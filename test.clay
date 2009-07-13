@@ -1,0 +1,9 @@
+def print_string(s:String):Void {
+    printf("%s", s);
+    return;
+}
+
+def main(args:Array[String]):Int {
+    print_string("Hello World!");
+    return 0;
+}

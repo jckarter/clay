@@ -1,0 +1,55 @@
+Simple Types
+------------
+
+Bool, Int,
+Void
+
+
+Derived Types
+-------------
+
+Pointer(T)
+Tuple(T1, T2, ...)
+Procedure(T1, T2)
+
+
+Syntax
+------
+
+Program -> list(Definition) ;
+Definition -> (Name, Expression) ;
+
+Expression -> Literal
+            | Lambda
+            | Variable
+            | Assignment
+            | ProcedureCall
+            | Conditional
+            | Sequence
+            | LetBinding
+            | PrimitiveOperation
+            ;
+
+Literal -> BoolLiteral | IntLiteral | VoidLiteral ;
+
+Lambda -> (list(Name), Expression) ;
+
+Variable -> (Name) ;
+Assignment -> (Name, Expression) ;
+ProcedureCall -> (Expression, Expression) ;
+Conditional -> (Expression, Expression, Expression) ;
+
+Sequence -> list(Expression) ;
+LetBinding -> (Name, Expression, Expression) ;
+
+PrimitiveOperation -> LogicalNot | LogicalAnd | LogicalOr
+                    | NumericAdd | NumericSubtract | NumericMultiply
+                    | NumericDivide | NumericRemainder
+                    | NumericLesser | NumericLesserEquals
+                    | NumericGreater | NumericGreaterEquals
+                    | NumericEquals
+                    | PointerRead | PointerWrite
+                    | PointerAlloc | PointerFree
+                    | MakeTuple | TupleGet | TupleSet
+                    ;
+
