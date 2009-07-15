@@ -52,3 +52,5 @@ Literal -> BoolLiteral
          | CharLiteral
          | StringLiteral
          ;
+
+BoolLiteral -> "true" | "false" ;
