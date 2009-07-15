@@ -1,9 +1,12 @@
-__all__ = ["Input", "zeroplus", "choice", "sequence", "modify",
-           "oneplus", "many", "listof", "condition", "literal"]
+__all__ = ["Failure", "Input", "zeroplus", "choice",
+           "sequence", "modify", "oneplus", "many", "listof",
+           "condition", "literal"]
 
 #
 # parser input
 #
+
+class Failure(object) : pass
 
 class Input(object) :
     def __init__(self, data, pos=0) :
@@ -14,7 +17,7 @@ class Input(object) :
 
     def next(self) :
         if self.pos >= len(self.data) :
-            return None
+            return Failure
         self.max_pos = max(self.max_pos, self.pos)
         item = self.data[self.pos]
         self.pos += 1
@@ -39,7 +42,7 @@ def zeroplus(parser) :
         results = []
         while True :
             result = parser(input)
-            if result is None :
+            if result is Failure :
                 break
             results.append(result)
         return results
@@ -49,9 +52,9 @@ def choice(*parsers) :
     def parser_proc(input) :
         for parser in parsers :
             result = parser(input)
-            if result is not None :
+            if result is not Failure :
                 return result
-        return None
+        return Failure
     return parser_proc
 
 def sequence(*parsers) :
@@ -60,9 +63,9 @@ def sequence(*parsers) :
         input.begin()
         for parser in parsers :
             result = parser(input)
-            if result is None :
+            if result is Failure :
                 input.rollback()
-                return None
+                return Failure
             results.append(result)
         input.commit()
         return results
@@ -71,7 +74,7 @@ def sequence(*parsers) :
 def modify(parser, modifier) :
     def parser_proc(input) :
         result = parser(input)
-        if result is not None :
+        if result is not Failure :
             result = modifier(result)
         return result
     return parser_proc
@@ -88,12 +91,12 @@ def many(parser, min, max) :
             if len(results) == max :
                 break
             result = parser(input)
-            if result is None :
+            if result is Failure :
                 break
             results.append(result)
         if len(results) < min :
             input.rollback()
-            return None
+            return Failure
         input.commit()
         return results
     return parser_proc
@@ -112,9 +115,9 @@ def condition(cond) :
     def parser_proc(input) :
         input.begin()
         item = input.next()
-        if (item is None) or (not cond(item)) :
+        if (item is Failure) or (not cond(item)) :
             input.rollback()
-            return None
+            return Failure
         input.commit()
         return item
     return parser_proc

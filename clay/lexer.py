@@ -12,7 +12,7 @@ class LexerInput(Input) :
     def consume_string(self, s) :
         self.max_pos = max(self.max_pos, self.pos)
         if not self.data.startswith(s, self.pos) :
-            return None
+            return Failure
         self.pos += len(s)
         return s
 
@@ -20,7 +20,7 @@ class LexerInput(Input) :
         self.max_pos = max(self.max_pos, self.pos)
         match = regex.match(self.data, self.pos)
         if match is None :
-            return None
+            return Failure
         s = match.group()
         self.pos += len(s)
         return s
@@ -40,16 +40,16 @@ def not_ahead(parser) :
         input.begin()
         result = parser(input)
         input.rollback()
-        if result is None :
+        if result is Failure :
             return ""
-        return None
+        return Failure
     return parser_proc
 
 def token(parser, klass) :
     def parser_proc(input) :
         start = input.pos
         result = parser(input)
-        if result is None :
+        if result is Failure :
             return result
         end = input.pos
         return klass(result, start, end)
@@ -248,7 +248,7 @@ def tokenize(data, filename, remove_space=True) :
     input = LexerInput(data)
     while input.pos < len(data) :
         token = one_token(input)
-        if token is None :
+        if token is Failure :
             line,column = linecol.locate_line_column(data, input.max_pos)
             raise LexerError(filename, line, column)
         tokens.append(token)
