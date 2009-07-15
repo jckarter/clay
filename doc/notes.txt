@@ -1,0 +1,36 @@
+let N = 'a';
+
+Primitive Types:
+Bool, Char, Int, String, Type, Void
+
+Primitive Values:
+true, false, CharLiteral, IntLiteral,
+StringLiteral, void
+
+Primitive Type Constructors:
+(Type,....) : tuple type constructor
+[Type] : array type constructor
+Record( (Name,Type)* ) : record type constructor
+
+
+Primitive Value Constructors:
+(Value,...) : tuple constructor
+[Value,...] : array constructor
+T() : empty array constructor if IsArray(T)
+T(Value,..) : record constructor if IsRecord(T)
+
+User Defined:
+
+record IntNode {
+    x:Int,
+    next:IntNode
+}
+
+record Node[T] {
+    x:T,
+    next:Node[T]
+}
+
+def sum(a,b) {
+    return int_add(a,b);
+}

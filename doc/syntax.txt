@@ -1,0 +1,54 @@
+Program -> TopLevelItem* ;
+
+TopLevelItem -> RecordDef | VariableDef | ProcedureDef ;
+
+RecordDef -> "record" Name TypeVars? "{" comma_list(FieldDef) "}" ;
+FieldDef -> Name ":" Expression ;
+
+TypeVars -> "[" comma_list(Name) "]" ;
+
+VariableDef -> "var" Name "=" Expression ";" ;
+
+ProcedureDef -> "def" Name "(" comma_list(Name)? ")" Block ;
+
+Block -> "{" Statement+ "}" ;
+
+Statement -> Block
+           | VariableDef
+           | Assignment
+           | IfStatement
+           | ReturnStatement
+           | Expression
+           ;
+
+Assignment -> Name "=" Expression ";" ;
+
+IfStatement -> "if" "(" Expression ")" Statement
+               ("else" Statement)? ;
+
+ReturnStatement -> "return" Expression ";" ;
+
+Expression -> SuffixExpr ;
+
+SuffixExpr -> AtomicExpr Suffix* ;
+Suffix -> ArrayExpr
+        | TupleExpr
+        | FieldRef
+        ;
+ArrayExpr -> "[" comma_list(Expression) "]" ;
+TupleExpr -> "(" comma_list(Expression) ")" ;
+FieldRef -> "." Name ;
+
+AtomicExpr -> ArrayExpr
+            | TupleExpr
+            | NameRef
+            | Literal
+            ;
+
+NameRef -> Name ;
+
+Literal -> BoolLiteral
+         | IntLiteral
+         | CharLiteral
+         | StringLiteral
+         ;
