@@ -1,7 +1,7 @@
 import re
-from parserlib import *
-from tokens import *
-import linecol
+from clay.parserlib import *
+from clay.tokens import *
+from clay import linecol
 
 __all__ = ["LexerError", "tokenize"]
 

@@ -1,5 +1,5 @@
 import sys
-import lexer
+from clay import lexer
 
 def main() :
     filename = sys.argv[1]
