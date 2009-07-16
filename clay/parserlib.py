@@ -71,6 +71,14 @@ def sequence(*parsers) :
         return results
     return parser_proc
 
+def optional(parser, default=None) :
+    def parser_proc(input) :
+        result = parser(input)
+        if result is Failure :
+            result = default
+        return result
+    return parser_proc
+
 def modify(parser, modifier) :
     def parser_proc(input) :
         result = parser(input)
