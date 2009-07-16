@@ -14,12 +14,14 @@ ProcedureDef -> "def" Name "(" comma_list(Name)? ")" Block ;
 Block -> "{" Statement+ "}" ;
 
 Statement -> Block
-           | VariableDef
+           | LocalVariableDef
            | Assignment
            | IfStatement
            | ReturnStatement
            | Expression
            ;
+
+LocalVariableDef -> "var" Name "=" Expression ";" ;
 
 Assignment -> Name "=" Expression ";" ;
 
