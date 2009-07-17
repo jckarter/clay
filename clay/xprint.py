@@ -51,7 +51,7 @@ class XObject(object) :
         self.fields = fields
 
 class XField(object) :
-    def __init__(self, name, value) :
+    def __init__(self, name, value, separator="=") :
         self.name = name
         self.value = value
 
