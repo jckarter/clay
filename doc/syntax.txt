@@ -33,19 +33,22 @@ ReturnStatement -> "return" Expression ";" ;
 Expression -> SuffixExpr ;
 
 SuffixExpr -> AtomicExpr Suffix* ;
-Suffix -> ArrayExpr
-        | TupleExpr
-        | FieldRef
+Suffix -> IndexSuffix
+        | CallSuffix
+        | FieldRefSuffix
         ;
-ArrayExpr -> "[" comma_list(Expression) "]" ;
-TupleExpr -> "(" comma_list(Expression) ")" ;
-FieldRef -> "." Name ;
+IndexSuffix -> "[" comma_list(Expression) "]" ;
+CallSuffix -> "(" comma_list(Expression) ")" ;
+FieldRefSuffix -> "." Name ;
 
 AtomicExpr -> ArrayExpr
             | TupleExpr
             | NameRef
             | Literal
             ;
+
+ArrayExpr -> "[" comma_list(Expression) "]" ;
+TupleExpr -> "(" comma_list(Expression) ")" ;
 
 NameRef -> Name ;
 
