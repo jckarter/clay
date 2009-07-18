@@ -1,8 +1,7 @@
 class Token(object) :
-    def __init__(self, value, start=None, end=None) :
+    def __init__(self, value) :
         self.value = value
-        self.start = start
-        self.end = end
+        self.location = None
     def __str__(self) :
         return "%s(%s)" % (type(self).__name__, repr(self.value))
     def __repr__(self) :

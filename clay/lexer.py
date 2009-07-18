@@ -1,13 +1,15 @@
 import re
 from clay.parserlib import *
 from clay.tokens import *
+from clay.location import Location
 from clay import linecol
 
 __all__ = ["LexerError", "tokenize"]
 
 class LexerInput(Input) :
-    def __init__(self, data) :
+    def __init__(self, data, file_name) :
         super(LexerInput,self).__init__(data)
+        self.file_name = file_name
 
     def consume_string(self, s) :
         if not self.data.startswith(s, self.pos) :
@@ -52,7 +54,9 @@ def token(parser, klass) :
         if result is Failure :
             return result
         end = input.pos
-        return klass(result, start, end)
+        tok = klass(result)
+        tok.location = Location(input.data, start, end, input.file_name)
+        return tok
     return parser_proc
 
 
@@ -85,11 +89,8 @@ ident_char1 = condition(lambda x : x.isalpha() or (x == "_"))
 ident_char2 = condition(lambda x : x.isalpha() or x.isdigit() or (x == "_"))
 keyword_ident1 = modify(sequence(ident_char1, zeroplus(ident_char2)),
                         lambda x : x[0] + "".join(x[1]))
-def keyword_ident_factory(s, start, end) :
-    if s in keyword_set :
-        return Keyword(s, start, end)
-    else :
-        return Identifier(s, start, end)
+def keyword_ident_factory(s) :
+    return Keyword(s) if s in keyword_set else Identifier(s)
 
 keyword_identifier = token(keyword_ident1, klass=keyword_ident_factory)
 
@@ -240,19 +241,19 @@ one_token = choice(space, single_line_comment, multi_line_comment,
 #
 
 class LexerError(Exception) :
-    def __init__(self, filename, line, column) :
-        self.filename = filename
+    def __init__(self, file_name, line, column) :
+        self.file_name = file_name
         self.line = line
         self.column = column
 
-def tokenize(data, filename, remove_space=True) :
+def tokenize(data, file_name, remove_space=True) :
     tokens = []
-    input = LexerInput(data)
+    input = LexerInput(data, file_name)
     while input.pos < len(data) :
         token = one_token(input)
         if token is Failure :
             line,column = linecol.locate_line_column(data, input.max_pos)
-            raise LexerError(filename, line, column)
+            raise LexerError(file_name, line, column)
         tokens.append(token)
     def is_space(t) :
         return type(t) in [Space,SingleLineComment,MultiLineComment]
