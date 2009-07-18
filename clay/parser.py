@@ -110,8 +110,11 @@ if_statement = modify(sequence(keyword("if"), if_condition,
 block = modify(sequence(symbol("{"), oneplus(statement2), symbol("}")),
                lambda x : Block(x[1]))
 
+expr_statement = modify(sequence(expression, semicolon),
+                        lambda x : x[0])
+
 statement = choice(block, local_variable_def, assignment,
-                   if_statement, return_statement, expression)
+                   if_statement, return_statement, expr_statement)
 
 #
 # top level items
@@ -158,7 +161,10 @@ class ParseError(Exception) :
         self.column = column
 
 def parse(data, filename) :
-    tokens = lexer.tokenize(data, filename)
+    try :
+        tokens = lexer.tokenize(data, filename)
+    except lexer.LexerError, e :
+        raise ParseError(e.filename, e.line, e.column)
     input = Input(tokens)
     result = program(input)
     if (result is Failure) or (input.pos < len(tokens)) :
