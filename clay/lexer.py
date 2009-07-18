@@ -10,19 +10,19 @@ class LexerInput(Input) :
         super(LexerInput,self).__init__(data)
 
     def consume_string(self, s) :
-        self.max_pos = max(self.max_pos, self.pos)
         if not self.data.startswith(s, self.pos) :
             return Failure
         self.pos += len(s)
+        self.update_max_pos()
         return s
 
     def consume_regex(self, regex) :
-        self.max_pos = max(self.max_pos, self.pos)
         match = regex.match(self.data, self.pos)
         if match is None :
             return Failure
         s = match.group()
         self.pos += len(s)
+        self.update_max_pos()
         return s
 
 def string_parser(s) :
@@ -65,8 +65,9 @@ symbols = ("( ) [ ] { } "
            + "<= <> != >= == < > "
            + ": -> = ; , "
            + "+ - ~ . ^ ").split()
-symbols_regex = "|".join([re.escape(s) for s in symbols])
-symbol = token(regex_parser(re.compile(symbols_regex)),
+def symbols_regex() :
+    return "|".join([re.escape(s) for s in symbols])
+symbol = token(regex_parser(re.compile(symbols_regex())),
                klass=Symbol)
 
 
