@@ -24,7 +24,7 @@ r(Program, lambda x : xo("Program", *x.top_level_items))
 #
 
 r(RecordDef, lambda x : xo("RecordDef", x.name, xf("type_vars",x.type_vars),
-                           *x.fields)
+                           *x.fields))
 r(Field, lambda x : xf(x.name,x.type,separator=":"))
 r(VariableDef, lambda x : xo("VariableDef", x.name, x.expr))
 r(ProcedureDef, lambda x : xo("ProcedureDef", x.name, tuple(x.args), x.body))
