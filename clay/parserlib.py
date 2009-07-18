@@ -1,5 +1,5 @@
 __all__ = ["Failure", "Input", "zeroplus", "choice",
-           "sequence", "modify", "oneplus", "many", "listof",
+           "sequence", "optional", "modify", "oneplus", "many", "listof",
            "condition", "literal"]
 
 #
