@@ -1,13 +1,15 @@
 import sys
-from clay import lexer
+from clay import parser
+from clay.astprinter import ast_print
 
 def main() :
     filename = sys.argv[1]
     data = file(filename).read()
     try :
-        tokens = lexer.tokenize(data, filename)
-    except lexer.LexerError, e :
-        print "lexer error at %s:%d:%d" % (e.filename,e.line,e.column)
-    print tokens
+        result = parser.parse(data, filename)
+    except parser.ParseError, e :
+        print "parser error at %s:%d:%d" % (e.filename,e.line,e.column)
+        return
+    ast_print(result)
 
 main()
