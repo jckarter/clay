@@ -54,6 +54,7 @@ class XField(object) :
     def __init__(self, name, value, separator="=") :
         self.name = name
         self.value = value
+        self.separator = separator
 
 class XSymbol(object) :
     def __init__(self, name) :
@@ -79,7 +80,7 @@ def _xprint_xobject(x, buf, max_offset) :
 
 def _xprint_xfield(x, buf, max_offset) :
     buf.add(x.name)
-    buf.add("=")
+    buf.add(x.separator)
     return _xprint(x.value, buf, max_offset)
 
 def _xprint_xsymbol(x, buf, max_offset) :
