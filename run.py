@@ -3,13 +3,14 @@ from clay import parser
 from clay.astprinter import ast_print
 
 def main() :
-    filename = sys.argv[1]
-    data = file(filename).read()
+    file_name = sys.argv[1]
+    data = file(file_name).read()
     try :
-        result = parser.parse(data, filename)
+        result = parser.parse(data, file_name)
     except parser.ParseError, e :
-        print "parser error at %s:%d:%d" % (e.filename,e.line,e.column)
+        print "parser error at %s:%d:%d" % (e.file_name,e.line,e.column)
         return
     ast_print(result)
 
-main()
+if __name__ == "__main__" :
+    main()
