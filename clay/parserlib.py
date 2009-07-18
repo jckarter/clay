@@ -18,7 +18,6 @@ class Input(object) :
     def next(self) :
         if self.pos >= len(self.data) :
             return Failure
-        self.max_pos = max(self.max_pos, self.pos)
         item = self.data[self.pos]
         self.pos += 1
         return item
@@ -28,9 +27,13 @@ class Input(object) :
 
     def commit(self) :
         self.saved_.pop()
+        self.update_max_pos()
 
     def rollback(self) :
         self.pos = self.saved_.pop()
+
+    def update_max_pos(self) :
+        self.max_pos = max(self.max_pos, self.pos)
 
 
 #
