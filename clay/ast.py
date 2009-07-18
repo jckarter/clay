@@ -1,9 +1,5 @@
 class ASTNode(object) :
-    start_token = None
-    end_token = None
-    def set_location(self, start_token, end_token) :
-        self.start_token = start_token
-        self.end_token = end_token
+    location = None
 
 class Program(ASTNode) :
     def __init__(self, top_level_items) :
