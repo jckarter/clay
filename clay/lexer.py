@@ -76,7 +76,8 @@ symbol = token(regex_parser(re.compile(symbols_regex)),
 
 keyword_list = ("record var def "
                 + "break continue return if else while for in "
-                + "or and not bitor bitand bitxor ").split()
+                + "or and not bitor bitand bitxor "
+                + "true false ").split()
 keyword_set = set(keyword_list)
 
 ident_char1 = condition(lambda x : x.isalpha() or (x == "_"))
