@@ -3,7 +3,7 @@ from clay import tokens as t
 from clay import lexer
 from clay.ast import *
 from clay.location import Location
-from clay import linecol
+from clay.error import SourceError;
 
 #
 # primitives
@@ -172,17 +172,11 @@ program = astnode(oneplus(top_level_item), lambda x : Program(x))
 # parse
 #
 
-class ParseError(Exception) :
-    def __init__(self, file_name, line, column) :
-        self.file_name = file_name
-        self.line = line
-        self.column = column
+class ParseError(SourceError) :
+    pass
 
 def parse(data, file_name) :
-    try :
-        tokens = lexer.tokenize(data, file_name)
-    except lexer.LexerError, e :
-        raise ParseError(e.file_name, e.line, e.column)
+    tokens = lexer.tokenize(data, file_name)
     input = Input(tokens)
     result = program(input)
     if (result is Failure) or (input.pos < len(tokens)) :
@@ -190,6 +184,5 @@ def parse(data, file_name) :
             pos = len(data)
         else :
             pos = tokens[input.max_pos].location.start
-        line,column = linecol.locate_line_column(data, pos)
-        raise ParseError(file_name, line, column)
+        raise ParseError("parse error", data, pos, file_name)
     return result

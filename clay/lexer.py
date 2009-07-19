@@ -2,7 +2,7 @@ import re
 from clay.parserlib import *
 from clay.tokens import *
 from clay.location import Location
-from clay import linecol
+from clay.error import SourceError
 
 __all__ = ["LexerError", "tokenize"]
 
@@ -240,11 +240,8 @@ one_token = choice(space, single_line_comment, multi_line_comment,
 # LexerError, Lexer
 #
 
-class LexerError(Exception) :
-    def __init__(self, file_name, line, column) :
-        self.file_name = file_name
-        self.line = line
-        self.column = column
+class LexerError(SourceError) :
+    pass
 
 def tokenize(data, file_name, remove_space=True) :
     tokens = []
@@ -252,8 +249,7 @@ def tokenize(data, file_name, remove_space=True) :
     while input.pos < len(data) :
         token = one_token(input)
         if token is Failure :
-            line,column = linecol.locate_line_column(data, input.max_pos)
-            raise LexerError(file_name, line, column)
+            raise LexerError("invalid token", data, input.max_pos, file_name)
         tokens.append(token)
     def is_space(t) :
         return type(t) in [Space,SingleLineComment,MultiLineComment]
