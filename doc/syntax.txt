@@ -3,13 +3,15 @@ Program -> TopLevelItem* ;
 TopLevelItem -> RecordDef | VariableDef | ProcedureDef ;
 
 RecordDef -> "record" Name TypeVars? "{" comma_list(FieldDef) "}" ;
-FieldDef -> Name ":" Expression ;
+FieldDef -> Name ":" TypeExpr ;
 
 TypeVars -> "[" comma_list(Name) "]" ;
 
-VariableDef -> "var" Name "=" Expression ";" ;
+VariableDef -> "var" Name ":" TypeExpr "=" Expression ";" ;
 
-ProcedureDef -> "def" Name "(" comma_list(Name)? ")" Block ;
+ProcedureDef -> "def" Name TypeVars? "(" comma_list(Argument)? ")"
+                ":" TypeExpr Block ;
+Argument -> Name ":" TypeExpr ;
 
 Block -> "{" Statement+ "}" ;
 
@@ -21,14 +23,16 @@ Statement -> Block
            | Expression
            ;
 
-LocalVariableDef -> "var" Name "=" Expression ";" ;
+LocalVariableDef -> "var" Name ":" TypeExpr "=" Expression ";" ;
 
 Assignment -> Name "=" Expression ";" ;
 
 IfStatement -> "if" "(" Expression ")" Statement
                ("else" Statement)? ;
 
-ReturnStatement -> "return" Expression ";" ;
+ReturnStatement -> "return" Expression? ";" ;
+
+TypeExpr -> Expression ;
 
 Expression -> SuffixExpr ;
 
