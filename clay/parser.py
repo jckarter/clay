@@ -149,8 +149,8 @@ name_list = listof(identifier, comma)
 type_vars = modify(sequence(symbol("["), name_list, symbol("]")),
                    lambda x : x[1])
 opt_type_vars = modify(optional(type_vars), lambda x : [] if x is None else x)
-field_def = modify(sequence(identifier, symbol(":"), expression),
-                   lambda x : Field(x[0],x[2]))
+field_def = astnode(sequence(identifier, type_spec),
+                   lambda x : Field(x[0],x[1]))
 field_list = listof(field_def, comma)
 record_def = astnode(sequence(keyword("record"), identifier, opt_type_vars,
                               symbol("{"), field_list, symbol("}")),
@@ -160,10 +160,14 @@ variable_def = astnode(sequence(keyword("var"), identifier, type_spec,
                        lambda x : VariableDef(x[1],x[2],x[4]))
 
 opt_name_list = modify(optional(name_list), lambda x : [] if x is None else x)
-procedure_def = astnode(sequence(keyword("def"), identifier,
-                                 symbol("("), opt_name_list, symbol(")"),
+argument = astnode(sequence(identifier, type_spec),
+                   lambda x : Argument(x[0],x[1]))
+opt_arguments = modify(optional(listof(argument, comma)),
+                       lambda x : [] if x is None else x)
+procedure_def = astnode(sequence(keyword("def"), identifier, opt_type_vars,
+                                 symbol("("), opt_arguments, symbol(")"),
                                  block),
-                        lambda x : ProcedureDef(x[1],x[3],x[5]))
+                        lambda x : ProcedureDef(x[1],x[2],x[4],x[6]))
 
 top_level_item = choice(record_def, variable_def, procedure_def)
 
