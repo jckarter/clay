@@ -104,6 +104,13 @@ expression = suffix_expr
 
 
 #
+# type spec
+#
+
+type_spec = modify(sequence(symbol(":"), expression), lambda x : x[1])
+
+
+#
 # statements
 #
 
@@ -111,9 +118,9 @@ return_statement = astnode(sequence(keyword("return"), expression, semicolon),
                            lambda x : ReturnStatement(x[1]))
 assignment = astnode(sequence(identifier, symbol("="), expression, semicolon),
                      lambda x : Assignment(x[0], x[2]))
-local_variable_def = astnode(sequence(keyword("var"), identifier,
+local_variable_def = astnode(sequence(keyword("var"), identifier, type_spec,
                                       symbol("="), expression, semicolon),
-                             lambda x : LocalVariableDef(x[1],x[3]))
+                             lambda x : LocalVariableDef(x[1],x[2],x[4]))
 
 statement2 = lambda input : statement(input)
 
@@ -148,9 +155,9 @@ field_list = listof(field_def, comma)
 record_def = astnode(sequence(keyword("record"), identifier, opt_type_vars,
                               symbol("{"), field_list, symbol("}")),
                      lambda x : RecordDef(x[1],x[2],x[4]))
-variable_def = astnode(sequence(keyword("var"), identifier,
+variable_def = astnode(sequence(keyword("var"), identifier, type_spec,
                                 symbol("="), expression, semicolon),
-                       lambda x : VariableDef(x[1],x[3]))
+                       lambda x : VariableDef(x[1],x[2],x[4]))
 
 opt_name_list = modify(optional(name_list), lambda x : [] if x is None else x)
 procedure_def = astnode(sequence(keyword("def"), identifier,

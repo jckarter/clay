@@ -20,8 +20,9 @@ class Field(ASTNode) :
         self.type = type
 
 class VariableDef(TopLevelItem) :
-    def __init__(self, name, expr) :
+    def __init__(self, name, type, expr) :
         self.name = name
+        self.type = type
         self.expr = expr
 
 class ProcedureDef(TopLevelItem) :
@@ -38,8 +39,9 @@ class Block(Statement) :
         self.statements = statements
 
 class LocalVariableDef(Statement) :
-    def __init__(self, name, expr) :
+    def __init__(self, name, type, expr) :
         self.name = name
+        self.type = type
         self.expr = expr
 
 class Assignment(Statement) :

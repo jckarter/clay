@@ -26,7 +26,7 @@ r(Program, lambda x : xo("Program", *x.top_level_items))
 r(RecordDef, lambda x : xo("RecordDef", x.name, xf("type_vars",x.type_vars),
                            *x.fields))
 r(Field, lambda x : xf(x.name,x.type,separator=":"))
-r(VariableDef, lambda x : xo("VariableDef", x.name, x.expr))
+r(VariableDef, lambda x : xo("VariableDef", x.name, x.type, x.expr))
 r(ProcedureDef, lambda x : xo("ProcedureDef", x.name, tuple(x.args), x.body))
 
 
@@ -35,7 +35,7 @@ r(ProcedureDef, lambda x : xo("ProcedureDef", x.name, tuple(x.args), x.body))
 #
 
 r(Block, lambda x : xo("Block", *x.statements))
-r(LocalVariableDef, lambda x : xo("LocalVariableDef", x.name, x.expr))
+r(LocalVariableDef, lambda x : xo("LocalVariableDef", x.name, x.type, x.expr))
 r(Assignment, lambda x : xo("Assignment", x.name, x.expr))
 r(IfStatement, lambda x : xo("IfStatement", x.condition,
                              xf("then", x.then_part),
