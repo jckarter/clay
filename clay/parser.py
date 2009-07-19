@@ -114,7 +114,8 @@ type_spec = modify(sequence(symbol(":"), expression), lambda x : x[1])
 # statements
 #
 
-return_statement = astnode(sequence(keyword("return"), expression, semicolon),
+return_statement = astnode(sequence(keyword("return"), optional(expression),
+                                    semicolon),
                            lambda x : ReturnStatement(x[1]))
 assignment = astnode(sequence(identifier, symbol("="), expression, semicolon),
                      lambda x : Assignment(x[0], x[2]))
