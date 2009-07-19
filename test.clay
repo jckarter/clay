@@ -1,3 +1,9 @@
+record Point {
+    x:Double, y:Double
+}
+
+var foo:Int = 10;
+
 def print_string(s:String):Void {
     printf("%s", s);
     return;
