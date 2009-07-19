@@ -27,7 +27,7 @@ r(RecordDef, lambda x : xo("RecordDef", x.name, x.type_vars, *x.fields))
 r(Field, lambda x : xf(x.name,x.type,separator=":"))
 r(VariableDef, lambda x : xo("VariableDef", x.name, x.type, x.expr))
 r(ProcedureDef, lambda x : xo("ProcedureDef", x.name, x.type_vars,
-                              tuple(x.args), x.body))
+                              tuple(x.args), x.return_type, x.body))
 r(Argument, lambda x : (x.name, x.type))
 
 

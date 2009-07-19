@@ -26,10 +26,11 @@ class VariableDef(TopLevelItem) :
         self.expr = expr
 
 class ProcedureDef(TopLevelItem) :
-    def __init__(self, name, type_vars, args, body) :
+    def __init__(self, name, type_vars, args, return_type, body) :
         self.name = name
         self.type_vars = type_vars
         self.args = args
+        self.return_type = return_type
         self.body = body
 
 class Argument(ASTNode) :

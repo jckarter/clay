@@ -167,8 +167,8 @@ opt_arguments = modify(optional(listof(argument, comma)),
                        lambda x : [] if x is None else x)
 procedure_def = astnode(sequence(keyword("def"), identifier, opt_type_vars,
                                  symbol("("), opt_arguments, symbol(")"),
-                                 block),
-                        lambda x : ProcedureDef(x[1],x[2],x[4],x[6]))
+                                 type_spec, block),
+                        lambda x : ProcedureDef(x[1],x[2],x[4],x[6],x[7]))
 
 top_level_item = choice(record_def, variable_def, procedure_def)
 
