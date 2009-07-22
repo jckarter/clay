@@ -1,5 +1,40 @@
+#
+# Vector
+#
+
+record Vector(T) {
+    size:Int;
+    data:Array(T);
+}
+
+overloadable vector;
+
+overload vector[T](a:Array(T)):Vector(T) {
+    return Vector(array_size(a), a);
+}
+
+overload vector[T](n:Int, v:T):Vector(T) {
+    return Vector(n, new_array(n,v));
+}
+
+overload vector[T](T:Type):Vector(T) {
+    return Vector(0, new_array(T,0));
+}
+
+def vector_add[T](a:Vector(T), x:T):Void {
+    if (a.size == array_size(a.data)) {
+        var b = new_array(T, a.size*2 + 1);
+        for (var i,x in enumerate(a.data))
+            b[i] = x;
+        a.data = b;
+    }
+    a.data[a.size] = x;
+    a.size += 1;
+}
+
 record Point {
-    x:Double, y:Double
+    x:Double;
+    y:Double;
 }
 
 var foo:Int = 10;
@@ -9,7 +44,7 @@ def print_string(s:String):Void {
     return;
 }
 
-def main(args:[String]):Int {
+def main(args:Array(String)):Int {
     print_string("Hello World!");
     return 0;
 }

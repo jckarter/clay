@@ -1,17 +1,34 @@
 Program -> TopLevelItem* ;
 
-TopLevelItem -> RecordDef | VariableDef | ProcedureDef ;
+TopLevelItem -> PredicateDef | InstanceDef | RecordDef | StructDef
+              | VariableDef | ProcedureDef | OverloadableDef | OverloadDef ;
 
-RecordDef -> "record" Name TypeVars? "{" comma_list(FieldDef) "}" ;
-FieldDef -> Name ":" TypeExpr ;
+PredicateDef -> "predicate" Name ;
+InstanceDef -> "instance" TypeVars? Name "(" comma_list(TypeExpr) ")"
+               TypeConditions? ";" ;
 
 TypeVars -> "[" comma_list(Name) "]" ;
+TypeConditions -> "if" comma_list(TypeCondition) ;
+TypeCondition -> Name "(" comma_list(TypeExpr) ")" ;
 
-VariableDef -> "var" Name ":" TypeExpr "=" Expression ";" ;
+RecordDef -> "record" Name TypeVars? "{" FieldDef+ "}" ;
+StructDef -> "struct" Name TypeVars? "{" FieldDef+ "}" ;
+FieldDef -> Name ":" TypeExpr ";" ;
+
+TypeSpec -> ":" TypeExpr ;
+
+VariableDef -> "var" Name TypeSpec? "=" Expression ";" ;
 
 ProcedureDef -> "def" Name TypeVars? "(" comma_list(Argument)? ")"
-                ":" TypeExpr Block ;
-Argument -> Name ":" TypeExpr ;
+                TypeSpec? TypeConditions? Block ;
+Argument -> Name TypeSpec?
+          | "type" Expression
+          ;
+
+OverloadableDef -> "overloadable" Name ";" ;
+
+OverloadDef -> "overload" Name TypeVars? "(" comma_list(Argument)? ")"
+               TypeSpec? TypeConditions? Block ;
 
 Block -> "{" Statement+ "}" ;
 
@@ -23,7 +40,7 @@ Statement -> Block
            | Expression
            ;
 
-LocalVariableDef -> "var" Name ":" TypeExpr "=" Expression ";" ;
+LocalVariableDef -> "var" Name TypeSpec? "=" Expression ";" ;
 
 Assignment -> Name "=" Expression ";" ;
 

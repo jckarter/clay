@@ -1,0 +1,11 @@
+- automatic memory management with refcounting
+- overloadable, overload
+- type relations, type variables, type patterns
+- exception handling
+- lambdas
+
+- any type
+
+- type inference
+- value semantics: achieve same syntactic convenience for ref-counted
+  structs and arrays as in a language like python

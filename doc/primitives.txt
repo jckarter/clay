@@ -1,0 +1,74 @@
+Primitive Types:
+Bool, Byte, Char, Int, Type, Void
+
+Primitive Values:
+true, false, ByteLiteral, CharLiteral, IntLiteral, void
+
+Primitive Type Constructors:
+(Type,...) : tuple type constructor
+Array[T] : array reference type constructor
+ArrayValue[T,n] : array value type constructor
+record [T,..]? { (Name:Type;)* } : record type definition
+struct [T,..]? { (Name:Type;)* } : struct type definition
+Ref[T] : refcounted pointer
+RawRef[T] : simple pointer
+
+Primitive Value
+(Value,...) : tuple constructor
+[Value,...] : array constructor
+T(Value,...) : record constructor if IsRecord(T)
+T(Value,...) : record constructor if IsStruct(T)
+
+Primitive Operations:
+
+default[T](T:Type):T
+
+ref_to_rawref[T](a:Ref[T]): RawRef[T]
+ref_get[T](a:Ref[T]): T
+ref_set[T](a:Ref[T], x:T): Void
+ref_offset[T](a:RawRef[T], offset:Int): RawRef[T]
+ref_diff[T](a:RawRef[T], b:RawRef[T]): Int
+
+(v1, ..., vn) : tuple constructor
+tuple_get(a:T, i): T2
+tuple_ref(a:RawRef[T], i:IntLiteral): RawRef[T2]
+
+[v1, ... ,vn] : Array[T]
+new_array[T](T:Type):Array[T]
+new_array[T](T:Type, n:Int):Array[T]
+new_array[T](n:Int, v:T):Array[T]
+array_size[T](a:Array[T]):Int
+array_get[T](a:Array[T], i:Int):T
+array_set[T](a:Array[T], i:Int, x:T):Void
+array_ref[T](a:Array[T], i:Int): RawRef[T]
+
+array_value[T](T:Type, n:IntLiteral, x:T): ArrayValue[T,n]
+array_value_get[T](a:ArrayValue[T,n], i:Int): T
+array_value_ref[T](a:RawRef[ArrayValue[T,n]], i:Int): RawRef[T]
+
+T(v1, v2, ...): record constructor
+record_get(a:T, field:StringLiteral):T2
+record_set(a:T, field:StringLiteral, x:T2): Void
+record_ref(a:T, field:StringLiteral): RawRef[T2]
+
+T(v1, v2, ...): struct constructor
+struct_get(a:T, field:StringLiteral):T2
+struct_ref(a:RawRef[T], field:StringLiteral): RawRef[T2]
+
+not(x:Bool):Bool
+
+byte_to_int, int_to_byte,
+byte_add, byte_subtract, byte_multiply, byte_divide,
+byte_modulus, byte_negate,
+byte_equals, byte_lesser, byte_lesser_equals,
+byte_greater, byte_greater_equals
+
+char_to_int(c:Char):Int
+int_to_char(i:Int):Char
+char_equals, char_lesser, char_lesser_equals,
+char_greater, char_greater_equals
+
+int_add, int_subtract, int_multiply, int_divide
+int_modulus, int_negate,
+int_equals, int_lesser, int_lesser_equals,
+int_greater, int_greater_equals
