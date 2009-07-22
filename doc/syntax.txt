@@ -13,7 +13,7 @@ TypeCondition -> Name "(" comma_list(TypeExpr) ")" ;
 
 RecordDef -> "record" Name TypeVars? "{" FieldDef+ "}" ;
 StructDef -> "struct" Name TypeVars? "{" FieldDef+ "}" ;
-FieldDef -> Name ":" TypeExpr ";" ;
+FieldDef -> Name TypeSpec ";" ;
 
 TypeSpec -> ":" TypeExpr ;
 
