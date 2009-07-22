@@ -21,7 +21,7 @@ T(Value,...) : record constructor if IsStruct(T)
 
 Primitive Operations:
 
-default[T](T:Type):T
+default[T](type T):T
 
 ref_to_rawref[T](a:Ref[T]): RawRef[T]
 ref_get[T](a:Ref[T]): T
@@ -34,15 +34,15 @@ tuple_get(a:T, i): T2
 tuple_ref(a:RawRef[T], i:IntLiteral): RawRef[T2]
 
 [v1, ... ,vn] : Array[T]
-new_array[T](T:Type):Array[T]
-new_array[T](T:Type, n:Int):Array[T]
+new_array[T](type T):Array[T]
+new_array[T](type T, n:Int):Array[T]
 new_array[T](n:Int, v:T):Array[T]
 array_size[T](a:Array[T]):Int
 array_get[T](a:Array[T], i:Int):T
 array_set[T](a:Array[T], i:Int, x:T):Void
 array_ref[T](a:Array[T], i:Int): RawRef[T]
 
-array_value[T](T:Type, n:IntLiteral, x:T): ArrayValue[T,n]
+array_value[T](type T, n:IntLiteral, x:T): ArrayValue[T,n]
 array_value_get[T](a:ArrayValue[T,n], i:Int): T
 array_value_ref[T](a:RawRef[ArrayValue[T,n]], i:Int): RawRef[T]
 
