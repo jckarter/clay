@@ -29,8 +29,8 @@ r(InstanceDef, lambda x : xo("InstanceDef", x.name, x.type_vars,
 r(TypeCondition, lambda x : xo("TypeCondition", x.name.s, *x.type_args))
 r(RecordDef, lambda x : xo("RecordDef", x.name, x.type_vars, *x.fields))
 r(StructDef, lambda x : xo("StructDef", x.name, x.type_vars, *x.fields))
-r(Field, lambda x : (x.name, x.type))
-r(Variable, lambda x : (x.name, x.type))
+r(Field, lambda x : xo("Field", x.name, x.type))
+r(Variable, lambda x : xo("Variable", x.name, x.type))
 r(VariableDef, lambda x : xo("VariableDef", x.variables, x.expr))
 r(ProcedureDef, lambda x : xo("ProcedureDef", x.name, x.type_vars,
                               tuple(x.args), x.return_type,
@@ -39,10 +39,11 @@ r(OverloadableDef, lambda x : xo("OverloadableDef", x.name))
 r(OverloadDef, lambda x : xo("OverloadDef", x.name, x.type_vars,
                              tuple(x.args), x.return_type,
                              xf("if",x.type_conditions), x.body))
-r(ValueArgument, lambda x : (xf("ref",x.is_ref), x.variable))
+r(ValueArgument, lambda x : xo("ValueArgument", xf("ref",x.is_ref),
+                               x.variable))
 r(TypeArgument, lambda x : xo("TypeArgument", x.type))
 
-r(Name, lambda x : XSymbol(x.s))
+r(Name, lambda x : xo("Name", XSymbol(x.s)))
 
 #
 # statements
@@ -75,7 +76,7 @@ r(PointerRef, lambda x : xo("PointerRef", x.expr))
 
 r(ArrayExpr, lambda x : xo("ArrayExpr", *x.elements))
 r(TupleExpr, lambda x : xo("TupleExpr", *x.elements))
-r(NameRef, lambda x : xo("NameRef", x.s))
+r(NameRef, lambda x : xo("NameRef", XSymbol(x.s)))
 r(BoolLiteral, lambda x : xo("BoolLiteral", x.value))
 r(IntLiteral, lambda x : xo("IntLiteral", x.value))
 r(CharLiteral, lambda x : xo("CharLiteral", x.value))
