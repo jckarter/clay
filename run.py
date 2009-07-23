@@ -11,7 +11,7 @@ def main() :
     except SourceError, e :
         e.display()
         return
-    ast_print(result)
+    ast_print(result, 100)
 
 if __name__ == "__main__" :
     main()
