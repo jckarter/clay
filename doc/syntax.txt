@@ -4,7 +4,7 @@ TopLevelItem -> PredicateDef | InstanceDef | RecordDef | StructDef
               | VariableDef | ProcedureDef | OverloadableDef | OverloadDef ;
 
 PredicateDef -> "predicate" Name ;
-InstanceDef -> "instance" TypeVars? Name "(" comma_list(TypeExpr) ")"
+InstanceDef -> "instance" Name TypeVars? "(" comma_list(TypeExpr) ")"
                TypeConditions? ";" ;
 
 TypeVars -> "[" comma_list(Name) "]" ;
@@ -17,11 +17,14 @@ FieldDef -> Name TypeSpec ";" ;
 
 TypeSpec -> ":" TypeExpr ;
 
-VariableDef -> "var" Name TypeSpec? "=" Expression ";" ;
+Variable -> Name TypeSpec? ;
+VariableList -> comma_list(Variable) ;
+
+VariableDef -> "var" VariableList "=" Expression ";" ;
 
 ProcedureDef -> "def" Name TypeVars? "(" comma_list(Argument)? ")"
                 TypeSpec? TypeConditions? Block ;
-Argument -> Name TypeSpec?
+Argument -> "ref"? Variable
           | "type" Expression
           ;
 
@@ -36,31 +39,50 @@ Statement -> Block
            | LocalVariableDef
            | Assignment
            | IfStatement
+           | BreakStatement
+           | ContinueStatement
+           | WhileStatement
+           | ForStatement
            | ReturnStatement
            | Expression
            ;
 
-LocalVariableDef -> "var" Name TypeSpec? "=" Expression ";" ;
+LocalVariableDef -> "var" VariableList "=" Expression ";" ;
 
-Assignment -> Name "=" Expression ";" ;
+Assignment -> comma_list(Expression) "=" Expression ";" ;
 
 IfStatement -> "if" "(" Expression ")" Statement
                ("else" Statement)? ;
 
-ReturnStatement -> "return" Expression? ";" ;
+BreakStatement -> "break" ";" ;
+ContinueStatement -> "continue" ";" ;
+
+WhileStatement -> "while" "(" Expression ")" Statement ;
+ForStatement -> "for" "(" "var" VariableList "in" Expression ")"
+                Statement ;
+
+ReturnStatement -> "return" comma_list(Expression)? ";" ;
 
 TypeExpr -> Expression ;
 
-Expression -> SuffixExpr ;
+Expression -> PrefixExpr ;
 
+PrefixExpr -> AddressOfExpr
+            | SuffixExpr
+            ;
+AddressOfExpr -> "&" SuffixExpr ;
 SuffixExpr -> AtomicExpr Suffix* ;
 Suffix -> IndexSuffix
         | CallSuffix
         | FieldRefSuffix
+        | TupleRefSuffix
+        | PointerRefSuffix
         ;
 IndexSuffix -> "[" comma_list(Expression) "]" ;
 CallSuffix -> "(" comma_list(Expression) ")" ;
 FieldRefSuffix -> "." Name ;
+TupleRefSuffix -> "." IntLiteral ;
+PointerRefSuffix -> "^" ;
 
 AtomicExpr -> ArrayExpr
             | TupleExpr

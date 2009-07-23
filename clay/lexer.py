@@ -65,7 +65,7 @@ def token(parser, klass) :
 #
 
 symbols = ("( ) [ ] { } " +
-           ": ; , . = ").split()
+           ": ; , . = & ^").split()
 def symbols_regex() :
     return "|".join([re.escape(s) for s in symbols])
 symbol = token(regex_parser(re.compile(symbols_regex())),
@@ -76,9 +76,9 @@ symbol = token(regex_parser(re.compile(symbols_regex())),
 # keyword, identifier
 #
 
-keyword_list = ("predicate instance record struct var def " +
+keyword_list = ("predicate instance record struct var ref def " +
                 "overloadable overload type " +
-                "if else return " +
+                "if else break continue while for in return " +
                 "true false").split()
 keyword_set = set(keyword_list)
 
