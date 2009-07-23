@@ -5,7 +5,7 @@ __all__ = [
     "OverloadDef", "Argument", "ValueArgument", "TypeArgument",
     "Statement", "Block", "LocalVariableDef", "Assignment",
     "IfStatement", "BreakStatement", "ContinueStatement",
-    "WhileStatement", "ForStatement", "ReturnStatement",
+    "WhileStatement", "ForStatement", "ReturnStatement", "ExprStatement",
     "Expression", "AddressOfExpr", "IndexExpr", "CallExpr",
     "FieldRef", "TupleRef", "PointerRef",
     "ArrayExpr", "TupleExpr", "NameRef", "BoolLiteral", "IntLiteral",
@@ -210,7 +210,12 @@ class ReturnStatement(Statement) :
         _checklist(results, Expression)
         self.results = results
 
-class Expression(Statement) :
+class ExprStatement(Statement) :
+    def __init__(self, expr) :
+        _check(expr, Expression)
+        self.expr = expr
+
+class Expression(ASTNode) :
     pass
 
 class AddressOfExpr(Expression) :

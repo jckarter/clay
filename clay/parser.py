@@ -163,8 +163,8 @@ local_variable_def = astnode(sequence(keyword("var"), variable_list,
 block = astnode(sequence(symbol("{"), oneplus(statement2), symbol("}")),
                 lambda x : Block(x[1]))
 
-expr_statement = modify(sequence(expression, semicolon),
-                        lambda x : x[0])
+expr_statement = astnode(sequence(expression, semicolon),
+                         lambda x : ExprStatement(x[0]))
 
 statement = choice(block, local_variable_def, assignment,
                    if_statement, break_statement, continue_statement,

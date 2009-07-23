@@ -60,6 +60,7 @@ r(ContinueStatement, lambda x : xo("Continue"))
 r(WhileStatement, lambda x : xo("WhileStatement", x.condition, x.body))
 r(ForStatement, lambda x : xo("ForStatement", x.variables, x.expr, x.body))
 r(ReturnStatement, lambda x : xo("ReturnStatement", *x.results))
+r(ExprStatement, lambda x : xo("ExprStatement", x.expr))
 
 
 #
