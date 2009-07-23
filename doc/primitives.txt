@@ -1,8 +1,8 @@
 Primitive Types:
-Bool, Byte, Char, Int, Type, Void
+Bool, Char, Int, Void
 
 Primitive Values:
-true, false, ByteLiteral, CharLiteral, IntLiteral, void
+true, false, CharLiteral, IntLiteral, void
 
 Primitive Type Constructors:
 (Type,...) : tuple type constructor
@@ -10,7 +10,6 @@ Array[T] : array reference type constructor
 ArrayValue[T,n] : array value type constructor
 record [T,..]? { (Name:Type;)* } : record type definition
 struct [T,..]? { (Name:Type;)* } : struct type definition
-RCRef[T] : refcounted pointer
 Ref[T] : simple pointer
 
 Primitive Value
@@ -23,12 +22,10 @@ Primitive Operations:
 
 default[T](type T):T
 
-rcref_to_ref[T](a:RCRef[T]): Ref[T]
-
 ref_get[T](a:Ref[T]): T
 ref_set[T](a:Ref[T], x:T): Void
 ref_offset[T](a:Ref[T], offset:Int): Ref[T]
-ref_diff[T](a:Ref[T], b:Ref[T]): Int
+ref_difference[T](a:Ref[T], b:Ref[T]): Int
 
 (v1, ..., vn) : tuple constructor
 tuple_ref(a:Ref[T], i:IntLiteral): Ref[T2]
@@ -49,7 +46,7 @@ record_ref(a:T, field:StringLiteral): Ref[T2]
 T(v1, v2, ...): struct constructor
 struct_ref(a:Ref[T], field:StringLiteral): Ref[T2]
 
-not(x:Bool):Bool
+bool_not(x:Bool):Bool
 
 char_to_int(c:Char):Int
 int_to_char(i:Int):Char
