@@ -1,4 +1,4 @@
-__all__ = ["SourceError"]
+__all__ = ["SourceError", "ASTError"]
 
 class SourceError(Exception) :
     def __init__(self, error_message, data, offset, file_name) :
@@ -13,6 +13,12 @@ class SourceError(Exception) :
         display_context_(lines, line, column)
         print "error at %s:%d:%d: %s" % \
             (self.file_name, line+1, column, self.error_message)
+
+class ASTError(SourceError) :
+    def __init__(self, error_message, ast_node) :
+        loc = ast_node.location
+        super(ASTError,self).__init__(
+            error_message, loc.data, loc.start, loc.file_name)
 
 def locate_(lines, offset) :
     line = 0
