@@ -1,24 +1,27 @@
-__all__ = ["SourceError", "ASTError"]
+__all__ = ["Location", "raise_error", "SourceError"]
 
-class SourceError(Exception) :
-    def __init__(self, error_message, data, offset, file_name) :
-        self.error_message = error_message
+class Location(object) :
+    def __init__(self, data, offset, file_name) :
         self.data = data
         self.offset = offset
         self.file_name = file_name
 
+def raise_error(error_message, location) :
+    if type(location) is not Location :
+        location = location.location
+    raise SourceError(error_message, location)
+
+class SourceError(Exception) :
+    def __init__(self, error_message, location) :
+        self.error_message = error_message
+        self.location = location
+
     def display(self) :
-        lines = self.data.splitlines(True)
-        line, column = locate_(lines, self.offset)
+        lines = self.location.data.splitlines(True)
+        line, column = locate_(lines, self.location.offset)
         display_context_(lines, line, column)
         print "error at %s:%d:%d: %s" % \
-            (self.file_name, line+1, column, self.error_message)
-
-class ASTError(SourceError) :
-    def __init__(self, error_message, ast_node) :
-        loc = ast_node.location
-        super(ASTError,self).__init__(
-            error_message, loc.data, loc.start, loc.file_name)
+            (self.location.file_name, line+1, column, self.error_message)
 
 def locate_(lines, offset) :
     line = 0

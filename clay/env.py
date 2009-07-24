@@ -1,5 +1,5 @@
 from clay.ast import *
-from clay.error import *
+from clay.error import raise_error
 
 __all__ = ["Env", "EnvEntry",
            "BoolTypeEntry", "CharTypeEntry", "IntTypeEntry", "VoidTypeEntry",
@@ -47,7 +47,7 @@ class Env(object) :
     def add_name(self, name, value) :
         assert type(name) is Name
         if name.s in self.entries :
-            raise ASTError("name redefinition", name)
+            raise_error("name redefinition", name)
         self.add_(name.s, value)
 
     def lookup_(self, name) :
@@ -61,14 +61,14 @@ class Env(object) :
         assert type(name) is Name
         entry = self.lookup_(name.s)
         if entry is None :
-            raise ASTError("undefined name", name)
+            raise_error("undefined name", name)
         return entry
 
     def lookup_nameref(self, nameref) :
         assert type(nameref) is NameRef
         entry = self.lookup_(nameref.s)
         if entry is None :
-            raise ASTError("undefined name", nameref)
+            raise_error("undefined name", nameref)
         return entry
 
 

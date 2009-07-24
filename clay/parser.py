@@ -2,8 +2,9 @@ from clay.parserlib import *
 from clay import tokens as t
 from clay import lexer
 from clay.ast import *
-from clay.location import Location
-from clay.error import SourceError;
+from clay.error import raise_error
+
+__all__ = ["parse"]
 
 #
 # primitives
@@ -38,8 +39,7 @@ def astnode(parser, constructor) :
         if result is Failure :
             return Failure
         node = constructor(result)
-        start = input.data[start_tok].location.start
-        node.location = input.data[input.pos-1].location.new_start(start)
+        node.location = input.data[start_tok].location
         return node
     return parser_proc
 
@@ -96,7 +96,7 @@ suffix = choice(index_suffix, call_suffix, field_ref_suffix,
 def fold_suffixes(expr, suffixes) :
     for suffix in suffixes :
         suffix.expr = expr
-        suffix.location = suffix.location.new_start(expr.location.start)
+        suffix.location = expr.location
         expr = suffix
     return expr
 
@@ -245,17 +245,14 @@ program = astnode(oneplus(top_level_item), lambda x : Program(x))
 # parse
 #
 
-class ParseError(SourceError) :
-    pass
-
 def parse(data, file_name) :
     tokens = lexer.tokenize(data, file_name)
     input = Input(tokens)
     result = program(input)
     if (result is Failure) or (input.pos < len(tokens)) :
         if input.max_pos == len(tokens) :
-            pos = len(data)
+            location = Location(data, len(data), file_name)
         else :
-            pos = tokens[input.max_pos].location.start
-        raise ParseError("parse error", data, pos, file_name)
+            location = tokens[input.max_pos].location
+        raise_error("parse error", location)
     return result

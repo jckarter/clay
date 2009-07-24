@@ -1,10 +1,9 @@
 import re
 from clay.parserlib import *
 from clay.tokens import *
-from clay.location import Location
-from clay.error import SourceError
+from clay.error import Location, raise_error
 
-__all__ = ["LexerError", "tokenize"]
+__all__ = ["tokenize"]
 
 class LexerInput(Input) :
     def __init__(self, data, file_name) :
@@ -53,9 +52,8 @@ def token(parser, klass) :
         result = parser(input)
         if result is Failure :
             return result
-        end = input.pos
         tok = klass(result)
-        tok.location = Location(input.data, start, end, input.file_name)
+        tok.location = Location(input.data, start, input.file_name)
         return tok
     return parser_proc
 
@@ -237,16 +235,14 @@ one_token = choice(space, single_line_comment, multi_line_comment,
 # LexerError, Lexer
 #
 
-class LexerError(SourceError) :
-    pass
-
 def tokenize(data, file_name, remove_space=True) :
     tokens = []
     input = LexerInput(data, file_name)
     while input.pos < len(data) :
         token = one_token(input)
         if token is Failure :
-            raise LexerError("invalid token", data, input.max_pos, file_name)
+            location = Location(data, input.max_pos, file_name)
+            raise_error("invalid token", location)
         tokens.append(token)
     def is_space(t) :
         return type(t) in [Space,SingleLineComment,MultiLineComment]
