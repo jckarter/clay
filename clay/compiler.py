@@ -1,5 +1,6 @@
 from clay.ast import *
 from clay.env import *
+from clay.types import *
 from clay.error import *
 from clay.multimethod import multimethod
 
@@ -59,19 +60,22 @@ def primitives_env() :
 #
 
 def lookup_name(name, env) :
-    return env.lookup(name)
+    return env.lookup_name(name)
 
 def lookup_predicate(name, env) :
     x = lookup_name(name, env)
     if type(x) is not PredicateEntry :
-        raise ASTError("not a predicate", name)
+        raise_error("not a predicate", name)
     return x
 
 def lookup_overloadable(name, env) :
     x = lookup_name(name, env)
     if type(x) is not OverloadableEntry :
-        raise ASTError("not an overloadable", name)
+        raise_error("not an overloadable", name)
     return x
+
+def lookup_nameref(nameref, env) :
+    return env.lookup_nameref(nameref)
 
 
 
@@ -119,6 +123,127 @@ def f(x, env) :
 @add_top_level.register(OverloadDef)
 def f(x, env) :
     lookup_overloadable(x.name, env).overloads.append(x)
+
+
+
+#
+# compile_expr : (expr, env) -> (is_value, type)
+#
+
+compile_expr = multimethod()
+
+def compile_expr_as_value(x, env) :
+    is_value,result_type = compile_expr(x, env)
+    if not is_value :
+        raise_error("value expected", x)
+    return result_type
+
+def compile_expr_as_type(x, env) :
+    is_value,result_type = compile_expr(x, env)
+    if is_value :
+        raise_error("type expected", x)
+    return result_type
+
+def list_as_one(container, memberlist, kind) :
+    if len(memberlist) > 1 :
+        raise_error("only one %s allowed" % kind, memberlist[1])
+    if len(memberlist) < 1 :
+        raise_error("missing %s" % kind, container)
+    return memberlist[0]
+
+def list_as_n(n, container, memberlist, kind) :
+    if n == len(memberlist) :
+        return memberlist
+    if len(memberlist) == 0 :
+        raise_error("missing %s" % kind, container)
+    raise_error("incorrect number of %s" % kind, container)
+
+@compile_expr.register(AddressOfExpr)
+def f(x, env) :
+    return True, RefType(compile_expr_as_value(x.expr, env))
+
+@compile_expr.register(IndexExpr)
+def f(x, env) :
+    if type(x.expr) is NameRef :
+        entry = lookup_nameref(x.expr, env)
+        result = compile_named_index_expr(entry, x, env)
+        if result is not False :
+            return result
+    indexable_type = compile_expr_as_value(x.expr, env)
+    if type(indexable_type) is ArrayType :
+        return True, indexable_type.type
+    elif type(indexable_type) is ArrayValueType :
+        return True, indexable_type.type
+    else :
+        raise_error("array type expected", x.expr)
+
+
+# begin compile_named_index_expr
+
+compile_named_index_expr = multimethod(default=False)
+
+@compile_named_index_expr.register(ArrayTypeEntry)
+def f(entry, x, env) :
+    type_param = list_as_one(x, x.indexes, "type parameter")
+    return False, ArrayType(compile_expr_as_type(type_param, env))
+
+@compile_named_index_expr.register(ArrayValueTypeEntry)
+def f(entry, x, env) :
+    type_param,size = list_as_n(2, x, x.indexes, "type parameters")
+    if type(size) is not IntLiteral :
+        raise_error("int literal expected", size)
+    y = compile_expr_as_type(type_param, env)
+    return False, ArrayValueType(y, size.value)
+
+@compile_named_index_expr.register(RefTypeEntry)
+def f(entry, x, env) :
+    type_param = list_as_one(x, x.indexes, "type parameter")
+    return False, RefType(compile_expr_as_type(type_param, env))
+
+@compile_named_index_expr.register(RecordEntry)
+def f(entry, x, env) :
+    n_type_vars = len(entry.record_def.type_vars)
+    type_params = list_as_n(n_type_vars, x, x.indexes, "type parameters")
+    type_params = [compile_expr_as_type(y,env) for y in type_params]
+    return False, RecordType(entry, type_params)
+
+@compile_named_index_expr.register(StructEntry)
+def f (entry, x, env) :
+    n_type_vars = len(entry.record_def.type_vars)
+    type_params = list_as_n(n_type_vars, x, x.indexes, "type parameters")
+    type_params = [compile_expr_as_type(y,env) for y in type_params]
+    return False, RecordType(entry, type_params)
+
+# end compile_named_index_expr
+
+
+@compile_expr.register(CallExpr)
+def f(x, env) :
+    if type(x.expr) is NameRef :
+        entry = lookup_nameref(x.expr, env)
+        result = compile_named_call_expr(entry, x, env)
+        if result is not False :
+            return result
+    is_value,callable_type = compile_expr(x.expr, env)
+    if is_value :
+        raise_error("invalid call", x)
+    if type(callable_type) is RecordType :
+        field_types = compute_record_field_types(callable_type)
+        pass
+    elif type(callable_type) is StructType :
+        pass
+    else :
+        raise_error("invalid call", x)
+    # handle record/struct constructors
+
+def compute_record_field_types(record_type) :
+    pass
+
+# begin compile_named_call_expr
+
+compile_named_call_expr = multimethod(default=False)
+
+# end compile_named_call_expr
 
 
 
