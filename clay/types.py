@@ -3,7 +3,17 @@ from clay.multimethod import multimethod
 __all__ = ["Type", "PrimitiveType", "bool_type", "int_type", "char_type",
            "void_type", "TupleType", "ArrayType", "ArrayValueType", "RefType",
            "RecordType", "StructType",
-           "type_equals"]
+           "type_equals",
+           "is_primitive_type", "is_bool_type", "is_int_type", "is_char_type",
+           "is_void_type", "is_tuple_type", "is_array_type",
+           "is_array_value_type", "is_ref_type",
+           "is_record_type", "is_struct_type"]
+
+
+
+#
+# types
+#
 
 class Type(object) :
     pass
@@ -89,3 +99,21 @@ def f(x, y) :
 def f(x, y) :
     return (x.struct_entry is y.struct_entry) and \
         type_list_equals(x.type_params, y.type_params)
+
+
+
+#
+# type predicates
+#
+
+def is_primitive_type(t) : return type(t) is PrimitiveType
+def is_bool_type(t) : return type_equals(t, bool_type)
+def is_int_type(t) : return type_equals(t, int_type)
+def is_char_type(t) : return type_equals(t, char_type)
+def is_void_type(t) : return type_equals(t, void_type)
+def is_tuple_type(t) : return type(t) is TupleType
+def is_array_type(t) : return type(t) is ArrayType
+def is_array_value_type(t) : return type(t) is ArrayValueType
+def is_ref_type(t) : return type(t) is RefType
+def is_record_type(t) : return type(t) is RecordType
+def is_struct_type(t) : return type(t) is StructType
