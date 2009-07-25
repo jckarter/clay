@@ -96,7 +96,6 @@ suffix = choice(index_suffix, call_suffix, field_ref_suffix,
 def fold_suffixes(expr, suffixes) :
     for suffix in suffixes :
         suffix.expr = expr
-        suffix.location = expr.location
         expr = suffix
     return expr
 
