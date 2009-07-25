@@ -2,7 +2,7 @@ from clay.parserlib import *
 from clay import tokens as t
 from clay import lexer
 from clay.ast import *
-from clay.error import raise_error
+from clay.error import Location, raise_error
 
 __all__ = ["parse"]
 
