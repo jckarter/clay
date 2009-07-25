@@ -38,6 +38,8 @@ class Env(object) :
     def add_(self, name, value) :
         assert type(name) is str
         assert not name in self.entries
+        assert isinstance(value, EnvEntry)
+        value.env = self
         self.entries[name] = value
 
     def add_builtin(self, name, value) :
@@ -78,7 +80,7 @@ class Env(object) :
 #
 
 class EnvEntry(object) :
-    pass
+    env = None
 
 
 
