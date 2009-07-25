@@ -229,15 +229,42 @@ def f(x, env) :
         raise_error("invalid call", x)
     if type(callable_type) is RecordType :
         field_types = compute_record_field_types(callable_type)
-        pass
+        if len(x.args) != len(field_types) :
+            raise_error("incorrect number of arguments", x)
+        for arg, field_type in zip(x.args, field_types) :
+            arg_type = compile_expr_as_value(arg, env)
+            if not type_equals(arg_type, field_type) :
+                raise_error("type mismatch in argument", arg)
+        return callable_type
     elif type(callable_type) is StructType :
-        pass
+        field_types = compute_struct_field_types(callable_type)
+        if len(x.args) != len(field_types) :
+            raise_error("incorrect number of arguments", x)
+        for arg, field_type in zip(x.args, field_types) :
+            arg_type = compile_expr_as_value(arg, env)
+            if not type_equals(arg_type, field_type) :
+                raise_error("type mismatch in argument", arg)
+        return callable_type
     else :
         raise_error("invalid call", x)
-    # handle record/struct constructors
 
 def compute_record_field_types(record_type) :
-    pass
+    rentry = record_type.record_entry
+    rdef = rentry.record_def
+    env = Env(rentry.env)
+    assert len(rdef.type_vars) == len(record_type.type_params)
+    for tvar, tparam in zip(rdef.type_vars, record_type.type_params) :
+        env.add_name(tvar, tparam)
+    return [compile_expr_as_type(f.type,env) for f in rdef.fields]
+
+def compute_struct_field_types(struct_type) :
+    sentry = struct_type.struct_entry
+    sdef = sentry.struct_def
+    env = Env(sentry.env)
+    assert len(sdef.type_vars) == len(struct_type.type_params)
+    for tvar, tparam in zip(sdef.type_vars, struct_type.type_params) :
+        env.add_name(tvar, tparam)
+    return [compile_expr_as_type(f.type,env) for f in sdef.fields]
 
 # begin compile_named_call_expr
 
