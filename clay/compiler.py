@@ -10,27 +10,27 @@ from clay.multimethod import multimethod
 # env operations
 #
 
-def add_name(env, name, entry) :
-    assert type(name) is Name
+def add_ident(env, name, entry) :
+    assert type(name) is Identifier
     if env.has_entry(name.s) :
         raise_error("name redefinition", name)
     env.add(name.s, entry)
 
-def lookup_name(env, name) :
-    assert type(name) is Name
+def lookup_ident(env, name) :
+    assert type(name) is Identifier
     entry = env.lookup(name.s)
     if entry is None :
         raise_error("undefined name", name)
     return entry
 
 def lookup_predicate(env, name) :
-    x = lookup_name(env, name)
+    x = lookup_ident(env, name)
     if type(x) is not PredicateEntry :
         raise_error("not a predicate", name)
     return x
 
 def lookup_overloadable(env, name) :
-    x = lookup_name(env, name)
+    x = lookup_ident(env, name)
     if type(x) is not OverloadableEntry :
         raise_error("not an overloadable", name)
     return x
@@ -100,7 +100,7 @@ add_top_level = multimethod()
 
 @add_top_level.register(PredicateDef)
 def f(x, env) :
-    add_name(env, x.name, PredicateEntry(env,x))
+    add_ident(env, x.name, PredicateEntry(env,x))
 
 @add_top_level.register(InstanceDef)
 def f(x, env) :
@@ -109,25 +109,25 @@ def f(x, env) :
 
 @add_top_level.register(RecordDef)
 def f(x, env) :
-    add_name(env, x.name, RecordEntry(env,x))
+    add_ident(env, x.name, RecordEntry(env,x))
 
 @add_top_level.register(StructDef)
 def f(x, env) :
-    add_name(env, x.name, StructEntry(env,x))
+    add_ident(env, x.name, StructEntry(env,x))
 
 @add_top_level.register(VariableDef)
 def f(x, env) :
     def_entry = VariableDefEntry(env, x)
     for i,variable in enumerate(x.variables) :
-        add_name(env, variable.name, VariableEntry(env,def_entry,i))
+        add_ident(env, variable.name, VariableEntry(env,def_entry,i))
 
 @add_top_level.register(ProcedureDef)
 def f(x, env) :
-    add_name(env, x.name, ProcedureEntry(env,x))
+    add_ident(env, x.name, ProcedureEntry(env,x))
 
 @add_top_level.register(OverloadableDef)
 def f(x, env) :
-    add_name(env, x.name, OverloadableEntry(env,x))
+    add_ident(env, x.name, OverloadableEntry(env,x))
 
 @add_top_level.register(OverloadDef)
 def f(x, env) :
@@ -175,7 +175,7 @@ def f(x, env) :
 @compile_expr.register(IndexExpr)
 def f(x, env) :
     if type(x.expr) is NameRef :
-        entry = lookup_name(env, x.expr.name)
+        entry = lookup_ident(env, x.expr.name)
         result = compile_named_index_expr(entry, x, env)
         if result is not False :
             return result
@@ -233,7 +233,7 @@ def f(entry, x, env) :
 @compile_expr.register(CallExpr)
 def f(x, env) :
     if type(x.expr) is NameRef :
-        entry = lookup_name(env, x.expr.name)
+        entry = lookup_ident(env, x.expr.name)
         result = compile_named_call_expr(entry, x, env)
         if result is not False :
             return result
@@ -258,7 +258,7 @@ def compute_field_types(t) :
     env = Env(t.entry.env)
     assert len(ast.type_vars) == len(t.type_params)
     for tvar, tparam in zip(ast.type_vars, t.type_params) :
-        add_name(env, tvar, tparam)
+        add_ident(env, tvar, tparam)
     return [compile_expr_as_type(field.type, env) for field in ast.fields]
 
 
@@ -596,7 +596,7 @@ def bind_type_variables(tvar_names, env) :
     for tvar_name in tvar_names :
         tvar = TypeVariable(tvar_name)
         tvars.append(tvar)
-        add_name(env, tvar_name, tvar)
+        add_ident(env, tvar_name, tvar)
     return tvars
 
 @compile_named_call_expr.register(RecordEntry)
