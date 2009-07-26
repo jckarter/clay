@@ -102,7 +102,9 @@ def f(x, env) :
 
 @add_top_level.register(InstanceDef)
 def f(x, env) :
-    lookup_predicate(x.name, env).instances.append(x)
+    entry = InstanceEntry(x)
+    entry.env = env
+    lookup_predicate(x.name, env).instances.append(entry)
 
 @add_top_level.register(RecordDef)
 def f(x, env) :
@@ -115,6 +117,7 @@ def f(x, env) :
 @add_top_level.register(VariableDef)
 def f(x, env) :
     def_entry = VariableDefEntry(x)
+    def_entry.env = env
     for i,variable in enumerate(x.variables) :
         env.add_name(variable.name, VariableEntry(def_entry,i))
 
@@ -128,7 +131,9 @@ def f(x, env) :
 
 @add_top_level.register(OverloadDef)
 def f(x, env) :
-    lookup_overloadable(x.name, env).overloads.append(x)
+    entry = OverloadEntry(x)
+    entry.env = env
+    lookup_overloadable(x.name, env).overloads.append(entry)
 
 
 
@@ -466,7 +471,7 @@ def f(entry, x, env) :
     arg_type = compile_expr_as_value(arg, env)
     if not is_int_type(arg_type) :
         raise_error("Int type expected", arg)
-    return char_type
+    return True, char_type
 
 @compile_named_call_expr.register(PrimOpCharEquals)
 def f(entry, x, env) :
@@ -475,7 +480,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_char_type(arg_type) :
             raise_error("Char type expected", y)
-    return bool_type
+    return True, bool_type
 
 @compile_named_call_expr.register(PrimOpCharLesser)
 def f(entry, x, env) :
@@ -484,7 +489,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_char_type(arg_type) :
             raise_error("Char type expected", y)
-    return bool_type
+    return True, bool_type
 
 @compile_named_call_expr.register(PrimOpCharLesserEquals)
 def f(entry, x, env) :
@@ -493,7 +498,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_char_type(arg_type) :
             raise_error("Char type expected", y)
-    return bool_type
+    return True, bool_type
 
 @compile_named_call_expr.register(PrimOpCharGreater)
 def f(entry, x, env) :
@@ -502,7 +507,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_char_type(arg_type) :
             raise_error("Char type expected", y)
-    return bool_type
+    return True, bool_type
 
 @compile_named_call_expr.register(PrimOpCharGreaterEquals)
 def f(entry, x, env) :
@@ -511,7 +516,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_char_type(arg_type) :
             raise_error("Char type expected", y)
-    return bool_type
+    return True, bool_type
 
 @compile_named_call_expr.register(PrimOpIntAdd)
 def f(entry, x, env) :
@@ -520,7 +525,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return int_type
+    return True, int_type
 
 @compile_named_call_expr.register(PrimOpIntSubtract)
 def f(entry, x, env) :
@@ -529,7 +534,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return int_type
+    return True, int_type
 
 @compile_named_call_expr.register(PrimOpIntMultiply)
 def f(entry, x, env) :
@@ -538,7 +543,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return int_type
+    return True, int_type
 
 @compile_named_call_expr.register(PrimOpIntDivide)
 def f(entry, x, env) :
@@ -547,7 +552,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return int_type
+    return True, int_type
 
 @compile_named_call_expr.register(PrimOpIntModulus)
 def f(entry, x, env) :
@@ -556,7 +561,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return int_type
+    return True, int_type
 
 @compile_named_call_expr.register(PrimOpIntNegate)
 def f(entry, x, env) :
@@ -564,7 +569,7 @@ def f(entry, x, env) :
     arg_type = compile_expr_as_value(arg, env)
     if not is_int_type(arg_type) :
         raise_error("Int type expected", arg)
-    return int_type
+    return True, int_type
 
 @compile_named_call_expr.register(PrimOpIntEquals)
 def f(entry, x, env) :
@@ -573,7 +578,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return bool_type
+    return True, bool_type
 
 @compile_named_call_expr.register(PrimOpIntLesser)
 def f(entry, x, env) :
@@ -582,7 +587,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return bool_type
+    return True, bool_type
 
 @compile_named_call_expr.register(PrimOpIntLesserEquals)
 def f(entry, x, env) :
@@ -591,7 +596,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return bool_type
+    return True, bool_type
 
 @compile_named_call_expr.register(PrimOpIntGreater)
 def f(entry, x, env) :
@@ -600,7 +605,7 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return bool_type
+    return True, bool_type
 
 @compile_named_call_expr.register(PrimOpIntGreaterEquals)
 def f(entry, x, env) :
@@ -609,7 +614,57 @@ def f(entry, x, env) :
         arg_type = compile_expr_as_value(y, env)
         if not is_int_type(arg_type) :
             raise_error("Int type expected", y)
-    return bool_type
+    return True, bool_type
+
+def bind_type_variables(tvar_names, env) :
+    tvars = []
+    for tvar_name in tvar_names :
+        tvar = TypeVariable(tvar_name)
+        tvars.append(tvar)
+        env.add_name(tvar_name, tvar)
+    return tvars
+
+@compile_named_call_expr.register(RecordEntry)
+def f(entry, x, env) :
+    rdef = entry.record_def
+    env2 = Env(entry.env)
+    tvars = bind_type_variables(rdef.type_vars, env2)
+    if len(x.args) != len(rdef.fields) :
+        raise_error("incorrect number of arguments", x)
+    for field, arg in zip(rdef.fields, x.args) :
+        field_type = compile_expr_as_type(field.type, env2)
+        arg_type = compile_expr_as_value(arg, env)
+        if not type_unify(arg_type, field_type) :
+            raise_error("type mismatch", arg)
+    type_params = [tvar.deref() for tvar in tvars]
+    return True, RecordType(entry, type_params)
+
+@compile_named_call_expr.register(StructEntry)
+def f(entry, x, env) :
+    sdef = entry.struct_def
+    env2 = Env(entry.env)
+    tvars = bind_type_variables(sdef.type_vars, env2)
+    if len(x.args) != len(sdef.fields) :
+        raise_error("incorrect number of arguments", x)
+    for field, arg in zip(sdef.fields, x.args) :
+        field_type = compile_expr_as_type(field.type, env2)
+        arg_type = compile_expr_as_value(arg, env)
+        if not type_unify(arg_type, field_type) :
+            raise_error("type mismatch", arg)
+    type_params = [tvar.deref() for tvar in tvars]
+    return True, StructType(entry, type_params)
+
+@compile_named_call_expr.register(ProcedureEntry)
+def f(entry, x, env) :
+    assert False
+
+@compile_named_call_expr.register(OverloadableEntry)
+def f(entry, x, env) :
+    assert False
+
+@compile_named_call_expr.register(TypeVarEntry)
+def f(entry, x, env) :
+    assert False
 
 # end compile_named_call_expr
 
