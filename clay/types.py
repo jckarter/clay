@@ -1,4 +1,5 @@
 from clay.multimethod import multimethod
+from clay.error import raise_error
 
 __all__ = ["Type", "bool_type", "int_type", "char_type", "void_type",
            "TupleType", "ArrayType", "ArrayValueType", "RefType",
@@ -126,12 +127,19 @@ def f(x, y) :
 #
 
 class TypeVariable(Type) :
-    def __init__(self) :
+    def __init__(self, name) :
+        self.name = name
         self.type = None
 
     def deref(self) :
+        t = self.deref_()
+        if t is None :
+            raise_error("unresolved type variable", self.name)
+        return t
+
+    def deref_(self) :
         if type(self.type) is TypeVariable :
-            return self.type.deref()
+            return self.type.deref_()
         return self.type
 
 
