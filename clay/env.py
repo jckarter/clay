@@ -52,23 +52,23 @@ class Env(object) :
             raise_error("name redefinition", name)
         self.add_(name.s, value)
 
-    def lookup_(self, name) :
+    def lookup_str(self, name) :
         assert type(name) is str
         entry = self.entries.get(name)
         if (entry is None) and (self.parent is not None) :
-            return self.parent.lookup_(name)
+            return self.parent.lookup_str(name)
         return entry
 
     def lookup_name(self, name) :
         assert type(name) is Name
-        entry = self.lookup_(name.s)
+        entry = self.lookup_str(name.s)
         if entry is None :
             raise_error("undefined name", name)
         return entry
 
     def lookup_nameref(self, nameref) :
         assert type(nameref) is NameRef
-        entry = self.lookup_(nameref.s)
+        entry = self.lookup_str(nameref.s)
         if entry is None :
             raise_error("undefined name", nameref)
         return entry

@@ -77,6 +77,12 @@ def lookup_overloadable(name, env) :
 def lookup_nameref(nameref, env) :
     return env.lookup_nameref(nameref)
 
+def lookup_field(fieldname, env, node) :
+    ftype = env.lookup_str(fieldname)
+    if ftype is None :
+        raise_error("invalid field", node)
+    return ftype
+
 
 
 #
@@ -144,14 +150,14 @@ def compile_expr_as_type(x, env) :
         raise_error("type expected", x)
     return result_type
 
-def list_as_one(container, memberlist, kind) :
+def take_one(container, memberlist, kind) :
     if len(memberlist) > 1 :
         raise_error("only one %s allowed" % kind, memberlist[1])
     if len(memberlist) < 1 :
         raise_error("missing %s" % kind, container)
     return memberlist[0]
 
-def list_as_n(n, container, memberlist, kind) :
+def take_n(n, container, memberlist, kind) :
     if n == len(memberlist) :
         return memberlist
     if len(memberlist) == 0 :
@@ -170,52 +176,55 @@ def f(x, env) :
         if result is not False :
             return result
     indexable_type = compile_expr_as_value(x.expr, env)
-    if type(indexable_type) is ArrayType :
+    if is_array_type(indexable_type) :
         return True, indexable_type.type
-    elif type(indexable_type) is ArrayValueType :
+    elif is_array_value_type(indexable_type) :
         return True, indexable_type.type
     else :
         raise_error("array type expected", x.expr)
 
 
+
 # begin compile_named_index_expr
 
 compile_named_index_expr = multimethod(default=False)
 
 @compile_named_index_expr.register(ArrayTypeEntry)
 def f(entry, x, env) :
-    type_param = list_as_one(x, x.indexes, "type parameter")
+    type_param = take_one(x, x.indexes, "type parameter")
     return False, ArrayType(compile_expr_as_type(type_param, env))
 
 @compile_named_index_expr.register(ArrayValueTypeEntry)
 def f(entry, x, env) :
-    type_param,size = list_as_n(2, x, x.indexes, "type parameters")
+    type_param,size = take_n(2, x, x.indexes, "type parameters")
     if type(size) is not IntLiteral :
         raise_error("int literal expected", size)
+    if size.value < 0 :
+        raise_error("array size cannot be negative", size)
     y = compile_expr_as_type(type_param, env)
     return False, ArrayValueType(y, size.value)
 
 @compile_named_index_expr.register(RefTypeEntry)
 def f(entry, x, env) :
-    type_param = list_as_one(x, x.indexes, "type parameter")
+    type_param = take_one(x, x.indexes, "type parameter")
     return False, RefType(compile_expr_as_type(type_param, env))
 
 @compile_named_index_expr.register(RecordEntry)
 def f(entry, x, env) :
     n_type_vars = len(entry.record_def.type_vars)
-    type_params = list_as_n(n_type_vars, x, x.indexes, "type parameters")
+    type_params = take_n(n_type_vars, x, x.indexes, "type parameters")
     type_params = [compile_expr_as_type(y,env) for y in type_params]
     return False, RecordType(entry, type_params)
 
 @compile_named_index_expr.register(StructEntry)
-def f (entry, x, env) :
+def f(entry, x, env) :
     n_type_vars = len(entry.record_def.type_vars)
-    type_params = list_as_n(n_type_vars, x, x.indexes, "type parameters")
+    type_params = take_n(n_type_vars, x, x.indexes, "type parameters")
     type_params = [compile_expr_as_type(y,env) for y in type_params]
     return False, RecordType(entry, type_params)
 
 # end compile_named_index_expr
-
+
 
 @compile_expr.register(CallExpr)
 def f(x, env) :
@@ -227,7 +236,7 @@ def f(x, env) :
     is_value,callable_type = compile_expr(x.expr, env)
     if is_value :
         raise_error("invalid call", x)
-    if type(callable_type) is RecordType :
+    if is_record_type(callable_type) :
         field_types = compute_record_field_types(callable_type)
         if len(x.args) != len(field_types) :
             raise_error("incorrect number of arguments", x)
@@ -236,7 +245,7 @@ def f(x, env) :
             if not type_equals(arg_type, field_type) :
                 raise_error("type mismatch in argument", arg)
         return callable_type
-    elif type(callable_type) is StructType :
+    elif is_struct_type(callable_type) :
         field_types = compute_struct_field_types(callable_type)
         if len(x.args) != len(field_types) :
             raise_error("incorrect number of arguments", x)
@@ -266,12 +275,344 @@ def compute_struct_field_types(struct_type) :
         env.add_name(tvar, tparam)
     return [compile_expr_as_type(f.type,env) for f in sdef.fields]
 
+
+
 # begin compile_named_call_expr
 
 compile_named_call_expr = multimethod(default=False)
 
-# end compile_named_call_expr
+@compile_named_call_expr.register(PrimOpDefault)
+def f(entry, x, env) :
+    arg_type = compile_expr_as_type(take_one(x,x.args,"argument"), env)
+    return True, arg_type
 
+@compile_named_call_expr.register(PrimOpRefGet)
+def f(entry, x, env) :
+    arg = take_one(x, x.args, "argument")
+    ref_type = compile_expr_as_value(arg, env)
+    if not is_ref_type(ref_type) :
+        raise_error("Ref type expected", arg)
+    return True, ref_type.type
+
+@compile_named_call_expr.register(PrimOpRefSet)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    ref_type, value_type = [compile_expr_as_value(y,env) for y in args]
+    if not is_ref_type(ref_type) :
+        raise_error("Ref type expected", args[0])
+    if not type_equals(ref_type.type, value_type) :
+        raise_error("type mismatch", args[1])
+    return True, void_type
+
+@compile_named_call_expr.register(PrimOpRefOffset)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    ref_type, offset_type = [compile_expr_as_value(y,env) for y in args]
+    if not is_ref_type(ref_type) :
+        raise_error("Ref type expected", args[0])
+    if not is_int_type(offset_type) :
+        raise_error("Int type expected", args[1])
+    return True, ref_type
+
+@compile_named_call_expr.register(PrimOpRefDifference)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    ref_type1, ref_type2 = [compile_expr_as_value(y,env) for y in args]
+    if not is_ref_type(ref_type1) :
+        raise_error("Ref type expected", args[0])
+    if not is_ref_type(ref_type2) :
+        raise_error("Ref type expected", args[1])
+    if not type_equals(ref_type1, ref_type2) :
+        raise_error("reference types differ", args[1])
+    return True, int_type
+
+@compile_named_call_expr.register(PrimOpTupleRef)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    tuple_ref = compile_expr_as_value(args[0], env)
+    if (not is_ref_type(tuple_ref)) or (not is_tuple_type(tuple_ref.type)) :
+        raise_error("reference to tuple type expected", args[0])
+    if type(args[1]) is not IntLiteral :
+        raise_error("int literal expected", args[1])
+    i = args[1].value
+    if (i < 0) or (i >= len(tuple_ref.type.types)) :
+        raise_error("tuple index out of range", args[1])
+    return True, tuple_ref.type.types[i]
+
+@compile_named_call_expr.register(PrimOpNewArray)
+def f(entry, x, env) :
+    if len(x.args) == 1 :
+        element_type = compile_expr_as_type(x.args[0], env)
+        return True, ArrayType(element_type)
+    elif len(x.args) == 2 :
+        is_value, arg1_type = compile_expr(x.args[0], env)
+        arg2_type = compile_expr_as_value(x.args[1], env)
+        if is_value :
+            if not is_int_type(arg1_type) :
+                raise_error("Int type expected", x.args[0])
+            return True, ArrayType(arg2_type)
+        else :
+            if not is_int_type(arg2_type) :
+                raise_error("Int type expected", x.args[1])
+            return True, ArrayType(arg1_type)
+    else :
+        raise_error("incorrect number of arguments", x)
+
+@compile_named_call_expr.register(PrimOpArraySize)
+def f(entry, x, env) :
+    arg = take_one(x, x.args, "argument")
+    arg_type = compile_expr_as_value(arg, env)
+    if not is_array_type(arg_type) :
+        raise_error("Array type expected", arg)
+    return True, int_type
+
+@compile_named_call_expr.register(PrimOpArrayRef)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    arg_type1, arg_type2 = [compile_expr_as_value(y,env) for y in args]
+    if not is_array_type(arg_type1) :
+        raise_error("Array type expected", args[0])
+    if not is_int_type(arg_type2) :
+        raise_error("Int type expected", args[1])
+    return True, RefType(arg_type1.type)
+
+@compile_named_call_expr.register(PrimOpArrayValue)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    if type(args[0]) is IntLiteral :
+        size = args[0].value
+        if size < 0 :
+            raise_error("invalid array size", args[0])
+        element_type = compile_expr_as_value(args[1], env)
+        return True, ArrayValueType(element_type, size)
+    else :
+        arg1_type = compile_expr_as_type(args[0], env)
+        if type(args[1]) is not IntLiteral :
+            raise_error("Int literal expected", args[1])
+        size = args[1].value
+        if size < 0 :
+            raise_error("invalid array size", args[1])
+        return True, ArrayValueType(arg1_type, size)
+
+@compile_named_call_expr.register(PrimOpArrayValueRef)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    arg1_type, arg2_type = [compile_expr_as_value(y, env) for y in args]
+    if not is_array_value_type(arg1_type) :
+        raise_error("ArrayValue type expected", args[0])
+    if not is_int_type(arg2_type) :
+        raise_error("Int type expected", args[1])
+    return True, arg1_type.type
+
+def compute_record_field_type_map(record_type) :
+    ftypes = compute_record_field_types(record_type)
+    fields = record_type.record_entry.record_def.fields
+    env = Env()
+    for f,ftype in zip(fields,ftypes) :
+        env.add_name(f.name, ftype)
+    return env
+
+def compute_struct_field_type_map(struct_type) :
+    ftypes = compute_struct_field_types(struct_type)
+    fields = struct_type.struct_entry.struct_def.fields
+    env = Env()
+    for f,ftype in zip(fields,ftypes) :
+        env.add_name(f.name, ftype)
+    return env
+
+@compile_named_call_expr.register(PrimOpRecordRef)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    arg1_type = compile_expr_as_value(args[0], env)
+    if not is_record_type(arg1_type) :
+        raise_error("record type expected", args[0])
+    if type(args[1]) is not StringLiteral :
+        raise_error("string literal expected", args[1])
+    type_map = compute_record_field_type_map(arg1_type)
+    ftype = lookup_field(args[1].value, type_map, args[1])
+    return True, RefType(ftype)
+
+@compile_named_call_expr.register(PrimOpStructRef)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    arg1_type = compile_expr_as_value(args[0], env)
+    if (not is_ref_type(arg1_type)) or (not is_struct_type(arg1_type.type)) :
+        raise_error("reference to struct type expected", args[0])
+    if type(args[1]) is not StringLiteral :
+        raise_error("string literal expected", args[1])
+    type_map = compute_struct_field_type_map(arg1_type.type)
+    ftype = lookup_field(args[1].value, type_map, args[1])
+    return True, RefType(ftype)
+
+@compile_named_call_expr.register(PrimOpBoolNot)
+def f(entry, x, env) :
+    arg = take_one(x, x.xargs, "argument")
+    arg_type = compile_expr_as_value(arg, env)
+    if not is_bool_type(arg_type) :
+        raise_error("Bool type expected", arg)
+    return True, bool_type
+
+@compile_named_call_expr.register(PrimOpCharToInt)
+def f(entry, x, env) :
+    arg = take_one(x, x.args, "argument")
+    arg_type = compile_expr_as_value(arg, env)
+    if not is_char_type(arg_type) :
+        raise_error("Char type expected", arg)
+    return True, int_type
+
+@compile_named_call_expr.register(PrimOpIntToChar)
+def f(entry, x, env) :
+    arg = take_one(x, x.args, "argument")
+    arg_type = compile_expr_as_value(arg, env)
+    if not is_int_type(arg_type) :
+        raise_error("Int type expected", arg)
+    return char_type
+
+@compile_named_call_expr.register(PrimOpCharEquals)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_char_type(arg_type) :
+            raise_error("Char type expected", y)
+    return bool_type
+
+@compile_named_call_expr.register(PrimOpCharLesser)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_char_type(arg_type) :
+            raise_error("Char type expected", y)
+    return bool_type
+
+@compile_named_call_expr.register(PrimOpCharLesserEquals)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_char_type(arg_type) :
+            raise_error("Char type expected", y)
+    return bool_type
+
+@compile_named_call_expr.register(PrimOpCharGreater)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_char_type(arg_type) :
+            raise_error("Char type expected", y)
+    return bool_type
+
+@compile_named_call_expr.register(PrimOpCharGreaterEquals)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_char_type(arg_type) :
+            raise_error("Char type expected", y)
+    return bool_type
+
+@compile_named_call_expr.register(PrimOpIntAdd)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return int_type
+
+@compile_named_call_expr.register(PrimOpIntSubtract)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return int_type
+
+@compile_named_call_expr.register(PrimOpIntMultiply)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return int_type
+
+@compile_named_call_expr.register(PrimOpIntDivide)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return int_type
+
+@compile_named_call_expr.register(PrimOpIntModulus)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return int_type
+
+@compile_named_call_expr.register(PrimOpIntNegate)
+def f(entry, x, env) :
+    arg = take_one(x, x.args, "argument")
+    arg_type = compile_expr_as_value(arg, env)
+    if not is_int_type(arg_type) :
+        raise_error("Int type expected", arg)
+    return int_type
+
+@compile_named_call_expr.register(PrimOpIntEquals)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return bool_type
+
+@compile_named_call_expr.register(PrimOpIntLesser)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return bool_type
+
+@compile_named_call_expr.register(PrimOpIntLesserEquals)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return bool_type
+
+@compile_named_call_expr.register(PrimOpIntGreater)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return bool_type
+
+@compile_named_call_expr.register(PrimOpIntGreaterEquals)
+def f(entry, x, env) :
+    args = take_n(2, x, x.args, "arguments")
+    for y in args :
+        arg_type = compile_expr_as_value(y, env)
+        if not is_int_type(arg_type) :
+            raise_error("Int type expected", y)
+    return bool_type
+
+# end compile_named_call_expr
+
 
 
 #

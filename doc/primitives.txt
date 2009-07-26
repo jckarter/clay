@@ -37,7 +37,8 @@ new_array[T](n:Int, v:T):Array[T]
 array_size[T](a:Array[T]):Int
 array_ref[T](a:Array[T], i:Int): Ref[T]
 
-array_value[T](type T, n:IntLiteral, x:T): ArrayValue[T,n]
+array_value[T](type T, n:IntLiteral): ArrayValue[T,n]
+array_value[T](n:IntLiteral, x:T): ArrayValue[T,n]
 array_value_ref[T](a:Ref[ArrayValue[T,n]], i:Int): Ref[T]
 
 T(v1, v2, ...): record constructor
