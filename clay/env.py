@@ -20,9 +20,10 @@ __all__ = ["Env", "EnvEntry",
            "PrimOpIntDivide", "PrimOpIntModulus", "PrimOpIntNegate",
            "PrimOpIntEquals", "PrimOpIntLesser", "PrimOpIntLesserEquals",
            "PrimOpIntGreater", "PrimOpIntGreaterEquals",
-           "PredicateEntry", "RecordEntry", "StructEntry", "VariableDefEntry",
-           "VariableEntry", "ProcedureEntry", "OverloadableEntry",
-           "TypeVarEntry", "LocalVariableDefEntry", "LocalVariableEntry"]
+           "PredicateEntry", "InstanceEntry", "RecordEntry", "StructEntry",
+           "VariableDefEntry", "VariableEntry", "ProcedureEntry",
+           "OverloadableEntry", "OverloadEntry", "TypeVarEntry",
+           "LocalVariableDefEntry", "LocalVariableEntry"]
 
 
 
@@ -149,6 +150,10 @@ class PredicateEntry(EnvEntry) :
         self.predicate_def = predicate_def
         self.instances = []
 
+class InstanceEntry(EnvEntry) :
+    def __init__(self, instance_def) :
+        self.instance_def = instance_def
+
 class RecordEntry(EnvEntry) :
     def __init__(self, record_def) :
         self.record_def = record_def
@@ -175,7 +180,12 @@ class OverloadableEntry(EnvEntry) :
         self.overloadable_def = overloadable_def
         self.overloads = []
 
+class OverloadEntry(EnvEntry) :
+    def __init__(self, overload_def) :
+        self.overload_def = overload_def
 
+
+
 #
 # local entries
 #
