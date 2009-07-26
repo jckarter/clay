@@ -23,7 +23,7 @@ __all__ = ["Env", "EnvEntry",
            "PredicateEntry", "InstanceEntry", "RecordEntry", "StructEntry",
            "VariableDefEntry", "VariableEntry", "ProcedureEntry",
            "OverloadableEntry", "OverloadEntry", "TypeVarEntry",
-           "LocalVariableDefEntry", "LocalVariableEntry"]
+           "LocalVariableEntry"]
 
 
 
@@ -36,42 +36,20 @@ class Env(object) :
         self.parent = parent
         self.entries = {}
 
-    def add_(self, name, value) :
+    def has_entry(self, name) :
+        return name in self.entries
+
+    def add(self, name, entry) :
         assert type(name) is str
-        assert not name in self.entries
-        assert isinstance(value, EnvEntry)
-        value.env = self
-        self.entries[name] = value
+        assert name not in self.entries
+        assert isinstance(entry, EnvEntry)
+        self.entries[name] = entry
 
-    def add_builtin(self, name, value) :
-        assert type(name) is str
-        self.add_(name, value)
-
-    def add_name(self, name, value) :
-        assert type(name) is Name
-        if name.s in self.entries :
-            raise_error("name redefinition", name)
-        self.add_(name.s, value)
-
-    def lookup_str(self, name) :
+    def lookup(self, name) :
         assert type(name) is str
         entry = self.entries.get(name)
         if (entry is None) and (self.parent is not None) :
-            return self.parent.lookup_str(name)
-        return entry
-
-    def lookup_name(self, name) :
-        assert type(name) is Name
-        entry = self.lookup_str(name.s)
-        if entry is None :
-            raise_error("undefined name", name)
-        return entry
-
-    def lookup_nameref(self, nameref) :
-        assert type(nameref) is NameRef
-        entry = self.lookup_str(nameref.s)
-        if entry is None :
-            raise_error("undefined name", nameref)
+            return self.parent.lookup(name)
         return entry
 
 
@@ -81,7 +59,9 @@ class Env(object) :
 #
 
 class EnvEntry(object) :
-    env = None
+    def __init__(self, env, ast) :
+        self.env = env
+        self.ast = ast
 
 
 
@@ -146,43 +126,33 @@ class PrimOpIntGreaterEquals(EnvEntry) : pass
 #
 
 class PredicateEntry(EnvEntry) :
-    def __init__(self, predicate_def) :
-        self.predicate_def = predicate_def
+    def __init__(self, env, ast) :
+        super(PredicateEntry, self).__init__(env, ast)
         self.instances = []
 
-class InstanceEntry(EnvEntry) :
-    def __init__(self, instance_def) :
-        self.instance_def = instance_def
+class InstanceEntry(EnvEntry) : pass
 
-class RecordEntry(EnvEntry) :
-    def __init__(self, record_def) :
-        self.record_def = record_def
+class RecordEntry(EnvEntry) : pass
 
-class StructEntry(EnvEntry) :
-    def __init__(self, struct_def) :
-        self.struct_def = struct_def
+class StructEntry(EnvEntry) : pass
 
-class VariableDefEntry(object) :
-    def __init__(self, variable_def) :
-        self.variable_def = variable_def
+class VariableDefEntry(object) : pass
 
 class VariableEntry(EnvEntry) :
-    def __init__(self, def_entry, index) :
+    def __init__(self, env, def_entry, index) :
+        ast = def_entry.ast.variables[index]
+        super(VariableEntry, self).__init__(env, ast)
         self.def_entry = def_entry
         self.index = index
 
-class ProcedureEntry(EnvEntry) :
-    def __init__(self, procedure_def) :
-        self.procedure_def = procedure_def
+class ProcedureEntry(EnvEntry) : pass
 
 class OverloadableEntry(EnvEntry) :
-    def __init__(self, overloadable_def) :
-        self.overloadable_def = overloadable_def
+    def __init__(self, env, ast) :
+        super(OverloadableEntry, self).__init__(env, ast)
         self.overloads = []
 
-class OverloadEntry(EnvEntry) :
-    def __init__(self, overload_def) :
-        self.overload_def = overload_def
+class OverloadEntry(EnvEntry) : pass
 
 
 
@@ -191,18 +161,11 @@ class OverloadEntry(EnvEntry) :
 #
 
 class TypeVarEntry(EnvEntry) :
-    def __init__(self, type) :
+    def __init__(self, env, ast, type) :
+        super(TypeVarEntry, self).__init__(env, ast)
         self.type = type
 
-class ValueArgumentEntry(EnvEntry) :
-    def __init__(self, arg) :
-        self.arg = arg
-
-class LocalVariableDefEntry(object) :
-    def __init__(self, local_variable_def) :
-        self.local_variable_def = local_variable_def
-
 class LocalVariableEntry(EnvEntry) :
-    def __init__(self, def_entry, index) :
-        self.def_entry = def_entry
-        self.index = index
+    def __init__(self, env, ast, type) :
+        super(LocalVariableEntry, self).__init__(env, ast)
+        self.type = type

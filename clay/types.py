@@ -47,13 +47,13 @@ class RefType(Type) :
         self.type = type
 
 class RecordType(Type) :
-    def __init__(self, record_entry, type_params) :
-        self.record_entry = record_entry
+    def __init__(self, entry, type_params) :
+        self.entry = entry
         self.type_params = type_params
 
 class StructType(Type) :
-    def __init__(self, struct_entry, type_params) :
-        self.struct_entry = struct_entry
+    def __init__(self, entry, type_params) :
+        self.entry = entry
         self.type_params = type_params
 
 

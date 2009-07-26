@@ -7,81 +7,83 @@ from clay.multimethod import multimethod
 
 
 #
+# env operations
+#
+
+def add_name(env, name, entry) :
+    assert type(name) is Name
+    if env.has_entry(name.s) :
+        raise_error("name redefinition", name)
+    env.add(name.s, entry)
+
+def lookup_name(env, name) :
+    assert type(name) is Name
+    entry = env.lookup(name.s)
+    if entry is None :
+        raise_error("undefined name", name)
+    return entry
+
+def lookup_predicate(env, name) :
+    x = lookup_name(env, name)
+    if type(x) is not PredicateEntry :
+        raise_error("not a predicate", name)
+    return x
+
+def lookup_overloadable(env, name) :
+    x = lookup_name(env, name)
+    if type(x) is not OverloadableEntry :
+        raise_error("not an overloadable", name)
+    return x
+
+
+
+#
 # primitives_env
 #
 
 def primitives_env() :
     env = Env()
-    a = env.add_builtin
-    a("Bool", BoolTypeEntry())
-    a("Char", CharTypeEntry())
-    a("Int", IntTypeEntry())
-    a("Void", VoidTypeEntry())
-    a("Array", ArrayTypeEntry())
-    a("Ref", RefTypeEntry())
-    a("default", PrimOpDefault())
-    a("ref_get", PrimOpRefGet())
-    a("ref_set", PrimOpRefSet())
-    a("ref_offset", PrimOpRefOffset())
-    a("ref_difference", PrimOpRefDifference())
-    a("tuple_ref", PrimOpTupleRef())
-    a("new_array", PrimOpNewArray())
-    a("array_size", PrimOpArraySize())
-    a("array_ref", PrimOpArrayRef())
-    a("array_value", PrimOpArrayValue())
-    a("array_value_ref", PrimOpArrayValueRef())
-    a("record_ref", PrimOpRecordRef())
-    a("struct_ref", PrimOpStructRef())
-    a("bool_not", PrimOpBoolNot())
-    a("char_to_int", PrimOpCharToInt())
-    a("int_to_char", PrimOpIntToChar())
-    a("char_equals", PrimOpCharEquals())
-    a("char_lesser", PrimOpCharLesser())
-    a("char_lesser_equals", PrimOpCharLesserEquals())
-    a("char_greater", PrimOpCharGreater())
-    a("char_greater_equals", PrimOpCharGreaterEquals())
-    a("int_add", PrimOpIntAdd())
-    a("int_subtract", PrimOpIntSubtract())
-    a("int_multiply", PrimOpIntMultiply())
-    a("int_divide", PrimOpIntDivide())
-    a("int_modulus", PrimOpIntModulus())
-    a("int_negate", PrimOpIntNegate())
-    a("int_equals", PrimOpIntEquals())
-    a("int_lesser", PrimOpIntLesser())
-    a("int_lesser_equals", PrimOpIntLesserEquals())
-    a("int_greater", PrimOpIntGreater())
-    a("int_greater_equals", PrimOpIntGreaterEquals())
+    def a(name, klass) :
+        env.add(name, klass(env,None))
+    a("Bool", BoolTypeEntry)
+    a("Char", CharTypeEntry)
+    a("Int", IntTypeEntry)
+    a("Void", VoidTypeEntry)
+    a("Array", ArrayTypeEntry)
+    a("Ref", RefTypeEntry)
+    a("default", PrimOpDefault)
+    a("ref_get", PrimOpRefGet)
+    a("ref_set", PrimOpRefSet)
+    a("ref_offset", PrimOpRefOffset)
+    a("ref_difference", PrimOpRefDifference)
+    a("tuple_ref", PrimOpTupleRef)
+    a("new_array", PrimOpNewArray)
+    a("array_size", PrimOpArraySize)
+    a("array_ref", PrimOpArrayRef)
+    a("array_value", PrimOpArrayValue)
+    a("array_value_ref", PrimOpArrayValueRef)
+    a("record_ref", PrimOpRecordRef)
+    a("struct_ref", PrimOpStructRef)
+    a("bool_not", PrimOpBoolNot)
+    a("char_to_int", PrimOpCharToInt)
+    a("int_to_char", PrimOpIntToChar)
+    a("char_equals", PrimOpCharEquals)
+    a("char_lesser", PrimOpCharLesser)
+    a("char_lesser_equals", PrimOpCharLesserEquals)
+    a("char_greater", PrimOpCharGreater)
+    a("char_greater_equals", PrimOpCharGreaterEquals)
+    a("int_add", PrimOpIntAdd)
+    a("int_subtract", PrimOpIntSubtract)
+    a("int_multiply", PrimOpIntMultiply)
+    a("int_divide", PrimOpIntDivide)
+    a("int_modulus", PrimOpIntModulus)
+    a("int_negate", PrimOpIntNegate)
+    a("int_equals", PrimOpIntEquals)
+    a("int_lesser", PrimOpIntLesser)
+    a("int_lesser_equals", PrimOpIntLesserEquals)
+    a("int_greater", PrimOpIntGreater)
+    a("int_greater_equals", PrimOpIntGreaterEquals)
     return env
-
-
-
-#
-# lookup
-#
-
-def lookup_name(name, env) :
-    return env.lookup_name(name)
-
-def lookup_predicate(name, env) :
-    x = lookup_name(name, env)
-    if type(x) is not PredicateEntry :
-        raise_error("not a predicate", name)
-    return x
-
-def lookup_overloadable(name, env) :
-    x = lookup_name(name, env)
-    if type(x) is not OverloadableEntry :
-        raise_error("not an overloadable", name)
-    return x
-
-def lookup_nameref(nameref, env) :
-    return env.lookup_nameref(nameref)
-
-def lookup_field(fieldname, env, node) :
-    ftype = env.lookup_str(fieldname)
-    if ftype is None :
-        raise_error("invalid field", node)
-    return ftype
 
 
 
@@ -98,42 +100,39 @@ add_top_level = multimethod()
 
 @add_top_level.register(PredicateDef)
 def f(x, env) :
-    env.add_name(x.name, PredicateEntry(x))
+    add_name(env, x.name, PredicateEntry(env,x))
 
 @add_top_level.register(InstanceDef)
 def f(x, env) :
-    entry = InstanceEntry(x)
-    entry.env = env
-    lookup_predicate(x.name, env).instances.append(entry)
+    entry = InstanceEntry(env, x)
+    lookup_predicate(env, x.name).instances.append(entry)
 
 @add_top_level.register(RecordDef)
 def f(x, env) :
-    env.add_name(x.name, RecordEntry(x))
+    add_name(env, x.name, RecordEntry(env,x))
 
 @add_top_level.register(StructDef)
 def f(x, env) :
-    env.add_name(x.name, StructEntry(x))
+    add_name(env, x.name, StructEntry(env,x))
 
 @add_top_level.register(VariableDef)
 def f(x, env) :
-    def_entry = VariableDefEntry(x)
-    def_entry.env = env
+    def_entry = VariableDefEntry(env, x)
     for i,variable in enumerate(x.variables) :
-        env.add_name(variable.name, VariableEntry(def_entry,i))
+        add_name(env, variable.name, VariableEntry(env,def_entry,i))
 
 @add_top_level.register(ProcedureDef)
 def f(x, env) :
-    env.add_name(x.name, ProcedureEntry(x))
+    add_name(env, x.name, ProcedureEntry(env,x))
 
 @add_top_level.register(OverloadableDef)
 def f(x, env) :
-    env.add_name(x.name, OverloadableEntry(x))
+    add_name(env, x.name, OverloadableEntry(env,x))
 
 @add_top_level.register(OverloadDef)
 def f(x, env) :
-    entry = OverloadEntry(x)
-    entry.env = env
-    lookup_overloadable(x.name, env).overloads.append(entry)
+    entry = OverloadEntry(env, x)
+    lookup_overloadable(env, x.name).overloads.append(entry)
 
 
 
@@ -176,7 +175,7 @@ def f(x, env) :
 @compile_expr.register(IndexExpr)
 def f(x, env) :
     if type(x.expr) is NameRef :
-        entry = lookup_nameref(x.expr, env)
+        entry = lookup_name(env, x.expr.name)
         result = compile_named_index_expr(entry, x, env)
         if result is not False :
             return result
@@ -216,17 +215,17 @@ def f(entry, x, env) :
 
 @compile_named_index_expr.register(RecordEntry)
 def f(entry, x, env) :
-    n_type_vars = len(entry.record_def.type_vars)
+    n_type_vars = len(entry.ast.type_vars)
     type_params = take_n(n_type_vars, x, x.indexes, "type parameters")
     type_params = [compile_expr_as_type(y,env) for y in type_params]
     return False, RecordType(entry, type_params)
 
 @compile_named_index_expr.register(StructEntry)
 def f(entry, x, env) :
-    n_type_vars = len(entry.record_def.type_vars)
+    n_type_vars = len(entry.ast.type_vars)
     type_params = take_n(n_type_vars, x, x.indexes, "type parameters")
     type_params = [compile_expr_as_type(y,env) for y in type_params]
-    return False, RecordType(entry, type_params)
+    return False, StructType(entry, type_params)
 
 # end compile_named_index_expr
 
@@ -234,24 +233,15 @@ def f(entry, x, env) :
 @compile_expr.register(CallExpr)
 def f(x, env) :
     if type(x.expr) is NameRef :
-        entry = lookup_nameref(x.expr, env)
+        entry = lookup_name(env, x.expr.name)
         result = compile_named_call_expr(entry, x, env)
         if result is not False :
             return result
     is_value,callable_type = compile_expr(x.expr, env)
     if is_value :
         raise_error("invalid call", x)
-    if is_record_type(callable_type) :
-        field_types = compute_record_field_types(callable_type)
-        if len(x.args) != len(field_types) :
-            raise_error("incorrect number of arguments", x)
-        for arg, field_type in zip(x.args, field_types) :
-            arg_type = compile_expr_as_value(arg, env)
-            if not type_equals(arg_type, field_type) :
-                raise_error("type mismatch in argument", arg)
-        return callable_type
-    elif is_struct_type(callable_type) :
-        field_types = compute_struct_field_types(callable_type)
+    if is_record_type(callable_type) or is_struct_type(callable_type) :
+        field_types = compute_field_types(callable_type)
         if len(x.args) != len(field_types) :
             raise_error("incorrect number of arguments", x)
         for arg, field_type in zip(x.args, field_types) :
@@ -262,23 +252,14 @@ def f(x, env) :
     else :
         raise_error("invalid call", x)
 
-def compute_record_field_types(record_type) :
-    rentry = record_type.record_entry
-    rdef = rentry.record_def
-    env = Env(rentry.env)
-    assert len(rdef.type_vars) == len(record_type.type_params)
-    for tvar, tparam in zip(rdef.type_vars, record_type.type_params) :
-        env.add_name(tvar, tparam)
-    return [compile_expr_as_type(f.type,env) for f in rdef.fields]
-
-def compute_struct_field_types(struct_type) :
-    sentry = struct_type.struct_entry
-    sdef = sentry.struct_def
-    env = Env(sentry.env)
-    assert len(sdef.type_vars) == len(struct_type.type_params)
-    for tvar, tparam in zip(sdef.type_vars, struct_type.type_params) :
-        env.add_name(tvar, tparam)
-    return [compile_expr_as_type(f.type,env) for f in sdef.fields]
+def compute_field_types(t) :
+    assert is_record_type(t) or is_struct_type(t)
+    ast = t.entry.ast
+    env = Env(t.entry.env)
+    assert len(ast.type_vars) == len(t.type_params)
+    for tvar, tparam in zip(ast.type_vars, t.type_params) :
+        add_name(env, tvar, tparam)
+    return [compile_expr_as_type(field.type, env) for field in ast.fields]
 
 
 
@@ -403,27 +384,19 @@ def f(entry, x, env) :
 def f(entry, x, env) :
     args = take_n(2, x, x.args, "arguments")
     arg1_type, arg2_type = [compile_expr_as_value(y, env) for y in args]
-    if not is_array_value_type(arg1_type) :
-        raise_error("ArrayValue type expected", args[0])
+    if (not is_ref_type(arg1_type)) or \
+            (not is_array_value_type(arg1_type.type)) :
+        raise_error("reference to array value type expected", args[0])
     if not is_int_type(arg2_type) :
         raise_error("Int type expected", args[1])
-    return True, arg1_type.type
+    return True, RefType(arg1_type.type)
 
-def compute_record_field_type_map(record_type) :
-    ftypes = compute_record_field_types(record_type)
-    fields = record_type.record_entry.record_def.fields
-    env = Env()
-    for f,ftype in zip(fields,ftypes) :
-        env.add_name(f.name, ftype)
-    return env
-
-def compute_struct_field_type_map(struct_type) :
-    ftypes = compute_struct_field_types(struct_type)
-    fields = struct_type.struct_entry.struct_def.fields
-    env = Env()
-    for f,ftype in zip(fields,ftypes) :
-        env.add_name(f.name, ftype)
-    return env
+def get_field_type(t, fname) :
+    ftypes = compute_field_types(t)
+    for field, ftype in zip(t.entry.ast.fields, ftypes) :
+        if field.name.s == fname :
+            return ftype
+    return None
 
 @compile_named_call_expr.register(PrimOpRecordRef)
 def f(entry, x, env) :
@@ -433,8 +406,9 @@ def f(entry, x, env) :
         raise_error("record type expected", args[0])
     if type(args[1]) is not StringLiteral :
         raise_error("string literal expected", args[1])
-    type_map = compute_record_field_type_map(arg1_type)
-    ftype = lookup_field(args[1].value, type_map, args[1])
+    ftype = get_field_type(arg1_type, args[1].value)
+    if ftype is None :
+        raise_error("invalid field", args[1])
     return True, RefType(ftype)
 
 @compile_named_call_expr.register(PrimOpStructRef)
@@ -445,8 +419,9 @@ def f(entry, x, env) :
         raise_error("reference to struct type expected", args[0])
     if type(args[1]) is not StringLiteral :
         raise_error("string literal expected", args[1])
-    type_map = compute_struct_field_type_map(arg1_type.type)
-    ftype = lookup_field(args[1].value, type_map, args[1])
+    ftype = get_field_type(arg1_type, args[1].value)
+    if ftype is None :
+        raise_error("invalid field", args[1])
     return True, RefType(ftype)
 
 @compile_named_call_expr.register(PrimOpBoolNot)
@@ -621,17 +596,17 @@ def bind_type_variables(tvar_names, env) :
     for tvar_name in tvar_names :
         tvar = TypeVariable(tvar_name)
         tvars.append(tvar)
-        env.add_name(tvar_name, tvar)
+        add_name(env, tvar_name, tvar)
     return tvars
 
 @compile_named_call_expr.register(RecordEntry)
 def f(entry, x, env) :
-    rdef = entry.record_def
+    ast = entry.ast
     env2 = Env(entry.env)
-    tvars = bind_type_variables(rdef.type_vars, env2)
-    if len(x.args) != len(rdef.fields) :
+    tvars = bind_type_variables(ast.type_vars, env2)
+    if len(x.args) != len(ast.fields) :
         raise_error("incorrect number of arguments", x)
-    for field, arg in zip(rdef.fields, x.args) :
+    for field, arg in zip(ast.fields, x.args) :
         field_type = compile_expr_as_type(field.type, env2)
         arg_type = compile_expr_as_value(arg, env)
         if not type_unify(arg_type, field_type) :
@@ -641,12 +616,12 @@ def f(entry, x, env) :
 
 @compile_named_call_expr.register(StructEntry)
 def f(entry, x, env) :
-    sdef = entry.struct_def
+    ast = entry.ast
     env2 = Env(entry.env)
-    tvars = bind_type_variables(sdef.type_vars, env2)
-    if len(x.args) != len(sdef.fields) :
+    tvars = bind_type_variables(ast.type_vars, env2)
+    if len(x.args) != len(ast.fields) :
         raise_error("incorrect number of arguments", x)
-    for field, arg in zip(sdef.fields, x.args) :
+    for field, arg in zip(ast.fields, x.args) :
         field_type = compile_expr_as_type(field.type, env2)
         arg_type = compile_expr_as_value(arg, env)
         if not type_unify(arg_type, field_type) :
