@@ -1,5 +1,5 @@
 __all__ = [
-    "ASTNode", "Program", "TopLevelItem", "PredicateDef", "Name",
+    "ASTNode", "Program", "TopLevelItem", "PredicateDef", "Identifier",
     "InstanceDef", "TypeCondition", "RecordDef", "StructDef", "Field",
     "Variable", "VariableDef", "ProcedureDef", "OverloadableDef",
     "OverloadDef", "Argument", "ValueArgument", "TypeArgument",
@@ -35,18 +35,18 @@ class TopLevelItem(ASTNode) :
 
 class PredicateDef(TopLevelItem) :
     def __init__(self, name) :
-        _check(name, Name)
+        _check(name, Identifier)
         self.name = name
 
-class Name(ASTNode) :
+class Identifier(ASTNode) :
     def __init__(self, s) :
         _check(s, str)
         self.s = s
 
 class InstanceDef(TopLevelItem) :
     def __init__(self, name, type_vars, type_args, type_conditions) :
-        _check(name, Name)
-        _checklist(type_vars, Name)
+        _check(name, Identifier)
+        _checklist(type_vars, Identifier)
         _checklist(type_args, Expression)
         _checklist(type_conditions, TypeCondition)
         self.name = name
@@ -56,15 +56,15 @@ class InstanceDef(TopLevelItem) :
 
 class TypeCondition(ASTNode) :
     def __init__(self, name, type_args) :
-        _check(name, Name)
+        _check(name, Identifier)
         _checklist(type_args, Expression)
         self.name = name
         self.type_args = type_args
 
 class RecordDef(TopLevelItem) :
     def __init__(self, name, type_vars, fields) :
-        _check(name, Name)
-        _checklist(type_vars, Name)
+        _check(name, Identifier)
+        _checklist(type_vars, Identifier)
         _checklist(fields, Field)
         self.name = name
         self.type_vars = type_vars
@@ -72,8 +72,8 @@ class RecordDef(TopLevelItem) :
 
 class StructDef(TopLevelItem) :
     def __init__(self, name, type_vars, fields) :
-        _check(name, Name)
-        _checklist(type_vars, Name)
+        _check(name, Identifier)
+        _checklist(type_vars, Identifier)
         _checklist(fields, Field)
         self.name = name
         self.type_vars = type_vars
@@ -81,14 +81,14 @@ class StructDef(TopLevelItem) :
 
 class Field(ASTNode) :
     def __init__(self, name, type) :
-        _check(name, Name)
+        _check(name, Identifier)
         _check(type, Expression)
         self.name = name
         self.type = type
 
 class Variable(ASTNode) :
     def __init__(self, name, type) :
-        _check(name, Name)
+        _check(name, Identifier)
         _check2(type, Expression)
         self.name = name
         self.type = type
@@ -103,8 +103,8 @@ class VariableDef(TopLevelItem) :
 class ProcedureDef(TopLevelItem) :
     def __init__(self, name, type_vars, args, return_type,
                  type_conditions, body) :
-        _check(name, Name)
-        _checklist(type_vars, Name)
+        _check(name, Identifier)
+        _checklist(type_vars, Identifier)
         _checklist(args, Argument)
         _check2(return_type, Expression)
         _checklist(type_conditions, TypeCondition)
@@ -118,14 +118,14 @@ class ProcedureDef(TopLevelItem) :
 
 class OverloadableDef(TopLevelItem) :
     def __init__(self, name) :
-        _check(name, Name)
+        _check(name, Identifier)
         self.name = name
 
 class OverloadDef(TopLevelItem) :
     def __init__(self, name, type_vars, args, return_type,
                  type_conditions, body) :
-        _check(name, Name)
-        _checklist(type_vars, Name)
+        _check(name, Identifier)
+        _checklist(type_vars, Identifier)
         _checklist(args, Argument)
         _check2(return_type, Expression)
         _checklist(type_conditions, TypeCondition)
@@ -240,7 +240,7 @@ class CallExpr(Expression) :
 class FieldRef(Expression) :
     def __init__(self, expr, name) :
         _check2(expr, Expression)
-        _check(name, Name)
+        _check(name, Identifier)
         self.expr = expr
         self.name = name
 
@@ -267,9 +267,9 @@ class TupleExpr(Expression) :
         self.elements = elements
 
 class NameRef(Expression) :
-    def __init__(self, s) :
-        _check(s, str)
-        self.s = s
+    def __init__(self, name) :
+        _check(name, Identifier)
+        self.name = name
 
 class BoolLiteral(Expression) :
     def __init__(self, value) :

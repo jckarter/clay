@@ -22,7 +22,7 @@ def token_value(klass, value) :
 def symbol(s) : return token_value(t.Symbol, s)
 def keyword(s) : return token_value(t.Keyword, s)
 
-identifier = token_type(t.Identifier)
+ident_tok = token_type(t.Identifier)
 
 semicolon = symbol(";")
 comma = symbol(",")
@@ -70,6 +70,8 @@ array_expr = astnode(sequence(symbol("["), expression_list, symbol("]")),
                      lambda x : ArrayExpr(x[1]))
 tuple_expr = astnode(sequence(symbol("("), expression_list, symbol(")")),
                      lambda x : TupleExpr(x[1]))
+
+identifier = astnode(ident_tok, lambda x : Identifier(x))
 name_ref = astnode(identifier, lambda x : NameRef(x))
 atomic_expr = choice(array_expr, tuple_expr, name_ref, literal)
 
@@ -78,13 +80,11 @@ atomic_expr = choice(array_expr, tuple_expr, name_ref, literal)
 # suffix expr
 #
 
-name = astnode(identifier, lambda x : Name(x))
-
 index_suffix = astnode(sequence(symbol("["), expression_list, symbol("]")),
                        lambda x : IndexExpr(None,x[1]))
 call_suffix = astnode(sequence(symbol("("), opt_expression_list, symbol(")")),
                       lambda x : CallExpr(None,x[1]))
-field_ref_suffix = astnode(sequence(symbol("."), name),
+field_ref_suffix = astnode(sequence(symbol("."), identifier),
                            lambda x : FieldRef(None,x[1]))
 tuple_ref_suffix = astnode(sequence(symbol("."), int_literal),
                            lambda x : TupleRef(None,x[1]))
@@ -120,7 +120,7 @@ expression = choice(address_of_expr, suffix_expr)
 type_spec = modify(sequence(symbol(":"), expression), lambda x : x[1])
 opt_type_spec = optional(type_spec)
 
-variable = astnode(sequence(name, opt_type_spec),
+variable = astnode(sequence(identifier, opt_type_spec),
                    lambda x : Variable(x[0],x[1]))
 variable_list = listof(variable, comma)
 
@@ -175,23 +175,24 @@ statement = choice(block, local_variable_def, assignment,
 # top level items
 #
 
-name_list = listof(name, comma)
-type_vars = modify(sequence(symbol("["), name_list, symbol("]")),
+identifier_list = listof(identifier, comma)
+type_vars = modify(sequence(symbol("["), identifier_list, symbol("]")),
                    lambda x : x[1])
 opt_type_vars = modify(optional(type_vars), lambda x : [] if x is None else x)
-field_def = astnode(sequence(name, type_spec, semicolon),
+field_def = astnode(sequence(identifier, type_spec, semicolon),
                     lambda x : Field(x[0],x[1]))
-record_def = astnode(sequence(keyword("record"), name, opt_type_vars,
+record_def = astnode(sequence(keyword("record"), identifier, opt_type_vars,
                               symbol("{"), oneplus(field_def), symbol("}")),
                      lambda x : RecordDef(x[1],x[2],x[4]))
-struct_def = astnode(sequence(keyword("struct"), name, opt_type_vars,
+struct_def = astnode(sequence(keyword("struct"), identifier, opt_type_vars,
                               symbol("{"), oneplus(field_def), symbol("}")),
                      lambda x : StructDef(x[1],x[2],x[4]))
 variable_def = astnode(sequence(keyword("var"), variable_list,
                                 symbol("="), expression, semicolon),
                        lambda x : VariableDef(x[1],x[3]))
 
-opt_name_list = modify(optional(name_list), lambda x : [] if x is None else x)
+opt_identifier_list = modify(optional(identifier_list),
+                             lambda x : [] if x is None else x)
 is_ref = modify(optional(keyword("ref")), lambda x : x is not None)
 value_argument = astnode(sequence(is_ref, variable),
                          lambda x : ValueArgument(x[0],x[1]))
@@ -200,30 +201,31 @@ type_argument = astnode(sequence(keyword("type"), expression),
 argument = choice(value_argument, type_argument)
 opt_arguments = modify(optional(listof(argument, comma)),
                        lambda x : [] if x is None else x)
-type_condition = astnode(sequence(name, symbol("("), opt_expression_list,
+type_condition = astnode(sequence(identifier, symbol("("), opt_expression_list,
                                   symbol(")")),
                          lambda x : TypeCondition(x[0],x[2]))
 type_conditions = modify(sequence(keyword("if"), listof(type_condition,comma)),
                          lambda x : x[1])
 opt_type_conditions = modify(optional(type_conditions),
                              lambda x : [] if x is None else x)
-procedure_def = astnode(sequence(keyword("def"), name, opt_type_vars,
+procedure_def = astnode(sequence(keyword("def"), identifier, opt_type_vars,
                                  symbol("("), opt_arguments, symbol(")"),
                                  opt_type_spec, opt_type_conditions, block),
                         lambda x : ProcedureDef(x[1],x[2],x[4],x[6],x[7],x[8]))
 
-overloadable_def = astnode(sequence(keyword("overloadable"), name, semicolon),
+overloadable_def = astnode(sequence(keyword("overloadable"), identifier,
+                                    semicolon),
                            lambda x : OverloadableDef(x[1]))
 
-overload_def = astnode(sequence(keyword("overload"), name, opt_type_vars,
+overload_def = astnode(sequence(keyword("overload"), identifier, opt_type_vars,
                                 symbol("("), opt_arguments, symbol(")"),
                                 opt_type_spec, opt_type_conditions, block),
                        lambda x : OverloadDef(x[1],x[2],x[4],x[6],x[7],x[8]))
 
-predicate_def = astnode(sequence(keyword("predicate"), name, semicolon),
+predicate_def = astnode(sequence(keyword("predicate"), identifier, semicolon),
                         lambda x : PredicateDef(x[1]))
 
-instance_def = astnode(sequence(keyword("instance"), name, opt_type_vars,
+instance_def = astnode(sequence(keyword("instance"), identifier, opt_type_vars,
                                 symbol("("), opt_expression_list, symbol(")"),
                                 opt_type_conditions, semicolon),
                        lambda x : InstanceDef(x[1],x[2],x[4],x[6]))

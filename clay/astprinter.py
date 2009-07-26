@@ -43,7 +43,7 @@ r(ValueArgument, lambda x : xo("ValueArgument", xf("ref",x.is_ref),
                                x.variable))
 r(TypeArgument, lambda x : xo("TypeArgument", x.type))
 
-r(Name, lambda x : xo("Name", XSymbol(x.s)))
+r(Identifier, lambda x : xo("Identifier", XSymbol(x.s)))
 
 #
 # statements
@@ -77,7 +77,7 @@ r(PointerRef, lambda x : xo("PointerRef", x.expr))
 
 r(ArrayExpr, lambda x : xo("ArrayExpr", *x.elements))
 r(TupleExpr, lambda x : xo("TupleExpr", *x.elements))
-r(NameRef, lambda x : xo("NameRef", XSymbol(x.s)))
+r(NameRef, lambda x : xo("NameRef", x.name))
 r(BoolLiteral, lambda x : xo("BoolLiteral", x.value))
 r(IntLiteral, lambda x : xo("IntLiteral", x.value))
 r(CharLiteral, lambda x : xo("CharLiteral", x.value))
