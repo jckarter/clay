@@ -20,25 +20,25 @@ __all__ = ["xprint", "XObject", "XField", "XSymbol", "xregister"]
 
 def xprint(x, columns=80) :
     buf = PrintBuffer()
-    _xprint(x, buf, max_offset=columns)
+    _xprint(x, buf, maxOffset=columns)
     for line in buf.lines() :
         print line
 
 
 #
-# _xprint : (x,buf,max_offset) -> overflowed
+# _xprint : (x,buf,maxOffset) -> overflowed
 #
 
-def _xprint(x, buf, max_offset) :
+def _xprint(x, buf, maxOffset) :
     t = type(x)
     handler = _handlers.get(t)
     if handler is None :
         converter = _converters.get(t)
         if converter is None :
-            return _xprint_atom(x, buf, max_offset)
+            return _xprintAtom(x, buf, maxOffset)
         data = converter(x)
-        return _xprint(data, buf, max_offset)
-    return handler(x, buf, max_offset)
+        return _xprint(data, buf, maxOffset)
+    return handler(x, buf, maxOffset)
 
 
 #
@@ -65,27 +65,27 @@ class XSymbol(object) :
 # _xprint handlers
 #
 
-def _xprint_atom(x, buf, max_offset) :
+def _xprintAtom(x, buf, maxOffset) :
     buf.add(repr(x))
-    return buf.last_line_length() >= max_offset
+    return buf.lastLineLength() >= maxOffset
 
-def _xprint_list(x, buf, max_offset) :
-    return _xprint_container("[", x, "]", buf, max_offset)
+def _xprintList(x, buf, maxOffset) :
+    return _xprintContainer("[", x, "]", buf, maxOffset)
 
-def _xprint_tuple(x, buf, max_offset) :
-    return _xprint_container("(", x, ")", buf, max_offset)
+def _xprintTuple(x, buf, maxOffset) :
+    return _xprintContainer("(", x, ")", buf, maxOffset)
 
-def _xprint_xobject(x, buf, max_offset) :
-    return _xprint_container(x.name + "(", x.fields, ")", buf, max_offset)
+def _xprintXObject(x, buf, maxOffset) :
+    return _xprintContainer(x.name + "(", x.fields, ")", buf, maxOffset)
 
-def _xprint_xfield(x, buf, max_offset) :
+def _xprintXField(x, buf, maxOffset) :
     buf.add(x.name)
     buf.add(x.separator)
-    return _xprint(x.value, buf, max_offset)
+    return _xprint(x.value, buf, maxOffset)
 
-def _xprint_xsymbol(x, buf, max_offset) :
+def _xprintXSymbol(x, buf, maxOffset) :
     buf.add(x.name)
-    return buf.last_line_length() >= max_offset
+    return buf.lastLineLength() >= maxOffset
 
 
 #
@@ -107,52 +107,52 @@ _handlers = {}
 def init_handlers() :
     for t in (type(None), bool, int, long, float,
               str, unicode) :
-        _handlers[t] = _xprint_atom
-    _handlers[list] = _xprint_list
-    _handlers[tuple] = _xprint_tuple
-    _handlers[XObject] = _xprint_xobject
-    _handlers[XField] = _xprint_xfield
-    _handlers[XSymbol] = _xprint_xsymbol
+        _handlers[t] = _xprintAtom
+    _handlers[list] = _xprintList
+    _handlers[tuple] = _xprintTuple
+    _handlers[XObject] = _xprintXObject
+    _handlers[XField] = _xprintXField
+    _handlers[XSymbol] = _xprintXSymbol
 init_handlers()
 
 
 #
-# _xprint_container
+# _xprintContainer
 #
 
-def _xprint_container(prefix, items, suffix, buf, max_offset) :
-    nlines_initial = buf.line_count()
-    initial_last_len = buf.last_line_length()
+def _xprintContainer(prefix, items, suffix, buf, maxOffset) :
+    nLinesInitial = buf.lineCount()
+    initialLastLen = buf.lastLineLength()
     buf.add(prefix)
-    saved_indent = buf.indent()
-    buf.set_indent(buf.last_line_length())
+    savedIndent = buf.indent()
+    buf.setIndent(buf.lastLineLength())
     j = 0
     for i,item in enumerate(items) :
         if i > 0 :
             buf.add(",")
-            if child_overflowed :
+            if childOverflowed :
                 buf.newline()
                 j = 0
             else :
                 buf.add(" ")
                 j += 1
         checkpoint = buf.checkpoint()
-        child_overflowed = _xprint(item, buf, max_offset)
-        if child_overflowed :
+        childOverflowed = _xprint(item, buf, maxOffset)
+        if childOverflowed :
             wrap = False
             if j > 0 : wrap = True
             if (i == 0) and (len(prefix) > 2) :
                 wrap = True
-                buf.set_indent(initial_last_len + 2)
+                buf.setIndent(initialLastLen + 2)
             if wrap :
                 buf.revert(checkpoint)
                 buf.newline()
                 j = 0
-                child_overflowed = _xprint(item, buf, max_offset)
+                childOverflowed = _xprint(item, buf, maxOffset)
     buf.add(suffix)
-    buf.set_indent(saved_indent)
-    overflowed = (buf.line_count() > nlines_initial) or \
-        (buf.last_line_length() >= max_offset)
+    buf.setIndent(savedIndent)
+    overflowed = (buf.lineCount() > nLinesInitial) or \
+        (buf.lastLineLength() >= maxOffset)
     return overflowed
 
 
@@ -164,18 +164,18 @@ class PrintBuffer(object) :
     def __init__(self) :
         self.lines_ = [[]]
         self.indent_ = 0
-        self.last_line_length_ = 0
+        self.lastLineLength_ = 0
 
     def indent(self) :
         return self.indent_
 
-    def set_indent(self, x) :
+    def setIndent(self, x) :
         self.indent_ = x
 
-    def last_line_length(self) :
-        return self.last_line_length_
+    def lastLineLength(self) :
+        return self.lastLineLength_
 
-    def line_count(self) :
+    def lineCount(self) :
         return len(self.lines_)
 
     def lines(self) :
@@ -184,25 +184,25 @@ class PrintBuffer(object) :
 
     def add(self, s) :
         self.lines_[-1].append(s)
-        self.last_line_length_ += len(s)
+        self.lastLineLength_ += len(s)
 
     def newline(self) :
         line = []
-        self.last_line_length_ = 0
+        self.lastLineLength_ = 0
         if self.indent_ > 0 :
             line.append(" " * self.indent_)
-            self.last_line_length_ += self.indent_
+            self.lastLineLength_ += self.indent_
         self.lines_.append(line)
 
     def checkpoint(self) :
-        nlines = len(self.lines_)
-        nitems = len(self.lines_[-1])
-        return (nlines, nitems, self.last_line_length_)
+        nLines = len(self.lines_)
+        nItems = len(self.lines_[-1])
+        return (nLines, nItems, self.lastLineLength_)
 
     def revert(self, checkpoint) :
-        nlines, nitems, self.last_line_length_ = checkpoint
-        del self.lines_[nlines:]
-        del self.lines_[-1][nitems:]
+        nLines, nItems, self.lastLineLength_ = checkpoint
+        del self.lines_[nLines:]
+        del self.lines_[-1][nItems:]
 
 
 
@@ -216,13 +216,13 @@ class Person(object) :
         self.age = age
 
 def test1() :
-    def convert_person(x) :
+    def convertPerson(x) :
         return XObject("Person", x.name, x.age)
-    xregister(Person, convert_person)
+    xregister(Person, convertPerson)
     xprint(Person("Stepanov", 40))
-    def convert_person(x) :
+    def convertPerson(x) :
         return XObject("Person", x.name, XField("age",x.age))
-    xregister(Person, convert_person)
+    xregister(Person, convertPerson)
     xprint(Person("Stepanov", 40))
 
 class BinaryOp(object) :
@@ -260,20 +260,20 @@ def test2():
     root1 = Divide(Add(Negate(b),sroot), Multiply(2,a))
     root2 = Divide(Subtract(Negate(b),sroot), Multiply(2,a))
 
-    quadratic_roots = [root1, root2]
+    quadraticRoots = [root1, root2]
 
     print "#################################"
     print "#### xprint, columns=80 (default)"
     print "#################################"
     print ""
-    xprint(quadratic_roots)
+    xprint(quadraticRoots)
     print ""
 
     print "#################################"
     print "#### xprint, columns=50"
     print "#################################"
     print ""
-    xprint(quadratic_roots, columns=50)
+    xprint(quadraticRoots, columns=50)
     print ""
 
 if __name__ == "__main__" :
