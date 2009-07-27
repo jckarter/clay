@@ -14,142 +14,142 @@ __all__ = [
 class ASTNode(object) :
     location = None
 
-def _check(x, t) :
+def check(x, t) :
     assert isinstance(x,t)
 
-def _check2(x, t) :
+def check2(x, t) :
     assert (x is None) or isinstance(x,t)
 
-def _checklist(x, t) :
-    _check(x, list)
+def checkList(x, t) :
+    check(x, list)
     for item in x :
-        _check(item, t)
+        check(item, t)
 
 class Program(ASTNode) :
-    def __init__(self, top_level_items) :
-        _checklist(top_level_items, TopLevelItem)
-        self.top_level_items = top_level_items
+    def __init__(self, topLevelItems) :
+        checkList(topLevelItems, TopLevelItem)
+        self.topLevelItems = topLevelItems
 
 class TopLevelItem(ASTNode) :
     pass
 
 class PredicateDef(TopLevelItem) :
     def __init__(self, name) :
-        _check(name, Identifier)
+        check(name, Identifier)
         self.name = name
 
 class Identifier(ASTNode) :
     def __init__(self, s) :
-        _check(s, str)
+        check(s, str)
         self.s = s
 
 class InstanceDef(TopLevelItem) :
-    def __init__(self, name, type_vars, type_args, type_conditions) :
-        _check(name, Identifier)
-        _checklist(type_vars, Identifier)
-        _checklist(type_args, Expression)
-        _checklist(type_conditions, TypeCondition)
+    def __init__(self, name, typeVars, typeArgs, typeConditions) :
+        check(name, Identifier)
+        checkList(typeVars, Identifier)
+        checkList(typeArgs, Expression)
+        checkList(typeConditions, TypeCondition)
         self.name = name
-        self.type_vars = type_vars
-        self.type_args = type_args
-        self.type_conditions = type_conditions
+        self.typeVars = typeVars
+        self.typeArgs = typeArgs
+        self.typeConditions = typeConditions
 
 class TypeCondition(ASTNode) :
-    def __init__(self, name, type_args) :
-        _check(name, Identifier)
-        _checklist(type_args, Expression)
+    def __init__(self, name, typeArgs) :
+        check(name, Identifier)
+        checkList(typeArgs, Expression)
         self.name = name
-        self.type_args = type_args
+        self.typeArgs = typeArgs
 
 class RecordDef(TopLevelItem) :
-    def __init__(self, name, type_vars, fields) :
-        _check(name, Identifier)
-        _checklist(type_vars, Identifier)
-        _checklist(fields, Field)
+    def __init__(self, name, typeVars, fields) :
+        check(name, Identifier)
+        checkList(typeVars, Identifier)
+        checkList(fields, Field)
         self.name = name
-        self.type_vars = type_vars
+        self.typeVars = typeVars
         self.fields = fields
 
 class StructDef(TopLevelItem) :
-    def __init__(self, name, type_vars, fields) :
-        _check(name, Identifier)
-        _checklist(type_vars, Identifier)
-        _checklist(fields, Field)
+    def __init__(self, name, typeVars, fields) :
+        check(name, Identifier)
+        checkList(typeVars, Identifier)
+        checkList(fields, Field)
         self.name = name
-        self.type_vars = type_vars
+        self.typeVars = typeVars
         self.fields = fields
 
 class Field(ASTNode) :
     def __init__(self, name, type) :
-        _check(name, Identifier)
-        _check(type, Expression)
+        check(name, Identifier)
+        check(type, Expression)
         self.name = name
         self.type = type
 
 class Variable(ASTNode) :
     def __init__(self, name, type) :
-        _check(name, Identifier)
-        _check2(type, Expression)
+        check(name, Identifier)
+        check2(type, Expression)
         self.name = name
         self.type = type
 
 class VariableDef(TopLevelItem) :
-    def __init__(self, variables, exprlist) :
-        _checklist(variables, Variable)
-        _checklist(exprlist, Expression)
+    def __init__(self, variables, exprList) :
+        checkList(variables, Variable)
+        checkList(exprList, Expression)
         self.variables = variables
-        self.exprlist = exprlist
+        self.exprList = exprList
 
 class ProcedureDef(TopLevelItem) :
-    def __init__(self, name, type_vars, args, return_type,
-                 type_conditions, body) :
-        _check(name, Identifier)
-        _checklist(type_vars, Identifier)
-        _checklist(args, Argument)
-        _check2(return_type, Expression)
-        _checklist(type_conditions, TypeCondition)
-        _check(body, Block)
+    def __init__(self, name, typeVars, args, returnType,
+                 typeConditions, body) :
+        check(name, Identifier)
+        checkList(typeVars, Identifier)
+        checkList(args, Argument)
+        check2(returnType, Expression)
+        checkList(typeConditions, TypeCondition)
+        check(body, Block)
         self.name = name
-        self.type_vars = type_vars
+        self.typeVars = typeVars
         self.args = args
-        self.return_type = return_type
-        self.type_conditions = type_conditions
+        self.returnType = returnType
+        self.typeConditions = typeConditions
         self.body = body
 
 class OverloadableDef(TopLevelItem) :
     def __init__(self, name) :
-        _check(name, Identifier)
+        check(name, Identifier)
         self.name = name
 
 class OverloadDef(TopLevelItem) :
-    def __init__(self, name, type_vars, args, return_type,
-                 type_conditions, body) :
-        _check(name, Identifier)
-        _checklist(type_vars, Identifier)
-        _checklist(args, Argument)
-        _check2(return_type, Expression)
-        _checklist(type_conditions, TypeCondition)
-        _check(body, Block)
+    def __init__(self, name, typeVars, args, returnType,
+                 typeConditions, body) :
+        check(name, Identifier)
+        checkList(typeVars, Identifier)
+        checkList(args, Argument)
+        check2(returnType, Expression)
+        checkList(typeConditions, TypeCondition)
+        check(body, Block)
         self.name = name
-        self.type_vars = type_vars
+        self.typeVars = typeVars
         self.args = args
-        self.return_type = return_type
-        self.type_conditions = type_conditions
+        self.returnType = returnType
+        self.typeConditions = typeConditions
         self.body = body
 
 class Argument(ASTNode) :
     pass
 
 class ValueArgument(Argument) :
-    def __init__(self, is_ref, variable) :
-        _check(is_ref, bool)
-        _check(variable, Variable)
-        self.is_ref = is_ref
+    def __init__(self, isRef, variable) :
+        check(isRef, bool)
+        check(variable, Variable)
+        self.isRef = isRef
         self.variable = variable
 
 class TypeArgument(Argument) :
     def __init__(self, type) :
-        _check(type, Expression)
+        check(type, Expression)
         self.type = type
 
 class Statement(ASTNode) :
@@ -157,31 +157,31 @@ class Statement(ASTNode) :
 
 class Block(Statement) :
     def __init__(self, statements) :
-        _checklist(statements, Statement)
+        checkList(statements, Statement)
         self.statements = statements
 
 class LocalVariableDef(Statement) :
-    def __init__(self, variables, exprlist) :
-        _checklist(variables, Variable)
-        _checklist(exprlist, Expression)
+    def __init__(self, variables, exprList) :
+        checkList(variables, Variable)
+        checkList(exprList, Expression)
         self.variables = variables
-        self.exprlist = exprlist
+        self.exprList = exprList
 
 class Assignment(Statement) :
-    def __init__(self, assignables, exprlist) :
-        _checklist(assignables, Expression)
-        _checklist(exprlist, Expression)
+    def __init__(self, assignables, exprList) :
+        checkList(assignables, Expression)
+        checkList(exprList, Expression)
         self.assignables = assignables
-        self.exprlist = exprlist
+        self.exprList = exprList
 
 class IfStatement(Statement) :
-    def __init__(self, condition, then_part, else_part) :
-        _check(condition, Expression)
-        _check(then_part, Statement)
-        _check2(else_part, Statement)
+    def __init__(self, condition, thenPart, elsePart) :
+        check(condition, Expression)
+        check(thenPart, Statement)
+        check2(elsePart, Statement)
         self.condition = condition
-        self.then_part = then_part
-        self.else_part = else_part
+        self.thenPart = thenPart
+        self.elsePart = elsePart
 
 class BreakStatement(Statement) :
     pass
@@ -191,28 +191,28 @@ class ContinueStatement(Statement) :
 
 class WhileStatement(Statement) :
     def __init__(self, condition, body) :
-        _check(condition, Expression)
-        _check(body, Statement)
+        check(condition, Expression)
+        check(body, Statement)
         self.condition = condition
         self.body = body
 
 class ForStatement(Statement) :
     def __init__(self, variables, expr, body) :
-        _checklist(variables, Variable)
-        _check(expr, Expression)
-        _check(body, Statement)
+        checkList(variables, Variable)
+        check(expr, Expression)
+        check(body, Statement)
         self.variables = variables
         self.expr = expr
         self.body = body
 
 class ReturnStatement(Statement) :
-    def __init__(self, exprlist) :
-        _checklist(exprlist, Expression)
-        self.exprlist = exprlist
+    def __init__(self, exprList) :
+        checkList(exprList, Expression)
+        self.exprList = exprList
 
 class ExprStatement(Statement) :
     def __init__(self, expr) :
-        _check(expr, Expression)
+        check(expr, Expression)
         self.expr = expr
 
 class Expression(ASTNode) :
@@ -220,60 +220,60 @@ class Expression(ASTNode) :
 
 class AddressOfExpr(Expression) :
     def __init__(self, expr) :
-        _check(expr, Expression)
+        check(expr, Expression)
         self.expr = expr
 
 class IndexExpr(Expression) :
     def __init__(self, expr, indexes) :
-        _check2(expr, Expression)
-        _checklist(indexes, Expression)
+        check2(expr, Expression)
+        checkList(indexes, Expression)
         self.expr = expr
         self.indexes = indexes
 
 class CallExpr(Expression) :
     def __init__(self, expr, args) :
-        _check2(expr, Expression)
-        _checklist(args, Expression)
+        check2(expr, Expression)
+        checkList(args, Expression)
         self.expr = expr
         self.args = args
 
 class FieldRef(Expression) :
     def __init__(self, expr, name) :
-        _check2(expr, Expression)
-        _check(name, Identifier)
+        check2(expr, Expression)
+        check(name, Identifier)
         self.expr = expr
         self.name = name
 
 class TupleRef(Expression) :
     def __init__(self, expr, index) :
-        _check2(expr, Expression)
-        _check(index, int)
+        check2(expr, Expression)
+        check(index, int)
         self.expr = expr
         self.index = index
 
 class PointerRef(Expression) :
     def __init__(self, expr) :
-        _check2(expr, Expression)
+        check2(expr, Expression)
         self.expr = expr
 
 class ArrayExpr(Expression) :
     def __init__(self, elements) :
-        _checklist(elements, Expression)
+        checkList(elements, Expression)
         self.elements = elements
 
 class TupleExpr(Expression) :
     def __init__(self, elements) :
-        _checklist(elements, Expression)
+        checkList(elements, Expression)
         self.elements = elements
 
 class NameRef(Expression) :
     def __init__(self, name) :
-        _check(name, Identifier)
+        check(name, Identifier)
         self.name = name
 
 class BoolLiteral(Expression) :
     def __init__(self, value) :
-        _check(value, bool)
+        check(value, bool)
         self.value = value
 
 class IntLiteral(Expression) :
@@ -283,10 +283,10 @@ class IntLiteral(Expression) :
 
 class CharLiteral(Expression) :
     def __init__(self, value) :
-        _check(value, unicode)
+        check(value, unicode)
         self.value = value
 
 class StringLiteral(Expression) :
     def __init__(self, value) :
-        _check(value, unicode)
+        check(value, unicode)
         self.value = value

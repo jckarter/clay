@@ -86,7 +86,7 @@ def primitives_env() :
 
 def build_top_level_env(program) :
     env = Env(primitives_env())
-    for item in program.top_level_items :
+    for item in program.topLevelItems :
         add_top_level(item, env)
 
 add_top_level = multimethod()
@@ -208,14 +208,14 @@ def f(entry, x, env) :
 
 @compile_named_index_expr.register(RecordEntry)
 def f(entry, x, env) :
-    n_type_vars = len(entry.ast.type_vars)
+    n_type_vars = len(entry.ast.typeVars)
     type_params = take_n(n_type_vars, x, x.indexes, "type parameters")
     type_params = [compile_expr_as_type(y,env) for y in type_params]
     return False, RecordType(entry, type_params)
 
 @compile_named_index_expr.register(StructEntry)
 def f(entry, x, env) :
-    n_type_vars = len(entry.ast.type_vars)
+    n_type_vars = len(entry.ast.typeVars)
     type_params = take_n(n_type_vars, x, x.indexes, "type parameters")
     type_params = [compile_expr_as_type(y,env) for y in type_params]
     return False, StructType(entry, type_params)
@@ -249,8 +249,8 @@ def compute_field_types(t) :
     assert is_record_type(t) or is_struct_type(t)
     ast = t.entry.ast
     env = Env(t.entry.env)
-    assert len(ast.type_vars) == len(t.type_params)
-    for tvar, tparam in zip(ast.type_vars, t.type_params) :
+    assert len(ast.typeVars) == len(t.type_params)
+    for tvar, tparam in zip(ast.typeVars, t.type_params) :
         add_ident(env, tvar, tparam)
     return [compile_expr_as_type(field.type, env) for field in ast.fields]
 
@@ -489,7 +489,7 @@ def bind_type_variables(tvar_names, env) :
 def f(entry, x, env) :
     ast = entry.ast
     env2 = Env(entry.env)
-    tvars = bind_type_variables(ast.type_vars, env2)
+    tvars = bind_type_variables(ast.typeVars, env2)
     if len(x.args) != len(ast.fields) :
         raiseError("incorrect number of arguments", x)
     for field, arg in zip(ast.fields, x.args) :
@@ -504,7 +504,7 @@ def f(entry, x, env) :
 def f(entry, x, env) :
     ast = entry.ast
     env2 = Env(entry.env)
-    tvars = bind_type_variables(ast.type_vars, env2)
+    tvars = bind_type_variables(ast.typeVars, env2)
     if len(x.args) != len(ast.fields) :
         raiseError("incorrect number of arguments", x)
     for field, arg in zip(ast.fields, x.args) :
