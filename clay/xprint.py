@@ -99,12 +99,12 @@ def xregister(type, converter) :
 
 
 #
-# init_handlers
+# initHandlers
 #
 
 _handlers = {}
 
-def init_handlers() :
+def initHandlers() :
     for t in (type(None), bool, int, long, float,
               str, unicode) :
         _handlers[t] = _xprintAtom
@@ -113,7 +113,7 @@ def init_handlers() :
     _handlers[XObject] = _xprintXObject
     _handlers[XField] = _xprintXField
     _handlers[XSymbol] = _xprintXSymbol
-init_handlers()
+initHandlers()
 
 
 #
