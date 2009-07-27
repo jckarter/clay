@@ -6,32 +6,32 @@ class DefaultProc(object) :
     def __init__(self, proc) :
         self.proc = proc
 
-def multimethod(n=1, default=DummyDefault, default_proc=DummyDefault) :
-    assert (default is DummyDefault) or (default_proc is DummyDefault)
+def multimethod(n=1, default=DummyDefault, defaultProc=DummyDefault) :
+    assert (default is DummyDefault) or (defaultProc is DummyDefault)
     if default is not DummyDefault :
-        default_proc = lambda *args : default
-    elif default_proc is not DummyDefault :
+        defaultProc = lambda *args : default
+    elif defaultProc is not DummyDefault :
         pass
     else :
-        default_proc = None
-    return MultiMethod(n, default_proc)
+        defaultProc = None
+    return MultiMethod(n, defaultProc)
 
 class MultiMethod(object) :
-    def __init__(self, n, default_proc) :
+    def __init__(self, n, defaultProc) :
         self.registry_ = {}
         self.n_ = n
-        self.default_proc_ = default_proc
+        self.defaultProc_ = defaultProc
 
-    def add_handler(self, f, *types) :
+    def addHandler(self, f, *types) :
         self.registry_[types] = f
 
     def register(self, *types) :
         def modifier(f) :
-            self.add_handler(f, *types)
+            self.addHandler(f, *types)
             return self
         return modifier
 
     def __call__(self, *args) :
         types = tuple(type(x) for x in args[:self.n_])
-        handler = self.registry_.get(types, self.default_proc_)
+        handler = self.registry_.get(types, self.defaultProc_)
         return handler(*args)

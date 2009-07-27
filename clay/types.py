@@ -143,7 +143,7 @@ class TypeVariable(Type) :
         return self.type
 
 
-type_unify = multimethod(n=2, default_proc=type_unify_variables)
+type_unify = multimethod(n=2, defaultProc=type_unify_variables)
 
 def type_list_unify(a, b) :
     if len(a) != len(b) :
