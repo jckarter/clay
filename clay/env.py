@@ -1,5 +1,4 @@
 from clay.ast import *
-from clay.error import raise_error
 
 __all__ = ["Env", "EnvEntry",
            "BoolTypeEntry", "CharTypeEntry", "IntTypeEntry", "VoidTypeEntry",

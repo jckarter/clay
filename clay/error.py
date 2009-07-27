@@ -1,29 +1,29 @@
-__all__ = ["Location", "raise_error", "SourceError"]
+__all__ = ["Location", "raiseError", "SourceError"]
 
 class Location(object) :
-    def __init__(self, data, offset, file_name) :
+    def __init__(self, data, offset, fileName) :
         self.data = data
         self.offset = offset
-        self.file_name = file_name
+        self.fileName = fileName
 
-def raise_error(error_message, location) :
+def raiseError(errorMessage, location) :
     if type(location) is not Location :
         location = location.location
-    raise SourceError(error_message, location)
+    raise SourceError(errorMessage, location)
 
 class SourceError(Exception) :
-    def __init__(self, error_message, location) :
-        self.error_message = error_message
+    def __init__(self, errorMessage, location) :
+        self.errorMessage = errorMessage
         self.location = location
 
     def display(self) :
         lines = self.location.data.splitlines(True)
-        line, column = locate_(lines, self.location.offset)
-        display_context_(lines, line, column)
+        line, column = locate(lines, self.location.offset)
+        displayContext(lines, line, column)
         print "error at %s:%d:%d: %s" % \
-            (self.location.file_name, line+1, column, self.error_message)
+            (self.location.fileName, line+1, column, self.errorMessage)
 
-def locate_(lines, offset) :
+def locate(lines, offset) :
     line = 0
     for s in lines :
         if offset < len(s) :
@@ -33,16 +33,16 @@ def locate_(lines, offset) :
     column = offset
     return line, column
 
-def display_context_(lines, line, column) :
+def displayContext(lines, line, column) :
     for i in range(5) :
         j = line + i -2
         if j < 0 : continue
         if j >= len(lines) : break
-        print trim_line_ending_(lines[j])
+        print trimLineEnding(lines[j])
         if j == line :
             print ("-" * column) + "^"
 
-def trim_line_ending_(line) :
+def trimLineEnding(line) :
     if line.endswith("\r\n") : return line[:-2]
     if line.endswith("\r") : return line[:-1]
     if line.endswith("\n") : return line[:-1]

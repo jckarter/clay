@@ -2,7 +2,7 @@ from clay.parserlib import *
 from clay import tokens as t
 from clay import lexer
 from clay.ast import *
-from clay.error import Location, raise_error
+from clay.error import Location, raiseError
 
 __all__ = ["parse"]
 
@@ -246,14 +246,14 @@ program = astnode(oneplus(top_level_item), lambda x : Program(x))
 # parse
 #
 
-def parse(data, file_name) :
-    tokens = lexer.tokenize(data, file_name)
+def parse(data, fileName) :
+    tokens = lexer.tokenize(data, fileName)
     input = Input(tokens)
     result = program(input)
     if (result is Failure) or (input.pos < len(tokens)) :
         if input.max_pos == len(tokens) :
-            location = Location(data, len(data), file_name)
+            location = Location(data, len(data), fileName)
         else :
             location = tokens[input.max_pos].location
-        raise_error("parse error", location)
+        raiseError("parse error", location)
     return result
