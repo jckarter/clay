@@ -20,7 +20,7 @@ TypeSpec -> ":" TypeExpr ;
 Variable -> Name TypeSpec? ;
 VariableList -> comma_list(Variable) ;
 
-VariableDef -> "var" VariableList "=" Expression ";" ;
+VariableDef -> "var" VariableList "=" comma_list(Expression) ";" ;
 
 ProcedureDef -> "def" Name TypeVars? "(" comma_list(Argument)? ")"
                 TypeSpec? TypeConditions? Block ;
@@ -47,9 +47,9 @@ Statement -> Block
            | Expression
            ;
 
-LocalVariableDef -> "var" VariableList "=" Expression ";" ;
+LocalVariableDef -> "var" VariableList "=" comma_list(Expression) ";" ;
 
-Assignment -> comma_list(Expression) "=" Expression ";" ;
+Assignment -> comma_list(Expression) "=" comma_list(Expression) ";" ;
 
 IfStatement -> "if" "(" Expression ")" Statement
                ("else" Statement)? ;

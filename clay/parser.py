@@ -152,11 +152,11 @@ if_statement = astnode(sequence(keyword("if"), paren_condition,
                                 statement2, optional(else_part)),
                        lambda x : IfStatement(x[1],x[2],x[3]))
 
-assignment = astnode(sequence(expression_list, symbol("="), expression,
+assignment = astnode(sequence(expression_list, symbol("="), expression_list,
                               semicolon),
                      lambda x : Assignment(x[0], x[2]))
 local_variable_def = astnode(sequence(keyword("var"), variable_list,
-                                      symbol("="), expression, semicolon),
+                                      symbol("="), expression_list, semicolon),
                              lambda x : LocalVariableDef(x[1],x[3]))
 
 block = astnode(sequence(symbol("{"), oneplus(statement2), symbol("}")),
@@ -188,7 +188,7 @@ struct_def = astnode(sequence(keyword("struct"), identifier, opt_type_vars,
                               symbol("{"), oneplus(field_def), symbol("}")),
                      lambda x : StructDef(x[1],x[2],x[4]))
 variable_def = astnode(sequence(keyword("var"), variable_list,
-                                symbol("="), expression, semicolon),
+                                symbol("="), expression_list, semicolon),
                        lambda x : VariableDef(x[1],x[3]))
 
 opt_identifier_list = modify(optional(identifier_list),

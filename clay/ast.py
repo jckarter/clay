@@ -94,11 +94,11 @@ class Variable(ASTNode) :
         self.type = type
 
 class VariableDef(TopLevelItem) :
-    def __init__(self, variables, expr) :
+    def __init__(self, variables, exprlist) :
         _checklist(variables, Variable)
-        _check(expr, Expression)
+        _checklist(exprlist, Expression)
         self.variables = variables
-        self.expr = expr
+        self.exprlist = exprlist
 
 class ProcedureDef(TopLevelItem) :
     def __init__(self, name, type_vars, args, return_type,
@@ -161,18 +161,18 @@ class Block(Statement) :
         self.statements = statements
 
 class LocalVariableDef(Statement) :
-    def __init__(self, variables, expr) :
+    def __init__(self, variables, exprlist) :
         _checklist(variables, Variable)
-        _check(expr, Expression)
+        _checklist(exprlist, Expression)
         self.variables = variables
-        self.expr = expr
+        self.exprlist = exprlist
 
 class Assignment(Statement) :
-    def __init__(self, assignables, expr) :
+    def __init__(self, assignables, exprlist) :
         _checklist(assignables, Expression)
-        _check(expr, Expression)
+        _checklist(exprlist, Expression)
         self.assignables = assignables
-        self.expr = expr
+        self.exprlist = exprlist
 
 class IfStatement(Statement) :
     def __init__(self, condition, then_part, else_part) :
@@ -206,9 +206,9 @@ class ForStatement(Statement) :
         self.body = body
 
 class ReturnStatement(Statement) :
-    def __init__(self, results) :
-        _checklist(results, Expression)
-        self.results = results
+    def __init__(self, exprlist) :
+        _checklist(exprlist, Expression)
+        self.exprlist = exprlist
 
 class ExprStatement(Statement) :
     def __init__(self, expr) :

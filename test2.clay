@@ -1,0 +1,38 @@
+def fact(n) {
+    if (intEquals(n,0))
+        return 1;
+    return intMultiply(n, fact(intSubtract(n,1)));
+}
+
+
+def min(a, b) {
+    if (lesser(a, b))
+        return a;
+    return b;
+}
+
+def fibo(n) {
+    if (intEquals(n,1))
+        return 0;
+    var a, b = 0, 1;
+    while (intGreater(n, 1)) {
+        n = intSubtract(n, 1);
+        a, b = b, intAdd(a, b);
+    }
+    return a;
+}
+
+def rfibo(n) {
+    if (intEquals(n,1)) return 0;
+    if (intEquals(n,2)) return 1;
+    return intAdd(rfibo(intSubtract(n,1)), rfibo(intSubtract(n,2)));
+}
+
+// type(fact(T)) = combine(
+//       type(1),
+//       type(intMultiply(T,type(fact(type(intSubtract(T, type(1))))))))
+// 
+// 
+// t(min(A,B)) = combine(t(a), t(b))
+// 
+// t(fibo(T)) = combine(t(0), t((0,1).0))
