@@ -2,7 +2,7 @@ Primitive Types:
 Bool, Char, Int, Void
 
 Primitive Values:
-true, false, CharLiteral, IntLiteral, void
+true, false, CharLiteral, IntLiteral
 
 Primitive Type Constructors:
 (Type,...) : tuple type constructor
@@ -22,39 +22,39 @@ Primitive Operations:
 
 default[T](type T):T
 
-ref_get[T](a:Ref[T]): T
-ref_set[T](a:Ref[T], x:T): Void
-ref_offset[T](a:Ref[T], offset:Int): Ref[T]
-ref_difference[T](a:Ref[T], b:Ref[T]): Int
+e:T => &e:Ref[T]
+e:Ref[T] => e^:T
+e:Ref[T],i:Int => e+i:Ref[T], e-i:Ref[T]
+e1:Ref[T],e2:Ref[T] -> e1-e2:Int
 
-(v1, ..., vn) : tuple constructor
-tuple_ref(a:Ref[T], i:IntLiteral): Ref[T2]
+v_1:T_1, ..., v_n:T_n => (v_1, ..., v_n) : (T_1, ..., T_n)
+e:(T_1, ..., T_n) => e.i : T_i
 
-[v1, ... ,vn] : Array[T]
-new_array[T](type T):Array[T]
-new_array[T](type T, n:Int):Array[T]
-new_array[T](n:Int, v:T):Array[T]
-array_size[T](a:Array[T]):Int
-array_ref[T](a:Array[T], i:Int): Ref[T]
+v_1:T, ..., v_n:T => [v_1, ... ,v_n] : Array[T]
+T:Type => array(type T):Array[T]
+T:Type,n:Int => array(type T, n):Array[T]
+n:Int, v:T => array(n, v):Array[T]
+a:Array[T] => arraySize(a):Int
+a:Array[T], i:Int => a[i]:T
 
-array_value[T](type T, n:IntLiteral): ArrayValue[T,n]
-array_value[T](n:IntLiteral, x:T): ArrayValue[T,n]
-array_value_ref[T](a:Ref[ArrayValue[T,n]], i:Int): Ref[T]
+T:Type, n:IntLiteral => arrayValue(type T, n):ArrayValue[T,n]
+n:IntLiteral, v:T => arrayValue(n, v):ArrayValue[T, n]
+a:ArrayValue[T,n], i:Int => a[i]:T
 
-T(v1, v2, ...): record constructor
-record_ref(a:T, field:StringLiteral): Ref[T2]
+R:Record => R(v_1, ..., v_n):RecordType
+a:RecordType => a.field:FieldType
 
-T(v1, v2, ...): struct constructor
-struct_ref(a:Ref[T], field:StringLiteral): Ref[T2]
+S:Struct => S(v_1, ..., v_n):StructType
+a:StructType => a.field:FieldType
 
-bool_not(x:Bool):Bool
+boolNot(x:Bool):Bool
 
-char_to_int(c:Char):Int
-int_to_char(i:Int):Char
-char_equals, char_lesser, char_lesser_equals,
-char_greater, char_greater_equals
+charToInt(c:Char):Int
+intToChar(i:Int):Char
+charEquals, charLesser, charLesserEquals,
+charGreater, charGreaterEquals
 
-int_add, int_subtract, int_multiply, int_divide
-int_modulus, int_negate,
-int_equals, int_lesser, int_lesser_equals,
-int_greater, int_greater_equals
+intAdd, intSubtract, intMultiply, inDivide,
+intModulus, intNegate,
+intEquals, intLesser, intLesserEquals,
+intGreater, intGreaterEquals

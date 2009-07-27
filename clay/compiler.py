@@ -51,38 +51,31 @@ def primitives_env() :
     a("Void", VoidTypeEntry)
     a("Array", ArrayTypeEntry)
     a("Ref", RefTypeEntry)
+
     a("default", PrimOpDefault)
-    a("ref_get", PrimOpRefGet)
-    a("ref_set", PrimOpRefSet)
-    a("ref_offset", PrimOpRefOffset)
-    a("ref_difference", PrimOpRefDifference)
-    a("tuple_ref", PrimOpTupleRef)
-    a("new_array", PrimOpNewArray)
-    a("array_size", PrimOpArraySize)
-    a("array_ref", PrimOpArrayRef)
-    a("array_value", PrimOpArrayValue)
-    a("array_value_ref", PrimOpArrayValueRef)
-    a("record_ref", PrimOpRecordRef)
-    a("struct_ref", PrimOpStructRef)
-    a("bool_not", PrimOpBoolNot)
-    a("char_to_int", PrimOpCharToInt)
-    a("int_to_char", PrimOpIntToChar)
-    a("char_equals", PrimOpCharEquals)
-    a("char_lesser", PrimOpCharLesser)
-    a("char_lesser_equals", PrimOpCharLesserEquals)
-    a("char_greater", PrimOpCharGreater)
-    a("char_greater_equals", PrimOpCharGreaterEquals)
-    a("int_add", PrimOpIntAdd)
-    a("int_subtract", PrimOpIntSubtract)
-    a("int_multiply", PrimOpIntMultiply)
-    a("int_divide", PrimOpIntDivide)
-    a("int_modulus", PrimOpIntModulus)
-    a("int_negate", PrimOpIntNegate)
-    a("int_equals", PrimOpIntEquals)
-    a("int_lesser", PrimOpIntLesser)
-    a("int_lesser_equals", PrimOpIntLesserEquals)
-    a("int_greater", PrimOpIntGreater)
-    a("int_greater_equals", PrimOpIntGreaterEquals)
+    a("array", PrimOpArray)
+    a("arraySize", PrimOpArraySize)
+    a("arrayValue", PrimOpArrayValue)
+
+    a("boolNot", PrimOpBoolNot)
+    a("charToInt", PrimOpCharToInt)
+    a("intToChar", PrimOpIntToChar)
+    a("charEquals", PrimOpCharEquals)
+    a("charLesser", PrimOpCharLesser)
+    a("charLesserEquals", PrimOpCharLesserEquals)
+    a("charGreater", PrimOpCharGreater)
+    a("charGreaterEquals", PrimOpCharGreaterEquals)
+    a("intAdd", PrimOpIntAdd)
+    a("intSubtract", PrimOpIntSubtract)
+    a("intMultiply", PrimOpIntMultiply)
+    a("intDivide", PrimOpIntDivide)
+    a("intModulus", PrimOpIntModulus)
+    a("intNegate", PrimOpIntNegate)
+    a("intEquals", PrimOpIntEquals)
+    a("intLesser", PrimOpIntLesser)
+    a("intLesserEquals", PrimOpIntLesserEquals)
+    a("intGreater", PrimOpIntGreater)
+    a("intGreaterEquals", PrimOpIntGreaterEquals)
     return env
 
 
@@ -272,60 +265,7 @@ def f(entry, x, env) :
     arg_type = compile_expr_as_type(take_one(x,x.args,"argument"), env)
     return True, arg_type
 
-@compile_named_call_expr.register(PrimOpRefGet)
-def f(entry, x, env) :
-    arg = take_one(x, x.args, "argument")
-    ref_type = compile_expr_as_value(arg, env)
-    if not is_ref_type(ref_type) :
-        raise_error("Ref type expected", arg)
-    return True, ref_type.type
-
-@compile_named_call_expr.register(PrimOpRefSet)
-def f(entry, x, env) :
-    args = take_n(2, x, x.args, "arguments")
-    ref_type, value_type = [compile_expr_as_value(y,env) for y in args]
-    if not is_ref_type(ref_type) :
-        raise_error("Ref type expected", args[0])
-    if not type_equals(ref_type.type, value_type) :
-        raise_error("type mismatch", args[1])
-    return True, void_type
-
-@compile_named_call_expr.register(PrimOpRefOffset)
-def f(entry, x, env) :
-    args = take_n(2, x, x.args, "arguments")
-    ref_type, offset_type = [compile_expr_as_value(y,env) for y in args]
-    if not is_ref_type(ref_type) :
-        raise_error("Ref type expected", args[0])
-    if not is_int_type(offset_type) :
-        raise_error("Int type expected", args[1])
-    return True, ref_type
-
-@compile_named_call_expr.register(PrimOpRefDifference)
-def f(entry, x, env) :
-    args = take_n(2, x, x.args, "arguments")
-    ref_type1, ref_type2 = [compile_expr_as_value(y,env) for y in args]
-    if not is_ref_type(ref_type1) :
-        raise_error("Ref type expected", args[0])
-    if not is_ref_type(ref_type2) :
-        raise_error("Ref type expected", args[1])
-    if not type_equals(ref_type1, ref_type2) :
-        raise_error("reference types differ", args[1])
-    return True, int_type
-
-@compile_named_call_expr.register(PrimOpTupleRef)
-def f(entry, x, env) :
-    args = take_n(2, x, x.args, "arguments")
-    tuple_ref = compile_expr_as_value(args[0], env)
-    if (not is_ref_type(tuple_ref)) or (not is_tuple_type(tuple_ref.type)) :
-        raise_error("reference to tuple type expected", args[0])
-    if type(args[1]) is not IntLiteral :
-        raise_error("int literal expected", args[1])
-    i = args[1].value
-    if (i < 0) or (i >= len(tuple_ref.type.types)) :
-        raise_error("tuple index out of range", args[1])
-    return True, tuple_ref.type.types[i]
-
-@compile_named_call_expr.register(PrimOpNewArray)
+@compile_named_call_expr.register(PrimOpArray)
 def f(entry, x, env) :
     if len(x.args) == 1 :
         element_type = compile_expr_as_type(x.args[0], env)
@@ -352,16 +292,6 @@ def f(entry, x, env) :
         raise_error("Array type expected", arg)
     return True, int_type
 
-@compile_named_call_expr.register(PrimOpArrayRef)
-def f(entry, x, env) :
-    args = take_n(2, x, x.args, "arguments")
-    arg_type1, arg_type2 = [compile_expr_as_value(y,env) for y in args]
-    if not is_array_type(arg_type1) :
-        raise_error("Array type expected", args[0])
-    if not is_int_type(arg_type2) :
-        raise_error("Int type expected", args[1])
-    return True, RefType(arg_type1.type)
-
 @compile_named_call_expr.register(PrimOpArrayValue)
 def f(entry, x, env) :
     args = take_n(2, x, x.args, "arguments")
@@ -379,50 +309,6 @@ def f(entry, x, env) :
         if size < 0 :
             raise_error("invalid array size", args[1])
         return True, ArrayValueType(arg1_type, size)
-
-@compile_named_call_expr.register(PrimOpArrayValueRef)
-def f(entry, x, env) :
-    args = take_n(2, x, x.args, "arguments")
-    arg1_type, arg2_type = [compile_expr_as_value(y, env) for y in args]
-    if (not is_ref_type(arg1_type)) or \
-            (not is_array_value_type(arg1_type.type)) :
-        raise_error("reference to array value type expected", args[0])
-    if not is_int_type(arg2_type) :
-        raise_error("Int type expected", args[1])
-    return True, RefType(arg1_type.type)
-
-def get_field_type(t, fname) :
-    ftypes = compute_field_types(t)
-    for field, ftype in zip(t.entry.ast.fields, ftypes) :
-        if field.name.s == fname :
-            return ftype
-    return None
-
-@compile_named_call_expr.register(PrimOpRecordRef)
-def f(entry, x, env) :
-    args = take_n(2, x, x.args, "arguments")
-    arg1_type = compile_expr_as_value(args[0], env)
-    if not is_record_type(arg1_type) :
-        raise_error("record type expected", args[0])
-    if type(args[1]) is not StringLiteral :
-        raise_error("string literal expected", args[1])
-    ftype = get_field_type(arg1_type, args[1].value)
-    if ftype is None :
-        raise_error("invalid field", args[1])
-    return True, RefType(ftype)
-
-@compile_named_call_expr.register(PrimOpStructRef)
-def f(entry, x, env) :
-    args = take_n(2, x, x.args, "arguments")
-    arg1_type = compile_expr_as_value(args[0], env)
-    if (not is_ref_type(arg1_type)) or (not is_struct_type(arg1_type.type)) :
-        raise_error("reference to struct type expected", args[0])
-    if type(args[1]) is not StringLiteral :
-        raise_error("string literal expected", args[1])
-    ftype = get_field_type(arg1_type, args[1].value)
-    if ftype is None :
-        raise_error("invalid field", args[1])
-    return True, RefType(ftype)
 
 @compile_named_call_expr.register(PrimOpBoolNot)
 def f(entry, x, env) :

@@ -4,14 +4,8 @@ from clay.error import raise_error
 __all__ = ["Env", "EnvEntry",
            "BoolTypeEntry", "CharTypeEntry", "IntTypeEntry", "VoidTypeEntry",
            "ArrayTypeEntry", "ArrayValueTypeEntry", "RefTypeEntry",
-           "PrimOpDefault",
-           "PrimOpRefGet", "PrimOpRefSet", "PrimOpRefOffset",
-           "PrimOpRefDifference",
-           "PrimOpTupleRef",
-           "PrimOpNewArray", "PrimOpArraySize", "PrimOpArrayRef",
-           "PrimOpArrayValue", "PrimOpArrayValueRef",
-           "PrimOpRecordRef",
-           "PrimOpStructRef",
+           "PrimOpDefault", "PrimOpArray", "PrimOpArraySize",
+           "PrimOpArrayValue",
            "PrimOpBoolNot",
            "PrimOpCharToInt", "PrimOpIntToChar", "PrimOpCharEquals",
            "PrimOpCharLesser", "PrimOpCharLesserEquals", "PrimOpCharGreater",
@@ -78,24 +72,9 @@ class ArrayValueTypeEntry(EnvEntry) : pass
 class RefTypeEntry(EnvEntry) : pass
 
 class PrimOpDefault(EnvEntry) : pass
-
-class PrimOpRefGet(EnvEntry) : pass
-class PrimOpRefSet(EnvEntry) : pass
-class PrimOpRefOffset(EnvEntry) : pass
-class PrimOpRefDifference(EnvEntry) : pass
-
-class PrimOpTupleRef(EnvEntry) : pass
-
-class PrimOpNewArray(EnvEntry) : pass
+class PrimOpArray(EnvEntry) : pass
 class PrimOpArraySize(EnvEntry) : pass
-class PrimOpArrayRef(EnvEntry) : pass
-
 class PrimOpArrayValue(EnvEntry) : pass
-class PrimOpArrayValueRef(EnvEntry) : pass
-
-class PrimOpRecordRef(EnvEntry) : pass
-
-class PrimOpStructRef(EnvEntry) : pass
 
 class PrimOpBoolNot(EnvEntry) : pass
 
