@@ -14,7 +14,7 @@ class LexerInput(Input) :
         if not self.data.startswith(s, self.pos) :
             return Failure
         self.pos += len(s)
-        self.update_max_pos()
+        self.updateMaxPos()
         return s
 
     def consume_regex(self, regex) :
@@ -23,7 +23,7 @@ class LexerInput(Input) :
             return Failure
         s = match.group()
         self.pos += len(s)
-        self.update_max_pos()
+        self.updateMaxPos()
         return s
 
 def string_parser(s) :
@@ -82,7 +82,7 @@ keyword_set = set(keyword_list)
 
 ident_char1 = condition(lambda x : x.isalpha() or (x == "_"))
 ident_char2 = condition(lambda x : x.isalpha() or x.isdigit() or (x == "_"))
-keyword_ident1 = modify(sequence(ident_char1, zeroplus(ident_char2)),
+keyword_ident1 = modify(sequence(ident_char1, zeroPlus(ident_char2)),
                         lambda x : x[0] + "".join(x[1]))
 def keyword_ident_factory(s) :
     return Keyword(s) if s in keyword_set else Identifier(s)
@@ -137,7 +137,7 @@ def make_string_parser(delim, is_single, is_unicode) :
                                  literal(delim)),
                         lambda x : x[1])
     else :
-        parser = modify(sequence(literal(delim), zeroplus(string_char),
+        parser = modify(sequence(literal(delim), zeroPlus(string_char),
                                  literal(delim)),
                         lambda x : "".join(x[1]))
     return parser
@@ -169,20 +169,20 @@ byte_literal = token(byte_literal2, klass=ByteLiteral)
 #
 
 hex_digit = condition(lambda c : c in "0123456789ABCDEFabcdef")
-hex_int = modify(sequence(literal("0"), literal("x"), oneplus(hex_digit)),
+hex_int = modify(sequence(literal("0"), literal("x"), onePlus(hex_digit)),
                  lambda x : int("".join(x[2]), 16))
 
 binary_digit = condition(lambda c : c in "01")
 binary_int = modify(sequence(literal("0"), literal("b"),
-                             oneplus(binary_digit)),
+                             onePlus(binary_digit)),
                     lambda x : int("".join(x[2]), 2))
 
 octal_digit = condition(lambda c : c in "01234567")
-octal_int = modify(sequence(literal("0"), oneplus(octal_digit)),
+octal_int = modify(sequence(literal("0"), onePlus(octal_digit)),
                    lambda x : int("".join(x[1]), 8))
 
 decimal_digit = condition(lambda c : c in "0123456789")
-decimal_int = modify(oneplus(decimal_digit), lambda x : int("".join(x)))
+decimal_int = modify(onePlus(decimal_digit), lambda x : int("".join(x)))
 
 unsigned_int = choice(hex_int, binary_int, octal_int, decimal_int)
 positive_int = modify(sequence(literal("+"), unsigned_int),
@@ -197,14 +197,14 @@ int_literal = token(choice(negative_int, positive_int, unsigned_int),
 # space, single_line_comment, multi_line_comment
 #
 
-space = token(oneplus(condition(lambda x : x.isspace())),
+space = token(onePlus(condition(lambda x : x.isspace())),
               klass=Space)
 
 end_of_line = condition(lambda c : c in "\r\n")
 any_char = condition(lambda c : True)
 slc_char = modify(sequence(not_ahead(end_of_line), any_char),
                          lambda x : x[1])
-slc_string1 = modify(zeroplus(slc_char), lambda x : "".join(x))
+slc_string1 = modify(zeroPlus(slc_char), lambda x : "".join(x))
 slc_string2 = modify(sequence(string_parser("//"), slc_string1),
                      lambda x : x[1])
 single_line_comment = token(slc_string2, klass=SingleLineComment)
@@ -213,7 +213,7 @@ mlc_begin = string_parser("/*")
 mlc_end = string_parser("*/")
 mlc_char = modify(sequence(not_ahead(mlc_end), any_char),
                   lambda x : x[1])
-mlc_string1 = modify(zeroplus(mlc_char), lambda x : "".join(x))
+mlc_string1 = modify(zeroPlus(mlc_char), lambda x : "".join(x))
 mlc_string2 = modify(sequence(mlc_begin, mlc_string1, mlc_end),
                      lambda x : x[1])
 
@@ -241,7 +241,7 @@ def tokenize(data, fileName, remove_space=True) :
     while input.pos < len(data) :
         token = one_token(input)
         if token is Failure :
-            location = Location(data, input.max_pos, fileName)
+            location = Location(data, input.maxPos, fileName)
             raiseError("invalid token", location)
         tokens.append(token)
     def is_space(t) :

@@ -1,5 +1,5 @@
-__all__ = ["Failure", "Input", "zeroplus", "choice",
-           "sequence", "optional", "modify", "oneplus", "many", "listof",
+__all__ = ["Failure", "Input", "zeroPlus", "choice",
+           "sequence", "optional", "modify", "onePlus", "many", "listOf",
            "condition", "literal"]
 
 #
@@ -12,7 +12,7 @@ class Input(object) :
     def __init__(self, data, pos=0) :
         self.data = data
         self.pos = pos
-        self.max_pos = pos
+        self.maxPos = pos
         self.saved_ = []
 
     def next(self) :
@@ -27,21 +27,21 @@ class Input(object) :
 
     def commit(self) :
         self.saved_.pop()
-        self.update_max_pos()
+        self.updateMaxPos()
 
     def rollback(self) :
         self.pos = self.saved_.pop()
 
-    def update_max_pos(self) :
-        self.max_pos = max(self.max_pos, self.pos)
+    def updateMaxPos(self) :
+        self.maxPos = max(self.maxPos, self.pos)
 
 
 #
 # parser combinators
 #
 
-def zeroplus(parser) :
-    def parser_proc(input) :
+def zeroPlus(parser) :
+    def parserProc(input) :
         results = []
         while True :
             result = parser(input)
@@ -49,19 +49,19 @@ def zeroplus(parser) :
                 break
             results.append(result)
         return results
-    return parser_proc
+    return parserProc
 
 def choice(*parsers) :
-    def parser_proc(input) :
+    def parserProc(input) :
         for parser in parsers :
             result = parser(input)
             if result is not Failure :
                 return result
         return Failure
-    return parser_proc
+    return parserProc
 
 def sequence(*parsers) :
-    def parser_proc(input) :
+    def parserProc(input) :
         results = []
         input.begin()
         for parser in parsers :
@@ -72,30 +72,30 @@ def sequence(*parsers) :
             results.append(result)
         input.commit()
         return results
-    return parser_proc
+    return parserProc
 
 def optional(parser, default=None) :
-    def parser_proc(input) :
+    def parserProc(input) :
         result = parser(input)
         if result is Failure :
             result = default
         return result
-    return parser_proc
+    return parserProc
 
 def modify(parser, modifier) :
-    def parser_proc(input) :
+    def parserProc(input) :
         result = parser(input)
         if result is not Failure :
             result = modifier(result)
         return result
-    return parser_proc
+    return parserProc
 
-def oneplus(parser) :
-    return modify(sequence(parser, zeroplus(parser)),
-                  lambda x : fixlist(x))
+def onePlus(parser) :
+    return modify(sequence(parser, zeroPlus(parser)),
+                  lambda x : fixList(x))
 
 def many(parser, min, max) :
-    def parser_proc(input) :
+    def parserProc(input) :
         input.begin()
         results = []
         while True :
@@ -110,20 +110,20 @@ def many(parser, min, max) :
             return Failure
         input.commit()
         return results
-    return parser_proc
+    return parserProc
 
-def listof(parser, separator) :
+def listOf(parser, separator) :
     tail = modify(sequence(separator, parser), lambda x : x[1])
-    return modify(sequence(parser, zeroplus(tail)), lambda x : fixlist(x))
+    return modify(sequence(parser, zeroPlus(tail)), lambda x : fixList(x))
 
-def fixlist(head_tail) :
-    head = head_tail[0]
-    body = head_tail[1]
+def fixList(headTail) :
+    head = headTail[0]
+    body = headTail[1]
     body.insert(0, head)
     return body
 
 def condition(cond) :
-    def parser_proc(input) :
+    def parserProc(input) :
         input.begin()
         item = input.next()
         if (item is Failure) or (not cond(item)) :
@@ -131,7 +131,7 @@ def condition(cond) :
             return Failure
         input.commit()
         return item
-    return parser_proc
+    return parserProc
 
 def literal(lit) :
     return condition(lambda x : x == lit)

@@ -62,7 +62,7 @@ literal = choice(bool_literal, int_literal, char_literal, string_literal)
 #
 
 expression2 = lambda input : expression(input)
-expression_list = listof(expression2, comma)
+expression_list = listOf(expression2, comma)
 opt_expression_list = modify(optional(expression_list),
                              lambda x : [] if x is None else x)
 
@@ -99,7 +99,7 @@ def fold_suffixes(expr, suffixes) :
         expr = suffix
     return expr
 
-suffix_expr = modify(sequence(atomic_expr, zeroplus(suffix)),
+suffix_expr = modify(sequence(atomic_expr, zeroPlus(suffix)),
                      lambda x : fold_suffixes(x[0], x[1]))
 
 
@@ -122,7 +122,7 @@ opt_type_spec = optional(type_spec)
 
 variable = astnode(sequence(identifier, opt_type_spec),
                    lambda x : Variable(x[0],x[1]))
-variable_list = listof(variable, comma)
+variable_list = listOf(variable, comma)
 
 #
 # statements
@@ -159,7 +159,7 @@ local_variable_def = astnode(sequence(keyword("var"), variable_list,
                                       symbol("="), expression_list, semicolon),
                              lambda x : LocalVariableDef(x[1],x[3]))
 
-block = astnode(sequence(symbol("{"), oneplus(statement2), symbol("}")),
+block = astnode(sequence(symbol("{"), onePlus(statement2), symbol("}")),
                 lambda x : Block(x[1]))
 
 expr_statement = astnode(sequence(expression, semicolon),
@@ -175,17 +175,17 @@ statement = choice(block, local_variable_def, assignment,
 # top level items
 #
 
-identifier_list = listof(identifier, comma)
+identifier_list = listOf(identifier, comma)
 type_vars = modify(sequence(symbol("["), identifier_list, symbol("]")),
                    lambda x : x[1])
 opt_type_vars = modify(optional(type_vars), lambda x : [] if x is None else x)
 field_def = astnode(sequence(identifier, type_spec, semicolon),
                     lambda x : Field(x[0],x[1]))
 record_def = astnode(sequence(keyword("record"), identifier, opt_type_vars,
-                              symbol("{"), oneplus(field_def), symbol("}")),
+                              symbol("{"), onePlus(field_def), symbol("}")),
                      lambda x : RecordDef(x[1],x[2],x[4]))
 struct_def = astnode(sequence(keyword("struct"), identifier, opt_type_vars,
-                              symbol("{"), oneplus(field_def), symbol("}")),
+                              symbol("{"), onePlus(field_def), symbol("}")),
                      lambda x : StructDef(x[1],x[2],x[4]))
 variable_def = astnode(sequence(keyword("var"), variable_list,
                                 symbol("="), expression_list, semicolon),
@@ -199,12 +199,12 @@ value_argument = astnode(sequence(is_ref, variable),
 type_argument = astnode(sequence(keyword("type"), expression),
                         lambda x : TypeArgument(x[1]))
 argument = choice(value_argument, type_argument)
-opt_arguments = modify(optional(listof(argument, comma)),
+opt_arguments = modify(optional(listOf(argument, comma)),
                        lambda x : [] if x is None else x)
 type_condition = astnode(sequence(identifier, symbol("("), opt_expression_list,
                                   symbol(")")),
                          lambda x : TypeCondition(x[0],x[2]))
-type_conditions = modify(sequence(keyword("if"), listof(type_condition,comma)),
+type_conditions = modify(sequence(keyword("if"), listOf(type_condition,comma)),
                          lambda x : x[1])
 opt_type_conditions = modify(optional(type_conditions),
                              lambda x : [] if x is None else x)
@@ -239,7 +239,7 @@ top_level_item = choice(predicate_def, instance_def, record_def, struct_def,
 # program
 #
 
-program = astnode(oneplus(top_level_item), lambda x : Program(x))
+program = astnode(onePlus(top_level_item), lambda x : Program(x))
 
 
 #
@@ -251,9 +251,9 @@ def parse(data, fileName) :
     input = Input(tokens)
     result = program(input)
     if (result is Failure) or (input.pos < len(tokens)) :
-        if input.max_pos == len(tokens) :
+        if input.maxPos == len(tokens) :
             location = Location(data, len(data), fileName)
         else :
-            location = tokens[input.max_pos].location
+            location = tokens[input.maxPos].location
         raiseError("parse error", location)
     return result
