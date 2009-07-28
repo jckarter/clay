@@ -31,6 +31,9 @@ class MultiMethod(object) :
             return self
         return modifier
 
+    def getHandler(self, *types) :
+        return self.registry_.get(types, self.defaultProc_)
+
     def __call__(self, *args) :
         types = tuple(type(x) for x in args[:self.n_])
         handler = self.registry_.get(types, self.defaultProc_)
