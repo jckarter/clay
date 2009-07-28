@@ -140,7 +140,17 @@ def oneTypeParam(container, memberList) :
 
 def nTypeParams(n, container, memberList) :
     if len(memberList) != n :
-        raiseError("exactly %d type parameters expected" % n, container)
+        raiseError("exactly %d type parameter(s) expected" % n, container)
+    return memberList
+
+def oneArg(container, memberList) :
+    if len(memberList) != 1 :
+        raiseError("exactly one argument expected", container)
+    return memberList[0]
+
+def nArgs(n, container, memberList) :
+    if len(memberList) !+ n :
+        raiseError("exactly %d argument(s) expected" % n, container)
     return memberList
 
 def intLiteralValue(x) :
@@ -166,10 +176,13 @@ def inferValueType(x, env, verify=None) :
             raiseError("invalid type", x)
     return resultType
 
-def inferTypeType(x, env) :
+def inferTypeType(x, env, verify=None) :
     isValue, resultType = inferType(x, env)
     if not isValue :
         raiseError("type expected", x)
+    if verify is not None :
+        if not verify(resultType) :
+            raiseError("invalid type", x)
     return resultType
 
 @inferType.register(AddressOfExpr)
@@ -189,7 +202,12 @@ def inferArrayIndexing(x, env) :
     def isIndexable(t) :
         return isArrayType(t) or isArrayValueType(t)
     indexableType = inferValueType(x.expr, env, isIndexable)
+    index = oneArg(x, x.indexes)
+    indexType = inferValueType(index, env, isIntType)
     return True, indexableType.type
+
+
+# begin inferNamedIndexExpr
 
 inferNamedIndexExpr = multimethod()
 
@@ -204,409 +222,151 @@ def foo(entry, x, env) :
     typeParam = inferTypeType(typeParam, env)
     return False, ArrayValueType(typeParam, intLiteralValue(size))
 
-@inferNamedIndexExpr.register
+@inferNamedIndexExpr.register(RefTypeEntry)
+def foo(entry, x, env) :
+    typeParam = oneTypeParam(x, x.indexes)
+    return False, RefType(inferTypeType(typeParam, env))
 
+@inferNamedIndexExpr.register(RecordEntry)
+def foo(entry, x, env) :
+    assert False
+
+@inferNamedIndexExpr.register(StructEntry)
+def foo(entry, x, env) :
+    assert False
+
+# end inferNamedIndexExpr
 
-#
-# compileExpr : (expr, env) -> (isValue, type)
-#
 
-compileExpr = multimethod()
-
-def compileExprAsValue(x, env) :
-    isValue,resultType = compileExpr(x, env)
-    if not isValue :
-        raiseError("value expected", x)
-    return resultType
-
-def compileExprAsType(x, env) :
-    isValue,resultType = compileExpr(x, env)
-    if isValue :
-        raiseError("type expected", x)
-    return resultType
-
-def takeOne(container, memberList, kind) :
-    if len(memberList) > 1 :
-        raiseError("only one %s allowed" % kind, memberList[1])
-    if len(memberList) < 1 :
-        raiseError("missing %s" % kind, container)
-    return memberList[0]
-
-def takeN(n, container, memberList, kind) :
-    if n == len(memberList) :
-        return memberList
-    if len(memberList) == 0 :
-        raiseError("missing %s" % kind, container)
-    raiseError("incorrect number of %s" % kind, container)
-
-@compileExpr.register(AddressOfExpr)
-def foo(x, env) :
-    return True, RefType(compileExprAsValue(x.expr, env))
-
-@compileExpr.register(IndexExpr)
+@inferType.register(CallExpr)
 def foo(x, env) :
     if type(x.expr) is NameRef :
         entry = lookupIdent(env, x.expr.name)
-        result = compileNamedIndexExpr(entry, x, env)
-        if result is not False :
-            return result
-    indexableType = compileExprAsValue(x.expr, env)
-    if isArrayType(indexableType) :
-        return True, indexableType.type
-    elif isArrayValueType(indexableType) :
-        return True, indexableType.type
-    else :
-        raiseError("array type expected", x.expr)
+        handler = inferNamedCallExpr.getHandler(type(entry))
+        if handler is not None :
+            return handler(entry, x, env)
+    return inferIndirectCall(x, env)
 
-
-
-# begin compileNamedIndexExpr
-
-compileNamedIndexExpr = multimethod(default=False)
-
-@compileNamedIndexExpr.register(ArrayTypeEntry)
-def foo(entry, x, env) :
-    typeParam = takeOne(x, x.indexes, "type parameter")
-    return False, ArrayType(compileExprAsType(typeParam, env))
-
-@compileNamedIndexExpr.register(ArrayValueTypeEntry)
-def foo(entry, x, env) :
-    typeParam,size = takeN(2, x, x.indexes, "type parameters")
-    if type(size) is not IntLiteral :
-        raiseError("int literal expected", size)
-    if size.value < 0 :
-        raiseError("array size cannot be negative", size)
-    y = compileExprAsType(typeParam, env)
-    return False, ArrayValueType(y, size.value)
-
-@compileNamedIndexExpr.register(RefTypeEntry)
-def foo(entry, x, env) :
-    typeParam = takeOne(x, x.indexes, "type parameter")
-    return False, RefType(compileExprAsType(typeParam, env))
-
-@compileNamedIndexExpr.register(RecordEntry)
-def foo(entry, x, env) :
-    nTypeVars = len(entry.ast.typeVars)
-    typeParams = takeN(nTypeVars, x, x.indexes, "type parameters")
-    typeParams = [compileExprAsType(y,env) for y in typeParams]
-    return False, RecordType(entry, typeParams)
-
-@compileNamedIndexExpr.register(StructEntry)
-def foo(entry, x, env) :
-    nTypeVars = len(entry.ast.typeVars)
-    typeParams = takeN(nTypeVars, x, x.indexes, "type parameters")
-    typeParams = [compileExprAsType(y,env) for y in typeParams]
-    return False, StructType(entry, typeParams)
-
-# end compileNamedIndexExpr
-
-
-@compileExpr.register(CallExpr)
-def foo(x, env) :
-    if type(x.expr) is NameRef :
-        entry = lookupIdent(env, x.expr.name)
-        result = compileNamedCallExpr(entry, x, env)
-        if result is not False :
-            return result
-    isValue,callableType = compileExpr(x.expr, env)
-    if isValue :
-        raiseError("invalid call", x)
-    if isRecordType(callableType) or isStructType(callableType) :
-        fieldTypes = computeFieldTypes(callableType)
-        if len(x.args) != len(fieldTypes) :
-            raiseError("incorrect number of arguments", x)
-        for arg, fieldType in zip(x.args, fieldTypes) :
-            argType = compileExprAsValue(arg, env)
-            if not typeEquals(argType, fieldType) :
-                raiseError("type mismatch in argument", arg)
-        return callableType
-    else :
-        raiseError("invalid call", x)
-
-def computeFieldTypes(t) :
-    assert isRecordType(t) or isStructType(t)
-    ast = t.entry.ast
-    env = Env(t.entry.env)
-    assert len(ast.typeVars) == len(t.typeParams)
-    for tvar, tparam in zip(ast.typeVars, t.typeParams) :
-        addIdent(env, tvar, tparam)
-    return [compileExprAsType(field.type, env) for field in ast.fields]
-
+def insertIndirectCall(x, env) :
+    def isCallable(t) :
+        return isRecordType(t) or isStructType(t)
+    callableType = inferTypeType(x.expr, env, isCallable)
+    assert False
 
 
-# begin compileNamedCallExpr
+# begin inferNamedCallExpr
 
-compileNamedCallExpr = multimethod(default=False)
+inferNamedCallExpr = multimethod()
 
-@compileNamedCallExpr.register(PrimOpDefault)
+@inferNamedCallExpr.register(PrimOpDefault)
 def foo(entry, x, env) :
-    argType = compileExprAsType(takeOne(x,x.args,"argument"), env)
+    arg = oneArg(x, x.args)
+    argType = inferTypeType(arg, env)
     return True, argType
 
-@compileNamedCallExpr.register(PrimOpArray)
+@inferNamedCallExpr.register(PrimOpArray)
 def foo(entry, x, env) :
-    if len(x.args) == 1 :
-        elementType = compileExprAsType(x.args[0], env)
-        return True, ArrayType(elementType)
-    elif len(x.args) == 2 :
-        isValue, arg1Type = compileExpr(x.args[0], env)
-        arg2Type = compileExprAsValue(x.args[1], env)
-        if isValue :
-            if not isIntType(arg1Type) :
-                raiseError("Int type expected", x.args[0])
-            return True, ArrayType(arg2Type)
-        else :
-            if not isIntType(arg2Type) :
-                raiseError("Int type expected", x.args[1])
-            return True, ArrayType(arg1Type)
-    else :
-        raiseError("incorrect number of arguments", x)
+    args = nArgs(2, x, x.args)
+    nType = inferValueType(args[0], env, isIntType)
+    vType = inferValueType(args[1], env)
+    return True, ArrayType(vType)
 
-@compileNamedCallExpr.register(PrimOpArraySize)
+@inferNamedCallExpr.register(PrimOpArraySize)
 def foo(entry, x, env) :
-    arg = takeOne(x, x.args, "argument")
-    argType = compileExprAsValue(arg, env)
-    if not isArrayType(argType) :
-        raiseError("Array type expected", arg)
+    arg = oneArg(x, x.args)
+    arrayType = inferValueType(arg, env, isArrayType)
     return True, intType
 
-@compileNamedCallExpr.register(PrimOpArrayValue)
+@inferNamedCallExpr.register(PrimOpArrayValue)
 def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    if type(args[0]) is IntLiteral :
-        size = args[0].value
-        if size < 0 :
-            raiseError("invalid array size", args[0])
-        elementType = compileExprAsValue(args[1], env)
-        return True, ArrayValueType(elementType, size)
-    else :
-        arg1Type = compileExprAsType(args[0], env)
-        if type(args[1]) is not IntLiteral :
-            raiseError("Int literal expected", args[1])
-        size = args[1].value
-        if size < 0 :
-            raiseError("invalid array size", args[1])
-        return True, ArrayValueType(arg1Type, size)
+    args = nArgs(2, x, x.args)
+    n = intLiteralValue(args[0])
+    vType = inferValueType(args[1], env)
+    return True, ArrayValueType(vType, n)
 
-@compileNamedCallExpr.register(PrimOpBoolNot)
+@inferNamedCallExpr.register(PrimOpBoolNot)
 def foo(entry, x, env) :
-    arg = takeOne(x, x.xargs, "argument")
-    argType = compileExprAsValue(arg, env)
-    if not isBoolType(argType) :
-        raiseError("Bool type expected", arg)
+    arg = oneArg(x, x.args)
+    argType = inferValueType(arg, env, isBoolType)
     return True, boolType
 
-@compileNamedCallExpr.register(PrimOpCharToInt)
+@inferNamedCallExpr.register(PrimOpCharToInt)
 def foo(entry, x, env) :
-    arg = takeOne(x, x.args, "argument")
-    argType = compileExprAsValue(arg, env)
-    if not isCharType(argType) :
-        raiseError("Char type expected", arg)
+    arg = oneArg(x, x.args)
+    argType = inferValueType(arg, env, isCharType)
     return True, intType
 
-@compileNamedCallExpr.register(PrimOpIntToChar)
+@inferNamedCallExpr.register(PrimOpIntToChar)
 def foo(entry, x, env) :
-    arg = takeOne(x, x.args, "argument")
-    argType = compileExprAsValue(arg, env)
-    if not isIntType(argType) :
-        raiseError("Int type expected", arg)
+    arg = oneArg(x, x.args)
+    argType = inferValueType(arg, env, isIntType)
     return True, charType
 
-@compileNamedCallExpr.register(PrimOpCharEquals)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isCharType(argType) :
-            raiseError("Char type expected", y)
+def inferCharComparison(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    arg1Type = inferValueType(args[0], env, isCharType)
+    arg2Type = inferValueType(args[1], env, isCharType)
     return True, boolType
 
-@compileNamedCallExpr.register(PrimOpCharLesser)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isCharType(argType) :
-            raiseError("Char type expected", y)
-    return True, boolType
+inferNamedCallExpr.addHandler(inferCharComparison, PrimOpCharEquals)
+inferNamedCallExpr.addHandler(inferCharComparison, PrimOpCharLesser)
+inferNamedCallExpr.addHandler(inferCharComparison, PrimOpCharLesserEquals)
+inferNamedCallExpr.addHandler(inferCharComparison, PrimOpCharGreater)
+inferNamedCallExpr.addHandler(inferCharComparison, PrimOpCharGreaterEquals)
 
-@compileNamedCallExpr.register(PrimOpCharLesserEquals)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isCharType(argType) :
-            raiseError("Char type expected", y)
-    return True, boolType
-
-@compileNamedCallExpr.register(PrimOpCharGreater)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isCharType(argType) :
-            raiseError("Char type expected", y)
-    return True, boolType
-
-@compileNamedCallExpr.register(PrimOpCharGreaterEquals)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isCharType(argType) :
-            raiseError("Char type expected", y)
-    return True, boolType
-
-@compileNamedCallExpr.register(PrimOpIntAdd)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
+def inferIntBinaryOp(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    arg1Type = inferValueType(args[0], env, isIntType)
+    arg2Type = inferValueType(args[1], env, isIntType)
     return True, intType
 
-@compileNamedCallExpr.register(PrimOpIntSubtract)
+inferNamedCallExpr.addHandler(inferIntBinaryOp, PrimOpIntAdd)
+inferNamedCallExpr.addHandler(inferIntBinaryOp, PrimOpIntSubtract)
+inferNamedCallExpr.addHandler(inferIntBinaryOp, PrimOpIntMultiply)
+inferNamedCallExpr.addHandler(inferIntBinaryOp, PrimOpIntDivide)
+inferNamedCallExpr.addHandler(inferIntBinaryOp, PrimOpIntModulus)
+
+@inferNamedCallExpr.register(PrimOpIntNegate)
 def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
+    arg = oneArg(x, x.args)
+    argType = inferValueType(arg, env, isIntType)
     return True, intType
 
-@compileNamedCallExpr.register(PrimOpIntMultiply)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
-    return True, intType
-
-@compileNamedCallExpr.register(PrimOpIntDivide)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
-    return True, intType
-
-@compileNamedCallExpr.register(PrimOpIntModulus)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
-    return True, intType
-
-@compileNamedCallExpr.register(PrimOpIntNegate)
-def foo(entry, x, env) :
-    arg = takeOne(x, x.args, "argument")
-    argType = compileExprAsValue(arg, env)
-    if not isIntType(argType) :
-        raiseError("Int type expected", arg)
-    return True, intType
-
-@compileNamedCallExpr.register(PrimOpIntEquals)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
+def inferIntComparison(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    arg1Type = inferValueType(args[0], env, isIntType)
+    arg2Type = inferValueType(args[1], env, isIntType)
     return True, boolType
 
-@compileNamedCallExpr.register(PrimOpIntLesser)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
-    return True, boolType
+inferNamedCallExpr.addHandler(inferIntComparison, PrimOpIntEquals)
+inferNamedCallExpr.addHandler(inferIntComparison, PrimOpIntLesser)
+inferNamedCallExpr.addHandler(inferIntComparison, PrimOpIntLesserEquals)
+inferNamedCallExpr.addHandler(inferIntComparison, PrimOpIntGreater)
+inferNamedCallExpr.addHandler(inferIntComparison, PrimOpIntGreaterEquals)
 
-@compileNamedCallExpr.register(PrimOpIntLesserEquals)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
-    return True, boolType
-
-@compileNamedCallExpr.register(PrimOpIntGreater)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
-    return True, boolType
-
-@compileNamedCallExpr.register(PrimOpIntGreaterEquals)
-def foo(entry, x, env) :
-    args = takeN(2, x, x.args, "arguments")
-    for y in args :
-        argType = compileExprAsValue(y, env)
-        if not isIntType(argType) :
-            raiseError("Int type expected", y)
-    return True, boolType
-
-def bindTypeVariables(tvarNames, env) :
-    tvars = []
-    for tvarName in tvarNames :
-        tvar = TypeVariable(tvarName)
-        tvars.append(tvar)
-        addIdent(env, tvarName, tvar)
-    return tvars
-
-@compileNamedCallExpr.register(RecordEntry)
-def foo(entry, x, env) :
-    ast = entry.ast
-    env2 = Env(entry.env)
-    tvars = bindTypeVariables(ast.typeVars, env2)
-    if len(x.args) != len(ast.fields) :
-        raiseError("incorrect number of arguments", x)
-    for field, arg in zip(ast.fields, x.args) :
-        fieldType = compileExprAsType(field.type, env2)
-        argType = compileExprAsValue(arg, env)
-        if not typeUnify(argType, fieldType) :
-            raiseError("type mismatch", arg)
-    typeParams = [tvar.deref() for tvar in tvars]
-    return True, RecordType(entry, typeParams)
-
-@compileNamedCallExpr.register(StructEntry)
-def foo(entry, x, env) :
-    ast = entry.ast
-    env2 = Env(entry.env)
-    tvars = bindTypeVariables(ast.typeVars, env2)
-    if len(x.args) != len(ast.fields) :
-        raiseError("incorrect number of arguments", x)
-    for field, arg in zip(ast.fields, x.args) :
-        fieldType = compileExprAsType(field.type, env2)
-        argType = compileExprAsValue(arg, env)
-        if not typeUnify(argType, fieldType) :
-            raiseError("type mismatch", arg)
-    typeParams = [tvar.deref() for tvar in tvars]
-    return True, StructType(entry, typeParams)
-
-@compileNamedCallExpr.register(ProcedureEntry)
+@inferNamedCallExpr.register(RecordEntry)
 def foo(entry, x, env) :
     assert False
 
-@compileNamedCallExpr.register(OverloadableEntry)
+@inferNamedCallExpr.register(StructEntry)
 def foo(entry, x, env) :
     assert False
 
-@compileNamedCallExpr.register(TypeVarEntry)
+@inferNamedCallExpr.register(ProcedureEntry)
 def foo(entry, x, env) :
     assert False
 
-# end compileNamedCallExpr
+@inferNamedCallExpr.register(OverloadableEntry)
+def foo(entry, x, env) :
+    assert False
+
+@inferNamedCallExpr.register(TypeVarEntry)
+def foo(entry, x, env) :
+    assert False
+
+# end inferNamedCallExpr
 
+
 
 
 #
