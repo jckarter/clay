@@ -31,13 +31,10 @@ v_1:T_1, ..., v_n:T_n => (v_1, ..., v_n) : (T_1, ..., T_n)
 e:(T_1, ..., T_n) => e.i : T_i
 
 v_1:T, ..., v_n:T => [v_1, ... ,v_n] : Array[T]
-T:Type => array(type T):Array[T]
-T:Type,n:Int => array(type T, n):Array[T]
 n:Int, v:T => array(n, v):Array[T]
 a:Array[T] => arraySize(a):Int
 a:Array[T], i:Int => a[i]:T
 
-T:Type, n:IntLiteral => arrayValue(type T, n):ArrayValue[T,n]
 n:IntLiteral, v:T => arrayValue(n, v):ArrayValue[T, n]
 a:ArrayValue[T,n], i:Int => a[i]:T
 
