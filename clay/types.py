@@ -91,31 +91,31 @@ def typeListEquals(a, b) :
     return True
 
 @typeEquals.register(PrimitiveType, PrimitiveType)
-def f(x, y) :
+def foo(x, y) :
     return x.name == y.name
 
 @typeEquals.register(TupleType, TupleType)
-def f(x, y) :
+def foo(x, y) :
     return typeListEquals(x.types, y.types)
 
 @typeEquals.register(ArrayType, ArrayType)
-def f(x, y) :
+def foo(x, y) :
     return typeEquals(x.type, y.type)
 
 @typeEquals.register(ArrayValueType, ArrayValueType)
-def f(x, y) :
+def foo(x, y) :
     return typeEquals(x.type, y.type) and (x.size == y.size)
 
 @typeEquals.register(RefType, RefType)
-def f(x, y) :
+def foo(x, y) :
     return typeEquals(x.type, y.type)
 
 @typeEquals.register(RecordType, RecordType)
-def f(x, y) :
+def foo(x, y) :
     return (x.entry is y.entry) and typeListEquals(x.typeParams, y.typeParams)
 
 @typeEquals.register(StructType, StructType)
-def f(x, y) :
+def foo(x, y) :
     return (x.entry is y.entry) and typeListEquals(x.typeParams, y.typeParams)
 
 
@@ -127,33 +127,33 @@ def f(x, y) :
 typeHash = multimethod()
 
 @typeHash.register(PrimitiveType)
-def f(x) :
+def foo(x) :
     return hash(x.name)
 
 @typeHash.register(TupleType)
-def f(x) :
+def foo(x) :
     childHashes = tuple([typeHash(t) for t in x.types])
     return hash(("Tuple", childHashes))
 
 @typeHash.register(ArrayType)
-def f(x) :
+def foo(x) :
     return hash(("Array", typeHash(x.type)))
 
 @typeHash.register(ArrayValueType)
-def f(x) :
+def foo(x) :
     return hash(("ArrayValue", typeHash(x.type), x.size))
 
 @typeHash.register(RefType)
-def f(x) :
+def foo(x) :
     return hash(("Ref", typeHash(x.type)))
 
 @typeHash.register(RecordType)
-def f(x) :
+def foo(x) :
     childHashes = tuple([typeHash(t) for t in x.typeParams])
     return hash(("Record", id(x.entry), childHashes))
 
 @typeHash.register(StructType)
-def f(x) :
+def foo(x) :
     childHashes = tuple([typeHash(t) for t in x.typeParams])
     return hash(("Struct", id(x.entry), childHashes))
 
@@ -204,31 +204,31 @@ def typeUnifyVariables(x, y) :
     assert False
 
 @typeUnify.register(PrimitiveType, PrimitiveType)
-def f(x, y) :
+def foo(x, y) :
     return x.name == y.name
 
 @typeUnify.register(TupleType, TupleType)
-def f(x, y) :
+def foo(x, y) :
     return typeListUnify(x.types, y.types)
 
 @typeUnify.register(ArrayType, ArrayType)
-def f(x, y) :
+def foo(x, y) :
     return typeUnify(x.type, y.type)
 
 @typeUnify.register(ArrayValueType, ArrayValueType)
-def f(x, y) :
+def foo(x, y) :
     return (x.size == y.size) and typeUnify(x.type, y.type)
 
 @typeUnify.register(RefType, RefType)
-def f(x, y) :
+def foo(x, y) :
     return typeUnify(x.type, y.type)
 
 @typeUnify.register(RecordType, RecordType)
-def f(x, y) :
+def foo(x, y) :
     return (x.entry is y.entry) and typeListUnify(x.typeParams, y.typeParams)
 
 @typeUnify.register(StructType, StructType)
-def f(x, y) :
+def foo(x, y) :
     return (x.entry is y.entry) and typeListUnify(x.typeParams, y.typeParams)
 
 
@@ -237,4 +237,4 @@ def f(x, y) :
 # remove temp name used for multimethod instances
 #
 
-del f
+del foo
