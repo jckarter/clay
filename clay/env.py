@@ -29,7 +29,7 @@ class Env(object) :
         self.parent = parent
         self.entries = {}
 
-    def has_entry(self, name) :
+    def hasEntry(self, name) :
         return name in self.entries
 
     def add(self, name, entry) :
@@ -117,10 +117,10 @@ class StructEntry(EnvEntry) : pass
 class VariableDefEntry(object) : pass
 
 class VariableEntry(EnvEntry) :
-    def __init__(self, env, def_entry, index) :
-        ast = def_entry.ast.variables[index]
+    def __init__(self, env, defEntry, index) :
+        ast = defEntry.ast.variables[index]
         super(VariableEntry, self).__init__(env, ast)
-        self.def_entry = def_entry
+        self.defEntry = defEntry
         self.index = index
 
 class ProcedureEntry(EnvEntry) : pass
