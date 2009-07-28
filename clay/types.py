@@ -8,7 +8,7 @@ __all__ = ["Type", "boolType", "intType", "charType", "voidType",
            "isVoidType", "isTupleType", "isArrayType",
            "isArrayValueType", "isRefType",
            "isRecordType", "isStructType",
-           "typeEquals", "typeListEquals",
+           "typeEquals", "typeListEquals", "typeHash",
            "typeUnify", "typeListUnify", "TypeVariable"]
 
 
@@ -18,7 +18,12 @@ __all__ = ["Type", "boolType", "intType", "charType", "voidType",
 #
 
 class Type(object) :
-    pass
+    def __eq__(self, other) :
+        return typeEquals(self, other)
+    def __ne__(self, other) :
+        return not typeEquals(self, other)
+    def __hash__(self) :
+        return typeHash(self)
 
 class PrimitiveType(Type) :
     def __init__(self, name) :
