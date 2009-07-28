@@ -92,41 +92,119 @@ def buildTopLevelEnv(program) :
 addTopLevel = multimethod()
 
 @addTopLevel.register(PredicateDef)
-def f(x, env) :
+def foo(x, env) :
     addIdent(env, x.name, PredicateEntry(env,x))
 
 @addTopLevel.register(InstanceDef)
-def f(x, env) :
+def foo(x, env) :
     entry = InstanceEntry(env, x)
     lookupPredicate(env, x.name).instances.append(entry)
 
 @addTopLevel.register(RecordDef)
-def f(x, env) :
+def foo(x, env) :
     addIdent(env, x.name, RecordEntry(env,x))
 
 @addTopLevel.register(StructDef)
-def f(x, env) :
+def foo(x, env) :
     addIdent(env, x.name, StructEntry(env,x))
 
 @addTopLevel.register(VariableDef)
-def f(x, env) :
+def foo(x, env) :
     defEntry = VariableDefEntry(env, x)
     for i,variable in enumerate(x.variables) :
         addIdent(env, variable.name, VariableEntry(env,defEntry,i))
 
 @addTopLevel.register(ProcedureDef)
-def f(x, env) :
+def foo(x, env) :
     addIdent(env, x.name, ProcedureEntry(env,x))
 
 @addTopLevel.register(OverloadableDef)
-def f(x, env) :
+def foo(x, env) :
     addIdent(env, x.name, OverloadableEntry(env,x))
 
 @addTopLevel.register(OverloadDef)
-def f(x, env) :
+def foo(x, env) :
     entry = OverloadEntry(env, x)
     lookupOverloadable(env, x.name).overloads.append(entry)
 
+
+
+#
+# error checking getters
+#
+
+def oneTypeParam(container, memberList) :
+    if len(memberList) != 1 :
+        raiseError("exactly one type parameter expected", container)
+    return memberList[0]
+
+def nTypeParams(n, container, memberList) :
+    if len(memberList) != n :
+        raiseError("exactly %d type parameters expected" % n, container)
+    return memberList
+
+def intLiteralValue(x) :
+    if type(x) is not IntLiteral :
+        raiseError("int literal expected", x)
+    return x.value
+
+
+
+#
+# inferType : (expr, env) -> (isValue, type)
+#             throws RecursiveInferenceError
+#
+
+inferType = multimethod()
+
+def inferValueType(x, env, verify=None) :
+    isValue, resultType = inferType(x, env)
+    if not isValue :
+        raiseError("value expected", x)
+    if verify is not None :
+        if not verify(resultType) :
+            raiseError("invalid type", x)
+    return resultType
+
+def inferTypeType(x, env) :
+    isValue, resultType = inferType(x, env)
+    if not isValue :
+        raiseError("type expected", x)
+    return resultType
+
+@inferType.register(AddressOfExpr)
+def foo(x, env) :
+    return True, RefType(inferValueType(x.expr, env))
+
+@inferType.register(IndexExpr)
+def foo(x, env) :
+    if type(x.expr) is NameRef :
+        entry = lookupIdent(env, x.expr.name)
+        handler = inferNamedIndexExpr.getHandler(type(entry))
+        if handler is not None :
+            return handler(entry, x, env)
+    return inferArrayIndexing(x, env)
+
+def inferArrayIndexing(x, env) :
+    def isIndexable(t) :
+        return isArrayType(t) or isArrayValueType(t)
+    indexableType = inferValueType(x.expr, env, isIndexable)
+    return True, indexableType.type
+
+inferNamedIndexExpr = multimethod()
+
+@inferNamedIndexExpr.register(ArrayTypeEntry)
+def foo(entry, x, env) :
+    typeParam = oneTypeParam(x, x.indexes)
+    return False, ArrayType(inferTypeType(typeParam, env))
+
+@inferNamedIndexExpr.register(ArrayValueTypeEntry)
+def foo(entry, x, env) :
+    typeParam, size = nTypeParams(2, x, x.indexes)
+    typeParam = inferTypeType(typeParam, env)
+    return False, ArrayValueType(typeParam, intLiteralValue(size))
+
+@inferNamedIndexExpr.register
 
 
 #
@@ -162,11 +240,11 @@ def takeN(n, container, memberList, kind) :
     raiseError("incorrect number of %s" % kind, container)
 
 @compileExpr.register(AddressOfExpr)
-def f(x, env) :
+def foo(x, env) :
     return True, RefType(compileExprAsValue(x.expr, env))
 
 @compileExpr.register(IndexExpr)
-def f(x, env) :
+def foo(x, env) :
     if type(x.expr) is NameRef :
         entry = lookupIdent(env, x.expr.name)
         result = compileNamedIndexExpr(entry, x, env)
@@ -187,12 +265,12 @@ def f(x, env) :
 compileNamedIndexExpr = multimethod(default=False)
 
 @compileNamedIndexExpr.register(ArrayTypeEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     typeParam = takeOne(x, x.indexes, "type parameter")
     return False, ArrayType(compileExprAsType(typeParam, env))
 
 @compileNamedIndexExpr.register(ArrayValueTypeEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     typeParam,size = takeN(2, x, x.indexes, "type parameters")
     if type(size) is not IntLiteral :
         raiseError("int literal expected", size)
@@ -202,19 +280,19 @@ def f(entry, x, env) :
     return False, ArrayValueType(y, size.value)
 
 @compileNamedIndexExpr.register(RefTypeEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     typeParam = takeOne(x, x.indexes, "type parameter")
     return False, RefType(compileExprAsType(typeParam, env))
 
 @compileNamedIndexExpr.register(RecordEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     nTypeVars = len(entry.ast.typeVars)
     typeParams = takeN(nTypeVars, x, x.indexes, "type parameters")
     typeParams = [compileExprAsType(y,env) for y in typeParams]
     return False, RecordType(entry, typeParams)
 
 @compileNamedIndexExpr.register(StructEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     nTypeVars = len(entry.ast.typeVars)
     typeParams = takeN(nTypeVars, x, x.indexes, "type parameters")
     typeParams = [compileExprAsType(y,env) for y in typeParams]
@@ -224,7 +302,7 @@ def f(entry, x, env) :
 
 
 @compileExpr.register(CallExpr)
-def f(x, env) :
+def foo(x, env) :
     if type(x.expr) is NameRef :
         entry = lookupIdent(env, x.expr.name)
         result = compileNamedCallExpr(entry, x, env)
@@ -261,12 +339,12 @@ def computeFieldTypes(t) :
 compileNamedCallExpr = multimethod(default=False)
 
 @compileNamedCallExpr.register(PrimOpDefault)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     argType = compileExprAsType(takeOne(x,x.args,"argument"), env)
     return True, argType
 
 @compileNamedCallExpr.register(PrimOpArray)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     if len(x.args) == 1 :
         elementType = compileExprAsType(x.args[0], env)
         return True, ArrayType(elementType)
@@ -285,7 +363,7 @@ def f(entry, x, env) :
         raiseError("incorrect number of arguments", x)
 
 @compileNamedCallExpr.register(PrimOpArraySize)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     arg = takeOne(x, x.args, "argument")
     argType = compileExprAsValue(arg, env)
     if not isArrayType(argType) :
@@ -293,7 +371,7 @@ def f(entry, x, env) :
     return True, intType
 
 @compileNamedCallExpr.register(PrimOpArrayValue)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     if type(args[0]) is IntLiteral :
         size = args[0].value
@@ -311,7 +389,7 @@ def f(entry, x, env) :
         return True, ArrayValueType(arg1Type, size)
 
 @compileNamedCallExpr.register(PrimOpBoolNot)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     arg = takeOne(x, x.xargs, "argument")
     argType = compileExprAsValue(arg, env)
     if not isBoolType(argType) :
@@ -319,7 +397,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpCharToInt)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     arg = takeOne(x, x.args, "argument")
     argType = compileExprAsValue(arg, env)
     if not isCharType(argType) :
@@ -327,7 +405,7 @@ def f(entry, x, env) :
     return True, intType
 
 @compileNamedCallExpr.register(PrimOpIntToChar)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     arg = takeOne(x, x.args, "argument")
     argType = compileExprAsValue(arg, env)
     if not isIntType(argType) :
@@ -335,7 +413,7 @@ def f(entry, x, env) :
     return True, charType
 
 @compileNamedCallExpr.register(PrimOpCharEquals)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -344,7 +422,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpCharLesser)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -353,7 +431,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpCharLesserEquals)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -362,7 +440,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpCharGreater)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -371,7 +449,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpCharGreaterEquals)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -380,7 +458,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpIntAdd)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -389,7 +467,7 @@ def f(entry, x, env) :
     return True, intType
 
 @compileNamedCallExpr.register(PrimOpIntSubtract)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -398,7 +476,7 @@ def f(entry, x, env) :
     return True, intType
 
 @compileNamedCallExpr.register(PrimOpIntMultiply)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -407,7 +485,7 @@ def f(entry, x, env) :
     return True, intType
 
 @compileNamedCallExpr.register(PrimOpIntDivide)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -416,7 +494,7 @@ def f(entry, x, env) :
     return True, intType
 
 @compileNamedCallExpr.register(PrimOpIntModulus)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -425,7 +503,7 @@ def f(entry, x, env) :
     return True, intType
 
 @compileNamedCallExpr.register(PrimOpIntNegate)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     arg = takeOne(x, x.args, "argument")
     argType = compileExprAsValue(arg, env)
     if not isIntType(argType) :
@@ -433,7 +511,7 @@ def f(entry, x, env) :
     return True, intType
 
 @compileNamedCallExpr.register(PrimOpIntEquals)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -442,7 +520,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpIntLesser)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -451,7 +529,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpIntLesserEquals)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -460,7 +538,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpIntGreater)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -469,7 +547,7 @@ def f(entry, x, env) :
     return True, boolType
 
 @compileNamedCallExpr.register(PrimOpIntGreaterEquals)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     args = takeN(2, x, x.args, "arguments")
     for y in args :
         argType = compileExprAsValue(y, env)
@@ -486,7 +564,7 @@ def bindTypeVariables(tvarNames, env) :
     return tvars
 
 @compileNamedCallExpr.register(RecordEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     ast = entry.ast
     env2 = Env(entry.env)
     tvars = bindTypeVariables(ast.typeVars, env2)
@@ -501,7 +579,7 @@ def f(entry, x, env) :
     return True, RecordType(entry, typeParams)
 
 @compileNamedCallExpr.register(StructEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     ast = entry.ast
     env2 = Env(entry.env)
     tvars = bindTypeVariables(ast.typeVars, env2)
@@ -516,15 +594,15 @@ def f(entry, x, env) :
     return True, StructType(entry, typeParams)
 
 @compileNamedCallExpr.register(ProcedureEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     assert False
 
 @compileNamedCallExpr.register(OverloadableEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     assert False
 
 @compileNamedCallExpr.register(TypeVarEntry)
-def f(entry, x, env) :
+def foo(entry, x, env) :
     assert False
 
 # end compileNamedCallExpr
@@ -535,4 +613,4 @@ def f(entry, x, env) :
 # remove temp name used for multimethod instances
 #
 
-del f
+del foo
