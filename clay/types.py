@@ -112,13 +112,50 @@ def f(x, y) :
 
 @typeEquals.register(RecordType, RecordType)
 def f(x, y) :
-    return (x.record_entry is y.record_entry) and \
-        typeListEquals(x.typeParams, y.typeParams)
+    return (x.entry is y.entry) and typeListEquals(x.typeParams, y.typeParams)
 
 @typeEquals.register(StructType, StructType)
 def f(x, y) :
-    return (x.struct_entry is y.struct_entry) and \
-        typeListEquals(x.typeParams, y.typeParams)
+    return (x.entry is y.entry) and typeListEquals(x.typeParams, y.typeParams)
+
+
+
+#
+# typeHash
+#
+
+typeHash = multimethod()
+
+@typeHash.register(PrimitiveType)
+def f(x) :
+    return hash(x.name)
+
+@typeHash.register(TupleType)
+def f(x) :
+    childHashes = tuple([typeHash(t) for t in x.types])
+    return hash(("Tuple", childHashes))
+
+@typeHash.register(ArrayType)
+def f(x) :
+    return hash(("Array", typeHash(x.type)))
+
+@typeHash.register(ArrayValueType)
+def f(x) :
+    return hash(("ArrayValue", typeHash(x.type), x.size))
+
+@typeHash.register(RefType)
+def f(x) :
+    return hash(("Ref", typeHash(x.type)))
+
+@typeHash.register(RecordType)
+def f(x) :
+    childHashes = tuple([typeHash(t) for t in x.typeParams])
+    return hash(("Record", id(x.entry), childHashes))
+
+@typeHash.register(StructType)
+def f(x) :
+    childHashes = tuple([typeHash(t) for t in x.typeParams])
+    return hash(("Struct", id(x.entry), childHashes))
 
 
 
@@ -188,13 +225,11 @@ def f(x, y) :
 
 @typeUnify.register(RecordType, RecordType)
 def f(x, y) :
-    return (x.record_entry is y.record_entry) and \
-        typeListUnify(x.typeParams, y.typeParams)
+    return (x.entry is y.entry) and typeListUnify(x.typeParams, y.typeParams)
 
 @typeUnify.register(StructType, StructType)
 def f(x, y) :
-    return (x.struct_entry is y.struct_entry) and \
-        typeListUnify(x.typeParams, y.typeParams)
+    return (x.entry is y.entry) and typeListUnify(x.typeParams, y.typeParams)
 
 
 
