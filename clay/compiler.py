@@ -130,7 +130,7 @@ def foo(x, env) :
 
 
 #
-# error checking getters
+# utilities
 #
 
 def oneTypeParam(container, memberList) :
@@ -157,6 +157,30 @@ def intLiteralValue(x) :
     if type(x) is not IntLiteral :
         raiseError("int literal expected", x)
     return x.value
+
+def bindTypeVariables(env, typeVarNames) :
+    tvarEntries = []
+    for tvarName in typeVarNames :
+        tvarEntry = TypeVarEntry(env, tvarName, TypeVariable())
+        tvarEntries.append(tvarEntry)
+        addIdent(env, tvarName, tvarEntry)
+    return tvarEntries
+
+def reduceTypeVariables(typeVarEntries) :
+    for entry in typeVarEntries :
+        t = typeDeref(entry.type)
+        if t is None :
+            raiseError("unresolved type variable", entry.ast)
+        entry.type = t
+
+def getFieldTypes(t) :
+    assert isRecordType(t) or isStructType(t)
+    assert len(t.entry.ast.typeVars) == len(t.typeParams)
+    env = Env(t.entry.env)
+    for tvarName, typeParam in zip(t.entry.ast.typeVars, t.typeParams) :
+        tvarEntry = TypeVarEntry(env, tvarName, typeParam)
+        addIdent(env, tvarName, tvarEntry)
+    return [inferTypeType(f.type, env) for f in t.entry.ast.fields]
 
 
 
@@ -234,11 +258,17 @@ def foo(entry, x, env) :
 
 @inferNamedIndexExpr.register(RecordEntry)
 def foo(entry, x, env) :
-    raise NotImplementedError
+    n = len(entry.ast.typeVars)
+    typeParams = nTypeParams(n, x, x.indexes)
+    typeParams = [inferTypeType(y, env) for y in typeParams]
+    return False, RecordType(entry, typeParams)
 
 @inferNamedIndexExpr.register(StructEntry)
 def foo(entry, x, env) :
-    raise NotImplementedError
+    n = len(entry.ast.typeVars)
+    typeParams = nTypeParams(n, x, x.indexes)
+    typeParams = [inferTypeType(y, env) for y in typeParams]
+    return False, StructType(entry, typeParams)
 
 # end inferNamedIndexExpr
 
@@ -255,8 +285,15 @@ def foo(x, env) :
 def inferIndirectCall(x, env) :
     def isCallable(t) :
         return isRecordType(t) or isStructType(t)
-    inferTypeType(x.expr, env, isCallable)
-    raise NotImplementedError
+    callableType = inferTypeType(x.expr, env, isCallable)
+    fieldTypes = getFieldTypes(callableType)
+    if len(fieldTypes) != len(x.args) :
+        raiseError("incorrect no. of arguments", x)
+    for fieldType, arg in zip(fieldTypes, x.args) :
+        argType = inferValueType(arg, env)
+        if not typeEquals(fieldType, argType) :
+            raiseError("type mismatch", arg)
+    return True, callableType
 
 
 # begin inferNamedCallExpr
@@ -351,11 +388,33 @@ inferNamedCallExpr.addHandler(inferIntComparison, PrimOpIntGreaterEquals)
 
 @inferNamedCallExpr.register(RecordEntry)
 def foo(entry, x, env) :
-    raise NotImplementedError
+    if len(entry.ast.fields) != len(x.args) :
+        raiseError("incorrect no. of arguments", x)
+    env2 = Env(entry.env)
+    typeVarEntries = bindTypeVariables(env2, entry.ast.typeVars)
+    for field, arg in zip(entry.ast.fields, x.args) :
+        fieldType = inferTypeType(field.type, env2)
+        argType = inferValueType(arg, env)
+        if not typeUnify(fieldType, argType) :
+            raiseError("type mismatch", arg)
+    reduceTypeVariables(typeVarEntries)
+    typeParams = [tvarEntry.type for tvarEntry in typeVarEntries]
+    return True, RecordType(entry, typeParams)
 
 @inferNamedCallExpr.register(StructEntry)
 def foo(entry, x, env) :
-    raise NotImplementedError
+    if len(entry.ast.fields) != len(x.args) :
+        raiseError("incorrect no. of arguments", x)
+    env2 = Env(entry.env)
+    typeVarEntries = bindTypeVariables(env2, entry.ast.typeVars)
+    for field, arg in zip(entry.ast.fields, x.args) :
+        fieldType = inferTypeType(field.type, env2)
+        argType = inferValueType(arg, env)
+        if not typeUnify(fieldType, argType) :
+            raiseError("type mismatch", arg)
+    reduceTypeVariables(typeVarEntries)
+    typeParams = [tvarEntry.type for tvarEntry in typeVarEntries]
+    return True, StructType(entry, typeParams)
 
 @inferNamedCallExpr.register(ProcedureEntry)
 def foo(entry, x, env) :
@@ -375,21 +434,6 @@ def foo(entry, x, env) :
             del entry.returnTypes[argsInfo]
         else :
             entry.returnTypes[argsInfo] = returnType
-
-def bindTypeVariables(env, typeVarNames) :
-    tvarEntries = []
-    for tvarName in typeVarNames :
-        tvarEntry = TypeVarEntry(env, tvarName, TypeVariable())
-        tvarEntries.append(tvarEntry)
-        addIdent(env, tvarName, tvarEntry)
-    return tvarEntries
-
-def reduceTypeVariables(typeVarEntries) :
-    for entry in typeVarEntries :
-        t = typeDeref(entry.type)
-        if t is None :
-            raiseError("unresolved type variable", entry.ast)
-        entry.type = t
 
 def inferProcedureReturnType(entry, argsInfo, callExpr) :
     ast = entry.ast
