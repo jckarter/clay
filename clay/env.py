@@ -123,7 +123,10 @@ class VariableEntry(EnvEntry) :
         self.defEntry = defEntry
         self.index = index
 
-class ProcedureEntry(EnvEntry) : pass
+class ProcedureEntry(EnvEntry) :
+    def __init__(self, env, ast) :
+        super(ProcedureEntry, self).__init__(env, ast)
+        self.returnTypes = {}
 
 class OverloadableEntry(EnvEntry) :
     def __init__(self, env, ast) :

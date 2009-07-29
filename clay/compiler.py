@@ -165,6 +165,10 @@ def intLiteralValue(x) :
 #             throws RecursiveInferenceError
 #
 
+class RecursiveInferenceError(Exception) :
+    def __init__(self, astNode) :
+        self.astNode = astNode
+
 inferType = multimethod()
 
 def inferValueType(x, env, verify=None) :
@@ -354,6 +358,73 @@ def foo(entry, x, env) :
 
 @inferNamedCallExpr.register(ProcedureEntry)
 def foo(entry, x, env) :
+    argsInfo = tuple([inferExpr(y, env) for y in x.args])
+    returnType = entry.returnTypes.get(argsInfo)
+    if returnType is not None :
+        if returnType is False :
+            raise RecursiveInferenceError(x)
+        return True, returnType
+    entry.returnTypes[argsInfo] = False
+    returnType = None
+    try :
+        returnType = inferProcedureReturnType(entry, argsInfo, x)
+        return returnType
+    finally :
+        if returnType is None :
+            del entry.returnTypes[argsInfo]
+        else :
+            entry.returnTypes[argsInfo] = returnType
+
+def bindTypeVariables(env, typeVarNames) :
+    tvarEntries = []
+    for tvarName in ast.typeVars :
+        tvarEntry = TypeVarEntry(env, tvarName, TypeVariable())
+        tvarEntries.append(tvarEntry)
+        addIdent(env, tvarName, tvarEntry)
+    return tvarEntries
+
+def reduceTypeVariables(typeVarEntries) :
+    for entry in typeVarEntries :
+        t = typeDeref(entry.type)
+        if t is None :
+            raiseError("unresolved type variable", entry.ast)
+        entry.type = t
+
+def inferProcedureReturnType(entry, argsInfo, callExpr) :
+    ast = entry.ast
+    if len(ast.args) != len(argsInfo) :
+        raiseError("incorrect no. of arguments", callExpr)
+    env = Env(entry.env)
+    typeVarEntries = bindTypeVariables(env, ast.typeVars)
+    for i, formalArg in enumerate(ast.args) :
+        isValue, argType = argsInfo[i]
+        if type(formalArg) is ValueArgument :
+            if not isValue :
+                raiseError("expected a value", callExpr.args[i])
+            formalTypeExpr = arg.variable.type
+        elif type(formalArg) is TypeArgument :
+            if isValue :
+                raiseError("expected a type", callExpr.args[i])
+            formalTypeExpr = arg.type
+        else :
+            assert False
+        formalType = inferTypeType(formalTypeExpr, env)
+        if not typeUnify(typePattern, argType) :
+            raiseError("type mismatch", callExpr.args[i])
+    if ast.typeConditions is not None :
+        assert False
+    reduceTypeVariables(typeVarEntries)
+    for i, formalArg in enumerate(arg.args) :
+        isValue, argType = argsInfo[i]
+        if type(formalArg) is ValueArgument :
+            if formalArg.isRef :
+                argType = RefType(argType)
+            argName = formalArg.variable.name
+            localVarEntry = LocalVariableEntry(env, argName, argType)
+            addIdent(env, argName, localVarEntry)
+    declaredReturnType = None
+    if ast.returnType is not None :
+        declaredReturnType = inferTypeType(ast.returnType, env)
     assert False
 
 @inferNamedCallExpr.register(OverloadableEntry)
