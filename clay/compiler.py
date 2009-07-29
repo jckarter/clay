@@ -149,7 +149,7 @@ def oneArg(container, memberList) :
     return memberList[0]
 
 def nArgs(n, container, memberList) :
-    if len(memberList) !+ n :
+    if len(memberList) != n :
         raiseError("exactly %d argument(s) expected" % n, container)
     return memberList
 
@@ -167,6 +167,7 @@ def intLiteralValue(x) :
 
 class RecursiveInferenceError(Exception) :
     def __init__(self, astNode) :
+        super(RecursiveInferenceError, self).__init__()
         self.astNode = astNode
 
 inferType = multimethod()
@@ -207,7 +208,7 @@ def inferArrayIndexing(x, env) :
         return isArrayType(t) or isArrayValueType(t)
     indexableType = inferValueType(x.expr, env, isIndexable)
     index = oneArg(x, x.indexes)
-    indexType = inferValueType(index, env, isIntType)
+    inferValueType(index, env, isIntType)
     return True, indexableType.type
 
 
@@ -233,11 +234,11 @@ def foo(entry, x, env) :
 
 @inferNamedIndexExpr.register(RecordEntry)
 def foo(entry, x, env) :
-    assert False
+    raise NotImplementedError
 
 @inferNamedIndexExpr.register(StructEntry)
 def foo(entry, x, env) :
-    assert False
+    raise NotImplementedError
 
 # end inferNamedIndexExpr
 
@@ -251,11 +252,11 @@ def foo(x, env) :
             return handler(entry, x, env)
     return inferIndirectCall(x, env)
 
-def insertIndirectCall(x, env) :
+def inferIndirectCall(x, env) :
     def isCallable(t) :
         return isRecordType(t) or isStructType(t)
-    callableType = inferTypeType(x.expr, env, isCallable)
-    assert False
+    inferTypeType(x.expr, env, isCallable)
+    raise NotImplementedError
 
 
 # begin inferNamedCallExpr
@@ -271,14 +272,14 @@ def foo(entry, x, env) :
 @inferNamedCallExpr.register(PrimOpArray)
 def foo(entry, x, env) :
     args = nArgs(2, x, x.args)
-    nType = inferValueType(args[0], env, isIntType)
+    inferValueType(args[0], env, isIntType)
     vType = inferValueType(args[1], env)
     return True, ArrayType(vType)
 
 @inferNamedCallExpr.register(PrimOpArraySize)
 def foo(entry, x, env) :
     arg = oneArg(x, x.args)
-    arrayType = inferValueType(arg, env, isArrayType)
+    inferValueType(arg, env, isArrayType)
     return True, intType
 
 @inferNamedCallExpr.register(PrimOpArrayValue)
@@ -291,25 +292,25 @@ def foo(entry, x, env) :
 @inferNamedCallExpr.register(PrimOpBoolNot)
 def foo(entry, x, env) :
     arg = oneArg(x, x.args)
-    argType = inferValueType(arg, env, isBoolType)
+    inferValueType(arg, env, isBoolType)
     return True, boolType
 
 @inferNamedCallExpr.register(PrimOpCharToInt)
 def foo(entry, x, env) :
     arg = oneArg(x, x.args)
-    argType = inferValueType(arg, env, isCharType)
+    inferValueType(arg, env, isCharType)
     return True, intType
 
 @inferNamedCallExpr.register(PrimOpIntToChar)
 def foo(entry, x, env) :
     arg = oneArg(x, x.args)
-    argType = inferValueType(arg, env, isIntType)
+    inferValueType(arg, env, isIntType)
     return True, charType
 
 def inferCharComparison(entry, x, env) :
     args = nArgs(2, x, x.args)
-    arg1Type = inferValueType(args[0], env, isCharType)
-    arg2Type = inferValueType(args[1], env, isCharType)
+    inferValueType(args[0], env, isCharType)
+    inferValueType(args[1], env, isCharType)
     return True, boolType
 
 inferNamedCallExpr.addHandler(inferCharComparison, PrimOpCharEquals)
@@ -320,8 +321,8 @@ inferNamedCallExpr.addHandler(inferCharComparison, PrimOpCharGreaterEquals)
 
 def inferIntBinaryOp(entry, x, env) :
     args = nArgs(2, x, x.args)
-    arg1Type = inferValueType(args[0], env, isIntType)
-    arg2Type = inferValueType(args[1], env, isIntType)
+    inferValueType(args[0], env, isIntType)
+    inferValueType(args[1], env, isIntType)
     return True, intType
 
 inferNamedCallExpr.addHandler(inferIntBinaryOp, PrimOpIntAdd)
@@ -333,13 +334,13 @@ inferNamedCallExpr.addHandler(inferIntBinaryOp, PrimOpIntModulus)
 @inferNamedCallExpr.register(PrimOpIntNegate)
 def foo(entry, x, env) :
     arg = oneArg(x, x.args)
-    argType = inferValueType(arg, env, isIntType)
+    inferValueType(arg, env, isIntType)
     return True, intType
 
 def inferIntComparison(entry, x, env) :
     args = nArgs(2, x, x.args)
-    arg1Type = inferValueType(args[0], env, isIntType)
-    arg2Type = inferValueType(args[1], env, isIntType)
+    inferValueType(args[0], env, isIntType)
+    inferValueType(args[1], env, isIntType)
     return True, boolType
 
 inferNamedCallExpr.addHandler(inferIntComparison, PrimOpIntEquals)
@@ -350,15 +351,15 @@ inferNamedCallExpr.addHandler(inferIntComparison, PrimOpIntGreaterEquals)
 
 @inferNamedCallExpr.register(RecordEntry)
 def foo(entry, x, env) :
-    assert False
+    raise NotImplementedError
 
 @inferNamedCallExpr.register(StructEntry)
 def foo(entry, x, env) :
-    assert False
+    raise NotImplementedError
 
 @inferNamedCallExpr.register(ProcedureEntry)
 def foo(entry, x, env) :
-    argsInfo = tuple([inferExpr(y, env) for y in x.args])
+    argsInfo = tuple([inferType(y, env) for y in x.args])
     returnType = entry.returnTypes.get(argsInfo)
     if returnType is not None :
         if returnType is False :
@@ -377,7 +378,7 @@ def foo(entry, x, env) :
 
 def bindTypeVariables(env, typeVarNames) :
     tvarEntries = []
-    for tvarName in ast.typeVars :
+    for tvarName in typeVarNames :
         tvarEntry = TypeVarEntry(env, tvarName, TypeVariable())
         tvarEntries.append(tvarEntry)
         addIdent(env, tvarName, tvarEntry)
@@ -401,20 +402,20 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
         if type(formalArg) is ValueArgument :
             if not isValue :
                 raiseError("expected a value", callExpr.args[i])
-            formalTypeExpr = arg.variable.type
+            formalTypeExpr = formalArg.variable.type
         elif type(formalArg) is TypeArgument :
             if isValue :
                 raiseError("expected a type", callExpr.args[i])
-            formalTypeExpr = arg.type
+            formalTypeExpr = formalArg.type
         else :
             assert False
         formalType = inferTypeType(formalTypeExpr, env)
-        if not typeUnify(typePattern, argType) :
+        if not typeUnify(formalType, argType) :
             raiseError("type mismatch", callExpr.args[i])
     if ast.typeConditions is not None :
-        assert False
+        raise NotImplementedError
     reduceTypeVariables(typeVarEntries)
-    for i, formalArg in enumerate(arg.args) :
+    for i, formalArg in enumerate(ast.args) :
         isValue, argType = argsInfo[i]
         if type(formalArg) is ValueArgument :
             if formalArg.isRef :
@@ -425,18 +426,54 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
     declaredReturnType = None
     if ast.returnType is not None :
         declaredReturnType = inferTypeType(ast.returnType, env)
-    assert False
+    raise NotImplementedError
 
 @inferNamedCallExpr.register(OverloadableEntry)
 def foo(entry, x, env) :
-    assert False
+    raise NotImplementedError
 
 @inferNamedCallExpr.register(TypeVarEntry)
 def foo(entry, x, env) :
-    assert False
+    raise NotImplementedError
 
 # end inferNamedCallExpr
 
+
+@inferType.register(FieldRef)
+def foo(x, env) :
+    raise NotImplementedError
+
+@inferType.register(TupleRef)
+def foo(x, env) :
+    raise NotImplementedError
+
+@inferType.register(PointerRef)
+def foo(x, env) :
+    raise NotImplementedError
+
+@inferType.register(ArrayExpr)
+def foo(x, env) :
+    raise NotImplementedError
+
+@inferType.register(TupleExpr)
+def foo(x, env) :
+    raise NotImplementedError
+
+@inferType.register(NameRef)
+def foo(x, env) :
+    raise NotImplementedError
+
+@inferType.register(BoolLiteral)
+def foo(x, env) :
+    raise NotImplementedError
+
+@inferType.register(IntLiteral)
+def foo(x, env) :
+    raise NotImplementedError
+
+@inferType.register(CharLiteral)
+def foo(x, env) :
+    raise NotImplementedError
 
 
 
