@@ -1,5 +1,4 @@
 from clay.multimethod import multimethod
-from clay.error import raiseError
 
 __all__ = ["Type", "boolType", "intType", "charType", "voidType",
            "TupleType", "ArrayType", "ArrayValueType", "RefType",
@@ -9,7 +8,7 @@ __all__ = ["Type", "boolType", "intType", "charType", "voidType",
            "isArrayValueType", "isRefType",
            "isRecordType", "isStructType",
            "typeEquals", "typeListEquals", "typeHash",
-           "typeUnify", "typeListUnify", "TypeVariable"]
+           "typeUnify", "typeListUnify", "TypeVariable", "typeDeref"]
 
 
 
@@ -169,20 +168,13 @@ def foo(x) :
 #
 
 class TypeVariable(Type) :
-    def __init__(self, name) :
-        self.name = name
+    def __init__(self) :
         self.type = None
 
-    def deref(self) :
-        t = self.deref_()
-        if t is None :
-            raiseError("unresolved type variable", self.name)
-        return t
-
-    def deref_(self) :
-        if type(self.type) is TypeVariable :
-            return self.type.deref_()
-        return self.type
+def typeDeref(t) :
+    while type(t) is TypeVariable :
+        t = t.type
+    return t
 
 
 typeUnify = multimethod(n=2, defaultProc=typeUnifyVariables)
