@@ -114,7 +114,10 @@ class RecordEntry(EnvEntry) : pass
 
 class StructEntry(EnvEntry) : pass
 
-class VariableDefEntry(object) : pass
+class VariableDefEntry(EnvEntry) :
+    def __init__(self, env, ast) :
+        super(VariableDefEntry).__init__(env, ast)
+        self.typeList = None
 
 class VariableEntry(EnvEntry) :
     def __init__(self, env, defEntry, index) :

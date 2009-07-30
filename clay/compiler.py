@@ -428,7 +428,7 @@ def foo(entry, x, env) :
     returnType = None
     try :
         returnType = inferProcedureReturnType(entry, argsInfo, x)
-        return returnType
+        return True, returnType
     finally :
         if returnType is None :
             del entry.returnTypes[argsInfo]
@@ -476,48 +476,129 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
 def foo(entry, x, env) :
     raise NotImplementedError
 
-@inferNamedCallExpr.register(TypeVarEntry)
-def foo(entry, x, env) :
-    raise NotImplementedError
-
 # end inferNamedCallExpr
 
 
 @inferType.register(FieldRef)
 def foo(x, env) :
-    raise NotImplementedError
+    def isContainer(t) :
+        return isRecordType(t) or isStructType(t)
+    containerType = inferValueType(x.expr, env, isContainer)
+    ast = containerType.entry.ast
+    for field, fieldType in zip(ast.fields, getFieldTypes(containerType)) :
+        if field.name.s == x.name.s :
+            return True, fieldType
+    raiseError("field not found", x)
 
 @inferType.register(TupleRef)
 def foo(x, env) :
-    raise NotImplementedError
+    tupleType = inferValueType(x.expr, env, isTupleType)
+    if (x.index < 0) or (x.index >= len(tupleType.types)) :
+        raiseError("invalid tuple index", x)
+    return True, tupleType.types[x.index]
 
 @inferType.register(PointerRef)
 def foo(x, env) :
-    raise NotImplementedError
+    referenceType = inferValueType(x.expr, env, isRefType)
+    return True, referenceType.type
 
 @inferType.register(ArrayExpr)
 def foo(x, env) :
-    raise NotImplementedError
+    elementType = None
+    for y in x.elements :
+        currentType = inferValueType(y, env)
+        if elementType is None :
+            elementType = currentType
+        elif not typeEquals(elementType, currentType) :
+            raiseError("type mismatch", y)
+    if elementType is None :
+        raiseError("empty array expression", x)
+    return True, ArrayType(elementType)
 
 @inferType.register(TupleExpr)
 def foo(x, env) :
-    raise NotImplementedError
+    elementTypes = [inferValueType(y, env) for y in x.elements]
+    if len(elementTypes) == 0 :
+        raiseError("empty tuple expression", x)
+    if len(elementTypes) == 1 :
+        return True, elementTypes[0]
+    return True, TupleType(elementTypes)
 
 @inferType.register(NameRef)
 def foo(x, env) :
-    raise NotImplementedError
+    entry = lookupIdent(env, x.name)
+    handler = inferNamedExpr.getHandler(type(entry))
+    if handler is not None :
+        return handler(entry, x, env)
+    raiseError("invalid expression", x)
+
+
+# begin inferNamedExpr
+
+inferNamedExpr = multimethod()
+
+@inferNamedExpr.register(BoolTypeEntry)
+def foo(entry, x, env) :
+    return False, boolType
+
+@inferNamedExpr.register(CharTypeEntry)
+def foo(entry, x, env) :
+    return False, charType
+
+@inferNamedExpr.register(IntTypeEntry)
+def foo(entry, x, env) :
+    return False, intType
+
+@inferNamedExpr.register(VoidTypeEntry)
+def foo(entry, x, env) :
+    return False, voidType
+
+@inferNamedExpr.register(VariableEntry)
+def foo(entry, x, env) :
+    typeList = inferVariableDefRHS(entry.defEntry)
+    varType = typeList[entry.index]
+    if entry.ast.type is not None :
+        declaredType = inferTypeType(entry.ast.type, entry.env)
+        if not typeEquals(varType, declaredType) :
+            raiseError("type mismatch", entry.ast)
+    return True, varType
+
+def inferVariableDefRHS(entry) :
+    if entry.typeList is False :
+        raise RecursiveInferenceError(entry.ast)
+    if entry.typeList is not None :
+        return entry.typeList
+    entry.typeList = False
+    try :
+        types = [inferValueType(x, entry.env) for x in entry.ast.exprList]
+        if (len(types) == 1) and (len(entry.ast.variables) > 1) :
+            if not isTupleType(types[0]) :
+                raiseError("type mismatch", entry.ast)
+            types = types[0].types
+        elif (len(types) > 1) and (len(entry.ast.variables) == 1) :
+            types = [TupleType(types)]
+        if len(types) != len(entry.ast.variables) :
+            raiseError("type mismatch", entry.ast)
+        entry.typeList = types
+        return types
+    finally :
+        if entry.typeList is False :
+            entry.typeList = None
+
+# end inferNamedExpr
+
 
 @inferType.register(BoolLiteral)
 def foo(x, env) :
-    raise NotImplementedError
+    return True, boolType
 
 @inferType.register(IntLiteral)
 def foo(x, env) :
-    raise NotImplementedError
+    return True, intType
 
 @inferType.register(CharLiteral)
 def foo(x, env) :
-    raise NotImplementedError
+    return True, charType
 
 
 
