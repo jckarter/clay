@@ -585,6 +585,14 @@ def inferVariableDefRHSType(entry) :
         if entry.typeList is False :
             entry.typeList = None
 
+@inferNamedExprType.register(TypeVarEntry)
+def foo(entry, x, env) :
+    return False, entry.type
+
+@inferNamedExprType.register(LocalVariableEntry)
+def foo(entry, x, env) :
+    return True, entry.type
+
 # end inferNamedExprType
 
 
