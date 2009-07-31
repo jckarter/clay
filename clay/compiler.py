@@ -38,98 +38,6 @@ def lookupOverloadable(env, name) :
 
 
 #
-# primitivesEnv
-#
-
-def primitivesEnv() :
-    env = Env()
-    def a(name, klass) :
-        env.add(name, klass(env,None))
-    a("Bool", BoolTypeEntry)
-    a("Char", CharTypeEntry)
-    a("Int", IntTypeEntry)
-    a("Void", VoidTypeEntry)
-    a("Array", ArrayTypeEntry)
-    a("Ref", RefTypeEntry)
-
-    a("default", PrimOpDefault)
-    a("array", PrimOpArray)
-    a("arraySize", PrimOpArraySize)
-    a("arrayValue", PrimOpArrayValue)
-
-    a("boolNot", PrimOpBoolNot)
-    a("charToInt", PrimOpCharToInt)
-    a("intToChar", PrimOpIntToChar)
-    a("charEquals", PrimOpCharEquals)
-    a("charLesser", PrimOpCharLesser)
-    a("charLesserEquals", PrimOpCharLesserEquals)
-    a("charGreater", PrimOpCharGreater)
-    a("charGreaterEquals", PrimOpCharGreaterEquals)
-    a("intAdd", PrimOpIntAdd)
-    a("intSubtract", PrimOpIntSubtract)
-    a("intMultiply", PrimOpIntMultiply)
-    a("intDivide", PrimOpIntDivide)
-    a("intModulus", PrimOpIntModulus)
-    a("intNegate", PrimOpIntNegate)
-    a("intEquals", PrimOpIntEquals)
-    a("intLesser", PrimOpIntLesser)
-    a("intLesserEquals", PrimOpIntLesserEquals)
-    a("intGreater", PrimOpIntGreater)
-    a("intGreaterEquals", PrimOpIntGreaterEquals)
-    return env
-
-
-
-#
-# buildTopLevelEnv
-#
-
-def buildTopLevelEnv(program) :
-    env = Env(primitivesEnv())
-    for item in program.topLevelItems :
-        addTopLevel(item, env)
-
-addTopLevel = multimethod()
-
-@addTopLevel.register(PredicateDef)
-def foo(x, env) :
-    addIdent(env, x.name, PredicateEntry(env,x))
-
-@addTopLevel.register(InstanceDef)
-def foo(x, env) :
-    entry = InstanceEntry(env, x)
-    lookupPredicate(env, x.name).instances.append(entry)
-
-@addTopLevel.register(RecordDef)
-def foo(x, env) :
-    addIdent(env, x.name, RecordEntry(env,x))
-
-@addTopLevel.register(StructDef)
-def foo(x, env) :
-    addIdent(env, x.name, StructEntry(env,x))
-
-@addTopLevel.register(VariableDef)
-def foo(x, env) :
-    defEntry = VariableDefEntry(env, x)
-    for i,variable in enumerate(x.variables) :
-        addIdent(env, variable.name, VariableEntry(env,defEntry,i))
-
-@addTopLevel.register(ProcedureDef)
-def foo(x, env) :
-    addIdent(env, x.name, ProcedureEntry(env,x))
-
-@addTopLevel.register(OverloadableDef)
-def foo(x, env) :
-    addIdent(env, x.name, OverloadableEntry(env,x))
-
-@addTopLevel.register(OverloadDef)
-def foo(x, env) :
-    entry = OverloadEntry(env, x)
-    lookupOverloadable(env, x.name).overloads.append(entry)
-
-
-
-#
 # utilities
 #
 
@@ -182,6 +90,110 @@ def getFieldTypes(t) :
         addIdent(env, tvarName, tvarEntry)
     return [inferTypeType(f.type, env) for f in t.entry.ast.fields]
 
+def unpackTypes(types, unpackCount, astNode) :
+    if (len(types) == 1) and (unpackCount > 1) :
+        if not isTupleType(types[0]) :
+            raiseError("type mismatch", astNode)
+        types = types[0].types
+    elif (len(types) > 1) and (unpackCount == 1) :
+        types = [TupleType(types)]
+    if len(types) != unpackCount :
+        raiseError("type mismatch", astNode)
+    return types
+
+
+
+#
+# primitivesEnv
+#
+
+def primitivesEnv() :
+    env = Env()
+    def a(name, klass) :
+        env.add(name, klass(env,None))
+    a("Bool", BoolTypeEntry)
+    a("Char", CharTypeEntry)
+    a("Int", IntTypeEntry)
+    a("Void", VoidTypeEntry)
+    a("Array", ArrayTypeEntry)
+    a("Ref", RefTypeEntry)
+
+    a("default", PrimOpDefault)
+    a("array", PrimOpArray)
+    a("arraySize", PrimOpArraySize)
+    a("arrayValue", PrimOpArrayValue)
+
+    a("boolNot", PrimOpBoolNot)
+    a("charToInt", PrimOpCharToInt)
+    a("intToChar", PrimOpIntToChar)
+    a("charEquals", PrimOpCharEquals)
+    a("charLesser", PrimOpCharLesser)
+    a("charLesserEquals", PrimOpCharLesserEquals)
+    a("charGreater", PrimOpCharGreater)
+    a("charGreaterEquals", PrimOpCharGreaterEquals)
+    a("intAdd", PrimOpIntAdd)
+    a("intSubtract", PrimOpIntSubtract)
+    a("intMultiply", PrimOpIntMultiply)
+    a("intDivide", PrimOpIntDivide)
+    a("intModulus", PrimOpIntModulus)
+    a("intNegate", PrimOpIntNegate)
+    a("intEquals", PrimOpIntEquals)
+    a("intLesser", PrimOpIntLesser)
+    a("intLesserEquals", PrimOpIntLesserEquals)
+    a("intGreater", PrimOpIntGreater)
+    a("intGreaterEquals", PrimOpIntGreaterEquals)
+    return env
+
+
+
+#
+# buildTopLevelEnv
+#
+
+def buildTopLevelEnv(program) :
+    env = Env(primitivesEnv())
+    for item in program.topLevelItems :
+        addTopLevel(item, env)
+    return env
+
+addTopLevel = multimethod()
+
+@addTopLevel.register(PredicateDef)
+def foo(x, env) :
+    addIdent(env, x.name, PredicateEntry(env,x))
+
+@addTopLevel.register(InstanceDef)
+def foo(x, env) :
+    entry = InstanceEntry(env, x)
+    lookupPredicate(env, x.name).instances.append(entry)
+
+@addTopLevel.register(RecordDef)
+def foo(x, env) :
+    addIdent(env, x.name, RecordEntry(env,x))
+
+@addTopLevel.register(StructDef)
+def foo(x, env) :
+    addIdent(env, x.name, StructEntry(env,x))
+
+@addTopLevel.register(VariableDef)
+def foo(x, env) :
+    defEntry = VariableDefEntry(env, x)
+    for i,variable in enumerate(x.variables) :
+        addIdent(env, variable.name, VariableEntry(env,defEntry,i))
+
+@addTopLevel.register(ProcedureDef)
+def foo(x, env) :
+    addIdent(env, x.name, ProcedureEntry(env,x))
+
+@addTopLevel.register(OverloadableDef)
+def foo(x, env) :
+    addIdent(env, x.name, OverloadableEntry(env,x))
+
+@addTopLevel.register(OverloadDef)
+def foo(x, env) :
+    entry = OverloadEntry(env, x)
+    lookupOverloadable(env, x.name).overloads.append(entry)
+
 
 
 #
@@ -190,9 +202,7 @@ def getFieldTypes(t) :
 #
 
 class RecursiveInferenceError(Exception) :
-    def __init__(self, astNode) :
-        super(RecursiveInferenceError, self).__init__()
-        self.astNode = astNode
+    pass
 
 inferType = multimethod()
 
@@ -422,7 +432,7 @@ def foo(entry, x, env) :
     returnType = entry.returnTypes.get(argsInfo)
     if returnType is not None :
         if returnType is False :
-            raise RecursiveInferenceError(x)
+            raise RecursiveInferenceError()
         return True, returnType
     entry.returnTypes[argsInfo] = False
     returnType = None
@@ -459,6 +469,8 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
     if ast.typeConditions is not None :
         raise NotImplementedError
     reduceTypeVariables(typeVarEntries)
+    if ast.returnType is not None :
+        return inferTypeType(ast.returnType, env)
     for i, formalArg in enumerate(ast.args) :
         isValue, argType = argsInfo[i]
         if type(formalArg) is ValueArgument :
@@ -467,10 +479,10 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
             argName = formalArg.variable.name
             localVarEntry = LocalVariableEntry(env, argName, argType)
             addIdent(env, argName, localVarEntry)
-    declaredReturnType = None
-    if ast.returnType is not None :
-        declaredReturnType = inferTypeType(ast.returnType, env)
-    raise NotImplementedError
+    returnType = inferReturnType(ast.body, env)
+    if returnType is None :
+        raise RecursiveInferenceError()
+    return returnType
 
 @inferNamedCallExprType.register(OverloadableEntry)
 def foo(entry, x, env) :
@@ -565,20 +577,13 @@ def foo(entry, x, env) :
 
 def inferVariableDefRHSType(entry) :
     if entry.typeList is False :
-        raise RecursiveInferenceError(entry.ast)
+        raise RecursiveInferenceError()
     if entry.typeList is not None :
         return entry.typeList
     entry.typeList = False
     try :
         types = [inferValueType(x, entry.env) for x in entry.ast.exprList]
-        if (len(types) == 1) and (len(entry.ast.variables) > 1) :
-            if not isTupleType(types[0]) :
-                raiseError("type mismatch", entry.ast)
-            types = types[0].types
-        elif (len(types) > 1) and (len(entry.ast.variables) == 1) :
-            types = [TupleType(types)]
-        if len(types) != len(entry.ast.variables) :
-            raiseError("type mismatch", entry.ast)
+        types = unpackTypes(types, len(entry.ast.variables), entry.ast)
         entry.typeList = types
         return types
     finally :
@@ -607,6 +612,119 @@ def foo(x, env) :
 @inferType.register(CharLiteral)
 def foo(x, env) :
     return True, charType
+
+
+
+#
+# inferReturnType (statement, env) -> optional(Type)
+#
+
+def inferReturnType(body, env) :
+    collector = ReturnTypeCollector()
+    collectReturns(body, env, collector)
+    if collector.returnType is not None :
+        return collector.returnType
+    if not collector.hasFailure :
+        return voidType
+    return None
+
+class ReturnTypeCollector(object) :
+    def __init__(self) :
+        self.returnType = None
+        self.hasFailure = False
+
+    def failure(self) :
+        self.hasFailure = True
+
+    def success(self, returnType) :
+        if self.returnType is not None :
+            return typeEquals(returnType, self.returnType)
+        self.returnType = returnType
+        return True
+
+collectReturns = multimethod()
+
+@collectReturns.register(Block)
+def foo(x, env, collector) :
+    for y in x.statements :
+        if type(y) is LocalVariableDef :
+            if env is None :
+                continue
+            try :
+                types = [inferValueType(z, env) for z in y.exprList]
+                types = unpackTypes(types, len(y.variables), y)
+                env = Env(env)
+                for variable, itemType in zip(y.variables, types) :
+                    localVar = LocalVariableEntry(env, variable, itemType)
+                    addIdent(env, variable.name, localVar)
+            except RecursiveInferenceError :
+                env = None
+        else :
+            collectReturns(y, env, collector)
+
+@collectReturns.register(LocalVariableDef)
+def foo(x, env, collector) :
+    raiseError("invalid local variable definition", x)
+
+@collectReturns.register(Assignment)
+def foo(x, env, collector) :
+    pass
+
+@collectReturns.register(IfStatement)
+def foo(x, env, collector) :
+    collectReturns(x.thenPart, env, collector)
+    if x.elsePart is not None :
+        collectReturns(x.elsePart, env, collector)
+
+@collectReturns.register(BreakStatement)
+def foo(x, env, collector) :
+    pass
+
+@collectReturns.register(ContinueStatement)
+def foo(x, env, collector) :
+    pass
+
+@collectReturns.register(WhileStatement)
+def foo(x, env, collector) :
+    collectReturns(x.body, env, collector)
+
+@collectReturns.register(ForStatement)
+def foo(x, env, collector) :
+    if env is not None :
+        try :
+            def isSequenceType(y) :
+                return isArrayType(y) or isArrayValueType(y)
+            exprType = inferValueType(x.expr, env, isSequenceType)
+            typeList = unpackTypes([exprType.type], len(x.variables), x.expr)
+            env = Env(env)
+            for variable, itemType in zip(x.variables, typeList) :
+                localVar = LocalVariableEntry(env, variable, itemType)
+                addIdent(env, variable.name, localVar)
+        except RecursiveInferenceError :
+            env = None
+    collectReturns(x.body, env, collector)
+
+@collectReturns.register(ReturnStatement)
+def foo(x, env, collector) :
+    if len(x.exprList) == 0 :
+        returnType = voidType
+    elif env is None :
+        returnType = None
+    else :
+        try :
+            types = [inferValueType(y, env) for y in x.exprList]
+            returnType = types[0] if len(types) == 1 else TupleType(types)
+        except RecursiveInferenceError :
+            returnType = None
+    if returnType is None :
+        collector.failure()
+    else :
+        if not collector.success(voidType) :
+            raiseError("type mismatch", x)
+
+@collectReturns.register(ExprStatement)
+def foo(x, env, collector) :
+    pass
 
 
 
