@@ -3,6 +3,7 @@ from clay.env import *
 from clay.types import *
 from clay.error import *
 from clay.multimethod import multimethod
+from clay.xprint import xprint
 
 
 
@@ -721,7 +722,7 @@ def foo(x, env, collector) :
     if returnType is None :
         collector.failure()
     else :
-        if not collector.success(voidType) :
+        if not collector.success(returnType) :
             raiseError("type mismatch", x)
 
 @collectReturns.register(ExprStatement)
