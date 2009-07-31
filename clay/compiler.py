@@ -453,6 +453,7 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
     typeVarEntries = bindTypeVariables(env, ast.typeVars)
     for i, formalArg in enumerate(ast.args) :
         isValue, argType = argsInfo[i]
+        formalTypeExpr = None
         if type(formalArg) is ValueArgument :
             if not isValue :
                 raiseError("expected a value", callExpr.args[i])
@@ -463,10 +464,11 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
             formalTypeExpr = formalArg.type
         else :
             assert False
-        formalType = inferTypeType(formalTypeExpr, env)
-        if not typeUnify(formalType, argType) :
-            raiseError("type mismatch", callExpr.args[i])
-    if ast.typeConditions is not None :
+        if formalTypeExpr is not None :
+            formalType = inferTypeType(formalTypeExpr, env)
+            if not typeUnify(formalType, argType) :
+                raiseError("type mismatch", callExpr.args[i])
+    if len(ast.typeConditions) > 0 :
         raise NotImplementedError
     reduceTypeVariables(typeVarEntries)
     if ast.returnType is not None :
