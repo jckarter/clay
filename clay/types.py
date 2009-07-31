@@ -1,4 +1,5 @@
 from clay.multimethod import multimethod
+from clay.xprint import xprint, XObject, XField, XSymbol, xregister
 
 __all__ = ["Type", "boolType", "intType", "charType", "voidType",
            "TupleType", "ArrayType", "ArrayValueType", "RefType",
@@ -8,7 +9,8 @@ __all__ = ["Type", "boolType", "intType", "charType", "voidType",
            "isArrayValueType", "isRefType",
            "isRecordType", "isStructType",
            "typeEquals", "typeListEquals", "typeHash",
-           "typeUnify", "typeListUnify", "TypeVariable", "typeDeref"]
+           "typeUnify", "typeListUnify", "TypeVariable", "typeDeref",
+           "typePrint"]
 
 
 
@@ -176,9 +178,6 @@ def typeDeref(t) :
         t = t.type
     return t
 
-
-typeUnify = multimethod(n=2, defaultProc=typeUnifyVariables)
-
 def typeListUnify(a, b) :
     if len(a) != len(b) :
         return False
@@ -199,6 +198,8 @@ def typeUnifyVariables(x, y) :
             return True
         return typeUnify(x, y.type)
     assert False
+
+typeUnify = multimethod(n=2, defaultProc=typeUnifyVariables)
 
 @typeUnify.register(PrimitiveType, PrimitiveType)
 def foo(x, y) :
@@ -227,6 +228,24 @@ def foo(x, y) :
 @typeUnify.register(StructType, StructType)
 def foo(x, y) :
     return (x.entry is y.entry) and typeListUnify(x.typeParams, y.typeParams)
+
+
+
+#
+# type printer
+#
+
+xregister(PrimitiveType, lambda x : XSymbol(x.name))
+xregister(TupleType, lambda x : tuple(x.types))
+xregister(ArrayType, lambda x : XObject("Array", x.type))
+xregister(ArrayValueType, lambda x : XObject("ArrayValue", x.type, x.size))
+xregister(RefType, lambda x : XObject("Ref", x.type))
+xregister(RecordType, lambda x : XObject(x.entry.ast.name.s, *x.typeParams))
+xregister(StructType, lambda x : XObject(x.entry.ast.name.s, *x.typeParams))
+xregister(TypeVariable, lambda x : XObject("TypeVariable", x.type))
+
+def typePrint(t) :
+    return xprint(t)
 
 
 
