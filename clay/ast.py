@@ -290,3 +290,11 @@ class StringLiteral(Expression) :
     def __init__(self, value) :
         check(value, unicode)
         self.value = value
+
+
+
+#
+# enable xprint support for ast
+#
+
+import clay.astprinter

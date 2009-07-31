@@ -9,8 +9,7 @@ __all__ = ["Type", "boolType", "intType", "charType", "voidType",
            "isArrayValueType", "isRefType",
            "isRecordType", "isStructType",
            "typeEquals", "typeListEquals", "typeHash",
-           "typeUnify", "typeListUnify", "TypeVariable", "typeDeref",
-           "typePrint"]
+           "typeUnify", "typeListUnify", "TypeVariable", "typeDeref"]
 
 
 
@@ -243,9 +242,6 @@ xregister(RefType, lambda x : XObject("Ref", x.type))
 xregister(RecordType, lambda x : XObject(x.entry.ast.name.s, *x.typeParams))
 xregister(StructType, lambda x : XObject(x.entry.ast.name.s, *x.typeParams))
 xregister(TypeVariable, lambda x : XObject("TypeVariable", x.type))
-
-def typePrint(t) :
-    return xprint(t)
 
 
 

@@ -1,10 +1,7 @@
 from clay.ast import *
 from clay.xprint import xprint, XObject, XField, XSymbol, xregister
 
-__all__ = ["astPrint"]
-
-def astPrint(x, columns=80) :
-    xprint(x, columns)
+__all__ = []
 
 
 r = xregister
