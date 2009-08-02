@@ -1,6 +1,6 @@
 __all__ = [
     "ASTNode", "Program", "TopLevelItem", "PredicateDef", "Identifier",
-    "InstanceDef", "TypeCondition", "RecordDef", "StructDef", "Field",
+    "InstanceDef", "TypeCondition", "RecordDef", "Field",
     "Variable", "VariableDef", "ProcedureDef", "OverloadableDef",
     "OverloadDef", "Argument", "ValueArgument", "TypeArgument",
     "Statement", "Block", "LocalVariableDef", "Assignment",
@@ -62,15 +62,6 @@ class TypeCondition(ASTNode) :
         self.typeArgs = typeArgs
 
 class RecordDef(TopLevelItem) :
-    def __init__(self, name, typeVars, fields) :
-        check(name, Identifier)
-        checkList(typeVars, Identifier)
-        checkList(fields, Field)
-        self.name = name
-        self.typeVars = typeVars
-        self.fields = fields
-
-class StructDef(TopLevelItem) :
     def __init__(self, name, typeVars, fields) :
         check(name, Identifier)
         checkList(typeVars, Identifier)
@@ -141,10 +132,8 @@ class Argument(ASTNode) :
     pass
 
 class ValueArgument(Argument) :
-    def __init__(self, isRef, variable) :
-        check(isRef, bool)
+    def __init__(self, variable) :
         check(variable, Variable)
-        self.isRef = isRef
         self.variable = variable
 
 class TypeArgument(Argument) :

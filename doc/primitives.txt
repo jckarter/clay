@@ -9,23 +9,25 @@ Primitive Type Constructors:
 Array[T] : array reference type constructor
 ArrayValue[T,n] : array value type constructor
 record [T,..]? { (Name:Type;)* } : record type definition
-struct [T,..]? { (Name:Type;)* } : struct type definition
-Ref[T] : simple pointer
+Ref[T] : reference counted pointer
+RawRef[T] : raw pointer
 
 Primitive Value
 (Value,...) : tuple constructor
 [Value,...] : array constructor
 T(Value,...) : record constructor if IsRecord(T)
-T(Value,...) : record constructor if IsStruct(T)
 
 Primitive Operations:
 
 default[T](type T):T
 
-e:T => &e:Ref[T]
+e:T => &e:RawRef[T]
+e:RawRef[T] => e^:T
+e:RawRef[T], i:Int => rawRefOffset(e, i):RawRef[T]
+e1:RawRef[T],e2:RawRef[T] -> rawRefDifference(e1, e2):Int
+
+new[T](v:T):Ref[T]
 e:Ref[T] => e^:T
-e:Ref[T],i:Int => e+i:Ref[T], e-i:Ref[T]
-e1:Ref[T],e2:Ref[T] -> e1-e2:Int
 
 v_1:T_1, ..., v_n:T_n => (v_1, ..., v_n) : (T_1, ..., T_n)
 e:(T_1, ..., T_n) => e.i : T_i
@@ -40,9 +42,6 @@ a:ArrayValue[T,n], i:Int => a[i]:T
 
 R:Record => R(v_1, ..., v_n):RecordType
 a:RecordType => a.field:FieldType
-
-S:Struct => S(v_1, ..., v_n):StructType
-a:StructType => a.field:FieldType
 
 boolNot(x:Bool):Bool
 

@@ -25,7 +25,6 @@ r(InstanceDef, lambda x : xo("InstanceDef", x.name, x.typeVars,
                              tuple(x.typeArgs), xf("if",x.typeConditions)))
 r(TypeCondition, lambda x : xo("TypeCondition", x.name.s, *x.typeArgs))
 r(RecordDef, lambda x : xo("RecordDef", x.name, x.typeVars, *x.fields))
-r(StructDef, lambda x : xo("StructDef", x.name, x.typeVars, *x.fields))
 r(Field, lambda x : xo("Field", x.name, x.type))
 r(Variable, lambda x : xo("Variable", x.name, x.type))
 r(VariableDef, lambda x : xo("VariableDef", x.variables, x.exprList))
@@ -36,8 +35,7 @@ r(OverloadableDef, lambda x : xo("OverloadableDef", x.name))
 r(OverloadDef, lambda x : xo("OverloadDef", x.name, x.typeVars,
                              tuple(x.args), x.returnType,
                              xf("if",x.typeConditions), x.body))
-r(ValueArgument, lambda x : xo("ValueArgument", xf("ref",x.isRef),
-                               x.variable))
+r(ValueArgument, lambda x : xo("ValueArgument", x.variable))
 r(TypeArgument, lambda x : xo("TypeArgument", x.type))
 
 r(Identifier, lambda x : xo("Identifier", XSymbol(x.s)))

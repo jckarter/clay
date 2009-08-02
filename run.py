@@ -10,7 +10,6 @@ def main() :
     data = file(fileName).read()
     try :
         program = parse(data, fileName)
-        xprint(program, 100)
         env = buildTopLevelEnv(program)
         e = ast.CallExpr(ast.NameRef(ast.Identifier("main")), [])
         xprint(inferType(e, env))

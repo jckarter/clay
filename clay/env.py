@@ -2,8 +2,12 @@ from clay.ast import *
 
 __all__ = ["Env", "EnvEntry",
            "BoolTypeEntry", "CharTypeEntry", "IntTypeEntry", "VoidTypeEntry",
-           "ArrayTypeEntry", "ArrayValueTypeEntry", "RefTypeEntry",
-           "PrimOpDefault", "PrimOpArray", "PrimOpArraySize",
+           "ArrayTypeEntry", "ArrayValueTypeEntry", "RawRefTypeEntry",
+           "RefTypeEntry",
+           "PrimOpDefault",
+           "PrimOpRawRefOffset", "PrimOpRawRefDifference",
+           "PrimOpNew",
+           "PrimOpArray", "PrimOpArraySize",
            "PrimOpArrayValue",
            "PrimOpBoolNot",
            "PrimOpCharToInt", "PrimOpIntToChar", "PrimOpCharEquals",
@@ -13,7 +17,7 @@ __all__ = ["Env", "EnvEntry",
            "PrimOpIntDivide", "PrimOpIntModulus", "PrimOpIntNegate",
            "PrimOpIntEquals", "PrimOpIntLesser", "PrimOpIntLesserEquals",
            "PrimOpIntGreater", "PrimOpIntGreaterEquals",
-           "PredicateEntry", "InstanceEntry", "RecordEntry", "StructEntry",
+           "PredicateEntry", "InstanceEntry", "RecordEntry",
            "VariableDefEntry", "VariableEntry", "ProcedureEntry",
            "OverloadableEntry", "OverloadEntry", "TypeVarEntry",
            "LocalVariableEntry"]
@@ -68,9 +72,13 @@ class IntTypeEntry(EnvEntry) : pass
 class VoidTypeEntry(EnvEntry) : pass
 class ArrayTypeEntry(EnvEntry) : pass
 class ArrayValueTypeEntry(EnvEntry) : pass
+class RawRefTypeEntry(EnvEntry) : pass
 class RefTypeEntry(EnvEntry) : pass
 
 class PrimOpDefault(EnvEntry) : pass
+class PrimOpRawRefOffset(EnvEntry) : pass
+class PrimOpRawRefDifference(EnvEntry) : pass
+class PrimOpNew(EnvEntry) : pass
 class PrimOpArray(EnvEntry) : pass
 class PrimOpArraySize(EnvEntry) : pass
 class PrimOpArrayValue(EnvEntry) : pass
@@ -111,8 +119,6 @@ class PredicateEntry(EnvEntry) :
 class InstanceEntry(EnvEntry) : pass
 
 class RecordEntry(EnvEntry) : pass
-
-class StructEntry(EnvEntry) : pass
 
 class VariableDefEntry(EnvEntry) :
     def __init__(self, env, ast) :

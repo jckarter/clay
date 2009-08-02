@@ -74,7 +74,7 @@ symbol = token(regexParser(re.compile(symbolsRegex())),
 # keyword, identifier
 #
 
-keywordList = ("predicate instance record struct var ref def " +
+keywordList = ("predicate instance record var def " +
                "overloadable overload type " +
                "if else break continue while for in return " +
                "true false").split()

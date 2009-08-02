@@ -184,16 +184,11 @@ fieldDef = astNode(sequence(identifier, typeSpec, semicolon),
 recordDef = astNode(sequence(keyword("record"), identifier, optTypeVars,
                              symbol("{"), onePlus(fieldDef), symbol("}")),
                     lambda x : RecordDef(x[1],x[2],x[4]))
-structDef = astNode(sequence(keyword("struct"), identifier, optTypeVars,
-                             symbol("{"), onePlus(fieldDef), symbol("}")),
-                    lambda x : StructDef(x[1],x[2],x[4]))
 variableDef = astNode(sequence(keyword("var"), variableList,
                                symbol("="), expressionList, semicolon),
                       lambda x : VariableDef(x[1],x[3]))
 
-isRef = modify(optional(keyword("ref")), lambda x : x is not None)
-valueArgument = astNode(sequence(isRef, variable),
-                        lambda x : ValueArgument(x[0],x[1]))
+valueArgument = astNode(variable, lambda x : ValueArgument(x))
 typeArgument = astNode(sequence(keyword("type"), expression),
                        lambda x : TypeArgument(x[1]))
 argument = choice(valueArgument, typeArgument)
@@ -228,7 +223,7 @@ instanceDef = astNode(sequence(keyword("instance"), identifier, optTypeVars,
                                optTypeConditions, semicolon),
                       lambda x : InstanceDef(x[1],x[2],x[4],x[6]))
 
-topLevelItem = choice(predicateDef, instanceDef, recordDef, structDef,
+topLevelItem = choice(predicateDef, instanceDef, recordDef,
                       variableDef, procedureDef, overloadableDef,
                       overloadDef)
 

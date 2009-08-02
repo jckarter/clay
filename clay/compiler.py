@@ -83,7 +83,7 @@ def reduceTypeVariables(typeVarEntries) :
         entry.type = t
 
 def getFieldTypes(t) :
-    assert isRecordType(t) or isStructType(t)
+    assert isRecordType(t)
     assert len(t.entry.ast.typeVars) == len(t.typeParams)
     env = Env(t.entry.env)
     for tvarName, typeParam in zip(t.entry.ast.typeVars, t.typeParams) :
@@ -117,9 +117,13 @@ def primitivesEnv() :
     a("Int", IntTypeEntry)
     a("Void", VoidTypeEntry)
     a("Array", ArrayTypeEntry)
+    a("RawRef", RawRefTypeEntry)
     a("Ref", RefTypeEntry)
 
     a("default", PrimOpDefault)
+    a("rawRefOffset", PrimOpRawRefOffset)
+    a("rawRefDifference", PrimOpRawRefDifference)
+    a("new", PrimOpNew)
     a("array", PrimOpArray)
     a("arraySize", PrimOpArraySize)
     a("arrayValue", PrimOpArrayValue)
@@ -172,10 +176,6 @@ def foo(x, env) :
 def foo(x, env) :
     addIdent(env, x.name, RecordEntry(env,x))
 
-@addTopLevel.register(StructDef)
-def foo(x, env) :
-    addIdent(env, x.name, StructEntry(env,x))
-
 @addTopLevel.register(VariableDef)
 def foo(x, env) :
     defEntry = VariableDefEntry(env, x)
@@ -227,7 +227,7 @@ def inferTypeType(x, env, verify=None) :
 
 @inferType.register(AddressOfExpr)
 def foo(x, env) :
-    return True, RefType(inferValueType(x.expr, env))
+    return True, RawRefType(inferValueType(x.expr, env))
 
 @inferType.register(IndexExpr)
 def foo(x, env) :
@@ -262,6 +262,11 @@ def foo(entry, x, env) :
     typeParam = inferTypeType(typeParam, env)
     return False, ArrayValueType(typeParam, intLiteralValue(size))
 
+@inferNamedIndexExprType.register(RawRefTypeEntry)
+def foo(entry, x, env) :
+    typeParam = oneTypeParam(x, x.indexes)
+    return False, RawRefType(inferTypeType(typeParam, env))
+
 @inferNamedIndexExprType.register(RefTypeEntry)
 def foo(entry, x, env) :
     typeParam = oneTypeParam(x, x.indexes)
@@ -273,13 +278,6 @@ def foo(entry, x, env) :
     typeParams = nTypeParams(n, x, x.indexes)
     typeParams = [inferTypeType(y, env) for y in typeParams]
     return False, RecordType(entry, typeParams)
-
-@inferNamedIndexExprType.register(StructEntry)
-def foo(entry, x, env) :
-    n = len(entry.ast.typeVars)
-    typeParams = nTypeParams(n, x, x.indexes)
-    typeParams = [inferTypeType(y, env) for y in typeParams]
-    return False, StructType(entry, typeParams)
 
 # end inferNamedIndexExprType
 
@@ -295,7 +293,7 @@ def foo(x, env) :
 
 def inferIndirectCallType(x, env) :
     def isCallable(t) :
-        return isRecordType(t) or isStructType(t)
+        return isRecordType(t)
     callableType = inferTypeType(x.expr, env, isCallable)
     fieldTypes = getFieldTypes(callableType)
     if len(fieldTypes) != len(x.args) :
@@ -316,6 +314,28 @@ def foo(entry, x, env) :
     arg = oneArg(x, x.args)
     argType = inferTypeType(arg, env)
     return True, argType
+
+@inferNamedCallExprType.register(PrimOpRawRefOffset)
+def foo(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    type1 = inferValueType(args[0], env, isRawRefType)
+    type2 = inferValueType(args[1], env, isIntType)
+    return True, type1
+
+@inferNamedCallExprType.register(PrimOpRawRefDifference)
+def foo(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    type1 = inferValueType(args[0], env, isRawRefType)
+    type2 = inferValueType(args[1], env, isRawRefType)
+    if not typeEquals(type1.type, type2.type) :
+        raiseError("type mismatch", args[1])
+    return True, intType
+
+@inferNamedCallExprType.register(PrimOpNew)
+def foo(entry, x, env) :
+    arg = oneArg(x, x.args)
+    vType = inferValueType(arg, env)
+    return True, RefType(vType)
 
 @inferNamedCallExprType.register(PrimOpArray)
 def foo(entry, x, env) :
@@ -412,21 +432,6 @@ def foo(entry, x, env) :
     typeParams = [tvarEntry.type for tvarEntry in typeVarEntries]
     return True, RecordType(entry, typeParams)
 
-@inferNamedCallExprType.register(StructEntry)
-def foo(entry, x, env) :
-    if len(entry.ast.fields) != len(x.args) :
-        raiseError("incorrect no. of arguments", x)
-    env2 = Env(entry.env)
-    typeVarEntries = bindTypeVariables(env2, entry.ast.typeVars)
-    for field, arg in zip(entry.ast.fields, x.args) :
-        fieldType = inferTypeType(field.type, env2)
-        argType = inferValueType(arg, env)
-        if not typeUnify(fieldType, argType) :
-            raiseError("type mismatch", arg)
-    reduceTypeVariables(typeVarEntries)
-    typeParams = [tvarEntry.type for tvarEntry in typeVarEntries]
-    return True, StructType(entry, typeParams)
-
 @inferNamedCallExprType.register(ProcedureEntry)
 def foo(entry, x, env) :
     argsInfo = tuple([inferType(y, env) for y in x.args])
@@ -477,8 +482,6 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
     for i, formalArg in enumerate(ast.args) :
         isValue, argType = argsInfo[i]
         if type(formalArg) is ValueArgument :
-            if formalArg.isRef :
-                argType = RefType(argType)
             argName = formalArg.variable.name
             localVarEntry = LocalVariableEntry(env, argName, argType)
             addIdent(env, argName, localVarEntry)
@@ -497,7 +500,7 @@ def foo(entry, x, env) :
 @inferType.register(FieldRef)
 def foo(x, env) :
     def isContainer(t) :
-        return isRecordType(t) or isStructType(t)
+        return isRecordType(t)
     containerType = inferValueType(x.expr, env, isContainer)
     ast = containerType.entry.ast
     for field, fieldType in zip(ast.fields, getFieldTypes(containerType)) :
@@ -514,8 +517,10 @@ def foo(x, env) :
 
 @inferType.register(PointerRef)
 def foo(x, env) :
-    referenceType = inferValueType(x.expr, env, isRefType)
-    return True, referenceType.type
+    def isPointerType(t) :
+        return isRefType(t) or isRawRefType(t)
+    pointerType = inferValueType(x.expr, env, isPointerType)
+    return True, pointerType.type
 
 @inferType.register(ArrayExpr)
 def foo(x, env) :

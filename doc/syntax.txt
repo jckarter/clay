@@ -1,6 +1,6 @@
 Program -> TopLevelItem* ;
 
-TopLevelItem -> PredicateDef | InstanceDef | RecordDef | StructDef
+TopLevelItem -> PredicateDef | InstanceDef | RecordDef
               | VariableDef | ProcedureDef | OverloadableDef | OverloadDef ;
 
 PredicateDef -> "predicate" Name ;
@@ -12,7 +12,6 @@ TypeConditions -> "if" comma_list(TypeCondition) ;
 TypeCondition -> Name "(" comma_list(TypeExpr) ")" ;
 
 RecordDef -> "record" Name TypeVars? "{" FieldDef+ "}" ;
-StructDef -> "struct" Name TypeVars? "{" FieldDef+ "}" ;
 FieldDef -> Name TypeSpec ";" ;
 
 TypeSpec -> ":" TypeExpr ;
@@ -24,7 +23,7 @@ VariableDef -> "var" VariableList "=" comma_list(Expression) ";" ;
 
 ProcedureDef -> "def" Name TypeVars? "(" comma_list(Argument)? ")"
                 TypeSpec? TypeConditions? Block ;
-Argument -> "ref"? Variable
+Argument -> Variable
           | "type" Expression
           ;
 
