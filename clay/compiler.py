@@ -116,17 +116,20 @@ def primitivesEnv() :
     a("Char", CharTypeEntry)
     a("Int", IntTypeEntry)
     a("Void", VoidTypeEntry)
-    a("Array", ArrayTypeEntry)
+    a("ArrayValue", ArrayValueTypeEntry)
     a("Pointer", PointerTypeEntry)
-    a("Ref", RefTypeEntry)
 
     a("default", PrimOpDefault)
     a("pointerOffset", PrimOpPointerOffset)
     a("pointerDifference", PrimOpPointerDifference)
-    a("new", PrimOpNew)
-    a("array", PrimOpArray)
-    a("arraySize", PrimOpArraySize)
+    a("pointerCast", PrimOpPointerCast)
+    a("allocate", PrimOpAllocate)
+    a("free", PrimOpFree)
+    a("allocateBlock", PrimOpAllocateBlock)
+    a("freeBlock", PrimOpFreeBlock)
+    a("blockSize", PrimOpBlockSize)
     a("arrayValue", PrimOpArrayValue)
+    a("arrayValueSize", PrimOpArrayValueSize)
 
     a("boolNot", PrimOpBoolNot)
     a("charToInt", PrimOpCharToInt)
@@ -240,7 +243,7 @@ def foo(x, env) :
 
 def inferArrayIndexingType(x, env) :
     def isIndexable(t) :
-        return isArrayType(t) or isArrayValueType(t)
+        return isArrayValueType(t)
     indexableType = inferValueType(x.expr, env, isIndexable)
     index = oneArg(x, x.indexes)
     inferValueType(index, env, isIntType)
@@ -250,11 +253,6 @@ def inferArrayIndexingType(x, env) :
 # begin inferNamedIndexExprType
 
 inferNamedIndexExprType = multimethod()
-
-@inferNamedIndexExprType.register(ArrayTypeEntry)
-def foo(entry, x, env) :
-    typeParam = oneTypeParam(x, x.indexes)
-    return False, ArrayType(inferTypeType(typeParam, env))
 
 @inferNamedIndexExprType.register(ArrayValueTypeEntry)
 def foo(entry, x, env) :
@@ -266,11 +264,6 @@ def foo(entry, x, env) :
 def foo(entry, x, env) :
     typeParam = oneTypeParam(x, x.indexes)
     return False, PointerType(inferTypeType(typeParam, env))
-
-@inferNamedIndexExprType.register(RefTypeEntry)
-def foo(entry, x, env) :
-    typeParam = oneTypeParam(x, x.indexes)
-    return False, RefType(inferTypeType(typeParam, env))
 
 @inferNamedIndexExprType.register(RecordEntry)
 def foo(entry, x, env) :
@@ -331,23 +324,42 @@ def foo(entry, x, env) :
         raiseError("type mismatch", args[1])
     return True, intType
 
-@inferNamedCallExprType.register(PrimOpNew)
-def foo(entry, x, env) :
-    arg = oneArg(x, x.args)
-    vType = inferValueType(arg, env)
-    return True, RefType(vType)
-
-@inferNamedCallExprType.register(PrimOpArray)
+@inferNamedCallExprType.register(PrimOpPointerCast)
 def foo(entry, x, env) :
     args = nArgs(2, x, x.args)
-    inferValueType(args[0], env, isIntType)
-    vType = inferValueType(args[1], env)
-    return True, ArrayType(vType)
+    destType = inferTypeType(args[0], env)
+    pointerType = inferValueType(args[0], env, isPointerType)
+    return True, PointerType(destType)
 
-@inferNamedCallExprType.register(PrimOpArraySize)
+@inferNamedCallExprType.register(PrimOpAllocate)
 def foo(entry, x, env) :
     arg = oneArg(x, x.args)
-    inferValueType(arg, env, isArrayType)
+    elementType = inferTypeType(arg, env)
+    return True, PointerType(elementType)
+
+@inferNamedCallExprType.register(PrimOpFree)
+def foo(entry, x, env) :
+    arg = oneArg(x, x.args)
+    vType = inferValueType(arg, env, isPointerType)
+    return True, voidType
+
+@inferNamedCallExprType.register(PrimOpAllocateBlock)
+def foo(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    elementType = inferTypeType(args[0], env)
+    sizeType = inferValueType(args[1], env, isIntType)
+    return True, PointerType(elementType)
+
+@inferNamedCallExprType.register(PrimOpFreeBlock)
+def foo(entry, x, env) :
+    arg = oneArg(x, x.args)
+    vType = inferValueType(arg, env, isPointerType)
+    return True, voidType
+
+@inferNamedCallExprType.register(PrimOpBlockSize)
+def foo(entry, x, env) :
+    arg = oneArg(x, x.args)
+    vType = inferValueType(arg, env, isPointerType)
     return True, intType
 
 @inferNamedCallExprType.register(PrimOpArrayValue)
@@ -356,6 +368,12 @@ def foo(entry, x, env) :
     n = intLiteralValue(args[0])
     vType = inferValueType(args[1], env)
     return True, ArrayValueType(vType, n)
+
+@inferNamedCallExprType.register(PrimOpArrayValueSize)
+def foo(entry, x, env) :
+    arg = oneArg(x, x.args)
+    inferValueType(arg, env, isArrayValueType)
+    return True, intType
 
 @inferNamedCallExprType.register(PrimOpBoolNot)
 def foo(entry, x, env) :
@@ -518,7 +536,7 @@ def foo(x, env) :
 @inferType.register(Dereference)
 def foo(x, env) :
     def isReferenceType(t) :
-        return isRefType(t) or isPointerType(t)
+        return isPointerType(t)
     referenceType = inferValueType(x.expr, env, isReferenceType)
     return True, referenceType.type
 
@@ -533,7 +551,7 @@ def foo(x, env) :
             raiseError("type mismatch", y)
     if elementType is None :
         raiseError("empty array expression", x)
-    return True, ArrayType(elementType)
+    return True, ArrayValueType(elementType, len(x.elements))
 
 @inferType.register(TupleExpr)
 def foo(x, env) :
@@ -701,7 +719,7 @@ def foo(x, env, collector) :
     if env is not None :
         try :
             def isSequenceType(y) :
-                return isArrayType(y) or isArrayValueType(y)
+                return isArrayValueType(y)
             exprType = inferValueType(x.expr, env, isSequenceType)
             typeList = unpackTypes([exprType.type], len(x.variables), x.expr)
             env = Env(env)

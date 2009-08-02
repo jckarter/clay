@@ -17,16 +17,17 @@ def isOdd(n) {
 
 record NodeA[T] {
     x: T;
-    next: Ref[NodeA[T]];
+    next: Pointer[NodeA[T]];
 }
 
-def nullRef[T](type T):Ref[T] {
-    return default(Ref[T]);
+def null[T](type T):Pointer[T] {
+    return default(Pointer[T]);
 }
 
 def mainA() {
     var i = 10;
-    var n = new(NodeA(i, nullRef(NodeA[Int])));
+    var n = allocate(NodeA[Int]);
+    n^ = NodeA(i, null(NodeA[Int]));
     return n^.next;
 }
 

@@ -2,13 +2,12 @@ from clay.ast import *
 
 __all__ = ["Env", "EnvEntry",
            "BoolTypeEntry", "CharTypeEntry", "IntTypeEntry", "VoidTypeEntry",
-           "ArrayTypeEntry", "ArrayValueTypeEntry", "PointerTypeEntry",
-           "RefTypeEntry",
+           "ArrayValueTypeEntry", "PointerTypeEntry",
            "PrimOpDefault",
            "PrimOpPointerOffset", "PrimOpPointerDifference",
-           "PrimOpNew",
-           "PrimOpArray", "PrimOpArraySize",
-           "PrimOpArrayValue",
+           "PrimOpPointerCast", "PrimOpAllocate", "PrimOpFree",
+           "PrimOpAllocateBlock", "PrimOpFreeBlock", "PrimOpBlockSize",
+           "PrimOpArrayValue", "PrimOpArrayValueSize",
            "PrimOpBoolNot",
            "PrimOpCharToInt", "PrimOpIntToChar", "PrimOpCharEquals",
            "PrimOpCharLesser", "PrimOpCharLesserEquals", "PrimOpCharGreater",
@@ -70,18 +69,20 @@ class BoolTypeEntry(EnvEntry) : pass
 class CharTypeEntry(EnvEntry) : pass
 class IntTypeEntry(EnvEntry) : pass
 class VoidTypeEntry(EnvEntry) : pass
-class ArrayTypeEntry(EnvEntry) : pass
 class ArrayValueTypeEntry(EnvEntry) : pass
 class PointerTypeEntry(EnvEntry) : pass
-class RefTypeEntry(EnvEntry) : pass
 
 class PrimOpDefault(EnvEntry) : pass
 class PrimOpPointerOffset(EnvEntry) : pass
 class PrimOpPointerDifference(EnvEntry) : pass
-class PrimOpNew(EnvEntry) : pass
-class PrimOpArray(EnvEntry) : pass
-class PrimOpArraySize(EnvEntry) : pass
+class PrimOpPointerCast(EnvEntry) : pass
+class PrimOpAllocate(EnvEntry) : pass
+class PrimOpFree(EnvEntry) : pass
+class PrimOpAllocateBlock(EnvEntry) : pass
+class PrimOpFreeBlock(EnvEntry) : pass
+class PrimOpBlockSize(EnvEntry) : pass
 class PrimOpArrayValue(EnvEntry) : pass
+class PrimOpArrayValueSize(EnvEntry) : pass
 
 class PrimOpBoolNot(EnvEntry) : pass
 

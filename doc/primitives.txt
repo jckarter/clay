@@ -6,15 +6,13 @@ true, false, CharLiteral, IntLiteral
 
 Primitive Type Constructors:
 (Type,...) : tuple type constructor
-Array[T] : array reference type constructor
 ArrayValue[T,n] : array value type constructor
 record [T,..]? { (Name:Type;)* } : record type definition
 Pointer[T] : raw pointer
-Ref[T] : reference counted pointer
 
 Primitive Value
 (Value,...) : tuple constructor
-[Value,...] : array constructor
+[Value,...] : array value constructor
 T(Value,...) : record constructor if IsRecord(T)
 
 Primitive Operations:
@@ -24,21 +22,23 @@ default[T](type T):T
 e:T => &e:Pointer[T]
 e:Pointer[T] => e^:T
 e:Pointer[T], i:Int => pointerOffset(e, i):Pointer[T]
-e1:Pointer[T],e2:Pointer[T] -> pointerDifference(e1, e2):Int
+e1:Pointer[T],e2:Pointer[T] => pointerDifference(e1, e2):Int
+T2:Type, a:Pointer[T1] => pointerCast(T2, a):Pointer[T2]
 
-new[T](v:T):Ref[T]
-e:Ref[T] => e^:T
+T:Type => allocate(T) => Pointer[T]
+p:Pointer[T] => free(p):Void
+
+T:Type, n:Int => allocateBlock(T, n) => Pointer[T]
+p:Pointer[T] => freeBlock(p):Void
+p:Pointer[T] => blockSize(p):Int
 
 v_1:T_1, ..., v_n:T_n => (v_1, ..., v_n) : (T_1, ..., T_n)
 e:(T_1, ..., T_n) => e.i : T_i
 
-v_1:T, ..., v_n:T => [v_1, ... ,v_n] : Array[T]
-n:Int, v:T => array(n, v):Array[T]
-a:Array[T] => arraySize(a):Int
-a:Array[T], i:Int => a[i]:T
-
+v_1:T, ..., v_n:T => [v_1, ... ,v_n] : ArrayValue[T, n]
 n:IntLiteral, v:T => arrayValue(n, v):ArrayValue[T, n]
 a:ArrayValue[T,n], i:Int => a[i]:T
+a:ArrayValue[T,n] => arrayValueSize(a):Int
 
 R:Record => R(v_1, ..., v_n):RecordType
 a:RecordType => a.field:FieldType
