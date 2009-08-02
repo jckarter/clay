@@ -218,7 +218,7 @@ def inferValueType(x, env, verify=None) :
 
 def inferTypeType(x, env, verify=None) :
     isValue, resultType = inferType(x, env)
-    if not isValue :
+    if isValue :
         raiseError("type expected", x)
     if verify is not None :
         if not verify(resultType) :
