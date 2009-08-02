@@ -9,8 +9,8 @@ Primitive Type Constructors:
 Array[T] : array reference type constructor
 ArrayValue[T,n] : array value type constructor
 record [T,..]? { (Name:Type;)* } : record type definition
+Pointer[T] : raw pointer
 Ref[T] : reference counted pointer
-RawRef[T] : raw pointer
 
 Primitive Value
 (Value,...) : tuple constructor
@@ -21,10 +21,10 @@ Primitive Operations:
 
 default[T](type T):T
 
-e:T => &e:RawRef[T]
-e:RawRef[T] => e^:T
-e:RawRef[T], i:Int => rawRefOffset(e, i):RawRef[T]
-e1:RawRef[T],e2:RawRef[T] -> rawRefDifference(e1, e2):Int
+e:T => &e:Pointer[T]
+e:Pointer[T] => e^:T
+e:Pointer[T], i:Int => pointerOffset(e, i):Pointer[T]
+e1:Pointer[T],e2:Pointer[T] -> pointerDifference(e1, e2):Int
 
 new[T](v:T):Ref[T]
 e:Ref[T] => e^:T

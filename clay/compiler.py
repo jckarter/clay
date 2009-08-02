@@ -117,12 +117,12 @@ def primitivesEnv() :
     a("Int", IntTypeEntry)
     a("Void", VoidTypeEntry)
     a("Array", ArrayTypeEntry)
-    a("RawRef", RawRefTypeEntry)
+    a("Pointer", PointerTypeEntry)
     a("Ref", RefTypeEntry)
 
     a("default", PrimOpDefault)
-    a("rawRefOffset", PrimOpRawRefOffset)
-    a("rawRefDifference", PrimOpRawRefDifference)
+    a("pointerOffset", PrimOpPointerOffset)
+    a("pointerDifference", PrimOpPointerDifference)
     a("new", PrimOpNew)
     a("array", PrimOpArray)
     a("arraySize", PrimOpArraySize)
@@ -227,7 +227,7 @@ def inferTypeType(x, env, verify=None) :
 
 @inferType.register(AddressOfExpr)
 def foo(x, env) :
-    return True, RawRefType(inferValueType(x.expr, env))
+    return True, PointerType(inferValueType(x.expr, env))
 
 @inferType.register(IndexExpr)
 def foo(x, env) :
@@ -262,10 +262,10 @@ def foo(entry, x, env) :
     typeParam = inferTypeType(typeParam, env)
     return False, ArrayValueType(typeParam, intLiteralValue(size))
 
-@inferNamedIndexExprType.register(RawRefTypeEntry)
+@inferNamedIndexExprType.register(PointerTypeEntry)
 def foo(entry, x, env) :
     typeParam = oneTypeParam(x, x.indexes)
-    return False, RawRefType(inferTypeType(typeParam, env))
+    return False, PointerType(inferTypeType(typeParam, env))
 
 @inferNamedIndexExprType.register(RefTypeEntry)
 def foo(entry, x, env) :
@@ -315,18 +315,18 @@ def foo(entry, x, env) :
     argType = inferTypeType(arg, env)
     return True, argType
 
-@inferNamedCallExprType.register(PrimOpRawRefOffset)
+@inferNamedCallExprType.register(PrimOpPointerOffset)
 def foo(entry, x, env) :
     args = nArgs(2, x, x.args)
-    type1 = inferValueType(args[0], env, isRawRefType)
+    type1 = inferValueType(args[0], env, isPointerType)
     type2 = inferValueType(args[1], env, isIntType)
     return True, type1
 
-@inferNamedCallExprType.register(PrimOpRawRefDifference)
+@inferNamedCallExprType.register(PrimOpPointerDifference)
 def foo(entry, x, env) :
     args = nArgs(2, x, x.args)
-    type1 = inferValueType(args[0], env, isRawRefType)
-    type2 = inferValueType(args[1], env, isRawRefType)
+    type1 = inferValueType(args[0], env, isPointerType)
+    type2 = inferValueType(args[1], env, isPointerType)
     if not typeEquals(type1.type, type2.type) :
         raiseError("type mismatch", args[1])
     return True, intType
@@ -517,10 +517,10 @@ def foo(x, env) :
 
 @inferType.register(PointerRef)
 def foo(x, env) :
-    def isPointerType(t) :
-        return isRefType(t) or isRawRefType(t)
-    pointerType = inferValueType(x.expr, env, isPointerType)
-    return True, pointerType.type
+    def isReferenceType(t) :
+        return isRefType(t) or isPointerType(t)
+    referenceType = inferValueType(x.expr, env, isReferenceType)
+    return True, referenceType.type
 
 @inferType.register(ArrayExpr)
 def foo(x, env) :

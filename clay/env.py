@@ -2,10 +2,10 @@ from clay.ast import *
 
 __all__ = ["Env", "EnvEntry",
            "BoolTypeEntry", "CharTypeEntry", "IntTypeEntry", "VoidTypeEntry",
-           "ArrayTypeEntry", "ArrayValueTypeEntry", "RawRefTypeEntry",
+           "ArrayTypeEntry", "ArrayValueTypeEntry", "PointerTypeEntry",
            "RefTypeEntry",
            "PrimOpDefault",
-           "PrimOpRawRefOffset", "PrimOpRawRefDifference",
+           "PrimOpPointerOffset", "PrimOpPointerDifference",
            "PrimOpNew",
            "PrimOpArray", "PrimOpArraySize",
            "PrimOpArrayValue",
@@ -72,12 +72,12 @@ class IntTypeEntry(EnvEntry) : pass
 class VoidTypeEntry(EnvEntry) : pass
 class ArrayTypeEntry(EnvEntry) : pass
 class ArrayValueTypeEntry(EnvEntry) : pass
-class RawRefTypeEntry(EnvEntry) : pass
+class PointerTypeEntry(EnvEntry) : pass
 class RefTypeEntry(EnvEntry) : pass
 
 class PrimOpDefault(EnvEntry) : pass
-class PrimOpRawRefOffset(EnvEntry) : pass
-class PrimOpRawRefDifference(EnvEntry) : pass
+class PrimOpPointerOffset(EnvEntry) : pass
+class PrimOpPointerDifference(EnvEntry) : pass
 class PrimOpNew(EnvEntry) : pass
 class PrimOpArray(EnvEntry) : pass
 class PrimOpArraySize(EnvEntry) : pass
