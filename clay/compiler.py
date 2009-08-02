@@ -515,7 +515,7 @@ def foo(x, env) :
         raiseError("invalid tuple index", x)
     return True, tupleType.types[x.index]
 
-@inferType.register(PointerRef)
+@inferType.register(Dereference)
 def foo(x, env) :
     def isReferenceType(t) :
         return isRefType(t) or isPointerType(t)

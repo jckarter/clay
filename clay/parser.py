@@ -88,10 +88,10 @@ fieldRefSuffix = astNode(sequence(symbol("."), identifier),
                          lambda x : FieldRef(None,x[1]))
 tupleRefSuffix = astNode(sequence(symbol("."), intLiteral),
                          lambda x : TupleRef(None,x[1]))
-pointerRefSuffix = astNode(symbol("^"), lambda x : PointerRef(None))
+dereferenceSuffix = astNode(symbol("^"), lambda x : Dereference(None))
 
 suffix = choice(indexSuffix, callSuffix, fieldRefSuffix,
-                tupleRefSuffix, pointerRefSuffix)
+                tupleRefSuffix, dereferenceSuffix)
 
 def foldSuffixes(expr, suffixes) :
     for suffix in suffixes :

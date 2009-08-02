@@ -68,7 +68,7 @@ r(IndexExpr, lambda x : xo("IndexExpr", x.expr, xf("indexes",x.indexes)))
 r(CallExpr, lambda x : xo("CallExpr", x.expr, xf("args",x.args)))
 r(FieldRef, lambda x : xo("FieldRef", x.expr, xf("field",x.name)))
 r(TupleRef, lambda x : xo("TupleRef", x.expr, xf("index",x.index)))
-r(PointerRef, lambda x : xo("PointerRef", x.expr))
+r(Dereference, lambda x : xo("Dereference", x.expr))
 
 r(ArrayExpr, lambda x : xo("ArrayExpr", *x.elements))
 r(TupleExpr, lambda x : xo("TupleExpr", *x.elements))

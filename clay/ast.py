@@ -7,7 +7,7 @@ __all__ = [
     "IfStatement", "BreakStatement", "ContinueStatement",
     "WhileStatement", "ForStatement", "ReturnStatement", "ExprStatement",
     "Expression", "AddressOfExpr", "IndexExpr", "CallExpr",
-    "FieldRef", "TupleRef", "PointerRef",
+    "FieldRef", "TupleRef", "Dereference",
     "ArrayExpr", "TupleExpr", "NameRef", "BoolLiteral", "IntLiteral",
     "CharLiteral", "StringLiteral"]
 
@@ -240,7 +240,7 @@ class TupleRef(Expression) :
         self.expr = expr
         self.index = index
 
-class PointerRef(Expression) :
+class Dereference(Expression) :
     def __init__(self, expr) :
         check2(expr, Expression)
         self.expr = expr

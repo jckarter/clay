@@ -75,13 +75,13 @@ Suffix -> IndexSuffix
         | CallSuffix
         | FieldRefSuffix
         | TupleRefSuffix
-        | PointerRefSuffix
+        | DereferenceSuffix
         ;
 IndexSuffix -> "[" comma_list(Expression) "]" ;
 CallSuffix -> "(" comma_list(Expression) ")" ;
 FieldRefSuffix -> "." Name ;
 TupleRefSuffix -> "." IntLiteral ;
-PointerRefSuffix -> "^" ;
+DereferenceSuffix -> "^" ;
 
 AtomicExpr -> ArrayExpr
             | TupleExpr
