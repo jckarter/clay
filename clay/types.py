@@ -2,9 +2,9 @@ from clay.multimethod import multimethod
 from clay.xprint import xprint, XObject, XField, XSymbol, xregister
 
 __all__ = ["Type", "boolType", "intType", "charType", "voidType",
-           "TupleType", "ArrayValueType", "PointerType", "RecordType",
+           "TupleType", "ArrayType", "PointerType", "RecordType",
            "isPrimitiveType", "isBoolType", "isIntType", "isCharType",
-           "isVoidType", "isTupleType", "isArrayValueType", "isPointerType",
+           "isVoidType", "isTupleType", "isArrayType", "isPointerType",
            "isRecordType",
            "typeEquals", "typeListEquals", "typeHash",
            "typeUnify", "typeListUnify", "TypeVariable", "typeDeref"]
@@ -36,7 +36,7 @@ class TupleType(Type) :
     def __init__(self, types) :
         self.types = types
 
-class ArrayValueType(Type) :
+class ArrayType(Type) :
     def __init__(self, type, size) :
         self.type = type
         self.size = size
@@ -62,7 +62,7 @@ def isIntType(t) : return t is intType
 def isCharType(t) : return t is charType
 def isVoidType(t) : return t is voidType
 def isTupleType(t) : return type(t) is TupleType
-def isArrayValueType(t) : return type(t) is ArrayValueType
+def isArrayType(t) : return type(t) is ArrayType
 def isPointerType(t) : return type(t) is PointerType
 def isRecordType(t) : return type(t) is RecordType
 
@@ -90,7 +90,7 @@ def foo(x, y) :
 def foo(x, y) :
     return typeListEquals(x.types, y.types)
 
-@typeEquals.register(ArrayValueType, ArrayValueType)
+@typeEquals.register(ArrayType, ArrayType)
 def foo(x, y) :
     return typeEquals(x.type, y.type) and (x.size == y.size)
 
@@ -119,9 +119,9 @@ def foo(x) :
     childHashes = tuple([typeHash(t) for t in x.types])
     return hash(("Tuple", childHashes))
 
-@typeHash.register(ArrayValueType)
+@typeHash.register(ArrayType)
 def foo(x) :
-    return hash(("ArrayValue", typeHash(x.type), x.size))
+    return hash(("Array", typeHash(x.type), x.size))
 
 @typeHash.register(PointerType)
 def foo(x) :
@@ -178,7 +178,7 @@ def foo(x, y) :
 def foo(x, y) :
     return typeListUnify(x.types, y.types)
 
-@typeUnify.register(ArrayValueType, ArrayValueType)
+@typeUnify.register(ArrayType, ArrayType)
 def foo(x, y) :
     return (x.size == y.size) and typeUnify(x.type, y.type)
 
@@ -198,7 +198,7 @@ def foo(x, y) :
 
 xregister(PrimitiveType, lambda x : XSymbol(x.name))
 xregister(TupleType, lambda x : tuple(x.types))
-xregister(ArrayValueType, lambda x : XObject("ArrayValue", x.type, x.size))
+xregister(ArrayType, lambda x : XObject("Array", x.type, x.size))
 xregister(PointerType, lambda x : XObject("Pointer", x.type))
 xregister(RecordType, lambda x : XObject(x.entry.ast.name.s, *x.typeParams))
 xregister(TypeVariable, lambda x : XObject("TypeVariable", x.type))

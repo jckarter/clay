@@ -6,13 +6,13 @@ true, false, CharLiteral, IntLiteral
 
 Primitive Type Constructors:
 (Type,...) : tuple type constructor
-ArrayValue[T,n] : array value type constructor
+Array[T,n] : array type constructor
 record [T,..]? { (Name:Type;)* } : record type definition
 Pointer[T] : raw pointer
 
 Primitive Value
 (Value,...) : tuple constructor
-[Value,...] : array value constructor
+[Value,...] : array constructor
 T(Value,...) : record constructor if IsRecord(T)
 
 Primitive Operations:
@@ -35,10 +35,10 @@ p:Pointer[T] => blockSize(p):Int
 v_1:T_1, ..., v_n:T_n => (v_1, ..., v_n) : (T_1, ..., T_n)
 e:(T_1, ..., T_n) => e.i : T_i
 
-v_1:T, ..., v_n:T => [v_1, ... ,v_n] : ArrayValue[T, n]
-n:IntLiteral, v:T => arrayValue(n, v):ArrayValue[T, n]
-a:ArrayValue[T,n], i:Int => a[i]:T
-a:ArrayValue[T,n] => arrayValueSize(a):Int
+v_1:T, ..., v_n:T => [v_1, ... ,v_n] : Array[T, n]
+n:IntLiteral, v:T => array(n, v):Array[T, n]
+a:Array[T,n], i:Int => a[i]:T
+a:Array[T,n] => arraySize(a):Int
 
 R:Record => R(v_1, ..., v_n):RecordType
 a:RecordType => a.field:FieldType
