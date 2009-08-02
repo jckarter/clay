@@ -46,9 +46,20 @@ def _xprint(x, buf, maxOffset) :
 #
 
 class XObject(object) :
-    def __init__(self, name, *fields) :
+    def __init__(self, name, *fields, **kwargs) :
         self.name = name
         self.fields = fields
+        opening = "("
+        closing = ")"
+        for k,v in kwargs.items() :
+            if k == "opening" :
+                opening = v
+            elif k == "closing" :
+                closing = v
+            else :
+                assert False, ("unknown keyword argument: %s" % k)
+        self.opening = opening
+        self.closing = closing
 
 class XField(object) :
     def __init__(self, name, value, separator="=") :
@@ -76,7 +87,8 @@ def _xprintTuple(x, buf, maxOffset) :
     return _xprintContainer("(", x, ")", buf, maxOffset)
 
 def _xprintXObject(x, buf, maxOffset) :
-    return _xprintContainer(x.name + "(", x.fields, ")", buf, maxOffset)
+    return _xprintContainer(x.name + x.opening, x.fields, x.closing,
+                            buf, maxOffset)
 
 def _xprintXField(x, buf, maxOffset) :
     buf.add(x.name)

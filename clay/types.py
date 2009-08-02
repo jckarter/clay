@@ -196,11 +196,14 @@ def foo(x, y) :
 # type printer
 #
 
+def obj(name, *fields) :
+    return XObject(name, *fields, opening="[", closing="]")
+
 xregister(PrimitiveType, lambda x : XSymbol(x.name))
 xregister(TupleType, lambda x : tuple(x.types))
-xregister(ArrayType, lambda x : XObject("Array", x.type, x.size))
-xregister(PointerType, lambda x : XObject("Pointer", x.type))
-xregister(RecordType, lambda x : XObject(x.entry.ast.name.s, *x.typeParams))
+xregister(ArrayType, lambda x : obj("Array", x.type, x.size))
+xregister(PointerType, lambda x : obj("Pointer", x.type))
+xregister(RecordType, lambda x : obj(x.entry.ast.name.s, *x.typeParams))
 xregister(TypeVariable, lambda x : XObject("TypeVariable", x.type))
 
 
