@@ -127,7 +127,8 @@ def makeStringParser(delim, isSingle, isUnicode) :
     escapes = [simpleEscape, octalEscape, hexEscape]
     if isUnicode :
         escapes.extend([unicodeEscape1, unicodeEscape2])
-    escapeChar = sequence(literal("\\"), choice(*escapes))
+    escapeChar = modify(sequence(literal("\\"), choice(*escapes)),
+                        lambda x : x[1])
     simpleSet = delim + "\\"
     simpleChar = modify(condition(lambda c : c not in simpleSet),
                         lambda x : conv(x))
