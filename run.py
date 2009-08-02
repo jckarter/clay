@@ -2,7 +2,7 @@ import sys
 from clay.error import SourceError
 from clay.parser import parse
 from clay import ast
-from clay.compiler import buildTopLevelEnv, inferType
+from clay.compiler import buildTopLevelEnv, inferValueType
 from clay.xprint import xprint
 
 def main() :
@@ -12,7 +12,7 @@ def main() :
         program = parse(data, fileName)
         env = buildTopLevelEnv(program)
         e = ast.CallExpr(ast.NameRef(ast.Identifier("main")), [])
-        xprint(inferType(e, env))
+        xprint(inferValueType(e, env))
     except SourceError, e :
         e.display()
         return

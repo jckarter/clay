@@ -242,12 +242,10 @@ def foo(x, env) :
     return inferArrayIndexingType(x, env)
 
 def inferArrayIndexingType(x, env) :
-    def isIndexable(t) :
-        return isArrayType(t)
-    indexableType = inferValueType(x.expr, env, isIndexable)
+    exprType = inferValueType(x.expr, env, isArrayType)
     index = oneArg(x, x.indexes)
     inferValueType(index, env, isIntType)
-    return True, indexableType.type
+    return True, exprType.type
 
 
 # begin inferNamedIndexExprType
@@ -285,17 +283,15 @@ def foo(x, env) :
     return inferIndirectCallType(x, env)
 
 def inferIndirectCallType(x, env) :
-    def isCallable(t) :
-        return isRecordType(t)
-    callableType = inferTypeType(x.expr, env, isCallable)
-    fieldTypes = getFieldTypes(callableType)
+    typeType = inferTypeType(x.expr, env, isRecordType)
+    fieldTypes = getFieldTypes(typeType)
     if len(fieldTypes) != len(x.args) :
         raiseError("incorrect no. of arguments", x)
     for fieldType, arg in zip(fieldTypes, x.args) :
         argType = inferValueType(arg, env)
         if not typeEquals(fieldType, argType) :
             raiseError("type mismatch", arg)
-    return True, callableType
+    return True, typeType
 
 
 # begin inferNamedCallExprType
@@ -328,7 +324,7 @@ def foo(entry, x, env) :
 def foo(entry, x, env) :
     args = nArgs(2, x, x.args)
     destType = inferTypeType(args[0], env)
-    pointerType = inferValueType(args[0], env, isPointerType)
+    exprType = inferValueType(args[0], env, isPointerType)
     return True, PointerType(destType)
 
 @inferNamedCallExprType.register(PrimOpAllocate)
@@ -517,11 +513,9 @@ def foo(entry, x, env) :
 
 @inferType.register(FieldRef)
 def foo(x, env) :
-    def isContainer(t) :
-        return isRecordType(t)
-    containerType = inferValueType(x.expr, env, isContainer)
-    ast = containerType.entry.ast
-    for field, fieldType in zip(ast.fields, getFieldTypes(containerType)) :
+    exprType = inferValueType(x.expr, env, isRecordType)
+    ast = exprType.entry.ast
+    for field, fieldType in zip(ast.fields, getFieldTypes(exprType)) :
         if field.name.s == x.name.s :
             return True, fieldType
     raiseError("field not found", x)
@@ -535,10 +529,8 @@ def foo(x, env) :
 
 @inferType.register(Dereference)
 def foo(x, env) :
-    def isReferenceType(t) :
-        return isPointerType(t)
-    referenceType = inferValueType(x.expr, env, isReferenceType)
-    return True, referenceType.type
+    exprType = inferValueType(x.expr, env, isPointerType)
+    return True, exprType.type
 
 @inferType.register(ArrayExpr)
 def foo(x, env) :
@@ -718,9 +710,7 @@ def foo(x, env, collector) :
 def foo(x, env, collector) :
     if env is not None :
         try :
-            def isSequenceType(y) :
-                return isArrayType(y)
-            exprType = inferValueType(x.expr, env, isSequenceType)
+            exprType = inferValueType(x.expr, env, isArrayType)
             typeList = unpackTypes([exprType.type], len(x.variables), x.expr)
             env = Env(env)
             for variable, itemType in zip(x.variables, typeList) :
