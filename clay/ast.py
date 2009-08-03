@@ -85,11 +85,11 @@ class Variable(ASTNode) :
         self.type = type
 
 class VariableDef(TopLevelItem) :
-    def __init__(self, variables, exprList) :
-        checkList(variables, Variable)
-        checkList(exprList, Expression)
-        self.variables = variables
-        self.exprList = exprList
+    def __init__(self, variable, expr) :
+        check(variable, Variable)
+        check(expr, Expression)
+        self.variable = variable
+        self.expr = expr
 
 class ProcedureDef(TopLevelItem) :
     def __init__(self, name, typeVars, args, returnType,
@@ -150,18 +150,18 @@ class Block(Statement) :
         self.statements = statements
 
 class LocalVariableDef(Statement) :
-    def __init__(self, variables, exprList) :
-        checkList(variables, Variable)
-        checkList(exprList, Expression)
-        self.variables = variables
-        self.exprList = exprList
+    def __init__(self, variable, expr) :
+        check(variable, Variable)
+        check(expr, Expression)
+        self.variable = variable
+        self.expr = expr
 
 class Assignment(Statement) :
-    def __init__(self, assignables, exprList) :
-        checkList(assignables, Expression)
-        checkList(exprList, Expression)
-        self.assignables = assignables
-        self.exprList = exprList
+    def __init__(self, assignable, expr) :
+        check(assignable, Expression)
+        check(expr, Expression)
+        self.assignable = assignable
+        self.expr = expr
 
 class IfStatement(Statement) :
     def __init__(self, condition, thenPart, elsePart) :
@@ -186,18 +186,18 @@ class WhileStatement(Statement) :
         self.body = body
 
 class ForStatement(Statement) :
-    def __init__(self, variables, expr, body) :
-        checkList(variables, Variable)
+    def __init__(self, variable, expr, body) :
+        check(variable, Variable)
         check(expr, Expression)
         check(body, Statement)
-        self.variables = variables
+        self.variable = variable
         self.expr = expr
         self.body = body
 
 class ReturnStatement(Statement) :
-    def __init__(self, exprList) :
-        checkList(exprList, Expression)
-        self.exprList = exprList
+    def __init__(self, expr) :
+        check2(expr, Expression)
+        self.expr = expr
 
 class ExprStatement(Statement) :
     def __init__(self, expr) :

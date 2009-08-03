@@ -27,7 +27,7 @@ r(TypeCondition, lambda x : xo("TypeCondition", x.name.s, *x.typeArgs))
 r(RecordDef, lambda x : xo("RecordDef", x.name, x.typeVars, *x.fields))
 r(Field, lambda x : xo("Field", x.name, x.type))
 r(Variable, lambda x : xo("Variable", x.name, x.type))
-r(VariableDef, lambda x : xo("VariableDef", x.variables, x.exprList))
+r(VariableDef, lambda x : xo("VariableDef", x.variable, x.expr))
 r(ProcedureDef, lambda x : xo("ProcedureDef", x.name, x.typeVars,
                               tuple(x.args), x.returnType,
                               xf("if",x.typeConditions), x.body))
@@ -45,16 +45,16 @@ r(Identifier, lambda x : xo("Identifier", XSymbol(x.s)))
 #
 
 r(Block, lambda x : xo("Block", *x.statements))
-r(LocalVariableDef, lambda x : xo("LocalVariableDef", x.variables, x.exprList))
-r(Assignment, lambda x : xo("Assignment", x.assignables, x.exprList))
+r(LocalVariableDef, lambda x : xo("LocalVariableDef", x.variable, x.expr))
+r(Assignment, lambda x : xo("Assignment", x.assignable, x.expr))
 r(IfStatement, lambda x : xo("IfStatement", x.condition,
                              xf("then", x.thenPart),
                              xf("else", x.elsePart)))
 r(BreakStatement, lambda x : xo("Break"))
 r(ContinueStatement, lambda x : xo("Continue"))
 r(WhileStatement, lambda x : xo("WhileStatement", x.condition, x.body))
-r(ForStatement, lambda x : xo("ForStatement", x.variables, x.expr, x.body))
-r(ReturnStatement, lambda x : xo("ReturnStatement", *x.exprList))
+r(ForStatement, lambda x : xo("ForStatement", x.variable, x.expr, x.body))
+r(ReturnStatement, lambda x : xo("ReturnStatement", x.expr))
 r(ExprStatement, lambda x : xo("ExprStatement", x.expr))
 
 

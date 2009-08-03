@@ -91,17 +91,6 @@ def getFieldTypes(t) :
         addIdent(env, tvarName, tvarEntry)
     return [inferTypeType(f.type, env) for f in t.entry.ast.fields]
 
-def unpackTypes(types, unpackCount, astNode) :
-    if (len(types) == 1) and (unpackCount > 1) :
-        if not isTupleType(types[0]) :
-            raiseError("type mismatch", astNode)
-        types = types[0].types
-    elif (len(types) > 1) and (unpackCount == 1) :
-        types = [TupleType(types)]
-    if len(types) != unpackCount :
-        raiseError("type mismatch", astNode)
-    return types
-
 
 
 #
@@ -181,9 +170,7 @@ def foo(x, env) :
 
 @addTopLevel.register(VariableDef)
 def foo(x, env) :
-    defEntry = VariableDefEntry(env, x)
-    for i,variable in enumerate(x.variables) :
-        addIdent(env, variable.name, VariableEntry(env,defEntry,i))
+    addIdent(env, x.variable.name, VariableEntry(env,x))
 
 @addTopLevel.register(ProcedureDef)
 def foo(x, env) :
@@ -585,28 +572,22 @@ def foo(entry, x, env) :
 
 @inferNamedExprType.register(VariableEntry)
 def foo(entry, x, env) :
-    typeList = inferVariableDefRHSType(entry.defEntry)
-    varType = typeList[entry.index]
-    if entry.ast.type is not None :
-        declaredType = inferTypeType(entry.ast.type, entry.env)
-        if not typeEquals(varType, declaredType) :
-            raiseError("type mismatch", entry.ast)
-    return True, varType
-
-def inferVariableDefRHSType(entry) :
-    if entry.typeList is False :
+    if entry.type is False :
         raise RecursiveInferenceError()
-    if entry.typeList is not None :
-        return entry.typeList
-    entry.typeList = False
+    if entry.type is not None :
+        return True, entry.type
+    entry.type = False
     try :
-        types = [inferValueType(x, entry.env) for x in entry.ast.exprList]
-        types = unpackTypes(types, len(entry.ast.variables), entry.ast)
-        entry.typeList = types
-        return types
+        exprType = inferValueType(entry.ast.expr, entry.env)
+        if entry.ast.variable.type is not None :
+            declaredType = inferTypeType(entry.ast.variable.type, entry.env)
+            if not typeEquals(exprType, declaredType) :
+                raiseError("type mismatch", entry.ast.expr)
+        entry.type = exprType
+        return True, exprType
     finally :
-        if entry.typeList is False :
-            entry.typeList = None
+        if entry.type is False :
+            entry.type = None
 
 @inferNamedExprType.register(TypeVarEntry)
 def foo(entry, x, env) :
@@ -669,12 +650,13 @@ def foo(x, env, collector) :
             if env is None :
                 continue
             try :
-                types = [inferValueType(z, env) for z in y.exprList]
-                types = unpackTypes(types, len(y.variables), y)
-                env = Env(env)
-                for variable, itemType in zip(y.variables, types) :
-                    localVar = LocalVariableEntry(env, variable, itemType)
-                    addIdent(env, variable.name, localVar)
+                exprType = inferValueType(y.expr, env)
+                if y.variable.type is not None :
+                    declaredType = inferTypeType(y.variable.type, env)
+                    if not typeEquals(exprType, declaredType) :
+                        raiseError("type mismatch", y.expr)
+                localVar = LocalVariableEntry(env, y.variable, exprType)
+                addIdent(env, y.variable.name, localVar)
             except RecursiveInferenceError :
                 env = None
         else :
@@ -711,25 +693,26 @@ def foo(x, env, collector) :
     if env is not None :
         try :
             exprType = inferValueType(x.expr, env, isArrayType)
-            typeList = unpackTypes([exprType.type], len(x.variables), x.expr)
-            env = Env(env)
-            for variable, itemType in zip(x.variables, typeList) :
-                localVar = LocalVariableEntry(env, variable, itemType)
-                addIdent(env, variable.name, localVar)
+            itemType = exprType.type
+            if x.variable.type is not None :
+                declaredType = inferTypeType(x.variable.type, env)
+                if not typeEquals(itemType, declaredType) :
+                    raiseError("type mismatch", x.expr)
+            localVar = LocalVariableEntry(env, x.variable, itemType)
+            addIdent(env, x.variable.name, localVar)
         except RecursiveInferenceError :
             env = None
     collectReturns(x.body, env, collector)
 
 @collectReturns.register(ReturnStatement)
 def foo(x, env, collector) :
-    if len(x.exprList) == 0 :
+    if x.expr is None :
         returnType = voidType
     elif env is None :
         returnType = None
     else :
         try :
-            types = [inferValueType(y, env) for y in x.exprList]
-            returnType = types[0] if len(types) == 1 else TupleType(types)
+            returnType = inferValueType(x.expr, env)
         except RecursiveInferenceError :
             returnType = None
     if returnType is None :

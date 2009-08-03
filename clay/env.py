@@ -17,7 +17,7 @@ __all__ = ["Env", "EnvEntry",
            "PrimOpIntEquals", "PrimOpIntLesser", "PrimOpIntLesserEquals",
            "PrimOpIntGreater", "PrimOpIntGreaterEquals",
            "PredicateEntry", "InstanceEntry", "RecordEntry",
-           "VariableDefEntry", "VariableEntry", "ProcedureEntry",
+           "VariableEntry", "ProcedureEntry",
            "OverloadableEntry", "OverloadEntry", "TypeVarEntry",
            "LocalVariableEntry"]
 
@@ -121,17 +121,10 @@ class InstanceEntry(EnvEntry) : pass
 
 class RecordEntry(EnvEntry) : pass
 
-class VariableDefEntry(EnvEntry) :
-    def __init__(self, env, ast) :
-        super(VariableDefEntry).__init__(env, ast)
-        self.typeList = None
-
 class VariableEntry(EnvEntry) :
-    def __init__(self, env, defEntry, index) :
-        ast = defEntry.ast.variables[index]
+    def __init__(self, env, ast) :
         super(VariableEntry, self).__init__(env, ast)
-        self.defEntry = defEntry
-        self.index = index
+        self.type = None
 
 class ProcedureEntry(EnvEntry) :
     def __init__(self, env, ast) :

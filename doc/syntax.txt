@@ -17,9 +17,8 @@ FieldDef -> Name TypeSpec ";" ;
 TypeSpec -> ":" TypeExpr ;
 
 Variable -> Name TypeSpec? ;
-VariableList -> comma_list(Variable) ;
 
-VariableDef -> "var" VariableList "=" comma_list(Expression) ";" ;
+VariableDef -> "var" Variable "=" Expression ";" ;
 
 ProcedureDef -> "def" Name TypeVars? "(" comma_list(Argument)? ")"
                 TypeSpec? TypeConditions? Block ;
@@ -46,9 +45,9 @@ Statement -> Block
            | Expression
            ;
 
-LocalVariableDef -> "var" VariableList "=" comma_list(Expression) ";" ;
+LocalVariableDef -> "var" Variable "=" Expression ";" ;
 
-Assignment -> comma_list(Expression) "=" comma_list(Expression) ";" ;
+Assignment -> Expression "=" Expression ";" ;
 
 IfStatement -> "if" "(" Expression ")" Statement
                ("else" Statement)? ;
@@ -57,10 +56,10 @@ BreakStatement -> "break" ";" ;
 ContinueStatement -> "continue" ";" ;
 
 WhileStatement -> "while" "(" Expression ")" Statement ;
-ForStatement -> "for" "(" "var" VariableList "in" Expression ")"
+ForStatement -> "for" "(" "var" Variable "in" Expression ")"
                 Statement ;
 
-ReturnStatement -> "return" comma_list(Expression)? ";" ;
+ReturnStatement -> "return" Expression? ";" ;
 
 TypeExpr -> Expression ;
 

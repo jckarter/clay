@@ -62,6 +62,7 @@ literal = choice(boolLiteral, intLiteral, charLiteral, stringLiteral)
 #
 
 expression2 = lambda input : expression(input)
+optExpression = optional(expression2)
 expressionList = listOf(expression2, comma)
 optExpressionList = modify(optional(expressionList),
                              lambda x : [] if x is None else x)
@@ -114,7 +115,7 @@ expression = choice(addressOfExpr, suffixExpr)
 
 
 #
-# typeSpec, variable, variableList
+# typeSpec, variable
 #
 
 typeSpec = modify(sequence(symbol(":"), expression), lambda x : x[1])
@@ -122,7 +123,6 @@ optTypeSpec = optional(typeSpec)
 
 variable = astNode(sequence(identifier, optTypeSpec),
                    lambda x : Variable(x[0],x[1]))
-variableList = listOf(variable, comma)
 
 #
 # statements
@@ -130,11 +130,11 @@ variableList = listOf(variable, comma)
 
 statement2 = lambda input : statement(input)
 
-returnStatement = astNode(sequence(keyword("return"), optExpressionList,
+returnStatement = astNode(sequence(keyword("return"), optExpression,
                                    semicolon),
                           lambda x : ReturnStatement(x[1]))
 forStatement = astNode(sequence(keyword("for"), symbol("("), keyword("var"),
-                                variableList, keyword("in"), expression,
+                                variable, keyword("in"), expression,
                                 symbol(")"), statement2),
                        lambda x : ForStatement(x[3], x[5], x[7]))
 parenCondition = modify(sequence(symbol("("), expression, symbol(")")),
@@ -152,11 +152,10 @@ ifStatement = astNode(sequence(keyword("if"), parenCondition,
                                statement2, optional(elsePart)),
                       lambda x : IfStatement(x[1],x[2],x[3]))
 
-assignment = astNode(sequence(expressionList, symbol("="), expressionList,
-                              semicolon),
+assignment = astNode(sequence(expression, symbol("="), expression, semicolon),
                      lambda x : Assignment(x[0], x[2]))
-localVariableDef = astNode(sequence(keyword("var"), variableList,
-                                    symbol("="), expressionList, semicolon),
+localVariableDef = astNode(sequence(keyword("var"), variable,
+                                    symbol("="), expression, semicolon),
                            lambda x : LocalVariableDef(x[1],x[3]))
 
 block = astNode(sequence(symbol("{"), onePlus(statement2), symbol("}")),
@@ -184,8 +183,8 @@ fieldDef = astNode(sequence(identifier, typeSpec, semicolon),
 recordDef = astNode(sequence(keyword("record"), identifier, optTypeVars,
                              symbol("{"), onePlus(fieldDef), symbol("}")),
                     lambda x : RecordDef(x[1],x[2],x[4]))
-variableDef = astNode(sequence(keyword("var"), variableList,
-                               symbol("="), expressionList, semicolon),
+variableDef = astNode(sequence(keyword("var"), variable,
+                               symbol("="), expression, semicolon),
                       lambda x : VariableDef(x[1],x[3]))
 
 valueArgument = astNode(variable, lambda x : ValueArgument(x))
