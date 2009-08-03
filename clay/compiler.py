@@ -141,6 +141,11 @@ def primitivesEnv() :
     a("pointerOffset", PrimOpPointerOffset)
     a("pointerDifference", PrimOpPointerDifference)
     a("pointerCast", PrimOpPointerCast)
+    a("pointerEquals", PrimOpPointerEquals)
+    a("pointerLesser", PrimOpPointerLesser)
+    a("pointerLesserEquals", PrimOpPointerLesserEquals)
+    a("pointerGreater", PrimOpPointerGreater)
+    a("pointerGreaterEquals", PrimOpPointerGreaterEquals)
     a("allocate", PrimOpAllocate)
     a("free", PrimOpFree)
     a("allocateBlock", PrimOpAllocateBlock)
@@ -342,6 +347,23 @@ def foo(entry, x, env) :
     destType = inferTypeType(args[0], env)
     exprType = inferValueType(args[0], env, isPointerType)
     return True, PointerType(destType)
+
+def inferPointerComparison(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    pType1 = inferValueType(args[0], env, isPointerType)
+    pType2 = inferValueType(args[1], env, isPointerType)
+    if not typeEquals(pType1, pType2) :
+        raiseError("type mismatch", args[1])
+    return True, boolType
+
+def initInferPointerComparisons() :
+    inferer = inferPointerComparison
+    for primOp in (PrimOpPointerEquals, PrimOpPointerLesser,
+                   PrimOpPointerLesserEquals, PrimOpPointerGreater,
+                   PrimOpPointerGreaterEquals) :
+        inferNamedCallExprType.addHandler(inferer, primOp)
+
+initInferPointerComparisons()
 
 @inferNamedCallExprType.register(PrimOpAllocate)
 def foo(entry, x, env) :

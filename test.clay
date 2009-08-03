@@ -13,13 +13,36 @@ overloadable divide;
 overloadable modulus;
 overloadable negate;
 
+overloadable size;
+overloadable begin;
+overloadable end;
+overloadable next;
+overloadable previous;
+
+overloadable destroy;
+
+
+//
+// Bool
+//
+
 overload not(a:Bool) { return boolNot(a); }
+
+
+//
+// Char
+//
 
 overload equals(a:Char, b:Char) { return charEquals(a, b); }
 overload lesser(a:Char, b:Char) { return charLesser(a, b); }
 overload lesserEquals(a:Char, b:Char) { return charLesserEquals(a, b); }
 overload greater(a:Char, b:Char) { return charGreater(a, b); }
 overload greaterEquals(a:Char, b:Char) { return charGreaterEquals(a, b); }
+
+
+//
+// Int
+//
 
 overload equals(a:Int, b:Int) { return intEquals(a, b); }
 overload lesser(a:Int, b:Int) { return intLesser(a, b); }
@@ -34,6 +57,42 @@ overload divide(a:Int, b:Int) { return intDivide(a, b); }
 overload modulus(a:Int, b:Int) { return intModulus(a, b); }
 overload negate(a:Int) { return intNegate(a); }
 
+
+//
+// Pointer[T]
+//
+
+overload equals[T](a:Pointer[T], b:Pointer[T]) {
+    return pointerEquals(a, b);
+}
+overload lesser[T](a:Pointer[T], b:Pointer[T]) {
+    return pointerLesser(a, b);
+}
+overload lesserEquals[T](a:Pointer[T], b:Pointer[T]) {
+    return pointerLesserEquals(a, b);
+}
+overload greater[T](a:Pointer[T], b:Pointer[T]) {
+    return pointerGreater(a, b);
+}
+overload greaterEquals(a:Pointer, b:Pointer) {
+    return pointerGreaterEquals(a, b);
+}
+
+overload add[T](p:Pointer[T], i:Int) {
+    return pointerOffset(p, i);
+}
+overload subtract[T](a:Pointer[T], i:Int) {
+    return pointerOffset(p, negate(i));
+}
+overload subtract[T](a:Pointer[T], b:Pointer[T]) {
+    return pointerDifference(a, b);
+}
+
+
+//
+// Complex
+//
+
 record Complex {
     x:Int; y:Int;
 }
@@ -44,11 +103,16 @@ overload subtract(a:Complex, b:Complex) {
     return Complex(subtract(a.x,b.x), subtract(a.y,b.y));
 }
 
+
+//
+// Vector[T]
+//
+
 record Vector[T] {
     p: Pointer[T];
 }
-overloadable newVector;
-overload newVector[T](n:Int, v:T) {
+overloadable vector;
+overload vector[T](n:Int, v:T) {
     var block = allocateBlock(T, n);
     var p = block;
     var end = pointerOffset(block, n);
@@ -58,33 +122,39 @@ overload newVector[T](n:Int, v:T) {
     }
     return Vector(block);
 }
-overload newVector[T](type T, n:Int) {
-    return newVector(n, default(T));
+overload vector[T](type T, n:Int) {
+    return vector(n, default(T));
 }
-def delVector[T](v:Vector[T]) {
+overload destroy[T](v:Vector[T]) {
     freeBlock(v.p);
-}
-def vectorSize[T](v:Vector[T]) {
-    return blockSize(v.p);
 }
 def vectorRef[T](v:Vector[T], i:Int) {
     return pointerOffset(v.p, i);
 }
-def vectorBegin[T](v:Vector[T]) {
+overload size[T](v:Vector[T]) {
+    return blockSize(v.p);
+}
+overload begin[T](v:Vector[T]) {
     return vectorRef(v, 0);
 }
-def vectorEnd[T](v:Vector[T]) {
-    return vectorRef(v, vectorSize(v));
+overload end[T](v:Vector[T]) {
+    return vectorRef(v, size(v));
 }
 
+
+//
+//
+//
+
 def min(v) {
-    var p = vectorBegin(v);
-    var end = vectorEnd(v);
+    var p = begin(v);
+    var end = end(v);
     var minValue = p;
-    p = pointerOffset(p, 1);
-    while (not(equals(p,end))) {
+    p = add(p, 1);
+    while (not(equals(p, end))) {
         if (lesser(p^,minValue^))
             minValue = p;
+        p = next(p);
     }
     return minValue^;
 }
@@ -105,11 +175,17 @@ def isOdd(n) {
     return equals(n, 1);
 }
 
+def main1() {
+    var n = fact(5);
+    return (n, isEven(n));
+}
 
 def main() {
-    var a1 = newVector(10, 'a');
+    var a1 = vector(10, 'a');
     var result1 = (a1, min(a1));
-    var a2 = newVector(20, 100);
+    var a2 = vector(20, 100);
     var result2 = (a2, min(a2));
-    return (result1, result2);
+    var a3 = vector(14, Complex(1,2));
+    var result3 = (a3, min(a3));
+    return (result1, result2, result3);
 }

@@ -24,6 +24,8 @@ e:Pointer[T] => e^:T
 e:Pointer[T], i:Int => pointerOffset(e, i):Pointer[T]
 e1:Pointer[T],e2:Pointer[T] => pointerDifference(e1, e2):Int
 T2:Type, a:Pointer[T1] => pointerCast(T2, a):Pointer[T2]
+pointerEquals, pointerLesser, pointerLesserEquals,
+pointerGreater, pointerGreaterEquals
 
 T:Type => allocate(T) => Pointer[T]
 p:Pointer[T] => free(p):Void
@@ -31,6 +33,7 @@ p:Pointer[T] => free(p):Void
 T:Type, n:Int => allocateBlock(T, n) => Pointer[T]
 p:Pointer[T] => freeBlock(p):Void
 p:Pointer[T] => blockSize(p):Int
+
 
 v_1:T_1, ..., v_n:T_n => (v_1, ..., v_n) : (T_1, ..., T_n)
 e:(T_1, ..., T_n) => e.i : T_i

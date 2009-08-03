@@ -5,7 +5,11 @@ __all__ = ["Env", "EnvEntry",
            "ArrayTypeEntry", "PointerTypeEntry",
            "PrimOpDefault",
            "PrimOpPointerOffset", "PrimOpPointerDifference",
-           "PrimOpPointerCast", "PrimOpAllocate", "PrimOpFree",
+           "PrimOpPointerCast",
+           "PrimOpPointerEquals", "PrimOpPointerLesser",
+           "PrimOpPointerLesserEquals", "PrimOpPointerGreater",
+           "PrimOpPointerGreaterEquals",
+           "PrimOpAllocate", "PrimOpFree",
            "PrimOpAllocateBlock", "PrimOpFreeBlock", "PrimOpBlockSize",
            "PrimOpArray", "PrimOpArraySize",
            "PrimOpBoolNot",
@@ -76,6 +80,11 @@ class PrimOpDefault(EnvEntry) : pass
 class PrimOpPointerOffset(EnvEntry) : pass
 class PrimOpPointerDifference(EnvEntry) : pass
 class PrimOpPointerCast(EnvEntry) : pass
+class PrimOpPointerEquals(EnvEntry) : pass
+class PrimOpPointerLesser(EnvEntry) : pass
+class PrimOpPointerLesserEquals(EnvEntry) : pass
+class PrimOpPointerGreater(EnvEntry) : pass
+class PrimOpPointerGreaterEquals(EnvEntry) : pass
 class PrimOpAllocate(EnvEntry) : pass
 class PrimOpFree(EnvEntry) : pass
 class PrimOpAllocateBlock(EnvEntry) : pass
