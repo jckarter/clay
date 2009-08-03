@@ -255,7 +255,7 @@ def getNext(it) {
 //
 //
 
-def min(v) {
+def findMinimum(v) {
     var i = iterator(v);
     var minValue = getNext(i);
     while (hasMore(i)) {
@@ -303,5 +303,5 @@ def someData() {
 
 def main() {
     var a = someData();
-    return (a, min(a));
+    return (a, findMinimum(a));
 }
