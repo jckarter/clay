@@ -13,6 +13,8 @@ overloadable divide;
 overloadable modulus;
 overloadable negate;
 
+overloadable get;
+
 overloadable size;
 overloadable begin;
 overloadable end;
@@ -98,6 +100,10 @@ overload negate(a:Double) { return doubleNegate(a); }
 // Pointer[T]
 //
 
+def null[T](type T) {
+    return default(Pointer[T]);
+}
+
 overload equals[T](a:Pointer[T], b:Pointer[T]) {
     return pointerEquals(a, b);
 }
@@ -124,13 +130,23 @@ overload subtract[T](a:Pointer[T], b:Pointer[T]) {
     return pointerDifference(a, b);
 }
 
+overload get[T](p:Pointer[T]) {
+    return p^;
+}
+overload next[T](p:Pointer[T]) {
+    return add(p, 1);
+}
+overload previous[T](p:Pointer[T]) {
+    return subtract(p, 1);
+}
+
 
 //
 // Complex
 //
 
 record Complex {
-    x:Int; y:Int;
+    x:Double; y:Double;
 }
 overload add(a:Complex, b:Complex) {
     return Complex(add(a.x,b.x), add(a.y,b.y));
@@ -179,20 +195,75 @@ overload end[T](v:Vector[T]) {
 
 
 //
+// LinkedList[T]
+//
+
+record Node[T] {
+    value :T;
+    next :Pointer[Node[T]];
+}
+record NodeLocation[T] {
+    ptr :Pointer[Node[T]];
+}
+record LinkedList[T] {
+    first :Pointer[Node[T]];
+}
+def linkedList[T](type T) {
+    return LinkedList(null(Node[T]));
+}
+overload begin[T](a:LinkedList[T]) {
+    return NodeLocation(a.first);
+}
+overload end[T](a:LinkedList[T]) {
+    return NodeLocation(null(Node[T]));
+}
+overload equals[T](a:NodeLocation[T], b:NodeLocation[T]) {
+    return equals(a.ptr, b.ptr);
+}
+overload get[T](a:NodeLocation[T]) {
+    return a.ptr^.value;
+}
+overload next[T](a:NodeLocation[T]) {
+    return NodeLocation(a.ptr^.next);
+}
+
+
+//
+// Iterator
+//
+
+record Iterator[L] {
+    cur:L;
+    end:L;
+}
+
+def iterator(a) {
+    return Iterator(begin(a), end(a));
+}
+
+def hasMore(it) {
+    return not(equals(it.cur, it.end));
+}
+
+def getNext(it) {
+    it.cur = next(it.cur);
+    return get(it.cur);
+}
+
+
+//
 //
 //
 
 def min(v) {
-    var p = begin(v);
-    var end = end(v);
-    var minValue = p;
-    p = add(p, 1);
-    while (not(equals(p, end))) {
-        if (lesser(p^,minValue^))
-            minValue = p;
-        p = next(p);
+    var i = iterator(v);
+    var minValue = getNext(i);
+    while (hasMore(i)) {
+        var current = getNext(i);
+        if (lesser(current, minValue))
+            minValue = current;
     }
-    return minValue^;
+    return minValue;
 }
 
 def fact(n) {
@@ -202,13 +273,15 @@ def fact(n) {
 }
 
 def isEven(n) {
+    if (lesser(n, 2))
+        return equals(n, 0);
     return isOdd(subtract(n, 1));
 }
 
 def isOdd(n) {
-    if (greater(n, 1))
-        return isEven(subtract(n, 1));
-    return equals(n, 1);
+    if (lesser(n, 2))
+        return equals(n, 1);
+    return isEven(subtract(n, 1));
 }
 
 def main1() {
@@ -216,12 +289,19 @@ def main1() {
     return (n, isEven(n));
 }
 
+def someList() {
+    var a = linkedList(Float);
+    return a;
+}
+
+def someData() {
+    // return vector(10, 'a');
+    // return vector(20, 100.0);
+    // return vector(14, Complex(1.0,2.0));
+    return someList();
+}
+
 def main() {
-    var a1 = vector(10, 'a');
-    var result1 = (a1, min(a1));
-    var a2 = vector(20, 100);
-    var result2 = (a2, min(a2));
-    var a3 = vector(14, Complex(1,2));
-    var result3 = (a3, min(a3));
-    return (result1, result2, result3, 1.0, 2.2f);
+    var a = someData();
+    return (a, min(a));
 }
