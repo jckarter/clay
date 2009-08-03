@@ -1,7 +1,8 @@
 from clay.ast import *
 
 __all__ = ["Env", "EnvEntry",
-           "BoolTypeEntry", "CharTypeEntry", "IntTypeEntry", "VoidTypeEntry",
+           "BoolTypeEntry", "CharTypeEntry", "IntTypeEntry", "FloatTypeEntry",
+           "DoubleTypeEntry", "VoidTypeEntry",
            "ArrayTypeEntry", "PointerTypeEntry",
            "PrimOpDefault",
            "PrimOpPointerOffset", "PrimOpPointerDifference",
@@ -13,13 +14,25 @@ __all__ = ["Env", "EnvEntry",
            "PrimOpAllocateBlock", "PrimOpFreeBlock", "PrimOpBlockSize",
            "PrimOpArray", "PrimOpArraySize",
            "PrimOpBoolNot",
-           "PrimOpCharToInt", "PrimOpIntToChar", "PrimOpCharEquals",
-           "PrimOpCharLesser", "PrimOpCharLesserEquals", "PrimOpCharGreater",
-           "PrimOpCharGreaterEquals",
+           "PrimOpCharEquals", "PrimOpCharLesser", "PrimOpCharLesserEquals",
+           "PrimOpCharGreater", "PrimOpCharGreaterEquals",
            "PrimOpIntAdd", "PrimOpIntSubtract", "PrimOpIntMultiply",
            "PrimOpIntDivide", "PrimOpIntModulus", "PrimOpIntNegate",
            "PrimOpIntEquals", "PrimOpIntLesser", "PrimOpIntLesserEquals",
            "PrimOpIntGreater", "PrimOpIntGreaterEquals",
+           "PrimOpFloatAdd", "PrimOpFloatSubtract", "PrimOpFloatMultiply",
+           "PrimOpFloatDivide", "PrimOpFloatNegate",
+           "PrimOpFloatEquals", "PrimOpFloatLesser", "PrimOpFloatLesserEquals",
+           "PrimOpFloatGreater", "PrimOpFloatGreaterEquals",
+           "PrimOpDoubleAdd", "PrimOpDoubleSubtract", "PrimOpDoubleMultiply",
+           "PrimOpDoubleDivide", "PrimOpDoubleNegate",
+           "PrimOpDoubleEquals", "PrimOpDoubleLesser",
+           "PrimOpDoubleLesserEquals", "PrimOpDoubleGreater",
+           "PrimOpDoubleGreaterEquals",
+           "PrimOpCharToInt", "PrimOpIntToChar",
+           "PrimOpFloatToInt", "PrimOpIntToFloat",
+           "PrimOpFloatToDouble", "PrimOpDoubleToFloat",
+           "PrimOpDoubleToInt", "PrimOpIntToDouble",
            "PredicateEntry", "InstanceEntry", "RecordEntry",
            "VariableEntry", "ProcedureEntry",
            "OverloadableEntry", "OverloadEntry", "TypeVarEntry",
@@ -72,6 +85,8 @@ class EnvEntry(object) :
 class BoolTypeEntry(EnvEntry) : pass
 class CharTypeEntry(EnvEntry) : pass
 class IntTypeEntry(EnvEntry) : pass
+class FloatTypeEntry(EnvEntry) : pass
+class DoubleTypeEntry(EnvEntry) : pass
 class VoidTypeEntry(EnvEntry) : pass
 class ArrayTypeEntry(EnvEntry) : pass
 class PointerTypeEntry(EnvEntry) : pass
@@ -95,8 +110,6 @@ class PrimOpArraySize(EnvEntry) : pass
 
 class PrimOpBoolNot(EnvEntry) : pass
 
-class PrimOpCharToInt(EnvEntry) : pass
-class PrimOpIntToChar(EnvEntry) : pass
 class PrimOpCharEquals(EnvEntry) : pass
 class PrimOpCharLesser(EnvEntry) : pass
 class PrimOpCharLesserEquals(EnvEntry) : pass
@@ -114,6 +127,37 @@ class PrimOpIntLesser(EnvEntry) : pass
 class PrimOpIntLesserEquals(EnvEntry) : pass
 class PrimOpIntGreater(EnvEntry) : pass
 class PrimOpIntGreaterEquals(EnvEntry) : pass
+
+class PrimOpFloatAdd(EnvEntry) : pass
+class PrimOpFloatSubtract(EnvEntry) : pass
+class PrimOpFloatMultiply(EnvEntry) : pass
+class PrimOpFloatDivide(EnvEntry) : pass
+class PrimOpFloatNegate(EnvEntry) : pass
+class PrimOpFloatEquals(EnvEntry) : pass
+class PrimOpFloatLesser(EnvEntry) : pass
+class PrimOpFloatLesserEquals(EnvEntry) : pass
+class PrimOpFloatGreater(EnvEntry) : pass
+class PrimOpFloatGreaterEquals(EnvEntry) : pass
+
+class PrimOpDoubleAdd(EnvEntry) : pass
+class PrimOpDoubleSubtract(EnvEntry) : pass
+class PrimOpDoubleMultiply(EnvEntry) : pass
+class PrimOpDoubleDivide(EnvEntry) : pass
+class PrimOpDoubleNegate(EnvEntry) : pass
+class PrimOpDoubleEquals(EnvEntry) : pass
+class PrimOpDoubleLesser(EnvEntry) : pass
+class PrimOpDoubleLesserEquals(EnvEntry) : pass
+class PrimOpDoubleGreater(EnvEntry) : pass
+class PrimOpDoubleGreaterEquals(EnvEntry) : pass
+
+class PrimOpCharToInt(EnvEntry) : pass
+class PrimOpIntToChar(EnvEntry) : pass
+class PrimOpFloatToInt(EnvEntry) : pass
+class PrimOpIntToFloat(EnvEntry) : pass
+class PrimOpFloatToDouble(EnvEntry) : pass
+class PrimOpDoubleToFloat(EnvEntry) : pass
+class PrimOpDoubleToInt(EnvEntry) : pass
+class PrimOpIntToDouble(EnvEntry) : pass
 
 
 

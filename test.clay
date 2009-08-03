@@ -59,6 +59,42 @@ overload negate(a:Int) { return intNegate(a); }
 
 
 //
+// Float
+//
+
+overload equals(a:Float, b:Float) { return floatEquals(a, b); }
+overload lesser(a:Float, b:Float) { return floatLesser(a, b); }
+overload lesserEquals(a:Float, b:Float) { return floatLesserEquals(a, b); }
+overload greater(a:Float, b:Float) { return floatGreater(a, b); }
+overload greaterEquals(a:Float, b:Float) { return floatGreaterEquals(a, b); }
+
+overload add(a:Float, b:Float) { return floatAdd(a, b); }
+overload subtract(a:Float, b:Float) { return floatSubtract(a, b); }
+overload multiply(a:Float, b:Float) { return floatMultiply(a, b); }
+overload divide(a:Float, b:Float) { return floatDivide(a, b); }
+overload negate(a:Float) { return floatNegate(a); }
+
+
+//
+// Double
+//
+
+overload equals(a:Double, b:Double) { return doubleEquals(a, b); }
+overload lesser(a:Double, b:Double) { return doubleLesser(a, b); }
+overload lesserEquals(a:Double, b:Double) { return doubleLesserEquals(a, b); }
+overload greater(a:Double, b:Double) { return doubleGreater(a, b); }
+overload greaterEquals(a:Double, b:Double) {
+    return doubleGreaterEquals(a, b);
+}
+
+overload add(a:Double, b:Double) { return doubleAdd(a, b); }
+overload subtract(a:Double, b:Double) { return doubleSubtract(a, b); }
+overload multiply(a:Double, b:Double) { return doubleMultiply(a, b); }
+overload divide(a:Double, b:Double) { return doubleDivide(a, b); }
+overload negate(a:Double) { return doubleNegate(a); }
+
+
+//
 // Pointer[T]
 //
 
@@ -160,9 +196,9 @@ def min(v) {
 }
 
 def fact(n) {
-    if (equals(n,0))
+    if (equals(n, 0))
         return 1;
-    return multiply(n, fact(subtract(n,1)));
+    return multiply(n, fact(subtract(n, 1)));
 }
 
 def isEven(n) {
@@ -187,5 +223,5 @@ def main() {
     var result2 = (a2, min(a2));
     var a3 = vector(14, Complex(1,2));
     var result3 = (a3, min(a3));
-    return (result1, result2, result3);
+    return (result1, result2, result3, 1.0, 2.2f);
 }

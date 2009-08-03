@@ -9,7 +9,7 @@ __all__ = [
     "Expression", "AddressOfExpr", "IndexExpr", "CallExpr",
     "FieldRef", "TupleRef", "Dereference",
     "ArrayExpr", "TupleExpr", "NameRef", "BoolLiteral", "IntLiteral",
-    "CharLiteral", "StringLiteral"]
+    "FloatLiteral", "DoubleLiteral", "CharLiteral", "StringLiteral"]
 
 class ASTNode(object) :
     location = None
@@ -268,6 +268,16 @@ class BoolLiteral(Expression) :
 class IntLiteral(Expression) :
     def __init__(self, value) :
         assert isinstance(value,int) or isinstance(value,long)
+        self.value = value
+
+class FloatLiteral(Expression) :
+    def __init__(self, value) :
+        assert isinstance(value, str)
+        self.value = value
+
+class DoubleLiteral(Expression) :
+    def __init__(self, value) :
+        assert isinstance(value, str)
         self.value = value
 
 class CharLiteral(Expression) :

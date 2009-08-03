@@ -195,6 +195,22 @@ intLiteral = token(choice(negativeInt, positiveInt, unsignedInt),
 
 
 #
+# doubleLiteral, floatLiteral
+#
+
+optSign = modify(optional(choice(literal("+"), literal("-"))),
+                 lambda x : "" if x is None else x)
+integralPart = modify(onePlus(decimalDigit), lambda x : "".join(x))
+decimalPart = modify(sequence(literal("."), integralPart),
+                     lambda x : "".join(x))
+doubleStr = modify(sequence(optSign, integralPart, decimalPart),
+                   lambda x : "".join(x))
+doubleLiteral = token(doubleStr, klass=DoubleLiteral)
+floatStr = modify(sequence(doubleStr, literal("f")), lambda x : "".join(x))
+floatLiteral = token(floatStr, klass=FloatLiteral)
+
+
+#
 # space, singleLineComment, multiLineComment
 #
 
@@ -229,7 +245,7 @@ oneToken = choice(space, singleLineComment, multiLineComment,
                   symbol, keywordIdentifier,
                   stringLiteral, charLiteral,
                   bytesLiteral, byteLiteral,
-                  intLiteral)
+                  floatLiteral, doubleLiteral, intLiteral)
 
 
 #

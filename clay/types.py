@@ -1,9 +1,11 @@
 from clay.multimethod import multimethod
 from clay.xprint import xprint, XObject, XField, XSymbol, xregister
 
-__all__ = ["Type", "boolType", "intType", "charType", "voidType",
+__all__ = ["Type", "boolType", "intType", "floatType", "doubleType",
+           "charType", "voidType",
            "TupleType", "ArrayType", "PointerType", "RecordType",
-           "isPrimitiveType", "isBoolType", "isIntType", "isCharType",
+           "isPrimitiveType", "isBoolType", "isIntType", "isFloatType",
+           "isDoubleType", "isCharType",
            "isVoidType", "isTupleType", "isArrayType", "isPointerType",
            "isRecordType",
            "typeEquals", "typeListEquals", "typeHash",
@@ -29,6 +31,8 @@ class PrimitiveType(Type) :
 
 boolType = PrimitiveType("Bool")
 intType = PrimitiveType("Int")
+floatType = PrimitiveType("Float")
+doubleType = PrimitiveType("Double")
 charType = PrimitiveType("Char")
 voidType = PrimitiveType("Void")
 
@@ -59,6 +63,8 @@ class RecordType(Type) :
 def isPrimitiveType(t) : return type(t) is PrimitiveType
 def isBoolType(t) : return t is boolType
 def isIntType(t) : return t is intType
+def isFloatType(t) : return t is floatType
+def isDoubleType(t) : return t is doubleType
 def isCharType(t) : return t is charType
 def isVoidType(t) : return t is voidType
 def isTupleType(t) : return type(t) is TupleType

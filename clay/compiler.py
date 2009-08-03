@@ -133,6 +133,8 @@ def primitivesEnv() :
     a("Bool", BoolTypeEntry)
     a("Char", CharTypeEntry)
     a("Int", IntTypeEntry)
+    a("Float", FloatTypeEntry)
+    a("Double", DoubleTypeEntry)
     a("Void", VoidTypeEntry)
     a("Array", ArrayTypeEntry)
     a("Pointer", PointerTypeEntry)
@@ -155,8 +157,6 @@ def primitivesEnv() :
     a("arraySize", PrimOpArraySize)
 
     a("boolNot", PrimOpBoolNot)
-    a("charToInt", PrimOpCharToInt)
-    a("intToChar", PrimOpIntToChar)
     a("charEquals", PrimOpCharEquals)
     a("charLesser", PrimOpCharLesser)
     a("charLesserEquals", PrimOpCharLesserEquals)
@@ -173,6 +173,34 @@ def primitivesEnv() :
     a("intLesserEquals", PrimOpIntLesserEquals)
     a("intGreater", PrimOpIntGreater)
     a("intGreaterEquals", PrimOpIntGreaterEquals)
+    a("floatAdd", PrimOpFloatAdd)
+    a("floatSubtract", PrimOpFloatSubtract)
+    a("floatMultiply", PrimOpFloatMultiply)
+    a("floatDivide", PrimOpFloatDivide)
+    a("floatNegate", PrimOpFloatNegate)
+    a("floatEquals", PrimOpFloatEquals)
+    a("floatLesser", PrimOpFloatLesser)
+    a("floatLesserEquals", PrimOpFloatLesserEquals)
+    a("floatGreater", PrimOpFloatGreater)
+    a("floatGreaterEquals", PrimOpFloatGreaterEquals)
+    a("doubleAdd", PrimOpDoubleAdd)
+    a("doubleSubtract", PrimOpDoubleSubtract)
+    a("doubleMultiply", PrimOpDoubleMultiply)
+    a("doubleDivide", PrimOpDoubleDivide)
+    a("doubleNegate", PrimOpDoubleNegate)
+    a("doubleEquals", PrimOpDoubleEquals)
+    a("doubleLesser", PrimOpDoubleLesser)
+    a("doubleLesserEquals", PrimOpDoubleLesserEquals)
+    a("doubleGreater", PrimOpDoubleGreater)
+    a("doubleGreaterEquals", PrimOpDoubleGreaterEquals)
+    a("charToInt", PrimOpCharToInt)
+    a("intToChar", PrimOpIntToChar)
+    a("floatToInt", PrimOpFloatToInt)
+    a("intToFloat", PrimOpIntToFloat)
+    a("floatToDouble", PrimOpFloatToDouble)
+    a("doubleToFloat", PrimOpDoubleToFloat)
+    a("doubleToInt", PrimOpDoubleToInt)
+    a("intToDouble", PrimOpIntToDouble)
     return env
 
 
@@ -415,18 +443,6 @@ def foo(entry, x, env) :
     inferValueType(arg, env, isBoolType)
     return True, boolType
 
-@inferNamedCallExprType.register(PrimOpCharToInt)
-def foo(entry, x, env) :
-    arg = oneArg(x, x.args)
-    inferValueType(arg, env, isCharType)
-    return True, intType
-
-@inferNamedCallExprType.register(PrimOpIntToChar)
-def foo(entry, x, env) :
-    arg = oneArg(x, x.args)
-    inferValueType(arg, env, isIntType)
-    return True, charType
-
 def inferCharComparison(entry, x, env) :
     args = nArgs(2, x, x.args)
     inferValueType(args[0], env, isCharType)
@@ -468,6 +484,98 @@ inferNamedCallExprType.addHandler(inferIntComparison, PrimOpIntLesser)
 inferNamedCallExprType.addHandler(inferIntComparison, PrimOpIntLesserEquals)
 inferNamedCallExprType.addHandler(inferIntComparison, PrimOpIntGreater)
 inferNamedCallExprType.addHandler(inferIntComparison, PrimOpIntGreaterEquals)
+
+def inferFloatBinaryOp(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    inferValueType(args[0], env, isFloatType)
+    inferValueType(args[1], env, isFloatType)
+    return True, floatType
+
+inferNamedCallExprType.addHandler(inferFloatBinaryOp, PrimOpFloatAdd)
+inferNamedCallExprType.addHandler(inferFloatBinaryOp, PrimOpFloatSubtract)
+inferNamedCallExprType.addHandler(inferFloatBinaryOp, PrimOpFloatMultiply)
+inferNamedCallExprType.addHandler(inferFloatBinaryOp, PrimOpFloatDivide)
+
+@inferNamedCallExprType.register(PrimOpFloatNegate)
+def foo(entry, x, env) :
+    arg = oneArg(x, x.args)
+    inferValueType(arg, env, isFloatType)
+    return True, floatType
+
+def inferFloatComparison(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    inferValueType(args[0], env, isFloatType)
+    inferValueType(args[1], env, isFloatType)
+    return True, boolType
+
+inferNamedCallExprType.addHandler(inferFloatComparison,
+                                  PrimOpFloatEquals)
+inferNamedCallExprType.addHandler(inferFloatComparison,
+                                  PrimOpFloatLesser)
+inferNamedCallExprType.addHandler(inferFloatComparison,
+                                  PrimOpFloatLesserEquals)
+inferNamedCallExprType.addHandler(inferFloatComparison,
+                                  PrimOpFloatGreater)
+inferNamedCallExprType.addHandler(inferFloatComparison,
+                                  PrimOpFloatGreaterEquals)
+
+def inferDoubleBinaryOp(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    inferValueType(args[0], env, isDoubleType)
+    inferValueType(args[1], env, isDoubleType)
+    return True, doubleType
+
+inferNamedCallExprType.addHandler(inferDoubleBinaryOp, PrimOpDoubleAdd)
+inferNamedCallExprType.addHandler(inferDoubleBinaryOp, PrimOpDoubleSubtract)
+inferNamedCallExprType.addHandler(inferDoubleBinaryOp, PrimOpDoubleMultiply)
+inferNamedCallExprType.addHandler(inferDoubleBinaryOp, PrimOpDoubleDivide)
+
+@inferNamedCallExprType.register(PrimOpDoubleNegate)
+def foo(entry, x, env) :
+    arg = oneArg(x, x.args)
+    inferValueType(arg, env, isDoubleType)
+    return True, doubleType
+
+def inferDoubleComparison(entry, x, env) :
+    args = nArgs(2, x, x.args)
+    inferValueType(args[0], env, isDoubleType)
+    inferValueType(args[1], env, isDoubleType)
+    return True, boolType
+
+inferNamedCallExprType.addHandler(inferDoubleComparison,
+                                  PrimOpDoubleEquals)
+inferNamedCallExprType.addHandler(inferDoubleComparison,
+                                  PrimOpDoubleLesser)
+inferNamedCallExprType.addHandler(inferDoubleComparison,
+                                  PrimOpDoubleLesserEquals)
+inferNamedCallExprType.addHandler(inferDoubleComparison,
+                                  PrimOpDoubleGreater)
+inferNamedCallExprType.addHandler(inferDoubleComparison,
+                                  PrimOpDoubleGreaterEquals)
+
+def conversionInferer(srcPredicate, destType) :
+    def foo(entry, x, env) :
+        arg = oneArg(x, x.args)
+        inferValueType(arg, env, srcPredicate)
+        return True, destType
+    return foo
+
+inferNamedCallExprType.addHandler(conversionInferer(isCharType, intType),
+                                  PrimOpCharToInt)
+inferNamedCallExprType.addHandler(conversionInferer(isIntType, charType),
+                                  PrimOpIntToChar)
+inferNamedCallExprType.addHandler(conversionInferer(isFloatType, intType),
+                                  PrimOpFloatToInt)
+inferNamedCallExprType.addHandler(conversionInferer(isIntType, floatType),
+                                  PrimOpIntToFloat)
+inferNamedCallExprType.addHandler(conversionInferer(isFloatType, doubleType),
+                                  PrimOpFloatToDouble)
+inferNamedCallExprType.addHandler(conversionInferer(isDoubleType, floatType),
+                                  PrimOpDoubleToFloat)
+inferNamedCallExprType.addHandler(conversionInferer(isDoubleType, intType),
+                                  PrimOpDoubleToInt)
+inferNamedCallExprType.addHandler(conversionInferer(isIntType, doubleType),
+                                  PrimOpIntToDouble)
 
 @inferNamedCallExprType.register(RecordEntry)
 def foo(entry, x, env) :
@@ -647,9 +755,23 @@ def foo(entry, x, env) :
 def foo(entry, x, env) :
     return False, intType
 
+@inferNamedExprType.register(FloatTypeEntry)
+def foo(entry, x, env) :
+    return False, floatType
+
+@inferNamedExprType.register(DoubleTypeEntry)
+def foo(entry, x, env) :
+    return False, doubleType
+
 @inferNamedExprType.register(VoidTypeEntry)
 def foo(entry, x, env) :
     return False, voidType
+
+@inferNamedExprType.register(RecordEntry)
+def foo(entry, x, env) :
+    if len(entry.ast.typeVars) > 0 :
+        raiseError("record type requires type parameters", x)
+    return False, RecordType(entry, [])
 
 @inferNamedExprType.register(VariableEntry)
 def foo(entry, x, env) :
@@ -688,6 +810,14 @@ def foo(x, env) :
 @inferType.register(IntLiteral)
 def foo(x, env) :
     return True, intType
+
+@inferType.register(FloatLiteral)
+def foo(x, env) :
+    return True, floatType
+
+@inferType.register(DoubleLiteral)
+def foo(x, env) :
+    return True, doubleType
 
 @inferType.register(CharLiteral)
 def foo(x, env) :

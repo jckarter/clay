@@ -1,8 +1,8 @@
 Primitive Types:
-Bool, Char, Int, Void
+Bool, Char, Int, Float, Double, Void
 
 Primitive Values:
-true, false, CharLiteral, IntLiteral
+true, false, CharLiteral, IntLiteral, FloatLiteral, DoubleLiteral
 
 Primitive Type Constructors:
 (Type,...) : tuple type constructor
@@ -48,12 +48,25 @@ a:RecordType => a.field:FieldType
 
 boolNot(x:Bool):Bool
 
-charToInt(c:Char):Int
-intToChar(i:Int):Char
 charEquals, charLesser, charLesserEquals,
 charGreater, charGreaterEquals
 
-intAdd, intSubtract, intMultiply, inDivide,
+intAdd, intSubtract, intMultiply, intDivide,
 intModulus, intNegate,
 intEquals, intLesser, intLesserEquals,
 intGreater, intGreaterEquals
+
+floatAdd, floatSubtract, floatMultiply, floatDivide,
+floatNegate,
+floatEquals, floatLesser, floatLesserEquals,
+floatGreater, floatGreaterEquals
+
+doubleAdd, doubleSubtract, doubleMultiply, doubleDivide,
+doubleNegate,
+doubleEquals, doubleLesser, doubleLesserEquals,
+doubleGreater, doubleGreaterEquals
+
+charToInt, intToChar,
+floatToInt, intToFloat,
+floatToDouble, doubleToFloat,
+doubleToInt, intToDouble

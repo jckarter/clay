@@ -48,13 +48,17 @@ def astNode(parser, constructor) :
 # literals
 #
 
-stringLiteral = astNode(tokenType(t.StringLiteral),
-                        lambda x : StringLiteral(x))
-charLiteral = astNode(tokenType(t.CharLiteral), lambda x : CharLiteral(x))
-intLiteral = astNode(tokenType(t.IntLiteral), lambda x : IntLiteral(x))
 boolLiteral = choice(astNode(keyword("true"), lambda x : BoolLiteral(True)),
                      astNode(keyword("false"), lambda x : BoolLiteral(False)))
-literal = choice(boolLiteral, intLiteral, charLiteral, stringLiteral)
+intLiteral = astNode(tokenType(t.IntLiteral), lambda x : IntLiteral(x))
+floatLiteral = astNode(tokenType(t.FloatLiteral), lambda x : FloatLiteral(x))
+doubleLiteral = astNode(tokenType(t.DoubleLiteral),
+                        lambda x : DoubleLiteral(x))
+charLiteral = astNode(tokenType(t.CharLiteral), lambda x : CharLiteral(x))
+stringLiteral = astNode(tokenType(t.StringLiteral),
+                        lambda x : StringLiteral(x))
+literal = choice(boolLiteral, intLiteral, floatLiteral, doubleLiteral,
+                 charLiteral, stringLiteral)
 
 
 #
