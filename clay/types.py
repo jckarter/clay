@@ -203,7 +203,10 @@ xregister(PrimitiveType, lambda x : XSymbol(x.name))
 xregister(TupleType, lambda x : tuple(x.types))
 xregister(ArrayType, lambda x : obj("Array", x.type, x.size))
 xregister(PointerType, lambda x : obj("Pointer", x.type))
-xregister(RecordType, lambda x : obj(x.entry.ast.name.s, *x.typeParams))
+xregister(RecordType,
+          lambda x : (obj(x.entry.ast.name.s, *x.typeParams)
+                      if x.typeParams
+                      else XSymbol(x.entry.ast.name.s)))
 xregister(TypeVariable, lambda x : XObject("TypeVariable", x.type))
 
 
