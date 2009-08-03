@@ -32,5 +32,6 @@ def mainA() {
 }
 
 def main() {
+    var a = "hello";
     return mainA();
 }

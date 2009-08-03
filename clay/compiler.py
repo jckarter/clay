@@ -642,6 +642,10 @@ def foo(x, env) :
 def foo(x, env) :
     return True, charType
 
+@inferType.register(StringLiteral)
+def foo(x, env) :
+    raiseError("strings are not supported yet", x)
+
 
 
 #
