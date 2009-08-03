@@ -67,6 +67,15 @@ def intLiteralValue(x) :
         raiseError("int literal expected", x)
     return x.value
 
+def getFieldTypes(t) :
+    assert isRecordType(t)
+    assert len(t.entry.ast.typeVars) == len(t.typeParams)
+    env = Env(t.entry.env)
+    for tvarName, typeParam in zip(t.entry.ast.typeVars, t.typeParams) :
+        tvarEntry = TypeVarEntry(env, tvarName, typeParam)
+        addIdent(env, tvarName, tvarEntry)
+    return [inferTypeType(f.type, env) for f in t.entry.ast.fields]
+
 def bindTypeVariables(env, typeVarNames) :
     tvarEntries = []
     for tvarName in typeVarNames :
@@ -82,14 +91,34 @@ def reduceTypeVariables(typeVarEntries) :
             raiseError("unresolved type variable", entry.ast)
         entry.type = t
 
-def getFieldTypes(t) :
-    assert isRecordType(t)
-    assert len(t.entry.ast.typeVars) == len(t.typeParams)
-    env = Env(t.entry.env)
-    for tvarName, typeParam in zip(t.entry.ast.typeVars, t.typeParams) :
-        tvarEntry = TypeVarEntry(env, tvarName, typeParam)
-        addIdent(env, tvarName, tvarEntry)
-    return [inferTypeType(f.type, env) for f in t.entry.ast.fields]
+def evalTypeCondition(env, typeVarEntries, typeCondition) :
+    def typeVariableType(entry) :
+        assert type(entry) is TypeVarEntry
+        assert type(entry.type) is TypeVariable
+    savedTypeVars = [typeVariableType(e) for e in typeVarEntries]
+    def restoreTypeVars() :
+        for entry, typeValue in zip(typeVarEntries, savedTypeVars) :
+            entry.type.type = typeValue
+    typeArgs = [inferTypeType(x, env) for x in typeCondition.typeArgs]
+    predicateEntry = lookupPredicate(env, typeCondition.name)
+    for instanceEntry in predicateEntry.instances :
+        if evalPredicateInstance(instanceEntry, typeArgs) :
+            return True
+        restoreTypeVars()
+    return False
+
+def evalPredicateInstance(instanceEntry, typeArgs) :
+    ast = instanceEntry.ast
+    env = Env(instanceEntry.env)
+    typeVarEntries = bindTypeVariables(env, ast.typeVars)
+    formalTypes = [inferTypeType(x, env) for x in ast.typeArgs]
+    for typeArg, formalType in zip(typeArgs, formalTypes) :
+        if not typeUnify(typeArg, formalType) :
+            return False
+    for typeCondition in ast.typeConditions :
+        if not evalTypeCondition(env, typeVarEntries, typeCondition) :
+            return False
+    return True
 
 
 
@@ -475,8 +504,9 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
             formalType = inferTypeType(formalTypeExpr, env)
             if not typeUnify(formalType, argType) :
                 raiseError("type mismatch", callExpr.args[i])
-    if len(ast.typeConditions) > 0 :
-        raise NotImplementedError
+    for typeCondition in ast.typeConditions :
+        if not evalTypeCondition(env, typeVarEntries, typeCondition) :
+            raiseError("type condition failed", typeCondition)
     reduceTypeVariables(typeVarEntries)
     if ast.returnType is not None :
         return inferTypeType(ast.returnType, env)
