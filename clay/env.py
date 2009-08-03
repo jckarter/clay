@@ -135,6 +135,7 @@ class OverloadableEntry(EnvEntry) :
     def __init__(self, env, ast) :
         super(OverloadableEntry, self).__init__(env, ast)
         self.overloads = []
+        self.returnTypes = {}
 
 class OverloadEntry(EnvEntry) : pass
 

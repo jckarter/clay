@@ -1,50 +1,115 @@
-//
-// Vector
-//
+overloadable not;
+
+overloadable equals;
+overloadable lesser;
+overloadable lesserEquals;
+overloadable greater;
+overloadable greaterEquals;
+
+overloadable add;
+overloadable subtract;
+overloadable multiply;
+overloadable divide;
+overloadable modulus;
+overloadable negate;
+
+overload not(a:Bool) { return boolNot(a); }
+
+overload equals(a:Char, b:Char) { return charEquals(a, b); }
+overload lesser(a:Char, b:Char) { return charLesser(a, b); }
+overload lesserEquals(a:Char, b:Char) { return charLesserEquals(a, b); }
+overload greater(a:Char, b:Char) { return charGreater(a, b); }
+overload greaterEquals(a:Char, b:Char) { return charGreaterEquals(a, b); }
+
+overload equals(a:Int, b:Int) { return intEquals(a, b); }
+overload lesser(a:Int, b:Int) { return intLesser(a, b); }
+overload lesserEquals(a:Int, b:Int) { return intLesserEquals(a, b); }
+overload greater(a:Int, b:Int) { return intGreater(a, b); }
+overload greaterEquals(a:Int, b:Int) { return intGreaterEquals(a, b); }
+
+overload add(a:Int, b:Int) { return intAdd(a, b); }
+overload subtract(a:Int, b:Int) { return intSubtract(a, b); }
+overload multiply(a:Int, b:Int) { return intMultiply(a, b); }
+overload divide(a:Int, b:Int) { return intDivide(a, b); }
+overload modulus(a:Int, b:Int) { return intModulus(a, b); }
+overload negate(a:Int) { return intNegate(a); }
+
+record Complex {
+    x:Int; y:Int;
+}
+overload add(a:Complex, b:Complex) {
+    return Complex(add(a.x,b.x), add(a.y,b.y));
+}
+overload subtract(a:Complex, b:Complex) {
+    return Complex(subtract(a.x,b.x), subtract(a.y,b.y));
+}
 
 record Vector[T] {
-    size:Int;
-    data:Array[T];
+    p: Pointer[T];
 }
-
-overloadable vector;
-
-overload vector[T](a:Array[T]):Vector[T] {
-    return Vector(array_size(a), a);
-}
-
-overload vector[T](n:Int, v:T):Vector[T] {
-    return Vector(n, new_array(n,v));
-}
-
-overload vector[T](type T):Vector[T] {
-    return Vector(0, new_array(T,0));
-}
-
-def vector_add[T](a:Vector[T], x:T):Void {
-    if (int_equals(a.size, array_size(a.data))) {
-        var b = new_array(T, int_add(int_multiply(a.size,2), 1));
-        for (var i,x in enumerate(a.data))
-            b[i] = x;
-        a.data = b;
+overloadable newVector;
+overload newVector[T](n:Int, v:T) {
+    var block = allocateBlock(T, n);
+    var p = block;
+    var end = pointerOffset(block, n);
+    while (not(equals(p, end))) {
+        p^ = v;
+        p = add(p, 1);
     }
-    a.data[a.size] = x;
-    a.size = int_add(a.size, 1);
+    return Vector(block);
+}
+overload newVector[T](type T, n:Int) {
+    return newVector(n, default(T));
+}
+def delVector[T](v:Vector[T]) {
+    freeBlock(v.p);
+}
+def vectorSize[T](v:Vector[T]) {
+    return blockSize(v.p);
+}
+def vectorRef[T](v:Vector[T], i:Int) {
+    return pointerOffset(v.p, i);
+}
+def vectorBegin[T](v:Vector[T]) {
+    return vectorRef(v, 0);
+}
+def vectorEnd[T](v:Vector[T]) {
+    return vectorRef(v, vectorSize(v));
 }
 
-record Point {
-    x:Double;
-    y:Double;
+def min(v) {
+    var p = vectorBegin(v);
+    var end = vectorEnd(v);
+    var minValue = p;
+    p = pointerOffset(p, 1);
+    while (not(equals(p,end))) {
+        if (lesser(p^,minValue^))
+            minValue = p;
+    }
+    return minValue^;
 }
 
-var foo:Int = 10;
-
-def print_string(s:String):Void {
-    printf("%s", s);
-    return;
+def fact(n) {
+    if (equals(n,0))
+        return 1;
+    return multiply(n, fact(subtract(n,1)));
 }
 
-def main(args:Array[String]):Int {
-    print_string("Hello World!");
-    return 0;
+def isEven(n) {
+    return isOdd(subtract(n, 1));
+}
+
+def isOdd(n) {
+    if (greater(n, 1))
+        return isEven(subtract(n, 1));
+    return equals(n, 1);
+}
+
+
+def main() {
+    var a1 = newVector(10, 'a');
+    var result1 = (a1, min(a1));
+    var a2 = newVector(20, 100);
+    var result2 = (a2, min(a2));
+    return (result1, result2);
 }

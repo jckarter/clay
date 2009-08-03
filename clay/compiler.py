@@ -466,14 +466,17 @@ def foo(entry, x, env) :
 def foo(entry, x, env) :
     argsInfo = tuple([inferType(y, env) for y in x.args])
     returnType = entry.returnTypes.get(argsInfo)
+    if returnType is False :
+        raise RecursiveInferenceError()
     if returnType is not None :
-        if returnType is False :
-            raise RecursiveInferenceError()
         return True, returnType
     entry.returnTypes[argsInfo] = False
     returnType = None
     try :
-        returnType = inferProcedureReturnType(entry, argsInfo, x)
+        result = inferProcedureType(entry, argsInfo, x)
+        if type(result) is ProcedureMismatch :
+            raiseError(result.errorMessage, result.astNode)
+        returnType = result
         return True, returnType
     finally :
         if returnType is None :
@@ -481,10 +484,40 @@ def foo(entry, x, env) :
         else :
             entry.returnTypes[argsInfo] = returnType
 
-def inferProcedureReturnType(entry, argsInfo, callExpr) :
+@inferNamedCallExprType.register(OverloadableEntry)
+def foo(entry, x, env) :
+    argsInfo = tuple([inferType(y, env) for y in x.args])
+    returnType = entry.returnTypes.get(argsInfo)
+    if returnType is False :
+        raise RecursiveInferenceError()
+    if returnType is not None :
+        return True, returnType
+    entry.returnTypes[argsInfo] = False
+    returnType = None
+    try :
+        for overload in entry.overloads :
+            result = inferProcedureType(overload, argsInfo, x)
+            if type(result) is not ProcedureMismatch :
+                returnType = result
+                return True, returnType
+        raiseError("no matching overload", x)
+    finally :
+        if returnType is None :
+            del entry.returnTypes[argsInfo]
+        else :
+            entry.returnTypes[argsInfo] = returnType
+
+class ProcedureMismatch(object) :
+    def __init__(self, errorMessage, astNode) :
+        self.errorMessage = errorMessage
+        self.astNode = astNode
+
+def inferProcedureType(entry, argsInfo, callExpr) :
+    def mismatch(errorMessage, astNode) :
+        return ProcedureMismatch(errorMessage, astNode)
     ast = entry.ast
     if len(ast.args) != len(argsInfo) :
-        raiseError("incorrect no. of arguments", callExpr)
+        return mismatch("incorrect no. of arguments", callExpr)
     env = Env(entry.env)
     typeVarEntries = bindTypeVariables(env, ast.typeVars)
     for i, formalArg in enumerate(ast.args) :
@@ -492,21 +525,21 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
         formalTypeExpr = None
         if type(formalArg) is ValueArgument :
             if not isValue :
-                raiseError("expected a value", callExpr.args[i])
+                return mismatch("expected a value", callExpr.args[i])
             formalTypeExpr = formalArg.variable.type
         elif type(formalArg) is TypeArgument :
             if isValue :
-                raiseError("expected a type", callExpr.args[i])
+                return mismatch("expected a type", callExpr.args[i])
             formalTypeExpr = formalArg.type
         else :
             assert False
         if formalTypeExpr is not None :
             formalType = inferTypeType(formalTypeExpr, env)
             if not typeUnify(formalType, argType) :
-                raiseError("type mismatch", callExpr.args[i])
+                return mismatch("type mismatch", callExpr.args[i])
     for typeCondition in ast.typeConditions :
         if not evalTypeCondition(env, typeVarEntries, typeCondition) :
-            raiseError("type condition failed", typeCondition)
+            return mismatch("type condition failed", typeCondition)
     reduceTypeVariables(typeVarEntries)
     if ast.returnType is not None :
         return inferTypeType(ast.returnType, env)
@@ -520,10 +553,6 @@ def inferProcedureReturnType(entry, argsInfo, callExpr) :
     if returnType is None :
         raise RecursiveInferenceError()
     return returnType
-
-@inferNamedCallExprType.register(OverloadableEntry)
-def foo(entry, x, env) :
-    raise NotImplementedError
 
 # end inferNamedCallExprType
 
