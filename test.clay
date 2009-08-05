@@ -266,10 +266,10 @@ def findMinimum(v) {
     return minValue;
 }
 
-def fact(n) {
+def factorial(n) {
     if (equals(n, 0))
         return 1;
-    return multiply(n, fact(subtract(n, 1)));
+    return multiply(n, factorial(subtract(n, 1)));
 }
 
 def isEven(n) {
@@ -285,7 +285,7 @@ def isOdd(n) {
 }
 
 def main1() {
-    var n = fact(5);
+    var n = factorial(5);
     return (n, isEven(n));
 }
 
