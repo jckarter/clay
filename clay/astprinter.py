@@ -27,7 +27,7 @@ r(TypeCondition, lambda x : xo("TypeCondition", x.name.s, *x.typeArgs))
 r(RecordDef, lambda x : xo("RecordDef", x.name, x.typeVars, *x.fields))
 r(Field, lambda x : xo("Field", x.name, x.type))
 r(Variable, lambda x : xo("Variable", x.name, x.type))
-r(VariableDef, lambda x : xo("VariableDef", x.variable, x.expr))
+r(GlobalVarDef, lambda x : xo("GlobalVarDef", x.variable, x.expr))
 r(Procedure, lambda x : xo("Procedure", x.typeVars, tuple(x.args),
                            xf("ref",x.returnByRef), x.returnType,
                            xf("if",x.typeConditions), x.body))
@@ -44,7 +44,7 @@ r(Identifier, lambda x : xo("Identifier", XSymbol(x.s)))
 #
 
 r(Block, lambda x : xo("Block", *x.statements))
-r(LocalVariableDef, lambda x : xo("LocalVariableDef", x.variable, x.expr))
+r(LocalVarDef, lambda x : xo("LocalVarDef", x.variable, x.expr))
 r(Assignment, lambda x : xo("Assignment", x.assignable, x.expr))
 r(IfStatement, lambda x : xo("IfStatement", x.condition,
                              xf("then", x.thenPart),

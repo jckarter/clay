@@ -158,9 +158,9 @@ ifStatement = astNode(sequence(keyword("if"), parenCondition,
 
 assignment = astNode(sequence(expression, symbol("="), expression, semicolon),
                      lambda x : Assignment(x[0], x[2]))
-localVariableDef = astNode(sequence(keyword("var"), variable,
-                                    symbol("="), expression, semicolon),
-                           lambda x : LocalVariableDef(x[1],x[3]))
+localVarDef = astNode(sequence(keyword("var"), variable, symbol("="),
+                               expression, semicolon),
+                      lambda x : LocalVarDef(x[1],x[3]))
 
 block = astNode(sequence(symbol("{"), onePlus(statement2), symbol("}")),
                 lambda x : Block(x[1]))
@@ -168,7 +168,7 @@ block = astNode(sequence(symbol("{"), onePlus(statement2), symbol("}")),
 exprStatement = astNode(sequence(expression, semicolon),
                         lambda x : ExprStatement(x[0]))
 
-statement = choice(block, localVariableDef, assignment,
+statement = choice(block, localVarDef, assignment,
                    ifStatement, breakStatement, continueStatement,
                    whileStatement, forStatement, returnStatement,
                    exprStatement)
@@ -187,9 +187,9 @@ fieldDef = astNode(sequence(identifier, typeSpec, semicolon),
 recordDef = astNode(sequence(keyword("record"), identifier, optTypeVars,
                              symbol("{"), onePlus(fieldDef), symbol("}")),
                     lambda x : RecordDef(x[1],x[2],x[4]))
-variableDef = astNode(sequence(keyword("var"), variable,
-                               symbol("="), expression, semicolon),
-                      lambda x : VariableDef(x[1],x[3]))
+globalVarDef = astNode(sequence(keyword("var"), variable, symbol("="),
+                                expression, semicolon),
+                       lambda x : GlobalVarDef(x[1],x[3]))
 
 isRef = modify(optional(keyword("ref")), lambda x : x is not None)
 
@@ -227,7 +227,7 @@ instanceDef = astNode(sequence(keyword("instance"), identifier, optTypeVars,
                       lambda x : InstanceDef(x[1],x[2],x[4],x[6]))
 
 topLevelItem = choice(predicateDef, instanceDef, recordDef,
-                      variableDef, procedureDef, overloadableDef,
+                      globalVarDef, procedureDef, overloadableDef,
                       overloadDef)
 
 

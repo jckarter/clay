@@ -1,9 +1,9 @@
 __all__ = [
     "ASTNode", "Program", "TopLevelItem", "PredicateDef", "Identifier",
     "InstanceDef", "TypeCondition", "RecordDef", "Field",
-    "Variable", "VariableDef", "Procedure", "ProcedureDef", "OverloadableDef",
+    "Variable", "GlobalVarDef", "Procedure", "ProcedureDef", "OverloadableDef",
     "OverloadDef", "Argument", "ValueArgument", "TypeArgument",
-    "Statement", "Block", "LocalVariableDef", "Assignment",
+    "Statement", "Block", "LocalVarDef", "Assignment",
     "IfStatement", "BreakStatement", "ContinueStatement",
     "WhileStatement", "ForStatement", "ReturnStatement", "ExprStatement",
     "Expression", "AddressOfExpr", "IndexExpr", "CallExpr",
@@ -84,7 +84,7 @@ class Variable(ASTNode) :
         self.name = name
         self.type = type
 
-class VariableDef(TopLevelItem) :
+class GlobalVarDef(TopLevelItem) :
     def __init__(self, variable, expr) :
         check(variable, Variable)
         check(expr, Expression)
@@ -149,7 +149,7 @@ class Block(Statement) :
         checkList(statements, Statement)
         self.statements = statements
 
-class LocalVariableDef(Statement) :
+class LocalVarDef(Statement) :
     def __init__(self, variable, expr) :
         check(variable, Variable)
         check(expr, Expression)

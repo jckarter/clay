@@ -34,9 +34,9 @@ __all__ = ["Env", "EnvEntry",
            "PrimOpFloatToDouble", "PrimOpDoubleToFloat",
            "PrimOpDoubleToInt", "PrimOpIntToDouble",
            "PredicateEntry", "InstanceEntry", "RecordEntry",
-           "VariableEntry", "ProcedureEntry",
+           "GlobalVarEntry", "ProcedureEntry",
            "OverloadableEntry", "OverloadEntry", "TypeVarEntry",
-           "LocalVariableEntry"]
+           "LocalVarEntry"]
 
 
 
@@ -174,9 +174,9 @@ class InstanceEntry(EnvEntry) : pass
 
 class RecordEntry(EnvEntry) : pass
 
-class VariableEntry(EnvEntry) :
+class GlobalVarEntry(EnvEntry) :
     def __init__(self, env, ast) :
-        super(VariableEntry, self).__init__(env, ast)
+        super(GlobalVarEntry, self).__init__(env, ast)
         self.type = None
 
 class ProcedureEntry(EnvEntry) :
@@ -203,7 +203,7 @@ class TypeVarEntry(EnvEntry) :
         super(TypeVarEntry, self).__init__(env, ast)
         self.type = type
 
-class LocalVariableEntry(EnvEntry) :
+class LocalVarEntry(EnvEntry) :
     def __init__(self, env, ast, type) :
-        super(LocalVariableEntry, self).__init__(env, ast)
+        super(LocalVarEntry, self).__init__(env, ast)
         self.type = type

@@ -230,9 +230,9 @@ def foo(x, env) :
 def foo(x, env) :
     addIdent(env, x.name, RecordEntry(env,x))
 
-@addTopLevel.register(VariableDef)
+@addTopLevel.register(GlobalVarDef)
 def foo(x, env) :
-    addIdent(env, x.variable.name, VariableEntry(env,x))
+    addIdent(env, x.variable.name, GlobalVarEntry(env,x))
 
 @addTopLevel.register(ProcedureDef)
 def foo(x, env) :
@@ -678,7 +678,7 @@ def inferProcedureType(env, ast, argsInfo, callExpr) :
         isValue, argType = argsInfo[i]
         if type(formalArg) is ValueArgument :
             argName = formalArg.variable.name
-            localVarEntry = LocalVariableEntry(env, argName, argType)
+            localVarEntry = LocalVarEntry(env, argName, argType)
             addIdent(env, argName, localVarEntry)
     returnType = inferReturnType(ast.body, env)
     if returnType is None :
@@ -774,7 +774,7 @@ def foo(entry, x, env) :
         raiseError("record type requires type parameters", x)
     return False, RecordType(entry, [])
 
-@inferNamedExprType.register(VariableEntry)
+@inferNamedExprType.register(GlobalVarEntry)
 def foo(entry, x, env) :
     if entry.type is False :
         raise RecursiveInferenceError()
@@ -797,7 +797,7 @@ def foo(entry, x, env) :
 def foo(entry, x, env) :
     return False, entry.type
 
-@inferNamedExprType.register(LocalVariableEntry)
+@inferNamedExprType.register(LocalVarEntry)
 def foo(entry, x, env) :
     return True, entry.type
 
@@ -862,7 +862,7 @@ collectReturns = multimethod()
 @collectReturns.register(Block)
 def foo(x, env, collector) :
     for y in x.statements :
-        if type(y) is LocalVariableDef :
+        if type(y) is LocalVarDef :
             if env is None :
                 continue
             try :
@@ -871,14 +871,14 @@ def foo(x, env, collector) :
                     declaredType = inferTypeType(y.variable.type, env)
                     if not typeEquals(exprType, declaredType) :
                         raiseError("type mismatch", y.expr)
-                localVar = LocalVariableEntry(env, y.variable, exprType)
+                localVar = LocalVarEntry(env, y.variable, exprType)
                 addIdent(env, y.variable.name, localVar)
             except RecursiveInferenceError :
                 env = None
         else :
             collectReturns(y, env, collector)
 
-@collectReturns.register(LocalVariableDef)
+@collectReturns.register(LocalVarDef)
 def foo(x, env, collector) :
     raiseError("invalid local variable definition", x)
 
@@ -914,7 +914,7 @@ def foo(x, env, collector) :
                 declaredType = inferTypeType(x.variable.type, env)
                 if not typeEquals(itemType, declaredType) :
                     raiseError("type mismatch", x.expr)
-            localVar = LocalVariableEntry(env, x.variable, itemType)
+            localVar = LocalVarEntry(env, x.variable, itemType)
             addIdent(env, x.variable.name, localVar)
         except RecursiveInferenceError :
             env = None

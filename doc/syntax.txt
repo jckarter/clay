@@ -1,7 +1,7 @@
 Program -> TopLevelItem* ;
 
 TopLevelItem -> PredicateDef | InstanceDef | RecordDef
-              | VariableDef | ProcedureDef | OverloadableDef | OverloadDef ;
+              | GlobalVarDef | ProcedureDef | OverloadableDef | OverloadDef ;
 
 PredicateDef -> "predicate" Name ;
 InstanceDef -> "instance" Name TypeVars? "(" comma_list(TypeExpr) ")"
@@ -18,7 +18,7 @@ TypeSpec -> ":" TypeExpr ;
 
 Variable -> Name TypeSpec? ;
 
-VariableDef -> "var" Variable "=" Expression ";" ;
+GlobalVarDef -> "var" Variable "=" Expression ";" ;
 
 ProcedureDef -> "def" Name Procedure ;
 
@@ -36,7 +36,7 @@ OverloadDef -> "overload" Name Procedure ;
 Block -> "{" Statement+ "}" ;
 
 Statement -> Block
-           | LocalVariableDef
+           | LocalVarDef
            | Assignment
            | IfStatement
            | BreakStatement
@@ -47,7 +47,7 @@ Statement -> Block
            | Expression
            ;
 
-LocalVariableDef -> "var" Variable "=" Expression ";" ;
+LocalVarDef -> "var" Variable "=" Expression ";" ;
 
 Assignment -> Expression "=" Expression ";" ;
 
