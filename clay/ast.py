@@ -1,7 +1,7 @@
 __all__ = [
     "ASTNode", "Program", "TopLevelItem", "PredicateDef", "Identifier",
     "InstanceDef", "TypeCondition", "RecordDef", "Field",
-    "Variable", "VariableDef", "ProcedureDef", "OverloadableDef",
+    "Variable", "VariableDef", "Procedure", "ProcedureDef", "OverloadableDef",
     "OverloadDef", "Argument", "ValueArgument", "TypeArgument",
     "Statement", "Block", "LocalVariableDef", "Assignment",
     "IfStatement", "BreakStatement", "ContinueStatement",
@@ -91,21 +91,28 @@ class VariableDef(TopLevelItem) :
         self.variable = variable
         self.expr = expr
 
-class ProcedureDef(TopLevelItem) :
-    def __init__(self, name, typeVars, args, returnType,
+class Procedure(ASTNode) :
+    def __init__(self, typeVars, args, returnByRef, returnType,
                  typeConditions, body) :
-        check(name, Identifier)
         checkList(typeVars, Identifier)
         checkList(args, Argument)
+        check(returnByRef, bool)
         check2(returnType, Expression)
         checkList(typeConditions, TypeCondition)
         check(body, Block)
-        self.name = name
         self.typeVars = typeVars
         self.args = args
+        self.returnByRef = returnByRef
         self.returnType = returnType
         self.typeConditions = typeConditions
         self.body = body
+
+class ProcedureDef(TopLevelItem) :
+    def __init__(self, name, procedure) :
+        check(name, Identifier)
+        check(procedure, Procedure)
+        self.name = name
+        self.procedure = procedure
 
 class OverloadableDef(TopLevelItem) :
     def __init__(self, name) :
@@ -113,27 +120,20 @@ class OverloadableDef(TopLevelItem) :
         self.name = name
 
 class OverloadDef(TopLevelItem) :
-    def __init__(self, name, typeVars, args, returnType,
-                 typeConditions, body) :
+    def __init__(self, name, procedure) :
         check(name, Identifier)
-        checkList(typeVars, Identifier)
-        checkList(args, Argument)
-        check2(returnType, Expression)
-        checkList(typeConditions, TypeCondition)
-        check(body, Block)
+        check(procedure, Procedure)
         self.name = name
-        self.typeVars = typeVars
-        self.args = args
-        self.returnType = returnType
-        self.typeConditions = typeConditions
-        self.body = body
+        self.procedure = procedure
 
 class Argument(ASTNode) :
     pass
 
 class ValueArgument(Argument) :
-    def __init__(self, variable) :
+    def __init__(self, isRef, variable) :
+        check(isRef, bool)
         check(variable, Variable)
+        self.isRef = isRef
         self.variable = variable
 
 class TypeArgument(Argument) :

@@ -191,7 +191,10 @@ variableDef = astNode(sequence(keyword("var"), variable,
                                symbol("="), expression, semicolon),
                       lambda x : VariableDef(x[1],x[3]))
 
-valueArgument = astNode(variable, lambda x : ValueArgument(x))
+isRef = modify(optional(keyword("ref")), lambda x : x is not None)
+
+valueArgument = astNode(sequence(isRef, variable),
+                        lambda x : ValueArgument(x[0],x[1]))
 typeArgument = astNode(sequence(keyword("type"), expression),
                        lambda x : TypeArgument(x[1]))
 argument = choice(valueArgument, typeArgument)
@@ -204,23 +207,20 @@ typeConditions = modify(sequence(keyword("if"), listOf(typeCondition,comma)),
                         lambda x : x[1])
 optTypeConditions = modify(optional(typeConditions),
                            lambda x : [] if x is None else x)
-procedureDef = astNode(sequence(keyword("def"), identifier, optTypeVars,
-                                symbol("("), optArguments, symbol(")"),
-                                optTypeSpec, optTypeConditions, block),
-                       lambda x : ProcedureDef(x[1],x[2],x[4],x[6],x[7],x[8]))
-
+procedure = astNode(sequence(optTypeVars, symbol("("), optArguments,
+                             symbol(")"), isRef, optTypeSpec,
+                             optTypeConditions, block),
+                    lambda x : Procedure(x[0],x[2],x[4],x[5],x[6],x[7]))
+procedureDef = astNode(sequence(keyword("def"), identifier, procedure),
+                       lambda x : ProcedureDef(x[1], x[2]))
 overloadableDef = astNode(sequence(keyword("overloadable"), identifier,
                                    semicolon),
                           lambda x : OverloadableDef(x[1]))
-
-overloadDef = astNode(sequence(keyword("overload"), identifier, optTypeVars,
-                               symbol("("), optArguments, symbol(")"),
-                               optTypeSpec, optTypeConditions, block),
-                      lambda x : OverloadDef(x[1],x[2],x[4],x[6],x[7],x[8]))
+overloadDef = astNode(sequence(keyword("overload"), identifier, procedure),
+                      lambda x : OverloadDef(x[1], x[2]))
 
 predicateDef = astNode(sequence(keyword("predicate"), identifier, semicolon),
                        lambda x : PredicateDef(x[1]))
-
 instanceDef = astNode(sequence(keyword("instance"), identifier, optTypeVars,
                                symbol("("), optExpressionList, symbol(")"),
                                optTypeConditions, semicolon),

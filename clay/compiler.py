@@ -603,7 +603,8 @@ def foo(entry, x, env) :
     entry.returnTypes[argsInfo] = False
     returnType = None
     try :
-        result = inferProcedureType(entry, argsInfo, x)
+        proc = entry.ast.procedure
+        result = inferProcedureType(entry.env, proc, argsInfo, x)
         if type(result) is ProcedureMismatch :
             raiseError(result.errorMessage, result.astNode)
         returnType = result
@@ -626,7 +627,8 @@ def foo(entry, x, env) :
     returnType = None
     try :
         for overload in entry.overloads :
-            result = inferProcedureType(overload, argsInfo, x)
+            proc = overload.ast.procedure
+            result = inferProcedureType(overload.env, proc, argsInfo, x)
             if type(result) is not ProcedureMismatch :
                 returnType = result
                 return True, returnType
@@ -642,13 +644,12 @@ class ProcedureMismatch(object) :
         self.errorMessage = errorMessage
         self.astNode = astNode
 
-def inferProcedureType(entry, argsInfo, callExpr) :
+def inferProcedureType(env, ast, argsInfo, callExpr) :
     def mismatch(errorMessage, astNode) :
         return ProcedureMismatch(errorMessage, astNode)
-    ast = entry.ast
     if len(ast.args) != len(argsInfo) :
         return mismatch("incorrect no. of arguments", callExpr)
-    env = Env(entry.env)
+    env = Env(env)
     typeVarEntries = bindTypeVariables(env, ast.typeVars)
     for i, formalArg in enumerate(ast.args) :
         isValue, argType = argsInfo[i]

@@ -20,16 +20,18 @@ Variable -> Name TypeSpec? ;
 
 VariableDef -> "var" Variable "=" Expression ";" ;
 
-ProcedureDef -> "def" Name TypeVars? "(" comma_list(Argument)? ")"
-                TypeSpec? TypeConditions? Block ;
-Argument -> Variable
+ProcedureDef -> "def" Name Procedure ;
+
+Procedure -> TypeVars? "(" comma_list(Argument)? ")"
+             "ref"? TypeSpec? TypeConditions? Block;
+
+Argument -> "ref"? Variable
           | "type" Expression
           ;
 
 OverloadableDef -> "overloadable" Name ";" ;
 
-OverloadDef -> "overload" Name TypeVars? "(" comma_list(Argument)? ")"
-               TypeSpec? TypeConditions? Block ;
+OverloadDef -> "overload" Name Procedure ;
 
 Block -> "{" Statement+ "}" ;
 

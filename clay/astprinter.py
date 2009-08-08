@@ -28,14 +28,13 @@ r(RecordDef, lambda x : xo("RecordDef", x.name, x.typeVars, *x.fields))
 r(Field, lambda x : xo("Field", x.name, x.type))
 r(Variable, lambda x : xo("Variable", x.name, x.type))
 r(VariableDef, lambda x : xo("VariableDef", x.variable, x.expr))
-r(ProcedureDef, lambda x : xo("ProcedureDef", x.name, x.typeVars,
-                              tuple(x.args), x.returnType,
-                              xf("if",x.typeConditions), x.body))
+r(Procedure, lambda x : xo("Procedure", x.typeVars, tuple(x.args),
+                           xf("ref",x.returnByRef), x.returnType,
+                           xf("if",x.typeConditions), x.body))
+r(ProcedureDef, lambda x : xo("ProcedureDef", x.name, x.procedure))
 r(OverloadableDef, lambda x : xo("OverloadableDef", x.name))
-r(OverloadDef, lambda x : xo("OverloadDef", x.name, x.typeVars,
-                             tuple(x.args), x.returnType,
-                             xf("if",x.typeConditions), x.body))
-r(ValueArgument, lambda x : xo("ValueArgument", x.variable))
+r(OverloadDef, lambda x : xo("OverloadDef", x.name, x.procedure))
+r(ValueArgument, lambda x : xo("ValueArgument", xf("ref",x.isRef), x.variable))
 r(TypeArgument, lambda x : xo("TypeArgument", x.type))
 
 r(Identifier, lambda x : xo("Identifier", XSymbol(x.s)))
