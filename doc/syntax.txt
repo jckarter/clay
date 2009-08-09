@@ -1,24 +1,17 @@
 Program -> TopLevelItem* ;
 
-TopLevelItem -> PredicateDef | InstanceDef | RecordDef
-              | GlobalVarDef | ProcedureDef | OverloadableDef | OverloadDef ;
-
-PredicateDef -> "predicate" Name ;
-InstanceDef -> "instance" Name TypeVars? "(" comma_list(TypeExpr) ")"
-               TypeConditions? ";" ;
-
-TypeVars -> "[" comma_list(Name) "]" ;
-TypeConditions -> "if" comma_list(TypeCondition) ;
-TypeCondition -> Name "(" comma_list(TypeExpr) ")" ;
+TopLevelItem -> RecordDef | GlobalVarDef | ProcedureDef
+              | OverloadableDef | OverloadDef ;
 
 RecordDef -> "record" Name TypeVars? "{" FieldDef+ "}" ;
 FieldDef -> Name TypeSpec ";" ;
 
+TypeVars -> "[" comma_list(Name) "]" ;
 TypeSpec -> ":" TypeExpr ;
 
-Variable -> Name TypeSpec? ;
-
 GlobalVarDef -> "var" Variable "=" Expression ";" ;
+
+Variable -> Name TypeSpec? ;
 
 ProcedureDef -> "def" Name Procedure ;
 
@@ -28,6 +21,9 @@ Procedure -> TypeVars? "(" comma_list(Argument)? ")"
 Argument -> "ref"? Variable
           | "type" Expression
           ;
+
+TypeConditions -> "if" comma_list(TypeCondition) ;
+TypeCondition -> Name "(" comma_list(TypeExpr) ")" ;
 
 OverloadableDef -> "overloadable" Name ";" ;
 
@@ -39,10 +35,6 @@ Statement -> Block
            | LocalVarDef
            | Assignment
            | IfStatement
-           | BreakStatement
-           | ContinueStatement
-           | WhileStatement
-           | ForStatement
            | ReturnStatement
            | Expression
            ;
@@ -53,13 +45,6 @@ Assignment -> Expression "=" Expression ";" ;
 
 IfStatement -> "if" "(" Expression ")" Statement
                ("else" Statement)? ;
-
-BreakStatement -> "break" ";" ;
-ContinueStatement -> "continue" ";" ;
-
-WhileStatement -> "while" "(" Expression ")" Statement ;
-ForStatement -> "for" "(" "var" Variable "in" Expression ")"
-                Statement ;
 
 ReturnStatement -> "return" Expression? ";" ;
 

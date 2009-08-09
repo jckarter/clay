@@ -137,19 +137,8 @@ statement2 = lambda input : statement(input)
 returnStatement = astNode(sequence(keyword("return"), optExpression,
                                    semicolon),
                           lambda x : ReturnStatement(x[1]))
-forStatement = astNode(sequence(keyword("for"), symbol("("), keyword("var"),
-                                variable, keyword("in"), expression,
-                                symbol(")"), statement2),
-                       lambda x : ForStatement(x[3], x[5], x[7]))
 parenCondition = modify(sequence(symbol("("), expression, symbol(")")),
                         lambda x : x[1])
-whileStatement = astNode(sequence(keyword("while"), parenCondition,
-                                  statement2),
-                         lambda x : WhileStatement(x[1],x[2]))
-continueStatement = astNode(sequence(keyword("continue"), semicolon),
-                            lambda x : ContinueStatement())
-breakStatement = astNode(sequence(keyword("break"), semicolon),
-                         lambda x : BreakStatement())
 elsePart = modify(sequence(keyword("else"), statement2),
                   lambda x : x[1])
 ifStatement = astNode(sequence(keyword("if"), parenCondition,
@@ -168,10 +157,8 @@ block = astNode(sequence(symbol("{"), onePlus(statement2), symbol("}")),
 exprStatement = astNode(sequence(expression, semicolon),
                         lambda x : ExprStatement(x[0]))
 
-statement = choice(block, localVarDef, assignment,
-                   ifStatement, breakStatement, continueStatement,
-                   whileStatement, forStatement, returnStatement,
-                   exprStatement)
+statement = choice(block, localVarDef, assignment, ifStatement,
+                   returnStatement, exprStatement)
 
 
 #
@@ -219,16 +206,8 @@ overloadableDef = astNode(sequence(keyword("overloadable"), identifier,
 overloadDef = astNode(sequence(keyword("overload"), identifier, procedure),
                       lambda x : OverloadDef(x[1], x[2]))
 
-predicateDef = astNode(sequence(keyword("predicate"), identifier, semicolon),
-                       lambda x : PredicateDef(x[1]))
-instanceDef = astNode(sequence(keyword("instance"), identifier, optTypeVars,
-                               symbol("("), optExpressionList, symbol(")"),
-                               optTypeConditions, semicolon),
-                      lambda x : InstanceDef(x[1],x[2],x[4],x[6]))
-
-topLevelItem = choice(predicateDef, instanceDef, recordDef,
-                      globalVarDef, procedureDef, overloadableDef,
-                      overloadDef)
+topLevelItem = choice(recordDef, globalVarDef, procedureDef,
+                      overloadableDef, overloadDef)
 
 
 #

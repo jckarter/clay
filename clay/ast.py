@@ -1,11 +1,10 @@
 __all__ = [
-    "ASTNode", "Program", "TopLevelItem", "PredicateDef", "Identifier",
-    "InstanceDef", "TypeCondition", "RecordDef", "Field",
-    "Variable", "GlobalVarDef", "Procedure", "ProcedureDef", "OverloadableDef",
-    "OverloadDef", "Argument", "ValueArgument", "TypeArgument",
+    "ASTNode", "Program", "TopLevelItem", "Identifier",
+    "RecordDef", "Field", "Variable", "GlobalVarDef",
+    "Procedure", "TypeCondition", "Argument", "ValueArgument", "TypeArgument",
+    "ProcedureDef", "OverloadableDef", "OverloadDef",
     "Statement", "Block", "LocalVarDef", "Assignment",
-    "IfStatement", "BreakStatement", "ContinueStatement",
-    "WhileStatement", "ForStatement", "ReturnStatement", "ExprStatement",
+    "IfStatement", "ReturnStatement", "ExprStatement",
     "Expression", "AddressOfExpr", "IndexExpr", "CallExpr",
     "FieldRef", "TupleRef", "Dereference",
     "ArrayExpr", "TupleExpr", "NameRef", "BoolLiteral", "IntLiteral",
@@ -33,33 +32,10 @@ class Program(ASTNode) :
 class TopLevelItem(ASTNode) :
     pass
 
-class PredicateDef(TopLevelItem) :
-    def __init__(self, name) :
-        check(name, Identifier)
-        self.name = name
-
 class Identifier(ASTNode) :
     def __init__(self, s) :
         check(s, str)
         self.s = s
-
-class InstanceDef(TopLevelItem) :
-    def __init__(self, name, typeVars, typeArgs, typeConditions) :
-        check(name, Identifier)
-        checkList(typeVars, Identifier)
-        checkList(typeArgs, Expression)
-        checkList(typeConditions, TypeCondition)
-        self.name = name
-        self.typeVars = typeVars
-        self.typeArgs = typeArgs
-        self.typeConditions = typeConditions
-
-class TypeCondition(ASTNode) :
-    def __init__(self, name, typeArgs) :
-        check(name, Identifier)
-        checkList(typeArgs, Expression)
-        self.name = name
-        self.typeArgs = typeArgs
 
 class RecordDef(TopLevelItem) :
     def __init__(self, name, typeVars, fields) :
@@ -107,6 +83,28 @@ class Procedure(ASTNode) :
         self.typeConditions = typeConditions
         self.body = body
 
+class TypeCondition(ASTNode) :
+    def __init__(self, name, typeArgs) :
+        check(name, Identifier)
+        checkList(typeArgs, Expression)
+        self.name = name
+        self.typeArgs = typeArgs
+
+class Argument(ASTNode) :
+    pass
+
+class ValueArgument(Argument) :
+    def __init__(self, isRef, variable) :
+        check(isRef, bool)
+        check(variable, Variable)
+        self.isRef = isRef
+        self.variable = variable
+
+class TypeArgument(Argument) :
+    def __init__(self, type) :
+        check(type, Expression)
+        self.type = type
+
 class ProcedureDef(TopLevelItem) :
     def __init__(self, name, procedure) :
         check(name, Identifier)
@@ -125,21 +123,6 @@ class OverloadDef(TopLevelItem) :
         check(procedure, Procedure)
         self.name = name
         self.procedure = procedure
-
-class Argument(ASTNode) :
-    pass
-
-class ValueArgument(Argument) :
-    def __init__(self, isRef, variable) :
-        check(isRef, bool)
-        check(variable, Variable)
-        self.isRef = isRef
-        self.variable = variable
-
-class TypeArgument(Argument) :
-    def __init__(self, type) :
-        check(type, Expression)
-        self.type = type
 
 class Statement(ASTNode) :
     pass
@@ -171,28 +154,6 @@ class IfStatement(Statement) :
         self.condition = condition
         self.thenPart = thenPart
         self.elsePart = elsePart
-
-class BreakStatement(Statement) :
-    pass
-
-class ContinueStatement(Statement) :
-    pass
-
-class WhileStatement(Statement) :
-    def __init__(self, condition, body) :
-        check(condition, Expression)
-        check(body, Statement)
-        self.condition = condition
-        self.body = body
-
-class ForStatement(Statement) :
-    def __init__(self, variable, expr, body) :
-        check(variable, Variable)
-        check(expr, Expression)
-        check(body, Statement)
-        self.variable = variable
-        self.expr = expr
-        self.body = body
 
 class ReturnStatement(Statement) :
     def __init__(self, expr) :

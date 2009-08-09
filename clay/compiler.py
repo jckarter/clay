@@ -24,12 +24,6 @@ def lookupIdent(env, name) :
         raiseError("undefined name", name)
     return entry
 
-def lookupPredicate(env, name) :
-    x = lookupIdent(env, name)
-    if type(x) is not PredicateEntry :
-        raiseError("not a predicate", name)
-    return x
-
 def lookupOverloadable(env, name) :
     x = lookupIdent(env, name)
     if type(x) is not OverloadableEntry :
@@ -90,35 +84,6 @@ def reduceTypeVariables(typeVarEntries) :
         if t is None :
             raiseError("unresolved type variable", entry.ast)
         entry.type = t
-
-def evalTypeCondition(env, typeVarEntries, typeCondition) :
-    def typeVariableType(entry) :
-        assert type(entry) is TypeVarEntry
-        assert type(entry.type) is TypeVariable
-    savedTypeVars = [typeVariableType(e) for e in typeVarEntries]
-    def restoreTypeVars() :
-        for entry, typeValue in zip(typeVarEntries, savedTypeVars) :
-            entry.type.type = typeValue
-    typeArgs = [inferTypeType(x, env) for x in typeCondition.typeArgs]
-    predicateEntry = lookupPredicate(env, typeCondition.name)
-    for instanceEntry in predicateEntry.instances :
-        if evalPredicateInstance(instanceEntry, typeArgs) :
-            return True
-        restoreTypeVars()
-    return False
-
-def evalPredicateInstance(instanceEntry, typeArgs) :
-    ast = instanceEntry.ast
-    env = Env(instanceEntry.env)
-    typeVarEntries = bindTypeVariables(env, ast.typeVars)
-    formalTypes = [inferTypeType(x, env) for x in ast.typeArgs]
-    for typeArg, formalType in zip(typeArgs, formalTypes) :
-        if not typeUnify(typeArg, formalType) :
-            return False
-    for typeCondition in ast.typeConditions :
-        if not evalTypeCondition(env, typeVarEntries, typeCondition) :
-            return False
-    return True
 
 
 
@@ -216,15 +181,6 @@ def buildTopLevelEnv(program) :
     return env
 
 addTopLevel = multimethod()
-
-@addTopLevel.register(PredicateDef)
-def foo(x, env) :
-    addIdent(env, x.name, PredicateEntry(env,x))
-
-@addTopLevel.register(InstanceDef)
-def foo(x, env) :
-    entry = InstanceEntry(env, x)
-    lookupPredicate(env, x.name).instances.append(entry)
 
 @addTopLevel.register(RecordDef)
 def foo(x, env) :
@@ -668,9 +624,8 @@ def inferProcedureType(env, ast, argsInfo, callExpr) :
             formalType = inferTypeType(formalTypeExpr, env)
             if not typeUnify(formalType, argType) :
                 return mismatch("type mismatch", callExpr.args[i])
-    for typeCondition in ast.typeConditions :
-        if not evalTypeCondition(env, typeVarEntries, typeCondition) :
-            return mismatch("type condition failed", typeCondition)
+    if ast.typeConditions :
+        raiseError("type conditions not supported yet.", ast.typeConditions[0])
     reduceTypeVariables(typeVarEntries)
     if ast.returnType is not None :
         return inferTypeType(ast.returnType, env)
@@ -891,34 +846,6 @@ def foo(x, env, collector) :
     collectReturns(x.thenPart, env, collector)
     if x.elsePart is not None :
         collectReturns(x.elsePart, env, collector)
-
-@collectReturns.register(BreakStatement)
-def foo(x, env, collector) :
-    pass
-
-@collectReturns.register(ContinueStatement)
-def foo(x, env, collector) :
-    pass
-
-@collectReturns.register(WhileStatement)
-def foo(x, env, collector) :
-    collectReturns(x.body, env, collector)
-
-@collectReturns.register(ForStatement)
-def foo(x, env, collector) :
-    if env is not None :
-        try :
-            exprType = inferValueType(x.expr, env, isArrayType)
-            itemType = exprType.type
-            if x.variable.type is not None :
-                declaredType = inferTypeType(x.variable.type, env)
-                if not typeEquals(itemType, declaredType) :
-                    raiseError("type mismatch", x.expr)
-            localVar = LocalVarEntry(env, x.variable, itemType)
-            addIdent(env, x.variable.name, localVar)
-        except RecursiveInferenceError :
-            env = None
-    collectReturns(x.body, env, collector)
 
 @collectReturns.register(ReturnStatement)
 def foo(x, env, collector) :

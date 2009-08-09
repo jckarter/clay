@@ -33,8 +33,7 @@ __all__ = ["Env", "EnvEntry",
            "PrimOpFloatToInt", "PrimOpIntToFloat",
            "PrimOpFloatToDouble", "PrimOpDoubleToFloat",
            "PrimOpDoubleToInt", "PrimOpIntToDouble",
-           "PredicateEntry", "InstanceEntry", "RecordEntry",
-           "GlobalVarEntry", "ProcedureEntry",
+           "RecordEntry", "GlobalVarEntry", "ProcedureEntry",
            "OverloadableEntry", "OverloadEntry", "TypeVarEntry",
            "LocalVarEntry"]
 
@@ -164,13 +163,6 @@ class PrimOpIntToDouble(EnvEntry) : pass
 #
 # global entries
 #
-
-class PredicateEntry(EnvEntry) :
-    def __init__(self, env, ast) :
-        super(PredicateEntry, self).__init__(env, ast)
-        self.instances = []
-
-class InstanceEntry(EnvEntry) : pass
 
 class RecordEntry(EnvEntry) : pass
 

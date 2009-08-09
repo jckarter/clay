@@ -166,12 +166,12 @@ record Vector[T] {
 overloadable vector;
 overload vector[T](n:Int, v:T) {
     var block = allocateBlock(T, n);
-    var p = block;
-    var end = pointerOffset(block, n);
-    while (not(equals(p, end))) {
-        p^ = v;
-        p = add(p, 1);
-    }
+    // var p = block;
+    // var end = pointerOffset(block, n);
+    // while (not(equals(p, end))) {
+    //     p^ = v;
+    //     p = add(p, 1);
+    // }
     return Vector(block);
 }
 overload vector[T](type T, n:Int) {
@@ -258,11 +258,11 @@ def getNext(it) {
 def findMinimum(v) {
     var i = iterator(v);
     var minValue = getNext(i);
-    while (hasMore(i)) {
-        var current = getNext(i);
-        if (lesser(current, minValue))
-            minValue = current;
-    }
+    // while (hasMore(i)) {
+    //     var current = getNext(i);
+    //     if (lesser(current, minValue))
+    //         minValue = current;
+    // }
     return minValue;
 }
 
