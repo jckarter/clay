@@ -10,41 +10,34 @@ Array[T,n] : array type constructor
 record [T,..]? { (Name:Type;)* } : record type definition
 Pointer[T] : raw pointer
 
-Primitive Value
-(Value,...) : tuple constructor
-[Value,...] : array constructor
-T(Value,...) : record constructor if IsRecord(T)
-
 Primitive Operations:
 
-default[T](type T):T
+default[T](meta T):T
 
-e:T => &e:Pointer[T]
-e:Pointer[T] => e^:T
-e:Pointer[T], i:Int => pointerOffset(e, i):Pointer[T]
-e1:Pointer[T],e2:Pointer[T] => pointerDifference(e1, e2):Int
-T2:Type, a:Pointer[T1] => pointerCast(T2, a):Pointer[T2]
+addressOf[T](ref a : T) : Pointer[T]
+pointerDereference[T](e:Pointer[T]) ref : T
+pointerOffset[T](e:Pointer[T], i:Int):Pointer[T]
+pointerSubtract[T](e1:Pointer[T], e2:Pointer[T]):Int
+pointerCast[T1,T2](meta T2, a:Pointer[T1]):Pointer[T2]
+
 pointerEquals, pointerLesser, pointerLesserEquals,
 pointerGreater, pointerGreaterEquals
 
-T:Type => allocate(T) => Pointer[T]
-p:Pointer[T] => free(p):Void
+allocate[T](meta T) : Pointer[T]
+free[T](p:Pointer[T]) : Void
+allocateBlock[T](meta T, n:Int) : Pointer[T]
+freeBlock[T](p:Pointer[T]):Void
+blockSize[T](p:Pointer[T]):Int
 
-T:Type, n:Int => allocateBlock(T, n) => Pointer[T]
-p:Pointer[T] => freeBlock(p):Void
-p:Pointer[T] => blockSize(p):Int
+makeTuple(v_1, ..., v_n): TupleType
+tupleFieldRef[T,i](a:T, meta i) : FieldType
 
+array[T,n](meta n, v:T):Array[T, n]
+arrayRef[T,n](ref a:Array[T,n], i:Int) ref : T;
+arraySize[T,n](ref a:Array[T,n]) : Int
 
-v_1:T_1, ..., v_n:T_n => (v_1, ..., v_n) : (T_1, ..., T_n)
-e:(T_1, ..., T_n) => e.i : T_i
-
-v_1:T, ..., v_n:T => [v_1, ... ,v_n] : Array[T, n]
-n:IntLiteral, v:T => array(n, v):Array[T, n]
-a:Array[T,n], i:Int => a[i]:T
-a:Array[T,n] => arraySize(a):Int
-
-R:Record => R(v_1, ..., v_n):RecordType
-a:RecordType => a.field:FieldType
+makeRecord(R, v_1, ..., v_n):RecordType
+recordFieldRef(a:R, meta name) ref : FieldType;
 
 boolNot(x:Bool):Bool
 

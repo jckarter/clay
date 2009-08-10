@@ -7,7 +7,7 @@ from clay.error import Location, raiseError
 __all__ = ["parse"]
 
 #
-# primitives
+# combinators
 #
 
 def tokenType(klass) :
@@ -22,16 +22,6 @@ def tokenValue(klass, value) :
 def symbol(s) : return tokenValue(t.Symbol, s)
 def keyword(s) : return tokenValue(t.Keyword, s)
 
-identTok = tokenType(t.Identifier)
-
-semicolon = symbol(";")
-comma = symbol(",")
-
-
-#
-# astNode
-#
-
 def astNode(parser, constructor) :
     def parserProc(input) :
         start_tok = input.pos
@@ -42,6 +32,16 @@ def astNode(parser, constructor) :
         node.location = input.data[start_tok].location
         return node
     return parserProc
+
+
+#
+# misc
+#
+
+semicolon = symbol(";")
+comma = symbol(",")
+
+identifier = astNode(tokenType(t.Identifier), lambda x : Identifier(x))
 
 
 #
@@ -62,7 +62,7 @@ literal = choice(boolLiteral, intLiteral, floatLiteral, doubleLiteral,
 
 
 #
-# atomic expr
+# misc
 #
 
 expression2 = lambda input : expression(input)
@@ -71,31 +71,32 @@ expressionList = listOf(expression2, comma)
 optExpressionList = modify(optional(expressionList),
                              lambda x : [] if x is None else x)
 
-arrayExpr = astNode(sequence(symbol("["), expressionList, symbol("]")),
-                    lambda x : ArrayExpr(x[1]))
-tupleExpr = astNode(sequence(symbol("("), expressionList, symbol(")")),
-                    lambda x : TupleExpr(x[1]))
 
-identifier = astNode(identTok, lambda x : Identifier(x))
+#
+# atomic expr
+#
+
+tupleExpr = astNode(sequence(symbol("("), expressionList, symbol(")")),
+                    lambda x : Tuple(x[1]))
 nameRef = astNode(identifier, lambda x : NameRef(x))
-atomicExpr = choice(arrayExpr, tupleExpr, nameRef, literal)
+atomicExpr = choice(tupleExpr, nameRef, literal)
 
 
 #
 # suffix expr
 #
 
-indexSuffix = astNode(sequence(symbol("["), expressionList, symbol("]")),
-                      lambda x : IndexExpr(None,x[1]))
+indexingSuffix = astNode(sequence(symbol("["), expressionList, symbol("]")),
+                         lambda x : Indexing(None,x[1]))
 callSuffix = astNode(sequence(symbol("("), optExpressionList, symbol(")")),
-                     lambda x : CallExpr(None,x[1]))
+                     lambda x : Call(None,x[1]))
 fieldRefSuffix = astNode(sequence(symbol("."), identifier),
                          lambda x : FieldRef(None,x[1]))
 tupleRefSuffix = astNode(sequence(symbol("."), intLiteral),
                          lambda x : TupleRef(None,x[1]))
 dereferenceSuffix = astNode(symbol("^"), lambda x : Dereference(None))
 
-suffix = choice(indexSuffix, callSuffix, fieldRefSuffix,
+suffix = choice(indexingSuffix, callSuffix, fieldRefSuffix,
                 tupleRefSuffix, dereferenceSuffix)
 
 def foldSuffixes(expr, suffixes) :
@@ -113,20 +114,18 @@ suffixExpr = modify(sequence(atomicExpr, zeroPlus(suffix)),
 #
 
 addressOfExpr = astNode(sequence(symbol("&"), suffixExpr),
-                        lambda x : AddressOfExpr(x[1]))
+                        lambda x : AddressOf(x[1]))
 
 expression = choice(addressOfExpr, suffixExpr)
 
 
 #
-# typeSpec, variable
+# type spec
 #
 
 typeSpec = modify(sequence(symbol(":"), expression), lambda x : x[1])
 optTypeSpec = optional(typeSpec)
 
-variable = astNode(sequence(identifier, optTypeSpec),
-                   lambda x : Variable(x[0],x[1]))
 
 #
 # statements
@@ -136,7 +135,7 @@ statement2 = lambda input : statement(input)
 
 returnStatement = astNode(sequence(keyword("return"), optExpression,
                                    semicolon),
-                          lambda x : ReturnStatement(x[1]))
+                          lambda x : Return(x[1]))
 parenCondition = modify(sequence(symbol("("), expression, symbol(")")),
                         lambda x : x[1])
 elsePart = modify(sequence(keyword("else"), statement2),
@@ -147,9 +146,9 @@ ifStatement = astNode(sequence(keyword("if"), parenCondition,
 
 assignment = astNode(sequence(expression, symbol("="), expression, semicolon),
                      lambda x : Assignment(x[0], x[2]))
-localVarDef = astNode(sequence(keyword("var"), variable, symbol("="),
-                               expression, semicolon),
-                      lambda x : LocalVarDef(x[1],x[3]))
+localBinding = astNode(sequence(keyword("var"), identifier, optTypeSpec,
+                                symbol("="), expression, semicolon),
+                       lambda x : LocalBinding(x[1],x[2],x[4]))
 
 block = astNode(sequence(symbol("{"), onePlus(statement2), symbol("}")),
                 lambda x : Block(x[1]))
@@ -157,57 +156,57 @@ block = astNode(sequence(symbol("{"), onePlus(statement2), symbol("}")),
 exprStatement = astNode(sequence(expression, semicolon),
                         lambda x : ExprStatement(x[0]))
 
-statement = choice(block, localVarDef, assignment, ifStatement,
+statement = choice(block, localBinding, assignment, ifStatement,
                    returnStatement, exprStatement)
 
 
 #
-# top level items
+# code
 #
 
 identifierList = listOf(identifier, comma)
 typeVars = modify(sequence(symbol("["), identifierList, symbol("]")),
                   lambda x : x[1])
 optTypeVars = modify(optional(typeVars), lambda x : [] if x is None else x)
-fieldDef = astNode(sequence(identifier, typeSpec, semicolon),
-                   lambda x : Field(x[0],x[1]))
-recordDef = astNode(sequence(keyword("record"), identifier, optTypeVars,
-                             symbol("{"), onePlus(fieldDef), symbol("}")),
-                    lambda x : RecordDef(x[1],x[2],x[4]))
-globalVarDef = astNode(sequence(keyword("var"), variable, symbol("="),
-                                expression, semicolon),
-                       lambda x : GlobalVarDef(x[1],x[3]))
 
-isRef = modify(optional(keyword("ref")), lambda x : x is not None)
+byRef = modify(optional(keyword("ref")), lambda x : x is not None)
 
-valueArgument = astNode(sequence(isRef, variable),
-                        lambda x : ValueArgument(x[0],x[1]))
+valueArgument = astNode(sequence(byRef, identifier, optTypeSpec),
+                        lambda x : ValueArgument(x[1],x[2],x[0]))
 typeArgument = astNode(sequence(keyword("type"), expression),
                        lambda x : TypeArgument(x[1]))
-argument = choice(valueArgument, typeArgument)
-optArguments = modify(optional(listOf(argument, comma)),
-                      lambda x : [] if x is None else x)
-typeCondition = astNode(sequence(identifier, symbol("("), optExpressionList,
-                                 symbol(")")),
-                        lambda x : TypeCondition(x[0],x[2]))
-typeConditions = modify(sequence(keyword("if"), listOf(typeCondition,comma)),
+formalArgument = choice(valueArgument, typeArgument)
+formalArguments = modify(optional(listOf(formalArgument, comma)),
+                         lambda x : [] if x is None else x)
+typeConditions = modify(sequence(keyword("if"), expressionList),
                         lambda x : x[1])
 optTypeConditions = modify(optional(typeConditions),
                            lambda x : [] if x is None else x)
-procedure = astNode(sequence(optTypeVars, symbol("("), optArguments,
-                             symbol(")"), isRef, optTypeSpec,
-                             optTypeConditions, block),
-                    lambda x : Procedure(x[0],x[2],x[4],x[5],x[6],x[7]))
-procedureDef = astNode(sequence(keyword("def"), identifier, procedure),
-                       lambda x : ProcedureDef(x[1], x[2]))
-overloadableDef = astNode(sequence(keyword("overloadable"), identifier,
-                                   semicolon),
-                          lambda x : OverloadableDef(x[1]))
-overloadDef = astNode(sequence(keyword("overload"), identifier, procedure),
-                      lambda x : OverloadDef(x[1], x[2]))
+code = astNode(sequence(optTypeVars, symbol("("), formalArguments,
+                        symbol(")"), byRef, optTypeSpec,
+                        optTypeConditions, block),
+               lambda x : Code(x[0],x[2],x[4],x[5],x[6],x[7]))
 
-topLevelItem = choice(recordDef, globalVarDef, procedureDef,
-                      overloadableDef, overloadDef)
+
+#
+# top level items
+#
+
+field = astNode(sequence(identifier, typeSpec, semicolon),
+                lambda x : Field(x[0],x[1]))
+record = astNode(sequence(keyword("record"), identifier, optTypeVars,
+                          symbol("{"), zeroPlus(field), symbol("}")),
+                 lambda x : Record(x[1],x[2],x[4]))
+
+procedure = astNode(sequence(keyword("def"), identifier, code),
+                    lambda x : Procedure(x[1], x[2]))
+overloadable = astNode(sequence(keyword("overloadable"), identifier,
+                                semicolon),
+                       lambda x : Overloadable(x[1]))
+overload = astNode(sequence(keyword("overload"), identifier, code),
+                   lambda x : Overload(x[1], x[2]))
+
+topLevelItem = choice(record, procedure, overloadable, overload)
 
 
 #
