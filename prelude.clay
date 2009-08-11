@@ -150,13 +150,13 @@ overload lesser[T](a:Pointer[T], b:Pointer[T]) {
 }
 
 overload add[T](p:Pointer[T], i:Int) {
-    return pointerOffset(p, i);
+    return pointerOffset(p, multiply(typeSize(T), i));
 }
 overload subtract[T](a:Pointer[T], i:Int) {
-    return pointerOffset(p, negate(i));
+    return pointerOffset(p, multiply(typeSize(T), negate(i)));
 }
 overload subtract[T](a:Pointer[T], b:Pointer[T]) {
-    return pointerDifference(a, b);
+    return divide(pointerDifference(a, b), typeSize(T));
 }
 
 def null[T](type T) {

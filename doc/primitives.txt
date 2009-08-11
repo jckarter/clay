@@ -14,6 +14,8 @@ Primitive Operations:
 
 default[T](type T):T
 
+typeSize[T](type T):Int
+
 addressOf[T](ref a : T) : Pointer[T]
 pointerDereference[T](e:Pointer[T]) ref : T
 pointerOffset[T](e:Pointer[T], i:Int):Pointer[T]
@@ -24,11 +26,8 @@ pointerCopy
 pointerEquals, pointerLesser, pointerLesserEquals,
 pointerGreater, pointerGreaterEquals
 
-allocate[T](type T) : Pointer[T]
-free[T](p:Pointer[T]) : Void
-allocateBlock[T](type T, n:Int) : Pointer[T]
-freeBlock[T](p:Pointer[T]):Void
-blockSize[T](p:Pointer[T]):Int
+allocateMemory(size:Int) : Pointer[Int]
+freeMemory(ptr:Pointer[Int]) : Void
 
 makeTuple(v_1, ..., v_n): TupleType
 tupleFieldCount[T](type T) : Int
@@ -46,26 +45,26 @@ boolCopy(ref dest:Bool, ref src:Bool):Void
 boolNot(x:Bool):Bool
 
 charCopy(ref dest:Char, ref src:Char):Void
-charEquals, charLesser, charLesserEquals,
-charGreater, charGreaterEquals
+charEquals(a:Char, b:Char):Bool
+charLesser(a:Char, b:Char):Bool
 
 intCopy(ref dest:Int, ref src:Int):Void
+intEquals(a:Int, b:Int):Bool
+intLesser(a:Int, b:Int):Bool
 intAdd, intSubtract, intMultiply, intDivide,
 intModulus, intNegate,
-intEquals, intLesser, intLesserEquals,
-intGreater, intGreaterEquals
 
 floatCopy(ref dest:Float, ref src:Float):Void
+floatEquals(a:Float, b:Float):Bool
+floatLesser(a:Float, b:Float):Bool
 floatAdd, floatSubtract, floatMultiply, floatDivide,
 floatNegate,
-floatEquals, floatLesser, floatLesserEquals,
-floatGreater, floatGreaterEquals
 
 doubleCopy(ref dest:Double, ref src:Double):Void
+doubleEquals(a:Double, b:Double):Bool
+doubleLesser(a:Double, b:Double):Bool
 doubleAdd, doubleSubtract, doubleMultiply, doubleDivide,
 doubleNegate,
-doubleEquals, doubleLesser, doubleLesserEquals,
-doubleGreater, doubleGreaterEquals
 
 charToInt, intToChar,
 floatToInt, intToFloat,
