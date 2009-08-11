@@ -1,6 +1,32 @@
 import ctypes
 from clay.multimethod import multimethod
 from clay.xprint import xprint, XObject, XField, XSymbol, xregister
+from clay.machineops import *
+from clay.ast import *
+from clay.error import *
+
+
+
+#
+# error context
+#
+
+_errorContext = []
+
+def contextPush(astNode) :
+    _errorContext.append(astNode)
+
+def contextPop() :
+    _errorContext.pop()
+
+def contextTop() :
+    if not _errorContext :
+        return None
+    return _errorContext[-1]
+
+def error(msg) :
+    raiseError(msg, contextTop())
+
 
 
 #
@@ -275,6 +301,15 @@ def foo(t) :
 
 
 #
+# typeSize
+#
+
+def typeSize(t) :
+    return ctypes.sizeof(ctypesType(t))
+
+
+
+#
 # type printer
 #
 
@@ -300,18 +335,73 @@ xregister(TypeVariable, lambda x : XObject("TypeVariable", x.type))
 class Value(object) :
     def __init__(self, type) :
         self.type = type
-        self.__buf = allocateMemory(self.type)
+        self.buf = mop_memAlloc(typeSize(self.type))
     def __del__(self) :
-        freeMemory(self.__buf)
+        mop_memFree(self.buf)
+
+class RefValue(object) :
+    def __init__(self, type) :
+        self.type = type
+        self.ptr = Value(PointerType(type))
 
 
 
 #
-# evaluate : (expr, env) -> Type|Value
+# evaluate : (expr, env) -> Type|Value|RefValue|None
 #
 
 def evaluate(expr, env) :
-    pass
+    try :
+        contextPush(expr)
+        return evalExpr(expr, env)
+    finally :
+        contextPop()
+
+evalExpr = multimethod(defaultProc=lambda x, e : error("invalid expr"))
+
+@evalExpr.register(BoolLiteral)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(IntLiteral)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(CharLiteral)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(NameRef)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(Tuple)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(Indexing)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(Call)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(FieldRef)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(TupleRef)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(Dereference)
+def foo(x, env) :
+    raise NotImplementedError
+
+@evalExpr.register(AddressOf)
+def foo(x, env) :
+    raise NotImplementedError
 
 
 
