@@ -1,10 +1,14 @@
-overloadable not;
+overloadable init;
+overloadable destroy;
+overloadable assign;
 
 overloadable equals;
 overloadable lesser;
 overloadable lesserEquals;
 overloadable greater;
 overloadable greaterEquals;
+
+overloadable not;
 
 overloadable add;
 overloadable subtract;
@@ -13,20 +17,60 @@ overloadable divide;
 overloadable modulus;
 overloadable negate;
 
-overloadable get;
 
-overloadable size;
-overloadable begin;
-overloadable end;
-overloadable next;
-overloadable previous;
+//
+// defaults
+//
 
-overloadable destroy;
+overload(-2) init[T](ref a:T) {
+}
+
+overload(-2) destroy[T](ref a:T) {
+}
+
+overload(-1) assign[T](ref dest:T, ref src:T) {
+    if (equals(&dest, &src)) return;
+    destroy(dest);
+    init(dest, src);
+}
+
+def notEquals[T](ref a:T, ref b:T) {
+    return not(equals(a, b));
+}
+
+overload(-1) lesserEquals[T](ref a:T, ref b:T) {
+    if (equals(a, b)) return true;
+    if (lesser(a, b)) return true;
+    return false;
+}
+
+overload(-1) greater[T](ref a:T, ref b:T) {
+    return not(lesserEquals(a, b));
+}
+
+overload(-1) greaterEquals[T](ref a:T, ref b:T) {
+    return not(lesser(a, b));
+}
 
 
 //
 // Bool
 //
+
+overload init[T](ref dest:Bool, ref src:Bool)
+    boolCopy(dest, src);
+}
+
+overload equals(a:Bool, b:Bool) {
+    if (a) return b;
+    return not(b);
+}
+
+overload lesser(a:Bool, b:Bool) {
+    if (not(a))
+       return b;
+    return false;
+}
 
 overload not(a:Bool) { return boolNot(a); }
 
@@ -35,22 +79,20 @@ overload not(a:Bool) { return boolNot(a); }
 // Char
 //
 
+overload init[T](ref dest:Char, ref src:Char) { charCopy(dest, src); }
+
 overload equals(a:Char, b:Char) { return charEquals(a, b); }
 overload lesser(a:Char, b:Char) { return charLesser(a, b); }
-overload lesserEquals(a:Char, b:Char) { return charLesserEquals(a, b); }
-overload greater(a:Char, b:Char) { return charGreater(a, b); }
-overload greaterEquals(a:Char, b:Char) { return charGreaterEquals(a, b); }
 
 
 //
 // Int
 //
 
+overload init[T](ref dest:Int, ref src:Int) { intCopy(dest, src); }
+
 overload equals(a:Int, b:Int) { return intEquals(a, b); }
 overload lesser(a:Int, b:Int) { return intLesser(a, b); }
-overload lesserEquals(a:Int, b:Int) { return intLesserEquals(a, b); }
-overload greater(a:Int, b:Int) { return intGreater(a, b); }
-overload greaterEquals(a:Int, b:Int) { return intGreaterEquals(a, b); }
 
 overload add(a:Int, b:Int) { return intAdd(a, b); }
 overload subtract(a:Int, b:Int) { return intSubtract(a, b); }
@@ -64,11 +106,10 @@ overload negate(a:Int) { return intNegate(a); }
 // Float
 //
 
+overload init[T](ref dest:Float, ref src:Float) { floatCopy(dest, src); }
+
 overload equals(a:Float, b:Float) { return floatEquals(a, b); }
 overload lesser(a:Float, b:Float) { return floatLesser(a, b); }
-overload lesserEquals(a:Float, b:Float) { return floatLesserEquals(a, b); }
-overload greater(a:Float, b:Float) { return floatGreater(a, b); }
-overload greaterEquals(a:Float, b:Float) { return floatGreaterEquals(a, b); }
 
 overload add(a:Float, b:Float) { return floatAdd(a, b); }
 overload subtract(a:Float, b:Float) { return floatSubtract(a, b); }
@@ -81,13 +122,10 @@ overload negate(a:Float) { return floatNegate(a); }
 // Double
 //
 
+overload init[T](ref dest:Double, ref src:Double) { doubleCopy(dest, src); }
+
 overload equals(a:Double, b:Double) { return doubleEquals(a, b); }
 overload lesser(a:Double, b:Double) { return doubleLesser(a, b); }
-overload lesserEquals(a:Double, b:Double) { return doubleLesserEquals(a, b); }
-overload greater(a:Double, b:Double) { return doubleGreater(a, b); }
-overload greaterEquals(a:Double, b:Double) {
-    return doubleGreaterEquals(a, b);
-}
 
 overload add(a:Double, b:Double) { return doubleAdd(a, b); }
 overload subtract(a:Double, b:Double) { return doubleSubtract(a, b); }
@@ -100,8 +138,8 @@ overload negate(a:Double) { return doubleNegate(a); }
 // Pointer[T]
 //
 
-def null[T](type T) {
-    return default(Pointer[T]);
+overload init[T](ref dest:Pointer[T], ref src:Pointer[T]) {
+    pointerCopy(dest, src);
 }
 
 overload equals[T](a:Pointer[T], b:Pointer[T]) {
@@ -109,15 +147,6 @@ overload equals[T](a:Pointer[T], b:Pointer[T]) {
 }
 overload lesser[T](a:Pointer[T], b:Pointer[T]) {
     return pointerLesser(a, b);
-}
-overload lesserEquals[T](a:Pointer[T], b:Pointer[T]) {
-    return pointerLesserEquals(a, b);
-}
-overload greater[T](a:Pointer[T], b:Pointer[T]) {
-    return pointerGreater(a, b);
-}
-overload greaterEquals(a:Pointer, b:Pointer) {
-    return pointerGreaterEquals(a, b);
 }
 
 overload add[T](p:Pointer[T], i:Int) {
@@ -130,14 +159,151 @@ overload subtract[T](a:Pointer[T], b:Pointer[T]) {
     return pointerDifference(a, b);
 }
 
-overload get[T](p:Pointer[T]) {
-    return p^;
+def null[T](type T) {
+    return default(Pointer[T]);
 }
-overload next[T](p:Pointer[T]) {
-    return add(p, 1);
+
+
+//
+// Array[T,n]
+//
+
+overload init[T,n](ref a:Array[T,n]) {
+    initArray(a, 0);
 }
-overload previous[T](p:Pointer[T]) {
-    return subtract(p, 1);
+
+def initArray[T,n,i](ref a:Array[T,n], type i) {
+    if (equals(i, n)) return;
+    init(arrayRef(a, i));
+    initArray(a, add(i, 1));
+}
+
+overload init[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
+    initArrayCopy(dest, src, 0);
+}
+
+def initArrayCopy[T,n,i](ref dest:Array[T,n], ref src:Array[T,n], type i) {
+    if (equals(i, n)) return;
+    init(arrayRef(dest, i), arrayRef(src, i));
+    initArrayCopy(dest, src, add(i, 1));
+}
+
+overload destroy[T,n](ref a:Array[T,n]) {
+    destroyArray(a, 0);
+}
+
+def destroyArray[T,n,i](ref a:Array[T,n], type i) {
+    if (equals(i, n)) return;
+    destroy(arrayRef(a, i));
+    destroyArray(a, add(i, 1));
+}
+
+overload equals[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
+    return arrayEquals(a, b, 0);
+}
+
+def arrayEquals[T,n,i](ref a:Array[T,n], ref b:Array[T,n], type i) {
+    if (equals(i, n)) return true;
+    if (notEquals(arrayRef(a, i), arrayRef(b, i)))
+        return false;
+    return arrayRef(a, b, add(i, 1));
+}
+
+overload lesser[T,n,i](ref a:Array[T,n], ref b:Array[T,n]) {
+    return arrayLesser(a, b, 0);
+}
+
+def arrayLesser[T,n,i](ref a:Array[T,n], ref b:Array[T,n], type i) {
+    if (equals(i, n)) return false;
+    if (lesser(arrayRef(a, i), arrayRef(b, i)))
+        return true;
+    if (lesser(arrayRef(b, i), arrayRef(a, i)))
+        return false;
+    return arrayLesser(a, b, add(i, 1));
+}
+
+
+//
+// tuples, records
+//
+
+overloadable fieldCount;
+overloadable fieldRef;
+
+overload fieldCount[T](type T) if RecordType(T) {
+    return recordFieldCount(T);
+}
+
+overload fieldCount[T](type T) if TupleType(T) {
+    return tupleFieldCount(T);
+}
+
+overload fieldRef[T](ref a:T, type i) ref if RecordType(T) {
+    return recordFieldRef(a, i);
+}
+
+overload fieldRef[T](ref a:T, type i) ref if TupleType(T) {
+    return tupleFieldRef(a, i);
+}
+
+def RecordOrTuple[T](type T) {
+    if (RecordType(T)) return true;
+    if (TupleType(T)) return true;
+    return false;
+}
+
+overload(-1) init[T](ref a:T) if RecordOrTuple(T) {
+    initFields(a, fieldCount(T), 0);
+}
+
+def initFields[T,n,i](ref a:T, type n, type i) {
+    if (equals(i, n)) return;
+    init(fieldRef(a, i));
+    initFields(a, n, add(i, 1));
+}
+
+overload(-1) init[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
+    initFieldsCopy(dest, src, fieldCount(T), 0);
+}
+
+def initFieldsCopy[T,n,i](ref dest:T, ref src:T, type n, type i) {
+    if (equals(i, n)) return;
+    init(fieldRef(dest, i), fieldRef(src, i));
+    initFieldsCopy(dest, src, n, add(i, 1));
+}
+
+overload(-1) destroy[T](ref a:T) if RecordOrTuple(T) {
+    destroyFields(a, fieldCount(T), 0);
+}
+
+def destroyFields[T,n,i](ref a:T, type n, type i) {
+    if (equals(i, n)) return;
+    destroy(fieldRef(a, i));
+    destroyFields(a, n, add(i, 1));
+}
+
+overload(-1) equals[T](ref a:T, ref b:T) if RecordOrTuple(T) {
+    return equalFields(a, b, fieldCount(T), 0);
+}
+
+def equalFields[T,n,i](ref a:T, ref b:T, type n, type i) {
+    if (equals(i, n)) return true;
+    if (notEquals(fieldRef(a, i), fieldRef(b, i)))
+        return false;
+    return equalFields(a, b, n, add(i, 1));
+}
+
+overload(-1) lesser[T](ref a:T, ref b:T) if RecordOrTuple(T) {
+    return lesserFields(a, b, fieldCount(T), 0);
+}
+
+def lesserFields[T,n,i](ref a:T, ref b:T, type n, type i) {
+    if (equals(i, n)) return false;
+    if (lesser(fieldRef(a, i), fieldRef(b, i)))
+        return true;
+    if (lesser(fieldRef(b, i), fieldRef(a, i)))
+        return false;
+    return lesserFields(a, b, n, add(i, 1));
 }
 
 
