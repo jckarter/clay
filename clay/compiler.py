@@ -79,6 +79,29 @@ def lookupIdent(env, ident) :
 
 
 #
+# Value
+#
+
+class Value(object) :
+    def __init__(self, type) :
+        self.type = type
+        self.ctypesType = ctypesType(type)
+        self.buf = self.ctypesType()
+
+class RefValue(object) :
+    def __init__(self, value, offset=0, type=None) :
+        if type is not None :
+            self.type = type
+        else :
+            self.type = value.type
+        self.address = ctypes.addressof(value.buf) + offset
+
+def isValue(x) : return type(x) is Value
+def isRefValue(x) : return type(x) is RefValue
+
+
+
+#
 # types
 #
 
@@ -369,29 +392,6 @@ xregister(TypeCell, lambda x : XObject("TypeCell", x.type))
 
 
 #
-# Value
-#
-
-class Value(object) :
-    def __init__(self, type) :
-        self.type = type
-        self.ctypesType = ctypesType(type)
-        self.buf = self.ctypesType()
-
-class RefValue(object) :
-    def __init__(self, value, offset=0, type=None) :
-        if type is not None :
-            self.type = type
-        else :
-            self.type = value.type
-        self.address = ctypes.addressof(value.buf) + offset
-
-def isValue(x) : return type(x) is Value
-def isRefValue(x) : return type(x) is RefValue
-
-
-
-#
 # env entries
 #
 
@@ -404,31 +404,22 @@ class Constant(object) :
 
 
 #
-# primitives env
+# install primitives
 #
 
-class PrimitiveTypeConstructor(object) :
-    def __init__(self, name) :
-        self.name = name
-
-class PrimitiveOperation(object) :
-    def __init__(self, name) :
-        self.name = name
-
 primitivesEnv = Environment()
-primitiveNames = None
+primitives = None
 
-def buildPrimitivesEnv() :
-    names = {}
+def installPrimitives() :
+    primClasses = {}
     def entry(name, value) :
         primitivesEnv.add(name, value)
-        names[name] = name
     def constant(name, value) :
         entry(name, Constant(value))
-    def typeConstructor(name) :
-        entry(name, PrimitiveTypeConstructor(name))
-    def operation(name) :
-        entry(name, PrimitiveOperation(name))
+    def primitive(name) :
+        primClass = type("Primitive%s" % name, (object,), {})
+        primClasses[name] = primClass
+        entry(name, primClass())
     def overloadable(name) :
         x = Overloadable(Identifier(name))
         x.env = primitivesEnv
@@ -440,80 +431,80 @@ def buildPrimitivesEnv() :
     constant("Double", doubleType)
     constant("Char", charType)
 
-    typeConstructor("Tuple")
-    typeConstructor("Array")
-    typeConstructor("Pointer")
+    primitive("Tuple")
+    primitive("Array")
+    primitive("Pointer")
 
-    operation("default")
-    operation("typeSize")
+    primitive("default")
+    primitive("typeSize")
 
-    operation("addressOf")
-    operation("pointerDereference")
-    operation("pointerOffset")
-    operation("pointerSubtract")
-    operation("pointerCast")
-    operation("pointerCopy")
-    operation("pointerEquals")
-    operation("pointerLesser")
-    operation("allocateMemory")
-    operation("freeMemory")
+    primitive("addressOf")
+    primitive("pointerDereference")
+    primitive("pointerOffset")
+    primitive("pointerSubtract")
+    primitive("pointerCast")
+    primitive("pointerCopy")
+    primitive("pointerEquals")
+    primitive("pointerLesser")
+    primitive("allocateMemory")
+    primitive("freeMemory")
 
-    operation("TupleType")
-    operation("tuple")
-    operation("tupleFieldCount")
-    operation("tupleFieldRef")
+    primitive("TupleType")
+    primitive("tuple")
+    primitive("tupleFieldCount")
+    primitive("tupleFieldRef")
 
-    operation("array")
-    operation("arrayRef")
+    primitive("array")
+    primitive("arrayRef")
 
-    operation("RecordType")
-    operation("makeRecord")
-    operation("recordFieldCount")
-    operation("recordFieldRef")
+    primitive("RecordType")
+    primitive("makeRecord")
+    primitive("recordFieldCount")
+    primitive("recordFieldRef")
 
-    operation("boolCopy")
-    operation("boolNot")
+    primitive("boolCopy")
+    primitive("boolNot")
 
-    operation("charCopy")
-    operation("charEquals")
-    operation("charLesser")
+    primitive("charCopy")
+    primitive("charEquals")
+    primitive("charLesser")
 
-    operation("intCopy")
-    operation("intEquals")
-    operation("intLesser")
-    operation("intAdd")
-    operation("intSubtract")
-    operation("intMultiply")
-    operation("intDivide")
-    operation("intModulus")
-    operation("intNegate")
+    primitive("intCopy")
+    primitive("intEquals")
+    primitive("intLesser")
+    primitive("intAdd")
+    primitive("intSubtract")
+    primitive("intMultiply")
+    primitive("intDivide")
+    primitive("intModulus")
+    primitive("intNegate")
 
-    operation("floatCopy")
-    operation("floatEquals")
-    operation("floatLesser")
-    operation("floatAdd")
-    operation("floatSubtract")
-    operation("floatMultiply")
-    operation("floatDivide")
-    operation("floatNegate")
+    primitive("floatCopy")
+    primitive("floatEquals")
+    primitive("floatLesser")
+    primitive("floatAdd")
+    primitive("floatSubtract")
+    primitive("floatMultiply")
+    primitive("floatDivide")
+    primitive("floatNegate")
 
-    operation("doubleCopy")
-    operation("doubleEquals")
-    operation("doubleLesser")
-    operation("doubleAdd")
-    operation("doubleSubtract")
-    operation("doubleMultiply")
-    operation("doubleDivide")
-    operation("doubleNegate")
+    primitive("doubleCopy")
+    primitive("doubleEquals")
+    primitive("doubleLesser")
+    primitive("doubleAdd")
+    primitive("doubleSubtract")
+    primitive("doubleMultiply")
+    primitive("doubleDivide")
+    primitive("doubleNegate")
 
-    operation("charToInt")
-    operation("intToChar")
-    operation("floatToInt")
-    operation("intToFloat")
-    operation("floatToDouble")
-    operation("doubleToFloat")
-    operation("doubleToInt")
-    operation("intToDouble")
+    primitive("charToInt")
+    primitive("intToChar")
+    primitive("floatToInt")
+    primitive("intToFloat")
+    primitive("floatToDouble")
+    primitive("doubleToFloat")
+    primitive("doubleToInt")
+    primitive("intToDouble")
 
     overloadable("init")
     overloadable("destroy")
@@ -525,10 +516,11 @@ def buildPrimitivesEnv() :
     overloadable("greaterEquals")
     overloadable("hash")
 
-    global primitiveNames
-    primitiveNames = type("PrimitiveNames", (object,), names)
+    Primitives = type("Primitives", (object,), primClasses)
+    global primitives
+    primitives = Primitives()
 
-buildPrimitivesEnv()
+installPrimitives()
 
 
 
@@ -639,6 +631,14 @@ def evaluate(expr, env, verifier=None) :
         return result
     finally :
         contextPop()
+
+def ensureArity(someList, n) :
+    if len(someList) != n :
+        error("incorrect no. of arguments")
+
+def ensureMinArity(someList, n) :
+    if len(someList) < n :
+        error("insufficient no. of arguments")
 
 def verifyNonVoid(x) :
     if x is None :
@@ -774,7 +774,9 @@ def foo(x, env) :
 
 @evalExpr.register(Indexing)
 def foo(x, env) :
-    raise NotImplementedError
+    if type(x.expr) is not NameRef :
+        error("invalid expression")
+    return evalNamedIndexing(lookupIdent(env, x.expr.name), x.args, env)
 
 @evalExpr.register(Call)
 def foo(x, env) :
@@ -827,6 +829,47 @@ def foo(x) :
     if len(x.typesVars) > 0 :
         error("record type requires type parameters")
     return RecordType(x, [])
+
+
+
+#
+# evalNamedIndexing
+#
+
+evalNamedIndexing = multimethod(defaultProc=badExpression)
+
+@evalNamedIndexing.register(Record)
+def foo(x, args, env) :
+    ensureArity(args, len(x.typeVars))
+    typeParams = [evaluateAsTypeParam(y, env) for y in args]
+    return RecordType(x, typeParams)
+
+@evalNamedIndexing.register(primitives.Tuple)
+def foo(x, args, env) :
+    ensureMinArity(args, 2)
+    types = [evaluateAsType(y, env) for y in args]
+    return TupleType(types)
+
+@evalNamedIndexing.register(primitives.Array)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    elementType = evaluateAsType(args[0], env)
+    def verifyArraySize(y) :
+        if isType(y) and (type(y) is TypeCell) :
+            return y
+        if isValue(y) and isIntType(y.type) :
+            return valueToInt(y)
+        if isRefValue(y) and isIntType(y.type) :
+            return valueToInt(refToValue(y))
+        error("invalid array size parameter")
+    size = evaluate(args[1], env, verifyArraySize)
+    return ArrayType(elementType, size)
+
+@evalNamedIndexing.register(primitives.Pointer)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    targetType = evaluateAsType(args[0], env)
+    return PointerType(targetType)
 
 
 
