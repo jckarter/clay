@@ -19,13 +19,14 @@ def contextPush(astNode) :
 def contextPop() :
     _errorContext.pop()
 
-def contextTop() :
-    if not _errorContext :
-        return None
-    return _errorContext[-1]
+def contextLocation() :
+    for astNode in reversed(_errorContext) :
+        if astNode.location is not None :
+            return astNode.location
+    return None
 
 def error(msg) :
-    raiseError(msg, contextTop())
+    raiseError(msg, contextLocation)
 
 
 
@@ -154,6 +155,7 @@ def foo(x, y) :
 @typeEquals.register(RecordType, RecordType)
 def foo(x, y) :
     sameRecord = (x.record is y.record)
+    raise NotImplementedError
     return sameRecord and typeListEquals(x.typeParams, y.typeParams)
 
 
@@ -183,6 +185,7 @@ def foo(x) :
 
 @typeHash.register(RecordType)
 def foo(x) :
+    raise NotImplementedError
     childHashes = tuple([typeHash(t) for t in x.typeParams])
     return hash(("Record", id(x.record), childHashes))
 
@@ -243,6 +246,7 @@ def foo(x, y) :
 
 @typeUnify.register(RecordType, RecordType)
 def foo(x, y) :
+    raise NotImplementedError
     return (x.record is y.record) and typeListUnify(x.typeParams, y.typeParams)
 
 
@@ -328,6 +332,133 @@ xregister(TypeVariable, lambda x : XObject("TypeVariable", x.type))
 
 
 
+
+#
+# primitives env
+#
+
+class PrimitiveTypeConstructor(object) :
+    def __init__(self, name) :
+        self.name = name
+
+class PrimitiveOperation(object) :
+    def __init__(self, name) :
+        self.name = name
+
+primitivesEnv = Environment()
+primitiveNames = None
+
+def buildPrimitivesEnv() :
+    names = {}
+    def entry(name, value) :
+        primitivesEnv.add(name, value)
+        names[name] = name
+    def typeConstructor(name) :
+        entry(name, PrimitiveTypeConstructor(name))
+    def operation(name) :
+        entry(name, PrimitiveOperation(name))
+    def overloadable(name) :
+        x = Overloadable(Identifier(name))
+        x.env = primitivesEnv
+        entry(name, x)
+
+    entry("Bool", boolType)
+    entry("Int", intType)
+    entry("Float", floatType)
+    entry("Double", doubleType)
+    entry("Char", charType)
+
+    typeConstructor("Tuple")
+    typeConstructor("Array")
+    typeConstructor("Pointer")
+
+    operation("default")
+    operation("typeSize")
+
+    operation("addressOf")
+    operation("pointerDereference")
+    operation("pointerOffset")
+    operation("pointerSubtract")
+    operation("pointerCast")
+    operation("pointerCopy")
+    operation("pointerEquals")
+    operation("pointerLesser")
+    operation("allocateMemory")
+    operation("freeMemory")
+
+    operation("TupleType")
+    operation("tuple")
+    operation("tupleFieldCount")
+    operation("tupleFieldRef")
+
+    operation("array")
+    operation("arrayRef")
+
+    operation("RecordType")
+    operation("makeRecord")
+    operation("recordFieldCount")
+    operation("recordFieldRef")
+
+    operation("boolCopy")
+    operation("boolNot")
+
+    operation("charCopy")
+    operation("charEquals")
+    operation("charLesser")
+
+    operation("intCopy")
+    operation("intEquals")
+    operation("intLesser")
+    operation("intAdd")
+    operation("intSubtract")
+    operation("intMultiply")
+    operation("intDivide")
+    operation("intModulus")
+    operation("intNegate")
+
+    operation("floatCopy")
+    operation("floatEquals")
+    operation("floatLesser")
+    operation("floatAdd")
+    operation("floatSubtract")
+    operation("floatMultiply")
+    operation("floatDivide")
+    operation("floatNegate")
+
+    operation("doubleCopy")
+    operation("doubleEquals")
+    operation("doubleLesser")
+    operation("doubleAdd")
+    operation("doubleSubtract")
+    operation("doubleMultiply")
+    operation("doubleDivide")
+    operation("doubleNegate")
+
+    operation("charToInt")
+    operation("intToChar")
+    operation("floatToInt")
+    operation("intToFloat")
+    operation("floatToDouble")
+    operation("doubleToFloat")
+    operation("doubleToInt")
+    operation("intToDouble")
+
+    overloadable("init")
+    overloadable("destroy")
+    overloadable("assign")
+    overloadable("equals")
+    overloadable("lesser")
+    overloadable("lesserEquals")
+    overloadable("greater")
+    overloadable("greaterEquals")
+
+    global primitiveNames
+    primitiveNames = type("PrimitiveNames", (object,), names)
+
+buildPrimitivesEnv()
+
+
+
 #
 # Value
 #
@@ -335,7 +466,9 @@ xregister(TypeVariable, lambda x : XObject("TypeVariable", x.type))
 class Value(object) :
     def __init__(self, type) :
         self.type = type
-        self.buf = mop_memAlloc(typeSize(self.type))
+        self.ctypesType = ctypesType(type)
+        p = mop_memAlloc(ctypes.sizeof(self.ctypesType))
+        self.buf = ctypes.cast(p, ctypes.POINTER(self.ctypesType))
     def __del__(self) :
         mop_memFree(self.buf)
 
@@ -347,17 +480,181 @@ class RefValue(object) :
 
 
 #
+# temp values
+#
+
+_tempValues = []
+
+def tempValue(type) :
+    v = Value(type)
+    _tempValues.append(v)
+    return v
+
+def tempRefValue(type) :
+    v = RefValue(type)
+    _tempValues.append(v)
+    return v
+
+def clearTempValues() :
+    del _tempValues[:]
+
+
+
+#
+# value operations
+#
+
+def initValue(a) :
+    init = NameRef(Identifier("init"))
+    call = Call(init, [a])
+    evaluate(call, primitivesEnv)
+
+def copyValue(dest, src) :
+    init = NameRef(Identifier("init"))
+    call = Call(init, [dest, src])
+    evaluate(call, primitivesEnv)
+
+def destroyValue(a) :
+    destroy = NameRef(Identifier("destroy"))
+    call = Call(destroy, [a])
+    evaluate(call, primitivesEnv)
+
+def assignValue(dest, src) :
+    assign = NameRef(Identifier("assign"))
+    call = Call(assign, [dest, src])
+    evaluate(call, primitivesEnv)
+
+def valueToRef(a) :
+    ref = tempRefValue(a.type)
+    addr = ctypes.c_void_p(ctypes.addressof(a.buf))
+    ctypes.memmove(ref.ptr.buf, addr, ctypes.sizeof(addr))
+    return ref
+
+def refToValue(a) :
+    v = tempValue(a.type)
+    copyValue(v, a)
+    return v
+
+def valueToInt(a) :
+    assert type(a) is Value
+    assert isIntType(a.type)
+    return a.buf[0]
+
+def intToValue(i) :
+    v = tempValue(intType)
+    v.buf[0] = i
+    return v
+
+def valueToBool(a) :
+    assert type(a) is Value
+    assert isBoolType(a.type)
+    return a.buf[0]
+
+def boolToValue(b) :
+    v = tempValue(boolType)
+    v.buf[0] = b
+    return v
+
+def valueToChar(a) :
+    assert type(a) is Value
+    assert isCharType(a.type)
+    return a.buf[0]
+
+def charToValue(c) :
+    v = tempValue(charType)
+    v.buf[0] = c
+    return v
+
+
+
+#
 # evaluate : (expr, env) -> Type|Value|RefValue|None
 #
 
-def evaluate(expr, env) :
+def evaluate(expr, env, verifier=None) :
     try :
         contextPush(expr)
-        return evalExpr(expr, env)
+        result = evalExpr(expr, env)
+        if verifier is not None :
+            result = verifier(result)
+        return result
     finally :
         contextPop()
 
-evalExpr = multimethod(defaultProc=lambda x, e : error("invalid expr"))
+def verifyType(x) :
+    if not isType(x) :
+        error("type expected")
+    return x
+
+def verifyAssignable(x) :
+    if type(x) is not RefValue :
+        error("reference expected")
+    return x
+
+def verifyRef(x) :
+    if type(x) is RefValue :
+        return x
+    if type(x) is Value :
+        return valueToRef(x)
+    error("reference/value expected")
+
+def verifyValue(x) :
+    if type(x) is Value :
+        return x
+    if type(x) is RefValue :
+        return refToValue(x)
+    error("value expected")
+
+def verifyTypeParam(x) :
+    if type(x) is RefValue :
+        return refToValue(x)
+    if x is None :
+        error("type param expected")
+    return x
+
+def verifyIntValue(x) :
+    if type(x) is RefValue :
+        x = refToValue(x)
+    if (type(x) is not Value) or (not isIntType(x.type)) :
+        error("int value expected")
+    return valueToInt(x)
+
+def verifyBoolValue(x) :
+    if type(x) is RefValue :
+        x = refToValue(x)
+    if (type(x) is not Value) or (not isBoolType(x.type)) :
+        error("bool value expected")
+    return valueToBool(x)
+
+def evaluateAsType(expr, env) :
+    return evaluate(expr, env, verifyType)
+
+def evaluateAsAssignable(expr, env) :
+    return evaluate(expr, env, verifyAssignable)
+
+def evaluateAsRef(expr, env) :
+    return evaluate(expr, env, verifyRef)
+
+def evaluateAsValue(expr, env) :
+    return evaluate(expr, env, verifyValue)
+
+def evaluateAsTypeParam(expr, env) :
+    return evaluate(expr, env, verifyTypeParam)
+
+def evaluateAsIntValue(expr, env) :
+    return evaluate(expr, env, verifyIntValue)
+
+def evaluateAsBoolValue(expr, env) :
+    return evaluate(expr, env, verifyBoolValue)
+
+evalExpr = multimethod(defaultProc=lambda x, e : error("invalid expression"))
+
+def initEvalExpr() :
+    def f(x, env) : return x
+    for t in [PrimitiveType, TupleType, ArrayType, PointerType, RecordType,
+              TypeVariable, Value, RefValue] :
+        evalExpr.addHandler(f, t)
+initEvalExpr()
 
 @evalExpr.register(BoolLiteral)
 def foo(x, env) :

@@ -1,13 +1,3 @@
-overloadable init;
-overloadable destroy;
-overloadable assign;
-
-overloadable equals;
-overloadable lesser;
-overloadable lesserEquals;
-overloadable greater;
-overloadable greaterEquals;
-
 overloadable not;
 
 overloadable add;

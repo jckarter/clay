@@ -6,6 +6,7 @@ true, false, CharLiteral, IntLiteral, FloatLiteral, DoubleLiteral
 
 Primitive Type Constructors:
 (Type,...) : tuple type constructor
+Tuple[T1,...,Tn] : tuple type constructor
 Array[T,n] : array type constructor
 record [T,..]? { (Name:Type;)* } : record type definition
 Pointer[T] : raw pointer
@@ -23,19 +24,17 @@ pointerSubtract[T](e1:Pointer[T], e2:Pointer[T]):Int
 pointerCast[T1,T2](type T2, a:Pointer[T1]):Pointer[T2]
 
 pointerCopy
-pointerEquals, pointerLesser, pointerLesserEquals,
-pointerGreater, pointerGreaterEquals
+pointerEquals, pointerLesser
 
 allocateMemory(size:Int) : Pointer[Int]
 freeMemory(ptr:Pointer[Int]) : Void
 
-makeTuple(v_1, ..., v_n): TupleType
+tuple(v_1, ..., v_n): TupleType
 tupleFieldCount[T](type T) : Int
 tupleFieldRef[T,i](ref a:T, type i) ref : FieldType
 
 array[T,n](type n, v:T):Array[T, n]
 arrayRef[T,n](ref a:Array[T,n], i:Int) ref : T;
-arraySize[T,n](ref a:Array[T,n]) : Int
 
 makeRecord(R, v_1, ..., v_n):RecordType
 recordFieldCount[R](type R) : Int
