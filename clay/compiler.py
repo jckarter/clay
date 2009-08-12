@@ -195,13 +195,13 @@ def foo(x) :
 # type unification
 #
 
-class TypeVariable(Type) :
+class TypeCell(Type) :
     def __init__(self) :
-        super(TypeVariable, self).__init__()
+        super(TypeCell, self).__init__()
         self.type = None
 
 def typeDeref(t) :
-    while type(t) is TypeVariable :
+    while type(t) is TypeCell :
         t = t.type
     return t
 
@@ -214,12 +214,12 @@ def typeListUnify(a, b) :
     return True
 
 def typeUnifyVariables(x, y) :
-    if type(x) is TypeVariable :
+    if type(x) is TypeCell :
         if x.type is None :
             x.type = y
             return True
         return typeUnify(x.type, y)
-    elif type(y) is TypeVariable :
+    elif type(y) is TypeCell :
         if y.type is None :
             y.type = x
             return True
@@ -328,7 +328,7 @@ xregister(RecordType,
           lambda x : (obj(x.record.name.s, *x.typeParams)
                       if x.typeParams
                       else XSymbol(x.record.name.s)))
-xregister(TypeVariable, lambda x : XObject("TypeVariable", x.type))
+xregister(TypeCell, lambda x : XObject("TypeCell", x.type))
 
 
 
@@ -652,7 +652,7 @@ evalExpr = multimethod(defaultProc=lambda x, e : error("invalid expression"))
 def initEvalExpr() :
     def f(x, env) : return x
     for t in [PrimitiveType, TupleType, ArrayType, PointerType, RecordType,
-              TypeVariable, Value, RefValue] :
+              TypeCell, Value, RefValue] :
         evalExpr.addHandler(f, t)
 initEvalExpr()
 
