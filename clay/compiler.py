@@ -34,6 +34,10 @@ def error(msg) :
 # Environment
 #
 
+# env entries are:
+# Record, Procedure, Overloadable, Value, RefValue, Constant
+# primitives
+
 class Environment(object) :
     def __init__(self, parent=None) :
         self.parent = parent
@@ -343,10 +347,10 @@ def foo(t) :
 
 @makeCTypesType.register(TupleType)
 def foo(t) :
-    fieldTypes = [ctypesType(x) for x in t.types]
-    fieldNames = ["f%d" % x for x in range(len(t.types))]
+    fieldCTypes = [ctypesType(x) for x in t.types]
+    fieldCNames = ["f%d" % x for x in range(len(t.types))]
     ct = type("Tuple", (ctypes.Structure,))
-    ct._fields_ = zip(fieldNames, fieldTypes)
+    ct._fields_ = zip(fieldCNames, fieldCTypes)
     _ctypesTable[t] = ct
     return ct
 
@@ -359,7 +363,11 @@ def foo(t) :
 @makeCTypesType.register(RecordType)
 def foo(t) :
     ct = type("Record", (ctypes.Structure,))
-    raise NotImplementedError
+    _ctypesTable[t] = ct
+    fieldCTypes = [ctypesType(x) for x in recordFieldTypes(t)]
+    fieldCNames = [f.name.s for f in t.record.fields]
+    ct._fields_ = zip(fieldCNames, fieldCTypes)
+    return ct
 
 
 
@@ -402,7 +410,6 @@ class Constant(object) :
 
 
 
-
 #
 # install primitives
 #
@@ -544,22 +551,22 @@ def clearTempValues() :
 # value operations
 #
 
-def initValue(a) :
+def valueInit(a) :
     init = NameRef(Identifier("init"))
     call = Call(init, [a])
     evaluate(call, primitivesEnv)
 
-def copyInitValue(dest, src) :
+def valueInitCopy(dest, src) :
     init = NameRef(Identifier("init"))
     call = Call(init, [dest, src])
     evaluate(call, primitivesEnv)
 
-def destroyValue(a) :
+def valueDestroy(a) :
     destroy = NameRef(Identifier("destroy"))
     call = Call(destroy, [a])
     evaluate(call, primitivesEnv)
 
-def assignValue(dest, src) :
+def valueAssign(dest, src) :
     assign = NameRef(Identifier("assign"))
     call = Call(assign, [dest, src])
     evaluate(call, primitivesEnv)
@@ -579,7 +586,7 @@ def valueToRef(a) :
 
 def refToValue(a) :
     v = tempValue(a.type)
-    copyInitValue(v, a)
+    valueInitCopy(v, a)
     return v
 
 def valueToInt(a) :
@@ -619,6 +626,61 @@ def tupleFieldRef(a, i) :
 
 
 #
+# eval utilities
+#
+
+def ensureArity(someList, n) :
+    if len(someList) != n :
+        error("incorrect no. of arguments")
+
+def ensureMinArity(someList, n) :
+    if len(someList) < n :
+        error("insufficient no. of arguments")
+
+def bindTypeVars(parentEnv, typeVars) :
+    env = Environment(parentEnv)
+    typeCells = []
+    for typeVar in typeVars :
+        typeCell = TypeCell()
+        typeCells.append(typeCell)
+        addIdent(env, typeVar, Constant(typeCell))
+    return env, typeCells
+
+def resolveTypeVar(typeVar, typeValue) :
+    try :
+        contextPush(typeVar)
+        t = typeDeref(typeValue)
+        if t is None :
+            error("unresolved type var")
+        return t
+    finally :
+        contextPop()
+
+def bindTypeValues(parentEnv, typeVars, typeValues) :
+    env = Environment(parentEnv)
+    for typeVar, typeValue in zip(typeVars, typeValues) :
+        result = resolveTypeVar(typeVar, typeValue)
+        addIdent(env, typeVar, Constant(result))
+    return env
+
+def evalFieldTypes(fields, env) :
+    return [evaluateAsType(f.type, env) for f in fields]
+
+_recordFieldTypes = {}
+# assumes recordType is a complete type
+def recordFieldTypes(recordType) :
+    fieldTypes = _recordFieldTypes.get(recordType)
+    if fieldTypes is None :
+        record = recordType.record
+        typeParams = recordType.typeParams
+        env = bindTypeValues(record.env, record.typeVars, typeParams)
+        fieldTypes = evalFieldTypes(record.fields, env)
+        _recordFieldTypes[recordType] = fieldTypes
+    return fieldTypes
+
+
+
+#
 # evaluate : (expr, env) -> Type|Value|RefValue|None
 #
 
@@ -631,14 +693,6 @@ def evaluate(expr, env, verifier=None) :
         return result
     finally :
         contextPop()
-
-def ensureArity(someList, n) :
-    if len(someList) != n :
-        error("incorrect no. of arguments")
-
-def ensureMinArity(someList, n) :
-    if len(someList) < n :
-        error("insufficient no. of arguments")
 
 def verifyNonVoid(x) :
     if x is None :
@@ -769,18 +823,26 @@ def foo(x, env) :
         value = tempValue(valueType)
         for i, arg in enumerate(args) :
             left = tupleFieldRef(value, i)
-            copyInitValue(left, arg)
+            valueInitCopy(left, arg)
         return value
 
 @evalExpr.register(Indexing)
 def foo(x, env) :
-    if type(x.expr) is not NameRef :
-        error("invalid expression")
-    return evalNamedIndexing(lookupIdent(env, x.expr.name), x.args, env)
+    if type(x.expr) is NameRef :
+        entry = lookupIdent(env, x.expr.name)
+        handler = evalNamedIndexing.getHandler(type(entry))
+        if handler is not None :
+            return handler(entry, x.args, env)
+    error("invalid expression")
 
 @evalExpr.register(Call)
 def foo(x, env) :
-    raise NotImplementedError
+    if type(x.expr) is NameRef :
+        entry = lookupIdent(env, x.expr.name)
+        handler = evalNamedCall.getHandler(type(entry))
+        if handler is not None :
+            return handler(entry, x.args, env)
+    error("invalid expression")
 
 @evalExpr.register(FieldRef)
 def foo(x, env) :
@@ -820,7 +882,7 @@ def foo(x) :
         return x.data
     elif isValue(x.data) :
         a = tempValue(x.data.type)
-        copyInitValue(a, x.data)
+        valueInitCopy(a, x.data)
         return a
     assert False
 
@@ -870,6 +932,270 @@ def foo(x, args, env) :
     ensureArity(args, 1)
     targetType = evaluateAsType(args[0], env)
     return PointerType(targetType)
+
+
+
+#
+# evalNamedCall
+#
+
+evalNamedCall = multimethod(defaultProc=badExpression)
+
+@evalNamedCall.register(Record)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(Procedure)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(Overloadable)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(Constant)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.default)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.typeSize)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.addressOf)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.pointerDereference)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.pointerOffset)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.pointerSubtract)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.pointerCast)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.pointerCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.pointerEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.pointerLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.allocateMemory)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.freeMemory)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.TupleType)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.tuple)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.tupleFieldCount)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.tupleFieldRef)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.array)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.arrayRef)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.RecordType)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.makeRecord)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.recordFieldCount)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.recordFieldRef)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.boolCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.boolNot)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.charCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.charEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.charLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intAdd)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intSubtract)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intMultiply)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intDivide)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intModulus)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intNegate)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatAdd)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatSubtract)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatMultiply)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatDivide)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatNegate)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleAdd)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleSubtract)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleMultiply)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleDivide)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleNegate)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.charToInt)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intToChar)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatToInt)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intToFloat)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.floatToDouble)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleToFloat)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.doubleToInt)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@evalNamedCall.register(primitives.intToDouble)
+def foo(x, args, env) :
+    raise NotImplementedError
 
 
 
