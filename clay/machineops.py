@@ -36,7 +36,7 @@ def getF(name, resultType=None) :
 
 f_mop_memAlloc = getF("mop_memAlloc", ctypes.c_void_p)
 def mop_memAlloc(size) :
-    return f_mop_memAlloc(size)
+    return ctypes.c_void_p(f_mop_memAlloc(size))
 
 f_mop_memFree = getF("mop_memFree")
 def mop_memFree(ptr) :
