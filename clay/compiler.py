@@ -44,15 +44,37 @@ class Environment(object) :
 
     def add(self, name, entry) :
         assert type(name) is str
-        assert name not in self.entries
+        if name in self.entries :
+            error("duplicate definition: %s" % name)
         self.entries[name] = entry
 
-    def lookup(self, name) :
+    def lookupInternal(self, name) :
         assert type(name) is str
         entry = self.entries.get(name)
         if (entry is None) and (self.parent is not None) :
-            return self.parent.lookup(name)
+            return self.parent.lookupInternal(name)
         return entry
+
+    def lookup(self, name) :
+        result = self.lookupInternal(name)
+        if result is None :
+            error("undefined name: %s" % name)
+        return result
+
+
+def addIdent(env, ident, value) :
+    try :
+        contextPush(ident)
+        env.add(ident.s, value)
+    finally :
+        contextPop()
+
+def lookupIdent(env, ident) :
+    try :
+        contextPush(ident)
+        return env.lookup(ident.s)
+    finally :
+        contextPop()
 
 
 
@@ -223,7 +245,7 @@ def typeListUnify(a, b) :
             return False
     return True
 
-def typeUnifyVariables(x, y) :
+def typeUnifyCells(x, y) :
     if type(x) is TypeCell :
         if x.type is None :
             x.type = y
@@ -236,7 +258,7 @@ def typeUnifyVariables(x, y) :
         return typeUnify(x, y.type)
     return False
 
-typeUnify = multimethod(n=2, defaultProc=typeUnifyVariables)
+typeUnify = multimethod(n=2, defaultProc=typeUnifyCells)
 
 @typeUnify.register(PrimitiveType, PrimitiveType)
 def foo(x, y) :
@@ -346,6 +368,40 @@ xregister(TypeCell, lambda x : XObject("TypeCell", x.type))
 
 
 
+#
+# Value
+#
+
+class Value(object) :
+    def __init__(self, type) :
+        self.type = type
+        self.ctypesType = ctypesType(type)
+        self.buf = self.ctypesType()
+
+class RefValue(object) :
+    def __init__(self, value, offset=0, type=None) :
+        if type is not None :
+            self.type = type
+        else :
+            self.type = value.type
+        self.address = ctypes.addressof(value.buf) + offset
+
+def isValue(x) : return type(x) is Value
+def isRefValue(x) : return type(x) is RefValue
+
+
+
+#
+# env entries
+#
+
+class Constant(object) :
+    def __init__(self, data) :
+        assert isValue(data) or isType(data)
+        self.data = data
+
+
+
 
 #
 # primitives env
@@ -367,6 +423,8 @@ def buildPrimitivesEnv() :
     def entry(name, value) :
         primitivesEnv.add(name, value)
         names[name] = name
+    def constant(name, value) :
+        entry(name, Constant(value))
     def typeConstructor(name) :
         entry(name, PrimitiveTypeConstructor(name))
     def operation(name) :
@@ -376,11 +434,11 @@ def buildPrimitivesEnv() :
         x.env = primitivesEnv
         entry(name, x)
 
-    entry("Bool", boolType)
-    entry("Int", intType)
-    entry("Float", floatType)
-    entry("Double", doubleType)
-    entry("Char", charType)
+    constant("Bool", boolType)
+    constant("Int", intType)
+    constant("Float", floatType)
+    constant("Double", doubleType)
+    constant("Char", charType)
 
     typeConstructor("Tuple")
     typeConstructor("Array")
@@ -475,26 +533,6 @@ buildPrimitivesEnv()
 
 
 #
-# Value
-#
-
-class Value(object) :
-    def __init__(self, type) :
-        self.type = type
-        self.ctypesType = ctypesType(type)
-        p = mop_memAlloc(ctypes.sizeof(self.ctypesType))
-        self.buf = ctypes.cast(p, ctypes.POINTER(self.ctypesType))
-    def __del__(self) :
-        mop_memFree(self.buf)
-
-class RefValue(object) :
-    def __init__(self, type) :
-        self.type = type
-        self.ptr = Value(PointerType(type))
-
-
-
-#
 # temp values
 #
 
@@ -502,11 +540,6 @@ _tempValues = []
 
 def tempValue(type) :
     v = Value(type)
-    _tempValues.append(v)
-    return v
-
-def tempRefValue(type) :
-    v = RefValue(type)
     _tempValues.append(v)
     return v
 
@@ -524,7 +557,7 @@ def initValue(a) :
     call = Call(init, [a])
     evaluate(call, primitivesEnv)
 
-def copyValue(dest, src) :
+def copyInitValue(dest, src) :
     init = NameRef(Identifier("init"))
     call = Call(init, [dest, src])
     evaluate(call, primitivesEnv)
@@ -550,45 +583,46 @@ def valueHash(a) :
     return evaluateAsIntValue(call, primitivesEnv)
 
 def valueToRef(a) :
-    ref = tempRefValue(a.type)
-    addr = ctypes.c_void_p(ctypes.addressof(a.buf))
-    ctypes.memmove(ref.ptr.buf, addr, ctypes.sizeof(addr))
-    return ref
+    return RefValue(a)
 
 def refToValue(a) :
     v = tempValue(a.type)
-    copyValue(v, a)
+    copyInitValue(v, a)
     return v
 
 def valueToInt(a) :
-    assert type(a) is Value
-    assert isIntType(a.type)
-    return a.buf[0]
+    assert isValue(a) and isIntType(a.type)
+    return a.buf.value
 
 def intToValue(i) :
     v = tempValue(intType)
-    v.buf[0] = i
+    v.buf.value = i
     return v
 
 def valueToBool(a) :
-    assert type(a) is Value
-    assert isBoolType(a.type)
-    return a.buf[0]
+    assert isValue(a) and isBoolType(a.type)
+    return a.buf.value
 
 def boolToValue(b) :
     v = tempValue(boolType)
-    v.buf[0] = b
+    v.buf.value = b
     return v
 
 def valueToChar(a) :
-    assert type(a) is Value
-    assert isCharType(a.type)
-    return a.buf[0]
+    assert isValue(a) and isCharType(a.type)
+    return a.buf.value
 
 def charToValue(c) :
     v = tempValue(charType)
-    v.buf[0] = c
+    v.buf.value = c
     return v
+
+def tupleFieldRef(a, i) :
+    assert isRefValue(a) and isTupleType(a.type)
+    fieldName = "f%d" % i
+    fieldType = a.type.types[i]
+    ctypesField = getattr(a.ctypesType, fieldName)
+    return RefValue(a, ctypesField.offset, fieldType)
 
 
 
@@ -606,6 +640,11 @@ def evaluate(expr, env, verifier=None) :
     finally :
         contextPop()
 
+def verifyNonVoid(x) :
+    if x is None :
+        error("unexpected void expression")
+    return x
+
 def verifyType(x) :
     if not isType(x) :
         error("type expected")
@@ -617,39 +656,42 @@ def verifyAssignable(x) :
     return x
 
 def verifyRef(x) :
-    if type(x) is RefValue :
+    if isRefValue(x) :
         return x
-    if type(x) is Value :
+    if isValue(x) :
         return valueToRef(x)
     error("reference/value expected")
 
 def verifyValue(x) :
-    if type(x) is Value :
+    if isValue(x) :
         return x
-    if type(x) is RefValue :
+    if isRefValue(x) :
         return refToValue(x)
     error("value expected")
 
 def verifyTypeParam(x) :
-    if type(x) is RefValue :
+    if isRefValue(x) :
         return refToValue(x)
     if x is None :
         error("type param expected")
     return x
 
 def verifyIntValue(x) :
-    if type(x) is RefValue :
+    if isRefValue(x) :
         x = refToValue(x)
     if (type(x) is not Value) or (not isIntType(x.type)) :
         error("int value expected")
     return valueToInt(x)
 
 def verifyBoolValue(x) :
-    if type(x) is RefValue :
+    if isRefValue(x) :
         x = refToValue(x)
     if (type(x) is not Value) or (not isBoolType(x.type)) :
         error("bool value expected")
     return valueToBool(x)
+
+def evaluateNonVoid(expr, env) :
+    return evaluate(expr, env, verifyNonVoid)
 
 def evaluateAsType(expr, env) :
     return evaluate(expr, env, verifyType)
@@ -672,34 +714,63 @@ def evaluateAsIntValue(expr, env) :
 def evaluateAsBoolValue(expr, env) :
     return evaluate(expr, env, verifyBoolValue)
 
-evalExpr = multimethod(defaultProc=lambda x, e : error("invalid expression"))
 
-def initEvalExpr() :
-    def f(x, env) : return x
-    for t in [PrimitiveType, TupleType, ArrayType, PointerType, RecordType,
-              TypeCell, Value, RefValue] :
-        evalExpr.addHandler(f, t)
-initEvalExpr()
+
+#
+# evalExpr
+#
+
+def badExpression(*args) :
+    error("invalid expression")
+
+evalExpr = multimethod(defaultProc=badExpression)
+
+@evalExpr.register(Value)
+def foo(x, env) :
+    return x
+
+@evalExpr.register(RefValue)
+def foo(x, env) :
+    return x
+
+@evalExpr.register(Constant)
+def foo(x, env) :
+    return x.data
 
 @evalExpr.register(BoolLiteral)
 def foo(x, env) :
-    raise NotImplementedError
+    return boolToValue(x.value)
 
 @evalExpr.register(IntLiteral)
 def foo(x, env) :
-    raise NotImplementedError
+    return intToValue(x.value)
 
 @evalExpr.register(CharLiteral)
 def foo(x, env) :
-    raise NotImplementedError
+    return charToValue(x.value)
 
 @evalExpr.register(NameRef)
 def foo(x, env) :
-    raise NotImplementedError
+    return evalNameRef(lookupIdent(env, x.name))
 
 @evalExpr.register(Tuple)
 def foo(x, env) :
-    raise NotImplementedError
+    assert len(x.args) > 0
+    first = evaluateNonVoid(x.args[0], env)
+    if len(x.args) == 1 :
+        return first
+    if isType(first) :
+        rest = [evaluateAsType(arg, env) for arg in x.args[1:]]
+        return TupleType([first] + rest)
+    else :
+        args = [verifyRef(first)]
+        args.extend([evaluateAsRef(arg, env) for arg in x.args[1:]])
+        valueType = TupleType([arg.type for arg in args])
+        value = tempValue(valueType)
+        for i, arg in enumerate(args) :
+            left = tupleFieldRef(value, i)
+            copyInitValue(left, arg)
+        return value
 
 @evalExpr.register(Indexing)
 def foo(x, env) :
@@ -724,6 +795,38 @@ def foo(x, env) :
 @evalExpr.register(AddressOf)
 def foo(x, env) :
     raise NotImplementedError
+
+
+
+#
+# evalNameRef
+#
+
+evalNameRef = multimethod(defaultProc=badExpression)
+
+@evalNameRef.register(Value)
+def foo(x) :
+    return valueToRef(x)
+
+@evalNameRef.register(RefValue)
+def foo(x) :
+    return x
+
+@evalNameRef.register(Constant)
+def foo(x) :
+    if isType(x.data) :
+        return x.data
+    elif isValue(x.data) :
+        a = tempValue(x.data.type)
+        copyInitValue(a, x.data)
+        return a
+    assert False
+
+@evalNameRef.register(Record)
+def foo(x) :
+    if len(x.typesVars) > 0 :
+        error("record type requires type parameters")
+    return RecordType(x, [])
 
 
 
