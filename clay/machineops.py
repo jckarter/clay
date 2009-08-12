@@ -2,7 +2,6 @@ import ctypes
 import ctypes.util
 
 __all__ = [
-    "mop_memAlloc", "mop_memFree",
     "mop_pointerOffset", "mop_pointerSubtract", "mop_pointerCopy",
     "mop_pointerEquals", "mop_pointerLesser",
     "mop_allocateMemory", "mop_freeMemory",
@@ -27,20 +26,6 @@ def getF(name, resultType=None) :
     f = getattr(dll, name)
     f.restype = resultType
     return f
-
-
-
-#
-# memAlloc, memFree
-#
-
-f_mop_memAlloc = getF("mop_memAlloc", ctypes.c_void_p)
-def mop_memAlloc(size) :
-    return ctypes.c_void_p(f_mop_memAlloc(size))
-
-f_mop_memFree = getF("mop_memFree")
-def mop_memFree(ptr) :
-    f_mop_memFree(ptr)
 
 
 

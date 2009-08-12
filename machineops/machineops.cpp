@@ -7,21 +7,6 @@
 
 
 /*
- * memAlloc, memFree
- */
-
-
-extern "C" void *mop_memAlloc(int size) {
-    return malloc(size);
-}
-
-extern "C" void mop_memFree(void *ptr) {
-    return free(ptr);
-}
-
-
-
-/*
  * pointers
  */
 
