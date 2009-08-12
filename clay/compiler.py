@@ -98,7 +98,13 @@ class RefValue(object) :
             self.type = type
         else :
             self.type = value.type
-        self.address = ctypes.addressof(value.buf) + offset
+        if isRefValue(value) :
+            address = value.address
+        elif isValue(value) :
+            address = ctypes.addressof(value.buf)
+        else :
+            assert False
+        self.address = address + offset
 
 def isValue(x) : return type(x) is Value
 def isRefValue(x) : return type(x) is RefValue
@@ -619,9 +625,31 @@ def charToValue(c) :
 def tupleFieldRef(a, i) :
     assert isRefValue(a) and isTupleType(a.type)
     fieldName = "f%d" % i
+    ctypesField = getattr(ctypesType(a.type), fieldName)
     fieldType = a.type.types[i]
-    ctypesField = getattr(a.ctypesType, fieldName)
     return RefValue(a, ctypesField.offset, fieldType)
+
+def recordFieldRef(a, i) :
+    assert isRefValue(a) and isRecordType(a.type)
+    fieldName = a.type.record.fields[i].name.s
+    fieldType = recordFieldTypes(a.type)[i]
+    ctypesField = getattr(ctypesType(a.type), fieldName)
+    return RefValue(a, ctypesField.offset, fieldType)
+
+def recordFieldIndex(recordType, ident) :
+    for i, f in enumerate(recordType.record.fields) :
+        if f.name.s == ident.s :
+            return i
+    error("record field not found: %s" % ident.s)
+
+def makeRecord(recordType, argValueRefs) :
+    ensureArity(argValueRefs, len(recordType.record.fields))
+    value = tempValue(recordType)
+    valueRef = RefValue(value)
+    for i, argValueRef in enumerate(argValueRefs) :
+        left = recordFieldRef(valueRef, i)
+        valueInitCopy(left, argValueRef)
+    return value
 
 
 
@@ -656,7 +684,10 @@ def resolveTypeVar(typeVar, typeValue) :
     finally :
         contextPop()
 
-def bindTypeValues(parentEnv, typeVars, typeValues) :
+def resolveTypeVars(typeVars, typeCells) :
+    return [resolveTypeVar(v, c) for v, c in zip(typeVars, typeCells)]
+
+def bindTypeParams(parentEnv, typeVars, typeValues) :
     env = Environment(parentEnv)
     for typeVar, typeValue in zip(typeVars, typeValues) :
         result = resolveTypeVar(typeVar, typeValue)
@@ -673,10 +704,18 @@ def recordFieldTypes(recordType) :
     if fieldTypes is None :
         record = recordType.record
         typeParams = recordType.typeParams
-        env = bindTypeValues(record.env, record.typeVars, typeParams)
+        env = bindTypeParams(record.env, record.typeVars, typeParams)
         fieldTypes = evalFieldTypes(record.fields, env)
         _recordFieldTypes[recordType] = fieldTypes
     return fieldTypes
+
+def matchType(expr, exprType, typePattern) :
+    try :
+        contextPush(expr)
+        if not typeUnify(exprType, typePattern) :
+            error("type mismatch")
+    finally :
+        contextPop()
 
 
 
@@ -821,8 +860,9 @@ def foo(x, env) :
         args.extend([evaluateAsRef(arg, env) for arg in x.args[1:]])
         valueType = TupleType([arg.type for arg in args])
         value = tempValue(valueType)
+        valueRef = RefValue(value)
         for i, arg in enumerate(args) :
-            left = tupleFieldRef(value, i)
+            left = tupleFieldRef(valueRef, i)
             valueInitCopy(left, arg)
         return value
 
@@ -842,7 +882,11 @@ def foo(x, env) :
         handler = evalNamedCall.getHandler(type(entry))
         if handler is not None :
             return handler(entry, x.args, env)
-    error("invalid expression")
+    recType = evaluateAsType(x.expr, env)
+    if not isRecordType(recType) :
+        error("invalid expression")
+    argValueRefs = [evaluateAsRef(arg, env) for arg in x.args]
+    return makeRecord(recType, argValueRefs)
 
 @evalExpr.register(FieldRef)
 def foo(x, env) :
@@ -943,7 +987,15 @@ evalNamedCall = multimethod(defaultProc=badExpression)
 
 @evalNamedCall.register(Record)
 def foo(x, args, env) :
-    raise NotImplementedError
+    recEnv, typeCells = bindTypeVars(x.env, x.typeVars)
+    fieldTypePatterns = evalFieldTypes(x.fields, recEnv)
+    ensureArity(args, len(x.fields))
+    argValueRefs = [evaluateAsRef(arg, env) for arg in args]
+    for i, typePattern in enumerate(fieldTypePatterns) :
+        matchType(args[i], argValueRefs[i].type, typePattern)
+    typeParams = resolveTypeVars(x.typeVars, typeCells)
+    recType = RecordType(x, typeParams)
+    return makeRecord(recType, argValueRefs)
 
 @evalNamedCall.register(Procedure)
 def foo(x, args, env) :
