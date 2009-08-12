@@ -89,6 +89,10 @@ class ArrayType(Type) :
         super(ArrayType, self).__init__()
         self.type = type
         self.size = size
+    def sizeAsValue(self) :
+        if type(self.size) is int :
+            return intToValue(self.size)
+        return self.size
 
 class PointerType(Type) :
     def __init__(self, type) :
@@ -155,8 +159,11 @@ def foo(x, y) :
 @typeEquals.register(RecordType, RecordType)
 def foo(x, y) :
     sameRecord = (x.record is y.record)
-    raise NotImplementedError
     return sameRecord and typeListEquals(x.typeParams, y.typeParams)
+
+@typeEquals.register(Value, Value)
+def foo(x, y) :
+    return valueEquals(x, y)
 
 
 
@@ -185,9 +192,12 @@ def foo(x) :
 
 @typeHash.register(RecordType)
 def foo(x) :
-    raise NotImplementedError
     childHashes = tuple([typeHash(t) for t in x.typeParams])
     return hash(("Record", id(x.record), childHashes))
+
+@typeHash.register(Value)
+def foo(x) :
+    return valueHash(x)
 
 
 
@@ -238,7 +248,8 @@ def foo(x, y) :
 
 @typeUnify.register(ArrayType, ArrayType)
 def foo(x, y) :
-    return (x.size == y.size) and typeUnify(x.type, y.type)
+    sizeResult = typeUnify(x.sizeAsValue(), y.sizeAsValue())
+    return sizeResult and typeUnify(x.type, y.type)
 
 @typeUnify.register(PointerType, PointerType)
 def foo(x, y) :
@@ -246,8 +257,11 @@ def foo(x, y) :
 
 @typeUnify.register(RecordType, RecordType)
 def foo(x, y) :
-    raise NotImplementedError
     return (x.record is y.record) and typeListUnify(x.typeParams, y.typeParams)
+
+@typeUnify.register(Value, Value)
+def foo(x, y) :
+    return valueEquals(x, y)
 
 
 
@@ -451,6 +465,7 @@ def buildPrimitivesEnv() :
     overloadable("lesserEquals")
     overloadable("greater")
     overloadable("greaterEquals")
+    overloadable("hash")
 
     global primitiveNames
     primitiveNames = type("PrimitiveNames", (object,), names)
@@ -523,6 +538,16 @@ def assignValue(dest, src) :
     assign = NameRef(Identifier("assign"))
     call = Call(assign, [dest, src])
     evaluate(call, primitivesEnv)
+
+def valueEquals(a, b) :
+    equals = NameRef(Identifier("equals"))
+    call = Call(equals, [a, b])
+    return evaluateAsBoolValue(call, primitivesEnv)
+
+def valueHash(a) :
+    hash = NameRef(Identifier("hash"))
+    call = Call(hash, [a])
+    return evaluateAsIntValue(call, primitivesEnv)
 
 def valueToRef(a) :
     ref = tempRefValue(a.type)

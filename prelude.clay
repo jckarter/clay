@@ -62,6 +62,11 @@ overload lesser(a:Bool, b:Bool) {
     return false;
 }
 
+overload hash(a:Bool) {
+    if (a) return 1;
+    return 0;
+}
+
 overload not(a:Bool) { return boolNot(a); }
 
 
@@ -74,6 +79,8 @@ overload init[T](ref dest:Char, ref src:Char) { charCopy(dest, src); }
 overload equals(a:Char, b:Char) { return charEquals(a, b); }
 overload lesser(a:Char, b:Char) { return charLesser(a, b); }
 
+overload hash(a:Char) { return charToInt(a); }
+
 
 //
 // Int
@@ -83,6 +90,8 @@ overload init[T](ref dest:Int, ref src:Int) { intCopy(dest, src); }
 
 overload equals(a:Int, b:Int) { return intEquals(a, b); }
 overload lesser(a:Int, b:Int) { return intLesser(a, b); }
+
+overload hash(a:Int) { return a; }
 
 overload add(a:Int, b:Int) { return intAdd(a, b); }
 overload subtract(a:Int, b:Int) { return intSubtract(a, b); }
@@ -101,6 +110,8 @@ overload init[T](ref dest:Float, ref src:Float) { floatCopy(dest, src); }
 overload equals(a:Float, b:Float) { return floatEquals(a, b); }
 overload lesser(a:Float, b:Float) { return floatLesser(a, b); }
 
+overload hash(a:Float) { return floatToInt(a); }
+
 overload add(a:Float, b:Float) { return floatAdd(a, b); }
 overload subtract(a:Float, b:Float) { return floatSubtract(a, b); }
 overload multiply(a:Float, b:Float) { return floatMultiply(a, b); }
@@ -116,6 +127,8 @@ overload init[T](ref dest:Double, ref src:Double) { doubleCopy(dest, src); }
 
 overload equals(a:Double, b:Double) { return doubleEquals(a, b); }
 overload lesser(a:Double, b:Double) { return doubleLesser(a, b); }
+
+overload hash(a:Double) { return doubleToInt(a); }
 
 overload add(a:Double, b:Double) { return doubleAdd(a, b); }
 overload subtract(a:Double, b:Double) { return doubleSubtract(a, b); }
@@ -137,6 +150,10 @@ overload equals[T](a:Pointer[T], b:Pointer[T]) {
 }
 overload lesser[T](a:Pointer[T], b:Pointer[T]) {
     return pointerLesser(a, b);
+}
+
+overload hash[T](a:Pointer[T]) {
+    return pointerCast(Int, &a)^;
 }
 
 overload add[T](p:Pointer[T], i:Int) {
@@ -199,7 +216,7 @@ def arrayEquals[T,n,i](ref a:Array[T,n], ref b:Array[T,n], type i) {
     return arrayRef(a, b, add(i, 1));
 }
 
-overload lesser[T,n,i](ref a:Array[T,n], ref b:Array[T,n]) {
+overload lesser[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
     return arrayLesser(a, b, 0);
 }
 
@@ -210,6 +227,16 @@ def arrayLesser[T,n,i](ref a:Array[T,n], ref b:Array[T,n], type i) {
     if (lesser(arrayRef(b, i), arrayRef(a, i)))
         return false;
     return arrayLesser(a, b, add(i, 1));
+}
+
+overload hash[T,n](ref a:Array[T,n]) {
+    return arrayHash(a, 0, 0);
+}
+
+def arrayHash[T,n,i,h](ref a:Array[T,n], type i, type h) {
+    if (equals(i, n)) return h;
+    var newH = add(h, hash(arrayRef(a, i)));
+    return arrayHash(a, add(i, 1), newH);
 }
 
 
@@ -294,6 +321,16 @@ def lesserFields[T,n,i](ref a:T, ref b:T, type n, type i) {
     if (lesser(fieldRef(b, i), fieldRef(a, i)))
         return false;
     return lesserFields(a, b, n, add(i, 1));
+}
+
+overload hash[T](ref a:T) if RecordOrTuple(T) {
+    return hashFields(a, fieldCount(T), 0, 0);
+}
+
+def hashFields[T,n,i,h](ref a:T, type n, type i, type h) {
+    if (equals(i, n)) return h;
+    var newH = add(h, hash(fieldRef(a, i)));
+    return hashFields(a, n, add(i, 1), newH);
 }
 
 
