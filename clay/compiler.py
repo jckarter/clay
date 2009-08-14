@@ -1068,7 +1068,15 @@ def foo(x, args, env) :
 
 @evalNamedCall.register(Overloadable)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argResults = [evaluate(arg, env) for arg in args]
+    for y in x.overloads :
+        result = matchCodeSignature(y.env, y.code, argResults)
+        if type(result) is MatchFailure :
+            continue
+        assert type(result) is Environment
+        procEnv = result
+        return evalCodeBody(y.code, procEnv)
+    error("no matching overload")
 
 @evalNamedCall.register(Constant)
 def foo(x, args, env) :
