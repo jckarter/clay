@@ -73,10 +73,13 @@ def addIdent(env, ident, value) :
     finally :
         contextPop()
 
-def lookupIdent(env, ident) :
+def lookupIdent(env, ident, verifier=None) :
     try :
         contextPush(ident)
-        return env.lookup(ident.s)
+        result = env.lookup(ident.s)
+        if verifier is not None :
+            verifier(result)
+        return result
     finally :
         contextPop()
 
@@ -654,6 +657,29 @@ def makeRecord(recordType, argValueRefs) :
 
 
 #
+# build top level env
+#
+
+def buildTopLevelEnv(program) :
+    env = Environment(primitivesEnv)
+    for item in program.topLevelItems :
+        item.env = env
+        if type(item) is Overload :
+            installOverload(env, item)
+        else :
+            addIdent(env, item.name, item)
+    return env
+
+def installOverload(env, item) :
+    def verifyOverloadable(x) :
+        if type(x) is not Overloadable :
+            error("invalid overloadable")
+    entry = lookupIdent(env, item.name, verifyOverloadable)
+    entry.overloads.append(item)
+
+
+
+#
 # eval utilities
 #
 
@@ -717,7 +743,6 @@ def matchType(expr, exprType, typePattern) :
     finally :
         contextPop()
 
-
 
 #
 # evaluate : (expr, env) -> Type|Value|RefValue|None
@@ -733,8 +758,11 @@ def evaluate(expr, env, verifier=None) :
     finally :
         contextPop()
 
+def isNonVoid(x) :
+    return x is not None
+
 def verifyNonVoid(x) :
-    if x is None :
+    if not isNonVoid(x) :
         error("unexpected void expression")
     return x
 
@@ -743,45 +771,76 @@ def verifyType(x) :
         error("type expected")
     return x
 
+def isAssignable(x) :
+    return isRefValue(x)
+
 def verifyAssignable(x) :
-    if type(x) is not RefValue :
+    if not isAssignable(x) :
         error("reference expected")
     return x
 
-def verifyRef(x) :
+def toRefParam(x) :
     if isRefValue(x) :
         return x
     if isValue(x) :
         return valueToRef(x)
-    error("reference/value expected")
+    return None
 
-def verifyValue(x) :
+def verifyRefParam(x) :
+    result = toRefParam(x)
+    if result is None :
+        error("reference/value expected")
+    return result
+
+def toValue(x) :
     if isValue(x) :
         return x
     if isRefValue(x) :
         return refToValue(x)
-    error("value expected")
+    return None
 
-def verifyTypeParam(x) :
+def verifyValue(x) :
+    result = toValue(x)
+    if result is None :
+        error("value expected")
+    return result
+
+def toTypeParam(x) :
     if isRefValue(x) :
         return refToValue(x)
-    if x is None :
+    return x
+
+def verifyTypeParam(x) :
+    result = toTypeParam(x)
+    if result is None :
         error("type param expected")
     return x
 
-def verifyIntValue(x) :
+def toIntValue(x) :
     if isRefValue(x) :
         x = refToValue(x)
-    if (type(x) is not Value) or (not isIntType(x.type)) :
+    if isValue(x) and isIntType(x.type) :
+        return valueToInt(x)
+    return None
+
+def verifyIntValue(x) :
+    result = toIntValue(x)
+    if result is None :
         error("int value expected")
-    return valueToInt(x)
+    return result
+
+def toBoolValue(x) :
+    if isRefValue(x) :
+        x = refToValue(x)
+    if isValue(x) and isBoolType(x.type) :
+        return valueToBool(x)
+    return None
 
 def verifyBoolValue(x) :
-    if isRefValue(x) :
-        x = refToValue(x)
-    if (type(x) is not Value) or (not isBoolType(x.type)) :
+    result = toBoolValue(x)
+    if result is None :
         error("bool value expected")
-    return valueToBool(x)
+    return result
 
 def evaluateNonVoid(expr, env) :
     return evaluate(expr, env, verifyNonVoid)
@@ -792,8 +851,8 @@ def evaluateAsType(expr, env) :
 def evaluateAsAssignable(expr, env) :
     return evaluate(expr, env, verifyAssignable)
 
-def evaluateAsRef(expr, env) :
-    return evaluate(expr, env, verifyRef)
+def evaluateAsRefParam(expr, env) :
+    return evaluate(expr, env, verifyRefParam)
 
 def evaluateAsValue(expr, env) :
     return evaluate(expr, env, verifyValue)
@@ -856,8 +915,8 @@ def foo(x, env) :
         rest = [evaluateAsType(arg, env) for arg in x.args[1:]]
         return TupleType([first] + rest)
     else :
-        args = [verifyRef(first)]
-        args.extend([evaluateAsRef(arg, env) for arg in x.args[1:]])
+        args = [verifyRefParam(first)]
+        args.extend([evaluateAsRefParam(arg, env) for arg in x.args[1:]])
         valueType = TupleType([arg.type for arg in args])
         value = tempValue(valueType)
         valueRef = RefValue(value)
@@ -885,7 +944,7 @@ def foo(x, env) :
     recType = evaluateAsType(x.expr, env)
     if not isRecordType(recType) :
         error("invalid expression")
-    argValueRefs = [evaluateAsRef(arg, env) for arg in x.args]
+    argValueRefs = [evaluateAsRefParam(arg, env) for arg in x.args]
     return makeRecord(recType, argValueRefs)
 
 @evalExpr.register(FieldRef)
@@ -990,7 +1049,7 @@ def foo(x, args, env) :
     recEnv, typeCells = bindTypeVars(x.env, x.typeVars)
     fieldTypePatterns = evalFieldTypes(x.fields, recEnv)
     ensureArity(args, len(x.fields))
-    argValueRefs = [evaluateAsRef(arg, env) for arg in args]
+    argValueRefs = [evaluateAsRefParam(arg, env) for arg in args]
     for i, typePattern in enumerate(fieldTypePatterns) :
         matchType(args[i], argValueRefs[i].type, typePattern)
     typeParams = resolveTypeVars(x.typeVars, typeCells)
@@ -999,7 +1058,13 @@ def foo(x, args, env) :
 
 @evalNamedCall.register(Procedure)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argResults = [evaluate(arg, env) for arg in args]
+    result = matchCodeSignature(x.env, x.code, argResults)
+    if type(result) is MatchFailure :
+        result.signalError(x, args)
+    assert type(result) is Environment
+    procEnv = result
+    return evalCodeBody(x.code, procEnv)
 
 @evalNamedCall.register(Overloadable)
 def foo(x, args, env) :
@@ -1247,6 +1312,86 @@ def foo(x, args, env) :
 
 @evalNamedCall.register(primitives.intToDouble)
 def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# matchCodeSignature (env, code, args) -> Environment | MatchFailure
+#
+
+class MatchFailure(object) :
+    def __init__(self, message, argOffset=None, typeCondOffset=None) :
+        self.message = message
+        self.argOffset = argOffset
+        self.typeCondOffset = typeCondOffset
+
+    def getContext(self, proc, args) :
+        if self.argOffset is not None :
+            return args[self.argOffset]
+        elif self.typeCondOffset is not None :
+            return proc.code.typeConditions[self.typeCondOffset]
+        return None
+
+    def signalError(self, proc, args) :
+        context = self.getContext(proc, args)
+        try :
+            if context is not None :
+                contextPush(context)
+            error(self.message)
+        finally :
+            if context is not None :
+                contextPop()
+
+def matchCodeSignature(env, code, args) :
+    def argMismatch(i) :
+        return MatchFailure("argument mismatch", argOffset=i)
+    def typeCondFailure(i) :
+        return MatchFailure("type condition failed", typeCondOffset=i)
+    if len(args) != len(code.formalArgs) :
+        return MatchFailure("incorrect no. of arguments")
+    procEnv, typeCells = bindTypeVars(env, code.typeVars)
+    bindings = []
+    for i, formalArg in enumerate(code.formalArgs) :
+        arg = args[i]
+        if type(formalArg) is ValueArgument :
+            if formalArg.byRef :
+                arg = toRefParam(arg)
+            else :
+                arg = toValue(arg)
+            if arg is None :
+                return argMismatch(i)
+            if formalArg.type is not None :
+                typePattern = evaluateAsType(formalArg.type, procEnv)
+                if not typeUnify(typePattern, arg.type) :
+                    return argMismatch(i)
+            bindings.append((formalArg.name, arg))
+        elif type(formalArg) is TypeArgument :
+            arg = toTypeParam(arg)
+            if arg is None :
+                return argMismatch(i)
+            typePattern = evaluateAsType(formalArg.type, procEnv)
+            if not typeUnify(typePattern, arg) :
+                return argMismatch(i)
+        else :
+            assert False
+    typeValues = resolveTypeVars(code.typeVars, typeCells)
+    procEnv = bindTypeParams(env, code.typeVars, typeValues)
+    for i, typeCondition in enumerate(code.typeConditions) :
+        result = evaluateAsBoolValue(typeCondition, procEnv)
+        if not result :
+            return typeCondFailure(i)
+    for ident, value in bindings :
+        addIdent(procEnv, ident, value)
+    return procEnv
+
+
+
+#
+# evalCodeBody
+#
+
+def evalCodeBody(code, env) :
     raise NotImplementedError
 
 
