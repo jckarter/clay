@@ -743,6 +743,7 @@ def matchType(expr, exprType, typePattern) :
     finally :
         contextPop()
 
+
 
 #
 # evaluate : (expr, env) -> Type|Value|RefValue|None
@@ -813,7 +814,7 @@ def toTypeParam(x) :
 def verifyTypeParam(x) :
     result = toTypeParam(x)
     if result is None :
-        error("type param expected")
+        error("type/value expected")
     return x
 
 def toIntValue(x) :
@@ -1400,6 +1401,83 @@ def matchCodeSignature(env, code, args) :
 #
 
 def evalCodeBody(code, env) :
+    result = evalStatement(code.block, env, code)
+    raise NotImplementedError
+
+
+
+#
+# evalStatement : (stmt, env, code) -> ReturnValue(Type|Value|RefValue|None)
+#                                    | Environment
+#                                    | None
+#
+
+class ReturnValue(object) :
+    def __init__(thing) :
+        self.thing = thing
+
+def evalStatement(stmt, env, code) :
+    try :
+        contextPush(stmt)
+        return evalStmt(stmt, env, code)
+    finally :
+        contextPop()
+
+def evalInnerStatement(stmt, env, code) :
+    result = evalStatement(stmt, env, code)
+    if type(result) is Environment :
+        result = None
+    return result
+
+evalStmt = multimethod()
+
+@evalStmt.register(Block)
+def foo(x, env, code) :
+    for statement in x.statements :
+        result = evalStatement(statement, env, code)
+        if type(result) is Environment :
+            env = result
+        if type(result) is ReturnValue :
+            return result
+
+@evalStmt.register(Assignment)
+def foo(x, env, code) :
+    assignable = evaluateAsAssignable(x.assignable, env)
+    right = evaluateAsRefParam(x.expr, env)
+    valueAssign(assignable, right)
+
+@evalStmt.register(LocalBinding)
+def foo(x, env, code) :
+    newEnv = Environment(env)
+    value = evaluateAsValue(x.expr, env)
+    if x.type is not None :
+        declaredType = evaluateAsType(x.type, env)
+        if not typeEquals(declaredType, value.type) :
+            error("type mismatch")
+    addIdent(newEnv, x.name, value)
+    return newEnv
+
+@evalStmt.register(Return)
+def foo(x, env, code) :
+    if code.returnByRef :
+        if x.expr is None :
+            error("return value expected")
+        refValue = evaluateAsAssignable(x.expr, env)
+        return ReturnValue(refValue)
+    if x.expr is None :
+        return
+    result = evaluateAsTypeParam(x.expr, env)
+    return ReturnValue(result)
+
+@evalStmt.register(IfStatement)
+def foo(x, env, code) :
+    if evaluateAsBoolValue(x.condition, env) :
+        return evalInnerStatement(x.thenPart, env, code)
+    elif x.elsePart is not None :
+        return evalInnerStatement(x.elsePart, env, code)
+
+@evalStmt.register(ExprStatement)
+def foo(x, env, code) :
     raise NotImplementedError
 
 
