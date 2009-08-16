@@ -19,7 +19,7 @@ Procedure -> TypeVars? "(" comma_list(Argument)? ")"
              "ref"? TypeSpec? TypeConditions? Block;
 
 Argument -> "ref"? Variable
-          | "type" Expression
+          | "static" Expression
           ;
 
 TypeConditions -> "if" comma_list(TypeCondition) ;

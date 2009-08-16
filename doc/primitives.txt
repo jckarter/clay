@@ -13,15 +13,15 @@ Pointer[T] : raw pointer
 
 Primitive Operations:
 
-default[T](type T):T
+default[T](static T):T
 
-typeSize[T](type T):Int
+typeSize[T](static T):Int
 
 addressOf[T](ref a : T) : Pointer[T]
 pointerDereference[T](e:Pointer[T]) ref : T
 pointerOffset[T](e:Pointer[T], i:Int):Pointer[T]
 pointerSubtract[T](e1:Pointer[T], e2:Pointer[T]):Int
-pointerCast[T1,T2](type T2, a:Pointer[T1]):Pointer[T2]
+pointerCast[T1,T2](static T2, a:Pointer[T1]):Pointer[T2]
 
 pointerCopy
 pointerEquals, pointerLesser
@@ -30,15 +30,15 @@ allocateMemory(size:Int) : Pointer[Int]
 freeMemory(ptr:Pointer[Int]) : Void
 
 tuple(v_1, ..., v_n): TupleType
-tupleFieldCount[T](type T) : Int
-tupleFieldRef[T,i](ref a:T, type i) ref : FieldType
+tupleFieldCount[T](static T) : Int
+tupleFieldRef[T,i](ref a:T, static i) ref : FieldType
 
-array[T,n](type n, v:T):Array[T, n]
+array[T,n](static n, v:T):Array[T, n]
 arrayRef[T,n](ref a:Array[T,n], i:Int) ref : T;
 
 makeRecord(R, v_1, ..., v_n):RecordType
-recordFieldCount[R](type R) : Int
-recordFieldRef(ref a:R, type i) ref : FieldType;
+recordFieldCount[R](static R) : Int
+recordFieldRef(ref a:R, static i) ref : FieldType;
 
 boolCopy(ref dest:Bool, ref src:Bool):Void
 boolNot(x:Bool):Bool

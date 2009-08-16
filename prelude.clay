@@ -47,7 +47,7 @@ overload(-1) greaterEquals[T](ref a:T, ref b:T) {
 // Bool
 //
 
-overload init[T](ref dest:Bool, ref src:Bool)
+overload init[T](ref dest:Bool, ref src:Bool) {
     boolCopy(dest, src);
 }
 
@@ -166,7 +166,7 @@ overload subtract[T](a:Pointer[T], b:Pointer[T]) {
     return divide(pointerDifference(a, b), typeSize(T));
 }
 
-def null[T](type T) {
+def null[T](static T) {
     return default(Pointer[T]);
 }
 
@@ -179,7 +179,7 @@ overload init[T,n](ref a:Array[T,n]) {
     initArray(a, 0);
 }
 
-def initArray[T,n,i](ref a:Array[T,n], type i) {
+def initArray[T,n,i](ref a:Array[T,n], static i) {
     if (equals(i, n)) return;
     init(arrayRef(a, i));
     initArray(a, add(i, 1));
@@ -189,7 +189,7 @@ overload init[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
     initArrayCopy(dest, src, 0);
 }
 
-def initArrayCopy[T,n,i](ref dest:Array[T,n], ref src:Array[T,n], type i) {
+def initArrayCopy[T,n,i](ref dest:Array[T,n], ref src:Array[T,n], static i) {
     if (equals(i, n)) return;
     init(arrayRef(dest, i), arrayRef(src, i));
     initArrayCopy(dest, src, add(i, 1));
@@ -199,7 +199,7 @@ overload destroy[T,n](ref a:Array[T,n]) {
     destroyArray(a, 0);
 }
 
-def destroyArray[T,n,i](ref a:Array[T,n], type i) {
+def destroyArray[T,n,i](ref a:Array[T,n], static i) {
     if (equals(i, n)) return;
     destroy(arrayRef(a, i));
     destroyArray(a, add(i, 1));
@@ -209,7 +209,7 @@ overload equals[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
     return arrayEquals(a, b, 0);
 }
 
-def arrayEquals[T,n,i](ref a:Array[T,n], ref b:Array[T,n], type i) {
+def arrayEquals[T,n,i](ref a:Array[T,n], ref b:Array[T,n], static i) {
     if (equals(i, n)) return true;
     if (notEquals(arrayRef(a, i), arrayRef(b, i)))
         return false;
@@ -220,7 +220,7 @@ overload lesser[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
     return arrayLesser(a, b, 0);
 }
 
-def arrayLesser[T,n,i](ref a:Array[T,n], ref b:Array[T,n], type i) {
+def arrayLesser[T,n,i](ref a:Array[T,n], ref b:Array[T,n], static i) {
     if (equals(i, n)) return false;
     if (lesser(arrayRef(a, i), arrayRef(b, i)))
         return true;
@@ -233,7 +233,7 @@ overload hash[T,n](ref a:Array[T,n]) {
     return arrayHash(a, 0, 0);
 }
 
-def arrayHash[T,n,i,h](ref a:Array[T,n], type i, type h) {
+def arrayHash[T,n,i,h](ref a:Array[T,n], static i, static h) {
     if (equals(i, n)) return h;
     var newH = add(h, hash(arrayRef(a, i)));
     return arrayHash(a, add(i, 1), newH);
@@ -247,23 +247,23 @@ def arrayHash[T,n,i,h](ref a:Array[T,n], type i, type h) {
 overloadable fieldCount;
 overloadable fieldRef;
 
-overload fieldCount[T](type T) if RecordType(T) {
+overload fieldCount[T](static T) if RecordType(T) {
     return recordFieldCount(T);
 }
 
-overload fieldCount[T](type T) if TupleType(T) {
+overload fieldCount[T](static T) if TupleType(T) {
     return tupleFieldCount(T);
 }
 
-overload fieldRef[T](ref a:T, type i) ref if RecordType(T) {
+overload fieldRef[T](ref a:T, static i) ref if RecordType(T) {
     return recordFieldRef(a, i);
 }
 
-overload fieldRef[T](ref a:T, type i) ref if TupleType(T) {
+overload fieldRef[T](ref a:T, static i) ref if TupleType(T) {
     return tupleFieldRef(a, i);
 }
 
-def RecordOrTuple[T](type T) {
+def RecordOrTuple[T](static T) {
     if (RecordType(T)) return true;
     if (TupleType(T)) return true;
     return false;
@@ -273,7 +273,7 @@ overload(-1) init[T](ref a:T) if RecordOrTuple(T) {
     initFields(a, fieldCount(T), 0);
 }
 
-def initFields[T,n,i](ref a:T, type n, type i) {
+def initFields[T,n,i](ref a:T, static n, static i) {
     if (equals(i, n)) return;
     init(fieldRef(a, i));
     initFields(a, n, add(i, 1));
@@ -283,7 +283,7 @@ overload(-1) init[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
     initFieldsCopy(dest, src, fieldCount(T), 0);
 }
 
-def initFieldsCopy[T,n,i](ref dest:T, ref src:T, type n, type i) {
+def initFieldsCopy[T,n,i](ref dest:T, ref src:T, static n, static i) {
     if (equals(i, n)) return;
     init(fieldRef(dest, i), fieldRef(src, i));
     initFieldsCopy(dest, src, n, add(i, 1));
@@ -293,7 +293,7 @@ overload(-1) destroy[T](ref a:T) if RecordOrTuple(T) {
     destroyFields(a, fieldCount(T), 0);
 }
 
-def destroyFields[T,n,i](ref a:T, type n, type i) {
+def destroyFields[T,n,i](ref a:T, static n, static i) {
     if (equals(i, n)) return;
     destroy(fieldRef(a, i));
     destroyFields(a, n, add(i, 1));
@@ -303,7 +303,7 @@ overload(-1) equals[T](ref a:T, ref b:T) if RecordOrTuple(T) {
     return equalFields(a, b, fieldCount(T), 0);
 }
 
-def equalFields[T,n,i](ref a:T, ref b:T, type n, type i) {
+def equalFields[T,n,i](ref a:T, ref b:T, static n, static i) {
     if (equals(i, n)) return true;
     if (notEquals(fieldRef(a, i), fieldRef(b, i)))
         return false;
@@ -314,7 +314,7 @@ overload(-1) lesser[T](ref a:T, ref b:T) if RecordOrTuple(T) {
     return lesserFields(a, b, fieldCount(T), 0);
 }
 
-def lesserFields[T,n,i](ref a:T, ref b:T, type n, type i) {
+def lesserFields[T,n,i](ref a:T, ref b:T, static n, static i) {
     if (equals(i, n)) return false;
     if (lesser(fieldRef(a, i), fieldRef(b, i)))
         return true;
@@ -327,7 +327,7 @@ overload hash[T](ref a:T) if RecordOrTuple(T) {
     return hashFields(a, fieldCount(T), 0, 0);
 }
 
-def hashFields[T,n,i,h](ref a:T, type n, type i, type h) {
+def hashFields[T,n,i,h](ref a:T, static n, static i, static h) {
     if (equals(i, n)) return h;
     var newH = add(h, hash(fieldRef(a, i)));
     return hashFields(a, n, add(i, 1), newH);
@@ -367,7 +367,7 @@ overload vector[T](n:Int, v:T) {
     // }
     return Vector(block);
 }
-overload vector[T](type T, n:Int) {
+overload vector[T](static T, n:Int) {
     return vector(n, default(T));
 }
 overload destroy[T](v:Vector[T]) {
@@ -401,7 +401,7 @@ record NodeLocation[T] {
 record LinkedList[T] {
     first :Pointer[Node[T]];
 }
-def linkedList[T](type T) {
+def linkedList[T](static T) {
     return LinkedList(null(Node[T]));
 }
 overload begin[T](a:LinkedList[T]) {
