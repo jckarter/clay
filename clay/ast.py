@@ -6,7 +6,7 @@ __all__ = [
     "Dereference", "AddressOf",
     "Statement", "Block", "Assignment", "LocalBinding", "Return",
     "IfStatement", "ExprStatement",
-    "Code", "FormalArgument", "ValueArgument", "TypeArgument",
+    "Code", "FormalArgument", "ValueArgument", "StaticArgument",
     "TopLevelItem", "Record", "Field", "Procedure", "Overloadable", "Overload",
     "Program"]
 
@@ -222,9 +222,9 @@ class ValueArgument(FormalArgument) :
         self.type = type
         self.byRef = byRef
 
-class TypeArgument(FormalArgument) :
+class StaticArgument(FormalArgument) :
     def __init__(self, type) :
-        super(TypeArgument, self).__init__()
+        super(StaticArgument, self).__init__()
         check(type, Expression)
         self.type = type
 

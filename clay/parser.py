@@ -173,9 +173,9 @@ byRef = modify(optional(keyword("ref")), lambda x : x is not None)
 
 valueArgument = astNode(sequence(byRef, identifier, optTypeSpec),
                         lambda x : ValueArgument(x[1],x[2],x[0]))
-typeArgument = astNode(sequence(keyword("type"), expression),
-                       lambda x : TypeArgument(x[1]))
-formalArgument = choice(valueArgument, typeArgument)
+staticArgument = astNode(sequence(keyword("static"), expression),
+                         lambda x : StaticArgument(x[1]))
+formalArgument = choice(valueArgument, staticArgument)
 formalArguments = modify(optional(listOf(formalArgument, comma)),
                          lambda x : [] if x is None else x)
 typeConditions = modify(sequence(keyword("if"), expressionList),

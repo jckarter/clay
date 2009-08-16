@@ -1394,7 +1394,7 @@ def matchCodeSignature(env, code, args) :
                 if not typeUnify(typePattern, arg.type) :
                     return argMismatch(i)
             bindings.append((formalArg.name, arg))
-        elif type(formalArg) is TypeArgument :
+        elif type(formalArg) is StaticArgument :
             arg = toTypeParam(arg)
             if arg is None :
                 return argMismatch(i)
