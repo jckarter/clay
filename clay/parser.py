@@ -150,7 +150,7 @@ localBinding = astNode(sequence(keyword("var"), identifier, optTypeSpec,
                                 symbol("="), expression, semicolon),
                        lambda x : LocalBinding(x[1],x[2],x[4]))
 
-block = astNode(sequence(symbol("{"), onePlus(statement2), symbol("}")),
+block = astNode(sequence(symbol("{"), zeroPlus(statement2), symbol("}")),
                 lambda x : Block(x[1]))
 
 exprStatement = astNode(sequence(expression, semicolon),
