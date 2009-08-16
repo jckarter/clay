@@ -545,6 +545,18 @@ installPrimitives()
 #
 
 _tempValues = []
+_savedTempValueSets = []
+
+def pushTempValueSet() :
+    global _tempValues
+    _savedTempValueSets.append(_tempValues)
+    _tempValues = []
+
+def popTempValueSet(old) :
+    global _tempValues
+    for temp in _tempValues :
+        valueDestroy(temp)
+    _tempValues = _savedTempValueSets.pop()
 
 def tempValue(type) :
     v = Value(type)
@@ -636,7 +648,7 @@ def makeTuple(argValueRefs) :
     valueType = TupleType([x.type for x in argValueRefs])
     value = tempValue(valueType)
     valueRef = RefValue(value)
-    for i, arg in enumerate(args) :
+    for i, arg in enumerate(argValueRefs) :
         left = tupleFieldRef(valueRef, i)
         valueInitCopy(left, arg)
     return value
@@ -1408,8 +1420,14 @@ def matchCodeSignature(env, code, args) :
 #
 
 def evalCodeBody(code, env) :
-    result = evalStatement(code.block, env, code)
-    raise NotImplementedError
+    returnType = None
+    if code.returnType is not None :
+        returnType = evaluateAsType(code.returnType, env)
+    context = CodeContext(code.returnByRef, returnType)
+    result = evalInnerStatement(code.block, env, context)
+    if type(result) is ReturnValue :
+        result = result.thing
+    return result
 
 
 
@@ -1419,19 +1437,26 @@ def evalCodeBody(code, env) :
 #                                    | None
 #
 
+class CodeContext(object) :
+    def __init__(self, returnByRef, returnType) :
+        self.returnByRef = returnByRef
+        self.returnType = returnType
+
 class ReturnValue(object) :
-    def __init__(thing) :
+    def __init__(self, thing) :
         self.thing = thing
 
-def evalStatement(stmt, env, code) :
+def evalStatement(stmt, env, context) :
     try :
         contextPush(stmt)
-        return evalStmt(stmt, env, code)
+        pushTempValueSet()
+        return evalStmt(stmt, env, context)
     finally :
+        popTempValueSet()
         contextPop()
 
-def evalInnerStatement(stmt, env, code) :
-    result = evalStatement(stmt, env, code)
+def evalInnerStatement(stmt, env, context) :
+    result = evalStatement(stmt, env, context)
     if type(result) is Environment :
         result = None
     return result
@@ -1439,52 +1464,58 @@ def evalInnerStatement(stmt, env, code) :
 evalStmt = multimethod()
 
 @evalStmt.register(Block)
-def foo(x, env, code) :
+def foo(x, env, context) :
     for statement in x.statements :
-        result = evalStatement(statement, env, code)
+        result = evalStatement(statement, env, context)
         if type(result) is Environment :
             env = result
         if type(result) is ReturnValue :
             return result
 
 @evalStmt.register(Assignment)
-def foo(x, env, code) :
+def foo(x, env, context) :
     assignable = evaluateAsAssignable(x.assignable, env)
     right = evaluateAsRefParam(x.expr, env)
     valueAssign(assignable, right)
 
 @evalStmt.register(LocalBinding)
-def foo(x, env, code) :
+def foo(x, env, context) :
     newEnv = Environment(env)
-    value = evaluateAsValue(x.expr, env)
+    refValue = evaluateAsRefParam(x.expr, env)
     if x.type is not None :
         declaredType = evaluateAsType(x.type, env)
-        if not typeEquals(declaredType, value.type) :
+        if not typeEquals(declaredType, refValue.type) :
             error("type mismatch")
+    value = Value(refValue.type)
+    valueInitCopy(value, refValue)
     addIdent(newEnv, x.name, value)
     return newEnv
 
 @evalStmt.register(Return)
-def foo(x, env, code) :
-    if code.returnByRef :
+def foo(x, env, context) :
+    result = None
+    if context.returnByRef :
         if x.expr is None :
             error("return value expected")
-        refValue = evaluateAsAssignable(x.expr, env)
-        return ReturnValue(refValue)
-    if x.expr is None :
-        return
-    result = evaluateAsTypeParam(x.expr, env)
+        result = evaluateAsAssignable(x.expr, env)
+    elif x.expr is not None :
+        result = evaluateAsTypeParam(x.expr, env)
+    if context.returnType is not None :
+        if not (isValue(result) or isRefValue(result)) :
+            error("return value expected")
+        if not typeEquals(context.returnType, result.type) :
+            error("return type mismatch")
     return ReturnValue(result)
 
 @evalStmt.register(IfStatement)
-def foo(x, env, code) :
+def foo(x, env, context) :
     if evaluateAsBoolValue(x.condition, env) :
-        return evalInnerStatement(x.thenPart, env, code)
+        return evalInnerStatement(x.thenPart, env, context)
     elif x.elsePart is not None :
-        return evalInnerStatement(x.elsePart, env, code)
+        return evalInnerStatement(x.elsePart, env, context)
 
 @evalStmt.register(ExprStatement)
-def foo(x, env, code) :
+def foo(x, env, context) :
     evaluate(x.expr, env)
 
 
