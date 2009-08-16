@@ -70,7 +70,7 @@ r(Record, lambda x : xo("RecordDef", x.name, x.typeVars, *x.fields))
 r(Field, lambda x : xo("Field", x.name, x.type))
 r(Procedure, lambda x : xo("Procedure", x.name, x.code))
 r(Overloadable, lambda x : xo("Overloadable", x.name))
-r(Overload, lambda x : xo("Overload", x.name, x.code))
+r(Overload, lambda x : xo("Overload", x.name, x.level, x.code))
 
 
 
