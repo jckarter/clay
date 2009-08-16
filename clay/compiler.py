@@ -632,6 +632,15 @@ def tupleFieldRef(a, i) :
     fieldType = a.type.types[i]
     return RefValue(a, ctypesField.offset, fieldType)
 
+def makeTuple(argValueRefs) :
+    valueType = TupleType([x.type for x in argValueRefs])
+    value = tempValue(valueType)
+    valueRef = RefValue(value)
+    for i, arg in enumerate(args) :
+        left = tupleFieldRef(valueRef, i)
+        valueInitCopy(left, arg)
+    return value
+
 def recordFieldRef(a, i) :
     assert isRefValue(a) and isRecordType(a.type)
     fieldName = a.type.record.fields[i].name.s
@@ -918,13 +927,7 @@ def foo(x, env) :
     else :
         args = [verifyRefParam(first)]
         args.extend([evaluateAsRefParam(arg, env) for arg in x.args[1:]])
-        valueType = TupleType([arg.type for arg in args])
-        value = tempValue(valueType)
-        valueRef = RefValue(value)
-        for i, arg in enumerate(args) :
-            left = tupleFieldRef(valueRef, i)
-            valueInitCopy(left, arg)
-        return value
+        return makeTuple(args)
 
 @evalExpr.register(Indexing)
 def foo(x, env) :
@@ -1081,7 +1084,11 @@ def foo(x, args, env) :
 
 @evalNamedCall.register(Constant)
 def foo(x, args, env) :
-    raise NotImplementedError
+    if not isRecordType(x.data) :
+        error("invalid expression")
+    recType = x.data
+    argValueRefs = [evaluateAsRefParam(y, env) for y in args]
+    return makeRecord(recType, argValueRefs)
 
 @evalNamedCall.register(primitives.default)
 def foo(x, args, env) :
@@ -1478,7 +1485,7 @@ def foo(x, env, code) :
 
 @evalStmt.register(ExprStatement)
 def foo(x, env, code) :
-    raise NotImplementedError
+    evaluate(x.expr, env)
 
 
 
