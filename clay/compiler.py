@@ -696,7 +696,7 @@ def installOverload(env, item) :
         if type(x) is not Overloadable :
             error("invalid overloadable")
     entry = lookupIdent(env, item.name, verifyOverloadable)
-    entry.overloads.append(item)
+    entry.overloads.insert(0, item)
 
 
 

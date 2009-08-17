@@ -274,13 +274,11 @@ class Overloadable(TopLevelItem) :
         self.overloads = []
 
 class Overload(TopLevelItem) :
-    def __init__(self, name, level, code) :
+    def __init__(self, name, code) :
         super(Overload, self).__init__()
         check(name, Identifier)
-        check(level, int)
         check(code, Code)
         self.name = name
-        self.level = level
         self.code = code
         self.env = None
 

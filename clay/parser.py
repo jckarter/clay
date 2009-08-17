@@ -203,10 +203,8 @@ procedure = astNode(sequence(keyword("def"), identifier, code),
 overloadable = astNode(sequence(keyword("overloadable"), identifier,
                                 semicolon),
                        lambda x : Overloadable(x[1]))
-intInParens = sequence(symbol("("), tokenType(t.IntLiteral), symbol(")"))
-level = modify(optional(intInParens), lambda x : 0 if x is None else x[1])
-overload = astNode(sequence(keyword("overload"), level, identifier, code),
-                   lambda x : Overload(x[2], x[1], x[3]))
+overload = astNode(sequence(keyword("overload"), identifier, code),
+                   lambda x : Overload(x[1], x[2]))
 
 topLevelItem = choice(record, procedure, overloadable, overload)
 

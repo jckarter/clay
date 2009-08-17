@@ -12,13 +12,13 @@ overloadable negate;
 // defaults
 //
 
-overload(-2) init[T](ref a:T) {
+overload init[T](ref a:T) {
 }
 
-overload(-2) destroy[T](ref a:T) {
+overload destroy[T](ref a:T) {
 }
 
-overload(-1) assign[T](ref dest:T, ref src:T) {
+overload assign[T](ref dest:T, ref src:T) {
     if (equals(&dest, &src)) return;
     destroy(dest);
     init(dest, src);
@@ -28,17 +28,17 @@ def notEquals[T](ref a:T, ref b:T) {
     return not(equals(a, b));
 }
 
-overload(-1) lesserEquals[T](ref a:T, ref b:T) {
+overload lesserEquals[T](ref a:T, ref b:T) {
     if (equals(a, b)) return true;
     if (lesser(a, b)) return true;
     return false;
 }
 
-overload(-1) greater[T](ref a:T, ref b:T) {
+overload greater[T](ref a:T, ref b:T) {
     return not(lesserEquals(a, b));
 }
 
-overload(-1) greaterEquals[T](ref a:T, ref b:T) {
+overload greaterEquals[T](ref a:T, ref b:T) {
     return not(lesser(a, b));
 }
 
@@ -47,7 +47,7 @@ overload(-1) greaterEquals[T](ref a:T, ref b:T) {
 // Bool
 //
 
-overload init[T](ref dest:Bool, ref src:Bool) {
+overload init(ref dest:Bool, ref src:Bool) {
     boolCopy(dest, src);
 }
 
@@ -269,7 +269,7 @@ def RecordOrTuple[T](static T) {
     return false;
 }
 
-overload(-1) init[T](ref a:T) if RecordOrTuple(T) {
+overload init[T](ref a:T) if RecordOrTuple(T) {
     initFields(a, fieldCount(T), 0);
 }
 
@@ -279,7 +279,7 @@ def initFields[T,n,i](ref a:T, static n, static i) {
     initFields(a, n, add(i, 1));
 }
 
-overload(-1) init[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
+overload init[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
     initFieldsCopy(dest, src, fieldCount(T), 0);
 }
 
@@ -289,7 +289,7 @@ def initFieldsCopy[T,n,i](ref dest:T, ref src:T, static n, static i) {
     initFieldsCopy(dest, src, n, add(i, 1));
 }
 
-overload(-1) destroy[T](ref a:T) if RecordOrTuple(T) {
+overload destroy[T](ref a:T) if RecordOrTuple(T) {
     destroyFields(a, fieldCount(T), 0);
 }
 
@@ -299,7 +299,7 @@ def destroyFields[T,n,i](ref a:T, static n, static i) {
     destroyFields(a, n, add(i, 1));
 }
 
-overload(-1) equals[T](ref a:T, ref b:T) if RecordOrTuple(T) {
+overload equals[T](ref a:T, ref b:T) if RecordOrTuple(T) {
     return equalFields(a, b, fieldCount(T), 0);
 }
 
@@ -310,7 +310,7 @@ def equalFields[T,n,i](ref a:T, ref b:T, static n, static i) {
     return equalFields(a, b, n, add(i, 1));
 }
 
-overload(-1) lesser[T](ref a:T, ref b:T) if RecordOrTuple(T) {
+overload lesser[T](ref a:T, ref b:T) if RecordOrTuple(T) {
     return lesserFields(a, b, fieldCount(T), 0);
 }
 
