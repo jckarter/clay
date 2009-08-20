@@ -40,7 +40,7 @@ r(AddressOf, lambda x : xo("AddressOf", x.expr))
 #
 
 r(Block, lambda x : xo("Block", *x.statements))
-r(Assignment, lambda x : xo("Assignment", x.assignable, x.expr))
+r(Assignment, lambda x : xo("Assignment", x.left, x.right))
 r(LocalBinding, lambda x : xo("LocalBinding", x.name, x.type, x.expr))
 r(Return, lambda x : xo("Return", x.expr))
 r(IfStatement, lambda x : xo("IfStatement", x.condition,

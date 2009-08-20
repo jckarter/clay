@@ -1474,9 +1474,9 @@ def foo(x, env, context) :
 
 @evalStmt.register(Assignment)
 def foo(x, env, context) :
-    assignable = evaluateAsAssignable(x.assignable, env)
-    right = evaluateAsRefParam(x.expr, env)
-    valueAssign(assignable, right)
+    left = evaluateAsAssignable(x.left, env)
+    right = evaluateAsRefParam(x.right, env)
+    valueAssign(left, right)
 
 @evalStmt.register(LocalBinding)
 def foo(x, env, context) :

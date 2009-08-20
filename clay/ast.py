@@ -147,12 +147,12 @@ class Block(Statement) :
         self.statements = statements
 
 class Assignment(Statement) :
-    def __init__(self, assignable, expr) :
+    def __init__(self, left, right) :
         super(Assignment, self).__init__()
-        check(assignable, Expression)
-        check(expr, Expression)
-        self.assignable = assignable
-        self.expr = expr
+        check(left, Expression)
+        check(right, Expression)
+        self.left = left
+        self.right = right
 
 class LocalBinding(Statement) :
     def __init__(self, name, type, expr) :
