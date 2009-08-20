@@ -1,5 +1,5 @@
 import ctypes
-from clay.multimethod import multimethod
+from clay.multimethod import multimethod as orig_multimethod
 from clay.xprint import xprint, XObject, XField, XSymbol, xregister
 from clay.machineops import *
 from clay.ast import *
@@ -28,6 +28,501 @@ def contextLocation() :
 def error(msg) :
     raiseError(msg, contextLocation)
 
+def ensure(cond, msg) :
+    if not cond :
+        error(msg)
+
+def ensureArity(args, n) :
+    ensure(len(args) == n, "incorrect no. arguments")
+
+
+
+#
+# multimethod
+#
+
+def multimethod(n=1, errorMessage=None, defaultProc=None) :
+    if errorMessage is not None :
+        assert defaultProc is None
+        defaultProc = lambda *args : error(errorMessage)
+    if defaultProc is not None :
+        return orig_multimethod(n, defaultProc=defaultProc)
+    return orig_multimethod(n)
+
+
+
+#
+# types
+#
+
+class Type(object) :
+    def __init__(self, tag, params) :
+        self.tag = tag
+        self.params = params
+    def __eq__(self, other) :
+        return typeEquals(self, other)
+    def __hash__(self) :
+        return typeHash(self)
+
+class BoolTypeTag(object) : pass
+class IntTypeTag(object) : pass
+class FloatTypeTag(object) : pass
+class DoubleTypeTag(object) : pass
+class CharTypeTag(object) : pass
+class VoidTypeTag(object) : pass
+class TupleTypeTag(object) : pass
+class ArrayTypeTag(object) : pass
+class PointerTypeTag(object) : pass
+
+boolTypeTag = BoolTypeTag()
+intTypeTag = IntTypeTag()
+floatTypeTag = FloatTypeTag()
+doubleTypeTag = DoubleTypeTag()
+charTypeTag = CharTypeTag()
+voidTypeTag = VoidTypeTag()
+
+tupleTypeTag = TupleTypeTag()
+arrayTypeTag = ArrayTypeTag()
+pointerTypeTag = PointerTypeTag()
+
+boolType = Type(boolTypeTag, [])
+intType = Type(intTypeTag, [])
+floatType = Type(floatTypeTag, [])
+doubleType = Type(doubleTypeTag, [])
+charType = Type(charTypeTag, [])
+voidType = Type(voidTypeTag, [])
+
+def tupleType(types) :
+    assert len(types) >= 2
+    return Type(tupleTypeTag, types)
+
+def arrayType(type_, sizeValue) :
+    return Type(arrayTypeTag, [type_, sizeValue])
+
+def pointerType(type_) :
+    return Type(pointerTypeTag, [type_])
+
+def recordType(record, params) :
+    return Type(record, params)
+
+
+
+#
+# type predicates
+#
+
+def isType(t) : return type(t) is Type
+def isBoolType(t) : return t.tag is boolTypeTag
+def isIntType(t) : return t.tag is intTypeTag
+def isFloatType(t) : return t.tag is floatTypeTag
+def isDoubleType(t) : return t.tag is doubleTypeTag
+def isCharType(t) : return t.tag is charTypeTag
+def isVoidType(t) : return t.tag is voidTypeTag
+
+def isTupleType(t) : return t.tag is tupleTypeTag
+def isArrayType(t) : return t.tag is arrayTypeTag
+def isPointerType(t) : return t.tag is pointerTypeTag
+def isRecordType(t) : return type(t.tag) is Record
+
+
+
+#
+# typeEquals, typeHash
+#
+
+def typeEquals(a, b) :
+    assert isType(a) and isType(b)
+    return (a.tag is b.tag) and listEquals(a.params, b.params)
+
+
+def typeHash(a) :
+    assert isType(a)
+    hash((a.tag, listHash(a.params)))
+
+
+
+#
+# convert to ctypes
+#
+
+_ctypesTable = {}
+_ctypesTable[boolType] = ctypes.c_bool
+_ctypesTable[intType] = ctypes.c_int
+_ctypesTable[floatType] = ctypes.c_float
+_ctypesTable[doubleType] = ctypes.c_double
+_ctypesTable[charType] = ctypes.c_wchar
+_ctypesTable[voidType] = ctypes.c_bool
+
+def ctypesType(t) :
+    ct = _ctypesTable.get(t)
+    if ct is None :
+        ct = makeCTypesType(t.tag, t)
+    return ct
+
+makeCTypesType = multimethod(errorMessage="invalid type tag")
+
+@makeCTypesType.register(TupleTypeTag)
+def foo(tag, t) :
+    fieldCTypes = [ctypesType(toType(x)) for x in t.params]
+    fieldCNames = ["f%d" % x for x in range(len(t.params))]
+    ct = type("Tuple", (ctypes.Structure,))
+    ct._fields_ = zip(fieldCNames, fieldCTypes)
+    _ctypesTable[t] = ct
+    return ct
+
+@makeCTypesType.register(ArrayTypeTag)
+def foo(tag, t) :
+    ensure(len(t.params) == 2, "invalid array type")
+    ct = ctypesType(toType(t.params[0])) * toInt(t.params[1])
+    _ctypesTable[t] = ct
+    return ct
+
+@makeCTypesType.register(PointerTypeTag)
+def foo(tag, t) :
+    ensure(len(t.params) == 1, "invalid pointer type")
+    ct = ctypes.POINTER(ctypesType(toType(t.params[0])))
+    _ctypesTable[t] = ct
+    return ct
+
+@makeCTypesType.register(Record)
+def foo(tag, t) :
+    ct = type("Record", (ctypes.Structure,))
+    _ctypesTable[t] = ct
+    fieldCTypes = [ctypesType(x) for x in recordFieldTypes(t)]
+    fieldCNames = [f.name.s for f in t.record.fields]
+    ct._fields_ = zip(fieldCNames, fieldCTypes)
+    return ct
+
+
+
+#
+# typeSize
+#
+
+def typeSize(t) :
+    return ctypes.sizeof(ctypesType(t))
+
+
+
+#
+# type printer
+#
+
+
+xregister(Type, lambda t : (XObject(tagName(t), *t.params,
+                                    opening="[", closing="[")
+                            if t.params
+                            else XSymbol(tagName(t))))
+
+def tagName(t) :
+    if type(t.tag) is Record :
+        return t.tag.name.s
+    return _tagNames[t.tag]
+
+_tagNames = {}
+_tagNames[boolTypeTag] = "Bool"
+_tagNames[intTypeTag] = "Int"
+_tagNames[floatTypeTag] = "Float"
+_tagNames[doubleTypeTag] = "Double"
+_tagNames[charTypeTag] = "Char"
+_tagNames[voidTypeTag] = "Void"
+_tagNames[tupleTypeTag] = "Tuple"
+_tagNames[arrayTypeTag] = "Array"
+_tagNames[pointerTypeTag] = "Pointer"
+
+
+
+#
+# Value, Reference
+#
+
+class Value(object) :
+    def __init__(self, type_) :
+        self.type = type_
+        self.ctypesType = ctypesType(type_)
+        self.buf = self.ctypesType()
+    def __eq__(self, other) :
+        return equals(self, other)
+    def __hash__(self) :
+        return valueHash(self)
+
+class Reference(object) :
+    def __init__(self, type_, address) :
+        self.type = type_
+        self.address = address
+    def __eq__(self, other) :
+        return equals(self, other)
+    def __hash__(self) :
+        return valueHash(self)
+
+def isValue(x) : return type(x) is Value
+def isReference(x) : return type(x) is Reference
+
+
+
+#
+# VoidValue, voidValue
+#
+
+class VoidValue(object) :
+    pass
+
+voidValue = VoidValue()
+
+
+
+#
+# toInt
+#
+
+toInt = multimethod(errorMessage="invalid int")
+
+toInt.register(Value)
+def foo(x) :
+    ensure(x.type == intType, "not int type")
+    return x.buf.value
+
+toInt.register(Reference)
+def foo(x) :
+    return toInt(toValue(x))
+
+
+
+#
+# toBool
+#
+
+toBool = multimethod(errorMessage="invalid bool")
+
+toBool.register(Value)
+def foo(x) :
+    ensure(x.type == boolType, "not bool type")
+    return x.buf.value
+
+toBool.register(Reference)
+def foo(x) :
+    return toBool(toValue(x))
+
+
+
+#
+# toValue
+#
+
+toValue = multimethod(errorMessage="invalid value")
+
+toValue.register(bool)
+def foo(x) :
+    v = tempValue(boolType)
+    v.buf.value = x
+    return v
+
+toValue.register(int)
+def foo(x) :
+    v = tempValue(intType)
+    v.buf.value = x
+    return v
+
+toValue.register(Reference)
+def foo(x) :
+    v = tempValue(x.type)
+    valueCopy(v, x)
+    return v
+
+toValue.register(Value)
+def foo(x) :
+    return x
+
+
+
+#
+# toLValue
+#
+
+toLValue = multimethod(errorMessage="invalid l-value")
+
+toLValue.register(Reference)
+def foo(x) :
+    return x
+
+
+
+#
+# toReference
+#
+
+toReference = multimethod(errorMessage="invalid reference")
+
+toReference.register(Value)
+def foo(x) :
+    return Reference(x.type, ctypes.addressof(x.buf))
+
+toReference.register(Reference)
+def foo(x) :
+    return x
+
+
+
+#
+# toType
+#
+
+toType = multimethod(errorMessage="invalid type")
+
+toType.register(Type)
+def foo(x) :
+    return x
+
+
+
+#
+# toTypeOrValue
+#
+
+toTypeOrValue = multimethod(errorMessage="invalid type param")
+
+toTypeOrValue.register(Value)
+def foo(x) :
+    return x
+
+toTypeOrValue.register(Reference)
+def foo(x) :
+    return toValue(x)
+
+toTypeOrValue.register(Type)
+def foo(x) :
+    return x
+
+
+
+#
+# toValueOrCell, toTypeOrCell, toTypeOrValueOrCell
+#
+
+toValueOrCell = multimethod(defaultProc=toValue)
+toValueOrCell.register(Cell)(lambda x : x)
+
+toTypeOrCell = multimethod(defaultProc=toType)
+toTypeOrCell.register(Cell)(lambda x : x)
+
+toTypeOrValueOrCell = multimethod(defaultProc=toTypeOrValue)
+toTypeOrValueOrCell.register(Cell)(lambda x : x)
+
+
+
+#
+# equals
+#
+
+equals = multimethod(n=2, errorMessage="invalid equals test")
+
+equals.register(Value, Value)
+def foo(a, b) :
+    return valueEquals(a, b)
+
+equals.register(Value, Reference)
+def foo(a, b) :
+    return valueEquals(a, b)
+
+equals.register(Reference, Value)
+def foo(a, b) :
+    return valueEquals(a, b)
+
+equals.register(Reference, Reference)
+def foo(a, b) :
+    return valueEquals(a, b)
+
+equals.register(Type, Type)
+def foo(a, b) :
+    return typeEquals(a, b)
+
+def listEquals(a, b) :
+    for x, y in zip(a, b) :
+        if not equals(x, y) :
+            return False
+    return True
+
+def listHash(a) :
+    return hash(tuple(map(hash, a)))
+
+
+
+#
+# core value operations
+#
+
+def callBuiltin(builtinName, args, converter=None) :
+    env = Environment(primitivesEnv)
+    variables = [Identifier("v%d" % i) for i in range(len(args))]
+    for variable, arg in zip(variables, args) :
+        addIdent(env, variable, arg)
+    argNames = map(NameRef, variables)
+    builtin = NameRef(Identifier(builtinName))
+    call = Call(builtin, argNames)
+    if converter is None :
+        return evaluate(call, env)
+    return evaluate(call, env, converter)
+
+def valueInit(a) :
+    callBuiltin("init", [a])
+
+def valueCopy(dest, src) :
+    callBuiltin("copy", [dest, src])
+
+def valueAssign(dest, src) :
+    callBuiltin("assign", [dest, src])
+
+def valueDestroy(a) :
+    callBuiltin("destroy", [a])
+
+def valueEquals(a, b) :
+    return callBuiltin("equals", [a, b], toBool)
+
+def valueHash(a) :
+    return callBuiltin("hash", [a], toInt)
+
+
+
+#
+# unification
+#
+
+class Cell(object) :
+    def __init__(self, param) :
+        self.param = param
+
+def isCell(x) :
+    return type(x) is Cell
+
+def unify(a, b) :
+    assert type(a) in (Value, Type, Cell)
+    assert type(b) in (Value, Type, Cell)
+    if isCell(a) :
+        if a.param is None :
+            a.param = b
+            return True
+        return unify(a.param, b)
+    elif isCell(b) :
+        if b.param is None :
+            b.param = a
+            return True
+        return unify(a, b.param)
+    if isValue(a) and isValue(b) :
+        return equals(a, b)
+    if isType(a) and isType(b) :
+        if a.tag is not b.tag :
+            return False
+        for x, y in zip(a.params, b.params) :
+            if not unify(x, y) :
+                return False
+        return True
+    return False
+
+def cellDeref(a) :
+    while type(a) is Cell :
+        a = a.param
+    return a
+
 
 
 #
@@ -35,8 +530,8 @@ def error(msg) :
 #
 
 # env entries are:
-# Record, Procedure, Overloadable, Value, RefValue, Constant
-# primitives
+# Record, Procedure, Overloadable, Value, Reference, Type, Cell,
+# and primitives
 
 class Environment(object) :
     def __init__(self, parent=None) :
@@ -86,340 +581,6 @@ def lookupIdent(env, ident, verifier=None) :
 
 
 #
-# Value
-#
-
-class Value(object) :
-    def __init__(self, type) :
-        self.type = type
-        self.ctypesType = ctypesType(type)
-        self.buf = self.ctypesType()
-
-class RefValue(object) :
-    def __init__(self, value, offset=0, type=None) :
-        if type is not None :
-            self.type = type
-        else :
-            self.type = value.type
-        if isRefValue(value) :
-            address = value.address
-        elif isValue(value) :
-            address = ctypes.addressof(value.buf)
-        else :
-            assert False
-        self.address = address + offset
-
-def isValue(x) : return type(x) is Value
-def isRefValue(x) : return type(x) is RefValue
-
-
-
-#
-# types
-#
-
-class Type(object) :
-    def __eq__(self, other) :
-        return typeEquals(self, other)
-    def __ne__(self, other) :
-        return not typeEquals(self, other)
-    def __hash__(self) :
-        return typeHash(self)
-
-class PrimitiveType(Type) :
-    def __init__(self, name) :
-        super(PrimitiveType, self).__init__()
-        self.name = name
-
-boolType = PrimitiveType("Bool")
-intType = PrimitiveType("Int")
-floatType = PrimitiveType("Float")
-doubleType = PrimitiveType("Double")
-charType = PrimitiveType("Char")
-
-class TupleType(Type) :
-    def __init__(self, types) :
-        super(TupleType, self).__init__()
-        self.types = types
-
-class ArrayType(Type) :
-    def __init__(self, type, size) :
-        super(ArrayType, self).__init__()
-        self.type = type
-        self.size = size
-    def sizeAsValue(self) :
-        if type(self.size) is int :
-            return intToValue(self.size)
-        return self.size
-
-class PointerType(Type) :
-    def __init__(self, type) :
-        super(PointerType, self).__init__()
-        self.type = type
-
-class RecordType(Type) :
-    def __init__(self, record, typeParams) :
-        super(RecordType, self).__init__()
-        self.record = record
-        self.typeParams = typeParams
-
-
-
-#
-# type predicates
-#
-
-def isType(t) : return isinstance(t, Type)
-def isPrimitiveType(t) : return type(t) is PrimitiveType
-def isBoolType(t) : return t is boolType
-def isIntType(t) : return t is intType
-def isFloatType(t) : return t is floatType
-def isDoubleType(t) : return t is doubleType
-def isCharType(t) : return t is charType
-
-def isTupleType(t) : return type(t) is TupleType
-def isArrayType(t) : return type(t) is ArrayType
-def isPointerType(t) : return type(t) is PointerType
-def isRecordType(t) : return type(t) is RecordType
-
-
-
-#
-# type equality
-#
-
-typeEquals = multimethod(n=2, default=False)
-
-def typeListEquals(a, b) :
-    if len(a) != len(b) :
-        return False
-    for x,y in zip(a,b) :
-        if not typeEquals(x, y) :
-            return False
-    return True
-
-@typeEquals.register(PrimitiveType, PrimitiveType)
-def foo(x, y) :
-    return x.name == y.name
-
-@typeEquals.register(TupleType, TupleType)
-def foo(x, y) :
-    return typeListEquals(x.types, y.types)
-
-@typeEquals.register(ArrayType, ArrayType)
-def foo(x, y) :
-    return typeEquals(x.type, y.type) and (x.size == y.size)
-
-@typeEquals.register(PointerType, PointerType)
-def foo(x, y) :
-    return typeEquals(x.type, y.type)
-
-@typeEquals.register(RecordType, RecordType)
-def foo(x, y) :
-    sameRecord = (x.record is y.record)
-    return sameRecord and typeListEquals(x.typeParams, y.typeParams)
-
-@typeEquals.register(Value, Value)
-def foo(x, y) :
-    return valueEquals(x, y)
-
-
-
-#
-# type hash
-#
-
-typeHash = multimethod()
-
-@typeHash.register(PrimitiveType)
-def foo(x) :
-    return hash(x.name)
-
-@typeHash.register(TupleType)
-def foo(x) :
-    childHashes = tuple([typeHash(t) for t in x.types])
-    return hash(("Tuple", childHashes))
-
-@typeHash.register(ArrayType)
-def foo(x) :
-    return hash(("Array", typeHash(x.type), x.size))
-
-@typeHash.register(PointerType)
-def foo(x) :
-    return hash(("Pointer", typeHash(x.type)))
-
-@typeHash.register(RecordType)
-def foo(x) :
-    childHashes = tuple([typeHash(t) for t in x.typeParams])
-    return hash(("Record", id(x.record), childHashes))
-
-@typeHash.register(Value)
-def foo(x) :
-    return valueHash(x)
-
-
-
-#
-# type unification
-#
-
-class TypeCell(Type) :
-    def __init__(self) :
-        super(TypeCell, self).__init__()
-        self.type = None
-
-def typeDeref(t) :
-    while type(t) is TypeCell :
-        t = t.type
-    return t
-
-def typeListUnify(a, b) :
-    if len(a) != len(b) :
-        return False
-    for x,y in zip(a,b) :
-        if not typeUnify(x,y) :
-            return False
-    return True
-
-def typeUnifyCells(x, y) :
-    if type(x) is TypeCell :
-        if x.type is None :
-            x.type = y
-            return True
-        return typeUnify(x.type, y)
-    elif type(y) is TypeCell :
-        if y.type is None :
-            y.type = x
-            return True
-        return typeUnify(x, y.type)
-    return False
-
-typeUnify = multimethod(n=2, defaultProc=typeUnifyCells)
-
-@typeUnify.register(PrimitiveType, PrimitiveType)
-def foo(x, y) :
-    return x.name == y.name
-
-@typeUnify.register(TupleType, TupleType)
-def foo(x, y) :
-    return typeListUnify(x.types, y.types)
-
-@typeUnify.register(ArrayType, ArrayType)
-def foo(x, y) :
-    sizeResult = typeUnify(x.sizeAsValue(), y.sizeAsValue())
-    return sizeResult and typeUnify(x.type, y.type)
-
-@typeUnify.register(PointerType, PointerType)
-def foo(x, y) :
-    return typeUnify(x.type, y.type)
-
-@typeUnify.register(RecordType, RecordType)
-def foo(x, y) :
-    return (x.record is y.record) and typeListUnify(x.typeParams, y.typeParams)
-
-@typeUnify.register(Value, Value)
-def foo(x, y) :
-    return valueEquals(x, y)
-
-
-
-#
-# convert to ctypes
-#
-
-_ctypesTable = {}
-
-def ctypesType(t) :
-    ct = _ctypesTable.get(t)
-    if ct is None :
-        ct = makeCTypesType(t)
-    return ct
-
-makeCTypesType = multimethod()
-
-@makeCTypesType.register(PrimitiveType)
-def foo(t) :
-    if isBoolType(t) :
-        ct = ctypes.c_bool
-    elif isIntType(t) :
-        ct = ctypes.c_int
-    elif isFloatType(t) :
-        ct = ctypes.c_float
-    elif isDoubleType(t) :
-        ct = ctypes.c_double
-    elif isCharType(t) :
-        ct = ctypes.c_char
-    else :
-        assert False
-    _ctypesTable[t] = ct
-    return ct
-
-@makeCTypesType.register(TupleType)
-def foo(t) :
-    fieldCTypes = [ctypesType(x) for x in t.types]
-    fieldCNames = ["f%d" % x for x in range(len(t.types))]
-    ct = type("Tuple", (ctypes.Structure,))
-    ct._fields_ = zip(fieldCNames, fieldCTypes)
-    _ctypesTable[t] = ct
-    return ct
-
-@makeCTypesType.register(ArrayType)
-def foo(t) :
-    ct = ctypesType(t.type) * t.size
-    _ctypesTable[t] = ct
-    return ct
-
-@makeCTypesType.register(RecordType)
-def foo(t) :
-    ct = type("Record", (ctypes.Structure,))
-    _ctypesTable[t] = ct
-    fieldCTypes = [ctypesType(x) for x in recordFieldTypes(t)]
-    fieldCNames = [f.name.s for f in t.record.fields]
-    ct._fields_ = zip(fieldCNames, fieldCTypes)
-    return ct
-
-
-
-#
-# typeSize
-#
-
-def typeSize(t) :
-    return ctypes.sizeof(ctypesType(t))
-
-
-
-#
-# type printer
-#
-
-def obj(name, *fields) :
-    return XObject(name, *fields, opening="[", closing="]")
-
-xregister(PrimitiveType, lambda x : XSymbol(x.name))
-xregister(TupleType, lambda x : tuple(x.types))
-xregister(ArrayType, lambda x : obj("Array", x.type, x.size))
-xregister(PointerType, lambda x : obj("Pointer", x.type))
-xregister(RecordType,
-          lambda x : (obj(x.record.name.s, *x.typeParams)
-                      if x.typeParams
-                      else XSymbol(x.record.name.s)))
-xregister(TypeCell, lambda x : XObject("TypeCell", x.type))
-
-
-
-#
-# env entries
-#
-
-class Constant(object) :
-    def __init__(self, data) :
-        assert isValue(data) or isType(data)
-        self.data = data
-
-
-
-#
 # install primitives
 #
 
@@ -430,8 +591,6 @@ def installPrimitives() :
     primClasses = {}
     def entry(name, value) :
         primitivesEnv.add(name, value)
-    def constant(name, value) :
-        entry(name, Constant(value))
     def primitive(name) :
         primClass = type("Primitive%s" % name, (object,), {})
         primClasses[name] = primClass
@@ -441,11 +600,12 @@ def installPrimitives() :
         x.env = primitivesEnv
         entry(name, x)
 
-    constant("Bool", boolType)
-    constant("Int", intType)
-    constant("Float", floatType)
-    constant("Double", doubleType)
-    constant("Char", charType)
+    entry("Bool", boolType)
+    entry("Int", intType)
+    entry("Float", floatType)
+    entry("Double", doubleType)
+    entry("Char", charType)
+    entry("Void", voidType)
 
     primitive("Tuple")
     primitive("Array")
@@ -523,6 +683,7 @@ def installPrimitives() :
     primitive("intToDouble")
 
     overloadable("init")
+    overloadable("copy")
     overloadable("destroy")
     overloadable("assign")
     overloadable("equals")
@@ -554,339 +715,139 @@ def pushTempValueSet() :
 
 def popTempValueSet(old) :
     global _tempValues
-    for temp in _tempValues :
+    for temp in reversed(_tempValues) :
         valueDestroy(temp)
     _tempValues = _savedTempValueSets.pop()
 
-def tempValue(type) :
-    v = Value(type)
+def tempValue(type_) :
+    v = Value(type_)
     _tempValues.append(v)
     return v
 
-def clearTempValues() :
-    del _tempValues[:]
-
 
 
 #
-# value operations
+# bindings
 #
 
-def valueInit(a) :
-    init = NameRef(Identifier("init"))
-    call = Call(init, [a])
-    evaluate(call, primitivesEnv)
-
-def valueInitCopy(dest, src) :
-    init = NameRef(Identifier("init"))
-    call = Call(init, [dest, src])
-    evaluate(call, primitivesEnv)
-
-def valueDestroy(a) :
-    destroy = NameRef(Identifier("destroy"))
-    call = Call(destroy, [a])
-    evaluate(call, primitivesEnv)
-
-def valueAssign(dest, src) :
-    assign = NameRef(Identifier("assign"))
-    call = Call(assign, [dest, src])
-    evaluate(call, primitivesEnv)
-
-def valueEquals(a, b) :
-    equals = NameRef(Identifier("equals"))
-    call = Call(equals, [a, b])
-    return evaluateAsBoolValue(call, primitivesEnv)
-
-def valueHash(a) :
-    hash = NameRef(Identifier("hash"))
-    call = Call(hash, [a])
-    return evaluateAsIntValue(call, primitivesEnv)
-
-def valueToRef(a) :
-    return RefValue(a)
-
-def refToValue(a) :
-    v = tempValue(a.type)
-    valueInitCopy(v, a)
-    return v
-
-def valueToInt(a) :
-    assert isValue(a) and isIntType(a.type)
-    return a.buf.value
-
-def intToValue(i) :
-    v = tempValue(intType)
-    v.buf.value = i
-    return v
-
-def valueToBool(a) :
-    assert isValue(a) and isBoolType(a.type)
-    return a.buf.value
-
-def boolToValue(b) :
-    v = tempValue(boolType)
-    v.buf.value = b
-    return v
-
-def valueToChar(a) :
-    assert isValue(a) and isCharType(a.type)
-    return a.buf.value
-
-def charToValue(c) :
-    v = tempValue(charType)
-    v.buf.value = c
-    return v
-
-def tupleFieldRef(a, i) :
-    assert isRefValue(a) and isTupleType(a.type)
-    fieldName = "f%d" % i
-    ctypesField = getattr(ctypesType(a.type), fieldName)
-    fieldType = a.type.types[i]
-    return RefValue(a, ctypesField.offset, fieldType)
-
-def makeTuple(argValueRefs) :
-    valueType = TupleType([x.type for x in argValueRefs])
-    value = tempValue(valueType)
-    valueRef = RefValue(value)
-    for i, arg in enumerate(argValueRefs) :
-        left = tupleFieldRef(valueRef, i)
-        valueInitCopy(left, arg)
-    return value
-
-def recordFieldRef(a, i) :
-    assert isRefValue(a) and isRecordType(a.type)
-    fieldName = a.type.record.fields[i].name.s
-    fieldType = recordFieldTypes(a.type)[i]
-    ctypesField = getattr(ctypesType(a.type), fieldName)
-    return RefValue(a, ctypesField.offset, fieldType)
-
-def recordFieldIndex(recordType, ident) :
-    for i, f in enumerate(recordType.record.fields) :
-        if f.name.s == ident.s :
-            return i
-    error("record field not found: %s" % ident.s)
-
-def makeRecord(recordType, argValueRefs) :
-    ensureArity(argValueRefs, len(recordType.record.fields))
-    value = tempValue(recordType)
-    valueRef = RefValue(value)
-    for i, argValueRef in enumerate(argValueRefs) :
-        left = recordFieldRef(valueRef, i)
-        valueInitCopy(left, argValueRef)
-    return value
-
-
-
-#
-# build top level env
-#
-
-def buildTopLevelEnv(program) :
-    env = Environment(primitivesEnv)
-    for item in program.topLevelItems :
-        item.env = env
-        if type(item) is Overload :
-            installOverload(env, item)
-        else :
-            addIdent(env, item.name, item)
+def bindVariables(parentEnv, variables, objects) :
+    env = Environment(parentEnv)
+    for variable, object_ in zip(variables, objects) :
+        addIdent(env, variable, object_)
     return env
 
-def installOverload(env, item) :
-    def verifyOverloadable(x) :
-        if type(x) is not Overloadable :
-            error("invalid overloadable")
-    entry = lookupIdent(env, item.name, verifyOverloadable)
-    entry.overloads.insert(0, item)
-
-
-
-#
-# eval utilities
-#
-
-def ensureArity(someList, n) :
-    if len(someList) != n :
-        error("incorrect no. of arguments")
-
-def ensureMinArity(someList, n) :
-    if len(someList) < n :
-        error("insufficient no. of arguments")
-
 def bindTypeVars(parentEnv, typeVars) :
-    env = Environment(parentEnv)
-    typeCells = []
-    for typeVar in typeVars :
-        typeCell = TypeCell()
-        typeCells.append(typeCell)
-        addIdent(env, typeVar, Constant(typeCell))
-    return env, typeCells
+    cells = [Cell(None) for _ in typeVars]
+    env = bindVariables(parentEnv, typeVars, cells)
+    return env, cells
 
-def resolveTypeVar(typeVar, typeValue) :
+def matchPattern(pattern, typeParam, context) :
+    try :
+        contextPush(context)
+        if not unify(pattern, typeParam) :
+            error("type mismatch")
+    finally :
+        contextPop()
+
+def matchType(typeA, typeB, context) :
+    try :
+        contextPush(context)
+        if not typeEquals(typeA, typeB) :
+            error("type mismatch")
+    finally :
+        contextPop()
+
+def resolveTypeVar(typeVar, cell) :
     try :
         contextPush(typeVar)
-        t = typeDeref(typeValue)
+        t = cellDeref(cell)
         if t is None :
             error("unresolved type var")
         return t
     finally :
         contextPop()
 
-def resolveTypeVars(typeVars, typeCells) :
-    return [resolveTypeVar(v, c) for v, c in zip(typeVars, typeCells)]
-
-def bindTypeParams(parentEnv, typeVars, typeValues) :
-    env = Environment(parentEnv)
-    for typeVar, typeValue in zip(typeVars, typeValues) :
-        result = resolveTypeVar(typeVar, typeValue)
-        addIdent(env, typeVar, Constant(result))
-    return env
-
-def evalFieldTypes(fields, env) :
-    return [evaluateAsType(f.type, env) for f in fields]
-
-_recordFieldTypes = {}
-# assumes recordType is a complete type
-def recordFieldTypes(recordType) :
-    fieldTypes = _recordFieldTypes.get(recordType)
-    if fieldTypes is None :
-        record = recordType.record
-        typeParams = recordType.typeParams
-        env = bindTypeParams(record.env, record.typeVars, typeParams)
-        fieldTypes = evalFieldTypes(record.fields, env)
-        _recordFieldTypes[recordType] = fieldTypes
-    return fieldTypes
-
-def matchType(expr, exprType, typePattern) :
-    try :
-        contextPush(expr)
-        if not typeUnify(exprType, typePattern) :
-            error("type mismatch")
-    finally :
-        contextPop()
+def resolveTypeVars(typeVars, cells) :
+    typeValues = []
+    for typeVar, cell in zip(typeVars, cells) :
+        typeValues.append(resolveTypeVar(typeVar, cell))
+    return typeValues
 
 
 
 #
-# evaluate : (expr, env) -> Type|Value|RefValue|None
+# tuples, records
 #
 
-def evaluate(expr, env, verifier=None) :
+def tupleFieldRef(a, i) :
+    assert isReference(a) and isTupleType(a.type)
+    fieldName = "f%d" % i
+    ctypesField = getattr(ctypesType(a.type), fieldName)
+    fieldType = toType(a.type.params[i])
+    return Reference(fieldType, a.address + ctypesField.offset)
+
+def makeTuple(argRefs) :
+    t = tupleType([x.type for x in argRefs])
+    value = tempValue(t)
+    valueRef = toReference(value)
+    for i, argRef in enumerate(argRefs) :
+        left = tupleFieldRef(valueRef, i)
+        valueCopy(left, argRef)
+    return value
+
+def recordFieldRef(a, i) :
+    assert isReference(a) and isRecordType(a.type)
+    fieldName = a.type.tag.fields[i].name.s
+    fieldType = recordFieldTypes(a.type)[i]
+    ctypesField = getattr(ctypesType(a.type), fieldName)
+    return Reference(fieldType, a.address + ctypesField.offset)
+
+def recordFieldIndex(recType, ident) :
+    for i, f in enumerate(recType.tag.fields) :
+        if f.name.s == ident.s :
+            return i
+    error("record field not found: %s" % ident.s)
+
+def makeRecord(recType, argRefs) :
+    ensureArity(argRefs, len(recType.tag.fields))
+    value = tempValue(recType)
+    valueRef = toReference(value)
+    for i, argRef in enumerate(argRefs) :
+        left = recordFieldRef(valueRef, i)
+        valueCopy(left, argRef)
+    return value
+
+def computeFieldTypes(fields, env) :
+    typeExprs = [f.type for f in fields]
+    fieldTypes = [evaluate(x, env, toTypeOrCell) for x in typeExprs]
+    return fieldTypes
+
+_recordFieldTypes = {}
+def recordFieldTypes(recType) :
+    assert isType(recType)
+    fieldTypes = _recordFieldTypes.get(recType)
+    if fieldTypes is None :
+        record = recType.tag
+        env = bindVariables(record.env, record.typeVars, recType.params)
+        fieldTypes = computeFieldTypes(record.fields, env)
+        _recordFieldTypes[recType] = fieldTypes
+    return fieldTypes
+
+
+
+#
+# evaluate
+#
+
+def evaluate(expr, env, converter) :
     try :
         contextPush(expr)
         result = evalExpr(expr, env)
-        if verifier is not None :
-            result = verifier(result)
+        if converter is not None :
+            result = converter(result)
         return result
     finally :
         contextPop()
-
-def isNonVoid(x) :
-    return x is not None
-
-def verifyNonVoid(x) :
-    if not isNonVoid(x) :
-        error("unexpected void expression")
-    return x
-
-def verifyType(x) :
-    if not isType(x) :
-        error("type expected")
-    return x
-
-def isAssignable(x) :
-    return isRefValue(x)
-
-def verifyAssignable(x) :
-    if not isAssignable(x) :
-        error("reference expected")
-    return x
-
-def toRefParam(x) :
-    if isRefValue(x) :
-        return x
-    if isValue(x) :
-        return valueToRef(x)
-    return None
-
-def verifyRefParam(x) :
-    result = toRefParam(x)
-    if result is None :
-        error("reference/value expected")
-    return result
-
-def toValue(x) :
-    if isValue(x) :
-        return x
-    if isRefValue(x) :
-        return refToValue(x)
-    return None
-
-def verifyValue(x) :
-    result = toValue(x)
-    if result is None :
-        error("value expected")
-    return result
-
-def toTypeParam(x) :
-    if isRefValue(x) :
-        return refToValue(x)
-    return x
-
-def verifyTypeParam(x) :
-    result = toTypeParam(x)
-    if result is None :
-        error("type/value expected")
-    return x
-
-def toIntValue(x) :
-    if isRefValue(x) :
-        x = refToValue(x)
-    if isValue(x) and isIntType(x.type) :
-        return valueToInt(x)
-    return None
-
-def verifyIntValue(x) :
-    result = toIntValue(x)
-    if result is None :
-        error("int value expected")
-    return result
-
-def toBoolValue(x) :
-    if isRefValue(x) :
-        x = refToValue(x)
-    if isValue(x) and isBoolType(x.type) :
-        return valueToBool(x)
-    return None
-
-def verifyBoolValue(x) :
-    result = toBoolValue(x)
-    if result is None :
-        error("bool value expected")
-    return result
-
-def evaluateNonVoid(expr, env) :
-    return evaluate(expr, env, verifyNonVoid)
-
-def evaluateAsType(expr, env) :
-    return evaluate(expr, env, verifyType)
-
-def evaluateAsAssignable(expr, env) :
-    return evaluate(expr, env, verifyAssignable)
-
-def evaluateAsRefParam(expr, env) :
-    return evaluate(expr, env, verifyRefParam)
-
-def evaluateAsValue(expr, env) :
-    return evaluate(expr, env, verifyValue)
-
-def evaluateAsTypeParam(expr, env) :
-    return evaluate(expr, env, verifyTypeParam)
-
-def evaluateAsIntValue(expr, env) :
-    return evaluate(expr, env, verifyIntValue)
-
-def evaluateAsBoolValue(expr, env) :
-    return evaluate(expr, env, verifyBoolValue)
 
 
 
@@ -894,199 +855,146 @@ def evaluateAsBoolValue(expr, env) :
 # evalExpr
 #
 
-def badExpression(*args) :
-    error("invalid expression")
-
-evalExpr = multimethod(defaultProc=badExpression)
-
-@evalExpr.register(Value)
-def foo(x, env) :
-    return x
-
-@evalExpr.register(RefValue)
-def foo(x, env) :
-    return x
-
-@evalExpr.register(Constant)
-def foo(x, env) :
-    return x.data
+evalExpr = multimethod(errorMessage="invalid expression")
 
 @evalExpr.register(BoolLiteral)
 def foo(x, env) :
-    return boolToValue(x.value)
+    return toValue(x.value)
+
 
 @evalExpr.register(IntLiteral)
 def foo(x, env) :
-    return intToValue(x.value)
+    return toValue(x.value)
 
 @evalExpr.register(CharLiteral)
 def foo(x, env) :
-    return charToValue(x.value)
+    v = tempValue(charType)
+    v.buf.value = x.value
+    return v
 
 @evalExpr.register(NameRef)
 def foo(x, env) :
-    return evalNameRef(lookupIdent(env, x.name))
+    return lookupIdent(env, x.name)
 
 @evalExpr.register(Tuple)
 def foo(x, env) :
     assert len(x.args) > 0
-    first = evaluateNonVoid(x.args[0], env)
+    first = evaluate(x.args[0], env)
     if len(x.args) == 1 :
         return first
-    if isType(first) :
-        rest = [evaluateAsType(arg, env) for arg in x.args[1:]]
-        return TupleType([first] + rest)
+    if isType(first) or isCell(first) :
+        rest = [evaluate(y, env, toTypeOrCell) for y in x.args[1:]]
+        return tupleType([first] + rest)
     else :
-        args = [verifyRefParam(first)]
-        args.extend([evaluateAsRefParam(arg, env) for arg in x.args[1:]])
+        args = [toReference(first)]
+        args.extend([evaluate(y, env, toReference) for y in x.args[1:]])
         return makeTuple(args)
 
 @evalExpr.register(Indexing)
 def foo(x, env) :
-    if type(x.expr) is NameRef :
-        entry = lookupIdent(env, x.expr.name)
-        handler = evalNamedIndexing.getHandler(type(entry))
-        if handler is not None :
-            return handler(entry, x.args, env)
-    error("invalid expression")
+    thing = evaluate(x.expr, env)
+    return evalIndexing(thing, x.args, env)
 
 @evalExpr.register(Call)
 def foo(x, env) :
-    if type(x.expr) is NameRef :
-        entry = lookupIdent(env, x.expr.name)
-        handler = evalNamedCall.getHandler(type(entry))
-        if handler is not None :
-            return handler(entry, x.args, env)
-    recType = evaluateAsType(x.expr, env)
-    if not isRecordType(recType) :
-        error("invalid expression")
-    argValueRefs = [evaluateAsRefParam(arg, env) for arg in x.args]
-    return makeRecord(recType, argValueRefs)
+    thing = evaluate(x.expr, env)
+    return evalCall(thing, x.args, env)
 
 @evalExpr.register(FieldRef)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = evaluate(x.expr, env, toReference)
+    ensure(isRecordType(thing.type), "invalid record")
+    return recordFieldRef(thing, recordFieldIndex(thing.type, x.name))
 
 @evalExpr.register(TupleRef)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = evaluate(x.expr, env, toReference)
+    ensure(isTupleType(thing.type), "invalid tuple")
+    return tupleFieldRef(thing, x.index)
 
 @evalExpr.register(Dereference)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = evaluate(x.expr, env, toValue)
+    ensure(isPointerType(thing.type), "invalid pointer")
+    void_ptr = ctypes.cast(thing.buf, ctypes.c_void_p)
+    return Reference(thing.type, void_ptr.value)
 
 @evalExpr.register(AddressOf)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = evaluate(x.expr, env, toLValue)
+    ptr = tempValue(pointerType(thing.type))
+    void_ptr = ctypes.c_void_p(thing.address)
+    ptr.buf = ctypes.cast(void_ptr, ptr.ctypesType)
+    return ptr
 
 
 
 #
-# evalNameRef
+# evalIndexing
 #
 
-evalNameRef = multimethod(defaultProc=badExpression)
+evalIndexing = multimethod(errorMessage="invalid indexing")
 
-@evalNameRef.register(Value)
-def foo(x) :
-    return valueToRef(x)
-
-@evalNameRef.register(RefValue)
-def foo(x) :
-    return x
-
-@evalNameRef.register(Constant)
-def foo(x) :
-    if isType(x.data) :
-        return x.data
-    elif isValue(x.data) :
-        a = tempValue(x.data.type)
-        valueInitCopy(a, x.data)
-        return a
-    assert False
-
-@evalNameRef.register(Record)
-def foo(x) :
-    if len(x.typesVars) > 0 :
-        error("record type requires type parameters")
-    return RecordType(x, [])
-
-
-
-#
-# evalNamedIndexing
-#
-
-evalNamedIndexing = multimethod(defaultProc=badExpression)
-
-@evalNamedIndexing.register(Record)
+@evalIndexing.register(Record)
 def foo(x, args, env) :
     ensureArity(args, len(x.typeVars))
-    typeParams = [evaluateAsTypeParam(y, env) for y in args]
-    return RecordType(x, typeParams)
+    typeParams = [evaluate(y, env, toTypeOrValueOrCell) for y in args]
+    return recordType(x, typeParams)
 
-@evalNamedIndexing.register(primitives.Tuple)
+@evalIndexing.register(primitives.Tuple)
 def foo(x, args, env) :
-    ensureMinArity(args, 2)
-    types = [evaluateAsType(y, env) for y in args]
-    return TupleType(types)
+    ensure(len(args) > 1, "tuple types need atleast two member types")
+    elementTypes = [evaluate(y, env, toTypeOrCell) for y in args]
+    return tupleType(elementTypes)
 
-@evalNamedIndexing.register(primitives.Array)
+@evalIndexing.register(primitives.Array)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    elementType = evaluateAsType(args[0], env)
-    def verifyArraySize(y) :
-        if isType(y) and (type(y) is TypeCell) :
-            return y
-        if isValue(y) and isIntType(y.type) :
-            return valueToInt(y)
-        if isRefValue(y) and isIntType(y.type) :
-            return valueToInt(refToValue(y))
-        error("invalid array size parameter")
-    size = evaluate(args[1], env, verifyArraySize)
-    return ArrayType(elementType, size)
+    elementType = evaluate(args[0], env, toTypeOrCell)
+    sizeValue = evaluate(args[1], env, toValueOrCell)
+    return arrayType(elementType, sizeValue)
 
-@evalNamedIndexing.register(primitives.Pointer)
+@evalIndexing.register(primitives.Pointer)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    targetType = evaluateAsType(args[0], env)
-    return PointerType(targetType)
+    targetType = evaluate(args[0], env, toTypeOrCell)
+    return pointerType(targetType)
 
 
 
 #
-# evalNamedCall
+# evalCall
 #
 
-evalNamedCall = multimethod(defaultProc=badExpression)
+evalCall = multimethod(errorMessage="invalid call")
 
-@evalNamedCall.register(Record)
+@evalCall.register(Record)
 def foo(x, args, env) :
-    recEnv, typeCells = bindTypeVars(x.env, x.typeVars)
-    fieldTypePatterns = evalFieldTypes(x.fields, recEnv)
     ensureArity(args, len(x.fields))
-    argValueRefs = [evaluateAsRefParam(arg, env) for arg in args]
-    for i, typePattern in enumerate(fieldTypePatterns) :
-        matchType(args[i], argValueRefs[i].type, typePattern)
-    typeParams = resolveTypeVars(x.typeVars, typeCells)
-    recType = RecordType(x, typeParams)
-    return makeRecord(recType, argValueRefs)
+    recordEnv, cells = bindTypeVars(x.env, x.typeVars)
+    fieldTypePatterns = computeFieldTypes(x.fields, recordEnv)
+    argRefs = [evaluate(y, env, toReference) for y in args]
+    for typePattern, argRef, arg in zip(fieldTypePatterns, argRefs, args) :
+        matchPattern(typePattern, argRef.type, arg)
+    typeParams = resolveTypeVars(x.typeVars, cells)
+    recType = recordType(x, typeParams)
+    return makeRecord(recType, argRefs)
 
-@evalNamedCall.register(Procedure)
+@evalCall.register(Procedure)
 def foo(x, args, env) :
-    argResults = [evaluate(arg, env) for arg in args]
-    result = matchCodeSignature(x.env, x.code, argResults)
+    argWrappers = [ArgumentWrapper(y, env) for y in args]
+    result = matchCodeSignature(x.env, x.code, argWrappers)
     if type(result) is MatchFailure :
-        result.signalError(x, args)
+        result.signalError(x.code, args)
     assert type(result) is Environment
     procEnv = result
     return evalCodeBody(x.code, procEnv)
 
-@evalNamedCall.register(Overloadable)
+@evalCall.register(Overloadable)
 def foo(x, args, env) :
-    argResults = [evaluate(arg, env) for arg in args]
+    argWrappers = [ArgumentWrapper(y, env) for y in args]
     for y in x.overloads :
-        result = matchCodeSignature(y.env, y.code, argResults)
+        result = matchCodeSignature(y.env, y.code, argWrappers)
         if type(result) is MatchFailure :
             continue
         assert type(result) is Environment
@@ -1094,324 +1002,319 @@ def foo(x, args, env) :
         return evalCodeBody(y.code, procEnv)
     error("no matching overload")
 
-@evalNamedCall.register(Constant)
-def foo(x, args, env) :
-    if not isRecordType(x.data) :
-        error("invalid expression")
-    recType = x.data
-    argValueRefs = [evaluateAsRefParam(y, env) for y in args]
-    return makeRecord(recType, argValueRefs)
-
-@evalNamedCall.register(primitives.default)
+@evalCall.register(primitives.default)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.typeSize)
+@evalCall.register(primitives.typeSize)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.addressOf)
+@evalCall.register(primitives.addressOf)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.pointerDereference)
+@evalCall.register(primitives.pointerDereference)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.pointerOffset)
+@evalCall.register(primitives.pointerOffset)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.pointerSubtract)
+@evalCall.register(primitives.pointerSubtract)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.pointerCast)
+@evalCall.register(primitives.pointerCast)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.pointerCopy)
+@evalCall.register(primitives.pointerCopy)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.pointerEquals)
+@evalCall.register(primitives.pointerEquals)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.pointerLesser)
+@evalCall.register(primitives.pointerLesser)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.allocateMemory)
+@evalCall.register(primitives.allocateMemory)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.freeMemory)
+@evalCall.register(primitives.freeMemory)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.TupleType)
+@evalCall.register(primitives.TupleType)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.tuple)
+@evalCall.register(primitives.tuple)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.tupleFieldCount)
+@evalCall.register(primitives.tupleFieldCount)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.tupleFieldRef)
+@evalCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.array)
+@evalCall.register(primitives.array)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.arrayRef)
+@evalCall.register(primitives.arrayRef)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.RecordType)
+@evalCall.register(primitives.RecordType)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.makeRecord)
+@evalCall.register(primitives.makeRecord)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.recordFieldCount)
+@evalCall.register(primitives.recordFieldCount)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.recordFieldRef)
+@evalCall.register(primitives.recordFieldRef)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.boolCopy)
+@evalCall.register(primitives.boolCopy)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.boolNot)
+@evalCall.register(primitives.boolNot)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.charCopy)
+@evalCall.register(primitives.charCopy)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.charEquals)
+@evalCall.register(primitives.charEquals)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.charLesser)
+@evalCall.register(primitives.charLesser)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intCopy)
+@evalCall.register(primitives.intCopy)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intEquals)
+@evalCall.register(primitives.intEquals)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intLesser)
+@evalCall.register(primitives.intLesser)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intAdd)
+@evalCall.register(primitives.intAdd)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intSubtract)
+@evalCall.register(primitives.intSubtract)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intMultiply)
+@evalCall.register(primitives.intMultiply)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intDivide)
+@evalCall.register(primitives.intDivide)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intModulus)
+@evalCall.register(primitives.intModulus)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intNegate)
+@evalCall.register(primitives.intNegate)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatCopy)
+@evalCall.register(primitives.floatCopy)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatEquals)
+@evalCall.register(primitives.floatEquals)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatLesser)
+@evalCall.register(primitives.floatLesser)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatAdd)
+@evalCall.register(primitives.floatAdd)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatSubtract)
+@evalCall.register(primitives.floatSubtract)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatMultiply)
+@evalCall.register(primitives.floatMultiply)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatDivide)
+@evalCall.register(primitives.floatDivide)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatNegate)
+@evalCall.register(primitives.floatNegate)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleCopy)
+@evalCall.register(primitives.doubleCopy)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleEquals)
+@evalCall.register(primitives.doubleEquals)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleLesser)
+@evalCall.register(primitives.doubleLesser)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleAdd)
+@evalCall.register(primitives.doubleAdd)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleSubtract)
+@evalCall.register(primitives.doubleSubtract)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleMultiply)
+@evalCall.register(primitives.doubleMultiply)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleDivide)
+@evalCall.register(primitives.doubleDivide)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleNegate)
+@evalCall.register(primitives.doubleNegate)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.charToInt)
+@evalCall.register(primitives.charToInt)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intToChar)
+@evalCall.register(primitives.intToChar)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatToInt)
+@evalCall.register(primitives.floatToInt)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intToFloat)
+@evalCall.register(primitives.intToFloat)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.floatToDouble)
+@evalCall.register(primitives.floatToDouble)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleToFloat)
+@evalCall.register(primitives.doubleToFloat)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.doubleToInt)
+@evalCall.register(primitives.doubleToInt)
 def foo(x, args, env) :
     raise NotImplementedError
 
-@evalNamedCall.register(primitives.intToDouble)
+@evalCall.register(primitives.intToDouble)
 def foo(x, args, env) :
     raise NotImplementedError
 
 
 
 #
-# matchCodeSignature (env, code, args) -> Environment | MatchFailure
+# matchCodeSignature(env, code, args) -> Environment | MatchFailure
 #
 
 class MatchFailure(object) :
-    def __init__(self, message, argOffset=None, typeCondOffset=None) :
+    def __init__(self, message, context=None) :
         self.message = message
-        self.argOffset = argOffset
-        self.typeCondOffset = typeCondOffset
-
-    def getContext(self, proc, args) :
-        if self.argOffset is not None :
-            return args[self.argOffset]
-        elif self.typeCondOffset is not None :
-            return proc.code.typeConditions[self.typeCondOffset]
-        return None
-
-    def signalError(self, proc, args) :
-        context = self.getContext(proc, args)
+        self.context = context
+    def signalError(self) :
         try :
-            if context is not None :
-                contextPush(context)
+            if self.context is not None :
+                contextPush(self.context)
             error(self.message)
         finally :
-            if context is not None :
+            if self.context is not None :
                 contextPop()
 
-def matchCodeSignature(env, code, args) :
-    def argMismatch(i) :
-        return MatchFailure("argument mismatch", argOffset=i)
-    def typeCondFailure(i) :
-        return MatchFailure("type condition failed", typeCondOffset=i)
+class ArgumentWrapper(object) :
+    def __init__(self, expr, env) :
+        self.expr = expr
+        self.env = env
+        self.result_ = None
+
+    def evaluate(self, converter=None) :
+        if self.result_ is None :
+            self.result_ = evaluate(self.expr, self.env)
+        try :
+            contextPush(self.expr)
+            if converter is not None :
+                return converter(self.result_)
+            return self.result_
+        finally :
+            contextPop()
+
+def matchCodeSignature(codeEnv, code, args) :
+    def argMismatch(arg) :
+        return MatchFailure("argument mismatch", arg.expr)
+    def typeCondFailure(typeCond) :
+        return MatchFailure("type condition failed", typeCond)
     if len(args) != len(code.formalArgs) :
         return MatchFailure("incorrect no. of arguments")
-    procEnv, typeCells = bindTypeVars(env, code.typeVars)
+    codeEnv2, cells = bindTypeVars(codeEnv, code.typeVars)
     bindings = []
-    for i, formalArg in enumerate(code.formalArgs) :
-        arg = args[i]
+    for arg, formalArg in zip(args, code.formalArgs) :
         if type(formalArg) is ValueArgument :
             if formalArg.byRef :
-                arg = toRefParam(arg)
+                argResult = arg.evaluate(toReference)
             else :
-                arg = toValue(arg)
-            if arg is None :
-                return argMismatch(i)
+                argResult = arg.evaluate(toValue)
             if formalArg.type is not None :
-                typePattern = evaluateAsType(formalArg.type, procEnv)
-                if not typeUnify(typePattern, arg.type) :
-                    return argMismatch(i)
-            bindings.append((formalArg.name, arg))
+                typePattern = evaluate(formalArg.type, codeEnv2, toTypeOrCell)
+                if not unify(typePattern, argResult.type) :
+                    return argMismatch(arg)
+            bindings.append((formalArg.name, argResult))
         elif type(formalArg) is StaticArgument :
-            arg = toTypeParam(arg)
-            if arg is None :
-                return argMismatch(i)
-            typePattern = evaluateAsType(formalArg.type, procEnv)
-            if not typeUnify(typePattern, arg) :
-                return argMismatch(i)
+            argResult = arg.evaluate(toTypeOrValue)
+            formalType = formalArg.type
+            typePattern = evaluate(formalType, codeEnv2, toTypeOrValueOrCell)
+            if not unify(typePattern, argResult) :
+                return argMismatch(arg)
         else :
             assert False
-    typeValues = resolveTypeVars(code.typeVars, typeCells)
-    procEnv = bindTypeParams(env, code.typeVars, typeValues)
-    for i, typeCondition in enumerate(code.typeConditions) :
-        result = evaluateAsBoolValue(typeCondition, procEnv)
+    typeParams = resolveTypeVars(code.typeVars, cells)
+    codeEnv2 = bindVariables(codeEnv, code.typeVars, typeParams)
+    for typeCondition in enumerate(code.typeConditions) :
+        result = evaluate(typeCondition, codeEnv2, toBool)
         if not result :
-            return typeCondFailure(i)
+            return typeCondFailure(typeCondition)
     for ident, value in bindings :
-        addIdent(procEnv, ident, value)
-    return procEnv
+        addIdent(codeEnv2, ident, value)
+    return codeEnv2
 
 
 
@@ -1422,29 +1325,26 @@ def matchCodeSignature(env, code, args) :
 def evalCodeBody(code, env) :
     returnType = None
     if code.returnType is not None :
-        returnType = evaluateAsType(code.returnType, env)
+        returnType = evaluate(code.returnType, env, toType)
     context = CodeContext(code.returnByRef, returnType)
-    result = evalInnerStatement(code.block, env, context)
-    if type(result) is ReturnValue :
-        result = result.thing
+    result = evalStatement(code.block, env, context)
+    if result is None :
+        if returnType is not None :
+            ensure(typeEquals(returnType, voidType),
+                   "unexpected void return")
+        result = voidValue
     return result
 
 
 
 #
-# evalStatement : (stmt, env, code) -> ReturnValue(Type|Value|RefValue|None)
-#                                    | Environment
-#                                    | None
+# evalStatement : (stmt, env, context) -> Thing | None
 #
 
 class CodeContext(object) :
     def __init__(self, returnByRef, returnType) :
         self.returnByRef = returnByRef
         self.returnType = returnType
-
-class ReturnValue(object) :
-    def __init__(self, thing) :
-        self.thing = thing
 
 def evalStatement(stmt, env, context) :
     try :
@@ -1455,64 +1355,65 @@ def evalStatement(stmt, env, context) :
         popTempValueSet()
         contextPop()
 
-def evalInnerStatement(stmt, env, context) :
-    result = evalStatement(stmt, env, context)
-    if type(result) is Environment :
-        result = None
-    return result
 
-evalStmt = multimethod()
+
+#
+# evalStmt
+#
+
+evalStmt = multimethod(errorMessage="invalid statement")
 
 @evalStmt.register(Block)
 def foo(x, env, context) :
-    for statement in x.statements :
-        result = evalStatement(statement, env, context)
-        if type(result) is Environment :
-            env = result
-        if type(result) is ReturnValue :
-            return result
+    localValues = []
+    try :
+        for statement in x.statements :
+            if type(statement) is LocalBinding :
+                lb = statement
+                right = evaluate(lb.expr, env, toReference)
+                if lb.type is not None :
+                    declaredType = evaluate(lb.type, env, toType)
+                    matchType(declaredType, right.type, lb.expr)
+                value = Value(right.type)
+                valueCopy(value, right)
+                localValues.append(value)
+                addIdent(lb.name, value)
+            else :
+                result = evalStatement(statement, env, context)
+                if result is not None :
+                    return result
+    finally :
+        for v in reversed(localValues) :
+            valueDestroy(v)
 
 @evalStmt.register(Assignment)
 def foo(x, env, context) :
-    left = evaluateAsAssignable(x.left, env)
-    right = evaluateAsRefParam(x.right, env)
+    left = evaluate(x.left, env, toLValue)
+    right = evaluate(x.right, env, toReference)
     valueAssign(left, right)
-
-@evalStmt.register(LocalBinding)
-def foo(x, env, context) :
-    newEnv = Environment(env)
-    refValue = evaluateAsRefParam(x.expr, env)
-    if x.type is not None :
-        declaredType = evaluateAsType(x.type, env)
-        if not typeEquals(declaredType, refValue.type) :
-            error("type mismatch")
-    value = Value(refValue.type)
-    valueInitCopy(value, refValue)
-    addIdent(newEnv, x.name, value)
-    return newEnv
 
 @evalStmt.register(Return)
 def foo(x, env, context) :
-    result = None
     if context.returnByRef :
-        if x.expr is None :
-            error("return value expected")
-        result = evaluateAsAssignable(x.expr, env)
-    elif x.expr is not None :
-        result = evaluateAsTypeParam(x.expr, env)
+        result = evaluate(x.expr, env, toLValue)
+        resultType = result.type
+    elif x.expr is None :
+        result = voidValue
+        resultType = voidType
+    else :
+        result = evaluate(x.expr, env, toTypeOrValue)
+        resultType = result.type if isType(result) else None
     if context.returnType is not None :
-        if not (isValue(result) or isRefValue(result)) :
-            error("return value expected")
-        if not typeEquals(context.returnType, result.type) :
-            error("return type mismatch")
-    return ReturnValue(result)
+        matchType(resultType, context.returnType, x.expr)
+    return result
 
 @evalStmt.register(IfStatement)
 def foo(x, env, context) :
-    if evaluateAsBoolValue(x.condition, env) :
-        return evalInnerStatement(x.thenPart, env, context)
+    cond = evaluate(x.condition, env, toBool)
+    if cond :
+        return evalStatement(x.thenPart, env, context)
     elif x.elsePart is not None :
-        return evalInnerStatement(x.elsePart, env, context)
+        return evalStatement(x.elsePart, env, context)
 
 @evalStmt.register(ExprStatement)
 def foo(x, env, context) :
