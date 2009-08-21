@@ -137,7 +137,16 @@ def typeEquals(a, b) :
 
 def typeHash(a) :
     assert isType(a)
-    hash((a.tag, listHash(a.params)))
+    return hash((a.tag, listHash(a.params)))
+
+def listEquals(a, b) :
+    for x, y in zip(a, b) :
+        if not equals(x, y) :
+            return False
+    return True
+
+def listHash(a) :
+    return hash(tuple(map(hash, a)))
 
 
 
@@ -233,7 +242,7 @@ _tagNames[pointerTypeTag] = "Pointer"
 
 
 #
-# Value, Reference
+# Value, Reference, Cell
 #
 
 class Value(object) :
@@ -255,8 +264,13 @@ class Reference(object) :
     def __hash__(self) :
         return valueHash(self)
 
+class Cell(object) :
+    def __init__(self, param=None) :
+        self.param = param
+
 def isValue(x) : return type(x) is Value
 def isReference(x) : return type(x) is Reference
+def isCell(x) : return type(x) is Cell
 
 
 
@@ -436,15 +450,6 @@ equals.register(Type, Type)
 def foo(a, b) :
     return typeEquals(a, b)
 
-def listEquals(a, b) :
-    for x, y in zip(a, b) :
-        if not equals(x, y) :
-            return False
-    return True
-
-def listHash(a) :
-    return hash(tuple(map(hash, a)))
-
 
 
 #
@@ -486,13 +491,6 @@ def valueHash(a) :
 #
 # unification
 #
-
-class Cell(object) :
-    def __init__(self, param=None) :
-        self.param = param
-
-def isCell(x) :
-    return type(x) is Cell
 
 def unify(a, b) :
     assert type(a) in (Value, Type, Cell)
@@ -697,6 +695,28 @@ def installPrimitives() :
     primitives = Primitives()
 
 installPrimitives()
+
+
+
+#
+# build top level env
+#
+
+def buildTopLevelEnv(program) :
+    env = Environment(primitivesEnv)
+    for item in program.topLevelItems :
+        item.env = env
+        if type(item) is Overload :
+            installOverload(env, item)
+        else :
+            addIdent(env, item.name, item)
+    return env
+
+def installOverload(env, item) :
+    def verifyOverloadable(x) :
+        ensure(type(x) is Overloadable, "invalid overloadable")
+    entry = lookupIdent(env, item.name, verifyOverloadable)
+    entry.overloads.insert(0, item)
 
 
 
@@ -1056,7 +1076,9 @@ def foo(x, args, env) :
 
 
 
+#
 # evaluate primitives
+#
 
 @evalCall.register(primitives.default)
 def foo(x, args, env) :
@@ -1071,6 +1093,43 @@ def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
     return toValue(typeSize(t))
+
+
+
+#
+# machine op utils
+#
+
+def callMachineOp(f, args) :
+    def toPtr(x) :
+        if type(x) is Value :
+            return ctypes.pointer(x.buf)
+        elif type(x) is Reference :
+            return ctypes.c_void_p(x.address)
+        else :
+            assert False
+    ptrs = map(toPtr, args)
+    return f(*ptrs)
+
+def simpleMop(mop, args, env, argTypes, returnType) :
+    ensureArity(args, len(argTypes))
+    mopInput = []
+    for arg, argType in zip(args, argTypes) :
+        ref = evaluate(arg, env, toReferenceOfType(argType))
+        mopInput.append(ref)
+    if returnType is not None :
+        result = tempValue(returnType)
+        mopInput.append(result)
+    else :
+        result = voidValue
+    callMachineOp(mop, mopInput)
+    return result
+
+
+
+#
+# evaluate pointer primitives
+#
 
 def pointerToAddress(ptr) :
     void_ptr = ctypes.cast(ptr.buf, ctypes.c_void_p)
@@ -1094,17 +1153,6 @@ def foo(x, args, env) :
     cell = Cell()
     ptr = evaluate(args[0], env, toValueOfType(pointerType(cell)))
     return Reference(cell.param, pointerToAddress(ptr))
-
-def callMachineOp(f, args) :
-    def toPtr(x) :
-        if type(x) is Value :
-            return ctypes.pointer(x.buf)
-        elif type(x) is Reference :
-            return ctypes.c_void_p(x.address)
-        else :
-            assert False
-    ptrs = map(toPtr, args)
-    return f(*ptrs)
 
 @evalCall.register(primitives.pointerOffset)
 def foo(x, args, env) :
@@ -1139,8 +1187,8 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
     destRef = evaluate(args[0], env, toReferenceOfType(pointerType(cell)))
-    src = evaluate(args[1], env, toValueOfType(pointerType(cell)))
-    callMachineOp(mop_pointerCopy, [destRef, src])
+    srcRef = evaluate(args[1], env, toReferenceOfType(pointerType(cell)))
+    callMachineOp(mop_pointerCopy, [destRef, srcRef])
     return voidValue
 
 @evalCall.register(primitives.pointerEquals)
@@ -1178,6 +1226,12 @@ def foo(x, args, env) :
     callMachineOp(mop_freeMemory, [ptr])
     return voidValue
 
+
+
+#
+# evaluate tuple primitives
+#
+
 @evalCall.register(primitives.TupleType)
 def foo(x, args, env) :
     ensureArity(args, 1)
@@ -1204,6 +1258,12 @@ def foo(x, args, env) :
     # TODO: check index bounds
     return tupleFieldRef(tupleRef, i)
 
+
+
+#
+# evaluate array primitives
+#
+
 @evalCall.register(primitives.array)
 def foo(x, args, env) :
     ensureArity(args, 2)
@@ -1218,6 +1278,12 @@ def foo(x, args, env) :
     i = evaluate(args[1], env, toInt)
     # TODO: check index bounds
     return arrayRef(a, i)
+
+
+
+#
+# evaluate record primitives
+#
 
 @evalCall.register(primitives.RecordType)
 def foo(x, args, env) :
@@ -1239,157 +1305,223 @@ def foo(x, args, env) :
     # TODO: check index bounds
     return recordFieldRef(recRef, i)
 
+
+
+#
+# evaluate bool primitives
+#
+
 @evalCall.register(primitives.boolCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [boolType, boolType]
+    return simpleMop(mop_boolCopy, args, env, argTypes, None)
 
 @evalCall.register(primitives.boolNot)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [boolType]
+    return simpleMop(mop_boolNot, args, env, argTypes, boolType)
+
+
+
+#
+# evaluate char primitives
+#
 
 @evalCall.register(primitives.charCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [charType, charType]
+    return simpleMop(mop_charCopy, args, env, argTypes, None)
 
 @evalCall.register(primitives.charEquals)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [charType, charType]
+    return simpleMop(mop_charEquals, args, env, argTypes, boolType)
 
 @evalCall.register(primitives.charLesser)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [charType, charType]
+    return simpleMop(mop_charLesser, args, env, argTypes, boolType)
+
+
+
+#
+# evaluate int primitives
+#
 
 @evalCall.register(primitives.intCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [intType, intType]
+    return simpleMop(mop_intCopy, args, env, argTypes, None)
 
 @evalCall.register(primitives.intEquals)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [intType, intType]
+    return simpleMop(mop_intEquals, args, env, argTypes, boolType)
 
 @evalCall.register(primitives.intLesser)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [intType, intType]
+    return simpleMop(mop_intLesser, args, env, argTypes, boolType)
 
 @evalCall.register(primitives.intAdd)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [intType, intType]
+    return simpleMop(mop_intAdd, args, env, argTypes, intType)
 
 @evalCall.register(primitives.intSubtract)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [intType, intType]
+    return simpleMop(mop_intSubtract, args, env, argTypes, intType)
 
 @evalCall.register(primitives.intMultiply)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [intType, intType]
+    return simpleMop(mop_intMultiply, args, env, argTypes, intType)
 
 @evalCall.register(primitives.intDivide)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [intType, intType]
+    return simpleMop(mop_intDivide, args, env, argTypes, intType)
 
 @evalCall.register(primitives.intModulus)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [intType, intType]
+    return simpleMop(mop_intModulus, args, env, argTypes, intType)
 
 @evalCall.register(primitives.intNegate)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [intType]
+    return simpleMop(mop_intNegate, args, env, argTypes, intType)
+
+
+
+#
+# evaluate float primitives
+#
 
 @evalCall.register(primitives.floatCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [floatType, floatType]
+    return simpleMop(mop_floatCopy, args, env, argTypes, None)
 
 @evalCall.register(primitives.floatEquals)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [floatType, floatType]
+    return simpleMop(mop_floatEquals, args, env, argTypes, boolType)
 
 @evalCall.register(primitives.floatLesser)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [floatType, floatType]
+    return simpleMop(mop_floatLesser, args, env, argTypes, boolType)
 
 @evalCall.register(primitives.floatAdd)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [floatType, floatType]
+    return simpleMop(mop_floatAdd, args, env, argTypes, floatType)
 
 @evalCall.register(primitives.floatSubtract)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [floatType, floatType]
+    return simpleMop(mop_floatSubtract, args, env, argTypes, floatType)
 
 @evalCall.register(primitives.floatMultiply)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [floatType, floatType]
+    return simpleMop(mop_floatMultiply, args, env, argTypes, floatType)
 
 @evalCall.register(primitives.floatDivide)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [floatType, floatType]
+    return simpleMop(mop_floatDivide, args, env, argTypes, floatType)
 
 @evalCall.register(primitives.floatNegate)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [floatType]
+    return simpleMop(mop_floatNegate, args, env, argTypes, floatType)
+
+
+
+#
+# evaluate double primitives
+#
 
 @evalCall.register(primitives.doubleCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [doubleType, doubleType]
+    return simpleMop(mop_doubleCopy, args, env, argTypes, None)
 
 @evalCall.register(primitives.doubleEquals)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [doubleType, doubleType]
+    return simpleMop(mop_doubleEquals, args, env, argTypes, boolType)
 
 @evalCall.register(primitives.doubleLesser)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [doubleType, doubleType]
+    return simpleMop(mop_doubleLesser, args, env, argTypes, boolType)
 
 @evalCall.register(primitives.doubleAdd)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [doubleType, doubleType]
+    return simpleMop(mop_doubleAdd, args, env, argTypes, doubleType)
 
 @evalCall.register(primitives.doubleSubtract)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [doubleType, doubleType]
+    return simpleMop(mop_doubleSubtract, args, env, argTypes, doubleType)
 
 @evalCall.register(primitives.doubleMultiply)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [doubleType, doubleType]
+    return simpleMop(mop_doubleMultiply, args, env, argTypes, doubleType)
 
 @evalCall.register(primitives.doubleDivide)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [doubleType, doubleType]
+    return simpleMop(mop_doubleDivide, args, env, argTypes, doubleType)
 
 @evalCall.register(primitives.doubleNegate)
 def foo(x, args, env) :
-    raise NotImplementedError
+    argTypes = [doubleType]
+    return simpleMop(mop_doubleNegate, args, env, argTypes, doubleType)
+
+
+
+#
+# evaluate conversion primitives
+#
 
 @evalCall.register(primitives.charToInt)
 def foo(x, args, env) :
-    raise NotImplementedError
+    return simpleMop(mop_charToInt, args, env, [charType], intType)
 
 @evalCall.register(primitives.intToChar)
 def foo(x, args, env) :
-    raise NotImplementedError
+    return simpleMop(mop_intToChar, args, env, [intType], charType)
 
 @evalCall.register(primitives.floatToInt)
 def foo(x, args, env) :
-    raise NotImplementedError
+    return simpleMop(mop_floatToInt, args, env, [floatType], intType)
 
 @evalCall.register(primitives.intToFloat)
 def foo(x, args, env) :
-    raise NotImplementedError
+    return simpleMop(mop_intToFloat, args, env, [intType], floatType)
 
 @evalCall.register(primitives.floatToDouble)
 def foo(x, args, env) :
-    raise NotImplementedError
+    return simpleMop(mop_floatToDouble, args, env, [floatType], doubleType)
 
 @evalCall.register(primitives.doubleToFloat)
 def foo(x, args, env) :
-    raise NotImplementedError
+    return simpleMop(mop_doubleToFloat, args, env, [doubleType], floatType)
 
 @evalCall.register(primitives.doubleToInt)
 def foo(x, args, env) :
-    raise NotImplementedError
+    return simpleMop(mop_doubleToInt, args, env, [doubleType], intType)
 
 @evalCall.register(primitives.intToDouble)
 def foo(x, args, env) :
-    raise NotImplementedError
+    return simpleMop(mop_intToDouble, args, env, [intType], doubleType)
 
 
 
