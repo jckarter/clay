@@ -277,10 +277,6 @@ def isValue(x) : return type(x) is Value
 def isReference(x) : return type(x) is Reference
 def isCell(x) : return type(x) is Cell
 
-xregister(Value, lambda x : XObject("Value", x.type))
-xregister(Reference, lambda x : XObject("Reference", x.type, x.address))
-xregister(Cell, lambda x : XObject("Cell", x.param))
-
 
 
 #
@@ -487,7 +483,8 @@ def simpleValueCopy(dest, src) :
     destPtr = ctypes.c_void_p(destRef.address)
     srcRef = toReference(src)
     srcPtr = ctypes.c_void_p(srcRef.address)
-    ctypes.memmove(destPtr, srcPtr, typeSize(dest.type))
+    size = typeSize(dest.type)
+    ctypes.memmove(destPtr, srcPtr, size)
 
 def valueCopy(dest, src) :
     assert dest.type == src.type
@@ -514,6 +511,61 @@ def valueEquals(a, b) :
 
 def valueHash(a) :
     return callBuiltin("hash", [a], toInt)
+
+
+
+#
+# value printer
+#
+
+def xconvertBuiltin(r) :
+    return toValue(r).buf.value
+
+def xconvertBool(r) :
+    return XSymbol("true" if toValue(r).buf.value else "false")
+
+def xconvertPointer(r) :
+    return XObject("Ptr", r.type.params[0])
+
+def xconvertTuple(r) :
+    elements = [tupleFieldRef(r, i) for i in range(len(r.type.params))]
+    return tuple(elements)
+
+def xconvertArray(r) :
+    arraySize = toInt(r.type.params[1])
+    return [arrayRef(r, i) for i in range(arraySize)]
+
+def xconvertRecord(r) :
+    fieldCount = len(r.type.tag.fields)
+    fields = [recordFieldRef(r, i) for i in range(fieldCount)]
+    return XObject(r.type.tag.name.s, *fields)
+
+def xconvertValue(x) :
+    return xconvertReference(toReference(x))
+
+def xconvertReference(x) :
+    converter = _xconverters.get(x.type.tag)
+    if converter is not None :
+        return converter(x)
+    if isRecordType(x.type) :
+        return xconvertRecord(x)
+    return x
+
+xregister(Value, xconvertValue)
+xregister(Reference, xconvertReference)
+xregister(Cell, lambda x : XObject("Cell", x.param))
+xregister(VoidValue, lambda x : XSymbol("void"))
+
+_xconverters = {}
+
+_xconverters[boolTypeTag] = xconvertBool
+_xconverters[intTypeTag] = xconvertBuiltin
+_xconverters[floatTypeTag] = xconvertBuiltin
+_xconverters[doubleTypeTag] = xconvertBuiltin
+_xconverters[charTypeTag] = xconvertBuiltin
+_xconverters[pointerTypeTag] = xconvertPointer
+_xconverters[tupleTypeTag] = xconvertTuple
+_xconverters[arrayTypeTag] = xconvertArray
 
 
 
@@ -1712,7 +1764,7 @@ def foo(x, env, context) :
         resultType = voidType
     else :
         result = evaluate(x.expr, env, toTypeOrValue)
-        resultType = result.type if isType(result) else None
+        resultType = result.type if isValue(result) else None
     if context.returnType is not None :
         matchType(resultType, context.returnType, x.expr)
     return result

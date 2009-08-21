@@ -352,7 +352,10 @@ def isOdd(n) {
     return isEven(subtract(n, 1));
 }
 
+def doIntAdd(a, b) {
+    return intAdd(a, b);
+}
+
 def main() {
-    var n = factorial(5);
-    return (n, isEven(n));
+    return (5, intAdd(6,1));
 }
