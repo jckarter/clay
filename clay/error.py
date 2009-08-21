@@ -7,8 +7,6 @@ class Location(object) :
         self.fileName = fileName
 
 def raiseError(errorMessage, location) :
-    if type(location) is not Location :
-        location = location.location
     raise SourceError(errorMessage, location)
 
 class SourceError(Exception) :
@@ -17,6 +15,9 @@ class SourceError(Exception) :
         self.location = location
 
     def display(self) :
+        if self.location is None :
+            print "error: %s" % self.errorMessage
+            return
         lines = self.location.data.splitlines(True)
         line, column = locate(lines, self.location.offset)
         displayContext(lines, line, column)
