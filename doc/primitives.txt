@@ -29,14 +29,14 @@ pointerEquals, pointerLesser
 allocateMemory(size:Int) : Pointer[Int]
 freeMemory(ptr:Pointer[Int]) : Void
 
+TupleType[T](static T) : Bool
 tuple(v_1, ..., v_n): TupleType
 tupleFieldCount[T](static T) : Int
 tupleFieldRef[T,i](ref a:T, static i) ref : FieldType
 
-array[T,n](static n, v:T):Array[T, n]
+array[T,n](static n, ref v:T):Array[T, n]
 arrayRef[T,n](ref a:Array[T,n], i:Int) ref : T;
 
-makeRecord(R, v_1, ..., v_n):RecordType
 recordFieldCount[R](static R) : Int
 recordFieldRef(ref a:R, static i) ref : FieldType;
 

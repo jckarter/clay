@@ -488,7 +488,7 @@ def valueHash(a) :
 #
 
 class Cell(object) :
-    def __init__(self, param) :
+    def __init__(self, param=None) :
         self.param = param
 
 def isCell(x) :
@@ -634,7 +634,6 @@ def installPrimitives() :
     primitive("arrayRef")
 
     primitive("RecordType")
-    primitive("makeRecord")
     primitive("recordFieldCount")
     primitive("recordFieldRef")
 
@@ -737,17 +736,19 @@ def bindVariables(parentEnv, variables, objects) :
     return env
 
 def bindTypeVars(parentEnv, typeVars) :
-    cells = [Cell(None) for _ in typeVars]
+    cells = [Cell() for _ in typeVars]
     env = bindVariables(parentEnv, typeVars, cells)
     return env, cells
 
-def matchPattern(pattern, typeParam, context) :
+def matchPattern(pattern, typeParam, context=None) :
     try :
-        contextPush(context)
+        if context is not None :
+            contextPush(context)
         if not unify(pattern, typeParam) :
             error("type mismatch")
     finally :
-        contextPop()
+        if context is not None :
+            contextPop()
 
 def matchType(typeA, typeB, context) :
     try :
@@ -776,8 +777,66 @@ def resolveTypeVars(typeVars, cells) :
 
 
 #
-# tuples, records
+# type checking converters
 #
+
+def toValueOfType(pattern) :
+    def f(x) :
+        v = toValue(x)
+        matchPattern(pattern, v.type)
+        return v
+    return f
+
+def toReferenceOfType(pattern) :
+    def f(x) :
+        r = toReference(x)
+        matchPattern(pattern, r.type)
+        return r
+    return f
+
+def toReferenceWithTypeTag(tag) :
+    def f(x) :
+        r = toReference(x)
+        ensure(r.type.tag is tag, "type mismatch")
+        return r
+    return f
+
+def toTypeWithTag(tag) :
+    def f(x) :
+        t = toType(x)
+        ensure(t.tag is tag, "type mismatch")
+        return t
+    return f
+
+def toRecordReference(x) :
+    r = toReference(x)
+    ensure(isRecordType(r.type), "record type expected")
+    return r
+
+def toRecordType(t) :
+    ensure(isType(t) and isRecordType(t), "record type expected")
+    return t
+
+
+
+#
+# arrays, tuples, records
+#
+
+def arrayRef(a, i) :
+    cell = Cell()
+    matchPattern(arrayType(cell), a.type)
+    elementType = cell.param
+    return Reference(elementType, a.address + i*typeSize(elementType))
+
+def makeArray(n, defaultElement) :
+    assert isReference(defaultElement)
+    value = tempValue(arrayType(defaultElement.type, toValue(n)))
+    valueRef = toReference(value)
+    for i in range(n) :
+        elementRef = arrayRef(valueRef, i)
+        valueCopy(elementRef, defaultElement)
+    return value
 
 def tupleFieldRef(a, i) :
     assert isReference(a) and isTupleType(a.type)
@@ -914,18 +973,11 @@ def foo(x, env) :
 
 @evalExpr.register(Dereference)
 def foo(x, env) :
-    thing = evaluate(x.expr, env, toValue)
-    ensure(isPointerType(thing.type), "invalid pointer")
-    void_ptr = ctypes.cast(thing.buf, ctypes.c_void_p)
-    return Reference(thing.type, void_ptr.value)
+    return evalCall(primitives.pointerDereference, [x], env)
 
 @evalExpr.register(AddressOf)
 def foo(x, env) :
-    thing = evaluate(x.expr, env, toLValue)
-    ptr = tempValue(pointerType(thing.type))
-    void_ptr = ctypes.c_void_p(thing.address)
-    ptr.buf = ctypes.cast(void_ptr, ptr.ctypesType)
-    return ptr
+    return evalCall(primitives.addressOf, [x], env)
 
 
 
@@ -1002,93 +1054,190 @@ def foo(x, args, env) :
         return evalCodeBody(y.code, procEnv)
     error("no matching overload")
 
+
+
+# evaluate primitives
+
 @evalCall.register(primitives.default)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = evaluate(args[0], env, toType)
+    v = tempValue(t)
+    valueInit(v)
+    return v
 
 @evalCall.register(primitives.typeSize)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = evaluate(args[0], env, toType)
+    return toValue(typeSize(t))
+
+def pointerToAddress(ptr) :
+    void_ptr = ctypes.cast(ptr.buf, ctypes.c_void_p)
+    return void_ptr.value
+
+def addressToPointer(addr, ptrType) :
+    void_ptr = ctypes.c_void_p(addr)
+    ptr = tempValue(ptrType)
+    ptr.buf = ctypes.cast(void_ptr, ptr.ctypesType)
+    return ptr
 
 @evalCall.register(primitives.addressOf)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    valueRef = evaluate(args[0], env, toLValue)
+    return addressToPointer(valueRef.address, pointerType(valueRef.type))
 
 @evalCall.register(primitives.pointerDereference)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    cell = Cell()
+    ptr = evaluate(args[0], env, toValueOfType(pointerType(cell)))
+    return Reference(cell.param, pointerToAddress(ptr))
+
+def callMachineOp(f, args) :
+    def toPtr(x) :
+        if type(x) is Value :
+            return ctypes.pointer(x.buf)
+        elif type(x) is Reference :
+            return ctypes.c_void_p(x.address)
+        else :
+            assert False
+    ptrs = map(toPtr, args)
+    return f(*ptrs)
 
 @evalCall.register(primitives.pointerOffset)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cell = Cell()
+    ptr = evaluate(args[0], env, toValueOfType(pointerType(cell)))
+    offset = evaluate(args[0], env, toValueOfType(intType))
+    result = tempValue(ptr.type)
+    callMachineOp(mop_pointerOffset, [ptr, offset, result])
+    return result
 
 @evalCall.register(primitives.pointerSubtract)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cell = Cell()
+    ptr1 = evaluate(args[0], env, toValueOfType(pointerType(cell)))
+    ptr2 = evaluate(args[0], env, toValueOfType(pointerType(cell)))
+    result = tempValue(intType)
+    callMachineOp(mop_pointerSubtract, [ptr1, ptr2, result])
+    return result
 
 @evalCall.register(primitives.pointerCast)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cell = Cell()
+    targetType = evaluate(args[0], env, toType)
+    ptr = evaluate(args[1], env, toValueOfType(pointerType(cell)))
+    return addressToPointer(pointerToAddress(ptr), pointerType(targetType))
 
 @evalCall.register(primitives.pointerCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cell = Cell()
+    destRef = evaluate(args[0], env, toReferenceOfType(pointerType(cell)))
+    src = evaluate(args[1], env, toValueOfType(pointerType(cell)))
+    callMachineOp(mop_pointerCopy, [destRef, src])
+    return voidValue
 
 @evalCall.register(primitives.pointerEquals)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cell = Cell()
+    ptr1 = evaluate(args[0], env, toValueOfType(pointerType(cell)))
+    ptr2 = evaluate(args[1], env, toValueOfType(pointerType(cell)))
+    result = tempValue(boolType)
+    callMachineOp(mop_pointerEquals, [ptr1, ptr2, result])
+    return result
 
 @evalCall.register(primitives.pointerLesser)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cell = Cell()
+    ptr1 = evaluate(args[0], env, toValueOfType(pointerType(cell)))
+    ptr2 = evaluate(args[1], env, toValueOfType(pointerType(cell)))
+    result = tempValue(boolType)
+    callMachineOp(mop_pointerLesser, [ptr1, ptr2, result])
+    return result
 
 @evalCall.register(primitives.allocateMemory)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    size = evaluate(args[0], env, toValueOfType(intType))
+    result = tempValue(pointerType(intType))
+    callMachineOp(mop_allocateMemory, [size, result])
+    return result
 
 @evalCall.register(primitives.freeMemory)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    ptr = evaluate(args[0], env, toValueOfType(pointerType(intType)))
+    callMachineOp(mop_freeMemory, [ptr])
+    return voidValue
 
 @evalCall.register(primitives.TupleType)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = evaluate(args[0], env, toType)
+    return toValue(isTupleType(t))
 
 @evalCall.register(primitives.tuple)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensure(len(args) > 1, "tuples need atleast two members")
+    valueRefs = [evaluate(y, env, toReference) for y in args]
+    return makeTuple(valueRefs)
 
 @evalCall.register(primitives.tupleFieldCount)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = evaluate(args[0], env, toTypeWithTag(tupleTypeTag))
+    return toValue(len(t.params))
 
 @evalCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    tupleRef = evaluate(args[0], env, toReferenceWithTypeTag(tupleTypeTag))
+    i = evaluate(args[1], env, toInt)
+    # TODO: check index bounds
+    return tupleFieldRef(tupleRef, i)
 
 @evalCall.register(primitives.array)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    n = evaluate(args[0], env, toInt)
+    v = evaluate(args[1], env, toReference)
+    return makeArray(n, v)
 
 @evalCall.register(primitives.arrayRef)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    a = evaluate(args[0], env, toReference)
+    i = evaluate(args[1], env, toInt)
+    # TODO: check index bounds
+    return arrayRef(a, i)
 
 @evalCall.register(primitives.RecordType)
 def foo(x, args, env) :
-    raise NotImplementedError
-
-@evalCall.register(primitives.makeRecord)
-def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = evaluate(args[0], env, toType)
+    return toValue(isRecordType(t))
 
 @evalCall.register(primitives.recordFieldCount)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = evaluate(args[0], env, toRecordType)
+    return len(t.tag.fields)
 
 @evalCall.register(primitives.recordFieldRef)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    recRef = evaluate(args[0], env, toRecordReference)
+    i = evaluate(args[1], env, toInt)
+    # TODO: check index bounds
+    return recordFieldRef(recRef, i)
 
 @evalCall.register(primitives.boolCopy)
 def foo(x, args, env) :
