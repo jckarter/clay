@@ -47,7 +47,7 @@ overload greaterEquals[T](ref a:T, ref b:T) {
 // Bool
 //
 
-overload init(ref dest:Bool, ref src:Bool) {
+overload copy(ref dest:Bool, ref src:Bool) {
     boolCopy(dest, src);
 }
 
@@ -74,7 +74,7 @@ overload not(a:Bool) { return boolNot(a); }
 // Char
 //
 
-overload init[T](ref dest:Char, ref src:Char) { charCopy(dest, src); }
+overload copy[T](ref dest:Char, ref src:Char) { charCopy(dest, src); }
 
 overload equals(a:Char, b:Char) { return charEquals(a, b); }
 overload lesser(a:Char, b:Char) { return charLesser(a, b); }
@@ -86,7 +86,7 @@ overload hash(a:Char) { return charToInt(a); }
 // Int
 //
 
-overload init[T](ref dest:Int, ref src:Int) { intCopy(dest, src); }
+overload copy[T](ref dest:Int, ref src:Int) { intCopy(dest, src); }
 
 overload equals(a:Int, b:Int) { return intEquals(a, b); }
 overload lesser(a:Int, b:Int) { return intLesser(a, b); }
@@ -105,7 +105,7 @@ overload negate(a:Int) { return intNegate(a); }
 // Float
 //
 
-overload init[T](ref dest:Float, ref src:Float) { floatCopy(dest, src); }
+overload copy[T](ref dest:Float, ref src:Float) { floatCopy(dest, src); }
 
 overload equals(a:Float, b:Float) { return floatEquals(a, b); }
 overload lesser(a:Float, b:Float) { return floatLesser(a, b); }
@@ -123,7 +123,7 @@ overload negate(a:Float) { return floatNegate(a); }
 // Double
 //
 
-overload init[T](ref dest:Double, ref src:Double) { doubleCopy(dest, src); }
+overload copy[T](ref dest:Double, ref src:Double) { doubleCopy(dest, src); }
 
 overload equals(a:Double, b:Double) { return doubleEquals(a, b); }
 overload lesser(a:Double, b:Double) { return doubleLesser(a, b); }
@@ -141,7 +141,7 @@ overload negate(a:Double) { return doubleNegate(a); }
 // Pointer[T]
 //
 
-overload init[T](ref dest:Pointer[T], ref src:Pointer[T]) {
+overload copy[T](ref dest:Pointer[T], ref src:Pointer[T]) {
     pointerCopy(dest, src);
 }
 
@@ -185,7 +185,7 @@ def initArray[T,n,i](ref a:Array[T,n], static i) {
     initArray(a, add(i, 1));
 }
 
-overload init[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
+overload copy[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
     initArrayCopy(dest, src, 0);
 }
 
@@ -255,11 +255,11 @@ overload fieldCount[T](static T) if TupleType(T) {
     return tupleFieldCount(T);
 }
 
-overload fieldRef[T](ref a:T, static i) ref if RecordType(T) {
+overload fieldRef[T,i](ref a:T, static i) ref if RecordType(T) {
     return recordFieldRef(a, i);
 }
 
-overload fieldRef[T](ref a:T, static i) ref if TupleType(T) {
+overload fieldRef[T,i](ref a:T, static i) ref if TupleType(T) {
     return tupleFieldRef(a, i);
 }
 
@@ -279,7 +279,7 @@ def initFields[T,n,i](ref a:T, static n, static i) {
     initFields(a, n, add(i, 1));
 }
 
-overload init[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
+overload copy[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
     initFieldsCopy(dest, src, fieldCount(T), 0);
 }
 
@@ -334,131 +334,6 @@ def hashFields[T,n,i,h](ref a:T, static n, static i, static h) {
 }
 
 
-//
-// Complex
-//
-
-record Complex {
-    x:Double; y:Double;
-}
-overload add(a:Complex, b:Complex) {
-    return Complex(add(a.x,b.x), add(a.y,b.y));
-}
-overload subtract(a:Complex, b:Complex) {
-    return Complex(subtract(a.x,b.x), subtract(a.y,b.y));
-}
-
-
-//
-// Vector[T]
-//
-
-record Vector[T] {
-    p: Pointer[T];
-}
-overloadable vector;
-overload vector[T](n:Int, v:T) {
-    var block = allocateBlock(T, n);
-    // var p = block;
-    // var end = pointerOffset(block, n);
-    // while (not(equals(p, end))) {
-    //     p^ = v;
-    //     p = add(p, 1);
-    // }
-    return Vector(block);
-}
-overload vector[T](static T, n:Int) {
-    return vector(n, default(T));
-}
-overload destroy[T](v:Vector[T]) {
-    freeBlock(v.p);
-}
-def vectorRef[T](v:Vector[T], i:Int) {
-    return pointerOffset(v.p, i);
-}
-overload size[T](v:Vector[T]) {
-    return blockSize(v.p);
-}
-overload begin[T](v:Vector[T]) {
-    return vectorRef(v, 0);
-}
-overload end[T](v:Vector[T]) {
-    return vectorRef(v, size(v));
-}
-
-
-//
-// LinkedList[T]
-//
-
-record Node[T] {
-    value :T;
-    next :Pointer[Node[T]];
-}
-record NodeLocation[T] {
-    ptr :Pointer[Node[T]];
-}
-record LinkedList[T] {
-    first :Pointer[Node[T]];
-}
-def linkedList[T](static T) {
-    return LinkedList(null(Node[T]));
-}
-overload begin[T](a:LinkedList[T]) {
-    return NodeLocation(a.first);
-}
-overload end[T](a:LinkedList[T]) {
-    return NodeLocation(null(Node[T]));
-}
-overload equals[T](a:NodeLocation[T], b:NodeLocation[T]) {
-    return equals(a.ptr, b.ptr);
-}
-overload get[T](a:NodeLocation[T]) {
-    return a.ptr^.value;
-}
-overload next[T](a:NodeLocation[T]) {
-    return NodeLocation(a.ptr^.next);
-}
-
-
-//
-// Iterator
-//
-
-record Iterator[L] {
-    cur:L;
-    end:L;
-}
-
-def iterator(a) {
-    return Iterator(begin(a), end(a));
-}
-
-def hasMore(it) {
-    return not(equals(it.cur, it.end));
-}
-
-def getNext(it) {
-    it.cur = next(it.cur);
-    return get(it.cur);
-}
-
-
-//
-//
-//
-
-def findMinimum(v) {
-    var i = iterator(v);
-    var minValue = getNext(i);
-    // while (hasMore(i)) {
-    //     var current = getNext(i);
-    //     if (lesser(current, minValue))
-    //         minValue = current;
-    // }
-    return minValue;
-}
-
 def factorial(n) {
     if (equals(n, 0))
         return 1;
@@ -477,24 +352,7 @@ def isOdd(n) {
     return isEven(subtract(n, 1));
 }
 
-def main1() {
+def main() {
     var n = factorial(5);
     return (n, isEven(n));
-}
-
-def someList() {
-    var a = linkedList(Float);
-    return a;
-}
-
-def someData() {
-    // return vector(10, 'a');
-    // return vector(20, 100.0);
-    // return vector(14, Complex(1.0,2.0));
-    return someList();
-}
-
-def main() {
-    var a = someData();
-    return (a, findMinimum(a));
 }

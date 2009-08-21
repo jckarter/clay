@@ -10,7 +10,6 @@ def main() :
     data = file(fileName).read()
     try :
         program = parse(data, fileName)
-        xprint(program)
         env = buildTopLevelEnv(program)
         mainName = ast.NameRef(ast.Identifier("main"))
         mainCall = ast.Call(mainName, [])
@@ -18,7 +17,7 @@ def main() :
         xprint(result)
     except SourceError, e :
         e.display()
-        return
+        raise
 
 if __name__ == "__main__" :
     main()

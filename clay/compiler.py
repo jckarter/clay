@@ -26,7 +26,7 @@ def contextLocation() :
     return None
 
 def error(msg) :
-    raiseError(msg, contextLocation)
+    raiseError(msg, contextLocation())
 
 def ensure(cond, msg) :
     if not cond :
@@ -124,6 +124,11 @@ def isArrayType(t) : return t.tag is arrayTypeTag
 def isPointerType(t) : return t.tag is pointerTypeTag
 def isRecordType(t) : return type(t.tag) is Record
 
+simpleTypeTags = (boolTypeTag, intTypeTag, floatTypeTag,
+                  doubleTypeTag, charTypeTag, pointerTypeTag)
+def isSimpleType(t) :
+    return t.tag in simpleTypeTags
+
 
 
 #
@@ -174,7 +179,7 @@ makeCTypesType = multimethod(errorMessage="invalid type tag")
 def foo(tag, t) :
     fieldCTypes = [ctypesType(toType(x)) for x in t.params]
     fieldCNames = ["f%d" % x for x in range(len(t.params))]
-    ct = type("Tuple", (ctypes.Structure,))
+    ct = type("Tuple", (ctypes.Structure,), {})
     ct._fields_ = zip(fieldCNames, fieldCTypes)
     _ctypesTable[t] = ct
     return ct
@@ -195,7 +200,7 @@ def foo(tag, t) :
 
 @makeCTypesType.register(Record)
 def foo(tag, t) :
-    ct = type("Record", (ctypes.Structure,))
+    ct = type("Record", (ctypes.Structure,), {})
     _ctypesTable[t] = ct
     fieldCTypes = [ctypesType(x) for x in recordFieldTypes(t)]
     fieldCNames = [f.name.s for f in t.record.fields]
@@ -219,7 +224,7 @@ def typeSize(t) :
 
 
 xregister(Type, lambda t : (XObject(tagName(t), *t.params,
-                                    opening="[", closing="[")
+                                    opening="[", closing="]")
                             if t.params
                             else XSymbol(tagName(t))))
 
@@ -272,6 +277,10 @@ def isValue(x) : return type(x) is Value
 def isReference(x) : return type(x) is Reference
 def isCell(x) : return type(x) is Cell
 
+xregister(Value, lambda x : XObject("Value", x.type))
+xregister(Reference, lambda x : XObject("Reference", x.type, x.address))
+xregister(Cell, lambda x : XObject("Cell", x.param))
+
 
 
 #
@@ -291,12 +300,12 @@ voidValue = VoidValue()
 
 toInt = multimethod(errorMessage="invalid int")
 
-toInt.register(Value)
+@toInt.register(Value)
 def foo(x) :
     ensure(x.type == intType, "not int type")
     return x.buf.value
 
-toInt.register(Reference)
+@toInt.register(Reference)
 def foo(x) :
     return toInt(toValue(x))
 
@@ -308,12 +317,12 @@ def foo(x) :
 
 toBool = multimethod(errorMessage="invalid bool")
 
-toBool.register(Value)
+@toBool.register(Value)
 def foo(x) :
     ensure(x.type == boolType, "not bool type")
     return x.buf.value
 
-toBool.register(Reference)
+@toBool.register(Reference)
 def foo(x) :
     return toBool(toValue(x))
 
@@ -325,25 +334,25 @@ def foo(x) :
 
 toValue = multimethod(errorMessage="invalid value")
 
-toValue.register(bool)
+@toValue.register(bool)
 def foo(x) :
     v = tempValue(boolType)
     v.buf.value = x
     return v
 
-toValue.register(int)
+@toValue.register(int)
 def foo(x) :
     v = tempValue(intType)
     v.buf.value = x
     return v
 
-toValue.register(Reference)
+@toValue.register(Reference)
 def foo(x) :
     v = tempValue(x.type)
     valueCopy(v, x)
     return v
 
-toValue.register(Value)
+@toValue.register(Value)
 def foo(x) :
     return x
 
@@ -355,7 +364,7 @@ def foo(x) :
 
 toLValue = multimethod(errorMessage="invalid l-value")
 
-toLValue.register(Reference)
+@toLValue.register(Reference)
 def foo(x) :
     return x
 
@@ -367,11 +376,11 @@ def foo(x) :
 
 toReference = multimethod(errorMessage="invalid reference")
 
-toReference.register(Value)
+@toReference.register(Value)
 def foo(x) :
     return Reference(x.type, ctypes.addressof(x.buf))
 
-toReference.register(Reference)
+@toReference.register(Reference)
 def foo(x) :
     return x
 
@@ -383,7 +392,7 @@ def foo(x) :
 
 toType = multimethod(errorMessage="invalid type")
 
-toType.register(Type)
+@toType.register(Type)
 def foo(x) :
     return x
 
@@ -395,15 +404,15 @@ def foo(x) :
 
 toTypeOrValue = multimethod(errorMessage="invalid type param")
 
-toTypeOrValue.register(Value)
+@toTypeOrValue.register(Value)
 def foo(x) :
     return x
 
-toTypeOrValue.register(Reference)
+@toTypeOrValue.register(Reference)
 def foo(x) :
     return toValue(x)
 
-toTypeOrValue.register(Type)
+@toTypeOrValue.register(Type)
 def foo(x) :
     return x
 
@@ -430,23 +439,23 @@ toTypeOrValueOrCell.register(Cell)(lambda x : x)
 
 equals = multimethod(n=2, errorMessage="invalid equals test")
 
-equals.register(Value, Value)
+@equals.register(Value, Value)
 def foo(a, b) :
     return valueEquals(a, b)
 
-equals.register(Value, Reference)
+@equals.register(Value, Reference)
 def foo(a, b) :
     return valueEquals(a, b)
 
-equals.register(Reference, Value)
+@equals.register(Reference, Value)
 def foo(a, b) :
     return valueEquals(a, b)
 
-equals.register(Reference, Reference)
+@equals.register(Reference, Reference)
 def foo(a, b) :
     return valueEquals(a, b)
 
-equals.register(Type, Type)
+@equals.register(Type, Type)
 def foo(a, b) :
     return typeEquals(a, b)
 
@@ -469,18 +478,38 @@ def callBuiltin(builtinName, args, converter=None) :
     return evaluate(call, env, converter)
 
 def valueInit(a) :
+    if isSimpleType(a.type) :
+        return
     callBuiltin("init", [a])
 
+def simpleValueCopy(dest, src) :
+    destRef = toReference(dest)
+    destPtr = ctypes.c_void_p(destRef.address)
+    srcRef = toReference(src)
+    srcPtr = ctypes.c_void_p(srcRef.address)
+    ctypes.memmove(destPtr, srcPtr, typeSize(dest.type))
+
 def valueCopy(dest, src) :
+    assert dest.type == src.type
+    if isSimpleType(dest.type) :
+        simpleValueCopy(dest, src)
+        return
     callBuiltin("copy", [dest, src])
 
 def valueAssign(dest, src) :
+    assert dest.type == src.type
+    if isSimpleType(dest.type) :
+        simpleValueCopy(dest, src)
+        return
     callBuiltin("assign", [dest, src])
 
 def valueDestroy(a) :
+    if isSimpleType(a.type) :
+        return
     callBuiltin("destroy", [a])
 
 def valueEquals(a, b) :
+    # TODO: add bypass for simple types
     return callBuiltin("equals", [a, b], toBool)
 
 def valueHash(a) :
@@ -732,7 +761,7 @@ def pushTempValueSet() :
     _savedTempValueSets.append(_tempValues)
     _tempValues = []
 
-def popTempValueSet(old) :
+def popTempValueSet() :
     global _tempValues
     for temp in reversed(_tempValues) :
         valueDestroy(temp)
@@ -918,7 +947,7 @@ def recordFieldTypes(recType) :
 # evaluate
 #
 
-def evaluate(expr, env, converter) :
+def evaluate(expr, env, converter=None) :
     try :
         contextPush(expr)
         result = evalExpr(expr, env)
@@ -1589,7 +1618,7 @@ def matchCodeSignature(codeEnv, code, args) :
             assert False
     typeParams = resolveTypeVars(code.typeVars, cells)
     codeEnv2 = bindVariables(codeEnv, code.typeVars, typeParams)
-    for typeCondition in enumerate(code.typeConditions) :
+    for typeCondition in code.typeConditions :
         result = evaluate(typeCondition, codeEnv2, toBool)
         if not result :
             return typeCondFailure(typeCondition)
@@ -1608,7 +1637,7 @@ def evalCodeBody(code, env) :
     if code.returnType is not None :
         returnType = evaluate(code.returnType, env, toType)
     context = CodeContext(code.returnByRef, returnType)
-    result = evalStatement(code.block, env, context)
+    result = evalStatement(code.body, env, context)
     if result is None :
         if returnType is not None :
             ensure(typeEquals(returnType, voidType),
@@ -1658,7 +1687,7 @@ def foo(x, env, context) :
                 value = Value(right.type)
                 valueCopy(value, right)
                 localValues.append(value)
-                addIdent(lb.name, value)
+                addIdent(env, lb.name, value)
             else :
                 result = evalStatement(statement, env, context)
                 if result is not None :
