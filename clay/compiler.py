@@ -506,6 +506,8 @@ def valueDestroy(a) :
     callBuiltin("destroy", [a])
 
 def valueEquals(a, b) :
+    if not typeEquals(a.type, b.type) :
+        return False
     # TODO: add bypass for simple types
     return callBuiltin("equals", [a, b], toBool)
 
@@ -805,24 +807,40 @@ def installOverload(env, item) :
 # temp values
 #
 
-_tempValues = []
-_savedTempValueSets = []
+class TempValueSet(object) :
+    def __init__(self) :
+        self.values = []
+
+    def tempValue(self, type_) :
+        v = Value(type_)
+        self.values.append(v)
+        return v
+
+    def removeTemp(self, v) :
+        for i, x in enumerate(self.values) :
+            if v is x :
+                self.values.pop(i)
+                return
+        error("temp not found")
+
+    def addTemp(self, v) :
+        self.values.append(v)
+
+_tempValueSets = [TempValueSet()]
 
 def pushTempValueSet() :
-    global _tempValues
-    _savedTempValueSets.append(_tempValues)
-    _tempValues = []
+    _tempValueSets.append(TempValueSet())
 
 def popTempValueSet() :
-    global _tempValues
-    for temp in reversed(_tempValues) :
+    tempValueSet = _tempValueSets.pop()
+    for temp in reversed(tempValueSet.values) :
         valueDestroy(temp)
-    _tempValues = _savedTempValueSets.pop()
+
+def topTempValueSet() :
+    return _tempValueSets[-1]
 
 def tempValue(type_) :
-    v = Value(type_)
-    _tempValues.append(v)
-    return v
+    return topTempValueSet().tempValue(type_)
 
 
 
@@ -1020,7 +1038,6 @@ evalExpr = multimethod(errorMessage="invalid expression")
 @evalExpr.register(BoolLiteral)
 def foo(x, env) :
     return toValue(x.value)
-
 
 @evalExpr.register(IntLiteral)
 def foo(x, env) :
@@ -1688,7 +1705,7 @@ def evalCodeBody(code, env) :
     returnType = None
     if code.returnType is not None :
         returnType = evaluate(code.returnType, env, toType)
-    context = CodeContext(code.returnByRef, returnType)
+    context = CodeContext(code.returnByRef, returnType, topTempValueSet())
     result = evalStatement(code.body, env, context)
     if result is None :
         if returnType is not None :
@@ -1704,9 +1721,10 @@ def evalCodeBody(code, env) :
 #
 
 class CodeContext(object) :
-    def __init__(self, returnByRef, returnType) :
+    def __init__(self, returnByRef, returnType, callerTemps) :
         self.returnByRef = returnByRef
         self.returnType = returnType
+        self.callerTemps = callerTemps
 
 def evalStatement(stmt, env, context) :
     try :
@@ -1727,26 +1745,17 @@ evalStmt = multimethod(errorMessage="invalid statement")
 
 @evalStmt.register(Block)
 def foo(x, env, context) :
-    localValues = []
-    try :
-        for statement in x.statements :
-            if type(statement) is LocalBinding :
-                lb = statement
-                right = evaluate(lb.expr, env, toReference)
-                if lb.type is not None :
-                    declaredType = evaluate(lb.type, env, toType)
-                    matchType(declaredType, right.type, lb.expr)
-                value = Value(right.type)
-                valueCopy(value, right)
-                localValues.append(value)
-                addIdent(env, lb.name, value)
-            else :
-                result = evalStatement(statement, env, context)
-                if result is not None :
-                    return result
-    finally :
-        for v in reversed(localValues) :
-            valueDestroy(v)
+    for statement in x.statements :
+        if type(statement) is LocalBinding :
+            right = evaluate(statement.expr, env, toValue)
+            if statement.type is not None :
+                declaredType = evaluate(statement.type, env, toType)
+                matchType(declaredType, right.type, statement.expr)
+            addIdent(env, statement.name, right)
+        else :
+            result = evalStatement(statement, env, context)
+            if result is not None :
+                return result
 
 @evalStmt.register(Assignment)
 def foo(x, env, context) :
@@ -1765,6 +1774,9 @@ def foo(x, env, context) :
     else :
         result = evaluate(x.expr, env, toTypeOrValue)
         resultType = result.type if isValue(result) else None
+        if isValue(result) :
+            topTempValueSet().removeTemp(result)
+            context.callerTemps.addTemp(result)
     if context.returnType is not None :
         matchType(resultType, context.returnType, x.expr)
     return result
