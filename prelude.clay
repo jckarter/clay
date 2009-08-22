@@ -21,7 +21,7 @@ overload destroy[T](ref a:T) {
 overload assign[T](ref dest:T, ref src:T) {
     if (equals(&dest, &src)) return;
     destroy(dest);
-    init(dest, src);
+    copy(dest, src);
 }
 
 def notEquals[T](ref a:T, ref b:T) {
@@ -86,7 +86,7 @@ overload hash(a:Char) { return charToInt(a); }
 // Int
 //
 
-overload copy[T](ref dest:Int, ref src:Int) { intCopy(dest, src); }
+overload copy(ref dest:Int, ref src:Int) { intCopy(dest, src); }
 
 overload equals(a:Int, b:Int) { return intEquals(a, b); }
 overload lesser(a:Int, b:Int) { return intLesser(a, b); }
@@ -186,13 +186,13 @@ def initArray[T,n,i](ref a:Array[T,n], static i) {
 }
 
 overload copy[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
-    initArrayCopy(dest, src, 0);
+    copyArray(dest, src, 0);
 }
 
-def initArrayCopy[T,n,i](ref dest:Array[T,n], ref src:Array[T,n], static i) {
+def copyArray[T,n,i](ref dest:Array[T,n], ref src:Array[T,n], static i) {
     if (equals(i, n)) return;
-    init(arrayRef(dest, i), arrayRef(src, i));
-    initArrayCopy(dest, src, add(i, 1));
+    copy(arrayRef(dest, i), arrayRef(src, i));
+    copyArray(dest, src, add(i, 1));
 }
 
 overload destroy[T,n](ref a:Array[T,n]) {
@@ -280,13 +280,13 @@ def initFields[T,n,i](ref a:T, static n, static i) {
 }
 
 overload copy[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
-    initFieldsCopy(dest, src, fieldCount(T), 0);
+    copyFields(dest, src, fieldCount(T), 0);
 }
 
-def initFieldsCopy[T,n,i](ref dest:T, ref src:T, static n, static i) {
+def copyFields[T,n,i](ref dest:T, ref src:T, static n, static i) {
     if (equals(i, n)) return;
-    init(fieldRef(dest, i), fieldRef(src, i));
-    initFieldsCopy(dest, src, n, add(i, 1));
+    copy(fieldRef(dest, i), fieldRef(src, i));
+    copyFields(dest, src, n, add(i, 1));
 }
 
 overload destroy[T](ref a:T) if RecordOrTuple(T) {
@@ -334,6 +334,10 @@ def hashFields[T,n,i,h](ref a:T, static n, static i, static h) {
 }
 
 
+//
+// testing code
+//
+
 def factorial(n) {
     if (equals(n, 0))
         return 1;
@@ -352,10 +356,8 @@ def isOdd(n) {
     return isEven(subtract(n, 1));
 }
 
-def doIntAdd(a, b) {
-    return intAdd(a, b);
-}
-
 def main() {
-    return (5, intAdd(6,1));
+    var n = 7;
+    var f = factorial(n);
+    return (isEven(n), f);
 }
