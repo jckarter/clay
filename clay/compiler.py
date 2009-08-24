@@ -945,8 +945,10 @@ def toRecordType(t) :
 #
 
 def arrayRef(a, i) :
-    cell = Cell()
-    matchPattern(arrayType(cell), a.type)
+    assert isReference(a)
+    cell, sizeCell = Cell(), Cell()
+    matchPattern(arrayType(cell, sizeCell), a.type)
+    ensure((0 <= i < toInt(sizeCell.param)), "array index out of range")
     elementType = cell.param
     return Reference(elementType, a.address + i*typeSize(elementType))
 
@@ -978,6 +980,8 @@ def makeTuple(argRefs) :
 
 def recordFieldRef(a, i) :
     assert isReference(a) and isRecordType(a.type)
+    nFields = len(a.type.tag.fields)
+    ensure((0 <= i < nFields), "record field index out of range")
     fieldName = a.type.tag.fields[i].name.s
     fieldType = recordFieldTypes(a.type)[i]
     ctypesField = getattr(ctypesType(a.type), fieldName)
@@ -1354,7 +1358,6 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     tupleRef = evaluate(args[0], env, toReferenceWithTypeTag(tupleTypeTag))
     i = evaluate(args[1], env, toInt)
-    # TODO: check index bounds
     return tupleFieldRef(tupleRef, i)
 
 
@@ -1375,7 +1378,6 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     a = evaluate(args[0], env, toReference)
     i = evaluate(args[1], env, toInt)
-    # TODO: check index bounds
     return arrayRef(a, i)
 
 
@@ -1401,7 +1403,6 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     recRef = evaluate(args[0], env, toRecordReference)
     i = evaluate(args[1], env, toInt)
-    # TODO: check index bounds
     return recordFieldRef(recRef, i)
 
 
