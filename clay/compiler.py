@@ -1022,7 +1022,7 @@ def recordFieldTypes(recType) :
 def evaluate(expr, env, converter=None) :
     try :
         contextPush(expr)
-        result = evalExpr(expr, env)
+        result = evaluate2(expr, env)
         if converter is not None :
             result = converter(result)
         return result
@@ -1032,30 +1032,30 @@ def evaluate(expr, env, converter=None) :
 
 
 #
-# evalExpr
+# evaluate2
 #
 
-evalExpr = multimethod(errorMessage="invalid expression")
+evaluate2 = multimethod(errorMessage="invalid expression")
 
-@evalExpr.register(BoolLiteral)
+@evaluate2.register(BoolLiteral)
 def foo(x, env) :
     return toValue(x.value)
 
-@evalExpr.register(IntLiteral)
+@evaluate2.register(IntLiteral)
 def foo(x, env) :
     return toValue(x.value)
 
-@evalExpr.register(CharLiteral)
+@evaluate2.register(CharLiteral)
 def foo(x, env) :
     v = tempValue(charType)
     v.buf.value = x.value
     return v
 
-@evalExpr.register(NameRef)
+@evaluate2.register(NameRef)
 def foo(x, env) :
     return lookupIdent(env, x.name)
 
-@evalExpr.register(Tuple)
+@evaluate2.register(Tuple)
 def foo(x, env) :
     assert len(x.args) > 0
     first = evaluate(x.args[0], env)
@@ -1069,64 +1069,64 @@ def foo(x, env) :
         args.extend([evaluate(y, env, toReference) for y in x.args[1:]])
         return makeTuple(args)
 
-@evalExpr.register(Indexing)
+@evaluate2.register(Indexing)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
-    return evalIndexing(thing, x.args, env)
+    return evaluateIndexing(thing, x.args, env)
 
-@evalExpr.register(Call)
+@evaluate2.register(Call)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
-    return evalCall(thing, x.args, env)
+    return evaluateCall(thing, x.args, env)
 
-@evalExpr.register(FieldRef)
+@evaluate2.register(FieldRef)
 def foo(x, env) :
     thing = evaluate(x.expr, env, toReference)
     ensure(isRecordType(thing.type), "invalid record")
     return recordFieldRef(thing, recordFieldIndex(thing.type, x.name))
 
-@evalExpr.register(TupleRef)
+@evaluate2.register(TupleRef)
 def foo(x, env) :
     thing = evaluate(x.expr, env, toReference)
     ensure(isTupleType(thing.type), "invalid tuple")
     return tupleFieldRef(thing, x.index)
 
-@evalExpr.register(Dereference)
+@evaluate2.register(Dereference)
 def foo(x, env) :
-    return evalCall(primitives.pointerDereference, [x], env)
+    return evaluateCall(primitives.pointerDereference, [x], env)
 
-@evalExpr.register(AddressOf)
+@evaluate2.register(AddressOf)
 def foo(x, env) :
-    return evalCall(primitives.addressOf, [x], env)
+    return evaluateCall(primitives.addressOf, [x], env)
 
 
 
 #
-# evalIndexing
+# evaluateIndexing
 #
 
-evalIndexing = multimethod(errorMessage="invalid indexing")
+evaluateIndexing = multimethod(errorMessage="invalid indexing")
 
-@evalIndexing.register(Record)
+@evaluateIndexing.register(Record)
 def foo(x, args, env) :
     ensureArity(args, len(x.typeVars))
     typeParams = [evaluate(y, env, toTypeOrValueOrCell) for y in args]
     return recordType(x, typeParams)
 
-@evalIndexing.register(primitives.Tuple)
+@evaluateIndexing.register(primitives.Tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuple types need atleast two member types")
     elementTypes = [evaluate(y, env, toTypeOrCell) for y in args]
     return tupleType(elementTypes)
 
-@evalIndexing.register(primitives.Array)
+@evaluateIndexing.register(primitives.Array)
 def foo(x, args, env) :
     ensureArity(args, 2)
     elementType = evaluate(args[0], env, toTypeOrCell)
     sizeValue = evaluate(args[1], env, toValueOrCell)
     return arrayType(elementType, sizeValue)
 
-@evalIndexing.register(primitives.Pointer)
+@evaluateIndexing.register(primitives.Pointer)
 def foo(x, args, env) :
     ensureArity(args, 1)
     targetType = evaluate(args[0], env, toTypeOrCell)
@@ -1135,12 +1135,12 @@ def foo(x, args, env) :
 
 
 #
-# evalCall
+# evaluateCall
 #
 
-evalCall = multimethod(errorMessage="invalid call")
+evaluateCall = multimethod(errorMessage="invalid call")
 
-@evalCall.register(Record)
+@evaluateCall.register(Record)
 def foo(x, args, env) :
     ensureArity(args, len(x.fields))
     recordEnv, cells = bindTypeVars(x.env, x.typeVars)
@@ -1152,7 +1152,7 @@ def foo(x, args, env) :
     recType = recordType(x, typeParams)
     return makeRecord(recType, argRefs)
 
-@evalCall.register(Procedure)
+@evaluateCall.register(Procedure)
 def foo(x, args, env) :
     argWrappers = [ArgumentWrapper(y, env) for y in args]
     result = matchCodeSignature(x.env, x.code, argWrappers)
@@ -1162,7 +1162,7 @@ def foo(x, args, env) :
     procEnv = result
     return evalCodeBody(x.code, procEnv)
 
-@evalCall.register(Overloadable)
+@evaluateCall.register(Overloadable)
 def foo(x, args, env) :
     argWrappers = [ArgumentWrapper(y, env) for y in args]
     for y in x.overloads :
@@ -1180,7 +1180,7 @@ def foo(x, args, env) :
 # evaluate primitives
 #
 
-@evalCall.register(primitives.default)
+@evaluateCall.register(primitives.default)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
@@ -1188,7 +1188,7 @@ def foo(x, args, env) :
     valueInit(v)
     return v
 
-@evalCall.register(primitives.typeSize)
+@evaluateCall.register(primitives.typeSize)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
@@ -1241,20 +1241,20 @@ def addressToPointer(addr, ptrType) :
     ptr.buf = ctypes.cast(void_ptr, ptr.ctypesType)
     return ptr
 
-@evalCall.register(primitives.addressOf)
+@evaluateCall.register(primitives.addressOf)
 def foo(x, args, env) :
     ensureArity(args, 1)
     valueRef = evaluate(args[0], env, toLValue)
     return addressToPointer(valueRef.address, pointerType(valueRef.type))
 
-@evalCall.register(primitives.pointerDereference)
+@evaluateCall.register(primitives.pointerDereference)
 def foo(x, args, env) :
     ensureArity(args, 1)
     cell = Cell()
     ptr = evaluate(args[0], env, toValueOfType(pointerType(cell)))
     return Reference(cell.param, pointerToAddress(ptr))
 
-@evalCall.register(primitives.pointerOffset)
+@evaluateCall.register(primitives.pointerOffset)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
@@ -1264,7 +1264,7 @@ def foo(x, args, env) :
     callMachineOp(mop_pointerOffset, [ptr, offset, result])
     return result
 
-@evalCall.register(primitives.pointerSubtract)
+@evaluateCall.register(primitives.pointerSubtract)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
@@ -1274,7 +1274,7 @@ def foo(x, args, env) :
     callMachineOp(mop_pointerSubtract, [ptr1, ptr2, result])
     return result
 
-@evalCall.register(primitives.pointerCast)
+@evaluateCall.register(primitives.pointerCast)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
@@ -1282,7 +1282,7 @@ def foo(x, args, env) :
     ptr = evaluate(args[1], env, toValueOfType(pointerType(cell)))
     return addressToPointer(pointerToAddress(ptr), pointerType(targetType))
 
-@evalCall.register(primitives.pointerCopy)
+@evaluateCall.register(primitives.pointerCopy)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
@@ -1291,7 +1291,7 @@ def foo(x, args, env) :
     callMachineOp(mop_pointerCopy, [destRef, srcRef])
     return voidValue
 
-@evalCall.register(primitives.pointerEquals)
+@evaluateCall.register(primitives.pointerEquals)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
@@ -1301,7 +1301,7 @@ def foo(x, args, env) :
     callMachineOp(mop_pointerEquals, [ptr1, ptr2, result])
     return result
 
-@evalCall.register(primitives.pointerLesser)
+@evaluateCall.register(primitives.pointerLesser)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
@@ -1311,7 +1311,7 @@ def foo(x, args, env) :
     callMachineOp(mop_pointerLesser, [ptr1, ptr2, result])
     return result
 
-@evalCall.register(primitives.allocateMemory)
+@evaluateCall.register(primitives.allocateMemory)
 def foo(x, args, env) :
     ensureArity(args, 1)
     size = evaluate(args[0], env, toValueOfType(intType))
@@ -1319,7 +1319,7 @@ def foo(x, args, env) :
     callMachineOp(mop_allocateMemory, [size, result])
     return result
 
-@evalCall.register(primitives.freeMemory)
+@evaluateCall.register(primitives.freeMemory)
 def foo(x, args, env) :
     ensureArity(args, 1)
     ptr = evaluate(args[0], env, toValueOfType(pointerType(intType)))
@@ -1332,25 +1332,25 @@ def foo(x, args, env) :
 # evaluate tuple primitives
 #
 
-@evalCall.register(primitives.TupleType)
+@evaluateCall.register(primitives.TupleType)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
     return toValue(isTupleType(t))
 
-@evalCall.register(primitives.tuple)
+@evaluateCall.register(primitives.tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuples need atleast two members")
     valueRefs = [evaluate(y, env, toReference) for y in args]
     return makeTuple(valueRefs)
 
-@evalCall.register(primitives.tupleFieldCount)
+@evaluateCall.register(primitives.tupleFieldCount)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toTypeWithTag(tupleTypeTag))
     return toValue(len(t.params))
 
-@evalCall.register(primitives.tupleFieldRef)
+@evaluateCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
     tupleRef = evaluate(args[0], env, toReferenceWithTypeTag(tupleTypeTag))
@@ -1364,14 +1364,14 @@ def foo(x, args, env) :
 # evaluate array primitives
 #
 
-@evalCall.register(primitives.array)
+@evaluateCall.register(primitives.array)
 def foo(x, args, env) :
     ensureArity(args, 2)
     n = evaluate(args[0], env, toInt)
     v = evaluate(args[1], env, toReference)
     return makeArray(n, v)
 
-@evalCall.register(primitives.arrayRef)
+@evaluateCall.register(primitives.arrayRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
     a = evaluate(args[0], env, toReference)
@@ -1385,19 +1385,19 @@ def foo(x, args, env) :
 # evaluate record primitives
 #
 
-@evalCall.register(primitives.RecordType)
+@evaluateCall.register(primitives.RecordType)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
     return toValue(isRecordType(t))
 
-@evalCall.register(primitives.recordFieldCount)
+@evaluateCall.register(primitives.recordFieldCount)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toRecordType)
     return len(t.tag.fields)
 
-@evalCall.register(primitives.recordFieldRef)
+@evaluateCall.register(primitives.recordFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
     recRef = evaluate(args[0], env, toRecordReference)
@@ -1411,12 +1411,12 @@ def foo(x, args, env) :
 # evaluate bool primitives
 #
 
-@evalCall.register(primitives.boolCopy)
+@evaluateCall.register(primitives.boolCopy)
 def foo(x, args, env) :
     argTypes = [boolType, boolType]
     return simpleMop(mop_boolCopy, args, env, argTypes, None)
 
-@evalCall.register(primitives.boolNot)
+@evaluateCall.register(primitives.boolNot)
 def foo(x, args, env) :
     argTypes = [boolType]
     return simpleMop(mop_boolNot, args, env, argTypes, boolType)
@@ -1427,17 +1427,17 @@ def foo(x, args, env) :
 # evaluate char primitives
 #
 
-@evalCall.register(primitives.charCopy)
+@evaluateCall.register(primitives.charCopy)
 def foo(x, args, env) :
     argTypes = [charType, charType]
     return simpleMop(mop_charCopy, args, env, argTypes, None)
 
-@evalCall.register(primitives.charEquals)
+@evaluateCall.register(primitives.charEquals)
 def foo(x, args, env) :
     argTypes = [charType, charType]
     return simpleMop(mop_charEquals, args, env, argTypes, boolType)
 
-@evalCall.register(primitives.charLesser)
+@evaluateCall.register(primitives.charLesser)
 def foo(x, args, env) :
     argTypes = [charType, charType]
     return simpleMop(mop_charLesser, args, env, argTypes, boolType)
@@ -1448,47 +1448,47 @@ def foo(x, args, env) :
 # evaluate int primitives
 #
 
-@evalCall.register(primitives.intCopy)
+@evaluateCall.register(primitives.intCopy)
 def foo(x, args, env) :
     argTypes = [intType, intType]
     return simpleMop(mop_intCopy, args, env, argTypes, None)
 
-@evalCall.register(primitives.intEquals)
+@evaluateCall.register(primitives.intEquals)
 def foo(x, args, env) :
     argTypes = [intType, intType]
     return simpleMop(mop_intEquals, args, env, argTypes, boolType)
 
-@evalCall.register(primitives.intLesser)
+@evaluateCall.register(primitives.intLesser)
 def foo(x, args, env) :
     argTypes = [intType, intType]
     return simpleMop(mop_intLesser, args, env, argTypes, boolType)
 
-@evalCall.register(primitives.intAdd)
+@evaluateCall.register(primitives.intAdd)
 def foo(x, args, env) :
     argTypes = [intType, intType]
     return simpleMop(mop_intAdd, args, env, argTypes, intType)
 
-@evalCall.register(primitives.intSubtract)
+@evaluateCall.register(primitives.intSubtract)
 def foo(x, args, env) :
     argTypes = [intType, intType]
     return simpleMop(mop_intSubtract, args, env, argTypes, intType)
 
-@evalCall.register(primitives.intMultiply)
+@evaluateCall.register(primitives.intMultiply)
 def foo(x, args, env) :
     argTypes = [intType, intType]
     return simpleMop(mop_intMultiply, args, env, argTypes, intType)
 
-@evalCall.register(primitives.intDivide)
+@evaluateCall.register(primitives.intDivide)
 def foo(x, args, env) :
     argTypes = [intType, intType]
     return simpleMop(mop_intDivide, args, env, argTypes, intType)
 
-@evalCall.register(primitives.intModulus)
+@evaluateCall.register(primitives.intModulus)
 def foo(x, args, env) :
     argTypes = [intType, intType]
     return simpleMop(mop_intModulus, args, env, argTypes, intType)
 
-@evalCall.register(primitives.intNegate)
+@evaluateCall.register(primitives.intNegate)
 def foo(x, args, env) :
     argTypes = [intType]
     return simpleMop(mop_intNegate, args, env, argTypes, intType)
@@ -1499,42 +1499,42 @@ def foo(x, args, env) :
 # evaluate float primitives
 #
 
-@evalCall.register(primitives.floatCopy)
+@evaluateCall.register(primitives.floatCopy)
 def foo(x, args, env) :
     argTypes = [floatType, floatType]
     return simpleMop(mop_floatCopy, args, env, argTypes, None)
 
-@evalCall.register(primitives.floatEquals)
+@evaluateCall.register(primitives.floatEquals)
 def foo(x, args, env) :
     argTypes = [floatType, floatType]
     return simpleMop(mop_floatEquals, args, env, argTypes, boolType)
 
-@evalCall.register(primitives.floatLesser)
+@evaluateCall.register(primitives.floatLesser)
 def foo(x, args, env) :
     argTypes = [floatType, floatType]
     return simpleMop(mop_floatLesser, args, env, argTypes, boolType)
 
-@evalCall.register(primitives.floatAdd)
+@evaluateCall.register(primitives.floatAdd)
 def foo(x, args, env) :
     argTypes = [floatType, floatType]
     return simpleMop(mop_floatAdd, args, env, argTypes, floatType)
 
-@evalCall.register(primitives.floatSubtract)
+@evaluateCall.register(primitives.floatSubtract)
 def foo(x, args, env) :
     argTypes = [floatType, floatType]
     return simpleMop(mop_floatSubtract, args, env, argTypes, floatType)
 
-@evalCall.register(primitives.floatMultiply)
+@evaluateCall.register(primitives.floatMultiply)
 def foo(x, args, env) :
     argTypes = [floatType, floatType]
     return simpleMop(mop_floatMultiply, args, env, argTypes, floatType)
 
-@evalCall.register(primitives.floatDivide)
+@evaluateCall.register(primitives.floatDivide)
 def foo(x, args, env) :
     argTypes = [floatType, floatType]
     return simpleMop(mop_floatDivide, args, env, argTypes, floatType)
 
-@evalCall.register(primitives.floatNegate)
+@evaluateCall.register(primitives.floatNegate)
 def foo(x, args, env) :
     argTypes = [floatType]
     return simpleMop(mop_floatNegate, args, env, argTypes, floatType)
@@ -1545,42 +1545,42 @@ def foo(x, args, env) :
 # evaluate double primitives
 #
 
-@evalCall.register(primitives.doubleCopy)
+@evaluateCall.register(primitives.doubleCopy)
 def foo(x, args, env) :
     argTypes = [doubleType, doubleType]
     return simpleMop(mop_doubleCopy, args, env, argTypes, None)
 
-@evalCall.register(primitives.doubleEquals)
+@evaluateCall.register(primitives.doubleEquals)
 def foo(x, args, env) :
     argTypes = [doubleType, doubleType]
     return simpleMop(mop_doubleEquals, args, env, argTypes, boolType)
 
-@evalCall.register(primitives.doubleLesser)
+@evaluateCall.register(primitives.doubleLesser)
 def foo(x, args, env) :
     argTypes = [doubleType, doubleType]
     return simpleMop(mop_doubleLesser, args, env, argTypes, boolType)
 
-@evalCall.register(primitives.doubleAdd)
+@evaluateCall.register(primitives.doubleAdd)
 def foo(x, args, env) :
     argTypes = [doubleType, doubleType]
     return simpleMop(mop_doubleAdd, args, env, argTypes, doubleType)
 
-@evalCall.register(primitives.doubleSubtract)
+@evaluateCall.register(primitives.doubleSubtract)
 def foo(x, args, env) :
     argTypes = [doubleType, doubleType]
     return simpleMop(mop_doubleSubtract, args, env, argTypes, doubleType)
 
-@evalCall.register(primitives.doubleMultiply)
+@evaluateCall.register(primitives.doubleMultiply)
 def foo(x, args, env) :
     argTypes = [doubleType, doubleType]
     return simpleMop(mop_doubleMultiply, args, env, argTypes, doubleType)
 
-@evalCall.register(primitives.doubleDivide)
+@evaluateCall.register(primitives.doubleDivide)
 def foo(x, args, env) :
     argTypes = [doubleType, doubleType]
     return simpleMop(mop_doubleDivide, args, env, argTypes, doubleType)
 
-@evalCall.register(primitives.doubleNegate)
+@evaluateCall.register(primitives.doubleNegate)
 def foo(x, args, env) :
     argTypes = [doubleType]
     return simpleMop(mop_doubleNegate, args, env, argTypes, doubleType)
@@ -1591,35 +1591,35 @@ def foo(x, args, env) :
 # evaluate conversion primitives
 #
 
-@evalCall.register(primitives.charToInt)
+@evaluateCall.register(primitives.charToInt)
 def foo(x, args, env) :
     return simpleMop(mop_charToInt, args, env, [charType], intType)
 
-@evalCall.register(primitives.intToChar)
+@evaluateCall.register(primitives.intToChar)
 def foo(x, args, env) :
     return simpleMop(mop_intToChar, args, env, [intType], charType)
 
-@evalCall.register(primitives.floatToInt)
+@evaluateCall.register(primitives.floatToInt)
 def foo(x, args, env) :
     return simpleMop(mop_floatToInt, args, env, [floatType], intType)
 
-@evalCall.register(primitives.intToFloat)
+@evaluateCall.register(primitives.intToFloat)
 def foo(x, args, env) :
     return simpleMop(mop_intToFloat, args, env, [intType], floatType)
 
-@evalCall.register(primitives.floatToDouble)
+@evaluateCall.register(primitives.floatToDouble)
 def foo(x, args, env) :
     return simpleMop(mop_floatToDouble, args, env, [floatType], doubleType)
 
-@evalCall.register(primitives.doubleToFloat)
+@evaluateCall.register(primitives.doubleToFloat)
 def foo(x, args, env) :
     return simpleMop(mop_doubleToFloat, args, env, [doubleType], floatType)
 
-@evalCall.register(primitives.doubleToInt)
+@evaluateCall.register(primitives.doubleToInt)
 def foo(x, args, env) :
     return simpleMop(mop_doubleToInt, args, env, [doubleType], intType)
 
-@evalCall.register(primitives.intToDouble)
+@evaluateCall.register(primitives.intToDouble)
 def foo(x, args, env) :
     return simpleMop(mop_intToDouble, args, env, [intType], doubleType)
 
