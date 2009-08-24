@@ -1732,7 +1732,7 @@ def evalStatement(stmt, env, context) :
     try :
         contextPush(stmt)
         pushTempValueSet()
-        return evalStmt(stmt, env, context)
+        return evalStatement2(stmt, env, context)
     finally :
         popTempValueSet()
         contextPop()
@@ -1740,12 +1740,12 @@ def evalStatement(stmt, env, context) :
 
 
 #
-# evalStmt
+# evalStatement2
 #
 
-evalStmt = multimethod(errorMessage="invalid statement")
+evalStatement2 = multimethod(errorMessage="invalid statement")
 
-@evalStmt.register(Block)
+@evalStatement2.register(Block)
 def foo(x, env, context) :
     for statement in x.statements :
         if type(statement) is LocalBinding :
@@ -1759,13 +1759,13 @@ def foo(x, env, context) :
             if result is not None :
                 return result
 
-@evalStmt.register(Assignment)
+@evalStatement2.register(Assignment)
 def foo(x, env, context) :
     left = evaluate(x.left, env, toLValue)
     right = evaluate(x.right, env, toReference)
     valueAssign(left, right)
 
-@evalStmt.register(Return)
+@evalStatement2.register(Return)
 def foo(x, env, context) :
     if context.returnByRef :
         result = evaluate(x.expr, env, toLValue)
@@ -1783,7 +1783,7 @@ def foo(x, env, context) :
         matchType(resultType, context.returnType, x.expr)
     return result
 
-@evalStmt.register(IfStatement)
+@evalStatement2.register(IfStatement)
 def foo(x, env, context) :
     cond = evaluate(x.condition, env, toBool)
     if cond :
@@ -1791,7 +1791,7 @@ def foo(x, env, context) :
     elif x.elsePart is not None :
         return evalStatement(x.elsePart, env, context)
 
-@evalStmt.register(ExprStatement)
+@evalStatement2.register(ExprStatement)
 def foo(x, env, context) :
     evaluate(x.expr, env)
 
