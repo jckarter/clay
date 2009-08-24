@@ -437,19 +437,22 @@ equals = multimethod(n=2, errorMessage="invalid equals test")
 
 @equals.register(Value, Value)
 def foo(a, b) :
-    return valueEquals(a, b)
+    return typeAndValueEquals(a, b)
 
 @equals.register(Value, Reference)
 def foo(a, b) :
-    return valueEquals(a, b)
+    return typeAndValueEquals(a, b)
 
 @equals.register(Reference, Value)
 def foo(a, b) :
-    return valueEquals(a, b)
+    return typeAndValueEquals(a, b)
 
 @equals.register(Reference, Reference)
 def foo(a, b) :
-    return valueEquals(a, b)
+    return typeAndValueEquals(a, b)
+
+def typeAndValueEquals(a, b) :
+    return typeEquals(a.type, b.type) and valueEquals(a, b)
 
 @equals.register(Type, Type)
 def foo(a, b) :
@@ -506,8 +509,7 @@ def valueDestroy(a) :
     callBuiltin("destroy", [a])
 
 def valueEquals(a, b) :
-    if not typeEquals(a.type, b.type) :
-        return False
+    assert a.type == b.type
     # TODO: add bypass for simple types
     return callBuiltin("equals", [a, b], toBool)
 
