@@ -1797,6 +1797,221 @@ def foo(x, env, context) :
 
 
 #
+# RTValue, RTReference
+#
+
+class RTValue(object) :
+    def __init__(self, type_) :
+        self.type = type_
+
+class RTReference(object) :
+    def __init__(self, type_) :
+        self.type = type_
+
+def isRTValue(x) : return type(x) is RTValue
+def isRTReference(x) : return type(x) is RTReference
+
+
+xregister(RTValue, lambda x : XObject("RTValue", x.type))
+xregister(RTReference, lambda x : XObject("RTReference", x.type))
+
+
+
+#
+# toRTValue
+#
+
+toRTValue = multimethod(errorMessage="invalid value")
+
+@toRTValue.register(RTValue)
+def foo(x) :
+    return x
+
+@toRTValue.register(RTReference)
+def foo(x) :
+    return RTValue(x.type)
+
+
+
+#
+# toRTLValue
+#
+
+toRTLValue = multimethod(errorMessage="invalid l-value")
+
+@toRTLValue.register(RTReference)
+def foo(x) :
+    return x
+
+
+
+#
+# toRTReference
+#
+
+toRTReference = multimethod(errorMessage="invalid reference")
+
+@toRTReference.register(RTReference)
+def foo(x) :
+    return x
+
+@toRTReference.register(RTValue)
+def foo(x) :
+    return RTReference(x.type)
+
+
+
+#
+# type checking converters
+#
+
+def toRTValueOfType(pattern) :
+    def f(x) :
+        v = toRTValue(x)
+        matchPattern(pattern, v.type)
+        return v
+    return f
+
+def toRTReferenceOfType(pattern) :
+    def f(x) :
+        r = toRTReference(x)
+        matchPattern(pattern, r.type)
+        return r
+    return f
+
+def toRTReferenceWithTypeTag(tag) :
+    def f(x) :
+        r = toRTReference(x)
+        ensure(r.type.tag is tag, "type mismatch")
+        return r
+    return f
+
+def toRTRecordReference(x) :
+    r = toRTReference(x)
+    ensure(isRecordType(r.type), "record type expected")
+    return r
+
+
+
+#
+# analyze(expr, env) -> RTValue | RTReference | Type | ...
+#
+
+def analyze(expr, env, converter=None) :
+    try :
+        contextPush(expr)
+        result = analyze2(expr, env)
+        if converter is not None :
+            result = converter(result)
+        return result
+    finally :
+        contextPop()
+
+
+
+#
+# analyze2
+#
+
+analyze2 = multimethod(errorMessage="invalid expression")
+
+@analyze2.register(BoolLiteral)
+def foo(x, env) :
+    return RTValue(boolType)
+
+@analyze2.register(IntLiteral)
+def foo(x, env) :
+    return RTValue(intType)
+
+@analyze2.register(CharLiteral)
+def foo(x, env) :
+    return RTValue(charType)
+
+@analyze2.register(NameRef)
+def foo(x, env) :
+    return analyzeNameRef(lookupIdent(env, x.name))
+
+@analyze2.register(Tuple)
+def foo(x, env) :
+    assert len(x.args) > 0
+    first = analyze(x.args[0], env)
+    if len(x.args) == 1 :
+        return first
+    if isType(first) or isCell(first) :
+        rest = [analyze(y, env, toTypeOrCell) for y in x.args[1:]]
+        return tupleType([first] + rest)
+    else :
+        args = [toRTValue(first)]
+        args.extend([analyze(y, env, toRTValue) for y in x.args[1:]])
+        argTypes = [y.type for y in args]
+        return RTValue(tupleType(argTypes))
+
+@analyze2.register(Indexing)
+def foo(x, env) :
+    thing = analyze(x.expr, env)
+    return analyzeIndexing(thing, x.args, env)
+
+@analyze2.register(Call)
+def foo(x, env) :
+    thing = analyze(x.expr, env)
+    return analyzeCall(thing, x.args, env)
+
+@analyze2.register(FieldRef)
+def foo(x, env) :
+    thing = analyze(x.expr, env, toRTRecordReference)
+    fieldTypes = recordFieldTypes(thing.type)
+    fieldIndex = recordFieldIndex(thing.type, x.name)
+    return fieldTypes[fieldIndex]
+
+@analyze2.register(TupleRef)
+def foo(x, env) :
+    thing = analyze(x.expr, env, toRTReferenceWithTypeTag(tupleTypeTag))
+    ensure(0 <= x.index < len(thing.type.params), "tuple index out of range")
+    return thing.type.params[x.index]
+
+@analyze2.register(Dereference)
+def foo(x, env) :
+    return analyzeCall(primitives.pointerDereference, [x.expr], env)
+
+@analyze2.register(AddressOf)
+def foo(x, env) :
+    return analyzeCall(primitives.addressOf, [x.expr], env)
+
+
+
+#
+# analyzeNameRef
+#
+
+analyzeNameRef = multimethod(defaultProc=lambda x : x)
+
+@analyzeNameRef.register(Value)
+def foo(x) :
+    return RTValue(x.type)
+
+@analyzeNameRef.register(Reference)
+def foo(x) :
+    return RTReference(x.type)
+
+
+
+#
+# analyzeIndexing
+#
+
+analyzeIndexing = multimethod(errorMessage="invalid indexing")
+
+
+
+#
+# analyzeCall
+#
+
+analyzeCall = multimethod(errorMessage="invalid call")
+
+
+
+#
 # remove temp name used for multimethod instances
 #
 
