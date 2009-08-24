@@ -961,6 +961,7 @@ def makeArray(n, defaultElement) :
 
 def tupleFieldRef(a, i) :
     assert isReference(a) and isTupleType(a.type)
+    ensure((0 <= i < len(a.type.params)), "tuple index out of range")
     fieldName = "f%d" % i
     ctypesField = getattr(ctypesType(a.type), fieldName)
     fieldType = toType(a.type.params[i])
@@ -1081,23 +1082,21 @@ def foo(x, env) :
 
 @evaluate2.register(FieldRef)
 def foo(x, env) :
-    thing = evaluate(x.expr, env, toReference)
-    ensure(isRecordType(thing.type), "invalid record")
+    thing = evaluate(x.expr, env, toRecordReference)
     return recordFieldRef(thing, recordFieldIndex(thing.type, x.name))
 
 @evaluate2.register(TupleRef)
 def foo(x, env) :
-    thing = evaluate(x.expr, env, toReference)
-    ensure(isTupleType(thing.type), "invalid tuple")
+    thing = evaluate(x.expr, env, toReferenceWithTypeTag(tupleTypeTag))
     return tupleFieldRef(thing, x.index)
 
 @evaluate2.register(Dereference)
 def foo(x, env) :
-    return evaluateCall(primitives.pointerDereference, [x], env)
+    return evaluateCall(primitives.pointerDereference, [x.expr], env)
 
 @evaluate2.register(AddressOf)
 def foo(x, env) :
-    return evaluateCall(primitives.addressOf, [x], env)
+    return evaluateCall(primitives.addressOf, [x.expr], env)
 
 
 
