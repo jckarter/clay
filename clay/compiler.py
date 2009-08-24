@@ -298,7 +298,7 @@ toInt = multimethod(errorMessage="invalid int")
 
 @toInt.register(Value)
 def foo(x) :
-    ensure(x.type == intType, "not int type")
+    ensure(typeEquals(x.type, intType), "not int type")
     return x.buf.value
 
 @toInt.register(Reference)
@@ -315,7 +315,7 @@ toBool = multimethod(errorMessage="invalid bool")
 
 @toBool.register(Value)
 def foo(x) :
-    ensure(x.type == boolType, "not bool type")
+    ensure(typeEquals(x.type, boolType), "not bool type")
     return x.buf.value
 
 @toBool.register(Reference)
@@ -490,14 +490,14 @@ def simpleValueCopy(dest, src) :
     ctypes.memmove(destPtr, srcPtr, size)
 
 def valueCopy(dest, src) :
-    assert dest.type == src.type
+    assert typeEquals(dest.type, src.type)
     if isSimpleType(dest.type) :
         simpleValueCopy(dest, src)
         return
     callBuiltin("copy", [dest, src])
 
 def valueAssign(dest, src) :
-    assert dest.type == src.type
+    assert typeEquals(dest.type, src.type)
     if isSimpleType(dest.type) :
         simpleValueCopy(dest, src)
         return
@@ -509,7 +509,7 @@ def valueDestroy(a) :
     callBuiltin("destroy", [a])
 
 def valueEquals(a, b) :
-    assert a.type == b.type
+    assert typeEquals(a.type, b.type)
     # TODO: add bypass for simple types
     return callBuiltin("equals", [a, b], toBool)
 
