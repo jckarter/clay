@@ -2002,6 +2002,22 @@ def foo(x) :
 
 analyzeIndexing = multimethod(errorMessage="invalid indexing")
 
+@analyzeIndexing.register(Record)
+def foo(x, args, env) :
+    return evaluateIndexing(x, args, env)
+
+@analyzeIndexing.register(primitives.Tuple)
+def foo(x, args, env) :
+    return evaluateIndexing(x, args, env)
+
+@analyzeIndexing.register(primitives.Array)
+def foo(x, args, env) :
+    return evaluateIndexing(x, args, env)
+
+@analyzeIndexing.register(primitives.Pointer)
+def foo(x, args, env) :
+    return evaluateIndexing(x, args, env)
+
 
 
 #
