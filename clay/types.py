@@ -64,6 +64,19 @@ def recordType(record, params) :
 
 
 #
+# VoidValue, voidValue
+#
+
+class VoidValue(object) :
+    pass
+
+voidValue = VoidValue()
+
+xregister(VoidValue, lambda x : XSymbol("void"))
+
+
+
+#
 # install primitive types
 #
 

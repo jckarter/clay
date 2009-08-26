@@ -12,19 +12,6 @@ from clay.unify import *
 
 
 #
-# VoidValue, voidValue
-#
-
-class VoidValue(object) :
-    pass
-
-voidValue = VoidValue()
-
-xregister(VoidValue, lambda x : XSymbol("void"))
-
-
-
-#
 # evaluate
 #
 
