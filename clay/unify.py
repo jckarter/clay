@@ -101,6 +101,28 @@ def toReferenceOfType(pattern) :
     return f
 
 
+def toRTValueOfType(pattern) :
+    def f(x) :
+        v = toRTValue(x)
+        matchType(pattern, v.type)
+        return v
+    return f
+
+def toRTLValueOfType(pattern) :
+    def f(x) :
+        v = toRTLValue(x)
+        matchType(pattern, v.type)
+        return v
+    return f
+
+def toRTReferenceOfType(pattern) :
+    def f(x) :
+        r = toRTReference(x)
+        matchType(pattern, r.type)
+        return r
+    return f
+
+
 
 #
 # type variables

@@ -2,7 +2,8 @@ from clay.error import *
 from clay.multimethod import *
 
 __all__ = ["equals", "hashify", "toType", "toInt", "toBool",
-           "toValue", "toLValue", "toReference", "toStatic"]
+           "toValue", "toLValue", "toReference", "toStatic",
+           "toRTValue", "toRTLValue", "toRTReference"]
 
 
 
@@ -33,3 +34,9 @@ toLValue = multimethod(errorMessage="invalid l-value")
 toReference = multimethod(errorMessage="invalid reference")
 
 toStatic = multimethod(errorMessage="invalid static value")
+
+toRTValue = multimethod(errorMessage="invalid value")
+
+toRTLValue = multimethod(errorMessage="invalid reference")
+
+toRTReference = multimethod(errorMessage="invalid reference")
