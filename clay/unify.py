@@ -2,6 +2,7 @@ from clay.xprint import *
 from clay.error import *
 from clay.multimethod import *
 from clay.coreops import *
+from clay.types import *
 
 
 
@@ -115,7 +116,3 @@ def resolveTypeVars(typeVars, cells) :
     for typeVar, cell in zip(typeVars, cells) :
         typeValues.append(withContext(typeVar, lambda : ensureDeref(cell)))
     return typeValues
-
-
-# TODO: fix cyclic import
-from clay.types import *

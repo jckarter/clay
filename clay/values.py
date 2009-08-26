@@ -4,6 +4,73 @@ from clay.error import *
 from clay.multimethod import *
 from clay.coreops import *
 from clay.env import *
+from clay.types import *
+from clay.unify import *
+
+
+
+#
+# convert to ctypes
+#
+
+_ctypesTable = {}
+_ctypesTable[boolType] = ctypes.c_bool
+_ctypesTable[intType] = ctypes.c_int
+_ctypesTable[floatType] = ctypes.c_float
+_ctypesTable[doubleType] = ctypes.c_double
+_ctypesTable[charType] = ctypes.c_wchar
+
+ctypesType = multimethod(errorMessage="invalid type")
+
+@ctypesType.register(Type)
+def foo(t) :
+    ct = _ctypesTable.get(t)
+    if ct is None :
+        ct = makeCTypesType(t.tag, t)
+    return ct
+
+makeCTypesType = multimethod(errorMessage="invalid type tag")
+
+@makeCTypesType.register(TupleTypeTag)
+def foo(tag, t) :
+    fieldCTypes = [ctypesType(x) for x in t.params]
+    fieldCNames = ["f%d" % x for x in range(len(t.params))]
+    ct = type("Tuple", (ctypes.Structure,), {})
+    ct._fields_ = zip(fieldCNames, fieldCTypes)
+    _ctypesTable[t] = ct
+    return ct
+
+@makeCTypesType.register(ArrayTypeTag)
+def foo(tag, t) :
+    ensure(len(t.params) == 2, "invalid array type")
+    ct = ctypesType(t.params[0]) * toInt(t.params[1])
+    _ctypesTable[t] = ct
+    return ct
+
+@makeCTypesType.register(PointerTypeTag)
+def foo(tag, t) :
+    ensure(len(t.params) == 1, "invalid pointer type")
+    ct = ctypes.POINTER(ctypesType(t.params[0]))
+    _ctypesTable[t] = ct
+    return ct
+
+@makeCTypesType.register(Record)
+def foo(tag, t) :
+    ct = type("Record", (ctypes.Structure,), {})
+    _ctypesTable[t] = ct
+    fieldCTypes = [ctypesType(x) for x in recordFieldTypes(t)]
+    fieldCNames = [f.name.s for f in t.record.fields]
+    ct._fields_ = zip(fieldCNames, fieldCTypes)
+    return ct
+
+
+
+#
+# typeSize
+#
+
+def typeSize(t) :
+    return ctypes.sizeof(ctypesType(t))
 
 
 
@@ -234,6 +301,85 @@ def foo(a) :
 
 
 #
+# arrays, tuples, records
+#
+
+def arrayRef(a, i) :
+    assert isReference(a)
+    cell, sizeCell = Cell(), Cell()
+    matchType(arrayType(cell, sizeCell), a.type)
+    ensure((0 <= i < toInt(sizeCell.param)), "array index out of range")
+    elementType = cell.param
+    return Reference(elementType, a.address + i*typeSize(elementType))
+
+def makeArray(n, defaultElement) :
+    assert isReference(defaultElement)
+    value = tempValue(arrayType(defaultElement.type, intToValue(n)))
+    valueRef = toReference(value)
+    for i in range(n) :
+        elementRef = arrayRef(valueRef, i)
+        valueCopy(elementRef, defaultElement)
+    return value
+
+def tupleFieldRef(a, i) :
+    assert isReference(a) and isTupleType(a.type)
+    ensure((0 <= i < len(a.type.params)), "tuple index out of range")
+    fieldName = "f%d" % i
+    ctypesField = getattr(ctypesType(a.type), fieldName)
+    fieldType = toType(a.type.params[i])
+    return Reference(fieldType, a.address + ctypesField.offset)
+
+def makeTuple(argRefs) :
+    t = tupleType([x.type for x in argRefs])
+    value = tempValue(t)
+    valueRef = toReference(value)
+    for i, argRef in enumerate(argRefs) :
+        left = tupleFieldRef(valueRef, i)
+        valueCopy(left, argRef)
+    return value
+
+def recordFieldRef(a, i) :
+    assert isReference(a) and isRecordType(a.type)
+    nFields = len(a.type.tag.fields)
+    ensure((0 <= i < nFields), "record field index out of range")
+    fieldName = a.type.tag.fields[i].name.s
+    fieldType = recordFieldTypes(a.type)[i]
+    ctypesField = getattr(ctypesType(a.type), fieldName)
+    return Reference(fieldType, a.address + ctypesField.offset)
+
+def recordFieldIndex(recType, ident) :
+    for i, f in enumerate(recType.tag.fields) :
+        if f.name.s == ident.s :
+            return i
+    error("record field not found: %s" % ident.s)
+
+def makeRecord(recType, argRefs) :
+    value = tempValue(recType)
+    valueRef = toReference(value)
+    for i, argRef in enumerate(argRefs) :
+        left = recordFieldRef(valueRef, i)
+        valueCopy(left, argRef)
+    return value
+
+def computeFieldTypes(fields, env) :
+    typeExprs = [f.type for f in fields]
+    fieldTypes = [evaluate(x, env, toTypeOrCell) for x in typeExprs]
+    return fieldTypes
+
+_recordFieldTypes = {}
+def recordFieldTypes(recType) :
+    assert isType(recType)
+    fieldTypes = _recordFieldTypes.get(recType)
+    if fieldTypes is None :
+        record = recType.tag
+        env = extendEnv(record.env, record.typeVars, recType.params)
+        fieldTypes = computeFieldTypes(record.fields, env)
+        _recordFieldTypes[recType] = fieldTypes
+    return fieldTypes
+
+
+
+#
 # value printer
 #
 
@@ -297,4 +443,4 @@ del foo
 
 
 # TODO: fix cyclic import
-from clay.types import *
+from clay.evaluator import *

@@ -6,6 +6,8 @@ from clay.machineops import *
 from clay.ast import *
 from clay.env import *
 from clay.coreops import *
+from clay.types import *
+from clay.unify import *
 
 
 
@@ -23,95 +25,13 @@ xregister(VoidValue, lambda x : XSymbol("void"))
 
 
 #
-# arrays, tuples, records
-#
-
-def arrayRef(a, i) :
-    assert isReference(a)
-    cell, sizeCell = Cell(), Cell()
-    matchType(arrayType(cell, sizeCell), a.type)
-    ensure((0 <= i < toInt(sizeCell.param)), "array index out of range")
-    elementType = cell.param
-    return Reference(elementType, a.address + i*typeSize(elementType))
-
-def makeArray(n, defaultElement) :
-    assert isReference(defaultElement)
-    value = tempValue(arrayType(defaultElement.type, intToValue(n)))
-    valueRef = toReference(value)
-    for i in range(n) :
-        elementRef = arrayRef(valueRef, i)
-        valueCopy(elementRef, defaultElement)
-    return value
-
-def tupleFieldRef(a, i) :
-    assert isReference(a) and isTupleType(a.type)
-    ensure((0 <= i < len(a.type.params)), "tuple index out of range")
-    fieldName = "f%d" % i
-    ctypesField = getattr(ctypesType(a.type), fieldName)
-    fieldType = toType(a.type.params[i])
-    return Reference(fieldType, a.address + ctypesField.offset)
-
-def makeTuple(argRefs) :
-    t = tupleType([x.type for x in argRefs])
-    value = tempValue(t)
-    valueRef = toReference(value)
-    for i, argRef in enumerate(argRefs) :
-        left = tupleFieldRef(valueRef, i)
-        valueCopy(left, argRef)
-    return value
-
-def recordFieldRef(a, i) :
-    assert isReference(a) and isRecordType(a.type)
-    nFields = len(a.type.tag.fields)
-    ensure((0 <= i < nFields), "record field index out of range")
-    fieldName = a.type.tag.fields[i].name.s
-    fieldType = recordFieldTypes(a.type)[i]
-    ctypesField = getattr(ctypesType(a.type), fieldName)
-    return Reference(fieldType, a.address + ctypesField.offset)
-
-def recordFieldIndex(recType, ident) :
-    for i, f in enumerate(recType.tag.fields) :
-        if f.name.s == ident.s :
-            return i
-    error("record field not found: %s" % ident.s)
-
-def makeRecord(recType, argRefs) :
-    value = tempValue(recType)
-    valueRef = toReference(value)
-    for i, argRef in enumerate(argRefs) :
-        left = recordFieldRef(valueRef, i)
-        valueCopy(left, argRef)
-    return value
-
-def computeFieldTypes(fields, env) :
-    typeExprs = [f.type for f in fields]
-    fieldTypes = [evaluate(x, env, toTypeOrCell) for x in typeExprs]
-    return fieldTypes
-
-_recordFieldTypes = {}
-def recordFieldTypes(recType) :
-    assert isType(recType)
-    fieldTypes = _recordFieldTypes.get(recType)
-    if fieldTypes is None :
-        record = recType.tag
-        env = extendEnv(record.env, record.typeVars, recType.params)
-        fieldTypes = computeFieldTypes(record.fields, env)
-        _recordFieldTypes[recType] = fieldTypes
-    return fieldTypes
-
-
-
-#
 # evaluate
 #
 
-def evaluate(expr, env, converter=None) :
+def evaluate(expr, env, converter=(lambda x : x)) :
     try :
         contextPush(expr)
-        result = evaluate2(expr, env)
-        if converter is not None :
-            result = converter(result)
-        return result
+        return converter(evaluate2(expr, env))
     finally :
         contextPop()
 
@@ -886,6 +806,4 @@ def foo(x, env, context) :
 del foo
 
 # TODO: fix cyclic import
-from clay.types import *
 from clay.values import *
-from clay.unify import *
