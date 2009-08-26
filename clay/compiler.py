@@ -1,6 +1,6 @@
 import ctypes
-from clay.multimethod import multimethod as orig_multimethod
-from clay.xprint import xprint, XObject, XField, XSymbol, xregister
+from clay.multimethod import *
+from clay.xprint import *
 from clay.machineops import *
 from clay.ast import *
 from clay.error import *
@@ -17,20 +17,6 @@ def ensure(cond, msg) :
 
 def ensureArity(args, n) :
     ensure(len(args) == n, "incorrect no. arguments")
-
-
-
-#
-# multimethod
-#
-
-def multimethod(n=1, errorMessage=None, defaultProc=None) :
-    if errorMessage is not None :
-        assert defaultProc is None
-        defaultProc = lambda *args : error(errorMessage)
-    if defaultProc is not None :
-        return orig_multimethod(n, defaultProc=defaultProc)
-    return orig_multimethod(n)
 
 
 

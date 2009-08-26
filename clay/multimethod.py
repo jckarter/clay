@@ -1,19 +1,11 @@
+from clay.error import error
+
 __all__ = ["multimethod"]
 
-class DummyDefault(object) : pass
-
-class DefaultProc(object) :
-    def __init__(self, proc) :
-        self.proc = proc
-
-def multimethod(n=1, default=DummyDefault, defaultProc=DummyDefault) :
-    assert (default is DummyDefault) or (defaultProc is DummyDefault)
-    if default is not DummyDefault :
-        defaultProc = lambda *args : default
-    elif defaultProc is not DummyDefault :
-        pass
-    else :
-        defaultProc = None
+def multimethod(n=1, errorMessage=None, defaultProc=None) :
+    if errorMessage is not None :
+        assert defaultProc is None
+        defaultProc = lambda *args : error(errorMessage)
     return MultiMethod(n, defaultProc)
 
 class MultiMethod(object) :
