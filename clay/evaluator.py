@@ -69,7 +69,7 @@ def foo(x, env) :
         rest = [evaluate(y, env, toTypeOrCell) for y in x.args[1:]]
         return tupleType([first] + rest)
     else :
-        args = [toReference(first)]
+        args = [withContext(x.args[0], lambda : toReference(first))]
         args.extend([evaluate(y, env, toReference) for y in x.args[1:]])
         return makeTuple(args)
 
@@ -261,7 +261,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
     ptr = evaluate(args[0], env, toReferenceOfType(pointerType(cell)))
-    offset = evaluate(args[0], env, toReferenceOfType(intType))
+    offset = evaluate(args[1], env, toReferenceOfType(intType))
     result = tempValue(ptr.type)
     callMachineOp(mop_pointerOffset, [ptr, offset, result])
     return result
@@ -271,7 +271,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
     ptr1 = evaluate(args[0], env, toReferenceOfType(pointerType(cell)))
-    ptr2 = evaluate(args[0], env, toReferenceOfType(pointerType(cell)))
+    ptr2 = evaluate(args[1], env, toReferenceOfType(pointerType(cell)))
     result = tempValue(intType)
     callMachineOp(mop_pointerSubtract, [ptr1, ptr2, result])
     return result
