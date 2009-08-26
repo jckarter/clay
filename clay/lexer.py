@@ -1,7 +1,7 @@
 import re
 from clay.parserlib import *
 from clay.tokens import *
-from clay.error import Location, raiseError
+from clay.error import Location, error
 
 __all__ = ["tokenize"]
 
@@ -249,7 +249,7 @@ oneToken = choice(space, singleLineComment, multiLineComment,
 
 
 #
-# LexerError, Lexer
+# Lexer
 #
 
 def tokenize(data, fileName, remove_space=True) :
@@ -259,7 +259,7 @@ def tokenize(data, fileName, remove_space=True) :
         token = oneToken(input)
         if token is Failure :
             location = Location(data, input.maxPos, fileName)
-            raiseError("invalid token", location)
+            error("invalid token", location=location)
         tokens.append(token)
     def is_space(t) :
         return type(t) in [Space,SingleLineComment,MultiLineComment]

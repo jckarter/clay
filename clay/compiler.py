@@ -8,25 +8,8 @@ from clay.error import *
 
 
 #
-# error context
+# utility
 #
-
-_errorContext = []
-
-def contextPush(astNode) :
-    _errorContext.append(astNode)
-
-def contextPop() :
-    _errorContext.pop()
-
-def contextLocation() :
-    for astNode in reversed(_errorContext) :
-        if astNode.location is not None :
-            return astNode.location
-    return None
-
-def error(msg) :
-    raiseError(msg, contextLocation())
 
 def ensure(cond, msg) :
     if not cond :

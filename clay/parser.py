@@ -2,7 +2,7 @@ from clay.parserlib import *
 from clay import tokens as t
 from clay import lexer
 from clay.ast import *
-from clay.error import Location, raiseError
+from clay.error import Location, error
 
 __all__ = ["parse"]
 
@@ -229,5 +229,5 @@ def parse(data, fileName) :
             location = Location(data, len(data), fileName)
         else :
             location = tokens[input.maxPos].location
-        raiseError("parse error", location)
+        error("parse error", location=location)
     return result

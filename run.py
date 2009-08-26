@@ -1,5 +1,5 @@
 import sys
-from clay.error import SourceError
+from clay.error import CompilerError
 from clay.parser import parse
 from clay import ast
 from clay.compiler import buildTopLevelEnv, evaluate
@@ -15,7 +15,7 @@ def main() :
         mainCall = ast.Call(mainName, [])
         result = evaluate(mainCall, env)
         xprint(result)
-    except SourceError, e :
+    except CompilerError, e :
         e.display()
         raise
 

@@ -1,4 +1,5 @@
-__all__ = ["Location", "raiseError", "SourceError"]
+__all__ = ["Location", "CompilerError", "contextPush", "contextPop",
+           "error"]
 
 class Location(object) :
     def __init__(self, data, offset, fileName) :
@@ -6,23 +7,52 @@ class Location(object) :
         self.offset = offset
         self.fileName = fileName
 
-def raiseError(errorMessage, location) :
-    raise SourceError(errorMessage, location)
-
-class SourceError(Exception) :
+class CompilerError(Exception) :
     def __init__(self, errorMessage, location) :
         self.errorMessage = errorMessage
         self.location = location
 
     def display(self) :
-        if self.location is None :
-            print "error: %s" % self.errorMessage
-            return
-        lines = self.location.data.splitlines(True)
-        line, column = locate(lines, self.location.offset)
-        displayContext(lines, line, column)
-        print "error at %s:%d:%d: %s" % \
-            (self.location.fileName, line+1, column, self.errorMessage)
+        displayError(self)
+
+_errorContext = []
+
+def contextPush(thing) :
+    _errorContext.append(thing)
+
+def contextPop() :
+    _errorContext.pop()
+
+def error(msg, **kwargs) :
+    location = kwargs.get("location")
+    if location is None :
+        location = contextLocation()
+    raise CompilerError(msg, location)
+
+
+
+#
+# utility procedures
+#
+
+def contextLocation() :
+    for thing in reversed(_errorContext) :
+        if type(thing) is Location :
+            return thing
+        if hasattr(thing, "location") :
+            if thing.location is not None :
+                return thing.location
+    return None
+
+def displayError(err) :
+    if err.location is None :
+        print "error: %s" % err.errorMessage
+        return
+    lines = err.location.data.splitlines(True)
+    line, column = locate(lines, err.location.offset)
+    displayContext(lines, line, column)
+    print "error at %s:%d:%d: %s" % \
+        (err.location.fileName, line+1, column, err.errorMessage)
 
 def locate(lines, offset) :
     line = 0
