@@ -3,7 +3,8 @@ from clay.xprint import *
 from clay.error import *
 from clay.multimethod import *
 from clay.ast import *
-from clay.metaops import *
+from clay.env import *
+from clay.coreops import *
 
 
 
@@ -64,6 +65,19 @@ def recordType(record, params) :
 
 
 #
+# install primitive types
+#
+
+installPrimitive("Bool", boolType)
+installPrimitive("Int", intType)
+installPrimitive("Float", floatType)
+installPrimitive("Double", doubleType)
+installPrimitive("Char", charType)
+installPrimitive("Void", voidType)
+
+
+
+#
 # type predicates
 #
 
@@ -88,18 +102,6 @@ def isSimpleType(t) :
 
 
 #
-# toType
-#
-
-toType = multimethod(errorMessage="invalid type")
-
-@toType.register(Type)
-def foo(x) :
-    return x
-
-
-
-#
 # equals, hashify
 #
 
@@ -120,6 +122,20 @@ def foo(a) :
 
 
 #
+# toType, toStatic
+#
+
+@toType.register(Type)
+def foo(x) :
+    return x
+
+@toStatic.register(Type)
+def foo(x) :
+    return x
+
+
+
+#
 # convert to ctypes
 #
 
@@ -131,7 +147,10 @@ _ctypesTable[doubleType] = ctypes.c_double
 _ctypesTable[charType] = ctypes.c_wchar
 _ctypesTable[voidType] = ctypes.c_bool
 
-def ctypesType(t) :
+ctypesType = multimethod(errorMessage="invalid type")
+
+@ctypesType.register(Type)
+def foo(t) :
     ct = _ctypesTable.get(t)
     if ct is None :
         ct = makeCTypesType(t.tag, t)
@@ -141,7 +160,7 @@ makeCTypesType = multimethod(errorMessage="invalid type tag")
 
 @makeCTypesType.register(TupleTypeTag)
 def foo(tag, t) :
-    fieldCTypes = [ctypesType(toType(x)) for x in t.params]
+    fieldCTypes = [ctypesType(x) for x in t.params]
     fieldCNames = ["f%d" % x for x in range(len(t.params))]
     ct = type("Tuple", (ctypes.Structure,), {})
     ct._fields_ = zip(fieldCNames, fieldCTypes)
@@ -151,14 +170,14 @@ def foo(tag, t) :
 @makeCTypesType.register(ArrayTypeTag)
 def foo(tag, t) :
     ensure(len(t.params) == 2, "invalid array type")
-    ct = ctypesType(toType(t.params[0])) * toInt(t.params[1])
+    ct = ctypesType(t.params[0]) * toInt(t.params[1])
     _ctypesTable[t] = ct
     return ct
 
 @makeCTypesType.register(PointerTypeTag)
 def foo(tag, t) :
     ensure(len(t.params) == 1, "invalid pointer type")
-    ct = ctypes.POINTER(ctypesType(toType(t.params[0])))
+    ct = ctypes.POINTER(ctypesType(t.params[0]))
     _ctypesTable[t] = ct
     return ct
 
@@ -211,6 +230,35 @@ _tagNames[pointerTypeTag] = "Pointer"
 
 
 #
+# type checking converters
+#
+
+def toTypeWithTag(tag) :
+    def f(x) :
+        t = toType(x)
+        ensure(t.tag is tag, "type mismatch")
+        return t
+    return f
+
+def toRecordType(t) :
+    ensure(isType(t) and isRecordType(t), "record type expected")
+    return t
+
+def toReferenceWithTypeTag(tag) :
+    def f(x) :
+        r = toReference(x)
+        ensure(r.type.tag is tag, "type mismatch")
+        return r
+    return f
+
+def toRecordReference(x) :
+    r = toReference(x)
+    ensure(isRecordType(r.type), "record type expected")
+    return r
+
+
+
+#
 # remove temp name used for multimethod instances
 #
 
@@ -218,4 +266,4 @@ del foo
 
 
 # TODO: fix cyclic import
-from clay.compiler import *
+from clay.evaluator import *

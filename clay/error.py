@@ -1,5 +1,5 @@
 __all__ = ["Location", "CompilerError", "contextPush", "contextPop",
-           "error", "ensure"]
+           "error", "ensure", "ensureArity", "withContext"]
 
 class Location(object) :
     def __init__(self, data, offset, fileName) :
@@ -32,6 +32,18 @@ def error(msg, **kwargs) :
 def ensure(cond, msg) :
     if not cond :
         error(msg)
+
+def ensureArity(args, n) :
+    ensure(len(args) == n, "incorrect no. arguments")
+
+def withContext(ctx, f) :
+    try :
+        if ctx is not None :
+            contextPush(ctx)
+        return f()
+    finally :
+        if ctx is not None :
+            contextPop()
 
 
 

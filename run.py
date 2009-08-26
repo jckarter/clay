@@ -1,9 +1,10 @@
 import sys
+from clay.xprint import xprint
 from clay.error import CompilerError
 from clay.parser import parse
-from clay import ast
-from clay.compiler import buildTopLevelEnv, evaluate
-from clay.xprint import xprint
+from clay.ast import *
+from clay.env import buildTopLevelEnv
+from clay.evaluator import evaluate
 
 def main() :
     fileName = sys.argv[1]
@@ -11,8 +12,7 @@ def main() :
     try :
         program = parse(data, fileName)
         env = buildTopLevelEnv(program)
-        mainName = ast.NameRef(ast.Identifier("main"))
-        mainCall = ast.Call(mainName, [])
+        mainCall = Call(NameRef(Identifier("main")), [])
         result = evaluate(mainCall, env)
         xprint(result)
     except CompilerError, e :
