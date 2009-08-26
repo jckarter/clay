@@ -1,5 +1,5 @@
 __all__ = ["Location", "CompilerError", "contextPush", "contextPop",
-           "error"]
+           "error", "ensure"]
 
 class Location(object) :
     def __init__(self, data, offset, fileName) :
@@ -28,6 +28,10 @@ def error(msg, **kwargs) :
     if location is None :
         location = contextLocation()
     raise CompilerError(msg, location)
+
+def ensure(cond, msg) :
+    if not cond :
+        error(msg)
 
 
 
