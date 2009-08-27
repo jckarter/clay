@@ -59,7 +59,7 @@ def foo(tag, t) :
     ct = type("Record", (ctypes.Structure,), {})
     _ctypesTable[t] = ct
     fieldCTypes = [ctypesType(x) for x in recordFieldTypes(t)]
-    fieldCNames = [f.name.s for f in t.record.fields]
+    fieldCNames = [f.name.s for f in t.tag.fields]
     ct._fields_ = zip(fieldCNames, fieldCTypes)
     return ct
 
