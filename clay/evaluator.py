@@ -88,6 +88,10 @@ def foo(x, env) :
 def foo(x, env) :
     return evaluateCall(primitives.addressOf, [x.expr], env)
 
+@evaluate2.register(StaticExpr)
+def foo(x, env) :
+    return evaluate(x.expr, env, toValue)
+
 
 
 #

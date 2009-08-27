@@ -32,6 +32,7 @@ r(FieldRef, lambda x : xo("FieldRef", x.expr, x.name))
 r(TupleRef, lambda x : xo("TupleRef", x.expr, x.index))
 r(Dereference, lambda x : xo("Dereference", x.expr))
 r(AddressOf, lambda x : xo("AddressOf", x.expr))
+r(StaticExpr, lambda x : xo("StaticExpr", x.expr))
 
 
 

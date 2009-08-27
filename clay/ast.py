@@ -3,7 +3,7 @@ __all__ = [
     "Expression", "BoolLiteral", "IntLiteral", "FloatLiteral",
     "DoubleLiteral", "CharLiteral", "StringLiteral",
     "NameRef", "Tuple", "Indexing", "Call", "FieldRef", "TupleRef",
-    "Dereference", "AddressOf",
+    "Dereference", "AddressOf", "StaticExpr",
     "Statement", "Block", "Assignment", "LocalBinding", "Return",
     "IfStatement", "ExprStatement",
     "Code", "FormalArgument", "ValueArgument", "StaticArgument",
@@ -128,6 +128,12 @@ class Dereference(Expression) :
 class AddressOf(Expression) :
     def __init__(self, expr) :
         super(AddressOf, self).__init__()
+        check(expr, Expression)
+        self.expr = expr
+
+class StaticExpr(Expression) :
+    def __init__(self, expr) :
+        super(StaticExpr, self).__init__()
         check(expr, Expression)
         self.expr = expr
 

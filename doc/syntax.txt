@@ -50,7 +50,11 @@ ReturnStatement -> "return" Expression? ";" ;
 
 TypeExpr -> Expression ;
 
-Expression -> PrefixExpr ;
+Expression -> StaticExpr
+            | PrefixExpr
+            ;
+
+StaticExpr -> "static" PrefixExpr ;
 
 PrefixExpr -> AddressOfExpr
             | SuffixExpr

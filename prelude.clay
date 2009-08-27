@@ -176,48 +176,48 @@ def null[T](static T) {
 //
 
 overload init[T,n](ref a:Array[T,n]) {
-    initArray(a, 0);
+    initArray(a, static 0);
 }
 
 def initArray[T,n,i](ref a:Array[T,n], static i) {
     if (equals(i, n)) return;
     init(arrayRef(a, i));
-    initArray(a, add(i, 1));
+    initArray(a, static add(i, 1));
 }
 
 overload copy[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
-    copyArray(dest, src, 0);
+    copyArray(dest, src, static 0);
 }
 
 def copyArray[T,n,i](ref dest:Array[T,n], ref src:Array[T,n], static i) {
     if (equals(i, n)) return;
     copy(arrayRef(dest, i), arrayRef(src, i));
-    copyArray(dest, src, add(i, 1));
+    copyArray(dest, src, static add(i, 1));
 }
 
 overload destroy[T,n](ref a:Array[T,n]) {
-    destroyArray(a, 0);
+    destroyArray(a, static 0);
 }
 
 def destroyArray[T,n,i](ref a:Array[T,n], static i) {
     if (equals(i, n)) return;
     destroy(arrayRef(a, i));
-    destroyArray(a, add(i, 1));
+    destroyArray(a, static add(i, 1));
 }
 
 overload equals[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
-    return arrayEquals(a, b, 0);
+    return arrayEquals(a, b, static 0);
 }
 
 def arrayEquals[T,n,i](ref a:Array[T,n], ref b:Array[T,n], static i) {
     if (equals(i, n)) return true;
     if (notEquals(arrayRef(a, i), arrayRef(b, i)))
         return false;
-    return arrayRef(a, b, add(i, 1));
+    return arrayRef(a, b, static add(i, 1));
 }
 
 overload lesser[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
-    return arrayLesser(a, b, 0);
+    return arrayLesser(a, b, static 0);
 }
 
 def arrayLesser[T,n,i](ref a:Array[T,n], ref b:Array[T,n], static i) {
@@ -226,17 +226,17 @@ def arrayLesser[T,n,i](ref a:Array[T,n], ref b:Array[T,n], static i) {
         return true;
     if (lesser(arrayRef(b, i), arrayRef(a, i)))
         return false;
-    return arrayLesser(a, b, add(i, 1));
+    return arrayLesser(a, b, static add(i, 1));
 }
 
 overload hash[T,n](ref a:Array[T,n]) {
-    return arrayHash(a, 0, 0);
+    return arrayHash(a, static 0);
 }
 
-def arrayHash[T,n,i,h](ref a:Array[T,n], static i, static h) {
-    if (equals(i, n)) return h;
-    var newH = add(h, hash(arrayRef(a, i)));
-    return arrayHash(a, add(i, 1), newH);
+def arrayHash[T,n,i,h](ref a:Array[T,n], static i) {
+    if (equals(i, n)) return 0;
+    var curH = hash(arrayRef(a, i));
+    return add(curH, arrayHash(a, static add(i, 1)));
 }
 
 
@@ -270,67 +270,67 @@ def RecordOrTuple[T](static T) {
 }
 
 overload init[T](ref a:T) if RecordOrTuple(T) {
-    initFields(a, fieldCount(T), 0);
+    initFields(a, static 0);
 }
 
-def initFields[T,n,i](ref a:T, static n, static i) {
-    if (equals(i, n)) return;
+def initFields[T,i](ref a:T, static i) {
+    if (equals(i, fieldCount(T))) return;
     init(fieldRef(a, i));
-    initFields(a, n, add(i, 1));
+    initFields(a, static add(i, 1));
 }
 
 overload copy[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
-    copyFields(dest, src, fieldCount(T), 0);
+    copyFields(dest, src, static 0);
 }
 
-def copyFields[T,n,i](ref dest:T, ref src:T, static n, static i) {
-    if (equals(i, n)) return;
+def copyFields[T,i](ref dest:T, ref src:T, static i) {
+    if (equals(i, fieldCount(T))) return;
     copy(fieldRef(dest, i), fieldRef(src, i));
-    copyFields(dest, src, n, add(i, 1));
+    copyFields(dest, src, static add(i, 1));
 }
 
 overload destroy[T](ref a:T) if RecordOrTuple(T) {
-    destroyFields(a, fieldCount(T), 0);
+    destroyFields(a, static 0);
 }
 
-def destroyFields[T,n,i](ref a:T, static n, static i) {
-    if (equals(i, n)) return;
+def destroyFields[T,i](ref a:T, static i) {
+    if (equals(i, fieldCount(T))) return;
     destroy(fieldRef(a, i));
-    destroyFields(a, n, add(i, 1));
+    destroyFields(a, static add(i, 1));
 }
 
 overload equals[T](ref a:T, ref b:T) if RecordOrTuple(T) {
-    return equalFields(a, b, fieldCount(T), 0);
+    return equalFields(a, b, static 0);
 }
 
-def equalFields[T,n,i](ref a:T, ref b:T, static n, static i) {
-    if (equals(i, n)) return true;
+def equalFields[T,i](ref a:T, ref b:T, static i) {
+    if (equals(i, fieldCount(T))) return true;
     if (notEquals(fieldRef(a, i), fieldRef(b, i)))
         return false;
-    return equalFields(a, b, n, add(i, 1));
+    return equalFields(a, b, static add(i, 1));
 }
 
 overload lesser[T](ref a:T, ref b:T) if RecordOrTuple(T) {
-    return lesserFields(a, b, fieldCount(T), 0);
+    return lesserFields(a, b, static 0);
 }
 
-def lesserFields[T,n,i](ref a:T, ref b:T, static n, static i) {
-    if (equals(i, n)) return false;
+def lesserFields[T,i](ref a:T, ref b:T, static i) {
+    if (equals(i, fieldCount(T))) return false;
     if (lesser(fieldRef(a, i), fieldRef(b, i)))
         return true;
     if (lesser(fieldRef(b, i), fieldRef(a, i)))
         return false;
-    return lesserFields(a, b, n, add(i, 1));
+    return lesserFields(a, b, static add(i, 1));
 }
 
 overload hash[T](ref a:T) if RecordOrTuple(T) {
-    return hashFields(a, fieldCount(T), 0, 0);
+    return hashFields(a, static 0);
 }
 
-def hashFields[T,n,i,h](ref a:T, static n, static i, static h) {
-    if (equals(i, n)) return h;
-    var newH = add(h, hash(fieldRef(a, i)));
-    return hashFields(a, n, add(i, 1), newH);
+def hashFields[T,i](ref a:T, static i) {
+    if (equals(i, fieldCount(T))) return 0;
+    var curH = hash(fieldRef(a, i));
+    return add(curH, hashFields(a, static add(i, 1)));
 }
 
 

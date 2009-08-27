@@ -116,7 +116,12 @@ suffixExpr = modify(sequence(atomicExpr, zeroPlus(suffix)),
 addressOfExpr = astNode(sequence(symbol("&"), suffixExpr),
                         lambda x : AddressOf(x[1]))
 
-expression = choice(addressOfExpr, suffixExpr)
+prefixExpr = choice(addressOfExpr, suffixExpr)
+
+staticExpr = astNode(sequence(keyword("static"), prefixExpr),
+                     lambda x : StaticExpr(x[1]))
+
+expression = choice(staticExpr, prefixExpr)
 
 
 #
