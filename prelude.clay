@@ -358,6 +358,7 @@ def isOdd(n) {
 
 def main() {
     var n = 7;
+    n = subtract(n, 1);
     var f = factorial(n);
     return (isEven(n), f);
 }

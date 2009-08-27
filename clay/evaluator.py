@@ -8,6 +8,7 @@ from clay.env import *
 from clay.coreops import *
 from clay.types import *
 from clay.unify import *
+from clay.values import *
 
 
 
@@ -44,7 +45,7 @@ def foo(x, env) :
 
 @evaluate2.register(NameRef)
 def foo(x, env) :
-    return lookupIdent(env, x.name)
+    return evaluateNameRef(lookupIdent(env, x.name))
 
 @evaluate2.register(Tuple)
 def foo(x, env) :
@@ -91,6 +92,18 @@ def foo(x, env) :
 @evaluate2.register(StaticExpr)
 def foo(x, env) :
     return evaluate(x.expr, env, toValue)
+
+
+
+#
+# evaluateNameRef
+#
+
+evaluateNameRef = multimethod(defaultProc=(lambda x : x))
+
+@evaluateNameRef.register(Value)
+def foo(x) :
+    return toReference(x)
 
 
 
@@ -795,6 +808,3 @@ def foo(x, env, context) :
 #
 
 del foo
-
-# TODO: fix cyclic import
-from clay.values import *
