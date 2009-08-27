@@ -32,11 +32,16 @@ def isRTReference(x) : return type(x) is RTReference
 
 toRTValue.register(RTValue)(lambda x : x)
 toRTValue.register(RTReference)(lambda x : RTValue(x.type))
+toRTValue.register(Value)(lambda x : RTValue(x.type))
+toRTValue.register(Reference)(lambda x : RTValue(x.type))
 
 toRTLValue.register(RTReference)(lambda x : x)
+toRTLValue.register(Reference)(lambda x : RTReference(x.type))
 
 toRTReference.register(RTReference)(lambda x : x)
 toRTReference.register(RTValue)(lambda x : RTReference(x.type))
+toRTReference.register(Value)(lambda x : RTReference(x.type))
+toRTReference.register(Reference)(lambda x : RTReference(x.type))
 
 
 
@@ -70,15 +75,15 @@ analyze2 = multimethod(errorMessage="invalid expression")
 
 @analyze2.register(BoolLiteral)
 def foo(x, env) :
-    return RTValue(boolType)
+    return boolToValue(x.value)
 
 @analyze2.register(IntLiteral)
 def foo(x, env) :
-    return RTValue(intType)
+    return intToValue(x.value)
 
 @analyze2.register(CharLiteral)
 def foo(x, env) :
-    return RTValue(charType)
+    return charToValue(x.value)
 
 @analyze2.register(NameRef)
 def foo(x, env) :
@@ -130,6 +135,10 @@ def foo(x, env) :
 def foo(x, env) :
     return analyzeCall(primitives.addressOf, [x.expr], env)
 
+@analyze2.register(StaticExpr)
+def foo(x, env) :
+    return evaluate(x.expr, env, toValue)
+
 
 
 #
@@ -138,13 +147,13 @@ def foo(x, env) :
 
 analyzeNameRef = multimethod(defaultProc=(lambda x : x))
 
-@analyzeNameRef.register(Value)
-def foo(x) :
-    return RTValue(x.type)
-
 @analyzeNameRef.register(Reference)
 def foo(x) :
-    return RTReference(x.type)
+    return toValue(x)
+
+@analyzeNameRef.register(RTValue)
+def foo(x) :
+    return toRTReference(x)
 
 
 
