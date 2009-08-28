@@ -638,6 +638,12 @@ class RTActualArgument(object) :
 
 _analysisTable = {}
 
+def _cleanupAnalysisTable() :
+    global _analysisTable
+    _analysisTable = {}
+
+installGlobalsCleanupHook(_cleanupAnalysisTable)
+
 class RecursiveAnalysisError(Exception) :
     pass
 

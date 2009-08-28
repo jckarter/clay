@@ -4,10 +4,11 @@ from clay.error import CompilerError
 from clay.parser import parse
 from clay.ast import *
 from clay.env import buildTopLevelEnv
+from clay.coreops import cleanupGlobals
 from clay.evaluator import evaluate
 from clay.analyzer import analyze
 
-def main() :
+def process() :
     fileName = sys.argv[1]
     data = file(fileName).read()
     try :
@@ -22,5 +23,12 @@ def main() :
         e.display()
         raise
 
+def main() :
+    try :
+        process()
+    finally :
+        cleanupGlobals()
+
 if __name__ == "__main__" :
     main()
+    print "done"

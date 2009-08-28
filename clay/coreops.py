@@ -3,7 +3,8 @@ from clay.multimethod import *
 
 __all__ = ["equals", "hashify", "toType", "toInt", "toBool",
            "toValue", "toLValue", "toReference", "toStatic",
-           "toRTValue", "toRTLValue", "toRTReference"]
+           "toRTValue", "toRTLValue", "toRTReference",
+           "installGlobalsCleanupHook", "cleanupGlobals"]
 
 
 
@@ -40,3 +41,18 @@ toRTValue = multimethod(errorMessage="invalid value")
 toRTLValue = multimethod(errorMessage="invalid reference")
 
 toRTReference = multimethod(errorMessage="invalid reference")
+
+
+
+#
+# globals cleanup hooks
+#
+
+_globalsCleanupHooks = []
+
+def installGlobalsCleanupHook(f) :
+    _globalsCleanupHooks.append(f)
+
+def cleanupGlobals() :
+    for f in _globalsCleanupHooks :
+        f()
