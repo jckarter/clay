@@ -356,9 +356,13 @@ def isOdd(n) {
     return isEven(subtract(n, 1));
 }
 
+def foo() {
+    return array(10, 10);
+}
+
 def main() {
     var n = 7;
     n = subtract(n, 1);
     var f = factorial(n);
-    return (isEven(n), f);
+    return (foo(), isEven(n), f);
 }

@@ -255,6 +255,7 @@ def _simpleValueCopy(dest, src) :
 
 def valueDestroy(a) :
     if isSimpleType(a.type) :
+        ctypes.memset(ctypes.pointer(a.buf), 0, typeSize(a.type))
         return
     _callBuiltin("destroy", [a])
 
