@@ -91,7 +91,7 @@ def foo(x, env) :
 
 @evaluate2.register(StaticExpr)
 def foo(x, env) :
-    return evaluate(x.expr, env, toValue)
+    return evaluate(x.expr, env, toStatic)
 
 
 
