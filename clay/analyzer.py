@@ -210,11 +210,23 @@ def foo(x, args, env) :
 
 @analyzeCall.register(Procedure)
 def foo(x, args, env) :
-    raise NotImplementedError
+    actualArgs = [RTActualArgument(y, env) for y in args]
+    result = matchCodeSignature(x.env, x.code, actualArgs)
+    if type(result) is MatchFailure :
+        result.signalError()
+    bindingNames, bindingValues = result
+    return analyzeCodeBody(x.code, x.env, bindingNames, bindingValues)
 
 @analyzeCall.register(Overloadable)
 def foo(x, args, env) :
-    raise NotImplementedError
+    actualArgs = [RTActualArgument(y, env) for y in args]
+    for y in x.overloads :
+        result = matchCodeSignature(y.env, y.code, actualArgs)
+        if type(result) is MatchFailure :
+            continue
+        bindingNames, bindingValues = result
+        return analyzeCodeBody(y.code, y.env, bindingNames, bindingValues)
+    error("no matching overload")
 
 
 
@@ -596,6 +608,151 @@ def foo(x, args, env) :
 @analyzeCall.register(primitives.intToDouble)
 def foo(x, args, env) :
     return simpleOp(args, env, [intType], doubleType)
+
+
+
+#
+# analyze actual arguments
+#
+
+class RTActualArgument(object) :
+    def __init__(self, expr, env) :
+        self.expr = expr
+        self.env = env
+        self.result_ = analyze(self.expr, self.env)
+
+    def asReference(self) :
+        return withContext(self.expr, lambda : toRTReference(self.result_))
+
+    def asValue(self) :
+        return withContext(self.expr, lambda : toRTValue(self.result_))
+
+    def asStatic(self) :
+        return withContext(self.expr, lambda : toStatic(self.result_))
+
+
+
+#
+# analyzeCodeBody
+#
+
+_analysisTable = {}
+
+class RecursiveAnalysisError(Exception) :
+    pass
+
+def analyzeCodeBody(code, env, bindingNames, bindingValues) :
+    key = [code]
+    for v in bindingValues :
+        if type(v) in (RTValue, RTReference) :
+            v = v.type
+        key.append(v)
+    key = tuple(key)
+    result = _analysisTable.get(key)
+    if result is not None :
+        if result is False :
+            raise RecursiveAnalysisError()
+        return result
+    try :
+        result = None
+        _analysisTable[key] = False
+        env = extendEnv(env, bindingNames, bindingValues)
+        result = analyzeCodeBody2(code, env)
+        _analysisTable[key] = result
+        return result
+    finally :
+        if result is None :
+            del _analysisTable[key]
+
+def analyzeCodeBody2(code, env) :
+    if code.returnType is not None :
+        returnType = evaluate(code.returnType, env, toType)
+        if code.returnByRef :
+            return RTReference(returnType)
+        else :
+            return RTValue(returnType)
+    context = CodeContext2(code.returnByRef)
+    result = analyzeStatement(code.body, env, context)
+    if result is not None :
+        return result
+    return voidValue
+
+
+
+#
+# analyzeStatement
+#
+
+class CodeContext2(object) :
+    def __init__(self, returnByRef) :
+        self.returnByRef = returnByRef
+
+def analyzeStatement(x, env, context) :
+    return withContext(x, lambda : analyzeStatement2(x, env, context))
+
+
+
+#
+# analyzeStatement2
+#
+
+analyzeStatement2 = multimethod(errorMessage="invalid statement")
+
+@analyzeStatement2.register(Block)
+def foo(x, env, context) :
+    env = Environment(env)
+    for y in x.statements :
+        if type(y) is LocalBinding :
+            converter = toRTValue
+            if y.type is not None :
+                declaredType = evaluate(y.type, env, toType)
+                converter = toRTValueOfType(declaredType)
+            right = analyze(y.expr, env, converter)
+            addIdent(env, y.name, right)
+        else :
+            result = analyzeStatement(y, env, context)
+            if result is not None :
+                return result
+
+@analyzeStatement2.register(Assignment)
+def foo(x, env, context) :
+    # nothing to do
+    pass
+
+@analyzeStatement2.register(Return)
+def foo(x, env, context) :
+    if context.returnByRef :
+        return analyze(x.expr, env, toRTReference)
+    if x.expr is None :
+        return voidValue
+    return analyze(x.expr, env, toRTValue)
+
+@analyzeStatement2.register(IfStatement)
+def foo(x, env, context) :
+    analyze(x.condition, env, toRTValueOfType(boolType))
+    result = None
+    failed = 0
+    try :
+        result = analyzeStatement(x.thenPart, env, context)
+        if result is not None :
+            return result
+    except RecursiveAnalysisError :
+        failed += 1
+    if x.elsePart is None :
+        return
+    try :
+        result = analyzeStatement(x.elsePart, env, context)
+        if result is not None :
+            return result
+    except RecursiveAnalysisError :
+        failed += 1
+    if failed == 2 :
+        raise RecursiveAnalysisError()
+
+@analyzeStatement2.register(ExprStatement)
+def foo(x, env, context) :
+    # nothing to do
+    pass
 
 
 
