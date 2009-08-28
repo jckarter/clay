@@ -748,6 +748,7 @@ evalStatement2 = multimethod(errorMessage="invalid statement")
 
 @evalStatement2.register(Block)
 def foo(x, env, context) :
+    env = Environment(env)
     for statement in x.statements :
         if type(statement) is LocalBinding :
             converter = toValue
