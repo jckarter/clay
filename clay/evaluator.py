@@ -160,17 +160,17 @@ def foo(x, args, env) :
 
 @evaluateCall.register(Procedure)
 def foo(x, args, env) :
-    argWrappers = [ArgumentWrapper(y, env) for y in args]
+    argWrappers = [ActualArgument(y, env) for y in args]
     result = matchCodeSignature(x.env, x.code, argWrappers)
     if type(result) is MatchFailure :
-        result.signalError(x.code, args)
+        result.signalError()
     assert type(result) is Environment
     procEnv = result
     return evalCodeBody(x.code, procEnv)
 
 @evaluateCall.register(Overloadable)
 def foo(x, args, env) :
-    argWrappers = [ArgumentWrapper(y, env) for y in args]
+    argWrappers = [ActualArgument(y, env) for y in args]
     for y in x.overloads :
         result = matchCodeSignature(y.env, y.code, argWrappers)
         if type(result) is MatchFailure :
@@ -645,22 +645,20 @@ class MatchFailure(object) :
             if self.context is not None :
                 contextPop()
 
-class ArgumentWrapper(object) :
+class ActualArgument(object) :
     def __init__(self, expr, env) :
         self.expr = expr
         self.env = env
-        self.result_ = None
+        self.result_ = evaluate(self.expr, self.env)
 
-    def evaluate(self, converter=None) :
-        if self.result_ is None :
-            self.result_ = evaluate(self.expr, self.env)
-        try :
-            contextPush(self.expr)
-            if converter is not None :
-                return converter(self.result_)
-            return self.result_
-        finally :
-            contextPop()
+    def asReference(self) :
+        return withContext(self.expr, lambda : toReference(self.result_))
+
+    def asValue(self) :
+        return withContext(self.expr, lambda : toValue(self.result_))
+
+    def asStatic(self) :
+        return withContext(self.expr, lambda : toStatic(self.result_))
 
 def matchCodeSignature(codeEnv, code, args) :
     def argMismatch(arg) :
@@ -674,16 +672,16 @@ def matchCodeSignature(codeEnv, code, args) :
     for arg, formalArg in zip(args, code.formalArgs) :
         if type(formalArg) is ValueArgument :
             if formalArg.byRef :
-                argResult = arg.evaluate(toReference)
+                argResult = arg.asReference()
             else :
-                argResult = arg.evaluate(toValue)
+                argResult = arg.asValue()
             if formalArg.type is not None :
                 typePattern = evaluate(formalArg.type, codeEnv2, toTypeOrCell)
                 if not unify(typePattern, argResult.type) :
                     return argMismatch(arg)
             bindings.append((formalArg.name, argResult))
         elif type(formalArg) is StaticArgument :
-            argResult = arg.evaluate(toStatic)
+            argResult = arg.asStatic()
             formalType = formalArg.type
             typePattern = evaluate(formalType, codeEnv2, toStaticOrCell)
             if not unify(typePattern, argResult) :
