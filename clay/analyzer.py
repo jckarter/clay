@@ -92,16 +92,15 @@ def foo(x, env) :
 @analyze2.register(Tuple)
 def foo(x, env) :
     assert len(x.args) > 0
-    first = analyze(x.args[0], env)
-    if len(x.args) == 1 :
-        return first
-    if isType(first) or isCell(first) :
-        rest = [analyze(y, env, toTypeOrCell) for y in x.args[1:]]
-        return tupleType([first] + rest)
+    eargs = [analyze(y, env) for y in x.args]
+    if len(x.args) == 1:
+        return eargs[0]
+    if isType(eargs[0]) or isCell(eargs[0]) :
+        elementTypes = convertObjects(toTypeOrCell, eargs, x.args)
+        return tupleType(elementTypes)
     else :
-        args = [withContext(x.args[0], lambda : toRTReference(first))]
-        args.extend([analyze(y, env, toRTReference) for y in x.args[1:]])
-        return RTValue(tupleType([y.type for y in args]))
+        argRefs = convertObjects(toRTReference, eargs, x.args)
+        return RTValue(tupleType([y.type for y in argRefs]))
 
 @analyze2.register(Indexing)
 def foo(x, env) :
@@ -677,7 +676,7 @@ def analyzeCodeBody2(code, env) :
             return RTReference(returnType)
         else :
             return RTValue(returnType)
-    context = CodeContext2(code.returnByRef)
+    context = CodeContext(code.returnByRef, None)
     result = analyzeStatement(code.body, env, context)
     if result is not None :
         return result
@@ -688,10 +687,6 @@ def analyzeCodeBody2(code, env) :
 #
 # analyzeStatement
 #
-
-class CodeContext2(object) :
-    def __init__(self, returnByRef) :
-        self.returnByRef = returnByRef
 
 def analyzeStatement(x, env, context) :
     return withContext(x, lambda : analyzeStatement2(x, env, context))
