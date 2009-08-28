@@ -164,9 +164,8 @@ def foo(x, args, env) :
     result = matchCodeSignature(x.env, x.code, actualArgs)
     if type(result) is MatchFailure :
         result.signalError()
-    assert type(result) is Environment
-    procEnv = result
-    return evalCodeBody(x.code, procEnv)
+    bindingNames, bindingValues = result
+    return evalCodeBody(x.code, x.env, bindingNames, bindingValues)
 
 @evaluateCall.register(Overloadable)
 def foo(x, args, env) :
@@ -175,9 +174,8 @@ def foo(x, args, env) :
         result = matchCodeSignature(y.env, y.code, actualArgs)
         if type(result) is MatchFailure :
             continue
-        assert type(result) is Environment
-        procEnv = result
-        return evalCodeBody(y.code, procEnv)
+        bindingNames, bindingValues = result
+        return evalCodeBody(y.code, y.env, bindingNames, bindingValues)
     error("no matching overload")
 
 
@@ -668,7 +666,7 @@ def matchCodeSignature(codeEnv, code, actualArgs) :
     if len(actualArgs) != len(code.formalArgs) :
         return MatchFailure("incorrect no. of arguments")
     codeEnv2, cells = bindTypeVars(codeEnv, code.typeVars)
-    bindings = []
+    bindingNames, bindingValues = [], []
     for actualArg, formalArg in zip(actualArgs, code.formalArgs) :
         if type(formalArg) is ValueArgument :
             if formalArg.byRef :
@@ -679,7 +677,8 @@ def matchCodeSignature(codeEnv, code, actualArgs) :
                 typePattern = evaluate(formalArg.type, codeEnv2, toTypeOrCell)
                 if not unify(typePattern, arg.type) :
                     return argMismatch(actualArg)
-            bindings.append((formalArg.name, arg))
+            bindingNames.append(formalArg.name)
+            bindingValues.append(arg)
         elif type(formalArg) is StaticArgument :
             arg = actualArg.asStatic()
             formalType = formalArg.type
@@ -694,9 +693,9 @@ def matchCodeSignature(codeEnv, code, actualArgs) :
         result = evaluate(typeCondition, codeEnv2, toBool)
         if not result :
             return typeCondFailure(typeCondition)
-    for ident, value in bindings :
-        addIdent(codeEnv2, ident, value)
-    return codeEnv2
+    bindingNames[0:0] = code.typeVars
+    bindingValues[0:0] = typeParams
+    return bindingNames, bindingValues
 
 
 
@@ -704,7 +703,8 @@ def matchCodeSignature(codeEnv, code, actualArgs) :
 # evalCodeBody
 #
 
-def evalCodeBody(code, env) :
+def evalCodeBody(code, env, bindingNames, bindingValues) :
+    env = extendEnv(env, bindingNames, bindingValues)
     returnType = None
     if code.returnType is not None :
         returnType = evaluate(code.returnType, env, toType)
