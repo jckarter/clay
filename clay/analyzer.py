@@ -370,7 +370,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     n = evaluate(args[0], env, toInt)
     v = analyze(args[1], env, toRTReference)
-    return arrayType(v.type, intToValue(n))
+    return RTValue(arrayType(v.type, intToValue(n)))
 
 @analyzeCall.register(primitives.arrayRef)
 def foo(x, args, env) :
