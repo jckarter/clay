@@ -160,8 +160,8 @@ def foo(x, args, env) :
 
 @evaluateCall.register(Procedure)
 def foo(x, args, env) :
-    argWrappers = [ActualArgument(y, env) for y in args]
-    result = matchCodeSignature(x.env, x.code, argWrappers)
+    actualArgs = [ActualArgument(y, env) for y in args]
+    result = matchCodeSignature(x.env, x.code, actualArgs)
     if type(result) is MatchFailure :
         result.signalError()
     assert type(result) is Environment
@@ -170,9 +170,9 @@ def foo(x, args, env) :
 
 @evaluateCall.register(Overloadable)
 def foo(x, args, env) :
-    argWrappers = [ActualArgument(y, env) for y in args]
+    actualArgs = [ActualArgument(y, env) for y in args]
     for y in x.overloads :
-        result = matchCodeSignature(y.env, y.code, argWrappers)
+        result = matchCodeSignature(y.env, y.code, actualArgs)
         if type(result) is MatchFailure :
             continue
         assert type(result) is Environment
@@ -629,7 +629,7 @@ def foo(x, args, env) :
 
 
 #
-# matchCodeSignature(env, code, args) -> Environment | MatchFailure
+# matchCodeSignature(env, code, actualArgs) -> Environment | MatchFailure
 #
 
 class MatchFailure(object) :
@@ -660,32 +660,32 @@ class ActualArgument(object) :
     def asStatic(self) :
         return withContext(self.expr, lambda : toStatic(self.result_))
 
-def matchCodeSignature(codeEnv, code, args) :
-    def argMismatch(arg) :
-        return MatchFailure("argument mismatch", arg.expr)
+def matchCodeSignature(codeEnv, code, actualArgs) :
+    def argMismatch(actualArg) :
+        return MatchFailure("argument mismatch", actualArg.expr)
     def typeCondFailure(typeCond) :
         return MatchFailure("type condition failed", typeCond)
-    if len(args) != len(code.formalArgs) :
+    if len(actualArgs) != len(code.formalArgs) :
         return MatchFailure("incorrect no. of arguments")
     codeEnv2, cells = bindTypeVars(codeEnv, code.typeVars)
     bindings = []
-    for arg, formalArg in zip(args, code.formalArgs) :
+    for actualArg, formalArg in zip(actualArgs, code.formalArgs) :
         if type(formalArg) is ValueArgument :
             if formalArg.byRef :
-                argResult = arg.asReference()
+                arg = actualArg.asReference()
             else :
-                argResult = arg.asValue()
+                arg = actualArg.asValue()
             if formalArg.type is not None :
                 typePattern = evaluate(formalArg.type, codeEnv2, toTypeOrCell)
-                if not unify(typePattern, argResult.type) :
-                    return argMismatch(arg)
-            bindings.append((formalArg.name, argResult))
+                if not unify(typePattern, arg.type) :
+                    return argMismatch(actualArg)
+            bindings.append((formalArg.name, arg))
         elif type(formalArg) is StaticArgument :
-            argResult = arg.asStatic()
+            arg = actualArg.asStatic()
             formalType = formalArg.type
             typePattern = evaluate(formalType, codeEnv2, toStaticOrCell)
-            if not unify(typePattern, argResult) :
-                return argMismatch(arg)
+            if not unify(typePattern, arg) :
+                return argMismatch(actualArg)
         else :
             assert False
     typeParams = resolveTypeVars(code.typeVars, cells)
