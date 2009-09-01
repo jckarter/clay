@@ -30,6 +30,10 @@ def isRTReference(x) : return type(x) is RTReference
 # toRTValue, toRTLValue, toRTReference
 #
 
+toRTValue = multimethod(errorMessage="invalid value")
+toRTLValue = multimethod(errorMessage="invalid reference")
+toRTReference = multimethod(errorMessage="invalid reference")
+
 toRTValue.register(RTValue)(lambda x : x)
 toRTValue.register(RTReference)(lambda x : RTValue(x.type))
 toRTValue.register(Value)(lambda x : RTValue(x.type))
@@ -42,6 +46,51 @@ toRTReference.register(RTReference)(lambda x : x)
 toRTReference.register(RTValue)(lambda x : RTReference(x.type))
 toRTReference.register(Value)(lambda x : RTReference(x.type))
 toRTReference.register(Reference)(lambda x : RTReference(x.type))
+
+
+
+#
+# type checking converters
+#
+
+def toRTReferenceWithTypeTag(tag) :
+    def f(x) :
+        r = toRTReference(x)
+        ensure(r.type.tag is tag, "type mismatch")
+        return r
+    return f
+
+def toRTRecordReference(x) :
+    r = toRTReference(x)
+    ensure(isRecordType(r.type), "record type expected")
+    return r
+
+
+
+#
+# type pattern matching converters
+#
+
+def toRTValueOfType(pattern) :
+    def f(x) :
+        v = toRTValue(x)
+        matchType(pattern, v.type)
+        return v
+    return f
+
+def toRTLValueOfType(pattern) :
+    def f(x) :
+        v = toRTLValue(x)
+        matchType(pattern, v.type)
+        return v
+    return f
+
+def toRTReferenceOfType(pattern) :
+    def f(x) :
+        r = toRTReference(x)
+        matchType(pattern, r.type)
+        return r
+    return f
 
 
 

@@ -202,18 +202,6 @@ def toRecordReference(x) :
     ensure(isRecordType(r.type), "record type expected")
     return r
 
-def toRTReferenceWithTypeTag(tag) :
-    def f(x) :
-        r = toRTReference(x)
-        ensure(r.type.tag is tag, "type mismatch")
-        return r
-    return f
-
-def toRTRecordReference(x) :
-    r = toRTReference(x)
-    ensure(isRecordType(r.type), "record type expected")
-    return r
-
 
 
 #
