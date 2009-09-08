@@ -7,6 +7,7 @@ from clay.env import buildTopLevelEnv
 from clay.coreops import cleanupGlobals
 from clay.evaluator import evaluate
 from clay.analyzer import analyze
+from clay.codegen import llvmType
 
 def process() :
     fileName = sys.argv[1]
@@ -19,6 +20,8 @@ def process() :
         xprint(result)
         result = evaluate(mainCall, env)
         xprint(result)
+        llt = llvmType(result.type)
+        print "llvm type =", llt
     except CompilerError, e :
         e.display()
         raise

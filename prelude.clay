@@ -360,9 +360,20 @@ def foo() {
     return array(10, 10);
 }
 
+record NodeA[T] {
+    value: T;
+    next: Pointer[NodeB[T]];
+}
+
+record NodeB[T] {
+    ptr: Pointer[T];
+    next: Pointer[NodeA[T]];
+}
+
 def main() {
     var n = 7;
     n = subtract(n, 1);
     var f = factorial(n);
-    return (foo(), isEven(n), f);
+    var p = default(NodeA[(Int,Bool)]);
+    return (foo(), isEven(n), f, p);
 }
