@@ -37,15 +37,12 @@ toRTReference = multimethod(errorMessage="invalid reference")
 toRTValue.register(RTValue)(lambda x : x)
 toRTValue.register(RTReference)(lambda x : RTValue(x.type))
 toRTValue.register(Value)(lambda x : RTValue(x.type))
-toRTValue.register(Reference)(lambda x : RTValue(x.type))
 
 toRTLValue.register(RTReference)(lambda x : x)
-toRTLValue.register(Reference)(lambda x : RTReference(x.type))
 
 toRTReference.register(RTReference)(lambda x : x)
 toRTReference.register(RTValue)(lambda x : RTReference(x.type))
 toRTReference.register(Value)(lambda x : RTReference(x.type))
-toRTReference.register(Reference)(lambda x : RTReference(x.type))
 
 
 
