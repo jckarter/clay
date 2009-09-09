@@ -7,7 +7,7 @@ from clay.env import buildTopLevelEnv
 from clay.coreops import cleanupGlobals
 from clay.evaluator import evaluate
 from clay.analyzer import analyze
-from clay.codegen import llvmType
+from clay.compiler import llvmType
 
 def process() :
     fileName = sys.argv[1]
