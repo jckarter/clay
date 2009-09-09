@@ -10,8 +10,6 @@ from clay.evaluator import *
 import clay.llvmwrapper as llvm
 
 
-llvmModule = llvm.Module.new("foo")
-
 
 #
 # convert to llvm types
@@ -84,6 +82,285 @@ def foo(tag, t) :
     llt = typeHandle.type
     _llvmTypesTable[t] = llt
     return llt
+
+
+
+#
+# global llvm data
+#
+
+llvmModule = llvm.Module.new("foo")
+llvmInitBuilder = None
+llvmBuilder = None
+
+
+
+#
+# RTValue, RTReference
+#
+
+class RTValue(object) :
+    def __init__(self, type_, llvmValue) :
+        self.type = type_
+        self.llvmValue = llvmValue
+
+class RTReference(object) :
+    def __init__(self, type_, llvmValue) :
+        self.type = type_
+        self.llvmValue = llvmValue
+
+def isRTValue(x) : return type(x) is RTValue
+def isRTReference(x) : return type(x) is RTReference
+
+
+
+#
+# temp values
+#
+
+_tempRTValues = []
+
+def tempRTValue(type_) :
+    llt = llvmType(type_)
+    ptr = llvmInitBuilder.alloca(llt)
+    value = RTValue(type_, ptr)
+    tempRTValues.append(value)
+    return value
+
+
+
+#
+# toRTValue, toRTLValue, toRTReference
+#
+
+toRTValue = multimethod(errorMessage="invalid value")
+
+@toRTValue.register(RTValue)
+def foo(x) :
+    return x
+
+@toRTValue.register(RTReference)
+def foo(x) :
+    temp = tempRTValue(x.type)
+    rtValueCopy(temp, x)
+    return temp
+
+@toRTValue.register(Value)
+def foo(x) :
+    if isBoolType(x.type) :
+        constValue = Constant.int(llvmType(x.type), x.buf.value)
+    elif isIntType(x.type) :
+        constValue = Constant.int(llvmType(x.type), x.buf.value)
+    elif isCharType(x.type) :
+        constValue = Constant.int(llvmType(x.type), ord(x.buf.value))
+    else :
+        error("unsupported type in toRTValue")
+    temp = tempRTValue(x.type)
+    llvmBuilder.store(constValue, temp)
+    return temp
+
+
+toRTLValue = multimethod(errorMessage="invalid reference")
+
+@toRTLValue.register(RTReference)
+def foo(x) :
+    return x
+
+
+toRTReference = multimethod(errorMessage="invalid reference")
+
+@toRTReference.register(RTReference)
+def foo(x) :
+    return x
+
+@toRTReference.register(RTValue)
+def foo(x) :
+    return RTReference(x.type, x.llvmValue)
+
+@toRTReference.register(Value)
+def foo(x) :
+    return toRTReference(toRTValue(x))
+
+
+
+#
+# type checking converters
+#
+
+def toRTReferenceWithTypeTag(tag) :
+    def f(x) :
+        r = toRTReference(x)
+        ensure(r.type.tag is tag, "type mismatch")
+        return r
+    return f
+
+def toRTRecordReference(x) :
+    r = toRTReference(x)
+    ensure(isRecordType(r.type), "record type expected")
+    return r
+
+
+
+#
+# type pattern matching converters
+#
+
+def toRTValueOfType(pattern) :
+    def f(x) :
+        v = toRTValue(x)
+        matchType(pattern, v.type)
+        return v
+    return f
+
+def toRTLValueOfType(pattern) :
+    def f(x) :
+        v = toRTLValue(x)
+        matchType(pattern, v.type)
+        return v
+    return f
+
+def toRTReferenceOfType(pattern) :
+    def f(x) :
+        r = toRTReference(x)
+        matchType(pattern, r.type)
+        return r
+    return f
+
+
+
+#
+# printer
+#
+
+xregister(RTValue, lambda x : XObject("RTValue", x.type))
+xregister(RTReference, lambda x : XObject("RTReference", x.type))
+
+
+
+#
+# core value operations
+#
+
+def _compileBuiltin(builtinName, args) :
+    env = Environment(primitivesEnv)
+    variables = [Identifier("v%d" % i) for i in range(len(args))]
+    for variable, arg in zip(variables, args) :
+        addIdent(env, variable, arg)
+    argNames = map(NameRef, variables)
+    builtin = NameRef(Identifier(builtinName))
+    call = Call(builtin, argNames)
+    return compile(call, env, converter)
+
+def rtValueInit(a) :
+    if isSimpleType(a.type) :
+        return
+    _compileBuiltin("init", [a])
+
+def rtValueCopy(dest, src) :
+    assert equals(dest.type, src.type)
+    if isSimpleType(dest.type) :
+        temp = llvmBuilder.load(src.llvmValue)
+        llvmBuilder.store(temp, dest.llvmValue)
+        return
+    _compileBuiltin("copy", [dest, src])
+
+def rtValueAssign(dest, src) :
+    assert equals(dest.type, src.type)
+    if isSimpleType(dest.type) :
+        temp = llvmBuilder.load(src.llvmValue)
+        llvmBuilder.store(temp, dest.llvmValue)
+        return
+    _compileBuiltin("assign", [dest, src])
+
+def rtValueDestroy(a) :
+    if isSimpleType(a.type) :
+        return
+    _compileBuiltin("destroy", [a])
+
+
+
+#
+# compile
+#
+
+def compile(expr, env, converter=(lambda x : x)) :
+    try :
+        contextPush(expr)
+        return converter(compile2(expr, env))
+    finally :
+        contextPop()
+
+
+
+#
+# compile2
+#
+
+compile2 = multimethod(errorMessage="invalid expression")
+
+@compile2.register(BoolLiteral)
+def foo(x, env) :
+    return boolToValue(x.value)
+
+@compile2.register(IntLiteral)
+def foo(x, env) :
+    return intToValue(x.value)
+
+@compile2.register(CharLiteral)
+def foo(x, env) :
+    return charToValue(x.value)
+
+@compile2.register(NameRef)
+def foo(x, env) :
+    return compileNameRef(lookupIdent(env, x.name))
+
+@compile2.register(Tuple)
+def foo(x, env) :
+    raise NotImplementedError
+
+@compile2.register(Indexing)
+def foo(x, env) :
+    raise NotImplementedError
+
+@compile2.register(Call)
+def foo(x, env) :
+    raise NotImplementedError
+
+@compile2.register(FieldRef)
+def foo(x, env) :
+    raise NotImplementedError
+
+@compile2.register(TupleRef)
+def foo(x, env) :
+    raise NotImplementedError
+
+@compile2.register(Dereference)
+def foo(x, env) :
+    raise NotImplementedError
+
+@compile2.register(AddressOf)
+def foo(x, env) :
+    raise NotImplementedError
+
+@compile2.register(StaticExpr)
+def foo(x, env) :
+    raise NotImplementedError
+
+
+
+#
+# compileNameRef
+#
+
+compileNameRef = multimethod(defaultProc=(lambda x : x))
+
+@compileNameRef.register(Reference)
+def foo(x) :
+    return toValue(x)
+
+@compileNameRef.register(RTValue)
+def foo(x) :
+    return toRTReference(x)
 
 
 
