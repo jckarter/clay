@@ -1,0 +1,63 @@
+Using compile-time values at run-time
+-------------------------------------
+
+It is desirable to have the ability to pre-compute arbitrary values at
+compile-time and use them at run-time. Currently, computation of
+arbitrary values at compile-time is supported, but we also need the
+ability to save the computed values and restore them at run-time. The
+run-time can even be a different process as the compiler can save the
+compiled program as a binary executable for later execution.
+
+Currently, this support is available only for a few primitive types:
+Bool, Int, and Char. Pointers cannot be supported because object
+locations cannot be preserved across different processes.
+
+To support arbitrary user defined types, some form of 'serialization'
+needs to be performed during compile-time, and some form of
+'de-serialization' needs to be performed at run-time. What
+serialization format should be used? Perhaps, we can serialize the
+values into a flat sequence of byes. Though possible, there is a much
+better option. Simply convert every compile-time value to be saved
+into an expression which computes the value. We simply replace the
+run-time reference to the value with the expression for constructing
+it, and then compile the code!
+
+How can this be implemented?
+
+(implement copyStatic primitive overloadable)
+
+
+Efficient Constructors
+----------------------
+
+In C++, nested constructor calls are inefficient. Take for example:
+
+Foo(Bar(1, 2))
+
+
+A Bar object is constructed and passed as a parameter to the Foo
+constructor. Unfortunately, this expression results in an unnecessary
+copy of Bar. First an independent Bar object is constructed. Then,
+during the construction of Foo, the Bar object inside Foo is copy
+constructed from the first Bar object. Once Foo is constructed, the
+first Bar object is destroyed.
+
+How can this inefficieny be fixed?
+
+(named return values, initializing assignment, inlining
+pass-by-expression)
+
+
+Lambda
+------
+
+When a lambda expression is evaluated, a procedure value is
+constructed. What happens to all the non-local variable references
+within the body of the lambda expression? How do we ensure that the
+lifetime of the referenced external values is greater than the
+lifetime of the procedure value.
+
+One simple option is to leave the choice to the programmer: Use
+'lambda' to create procedures which outlive the execution of the
+containing procedure, and use 'block' to create procedures which do
+not outlive the execution of the containing procedure.
