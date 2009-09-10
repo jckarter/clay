@@ -307,6 +307,14 @@ def rtRecordFieldRef(a, i) :
     fieldPtr = llvmBuilder.gep(a.llvmValue, [0, i])
     return RTReference(fieldType, fieldPtr)
 
+def rtMakeRecord(recType, argRefs) :
+    value = tempRTValue(recType)
+    valueRef = toRTReference(value)
+    for i, argRef in enumerate(argRefs) :
+        left = rtRecordFieldRef(valueRef, i)
+        rtValueCopy(left, argRef)
+    return value
+
 
 
 #
@@ -448,6 +456,371 @@ def foo(x, args, env) :
 #
 
 compileCall = multimethod(errorMessage="invalid call")
+
+@compileCall.register(Record)
+def foo(x, args, env) :
+    ensureArity(args, len(x.fields))
+    recordEnv, cells = bindTypeVars(x.env, x.typeVars)
+    fieldTypePatterns = computeFieldTypes(x.fields, recordEnv)
+    cargs = [compile(y, env) for y in args]
+    argRefs = convertObjects(toRTReference, cargs, args)
+    for typePattern, argRef, arg in zip(fieldTypePatterns, argRefs, args) :
+        withContext(arg, lambda : matchType(typePattern, argRef.type))
+    typeParams = resolveTypeVars(x.typeVars, cells)
+    recType = recordType(x, typeParams)
+    return rtMakeRecord(recType, argRefs)
+
+@compileCall.register(Procedure)
+def foo(x, args, env) :
+    actualArgs = [RTActualArgument(y, env) for y in args]
+    result = matchCodeSignature(x.env, x.code, actualArgs)
+    if type(result) is MatchFailure :
+        result.signalError()
+    bindingNames, bindingValues = result
+    return compileCodeBody(x.code, x.env, bindingNames, bindingValues)
+
+@compileCall.register(Overloadable)
+def foo(x, args, env) :
+    actualArgs = [RTActualArgument(y, env) for y in args]
+    for y in x.overloads :
+        result = matchCodeSignature(y.env, y.code, actualArgs)
+        if type(result) is MatchFailure :
+            continue
+        bindingNames, bindingValues = result
+        return compileCodeBody(y.code, y.env, bindingNames, bindingValues)
+    error("no matching overload")
+
+
+
+#
+# compile primitives
+#
+
+@compileCall.register(primitives.default)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.typeSize)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile pointer primitives
+#
+
+@compileCall.register(primitives.addressOf)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.pointerDereference)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.pointerOffset)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.pointerSubtract)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.pointerCast)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.pointerCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.pointerEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.pointerLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.allocateMemory)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.freeMemory)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile tuple primitives
+#
+
+@compileCall.register(primitives.TupleType)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.tuple)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.tupleFieldCount)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.tupleFieldRef)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile array primitives
+#
+
+@compileCall.register(primitives.array)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.arrayRef)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile record primitives
+#
+
+@compileCall.register(primitives.RecordType)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.recordFieldCount)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.recordFieldRef)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile bool primitives
+#
+
+@compileCall.register(primitives.boolCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.boolNot)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile char primitives
+#
+
+@compileCall.register(primitives.charCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.charEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.charLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile int primitives
+#
+
+@compileCall.register(primitives.intCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intAdd)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intSubtract)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intMultiply)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intDivide)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intModulus)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intNegate)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile float primitives
+#
+
+@compileCall.register(primitives.floatCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.floatEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.floatLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.floatAdd)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.floatSubtract)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.floatMultiply)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.floatDivide)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.floatNegate)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile double primitives
+#
+
+@compileCall.register(primitives.doubleCopy)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.doubleEquals)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.doubleLesser)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.doubleAdd)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.doubleSubtract)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.doubleMultiply)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.doubleDivide)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.doubleNegate)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile conversion primitives
+#
+
+@compileCall.register(primitives.charToInt)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intToChar)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.floatToInt)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intToFloat)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.floatToDouble)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.doubleToFloat)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.doubleToInt)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+@compileCall.register(primitives.intToDouble)
+def foo(x, args, env) :
+    raise NotImplementedError
+
+
+
+#
+# compile actual arguments
+#
+
+class RTActualArgument(object) :
+    def __init__(self, expr, env) :
+        self.expr = expr
+        self.env = env
+        self.result_ = compile(self.expr, self.env)
+
+    def asReference(self) :
+        return withContext(self.expr, lambda : toRTReference(self.result_))
+
+    def asValue(self) :
+        return withContext(self.expr, lambda : toRTValue(self.result_))
+
+    def asStatic(self) :
+        return withContext(self.expr, lambda : toStatic(self.result_))
+
+
+
+#
+# compileCodeBody
+#
+
+def compileCodeBody(code, env, bindingNames, bindingValues) :
+    raise NotImplementedError
 
 
 
