@@ -420,7 +420,7 @@ def foo(x, args, env) :
 @analyzeCall.register(primitives.arrayRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    a = analyze(args[0], env, toRTReferenceWithTypeTag(arrayType))
+    a = analyze(args[0], env, toRTReferenceWithTypeTag(arrayTypeTag))
     analyze(args[1], env, toRTValueOfType(intType))
     return RTReference(a.type.params[0])
 
