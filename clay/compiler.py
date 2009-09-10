@@ -523,6 +523,29 @@ def foo(x, args, env) :
 
 
 #
+# utility methods for compiling primitives
+#
+
+def rtLoadRefs(args, env, types) :
+    ensureArity(args, len(types))
+    argRefs = []
+    for arg, type_ in zip(args, types) :
+        argRef = compile(arg, env, toRTReferenceOfType(type_))
+        argRefs.append(argRef)
+    return argRefs
+
+def rtLoadLLVM(args, env, types) :
+    argRefs = rtLoadRefs(args, env, types)
+    return [llvmBuilder.load(x.llvmValue) for x in argRefs]
+
+def rtResult(type_, llvmValue) :
+    result = tempRTValue(type_)
+    llvmBuilder.store(llvmValue, result.llvmValue)
+    return result
+
+
+
+#
 # compile pointer primitives
 #
 
@@ -536,45 +559,28 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.pointerDereference)
 def foo(x, args, env) :
-    ensureArity(args, 1)
     cell = Cell()
-    ptrRef = compile(args[0], env, toRTReferenceOfType(pointerType(cell)))
-    llvmPtr = llvmBuilder.load(ptrRef.llvmValue)
-    return RTReference(cell.param, llvmPtr)
+    ptr = rtLoadLLVM(args, env, [pointerType(cell)])
+    return RTReference(cell.param, ptr)
 
 @compileCall.register(primitives.pointerOffset)
 def foo(x, args, env) :
-    ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
     cell = Cell()
-    converter = toRTReferenceOfType(pointerType(cell))
-    ptrRef = convertObject(converter, cargs[0], args[0])
-    offsetRef = convertObject(toRTReferenceOfType(intType), cargs[1], args[1])
-    ptr = llvmBuilder.load(ptrRef.llvmValue)
-    offset = llvmBuilder.load(offsetRef.llvmValue)
+    ptr, offset = rtLoadLLVM(args, env, [pointerType(cell), intType])
     ptr = llvmBuilder.bitcast(ptr, llvm.Type.pointer(llvm.Type.int(8)))
     ptr = llvmBuilder.gep(ptr, [offset])
-    ptr = llvmBuilder.bitcast(ptr, llvmType(ptrRef.type))
-    result = tempRTValue(ptrRef.type)
-    llvmBuilder.store(ptr, result.llvmValue)
-    return result
+    ptr = llvmBuilder.bitcast(ptr, llvmType(pointerType(cell.param)))
+    return rtResult(pointerType(cell.param), ptr)
 
 @compileCall.register(primitives.pointerSubtract)
 def foo(x, args, env) :
-    ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
     cell = Cell()
-    converter = toRTReferenceOfType(pointerType(cell))
-    ptr1Ref = convertObject(converter, cargs[0], args[0])
-    ptr2Ref = convertObject(converter, cargs[1], args[1])
-    ptr1 = llvmBuilder.load(ptr1Ref.llvmValue)
-    ptr2 = llvmBuilder.load(ptr2Ref.llvmValue)
+    ptrType = pointerType(cell)
+    ptr1, ptr2 = rtLoadLLVM(args, env, [ptrType, ptrType])
     ptr1Int = llvmBuilder.ptrtoint(ptr1, llvmType(intType))
     ptr2Int = llvmBuilder.ptrtoint(ptr2, llvmType(intType))
     diff = llvmBuilder.sub(ptr1Int, ptr2Int)
-    result = tempRTValue(intType)
-    llvmBuilder.store(diff, result.llvmValue)
-    return result
+    return rtResult(intType, diff)
 
 @compileCall.register(primitives.pointerCast)
 def foo(x, args, env) :
@@ -585,73 +591,45 @@ def foo(x, args, env) :
     ptrRef = compile(args[1], env, toRTReferenceOfType(pointerType(cell)))
     ptr = llvmBuilder.load(ptrRef.llvmValue)
     ptr = llvmBuilder.bitcast(ptr, llvmType(targetPtrType))
-    result = tempRTValue(targetPtrType)
-    llvmBuilder.store(ptr, result.llvmValue)
-    return result
+    return rtResult(targetPtrType, ptr)
 
 @compileCall.register(primitives.pointerCopy)
 def foo(x, args, env) :
-    ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
     cell = Cell()
-    converter = toRTReferenceOfType(pointerType(cell))
-    destRef = convertObject(converter, cargs[0], args[0])
-    srcRef = convertObject(converter, cargs[1], args[1])
+    ptrType = pointerType(cell)
+    destRef, srcRef = rtLoadRefs(args, env, [ptrType, ptrType])
     ptr = llvmBuilder.load(srcRef.llvmValue)
     llvmBuilder.store(ptr, destRef.llvmValue)
     return voidValue
 
 @compileCall.register(primitives.pointerEquals)
 def foo(x, args, env) :
-    ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
     cell = Cell()
-    converter = toRTReferenceOfType(pointerType(cell))
-    ptr1Ref = convertObject(converter, cargs[0], args[0])
-    ptr2Ref = convertObject(converter, cargs[1], args[1])
-    ptr1 = llvmBuilder.load(ptr1Ref.llvmValue)
-    ptr2 = llvmBuilder.load(ptr2Ref.llvmValue)
+    ptrType = pointerType(cell)
+    ptr1, ptr2 = rtLoadLLVM(args, env, [ptrType, ptrType])
     flag = llvmBuilder.icmp(llvm.ICMP_EQ, ptr1, ptr2)
     flag = llvmBuilder.zext(flag, llvmType(boolType))
-    result = tempRTValue(boolType)
-    llvmBuilder.store(flag, result.llvmValue)
-    return result
+    return rtResult(boolType, flag)
 
 @compileCall.register(primitives.pointerLesser)
 def foo(x, args, env) :
-    ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
     cell = Cell()
-    converter = toRTReferenceOfType(pointerType(cell))
-    ptr1Ref = convertObject(converter, cargs[0], args[0])
-    ptr2Ref = convertObject(converter, cargs[1], args[1])
-    ptr1 = llvmBuilder.load(ptr1Ref.llvmValue)
-    ptr2 = llvmBuilder.load(ptr2Ref.llvmValue)
+    ptrType = pointerType(cell)
+    ptr1, ptr2 = rtLoadLLVM(args, env, [ptrType, ptrType])
     flag = llvmBuilder.icmp(llvm.ICMP_ULT, ptr1, ptr2)
     flag = llvmBuilder.zext(flag, llvmType(boolType))
-    result = tempRTValue(boolType)
-    llvmBuilder.store(flag, result.llvmValue)
-    return result
+    return rtResult(boolType, flag)
 
 @compileCall.register(primitives.allocateMemory)
 def foo(x, args, env) :
-    ensureArity(args, 1)
-    carg = compile(args[0], env)
-    sizeRef = convertObject(toRTReferenceOfType(intType), carg, args[0])
-    size = llvmBuilder.load(sizeRef.llvmValue)
+    size, = rtLoadLLVM(args, env, [intType])
     ptr = llvmBuilder.malloc(llvm.Type.int(8), size)
     ptr = llvmBuilder.bitcast(ptr, llvmType(intType))
-    result = tempRTValue(pointerType(intType))
-    llvmBuilder.store(ptr, result.llvmValue)
-    return result
+    return rtResult(pointerType(intType), ptr)
 
 @compileCall.register(primitives.freeMemory)
 def foo(x, args, env) :
-    ensureArity(args, 1)
-    carg = compile(args[0], env)
-    converter = toRTReferenceOfType(pointerType(intType))
-    ptrRef = convertObject(converter, carg, args[0])
-    ptr = llvmBuilder.load(ptrRef.llvmValue)
+    ptr = rtLoadLLVM(args, env, [pointerType(intType)])
     ptr = llvmBuilder.bitcast(ptr, llvm.Type.pointer(llvm.Type.int(8)))
     llvmBuilder.free(ptr)
     return voidValue
@@ -755,26 +733,18 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.boolCopy)
 def foo(x, args, env) :
-    ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
-    converter = toRTReferenceOfType(boolType)
-    destRef, srcRef = convertObjects(converter, cargs, args)
+    destRef, srcRef = rtLoadRefs(args, env, [boolType, boolType])
     v = llvmBuilder.load(srcRef.llvmValue)
     llvmBuilder.store(v, destRef.llvmValue)
     return voidValue
 
 @compileCall.register(primitives.boolNot)
 def foo(x, args, env) :
-    ensureArity(args, 1)
-    carg = compile(args[0], env)
-    bRef = convertObject(toRTReferenceOfType(boolType), carg, args[0])
-    v = llvmBuilder.load(bRef.llvmValue)
+    v, = rtLoadLLVM(args, env, [boolType])
     zero = llvm.Constant.int(llvmType(boolType), 0)
     flag = llvmBuilder.icmp(llvm.ICMP_EQ, v, zero)
     flag = llvmBuilder.zext(flag, llvmType(boolType))
-    result = tempRTValue(boolType)
-    llvmBuilder.store(flag, result.llvmValue)
-    return result
+    return rtResult(boolType, flag)
 
 
 
@@ -784,41 +754,24 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.charCopy)
 def foo(x, args, env) :
-    ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
-    converter = toRTReferenceOfType(charType)
-    destRef, srcRef = convertObjects(converter, cargs, args)
+    destRef, srcRef = rtLoadRefs(args, env, [charType, charType])
     v = llvmBuilder.load(srcRef.llvmValue)
     llvmBuilder.store(v, destRef.llvmValue)
     return voidValue
 
 @compileCall.register(primitives.charEquals)
 def foo(x, args, env) :
-    ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
-    converter = toRTReferenceOfType(charType)
-    vRef1, vRef2 = convertObjects(converter, cargs, args)
-    v1 = llvmBuilder.load(vRef1.llvmValue)
-    v2 = llvmBuilder.load(vRef2.llvmValue)
+    v1, v2 = rtLoadLLVM(args, env, [charType, charType])
     flag = llvmBuilder.icmp(llvm.ICMP_EQ, v1, v2)
     flag = llvmBuilder.zext(flag, llvmType(boolType))
-    result = tempRTValue(boolType)
-    llvmBuilder.store(flag, result.llvmValue)
-    return result
+    return rtResult(boolType, flag)
 
 @compileCall.register(primitives.charLesser)
 def foo(x, args, env) :
-    ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
-    converter = toRTReferenceOfType(charType)
-    vRef1, vRef2 = convertObjects(converter, cargs, args)
-    v1 = llvmBuilder.load(vRef1.llvmValue)
-    v2 = llvmBuilder.load(vRef2.llvmValue)
+    v1, v2 = rtLoadLLVM(args, env, [charType, charType])
     flag = llvmBuilder.icmp(llvm.ICMP_ULT, v1, v2)
     flag = llvmBuilder.zext(flag, llvmType(boolType))
-    result = tempRTValue(boolType)
-    llvmBuilder.store(flag, result.llvmValue)
-    return result
+    return rtResult(boolType, flag)
 
 
 
@@ -828,39 +781,60 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.intCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    destRef, srcRef = rtLoadRefs(args, env, [intType, intType])
+    v = llvmBuilder.load(srcRef.llvmValue)
+    llvmBuilder.store(v, destRef.llvmValue)
+    return voidValue
 
 @compileCall.register(primitives.intEquals)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
+    flag = llvmBuilder.icmp(llvm.ICMP_EQ, v1, v2)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    return rtResult(boolType, flag)
 
 @compileCall.register(primitives.intLesser)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
+    flag = llvmBuilder.icmp(llvm.ICMP_SLT, v1, v2)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    return rtResult(boolType, flag)
 
 @compileCall.register(primitives.intAdd)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
+    v3 = llvmBuilder.add(v1, v2)
+    return rtResult(intType, v3)
 
 @compileCall.register(primitives.intSubtract)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
+    v3 = llvmBuilder.sub(v1, v2)
+    return rtResult(intType, v3)
 
 @compileCall.register(primitives.intMultiply)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
+    v3 = llvmBuilder.mul(v1, v2)
+    return rtResult(intType, v3)
 
 @compileCall.register(primitives.intDivide)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
+    v3 = llvmBuilder.sdiv(v1, v2)
+    return rtResult(intType, v3)
 
 @compileCall.register(primitives.intModulus)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
+    v3 = llvmBuilder.srem(v1, v2)
+    return rtResult(intType, v3)
 
 @compileCall.register(primitives.intNegate)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [intType])
+    v2 = llvmBuilder.neg(v1)
+    return rtResult(intType, v2)
 
 
 
