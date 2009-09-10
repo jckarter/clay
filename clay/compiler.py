@@ -148,7 +148,7 @@ def foo(x) :
 @toRTValue.register(Value)
 def foo(x) :
     if isBoolType(x.type) :
-        constValue = Constant.int(llvmType(x.type), x.buf.value)
+        constValue = Constant.int(llvmType(x.type), int(x.buf.value))
     elif isIntType(x.type) :
         constValue = Constant.int(llvmType(x.type), x.buf.value)
     elif isCharType(x.type) :
@@ -664,19 +664,31 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.TupleType)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = compile(args[0], env, toType)
+    return toRTValue(boolToValue(isTupleType(t)))
 
 @compileCall.register(primitives.tuple)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensure(len(args) > 1, "tuples need atleast two members")
+    cargs = [compile(y, env) for y in args]
+    argRefs = convertObjects(toRTReference, cargs, args)
+    return rtMakeTuple(argRefs)
 
 @compileCall.register(primitives.tupleFieldCount)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = compile(args[0], env, toTypeWithTag(tupleTypeTag))
+    return toRTValue(intToValue(len(t.params)))
 
 @compileCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cargs = [compile(y, env) for y in args]
+    converter = toRTReferenceWithTypeTag(tupleTypeTag)
+    tupleRef = convertObject(converter, cargs[0], args[0])
+    i = convertObject(toInt, cargs[1], args[1])
+    return rtTupleFieldRef(tupleRef, i)
 
 
 
@@ -686,11 +698,28 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.array)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cargs = [compile(y, env) for y in args]
+    n = convertObject(toInt, cargs[0], args[0])
+    v = convertObject(toRTReference, cargs[1], args[1])
+    a = tempRTValue(arrayType(v.type, intToValue(n)))
+    for i in range(n) :
+        offset = llvm.Constant.int(llvmType(intType), i)
+        element = llvmBuilder.gep(a.llvmValue, [offset])
+        elementRef = RTReference(v.type, element)
+        rtValueCopy(elementRef, v)
+    return a
 
 @compileCall.register(primitives.arrayRef)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cargs = [compile(y, env) for y in args]
+    converter = toRTReferenceWithTypeTag(arrayTypeTag)
+    aRef = convertObject(converter, cargs[0], args[0])
+    iRef = convertObject(toRTReferenceOfType(intType), cargs[1], args[1])
+    i = llvmBuilder.load(iRef.llvmValue)
+    element = llvmBuilder.gep(aRef.llvmValue, [i])
+    return RTReference(aRef.type.params[0], element)
 
 
 
@@ -700,15 +729,23 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.RecordType)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = compile(args[0], env, toType)
+    return toRTValue(boolToValue(isRecordType(t)))
 
 @compileCall.register(primitives.recordFieldCount)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = compile(args[0], env, toRecordType)
+    return toRTValue(intToValue(len(t.tag.fields)))
 
 @compileCall.register(primitives.recordFieldRef)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cargs = [compile(y, env) for y in args]
+    recRef = convertObject(toRTRecordReference, cargs[0], args[0])
+    i = convertObject(toInt, cargs[1], args[1])
+    return rtRecordFieldRef(recRef, i)
 
 
 
