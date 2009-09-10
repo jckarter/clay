@@ -124,7 +124,7 @@ def tempRTValue(type_) :
     llt = llvmType(type_)
     ptr = llvmInitBuilder.alloca(llt)
     value = RTValue(type_, ptr)
-    tempRTValues.append(value)
+    _tempRTValues.append(value)
     return value
 
 
@@ -148,11 +148,11 @@ def foo(x) :
 @toRTValue.register(Value)
 def foo(x) :
     if isBoolType(x.type) :
-        constValue = Constant.int(llvmType(x.type), int(x.buf.value))
+        constValue = llvm.Constant.int(llvmType(x.type), int(x.buf.value))
     elif isIntType(x.type) :
-        constValue = Constant.int(llvmType(x.type), x.buf.value)
+        constValue = llvm.Constant.int(llvmType(x.type), x.buf.value)
     elif isCharType(x.type) :
-        constValue = Constant.int(llvmType(x.type), ord(x.buf.value))
+        constValue = llvm.Constant.int(llvmType(x.type), ord(x.buf.value))
     else :
         error("unsupported type in toRTValue")
     temp = tempRTValue(x.type)
@@ -249,7 +249,7 @@ def _compileBuiltin(builtinName, args) :
     argNames = map(NameRef, variables)
     builtin = NameRef(Identifier(builtinName))
     call = Call(builtin, argNames)
-    return compile(call, env, converter)
+    return compile(call, env)
 
 def rtValueInit(a) :
     if isSimpleType(a.type) :
@@ -514,7 +514,7 @@ def foo(x, args, env) :
     t = compile(args[0], env, toType)
     ptr = llvm.Constant.null(llvmType(pointerType(t)))
     one = llvm.Constant.int(llvmType(intType), 1)
-    offsetPtr = llvmBuilder.gep(one, [one])
+    offsetPtr = llvmBuilder.gep(ptr, [one])
     offsetInt = llvmBuilder.ptrtoint(offsetPtr, llvmType(intType))
     v = tempRTValue(intType)
     llvmBuilder.store(offsetInt, v.llvmValue)
