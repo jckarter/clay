@@ -280,6 +280,36 @@ def rtValueDestroy(a) :
 
 
 #
+# utility operations
+#
+
+def rtTupleFieldRef(a, i) :
+    assert isRTReference(a) and isTupleType(a.type)
+    ensure((0 <= i < len(a.type.params)), "tuple index out of range")
+    elementType = toType(a.type.params[i])
+    elementPtr = llvmBuilder.gep(a.llvmValue, [0, i])
+    return RTReference(elementType, elementPtr)
+
+def rtMakeTuple(argRefs) :
+    t = tupleType([x.type for x in argRefs])
+    value = tempRTValue(t)
+    valueRef = toRTReference(value)
+    for i, argRef in enumerate(argRefs) :
+        left = rtTupleFieldRef(valueRef, i)
+        rtValueCopy(left, argRef)
+    return value
+
+def rtRecordFieldRef(a, i) :
+    assert isRTReference(a) and isRecordType(a.type)
+    nFields = len(a.type.tag.fields)
+    ensure((0 <= i < nFields), "record field index out of range")
+    fieldType = recordFieldTypes(a.type)[i]
+    fieldPtr = llvmBuilder.gep(a.llvmValue, [0, i])
+    return RTReference(fieldType, fieldPtr)
+
+
+
+#
 # compile
 #
 
@@ -316,35 +346,51 @@ def foo(x, env) :
 
 @compile2.register(Tuple)
 def foo(x, env) :
-    raise NotImplementedError
+    assert len(x.args) > 0
+    cargs = [compile(y, env) for y in x.args]
+    if len(x.args) == 1 :
+        return cargs[1]
+    if isType(cargs[0]) or isCell(cargs[0]) :
+        elementTypes = convertObjects(toTypeOrCell, cargs, x.args)
+        return tupleType(elementTypes)
+    else :
+        argRefs = convertObjects(toRTReference, cargs, x.args)
+        return rtMakeTuple(argRefs)
 
 @compile2.register(Indexing)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = compile(x.expr, env)
+    return compileIndexing(thing, x.args, env)
 
 @compile2.register(Call)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = compile(x.expr, env)
+    return compileCall(thing, x.args, env)
 
 @compile2.register(FieldRef)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = compile(x.expr, env)
+    thingRef = convertObject(toRTRecordReference, thing, x.expr)
+    return rtRecordFieldRef(thingRef, recordFieldIndex(thing.type, x.name))
 
 @compile2.register(TupleRef)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = compile(x.expr, env)
+    toRTTupleReference = toRTReferenceWithTypeTag(tupleTypeTag)
+    thingRef = convertObject(toRTTupleReference, thing, x.expr)
+    return rtTupleFieldRef(thingRef, x.index)
 
 @compile2.register(Dereference)
 def foo(x, env) :
-    raise NotImplementedError
+    return compileCall(primitives.pointerDereference, [x.expr], env)
 
 @compile2.register(AddressOf)
 def foo(x, env) :
-    raise NotImplementedError
+    return compileCall(primitives.addressOf, [x.expr], env)
 
 @compile2.register(StaticExpr)
 def foo(x, env) :
-    raise NotImplementedError
+    return evaluate(x.expr, env, toStatic)
 
 
 
@@ -361,6 +407,47 @@ def foo(x) :
 @compileNameRef.register(RTValue)
 def foo(x) :
     return toRTReference(x)
+
+
+
+#
+# compileIndexing
+#
+
+compileIndexing = multimethod(errorMessage="invalid indexing")
+
+@compileIndexing.register(Record)
+def foo(x, args, env) :
+    ensureArity(args, len(x.typeVars))
+    typeParams = [evaluate(y, env, toStaticOrCell) for y in args]
+    return recordType(x, typeParams)
+
+@compileIndexing.register(primitives.Tuple)
+def foo(x, args, env) :
+    ensure(len(args) > 1, "tuple types need atleast two member types")
+    elementTypes = [evaluate(y, env, toStaticOrCell) for y in args]
+    return tupleType(elementTypes)
+
+@compileIndexing.register(primitives.Array)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    elementType = evaluate(args[0], env, toTypeOrCell)
+    sizeValue = evaluate(args[1], env, toValueOrCell)
+    return arrayType(elementType, sizeValue)
+
+@compileIndexing.register(primitives.Pointer)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    pointeeType = evaluate(args[0], env, toTypeOrCell)
+    return pointerType(pointeeType)
+
+
+
+#
+# compileCall
+#
+
+compileCall = multimethod(errorMessage="invalid call")
 
 
 
