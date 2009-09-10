@@ -755,11 +755,26 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.boolCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cargs = [compile(y, env) for y in args]
+    converter = toRTReferenceOfType(boolType)
+    destRef, srcRef = convertObjects(converter, cargs, args)
+    v = llvmBuilder.load(srcRef.llvmValue)
+    llvmBuilder.store(v, destRef.llvmValue)
+    return voidValue
 
 @compileCall.register(primitives.boolNot)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    carg = compile(args[0], env)
+    bRef = convertObject(toRTReferenceOfType(boolType), carg, args[0])
+    v = llvmBuilder.load(bRef.llvmValue)
+    zero = llvm.Constant.int(llvmType(boolType), 0)
+    flag = llvmBuilder.icmp(llvm.ICMP_EQ, v, zero)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    result = tempRTValue(boolType)
+    llvmBuilder.store(flag, result.llvmValue)
+    return result
 
 
 
@@ -769,15 +784,41 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.charCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cargs = [compile(y, env) for y in args]
+    converter = toRTReferenceOfType(charType)
+    destRef, srcRef = convertObjects(converter, cargs, args)
+    v = llvmBuilder.load(srcRef.llvmValue)
+    llvmBuilder.store(v, destRef.llvmValue)
+    return voidValue
 
 @compileCall.register(primitives.charEquals)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cargs = [compile(y, env) for y in args]
+    converter = toRTReferenceOfType(charType)
+    vRef1, vRef2 = convertObjects(converter, cargs, args)
+    v1 = llvmBuilder.load(vRef1.llvmValue)
+    v2 = llvmBuilder.load(vRef2.llvmValue)
+    flag = llvmBuilder.icmp(llvm.ICMP_EQ, v1, v2)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    result = tempRTValue(boolType)
+    llvmBuilder.store(flag, result.llvmValue)
+    return result
 
 @compileCall.register(primitives.charLesser)
 def foo(x, args, env) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    cargs = [compile(y, env) for y in args]
+    converter = toRTReferenceOfType(charType)
+    vRef1, vRef2 = convertObjects(converter, cargs, args)
+    v1 = llvmBuilder.load(vRef1.llvmValue)
+    v2 = llvmBuilder.load(vRef2.llvmValue)
+    flag = llvmBuilder.icmp(llvm.ICMP_ULT, v1, v2)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    result = tempRTValue(boolType)
+    llvmBuilder.store(flag, result.llvmValue)
+    return result
 
 
 
