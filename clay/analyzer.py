@@ -211,26 +211,26 @@ analyzeIndexing = multimethod(errorMessage="invalid indexing")
 @analyzeIndexing.register(Record)
 def foo(x, args, env) :
     ensureArity(args, len(x.typeVars))
-    typeParams = [evaluate(y, env, toStaticOrCell) for y in args]
+    typeParams = [analyze(y, env, toStaticOrCell) for y in args]
     return recordType(x, typeParams)
 
 @analyzeIndexing.register(primitives.Tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuple types need atleast two member types")
-    elementTypes = [evaluate(y, env, toTypeOrCell) for y in args]
+    elementTypes = [analyze(y, env, toTypeOrCell) for y in args]
     return tupleType(elementTypes)
 
 @analyzeIndexing.register(primitives.Array)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    elementType = evaluate(args[0], env, toTypeOrCell)
-    sizeValue = evaluate(args[1], env, toValueOrCell)
+    elementType = analyze(args[0], env, toTypeOrCell)
+    sizeValue = analyze(args[1], env, toValueOrCell)
     return arrayType(elementType, sizeValue)
 
 @analyzeIndexing.register(primitives.Pointer)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    targetType = evaluate(args[0], env, toTypeOrCell)
+    targetType = analyze(args[0], env, toTypeOrCell)
     return pointerType(targetType)
 
 
@@ -399,7 +399,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 2)
     thing = analyze(args[0], env, toRTReferenceWithTypeTag(tupleTypeTag))
-    i = evaluate(args[1], env, toInt)
+    i = analyze(args[1], env, toInt)
     nFields = len(thing.type.params)
     ensure((0 <= i < nFields), "tuple field index out of range")
     return RTReference(thing.type.params[i])
@@ -413,7 +413,7 @@ def foo(x, args, env) :
 @analyzeCall.register(primitives.array)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    n = evaluate(args[0], env, toInt)
+    n = analyze(args[0], env, toInt)
     v = analyze(args[1], env, toRTReference)
     return RTValue(arrayType(v.type, intToValue(n)))
 
@@ -446,7 +446,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 2)
     thing = analyze(args[0], env, toRTRecordReference)
-    i = evaluate(args[1], env, toInt)
+    i = analyze(args[1], env, toInt)
     nFields = len(thing.type.tag.fields)
     ensure((0 <= i < nFields), "record field index out of range")
     fieldType = recordFieldTypes(thing.type)[i]
@@ -717,7 +717,7 @@ def analyzeCodeBody(code, env, bindingNames, bindingValues) :
 
 def analyzeCodeBody2(code, env) :
     if code.returnType is not None :
-        returnType = evaluate(code.returnType, env, toType)
+        returnType = analyze(code.returnType, env, toType)
         if code.returnByRef :
             return RTReference(returnType)
         else :
@@ -752,7 +752,7 @@ def foo(x, env, context) :
         if type(y) is LocalBinding :
             converter = toRTValue
             if y.type is not None :
-                declaredType = evaluate(y.type, env, toType)
+                declaredType = analyze(y.type, env, toType)
                 converter = toRTValueOfType(declaredType)
             right = analyze(y.expr, env, converter)
             addIdent(env, y.name, right)

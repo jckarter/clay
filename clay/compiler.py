@@ -431,26 +431,26 @@ compileIndexing = multimethod(errorMessage="invalid indexing")
 @compileIndexing.register(Record)
 def foo(x, args, env) :
     ensureArity(args, len(x.typeVars))
-    typeParams = [evaluate(y, env, toStaticOrCell) for y in args]
+    typeParams = [compile(y, env, toStaticOrCell) for y in args]
     return recordType(x, typeParams)
 
 @compileIndexing.register(primitives.Tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuple types need atleast two member types")
-    elementTypes = [evaluate(y, env, toStaticOrCell) for y in args]
+    elementTypes = [compile(y, env, toStaticOrCell) for y in args]
     return tupleType(elementTypes)
 
 @compileIndexing.register(primitives.Array)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    elementType = evaluate(args[0], env, toTypeOrCell)
-    sizeValue = evaluate(args[1], env, toValueOrCell)
+    elementType = compile(args[0], env, toTypeOrCell)
+    sizeValue = compile(args[1], env, toValueOrCell)
     return arrayType(elementType, sizeValue)
 
 @compileIndexing.register(primitives.Pointer)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    pointeeType = evaluate(args[0], env, toTypeOrCell)
+    pointeeType = compile(args[0], env, toTypeOrCell)
     return pointerType(pointeeType)
 
 
@@ -503,7 +503,7 @@ def foo(x, args, env) :
 @compileCall.register(primitives.default)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    t = evaluate(args[0], env, toType)
+    t = compile(args[0], env, toType)
     v = tempRTValue(t)
     rtValueInit(v)
     return v
@@ -511,7 +511,7 @@ def foo(x, args, env) :
 @compileCall.register(primitives.typeSize)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    t = evaluate(args[0], env, toType)
+    t = compile(args[0], env, toType)
     ptr = llvm.Constant.null(llvmType(pointerType(t)))
     one = llvm.Constant.int(llvmType(intType), 1)
     offsetPtr = llvmBuilder.gep(one, [one])
@@ -580,7 +580,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
-    targetType = evaluate(args[0], env, toType)
+    targetType = compile(args[0], env, toType)
     targetPtrType = pointerType(targetType)
     ptrRef = compile(args[1], env, toRTReferenceOfType(pointerType(cell)))
     ptr = llvmBuilder.load(ptrRef.llvmValue)
@@ -652,6 +652,7 @@ def foo(x, args, env) :
     converter = toRTReferenceOfType(pointerType(intType))
     ptrRef = convertObject(converter, carg, args[0])
     ptr = llvmBuilder.load(ptrRef.llvmValue)
+    ptr = llvmBuilder.bitcast(ptr, llvm.Type.pointer(llvm.Type.int(8)))
     llvmBuilder.free(ptr)
     return voidValue
 
