@@ -286,7 +286,6 @@ def arrayRef(a, i) :
     assert isReference(a)
     cell, sizeCell = Cell(), Cell()
     matchType(arrayType(cell, sizeCell), a.type)
-    ensure((0 <= i < toInt(sizeCell.param)), "array index out of range")
     elementType = cell.param
     return Reference(elementType, a.address + i*typeSize(elementType))
 
