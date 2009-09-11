@@ -844,35 +844,54 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.floatCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    destRef, srcRef = rtLoadRefs(args, env, [floatType, floatType])
+    v = llvmBuilder.load(srcRef.llvmValue)
+    llvmBuilder.store(v, destRef.llvmValue)
+    return voidValue
 
 @compileCall.register(primitives.floatEquals)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
+    flag = llvmBuilder.fcmp(llvm.FCMP_OEQ, v1, v2)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    return rtResult(boolType, flag)
 
 @compileCall.register(primitives.floatLesser)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
+    flag = llvmBuilder.fcmp(llvm.FCMP_OLT, v1, v2)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    return rtResult(boolType, flag)
 
 @compileCall.register(primitives.floatAdd)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
+    v3 = llvmBuilder.add(v1, v2)
+    return rtResult(floatType, v3)
 
 @compileCall.register(primitives.floatSubtract)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
+    v3 = llvmBuilder.sub(v1, v2)
+    return rtResult(floatType, v3)
 
 @compileCall.register(primitives.floatMultiply)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
+    v3 = llvmBuilder.mul(v1, v2)
+    return rtResult(floatType, v3)
 
 @compileCall.register(primitives.floatDivide)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
+    v3 = llvmBuilder.fdiv(v1, v2)
+    return rtResult(floatType, v3)
 
 @compileCall.register(primitives.floatNegate)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [floatType])
+    v2 = llvmBuilder.neg(v1)
+    return rtResult(floatType, v2)
 
 
 
@@ -882,35 +901,54 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.doubleCopy)
 def foo(x, args, env) :
-    raise NotImplementedError
+    destRef, srcRef = rtLoadRefs(args, env, [doubleType, doubleType])
+    v = llvmBuilder.load(srcRef.llvmValue)
+    llvmBuilder.store(v, destRef.llvmValue)
+    return voidValue
 
 @compileCall.register(primitives.doubleEquals)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
+    flag = llvmBuilder.fcmp(llvm.FCMP_OEQ, v1, v2)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    return rtResult(boolType, flag)
 
 @compileCall.register(primitives.doubleLesser)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
+    flag = llvmBuilder.fcmp(llvm.FCMP_OLT, v1, v2)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    return rtResult(boolType, flag)
 
 @compileCall.register(primitives.doubleAdd)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
+    v3 = llvmBuilder.add(v1, v2)
+    return rtResult(doubleType, v3)
 
 @compileCall.register(primitives.doubleSubtract)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
+    v3 = llvmBuilder.sub(v1, v2)
+    return rtResult(doubleType, v3)
 
 @compileCall.register(primitives.doubleMultiply)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
+    v3 = llvmBuilder.mul(v1, v2)
+    return rtResult(doubleType, v3)
 
 @compileCall.register(primitives.doubleDivide)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
+    v3 = llvmBuilder.fdiv(v1, v2)
+    return rtResult(doubleType, v3)
 
 @compileCall.register(primitives.doubleNegate)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [doubleType])
+    v2 = llvmBuilder.neg(v1)
+    return rtResult(doubleType, v2)
 
 
 
@@ -920,35 +958,51 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.charToInt)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [charType])
+    v2 = llvmBuilder.zext(v1, llvmType(intType))
+    return rtResult(intType, v2)
 
 @compileCall.register(primitives.intToChar)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [intType])
+    v2 = llvmBuilder.trunc(v1, llvmType(charType))
+    return rtResult(charType, v2)
 
 @compileCall.register(primitives.floatToInt)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [floatType])
+    v2 = llvmBuilder.fptosi(v1, llvmType(intType))
+    return rtResult(intType, v2)
 
 @compileCall.register(primitives.intToFloat)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [intType])
+    v2 = llvmBuilder.sitofp(v1, llvmType(floatType))
+    return rtResult(floatType, v2)
 
 @compileCall.register(primitives.floatToDouble)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [floatType])
+    v2 = llvmBuilder.fpext(v1, llvmType(doubleType))
+    return rtResult(doubleType, v2)
 
 @compileCall.register(primitives.doubleToFloat)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [doubleType])
+    v2 = llvmBuilder.fptrunc(v1, llvmType(floatType))
+    return rtResult(floatType, v2)
 
 @compileCall.register(primitives.doubleToInt)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [doubleType])
+    v2 = llvmBuilder.fptosi(v1, llvmType(intType))
+    return rtResult(intType, v2)
 
 @compileCall.register(primitives.intToDouble)
 def foo(x, args, env) :
-    raise NotImplementedError
+    v1, = rtLoadLLVM(args, env, [intType])
+    v2 = llvmBuilder.sitofp(v1, llvmType(doubleType))
+    return rtResult(doubleType, v2)
 
 
 
