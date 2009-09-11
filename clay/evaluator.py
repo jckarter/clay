@@ -92,8 +92,6 @@ def typeSize(t) :
 # Value, Reference
 #
 
-import traceback
-
 class Value(object) :
     def __init__(self, type_) :
         self.type = type_
@@ -585,21 +583,21 @@ def foo(x, args, env) :
 @evaluateCall.register(Procedure)
 def foo(x, args, env) :
     actualArgs = [ActualArgument(y, env) for y in args]
-    result = matchCodeSignature(x.env, x.code, actualArgs)
-    if type(result) is MatchFailure :
+    result = matchInvoke(x.code, x.env, actualArgs)
+    if type(result) is InvokeError :
         result.signalError()
-    bindingNames, bindingValues = result
-    return evalCodeBody(x.code, x.env, bindingNames, bindingValues)
+    assert type(result) is InvokeBindings
+    return evalInvoke(x.code, x.env, result)
 
 @evaluateCall.register(Overloadable)
 def foo(x, args, env) :
     actualArgs = [ActualArgument(y, env) for y in args]
     for y in x.overloads :
-        result = matchCodeSignature(y.env, y.code, actualArgs)
-        if type(result) is MatchFailure :
+        result = matchInvoke(y.code, y.env, actualArgs)
+        if type(result) is InvokeError :
             continue
-        bindingNames, bindingValues = result
-        return evalCodeBody(y.code, y.env, bindingNames, bindingValues)
+        assert type(result) is InvokeBindings
+        return evalInvoke(y.code, y.env, result)
     error("no matching overload")
 
 
@@ -1074,21 +1072,8 @@ def foo(x, args, env) :
 
 
 #
-# matchCodeSignature(env, code, actualArgs) -> Environment | MatchFailure
+# wrapper for actual arguments
 #
-
-class MatchFailure(object) :
-    def __init__(self, message, context=None) :
-        self.message = message
-        self.context = context
-    def signalError(self) :
-        try :
-            if self.context is not None :
-                contextPush(self.context)
-            error(self.message)
-        finally :
-            if self.context is not None :
-                contextPop()
 
 class ActualArgument(object) :
     def __init__(self, expr, env) :
@@ -1105,15 +1090,41 @@ class ActualArgument(object) :
     def asStatic(self) :
         return withContext(self.expr, lambda : toStatic(self.result_))
 
-def matchCodeSignature(codeEnv, code, actualArgs) :
+
+
+#
+# matchInvoke(code, env, actualArgs) -> InvokeBindings | InvokeError
+#
+
+class InvokeError(object) :
+    def __init__(self, message, context=None) :
+        self.message = message
+        self.context = context
+    def signalError(self) :
+        try :
+            if self.context is not None :
+                contextPush(self.context)
+            error(self.message)
+        finally :
+            if self.context is not None :
+                contextPop()
+
+class InvokeBindings(object) :
+    def __init__(self, typeVars, typeParams, vars, params) :
+        self.typeVars = typeVars
+        self.typeParams = typeParams
+        self.vars = vars
+        self.params = params
+
+def matchInvoke(code, codeEnv, actualArgs) :
     def argMismatch(actualArg) :
-        return MatchFailure("argument mismatch", actualArg.expr)
+        return InvokeError("argument mismatch", actualArg.expr)
     def typeCondFailure(typeCond) :
-        return MatchFailure("type condition failed", typeCond)
+        return InvokeError("type condition failed", typeCond)
     if len(actualArgs) != len(code.formalArgs) :
-        return MatchFailure("incorrect no. of arguments")
+        return InvokeError("incorrect no. of arguments")
     codeEnv2, cells = bindTypeVars(codeEnv, code.typeVars)
-    bindingNames, bindingValues = [], []
+    vars, params = [], []
     for actualArg, formalArg in zip(actualArgs, code.formalArgs) :
         if type(formalArg) is ValueArgument :
             if formalArg.byRef :
@@ -1124,8 +1135,8 @@ def matchCodeSignature(codeEnv, code, actualArgs) :
                 typePattern = evaluate(formalArg.type, codeEnv2, toTypeOrCell)
                 if not unify(typePattern, arg.type) :
                     return argMismatch(actualArg)
-            bindingNames.append(formalArg.name)
-            bindingValues.append(arg)
+            vars.append(formalArg.name)
+            params.append(arg)
         elif type(formalArg) is StaticArgument :
             arg = actualArg.asStatic()
             formalType = formalArg.type
@@ -1140,18 +1151,17 @@ def matchCodeSignature(codeEnv, code, actualArgs) :
         result = evaluate(typeCondition, codeEnv2, toBool)
         if not result :
             return typeCondFailure(typeCondition)
-    bindingNames[0:0] = code.typeVars
-    bindingValues[0:0] = typeParams
-    return bindingNames, bindingValues
+    return InvokeBindings(code.typeVars, typeParams, vars, params)
 
 
 
 #
-# evalCodeBody
+# evalInvoke
 #
 
-def evalCodeBody(code, env, bindingNames, bindingValues) :
-    env = extendEnv(env, bindingNames, bindingValues)
+def evalInvoke(code, env, bindings) :
+    env = extendEnv(env, bindings.typeVars + bindings.vars,
+                    bindings.typeParams + bindings.params)
     returnType = None
     if code.returnType is not None :
         returnType = evaluate(code.returnType, env, toType)

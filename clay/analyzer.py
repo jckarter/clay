@@ -256,21 +256,21 @@ def foo(x, args, env) :
 @analyzeCall.register(Procedure)
 def foo(x, args, env) :
     actualArgs = [RTActualArgument(y, env) for y in args]
-    result = matchCodeSignature(x.env, x.code, actualArgs)
-    if type(result) is MatchFailure :
+    result = matchInvoke(x.code, x.env, actualArgs)
+    if type(result) is InvokeError :
         result.signalError()
-    bindingNames, bindingValues = result
-    return analyzeCodeBody(x.code, x.env, bindingNames, bindingValues)
+    assert type(result) is InvokeBindings
+    return analyzeInvoke(x.code, x.env, result)
 
 @analyzeCall.register(Overloadable)
 def foo(x, args, env) :
     actualArgs = [RTActualArgument(y, env) for y in args]
     for y in x.overloads :
-        result = matchCodeSignature(y.env, y.code, actualArgs)
-        if type(result) is MatchFailure :
+        result = matchInvoke(y.code, y.env, actualArgs)
+        if type(result) is InvokeError :
             continue
-        bindingNames, bindingValues = result
-        return analyzeCodeBody(y.code, y.env, bindingNames, bindingValues)
+        assert type(result) is InvokeBindings
+        return analyzeInvoke(y.code, y.env, result)
     error("no matching overload")
 
 
@@ -678,44 +678,41 @@ class RTActualArgument(object) :
 
 
 #
-# analyzeCodeBody
+# analyzeInvoke
 #
 
-_analysisTable = {}
+_invokeTable = {}
 
-def _cleanupAnalysisTable() :
-    global _analysisTable
-    _analysisTable = {}
+def _cleanupInvokeTable() :
+    global _invokeTable
+    _invokeTable = {}
 
-installGlobalsCleanupHook(_cleanupAnalysisTable)
+installGlobalsCleanupHook(_cleanupInvokeTable)
 
 class RecursiveAnalysisError(Exception) :
     pass
 
-def analyzeCodeBody(code, env, bindingNames, bindingValues) :
-    key = [code]
-    for v in bindingValues :
-        if type(v) in (RTValue, RTReference) :
-            v = v.type
-        key.append(v)
-    key = tuple(key)
-    result = _analysisTable.get(key)
+def analyzeInvoke(code, env, bindings) :
+    key = tuple([code] + bindings.typeParams +
+                [p.type for p in bindings.params])
+    result = _invokeTable.get(key)
     if result is not None :
         if result is False :
             raise RecursiveAnalysisError()
         return result
     try :
         result = None
-        _analysisTable[key] = False
-        env = extendEnv(env, bindingNames, bindingValues)
-        result = analyzeCodeBody2(code, env)
-        _analysisTable[key] = result
+        _invokeTable[key] = False
+        env = extendEnv(env, bindings.typeVars + bindings.vars,
+                        bindings.typeParams + bindings.params)
+        result = analyzeInvoke2(code, env)
+        _invokeTable[key] = result
         return result
     finally :
         if result is None :
-            del _analysisTable[key]
+            del _invokeTable[key]
 
-def analyzeCodeBody2(code, env) :
+def analyzeInvoke2(code, env) :
     if code.returnType is not None :
         returnType = analyze(code.returnType, env, toType)
         if code.returnByRef :

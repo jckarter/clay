@@ -477,21 +477,21 @@ def foo(x, args, env) :
 @compileCall.register(Procedure)
 def foo(x, args, env) :
     actualArgs = [RTActualArgument(y, env) for y in args]
-    result = matchCodeSignature(x.env, x.code, actualArgs)
-    if type(result) is MatchFailure :
+    result = matchInvoke(x.code, x.env, actualArgs)
+    if type(result) is InvokeError :
         result.signalError()
-    bindingNames, bindingValues = result
-    return compileCodeBody(x.code, x.env, bindingNames, bindingValues)
+    assert type(result) is InvokeBindings
+    return compileInvoke(x.name.s, x.code, x.env, result)
 
 @compileCall.register(Overloadable)
 def foo(x, args, env) :
     actualArgs = [RTActualArgument(y, env) for y in args]
     for y in x.overloads :
-        result = matchCodeSignature(y.env, y.code, actualArgs)
-        if type(result) is MatchFailure :
+        result = matchInvoke(y.code, y.env, actualArgs)
+        if type(result) is InvokeError :
             continue
-        bindingNames, bindingValues = result
-        return compileCodeBody(y.code, y.env, bindingNames, bindingValues)
+        assert type(result) is InvokeBindings
+        return compileInvoke(x.name.s, y.code, y.env, result)
     error("no matching overload")
 
 
@@ -1028,10 +1028,10 @@ class RTActualArgument(object) :
 
 
 #
-# compileCodeBody
+# compileInvoke
 #
 
-def compileCodeBody(code, env, bindingNames, bindingValues) :
+def compileInvoke(name, code, env, bindings) :
     raise NotImplementedError
 
 
