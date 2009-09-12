@@ -7,6 +7,7 @@ from clay.env import *
 from clay.types import *
 from clay.unify import *
 from clay.evaluator import *
+from clay import analyzer
 import clay.llvmwrapper as llvm
 
 
@@ -89,7 +90,7 @@ def foo(tag, t) :
 # global llvm data
 #
 
-llvmModule = llvm.Module.new("foo")
+llvmModule = llvm.Module.new("clay_code")
 llvmInitBuilder = None
 llvmBuilder = None
 
@@ -1032,6 +1033,136 @@ class RTActualArgument(object) :
 #
 
 def compileInvoke(name, code, env, bindings) :
+    compiledCode = compileCode(name, code, env, bindings)
+    llvmArgs = []
+    for p in bindings.params :
+        llvmArgs.append(p.llvmValue)
+    if isVoidType(compiledCode.returnType) :
+        llvmBuilder.call(compiledCode.llvmFunc, llvmArgs)
+        return voidValue
+    else :
+        t = compiledCode.returnType
+        if compiledCode.returnByRef :
+            t = pointerType(t)
+        retVal = tempRTValue(t)
+        llvmArgs.append(retVal.llvmValue)
+        llvmBuilder.call(compiledCode.llvmFunc, llvmArgs)
+        if compiledCode.returnByRef :
+            ptr = llvmBuilder.load(retVal.llvmValue)
+            return RTReference(compiledCode.returnType, ptr)
+        else :
+            return retVal
+
+
+
+#
+# compileCode
+#
+
+class CompiledCode(object) :
+    def __init__(self, returnByRef, returnType, llvmFunc) :
+        self.returnByRef = returnByRef
+        self.returnType = returnType
+        self.llvmFunc = llvmFunc
+
+_compiledCodeTable = {}
+
+def _cleanupCompiledCodeTable() :
+    global _compiledCodeTable
+    _compiledCodeTable = {}
+
+installGlobalsCleanupHook(_cleanupCompiledCodeTable)
+
+def compileCode(name, code, env, bindings) :
+    key = tuple([code] + bindings.typeParams +
+                [p.type for p in bindings.params])
+    compiledCode = _compiledCodeTable.get(key)
+    if compiledCode is None :
+        global llvmBuilder, llvmInitBuilder
+        savedLLVMBuilder = llvmBuilder
+        savedLLVMInitBuilder = llvmInitBuilder
+        try :
+            compiledCode = compileCode2(name, code, env, bindings)
+            _compiledCodeTable[key] = compiledCode
+        finally :
+            llvmBuilder = savedLLVMBuilder
+            llvmInitBuilder = savedLLVMInitBuilder
+    return compiledCode
+
+def compileCode2(name, code, env, bindings) :
+    llvmArgTypes = []
+    for param in bindings.params :
+        llt = llvm.Type.pointer(llvmType(param.type))
+        llvmArgTypes.append(llt)
+    compiledCode = analyzeCodeToCompile(code, env, bindings)
+    if not isVoidType(compiledCode.returnType) :
+        llvmReturnType = llvmType(compiledCode.returnType)
+        if compiledCode.returnByRef :
+            llvmReturnType = llvm.Type.pointer(llvmReturnType)
+        llvmArgTypes.append(llvm.Type.pointer(llvmReturnType))
+    funcType = llvm.Type.function(llvm.Type.void(), llvmArgTypes)
+    func = llvmModule.add_function(funcType, name)
+    compiledCode.llvmFunc = func
+    for i, var in enumerate(bindings.vars) :
+        func.args[i].name = var.s
+    initBlock = func.append_basic_block("entry")
+    codeBlock = func.append_basic_block("code")
+    global llvmBuilder, llvmInitBuilder
+    llvmInitBuilder = llvm.Builder.new(initBlock)
+    llvmBuilder = llvm.Builder.new(codeBlock)
+    params = []
+    for i, p in enumerate(bindings.params) :
+        if isRTValue(p) :
+            p = RTValue(p.type, func.args[i])
+        elif isRTReference(p) :
+            p = RTReference(p.type, func.args[i])
+        else :
+            assert False, p
+        params.append(p)
+    env = extendEnv(env, bindings.typeVars + bindings.vars,
+                    bindings.typeParams, params)
+    compileStatement(code.body, env, compiledCode)
+    llvmInitBuilder.branch(codeBlock)
+    return compiledCode
+
+def analyzeCodeToCompile(code, env, bindings) :
+    bindings2 = bindingsForAnalysis(bindings)
+    result = analyzer.analyzeInvoke(code, env, bindings2)
+    if analyzer.isRTValue(result) :
+        returnByRef = False
+        returnType = result.type
+    elif analyzer.isRTReference(result) :
+        returnByRef = True
+        returnType = result.type
+    elif isVoidValue(result) :
+        returnByRef = False
+        returnType = voidType
+    else :
+        assert False, result
+    return CompiledCode(returnByRef, returnType, None)
+
+def bindingsForAnalysis(bindings) :
+    params = []
+    for p in bindings.params :
+        if isRTValue(p) :
+            p = analyzer.RTValue(p.type)
+        elif isRTReference(p) :
+            p = analyzer.RTReference(p.type)
+        else :
+            assert False, p
+        params.append(p)
+    bindings2 = InvokeBindings(
+        bindings.typeVars, bindings.typeParams,
+        bindings.vars, params)
+    return bindings2
+
+
+
+#
+# compileStatement
+#
+
+def compileStatement(x, env, compiledCode) :
     raise NotImplementedError
 
 
