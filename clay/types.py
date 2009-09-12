@@ -68,9 +68,13 @@ def recordType(record, params) :
 #
 
 class VoidValue(object) :
-    pass
+    def __init__(self) :
+        self.type = voidType
 
 voidValue = VoidValue()
+
+def isVoidValue(x) :
+    return type(x) is VoidValue
 
 xregister(VoidValue, lambda x : XSymbol("void"))
 
