@@ -766,7 +766,7 @@ def foo(x, env, context) :
 @analyzeStatement2.register(Return)
 def foo(x, env, context) :
     if context.returnByRef :
-        return analyze(x.expr, env, toRTReference)
+        return analyze(x.expr, env, toRTLValue)
     if x.expr is None :
         return voidValue
     return analyze(x.expr, env, toRTValue)
