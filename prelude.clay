@@ -176,67 +176,67 @@ def null[T](static T) {
 //
 
 overload init[T,n](ref a:Array[T,n]) {
-    initArray(a, static 0);
+    initArray(a, 0);
 }
 
-def initArray[T,n,i](ref a:Array[T,n], static i) {
+def initArray[T,n](ref a:Array[T,n], i:Int) {
     if (equals(i, n)) return;
     init(arrayRef(a, i));
-    initArray(a, static add(i, 1));
+    initArray(a, add(i, 1));
 }
 
 overload copy[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
-    copyArray(dest, src, static 0);
+    copyArray(dest, src, 0);
 }
 
-def copyArray[T,n,i](ref dest:Array[T,n], ref src:Array[T,n], static i) {
+def copyArray[T,n](ref dest:Array[T,n], ref src:Array[T,n], i:Int) {
     if (equals(i, n)) return;
     copy(arrayRef(dest, i), arrayRef(src, i));
-    copyArray(dest, src, static add(i, 1));
+    copyArray(dest, src, add(i, 1));
 }
 
 overload destroy[T,n](ref a:Array[T,n]) {
-    destroyArray(a, static 0);
+    destroyArray(a, 0);
 }
 
-def destroyArray[T,n,i](ref a:Array[T,n], static i) {
+def destroyArray[T,n](ref a:Array[T,n], i:Int) {
     if (equals(i, n)) return;
     destroy(arrayRef(a, i));
-    destroyArray(a, static add(i, 1));
+    destroyArray(a, add(i, 1));
 }
 
 overload equals[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
-    return arrayEquals(a, b, static 0);
+    return arrayEquals(a, b, 0);
 }
 
-def arrayEquals[T,n,i](ref a:Array[T,n], ref b:Array[T,n], static i) {
+def arrayEquals[T,n](ref a:Array[T,n], ref b:Array[T,n], i:Int) {
     if (equals(i, n)) return true;
     if (notEquals(arrayRef(a, i), arrayRef(b, i)))
         return false;
-    return arrayRef(a, b, static add(i, 1));
+    return arrayRef(a, b, add(i, 1));
 }
 
 overload lesser[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
-    return arrayLesser(a, b, static 0);
+    return arrayLesser(a, b, 0);
 }
 
-def arrayLesser[T,n,i](ref a:Array[T,n], ref b:Array[T,n], static i) {
+def arrayLesser[T,n](ref a:Array[T,n], ref b:Array[T,n], i:Int) {
     if (equals(i, n)) return false;
     if (lesser(arrayRef(a, i), arrayRef(b, i)))
         return true;
     if (lesser(arrayRef(b, i), arrayRef(a, i)))
         return false;
-    return arrayLesser(a, b, static add(i, 1));
+    return arrayLesser(a, b, add(i, 1));
 }
 
 overload hash[T,n](ref a:Array[T,n]) {
-    return arrayHash(a, static 0);
+    return arrayHash(a, 0);
 }
 
-def arrayHash[T,n,i,h](ref a:Array[T,n], static i) {
+def arrayHash[T,n](ref a:Array[T,n], i:Int) {
     if (equals(i, n)) return 0;
     var curH = hash(arrayRef(a, i));
-    return add(curH, arrayHash(a, static add(i, 1)));
+    return add(curH, arrayHash(a, add(i, 1)));
 }
 
 
@@ -263,6 +263,10 @@ overload fieldRef[T,i](ref a:T, static i) ref if TupleType(T) {
     return tupleFieldRef(a, i);
 }
 
+def lastFieldIndex[T,i](static T, static i) {
+    return equals(i, fieldCount(T));
+}
+
 def RecordOrTuple[T](static T) {
     if (RecordType(T)) return true;
     if (TupleType(T)) return true;
@@ -273,64 +277,88 @@ overload init[T](ref a:T) if RecordOrTuple(T) {
     initFields(a, static 0);
 }
 
-def initFields[T,i](ref a:T, static i) {
-    if (equals(i, fieldCount(T))) return;
+overloadable initFields;
+overload initFields[T,i](ref a:T, static i) {
     init(fieldRef(a, i));
     initFields(a, static add(i, 1));
+}
+overload initFields[T, i](ref a:T, static i)
+        if lastFieldIndex(T, i) {
+    return;
 }
 
 overload copy[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
     copyFields(dest, src, static 0);
 }
 
-def copyFields[T,i](ref dest:T, ref src:T, static i) {
-    if (equals(i, fieldCount(T))) return;
+overloadable copyFields;
+overload copyFields[T, i](ref dest:T, ref src:T, static i) {
     copy(fieldRef(dest, i), fieldRef(src, i));
     copyFields(dest, src, static add(i, 1));
+}
+overload copyFields[T, i](ref dest:T, ref src:T, static i)
+        if lastFieldIndex(T, i) {
+    return;
 }
 
 overload destroy[T](ref a:T) if RecordOrTuple(T) {
     destroyFields(a, static 0);
 }
 
-def destroyFields[T,i](ref a:T, static i) {
-    if (equals(i, fieldCount(T))) return;
+overloadable destroyFields;
+overload destroyFields[T, i](ref a:T, static i) {
     destroy(fieldRef(a, i));
     destroyFields(a, static add(i, 1));
+}
+overload destroyFields[T, i](ref a:T, static i)
+        if lastFieldIndex(T, i) {
+    return;
 }
 
 overload equals[T](ref a:T, ref b:T) if RecordOrTuple(T) {
     return equalFields(a, b, static 0);
 }
 
-def equalFields[T,i](ref a:T, ref b:T, static i) {
-    if (equals(i, fieldCount(T))) return true;
+overloadable equalFields;
+overload equalFields[T, i](ref a:T, ref b:T, static i) {
     if (notEquals(fieldRef(a, i), fieldRef(b, i)))
         return false;
     return equalFields(a, b, static add(i, 1));
+}
+overload equalFields[T, i](ref a:T, ref b:T, static i)
+        if lastFieldIndex(T, i) {
+    return true;
 }
 
 overload lesser[T](ref a:T, ref b:T) if RecordOrTuple(T) {
     return lesserFields(a, b, static 0);
 }
 
-def lesserFields[T,i](ref a:T, ref b:T, static i) {
-    if (equals(i, fieldCount(T))) return false;
+overloadable lesserFields;
+overload lesserFields[T,i](ref a:T, ref b:T, static i) {
     if (lesser(fieldRef(a, i), fieldRef(b, i)))
         return true;
     if (lesser(fieldRef(b, i), fieldRef(a, i)))
         return false;
     return lesserFields(a, b, static add(i, 1));
 }
+overload lesserFields[T, i](ref a:T, ref b:T, static i)
+        if lastFieldIndex(T, i) {
+    return false;
+}
 
 overload hash[T](ref a:T) if RecordOrTuple(T) {
     return hashFields(a, static 0);
 }
 
-def hashFields[T,i](ref a:T, static i) {
-    if (equals(i, fieldCount(T))) return 0;
+overloadable hashFields;
+overload hashFields[T,i](ref a:T, static i) {
     var curH = hash(fieldRef(a, i));
     return add(curH, hashFields(a, static add(i, 1)));
+}
+overload hashFields[T, i](ref a:T, static i)
+        if lastFieldIndex(T, i) {
+    return 0;
 }
 
 
@@ -370,10 +398,17 @@ record NodeB[T] {
     next: Pointer[NodeA[T]];
 }
 
-def main() {
+def main1() {
     var n = 7;
     n = subtract(n, 1);
     var f = factorial(n);
     var p = default(NodeA[(Int,Bool)]);
     return (foo(), isEven(n), f, p);
+}
+
+def main() {
+    var n = 7;
+    n = subtract(n, 1);
+    var f = factorial(n);
+    return f;
 }
