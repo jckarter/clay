@@ -1116,56 +1116,13 @@ def compileInvoke(name, code, env, bindings) :
 
 
 #
-# scope stack (used for compiling statement blocks)
-#
-
-class ScopeMarker(object) :
-    pass
-
-def isScopeMarker(x) : return type(x) is ScopeMarker
-
-class ScopeStack(object) :
-    def __init__(self) :
-        self.stack = []
-
-    def pushValue(self, value) :
-        assert isRTValue(value)
-        self.stack.append(value)
-
-    def pushMarker(self) :
-        marker = ScopeMarker()
-        self.stack.append(marker)
-        return marker
-
-    def cleanUpto(self, marker) :
-        assert isScopeMarker(marker)
-        for x in reversed(self.stack) :
-            if isRTValue(x) :
-                rtValueDestroy(x)
-            if x is marker :
-                return
-        assert False
-
-    def popUpto(self, marker) :
-        assert isScopeMarker(marker)
-        while True :
-            thing = self.stack.pop()
-            if thing is marker :
-                break
-
-scopeStack = ScopeStack()
-
-
-
-#
 # compileCode
 #
 
 class CompiledCode(object) :
-    def __init__(self, returnByRef, returnType, returnMarker, llvmFunc) :
+    def __init__(self, returnByRef, returnType, llvmFunc) :
         self.returnByRef = returnByRef
         self.returnType = returnType
-        self.returnMarker = returnMarker
         self.llvmFunc = llvmFunc
 
 _compiledCodeTable = {}
@@ -1224,7 +1181,7 @@ def analyzeCodeToCompile(code, env, bindings) :
         returnType = voidType
     else :
         assert False, result
-    return CompiledCode(returnByRef, returnType, None, None)
+    return CompiledCode(returnByRef, returnType, None)
 
 def bindingsForAnalysis(bindings) :
     params = []
@@ -1240,6 +1197,54 @@ def bindingsForAnalysis(bindings) :
         bindings.typeVars, bindings.typeParams,
         bindings.vars, params)
     return bindings2
+
+
+
+#
+# CompilerCodeContext
+#
+
+class ScopeMarker(object) :
+    pass
+
+def isScopeMarker(x) : return type(x) is ScopeMarker
+
+class CompilerCodeContext(object) :
+    def __init__(self, compiledCode) :
+        self.returnByRef = compiledCode.returnByRef
+        self.returnType = compiledCode.returnType
+        self.llvmFunc = compiledCode.llvmFunc
+        self.scopeStack = []
+
+    def pushValue(self, value) :
+        assert isRTValue(value)
+        self.scopeStack.append(value)
+
+    def pushMarker(self) :
+        marker = ScopeMarker()
+        self.scopeStack.append(marker)
+        return marker
+
+    def cleanAll(self) :
+        for x in reversed(self.scopeStack) :
+            if isRTValue(x) :
+                rtValueDestroy(x)
+
+    def cleanUpto(self, marker) :
+        assert isScopeMarker(marker)
+        for x in reversed(self.scopeStack) :
+            if isRTValue(x) :
+                rtValueDestroy(x)
+            if x is marker :
+                return
+        assert False
+
+    def popUpto(self, marker) :
+        assert isScopeMarker(marker)
+        while True :
+            thing = self.scopeStack.pop()
+            if thing is marker :
+                break
 
 
 
@@ -1267,12 +1272,10 @@ def compileCodeBody(code, env, bindings, compiledCode) :
         params.append(p)
     env = extendEnv(env, bindings.typeVars + bindings.vars,
                     bindings.typeParams + params)
-    compiledCode.returnMarker = scopeStack.pushMarker()
-    isTerminated = compileStatement(code.body, env, compiledCode)
+    codeContext = CompilerCodeContext(compiledCode)
+    isTerminated = compileStatement(code.body, env, codeContext)
     if not isTerminated :
         llvmBuilder.ret_void()
-    scopeStack.popUpto(compiledCode.returnMarker)
-    compiledCode.returnMarker = None
     llvmInitBuilder.branch(codeBlock)
     llvmBuilder = savedLLVMBuilder
     llvmInitBuilder = savedLLVMInitBuilder
@@ -1283,10 +1286,10 @@ def compileCodeBody(code, env, bindings, compiledCode) :
 # compileStatement
 #
 
-def compileStatement(x, env, compiledCode) :
-    contextPush(x)
-    result = compileStatement2(x, env, compiledCode)
-    contextPop()
+def compileStatement(x, env, codeContext) :
+    contextPush(x) # error context
+    result = compileStatement2(x, env, codeContext)
+    contextPop() # error context
     return result
 
 
@@ -1298,9 +1301,9 @@ def compileStatement(x, env, compiledCode) :
 compileStatement2 = multimethod(errorMessage="invalid statement")
 
 @compileStatement2.register(Block)
-def foo(x, env, compiledCode) :
+def foo(x, env, codeContext) :
     env = Environment(env)
-    blockMarker = scopeStack.pushMarker()
+    blockMarker = codeContext.pushMarker()
     isTerminated = False
     for y in x.statements :
         if isTerminated :
@@ -1311,16 +1314,17 @@ def foo(x, env, compiledCode) :
                 declaredType = compile(y.type, env, toType)
                 converter = toRTValueOfType(declaredType)
             right = compileRootValueExpr(y.expr, env, converter)
+            codeContext.pushValue(right)
             addIdent(env, y.name, right)
         else :
-            isTerminated = compileStatement(y, env, compiledCode)
+            isTerminated = compileStatement(y, env, codeContext)
     if not isTerminated :
-        scopeStack.cleanUpto(blockMarker)
-    scopeStack.popUpto(blockMarker)
+        codeContext.cleanUpto(blockMarker)
+    codeContext.popUpto(blockMarker)
     return isTerminated
 
 @compileStatement2.register(Assignment)
-def foo(x, env, compiledCode) :
+def foo(x, env, codeContext) :
     pushTempsBlock()
     left = compile(x.left, env, toRTLValue)
     right = compile(x.right, env, toRTReferenceOfType(left.type))
@@ -1329,52 +1333,52 @@ def foo(x, env, compiledCode) :
     return False
 
 @compileStatement2.register(Return)
-def foo(x, env, compiledCode) :
-    retType = compiledCode.returnType
+def foo(x, env, codeContext) :
+    retType = codeContext.returnType
     if isVoidType(retType) :
         ensure(x.expr is None, "void return expected")
-        scopeStack.cleanUpto(compiledCode.returnMarker)
+        codeContext.cleanAll()
         llvmBuilder.ret_void()
         return True
     ensure(x.expr is not None, "return value expected")
     pushTempsBlock()
-    if compiledCode.returnByRef :
+    if codeContext.returnByRef :
         result = compile(x.expr, env, toRTLValueOfType(retType))
-        llvmBuilder.store(result.llvmValue, compiledCode.llvmFunc.args[-1])
+        llvmBuilder.store(result.llvmValue, codeContext.llvmFunc.args[-1])
     else :
         result = compile(x.expr, env, toRTReferenceOfType(retType))
-        returnRef = RTReference(retType, compiledCode.llvmFunc.args[-1])
+        returnRef = RTReference(retType, codeContext.llvmFunc.args[-1])
         rtValueCopy(returnRef, result)
     popTempsBlock()
-    scopeStack.cleanUpto(compiledCode.returnMarker)
+    codeContext.cleanAll()
     llvmBuilder.ret_void()
     return True
 
 @compileStatement2.register(IfStatement)
-def foo(x, env, compiledCode) :
+def foo(x, env, codeContext) :
     pushTempsBlock()
     condRef = compile(x.condition, env, toRTReferenceOfType(boolType))
     cond = llvmBuilder.load(condRef.llvmValue)
     zero = llvm.Constant.int(llvmType(boolType), 0)
     condResult = llvmBuilder.icmp(llvm.ICMP_NE, cond, zero)
     popTempsBlock()
-    thenBlock = compiledCode.llvmFunc.append_basic_block("then")
-    elseBlock = compiledCode.llvmFunc.append_basic_block("else")
+    thenBlock = codeContext.llvmFunc.append_basic_block("then")
+    elseBlock = codeContext.llvmFunc.append_basic_block("else")
     mergeBlock = None
     llvmBuilder.cbranch(condResult, thenBlock, elseBlock)
     llvmBuilder.position_at_end(thenBlock)
-    thenTerminated = compileStatement(x.thenPart, env, compiledCode)
+    thenTerminated = compileStatement(x.thenPart, env, codeContext)
     if not thenTerminated :
         if mergeBlock is None :
-            mergeBlock = compiledCode.llvmFunc.append_basic_block("merge")
+            mergeBlock = codeContext.llvmFunc.append_basic_block("merge")
         llvmBuilder.branch(mergeBlock)
     elseTerminated = False
     llvmBuilder.position_at_end(elseBlock)
     if x.elsePart is not None :
-        elseTerminated = compileStatement(x.elsePart, env, compiledCode)
+        elseTerminated = compileStatement(x.elsePart, env, codeContext)
     if not elseTerminated :
         if mergeBlock is None :
-            mergeBlock = compiledCode.llvmFunc.append_basic_block("merge")
+            mergeBlock = codeContext.llvmFunc.append_basic_block("merge")
         llvmBuilder.branch(mergeBlock)
     if mergeBlock is not None :
         assert not (thenTerminated and elseTerminated)
@@ -1384,7 +1388,7 @@ def foo(x, env, compiledCode) :
     return True
 
 @compileStatement2.register(ExprStatement)
-def foo(x, env, compiledCode) :
+def foo(x, env, codeContext) :
     pushTempsBlock()
     compile(x.expr, env)
     popTempsBlock()
