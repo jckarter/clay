@@ -119,14 +119,46 @@ def isRTReference(x) : return type(x) is RTReference
 # temp values
 #
 
-_tempRTValues = []
+class TempsBlock(object) :
+    def __init__(self) :
+        self.temps = []
+
+    def add(self, temp) :
+        self.temps.append(temp)
+
+    def newTemp(self, type_) :
+        llt = llvmType(type_)
+        ptr = llvmInitBuilder.alloca(llt)
+        value = RTValue(type_, ptr)
+        self.add(value)
+        return value
+
+    def cleanup(self, excepting=None) :
+        exceptingFound = 0
+        for temp in reversed(self.temps) :
+            if temp is excepting :
+                exceptingFound += 1
+            else :
+                rtValueDestroy(temp)
+        if excepting is not None :
+            assert exceptingFound == 1
+        else :
+            assert exceptingFound == 0
+
+_tempsBlocks = []
+
+def pushTempsBlock() :
+    block = TempsBlock()
+    _tempsBlocks.append(block)
+
+def popTempsBlock(excepting=None) :
+    block = _tempsBlocks.pop()
+    block.cleanup(excepting)
+    if excepting is not None :
+        _tempsBlocks[-1].add(excepting)
 
 def tempRTValue(type_) :
-    llt = llvmType(type_)
-    ptr = llvmInitBuilder.alloca(llt)
-    value = RTValue(type_, ptr)
-    _tempRTValues.append(value)
-    return value
+    return _tempsBlocks[-1].newTemp(type_)
 
 
 
@@ -329,8 +361,14 @@ def rtMakeRecord(recType, argRefs) :
 def compile(expr, env, converter=(lambda x : x)) :
     try :
         contextPush(expr)
-        return converter(compile2(expr, env))
+        pushTempsBlock()
+        result = compile2(expr, env)
+        return converter(result)
     finally :
+        excepting = None
+        if isRTValue(result) :
+            excepting = result
+        popTempsBlock(excepting)
         contextPop()
 
 
@@ -1082,11 +1120,13 @@ def compileCode(name, code, env, bindings) :
         savedLLVMBuilder = llvmBuilder
         savedLLVMInitBuilder = llvmInitBuilder
         try :
+            pushTempsBlock()
             compiledCode = compileCode2(name, code, env, bindings)
             _compiledCodeTable[key] = compiledCode
         finally :
             llvmBuilder = savedLLVMBuilder
             llvmInitBuilder = savedLLVMInitBuilder
+            popTempsBlock()
     return compiledCode
 
 def compileCode2(name, code, env, bindings) :
