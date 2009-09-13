@@ -1216,7 +1216,7 @@ def foo(x, env, context) :
 def foo(x, env, context) :
     left = evaluate(x.left, env, toLValue)
     right = evaluate(x.right, env)
-    rightRef = convertObject(toReference, right, x.right)
+    rightRef = convertObject(toReferenceOfType(left.type), right, x.right)
     valueAssign(left, rightRef)
 
 @evalStatement2.register(Return)
