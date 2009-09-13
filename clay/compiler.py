@@ -160,7 +160,7 @@ def popTempsBlock(excepting=None) :
     return tempsDestroyed
 
 def addToTempsBlock(value) :
-    _tempsBlocks[1].add(value)
+    _tempsBlocks[-1].add(value)
 
 def tempRTValue(type_) :
     return _tempsBlocks[-1].newTemp(type_)
@@ -194,7 +194,7 @@ def foo(x) :
     else :
         error("unsupported type in toRTValue")
     temp = tempRTValue(x.type)
-    llvmBuilder.store(constValue, temp)
+    llvmBuilder.store(constValue, temp.llvmValue)
     return temp
 
 
@@ -740,9 +740,10 @@ def foo(x, args, env) :
     n = convertObject(toInt, cargs[0], args[0])
     v = convertObject(toRTReference, cargs[1], args[1])
     a = tempRTValue(arrayType(v.type, intToValue(n)))
+    zero = llvm.Constant.int(llvmType(intType), 0)
     for i in range(n) :
         offset = llvm.Constant.int(llvmType(intType), i)
-        element = llvmBuilder.gep(a.llvmValue, [offset])
+        element = llvmBuilder.gep(a.llvmValue, [zero, offset])
         elementRef = RTReference(v.type, element)
         rtValueCopy(elementRef, v)
     return a
@@ -755,7 +756,8 @@ def foo(x, args, env) :
     aRef = convertObject(converter, cargs[0], args[0])
     iRef = convertObject(toRTReferenceOfType(intType), cargs[1], args[1])
     i = llvmBuilder.load(iRef.llvmValue)
-    element = llvmBuilder.gep(aRef.llvmValue, [i])
+    zero = llvm.Constant.int(llvmType(intType), 0)
+    element = llvmBuilder.gep(aRef.llvmValue, [zero, i])
     return RTReference(aRef.type.params[0], element)
 
 
@@ -1179,18 +1181,18 @@ def compileCode(name, code, env, bindings) :
                 [p.type for p in bindings.params])
     compiledCode = _compiledCodeTable.get(key)
     if compiledCode is None :
-        global llvmBuilder, llvmInitBuilder
-        savedLLVMBuilder = llvmBuilder
-        savedLLVMInitBuilder = llvmInitBuilder
-        pushTempsBlock()
-        compiledCode = compileCode2(name, code, env, bindings)
+        compiledCode = compileCodeHeader(name, code, env, bindings)
         _compiledCodeTable[key] = compiledCode
-        llvmBuilder = savedLLVMBuilder
-        llvmInitBuilder = savedLLVMInitBuilder
-        popTempsBlock()
+        compileCodeBody(code, env, bindings, compiledCode)
     return compiledCode
 
-def compileCode2(name, code, env, bindings) :
+
+
+#
+# compileCodeHeader
+#
+
+def compileCodeHeader(name, code, env, bindings) :
     llvmArgTypes = []
     for param in bindings.params :
         llt = llvm.Type.pointer(llvmType(param.type))
@@ -1202,28 +1204,10 @@ def compileCode2(name, code, env, bindings) :
             llvmReturnType = llvm.Type.pointer(llvmReturnType)
         llvmArgTypes.append(llvm.Type.pointer(llvmReturnType))
     funcType = llvm.Type.function(llvm.Type.void(), llvmArgTypes)
-    func = llvmModule.add_function(funcType, name)
+    func = llvmModule.add_function(funcType, "clay_" + name)
     compiledCode.llvmFunc = func
     for i, var in enumerate(bindings.vars) :
         func.args[i].name = var.s
-    initBlock = func.append_basic_block("entry")
-    codeBlock = func.append_basic_block("code")
-    global llvmBuilder, llvmInitBuilder
-    llvmInitBuilder = llvm.Builder.new(initBlock)
-    llvmBuilder = llvm.Builder.new(codeBlock)
-    params = []
-    for i, p in enumerate(bindings.params) :
-        if isRTValue(p) :
-            p = RTValue(p.type, func.args[i])
-        elif isRTReference(p) :
-            p = RTReference(p.type, func.args[i])
-        else :
-            assert False, p
-        params.append(p)
-    env = extendEnv(env, bindings.typeVars + bindings.vars,
-                    bindings.typeParams, params)
-    compileCodeBody(code.body, env, compiledCode)
-    llvmInitBuilder.branch(codeBlock)
     return compiledCode
 
 def analyzeCodeToCompile(code, env, bindings) :
@@ -1263,13 +1247,35 @@ def bindingsForAnalysis(bindings) :
 # compileCodeBody
 #
 
-def compileCodeBody(x, env, compiledCode) :
+def compileCodeBody(code, env, bindings, compiledCode) :
+    func = compiledCode.llvmFunc
+    initBlock = func.append_basic_block("entry")
+    codeBlock = func.append_basic_block("code")
+    global llvmBuilder, llvmInitBuilder
+    savedLLVMBuilder = llvmBuilder
+    savedLLVMInitBuilder = llvmInitBuilder
+    llvmInitBuilder = llvm.Builder.new(initBlock)
+    llvmBuilder = llvm.Builder.new(codeBlock)
+    params = []
+    for i, p in enumerate(bindings.params) :
+        if isRTValue(p) :
+            p = RTValue(p.type, func.args[i])
+        elif isRTReference(p) :
+            p = RTReference(p.type, func.args[i])
+        else :
+            assert False, p
+        params.append(p)
+    env = extendEnv(env, bindings.typeVars + bindings.vars,
+                    bindings.typeParams + params)
     compiledCode.returnMarker = scopeStack.pushMarker()
-    isTerminated = compileStatement(x, env, compiledCode)
+    isTerminated = compileStatement(code.body, env, compiledCode)
     if not isTerminated :
-        llvmBuilder.ret()
+        llvmBuilder.ret_void()
     scopeStack.popUpto(compiledCode.returnMarker)
     compiledCode.returnMarker = None
+    llvmInitBuilder.branch(codeBlock)
+    llvmBuilder = savedLLVMBuilder
+    llvmInitBuilder = savedLLVMInitBuilder
 
 
 
@@ -1328,7 +1334,7 @@ def foo(x, env, compiledCode) :
     if isVoidType(retType) :
         ensure(x.expr is None, "void return expected")
         scopeStack.cleanUpto(compiledCode.returnMarker)
-        llvmBuilder.ret()
+        llvmBuilder.ret_void()
         return True
     ensure(x.expr is not None, "return value expected")
     pushTempsBlock()
@@ -1341,7 +1347,7 @@ def foo(x, env, compiledCode) :
         rtValueCopy(returnRef, result)
     popTempsBlock()
     scopeStack.cleanUpto(compiledCode.returnMarker)
-    llvmBuilder.ret()
+    llvmBuilder.ret_void()
     return True
 
 @compileStatement2.register(IfStatement)
@@ -1361,15 +1367,15 @@ def foo(x, env, compiledCode) :
     if not thenTerminated :
         if mergeBlock is None :
             mergeBlock = compiledCode.llvmFunc.append_basic_block("merge")
-            llvmBuilder.branch(mergeBlock)
+        llvmBuilder.branch(mergeBlock)
     elseTerminated = False
+    llvmBuilder.position_at_end(elseBlock)
     if x.elsePart is not None :
-        llvmBuilder.position_at_end(elseBlock)
         elseTerminated = compileStatement(x.elsePart, env, compiledCode)
     if not elseTerminated :
         if mergeBlock is None :
             mergeBlock = compiledCode.llvmFunc.append_basic_block("merge")
-            llvmBuilder.branch(mergeBlock)
+        llvmBuilder.branch(mergeBlock)
     if mergeBlock is not None :
         assert not (thenTerminated and elseTerminated)
         llvmBuilder.position_at_end(mergeBlock)
