@@ -2,3 +2,5 @@ syntax: regexp
 
 \.pyc$
 \.dylib$
+^test.exe$
+^test.s$
