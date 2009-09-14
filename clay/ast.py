@@ -4,8 +4,8 @@ __all__ = [
     "DoubleLiteral", "CharLiteral", "StringLiteral",
     "NameRef", "Tuple", "Indexing", "Call", "FieldRef", "TupleRef",
     "Dereference", "AddressOf", "StaticExpr",
-    "Statement", "Block", "Assignment", "LocalBinding", "Return",
-    "IfStatement", "ExprStatement",
+    "Statement", "Block", "Label", "LocalBinding", "Assignment",
+    "Goto", "Return", "IfStatement", "ExprStatement",
     "Code", "FormalArgument", "ValueArgument", "StaticArgument",
     "TopLevelItem", "Record", "Field", "Procedure", "Overloadable", "Overload",
     "Program"]
@@ -152,13 +152,11 @@ class Block(Statement) :
         checkList(statements, Statement)
         self.statements = statements
 
-class Assignment(Statement) :
-    def __init__(self, left, right) :
-        super(Assignment, self).__init__()
-        check(left, Expression)
-        check(right, Expression)
-        self.left = left
-        self.right = right
+class Label(Statement) :
+    def __init__(self, name) :
+        super(Label, self).__init__()
+        check(name, Identifier)
+        self.name = name
 
 class LocalBinding(Statement) :
     def __init__(self, name, type, expr) :
@@ -169,6 +167,20 @@ class LocalBinding(Statement) :
         self.name = name
         self.type = type
         self.expr = expr
+
+class Assignment(Statement) :
+    def __init__(self, left, right) :
+        super(Assignment, self).__init__()
+        check(left, Expression)
+        check(right, Expression)
+        self.left = left
+        self.right = right
+
+class Goto(Statement) :
+    def __init__(self, labelName) :
+        super(Goto, self).__init__()
+        check(labelName, Identifier)
+        self.labelName = labelName
 
 class Return(Statement) :
     def __init__(self, expr) :

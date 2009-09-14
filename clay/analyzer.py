@@ -753,6 +753,9 @@ def foo(x, env, context) :
                 converter = toRTValueOfType(declaredType)
             right = analyze(y.expr, env, converter)
             addIdent(env, y.name, right)
+        elif type(y) is Label :
+            # ignore labels during analysis
+            pass
         else :
             result = analyzeStatement(y, env, context)
             if result is not None :
@@ -761,6 +764,11 @@ def foo(x, env, context) :
 @analyzeStatement2.register(Assignment)
 def foo(x, env, context) :
     # nothing to do
+    pass
+
+@analyzeStatement2.register(Goto)
+def foo(x, env, context) :
+    # ignore goto during analysis
     pass
 
 @analyzeStatement2.register(Return)

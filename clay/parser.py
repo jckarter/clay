@@ -138,6 +138,22 @@ optTypeSpec = optional(typeSpec)
 
 statement2 = lambda input : statement(input)
 
+block = astNode(sequence(symbol("{"), zeroPlus(statement2), symbol("}")),
+                lambda x : Block(x[1]))
+
+labelDef = astNode(sequence(identifier, symbol(":")),
+                   lambda x : Label(x[0]))
+
+localBinding = astNode(sequence(keyword("var"), identifier, optTypeSpec,
+                                symbol("="), expression, semicolon),
+                       lambda x : LocalBinding(x[1],x[2],x[4]))
+
+assignment = astNode(sequence(expression, symbol("="), expression, semicolon),
+                     lambda x : Assignment(x[0], x[2]))
+
+gotoStatement = astNode(sequence(keyword("goto"), identifier, semicolon),
+                        lambda x : Goto(x[1]))
+
 returnStatement = astNode(sequence(keyword("return"), optExpression,
                                    semicolon),
                           lambda x : Return(x[1]))
@@ -149,20 +165,11 @@ ifStatement = astNode(sequence(keyword("if"), parenCondition,
                                statement2, optional(elsePart)),
                       lambda x : IfStatement(x[1],x[2],x[3]))
 
-assignment = astNode(sequence(expression, symbol("="), expression, semicolon),
-                     lambda x : Assignment(x[0], x[2]))
-localBinding = astNode(sequence(keyword("var"), identifier, optTypeSpec,
-                                symbol("="), expression, semicolon),
-                       lambda x : LocalBinding(x[1],x[2],x[4]))
-
-block = astNode(sequence(symbol("{"), zeroPlus(statement2), symbol("}")),
-                lambda x : Block(x[1]))
-
 exprStatement = astNode(sequence(expression, semicolon),
                         lambda x : ExprStatement(x[0]))
 
-statement = choice(block, localBinding, assignment, ifStatement,
-                   returnStatement, exprStatement)
+statement = choice(block, labelDef, localBinding, assignment, ifStatement,
+                   gotoStatement, returnStatement, exprStatement)
 
 
 #

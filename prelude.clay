@@ -406,9 +406,19 @@ def main1() {
     return (foo(), isEven(n), f, p);
 }
 
+def factorial2(n) {
+    var p = 1;
+    again :
+    if (equals(n, 0))
+        return p;
+    p = multiply(p, n);
+    n = subtract(n, 1);
+    goto again;
+}
+
 def main() {
     var n = 7;
     n = subtract(n, 1);
-    var f = factorial(n);
+    var f = factorial2(n);
     return f;
 }

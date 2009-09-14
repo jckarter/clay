@@ -1215,6 +1215,7 @@ class CompilerCodeContext(object) :
         self.returnType = compiledCode.returnType
         self.llvmFunc = compiledCode.llvmFunc
         self.scopeStack = []
+        self.labels = {}
 
     def pushValue(self, value) :
         assert isRTValue(value)
@@ -1245,6 +1246,23 @@ class CompilerCodeContext(object) :
             thing = self.scopeStack.pop()
             if thing is marker :
                 break
+
+    def addLabel(self, name, marker) :
+        if name.s in self.labels :
+            withContext(name, lambda : error("label redefinition"))
+        llvmBlock = self.llvmFunc.append_basic_block(name.s)
+        self.labels[name.s] = (llvmBlock, marker)
+
+    def lookupLabel(self, name) :
+        result = self.labels.get(name.s)
+        if result is None :
+            withContext(name, lambda : error("label not found"))
+        llvmBlock, marker = result
+        return llvmBlock, marker
+
+    def lookupLabelBlock(self, name) :
+        llvmBlock, _ = self.lookupLabel(name)
+        return llvmBlock
 
 
 
@@ -1304,11 +1322,17 @@ compileStatement2 = multimethod(errorMessage="invalid statement")
 def foo(x, env, codeContext) :
     env = Environment(env)
     blockMarker = codeContext.pushMarker()
+    marker = blockMarker
+    compilerCollectLabels(x.statements, 0, marker, codeContext)
     isTerminated = False
-    for y in x.statements :
-        if isTerminated :
+    for i, y in enumerate(x.statements) :
+        if type(y) is Label :
+            labelBlock = codeContext.lookupLabelBlock(y.name)
+            llvmBuilder.branch(labelBlock)
+            llvmBuilder.position_at_end(labelBlock)
+        elif isTerminated :
             withContext(y, lambda : error("unreachable code"))
-        if type(y) is LocalBinding :
+        elif type(y) is LocalBinding :
             converter = toRTValue
             if y.type is not None :
                 declaredType = compile(y.type, env, toType)
@@ -1316,12 +1340,23 @@ def foo(x, env, codeContext) :
             right = compileRootValueExpr(y.expr, env, converter)
             codeContext.pushValue(right)
             addIdent(env, y.name, right)
+            marker = codeContext.pushMarker()
+            compilerCollectLabels(x.statements, i+1, marker, codeContext)
         else :
             isTerminated = compileStatement(y, env, codeContext)
     if not isTerminated :
         codeContext.cleanUpto(blockMarker)
     codeContext.popUpto(blockMarker)
     return isTerminated
+
+def compilerCollectLabels(statements, i, marker, codeContext) :
+    while i < len(statements) :
+        stmt = statements[i]
+        if type(stmt) is Label :
+            codeContext.addLabel(stmt.name, marker)
+        elif type(stmt) is LocalBinding :
+            break
+        i += 1
 
 @compileStatement2.register(Assignment)
 def foo(x, env, codeContext) :
@@ -1331,6 +1366,13 @@ def foo(x, env, codeContext) :
     rtValueAssign(left, right)
     popTempsBlock()
     return False
+
+@compileStatement2.register(Goto)
+def foo(x, env, codeContext) :
+    llvmBlock, marker = codeContext.lookupLabel(x.labelName)
+    codeContext.cleanUpto(marker)
+    llvmBuilder.branch(llvmBlock)
+    return True
 
 @compileStatement2.register(Return)
 def foo(x, env, codeContext) :

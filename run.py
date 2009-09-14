@@ -21,8 +21,6 @@ def testAnalyzeEval() :
         xprint(result)
         result = evaluate(mainCall, env)
         xprint(result)
-        llt = compiler.llvmType(result.type)
-        print "llvm type =", llt
     except CompilerError, e :
         e.display()
         raise

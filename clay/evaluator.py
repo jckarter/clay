@@ -1167,6 +1167,8 @@ def evalInvoke(code, env, bindings) :
         returnType = evaluate(code.returnType, env, toType)
     context = CodeContext(code.returnByRef, returnType)
     result = evalStatement(code.body, env, context)
+    if type(result) is Goto :
+        withContext(result.labelName, lambda : error("label not found"))
     if result is None :
         if returnType is not None :
             ensure(equals(returnType, voidType),
@@ -1198,19 +1200,43 @@ evalStatement2 = multimethod(errorMessage="invalid statement")
 
 @evalStatement2.register(Block)
 def foo(x, env, context) :
-    env = Environment(env)
-    for statement in x.statements :
+    i = 0
+    labels = {}
+    evalCollectLabels(x.statements, i, labels, env)
+    while i < len(x.statements) :
+        statement = x.statements[i]
         if type(statement) is LocalBinding :
             converter = toValue
             if statement.type is not None :
                 declaredType = evaluate(statement.type, env, toType)
                 converter = toValueOfType(declaredType)
             right = evaluate(statement.expr, env, converter)
-            addIdent(env, statement.name, right)
+            env = extendEnv(env, [statement.name], [right])
+            evalCollectLabels(x.statements, i+1, labels, env)
+        elif type(statement) is Label :
+            pass
         else :
             result = evalStatement(statement, env, context)
+            if type(result) is Goto :
+                envAndPos = labels.get(result.labelName.s)
+                if envAndPos is None :
+                    return result
+                else :
+                    env, i = envAndPos
+                    continue
             if result is not None :
                 return result
+        i += 1
+
+def evalCollectLabels(statements, startIndex, labels, env) :
+    i = startIndex
+    while i < len(statements) :
+        stmt = statements[i]
+        if type(stmt) is Label :
+            labels[stmt.name.s] = (env, i)
+        elif type(stmt) is LocalBinding :
+            break
+        i += 1
 
 @evalStatement2.register(Assignment)
 def foo(x, env, context) :
@@ -1218,6 +1244,10 @@ def foo(x, env, context) :
     right = evaluate(x.right, env)
     rightRef = convertObject(toReferenceOfType(left.type), right, x.right)
     valueAssign(left, rightRef)
+
+@evalStatement2.register(Goto)
+def foo(x, env, context) :
+    return x
 
 @evalStatement2.register(Return)
 def foo(x, env, context) :

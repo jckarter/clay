@@ -3,17 +3,17 @@ Program -> TopLevelItem* ;
 TopLevelItem -> RecordDef | GlobalVarDef | ProcedureDef
               | OverloadableDef | OverloadDef ;
 
-RecordDef -> "record" Name TypeVars? "{" FieldDef+ "}" ;
-FieldDef -> Name TypeSpec ";" ;
+RecordDef -> "record" Identifier TypeVars? "{" FieldDef+ "}" ;
+FieldDef -> Identifier TypeSpec ";" ;
 
-TypeVars -> "[" comma_list(Name) "]" ;
+TypeVars -> "[" comma_list(Identifier) "]" ;
 TypeSpec -> ":" TypeExpr ;
 
 GlobalVarDef -> "var" Variable "=" Expression ";" ;
 
-Variable -> Name TypeSpec? ;
+Variable -> Identifier TypeSpec? ;
 
-ProcedureDef -> "def" Name Procedure ;
+ProcedureDef -> "def" Identifier Procedure ;
 
 Procedure -> TypeVars? "(" comma_list(Argument)? ")"
              "ref"? TypeSpec? TypeConditions? Block;
@@ -23,28 +23,34 @@ Argument -> "ref"? Variable
           ;
 
 TypeConditions -> "if" comma_list(TypeCondition) ;
-TypeCondition -> Name "(" comma_list(TypeExpr) ")" ;
+TypeCondition -> Identifier "(" comma_list(TypeExpr) ")" ;
 
-OverloadableDef -> "overloadable" Name ";" ;
+OverloadableDef -> "overloadable" Identifier ";" ;
 
-OverloadDef -> "overload" Name Procedure ;
+OverloadDef -> "overload" Identifier Procedure ;
 
 Block -> "{" Statement+ "}" ;
 
 Statement -> Block
-           | LocalVarDef
+           | LabelDef
+           | LocalBinding
            | Assignment
            | IfStatement
+           | GotoStatement
            | ReturnStatement
            | Expression
            ;
 
-LocalVarDef -> "var" Variable "=" Expression ";" ;
+LabelDef -> Identifier ":" ;
+
+LocalBinding -> "var" Variable "=" Expression ";" ;
 
 Assignment -> Expression "=" Expression ";" ;
 
 IfStatement -> "if" "(" Expression ")" Statement
                ("else" Statement)? ;
+
+GotoStatement -> "goto" Identifier ";" ;
 
 ReturnStatement -> "return" Expression? ";" ;
 
@@ -69,7 +75,7 @@ Suffix -> IndexSuffix
         ;
 IndexSuffix -> "[" comma_list(Expression) "]" ;
 CallSuffix -> "(" comma_list(Expression) ")" ;
-FieldRefSuffix -> "." Name ;
+FieldRefSuffix -> "." Identifier ;
 TupleRefSuffix -> "." IntLiteral ;
 DereferenceSuffix -> "^" ;
 
@@ -82,7 +88,7 @@ AtomicExpr -> ArrayExpr
 ArrayExpr -> "[" comma_list(Expression) "]" ;
 TupleExpr -> "(" comma_list(Expression) ")" ;
 
-NameRef -> Name ;
+NameRef -> Identifier ;
 
 Literal -> BoolLiteral
          | IntLiteral
