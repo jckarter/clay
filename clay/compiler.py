@@ -1216,6 +1216,8 @@ class CompilerCodeContext(object) :
         self.llvmFunc = compiledCode.llvmFunc
         self.scopeStack = []
         self.labels = {}
+        self.breakInfo = []
+        self.continueInfo = []
 
     def pushValue(self, value) :
         assert isRTValue(value)
@@ -1263,6 +1265,27 @@ class CompilerCodeContext(object) :
     def lookupLabelBlock(self, name) :
         llvmBlock, _ = self.lookupLabel(name)
         return llvmBlock
+
+    def pushLoopInfo(self, breakBlock, breakMarker,
+                    continueBlock, continueMarker) :
+        self.breakInfo.append((breakBlock, breakMarker))
+        self.continueInfo.append((continueBlock, continueMarker))
+
+    def popLoopInfo(self) :
+        self.breakInfo.pop()
+        self.continueInfo.pop()
+
+    def lookupBreak(self) :
+        if not self.breakInfo :
+            error("invalid break statement")
+        llvmBlock, marker = self.breakInfo[-1]
+        return llvmBlock, marker
+
+    def lookupContinue(self) :
+        if not self.continueInfo :
+            error("invalid continue statement")
+        llvmBlock, marker = self.continueInfo[-1]
+        return llvmBlock, marker
 
 
 
@@ -1435,6 +1458,45 @@ def foo(x, env, codeContext) :
     compile(x.expr, env)
     popTempsBlock()
     return False
+
+@compileStatement2.register(While)
+def foo(x, env, codeContext) :
+    condBlock = codeContext.llvmFunc.append_basic_block("while")
+    bodyBlock = codeContext.llvmFunc.append_basic_block("body")
+    exitBlock = codeContext.llvmFunc.append_basic_block("exit")
+    marker = codeContext.pushMarker()
+    codeContext.pushLoopInfo(exitBlock, marker, condBlock, marker)
+    llvmBuilder.branch(condBlock)
+    llvmBuilder.position_at_end(condBlock)
+    pushTempsBlock()
+    condRef = compile(x.condition, env, toRTReferenceOfType(boolType))
+    cond = llvmBuilder.load(condRef.llvmValue)
+    zero = llvm.Constant.int(llvmType(boolType), 0)
+    condResult = llvmBuilder.icmp(llvm.ICMP_NE, cond, zero)
+    popTempsBlock()
+    llvmBuilder.cbranch(condResult, bodyBlock, exitBlock)
+    llvmBuilder.position_at_end(bodyBlock)
+    bodyTerminated = compileStatement(x.body, env, codeContext)
+    if not bodyTerminated :
+        llvmBuilder.branch(condBlock)
+    llvmBuilder.position_at_end(exitBlock)
+    codeContext.popLoopInfo()
+    codeContext.popUpto(marker)
+    return False
+
+@compileStatement2.register(Break)
+def foo(x, env, codeContext) :
+    llvmBlock, marker = codeContext.lookupBreak()
+    codeContext.cleanUpto(marker)
+    llvmBuilder.branch(llvmBlock)
+    return True
+
+@compileStatement2.register(Continue)
+def foo(x, env, codeContext) :
+    llvmBlock, marker = codeContext.lookupContinue()
+    codeContext.cleanUpto(marker)
+    llvmBuilder.branch(llvmBlock)
+    return True
 
 
 

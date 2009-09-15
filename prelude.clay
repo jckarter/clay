@@ -416,9 +416,19 @@ def factorial2(n) {
     goto again;
 }
 
+def factorial3(n) {
+    var p = 1;
+    while (true) {
+        if (equals(n, 0)) break;
+        p = multiply(p, n);
+        n = subtract(n, 1);
+    }
+    return p;
+}
+
 def main() {
     var n = 7;
     n = subtract(n, 1);
-    var f = factorial2(n);
+    var f = factorial3(n);
     return f;
 }

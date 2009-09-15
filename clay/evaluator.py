@@ -1169,6 +1169,10 @@ def evalInvoke(code, env, bindings) :
     result = evalStatement(code.body, env, context)
     if type(result) is Goto :
         withContext(result.labelName, lambda : error("label not found"))
+    if type(result) is Break :
+        withContext(result, lambda : error("invalid break statement"))
+    if type(result) is Continue :
+        withContext(result, lambda : error("invalid continue statement"))
     if result is None :
         if returnType is not None :
             ensure(equals(returnType, voidType),
@@ -1277,6 +1281,28 @@ def foo(x, env, context) :
 @evalStatement2.register(ExprStatement)
 def foo(x, env, context) :
     evaluate(x.expr, env)
+
+@evalStatement2.register(While)
+def foo(x, env, context) :
+    while True :
+        cond = evaluate(x.condition, env, toBool)
+        if not cond :
+            break
+        result = evalStatement(x.body, env, context)
+        if type(result) is Break :
+            break
+        if type(result) is Continue :
+            continue
+        if result is not None :
+            return result
+
+@evalStatement2.register(Break)
+def foo(x, env, context) :
+    return x
+
+@evalStatement2.register(Continue)
+def foo(x, env, context) :
+    return x
 
 
 

@@ -39,6 +39,9 @@ Statement -> Block
            | GotoStatement
            | ReturnStatement
            | Expression
+           | WhileStatement
+           | BreakStatement
+           | ContinueStatement
            ;
 
 LabelDef -> Identifier ":" ;

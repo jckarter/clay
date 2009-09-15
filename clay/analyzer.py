@@ -782,7 +782,6 @@ def foo(x, env, context) :
 @analyzeStatement2.register(IfStatement)
 def foo(x, env, context) :
     analyze(x.condition, env, toRTValueOfType(boolType))
-    result = None
     failed = 0
     try :
         result = analyzeStatement(x.thenPart, env, context)
@@ -804,6 +803,26 @@ def foo(x, env, context) :
 @analyzeStatement2.register(ExprStatement)
 def foo(x, env, context) :
     # nothing to do
+    pass
+
+@analyzeStatement2.register(While)
+def foo(x, env, context) :
+    analyze(x.condition, env, toRTValueOfType(boolType))
+    try :
+        result = analyzeStatement(x.body, env, context)
+        if result is not None :
+            return result
+    except RecursiveAnalysisError :
+        pass
+
+@analyzeStatement2.register(Break)
+def foo(x, env, context) :
+    # ignore break during analysis
+    pass
+
+@analyzeStatement2.register(Continue)
+def foo(x, env, context) :
+    # ignore continue during analysis
     pass
 
 

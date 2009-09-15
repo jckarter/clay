@@ -50,6 +50,9 @@ r(IfStatement, lambda x : xo("IfStatement", x.condition,
                              xf("then", x.thenPart),
                              xf("else", x.elsePart)))
 r(ExprStatement, lambda x : xo("ExprStatement", x.expr))
+r(While, lambda x : xo("While", x.condition, x.body))
+r(Break, lambda x : xo("Break"))
+r(Continue, lambda x : xo("Continue"))
 
 
 

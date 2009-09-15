@@ -168,8 +168,18 @@ ifStatement = astNode(sequence(keyword("if"), parenCondition,
 exprStatement = astNode(sequence(expression, semicolon),
                         lambda x : ExprStatement(x[0]))
 
+whileStatement = astNode(sequence(keyword("while"), parenCondition,
+                                  statement2),
+                         lambda x : While(x[1], x[2]))
+
+breakStatement = astNode(sequence(keyword("break"), semicolon),
+                         lambda x : Break())
+continueStatement = astNode(sequence(keyword("continue"), semicolon),
+                            lambda x : Continue())
+
 statement = choice(block, labelDef, localBinding, assignment, ifStatement,
-                   gotoStatement, returnStatement, exprStatement)
+                   gotoStatement, returnStatement, exprStatement,
+                   whileStatement, breakStatement, continueStatement)
 
 
 #

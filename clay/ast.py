@@ -6,6 +6,7 @@ __all__ = [
     "Dereference", "AddressOf", "StaticExpr",
     "Statement", "Block", "Label", "LocalBinding", "Assignment",
     "Goto", "Return", "IfStatement", "ExprStatement",
+    "While", "Break", "Continue",
     "Code", "FormalArgument", "ValueArgument", "StaticArgument",
     "TopLevelItem", "Record", "Field", "Procedure", "Overloadable", "Overload",
     "Program"]
@@ -203,6 +204,22 @@ class ExprStatement(Statement) :
         super(ExprStatement, self).__init__()
         check(expr, Expression)
         self.expr = expr
+
+class While(Statement) :
+    def __init__(self, condition, body) :
+        super(While, self).__init__()
+        check(condition, Expression)
+        check(body, Statement)
+        self.condition = condition
+        self.body = body
+
+class Break(Statement) :
+    def __init__(self) :
+        super(Break, self).__init__()
+
+class Continue(Statement) :
+    def __init__(self) :
+        super(Continue, self).__init__()
 
 
 

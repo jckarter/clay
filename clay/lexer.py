@@ -76,7 +76,7 @@ symbol = token(regexParser(re.compile(symbolsRegex())),
 
 keywordList = ("predicate instance record var def " +
                "overloadable overload static ref " +
-               "if else goto return " +
+               "if else while break continue goto return " +
                "true false").split()
 keywordSet = set(keywordList)
 
