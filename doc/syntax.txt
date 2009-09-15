@@ -57,6 +57,10 @@ GotoStatement -> "goto" Identifier ";" ;
 
 ReturnStatement -> "return" Expression? ";" ;
 
+WhileStatement -> "while" "(" Expression ")" Statement ;
+BreakStatement -> "break" ";" ;
+ContinueStatement -> "continue" ";" ;
+
 TypeExpr -> Expression ;
 
 Expression -> StaticExpr
