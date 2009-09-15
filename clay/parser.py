@@ -177,9 +177,15 @@ breakStatement = astNode(sequence(keyword("break"), semicolon),
 continueStatement = astNode(sequence(keyword("continue"), semicolon),
                             lambda x : Continue())
 
+forStatement = astNode(sequence(keyword("for"), symbol("("), keyword("var"),
+                                identifier, optTypeSpec, keyword("in"),
+                                expression, symbol(")"), statement2),
+                       lambda x : For(x[3], x[4], x[6], x[8]))
+
 statement = choice(block, labelDef, localBinding, assignment, ifStatement,
                    gotoStatement, returnStatement, exprStatement,
-                   whileStatement, breakStatement, continueStatement)
+                   whileStatement, breakStatement, continueStatement,
+                   forStatement)
 
 
 #

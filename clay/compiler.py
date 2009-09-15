@@ -1498,6 +1498,10 @@ def foo(x, env, codeContext) :
     llvmBuilder.branch(llvmBlock)
     return True
 
+@compileStatement2.register(For)
+def foo(x, env, codeContext) :
+    return compileStatement(convertForStatement(x), env, codeContext)
+
 
 
 #

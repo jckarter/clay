@@ -1304,6 +1304,29 @@ def foo(x, env, context) :
 def foo(x, env, context) :
     return x
 
+@evalStatement2.register(For)
+def foo(x, env, context) :
+    return evalStatement(convertForStatement(x), env, context)
+
+
+
+#
+# expand for statement to use while
+#
+
+def convertForStatement(x) :
+    iteratorVar = Identifier("%iter")
+    block = Block(
+        [LocalBinding(iteratorVar, None,
+                      Call(NameRef(Identifier("iterator")), [x.expr])),
+         While(Call(NameRef(Identifier("hasNext")),
+                    [NameRef(iteratorVar)]),
+               Block([LocalBinding(x.variable, x.type,
+                                   Call(NameRef(Identifier("next")),
+                                        [NameRef(iteratorVar)])),
+                      x.body]))])
+    return block
+
 
 
 #

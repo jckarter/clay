@@ -53,6 +53,7 @@ r(ExprStatement, lambda x : xo("ExprStatement", x.expr))
 r(While, lambda x : xo("While", x.condition, x.body))
 r(Break, lambda x : xo("Break"))
 r(Continue, lambda x : xo("Continue"))
+r(For, lambda x : xo("For", x.variable, x.type, x.expr, x.body))
 
 
 

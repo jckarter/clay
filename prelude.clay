@@ -426,9 +426,39 @@ def factorial3(n) {
     return p;
 }
 
+record Range[I] {
+    first: I;
+    last: I;
+}
+
+def iterator(ref x) ref {
+    return x;
+}
+
+def hasNext(ref a:Range[Int]) {
+    return lesser(a.first, a.last);
+}
+
+def next(ref a:Range[Int]) {
+    var x = a.first;
+    a.first = add(x, 1);
+    return x;
+}
+
+def range(n) {
+    return Range(0, n);
+}
+
+def factorial4(n) {
+    var p = 1;
+    for (var i in range(n))
+        p = multiply(p, add(i, 1));
+    return p;
+}
+
 def main() {
     var n = 7;
     n = subtract(n, 1);
-    var f = factorial3(n);
+    var f = factorial4(n);
     return f;
 }

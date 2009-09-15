@@ -825,6 +825,10 @@ def foo(x, env, context) :
     # ignore continue during analysis
     pass
 
+@analyzeStatement2.register(For)
+def foo(x, env, context) :
+    return analyzeStatement(convertForStatement(x), env, context)
+
 
 
 #

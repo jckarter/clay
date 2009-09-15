@@ -42,6 +42,7 @@ Statement -> Block
            | WhileStatement
            | BreakStatement
            | ContinueStatement
+           | ForStatement
            ;
 
 LabelDef -> Identifier ":" ;
@@ -62,6 +63,8 @@ ExpressionStatement -> Expression ";" ;
 WhileStatement -> "while" "(" Expression ")" Statement ;
 BreakStatement -> "break" ";" ;
 ContinueStatement -> "continue" ";" ;
+
+ForStatement -> "for" "(" "var" Identifier "in" Expression ")" Statement ;
 
 TypeExpr -> Expression ;
 

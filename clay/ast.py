@@ -6,7 +6,7 @@ __all__ = [
     "Dereference", "AddressOf", "StaticExpr",
     "Statement", "Block", "Label", "LocalBinding", "Assignment",
     "Goto", "Return", "IfStatement", "ExprStatement",
-    "While", "Break", "Continue",
+    "While", "Break", "Continue", "For",
     "Code", "FormalArgument", "ValueArgument", "StaticArgument",
     "TopLevelItem", "Record", "Field", "Procedure", "Overloadable", "Overload",
     "Program"]
@@ -220,6 +220,18 @@ class Break(Statement) :
 class Continue(Statement) :
     def __init__(self) :
         super(Continue, self).__init__()
+
+class For(Statement) :
+    def __init__(self, variable, type, expr, body) :
+        super(For, self).__init__()
+        check(variable, Identifier)
+        check2(type, Expression)
+        check(expr, Expression)
+        check(body, Statement)
+        self.variable = variable
+        self.type = type
+        self.expr = expr
+        self.body = body
 
 
 
