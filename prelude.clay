@@ -176,67 +176,63 @@ def null[T](static T) {
 //
 
 overload init[T,n](ref a:Array[T,n]) {
-    initArray(a, 0);
-}
-
-def initArray[T,n](ref a:Array[T,n], i:Int) {
-    if (equals(i, n)) return;
-    init(arrayRef(a, i));
-    initArray(a, add(i, 1));
+    var i = 0;
+    while (lesser(i, n)) {
+        init(arrayRef(a, i));
+        i = add(i, 1);
+    }
 }
 
 overload copy[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
-    copyArray(dest, src, 0);
-}
-
-def copyArray[T,n](ref dest:Array[T,n], ref src:Array[T,n], i:Int) {
-    if (equals(i, n)) return;
-    copy(arrayRef(dest, i), arrayRef(src, i));
-    copyArray(dest, src, add(i, 1));
+    var i = 0;
+    while (lesser(i, n)) {
+        copy(arrayRef(dest, i), arrayRef(src, i));
+        i = add(i, 1);
+    }
 }
 
 overload destroy[T,n](ref a:Array[T,n]) {
-    destroyArray(a, 0);
-}
-
-def destroyArray[T,n](ref a:Array[T,n], i:Int) {
-    if (equals(i, n)) return;
-    destroy(arrayRef(a, i));
-    destroyArray(a, add(i, 1));
+    var i = 0;
+    while (lesser(i, n)) {
+        destroy(arrayRef(a, i));
+        i = add(i, 1);
+    }
 }
 
 overload equals[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
-    return arrayEquals(a, b, 0);
-}
-
-def arrayEquals[T,n](ref a:Array[T,n], ref b:Array[T,n], i:Int) {
-    if (equals(i, n)) return true;
-    if (notEquals(arrayRef(a, i), arrayRef(b, i)))
-        return false;
-    return arrayRef(a, b, add(i, 1));
+    var i = 0;
+    while (lesser(i, n)) {
+        if (notEquals(arrayRef(a, i), arrayRef(b, i)))
+            return false;
+        i = add(i, 1);
+    }
+    return true;
 }
 
 overload lesser[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
-    return arrayLesser(a, b, 0);
-}
-
-def arrayLesser[T,n](ref a:Array[T,n], ref b:Array[T,n], i:Int) {
-    if (equals(i, n)) return false;
-    if (lesser(arrayRef(a, i), arrayRef(b, i)))
-        return true;
-    if (lesser(arrayRef(b, i), arrayRef(a, i)))
-        return false;
-    return arrayLesser(a, b, add(i, 1));
+    var i = 0;
+    while (lesser(i, n)) {
+        if (lesser(arrayRef(a, i), arrayRef(b, i)))
+            return true;
+        if (lesser(arrayRef(b, i), arrayRef(a, i)))
+            return false;
+        i = add(i, 1);
+    }
+    return false;
 }
 
 overload hash[T,n](ref a:Array[T,n]) {
-    return arrayHash(a, 0);
+    var h = 0;
+    var i = 0;
+    while (lesser(i, n)) {
+        h = add(h, hash(arrayRef(a, i)));
+        i = add(i, 1);
+    }
+    return h;
 }
 
-def arrayHash[T,n](ref a:Array[T,n], i:Int) {
-    if (equals(i, n)) return 0;
-    var curH = hash(arrayRef(a, i));
-    return add(curH, arrayHash(a, add(i, 1)));
+def arraySize[T,n](ref a:Array[T,n]) {
+    return n;
 }
 
 
