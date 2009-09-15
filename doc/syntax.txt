@@ -38,7 +38,7 @@ Statement -> Block
            | IfStatement
            | GotoStatement
            | ReturnStatement
-           | Expression
+           | ExpressionStatement
            | WhileStatement
            | BreakStatement
            | ContinueStatement
@@ -56,6 +56,8 @@ IfStatement -> "if" "(" Expression ")" Statement
 GotoStatement -> "goto" Identifier ";" ;
 
 ReturnStatement -> "return" Expression? ";" ;
+
+ExpressionStatement -> Expression ";" ;
 
 WhileStatement -> "while" "(" Expression ")" Statement ;
 BreakStatement -> "break" ";" ;
