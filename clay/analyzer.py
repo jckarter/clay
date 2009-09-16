@@ -413,9 +413,9 @@ def foo(x, args, env) :
 @analyzeCall.register(primitives.array)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    n = analyze(args[0], env, toInt)
-    v = analyze(args[1], env, toRTReference)
-    return RTValue(arrayType(v.type, intToValue(n)))
+    elementType = analyze(args[0], env, toType)
+    n = analyze(args[1], env, toInt)
+    return RTValue(arrayType(elementType, intToValue(n)))
 
 @analyzeCall.register(primitives.arrayRef)
 def foo(x, args, env) :

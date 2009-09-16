@@ -737,16 +737,11 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 2)
     cargs = [compile(y, env) for y in args]
-    n = convertObject(toInt, cargs[0], args[0])
-    v = convertObject(toRTReference, cargs[1], args[1])
-    a = tempRTValue(arrayType(v.type, intToValue(n)))
-    zero = llvm.Constant.int(llvmType(intType), 0)
-    for i in range(n) :
-        offset = llvm.Constant.int(llvmType(intType), i)
-        element = llvmBuilder.gep(a.llvmValue, [zero, offset])
-        elementRef = RTReference(v.type, element)
-        rtValueCopy(elementRef, v)
-    return a
+    elementType = convertObject(toType, cargs[0], args[0])
+    n = convertObject(toInt, cargs[1], args[1])
+    a = tempRTValue(arrayType(elementType, intToValue(n)))
+    rtValueInit(a);
+    return a;
 
 @compileCall.register(primitives.arrayRef)
 def foo(x, args, env) :

@@ -287,15 +287,6 @@ def arrayRef(a, i) :
     elementType = cell.param
     return Reference(elementType, a.address + i*typeSize(elementType))
 
-def makeArray(n, defaultElement) :
-    assert isReference(defaultElement)
-    value = Value(arrayType(defaultElement.type, intToValue(n)))
-    valueRef = toReference(value)
-    for i in range(n) :
-        elementRef = arrayRef(valueRef, i)
-        valueCopy(elementRef, defaultElement)
-    return value
-
 def tupleFieldRef(a, i) :
     assert isReference(a) and isTupleType(a.type)
     ensure((0 <= i < len(a.type.params)), "tuple index out of range")
@@ -812,9 +803,11 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 2)
     eargs = [evaluate(y, env) for y in args]
-    n = convertObject(toInt, eargs[0], args[0])
-    v = convertObject(toReference, eargs[1], args[1])
-    return makeArray(n, v)
+    elementType = convertObject(toType, eargs[0], args[0])
+    n = convertObject(toInt, eargs[1], args[1])
+    a = Value(arrayType(elementType, intToValue(n)))
+    valueInit(a)
+    return a
 
 @evaluateCall.register(primitives.arrayRef)
 def foo(x, args, env) :
