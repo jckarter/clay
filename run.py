@@ -26,7 +26,13 @@ def testAnalyzeEval() :
         raise
 
 def process() :
+    if len(sys.argv) < 2 :
+        print "usage: clayc input.clay [output.ll]"
     fileName = sys.argv[1]
+    if len(sys.argv) == 3 :
+        outputFileName = sys.argv[2]
+    else :
+        outputFileName = None
     data = file(fileName).read()
     try :
         program = parse(data, fileName)
@@ -36,10 +42,14 @@ def process() :
             error("'main' is not a procedure")
         bindings = InvokeBindings([], [], [], [])
         compiler.compileCode("main", mainProc.code, mainProc.env, bindings)
-        print str(compiler.llvmModule)
+        output = str(compiler.llvmModule)
+        if outputFileName is None :
+            print output
+        else :
+            f = file(outputFileName, "w")
+            f.write(output)
     except CompilerError, e :
         e.display()
-        raise
 
 def main() :
     try :
