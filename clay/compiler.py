@@ -94,6 +94,14 @@ llvmModule = llvm.Module.new("clay_code")
 llvmInitBuilder = None
 llvmBuilder = None
 
+def _cleanLLVMGlobals() :
+    global llvmModule, llvmInitBuilder, llvmBuilder
+    llvmModule = None
+    llvmInitBuilder = None
+    llvmBuilder = None
+
+installGlobalsCleanupHook(_cleanLLVMGlobals)
+
 
 
 #
