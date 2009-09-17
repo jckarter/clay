@@ -2,8 +2,3 @@ syntax: regexp
 
 \.pyc$
 \.dylib$
-^test.ll$
-^test.bc$
-^test-opt.bc$
-^test.c$
-^test.exe$

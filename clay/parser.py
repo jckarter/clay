@@ -256,7 +256,7 @@ exports = zeroPlus(exportSpec)
 # module
 #
 
-module = astNode(sequence(imports, exports, onePlus(topLevelItem)),
+module = astNode(sequence(imports, exports, zeroPlus(topLevelItem)),
                  lambda x : Module(x[0], x[1], x[2]))
 
 

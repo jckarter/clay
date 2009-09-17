@@ -1,0 +1,42 @@
+import base;
+
+def insertionSort(ref a) {
+    var i = 1;
+    while (lesser(i, arraySize(a))) {
+        var x = arrayRef(a, i);
+        var j = i;
+        while (greater(arrayRef(a, subtract(j, 1)), x)) {
+            arrayRef(a, j) = arrayRef(a, subtract(j, 1));
+            j = subtract(j, 1);
+            if (equals(j, 0)) break;
+        }
+        arrayRef(a, j) = x;
+        i = add(i, 1);
+    }
+}
+
+def swap(ref a, ref b) {
+    var temp = a;
+    a = b;
+    b = temp;
+}
+
+def reverse(ref a) {
+    var n = arraySize(a);
+    for (var i in range(divide(n, 2))) {
+        var j = subtract(subtract(n, i), 1);
+        swap(arrayRef(a, i), arrayRef(a, j));
+    }
+}
+
+def main() {
+    var a = array(Int, 1000);
+    var n = arraySize(a);
+    for (var i in range(n))
+        arrayRef(a, i) = multiply(i, 2);
+    for (var i in range(100)) {
+        insertionSort(a);
+        reverse(a);
+    }
+    return arrayRef(a, 0);
+}

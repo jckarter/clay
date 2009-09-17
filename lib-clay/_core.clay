@@ -361,143 +361,32 @@ overload hashFields[T, i](ref a:T, static i)
 
 
 //
-// testing code
+// Iterators
 //
 
-def factorial(n) {
-    if (equals(n, 0))
-        return 1;
-    return multiply(n, factorial(subtract(n, 1)));
-}
-
-def isEven(n) {
-    if (lesser(n, 2))
-        return equals(n, 0);
-    return isOdd(subtract(n, 1));
-}
-
-def isOdd(n) {
-    if (lesser(n, 2))
-        return equals(n, 1);
-    return isEven(subtract(n, 1));
-}
-
-def foo() {
-    return array(10, 10);
-}
-
-record NodeA[T] {
-    value: T;
-    next: Pointer[NodeB[T]];
-}
-
-record NodeB[T] {
-    ptr: Pointer[T];
-    next: Pointer[NodeA[T]];
-}
-
-def main1() {
-    var n = 7;
-    n = subtract(n, 1);
-    var f = factorial(n);
-    var p = default(NodeA[(Int,Bool)]);
-    return (foo(), isEven(n), f, p);
-}
-
-def factorial2(n) {
-    var p = 1;
-    again :
-    if (equals(n, 0))
-        return p;
-    p = multiply(p, n);
-    n = subtract(n, 1);
-    goto again;
-}
-
-def factorial3(n) {
-    var p = 1;
-    while (true) {
-        if (equals(n, 0)) break;
-        p = multiply(p, n);
-        n = subtract(n, 1);
-    }
-    return p;
-}
+overloadable iterator;
+overloadable hasNext;
+overloadable next;
 
 record Range[I] {
     first: I;
     last: I;
 }
 
-def iterator(ref x) {
-    return x;
-}
-
-def hasNext(ref a:Range[Int]) {
-    return lesser(a.first, a.last);
-}
-
-def next(ref a:Range[Int]) {
-    var x = a.first;
-    a.first = add(x, 1);
-    return x;
-}
-
 def range(n) {
     return Range(0, n);
 }
 
-def factorial4(n) {
-    var p = 1;
-    for (var i in range(n))
-        p = multiply(p, add(i, 1));
-    return p;
+overload iterator[I](ref r:Range[I]) {
+    return r;
 }
 
-def main2() {
-    var n = 7;
-    n = subtract(n, 1);
-    var f = factorial4(n);
-    return f;
+overload hasNext[I](ref a:Range[I]) {
+    return lesser(a.first, a.last);
 }
 
-def insertionSort(ref a) {
-    var i = 1;
-    while (lesser(i, arraySize(a))) {
-        var x = arrayRef(a, i);
-        var j = i;
-        while (greater(arrayRef(a, subtract(j, 1)), x)) {
-            arrayRef(a, j) = arrayRef(a, subtract(j, 1));
-            j = subtract(j, 1);
-            if (equals(j, 0)) break;
-        }
-        arrayRef(a, j) = x;
-        i = add(i, 1);
-    }
-}
-
-def swap(ref a, ref b) {
-    var temp = a;
-    a = b;
-    b = temp;
-}
-
-def reverse(ref a) {
-    var n = arraySize(a);
-    for (var i in range(divide(n, 2))) {
-        var j = subtract(subtract(n, i), 1);
-        swap(arrayRef(a, i), arrayRef(a, j));
-    }
-}
-
-def main() {
-    var a = array(Int, 1000);
-    var n = arraySize(a);
-    for (var i in range(n))
-        arrayRef(a, i) = multiply(i, 2);
-    for (var i in range(100)) {
-        insertionSort(a);
-        reverse(a);
-    }
-    return arrayRef(a, 0);
+overload next[I](ref a:Range[I]) {
+    var x = a.first;
+    a.first = add(x, 1);
+    return x;
 }

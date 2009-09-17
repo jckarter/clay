@@ -1,2 +1,3 @@
 #!/bin/sh
-python run.py $*
+export PYTHONPATH=$(dirname $0):$PYTHONPATH
+python clay/main.py $*
