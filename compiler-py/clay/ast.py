@@ -3,7 +3,9 @@ __all__ = [
     "Expression", "BoolLiteral", "IntLiteral", "FloatLiteral",
     "DoubleLiteral", "CharLiteral", "StringLiteral",
     "NameRef", "Tuple", "Indexing", "Call", "FieldRef", "TupleRef",
-    "Dereference", "AddressOf", "StaticExpr",
+    "Dereference", "AddressOf",
+    "UnaryOpExpr", "BinaryOpExpr", "NotExpr", "AndExpr", "OrExpr",
+    "StaticExpr",
     "Statement", "Block", "Label", "LocalBinding", "Assignment",
     "Goto", "Return", "IfStatement", "ExprStatement",
     "While", "Break", "Continue", "For",
@@ -33,6 +35,7 @@ class Identifier(ASTNode) :
 
 class DottedName(ASTNode) :
     def __init__(self, names) :
+        super(DottedName, self).__init__()
         checkList(names, Identifier)
         self.names = names
 
@@ -136,6 +139,48 @@ class AddressOf(Expression) :
         super(AddressOf, self).__init__()
         check(expr, Expression)
         self.expr = expr
+
+# operators: + -
+class UnaryOpExpr(Expression) :
+    def __init__(self, op, expr) :
+        super(UnaryOpExpr, self).__init__()
+        check(op, str)
+        check(expr, Expression)
+        self.op = op
+        self.expr = expr
+
+# operators: + - * / == != < <= > >=
+class BinaryOpExpr(Expression) :
+    def __init__(self, op, expr1, expr2) :
+        super(BinaryOpExpr, self).__init__()
+        check(op, str)
+        check2(expr1, Expression)
+        check(expr2, Expression)
+        self.op = op
+        self.expr1 = expr1
+        self.expr2 = expr2
+
+class NotExpr(Expression) :
+    def __init__(self, expr) :
+        super(NotExpr, self).__init__()
+        check(expr, Expression)
+        self.expr = expr
+
+class AndExpr(Expression) :
+    def __init__(self, expr1, expr2) :
+        super(AndExpr, self).__init__()
+        check2(expr1, Expression)
+        check(expr2, Expression)
+        self.expr1 = expr1
+        self.expr2 = expr2
+
+class OrExpr(Expression) :
+    def __init__(self, expr1, expr2) :
+        super(OrExpr, self).__init__()
+        check2(expr1, Expression)
+        check(expr2, Expression)
+        self.expr1 = expr1
+        self.expr2 = expr2
 
 class StaticExpr(Expression) :
     def __init__(self, expr) :

@@ -1,25 +1,25 @@
 import base;
 
 def factorial(n) {
-    if (equals(n, 0))
+    if (n == 0)
         return 1;
-    return multiply(n, factorial(subtract(n, 1)));
+    return n*factorial(n-1);
 }
 
 def isEven(n) {
-    if (lesser(n, 2))
-        return equals(n, 0);
-    return isOdd(subtract(n, 1));
+    if (n < 2)
+        return n == 0;
+    return isOdd(n-1);
 }
 
 def isOdd(n) {
-    if (lesser(n, 2))
-        return equals(n, 1);
-    return isEven(subtract(n, 1));
+    if (n < 2)
+        return n == 1;
+    return isEven(n-1);
 }
 
 def foo() {
-    return array(10, 10);
+    return array(Int, 10);
 }
 
 record NodeA[T] {
@@ -34,7 +34,7 @@ record NodeB[T] {
 
 def main() {
     var n = 7;
-    n = subtract(n, 1);
+    n = n - 1;
     var f = factorial(n);
     var p = default(NodeA[(Int,Bool)]);
     return (foo(), isEven(n), f, p);

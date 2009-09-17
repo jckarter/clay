@@ -33,6 +33,14 @@ r(FieldRef, lambda x : xo("FieldRef", x.expr, x.name))
 r(TupleRef, lambda x : xo("TupleRef", x.expr, x.index))
 r(Dereference, lambda x : xo("Dereference", x.expr))
 r(AddressOf, lambda x : xo("AddressOf", x.expr))
+
+r(UnaryOpExpr, lambda x : xo("UnaryOpExpr", x.op, x.expr))
+r(BinaryOpExpr, lambda x : xo("BinaryOpExpr", x.op, x.expr1, x.expr2))
+
+r(NotExpr, lambda x : xo("NotExpr", x.expr))
+r(AndExpr, lambda x : xo("AndExpr", x.expr1, x.expr2))
+r(OrExpr, lambda x : xo("OrExpr", x.expr1, x.expr2))
+
 r(StaticExpr, lambda x : xo("StaticExpr", x.expr))
 
 

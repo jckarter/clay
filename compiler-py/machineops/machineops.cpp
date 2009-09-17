@@ -48,10 +48,6 @@ MACHINEOP mop_boolCopy(bool *dest, bool *src) {
     *dest = *src;
 }
 
-MACHINEOP mop_boolNot(bool *a, bool *result) {
-    *result = !(*a);
-}
-
 
 
 /*

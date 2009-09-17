@@ -161,7 +161,6 @@ def installDefaultPrimitives() :
     primitive("recordFieldRef")
 
     primitive("boolCopy")
-    primitive("boolNot")
 
     primitive("charCopy")
     primitive("charEquals")
@@ -208,11 +207,22 @@ def installDefaultPrimitives() :
     overloadable("copy")
     overloadable("destroy")
     overloadable("assign")
+
     overloadable("equals")
+    overloadable("notEquals")
     overloadable("lesser")
     overloadable("lesserEquals")
     overloadable("greater")
     overloadable("greaterEquals")
+
+    overloadable("plus")
+    overloadable("minus")
+    overloadable("add")
+    overloadable("subtract")
+    overloadable("multiply")
+    overloadable("divide")
+    overloadable("modulus")
+
     overloadable("hash")
 
     overloadable("iterator")

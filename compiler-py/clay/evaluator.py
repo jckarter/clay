@@ -501,6 +501,33 @@ def foo(x, env) :
 def foo(x, env) :
     return evaluateCall(primitives.addressOf, [x.expr], env)
 
+@evaluate2.register(UnaryOpExpr)
+def foo(x, env) :
+    return evaluate(convertUnaryOpExpr(x), env)
+
+@evaluate2.register(BinaryOpExpr)
+def foo(x, env) :
+    return evaluate(convertBinaryOpExpr(x), env)
+
+@evaluate2.register(NotExpr)
+def foo(x, env) :
+    v = evaluate(x.expr, env, toBool)
+    return boolToValue(v)
+
+@evaluate2.register(AndExpr)
+def foo(x, env) :
+    v = evaluate(x.expr1, env, toBool)
+    if not v :
+        return boolToValue(False)
+    return boolToValue(evaluate(x.expr2, env, toBool))
+
+@evaluate2.register(OrExpr)
+def foo(x, env) :
+    v = evaluate(x.expr1, env, toBool)
+    if v :
+        return boolToValue(True)
+    return boolToValue(evaluate(x.expr2, env, toBool))
+
 @evaluate2.register(StaticExpr)
 def foo(x, env) :
     return evaluate(x.expr, env, toStatic)
@@ -508,6 +535,33 @@ def foo(x, env) :
 @evaluate2.register(SCExpression)
 def foo(x, env) :
     return evaluate(x.expr, x.env)
+
+
+
+#
+# convertUnaryOpExpr, convertBinaryOpExpr
+#
+
+_unaryOps = {"+" : "plus",
+             "-" : "minus"}
+
+def convertUnaryOpExpr(x) :
+    return Call(primitiveNameRef(_unaryOps[x.op]), [x.expr])
+
+_binaryOps = {"+" : "add",
+              "-" : "subtract",
+              "*" : "multiply",
+              "/" : "divide",
+              "%" : "modulus",
+              "==" : "equals",
+              "!=" : "notEquals",
+              "<" : "lesser",
+              "<=" : "lesserEquals",
+              ">" : "greater",
+              ">=" : "greaterEquals"}
+
+def convertBinaryOpExpr(x) :
+    return Call(primitiveNameRef(_binaryOps[x.op]), [x.expr1, x.expr2])
 
 
 
@@ -865,11 +919,6 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     argTypes = [boolType, boolType]
     return simpleMop(mop_boolCopy, args, env, argTypes, None)
-
-@evaluateCall.register(primitives.boolNot)
-def foo(x, args, env) :
-    argTypes = [boolType]
-    return simpleMop(mop_boolNot, args, env, argTypes, boolType)
 
 
 

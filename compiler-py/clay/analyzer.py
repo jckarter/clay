@@ -180,6 +180,31 @@ def foo(x, env) :
 def foo(x, env) :
     return analyzeCall(primitives.addressOf, [x.expr], env)
 
+@analyze2.register(UnaryOpExpr)
+def foo(x, env) :
+    return analyze(convertUnaryOpExpr(x), env)
+
+@analyze2.register(BinaryOpExpr)
+def foo(x, env) :
+    return analyze(convertBinaryOpExpr(x), env)
+
+@analyze2.register(NotExpr)
+def foo(x, env) :
+    analyze(x.expr, env, toRTValueOfType(boolType))
+    return RTValue(boolType)
+
+@analyze2.register(AndExpr)
+def foo(x, env) :
+    analyze(x.expr1, env, toRTValueOfType(boolType))
+    analyze(x.expr2, env, toRTValueOfType(boolType))
+    return RTValue(boolType)
+
+@analyze2.register(OrExpr)
+def foo(x, env) :
+    analyze(x.expr1, env, toRTValueOfType(boolType))
+    analyze(x.expr2, env, toRTValueOfType(boolType))
+    return RTValue(boolType)
+
 @analyze2.register(StaticExpr)
 def foo(x, env) :
     return evaluate(x.expr, env, toStatic)
@@ -286,7 +311,7 @@ def foo(x, args, env) :
 @analyzeCall.register(primitives._print)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    v = analyze(args[0], env, toRTReference)
+    analyze(args[0], env, toRTReference)
     return voidValue
 
 @analyzeCall.register(primitives.default)
@@ -485,10 +510,6 @@ def simpleOp(args, env, argTypes, returnType) :
 @analyzeCall.register(primitives.boolCopy)
 def foo(x, args, env) :
     return simpleOp(args, env, [boolType, boolType], None)
-
-@analyzeCall.register(primitives.boolNot)
-def foo(x, args, env) :
-    return simpleOp(args, env, [boolType], boolType)
 
 
 

@@ -91,6 +91,7 @@ def foo(tag, t) :
 #
 
 llvmModule = None
+llvmFunction = None
 llvmInitBuilder = None
 llvmBuilder = None
 
@@ -109,8 +110,9 @@ def initLLVMModule() :
     f.linkage = llvm.LINKAGE_EXTERNAL
 
 def _cleanLLVMGlobals() :
-    global llvmModule, llvmInitBuilder, llvmBuilder
+    global llvmModule, llvmFunction, llvmInitBuilder, llvmBuilder
     llvmModule = None
+    llvmFunction = None
     llvmInitBuilder = None
     llvmBuilder = None
 
@@ -442,7 +444,7 @@ def foo(x, env) :
     assert len(x.args) > 0
     cargs = [compile(y, env) for y in x.args]
     if len(x.args) == 1 :
-        return cargs[1]
+        return cargs[0]
     if isType(cargs[0]) or isCell(cargs[0]) :
         elementTypes = convertObjects(toTypeOrCell, cargs, x.args)
         return tupleType(elementTypes)
@@ -480,6 +482,74 @@ def foo(x, env) :
 @compile2.register(AddressOf)
 def foo(x, env) :
     return compileCall(primitives.addressOf, [x.expr], env)
+
+@compile2.register(UnaryOpExpr)
+def foo(x, env) :
+    return compile(convertUnaryOpExpr(x), env)
+
+@compile2.register(BinaryOpExpr)
+def foo(x, env) :
+    return compile(convertBinaryOpExpr(x), env)
+
+@compile2.register(NotExpr)
+def foo(x, env) :
+    v, = rtLoadLLVM([x.expr], env, [boolType])
+    zero = llvm.Constant.int(llvmType(boolType), 0)
+    flag = llvmBuilder.icmp(llvm.ICMP_EQ, v, zero)
+    flag = llvmBuilder.zext(flag, llvmType(boolType))
+    return rtResult(boolType, flag)
+
+@compile2.register(AndExpr)
+def foo(x, env) :
+    result = tempRTValue(boolType)
+    trueBlock = llvmFunction.append_basic_block("andOne")
+    falseBlock = llvmFunction.append_basic_block("andTwo")
+    mergeBlock = llvmFunction.append_basic_block("andMerge")
+
+    v1Ref = compile(x.expr1, env, toRTReferenceOfType(boolType))
+    v1 = llvmBuilder.load(v1Ref.llvmValue)
+    zero = llvm.Constant.int(llvmType(boolType), 0)
+    b1 = llvmBuilder.icmp(llvm.ICMP_NE, v1, zero)
+    llvmBuilder.cbranch(b1, trueBlock, falseBlock)
+
+    llvmBuilder.position_at_end(trueBlock)
+    v2Ref = compile(x.expr2, env, toRTReferenceOfType(boolType))
+    v2 = llvmBuilder.load(v2Ref.llvmValue)
+    llvmBuilder.store(v2, result.llvmValue)
+    llvmBuilder.branch(mergeBlock)
+
+    llvmBuilder.position_at_end(falseBlock)
+    llvmBuilder.store(v1, result.llvmValue)
+    llvmBuilder.branch(mergeBlock)
+
+    llvmBuilder.position_at_end(mergeBlock)
+    return result
+
+@compile2.register(OrExpr)
+def foo(x, env) :
+    result = tempRTValue(boolType)
+    trueBlock = llvmFunction.append_basic_block("orOne")
+    falseBlock = llvmFunction.append_basic_block("orTwo")
+    mergeBlock = llvmFunction.append_basic_block("orMerge")
+
+    v1Ref = compile(x.expr1, env, toRTReferenceOfType(boolType))
+    v1 = llvmBuilder.load(v1Ref.llvmValue)
+    zero = llvm.Constant.int(llvmType(boolType), 0)
+    b1 = llvmBuilder.icmp(llvm.ICMP_NE, v1, zero)
+    llvmBuilder.cbranch(b1, trueBlock, falseBlock)
+
+    llvmBuilder.position_at_end(trueBlock)
+    llvmBuilder.store(v1, result.llvmValue)
+    llvmBuilder.branch(mergeBlock)
+
+    llvmBuilder.position_at_end(falseBlock)
+    v2Ref = compile(x.expr2, env, toRTReferenceOfType(boolType))
+    v2 = llvmBuilder.load(v2Ref.llvmValue)
+    llvmBuilder.store(v2, result.llvmValue)
+    llvmBuilder.branch(mergeBlock)
+
+    llvmBuilder.position_at_end(mergeBlock)
+    return result
 
 @compile2.register(StaticExpr)
 def foo(x, env) :
@@ -779,8 +849,8 @@ def foo(x, args, env) :
     elementType = convertObject(toType, cargs[0], args[0])
     n = convertObject(toInt, cargs[1], args[1])
     a = tempRTValue(arrayType(elementType, intToValue(n)))
-    rtValueInit(a);
-    return a;
+    rtValueInit(a)
+    return a
 
 @compileCall.register(primitives.arrayRef)
 def foo(x, args, env) :
@@ -832,14 +902,6 @@ def foo(x, args, env) :
     v = llvmBuilder.load(srcRef.llvmValue)
     llvmBuilder.store(v, destRef.llvmValue)
     return voidValue
-
-@compileCall.register(primitives.boolNot)
-def foo(x, args, env) :
-    v, = rtLoadLLVM(args, env, [boolType])
-    zero = llvm.Constant.int(llvmType(boolType), 0)
-    flag = llvmBuilder.icmp(llvm.ICMP_EQ, v, zero)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
 
 
 
@@ -1333,9 +1395,11 @@ def compileCodeBody(code, env, bindings, compiledCode) :
     func = compiledCode.llvmFunc
     initBlock = func.append_basic_block("entry")
     codeBlock = func.append_basic_block("code")
-    global llvmBuilder, llvmInitBuilder
+    global llvmFunction, llvmBuilder, llvmInitBuilder
+    savedLLVMFunction = llvmFunction
     savedLLVMBuilder = llvmBuilder
     savedLLVMInitBuilder = llvmInitBuilder
+    llvmFunction = func
     llvmInitBuilder = llvm.Builder.new(initBlock)
     llvmBuilder = llvm.Builder.new(codeBlock)
     params = []
@@ -1354,6 +1418,7 @@ def compileCodeBody(code, env, bindings, compiledCode) :
     if not isTerminated :
         llvmBuilder.ret_void()
     llvmInitBuilder.branch(codeBlock)
+    llvmFunction = savedLLVMFunction
     llvmBuilder = savedLLVMBuilder
     llvmInitBuilder = savedLLVMInitBuilder
 

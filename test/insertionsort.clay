@@ -2,16 +2,16 @@ import base;
 
 def insertionSort(ref a) {
     var i = 1;
-    while (lesser(i, size(a))) {
+    while (i < size(a)) {
         var x = at(a, i);
         var j = i;
-        while (greater(at(a, subtract(j, 1)), x)) {
-            at(a, j) = at(a, subtract(j, 1));
-            j = subtract(j, 1);
-            if (equals(j, 0)) break;
+        while (at(a,j-1) > x) {
+            at(a, j) = at(a, j-1);
+            j = j - 1;
+            if (j == 0) break;
         }
         at(a, j) = x;
-        i = add(i, 1);
+        i = i + 1;
     }
 }
 
@@ -23,17 +23,15 @@ def swap(ref a, ref b) {
 
 def reverse(ref a) {
     var n = size(a);
-    for (var i in range(divide(n, 2))) {
-        var j = subtract(subtract(n, i), 1);
-        swap(at(a, i), at(a, j));
-    }
+    for (var i in range(n / 2))
+        swap(at(a, i), at(a, n-i-1));
 }
 
 def main() {
     var a = array(Int, 1000);
     var n = size(a);
     for (var i in range(n))
-        at(a, i) = multiply(i, 2);
+        at(a, i) = i*2;
     for (var i in range(100)) {
         insertionSort(a);
         reverse(a);

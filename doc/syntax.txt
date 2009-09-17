@@ -73,13 +73,25 @@ ForStatement -> "for" "(" "var" Identifier "in" Expression ")" Statement
 TypeExpr -> Expression
 
 Expression -> StaticExpr
-            | PrefixExpr
+            | OrExpr
 
-StaticExpr -> "static" PrefixExpr
+StaticExpr -> "static" OrExpr
 
-PrefixExpr -> AddressOfExpr
+OrExpr -> AndExpr ("or" AndExpr)*
+AndExpr -> NotExpr ("and" NotExpr)*
+NotExpr -> "not"? CompareExpr
+
+CompareExpr -> AddSubExpr (CompareOp AddSubExpr)?
+CompareOp -> "==" | "!=" | "<" | "<=" | ">" | ">="
+
+AddSubExpr -> MulDivExpr (("+" | "-") MulDivExpr)*
+MulDivExpr -> PrefixExpr (("*" | "/" | "%") PrefixExpr)*
+
+PrefixExpr -> SignExpr
+            | AddressOfExpr
             | SuffixExpr
 
+SignExpr -> ("+" | "-") SuffixExpr
 AddressOfExpr -> "&" SuffixExpr
 SuffixExpr -> AtomicExpr Suffix*
 Suffix -> IndexSuffix

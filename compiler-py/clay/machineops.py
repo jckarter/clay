@@ -5,7 +5,7 @@ __all__ = [
     "mop_pointerOffset", "mop_pointerSubtract", "mop_pointerCopy",
     "mop_pointerEquals", "mop_pointerLesser",
     "mop_allocateMemory", "mop_freeMemory",
-    "mop_boolCopy", "mop_boolNot",
+    "mop_boolCopy",
     "mop_charCopy", "mop_charEquals", "mop_charLesser",
     "mop_intCopy", "mop_intEquals", "mop_intLesser",
     "mop_intAdd", "mop_intSubtract", "mop_intMultiply",
@@ -70,10 +70,6 @@ def mop_freeMemory(ptr) :
 f_mop_boolCopy = getF("mop_boolCopy")
 def mop_boolCopy(dest, src) :
     f_mop_boolCopy(dest, src)
-
-f_mop_boolNot = getF("mop_boolNot")
-def mop_boolNot(a, result) :
-    f_mop_boolNot(a, result)
 
 
 

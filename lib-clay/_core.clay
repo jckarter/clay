@@ -1,15 +1,5 @@
 import __primitives__;
 
-overloadable not;
-
-overloadable add;
-overloadable subtract;
-overloadable multiply;
-overloadable divide;
-overloadable modulus;
-overloadable negate;
-
-
 //
 // defaults
 //
@@ -27,7 +17,7 @@ overload assign[T](ref dest:T, ref src:T) {
 }
 
 def notEquals[T](ref a:T, ref b:T) {
-    return not(equals(a, b));
+    return not equals(a, b);
 }
 
 overload lesserEquals[T](ref a:T, ref b:T) {
@@ -69,8 +59,6 @@ overload hash(a:Bool) {
     return 0;
 }
 
-overload not(a:Bool) { return boolNot(a); }
-
 
 //
 // Char
@@ -100,7 +88,9 @@ overload subtract(a:Int, b:Int) { return intSubtract(a, b); }
 overload multiply(a:Int, b:Int) { return intMultiply(a, b); }
 overload divide(a:Int, b:Int) { return intDivide(a, b); }
 overload modulus(a:Int, b:Int) { return intModulus(a, b); }
-overload negate(a:Int) { return intNegate(a); }
+
+overload plus(a:Int) { return a; }
+overload minus(a:Int) { return intNegate(a); }
 
 
 //
@@ -118,7 +108,9 @@ overload add(a:Float, b:Float) { return floatAdd(a, b); }
 overload subtract(a:Float, b:Float) { return floatSubtract(a, b); }
 overload multiply(a:Float, b:Float) { return floatMultiply(a, b); }
 overload divide(a:Float, b:Float) { return floatDivide(a, b); }
-overload negate(a:Float) { return floatNegate(a); }
+
+overload plus(a:Float) { return a; }
+overload minus(a:Float) { return floatNegate(a); }
 
 
 //
@@ -136,7 +128,9 @@ overload add(a:Double, b:Double) { return doubleAdd(a, b); }
 overload subtract(a:Double, b:Double) { return doubleSubtract(a, b); }
 overload multiply(a:Double, b:Double) { return doubleMultiply(a, b); }
 overload divide(a:Double, b:Double) { return doubleDivide(a, b); }
-overload negate(a:Double) { return doubleNegate(a); }
+
+overload plus(a:Double) { return a; }
+overload minus(a:Double) { return doubleNegate(a); }
 
 
 //
@@ -162,7 +156,7 @@ overload add[T](p:Pointer[T], i:Int) {
     return pointerOffset(p, multiply(typeSize(T), i));
 }
 overload subtract[T](a:Pointer[T], i:Int) {
-    return pointerOffset(p, multiply(typeSize(T), negate(i)));
+    return pointerOffset(p, multiply(typeSize(T), minus(i)));
 }
 overload subtract[T](a:Pointer[T], b:Pointer[T]) {
     return divide(pointerDifference(a, b), typeSize(T));

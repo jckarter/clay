@@ -63,7 +63,10 @@ def token(parser, klass) :
 #
 
 symbols = ("( ) [ ] { } " +
-           ": ; , . = & ^").split()
+           ": ; , . " +
+           "== != <= < >= > " +
+           "+ - * / % " +
+           "= & ^").split()
 def symbolsRegex() :
     return "|".join([re.escape(s) for s in symbols])
 symbol = token(regexParser(re.compile(symbolsRegex())),
@@ -75,7 +78,7 @@ symbol = token(regexParser(re.compile(symbolsRegex())),
 #
 
 keywordList = ("import export predicate instance record var def " +
-               "overloadable overload static ref " +
+               "overloadable overload static ref and or not " +
                "if else goto return while break continue for in " +
                "true false").split()
 keywordSet = set(keywordList)

@@ -118,12 +118,56 @@ suffixExpr = modify(sequence(atomicExpr, zeroPlus(suffix)),
 addressOfExpr = astNode(sequence(symbol("&"), suffixExpr),
                         lambda x : AddressOf(x[1]))
 
-prefixExpr = choice(addressOfExpr, suffixExpr)
+plusOrMinus = choice(symbol("+"), symbol("-"))
 
-staticExpr = astNode(sequence(keyword("static"), prefixExpr),
+signExpr = astNode(sequence(plusOrMinus, suffixExpr),
+                   lambda x : UnaryOpExpr(x[0], x[1]))
+
+prefixExpr = choice(signExpr, addressOfExpr, suffixExpr)
+
+mulDivOp = choice(symbol("*"), symbol("/"), symbol("%"))
+mulDivTail = astNode(sequence(mulDivOp, prefixExpr),
+                     lambda x : BinaryOpExpr(x[0], None, x[1]))
+mulDivExpr = modify(sequence(prefixExpr, zeroPlus(mulDivTail)),
+                    lambda x : foldBinaryOps(x[0], x[1]))
+
+addSubTail = astNode(sequence(plusOrMinus, mulDivExpr),
+                     lambda x : BinaryOpExpr(x[0], None, x[1]))
+addSubExpr = modify(sequence(mulDivExpr, zeroPlus(addSubTail)),
+                    lambda x : foldBinaryOps(x[0], x[1]))
+
+compareOp = choice(symbol("=="), symbol("!="),
+                   symbol("<"), symbol("<="),
+                   symbol(">"), symbol(">="))
+compareTail = astNode(sequence(compareOp, addSubExpr),
+                      lambda x : BinaryOpExpr(x[0], None, x[1]))
+compareExpr = modify(sequence(addSubExpr, optional(compareTail)),
+                     lambda x : (x[0] if x[1] is None
+                                 else foldBinaryOps(x[0], [x[1]])))
+
+def foldBinaryOps(expr, binOps) :
+    for x in binOps :
+        x.expr1 = expr
+        expr = x
+    return expr
+
+notExpr = astNode(sequence(optional(keyword("not")), compareExpr),
+                  lambda x : x[1] if not x[0] else NotExpr(x[1]))
+
+andExprTail = astNode(sequence(keyword("and"), notExpr),
+                      lambda x : AndExpr(None, x[1]))
+andExpr = modify(sequence(notExpr, zeroPlus(andExprTail)),
+                 lambda x : foldBinaryOps(x[0], x[1]))
+
+orExprTail = astNode(sequence(keyword("or"), andExpr),
+                     lambda x : OrExpr(None, x[1]))
+orExpr = modify(sequence(andExpr, zeroPlus(orExprTail)),
+                lambda x : foldBinaryOps(x[0], x[1]))
+
+staticExpr = astNode(sequence(keyword("static"), orExpr),
                      lambda x : StaticExpr(x[1]))
 
-expression = choice(staticExpr, prefixExpr)
+expression = choice(staticExpr, orExpr)
 
 
 #
