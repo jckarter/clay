@@ -1,4 +1,10 @@
-Program -> TopLevelItem* ;
+Module -> Import* Export* TopLevelItem* ;
+
+Import -> "import" DottedName ";" ;
+Export -> "export" DottedName ";" ;
+
+DottedName -> Identifier ("." Identifier)* ;
+
 
 TopLevelItem -> RecordDef | GlobalVarDef | ProcedureDef
               | OverloadableDef | OverloadDef ;
@@ -27,7 +33,7 @@ TypeCondition -> Identifier "(" comma_list(TypeExpr) ")" ;
 
 OverloadableDef -> "overloadable" Identifier ";" ;
 
-OverloadDef -> "overload" Identifier Procedure ;
+OverloadDef -> "overload" DottedName Procedure ;
 
 Block -> "{" Statement+ "}" ;
 
@@ -100,7 +106,7 @@ AtomicExpr -> ArrayExpr
 ArrayExpr -> "[" comma_list(Expression) "]" ;
 TupleExpr -> "(" comma_list(Expression) ")" ;
 
-NameRef -> Identifier ;
+NameRef -> DottedName ;
 
 Literal -> BoolLiteral
          | IntLiteral

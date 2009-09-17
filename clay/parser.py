@@ -43,6 +43,8 @@ comma = symbol(",")
 
 identifier = astNode(tokenType(t.Identifier), lambda x : Identifier(x))
 
+dottedName = astNode(listOf(identifier, comma), lambda x : DottedName(x))
+
 
 #
 # literals
@@ -238,10 +240,24 @@ topLevelItem = choice(record, procedure, overloadable, overload)
 
 
 #
-# program
+# import, export
 #
 
-program = astNode(onePlus(topLevelItem), lambda x : Program(x))
+importSpec = astNode(sequence(keyword("import"), dottedName, semicolon),
+                     lambda x : Import(x[1]))
+exportSpec = astNode(sequence(keyword("export"), dottedName, semicolon),
+                     lambda x : Export(x[1]))
+
+imports = zeroPlus(importSpec)
+exports = zeroPlus(exportSpec)
+
+
+#
+# module
+#
+
+module = astNode(sequence(imports, exports, onePlus(topLevelItem)),
+                 lambda x : Module(x[0], x[1], x[2]))
 
 
 #
@@ -251,7 +267,7 @@ program = astNode(onePlus(topLevelItem), lambda x : Program(x))
 def parse(data, fileName) :
     tokens = lexer.tokenize(data, fileName)
     input = Input(tokens)
-    result = program(input)
+    result = module(input)
     if (result is Failure) or (input.pos < len(tokens)) :
         if input.maxPos == len(tokens) :
             location = Location(data, len(data), fileName)

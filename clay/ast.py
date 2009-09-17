@@ -1,5 +1,5 @@
 __all__ = [
-    "ASTNode", "Identifier",
+    "ASTNode", "Identifier", "DottedName",
     "Expression", "BoolLiteral", "IntLiteral", "FloatLiteral",
     "DoubleLiteral", "CharLiteral", "StringLiteral",
     "NameRef", "Tuple", "Indexing", "Call", "FieldRef", "TupleRef",
@@ -9,7 +9,7 @@ __all__ = [
     "While", "Break", "Continue", "For",
     "Code", "FormalArgument", "ValueArgument", "StaticArgument",
     "TopLevelItem", "Record", "Field", "Procedure", "Overloadable", "Overload",
-    "Program"]
+    "Import", "Export", "Module"]
 
 def check(x, t) :
     assert isinstance(x,t)
@@ -30,6 +30,11 @@ class Identifier(ASTNode) :
         super(Identifier, self).__init__()
         check(s, str)
         self.s = s
+
+class DottedName(ASTNode) :
+    def __init__(self, names) :
+        checkList(names, Identifier)
+        self.names = names
 
 
 
@@ -332,14 +337,40 @@ class Overload(TopLevelItem) :
 
 
 #
-# Program
+# Import, Export
 #
 
-class Program(ASTNode) :
-    def __init__(self, topLevelItems) :
-        super(Program, self).__init__()
+class Import(ASTNode) :
+    def __init__(self, dottedName) :
+        super(Import, self).__init__()
+        check(dottedName, DottedName)
+        self.dottedName = dottedName
+        self.module = None
+
+class Export(ASTNode) :
+    def __init__(self, dottedName) :
+        super(Export, self).__init__()
+        check(dottedName, DottedName)
+        self.dottedName = dottedName
+        self.module = None
+
+
+
+#
+# Module
+#
+
+class Module(ASTNode) :
+    def __init__(self, imports, exports, topLevelItems) :
+        super(Module, self).__init__()
+        checkList(imports, Import)
+        checkList(exports, Export)
         checkList(topLevelItems, TopLevelItem)
+        self.imports = imports
+        self.exports = exports
         self.topLevelItems = topLevelItems
+        self.globals = {}
+        self.env = None
 
 
 

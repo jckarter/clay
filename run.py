@@ -1,31 +1,28 @@
 import sys
 from clay.xprint import xprint
 from clay.error import CompilerError, error
-from clay.parser import parse
 from clay.ast import *
-from clay.env import buildTopLevelEnv
+from clay.env import loadProgram
 from clay.coreops import cleanupGlobals
 from clay.evaluator import evaluate, InvokeBindings
 from clay.analyzer import analyze
 from clay import compiler
 from clay import llvmwrapper as llvm
 
-def testAnalyzeEval() :
+def loadAnalyzeAndEval() :
     fileName = sys.argv[1]
-    data = file(fileName).read()
     try :
-        program = parse(data, fileName)
-        env = buildTopLevelEnv(program)
+        module = loadProgram(fileName)
         mainCall = Call(NameRef(Identifier("main")), [])
-        result = analyze(mainCall, env)
+        result = analyze(mainCall, module.env)
         xprint(result)
-        result = evaluate(mainCall, env)
+        result = evaluate(mainCall, module.env)
         xprint(result)
     except CompilerError, e :
         e.display()
         raise
 
-def process() :
+def loadAndCompile() :
     if len(sys.argv) < 2 :
         print "usage: clayc input.clay [output.ll]"
     fileName = sys.argv[1]
@@ -33,11 +30,9 @@ def process() :
         outputFileName = sys.argv[2]
     else :
         outputFileName = None
-    data = file(fileName).read()
     try :
-        program = parse(data, fileName)
-        env = buildTopLevelEnv(program)
-        mainProc = env.lookup("main")
+        module = loadProgram(fileName)
+        mainProc = module.env.lookup("main")
         if type(mainProc) is not Procedure :
             error("'main' is not a procedure")
         bindings = InvokeBindings([], [], [], [])
@@ -53,7 +48,8 @@ def process() :
 
 def main() :
     try :
-        process()
+        # loadAnalyzeAndEval()
+        loadAndCompile()
     finally :
         cleanupGlobals()
 

@@ -10,6 +10,7 @@ xf = XField
 
 
 r(Identifier, lambda x : xo("Identifier", XSymbol(x.s)))
+r(DottedName, lambda x : xo("DottedName", *x.names))
 
 
 
@@ -82,7 +83,17 @@ r(Overload, lambda x : xo("Overload", x.name, x.code))
 
 
 #
-# Program
+# Import, Export
 #
 
-r(Program, lambda x : xo("Program", *x.topLevelItems))
+r(Import, lambda x : xo("Import", x.dottedName))
+r(Export, lambda x : xo("Export", x.dottedName))
+
+
+
+#
+# Module
+#
+
+r(Module, lambda x : xo("Module", *(x.imports + x.exports
+                                    + x.topLevelItems)))
