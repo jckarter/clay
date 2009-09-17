@@ -279,6 +279,12 @@ def foo(x, args, env) :
 # analyze primitives
 #
 
+@analyzeCall.register(primitives._print)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    v = analyze(args[0], env, toRTReference)
+    return voidValue
+
 @analyzeCall.register(primitives.default)
 def foo(x, args, env) :
     ensureArity(args, 1)

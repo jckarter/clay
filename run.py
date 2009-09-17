@@ -48,8 +48,8 @@ def loadAndCompile() :
 
 def main() :
     try :
-        # loadAnalyzeAndEval()
-        loadAndCompile()
+        loadAnalyzeAndEval()
+        # loadAndCompile()
     finally :
         cleanupGlobals()
 

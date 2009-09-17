@@ -90,9 +90,23 @@ def foo(tag, t) :
 # global llvm data
 #
 
-llvmModule = llvm.Module.new("clay_code")
+llvmModule = None
 llvmInitBuilder = None
 llvmBuilder = None
+
+def initLLVMModule() :
+    global llvmModule
+    llvmModule = llvm.Module.new("clay_code")
+
+    intPtrType = llvm.Type.pointer(llvmType(intType))
+    ft = llvm.Type.function(llvm.Type.void(), [intPtrType])
+    f = llvm.Function.new(llvmModule, ft, "_clay_print_int")
+    f.linkage = llvm.LINKAGE_EXTERNAL
+
+    boolPtrType = llvm.Type.pointer(llvmType(boolType))
+    ft = llvm.Type.function(llvm.Type.void(), [boolPtrType])
+    f = llvm.Function.new(llvmModule, ft, "_clay_print_bool")
+    f.linkage = llvm.LINKAGE_EXTERNAL
 
 def _cleanLLVMGlobals() :
     global llvmModule, llvmInitBuilder, llvmBuilder
@@ -566,6 +580,19 @@ def foo(x, args, env) :
 #
 # compile primitives
 #
+
+@compileCall.register(primitives._print)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    x = compile(args[0], env, toRTReference)
+    if x.type == boolType :
+        f = llvmModule.get_function_named("_clay_print_bool")
+    elif x.type == intType :
+        f = llvmModule.get_function_named("_clay_print_int")
+    else :
+        error("printing support not available for this type")
+    llvmBuilder.call(f, [x.llvmValue])
+    return voidValue
 
 @compileCall.register(primitives.default)
 def foo(x, args, env) :
@@ -1153,6 +1180,8 @@ def compileCode(name, code, env, bindings) :
 #
 
 def compileCodeHeader(name, code, env, bindings) :
+    if llvmModule is None :
+        initLLVMModule()
     llvmArgTypes = []
     for param in bindings.params :
         llt = llvm.Type.pointer(llvmType(param.type))

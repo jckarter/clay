@@ -597,6 +597,13 @@ def foo(x, args, env) :
 # evaluate primitives
 #
 
+@evaluateCall.register(primitives._print)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    v = evaluate(args[0], env, toReference)
+    xprint(v)
+    return voidValue
+
 @evaluateCall.register(primitives.default)
 def foo(x, args, env) :
     ensureArity(args, 1)
