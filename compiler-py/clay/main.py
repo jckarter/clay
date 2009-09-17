@@ -44,16 +44,13 @@ def loadAnalyzeAndEval() :
         raise
 
 def loadAndCompile(fileName) :
-    try :
-        module = loadProgram(fileName)
-        mainProc = module.env.lookup("main")
-        if type(mainProc) is not Procedure :
-            error("'main' is not a procedure")
-        bindings = InvokeBindings([], [], [], [])
-        compiler.compileCode("main", mainProc.code, mainProc.env, bindings)
-        return compiler.llvmModule
-    except CompilerError, e :
-        e.display()
+    module = loadProgram(fileName)
+    mainProc = module.env.lookup("main")
+    if type(mainProc) is not Procedure :
+        error("'main' is not a procedure")
+    bindings = InvokeBindings([], [], [], [])
+    compiler.compileCode("main", mainProc.code, mainProc.env, bindings)
+    return compiler.llvmModule
 
 def compileAndMakeExe() :
     parser = optparse.OptionParser()
@@ -92,6 +89,8 @@ def compileAndMakeExe() :
 def main() :
     try :
         compileAndMakeExe()
+    except CompilerError, e :
+        e.display()
     finally :
         clearTempFiles()
         cleanupGlobals()
