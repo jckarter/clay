@@ -429,7 +429,7 @@ record Range[I] {
     last: I;
 }
 
-def iterator(ref x) ref {
+def iterator(ref x) {
     return x;
 }
 
