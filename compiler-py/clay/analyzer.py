@@ -184,6 +184,10 @@ def foo(x, env) :
 def foo(x, env) :
     return evaluate(x.expr, env, toStatic)
 
+@analyze2.register(SCExpression)
+def foo(x, env) :
+    return analyze(x.expr, x.env)
+
 
 
 #

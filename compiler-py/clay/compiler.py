@@ -485,6 +485,10 @@ def foo(x, env) :
 def foo(x, env) :
     return evaluate(x.expr, env, toStatic)
 
+@compile2.register(SCExpression)
+def foo(x, env) :
+    return compile(x.expr, x.env)
+
 
 
 #

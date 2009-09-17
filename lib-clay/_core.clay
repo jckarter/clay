@@ -380,10 +380,6 @@ overload at[T,n](ref a:Array[T,n], i) ref {
 // Iterators
 //
 
-overloadable iterator;
-overloadable hasNext;
-overloadable next;
-
 record Range[I] {
     first: I;
     last: I;

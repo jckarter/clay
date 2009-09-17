@@ -215,6 +215,10 @@ def installDefaultPrimitives() :
     overloadable("greaterEquals")
     overloadable("hash")
 
+    overloadable("iterator")
+    overloadable("hasNext")
+    overloadable("next")
+
     Primitives = type("Primitives", (object,), primClasses)
     global primitives
     primitives = Primitives()
@@ -328,3 +332,19 @@ def extendEnv(parentEnv, variables, objects) :
     for variable, object_ in zip(variables, objects) :
         addIdent(env, variable, object_)
     return env
+
+
+
+#
+# syntactic closures
+#
+
+class SCExpression(Expression) :
+    def __init__(self, env, expr) :
+        super(SCExpression, self).__init__()
+        self.env = env
+        self.expr = expr
+
+def primitiveNameRef(s) :
+    nameRef = NameRef(Identifier(s))
+    return SCExpression(primitivesEnv, nameRef)

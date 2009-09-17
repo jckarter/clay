@@ -505,6 +505,10 @@ def foo(x, env) :
 def foo(x, env) :
     return evaluate(x.expr, env, toStatic)
 
+@evaluate2.register(SCExpression)
+def foo(x, env) :
+    return evaluate(x.expr, x.env)
+
 
 
 #
@@ -1315,15 +1319,14 @@ def foo(x, env, context) :
 #
 
 def convertForStatement(x) :
-    iteratorVar = Identifier("%iter")
+    iterVar = Identifier("%iter")
     block = Block(
-        [LocalBinding(iteratorVar, None,
-                      Call(NameRef(Identifier("iterator")), [x.expr])),
-         While(Call(NameRef(Identifier("hasNext")),
-                    [NameRef(iteratorVar)]),
+        [LocalBinding(iterVar, None,
+                      Call(primitiveNameRef("iterator"), [x.expr])),
+         While(Call(primitiveNameRef("hasNext"), [NameRef(iterVar)]),
                Block([LocalBinding(x.variable, x.type,
-                                   Call(NameRef(Identifier("next")),
-                                        [NameRef(iteratorVar)])),
+                                   Call(primitiveNameRef("next"),
+                                        [NameRef(iterVar)])),
                       x.body]))])
     return block
 
