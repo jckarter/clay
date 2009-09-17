@@ -361,6 +361,22 @@ overload hashFields[T, i](ref a:T, static i)
 
 
 //
+// Containers
+//
+
+overloadable size;
+overloadable at;
+
+overload size[T,n](ref a:Array[T,n]) {
+    return n;
+}
+
+overload at[T,n](ref a:Array[T,n], i) ref {
+    return arrayRef(a, i);
+}
+
+
+//
 // Iterators
 //
 
