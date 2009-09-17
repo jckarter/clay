@@ -1,3 +1,4 @@
 #!/bin/sh
-export PYTHONPATH=$(dirname $0):$PYTHONPATH
-python clay/main.py $*
+export PYTHONPATH=$(dirname $0)/compiler-py:$PYTHONPATH
+export DYLD_LIBRARY_PATH=$(dirname $0)/compiler-py:$DYLD_LIBRARY_PATH
+python $(dirname $0)/compiler-py/clay/main.py $*

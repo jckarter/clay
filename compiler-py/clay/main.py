@@ -13,8 +13,7 @@ from clay import compiler
 
 def initLibrary() :
     base = os.path.split(__file__)[0]
-    libDir = os.path.join(base, "..", "lib-clay")
-    print "libDir =", libDir
+    libDir = os.path.join(base, "..", "..", "lib-clay")
     setModuleSearchPath([libDir])
 
 initLibrary()
