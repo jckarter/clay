@@ -1,41 +1,40 @@
-Module -> Import* Export* TopLevelItem* ;
+Module -> Import* Export* TopLevelItem*
 
-Import -> "import" DottedName ";" ;
-Export -> "export" DottedName ";" ;
+Import -> "import" DottedName ";"
+Export -> "export" DottedName ";"
 
-DottedName -> Identifier ("." Identifier)* ;
+DottedName -> Identifier ("." Identifier)*
 
 
 TopLevelItem -> RecordDef | GlobalVarDef | ProcedureDef
-              | OverloadableDef | OverloadDef ;
+              | OverloadableDef | OverloadDef
 
-RecordDef -> "record" Identifier TypeVars? "{" FieldDef+ "}" ;
-FieldDef -> Identifier TypeSpec ";" ;
+RecordDef -> "record" Identifier TypeVars? "{" FieldDef+ "}"
+FieldDef -> Identifier TypeSpec ";"
 
-TypeVars -> "[" comma_list(Identifier) "]" ;
-TypeSpec -> ":" TypeExpr ;
+TypeVars -> "[" comma_list(Identifier) "]"
+TypeSpec -> ":" TypeExpr
 
-GlobalVarDef -> "var" Variable "=" Expression ";" ;
+GlobalVarDef -> "var" Variable "=" Expression ";"
 
-Variable -> Identifier TypeSpec? ;
+Variable -> Identifier TypeSpec?
 
-ProcedureDef -> "def" Identifier Procedure ;
+ProcedureDef -> "def" Identifier Procedure
 
 Procedure -> TypeVars? "(" comma_list(Argument)? ")"
-             "ref"? TypeSpec? TypeConditions? Block;
+             "ref"? TypeSpec? TypeConditions? Block
 
 Argument -> "ref"? Variable
           | "static" Expression
-          ;
 
-TypeConditions -> "if" comma_list(TypeCondition) ;
-TypeCondition -> Identifier "(" comma_list(TypeExpr) ")" ;
+TypeConditions -> "if" comma_list(TypeCondition)
+TypeCondition -> Identifier "(" comma_list(TypeExpr) ")"
 
-OverloadableDef -> "overloadable" Identifier ";" ;
+OverloadableDef -> "overloadable" Identifier ";"
 
-OverloadDef -> "overload" DottedName Procedure ;
+OverloadDef -> "overload" DottedName Procedure
 
-Block -> "{" Statement+ "}" ;
+Block -> "{" Statement+ "}"
 
 Statement -> Block
            | LabelDef
@@ -49,69 +48,65 @@ Statement -> Block
            | BreakStatement
            | ContinueStatement
            | ForStatement
-           ;
 
-LabelDef -> Identifier ":" ;
+LabelDef -> Identifier ":"
 
-LocalBinding -> "var" Variable "=" Expression ";" ;
+LocalBinding -> "var" Variable "=" Expression ";"
 
-Assignment -> Expression "=" Expression ";" ;
+Assignment -> Expression "=" Expression ";"
 
 IfStatement -> "if" "(" Expression ")" Statement
-               ("else" Statement)? ;
+               ("else" Statement)?
 
-GotoStatement -> "goto" Identifier ";" ;
+GotoStatement -> "goto" Identifier ";"
 
-ReturnStatement -> "return" Expression? ";" ;
+ReturnStatement -> "return" Expression? ";"
 
-ExpressionStatement -> Expression ";" ;
+ExpressionStatement -> Expression ";"
 
-WhileStatement -> "while" "(" Expression ")" Statement ;
-BreakStatement -> "break" ";" ;
-ContinueStatement -> "continue" ";" ;
+WhileStatement -> "while" "(" Expression ")" Statement
+BreakStatement -> "break" ";"
+ContinueStatement -> "continue" ";"
 
-ForStatement -> "for" "(" "var" Identifier "in" Expression ")" Statement ;
+ForStatement -> "for" "(" "var" Identifier "in" Expression ")" Statement
 
-TypeExpr -> Expression ;
+TypeExpr -> Expression
 
 Expression -> StaticExpr
             | PrefixExpr
-            ;
 
-StaticExpr -> "static" PrefixExpr ;
+StaticExpr -> "static" PrefixExpr
 
 PrefixExpr -> AddressOfExpr
             | SuffixExpr
-            ;
-AddressOfExpr -> "&" SuffixExpr ;
-SuffixExpr -> AtomicExpr Suffix* ;
+
+AddressOfExpr -> "&" SuffixExpr
+SuffixExpr -> AtomicExpr Suffix*
 Suffix -> IndexSuffix
         | CallSuffix
         | FieldRefSuffix
         | TupleRefSuffix
         | DereferenceSuffix
-        ;
-IndexSuffix -> "[" comma_list(Expression) "]" ;
-CallSuffix -> "(" comma_list(Expression) ")" ;
-FieldRefSuffix -> "." Identifier ;
-TupleRefSuffix -> "." IntLiteral ;
-DereferenceSuffix -> "^" ;
+
+IndexSuffix -> "[" comma_list(Expression) "]"
+CallSuffix -> "(" comma_list(Expression) ")"
+FieldRefSuffix -> "." Identifier
+TupleRefSuffix -> "." IntLiteral
+DereferenceSuffix -> "^"
 
 AtomicExpr -> ArrayExpr
             | TupleExpr
             | NameRef
             | Literal
-            ;
 
-ArrayExpr -> "[" comma_list(Expression) "]" ;
-TupleExpr -> "(" comma_list(Expression) ")" ;
+ArrayExpr -> "[" comma_list(Expression) "]"
+TupleExpr -> "(" comma_list(Expression) ")"
 
-NameRef -> DottedName ;
+NameRef -> DottedName
 
 Literal -> BoolLiteral
          | IntLiteral
          | CharLiteral
          | StringLiteral
-         ;
 
-BoolLiteral -> "true" | "false" ;
+BoolLiteral -> "true" | "false"
