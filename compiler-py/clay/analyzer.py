@@ -174,11 +174,11 @@ def foo(x, env) :
 
 @analyze2.register(Dereference)
 def foo(x, env) :
-    return analyzeCall(primitives.pointerDereference, [x.expr], env)
+    return analyzeCall(primitives.pointerDereference(), [x.expr], env)
 
 @analyze2.register(AddressOf)
 def foo(x, env) :
-    return analyzeCall(primitives.addressOf, [x.expr], env)
+    return analyzeCall(primitives.addressOf(), [x.expr], env)
 
 @analyze2.register(UnaryOpExpr)
 def foo(x, env) :

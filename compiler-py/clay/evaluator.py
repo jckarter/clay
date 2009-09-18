@@ -495,11 +495,11 @@ def foo(x, env) :
 
 @evaluate2.register(Dereference)
 def foo(x, env) :
-    return evaluateCall(primitives.pointerDereference, [x.expr], env)
+    return evaluateCall(primitives.pointerDereference(), [x.expr], env)
 
 @evaluate2.register(AddressOf)
 def foo(x, env) :
-    return evaluateCall(primitives.addressOf, [x.expr], env)
+    return evaluateCall(primitives.addressOf(), [x.expr], env)
 
 @evaluate2.register(UnaryOpExpr)
 def foo(x, env) :

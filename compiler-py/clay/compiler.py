@@ -477,11 +477,11 @@ def foo(x, env) :
 
 @compile2.register(Dereference)
 def foo(x, env) :
-    return compileCall(primitives.pointerDereference, [x.expr], env)
+    return compileCall(primitives.pointerDereference(), [x.expr], env)
 
 @compile2.register(AddressOf)
 def foo(x, env) :
-    return compileCall(primitives.addressOf, [x.expr], env)
+    return compileCall(primitives.addressOf(), [x.expr], env)
 
 @compile2.register(UnaryOpExpr)
 def foo(x, env) :
