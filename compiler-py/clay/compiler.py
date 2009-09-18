@@ -728,7 +728,7 @@ def foo(x, args, env) :
 @compileCall.register(primitives.pointerDereference)
 def foo(x, args, env) :
     cell = Cell()
-    ptr = rtLoadLLVM(args, env, [pointerType(cell)])
+    ptr, = rtLoadLLVM(args, env, [pointerType(cell)])
     return RTReference(cell.param, ptr)
 
 @compileCall.register(primitives.pointerOffset)
@@ -797,7 +797,7 @@ def foo(x, args, env) :
 
 @compileCall.register(primitives.freeMemory)
 def foo(x, args, env) :
-    ptr = rtLoadLLVM(args, env, [pointerType(intType)])
+    ptr, = rtLoadLLVM(args, env, [pointerType(intType)])
     ptr = llvmBuilder.bitcast(ptr, llvm.Type.pointer(llvm.Type.int(8)))
     llvmBuilder.free(ptr)
     return voidValue
