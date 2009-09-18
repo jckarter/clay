@@ -3,17 +3,19 @@
 
 using namespace std;
 
-void insertionSort(vector<int> &a) {
+void insertionSort(int *a, int n) {
     int i = 1;
-    while (i < a.size()) {
+    while (i < n) {
         int x = a[i];
-        vector<int>::iterator j = a.begin() + i;
-        while (*(j-1) > x) {
-            *j = *(j-1);
-            --j;
-            if (j == a.begin()) break;
+        int j = i;
+        while (a[j-1] > x) {
+            a[j] = a[j-1];
+            j = j - 1;
+            if (j == 0) break;
         }
-        *j = x;
+        if (i != j) {
+            a[j] = x;
+        }
         i = i + 1;
     }
 }
@@ -24,21 +26,21 @@ void swap(int &a, int &b) {
     b = temp;
 }
 
-void reverse(vector<int> &a) {
-    int n = a.size();
+void reverse(int *a, int n) {
     for (int i = 0; i < n/2; ++i) {
         swap(a[i], a[n-i-1]);
     }
 }
 
 int test() {
-    vector<int> a;
-    for (int i = 0; i < 1000; ++i) {
-        a.push_back(i*2);
+    int a[1000];
+    int n = 1000;
+    for (int i = 0; i < n; ++i) {
+        a[i] = (i*2);
     }
     for (int i = 0; i < 100; ++i) {
-        insertionSort(a);
-        reverse(a);
+        insertionSort(a, n);
+        reverse(a, n);
     }
     return a[0];
 }

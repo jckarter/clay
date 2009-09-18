@@ -15,12 +15,6 @@ def insertionSort(ref a) {
     }
 }
 
-def swap(ref a, ref b) {
-    var temp = a;
-    a = b;
-    b = temp;
-}
-
 def reverse(ref a) {
     var n = size(a);
     for (var i in range(n / 2))
@@ -29,8 +23,7 @@ def reverse(ref a) {
 
 def main() {
     var a = array(Int, 1000);
-    var n = size(a);
-    for (var i in range(n))
+    for (var i in range(size(a)))
         at(a, i) = i*2;
     for (var i in range(100)) {
         insertionSort(a);

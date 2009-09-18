@@ -1,3 +1,5 @@
+import sys
+
 def insertionSort(a) :
     i = 1
     while i < len(a) :
@@ -14,9 +16,7 @@ def insertionSort(a) :
 def reverse(a) :
     n = len(a)
     for i in range(n/2) :
-        temp = a[i]
-        a[i] = a[n-i-1]
-        a[n-i-1] = temp
+        a[i], a[n-i-1] = a[n-i-1], a[i]
 
 def main() :
     a = [0] * 1000

@@ -155,7 +155,7 @@ overload hash[T](a:Pointer[T]) {
 overload add[T](p:Pointer[T], i:Int) {
     return pointerOffset(p, multiply(typeSize(T), i));
 }
-overload subtract[T](a:Pointer[T], i:Int) {
+overload subtract[T](p:Pointer[T], i:Int) {
     return pointerOffset(p, multiply(typeSize(T), minus(i)));
 }
 overload subtract[T](a:Pointer[T], b:Pointer[T]) {
@@ -360,6 +360,8 @@ overload hashFields[T, i](ref a:T, static i)
 
 overloadable size;
 overloadable at;
+overloadable begin;
+overloadable end;
 
 overload size[T,n](ref a:Array[T,n]) {
     return n;
@@ -369,30 +371,14 @@ overload at[T,n](ref a:Array[T,n], i) ref {
     return arrayRef(a, i);
 }
 
-
-//
-// Iterators
-//
-
-record Range[I] {
-    first: I;
-    last: I;
+overload begin[T,n](ref a:Array[T,n]) {
+    return addressOf(at(a, 0));
 }
 
-def range(n) {
-    return Range(0, n);
+overload end[T,n](ref a:Array[T,n]) {
+     return &at(a, n);
 }
 
-overload iterator[I](ref r:Range[I]) {
-    return r;
-}
-
-overload hasNext[I](ref a:Range[I]) {
-    return lesser(a.first, a.last);
-}
-
-overload next[I](ref a:Range[I]) {
-    var x = a.first;
-    a.first = add(x, 1);
-    return x;
+overload at[T](p:Pointer[T]) ref {
+     return p^;
 }

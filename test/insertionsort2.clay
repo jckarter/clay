@@ -1,0 +1,33 @@
+import base;
+
+def insertionSort(ref a) {
+    var i = begin(a) + 1;
+    while (i < end(a)) {
+        var x = at(i);
+        var j = i;
+        while (at(j-1) > x) {
+            at(j) = at(j-1);
+            j = j - 1;
+            if (j == begin(a)) break;
+        }
+        at(j) = x;
+        i = i + 1;
+    }
+}
+
+def reverse(ref a) {
+    var n = size(a);
+    for (var i in range(n / 2))
+        swap(at(a, i), at(a, n-i-1));
+}
+
+def main() {
+    var a = array(Int, 1000);
+    for (var i in range(size(a)))
+        at(a, i) = i*2;
+    for (var i in range(100)) {
+        insertionSort(a);
+        reverse(a);
+    }
+    return at(a, 0);
+}
