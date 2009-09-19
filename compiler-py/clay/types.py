@@ -145,6 +145,11 @@ def foo(a) :
 def foo(x) :
     return x
 
+@toType.register(Record)
+def foo(x) :
+    ensure(len(x.typeVars) == 0, "record type parameters expected")
+    return recordType(x, [])
+
 @toStatic.register(Type)
 def foo(x) :
     return x
