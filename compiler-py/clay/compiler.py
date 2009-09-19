@@ -592,7 +592,7 @@ def foo(x, args, env) :
 @compileIndexing.register(primitives.Tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuple types need atleast two member types")
-    elementTypes = [compile(y, env, toStaticOrCell) for y in args]
+    elementTypes = [compile(y, env, toTypeOrCell) for y in args]
     return tupleType(elementTypes)
 
 @compileIndexing.register(primitives.Array)
