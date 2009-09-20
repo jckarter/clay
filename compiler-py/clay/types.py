@@ -18,7 +18,7 @@ class Type(object) :
     def __eq__(self, other) :
         return equals(self, other)
     def __hash__(self) :
-        return hashify(self)
+        return hash((self.tag, tuple(self.params)))
 
 class BoolTypeTag(object) : pass
 class IntTypeTag(object) : pass
@@ -118,7 +118,7 @@ def isSimpleType(t) :
 
 
 #
-# equals, hashify
+# equals
 #
 
 @equals.register(Type, Type)
@@ -129,11 +129,6 @@ def foo(a, b) :
         if not equals(x, y) :
             return False
     return True
-
-@hashify.register(Type)
-def foo(a) :
-    paramsHash = hashify(tuple(map(hashify, a.params)))
-    return hashify((a.tag, paramsHash))
 
 
 

@@ -243,7 +243,7 @@ def valueHash(a) :
 
 
 #
-# equals, hashify
+# equals
 #
 
 @equals.register(Value, Value)
@@ -264,15 +264,6 @@ def foo(a, b) :
 
 def typeAndValueEquals(a, b) :
     return equals(a.type, b.type) and valueEquals(a, b)
-
-
-@hashify.register(Value)
-def foo(a) :
-    return valueHash(a)
-
-@hashify.register(Reference)
-def foo(a) :
-    return valueHash(a)
 
 
 

@@ -1,19 +1,17 @@
 from clay.error import *
 from clay.multimethod import *
 
-__all__ = ["equals", "hashify", "toType", "toInt", "toBool",
+__all__ = ["equals", "toType", "toInt", "toBool",
            "toValue", "toLValue", "toReference", "toStatic",
            "installGlobalsCleanupHook", "cleanupGlobals"]
 
 
 
 #
-# equals, hashify
+# equals
 #
 
 equals = multimethod(n=2, defaultProc=(lambda x, y : x is y))
-
-hashify = multimethod(defaultProc=hash)
 
 
 
