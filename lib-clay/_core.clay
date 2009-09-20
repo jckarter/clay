@@ -1,5 +1,6 @@
 import __primitives__;
 
+
 //
 // defaults
 //
@@ -21,17 +22,15 @@ def notEquals[T](ref a:T, ref b:T) {
 }
 
 overload lesserEquals[T](ref a:T, ref b:T) {
-    if (equals(a, b)) return true;
-    if (lesser(a, b)) return true;
-    return false;
+    return equals(a, b) or lesser(a, b);
 }
 
 overload greater[T](ref a:T, ref b:T) {
-    return not(lesserEquals(a, b));
+    return not lesserEquals(a, b);
 }
 
 overload greaterEquals[T](ref a:T, ref b:T) {
-    return not(lesser(a, b));
+    return not lesser(a, b);
 }
 
 
@@ -44,12 +43,13 @@ overload copy(ref dest:Bool, ref src:Bool) {
 }
 
 overload equals(a:Bool, b:Bool) {
+    
     if (a) return b;
-    return not(b);
+    return not b;
 }
 
 overload lesser(a:Bool, b:Bool) {
-    if (not(a))
+    if (not a)
        return b;
     return false;
 }
@@ -372,7 +372,7 @@ overload at[T,n](ref a:Array[T,n], i) ref {
 }
 
 overload begin[T,n](ref a:Array[T,n]) {
-    return addressOf(at(a, 0));
+    return &at(a, 0);
 }
 
 overload end[T,n](ref a:Array[T,n]) {
