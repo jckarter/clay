@@ -190,9 +190,11 @@ block = astNode(sequence(symbol("{"), zeroPlus(statement2), symbol("}")),
 labelDef = astNode(sequence(identifier, symbol(":")),
                    lambda x : Label(x[0]))
 
-localBinding = astNode(sequence(keyword("let"), identifier, optTypeSpec,
+byRef = modify(optional(keyword("ref")), lambda x : x is not None)
+
+localBinding = astNode(sequence(keyword("let"), byRef, identifier, optTypeSpec,
                                 symbol("="), expression, semicolon),
-                       lambda x : LocalBinding(x[1],x[2],x[4]))
+                       lambda x : LocalBinding(x[1],x[2],x[3],x[5]))
 
 assignment = astNode(sequence(expression, symbol("="), expression, semicolon),
                      lambda x : Assignment(x[0], x[2]))
@@ -250,8 +252,6 @@ staticArgument = astNode(sequence(keyword("static"), expression),
 formalArgument = choice(valueArgument, staticArgument)
 formalArguments = modify(optional(listOf(formalArgument, comma)),
                          lambda x : [] if x is None else x)
-
-byRef = modify(optional(keyword("ref")), lambda x : x is not None)
 
 typeConditions = modify(sequence(keyword("if"), expressionList),
                         lambda x : x[1])

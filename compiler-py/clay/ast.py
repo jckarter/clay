@@ -210,11 +210,13 @@ class Label(Statement) :
         self.name = name
 
 class LocalBinding(Statement) :
-    def __init__(self, name, type, expr) :
+    def __init__(self, byRef, name, type, expr) :
         super(LocalBinding, self).__init__()
+        check(byRef, bool)
         check(name, Identifier)
         check2(type, Expression)
         check(expr, Expression)
+        self.byRef = byRef
         self.name = name
         self.type = type
         self.expr = expr

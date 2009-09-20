@@ -100,6 +100,13 @@ def toReferenceOfType(pattern) :
         return r
     return f
 
+def toValueOrReferenceOfType(pattern) :
+    def f(x) :
+        y = toValueOrReference(x)
+        matchType(pattern, y.type)
+        return y
+    return f
+
 
 
 #

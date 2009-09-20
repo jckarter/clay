@@ -77,8 +77,8 @@ symbol = token(regexParser(re.compile(symbolsRegex())),
 # keyword, identifier
 #
 
-keywordList = ("import export predicate instance record let def " +
-               "overloadable overload static ref and or not " +
+keywordList = ("import export predicate instance record let ref def " +
+               "overloadable overload static and or not " +
                "if else goto return while break continue for in " +
                "true false").split()
 keywordSet = set(keywordList)

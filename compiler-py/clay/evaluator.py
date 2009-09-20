@@ -122,11 +122,11 @@ def isReference(x) : return type(x) is Reference
 # temp values
 #
 
-_tempsBlocks = []
+_tempsBlocks = [[]]
 
 def _cleanupTempsBlocks() :
     global _tempsBlocks
-    _tempsBlocks = []
+    _tempsBlocks = [[]]
 
 installGlobalsCleanupHook(_cleanupTempsBlocks)
 
@@ -166,7 +166,7 @@ toBool.register(Reference)(lambda x : toBool(toValue(x)))
 
 
 #
-# toValue, toLValue, toReference, toStatic
+# toValue, toLValue, toReference, toValueOrReference, toStatic
 #
 
 toValue.register(Value)(lambda x : x)
@@ -184,6 +184,9 @@ toReference.register(Reference)(lambda x : x)
 @toReference.register(Value)
 def foo(x) :
     return Reference(x.type, ctypes.addressof(x.buf))
+
+toValueOrReference.register(Value)(lambda x : x)
+toValueOrReference.register(Reference)(lambda x : x)
 
 toStatic.register(Value)(lambda x : x)
 toStatic.register(Reference)(lambda x : toValue(x))
@@ -1288,11 +1291,13 @@ def foo(x, env, context) :
     while i < len(x.statements) :
         statement = x.statements[i]
         if type(statement) is LocalBinding :
-            converter = toValue
+            converter = toValueOrReference
             if statement.type is not None :
                 declaredType = evaluate(statement.type, env, toType)
-                converter = toValueOfType(declaredType)
+                converter = toValueOrReferenceOfType(declaredType)
             right = evaluateRootExpr(statement.expr, env, converter)
+            if not statement.byRef :
+                right = toValue(right)
             env = extendEnv(env, [statement.name], [right])
             evalCollectLabels(x.statements, i+1, labels, env)
         elif type(statement) is Label :
@@ -1395,12 +1400,14 @@ def foo(x, env, context) :
 #
 
 def convertForStatement(x) :
+    exprVar = Identifier("%expr")
     iterVar = Identifier("%iter")
     block = Block(
-        [LocalBinding(iterVar, None,
-                      Call(primitiveNameRef("iterator"), [x.expr])),
+        [LocalBinding(True, exprVar, None, x.expr),
+         LocalBinding(False, iterVar, None,
+                      Call(primitiveNameRef("iterator"), [NameRef(exprVar)])),
          While(Call(primitiveNameRef("hasNext"), [NameRef(iterVar)]),
-               Block([LocalBinding(x.variable, x.type,
+               Block([LocalBinding(True, x.variable, x.type,
                                    Call(primitiveNameRef("next"),
                                         [NameRef(iterVar)])),
                       x.body]))])

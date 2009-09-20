@@ -51,7 +51,8 @@ r(StaticExpr, lambda x : xo("StaticExpr", x.expr))
 
 r(Block, lambda x : xo("Block", *x.statements))
 r(Label, lambda x : xo("Label", x.name))
-r(LocalBinding, lambda x : xo("LocalBinding", x.name, x.type, x.expr))
+r(LocalBinding, lambda x : xo("LocalBinding", xf("byRef", x.byRef),
+                              x.name, x.type, x.expr))
 r(Assignment, lambda x : xo("Assignment", x.left, x.right))
 r(Goto, lambda x : xo("Goto", x.labelName))
 r(Return, lambda x : xo("Return", x.expr))
