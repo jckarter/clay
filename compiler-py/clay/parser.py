@@ -243,19 +243,21 @@ typeVars = modify(sequence(symbol("["), identifierList, symbol("]")),
                   lambda x : x[1])
 optTypeVars = modify(optional(typeVars), lambda x : [] if x is None else x)
 
-byRef = modify(optional(keyword("ref")), lambda x : x is not None)
-
-valueArgument = astNode(sequence(byRef, identifier, optTypeSpec),
-                        lambda x : ValueArgument(x[1],x[2],x[0]))
+valueArgument = astNode(sequence(identifier, optTypeSpec),
+                        lambda x : ValueArgument(x[0],x[1]))
 staticArgument = astNode(sequence(keyword("static"), expression),
                          lambda x : StaticArgument(x[1]))
 formalArgument = choice(valueArgument, staticArgument)
 formalArguments = modify(optional(listOf(formalArgument, comma)),
                          lambda x : [] if x is None else x)
+
+byRef = modify(optional(keyword("ref")), lambda x : x is not None)
+
 typeConditions = modify(sequence(keyword("if"), expressionList),
                         lambda x : x[1])
 optTypeConditions = modify(optional(typeConditions),
                            lambda x : [] if x is None else x)
+
 code = astNode(sequence(optTypeVars, symbol("("), formalArguments,
                         symbol(")"), byRef, optTypeSpec,
                         optTypeConditions, block),

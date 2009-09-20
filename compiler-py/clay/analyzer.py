@@ -700,9 +700,6 @@ class RTActualArgument(object) :
     def asReference(self) :
         return withContext(self.expr, lambda : toRTReference(self.result_))
 
-    def asValue(self) :
-        return withContext(self.expr, lambda : toRTValue(self.result_))
-
     def asStatic(self) :
         return withContext(self.expr, lambda : toStatic(self.result_))
 

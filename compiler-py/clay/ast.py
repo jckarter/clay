@@ -310,14 +310,12 @@ class FormalArgument(ASTNode) :
     pass
 
 class ValueArgument(FormalArgument) :
-    def __init__(self, name, type, byRef) :
+    def __init__(self, name, type) :
         super(ValueArgument, self).__init__()
         check(name, Identifier)
         check2(type, Expression)
-        check(byRef, bool)
         self.name = name
         self.type = type
-        self.byRef = byRef
 
 class StaticArgument(FormalArgument) :
     def __init__(self, type) :

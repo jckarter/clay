@@ -1,6 +1,6 @@
 import base;
 
-def insertionSort(ref a) {
+def insertionSort(a) {
     var i = 1;
     while (i < size(a)) {
         var x = at(a, i);
@@ -15,7 +15,7 @@ def insertionSort(ref a) {
     }
 }
 
-def reverse(ref a) {
+def reverse(a) {
     var n = size(a);
     for (var i in range(n / 2))
         swap(at(a, i), at(a, n-i-1));

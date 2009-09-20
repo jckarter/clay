@@ -24,7 +24,7 @@ ProcedureDef -> "def" Identifier Procedure
 Procedure -> TypeVars? "(" comma_list(Argument)? ")"
              "ref"? TypeSpec? TypeConditions? Block
 
-Argument -> "ref"? Variable
+Argument -> Variable
           | "static" Expression
 
 TypeConditions -> "if" comma_list(TypeCondition)

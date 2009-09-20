@@ -5,31 +5,31 @@ import __primitives__;
 // defaults
 //
 
-overload init[T](ref a:T) {
+overload init[T](a:T) {
 }
 
-overload destroy[T](ref a:T) {
+overload destroy[T](a:T) {
 }
 
-overload assign[T](ref dest:T, ref src:T) {
+overload assign[T](dest:T, src:T) {
     if (equals(&dest, &src)) return;
     destroy(dest);
     copy(dest, src);
 }
 
-def notEquals[T](ref a:T, ref b:T) {
+def notEquals[T](a:T, b:T) {
     return not equals(a, b);
 }
 
-overload lesserEquals[T](ref a:T, ref b:T) {
+overload lesserEquals[T](a:T, b:T) {
     return equals(a, b) or lesser(a, b);
 }
 
-overload greater[T](ref a:T, ref b:T) {
+overload greater[T](a:T, b:T) {
     return not lesserEquals(a, b);
 }
 
-overload greaterEquals[T](ref a:T, ref b:T) {
+overload greaterEquals[T](a:T, b:T) {
     return not lesser(a, b);
 }
 
@@ -38,7 +38,7 @@ overload greaterEquals[T](ref a:T, ref b:T) {
 // Bool
 //
 
-overload copy(ref dest:Bool, ref src:Bool) {
+overload copy(dest:Bool, src:Bool) {
     boolCopy(dest, src);
 }
 
@@ -64,7 +64,7 @@ overload hash(a:Bool) {
 // Char
 //
 
-overload copy[T](ref dest:Char, ref src:Char) { charCopy(dest, src); }
+overload copy[T](dest:Char, src:Char) { charCopy(dest, src); }
 
 overload equals(a:Char, b:Char) { return charEquals(a, b); }
 overload lesser(a:Char, b:Char) { return charLesser(a, b); }
@@ -76,7 +76,7 @@ overload hash(a:Char) { return charToInt(a); }
 // Int
 //
 
-overload copy(ref dest:Int, ref src:Int) { intCopy(dest, src); }
+overload copy(dest:Int, src:Int) { intCopy(dest, src); }
 
 overload equals(a:Int, b:Int) { return intEquals(a, b); }
 overload lesser(a:Int, b:Int) { return intLesser(a, b); }
@@ -97,7 +97,7 @@ overload minus(a:Int) { return intNegate(a); }
 // Float
 //
 
-overload copy[T](ref dest:Float, ref src:Float) { floatCopy(dest, src); }
+overload copy[T](dest:Float, src:Float) { floatCopy(dest, src); }
 
 overload equals(a:Float, b:Float) { return floatEquals(a, b); }
 overload lesser(a:Float, b:Float) { return floatLesser(a, b); }
@@ -117,7 +117,7 @@ overload minus(a:Float) { return floatNegate(a); }
 // Double
 //
 
-overload copy[T](ref dest:Double, ref src:Double) { doubleCopy(dest, src); }
+overload copy[T](dest:Double, src:Double) { doubleCopy(dest, src); }
 
 overload equals(a:Double, b:Double) { return doubleEquals(a, b); }
 overload lesser(a:Double, b:Double) { return doubleLesser(a, b); }
@@ -137,7 +137,7 @@ overload minus(a:Double) { return doubleNegate(a); }
 // Pointer[T]
 //
 
-overload copy[T](ref dest:Pointer[T], ref src:Pointer[T]) {
+overload copy[T](dest:Pointer[T], src:Pointer[T]) {
     pointerCopy(dest, src);
 }
 
@@ -171,7 +171,7 @@ def null[T](static T) {
 // Array[T,n]
 //
 
-overload init[T,n](ref a:Array[T,n]) {
+overload init[T,n](a:Array[T,n]) {
     var i = 0;
     while (lesser(i, n)) {
         init(arrayRef(a, i));
@@ -179,7 +179,7 @@ overload init[T,n](ref a:Array[T,n]) {
     }
 }
 
-overload copy[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
+overload copy[T,n](dest:Array[T,n], src:Array[T,n]) {
     var i = 0;
     while (lesser(i, n)) {
         copy(arrayRef(dest, i), arrayRef(src, i));
@@ -187,7 +187,7 @@ overload copy[T,n](ref dest:Array[T,n], ref src:Array[T,n]) {
     }
 }
 
-overload destroy[T,n](ref a:Array[T,n]) {
+overload destroy[T,n](a:Array[T,n]) {
     var i = 0;
     while (lesser(i, n)) {
         destroy(arrayRef(a, i));
@@ -195,7 +195,7 @@ overload destroy[T,n](ref a:Array[T,n]) {
     }
 }
 
-overload equals[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
+overload equals[T,n](a:Array[T,n], b:Array[T,n]) {
     var i = 0;
     while (lesser(i, n)) {
         if (notEquals(arrayRef(a, i), arrayRef(b, i)))
@@ -205,7 +205,7 @@ overload equals[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
     return true;
 }
 
-overload lesser[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
+overload lesser[T,n](a:Array[T,n], b:Array[T,n]) {
     var i = 0;
     while (lesser(i, n)) {
         if (lesser(arrayRef(a, i), arrayRef(b, i)))
@@ -217,7 +217,7 @@ overload lesser[T,n](ref a:Array[T,n], ref b:Array[T,n]) {
     return false;
 }
 
-overload hash[T,n](ref a:Array[T,n]) {
+overload hash[T,n](a:Array[T,n]) {
     var h = 0;
     var i = 0;
     while (lesser(i, n)) {
@@ -227,7 +227,7 @@ overload hash[T,n](ref a:Array[T,n]) {
     return h;
 }
 
-def arraySize[T,n](ref a:Array[T,n]) {
+def arraySize[T,n](a:Array[T,n]) {
     return n;
 }
 
@@ -247,11 +247,11 @@ overload fieldCount[T](static T) if TupleType(T) {
     return tupleFieldCount(T);
 }
 
-overload fieldRef[T,i](ref a:T, static i) ref if RecordType(T) {
+overload fieldRef[T,i](a:T, static i) ref if RecordType(T) {
     return recordFieldRef(a, i);
 }
 
-overload fieldRef[T,i](ref a:T, static i) ref if TupleType(T) {
+overload fieldRef[T,i](a:T, static i) ref if TupleType(T) {
     return tupleFieldRef(a, i);
 }
 
@@ -265,90 +265,90 @@ def RecordOrTuple[T](static T) {
     return false;
 }
 
-overload init[T](ref a:T) if RecordOrTuple(T) {
+overload init[T](a:T) if RecordOrTuple(T) {
     initFields(a, static 0);
 }
 
 overloadable initFields;
-overload initFields[T,i](ref a:T, static i) {
+overload initFields[T,i](a:T, static i) {
     init(fieldRef(a, i));
     initFields(a, static add(i, 1));
 }
-overload initFields[T, i](ref a:T, static i)
+overload initFields[T, i](a:T, static i)
         if lastFieldIndex(T, i) {
     return;
 }
 
-overload copy[T](ref dest:T, ref src:T) if RecordOrTuple(T) {
+overload copy[T](dest:T, src:T) if RecordOrTuple(T) {
     copyFields(dest, src, static 0);
 }
 
 overloadable copyFields;
-overload copyFields[T, i](ref dest:T, ref src:T, static i) {
+overload copyFields[T, i](dest:T, src:T, static i) {
     copy(fieldRef(dest, i), fieldRef(src, i));
     copyFields(dest, src, static add(i, 1));
 }
-overload copyFields[T, i](ref dest:T, ref src:T, static i)
+overload copyFields[T, i](dest:T, src:T, static i)
         if lastFieldIndex(T, i) {
     return;
 }
 
-overload destroy[T](ref a:T) if RecordOrTuple(T) {
+overload destroy[T](a:T) if RecordOrTuple(T) {
     destroyFields(a, static 0);
 }
 
 overloadable destroyFields;
-overload destroyFields[T, i](ref a:T, static i) {
+overload destroyFields[T, i](a:T, static i) {
     destroy(fieldRef(a, i));
     destroyFields(a, static add(i, 1));
 }
-overload destroyFields[T, i](ref a:T, static i)
+overload destroyFields[T, i](a:T, static i)
         if lastFieldIndex(T, i) {
     return;
 }
 
-overload equals[T](ref a:T, ref b:T) if RecordOrTuple(T) {
+overload equals[T](a:T, b:T) if RecordOrTuple(T) {
     return equalFields(a, b, static 0);
 }
 
 overloadable equalFields;
-overload equalFields[T, i](ref a:T, ref b:T, static i) {
+overload equalFields[T, i](a:T, b:T, static i) {
     if (notEquals(fieldRef(a, i), fieldRef(b, i)))
         return false;
     return equalFields(a, b, static add(i, 1));
 }
-overload equalFields[T, i](ref a:T, ref b:T, static i)
+overload equalFields[T, i](a:T, b:T, static i)
         if lastFieldIndex(T, i) {
     return true;
 }
 
-overload lesser[T](ref a:T, ref b:T) if RecordOrTuple(T) {
+overload lesser[T](a:T, b:T) if RecordOrTuple(T) {
     return lesserFields(a, b, static 0);
 }
 
 overloadable lesserFields;
-overload lesserFields[T,i](ref a:T, ref b:T, static i) {
+overload lesserFields[T,i](a:T, b:T, static i) {
     if (lesser(fieldRef(a, i), fieldRef(b, i)))
         return true;
     if (lesser(fieldRef(b, i), fieldRef(a, i)))
         return false;
     return lesserFields(a, b, static add(i, 1));
 }
-overload lesserFields[T, i](ref a:T, ref b:T, static i)
+overload lesserFields[T, i](a:T, b:T, static i)
         if lastFieldIndex(T, i) {
     return false;
 }
 
-overload hash[T](ref a:T) if RecordOrTuple(T) {
+overload hash[T](a:T) if RecordOrTuple(T) {
     return hashFields(a, static 0);
 }
 
 overloadable hashFields;
-overload hashFields[T,i](ref a:T, static i) {
+overload hashFields[T,i](a:T, static i) {
     var curH = hash(fieldRef(a, i));
     return add(curH, hashFields(a, static add(i, 1)));
 }
-overload hashFields[T, i](ref a:T, static i)
+overload hashFields[T, i](a:T, static i)
         if lastFieldIndex(T, i) {
     return 0;
 }
@@ -363,19 +363,19 @@ overloadable at;
 overloadable begin;
 overloadable end;
 
-overload size[T,n](ref a:Array[T,n]) {
+overload size[T,n](a:Array[T,n]) {
     return n;
 }
 
-overload at[T,n](ref a:Array[T,n], i) ref {
+overload at[T,n](a:Array[T,n], i) ref {
     return arrayRef(a, i);
 }
 
-overload begin[T,n](ref a:Array[T,n]) {
+overload begin[T,n](a:Array[T,n]) {
     return &at(a, 0);
 }
 
-overload end[T,n](ref a:Array[T,n]) {
+overload end[T,n](a:Array[T,n]) {
      return &at(a, n);
 }
 

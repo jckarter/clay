@@ -72,8 +72,7 @@ r(For, lambda x : xo("For", x.variable, x.type, x.expr, x.body))
 
 r(Code, lambda x : xo("Code", x.typeVars, tuple(x.formalArgs), x.returnByRef,
                       x.returnType, xf("if",x.typeConditions), x.body))
-r(ValueArgument, lambda x : xo("ValueArgument", x.name, x.type,
-                               xf("byRef",x.byRef)))
+r(ValueArgument, lambda x : xo("ValueArgument", x.name, x.type))
 r(StaticArgument, lambda x : xo("StaticArgument", x.type))
 
 

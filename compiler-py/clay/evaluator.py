@@ -1168,9 +1168,6 @@ class ActualArgument(object) :
     def asReference(self) :
         return withContext(self.expr, lambda : toReference(self.result_))
 
-    def asValue(self) :
-        return withContext(self.expr, lambda : toValue(self.result_))
-
     def asStatic(self) :
         return withContext(self.expr, lambda : toStatic(self.result_))
 
@@ -1211,10 +1208,7 @@ def matchInvoke(code, codeEnv, actualArgs) :
     vars, params = [], []
     for actualArg, formalArg in zip(actualArgs, code.formalArgs) :
         if type(formalArg) is ValueArgument :
-            if formalArg.byRef :
-                arg = actualArg.asReference()
-            else :
-                arg = actualArg.asValue()
+            arg = actualArg.asReference()
             if formalArg.type is not None :
                 typePattern = evaluate(formalArg.type, codeEnv2, toTypeOrCell)
                 if not unify(typePattern, arg.type) :

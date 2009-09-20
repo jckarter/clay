@@ -5,7 +5,7 @@ import base;
 // swap
 //
 
-def swap(ref a, ref b) {
+def swap(a, b) {
     var temp = a;
     a = b;
     b = temp;
@@ -25,15 +25,15 @@ def range(n) {
     return Range(0, n);
 }
 
-overload iterator[I](ref r:Range[I]) {
+overload iterator[I](r:Range[I]) {
     return r;
 }
 
-overload hasNext[I](ref a:Range[I]) {
+overload hasNext[I](a:Range[I]) {
     return lesser(a.first, a.last);
 }
 
-overload next[I](ref a:Range[I]) {
+overload next[I](a:Range[I]) {
     var x = a.first;
     a.first = add(x, 1);
     return x;
