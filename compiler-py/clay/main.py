@@ -30,18 +30,13 @@ def clearTempFiles() :
     for f in tempFiles :
         os.remove(f)
 
-def loadAnalyzeAndEval() :
-    fileName = sys.argv[1]
-    try :
-        module = loadProgram(fileName)
-        mainCall = Call(NameRef(Identifier("main")), [])
-        result = analyze(mainCall, module.env)
-        xprint(result)
-        result = evaluate(mainCall, module.env)
-        xprint(result)
-    except CompilerError, e :
-        e.display()
-        raise
+def loadAnalyzeAndEval(fileName) :
+    module = loadProgram(fileName)
+    mainCall = Call(NameRef(Identifier("main")), [])
+    result = analyze(mainCall, module.env)
+    xprint(result)
+    result = evaluate(mainCall, module.env)
+    xprint(result)
 
 def loadAndCompile(fileName) :
     module = loadProgram(fileName)
@@ -54,6 +49,8 @@ def loadAndCompile(fileName) :
 
 def compileAndMakeExe() :
     parser = optparse.OptionParser()
+    parser.add_option("--eval", action="store_true",
+                      dest="evaluate", default=False)
     parser.add_option("-o", action="store",
                       dest="output", default=None)
     (options, args) = parser.parse_args()
@@ -62,7 +59,9 @@ def compileAndMakeExe() :
     if len(args) > 1 :
         parser.error("only one input file allowed: %s" % str(args))
 
-    # loadAnalyzeAndEval()
+    if options.evaluate :
+        loadAnalyzeAndEval(args[0])
+        return
     llvmModule = loadAndCompile(args[0])
 
     llFile = newTempFile(".ll")
