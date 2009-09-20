@@ -17,7 +17,7 @@ overload assign[T](dest:T, src:T) {
     copy(dest, src);
 }
 
-def notEquals[T](a:T, b:T) {
+overload notEquals[T](a:T, b:T) {
     return not equals(a, b);
 }
 
@@ -43,7 +43,6 @@ overload copy(dest:Bool, src:Bool) {
 }
 
 overload equals(a:Bool, b:Bool) {
-    
     if (a) return b;
     return not b;
 }

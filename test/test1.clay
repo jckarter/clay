@@ -33,9 +33,9 @@ record NodeB[T] {
 }
 
 def main() {
-    var n = 7;
+    let n = 7;
     n = n - 1;
-    var f = factorial(n);
-    var p = default(NodeA[(Int,Bool)]);
+    let f = factorial(n);
+    let p = default(NodeA[(Int,Bool)]);
     return (foo(), isEven(n), f, p);
 }
