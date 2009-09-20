@@ -763,7 +763,10 @@ def analyzeInvoke2(code, env) :
 #
 
 def analyzeStatement(x, env, context) :
-    return withContext(x, lambda : analyzeStatement2(x, env, context))
+    pushTempsBlock()
+    result = withContext(x, lambda : analyzeStatement2(x, env, context))
+    popTempsBlock()
+    return result
 
 
 

@@ -119,6 +119,34 @@ def isReference(x) : return type(x) is Reference
 
 
 #
+# temp values
+#
+
+_tempsBlocks = []
+
+def _cleanupTempsBlocks() :
+    global _tempsBlocks
+    _tempsBlocks = []
+
+installGlobalsCleanupHook(_cleanupTempsBlocks)
+
+def pushTempsBlock() :
+    block = []
+    _tempsBlocks.append(block)
+
+def popTempsBlock() :
+    block = _tempsBlocks.pop()
+    while block :
+        block.pop()
+
+def tempValue(type_) :
+    v = Value(type_)
+    _tempsBlocks[-1].append(v)
+    return v
+
+
+
+#
 # toInt, toBool
 #
 
@@ -145,7 +173,7 @@ toValue.register(Value)(lambda x : x)
 
 @toValue.register(Reference)
 def foo(x) :
-    v = Value(x.type)
+    v = tempValue(x.type)
     valueCopy(v, x)
     return v
 
@@ -167,17 +195,17 @@ toStatic.register(Reference)(lambda x : toValue(x))
 #
 
 def boolToValue(x) :
-    v = Value(boolType)
+    v = tempValue(boolType)
     v.buf.value = x
     return v
 
 def intToValue(x) :
-    v = Value(intType)
+    v = tempValue(intType)
     v.buf.value = x
     return v
 
 def charToValue(x) :
-    v = Value(charType)
+    v = tempValue(charType)
     v.buf.value = x
     return v
 
@@ -288,7 +316,7 @@ def tupleFieldRef(a, i) :
 
 def makeTuple(argRefs) :
     t = tupleType([x.type for x in argRefs])
-    value = Value(t)
+    value = tempValue(t)
     valueRef = toReference(value)
     for i, argRef in enumerate(argRefs) :
         left = tupleFieldRef(valueRef, i)
@@ -311,7 +339,7 @@ def recordFieldIndex(recType, ident) :
     error("record field not found: %s" % ident.s)
 
 def makeRecord(recType, argRefs) :
-    value = Value(recType)
+    value = tempValue(recType)
     valueRef = toReference(value)
     for i, argRef in enumerate(argRefs) :
         left = recordFieldRef(valueRef, i)
@@ -413,6 +441,18 @@ def convertObjects(converter, objects, contexts) :
     result = []
     for object_, context in zip(objects, contexts) :
         result.append(convertObject(converter, object_, context))
+    return result
+
+
+
+#
+# evaluateRootExpr
+#
+
+def evaluateRootExpr(expr, env, converter=(lambda x : x)) :
+    pushTempsBlock()
+    result = evaluate(expr, env, converter)
+    popTempsBlock()
     return result
 
 
@@ -657,7 +697,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
-    v = Value(t)
+    v = tempValue(t)
     valueInit(v)
     return v
 
@@ -694,7 +734,7 @@ def simpleMop(mop, args, env, argTypes, returnType) :
         ref = convertObject(toReferenceOfType(argType), earg, arg)
         mopInput.append(ref)
     if returnType is not None :
-        result = Value(returnType)
+        result = tempValue(returnType)
         mopInput.append(result)
     else :
         result = voidValue
@@ -713,7 +753,7 @@ def pointerToAddress(ptr) :
 
 def addressToPointer(addr, ptrType) :
     void_ptr = ctypes.c_void_p(addr)
-    ptr = Value(ptrType)
+    ptr = tempValue(ptrType)
     ptr.buf = ctypes.cast(void_ptr, ptr.ctypesType)
     return ptr
 
@@ -738,7 +778,7 @@ def foo(x, args, env) :
     converter = toReferenceOfType(pointerType(cell))
     ptr = convertObject(converter, eargs[0], args[0])
     offset = convertObject(toReferenceOfType(intType), eargs[1], args[1])
-    result = Value(ptr.type)
+    result = tempValue(ptr.type)
     callMachineOp(mop_pointerOffset, [ptr, offset, result])
     return result
 
@@ -750,7 +790,7 @@ def foo(x, args, env) :
     converter = toReferenceOfType(pointerType(cell))
     ptr1 = convertObject(converter, eargs[0], args[0])
     ptr2 = convertObject(converter, eargs[1], args[1])
-    result = Value(intType)
+    result = tempValue(intType)
     callMachineOp(mop_pointerSubtract, [ptr1, ptr2, result])
     return result
 
@@ -781,7 +821,7 @@ def foo(x, args, env) :
     converter = toReferenceOfType(pointerType(cell))
     ptr1 = convertObject(converter, eargs[0], args[0])
     ptr2 = convertObject(converter, eargs[1], args[1])
-    result = Value(boolType)
+    result = tempValue(boolType)
     callMachineOp(mop_pointerEquals, [ptr1, ptr2, result])
     return result
 
@@ -793,7 +833,7 @@ def foo(x, args, env) :
     converter = toReferenceOfType(pointerType(cell))
     ptr1 = convertObject(converter, eargs[0], args[0])
     ptr2 = convertObject(converter, eargs[1], args[1])
-    result = Value(boolType)
+    result = tempValue(boolType)
     callMachineOp(mop_pointerLesser, [ptr1, ptr2, result])
     return result
 
@@ -802,7 +842,7 @@ def foo(x, args, env) :
     ensureArity(args, 1)
     size = evaluate(args[0], env)
     sizeRef = convertObject(toReferenceOfType(intType), size, args[0])
-    result = Value(pointerType(intType))
+    result = tempValue(pointerType(intType))
     callMachineOp(mop_allocateMemory, [sizeRef, result])
     return result
 
@@ -861,7 +901,7 @@ def foo(x, args, env) :
     eargs = [evaluate(y, env) for y in args]
     elementType = convertObject(toType, eargs[0], args[0])
     n = convertObject(toInt, eargs[1], args[1])
-    a = Value(arrayType(elementType, intToValue(n)))
+    a = tempValue(arrayType(elementType, intToValue(n)))
     valueInit(a)
     return a
 
@@ -1258,7 +1298,7 @@ def foo(x, env, context) :
             if statement.type is not None :
                 declaredType = evaluate(statement.type, env, toType)
                 converter = toValueOfType(declaredType)
-            right = evaluate(statement.expr, env, converter)
+            right = evaluateRootExpr(statement.expr, env, converter)
             env = extendEnv(env, [statement.name], [right])
             evalCollectLabels(x.statements, i+1, labels, env)
         elif type(statement) is Label :
@@ -1288,10 +1328,12 @@ def evalCollectLabels(statements, startIndex, labels, env) :
 
 @evalStatement2.register(Assignment)
 def foo(x, env, context) :
+    pushTempsBlock()
     left = evaluate(x.left, env, toLValue)
     right = evaluate(x.right, env)
     rightRef = convertObject(toReferenceOfType(left.type), right, x.right)
     valueAssign(left, rightRef)
+    popTempsBlock()
 
 @evalStatement2.register(Goto)
 def foo(x, env, context) :
@@ -1300,13 +1342,13 @@ def foo(x, env, context) :
 @evalStatement2.register(Return)
 def foo(x, env, context) :
     if context.returnByRef :
-        result = evaluate(x.expr, env, toLValue)
+        result = evaluateRootExpr(x.expr, env, toLValue)
         resultType = result.type
     elif x.expr is None :
         result = voidValue
         resultType = voidType
     else :
-        result = evaluate(x.expr, env, toStatic)
+        result = evaluateRootExpr(x.expr, env, toStatic)
         resultType = result.type if isValue(result) else None
     if context.returnType is not None :
         def check() :
@@ -1316,7 +1358,7 @@ def foo(x, env, context) :
 
 @evalStatement2.register(IfStatement)
 def foo(x, env, context) :
-    cond = evaluate(x.condition, env, toBool)
+    cond = evaluateRootExpr(x.condition, env, toBool)
     if cond :
         return evalStatement(x.thenPart, env, context)
     elif x.elsePart is not None :
@@ -1324,12 +1366,12 @@ def foo(x, env, context) :
 
 @evalStatement2.register(ExprStatement)
 def foo(x, env, context) :
-    evaluate(x.expr, env)
+    evaluateRootExpr(x.expr, env)
 
 @evalStatement2.register(While)
 def foo(x, env, context) :
     while True :
-        cond = evaluate(x.condition, env, toBool)
+        cond = evaluateRootExpr(x.condition, env, toBool)
         if not cond :
             break
         result = evalStatement(x.body, env, context)
