@@ -190,7 +190,7 @@ block = astNode(sequence(symbol("{"), zeroPlus(statement2), symbol("}")),
 labelDef = astNode(sequence(identifier, symbol(":")),
                    lambda x : Label(x[0]))
 
-localBinding = astNode(sequence(keyword("var"), identifier, optTypeSpec,
+localBinding = astNode(sequence(keyword("let"), identifier, optTypeSpec,
                                 symbol("="), expression, semicolon),
                        lambda x : LocalBinding(x[1],x[2],x[4]))
 
@@ -223,10 +223,10 @@ breakStatement = astNode(sequence(keyword("break"), semicolon),
 continueStatement = astNode(sequence(keyword("continue"), semicolon),
                             lambda x : Continue())
 
-forStatement = astNode(sequence(keyword("for"), symbol("("), keyword("var"),
+forStatement = astNode(sequence(keyword("for"), symbol("("),
                                 identifier, optTypeSpec, keyword("in"),
                                 expression, symbol(")"), statement2),
-                       lambda x : For(x[3], x[4], x[6], x[8]))
+                       lambda x : For(x[2], x[3], x[5], x[7]))
 
 statement = choice(block, labelDef, localBinding, assignment, ifStatement,
                    gotoStatement, returnStatement, exprStatement,

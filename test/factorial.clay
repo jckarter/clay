@@ -7,7 +7,7 @@ def factorial1(n) {
 }
 
 def factorial2(n) {
-    var p = 1;
+    let p = 1;
     again :
     if (n == 0)
         return p;
@@ -17,7 +17,7 @@ def factorial2(n) {
 }
 
 def factorial3(n) {
-    var p = 1;
+    let p = 1;
     while (true) {
         if (n == 0) break;
         p = p * n;
@@ -27,15 +27,15 @@ def factorial3(n) {
 }
 
 def factorial4(n) {
-    var p = 1;
-    for (var i in range(n))
+    let p = 1;
+    for (i in range(n))
         p = p * (i+1);
     return p;
 }
 
 def main() {
-    var n = 7;
+    let n = 7;
     n = n - 1;
-    var f = factorial4(n);
+    let f = factorial4(n);
     return f;
 }

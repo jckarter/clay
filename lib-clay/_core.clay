@@ -172,7 +172,7 @@ def null[T](static T) {
 //
 
 overload init[T,n](a:Array[T,n]) {
-    var i = 0;
+    let i = 0;
     while (lesser(i, n)) {
         init(arrayRef(a, i));
         i = add(i, 1);
@@ -180,7 +180,7 @@ overload init[T,n](a:Array[T,n]) {
 }
 
 overload copy[T,n](dest:Array[T,n], src:Array[T,n]) {
-    var i = 0;
+    let i = 0;
     while (lesser(i, n)) {
         copy(arrayRef(dest, i), arrayRef(src, i));
         i = add(i, 1);
@@ -188,7 +188,7 @@ overload copy[T,n](dest:Array[T,n], src:Array[T,n]) {
 }
 
 overload destroy[T,n](a:Array[T,n]) {
-    var i = 0;
+    let i = 0;
     while (lesser(i, n)) {
         destroy(arrayRef(a, i));
         i = add(i, 1);
@@ -196,7 +196,7 @@ overload destroy[T,n](a:Array[T,n]) {
 }
 
 overload equals[T,n](a:Array[T,n], b:Array[T,n]) {
-    var i = 0;
+    let i = 0;
     while (lesser(i, n)) {
         if (notEquals(arrayRef(a, i), arrayRef(b, i)))
             return false;
@@ -206,7 +206,7 @@ overload equals[T,n](a:Array[T,n], b:Array[T,n]) {
 }
 
 overload lesser[T,n](a:Array[T,n], b:Array[T,n]) {
-    var i = 0;
+    let i = 0;
     while (lesser(i, n)) {
         if (lesser(arrayRef(a, i), arrayRef(b, i)))
             return true;
@@ -218,8 +218,8 @@ overload lesser[T,n](a:Array[T,n], b:Array[T,n]) {
 }
 
 overload hash[T,n](a:Array[T,n]) {
-    var h = 0;
-    var i = 0;
+    let h = 0;
+    let i = 0;
     while (lesser(i, n)) {
         h = add(h, hash(arrayRef(a, i)));
         i = add(i, 1);
@@ -345,7 +345,7 @@ overload hash[T](a:T) if RecordOrTuple(T) {
 
 overloadable hashFields;
 overload hashFields[T,i](a:T, static i) {
-    var curH = hash(fieldRef(a, i));
+    let curH = hash(fieldRef(a, i));
     return add(curH, hashFields(a, static add(i, 1)));
 }
 overload hashFields[T, i](a:T, static i)

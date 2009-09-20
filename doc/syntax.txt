@@ -6,7 +6,7 @@ Export -> "export" DottedName ";"
 DottedName -> Identifier ("." Identifier)*
 
 
-TopLevelItem -> RecordDef | GlobalVarDef | ProcedureDef
+TopLevelItem -> RecordDef | GlobalBinding | ProcedureDef
               | OverloadableDef | OverloadDef
 
 RecordDef -> "record" Identifier TypeVars? "{" FieldDef+ "}"
@@ -15,7 +15,7 @@ FieldDef -> Identifier TypeSpec ";"
 TypeVars -> "[" comma_list(Identifier) "]"
 TypeSpec -> ":" TypeExpr
 
-GlobalVarDef -> "var" Variable "=" Expression ";"
+GlobalBinding -> "let" Variable "=" Expression ";"
 
 Variable -> Identifier TypeSpec?
 
@@ -51,7 +51,7 @@ Statement -> Block
 
 LabelDef -> Identifier ":"
 
-LocalBinding -> "var" Variable "=" Expression ";"
+LocalBinding -> "let" Variable "=" Expression ";"
 
 Assignment -> Expression "=" Expression ";"
 
@@ -68,7 +68,7 @@ WhileStatement -> "while" "(" Expression ")" Statement
 BreakStatement -> "break" ";"
 ContinueStatement -> "continue" ";"
 
-ForStatement -> "for" "(" "var" Identifier "in" Expression ")" Statement
+ForStatement -> "for" "(" Identifier "in" Expression ")" Statement
 
 TypeExpr -> Expression
 

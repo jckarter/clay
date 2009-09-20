@@ -6,7 +6,7 @@ import base;
 //
 
 def swap(a, b) {
-    var temp = a;
+    let temp = a;
     a = b;
     b = temp;
 }
@@ -34,7 +34,7 @@ overload hasNext[I](a:Range[I]) {
 }
 
 overload next[I](a:Range[I]) {
-    var x = a.first;
+    let x = a.first;
     a.first = add(x, 1);
     return x;
 }
