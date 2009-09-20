@@ -546,7 +546,7 @@ def foo(x, env) :
 @evaluate2.register(NotExpr)
 def foo(x, env) :
     v = evaluate(x.expr, env, toBool)
-    return boolToValue(v)
+    return boolToValue(not v)
 
 @evaluate2.register(AndExpr)
 def foo(x, env) :
