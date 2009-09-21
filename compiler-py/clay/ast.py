@@ -320,10 +320,10 @@ class ValueArgument(FormalArgument) :
         self.type = type
 
 class StaticArgument(FormalArgument) :
-    def __init__(self, type) :
+    def __init__(self, pattern) :
         super(StaticArgument, self).__init__()
-        check(type, Expression)
-        self.type = type
+        check(pattern, Expression)
+        self.pattern = pattern
 
 
 

@@ -1233,9 +1233,8 @@ def matchInvoke(code, codeEnv, actualArgs) :
             params.append(arg)
         elif type(formalArg) is StaticArgument :
             arg = actualArg.asStatic()
-            formalType = formalArg.type
-            typePattern = evaluate(formalType, codeEnv2, toStaticOrCell)
-            if not unify(typePattern, arg) :
+            pattern = evaluate(formalArg.pattern, codeEnv2, toStaticOrCell)
+            if not unify(pattern, arg) :
                 return argMismatch(actualArg)
         else :
             assert False
