@@ -1216,8 +1216,8 @@ class InvokeBindings(object) :
 def matchInvoke(code, codeEnv, actualArgs) :
     def argMismatch(actualArg) :
         return InvokeError("argument mismatch", actualArg.expr)
-    def typeCondFailure(typeCond) :
-        return InvokeError("type condition failed", typeCond)
+    def predicateFailure(typeCond) :
+        return InvokeError("predicate failed", typeCond)
     if len(actualArgs) != len(code.formalArgs) :
         return InvokeError("incorrect no. of arguments")
     codeEnv2, cells = bindTypeVars(codeEnv, code.typeVars)
@@ -1240,11 +1240,10 @@ def matchInvoke(code, codeEnv, actualArgs) :
         else :
             assert False
     typeParams = resolveTypeVars(code.typeVars, cells)
-    codeEnv2 = extendEnv(codeEnv, code.typeVars, typeParams)
-    for typeCondition in code.typeConditions :
-        result = evaluate(typeCondition, codeEnv2, toBool)
-        if not result :
-            return typeCondFailure(typeCondition)
+    if code.predicate is not None :
+        codeEnv2 = extendEnv(codeEnv, code.typeVars, typeParams)
+        if not evaluate(code.predicate, codeEnv2, toBool) :
+            return predicateFailure(code.predicate)
     return InvokeBindings(code.typeVars, typeParams, vars, params)
 
 

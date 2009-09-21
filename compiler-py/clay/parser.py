@@ -253,14 +253,12 @@ formalArgument = choice(valueArgument, staticArgument)
 formalArguments = modify(optional(listOf(formalArgument, comma)),
                          lambda x : [] if x is None else x)
 
-typeConditions = modify(sequence(keyword("if"), expressionList),
-                        lambda x : x[1])
-optTypeConditions = modify(optional(typeConditions),
-                           lambda x : [] if x is None else x)
+predicate = modify(sequence(keyword("if"), parenCondition),
+                   lambda x : x[1])
 
 code = astNode(sequence(optTypeVars, symbol("("), formalArguments,
                         symbol(")"), byRef, optTypeSpec,
-                        optTypeConditions, block),
+                        optional(predicate), block),
                lambda x : Code(x[0],x[2],x[4],x[5],x[6],x[7]))
 
 

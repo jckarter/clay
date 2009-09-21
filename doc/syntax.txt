@@ -22,13 +22,12 @@ Variable -> Identifier TypeSpec?
 ProcedureDef -> "def" Identifier Procedure
 
 Procedure -> TypeVars? "(" comma_list(Argument)? ")"
-             "ref"? TypeSpec? TypeConditions? Block
+             "ref"? TypeSpec? Predicate? Block
 
 Argument -> Variable
           | "static" Expression
 
-TypeConditions -> "if" comma_list(TypeCondition)
-TypeCondition -> Identifier "(" comma_list(TypeExpr) ")"
+Predicate -> "if" "(" Expression ")" ;
 
 OverloadableDef -> "overloadable" Identifier ";"
 
