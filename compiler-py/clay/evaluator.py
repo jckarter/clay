@@ -139,6 +139,9 @@ def popTempsBlock() :
     while block :
         block.pop()
 
+def installTemp(value) :
+    _tempsBlocks[-1].append(value)
+
 def tempValue(type_) :
     v = Value(type_)
     _tempsBlocks[-1].append(v)
@@ -1264,6 +1267,8 @@ def evalInvoke(code, env, bindings) :
         withContext(result, lambda : error("invalid break statement"))
     if type(result) is Continue :
         withContext(result, lambda : error("invalid continue statement"))
+    if isValue(result) :
+        installTemp(result)
     if result is None :
         if returnType is not None :
             ensure(equals(returnType, voidType),
