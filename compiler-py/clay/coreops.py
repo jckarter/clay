@@ -34,7 +34,7 @@ toReference = multimethod(errorMessage="invalid reference")
 
 toValueOrReference = multimethod(errorMessage="invalid value or reference")
 
-toStatic = multimethod(errorMessage="invalid static value")
+toStatic = multimethod(defaultProc=(lambda x : x))
 
 
 

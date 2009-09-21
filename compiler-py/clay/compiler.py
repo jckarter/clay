@@ -140,6 +140,20 @@ def isRTReference(x) : return type(x) is RTReference
 
 
 #
+# toStatic
+#
+
+@toStatic.register(RTValue)
+def foo(x) :
+    error("invalid static value")
+
+@toStatic.register(RTReference)
+def foo(x) :
+    error("invalid static value")
+
+
+
+#
 # temp values
 #
 
@@ -611,6 +625,17 @@ def foo(x, args, env) :
 #
 
 compileCall = multimethod(errorMessage="invalid call")
+
+@compileCall.register(Type)
+def foo(x, args, env) :
+    ensure(isRecordType(x), "only record type constructors are supported")
+    ensureArity(args, len(x.tag.fields))
+    fieldTypes = recordFieldTypes(x)
+    argRefs = []
+    for arg, fieldType in zip(args, fieldTypes) :
+        argRef = compile(arg, env, toRTReferenceOfType(fieldType))
+        argRefs.append(argRef)
+    return rtMakeRecord(x, argRefs)
 
 @compileCall.register(Record)
 def foo(x, args, env) :

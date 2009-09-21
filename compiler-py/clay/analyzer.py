@@ -27,6 +27,20 @@ def isRTReference(x) : return type(x) is RTReference
 
 
 #
+# toStatic
+#
+
+@toStatic.register(RTValue)
+def foo(x) :
+    error("invalid static value")
+
+@toStatic.register(RTReference)
+def foo(x) :
+    error("invalid static value")
+
+
+
+#
 # toRTValue, toRTLValue, toRTReference
 #
 
@@ -269,6 +283,17 @@ def foo(x, args, env) :
 #
 
 analyzeCall = multimethod(errorMessage="invalid call")
+
+@analyzeCall.register(Type)
+def foo(x, args, env) :
+    ensure(isRecordType(x), "only record type constructors are supported")
+    ensureArity(args, len(x.tag.fields))
+    fieldTypes = recordFieldTypes(x)
+    argRefs = []
+    for arg, fieldType in zip(args, fieldTypes) :
+        argRef = analyze(arg, env, toRTReferenceOfType(fieldType))
+        argRefs.append(argRef)
+    return RTValue(x)
 
 @analyzeCall.register(Record)
 def foo(x, args, env) :

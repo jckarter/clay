@@ -1,0 +1,24 @@
+import base;
+
+record CustomCompare[T,F] {
+    x:T;
+}
+
+overload lesser[T,F](a:CustomCompare[T,F], b:CustomCompare[T,F]) {
+    return F(a.x, b.x);
+}
+
+def min(a, b) ref {
+    if (a <= b) return a;
+    return b;
+}
+
+def myLesser(a, b) {
+    return lesser(a, b);
+}
+
+def main() {
+    let a = CustomCompare[Int,myLesser](10);
+    let b = CustomCompare[Int,myLesser](20);
+    return min(a, b).x;
+}

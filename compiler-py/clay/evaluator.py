@@ -188,7 +188,6 @@ def foo(x) :
 toValueOrReference.register(Value)(lambda x : x)
 toValueOrReference.register(Reference)(lambda x : x)
 
-toStatic.register(Value)(lambda x : x)
 toStatic.register(Reference)(lambda x : toValue(x))
 
 
@@ -649,6 +648,17 @@ def foo(x, args, env) :
 #
 
 evaluateCall = multimethod(errorMessage="invalid call")
+
+@evaluateCall.register(Type)
+def foo(x, args, env) :
+    ensure(isRecordType(x), "only record type constructors are supported")
+    ensureArity(args, len(x.tag.fields))
+    fieldTypes = recordFieldTypes(x)
+    argRefs = []
+    for arg, fieldType in zip(args, fieldTypes) :
+        argRef = evaluate(arg, env, toReferenceOfType(fieldType))
+        argRefs.append(argRef)
+    return makeRecord(x, argRefs)
 
 @evaluateCall.register(Record)
 def foo(x, args, env) :
