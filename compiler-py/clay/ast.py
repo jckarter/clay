@@ -10,7 +10,9 @@ __all__ = [
     "Goto", "Return", "IfStatement", "ExprStatement",
     "While", "Break", "Continue", "For",
     "Code", "FormalArgument", "ValueArgument", "StaticArgument",
-    "TopLevelItem", "Record", "Field", "Procedure", "Overloadable", "Overload",
+    "TopLevelItem",
+    "Record", "RecordArg", "ValueRecordArg", "StaticRecordArg",
+    "Procedure", "Overloadable", "Overload",
     "Import", "Export", "Module"]
 
 def check(x, t) :
@@ -335,23 +337,34 @@ class TopLevelItem(ASTNode) :
     pass
 
 class Record(TopLevelItem) :
-    def __init__(self, name, typeVars, fields) :
+    def __init__(self, name, typeVars, args) :
         super(Record, self).__init__()
         check(name, Identifier)
         checkList(typeVars, Identifier)
-        checkList(fields, Field)
+        checkList(args, RecordArg)
         self.name = name
         self.typeVars = typeVars
-        self.fields = fields
+        self.args = args
         self.env = None
+        self.valueArgs_ = None
+        self.valueNames_ = None
 
-class Field(ASTNode) :
+class RecordArg(ASTNode) :
+    pass
+
+class ValueRecordArg(RecordArg) :
     def __init__(self, name, type) :
-        super(Field, self).__init__()
+        super(ValueRecordArg, self).__init__()
         check(name, Identifier)
         check(type, Expression)
         self.name = name
         self.type = type
+
+class StaticRecordArg(RecordArg) :
+    def __init__(self, pattern) :
+        super(StaticRecordArg, self).__init__()
+        check(pattern, Expression)
+        self.pattern = pattern
 
 class Procedure(TopLevelItem) :
     def __init__(self, name, code) :

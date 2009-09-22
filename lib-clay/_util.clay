@@ -16,10 +16,7 @@ def swap(a, b) {
 // Iterators
 //
 
-record Range[I] {
-    first: I;
-    last: I;
-}
+record Range[I](first:I, last:I);
 
 def range(n) {
     return Range(0, n);

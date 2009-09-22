@@ -396,7 +396,7 @@ def rtMakeTuple(argRefs) :
 
 def rtRecordFieldRef(a, i) :
     assert isRTReference(a) and isRecordType(a.type)
-    nFields = len(a.type.tag.fields)
+    nFields = len(recordValueArgs(a.type.tag))
     ensure((0 <= i < nFields), "record field index out of range")
     fieldType = recordFieldTypes(a.type)[i]
     zero = llvm.Constant.int(llvmType(intType), 0)
@@ -629,8 +629,8 @@ compileCall = multimethod(errorMessage="invalid call")
 @compileCall.register(Type)
 def foo(x, args, env) :
     ensure(isRecordType(x), "only record type constructors are supported")
-    ensureArity(args, len(x.tag.fields))
     fieldTypes = recordFieldTypes(x)
+    ensureArity(args, len(fieldTypes))
     argRefs = []
     for arg, fieldType in zip(args, fieldTypes) :
         argRef = compile(arg, env, toRTReferenceOfType(fieldType))
@@ -639,16 +639,13 @@ def foo(x, args, env) :
 
 @compileCall.register(Record)
 def foo(x, args, env) :
-    ensureArity(args, len(x.fields))
-    recordEnv, cells = bindTypeVars(x.env, x.typeVars)
-    fieldTypePatterns = computeFieldTypes(x.fields, recordEnv)
-    cargs = [compile(y, env) for y in args]
-    argRefs = convertObjects(toRTReference, cargs, args)
-    for typePattern, argRef, arg in zip(fieldTypePatterns, argRefs, args) :
-        withContext(arg, lambda : matchType(typePattern, argRef.type))
-    typeParams = resolveTypeVars(x.typeVars, cells)
-    recType = recordType(x, typeParams)
-    return rtMakeRecord(recType, argRefs)
+    actualArgs = [RTActualArgument(y, env) for y in args]
+    result = matchRecordInvoke(x, actualArgs)
+    if type(result) is InvokeError :
+        result.signalError()
+    assert type(result) is InvokeBindings
+    recType = recordType(x, result.typeParams)
+    return rtMakeRecord(recType, result.params)
 
 @compileCall.register(Procedure)
 def foo(x, args, env) :

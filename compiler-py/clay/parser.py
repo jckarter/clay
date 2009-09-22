@@ -266,10 +266,16 @@ code = astNode(sequence(optTypeVars, symbol("("), formalArguments,
 # top level items
 #
 
-field = astNode(sequence(identifier, typeSpec, semicolon),
-                lambda x : Field(x[0],x[1]))
+valueRecordArg = astNode(sequence(identifier, typeSpec),
+                         lambda x : ValueRecordArg(x[0], x[1]))
+staticRecordArg = astNode(sequence(keyword("static"), expression),
+                          lambda x : StaticRecordArg(x[1]))
+recordArg = choice(valueRecordArg, staticRecordArg)
+recordArgs = modify(optional(listOf(recordArg, comma)),
+                    lambda x : [] if x is None else x)
+
 record = astNode(sequence(keyword("record"), identifier, optTypeVars,
-                          symbol("{"), zeroPlus(field), symbol("}")),
+                          symbol("("), recordArgs, symbol(")"), semicolon),
                  lambda x : Record(x[1],x[2],x[4]))
 
 procedure = astNode(sequence(keyword("def"), identifier, code),

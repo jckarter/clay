@@ -287,8 +287,8 @@ analyzeCall = multimethod(errorMessage="invalid call")
 @analyzeCall.register(Type)
 def foo(x, args, env) :
     ensure(isRecordType(x), "only record type constructors are supported")
-    ensureArity(args, len(x.tag.fields))
     fieldTypes = recordFieldTypes(x)
+    ensureArity(args, len(fieldTypes))
     argRefs = []
     for arg, fieldType in zip(args, fieldTypes) :
         argRef = analyze(arg, env, toRTReferenceOfType(fieldType))
@@ -297,14 +297,12 @@ def foo(x, args, env) :
 
 @analyzeCall.register(Record)
 def foo(x, args, env) :
-    ensureArity(args, len(x.fields))
-    recordEnv, cells = bindTypeVars(x.env, x.typeVars)
-    fieldTypePatterns = computeFieldTypes(x.fields, recordEnv)
-    argRefs = [analyze(y, env, toRTReference) for y in args]
-    for typePattern, argRef, arg in zip(fieldTypePatterns, argRefs, args) :
-        withContext(arg, lambda : matchType(typePattern, argRef.type))
-    typeParams = resolveTypeVars(x.typeVars, cells)
-    recType = recordType(x, typeParams)
+    actualArgs = [RTActualArgument(y, env) for y in args]
+    result = matchRecordInvoke(x, actualArgs)
+    if type(result) is InvokeError :
+        result.signalError()
+    assert type(result) is InvokeBindings
+    recType = recordType(x, result.typeParams)
     return RTValue(recType)
 
 @analyzeCall.register(Procedure)
@@ -507,7 +505,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     thing = analyze(args[0], env, toRTRecordReference)
     i = analyze(args[1], env, toInt)
-    nFields = len(thing.type.tag.fields)
+    nFields = len(recordValueArgs(thing.type.tag))
     ensure((0 <= i < nFields), "record field index out of range")
     fieldType = recordFieldTypes(thing.type)[i]
     return RTReference(fieldType)

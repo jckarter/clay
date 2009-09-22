@@ -9,8 +9,14 @@ DottedName -> Identifier ("." Identifier)*
 TopLevelItem -> RecordDef | GlobalBinding | ProcedureDef
               | OverloadableDef | OverloadDef
 
-RecordDef -> "record" Identifier TypeVars? "{" FieldDef+ "}"
-FieldDef -> Identifier TypeSpec ";"
+RecordDef -> "record" Identifier TypeVars? "("
+             comma_list(RecordArg)? ")" ";"
+
+RecordArg -> ValueRecordArg
+           | StaticRecordArg
+
+ValueRecordArg -> Identifier TypeSpec
+StaticRecordArg -> "static" Expression
 
 TypeVars -> "[" comma_list(Identifier) "]"
 TypeSpec -> ":" TypeExpr
@@ -24,8 +30,11 @@ ProcedureDef -> "def" Identifier Procedure
 Procedure -> TypeVars? "(" comma_list(Argument)? ")"
              "ref"? TypeSpec? Predicate? Block
 
-Argument -> Variable
-          | "static" Expression
+Argument -> ValueArgument
+          | StaticArgument
+
+ValueArgument -> Variable
+StaticArgument -> "static" Expression
 
 Predicate -> "if" "(" Expression ")" ;
 

@@ -73,7 +73,7 @@ def foo(tag, t) :
     ct = type("Record", (ctypes.Structure,), {})
     _ctypesTable[t] = ct
     fieldCTypes = [ctypesType(x) for x in recordFieldTypes(t)]
-    fieldCNames = [f.name.s for f in t.tag.fields]
+    fieldCNames = [f.name.s for f in recordValueArgs(t.tag)]
     ct._fields_ = zip(fieldCNames, fieldCTypes)
     return ct
 
@@ -328,19 +328,37 @@ def makeTuple(argRefs) :
         valueCopy(left, argRef)
     return value
 
+def recordValueArgs(r) :
+    if r.valueArgs_ is None :
+        r.valueArgs_ = [a for a in r.args if type(a) is ValueRecordArg]
+    return r.valueArgs_
+
+def recordValueNames(r) :
+    if r.valueNames_ is None :
+        names = {}
+        for i, valueArg in enumerate(recordValueArgs(r)) :
+            if valueArg.name.s in names :
+                withContext(valueArg, lambda : error("duplicate field: %s" %
+                                                     valueArg.name.s))
+            names[valueArg.name.s] = i
+        r.valueNames_ = names
+    return r.valueNames_
+
 def recordFieldRef(a, i) :
     assert isReference(a) and isRecordType(a.type)
-    nFields = len(a.type.tag.fields)
+    valueArgs = recordValueArgs(a.type.tag)
+    nFields = len(valueArgs)
     ensure((0 <= i < nFields), "record field index out of range")
-    fieldName = a.type.tag.fields[i].name.s
+    fieldName = valueArgs[i].name.s
     fieldType = recordFieldTypes(a.type)[i]
     ctypesField = getattr(ctypesType(a.type), fieldName)
     return Reference(fieldType, a.address + ctypesField.offset)
 
 def recordFieldIndex(recType, ident) :
-    for i, f in enumerate(recType.tag.fields) :
-        if f.name.s == ident.s :
-            return i
+    valueNames = recordValueNames(recType.tag)
+    i = valueNames.get(ident.s)
+    if i is not None :
+        return i
     error("record field not found: %s" % ident.s)
 
 def makeRecord(recType, argRefs) :
@@ -351,11 +369,6 @@ def makeRecord(recType, argRefs) :
         valueCopy(left, argRef)
     return value
 
-def computeFieldTypes(fields, env) :
-    typeExprs = [f.type for f in fields]
-    fieldTypes = [evaluate(x, env, toTypeOrCell) for x in typeExprs]
-    return fieldTypes
-
 _recordFieldTypes = {}
 def recordFieldTypes(recType) :
     assert isType(recType)
@@ -363,7 +376,8 @@ def recordFieldTypes(recType) :
     if fieldTypes is None :
         record = recType.tag
         env = extendEnv(record.env, record.typeVars, recType.params)
-        fieldTypes = computeFieldTypes(record.fields, env)
+        valueArgs = recordValueArgs(record)
+        fieldTypes = [evaluate(x.type, env, toType) for x in valueArgs]
         _recordFieldTypes[recType] = fieldTypes
     return fieldTypes
 
@@ -400,7 +414,7 @@ def xconvertArray(r) :
     return map(xconvertReference, elements)
 
 def xconvertRecord(r) :
-    fieldCount = len(r.type.tag.fields)
+    fieldCount = len(recordValueArgs(r.type.tag))
     fields = [recordFieldRef(r, i) for i in range(fieldCount)]
     fields = map(xconvertReference, fields)
     return XObject(r.type.tag.name.s, *fields)
@@ -655,8 +669,8 @@ evaluateCall = multimethod(errorMessage="invalid call")
 @evaluateCall.register(Type)
 def foo(x, args, env) :
     ensure(isRecordType(x), "only record type constructors are supported")
-    ensureArity(args, len(x.tag.fields))
     fieldTypes = recordFieldTypes(x)
+    ensureArity(args, len(fieldTypes))
     argRefs = []
     for arg, fieldType in zip(args, fieldTypes) :
         argRef = evaluate(arg, env, toReferenceOfType(fieldType))
@@ -665,16 +679,13 @@ def foo(x, args, env) :
 
 @evaluateCall.register(Record)
 def foo(x, args, env) :
-    ensureArity(args, len(x.fields))
-    recordEnv, cells = bindTypeVars(x.env, x.typeVars)
-    fieldTypePatterns = computeFieldTypes(x.fields, recordEnv)
-    eargs = [evaluate(y, env) for y in args]
-    argRefs = convertObjects(toReference, eargs, args)
-    for typePattern, argRef, arg in zip(fieldTypePatterns, argRefs, args) :
-        withContext(arg, lambda : matchType(typePattern, argRef.type))
-    typeParams = resolveTypeVars(x.typeVars, cells)
-    recType = recordType(x, typeParams)
-    return makeRecord(recType, argRefs)
+    actualArgs = [ActualArgument(y, env) for y in args]
+    result = matchRecordInvoke(x, actualArgs)
+    if type(result) is InvokeError :
+        result.signalError()
+    assert type(result) is InvokeBindings
+    recType = recordType(x, result.typeParams)
+    return makeRecord(recType, result.params)
 
 @evaluateCall.register(Procedure)
 def foo(x, args, env) :
@@ -946,7 +957,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toRecordType)
-    return intToValue(len(t.tag.fields))
+    return intToValue(len(recordValueArgs(t.tag)))
 
 @evaluateCall.register(primitives.recordFieldRef)
 def foo(x, args, env) :
@@ -1244,6 +1255,37 @@ def matchInvoke(code, codeEnv, actualArgs) :
         if not evaluate(code.predicate, codeEnv2, toBool) :
             return predicateFailure(code.predicate)
     return InvokeBindings(code.typeVars, typeParams, vars, params)
+
+
+
+#
+# matchRecordInvoke(record, actualArgs) -> InvokeBindings | InvokeError
+#
+
+def matchRecordInvoke(record, actualArgs) :
+    def argMismatch(actualArg) :
+        return InvokeError("argument mismatch", actualArg.expr)
+    if len(actualArgs) != len(record.args) :
+        return InvokeError("incorrect no. of arguments")
+    env, cells = bindTypeVars(record.env, record.typeVars)
+    vars, params = [], []
+    for actualArg, formalArg in zip(actualArgs, record.args) :
+        if type(formalArg) is ValueRecordArg :
+            arg = actualArg.asReference()
+            typePattern = evaluate(formalArg.type, env, toTypeOrCell)
+            if not unify(typePattern, arg.type) :
+                return argMismatch(actualArg)
+            vars.append(formalArg.name)
+            params.append(arg)
+        elif type(formalArg) is StaticRecordArg :
+            arg = actualArg.asStatic()
+            pattern = evaluate(formalArg.pattern, env, toStaticOrCell)
+            if not unify(pattern, arg) :
+                return argMismatch(actualArg)
+        else :
+            assert False
+    typeParams = resolveTypeVars(record.typeVars, cells)
+    return InvokeBindings(record.typeVars, typeParams, vars, params)
 
 
 

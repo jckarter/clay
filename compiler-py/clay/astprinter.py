@@ -83,7 +83,8 @@ r(StaticArgument, lambda x : xo("StaticArgument", x.pattern))
 #
 
 r(Record, lambda x : xo("RecordDef", x.name, x.typeVars, *x.fields))
-r(Field, lambda x : xo("Field", x.name, x.type))
+r(ValueRecordArg, lambda x : xo("ValueRecordArg", x.name, x.type))
+r(StaticRecordArg, lambda x : xo("StaticRecordArg", x.pattern))
 r(Procedure, lambda x : xo("Procedure", x.name, x.code))
 r(Overloadable, lambda x : xo("Overloadable", x.name))
 r(Overload, lambda x : xo("Overload", x.name, x.code))
