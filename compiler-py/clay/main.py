@@ -3,10 +3,10 @@ import os
 import tempfile
 import optparse
 from clay.xprint import xprint
+from clay.cleanup import cleanupGlobals
 from clay.error import CompilerError, error
 from clay.ast import *
 from clay.env import setModuleSearchPath, loadProgram
-from clay.coreops import cleanupGlobals
 from clay.evaluator import evaluate, InvokeBindings
 from clay.analyzer import analyze
 from clay import compiler

@@ -1,7 +1,7 @@
 import os
+from clay.cleanup import *
 from clay.error import *
 from clay.ast import *
-from clay.coreops import installGlobalsCleanupHook
 from clay.parser import parse
 
 

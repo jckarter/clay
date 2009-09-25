@@ -3,8 +3,7 @@ from clay.multimethod import *
 
 __all__ = ["equals", "toType", "toInt", "toBool",
            "toValue", "toLValue", "toReference", "toValueOrReference",
-           "toStatic",
-           "installGlobalsCleanupHook", "cleanupGlobals"]
+           "toStatic"]
 
 
 
@@ -35,18 +34,3 @@ toReference = multimethod(errorMessage="invalid reference")
 toValueOrReference = multimethod(errorMessage="invalid value or reference")
 
 toStatic = multimethod(defaultProc=(lambda x : x))
-
-
-
-#
-# globals cleanup hooks
-#
-
-_globalsCleanupHooks = []
-
-def installGlobalsCleanupHook(f) :
-    _globalsCleanupHooks.append(f)
-
-def cleanupGlobals() :
-    for f in _globalsCleanupHooks :
-        f()

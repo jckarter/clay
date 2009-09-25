@@ -1,4 +1,5 @@
 from clay.xprint import *
+from clay.cleanup import *
 from clay.error import *
 from clay.multimethod import *
 from clay.coreops import *
