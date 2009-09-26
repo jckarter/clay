@@ -1,8 +1,8 @@
 Primitive Types:
-Bool, Char, Int, Float, Double, Void
+Bool, Int, Float, Double, Void
 
 Primitive Values:
-true, false, CharLiteral, IntLiteral, FloatLiteral, DoubleLiteral
+true, false, IntLiteral, FloatLiteral, DoubleLiteral
 
 Primitive Type Constructors:
 (Type,...) : tuple type constructor
@@ -42,10 +42,6 @@ recordFieldRef(ref a:R, static i) ref : FieldType;
 
 boolCopy(ref dest:Bool, ref src:Bool):Void
 boolNot(x:Bool):Bool
-
-charCopy(ref dest:Char, ref src:Char):Void
-charEquals(a:Char, b:Char):Bool
-charLesser(a:Char, b:Char):Bool
 
 intCopy(ref dest:Int, ref src:Int):Void
 intEquals(a:Int, b:Int):Bool

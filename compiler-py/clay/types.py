@@ -24,7 +24,6 @@ class BoolTypeTag(object) : pass
 class IntTypeTag(object) : pass
 class FloatTypeTag(object) : pass
 class DoubleTypeTag(object) : pass
-class CharTypeTag(object) : pass
 class VoidTypeTag(object) : pass
 class TupleTypeTag(object) : pass
 class ArrayTypeTag(object) : pass
@@ -34,7 +33,6 @@ boolTypeTag = BoolTypeTag()
 intTypeTag = IntTypeTag()
 floatTypeTag = FloatTypeTag()
 doubleTypeTag = DoubleTypeTag()
-charTypeTag = CharTypeTag()
 voidTypeTag = VoidTypeTag()
 
 tupleTypeTag = TupleTypeTag()
@@ -45,7 +43,6 @@ boolType = Type(boolTypeTag, [])
 intType = Type(intTypeTag, [])
 floatType = Type(floatTypeTag, [])
 doubleType = Type(doubleTypeTag, [])
-charType = Type(charTypeTag, [])
 voidType = Type(voidTypeTag, [])
 
 def tupleType(types) :
@@ -88,7 +85,6 @@ installPrimitive("Bool", boolType)
 installPrimitive("Int", intType)
 installPrimitive("Float", floatType)
 installPrimitive("Double", doubleType)
-installPrimitive("Char", charType)
 installPrimitive("Void", voidType)
 
 
@@ -102,7 +98,6 @@ def isBoolType(t) : return t.tag is boolTypeTag
 def isIntType(t) : return t.tag is intTypeTag
 def isFloatType(t) : return t.tag is floatTypeTag
 def isDoubleType(t) : return t.tag is doubleTypeTag
-def isCharType(t) : return t.tag is charTypeTag
 def isVoidType(t) : return t.tag is voidTypeTag
 
 def isTupleType(t) : return t.tag is tupleTypeTag
@@ -111,7 +106,7 @@ def isPointerType(t) : return t.tag is pointerTypeTag
 def isRecordType(t) : return type(t.tag) is Record
 
 simpleTypeTags = (boolTypeTag, intTypeTag, floatTypeTag,
-                  doubleTypeTag, charTypeTag, pointerTypeTag)
+                  doubleTypeTag, pointerTypeTag)
 def isSimpleType(t) :
     return t.tag in simpleTypeTags
 
@@ -171,7 +166,6 @@ _tagNames[boolTypeTag] = "Bool"
 _tagNames[intTypeTag] = "Int"
 _tagNames[floatTypeTag] = "Float"
 _tagNames[doubleTypeTag] = "Double"
-_tagNames[charTypeTag] = "Char"
 _tagNames[voidTypeTag] = "Void"
 _tagNames[tupleTypeTag] = "Tuple"
 _tagNames[arrayTypeTag] = "Array"

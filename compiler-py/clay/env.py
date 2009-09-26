@@ -162,10 +162,6 @@ def installDefaultPrimitives() :
 
     primitive("boolCopy")
 
-    primitive("charCopy")
-    primitive("charEquals")
-    primitive("charLesser")
-
     primitive("intCopy")
     primitive("intEquals")
     primitive("intLesser")
@@ -194,8 +190,6 @@ def installDefaultPrimitives() :
     primitive("doubleDivide")
     primitive("doubleNegate")
 
-    primitive("charToInt")
-    primitive("intToChar")
     primitive("floatToInt")
     primitive("intToFloat")
     primitive("floatToDouble")

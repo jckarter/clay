@@ -28,7 +28,6 @@ def _initLLVMTypesTable() :
     _llvmTypesTable[intType] = llvmInt(ctypes.c_int)
     _llvmTypesTable[floatType] = llvm.Type.float()
     _llvmTypesTable[doubleType] = llvm.Type.double()
-    _llvmTypesTable[charType] = llvmInt(ctypes.c_wchar)
 
 def _cleanupLLVMTypesTable() :
     global _llvmTypesTable
@@ -223,8 +222,6 @@ def foo(x) :
         constValue = llvm.Constant.int(llvmType(x.type), int(x.buf.value))
     elif isIntType(x.type) :
         constValue = llvm.Constant.int(llvmType(x.type), x.buf.value)
-    elif isCharType(x.type) :
-        constValue = llvm.Constant.int(llvmType(x.type), ord(x.buf.value))
     else :
         error("unsupported type in toRTValue")
     temp = tempRTValue(x.type)
@@ -441,10 +438,6 @@ def foo(x, env) :
 @compile2.register(IntLiteral)
 def foo(x, env) :
     return intToValue(x.value)
-
-@compile2.register(CharLiteral)
-def foo(x, env) :
-    return charToValue(x.value)
 
 @compile2.register(NameRef)
 def foo(x, env) :
@@ -925,33 +918,6 @@ def foo(x, args, env) :
 
 
 #
-# compile char primitives
-#
-
-@compileCall.register(primitives.charCopy)
-def foo(x, args, env) :
-    destRef, srcRef = rtLoadRefs(args, env, [charType, charType])
-    v = llvmBuilder.load(srcRef.llvmValue)
-    llvmBuilder.store(v, destRef.llvmValue)
-    return voidValue
-
-@compileCall.register(primitives.charEquals)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [charType, charType])
-    flag = llvmBuilder.icmp(llvm.ICMP_EQ, v1, v2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
-
-@compileCall.register(primitives.charLesser)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [charType, charType])
-    flag = llvmBuilder.icmp(llvm.ICMP_ULT, v1, v2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
-
-
-
-#
 # compile int primitives
 #
 
@@ -1131,18 +1097,6 @@ def foo(x, args, env) :
 #
 # compile conversion primitives
 #
-
-@compileCall.register(primitives.charToInt)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [charType])
-    v2 = llvmBuilder.zext(v1, llvmType(intType))
-    return rtResult(intType, v2)
-
-@compileCall.register(primitives.intToChar)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [intType])
-    v2 = llvmBuilder.trunc(v1, llvmType(charType))
-    return rtResult(charType, v2)
 
 @compileCall.register(primitives.floatToInt)
 def foo(x, args, env) :

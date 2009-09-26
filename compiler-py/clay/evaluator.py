@@ -25,7 +25,6 @@ def _initCTypesTable() :
     _ctypesTable[intType] = ctypes.c_int
     _ctypesTable[floatType] = ctypes.c_float
     _ctypesTable[doubleType] = ctypes.c_double
-    _ctypesTable[charType] = ctypes.c_wchar
 
 def _cleanupCTypesTable() :
     global _ctypesTable
@@ -197,7 +196,7 @@ toStatic.register(Reference)(lambda x : toValue(x))
 
 
 #
-# boolToValue, intToValue, charToValue
+# boolToValue, intToValue
 #
 
 def boolToValue(x) :
@@ -207,11 +206,6 @@ def boolToValue(x) :
 
 def intToValue(x) :
     v = tempValue(intType)
-    v.buf.value = x
-    return v
-
-def charToValue(x) :
-    v = tempValue(charType)
     v.buf.value = x
     return v
 
@@ -440,7 +434,6 @@ def getXConverter(tag) :
         _xconverters[intTypeTag] = xconvertBuiltin
         _xconverters[floatTypeTag] = xconvertBuiltin
         _xconverters[doubleTypeTag] = xconvertBuiltin
-        _xconverters[charTypeTag] = xconvertBuiltin
         _xconverters[pointerTypeTag] = xconvertPointer
         _xconverters[tupleTypeTag] = xconvertTuple
         _xconverters[arrayTypeTag] = xconvertArray
@@ -499,10 +492,6 @@ def foo(x, env) :
 @evaluate2.register(IntLiteral)
 def foo(x, env) :
     return intToValue(x.value)
-
-@evaluate2.register(CharLiteral)
-def foo(x, env) :
-    return charToValue(x.value)
 
 @evaluate2.register(NameRef)
 def foo(x, env) :
@@ -982,27 +971,6 @@ def foo(x, args, env) :
 
 
 #
-# evaluate char primitives
-#
-
-@evaluateCall.register(primitives.charCopy)
-def foo(x, args, env) :
-    argTypes = [charType, charType]
-    return simpleMop(mop_charCopy, args, env, argTypes, None)
-
-@evaluateCall.register(primitives.charEquals)
-def foo(x, args, env) :
-    argTypes = [charType, charType]
-    return simpleMop(mop_charEquals, args, env, argTypes, boolType)
-
-@evaluateCall.register(primitives.charLesser)
-def foo(x, args, env) :
-    argTypes = [charType, charType]
-    return simpleMop(mop_charLesser, args, env, argTypes, boolType)
-
-
-
-#
 # evaluate int primitives
 #
 
@@ -1148,14 +1116,6 @@ def foo(x, args, env) :
 #
 # evaluate conversion primitives
 #
-
-@evaluateCall.register(primitives.charToInt)
-def foo(x, args, env) :
-    return simpleMop(mop_charToInt, args, env, [charType], intType)
-
-@evaluateCall.register(primitives.intToChar)
-def foo(x, args, env) :
-    return simpleMop(mop_intToChar, args, env, [intType], charType)
 
 @evaluateCall.register(primitives.floatToInt)
 def foo(x, args, env) :

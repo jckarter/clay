@@ -51,24 +51,6 @@ MACHINEOP mop_boolCopy(bool *dest, bool *src) {
 
 
 /*
- * char
- */
-
-MACHINEOP mop_charCopy(wchar_t *dest, wchar_t *src) {
-    *dest = *src;
-}
-
-MACHINEOP mop_charEquals(wchar_t *a, wchar_t *b, bool *result) {
-    *result = (*a == *b);
-}
-
-MACHINEOP mop_charLesser(wchar_t *a, wchar_t *b, bool *result) {
-    *result = (*a < *b);
-}
-
-
-
-/*
  * int
  */
 
@@ -189,14 +171,6 @@ MACHINEOP mop_doubleNegate(double *a, double *result) {
 /*
  * conversions
  */
-
-MACHINEOP mop_charToInt(wchar_t *a, int *result) {
-    *result = (int)(*a);
-}
-
-MACHINEOP mop_intToChar(int *a, wchar_t *result) {
-    *result = (wchar_t)(*a);
-}
 
 MACHINEOP mop_floatToInt(float *a, int *result) {
     *result = (int)(*a);

@@ -142,10 +142,6 @@ def foo(x, env) :
 def foo(x, env) :
     return intToValue(x.value)
 
-@analyze2.register(CharLiteral)
-def foo(x, env) :
-    return charToValue(x.value)
-
 @analyze2.register(NameRef)
 def foo(x, env) :
     return analyzeNameRef(lookupIdent(env, x.name))
@@ -538,24 +534,6 @@ def foo(x, args, env) :
 
 
 #
-# analyze char primitives
-#
-
-@analyzeCall.register(primitives.charCopy)
-def foo(x, args, env) :
-    return simpleOp(args, env, [charType, charType], None)
-
-@analyzeCall.register(primitives.charEquals)
-def foo(x, args, env) :
-    return simpleOp(args, env, [charType, charType], boolType)
-
-@analyzeCall.register(primitives.charLesser)
-def foo(x, args, env) :
-    return simpleOp(args, env, [charType, charType], boolType)
-
-
-
-#
 # analyze int primitives
 #
 
@@ -676,14 +654,6 @@ def foo(x, args, env) :
 #
 # analyze conversion primitives
 #
-
-@analyzeCall.register(primitives.charToInt)
-def foo(x, args, env) :
-    return simpleOp(args, env, [charType], intType)
-
-@analyzeCall.register(primitives.intToChar)
-def foo(x, args, env) :
-    return simpleOp(args, env, [intType], charType)
 
 @analyzeCall.register(primitives.floatToInt)
 def foo(x, args, env) :

@@ -6,7 +6,6 @@ __all__ = [
     "mop_pointerEquals", "mop_pointerLesser",
     "mop_allocateMemory", "mop_freeMemory",
     "mop_boolCopy",
-    "mop_charCopy", "mop_charEquals", "mop_charLesser",
     "mop_intCopy", "mop_intEquals", "mop_intLesser",
     "mop_intAdd", "mop_intSubtract", "mop_intMultiply",
     "mop_intDivide", "mop_intModulus", "mop_intNegate",
@@ -16,9 +15,8 @@ __all__ = [
     "mop_doubleCopy", "mop_doubleEquals", "mop_doubleLesser",
     "mop_doubleAdd", "mop_doubleSubtract", "mop_doubleMultiply",
     "mop_doubleDivide", "mop_doubleNegate",
-    "mop_charToInt", "mop_intToChar", "mop_floatToInt", "mop_intToFloat",
-    "mop_floatToDouble", "mop_doubleToFloat", "mop_doubleToInt",
-    "mop_intToDouble"]
+    "mop_floatToInt", "mop_intToFloat", "mop_floatToDouble",
+    "mop_doubleToFloat", "mop_doubleToInt", "mop_intToDouble"]
 
 dll = ctypes.CDLL(ctypes.util.find_library("machineops"))
 
@@ -70,24 +68,6 @@ def mop_freeMemory(ptr) :
 f_mop_boolCopy = getF("mop_boolCopy")
 def mop_boolCopy(dest, src) :
     f_mop_boolCopy(dest, src)
-
-
-
-#
-# char
-#
-
-f_mop_charCopy = getF("mop_charCopy")
-def mop_charCopy(dest, src) :
-    f_mop_charCopy(dest, src)
-
-f_mop_charEquals = getF("mop_charEquals")
-def mop_charEquals(a, b, result) :
-    f_mop_charEquals(a, b, result)
-
-f_mop_charLesser = getF("mop_charLesser")
-def mop_charLesser(a, b, result) :
-    f_mop_charLesser(a, b, result)
 
 
 
@@ -212,14 +192,6 @@ def mop_doubleNegate(a, result) :
 #
 # conversions
 #
-
-f_mop_charToInt = getF("mop_charToInt")
-def mop_charToInt(a, result) :
-    f_mop_charToInt(a, result)
-
-f_mop_intToChar = getF("mop_intToChar")
-def mop_intToChar(a, result) :
-    f_mop_intToChar(a, result)
 
 f_mop_floatToInt = getF("mop_floatToInt")
 def mop_floatToInt(a, result) :
