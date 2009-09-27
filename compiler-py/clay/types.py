@@ -20,40 +20,40 @@ class Type(object) :
     def __hash__(self) :
         return hash((self.tag, tuple(self.params)))
 
-class BoolTypeTag(object) : pass
-class IntTypeTag(object) : pass
-class FloatTypeTag(object) : pass
-class DoubleTypeTag(object) : pass
-class VoidTypeTag(object) : pass
-class TupleTypeTag(object) : pass
-class ArrayTypeTag(object) : pass
-class PointerTypeTag(object) : pass
+class BoolTag(object) : pass
+class IntTag(object) : pass
+class FloatTag(object) : pass
+class DoubleTag(object) : pass
+class VoidTag(object) : pass
+class TupleTag(object) : pass
+class ArrayTag(object) : pass
+class PointerTag(object) : pass
 
-boolTypeTag = BoolTypeTag()
-intTypeTag = IntTypeTag()
-floatTypeTag = FloatTypeTag()
-doubleTypeTag = DoubleTypeTag()
-voidTypeTag = VoidTypeTag()
+boolTag = BoolTag()
+intTag = IntTag()
+floatTag = FloatTag()
+doubleTag = DoubleTag()
+voidTag = VoidTag()
 
-tupleTypeTag = TupleTypeTag()
-arrayTypeTag = ArrayTypeTag()
-pointerTypeTag = PointerTypeTag()
+tupleTag = TupleTag()
+arrayTag = ArrayTag()
+pointerTag = PointerTag()
 
-boolType = Type(boolTypeTag, [])
-intType = Type(intTypeTag, [])
-floatType = Type(floatTypeTag, [])
-doubleType = Type(doubleTypeTag, [])
-voidType = Type(voidTypeTag, [])
+boolType = Type(boolTag, [])
+intType = Type(intTag, [])
+floatType = Type(floatTag, [])
+doubleType = Type(doubleTag, [])
+voidType = Type(voidTag, [])
 
 def tupleType(types) :
     assert len(types) >= 2
-    return Type(tupleTypeTag, types)
+    return Type(tupleTag, types)
 
 def arrayType(type_, sizeValue) :
-    return Type(arrayTypeTag, [type_, sizeValue])
+    return Type(arrayTag, [type_, sizeValue])
 
 def pointerType(type_) :
-    return Type(pointerTypeTag, [type_])
+    return Type(pointerTag, [type_])
 
 def recordType(record, params) :
     return Type(record, params)
@@ -94,21 +94,20 @@ installPrimitive("Void", voidType)
 #
 
 def isType(t) : return type(t) is Type
-def isBoolType(t) : return t.tag is boolTypeTag
-def isIntType(t) : return t.tag is intTypeTag
-def isFloatType(t) : return t.tag is floatTypeTag
-def isDoubleType(t) : return t.tag is doubleTypeTag
-def isVoidType(t) : return t.tag is voidTypeTag
+def isBoolType(t) : return t.tag is boolTag
+def isIntType(t) : return t.tag is intTag
+def isFloatType(t) : return t.tag is floatTag
+def isDoubleType(t) : return t.tag is doubleTag
+def isVoidType(t) : return t.tag is voidTag
 
-def isTupleType(t) : return t.tag is tupleTypeTag
-def isArrayType(t) : return t.tag is arrayTypeTag
-def isPointerType(t) : return t.tag is pointerTypeTag
+def isTupleType(t) : return t.tag is tupleTag
+def isArrayType(t) : return t.tag is arrayTag
+def isPointerType(t) : return t.tag is pointerTag
 def isRecordType(t) : return type(t.tag) is Record
 
-simpleTypeTags = (boolTypeTag, intTypeTag, floatTypeTag,
-                  doubleTypeTag, pointerTypeTag)
+_simpleTags = (boolTag, intTag, floatTag, doubleTag, pointerTag)
 def isSimpleType(t) :
-    return t.tag in simpleTypeTags
+    return t.tag in _simpleTags
 
 
 
@@ -162,14 +161,14 @@ def tagName(t) :
     return _tagNames[t.tag]
 
 _tagNames = {}
-_tagNames[boolTypeTag] = "Bool"
-_tagNames[intTypeTag] = "Int"
-_tagNames[floatTypeTag] = "Float"
-_tagNames[doubleTypeTag] = "Double"
-_tagNames[voidTypeTag] = "Void"
-_tagNames[tupleTypeTag] = "Tuple"
-_tagNames[arrayTypeTag] = "Array"
-_tagNames[pointerTypeTag] = "Pointer"
+_tagNames[boolTag] = "Bool"
+_tagNames[intTag] = "Int"
+_tagNames[floatTag] = "Float"
+_tagNames[doubleTag] = "Double"
+_tagNames[voidTag] = "Void"
+_tagNames[tupleTag] = "Tuple"
+_tagNames[arrayTag] = "Array"
+_tagNames[pointerTag] = "Pointer"
 
 
 
@@ -188,7 +187,7 @@ def toRecordType(t) :
     ensure(isType(t) and isRecordType(t), "record type expected")
     return t
 
-def toReferenceWithTypeTag(tag) :
+def toReferenceWithTag(tag) :
     def f(x) :
         r = toReference(x)
         ensure(r.type.tag is tag, "type mismatch")

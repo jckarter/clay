@@ -65,7 +65,7 @@ toRTReference.register(Value)(lambda x : RTReference(x.type))
 # type checking converters
 #
 
-def toRTReferenceWithTypeTag(tag) :
+def toRTReferenceWithTag(tag) :
     def f(x) :
         r = toRTReference(x)
         ensure(r.type.tag is tag, "type mismatch")
@@ -178,7 +178,7 @@ def foo(x, env) :
 
 @analyze2.register(TupleRef)
 def foo(x, env) :
-    thing = analyze(x.expr, env, toRTReferenceWithTypeTag(tupleTypeTag))
+    thing = analyze(x.expr, env, toRTReferenceWithTag(tupleTag))
     nFields = len(thing.type.params)
     ensure((0 <= x.index < nFields), "tuple field index out of range")
     return RTReference(thing.type.params[x.index])
@@ -447,13 +447,13 @@ def foo(x, args, env) :
 @analyzeCall.register(primitives.tupleFieldCount)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    analyze(args[0], env, toTypeWithTag(tupleTypeTag))
+    analyze(args[0], env, toTypeWithTag(tupleTag))
     return RTValue(intType)
 
 @analyzeCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    thing = analyze(args[0], env, toRTReferenceWithTypeTag(tupleTypeTag))
+    thing = analyze(args[0], env, toRTReferenceWithTag(tupleTag))
     i = analyze(args[1], env, toInt)
     nFields = len(thing.type.params)
     ensure((0 <= i < nFields), "tuple field index out of range")
@@ -475,7 +475,7 @@ def foo(x, args, env) :
 @analyzeCall.register(primitives.arrayRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    a = analyze(args[0], env, toRTReferenceWithTypeTag(arrayTypeTag))
+    a = analyze(args[0], env, toRTReferenceWithTag(arrayTag))
     analyze(args[1], env, toRTValueOfType(intType))
     return RTReference(a.type.params[0])
 

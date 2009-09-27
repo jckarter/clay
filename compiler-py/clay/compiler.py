@@ -48,14 +48,14 @@ def foo(t) :
 
 makeLLVMType = multimethod(errorMessage="invalid type tag")
 
-@makeLLVMType.register(TupleTypeTag)
+@makeLLVMType.register(TupleTag)
 def foo(tag, t) :
     fieldLLVMTypes = [llvmType(x) for x in t.params]
     llt = llvm.Type.struct(fieldLLVMTypes)
     _llvmTypesTable[t] = llt
     return llt
 
-@makeLLVMType.register(ArrayTypeTag)
+@makeLLVMType.register(ArrayTag)
 def foo(tag, t) :
     ensure(len(t.params) == 2, "invalid array type")
     elementType = llvmType(t.params[0])
@@ -64,7 +64,7 @@ def foo(tag, t) :
     _llvmTypesTable[t] = llt
     return llt
 
-@makeLLVMType.register(PointerTypeTag)
+@makeLLVMType.register(PointerTag)
 def foo(tag, t) :
     ensure(len(t.params) == 1, "invalid pointer type")
     pointeeType = llvmType(t.params[0])
@@ -271,7 +271,7 @@ def foo(x) :
 # type checking converters
 #
 
-def toRTReferenceWithTypeTag(tag) :
+def toRTReferenceWithTag(tag) :
     def f(x) :
         r = toRTReference(x)
         ensure(r.type.tag is tag, "type mismatch")
@@ -475,7 +475,7 @@ def foo(x, env) :
 @compile2.register(TupleRef)
 def foo(x, env) :
     thing = compile(x.expr, env)
-    toRTTupleReference = toRTReferenceWithTypeTag(tupleTypeTag)
+    toRTTupleReference = toRTReferenceWithTag(tupleTag)
     thingRef = convertObject(toRTTupleReference, thing, x.expr)
     return rtTupleFieldRef(thingRef, x.index)
 
@@ -836,14 +836,14 @@ def foo(x, args, env) :
 @compileCall.register(primitives.tupleFieldCount)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    t = compile(args[0], env, toTypeWithTag(tupleTypeTag))
+    t = compile(args[0], env, toTypeWithTag(tupleTag))
     return toRTValue(intToValue(len(t.params)))
 
 @compileCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cargs = [compile(y, env) for y in args]
-    converter = toRTReferenceWithTypeTag(tupleTypeTag)
+    converter = toRTReferenceWithTag(tupleTag)
     tupleRef = convertObject(converter, cargs[0], args[0])
     i = convertObject(toInt, cargs[1], args[1])
     return rtTupleFieldRef(tupleRef, i)
@@ -868,7 +868,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 2)
     cargs = [compile(y, env) for y in args]
-    converter = toRTReferenceWithTypeTag(arrayTypeTag)
+    converter = toRTReferenceWithTag(arrayTag)
     aRef = convertObject(converter, cargs[0], args[0])
     iRef = convertObject(toRTReferenceOfType(intType), cargs[1], args[1])
     i = llvmBuilder.load(iRef.llvmValue)

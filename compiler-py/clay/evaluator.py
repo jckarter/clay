@@ -45,7 +45,7 @@ def foo(t) :
 
 makeCTypesType = multimethod(errorMessage="invalid type tag")
 
-@makeCTypesType.register(TupleTypeTag)
+@makeCTypesType.register(TupleTag)
 def foo(tag, t) :
     fieldCTypes = [ctypesType(x) for x in t.params]
     fieldCNames = ["f%d" % x for x in range(len(t.params))]
@@ -54,14 +54,14 @@ def foo(tag, t) :
     _ctypesTable[t] = ct
     return ct
 
-@makeCTypesType.register(ArrayTypeTag)
+@makeCTypesType.register(ArrayTag)
 def foo(tag, t) :
     ensure(len(t.params) == 2, "invalid array type")
     ct = ctypesType(t.params[0]) * toInt(t.params[1])
     _ctypesTable[t] = ct
     return ct
 
-@makeCTypesType.register(PointerTypeTag)
+@makeCTypesType.register(PointerTag)
 def foo(tag, t) :
     ensure(len(t.params) == 1, "invalid pointer type")
     ct = ctypes.POINTER(ctypesType(t.params[0]))
@@ -430,13 +430,13 @@ xregister(Reference, xconvertReference)
 
 def getXConverter(tag) :
     if not _xconverters :
-        _xconverters[boolTypeTag] = xconvertBool
-        _xconverters[intTypeTag] = xconvertBuiltin
-        _xconverters[floatTypeTag] = xconvertBuiltin
-        _xconverters[doubleTypeTag] = xconvertBuiltin
-        _xconverters[pointerTypeTag] = xconvertPointer
-        _xconverters[tupleTypeTag] = xconvertTuple
-        _xconverters[arrayTypeTag] = xconvertArray
+        _xconverters[boolTag] = xconvertBool
+        _xconverters[intTag] = xconvertBuiltin
+        _xconverters[floatTag] = xconvertBuiltin
+        _xconverters[doubleTag] = xconvertBuiltin
+        _xconverters[pointerTag] = xconvertPointer
+        _xconverters[tupleTag] = xconvertTuple
+        _xconverters[arrayTag] = xconvertArray
     return _xconverters.get(tag)
 
 _xconverters = {}
@@ -529,7 +529,7 @@ def foo(x, env) :
 @evaluate2.register(TupleRef)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
-    toTupleReference = toReferenceWithTypeTag(tupleTypeTag)
+    toTupleReference = toReferenceWithTag(tupleTag)
     thingRef = convertObject(toTupleReference, thing, x.expr)
     return tupleFieldRef(thingRef, x.index)
 
@@ -894,14 +894,14 @@ def foo(x, args, env) :
 @evaluateCall.register(primitives.tupleFieldCount)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    t = evaluate(args[0], env, toTypeWithTag(tupleTypeTag))
+    t = evaluate(args[0], env, toTypeWithTag(tupleTag))
     return intToValue(len(t.params))
 
 @evaluateCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
     eargs = [evaluate(y, env) for y in args]
-    converter = toReferenceWithTypeTag(tupleTypeTag)
+    converter = toReferenceWithTag(tupleTag)
     tupleRef = convertObject(converter, eargs[0], args[0])
     i = convertObject(toInt, eargs[1], args[1])
     return tupleFieldRef(tupleRef, i)
@@ -926,7 +926,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 2)
     eargs = [evaluate(y, env) for y in args]
-    converter = toReferenceWithTypeTag(arrayTypeTag)
+    converter = toReferenceWithTag(arrayTag)
     a = convertObject(converter, eargs[0], args[0])
     i = convertObject(toInt, eargs[1], args[1])
     return arrayRef(a, i)
