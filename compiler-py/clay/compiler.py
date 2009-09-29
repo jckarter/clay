@@ -441,7 +441,9 @@ def foo(x, env) :
     zero = llvm.Constant.int(llvmType(boolType), 0)
     flag = llvmBuilder.icmp(llvm.ICMP_EQ, v, zero)
     flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
+    result = tempRTValue(boolType)
+    llvmBuilder.store(flag, result.llvmValue)
+    return result
 
 @compile2.register(AndExpr)
 def foo(x, env) :
@@ -619,11 +621,6 @@ def rtLoadLLVM(args, env, types) :
     argRefs = rtLoadRefs(args, env, types)
     return [llvmBuilder.load(x.llvmValue) for x in argRefs]
 
-def rtResult(type_, llvmValue) :
-    result = tempRTValue(type_)
-    llvmBuilder.store(llvmValue, result.llvmValue)
-    return result
-
 
 
 #
@@ -733,7 +730,9 @@ def foo(x, args, env) :
     ptrRef = compile(args[1], env, toRTReferenceOfType(pointerType(cell)))
     ptr = llvmBuilder.load(ptrRef.llvmValue)
     ptr = llvmBuilder.bitcast(ptr, llvmType(targetPtrType))
-    return rtResult(targetPtrType, ptr)
+    result = tempRTValue(targetPtrType)
+    llvmBuilder.store(ptr, result.llvmValue)
+    return result
 
 @compileCall.register(primitives.allocateMemory)
 def foo(x, args, env) :
