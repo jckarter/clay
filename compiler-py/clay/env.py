@@ -64,9 +64,10 @@ class ModuleEnvironment(object) :
 #
 
 class Environment(object) :
-    def __init__(self, parent=None) :
+    def __init__(self, parent=None, filter=None) :
         self.parent = parent
         self.entries = {}
+        self.filter = filter
 
     def add(self, name, entry) :
         assert type(name) is str
@@ -85,6 +86,8 @@ class Environment(object) :
         entry = self.lookupInternal(name)
         if entry is None :
             error("undefined name: %s" % name)
+        if self.filter is not None :
+            entry = self.filter(entry)
         return entry
 
 

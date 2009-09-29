@@ -80,6 +80,34 @@ def foo(x) :
 
 
 #
+# return locations
+#
+
+class RTReturnLocation(object) :
+    def __init__(self, type_, llvmValue) :
+        self.type = type_
+        self.llvmValue = llvmValue
+        self.used = False
+    def use(self, type_) :
+        ensure(type_ == self.type, "type mismatch")
+        ensure(not self.used, "double use")
+        self.used = True
+        return RTValue(self.type, self.llvmValue)
+
+_rtReturnLocations = []
+
+def pushRTReturnLocation(returnLoc) :
+    _rtReturnLocations.append(returnLoc)
+
+def topRTReturnLocation() :
+    return _rtReturnLocations[-1]
+
+def popRTReturnLocation() :
+    return _rtReturnLocations.pop()
+
+
+
+#
 # temp values
 #
 
@@ -122,6 +150,9 @@ def detachFromRTTempsBlock(temp) :
     _rtTempsBlocks[-1].detachTemp(temp)
 
 def tempRTValue(type_) :
+    returnLoc = topRTReturnLocation()
+    if returnLoc is not None :
+        return returnLoc.use(type_)
     return _rtTempsBlocks[-1].newTemp(type_)
 
 
@@ -327,13 +358,15 @@ def rtTupleFieldRef(a, i) :
     elementPtr = llvmBuilder.gep(a.llvmValue, [zero, iValue])
     return RTReference(elementType, elementPtr)
 
-def rtMakeTuple(argRefs) :
-    t = tupleType([x.type for x in argRefs])
+def rtMakeTuple(argTypes, argExprs, env) :
+    t = tupleType(argTypes)
     value = tempRTValue(t)
     valueRef = toRTReference(value)
-    for i, argRef in enumerate(argRefs) :
+    for i, argExpr in enumerate(argExpr) :
         left = rtTupleFieldRef(valueRef, i)
-        rtValueCopy(left, argRef)
+        returnLoc = RTReturnLocation(left.type, left.llvmValue)
+        compile(argExpr, env, toRTValueOfType(argTypes[i]),
+                returnLocation=returnLoc)
     return value
 
 def rtRecordFieldRef(a, i) :
@@ -346,12 +379,15 @@ def rtRecordFieldRef(a, i) :
     fieldPtr = llvmBuilder.gep(a.llvmValue, [zero, iValue])
     return RTReference(fieldType, fieldPtr)
 
-def rtMakeRecord(recType, argRefs) :
+def rtMakeRecord(recType, argExprs, env) :
     value = tempRTValue(recType)
     valueRef = toRTReference(value)
-    for i, argRef in enumerate(argRefs) :
+    fieldTypes = recordFieldTypes(recType)
+    for i, argExpr in enumerate(argExprs) :
         left = rtRecordFieldRef(valueRef, i)
-        rtValueCopy(left, argRef)
+        returnLoc = RTReturnLocation(left.type, left.llvmValue)
+        compile(argExpr, env, toRTValueOfType(fieldTypes[i]),
+                returnLocation=returnLoc)
     return value
 
 
@@ -360,12 +396,19 @@ def rtMakeRecord(recType, argRefs) :
 # compile
 #
 
-def compile(expr, env, converter=(lambda x : x)) :
+def compile(expr, env, converter=(lambda x : x), returnLocation=None) :
     contextPush(expr)
+    pushRTReturnLocation(returnLocation)
     result = compile2(expr, env)
     result = converter(result)
+    popRTReturnLocation()
+    if returnLocation is not None :
+        assert returnLocation.used
     contextPop()
     return result
+
+def compileDelegate(expr, env) :
+    return compile2(expr, env)
 
 
 
@@ -393,7 +436,7 @@ def foo(x, env) :
 
 @compile2.register(Tuple)
 def foo(x, env) :
-    return compile(Call(primitiveNameRef("tuple"), x.args), env)
+    return compileDelegate(Call(primitiveNameRef("tuple"), x.args), env)
 
 @compile2.register(Indexing)
 def foo(x, env) :
@@ -407,33 +450,31 @@ def foo(x, env) :
 
 @compile2.register(FieldRef)
 def foo(x, env) :
-    thing = compile(x.expr, env)
-    thingRef = convertObject(toRTRecordReference, thing, x.expr)
-    return rtRecordFieldRef(thingRef, recordFieldIndex(thing.type, x.name))
+    thingRef = compile(x.expr, env, toRTRecordReference)
+    return rtRecordFieldRef(thingRef, recordFieldIndex(thingRef.type, x.name))
 
 @compile2.register(TupleRef)
 def foo(x, env) :
-    thing = compile(x.expr, env)
     toRTTupleReference = toRTReferenceWithTag(tupleTag)
-    thingRef = convertObject(toRTTupleReference, thing, x.expr)
+    thingRef = compile(x.expr, env, toRTTupleReference)
     return rtTupleFieldRef(thingRef, x.index)
 
 @compile2.register(Dereference)
 def foo(x, env) :
     primOp = primitiveNameRef("pointerDereference")
-    return compile(Call(primOp, [x.expr]), env)
+    return compileDelegate(Call(primOp, [x.expr]), env)
 
 @compile2.register(AddressOf)
 def foo(x, env) :
-    return compile(Call(primitiveNameRef("addressOf"), [x.expr]), env)
+    return compileDelegate(Call(primitiveNameRef("addressOf"), [x.expr]), env)
 
 @compile2.register(UnaryOpExpr)
 def foo(x, env) :
-    return compile(convertUnaryOpExpr(x), env)
+    return compileDelegate(convertUnaryOpExpr(x), env)
 
 @compile2.register(BinaryOpExpr)
 def foo(x, env) :
-    return compile(convertBinaryOpExpr(x), env)
+    return compileDelegate(convertBinaryOpExpr(x), env)
 
 @compile2.register(NotExpr)
 def foo(x, env) :
@@ -503,7 +544,7 @@ def foo(x, env) :
 
 @compile2.register(SCExpression)
 def foo(x, env) :
-    return compile(x.expr, x.env)
+    return compileDelegate(x.expr, x.env)
 
 
 
@@ -565,23 +606,17 @@ compileCall = multimethod(errorMessage="invalid call")
 @compileCall.register(Type)
 def foo(x, args, env) :
     ensure(isRecordType(x), "only record type constructors are supported")
-    fieldTypes = recordFieldTypes(x)
-    ensureArity(args, len(fieldTypes))
-    argRefs = []
-    for arg, fieldType in zip(args, fieldTypes) :
-        argRef = compile(arg, env, toRTReferenceOfType(fieldType))
-        argRefs.append(argRef)
-    return rtMakeRecord(x, argRefs)
+    return rtMakeRecord(x, args, env)
 
 @compileCall.register(Record)
 def foo(x, args, env) :
-    actualArgs = [RTActualArgument(y, env) for y in args]
-    result = matchRecordInvoke(x, actualArgs)
-    if type(result) is InvokeError :
-        result.signalError()
-    assert type(result) is InvokeBindings
-    recType = recordType(x, result.typeParams)
-    return rtMakeRecord(recType, result.params)
+    result = analyzer.analyzeCall(x, args, envForAnalysis(env))
+    recType = result.type
+    nonStaticArgs = []
+    for formalArg, actualArg in zip(x.args, args) :
+        if type(formalArg) is ValueRecordArg :
+            nonStaticArgs.append(actualArg)
+    return rtMakeRecord(recType, nonStaticArgs, env)
 
 @compileCall.register(Procedure)
 def foo(x, args, env) :
@@ -594,11 +629,15 @@ def foo(x, args, env) :
 
 @compileCall.register(Overloadable)
 def foo(x, args, env) :
-    actualArgs = [RTActualArgument(y, env) for y in args]
+    env2 = envForAnalysis(env)
+    actualArgs = [analyzer.RTActualArgument(arg, env2) for arg in args]
     for y in x.overloads :
-        result = matchInvoke(y.code, y.env, actualArgs)
+        result = matchInvoke(y.code, envForAnalysis(y.env), actualArgs)
         if type(result) is InvokeError :
             continue
+        assert type(result) is InvokeBindings
+        actualArgs = [RTActualArgument(arg, env) for arg in args]
+        result = matchInvoke(y.code, y.env, actualArgs)
         assert type(result) is InvokeBindings
         return compileInvoke(x.name.s, y.code, y.env, result)
     error("no matching overload")
@@ -763,9 +802,12 @@ def foo(x, args, env) :
 @compileCall.register(primitives.tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuples need atleast two members")
-    cargs = [compile(y, env) for y in args]
-    argRefs = convertObjects(toRTReference, cargs, args)
-    return rtMakeTuple(argRefs)
+    argTypes = []
+    env2 = envForAnalysis(env)
+    for arg in args :
+        result = analyzer.analyze(arg, env2, analyzer.toRTReference)
+        argTypes.append(result.type)
+    return rtMakeTuple(argTypes, args, env)
 
 @compileCall.register(primitives.tupleFieldCount)
 def foo(x, args, env) :
@@ -776,10 +818,9 @@ def foo(x, args, env) :
 @compileCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
-    converter = toRTReferenceWithTag(tupleTag)
-    tupleRef = convertObject(converter, cargs[0], args[0])
-    i = convertObject(toNativeInt, cargs[1], args[1])
+    toRTTupleReference = toRTReferenceWithTag(tupleTag)
+    tupleRef = compile(args[0], env, toRTTupleReference)
+    i = compile(args[1], env, toNativeInt)
     return rtTupleFieldRef(tupleRef, i)
 
 
@@ -791,9 +832,8 @@ def foo(x, args, env) :
 @compileCall.register(primitives.array)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
-    elementType = convertObject(toType, cargs[0], args[0])
-    n = convertObject(toNativeInt, cargs[1], args[1])
+    elementType = compile(args[0], env, toType)
+    n = compile(args[1], env, toNativeInt)
     a = tempRTValue(arrayType(elementType, intToValue(n)))
     rtValueInit(a)
     return a
@@ -801,10 +841,8 @@ def foo(x, args, env) :
 @compileCall.register(primitives.arrayRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
-    converter = toRTReferenceWithTag(arrayTag)
-    aRef = convertObject(converter, cargs[0], args[0])
-    iRef = convertObject(toRTReferenceOfType(nativeIntType), cargs[1], args[1])
+    aRef = compile(args[0], env, toRTReferenceWithTag(arrayTag))
+    iRef = compile(args[1], env, toRTReferenceOfType(nativeIntType))
     i = llvmBuilder.load(iRef.llvmValue)
     zero = llvm.Constant.int(llvmType(nativeIntType), 0)
     element = llvmBuilder.gep(aRef.llvmValue, [zero, i])
@@ -831,9 +869,8 @@ def foo(x, args, env) :
 @compileCall.register(primitives.recordFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    cargs = [compile(y, env) for y in args]
-    recRef = convertObject(toRTRecordReference, cargs[0], args[0])
-    i = convertObject(toNativeInt, cargs[1], args[1])
+    recRef = compile(args[0], env, toRTRecordReference)
+    i = compile(args[1], env, toNativeInt)
     return rtRecordFieldRef(recRef, i)
 
 
@@ -899,6 +936,22 @@ def foo(x, args, env) :
 
 
 #
+# environment for analysis
+#
+
+def analysisFilter(x) :
+    if isRTValue(x) :
+        return analyzer.RTValue(x.type)
+    elif isRTReference(x) :
+        return analyzer.RTReference(x.type)
+    return x
+
+def envForAnalysis(env) :
+    return Environment(env, filter=analysisFilter)
+
+
+
+#
 # compile actual arguments
 #
 
@@ -906,13 +959,17 @@ class RTActualArgument(object) :
     def __init__(self, expr, env) :
         self.expr = expr
         self.env = env
-        self.result_ = compile(self.expr, self.env)
+        self.result_ = None
 
     def asReference(self) :
-        return withContext(self.expr, lambda : toRTReference(self.result_))
+        assert self.result_ is None
+        self.result_ = compile(self.expr, self.env, toRTReference)
+        return self.result_
 
     def asStatic(self) :
-        return withContext(self.expr, lambda : toStatic(self.result_))
+        assert self.result_ is None
+        self.result_ = compile(self.expr, self.env, toStatic)
+        return self.result_
 
 
 
@@ -928,18 +985,14 @@ def compileInvoke(name, code, env, bindings) :
     if isVoidType(compiledCode.returnType) :
         llvmBuilder.call(compiledCode.llvmFunc, llvmArgs)
         return voidValue
+    elif compiledCode.returnByRef :
+        ptr = llvmBuilder.call(compiledCode.llvmFunc, llvmArgs)
+        return RTReference(compiledCode.returnType, ptr)
     else :
-        t = compiledCode.returnType
-        if compiledCode.returnByRef :
-            t = pointerType(t)
-        retVal = tempRTValue(t)
+        retVal = tempRTValue(compiledCode.returnType)
         llvmArgs.append(retVal.llvmValue)
         llvmBuilder.call(compiledCode.llvmFunc, llvmArgs)
-        if compiledCode.returnByRef :
-            ptr = llvmBuilder.load(retVal.llvmValue)
-            return RTReference(compiledCode.returnType, ptr)
-        else :
-            return retVal
+        return retVal
 
 
 
@@ -985,12 +1038,14 @@ def compileCodeHeader(name, code, env, bindings) :
         llt = llvm.Type.pointer(llvmType(param.type))
         llvmArgTypes.append(llt)
     compiledCode = analyzeCodeToCompile(code, env, bindings)
-    if not isVoidType(compiledCode.returnType) :
-        llvmReturnType = llvmType(compiledCode.returnType)
-        if compiledCode.returnByRef :
-            llvmReturnType = llvm.Type.pointer(llvmReturnType)
-        llvmArgTypes.append(llvm.Type.pointer(llvmReturnType))
-    funcType = llvm.Type.function(llvm.Type.void(), llvmArgTypes)
+    if isVoidType(compiledCode.returnType) :
+        llvmReturnType = llvm.Type.void()
+    elif compiledCode.returnByRef :
+        llvmReturnType = llvmType(pointerType(compiledCode.returnType))
+    else :
+        llvmReturnType = llvm.Type.void()
+        llvmArgTypes.append(llvmType(pointerType(compiledCode.returnType)))
+    funcType = llvm.Type.function(llvmReturnType, llvmArgTypes)
     func = llvmModule().add_function(funcType, "clay_" + name)
     compiledCode.llvmFunc = func
     for i, var in enumerate(bindings.vars) :
@@ -1247,14 +1302,16 @@ def foo(x, env, codeContext) :
         llvmBuilder.ret_void()
         return True
     ensure(x.expr is not None, "return value expected")
-    pushRTTempsBlock()
     if codeContext.returnByRef :
+        pushRTTempsBlock()
         result = compile(x.expr, env, toRTLValueOfType(retType))
-        llvmBuilder.store(result.llvmValue, codeContext.llvmFunc.args[-1])
-    else :
-        result = compile(x.expr, env, toRTReferenceOfType(retType))
-        returnRef = RTReference(retType, codeContext.llvmFunc.args[-1])
-        rtValueCopy(returnRef, result)
+        popRTTempsBlock()
+        codeContext.cleanAll()
+        llvmBuilder.ret(result.llvmValue)
+        return True
+    returnLoc = RTReturnLocation(retType, codeContext.llvmFunc.args[-1])
+    pushRTTempsBlock()
+    compile(x.expr, env, toRTValueOfType(retType), returnLocation=returnLoc)
     popRTTempsBlock()
     codeContext.cleanAll()
     llvmBuilder.ret_void()
