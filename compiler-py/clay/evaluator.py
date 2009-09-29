@@ -305,7 +305,7 @@ toStatic.register(Reference)(lambda x : toValue(x))
 
 
 #
-# boolToValue, intToValue
+# boolToValue, intToValue, intXToValue
 #
 
 def boolToValue(x) :
@@ -313,8 +313,17 @@ def boolToValue(x) :
     v.buf.value = x
     return v
 
-def intToValue(x) :
-    v = tempValue(nativeIntType)
+def intToValue(x, type_=None) :
+    if type_ is None :
+        type_ = nativeIntType
+    v = tempValue(type_)
+    v.buf.value = x
+    return v
+
+def floatToValue(x, type_=None) :
+    if type_ is None :
+        type_ = float64Type
+    v = tempValue(type_)
     v.buf.value = x
     return v
 
@@ -611,9 +620,36 @@ evaluate2 = multimethod(errorMessage="invalid expression")
 def foo(x, env) :
     return boolToValue(x.value)
 
+_suffixTypes = {
+    "i8"  : int8Type,
+    "i16" : int16Type,
+    "i32" : int32Type,
+    "i64" : int64Type,
+    "u8"  : uint8Type,
+    "u16" : uint16Type,
+    "u32" : uint32Type,
+    "u64" : uint64Type,
+    "f32" : float32Type,
+    "f64" : float64Type}
+
 @evaluate2.register(IntLiteral)
 def foo(x, env) :
-    return intToValue(x.value)
+    if x.suffix is None :
+        return intToValue(x.value)
+    type_ = _suffixTypes.get(x.suffix)
+    ensure(type_ is not None, "invalid suffix: %s" % x.suffix)
+    if isFloatingPointType(type_) :
+        return floatToValue(x.value, type_)
+    return intToValue(x.value, type_)
+
+@evaluate2.register(FloatLiteral)
+def foo(x, env) :
+    if x.suffix is None :
+        return floatToValue(x.value)
+    type_ = _suffixTypes.get(x.suffix)
+    ensure(type_ is not None, "invalid suffix: %s" % x.suffix)
+    ensure(not isIntegerType(type_), "floating point suffix expected")
+    return floatToValue(x.value, type_)
 
 @evaluate2.register(NameRef)
 def foo(x, env) :

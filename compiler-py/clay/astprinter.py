@@ -19,9 +19,8 @@ r(DottedName, lambda x : xo("DottedName", *x.names))
 #
 
 r(BoolLiteral, lambda x : xo("BoolLiteral", x.value))
-r(IntLiteral, lambda x : xo("IntLiteral", x.value))
-r(FloatLiteral, lambda x : xo("FloatLiteral", x.value))
-r(DoubleLiteral, lambda x : xo("DoubleLiteral", x.value))
+r(IntLiteral, lambda x : xo("IntLiteral", x.value, x.suffix))
+r(FloatLiteral, lambda x : xo("FloatLiteral", x.value, x.suffix))
 r(CharLiteral, lambda x : xo("CharLiteral", x.value))
 r(StringLiteral, lambda x : xo("StringLiteral", x.value))
 

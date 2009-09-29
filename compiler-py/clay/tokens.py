@@ -16,7 +16,7 @@ class BytesLiteral(Token) : pass
 class ByteLiteral(Token) : pass
 class IntLiteral(Token) : pass
 class FloatLiteral(Token) : pass
-class DoubleLiteral(Token) : pass
+class LiteralSuffix(Token) : pass
 class Space(Token) : pass
 class SingleLineComment(Token) : pass
 class MultiLineComment(Token) : pass

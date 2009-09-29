@@ -153,11 +153,15 @@ analyze2 = multimethod(errorMessage="invalid expression")
 
 @analyze2.register(BoolLiteral)
 def foo(x, env) :
-    return boolToValue(x.value)
+    return evaluate(x, env)
 
 @analyze2.register(IntLiteral)
 def foo(x, env) :
-    return intToValue(x.value)
+    return evaluate(x, env)
+
+@analyze2.register(FloatLiteral)
+def foo(x, env) :
+    return evaluate(x, env)
 
 @analyze2.register(NameRef)
 def foo(x, env) :

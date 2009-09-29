@@ -52,14 +52,16 @@ dottedName = astNode(listOf(identifier, comma), lambda x : DottedName(x))
 
 boolLiteral = choice(astNode(keyword("true"), lambda x : BoolLiteral(True)),
                      astNode(keyword("false"), lambda x : BoolLiteral(False)))
-intLiteral = astNode(tokenType(t.IntLiteral), lambda x : IntLiteral(x))
-floatLiteral = astNode(tokenType(t.FloatLiteral), lambda x : FloatLiteral(x))
-doubleLiteral = astNode(tokenType(t.DoubleLiteral),
-                        lambda x : DoubleLiteral(x))
+intLiteral = astNode(sequence(tokenType(t.IntLiteral),
+                              optional(tokenType(t.LiteralSuffix))),
+                     lambda x : IntLiteral(x[0], x[1]))
+floatLiteral = astNode(sequence(tokenType(t.FloatLiteral),
+                                optional(tokenType(t.LiteralSuffix))),
+                       lambda x :FloatLiteral(x[0], x[1]))
 charLiteral = astNode(tokenType(t.CharLiteral), lambda x : CharLiteral(x))
 stringLiteral = astNode(tokenType(t.StringLiteral),
                         lambda x : StringLiteral(x))
-literal = choice(boolLiteral, intLiteral, floatLiteral, doubleLiteral,
+literal = choice(boolLiteral, intLiteral, floatLiteral,
                  charLiteral, stringLiteral)
 
 

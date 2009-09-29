@@ -85,12 +85,12 @@ keywordSet = set(keywordList)
 
 identChar1 = condition(lambda x : x.isalpha() or (x == "_"))
 identChar2 = condition(lambda x : x.isalpha() or x.isdigit() or (x == "_"))
-keywordIdent1 = modify(sequence(identChar1, zeroPlus(identChar2)),
-                        lambda x : x[0] + "".join(x[1]))
+keywordIdentStr = modify(sequence(identChar1, zeroPlus(identChar2)),
+                         lambda x : x[0] + "".join(x[1]))
 def keywordIdentFactory(s) :
     return Keyword(s) if s in keywordSet else Identifier(s)
 
-keywordIdentifier = token(keywordIdent1, klass=keywordIdentFactory)
+keywordIdentifier = token(keywordIdentStr, klass=keywordIdentFactory)
 
 
 #
@@ -198,7 +198,7 @@ intLiteral = token(choice(negativeInt, positiveInt, unsignedInt),
 
 
 #
-# doubleLiteral, floatLiteral
+# floatLiteral
 #
 
 optSign = modify(optional(choice(literal("+"), literal("-"))),
@@ -206,11 +206,19 @@ optSign = modify(optional(choice(literal("+"), literal("-"))),
 integralPart = modify(onePlus(decimalDigit), lambda x : "".join(x))
 decimalPart = modify(sequence(literal("."), integralPart),
                      lambda x : "".join(x))
-doubleStr = modify(sequence(optSign, integralPart, decimalPart),
-                   lambda x : "".join(x))
-doubleLiteral = token(doubleStr, klass=DoubleLiteral)
-floatStr = modify(sequence(doubleStr, literal("f")), lambda x : "".join(x))
-floatLiteral = token(floatStr, klass=FloatLiteral)
+floatValue = modify(sequence(optSign, integralPart, decimalPart),
+                    lambda x : float("".join(x)))
+floatLiteral = token(floatValue, klass=FloatLiteral)
+
+
+#
+# literalSuffix
+#
+
+literalSuffix1 = modify(sequence(literal("#"), keywordIdentStr),
+                        lambda x : x[1])
+
+literalSuffix = token(literalSuffix1, klass=LiteralSuffix)
 
 
 #
@@ -248,7 +256,7 @@ oneToken = choice(space, singleLineComment, multiLineComment,
                   symbol, keywordIdentifier,
                   stringLiteral, charLiteral,
                   bytesLiteral, byteLiteral,
-                  floatLiteral, doubleLiteral, intLiteral)
+                  floatLiteral, intLiteral, literalSuffix)
 
 
 #

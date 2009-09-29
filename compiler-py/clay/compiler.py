@@ -148,6 +148,8 @@ def foo(x) :
         constValue = llvm.Constant.int(llvmType(x.type), int(x.buf.value))
     elif isIntegerType(x.type) :
         constValue = llvm.Constant.int(llvmType(x.type), x.buf.value)
+    elif isFloatingPointType(x.type) :
+        constValue = llvm.Constant.real(llvmType(x.type), x.buf.value)
     else :
         error("unsupported type in toRTValue")
     temp = tempRTValue(x.type)
@@ -376,11 +378,15 @@ compile2 = multimethod(errorMessage="invalid expression")
 
 @compile2.register(BoolLiteral)
 def foo(x, env) :
-    return boolToValue(x.value)
+    return evaluate(x, env)
 
 @compile2.register(IntLiteral)
 def foo(x, env) :
-    return intToValue(x.value)
+    return evaluate(x, env)
+
+@compile2.register(FloatLiteral)
+def foo(x, env) :
+    return evaluate(x, env)
 
 @compile2.register(NameRef)
 def foo(x, env) :

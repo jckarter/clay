@@ -1,7 +1,7 @@
 __all__ = [
     "ASTNode", "Identifier", "DottedName",
     "Expression", "BoolLiteral", "IntLiteral", "FloatLiteral",
-    "DoubleLiteral", "CharLiteral", "StringLiteral",
+    "CharLiteral", "StringLiteral",
     "NameRef", "Tuple", "Indexing", "Call", "FieldRef", "TupleRef",
     "Dereference", "AddressOf",
     "UnaryOpExpr", "BinaryOpExpr", "NotExpr", "AndExpr", "OrExpr",
@@ -57,22 +57,20 @@ class BoolLiteral(Expression) :
         self.value = value
 
 class IntLiteral(Expression) :
-    def __init__(self, value) :
+    def __init__(self, value, suffix) :
         super(IntLiteral, self).__init__()
         assert isinstance(value, int) or isinstance(value, long)
+        check2(suffix, str)
         self.value = value
+        self.suffix = suffix
 
 class FloatLiteral(Expression) :
-    def __init__(self, value) :
+    def __init__(self, value, suffix) :
         super(FloatLiteral, self).__init__()
-        check(value, str)
+        assert isinstance(value, float)
+        check2(suffix, str)
         self.value = value
-
-class DoubleLiteral(Expression) :
-    def __init__(self, value) :
-        super(DoubleLiteral, self).__init__()
-        check(value, str)
-        self.value = value
+        self.suffix = suffix
 
 class CharLiteral(Expression) :
     def __init__(self, value) :
