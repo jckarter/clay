@@ -287,8 +287,7 @@ def toFloatingPointReference(x) :
 
 def toNumericReference(x) :
     r = toReference(x)
-    t = r.type
-    ensure(isType(t) and (isIntegerType(t) or isFloatingPointType(t)),
+    ensure(isIntegerType(r.type) or isFloatingPointType(r.type),
            "numeric type expected")
     return r
 

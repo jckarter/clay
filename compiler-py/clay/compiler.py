@@ -218,8 +218,7 @@ def toRTFloatingPointReference(x) :
 
 def toRTNumericReference(x) :
     r = toRTReference(x)
-    t = r.type
-    ensure(isType(t) and (isIntegerType(t) or isFloatingPointType(t)),
+    ensure(isIntegerType(r.type) or isFloatingPointType(r.type),
            "numeric type expected")
     return r
 
