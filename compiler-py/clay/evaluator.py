@@ -657,16 +657,7 @@ def foo(x, env) :
 
 @evaluate2.register(Tuple)
 def foo(x, env) :
-    assert len(x.args) > 0
-    eargs = [evaluate(y, env) for y in x.args]
-    if len(x.args) == 1 :
-        return eargs[0]
-    if isType(eargs[0]) or isCell(eargs[0]) :
-        elementTypes = convertObjects(toTypeOrCell, eargs, x.args)
-        return tupleType(elementTypes)
-    else :
-        argRefs = convertObjects(toReference, eargs, x.args)
-        return makeTuple(argRefs)
+    return evaluate(Call(primitiveNameRef("tuple"), x.args), env)
 
 @evaluate2.register(Indexing)
 def foo(x, env) :
@@ -693,11 +684,12 @@ def foo(x, env) :
 
 @evaluate2.register(Dereference)
 def foo(x, env) :
-    return evaluateCall(primitives.pointerDereference(), [x.expr], env)
+    primOp = primitiveNameRef("pointerDereference")
+    return evaluate(Call(primOp, [x.expr]), env)
 
 @evaluate2.register(AddressOf)
 def foo(x, env) :
-    return evaluateCall(primitives.addressOf(), [x.expr], env)
+    return evaluate(Call(primitiveNameRef("addressOf"), [x.expr]), env)
 
 @evaluate2.register(UnaryOpExpr)
 def foo(x, env) :

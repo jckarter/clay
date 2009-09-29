@@ -393,16 +393,7 @@ def foo(x, env) :
 
 @compile2.register(Tuple)
 def foo(x, env) :
-    assert len(x.args) > 0
-    cargs = [compile(y, env) for y in x.args]
-    if len(x.args) == 1 :
-        return cargs[0]
-    if isType(cargs[0]) or isCell(cargs[0]) :
-        elementTypes = convertObjects(toTypeOrCell, cargs, x.args)
-        return tupleType(elementTypes)
-    else :
-        argRefs = convertObjects(toRTReference, cargs, x.args)
-        return rtMakeTuple(argRefs)
+    return compile(Call(primitiveNameRef("tuple"), x.args), env)
 
 @compile2.register(Indexing)
 def foo(x, env) :
@@ -429,11 +420,12 @@ def foo(x, env) :
 
 @compile2.register(Dereference)
 def foo(x, env) :
-    return compileCall(primitives.pointerDereference(), [x.expr], env)
+    primOp = primitiveNameRef("pointerDereference")
+    return compile(Call(primOp, [x.expr]), env)
 
 @compile2.register(AddressOf)
 def foo(x, env) :
-    return compileCall(primitives.addressOf(), [x.expr], env)
+    return compile(Call(primitiveNameRef("addressOf"), [x.expr]), env)
 
 @compile2.register(UnaryOpExpr)
 def foo(x, env) :

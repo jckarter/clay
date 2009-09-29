@@ -168,16 +168,7 @@ def foo(x, env) :
 
 @analyze2.register(Tuple)
 def foo(x, env) :
-    assert len(x.args) > 0
-    eargs = [analyze(y, env) for y in x.args]
-    if len(x.args) == 1:
-        return eargs[0]
-    if isType(eargs[0]) or isCell(eargs[0]) :
-        elementTypes = convertObjects(toTypeOrCell, eargs, x.args)
-        return tupleType(elementTypes)
-    else :
-        argRefs = convertObjects(toRTReference, eargs, x.args)
-        return RTValue(tupleType([y.type for y in argRefs]))
+    return analyze(Call(primitiveNameRef("tuple"), x.args), env)
 
 @analyze2.register(Indexing)
 def foo(x, env) :
@@ -205,11 +196,12 @@ def foo(x, env) :
 
 @analyze2.register(Dereference)
 def foo(x, env) :
-    return analyzeCall(primitives.pointerDereference(), [x.expr], env)
+    primOp = primitiveNameRef("pointerDereference")
+    return analyze(Call(primOp, [x.expr]), env)
 
 @analyze2.register(AddressOf)
 def foo(x, env) :
-    return analyzeCall(primitives.addressOf(), [x.expr], env)
+    return analyze(Call(primitiveNameRef("addressOf"), [x.expr]), env)
 
 @analyze2.register(UnaryOpExpr)
 def foo(x, env) :
