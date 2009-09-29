@@ -575,21 +575,6 @@ _xconverters = {}
 
 
 #
-# converter utilities
-#
-
-def convertObject(converter, object_, context) :
-    return withContext(context, lambda : converter(object_))
-
-def convertObjects(converter, objects, contexts) :
-    result = []
-    for object_, context in zip(objects, contexts) :
-        result.append(convertObject(converter, object_, context))
-    return result
-
-
-
-#
 # evaluateRootExpr
 #
 
@@ -673,15 +658,13 @@ def foo(x, env) :
 
 @evaluate2.register(FieldRef)
 def foo(x, env) :
-    thing = evaluate(x.expr, env)
-    thingRef = convertObject(toRecordReference, thing, x.expr)
-    return recordFieldRef(thingRef, recordFieldIndex(thing.type, x.name))
+    thingRef = evaluate(x.expr, env, toRecordReference)
+    return recordFieldRef(thingRef, recordFieldIndex(thingRef.type, x.name))
 
 @evaluate2.register(TupleRef)
 def foo(x, env) :
-    thing = evaluate(x.expr, env)
     toTupleReference = toReferenceWithTag(tupleTag)
-    thingRef = convertObject(toTupleReference, thing, x.expr)
+    thingRef = evaluate(x.expr, env, toTupleReference)
     return tupleFieldRef(thingRef, x.index)
 
 @evaluate2.register(Dereference)
@@ -1232,8 +1215,7 @@ def foo(x, args, env) :
 @evaluateCall.register(primitives.tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuples need atleast two members")
-    eargs = [evaluate(y, env) for y in args]
-    argRefs = convertObjects(toReference, eargs, args)
+    argRefs = [evaluate(y, env, toReference) for y in args]
     return makeTuple(argRefs)
 
 @evaluateCall.register(primitives.tupleFieldCount)
@@ -1245,10 +1227,8 @@ def foo(x, args, env) :
 @evaluateCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    eargs = [evaluate(y, env) for y in args]
-    converter = toReferenceWithTag(tupleTag)
-    tupleRef = convertObject(converter, eargs[0], args[0])
-    i = convertObject(toNativeInt, eargs[1], args[1])
+    tupleRef = evaluate(args[0], env, toReferenceWithTag(tupleTag))
+    i = evaluate(args[1], env, toNativeInt)
     return tupleFieldRef(tupleRef, i)
 
 
@@ -1260,9 +1240,8 @@ def foo(x, args, env) :
 @evaluateCall.register(primitives.array)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    eargs = [evaluate(y, env) for y in args]
-    elementType = convertObject(toType, eargs[0], args[0])
-    n = convertObject(toNativeInt, eargs[1], args[1])
+    elementType = evaluate(args[0], env, toType)
+    n = evaluate(args[1], env, toNativeInt)
     a = tempValue(arrayType(elementType, intToValue(n)))
     valueInit(a)
     return a
@@ -1270,10 +1249,8 @@ def foo(x, args, env) :
 @evaluateCall.register(primitives.arrayRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    eargs = [evaluate(y, env) for y in args]
-    converter = toReferenceWithTag(arrayTag)
-    a = convertObject(converter, eargs[0], args[0])
-    i = convertObject(toNativeInt, eargs[1], args[1])
+    a = evaluate(args[0], env, toReferenceWithTag(arrayTag))
+    i = evaluate(args[1], env, toNativeInt)
     return arrayRef(a, i)
 
 
@@ -1297,9 +1274,8 @@ def foo(x, args, env) :
 @evaluateCall.register(primitives.recordFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    eargs = [evaluate(y, env) for y in args]
-    recRef = convertObject(toRecordReference, eargs[0], args[0])
-    i = convertObject(toNativeInt, eargs[1], args[1])
+    recRef = evaluate(args[0], env, toRecordReference)
+    i = evaluate(args[1], env, toNativeInt)
     return recordFieldRef(recRef, i)
 
 
@@ -1566,8 +1542,7 @@ def evalCollectLabels(statements, startIndex, labels, env) :
 def foo(x, env, context) :
     pushTempsBlock()
     left = evaluate(x.left, env, toLValue)
-    right = evaluate(x.right, env)
-    rightRef = convertObject(toReferenceOfType(left.type), right, x.right)
+    rightRef = evaluate(x.right, env, toReferenceOfType(left.type))
     valueAssign(left, rightRef)
     popTempsBlock()
 
