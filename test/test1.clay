@@ -19,23 +19,17 @@ def isOdd(n) {
 }
 
 def foo() {
-    return array(Int, 10);
+    return array(Int32, 10);
 }
 
-record NodeA[T] {
-    value: T;
-    next: Pointer[NodeB[T]];
-}
+record NodeA[T] (value:T, next:Pointer[NodeB[T]]);
 
-record NodeB[T] {
-    ptr: Pointer[T];
-    next: Pointer[NodeA[T]];
-}
+record NodeB[T] (ptr:Pointer[T], next:Pointer[NodeA[T]]);
 
 def main() {
     let n = 7;
     n = n - 1;
     let f = factorial(n);
-    let p = default(NodeA[(Int,Bool)]);
+    let p = default(NodeA[(Int32,Bool)]);
     return (foo(), isEven(n), f, p);
 }

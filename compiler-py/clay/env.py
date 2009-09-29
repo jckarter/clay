@@ -122,7 +122,9 @@ def installDefaultPrimitives() :
     def primitive(name) :
         primClass = type("Primitive%s" % name, (object,), {})
         primClasses[name] = primClass
-        entry(name, primClass())
+        prim = primClass()
+        prim.name = name
+        entry(name, prim)
     def overloadable(name) :
         x = Overloadable(Identifier(name))
         x.env = primitivesEnv
@@ -137,14 +139,13 @@ def installDefaultPrimitives() :
     primitive("default")
     primitive("typeSize")
 
+    primitive("primitiveCopy")
+
     primitive("addressOf")
     primitive("pointerDereference")
-    primitive("pointerOffset")
-    primitive("pointerSubtract")
+    primitive("pointerToInt")
+    primitive("intToPointer")
     primitive("pointerCast")
-    primitive("pointerCopy")
-    primitive("pointerEquals")
-    primitive("pointerLesser")
     primitive("allocateMemory")
     primitive("freeMemory")
 
@@ -160,42 +161,21 @@ def installDefaultPrimitives() :
     primitive("recordFieldCount")
     primitive("recordFieldRef")
 
-    primitive("boolCopy")
+    primitive("numericEquals")
+    primitive("numericLesser")
+    primitive("numericAdd")
+    primitive("numericSubtract")
+    primitive("numericMultiply")
+    primitive("numericDivide")
+    primitive("numericRemainder")
+    primitive("numericNegate")
+    primitive("numericConvert")
 
-    primitive("intCopy")
-    primitive("intEquals")
-    primitive("intLesser")
-    primitive("intAdd")
-    primitive("intSubtract")
-    primitive("intMultiply")
-    primitive("intDivide")
-    primitive("intModulus")
-    primitive("intNegate")
-
-    primitive("floatCopy")
-    primitive("floatEquals")
-    primitive("floatLesser")
-    primitive("floatAdd")
-    primitive("floatSubtract")
-    primitive("floatMultiply")
-    primitive("floatDivide")
-    primitive("floatNegate")
-
-    primitive("doubleCopy")
-    primitive("doubleEquals")
-    primitive("doubleLesser")
-    primitive("doubleAdd")
-    primitive("doubleSubtract")
-    primitive("doubleMultiply")
-    primitive("doubleDivide")
-    primitive("doubleNegate")
-
-    primitive("floatToInt")
-    primitive("intToFloat")
-    primitive("floatToDouble")
-    primitive("doubleToFloat")
-    primitive("doubleToInt")
-    primitive("intToDouble")
+    primitive("shiftLeft")
+    primitive("shiftRight")
+    primitive("bitwiseAnd")
+    primitive("bitwiseOr")
+    primitive("bitwiseXor")
 
     overloadable("init")
     overloadable("copy")
@@ -215,7 +195,7 @@ def installDefaultPrimitives() :
     overloadable("subtract")
     overloadable("multiply")
     overloadable("divide")
-    overloadable("modulus")
+    overloadable("remainder")
 
     overloadable("hash")
 

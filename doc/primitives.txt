@@ -1,67 +1,59 @@
 Primitive Types:
-Bool, Int, Float, Double, Void
+Bool,
+Int8, Int16, Int32, Int64
+UInt8, UInt16, UInt32, UInt64
+Float32, Float64
 
 Primitive Values:
-true, false, IntLiteral, FloatLiteral, DoubleLiteral
+true, false, IntLiteral, FloatLiteral
 
-Primitive Type Constructors:
-(Type,...) : tuple type constructor
-Tuple[T1,...,Tn] : tuple type constructor
-Array[T,n] : array type constructor
-record [T,..]? { (Name:Type;)* } : record type definition
-Pointer[T] : raw pointer
+Derived Types:
+Tuple[T1, ..., Tn] : tuple type constructor
+Array[T, n] : array type constructor
+Pointer[T] : pointer type
+
+User defined types:
+records
 
 Primitive Operations:
 
 default[T](static T):T
+typeSize[T](static T):Int32
 
-typeSize[T](static T):Int
+primitiveCopy[T](dest:T, src:T): Void
 
-addressOf[T](ref a : T) : Pointer[T]
-pointerDereference[T](e:Pointer[T]) ref : T
-pointerOffset[T](e:Pointer[T], i:Int):Pointer[T]
-pointerSubtract[T](e1:Pointer[T], e2:Pointer[T]):Int
-pointerCast[T1,T2](static T2, a:Pointer[T1]):Pointer[T2]
+addressOf[T](a:T) : Pointer[T]
+pointerDereference[T](a:Pointer[T]) ref : T
+pointerToInt[T,I](a:Pointer[T], static I) : I
+intToPointer[I,T](a:I, static T) : Pointer[T]
+pointerCast[T1,T2](static T2, a:Pointer[T1]): Pointer[T2]
+allocateMemory[T](static T, n:Int32): Pointer[T]
+freeMemory[T](p:Pointer[T]): Void
 
-pointerCopy
-pointerEquals, pointerLesser
+TupleType[T](static T): Bool
+tuple(v1, ..., vn): TupleType
+tupleFieldCount[T](static T): Int32
+tupleFieldRef[T,i](a:T, static i) ref : FieldType
 
-allocateMemory(size:Int) : Pointer[Int]
-freeMemory(ptr:Pointer[Int]) : Void
+array[T,n](static T, static n): Array[T,n]
+arrayRef[T,n](a:Array[T,n], i:Int32) ref : T
 
-TupleType[T](static T) : Bool
-tuple(v_1, ..., v_n): TupleType
-tupleFieldCount[T](static T) : Int
-tupleFieldRef[T,i](ref a:T, static i) ref : FieldType
+RecordType[T](static T): Bool
+recordFieldCount[R](static R) : Int32
+recordFieldRef[R,i](a:R, static i) ref : FieldType
 
-array[T,n](static T, static n):Array[T, n]
-arrayRef[T,n](ref a:Array[T,n], i:Int) ref : T;
+numericEquals[N](a:N, b:N): Bool
+numericLesser[N](a:N, b:N): Bool
+numericAdd[N](a:N, b:N): N
+numericSubtract[N](a:N, b:N): N
+numericMultiply[N](a:N, b:N): N
+numericDivide[N](a:N, b:N): N
+numericRemainder[N](a:N, b:N): N
+numericNegate[N](a:N): N
+numericConvert[Dest,Src](static Dest, a:Src): Dest
 
-recordFieldCount[R](static R) : Int
-recordFieldRef(ref a:R, static i) ref : FieldType;
-
-boolCopy(ref dest:Bool, ref src:Bool):Void
-boolNot(x:Bool):Bool
-
-intCopy(ref dest:Int, ref src:Int):Void
-intEquals(a:Int, b:Int):Bool
-intLesser(a:Int, b:Int):Bool
-intAdd, intSubtract, intMultiply, intDivide,
-intModulus, intNegate,
-
-floatCopy(ref dest:Float, ref src:Float):Void
-floatEquals(a:Float, b:Float):Bool
-floatLesser(a:Float, b:Float):Bool
-floatAdd, floatSubtract, floatMultiply, floatDivide,
-floatNegate,
-
-doubleCopy(ref dest:Double, ref src:Double):Void
-doubleEquals(a:Double, b:Double):Bool
-doubleLesser(a:Double, b:Double):Bool
-doubleAdd, doubleSubtract, doubleMultiply, doubleDivide,
-doubleNegate,
-
-charToInt, intToChar,
-floatToInt, intToFloat,
-floatToDouble, doubleToFloat,
-doubleToInt, intToDouble
+shiftLeft[I](a:I, n:I): I
+shiftRight[I](a:I, n:I): I
+bitwiseAnd[I](a:I, b:I): I
+bitwiseOr[I](a:I, b:I): I
+bitwiseXor[I](a:I, b:I): I

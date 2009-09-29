@@ -72,6 +72,23 @@ def toRTReferenceWithTag(tag) :
         return r
     return f
 
+def toRTIntegerReference(x) :
+    r = toRTReference(x)
+    ensure(isIntegerType(r.type), "integer type expected")
+    return r
+
+def toRTFloatingPointReference(x) :
+    r = toRTReference(x)
+    ensure(isFloatingPointType(r.type), "floating point type expected")
+    return r
+
+def toRTNumericReference(x) :
+    r = toRTReference(x)
+    t = r.type
+    ensure(isType(t) and (isIntegerType(t) or isFloatingPointType(t)),
+           "numeric type expected")
+    return r
+
 def toRTRecordReference(x) :
     r = toRTReference(x)
     ensure(isRecordType(r.type), "record type expected")
@@ -344,7 +361,16 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     analyze(args[0], env, toType)
-    return RTValue(intType)
+    return RTValue(nativeIntType)
+
+@analyzeCall.register(primitives.primitiveCopy)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    cell = Cell()
+    analyze(args[0], env, toRTReferenceOfType(cell))
+    analyze(args[1], env, toRTReferenceOfType(cell))
+    ensure(isSimpleType(cell.param), "expected simple type")
+    return voidValue
 
 
 
@@ -365,21 +391,20 @@ def foo(x, args, env) :
     analyze(args[0], env, toRTValueOfType(pointerType(cell)))
     return RTReference(cell.param)
 
-@analyzeCall.register(primitives.pointerOffset)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    cell = Cell()
-    ptr = analyze(args[0], env, toRTReferenceOfType(pointerType(cell)))
-    analyze(args[1], env, toRTReferenceOfType(intType))
-    return RTValue(ptr.type)
-
-@analyzeCall.register(primitives.pointerSubtract)
+@analyzeCall.register(primitives.pointerToInt)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
     analyze(args[0], env, toRTReferenceOfType(pointerType(cell)))
-    analyze(args[1], env, toRTReferenceOfType(pointerType(cell)))
-    return RTValue(intType)
+    outType = analyze(args[1], env, toIntegerType)
+    return RTValue(outType)
+
+@analyzeCall.register(primitives.intToPointer)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    analyze(args[0], env, toRTIntegerReference)
+    pointeeType = analyze(args[1], env, toType)
+    return RTValue(pointerType(pointeeType))
 
 @analyzeCall.register(primitives.pointerCast)
 def foo(x, args, env) :
@@ -389,40 +414,18 @@ def foo(x, args, env) :
     analyze(args[1], env, toRTValueOfType(pointerType(cell)))
     return RTValue(pointerType(targetType))
 
-@analyzeCall.register(primitives.pointerCopy)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    cell = Cell()
-    analyze(args[0], env, toRTReferenceOfType(pointerType(cell)))
-    analyze(args[1], env, toRTReferenceOfType(pointerType(cell)))
-    return voidValue
-
-@analyzeCall.register(primitives.pointerEquals)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    cell = Cell()
-    analyze(args[0], env, toRTReferenceOfType(pointerType(cell)))
-    analyze(args[1], env, toRTReferenceOfType(pointerType(cell)))
-    return RTValue(boolType)
-
-@analyzeCall.register(primitives.pointerLesser)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    cell = Cell()
-    analyze(args[0], env, toRTReferenceOfType(pointerType(cell)))
-    analyze(args[1], env, toRTReferenceOfType(pointerType(cell)))
-    return RTValue(boolType)
-
 @analyzeCall.register(primitives.allocateMemory)
 def foo(x, args, env) :
-    ensureArity(args, 1)
-    analyze(args[0], env, toRTReferenceOfType(intType))
-    return RTValue(pointerType(intType))
+    ensureArity(args, 2)
+    type_ = analyze(args[0], env, toType)
+    analyze(args[1], env, toRTReferenceOfType(nativeIntType))
+    return RTValue(pointerType(type_))
 
 @analyzeCall.register(primitives.freeMemory)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    analyze(args[0], env, toRTReferenceOfType(pointerType(intType)))
+    cell = Cell()
+    analyze(args[0], env, toRTReferenceOfType(pointerType(cell)))
     return voidValue
 
 
@@ -448,13 +451,13 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     analyze(args[0], env, toTypeWithTag(tupleTag))
-    return RTValue(intType)
+    return RTValue(nativeIntType)
 
 @analyzeCall.register(primitives.tupleFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
     thing = analyze(args[0], env, toRTReferenceWithTag(tupleTag))
-    i = analyze(args[1], env, toInt)
+    i = analyze(args[1], env, toNativeInt)
     nFields = len(thing.type.params)
     ensure((0 <= i < nFields), "tuple field index out of range")
     return RTReference(thing.type.params[i])
@@ -469,14 +472,14 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 2)
     elementType = analyze(args[0], env, toType)
-    n = analyze(args[1], env, toInt)
+    n = analyze(args[1], env, toNativeInt)
     return RTValue(arrayType(elementType, intToValue(n)))
 
 @analyzeCall.register(primitives.arrayRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
     a = analyze(args[0], env, toRTReferenceWithTag(arrayTag))
-    analyze(args[1], env, toRTValueOfType(intType))
+    analyze(args[1], env, toRTValueOfType(nativeIntType))
     return RTReference(a.type.params[0])
 
 
@@ -495,13 +498,13 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     analyze(args[0], env, toRecordType)
-    return RTValue(intType)
+    return RTValue(nativeIntType)
 
 @analyzeCall.register(primitives.recordFieldRef)
 def foo(x, args, env) :
     ensureArity(args, 2)
     thing = analyze(args[0], env, toRTRecordReference)
-    i = analyze(args[1], env, toInt)
+    i = analyze(args[1], env, toNativeInt)
     nFields = len(recordValueArgs(thing.type.tag))
     ensure((0 <= i < nFields), "record field index out of range")
     fieldType = recordFieldTypes(thing.type)[i]
@@ -510,174 +513,77 @@ def foo(x, args, env) :
 
 
 #
-# analyze primitives util
+# analyze numeric primitives
 #
 
-def simpleOp(args, env, argTypes, returnType) :
-    ensureArity(args, len(argTypes))
-    for arg, argType in zip(args, argTypes) :
-        analyze(arg, env, toRTReferenceOfType(argType))
-    if returnType is None :
-        return voidValue
-    return RTValue(returnType)
-
-
-
-#
-# analyze bool primitives
-#
-
-@analyzeCall.register(primitives.boolCopy)
+@analyzeCall.register(primitives.numericEquals)
 def foo(x, args, env) :
-    return simpleOp(args, env, [boolType, boolType], None)
+    ensureArity(args, 2)
+    x1 = analyze(args[0], env, toRTNumericReference)
+    x2 = analyze(args[1], env, toRTNumericReference)
+    ensure(x1.type == x2.type, "argument types mismatch")
+    return RTValue(boolType)
 
-
-
-#
-# analyze int primitives
-#
-
-@analyzeCall.register(primitives.intCopy)
+@analyzeCall.register(primitives.numericLesser)
 def foo(x, args, env) :
-    return simpleOp(args, env, [intType, intType], None)
+    ensureArity(args, 2)
+    x1 = analyze(args[0], env, toRTNumericReference)
+    x2 = analyze(args[1], env, toRTNumericReference)
+    ensure(x1.type == x2.type, "argument types mismatch")
+    return RTValue(boolType)
 
-@analyzeCall.register(primitives.intEquals)
+@analyzeCall.register(primitives.numericAdd)
 def foo(x, args, env) :
-    return simpleOp(args, env, [intType, intType], boolType)
+    ensureArity(args, 2)
+    x1 = analyze(args[0], env, toRTNumericReference)
+    x2 = analyze(args[1], env, toRTNumericReference)
+    ensure(x1.type == x2.type, "argument types mismatch")
+    return RTValue(x1.type)
 
-@analyzeCall.register(primitives.intLesser)
+@analyzeCall.register(primitives.numericSubtract)
 def foo(x, args, env) :
-    return simpleOp(args, env, [intType, intType], boolType)
+    ensureArity(args, 2)
+    x1 = analyze(args[0], env, toRTNumericReference)
+    x2 = analyze(args[1], env, toRTNumericReference)
+    ensure(x1.type == x2.type, "argument types mismatch")
+    return RTValue(x1.type)
 
-@analyzeCall.register(primitives.intAdd)
+@analyzeCall.register(primitives.numericMultiply)
 def foo(x, args, env) :
-    return simpleOp(args, env, [intType, intType], intType)
+    ensureArity(args, 2)
+    x1 = analyze(args[0], env, toRTNumericReference)
+    x2 = analyze(args[1], env, toRTNumericReference)
+    ensure(x1.type == x2.type, "argument types mismatch")
+    return RTValue(x1.type)
 
-@analyzeCall.register(primitives.intSubtract)
+@analyzeCall.register(primitives.numericDivide)
 def foo(x, args, env) :
-    return simpleOp(args, env, [intType, intType], intType)
+    ensureArity(args, 2)
+    x1 = analyze(args[0], env, toRTNumericReference)
+    x2 = analyze(args[1], env, toRTNumericReference)
+    ensure(x1.type == x2.type, "argument types mismatch")
+    return RTValue(x1.type)
 
-@analyzeCall.register(primitives.intMultiply)
+@analyzeCall.register(primitives.numericRemainder)
 def foo(x, args, env) :
-    return simpleOp(args, env, [intType, intType], intType)
+    ensureArity(args, 2)
+    x1 = analyze(args[0], env, toRTNumericReference)
+    x2 = analyze(args[1], env, toRTNumericReference)
+    ensure(x1.type == x2.type, "argument types mismatch")
+    return RTValue(x1.type)
 
-@analyzeCall.register(primitives.intDivide)
+@analyzeCall.register(primitives.numericNegate)
 def foo(x, args, env) :
-    return simpleOp(args, env, [intType, intType], intType)
+    ensureArity(args, 1)
+    x1 = analyze(args[0], env, toRTNumericReference)
+    return RTValue(x1.type)
 
-@analyzeCall.register(primitives.intModulus)
+@analyzeCall.register(primitives.numericConvert)
 def foo(x, args, env) :
-    return simpleOp(args, env, [intType, intType], intType)
-
-@analyzeCall.register(primitives.intNegate)
-def foo(x, args, env) :
-    return simpleOp(args, env, [intType], intType)
-
-
-
-#
-# analyze float primitives
-#
-
-@analyzeCall.register(primitives.floatCopy)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType, floatType], None)
-
-@analyzeCall.register(primitives.floatEquals)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType, floatType], boolType)
-
-@analyzeCall.register(primitives.floatLesser)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType, floatType], boolType)
-
-@analyzeCall.register(primitives.floatAdd)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType, floatType], floatType)
-
-@analyzeCall.register(primitives.floatSubtract)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType, floatType], floatType)
-
-@analyzeCall.register(primitives.floatMultiply)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType, floatType], floatType)
-
-@analyzeCall.register(primitives.floatDivide)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType, floatType], floatType)
-
-@analyzeCall.register(primitives.floatNegate)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType], floatType)
-
-
-
-#
-# analyze double primitives
-#
-
-@analyzeCall.register(primitives.doubleCopy)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType, doubleType], None)
-
-@analyzeCall.register(primitives.doubleEquals)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType, doubleType], boolType)
-
-@analyzeCall.register(primitives.doubleLesser)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType, doubleType], boolType)
-
-@analyzeCall.register(primitives.doubleAdd)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType, doubleType], doubleType)
-
-@analyzeCall.register(primitives.doubleSubtract)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType, doubleType], doubleType)
-
-@analyzeCall.register(primitives.doubleMultiply)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType, doubleType], doubleType)
-
-@analyzeCall.register(primitives.doubleDivide)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType, doubleType], doubleType)
-
-@analyzeCall.register(primitives.doubleNegate)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType], doubleType)
-
-
-
-#
-# analyze conversion primitives
-#
-
-@analyzeCall.register(primitives.floatToInt)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType], intType)
-
-@analyzeCall.register(primitives.intToFloat)
-def foo(x, args, env) :
-    return simpleOp(args, env, [intType], floatType)
-
-@analyzeCall.register(primitives.floatToDouble)
-def foo(x, args, env) :
-    return simpleOp(args, env, [floatType], doubleType)
-
-@analyzeCall.register(primitives.doubleToFloat)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType], floatType)
-
-@analyzeCall.register(primitives.doubleToInt)
-def foo(x, args, env) :
-    return simpleOp(args, env, [doubleType], intType)
-
-@analyzeCall.register(primitives.intToDouble)
-def foo(x, args, env) :
-    return simpleOp(args, env, [intType], doubleType)
+    ensureArity(args, 2)
+    destType = analyze(args[0], env, toNumericType)
+    analyze(args[1], env, toRTNumericReference)
+    return RTValue(destType)
 
 
 

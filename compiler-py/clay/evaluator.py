@@ -3,12 +3,114 @@ from clay.xprint import *
 from clay.cleanup import *
 from clay.error import *
 from clay.multimethod import *
-from clay.machineops import *
 from clay.ast import *
 from clay.env import *
 from clay.coreops import *
 from clay.types import *
 from clay.unify import *
+import clay.llvmwrapper as llvm
+
+
+
+#
+# llvmType, llvmTargetData, llvmExecutionEngine, llvmModule
+#
+
+_llvmTypesTable = None
+
+def _initLLVMTypesTable() :
+    global _llvmTypesTable
+    _llvmTypesTable = {}
+    _llvmTypesTable[boolType] = llvm.Type.int(8)
+    for t in [int8Type, int16Type, int32Type, int64Type,
+              uint8Type, uint16Type, uint32Type, uint64Type] :
+        _llvmTypesTable[t] = llvm.Type.int(t.tag.bits)
+    _llvmTypesTable[float32Type] = llvm.Type.float()
+    _llvmTypesTable[float64Type] = llvm.Type.double()
+
+llvmType = multimethod(errorMessage="invalid type")
+
+@llvmType.register(Type)
+def foo(t) :
+    if _llvmTypesTable is None :
+        _initLLVMTypesTable()
+    llt = _llvmTypesTable.get(t)
+    if llt is None :
+        llt = makeLLVMType(t.tag, t)
+    return llt
+
+makeLLVMType = multimethod(errorMessage="invalid type tag")
+
+@makeLLVMType.register(TupleTag)
+def foo(tag, t) :
+    fieldLLVMTypes = [llvmType(x) for x in t.params]
+    llt = llvm.Type.struct(fieldLLVMTypes)
+    _llvmTypesTable[t] = llt
+    return llt
+
+@makeLLVMType.register(ArrayTag)
+def foo(tag, t) :
+    ensure(len(t.params) == 2, "invalid array type")
+    elementType = llvmType(t.params[0])
+    count = toNativeInt(t.params[1])
+    llt = llvm.Type.array(elementType, count)
+    _llvmTypesTable[t] = llt
+    return llt
+
+@makeLLVMType.register(PointerTag)
+def foo(tag, t) :
+    ensure(len(t.params) == 1, "invalid pointer type")
+    pointeeType = llvmType(t.params[0])
+    llt = llvm.Type.pointer(pointeeType)
+    _llvmTypesTable[t] = llt
+    return llt
+
+@makeLLVMType.register(Record)
+def foo(tag, t) :
+    llt = llvm.Type.opaque()
+    typeHandle = llvm.TypeHandle.new(llt)
+    _llvmTypesTable[t] = llt
+    fieldLLVMTypes = [llvmType(x) for x in recordFieldTypes(t)]
+    recType = llvm.Type.struct(fieldLLVMTypes)
+    typeHandle.type.refine(recType)
+    llt = typeHandle.type
+    _llvmTypesTable[t] = llt
+    return llt
+
+_llvmTargetData = None
+def llvmTargetData() :
+    global _llvmTargetData
+    if _llvmTargetData is None :
+        _llvmTargetData = llvmExecutionEngine().target_data
+    return _llvmTargetData
+
+_llvmModuleProvider = None
+_llvmExecutionEngine = None
+def llvmExecutionEngine() :
+    global _llvmModuleProvider, _llvmExecutionEngine
+    if _llvmExecutionEngine is None :
+        _llvmModuleProvider = llvm.ModuleProvider.new(llvmModule())
+        _llvmExecutionEngine = llvm.ExecutionEngine.new(_llvmModuleProvider)
+    return _llvmExecutionEngine
+
+_llvmModule = None
+def llvmModule() :
+    global _llvmModule
+    if _llvmModule is None :
+        _llvmModule = llvm.Module.new("clay_module")
+    return _llvmModule
+
+def _cleanupLLVMGlobals() :
+    global _llvmTypesTable, _llvmTargetData
+    global _llvmModuleProvider, _llvmExecutionEngine
+    global _llvmModule
+    _llvmTypesTable = {}
+    _llvmTargetData = None
+    _llvmModuleProvider = None
+    _llvmExecutionEngine = None
+    _llvmModule = None
+
+installGlobalsCleanupHook(_cleanupLLVMGlobals)
 
 
 
@@ -22,9 +124,16 @@ def _initCTypesTable() :
     global _ctypesTable
     _ctypesTable = {}
     _ctypesTable[boolType] = ctypes.c_bool
-    _ctypesTable[intType] = ctypes.c_int
-    _ctypesTable[floatType] = ctypes.c_float
-    _ctypesTable[doubleType] = ctypes.c_double
+    _ctypesTable[int8Type] = ctypes.c_int8
+    _ctypesTable[int16Type] = ctypes.c_int16
+    _ctypesTable[int32Type] = ctypes.c_int32
+    _ctypesTable[int64Type] = ctypes.c_int64
+    _ctypesTable[uint8Type] = ctypes.c_uint8
+    _ctypesTable[uint16Type] = ctypes.c_uint16
+    _ctypesTable[uint32Type] = ctypes.c_uint32
+    _ctypesTable[uint64Type] = ctypes.c_uint64
+    _ctypesTable[float32Type] = ctypes.c_float
+    _ctypesTable[float64Type] = ctypes.c_double
 
 def _cleanupCTypesTable() :
     global _ctypesTable
@@ -57,7 +166,7 @@ def foo(tag, t) :
 @makeCTypesType.register(ArrayTag)
 def foo(tag, t) :
     ensure(len(t.params) == 2, "invalid array type")
-    ct = ctypesType(t.params[0]) * toInt(t.params[1])
+    ct = ctypesType(t.params[0]) * toNativeInt(t.params[1])
     _ctypesTable[t] = ct
     return ct
 
@@ -150,12 +259,12 @@ def tempValue(type_) :
 
 
 #
-# toInt, toBool
+# toNativeInt, toBool
 #
 
-@toInt.register(Value)
+@toNativeInt.register(Value)
 def foo(x) :
-    ensure(equals(x.type, intType), "not int type")
+    ensure(equals(x.type, nativeIntType), "not int type")
     return x.buf.value
 
 @toBool.register(Value)
@@ -163,7 +272,7 @@ def foo(x) :
     ensure(equals(x.type, boolType), "not bool type")
     return x.buf.value
 
-toInt.register(Reference)(lambda x : toInt(toValue(x)))
+toNativeInt.register(Reference)(lambda x : toNativeInt(toValue(x)))
 toBool.register(Reference)(lambda x : toBool(toValue(x)))
 
 
@@ -205,7 +314,7 @@ def boolToValue(x) :
     return v
 
 def intToValue(x) :
-    v = tempValue(intType)
+    v = tempValue(nativeIntType)
     v.buf.value = x
     return v
 
@@ -258,7 +367,9 @@ def valueDestroy(a) :
     if isSimpleType(a.type) :
         ctypes.memset(ctypes.pointer(a.buf), 0, typeSize(a.type))
         return
-    _callBuiltin("destroy", [a])
+    # TODO: fix the ugly hack below
+    if not isCleaningUp() :
+        _callBuiltin("destroy", [a])
 
 def valueEquals(a, b) :
     assert equals(a.type, b.type)
@@ -266,7 +377,7 @@ def valueEquals(a, b) :
     return _callBuiltin("equals", [a, b], toBool)
 
 def valueHash(a) :
-    return _callBuiltin("hash", [a], toInt)
+    return _callBuiltin("hash", [a], toNativeInt)
 
 
 
@@ -388,9 +499,11 @@ installGlobalsCleanupHook(_cleanupRecordFieldTypes)
 # value printer
 #
 
-def xconvertBuiltin(r) :
-    v = toValue(r)
-    return v.buf.value
+def makeXConvertBuiltin(suffix) :
+    def xconvert(r) :
+        v = toValue(r)
+        return XSymbol(str(v.buf.value) + suffix)
+    return xconvert
 
 def xconvertBool(r) :
     v = toValue(r)
@@ -404,7 +517,7 @@ def xconvertTuple(r) :
     return tuple(map(xconvertReference, elements))
 
 def xconvertArray(r) :
-    arraySize = toInt(r.type.params[1])
+    arraySize = toNativeInt(r.type.params[1])
     elements = [arrayRef(r, i) for i in range(arraySize)]
     return map(xconvertReference, elements)
 
@@ -431,9 +544,18 @@ xregister(Reference, xconvertReference)
 def getXConverter(tag) :
     if not _xconverters :
         _xconverters[boolTag] = xconvertBool
-        _xconverters[intTag] = xconvertBuiltin
-        _xconverters[floatTag] = xconvertBuiltin
-        _xconverters[doubleTag] = xconvertBuiltin
+        for t in [int8Tag, int16Tag, int32Tag, int64Tag,
+                  uint8Tag, uint16Tag, uint32Tag, uint64Tag,
+                  float32Tag, float64Tag] :
+            if type(t) is IntegerTag :
+                if t.signed :
+                    suffix = "#i%d" % t.bits
+                else :
+                    suffix = "#u%d" % t.bits
+            else :
+                assert type(t) is FloatingPointTag
+                suffix = "#f%d" % t.bits
+            _xconverters[t] = makeXConvertBuiltin(suffix)
         _xconverters[pointerTag] = xconvertPointer
         _xconverters[tupleTag] = xconvertTuple
         _xconverters[arrayTag] = xconvertArray
@@ -592,7 +714,7 @@ _binaryOps = {"+" : "add",
               "-" : "subtract",
               "*" : "multiply",
               "/" : "divide",
-              "%" : "modulus",
+              "%" : "remainder",
               "==" : "equals",
               "!=" : "notEquals",
               "<" : "lesser",
@@ -700,6 +822,272 @@ def foo(x, args, env) :
 
 
 #
+# codegen for primitives
+#
+
+_primitiveFuncs = {}
+
+def primitiveFunc(primitive, inputTypes, outputType) :
+    key = (primitive, tuple(inputTypes), outputType)
+    func = _primitiveFuncs.get(key)
+    if func is None :
+        func = codegenPrimitive(primitive, inputTypes, outputType)
+        _primitiveFuncs[key] = func
+    return func
+
+def _cleanPrimitiveFuncs() :
+    global _primitiveFuncs
+    _primitiveFuncs = {}
+
+installGlobalsCleanupHook(_cleanPrimitiveFuncs)
+
+def codegenPrimitive(primitive, inputTypes, outputType) :
+    llvmArgs = [llvmType(pointerType(inputType)) for inputType in inputTypes]
+    if not isVoidType(outputType) :
+        llvmArgs.append(llvmType(pointerType(outputType)))
+    llvmFuncType = llvm.Type.function(llvm.Type.void(), llvmArgs)
+    name = "clayprim_%s" % primitive.name
+    func = llvmModule().add_function(llvmFuncType, name)
+    block = func.append_basic_block("code")
+    builder = llvm.Builder.new(block)
+    codegenPrimitiveBody(primitive, inputTypes, outputType, builder, func)
+    return func
+
+
+codegenPrimitiveBody = multimethod(errorMessage="invalid primitive")
+
+@codegenPrimitiveBody.register(primitives.primitiveCopy)
+def foo(x, inputTypes, outputType, builder, func) :
+    v = builder.load(func.args[1])
+    builder.store(v, func.args[0])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.pointerToInt)
+def foo(x, inputTypes, outputType, builder, func) :
+    ptr = builder.load(func.args[0])
+    i = builder.ptrtoint(ptr, llvmType(outputType))
+    builder.store(i, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.intToPointer)
+def foo(x, inputTypes, outputType, builder, func) :
+    i = builder.load(func.args[0])
+    ptr = builder.inttoptr(i, llvmType(outputType))
+    builder.store(ptr, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.allocateMemory)
+def foo(x, inputTypes, outputType, builder, func) :
+    n = builder.load(func.args[0])
+    llt = llvmType(outputType.params[0])
+    ptr = builder.malloc_array(llt, n)
+    builder.store(ptr, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.freeMemory)
+def foo(x, inputTypes, outputType, builder, func) :
+    ptr = builder.load(func.args[0])
+    builder.free(ptr)
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericEquals)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    x2 = builder.load(func.args[1])
+    if isIntegerType(inputTypes[0]) :
+        cond = builder.icmp(llvm.ICMP_EQ, x1, x2)
+    elif isFloatingPointType(inputTypes[0]) :
+        cond = builder.fcmp(llvm.FCMP_OEQ, x1, x2)
+    else :
+        assert False
+    result = builder.zext(cond, llvmType(outputType))
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericLesser)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    x2 = builder.load(func.args[1])
+    if isIntegerType(inputTypes[0]) :
+        if inputTypes[0].tag.signed :
+            cond = builder.icmp(llvm.ICMP_SLT, x1, x2)
+        else :
+            cond = builder.icmp(llvm.ICMP_ULT, x1, x2)
+    elif isFloatingPointType(inputTypes[0]) :
+        cond = builder.fcmp(llvm.FCMP_OLT, x1, x2)
+    else :
+        assert False
+    result = builder.zext(cond, llvmType(outputType))
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericAdd)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    x2 = builder.load(func.args[1])
+    if isIntegerType(inputTypes[0]) :
+        result = builder.add(x1, x2)
+    elif isFloatingPointType(inputTypes[0]) :
+        result = builder.fadd(x1, x2)
+    else :
+        assert False
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericSubtract)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    x2 = builder.load(func.args[1])
+    if isIntegerType(inputTypes[0]) :
+        result = builder.sub(x1, x2)
+    elif isFloatingPointType(inputTypes[0]) :
+        result = builder.fsub(x1, x2)
+    else :
+        assert False
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericMultiply)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    x2 = builder.load(func.args[1])
+    if isIntegerType(inputTypes[0]) :
+        result = builder.mul(x1, x2)
+    elif isFloatingPointType(inputTypes[0]) :
+        result = builder.fmul(x1, x2)
+    else :
+        assert False
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericMultiply)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    x2 = builder.load(func.args[1])
+    if isIntegerType(inputTypes[0]) :
+        result = builder.mul(x1, x2)
+    elif isFloatingPointType(inputTypes[0]) :
+        result = builder.fmul(x1, x2)
+    else :
+        assert False
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericDivide)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    x2 = builder.load(func.args[1])
+    if isIntegerType(inputTypes[0]) :
+        if inputTypes[0].tag.signed :
+            result = builder.sdiv(x1, x2)
+        else :
+            result = builder.udiv(x1, x2)
+    elif isFloatingPointType(inputTypes[0]) :
+        result = builder.fdiv(x1, x2)
+    else :
+        assert False
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericRemainder)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    x2 = builder.load(func.args[1])
+    if isIntegerType(inputTypes[0]) :
+        if inputTypes[0].tag.signed :
+            result = builder.srem(x1, x2)
+        else :
+            result = builder.urem(x1, x2)
+    elif isFloatingPointType(inputTypes[0]) :
+        result = builder.frem(x1, x2)
+    else :
+        assert False
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericNegate)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    if isIntegerType(inputTypes[0]) :
+        result = builder.neg(x1)
+    elif isFloatingPointType(inputTypes[0]) :
+        result = builder.fneg(x1)
+    else :
+        assert False
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+@codegenPrimitiveBody.register(primitives.numericConvert)
+def foo(x, inputTypes, outputType, builder, func) :
+    x1 = builder.load(func.args[0])
+    inType = inputTypes[0]
+    outType = outputType
+    if isIntegerType(inType) :
+        if isIntegerType(outType) :
+            if outType.tag.bits < inType.tag.bits :
+                result = builder.trunc(x1, llvmType(outType))
+            elif outType.tag.bits > inType.tag.bits :
+                if inType.tag.signed :
+                    result = builder.sext(x1, llvmType(outType))
+                else :
+                    result = builder.zext(x1, llvmType(outType))
+            else :
+                result = x1
+        elif isFloatingPointType(outType) :
+            if inType.tag.signed :
+                result = builder.sitofp(x1, llvmType(outType))
+            else :
+                result = builder.uitofp(x1, llvmType(outType))
+        else :
+            assert False
+    elif isFloatingPointType(inType) :
+        if isIntegerType(outType) :
+            if outType.tag.signed :
+                result = builder.fptosi(x1, llvmType(outType))
+            else :
+                result = builder.fptoui(x1, llvmType(outType))
+        elif isFloatingPointType(outType) :
+            if outType.tag.bits < inType.tag.bits :
+                result = builder.fptrunc(x1, llvmType(outType))
+            elif outType.tag.bits > inType.tag.bits :
+                result = builder.fpext(x1, llvmType(outType))
+            else :
+                result = x1
+        else :
+            assert False
+    else :
+        assert False
+    builder.store(result, func.args[-1])
+    builder.ret_void()
+
+
+
+#
+# evalPrimitiveCall
+#
+
+def evalPrimitiveCall(primitive, inRefs, outputType) :
+    func = primitiveFunc(primitive, [x.type for x in inRefs], outputType)
+    llvmArgs = []
+    for inRef in inRefs :
+        llt = llvmType(pointerType(inRef.type))
+        gv = llvm.GenericValue.pointer(llt, inRef.address)
+        llvmArgs.append(gv)
+    if not isVoidType(outputType) :
+        output = tempValue(outputType)
+        outputRef = toReference(output)
+        llt = llvmType(pointerType(outputType))
+        gv = llvm.GenericValue.pointer(llt, outputRef.address)
+        llvmArgs.append(gv)
+    else :
+        output = voidValue
+    ee = llvmExecutionEngine()
+    ee.run_function(func, llvmArgs)
+    return output
+
+
+
+#
 # evaluate primitives
 #
 
@@ -724,39 +1112,14 @@ def foo(x, args, env) :
     t = evaluate(args[0], env, toType)
     return intToValue(typeSize(t))
 
-
-
-#
-# machine op utils
-#
-
-def callMachineOp(f, args) :
-    def toPtr(x) :
-        if type(x) is Value :
-            return ctypes.pointer(x.buf)
-        elif type(x) is Reference :
-            return ctypes.c_void_p(x.address)
-        else :
-            assert False
-    ptrs = map(toPtr, args)
-    return f(*ptrs)
-
-def simpleMop(mop, args, env, argTypes, returnType) :
-    ensureArity(args, len(argTypes))
-    eargs = []
-    mopInput = []
-    for arg, argType in zip(args, argTypes) :
-        earg = evaluate(arg, env)
-        eargs.append(earg)
-        ref = convertObject(toReferenceOfType(argType), earg, arg)
-        mopInput.append(ref)
-    if returnType is not None :
-        result = tempValue(returnType)
-        mopInput.append(result)
-    else :
-        result = voidValue
-    callMachineOp(mop, mopInput)
-    return result
+@evaluateCall.register(primitives.primitiveCopy)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    cell = Cell()
+    destRef = evaluate(args[0], env, toReferenceOfType(cell))
+    srcRef = evaluate(args[1], env, toReferenceOfType(cell))
+    ensure(isSimpleType(cell.param), "expected simple type")
+    return evalPrimitiveCall(x, [destRef, srcRef], voidType)
 
 
 
@@ -787,29 +1150,20 @@ def foo(x, args, env) :
     ptr = evaluate(args[0], env, toValueOfType(pointerType(cell)))
     return Reference(cell.param, pointerToAddress(ptr))
 
-@evaluateCall.register(primitives.pointerOffset)
+@evaluateCall.register(primitives.pointerToInt)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    eargs = [evaluate(y, env) for y in args]
     cell = Cell()
-    converter = toReferenceOfType(pointerType(cell))
-    ptr = convertObject(converter, eargs[0], args[0])
-    offset = convertObject(toReferenceOfType(intType), eargs[1], args[1])
-    result = tempValue(ptr.type)
-    callMachineOp(mop_pointerOffset, [ptr, offset, result])
-    return result
+    ptrRef = evaluate(args[0], env, toReferenceOfType(pointerType(cell)))
+    outType = evaluate(args[1], env, toIntegerType)
+    return evalPrimitiveCall(x, [ptrRef], outType)
 
-@evaluateCall.register(primitives.pointerSubtract)
+@evaluateCall.register(primitives.intToPointer)
 def foo(x, args, env) :
     ensureArity(args, 2)
-    eargs = [evaluate(y, env) for y in args]
-    cell = Cell()
-    converter = toReferenceOfType(pointerType(cell))
-    ptr1 = convertObject(converter, eargs[0], args[0])
-    ptr2 = convertObject(converter, eargs[1], args[1])
-    result = tempValue(intType)
-    callMachineOp(mop_pointerSubtract, [ptr1, ptr2, result])
-    return result
+    intRef = evaluate(args[0], env, toIntegerReference)
+    pointeeType = evaluate(args[1], env, toType)
+    return evalPrimitiveCall(x, [intRef], pointerType(pointeeType))
 
 @evaluateCall.register(primitives.pointerCast)
 def foo(x, args, env) :
@@ -819,58 +1173,19 @@ def foo(x, args, env) :
     ptr = evaluate(args[1], env, toValueOfType(pointerType(cell)))
     return addressToPointer(pointerToAddress(ptr), pointerType(targetType))
 
-@evaluateCall.register(primitives.pointerCopy)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    eargs = [evaluate(y, env) for y in args]
-    cell = Cell()
-    converter = toReferenceOfType(pointerType(cell))
-    destRef = convertObject(converter, eargs[0], args[0])
-    srcRef = convertObject(converter, eargs[1], args[1])
-    callMachineOp(mop_pointerCopy, [destRef, srcRef])
-    return voidValue
-
-@evaluateCall.register(primitives.pointerEquals)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    eargs = [evaluate(y, env) for y in args]
-    cell = Cell()
-    converter = toReferenceOfType(pointerType(cell))
-    ptr1 = convertObject(converter, eargs[0], args[0])
-    ptr2 = convertObject(converter, eargs[1], args[1])
-    result = tempValue(boolType)
-    callMachineOp(mop_pointerEquals, [ptr1, ptr2, result])
-    return result
-
-@evaluateCall.register(primitives.pointerLesser)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    eargs = [evaluate(y, env) for y in args]
-    cell = Cell()
-    converter = toReferenceOfType(pointerType(cell))
-    ptr1 = convertObject(converter, eargs[0], args[0])
-    ptr2 = convertObject(converter, eargs[1], args[1])
-    result = tempValue(boolType)
-    callMachineOp(mop_pointerLesser, [ptr1, ptr2, result])
-    return result
-
 @evaluateCall.register(primitives.allocateMemory)
 def foo(x, args, env) :
-    ensureArity(args, 1)
-    size = evaluate(args[0], env)
-    sizeRef = convertObject(toReferenceOfType(intType), size, args[0])
-    result = tempValue(pointerType(intType))
-    callMachineOp(mop_allocateMemory, [sizeRef, result])
-    return result
+    ensureArity(args, 2)
+    type_ = evaluate(args[0], env, toType)
+    nRef = evaluate(args[1], env, toReferenceOfType(nativeIntType))
+    return evalPrimitiveCall(x, [nRef], pointerType(type_))
 
 @evaluateCall.register(primitives.freeMemory)
 def foo(x, args, env) :
     ensureArity(args, 1)
-    ptr = evaluate(args[0], env)
-    converter = toReferenceOfType(pointerType(intType))
-    ptrRef = convertObject(converter, ptr, args[0])
-    callMachineOp(mop_freeMemory, [ptrRef])
-    return voidValue
+    cell = Cell()
+    ptrRef = evaluate(args[0], toReferenceOfType(pointerType(cell)))
+    return evalPrimitiveCall(x, [ptrRef], voidType)
 
 
 
@@ -903,7 +1218,7 @@ def foo(x, args, env) :
     eargs = [evaluate(y, env) for y in args]
     converter = toReferenceWithTag(tupleTag)
     tupleRef = convertObject(converter, eargs[0], args[0])
-    i = convertObject(toInt, eargs[1], args[1])
+    i = convertObject(toNativeInt, eargs[1], args[1])
     return tupleFieldRef(tupleRef, i)
 
 
@@ -917,7 +1232,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     eargs = [evaluate(y, env) for y in args]
     elementType = convertObject(toType, eargs[0], args[0])
-    n = convertObject(toInt, eargs[1], args[1])
+    n = convertObject(toNativeInt, eargs[1], args[1])
     a = tempValue(arrayType(elementType, intToValue(n)))
     valueInit(a)
     return a
@@ -928,7 +1243,7 @@ def foo(x, args, env) :
     eargs = [evaluate(y, env) for y in args]
     converter = toReferenceWithTag(arrayTag)
     a = convertObject(converter, eargs[0], args[0])
-    i = convertObject(toInt, eargs[1], args[1])
+    i = convertObject(toNativeInt, eargs[1], args[1])
     return arrayRef(a, i)
 
 
@@ -954,192 +1269,68 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     eargs = [evaluate(y, env) for y in args]
     recRef = convertObject(toRecordReference, eargs[0], args[0])
-    i = convertObject(toInt, eargs[1], args[1])
+    i = convertObject(toNativeInt, eargs[1], args[1])
     return recordFieldRef(recRef, i)
 
 
 
 #
-# evaluate bool primitives
+# evaluate numeric primitives
 #
 
-@evaluateCall.register(primitives.boolCopy)
+def _eval2NumericArgs(args, env) :
+    ensureArity(args, 2)
+    a, b = [evaluate(x, env, toNumericReference) for x in args]
+    ensure(a.type == b.type, "argument types mismatch")
+    return (a, b)
+
+@evaluateCall.register(primitives.numericEquals)
 def foo(x, args, env) :
-    argTypes = [boolType, boolType]
-    return simpleMop(mop_boolCopy, args, env, argTypes, None)
+    x1, x2 = _eval2NumericArgs(args, env)
+    return evalPrimitiveCall(x, [x1, x2], boolType)
 
-
-
-#
-# evaluate int primitives
-#
-
-@evaluateCall.register(primitives.intCopy)
+@evaluateCall.register(primitives.numericLesser)
 def foo(x, args, env) :
-    argTypes = [intType, intType]
-    return simpleMop(mop_intCopy, args, env, argTypes, None)
+    x1, x2 = _eval2NumericArgs(args, env)
+    return evalPrimitiveCall(x, [x1, x2], boolType)
 
-@evaluateCall.register(primitives.intEquals)
+@evaluateCall.register(primitives.numericAdd)
 def foo(x, args, env) :
-    argTypes = [intType, intType]
-    return simpleMop(mop_intEquals, args, env, argTypes, boolType)
+    x1, x2 = _eval2NumericArgs(args, env)
+    return evalPrimitiveCall(x, [x1, x2], x1.type)
 
-@evaluateCall.register(primitives.intLesser)
+@evaluateCall.register(primitives.numericSubtract)
 def foo(x, args, env) :
-    argTypes = [intType, intType]
-    return simpleMop(mop_intLesser, args, env, argTypes, boolType)
+    x1, x2 = _eval2NumericArgs(args, env)
+    return evalPrimitiveCall(x, [x1, x2], x1.type)
 
-@evaluateCall.register(primitives.intAdd)
+@evaluateCall.register(primitives.numericMultiply)
 def foo(x, args, env) :
-    argTypes = [intType, intType]
-    return simpleMop(mop_intAdd, args, env, argTypes, intType)
+    x1, x2 = _eval2NumericArgs(args, env)
+    return evalPrimitiveCall(x, [x1, x2], x1.type)
 
-@evaluateCall.register(primitives.intSubtract)
+@evaluateCall.register(primitives.numericDivide)
 def foo(x, args, env) :
-    argTypes = [intType, intType]
-    return simpleMop(mop_intSubtract, args, env, argTypes, intType)
+    x1, x2 = _eval2NumericArgs(args, env)
+    return evalPrimitiveCall(x, [x1, x2], x1.type)
 
-@evaluateCall.register(primitives.intMultiply)
+@evaluateCall.register(primitives.numericRemainder)
 def foo(x, args, env) :
-    argTypes = [intType, intType]
-    return simpleMop(mop_intMultiply, args, env, argTypes, intType)
+    x1, x2 = _eval2NumericArgs(args, env)
+    return evalPrimitiveCall(x, [x1, x2], x1.type)
 
-@evaluateCall.register(primitives.intDivide)
+@evaluateCall.register(primitives.numericNegate)
 def foo(x, args, env) :
-    argTypes = [intType, intType]
-    return simpleMop(mop_intDivide, args, env, argTypes, intType)
+    ensureArity(args, 1)
+    x1 = evaluate(args[0], env, toNumericReference)
+    return evalPrimitiveCall(x, [x1], x1.type)
 
-@evaluateCall.register(primitives.intModulus)
+@evaluateCall.register(primitives.numericConvert)
 def foo(x, args, env) :
-    argTypes = [intType, intType]
-    return simpleMop(mop_intModulus, args, env, argTypes, intType)
-
-@evaluateCall.register(primitives.intNegate)
-def foo(x, args, env) :
-    argTypes = [intType]
-    return simpleMop(mop_intNegate, args, env, argTypes, intType)
-
-
-
-#
-# evaluate float primitives
-#
-
-@evaluateCall.register(primitives.floatCopy)
-def foo(x, args, env) :
-    argTypes = [floatType, floatType]
-    return simpleMop(mop_floatCopy, args, env, argTypes, None)
-
-@evaluateCall.register(primitives.floatEquals)
-def foo(x, args, env) :
-    argTypes = [floatType, floatType]
-    return simpleMop(mop_floatEquals, args, env, argTypes, boolType)
-
-@evaluateCall.register(primitives.floatLesser)
-def foo(x, args, env) :
-    argTypes = [floatType, floatType]
-    return simpleMop(mop_floatLesser, args, env, argTypes, boolType)
-
-@evaluateCall.register(primitives.floatAdd)
-def foo(x, args, env) :
-    argTypes = [floatType, floatType]
-    return simpleMop(mop_floatAdd, args, env, argTypes, floatType)
-
-@evaluateCall.register(primitives.floatSubtract)
-def foo(x, args, env) :
-    argTypes = [floatType, floatType]
-    return simpleMop(mop_floatSubtract, args, env, argTypes, floatType)
-
-@evaluateCall.register(primitives.floatMultiply)
-def foo(x, args, env) :
-    argTypes = [floatType, floatType]
-    return simpleMop(mop_floatMultiply, args, env, argTypes, floatType)
-
-@evaluateCall.register(primitives.floatDivide)
-def foo(x, args, env) :
-    argTypes = [floatType, floatType]
-    return simpleMop(mop_floatDivide, args, env, argTypes, floatType)
-
-@evaluateCall.register(primitives.floatNegate)
-def foo(x, args, env) :
-    argTypes = [floatType]
-    return simpleMop(mop_floatNegate, args, env, argTypes, floatType)
-
-
-
-#
-# evaluate double primitives
-#
-
-@evaluateCall.register(primitives.doubleCopy)
-def foo(x, args, env) :
-    argTypes = [doubleType, doubleType]
-    return simpleMop(mop_doubleCopy, args, env, argTypes, None)
-
-@evaluateCall.register(primitives.doubleEquals)
-def foo(x, args, env) :
-    argTypes = [doubleType, doubleType]
-    return simpleMop(mop_doubleEquals, args, env, argTypes, boolType)
-
-@evaluateCall.register(primitives.doubleLesser)
-def foo(x, args, env) :
-    argTypes = [doubleType, doubleType]
-    return simpleMop(mop_doubleLesser, args, env, argTypes, boolType)
-
-@evaluateCall.register(primitives.doubleAdd)
-def foo(x, args, env) :
-    argTypes = [doubleType, doubleType]
-    return simpleMop(mop_doubleAdd, args, env, argTypes, doubleType)
-
-@evaluateCall.register(primitives.doubleSubtract)
-def foo(x, args, env) :
-    argTypes = [doubleType, doubleType]
-    return simpleMop(mop_doubleSubtract, args, env, argTypes, doubleType)
-
-@evaluateCall.register(primitives.doubleMultiply)
-def foo(x, args, env) :
-    argTypes = [doubleType, doubleType]
-    return simpleMop(mop_doubleMultiply, args, env, argTypes, doubleType)
-
-@evaluateCall.register(primitives.doubleDivide)
-def foo(x, args, env) :
-    argTypes = [doubleType, doubleType]
-    return simpleMop(mop_doubleDivide, args, env, argTypes, doubleType)
-
-@evaluateCall.register(primitives.doubleNegate)
-def foo(x, args, env) :
-    argTypes = [doubleType]
-    return simpleMop(mop_doubleNegate, args, env, argTypes, doubleType)
-
-
-
-#
-# evaluate conversion primitives
-#
-
-@evaluateCall.register(primitives.floatToInt)
-def foo(x, args, env) :
-    return simpleMop(mop_floatToInt, args, env, [floatType], intType)
-
-@evaluateCall.register(primitives.intToFloat)
-def foo(x, args, env) :
-    return simpleMop(mop_intToFloat, args, env, [intType], floatType)
-
-@evaluateCall.register(primitives.floatToDouble)
-def foo(x, args, env) :
-    return simpleMop(mop_floatToDouble, args, env, [floatType], doubleType)
-
-@evaluateCall.register(primitives.doubleToFloat)
-def foo(x, args, env) :
-    return simpleMop(mop_doubleToFloat, args, env, [doubleType], floatType)
-
-@evaluateCall.register(primitives.doubleToInt)
-def foo(x, args, env) :
-    return simpleMop(mop_doubleToInt, args, env, [doubleType], intType)
-
-@evaluateCall.register(primitives.intToDouble)
-def foo(x, args, env) :
-    return simpleMop(mop_intToDouble, args, env, [intType], doubleType)
+    ensureArity(args, 2)
+    destType = evaluate(args[0], env, toNumericType)
+    src = evaluate(args[1], env, toNumericReference)
+    return evalPrimitiveCall(x, [src], destType)
 
 
 

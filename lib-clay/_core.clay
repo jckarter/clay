@@ -1,6 +1,8 @@
 import __primitives__;
 
 
+overloadable to;
+
 //
 // defaults
 //
@@ -39,7 +41,7 @@ overload greaterEquals[T](a:T, b:T) {
 //
 
 overload copy(dest:Bool, src:Bool) {
-    boolCopy(dest, src);
+    primitiveCopy(dest, src);
 }
 
 overload equals(a:Bool, b:Bool) {
@@ -60,76 +62,118 @@ overload hash(a:Bool) {
 
 
 //
-// Char
+// numeric types
 //
 
-overload copy[T](dest:Char, src:Char) { charCopy(dest, src); }
+overloadable IntegerType;
+overload IntegerType[T](static T) { return false; }
+overload IntegerType(static Int8) { return true; }
+overload IntegerType(static Int16) { return true; }
+overload IntegerType(static Int32) { return true; }
+overload IntegerType(static Int64) { return true; }
+overload IntegerType(static UInt8) { return true; }
+overload IntegerType(static UInt16) { return true; }
+overload IntegerType(static UInt32) { return true; }
+overload IntegerType(static UInt64) { return true; }
 
-overload equals(a:Char, b:Char) { return charEquals(a, b); }
-overload lesser(a:Char, b:Char) { return charLesser(a, b); }
+overloadable SignedIntegerType;
+overload SignedIntegerType[T](static T) { return false; }
+overload SignedIntegerType(static Int8) { return true; }
+overload SignedIntegerType(static Int16) { return true; }
+overload SignedIntegerType(static Int32) { return true; }
+overload SignedIntegerType(static Int64) { return true; }
 
-overload hash(a:Char) { return charToInt(a); }
+overloadable FloatingPointType;
+overload FloatingPointType[T](static T) { return false; }
+overload FloatingPointType(static Float32) { return true; }
+overload FloatingPointType(static Float64) { return true; }
 
+def NumericType[T](static T) { return FloatingPointType(T) or IntegerType(T); }
 
-//
-// Int
-//
+overloadable BiggerNumericType;
+overload BiggerNumericType[A,B](static A, static B)
+        if (IntegerType(A) and FloatingPointType(B)) {
+    return false;
+}
+overload BiggerNumericType[A,B](static A, static B)
+        if (FloatingPointType(A) and IntegerType(B)) {
+    return true;
+}
+overload BiggerNumericType[A,B](static A, static B)
+        if (FloatingPointType(A) and FloatingPointType(B)) {
+    return typeSize(A) > typeSize(B);
+}
+overload BiggerNumericType[A,B](static A, static B)
+        if (IntegerType(A) and IntegerType(B)) {
+    if (typeSize(A) == typeSize(B))
+        return not SignedIntegerType(A);
+    return typeSize(A) > typeSize(B);
+}
 
-overload copy(dest:Int, src:Int) { intCopy(dest, src); }
+overload copy[T](dest:T, src:T) if (NumericType(T)) {
+    primitiveCopy(dest, src);
+}
 
-overload equals(a:Int, b:Int) { return intEquals(a, b); }
-overload lesser(a:Int, b:Int) { return intLesser(a, b); }
+overload equals[T](a:T, b:T) if (NumericType(T)) {
+    return numericEquals(a, b);
+}
+overload lesser[T](a:T, b:T) if (NumericType(T)) {
+    return numericLesser(a, b);
+}
 
-overload hash(a:Int) { return a; }
+overload hash[T](a:T) if (NumericType(T)) { return numericConvert(Int32,a); }
 
-overload add(a:Int, b:Int) { return intAdd(a, b); }
-overload subtract(a:Int, b:Int) { return intSubtract(a, b); }
-overload multiply(a:Int, b:Int) { return intMultiply(a, b); }
-overload divide(a:Int, b:Int) { return intDivide(a, b); }
-overload modulus(a:Int, b:Int) { return intModulus(a, b); }
+overload to[A, B](static A, b:B) if (NumericType(A) and NumericType(B)) {
+    return numericConvert(A, b);
+}
 
-overload plus(a:Int) { return a; }
-overload minus(a:Int) { return intNegate(a); }
+overload add[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericAdd(a, to(A, b));
+}
+overload add[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericAdd(to(B, a), b);
+}
 
+overload subtract[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericSubtract(a, to(A, b));
+}
+overload subtract[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericSubtract(to(B, a), b);
+}
 
-//
-// Float
-//
+overload multiply[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericMultiply(a, to(A, b));
+}
+overload multiply[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericMultiply(to(B, a), b);
+}
 
-overload copy[T](dest:Float, src:Float) { floatCopy(dest, src); }
+overload divide[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericDivide(a, to(A, b));
+}
+overload divide[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericDivide(to(B, a), b);
+}
 
-overload equals(a:Float, b:Float) { return floatEquals(a, b); }
-overload lesser(a:Float, b:Float) { return floatLesser(a, b); }
+overload remainder[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericRemainder(a, to(A, b));
+}
+overload remainder[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericRemainder(to(B, a), b);
+}
 
-overload hash(a:Float) { return floatToInt(a); }
-
-overload add(a:Float, b:Float) { return floatAdd(a, b); }
-overload subtract(a:Float, b:Float) { return floatSubtract(a, b); }
-overload multiply(a:Float, b:Float) { return floatMultiply(a, b); }
-overload divide(a:Float, b:Float) { return floatDivide(a, b); }
-
-overload plus(a:Float) { return a; }
-overload minus(a:Float) { return floatNegate(a); }
-
-
-//
-// Double
-//
-
-overload copy[T](dest:Double, src:Double) { doubleCopy(dest, src); }
-
-overload equals(a:Double, b:Double) { return doubleEquals(a, b); }
-overload lesser(a:Double, b:Double) { return doubleLesser(a, b); }
-
-overload hash(a:Double) { return doubleToInt(a); }
-
-overload add(a:Double, b:Double) { return doubleAdd(a, b); }
-overload subtract(a:Double, b:Double) { return doubleSubtract(a, b); }
-overload multiply(a:Double, b:Double) { return doubleMultiply(a, b); }
-overload divide(a:Double, b:Double) { return doubleDivide(a, b); }
-
-overload plus(a:Double) { return a; }
-overload minus(a:Double) { return doubleNegate(a); }
+overload plus[T](a:T) if (NumericType(T)) { return a; }
+overload minus[T](a:T) if (NumericType(T)) { return numericNegate(a); }
 
 
 //
@@ -137,28 +181,38 @@ overload minus(a:Double) { return doubleNegate(a); }
 //
 
 overload copy[T](dest:Pointer[T], src:Pointer[T]) {
-    pointerCopy(dest, src);
+    primitiveCopy(dest, src);
 }
 
+overload to[I,T](static I, a:Pointer[T]) if (IntegerType(I)) {
+    return pointerToInt(a, I);
+}
+overload to[I,T](static Pointer[T], a:I) if (IntegerType(I)) {
+    return intToPointer(a, T);
+}
+
+def pointerToNativeInt[T](a:Pointer[T]) { return to(Int32, a); }
+def nativeIntToPointer[T](a:Int32) { return to(Pointer[T], a); }
+
 overload equals[T](a:Pointer[T], b:Pointer[T]) {
-    return pointerEquals(a, b);
+    return equals(pointerToNativeInt(a), pointerToNativeInt(b));
 }
 overload lesser[T](a:Pointer[T], b:Pointer[T]) {
-    return pointerLesser(a, b);
+    return lesser(pointerToNativeInt(a), pointerToNativeInt(b));
 }
 
 overload hash[T](a:Pointer[T]) {
-    return pointerCast(Int, &a)^;
+    return pointerToNativeInt(a);
 }
 
-overload add[T](p:Pointer[T], i:Int) {
-    return pointerOffset(p, multiply(typeSize(T), i));
+overload add[T,I](p:Pointer[T], i:I) if (IntegerType(I)) {
+    return to(Pointer[T], pointerToNativeInt(p) + i*typeSize(T));
 }
-overload subtract[T](p:Pointer[T], i:Int) {
-    return pointerOffset(p, multiply(typeSize(T), minus(i)));
+overload subtract[T,I](p:Pointer[T], i:I) if (IntegerType(I)) {
+    return to(Pointer[T], pointerToNativeInt(p) - i*typeSize(T));
 }
 overload subtract[T](a:Pointer[T], b:Pointer[T]) {
-    return divide(pointerDifference(a, b), typeSize(T));
+    return (pointerToNativeInt(a) - pointerToNativeInt(b)) / typeSize(T);
 }
 
 def null[T](static T) {

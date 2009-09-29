@@ -45,7 +45,7 @@ def loadAndCompile(fileName) :
         error("'main' is not a procedure")
     bindings = InvokeBindings([], [], [], [])
     compiler.compileCode("main", mainProc.code, mainProc.env, bindings)
-    return compiler.llvmModule
+    return compiler.llvmModule()
 
 def compileAndMakeExe() :
     parser = optparse.OptionParser()
@@ -72,7 +72,7 @@ def compileAndMakeExe() :
     bcFile = newTempFile(".bc")
     os.system("llvm-as -f -o '%s' '%s'" % (bcFile, llFile))
     optBcFile = newTempFile("-opt.bc")
-    os.system("opt -O3 -f -o '%s' '%s'" % (optBcFile, bcFile))
+    os.system("opt -O1 -f -o '%s' '%s'" % (optBcFile, bcFile))
     cFile = newTempFile(".c")
     os.system("llc -march=c -f -o '%s' '%s'" % (cFile, optBcFile))
 

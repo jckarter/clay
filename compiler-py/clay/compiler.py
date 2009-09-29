@@ -14,109 +14,35 @@ import clay.llvmwrapper as llvm
 
 
 #
-# convert to llvm types
-#
-
-_llvmTypesTable = None
-
-def _initLLVMTypesTable() :
-    global _llvmTypesTable
-    _llvmTypesTable = {}
-    def llvmInt(ct) :
-        return llvm.Type.int(ctypes.sizeof(ct) * 8)
-    _llvmTypesTable[boolType] = llvmInt(ctypes.c_bool)
-    _llvmTypesTable[intType] = llvmInt(ctypes.c_int)
-    _llvmTypesTable[floatType] = llvm.Type.float()
-    _llvmTypesTable[doubleType] = llvm.Type.double()
-
-def _cleanupLLVMTypesTable() :
-    global _llvmTypesTable
-    _llvmTypesTable = None
-
-installGlobalsCleanupHook(_cleanupLLVMTypesTable)
-
-llvmType = multimethod(errorMessage="invalid type")
-
-@llvmType.register(Type)
-def foo(t) :
-    if _llvmTypesTable is None :
-        _initLLVMTypesTable()
-    llt = _llvmTypesTable.get(t)
-    if llt is None :
-        llt = makeLLVMType(t.tag, t)
-    return llt
-
-makeLLVMType = multimethod(errorMessage="invalid type tag")
-
-@makeLLVMType.register(TupleTag)
-def foo(tag, t) :
-    fieldLLVMTypes = [llvmType(x) for x in t.params]
-    llt = llvm.Type.struct(fieldLLVMTypes)
-    _llvmTypesTable[t] = llt
-    return llt
-
-@makeLLVMType.register(ArrayTag)
-def foo(tag, t) :
-    ensure(len(t.params) == 2, "invalid array type")
-    elementType = llvmType(t.params[0])
-    count = toInt(t.params[1])
-    llt = llvm.Type.array(elementType, count)
-    _llvmTypesTable[t] = llt
-    return llt
-
-@makeLLVMType.register(PointerTag)
-def foo(tag, t) :
-    ensure(len(t.params) == 1, "invalid pointer type")
-    pointeeType = llvmType(t.params[0])
-    llt = llvm.Type.pointer(pointeeType)
-    _llvmTypesTable[t] = llt
-    return llt
-
-@makeLLVMType.register(Record)
-def foo(tag, t) :
-    llt = llvm.Type.opaque()
-    typeHandle = llvm.TypeHandle.new(llt)
-    _llvmTypesTable[t] = llt
-    fieldLLVMTypes = [llvmType(x) for x in recordFieldTypes(t)]
-    recType = llvm.Type.struct(fieldLLVMTypes)
-    typeHandle.type.refine(recType)
-    llt = typeHandle.type
-    _llvmTypesTable[t] = llt
-    return llt
-
-
-
-#
 # global llvm data
 #
 
-llvmModule = None
+llvmModuleInitialized = False
 llvmFunction = None
 llvmInitBuilder = None
 llvmBuilder = None
 
 def initLLVMModule() :
-    global llvmModule
-    llvmModule = llvm.Module.new("clay_code")
-
-    intPtrType = llvm.Type.pointer(llvmType(intType))
+    global llvmModuleInitialized
+    llvmModuleInitialized = True
+    intPtrType = llvm.Type.pointer(llvmType(nativeIntType))
     ft = llvm.Type.function(llvm.Type.void(), [intPtrType])
-    f = llvm.Function.new(llvmModule, ft, "_clay_print_int")
+    f = llvm.Function.new(llvmModule(), ft, "_clay_print_int")
     f.linkage = llvm.LINKAGE_EXTERNAL
 
     boolPtrType = llvm.Type.pointer(llvmType(boolType))
     ft = llvm.Type.function(llvm.Type.void(), [boolPtrType])
-    f = llvm.Function.new(llvmModule, ft, "_clay_print_bool")
+    f = llvm.Function.new(llvmModule(), ft, "_clay_print_bool")
     f.linkage = llvm.LINKAGE_EXTERNAL
 
-def _cleanLLVMGlobals() :
-    global llvmModule, llvmFunction, llvmInitBuilder, llvmBuilder
-    llvmModule = None
+def _cleanCompilerLLVMGlobals() :
+    global llvmModuleInitialized, llvmFunction, llvmInitBuilder, llvmBuilder
+    llvmModuleInitialized = False
     llvmFunction = None
     llvmInitBuilder = None
     llvmBuilder = None
 
-installGlobalsCleanupHook(_cleanLLVMGlobals)
+installGlobalsCleanupHook(_cleanCompilerLLVMGlobals)
 
 
 
@@ -220,7 +146,7 @@ def foo(x) :
 def foo(x) :
     if isBoolType(x.type) :
         constValue = llvm.Constant.int(llvmType(x.type), int(x.buf.value))
-    elif isIntType(x.type) :
+    elif isIntegerType(x.type) :
         constValue = llvm.Constant.int(llvmType(x.type), x.buf.value)
     else :
         error("unsupported type in toRTValue")
@@ -277,6 +203,23 @@ def toRTReferenceWithTag(tag) :
         ensure(r.type.tag is tag, "type mismatch")
         return r
     return f
+
+def toRTIntegerReference(x) :
+    r = toRTReference(x)
+    ensure(isIntegerType(r.type), "integer type expected")
+    return r
+
+def toRTFloatingPointReference(x) :
+    r = toRTReference(x)
+    ensure(isFloatingPointType(r.type), "floating point type expected")
+    return r
+
+def toRTNumericReference(x) :
+    r = toRTReference(x)
+    t = r.type
+    ensure(isType(t) and (isIntegerType(t) or isFloatingPointType(t)),
+           "numeric type expected")
+    return r
 
 def toRTRecordReference(x) :
     r = toRTReference(x)
@@ -378,8 +321,8 @@ def rtTupleFieldRef(a, i) :
     assert isRTReference(a) and isTupleType(a.type)
     ensure((0 <= i < len(a.type.params)), "tuple index out of range")
     elementType = toType(a.type.params[i])
-    zero = llvm.Constant.int(llvmType(intType), 0)
-    iValue = llvm.Constant.int(llvmType(intType), i)
+    zero = llvm.Constant.int(llvmType(nativeIntType), 0)
+    iValue = llvm.Constant.int(llvmType(nativeIntType), i)
     elementPtr = llvmBuilder.gep(a.llvmValue, [zero, iValue])
     return RTReference(elementType, elementPtr)
 
@@ -397,8 +340,8 @@ def rtRecordFieldRef(a, i) :
     nFields = len(recordValueArgs(a.type.tag))
     ensure((0 <= i < nFields), "record field index out of range")
     fieldType = recordFieldTypes(a.type)[i]
-    zero = llvm.Constant.int(llvmType(intType), 0)
-    iValue = llvm.Constant.int(llvmType(intType), i)
+    zero = llvm.Constant.int(llvmType(nativeIntType), 0)
+    iValue = llvm.Constant.int(llvmType(nativeIntType), i)
     fieldPtr = llvmBuilder.gep(a.llvmValue, [zero, iValue])
     return RTReference(fieldType, fieldPtr)
 
@@ -664,45 +607,6 @@ def foo(x, args, env) :
 
 
 #
-# compile primitives
-#
-
-@compileCall.register(primitives._print)
-def foo(x, args, env) :
-    ensureArity(args, 1)
-    x = compile(args[0], env, toRTReference)
-    if x.type == boolType :
-        f = llvmModule.get_function_named("_clay_print_bool")
-    elif x.type == intType :
-        f = llvmModule.get_function_named("_clay_print_int")
-    else :
-        error("printing support not available for this type")
-    llvmBuilder.call(f, [x.llvmValue])
-    return voidValue
-
-@compileCall.register(primitives.default)
-def foo(x, args, env) :
-    ensureArity(args, 1)
-    t = compile(args[0], env, toType)
-    v = tempRTValue(t)
-    rtValueInit(v)
-    return v
-
-@compileCall.register(primitives.typeSize)
-def foo(x, args, env) :
-    ensureArity(args, 1)
-    t = compile(args[0], env, toType)
-    ptr = llvm.Constant.null(llvmType(pointerType(t)))
-    one = llvm.Constant.int(llvmType(intType), 1)
-    offsetPtr = llvmBuilder.gep(ptr, [one])
-    offsetInt = llvmBuilder.ptrtoint(offsetPtr, llvmType(intType))
-    v = tempRTValue(intType)
-    llvmBuilder.store(offsetInt, v.llvmValue)
-    return v
-
-
-
-#
 # utility methods for compiling primitives
 #
 
@@ -726,6 +630,71 @@ def rtResult(type_, llvmValue) :
 
 
 #
+# compilePrimitiveCall
+#
+
+def compilePrimitiveCall(primitive, inRefs, outputType) :
+    func = primitiveFunc(primitive, [x.type for x in inRefs], outputType)
+    llvmArgs = [inRef.llvmValue for inRef in inRefs]
+    if not isVoidType(outputType) :
+        result = tempRTValue(outputType)
+        llvmArgs.append(result.llvmValue)
+    else :
+        result = voidValue
+    llvmBuilder.call(func, llvmArgs)
+    return result
+
+
+
+#
+# compile primitives
+#
+
+@compileCall.register(primitives._print)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    x = compile(args[0], env, toRTReference)
+    if x.type == boolType :
+        f = llvmModule().get_function_named("_clay_print_bool")
+    elif x.type == nativeIntType :
+        f = llvmModule().get_function_named("_clay_print_int")
+    else :
+        error("printing support not available for this type")
+    llvmBuilder.call(f, [x.llvmValue])
+    return voidValue
+
+@compileCall.register(primitives.default)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    t = compile(args[0], env, toType)
+    v = tempRTValue(t)
+    rtValueInit(v)
+    return v
+
+@compileCall.register(primitives.typeSize)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    t = compile(args[0], env, toType)
+    ptr = llvm.Constant.null(llvmType(pointerType(t)))
+    one = llvm.Constant.int(llvmType(nativeIntType), 1)
+    offsetPtr = llvmBuilder.gep(ptr, [one])
+    offsetInt = llvmBuilder.ptrtoint(offsetPtr, llvmType(nativeIntType))
+    v = tempRTValue(nativeIntType)
+    llvmBuilder.store(offsetInt, v.llvmValue)
+    return v
+
+@compileCall.register(primitives.primitiveCopy)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    cell = Cell()
+    destRef = compile(args[0], env, toRTReferenceOfType(cell))
+    srcRef = compile(args[1], env, toRTReferenceOfType(cell))
+    ensure(isSimpleType(cell.param), "expected simple type")
+    return compilePrimitiveCall(x, [destRef, srcRef], voidType)
+
+
+
+#
 # compile pointer primitives
 #
 
@@ -743,24 +712,20 @@ def foo(x, args, env) :
     ptr, = rtLoadLLVM(args, env, [pointerType(cell)])
     return RTReference(cell.param, ptr)
 
-@compileCall.register(primitives.pointerOffset)
+@compileCall.register(primitives.pointerToInt)
 def foo(x, args, env) :
+    ensureArity(args, 2)
     cell = Cell()
-    ptr, offset = rtLoadLLVM(args, env, [pointerType(cell), intType])
-    ptr = llvmBuilder.bitcast(ptr, llvm.Type.pointer(llvm.Type.int(8)))
-    ptr = llvmBuilder.gep(ptr, [offset])
-    ptr = llvmBuilder.bitcast(ptr, llvmType(pointerType(cell.param)))
-    return rtResult(pointerType(cell.param), ptr)
+    ptrRef = compile(args[0], env, toRTReferenceOfType(pointerType(cell)))
+    outType = compile(args[1], env, toIntegerType)
+    return compilePrimitiveCall(x, [ptrRef], outType)
 
-@compileCall.register(primitives.pointerSubtract)
+@compileCall.register(primitives.intToPointer)
 def foo(x, args, env) :
-    cell = Cell()
-    ptrType = pointerType(cell)
-    ptr1, ptr2 = rtLoadLLVM(args, env, [ptrType, ptrType])
-    ptr1Int = llvmBuilder.ptrtoint(ptr1, llvmType(intType))
-    ptr2Int = llvmBuilder.ptrtoint(ptr2, llvmType(intType))
-    diff = llvmBuilder.sub(ptr1Int, ptr2Int)
-    return rtResult(intType, diff)
+    ensureArity(args, 2)
+    intRef = compile(args[0], env, toRTIntegerReference)
+    pointeeType = compile(args[1], env, toType)
+    return compilePrimitiveCall(x, [intRef], pointerType(pointeeType))
 
 @compileCall.register(primitives.pointerCast)
 def foo(x, args, env) :
@@ -773,46 +738,19 @@ def foo(x, args, env) :
     ptr = llvmBuilder.bitcast(ptr, llvmType(targetPtrType))
     return rtResult(targetPtrType, ptr)
 
-@compileCall.register(primitives.pointerCopy)
-def foo(x, args, env) :
-    cell = Cell()
-    ptrType = pointerType(cell)
-    destRef, srcRef = rtLoadRefs(args, env, [ptrType, ptrType])
-    ptr = llvmBuilder.load(srcRef.llvmValue)
-    llvmBuilder.store(ptr, destRef.llvmValue)
-    return voidValue
-
-@compileCall.register(primitives.pointerEquals)
-def foo(x, args, env) :
-    cell = Cell()
-    ptrType = pointerType(cell)
-    ptr1, ptr2 = rtLoadLLVM(args, env, [ptrType, ptrType])
-    flag = llvmBuilder.icmp(llvm.ICMP_EQ, ptr1, ptr2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
-
-@compileCall.register(primitives.pointerLesser)
-def foo(x, args, env) :
-    cell = Cell()
-    ptrType = pointerType(cell)
-    ptr1, ptr2 = rtLoadLLVM(args, env, [ptrType, ptrType])
-    flag = llvmBuilder.icmp(llvm.ICMP_ULT, ptr1, ptr2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
-
 @compileCall.register(primitives.allocateMemory)
 def foo(x, args, env) :
-    size, = rtLoadLLVM(args, env, [intType])
-    ptr = llvmBuilder.malloc(llvm.Type.int(8), size)
-    ptr = llvmBuilder.bitcast(ptr, llvmType(intType))
-    return rtResult(pointerType(intType), ptr)
+    ensureArity(args, 2)
+    type_ = compile(args[0], env, toType)
+    nRef = compile(args[1], env, toRTReferenceOfType(nativeIntType))
+    return compilePrimitiveCall(x, [nRef], pointerType(type_))
 
 @compileCall.register(primitives.freeMemory)
 def foo(x, args, env) :
-    ptr, = rtLoadLLVM(args, env, [pointerType(intType)])
-    ptr = llvmBuilder.bitcast(ptr, llvm.Type.pointer(llvm.Type.int(8)))
-    llvmBuilder.free(ptr)
-    return voidValue
+    ensureArity(args, 1)
+    cell = Cell()
+    ptrRef = compile(args[0], toRTReferenceOfType(pointerType(cell)))
+    return compilePrimitiveCall(x, [ptrRef], voidType)
 
 
 
@@ -845,7 +783,7 @@ def foo(x, args, env) :
     cargs = [compile(y, env) for y in args]
     converter = toRTReferenceWithTag(tupleTag)
     tupleRef = convertObject(converter, cargs[0], args[0])
-    i = convertObject(toInt, cargs[1], args[1])
+    i = convertObject(toNativeInt, cargs[1], args[1])
     return rtTupleFieldRef(tupleRef, i)
 
 
@@ -859,7 +797,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     cargs = [compile(y, env) for y in args]
     elementType = convertObject(toType, cargs[0], args[0])
-    n = convertObject(toInt, cargs[1], args[1])
+    n = convertObject(toNativeInt, cargs[1], args[1])
     a = tempRTValue(arrayType(elementType, intToValue(n)))
     rtValueInit(a)
     return a
@@ -870,9 +808,9 @@ def foo(x, args, env) :
     cargs = [compile(y, env) for y in args]
     converter = toRTReferenceWithTag(arrayTag)
     aRef = convertObject(converter, cargs[0], args[0])
-    iRef = convertObject(toRTReferenceOfType(intType), cargs[1], args[1])
+    iRef = convertObject(toRTReferenceOfType(nativeIntType), cargs[1], args[1])
     i = llvmBuilder.load(iRef.llvmValue)
-    zero = llvm.Constant.int(llvmType(intType), 0)
+    zero = llvm.Constant.int(llvmType(nativeIntType), 0)
     element = llvmBuilder.gep(aRef.llvmValue, [zero, i])
     return RTReference(aRef.type.params[0], element)
 
@@ -899,240 +837,68 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     cargs = [compile(y, env) for y in args]
     recRef = convertObject(toRTRecordReference, cargs[0], args[0])
-    i = convertObject(toInt, cargs[1], args[1])
+    i = convertObject(toNativeInt, cargs[1], args[1])
     return rtRecordFieldRef(recRef, i)
 
 
 
 #
-# compile bool primitives
+# compile numeric primitives
 #
 
-@compileCall.register(primitives.boolCopy)
+def _compile2NumericArgs(args, env) :
+    ensureArity(args, 2)
+    a, b = [compile(x, env, toRTNumericReference) for x in args]
+    ensure(a.type == b.type, "argument types mismatch")
+    return (a, b)
+    
+@compileCall.register(primitives.numericEquals)
 def foo(x, args, env) :
-    destRef, srcRef = rtLoadRefs(args, env, [boolType, boolType])
-    v = llvmBuilder.load(srcRef.llvmValue)
-    llvmBuilder.store(v, destRef.llvmValue)
-    return voidValue
+    x1, x2 = _compile2NumericArgs(args, env)
+    return compilePrimitiveCall(x, [x1, x2], boolType)
 
-
-
-#
-# compile int primitives
-#
-
-@compileCall.register(primitives.intCopy)
+@compileCall.register(primitives.numericLesser)
 def foo(x, args, env) :
-    destRef, srcRef = rtLoadRefs(args, env, [intType, intType])
-    v = llvmBuilder.load(srcRef.llvmValue)
-    llvmBuilder.store(v, destRef.llvmValue)
-    return voidValue
+    x1, x2 = _compile2NumericArgs(args, env)
+    return compilePrimitiveCall(x, [x1, x2], boolType)
 
-@compileCall.register(primitives.intEquals)
+@compileCall.register(primitives.numericAdd)
 def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
-    flag = llvmBuilder.icmp(llvm.ICMP_EQ, v1, v2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
+    x1, x2 = _compile2NumericArgs(args, env)
+    return compilePrimitiveCall(x, [x1, x2], x1.type)
 
-@compileCall.register(primitives.intLesser)
+@compileCall.register(primitives.numericSubtract)
 def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
-    flag = llvmBuilder.icmp(llvm.ICMP_SLT, v1, v2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
+    x1, x2 = _compile2NumericArgs(args, env)
+    return compilePrimitiveCall(x, [x1, x2], x1.type)
 
-@compileCall.register(primitives.intAdd)
+@compileCall.register(primitives.numericMultiply)
 def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
-    v3 = llvmBuilder.add(v1, v2)
-    return rtResult(intType, v3)
+    x1, x2 = _compile2NumericArgs(args, env)
+    return compilePrimitiveCall(x, [x1, x2], x1.type)
 
-@compileCall.register(primitives.intSubtract)
+@compileCall.register(primitives.numericDivide)
 def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
-    v3 = llvmBuilder.sub(v1, v2)
-    return rtResult(intType, v3)
+    x1, x2 = _compile2NumericArgs(args, env)
+    return compilePrimitiveCall(x, [x1, x2], x1.type)
 
-@compileCall.register(primitives.intMultiply)
+@compileCall.register(primitives.numericRemainder)
 def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
-    v3 = llvmBuilder.mul(v1, v2)
-    return rtResult(intType, v3)
+    x1, x2 = _compile2NumericArgs(args, env)
+    return compilePrimitiveCall(x, [x1, x2], x1.type)
 
-@compileCall.register(primitives.intDivide)
+@compileCall.register(primitives.numericNegate)
 def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
-    v3 = llvmBuilder.sdiv(v1, v2)
-    return rtResult(intType, v3)
+    ensureArity(args, 1)
+    x1 = compile(args[0], env, toRTNumericReference)
+    return compilePrimitiveCall(x, [x1], x1.type)
 
-@compileCall.register(primitives.intModulus)
+@compileCall.register(primitives.numericConvert)
 def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [intType, intType])
-    v3 = llvmBuilder.srem(v1, v2)
-    return rtResult(intType, v3)
-
-@compileCall.register(primitives.intNegate)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [intType])
-    v2 = llvmBuilder.neg(v1)
-    return rtResult(intType, v2)
-
-
-
-#
-# compile float primitives
-#
-
-@compileCall.register(primitives.floatCopy)
-def foo(x, args, env) :
-    destRef, srcRef = rtLoadRefs(args, env, [floatType, floatType])
-    v = llvmBuilder.load(srcRef.llvmValue)
-    llvmBuilder.store(v, destRef.llvmValue)
-    return voidValue
-
-@compileCall.register(primitives.floatEquals)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
-    flag = llvmBuilder.fcmp(llvm.FCMP_OEQ, v1, v2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
-
-@compileCall.register(primitives.floatLesser)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
-    flag = llvmBuilder.fcmp(llvm.FCMP_OLT, v1, v2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
-
-@compileCall.register(primitives.floatAdd)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
-    v3 = llvmBuilder.add(v1, v2)
-    return rtResult(floatType, v3)
-
-@compileCall.register(primitives.floatSubtract)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
-    v3 = llvmBuilder.sub(v1, v2)
-    return rtResult(floatType, v3)
-
-@compileCall.register(primitives.floatMultiply)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
-    v3 = llvmBuilder.mul(v1, v2)
-    return rtResult(floatType, v3)
-
-@compileCall.register(primitives.floatDivide)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [floatType, floatType])
-    v3 = llvmBuilder.fdiv(v1, v2)
-    return rtResult(floatType, v3)
-
-@compileCall.register(primitives.floatNegate)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [floatType])
-    v2 = llvmBuilder.neg(v1)
-    return rtResult(floatType, v2)
-
-
-
-#
-# compile double primitives
-#
-
-@compileCall.register(primitives.doubleCopy)
-def foo(x, args, env) :
-    destRef, srcRef = rtLoadRefs(args, env, [doubleType, doubleType])
-    v = llvmBuilder.load(srcRef.llvmValue)
-    llvmBuilder.store(v, destRef.llvmValue)
-    return voidValue
-
-@compileCall.register(primitives.doubleEquals)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
-    flag = llvmBuilder.fcmp(llvm.FCMP_OEQ, v1, v2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
-
-@compileCall.register(primitives.doubleLesser)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
-    flag = llvmBuilder.fcmp(llvm.FCMP_OLT, v1, v2)
-    flag = llvmBuilder.zext(flag, llvmType(boolType))
-    return rtResult(boolType, flag)
-
-@compileCall.register(primitives.doubleAdd)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
-    v3 = llvmBuilder.add(v1, v2)
-    return rtResult(doubleType, v3)
-
-@compileCall.register(primitives.doubleSubtract)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
-    v3 = llvmBuilder.sub(v1, v2)
-    return rtResult(doubleType, v3)
-
-@compileCall.register(primitives.doubleMultiply)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
-    v3 = llvmBuilder.mul(v1, v2)
-    return rtResult(doubleType, v3)
-
-@compileCall.register(primitives.doubleDivide)
-def foo(x, args, env) :
-    v1, v2 = rtLoadLLVM(args, env, [doubleType, doubleType])
-    v3 = llvmBuilder.fdiv(v1, v2)
-    return rtResult(doubleType, v3)
-
-@compileCall.register(primitives.doubleNegate)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [doubleType])
-    v2 = llvmBuilder.neg(v1)
-    return rtResult(doubleType, v2)
-
-
-
-#
-# compile conversion primitives
-#
-
-@compileCall.register(primitives.floatToInt)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [floatType])
-    v2 = llvmBuilder.fptosi(v1, llvmType(intType))
-    return rtResult(intType, v2)
-
-@compileCall.register(primitives.intToFloat)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [intType])
-    v2 = llvmBuilder.sitofp(v1, llvmType(floatType))
-    return rtResult(floatType, v2)
-
-@compileCall.register(primitives.floatToDouble)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [floatType])
-    v2 = llvmBuilder.fpext(v1, llvmType(doubleType))
-    return rtResult(doubleType, v2)
-
-@compileCall.register(primitives.doubleToFloat)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [doubleType])
-    v2 = llvmBuilder.fptrunc(v1, llvmType(floatType))
-    return rtResult(floatType, v2)
-
-@compileCall.register(primitives.doubleToInt)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [doubleType])
-    v2 = llvmBuilder.fptosi(v1, llvmType(intType))
-    return rtResult(intType, v2)
-
-@compileCall.register(primitives.intToDouble)
-def foo(x, args, env) :
-    v1, = rtLoadLLVM(args, env, [intType])
-    v2 = llvmBuilder.sitofp(v1, llvmType(doubleType))
-    return rtResult(doubleType, v2)
+    ensureArity(args, 2)
+    destType = compile(args[0], env, toNumericType)
+    src = compile(args[1], env, toRTNumericReference)
+    return compilePrimitiveCall(x, [src], destType)
 
 
 
@@ -1216,7 +982,7 @@ def compileCode(name, code, env, bindings) :
 #
 
 def compileCodeHeader(name, code, env, bindings) :
-    if llvmModule is None :
+    if not llvmModuleInitialized :
         initLLVMModule()
     llvmArgTypes = []
     for param in bindings.params :
@@ -1229,7 +995,7 @@ def compileCodeHeader(name, code, env, bindings) :
             llvmReturnType = llvm.Type.pointer(llvmReturnType)
         llvmArgTypes.append(llvm.Type.pointer(llvmReturnType))
     funcType = llvm.Type.function(llvm.Type.void(), llvmArgTypes)
-    func = llvmModule.add_function(funcType, "clay_" + name)
+    func = llvmModule().add_function(funcType, "clay_" + name)
     compiledCode.llvmFunc = func
     for i, var in enumerate(bindings.vars) :
         func.args[i].name = var.s

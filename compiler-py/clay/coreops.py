@@ -1,7 +1,7 @@
 from clay.error import *
 from clay.multimethod import *
 
-__all__ = ["equals", "toType", "toInt", "toBool",
+__all__ = ["equals", "toType", "toNativeInt", "toBool",
            "toValue", "toLValue", "toReference", "toValueOrReference",
            "toStatic"]
 
@@ -21,9 +21,9 @@ equals = multimethod(n=2, defaultProc=(lambda x, y : x is y))
 
 toType = multimethod(errorMessage="type expected")
 
-toInt = multimethod(errorMessage="int expected")
-
 toBool = multimethod(errorMessage="bool expected")
+
+toNativeInt = multimethod(errorMessage="int expected")
 
 toValue = multimethod(errorMessage="invalid value")
 

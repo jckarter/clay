@@ -21,18 +21,37 @@ class Type(object) :
         return hash((self.tag, tuple(self.params)))
 
 class BoolTag(object) : pass
-class IntTag(object) : pass
-class FloatTag(object) : pass
-class DoubleTag(object) : pass
+
+class IntegerTag(object) :
+    def __init__(self, bits, signed) :
+        self.bits = bits
+        self.signed = signed
+
+class FloatingPointTag(object) :
+    def __init__(self, bits) :
+        self.bits = bits
+
 class VoidTag(object) : pass
+
 class TupleTag(object) : pass
 class ArrayTag(object) : pass
 class PointerTag(object) : pass
 
 boolTag = BoolTag()
-intTag = IntTag()
-floatTag = FloatTag()
-doubleTag = DoubleTag()
+
+int8Tag  = IntegerTag(8,  signed=True)
+int16Tag = IntegerTag(16, signed=True)
+int32Tag = IntegerTag(32, signed=True)
+int64Tag = IntegerTag(64, signed=True)
+
+uint8Tag  = IntegerTag(8,  signed=False)
+uint16Tag = IntegerTag(16, signed=False)
+uint32Tag = IntegerTag(32, signed=False)
+uint64Tag = IntegerTag(64, signed=False)
+
+float32Tag = FloatingPointTag(32)
+float64Tag = FloatingPointTag(64)
+
 voidTag = VoidTag()
 
 tupleTag = TupleTag()
@@ -40,9 +59,22 @@ arrayTag = ArrayTag()
 pointerTag = PointerTag()
 
 boolType = Type(boolTag, [])
-intType = Type(intTag, [])
-floatType = Type(floatTag, [])
-doubleType = Type(doubleTag, [])
+
+int8Type  = Type(int8Tag, [])
+int16Type = Type(int16Tag, [])
+int32Type = Type(int32Tag, [])
+int64Type = Type(int64Tag, [])
+
+uint8Type  = Type(uint8Tag, [])
+uint16Type = Type(uint16Tag, [])
+uint32Type = Type(uint32Tag, [])
+uint64Type = Type(uint64Tag, [])
+
+nativeIntType = int32Type
+
+float32Type = Type(float32Tag, [])
+float64Type = Type(float64Tag, [])
+
 voidType = Type(voidTag, [])
 
 def tupleType(types) :
@@ -82,9 +114,20 @@ xregister(VoidValue, lambda x : XSymbol("void"))
 #
 
 installPrimitive("Bool", boolType)
-installPrimitive("Int", intType)
-installPrimitive("Float", floatType)
-installPrimitive("Double", doubleType)
+
+installPrimitive("Int8",  int8Type)
+installPrimitive("Int16", int16Type)
+installPrimitive("Int32", int32Type)
+installPrimitive("Int64", int64Type)
+
+installPrimitive("UInt8",  uint8Type)
+installPrimitive("UInt16", uint16Type)
+installPrimitive("UInt32", uint32Type)
+installPrimitive("UInt64", uint64Type)
+
+installPrimitive("Float32", float32Type)
+installPrimitive("Float64", float64Type)
+
 installPrimitive("Void", voidType)
 
 
@@ -95,9 +138,24 @@ installPrimitive("Void", voidType)
 
 def isType(t) : return type(t) is Type
 def isBoolType(t) : return t.tag is boolTag
-def isIntType(t) : return t.tag is intTag
-def isFloatType(t) : return t.tag is floatTag
-def isDoubleType(t) : return t.tag is doubleTag
+
+def isIntegerType(t) : return type(t.tag) is IntegerTag
+
+def isInt8Type(t)  : return t.tag is int8Tag
+def isInt16Type(t) : return t.tag is int16Tag
+def isInt32Type(t) : return t.tag is int32Tag
+def isInt64Type(t) : return t.tag is int64Tag
+
+def isUInt8Type(t)  : return t.tag is uint8Tag
+def isUInt16Type(t) : return t.tag is uint16Tag
+def isUInt32Type(t) : return t.tag is uint32Tag
+def isUInt64Type(t) : return t.tag is uint64Tag
+
+def isFloatingPointType(t) : return type(t.tag) is FloatingPointTag
+
+def isFloat32Type(t) : return t.tag is float32Tag
+def isFloat64Type(t) : return t.tag is float64Tag
+
 def isVoidType(t) : return t.tag is voidTag
 
 def isTupleType(t) : return t.tag is tupleTag
@@ -105,7 +163,9 @@ def isArrayType(t) : return t.tag is arrayTag
 def isPointerType(t) : return t.tag is pointerTag
 def isRecordType(t) : return type(t.tag) is Record
 
-_simpleTags = (boolTag, intTag, floatTag, doubleTag, pointerTag)
+_simpleTags = set([boolTag, int8Tag, int16Tag, int32Tag, int64Tag,
+                   uint8Tag, uint16Tag, uint32Tag, uint64Tag,
+                   float32Tag, float64Tag, pointerTag])
 def isSimpleType(t) :
     return t.tag in _simpleTags
 
@@ -162,9 +222,16 @@ def tagName(t) :
 
 _tagNames = {}
 _tagNames[boolTag] = "Bool"
-_tagNames[intTag] = "Int"
-_tagNames[floatTag] = "Float"
-_tagNames[doubleTag] = "Double"
+_tagNames[int8Tag] = "Int8"
+_tagNames[int16Tag] = "Int16"
+_tagNames[int32Tag] = "Int32"
+_tagNames[int64Tag] = "Int64"
+_tagNames[uint8Tag] = "UInt8"
+_tagNames[uint16Tag] = "UInt16"
+_tagNames[uint32Tag] = "UInt32"
+_tagNames[uint64Tag] = "UInt64"
+_tagNames[float32Tag] = "Float32"
+_tagNames[float64Tag] = "Float64"
 _tagNames[voidTag] = "Void"
 _tagNames[tupleTag] = "Tuple"
 _tagNames[arrayTag] = "Array"
@@ -183,6 +250,20 @@ def toTypeWithTag(tag) :
         return t
     return f
 
+def toIntegerType(t) :
+    ensure(isType(t) and isIntegerType(t), "integer type expected")
+    return t
+
+def toFloatingPointType(t) :
+    ensure(isType(t) and isFloatingPointType(t),
+           "floating point type expected")
+    return t
+
+def toNumericType(t) :
+    ensure(isType(t) and (isIntegerType(t) or isFloatingPointType(t)),
+           "numeric type expected")
+    return t
+
 def toRecordType(t) :
     ensure(isType(t) and isRecordType(t), "record type expected")
     return t
@@ -193,6 +274,23 @@ def toReferenceWithTag(tag) :
         ensure(r.type.tag is tag, "type mismatch")
         return r
     return f
+
+def toIntegerReference(x) :
+    r = toReference(x)
+    ensure(isIntegerType(r.type), "integer type expected")
+    return r
+
+def toFloatingPointReference(x) :
+    r = toReference(x)
+    ensure(isFloatingPointType(r.type), "floating point type expected")
+    return r
+
+def toNumericReference(x) :
+    r = toReference(x)
+    t = r.type
+    ensure(isType(t) and (isIntegerType(t) or isFloatingPointType(t)),
+           "numeric type expected")
+    return r
 
 def toRecordReference(x) :
     r = toReference(x)
