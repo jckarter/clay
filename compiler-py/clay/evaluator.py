@@ -657,6 +657,8 @@ def foo(x, env) :
 
 @evaluate2.register(Tuple)
 def foo(x, env) :
+    if len(x.args) == 1 :
+        return evaluate(x.args[0], env)
     return evaluate(Call(primitiveNameRef("tuple"), x.args), env)
 
 @evaluate2.register(Indexing)

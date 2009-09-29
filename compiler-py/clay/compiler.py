@@ -436,6 +436,8 @@ def foo(x, env) :
 
 @compile2.register(Tuple)
 def foo(x, env) :
+    if len(x.args) == 1:
+        return compileDelegate(x.args[0], env)
     return compileDelegate(Call(primitiveNameRef("tuple"), x.args), env)
 
 @compile2.register(Indexing)

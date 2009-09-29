@@ -168,6 +168,8 @@ def foo(x, env) :
 
 @analyze2.register(Tuple)
 def foo(x, env) :
+    if len(x.args) == 1 :
+        return analyze(x.args[0], env)
     return analyze(Call(primitiveNameRef("tuple"), x.args), env)
 
 @analyze2.register(Indexing)
