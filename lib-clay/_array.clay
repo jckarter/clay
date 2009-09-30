@@ -77,8 +77,8 @@ overload init[T,n](a:Array[T,n]) {
 }
 
 overload copy[T,n](dest:Array[T,n], src:Array[T,n]) {
-    let ref d = iterator(dest);
-    let ref s = iterator(src);
+    ref d = iterator(dest);
+    ref s = iterator(src);
     while (hasNext(s))
         copy(next(d), next(s));
 }
@@ -89,8 +89,8 @@ overload destroy[T,n](a:Array[T,n]) {
 }
 
 overload equals[T,n](a:Array[T,n], b:Array[T,n]) {
-    let ref i = iterator(a);
-    let ref j = iterator(b);
+    ref i = iterator(a);
+    ref j = iterator(b);
     while (hasNext(i)) {
         if (next(i) != next(j))
             return false;
@@ -99,11 +99,11 @@ overload equals[T,n](a:Array[T,n], b:Array[T,n]) {
 }
 
 overload lesser[T,n](a:Array[T,n], b:Array[T,n]) {
-    let ref i = iterator(a);
-    let ref j = iterator(b);
+    ref i = iterator(a);
+    ref j = iterator(b);
     while (hasNext(i)) {
-        let ref x = next(i);
-        let ref y = next(j);
+        ref x = next(i);
+        ref y = next(j);
         if (x < y) return true;
         if (y < x) return false;
     }

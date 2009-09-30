@@ -59,7 +59,7 @@ Statement -> Block
 
 LabelDef -> Identifier ":"
 
-LocalBinding -> "let" "ref"? Variable "=" Expression ";"
+LocalBinding -> ("let" | "ref") Variable "=" Expression ";"
 
 Assignment -> Expression "=" Expression ";"
 

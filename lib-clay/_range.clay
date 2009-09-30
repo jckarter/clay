@@ -44,7 +44,7 @@ overload hasNext[T](r:CoordinateRange[T]) {
 }
 
 overload next[T](r:CoordinateRange[T]) ref {
-    let ref obj = at(r.first);
+    ref obj = at(r.first);
     inc(r.first);
     return obj;
 }

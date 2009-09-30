@@ -104,8 +104,8 @@ overload copy[T](dest:Vector[T], src:Vector[T]) {
     dest.capacity = src.size;
     if (dest.capacity > 0) {
         dest.data = allocateMemory(T, dest.capacity);
-        let ref d = iterator(dest);
-        let ref s = iterator(src);
+        ref d = iterator(dest);
+        ref s = iterator(src);
         while (hasNext(s))
             copy(next(d), next(s));
     }
@@ -123,8 +123,8 @@ overload destroy[T](a:Vector[T]) {
 overload equals[T](a:Vector[T], b:Vector[T]) {
     if (size(a) != size(b))
         return false;
-    let ref i = iterator(a);
-    let ref j = iterator(b);
+    ref i = iterator(a);
+    ref j = iterator(b);
     while (hasNext(i)) {
         if (next(i) != next(j))
             return false;
@@ -133,13 +133,13 @@ overload equals[T](a:Vector[T], b:Vector[T]) {
 }
 
 overload lesser[T](a:Vector[T], b:Vector[T]) {
-    let ref i = iterator(a);
-    let ref j = iterator(b);
+    ref i = iterator(a);
+    ref j = iterator(b);
     while (hasNext(i)) {
         if (not hasNext(j))
             return false;
-        let ref x = next(i);
-        let ref y = next(j);
+        ref x = next(i);
+        ref y = next(j);
         if (x < y) return true;
         if (y < x) return false;
     }
