@@ -98,6 +98,7 @@ def llvmModule() :
     global _llvmModule
     if _llvmModule is None :
         _llvmModule = llvm.Module.new("clay_module")
+        _llvmModule.data_layout = str(llvmTargetData())
     return _llvmModule
 
 def _cleanupLLVMGlobals() :
