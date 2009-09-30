@@ -1198,7 +1198,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     cell = Cell()
-    ptrRef = evaluate(args[0], toReferenceOfType(pointerType(cell)))
+    ptrRef = evaluate(args[0], env, toReferenceOfType(pointerType(cell)))
     return evalPrimitiveCall(x, [ptrRef], voidType)
 
 

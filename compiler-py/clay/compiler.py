@@ -786,7 +786,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     cell = Cell()
-    ptrRef = compile(args[0], toRTReferenceOfType(pointerType(cell)))
+    ptrRef = compile(args[0], env, toRTReferenceOfType(pointerType(cell)))
     return compilePrimitiveCall(x, [ptrRef], voidType)
 
 
