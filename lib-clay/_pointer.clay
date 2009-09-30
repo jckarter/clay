@@ -1,0 +1,49 @@
+import _core;
+import _numeric;
+
+//
+// Pointer[T]
+//
+
+overload copy[T](dest:Pointer[T], src:Pointer[T]) {
+    primitiveCopy(dest, src);
+}
+
+overload to[I,T](static I, a:Pointer[T]) if (IntegerType(I)) {
+    return pointerToInt(a, I);
+}
+overload to[I,T](static Pointer[T], a:I) if (IntegerType(I)) {
+    return intToPointer(a, T);
+}
+
+def pointerToNativeInt[T](a:Pointer[T]) { return to(Int32, a); }
+def nativeIntToPointer[T](a:Int32) { return to(Pointer[T], a); }
+
+overload equals[T](a:Pointer[T], b:Pointer[T]) {
+    return equals(pointerToNativeInt(a), pointerToNativeInt(b));
+}
+overload lesser[T](a:Pointer[T], b:Pointer[T]) {
+    return lesser(pointerToNativeInt(a), pointerToNativeInt(b));
+}
+
+overload hash[T](a:Pointer[T]) {
+    return pointerToNativeInt(a);
+}
+
+overload add[T,I](p:Pointer[T], i:I) if (IntegerType(I)) {
+    return to(Pointer[T], pointerToNativeInt(p) + i*typeSize(T));
+}
+overload subtract[T,I](p:Pointer[T], i:I) if (IntegerType(I)) {
+    return to(Pointer[T], pointerToNativeInt(p) - i*typeSize(T));
+}
+overload subtract[T](a:Pointer[T], b:Pointer[T]) {
+    return (pointerToNativeInt(a) - pointerToNativeInt(b)) / typeSize(T);
+}
+
+def null[T](static T) {
+    return default(Pointer[T]);
+}
+
+overload at[T](p:Pointer[T]) ref {
+    return p^;
+}

@@ -1,0 +1,47 @@
+import _core;
+
+//
+// Range
+//
+
+record Range[T](first:T, last:T);
+
+overload iterator[T](r:Range[T]) {
+    return r;
+}
+
+overload hasNext[T](r:Range[T]) {
+    return r.first < r.last;
+}
+
+overload next[T](r:Range[T]) {
+    let x = r.first;
+    r.first = x + 1;
+    return x;
+}
+
+overloadable range;
+
+overload range(first, last) { return Range(first, last); }
+overload range(last) { return Range(0, last); }
+
+
+//
+// CoordinateRange
+//
+
+record CoordinateRange[T](first:T, last:T);
+
+overload iterator[T](r:CoordinateRange[T]) {
+    return r;
+}
+
+overload hasNext[T](r:CoordinateRange[T]) {
+    return r.first < r.last;
+}
+
+overload next[T](r:CoordinateRange[T]) ref {
+    let ref obj = at(r.first);
+    r.first = r.first + 1;
+    return obj;
+}

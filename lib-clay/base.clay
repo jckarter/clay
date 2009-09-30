@@ -1,3 +1,8 @@
 export __primitives__;
 export _core;
-export _util;
+export _bool;
+export _numeric;
+export _pointer;
+export _tuplerecord;
+export _range;
+export _array;

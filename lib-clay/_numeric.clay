@@ -1,0 +1,118 @@
+import _core;
+
+//
+// numeric types
+//
+
+overloadable IntegerType;
+overload IntegerType[T](static T) { return false; }
+overload IntegerType(static Int8) { return true; }
+overload IntegerType(static Int16) { return true; }
+overload IntegerType(static Int32) { return true; }
+overload IntegerType(static Int64) { return true; }
+overload IntegerType(static UInt8) { return true; }
+overload IntegerType(static UInt16) { return true; }
+overload IntegerType(static UInt32) { return true; }
+overload IntegerType(static UInt64) { return true; }
+
+overloadable SignedIntegerType;
+overload SignedIntegerType[T](static T) { return false; }
+overload SignedIntegerType(static Int8) { return true; }
+overload SignedIntegerType(static Int16) { return true; }
+overload SignedIntegerType(static Int32) { return true; }
+overload SignedIntegerType(static Int64) { return true; }
+
+overloadable FloatingPointType;
+overload FloatingPointType[T](static T) { return false; }
+overload FloatingPointType(static Float32) { return true; }
+overload FloatingPointType(static Float64) { return true; }
+
+def NumericType[T](static T) { return FloatingPointType(T) or IntegerType(T); }
+
+overloadable BiggerNumericType;
+overload BiggerNumericType[A,B](static A, static B)
+        if (IntegerType(A) and FloatingPointType(B)) {
+    return false;
+}
+overload BiggerNumericType[A,B](static A, static B)
+        if (FloatingPointType(A) and IntegerType(B)) {
+    return true;
+}
+overload BiggerNumericType[A,B](static A, static B)
+        if (FloatingPointType(A) and FloatingPointType(B)) {
+    return typeSize(A) > typeSize(B);
+}
+overload BiggerNumericType[A,B](static A, static B)
+        if (IntegerType(A) and IntegerType(B)) {
+    if (typeSize(A) == typeSize(B))
+        return not SignedIntegerType(A);
+    return typeSize(A) > typeSize(B);
+}
+
+overload copy[T](dest:T, src:T) if (NumericType(T)) {
+    primitiveCopy(dest, src);
+}
+
+overload equals[T](a:T, b:T) if (NumericType(T)) {
+    return numericEquals(a, b);
+}
+overload lesser[T](a:T, b:T) if (NumericType(T)) {
+    return numericLesser(a, b);
+}
+
+overload hash[T](a:T) if (NumericType(T)) { return numericConvert(Int32,a); }
+
+overload to[A, B](static A, b:B) if (NumericType(A) and NumericType(B)) {
+    return numericConvert(A, b);
+}
+
+overload add[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericAdd(a, to(A, b));
+}
+overload add[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericAdd(to(B, a), b);
+}
+
+overload subtract[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericSubtract(a, to(A, b));
+}
+overload subtract[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericSubtract(to(B, a), b);
+}
+
+overload multiply[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericMultiply(a, to(A, b));
+}
+overload multiply[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericMultiply(to(B, a), b);
+}
+
+overload divide[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericDivide(a, to(A, b));
+}
+overload divide[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericDivide(to(B, a), b);
+}
+
+overload remainder[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and BiggerNumericType(A, B)) {
+    return numericRemainder(a, to(A, b));
+}
+overload remainder[A,B](a:A, b:B)
+        if (NumericType(A) and NumericType(B) and not BiggerNumericType(A, B)) {
+    return numericRemainder(to(B, a), b);
+}
+
+overload plus[T](a:T) if (NumericType(T)) { return a; }
+overload minus[T](a:T) if (NumericType(T)) { return numericNegate(a); }
+
+overload zero[A](static A) if (NumericType(A)) { return to(A, 0); }
+overload one[A](static A) if (NumericType(A)) { return to(A, 1); }

@@ -1,0 +1,25 @@
+import _core;
+
+//
+// Bool
+//
+
+overload copy(dest:Bool, src:Bool) {
+    primitiveCopy(dest, src);
+}
+
+overload equals(a:Bool, b:Bool) {
+    if (a) return b;
+    return not b;
+}
+
+overload lesser(a:Bool, b:Bool) {
+    if (not a)
+       return b;
+    return false;
+}
+
+overload hash(a:Bool) {
+    if (a) return 1;
+    return 0;
+}
