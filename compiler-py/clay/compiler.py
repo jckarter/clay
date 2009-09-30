@@ -1247,6 +1247,7 @@ def foo(x, env, codeContext) :
             labelBlock = codeContext.lookupLabelBlock(y.name)
             llvmBuilder.branch(labelBlock)
             llvmBuilder.position_at_end(labelBlock)
+            isTerminated = False
         elif isTerminated :
             withContext(y, lambda : error("unreachable code"))
         elif type(y) is LocalBinding :
