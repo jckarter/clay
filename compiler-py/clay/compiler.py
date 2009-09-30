@@ -340,7 +340,7 @@ def rtMakeTuple(argTypes, argExprs, env) :
     t = tupleType(argTypes)
     value = tempRTValue(t)
     valueRef = toRTReference(value)
-    for i, argExpr in enumerate(argExpr) :
+    for i, argExpr in enumerate(argExprs) :
         left = rtTupleFieldRef(valueRef, i)
         returnLoc = RTReturnLocation(left.type, left.llvmValue)
         compile(argExpr, env, toRTValueOfType(argTypes[i]),
