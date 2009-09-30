@@ -1016,12 +1016,12 @@ def _cleanupCompiledCodeTable() :
 
 installGlobalsCleanupHook(_cleanupCompiledCodeTable)
 
-def compileCode(name, code, env, bindings) :
+def compileCode(name, code, env, bindings, internal=True) :
     key = tuple([code] + bindings.typeParams +
                 [p.type for p in bindings.params])
     compiledCode = _compiledCodeTable.get(key)
     if compiledCode is None :
-        compiledCode = compileCodeHeader(name, code, env, bindings)
+        compiledCode = compileCodeHeader(name, code, env, bindings, internal)
         _compiledCodeTable[key] = compiledCode
         compileCodeBody(code, env, bindings, compiledCode)
     return compiledCode
@@ -1032,7 +1032,7 @@ def compileCode(name, code, env, bindings) :
 # compileCodeHeader
 #
 
-def compileCodeHeader(name, code, env, bindings) :
+def compileCodeHeader(name, code, env, bindings, internal) :
     if not llvmModuleInitialized :
         initLLVMModule()
     llvmArgTypes = []
@@ -1049,6 +1049,8 @@ def compileCodeHeader(name, code, env, bindings) :
         llvmArgTypes.append(llvmType(pointerType(compiledCode.returnType)))
     funcType = llvm.Type.function(llvmReturnType, llvmArgTypes)
     func = llvmModule().add_function(funcType, "clay_" + name)
+    if internal :
+        func.linkage = llvm.LINKAGE_INTERNAL
     compiledCode.llvmFunc = func
     for i, var in enumerate(bindings.vars) :
         func.args[i].name = var.s

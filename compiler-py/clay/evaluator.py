@@ -861,6 +861,7 @@ def codegenPrimitive(primitive, inputTypes, outputType) :
     llvmFuncType = llvm.Type.function(llvm.Type.void(), llvmArgs)
     name = "clayprim_%s" % primitive.name
     func = llvmModule().add_function(llvmFuncType, name)
+    func.linkage = llvm.LINKAGE_INTERNAL
     block = func.append_basic_block("code")
     builder = llvm.Builder.new(block)
     codegenPrimitiveBody(primitive, inputTypes, outputType, builder, func)

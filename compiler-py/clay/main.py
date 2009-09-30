@@ -44,7 +44,8 @@ def loadAndCompile(fileName) :
     if type(mainProc) is not Procedure :
         error("'main' is not a procedure")
     bindings = InvokeBindings([], [], [], [])
-    compiler.compileCode("main", mainProc.code, mainProc.env, bindings)
+    compiler.compileCode("main", mainProc.code, mainProc.env, bindings,
+                         internal=False)
     return compiler.llvmModule()
 
 def compileAndMakeExe() :
