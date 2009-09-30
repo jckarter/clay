@@ -6,3 +6,4 @@ export _pointer;
 export _tuplerecord;
 export _range;
 export _array;
+export _vector;

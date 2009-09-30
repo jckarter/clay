@@ -1,4 +1,5 @@
 import _core;
+import _numeric;
 
 //
 // Range
@@ -16,14 +17,16 @@ overload hasNext[T](r:Range[T]) {
 
 overload next[T](r:Range[T]) {
     let x = r.first;
-    r.first = x + 1;
+    inc(r.first);
     return x;
 }
 
 overloadable range;
 
 overload range(first, last) { return Range(first, last); }
-overload range(last) { return Range(0, last); }
+overload range[I](last:I) if (IntegerType(I)) {
+    return Range(zero(I), last);
+}
 
 
 //
@@ -42,6 +45,6 @@ overload hasNext[T](r:CoordinateRange[T]) {
 
 overload next[T](r:CoordinateRange[T]) ref {
     let ref obj = at(r.first);
-    r.first = r.first + 1;
+    inc(r.first);
     return obj;
 }

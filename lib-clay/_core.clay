@@ -3,13 +3,24 @@ export __primitives__;
 
 overloadable to;
 
+overloadable zero;
+overloadable one;
+
+overloadable inc;
+overloadable dec;
+
 overloadable size;
 overloadable at;
 overloadable begin;
 overloadable end;
 
-overloadable zero;
-overloadable one;
+overloadable front;
+overloadable back;
+overloadable pushBack;
+overloadable popBack;
+overloadable clear;
+overloadable insert;
+overloadable remove;
 
 
 //

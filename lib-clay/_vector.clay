@@ -1,0 +1,253 @@
+import _core;
+import _numeric;
+import _pointer;
+import _range;
+import _move;
+
+
+//
+// Vector[T]
+//
+
+record Vector[T](size:Int32, capacity:Int32, data:Pointer[T]);
+
+
+//
+// create vector
+//
+
+overloadable vector;
+
+overload vector[T](static T) {
+    return Vector(0, 0, null(T));
+}
+
+overload vector[T](static T, capacity) {
+    let data = allocateMemory(T, capacity);
+    return Vector(0, capacity, data);
+}
+
+
+//
+// size, at
+//
+
+overload size[T](a:Vector[T]) {
+    return a.size;
+}
+
+overload at[T](a:Vector[T], i) ref {
+    return at(a.data + i);
+}
+
+
+//
+// vector coordinates
+//
+
+record VectorCoordinate[T](ptr:Pointer[T]);
+
+overload at[T](c:VectorCoordinate[T]) ref {
+    return at(c.ptr);
+}
+
+overload begin[T](a:Vector[T]) {
+    return VectorCoordinate(a.data);
+}
+
+overload end[T](a:Vector[T]) {
+    return VectorCoordinate(a.data + a.size);
+}
+
+overload add[T,I](c:VectorCoordinate[T], i:I) if (IntegerType(I)) {
+    return VectorCoordinate(c.ptr + i);
+}
+
+overload subtract[T,I](c:VectorCoordinate[T], i:I) if (IntegerType(I)) {
+    return VectorCoordinate(c.ptr - i);
+}
+
+overload subtract[T](c1:VectorCoordinate[T], c2:VectorCoordinate[T]) {
+    return c1.ptr - c2.ptr;
+}
+
+overload inc[T](c:VectorCoordinate[T]) {
+    inc(c.ptr);
+}
+
+overload dec[T](c:VectorCoordinate[T]) {
+    dec(c.ptr);
+}
+
+
+//
+// vector iteration
+//
+
+overload iterator[T](a:Vector[T]) {
+    return CoordinateRange(begin(a), end(a));
+}
+
+
+//
+// init, copy, destroy, equals, lesser, hash
+//
+
+overload init[T](a:Vector[T]) {
+    a.size = 0;
+    a.capacity = 0;
+    a.data = null(T);
+}
+
+overload copy[T](dest:Vector[T], src:Vector[T]) {
+    dest.size = src.size;
+    dest.capacity = src.size;
+    if (dest.capacity > 0) {
+        dest.data = allocateMemory(T, dest.capacity);
+        let ref d = iterator(dest);
+        let ref s = iterator(src);
+        while (hasNext(s))
+            copy(next(d), next(s));
+    }
+    else {
+        dest.data = null(T);
+    }
+}
+
+overload destroy[T](a:Vector[T]) {
+    for (x in a)
+        destroy(x);
+    freeMemory(a.data);
+}
+
+overload equals[T](a:Vector[T], b:Vector[T]) {
+    if (size(a) != size(b))
+        return false;
+    let ref i = iterator(a);
+    let ref j = iterator(b);
+    while (hasNext(i)) {
+        if (next(i) != next(j))
+            return false;
+    }
+    return true;
+}
+
+overload lesser[T](a:Vector[T], b:Vector[T]) {
+    let ref i = iterator(a);
+    let ref j = iterator(b);
+    while (hasNext(i)) {
+        if (not hasNext(j))
+            return false;
+        let ref x = next(i);
+        let ref y = next(j);
+        if (x < y) return true;
+        if (y < x) return false;
+    }
+    return hasNext(j);
+}
+
+overload hash[T](a:Vector[T]) {
+    let h = 0;
+    for (x in a)
+        h = h + hash(x);
+    return h;
+}
+
+
+//
+// front, back, pushBack, popBack
+//
+
+overload front[T](a:Vector[T]) ref {
+    return at(a, 0);
+}
+
+overload back[T](a:Vector[T]) ref {
+    return at(a, size(a)-1);
+}
+
+overload pushBack[T](a:Vector[T], x:T) {
+    insert(a, size(a), x);
+}
+
+overload pushBack[T](a:Vector[T], a:Movable[T]) {
+    insert(a, size(a), x);
+}
+
+overload popBack[T](a:Vector[T]) {
+    // FIXME: get rid of extra copy
+    let x = back(a);
+    remove(a, end(a)-1);
+    return x;
+}
+
+
+//
+// clear, insert, remove
+//
+
+overload clear[T](a:Vector[T]) {
+    destroy(a);
+    init(a);
+}
+
+def setCapacity[T](a:Vector[T], capacity:Int32) {
+    let data = allocateMemory(T, capacity);
+    let ptr = data;
+    for (x in a) {
+        move(at(ptr), x);
+        inc(ptr);
+    }
+    freeMemory(a.data);
+    a.data = data;
+    a.capacity = capacity;
+}
+
+def ensureSpace[T](a:Vector[T], space:Int32) {
+    if (a.size + space > a.capacity)
+        setCapacity(a, 2*(a.size + space));
+}
+
+def insertionPoint[T,I](a:Vector[T], pos:I) ref if (IntegerType(I)) {
+    ensureSpace(a, 1);
+    let i = begin(a) + pos;
+    let j = end(a);
+    while (i < j) {
+        move(at(j), at(j-1));
+        dec(j);
+    }
+    inc(a.size);
+    return at(i);
+}
+
+overload insert[T,I](a:Vector[T], i:I, x:T) if (IntegerType(I)) {
+    copy(insertionPoint(a, i), x);
+}
+
+overload insert[T,I](a:Vector[T], i:I, x:Movable[T]) if (IntegerType(I)) {
+    move(insertionPoint(a, i), x);
+}
+
+overload insert[T](a:Vector[T], i:VectorCoordinate[T], x:T) {
+    insert(a, i-begin(a), x);
+}
+
+overload insert[T](a:Vector[T], i:VectorCoordinate[T], x:Movable[T]) {
+    insert(a, i-begin(a), x);
+}
+
+overload remove[T](a:Vector[T], i:VectorCoordinate[T]) {
+    destroy(at(i));
+    let j = end(a);
+    while (true) {
+        move(at(i), at(i+1));
+        inc(i);
+        if (i == j) break;
+    }
+    if (a.capacity > 3*(a.size+1))
+        setCapacity(2*(a.size + 1));
+}
+
+overload remove[T,I](a:Vector[T], i:I) if (IntegerType(I)) {
+    remove(a, begin(a)+i);
+}

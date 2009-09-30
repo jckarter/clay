@@ -1,0 +1,18 @@
+import _core;
+
+overloadable move;
+
+overload move[T](dest:T, src:T) {
+    copy(dest, src);
+    destroy(src);
+}
+
+record Movable[T](data:Pointer[T]);
+
+overload move[T](a:T) {
+    return Movable(&a);
+}
+
+overload at[T](a:Movable[T]) ref {
+    return at(a.data);
+}

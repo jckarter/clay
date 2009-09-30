@@ -6,63 +6,6 @@ import _range;
 // Array[T,n]
 //
 
-overload init[T,n](a:Array[T,n]) {
-    let i = 0;
-    while (lesser(i, n)) {
-        init(arrayRef(a, i));
-        i = add(i, 1);
-    }
-}
-
-overload copy[T,n](dest:Array[T,n], src:Array[T,n]) {
-    let i = 0;
-    while (lesser(i, n)) {
-        copy(arrayRef(dest, i), arrayRef(src, i));
-        i = add(i, 1);
-    }
-}
-
-overload destroy[T,n](a:Array[T,n]) {
-    let i = 0;
-    while (lesser(i, n)) {
-        destroy(arrayRef(a, i));
-        i = add(i, 1);
-    }
-}
-
-overload equals[T,n](a:Array[T,n], b:Array[T,n]) {
-    let i = 0;
-    while (lesser(i, n)) {
-        if (notEquals(arrayRef(a, i), arrayRef(b, i)))
-            return false;
-        i = add(i, 1);
-    }
-    return true;
-}
-
-overload lesser[T,n](a:Array[T,n], b:Array[T,n]) {
-    let i = 0;
-    while (lesser(i, n)) {
-        if (lesser(arrayRef(a, i), arrayRef(b, i)))
-            return true;
-        if (lesser(arrayRef(b, i), arrayRef(a, i)))
-            return false;
-        i = add(i, 1);
-    }
-    return false;
-}
-
-overload hash[T,n](a:Array[T,n]) {
-    let h = 0;
-    let i = 0;
-    while (lesser(i, n)) {
-        h = add(h, hash(arrayRef(a, i)));
-        i = add(i, 1);
-    }
-    return h;
-}
-
-
 //
 // size, at
 //
@@ -83,7 +26,7 @@ overload at[T,n](a:Array[T,n], i) ref {
 record ArrayCoordinate[T](ptr:Pointer[T]);
 
 overload at[T](c:ArrayCoordinate[T]) ref {
-    return c.ptr^;
+    return at(c.ptr);
 }
 
 overload begin[T,n](a:Array[T,n]) {
@@ -106,6 +49,14 @@ overload subtract[T](c1:ArrayCoordinate[T], c2:ArrayCoordinate[T]) {
     return c1.ptr - c2.ptr;
 }
 
+overload inc[T](c:ArrayCoordinate[T]) {
+    inc(c.ptr);
+}
+
+overload dec[T](c:ArrayCoordinate[T]) {
+    dec(c.ptr);
+}
+
 
 //
 // array iteration
@@ -113,4 +64,55 @@ overload subtract[T](c1:ArrayCoordinate[T], c2:ArrayCoordinate[T]) {
 
 overload iterator[T,n](a:Array[T,n]) {
     return CoordinateRange(begin(a), end(a));
+}
+
+
+//
+// init, copy, destroy, equals, lesser, hash
+//
+
+overload init[T,n](a:Array[T,n]) {
+    for (x in a)
+        init(x);
+}
+
+overload copy[T,n](dest:Array[T,n], src:Array[T,n]) {
+    let ref d = iterator(dest);
+    let ref s = iterator(src);
+    while (hasNext(s))
+        copy(next(d), next(s));
+}
+
+overload destroy[T,n](a:Array[T,n]) {
+    for (x in a)
+        destroy(x);
+}
+
+overload equals[T,n](a:Array[T,n], b:Array[T,n]) {
+    let ref i = iterator(a);
+    let ref j = iterator(b);
+    while (hasNext(i)) {
+        if (next(i) != next(j))
+            return false;
+    }
+    return true;
+}
+
+overload lesser[T,n](a:Array[T,n], b:Array[T,n]) {
+    let ref i = iterator(a);
+    let ref j = iterator(b);
+    while (hasNext(i)) {
+        let ref x = next(i);
+        let ref y = next(j);
+        if (x < y) return true;
+        if (y < x) return false;
+    }
+    return false;
+}
+
+overload hash[T,n](a:Array[T,n]) {
+    let h = 0;
+    for (x in a)
+        h = h + hash(x);
+    return h;
 }

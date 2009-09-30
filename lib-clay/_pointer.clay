@@ -40,8 +40,16 @@ overload subtract[T](a:Pointer[T], b:Pointer[T]) {
     return (pointerToNativeInt(a) - pointerToNativeInt(b)) / typeSize(T);
 }
 
+overload inc[T](a:Pointer[T]) {
+    a = a + 1;
+}
+
+overload dec[T](a:Pointer[T]) {
+    a = a - 1;
+}
+
 def null[T](static T) {
-    return default(Pointer[T]);
+    return to(Pointer[T], 0);
 }
 
 overload at[T](p:Pointer[T]) ref {

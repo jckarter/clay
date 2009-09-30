@@ -116,3 +116,11 @@ overload minus[T](a:T) if (NumericType(T)) { return numericNegate(a); }
 
 overload zero[A](static A) if (NumericType(A)) { return to(A, 0); }
 overload one[A](static A) if (NumericType(A)) { return to(A, 1); }
+
+overload inc[T](a:T) if (NumericType(T)) {
+    a = a + one(T);
+}
+
+overload dec[T](a:T) if (NumericType(T)) {
+    a = a - one(T);
+}
