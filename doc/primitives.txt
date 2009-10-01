@@ -17,7 +17,6 @@ records
 
 Primitive Operations:
 
-default[T](static T):T
 typeSize[T](static T):Int32
 
 primitiveCopy[T](dest:T, src:T): Void
@@ -35,7 +34,6 @@ tuple(v1, ..., vn): TupleType
 tupleFieldCount[T](static T): Int32
 tupleFieldRef[T,i](a:T, static i) ref : FieldType
 
-array[T,n](static T, static n): Array[T,n]
 arrayRef[T,n](a:Array[T,n], i:Int32) ref : T
 
 RecordType[T](static T): Bool

@@ -297,17 +297,36 @@ analyzeCall = multimethod(errorMessage="invalid call")
 
 @analyzeCall.register(Type)
 def foo(x, args, env) :
-    ensure(isRecordType(x), "only record type constructors are supported")
-    fieldTypes = recordFieldTypes(x)
-    ensureArity(args, len(fieldTypes))
-    argRefs = []
-    for arg, fieldType in zip(args, fieldTypes) :
-        argRef = analyze(arg, env, toRTReferenceOfType(fieldType))
-        argRefs.append(argRef)
-    return RTValue(x)
+    if len(args) == 0 :
+        return RTValue(x)
+    elif isRecordType(x) :
+        fieldTypes = recordFieldTypes(x)
+        ensureArity(args, len(fieldTypes))
+        argRefs = []
+        for arg, fieldType in zip(args, fieldTypes) :
+            argRef = analyze(arg, env, toRTReferenceOfType(fieldType))
+            argRefs.append(argRef)
+        return RTValue(x)
+    elif isArrayType(x) :
+        elementType = toType(x.params[0])
+        ensureArity(args, toNativeInt(x.params[1]))
+        for arg in args :
+            analyze(arg, env, toRTReferenceOfType(elementType))
+        return RTValue(x)
+    elif isTupleType(x) :
+        ensureArity(args, len(x.params))
+        for i, arg in enumerate(args) :
+            fieldType = toType(x.params[i])
+            analyze(arg, env, toRTReferenceOfType(fieldType))
+        return RTValue(x)
+    else :
+        error("only array, tuple, and record types " +
+              "can be constructed this way.")
 
 @analyzeCall.register(Record)
 def foo(x, args, env) :
+    if len(args) == 0 :
+        return RTValue(toType(x))
     actualArgs = [RTActualArgument(y, env) for y in args]
     result = matchRecordInvoke(x, actualArgs)
     if type(result) is InvokeError :
@@ -347,12 +366,6 @@ def foo(x, args, env) :
     ensureArity(args, 1)
     analyze(args[0], env, toRTReference)
     return voidValue
-
-@analyzeCall.register(primitives.default)
-def foo(x, args, env) :
-    ensureArity(args, 1)
-    t = analyze(args[0], env, toType)
-    return RTValue(t)
 
 @analyzeCall.register(primitives.typeSize)
 def foo(x, args, env) :
@@ -464,13 +477,6 @@ def foo(x, args, env) :
 #
 # analyze array primitives
 #
-
-@analyzeCall.register(primitives.array)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    elementType = analyze(args[0], env, toType)
-    n = analyze(args[1], env, toNativeInt)
-    return RTValue(arrayType(elementType, intToValue(n)))
 
 @analyzeCall.register(primitives.arrayRef)
 def foo(x, args, env) :

@@ -22,7 +22,7 @@ def reverse(a) {
 }
 
 def main() {
-    let a = vector(Int32);
+    let a = Vector[Int32]();
     for (i in range(1000))
         pushBack(a, i*2);
     for (i in range(100)) {

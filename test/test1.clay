@@ -19,7 +19,7 @@ def isOdd(n) {
 }
 
 def foo() {
-    return array(Int32, 10);
+    return Array[Int32, 10]();
 }
 
 record NodeA[T] (value:T, next:Pointer[NodeB[T]]);
@@ -30,6 +30,6 @@ def main() {
     let n = 7;
     n = n - 1;
     let f = factorial(n);
-    let p = default(NodeA[Tuple[Int32,Bool]]);
+    let p = NodeA[Tuple[Int32,Bool]]();
     return (foo(), isEven(n), f, p);
 }

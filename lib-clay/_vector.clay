@@ -13,22 +13,6 @@ record Vector[T](size:Int32, capacity:Int32, data:Pointer[T]);
 
 
 //
-// create vector
-//
-
-overloadable vector;
-
-overload vector[T](static T) {
-    return Vector(0, 0, null(T));
-}
-
-overload vector[T](static T, capacity) {
-    let data = allocateMemory(T, capacity);
-    return Vector(0, capacity, data);
-}
-
-
-//
 // size, at
 //
 

@@ -139,7 +139,6 @@ def installDefaultPrimitives() :
     primitive("Array")
     primitive("Pointer")
 
-    primitive("default")
     primitive("typeSize")
 
     primitive("primitiveCopy")
@@ -157,7 +156,6 @@ def installDefaultPrimitives() :
     primitive("tupleFieldCount")
     primitive("tupleFieldRef")
 
-    primitive("array")
     primitive("arrayRef")
 
     primitive("RecordType")

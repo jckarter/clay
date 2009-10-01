@@ -794,17 +794,46 @@ evaluateCall = multimethod(errorMessage="invalid call")
 
 @evaluateCall.register(Type)
 def foo(x, args, env) :
-    ensure(isRecordType(x), "only record type constructors are supported")
-    fieldTypes = recordFieldTypes(x)
-    ensureArity(args, len(fieldTypes))
-    argRefs = []
-    for arg, fieldType in zip(args, fieldTypes) :
-        argRef = evaluate(arg, env, toReferenceOfType(fieldType))
-        argRefs.append(argRef)
-    return makeRecord(x, argRefs)
+    if len(args) == 0 :
+        v = tempValue(x)
+        valueInit(v)
+        return v
+    elif isRecordType(x) :
+        fieldTypes = recordFieldTypes(x)
+        ensureArity(args, len(fieldTypes))
+        argRefs = []
+        for arg, fieldType in zip(args, fieldTypes) :
+            argRef = evaluate(arg, env, toReferenceOfType(fieldType))
+            argRefs.append(argRef)
+        return makeRecord(x, argRefs)
+    elif isArrayType(x) :
+        elementType = toType(x.params[0])
+        ensureArity(args, toNativeInt(x.params[1]))
+        value = tempValue(x)
+        valueRef = toReference(value)
+        for i, arg in enumerate(args) :
+            argRef = evaluate(arg, env, toReferenceOfType(elementType))
+            valueCopy(arrayRef(valueRef, i), argRef)
+        return value
+    elif isTupleType(x) :
+        ensureArity(args, len(x.params))
+        value = tempValue(x)
+        valueRef = toReference(value)
+        for i, arg in enumerate(args) :
+            fieldType = toType(x.params[i])
+            argRef = evaluate(arg, env, toReferenceOfType(fieldType))
+            valueCopy(tupleFieldRef(valueRef, i), argRef)
+        return value
+    else :
+        error("only array, tuple, and record types " +
+              "can be constructed this way.")
 
 @evaluateCall.register(Record)
 def foo(x, args, env) :
+    if len(args) == 0 :
+        v = tempValue(toType(x))
+        valueInit(v)
+        return v
     actualArgs = [ActualArgument(y, env) for y in args]
     result = matchRecordInvoke(x, actualArgs)
     if type(result) is InvokeError :
@@ -1113,14 +1142,6 @@ def foo(x, args, env) :
     xprint(v)
     return voidValue
 
-@evaluateCall.register(primitives.default)
-def foo(x, args, env) :
-    ensureArity(args, 1)
-    t = evaluate(args[0], env, toType)
-    v = tempValue(t)
-    valueInit(v)
-    return v
-
 @evaluateCall.register(primitives.typeSize)
 def foo(x, args, env) :
     ensureArity(args, 1)
@@ -1238,15 +1259,6 @@ def foo(x, args, env) :
 #
 # evaluate array primitives
 #
-
-@evaluateCall.register(primitives.array)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    elementType = evaluate(args[0], env, toType)
-    n = evaluate(args[1], env, toNativeInt)
-    a = tempValue(arrayType(elementType, intToValue(n)))
-    valueInit(a)
-    return a
 
 @evaluateCall.register(primitives.arrayRef)
 def foo(x, args, env) :

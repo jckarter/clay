@@ -327,6 +327,21 @@ def rtValueDestroy(a) :
 # utility operations
 #
 
+def rtMakeArray(arrayTy, argExprs, env) :
+    elementType = toType(arrayTy.params[0])
+    count = toNativeInt(arrayTy.params[1])
+    ensureArity(argExprs, count)
+    value = tempRTValue(arrayTy)
+    valueRef = toRTReference(value)
+    zero = llvm.Constant.int(llvmType(nativeIntType), 0)
+    for i, argExpr in enumerate(argExprs) :
+        iVal = llvm.Constant.int(llvmType(nativeIntType), i)
+        elementAddr = llvmBuilder.gep(valueRef.llvmValue, [zero, iVal])
+        returnLoc = RTReturnLocation(elementType, elementAddr)
+        compile(argExpr, env, toRTValueOfType(elementType),
+                returnLocation=returnLoc)
+    return value
+
 def rtTupleFieldRef(a, i) :
     assert isRTReference(a) and isTupleType(a.type)
     ensure((0 <= i < len(a.type.params)), "tuple index out of range")
@@ -340,6 +355,7 @@ def rtMakeTuple(argTypes, argExprs, env) :
     t = tupleType(argTypes)
     value = tempRTValue(t)
     valueRef = toRTReference(value)
+    ensureArity(argExprs, len(argTypes))
     for i, argExpr in enumerate(argExprs) :
         left = rtTupleFieldRef(valueRef, i)
         returnLoc = RTReturnLocation(left.type, left.llvmValue)
@@ -361,6 +377,7 @@ def rtMakeRecord(recType, argExprs, env) :
     value = tempRTValue(recType)
     valueRef = toRTReference(value)
     fieldTypes = recordFieldTypes(recType)
+    ensureArity(argExprs, len(fieldTypes))
     for i, argExpr in enumerate(argExprs) :
         left = rtRecordFieldRef(valueRef, i)
         returnLoc = RTReturnLocation(left.type, left.llvmValue)
@@ -585,11 +602,27 @@ compileCall = multimethod(errorMessage="invalid call")
 
 @compileCall.register(Type)
 def foo(x, args, env) :
-    ensure(isRecordType(x), "only record type constructors are supported")
-    return rtMakeRecord(x, args, env)
+    if len(args) == 0 :
+        v = tempRTValue(x)
+        rtValueInit(v)
+        return v
+    elif isRecordType(x) :
+        return rtMakeRecord(x, args, env)
+    elif isArrayType(x) :
+        return rtMakeArray(x, args, env)
+    elif isTupleType(x) :
+        fieldTypes = [toType(y) for y in x.params]
+        return rtMakeTuple(fieldTypes, args, env)
+    else :
+        error("only array, tuple, and record types " +
+              "can be constructed this way.")
 
 @compileCall.register(Record)
 def foo(x, args, env) :
+    if len(args) == 0 :
+        v = tempRTValue(toType(x))
+        rtValueInit(v)
+        return v
     result = analyzer.analyzeCall(x, args, envForAnalysis(env))
     recType = result.type
     nonStaticArgs = []
@@ -675,14 +708,6 @@ def foo(x, args, env) :
         error("printing support not available for this type")
     llvmBuilder.call(f, [x.llvmValue])
     return voidValue
-
-@compileCall.register(primitives.default)
-def foo(x, args, env) :
-    ensureArity(args, 1)
-    t = compile(args[0], env, toType)
-    v = tempRTValue(t)
-    rtValueInit(v)
-    return v
 
 @compileCall.register(primitives.typeSize)
 def foo(x, args, env) :
@@ -808,15 +833,6 @@ def foo(x, args, env) :
 #
 # compile array primitives
 #
-
-@compileCall.register(primitives.array)
-def foo(x, args, env) :
-    ensureArity(args, 2)
-    elementType = compile(args[0], env, toType)
-    n = compile(args[1], env, toNativeInt)
-    a = tempRTValue(arrayType(elementType, intToValue(n)))
-    rtValueInit(a)
-    return a
 
 @compileCall.register(primitives.arrayRef)
 def foo(x, args, env) :

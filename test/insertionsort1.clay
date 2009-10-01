@@ -22,7 +22,7 @@ def reverse(a) {
 }
 
 def main() {
-    let a = array(Int32, 1000);
+    let a = Array[Int32, 1000]();
     for (i in range(size(a)))
         at(a, i) = i*2;
     for (i in range(100)) {
