@@ -647,6 +647,11 @@ def foo(x, env) :
     ensure(not isIntegerType(type_), "floating point suffix expected")
     return floatToValue(x.value, type_)
 
+@evaluate2.register(CharLiteral)
+def foo(x, env) :
+    assert len(x.value) == 1
+    return evaluate(convertCharLiteral(x), env)
+
 @evaluate2.register(NameRef)
 def foo(x, env) :
     return evaluateNameRef(lookupIdent(env, x.name))
@@ -725,6 +730,17 @@ def foo(x, env) :
 @evaluate2.register(SCExpression)
 def foo(x, env) :
     return evaluate(x.expr, x.env)
+
+
+
+#
+# convertCharLiteral
+#
+
+def convertCharLiteral(x) :
+    nameRef = NameRef(Identifier("Char"))
+    nameRef = SCExpression(loadedModule("_char").env, nameRef)
+    return Call(nameRef, [IntLiteral(ord(x.value), None)])
 
 
 

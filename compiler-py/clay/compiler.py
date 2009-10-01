@@ -425,6 +425,10 @@ def foo(x, env) :
 def foo(x, env) :
     return evaluate(x, env)
 
+@compile2.register(CharLiteral)
+def foo(x, env) :
+    return compileDelegate(convertCharLiteral(x), env)
+
 @compile2.register(NameRef)
 def foo(x, env) :
     return compileNameRef(lookupIdent(env, x.name))

@@ -237,20 +237,25 @@ def loadModuleFile(fileName) :
 
 def resolveLinks(links) :
     for link in links :
-        link.module = loadModule(link.dottedName)
+        nameParts = [x.s for x in link.dottedName.names]
+        link.module = loadModule(nameParts)
 
-def loadModule(dottedName) :
-    names = [x.s for x in dottedName.names]
-    nameStr = ".".join(names)
+def loadModule(nameParts) :
+    nameStr = ".".join(nameParts)
     if nameStr == "__primitives__" :
         return primitivesModule
     module = _modules.get(nameStr)
     if module is None :
-        fileName = locateModule(names)
+        fileName = locateModule(nameParts)
         module = loadModuleFile(fileName)
         _modules[nameStr] = module
         resolveLinks(module.imports)
         resolveLinks(module.exports)
+    return module
+
+def loadedModule(nameStr) :
+    module = _modules.get(nameStr)
+    ensure(module is not None, "module not loaded: %s" % nameStr)
     return module
 
 _modules = {}

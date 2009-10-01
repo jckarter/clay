@@ -31,5 +31,5 @@ def main() {
     n = n - 1;
     let f = factorial(n);
     let p = NodeA[Tuple[Int32,Bool]]();
-    return (foo(), isEven(n), f, p);
+    return (foo(), isEven(n), f, p, 'a');
 }

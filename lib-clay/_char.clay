@@ -1,0 +1,14 @@
+import _core;
+import _numeric;
+
+record Char(code:Int32);
+
+def char[I](c:I) if (IntegerType(I)) {
+    return Char(to(Int32, c));
+}
+
+def ord(c:Char) { return c.code; }
+
+overload to[I](static I, c:Char) if (IntegerType(I)) {
+    return to(I, c.code);
+}
