@@ -34,6 +34,7 @@ tuple(v1, ..., vn): TupleType
 tupleFieldCount[T](static T): Int32
 tupleFieldRef[T,i](a:T, static i) ref : FieldType
 
+array(v1, ..., vn): Array[T, n]
 arrayRef[T,n](a:Array[T,n], i:Int32) ref : T
 
 RecordType[T](static T): Bool

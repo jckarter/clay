@@ -2,7 +2,7 @@ __all__ = [
     "ASTNode", "Identifier", "DottedName",
     "Expression", "BoolLiteral", "IntLiteral", "FloatLiteral",
     "CharLiteral", "StringLiteral",
-    "NameRef", "Tuple", "Indexing", "Call", "FieldRef", "TupleRef",
+    "NameRef", "Tuple", "Array", "Indexing", "Call", "FieldRef", "TupleRef",
     "Dereference", "AddressOf",
     "UnaryOpExpr", "BinaryOpExpr", "NotExpr", "AndExpr", "OrExpr",
     "StaticExpr",
@@ -93,6 +93,12 @@ class NameRef(Expression) :
 class Tuple(Expression) :
     def __init__(self, args) :
         super(Tuple, self).__init__()
+        checkList(args, Expression)
+        self.args = args
+
+class Array(Expression) :
+    def __init__(self, args) :
+        super(Array, self).__init__()
         checkList(args, Expression)
         self.args = args
 

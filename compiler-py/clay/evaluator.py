@@ -427,6 +427,16 @@ def arrayRef(a, i) :
     elementType = cell.param
     return Reference(elementType, a.address + i*typeSize(elementType))
 
+def makeArray(argRefs) :
+    assert len(argRefs) > 0
+    t = arrayType(argRefs[0].type, intToValue(len(argRefs)))
+    value = tempValue(t)
+    valueRef = toReference(value)
+    for i, argRef in enumerate(argRefs) :
+        left = arrayRef(valueRef, i)
+        valueCopy(left, argRef)
+    return value
+
 def tupleFieldRef(a, i) :
     assert isReference(a) and isTupleType(a.type)
     ensure((0 <= i < len(a.type.params)), "tuple index out of range")
@@ -646,6 +656,10 @@ def foo(x, env) :
     if len(x.args) == 1 :
         return evaluate(x.args[0], env)
     return evaluate(Call(primitiveNameRef("tuple"), x.args), env)
+
+@evaluate2.register(Array)
+def foo(x, env) :
+    return evaluate(Call(primitiveNameRef("array"), x.args), env)
 
 @evaluate2.register(Indexing)
 def foo(x, env) :
@@ -1259,6 +1273,15 @@ def foo(x, args, env) :
 #
 # evaluate array primitives
 #
+
+@evaluateCall.register(primitives.array)
+def foo(x, args, env) :
+    ensure(len(args) > 0, "empty array expressions are not allowed")
+    firstArg = evaluate(args[0], env, toReference)
+    converter = toReferenceOfType(firstArg.type)
+    argRefs = [evaluate(y, env, converter) for y in args[1:]]
+    argRefs.insert(0, firstArg)
+    return makeArray(argRefs)
 
 @evaluateCall.register(primitives.arrayRef)
 def foo(x, args, env) :

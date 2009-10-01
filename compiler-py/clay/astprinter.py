@@ -26,6 +26,7 @@ r(StringLiteral, lambda x : xo("StringLiteral", x.value))
 
 r(NameRef, lambda x : xo("NameRef", x.name))
 r(Tuple, lambda x : xo("Tuple", *x.args))
+r(Array, lambda x : xo("Array", *x.args))
 r(Indexing, lambda x : xo("Indexing", x.expr, xf("args",x.args)))
 r(Call, lambda x : xo("Call", x.expr, xf("args",x.args)))
 r(FieldRef, lambda x : xo("FieldRef", x.expr, x.name))

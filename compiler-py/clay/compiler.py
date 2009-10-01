@@ -435,6 +435,10 @@ def foo(x, env) :
         return compileDelegate(x.args[0], env)
     return compileDelegate(Call(primitiveNameRef("tuple"), x.args), env)
 
+@compile2.register(Array)
+def foo(x, env) :
+    return compileDelegate(Call(primitiveNameRef("array"), x.args), env)
+
 @compile2.register(Indexing)
 def foo(x, env) :
     thing = compile(x.expr, env)
@@ -833,6 +837,14 @@ def foo(x, args, env) :
 #
 # compile array primitives
 #
+
+@compileCall.register(primitives.array)
+def foo(x, args, env) :
+    ensure(len(args) > 0, "empty array expressions are not allowed")
+    env2 = envForAnalysis(env)
+    firstArg = analyzer.analyze(args[0], env2, analyzer.toRTReference)
+    arrayTy = arrayType(firstArg.type, intToValue(len(args)))
+    return rtMakeArray(arrayTy, args, env)
 
 @compileCall.register(primitives.arrayRef)
 def foo(x, args, env) :

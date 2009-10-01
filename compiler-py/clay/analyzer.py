@@ -172,6 +172,10 @@ def foo(x, env) :
         return analyze(x.args[0], env)
     return analyze(Call(primitiveNameRef("tuple"), x.args), env)
 
+@analyze2.register(Array)
+def foo(x, env) :
+    return analyze(Call(primitiveNameRef("array"), x.args), env)
+
 @analyze2.register(Indexing)
 def foo(x, env) :
     thing = analyze(x.expr, env)
@@ -477,6 +481,16 @@ def foo(x, args, env) :
 #
 # analyze array primitives
 #
+
+@analyzeCall.register(primitives.array)
+def foo(x, args, env) :
+    ensure(len(args) > 0, "empty array expressions are not allowed")
+    firstArg = analyze(args[0], env, toRTReference)
+    converter = toRTReferenceOfType(firstArg.type)
+    for y in args[1:] :
+        analyze(y, env, converter)
+    arrayTy = arrayType(firstArg.type, intToValue(len(args)))
+    return RTValue(arrayTy)
 
 @analyzeCall.register(primitives.arrayRef)
 def foo(x, args, env) :

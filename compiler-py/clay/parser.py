@@ -80,10 +80,12 @@ optExpressionList = modify(optional(expressionList),
 # atomic expr
 #
 
+arrayExpr = astNode(sequence(symbol("["), expressionList, symbol("]")),
+                    lambda x : Array(x[1]))
 tupleExpr = astNode(sequence(symbol("("), expressionList, symbol(")")),
                     lambda x : Tuple(x[1]))
 nameRef = astNode(identifier, lambda x : NameRef(x))
-atomicExpr = choice(tupleExpr, nameRef, literal)
+atomicExpr = choice(arrayExpr, tupleExpr, nameRef, literal)
 
 
 #
