@@ -1,0 +1,20 @@
+import base;
+
+overloadable foo;
+
+overload foo(x) {
+    return 0;
+}
+
+overload foo(static Int32) {
+    return 1;
+}
+
+overload foo(x:Int32) {
+    return 2;
+}
+
+def main() {
+    let v = true;
+    return foo(v) + 10*foo(Int32) + 100*foo(10);
+}

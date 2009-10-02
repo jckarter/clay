@@ -25,20 +25,6 @@ def isRTReference(x) : return type(x) is RTReference
 
 
 #
-# toStatic
-#
-
-@toStatic.register(RTValue)
-def foo(x) :
-    error("invalid static value")
-
-@toStatic.register(RTReference)
-def foo(x) :
-    error("invalid static value")
-
-
-
-#
 # toRTValue, toRTLValue, toRTReference
 #
 
@@ -661,10 +647,16 @@ class RTActualArgument(object) :
         self.result_ = analyze(self.expr, self.env)
 
     def asReference(self) :
-        return withContext(self.expr, lambda : toRTReference(self.result_))
+        handler = toRTReference.getHandler(type(self.result_))
+        if handler is None :
+            return None
+        return withContext(self.expr, lambda : handler(self.result_))
 
     def asStatic(self) :
-        return withContext(self.expr, lambda : toStatic(self.result_))
+        handler = toStatic.getHandler(type(self.result_))
+        if handler is None :
+            return None
+        return withContext(self.expr, lambda : handler(self.result_))
 
 
 

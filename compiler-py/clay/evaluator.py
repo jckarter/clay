@@ -35,7 +35,7 @@ toReference = multimethod(errorMessage="invalid reference")
 
 toValueOrReference = multimethod(errorMessage="invalid value or reference")
 
-toStatic = multimethod(defaultProc=(lambda x : x))
+toStatic = multimethod(errorMessage="invalid static value")
 
 
 
@@ -236,9 +236,10 @@ def foo(x) :
     ensure(len(x.typeVars) == 0, "record type parameters expected")
     return recordType(x, [])
 
-@toStatic.register(Type)
-def foo(x) :
-    return x
+toStatic.register(Type)(lambda x : x)
+toStatic.register(Record)(lambda x : x)
+toStatic.register(Procedure)(lambda x : x)
+toStatic.register(Overloadable)(lambda x : x)
 
 
 
@@ -749,6 +750,7 @@ def foo(x) :
 toValueOrReference.register(Value)(lambda x : x)
 toValueOrReference.register(Reference)(lambda x : x)
 
+toStatic.register(Value)(lambda x : x)
 toStatic.register(Reference)(lambda x : toValue(x))
 
 
@@ -1964,10 +1966,16 @@ class ActualArgument(object) :
         self.result_ = evaluate(self.expr, self.env)
 
     def asReference(self) :
-        return withContext(self.expr, lambda : toReference(self.result_))
+        handler = toReference.getHandler(type(self.result_))
+        if handler is None :
+            return None
+        return withContext(self.expr, lambda : handler(self.result_))
 
     def asStatic(self) :
-        return withContext(self.expr, lambda : toStatic(self.result_))
+        handler = toStatic.getHandler(type(self.result_))
+        if handler is None :
+            return None
+        return withContext(self.expr, lambda : handler(self.result_))
 
 
 
@@ -2007,6 +2015,8 @@ def matchInvoke(code, codeEnv, actualArgs) :
     for actualArg, formalArg in zip(actualArgs, code.formalArgs) :
         if type(formalArg) is ValueArgument :
             arg = actualArg.asReference()
+            if arg is None :
+                return argMismatch(actualArg)
             if formalArg.type is not None :
                 typePattern = evaluate(formalArg.type, codeEnv2, toTypeOrCell)
                 if not unify(typePattern, arg.type) :
@@ -2015,6 +2025,8 @@ def matchInvoke(code, codeEnv, actualArgs) :
             params.append(arg)
         elif type(formalArg) is StaticArgument :
             arg = actualArg.asStatic()
+            if arg is None :
+                return argMismatch(actualArg)
             pattern = evaluate(formalArg.pattern, codeEnv2, toStaticOrCell)
             if not unify(pattern, arg) :
                 return argMismatch(actualArg)

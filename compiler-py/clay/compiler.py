@@ -63,20 +63,6 @@ def isRTReference(x) : return type(x) is RTReference
 
 
 #
-# toStatic
-#
-
-@toStatic.register(RTValue)
-def foo(x) :
-    error("invalid static value")
-
-@toStatic.register(RTReference)
-def foo(x) :
-    error("invalid static value")
-
-
-
-#
 # return locations
 #
 
