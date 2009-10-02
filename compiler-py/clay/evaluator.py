@@ -894,7 +894,7 @@ def _simpleValueDestroy(a) :
 
 def valueEquals(a, b) :
     # TODO: add bypass for simple types
-    if isCompilerObjectType(dest.type) and isCompilerObjectType(src.type) :
+    if isCompilerObjectType(a.type) and isCompilerObjectType(b.type) :
         return compilerObjectEquals(a.address, b.address)
     return _callBuiltin("equals", [a, b], toBool)
 
