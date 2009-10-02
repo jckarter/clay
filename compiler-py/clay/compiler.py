@@ -309,8 +309,7 @@ def rtValueCopy(dest, src) :
     _compileBuiltin("copy", [dest, src])
 
 def rtValueAssign(dest, src) :
-    assert equals(dest.type, src.type)
-    if isSimpleType(dest.type) :
+    if isSimpleType(dest.type) and (dest.type == src.type) :
         temp = llvmBuilder.load(src.llvmValue)
         llvmBuilder.store(temp, dest.llvmValue)
         return

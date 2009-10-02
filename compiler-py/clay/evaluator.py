@@ -306,7 +306,7 @@ toStatic.register(Reference)(lambda x : toValue(x))
 
 
 #
-# boolToValue, intToValue, intXToValue
+# boolToValue, intToValue, floatToValue
 #
 
 def boolToValue(x) :
@@ -359,8 +359,7 @@ def valueCopy(dest, src) :
     _callBuiltin("copy", [dest, src])
 
 def valueAssign(dest, src) :
-    assert equals(dest.type, src.type)
-    if isSimpleType(dest.type) :
+    if isSimpleType(dest.type) and (dest.type == src.type) :
         _simpleValueCopy(dest, src)
         return
     _callBuiltin("assign", [dest, src])
@@ -382,7 +381,6 @@ def valueDestroy(a) :
         _callBuiltin("destroy", [a])
 
 def valueEquals(a, b) :
-    assert equals(a.type, b.type)
     # TODO: add bypass for simple types
     return _callBuiltin("equals", [a, b], toBool)
 
