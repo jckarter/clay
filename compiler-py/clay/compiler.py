@@ -141,7 +141,7 @@ def tempRTValue(type_) :
 
 
 #
-# toRTValue, toRTLValue, toRTReference
+# toRTValue, toRTReference, toRTLValue, toRTValueOrReference
 #
 
 toRTValue = multimethod(errorMessage="invalid value")
@@ -171,13 +171,6 @@ def foo(x) :
     return temp
 
 
-toRTLValue = multimethod(errorMessage="invalid reference")
-
-@toRTLValue.register(RTReference)
-def foo(x) :
-    return x
-
-
 toRTReference = multimethod(errorMessage="invalid reference")
 
 @toRTReference.register(RTReference)
@@ -191,6 +184,19 @@ def foo(x) :
 @toRTReference.register(Value)
 def foo(x) :
     return toRTReference(toRTValue(x))
+
+
+toRTLValue = multimethod(errorMessage="invalid reference")
+
+@toRTLValue.register(RTReference)
+def foo(x) :
+    return x
+
+
+toRTValueOrReference = multimethod(defaultProc=toRTValue)
+
+toRTValueOrReference.register(RTValue)(lambda x : x)
+toRTValueOrReference.register(RTReference)(lambda x : x)
 
 
 
@@ -239,6 +245,13 @@ def toRTValueOfType(pattern) :
         return v
     return f
 
+def toRTReferenceOfType(pattern) :
+    def f(x) :
+        r = toRTReference(x)
+        matchType(pattern, r.type)
+        return r
+    return f
+
 def toRTLValueOfType(pattern) :
     def f(x) :
         v = toRTLValue(x)
@@ -246,11 +259,11 @@ def toRTLValueOfType(pattern) :
         return v
     return f
 
-def toRTReferenceOfType(pattern) :
+def toRTValueOrReferenceOfType(pattern) :
     def f(x) :
-        r = toRTReference(x)
-        matchType(pattern, r.type)
-        return r
+        v = toRTValueOrReference(x)
+        matchType(pattern, v.type)
+        return v
     return f
 
 
@@ -284,7 +297,7 @@ def rtValueInit(a) :
     _compileBuiltin("init", [a])
 
 def rtValueCopy(dest, src) :
-    assert equals(dest.type, src.type)
+    assert dest.type == src.type
     if isSimpleType(dest.type) :
         temp = llvmBuilder.load(src.llvmValue)
         llvmBuilder.store(temp, dest.llvmValue)
@@ -428,11 +441,13 @@ def foo(x, env) :
 @compile2.register(Indexing)
 def foo(x, env) :
     thing = compile(x.expr, env)
+    thing = reduceCompilerObject(thing)
     return compileIndexing(thing, x.args, env)
 
 @compile2.register(Call)
 def foo(x, env) :
     thing = compile(x.expr, env)
+    thing = reduceCompilerObject(thing)
     return compileCall(thing, x.args, env)
 
 @compile2.register(FieldRef)
@@ -1271,8 +1286,8 @@ def foo(x, env, codeContext) :
             isTerminated = False
         elif isTerminated :
             withContext(y, lambda : error("unreachable code"))
-        elif type(y) is LocalBinding :
-            processLocalBinding(y, env, codeContext)
+        elif type(y) in (LetBinding, RefBinding, StaticBinding) :
+            env = compileBinding(y, env, codeContext)
             marker = codeContext.pushMarker()
             compilerCollectLabels(x.statements, i+1, marker, codeContext)
         else :
@@ -1282,38 +1297,46 @@ def foo(x, env, codeContext) :
     codeContext.popUpto(blockMarker)
     return isTerminated
 
-def processLocalBinding(x, env, codeContext) :
-    right = analyzer.analyze(x.expr, envForAnalysis(env))
+compileBinding = multimethod(errorMessage="invalid binding")
+
+@compileBinding.register(LetBinding)
+def foo(x, env, codeContext) :
     pushRTTempsBlock()
+    converter = toRTValue
     if x.type is not None :
         declaredType = compile(x.type, env, toType)
-        analyzer.toRTValueOfType(declaredType)(right)
-    if x.byRef :
-        if analyzer.isRTValue(right) or isValue(right) :
-            right = compile(x.expr, env, toRTValue)
-            detachFromRTTempsBlock(right)
-            codeContext.pushValue(right)
-        elif analyzer.isRTReference(right) :
-            right = compile(x.expr, env, toRTReference)
-        else :
-            error("invalid ref binding")
-    else :
-        if analyzer.isRTValue(right) or analyzer.isRTReference(right) or \
-                isValue(right) :
-            right = compile(x.expr, env, toRTValue)
-            detachFromRTTempsBlock(right)
-            codeContext.pushValue(right)
-        else :
-            right = compile(x.expr, env, toStatic)
+        converter = toRTValueOfType(declaredType)
+    right = compile(x.expr, env, converter)
+    detachFromRTTempsBlock(right)
+    codeContext.pushValue(right)
     popRTTempsBlock()
-    addIdent(env, x.name, right)
+    return extendEnv(env, [x.name], [right])
+
+@compileBinding.register(RefBinding)
+def foo(x, env, codeContext) :
+    pushRTTempsBlock()
+    converter = toRTValueOrReference
+    if x.type is not None :
+        declaredType = compile(x.type, env, toType)
+        converter = toRTValueOrReferenceOfType(declaredType)
+    right = compile(x.expr, env, converter)
+    if isRTValue(right) :
+        detachFromRTTempsBlock(right)
+        codeContext.pushValue(right)
+    popRTTempsBlock()
+    return extendEnv(env, [x.name], [right])
+
+@compileBinding.register(StaticBinding)
+def foo(x, env, codeContext) :
+    right = evaluate(x.expr, env, toStatic)
+    return extendEnv(env, [x.name], [right])
 
 def compilerCollectLabels(statements, i, marker, codeContext) :
     while i < len(statements) :
         stmt = statements[i]
         if type(stmt) is Label :
             codeContext.addLabel(stmt.name, marker)
-        elif type(stmt) is LocalBinding :
+        elif type(stmt) in (LetBinding, RefBinding, StaticBinding) :
             break
         i += 1
 

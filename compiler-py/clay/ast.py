@@ -6,8 +6,9 @@ __all__ = [
     "Dereference", "AddressOf",
     "UnaryOpExpr", "BinaryOpExpr", "NotExpr", "AndExpr", "OrExpr",
     "StaticExpr",
-    "Statement", "Block", "Label", "LocalBinding", "Assignment",
-    "Goto", "Return", "IfStatement", "ExprStatement",
+    "Statement", "Block", "Label",
+    "LetBinding", "RefBinding", "StaticBinding",
+    "Assignment", "Goto", "Return", "IfStatement", "ExprStatement",
     "While", "Break", "Continue", "For",
     "Code", "FormalArgument", "ValueArgument", "StaticArgument",
     "TopLevelItem",
@@ -215,16 +216,32 @@ class Label(Statement) :
         check(name, Identifier)
         self.name = name
 
-class LocalBinding(Statement) :
-    def __init__(self, byRef, name, type, expr) :
-        super(LocalBinding, self).__init__()
-        check(byRef, bool)
+class LetBinding(Statement) :
+    def __init__(self, name, type, expr) :
+        super(LetBinding, self).__init__()
         check(name, Identifier)
         check2(type, Expression)
         check(expr, Expression)
-        self.byRef = byRef
         self.name = name
         self.type = type
+        self.expr = expr
+
+class RefBinding(Statement) :
+    def __init__(self, name, type, expr) :
+        super(RefBinding, self).__init__()
+        check(name, Identifier)
+        check2(type, Expression)
+        check(expr, Expression)
+        self.name = name
+        self.type = type
+        self.expr = expr
+
+class StaticBinding(Statement) :
+    def __init__(self, name, expr) :
+        super(StaticBinding, self).__init__()
+        check(name, Identifier)
+        check(expr, Expression)
+        self.name = name
         self.expr = expr
 
 class Assignment(Statement) :

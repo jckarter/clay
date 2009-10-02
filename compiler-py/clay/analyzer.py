@@ -25,22 +25,27 @@ def isRTReference(x) : return type(x) is RTReference
 
 
 #
-# toRTValue, toRTLValue, toRTReference
+# toRTValue, toRTReference, toRTLValue, toRTValueOrReference
 #
 
 toRTValue = multimethod(errorMessage="invalid value")
-toRTLValue = multimethod(errorMessage="invalid reference")
 toRTReference = multimethod(errorMessage="invalid reference")
+toRTLValue = multimethod(errorMessage="invalid reference")
 
 toRTValue.register(RTValue)(lambda x : x)
 toRTValue.register(RTReference)(lambda x : RTValue(x.type))
 toRTValue.register(Value)(lambda x : RTValue(x.type))
 
-toRTLValue.register(RTReference)(lambda x : x)
-
 toRTReference.register(RTReference)(lambda x : x)
 toRTReference.register(RTValue)(lambda x : RTReference(x.type))
 toRTReference.register(Value)(lambda x : RTReference(x.type))
+
+toRTLValue.register(RTReference)(lambda x : x)
+
+toRTValueOrReference = multimethod(defaultProc=toRTValue)
+
+toRTValueOrReference.register(RTValue)(lambda x : x)
+toRTValueOrReference.register(RTReference)(lambda x : x)
 
 
 
@@ -89,6 +94,13 @@ def toRTValueOfType(pattern) :
         return v
     return f
 
+def toRTReferenceOfType(pattern) :
+    def f(x) :
+        r = toRTReference(x)
+        matchType(pattern, r.type)
+        return r
+    return f
+
 def toRTLValueOfType(pattern) :
     def f(x) :
         v = toRTLValue(x)
@@ -96,11 +108,11 @@ def toRTLValueOfType(pattern) :
         return v
     return f
 
-def toRTReferenceOfType(pattern) :
+def toRTValueOrReferenceOfType(pattern) :
     def f(x) :
-        r = toRTReference(x)
-        matchType(pattern, r.type)
-        return r
+        v = toRTValueOrReference(x)
+        matchType(pattern, v.type)
+        return v
     return f
 
 
@@ -166,11 +178,13 @@ def foo(x, env) :
 @analyze2.register(Indexing)
 def foo(x, env) :
     thing = analyze(x.expr, env)
+    thing = reduceCompilerObject(thing)
     return analyzeIndexing(thing, x.args, env)
 
 @analyze2.register(Call)
 def foo(x, env) :
     thing = analyze(x.expr, env)
+    thing = reduceCompilerObject(thing)
     return analyzeCall(thing, x.args, env)
 
 @analyze2.register(FieldRef)
@@ -732,13 +746,8 @@ analyzeStatement2 = multimethod(errorMessage="invalid statement")
 def foo(x, env, context) :
     env = Environment(env)
     for y in x.statements :
-        if type(y) is LocalBinding :
-            converter = toRTValue
-            if y.type is not None :
-                declaredType = analyze(y.type, env, toType)
-                converter = toRTValueOfType(declaredType)
-            right = analyze(y.expr, env, converter)
-            addIdent(env, y.name, right)
+        if type(y) in (LetBinding, RefBinding, StaticBinding) :
+            env = analyzeBinding(y, env, context)
         elif type(y) is Label :
             # ignore labels during analysis
             pass
@@ -746,6 +755,31 @@ def foo(x, env, context) :
             result = analyzeStatement(y, env, context)
             if result is not None :
                 return result
+
+analyzeBinding = multimethod(errorMessage="invalid binding")
+
+@analyzeBinding.register(LetBinding)
+def foo(x, env, context) :
+    converter = toRTValue
+    if x.type is not None :
+        declaredType = analyze(x.type, env, toType)
+        converter = toRTValueOfType(declaredType)
+    right = analyze(x.expr, env, converter)
+    return extendEnv(env, [x.name], [right])
+
+@analyzeBinding.register(RefBinding)
+def foo(x, env, context) :
+    converter = toRTValueOrReference
+    if x.type is not None :
+        declaredType = analyze(x.type, env, toType)
+        converter = toRTValueOrReferenceOfType(declaredType)
+    right = analyze(x.expr, env, converter)
+    return extendEnv(env, [x.name], [right])
+
+@analyzeBinding.register(StaticBinding)
+def foo(x, env, context) :
+    right = evaluate(x.expr, env, toStatic)
+    return extendEnv(env, [x.name], [right])
 
 @analyzeStatement2.register(Assignment)
 def foo(x, env, context) :

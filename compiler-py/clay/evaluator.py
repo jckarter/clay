@@ -10,37 +10,7 @@ import clay.llvmwrapper as llvm
 
 
 #
-# equals
-#
-
-equals = multimethod(n=2, defaultProc=(lambda x, y : x is y))
-
-
-
-#
-# converters
-#
-
-toType = multimethod(errorMessage="type expected")
-
-toBool = multimethod(errorMessage="bool expected")
-
-toNativeInt = multimethod(errorMessage="int expected")
-
-toValue = multimethod(errorMessage="invalid value")
-
-toLValue = multimethod(errorMessage="invalid l-value")
-
-toReference = multimethod(errorMessage="invalid reference")
-
-toValueOrReference = multimethod(errorMessage="invalid value or reference")
-
-toStatic = multimethod(errorMessage="invalid static value")
-
-
-
-#
-# types
+# Type, Value, Reference
 #
 
 class Type(object) :
@@ -51,6 +21,36 @@ class Type(object) :
         return equals(self, other)
     def __hash__(self) :
         return hash((self.tag, tuple(self.params)))
+
+class Value(object) :
+    def __init__(self, type_) :
+        self.type = type_
+        self.ctypesType = ctypesType(type_)
+        self.buf = self.ctypesType()
+    def __del__(self) :
+        valueDestroy(toReference(self))
+    def __eq__(self, other) :
+        return equals(self, other)
+    def __hash__(self) :
+        return valueHash(toReference(self))
+
+class Reference(object) :
+    def __init__(self, type_, address) :
+        self.type = type_
+        self.address = address
+    def __eq__(self, other) :
+        return equals(self, other)
+    def __hash__(self) :
+        return valueHash(self)
+
+def isValue(x) : return type(x) is Value
+def isReference(x) : return type(x) is Reference
+
+
+
+#
+# types
+#
 
 class BoolTag(object) : pass
 
@@ -212,6 +212,8 @@ def isSimpleType(t) :
 # equals
 #
 
+equals = multimethod(n=2, defaultProc=(lambda x, y : x is y))
+
 @equals.register(Type, Type)
 def foo(a, b) :
     if a.tag is not b.tag :
@@ -221,11 +223,34 @@ def foo(a, b) :
             return False
     return True
 
+@equals.register(Value, Value)
+def foo(a, b) :
+    return typeAndValueEquals(a, b)
+
+@equals.register(Value, Reference)
+def foo(a, b) :
+    return typeAndValueEquals(a, b)
+
+@equals.register(Reference, Value)
+def foo(a, b) :
+    return typeAndValueEquals(a, b)
+
+@equals.register(Reference, Reference)
+def foo(a, b) :
+    return typeAndValueEquals(a, b)
+
+def typeAndValueEquals(a, b) :
+    if not equals(a.type, b.type) :
+        return False
+    return valueEquals(toReference(a), toReference(b))
+
 
 
 #
-# toType, toStatic
+# toType
 #
+
+toType = multimethod(errorMessage="type expected")
 
 @toType.register(Type)
 def foo(x) :
@@ -236,17 +261,124 @@ def foo(x) :
     ensure(len(x.typeVars) == 0, "record type parameters expected")
     return recordType(x, [])
 
+@toType.register(Value)
+def foo(x) :
+    return toType(toReference(x))
+
+@toType.register(Reference)
+def foo(x) :
+    ensure(isCompilerObjectType(x.type), "invalid type")
+    return toType(reduceCompilerObject(x))
+
+
+
+#
+# multimethodRegisterMany
+#
+
+def multimethodRegisterMany(mm, classList, proc) :
+    for c in classList :
+        mm.register(c)(proc)
+
+
+
+#
+# toStatic
+#
+
+toStatic = multimethod(errorMessage="invalid static value")
+
 toStatic.register(Type)(lambda x : x)
 toStatic.register(Record)(lambda x : x)
 toStatic.register(Procedure)(lambda x : x)
 toStatic.register(Overloadable)(lambda x : x)
+multimethodRegisterMany(toStatic, primitivesClassList, lambda x : x)
+
+@toStatic.register(Value)
+def foo(x) :
+    if isCompilerObjectType(x.type) :
+        return reduceCompilerObject(x)
+    return x
+
+@toStatic.register(Reference)
+def foo(x) :
+    if isCompilerObjectType(x.type) :
+        return reduceCompilerObject(x)
+    return toValue(x)
+
+
+
+#
+# toValue
+#
+
+toValue = multimethod(errorMessage="invalid value")
+
+toValue.register(Value)(lambda x : x)
+
+@toValue.register(Reference)
+def foo(x) :
+    v = tempValue(x.type)
+    valueCopy(toReference(v), x)
+    return v
+
+toValue.register(Type)(lambda x : liftCompilerObject(x))
+toValue.register(Record)(lambda x : liftCompilerObject(x))
+toValue.register(Procedure)(lambda x : liftCompilerObject(x))
+toValue.register(Overloadable)(lambda x : liftCompilerObject(x))
+multimethodRegisterMany(toValue, primitivesClassList,
+                        lambda x : liftCompilerObject(x))
+
+
+
+#
+# toReference
+#
+
+toReference = multimethod(errorMessage="invalid reference")
+
+toReference.register(Reference)(lambda x : x)
+
+@toReference.register(Value)
+def foo(x) :
+    return Reference(x.type, ctypes.addressof(x.buf))
+
+def liftCompilerObjectAsRef(x) :
+    return toReference(liftCompilerObject(x))
+
+toReference.register(Type)(lambda x : liftCompilerObjectAsRef(x))
+toReference.register(Record)(lambda x : liftCompilerObjectAsRef(x))
+toReference.register(Procedure)(lambda x : liftCompilerObjectAsRef(x))
+toReference.register(Overloadable)(lambda x : liftCompilerObjectAsRef(x))
+multimethodRegisterMany(toReference, primitivesClassList,
+                        lambda x : liftCompilerObjectAsRef(x))
+
+
+
+#
+# toLValue
+#
+
+toLValue = multimethod(errorMessage="invalid l-value")
+
+toLValue.register(Reference)(lambda x : x)
+
+
+
+#
+# toValueOrReference
+#
+
+toValueOrReference = multimethod(defaultProc=toValue)
+
+toValueOrReference.register(Value)(lambda x : x)
+toValueOrReference.register(Reference)(lambda x : x)
 
 
 
 #
 # type printer
 #
-
 
 xregister(Type, lambda t : (XObject(tagName(t), *t.params,
                                     opening="[", closing="]")
@@ -416,18 +548,18 @@ def toValueOfType(pattern) :
         return v
     return f
 
-def toLValueOfType(pattern) :
-    def f(x) :
-        v = toLValue(x)
-        matchType(pattern, v.type)
-        return v
-    return f
-
 def toReferenceOfType(pattern) :
     def f(x) :
         r = toReference(x)
         matchType(pattern, r.type)
         return r
+    return f
+
+def toLValueOfType(pattern) :
+    def f(x) :
+        v = toLValue(x)
+        matchType(pattern, v.type)
+        return v
     return f
 
 def toValueOrReferenceOfType(pattern) :
@@ -648,36 +780,6 @@ def typeSize(t) :
 
 
 #
-# Value, Reference
-#
-
-class Value(object) :
-    def __init__(self, type_) :
-        self.type = type_
-        self.ctypesType = ctypesType(type_)
-        self.buf = self.ctypesType()
-    def __del__(self) :
-        valueDestroy(toReference(self))
-    def __eq__(self, other) :
-        return equals(self, other)
-    def __hash__(self) :
-        return valueHash(toReference(self))
-
-class Reference(object) :
-    def __init__(self, type_, address) :
-        self.type = type_
-        self.address = address
-    def __eq__(self, other) :
-        return equals(self, other)
-    def __hash__(self) :
-        return valueHash(self)
-
-def isValue(x) : return type(x) is Value
-def isReference(x) : return type(x) is Reference
-
-
-
-#
 # temp values
 #
 
@@ -712,46 +814,23 @@ def tempValue(type_) :
 # toNativeInt, toBool
 #
 
+toNativeInt = multimethod(errorMessage="int expected")
+
 @toNativeInt.register(Value)
 def foo(x) :
-    ensure(equals(x.type, nativeIntType), "not int type")
-    return x.buf.value
-
-@toBool.register(Value)
-def foo(x) :
-    ensure(equals(x.type, boolType), "not bool type")
+    ensure(x.type == nativeIntType, "not int type")
     return x.buf.value
 
 toNativeInt.register(Reference)(lambda x : toNativeInt(toValue(x)))
+
+toBool = multimethod(errorMessage="bool expected")
+
+@toBool.register(Value)
+def foo(x) :
+    ensure(x.type == boolType, "not bool type")
+    return x.buf.value
+
 toBool.register(Reference)(lambda x : toBool(toValue(x)))
-
-
-
-#
-# toValue, toLValue, toReference, toValueOrReference, toStatic
-#
-
-toValue.register(Value)(lambda x : x)
-
-@toValue.register(Reference)
-def foo(x) :
-    v = tempValue(x.type)
-    valueCopy(toReference(v), x)
-    return v
-
-toLValue.register(Reference)(lambda x : x)
-
-toReference.register(Reference)(lambda x : x)
-
-@toReference.register(Value)
-def foo(x) :
-    return Reference(x.type, ctypes.addressof(x.buf))
-
-toValueOrReference.register(Value)(lambda x : x)
-toValueOrReference.register(Reference)(lambda x : x)
-
-toStatic.register(Value)(lambda x : x)
-toStatic.register(Reference)(lambda x : toValue(x))
 
 
 
@@ -812,6 +891,11 @@ def compilerObjectAssign(destAddr, srcAddr) :
     compilerObjectDestroy(destAddr)
     compilerObjectCopy(destAddr, srcAddr)
 
+def makeCompilerObject(x) :
+    v = tempValue(compilerObjectType)
+    setCompilerObject(toReference(v).address, x)
+    return v
+
 def getCompilerObject(addr) :
     p = compilerObjectFetch(addr)
     return ctypes.cast(p, ctypes.py_object).value
@@ -827,6 +911,35 @@ def compilerObjectEquals(addr1, addr2) :
 
 def compilerObjectHash(addr) :
     return hash(getCompilerObject(addr))
+
+
+
+#
+# liftCompilerObject, reduceCompilerObject
+#
+
+liftCompilerObject = multimethod(defaultProc=lambda x : x)
+
+liftCompilerObject.register(Type)(makeCompilerObject)
+liftCompilerObject.register(Record)(makeCompilerObject)
+liftCompilerObject.register(Procedure)(makeCompilerObject)
+liftCompilerObject.register(Overloadable)(makeCompilerObject)
+multimethodRegisterMany(liftCompilerObject, primitivesClassList,
+                        makeCompilerObject)
+
+reduceCompilerObject = multimethod(defaultProc=lambda x : x)
+
+@reduceCompilerObject.register(Value)
+def foo(x) :
+    if isCompilerObjectType(x.type) :
+        return getCompilerObject(toReference(x).address)
+    return x
+
+@reduceCompilerObject.register(Reference)
+def foo(x) :
+    if isCompilerObjectType(x.type) :
+        return getCompilerObject(x.address)
+    return x
 
 
 
@@ -855,7 +968,7 @@ def valueInit(a) :
     _callBuiltin("init", [a])
 
 def valueCopy(dest, src) :
-    assert equals(dest.type, src.type)
+    assert dest.type == src.type
     if isSimpleType(dest.type) :
         _simpleValueCopy(dest, src)
         return
@@ -904,33 +1017,6 @@ def valueHash(a) :
     if isCompilerObjectType(a.type) :
         return compilerObjectHash(a.address)
     return _callBuiltin("hash", [a], toNativeInt)
-
-
-
-#
-# equals
-#
-
-@equals.register(Value, Value)
-def foo(a, b) :
-    return typeAndValueEquals(a, b)
-
-@equals.register(Value, Reference)
-def foo(a, b) :
-    return typeAndValueEquals(a, b)
-
-@equals.register(Reference, Value)
-def foo(a, b) :
-    return typeAndValueEquals(a, b)
-
-@equals.register(Reference, Reference)
-def foo(a, b) :
-    return typeAndValueEquals(a, b)
-
-def typeAndValueEquals(a, b) :
-    if not equals(a.type, b.type) :
-        return False
-    return valueEquals(toReference(a), toReference(b))
 
 
 
@@ -1187,11 +1273,13 @@ def foo(x, env) :
 @evaluate2.register(Indexing)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
+    thing = reduceCompilerObject(thing)
     return evaluateIndexing(thing, x.args, env)
 
 @evaluate2.register(Call)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
+    thing = reduceCompilerObject(thing)
     return evaluateCall(thing, x.args, env)
 
 @evaluate2.register(FieldRef)
@@ -1710,14 +1798,14 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
-    compilerObjectInit(a)
+    compilerObjectInit(a.address)
     return voidValue
 
 @evaluateCall.register(primitives.compilerObjectDestroy)
 def foo(x, args, env) :
     ensureArity(args, 1)
     a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
-    compilerObjectDestroy(a)
+    compilerObjectDestroy(a.address)
     return voidValue
 
 @evaluateCall.register(primitives.compilerObjectCopy)
@@ -1725,7 +1813,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     dest = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
     src = evaluate(args[1], env, toReferenceOfType(compilerObjectType))
-    compilerObjectCopy(dest, src)
+    compilerObjectCopy(dest.address, src.address)
     return voidValue
 
 @evaluateCall.register(primitives.compilerObjectAssign)
@@ -1733,7 +1821,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     dest = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
     src = evaluate(args[1], env, toReferenceOfType(compilerObjectType))
-    compilerObjectAssign(dest, src)
+    compilerObjectAssign(dest.address, src.address)
     return voidValue
 
 @evaluateCall.register(primitives.compilerObjectEquals)
@@ -1741,13 +1829,13 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
     b = evaluate(args[1], env, toReferenceOfType(compilerObjectType))
-    return boolToValue(compilerObjectEquals(a, b))
+    return boolToValue(compilerObjectEquals(a.address, b.address))
 
 @evaluateCall.register(primitives.compilerObjectHash)
 def foo(x, args, env) :
     ensureArity(args, 1)
     a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
-    return intToValue(compilerObjectHash(a))
+    return intToValue(compilerObjectHash(a.address))
 
 
 
@@ -2094,8 +2182,7 @@ def evalInvoke(code, env, bindings) :
         installTemp(result)
     if result is None :
         if returnType is not None :
-            ensure(equals(returnType, voidType),
-                   "unexpected void return")
+            ensure(returnType == voidType, "unexpected void return")
         result = voidValue
     return result
 
@@ -2128,15 +2215,8 @@ def foo(x, env, context) :
     evalCollectLabels(x.statements, i, labels, env)
     while i < len(x.statements) :
         statement = x.statements[i]
-        if type(statement) is LocalBinding :
-            converter = toValueOrReference
-            if statement.type is not None :
-                declaredType = evaluate(statement.type, env, toType)
-                converter = toValueOrReferenceOfType(declaredType)
-            right = evaluateRootExpr(statement.expr, env, converter)
-            if not statement.byRef :
-                right = toValue(right)
-            env = extendEnv(env, [statement.name], [right])
+        if type(statement) in (LetBinding, RefBinding, StaticBinding) :
+            env = evalBinding(statement, env, context)
             evalCollectLabels(x.statements, i+1, labels, env)
         elif type(statement) is Label :
             pass
@@ -2153,13 +2233,38 @@ def foo(x, env, context) :
                 return result
         i += 1
 
+evalBinding = multimethod(errorMessage="invalid binding")
+
+@evalBinding.register(LetBinding)
+def foo(x, env, context) :
+    converter = toValue
+    if x.type is not None :
+        declaredType = evaluate(x.type, env, toType)
+        converter = toValueOfType(declaredType)
+    right = evaluateRootExpr(x.expr, env, converter)
+    return extendEnv(env, [x.name], [right])
+
+@evalBinding.register(RefBinding)
+def foo(x, env, context) :
+    converter = toValueOrReference
+    if x.type is not None :
+        declaredType = evaluate(x.type, env, toType)
+        converter = toValueOrReferenceOfType(declaredType)
+    right = evaluateRootExpr(x.expr, env, converter)
+    return extendEnv(env, [x.name], [right])
+
+@evalBinding.register(StaticBinding)
+def foo(x, env, context) :
+    right = evaluateRootExpr(x.expr, env, toStatic)
+    return extendEnv(env, [x.name], [right])
+
 def evalCollectLabels(statements, startIndex, labels, env) :
     i = startIndex
     while i < len(statements) :
         stmt = statements[i]
         if type(stmt) is Label :
             labels[stmt.name.s] = (env, i)
-        elif type(stmt) is LocalBinding :
+        elif type(stmt) in (LetBinding, RefBinding, StaticBinding) :
             break
         i += 1
 
@@ -2240,13 +2345,13 @@ def convertForStatement(x) :
     exprVar = Identifier("%expr")
     iterVar = Identifier("%iter")
     block = Block(
-        [LocalBinding(True, exprVar, None, x.expr),
-         LocalBinding(False, iterVar, None,
-                      Call(primitiveNameRef("iterator"), [NameRef(exprVar)])),
+        [RefBinding(exprVar, None, x.expr),
+         LetBinding(iterVar, None, Call(primitiveNameRef("iterator"),
+                                        [NameRef(exprVar)])),
          While(Call(primitiveNameRef("hasNext"), [NameRef(iterVar)]),
-               Block([LocalBinding(True, x.variable, x.type,
-                                   Call(primitiveNameRef("next"),
-                                        [NameRef(iterVar)])),
+               Block([RefBinding(x.variable, x.type,
+                                 Call(primitiveNameRef("next"),
+                                      [NameRef(iterVar)])),
                       x.body]))])
     return block
 

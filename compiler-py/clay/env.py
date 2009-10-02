@@ -114,6 +114,7 @@ primitivesModule = Module([], [], [])
 primitivesEnv = ModuleEnvironment(primitivesModule)
 primitivesModule.env = primitivesEnv
 primitives = None
+primitivesClassList = []
 
 def installPrimitive(name, value) :
     primitivesEnv.add(name, value)
@@ -124,6 +125,7 @@ def installDefaultPrimitives() :
         installPrimitive(name, value)
     def primitive(name) :
         primClass = type("Primitive%s" % name, (object,), {})
+        primitivesClassList.append(primClass)
         primClasses[name] = primClass
         prim = primClass()
         prim.name = name

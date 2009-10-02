@@ -194,12 +194,15 @@ block = astNode(sequence(symbol("{"), zeroPlus(statement2), symbol("}")),
 labelDef = astNode(sequence(identifier, symbol(":")),
                    lambda x : Label(x[0]))
 
-letOrRef = choice(modify(keyword("let"), lambda x : False),
-                  modify(keyword("ref"), lambda x : True))
-
-localBinding = astNode(sequence(letOrRef, identifier, optTypeSpec,
-                                symbol("="), expression, semicolon),
-                       lambda x : LocalBinding(x[0],x[1],x[2],x[4]))
+letBinding = astNode(sequence(keyword("let"), identifier, optTypeSpec,
+                              symbol("="), expression, semicolon),
+                     lambda x : LetBinding(x[1], x[2], x[4]))
+refBinding = astNode(sequence(keyword("ref"), identifier, optTypeSpec,
+                              symbol("="), expression, semicolon),
+                     lambda x : RefBinding(x[1], x[2], x[4]))
+staticBinding = astNode(sequence(keyword("static"), identifier,
+                                 symbol("="), expression, semicolon),
+                        lambda x : StaticBinding(x[1], x[3]))
 
 assignment = astNode(sequence(expression, symbol("="), expression, semicolon),
                      lambda x : Assignment(x[0], x[2]))
@@ -235,10 +238,10 @@ forStatement = astNode(sequence(keyword("for"), symbol("("),
                                 expression, symbol(")"), statement2),
                        lambda x : For(x[2], x[3], x[5], x[7]))
 
-statement = choice(block, labelDef, localBinding, assignment, ifStatement,
-                   gotoStatement, returnStatement, exprStatement,
-                   whileStatement, breakStatement, continueStatement,
-                   forStatement)
+statement = choice(block, labelDef, letBinding, refBinding, staticBinding,
+                   assignment, ifStatement, gotoStatement, returnStatement,
+                   exprStatement, whileStatement, breakStatement,
+                   continueStatement, forStatement)
 
 
 #

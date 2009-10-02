@@ -46,7 +46,9 @@ Block -> "{" Statement+ "}"
 
 Statement -> Block
            | LabelDef
-           | LocalBinding
+           | LetBinding
+           | RefBinding
+           | StaticBinding
            | Assignment
            | IfStatement
            | GotoStatement
@@ -59,7 +61,9 @@ Statement -> Block
 
 LabelDef -> Identifier ":"
 
-LocalBinding -> ("let" | "ref") Variable "=" Expression ";"
+LetBinding -> "let" Variable "=" Expression ";"
+RefBinding -> "ref" Variable "=" Expression ";"
+StaticBinding -> "static" Identifier "=" Expression ";"
 
 Assignment -> Expression "=" Expression ";"
 
