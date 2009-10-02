@@ -3,6 +3,7 @@ Bool,
 Int8, Int16, Int32, Int64
 UInt8, UInt16, UInt32, UInt64
 Float32, Float64
+CompilerObject
 
 Primitive Values:
 true, false, IntLiteral, FloatLiteral
@@ -20,6 +21,13 @@ Primitive Operations:
 typeSize[T](static T):Int32
 
 primitiveCopy[T](dest:T, src:T): Void
+
+compilerObjectInit(dest:CompilerObject): Void
+compilerObjectDestroy(dest:CompilerObject): Void
+compilerObjectCopy(dest:CompilerObject, src:CompilerObject): Void
+compilerObjectAssign(dest:CompilerObject, src:CompilerObject): Void
+compilerObjectEquals(dest:CompilerObject, src:CompilerObject): Bool
+compilerObjectHash(dest:CompilerObject, src:CompilerObject): Int32
 
 addressOf[T](a:T) : Pointer[T]
 pointerDereference[T](a:Pointer[T]) ref : T

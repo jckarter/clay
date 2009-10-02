@@ -740,6 +740,36 @@ def foo(x, args, env) :
 
 
 #
+# compile compiler object primitives
+#
+
+@compileCall.register(primitives.compilerObjectInit)
+def foo(x, args, env) :
+    error("compiler objects are not supported at runtime")
+
+@compileCall.register(primitives.compilerObjectDestroy)
+def foo(x, args, env) :
+    error("compiler objects are not supported at runtime")
+
+@compileCall.register(primitives.compilerObjectCopy)
+def foo(x, args, env) :
+    error("compiler objects are not supported at runtime")
+
+@compileCall.register(primitives.compilerObjectAssign)
+def foo(x, args, env) :
+    error("compiler objects are not supported at runtime")
+
+@compileCall.register(primitives.compilerObjectEquals)
+def foo(x, args, env) :
+    error("compiler objects are not supported at runtime")
+
+@compileCall.register(primitives.compilerObjectHash)
+def foo(x, args, env) :
+    error("compiler objects are not supported at runtime")
+
+
+
+#
 # compile pointer primitives
 #
 
@@ -1308,7 +1338,7 @@ def compilerCollectLabels(statements, i, marker, codeContext) :
 def foo(x, env, codeContext) :
     pushRTTempsBlock()
     left = compile(x.left, env, toRTLValue)
-    right = compile(x.right, env, toRTReferenceOfType(left.type))
+    right = compile(x.right, env, toRTReference)
     rtValueAssign(left, right)
     popRTTempsBlock()
     return False

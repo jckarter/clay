@@ -1,5 +1,6 @@
 export __primitives__;
 export _core;
+export _compilerobject;
 export _bool;
 export _numeric;
 export _pointer;

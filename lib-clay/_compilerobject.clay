@@ -1,0 +1,29 @@
+import _core;
+
+//
+// compiler objects
+//
+
+overload init(a:CompilerObject) {
+    compilerObjectInit(a);
+}
+
+overload destroy(a:CompilerObject) {
+    compilerObjectDestroy(a);
+}
+
+overload copy(dest:CompilerObject, src:CompilerObject) {
+    compilerObjectCopy(dest, src);
+}
+
+overload assign(dest:CompilerObject, src:CompilerObject) {
+    compilerObjectAssign(dest, src);
+}
+
+overload equals(a:CompilerObject, b:CompilerObject) {
+    return compilerObjectEquals(a, b);
+}
+
+overload hash(a:CompilerObject) {
+    return compilerObjectHash(a);
+}

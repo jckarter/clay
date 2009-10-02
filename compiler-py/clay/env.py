@@ -143,6 +143,13 @@ def installDefaultPrimitives() :
 
     primitive("primitiveCopy")
 
+    primitive("compilerObjectInit")
+    primitive("compilerObjectDestroy")
+    primitive("compilerObjectCopy")
+    primitive("compilerObjectAssign")
+    primitive("compilerObjectEquals")
+    primitive("compilerObjectHash")
+
     primitive("addressOf")
     primitive("pointerDereference")
     primitive("pointerToInt")

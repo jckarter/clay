@@ -41,6 +41,10 @@ def foo(t) :
 
 makeLLVMType = multimethod(errorMessage="invalid type tag")
 
+@makeLLVMType.register(CompilerObjectTag)
+def foo(tag, t) :
+    error("compiler object types are not supported at runtime")
+
 @makeLLVMType.register(TupleTag)
 def foo(tag, t) :
     fieldLLVMTypes = [llvmType(x) for x in t.params]
@@ -135,6 +139,7 @@ def _initCTypesTable() :
     _ctypesTable[uint64Type] = ctypes.c_uint64
     _ctypesTable[float32Type] = ctypes.c_float
     _ctypesTable[float64Type] = ctypes.c_double
+    _ctypesTable[compilerObjectType] = ctypes.c_void_p
 
 def _cleanupCTypesTable() :
     global _ctypesTable
@@ -208,11 +213,11 @@ class Value(object) :
         self.ctypesType = ctypesType(type_)
         self.buf = self.ctypesType()
     def __del__(self) :
-        valueDestroy(self)
+        valueDestroy(toReference(self))
     def __eq__(self, other) :
         return equals(self, other)
     def __hash__(self) :
-        return valueHash(self)
+        return valueHash(toReference(self))
 
 class Reference(object) :
     def __init__(self, type_, address) :
@@ -287,7 +292,7 @@ toValue.register(Value)(lambda x : x)
 @toValue.register(Reference)
 def foo(x) :
     v = tempValue(x.type)
-    valueCopy(v, x)
+    valueCopy(toReference(v), x)
     return v
 
 toLValue.register(Reference)(lambda x : x)
@@ -331,6 +336,56 @@ def floatToValue(x, type_=None) :
 
 
 #
+# compiler object operations
+#
+
+_Ptr = ctypes.c_void_p
+_PtrPtr = ctypes.POINTER(_Ptr)
+
+def compilerObjectFetch(addr) :
+    return ctypes.cast(_Ptr(addr), _PtrPtr).contents
+
+def compilerObjectInit(addr) :
+    p = compilerObjectFetch(addr)
+    p.value = id(None)
+    ctypes.pythonapi.Py_IncRef(p)
+
+def compilerObjectDestroy(addr) :
+    p = compilerObjectFetch(addr)
+    ctypes.pythonapi.Py_DecRef(p)
+    p.value = 0
+
+def compilerObjectCopy(destAddr, srcAddr) :
+    dest = compilerObjectFetch(destAddr)
+    src = compilerObjectFetch(srcAddr)
+    dest.value = src.value
+    ctypes.pythonapi.Py_IncRef(dest)
+
+def compilerObjectAssign(destAddr, srcAddr) :
+    if destAddr == srcAddr :
+        return
+    compilerObjectDestroy(destAddr)
+    compilerObjectCopy(destAddr, srcAddr)
+
+def getCompilerObject(addr) :
+    p = compilerObjectFetch(addr)
+    return ctypes.cast(p, ctypes.py_object).value
+
+def setCompilerObject(addr, x) :
+    # assume compiler-object at addr has not been initialized
+    p = compilerObjectFetch(addr)
+    p.value = id(x)
+    ctypes.pythonapi.Py_IncRef(p)
+
+def compilerObjectEquals(addr1, addr2) :
+    return getCompilerObject(addr1) == getCompilerObject(addr2)
+
+def compilerObjectHash(addr) :
+    return hash(getCompilerObject(addr))
+
+
+
+#
 # core value operations
 #
 
@@ -349,6 +404,9 @@ def _callBuiltin(builtinName, args, converter=None) :
 def valueInit(a) :
     if isSimpleType(a.type) :
         return
+    if isCompilerObjectType(a.type) :
+        compilerObjectInit(a.address)
+        return
     _callBuiltin("init", [a])
 
 def valueCopy(dest, src) :
@@ -356,35 +414,50 @@ def valueCopy(dest, src) :
     if isSimpleType(dest.type) :
         _simpleValueCopy(dest, src)
         return
+    if isCompilerObjectType(dest.type) :
+        compilerObjectCopy(dest.address, src.address)
+        return
     _callBuiltin("copy", [dest, src])
 
 def valueAssign(dest, src) :
     if isSimpleType(dest.type) and (dest.type == src.type) :
         _simpleValueCopy(dest, src)
         return
+    if isCompilerObjectType(dest.type) and isCompilerObjectType(src.type) :
+        compilerObjectAssign(dest.address, src.address)
+        return
     _callBuiltin("assign", [dest, src])
 
 def _simpleValueCopy(dest, src) :
-    destRef = toReference(dest)
-    destPtr = ctypes.c_void_p(destRef.address)
-    srcRef = toReference(src)
-    srcPtr = ctypes.c_void_p(srcRef.address)
+    destPtr = ctypes.c_void_p(dest.address)
+    srcPtr = ctypes.c_void_p(src.address)
     size = typeSize(dest.type)
     ctypes.memmove(destPtr, srcPtr, size)
 
 def valueDestroy(a) :
     if isSimpleType(a.type) :
-        ctypes.memset(ctypes.pointer(a.buf), 0, typeSize(a.type))
+        _simpleValueDestroy(a)
+        return
+    if isCompilerObjectType(a.type) :
+        compilerObjectDestroy(a.address)
         return
     # TODO: fix the ugly hack below
     if not isCleaningUp() :
         _callBuiltin("destroy", [a])
 
+def _simpleValueDestroy(a) :
+    ptr = ctypes.c_void_p(a.address)
+    ctypes.memset(ptr, 0, typeSize(a.type))
+
 def valueEquals(a, b) :
     # TODO: add bypass for simple types
+    if isCompilerObjectType(dest.type) and isCompilerObjectType(src.type) :
+        return compilerObjectEquals(a.address, b.address)
     return _callBuiltin("equals", [a, b], toBool)
 
 def valueHash(a) :
+    if isCompilerObjectType(a.type) :
+        return compilerObjectHash(a.address)
     return _callBuiltin("hash", [a], toNativeInt)
 
 
@@ -410,7 +483,9 @@ def foo(a, b) :
     return typeAndValueEquals(a, b)
 
 def typeAndValueEquals(a, b) :
-    return equals(a.type, b.type) and valueEquals(a, b)
+    if not equals(a.type, b.type) :
+        return False
+    return valueEquals(toReference(a), toReference(b))
 
 
 
@@ -824,7 +899,7 @@ evaluateCall = multimethod(errorMessage="invalid call")
 def foo(x, args, env) :
     if len(args) == 0 :
         v = tempValue(x)
-        valueInit(v)
+        valueInit(toReference(v))
         return v
     elif isRecordType(x) :
         fieldTypes = recordFieldTypes(x)
@@ -837,21 +912,16 @@ def foo(x, args, env) :
     elif isArrayType(x) :
         elementType = toType(x.params[0])
         ensureArity(args, toNativeInt(x.params[1]))
-        value = tempValue(x)
-        valueRef = toReference(value)
-        for i, arg in enumerate(args) :
-            argRef = evaluate(arg, env, toReferenceOfType(elementType))
-            valueCopy(arrayRef(valueRef, i), argRef)
-        return value
+        converter = toReferenceOfType(elementType)
+        argRefs = [evaluate(y, env, converter) for y in args]
+        return makeArray(argRefs)
     elif isTupleType(x) :
         ensureArity(args, len(x.params))
-        value = tempValue(x)
-        valueRef = toReference(value)
-        for i, arg in enumerate(args) :
-            fieldType = toType(x.params[i])
-            argRef = evaluate(arg, env, toReferenceOfType(fieldType))
-            valueCopy(tupleFieldRef(valueRef, i), argRef)
-        return value
+        argRefs = []
+        for arg, param in zip(args, x.params) :
+            argRef = evaluate(arg, env, toReferenceOfType(toType(param)))
+            argRefs.append(argRef)
+        return makeTuple(argRefs)
     else :
         error("only array, tuple, and record types " +
               "can be constructed this way.")
@@ -860,7 +930,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     if len(args) == 0 :
         v = tempValue(toType(x))
-        valueInit(v)
+        valueInit(toReference(v))
         return v
     actualArgs = [ActualArgument(y, env) for y in args]
     result = matchRecordInvoke(x, actualArgs)
@@ -1184,6 +1254,55 @@ def foo(x, args, env) :
     srcRef = evaluate(args[1], env, toReferenceOfType(cell))
     ensure(isSimpleType(cell.param), "expected simple type")
     return evalPrimitiveCall(x, [destRef, srcRef], voidType)
+
+
+
+#
+# evaluate compiler object primitives
+#
+
+@evaluateCall.register(primitives.compilerObjectInit)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
+    compilerObjectInit(a)
+    return voidValue
+
+@evaluateCall.register(primitives.compilerObjectDestroy)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
+    compilerObjectDestroy(a)
+    return voidValue
+
+@evaluateCall.register(primitives.compilerObjectCopy)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    dest = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
+    src = evaluate(args[1], env, toReferenceOfType(compilerObjectType))
+    compilerObjectCopy(dest, src)
+    return voidValue
+
+@evaluateCall.register(primitives.compilerObjectAssign)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    dest = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
+    src = evaluate(args[1], env, toReferenceOfType(compilerObjectType))
+    compilerObjectAssign(dest, src)
+    return voidValue
+
+@evaluateCall.register(primitives.compilerObjectEquals)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
+    b = evaluate(args[1], env, toReferenceOfType(compilerObjectType))
+    return boolToValue(compilerObjectEquals(a, b))
+
+@evaluateCall.register(primitives.compilerObjectHash)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
+    return intToValue(compilerObjectHash(a))
 
 
 
@@ -1593,7 +1712,7 @@ def evalCollectLabels(statements, startIndex, labels, env) :
 def foo(x, env, context) :
     pushTempsBlock()
     left = evaluate(x.left, env, toLValue)
-    rightRef = evaluate(x.right, env, toReferenceOfType(left.type))
+    rightRef = evaluate(x.right, env, toReference)
     valueAssign(left, rightRef)
     popTempsBlock()
 

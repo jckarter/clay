@@ -32,6 +32,7 @@ class FloatingPointTag(object) :
         self.bits = bits
 
 class VoidTag(object) : pass
+class CompilerObjectTag(object) : pass
 
 class TupleTag(object) : pass
 class ArrayTag(object) : pass
@@ -53,6 +54,7 @@ float32Tag = FloatingPointTag(32)
 float64Tag = FloatingPointTag(64)
 
 voidTag = VoidTag()
+compilerObjectTag = CompilerObjectTag()
 
 tupleTag = TupleTag()
 arrayTag = ArrayTag()
@@ -76,6 +78,7 @@ float32Type = Type(float32Tag, [])
 float64Type = Type(float64Tag, [])
 
 voidType = Type(voidTag, [])
+compilerObjectType = Type(compilerObjectTag, [])
 
 def tupleType(types) :
     assert len(types) >= 2
@@ -129,6 +132,7 @@ installPrimitive("Float32", float32Type)
 installPrimitive("Float64", float64Type)
 
 installPrimitive("Void", voidType)
+installPrimitive("CompilerObject", compilerObjectType)
 
 
 
@@ -157,6 +161,7 @@ def isFloat32Type(t) : return t.tag is float32Tag
 def isFloat64Type(t) : return t.tag is float64Tag
 
 def isVoidType(t) : return t.tag is voidTag
+def isCompilerObjectType(t) : return t.tag is compilerObjectTag
 
 def isTupleType(t) : return t.tag is tupleTag
 def isArrayType(t) : return t.tag is arrayTag

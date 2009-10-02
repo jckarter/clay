@@ -393,6 +393,51 @@ def foo(x, args, env) :
 
 
 #
+# analyze compiler object primitives
+#
+
+@analyzeCall.register(primitives.compilerObjectInit)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    analyze(args[0], env, toRTReferenceOfType(compilerObjectType))
+    return voidValue
+
+@analyzeCall.register(primitives.compilerObjectDestroy)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    analyze(args[0], env, toRTReferenceOfType(compilerObjectType))
+    return voidValue
+
+@analyzeCall.register(primitives.compilerObjectCopy)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    analyze(args[0], env, toRTReferenceOfType(compilerObjectType))
+    analyze(args[1], env, toRTReferenceOfType(compilerObjectType))
+    return voidValue
+
+@analyzeCall.register(primitives.compilerObjectAssign)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    analyze(args[0], env, toRTReferenceOfType(compilerObjectType))
+    analyze(args[1], env, toRTReferenceOfType(compilerObjectType))
+    return voidValue
+
+@analyzeCall.register(primitives.compilerObjectEquals)
+def foo(x, args, env) :
+    ensureArity(args, 2)
+    analyze(args[0], env, toRTReferenceOfType(compilerObjectType))
+    analyze(args[1], env, toRTReferenceOfType(compilerObjectType))
+    return RTValue(boolType)
+
+@analyzeCall.register(primitives.compilerObjectHash)
+def foo(x, args, env) :
+    ensureArity(args, 1)
+    analyze(args[0], env, toRTReferenceOfType(compilerObjectType))
+    return RTValue(nativeIntType)
+
+
+
+#
 # analyze pointer primitives
 #
 
