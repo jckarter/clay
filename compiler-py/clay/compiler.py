@@ -3,10 +3,7 @@ from clay.xprint import *
 from clay.cleanup import *
 from clay.error import *
 from clay.multimethod import *
-from clay.coreops import *
 from clay.env import *
-from clay.types import *
-from clay.unify import *
 from clay.evaluator import *
 from clay import analyzer
 import clay.llvmwrapper as llvm
