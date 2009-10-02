@@ -297,23 +297,17 @@ def locateModule(names) :
 #
 
 def installOverloads(module) :
-    installOverloads2(module, set())
-
-def installOverloads2(module, moduleSet) :
-    if module in moduleSet :
+    if module.overloadsInstalled :
         return
-    moduleSet.add(module)
-    try :
-        for import_ in module.imports :
-            installOverloads2(import_.module, moduleSet)
-        for export in module.exports :
-            installOverloads2(export.module, moduleSet)
-        for item in module.topLevelItems :
-            if type(item) is Overload :
-                entry = lookupIdent(module.env, item.name, verifyOverloadable)
-                entry.overloads.insert(0, item)
-    finally :
-        moduleSet.remove(module)
+    module.overloadsInstalled = True
+    for import_ in module.imports :
+        installOverloads(import_.module)
+    for export in module.exports :
+        installOverloads(export.module)
+    for item in module.topLevelItems :
+        if type(item) is Overload :
+            entry = lookupIdent(module.env, item.name, verifyOverloadable)
+            entry.overloads.insert(0, item)
 
 def verifyOverloadable(x) :
     ensure(type(x) is Overloadable, "invalid overloadable")

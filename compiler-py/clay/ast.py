@@ -433,6 +433,7 @@ class Module(ASTNode) :
         self.topLevelItems = topLevelItems
         self.globals = {}
         self.env = None
+        self.overloadsInstalled = False
 
 
 
