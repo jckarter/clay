@@ -83,7 +83,7 @@ r(StaticArgument, lambda x : xo("StaticArgument", x.pattern))
 # TopLevelItem
 #
 
-r(Record, lambda x : xo("RecordDef", x.name, x.typeVars, *x.fields))
+r(Record, lambda x : xo("Record", x.name, x.typeVars, *x.args))
 r(ValueRecordArg, lambda x : xo("ValueRecordArg", x.name, x.type))
 r(StaticRecordArg, lambda x : xo("StaticRecordArg", x.pattern))
 r(Procedure, lambda x : xo("Procedure", x.name, x.code))
