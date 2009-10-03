@@ -20,7 +20,7 @@ overload next[T](r:Range[T]) {
 overloadable range;
 
 overload range(first, last) = Range(first, last);
-overload range[I](last:I) if (IntegerType(I)) = Range(zero(I), last);
+overload range[I](last:I) if (isInteger(I)) = Range(zero(I), last);
 
 
 //

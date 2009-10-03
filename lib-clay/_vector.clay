@@ -44,10 +44,10 @@ overload at[T](c:VectorCoordinate[T]) ref = at(c.ptr);
 overload begin[T](a:Vector[T]) = VectorCoordinate(a.data);
 overload end[T](a:Vector[T]) = VectorCoordinate(a.data + a.size);
 
-overload add[T,I](c:VectorCoordinate[T], i:I) if (IntegerType(I)) =
+overload add[T,I](c:VectorCoordinate[T], i:I) if (isInteger(I)) =
     VectorCoordinate(c.ptr + i);
 
-overload subtract[T,I](c:VectorCoordinate[T], i:I) if (IntegerType(I)) =
+overload subtract[T,I](c:VectorCoordinate[T], i:I) if (isInteger(I)) =
     VectorCoordinate(c.ptr - i);
 
 overload subtract[T](c1:VectorCoordinate[T], c2:VectorCoordinate[T]) =
@@ -183,7 +183,7 @@ ensureSpace[T](a:Vector[T], space:Int32) {
         setCapacity(a, 2*(a.size + space));
 }
 
-insertionPoint[T,I](a:Vector[T], pos:I) ref if (IntegerType(I)) {
+insertionPoint[T,I](a:Vector[T], pos:I) ref if (isInteger(I)) {
     ensureSpace(a, 1);
     var i = begin(a) + pos;
     var j = end(a);
@@ -195,11 +195,11 @@ insertionPoint[T,I](a:Vector[T], pos:I) ref if (IntegerType(I)) {
     return at(i);
 }
 
-overload insert[T,I](a:Vector[T], i:I, x:T) if (IntegerType(I)) {
+overload insert[T,I](a:Vector[T], i:I, x:T) if (isInteger(I)) {
     copy(insertionPoint(a, i), x);
 }
 
-overload insert[T,I](a:Vector[T], i:I, x:Movable[T]) if (IntegerType(I)) {
+overload insert[T,I](a:Vector[T], i:I, x:Movable[T]) if (isInteger(I)) {
     move(insertionPoint(a, i), x);
 }
 
@@ -223,6 +223,6 @@ overload remove[T](a:Vector[T], i:VectorCoordinate[T]) {
         setCapacity(2*(a.size + 1));
 }
 
-overload remove[T,I](a:Vector[T], i:I) if (IntegerType(I)) {
+overload remove[T,I](a:Vector[T], i:I) if (isInteger(I)) {
     remove(a, begin(a)+i);
 }

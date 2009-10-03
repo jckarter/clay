@@ -3,8 +3,8 @@ import _numeric;
 
 record Char(code:Int32);
 
-char[I](c:I) if (IntegerType(I)) = Char(to(Int32, c));
+char[I](c:I) if (isInteger(I)) = Char(to(Int32, c));
 
 ord(c:Char) = c.code;
 
-overload to[I](static I, c:Char) if (IntegerType(I)) = to(I, c.code);
+overload to[I](static I, c:Char) if (isInteger(I)) = to(I, c.code);
