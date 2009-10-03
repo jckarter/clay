@@ -2156,6 +2156,8 @@ def matchRecordInvoke(record, actualArgs) :
     for actualArg, formalArg in zip(actualArgs, record.args) :
         if type(formalArg) is ValueRecordArg :
             arg = actualArg.asReference()
+            if arg is None :
+                return argMismatch(actualArg)
             typePattern = evaluate(formalArg.type, env, toTypeOrCell)
             if not unify(typePattern, arg.type) :
                 return argMismatch(actualArg)
@@ -2163,6 +2165,8 @@ def matchRecordInvoke(record, actualArgs) :
             params.append(arg)
         elif type(formalArg) is StaticRecordArg :
             arg = actualArg.asStatic()
+            if arg is None :
+                return argMismatch(actualArg)
             pattern = evaluate(formalArg.pattern, env, toStaticOrCell)
             if not unify(pattern, arg) :
                 return argMismatch(actualArg)
