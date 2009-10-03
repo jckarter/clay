@@ -256,11 +256,6 @@ toType = multimethod(errorMessage="type expected")
 def foo(x) :
     return x
 
-@toType.register(Record)
-def foo(x) :
-    ensure(len(x.typeVars) == 0, "record type parameters expected")
-    return recordType(x, [])
-
 @toType.register(Value)
 def foo(x) :
     return toType(toReference(x))
@@ -1399,6 +1394,12 @@ evaluateNameRef = multimethod(defaultProc=(lambda x : x))
 @evaluateNameRef.register(Value)
 def foo(x) :
     return toReference(x)
+
+@evaluateNameRef.register(Record)
+def foo(x) :
+    if (len(x.typeVars) == 0) :
+        return recordType(x, [])
+    return x
 
 
 

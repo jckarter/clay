@@ -263,6 +263,12 @@ def foo(x) :
 def foo(x) :
     return toRTReference(x)
 
+@analyzeNameRef.register(Record)
+def foo(x) :
+    if (len(x.typeVars) == 0) :
+        return recordType(x, [])
+    return x
+
 
 
 #
