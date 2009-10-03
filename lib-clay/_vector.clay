@@ -16,13 +16,9 @@ record Vector[T](size:Int32, capacity:Int32, data:Pointer[T]);
 // size, at
 //
 
-overload size[T](a:Vector[T]) {
-    return a.size;
-}
+overload size[T](a:Vector[T]) = a.size;
 
-overload at[T](a:Vector[T], i) ref {
-    return at(a.data + i);
-}
+overload at[T](a:Vector[T], i) ref = at(a.data + i);
 
 
 //
@@ -31,29 +27,19 @@ overload at[T](a:Vector[T], i) ref {
 
 record VectorCoordinate[T](ptr:Pointer[T]);
 
-overload at[T](c:VectorCoordinate[T]) ref {
-    return at(c.ptr);
-}
+overload at[T](c:VectorCoordinate[T]) ref = at(c.ptr);
 
-overload begin[T](a:Vector[T]) {
-    return VectorCoordinate(a.data);
-}
+overload begin[T](a:Vector[T]) = VectorCoordinate(a.data);
+overload end[T](a:Vector[T]) = VectorCoordinate(a.data + a.size);
 
-overload end[T](a:Vector[T]) {
-    return VectorCoordinate(a.data + a.size);
-}
+overload add[T,I](c:VectorCoordinate[T], i:I) if (IntegerType(I)) =
+    VectorCoordinate(c.ptr + i);
 
-overload add[T,I](c:VectorCoordinate[T], i:I) if (IntegerType(I)) {
-    return VectorCoordinate(c.ptr + i);
-}
+overload subtract[T,I](c:VectorCoordinate[T], i:I) if (IntegerType(I)) =
+    VectorCoordinate(c.ptr - i);
 
-overload subtract[T,I](c:VectorCoordinate[T], i:I) if (IntegerType(I)) {
-    return VectorCoordinate(c.ptr - i);
-}
-
-overload subtract[T](c1:VectorCoordinate[T], c2:VectorCoordinate[T]) {
-    return c1.ptr - c2.ptr;
-}
+overload subtract[T](c1:VectorCoordinate[T], c2:VectorCoordinate[T]) =
+    c1.ptr - c2.ptr;
 
 overload inc[T](c:VectorCoordinate[T]) {
     inc(c.ptr);
@@ -68,9 +54,7 @@ overload dec[T](c:VectorCoordinate[T]) {
 // vector iteration
 //
 
-overload iterator[T](a:Vector[T]) {
-    return CoordinateRange(begin(a), end(a));
-}
+overload iterator[T](a:Vector[T]) = CoordinateRange(begin(a), end(a));
 
 
 //
@@ -142,13 +126,8 @@ overload hash[T](a:Vector[T]) {
 // front, back, pushBack, popBack
 //
 
-overload front[T](a:Vector[T]) ref {
-    return at(a, 0);
-}
-
-overload back[T](a:Vector[T]) ref {
-    return at(a, size(a)-1);
-}
+overload front[T](a:Vector[T]) ref = at(a, 0);
+overload back[T](a:Vector[T]) ref = at(a, size(a)-1);
 
 overload pushBack[T](a:Vector[T], x:T) {
     insert(a, size(a), x);
@@ -175,7 +154,7 @@ overload clear[T](a:Vector[T]) {
     init(a);
 }
 
-def setCapacity[T](a:Vector[T], capacity:Int32) {
+setCapacity[T](a:Vector[T], capacity:Int32) {
     var data = allocateMemory(T, capacity);
     var ptr = data;
     for (x in a) {
@@ -187,12 +166,12 @@ def setCapacity[T](a:Vector[T], capacity:Int32) {
     a.capacity = capacity;
 }
 
-def ensureSpace[T](a:Vector[T], space:Int32) {
+ensureSpace[T](a:Vector[T], space:Int32) {
     if (a.size + space > a.capacity)
         setCapacity(a, 2*(a.size + space));
 }
 
-def insertionPoint[T,I](a:Vector[T], pos:I) ref if (IntegerType(I)) {
+insertionPoint[T,I](a:Vector[T], pos:I) ref if (IntegerType(I)) {
     ensureSpace(a, 1);
     var i = begin(a) + pos;
     var j = end(a);

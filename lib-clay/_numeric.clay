@@ -4,30 +4,26 @@ import _core;
 // numeric types
 //
 
-def SignedIntegerType(T) {
+SignedIntegerType(T) {
     static e = compilerObjectEquals;
     return e(T, Int8) or e(T, Int16) or e(T, Int32) or e(T, Int64);
 }
 
-def UnsignedIntegerType(T) {
+UnsignedIntegerType(T) {
     static e = compilerObjectEquals;
     return e(T, UInt8) or e(T, UInt16) or e(T, UInt32) or e(T, UInt64);
 }
 
-def IntegerType(T) {
-    return SignedIntegerType(T) or UnsignedIntegerType(T);
-}
+IntegerType(T) = SignedIntegerType(T) or UnsignedIntegerType(T);
 
-def FloatingPointType(T) {
+FloatingPointType(T) {
     static e = compilerObjectEquals;
     return e(T, Float32) or e(T, Float64);
 }
 
-def NumericType(T) {
-    return IntegerType(T) or FloatingPointType(T);
-}
+NumericType(T) = IntegerType(T) or FloatingPointType(T);
 
-def BiggerNumericType(A, B) {
+BiggerNumericType(A, B) {
     if (FloatingPointType(A)) {
         if (IntegerType(B))
             return A;
@@ -58,14 +54,10 @@ overload copy[T](dest:T, src:T) if (NumericType(T)) {
     primitiveCopy(dest, src);
 }
 
-overload equals[T](a:T, b:T) if (NumericType(T)) {
-    return numericEquals(a, b);
-}
-overload lesser[T](a:T, b:T) if (NumericType(T)) {
-    return numericLesser(a, b);
-}
+overload equals[T](a:T, b:T) if (NumericType(T)) = numericEquals(a, b);
+overload lesser[T](a:T, b:T) if (NumericType(T)) = numericLesser(a, b);
 
-overload hash[T](a:T) if (NumericType(T)) { return numericConvert(Int32,a); }
+overload hash[T](a:T) if (NumericType(T)) = numericConvert(Int32,a);
 
 overload to[A, B](static A, b:B) if (NumericType(A) and NumericType(B)) {
     return numericConvert(A, b);
@@ -96,11 +88,11 @@ overload remainder[A,B](a:A, b:B) if (NumericType(A) and NumericType(B)) {
     return numericRemainder(to(T, a), to(T, b));
 }
 
-overload plus[T](a:T) if (NumericType(T)) { return a; }
-overload minus[T](a:T) if (NumericType(T)) { return numericNegate(a); }
+overload plus[T](a:T) if (NumericType(T)) = a;
+overload minus[T](a:T) if (NumericType(T)) = numericNegate(a);
 
-overload zero[A](static A) if (NumericType(A)) { return to(A, 0); }
-overload one[A](static A) if (NumericType(A)) { return to(A, 1); }
+overload zero[A](static A) if (NumericType(A)) = to(A, 0);
+overload one[A](static A) if (NumericType(A)) = to(A, 1);
 
 overload inc[T](a:T) if (NumericType(T)) {
     a = a + one(T);

@@ -3,12 +3,8 @@ import _numeric;
 
 record Char(code:Int32);
 
-def char[I](c:I) if (IntegerType(I)) {
-    return Char(to(Int32, c));
-}
+char[I](c:I) if (IntegerType(I)) = Char(to(Int32, c));
 
-def ord(c:Char) { return c.code; }
+ord(c:Char) = c.code;
 
-overload to[I](static I, c:Char) if (IntegerType(I)) {
-    return to(I, c.code);
-}
+overload to[I](static I, c:Char) if (IntegerType(I)) = to(I, c.code);

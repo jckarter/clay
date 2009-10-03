@@ -39,28 +39,17 @@ overload assign[T](dest:T, src:T) {
     copy(dest, src);
 }
 
-overload notEquals[T](a:T, b:T) {
-    return not equals(a, b);
-}
-
-overload lesserEquals[T](a:T, b:T) {
-    return equals(a, b) or lesser(a, b);
-}
-
-overload greater[T](a:T, b:T) {
-    return not lesserEquals(a, b);
-}
-
-overload greaterEquals[T](a:T, b:T) {
-    return not lesser(a, b);
-}
+overload notEquals[T](a:T, b:T) = not equals(a, b);
+overload lesserEquals[T](a:T, b:T) = equals(a, b) or lesser(a, b);
+overload greater[T](a:T, b:T) = not lesserEquals(a, b);
+overload greaterEquals[T](a:T, b:T) = not lesser(a, b);
 
 
 //
 // swap
 //
 
-def swap(a, b) {
+swap(a, b) {
     var temp = a;
     a = b;
     b = temp;

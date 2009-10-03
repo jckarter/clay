@@ -2,20 +2,17 @@ import base;
 
 record CustomCompare[T,F](x:T, static F);
 
-overload lesser[T,F](a:CustomCompare[T,F], b:CustomCompare[T,F]) {
-    return F(a.x, b.x);
-}
+overload lesser[T,F](a:CustomCompare[T,F], b:CustomCompare[T,F]) =
+    F(a.x, b.x);
 
-def min(a, b) ref {
+min(a, b) ref {
     if (a <= b) return a;
     return b;
 }
 
-def myLesser(a, b) {
-    return lesser(a, b);
-}
+myLesser(a, b) = lesser(a, b);
 
-def main() {
+main() {
     var a = CustomCompare(10, myLesser);
     var b = CustomCompare[Int32,myLesser](-20);
     return min(a, b).x;

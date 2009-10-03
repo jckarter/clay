@@ -1,21 +1,11 @@
 import base;
 
-def testSignedInt() {
-    return (1, 1#i8, 1#i16, 1#i32, 1#i64);
-}
+testSignedInt() = (1, 1#i8, 1#i16, 1#i32, 1#i64);
 
-def testUnsignedInt() {
-    return (1, 1#u8, 1#u16, 1#u32, 1#u64);
-}
+testUnsignedInt() = (1, 1#u8, 1#u16, 1#u32, 1#u64);
 
-def testFloat() {
-    return (1, 1.0, 1#f32, 1#f64, 1.0#f32, 1.0#f64);
-}
+testFloat() = (1, 1.0, 1#f32, 1#f64, 1.0#f32, 1.0#f64);
 
-def testConst() {
-    return (testSignedInt(), testUnsignedInt(), testFloat());
-}
+testConst() = (testSignedInt(), testUnsignedInt(), testFloat());
 
-def main() {
-    return testConst();
-}
+main() = testConst();

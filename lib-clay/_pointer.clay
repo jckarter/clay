@@ -17,8 +17,8 @@ overload to[I,T](static Pointer[T], a:I) if (IntegerType(I)) {
     return intToPointer(a, T);
 }
 
-def pointerToNativeInt[T](a:Pointer[T]) { return to(Int32, a); }
-def nativeIntToPointer[T](a:Int32) { return to(Pointer[T], a); }
+pointerToNativeInt[T](a:Pointer[T]) = to(Int32, a);
+nativeIntToPointer[T](a:Int32) = to(Pointer[T], a);
 
 overload equals[T](a:Pointer[T], b:Pointer[T]) {
     return equals(pointerToNativeInt(a), pointerToNativeInt(b));
@@ -27,9 +27,7 @@ overload lesser[T](a:Pointer[T], b:Pointer[T]) {
     return lesser(pointerToNativeInt(a), pointerToNativeInt(b));
 }
 
-overload hash[T](a:Pointer[T]) {
-    return pointerToNativeInt(a);
-}
+overload hash[T](a:Pointer[T]) = pointerToNativeInt(a);
 
 overload add[T,I](p:Pointer[T], i:I) if (IntegerType(I)) {
     return to(Pointer[T], pointerToNativeInt(p) + i*typeSize(T));
@@ -49,18 +47,9 @@ overload dec[T](a:Pointer[T]) {
     a = a - 1;
 }
 
-def null[T](static T) {
-    return to(Pointer[T], 0);
-}
+null[T](static T) = to(Pointer[T], 0);
 
-overload at[T](p:Pointer[T]) ref {
-    return pointerDereference(p);
-}
+overload at[T](p:Pointer[T]) ref = pointerDereference(p);
 
-overload RandomAccessCoordinate[T](static Pointer[T]) {
-    return true;
-}
-
-overload CoordinateTarget[T](static Pointer[T]) {
-    return T;
-}
+overload RandomAccessCoordinate[T](static Pointer[T]) = true;
+overload CoordinateTarget[T](static Pointer[T]) = T;

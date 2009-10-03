@@ -266,9 +266,15 @@ byRef = modify(optional(keyword("ref")), lambda x : x is not None)
 predicate = modify(sequence(keyword("if"), parenCondition),
                    lambda x : x[1])
 
+exprBody1 = astNode(sequence(symbol("="), expression, symbol(";")),
+                   lambda x : Return(x[1]))
+exprBody = astNode(exprBody1, lambda x : Block([x]))
+
+body = choice(exprBody, block)
+
 code = astNode(sequence(optTypeVars, symbol("("), formalArguments,
                         symbol(")"), byRef, optTypeSpec,
-                        optional(predicate), block),
+                        optional(predicate), body),
                lambda x : Code(x[0],x[2],x[4],x[5],x[6],x[7]))
 
 
@@ -288,8 +294,8 @@ record = astNode(sequence(keyword("record"), identifier, optTypeVars,
                           symbol("("), recordArgs, symbol(")"), semicolon),
                  lambda x : Record(x[1],x[2],x[4]))
 
-procedure = astNode(sequence(keyword("def"), identifier, code),
-                    lambda x : Procedure(x[1], x[2]))
+procedure = astNode(sequence(identifier, code),
+                    lambda x : Procedure(x[0], x[1]))
 overloadable = astNode(sequence(keyword("overloadable"), identifier,
                                 semicolon),
                        lambda x : Overloadable(x[1]))

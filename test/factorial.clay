@@ -1,12 +1,12 @@
 import base;
 
-def factorial1(n) {
+factorial1(n) {
     if (n == 0)
         return 1;
     return n*factorial1(n-1);
 }
 
-def factorial2(n) {
+factorial2(n) {
     var p = 1;
     again :
     if (n == 0)
@@ -16,7 +16,7 @@ def factorial2(n) {
     goto again;
 }
 
-def factorial3(n) {
+factorial3(n) {
     var p = 1;
     while (true) {
         if (n == 0) break;
@@ -26,14 +26,14 @@ def factorial3(n) {
     return p;
 }
 
-def factorial4(n) {
+factorial4(n) {
     var p = 1;
     for (i in range(n))
         p = p * (i+1);
     return p;
 }
 
-def main() {
+main() {
     var n = 7;
     n = n - 1;
     var f = factorial4(n);

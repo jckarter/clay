@@ -9,10 +9,6 @@ overload move[T](dest:T, src:T) {
 
 record Movable[T](data:Pointer[T]);
 
-overload move[T](a:T) {
-    return Movable(&a);
-}
+overload move[T](a:T) = Movable(&a);
 
-overload at[T](a:Movable[T]) ref {
-    return at(a.data);
-}
+overload at[T](a:Movable[T]) ref = at(a.data);

@@ -10,13 +10,9 @@ import _range;
 // size, at
 //
 
-overload size[T,n](a:Array[T,n]) {
-    return n;
-}
+overload size[T,n](a:Array[T,n]) = n;
 
-overload at[T,n](a:Array[T,n], i) ref {
-    return arrayRef(a, i);
-}
+overload at[T,n](a:Array[T,n], i) ref = arrayRef(a, i);
 
 
 //
@@ -25,29 +21,18 @@ overload at[T,n](a:Array[T,n], i) ref {
 
 record ArrayCoordinate[T](ptr:Pointer[T]);
 
-overload at[T](c:ArrayCoordinate[T]) ref {
-    return at(c.ptr);
-}
+overload at[T](c:ArrayCoordinate[T]) ref = at(c.ptr);
+overload begin[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, 0));
+overload end[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, n));
 
-overload begin[T,n](a:Array[T,n]) {
-    return ArrayCoordinate(&at(a, 0));
-}
+overload add[T,I](c:ArrayCoordinate[T], i:I) if (IntegerType(I)) =
+    ArrayCoordinate(c.ptr + i);
 
-overload end[T,n](a:Array[T,n]) {
-    return ArrayCoordinate(&at(a, n));
-}
+overload subtract[T,I](c:ArrayCoordinate[T], i:I) if (IntegerType(I)) =
+    ArrayCoordinate(c.ptr - i);
 
-overload add[T,I](c:ArrayCoordinate[T], i:I) if (IntegerType(I)) {
-    return ArrayCoordinate(c.ptr + i);
-}
-
-overload subtract[T,I](c:ArrayCoordinate[T], i:I) if (IntegerType(I)) {
-    return ArrayCoordinate(c.ptr - i);
-}
-
-overload subtract[T](c1:ArrayCoordinate[T], c2:ArrayCoordinate[T]) {
-    return c1.ptr - c2.ptr;
-}
+overload subtract[T](c1:ArrayCoordinate[T], c2:ArrayCoordinate[T]) =
+    c1.ptr - c2.ptr;
 
 overload inc[T](c:ArrayCoordinate[T]) {
     inc(c.ptr);
@@ -62,9 +47,7 @@ overload dec[T](c:ArrayCoordinate[T]) {
 // array iteration
 //
 
-overload iterator[T,n](a:Array[T,n]) {
-    return CoordinateRange(begin(a), end(a));
-}
+overload iterator[T,n](a:Array[T,n]) = CoordinateRange(begin(a), end(a));
 
 
 //

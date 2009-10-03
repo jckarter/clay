@@ -7,13 +7,9 @@ import _numeric;
 
 record Range[T](first:T, last:T);
 
-overload iterator[T](r:Range[T]) {
-    return r;
-}
+overload iterator[T](r:Range[T]) = r;
 
-overload hasNext[T](r:Range[T]) {
-    return r.first < r.last;
-}
+overload hasNext[T](r:Range[T]) = r.first < r.last;
 
 overload next[T](r:Range[T]) {
     var x = r.first;
@@ -23,10 +19,8 @@ overload next[T](r:Range[T]) {
 
 overloadable range;
 
-overload range(first, last) { return Range(first, last); }
-overload range[I](last:I) if (IntegerType(I)) {
-    return Range(zero(I), last);
-}
+overload range(first, last) = Range(first, last);
+overload range[I](last:I) if (IntegerType(I)) = Range(zero(I), last);
 
 
 //
@@ -35,13 +29,9 @@ overload range[I](last:I) if (IntegerType(I)) {
 
 record CoordinateRange[T](first:T, last:T);
 
-overload iterator[T](r:CoordinateRange[T]) {
-    return r;
-}
+overload iterator[T](r:CoordinateRange[T]) = r;
 
-overload hasNext[T](r:CoordinateRange[T]) {
-    return r.first < r.last;
-}
+overload hasNext[T](r:CoordinateRange[T]) = r.first < r.last;
 
 overload next[T](r:CoordinateRange[T]) ref {
     ref obj = at(r.first);

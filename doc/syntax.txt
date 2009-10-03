@@ -25,10 +25,10 @@ GlobalBinding -> "var" Variable "=" Expression ";"
 
 Variable -> Identifier TypeSpec?
 
-ProcedureDef -> "def" Identifier Procedure
+ProcedureDef -> Identifier Procedure
 
 Procedure -> TypeVars? "(" comma_list(Argument)? ")"
-             "ref"? TypeSpec? Predicate? Block
+             "ref"? TypeSpec? Predicate? Body
 
 Argument -> ValueArgument
           | StaticArgument
@@ -36,7 +36,10 @@ Argument -> ValueArgument
 ValueArgument -> Variable
 StaticArgument -> "static" Expression
 
-Predicate -> "if" "(" Expression ")" ;
+Predicate -> "if" "(" Expression ")"
+
+Body -> "=" Expression ";"
+      | Block
 
 OverloadableDef -> "overloadable" Identifier ";"
 
