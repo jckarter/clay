@@ -2215,7 +2215,7 @@ def foo(x, env, context) :
     evalCollectLabels(x.statements, i, labels, env)
     while i < len(x.statements) :
         statement = x.statements[i]
-        if type(statement) in (LetBinding, RefBinding, StaticBinding) :
+        if type(statement) in (VarBinding, RefBinding, StaticBinding) :
             env = evalBinding(statement, env, context)
             evalCollectLabels(x.statements, i+1, labels, env)
         elif type(statement) is Label :
@@ -2235,7 +2235,7 @@ def foo(x, env, context) :
 
 evalBinding = multimethod(errorMessage="invalid binding")
 
-@evalBinding.register(LetBinding)
+@evalBinding.register(VarBinding)
 def foo(x, env, context) :
     converter = toValue
     if x.type is not None :
@@ -2264,7 +2264,7 @@ def evalCollectLabels(statements, startIndex, labels, env) :
         stmt = statements[i]
         if type(stmt) is Label :
             labels[stmt.name.s] = (env, i)
-        elif type(stmt) in (LetBinding, RefBinding, StaticBinding) :
+        elif type(stmt) in (VarBinding, RefBinding, StaticBinding) :
             break
         i += 1
 
@@ -2346,7 +2346,7 @@ def convertForStatement(x) :
     iterVar = Identifier("%iter")
     block = Block(
         [RefBinding(exprVar, None, x.expr),
-         LetBinding(iterVar, None, Call(primitiveNameRef("iterator"),
+         VarBinding(iterVar, None, Call(primitiveNameRef("iterator"),
                                         [NameRef(exprVar)])),
          While(Call(primitiveNameRef("hasNext"), [NameRef(iterVar)]),
                Block([RefBinding(x.variable, x.type,

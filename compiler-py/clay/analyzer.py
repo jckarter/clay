@@ -746,7 +746,7 @@ analyzeStatement2 = multimethod(errorMessage="invalid statement")
 def foo(x, env, context) :
     env = Environment(env)
     for y in x.statements :
-        if type(y) in (LetBinding, RefBinding, StaticBinding) :
+        if type(y) in (VarBinding, RefBinding, StaticBinding) :
             env = analyzeBinding(y, env, context)
         elif type(y) is Label :
             # ignore labels during analysis
@@ -758,7 +758,7 @@ def foo(x, env, context) :
 
 analyzeBinding = multimethod(errorMessage="invalid binding")
 
-@analyzeBinding.register(LetBinding)
+@analyzeBinding.register(VarBinding)
 def foo(x, env, context) :
     converter = toRTValue
     if x.type is not None :

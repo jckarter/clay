@@ -1286,7 +1286,7 @@ def foo(x, env, codeContext) :
             isTerminated = False
         elif isTerminated :
             withContext(y, lambda : error("unreachable code"))
-        elif type(y) in (LetBinding, RefBinding, StaticBinding) :
+        elif type(y) in (VarBinding, RefBinding, StaticBinding) :
             env = compileBinding(y, env, codeContext)
             marker = codeContext.pushMarker()
             compilerCollectLabels(x.statements, i+1, marker, codeContext)
@@ -1299,7 +1299,7 @@ def foo(x, env, codeContext) :
 
 compileBinding = multimethod(errorMessage="invalid binding")
 
-@compileBinding.register(LetBinding)
+@compileBinding.register(VarBinding)
 def foo(x, env, codeContext) :
     pushRTTempsBlock()
     converter = toRTValue
@@ -1336,7 +1336,7 @@ def compilerCollectLabels(statements, i, marker, codeContext) :
         stmt = statements[i]
         if type(stmt) is Label :
             codeContext.addLabel(stmt.name, marker)
-        elif type(stmt) in (LetBinding, RefBinding, StaticBinding) :
+        elif type(stmt) in (VarBinding, RefBinding, StaticBinding) :
             break
         i += 1
 

@@ -15,6 +15,6 @@ overload foo(x:Int32) {
 }
 
 def main() {
-    let v = true;
+    var v = true;
     return foo(v) + 10*foo(Int32) + 100*foo(10);
 }

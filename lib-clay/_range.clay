@@ -16,7 +16,7 @@ overload hasNext[T](r:Range[T]) {
 }
 
 overload next[T](r:Range[T]) {
-    let x = r.first;
+    var x = r.first;
     inc(r.first);
     return x;
 }

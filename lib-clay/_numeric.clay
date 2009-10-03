@@ -5,12 +5,12 @@ import _core;
 //
 
 def SignedIntegerType(T) {
-    let e = compilerObjectEquals;
+    static e = compilerObjectEquals;
     return e(T, Int8) or e(T, Int16) or e(T, Int32) or e(T, Int64);
 }
 
 def UnsignedIntegerType(T) {
-    let e = compilerObjectEquals;
+    static e = compilerObjectEquals;
     return e(T, UInt8) or e(T, UInt16) or e(T, UInt32) or e(T, UInt64);
 }
 
@@ -19,7 +19,7 @@ def IntegerType(T) {
 }
 
 def FloatingPointType(T) {
-    let e = compilerObjectEquals;
+    static e = compilerObjectEquals;
     return e(T, Float32) or e(T, Float64);
 }
 

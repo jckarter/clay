@@ -7,7 +7,7 @@ __all__ = [
     "UnaryOpExpr", "BinaryOpExpr", "NotExpr", "AndExpr", "OrExpr",
     "StaticExpr",
     "Statement", "Block", "Label",
-    "LetBinding", "RefBinding", "StaticBinding",
+    "VarBinding", "RefBinding", "StaticBinding",
     "Assignment", "Goto", "Return", "IfStatement", "ExprStatement",
     "While", "Break", "Continue", "For",
     "Code", "FormalArgument", "ValueArgument", "StaticArgument",
@@ -216,9 +216,9 @@ class Label(Statement) :
         check(name, Identifier)
         self.name = name
 
-class LetBinding(Statement) :
+class VarBinding(Statement) :
     def __init__(self, name, type, expr) :
-        super(LetBinding, self).__init__()
+        super(VarBinding, self).__init__()
         check(name, Identifier)
         check2(type, Expression)
         check(expr, Expression)

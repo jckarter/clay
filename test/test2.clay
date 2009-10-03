@@ -16,7 +16,7 @@ def myLesser(a, b) {
 }
 
 def main() {
-    let a = CustomCompare(10, myLesser);
-    let b = CustomCompare[Int32,myLesser](-20);
+    var a = CustomCompare(10, myLesser);
+    var b = CustomCompare[Int32,myLesser](-20);
     return min(a, b).x;
 }

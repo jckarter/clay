@@ -194,9 +194,9 @@ block = astNode(sequence(symbol("{"), zeroPlus(statement2), symbol("}")),
 labelDef = astNode(sequence(identifier, symbol(":")),
                    lambda x : Label(x[0]))
 
-letBinding = astNode(sequence(keyword("let"), identifier, optTypeSpec,
+varBinding = astNode(sequence(keyword("var"), identifier, optTypeSpec,
                               symbol("="), expression, semicolon),
-                     lambda x : LetBinding(x[1], x[2], x[4]))
+                     lambda x : VarBinding(x[1], x[2], x[4]))
 refBinding = astNode(sequence(keyword("ref"), identifier, optTypeSpec,
                               symbol("="), expression, semicolon),
                      lambda x : RefBinding(x[1], x[2], x[4]))
@@ -238,7 +238,7 @@ forStatement = astNode(sequence(keyword("for"), symbol("("),
                                 expression, symbol(")"), statement2),
                        lambda x : For(x[2], x[3], x[5], x[7]))
 
-statement = choice(block, labelDef, letBinding, refBinding, staticBinding,
+statement = choice(block, labelDef, varBinding, refBinding, staticBinding,
                    assignment, ifStatement, gotoStatement, returnStatement,
                    exprStatement, whileStatement, breakStatement,
                    continueStatement, forStatement)

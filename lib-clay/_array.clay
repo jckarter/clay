@@ -111,7 +111,7 @@ overload lesser[T,n](a:Array[T,n], b:Array[T,n]) {
 }
 
 overload hash[T,n](a:Array[T,n]) {
-    let h = 0;
+    var h = 0;
     for (x in a)
         h = h + hash(x);
     return h;

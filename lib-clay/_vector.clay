@@ -131,7 +131,7 @@ overload lesser[T](a:Vector[T], b:Vector[T]) {
 }
 
 overload hash[T](a:Vector[T]) {
-    let h = 0;
+    var h = 0;
     for (x in a)
         h = h + hash(x);
     return h;
@@ -160,7 +160,7 @@ overload pushBack[T](a:Vector[T], a:Movable[T]) {
 
 overload popBack[T](a:Vector[T]) {
     // FIXME: get rid of extra copy
-    let x = back(a);
+    var x = back(a);
     remove(a, end(a)-1);
     return x;
 }
@@ -176,8 +176,8 @@ overload clear[T](a:Vector[T]) {
 }
 
 def setCapacity[T](a:Vector[T], capacity:Int32) {
-    let data = allocateMemory(T, capacity);
-    let ptr = data;
+    var data = allocateMemory(T, capacity);
+    var ptr = data;
     for (x in a) {
         move(at(ptr), x);
         inc(ptr);
@@ -194,8 +194,8 @@ def ensureSpace[T](a:Vector[T], space:Int32) {
 
 def insertionPoint[T,I](a:Vector[T], pos:I) ref if (IntegerType(I)) {
     ensureSpace(a, 1);
-    let i = begin(a) + pos;
-    let j = end(a);
+    var i = begin(a) + pos;
+    var j = end(a);
     while (i < j) {
         move(at(j), at(j-1));
         dec(j);
@@ -222,7 +222,7 @@ overload insert[T](a:Vector[T], i:VectorCoordinate[T], x:Movable[T]) {
 
 overload remove[T](a:Vector[T], i:VectorCoordinate[T]) {
     destroy(at(i));
-    let j = end(a);
+    var j = end(a);
     while (true) {
         move(at(i), at(i+1));
         inc(i);

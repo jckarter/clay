@@ -109,7 +109,7 @@ overload hash[T](a:T) if (RecordOrTuple(T)) {
 
 overloadable hashFields;
 overload hashFields[T,i](a:T, static i) {
-    let curH = hash(fieldRef(a, i));
+    var curH = hash(fieldRef(a, i));
     return add(curH, hashFields(a, static add(i, 1)));
 }
 overload hashFields[T, i](a:T, static i)

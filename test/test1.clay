@@ -27,9 +27,9 @@ record NodeA[T] (value:T, next:Pointer[NodeB[T]]);
 record NodeB[T] (ptr:Pointer[T], next:Pointer[NodeA[T]]);
 
 def main() {
-    let n = 7;
+    var n = 7;
     n = n - 1;
-    let f = factorial(n);
-    let p = NodeA[Tuple[Int32,Bool]]();
+    var f = factorial(n);
+    var p = NodeA[Tuple[Int32,Bool]]();
     return (foo(), isEven(n), f, p, 'a');
 }

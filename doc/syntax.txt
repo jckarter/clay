@@ -21,7 +21,7 @@ StaticRecordArg -> "static" Expression
 TypeVars -> "[" comma_list(Identifier) "]"
 TypeSpec -> ":" TypeExpr
 
-GlobalBinding -> "let" Variable "=" Expression ";"
+GlobalBinding -> "var" Variable "=" Expression ";"
 
 Variable -> Identifier TypeSpec?
 
@@ -46,7 +46,7 @@ Block -> "{" Statement+ "}"
 
 Statement -> Block
            | LabelDef
-           | LetBinding
+           | VarBinding
            | RefBinding
            | StaticBinding
            | Assignment
@@ -61,7 +61,7 @@ Statement -> Block
 
 LabelDef -> Identifier ":"
 
-LetBinding -> "let" Variable "=" Expression ";"
+VarBinding -> "var" Variable "=" Expression ";"
 RefBinding -> "ref" Variable "=" Expression ";"
 StaticBinding -> "static" Identifier "=" Expression ";"
 

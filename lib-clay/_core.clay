@@ -61,7 +61,7 @@ overload greaterEquals[T](a:T, b:T) {
 //
 
 def swap(a, b) {
-    let temp = a;
+    var temp = a;
     a = b;
     b = temp;
 }
