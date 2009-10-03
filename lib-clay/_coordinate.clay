@@ -1,0 +1,31 @@
+import _core;
+
+//
+// Coordinate types should support:
+// inc, dec, at, equals
+//
+
+overloadable Coordinate;
+
+
+//
+// RandomAccessCoordinate types should additionally support:
+// add(x, integer), subtract(x, integer), subtract(x, x), lesser
+// 
+
+overloadable RandomAccessCoordinate;
+
+
+overload Coordinate[T](static T) {
+    return false;
+}
+
+overload RandomAccessCoordinate[T](static T) {
+    return false;
+}
+
+overload Coordinate[T](static T) if (RandomAccessCoordinate(T)) {
+    return true;
+}
+
+overloadable CoordinateTarget;

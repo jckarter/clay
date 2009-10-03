@@ -1,5 +1,6 @@
 import _core;
 import _numeric;
+import _coordinate;
 
 //
 // Pointer[T]
@@ -53,5 +54,13 @@ def null[T](static T) {
 }
 
 overload at[T](p:Pointer[T]) ref {
-    return p^;
+    return pointerDereference(p);
+}
+
+overload RandomAccessCoordinate[T](static Pointer[T]) {
+    return true;
+}
+
+overload CoordinateTarget[T](static Pointer[T]) {
+    return T;
 }

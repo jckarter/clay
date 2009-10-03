@@ -3,6 +3,7 @@ export _core;
 export _compilerobject;
 export _bool;
 export _numeric;
+export _coordinate;
 export _pointer;
 export _tuplerecord;
 export _range;
