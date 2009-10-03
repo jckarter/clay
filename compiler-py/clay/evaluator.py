@@ -1256,6 +1256,10 @@ def foo(x, env) :
     assert len(x.value) == 1
     return evaluate(convertCharLiteral(x), env)
 
+@evaluate2.register(StringLiteral)
+def foo(x, env) :
+    return evaluate(convertStringLiteral(x), env)
+
 @evaluate2.register(NameRef)
 def foo(x, env) :
     return evaluateNameRef(lookupIdent(env, x.name))
@@ -1340,13 +1344,22 @@ def foo(x, env) :
 
 
 #
-# convertCharLiteral
+# convertCharLiteral, convertStringLiteral
 #
 
 def convertCharLiteral(x) :
+    return convertCharLiteral2(x.value)
+
+def convertCharLiteral2(c) :
     nameRef = NameRef(Identifier("Char"))
     nameRef = SCExpression(loadedModule("_char").env, nameRef)
-    return Call(nameRef, [IntLiteral(ord(x.value), None)])
+    return Call(nameRef, [IntLiteral(ord(c), None)])
+
+def convertStringLiteral(x) :
+    nameRef = NameRef(Identifier("string"))
+    nameRef = SCExpression(loadedModule("_string").env, nameRef)
+    charArray = Array([convertCharLiteral2(c) for c in x.value])
+    return Call(nameRef, [charArray])
 
 
 

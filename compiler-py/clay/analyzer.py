@@ -161,6 +161,10 @@ def foo(x, env) :
 def foo(x, env) :
     return analyze(convertCharLiteral(x), env)
 
+@analyze2.register(StringLiteral)
+def foo(x, env) :
+    return analyze(convertStringLiteral(x), env)
+
 @analyze2.register(NameRef)
 def foo(x, env) :
     return analyzeNameRef(lookupIdent(env, x.name))

@@ -13,6 +13,18 @@ record Vector[T](size:Int32, capacity:Int32, data:Pointer[T]);
 
 
 //
+// create vector
+//
+
+vector[T,n](a:Array[T,n]) {
+    var v = Vector[T]();
+    for (x in a)
+        pushBack(v, x);
+    return v;
+}
+
+
+//
 // size, at
 //
 

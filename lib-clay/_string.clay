@@ -1,0 +1,35 @@
+import _core;
+import _char;
+import _vector;
+
+
+//
+// String
+//
+
+record String(data:Vector[Char]);
+
+
+//
+// create string
+//
+
+string[n](a:Array[Char,n]) = String(vector(a));
+
+
+//
+// size, at
+//
+
+overload size(a:String) = size(a.data);
+
+overload at(a:String, i) ref = at(a.data, i);
+
+
+//
+// begin, end, iterator
+//
+
+overload begin(a:String) = begin(a.data);
+overload end(a:String) = end(a.data);
+overload iterator(a:String) = iterator(a.data);
