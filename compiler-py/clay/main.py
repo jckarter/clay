@@ -7,7 +7,7 @@ from clay.cleanup import cleanupGlobals
 from clay.error import CompilerError, error
 from clay.ast import *
 from clay.env import setModuleSearchPath, loadProgram
-from clay.evaluator import evaluate, InvokeBindings
+from clay.evaluator import evaluateRootExpr, InvokeBindings
 from clay.analyzer import analyze
 from clay import compiler
 
@@ -35,7 +35,7 @@ def loadAnalyzeAndEval(fileName) :
     mainCall = Call(NameRef(Identifier("main")), [])
     result = analyze(mainCall, module.env)
     xprint(result)
-    result = evaluate(mainCall, module.env)
+    result = evaluateRootExpr(mainCall, module.env)
     xprint(result)
 
 def loadAndCompile(fileName) :

@@ -395,15 +395,15 @@ compile2 = multimethod(errorMessage="invalid expression")
 
 @compile2.register(BoolLiteral)
 def foo(x, env) :
-    return evaluate(x, env)
+    return evaluateRootExpr(x, env)
 
 @compile2.register(IntLiteral)
 def foo(x, env) :
-    return evaluate(x, env)
+    return evaluateRootExpr(x, env)
 
 @compile2.register(FloatLiteral)
 def foo(x, env) :
-    return evaluate(x, env)
+    return evaluateRootExpr(x, env)
 
 @compile2.register(CharLiteral)
 def foo(x, env) :
@@ -531,7 +531,7 @@ def foo(x, env) :
 
 @compile2.register(StaticExpr)
 def foo(x, env) :
-    return evaluate(x.expr, env, toStatic)
+    return evaluateRootExpr(x.expr, env, toStatic)
 
 @compile2.register(SCExpression)
 def foo(x, env) :
@@ -1323,7 +1323,7 @@ def foo(x, env, codeContext) :
 
 @compileBinding.register(StaticBinding)
 def foo(x, env, codeContext) :
-    right = evaluate(x.expr, env, toStatic)
+    right = evaluateRootExpr(x.expr, env, toStatic)
     return extendEnv(env, [x.name], [right])
 
 def compilerCollectLabels(statements, i, marker, codeContext) :

@@ -778,13 +778,7 @@ def typeSize(t) :
 # temp values
 #
 
-_tempsBlocks = [[]]
-
-def _cleanupTempsBlocks() :
-    global _tempsBlocks
-    _tempsBlocks = [[]]
-
-installGlobalsCleanupHook(_cleanupTempsBlocks)
+_tempsBlocks = []
 
 def pushTempsBlock() :
     block = []
@@ -951,8 +945,8 @@ def _callBuiltin(builtinName, args, converter=None) :
     builtin = NameRef(Identifier(builtinName))
     call = Call(builtin, argNames)
     if converter is None :
-        return evaluate(call, env)
-    return evaluate(call, env, converter)
+        return evaluateRootExpr(call, env)
+    return evaluateRootExpr(call, env, converter)
 
 def valueInit(a) :
     if isSimpleType(a.type) :
@@ -1102,7 +1096,7 @@ def recordFieldTypes(recType) :
         record = recType.tag
         env = extendEnv(record.env, record.typeVars, recType.params)
         valueArgs = recordValueArgs(record)
-        fieldTypes = [evaluate(x.type, env, toType) for x in valueArgs]
+        fieldTypes = [evaluateRootExpr(x.type, env, toType) for x in valueArgs]
         _recordFieldTypes[recType] = fieldTypes
     return fieldTypes
 
@@ -1118,14 +1112,21 @@ installGlobalsCleanupHook(_cleanupRecordFieldTypes)
 # value printer
 #
 
+def toRootValue(r) :
+    try :
+        pushTempsBlock()
+        return toValue(r)
+    finally :
+        popTempsBlock()
+
 def makeXConvertBuiltin(suffix) :
     def xconvert(r) :
-        v = toValue(r)
+        v = toRootValue(r)
         return XSymbol(str(v.buf.value) + suffix)
     return xconvert
 
 def xconvertBool(r) :
-    v = toValue(r)
+    v = toRootValue(r)
     return XSymbol("true" if v.buf.value else "false")
 
 def xconvertPointer(r) :
@@ -1190,9 +1191,10 @@ _xconverters = {}
 
 def evaluateRootExpr(expr, env, converter=(lambda x : x)) :
     pushTempsBlock()
-    result = evaluate(expr, env, converter)
-    popTempsBlock()
-    return result
+    try :
+        return evaluate(expr, env, converter)
+    finally :
+        popTempsBlock()
 
 
 
@@ -1513,10 +1515,10 @@ def foo(x, args, env) :
     ensureArity(args, len(x.args))
     argRefs = []
     for arg, externalArg in zip(args, x.args) :
-        expectedType = evaluate(externalArg.type, x.env, toType)
+        expectedType = evaluateRootExpr(externalArg.type, x.env, toType)
         argRef = evaluate(arg, env, toReferenceOfType(expectedType))
         argRefs.append(argRef)
-    returnType = evaluate(x.returnType, x.env, toType)
+    returnType = evaluateRootExpr(x.returnType, x.env, toType)
     return evalLLVMCall(x.llvmFunc, argRefs, returnType)
 
 
@@ -1528,8 +1530,8 @@ def foo(x, args, env) :
 def initExternalProcedure(x) :
     if x.llvmFunc is not None :
         return
-    argTypes = [evaluate(y.type, x.env, toType) for y in x.args]
-    returnType = evaluate(x.returnType, x.env, toType)
+    argTypes = [evaluateRootExpr(y.type, x.env, toType) for y in x.args]
+    returnType = evaluateRootExpr(x.returnType, x.env, toType)
 
     # generate external func
     llvmArgTypes = [llvmType(y) for y in argTypes]
@@ -2167,7 +2169,8 @@ def matchInvoke(code, codeEnv, actualArgs) :
             if arg is None :
                 return argMismatch(actualArg)
             if formalArg.type is not None :
-                typePattern = evaluate(formalArg.type, codeEnv2, toTypeOrCell)
+                typePattern = evaluateRootExpr(formalArg.type, codeEnv2,
+                                               toTypeOrCell)
                 if not unify(typePattern, arg.type) :
                     return argMismatch(actualArg)
             vars.append(formalArg.name)
@@ -2176,7 +2179,8 @@ def matchInvoke(code, codeEnv, actualArgs) :
             arg = actualArg.asStatic()
             if arg is None :
                 return argMismatch(actualArg)
-            pattern = evaluate(formalArg.pattern, codeEnv2, toStaticOrCell)
+            pattern = evaluateRootExpr(formalArg.pattern, codeEnv2,
+                                       toStaticOrCell)
             if not unify(pattern, arg) :
                 return argMismatch(actualArg)
         else :
@@ -2184,7 +2188,7 @@ def matchInvoke(code, codeEnv, actualArgs) :
     typeParams = resolveTypeVars(code.typeVars, cells)
     if code.predicate is not None :
         codeEnv2 = extendEnv(codeEnv, code.typeVars, typeParams)
-        if not evaluate(code.predicate, codeEnv2, toBool) :
+        if not evaluateRootExpr(code.predicate, codeEnv2, toBool) :
             return predicateFailure(code.predicate)
     return InvokeBindings(code.typeVars, typeParams, vars, params)
 
@@ -2206,7 +2210,7 @@ def matchRecordInvoke(record, actualArgs) :
             arg = actualArg.asReference()
             if arg is None :
                 return argMismatch(actualArg)
-            typePattern = evaluate(formalArg.type, env, toTypeOrCell)
+            typePattern = evaluateRootExpr(formalArg.type, env, toTypeOrCell)
             if not unify(typePattern, arg.type) :
                 return argMismatch(actualArg)
             vars.append(formalArg.name)
@@ -2215,7 +2219,7 @@ def matchRecordInvoke(record, actualArgs) :
             arg = actualArg.asStatic()
             if arg is None :
                 return argMismatch(actualArg)
-            pattern = evaluate(formalArg.pattern, env, toStaticOrCell)
+            pattern = evaluateRootExpr(formalArg.pattern, env, toStaticOrCell)
             if not unify(pattern, arg) :
                 return argMismatch(actualArg)
         else :
@@ -2234,7 +2238,7 @@ def evalInvoke(code, env, bindings) :
                     bindings.typeParams + bindings.params)
     returnType = None
     if code.returnType is not None :
-        returnType = evaluate(code.returnType, env, toType)
+        returnType = evaluateRootExpr(code.returnType, env, toType)
     context = CodeContext(code.returnByRef, returnType)
     result = evalStatement(code.body, env, context)
     if type(result) is Goto :
@@ -2304,7 +2308,7 @@ evalBinding = multimethod(errorMessage="invalid binding")
 def foo(x, env, context) :
     converter = toValue
     if x.type is not None :
-        declaredType = evaluate(x.type, env, toType)
+        declaredType = evaluateRootExpr(x.type, env, toType)
         converter = toValueOfType(declaredType)
     right = evaluateRootExpr(x.expr, env, converter)
     return extendEnv(env, [x.name], [right])
@@ -2313,7 +2317,7 @@ def foo(x, env, context) :
 def foo(x, env, context) :
     converter = toValueOrReference
     if x.type is not None :
-        declaredType = evaluate(x.type, env, toType)
+        declaredType = evaluateRootExpr(x.type, env, toType)
         converter = toValueOrReferenceOfType(declaredType)
     right = evaluateRootExpr(x.expr, env, converter)
     return extendEnv(env, [x.name], [right])
@@ -2336,10 +2340,12 @@ def evalCollectLabels(statements, startIndex, labels, env) :
 @evalStatement2.register(Assignment)
 def foo(x, env, context) :
     pushTempsBlock()
-    left = evaluate(x.left, env, toLValue)
-    rightRef = evaluate(x.right, env, toReference)
-    valueAssign(left, rightRef)
-    popTempsBlock()
+    try :
+        left = evaluate(x.left, env, toLValue)
+        rightRef = evaluate(x.right, env, toReference)
+        valueAssign(left, rightRef)
+    finally :
+        popTempsBlock()
 
 @evalStatement2.register(Goto)
 def foo(x, env, context) :
