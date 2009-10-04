@@ -1,6 +1,7 @@
 import os
 from clay.cleanup import *
 from clay.error import *
+from clay.multimethod import *
 from clay.ast import *
 from clay.parser import parse
 
@@ -221,14 +222,38 @@ installDefaultPrimitives()
 
 
 #
+# setModuleSearchPath, locateModule
+#
+
+moduleSearchPath = []
+
+def setModuleSearchPath(searchPath) :
+    global moduleSearchPath
+    moduleSearchPath = searchPath
+
+def locateModule(names) :
+    for d in moduleSearchPath :
+        fileName = os.path.join(d, *names) + ".clay"
+        if os.path.isfile(fileName) :
+            return fileName
+    error("module not found: %s" % "".join(names))
+
+
+
+#
 # loadProgram
 #
+
+mainModule = None
+moduleMap = {}
 
 def loadProgram(fileName) :
     module = loadModuleFile(fileName)
     resolveLinks(module.imports)
     resolveLinks(module.exports)
     installOverloads(module)
+    global mainModule
+    mainModule = module
     return module
 
 def loadModuleFile(fileName) :
@@ -251,44 +276,26 @@ def loadModule(nameParts) :
     nameStr = ".".join(nameParts)
     if nameStr == "__primitives__" :
         return primitivesModule
-    module = _modules.get(nameStr)
+    module = moduleMap.get(nameStr)
     if module is None :
         fileName = locateModule(nameParts)
         module = loadModuleFile(fileName)
-        _modules[nameStr] = module
+        moduleMap[nameStr] = module
         resolveLinks(module.imports)
         resolveLinks(module.exports)
     return module
 
 def loadedModule(nameStr) :
-    module = _modules.get(nameStr)
+    module = moduleMap.get(nameStr)
     ensure(module is not None, "module not loaded: %s" % nameStr)
     return module
 
-_modules = {}
-def _cleanupModules() :
-    global _modules
-    _modules = {}
-installGlobalsCleanupHook(_cleanupModules)
-
-
-
-#
-# setModuleSearchPath, locateModule
-#
-
-_moduleSearchPath = []
-
-def setModuleSearchPath(searchPath) :
-    global _moduleSearchPath
-    _moduleSearchPath = searchPath
-
-def locateModule(names) :
-    for d in _moduleSearchPath :
-        fileName = os.path.join(d, *names) + ".clay"
-        if os.path.isfile(fileName) :
-            return fileName
-    error("module not found: %s" % "".join(names))
+def _cleanupEnvGlobals() :
+    global mainModule, moduleMap
+    cleanupModule(mainModule)
+    mainModule = None
+    moduleMap = {}
+installGlobalsCleanupHook(_cleanupEnvGlobals)
 
 
 
@@ -312,6 +319,51 @@ def installOverloads(module) :
 def verifyOverloadable(x) :
     ensure(type(x) is Overloadable, "invalid overloadable")
     return x
+
+
+
+#
+# cleanupModule
+#
+
+def cleanupModule(module) :
+    if module.env is None :
+        return
+    module.env = None
+    for import_ in module.imports :
+        cleanupModule(import_.module)
+    for export in module.exports :
+        cleanupModule(export.module)
+    for item in module.topLevelItems :
+        cleanupTopLevelItem(item)
+
+
+
+#
+# cleanupTopLevelItem
+#
+
+cleanupTopLevelItem = multimethod()
+
+@cleanupTopLevelItem.register(Record)
+def foo(x) :
+    pass
+
+@cleanupTopLevelItem.register(Procedure)
+def foo(x) :
+    pass
+
+@cleanupTopLevelItem.register(Overloadable)
+def foo(x) :
+    pass
+
+@cleanupTopLevelItem.register(Overload)
+def foo(x) :
+    pass
+
+@cleanupTopLevelItem.register(ExternalProcedure)
+def foo(x) :
+    x.llvmFunc = None
 
 
 
@@ -340,3 +392,11 @@ class SCExpression(Expression) :
 def primitiveNameRef(s) :
     nameRef = NameRef(Identifier(s))
     return SCExpression(primitivesEnv, nameRef)
+
+
+
+#
+# remove temp name used for multimethod instances
+#
+
+del foo
