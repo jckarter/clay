@@ -8,6 +8,7 @@ DottedName -> Identifier ("." Identifier)*
 
 TopLevelItem -> RecordDef | GlobalBinding | ProcedureDef
               | OverloadableDef | OverloadDef
+              | ExternalProcedure
 
 RecordDef -> "record" Identifier TypeVars? "("
              comma_list(RecordArg)? ")" ";"
@@ -44,6 +45,10 @@ Body -> "=" Expression ";"
 OverloadableDef -> "overloadable" Identifier ";"
 
 OverloadDef -> "overload" DottedName Procedure
+
+ExternalProcedure -> "external" Identifier "(" comma_list(ExternalArg)? ")"
+                     TypeSpec ";"
+ExternalArg -> Identifier TypeSpec
 
 Block -> "{" Statement+ "}"
 

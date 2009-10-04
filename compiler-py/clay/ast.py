@@ -14,6 +14,7 @@ __all__ = [
     "TopLevelItem",
     "Record", "RecordArg", "ValueRecordArg", "StaticRecordArg",
     "Procedure", "Overloadable", "Overload",
+    "ExternalProcedure", "ExternalArg",
     "Import", "Export", "Module"]
 
 def check(x, t) :
@@ -412,6 +413,26 @@ class Overload(TopLevelItem) :
         self.name = name
         self.code = code
         self.env = None
+
+class ExternalProcedure(TopLevelItem) :
+    def __init__(self, name, args, returnType) :
+        super(ExternalProcedure, self).__init__()
+        check(name, Identifier)
+        checkList(args, ExternalArg)
+        check(returnType, Expression)
+        self.name = name
+        self.args = args
+        self.returnType = returnType
+        self.env = None
+        self.llvmFunc = None
+
+class ExternalArg(ASTNode) :
+    def __init__(self, name, type_) :
+        super(ExternalArg, self).__init__()
+        check(name, Identifier)
+        check(type_, Expression)
+        self.name = name
+        self.type = type_
 
 
 

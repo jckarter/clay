@@ -33,3 +33,15 @@ overload at(a:String, i) ref = at(a.data, i);
 overload begin(a:String) = begin(a.data);
 overload end(a:String) = end(a.data);
 overload iterator(a:String) = iterator(a.data);
+
+//
+// c-string compatibility
+//
+
+toCString(s:String):Vector[Int8] {
+    var v = Vector[Int8]();
+    for (c in s)
+        pushBack(v, to(Int8, ord(c)));
+    pushBack(v, 0#i8);
+    return v;
+}

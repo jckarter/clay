@@ -14,27 +14,12 @@ import clay.llvmwrapper as llvm
 # global llvm data
 #
 
-llvmModuleInitialized = False
 llvmFunction = None
 llvmInitBuilder = None
 llvmBuilder = None
 
-def initLLVMModule() :
-    global llvmModuleInitialized
-    llvmModuleInitialized = True
-    intPtrType = llvm.Type.pointer(llvmType(nativeIntType))
-    ft = llvm.Type.function(llvm.Type.void(), [intPtrType])
-    f = llvm.Function.new(llvmModule(), ft, "_clay_print_int")
-    f.linkage = llvm.LINKAGE_EXTERNAL
-
-    boolPtrType = llvm.Type.pointer(llvmType(boolType))
-    ft = llvm.Type.function(llvm.Type.void(), [boolPtrType])
-    f = llvm.Function.new(llvmModule(), ft, "_clay_print_bool")
-    f.linkage = llvm.LINKAGE_EXTERNAL
-
 def _cleanCompilerLLVMGlobals() :
-    global llvmModuleInitialized, llvmFunction, llvmInitBuilder, llvmBuilder
-    llvmModuleInitialized = False
+    global llvmFunction, llvmInitBuilder, llvmBuilder
     llvmFunction = None
     llvmInitBuilder = None
     llvmBuilder = None
@@ -670,6 +655,18 @@ def foo(x, args, env) :
         return compileInvoke(x.name.s, y.code, y.env, result)
     error("no matching overload")
 
+@compileCall.register(ExternalProcedure)
+def foo(x, args, env) :
+    initExternalProcedure(x)
+    ensureArity(args, len(x.args))
+    argRefs = []
+    for arg, externalArg in zip(args, x.args) :
+        expectedType = compile(externalArg.type, x.env, toType)
+        argRef = compile(arg, env, toRTReferenceOfType(expectedType))
+        argRefs.append(argRef)
+    returnType = compile(x.returnType, x.env, toType)
+    return compileLLVMCall(x.llvmFunc, argRefs, returnType)
+
 
 
 #
@@ -691,11 +688,14 @@ def rtLoadLLVM(args, env, types) :
 
 
 #
-# compilePrimitiveCall
+# compilePrimitiveCall, compileLLVMCall
 #
 
 def compilePrimitiveCall(primitive, inRefs, outputType) :
     func = primitiveFunc(primitive, [x.type for x in inRefs], outputType)
+    return compileLLVMCall(func, inRefs, outputType)
+
+def compileLLVMCall(func, inRefs, outputType) :
     llvmArgs = [inRef.llvmValue for inRef in inRefs]
     if not isVoidType(outputType) :
         result = tempRTValue(outputType)
@@ -710,19 +710,6 @@ def compilePrimitiveCall(primitive, inRefs, outputType) :
 #
 # compile primitives
 #
-
-@compileCall.register(primitives._print)
-def foo(x, args, env) :
-    ensureArity(args, 1)
-    x = compile(args[0], env, toRTReference)
-    if x.type == boolType :
-        f = llvmModule().get_function_named("_clay_print_bool")
-    elif x.type == nativeIntType :
-        f = llvmModule().get_function_named("_clay_print_int")
-    else :
-        error("printing support not available for this type")
-    llvmBuilder.call(f, [x.llvmValue])
-    return voidValue
 
 @compileCall.register(primitives.typeSize)
 def foo(x, args, env) :
@@ -1080,8 +1067,6 @@ def compileCode(name, code, env, bindings, internal=True) :
 #
 
 def compileCodeHeader(name, code, env, bindings, internal) :
-    if not llvmModuleInitialized :
-        initLLVMModule()
     llvmArgTypes = []
     for param in bindings.params :
         llt = llvm.Type.pointer(llvmType(param.type))

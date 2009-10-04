@@ -89,6 +89,9 @@ r(StaticRecordArg, lambda x : xo("StaticRecordArg", x.pattern))
 r(Procedure, lambda x : xo("Procedure", x.name, x.code))
 r(Overloadable, lambda x : xo("Overloadable", x.name))
 r(Overload, lambda x : xo("Overload", x.name, x.code))
+r(ExternalProcedure, lambda x : xo("ExternalProcedure", x.name, x.args,
+                                   x.returnType))
+r(ExternalArg, lambda x : xo("ExternalArg", x.name, x.type))
 
 
 

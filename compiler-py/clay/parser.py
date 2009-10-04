@@ -302,7 +302,17 @@ overloadable = astNode(sequence(keyword("overloadable"), identifier,
 overload = astNode(sequence(keyword("overload"), identifier, code),
                    lambda x : Overload(x[1], x[2]))
 
-topLevelItem = choice(record, procedure, overloadable, overload)
+externalArg = astNode(sequence(identifier, typeSpec),
+                      lambda x : ExternalArg(x[0], x[1]))
+externalArgs = modify(listOf(externalArg, comma),
+                      lambda x : [] if x is None else x)
+externalProcedure = astNode(sequence(keyword("external"), identifier,
+                                     symbol("("), externalArgs, symbol(")"),
+                                     typeSpec, semicolon),
+                            lambda x : ExternalProcedure(x[1], x[3], x[5]))
+
+topLevelItem = choice(record, procedure, overloadable, overload,
+                      externalProcedure)
 
 
 #

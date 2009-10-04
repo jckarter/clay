@@ -1507,6 +1507,57 @@ def foo(x, args, env) :
         return evalInvoke(y.code, y.env, result)
     error("no matching overload")
 
+@evaluateCall.register(ExternalProcedure)
+def foo(x, args, env) :
+    initExternalProcedure(x)
+    ensureArity(args, len(x.args))
+    argRefs = []
+    for arg, externalArg in zip(args, x.args) :
+        expectedType = evaluate(externalArg.type, x.env, toType)
+        argRef = evaluate(arg, env, toReferenceOfType(expectedType))
+        argRefs.append(argRef)
+    returnType = evaluate(x.returnType, x.env, toType)
+    return evalLLVMCall(x.llvmFunc, argRefs, returnType)
+
+
+
+#
+# makeExternalFunc
+#
+
+def initExternalProcedure(x) :
+    if x.llvmFunc is not None :
+        return
+    argTypes = [evaluate(y.type, x.env, toType) for y in x.args]
+    returnType = evaluate(x.returnType, x.env, toType)
+
+    # generate external func
+    llvmArgTypes = [llvmType(y) for y in argTypes]
+    if isVoidType(returnType) :
+        llvmReturnType = llvm.Type.void()
+    else :
+        llvmReturnType = llvmType(returnType)
+    llvmFuncType = llvm.Type.function(llvmReturnType, llvmArgTypes)
+    func = llvmModule().add_function(llvmFuncType, x.name.s)
+    func.linkage = llvm.LINKAGE_EXTERNAL
+
+    # generate wrapper
+    llvmArgTypes2 = [llvmType(pointerType(y)) for y in argTypes]
+    if not isVoidType(returnType) :
+        llvmArgTypes2.append(llvmType(pointerType(returnType)))
+    llvmFuncType2 = llvm.Type.function(llvm.Type.void(), llvmArgTypes2)
+    func2 = llvmModule().add_function(llvmFuncType2, "wrapper_%s" % x.name.s)
+    func2.linkage = llvm.LINKAGE_INTERNAL
+    block = func2.append_basic_block("code")
+    builder = llvm.Builder.new(block)
+    llvmArgs = [builder.load(func2.args[i]) for i in range(len(argTypes))]
+    result = builder.call(func, llvmArgs)
+    if not isVoidType(returnType) :
+        builder.store(result, func2.args[-1])
+    builder.ret_void()
+
+    x.llvmFunc = func2
+
 
 
 #
@@ -1752,11 +1803,14 @@ def foo(x, inputTypes, outputType, builder, func) :
 
 
 #
-# evalPrimitiveCall
+# evalPrimitiveCall, evalLLVMCall
 #
 
 def evalPrimitiveCall(primitive, inRefs, outputType) :
     func = primitiveFunc(primitive, [x.type for x in inRefs], outputType)
+    return evalLLVMCall(func, inRefs, outputType)
+
+def evalLLVMCall(func, inRefs, outputType) :
     llvmArgs = []
     for inRef in inRefs :
         llt = llvmType(pointerType(inRef.type))
@@ -1779,13 +1833,6 @@ def evalPrimitiveCall(primitive, inRefs, outputType) :
 #
 # evaluate primitives
 #
-
-@evaluateCall.register(primitives._print)
-def foo(x, args, env) :
-    ensureArity(args, 1)
-    v = evaluate(args[0], env, toReference)
-    xprint(v)
-    return voidValue
 
 @evaluateCall.register(primitives.typeSize)
 def foo(x, args, env) :

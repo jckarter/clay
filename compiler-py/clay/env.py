@@ -135,8 +135,6 @@ def installDefaultPrimitives() :
         x.env = primitivesEnv
         entry(name, x)
 
-    primitive("_print")
-
     primitive("Tuple")
     primitive("Array")
     primitive("Pointer")

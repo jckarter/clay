@@ -370,17 +370,24 @@ def foo(x, args, env) :
         return analyzeInvoke(y.code, y.env, result)
     error("no matching overload")
 
+@analyzeCall.register(ExternalProcedure)
+def foo(x, args, env) :
+    ensureArity(args, len(x.args))
+    argRefs = []
+    for arg, externalArg in zip(args, x.args) :
+        expectedType = analyze(externalArg.type, x.env, toType)
+        argRef = analyze(arg, env, toRTReferenceOfType(expectedType))
+        argRefs.append(argRef)
+    returnType = analyze(x.returnType, x.env, toType)
+    if isVoidType(returnType) :
+        return voidValue
+    return RTValue(returnType)
+
 
 
 #
 # analyze primitives
 #
-
-@analyzeCall.register(primitives._print)
-def foo(x, args, env) :
-    ensureArity(args, 1)
-    analyze(args[0], env, toRTReference)
-    return voidValue
 
 @analyzeCall.register(primitives.typeSize)
 def foo(x, args, env) :

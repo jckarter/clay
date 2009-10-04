@@ -1,0 +1,9 @@
+import _core;
+
+external fopen(path:Pointer[Int8], mode:Pointer[Int8]): Pointer[Int8];
+external fdopen(fd:Int32, mode:Pointer[Int8]): Pointer[Int8];
+
+external fclose(f:Pointer[Int8]): Void;
+
+external fread(ptr:Pointer[Int8], size:Int32, n:Int32, f:Pointer[Int8]): Int32;
+external fwrite(ptr:Pointer[Int8], size:Int32, n:Int32, f:Pointer[Int8]): Int32;
