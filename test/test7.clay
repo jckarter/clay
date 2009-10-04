@@ -5,6 +5,5 @@ main() {
     var f = fdopen(1, toCString("w").data);
     var s = "Hello World!\n";
     fwrite(toCString(s).data, 1, size(s), f);
-    fclose(f);
     return 0;
 }
