@@ -292,6 +292,8 @@ def loadedModule(nameStr) :
 
 def _cleanupEnvGlobals() :
     global mainModule, moduleMap
+    if mainModule is None :
+        return
     cleanupModule(mainModule)
     mainModule = None
     moduleMap = {}
