@@ -1,4 +1,4 @@
-__all__ = ["installGlobalsCleanupHook", "cleanupGlobals", "isCleaningUp"]
+__all__ = ["installGlobalsCleanupHook", "cleanupGlobals"]
 
 
 _globalsCleanupHooks = []
@@ -6,13 +6,6 @@ _globalsCleanupHooks = []
 def installGlobalsCleanupHook(f) :
     _globalsCleanupHooks.append(f)
 
-_cleaningUp = False
-
 def cleanupGlobals() :
-    global _cleaningUp
-    _cleaningUp = True
-    for f in _globalsCleanupHooks :
+    for f in reversed(_globalsCleanupHooks) :
         f()
-
-def isCleaningUp() : 
-    return _cleaningUp

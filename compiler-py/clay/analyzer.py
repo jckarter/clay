@@ -279,7 +279,7 @@ def foo(x) :
 @analyzeNameRef.register(Record)
 def foo(x) :
     if (len(x.typeVars) == 0) :
-        return recordType(x, [])
+        return recordType(x, ())
     return x
 
 
@@ -294,13 +294,13 @@ analyzeIndexing = multimethod(errorMessage="invalid indexing")
 def foo(x, args, env) :
     ensureArity(args, len(x.typeVars))
     typeParams = [analyze(y, env, toStaticOrCell) for y in args]
-    return recordType(x, typeParams)
+    return recordType(x, tuple(typeParams))
 
 @analyzeIndexing.register(primitives.Tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuple types need atleast two member types")
     elementTypes = [analyze(y, env, toTypeOrCell) for y in args]
-    return tupleType(elementTypes)
+    return tupleType(tuple(elementTypes))
 
 @analyzeIndexing.register(primitives.Array)
 def foo(x, args, env) :
@@ -360,7 +360,7 @@ def foo(x, args, env) :
     if type(result) is InvokeError :
         result.signalError()
     assert type(result) is InvokeBindings
-    recType = recordType(x, result.typeParams)
+    recType = recordType(x, tuple(result.typeParams))
     return RTValue(recType)
 
 @analyzeCall.register(Procedure)
@@ -478,14 +478,14 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     cell = Cell()
-    analyze(args[0], env, toRTValueOfType(pointerType(cell)))
+    analyze(args[0], env, toRTValueOfType(pointerTypePattern(cell)))
     return RTReference(cell.param)
 
 @analyzeCall.register(primitives.pointerToInt)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
-    analyze(args[0], env, toRTReferenceOfType(pointerType(cell)))
+    analyze(args[0], env, toRTReferenceOfType(pointerTypePattern(cell)))
     outType = analyze(args[1], env, toIntegerType)
     return RTValue(outType)
 
@@ -501,7 +501,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
     targetType = analyze(args[0], env, toType)
-    analyze(args[1], env, toRTValueOfType(pointerType(cell)))
+    analyze(args[1], env, toRTValueOfType(pointerTypePattern(cell)))
     return RTValue(pointerType(targetType))
 
 @analyzeCall.register(primitives.allocateMemory)
@@ -515,7 +515,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     cell = Cell()
-    analyze(args[0], env, toRTReferenceOfType(pointerType(cell)))
+    analyze(args[0], env, toRTReferenceOfType(pointerTypePattern(cell)))
     return voidValue
 
 
@@ -534,7 +534,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuples need atleast two members")
     valueRefs = [analyze(y, env, toRTReference) for y in args]
-    tupType = tupleType([y.type for y in valueRefs])
+    tupType = tupleType(tuple([y.type for y in valueRefs]))
     return RTValue(tupType)
 
 @analyzeCall.register(primitives.tupleFieldCount)

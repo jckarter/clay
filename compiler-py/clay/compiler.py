@@ -322,7 +322,7 @@ def rtTupleFieldRef(a, i) :
     return RTReference(elementType, elementPtr)
 
 def rtMakeTuple(argTypes, argExprs, env) :
-    t = tupleType(argTypes)
+    t = tupleType(tuple(argTypes))
     value = tempRTValue(t)
     valueRef = toRTReference(value)
     ensureArity(argExprs, len(argTypes))
@@ -563,7 +563,7 @@ def foo(x) :
 @compileNameRef.register(Record)
 def foo(x) :
     if (len(x.typeVars) == 0) :
-        return recordType(x, [])
+        return recordType(x, ())
     return x
 
 
@@ -578,13 +578,13 @@ compileIndexing = multimethod(errorMessage="invalid indexing")
 def foo(x, args, env) :
     ensureArity(args, len(x.typeVars))
     typeParams = [compile(y, env, toStaticOrCell) for y in args]
-    return recordType(x, typeParams)
+    return recordType(x, tuple(typeParams))
 
 @compileIndexing.register(primitives.Tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuple types need atleast two member types")
     elementTypes = [compile(y, env, toTypeOrCell) for y in args]
-    return tupleType(elementTypes)
+    return tupleType(tuple(elementTypes))
 
 @compileIndexing.register(primitives.Array)
 def foo(x, args, env) :
@@ -786,14 +786,15 @@ def foo(x, args, env) :
 @compileCall.register(primitives.pointerDereference)
 def foo(x, args, env) :
     cell = Cell()
-    ptr, = rtLoadLLVM(args, env, [pointerType(cell)])
+    ptr, = rtLoadLLVM(args, env, [pointerTypePattern(cell)])
     return RTReference(cell.param, ptr)
 
 @compileCall.register(primitives.pointerToInt)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
-    ptrRef = compile(args[0], env, toRTReferenceOfType(pointerType(cell)))
+    converter = toRTReferenceOfType(pointerTypePattern(cell))
+    ptrRef = compile(args[0], env, converter)
     outType = compile(args[1], env, toIntegerType)
     return compilePrimitiveCall(x, [ptrRef], outType)
 
@@ -810,7 +811,8 @@ def foo(x, args, env) :
     cell = Cell()
     targetType = compile(args[0], env, toType)
     targetPtrType = pointerType(targetType)
-    ptrRef = compile(args[1], env, toRTReferenceOfType(pointerType(cell)))
+    converter = toRTReferenceOfType(pointerTypePattern(cell))
+    ptrRef = compile(args[1], env, converter)
     ptr = llvmBuilder.load(ptrRef.llvmValue)
     ptr = llvmBuilder.bitcast(ptr, llvmType(targetPtrType))
     result = tempRTValue(targetPtrType)
@@ -828,7 +830,8 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     cell = Cell()
-    ptrRef = compile(args[0], env, toRTReferenceOfType(pointerType(cell)))
+    converter = toRTReferenceOfType(pointerTypePattern(cell))
+    ptrRef = compile(args[0], env, converter)
     return compilePrimitiveCall(x, [ptrRef], voidType)
 
 

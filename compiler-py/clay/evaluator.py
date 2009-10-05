@@ -17,10 +17,7 @@ class Type(object) :
     def __init__(self, tag, params) :
         self.tag = tag
         self.params = params
-    def __eq__(self, other) :
-        return equals(self, other)
-    def __hash__(self) :
-        return hash((self.tag, tuple(self.params)))
+        self.interned = False
 
 class Value(object) :
     def __init__(self, type_) :
@@ -28,6 +25,9 @@ class Value(object) :
         self.ctypesType = ctypesType(type_)
         self.buf = self.ctypesType()
     def __del__(self) :
+        #FIXME: ugly hack
+        if valueDestroy is None :
+            return
         valueDestroy(toReference(self))
     def __eq__(self, other) :
         return equals(self, other)
@@ -43,6 +43,7 @@ class Reference(object) :
     def __hash__(self) :
         return valueHash(self)
 
+def isType(t) : return type(t) is Type
 def isValue(x) : return type(x) is Value
 def isReference(x) : return type(x) is Reference
 
@@ -92,38 +93,69 @@ tupleTag = TupleTag()
 arrayTag = ArrayTag()
 pointerTag = PointerTag()
 
-boolType = Type(boolTag, [])
+typesTable = {}
+internTypes = [True]
 
-int8Type  = Type(int8Tag, [])
-int16Type = Type(int16Tag, [])
-int32Type = Type(int32Tag, [])
-int64Type = Type(int64Tag, [])
+def enableInternedTypes(flag) :
+    internTypes.append(flag)
 
-uint8Type  = Type(uint8Tag, [])
-uint16Type = Type(uint16Tag, [])
-uint32Type = Type(uint32Tag, [])
-uint64Type = Type(uint64Tag, [])
+def restoreInternedTypes() :
+    internTypes.pop()
+
+def makeType(tag, params) :
+    if not internTypes[-1] :
+        return Type(tag, params)
+    key = (tag, params)
+    t = typesTable.get(key)
+    if t is None :
+        t = Type(tag, params)
+        t.interned = True
+        typesTable[key] = t
+    return t
+
+def _cleanupTypesTable() :
+    global typesTable
+    typesTable = {}
+installGlobalsCleanupHook(_cleanupTypesTable)
+
+boolType = makeType(boolTag, ())
+
+int8Type  = makeType(int8Tag, ())
+int16Type = makeType(int16Tag, ())
+int32Type = makeType(int32Tag, ())
+int64Type = makeType(int64Tag, ())
+
+uint8Type  = makeType(uint8Tag, ())
+uint16Type = makeType(uint16Tag, ())
+uint32Type = makeType(uint32Tag, ())
+uint64Type = makeType(uint64Tag, ())
 
 nativeIntType = int32Type
 
-float32Type = Type(float32Tag, [])
-float64Type = Type(float64Tag, [])
+float32Type = makeType(float32Tag, ())
+float64Type = makeType(float64Tag, ())
 
-voidType = Type(voidTag, [])
-compilerObjectType = Type(compilerObjectTag, [])
+voidType = makeType(voidTag, ())
+compilerObjectType = makeType(compilerObjectTag, ())
 
 def tupleType(types) :
     assert len(types) >= 2
-    return Type(tupleTag, types)
+    return makeType(tupleTag, types)
 
 def arrayType(type_, sizeValue) :
-    return Type(arrayTag, [type_, sizeValue])
+    return makeType(arrayTag, (type_, sizeValue))
+
+def arrayTypePattern(type_, sizeValue) :
+    return Type(arrayTag, (type_, sizeValue))
 
 def pointerType(type_) :
-    return Type(pointerTag, [type_])
+    return makeType(pointerTag, (type_,))
+
+def pointerTypePattern(type_) :
+    return Type(pointerTag, (type_,))
 
 def recordType(record, params) :
-    return Type(record, params)
+    return makeType(record, params)
 
 
 
@@ -172,7 +204,6 @@ installPrimitive("CompilerObject", compilerObjectType)
 # type predicates
 #
 
-def isType(t) : return type(t) is Type
 def isBoolType(t) : return t.tag is boolTag
 
 def isIntegerType(t) : return type(t.tag) is IntegerTag
@@ -213,15 +244,6 @@ def isSimpleType(t) :
 #
 
 equals = multimethod(n=2, defaultProc=(lambda x, y : x is y))
-
-@equals.register(Type, Type)
-def foo(a, b) :
-    if a.tag is not b.tag :
-        return False
-    for x, y in zip(a.params, b.params) :
-        if not equals(x, y) :
-            return False
-    return True
 
 @equals.register(Value, Value)
 def foo(a, b) :
@@ -497,23 +519,25 @@ toStaticOrCell.register(Cell)(lambda x : x)
 #
 
 def unify(a, b) :
-    if isCell(a) :
-        if a.param is None :
-            a.param = b
-            return True
-        return unify(a.param, b)
-    elif isCell(b) :
-        if b.param is None :
-            b.param = a
-            return True
-        return unify(a, b.param)
     if isType(a) and isType(b) :
+        if a.interned and b.interned :
+            return a is b
         if a.tag is not b.tag :
             return False
         for x, y in zip(a.params, b.params) :
             if not unify(x, y) :
                 return False
         return True
+    if isCell(a) :
+        if a.param is None :
+            a.param = b
+            return True
+        return unify(a.param, b)
+    if isCell(b) :
+        if b.param is None :
+            b.param = a
+            return True
+        return unify(a, b.param)
     return equals(a, b)
 
 def matchType(a, b) :
@@ -989,8 +1013,7 @@ def valueDestroy(a) :
         compilerObjectDestroy(a.address)
         return
     # TODO: fix the ugly hack below
-    if not isCleaningUp() :
-        _callBuiltin("destroy", [a])
+    _callBuiltin("destroy", [a])
 
 def _simpleValueDestroy(a) :
     ptr = ctypes.c_void_p(a.address)
@@ -1016,7 +1039,7 @@ def valueHash(a) :
 def arrayRef(a, i) :
     assert isReference(a)
     cell, sizeCell = Cell(), Cell()
-    matchType(arrayType(cell, sizeCell), a.type)
+    matchType(arrayTypePattern(cell, sizeCell), a.type)
     elementType = cell.param
     return Reference(elementType, a.address + i*typeSize(elementType))
 
@@ -1039,7 +1062,7 @@ def tupleFieldRef(a, i) :
     return Reference(fieldType, a.address + ctypesField.offset)
 
 def makeTuple(argRefs) :
-    t = tupleType([x.type for x in argRefs])
+    t = tupleType(tuple([x.type for x in argRefs]))
     value = tempValue(t)
     valueRef = toReference(value)
     for i, argRef in enumerate(argRefs) :
@@ -1183,7 +1206,7 @@ _xconverters = {}
 
 
 #
-# evaluateRootExpr
+# evaluateRootExpr, evaluatePattern
 #
 
 def evaluateRootExpr(expr, env, converter=(lambda x : x)) :
@@ -1192,6 +1215,13 @@ def evaluateRootExpr(expr, env, converter=(lambda x : x)) :
         return evaluate(expr, env, converter)
     finally :
         popTempsBlock()
+
+def evaluatePattern(expr, env, converter) :
+    enableInternedTypes(False)
+    try :
+        return evaluateRootExpr(expr, env, converter)
+    finally :
+        restoreInternedTypes()
 
 
 
@@ -1397,7 +1427,7 @@ def foo(x) :
 @evaluateNameRef.register(Record)
 def foo(x) :
     if (len(x.typeVars) == 0) :
-        return recordType(x, [])
+        return recordType(x, ())
     return x
 
 
@@ -1412,13 +1442,13 @@ evaluateIndexing = multimethod(errorMessage="invalid indexing")
 def foo(x, args, env) :
     ensureArity(args, len(x.typeVars))
     typeParams = [evaluate(y, env, toStaticOrCell) for y in args]
-    return recordType(x, typeParams)
+    return recordType(x, tuple(typeParams))
 
 @evaluateIndexing.register(primitives.Tuple)
 def foo(x, args, env) :
     ensure(len(args) > 1, "tuple types need atleast two member types")
     elementTypes = [evaluate(y, env, toTypeOrCell) for y in args]
-    return tupleType(elementTypes)
+    return tupleType(tuple(elementTypes))
 
 @evaluateIndexing.register(primitives.Array)
 def foo(x, args, env) :
@@ -1483,7 +1513,7 @@ def foo(x, args, env) :
     if type(result) is InvokeError :
         result.signalError()
     assert type(result) is InvokeBindings
-    recType = recordType(x, result.typeParams)
+    recType = recordType(x, tuple(result.typeParams))
     return makeRecord(recType, result.params)
 
 @evaluateCall.register(Procedure)
@@ -1923,14 +1953,15 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     cell = Cell()
-    ptr = evaluate(args[0], env, toValueOfType(pointerType(cell)))
+    ptr = evaluate(args[0], env, toValueOfType(pointerTypePattern(cell)))
     return Reference(cell.param, pointerToAddress(ptr))
 
 @evaluateCall.register(primitives.pointerToInt)
 def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
-    ptrRef = evaluate(args[0], env, toReferenceOfType(pointerType(cell)))
+    converter = toReferenceOfType(pointerTypePattern(cell))
+    ptrRef = evaluate(args[0], env, converter)
     outType = evaluate(args[1], env, toIntegerType)
     return evalPrimitiveCall(x, [ptrRef], outType)
 
@@ -1946,7 +1977,7 @@ def foo(x, args, env) :
     ensureArity(args, 2)
     cell = Cell()
     targetType = evaluate(args[0], env, toType)
-    ptr = evaluate(args[1], env, toValueOfType(pointerType(cell)))
+    ptr = evaluate(args[1], env, toValueOfType(pointerTypePattern(cell)))
     return addressToPointer(pointerToAddress(ptr), pointerType(targetType))
 
 @evaluateCall.register(primitives.allocateMemory)
@@ -1960,7 +1991,8 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     ensureArity(args, 1)
     cell = Cell()
-    ptrRef = evaluate(args[0], env, toReferenceOfType(pointerType(cell)))
+    converter = toReferenceOfType(pointerTypePattern(cell))
+    ptrRef = evaluate(args[0], env, converter)
     return evalPrimitiveCall(x, [ptrRef], voidType)
 
 
@@ -2166,8 +2198,8 @@ def matchInvoke(code, codeEnv, actualArgs) :
             if arg is None :
                 return argMismatch(actualArg)
             if formalArg.type is not None :
-                typePattern = evaluateRootExpr(formalArg.type, codeEnv2,
-                                               toTypeOrCell)
+                typePattern = evaluatePattern(formalArg.type, codeEnv2,
+                                              toTypeOrCell)
                 if not unify(typePattern, arg.type) :
                     return argMismatch(actualArg)
             vars.append(formalArg.name)
@@ -2176,8 +2208,8 @@ def matchInvoke(code, codeEnv, actualArgs) :
             arg = actualArg.asStatic()
             if arg is None :
                 return argMismatch(actualArg)
-            pattern = evaluateRootExpr(formalArg.pattern, codeEnv2,
-                                       toStaticOrCell)
+            pattern = evaluatePattern(formalArg.pattern, codeEnv2,
+                                      toStaticOrCell)
             if not unify(pattern, arg) :
                 return argMismatch(actualArg)
         else :
@@ -2207,7 +2239,7 @@ def matchRecordInvoke(record, actualArgs) :
             arg = actualArg.asReference()
             if arg is None :
                 return argMismatch(actualArg)
-            typePattern = evaluateRootExpr(formalArg.type, env, toTypeOrCell)
+            typePattern = evaluatePattern(formalArg.type, env, toTypeOrCell)
             if not unify(typePattern, arg.type) :
                 return argMismatch(actualArg)
             vars.append(formalArg.name)
@@ -2216,7 +2248,7 @@ def matchRecordInvoke(record, actualArgs) :
             arg = actualArg.asStatic()
             if arg is None :
                 return argMismatch(actualArg)
-            pattern = evaluateRootExpr(formalArg.pattern, env, toStaticOrCell)
+            pattern = evaluatePattern(formalArg.pattern, env, toStaticOrCell)
             if not unify(pattern, arg) :
                 return argMismatch(actualArg)
         else :
