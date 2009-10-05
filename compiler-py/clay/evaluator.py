@@ -1112,21 +1112,14 @@ installGlobalsCleanupHook(_cleanupRecordFieldTypes)
 # value printer
 #
 
-def toRootValue(r) :
-    try :
-        pushTempsBlock()
-        return toValue(r)
-    finally :
-        popTempsBlock()
-
 def makeXConvertBuiltin(suffix) :
     def xconvert(r) :
-        v = toRootValue(r)
+        v = toValue(r)
         return XSymbol(str(v.buf.value) + suffix)
     return xconvert
 
 def xconvertBool(r) :
-    v = toRootValue(r)
+    v = toValue(r)
     return XSymbol("true" if v.buf.value else "false")
 
 def xconvertPointer(r) :
@@ -1152,11 +1145,15 @@ def xconvertValue(x) :
 
 def xconvertReference(x) :
     converter = getXConverter(x.type.tag)
-    if converter is not None :
-        return converter(x)
-    if isRecordType(x.type) :
-        return xconvertRecord(x)
-    return x
+    pushTempsBlock()
+    try :
+        if converter is not None :
+            return converter(x)
+        if isRecordType(x.type) :
+            return xconvertRecord(x)
+        return x
+    finally :
+        popTempsBlock()
 
 xregister(Value, xconvertValue)
 xregister(Reference, xconvertReference)
