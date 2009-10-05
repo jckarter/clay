@@ -2,9 +2,7 @@ import base;
 
 main() {
     var sum = 0;
-    for (c in "Hello World!") {
+    for (c in "Hello World!")
         sum = sum + ord(c);
-        _print(ord(c));
-    }
     return sum;
 }
