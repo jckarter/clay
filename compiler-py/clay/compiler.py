@@ -93,13 +93,6 @@ class RTTempsBlock(object) :
         self.add(value)
         return value
 
-    def detachTemp(self, temp) :
-        for i, x in enumerate(self.temps) :
-            if x is temp :
-                self.temps.pop(i)
-                return
-        assert False
-
     def cleanup(self) :
         for temp in reversed(self.temps) :
             rtValueDestroy(temp)
@@ -113,9 +106,6 @@ def pushRTTempsBlock() :
 def popRTTempsBlock() :
     block = _rtTempsBlocks.pop()
     block.cleanup()
-
-def detachFromRTTempsBlock(temp) :
-    _rtTempsBlocks[-1].detachTemp(temp)
 
 def tempRTValue(type_) :
     returnLoc = topRTReturnLocation()
@@ -368,15 +358,32 @@ def rtMakeRecord(recType, argExprs, env) :
 
 
 #
+# compileRootExpr
+#
+
+def compileRootExpr(expr, env, converter=(lambda x : x), returnLocation=None) :
+    pushRTTempsBlock()
+    pushTempsBlock()
+    try :
+        return compile(expr, env, converter, returnLocation)
+    finally :
+        popTempsBlock()
+        popRTTempsBlock()
+
+
+
+#
 # compile
 #
 
 def compile(expr, env, converter=(lambda x : x), returnLocation=None) :
     contextPush(expr)
     pushRTReturnLocation(returnLocation)
-    result = compile2(expr, env)
-    result = converter(result)
-    popRTReturnLocation()
+    try :
+        result = compile2(expr, env)
+        result = converter(result)
+    finally :
+        popRTReturnLocation()
     if returnLocation is not None :
         assert returnLocation.used
     contextPop()
@@ -1140,9 +1147,12 @@ class CompilerCodeContext(object) :
         self.breakInfo = []
         self.continueInfo = []
 
-    def pushValue(self, value) :
-        assert isRTValue(value)
-        self.scopeStack.append(value)
+    def pushNewValue(self, type_) :
+        llt = llvmType(type_)
+        ptr = llvmInitBuilder.alloca(llt)
+        v = RTValue(type_, ptr)
+        self.scopeStack.append(v)
+        return v
 
     def pushMarker(self) :
         marker = ScopeMarker()
@@ -1252,12 +1262,11 @@ def compileCodeBody(code, env, bindings, compiledCode) :
 #
 
 def compileStatement(x, env, codeContext) :
-    contextPush(x) # error context
     pushTempsBlock()
-    result = compileStatement2(x, env, codeContext)
-    popTempsBlock()
-    contextPop() # error context
-    return result
+    try :
+        return withContext(x, lambda : compileStatement2(x, env, codeContext))
+    finally :
+        popTempsBlock()
 
 
 
@@ -1296,29 +1305,31 @@ compileBinding = multimethod(errorMessage="invalid binding")
 
 @compileBinding.register(VarBinding)
 def foo(x, env, codeContext) :
-    pushRTTempsBlock()
-    converter = toRTValue
+    converter = analyzer.toRTValue
     if x.type is not None :
-        declaredType = compile(x.type, env, toType)
-        converter = toRTValueOfType(declaredType)
-    right = compile(x.expr, env, converter)
-    detachFromRTTempsBlock(right)
-    codeContext.pushValue(right)
-    popRTTempsBlock()
+        declaredType = compileRootExpr(x.type, env, toType)
+        converter = analyzer.toRTValueOfType(declaredType)
+    result = analyzer.analyzeRootExpr(x.expr, envForAnalysis(env), converter)
+    v = codeContext.pushNewValue(result.type)
+    returnLoc = RTReturnLocation(v.type, v.llvmValue)
+    right = compileRootExpr(x.expr, env, toRTValueOfType(v.type),
+                            returnLocation=returnLoc)
     return extendEnv(env, [x.name], [right])
 
 @compileBinding.register(RefBinding)
 def foo(x, env, codeContext) :
-    pushRTTempsBlock()
-    converter = toRTValueOrReference
+    converter = analyzer.toRTValueOrReference
     if x.type is not None :
-        declaredType = compile(x.type, env, toType)
-        converter = toRTValueOrReferenceOfType(declaredType)
-    right = compile(x.expr, env, converter)
-    if isRTValue(right) :
-        detachFromRTTempsBlock(right)
-        codeContext.pushValue(right)
-    popRTTempsBlock()
+        declaredType = compileRootExpr(x.type, env, toType)
+        converter = analyzer.toRTValueOrReferenceOfType(declaredType)
+    result = analyzer.analyzeRootExpr(x.expr, envForAnalysis(env), converter)
+    if analyzer.isRTValue(result.type) :
+        v = codeContext.pushNewValue(result.type)
+        returnLoc = RTReturnLocation(v.type, v.llvmValue)
+        right = compileRootExpr(x.expr, env, toRTValueOfType(v.type),
+                                returnLocation=returnLoc)
+    else :
+        right = compileRootExpr(x.expr, env, toRTReferenceOfType(result.type))
     return extendEnv(env, [x.name], [right])
 
 @compileBinding.register(StaticBinding)
@@ -1338,10 +1349,12 @@ def compilerCollectLabels(statements, i, marker, codeContext) :
 @compileStatement2.register(Assignment)
 def foo(x, env, codeContext) :
     pushRTTempsBlock()
-    left = compile(x.left, env, toRTLValue)
-    right = compile(x.right, env, toRTReference)
-    rtValueAssign(left, right)
-    popRTTempsBlock()
+    try :
+        left = compile(x.left, env, toRTLValue)
+        right = compile(x.right, env, toRTReference)
+        rtValueAssign(left, right)
+    finally :
+        popRTTempsBlock()
     return False
 
 @compileStatement2.register(Goto)
@@ -1361,28 +1374,26 @@ def foo(x, env, codeContext) :
         return True
     ensure(x.expr is not None, "return value expected")
     if codeContext.returnByRef :
-        pushRTTempsBlock()
-        result = compile(x.expr, env, toRTLValueOfType(retType))
-        popRTTempsBlock()
+        result = compileRootExpr(x.expr, env, toRTLValueOfType(retType))
         codeContext.cleanAll()
         llvmBuilder.ret(result.llvmValue)
         return True
     returnLoc = RTReturnLocation(retType, codeContext.llvmFunc.args[-1])
-    pushRTTempsBlock()
-    compile(x.expr, env, toRTValueOfType(retType), returnLocation=returnLoc)
-    popRTTempsBlock()
+    compileRootExpr(x.expr, env, toRTValueOfType(retType),
+                    returnLocation=returnLoc)
     codeContext.cleanAll()
     llvmBuilder.ret_void()
     return True
 
-@compileStatement2.register(IfStatement)
-def foo(x, env, codeContext) :
-    pushRTTempsBlock()
-    condRef = compile(x.condition, env, toRTReferenceOfType(boolType))
+def toLLVMBool(x) :
+    condRef = toRTReferenceOfType(boolType)(x)
     cond = llvmBuilder.load(condRef.llvmValue)
     zero = llvm.Constant.int(llvmType(boolType), 0)
-    condResult = llvmBuilder.icmp(llvm.ICMP_NE, cond, zero)
-    popRTTempsBlock()
+    return llvmBuilder.icmp(llvm.ICMP_NE, cond, zero)
+
+@compileStatement2.register(IfStatement)
+def foo(x, env, codeContext) :
+    condResult = compileRootExpr(x.condition, env, toLLVMBool)
     thenBlock = codeContext.llvmFunc.append_basic_block("then")
     elseBlock = codeContext.llvmFunc.append_basic_block("else")
     mergeBlock = None
@@ -1410,9 +1421,7 @@ def foo(x, env, codeContext) :
 
 @compileStatement2.register(ExprStatement)
 def foo(x, env, codeContext) :
-    pushRTTempsBlock()
-    compile(x.expr, env)
-    popRTTempsBlock()
+    compileRootExpr(x.expr, env)
     return False
 
 @compileStatement2.register(While)
@@ -1424,12 +1433,7 @@ def foo(x, env, codeContext) :
     codeContext.pushLoopInfo(exitBlock, marker, condBlock, marker)
     llvmBuilder.branch(condBlock)
     llvmBuilder.position_at_end(condBlock)
-    pushRTTempsBlock()
-    condRef = compile(x.condition, env, toRTReferenceOfType(boolType))
-    cond = llvmBuilder.load(condRef.llvmValue)
-    zero = llvm.Constant.int(llvmType(boolType), 0)
-    condResult = llvmBuilder.icmp(llvm.ICMP_NE, cond, zero)
-    popRTTempsBlock()
+    condResult = compileRootExpr(x.condition, env, toLLVMBool)
     llvmBuilder.cbranch(condResult, bodyBlock, exitBlock)
     llvmBuilder.position_at_end(bodyBlock)
     bodyTerminated = compileStatement(x.body, env, codeContext)

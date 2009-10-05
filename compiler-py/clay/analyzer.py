@@ -127,6 +127,19 @@ xregister(RTReference, lambda x : XObject("RTReference", x.type))
 
 
 #
+# analyzeRootExpr
+#
+
+def analyzeRootExpr(expr, env, converter=(lambda x : x)) :
+    pushTempsBlock()
+    try :
+        return analyze(expr, env, converter)
+    finally :
+        popTempsBlock()
+
+
+
+#
 # analyze
 #
 
@@ -728,7 +741,7 @@ def analyzeInvoke(code, env, bindings) :
 
 def analyzeInvoke2(code, env) :
     if code.returnType is not None :
-        returnType = analyze(code.returnType, env, toType)
+        returnType = analyzeRootExpr(code.returnType, env, toType)
         if code.returnByRef :
             return RTReference(returnType)
         else :
@@ -747,9 +760,10 @@ def analyzeInvoke2(code, env) :
 
 def analyzeStatement(x, env, context) :
     pushTempsBlock()
-    result = withContext(x, lambda : analyzeStatement2(x, env, context))
-    popTempsBlock()
-    return result
+    try :
+        return withContext(x, lambda : analyzeStatement2(x, env, context))
+    finally :
+        popTempsBlock()
 
 
 

@@ -8,7 +8,7 @@ from clay.error import CompilerError, error
 from clay.ast import *
 from clay.env import setModuleSearchPath, loadProgram
 from clay.evaluator import evaluateRootExpr, InvokeBindings
-from clay.analyzer import analyze
+from clay.analyzer import analyzeRootExpr
 from clay import compiler
 
 def initLibrary() :
@@ -33,7 +33,7 @@ def clearTempFiles() :
 def loadAnalyzeAndEval(fileName) :
     module = loadProgram(fileName)
     mainCall = Call(NameRef(Identifier("main")), [])
-    result = analyze(mainCall, module.env)
+    result = analyzeRootExpr(mainCall, module.env)
     xprint(result)
     result = evaluateRootExpr(mainCall, module.env)
     xprint(result)
