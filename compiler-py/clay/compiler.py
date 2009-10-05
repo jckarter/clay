@@ -384,9 +384,9 @@ def compile(expr, env, converter=(lambda x : x), returnLocation=None) :
         result = converter(result)
     finally :
         popRTReturnLocation()
+        contextPop()
     if returnLocation is not None :
         assert returnLocation.used
-    contextPop()
     return result
 
 def compileDelegate(expr, env) :
