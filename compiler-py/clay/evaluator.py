@@ -18,6 +18,8 @@ class Type(object) :
         self.tag = tag
         self.params = params
         self.interned = False
+        self.ctypesType = None
+        self.llvmType = None
 
 class Value(object) :
     def __init__(self, type_) :
@@ -611,30 +613,32 @@ def resolveTypeVars(typeVars, cells) :
 # llvmType, llvmTargetData, llvmExecutionEngine, llvmModule
 #
 
-_llvmTypesTable = None
-
-def _initLLVMTypesTable() :
-    global _llvmTypesTable
-    _llvmTypesTable = {}
-    _llvmTypesTable[boolType] = llvm.Type.int(8)
-    for t in [int8Type, int16Type, int32Type, int64Type,
-              uint8Type, uint16Type, uint32Type, uint64Type] :
-        _llvmTypesTable[t] = llvm.Type.int(t.tag.bits)
-    _llvmTypesTable[float32Type] = llvm.Type.float()
-    _llvmTypesTable[float64Type] = llvm.Type.double()
-
-llvmType = multimethod(errorMessage="invalid type")
-
-@llvmType.register(Type)
-def foo(t) :
-    if _llvmTypesTable is None :
-        _initLLVMTypesTable()
-    llt = _llvmTypesTable.get(t)
-    if llt is None :
-        llt = makeLLVMType(t.tag, t)
+def llvmType(t) :
+    assert isType(t)
+    if t.llvmType is not None :
+        return t.llvmType
+    llt = makeLLVMType(t.tag, t)
+    t.llvmType = llt
     return llt
 
 makeLLVMType = multimethod(errorMessage="invalid type tag")
+
+@makeLLVMType.register(BoolTag)
+def foo(tag, t) :
+    return llvm.Type.int(8)
+
+@makeLLVMType.register(IntegerTag)
+def foo(tag, t) :
+    return llvm.Type.int(tag.bits)
+
+@makeLLVMType.register(FloatingPointTag)
+def foo(tag, t) :
+    if tag.bits == 32 :
+        return llvm.Type.float()
+    elif tag.bits == 64 :
+        return llvm.Type.double()
+    else :
+        assert False
 
 @makeLLVMType.register(CompilerObjectTag)
 def foo(tag, t) :
@@ -643,38 +647,30 @@ def foo(tag, t) :
 @makeLLVMType.register(TupleTag)
 def foo(tag, t) :
     fieldLLVMTypes = [llvmType(x) for x in t.params]
-    llt = llvm.Type.struct(fieldLLVMTypes)
-    _llvmTypesTable[t] = llt
-    return llt
+    return llvm.Type.struct(fieldLLVMTypes)
 
 @makeLLVMType.register(ArrayTag)
 def foo(tag, t) :
     ensure(len(t.params) == 2, "invalid array type")
     elementType = llvmType(t.params[0])
     count = toNativeInt(t.params[1])
-    llt = llvm.Type.array(elementType, count)
-    _llvmTypesTable[t] = llt
-    return llt
+    return llvm.Type.array(elementType, count)
 
 @makeLLVMType.register(PointerTag)
 def foo(tag, t) :
     ensure(len(t.params) == 1, "invalid pointer type")
     pointeeType = llvmType(t.params[0])
-    llt = llvm.Type.pointer(pointeeType)
-    _llvmTypesTable[t] = llt
-    return llt
+    return llvm.Type.pointer(pointeeType)
 
 @makeLLVMType.register(Record)
 def foo(tag, t) :
     llt = llvm.Type.opaque()
     typeHandle = llvm.TypeHandle.new(llt)
-    _llvmTypesTable[t] = llt
+    t.llvmType = llt
     fieldLLVMTypes = [llvmType(x) for x in recordFieldTypes(t)]
     recType = llvm.Type.struct(fieldLLVMTypes)
     typeHandle.type.refine(recType)
-    llt = typeHandle.type
-    _llvmTypesTable[t] = llt
-    return llt
+    return typeHandle.type
 
 _llvmTargetData = None
 def llvmTargetData() :
@@ -701,10 +697,9 @@ def llvmModule() :
     return _llvmModule
 
 def _cleanupLLVMGlobals() :
-    global _llvmTypesTable, _llvmTargetData
+    global _llvmTargetData
     global _llvmModuleProvider, _llvmExecutionEngine
     global _llvmModule
-    _llvmTypesTable = {}
     _llvmTargetData = None
     _llvmModuleProvider = None
     _llvmExecutionEngine = None
@@ -718,42 +713,37 @@ installGlobalsCleanupHook(_cleanupLLVMGlobals)
 # convert to ctypes
 #
 
-_ctypesTable = None
-
-def _initCTypesTable() :
-    global _ctypesTable
-    _ctypesTable = {}
-    _ctypesTable[boolType] = ctypes.c_bool
-    _ctypesTable[int8Type] = ctypes.c_int8
-    _ctypesTable[int16Type] = ctypes.c_int16
-    _ctypesTable[int32Type] = ctypes.c_int32
-    _ctypesTable[int64Type] = ctypes.c_int64
-    _ctypesTable[uint8Type] = ctypes.c_uint8
-    _ctypesTable[uint16Type] = ctypes.c_uint16
-    _ctypesTable[uint32Type] = ctypes.c_uint32
-    _ctypesTable[uint64Type] = ctypes.c_uint64
-    _ctypesTable[float32Type] = ctypes.c_float
-    _ctypesTable[float64Type] = ctypes.c_double
-    _ctypesTable[compilerObjectType] = ctypes.c_void_p
-
-def _cleanupCTypesTable() :
-    global _ctypesTable
-    _ctypesTable = None
-
-installGlobalsCleanupHook(_cleanupCTypesTable)
-
-ctypesType = multimethod(errorMessage="invalid type")
-
-@ctypesType.register(Type)
-def foo(t) :
-    if _ctypesTable is None :
-        _initCTypesTable()
-    ct = _ctypesTable.get(t)
-    if ct is None :
-        ct = makeCTypesType(t.tag, t)
+def ctypesType(t) :
+    assert isType(t)
+    if t.ctypesType is not None :
+        return t.ctypesType
+    ct = makeCTypesType(t.tag, t)
+    t.ctypesType = ct
     return ct
 
 makeCTypesType = multimethod(errorMessage="invalid type tag")
+
+@makeCTypesType.register(BoolTag)
+def foo(tag, t) :
+    return ctypes.c_bool
+
+@makeCTypesType.register(IntegerTag)
+def foo(tag, t) :
+    s = "c_%sint%d" % (("" if tag.signed else "u"), tag.bits)
+    return getattr(ctypes, s)
+
+@makeCTypesType.register(FloatingPointTag)
+def foo(tag, t) :
+    if tag.bits == 32 :
+        return ctypes.c_float
+    elif tag.bits == 64 :
+        return ctypes.c_double
+    else :
+        assert False
+
+@makeCTypesType.register(CompilerObjectTag)
+def foo(tag, t) :
+    return ctypes.c_void_p
 
 @makeCTypesType.register(TupleTag)
 def foo(tag, t) :
@@ -761,27 +751,22 @@ def foo(tag, t) :
     fieldCNames = ["f%d" % x for x in range(len(t.params))]
     ct = type("Tuple", (ctypes.Structure,), {})
     ct._fields_ = zip(fieldCNames, fieldCTypes)
-    _ctypesTable[t] = ct
     return ct
 
 @makeCTypesType.register(ArrayTag)
 def foo(tag, t) :
     ensure(len(t.params) == 2, "invalid array type")
-    ct = ctypesType(t.params[0]) * toNativeInt(t.params[1])
-    _ctypesTable[t] = ct
-    return ct
+    return ctypesType(t.params[0]) * toNativeInt(t.params[1])
 
 @makeCTypesType.register(PointerTag)
 def foo(tag, t) :
     ensure(len(t.params) == 1, "invalid pointer type")
-    ct = ctypes.POINTER(ctypesType(t.params[0]))
-    _ctypesTable[t] = ct
-    return ct
+    return ctypes.POINTER(ctypesType(t.params[0]))
 
 @makeCTypesType.register(Record)
 def foo(tag, t) :
     ct = type("Record", (ctypes.Structure,), {})
-    _ctypesTable[t] = ct
+    t.ctypesType = ct
     fieldCTypes = [ctypesType(x) for x in recordFieldTypes(t)]
     fieldCNames = [f.name.s for f in recordValueArgs(t.tag)]
     ct._fields_ = zip(fieldCNames, fieldCTypes)
@@ -1012,7 +997,6 @@ def valueDestroy(a) :
     if isCompilerObjectType(a.type) :
         compilerObjectDestroy(a.address)
         return
-    # TODO: fix the ugly hack below
     _callBuiltin("destroy", [a])
 
 def _simpleValueDestroy(a) :
