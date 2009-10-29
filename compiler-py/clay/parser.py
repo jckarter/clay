@@ -43,7 +43,7 @@ comma = symbol(",")
 
 identifier = astNode(tokenType(t.Identifier), lambda x : Identifier(x))
 
-dottedName = astNode(listOf(identifier, comma), lambda x : DottedName(x))
+dottedName = astNode(listOf(identifier, symbol(".")), lambda x : DottedName(x))
 
 
 #
