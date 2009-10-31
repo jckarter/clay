@@ -91,7 +91,6 @@ def main() :
         compileAndMakeExe()
     except CompilerError, e :
         e.display()
-        raise
     finally :
         clearTempFiles()
         cleanupGlobals()
