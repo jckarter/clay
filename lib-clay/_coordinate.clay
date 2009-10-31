@@ -20,7 +20,7 @@ overload Coordinate?[T](static T) = false;
 
 overload RandomAccessCoordinate?[T](static T) = false;
 
-overload Coordinate?[T](static T) if (RandomAccessCoordinate?(T)) = true;
+overload Coordinate? [T|RandomAccessCoordinate?(T)] (static T) = true;
 
 
 //

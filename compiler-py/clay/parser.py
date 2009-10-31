@@ -249,9 +249,13 @@ statement = choice(block, labelDef, varBinding, refBinding, staticBinding,
 #
 
 identifierList = listOf(identifier, comma)
-typeVars = modify(sequence(symbol("["), identifierList, symbol("]")),
-                  lambda x : x[1])
-optTypeVars = modify(optional(typeVars), lambda x : [] if x is None else x)
+predicate = modify(sequence(symbol("|"), expression),
+                   lambda x : x[1])
+typeVarsAndPredicate = modify(sequence(symbol("["), identifierList,
+                                       optional(predicate), symbol("]")),
+                              lambda x : (x[1], x[2]))
+optTypeVarsAndPredicate = modify(optional(typeVarsAndPredicate),
+                                 lambda x : ([], None) if x is None else x)
 
 valueArgument = astNode(sequence(identifier, optTypeSpec),
                         lambda x : ValueArgument(x[0],x[1]))
@@ -263,24 +267,24 @@ formalArguments = modify(optional(listOf(formalArgument, comma)),
 
 byRef = modify(optional(keyword("ref")), lambda x : x is not None)
 
-predicate = modify(sequence(keyword("if"), parenCondition),
-                   lambda x : x[1])
-
 exprBody1 = astNode(sequence(symbol("="), expression, symbol(";")),
                    lambda x : Return(x[1]))
 exprBody = astNode(exprBody1, lambda x : Block([x]))
 
 body = choice(exprBody, block)
 
-code = astNode(sequence(optTypeVars, symbol("("), formalArguments,
-                        symbol(")"), byRef, optTypeSpec,
-                        optional(predicate), body),
-               lambda x : Code(x[0],x[2],x[4],x[5],x[6],x[7]))
+code = astNode(sequence(optTypeVarsAndPredicate, symbol("("), formalArguments,
+                        symbol(")"), byRef, optTypeSpec, body),
+               lambda x : Code(x[0][0], x[0][1], x[2], x[4], x[5], x[6]))
 
 
 #
 # top level items
 #
+
+typeVars = modify(sequence(symbol("["), identifierList, symbol("]")),
+                  lambda x : x[1])
+optTypeVars = modify(optional(typeVars), lambda x : [] if x is None else x)
 
 valueRecordArg = astNode(sequence(identifier, typeSpec),
                          lambda x : ValueRecordArg(x[0], x[1]))

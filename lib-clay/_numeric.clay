@@ -25,7 +25,9 @@ overload FloatingPoint?[T](static T) = false;
 overload FloatingPoint?(static Float32) = true;
 overload FloatingPoint?(static Float64) = true;
 
-Numeric?(T) = Integer?(T) or FloatingPoint?(T);
+overloadable Numeric?;
+overload Numeric?(T) = Integer?(T) or FloatingPoint?(T);
+overload Numeric?(T1, T2) = Numeric?(T1) and Numeric?(T2);
 
 BiggerNumericType(A, B) {
     if (FloatingPoint?(A)) {
@@ -54,59 +56,57 @@ BiggerNumericType(A, B) {
     }
 }
 
-overload copy[T](dest:T, src:T) if (Numeric?(T)) {
+overload copy [T|Numeric?(T)] (dest:T, src:T) {
     primitiveCopy(dest, src);
 }
 
-overload equals?[T](a:T, b:T) if (Numeric?(T)) = numericEquals?(a, b);
-overload lesser?[T](a:T, b:T) if (Numeric?(T)) = numericLesser?(a, b);
+overload equals? [T|Numeric?(T)] (a:T, b:T) = numericEquals?(a, b);
+overload lesser? [T|Numeric?(T)] (a:T, b:T) = numericLesser?(a, b);
 
-overload hash[T](a:T) if (Numeric?(T)) = numericConvert(Int32,a);
+overload hash [T|Numeric?(T)] (a:T) = numericConvert(Int32,a);
 
-overload to[A, B](static A, b:B) if (Numeric?(A) and Numeric?(B)) {
-    return numericConvert(A, b);
-}
+overload to [A,B|Numeric?(A,B)] (static A, b:B) = numericConvert(A, b);
 
-overload add[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
+overload add [A,B|Numeric?(A,B)] (a:A, b:B) {
     static T = BiggerNumericType(A, B);
     return numericAdd(to(T, a), to(T, b));
 }
-overload add[A](a:A, b:A) if (Numeric?(A)) = numericAdd(a, b);
+overload add [A|Numeric?(A)] (a:A, b:A) = numericAdd(a, b);
 
-overload subtract[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
+overload subtract [A,B|Numeric?(A,B)] (a:A, b:B) {
     static T = BiggerNumericType(A, B);
     return numericSubtract(to(T, a), to(T, b));
 }
-overload subtract[A](a:A, b:A) if (Numeric?(A)) = numericSubtract(a, b);
+overload subtract [A|Numeric?(A)] (a:A, b:A) = numericSubtract(a, b);
 
-overload multiply[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
+overload multiply [A,B|Numeric?(A,B)] (a:A, b:B) {
     static T = BiggerNumericType(A, B);
     return numericMultiply(to(T, a), to(T, b));
 }
-overload multiply[A](a:A, b:A) if (Numeric?(A)) = numericMultiply(a, b);
+overload multiply [A|Numeric?(A)] (a:A, b:A) = numericMultiply(a, b);
 
-overload divide[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
+overload divide [A,B|Numeric?(A,B)] (a:A, b:B) {
     static T = BiggerNumericType(A, B);
     return numericDivide(to(T, a), to(T, b));
 }
-overload divide[A](a:A, b:A) if (Numeric?(A)) = numericDivide(a, b);
+overload divide [A|Numeric?(A)] (a:A, b:A) = numericDivide(a, b);
 
-overload remainder[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
+overload remainder [A,B|Numeric?(A,B)] (a:A, b:B) {
     static T = BiggerNumericType(A, B);
     return numericRemainder(to(T, a), to(T, b));
 }
-overload remainder[A](a:A, b:A) if (Numeric?(A)) = numericRemainder(a, b);
+overload remainder [A|Numeric?(A)] (a:A, b:A) = numericRemainder(a, b);
 
-overload plus[T](a:T) if (Numeric?(T)) = a;
-overload minus[T](a:T) if (Numeric?(T)) = numericNegate(a);
+overload plus [T|Numeric?(T)] (a:T) = a;
+overload minus [T|Numeric?(T)] (a:T) = numericNegate(a);
 
-overload zero[A](static A) if (Numeric?(A)) = to(A, 0);
-overload one[A](static A) if (Numeric?(A)) = to(A, 1);
+overload zero [A|Numeric?(A)] (static A) = to(A, 0);
+overload one [A|Numeric?(A)] (static A) = to(A, 1);
 
-overload inc[T](a:T) if (Numeric?(T)) {
+overload inc [T|Numeric?(T)] (a:T) {
     a = a + one(T);
 }
 
-overload dec[T](a:T) if (Numeric?(T)) {
+overload dec [T|Numeric?(T)] (a:T) {
     a = a - one(T);
 }

@@ -25,11 +25,11 @@ overload at[T](c:ArrayCoordinate[T]) ref = at(c.ptr);
 overload begin[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, 0));
 overload end[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, n));
 
-overload add[T,I](c:ArrayCoordinate[T], i:I) if (Integer?(I)) =
-    ArrayCoordinate(c.ptr + i);
+overload add [T,I | Integer?(I)] (c:ArrayCoordinate[T], i:I)
+    = ArrayCoordinate(c.ptr + i);
 
-overload subtract[T,I](c:ArrayCoordinate[T], i:I) if (Integer?(I)) =
-    ArrayCoordinate(c.ptr - i);
+overload subtract [T,I | Integer?(I)] (c:ArrayCoordinate[T], i:I)
+    = ArrayCoordinate(c.ptr - i);
 
 overload subtract[T](c1:ArrayCoordinate[T], c2:ArrayCoordinate[T]) =
     c1.ptr - c2.ptr;

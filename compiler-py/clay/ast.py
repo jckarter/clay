@@ -316,20 +316,20 @@ class For(Statement) :
 #
 
 class Code(ASTNode) :
-    def __init__(self, typeVars, formalArgs, returnByRef,
-                 returnType, predicate, body) :
+    def __init__(self, typeVars, predicate, formalArgs,
+                 returnByRef, returnType, body) :
         super(Code, self).__init__()
         checkList(typeVars, Identifier)
+        check2(predicate, Expression)
         checkList(formalArgs, FormalArgument)
         check(returnByRef, bool)
         check2(returnType, Expression)
-        check2(predicate, Expression)
         check(body, Block)
         self.typeVars = typeVars
+        self.predicate = predicate
         self.formalArgs = formalArgs
         self.returnByRef = returnByRef
         self.returnType = returnType
-        self.predicate = predicate
         self.body = body
 
 class FormalArgument(ASTNode) :
