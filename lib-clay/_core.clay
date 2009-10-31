@@ -1,6 +1,31 @@
 import __primitives__;
 export __primitives__;
 
+overloadable init;
+overloadable copy;
+overloadable destroy;
+overloadable assign;
+
+overloadable equals?;
+overloadable lesser?;
+overloadable lesserEquals?;
+overloadable greater?;
+overloadable greaterEquals?;
+
+overloadable plus;
+overloadable minus;
+overloadable add;
+overloadable subtract;
+overloadable multiply;
+overloadable divide;
+overloadable remainder;
+
+overloadable hash;
+
+overloadable iterator;
+overloadable hasNext?;
+overloadable next;
+
 overloadable to;
 
 overloadable zero;
@@ -34,15 +59,16 @@ overload destroy[T](a:T) {
 }
 
 overload assign[T](dest:T, src:T) {
-    if (equals(&dest, &src)) return;
+    if (equals?(&dest, &src)) return;
     destroy(dest);
     copy(dest, src);
 }
 
-overload notEquals[T](a:T, b:T) = not equals(a, b);
-overload lesserEquals[T](a:T, b:T) = equals(a, b) or lesser(a, b);
-overload greater[T](a:T, b:T) = not lesserEquals(a, b);
-overload greaterEquals[T](a:T, b:T) = not lesser(a, b);
+notEquals?[T](a:T, b:T) = not equals?(a, b);
+
+overload lesserEquals?[T](a:T, b:T) = equals?(a, b) or lesser?(a, b);
+overload greater?[T](a:T, b:T) = not lesserEquals?(a, b);
+overload greaterEquals?[T](a:T, b:T) = not lesser?(a, b);
 
 
 //

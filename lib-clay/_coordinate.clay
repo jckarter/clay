@@ -5,7 +5,7 @@ import _core;
 // inc, dec, at, equals
 //
 
-overloadable Coordinate;
+overloadable Coordinate?;
 
 
 //
@@ -13,14 +13,14 @@ overloadable Coordinate;
 // add(x, integer), subtract(x, integer), subtract(x, x), lesser
 // 
 
-overloadable RandomAccessCoordinate;
+overloadable RandomAccessCoordinate?;
 
 
-overload Coordinate[T](static T) = false;
+overload Coordinate?[T](static T) = false;
 
-overload RandomAccessCoordinate[T](static T) = false;
+overload RandomAccessCoordinate?[T](static T) = false;
 
-overload Coordinate[T](static T) if (RandomAccessCoordinate(T)) = true;
+overload Coordinate?[T](static T) if (RandomAccessCoordinate?(T)) = true;
 
 
 //

@@ -7,18 +7,18 @@ import _core;
 overloadable fieldCount;
 overloadable fieldRef;
 
-overload fieldCount[T](static T) if (RecordType(T)) = recordFieldCount(T);
-overload fieldCount[T](static T) if (TupleType(T)) = tupleFieldCount(T);
+overload fieldCount[T](static T) if (RecordType?(T)) = recordFieldCount(T);
+overload fieldCount[T](static T) if (TupleType?(T)) = tupleFieldCount(T);
 
-overload fieldRef[T,i](a:T, static i) ref if (RecordType(T)) =
+overload fieldRef[T,i](a:T, static i) ref if (RecordType?(T)) =
     recordFieldRef(a, i);
 
-overload fieldRef[T,i](a:T, static i) ref if (TupleType(T)) =
+overload fieldRef[T,i](a:T, static i) ref if (TupleType?(T)) =
     tupleFieldRef(a, i);
 
-RecordOrTuple[T](static T) = RecordType(T) or TupleType(T);
+RecordOrTuple?[T](static T) = RecordType?(T) or TupleType?(T);
 
-overload init[T](a:T) if (RecordOrTuple(T)) {
+overload init[T](a:T) if (RecordOrTuple?(T)) {
     initFields(a, static 0);
 }
 
@@ -32,7 +32,7 @@ overload initFields[T, i](a:T, static i)
     return;
 }
 
-overload copy[T](dest:T, src:T) if (RecordOrTuple(T)) {
+overload copy[T](dest:T, src:T) if (RecordOrTuple?(T)) {
     copyFields(dest, src, static 0);
 }
 
@@ -46,7 +46,7 @@ overload copyFields[T, i](dest:T, src:T, static i)
     return;
 }
 
-overload destroy[T](a:T) if (RecordOrTuple(T)) {
+overload destroy[T](a:T) if (RecordOrTuple?(T)) {
     destroyFields(a, static 0);
 }
 
@@ -60,33 +60,33 @@ overload destroyFields[T, i](a:T, static i)
     return;
 }
 
-overload equals[T](a:T, b:T) if (RecordOrTuple(T)) =
-    equalFields(a, b, static 0);
+overload equals?[T](a:T, b:T) if (RecordOrTuple?(T)) =
+    equalFields?(a, b, static 0);
 
-overloadable equalFields;
-overload equalFields[T, i](a:T, b:T, static i) {
-    if (notEquals(fieldRef(a, i), fieldRef(b, i)))
+overloadable equalFields?;
+overload equalFields?[T, i](a:T, b:T, static i) {
+    if (not equals?(fieldRef(a, i), fieldRef(b, i)))
         return false;
-    return equalFields(a, b, static add(i, 1));
+    return equalFields?(a, b, static add(i, 1));
 }
-overload equalFields[T, i](a:T, b:T, static i)
+overload equalFields?[T, i](a:T, b:T, static i)
         if (i == fieldCount(T)) = true;
 
-overload lesser[T](a:T, b:T) if (RecordOrTuple(T)) =
-    lesserFields(a, b, static 0);
+overload lesser?[T](a:T, b:T) if (RecordOrTuple?(T)) =
+    lesserFields?(a, b, static 0);
 
-overloadable lesserFields;
-overload lesserFields[T,i](a:T, b:T, static i) {
-    if (lesser(fieldRef(a, i), fieldRef(b, i)))
+overloadable lesserFields?;
+overload lesserFields?[T,i](a:T, b:T, static i) {
+    if (lesser?(fieldRef(a, i), fieldRef(b, i)))
         return true;
-    if (lesser(fieldRef(b, i), fieldRef(a, i)))
+    if (lesser?(fieldRef(b, i), fieldRef(a, i)))
         return false;
-    return lesserFields(a, b, static add(i, 1));
+    return lesserFields?(a, b, static add(i, 1));
 }
-overload lesserFields[T, i](a:T, b:T, static i)
+overload lesserFields?[T, i](a:T, b:T, static i)
         if (i == fieldCount(T)) = false;
 
-overload hash[T](a:T) if (RecordOrTuple(T)) = hashFields(a, static 0);
+overload hash[T](a:T) if (RecordOrTuple?(T)) = hashFields(a, static 0);
 
 overloadable hashFields;
 overload hashFields[T,i](a:T, static i) {

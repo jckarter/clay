@@ -10,29 +10,29 @@ overload copy[T](dest:Pointer[T], src:Pointer[T]) {
     primitiveCopy(dest, src);
 }
 
-overload to[I,T](static I, a:Pointer[T]) if (isInteger(I)) {
+overload to[I,T](static I, a:Pointer[T]) if (Integer?(I)) {
     return pointerToInt(a, I);
 }
-overload to[I,T](static Pointer[T], a:I) if (isInteger(I)) {
+overload to[I,T](static Pointer[T], a:I) if (Integer?(I)) {
     return intToPointer(a, T);
 }
 
 pointerToNativeInt[T](a:Pointer[T]) = to(Int32, a);
 nativeIntToPointer[T](a:Int32) = to(Pointer[T], a);
 
-overload equals[T](a:Pointer[T], b:Pointer[T]) {
-    return equals(pointerToNativeInt(a), pointerToNativeInt(b));
+overload equals?[T](a:Pointer[T], b:Pointer[T]) {
+    return equals?(pointerToNativeInt(a), pointerToNativeInt(b));
 }
-overload lesser[T](a:Pointer[T], b:Pointer[T]) {
-    return lesser(pointerToNativeInt(a), pointerToNativeInt(b));
+overload lesser?[T](a:Pointer[T], b:Pointer[T]) {
+    return lesser?(pointerToNativeInt(a), pointerToNativeInt(b));
 }
 
 overload hash[T](a:Pointer[T]) = pointerToNativeInt(a);
 
-overload add[T,I](p:Pointer[T], i:I) if (isInteger(I)) {
+overload add[T,I](p:Pointer[T], i:I) if (Integer?(I)) {
     return to(Pointer[T], pointerToNativeInt(p) + i*typeSize(T));
 }
-overload subtract[T,I](p:Pointer[T], i:I) if (isInteger(I)) {
+overload subtract[T,I](p:Pointer[T], i:I) if (Integer?(I)) {
     return to(Pointer[T], pointerToNativeInt(p) - i*typeSize(T));
 }
 overload subtract[T](a:Pointer[T], b:Pointer[T]) {
@@ -51,5 +51,5 @@ null[T](static T) = to(Pointer[T], 0);
 
 overload at[T](p:Pointer[T]) ref = pointerDereference(p);
 
-overload RandomAccessCoordinate[T](static Pointer[T]) = true;
+overload RandomAccessCoordinate?[T](static Pointer[T]) = true;
 overload CoordinateTarget[T](static Pointer[T]) = T;

@@ -4,109 +4,109 @@ import _core;
 // numeric types
 //
 
-overloadable isSignedInteger;
-overload isSignedInteger[T](static T) = false;
-overload isSignedInteger(static Int8) = true;
-overload isSignedInteger(static Int16) = true;
-overload isSignedInteger(static Int32) = true;
-overload isSignedInteger(static Int64) = true;
+overloadable SignedInteger?;
+overload SignedInteger?[T](static T) = false;
+overload SignedInteger?(static Int8) = true;
+overload SignedInteger?(static Int16) = true;
+overload SignedInteger?(static Int32) = true;
+overload SignedInteger?(static Int64) = true;
 
-overloadable isUnsignedInteger;
-overload isUnsignedInteger[T](static T) = false;
-overload isUnsignedInteger(static UInt8) = true;
-overload isUnsignedInteger(static UInt16) = true;
-overload isUnsignedInteger(static UInt32) = true;
-overload isUnsignedInteger(static UInt64) = true;
+overloadable UnsignedInteger?;
+overload UnsignedInteger?[T](static T) = false;
+overload UnsignedInteger?(static UInt8) = true;
+overload UnsignedInteger?(static UInt16) = true;
+overload UnsignedInteger?(static UInt32) = true;
+overload UnsignedInteger?(static UInt64) = true;
 
-isInteger(T) = isSignedInteger(T) or isUnsignedInteger(T);
+Integer?(T) = SignedInteger?(T) or UnsignedInteger?(T);
 
-overloadable isFloatingPoint;
-overload isFloatingPoint[T](static T) = false;
-overload isFloatingPoint(static Float32) = true;
-overload isFloatingPoint(static Float64) = true;
+overloadable FloatingPoint?;
+overload FloatingPoint?[T](static T) = false;
+overload FloatingPoint?(static Float32) = true;
+overload FloatingPoint?(static Float64) = true;
 
-isNumeric(T) = isInteger(T) or isFloatingPoint(T);
+Numeric?(T) = Integer?(T) or FloatingPoint?(T);
 
 BiggerNumericType(A, B) {
-    if (isFloatingPoint(A)) {
-        if (isInteger(B))
+    if (FloatingPoint?(A)) {
+        if (Integer?(B))
             return A;
-        if (isFloatingPoint(B)) {
+        if (FloatingPoint?(B)) {
             if (typeSize(A) > typeSize(B))
                 return A;
             else
                 return B;
         }
     }
-    else if (isInteger(A)) {
-        if (isInteger(B)) {
+    else if (Integer?(A)) {
+        if (Integer?(B)) {
             if (typeSize(A) > typeSize(B))
                 return A;
             if (typeSize(B) > typeSize(A))
                 return B;
-            if (isUnsignedInteger(A))
+            if (UnsignedInteger?(A))
                 return A;
             return B;
         }
-        if (isFloatingPoint(B)) {
+        if (FloatingPoint?(B)) {
             return B;
         }
     }
 }
 
-overload copy[T](dest:T, src:T) if (isNumeric(T)) {
+overload copy[T](dest:T, src:T) if (Numeric?(T)) {
     primitiveCopy(dest, src);
 }
 
-overload equals[T](a:T, b:T) if (isNumeric(T)) = numericEquals(a, b);
-overload lesser[T](a:T, b:T) if (isNumeric(T)) = numericLesser(a, b);
+overload equals?[T](a:T, b:T) if (Numeric?(T)) = numericEquals?(a, b);
+overload lesser?[T](a:T, b:T) if (Numeric?(T)) = numericLesser?(a, b);
 
-overload hash[T](a:T) if (isNumeric(T)) = numericConvert(Int32,a);
+overload hash[T](a:T) if (Numeric?(T)) = numericConvert(Int32,a);
 
-overload to[A, B](static A, b:B) if (isNumeric(A) and isNumeric(B)) {
+overload to[A, B](static A, b:B) if (Numeric?(A) and Numeric?(B)) {
     return numericConvert(A, b);
 }
 
-overload add[A,B](a:A, b:B) if (isNumeric(A) and isNumeric(B)) {
+overload add[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
     static T = BiggerNumericType(A, B);
     return numericAdd(to(T, a), to(T, b));
 }
-overload add[A](a:A, b:A) if (isNumeric(A)) = numericAdd(a, b);
+overload add[A](a:A, b:A) if (Numeric?(A)) = numericAdd(a, b);
 
-overload subtract[A,B](a:A, b:B) if (isNumeric(A) and isNumeric(B)) {
+overload subtract[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
     static T = BiggerNumericType(A, B);
     return numericSubtract(to(T, a), to(T, b));
 }
-overload subtract[A](a:A, b:A) if (isNumeric(A)) = numericSubtract(a, b);
+overload subtract[A](a:A, b:A) if (Numeric?(A)) = numericSubtract(a, b);
 
-overload multiply[A,B](a:A, b:B) if (isNumeric(A) and isNumeric(B)) {
+overload multiply[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
     static T = BiggerNumericType(A, B);
     return numericMultiply(to(T, a), to(T, b));
 }
-overload multiply[A](a:A, b:A) if (isNumeric(A)) = numericMultiply(a, b);
+overload multiply[A](a:A, b:A) if (Numeric?(A)) = numericMultiply(a, b);
 
-overload divide[A,B](a:A, b:B) if (isNumeric(A) and isNumeric(B)) {
+overload divide[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
     static T = BiggerNumericType(A, B);
     return numericDivide(to(T, a), to(T, b));
 }
-overload divide[A](a:A, b:A) if (isNumeric(A)) = numericDivide(a, b);
+overload divide[A](a:A, b:A) if (Numeric?(A)) = numericDivide(a, b);
 
-overload remainder[A,B](a:A, b:B) if (isNumeric(A) and isNumeric(B)) {
+overload remainder[A,B](a:A, b:B) if (Numeric?(A) and Numeric?(B)) {
     static T = BiggerNumericType(A, B);
     return numericRemainder(to(T, a), to(T, b));
 }
-overload remainder[A](a:A, b:A) if (isNumeric(A)) = numericRemainder(a, b);
+overload remainder[A](a:A, b:A) if (Numeric?(A)) = numericRemainder(a, b);
 
-overload plus[T](a:T) if (isNumeric(T)) = a;
-overload minus[T](a:T) if (isNumeric(T)) = numericNegate(a);
+overload plus[T](a:T) if (Numeric?(T)) = a;
+overload minus[T](a:T) if (Numeric?(T)) = numericNegate(a);
 
-overload zero[A](static A) if (isNumeric(A)) = to(A, 0);
-overload one[A](static A) if (isNumeric(A)) = to(A, 1);
+overload zero[A](static A) if (Numeric?(A)) = to(A, 0);
+overload one[A](static A) if (Numeric?(A)) = to(A, 1);
 
-overload inc[T](a:T) if (isNumeric(T)) {
+overload inc[T](a:T) if (Numeric?(T)) {
     a = a + one(T);
 }
 
-overload dec[T](a:T) if (isNumeric(T)) {
+overload dec[T](a:T) if (Numeric?(T)) {
     a = a - one(T);
 }

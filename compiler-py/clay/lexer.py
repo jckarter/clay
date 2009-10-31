@@ -85,7 +85,7 @@ keywordList = ("import export predicate instance record " +
 keywordSet = set(keywordList)
 
 identChar1 = condition(lambda x : x.isalpha() or (x == "_"))
-identChar2 = condition(lambda x : x.isalpha() or x.isdigit() or (x == "_"))
+identChar2 = condition(lambda x : x.isalpha() or x.isdigit() or (x in "_?"))
 keywordIdentStr = modify(sequence(identChar1, zeroPlus(identChar2)),
                          lambda x : x[0] + "".join(x[1]))
 def keywordIdentFactory(s) :

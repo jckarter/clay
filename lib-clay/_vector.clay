@@ -44,10 +44,10 @@ overload at[T](c:VectorCoordinate[T]) ref = at(c.ptr);
 overload begin[T](a:Vector[T]) = VectorCoordinate(a.data);
 overload end[T](a:Vector[T]) = VectorCoordinate(a.data + a.size);
 
-overload add[T,I](c:VectorCoordinate[T], i:I) if (isInteger(I)) =
+overload add[T,I](c:VectorCoordinate[T], i:I) if (Integer?(I)) =
     VectorCoordinate(c.ptr + i);
 
-overload subtract[T,I](c:VectorCoordinate[T], i:I) if (isInteger(I)) =
+overload subtract[T,I](c:VectorCoordinate[T], i:I) if (Integer?(I)) =
     VectorCoordinate(c.ptr - i);
 
 overload subtract[T](c1:VectorCoordinate[T], c2:VectorCoordinate[T]) =
@@ -86,7 +86,7 @@ overload copy[T](dest:Vector[T], src:Vector[T]) {
         dest.data = allocateMemory(T, dest.capacity);
         ref d = iterator(dest);
         ref s = iterator(src);
-        while (hasNext(s))
+        while (hasNext?(s))
             copy(next(d), next(s));
     }
     else {
@@ -100,30 +100,30 @@ overload destroy[T](a:Vector[T]) {
     freeMemory(a.data);
 }
 
-overload equals[T](a:Vector[T], b:Vector[T]) {
+overload equals?[T](a:Vector[T], b:Vector[T]) {
     if (size(a) != size(b))
         return false;
     ref i = iterator(a);
     ref j = iterator(b);
-    while (hasNext(i)) {
+    while (hasNext?(i)) {
         if (next(i) != next(j))
             return false;
     }
     return true;
 }
 
-overload lesser[T](a:Vector[T], b:Vector[T]) {
+overload lesser?[T](a:Vector[T], b:Vector[T]) {
     ref i = iterator(a);
     ref j = iterator(b);
-    while (hasNext(i)) {
-        if (not hasNext(j))
+    while (hasNext?(i)) {
+        if (not hasNext?(j))
             return false;
         ref x = next(i);
         ref y = next(j);
         if (x < y) return true;
         if (y < x) return false;
     }
-    return hasNext(j);
+    return hasNext?(j);
 }
 
 overload hash[T](a:Vector[T]) {
@@ -183,7 +183,7 @@ ensureSpace[T](a:Vector[T], space:Int32) {
         setCapacity(a, 2*(a.size + space));
 }
 
-insertionPoint[T,I](a:Vector[T], pos:I) ref if (isInteger(I)) {
+insertionPoint[T,I](a:Vector[T], pos:I) ref if (Integer?(I)) {
     ensureSpace(a, 1);
     var i = begin(a) + pos;
     var j = end(a);
@@ -195,11 +195,11 @@ insertionPoint[T,I](a:Vector[T], pos:I) ref if (isInteger(I)) {
     return at(i);
 }
 
-overload insert[T,I](a:Vector[T], i:I, x:T) if (isInteger(I)) {
+overload insert[T,I](a:Vector[T], i:I, x:T) if (Integer?(I)) {
     copy(insertionPoint(a, i), x);
 }
 
-overload insert[T,I](a:Vector[T], i:I, x:Movable[T]) if (isInteger(I)) {
+overload insert[T,I](a:Vector[T], i:I, x:Movable[T]) if (Integer?(I)) {
     move(insertionPoint(a, i), x);
 }
 
@@ -223,6 +223,6 @@ overload remove[T](a:Vector[T], i:VectorCoordinate[T]) {
         setCapacity(2*(a.size + 1));
 }
 
-overload remove[T,I](a:Vector[T], i:I) if (isInteger(I)) {
+overload remove[T,I](a:Vector[T], i:I) if (Integer?(I)) {
     remove(a, begin(a)+i);
 }

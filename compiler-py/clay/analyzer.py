@@ -449,7 +449,7 @@ def foo(x, args, env) :
     analyze(args[1], env, toRTReferenceOfType(compilerObjectType))
     return voidValue
 
-@analyzeCall.register(primitives.compilerObjectEquals)
+@analyzeCall.register(getattr(primitives, "compilerObjectEquals?"))
 def foo(x, args, env) :
     ensureArity(args, 2)
     analyze(args[0], env, toRTReferenceOfType(compilerObjectType))
@@ -524,7 +524,7 @@ def foo(x, args, env) :
 # analyze tuple primitives
 #
 
-@analyzeCall.register(primitives.TupleType)
+@analyzeCall.register(getattr(primitives, "TupleType?"))
 def foo(x, args, env) :
     ensureArity(args, 1)
     analyze(args[0], env, toType)
@@ -581,7 +581,7 @@ def foo(x, args, env) :
 # analyze record primitives
 #
 
-@analyzeCall.register(primitives.RecordType)
+@analyzeCall.register(getattr(primitives, "RecordType?"))
 def foo(x, args, env) :
     ensureArity(args, 1)
     analyze(args[0], env, toType)
@@ -609,7 +609,7 @@ def foo(x, args, env) :
 # analyze numeric primitives
 #
 
-@analyzeCall.register(primitives.numericEquals)
+@analyzeCall.register(getattr(primitives, "numericEquals?"))
 def foo(x, args, env) :
     ensureArity(args, 2)
     x1 = analyze(args[0], env, toRTNumericReference)
@@ -617,7 +617,7 @@ def foo(x, args, env) :
     ensure(x1.type == x2.type, "argument types mismatch")
     return RTValue(boolType)
 
-@analyzeCall.register(primitives.numericLesser)
+@analyzeCall.register(getattr(primitives, "numericLesser?"))
 def foo(x, args, env) :
     ensureArity(args, 2)
     x1 = analyze(args[0], env, toRTNumericReference)

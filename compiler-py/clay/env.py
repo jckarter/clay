@@ -148,7 +148,7 @@ def installDefaultPrimitives() :
     primitive("compilerObjectDestroy")
     primitive("compilerObjectCopy")
     primitive("compilerObjectAssign")
-    primitive("compilerObjectEquals")
+    primitive("compilerObjectEquals?")
     primitive("compilerObjectHash")
 
     primitive("addressOf")
@@ -159,7 +159,7 @@ def installDefaultPrimitives() :
     primitive("allocateMemory")
     primitive("freeMemory")
 
-    primitive("TupleType")
+    primitive("TupleType?")
     primitive("tuple")
     primitive("tupleFieldCount")
     primitive("tupleFieldRef")
@@ -167,12 +167,12 @@ def installDefaultPrimitives() :
     primitive("array")
     primitive("arrayRef")
 
-    primitive("RecordType")
+    primitive("RecordType?")
     primitive("recordFieldCount")
     primitive("recordFieldRef")
 
-    primitive("numericEquals")
-    primitive("numericLesser")
+    primitive("numericEquals?")
+    primitive("numericLesser?")
     primitive("numericAdd")
     primitive("numericSubtract")
     primitive("numericMultiply")
@@ -186,32 +186,6 @@ def installDefaultPrimitives() :
     primitive("bitwiseAnd")
     primitive("bitwiseOr")
     primitive("bitwiseXor")
-
-    overloadable("init")
-    overloadable("copy")
-    overloadable("destroy")
-    overloadable("assign")
-
-    overloadable("equals")
-    overloadable("notEquals")
-    overloadable("lesser")
-    overloadable("lesserEquals")
-    overloadable("greater")
-    overloadable("greaterEquals")
-
-    overloadable("plus")
-    overloadable("minus")
-    overloadable("add")
-    overloadable("subtract")
-    overloadable("multiply")
-    overloadable("divide")
-    overloadable("remainder")
-
-    overloadable("hash")
-
-    overloadable("iterator")
-    overloadable("hasNext")
-    overloadable("next")
 
     Primitives = type("Primitives", (object,), primClasses)
     global primitives
@@ -394,6 +368,11 @@ class SCExpression(Expression) :
 def primitiveNameRef(s) :
     nameRef = NameRef(Identifier(s))
     return SCExpression(primitivesEnv, nameRef)
+
+def coreNameRef(s) :
+    nameRef = NameRef(Identifier(s))
+    env = loadedModule("_core").env
+    return SCExpression(env, nameRef)
 
 
 

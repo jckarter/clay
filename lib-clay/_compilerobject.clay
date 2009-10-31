@@ -20,7 +20,7 @@ overload assign(dest:CompilerObject, src:CompilerObject) {
     compilerObjectAssign(dest, src);
 }
 
-overload equals(a:CompilerObject, b:CompilerObject) =
-    compilerObjectEquals(a, b);
+overload equals?(a:CompilerObject, b:CompilerObject) =
+    compilerObjectEquals?(a, b);
 
 overload hash(a:CompilerObject) = compilerObjectHash(a);

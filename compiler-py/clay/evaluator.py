@@ -946,7 +946,7 @@ def foo(x) :
 #
 
 def _callBuiltin(builtinName, args, converter=None) :
-    env = Environment(primitivesEnv)
+    env = Environment(loadedModule("_core").env)
     variables = [Identifier("v%d" % i) for i in range(len(args))]
     for variable, arg in zip(variables, args) :
         addIdent(env, variable, arg)
@@ -1007,7 +1007,7 @@ def valueEquals(a, b) :
     # TODO: add bypass for simple types
     if isCompilerObjectType(a.type) and isCompilerObjectType(b.type) :
         return compilerObjectEquals(a.address, b.address)
-    return _callBuiltin("equals", [a, b], toBool)
+    return _callBuiltin("equals?", [a, b], toBool)
 
 def valueHash(a) :
     if isCompilerObjectType(a.type) :
@@ -1379,22 +1379,22 @@ _unaryOps = {"+" : "plus",
              "-" : "minus"}
 
 def convertUnaryOpExpr(x) :
-    return Call(primitiveNameRef(_unaryOps[x.op]), [x.expr])
+    return Call(coreNameRef(_unaryOps[x.op]), [x.expr])
 
 _binaryOps = {"+" : "add",
               "-" : "subtract",
               "*" : "multiply",
               "/" : "divide",
               "%" : "remainder",
-              "==" : "equals",
-              "!=" : "notEquals",
-              "<" : "lesser",
-              "<=" : "lesserEquals",
-              ">" : "greater",
-              ">=" : "greaterEquals"}
+              "==" : "equals?",
+              "!=" : "notEquals?",
+              "<" : "lesser?",
+              "<=" : "lesserEquals?",
+              ">" : "greater?",
+              ">=" : "greaterEquals?"}
 
 def convertBinaryOpExpr(x) :
-    return Call(primitiveNameRef(_binaryOps[x.op]), [x.expr1, x.expr2])
+    return Call(coreNameRef(_binaryOps[x.op]), [x.expr1, x.expr2])
 
 
 
@@ -1643,7 +1643,7 @@ def foo(x, inputTypes, outputType, builder, func) :
     builder.free(ptr)
     builder.ret_void()
 
-@codegenPrimitiveBody.register(primitives.numericEquals)
+@codegenPrimitiveBody.register(getattr(primitives, "numericEquals?"))
 def foo(x, inputTypes, outputType, builder, func) :
     x1 = builder.load(func.args[0])
     x2 = builder.load(func.args[1])
@@ -1657,7 +1657,7 @@ def foo(x, inputTypes, outputType, builder, func) :
     builder.store(result, func.args[-1])
     builder.ret_void()
 
-@codegenPrimitiveBody.register(primitives.numericLesser)
+@codegenPrimitiveBody.register(getattr(primitives, "numericLesser?"))
 def foo(x, inputTypes, outputType, builder, func) :
     x1 = builder.load(func.args[0])
     x2 = builder.load(func.args[1])
@@ -1898,7 +1898,7 @@ def foo(x, args, env) :
     compilerObjectAssign(dest.address, src.address)
     return voidValue
 
-@evaluateCall.register(primitives.compilerObjectEquals)
+@evaluateCall.register(getattr(primitives, "compilerObjectEquals?"))
 def foo(x, args, env) :
     ensureArity(args, 2)
     a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
@@ -1985,7 +1985,7 @@ def foo(x, args, env) :
 # evaluate tuple primitives
 #
 
-@evaluateCall.register(primitives.TupleType)
+@evaluateCall.register(getattr(primitives, "TupleType?"))
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
@@ -2038,7 +2038,7 @@ def foo(x, args, env) :
 # evaluate record primitives
 #
 
-@evaluateCall.register(primitives.RecordType)
+@evaluateCall.register(getattr(primitives, "RecordType?"))
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
@@ -2069,12 +2069,12 @@ def _eval2NumericArgs(args, env) :
     ensure(a.type == b.type, "argument types mismatch")
     return (a, b)
 
-@evaluateCall.register(primitives.numericEquals)
+@evaluateCall.register(getattr(primitives, "numericEquals?"))
 def foo(x, args, env) :
     x1, x2 = _eval2NumericArgs(args, env)
     return evalPrimitiveCall(x, [x1, x2], boolType)
 
-@evaluateCall.register(primitives.numericLesser)
+@evaluateCall.register(getattr(primitives, "numericLesser?"))
 def foo(x, args, env) :
     x1, x2 = _eval2NumericArgs(args, env)
     return evalPrimitiveCall(x, [x1, x2], boolType)
@@ -2430,11 +2430,11 @@ def convertForStatement(x) :
     iterVar = Identifier("%iter")
     block = Block(
         [RefBinding(exprVar, None, x.expr),
-         VarBinding(iterVar, None, Call(primitiveNameRef("iterator"),
+         VarBinding(iterVar, None, Call(coreNameRef("iterator"),
                                         [NameRef(exprVar)])),
-         While(Call(primitiveNameRef("hasNext"), [NameRef(iterVar)]),
+         While(Call(coreNameRef("hasNext?"), [NameRef(iterVar)]),
                Block([RefBinding(x.variable, x.type,
-                                 Call(primitiveNameRef("next"),
+                                 Call(coreNameRef("next"),
                                       [NameRef(iterVar)])),
                       x.body]))])
     return block

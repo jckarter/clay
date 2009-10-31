@@ -25,10 +25,10 @@ overload at[T](c:ArrayCoordinate[T]) ref = at(c.ptr);
 overload begin[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, 0));
 overload end[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, n));
 
-overload add[T,I](c:ArrayCoordinate[T], i:I) if (isInteger(I)) =
+overload add[T,I](c:ArrayCoordinate[T], i:I) if (Integer?(I)) =
     ArrayCoordinate(c.ptr + i);
 
-overload subtract[T,I](c:ArrayCoordinate[T], i:I) if (isInteger(I)) =
+overload subtract[T,I](c:ArrayCoordinate[T], i:I) if (Integer?(I)) =
     ArrayCoordinate(c.ptr - i);
 
 overload subtract[T](c1:ArrayCoordinate[T], c2:ArrayCoordinate[T]) =
@@ -62,7 +62,7 @@ overload init[T,n](a:Array[T,n]) {
 overload copy[T,n](dest:Array[T,n], src:Array[T,n]) {
     ref d = iterator(dest);
     ref s = iterator(src);
-    while (hasNext(s))
+    while (hasNext?(s))
         copy(next(d), next(s));
 }
 
@@ -71,20 +71,20 @@ overload destroy[T,n](a:Array[T,n]) {
         destroy(x);
 }
 
-overload equals[T,n](a:Array[T,n], b:Array[T,n]) {
+overload equals?[T,n](a:Array[T,n], b:Array[T,n]) {
     ref i = iterator(a);
     ref j = iterator(b);
-    while (hasNext(i)) {
+    while (hasNext?(i)) {
         if (next(i) != next(j))
             return false;
     }
     return true;
 }
 
-overload lesser[T,n](a:Array[T,n], b:Array[T,n]) {
+overload lesser?[T,n](a:Array[T,n], b:Array[T,n]) {
     ref i = iterator(a);
     ref j = iterator(b);
-    while (hasNext(i)) {
+    while (hasNext?(i)) {
         ref x = next(i);
         ref y = next(j);
         if (x < y) return true;
