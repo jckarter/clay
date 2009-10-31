@@ -1,10 +1,10 @@
 import _core;
 import _numeric;
 
-record Char(code:Int32);
+record Char(code:Int8);
 
-char [I|Integer?(I)] (c:I) = Char(to(Int32, c));
+char [I|Integer?(I)] (c:I) = Char(to(Int8, c));
 
-ord(c:Char) = c.code;
+ord(c:Char) = to(Int32, c.code);
 
 overload to [I|Integer?(I)] (static I, c:Char) = to(I, c.code);

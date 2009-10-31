@@ -77,13 +77,13 @@ class FloatLiteral(Expression) :
 class CharLiteral(Expression) :
     def __init__(self, value) :
         super(CharLiteral, self).__init__()
-        check(value, unicode)
+        check(value, str)
         self.value = value
 
 class StringLiteral(Expression) :
     def __init__(self, value) :
         super(StringLiteral, self).__init__()
-        check(value, unicode)
+        check(value, str)
         self.value = value
 
 class NameRef(Expression) :

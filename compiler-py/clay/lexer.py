@@ -152,21 +152,21 @@ def makeStringParser(delim, isSingle, isUnicode) :
 # stringLiteral, charLiteral, bytesLiteral, byteLiteral
 #
 
-stringLiteral1 = makeStringParser("\"", isSingle=False, isUnicode=True)
+stringLiteral1 = makeStringParser("\"", isSingle=False, isUnicode=False)
 stringLiteral = token(stringLiteral1, klass=StringLiteral)
 
-charLiteral1 = makeStringParser("\'", isSingle=True, isUnicode=True)
+charLiteral1 = makeStringParser("\'", isSingle=True, isUnicode=False)
 charLiteral = token(charLiteral1, klass=CharLiteral)
 
-bytesLiteral1 = makeStringParser("\"", isSingle=False, isUnicode=False)
-bytesLiteral2 = modify(sequence(literal("b"), bytesLiteral1),
-                       lambda x : x[1])
-bytesLiteral = token(bytesLiteral2, klass=BytesLiteral)
+# bytesLiteral1 = makeStringParser("\"", isSingle=False, isUnicode=False)
+# bytesLiteral2 = modify(sequence(literal("b"), bytesLiteral1),
+#                        lambda x : x[1])
+# bytesLiteral = token(bytesLiteral2, klass=BytesLiteral)
 
-byteLiteral1 = makeStringParser("\'", isSingle=True, isUnicode=False)
-byteLiteral2 = modify(sequence(literal("b"), byteLiteral1),
-                      lambda x : x[1])
-byteLiteral = token(byteLiteral2, klass=ByteLiteral)
+# byteLiteral1 = makeStringParser("\'", isSingle=True, isUnicode=False)
+# byteLiteral2 = modify(sequence(literal("b"), byteLiteral1),
+#                       lambda x : x[1])
+# byteLiteral = token(byteLiteral2, klass=ByteLiteral)
 
 
 #
@@ -256,7 +256,6 @@ multiLineComment = token(mlcString2, klass=MultiLineComment)
 oneToken = choice(space, singleLineComment, multiLineComment,
                   symbol, keywordIdentifier,
                   stringLiteral, charLiteral,
-                  bytesLiteral, byteLiteral,
                   floatLiteral, intLiteral, literalSuffix)
 
 

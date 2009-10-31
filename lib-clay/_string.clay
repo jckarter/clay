@@ -14,7 +14,16 @@ record String(data:Vector[Char]);
 // create string
 //
 
-string[n](a:Array[Char,n]) = String(vector(a));
+overload init(a:String) {
+    init(a.data);
+    pushBack(a.data, char(0));
+}
+
+string[n](a:Array[Char,n]) {
+    var s = String(vector(a));
+    pushBack(s.data, char(0));
+    return s;
+}
 
 
 //
@@ -31,17 +40,11 @@ overload at(a:String, i) ref = at(a.data, i);
 //
 
 overload begin(a:String) = begin(a.data);
-overload end(a:String) = end(a.data);
-overload iterator(a:String) = iterator(a.data);
+overload end(a:String) = end(a.data) - 1;
+overload iterator(a:String) = CoordinateRange(begin(a), end(a));
 
 //
 // c-string compatibility
 //
 
-toCString(s:String):Vector[Int8] {
-    var v = Vector[Int8]();
-    for (c in s)
-        pushBack(v, to(Int8, ord(c)));
-    pushBack(v, 0#i8);
-    return v;
-}
+cstring(s:String):Pointer[Int8] = &at(s, 0).code;

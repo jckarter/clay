@@ -1361,7 +1361,7 @@ def convertCharLiteral(x) :
 def convertCharLiteral2(c) :
     nameRef = NameRef(Identifier("Char"))
     nameRef = SCExpression(loadedModule("_char").env, nameRef)
-    return Call(nameRef, [IntLiteral(ord(c), None)])
+    return Call(nameRef, [IntLiteral(ord(c), "i8")])
 
 def convertStringLiteral(x) :
     nameRef = NameRef(Identifier("string"))
