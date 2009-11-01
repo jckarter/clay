@@ -195,13 +195,13 @@ def foo(x, env) :
 @analyze2.register(Indexing)
 def foo(x, env) :
     thing = analyze(x.expr, env)
-    thing = reduceCompilerObject(thing)
+    thing = lower(thing)
     return analyzeIndexing(thing, x.args, env)
 
 @analyze2.register(Call)
 def foo(x, env) :
     thing = analyze(x.expr, env)
-    thing = reduceCompilerObject(thing)
+    thing = lower(thing)
     return analyzeCall(thing, x.args, env)
 
 @analyze2.register(FieldRef)

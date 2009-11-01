@@ -287,7 +287,7 @@ def foo(x) :
 @toType.register(Reference)
 def foo(x) :
     ensure(isCompilerObjectType(x.type), "invalid type")
-    return toType(reduceCompilerObject(x))
+    return toType(lower(x))
 
 
 
@@ -316,13 +316,13 @@ multimethodRegisterMany(toStatic, primitivesClassList, lambda x : x)
 @toStatic.register(Value)
 def foo(x) :
     if isCompilerObjectType(x.type) :
-        return reduceCompilerObject(x)
+        return lower(x)
     return x
 
 @toStatic.register(Reference)
 def foo(x) :
     if isCompilerObjectType(x.type) :
-        return reduceCompilerObject(x)
+        return lower(x)
     return toValue(x)
 
 
@@ -341,12 +341,11 @@ def foo(x) :
     valueCopy(toReference(v), x)
     return v
 
-toValue.register(Type)(lambda x : liftCompilerObject(x))
-toValue.register(Record)(lambda x : liftCompilerObject(x))
-toValue.register(Procedure)(lambda x : liftCompilerObject(x))
-toValue.register(Overloadable)(lambda x : liftCompilerObject(x))
-multimethodRegisterMany(toValue, primitivesClassList,
-                        lambda x : liftCompilerObject(x))
+toValue.register(Type)(lambda x : lift(x))
+toValue.register(Record)(lambda x : lift(x))
+toValue.register(Procedure)(lambda x : lift(x))
+toValue.register(Overloadable)(lambda x : lift(x))
+multimethodRegisterMany(toValue, primitivesClassList, lambda x : lift(x))
 
 
 
@@ -362,15 +361,15 @@ toReference.register(Reference)(lambda x : x)
 def foo(x) :
     return Reference(x.type, ctypes.addressof(x.buf))
 
-def liftCompilerObjectAsRef(x) :
-    return toReference(liftCompilerObject(x))
+def liftAsRef(x) :
+    return toReference(lift(x))
 
-toReference.register(Type)(lambda x : liftCompilerObjectAsRef(x))
-toReference.register(Record)(lambda x : liftCompilerObjectAsRef(x))
-toReference.register(Procedure)(lambda x : liftCompilerObjectAsRef(x))
-toReference.register(Overloadable)(lambda x : liftCompilerObjectAsRef(x))
+toReference.register(Type)(lambda x : liftAsRef(x))
+toReference.register(Record)(lambda x : liftAsRef(x))
+toReference.register(Procedure)(lambda x : liftAsRef(x))
+toReference.register(Overloadable)(lambda x : liftAsRef(x))
 multimethodRegisterMany(toReference, primitivesClassList,
-                        lambda x : liftCompilerObjectAsRef(x))
+                        lambda x : liftAsRef(x))
 
 
 
@@ -913,27 +912,26 @@ def compilerObjectHash(addr) :
 
 
 #
-# liftCompilerObject, reduceCompilerObject
+# lift, lower
 #
 
-liftCompilerObject = multimethod(defaultProc=lambda x : x)
+lift = multimethod(defaultProc=lambda x : x)
 
-liftCompilerObject.register(Type)(makeCompilerObject)
-liftCompilerObject.register(Record)(makeCompilerObject)
-liftCompilerObject.register(Procedure)(makeCompilerObject)
-liftCompilerObject.register(Overloadable)(makeCompilerObject)
-multimethodRegisterMany(liftCompilerObject, primitivesClassList,
-                        makeCompilerObject)
+lift.register(Type)(makeCompilerObject)
+lift.register(Record)(makeCompilerObject)
+lift.register(Procedure)(makeCompilerObject)
+lift.register(Overloadable)(makeCompilerObject)
+multimethodRegisterMany(lift, primitivesClassList, makeCompilerObject)
 
-reduceCompilerObject = multimethod(defaultProc=lambda x : x)
+lower = multimethod(defaultProc=lambda x : x)
 
-@reduceCompilerObject.register(Value)
+@lower.register(Value)
 def foo(x) :
     if isCompilerObjectType(x.type) :
         return getCompilerObject(toReference(x).address)
     return x
 
-@reduceCompilerObject.register(Reference)
+@lower.register(Reference)
 def foo(x) :
     if isCompilerObjectType(x.type) :
         return getCompilerObject(x.address)
@@ -1285,13 +1283,13 @@ def foo(x, env) :
 @evaluate2.register(Indexing)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
-    thing = reduceCompilerObject(thing)
+    thing = lower(thing)
     return evaluateIndexing(thing, x.args, env)
 
 @evaluate2.register(Call)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
-    thing = reduceCompilerObject(thing)
+    thing = lower(thing)
     return evaluateCall(thing, x.args, env)
 
 @evaluate2.register(FieldRef)

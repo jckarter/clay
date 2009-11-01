@@ -437,13 +437,13 @@ def foo(x, env) :
 @compile2.register(Indexing)
 def foo(x, env) :
     thing = compile(x.expr, env)
-    thing = reduceCompilerObject(thing)
+    thing = lower(thing)
     return compileIndexing(thing, x.args, env)
 
 @compile2.register(Call)
 def foo(x, env) :
     thing = compile(x.expr, env)
-    thing = reduceCompilerObject(thing)
+    thing = lower(thing)
     return compileCall(thing, x.args, env)
 
 @compile2.register(FieldRef)
