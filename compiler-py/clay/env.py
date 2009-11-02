@@ -124,17 +124,17 @@ def installDefaultPrimitives() :
     primClasses = {}
     def entry(name, value) :
         installPrimitive(name, value)
+    def safeName(s) :
+        if s.endswith("?") :
+            return s[:-1] + "_P"
+        return s
     def primitive(name) :
         primClass = type("Primitive%s" % name, (object,), {})
         primitivesClassList.append(primClass)
-        primClasses[name] = primClass
+        primClasses[safeName(name)] = primClass
         prim = primClass()
         prim.name = name
         entry(name, prim)
-    def overloadable(name) :
-        x = Overloadable(Identifier(name))
-        x.env = primitivesEnv
-        entry(name, x)
 
     primitive("Tuple")
     primitive("Array")

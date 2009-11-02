@@ -1641,7 +1641,7 @@ def foo(x, inputTypes, outputType, builder, func) :
     builder.free(ptr)
     builder.ret_void()
 
-@codegenPrimitiveBody.register(getattr(primitives, "numericEquals?"))
+@codegenPrimitiveBody.register(primitives.numericEquals_P)
 def foo(x, inputTypes, outputType, builder, func) :
     x1 = builder.load(func.args[0])
     x2 = builder.load(func.args[1])
@@ -1655,7 +1655,7 @@ def foo(x, inputTypes, outputType, builder, func) :
     builder.store(result, func.args[-1])
     builder.ret_void()
 
-@codegenPrimitiveBody.register(getattr(primitives, "numericLesser?"))
+@codegenPrimitiveBody.register(primitives.numericLesser_P)
 def foo(x, inputTypes, outputType, builder, func) :
     x1 = builder.load(func.args[0])
     x2 = builder.load(func.args[1])
@@ -1896,7 +1896,7 @@ def foo(x, args, env) :
     compilerObjectAssign(dest.address, src.address)
     return voidValue
 
-@evaluateCall.register(getattr(primitives, "compilerObjectEquals?"))
+@evaluateCall.register(primitives.compilerObjectEquals_P)
 def foo(x, args, env) :
     ensureArity(args, 2)
     a = evaluate(args[0], env, toReferenceOfType(compilerObjectType))
@@ -1983,7 +1983,7 @@ def foo(x, args, env) :
 # evaluate tuple primitives
 #
 
-@evaluateCall.register(getattr(primitives, "TupleType?"))
+@evaluateCall.register(primitives.TupleType_P)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
@@ -2036,7 +2036,7 @@ def foo(x, args, env) :
 # evaluate record primitives
 #
 
-@evaluateCall.register(getattr(primitives, "RecordType?"))
+@evaluateCall.register(primitives.RecordType_P)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = evaluate(args[0], env, toType)
@@ -2067,12 +2067,12 @@ def _eval2NumericArgs(args, env) :
     ensure(a.type == b.type, "argument types mismatch")
     return (a, b)
 
-@evaluateCall.register(getattr(primitives, "numericEquals?"))
+@evaluateCall.register(primitives.numericEquals_P)
 def foo(x, args, env) :
     x1, x2 = _eval2NumericArgs(args, env)
     return evalPrimitiveCall(x, [x1, x2], boolType)
 
-@evaluateCall.register(getattr(primitives, "numericLesser?"))
+@evaluateCall.register(primitives.numericLesser_P)
 def foo(x, args, env) :
     x1, x2 = _eval2NumericArgs(args, env)
     return evalPrimitiveCall(x, [x1, x2], boolType)

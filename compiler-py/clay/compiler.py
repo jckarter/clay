@@ -761,7 +761,7 @@ def foo(x, args, env) :
 def foo(x, args, env) :
     error("compiler objects are not supported at runtime")
 
-@compileCall.register(getattr(primitives, "compilerObjectEquals?"))
+@compileCall.register(primitives.compilerObjectEquals_P)
 def foo(x, args, env) :
     error("compiler objects are not supported at runtime")
 
@@ -840,7 +840,7 @@ def foo(x, args, env) :
 # compile tuple primitives
 #
 
-@compileCall.register(getattr(primitives, "TupleType?"))
+@compileCall.register(primitives.TupleType_P)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = compile(args[0], env, toType)
@@ -900,7 +900,7 @@ def foo(x, args, env) :
 # compile record primitives
 #
 
-@compileCall.register(getattr(primitives, "RecordType?"))
+@compileCall.register(primitives.RecordType_P)
 def foo(x, args, env) :
     ensureArity(args, 1)
     t = compile(args[0], env, toType)
@@ -931,12 +931,12 @@ def _compile2NumericArgs(args, env) :
     ensure(a.type == b.type, "argument types mismatch")
     return (a, b)
     
-@compileCall.register(getattr(primitives, "numericEquals?"))
+@compileCall.register(primitives.numericEquals_P)
 def foo(x, args, env) :
     x1, x2 = _compile2NumericArgs(args, env)
     return compilePrimitiveCall(x, [x1, x2], boolType)
 
-@compileCall.register(getattr(primitives, "numericLesser?"))
+@compileCall.register(primitives.numericLesser_P)
 def foo(x, args, env) :
     x1, x2 = _compile2NumericArgs(args, env)
     return compilePrimitiveCall(x, [x1, x2], boolType)
