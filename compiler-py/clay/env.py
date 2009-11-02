@@ -319,7 +319,7 @@ def cleanupModule(module) :
 # cleanupTopLevelItem
 #
 
-cleanupTopLevelItem = multimethod()
+cleanupTopLevelItem = multimethod("cleanupTopLevelItem")
 
 @cleanupTopLevelItem.register(Record)
 def foo(x) :

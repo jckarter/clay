@@ -28,9 +28,9 @@ def isRTReference(x) : return type(x) is RTReference
 # toRTValue, toRTReference, toRTLValue, toRTValueOrReference
 #
 
-toRTValue = multimethod(errorMessage="invalid value")
-toRTReference = multimethod(errorMessage="invalid reference")
-toRTLValue = multimethod(errorMessage="invalid reference")
+toRTValue = multimethod("toRTValue", errorMessage="invalid value")
+toRTReference = multimethod("toRTReference", errorMessage="invalid reference")
+toRTLValue = multimethod("toRTLValue", errorMessage="invalid reference")
 
 toRTValue.register(RTValue)(lambda x : x)
 toRTValue.register(RTReference)(lambda x : RTValue(x.type))
@@ -42,7 +42,8 @@ toRTReference.register(Value)(lambda x : RTReference(x.type))
 
 toRTLValue.register(RTReference)(lambda x : x)
 
-toRTValueOrReference = multimethod(defaultProc=toRTValue)
+toRTValueOrReference = multimethod("toRTValueOrReference",
+                                   defaultProc=toRTValue)
 
 toRTValueOrReference.register(RTValue)(lambda x : x)
 toRTValueOrReference.register(RTReference)(lambda x : x)
@@ -156,7 +157,7 @@ def analyze(expr, env, converter=(lambda x : x)) :
 # analyze2
 #
 
-analyze2 = multimethod(errorMessage="invalid expression")
+analyze2 = multimethod("analyze2", errorMessage="invalid expression")
 
 @analyze2.register(BoolLiteral)
 def foo(x, env) :
@@ -266,7 +267,7 @@ def foo(x, env) :
 # analyzeNameRef
 #
 
-analyzeNameRef = multimethod(defaultProc=(lambda x : x))
+analyzeNameRef = multimethod("analyzeNameRef", defaultProc=(lambda x : x))
 
 @analyzeNameRef.register(Reference)
 def foo(x) :
@@ -288,7 +289,8 @@ def foo(x) :
 # analyzeIndexing
 #
 
-analyzeIndexing = multimethod(errorMessage="invalid indexing")
+analyzeIndexing = multimethod("analyzeIndexing",
+                              errorMessage="invalid indexing")
 
 @analyzeIndexing.register(Record)
 def foo(x, args, env) :
@@ -321,7 +323,7 @@ def foo(x, args, env) :
 # analyzeCall
 #
 
-analyzeCall = multimethod(errorMessage="invalid call")
+analyzeCall = multimethod("analyzeCall", errorMessage="invalid call")
 
 @analyzeCall.register(Type)
 def foo(x, args, env) :
@@ -691,16 +693,10 @@ class RTActualArgument(object) :
         self.result_ = analyze(self.expr, self.env)
 
     def asReference(self) :
-        handler = toRTReference.getHandler(type(self.result_))
-        if handler is None :
-            return None
-        return withContext(self.expr, lambda : handler(self.result_))
+        return withContext(self.expr, lambda : toRTReference(self.result_))
 
     def asStatic(self) :
-        handler = toStatic.getHandler(type(self.result_))
-        if handler is None :
-            return None
-        return withContext(self.expr, lambda : handler(self.result_))
+        return withContext(self.expr, lambda : toStatic(self.result_))
 
 
 
@@ -771,7 +767,8 @@ def analyzeStatement(x, env, context) :
 # analyzeStatement2
 #
 
-analyzeStatement2 = multimethod(errorMessage="invalid statement")
+analyzeStatement2 = multimethod("analyzeStatement2",
+                                errorMessage="invalid statement")
 
 @analyzeStatement2.register(Block)
 def foo(x, env, context) :
@@ -787,7 +784,7 @@ def foo(x, env, context) :
             if result is not None :
                 return result
 
-analyzeBinding = multimethod(errorMessage="invalid binding")
+analyzeBinding = multimethod("analyzeBinding", errorMessage="invalid binding")
 
 @analyzeBinding.register(VarBinding)
 def foo(x, env, context) :

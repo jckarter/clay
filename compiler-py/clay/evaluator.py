@@ -245,7 +245,7 @@ def isSimpleType(t) :
 # equals
 #
 
-equals = multimethod(n=2, defaultProc=(lambda x, y : x is y))
+equals = multimethod("equals", n=2, defaultProc=(lambda x, y : x is y))
 
 @equals.register(Value, Value)
 def foo(a, b) :
@@ -274,7 +274,7 @@ def typeAndValueEquals(a, b) :
 # toType
 #
 
-toType = multimethod(errorMessage="type expected")
+toType = multimethod("toType", errorMessage="type expected")
 
 @toType.register(Type)
 def foo(x) :
@@ -305,7 +305,7 @@ def multimethodRegisterMany(mm, classList, proc) :
 # toStatic
 #
 
-toStatic = multimethod(errorMessage="invalid static value")
+toStatic = multimethod("toStatic", errorMessage="invalid static value")
 
 toStatic.register(Type)(lambda x : x)
 toStatic.register(Record)(lambda x : x)
@@ -331,7 +331,7 @@ def foo(x) :
 # toValue
 #
 
-toValue = multimethod(errorMessage="invalid value")
+toValue = multimethod("toValue", errorMessage="invalid value")
 
 toValue.register(Value)(lambda x : x)
 
@@ -353,7 +353,7 @@ multimethodRegisterMany(toValue, primitivesClassList, lambda x : lift(x))
 # toReference
 #
 
-toReference = multimethod(errorMessage="invalid reference")
+toReference = multimethod("toReference", errorMessage="invalid reference")
 
 toReference.register(Reference)(lambda x : x)
 
@@ -377,7 +377,7 @@ multimethodRegisterMany(toReference, primitivesClassList,
 # toLValue
 #
 
-toLValue = multimethod(errorMessage="invalid l-value")
+toLValue = multimethod("toLValue", errorMessage="invalid l-value")
 
 toLValue.register(Reference)(lambda x : x)
 
@@ -387,7 +387,7 @@ toLValue.register(Reference)(lambda x : x)
 # toValueOrReference
 #
 
-toValueOrReference = multimethod(defaultProc=toValue)
+toValueOrReference = multimethod("toValueOrReference", defaultProc=toValue)
 
 toValueOrReference.register(Value)(lambda x : x)
 toValueOrReference.register(Reference)(lambda x : x)
@@ -504,13 +504,13 @@ xregister(Cell, lambda x : XObject("Cell", x.param))
 # toValueOrCell, toTypeOrCell, toStaticOrCell
 #
 
-toValueOrCell = multimethod(defaultProc=toValue)
+toValueOrCell = multimethod("toValueOrCell", defaultProc=toValue)
 toValueOrCell.register(Cell)(lambda x : x)
 
-toTypeOrCell = multimethod(defaultProc=toType)
+toTypeOrCell = multimethod("toTypeOrCell", defaultProc=toType)
 toTypeOrCell.register(Cell)(lambda x : x)
 
-toStaticOrCell = multimethod(defaultProc=toStatic)
+toStaticOrCell = multimethod("toStaticOrCell", defaultProc=toStatic)
 toStaticOrCell.register(Cell)(lambda x : x)
 
 
@@ -620,7 +620,7 @@ def llvmType(t) :
     t.llvmType = llt
     return llt
 
-makeLLVMType = multimethod(errorMessage="invalid type tag")
+makeLLVMType = multimethod("makeLLVMType", errorMessage="invalid type tag")
 
 @makeLLVMType.register(BoolTag)
 def foo(tag, t) :
@@ -720,7 +720,7 @@ def ctypesType(t) :
     t.ctypesType = ct
     return ct
 
-makeCTypesType = multimethod(errorMessage="invalid type tag")
+makeCTypesType = multimethod("makeCTypesType", errorMessage="invalid type tag")
 
 @makeCTypesType.register(BoolTag)
 def foo(tag, t) :
@@ -811,7 +811,7 @@ def tempValue(type_) :
 # toNativeInt, toBool
 #
 
-toNativeInt = multimethod(errorMessage="int expected")
+toNativeInt = multimethod("toNativeInt", errorMessage="int expected")
 
 @toNativeInt.register(Value)
 def foo(x) :
@@ -820,7 +820,7 @@ def foo(x) :
 
 toNativeInt.register(Reference)(lambda x : toNativeInt(toValue(x)))
 
-toBool = multimethod(errorMessage="bool expected")
+toBool = multimethod("toBool", errorMessage="bool expected")
 
 @toBool.register(Value)
 def foo(x) :
@@ -915,7 +915,7 @@ def compilerObjectHash(addr) :
 # lift, lower
 #
 
-lift = multimethod(defaultProc=lambda x : x)
+lift = multimethod("lift", defaultProc=lambda x : x)
 
 lift.register(Type)(makeCompilerObject)
 lift.register(Record)(makeCompilerObject)
@@ -923,7 +923,7 @@ lift.register(Procedure)(makeCompilerObject)
 lift.register(Overloadable)(makeCompilerObject)
 multimethodRegisterMany(lift, primitivesClassList, makeCompilerObject)
 
-lower = multimethod(defaultProc=lambda x : x)
+lower = multimethod("lower", defaultProc=lambda x : x)
 
 @lower.register(Value)
 def foo(x) :
@@ -1220,7 +1220,7 @@ def evaluate(expr, env, converter=(lambda x : x)) :
 # evaluate2
 #
 
-evaluate2 = multimethod(errorMessage="invalid expression")
+evaluate2 = multimethod("evaluate2", errorMessage="invalid expression")
 
 @evaluate2.register(BoolLiteral)
 def foo(x, env) :
@@ -1400,7 +1400,7 @@ def convertBinaryOpExpr(x) :
 # evaluateNameRef
 #
 
-evaluateNameRef = multimethod(defaultProc=(lambda x : x))
+evaluateNameRef = multimethod("evaluateNameRef", defaultProc=(lambda x : x))
 
 @evaluateNameRef.register(Value)
 def foo(x) :
@@ -1418,7 +1418,8 @@ def foo(x) :
 # evaluateIndexing
 #
 
-evaluateIndexing = multimethod(errorMessage="invalid indexing")
+evaluateIndexing = multimethod("evaluateIndexing",
+                               errorMessage="invalid indexing")
 
 @evaluateIndexing.register(Record)
 def foo(x, args, env) :
@@ -1451,7 +1452,7 @@ def foo(x, args, env) :
 # evaluateCall
 #
 
-evaluateCall = multimethod(errorMessage="invalid call")
+evaluateCall = multimethod("evaluateCall", errorMessage="invalid call")
 
 @evaluateCall.register(Type)
 def foo(x, args, env) :
@@ -1605,7 +1606,8 @@ def codegenPrimitive(primitive, inputTypes, outputType) :
     return func
 
 
-codegenPrimitiveBody = multimethod(errorMessage="invalid primitive")
+codegenPrimitiveBody = multimethod("codegenPrimitiveBody",
+                                   errorMessage="invalid primitive")
 
 @codegenPrimitiveBody.register(primitives.primitiveCopy)
 def foo(x, inputTypes, outputType, builder, func) :
@@ -2128,16 +2130,10 @@ class ActualArgument(object) :
         self.result_ = evaluate(self.expr, self.env)
 
     def asReference(self) :
-        handler = toReference.getHandler(type(self.result_))
-        if handler is None :
-            return None
-        return withContext(self.expr, lambda : handler(self.result_))
+        return withContext(self.expr, lambda : toReference(self.result_))
 
     def asStatic(self) :
-        handler = toStatic.getHandler(type(self.result_))
-        if handler is None :
-            return None
-        return withContext(self.expr, lambda : handler(self.result_))
+        return withContext(self.expr, lambda : toStatic(self.result_))
 
 
 
@@ -2286,7 +2282,8 @@ def evalStatement(stmt, env, context) :
 # evalStatement2
 #
 
-evalStatement2 = multimethod(errorMessage="invalid statement")
+evalStatement2 = multimethod("evalStatement2",
+                             errorMessage="invalid statement")
 
 @evalStatement2.register(Block)
 def foo(x, env, context) :
@@ -2313,7 +2310,7 @@ def foo(x, env, context) :
                 return result
         i += 1
 
-evalBinding = multimethod(errorMessage="invalid binding")
+evalBinding = multimethod("evalBinding", errorMessage="invalid binding")
 
 @evalBinding.register(VarBinding)
 def foo(x, env, context) :

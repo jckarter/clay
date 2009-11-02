@@ -119,7 +119,7 @@ def tempRTValue(type_) :
 # toRTValue, toRTReference, toRTLValue, toRTValueOrReference
 #
 
-toRTValue = multimethod(errorMessage="invalid value")
+toRTValue = multimethod("toRTValue", errorMessage="invalid value")
 
 @toRTValue.register(RTValue)
 def foo(x) :
@@ -146,7 +146,7 @@ def foo(x) :
     return temp
 
 
-toRTReference = multimethod(errorMessage="invalid reference")
+toRTReference = multimethod("toRTReference", errorMessage="invalid reference")
 
 @toRTReference.register(RTReference)
 def foo(x) :
@@ -161,14 +161,15 @@ def foo(x) :
     return toRTReference(toRTValue(x))
 
 
-toRTLValue = multimethod(errorMessage="invalid reference")
+toRTLValue = multimethod("toRTLValue", errorMessage="invalid reference")
 
 @toRTLValue.register(RTReference)
 def foo(x) :
     return x
 
 
-toRTValueOrReference = multimethod(defaultProc=toRTValue)
+toRTValueOrReference = multimethod("toRTValueOrReference",
+                                   defaultProc=toRTValue)
 
 toRTValueOrReference.register(RTValue)(lambda x : x)
 toRTValueOrReference.register(RTReference)(lambda x : x)
@@ -398,7 +399,7 @@ def compileDelegate(expr, env) :
 # compile2
 #
 
-compile2 = multimethod(errorMessage="invalid expression")
+compile2 = multimethod("compile2", errorMessage="invalid expression")
 
 @compile2.register(BoolLiteral)
 def foo(x, env) :
@@ -550,7 +551,7 @@ def foo(x, env) :
 # compileNameRef
 #
 
-compileNameRef = multimethod(defaultProc=(lambda x : x))
+compileNameRef = multimethod("compileNameRef", defaultProc=(lambda x : x))
 
 @compileNameRef.register(Reference)
 def foo(x) :
@@ -572,7 +573,8 @@ def foo(x) :
 # compileIndexing
 #
 
-compileIndexing = multimethod(errorMessage="invalid indexing")
+compileIndexing = multimethod("compileIndexing",
+                              errorMessage="invalid indexing")
 
 @compileIndexing.register(Record)
 def foo(x, args, env) :
@@ -605,7 +607,7 @@ def foo(x, args, env) :
 # compileCall
 #
 
-compileCall = multimethod(errorMessage="invalid call")
+compileCall = multimethod("compileCall", errorMessage="invalid call")
 
 @compileCall.register(Type)
 def foo(x, args, env) :
@@ -1277,7 +1279,8 @@ def compileStatement(x, env, codeContext) :
 # compileStatement2
 #
 
-compileStatement2 = multimethod(errorMessage="invalid statement")
+compileStatement2 = multimethod("compileStatement2",
+                                errorMessage="invalid statement")
 
 @compileStatement2.register(Block)
 def foo(x, env, codeContext) :
@@ -1304,7 +1307,8 @@ def foo(x, env, codeContext) :
     codeContext.popUpto(blockMarker)
     return isTerminated
 
-compileBinding = multimethod(errorMessage="invalid binding")
+compileBinding = multimethod("compileBinding",
+                             errorMessage="invalid binding")
 
 @compileBinding.register(VarBinding)
 def foo(x, env, codeContext) :
