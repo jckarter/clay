@@ -1,0 +1,3 @@
+#!/bin/sh
+export PYTHONPATH=$(dirname $0)/compiler-py-new:$PYTHONPATH
+python -i $(dirname $0)/compiler-py-new/clay/main.py $*
