@@ -4,7 +4,8 @@ from clay.xprint import xprint
 from clay.error import CompilerError, error
 from clay.ast import *
 from clay.env import setModuleSearchPath, loadProgram
-from clay.core import allocMem
+from clay.core import *
+from clay.primitives import *
 
 def initLibrary() :
     base = os.path.split(__file__)[0]
