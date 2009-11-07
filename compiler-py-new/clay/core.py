@@ -439,8 +439,8 @@ def toFloat64Value(x) : return invoke_toPrimValue(float64Type, x)
 def toPointerValue(pointeeType, addr) :
     int8PtrType = pointerType(int8Type)
     args = [toGenericValue(pointerType(int8Type), addr)]
-    v = allocValue(pointerType(type_))
-    args.append(toGenericValue(pointerType(int8PtrType), addr))
+    v = allocValue(pointerType(pointerType))
+    args.append(toGenericValue(pointerType(int8PtrType), v.address))
     llvmExecutionEngine.run_function(code_ptrToValue, args)
     return v
 
@@ -911,7 +911,7 @@ def foo(a, b) :
 
 @unify.register(TypePattern, Value)
 def foo(a, b) :
-    if b.type != compilerObjectType
+    if b.type != compilerObjectType :
         return False
     return unifyType(a, fromCOValue(b))
 
