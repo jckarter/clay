@@ -142,7 +142,6 @@ def locateModule(names) :
 # loadProgram
 #
 
-mainModule = None
 moduleMap = {}
 
 def loadProgram(fileName) :
@@ -150,8 +149,6 @@ def loadProgram(fileName) :
     resolveLinks(module.imports)
     resolveLinks(module.exports)
     installOverloads(module)
-    global mainModule
-    mainModule = module
     return module
 
 def loadModuleFile(fileName) :
