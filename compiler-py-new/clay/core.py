@@ -817,35 +817,6 @@ def valueToType(v) :
 
 
 #
-# lift
-#
-
-lift = multimethod("lift")
-
-lift.register(Type)(toCOValue)
-lift.register(Record)(toCOValue)
-lift.register(Procedure)(toCOValue)
-lift.register(Overloadable)(toCOValue)
-lift.register(ExternalProcedure)(toCOValue)
-lift.register(Value)(lambda x : x)
-
-
-
-#
-# lower
-#
-
-def lower(v) :
-    return lower2(v.type, v)
-
-lower2 = multimethod("lower2")
-
-lower2.register(Type)(lambda x : x)
-lower2.register(CompilerObjectType)(fromCOValue)
-
-
-
-#
 # type patterns
 #
 
