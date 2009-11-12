@@ -137,13 +137,17 @@ def installPrimitives() :
     primOp("TupleFieldCount",  SimplePrimOp,        [compilerObjectType], int32Type)
     primOp("TupleFieldOffset", SimplePrimOp,        [compilerObjectType, int32Type], int32Type)
     primOp("tuple",            PrimitiveOp)
+    primOp("tupleFieldRef",    PrimitiveOp)
 
-    primOp("RecordType?",        TypePredicatePrimOp, RecordType)
-    primOp("RecordType",         PrimitiveOp)
-    primOp("RecordElementType",  SimplePrimOp,        [compilerObjectType, int32Type], compilerObjectType)
-    primOp("RecordFieldCount",   SimplePrimOp,        [compilerObjectType], int32Type)
-    primOp("RecordFieldOffset",  SimplePrimOp,        [compilerObjectType, int32Type], int32Type)
-    primOp("makeRecordInstance", PrimitiveOp)
+    primOp("RecordType?",          TypePredicatePrimOp, RecordType)
+    primOp("RecordType",           PrimitiveOp)
+    primOp("RecordElementType",    SimplePrimOp,        [compilerObjectType, int32Type], compilerObjectType)
+    primOp("RecordFieldCount",     SimplePrimOp,        [compilerObjectType], int32Type)
+    primOp("RecordFieldOffset",    SimplePrimOp,        [compilerObjectType, int32Type], int32Type)
+    primOp("RecordFieldIndex",     SimplePrimOp,        [compilerObjectType, compilerObjectType], int32Type)
+    primOp("makeRecordInstance",   PrimitiveOp)
+    primOp("recordFieldRef",       PrimitiveOp)
+    primOp("recordFieldRefByName", PrimitiveOp)
 
     primOp("makeInstance", PrimitiveOp)
 
