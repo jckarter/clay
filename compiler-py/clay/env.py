@@ -1,5 +1,4 @@
 import os
-from clay.cleanup import *
 from clay.error import *
 from clay.multimethod import *
 from clay.ast import *
@@ -108,90 +107,15 @@ def lookupIdent(env, ident, verifier=None) :
 
 
 #
-# install primitives
+# primitives module
 #
 
 primitivesModule = Module([], [], [])
 primitivesEnv = ModuleEnvironment(primitivesModule)
 primitivesModule.env = primitivesEnv
-primitives = None
-primitivesClassList = []
 
 def installPrimitive(name, value) :
     primitivesEnv.add(name, value)
-
-def installDefaultPrimitives() :
-    primClasses = {}
-    def entry(name, value) :
-        installPrimitive(name, value)
-    def safeName(s) :
-        if s.endswith("?") :
-            return s[:-1] + "_P"
-        return s
-    def primitive(name) :
-        primClass = type("Primitive%s" % name, (object,), {})
-        primitivesClassList.append(primClass)
-        primClasses[safeName(name)] = primClass
-        prim = primClass()
-        prim.name = name
-        entry(name, prim)
-
-    primitive("Tuple")
-    primitive("Array")
-    primitive("Pointer")
-
-    primitive("typeSize")
-
-    primitive("primitiveCopy")
-
-    primitive("compilerObjectInit")
-    primitive("compilerObjectDestroy")
-    primitive("compilerObjectCopy")
-    primitive("compilerObjectAssign")
-    primitive("compilerObjectEquals?")
-    primitive("compilerObjectHash")
-
-    primitive("addressOf")
-    primitive("pointerDereference")
-    primitive("pointerToInt")
-    primitive("intToPointer")
-    primitive("pointerCast")
-    primitive("allocateMemory")
-    primitive("freeMemory")
-
-    primitive("TupleType?")
-    primitive("tuple")
-    primitive("tupleFieldCount")
-    primitive("tupleFieldRef")
-
-    primitive("array")
-    primitive("arrayRef")
-
-    primitive("RecordType?")
-    primitive("recordFieldCount")
-    primitive("recordFieldRef")
-
-    primitive("numericEquals?")
-    primitive("numericLesser?")
-    primitive("numericAdd")
-    primitive("numericSubtract")
-    primitive("numericMultiply")
-    primitive("numericDivide")
-    primitive("numericRemainder")
-    primitive("numericNegate")
-    primitive("numericConvert")
-
-    primitive("shiftLeft")
-    primitive("shiftRight")
-    primitive("bitwiseAnd")
-    primitive("bitwiseOr")
-    primitive("bitwiseXor")
-
-    Primitives = type("Primitives", (object,), primClasses)
-    global primitives
-    primitives = Primitives()
-
-installDefaultPrimitives()
 
 
 
@@ -218,7 +142,6 @@ def locateModule(names) :
 # loadProgram
 #
 
-mainModule = None
 moduleMap = {}
 
 def loadProgram(fileName) :
@@ -226,8 +149,6 @@ def loadProgram(fileName) :
     resolveLinks(module.imports)
     resolveLinks(module.exports)
     installOverloads(module)
-    global mainModule
-    mainModule = module
     return module
 
 def loadModuleFile(fileName) :
@@ -264,15 +185,6 @@ def loadedModule(nameStr) :
     ensure(module is not None, "module not loaded: %s" % nameStr)
     return module
 
-def _cleanupEnvGlobals() :
-    global mainModule, moduleMap
-    if mainModule is None :
-        return
-    cleanupModule(mainModule)
-    mainModule = None
-    moduleMap = {}
-installGlobalsCleanupHook(_cleanupEnvGlobals)
-
 
 
 #
@@ -295,51 +207,6 @@ def installOverloads(module) :
 def verifyOverloadable(x) :
     ensure(type(x) is Overloadable, "invalid overloadable")
     return x
-
-
-
-#
-# cleanupModule
-#
-
-def cleanupModule(module) :
-    if module.env is None :
-        return
-    module.env = None
-    for import_ in module.imports :
-        cleanupModule(import_.module)
-    for export in module.exports :
-        cleanupModule(export.module)
-    for item in module.topLevelItems :
-        cleanupTopLevelItem(item)
-
-
-
-#
-# cleanupTopLevelItem
-#
-
-cleanupTopLevelItem = multimethod("cleanupTopLevelItem")
-
-@cleanupTopLevelItem.register(Record)
-def foo(x) :
-    pass
-
-@cleanupTopLevelItem.register(Procedure)
-def foo(x) :
-    pass
-
-@cleanupTopLevelItem.register(Overloadable)
-def foo(x) :
-    pass
-
-@cleanupTopLevelItem.register(Overload)
-def foo(x) :
-    pass
-
-@cleanupTopLevelItem.register(ExternalProcedure)
-def foo(x) :
-    x.llvmFunc = None
 
 
 
@@ -373,11 +240,3 @@ def coreNameRef(s) :
     nameRef = NameRef(Identifier(s))
     env = loadedModule("_core").env
     return SCExpression(env, nameRef)
-
-
-
-#
-# remove temp name used for multimethod instances
-#
-
-del foo
