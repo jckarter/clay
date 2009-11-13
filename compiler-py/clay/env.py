@@ -1,6 +1,7 @@
 import os
 from clay.error import *
 from clay.multimethod import *
+from clay.core import *
 from clay.ast import *
 from clay.parser import parse
 
@@ -64,10 +65,9 @@ class ModuleEnvironment(object) :
 #
 
 class Environment(object) :
-    def __init__(self, parent=None, filter=None) :
+    def __init__(self, parent=None) :
         self.parent = parent
         self.entries = {}
-        self.filter = filter
 
     def add(self, name, entry) :
         assert type(name) is str
@@ -86,8 +86,6 @@ class Environment(object) :
         entry = self.lookupInternal(name)
         if entry is None :
             error("undefined name: %s" % name)
-        if self.filter is not None :
-            entry = self.filter(entry)
         return entry
 
 
@@ -99,10 +97,8 @@ class Environment(object) :
 def addIdent(env, ident, value) :
     withContext(ident, lambda : env.add(ident.s, value))
 
-def lookupIdent(env, ident, verifier=None) :
-    if verifier is None :
-        verifier = lambda x : x
-    return withContext(ident, lambda : verifier(env.lookup(ident.s)))
+def lookupIdent(env, ident, converter=(lambda x : x)) :
+    return withContext(ident, lambda : converter(env.lookup(ident.s)))
 
 
 
@@ -159,7 +155,7 @@ def loadModuleFile(fileName) :
     for item in module.topLevelItems :
         item.env = env
         if type(item) is not Overload :
-            addIdent(env, item.name, item)
+            addIdent(env, item.name, toCOValue(item))
     return module
 
 def resolveLinks(links) :
@@ -201,12 +197,19 @@ def installOverloads(module) :
         installOverloads(export.module)
     for item in module.topLevelItems :
         if type(item) is Overload :
-            entry = lookupIdent(module.env, item.name, verifyOverloadable)
+            entry = lookupIdent(module.env, item.name, toOverloadable)
             entry.overloads.insert(0, item)
 
-def verifyOverloadable(x) :
-    ensure(type(x) is Overloadable, "invalid overloadable")
-    return x
+
+
+#
+# utility converters
+#
+
+def toOverloadable(x) :
+    y = lower(x)
+    ensure(type(y) is Overloadable, "invalid overloadable")
+    return y
 
 
 

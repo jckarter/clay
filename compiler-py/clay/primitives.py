@@ -1,4 +1,6 @@
 from clay.core import *
+from clay.unifier import *
+from clay.env import *
 
 class PrimitiveOp(object) :
     pass
@@ -30,7 +32,8 @@ class SimplePrimOp(PrimitiveOp) :
 # install primitives
 #
 
-Primitives = None
+PrimClasses = None
+PrimObjects = None
 
 def installPrimitives() :
     primitiveTypes = {
@@ -52,6 +55,7 @@ def installPrimitives() :
         installPrimitive(k, toCOValue(t))
 
     primClasses = {}
+    primObjects = {}
 
     def safeName(s) :
         if s.endswith("?") :
@@ -63,12 +67,15 @@ def installPrimitives() :
         primClass = type("Prim_%s" % name2, (klass,), {})
         primClasses[name2] = primClass
         prim = primClass(*args, **kwargs)
+        primObjects[name2] = prim
         installPrimitive(name, toCOValue(prim))
 
     primOp("Type?",              TypePredicatePrimOp, Type)
     primOp("TypeSize",           SimplePrimOp,        [compilerObjectType], int32Type)
 
     primOp("BoolType?",          TypePredicatePrimOp, BoolType)
+    primOp("boolNot",            SimplePrimOp,        [boolType], boolType)
+    primOp("boolTruth",          SimplePrimOp,        [boolType], boolType)
 
     primOp("IntegerType?",       TypePredicatePrimOp, IntegerType)
     primOp("SignedIntegerType?", PredicatePrimOp,     lambda t : isinstance(t, IntegerType) and t.signed)
@@ -151,7 +158,8 @@ def installPrimitives() :
 
     primOp("makeInstance", PrimitiveOp)
 
-    global Primitives
-    Primitives = type("Primitives", (object,), primClasses)
+    global PrimClasses, PrimObjects
+    PrimClasses = type("PrimClasses", (object,), primClasses)
+    PrimObjects = type("PrimObjects", (object,), primObjects)
 
 installPrimitives()

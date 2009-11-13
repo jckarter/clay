@@ -1,66 +1,89 @@
-Primitive Types:
-Bool,
-Int8, Int16, Int32, Int64
-UInt8, UInt16, UInt32, UInt64
-Float32, Float64
-CompilerObject
+Primitive Values
 
-Primitive Values:
-true, false, IntLiteral, FloatLiteral
+Bool, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64,
+Float32, Float64, Void, CompilerObject, Any : CompilerObject
 
-Derived Types:
-Tuple[T1, ..., Tn] : tuple type constructor
-Array[T, n] : array type constructor
-Pointer[T] : pointer type
+true, false : Bool
+void : Void
 
-User defined types:
-records
+Primitive Operations
 
-Primitive Operations:
+Type?(T:CompilerObject):Bool
+TypeSize(T:CompilerObject):Int32
 
-typeSize[T](static T):Int32
+BoolType?(T:CompilerObject):Bool
+boolNot(a:Bool):Bool
+boolTruth(a:Bool):Bool
 
-primitiveCopy[T](dest:T, src:T): Void
+IntegerType?(T:CompilerObject):Bool
+SignedIntegerType?(T:CompilerObject):Bool
 
-compilerObjectInit(dest:CompilerObject): Void
-compilerObjectDestroy(dest:CompilerObject): Void
-compilerObjectCopy(dest:CompilerObject, src:CompilerObject): Void
-compilerObjectAssign(dest:CompilerObject, src:CompilerObject): Void
-compilerObjectEquals(dest:CompilerObject, src:CompilerObject): Bool
-compilerObjectHash(dest:CompilerObject, src:CompilerObject): Int32
+FloatType?(T:CompilerObject):Bool
+
+NumericType?(T:CompilerObject):Bool = IntegerType?(T) or FloatType?(T);
+
+numericEquals?[N](a:N, b:N): Bool if (NumericType?(N))
+numericLesser?[N](a:N, b:N): Bool if (NumericType?(N))
+numericAdd[N](a:N, b:N): N if (NumericType?(N))
+numericSubtract[N](a:N, b:N): N if (NumericType?(N))
+numericMultiply[N](a:N, b:N): N if (NumericType?(N))
+numericDivide[N](a:N, b:N): N if (NumericType?(N))
+numericRemainder[N](a:N, b:N): N if (NumericType?(N))
+numericNegate[N](a:N): N if (NumericType?(N))
+numericConvert[Dest,Src](static Dest, a:Src): Dest
+    if (NumericType?(Dest) and NumericType?(Src))
+
+shiftLeft[I](a:I, n:I): I if (IntegerType?(I))
+shiftRight[I](a:I, n:I): I if (IntegerType?(I))
+bitwiseAnd[I](a:I, b:I): I if (IntegerType?(I))
+bitwiseOr[I](a:I, b:I): I if (IntegerType?(I))
+bitwiseXor[I](a:I, b:I): I if (IntegerType?(I))
+
+VoidType?(T:CompilerObject):Bool
+
+CompilerObjectType?(T:CompilerObject):Bool
+
+AnyType?(T:CompilerObject):Bool
+box[T](x:T):Any
+boxRef[T](x:T):Any
+unbox[T](static T, x:Any):T
+unboxRef[T](static T, x:Any) ref :T
+
+PointerType?(T:CompilerObject):Bool
+PointerType(T:CompilerObject):CompilerObject
+PointeeType(T:CompilerObject):CompilerObject
 
 addressOf[T](a:T) : Pointer[T]
 pointerDereference[T](a:Pointer[T]) ref : T
-pointerToInt[T,I](a:Pointer[T], static I) : I
-intToPointer[I,T](a:I, static T) : Pointer[T]
+pointerToInt[T,I](static I, a:Pointer[T]) : I if IntegerType?(I)
+intToPointer[I,T](static T, a:I) : Pointer[T] if IntegerType?(I)
 pointerCast[T1,T2](static T2, a:Pointer[T1]): Pointer[T2]
 allocateMemory[T](static T, n:Int32): Pointer[T]
 freeMemory[T](p:Pointer[T]): Void
 
-TupleType[T](static T): Bool
-tuple(v1, ..., vn): TupleType
-tupleFieldCount[T](static T): Int32
-tupleFieldRef[T,i](a:T, static i) ref : FieldType
-
-array(v1, ..., vn): Array[T, n]
+ArrayType?(T:CompilerObject):Bool
+ArrayType(T:CompilerObject, n:Int32):CompilerObject
+ArrayElementType(T:CompilerObject):CompilerObject
+ArraySize(T:CompilerObject):Int32
+array(v1, ..., vn): Array[T,n]
 arrayRef[T,n](a:Array[T,n], i:Int32) ref : T
 
-RecordType[T](static T): Bool
-recordFieldCount[R](static R) : Int32
-recordFieldRef[R,i](a:R, static i) ref : FieldType
+TupleType?(T:CompilerObject):Bool
+TupleType(T1, ...,Tn): CompilerObject
+TupleElementType(T:CompilerObject, i:Int32): CompilerObject
+TupleFieldCount(T:CompilerObject): Int32
+TupleFieldOffset(T:CompilerObject, i:Int32): Int32
+tuple(v1, ...,vn): tuple type
+tupleFieldRef [T|TupleType?(T)] (a:T, static i)
 
-numericEquals[N](a:N, b:N): Bool
-numericLesser[N](a:N, b:N): Bool
-numericAdd[N](a:N, b:N): N
-numericSubtract[N](a:N, b:N): N
-numericMultiply[N](a:N, b:N): N
-numericDivide[N](a:N, b:N): N
-numericRemainder[N](a:N, b:N): N
-numericNegate[N](a:N): N
-numericConvert[Dest,Src](static Dest, a:Src): Dest
+RecordType?(R:CompilerObject):Bool
+RecordType(R:CompilerObject, v1, ...,vn): CompilerObject
+RecordElementType(R:CompilerObject, i:Int32):CompilerObject
+RecordFieldCount(R:CompilerObject):Int32
+RecordFieldOffset(R:CompilerObject, i:Int32): Int32
+RecordFieldIndex(R:CompilerObject, name:CompilerObject): Int32
+makeRecordInstance[R](static R, v1, ...,vn): record type
+recordFieldRef [R|RecordType?(R)] (a:R, static i)
+recordFieldRefByName [R|RecordType?(R)] (a:R, static name)
 
-shiftLeft[I](a:I, n:I): I
-shiftRight[I](a:I, n:I): I
-bitwiseAnd[I](a:I, b:I): I
-bitwiseOr[I](a:I, b:I): I
-bitwiseXor[I](a:I, b:I): I
+makeInstance[T](static T, v1, ...,vn): T

@@ -1,5 +1,6 @@
 import sys
 import os
+import traceback
 from clay.xprint import xprint
 from clay.error import CompilerError, error
 from clay.ast import *
@@ -28,6 +29,8 @@ def mainInner() :
 def main() :
     try :
         mainInner()
+    except Exception, e :
+        traceback.print_exc()
     finally :
         os._exit(0)
 

@@ -1,5 +1,7 @@
 from clay.ast import *
 from clay.core import *
+from clay.unifier import *
+from clay.env import *
 from clay.primitives import *
 
 
@@ -17,20 +19,6 @@ lift.register(Procedure)(toCOValue)
 lift.register(Overloadable)(toCOValue)
 lift.register(ExternalProcedure)(toCOValue)
 lift.register(Value)(lambda x : x)
-
-
-
-#
-# lower
-#
-
-def lower(v) :
-    return lower2(v.type, v)
-
-lower2 = multimethod("lower2")
-
-lower2.register(Type)(lambda t, v : v)
-lower2.register(CompilerObjectType)(lambda t, v : fromCOValue(v))
 
 
 
@@ -127,7 +115,7 @@ def foo(x, env) :
     v = lookupIdent(env, x.name)
     assert type(v) is Value
     if v.isOwned :
-        v2 = allocTempValue(v.type_)
+        v2 = allocTempValue(v.type)
         copyValue(v2, v)
         return v2
     return v
@@ -155,44 +143,62 @@ def foo(x, env) :
 @evaluate2.register(FieldRef)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
-    name = 
-    raise NotImplementedError
+    name = toCOValue(x.name.s)
+    return invoke(PrimObjects.recordFieldRefByName, [thing, name])
 
 @evaluate2.register(TupleRef)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = evaluate(x.expr, env)
+    index = toInt32Value(x.index)
+    return invoke(PrimObjects.tupleFieldRef, [thing, index])
 
 @evaluate2.register(Dereference)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = evaluate(x.expr, env)
+    return invoke(PrimObjects.pointerDereference, [thing])
 
 @evaluate2.register(AddressOf)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = evaluate(x.expr, env)
+    return invoke(PrimObjects.addressOf, [thing])
 
 @evaluate2.register(UnaryOpExpr)
 def foo(x, env) :
-    raise NotImplementedError
+    return evaluate(convertUnaryOpExpr(x), env)
 
 @evaluate2.register(BinaryOpExpr)
 def foo(x, env) :
-    raise NotImplementedError
+    return evaluate(convertBinaryOpExpr(x), env)
 
 @evaluate2.register(NotExpr)
 def foo(x, env) :
-    raise NotImplementedError
+    thing = evaluate(x.expr, env)
+    return invoke(PrimObjects.boolNot, [thing])
 
 @evaluate2.register(AndExpr)
 def foo(x, env) :
-    raise NotImplementedError
+    v1 = evaluate(x.expr1, env)
+    flag1 = invoke(PrimObjects.boolTruth, [v1])
+    if not fromBoolValue(flag1) :
+        return v1
+    return evaluate(x.expr2, env)
 
 @evaluate2.register(OrExpr)
 def foo(x, env) :
-    raise NotImplementedError
+    v1 = evaluate(x.expr1, env)
+    flag1 = invoke(PrimObjects.boolTruth, [v1])
+    if fromBoolValue(flag1) :
+        return v1
+    return evaluate(x.expr2, env)
 
 @evaluate2.register(StaticExpr)
 def foo(x, env) :
-    raise NotImplementedError
+    v = evaluate(x.expr, env)
+    if not v.isOwned :
+        v2 = allocTempValue(v.type)
+        copyValue(v2, v)
+        return v2
+    return v
 
 @evaluate2.register(SCExpression)
 def foo(x, env) :
