@@ -5,6 +5,10 @@ from clay.env import *
 class PrimitiveOp(object) :
     pass
 
+class TypeConstructorPrimOp(PrimitiveOp) :
+    def __init__(self, constructorPrim) :
+        self.constructorPrim = constructorPrim
+
 class TypePredicatePrimOp(PrimitiveOp) :
     def __init__(self, klass) :
         super(TypePredicatePrimOp, self).__init__()
@@ -115,10 +119,11 @@ def installPrimitives() :
 
     primOp("VoidType?",       TypePredicatePrimOp, VoidType)
     primOp("CompilerObject?", TypePredicatePrimOp, CompilerObjectType)
-    primOp("PointerType?",    TypePredicatePrimOp, PointerType)
-    primOp("PointerType",     SimplePrimOp,        [compilerObjectType], compilerObjectType)
-    primOp("PointeeType",     SimplePrimOp,        [compilerObjectType], compilerObjectType)
 
+    primOp("PointerType?",    TypePredicatePrimOp,   PointerType)
+    primOp("PointerType",     SimplePrimOp,          [compilerObjectType], compilerObjectType)
+    primOp("Pointer",         TypeConstructorPrimOp, primObjects["PointerType"])
+    primOp("PointeeType",     SimplePrimOp,          [compilerObjectType], compilerObjectType)
     a = Cell()
     primOp("addressOf",          SimplePrimOp, [a], PointerTypePattern(a), cells=[a])
     a = Cell()
@@ -130,19 +135,21 @@ def installPrimitives() :
     a = Cell()
     primOp("freeMemory",         SimplePrimOp, [PointerTypePattern(a)], voidType, cells=[a])
 
-    primOp("ArrayType?",       TypePredicatePrimOp, ArrayType)
-    primOp("ArrayType",        SimplePrimOp,        [compilerObjectType, int32Type], compilerObjectType)
-    primOp("ArrayElementType", SimplePrimOp,        [compilerObjectType], compilerObjectType)
-    primOp("ArraySize",        SimplePrimOp,        [compilerObjectType], int32Type)
+    primOp("ArrayType?",       TypePredicatePrimOp,   ArrayType)
+    primOp("ArrayType",        SimplePrimOp,          [compilerObjectType, int32Type], compilerObjectType)
+    primOp("Array",            TypeConstructorPrimOp, primObjects["ArrayType"])
+    primOp("ArrayElementType", SimplePrimOp,          [compilerObjectType], compilerObjectType)
+    primOp("ArraySize",        SimplePrimOp,          [compilerObjectType], int32Type)
     primOp("array",            PrimitiveOp)
     a, b = Cell(), Cell()
     primOp("arrayRef",         SimplePrimOp,        [ArrayTypePattern(a, b), int32Type], a, returnByRef=True, cells=[a, b])
 
-    primOp("TupleType?",       TypePredicatePrimOp, TupleType)
+    primOp("TupleType?",       TypePredicatePrimOp,   TupleType)
     primOp("TupleType",        PrimitiveOp)
-    primOp("TupleElementType", SimplePrimOp,        [compilerObjectType, int32Type], compilerObjectType)
-    primOp("TupleFieldCount",  SimplePrimOp,        [compilerObjectType], int32Type)
-    primOp("TupleFieldOffset", SimplePrimOp,        [compilerObjectType, int32Type], int32Type)
+    primOp("Tuple",            TypeConstructorPrimOp, primObjects["TupleType"])
+    primOp("TupleElementType", SimplePrimOp,          [compilerObjectType, int32Type], compilerObjectType)
+    primOp("TupleFieldCount",  SimplePrimOp,          [compilerObjectType], int32Type)
+    primOp("TupleFieldOffset", SimplePrimOp,          [compilerObjectType, int32Type], int32Type)
     primOp("tuple",            PrimitiveOp)
     primOp("tupleFieldRef",    PrimitiveOp)
 

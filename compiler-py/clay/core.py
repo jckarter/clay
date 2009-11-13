@@ -808,12 +808,9 @@ def foo(t, a) :
 
 def lower(v) :
     assert type(v) is Value
-    return lower2(v.type, v)
-
-lower2 = multimethod("lower2")
-
-lower2.register(Type)(lambda t, v : v)
-lower2.register(CompilerObjectType)(lambda t, v : fromCOValue(v))
+    if v.type == compilerObjectType :
+        return fromCOValue(v)
+    return v
 
 
 

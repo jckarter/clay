@@ -51,6 +51,7 @@ unboxRef[T](static T, x:Any) ref :T
 
 PointerType?(T:CompilerObject):Bool
 PointerType(T:CompilerObject):CompilerObject
+Pointer[T]
 PointeeType(T:CompilerObject):CompilerObject
 
 addressOf[T](a:T) : Pointer[T]
@@ -63,6 +64,7 @@ freeMemory[T](p:Pointer[T]): Void
 
 ArrayType?(T:CompilerObject):Bool
 ArrayType(T:CompilerObject, n:Int32):CompilerObject
+Array[T,n]
 ArrayElementType(T:CompilerObject):CompilerObject
 ArraySize(T:CompilerObject):Int32
 array(v1, ..., vn): Array[T,n]
@@ -70,6 +72,7 @@ arrayRef[T,n](a:Array[T,n], i:Int32) ref : T
 
 TupleType?(T:CompilerObject):Bool
 TupleType(T1, ...,Tn): CompilerObject
+Tuple[T1, ..., Tn]
 TupleElementType(T:CompilerObject, i:Int32): CompilerObject
 TupleFieldCount(T:CompilerObject): Int32
 TupleFieldOffset(T:CompilerObject, i:Int32): Int32
@@ -78,6 +81,7 @@ tupleFieldRef [T|TupleType?(T)] (a:T, static i)
 
 RecordType?(R:CompilerObject):Bool
 RecordType(R:CompilerObject, v1, ...,vn): CompilerObject
+R[v1, ...,vn]
 RecordElementType(R:CompilerObject, i:Int32):CompilerObject
 RecordFieldCount(R:CompilerObject):Int32
 RecordFieldOffset(R:CompilerObject, i:Int32): Int32

@@ -132,13 +132,13 @@ def foo(x, env) :
 def foo(x, env) :
     thing = evaluate(x.expr, env)
     args = evaluateList(x.args)
-    return invokeIndexing(thing, args)
+    return invokeIndexing(lower(thing), args)
 
 @evaluate2.register(Call)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
     args = evaluateList(x.args)
-    return invoke(thing, args)
+    return invoke(lower(thing), args)
 
 @evaluate2.register(FieldRef)
 def foo(x, env) :
@@ -207,18 +207,6 @@ def foo(x, env) :
 
 
 #
-# invoke*
-#
-
-def invokeIndexing(x, args) :
-    raise NotImplementedError
-
-def invoke(x, args) :
-    raise NotImplementedError
-
-
-
-#
 # de-sugar syntax
 #
 
@@ -261,3 +249,36 @@ _binaryOps = {"+"  : "add",
 
 def convertBinaryOpExpr(x) :
     return Call(coreNameRef(_binaryOps[x.op]), [x.expr1, x.expr2])
+
+
+
+#
+# invokeIndexing
+#
+
+invokeIndexing = multimethod("invokeIndexing")
+
+@invokeIndexing.register(TypeConstructorPrimOp)
+def foo(x, args) :
+    return invoke(x.constructorPrim, args)
+
+@invokeIndexing.register(Record)
+def foo(x, args) :
+    return invoke(PrimObjects.RecordType, [toCOValue(x)] + args)
+
+
+
+#
+# invoke
+#
+
+def invoke(x, args) :
+    raise NotImplementedError
+
+
+
+#
+# remove temp name used for multimethod instances
+#
+
+del foo
