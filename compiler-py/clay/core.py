@@ -14,17 +14,9 @@ class Type(object) :
     def __init__(self) :
         self.interned = False
         self.llvmType = None
-    def __eq__(self, other) :
-        if not isinstance(other, Type) :
-            return False
-        return equalTypes(self, other)
-    def __hash__(self) :
-        return hashType(self)
 
 class BoolType(Type) :
     pass
-
-boolType = BoolType()
 
 class IntegerType(Type) :
     def __init__(self, bits, signed) :
@@ -32,32 +24,16 @@ class IntegerType(Type) :
         self.bits = bits
         self.signed = signed
 
-int8Type = IntegerType(bits=8, signed=True)
-int16Type = IntegerType(bits=16, signed=True)
-int32Type = IntegerType(bits=32, signed=True)
-int64Type = IntegerType(bits=64, signed=True)
-uint8Type = IntegerType(bits=8, signed=False)
-uint16Type = IntegerType(bits=16, signed=False)
-uint32Type = IntegerType(bits=32, signed=False)
-uint64Type = IntegerType(bits=64, signed=False)
-
 class FloatType(Type) :
     def __init__(self, bits) :
         super(FloatType, self).__init__()
         self.bits = bits
 
-float32Type = FloatType(32)
-float64Type = FloatType(64)
-
 class VoidType(Type) :
     pass
 
-voidType = VoidType()
-
 class CompilerObjectType(Type) :
     pass
-
-compilerObjectType = CompilerObjectType()
 
 class PointerType(Type) :
     def __init__(self, pointeeType) :
@@ -80,18 +56,6 @@ class RecordType(Type) :
         super(RecordType, self).__init__()
         self.record = record
         self.params = params
-
-def pointerType(pointeeType) :
-    return PointerType(pointeeType)
-
-def tupleType(elementTypes) :
-    return TupleType(elementTypes)
-
-def arrayType(elementType, size) :
-    return ArrayType(elementType, size)
-
-def recordType(record, params) :
-    return RecordType(record, params)
 
 
 
@@ -176,7 +140,7 @@ def foo(t) :
 
 @hashType.register(PointerType)
 def foo(t) :
-    return hash((id(PointerType), t.elementType))
+    return hash((id(PointerType), t.pointeeType))
 
 @hashType.register(TupleType)
 def foo(t) :
@@ -189,6 +153,64 @@ def foo(t) :
 @hashType.register(RecordType)
 def foo(t) :
     return hash((id(RecordType), t.record) + tuple(t.params))
+
+
+
+#
+# intern types
+#
+
+class TypeHolder(object) :
+    def __init__(self, type_) :
+        self.type = type_
+    def __eq__(self, other) :
+        if not isinstance(other, TypeHolder) :
+            return False
+        return equalTypes(self.type, other.type)
+    def __hash__(self) :
+        return hashType(self.type)
+
+_typesTable = {}
+
+def internType(t) :
+    holder = TypeHolder(t)
+    entry = _typesTable.get(holder)
+    if entry is not None :
+        assert entry.interned
+        return entry
+    t.interned = True
+    _typesTable[holder] = t
+    return t
+
+boolType = internType(BoolType())
+
+int8Type = internType(IntegerType(bits=8, signed=True))
+int16Type = internType(IntegerType(bits=16, signed=True))
+int32Type = internType(IntegerType(bits=32, signed=True))
+int64Type = internType(IntegerType(bits=64, signed=True))
+uint8Type = internType(IntegerType(bits=8, signed=False))
+uint16Type = internType(IntegerType(bits=16, signed=False))
+uint32Type = internType(IntegerType(bits=32, signed=False))
+uint64Type = internType(IntegerType(bits=64, signed=False))
+
+float32Type = internType(FloatType(32))
+float64Type = internType(FloatType(64))
+
+voidType = internType(VoidType())
+
+compilerObjectType = internType(CompilerObjectType())
+
+def pointerType(pointeeType) :
+    return internType(PointerType(pointeeType))
+
+def tupleType(elementTypes) :
+    return internType(TupleType(elementTypes))
+
+def arrayType(elementType, size) :
+    return internType(ArrayType(elementType, size))
+
+def recordType(record, params) :
+    return internType(RecordType(record, params))
 
 
 
