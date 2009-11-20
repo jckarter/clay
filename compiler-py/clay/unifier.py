@@ -25,12 +25,6 @@ class PointerTypePattern(TypePattern) :
         # pointeeType is Value|Pattern
         self.pointeeType = pointeeType
 
-class TupleTypePattern(TypePattern) :
-    def __init__(self, elementTypes) :
-        super(TupleTypePattern, self).__init__()
-        # elementTypes is a list of Value|Pattern
-        self.elementTypes = elementTypes
-
 class ArrayTypePattern(TypePattern) :
     def __init__(self, elementType, size) :
         super(ArrayTypePattern, self).__init__()
@@ -38,6 +32,12 @@ class ArrayTypePattern(TypePattern) :
         self.elementType = elementType
         # size is a Value|Cell
         self.size = size
+
+class TupleTypePattern(TypePattern) :
+    def __init__(self, elementTypes) :
+        super(TupleTypePattern, self).__init__()
+        # elementTypes is a list of Value|Pattern
+        self.elementTypes = elementTypes
 
 class RecordTypePattern(TypePattern) :
     def __init__(self, record, params) :
@@ -83,6 +83,12 @@ def foo(a, b) :
 def foo(a, b) :
     return unify(a.pointeeType, toCOValue(b.pointeeType))
 
+@unifyType.register(ArrayTypePattern, ArrayType)
+def foo(a, b) :
+    if not unify(a.elementType, toCOValue(b.elementType)) :
+        return False
+    return unify(a.size, toInt32Value(b.size))
+
 @unifyType.register(TupleTypePattern, TupleType)
 def foo(a, b) :
     if len(a.elementTypes) != len(b.elementTypes) :
@@ -91,12 +97,6 @@ def foo(a, b) :
         if not unify(x, toCOValue(y)) :
             return False
     return True
-
-@unifyType.register(ArrayTypePattern, ArrayType)
-def foo(a, b) :
-    if not unify(a.elementType, toCOValue(b.elementType)) :
-        return False
-    return unify(a.size, toInt32Value(b.size))
 
 @unifyType.register(RecordTypePattern, RecordType)
 def foo(a, b) :
@@ -107,6 +107,19 @@ def foo(a, b) :
             return False
     return True
 
+def derefCell(x) :
+    if x.value is None :
+        try :
+            if x.name is not None :
+                contextPush(x.name)
+            error("unresolved pattern variable")
+        finally :
+            if x.name is not None :
+                contextPop()
+    v2 = allocValue(x.value.type)
+    copyValue(v2, x.value.type)
+    return v2
+
 resolvePattern = multimethod("resolvePattern")
 
 @resolvePattern.register(Value)
@@ -115,19 +128,12 @@ def foo(x) :
 
 @resolvePattern.register(Cell)
 def foo(x) :
-    if x.value is None :
-        error("unresolved pattern variable: " + x.name)
-    return x.value
+    return derefCell(x)
 
 @resolvePattern.register(PointerTypePattern)
 def foo(x) :
     pointeeType = toType(resolvePattern(x.pointeeType))
     return toCOValue(pointerType(pointeeType))
-
-@resolvePattern.register(TupleTypePattern)
-def foo(x) :
-    elementTypes = [toType(resolvePattern(y)) for y in x.elementTypes]
-    return toCOValue(tupleType(elementTypes))
 
 @resolvePattern.register(ArrayTypePattern)
 def foo(x) :
@@ -135,10 +141,24 @@ def foo(x) :
     size = fromIntValue(resolvePattern(x.size))
     return toCOValue(arrayType(elementType, size))
 
+@resolvePattern.register(TupleTypePattern)
+def foo(x) :
+    elementTypes = [toType(resolvePattern(y)) for y in x.elementTypes]
+    return toCOValue(tupleType(elementTypes))
+
 @resolvePattern.register(RecordTypePattern)
 def foo(x) :
     params = [resolvePattern(y) for y in x.params]
     return toCOValue(recordType(x.record, params))
+
+
+
+#
+# utility procs
+#
+
+def derefCells(x) :
+    return [derefCell(y) for y in x]
 
 
 

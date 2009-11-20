@@ -49,6 +49,22 @@ def allocTempValue(type_) :
 
 
 #
+# asStatic
+#
+
+asStatic = multimethod("asStatic")
+
+@asStatic.register(Value)
+def foo(v) :
+    if not v.isOwned :
+        v2 = allocTempValue(v.type)
+        copyValue(v2, v)
+        return v2
+    return v
+
+
+
+#
 #
 #
 
@@ -113,7 +129,7 @@ def foo(x, env) :
 @evaluate2.register(NameRef)
 def foo(x, env) :
     v = lookupIdent(env, x.name)
-    assert type(v) is Value
+    ensure(type(v) is Value, "invalid value")
     if v.isOwned :
         v2 = allocTempValue(v.type)
         copyValue(v2, v)
@@ -131,13 +147,13 @@ def foo(x, env) :
 @evaluate2.register(Indexing)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
-    args = evaluateList(x.args)
+    args = evaluateList(x.args, env)
     return invokeIndexing(lower(thing), args)
 
 @evaluate2.register(Call)
 def foo(x, env) :
     thing = evaluate(x.expr, env)
-    args = evaluateList(x.args)
+    args = evaluateList(x.args, env)
     return invoke(lower(thing), args)
 
 @evaluate2.register(FieldRef)
@@ -193,12 +209,7 @@ def foo(x, env) :
 
 @evaluate2.register(StaticExpr)
 def foo(x, env) :
-    v = evaluate(x.expr, env)
-    if not v.isOwned :
-        v2 = allocTempValue(v.type)
-        copyValue(v2, v)
-        return v2
-    return v
+    return evaluate(x.expr, env, toStatic)
 
 @evaluate2.register(SCExpression)
 def foo(x, env) :
@@ -272,8 +283,131 @@ def foo(x, args) :
 # invoke
 #
 
-def invoke(x, args) :
+invoke = multimethod("invoke")
+
+@invoke.register(Procedure)
+def foo(x, args) :
     raise NotImplementedError
+
+@invoke.register(Overloadable)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(ExternalProcedure)
+def foo(x, args) :
+    raise NotImplementedError
+
+
+
+#
+# matchInvokeCode
+#
+
+class MatchError(object) :
+    pass
+
+class ArgCountError(MatchError) :
+    pass
+
+class ArgMismatch(MatchError) :
+    def __init__(self, pos) :
+        self.pos = pos
+
+class PredicateFailure(MatchError) :
+    pass
+
+def matchInvokeCode(x, args) :
+    if len(args) != len(x.formalArgs) :
+        return ArgCountError()
+    cells = [Cell(y) for y in x.typeVars]
+    patternEnv = extendEnv(x.env, x.typeVars, cells)
+    for i, farg in enumerate(x.formalArgs) :
+        if not matchArg(farg, args[i], patternEnv) :
+            return ArgMismatch(i)
+    env2 = extendEnv(x.env, x.typeVars, derefCells(cells))
+    if x.predicate is not None :
+        result = evaluateRootExpr(x.predicate, env2, toPredicateResult)
+        if not result :
+            return PredicateFailure()
+    for arg, farg in zip(args, x.formalArgs) :
+        if type(farg) is ValueArgument :
+            addIdent(env2, farg.name, asReference(arg))
+    return env2
+
+matchArg = multimethod("matchArg")
+
+@matchArg.register(ValueArgument)
+def foo(farg, arg, env) :
+    if farg.type is None :
+        return True
+    pattern = evaluatePattern(farg.type, env)
+    return unify(pattern, toCOValue(arg.type)) :
+
+@matchArg.register(StaticArgument)
+def foo(farg, arg, env) :
+    pattern = evaluatePattern(farg.pattern, env)
+    return unify(pattern, arg)
+
+def toPredicateResult(v) :
+    return fromBoolValue(invoke(PrimObjects.boolTruth, [v]))
+
+
+
+#
+# evaluatePattern
+#
+
+def evaluatePattern(x, env) :
+    pushTempsBlock()
+    try :
+        return evaluatePattern2(x, env)
+    finally :
+        popTempsBlock()
+
+evaluatePattern2 = multimethod("evaluatePattern2")
+
+@evaluatePattern2.register(object)
+def foo(x, env) :
+    return evaluate(x, env, toStatic)
+
+@evaluatePattern2.register(NameRef)
+def foo(x, env) :
+    v = lookupIdent(env, x.name)
+    if type(v) is Cell :
+        return v
+    return evaluate(x, env, toStatic)
+
+@evaluatePattern2.register(Indexing)
+def foo(x, env) :
+    thing = evaluate(x.expr, env)
+    args = [evaluatePattern(y, env) for y in x.args]
+    return invokeIndexingPattern(lower(thing), args)
+
+invokeIndexingPattern = multimethod("invokeIndexingPattern")
+
+@invokeIndexingPattern.register(object)
+def foo(x, args) :
+    return invokeIndexing(x, args)
+
+@invokeIndexingPattern.register(PrimObjects.Pointer)
+def foo(x, args) :
+    ensureArity(args, 1)
+    return PointerTypePattern(args[0])
+
+@invokeIndexingPattern.register(PrimObjects.Array)
+def foo(x, args) :
+    ensureArity(args, 2)
+    return ArrayTypePattern(args[0], args[1])
+
+@invokeIndexingPattern.register(PrimObjects.Tuple)
+def foo(x, args) :
+    ensure(len(args) >= 2, "tuple type needs atleast 2 elements")
+    return TupleTypePattern(args)
+
+@invokeIndexingPattern.register(Record)
+def foo(x, args) :
+    ensureArity(args, len(x.typeVars))
+    return RecordTypePattern(x, args)
 
 
 

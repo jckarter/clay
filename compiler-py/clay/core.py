@@ -394,6 +394,18 @@ class Value(object) :
 
 
 #
+# asReference
+#
+
+asReference = multimethod("asReference")
+
+@asReference.register(Value)
+def foo(x) :
+    return Value(x.type, False, x.address)
+
+
+
+#
 # allocValue
 #
 
