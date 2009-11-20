@@ -144,18 +144,13 @@ def loadProgram(fileName) :
     module = loadModuleFile(fileName)
     resolveLinks(module.imports)
     resolveLinks(module.exports)
-    installOverloads(module)
+    initModule1(module)
+    initModule2(module)
     return module
 
 def loadModuleFile(fileName) :
     data = file(fileName).read()
     module = parse(data, fileName)
-    env = ModuleEnvironment(module)
-    module.env = env
-    for item in module.topLevelItems :
-        item.env = env
-        if type(item) is not Overload :
-            addIdent(env, item.name, toCOValue(item))
     return module
 
 def resolveLinks(links) :
@@ -184,21 +179,73 @@ def loadedModule(nameStr) :
 
 
 #
-# installOverloads
+# initModule stage 1
 #
 
-def installOverloads(module) :
-    if module.overloadsInstalled :
+def initModule1(module) :
+    if module.initialized1 :
         return
-    module.overloadsInstalled = True
+    module.initialized1 = True
     for import_ in module.imports :
-        installOverloads(import_.module)
+        initModule1(import_.module)
     for export in module.exports :
-        installOverloads(export.module)
+        initModule1(export.module)
+    module.env = ModuleEnvironment(module)
     for item in module.topLevelItems :
-        if type(item) is Overload :
-            entry = lookupIdent(module.env, item.name, toOverloadable)
-            entry.overloads.insert(0, item)
+        initTopLevelItem1(item, module)
+
+initTopLevelItem1 = multimethod("initTopLevelItem1")
+
+@initTopLevelItem1.register(Record)
+def foo(x, module) :
+    x.env = module.env
+    addIdent(module.env, x.name, toCOValue(x))
+
+@initTopLevelItem1.register(Procedure)
+def foo(x, module) :
+    x.code.env = module.env
+    addIdent(module.env, x.name, toCOValue(x))
+
+@initTopLevelItem1.register(Overloadable)
+def foo(x, module) :
+    addIdent(module.env, x.name, toCOValue(x))
+
+@initTopLevelItem1.register(Overload)
+def foo(x, module) :
+    x.code.env = module.env
+
+@initTopLevelItem1.register(ExternalProcedure)
+def foo(x, module) :
+    x.env = module.env
+    addIdent(module.env, x.name, toCOValue(x))
+
+
+
+#
+# initModule stage 2
+#
+
+def initModule2(module) :
+    if module.initialized2 :
+        return
+    module.initialized2 = True
+    for import_ in module.imports :
+        initModule2(import_.module)
+    for export in module.exports :
+        initModule2(export.module)
+    for item in module.topLevelItems :
+        initTopLevelItem2(item, module)
+
+initTopLevelItem2 = multimethod("initTopLevelItem2")
+
+@initTopLevelItem2.register(TopLevelItem)
+def foo(x, module) :
+    pass
+
+@initTopLevelItem2.register(Overload)
+def foo(x, module) :
+    entry = lookupIdent(module.env, x.name, toOverloadable)
+    entry.overloads.insert(0, x)
 
 
 

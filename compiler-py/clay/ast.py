@@ -331,6 +331,7 @@ class Code(ASTNode) :
         self.returnByRef = returnByRef
         self.returnType = returnType
         self.body = body
+        self.env = None
 
 class FormalArgument(ASTNode) :
     pass
@@ -395,14 +396,12 @@ class Procedure(TopLevelItem) :
         check(code, Code)
         self.name = name
         self.code = code
-        self.env = None
 
 class Overloadable(TopLevelItem) :
     def __init__(self, name) :
         super(Overloadable, self).__init__()
         check(name, Identifier)
         self.name = name
-        self.env = None
         self.overloads = []
 
 class Overload(TopLevelItem) :
@@ -412,7 +411,6 @@ class Overload(TopLevelItem) :
         check(code, Code)
         self.name = name
         self.code = code
-        self.env = None
 
 class ExternalProcedure(TopLevelItem) :
     def __init__(self, name, args, returnType) :
@@ -471,7 +469,8 @@ class Module(ASTNode) :
         self.topLevelItems = topLevelItems
         self.globals = {}
         self.env = None
-        self.overloadsInstalled = False
+        self.initialized1 = False
+        self.initialized2 = False
 
 
 
