@@ -218,23 +218,19 @@ class Label(Statement) :
         self.name = name
 
 class VarBinding(Statement) :
-    def __init__(self, name, type, expr) :
+    def __init__(self, name, expr) :
         super(VarBinding, self).__init__()
         check(name, Identifier)
-        check2(type, Expression)
         check(expr, Expression)
         self.name = name
-        self.type = type
         self.expr = expr
 
 class RefBinding(Statement) :
-    def __init__(self, name, type, expr) :
+    def __init__(self, name, expr) :
         super(RefBinding, self).__init__()
         check(name, Identifier)
-        check2(type, Expression)
         check(expr, Expression)
         self.name = name
-        self.type = type
         self.expr = expr
 
 class StaticBinding(Statement) :
@@ -298,14 +294,12 @@ class Continue(Statement) :
         super(Continue, self).__init__()
 
 class For(Statement) :
-    def __init__(self, variable, type, expr, body) :
+    def __init__(self, variable, expr, body) :
         super(For, self).__init__()
         check(variable, Identifier)
-        check2(type, Expression)
         check(expr, Expression)
         check(body, Statement)
         self.variable = variable
-        self.type = type
         self.expr = expr
         self.body = body
 

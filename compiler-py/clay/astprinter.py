@@ -51,8 +51,8 @@ r(StaticExpr, lambda x : xo("StaticExpr", x.expr))
 
 r(Block, lambda x : xo("Block", *x.statements))
 r(Label, lambda x : xo("Label", x.name))
-r(VarBinding, lambda x : xo("VarBinding", x.name, x.type, x.expr))
-r(RefBinding, lambda x : xo("RefBinding", x.name, x.type, x.expr))
+r(VarBinding, lambda x : xo("VarBinding", x.name, x.expr))
+r(RefBinding, lambda x : xo("RefBinding", x.name, x.expr))
 r(StaticBinding, lambda x : xo("StaticBinding", x.name, x.expr))
 r(Assignment, lambda x : xo("Assignment", x.left, x.right))
 r(Goto, lambda x : xo("Goto", x.labelName))
@@ -64,7 +64,7 @@ r(ExprStatement, lambda x : xo("ExprStatement", x.expr))
 r(While, lambda x : xo("While", x.condition, x.body))
 r(Break, lambda x : xo("Break"))
 r(Continue, lambda x : xo("Continue"))
-r(For, lambda x : xo("For", x.variable, x.type, x.expr, x.body))
+r(For, lambda x : xo("For", x.variable, x.expr, x.body))
 
 
 

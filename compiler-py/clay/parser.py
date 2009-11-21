@@ -194,12 +194,12 @@ block = astNode(sequence(symbol("{"), zeroPlus(statement2), symbol("}")),
 labelDef = astNode(sequence(identifier, symbol(":")),
                    lambda x : Label(x[0]))
 
-varBinding = astNode(sequence(keyword("var"), identifier, optTypeSpec,
-                              symbol("="), expression, semicolon),
-                     lambda x : VarBinding(x[1], x[2], x[4]))
-refBinding = astNode(sequence(keyword("ref"), identifier, optTypeSpec,
-                              symbol("="), expression, semicolon),
-                     lambda x : RefBinding(x[1], x[2], x[4]))
+varBinding = astNode(sequence(keyword("var"), identifier, symbol("="),
+                              expression, semicolon),
+                     lambda x : VarBinding(x[1], x[3]))
+refBinding = astNode(sequence(keyword("ref"), identifier, symbol("="),
+                              expression, semicolon),
+                     lambda x : RefBinding(x[1], x[3]))
 staticBinding = astNode(sequence(keyword("static"), identifier,
                                  symbol("="), expression, semicolon),
                         lambda x : StaticBinding(x[1], x[3]))
@@ -234,9 +234,9 @@ continueStatement = astNode(sequence(keyword("continue"), semicolon),
                             lambda x : Continue())
 
 forStatement = astNode(sequence(keyword("for"), symbol("("),
-                                identifier, optTypeSpec, keyword("in"),
+                                identifier, keyword("in"),
                                 expression, symbol(")"), statement2),
-                       lambda x : For(x[2], x[3], x[5], x[7]))
+                       lambda x : For(x[2], x[4], x[6]))
 
 statement = choice(block, labelDef, varBinding, refBinding, staticBinding,
                    assignment, ifStatement, gotoStatement, returnStatement,
