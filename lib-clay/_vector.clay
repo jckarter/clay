@@ -30,7 +30,7 @@ vector[T,n](a:Array[T,n]) {
 
 overload size[T](a:Vector[T]) = a.size;
 
-overload at[T](a:Vector[T], i) ref = at(a.data + i);
+overload at[T](a:Vector[T], i) = ref at(a.data + i);
 
 
 //
@@ -39,7 +39,7 @@ overload at[T](a:Vector[T], i) ref = at(a.data + i);
 
 record VectorCoordinate[T](ptr:Pointer[T]);
 
-overload at[T](c:VectorCoordinate[T]) ref = at(c.ptr);
+overload at[T](c:VectorCoordinate[T]) = ref at(c.ptr);
 
 overload begin[T](a:Vector[T]) = VectorCoordinate(a.data);
 overload end[T](a:Vector[T]) = VectorCoordinate(a.data + a.size);
@@ -138,8 +138,8 @@ overload hash[T](a:Vector[T]) {
 // front, back, pushBack, popBack
 //
 
-overload front[T](a:Vector[T]) ref = at(a, 0);
-overload back[T](a:Vector[T]) ref = at(a, size(a)-1);
+overload front[T](a:Vector[T]) = ref at(a, 0);
+overload back[T](a:Vector[T]) = ref at(a, size(a)-1);
 
 overload pushBack[T](a:Vector[T], x:T) {
     insert(a, size(a), x);
@@ -183,7 +183,7 @@ ensureSpace[T](a:Vector[T], space:Int32) {
         setCapacity(a, 2*(a.size + space));
 }
 
-insertionPoint [T,I|Integer?(I)] (a:Vector[T], pos:I) ref {
+insertionPoint [T,I|Integer?(I)] (a:Vector[T], pos:I) {
     ensureSpace(a, 1);
     var i = begin(a) + pos;
     var j = end(a);
@@ -192,7 +192,7 @@ insertionPoint [T,I|Integer?(I)] (a:Vector[T], pos:I) ref {
         dec(j);
     }
     inc(a.size);
-    return at(i);
+    returnref at(i);
 }
 
 overload insert [T,I|Integer?(I)] (a:Vector[T], i:I, x:T) {

@@ -213,6 +213,11 @@ gotoStatement = astNode(sequence(keyword("goto"), identifier, semicolon),
 returnStatement = astNode(sequence(keyword("return"), optExpression,
                                    semicolon),
                           lambda x : Return(x[1]))
+
+returnRefStatement = astNode(sequence(keyword("returnref"), expression,
+                                      semicolon),
+                          lambda x : ReturnRef(x[1]))
+
 parenCondition = modify(sequence(symbol("("), expression, symbol(")")),
                         lambda x : x[1])
 elsePart = modify(sequence(keyword("else"), statement2),
@@ -240,8 +245,8 @@ forStatement = astNode(sequence(keyword("for"), symbol("("),
 
 statement = choice(block, labelDef, varBinding, refBinding, staticBinding,
                    assignment, ifStatement, gotoStatement, returnStatement,
-                   exprStatement, whileStatement, breakStatement,
-                   continueStatement, forStatement)
+                   returnRefStatement, exprStatement, whileStatement,
+                   breakStatement, continueStatement, forStatement)
 
 
 #
@@ -265,17 +270,17 @@ formalArgument = choice(valueArgument, staticArgument)
 formalArguments = modify(optional(listOf(formalArgument, comma)),
                          lambda x : [] if x is None else x)
 
-byRef = modify(optional(keyword("ref")), lambda x : x is not None)
-
-exprBody1 = astNode(sequence(symbol("="), expression, symbol(";")),
+exprBody = astNode(sequence(symbol("="), expression, symbol(";")),
                    lambda x : Return(x[1]))
-exprBody = astNode(exprBody1, lambda x : Block([x]))
+exprRefBody = astNode(sequence(symbol("="), keyword("ref"), expression,
+                               symbol(";")),
+                      lambda x : ReturnRef(x[2]))
 
-body = choice(exprBody, block)
+body = choice(exprBody, exprRefBody, block)
 
 code = astNode(sequence(optTypeVarsAndPredicate, symbol("("), formalArguments,
-                        symbol(")"), byRef, optTypeSpec, body),
-               lambda x : Code(x[0][0], x[0][1], x[2], x[4], x[5], x[6]))
+                        symbol(")"), body),
+               lambda x : Code(x[0][0], x[0][1], x[2], x[4]))
 
 
 #

@@ -547,6 +547,12 @@ def foo(x, env) :
     result = evaluateRootExpr(x.expr, env, toOwnedValue)
     return ReturnResult(result)
 
+@evalStatement2.register(ReturnRef)
+def foo(x, env) :
+    result = evaluateRootExpr(x.expr, env)
+    ensure(not result.isOwned, "cannot return a temp by reference")
+    return ReturnResult(result)
+
 @evalStatement2.register(IfStatement)
 def foo(x, env, context) :
     raise NotImplementedError

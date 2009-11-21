@@ -8,8 +8,8 @@ __all__ = [
     "StaticExpr",
     "Statement", "Block", "Label",
     "VarBinding", "RefBinding", "StaticBinding",
-    "Assignment", "Goto", "Return", "IfStatement", "ExprStatement",
-    "While", "Break", "Continue", "For",
+    "Assignment", "Goto", "Return", "ReturnRef", "IfStatement",
+    "ExprStatement", "While", "Break", "Continue", "For",
     "Code", "FormalArgument", "ValueArgument", "StaticArgument",
     "TopLevelItem",
     "Record", "RecordArg", "ValueRecordArg", "StaticRecordArg",
@@ -261,6 +261,12 @@ class Return(Statement) :
         check2(expr, Expression)
         self.expr = expr
 
+class ReturnRef(Statement) :
+    def __init__(self, expr) :
+        super(ReturnRef, self).__init__()
+        check(expr, Expression)
+        self.expr = expr
+
 class IfStatement(Statement) :
     def __init__(self, condition, thenPart, elsePart) :
         super(IfStatement, self).__init__()
@@ -310,20 +316,15 @@ class For(Statement) :
 #
 
 class Code(ASTNode) :
-    def __init__(self, typeVars, predicate, formalArgs,
-                 returnByRef, returnType, body) :
+    def __init__(self, typeVars, predicate, formalArgs, body) :
         super(Code, self).__init__()
         checkList(typeVars, Identifier)
         check2(predicate, Expression)
         checkList(formalArgs, FormalArgument)
-        check(returnByRef, bool)
-        check2(returnType, Expression)
-        check(body, Block)
+        check(body, Statement)
         self.typeVars = typeVars
         self.predicate = predicate
         self.formalArgs = formalArgs
-        self.returnByRef = returnByRef
-        self.returnType = returnType
         self.body = body
         self.env = None
 

@@ -80,7 +80,8 @@ symbol = token(regexParser(re.compile(symbolsRegex())),
 keywordList = ("import export predicate instance record " +
                "overloadable overload external " +
                "static var ref and or not " +
-               "if else goto return while break continue for in " +
+               "if else goto return returnref " +
+               "while break continue for in " +
                "true false").split()
 keywordSet = set(keywordList)
 

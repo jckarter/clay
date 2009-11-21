@@ -57,6 +57,7 @@ r(StaticBinding, lambda x : xo("StaticBinding", x.name, x.expr))
 r(Assignment, lambda x : xo("Assignment", x.left, x.right))
 r(Goto, lambda x : xo("Goto", x.labelName))
 r(Return, lambda x : xo("Return", x.expr))
+r(ReturnRef, lambda x : xo("ReturnRef", x.expr))
 r(IfStatement, lambda x : xo("IfStatement", x.condition,
                              xf("then", x.thenPart),
                              xf("else", x.elsePart)))
@@ -73,8 +74,7 @@ r(For, lambda x : xo("For", x.variable, x.expr, x.body))
 #
 
 r(Code, lambda x : xo("Code", x.typeVars, xf("when",x.predicate),
-                      tuple(x.formalArgs), x.returnByRef, x.returnType,
-                      x.body))
+                      tuple(x.formalArgs), x.body))
 r(ValueArgument, lambda x : xo("ValueArgument", x.name, x.type))
 r(StaticArgument, lambda x : xo("StaticArgument", x.pattern))
 

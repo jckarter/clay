@@ -10,11 +10,11 @@ overloadable fieldRef;
 overload fieldCount [T|RecordType?(T)] (static T) = recordFieldCount(T);
 overload fieldCount [T|TupleType?(T)] (static T) = tupleFieldCount(T);
 
-overload fieldRef [T,i|RecordType?(T)] (a:T, static i) ref
-    = recordFieldRef(a, i);
+overload fieldRef [T,i|RecordType?(T)] (a:T, static i) =
+    ref recordFieldRef(a, i);
 
-overload fieldRef [T,i|TupleType?(T)] (a:T, static i) ref
-    = tupleFieldRef(a, i);
+overload fieldRef [T,i|TupleType?(T)] (a:T, static i) =
+    ref tupleFieldRef(a, i);
 
 RecordOrTuple?[T](static T) = RecordType?(T) or TupleType?(T);
 

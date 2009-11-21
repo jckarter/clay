@@ -45,7 +45,7 @@ overload dec[T](a:Pointer[T]) {
 
 null[T](static T) = to(Pointer[T], 0);
 
-overload at[T](p:Pointer[T]) ref = pointerDereference(p);
+overload at[T](p:Pointer[T]) = ref pointerDereference(p);
 
 overload RandomAccessCoordinate?[T](static Pointer[T]) = true;
 overload CoordinateTarget[T](static Pointer[T]) = T;

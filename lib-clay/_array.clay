@@ -12,7 +12,7 @@ import _range;
 
 overload size[T,n](a:Array[T,n]) = n;
 
-overload at[T,n](a:Array[T,n], i) ref = arrayRef(a, i);
+overload at[T,n](a:Array[T,n], i) = ref arrayRef(a, i);
 
 
 //
@@ -21,7 +21,7 @@ overload at[T,n](a:Array[T,n], i) ref = arrayRef(a, i);
 
 record ArrayCoordinate[T](ptr:Pointer[T]);
 
-overload at[T](c:ArrayCoordinate[T]) ref = at(c.ptr);
+overload at[T](c:ArrayCoordinate[T]) = ref at(c.ptr);
 overload begin[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, 0));
 overload end[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, n));
 

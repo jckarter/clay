@@ -32,7 +32,7 @@ string[n](a:Array[Char,n]) {
 
 overload size(a:String) = size(a.data);
 
-overload at(a:String, i) ref = at(a.data, i);
+overload at(a:String, i) = ref at(a.data, i);
 
 
 //
@@ -47,4 +47,4 @@ overload iterator(a:String) = CoordinateRange(begin(a), end(a));
 // c-string compatibility
 //
 
-cstring(s:String):Pointer[Int8] = &at(s, 0).code;
+cstring(s:String) = &at(s, 0).code;
