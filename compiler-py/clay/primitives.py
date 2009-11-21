@@ -56,7 +56,7 @@ def installPrimitives() :
         "CompilerObject" : compilerObjectType,
         }
     for k, t in primitiveTypes.items() :
-        installPrimitive(k, toCOValue(t))
+        installPrimitive(k, StaticValue(toCOValue(t)))
 
     primClasses = {}
     primObjects = {}
@@ -72,7 +72,7 @@ def installPrimitives() :
         primClasses[name2] = primClass
         prim = primClass(*args, **kwargs)
         primObjects[name2] = prim
-        installPrimitive(name, toCOValue(prim))
+        installPrimitive(name, StaticValue(toCOValue(prim)))
 
     primOp("Type?",              TypePredicatePrimOp, Type)
     primOp("TypeSize",           SimplePrimOp,        [compilerObjectType], int32Type)

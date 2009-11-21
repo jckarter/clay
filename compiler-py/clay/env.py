@@ -103,6 +103,16 @@ def lookupIdent(env, ident, converter=(lambda x : x)) :
 
 
 #
+# StaticValue
+#
+
+class StaticValue(object) :
+    def __init__(self, value) :
+        self.value = value
+
+
+
+#
 # primitives module
 #
 
@@ -199,16 +209,16 @@ initTopLevelItem1 = multimethod("initTopLevelItem1")
 @initTopLevelItem1.register(Record)
 def foo(x, module) :
     x.env = module.env
-    addIdent(module.env, x.name, toCOValue(x))
+    addIdent(module.env, x.name, StaticValue(toCOValue(x)))
 
 @initTopLevelItem1.register(Procedure)
 def foo(x, module) :
     x.code.env = module.env
-    addIdent(module.env, x.name, toCOValue(x))
+    addIdent(module.env, x.name, StaticValue(toCOValue(x)))
 
 @initTopLevelItem1.register(Overloadable)
 def foo(x, module) :
-    addIdent(module.env, x.name, toCOValue(x))
+    addIdent(module.env, x.name, StaticValue(toCOValue(x)))
 
 @initTopLevelItem1.register(Overload)
 def foo(x, module) :
@@ -217,7 +227,7 @@ def foo(x, module) :
 @initTopLevelItem1.register(ExternalProcedure)
 def foo(x, module) :
     x.env = module.env
-    addIdent(module.env, x.name, toCOValue(x))
+    addIdent(module.env, x.name, StaticValue(toCOValue(x)))
 
 
 
@@ -244,19 +254,11 @@ def foo(x, module) :
 
 @initTopLevelItem2.register(Overload)
 def foo(x, module) :
-    entry = lookupIdent(module.env, x.name, toOverloadable)
-    entry.overloads.insert(0, x)
-
-
-
-#
-# utility converters
-#
-
-def toOverloadable(x) :
-    y = lower(x)
-    ensure(type(y) is Overloadable, "invalid overloadable")
-    return y
+    y = lookupIdent(module.env, x.name)
+    ensure(type(y) is StaticValue, "invalid overloadable")
+    z = lower(y.value)
+    ensure(type(z) is Overloadable, "invalid overloadable")
+    z.overloads.insert(0, x)
 
 
 

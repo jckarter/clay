@@ -394,18 +394,6 @@ class Value(object) :
 
 
 #
-# asReference
-#
-
-asReference = multimethod("asReference")
-
-@asReference.register(Value)
-def foo(x) :
-    return Value(x.type, False, x.address)
-
-
-
-#
 # allocValue
 #
 
@@ -666,6 +654,7 @@ def destroyPrim(t, v) :
 destroyValue2.register(BoolType)(destroyPrim)
 destroyValue2.register(IntegerType)(destroyPrim)
 destroyValue2.register(FloatType)(destroyPrim)
+destroyValue2.register(VoidType)(destroyPrim)
 destroyValue2.register(CompilerObjectType)(lambda t,v : destroyCOValue(v))
 destroyValue2.register(PointerType)(destroyPrim)
 
@@ -757,6 +746,10 @@ def foo(t, a, b) :
 @equalValues2.register(FloatType)
 def foo(t, a, b) :
     return fromFloatValue(a) == fromFloatValue(b)
+
+@equalValues2.register(VoidType)
+def foo(t, a, b) :
+    return True
 
 @equalValues2.register(CompilerObjectType)
 def foo(t, a, b) :

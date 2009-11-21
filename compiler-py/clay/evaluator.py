@@ -49,18 +49,24 @@ def allocTempValue(type_) :
 
 
 #
-# asStatic
+# toOwnedValue, toReferredValue
 #
 
-asStatic = multimethod("asStatic")
+toOwnedValue = multimethod("toOwnedValue")
 
-@asStatic.register(Value)
+@toOwnedValue.register(Value)
 def foo(v) :
     if not v.isOwned :
         v2 = allocTempValue(v.type)
         copyValue(v2, v)
         return v2
     return v
+
+toReferredValue = multimethod("toReferredValue")
+
+@toReferredValue.register(Value)
+def foo(x) :
+    return Value(x.type, False, x.address)
 
 
 
@@ -129,12 +135,12 @@ def foo(x, env) :
 @evaluate2.register(NameRef)
 def foo(x, env) :
     v = lookupIdent(env, x.name)
-    ensure(type(v) is Value, "invalid value")
-    if v.isOwned :
-        v2 = allocTempValue(v.type)
-        copyValue(v2, v)
+    if type(v) is StaticValue :
+        v2 = allocTempValue(v.value.type)
+        copyValue(v2, v.value)
         return v2
-    return v
+    ensure(type(v) is Value, "invalid value")
+    return toReferredValue(v)
 
 @evaluate2.register(Tuple)
 def foo(x, env) :
@@ -209,7 +215,7 @@ def foo(x, env) :
 
 @evaluate2.register(StaticExpr)
 def foo(x, env) :
-    return evaluate(x.expr, env, toStatic)
+    return evaluate(x.expr, env, toOwnedValue)
 
 @evaluate2.register(SCExpression)
 def foo(x, env) :
@@ -287,11 +293,20 @@ invoke = multimethod("invoke")
 
 @invoke.register(Procedure)
 def foo(x, args) :
-    raise NotImplementedError
+    result = matchInvokeCode(x.code, args)
+    if isinstance(result, MatchError) :
+        result.signalError()
+    env = result
+    return evalCodeBody(x.code, env)
 
 @invoke.register(Overloadable)
 def foo(x, args) :
-    raise NotImplementedError
+    for y in x.overloads :
+        result = matchInvokeCode(y.code, args)
+        if not isinstance(result, MatchError) :
+            env = result
+            return evalCodeBody(y.code, env)
+    error("no matching overload")
 
 @invoke.register(ExternalProcedure)
 def foo(x, args) :
@@ -307,14 +322,18 @@ class MatchError(object) :
     pass
 
 class ArgCountError(MatchError) :
-    pass
+    def signalError(self) :
+        error("incorrect no. of arguments")
 
 class ArgMismatch(MatchError) :
     def __init__(self, pos) :
         self.pos = pos
+    def signalError(self) :
+        error("mismatch at argument %d" % (self.pos+1))
 
 class PredicateFailure(MatchError) :
-    pass
+    def signalError(self) :
+        error("procedure predicate failure")
 
 def matchInvokeCode(x, args) :
     if len(args) != len(x.formalArgs) :
@@ -331,7 +350,7 @@ def matchInvokeCode(x, args) :
             return PredicateFailure()
     for arg, farg in zip(args, x.formalArgs) :
         if type(farg) is ValueArgument :
-            addIdent(env2, farg.name, asReference(arg))
+            addIdent(env2, farg.name, toReferredValue(arg))
     return env2
 
 matchArg = multimethod("matchArg")
@@ -368,14 +387,14 @@ evaluatePattern2 = multimethod("evaluatePattern2")
 
 @evaluatePattern2.register(object)
 def foo(x, env) :
-    return evaluate(x, env, toStatic)
+    return evaluate(x, env, toOwnedValue)
 
 @evaluatePattern2.register(NameRef)
 def foo(x, env) :
     v = lookupIdent(env, x.name)
     if type(v) is Cell :
         return v
-    return evaluate(x, env, toStatic)
+    return evaluate(x, env, toOwnedValue)
 
 @evaluatePattern2.register(Indexing)
 def foo(x, env) :
@@ -408,6 +427,149 @@ def foo(x, args) :
 def foo(x, args) :
     ensureArity(args, len(x.typeVars))
     return RecordTypePattern(x, args)
+
+
+
+#
+# evalCodeBody
+#
+
+def evalCodeBody(code, env) :
+    result = evalStatement(code.body, env)
+    if result is None :
+        result = ReturnResult(None)
+    return result.asFinalResult()
+
+class StatementResult(object) :
+    pass
+
+class GotoResult(StatementResult) :
+    def __init__(self, labelName) :
+        self.labelName = labelName
+    def asFinalResult(self) :
+        withContext(self.labelName, lambda : error("label not found"))
+
+class BreakResult(StatementResult) :
+    def __init__(self, stmt) :
+        self.stmt = stmt
+    def asFinalResult(self) :
+        withContext(self.stmt, lambda : error("invalid break statement"))
+
+class ContinueResult(StatementResult) :
+    def __init__(self, stmt) :
+        self.stmt = stmt
+    def asFinalResult(self) :
+        withContext(self.stmt, lambda : error("invalid continue statement"))
+
+class ReturnResult(StatementResult) :
+    def __init__(self, result) :
+        self.result = result
+    def asFinalResult(self) :
+        if self.result.isOwned :
+            installTemp(self.result)
+        return self.result
+
+def evalStatement(x, env) :
+    return withContext(x, lambda : evalStatement2(x, env))
+
+evalStatement2 = multimethod("evalStatement2")
+
+@evalStatement2.register(Block)
+def foo(x, env) :
+    i = 0
+    labels = {}
+    evalCollectLabels(x.statements, i, labels, env)
+    while i < len(x.statements) :
+        y = x.statements[i]
+        if type(y) in (VarBinding, RefBinding, StaticBinding) :
+            env = evalBinding(y, env)
+            evalCollectLabels(x.statements, i+1, labels, env)
+        elif type(y) is Label :
+            pass
+        else :
+            result = evalStatement(y, env)
+            if type(result) is GotoResult :
+                envAndPos = labels.get(result.labelName.s)
+                if envAndPos is not None :
+                    env, i = envAndPos
+                    continue
+            if result is not None :
+                return result
+        i += 1
+
+def evalCollectLabels(statements, startIndex, labels, env) :
+    i = startIndex
+    while i < len(statements) :
+        x = statements[i]
+        if type(x) is Label :
+            labels[x.name.s] = (env, i)
+        elif type(x) in (VarBinding, RefBinding, StaticBinding) :
+            break
+        i += 1
+
+evalBinding = multimethod("evalBinding")
+
+@evalBinding.register(VarBinding)
+def foo(x, env) :
+    right = evaluateRootExpr(x.expr, env, toOwnedValue)
+    return extendEnv(env, [x.name], [right])
+
+@evalBinding.register(RefBinding)
+def foo(x, env) :
+    right = evaluateRootExpr(x.expr, env)
+    return extendEnv(env, [x.name], [right])
+
+@evalBinding.register(StaticBinding)
+def foo(x, env) :
+    right = evaluateRootExpr(x.expr, env, toOwnedValue)
+    return extendEnv(env, [x.name], [StaticValue(right)])
+
+
+@evalStatement2.register(Assignment)
+def foo(x, env) :
+    pushTempsBlock()
+    try :
+        left = evaluate(x.left, env)
+        ensure(not left.isOwned, "cannot assign to a temp")
+        right = evaluate(x.right, env)
+        assignValue(left, right)
+    finally :
+        popTempsBlock()
+
+@evalStatement2.register(Goto)
+def foo(x, env) :
+    return GotoResult(x.labelName)
+
+@evalStatement2.register(Return)
+def foo(x, env) :
+    if x.expr is None :
+        return ReturnResult(None)
+    result = evaluateRootExpr(x.expr, env, toOwnedValue)
+    return ReturnResult(result)
+
+@evalStatement2.register(IfStatement)
+def foo(x, env, context) :
+    raise NotImplementedError
+
+@evalStatement2.register(ExprStatement)
+def foo(x, env, context) :
+    raise NotImplementedError
+
+@evalStatement2.register(While)
+def foo(x, env, context) :
+    raise NotImplementedError
+
+@evalStatement2.register(Break)
+def foo(x, env, context) :
+    raise NotImplementedError
+
+@evalStatement2.register(Continue)
+def foo(x, env, context) :
+    raise NotImplementedError
+
+@evalStatement2.register(For)
+def foo(x, env, context) :
+    raise NotImplementedError
 
 
 
