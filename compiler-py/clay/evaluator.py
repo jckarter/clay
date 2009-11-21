@@ -7,22 +7,6 @@ from clay.primitives import *
 
 
 #
-# lift
-#
-
-lift = multimethod("lift")
-
-lift.register(str)(toCOValue)
-lift.register(Type)(toCOValue)
-lift.register(Record)(toCOValue)
-lift.register(Procedure)(toCOValue)
-lift.register(Overloadable)(toCOValue)
-lift.register(ExternalProcedure)(toCOValue)
-lift.register(Value)(lambda x : x)
-
-
-
-#
 # record support
 #
 
