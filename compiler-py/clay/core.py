@@ -845,7 +845,7 @@ def lower(v) :
 # utility converters
 #
 
-def toType(v) :
+def toTypeResult(v) :
     t = lower(v)
     ensure(isinstance(t, Type), "invalid type")
     return t

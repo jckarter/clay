@@ -327,6 +327,7 @@ class ArgCountError(MatchError) :
 
 class ArgMismatch(MatchError) :
     def __init__(self, pos) :
+        super(ArgMismatch, self).__init__()
         self.pos = pos
     def signalError(self) :
         error("mismatch at argument %d" % (self.pos+1))
@@ -345,7 +346,7 @@ def matchInvokeCode(x, args) :
             return ArgMismatch(i)
     env2 = extendEnv(x.env, x.typeVars, derefCells(cells))
     if x.predicate is not None :
-        result = evaluateRootExpr(x.predicate, env2, toPredicateResult)
+        result = evaluateRootExpr(x.predicate, env2, toBoolResult)
         if not result :
             return PredicateFailure()
     for arg, farg in zip(args, x.formalArgs) :
@@ -360,14 +361,14 @@ def foo(farg, arg, env) :
     if farg.type is None :
         return True
     pattern = evaluatePattern(farg.type, env)
-    return unify(pattern, toCOValue(arg.type)) :
+    return unify(pattern, toCOValue(arg.type))
 
 @matchArg.register(StaticArgument)
 def foo(farg, arg, env) :
     pattern = evaluatePattern(farg.pattern, env)
     return unify(pattern, arg)
 
-def toPredicateResult(v) :
+def toBoolResult(v) :
     return fromBoolValue(invoke(PrimObjects.boolTruth, [v]))
 
 
@@ -445,24 +446,28 @@ class StatementResult(object) :
 
 class GotoResult(StatementResult) :
     def __init__(self, labelName) :
+        super(GotoResult, self).__init__()
         self.labelName = labelName
     def asFinalResult(self) :
         withContext(self.labelName, lambda : error("label not found"))
 
 class BreakResult(StatementResult) :
     def __init__(self, stmt) :
+        super(BreakResult, self).__init__()
         self.stmt = stmt
     def asFinalResult(self) :
         withContext(self.stmt, lambda : error("invalid break statement"))
 
 class ContinueResult(StatementResult) :
     def __init__(self, stmt) :
+        super(ContinueResult, self).__init__()
         self.stmt = stmt
     def asFinalResult(self) :
         withContext(self.stmt, lambda : error("invalid continue statement"))
 
 class ReturnResult(StatementResult) :
     def __init__(self, result) :
+        super(ReturnResult, self).__init__()
         self.result = result
     def asFinalResult(self) :
         if self.result.isOwned :
@@ -554,28 +559,61 @@ def foo(x, env) :
     return ReturnResult(result)
 
 @evalStatement2.register(IfStatement)
-def foo(x, env, context) :
-    raise NotImplementedError
+def foo(x, env) :
+    cond = evaluateRootExpr(x.condition, env, toBoolResult)
+    if cond :
+        return evalStatement(x.thenPart, env)
+    elif x.elsePart is not None :
+        return evalStatement(x.elsePart, env)
 
 @evalStatement2.register(ExprStatement)
-def foo(x, env, context) :
-    raise NotImplementedError
+def foo(x, env) :
+    evaluateRootExpr(x.expr, env)
 
 @evalStatement2.register(While)
-def foo(x, env, context) :
-    raise NotImplementedError
+def foo(x, env) :
+    while True :
+        cond = evaluateRootExpr(x.condition, env, toBoolResult)
+        if not cond :
+            break
+        result = evalStatement(x.body, env)
+        if type(result) is BreakResult :
+            break
+        elif type(result) is ContinueResult :
+            continue
+        elif result is not None :
+            return result
 
 @evalStatement2.register(Break)
-def foo(x, env, context) :
-    raise NotImplementedError
+def foo(x, env) :
+    return BreakResult(x)
 
 @evalStatement2.register(Continue)
-def foo(x, env, context) :
-    raise NotImplementedError
+def foo(x, env) :
+    return ContinueResult(x)
 
 @evalStatement2.register(For)
-def foo(x, env, context) :
-    raise NotImplementedError
+def foo(x, env) :
+    return evalStatement(convertForStatement(x), env)
+
+
+
+#
+# de-sugar for statement
+#
+
+def convertForStatement(x) :
+    exprVar = Identifier("%expr")
+    iterVar = Identifier("%iter")
+    block = Block(
+        [RefBinding(exprVar, x.expr),
+         VarBinding(iterVar, Call(coreNameRef("iterator"),
+                                  [NameRef(exprVar)])),
+         While(Call(coreNameRef("hasNext?"), [NameRef(iterVar)]),
+               Block([RefBinding(x.variable, Call(coreNameRef("next"),
+                                                  [NameRef(iterVar)])),
+                      x.body]))])
+    return block
 
 
 

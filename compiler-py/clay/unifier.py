@@ -132,18 +132,18 @@ def foo(x) :
 
 @resolvePattern.register(PointerTypePattern)
 def foo(x) :
-    pointeeType = toType(resolvePattern(x.pointeeType))
+    pointeeType = toTypeResult(resolvePattern(x.pointeeType))
     return toCOValue(pointerType(pointeeType))
 
 @resolvePattern.register(ArrayTypePattern)
 def foo(x) :
-    elementType = toType(resolvePattern(x.elementType))
+    elementType = toTypeResult(resolvePattern(x.elementType))
     size = fromIntValue(resolvePattern(x.size))
     return toCOValue(arrayType(elementType, size))
 
 @resolvePattern.register(TupleTypePattern)
 def foo(x) :
-    elementTypes = [toType(resolvePattern(y)) for y in x.elementTypes]
+    elementTypes = [toTypeResult(resolvePattern(y)) for y in x.elementTypes]
     return toCOValue(tupleType(elementTypes))
 
 @resolvePattern.register(RecordTypePattern)

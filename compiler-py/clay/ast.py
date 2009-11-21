@@ -332,12 +332,12 @@ class FormalArgument(ASTNode) :
     pass
 
 class ValueArgument(FormalArgument) :
-    def __init__(self, name, type) :
+    def __init__(self, name, type_) :
         super(ValueArgument, self).__init__()
         check(name, Identifier)
-        check2(type, Expression)
+        check2(type_, Expression)
         self.name = name
-        self.type = type
+        self.type = type_
 
 class StaticArgument(FormalArgument) :
     def __init__(self, pattern) :
@@ -371,12 +371,12 @@ class RecordArg(ASTNode) :
     pass
 
 class ValueRecordArg(RecordArg) :
-    def __init__(self, name, type) :
+    def __init__(self, name, type_) :
         super(ValueRecordArg, self).__init__()
         check(name, Identifier)
-        check(type, Expression)
+        check(type_, Expression)
         self.name = name
-        self.type = type
+        self.type = type_
 
 class StaticRecordArg(RecordArg) :
     def __init__(self, pattern) :

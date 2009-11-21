@@ -7,6 +7,7 @@ class PrimitiveOp(object) :
 
 class TypeConstructorPrimOp(PrimitiveOp) :
     def __init__(self, constructorPrim) :
+        super(TypeConstructorPrimOp, self).__init__()
         self.constructorPrim = constructorPrim
 
 class TypePredicatePrimOp(PrimitiveOp) :
