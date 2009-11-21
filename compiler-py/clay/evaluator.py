@@ -308,6 +308,14 @@ def foo(x, args) :
             return evalCodeBody(y.code, env)
     error("no matching overload")
 
+@invoke.register(Record)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(Type)
+def foo(x, args) :
+    raise NotImplementedError
+
 @invoke.register(ExternalProcedure)
 def foo(x, args) :
     raise NotImplementedError
