@@ -23,6 +23,74 @@ lift.register(Value)(lambda x : x)
 
 
 #
+# record support
+#
+
+def recordFieldTypes(type_) :
+    if type_.fieldTypes is None :
+        return type_.fieldTypes
+    r = type_.record
+    paramValues = [StaticValue(x) for x in type_.params]
+    env = extendEnv(r.env, r.typeVars, paramValues)
+    typeExprs = [x.type for x in r.args if type(x) is ValueRecordArg]
+    types = [evaluateRootExpr(x, env, toTypeResult) for x in typeExprs]
+    type_.fieldTypes = types
+    return types
+
+def recordFieldOffset(type_, index) :
+    llt = llvmType(type_)
+    return llvmTargetData.offset_of_element(llt, index)
+
+def recordFieldRef(v, index) :
+    offset = recordFieldOffset(v.type, index)
+    fieldType = recordFieldTypes(v.type)[index]
+    return Value(fieldType, False, v.address + offset)
+
+def recordFieldRefs(v) :
+    n = len(recordFieldTypes(v.type))
+    return [recordFieldRef(v, i) for i in range(n)]
+
+@makeLLVMType.register(RecordType)
+def foo(t) :
+    llt = llvm.Type.opaque()
+    typeHandle = llvm.TypeHandle.new(llt)
+    t.llvmType = llt
+    recType = lltStruct([llvmType(x) for x in recordFieldTypes(t)])
+    typeHandle.type.refine(recType)
+    return typeHandle.type
+
+@initValue2.register(RecordType)
+def foo(t, v) :
+    for x in recordFieldRefs(v) :
+        initValue(x)
+
+@destroyValue2.register(RecordType)
+def foo(t, v) :
+    for x in recordFieldRefs(v) :
+        destroyValue(x)
+
+@copyValue2.register(RecordType)
+def foo(t, dest, src) :
+    for x, y in zip(recordFieldRefs(dest), recordFieldRefs(src)) :
+        copyValue(x, y)
+
+@equalValues2.register(RecordType)
+def foo(t, a, b) :
+    for x, y in zip(recordFieldRefs(a), recordFieldRefs(b)) :
+        if not equalValues(x, y) :
+            return False
+    return True
+
+@hashValue2.register(RecordType)
+def foo(t, a) :
+    h = 0
+    for x in recordFieldRefs(a) :
+        h += hashValue(x)
+    return h
+
+
+
+#
 # temp values
 #
 
@@ -352,7 +420,8 @@ def matchInvokeCode(x, args) :
     for i, farg in enumerate(x.formalArgs) :
         if not matchArg(farg, args[i], patternEnv) :
             return ArgMismatch(i)
-    env2 = extendEnv(x.env, x.typeVars, derefCells(cells))
+    cellValues = [StaticValue(y) for y in derefCells(cells)]
+    env2 = extendEnv(x.env, x.typeVars, cellValues)
     if x.predicate is not None :
         result = evaluateRootExpr(x.predicate, env2, toBoolResult)
         if not result :

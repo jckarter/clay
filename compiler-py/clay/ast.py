@@ -364,8 +364,6 @@ class Record(TopLevelItem) :
         self.typeVars = typeVars
         self.args = args
         self.env = None
-        self.valueArgs_ = None
-        self.valueNames_ = None
 
 class RecordArg(ASTNode) :
     pass

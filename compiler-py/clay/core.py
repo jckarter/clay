@@ -56,6 +56,7 @@ class RecordType(Type) :
         super(RecordType, self).__init__()
         self.record = record
         self.params = params
+        self.fieldTypes = None
 
 
 
@@ -293,10 +294,6 @@ def foo(t) :
 @makeLLVMType.register(ArrayType)
 def foo(t) :
     return lltArray(llvmType(t.elementType), t.size)
-
-@makeLLVMType.register(RecordType)
-def foo(t) :
-    raise NotImplementedError
 
 
 
@@ -583,7 +580,7 @@ def tupleFieldOffset(type_, index) :
     return llvmTargetData.offset_of_element(llt, index)
 
 def tupleFieldRef(v, index) :
-    offset = tupleFieldRef(v.type, index)
+    offset = tupleFieldOffset(v.type, index)
     fieldType = v.type.elementTypes[index]
     return Value(fieldType, False, v.address + offset)
 
@@ -633,10 +630,6 @@ def foo(t, v) :
     for x in arrayElementRefs(v) :
         initValue(x)
 
-@initValue2.register(RecordType)
-def foo(t, v) :
-    raise NotImplementedError
-
 
 
 #
@@ -666,10 +659,6 @@ def foo(t, v) :
 def foo(t, v) :
     for x in arrayElementRefs(v) :
         destroyValue(x)
-
-@destroyValue2.register(RecordType)
-def foo(t, v) :
-    raise NotImplementedError
 
 
 
@@ -703,10 +692,6 @@ def foo(t, dest, src) :
 def foo(t, dest, src) :
     for x, y in zip(arrayElementRefs(dest), arrayElementRefs(src)) :
         copyValue(x, y)
-
-@copyValue2.register(RecordType)
-def foo(t, dest, src) :
-    raise NotImplementedError
 
 
 
@@ -768,10 +753,6 @@ def foo(t, a, b) :
             return False
     return True
 
-@equalValues2.register(RecordType)
-def foo(t, a, b) :
-    raise NotImplementedError
-
 
 
 #
@@ -817,10 +798,6 @@ def foo(t, a) :
     for x in arrayElementRefs(a) :
         h += hashValue(x)
     return h
-
-@hashValue2.register(RecordType)
-def foo(t, a) :
-    raise NotImplementedError
 
 
 
