@@ -362,7 +362,29 @@ def foo(x, args) :
 
 @invoke.register(Record)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, len(x.args))
+    cells = [Cell(y) for y in x.typeVars]
+    patternEnv = extendEnv(x.env, x.typeVars, cells)
+    for i, farg in enumerate(x.args) :
+        if not matchRecordArg(farg, args[i], patternEnv) :
+            error("mismatch at argument %d" % (i + 1))
+    type_ = recordType(x, derefCells(cells))
+    v = allocTempValue(type_)
+    for f, arg in zip(recordFieldRefs(v), arg) :
+        copyValue(f, arg)
+    return v
+
+matchRecordArg = multimethod("matchRecordArg")
+
+@matchRecordArg.register(ValueRecordArg)
+def foo(farg, arg, env) :
+    pattern = evaluatePattern(farg.type, env)
+    return unify(pattern, toCOValue(arg.type))
+
+@matchRecordArg.register(StaticRecordArg)
+def foo(farg, arg, env) :
+    pattern = evaluatePattern(farg.pattern, env)
+    return unify(pattern, arg)
 
 @invoke.register(Type)
 def foo(x, args) :
