@@ -365,24 +365,24 @@ def foo(x, args) :
     ensureArity(args, len(x.args))
     cells = [Cell(y) for y in x.typeVars]
     patternEnv = extendEnv(x.env, x.typeVars, cells)
-    for i, farg in enumerate(x.args) :
-        if not matchRecordArg(farg, args[i], patternEnv) :
+    for i, arg in enumerate(args) :
+        if not matchRecordArg(arg, x.args[i], patternEnv) :
             error("mismatch at argument %d" % (i + 1))
     type_ = recordType(x, derefCells(cells))
     v = allocTempValue(type_)
-    for f, arg in zip(recordFieldRefs(v), arg) :
+    for f, arg in zip(recordFieldRefs(v), args) :
         copyValue(f, arg)
     return v
 
 matchRecordArg = multimethod("matchRecordArg")
 
 @matchRecordArg.register(ValueRecordArg)
-def foo(farg, arg, env) :
+def foo(arg, farg, env) :
     pattern = evaluatePattern(farg.type, env)
     return unify(pattern, toCOValue(arg.type))
 
 @matchRecordArg.register(StaticRecordArg)
-def foo(farg, arg, env) :
+def foo(arg, farg, env) :
     pattern = evaluatePattern(farg.pattern, env)
     return unify(pattern, arg)
 
@@ -423,8 +423,8 @@ def matchInvokeCode(x, args) :
         return ArgCountError()
     cells = [Cell(y) for y in x.typeVars]
     patternEnv = extendEnv(x.env, x.typeVars, cells)
-    for i, farg in enumerate(x.formalArgs) :
-        if not matchArg(farg, args[i], patternEnv) :
+    for i, arg in enumerate(args) :
+        if not matchArg(arg, x.formalArgs[i], patternEnv) :
             return ArgMismatch(i)
     cellValues = [StaticValue(y) for y in derefCells(cells)]
     env2 = extendEnv(x.env, x.typeVars, cellValues)
@@ -440,14 +440,14 @@ def matchInvokeCode(x, args) :
 matchArg = multimethod("matchArg")
 
 @matchArg.register(ValueArgument)
-def foo(farg, arg, env) :
+def foo(arg, farg, env) :
     if farg.type is None :
         return True
     pattern = evaluatePattern(farg.type, env)
     return unify(pattern, toCOValue(arg.type))
 
 @matchArg.register(StaticArgument)
-def foo(farg, arg, env) :
+def foo(arg, farg, env) :
     pattern = evaluatePattern(farg.pattern, env)
     return unify(pattern, arg)
 
