@@ -415,6 +415,7 @@ class ExternalProcedure(TopLevelItem) :
         self.args = args
         self.returnType = returnType
         self.env = None
+        self.returnType2 = None
         self.llvmFunc = None
 
 class ExternalArg(ASTNode) :
@@ -424,6 +425,7 @@ class ExternalArg(ASTNode) :
         check(type_, Expression)
         self.name = name
         self.type = type_
+        self.type2 = None
 
 
 

@@ -437,7 +437,60 @@ def foo(x, args) :
 
 @invoke.register(ExternalProcedure)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, len(x.args))
+    initExternalProcedure(x)
+    for i, farg in enumerate(x.args) :
+        ensure(args[i].type == farg.type2,
+               "type mismatch at argument %d" % (i+1))
+    return evalLLVMCall(x.llvmFunc, args, x.returnType2)
+
+def initExternalProcedure(x) :
+    if x.llvmFunc is not None :
+        return
+    argTypes = [evaluateRootExpr(y.type, x.env, toTypeResult) for y in x.args]
+    returnType = evaluateRootExpr(x.returnType, x.env, toTypeResult)
+    for arg, argType in zip(x.args, argTypes) :
+        arg.type2 = argType
+    x.returnType2 = returnType
+    func = generateExternalFunc(argTypes, returnType, x.name.s)
+    x.llvmFunc = generateExternalWrapper(func, argTypes, returnType, x.name.s)
+
+def generateExternalFunc(argTypes, returnType, name) :
+    llvmArgTypes = [llvmType(y) for y in argTypes]
+    if returnType == voidType :
+        llvmReturnType = lltVoid()
+    else :
+        llvmReturnType = llvmType(returnType)
+    llvmFuncType = lltFunction(llvmReturnType, llvmArgTypes)
+    func = llvmModule.add_function(llvmFuncType, name)
+    func.linkage = llvm.LINKAGE_EXTERNAL
+    return func
+
+def generateExternalWrapper(func, argTypes, returnType, name) :
+    llvmArgTypes = [llvmType(pointerType(y)) for y in argTypes]
+    if returnType != voidType :
+        llvmArgTypes.append(llvmType(pointerType(returnType)))
+    llvmFuncType = lltFunction(lltVoid(), llvmArgTypes)
+    wrapper = llvmModule.add_function(llvmFuncType, "wrapper_%s" % name)
+    wrapper.linkage = llvm.LINKAGE_INTERNAL
+    block = wrapper.append_basic_block("code")
+    builder = llvm.Builder.new(block)
+    llvmArgs = [builder.load(wrapper.args[i]) for i in range(len(argTypes))]
+    result = builder.call(func, llvmArgs)
+    if returnType != voidType :
+        builder.store(result, wrapper.args[-1])
+    builder.ret_void()
+    return wrapper
+
+def evalLLVMCall(func, args, outputType) :
+    llvmArgs = [toGenericValue(pointerType(x.type), x.address) for x in args]
+    if outputType != voidType :
+        out = allocTempValue(outputType)
+        llvmArgs.append(toGenericValue(pointerType(out.type), out.address))
+    else :
+        out = None
+    llvmExecutionEngine.run_function(func, llvmArgs)
+    return out
 
 
 
