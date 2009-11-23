@@ -160,11 +160,8 @@ def installPrimitives() :
     primOp("RecordFieldCount",     SimplePrimOp,        [compilerObjectType], int32Type)
     primOp("RecordFieldOffset",    SimplePrimOp,        [compilerObjectType, int32Type], int32Type)
     primOp("RecordFieldIndex",     SimplePrimOp,        [compilerObjectType, compilerObjectType], int32Type)
-    primOp("makeRecordInstance",   PrimitiveOp)
     primOp("recordFieldRef",       PrimitiveOp)
     primOp("recordFieldRefByName", PrimitiveOp)
-
-    primOp("makeInstance", PrimitiveOp)
 
     global PrimClasses, PrimObjects
     PrimClasses = type("PrimClasses", (object,), primClasses)

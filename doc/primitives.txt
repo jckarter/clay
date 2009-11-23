@@ -86,8 +86,5 @@ RecordElementType(R:CompilerObject, i:Int32):CompilerObject
 RecordFieldCount(R:CompilerObject):Int32
 RecordFieldOffset(R:CompilerObject, i:Int32): Int32
 RecordFieldIndex(R:CompilerObject, name:CompilerObject): Int32
-makeRecordInstance[R](static R, v1, ...,vn): record type
 recordFieldRef [R|RecordType?(R)] (a:R, static i)
 recordFieldRefByName [R|RecordType?(R)] (a:R, static name)
-
-makeInstance[T](static T, v1, ...,vn): T
