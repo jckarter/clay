@@ -491,13 +491,13 @@ code_fromFloatValue[64] = codegen_fromPrimValue(float64Type)
 code_fromPtrValue = codegen_fromPrimValue(pointerType(int8Type))
 
 def fromBoolValue(v) :
-    assert v.type == boolType
+    ensure(v.type == boolType, "invalid bool type")
     args = [toGenericValue(pointerType(boolType), v.address)]
     result = llvmExecutionEngine.run_function(code_fromIntValue[8], args)
     return bool(result.as_int())
 
 def fromIntValue(v) :
-    assert isinstance(v.type, IntegerType)
+    ensure(isinstance(v.type, IntegerType), "invalid integer type")
     args = [toGenericValue(pointerType(v.type), v.address)]
     func = code_fromIntValue[v.type.bits]
     result = llvmExecutionEngine.run_function(func, args)
@@ -506,14 +506,14 @@ def fromIntValue(v) :
     return int(result.as_int())
 
 def fromFloatValue(v) :
-    assert isinstance(v.type, FloatType)
+    ensure(isinstance(v.type, FloatType), "invalid float type")
     args = [toGenericValue(pointerType(v.type), v.address)]
     bits = v.type.bits
     result = llvmExecutionEngine.run_function(code_fromFloatValue[bits], args)
     return result.as_real(llvmType(v.type))
 
 def fromPointerValue(v) :
-    assert isinstance(v.type, PointerType)
+    ensure(isinstance(v.type, PointerType), "invalid pointer type")
     args = [toGenericValue(pointerType(int8Type), v.address)]
     result = llvmExecutionEngine.run_function(code_fromPtrValue, args)
     return result.as_pointer()

@@ -126,7 +126,22 @@ def foo(x) :
 
 
 #
+# util procs
 #
+
+def toBoolResult(v) :
+    return fromBoolValue(invoke(PrimObjects.boolTruth, [v]))
+
+def toTempBool(x) :
+    return installTemp(toBoolValue(x))
+
+def toTempInt(x) :
+    return installTemp(toInt32Value(x))
+
+
+
+#
+# evaluateRootExpr, evaluate
 #
 
 def evaluateRootExpr(expr, env, converter=(lambda x : x)) :
@@ -146,7 +161,7 @@ evaluate2 = multimethod("evaluate2")
 
 @evaluate2.register(BoolLiteral)
 def foo(x, env) :
-    return installTemp(toBoolValue(x.value))
+    return toTempBool(x.value)
 
 _suffixMap = {
     "i8" : toInt8Value,
@@ -330,9 +345,17 @@ def convertBinaryOpExpr(x) :
 
 invokeIndexing = multimethod("invokeIndexing")
 
-@invokeIndexing.register(TypeConstructorPrimOp)
+@invokeIndexing.register(PrimClasses.Pointer)
 def foo(x, args) :
-    return invoke(x.constructorPrim, args)
+    return invoke(PrimObjects.PointerType, args)
+
+@invokeIndexing.register(PrimClasses.Array)
+def foo(x, args) :
+    return invoke(PrimObjects.ArrayType, args)
+
+@invokeIndexing.register(PrimClasses.Tuple)
+def foo(x, args) :
+    return invoke(PrimObjects.TupleType, args)
 
 @invokeIndexing.register(Record)
 def foo(x, args) :
@@ -419,9 +442,6 @@ def foo(arg, farg, env) :
 def foo(arg, farg, env) :
     pattern = evaluatePattern(farg.pattern, env)
     return unify(pattern, arg)
-
-def toBoolResult(v) :
-    return fromBoolValue(invoke(PrimObjects.boolTruth, [v]))
 
 
 
@@ -814,6 +834,279 @@ def evalLLVMCall(func, args, outputType) :
         out = None
     llvmExecutionEngine.run_function(func, llvmArgs)
     return out
+
+
+
+#
+# invoke primitives
+#
+
+def ensureArgType(args, i, type_) :
+    if args[i].type != type_ :
+        error("type mismatch at argument %d" % (i+1))
+
+def ensureArgTypes(args, types) :
+    ensureArity(args, len(types))
+    for i in range(len(args)) :
+        ensureArgType(args, i, types[i])
+
+def ensureType(args, i) :
+    if not isinstance(lower(args[i]), Type) :
+        error("invalid type at argument %d" % (i+1))
+
+@invoke.register(PrimClasses.TypeP)
+def foo(x, args) :
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), Type))
+
+@invoke.register(PrimClasses.TypeSize)
+def foo(x, args) :
+    ensureArity(args, 1)
+    ensureType(args, 0)
+    size = typeSize(fromCOValue(args[0]))
+    return toTempInt(size)
+
+
+@invoke.register(PrimClasses.BoolTypeP)
+def foo(x, args) :
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), BoolType))
+
+@invoke.register(PrimClasses.boolNot)
+def foo(x, args) :
+    ensureArgTypes(args, [boolType])
+    return toTempBool(not fromBoolValue(args[0]))
+
+@invoke.register(PrimClasses.boolTruth)
+def foo(x, args) :
+    ensureArgTypes(args, [boolType])
+    return toTempBool(fromBoolValue(args[0]))
+
+
+@invoke.register(PrimClasses.IntegerTypeP)
+def foo(x, args) :
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), IntegerType))
+
+@invoke.register(PrimClasses.SignedIntegerTypeP)
+def foo(x, args) :
+    ensureArgTypes(args, [compilerObjectType])
+    t = fromCOValue(args[0])
+    return toTempBool(isinstance(t, IntegerType) and t.signed)
+
+@invoke.register(PrimClasses.FloatTypeP)
+def foo(x, args) :
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), FloatType))
+
+
+@invoke.register(PrimClasses.numericEqualsP)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.numericLesserP)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.numericAdd)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.numericSubtract)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.numericMultiply)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.numericDivide)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.numericRemainder)
+def foo(x, args) :
+    raise NotImplementedError
+
+
+@invoke.register(PrimClasses.numericNegate)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.numericConvert)
+def foo(x, args) :
+    raise NotImplementedError
+
+
+@invoke.register(PrimClasses.shiftLeft)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.shiftRight)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.bitwiseAnd)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.bitwiseOr)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.bitwiseXor)
+def foo(x, args) :
+    raise NotImplementedError
+
+
+@invoke.register(PrimClasses.VoidTypeP)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.CompilerObjectTypeP)
+def foo(x, args) :
+    raise NotImplementedError
+
+
+@invoke.register(PrimClasses.PointerTypeP)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.PointerType)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.Pointer)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.PointeeType)
+def foo(x, args) :
+    raise NotImplementedError
+
+
+@invoke.register(PrimClasses.addressOf)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.pointerDereference)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.pointerToInt)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.intToPointer)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.pointerCast)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.allocateMemory)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.freeMemory)
+def foo(x, args) :
+    raise NotImplementedError
+
+
+@invoke.register(PrimClasses.ArrayTypeP)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.ArrayType)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.Array)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.ArrayElementType)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.ArraySize)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.array)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.arrayRef)
+def foo(x, args) :
+    raise NotImplementedError
+
+
+@invoke.register(PrimClasses.TupleTypeP)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.TupleType)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.Tuple)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.TupleElementType)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.TupleFieldCount)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.TupleFieldOffset)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.tuple)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.tupleFieldRef)
+def foo(x, args) :
+    raise NotImplementedError
+
+
+@invoke.register(PrimClasses.RecordTypeP)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.RecordType)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.RecordElementType)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.RecordFieldCount)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.RecordFieldOffset)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.RecordFieldIndex)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.recordFieldRef)
+def foo(x, args) :
+    raise NotImplementedError
+
+@invoke.register(PrimClasses.recordFieldRefByName)
+def foo(x, args) :
+    raise NotImplementedError
 
 
 

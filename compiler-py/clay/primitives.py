@@ -1,63 +1,20 @@
 from clay.core import *
-from clay.unifier import *
 from clay.env import *
 
 class PrimitiveOp(object) :
     pass
 
-class TypeConstructorPrimOp(PrimitiveOp) :
-    def __init__(self, constructorPrim) :
-        super(TypeConstructorPrimOp, self).__init__()
-        self.constructorPrim = constructorPrim
-
-class TypePredicatePrimOp(PrimitiveOp) :
-    def __init__(self, klass) :
-        super(TypePredicatePrimOp, self).__init__()
-        self.klass = klass
-
-class PredicatePrimOp(PrimitiveOp) :
-    def __init__(self, pred) :
-        super(PredicatePrimOp, self).__init__()
-        self.pred = pred
-
-class SimplePrimOp(PrimitiveOp) :
-    def __init__(self, argTypes, returnType, returnByRef=False,
-                 cells=None, condition=None) :
-        super(SimplePrimOp, self).__init__()
-        self.argTypes = argTypes
-        self.returnType = returnType
-        self.returnByRef = returnByRef
-        if cells is None :
-            cells = []
-        self.cells = cells
-        self.condition = condition
-
 
 #
-# install primitives
+# initialize primitives
 #
 
 PrimClasses = None
 PrimObjects = None
 
-def installPrimitives() :
-    primitiveTypes = {
-        "Bool": boolType,
-        "Int8"  : int8Type,
-        "Int16" : int16Type,
-        "Int32" : int32Type,
-        "Int64" : int64Type,
-        "UInt8"  : uint8Type,
-        "UInt16" : uint16Type,
-        "UInt32" : uint32Type,
-        "UInt64" : uint64Type,
-        "Float32" : float32Type,
-        "Float64" : float64Type,
-        "Void" : voidType,
-        "CompilerObject" : compilerObjectType,
-        }
-    for k, t in primitiveTypes.items() :
-        installPrimitive(k, StaticValue(toCOValue(t)))
+def initializePrimitives() :
+    def primType(name, type_) :
+        installPrimitive(name, StaticValue(toCOValue(type_)))
 
     primClasses = {}
     primObjects = {}
@@ -67,104 +24,101 @@ def installPrimitives() :
             return s[:-1] + "P"
         return s
 
-    def primOp(name, klass, *args, **kwargs) :
+    def primOp(name) :
         name2 = safeName(name)
-        primClass = type("Prim_%s" % name2, (klass,), {})
+        primClass = type("Prim_%s" % name2, (PrimitiveOp,), {})
         primClasses[name2] = primClass
-        prim = primClass(*args, **kwargs)
+        prim = primClass()
         primObjects[name2] = prim
         installPrimitive(name, StaticValue(toCOValue(prim)))
 
-    primOp("Type?",              TypePredicatePrimOp, Type)
-    primOp("TypeSize",           SimplePrimOp,        [compilerObjectType], int32Type)
+    primType("Bool", boolType)
+    primType("Int8", int8Type)
+    primType("Int16", int16Type)
+    primType("Int32", int32Type)
+    primType("Int64", int64Type)
+    primType("UInt8", uint8Type)
+    primType("UInt16", uint16Type)
+    primType("UInt32", uint32Type)
+    primType("UInt64", uint64Type)
+    primType("Float32", float32Type)
+    primType("Float64", float64Type)
+    primType("Void", voidType)
+    primType("CompilerObject", compilerObjectType)
 
-    primOp("BoolType?",          TypePredicatePrimOp, BoolType)
-    primOp("boolNot",            SimplePrimOp,        [boolType], boolType)
-    primOp("boolTruth",          SimplePrimOp,        [boolType], boolType)
+    primOp("Type?")
+    primOp("TypeSize")
 
-    primOp("IntegerType?",       TypePredicatePrimOp, IntegerType)
-    primOp("SignedIntegerType?", PredicatePrimOp,     lambda t : isinstance(t, IntegerType) and t.signed)
+    primOp("BoolType?")
+    primOp("boolNot")
+    primOp("boolTruth")
 
-    primOp("FloatType?",         TypePredicatePrimOp, FloatType)
+    primOp("IntegerType?")
+    primOp("SignedIntegerType?")
 
-    def numericTypeP(t) :
-        return isinstance(t, IntegerType) or isinstance(t, FloatType)
+    primOp("FloatType?")
 
-    def binaryOp(name, pred, returnType=None) :
-        type_ = Cell()
-        if returnType is None :
-            returnType = type_
-        primOp(name, SimplePrimOp, [type_, type_], returnType,
-               cells=[type_], condition=pred)
+    primOp("numericEquals?")
+    primOp("numericLesser?")
+    primOp("numericAdd")
+    primOp("numericSubtract")
+    primOp("numericMultiply")
+    primOp("numericDivide")
+    primOp("numericRemainder")
 
-    binaryOp("numericEquals?",   numericTypeP, returnType=boolType)
-    binaryOp("numericLesser?",   numericTypeP, returnType=boolType)
-    binaryOp("numericAdd",       numericTypeP)
-    binaryOp("numericSubtract",  numericTypeP)
-    binaryOp("numericMultiply",  numericTypeP)
-    binaryOp("numericDivide",    numericTypeP)
-    binaryOp("numericRemainder", numericTypeP)
+    primOp("numericNegate")
+    primOp("numericConvert")
 
-    a = Cell()
-    primOp("numericNegate",  SimplePrimOp, [a], a, cells=[a], condition=numericTypeP)
-    primOp("numericConvert", PrimitiveOp)
+    primOp("shiftLeft")
+    primOp("shiftRight")
+    primOp("bitwiseAnd")
+    primOp("bitwiseOr")
+    primOp("bitwiseXor")
 
-    def integerTypeP(t) :
-        return isinstance(t, IntegerType)
+    primOp("VoidType?")
+    primOp("CompilerObjectType?")
 
-    binaryOp("shiftLeft",  integerTypeP)
-    binaryOp("shiftRight", integerTypeP)
-    binaryOp("bitwiseAnd", integerTypeP)
-    binaryOp("bitwiseOr",  integerTypeP)
-    binaryOp("bitwiseXor", integerTypeP)
+    primOp("PointerType?")
+    primOp("PointerType")
+    primOp("Pointer")
+    primOp("PointeeType")
 
-    primOp("VoidType?",       TypePredicatePrimOp, VoidType)
-    primOp("CompilerObject?", TypePredicatePrimOp, CompilerObjectType)
+    primOp("addressOf")
+    primOp("pointerDereference")
+    primOp("pointerToInt")
+    primOp("intToPointer")
+    primOp("pointerCast")
+    primOp("allocateMemory")
+    primOp("freeMemory")
 
-    primOp("PointerType?",    TypePredicatePrimOp,   PointerType)
-    primOp("PointerType",     SimplePrimOp,          [compilerObjectType], compilerObjectType)
-    primOp("Pointer",         TypeConstructorPrimOp, primObjects["PointerType"])
-    primOp("PointeeType",     SimplePrimOp,          [compilerObjectType], compilerObjectType)
-    a = Cell()
-    primOp("addressOf",          SimplePrimOp, [a], PointerTypePattern(a), cells=[a])
-    a = Cell()
-    primOp("pointerDereference", SimplePrimOp, [PointerTypePattern(a)], a, returnByRef=True, cells=[a])
-    primOp("pointerToInt",       PrimitiveOp)
-    primOp("intToPointer",       PrimitiveOp)
-    primOp("pointerCast",        PrimitiveOp)
-    primOp("allocateMemory",     PrimitiveOp)
-    a = Cell()
-    primOp("freeMemory",         SimplePrimOp, [PointerTypePattern(a)], voidType, cells=[a])
+    primOp("ArrayType?")
+    primOp("ArrayType")
+    primOp("Array")
+    primOp("ArrayElementType")
+    primOp("ArraySize")
+    primOp("array")
+    primOp("arrayRef")
 
-    primOp("ArrayType?",       TypePredicatePrimOp,   ArrayType)
-    primOp("ArrayType",        SimplePrimOp,          [compilerObjectType, int32Type], compilerObjectType)
-    primOp("Array",            TypeConstructorPrimOp, primObjects["ArrayType"])
-    primOp("ArrayElementType", SimplePrimOp,          [compilerObjectType], compilerObjectType)
-    primOp("ArraySize",        SimplePrimOp,          [compilerObjectType], int32Type)
-    primOp("array",            PrimitiveOp)
-    a, b = Cell(), Cell()
-    primOp("arrayRef",         SimplePrimOp,        [ArrayTypePattern(a, b), int32Type], a, returnByRef=True, cells=[a, b])
+    primOp("TupleType?")
+    primOp("TupleType")
+    primOp("Tuple")
+    primOp("TupleElementType")
+    primOp("TupleFieldCount")
+    primOp("TupleFieldOffset")
+    primOp("tuple")
+    primOp("tupleFieldRef")
 
-    primOp("TupleType?",       TypePredicatePrimOp,   TupleType)
-    primOp("TupleType",        PrimitiveOp)
-    primOp("Tuple",            TypeConstructorPrimOp, primObjects["TupleType"])
-    primOp("TupleElementType", SimplePrimOp,          [compilerObjectType, int32Type], compilerObjectType)
-    primOp("TupleFieldCount",  SimplePrimOp,          [compilerObjectType], int32Type)
-    primOp("TupleFieldOffset", SimplePrimOp,          [compilerObjectType, int32Type], int32Type)
-    primOp("tuple",            PrimitiveOp)
-    primOp("tupleFieldRef",    PrimitiveOp)
-
-    primOp("RecordType?",          TypePredicatePrimOp, RecordType)
-    primOp("RecordType",           PrimitiveOp)
-    primOp("RecordElementType",    SimplePrimOp,        [compilerObjectType, int32Type], compilerObjectType)
-    primOp("RecordFieldCount",     SimplePrimOp,        [compilerObjectType], int32Type)
-    primOp("RecordFieldOffset",    SimplePrimOp,        [compilerObjectType, int32Type], int32Type)
-    primOp("RecordFieldIndex",     SimplePrimOp,        [compilerObjectType, compilerObjectType], int32Type)
-    primOp("recordFieldRef",       PrimitiveOp)
-    primOp("recordFieldRefByName", PrimitiveOp)
+    primOp("RecordType?")
+    primOp("RecordType")
+    primOp("RecordElementType")
+    primOp("RecordFieldCount")
+    primOp("RecordFieldOffset")
+    primOp("RecordFieldIndex")
+    primOp("recordFieldRef")
+    primOp("recordFieldRefByName")
 
     global PrimClasses, PrimObjects
     PrimClasses = type("PrimClasses", (object,), primClasses)
     PrimObjects = type("PrimObjects", (object,), primObjects)
 
-installPrimitives()
+initializePrimitives()
