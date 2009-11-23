@@ -341,7 +341,7 @@ def foo(x, args) :
 
 
 #
-# invoke
+# invoke procedures and overloadables
 #
 
 invoke = multimethod("invoke")
@@ -362,135 +362,6 @@ def foo(x, args) :
             env = result
             return evalCodeBody(y.code, env)
     error("no matching overload")
-
-@invoke.register(Record)
-def foo(x, args) :
-    ensureArity(args, len(x.args))
-    cells = [Cell(y) for y in x.typeVars]
-    patternEnv = extendEnv(x.env, x.typeVars, cells)
-    for i, arg in enumerate(args) :
-        if not matchRecordArg(arg, x.args[i], patternEnv) :
-            error("mismatch at argument %d" % (i + 1))
-    type_ = recordType(x, derefCells(cells))
-    v = allocTempValue(type_)
-    for f, arg in zip(recordFieldRefs(v), args) :
-        copyValue(f, arg)
-    return v
-
-matchRecordArg = multimethod("matchRecordArg")
-
-@matchRecordArg.register(ValueRecordArg)
-def foo(arg, farg, env) :
-    pattern = evaluatePattern(farg.type, env)
-    return unify(pattern, toCOValue(arg.type))
-
-@matchRecordArg.register(StaticRecordArg)
-def foo(arg, farg, env) :
-    pattern = evaluatePattern(farg.pattern, env)
-    return unify(pattern, arg)
-
-@invoke.register(Type)
-def foo(x, args) :
-    if len(args) == 0 :
-        # default constructor
-        v = allocTempValue(x)
-        initValue(v)
-        return v
-    if (len(args) == 1) and (args[0].type == x) :
-        # copy constructor
-        v = allocTempValue(args[0].type)
-        copyValue(v, args[0])
-        return v
-    return invokeConstructor(x, args)
-
-invokeConstructor = multimethod("invokeConstructor")
-
-@invokeConstructor.register(ArrayType)
-def foo(x, args) :
-    ensureArity(args, x.size)
-    v = allocTempValue(x)
-    for i, element in enumerate(arrayElementRefs(v)) :
-        ensure(args[i].type == element.type,
-               "type mismatch at argument %d" % (i+1))
-        copyValue(element, args[i])
-    return v
-
-@invokeConstructor.register(TupleType)
-def foo(x, args) :
-    ensureArity(args, len(x.elementTypes))
-    v = allocTempValue(x)
-    for i, field in enumerate(tupleFieldRefs(v)) :
-        ensure(args[i].type == field.type,
-               "type mismatch at argument %d" % (i+1))
-        copyValue(field, args[i])
-    return v
-
-@invokeConstructor.register(RecordType)
-def foo(x, args) :
-    ensureArity(args, recordFieldCount(x))
-    v = allocTempValue(x)
-    for i, field in enumerate(recordFieldRefs(v)) :
-        ensure(args[i].type == field.type,
-               "type mismatch at argument %d" % (i+1))
-        copyValue(field, args[i])
-    return v
-
-@invoke.register(ExternalProcedure)
-def foo(x, args) :
-    ensureArity(args, len(x.args))
-    initExternalProcedure(x)
-    for i, farg in enumerate(x.args) :
-        ensure(args[i].type == farg.type2,
-               "type mismatch at argument %d" % (i+1))
-    return evalLLVMCall(x.llvmFunc, args, x.returnType2)
-
-def initExternalProcedure(x) :
-    if x.llvmFunc is not None :
-        return
-    argTypes = [evaluateRootExpr(y.type, x.env, toTypeResult) for y in x.args]
-    returnType = evaluateRootExpr(x.returnType, x.env, toTypeResult)
-    for arg, argType in zip(x.args, argTypes) :
-        arg.type2 = argType
-    x.returnType2 = returnType
-    func = generateExternalFunc(argTypes, returnType, x.name.s)
-    x.llvmFunc = generateExternalWrapper(func, argTypes, returnType, x.name.s)
-
-def generateExternalFunc(argTypes, returnType, name) :
-    llvmArgTypes = [llvmType(y) for y in argTypes]
-    if returnType == voidType :
-        llvmReturnType = lltVoid()
-    else :
-        llvmReturnType = llvmType(returnType)
-    llvmFuncType = lltFunction(llvmReturnType, llvmArgTypes)
-    func = llvmModule.add_function(llvmFuncType, name)
-    func.linkage = llvm.LINKAGE_EXTERNAL
-    return func
-
-def generateExternalWrapper(func, argTypes, returnType, name) :
-    llvmArgTypes = [llvmType(pointerType(y)) for y in argTypes]
-    if returnType != voidType :
-        llvmArgTypes.append(llvmType(pointerType(returnType)))
-    llvmFuncType = lltFunction(lltVoid(), llvmArgTypes)
-    wrapper = llvmModule.add_function(llvmFuncType, "wrapper_%s" % name)
-    wrapper.linkage = llvm.LINKAGE_INTERNAL
-    block = wrapper.append_basic_block("code")
-    builder = llvm.Builder.new(block)
-    llvmArgs = [builder.load(wrapper.args[i]) for i in range(len(argTypes))]
-    result = builder.call(func, llvmArgs)
-    if returnType != voidType :
-        builder.store(result, wrapper.args[-1])
-    builder.ret_void()
-    return wrapper
-
-def evalLLVMCall(func, args, outputType) :
-    llvmArgs = [toGenericValue(pointerType(x.type), x.address) for x in args]
-    if outputType != voidType :
-        out = allocTempValue(outputType)
-        llvmArgs.append(toGenericValue(pointerType(out.type), out.address))
-    else :
-        out = None
-    llvmExecutionEngine.run_function(func, llvmArgs)
-    return out
 
 
 
@@ -613,7 +484,7 @@ def foo(x, args) :
 
 
 #
-# evalCodeBody
+# evalCodeBody, evalStatement
 #
 
 def evalCodeBody(code, env) :
@@ -795,6 +666,154 @@ def convertForStatement(x) :
                                                   [NameRef(iterVar)])),
                       x.body]))])
     return block
+
+
+
+#
+# invoke pattern matching record constructor
+#
+
+@invoke.register(Record)
+def foo(x, args) :
+    ensureArity(args, len(x.args))
+    cells = [Cell(y) for y in x.typeVars]
+    patternEnv = extendEnv(x.env, x.typeVars, cells)
+    for i, arg in enumerate(args) :
+        if not matchRecordArg(arg, x.args[i], patternEnv) :
+            error("mismatch at argument %d" % (i + 1))
+    type_ = recordType(x, derefCells(cells))
+    v = allocTempValue(type_)
+    for f, arg in zip(recordFieldRefs(v), args) :
+        copyValue(f, arg)
+    return v
+
+matchRecordArg = multimethod("matchRecordArg")
+
+@matchRecordArg.register(ValueRecordArg)
+def foo(arg, farg, env) :
+    pattern = evaluatePattern(farg.type, env)
+    return unify(pattern, toCOValue(arg.type))
+
+@matchRecordArg.register(StaticRecordArg)
+def foo(arg, farg, env) :
+    pattern = evaluatePattern(farg.pattern, env)
+    return unify(pattern, arg)
+
+
+
+#
+# invoke constructors for array types, tuple types, and record types.
+# invoke default constructor, copy constructor for all types
+#
+
+@invoke.register(Type)
+def foo(x, args) :
+    if len(args) == 0 :
+        # default constructor
+        v = allocTempValue(x)
+        initValue(v)
+        return v
+    if (len(args) == 1) and (args[0].type == x) :
+        # copy constructor
+        v = allocTempValue(args[0].type)
+        copyValue(v, args[0])
+        return v
+    return invokeConstructor(x, args)
+
+invokeConstructor = multimethod("invokeConstructor")
+
+@invokeConstructor.register(ArrayType)
+def foo(x, args) :
+    ensureArity(args, x.size)
+    v = allocTempValue(x)
+    for i, element in enumerate(arrayElementRefs(v)) :
+        ensure(args[i].type == element.type,
+               "type mismatch at argument %d" % (i+1))
+        copyValue(element, args[i])
+    return v
+
+@invokeConstructor.register(TupleType)
+def foo(x, args) :
+    ensureArity(args, len(x.elementTypes))
+    v = allocTempValue(x)
+    for i, field in enumerate(tupleFieldRefs(v)) :
+        ensure(args[i].type == field.type,
+               "type mismatch at argument %d" % (i+1))
+        copyValue(field, args[i])
+    return v
+
+@invokeConstructor.register(RecordType)
+def foo(x, args) :
+    ensureArity(args, recordFieldCount(x))
+    v = allocTempValue(x)
+    for i, field in enumerate(recordFieldRefs(v)) :
+        ensure(args[i].type == field.type,
+               "type mismatch at argument %d" % (i+1))
+        copyValue(field, args[i])
+    return v
+
+
+
+#
+# invoke external procedure
+#
+
+@invoke.register(ExternalProcedure)
+def foo(x, args) :
+    ensureArity(args, len(x.args))
+    initExternalProcedure(x)
+    for i, farg in enumerate(x.args) :
+        ensure(args[i].type == farg.type2,
+               "type mismatch at argument %d" % (i+1))
+    return evalLLVMCall(x.llvmFunc, args, x.returnType2)
+
+def initExternalProcedure(x) :
+    if x.llvmFunc is not None :
+        return
+    argTypes = [evaluateRootExpr(y.type, x.env, toTypeResult) for y in x.args]
+    returnType = evaluateRootExpr(x.returnType, x.env, toTypeResult)
+    for arg, argType in zip(x.args, argTypes) :
+        arg.type2 = argType
+    x.returnType2 = returnType
+    func = generateExternalFunc(argTypes, returnType, x.name.s)
+    x.llvmFunc = generateExternalWrapper(func, argTypes, returnType, x.name.s)
+
+def generateExternalFunc(argTypes, returnType, name) :
+    llvmArgTypes = [llvmType(y) for y in argTypes]
+    if returnType == voidType :
+        llvmReturnType = lltVoid()
+    else :
+        llvmReturnType = llvmType(returnType)
+    llvmFuncType = lltFunction(llvmReturnType, llvmArgTypes)
+    func = llvmModule.add_function(llvmFuncType, name)
+    func.linkage = llvm.LINKAGE_EXTERNAL
+    return func
+
+def generateExternalWrapper(func, argTypes, returnType, name) :
+    llvmArgTypes = [llvmType(pointerType(y)) for y in argTypes]
+    if returnType != voidType :
+        llvmArgTypes.append(llvmType(pointerType(returnType)))
+    llvmFuncType = lltFunction(lltVoid(), llvmArgTypes)
+    wrapper = llvmModule.add_function(llvmFuncType, "wrapper_%s" % name)
+    wrapper.linkage = llvm.LINKAGE_INTERNAL
+    block = wrapper.append_basic_block("code")
+    builder = llvm.Builder.new(block)
+    llvmArgs = [builder.load(wrapper.args[i]) for i in range(len(argTypes))]
+    result = builder.call(func, llvmArgs)
+    if returnType != voidType :
+        builder.store(result, wrapper.args[-1])
+    builder.ret_void()
+    return wrapper
+
+def evalLLVMCall(func, args, outputType) :
+    llvmArgs = [toGenericValue(pointerType(x.type), x.address) for x in args]
+    if outputType != voidType :
+        out = allocTempValue(outputType)
+        llvmArgs.append(toGenericValue(pointerType(out.type), out.address))
+    else :
+        out = None
+    llvmExecutionEngine.run_function(func, llvmArgs)
+    return out
 
 
 
