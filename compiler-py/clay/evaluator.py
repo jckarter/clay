@@ -21,6 +21,9 @@ def recordFieldTypes(type_) :
     type_.fieldTypes = types
     return types
 
+def recordFieldCount(type_) :
+    return len(recordFieldTypes(type_))
+
 def recordFieldOffset(type_, index) :
     llt = llvmType(type_)
     return llvmTargetData.offset_of_element(llt, index)
@@ -388,7 +391,49 @@ def foo(arg, farg, env) :
 
 @invoke.register(Type)
 def foo(x, args) :
-    raise NotImplementedError
+    if len(args) == 0 :
+        # default constructor
+        v = allocTempValue(x)
+        initValue(v)
+        return v
+    if (len(args) == 1) and (args[0].type == x) :
+        # copy constructor
+        v = allocTempValue(args[0].type)
+        copyValue(v, args[0])
+        return v
+    return invokeConstructor(x, args)
+
+invokeConstructor = multimethod("invokeConstructor")
+
+@invokeConstructor.register(ArrayType)
+def foo(x, args) :
+    ensureArity(args, x.size)
+    v = allocTempValue(x)
+    for i, element in enumerate(arrayElementRefs(v)) :
+        ensure(args[i].type == element.type,
+               "type mismatch at argument %d" % (i+1))
+        copyValue(element, args[i])
+    return v
+
+@invokeConstructor.register(TupleType)
+def foo(x, args) :
+    ensureArity(args, len(x.elementTypes))
+    v = allocTempValue(x)
+    for i, field in enumerate(tupleFieldRefs(v)) :
+        ensure(args[i].type == field.type,
+               "type mismatch at argument %d" % (i+1))
+        copyValue(field, args[i])
+    return v
+
+@invokeConstructor.register(RecordType)
+def foo(x, args) :
+    ensureArity(args, recordFieldCount(x))
+    v = allocTempValue(x)
+    for i, field in enumerate(recordFieldRefs(v)) :
+        ensure(args[i].type == field.type,
+               "type mismatch at argument %d" % (i+1))
+        copyValue(field, args[i])
+    return v
 
 @invoke.register(ExternalProcedure)
 def foo(x, args) :
