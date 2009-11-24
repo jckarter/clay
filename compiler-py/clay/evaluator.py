@@ -1157,35 +1157,66 @@ def foo(x, args) :
 
 @invoke.register(PrimClasses.TupleTypeP)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), TupleType))
 
 @invoke.register(PrimClasses.TupleType)
 def foo(x, args) :
-    raise NotImplementedError
+    ensure(len(args) >= 2, "atleast two elements required for tuple type")
+    elementTypes = [ensureType(args, i) for i in range(len(args))]
+    return installTemp(toCOValue(tupleType(elementTypes)))
 
-@invoke.register(PrimClasses.Tuple)
-def foo(x, args) :
-    raise NotImplementedError
+def ensureTupleType(args, i) :
+    t = lower(args[i])
+    if not isinstance(t, TupleType) :
+        error("invalid tuple type at argument %d" % (i+1))
+    return t
+
+def ensureTuple(args, i) :
+    if not isinstance(args[i].type, TupleType) :
+        error("invalid tuple type at argument %d" % (i+1))
 
 @invoke.register(PrimClasses.TupleElementType)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    t = ensureTupleType(args, 0)
+    ensureInteger(args, 1)
+    i = fromPrimValue(args[1])
+    if (i < 0) or (i >= len(t.elementTypes)) :
+        error("tuple index out of range")
+    return installTemp(toCOValue(t.elementTypes[i]))
 
 @invoke.register(PrimClasses.TupleFieldCount)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = ensureTupleType(args, 0)
+    return toTempInt(len(t.elementTypes))
 
 @invoke.register(PrimClasses.TupleFieldOffset)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    t = ensureTupleType(args, 0)
+    ensureInteger(args, 1)
+    i = fromPrimValue(args[1])
+    if (i < 0) or (i >= len(t.elementTypes)) :
+        error("tuple index out of range")
+    return toTempInt(tupleFieldOffset(t, i))
 
 @invoke.register(PrimClasses.tuple)
 def foo(x, args) :
-    raise NotImplementedError
+    ensure(len(args) >= 2, "atleast two elements required for tuple type")
+    t = tupleType([y.type for y in args])
+    return invoke(t, args)
 
 @invoke.register(PrimClasses.tupleFieldRef)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    ensureTuple(args, 0)
+    ensureInteger(args, 1)
+    i = fromPrimValue(args[1])
+    if (i < 0) or (i >= len(args[0].type.elementTypes)) :
+        error("tuple index out of range")
+    return tupleFieldRef(args[0], i)
 
 
 @invoke.register(PrimClasses.RecordTypeP)
