@@ -812,6 +812,109 @@ def foo(t, a) :
 
 
 #
+# xconvertValue
+#
+
+def xconvertValue(a) :
+    return xconvertValue2(a.type, a)
+
+xconvertValue2 = multimethod("xconvertValue2")
+
+@xconvertValue2.register(BoolType)
+def foo(t, a) :
+    if fromBoolValue(a) :
+        return XSymbol("true")
+    else :
+        return XSymbol("false")
+
+@xconvertValue2.register(IntegerType)
+def foo(t, a) :
+    x = fromPrimValue(a)
+    if t != int32Type :
+        s = "i" if t.signed else "u"
+        return XSymbol("%d#%s%d" % (x, s, t.bits))
+    return XSymbol("%d" % x)
+
+@xconvertValue2.register(FloatType)
+def foo(t, a) :
+    x = fromPrimValue(a)
+    return XSymbol(str(x) + "#f" + str(t.bits))
+
+@xconvertValue2.register(CompilerObjectType)
+def foo(t, a) :
+    return xconvertCompilerObject(fromCOValue(a))
+
+@xconvertValue2.register(PointerType)
+def foo(t, a) :
+    pointee = xconvertCompilerObject(t.pointeeType)
+    return XObject("Pointer", pointee, fromPointerValue(a))
+
+@xconvertValue2.register(TupleType)
+def foo(t, a) :
+    return tuple(tupleFieldRefs(a))
+
+@xconvertValue2.register(ArrayType)
+def foo(t, a) :
+    return arrayElementRefs(a)
+
+
+xconvertCompilerObject = multimethod("xconvertCompilerObject")
+
+@xconvertCompilerObject.register(object)
+def foo(x) :
+    return XSymbol(str(x))
+
+@xconvertCompilerObject.register(BoolType)
+def foo(x) :
+    return XSymbol("Bool")
+
+@xconvertCompilerObject.register(IntegerType)
+def foo(x) :
+    s = "" if x.signed else "U"
+    return XSymbol("%sInt%d" % (s, x.bits))
+
+@xconvertCompilerObject.register(FloatType)
+def foo(x) :
+    return XSymbol("Float%d" % (x.bits))
+
+@xconvertCompilerObject.register(VoidType)
+def foo(x) :
+    return XSymbol("Void")
+
+@xconvertCompilerObject.register(CompilerObjectType)
+def foo(x) :
+    return XSymbol("CompilerObject")
+
+@xconvertCompilerObject.register(PointerType)
+def foo(x) :
+    pointee = xconvertCompilerObject(x.pointeeType)
+    return XObject("Pointer", pointee, opening="[", closing="]")
+
+@xconvertCompilerObject.register(TupleType)
+def foo(x) :
+    elementTypes = map(xconvertCompilerObject, x.elementTypes)
+    kwargs = dict(opening="[", closing="]")
+    return XObject("Tuple", *elementTypes, **kwargs)
+
+@xconvertCompilerObject.register(ArrayType)
+def foo(x) :
+    elementType = xconvertCompilerObject(x.elementType)
+    kwargs = dict(opening="[", closing="]")
+    return XObject("Array", elementType, x.size, **kwargs)
+
+@xconvertCompilerObject.register(RecordType)
+def foo(x) :
+    if len(x.params) == 0 :
+        return XSymbol(x.record.name.s)
+    kwargs = dict(opening="[", closing="]")
+    return XObject(x.record.name.s, *x.params, **kwargs)
+
+
+xregister(Value, xconvertValue)
+
+
+
+#
 # lower
 #
 

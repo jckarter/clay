@@ -1,3 +1,4 @@
+from clay.xprint import *
 from clay.ast import *
 from clay.core import *
 from clay.unifier import *
@@ -88,6 +89,10 @@ def foo(t, a) :
     for x in recordFieldRefs(a) :
         h += hashValue(x)
     return h
+
+@xconvertValue2.register(RecordType)
+def foo(t, a) :
+    return XObject(t.record.name.s, t.params, recordFieldRefs(a))
 
 
 
