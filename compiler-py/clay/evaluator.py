@@ -854,8 +854,10 @@ def ensureArgTypes(args, types) :
         ensureArgType(args, i, types[i])
 
 def ensureType(args, i) :
-    if not isinstance(lower(args[i]), Type) :
+    t = lower(args[i])
+    if not isinstance(t, Type) :
         error("invalid type at argument %d" % (i+1))
+    return t
 
 @invoke.register(PrimClasses.TypeP)
 def foo(x, args) :
@@ -865,9 +867,8 @@ def foo(x, args) :
 @invoke.register(PrimClasses.TypeSize)
 def foo(x, args) :
     ensureArity(args, 1)
-    ensureType(args, 0)
-    size = typeSize(fromCOValue(args[0]))
-    return toTempInt(size)
+    t = ensureType(args, 0)
+    return toTempInt(typeSize(t))
 
 
 @invoke.register(PrimClasses.BoolTypeP)
@@ -905,14 +906,14 @@ def foo(x, args) :
 def isNumericType(t) :
     return isinstance(t, IntegerType) or isinstance(t, FloatType)
 
-def ensureNumericType(args, i) :
+def ensureNumeric(args, i) :
     if not isNumericType(args[i].type) :
         error("invalid numeric type at argument %d" % (i+1))
 
 def ensureNumericBinaryOp(args) :
     ensureArity(args, 2)
-    ensureNumericType(args, 0)
-    ensureNumericType(args, 1)
+    ensureNumeric(args, 0)
+    ensureNumeric(args, 1)
     if args[0].type != args[1].type :
         error("argument types don't match")
     return args[0].type, fromPrimValue(args[0]), fromPrimValue(args[1])
@@ -956,27 +957,27 @@ def foo(x, args) :
 @invoke.register(PrimClasses.numericNegate)
 def foo(x, args) :
     ensureArity(args, 1)
-    ensureNumericType(args, 0)
+    ensureNumeric(args, 0)
     return toTempPrim(args[0].type, -fromPrimValue(args[0]))
 
 @invoke.register(PrimClasses.numericConvert)
 def foo(x, args) :
     ensureArity(args, 2)
-    ensureNumericType(args, 1)
+    ensureNumeric(args, 1)
     t = toTypeResult(args[0])
     v = fromPrimValue(args[1])
     if isinstance(t, IntegerType) :
         v = int(v)
     return toTempPrim(t, v)
 
-def ensureIntegerType(args, i) :
+def ensureInteger(args, i) :
     if not isinstance(args[i].type, IntegerType) :
         error("invalid integer type at argument %d" % (i+1))
 
 def ensureIntegerBinaryOp(args) :
     ensureArity(args, 2)
-    ensureIntegerType(args, 0)
-    ensureIntegerType(args, 1)
+    ensureInteger(args, 0)
+    ensureInteger(args, 1)
     if args[0].type != args[1].type :
         error("argument types don't match")
     return args[0].type, fromPrimValue(args[0]), fromPrimValue(args[1])
@@ -1009,57 +1010,95 @@ def foo(x, args) :
 
 @invoke.register(PrimClasses.VoidTypeP)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), VoidType))
 
 @invoke.register(PrimClasses.CompilerObjectTypeP)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), CompilerObjectType))
 
 
 @invoke.register(PrimClasses.PointerTypeP)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), PointerType))
 
 @invoke.register(PrimClasses.PointerType)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = ensureType(args, 0)
+    return installTemp(toCOValue(pointerType(t)))
 
-@invoke.register(PrimClasses.Pointer)
-def foo(x, args) :
-    raise NotImplementedError
+def ensurePointerType(args, i) :
+    t = lower(args[i])
+    if not isinstance(t, PointerType) :
+        error("invalid pointer type at argument %d" % (i+1))
+    return t
+
+def ensurePointer(args, i) :
+    if not isinstance(args[i].type, PointerType) :
+        error("invalid poiner type at argument %d" % (i+1))
 
 @invoke.register(PrimClasses.PointeeType)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = ensurePointerType(args, 0)
+    return installTemp(toCOValue(t.pointeeType))
 
 
 @invoke.register(PrimClasses.addressOf)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    if args[0].isOwned :
+        error("cannot get address of temporary")
+    return installTemp(toPointerValue(args[0].type, args[0].address))
 
 @invoke.register(PrimClasses.pointerDereference)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    ensurePointer(args, 0)
+    t = args[0].type.pointeeType
+    return Value(t, False, fromPointerValue(args[0]))
 
 @invoke.register(PrimClasses.pointerToInt)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    ensurePointer(args, 1)
+    t = toTypeResult(args[0])
+    if not isinstance(t, IntegerType) :
+        error("invalid integer type at argument 1")
+    return toTempPrim(t, fromPointerValue(args[1]))
 
 @invoke.register(PrimClasses.intToPointer)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    t = ensureType(args, 0)
+    ensureInteger(args, 1)
+    return installTemp(toPointerValue(t, fromPrimValue(args[1])))
 
 @invoke.register(PrimClasses.pointerCast)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    t = ensureType(args, 0)
+    ensurePointer(args, 1)
+    return installTemp(toPointerValue(t, fromPointerValue(args[1])))
 
 @invoke.register(PrimClasses.allocateMemory)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    t = ensureType(args, 0)
+    ensureInteger(args, 1)
+    n = fromPrimValue(args[1])
+    addr = allocMem(typeSize(t) * n)
+    return installTemp(toPointerValue(t, addr))
 
 @invoke.register(PrimClasses.freeMemory)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    ensurePointer(args[0])
+    freeMem(fromPointerValue(args[0]))
+    return None
 
 
 @invoke.register(PrimClasses.ArrayTypeP)
