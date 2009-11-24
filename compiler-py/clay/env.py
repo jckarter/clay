@@ -296,3 +296,9 @@ def coreNameRef(s) :
     nameRef = NameRef(Identifier(s))
     env = loadedModule("_core").env
     return SCExpression(env, nameRef)
+
+def coreValue(s) :
+    v = loadedModule("_core").env.lookup(s)
+    if type(v) is StaticValue :
+        v = v.value
+    return lower(v)

@@ -63,32 +63,23 @@ def foo(t) :
 
 @initValue2.register(RecordType)
 def foo(t, v) :
-    for x in recordFieldRefs(v) :
-        initValue(x)
+    invoke(coreValue("init"), [v])
 
 @destroyValue2.register(RecordType)
 def foo(t, v) :
-    for x in recordFieldRefs(v) :
-        destroyValue(x)
+    invoke(coreValue("destroy"), [v])
 
 @copyValue2.register(RecordType)
 def foo(t, dest, src) :
-    for x, y in zip(recordFieldRefs(dest), recordFieldRefs(src)) :
-        copyValue(x, y)
+    invoke(coreValue("copy"), [dest, src])
 
 @equalValues2.register(RecordType)
 def foo(t, a, b) :
-    for x, y in zip(recordFieldRefs(a), recordFieldRefs(b)) :
-        if not equalValues(x, y) :
-            return False
-    return True
+    return toBoolResult(invoke(coreValue("equals?"), [a, b]))
 
 @hashValue2.register(RecordType)
 def foo(t, a) :
-    h = 0
-    for x in recordFieldRefs(a) :
-        h += hashValue(x)
-    return h
+    return fromPrimValue(invoke(coreValue("hash"), [a]))
 
 @xconvertValue2.register(RecordType)
 def foo(t, a) :
@@ -1127,7 +1118,7 @@ def foo(x, args) :
 @invoke.register(PrimClasses.freeMemory)
 def foo(x, args) :
     ensureArity(args, 1)
-    ensurePointer(args[0])
+    ensurePointer(args, 0)
     freeMem(fromPointerValue(args[0]))
     return None
 

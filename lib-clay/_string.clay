@@ -1,6 +1,7 @@
 import _core;
 import _char;
 import _vector;
+import _range;
 
 
 //
