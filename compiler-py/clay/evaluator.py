@@ -1038,7 +1038,7 @@ def ensurePointerType(args, i) :
 
 def ensurePointer(args, i) :
     if not isinstance(args[i].type, PointerType) :
-        error("invalid poiner type at argument %d" % (i+1))
+        error("invalid pointer type at argument %d" % (i+1))
 
 @invoke.register(PrimClasses.PointeeType)
 def foo(x, args) :
@@ -1103,31 +1103,56 @@ def foo(x, args) :
 
 @invoke.register(PrimClasses.ArrayTypeP)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), ArrayType))
 
 @invoke.register(PrimClasses.ArrayType)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    t = ensureType(args, 0)
+    ensureInteger(args, 1)
+    n = fromPrimValue(args[1])
+    if n < 0 :
+        error("negative array size")
+    return installTemp(toCOValue(arrayType(t, n)))
 
-@invoke.register(PrimClasses.Array)
-def foo(x, args) :
-    raise NotImplementedError
+def ensureArrayType(args, i) :
+    t = lower(args[i])
+    if not isinstance(t, ArrayType) :
+        error("invalid array type at argument %d" % (i+1))
+    return t
+
+def ensureArray(args, i) :
+    if not isinstance(args[i].type, ArrayType) :
+        error("invalid array type at argument %d" % (i+1))
 
 @invoke.register(PrimClasses.ArrayElementType)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = ensureArrayType(args, 0)
+    return installTemp(toCOValue(t.elementType))
 
 @invoke.register(PrimClasses.ArraySize)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = ensureArrayType(args, 0)
+    return toTempInt(t.size)
 
 @invoke.register(PrimClasses.array)
 def foo(x, args) :
-    raise NotImplementedError
+    cell = Cell("array_element_type")
+    for i, x in enumerate(args) :
+        if not unify(cell, toCOValue(x.type)) :
+            error("type mismatch at argument %d" % (i+1))
+    t = arrayType(toTypeResult(resolvePattern(cell)), len(args))
+    return invoke(t, args)
 
 @invoke.register(PrimClasses.arrayRef)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    ensureArray(args, 0)
+    ensureInteger(args, 1)
+    return arrayElementRef(args[0], fromPrimValue(args[0]))
 
 
 @invoke.register(PrimClasses.TupleTypeP)
