@@ -428,30 +428,30 @@ code_toFloatValue[64] = codegen_toPrimValue(float64Type)
 
 code_ptrToValue = codegen_toPrimValue(pointerType(int8Type))
 
-toPrimValueCode = multimethod("toPrimValueCode")
-toPrimValueCode.register(BoolType)(lambda t : code_toIntValue[8])
-toPrimValueCode.register(IntegerType)(lambda t : code_toIntValue[t.bits])
-toPrimValueCode.register(FloatType)(lambda t : code_toFloatValue[t.bits])
-toPrimValueCode.register(PointerType)(lambda t : code_ptrToValue)
+codeForToPrimValue = multimethod("codeForToPrimValue")
+codeForToPrimValue.register(BoolType)(lambda t : code_toIntValue[8])
+codeForToPrimValue.register(IntegerType)(lambda t : code_toIntValue[t.bits])
+codeForToPrimValue.register(FloatType)(lambda t : code_toFloatValue[t.bits])
+codeForToPrimValue.register(PointerType)(lambda t : code_ptrToValue)
 
-def invoke_toPrimValue(type_, x) :
+def toPrimValue(type_, x) :
     args = [toGenericValue(type_, x)]
     v = allocValue(type_)
     args.append(toGenericValue(pointerType(type_), v.address))
-    llvmExecutionEngine.run_function(toPrimValueCode(type_), args)
+    llvmExecutionEngine.run_function(codeForToPrimValue(type_), args)
     return v
 
-def toBoolValue(x) : return invoke_toPrimValue(boolType, x)
-def toInt8Value(x) : return invoke_toPrimValue(int8Type, x)
-def toInt16Value(x) : return invoke_toPrimValue(int16Type, x)
-def toInt32Value(x) : return invoke_toPrimValue(int32Type, x)
-def toInt64Value(x) : return invoke_toPrimValue(int64Type, x)
-def toUInt8Value(x) : return invoke_toPrimValue(uint8Type, x)
-def toUInt16Value(x) : return invoke_toPrimValue(uint16Type, x)
-def toUInt32Value(x) : return invoke_toPrimValue(uint32Type, x)
-def toUInt64Value(x) : return invoke_toPrimValue(uint64Type, x)
-def toFloat32Value(x) : return invoke_toPrimValue(float32Type, x)
-def toFloat64Value(x) : return invoke_toPrimValue(float64Type, x)
+def toBoolValue(x) : return toPrimValue(boolType, x)
+def toInt8Value(x) : return toPrimValue(int8Type, x)
+def toInt16Value(x) : return toPrimValue(int16Type, x)
+def toInt32Value(x) : return toPrimValue(int32Type, x)
+def toInt64Value(x) : return toPrimValue(int64Type, x)
+def toUInt8Value(x) : return toPrimValue(uint8Type, x)
+def toUInt16Value(x) : return toPrimValue(uint16Type, x)
+def toUInt32Value(x) : return toPrimValue(uint32Type, x)
+def toUInt64Value(x) : return toPrimValue(uint64Type, x)
+def toFloat32Value(x) : return toPrimValue(float32Type, x)
+def toFloat64Value(x) : return toPrimValue(float64Type, x)
 
 def toPointerValue(pointeeType, addr) :
     int8PtrType = pointerType(int8Type)
@@ -511,6 +511,14 @@ def fromFloatValue(v) :
     bits = v.type.bits
     result = llvmExecutionEngine.run_function(code_fromFloatValue[bits], args)
     return result.as_real(llvmType(v.type))
+
+def fromPrimValue(v) :
+    return fromPrimValue2(v.type, v)
+
+fromPrimValue2 = multimethod("fromPrimValue2")
+fromPrimValue2.register(BoolType)(lambda t, v : fromBoolValue(v))
+fromPrimValue2.register(IntegerType)(lambda t, v : fromIntValue(v))
+fromPrimValue2.register(FloatType)(lambda t, v : fromFloatValue(v))
 
 def fromPointerValue(v) :
     ensure(isinstance(v.type, PointerType), "invalid pointer type")

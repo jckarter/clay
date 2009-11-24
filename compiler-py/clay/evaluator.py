@@ -138,6 +138,9 @@ def toTempBool(x) :
 def toTempInt(x) :
     return installTemp(toInt32Value(x))
 
+def toTempPrim(t, x) :
+    return installTemp(toPrimValue(t, x))
+
 
 
 #
@@ -899,64 +902,109 @@ def foo(x, args) :
     ensureArgTypes(args, [compilerObjectType])
     return toTempBool(isinstance(fromCOValue(args[0]), FloatType))
 
+def isNumericType(t) :
+    return isinstance(t, IntegerType) or isinstance(t, FloatType)
+
+def ensureNumericType(args, i) :
+    if not isNumericType(args[i].type) :
+        error("invalid numeric type at argument %d" % (i+1))
+
+def ensureNumericBinaryOp(args) :
+    ensureArity(args, 2)
+    ensureNumericType(args, 0)
+    ensureNumericType(args, 1)
+    if args[0].type != args[1].type :
+        error("argument types don't match")
+    return args[0].type, fromPrimValue(args[0]), fromPrimValue(args[1])
 
 @invoke.register(PrimClasses.numericEqualsP)
 def foo(x, args) :
-    raise NotImplementedError
+    _, a, b = ensureNumericBinaryOp(args)
+    return toTempBool(a == b)
 
 @invoke.register(PrimClasses.numericLesserP)
 def foo(x, args) :
-    raise NotImplementedError
+    _, a, b = ensureNumericBinaryOp(args)
+    return toTempBool(a < b)
 
 @invoke.register(PrimClasses.numericAdd)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureNumericBinaryOp(args)
+    return toTempPrim(t, a + b)
 
 @invoke.register(PrimClasses.numericSubtract)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureNumericBinaryOp(args)
+    return toTempPrim(t, a - b)
 
 @invoke.register(PrimClasses.numericMultiply)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureNumericBinaryOp(args)
+    return toTempPrim(t, a * b)
 
 @invoke.register(PrimClasses.numericDivide)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureNumericBinaryOp(args)
+    return toTempPrim(t, a / b)
 
 @invoke.register(PrimClasses.numericRemainder)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureNumericBinaryOp(args)
+    return toTempPrim(t, a % b)
 
 
 @invoke.register(PrimClasses.numericNegate)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    ensureNumericType(args, 0)
+    return toTempPrim(args[0].type, -fromPrimValue(args[0]))
 
 @invoke.register(PrimClasses.numericConvert)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    ensureNumericType(args, 1)
+    t = toTypeResult(args[0])
+    v = fromPrimValue(args[1])
+    if isinstance(t, IntegerType) :
+        v = int(v)
+    return toTempPrim(t, v)
 
+def ensureIntegerType(args, i) :
+    if not isinstance(args[i].type, IntegerType) :
+        error("invalid integer type at argument %d" % (i+1))
+
+def ensureIntegerBinaryOp(args) :
+    ensureArity(args, 2)
+    ensureIntegerType(args, 0)
+    ensureIntegerType(args, 1)
+    if args[0].type != args[1].type :
+        error("argument types don't match")
+    return args[0].type, fromPrimValue(args[0]), fromPrimValue(args[1])
 
 @invoke.register(PrimClasses.shiftLeft)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureIntegerBinaryOp(args)
+    return toTempPrim(t, a << b)
 
 @invoke.register(PrimClasses.shiftRight)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureIntegerBinaryOp(args)
+    return toTempPrim(t, a >> b)
 
 @invoke.register(PrimClasses.bitwiseAnd)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureIntegerBinaryOp(args)
+    return toTempPrim(t, a & b)
 
 @invoke.register(PrimClasses.bitwiseOr)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureIntegerBinaryOp(args)
+    return toTempPrim(t, a | b)
 
 @invoke.register(PrimClasses.bitwiseXor)
 def foo(x, args) :
-    raise NotImplementedError
+    t, a, b = ensureIntegerBinaryOp(args)
+    return toTempPrim(t, a ^ b)
 
 
 @invoke.register(PrimClasses.VoidTypeP)
