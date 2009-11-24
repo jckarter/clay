@@ -389,6 +389,7 @@ class Procedure(TopLevelItem) :
         check(code, Code)
         self.name = name
         self.code = code
+        self.cache = None
 
 class Overloadable(TopLevelItem) :
     def __init__(self, name) :
@@ -396,6 +397,7 @@ class Overloadable(TopLevelItem) :
         check(name, Identifier)
         self.name = name
         self.overloads = []
+        self.cache = None
 
 class Overload(TopLevelItem) :
     def __init__(self, name, code) :

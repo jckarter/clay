@@ -384,20 +384,94 @@ invoke = multimethod("invoke")
 
 @invoke.register(Procedure)
 def foo(x, args) :
-    result = matchInvokeCode(x.code, args)
-    if isinstance(result, MatchError) :
-        result.signalError()
-    env = result
+    if x.cache is None :
+        x.cache = ProcedureCache(x)
+    env = x.cache.lookup(args)
+    if env is None :
+        result = matchInvokeCode(x.code, args)
+        if isinstance(result, MatchError) :
+            result.signalError()
+        env = result
+        x.cache.add(args, env)
+    env = bindValueArgs(env, args, x.code)
     return evalCodeBody(x.code, env)
+
+class ProcedureCache(object) :
+    def __init__(self, proc) :
+        self.proc = proc
+        self.staticMap = None
+        self.data = {}
+        self.initStaticMap()
+    def initStaticMap(self) :
+        self.staticMap = []
+        for x in self.proc.code.formalArgs :
+            self.staticMap.append(type(x) is StaticArgument)
+    def lookup(self, args) :
+        if len(args) != len(self.staticMap) :
+            return None
+        return self.data.get(self.key(args))
+    def add(self, args, env) :
+        self.data[self.key(args)] = env
+    def key(self, args) :
+        k = []
+        for arg, isStatic in zip(args, self.staticMap) :
+            if isStatic :
+                k.append(lower(arg))
+            else :
+                k.append(arg.type)
+        return tuple(k)
 
 @invoke.register(Overloadable)
 def foo(x, args) :
-    for y in x.overloads :
-        result = matchInvokeCode(y.code, args)
-        if not isinstance(result, MatchError) :
-            env = result
-            return evalCodeBody(y.code, env)
-    error("no matching overload")
+    if x.cache is None :
+        x.cache = OverloadableCache(x.overloads)
+    codeAndEnv = x.cache.lookup(args)
+    if codeAndEnv is None :
+        for y in x.overloads :
+            result = matchInvokeCode(y.code, args)
+            if not isinstance(result, MatchError) :
+                codeAndEnv = (y.code, result)
+                break
+        if codeAndEnv is None :
+            error("no matching overload")
+        x.cache.add(args, codeAndEnv)
+    code, env = codeAndEnv
+    env = bindValueArgs(env, args, code)
+    return evalCodeBody(code, env)
+
+class OverloadableCache(object) :
+    def __init__(self, overloads) :
+        self.overloads = overloads
+        self.arityMap = {}
+        self.data = {}
+        self.initArityMap()
+    def initArityMap(self) :
+        for x in self.overloads :
+            staticMap = []
+            for y in x.code.formalArgs :
+                staticMap.append(type(y) is StaticArgument)
+            z = self.arityMap.get(len(staticMap))
+            if z is None :
+                self.arityMap[len(staticMap)] = staticMap
+            elif z != staticMap :
+                msg = "inconsistency in position of static arguments"
+                withContext(x.code, lambda : error(msg))
+    def lookup(self, args) :
+        n = len(args)
+        staticMap = self.arityMap.get(n)
+        if staticMap is None :
+            return None
+        return self.data.get(self.key(args, staticMap))
+    def add(self, args, entry) :
+        self.data[self.key(args, self.arityMap[len(args)])] = entry
+    def key(self, args, staticMap) :
+        k = []
+        for arg, isStatic in zip(args, staticMap) :
+            if isStatic :
+                k.append(lower(arg))
+            else :
+                k.append(arg.type)
+        return tuple(k)
 
 
 
@@ -437,9 +511,6 @@ def matchInvokeCode(x, args) :
         result = evaluateRootExpr(x.predicate, env2, toBoolResult)
         if not result :
             return PredicateFailure()
-    for arg, farg in zip(args, x.formalArgs) :
-        if type(farg) is ValueArgument :
-            addIdent(env2, farg.name, toReferredValue(arg))
     return env2
 
 matchArg = multimethod("matchArg")
@@ -455,6 +526,14 @@ def foo(farg, env, arg) :
 def foo(farg, env, arg) :
     pattern = evaluatePattern(farg.pattern, env)
     return unify(pattern, arg)
+
+def bindValueArgs(env, args, code) :
+    names, values = [], []
+    for arg, farg in zip(args, code.formalArgs) :
+        if type(farg) is ValueArgument :
+            names.append(farg.name)
+            values.append(toReferredValue(arg))
+    return extendEnv(env, names, values)
 
 
 
