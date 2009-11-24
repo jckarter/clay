@@ -57,6 +57,8 @@ class RecordType(Type) :
         self.record = record
         self.params = params
         self.fieldTypes = None
+        self.fieldNames = None
+        self.fieldNamesMap = None
 
 
 

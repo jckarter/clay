@@ -80,7 +80,6 @@ tuple(v1, ...,vn): tuple type
 tupleFieldRef [T|TupleType?(T)] (a:T, static i)
 
 RecordType?(R:CompilerObject):Bool
-RecordType(R:CompilerObject, v1, ...,vn): CompilerObject
 R[v1, ...,vn]
 RecordElementType(R:CompilerObject, i:Int32):CompilerObject
 RecordFieldCount(R:CompilerObject):Int32

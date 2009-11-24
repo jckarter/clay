@@ -11,7 +11,7 @@ from clay.primitives import *
 #
 
 def recordFieldTypes(type_) :
-    if type_.fieldTypes is None :
+    if type_.fieldTypes is not None :
         return type_.fieldTypes
     r = type_.record
     paramValues = [StaticValue(x) for x in type_.params]
@@ -20,6 +20,20 @@ def recordFieldTypes(type_) :
     types = [evaluateRootExpr(x, env, toTypeResult) for x in typeExprs]
     type_.fieldTypes = types
     return types
+
+def recordFieldNames(type_) :
+    if type_.fieldNames is not None :
+        return type_.fieldNames
+    names = [x.name for x in type_.record.args if type(x) is ValueRecordArg]
+    type_.fieldNames = names
+    return names
+
+def recordFieldNamesMap(type_) :
+    if type_.fieldNamesMap is not None :
+        return type_.fieldNamesMap
+    namesMap = dict([(n.s, i) for i, n in enumerate(recordFieldNames(type_))])
+    type_.fieldNamesMap = namesMap
+    return namesMap
 
 def recordFieldCount(type_) :
     return len(recordFieldTypes(type_))
@@ -1221,35 +1235,80 @@ def foo(x, args) :
 
 @invoke.register(PrimClasses.RecordTypeP)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArgTypes(args, [compilerObjectType])
+    return toTempBool(isinstance(fromCOValue(args[0]), RecordType))
 
-@invoke.register(PrimClasses.RecordType)
-def foo(x, args) :
-    raise NotImplementedError
+def ensureRecordType(args, i) :
+    t = lower(args[i])
+    if not isinstance(t, RecordType) :
+        error("invalid record type at argument %d" % (i+1))
+    return t
+
+def ensureRecord(args, i) :
+    if not isinstance(args[i].type, RecordType) :
+        error("invalid record type at argument %d" % (i+1))
 
 @invoke.register(PrimClasses.RecordElementType)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    t = ensureRecordType(args, 0)
+    ensureInteger(args, 1)
+    i = fromPrimValue(args[1])
+    if (i < 0) or (i >= len(recordFieldTypes(t))) :
+        error("record field index out of range")
+    return installTemp(toCOValue(recordFieldTypes(t)[i]))
 
 @invoke.register(PrimClasses.RecordFieldCount)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 1)
+    t = ensureRecordType(args, 0)
+    return toTempInt(len(recordFieldTypes(t)))
 
 @invoke.register(PrimClasses.RecordFieldOffset)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    t = ensureRecordType(args, 0)
+    ensureInteger(args, 1)
+    i = fromPrimValue(args[1])
+    if (i < 0) or (i >= len(recordFieldTypes(t))) :
+        error("record field index out of range")
+    return toTempInt(recordFieldOffset(t, i))
+
+def ensureIdentifier(args, i) :
+    name = lower(args[i])
+    if not isinstance(name, Identifier) :
+        error("invalid identifier at argument %d" % (i+1))
+    return name
 
 @invoke.register(PrimClasses.RecordFieldIndex)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArgTypes(args, [compilerObjectType, compilerObjectType])
+    t = ensureRecordType(args, 0)
+    name = ensureIdentifier(args, 1)
+    i = recordFieldNamesMap(t).get(name.s)
+    if i is None :
+        error("field not found: %s" % name.s)
+    return toTempInt(i)
 
 @invoke.register(PrimClasses.recordFieldRef)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    ensureRecord(args, 0)
+    ensureInteger(args, 1)
+    i = fromPrimValue(args[1])
+    if (i < 0) or (i >= len(recordFieldTypes(args[0].type))) :
+        error("record field index out of range")
+    return recordFieldRef(args[0], i)
 
 @invoke.register(PrimClasses.recordFieldRefByName)
 def foo(x, args) :
-    raise NotImplementedError
+    ensureArity(args, 2)
+    ensureRecord(args, 0)
+    name = ensureIdentifier(args, 1)
+    i = recordFieldNamesMap(args[0].type).get(name.s)
+    if i is None :
+        error("field not found: %s" % name.s)
+    return recordFieldRef(args[0], i)
 
 
 
