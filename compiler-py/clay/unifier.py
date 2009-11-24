@@ -117,7 +117,7 @@ def derefCell(x) :
             if x.name is not None :
                 contextPop()
     v2 = allocValue(x.value.type)
-    copyValue(v2, x.value.type)
+    copyValue(v2, x.value)
     return v2
 
 resolvePattern = multimethod("resolvePattern")

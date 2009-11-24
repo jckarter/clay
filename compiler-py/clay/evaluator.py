@@ -111,9 +111,7 @@ def installTemp(value) :
     return value
 
 def allocTempValue(type_) :
-    v = allocValue(type_)
-    installTemp(v)
-    return v
+    return installTemp(allocValue(type_))
 
 
 
@@ -172,7 +170,9 @@ def evaluateList(exprList, env) :
     return [evaluate(x, env) for x in exprList]
 
 def evaluate(expr, env, converter=(lambda x : x)) :
-    return withContext(expr, lambda : converter(evaluate2(expr, env)))
+    def inner() :
+        return converter(evaluate2(expr, env))
+    return withContext(expr, inner)
 
 evaluate2 = multimethod("evaluate2")
 
@@ -433,7 +433,7 @@ def matchInvokeCode(x, args) :
     cells = [Cell(y) for y in x.typeVars]
     patternEnv = extendEnv(x.env, x.typeVars, cells)
     for i, arg in enumerate(args) :
-        if not matchArg(arg, x.formalArgs[i], patternEnv) :
+        if not matchArg(x.formalArgs[i], patternEnv, arg) :
             return ArgMismatch(i)
     cellValues = [StaticValue(y) for y in derefCells(cells)]
     env2 = extendEnv(x.env, x.typeVars, cellValues)
@@ -449,14 +449,14 @@ def matchInvokeCode(x, args) :
 matchArg = multimethod("matchArg")
 
 @matchArg.register(ValueArgument)
-def foo(arg, farg, env) :
+def foo(farg, env, arg) :
     if farg.type is None :
         return True
     pattern = evaluatePattern(farg.type, env)
     return unify(pattern, toCOValue(arg.type))
 
 @matchArg.register(StaticArgument)
-def foo(arg, farg, env) :
+def foo(farg, env, arg) :
     pattern = evaluatePattern(farg.pattern, env)
     return unify(pattern, arg)
 
@@ -498,17 +498,17 @@ invokeIndexingPattern = multimethod("invokeIndexingPattern")
 def foo(x, args) :
     return invokeIndexing(x, args)
 
-@invokeIndexingPattern.register(PrimObjects.Pointer)
+@invokeIndexingPattern.register(PrimClasses.Pointer)
 def foo(x, args) :
     ensureArity(args, 1)
     return PointerTypePattern(args[0])
 
-@invokeIndexingPattern.register(PrimObjects.Array)
+@invokeIndexingPattern.register(PrimClasses.Array)
 def foo(x, args) :
     ensureArity(args, 2)
     return ArrayTypePattern(args[0], args[1])
 
-@invokeIndexingPattern.register(PrimObjects.Tuple)
+@invokeIndexingPattern.register(PrimClasses.Tuple)
 def foo(x, args) :
     ensure(len(args) >= 2, "tuple type needs atleast 2 elements")
     return TupleTypePattern(args)
@@ -559,9 +559,10 @@ class ReturnResult(StatementResult) :
         super(ReturnResult, self).__init__()
         self.result = result
     def asFinalResult(self) :
-        if self.result.isOwned :
-            installTemp(self.result)
-        return self.result
+        x = self.result
+        if (x is not None) and x.isOwned :
+            installTemp(x)
+        return x
 
 def evalStatement(x, env) :
     return withContext(x, lambda : evalStatement2(x, env))
@@ -716,7 +717,7 @@ def foo(x, args) :
     cells = [Cell(y) for y in x.typeVars]
     patternEnv = extendEnv(x.env, x.typeVars, cells)
     for i, arg in enumerate(args) :
-        if not matchRecordArg(arg, x.args[i], patternEnv) :
+        if not matchRecordArg(x.args[i], patternEnv, arg) :
             error("mismatch at argument %d" % (i + 1))
     type_ = recordType(x, derefCells(cells))
     v = allocTempValue(type_)
@@ -727,12 +728,12 @@ def foo(x, args) :
 matchRecordArg = multimethod("matchRecordArg")
 
 @matchRecordArg.register(ValueRecordArg)
-def foo(arg, farg, env) :
+def foo(farg, env, arg) :
     pattern = evaluatePattern(farg.type, env)
     return unify(pattern, toCOValue(arg.type))
 
 @matchRecordArg.register(StaticRecordArg)
-def foo(arg, farg, env) :
+def foo(farg, env, arg) :
     pattern = evaluatePattern(farg.pattern, env)
     return unify(pattern, arg)
 
@@ -1274,9 +1275,9 @@ def foo(x, args) :
         error("record field index out of range")
     return toTempInt(recordFieldOffset(t, i))
 
-def ensureIdentifier(args, i) :
+def ensureName(args, i) :
     name = lower(args[i])
-    if not isinstance(name, Identifier) :
+    if not isinstance(name, str) :
         error("invalid identifier at argument %d" % (i+1))
     return name
 
@@ -1284,10 +1285,10 @@ def ensureIdentifier(args, i) :
 def foo(x, args) :
     ensureArgTypes(args, [compilerObjectType, compilerObjectType])
     t = ensureRecordType(args, 0)
-    name = ensureIdentifier(args, 1)
-    i = recordFieldNamesMap(t).get(name.s)
+    name = ensureName(args, 1)
+    i = recordFieldNamesMap(t).get(name)
     if i is None :
-        error("field not found: %s" % name.s)
+        error("field not found: %s" % name)
     return toTempInt(i)
 
 @invoke.register(PrimClasses.recordFieldRef)
@@ -1304,10 +1305,10 @@ def foo(x, args) :
 def foo(x, args) :
     ensureArity(args, 2)
     ensureRecord(args, 0)
-    name = ensureIdentifier(args, 1)
-    i = recordFieldNamesMap(args[0].type).get(name.s)
+    name = ensureName(args, 1)
+    i = recordFieldNamesMap(args[0].type).get(name)
     if i is None :
-        error("field not found: %s" % name.s)
+        error("field not found: %s" % name)
     return recordFieldRef(args[0], i)
 
 

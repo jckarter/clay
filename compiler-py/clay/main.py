@@ -7,6 +7,7 @@ from clay.ast import *
 from clay.env import setModuleSearchPath, loadProgram
 from clay.core import *
 from clay.primitives import *
+from clay.evaluator import *
 
 def initLibrary() :
     base = os.path.split(__file__)[0]
@@ -22,9 +23,12 @@ def mainInner() :
     fileName = sys.argv[1]
     try :
         module = loadProgram(fileName)
-        xprint(module)
+        mainCall = Call(NameRef(Identifier("main")), [])
+        result = evaluateRootExpr(mainCall, module.env, toOwnedValue)
+        print result
     except CompilerError, e :
         e.display()
+        #raise
 
 def main() :
     try :
