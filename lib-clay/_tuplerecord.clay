@@ -4,11 +4,11 @@ import _core;
 // tuples, records
 //
 
-overloadable fieldCount;
+overloadable FieldCount;
 overloadable fieldRef;
 
-overload fieldCount [T|RecordType?(T)] (static T) = recordFieldCount(T);
-overload fieldCount [T|TupleType?(T)] (static T) = tupleFieldCount(T);
+overload FieldCount [T|RecordType?(T)] (static T) = RecordFieldCount(T);
+overload FieldCount [T|TupleType?(T)] (static T) = TupleFieldCount(T);
 
 overload fieldRef [T,i|RecordType?(T)] (a:T, static i) =
     ref recordFieldRef(a, i);
@@ -27,7 +27,7 @@ overload initFields[T,i](a:T, static i) {
     init(fieldRef(a, i));
     initFields(a, static add(i, 1));
 }
-overload initFields [T,i|i == fieldCount(T)] (a:T, static i) {
+overload initFields [T,i|i == FieldCount(T)] (a:T, static i) {
     return;
 }
 
@@ -40,7 +40,7 @@ overload copyFields[T,i](dest:T, src:T, static i) {
     copy(fieldRef(dest, i), fieldRef(src, i));
     copyFields(dest, src, static add(i, 1));
 }
-overload copyFields [T,i|i == fieldCount(T)] (dest:T, src:T, static i) {
+overload copyFields [T,i|i == FieldCount(T)] (dest:T, src:T, static i) {
     return;
 }
 
@@ -53,7 +53,7 @@ overload destroyFields[T,i](a:T, static i) {
     destroy(fieldRef(a, i));
     destroyFields(a, static add(i, 1));
 }
-overload destroyFields [T,i|i == fieldCount(T)] (a:T, static i) {
+overload destroyFields [T,i|i == FieldCount(T)] (a:T, static i) {
     return;
 }
 
@@ -66,7 +66,7 @@ overload equalFields?[T,i](a:T, b:T, static i) {
         return false;
     return equalFields?(a, b, static add(i, 1));
 }
-overload equalFields? [T,i|i == fieldCount(T)] (a:T, b:T, static i) = true;
+overload equalFields? [T,i|i == FieldCount(T)] (a:T, b:T, static i) = true;
 
 overload lesser? [T|RecordOrTuple?(T)] (a:T, b:T)
     = lesserFields?(a, b, static 0);
@@ -79,7 +79,7 @@ overload lesserFields?[T,i](a:T, b:T, static i) {
         return false;
     return lesserFields?(a, b, static add(i, 1));
 }
-overload lesserFields? [T,i|i == fieldCount(T)] (a:T, b:T, static i) = false;
+overload lesserFields? [T,i|i == FieldCount(T)] (a:T, b:T, static i) = false;
 
 overload hash [T|RecordOrTuple?(T)] (a:T) = hashFields(a, static 0);
 
@@ -88,4 +88,4 @@ overload hashFields[T,i](a:T, static i) {
     var curH = hash(fieldRef(a, i));
     return add(curH, hashFields(a, static add(i, 1)));
 }
-overload hashFields [T,i|i == fieldCount(T)] (a:T, static i) = 0;
+overload hashFields [T,i|i == FieldCount(T)] (a:T, static i) = 0;

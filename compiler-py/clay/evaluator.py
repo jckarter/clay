@@ -890,6 +890,17 @@ def foo(x, args) :
     t = ensureType(args, 0)
     return toTempInt(typeSize(t))
 
+@invoke.register(PrimClasses.primitiveCopy)
+def foo(x, args) :
+    ensureArity(args, 2)
+    t = args[0].type
+    if (not isinstance(t, BoolType) and not isinstance(t, IntegerType) and
+        not isinstance(t, FloatType) and not isinstance(t, PointerType)) :
+        error("not a primitive type at argument 0")
+    if t != args[1].type :
+        error("arguments types don't match")
+    copyValue(args[0], args[1])
+    return None
 
 @invoke.register(PrimClasses.BoolTypeP)
 def foo(x, args) :
@@ -1172,7 +1183,7 @@ def foo(x, args) :
     ensureArity(args, 2)
     ensureArray(args, 0)
     ensureInteger(args, 1)
-    return arrayElementRef(args[0], fromPrimValue(args[0]))
+    return arrayElementRef(args[0], fromPrimValue(args[1]))
 
 
 @invoke.register(PrimClasses.TupleTypeP)
@@ -1243,6 +1254,16 @@ def foo(x, args) :
 def foo(x, args) :
     ensureArgTypes(args, [compilerObjectType])
     return toTempBool(isinstance(fromCOValue(args[0]), RecordType))
+
+@invoke.register(PrimClasses.RecordType)
+def foo(x, args) :
+    ensure(len(args) >= 2, "atleast two argument required")
+    r = lower(args[0])
+    ensure(isinstance(r, Record), "invalid record at argument 0")
+    ensureArity(args, 1+len(r.typeVars))
+    params = [toOwnedValue(y) for y in args[1:]]
+    t = recordType(r, params)
+    return installTemp(toCOValue(t))
 
 def ensureRecordType(args, i) :
     t = lower(args[i])

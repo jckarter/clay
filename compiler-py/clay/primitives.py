@@ -49,6 +49,8 @@ def initializePrimitives() :
     primOp("Type?")
     primOp("TypeSize")
 
+    primOp("primitiveCopy")
+
     primOp("BoolType?")
     primOp("boolNot")
     primOp("boolTruth")

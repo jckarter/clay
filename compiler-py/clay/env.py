@@ -209,7 +209,11 @@ initTopLevelItem1 = multimethod("initTopLevelItem1")
 @initTopLevelItem1.register(Record)
 def foo(x, module) :
     x.env = module.env
-    addIdent(module.env, x.name, StaticValue(toCOValue(x)))
+    if len(x.typeVars) == 0 :
+        v = recordType(x, [])
+    else :
+        v = x
+    addIdent(module.env, x.name, StaticValue(toCOValue(v)))
 
 @initTopLevelItem1.register(Procedure)
 def foo(x, module) :

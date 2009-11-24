@@ -458,7 +458,7 @@ def toFloat64Value(x) : return toPrimValue(float64Type, x)
 def toPointerValue(pointeeType, addr) :
     int8PtrType = pointerType(int8Type)
     args = [toGenericValue(pointerType(int8Type), addr)]
-    v = allocValue(pointerType(pointerType))
+    v = allocValue(pointerType(pointeeType))
     args.append(toGenericValue(pointerType(int8PtrType), v.address))
     llvmExecutionEngine.run_function(code_ptrToValue, args)
     return v

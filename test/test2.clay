@@ -2,7 +2,7 @@ import base;
 
 record CustomCompare[T,F](x:T, static F);
 
-overload lesser[T,F](a:CustomCompare[T,F], b:CustomCompare[T,F]) =
+overload lesser?[T,F](a:CustomCompare[T,F], b:CustomCompare[T,F]) =
     F(a.x, b.x);
 
 min(a, b) {
@@ -10,7 +10,7 @@ min(a, b) {
     returnref b;
 }
 
-myLesser(a, b) = lesser(a, b);
+myLesser(a, b) = lesser?(a, b);
 
 main() {
     var a = CustomCompare(10, myLesser);

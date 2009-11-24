@@ -34,7 +34,7 @@ BiggerNumericType(A, B) {
         if (Integer?(B))
             return A;
         if (FloatingPoint?(B)) {
-            if (typeSize(A) > typeSize(B))
+            if (TypeSize(A) > TypeSize(B))
                 return A;
             else
                 return B;
@@ -42,9 +42,9 @@ BiggerNumericType(A, B) {
     }
     else if (Integer?(A)) {
         if (Integer?(B)) {
-            if (typeSize(A) > typeSize(B))
+            if (TypeSize(A) > TypeSize(B))
                 return A;
-            if (typeSize(B) > typeSize(A))
+            if (TypeSize(B) > TypeSize(A))
                 return B;
             if (UnsignedInteger?(A))
                 return A;

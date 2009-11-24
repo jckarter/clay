@@ -28,7 +28,7 @@ def mainInner() :
         xprint(result)
     except CompilerError, e :
         e.display()
-        #raise
+        raise
 
 def main() :
     try :

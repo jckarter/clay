@@ -10,8 +10,8 @@ overload copy[T](dest:Pointer[T], src:Pointer[T]) {
     primitiveCopy(dest, src);
 }
 
-overload to [I,T|Integer?(I)] (static I, a:Pointer[T]) = pointerToInt(a, I);
-overload to [I,T|Integer?(I)] (static Pointer[T], a:I) = intToPointer(a, T);
+overload to [I,T|Integer?(I)] (static I, a:Pointer[T]) = pointerToInt(I, a);
+overload to [I,T|Integer?(I)] (static Pointer[T], a:I) = intToPointer(T, a);
 
 pointerToNativeInt[T](a:Pointer[T]) = to(Int32, a);
 nativeIntToPointer[T](a:Int32) = to(Pointer[T], a);
@@ -26,13 +26,13 @@ overload lesser?[T](a:Pointer[T], b:Pointer[T]) {
 overload hash[T](a:Pointer[T]) = pointerToNativeInt(a);
 
 overload add [T,I|Integer?(I)] (p:Pointer[T], i:I) {
-    return to(Pointer[T], pointerToNativeInt(p) + i*typeSize(T));
+    return to(Pointer[T], pointerToNativeInt(p) + i*TypeSize(T));
 }
 overload subtract [T,I|Integer?(I)] (p:Pointer[T], i:I) {
-    return to(Pointer[T], pointerToNativeInt(p) - i*typeSize(T));
+    return to(Pointer[T], pointerToNativeInt(p) - i*TypeSize(T));
 }
 overload subtract[T](a:Pointer[T], b:Pointer[T]) {
-    return (pointerToNativeInt(a) - pointerToNativeInt(b)) / typeSize(T);
+    return (pointerToNativeInt(a) - pointerToNativeInt(b)) / TypeSize(T);
 }
 
 overload inc[T](a:Pointer[T]) {
