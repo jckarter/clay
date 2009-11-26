@@ -24,7 +24,7 @@ def mainInner() :
     try :
         module = loadProgram(fileName)
         mainCall = Call(NameRef(Identifier("main")), [])
-        result = evaluateRootExpr(mainCall, module.env, toOwnedValue)
+        result = evaluateRootExpr(mainCall, module.env, toTemporary)
         xprint(result)
     except CompilerError, e :
         e.display()

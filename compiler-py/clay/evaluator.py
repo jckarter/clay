@@ -112,12 +112,12 @@ def allocTempValue(type_) :
 
 
 #
-# toOwnedValue, toReferredValue
+# toTemporary, toReference
 #
 
-toOwnedValue = multimethod("toOwnedValue")
+toTemporary = multimethod("toTemporary")
 
-@toOwnedValue.register(Value)
+@toTemporary.register(Value)
 def foo(v) :
     if not v.isOwned :
         v2 = allocTempValue(v.type)
@@ -125,9 +125,9 @@ def foo(v) :
         return v2
     return v
 
-toReferredValue = multimethod("toReferredValue")
+toReference = multimethod("toReference")
 
-@toReferredValue.register(Value)
+@toReference.register(Value)
 def foo(x) :
     return Value(x.type, False, x.address)
 
@@ -223,7 +223,7 @@ def foo(x, env) :
         copyValue(v2, v.value)
         return v2
     ensure(type(v) is Value, "invalid value")
-    return toReferredValue(v)
+    return toReference(v)
 
 @evaluate2.register(Tuple)
 def foo(x, env) :
@@ -298,7 +298,7 @@ def foo(x, env) :
 
 @evaluate2.register(StaticExpr)
 def foo(x, env) :
-    return evaluate(x.expr, env, toOwnedValue)
+    return evaluate(x.expr, env, toTemporary)
 
 @evaluate2.register(SCExpression)
 def foo(x, env) :
@@ -532,7 +532,7 @@ def bindValueArgs(env, args, code) :
     for arg, farg in zip(args, code.formalArgs) :
         if type(farg) is ValueArgument :
             names.append(farg.name)
-            values.append(toReferredValue(arg))
+            values.append(toReference(arg))
     return extendEnv(env, names, values)
 
 
@@ -552,14 +552,14 @@ evaluatePattern2 = multimethod("evaluatePattern2")
 
 @evaluatePattern2.register(object)
 def foo(x, env) :
-    return evaluate(x, env, toOwnedValue)
+    return evaluate(x, env, toTemporary)
 
 @evaluatePattern2.register(NameRef)
 def foo(x, env) :
     v = lookupIdent(env, x.name)
     if type(v) is Cell :
         return v
-    return evaluate(x, env, toOwnedValue)
+    return evaluate(x, env, toTemporary)
 
 @evaluatePattern2.register(Indexing)
 def foo(x, env) :
@@ -681,7 +681,7 @@ evalBinding = multimethod("evalBinding")
 
 @evalBinding.register(VarBinding)
 def foo(x, env) :
-    right = evaluateRootExpr(x.expr, env, toOwnedValue)
+    right = evaluateRootExpr(x.expr, env, toTemporary)
     return extendEnv(env, [x.name], [right])
 
 @evalBinding.register(RefBinding)
@@ -691,7 +691,7 @@ def foo(x, env) :
 
 @evalBinding.register(StaticBinding)
 def foo(x, env) :
-    right = evaluateRootExpr(x.expr, env, toOwnedValue)
+    right = evaluateRootExpr(x.expr, env, toTemporary)
     return extendEnv(env, [x.name], [StaticValue(right)])
 
 
@@ -714,7 +714,7 @@ def foo(x, env) :
 def foo(x, env) :
     if x.expr is None :
         return ReturnResult(None)
-    result = evaluateRootExpr(x.expr, env, toOwnedValue)
+    result = evaluateRootExpr(x.expr, env, toTemporary)
     return ReturnResult(result)
 
 @evalStatement2.register(ReturnRef)
@@ -1331,7 +1331,7 @@ def foo(x, args) :
     r = lower(args[0])
     ensure(isinstance(r, Record), "invalid record at argument 0")
     ensureArity(args, 1+len(r.typeVars))
-    params = [toOwnedValue(y) for y in args[1:]]
+    params = [toTemporary(y) for y in args[1:]]
     t = recordType(r, params)
     return installTemp(toCOValue(t))
 
