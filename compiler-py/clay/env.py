@@ -209,7 +209,7 @@ initTopLevelItem1 = multimethod("initTopLevelItem1")
 @initTopLevelItem1.register(Record)
 def foo(x, module) :
     x.env = module.env
-    if len(x.typeVars) == 0 :
+    if len(x.patternVars) == 0 :
         v = recordType(x, [])
     else :
         v = x

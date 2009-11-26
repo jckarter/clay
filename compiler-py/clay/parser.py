@@ -256,10 +256,10 @@ statement = choice(block, labelDef, varBinding, refBinding, staticBinding,
 identifierList = listOf(identifier, comma)
 predicate = modify(sequence(symbol("|"), expression),
                    lambda x : x[1])
-typeVarsAndPredicate = modify(sequence(symbol("["), identifierList,
-                                       optional(predicate), symbol("]")),
-                              lambda x : (x[1], x[2]))
-optTypeVarsAndPredicate = modify(optional(typeVarsAndPredicate),
+patternVarsAndPredicate = modify(sequence(symbol("["), identifierList,
+                                          optional(predicate), symbol("]")),
+                                 lambda x : (x[1], x[2]))
+optTypeVarsAndPredicate = modify(optional(patternVarsAndPredicate),
                                  lambda x : ([], None) if x is None else x)
 
 valueArgument = astNode(sequence(identifier, optTypeSpec),
@@ -287,9 +287,9 @@ code = astNode(sequence(optTypeVarsAndPredicate, symbol("("), formalArguments,
 # top level items
 #
 
-typeVars = modify(sequence(symbol("["), identifierList, symbol("]")),
-                  lambda x : x[1])
-optTypeVars = modify(optional(typeVars), lambda x : [] if x is None else x)
+patternVars = modify(sequence(symbol("["), identifierList, symbol("]")),
+                     lambda x : x[1])
+optTypeVars = modify(optional(patternVars), lambda x : [] if x is None else x)
 
 valueRecordArg = astNode(sequence(identifier, typeSpec),
                          lambda x : ValueRecordArg(x[0], x[1]))

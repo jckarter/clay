@@ -16,7 +16,7 @@ def recordFieldTypes(type_) :
         return type_.fieldTypes
     r = type_.record
     paramValues = [StaticValue(x) for x in type_.params]
-    env = extendEnv(r.env, r.typeVars, paramValues)
+    env = extendEnv(r.env, r.patternVars, paramValues)
     typeExprs = [x.type for x in r.args if type(x) is ValueRecordArg]
     types = [evaluateRootExpr(x, env, toTypeResult) for x in typeExprs]
     type_.fieldTypes = types
@@ -500,13 +500,13 @@ class PredicateFailure(MatchError) :
 def matchInvokeCode(x, args) :
     if len(args) != len(x.formalArgs) :
         return ArgCountError()
-    cells = [Cell(y) for y in x.typeVars]
-    patternEnv = extendEnv(x.env, x.typeVars, cells)
+    cells = [Cell(y) for y in x.patternVars]
+    patternEnv = extendEnv(x.env, x.patternVars, cells)
     for i, arg in enumerate(args) :
         if not matchArg(x.formalArgs[i], patternEnv, arg) :
             return ArgMismatch(i)
     cellValues = [StaticValue(y) for y in derefCells(cells)]
-    env2 = extendEnv(x.env, x.typeVars, cellValues)
+    env2 = extendEnv(x.env, x.patternVars, cellValues)
     if x.predicate is not None :
         result = evaluateRootExpr(x.predicate, env2, toBoolResult)
         if not result :
@@ -590,7 +590,7 @@ def foo(x, args) :
 
 @invokeIndexingPattern.register(Record)
 def foo(x, args) :
-    ensureArity(args, len(x.typeVars))
+    ensureArity(args, len(x.patternVars))
     return RecordTypePattern(x, args)
 
 
@@ -789,8 +789,8 @@ def convertForStatement(x) :
 @invoke.register(Record)
 def foo(x, args) :
     ensureArity(args, len(x.args))
-    cells = [Cell(y) for y in x.typeVars]
-    patternEnv = extendEnv(x.env, x.typeVars, cells)
+    cells = [Cell(y) for y in x.patternVars]
+    patternEnv = extendEnv(x.env, x.patternVars, cells)
     for i, arg in enumerate(args) :
         if not matchRecordArg(x.args[i], patternEnv, arg) :
             error("mismatch at argument %d" % (i + 1))
@@ -1330,7 +1330,7 @@ def foo(x, args) :
     ensure(len(args) >= 2, "atleast two argument required")
     r = lower(args[0])
     ensure(isinstance(r, Record), "invalid record at argument 0")
-    ensureArity(args, 1+len(r.typeVars))
+    ensureArity(args, 1+len(r.patternVars))
     params = [toTemporary(y) for y in args[1:]]
     t = recordType(r, params)
     return installTemp(toCOValue(t))

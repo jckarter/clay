@@ -73,7 +73,7 @@ r(For, lambda x : xo("For", x.variable, x.expr, x.body))
 # Code
 #
 
-r(Code, lambda x : xo("Code", x.typeVars, xf("when",x.predicate),
+r(Code, lambda x : xo("Code", x.patternVars, xf("when",x.predicate),
                       tuple(x.formalArgs), x.body))
 r(ValueArgument, lambda x : xo("ValueArgument", x.name, x.type))
 r(StaticArgument, lambda x : xo("StaticArgument", x.pattern))
@@ -84,7 +84,7 @@ r(StaticArgument, lambda x : xo("StaticArgument", x.pattern))
 # TopLevelItem
 #
 
-r(Record, lambda x : xo("Record", x.name, x.typeVars, *x.args))
+r(Record, lambda x : xo("Record", x.name, x.patternVars, *x.args))
 r(ValueRecordArg, lambda x : xo("ValueRecordArg", x.name, x.type))
 r(StaticRecordArg, lambda x : xo("StaticRecordArg", x.pattern))
 r(Procedure, lambda x : xo("Procedure", x.name, x.code))

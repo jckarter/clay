@@ -316,13 +316,13 @@ class For(Statement) :
 #
 
 class Code(ASTNode) :
-    def __init__(self, typeVars, predicate, formalArgs, body) :
+    def __init__(self, patternVars, predicate, formalArgs, body) :
         super(Code, self).__init__()
-        checkList(typeVars, Identifier)
+        checkList(patternVars, Identifier)
         check2(predicate, Expression)
         checkList(formalArgs, FormalArgument)
         check(body, Statement)
-        self.typeVars = typeVars
+        self.patternVars = patternVars
         self.predicate = predicate
         self.formalArgs = formalArgs
         self.body = body
@@ -355,13 +355,13 @@ class TopLevelItem(ASTNode) :
     pass
 
 class Record(TopLevelItem) :
-    def __init__(self, name, typeVars, args) :
+    def __init__(self, name, patternVars, args) :
         super(Record, self).__init__()
         check(name, Identifier)
-        checkList(typeVars, Identifier)
+        checkList(patternVars, Identifier)
         checkList(args, RecordArg)
         self.name = name
-        self.typeVars = typeVars
+        self.patternVars = patternVars
         self.args = args
         self.env = None
 
