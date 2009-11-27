@@ -168,10 +168,7 @@ orExprTail = astNode(sequence(keyword("or"), andExpr),
 orExpr = modify(sequence(andExpr, zeroPlus(orExprTail)),
                 lambda x : foldBinaryOps(x[0], x[1]))
 
-staticExpr = astNode(sequence(keyword("static"), orExpr),
-                     lambda x : StaticExpr(x[1]))
-
-expression = choice(staticExpr, orExpr)
+expression = orExpr
 
 
 #

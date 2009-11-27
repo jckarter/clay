@@ -41,8 +41,6 @@ r(NotExpr, lambda x : xo("NotExpr", x.expr))
 r(AndExpr, lambda x : xo("AndExpr", x.expr1, x.expr2))
 r(OrExpr, lambda x : xo("OrExpr", x.expr1, x.expr2))
 
-r(StaticExpr, lambda x : xo("StaticExpr", x.expr))
-
 
 
 #

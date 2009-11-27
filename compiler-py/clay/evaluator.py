@@ -296,10 +296,6 @@ def foo(x, env) :
         return v1
     return evaluate(x.expr2, env)
 
-@evaluate2.register(StaticExpr)
-def foo(x, env) :
-    return evaluate(x.expr, env, toTemporary)
-
 @evaluate2.register(SCExpression)
 def foo(x, env) :
     return evaluate(x.expr, x.env)

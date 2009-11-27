@@ -5,7 +5,6 @@ __all__ = [
     "NameRef", "Tuple", "Array", "Indexing", "Call", "FieldRef", "TupleRef",
     "Dereference", "AddressOf",
     "UnaryOpExpr", "BinaryOpExpr", "NotExpr", "AndExpr", "OrExpr",
-    "StaticExpr",
     "Statement", "Block", "Label",
     "VarBinding", "RefBinding", "StaticBinding",
     "Assignment", "Goto", "Return", "ReturnRef", "IfStatement",
@@ -189,12 +188,6 @@ class OrExpr(Expression) :
         check(expr2, Expression)
         self.expr1 = expr1
         self.expr2 = expr2
-
-class StaticExpr(Expression) :
-    def __init__(self, expr) :
-        super(StaticExpr, self).__init__()
-        check(expr, Expression)
-        self.expr = expr
 
 
 

@@ -88,10 +88,7 @@ ForStatement -> "for" "(" Identifier "in" Expression ")" Statement
 
 TypeExpr -> Expression
 
-Expression -> StaticExpr
-            | OrExpr
-
-StaticExpr -> "static" OrExpr
+Expression -> OrExpr
 
 OrExpr -> AndExpr ("or" AndExpr)*
 AndExpr -> NotExpr ("and" NotExpr)*
