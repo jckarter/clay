@@ -6,12 +6,11 @@ Export -> "export" DottedName ";"
 DottedName -> Identifier ("." Identifier)*
 
 
-TopLevelItem -> RecordDef | GlobalBinding | ProcedureDef
-              | OverloadableDef | OverloadDef
+TopLevelItem -> Record | Procedure | Overloadable | Overload
               | ExternalProcedure
 
-RecordDef -> "record" Identifier TypeVars? "("
-             comma_list(RecordArg)? ")" ";"
+Record -> "record" Identifier PatternVars? "("
+          comma_list(RecordArg)? ")" ";"
 
 RecordArg -> ValueRecordArg
            | StaticRecordArg
@@ -19,32 +18,29 @@ RecordArg -> ValueRecordArg
 ValueRecordArg -> Identifier TypeSpec
 StaticRecordArg -> "static" Expression
 
-TypeVars -> "[" comma_list(Identifier) "]"
+PatternVars -> "[" comma_list(Identifier) "]"
 TypeSpec -> ":" TypeExpr
 
-GlobalBinding -> "var" Variable "=" Expression ";"
+Procedure -> Identifier Code
 
-Variable -> Identifier TypeSpec?
+Code -> PatternVarsWithCond? "(" comma_list(Argument)? ")" Body
 
-ProcedureDef -> Identifier Procedure
-
-Procedure -> TypeVars? "(" comma_list(Argument)? ")"
-             "ref"? TypeSpec? Predicate? Body
+PatternVarsWithCond -> "[" comma_list(Identifier) Predicate? "]"
+Predicate -> "|" Expression
 
 Argument -> ValueArgument
           | StaticArgument
 
-ValueArgument -> Variable
+ValueArgument -> Identifier TypeSpec?
 StaticArgument -> "static" Expression
 
-Predicate -> "if" "(" Expression ")"
-
 Body -> "=" Expression ";"
+      | "=" "ref" Expression ";"
       | Block
 
-OverloadableDef -> "overloadable" Identifier ";"
+Overloadable -> "overloadable" Identifier ";"
 
-OverloadDef -> "overload" DottedName Procedure
+Overload -> "overload" DottedName Code
 
 ExternalProcedure -> "external" Identifier "(" comma_list(ExternalArg)? ")"
                      TypeSpec ";"
@@ -69,8 +65,8 @@ Statement -> Block
 
 LabelDef -> Identifier ":"
 
-VarBinding -> "var" Variable "=" Expression ";"
-RefBinding -> "ref" Variable "=" Expression ";"
+VarBinding -> "var" Identifier "=" Expression ";"
+RefBinding -> "ref" Identifier "=" Expression ";"
 StaticBinding -> "static" Identifier "=" Expression ";"
 
 Assignment -> Expression "=" Expression ";"
