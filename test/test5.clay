@@ -6,7 +6,11 @@ overload foo(x) = 0;
 overload foo(t:CompilerObject) = 1;
 overload foo(x:Int32) = 2;
 
+record Foo(x:CompilerObject);
+
 main() {
     var v = true;
+    var f = Foo(Int32);
+    var g = f;
     return foo(v) + 10*foo(Int32) + 100*foo(10);
 }

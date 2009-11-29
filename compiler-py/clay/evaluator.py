@@ -61,6 +61,34 @@ def foo(t) :
     typeHandle.type.refine(recType)
     return typeHandle.type
 
+def recordInit(a) :
+    for x in recordFieldRefs(a) :
+        initValue(x)
+
+def recordDestroy(a) :
+    for x in recordFieldRefs(a) :
+        destroyValue(x)
+
+def recordCopy(dest, src) :
+    for x, y in zip(recordFieldRefs(dest), recordFieldRefs(src)) :
+        copyValue(x, y)
+
+def recordAssign(dest, src) :
+    for x, y in zip(recordFieldRefs(dest), recordFieldRefs(src)) :
+        assignValue(x, y)
+
+def recordEquals(a, b) :
+    for x, y in zip(recordFieldRefs(a), recordFieldRefs(b)) :
+        if not equalValues(x, y) :
+            return False
+    return True
+
+def recordHash(a) :
+    h = 0
+    for x in recordFieldRefs(a) :
+        h += hashValue(x)
+    return h
+
 @initValue2.register(RecordType)
 def foo(t, v) :
     invoke(coreValue("init"), [v])
@@ -956,17 +984,37 @@ def foo(x, args) :
     t = ensureType(args, 0)
     return toTempInt(typeSize(t))
 
+
+@invoke.register(PrimClasses.primitiveInit)
+def foo(x, args) :
+    ensureArity(args, 1)
+    initValue(args[0])
+
+@invoke.register(PrimClasses.primitiveDestroy)
+def foo(x, args) :
+    ensureArity(args, 1)
+    destroyValue(args[0])
+
 @invoke.register(PrimClasses.primitiveCopy)
 def foo(x, args) :
     ensureArity(args, 2)
-    t = args[0].type
-    if (not isinstance(t, BoolType) and not isinstance(t, IntegerType) and
-        not isinstance(t, FloatType) and not isinstance(t, PointerType)) :
-        error("not a primitive type at argument 0")
-    if t != args[1].type :
-        error("arguments types don't match")
     copyValue(args[0], args[1])
-    return None
+
+@invoke.register(PrimClasses.primitiveAssign)
+def foo(x, args) :
+    ensureArity(args, 2)
+    assignValue(args[0], args[1])
+
+@invoke.register(PrimClasses.primitiveEqualsP)
+def foo(x, args) :
+    ensureArity(args, 2)
+    return toTempBool(equalValues(args[0], args[1]))
+
+@invoke.register(PrimClasses.primitiveHash)
+def foo(x, args) :
+    ensureArity(args, 1)
+    return toTempInt(hashValue(args[0]))
+
 
 @invoke.register(PrimClasses.BoolTypeP)
 def foo(x, args) :
@@ -1109,6 +1157,7 @@ def foo(x, args) :
 def foo(x, args) :
     ensureArgTypes(args, [compilerObjectType])
     return toTempBool(isinstance(fromCOValue(args[0]), VoidType))
+
 
 @invoke.register(PrimClasses.CompilerObjectTypeP)
 def foo(x, args) :
@@ -1402,6 +1451,36 @@ def foo(x, args) :
     if i is None :
         error("field not found: %s" % name)
     return recordFieldRef(args[0], i)
+
+@invoke.register(PrimClasses.recordInit)
+def foo(x, args) :
+    ensureArity(args, 1)
+    recordInit(args[0])
+
+@invoke.register(PrimClasses.recordDestroy)
+def foo(x, args) :
+    ensureArity(args, 1)
+    recordDestroy(args[0])
+
+@invoke.register(PrimClasses.recordCopy)
+def foo(x, args) :
+    ensureArity(args, 2)
+    recordCopy(args[0], args[1])
+
+@invoke.register(PrimClasses.recordAssign)
+def foo(x, args) :
+    ensureArity(args, 2)
+    recordAssign(args[0], args[1])
+
+@invoke.register(PrimClasses.recordEqualsP)
+def foo(x, args) :
+    ensureArity(args, 2)
+    return toTempBool(recordEquals(args[0], args[1]))
+
+@invoke.register(PrimClasses.recordHash)
+def foo(x, args) :
+    ensureArity(args, 1)
+    return toTempInt(recordHash(args[0]))
 
 
 

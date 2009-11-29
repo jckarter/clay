@@ -42,6 +42,9 @@ overload dec[T](c:ArrayCoordinate[T]) {
     dec(c.ptr);
 }
 
+overload lesser?[T](a:ArrayCoordinate[T], b:ArrayCoordinate[T])
+    = a.ptr < b.ptr;
+
 
 //
 // array iteration
@@ -51,51 +54,44 @@ overload iterator[T,n](a:Array[T,n]) = CoordinateRange(begin(a), end(a));
 
 
 //
-// init, copy, destroy, equals, lesser, hash
+// init, copy, destroy, equals, hash
 //
 
 overload init[T,n](a:Array[T,n]) {
-    for (x in a)
-        init(x);
+    // for (x in a)
+    //     init(x);
+    primitiveInit(a);
 }
 
 overload copy[T,n](dest:Array[T,n], src:Array[T,n]) {
-    ref d = iterator(dest);
-    ref s = iterator(src);
-    while (hasNext?(s))
-        copy(next(d), next(s));
+    // ref d = iterator(dest);
+    // ref s = iterator(src);
+    // while (hasNext?(s))
+    //     copy(next(d), next(s));
+    primitiveCopy(dest, src);
 }
 
 overload destroy[T,n](a:Array[T,n]) {
-    for (x in a)
-        destroy(x);
+    // for (x in a)
+    //     destroy(x);
+    primitiveDestroy(a);
 }
 
 overload equals?[T,n](a:Array[T,n], b:Array[T,n]) {
-    ref i = iterator(a);
-    ref j = iterator(b);
-    while (hasNext?(i)) {
-        if (next(i) != next(j))
-            return false;
-    }
-    return true;
-}
-
-overload lesser?[T,n](a:Array[T,n], b:Array[T,n]) {
-    ref i = iterator(a);
-    ref j = iterator(b);
-    while (hasNext?(i)) {
-        ref x = next(i);
-        ref y = next(j);
-        if (x < y) return true;
-        if (y < x) return false;
-    }
-    return false;
+    // ref i = iterator(a);
+    // ref j = iterator(b);
+    // while (hasNext?(i)) {
+    //     if (next(i) != next(j))
+    //         return false;
+    // }
+    // return true;
+    return primitiveEquals?(a, b);
 }
 
 overload hash[T,n](a:Array[T,n]) {
-    var h = 0;
-    for (x in a)
-        h = h + hash(x);
-    return h;
+    // var h = 0;
+    // for (x in a)
+    //     h = h + hash(x);
+    // return h;
+    return primitiveHash(a);
 }

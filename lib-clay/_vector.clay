@@ -61,6 +61,9 @@ overload dec[T](c:VectorCoordinate[T]) {
     dec(c.ptr);
 }
 
+overload lesser?[T](a:VectorCoordinate[T], b:VectorCoordinate[T])
+    = a.ptr < b.ptr;
+
 
 //
 // vector iteration
@@ -110,20 +113,6 @@ overload equals?[T](a:Vector[T], b:Vector[T]) {
             return false;
     }
     return true;
-}
-
-overload lesser?[T](a:Vector[T], b:Vector[T]) {
-    ref i = iterator(a);
-    ref j = iterator(b);
-    while (hasNext?(i)) {
-        if (not hasNext?(j))
-            return false;
-        ref x = next(i);
-        ref y = next(j);
-        if (x < y) return true;
-        if (y < x) return false;
-    }
-    return hasNext?(j);
 }
 
 overload hash[T](a:Vector[T]) {

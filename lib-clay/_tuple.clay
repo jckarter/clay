@@ -1,0 +1,25 @@
+import _core;
+
+overload init [T|TupleType?(T)] (a:T) {
+    primitiveInit(a);
+}
+
+overload destroy [T|TupleType?(T)] (a:T) {
+    primitiveDestroy(a);
+}
+
+overload copy [T|TupleType?(T)] (dest:T, src:T) {
+    primitiveCopy(dest, src);
+}
+
+overload assign [T|TupleType?(T)] (dest:T, src:T) {
+    primitiveAssign(dest, src);
+}
+
+overload equals? [T|TupleType?(T)] (a:T, b:T) {
+    return primitiveEquals?(a, b);
+}
+
+overload hash [T|TupleType?(T)] (a:T) {
+    return primitiveHash(a);
+}

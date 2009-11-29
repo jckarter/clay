@@ -1,0 +1,25 @@
+import _core;
+
+overload init [T|RecordType?(T)] (a:T) {
+    recordInit(a);
+}
+
+overload destroy [T|RecordType?(T)] (a:T) {
+    recordDestroy(a);
+}
+
+overload copy [T|RecordType?(T)] (dest:T, src:T) {
+    recordCopy(dest, src);
+}
+
+overload assign [T|RecordType?(T)] (dest:T, src:T) {
+    recordAssign(dest, src);
+}
+
+overload equals? [T|RecordType?(T)] (a:T, b:T) {
+    return recordEquals?(a, b);
+}
+
+overload hash [T|RecordType?(T)] (a:T) {
+    return recordHash(a);
+}

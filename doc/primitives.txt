@@ -11,7 +11,12 @@ Primitive Operations
 Type?(T:CompilerObject):Bool
 TypeSize(T:CompilerObject):Int32
 
+primitiveInit[T](a:T):Void
+primitiveDestroy[T](a:T):Void
 primitiveCopy[T](dest:T, src:T):Void
+primitiveAssign[T](dest:T, src:T):Void
+primitiveEquals?[T](a:T, b:T):Bool
+primitiveHash[T](a:T):Int32
 
 BoolType?(T:CompilerObject):Bool
 boolNot(a:Bool):Bool
@@ -90,3 +95,9 @@ RecordFieldOffset(R:CompilerObject, i:Int32): Int32
 RecordFieldIndex(R:CompilerObject, name:CompilerObject): Int32
 recordFieldRef [R|RecordType?(R)] (a:R, static i)
 recordFieldRefByName [R|RecordType?(R)] (a:R, static name)
+recordInit [R|RecordType?(R)] (a:R) :Void
+recordDestroy [R|RecordType?(R)] (a:R) :Void
+recordCopy [R|RecordType?(R)] (dest:R, src:R) :Void
+recordAssign [R|RecordType?(R)] (dest:R, src:R) :Void
+recordEquals? [R|RecordType?(R)] (a:R, b:R) :Bool
+recordHash [R|RecordType?(R)] (a:R) :Int32

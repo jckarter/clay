@@ -49,7 +49,12 @@ def initializePrimitives() :
     primOp("Type?")
     primOp("TypeSize")
 
+    primOp("primitiveInit")
+    primOp("primitiveDestroy")
     primOp("primitiveCopy")
+    primOp("primitiveAssign")
+    primOp("primitiveEquals?")
+    primOp("primitiveHash")
 
     primOp("BoolType?")
     primOp("boolNot")
@@ -78,6 +83,7 @@ def initializePrimitives() :
     primOp("bitwiseXor")
 
     primOp("VoidType?")
+
     primOp("CompilerObjectType?")
 
     primOp("PointerType?")
@@ -118,6 +124,12 @@ def initializePrimitives() :
     primOp("RecordFieldIndex")
     primOp("recordFieldRef")
     primOp("recordFieldRefByName")
+    primOp("recordInit")
+    primOp("recordDestroy")
+    primOp("recordCopy")
+    primOp("recordAssign")
+    primOp("recordEquals?")
+    primOp("recordHash")
 
     global PrimClasses, PrimObjects
     PrimClasses = type("PrimClasses", (object,), primClasses)
