@@ -1,3 +1,3 @@
 #!/bin/sh
-export PYTHONPATH=$(dirname $0)/compiler-py:$PYTHONPATH
-python -u $(dirname $0)/compiler-py/clay/main.py $*
+export PYTHONPATH=$(dirname $0)/evaluator-py:$PYTHONPATH
+python -u $(dirname $0)/evaluator-py/clay/main.py $*
