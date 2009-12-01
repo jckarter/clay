@@ -701,7 +701,7 @@ struct Module : public ANode {
 
 
 //
-// error reporting
+// error
 //
 
 void pushLocation(LocationPtr location);
@@ -724,10 +724,10 @@ void error(const string &msg);
 
 
 //
-// load source
+// util
 //
 
-SourcePtr loadSource(const string &fileName);
+SourcePtr loadFile(const string &fileName);
 
 
 

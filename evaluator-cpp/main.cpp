@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "usage: %s <clayfile>\n", argv[0]);
         return -1;
     }
-    SourcePtr source = loadSource(argv[1]);
+    SourcePtr source = loadFile(argv[1]);
     vector<TokenPtr> tokens;
     tokenize(source, tokens);
     vector<TokenPtr>::iterator i, end;

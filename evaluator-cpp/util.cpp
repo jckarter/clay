@@ -4,7 +4,7 @@
 
 using namespace std;
 
-SourcePtr loadSource(const string &fileName) {
+SourcePtr loadFile(const string &fileName) {
     FILE *f = fopen(fileName.c_str(), "rb");
     if (!f)
         error("unable to open file: " + fileName);
