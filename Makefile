@@ -2,6 +2,8 @@
 	g++ -MMD -Wall -g -c -o $@ $<
 
 OBJS = \
+	evaluator-cpp/error.o \
+	evaluator-cpp/source.o \
 	evaluator-cpp/main.o
 
 clayc : $(OBJS)

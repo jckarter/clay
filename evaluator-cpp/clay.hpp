@@ -699,4 +699,35 @@ struct Module : public ANode {
 };
 
 
+
+//
+// error
+//
+
+void pushLocation(LocationPtr location);
+void popLocation();
+
+struct LocationPusher {
+    LocationPusher(LocationPtr location)  {
+        pushLocation(location);
+    }
+    ~LocationPusher() {
+        popLocation();
+    }
+private :
+    LocationPusher(const LocationPusher &) {}
+    void operator=(const LocationPusher &) {}
+};
+
+void error(const string &msg);
+
+
+
+//
+// Source
+//
+
+SourcePtr loadSource(const string &fileName);
+
+
 #endif

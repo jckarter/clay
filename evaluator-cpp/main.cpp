@@ -1,7 +1,7 @@
 #include "clay.hpp"
-#include <stdio.h>
+#include <cstdio>
 
 int main() {
-    printf("Hello World!\n");
+    loadSource("foo.bar");
     return 0;
 }
