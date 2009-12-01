@@ -4,6 +4,7 @@
 OBJS = \
 	evaluator-cpp/error.o \
 	evaluator-cpp/source.o \
+	evaluator-cpp/lexer.o \
 	evaluator-cpp/main.o
 
 clayc : $(OBJS)

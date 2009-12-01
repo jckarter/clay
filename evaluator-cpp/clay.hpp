@@ -288,8 +288,8 @@ enum TokenKind {
     T_FLOAT_LITERAL,
     T_LITERAL_SUFFIX,
     T_SPACE,
-    T_SINGLE_LINE_COMMENT,
-    T_MULTI_LINE_COMMENT,
+    T_LINE_COMMENT,
+    T_BLOCK_COMMENT,
 };
 
 struct Token : public Object {
@@ -701,7 +701,7 @@ struct Module : public ANode {
 
 
 //
-// error
+// error reporting
 //
 
 void pushLocation(LocationPtr location);
@@ -724,10 +724,19 @@ void error(const string &msg);
 
 
 //
-// Source
+// load source
 //
 
 SourcePtr loadSource(const string &fileName);
+
+
+
+//
+// lexer
+//
+
+void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
+const char *tokenName(int tokenKind);
 
 
 #endif
