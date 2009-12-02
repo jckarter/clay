@@ -7,13 +7,7 @@ int main(int argc, char **argv) {
         return -1;
     }
     SourcePtr source = loadFile(argv[1]);
-    vector<TokenPtr> tokens;
-    tokenize(source, tokens);
-    vector<TokenPtr>::iterator i, end;
-    for (i = tokens.begin(), end = tokens.end(); i != end; ++i) {
-        TokenPtr t = *i;
-        const char *name = tokenName(t->tokenKind);
-        printf("%s '%s'\n", name, t->str.c_str());
-    }
+    ModulePtr m = parse(source);
+    printf("parsed successfully\n");
     return 0;
 }

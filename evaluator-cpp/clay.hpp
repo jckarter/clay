@@ -341,8 +341,8 @@ struct Expr : public ANode {
 };
 
 struct BoolLiteral : public Expr {
-    string value;
-    BoolLiteral(const string &value)
+    bool value;
+    BoolLiteral(bool value)
         : Expr(BOOL_LITERAL), value(value) {}
 };
 
@@ -607,6 +607,8 @@ struct Code : public ANode {
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
     StatementPtr body;
+    Code()
+        : ANode(CODE) {}
     Code(const vector<IdentifierPtr> &patternVars, ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs, StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
@@ -628,6 +630,8 @@ struct Record : public TopLevelItem {
     IdentifierPtr name;
     vector<IdentifierPtr> patternVars;
     vector<FormalArgPtr> formalArgs;
+    Record()
+        : TopLevelItem(RECORD) {}
     Record(IdentifierPtr name, const vector<IdentifierPtr> &patternVars,
            const vector<FormalArgPtr> &formalArgs)
         : TopLevelItem(RECORD), name(name), patternVars(patternVars),
@@ -659,6 +663,8 @@ struct ExternalProcedure : public TopLevelItem {
     IdentifierPtr name;
     vector<ValueArgPtr> args;
     ExprPtr returnType;
+    ExternalProcedure()
+        : TopLevelItem(EXTERNAL_PROCEDURE) {}
     ExternalProcedure(IdentifierPtr name, const vector<ValueArgPtr> &args,
                       ExprPtr returnType)
         : TopLevelItem(EXTERNAL_PROCEDURE), name(name), args(args),
@@ -693,6 +699,8 @@ struct Module : public ANode {
     vector<ImportPtr> imports;
     vector<ExportPtr> exports;
     vector<TopLevelItemPtr> topLevelItems;
+    Module()
+        : ANode(MODULE) {}
     Module(const vector<ImportPtr> &imports, const vector<ExportPtr> &exports,
            const vector<TopLevelItemPtr> &topLevelItems)
         : ANode(MODULE), imports(imports), exports(exports) {}
@@ -737,6 +745,14 @@ SourcePtr loadFile(const string &fileName);
 
 void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
 const char *tokenName(int tokenKind);
+
+
+
+//
+// parser
+//
+
+ModulePtr parse(SourcePtr source);
 
 
 #endif
