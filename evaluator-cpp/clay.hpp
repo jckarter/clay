@@ -3,8 +3,11 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
+
 using std::string;
 using std::vector;
+using std::ostream;
 
 
 
@@ -80,6 +83,7 @@ enum ObjectKind {
 
     IDENTIFIER,
     DOTTED_NAME,
+
     BOOL_LITERAL,
     INT_LITERAL,
     FLOAT_LITERAL,
@@ -709,6 +713,39 @@ struct Module : public ANode {
 
 
 //
+// printer
+//
+
+void print(const Object *x);
+void print(const Object *x, string &out);
+void print(const Object *x, ostream &out);
+
+ostream &operator<<(ostream &out, const Object &obj);
+
+template <class T>
+ostream &operator<<(ostream &out, const Ptr<T> &p) {
+    out << *p;
+    return out;
+}
+
+template <class T>
+ostream &operator<<(ostream &out, const vector<T> &v) {
+    out << "[";
+    typename vector<T>::const_iterator i, end;
+    bool first = true;
+    for (i = v.begin(), end = v.end(); i != end; ++i) {
+        if (!first)
+            out << ", ";
+        first = false;
+        out << *i;
+    }
+    out << "]";
+    return out;
+}
+
+
+
+//
 // error
 //
 
@@ -744,7 +781,6 @@ SourcePtr loadFile(const string &fileName);
 //
 
 void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
-const char *tokenName(int tokenKind);
 
 
 

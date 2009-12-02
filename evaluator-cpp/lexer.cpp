@@ -23,23 +23,6 @@ void tokenize(SourcePtr source, vector<TokenPtr> &tokens) {
     cleanupLexer();
 }
 
-const char *tokenName(int tokenKind) {
-    switch (tokenKind) {
-    case T_SYMBOL : return "SYMBOL";
-    case T_KEYWORD : return "KEYWORD";
-    case T_IDENTIFIER : return "IDENTIFIER";
-    case T_STRING_LITERAL : return "STRING_LITERAL";
-    case T_CHAR_LITERAL : return "CHAR_LITERAL";
-    case T_INT_LITERAL : return "INT_LITERAL";
-    case T_FLOAT_LITERAL : return "FLOAT_LITERAL";
-    case T_LITERAL_SUFFIX : return "LITERAL_SUFFIX";
-    case T_SPACE : return "SPACE";
-    case T_LINE_COMMENT : return "LINE_COMMENT";
-    case T_BLOCK_COMMENT : return "BLOCK_COMMENT";
-    }
-    assert(false);
-}
-
 static Source *lexerSource;
 static char *begin;
 static char *ptr;

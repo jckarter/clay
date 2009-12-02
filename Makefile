@@ -4,6 +4,7 @@
 OBJS = \
 	evaluator-cpp/error.o \
 	evaluator-cpp/util.o \
+	evaluator-cpp/printer.o \
 	evaluator-cpp/lexer.o \
 	evaluator-cpp/parser.o \
 	evaluator-cpp/main.o
