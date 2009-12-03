@@ -3,30 +3,15 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <set>
 #include <iostream>
 
 using std::string;
 using std::vector;
+using std::map;
+using std::set;
 using std::ostream;
-
-
-
-//
-// Object
-//
-
-struct Object {
-    int refCount;
-    int objKind;
-    Object(int objKind)
-        : refCount(0), objKind(objKind) {}
-    virtual ~Object() {}
-    void incRef() { ++refCount; }
-    void decRef() {
-        if (--refCount == 0)
-            delete this;
-    }
-};
 
 
 
@@ -69,6 +54,27 @@ public :
     operator bool() const { return ptr != 0; }
     bool operator!() const { return ptr == 0; }
 };
+
+
+
+//
+// Object
+//
+
+struct Object {
+    int refCount;
+    int objKind;
+    Object(int objKind)
+        : refCount(0), objKind(objKind) {}
+    virtual ~Object() {}
+    void incRef() { ++refCount; }
+    void decRef() {
+        if (--refCount == 0)
+            delete this;
+    }
+};
+
+typedef Ptr<Object> ObjectPtr;
 
 
 
@@ -127,6 +133,8 @@ enum ObjectKind {
     IMPORT,
     EXPORT,
     MODULE,
+
+    ENV,
 };
 
 
@@ -191,6 +199,8 @@ struct Import;
 struct Export;
 struct Module;
 
+struct Env;
+
 
 
 //
@@ -252,6 +262,8 @@ typedef Ptr<ExternalProcedure> ExternalProcedurePtr;
 typedef Ptr<Import> ImportPtr;
 typedef Ptr<Export> ExportPtr;
 typedef Ptr<Module> ModulePtr;
+
+typedef Ptr<Env> EnvPtr;
 
 
 
@@ -683,12 +695,14 @@ struct ExternalProcedure : public TopLevelItem {
 
 struct Import : public ANode {
     DottedNamePtr dottedName;
+    ModulePtr module;
     Import(DottedNamePtr dottedName)
         : ANode(IMPORT), dottedName(dottedName) {}
 };
 
 struct Export : public ANode {
     DottedNamePtr dottedName;
+    ModulePtr module;
     Export(DottedNamePtr dottedName)
         : ANode(EXPORT), dottedName(dottedName) {}
 };
@@ -703,11 +717,33 @@ struct Module : public ANode {
     vector<ImportPtr> imports;
     vector<ExportPtr> exports;
     vector<TopLevelItemPtr> topLevelItems;
+
+    map<string, ObjectPtr> globals;
+    bool lookupBusy;
+
     Module()
-        : ANode(MODULE) {}
+        : ANode(MODULE), lookupBusy(false) {}
     Module(const vector<ImportPtr> &imports, const vector<ExportPtr> &exports,
            const vector<TopLevelItemPtr> &topLevelItems)
-        : ANode(MODULE), imports(imports), exports(exports) {}
+        : ANode(MODULE), imports(imports), exports(exports),
+          lookupBusy(false) {}
+};
+
+
+
+//
+// environment
+//
+
+struct Env : public Object {
+    ObjectPtr parent;
+    map<string, ObjectPtr> entries;
+    Env()
+        : Object(ENV) {}
+    Env(ModulePtr parent)
+        : Object(ENV), parent(parent.raw()) {}
+    Env(EnvPtr parent)
+        : Object(ENV), parent(parent.raw()) {}
 };
 
 
@@ -766,6 +802,13 @@ private :
 
 void error(const string &msg);
 
+template <class T>
+void error(Ptr<T> context, const string &msg) {
+    if (context->location)
+        pushLocation(context->location);
+    error(msg);
+}
+
 
 
 //
@@ -777,18 +820,25 @@ SourcePtr loadFile(const string &fileName);
 
 
 //
-// lexer
+// lexer and parser
 //
 
 void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
+ModulePtr parse(SourcePtr source);
 
 
 
 //
-// parser
+// env
 //
 
-ModulePtr parse(SourcePtr source);
+void addGlobal(ModulePtr module, IdentifierPtr name, ObjectPtr value);
+ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name);
+
+ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
+
+void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);
+ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
 
 
 #endif
