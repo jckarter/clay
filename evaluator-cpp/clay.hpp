@@ -732,7 +732,7 @@ struct Module : public ANode {
 
 
 //
-// environment
+// Env
 //
 
 struct Env : public Object {
@@ -751,10 +751,6 @@ struct Env : public Object {
 //
 // printer
 //
-
-void print(const Object *x);
-void print(const Object *x, string &out);
-void print(const Object *x, ostream &out);
 
 ostream &operator<<(ostream &out, const Object &obj);
 
@@ -788,18 +784,6 @@ ostream &operator<<(ostream &out, const vector<T> &v) {
 void pushLocation(LocationPtr location);
 void popLocation();
 
-struct LocationPusher {
-    LocationPusher(LocationPtr location)  {
-        pushLocation(location);
-    }
-    ~LocationPusher() {
-        popLocation();
-    }
-private :
-    LocationPusher(const LocationPusher &) {}
-    void operator=(const LocationPusher &) {}
-};
-
 void error(const string &msg);
 
 template <class T>
@@ -808,14 +792,6 @@ void error(Ptr<T> context, const string &msg) {
         pushLocation(context->location);
     error(msg);
 }
-
-
-
-//
-// util
-//
-
-SourcePtr loadFile(const string &fileName);
 
 
 

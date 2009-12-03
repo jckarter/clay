@@ -9,6 +9,8 @@ using namespace std;
 // overload <<
 //
 
+static void print(const Object *x, ostream &out);
+
 ostream &operator<<(ostream &out, const Object &obj) {
     print(&obj, out);
     return out;
@@ -60,16 +62,7 @@ ostream &operator<<(ostream &out, const BigVec<T> &v) {
 // print
 //
 
-void print(const Object *x) {
-    print(x, cout);
-}
-
-void print(const Object *x, string &out) {
-    ostringstream sout(out);
-    print(x, sout);
-}
-
-void print(const Object *x, ostream &out) {
+static void print(const Object *x, ostream &out) {
     if (x == NULL) {
         out << "NULL";
         return;
