@@ -8,6 +8,7 @@ OBJS = \
 	evaluator-cpp/lexer.o \
 	evaluator-cpp/parser.o \
 	evaluator-cpp/env.o \
+	evaluator-cpp/loader.o \
 	evaluator-cpp/main.o
 
 clayc : $(OBJS)

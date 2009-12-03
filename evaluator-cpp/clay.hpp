@@ -841,4 +841,13 @@ void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);
 ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
 
 
+
+//
+// loader
+//
+
+void addSearchPath(const string &path);
+ModulePtr loadProgram(const string &fileName);
+
+
 #endif
