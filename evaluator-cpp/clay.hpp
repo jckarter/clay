@@ -291,6 +291,24 @@ struct Location : public Object {
 
 
 //
+// error module
+//
+
+void pushLocation(LocationPtr location);
+void popLocation();
+
+void error(const string &msg);
+
+template <class T>
+void error(Ptr<T> context, const string &msg) {
+    if (context->location)
+        pushLocation(context->location);
+    error(msg);
+}
+
+
+
+//
 // Token
 //
 
@@ -317,6 +335,14 @@ struct Token : public Object {
     Token(int tokenKind, const string &str)
         : Object(TOKEN), tokenKind(tokenKind), str(str) {}
 };
+
+
+
+//
+// lexer module
+//
+
+void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
 
 
 
@@ -732,24 +758,15 @@ struct Module : public ANode {
 
 
 //
-// Env
+// parser module
 //
 
-struct Env : public Object {
-    ObjectPtr parent;
-    map<string, ObjectPtr> entries;
-    Env()
-        : Object(ENV) {}
-    Env(ModulePtr parent)
-        : Object(ENV), parent(parent.raw()) {}
-    Env(EnvPtr parent)
-        : Object(ENV), parent(parent.raw()) {}
-};
+ModulePtr parse(SourcePtr source);
 
 
 
 //
-// printer
+// printer module
 //
 
 ostream &operator<<(ostream &out, const Object &obj);
@@ -778,34 +795,24 @@ ostream &operator<<(ostream &out, const vector<T> &v) {
 
 
 //
-// error
+// Env
 //
 
-void pushLocation(LocationPtr location);
-void popLocation();
-
-void error(const string &msg);
-
-template <class T>
-void error(Ptr<T> context, const string &msg) {
-    if (context->location)
-        pushLocation(context->location);
-    error(msg);
-}
+struct Env : public Object {
+    ObjectPtr parent;
+    map<string, ObjectPtr> entries;
+    Env()
+        : Object(ENV) {}
+    Env(ModulePtr parent)
+        : Object(ENV), parent(parent.raw()) {}
+    Env(EnvPtr parent)
+        : Object(ENV), parent(parent.raw()) {}
+};
 
 
 
 //
-// lexer and parser
-//
-
-void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
-ModulePtr parse(SourcePtr source);
-
-
-
-//
-// env
+// env module
 //
 
 void addGlobal(ModulePtr module, IdentifierPtr name, ObjectPtr value);
@@ -819,7 +826,7 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
 
 
 //
-// loader
+// loader module
 //
 
 void addSearchPath(const string &path);
