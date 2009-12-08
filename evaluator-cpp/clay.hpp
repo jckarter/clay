@@ -731,6 +731,7 @@ struct Code : public ANode {
 //
 
 struct TopLevelItem : public ANode {
+    EnvPtr env;
     TopLevelItem(int objKind)
         : ANode(objKind) {}
 };
@@ -1074,12 +1075,19 @@ struct PointerType : public Type {
 struct RecordType : public Type {
     RecordPtr record;
     vector<ValuePtr> params;
+
+    bool fieldsInitialized;
+    vector<TypePtr> fieldTypes;
+    map<string,int> fieldIndexMap;
+
     const llvm::StructLayout *layout;
+
     RecordType(RecordPtr record)
-        : Type(RECORD_TYPE), record(record), layout(NULL) {}
+        : Type(RECORD_TYPE), record(record), fieldsInitialized(false),
+          layout(NULL) {}
     RecordType(RecordPtr record, const vector<ValuePtr> &params)
         : Type(RECORD_TYPE), record(record), params(params),
-          layout(NULL) {}
+          fieldsInitialized(false), layout(NULL) {}
 };
 
 struct CompilerObjectType : public Type {

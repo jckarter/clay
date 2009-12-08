@@ -404,6 +404,7 @@ int valueHash(ValuePtr a) {
     }
     case RECORD_TYPE : {
         vector<ValuePtr> args;
+        args.push_back(a);
         return invokeToInt(coreName("hash"), args);
     }
     default :

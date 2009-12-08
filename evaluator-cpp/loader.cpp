@@ -106,22 +106,24 @@ static void initializeModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
 
 static void installGlobals(ModulePtr m) {
+    EnvPtr env = new Env(m);
     vector<TopLevelItemPtr>::iterator i, end;
     for (i = m->topLevelItems.begin(), end = m->topLevelItems.end();
          i != end; ++i) {
-        Object *obj = i->raw();
-        switch (obj->objKind) {
+        TopLevelItem *x = i->raw();
+        x->env = env;
+        switch (x->objKind) {
         case RECORD :
-            addGlobal(m, ((Record *)obj)->name, obj);
+            addGlobal(m, ((Record *)x)->name, x);
             break;
         case PROCEDURE :
-            addGlobal(m, ((Procedure *)obj)->name, obj);
+            addGlobal(m, ((Procedure *)x)->name, x);
             break;
         case OVERLOADABLE :
-            addGlobal(m, ((Overloadable *)obj)->name, obj);
+            addGlobal(m, ((Overloadable *)x)->name, x);
             break;
         case EXTERNAL_PROCEDURE :
-            addGlobal(m, ((ExternalProcedure *)obj)->name, obj);
+            addGlobal(m, ((ExternalProcedure *)x)->name, x);
             break;
         case OVERLOAD :
             break;
@@ -171,6 +173,7 @@ ModulePtr loadProgram(const string &fileName) {
     ModulePtr m = parse(loadFile(fileName));
     loadDependents(m);
     installGlobals(m);
+    initializeModule(m);
     return m;
 }
 

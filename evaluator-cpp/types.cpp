@@ -178,6 +178,40 @@ TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params) {
 
 
 //
+// recordFieldTypes
+//
+
+const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {
+    if (t->fieldsInitialized)
+        return t->fieldTypes;
+    t->fieldsInitialized = true;
+    RecordPtr r = t->record;
+    assert(t->params.size() == r->patternVars.size());
+    EnvPtr env = new Env(r->env);
+    for (unsigned i = 0; i < t->params.size(); ++i)
+        addLocal(env, r->patternVars[i], t->params[i].raw());
+    for (unsigned i = 0; i < r->formalArgs.size(); ++i) {
+        FormalArg *x = r->formalArgs[i].raw();
+        switch (x->objKind) {
+        case VALUE_ARG : {
+            ValueArg *y = (ValueArg *)x;
+            TypePtr ftype = evaluateToType(y->type, env);
+            t->fieldTypes.push_back(ftype);
+            t->fieldIndexMap[y->name->str] = t->fieldTypes.size();
+            break;
+        }
+        case STATIC_ARG :
+            break;
+        default :
+            assert(false);
+        }
+    }
+    return t->fieldTypes;
+}
+
+
+
+//
 // llvmType
 //
 
