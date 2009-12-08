@@ -6,6 +6,14 @@
 #include <map>
 #include <set>
 #include <iostream>
+#include <cstdlib>
+
+#include <llvm/Type.h>
+#include <llvm/DerivedTypes.h>
+#include <llvm/Module.h>
+#include <llvm/ModuleProvider.h>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/Target/TargetData.h>
 
 using std::string;
 using std::vector;
@@ -50,7 +58,7 @@ public :
     const T &operator*() const { return *ptr; }
     T *operator->() { return ptr; }
     const T *operator->() const { return ptr; }
-    T *raw() { return ptr; }
+    T *raw() const { return ptr; }
     operator bool() const { return ptr != 0; }
     bool operator!() const { return ptr == 0; }
 };
@@ -64,8 +72,9 @@ public :
 struct Object {
     int refCount;
     int objKind;
+    int coIndex;
     Object(int objKind)
-        : refCount(0), objKind(objKind) {}
+        : refCount(0), objKind(objKind), coIndex(-1) {}
     virtual ~Object() {}
     void incRef() { ++refCount; }
     void decRef() {
@@ -106,6 +115,8 @@ enum ObjectKind {
     UNARY_OP,
     BINARY_OP,
 
+    SC_EXPR,
+
     BLOCK,
     LABEL,
     BINDING,
@@ -135,6 +146,12 @@ enum ObjectKind {
     MODULE,
 
     ENV,
+
+    PRIM_OP,
+
+    TYPE,
+    VALUE,
+    PATTERN,
 };
 
 
@@ -167,6 +184,7 @@ struct FieldRef;
 struct TupleRef;
 struct UnaryOp;
 struct BinaryOp;
+struct SCExpr;
 
 struct Statement;
 struct Block;
@@ -201,6 +219,26 @@ struct Module;
 
 struct Env;
 
+struct PrimOp;
+
+struct Type;
+struct BoolType;
+struct IntegerType;
+struct FloatType;
+struct ArrayType;
+struct TupleType;
+struct PointerType;
+struct RecordType;
+
+struct Value;
+
+struct Pattern;
+struct PatternCell;
+struct ArrayTypePattern;
+struct TupleTypePattern;
+struct PointerTypePattern;
+struct RecordTypePattern;
+
 
 
 //
@@ -231,6 +269,7 @@ typedef Ptr<FieldRef> FieldRefPtr;
 typedef Ptr<TupleRef> TupleRefPtr;
 typedef Ptr<UnaryOp> UnaryOpPtr;
 typedef Ptr<BinaryOp> BinaryOpPtr;
+typedef Ptr<SCExpr> SCExprPtr;
 
 typedef Ptr<Statement> StatementPtr;
 typedef Ptr<Block> BlockPtr;
@@ -265,10 +304,31 @@ typedef Ptr<Module> ModulePtr;
 
 typedef Ptr<Env> EnvPtr;
 
+typedef Ptr<PrimOp> PrimOpPtr;
+
+typedef Ptr<Type> TypePtr;
+typedef Ptr<BoolType> BoolTypePtr;
+typedef Ptr<IntegerType> IntegerTypePtr;
+typedef Ptr<FloatType> FloatTypePtr;
+typedef Ptr<ArrayType> ArrayTypePtr;
+typedef Ptr<TupleType> TupleTypePtr;
+typedef Ptr<PointerType> PointerTypePtr;
+typedef Ptr<RecordType> RecordTypePtr;
+
+typedef Ptr<Value> ValuePtr;
+
+typedef Ptr<Pattern> PatternPtr;
+typedef Ptr<PatternCell> PatternCellPtr;
+typedef Ptr<ArrayTypePattern> ArrayTypePatternPtr;
+typedef Ptr<TupleTypePattern> TupleTypePatternPtr;
+typedef Ptr<PointerTypePattern> PointerTypePatternPtr;
+typedef Ptr<RecordTypePattern> RecordTypePatternPtr;
+
 
 
 //
 // Source, Location
+//
 
 struct Source : public Object {
     string fileName;
@@ -511,6 +571,13 @@ struct BinaryOp : public Expr {
         : Expr(BINARY_OP), op(op), expr1(expr1), expr2(expr2) {}
 };
 
+struct SCExpr : public Expr {
+    EnvPtr env;
+    ExprPtr expr;
+    SCExpr(EnvPtr env, ExprPtr expr)
+        : Expr(SC_EXPR), env(env), expr(expr) {}
+};
+
 
 
 //
@@ -745,14 +812,16 @@ struct Module : public ANode {
     vector<TopLevelItemPtr> topLevelItems;
 
     map<string, ObjectPtr> globals;
+    bool initialized;
+
     bool lookupBusy;
 
     Module()
-        : ANode(MODULE), lookupBusy(false) {}
+        : ANode(MODULE), initialized(false), lookupBusy(false) {}
     Module(const vector<ImportPtr> &imports, const vector<ExportPtr> &exports,
            const vector<TopLevelItemPtr> &topLevelItems)
         : ANode(MODULE), imports(imports), exports(exports),
-          lookupBusy(false) {}
+          initialized(false), lookupBusy(false) {}
 };
 
 
@@ -831,6 +900,339 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
 
 void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
+ModulePtr loadedModule(const string &module);
+ObjectPtr coreName(const string &name);
+ObjectPtr primName(const string &name);
 
+
+
+//
+// PrimOp
+//
+
+enum PrimOpCode {
+    PRIM_TypeP,
+    PRIM_TypeSize,
+
+    PRIM_primitiveInit,
+    PRIM_primitiveDestroy,
+    PRIM_primitiveCopy,
+    PRIM_primitiveAssign,
+    PRIM_primitiveEqualsP,
+    PRIM_primitiveHash,
+
+    PRIM_BoolTypeP,
+    PRIM_boolNot,
+    PRIM_boolTruth,
+
+    PRIM_IntegerTypeP,
+    PRIM_SignedIntegerTypeP,
+    PRIM_FloatTypeP,
+    PRIM_numericEqualsP,
+    PRIM_numericLesserP,
+    PRIM_numericAdd,
+    PRIM_numericSubtract,
+    PRIM_numericMultiply,
+    PRIM_numericDivide,
+    PRIM_numericRemainder,
+    PRIM_numericNegate,
+    PRIM_numericConvert,
+
+    PRIM_shiftLeft,
+    PRIM_shiftRight,
+    PRIM_bitwiseAnd,
+    PRIM_bitwiseOr,
+    PRIM_bitwiseXor,
+
+    PRIM_VoidTypeP,
+
+    PRIM_CompilerObjectTypeP,
+
+    PRIM_PointerTypeP,
+    PRIM_PointerType,
+    PRIM_Pointer,
+    PRIM_PointeeType,
+
+    PRIM_addressOf,
+    PRIM_pointerDereference,
+    PRIM_pointerToInt,
+    PRIM_intToPointer,
+    PRIM_pointerCast,
+    PRIM_allocateMemory,
+    PRIM_freeMemory,
+
+    PRIM_ArrayTypeP,
+    PRIM_ArrayType,
+    PRIM_Array,
+    PRIM_ArrayElementType,
+    PRIM_ArraySize,
+    PRIM_array,
+    PRIM_arrayRef,
+
+    PRIM_TupleTypeP,
+    PRIM_TupleType,
+    PRIM_Tuple,
+    PRIM_TupleElementType,
+    PRIM_TupleFieldCount,
+    PRIM_TupleFieldOffset,
+    PRIM_tuple,
+    PRIM_tupleFieldRef,
+
+    PRIM_RecordTypeP,
+    PRIM_RecordType,
+    PRIM_RecordElementType,
+    PRIM_RecordFieldCount,
+    PRIM_RecordFieldOffset,
+    PRIM_RecordFieldIndex,
+    PRIM_recordFieldRef,
+    PRIM_recordFieldRefByName,
+    PRIM_recordInit,
+    PRIM_recordDestroy,
+    PRIM_recordCopy,
+    PRIM_recordAssign,
+    PRIM_recordEqualsP,
+    PRIM_recordHash,
+};
+
+struct PrimOp : public Object {
+    int primOpCode;
+    PrimOp(int primOpCode)
+        : Object(PRIM_OP), primOpCode(primOpCode) {}
+};
+
+
+
+//
+// Type
+//
+
+struct Type : public Object {
+    int typeKind;
+    llvm::PATypeHolder *llTypeHolder;
+    int typeSize;
+    Type(int typeKind)
+        : Object(TYPE), typeKind(typeKind), llTypeHolder(NULL),
+          typeSize(-1) {}
+    ~Type() {
+        if (llTypeHolder)
+            delete llTypeHolder;
+    }
+};
+
+enum TypeKind {
+    BOOL_TYPE,
+    INTEGER_TYPE,
+    FLOAT_TYPE,
+    ARRAY_TYPE,
+    TUPLE_TYPE,
+    POINTER_TYPE,
+    RECORD_TYPE,
+    COMPILER_OBJECT_TYPE,
+};
+
+struct BoolType : public Type {
+    BoolType() :
+        Type(BOOL_TYPE) {}
+};
+
+struct IntegerType : public Type {
+    int bits;
+    bool isSigned;
+    IntegerType(int bits, bool isSigned)
+        : Type(INTEGER_TYPE), bits(bits), isSigned(isSigned) {}
+};
+
+struct FloatType : public Type {
+    int bits;
+    FloatType(int bits)
+        : Type(FLOAT_TYPE), bits(bits) {}
+};
+
+struct ArrayType : public Type {
+    TypePtr elementType;
+    int size;
+    ArrayType(TypePtr elementType, int size)
+        : Type(ARRAY_TYPE), elementType(elementType), size(size) {}
+};
+
+struct TupleType : public Type {
+    vector<TypePtr> elementTypes;
+    const llvm::StructLayout *layout;
+    TupleType()
+        : Type(TUPLE_TYPE), layout(NULL) {}
+    TupleType(const vector<TypePtr> &elementTypes)
+        : Type(TUPLE_TYPE), elementTypes(elementTypes),
+          layout(NULL) {}
+};
+
+struct PointerType : public Type {
+    TypePtr pointeeType;
+    PointerType(TypePtr pointeeType)
+        : Type(POINTER_TYPE), pointeeType(pointeeType) {}
+};
+
+struct RecordType : public Type {
+    RecordPtr record;
+    vector<ValuePtr> params;
+    const llvm::StructLayout *layout;
+    RecordType(RecordPtr record)
+        : Type(RECORD_TYPE), record(record), layout(NULL) {}
+    RecordType(RecordPtr record, const vector<ValuePtr> &params)
+        : Type(RECORD_TYPE), record(record), params(params),
+          layout(NULL) {}
+};
+
+struct CompilerObjectType : public Type {
+    CompilerObjectType()
+        : Type(COMPILER_OBJECT_TYPE) {}
+};
+
+
+
+//
+// types module
+//
+
+extern llvm::Module *llvmModule;
+extern llvm::ExecutionEngine *llvmEngine;
+extern const llvm::TargetData *llvmTargetData;
+
+void initLLVM();
+
+extern TypePtr boolType;
+extern TypePtr int8Type;
+extern TypePtr int16Type;
+extern TypePtr int32Type;
+extern TypePtr int64Type;
+extern TypePtr uint8Type;
+extern TypePtr uint16Type;
+extern TypePtr uint32Type;
+extern TypePtr uint64Type;
+extern TypePtr float32Type;
+extern TypePtr float64Type;
+
+extern TypePtr compilerObjectType;
+
+void initTypes();
+
+TypePtr integerType(int bits, bool isSigned);
+TypePtr intType(int bits);
+TypePtr uintType(int bits);
+TypePtr floatType(int bits);
+TypePtr arrayType(TypePtr elememtType, int size);
+TypePtr tupleType(const vector<TypePtr> &elementTypes);
+TypePtr pointerType(TypePtr pointeeType);
+TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params);
+
+const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
+
+const llvm::Type *llvmType(TypePtr t);
+
+int typeSize(TypePtr t);
+
+
+
+//
+// Value
+//
+
+struct Value : public Object {
+    TypePtr type;
+    char *buf;
+    bool isOwned;
+    Value(TypePtr type, char *buf, bool isOwned)
+        : Object(VALUE), type(type), buf(buf), isOwned(isOwned) {}
+    ~Value();
+};
+
+
+
+//
+// Pattern
+//
+
+enum PatternKind {
+    PATTERN_CELL,
+    ARRAY_TYPE_PATTERN,
+    TUPLE_TYPE_PATTERN,
+    POINTER_TYPE_PATTERN,
+    RECORD_TYPE_PATTERN,
+};
+
+struct Pattern : public Object {
+    int patternKind;
+    Pattern(int patternKind)
+        : Object(PATTERN) {}
+};
+
+struct PatternCell : public Pattern {
+    ValuePtr value;
+    PatternCell(ValuePtr value)
+        : Pattern(PATTERN_CELL), value(value) {}
+};
+
+struct ArrayTypePattern : public Pattern {
+    PatternPtr elementType;
+    PatternPtr size;
+    ArrayTypePattern(PatternPtr elementType, PatternPtr size)
+        : Pattern(ARRAY_TYPE_PATTERN), elementType(elementType),
+          size(size) {}
+};
+
+struct TupleTypePattern : public Pattern {
+    vector<PatternPtr> elementTypes;
+    TupleTypePattern(const vector<PatternPtr> &elementTypes)
+        : Pattern(TUPLE_TYPE_PATTERN), elementTypes(elementTypes) {}
+};
+
+struct PointerTypePattern : public Pattern {
+    PatternPtr pointeeType;
+    PointerTypePattern(PatternPtr pointeeType)
+        : Pattern(POINTER_TYPE_PATTERN), pointeeType(pointeeType) {}
+};
+
+struct RecordTypePattern : public Pattern {
+    RecordPtr record;
+    vector<PatternPtr> params;
+    RecordTypePattern(RecordPtr record, const vector<PatternPtr> &params)
+        : Pattern(RECORD_TYPE_PATTERN), record(record), params(params) {}
+};
+
+
+
+//
+// evaluator module
+//
+
+int toCOIndex(ObjectPtr obj);
+ObjectPtr fromCOIndex(int i);
+
+ValuePtr allocValue(TypePtr t);
+
+void valueInit(ValuePtr dest);
+void valueDestroy(ValuePtr dest);
+void valueInitCopy(ValuePtr dest, ValuePtr src);
+ValuePtr cloneValue(ValuePtr src);
+void valueAssign(ValuePtr dest, ValuePtr src);
+bool valueEquals(ValuePtr a, ValuePtr b);
+int valueHash(ValuePtr a);
+
+PatternPtr typeToPattern(TypePtr type);
+bool unify(PatternPtr pattern, ValuePtr value);
+
+void pushTempsBlock();
+void popTempsBlock();
+
+ValuePtr evaluate(ExprPtr expr, EnvPtr env);
+ValuePtr evaluateToStatic(ExprPtr expr, EnvPtr env);
+ObjectPtr evaluateToCO(ExprPtr expr, EnvPtr env);
+TypePtr evaluateToType(ExprPtr expr, EnvPtr env);
+bool evaluateToBool(ExprPtr expr, EnvPtr env);
+
+PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
+
+ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
+bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args);
+int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args);
 
 #endif

@@ -20,6 +20,8 @@ int main(int argc, char **argv) {
         cerr << "usage: " << argv[0] << " <clayfile>\n";
         return -1;
     }
+    initLLVM();
+    initTypes();
 
     setSearchPath(argv[0]);
 

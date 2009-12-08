@@ -102,7 +102,34 @@ static SourcePtr loadFile(const string &fileName) {
 //
 
 static void loadDependents(ModulePtr m);
+static void initializeModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
+
+static void installGlobals(ModulePtr m) {
+    vector<TopLevelItemPtr>::iterator i, end;
+    for (i = m->topLevelItems.begin(), end = m->topLevelItems.end();
+         i != end; ++i) {
+        Object *obj = i->raw();
+        switch (obj->objKind) {
+        case RECORD :
+            addGlobal(m, ((Record *)obj)->name, obj);
+            break;
+        case PROCEDURE :
+            addGlobal(m, ((Procedure *)obj)->name, obj);
+            break;
+        case OVERLOADABLE :
+            addGlobal(m, ((Overloadable *)obj)->name, obj);
+            break;
+        case EXTERNAL_PROCEDURE :
+            addGlobal(m, ((ExternalProcedure *)obj)->name, obj);
+            break;
+        case OVERLOAD :
+            break;
+        default :
+            assert(false);
+        }
+    }
+}
 
 static ModulePtr loadModuleByName(DottedNamePtr name) {
     string key = toKey(name);
@@ -126,6 +153,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name) {
 
     modules[key] = module;
     loadDependents(module);
+    installGlobals(module);
 
     return module;
 }
@@ -142,7 +170,53 @@ static void loadDependents(ModulePtr m) {
 ModulePtr loadProgram(const string &fileName) {
     ModulePtr m = parse(loadFile(fileName));
     loadDependents(m);
+    installGlobals(m);
     return m;
+}
+
+ModulePtr loadedModule(const string &module) {
+    if (!modules.count(module))
+        error("module not loaded: " + module);
+    return modules[module];
+}
+
+ObjectPtr coreName(const string &name) {
+    return lookupPublic(loadedModule("_core"), new Identifier(name));
+}
+
+ObjectPtr primName(const string &name) {
+    return lookupPublic(loadedModule("__primitives__"), new Identifier(name));
+}
+
+
+
+//
+// initializeModule
+//
+
+static void initializeModule(ModulePtr m) {
+    if (m->initialized) return;
+    m->initialized = true;
+    vector<ImportPtr>::iterator ii, iend;
+    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
+        initializeModule((*ii)->module);
+    vector<ExportPtr>::iterator ei, eend;
+    for (ei = m->exports.begin(), eend = m->exports.end(); ei != eend; ++ei)
+        initializeModule((*ei)->module);
+
+    vector<TopLevelItemPtr>::iterator ti, tend;
+    for (ti = m->topLevelItems.begin(), tend = m->topLevelItems.end();
+         ti != tend; ++ti) {
+        Object *obj = ti->raw();
+        if (obj->objKind == OVERLOAD) {
+            Overload *x = (Overload *)obj;
+            ObjectPtr y = lookupGlobal(m, x->name);
+            if (y->objKind != OVERLOADABLE)
+                error(x->name, "invalid overloadable");
+            Overloadable *z = (Overloadable *)y.raw();
+            z->overloads.insert(z->overloads.begin(), x);
+        }
+    }
 }
 
 
@@ -151,6 +225,97 @@ ModulePtr loadProgram(const string &fileName) {
 // makePrimitivesModule
 //
 
+static string toPrimStr(const string &s) {
+    string name = s;
+    if (name[s.size() - 1] == 'P')
+        name[s.size() - 1] = '?';
+    return name;
+}
+
 static ModulePtr makePrimitivesModule() {
-    return new Module();
+    ModulePtr prims = new Module();
+#define PRIMITIVE(x) prims->globals[toPrimStr(#x)] = new PrimOp(PRIM_##x)
+    PRIMITIVE(TypeP);
+    PRIMITIVE(TypeSize);
+
+    PRIMITIVE(primitiveInit);
+    PRIMITIVE(primitiveDestroy);
+    PRIMITIVE(primitiveCopy);
+    PRIMITIVE(primitiveAssign);
+    PRIMITIVE(primitiveEqualsP);
+    PRIMITIVE(primitiveHash);
+
+    PRIMITIVE(BoolTypeP);
+    PRIMITIVE(boolNot);
+    PRIMITIVE(boolTruth);
+
+    PRIMITIVE(IntegerTypeP);
+    PRIMITIVE(SignedIntegerTypeP);
+    PRIMITIVE(FloatTypeP);
+    PRIMITIVE(numericEqualsP);
+    PRIMITIVE(numericLesserP);
+    PRIMITIVE(numericAdd);
+    PRIMITIVE(numericSubtract);
+    PRIMITIVE(numericMultiply);
+    PRIMITIVE(numericDivide);
+    PRIMITIVE(numericRemainder);
+    PRIMITIVE(numericNegate);
+    PRIMITIVE(numericConvert);
+
+    PRIMITIVE(shiftLeft);
+    PRIMITIVE(shiftRight);
+    PRIMITIVE(bitwiseAnd);
+    PRIMITIVE(bitwiseOr);
+    PRIMITIVE(bitwiseXor);
+
+    PRIMITIVE(VoidTypeP);
+
+    PRIMITIVE(CompilerObjectTypeP);
+
+    PRIMITIVE(PointerTypeP);
+    PRIMITIVE(PointerType);
+    PRIMITIVE(Pointer);
+    PRIMITIVE(PointeeType);
+
+    PRIMITIVE(addressOf);
+    PRIMITIVE(pointerDereference);
+    PRIMITIVE(pointerToInt);
+    PRIMITIVE(intToPointer);
+    PRIMITIVE(pointerCast);
+    PRIMITIVE(allocateMemory);
+    PRIMITIVE(freeMemory);
+
+    PRIMITIVE(ArrayTypeP);
+    PRIMITIVE(ArrayType);
+    PRIMITIVE(Array);
+    PRIMITIVE(ArrayElementType);
+    PRIMITIVE(ArraySize);
+    PRIMITIVE(array);
+    PRIMITIVE(arrayRef);
+
+    PRIMITIVE(TupleTypeP);
+    PRIMITIVE(TupleType);
+    PRIMITIVE(Tuple);
+    PRIMITIVE(TupleElementType);
+    PRIMITIVE(TupleFieldCount);
+    PRIMITIVE(TupleFieldOffset);
+    PRIMITIVE(tuple);
+    PRIMITIVE(tupleFieldRef);
+
+    PRIMITIVE(RecordTypeP);
+    PRIMITIVE(RecordType);
+    PRIMITIVE(RecordElementType);
+    PRIMITIVE(RecordFieldCount);
+    PRIMITIVE(RecordFieldOffset);
+    PRIMITIVE(RecordFieldIndex);
+    PRIMITIVE(recordFieldRef);
+    PRIMITIVE(recordFieldRefByName);
+    PRIMITIVE(recordInit);
+    PRIMITIVE(recordDestroy);
+    PRIMITIVE(recordCopy);
+    PRIMITIVE(recordAssign);
+    PRIMITIVE(recordEqualsP);
+    PRIMITIVE(recordHash);
+#undef PRIMITIVE
+    return prims;
 }
