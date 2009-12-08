@@ -60,6 +60,38 @@ ValuePtr allocValue(TypePtr t) {
 
 
 //
+// intToValue, valueToInt,
+// coToValue, valueToCO
+//
+
+ValuePtr intToValue(int x) {
+    ValuePtr v = allocValue(int32Type);
+    *((int *)v->buf) = x;
+    return v;
+}
+
+int valueToInt(ValuePtr v) {
+    if (v->type != int32Type)
+        error("expecting value of int32 type");
+    return *((int *)v->buf);
+}
+
+ValuePtr coToValue(ObjectPtr x) {
+    ValuePtr v = allocValue(compilerObjectType);
+    *((int *)v->buf) = toCOIndex(x);
+    return v;
+}
+
+ObjectPtr valueToCO(ValuePtr v) {
+    if (v->type != compilerObjectType)
+        error("expecting compiler object type");
+    int x = *((int *)v->buf);
+    return fromCOIndex(x);
+}
+
+
+
+//
 // layouts
 //
 
@@ -72,14 +104,14 @@ static const llvm::StructLayout *tupleTypeLayout(TupleType *t) {
     return t->layout;
 }
 
-// static const llvm::StructLayout *recordTypeLayout(RecordType *t) {
-//     if (t->layout == NULL) {
-//         const llvm::StructType *st =
-//             llvm::cast<llvm::StructType>(llvmType(t));
-//         t->layout = llvmTargetData->getStructLayout(st);
-//     }
-//     return t->layout;
-// }
+static const llvm::StructLayout *recordTypeLayout(RecordType *t) {
+    if (t->layout == NULL) {
+        const llvm::StructType *st =
+            llvm::cast<llvm::StructType>(llvmType(t));
+        t->layout = llvmTargetData->getStructLayout(st);
+    }
+    return t->layout;
+}
 
 
 
@@ -410,5 +442,84 @@ int valueHash(ValuePtr a) {
     default :
         assert(false);
         return 0;
+    }
+}
+
+
+
+//
+// unify, unifyType
+//
+
+bool unify(PatternPtr pattern, ValuePtr value) {
+    if (pattern->patternKind == PATTERN_CELL) {
+        PatternCell *x = (PatternCell *)pattern.raw();
+        if (!x->value) {
+            x->value = value;
+            return true;
+        }
+        return valueEquals(x->value, value);
+    }
+    if (value->type != compilerObjectType)
+        return false;
+    ObjectPtr x = valueToCO(value);
+    if (x->objKind != TYPE)
+        return false;
+    TypePtr y = (Type *)x.raw();
+    return unifyType(pattern, y);
+}
+
+bool unifyType(PatternPtr pattern, TypePtr type) {
+    switch (pattern->patternKind) {
+    case PATTERN_CELL : {
+        return unify(pattern, coToValue(type.raw()));
+    }
+    case ARRAY_TYPE_PATTERN : {
+        ArrayTypePattern *x = (ArrayTypePattern *)pattern.raw();
+        if (type->typeKind != ARRAY_TYPE)
+            return false;
+        ArrayType *y = (ArrayType *)type.raw();
+        if (!unifyType(x->elementType, y->elementType))
+            return false;
+        if (!unify(x->size, intToValue(y->size)))
+            return false;
+        return true;
+    }
+    case TUPLE_TYPE_PATTERN : {
+        TupleTypePattern *x = (TupleTypePattern *)pattern.raw();
+        if (type->typeKind != TUPLE_TYPE)
+            return false;
+        TupleType *y = (TupleType *)type.raw();
+        if (x->elementTypes.size() != y->elementTypes.size())
+            return false;
+        for (unsigned i = 0; i < x->elementTypes.size(); ++i)
+            if (!unifyType(x->elementTypes[i], y->elementTypes[i]))
+                return false;
+        return true;
+    }
+    case POINTER_TYPE_PATTERN : {
+        PointerTypePattern *x = (PointerTypePattern *)pattern.raw();
+        if (type->typeKind != POINTER_TYPE)
+            return false;
+        PointerType *y = (PointerType *)type.raw();
+        return unifyType(x->pointeeType, y->pointeeType);
+    }
+    case RECORD_TYPE_PATTERN : {
+        RecordTypePattern *x = (RecordTypePattern *)pattern.raw();
+        if (type->typeKind != RECORD_TYPE)
+            return false;
+        RecordType *y = (RecordType *)type.raw();
+        if (x->record != y->record)
+            return false;
+        if (x->params.size() != y->params.size())
+            return false;
+        for (unsigned i = 0; i < x->params.size(); ++i)
+            if (!unify(x->params[i], y->params[i]))
+                return false;
+        return true;
+    }
+    default :
+        assert(false);
+        return false;
     }
 }

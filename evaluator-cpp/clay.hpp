@@ -1217,6 +1217,11 @@ ObjectPtr fromCOIndex(int i);
 
 ValuePtr allocValue(TypePtr t);
 
+ValuePtr intToValue(int x);
+int valueToInt(ValuePtr v);
+ValuePtr coToValue(ObjectPtr x);
+ObjectPtr valueToCO(ValuePtr v);
+
 void valueInit(ValuePtr dest);
 void valueDestroy(ValuePtr dest);
 void valueInitCopy(ValuePtr dest, ValuePtr src);
@@ -1225,8 +1230,8 @@ void valueAssign(ValuePtr dest, ValuePtr src);
 bool valueEquals(ValuePtr a, ValuePtr b);
 int valueHash(ValuePtr a);
 
-PatternPtr typeToPattern(TypePtr type);
 bool unify(PatternPtr pattern, ValuePtr value);
+bool unifyType(PatternPtr pattern, TypePtr type);
 
 void pushTempsBlock();
 void popTempsBlock();
