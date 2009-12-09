@@ -908,22 +908,22 @@ ValuePtr evaluate(ExprPtr expr, EnvPtr env) {
 
     case AND : {
         And *x = (And *)expr.raw();
-        ValuePtr v1 = evaluateNested(x->expr1, env);
+        ValuePtr v1 = evaluate(x->expr1, env);
         vector<ValuePtr> args;
         args.push_back(v1);
         if (!valueToBool(invoke(primName("boolTruth"), args)))
             return v1;
-        return evaluateNested(x->expr2, env);
+        return evaluate(x->expr2, env);
     }
 
     case OR : {
         Or *x = (Or *)expr.raw();
-        ValuePtr v1 = evaluateNested(x->expr1, env);
+        ValuePtr v1 = evaluate(x->expr1, env);
         vector<ValuePtr> args;
         args.push_back(v1);
         if (valueToBool(invoke(primName("boolTruth"), args)))
             return v1;
-        return evaluateNested(x->expr2, env);
+        return evaluate(x->expr2, env);
     }
 
     case SC_EXPR : {
