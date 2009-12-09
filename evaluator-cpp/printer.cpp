@@ -264,16 +264,21 @@ static void print(const Object *x, ostream &out) {
         case GREATER_EQUALS :
             out << "GREATER_EQUALS";
             break;
-        case AND :
-            out << "AND";
-            break;
-        case OR :
-            out << "OR";
-            break;
         default :
             assert(false);
         }
         out << ", " << y->expr1 << ", " << y->expr2 << ")";
+        break;
+    }
+    case AND : {
+        And *y = (And *)x;
+        out << "And(" << y->expr1 << ", " << y->expr2 << ")";
+        break;
+    }
+    case OR : {
+        Or *y = (Or *)x;
+        out << "Or(" << y->expr1 << ", " << y->expr2 << ")";
+        break;
         break;
     }
 

@@ -574,12 +574,12 @@ static bool notExpr(ExprPtr &x) {
     return true;
 }
 
-static bool andExprTail(BinaryOpPtr &x) {
+static bool andExprTail(AndPtr &x) {
     LocationPtr location = currentLocation();
     if (!keyword("and")) return false;
     ExprPtr y;
     if (!notExpr(y)) return false;
-    x = new BinaryOp(AND, NULL, y);
+    x = new And(NULL, y);
     x->location = location;
     return true;
 }
@@ -588,7 +588,7 @@ static bool andExpr(ExprPtr &x) {
     if (!notExpr(x)) return false;
     while (true) {
         int p = save();
-        BinaryOpPtr y;
+        AndPtr y;
         if (!andExprTail(y)) {
             restore(p);
             break;
@@ -599,12 +599,12 @@ static bool andExpr(ExprPtr &x) {
     return true;
 }
 
-static bool orExprTail(BinaryOpPtr &x) {
+static bool orExprTail(OrPtr &x) {
     LocationPtr location = currentLocation();
     if (!keyword("or")) return false;
     ExprPtr y;
     if (!andExpr(y)) return false;
-    x = new BinaryOp(OR, NULL, y);
+    x = new Or(NULL, y);
     x->location = location;
     return true;
 }
@@ -613,7 +613,7 @@ static bool orExpr(ExprPtr &x) {
     if (!andExpr(x)) return false;
     while (true) {
         int p = save();
-        BinaryOpPtr y;
+        OrPtr y;
         if (!orExprTail(y)) {
             restore(p);
             break;

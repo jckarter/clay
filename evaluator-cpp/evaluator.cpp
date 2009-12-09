@@ -17,6 +17,23 @@ Value::~Value() {
 
 
 //
+// interned identifiers
+//
+
+static map<string, IdentifierPtr> identTable;
+
+IdentifierPtr internIdentifier(IdentifierPtr x) {
+    map<string, IdentifierPtr>::iterator i = identTable.find(x->str);
+    if (i != identTable.end())
+        return i->second;
+    IdentifierPtr y = new Identifier(x->str);
+    identTable[x->str] = y;
+    return y;
+}
+
+
+
+//
 // compiler object table
 //
 
@@ -24,6 +41,8 @@ static vector<ObjectPtr> coTable;
 
 int toCOIndex(ObjectPtr obj) {
     switch (obj->objKind) {
+    case IDENTIFIER :
+        obj = internIdentifier((Identifier *)obj.raw()).raw();
     case RECORD :
     case PROCEDURE :
     case OVERLOADABLE :
@@ -60,7 +79,7 @@ ValuePtr allocValue(TypePtr t) {
 
 
 //
-// intToValue, valueToInt,
+// intToValue, valueToInt, valueToBool,
 // coToValue, valueToCO
 //
 
@@ -76,6 +95,12 @@ int valueToInt(ValuePtr v) {
     return *((int *)v->buf);
 }
 
+bool valueToBool(ValuePtr v) {
+    if (v->type != boolType)
+        error("expecting value of bool type");
+    return *((char *)v->buf) != 0;
+}
+
 ValuePtr coToValue(ObjectPtr x) {
     ValuePtr v = allocValue(compilerObjectType);
     *((int *)v->buf) = toCOIndex(x);
@@ -85,6 +110,13 @@ ValuePtr coToValue(ObjectPtr x) {
 ObjectPtr valueToCO(ValuePtr v) {
     if (v->type != compilerObjectType)
         error("expecting compiler object type");
+    int x = *((int *)v->buf);
+    return fromCOIndex(x);
+}
+
+ObjectPtr lower(ValuePtr v) {
+    if (v->type != compilerObjectType)
+        return v.raw();
     int x = *((int *)v->buf);
     return fromCOIndex(x);
 }
@@ -795,6 +827,110 @@ ValuePtr evaluate(ExprPtr expr, EnvPtr env) {
         return evaluate(x->converted, env);
     }
 
+    case NAME_REF : {
+        NameRef *x = (NameRef *)expr.raw();
+        ObjectPtr y = lookupEnv(env, x->name);
+        if (y->objKind == VALUE) {
+            ValuePtr z = (Value *)y.raw();
+            if (z->isOwned) {
+                // static values
+                z = cloneValue(z);
+            }
+            return z;
+        }
+        return coToValue(y);
+    }
+
+    case TUPLE : {
+        Tuple *x = (Tuple *)expr.raw();
+        if (!x->converted)
+            x->converted = convertTuple(x);
+        return evaluate(x->converted, env);
+    }
+
+    case ARRAY : {
+        Array *x = (Array *)expr.raw();
+        if (!x->converted)
+            x->converted = convertArray(x);
+        return evaluate(x->converted, env);
+    }
+
+    case INDEXING : {
+        Indexing *x = (Indexing *)expr.raw();
+        ValuePtr thing = evaluateNested(x->expr, env);
+        vector<ValuePtr> args;
+        for (unsigned i = 0; i < x->args.size(); ++i)
+            args.push_back(evaluateNested(x->args[i], env));
+        return invokeIndexing(lower(thing), args);
+    }
+
+    case CALL : {
+        Call *x = (Call *)expr.raw();
+        ValuePtr thing = evaluateNested(x->expr, env);
+        vector<ValuePtr> args;
+        for (unsigned i = 0; i < x->args.size(); ++i)
+            args.push_back(evaluateNested(x->args[i], env));
+        return invoke(lower(thing), args);
+    }
+
+    case FIELD_REF : {
+        FieldRef *x = (FieldRef *)expr.raw();
+        ValuePtr thing = evaluateNested(x->expr, env);
+        ValuePtr name = coToValue(x->name.raw());
+        vector<ValuePtr> args;
+        args.push_back(thing);
+        args.push_back(name);
+        return invoke(primName("recordFieldRefByName"), args);
+    }
+
+    case TUPLE_REF : {
+        TupleRef *x = (TupleRef *)expr.raw();
+        ValuePtr thing = evaluateNested(x->expr, env);
+        vector<ValuePtr> args;
+        args.push_back(thing);
+        args.push_back(intToValue(x->index));
+        return invoke(primName("tupleFieldRef"), args);
+    }
+
+    case UNARY_OP : {
+        UnaryOp *x = (UnaryOp *)expr.raw();
+        if (!x->converted)
+            x->converted = convertUnaryOp(x);
+        return evaluate(x->converted, env);
+    }
+
+    case BINARY_OP : {
+        BinaryOp *x = (BinaryOp *)expr.raw();
+        if (!x->converted)
+            x->converted = convertBinaryOp(x);
+        return evaluate(x->converted, env);
+    }
+
+    case AND : {
+        And *x = (And *)expr.raw();
+        ValuePtr v1 = evaluateNested(x->expr1, env);
+        vector<ValuePtr> args;
+        args.push_back(v1);
+        if (!valueToBool(invoke(primName("boolTruth"), args)))
+            return v1;
+        return evaluateNested(x->expr2, env);
+    }
+
+    case OR : {
+        Or *x = (Or *)expr.raw();
+        ValuePtr v1 = evaluateNested(x->expr1, env);
+        vector<ValuePtr> args;
+        args.push_back(v1);
+        if (valueToBool(invoke(primName("boolTruth"), args)))
+            return v1;
+        return evaluateNested(x->expr2, env);
+    }
+
+    case SC_EXPR : {
+        SCExpr *x = (SCExpr *)expr.raw();
+        return evaluate(x->expr, x->env);
+    }
+
     default :
         assert(false);
         return NULL;
@@ -817,5 +953,86 @@ ExprPtr convertStringLiteral(const string &s) {
     ExprPtr nameRef = moduleNameRef("_string", "string");
     CallPtr call = new Call(nameRef);
     call->args.push_back(charArray.raw());
+    return call.raw();
+}
+
+ExprPtr convertTuple(TuplePtr x) {
+    if (x->args.size() == 1)
+        return x->args[0];
+    return new Call(primNameRef("tuple"), x->args);
+}
+
+ExprPtr convertArray(ArrayPtr x) {
+    return new Call(primNameRef("array"), x->args);
+}
+
+ExprPtr convertUnaryOp(UnaryOpPtr x) {
+    ExprPtr callable;
+    switch (x->op) {
+    case DEREFERENCE :
+        callable = primNameRef("pointerDereference");
+        break;
+    case ADDRESS_OF :
+        callable = primNameRef("addressOf");
+        break;
+    case PLUS :
+        callable = coreNameRef("plus");
+        break;
+    case MINUS :
+        callable = coreNameRef("minus");
+        break;
+    case NOT :
+        callable = primNameRef("boolNot");
+        break;
+    default :
+        assert(false);
+    }
+    CallPtr call = new Call(callable);
+    call->args.push_back(x->expr);
+    return call.raw();
+}
+
+ExprPtr convertBinaryOp(BinaryOpPtr x) {
+    ExprPtr callable;
+    switch (x->op) {
+    case ADD :
+        callable = coreNameRef("add");
+        break;
+    case SUBTRACT :
+        callable = coreNameRef("subtract");
+        break;
+    case MULTIPLY :
+        callable = coreNameRef("multiply");
+        break;
+    case DIVIDE :
+        callable = coreNameRef("divide");
+        break;
+    case REMAINDER :
+        callable = coreNameRef("remainder");
+        break;
+    case EQUALS :
+        callable = coreNameRef("equals?");
+        break;
+    case NOT_EQUALS :
+        callable = coreNameRef("notEquals?");
+        break;
+    case LESSER :
+        callable = coreNameRef("lesser?");
+        break;
+    case LESSER_EQUALS :
+        callable = coreNameRef("lesserEquals?");
+        break;
+    case GREATER :
+        callable = coreNameRef("greater?");
+        break;
+    case GREATER_EQUALS :
+        callable = coreNameRef("greaterEquals?");
+        break;
+    default :
+        assert(false);
+    }
+    CallPtr call = new Call(callable);
+    call->args.push_back(x->expr1);
+    call->args.push_back(x->expr2);
     return call.raw();
 }

@@ -118,6 +118,8 @@ enum ObjectKind {
     TUPLE_REF,
     UNARY_OP,
     BINARY_OP,
+    AND,
+    OR,
 
     SC_EXPR,
 
@@ -188,6 +190,8 @@ struct FieldRef;
 struct TupleRef;
 struct UnaryOp;
 struct BinaryOp;
+struct And;
+struct Or;
 struct SCExpr;
 
 struct Statement;
@@ -273,6 +277,8 @@ typedef Ptr<FieldRef> FieldRefPtr;
 typedef Ptr<TupleRef> TupleRefPtr;
 typedef Ptr<UnaryOp> UnaryOpPtr;
 typedef Ptr<BinaryOp> BinaryOpPtr;
+typedef Ptr<And> AndPtr;
+typedef Ptr<Or> OrPtr;
 typedef Ptr<SCExpr> SCExprPtr;
 
 typedef Ptr<Statement> StatementPtr;
@@ -507,6 +513,7 @@ struct NameRef : public Expr {
 
 struct Tuple : public Expr {
     vector<ExprPtr> args;
+    ExprPtr converted;
     Tuple()
         : Expr(TUPLE) {}
     Tuple(const vector<ExprPtr> &args)
@@ -515,6 +522,7 @@ struct Tuple : public Expr {
 
 struct Array : public Expr {
     vector<ExprPtr> args;
+    ExprPtr converted;
     Array()
         : Expr(ARRAY) {}
     Array(const vector<ExprPtr> &args)
@@ -564,6 +572,7 @@ enum UnaryOpKind {
 struct UnaryOp : public Expr {
     int op;
     ExprPtr expr;
+    ExprPtr converted;
     UnaryOp(int op, ExprPtr expr)
         : Expr(UNARY_OP), op(op), expr(expr) {}
 };
@@ -581,15 +590,26 @@ enum BinaryOpKind {
     LESSER_EQUALS,
     GREATER,
     GREATER_EQUALS,
-    AND,
-    OR,
 };
 
 struct BinaryOp : public Expr {
     int op;
     ExprPtr expr1, expr2;
+    ExprPtr converted;
     BinaryOp(int op, ExprPtr expr1, ExprPtr expr2)
         : Expr(BINARY_OP), op(op), expr1(expr1), expr2(expr2) {}
+};
+
+struct And : public Expr {
+    ExprPtr expr1, expr2;
+    And(ExprPtr expr1, ExprPtr expr2)
+        : Expr(AND), expr1(expr1), expr2(expr2) {}
+};
+
+struct Or : public Expr {
+    ExprPtr expr1, expr2;
+    Or(ExprPtr expr1, ExprPtr expr2)
+        : Expr(OR), expr1(expr1), expr2(expr2) {}
 };
 
 struct SCExpr : public Expr {
@@ -1232,6 +1252,8 @@ struct RecordTypePattern : public Pattern {
 // evaluator module
 //
 
+IdentifierPtr internIdentifier(IdentifierPtr x);
+
 int toCOIndex(ObjectPtr obj);
 ObjectPtr fromCOIndex(int i);
 
@@ -1239,8 +1261,10 @@ ValuePtr allocValue(TypePtr t);
 
 ValuePtr intToValue(int x);
 int valueToInt(ValuePtr v);
+bool valueToBool(ValuePtr v);
 ValuePtr coToValue(ObjectPtr x);
 ObjectPtr valueToCO(ValuePtr v);
+ObjectPtr lower(ValuePtr v);
 
 void valueInit(ValuePtr dest);
 void valueDestroy(ValuePtr dest);
@@ -1273,7 +1297,12 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
 
 ExprPtr convertCharLiteral(char c);
 ExprPtr convertStringLiteral(const string &s);
+ExprPtr convertTuple(TuplePtr x);
+ExprPtr convertArray(ArrayPtr x);
+ExprPtr convertUnaryOp(UnaryOpPtr x);
+ExprPtr convertBinaryOp(BinaryOpPtr x);
 
+ValuePtr invokeIndexing(ObjectPtr thing, const vector<ValuePtr> &args);
 ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
 bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args);
 int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args);
