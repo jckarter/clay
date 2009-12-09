@@ -6,7 +6,10 @@
 #include <map>
 #include <set>
 #include <iostream>
+#include <sstream>
 #include <cstdlib>
+#include <climits>
+#include <cerrno>
 
 #include <llvm/Type.h>
 #include <llvm/DerivedTypes.h>
@@ -20,6 +23,7 @@ using std::vector;
 using std::map;
 using std::set;
 using std::ostream;
+using std::ostringstream;
 
 
 
@@ -357,6 +361,21 @@ struct Location : public Object {
 void pushLocation(LocationPtr location);
 void popLocation();
 
+struct LocationContext {
+    LocationPtr loc;
+    LocationContext(LocationPtr loc)
+        : loc(loc) {
+        if (loc) pushLocation(loc);
+    }
+    ~LocationContext() {
+        if (loc)
+            popLocation();
+    }
+private :
+    LocationContext(const LocationContext &) {}
+    void operator=(const LocationContext &) {}
+};
+
 void error(const string &msg);
 
 template <class T>
@@ -468,12 +487,14 @@ struct FloatLiteral : public Expr {
 
 struct CharLiteral : public Expr {
     char value;
+    ExprPtr converted;
     CharLiteral(char value)
         : Expr(CHAR_LITERAL), value(value) {}
 };
 
 struct StringLiteral : public Expr {
     string value;
+    ExprPtr converted;
     StringLiteral(const string &value)
         : Expr(STRING_LITERAL), value(value) {}
 };
@@ -813,6 +834,7 @@ struct Module : public ANode {
     vector<TopLevelItemPtr> topLevelItems;
 
     map<string, ObjectPtr> globals;
+    EnvPtr env;
     bool initialized;
 
     bool lookupBusy;
@@ -902,8 +924,6 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
 void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
 ModulePtr loadedModule(const string &module);
-ObjectPtr coreName(const string &name);
-ObjectPtr primName(const string &name);
 
 
 
@@ -1233,16 +1253,26 @@ int valueHash(ValuePtr a);
 bool unify(PatternPtr pattern, ValuePtr value);
 bool unifyType(PatternPtr pattern, TypePtr type);
 
-void pushTempsBlock();
-void popTempsBlock();
+ObjectPtr coreName(const string &name);
+ObjectPtr primName(const string &name);
+ExprPtr moduleNameRef(const string &module, const string &name);
+ExprPtr coreNameRef(const string &name);
+ExprPtr primNameRef(const string &name);
 
-ValuePtr evaluate(ExprPtr expr, EnvPtr env);
+void pushTempBlock();
+void popTempBlock();
+void installTemp(ValuePtr value);
+
 ValuePtr evaluateToStatic(ExprPtr expr, EnvPtr env);
 ObjectPtr evaluateToCO(ExprPtr expr, EnvPtr env);
 TypePtr evaluateToType(ExprPtr expr, EnvPtr env);
 bool evaluateToBool(ExprPtr expr, EnvPtr env);
-
+ValuePtr evaluateNested(ExprPtr expr, EnvPtr env);
+ValuePtr evaluate(ExprPtr expr, EnvPtr env);
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
+
+ExprPtr convertCharLiteral(char c);
+ExprPtr convertStringLiteral(const string &s);
 
 ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
 bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args);

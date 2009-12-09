@@ -106,12 +106,12 @@ static void initializeModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
 
 static void installGlobals(ModulePtr m) {
-    EnvPtr env = new Env(m);
+    m->env = new Env(m);
     vector<TopLevelItemPtr>::iterator i, end;
     for (i = m->topLevelItems.begin(), end = m->topLevelItems.end();
          i != end; ++i) {
         TopLevelItem *x = i->raw();
-        x->env = env;
+        x->env = m->env;
         switch (x->objKind) {
         case RECORD :
             addGlobal(m, ((Record *)x)->name, x);
@@ -181,14 +181,6 @@ ModulePtr loadedModule(const string &module) {
     if (!modules.count(module))
         error("module not loaded: " + module);
     return modules[module];
-}
-
-ObjectPtr coreName(const string &name) {
-    return lookupPublic(loadedModule("_core"), new Identifier(name));
-}
-
-ObjectPtr primName(const string &name) {
-    return lookupPublic(loadedModule("__primitives__"), new Identifier(name));
 }
 
 

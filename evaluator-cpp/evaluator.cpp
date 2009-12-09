@@ -523,3 +523,299 @@ bool unifyType(PatternPtr pattern, TypePtr type) {
         return false;
     }
 }
+
+
+
+//
+// access names from other modules
+//
+
+ObjectPtr coreName(const string &name) {
+    return lookupPublic(loadedModule("_core"), new Identifier(name));
+}
+
+ObjectPtr primName(const string &name) {
+    return lookupPublic(loadedModule("__primitives__"), new Identifier(name));
+}
+
+ExprPtr moduleNameRef(const string &module, const string &name) {
+    ExprPtr nameRef = new NameRef(new Identifier(name));
+    return new SCExpr(loadedModule(module)->env, nameRef);
+}
+
+ExprPtr coreNameRef(const string &name) {
+    return moduleNameRef("_core", name);
+}
+
+ExprPtr primNameRef(const string &name) {
+    return moduleNameRef("__primitives__", name);
+}
+
+
+
+//
+// temp blocks
+//
+
+static vector<vector<ValuePtr> > tempBlocks;
+
+void pushTempBlock() {
+    vector<ValuePtr> block;
+    tempBlocks.push_back(block);
+}
+
+void popTempBlock() {
+    assert(tempBlocks.size() > 0);
+    vector<ValuePtr> &block = tempBlocks.back();
+    while (block.size() > 0)
+        block.pop_back();
+    tempBlocks.pop_back();
+}
+
+void installTemp(ValuePtr value) {
+    assert(tempBlocks.size() > 0);
+    assert(value->isOwned);
+    tempBlocks.back().push_back(value);
+}
+
+
+
+//
+// evaluate
+//
+
+ValuePtr evaluateNested(ExprPtr expr, EnvPtr env) {
+    LocationContext loc(expr->location);
+    ValuePtr v = evaluate(expr, env);
+    if (v->isOwned)
+        installTemp(v);
+    return v;
+}
+
+ValuePtr evaluateToStatic(ExprPtr expr, EnvPtr env) {
+    LocationContext loc(expr->location);
+    pushTempBlock();
+    ValuePtr v = evaluate(expr, env);
+    if (!v->isOwned)
+        v = cloneValue(v);
+    popTempBlock();
+    return v;
+}
+
+ObjectPtr evaluateToCO(ExprPtr expr, EnvPtr env) {
+    LocationContext loc(expr->location);
+    pushTempBlock();
+    ValuePtr v = evaluate(expr, env);
+    ObjectPtr obj = valueToCO(v);
+    popTempBlock();
+    return obj;
+}
+
+TypePtr evaluateToType(ExprPtr expr, EnvPtr env) {
+    LocationContext loc(expr->location);
+    pushTempBlock();
+    ValuePtr v = evaluate(expr, env);
+    if (v->type != compilerObjectType)
+        error("expecting a type");
+    ObjectPtr obj = valueToCO(v);
+    if (obj->objKind != TYPE)
+        error("expecting a type");
+    popTempBlock();
+    return (Type *)obj.raw();
+}
+
+bool evaluateToBool(ExprPtr expr, EnvPtr env) {
+    LocationContext loc(expr->location);
+    pushTempBlock();
+    ValuePtr v = evaluate(expr, env);
+    if (v->type != boolType)
+        error("bool value expected");
+    char c = *((char *)v->buf);
+    popTempBlock();
+    return c != 0;
+}
+
+ValuePtr evaluate(ExprPtr expr, EnvPtr env) {
+    switch (expr->objKind) {
+
+    case BOOL_LITERAL : {
+        BoolLiteral *x = (BoolLiteral *)expr.raw();
+        ValuePtr v = allocValue(boolType);
+        *((char *)v->buf) = (x->value ? 1 : 0);
+        return v;
+    }
+
+    case INT_LITERAL : {
+        IntLiteral *x = (IntLiteral *)expr.raw();
+        char *ptr = (char *)x->value.c_str();
+        char *end = ptr;
+        if (x->suffix == "i8") {
+            long y = strtol(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int8 literal");
+            if ((errno == ERANGE) || (y < SCHAR_MIN) || (y > SCHAR_MAX))
+                error("int8 literal out of range");
+            ValuePtr v = allocValue(int8Type);
+            *((char *)v->buf) = (char)y;
+            return v;
+        }
+        else if (x->suffix == "i16") {
+            long y = strtol(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int16 literal");
+            if ((errno == ERANGE) || (y < SHRT_MIN) || (y > SHRT_MAX))
+                error("int16 literal out of range");
+            ValuePtr v = allocValue(int16Type);
+            *((short *)v->buf) = (short)y;
+            return v;
+        }
+        else if ((x->suffix == "i32") || x->suffix.empty()) {
+            long y = strtol(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int32 literal");
+            if (errno == ERANGE)
+                error("int32 literal out of range");
+            ValuePtr v = allocValue(int32Type);
+            *((int *)v->buf) = (int)y;
+            return v;
+        }
+        else if (x->suffix == "i64") {
+            long long y = strtoll(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int64 literal");
+            if (errno == ERANGE)
+                error("int64 literal out of range");
+            ValuePtr v = allocValue(int64Type);
+            *((long long *)v->buf) = y;
+            return v;
+        }
+        else if (x->suffix == "u8") {
+            unsigned long y = strtoul(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint8 literal");
+            if ((errno == ERANGE) || (y > UCHAR_MAX))
+                error("uint8 literal out of range");
+            ValuePtr v = allocValue(uint8Type);
+            *((unsigned char *)v->buf) = (unsigned char)y;
+            return v;
+        }
+        else if (x->suffix == "u16") {
+            unsigned long y = strtoul(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint16 literal");
+            if ((errno == ERANGE) || (y > USHRT_MAX))
+                error("uint16 literal out of range");
+            ValuePtr v = allocValue(uint16Type);
+            *((unsigned short *)v->buf) = (unsigned short)y;
+            return v;
+        }
+        else if (x->suffix == "u32") {
+            unsigned long y = strtoul(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint32 literal");
+            if (errno == ERANGE)
+                error("uint32 literal out of range");
+            ValuePtr v = allocValue(uint32Type);
+            *((unsigned int *)v->buf) = (unsigned int)y;
+            return v;
+        }
+        else if (x->suffix == "u64") {
+            unsigned long long y = strtoull(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint64 literal");
+            if (errno == ERANGE)
+                error("uint64 literal out of range");
+            ValuePtr v = allocValue(uint64Type);
+            *((unsigned long long *)v->buf) = y;
+            return v;
+        }
+        else if (x->suffix == "f32") {
+            float y = strtof(ptr, &end);
+            if (*end != 0)
+                error("invalid float32 literal");
+            if (errno == ERANGE)
+                error("float32 literal out of range");
+            ValuePtr v = allocValue(float32Type);
+            *((float *)v->buf) = y;
+            return v;
+        }
+        else if (x->suffix == "f64") {
+            double y = strtod(ptr, &end);
+            if (*end != 0)
+                error("invalid float64 literal");
+            if (errno == ERANGE)
+                error("float64 literal out of range");
+            ValuePtr v = allocValue(float64Type);
+            *((double *)v->buf) = y;
+            return v;
+        }
+        error("invalid literal suffix: " + x->suffix);
+        return NULL;
+    }
+
+    case FLOAT_LITERAL : {
+        FloatLiteral *x = (FloatLiteral *)expr.raw();
+        char *ptr = (char *)x->value.c_str();
+        char *end = ptr;
+        if (x->suffix == "f32") {
+            float y = strtof(ptr, &end);
+            if (*end != 0)
+                error("invalid float32 literal");
+            if (errno == ERANGE)
+                error("float32 literal out of range");
+            ValuePtr v = allocValue(float32Type);
+            *((float *)v->buf) = y;
+            return v;
+        }
+        else if ((x->suffix == "f64") || x->suffix.empty()) {
+            double y = strtod(ptr, &end);
+            if (*end != 0)
+                error("invalid float64 literal");
+            if (errno == ERANGE)
+                error("float64 literal out of range");
+            ValuePtr v = allocValue(float64Type);
+            *((double *)v->buf) = y;
+            return v;
+        }
+        error("invalid float literal suffix: " + x->suffix);
+        return NULL;
+    }
+
+    case CHAR_LITERAL : {
+        CharLiteral *x = (CharLiteral *)expr.raw();
+        if (!x->converted)
+            x->converted = convertCharLiteral(x->value);
+        return evaluate(x->converted, env);
+    }
+
+    case STRING_LITERAL : {
+        StringLiteral *x = (StringLiteral *)expr.raw();
+        if (!x->converted)
+            x->converted = convertStringLiteral(x->value);
+        return evaluate(x->converted, env);
+    }
+
+    default :
+        assert(false);
+        return NULL;
+    }
+}
+
+ExprPtr convertCharLiteral(char c) {
+    ExprPtr nameRef = moduleNameRef("_char", "Char");
+    CallPtr call = new Call(nameRef);
+    ostringstream out;
+    out << (int)c;
+    call->args.push_back(new IntLiteral(out.str(), "i8"));
+    return call.raw();
+}
+
+ExprPtr convertStringLiteral(const string &s) {
+    ArrayPtr charArray = new Array();
+    for (unsigned i = 0; i < s.size(); ++i)
+        charArray->args.push_back(convertCharLiteral(s[i]));
+    ExprPtr nameRef = moduleNameRef("_string", "string");
+    CallPtr call = new Call(nameRef);
+    call->args.push_back(charArray.raw());
+    return call.raw();
+}
