@@ -1264,6 +1264,7 @@ int valueToInt(ValuePtr v);
 bool valueToBool(ValuePtr v);
 ValuePtr coToValue(ObjectPtr x);
 ObjectPtr valueToCO(ValuePtr v);
+TypePtr valueToType(ValuePtr v);
 ObjectPtr lower(ValuePtr v);
 
 void valueInit(ValuePtr dest);
@@ -1302,9 +1303,9 @@ ExprPtr convertArray(ArrayPtr x);
 ExprPtr convertUnaryOp(UnaryOpPtr x);
 ExprPtr convertBinaryOp(BinaryOpPtr x);
 
-ValuePtr invokeIndexing(ObjectPtr thing, const vector<ValuePtr> &args);
-ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
+ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args);
 bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args);
 int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args);
+ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
 
 #endif

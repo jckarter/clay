@@ -80,7 +80,7 @@ ValuePtr allocValue(TypePtr t) {
 
 //
 // intToValue, valueToInt, valueToBool,
-// coToValue, valueToCO
+// coToValue, valueToCO, valueToType, lower
 //
 
 ValuePtr intToValue(int x) {
@@ -112,6 +112,15 @@ ObjectPtr valueToCO(ValuePtr v) {
         error("expecting compiler object type");
     int x = *((int *)v->buf);
     return fromCOIndex(x);
+}
+
+TypePtr valueToType(ValuePtr v) {
+    if (v->type != compilerObjectType)
+        error("expecting a type");
+    ObjectPtr obj = valueToCO(v);
+    if (obj->objKind != TYPE)
+        error("expecting a type");
+    return (Type *)obj.raw();
 }
 
 ObjectPtr lower(ValuePtr v) {
@@ -646,25 +655,17 @@ ObjectPtr evaluateToCO(ExprPtr expr, EnvPtr env) {
 TypePtr evaluateToType(ExprPtr expr, EnvPtr env) {
     LocationContext loc(expr->location);
     pushTempBlock();
-    ValuePtr v = evaluate(expr, env);
-    if (v->type != compilerObjectType)
-        error("expecting a type");
-    ObjectPtr obj = valueToCO(v);
-    if (obj->objKind != TYPE)
-        error("expecting a type");
+    TypePtr t = valueToType(evaluate(expr, env));
     popTempBlock();
-    return (Type *)obj.raw();
+    return t;
 }
 
 bool evaluateToBool(ExprPtr expr, EnvPtr env) {
     LocationContext loc(expr->location);
     pushTempBlock();
-    ValuePtr v = evaluate(expr, env);
-    if (v->type != boolType)
-        error("bool value expected");
-    char c = *((char *)v->buf);
+    bool b = valueToBool(evaluate(expr, env));
     popTempBlock();
-    return c != 0;
+    return b;
 }
 
 ValuePtr evaluate(ExprPtr expr, EnvPtr env) {
@@ -1035,4 +1036,49 @@ ExprPtr convertBinaryOp(BinaryOpPtr x) {
     call->args.push_back(x->expr1);
     call->args.push_back(x->expr2);
     return call.raw();
+}
+
+
+
+//
+// invokeIndexing
+//
+
+ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args) {
+    switch (obj->objKind) {
+    case RECORD : {
+        vector<ValuePtr> args2;
+        args2.push_back(coToValue(obj));
+        for (unsigned i = 0; i < args.size(); ++i)
+            args2.push_back(args[i]);
+        return invoke(primName("RecordType"), args2);
+    }
+    case PRIM_OP : {
+        PrimOp *x = (PrimOp *)obj.raw();
+        switch (x->primOpCode) {
+        case PRIM_Pointer :
+            return invoke(primName("PointerType"), args);
+        case PRIM_Array :
+            return invoke(primName("ArrayType"), args);
+        case PRIM_Tuple :
+            return invoke(primName("TupleType"), args);
+        }
+    }
+    }
+    error("invalid indexing operation");
+    return NULL;
+}
+
+
+
+//
+// invokeToInt, invokeToBool
+//
+
+int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args) {
+    return valueToInt(invoke(callable, args));
+}
+
+bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args) {
+    return valueToBool(invoke(callable, args));
 }
