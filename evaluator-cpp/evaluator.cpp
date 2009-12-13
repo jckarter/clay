@@ -1041,6 +1041,63 @@ ExprPtr convertBinaryOp(BinaryOpPtr x) {
 
 
 //
+// evaluatePattern
+//
+
+PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env) {
+    switch (expr->objKind) {
+    case NAME_REF : {
+        NameRef *x = (NameRef *)expr.raw();
+        ObjectPtr y = lookupEnv(env, x->name);
+        if (y->objKind == PATTERN) {
+            PatternPtr z = (Pattern *)y.raw();
+            assert(z->patternKind == PATTERN_CELL);
+            return z;
+        }
+    }
+    case INDEXING : {
+        Indexing *x = (Indexing *)expr.raw();
+        ValuePtr thing = evaluateToStatic(x->expr, env);
+        vector<PatternPtr> args;
+        for (unsigned i = 0; i < x->args.size(); ++i)
+            args.push_back(evaluatePattern(x->args[i], env));
+        return indexingPattern(lower(thing), args);
+    }
+    }
+    ValuePtr v = evaluateToStatic(expr, env);
+    return new PatternCell(v);
+}
+
+PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args) {
+    switch(obj->objKind) {
+    case RECORD : {
+        Record *x = (Record *)obj.raw();
+        ensureArity(args, x->patternVars.size());
+        return new RecordTypePattern(x, args);
+    }
+    case PRIM_OP : {
+        PrimOp *x = (PrimOp *)obj.raw();
+        switch (x->primOpCode) {
+        case PRIM_Pointer :
+            ensureArity(args, 1);
+            return new PointerTypePattern(args[0]);
+        case PRIM_Array :
+            ensureArity(args, 2);
+            return new ArrayTypePattern(args[0], args[1]);
+        case PRIM_Tuple :
+            if (args.size() < 2)
+                error("tuples require atleast elements");
+            return new TupleTypePattern(args);
+        }
+    }
+    }
+    error("invalid indexing pattern");
+    return NULL;
+}
+
+
+
+//
 // invokeIndexing
 //
 
@@ -1081,4 +1138,29 @@ int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args) {
 
 bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args) {
     return valueToBool(invoke(callable, args));
+}
+
+
+
+//
+// invoke
+//
+
+ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args) {
+    switch (callable->objKind) {
+    case RECORD :
+        return invokeRecord((Record *)callable.raw(), args);
+    case PROCEDURE :
+        return invokeProcedure((Procedure *)callable.raw(), args);
+    case OVERLOADABLE :
+        return invokeOverloadable((Overloadable *)callable.raw(), args);
+    case EXTERNAL_PROCEDURE :
+        return invokeExternal((ExternalProcedure *)callable.raw(), args);
+    case TYPE :
+        return invokeType((Type *)callable.raw(), args);
+    case PRIM_OP :
+        return invokePrimOp((PrimOp *)callable.raw(), args);
+    }
+    error("invalid operation");
+    return NULL;
 }

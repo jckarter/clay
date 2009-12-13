@@ -391,6 +391,12 @@ void error(Ptr<T> context, const string &msg) {
     error(msg);
 }
 
+template <class T>
+void ensureArity(const vector<T> &args, int size) {
+    if ((int)args.size() != size)
+        error("incorrect number of arguments");
+}
+
 
 
 //
@@ -1294,7 +1300,9 @@ TypePtr evaluateToType(ExprPtr expr, EnvPtr env);
 bool evaluateToBool(ExprPtr expr, EnvPtr env);
 ValuePtr evaluateNested(ExprPtr expr, EnvPtr env);
 ValuePtr evaluate(ExprPtr expr, EnvPtr env);
+
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
+PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args);
 
 ExprPtr convertCharLiteral(char c);
 ExprPtr convertStringLiteral(const string &s);
@@ -1306,6 +1314,14 @@ ExprPtr convertBinaryOp(BinaryOpPtr x);
 ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args);
 bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args);
 int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args);
+
 ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
+
+ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args);
+ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args);
+ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args);
+ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args);
+ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args);
+ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args);
 
 #endif
