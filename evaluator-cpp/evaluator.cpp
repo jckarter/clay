@@ -1206,16 +1206,7 @@ ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args) {
     for (unsigned i = 0; i < cells.size(); ++i)
         cellValues.push_back(derefCell(cells[i]));
     TypePtr t = recordType(x, cellValues);
-    ValuePtr v = allocValue(t);
-    RecordType *rt = (RecordType *)t.raw();
-    const llvm::StructLayout *layout = recordTypeLayout(rt);
-    const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
-    assert(fieldTypes.size() == nonStaticArgs.size());
-    for (unsigned i = 0; i < fieldTypes.size(); ++i) {
-        char *p = v->buf + layout->getElementOffset(i);
-        valueInitCopy(new Value(fieldTypes[i], p, false), nonStaticArgs[i]);
-    }
-    return v;
+    return invokeType(t, nonStaticArgs);
 }
 
 bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env) {
@@ -1233,4 +1224,68 @@ bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env) {
     }
     assert(false);
     return false;
+}
+
+
+
+//
+// invokeType
+//
+// invoke constructors for array types, tuple types, and record types.
+// invoke default constructor, copy constructor for all types
+//
+
+ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
+    if (args.size() == 0) {
+        ValuePtr v = allocValue(x);
+        valueInit(v);
+        return v;
+    }
+    if ((args.size() == 1) && (args[0]->type == x))
+        return cloneValue(args[0]);
+    switch (x->typeKind) {
+    case ARRAY_TYPE : {
+        ArrayType *y = (ArrayType *)x.raw();
+        ensureArity(args, y->size);
+        TypePtr etype = y->elementType;
+        int esize = typeSize(etype);
+        ValuePtr v = allocValue(y);
+        for (int i = 0; i < y->size; ++i) {
+            if (args[i]->type != etype)
+                fmtError("type mismatch at argument %d", i+1);
+            valueInitCopy(new Value(etype, v->buf + i*esize, false), args[i]);
+        }
+        return v;
+    }
+    case TUPLE_TYPE : {
+        TupleType *y = (TupleType *)x.raw();
+        ensureArity(args, y->elementTypes.size());
+        const llvm::StructLayout *layout = tupleTypeLayout(y);
+        ValuePtr v = allocValue(y);
+        for (unsigned i = 0; i < y->elementTypes.size(); ++i) {
+            char *p = v->buf + layout->getElementOffset(i);
+            TypePtr etype = y->elementTypes[i];
+            if (args[i]->type != etype)
+                fmtError("type mismatch at argument %d", i+1);
+            valueInitCopy(new Value(etype, p, false), args[i]);
+        }
+        return v;
+    }
+    case RECORD_TYPE : {
+        RecordType *y = (RecordType *)x.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(y);
+        ensureArity(args, fieldTypes.size());
+        const llvm::StructLayout *layout = recordTypeLayout(y);
+        ValuePtr v = allocValue(y);
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            char *p = v->buf + layout->getElementOffset(i);
+            if (args[i]->type != fieldTypes[i])
+                fmtError("type mismatch at argument %d", i+1);
+            valueInitCopy(new Value(fieldTypes[i], p, false), args[i]);
+        }
+        return v;
+    }
+    }
+    error("invalid constructor");
+    return NULL;
 }

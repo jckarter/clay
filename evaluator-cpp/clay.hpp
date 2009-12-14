@@ -1323,10 +1323,11 @@ ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
 ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args);
 bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env);
 
+ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args);
+
 ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args);
 ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args);
 ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args);
-ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args);
 ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args);
 
 #endif
