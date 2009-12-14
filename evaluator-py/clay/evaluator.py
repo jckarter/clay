@@ -820,6 +820,7 @@ def foo(x, args) :
             error("mismatch at argument %d" % (i + 1))
     type_ = recordType(x, derefCells(cells))
     v = allocTempValue(type_)
+    # FIXME: ignore static args
     for f, arg in zip(recordFieldRefs(v), args) :
         copyValue(f, arg)
     return v
