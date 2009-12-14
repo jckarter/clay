@@ -384,6 +384,8 @@ private :
 
 void error(const string &msg);
 
+void fmtError(const char *fmt, ...);
+
 template <class T>
 void error(Ptr<T> context, const string &msg) {
     if (context->location)
@@ -1220,9 +1222,10 @@ struct Pattern : public Object {
 };
 
 struct PatternCell : public Pattern {
+    IdentifierPtr name;
     ValuePtr value;
-    PatternCell(ValuePtr value)
-        : Pattern(PATTERN_CELL), value(value) {}
+    PatternCell(IdentifierPtr name, ValuePtr value)
+        : Pattern(PATTERN_CELL), name(name), value(value) {}
 };
 
 struct ArrayTypePattern : public Pattern {
@@ -1281,9 +1284,6 @@ void valueAssign(ValuePtr dest, ValuePtr src);
 bool valueEquals(ValuePtr a, ValuePtr b);
 int valueHash(ValuePtr a);
 
-bool unify(PatternPtr pattern, ValuePtr value);
-bool unifyType(PatternPtr pattern, TypePtr type);
-
 ObjectPtr coreName(const string &name);
 ObjectPtr primName(const string &name);
 ExprPtr moduleNameRef(const string &module, const string &name);
@@ -1303,6 +1303,9 @@ ValuePtr evaluate(ExprPtr expr, EnvPtr env);
 
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
 PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args);
+bool unify(PatternPtr pattern, ValuePtr value);
+bool unifyType(PatternPtr pattern, TypePtr type);
+ValuePtr derefCell(PatternCellPtr cell);
 
 ExprPtr convertCharLiteral(char c);
 ExprPtr convertStringLiteral(const string &s);
@@ -1318,6 +1321,8 @@ int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args);
 ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
 
 ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args);
+bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env);
+
 ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args);
 ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args);
 ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args);

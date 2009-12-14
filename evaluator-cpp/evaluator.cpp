@@ -489,85 +489,6 @@ int valueHash(ValuePtr a) {
 
 
 //
-// unify, unifyType
-//
-
-bool unify(PatternPtr pattern, ValuePtr value) {
-    if (pattern->patternKind == PATTERN_CELL) {
-        PatternCell *x = (PatternCell *)pattern.raw();
-        if (!x->value) {
-            x->value = value;
-            return true;
-        }
-        return valueEquals(x->value, value);
-    }
-    if (value->type != compilerObjectType)
-        return false;
-    ObjectPtr x = valueToCO(value);
-    if (x->objKind != TYPE)
-        return false;
-    TypePtr y = (Type *)x.raw();
-    return unifyType(pattern, y);
-}
-
-bool unifyType(PatternPtr pattern, TypePtr type) {
-    switch (pattern->patternKind) {
-    case PATTERN_CELL : {
-        return unify(pattern, coToValue(type.raw()));
-    }
-    case ARRAY_TYPE_PATTERN : {
-        ArrayTypePattern *x = (ArrayTypePattern *)pattern.raw();
-        if (type->typeKind != ARRAY_TYPE)
-            return false;
-        ArrayType *y = (ArrayType *)type.raw();
-        if (!unifyType(x->elementType, y->elementType))
-            return false;
-        if (!unify(x->size, intToValue(y->size)))
-            return false;
-        return true;
-    }
-    case TUPLE_TYPE_PATTERN : {
-        TupleTypePattern *x = (TupleTypePattern *)pattern.raw();
-        if (type->typeKind != TUPLE_TYPE)
-            return false;
-        TupleType *y = (TupleType *)type.raw();
-        if (x->elementTypes.size() != y->elementTypes.size())
-            return false;
-        for (unsigned i = 0; i < x->elementTypes.size(); ++i)
-            if (!unifyType(x->elementTypes[i], y->elementTypes[i]))
-                return false;
-        return true;
-    }
-    case POINTER_TYPE_PATTERN : {
-        PointerTypePattern *x = (PointerTypePattern *)pattern.raw();
-        if (type->typeKind != POINTER_TYPE)
-            return false;
-        PointerType *y = (PointerType *)type.raw();
-        return unifyType(x->pointeeType, y->pointeeType);
-    }
-    case RECORD_TYPE_PATTERN : {
-        RecordTypePattern *x = (RecordTypePattern *)pattern.raw();
-        if (type->typeKind != RECORD_TYPE)
-            return false;
-        RecordType *y = (RecordType *)type.raw();
-        if (x->record != y->record)
-            return false;
-        if (x->params.size() != y->params.size())
-            return false;
-        for (unsigned i = 0; i < x->params.size(); ++i)
-            if (!unify(x->params[i], y->params[i]))
-                return false;
-        return true;
-    }
-    default :
-        assert(false);
-        return false;
-    }
-}
-
-
-
-//
 // access names from other modules
 //
 
@@ -1065,7 +986,7 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env) {
     }
     }
     ValuePtr v = evaluateToStatic(expr, env);
-    return new PatternCell(v);
+    return new PatternCell(NULL, v);
 }
 
 PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args) {
@@ -1093,6 +1014,101 @@ PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args) {
     }
     error("invalid indexing pattern");
     return NULL;
+}
+
+
+
+//
+// unify, unifyType
+//
+
+bool unify(PatternPtr pattern, ValuePtr value) {
+    if (pattern->patternKind == PATTERN_CELL) {
+        PatternCell *x = (PatternCell *)pattern.raw();
+        if (!x->value) {
+            x->value = value;
+            return true;
+        }
+        return valueEquals(x->value, value);
+    }
+    if (value->type != compilerObjectType)
+        return false;
+    ObjectPtr x = valueToCO(value);
+    if (x->objKind != TYPE)
+        return false;
+    TypePtr y = (Type *)x.raw();
+    return unifyType(pattern, y);
+}
+
+bool unifyType(PatternPtr pattern, TypePtr type) {
+    switch (pattern->patternKind) {
+    case PATTERN_CELL : {
+        return unify(pattern, coToValue(type.raw()));
+    }
+    case ARRAY_TYPE_PATTERN : {
+        ArrayTypePattern *x = (ArrayTypePattern *)pattern.raw();
+        if (type->typeKind != ARRAY_TYPE)
+            return false;
+        ArrayType *y = (ArrayType *)type.raw();
+        if (!unifyType(x->elementType, y->elementType))
+            return false;
+        if (!unify(x->size, intToValue(y->size)))
+            return false;
+        return true;
+    }
+    case TUPLE_TYPE_PATTERN : {
+        TupleTypePattern *x = (TupleTypePattern *)pattern.raw();
+        if (type->typeKind != TUPLE_TYPE)
+            return false;
+        TupleType *y = (TupleType *)type.raw();
+        if (x->elementTypes.size() != y->elementTypes.size())
+            return false;
+        for (unsigned i = 0; i < x->elementTypes.size(); ++i)
+            if (!unifyType(x->elementTypes[i], y->elementTypes[i]))
+                return false;
+        return true;
+    }
+    case POINTER_TYPE_PATTERN : {
+        PointerTypePattern *x = (PointerTypePattern *)pattern.raw();
+        if (type->typeKind != POINTER_TYPE)
+            return false;
+        PointerType *y = (PointerType *)type.raw();
+        return unifyType(x->pointeeType, y->pointeeType);
+    }
+    case RECORD_TYPE_PATTERN : {
+        RecordTypePattern *x = (RecordTypePattern *)pattern.raw();
+        if (type->typeKind != RECORD_TYPE)
+            return false;
+        RecordType *y = (RecordType *)type.raw();
+        if (x->record != y->record)
+            return false;
+        if (x->params.size() != y->params.size())
+            return false;
+        for (unsigned i = 0; i < x->params.size(); ++i)
+            if (!unify(x->params[i], y->params[i]))
+                return false;
+        return true;
+    }
+    default :
+        assert(false);
+        return false;
+    }
+}
+
+
+
+//
+// derefCell
+//
+
+ValuePtr derefCell(PatternCellPtr cell) {
+    if (!cell->value) {
+        if (cell->name)
+            error(cell->name, "unresolved pattern variable");
+        else
+            error("unresolved pattern variable");
+    }
+    return cell->value;
 }
 
 
@@ -1163,4 +1179,58 @@ ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args) {
     }
     error("invalid operation");
     return NULL;
+}
+
+
+
+//
+// invokeRecord
+//
+
+ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args) {
+    ensureArity(args, x->formalArgs.size());
+    EnvPtr env = new Env(x->env);
+    vector<PatternCellPtr> cells;
+    for (unsigned i = 0; i < x->patternVars.size(); ++i) {
+        cells.push_back(new PatternCell(x->patternVars[i], NULL));
+        addLocal(env, x->patternVars[i], cells[i].raw());
+    }
+    vector<ValuePtr> nonStaticArgs;
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (!matchArg(args[i], x->formalArgs[i], env))
+            fmtError("mismatch at argument %d", i+1);
+        if (x->formalArgs[i]->objKind == VALUE_ARG)
+            nonStaticArgs.push_back(args[i]);
+    }
+    vector<ValuePtr> cellValues;
+    for (unsigned i = 0; i < cells.size(); ++i)
+        cellValues.push_back(derefCell(cells[i]));
+    TypePtr t = recordType(x, cellValues);
+    ValuePtr v = allocValue(t);
+    RecordType *rt = (RecordType *)t.raw();
+    const llvm::StructLayout *layout = recordTypeLayout(rt);
+    const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+    assert(fieldTypes.size() == nonStaticArgs.size());
+    for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+        char *p = v->buf + layout->getElementOffset(i);
+        valueInitCopy(new Value(fieldTypes[i], p, false), nonStaticArgs[i]);
+    }
+    return v;
+}
+
+bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env) {
+    switch (farg->objKind) {
+    case VALUE_ARG : {
+        ValueArg *x = (ValueArg *)farg.raw();
+        PatternPtr pattern = evaluatePattern(x->type, env);
+        return unifyType(pattern, arg->type);
+    }
+    case STATIC_ARG : {
+        StaticArg *x = (StaticArg *)farg.raw();
+        PatternPtr pattern = evaluatePattern(x->pattern, env);
+        return unify(pattern, arg);
+    }
+    }
+    assert(false);
+    return false;
 }

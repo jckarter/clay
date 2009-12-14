@@ -1,6 +1,7 @@
 #include "clay.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <cstdarg>
 
 static vector<LocationPtr> *errorLocations = NULL;
 
@@ -92,4 +93,13 @@ void error(const string &msg) {
         fprintf(stderr, "error: %s\n", msg.c_str());
     }
     exit(-1);
+}
+
+void fmtError(const char *fmt, ...) {
+    va_list ap;
+    char s[256];
+    va_start(ap, fmt);
+    vsnprintf(s, sizeof(s)-1, fmt, ap);
+    va_end(ap);
+    error(s);
 }
