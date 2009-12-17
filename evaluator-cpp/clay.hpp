@@ -158,6 +158,9 @@ enum ObjectKind {
     TYPE,
     VALUE,
     PATTERN,
+
+    MATCH_INVOKE_RESULT,
+    STATEMENT_RESULT,
 };
 
 
@@ -247,6 +250,18 @@ struct TupleTypePattern;
 struct PointerTypePattern;
 struct RecordTypePattern;
 
+struct MatchInvokeResult;
+struct MatchInvokeSuccess;
+struct MatchInvokeArgCountError;
+struct MatchInvokeArgMismatch;
+struct MatchInvokePredicateFailure;
+
+struct StatementResult;
+struct GotoResult;
+struct BreakResult;
+struct ContinueResult;
+struct ReturnResult;
+
 
 
 //
@@ -333,6 +348,18 @@ typedef Ptr<ArrayTypePattern> ArrayTypePatternPtr;
 typedef Ptr<TupleTypePattern> TupleTypePatternPtr;
 typedef Ptr<PointerTypePattern> PointerTypePatternPtr;
 typedef Ptr<RecordTypePattern> RecordTypePatternPtr;
+
+typedef Ptr<MatchInvokeResult> MatchInvokeResultPtr;
+typedef Ptr<MatchInvokeSuccess> MatchInvokeSuccessPtr;
+typedef Ptr<MatchInvokeArgCountError> MatchInvokeArgCountErrorPtr;
+typedef Ptr<MatchInvokeArgMismatch> MatchInvokeArgMismatchPtr;
+typedef Ptr<MatchInvokePredicateFailure> MatchInvokePredicateFailurePtr;
+
+typedef Ptr<StatementResult> StatementResultPtr;
+typedef Ptr<GotoResult> GotoResultPtr;
+typedef Ptr<BreakResult> BreakResultPtr;
+typedef Ptr<ContinueResult> ContinueResultPtr;
+typedef Ptr<ReturnResult> ReturnResultPtr;
 
 
 
@@ -1314,6 +1341,12 @@ ExprPtr convertArray(ArrayPtr x);
 ExprPtr convertUnaryOp(UnaryOpPtr x);
 ExprPtr convertBinaryOp(BinaryOpPtr x);
 
+
+
+//
+// invoke
+//
+
 ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args);
 bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args);
 int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args);
@@ -1327,7 +1360,112 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args);
 
 ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args);
 ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args);
+
+
+
+//
+// matchInvokeCode
+//
+
+enum MatchInvokeResultKind {
+    MATCH_INVOKE_SUCCESS,
+    MATCH_INVOKE_ARG_COUNT_ERROR,
+    MATCH_INVOKE_ARG_MISMATCH,
+    MATCH_INVOKE_PREDICATE_FAILURE,
+};
+
+struct MatchInvokeResult : public Object {
+    int resultKind;
+    MatchInvokeResult(int resultKind)
+        : Object(MATCH_INVOKE_RESULT), resultKind(resultKind) {}
+};
+
+struct MatchInvokeSuccess : public MatchInvokeResult {
+    EnvPtr env;
+    MatchInvokeSuccess(EnvPtr env)
+        : MatchInvokeResult(MATCH_INVOKE_SUCCESS), env(env) {}
+};
+
+struct MatchInvokeArgCountError : public MatchInvokeResult {
+    MatchInvokeArgCountError()
+        : MatchInvokeResult(MATCH_INVOKE_ARG_COUNT_ERROR) {}
+};
+
+struct MatchInvokeArgMismatch : public MatchInvokeResult {
+    int pos;
+    MatchInvokeArgMismatch(int pos)
+        : MatchInvokeResult(MATCH_INVOKE_ARG_MISMATCH), pos(pos) {}
+};
+
+struct MatchInvokePredicateFailure : public MatchInvokeResult {
+    MatchInvokePredicateFailure()
+        : MatchInvokeResult(MATCH_INVOKE_PREDICATE_FAILURE) {}
+};
+
+void signalMatchInvokeError(MatchInvokeResultPtr result);
+MatchInvokeResultPtr
+matchInvokeCode(CodePtr code, EnvPtr env, const vector<ValuePtr> &args);
+EnvPtr bindValueArgs(EnvPtr env, const vector<ValuePtr> &args, CodePtr code);
+
+
+
+//
+// evalCodeBody
+//
+
+enum StatementResultKind {
+    GOTO_RESULT,
+    BREAK_RESULT,
+    CONTINUE_RESULT,
+    RETURN_RESULT,
+};
+
+struct StatementResult : public Object {
+    int resultKind;
+    StatementResult(int resultKind)
+        : Object(STATEMENT_RESULT), resultKind(resultKind) {}
+};
+
+struct GotoResult : public StatementResult {
+    IdentifierPtr labelName;
+    GotoResult(IdentifierPtr labelName)
+        : StatementResult(GOTO_RESULT), labelName(labelName) {}
+};
+
+struct BreakResult : public StatementResult {
+    StatementPtr stmt;
+    BreakResult(StatementPtr stmt)
+        : StatementResult(BREAK_RESULT), stmt(stmt) {}
+};
+
+struct ContinueResult : public StatementResult {
+    StatementPtr stmt;
+    ContinueResult(StatementPtr stmt)
+        : StatementResult(CONTINUE_RESULT), stmt(stmt) {}
+};
+
+struct ReturnResult : public StatementResult {
+    ValuePtr result;
+    ReturnResult(ValuePtr result)
+        : StatementResult(RETURN_RESULT), result(result) {}
+};
+
+ValuePtr evalCodeBody(CodePtr code, EnvPtr env);
+
+
+
+//
+// invokeExternal
+//
+
 ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args);
+
+
+
+//
+// invokePrimOp
+//
+
 ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args);
 
 #endif

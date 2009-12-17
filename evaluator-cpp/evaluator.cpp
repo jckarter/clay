@@ -1108,7 +1108,10 @@ ValuePtr derefCell(PatternCellPtr cell) {
         else
             error("unresolved pattern variable");
     }
-    return cell->value;
+    ValuePtr v = cell->value;
+    if (!v->isOwned)
+        v = cloneValue(v);
+    return v;
 }
 
 
@@ -1213,6 +1216,8 @@ bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env) {
     switch (farg->objKind) {
     case VALUE_ARG : {
         ValueArg *x = (ValueArg *)farg.raw();
+        if (!x->type)
+            return true;
         PatternPtr pattern = evaluatePattern(x->type, env);
         return unifyType(pattern, arg->type);
     }
@@ -1289,3 +1294,113 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
     error("invalid constructor");
     return NULL;
 }
+
+
+
+//
+// invokeProcedure, invokeOverloadable
+// invoke procedures and overloadables
+//
+
+ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args) {
+    MatchInvokeResultPtr result = matchInvokeCode(x->code, x->env, args);
+    switch (result->resultKind) {
+    case MATCH_INVOKE_SUCCESS : {
+        MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.raw();
+        EnvPtr env = bindValueArgs(y->env, args, x->code);
+        return evalCodeBody(x->code, env);
+    }
+    }
+    signalMatchInvokeError(result);
+    return NULL;
+}
+
+ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args) {
+    for (unsigned i = 0; i < x->overloads.size(); ++i) {
+        OverloadPtr y = x->overloads[i];
+        MatchInvokeResultPtr result = matchInvokeCode(y->code, y->env, args);
+        if (result->resultKind == MATCH_INVOKE_SUCCESS) {
+            MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.raw();
+            EnvPtr env = bindValueArgs(z->env, args, y->code);
+            return evalCodeBody(y->code, env);
+        }
+    }
+    error("no matching overload");
+    return NULL;
+}
+
+
+
+//
+// matchInvokeCode
+//
+
+void signalMatchInvokeError(MatchInvokeResultPtr result) {
+    switch (result->resultKind) {
+    case MATCH_INVOKE_SUCCESS :
+        assert(false);
+        break;
+    case MATCH_INVOKE_ARG_COUNT_ERROR :
+        error("incorrect no. of arguments");
+        break;
+    case MATCH_INVOKE_ARG_MISMATCH : {
+        MatchInvokeArgMismatch *x = (MatchInvokeArgMismatch *)result.raw();
+        fmtError("mismatch at argument %d", (x->pos + 1));
+        break;
+    }
+    case MATCH_INVOKE_PREDICATE_FAILURE :
+        error("predicate failure");
+        break;
+    }
+}
+
+MatchInvokeResultPtr
+matchInvokeCode(CodePtr code, EnvPtr env, const vector<ValuePtr> &args) {
+    if (args.size() != code->formalArgs.size())
+        return new MatchInvokeArgCountError();
+    EnvPtr patternEnv = new Env(env);
+    vector<PatternCellPtr> cells;
+    for (unsigned i = 0; i < code->patternVars.size(); ++i) {
+        cells.push_back(new PatternCell(code->patternVars[i], NULL));
+        addLocal(patternEnv, code->patternVars[i], cells[i].raw());
+    }
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (!matchArg(args[i], code->formalArgs[i], patternEnv))
+            return new MatchInvokeArgMismatch(i);
+    }
+    EnvPtr env2 = new Env(env);
+    for (unsigned i = 0; i < cells.size(); ++i) {
+        ValuePtr v = derefCell(cells[i]);
+        addLocal(env2, code->patternVars[i], v.raw());
+    }
+    if (code->predicate) {
+        bool result = evaluateToBool(code->predicate, env2);
+        if (!result)
+            return new MatchInvokePredicateFailure();
+    }
+    return new MatchInvokeSuccess(env2);
+}
+
+EnvPtr bindValueArgs(EnvPtr env, const vector<ValuePtr> &args, CodePtr code) {
+    EnvPtr env2 = new Env(env);
+    for (unsigned i = 0; i < args.size(); ++i) {
+        FormalArgPtr farg = code->formalArgs[i];
+        if (farg->objKind == VALUE_ARG) {
+            ValueArg *x = (ValueArg *)farg.raw();
+            ValuePtr v = args[i];
+            if (v->isOwned)
+                v = new Value(v->type, v->buf, false);
+            addLocal(env2, x->name, v.raw());
+        }
+    }
+    return env2;
+}
+
+
+
+//
+// evalCodeBody
+//
+
+// ValuePtr evalCodeBody(CodePtr code, EnvPtr env) {
+// }
