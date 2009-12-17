@@ -1399,8 +1399,237 @@ EnvPtr bindValueArgs(EnvPtr env, const vector<ValuePtr> &args, CodePtr code) {
 
 
 //
-// evalCodeBody
+// evalCodeBody, evalStatement
 //
 
-// ValuePtr evalCodeBody(CodePtr code, EnvPtr env) {
-// }
+ValuePtr evalCodeBody(CodePtr code, EnvPtr env) {
+    StatementResultPtr result = evalStatement(code->body, env);
+    if (!result)
+        result = new ReturnResult(NULL);
+    switch (result->resultKind) {
+    case GOTO_RESULT : {
+        GotoResult *x = (GotoResult *)result.raw();
+        LocationContext loc(x->labelName->location);
+        fmtError("label not found: %s", x->labelName->str.c_str());
+    }
+    case BREAK_RESULT : {
+        BreakResult *x = (BreakResult *)result.raw();
+        error(x->stmt, "invalid break statement");
+    }
+    case CONTINUE_RESULT : {
+        ContinueResult *x = (ContinueResult *)result.raw();
+        error(x->stmt, "invalid continue statement");
+    }
+    case RETURN_RESULT : {
+        ReturnResult *x = (ReturnResult *)result.raw();
+        return x->result;
+    }
+    }
+    assert(false);
+    return NULL;
+}
+
+StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
+    LocationContext loc(stmt->location);
+    switch (stmt->objKind) {
+    case BLOCK : {
+        Block *x = (Block *)stmt.raw();
+        unsigned i = 0;
+        map<string, LabelInfo> labels;
+        vector<ValuePtr> blockTemps;
+        evalCollectLabels(x->statements, i, labels, env);
+        for (; i < x->statements.size(); ++i) {
+            StatementPtr y = x->statements[i];
+            if (y->objKind == BINDING) {
+                env = evalBinding((Binding *)y.raw(), env, blockTemps);
+                evalCollectLabels(x->statements, i+1, labels, env);
+            }
+            else if (y->objKind == LABEL) {
+                // ignore
+            }
+            else {
+                StatementResultPtr result = evalStatement(y, env);
+                if (!result)
+                    continue;
+                if (result->resultKind == GOTO_RESULT) {
+                    GotoResult *z = (GotoResult *)result.raw();
+                    map<string, LabelInfo>::iterator li =
+                        labels.find(z->labelName->str);
+                    if (li != labels.end()) {
+                        env = li->second.env;
+                        i = li->second.blockPos;
+                        continue;
+                    }
+                }
+                while (!blockTemps.empty())
+                    blockTemps.pop_back();
+                return result;
+            }
+        }
+        while (!blockTemps.empty())
+            blockTemps.pop_back();
+        return NULL;
+    }
+
+    case LABEL :
+    case BINDING :
+        error("invalid statement");
+
+    case ASSIGNMENT : {
+        Assignment *x = (Assignment *)stmt.raw();
+        pushTempBlock();
+        ValuePtr right = evaluate(x->right, env);
+        ValuePtr left = evaluate(x->left, env);
+        if (left->isOwned)
+            error("cannot assign to a temp");
+        valueAssign(left, right);
+        popTempBlock();
+        return NULL;
+    }
+
+    case GOTO : {
+        Goto *x = (Goto *)stmt.raw();
+        return new GotoResult(x->labelName);
+    }
+
+    case RETURN : {
+        Return *x = (Return *)stmt.raw();
+        if (!x->expr)
+            return new ReturnResult(NULL);
+        ValuePtr v = evaluateToStatic(x->expr, env);
+        return new ReturnResult(v);
+    }
+
+    case RETURN_REF : {
+        ReturnRef *x = (ReturnRef *)stmt.raw();
+        pushTempBlock();
+        ValuePtr v = evaluate(x->expr, env);
+        if (v->isOwned)
+            error("cannot return a temporary by reference");
+        popTempBlock();
+        return new ReturnResult(v);
+    }
+
+    case IF : {
+        If *x = (If *)stmt.raw();
+        bool cond = evaluateToBool(x->condition, env);
+        if (cond)
+            return evalStatement(x->thenPart, env);
+        if (x->elsePart)
+            return evalStatement(x->elsePart, env);
+        return NULL;
+            
+    }
+
+    case EXPR_STATEMENT : {
+        ExprStatement *x = (ExprStatement *)stmt.raw();
+        pushTempBlock();
+        evaluate(x->expr, env);
+        popTempBlock();
+        return NULL;
+    }
+
+    case WHILE : {
+        While *x = (While *)stmt.raw();
+        while (true) {
+            bool cond = evaluateToBool(x->condition, env);
+            if (!cond) break;
+            StatementResultPtr result = evalStatement(x->body, env);
+            if (!result)
+                continue;
+            if (result->resultKind == BREAK_RESULT)
+                break;
+            if (result->resultKind == CONTINUE_RESULT)
+                continue;
+            return result;
+        }
+        return NULL;
+    }
+
+    case BREAK : {
+        Break *x = (Break *)stmt.raw();
+        return new BreakResult(x);
+    }
+
+    case CONTINUE : {
+        Continue *x = (Continue *)stmt.raw();
+        return new ContinueResult(x);
+    }
+
+    case FOR : {
+        For *x = (For *)stmt.raw();
+        if (!x->converted)
+            x->converted = convertForStatement(x);
+        return evalStatement(x->converted, env);
+    }
+
+    }
+    assert(false);
+    return NULL;
+}
+
+void evalCollectLabels(const vector<StatementPtr> &statements,
+                       unsigned startIndex, map<string, LabelInfo> &labels,
+                       EnvPtr env) {
+    for (unsigned i = startIndex; i < statements.size(); ++i) {
+        StatementPtr x = statements[i];
+        switch (x->objKind) {
+        case LABEL : {
+            Label *y = (Label *)x.raw();
+            labels[y->name->str] = LabelInfo(env, i);
+        }
+        case BINDING :
+            return;
+        }
+    }
+}
+
+EnvPtr evalBinding(BindingPtr x, EnvPtr env, vector<ValuePtr> &blockTemps) {
+    ValuePtr right;
+    pushTempBlock();
+    switch (x->bindingKind) {
+    case VAR :
+        right = evaluate(x->expr, env);
+        if (!right->isOwned)
+            right = cloneValue(right);
+        blockTemps.push_back(right);
+        right = new Value(right->type, right->buf, false);
+    case REF :
+        right = evaluate(x->expr, env);
+        if (right->isOwned) {
+            blockTemps.push_back(right);
+            right = new Value(right->type, right->buf, false);
+        }
+    case STATIC :
+        right = evaluate(x->expr, env);
+        if (!right->isOwned)
+            right = cloneValue(right);
+    default :
+        assert(false);
+    }
+    EnvPtr env2 = new Env(env);
+    addLocal(env2, x->name, right.raw());
+    return env2;
+}
+
+StatementPtr convertForStatement(ForPtr x) {
+    IdentifierPtr exprVar = new Identifier("%expr");
+    IdentifierPtr iterVar = new Identifier("%iter");
+
+    BlockPtr block = new Block();
+    block->statements.push_back(new Binding(REF, exprVar, x->expr));
+
+    CallPtr iteratorCall = new Call(coreNameRef("iterator"));
+    iteratorCall->args.push_back(new NameRef(exprVar));
+    block->statements.push_back(new Binding(VAR, iterVar, iteratorCall.raw()));
+
+    CallPtr hasNextCall = new Call(coreNameRef("hasNext?"));
+    hasNextCall->args.push_back(new NameRef(iterVar));
+    CallPtr nextCall = new Call(coreNameRef("next"));
+    nextCall->args.push_back(new NameRef(iterVar));
+    BlockPtr whileBody = new Block();
+    whileBody->statements.push_back(new Binding(REF, x->variable, nextCall.raw()));
+
+    block->statements.push_back(new While(hasNextCall.raw(), whileBody.raw()));
+    return block.raw();
+}

@@ -759,6 +759,7 @@ struct For : public Statement {
     IdentifierPtr variable;
     ExprPtr expr;
     StatementPtr body;
+    StatementPtr converted;
     For(IdentifierPtr variable, ExprPtr expr, StatementPtr body)
         : Statement(FOR), variable(variable), expr(expr), body(body) {}
 };
@@ -1451,6 +1452,24 @@ struct ReturnResult : public StatementResult {
 };
 
 ValuePtr evalCodeBody(CodePtr code, EnvPtr env);
+
+StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env);
+
+struct LabelInfo {
+    EnvPtr env;
+    unsigned blockPos;
+    LabelInfo() : env(NULL), blockPos((unsigned)-1) {}
+    LabelInfo(EnvPtr env, unsigned blockPos)
+        : env(env), blockPos(blockPos) {}
+};
+
+void evalCollectLabels(const vector<StatementPtr> &statements,
+                       unsigned startIndex, map<string, LabelInfo> &labels,
+                       EnvPtr env);
+
+EnvPtr evalBinding(BindingPtr x, EnvPtr env, vector<ValuePtr> &blockTemps);
+
+StatementPtr convertForStatement(ForPtr x);
 
 
 
