@@ -17,7 +17,7 @@ record Vector[T](size:Int32, capacity:Int32, data:Pointer[T]);
 //
 
 vector[T,n](a:Array[T,n]) {
-    var v = Vector[T]();
+    var v = Vector[T](0, 0, null(T));
     for (x in a)
         pushBack(v, x);
     return v;
