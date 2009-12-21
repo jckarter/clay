@@ -861,7 +861,7 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
         vector<ValuePtr> args;
         args.push_back(thing);
         args.push_back(intToValue(x->index));
-        return invoke(primName("tupleFieldRef"), args);
+        return invoke(primName("tupleRef"), args);
     }
 
     case UNARY_OP : {
@@ -2159,6 +2159,13 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     case PRIM_Tuple : {
         error("Tuple type constructor cannot be invoked");
     }
+    case PRIM_TupleSize : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        ensureTupleType(t);
+        TupleType *tt = (TupleType *)t.raw();
+        return intToValue(tt->elementTypes.size());
+    }
     case PRIM_TupleElementType : {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
@@ -2169,14 +2176,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
             error("tuple type index out of range");
         return coToValue(tt->elementTypes[i].raw());
     }
-    case PRIM_TupleFieldCount : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        ensureTupleType(t);
-        TupleType *tt = (TupleType *)t.raw();
-        return intToValue(tt->elementTypes.size());
-    }
-    case PRIM_TupleFieldOffset : {
+    case PRIM_TupleElementOffset : {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
         ensureTupleType(t);
@@ -2203,7 +2203,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         }
         return v;
     }
-    case PRIM_tupleFieldRef : {
+    case PRIM_tupleRef : {
         ensureArity(args, 2);
         ensureTupleType(args[0]->type);
         TupleType *tt = (TupleType *)args[0]->type.raw();

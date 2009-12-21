@@ -81,11 +81,11 @@ arrayRef[T,n](a:Array[T,n], i:Int32) ref : T
 TupleType?(T:CompilerObject):Bool
 TupleType(T1, ...,Tn): CompilerObject
 Tuple[T1, ..., Tn]
+TupleSize(T:CompilerObject): Int32
 TupleElementType(T:CompilerObject, i:Int32): CompilerObject
-TupleFieldCount(T:CompilerObject): Int32
-TupleFieldOffset(T:CompilerObject, i:Int32): Int32
+TupleElementOffset(T:CompilerObject, i:Int32): Int32
 tuple(v1, ...,vn): tuple type
-tupleFieldRef [T|TupleType?(T)] (a:T, static i)
+tupleRef [T|TupleType?(T)] (a:T, static i)
 
 RecordType?(R:CompilerObject):Bool
 RecordType(R:CompilerObject, v1, ..., vn):CompilerObject
