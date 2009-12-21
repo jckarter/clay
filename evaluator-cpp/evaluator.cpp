@@ -91,9 +91,15 @@ ValuePtr allocValue(TypePtr t) {
 
 
 //
-// intToValue, valueToInt, valueToBool,
+// boolToValue, intToValue, valueToInt, valueToBool,
 // coToValue, valueToCO, valueToType, lower
 //
+
+ValuePtr boolToValue(bool x) {
+    ValuePtr v = allocValue(boolType);
+    *((char *)v->buf) = (x ? 1 : 0);
+    return v;
+}
 
 ValuePtr intToValue(int x) {
     ValuePtr v = allocValue(int32Type);
@@ -640,9 +646,7 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
 
     case BOOL_LITERAL : {
         BoolLiteral *x = (BoolLiteral *)expr.raw();
-        ValuePtr v = allocValue(boolType);
-        *((char *)v->buf) = (x->value ? 1 : 0);
-        return v;
+        return boolToValue(x->value);
     }
 
     case INT_LITERAL : {
@@ -1782,4 +1786,384 @@ ValuePtr execLLVMFunc(llvm::Function *func, const vector<ValuePtr> &args,
     }
     llvmEngine->runFunction(func, gvArgs);
     return out;
+}
+
+
+
+//
+// invokePrimOp
+//
+
+static void ensurePrimitiveType(ValuePtr a) {
+    if (a->type->typeKind == RECORD_TYPE)
+        error("primitiveInit cannot be applied to record types");
+}
+
+static void ensureSameType(ValuePtr a, ValuePtr b) {
+    if (a->type != b->type)
+        error("type mismatch");
+}
+
+static void ensureNumericType(ValuePtr a) {
+    switch (a->type->typeKind) {
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+        return;
+    }
+    error("numeric type expected");
+}
+
+ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
+    switch (x->primOpCode) {
+    case PRIM_TypeP : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToCO(args[0]);
+        return boolToValue(obj->objKind == TYPE);
+    }
+    case PRIM_TypeSize : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return intToValue(typeSize(t));
+    }
+
+    case PRIM_primitiveInit : {
+        ensureArity(args, 1);
+        ensurePrimitiveType(args[0]);
+        valueInit(args[0]);
+        return voidValue;
+    }
+    case PRIM_primitiveDestroy : {
+        ensureArity(args, 1);
+        ensurePrimitiveType(args[0]);
+        valueDestroy(args[0]);
+        return voidValue;
+    }
+    case PRIM_primitiveCopy : {
+        ensureArity(args, 2);
+        ensurePrimitiveType(args[0]);
+        ensureSameType(args[0], args[1]);
+        valueInitCopy(args[0], args[1]);
+        return voidValue;
+    }
+    case PRIM_primitiveAssign : {
+        ensureArity(args, 2);
+        ensurePrimitiveType(args[0]);
+        ensureSameType(args[0], args[1]);
+        valueAssign(args[0], args[1]);
+        return voidValue;
+    }
+    case PRIM_primitiveEqualsP : {
+        ensureArity(args, 2);
+        ensurePrimitiveType(args[0]);
+        ensureSameType(args[0], args[1]);
+        return boolToValue(valueEquals(args[0], args[1]));
+    }
+    case PRIM_primitiveHash : {
+        ensureArity(args, 1);
+        ensurePrimitiveType(args[0]);
+        return intToValue(valueHash(args[0]));
+    }
+
+    case PRIM_BoolTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t == boolType);
+    }
+    case PRIM_boolNot : {
+        ensureArity(args, 1);
+        bool x = valueToBool(args[0]);
+        return boolToValue(!x);
+    }
+    case PRIM_boolTruth : {
+        ensureArity(args, 1);
+        bool x = valueToBool(args[0]);
+        return boolToValue(x);
+    }
+
+    case PRIM_IntegerTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t->typeKind == INTEGER_TYPE);
+    }
+    case PRIM_SignedIntegerTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        if (t->typeKind != INTEGER_TYPE)
+            return boolToValue(false);
+        IntegerType *y = (IntegerType *)t.raw();
+        return boolToValue(y->isSigned);
+    }
+    case PRIM_FloatTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t->typeKind == FLOAT_TYPE);
+    }
+    case PRIM_numericEqualsP : {
+        ensureArity(args, 2);
+        ensureNumericType(args[0]);
+        ensureSameType(args[0], args[1]);
+        return boolToValue(numericEquals(args[0], args[1]));
+    }
+    case PRIM_numericLesserP : {
+        ensureArity(args, 2);
+        ensureNumericType(args[0]);
+        ensureSameType(args[0], args[1]);
+        return boolToValue(numericLesser(args[0], args[1]));
+    }
+    case PRIM_numericAdd : {
+        ensureArity(args, 2);
+        ensureNumericType(args[0]);
+        ensureSameType(args[0], args[1]);
+        return numericAdd(args[0], args[1]);
+    }
+    case PRIM_numericSubtract : {
+        ensureArity(args, 2);
+        ensureNumericType(args[0]);
+        ensureSameType(args[0], args[1]);
+        return numericSubtract(args[0], args[1]);
+    }
+    case PRIM_numericMultiply : {
+        ensureArity(args, 2);
+        ensureNumericType(args[0]);
+        ensureSameType(args[0], args[1]);
+        return numericMultiply(args[0], args[1]);
+    }
+    case PRIM_numericDivide : {
+        ensureArity(args, 2);
+        ensureNumericType(args[0]);
+        ensureSameType(args[0], args[1]);
+        return numericDivide(args[0], args[1]);
+    }
+    case PRIM_numericNegate : {
+        ensureArity(args, 1);
+        ensureNumericType(args[0]);
+        return numericNegate(args[0]);
+    }
+
+    case PRIM_integerRemainder :
+    case PRIM_integerShiftLeft :
+    case PRIM_integerShiftRight :
+    case PRIM_integerBitwiseAnd :
+    case PRIM_integerBitwiseOr :
+    case PRIM_integerBitwiseXor :
+
+    case PRIM_numericConvert :
+
+    case PRIM_VoidTypeP :
+
+    case PRIM_CompilerObjectTypeP :
+
+    case PRIM_PointerTypeP :
+    case PRIM_PointerType :
+    case PRIM_Pointer :
+    case PRIM_PointeeType :
+
+    case PRIM_addressOf :
+    case PRIM_pointerDereference :
+    case PRIM_pointerToInt :
+    case PRIM_intToPointer :
+    case PRIM_pointerCast :
+    case PRIM_allocateMemory :
+    case PRIM_freeMemory :
+
+    case PRIM_ArrayTypeP :
+    case PRIM_ArrayType :
+    case PRIM_Array :
+    case PRIM_ArrayElementType :
+    case PRIM_ArraySize :
+    case PRIM_array :
+    case PRIM_arrayRef :
+
+    case PRIM_TupleTypeP :
+    case PRIM_TupleType :
+    case PRIM_Tuple :
+    case PRIM_TupleElementType :
+    case PRIM_TupleFieldCount :
+    case PRIM_TupleFieldOffset :
+    case PRIM_tuple :
+    case PRIM_tupleFieldRef :
+
+    case PRIM_RecordTypeP :
+    case PRIM_RecordType :
+    case PRIM_RecordElementType :
+    case PRIM_RecordFieldCount :
+    case PRIM_RecordFieldOffset :
+    case PRIM_RecordFieldIndex :
+    case PRIM_recordFieldRef :
+    case PRIM_recordFieldRefByName :
+    case PRIM_recordInit :
+    case PRIM_recordDestroy :
+    case PRIM_recordCopy :
+    case PRIM_recordAssign :
+    case PRIM_recordEqualsP :
+    case PRIM_recordHash :
+        break;
+    }
+    error("invalid prim op");
+    return NULL;
+}
+
+
+
+//
+// numeric primitives
+//
+
+#define NUMERIC_BINARY_OP(operation, a, b) \
+    switch (a->type->typeKind) { \
+    case INTEGER_TYPE : { \
+        IntegerType *t = (IntegerType *)a->type.raw(); \
+        if (t->isSigned) { \
+            switch (t->bits) { \
+            case 8 : return operation<char>(a, b); \
+            case 16 : return operation<short>(a, b); \
+            case 32 : return operation<long>(a, b); \
+            case 64 : return operation<long long>(a, b); \
+            default : \
+                assert (false); \
+            } \
+        } \
+        else { \
+            switch (t->bits) { \
+            case 8 : return operation<unsigned char>(a, b); \
+            case 16 : return operation<unsigned short>(a, b); \
+            case 32 : return operation<unsigned long>(a, b); \
+            case 64 : return operation<unsigned long long>(a, b); \
+            default : \
+                assert (false); \
+            } \
+        } \
+    } \
+    case FLOAT_TYPE : { \
+        FloatType *t = (FloatType *)a->type.raw(); \
+        switch (t->bits) { \
+        case 32 : return operation<float>(a, b); \
+        case 64 : return operation<double>(a, b); \
+        default : \
+            assert(false); \
+        } \
+    } \
+    default : \
+        assert(false); \
+    }
+    
+
+template <typename T>
+bool _numericEquals(ValuePtr a, ValuePtr b) {
+    return *((T *)a->buf) == *((T *)b->buf);
+}
+
+bool numericEquals(ValuePtr a, ValuePtr b) {
+    assert(a->type == b->type);
+    NUMERIC_BINARY_OP(_numericEquals, a, b);
+    return false;
+}
+
+template <typename T>
+bool _numericLesser(ValuePtr a, ValuePtr b) {
+    return *((T *)a->buf) < *((T *)b->buf);
+}
+
+bool numericLesser(ValuePtr a, ValuePtr b) {
+    assert(a->type == b->type);
+    NUMERIC_BINARY_OP(_numericLesser, a, b);
+    return false;
+}
+
+template <typename T>
+ValuePtr _numericAdd(ValuePtr a, ValuePtr b) {
+    ValuePtr v = allocValue(a->type);
+    *((T *)v->buf) = *((T *)a->buf) + *((T *)b->buf);
+    return v;
+}
+
+ValuePtr numericAdd(ValuePtr a, ValuePtr b) {
+    assert(a->type == b->type);
+    NUMERIC_BINARY_OP(_numericAdd, a, b);
+    return NULL;
+}
+
+template <typename T>
+ValuePtr _numericSubtract(ValuePtr a, ValuePtr b) {
+    ValuePtr v = allocValue(a->type);
+    *((T *)v->buf) = *((T *)a->buf) - *((T *)b->buf);
+    return v;
+}
+
+ValuePtr numericSubtract(ValuePtr a, ValuePtr b) {
+    assert(a->type == b->type);
+    NUMERIC_BINARY_OP(_numericSubtract, a, b);
+    return NULL;
+}
+
+template <typename T>
+ValuePtr _numericMultiply(ValuePtr a, ValuePtr b) {
+    ValuePtr v = allocValue(a->type);
+    *((T *)v->buf) = *((T *)a->buf) * *((T *)b->buf);
+    return v;
+}
+
+ValuePtr numericMultiply(ValuePtr a, ValuePtr b) {
+    assert(a->type == b->type);
+    NUMERIC_BINARY_OP(_numericMultiply, a, b);
+    return NULL;
+}
+
+template <typename T>
+ValuePtr _numericDivide(ValuePtr a, ValuePtr b) {
+    ValuePtr v = allocValue(a->type);
+    *((T *)v->buf) = *((T *)a->buf) / *((T *)b->buf);
+    return v;
+}
+
+ValuePtr numericDivide(ValuePtr a, ValuePtr b) {
+    assert(a->type == b->type);
+    NUMERIC_BINARY_OP(_numericDivide, a, b);
+    return NULL;
+}
+
+template <typename T>
+ValuePtr _numericNegate(ValuePtr a) {
+    ValuePtr v = allocValue(a->type);
+    *((T *)v->buf) = - *((T *)a->buf);
+    return v;
+}
+
+ValuePtr numericNegate(ValuePtr a) {
+    switch (a->type->typeKind) {
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)a->type.raw();
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 : return _numericNegate<char>(a);
+            case 16 : return _numericNegate<short>(a);
+            case 32 : return _numericNegate<long>(a);
+            case 64 : return _numericNegate<long long>(a);
+            default :
+                assert (false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 : return _numericNegate<unsigned char>(a);
+            case 16 : return _numericNegate<unsigned short>(a);
+            case 32 : return _numericNegate<unsigned long>(a);
+            case 64 : return _numericNegate<unsigned long long>(a);
+            default :
+                assert (false);
+            }
+        }
+    }
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)a->type.raw();
+        switch (t->bits) {
+        case 32 : return _numericNegate<float>(a);
+        case 64 : return _numericNegate<double>(a);
+        default :
+            assert(false);
+        }
+    }
+    default :
+        assert(false);
+    }
 }

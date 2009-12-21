@@ -35,16 +35,17 @@ numericAdd[N](a:N, b:N): N if (NumericType?(N))
 numericSubtract[N](a:N, b:N): N if (NumericType?(N))
 numericMultiply[N](a:N, b:N): N if (NumericType?(N))
 numericDivide[N](a:N, b:N): N if (NumericType?(N))
-numericRemainder[N](a:N, b:N): N if (NumericType?(N))
 numericNegate[N](a:N): N if (NumericType?(N))
+
+integerRemainder[N](a:N, b:N): N if (NumericType?(N))
+integerShiftLeft[I](a:I, n:I): I if (IntegerType?(I))
+integerShiftRight[I](a:I, n:I): I if (IntegerType?(I))
+integerBitwiseAnd[I](a:I, b:I): I if (IntegerType?(I))
+integerBitwiseOr[I](a:I, b:I): I if (IntegerType?(I))
+integerBitwiseXor[I](a:I, b:I): I if (IntegerType?(I))
+
 numericConvert[Dest,Src](static Dest, a:Src): Dest
     if (NumericType?(Dest) and NumericType?(Src))
-
-shiftLeft[I](a:I, n:I): I if (IntegerType?(I))
-shiftRight[I](a:I, n:I): I if (IntegerType?(I))
-bitwiseAnd[I](a:I, b:I): I if (IntegerType?(I))
-bitwiseOr[I](a:I, b:I): I if (IntegerType?(I))
-bitwiseXor[I](a:I, b:I): I if (IntegerType?(I))
 
 VoidType?(T:CompilerObject):Bool
 

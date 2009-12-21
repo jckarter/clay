@@ -268,15 +268,16 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(numericSubtract);
     PRIMITIVE(numericMultiply);
     PRIMITIVE(numericDivide);
-    PRIMITIVE(numericRemainder);
     PRIMITIVE(numericNegate);
-    PRIMITIVE(numericConvert);
 
-    PRIMITIVE(shiftLeft);
-    PRIMITIVE(shiftRight);
-    PRIMITIVE(bitwiseAnd);
-    PRIMITIVE(bitwiseOr);
-    PRIMITIVE(bitwiseXor);
+    PRIMITIVE(integerRemainder);
+    PRIMITIVE(integerShiftLeft);
+    PRIMITIVE(integerShiftRight);
+    PRIMITIVE(integerBitwiseAnd);
+    PRIMITIVE(integerBitwiseOr);
+    PRIMITIVE(integerBitwiseXor);
+
+    PRIMITIVE(numericConvert);
 
     PRIMITIVE(VoidTypeP);
 

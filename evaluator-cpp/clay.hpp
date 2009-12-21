@@ -1028,15 +1028,16 @@ enum PrimOpCode {
     PRIM_numericSubtract,
     PRIM_numericMultiply,
     PRIM_numericDivide,
-    PRIM_numericRemainder,
     PRIM_numericNegate,
-    PRIM_numericConvert,
 
-    PRIM_shiftLeft,
-    PRIM_shiftRight,
-    PRIM_bitwiseAnd,
-    PRIM_bitwiseOr,
-    PRIM_bitwiseXor,
+    PRIM_integerRemainder,
+    PRIM_integerShiftLeft,
+    PRIM_integerShiftRight,
+    PRIM_integerBitwiseAnd,
+    PRIM_integerBitwiseOr,
+    PRIM_integerBitwiseXor,
+
+    PRIM_numericConvert,
 
     PRIM_VoidTypeP,
 
@@ -1324,6 +1325,7 @@ ObjectPtr fromCOIndex(int i);
 
 ValuePtr allocValue(TypePtr t);
 
+ValuePtr boolToValue(bool x);
 ValuePtr intToValue(int x);
 int valueToInt(ValuePtr v);
 bool valueToBool(ValuePtr v);
@@ -1542,5 +1544,13 @@ ValuePtr execLLVMFunc(llvm::Function *func, const vector<ValuePtr> &args,
 //
 
 ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args);
+
+bool numericEquals(ValuePtr a, ValuePtr b);
+bool numericLesser(ValuePtr a, ValuePtr b);
+ValuePtr numericAdd(ValuePtr a, ValuePtr b);
+ValuePtr numericSubtract(ValuePtr a, ValuePtr b);
+ValuePtr numericMultiply(ValuePtr a, ValuePtr b);
+ValuePtr numericDivide(ValuePtr a, ValuePtr b);
+ValuePtr numericNegate(ValuePtr a);
 
 #endif
