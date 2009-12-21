@@ -15,8 +15,12 @@
 #include <llvm/DerivedTypes.h>
 #include <llvm/Module.h>
 #include <llvm/ModuleProvider.h>
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/Function.h>
+#include <llvm/BasicBlock.h>
+#include <llvm/Support/IRBuilder.h>
 #include <llvm/Target/TargetData.h>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/ExecutionEngine/GenericValue.h>
 
 using std::string;
 using std::vector;
@@ -146,6 +150,7 @@ enum ObjectKind {
     OVERLOAD,
     OVERLOADABLE,
     EXTERNAL_PROCEDURE,
+    EXTERNAL_ARG,
 
     IMPORT,
     EXPORT,
@@ -223,6 +228,7 @@ struct Procedure;
 struct Overload;
 struct Overloadable;
 struct ExternalProcedure;
+struct ExternalArg;
 
 struct Import;
 struct Export;
@@ -322,6 +328,7 @@ typedef Ptr<Procedure> ProcedurePtr;
 typedef Ptr<Overload> OverloadPtr;
 typedef Ptr<Overloadable> OverloadablePtr;
 typedef Ptr<ExternalProcedure> ExternalProcedurePtr;
+typedef Ptr<ExternalArg> ExternalArgPtr;
 
 typedef Ptr<Import> ImportPtr;
 typedef Ptr<Export> ExportPtr;
@@ -848,14 +855,24 @@ struct Overloadable : public TopLevelItem {
 
 struct ExternalProcedure : public TopLevelItem {
     IdentifierPtr name;
-    vector<ValueArgPtr> args;
+    vector<ExternalArgPtr> args;
     ExprPtr returnType;
+    TypePtr returnType2;
+    llvm::Function *llvmFunc;
     ExternalProcedure()
-        : TopLevelItem(EXTERNAL_PROCEDURE) {}
-    ExternalProcedure(IdentifierPtr name, const vector<ValueArgPtr> &args,
+        : TopLevelItem(EXTERNAL_PROCEDURE), llvmFunc(NULL) {}
+    ExternalProcedure(IdentifierPtr name, const vector<ExternalArgPtr> &args,
                       ExprPtr returnType)
         : TopLevelItem(EXTERNAL_PROCEDURE), name(name), args(args),
-          returnType(returnType) {}
+          returnType(returnType), llvmFunc(NULL) {}
+};
+
+struct ExternalArg : public ANode {
+    IdentifierPtr name;
+    ExprPtr type;
+    TypePtr type2;
+    ExternalArg(IdentifierPtr name, ExprPtr type)
+        : ANode(EXTERNAL_ARG), name(name), type(type) {}
 };
 
 
@@ -1105,6 +1122,7 @@ enum TypeKind {
     POINTER_TYPE,
     RECORD_TYPE,
     COMPILER_OBJECT_TYPE,
+    VOID_TYPE,
 };
 
 struct BoolType : public Type {
@@ -1171,6 +1189,11 @@ struct CompilerObjectType : public Type {
         : Type(COMPILER_OBJECT_TYPE) {}
 };
 
+struct VoidType : public Type {
+    VoidType()
+        : Type(VOID_TYPE) {}
+};
+
 
 
 //
@@ -1196,6 +1219,8 @@ extern TypePtr float32Type;
 extern TypePtr float64Type;
 
 extern TypePtr compilerObjectType;
+
+extern TypePtr voidType;
 
 void initTypes();
 
@@ -1229,6 +1254,9 @@ struct Value : public Object {
     ~Value();
 };
 
+extern ValuePtr voidValue;
+
+void initVoidValue();
 
 
 //
@@ -1322,12 +1350,24 @@ void pushTempBlock();
 void popTempBlock();
 void installTemp(ValuePtr value);
 
+// the following versions of evaluate create their own temp block
+// they also push the expression's location onto location stack
 ValuePtr evaluateToStatic(ExprPtr expr, EnvPtr env);
 ObjectPtr evaluateToCO(ExprPtr expr, EnvPtr env);
-TypePtr evaluateToType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateNonVoidType(ExprPtr expr, EnvPtr env);
 bool evaluateToBool(ExprPtr expr, EnvPtr env);
-ValuePtr evaluateNested(ExprPtr expr, EnvPtr env);
+
+// the following versions of evaluate don't create a new temp block
+// but they push the expression's locaiton onto location stack
+ValuePtr evaluateNonVoid(ExprPtr expr, EnvPtr env);
 ValuePtr evaluate(ExprPtr expr, EnvPtr env);
+ValuePtr evaluateNested(ExprPtr expr, EnvPtr env);
+
+// the following versions of evaluate don't create a new temp block
+// and they don't push the expression's location onto location stack
+ValuePtr evaluateNonVoid2(ExprPtr expr, EnvPtr env);
+ValuePtr evaluate2(ExprPtr expr, EnvPtr env);
 
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
 PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args);
@@ -1478,6 +1518,22 @@ StatementPtr convertForStatement(ForPtr x);
 //
 
 ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args);
+void initExternalProcedure(ExternalProcedurePtr x);
+llvm::Function *
+generateExternalFunc(const vector<TypePtr> &argTypes, TypePtr returnType,
+                     const string &name);
+llvm::Function *
+generateExternalWrapper(llvm::Function *func, const vector<TypePtr> &argTypes,
+                        TypePtr returnType, const string &name);
+
+
+
+//
+// execLLVMFunc
+//
+
+ValuePtr execLLVMFunc(llvm::Function *func, const vector<ValuePtr> &args,
+                      TypePtr returnType);
 
 
 

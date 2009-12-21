@@ -25,6 +25,8 @@ TypePtr float64Type;
 
 TypePtr compilerObjectType;
 
+TypePtr voidType;
+
 static vector<vector<ArrayTypePtr> > arrayTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<PointerTypePtr> > pointerTypes;
@@ -44,6 +46,8 @@ void initTypes() {
     float64Type = new FloatType(64);
 
     compilerObjectType = new CompilerObjectType();
+
+    voidType = new VoidType();
 
     int N = 1024;
     arrayTypes.resize(N);
@@ -195,7 +199,7 @@ const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {
         switch (x->objKind) {
         case VALUE_ARG : {
             ValueArg *y = (ValueArg *)x;
-            TypePtr ftype = evaluateToType(y->type, env);
+            TypePtr ftype = evaluateNonVoidType(y->type, env);
             t->fieldTypes.push_back(ftype);
             t->fieldIndexMap[y->name->str] = t->fieldTypes.size();
             break;
@@ -278,6 +282,10 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         opaque->refineAbstractTypeTo(st);
         return x->llTypeHolder->get();
     }
+    case COMPILER_OBJECT_TYPE :
+        return llvm::IntegerType::get(llvm::getGlobalContext(), 32);
+    case VOID_TYPE :
+        return llvm::Type::getVoidTy(llvm::getGlobalContext());
     default :
         assert(false);
         return NULL;

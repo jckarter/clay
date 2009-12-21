@@ -17,6 +17,18 @@ Value::~Value() {
 
 
 //
+// voidValue
+//
+
+ValuePtr voidValue;
+
+void initVoidValue() {
+    voidValue = new Value(voidType, NULL, true);
+}
+
+
+
+//
 // interned identifiers
 //
 
@@ -167,6 +179,7 @@ void valueInit(ValuePtr dest) {
     case FLOAT_TYPE :
     case POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
+    case VOID_TYPE :
         break;
     case ARRAY_TYPE : {
         ArrayType *t = (ArrayType *)dest->type.raw();
@@ -209,6 +222,7 @@ void valueDestroy(ValuePtr dest) {
     case FLOAT_TYPE :
     case POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
+    case VOID_TYPE :
         break;
     case ARRAY_TYPE : {
         ArrayType *t = (ArrayType *)dest->type.raw();
@@ -258,6 +272,7 @@ void valueInitCopy(ValuePtr dest, ValuePtr src) {
     case FLOAT_TYPE :
     case POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
+    case VOID_TYPE :
         memcpy(dest->buf, src->buf, typeSize(dest->type));
         break;
     case ARRAY_TYPE : {
@@ -324,6 +339,7 @@ void valueAssign(ValuePtr dest, ValuePtr src) {
     case FLOAT_TYPE :
     case POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
+    case VOID_TYPE :
         memcpy(dest->buf, src->buf, typeSize(dest->type));
         break;
     case ARRAY_TYPE : {
@@ -377,6 +393,7 @@ bool valueEquals(ValuePtr a, ValuePtr b) {
     case FLOAT_TYPE :
     case POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
+    case VOID_TYPE :
         return memcmp(a->buf, b->buf, typeSize(a->type)) == 0;
     case ARRAY_TYPE : {
         ArrayType *t = (ArrayType *)a->type.raw();
@@ -455,6 +472,8 @@ int valueHash(ValuePtr a) {
         return (int)(*((void **)a->buf));
     case COMPILER_OBJECT_TYPE :
         return *((int *)a->buf);
+    case VOID_TYPE :
+        return 0;
     case ARRAY_TYPE : {
         ArrayType *t = (ArrayType *)a->type.raw();
         TypePtr etype = t->elementType;
@@ -546,18 +565,10 @@ void installTemp(ValuePtr value) {
 // evaluate
 //
 
-ValuePtr evaluateNested(ExprPtr expr, EnvPtr env) {
-    LocationContext loc(expr->location);
-    ValuePtr v = evaluate(expr, env);
-    if (v->isOwned)
-        installTemp(v);
-    return v;
-}
-
 ValuePtr evaluateToStatic(ExprPtr expr, EnvPtr env) {
     LocationContext loc(expr->location);
     pushTempBlock();
-    ValuePtr v = evaluate(expr, env);
+    ValuePtr v = evaluateNonVoid2(expr, env);
     if (!v->isOwned)
         v = cloneValue(v);
     popTempBlock();
@@ -567,29 +578,64 @@ ValuePtr evaluateToStatic(ExprPtr expr, EnvPtr env) {
 ObjectPtr evaluateToCO(ExprPtr expr, EnvPtr env) {
     LocationContext loc(expr->location);
     pushTempBlock();
-    ValuePtr v = evaluate(expr, env);
+    ValuePtr v = evaluateNonVoid2(expr, env);
     ObjectPtr obj = valueToCO(v);
     popTempBlock();
     return obj;
 }
 
-TypePtr evaluateToType(ExprPtr expr, EnvPtr env) {
+TypePtr evaluateType(ExprPtr expr, EnvPtr env) {
     LocationContext loc(expr->location);
     pushTempBlock();
-    TypePtr t = valueToType(evaluate(expr, env));
+    TypePtr t = valueToType(evaluateNonVoid2(expr, env));
     popTempBlock();
+    return t;
+}
+
+TypePtr evaluateNonVoidType(ExprPtr expr, EnvPtr env) {
+    LocationContext loc(expr->location);
+    pushTempBlock();
+    TypePtr t = valueToType(evaluateNonVoid2(expr, env));
+    popTempBlock();
+    if (t == voidType)
+        error("void type not allowed here");
     return t;
 }
 
 bool evaluateToBool(ExprPtr expr, EnvPtr env) {
     LocationContext loc(expr->location);
     pushTempBlock();
-    bool b = valueToBool(evaluate(expr, env));
+    bool b = valueToBool(evaluateNonVoid2(expr, env));
     popTempBlock();
     return b;
 }
 
+ValuePtr evaluateNonVoid(ExprPtr expr, EnvPtr env) {
+    LocationContext loc(expr->location);
+    return evaluateNonVoid2(expr, env);
+}
+
 ValuePtr evaluate(ExprPtr expr, EnvPtr env) {
+    LocationContext loc(expr->location);
+    return evaluate2(expr, env);
+}
+
+ValuePtr evaluateNested(ExprPtr expr, EnvPtr env) {
+    LocationContext loc(expr->location);
+    ValuePtr v = evaluateNonVoid2(expr, env);
+    if (v->isOwned)
+        installTemp(v);
+    return v;
+}
+
+ValuePtr evaluateNonVoid2(ExprPtr expr, EnvPtr env) {
+    ValuePtr v = evaluate2(expr, env);
+    if (v->type == voidType)
+        error("expecting non void-type expression");
+    return v;
+}
+
+ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     switch (expr->objKind) {
 
     case BOOL_LITERAL : {
@@ -1405,7 +1451,7 @@ EnvPtr bindValueArgs(EnvPtr env, const vector<ValuePtr> &args, CodePtr code) {
 ValuePtr evalCodeBody(CodePtr code, EnvPtr env) {
     StatementResultPtr result = evalStatement(code->body, env);
     if (!result)
-        result = new ReturnResult(NULL);
+        result = new ReturnResult(voidValue);
     switch (result->resultKind) {
     case GOTO_RESULT : {
         GotoResult *x = (GotoResult *)result.raw();
@@ -1478,8 +1524,8 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.raw();
         pushTempBlock();
-        ValuePtr right = evaluate(x->right, env);
-        ValuePtr left = evaluate(x->left, env);
+        ValuePtr right = evaluateNonVoid(x->right, env);
+        ValuePtr left = evaluateNonVoid(x->left, env);
         if (left->isOwned)
             error("cannot assign to a temp");
         valueAssign(left, right);
@@ -1495,7 +1541,7 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
     case RETURN : {
         Return *x = (Return *)stmt.raw();
         if (!x->expr)
-            return new ReturnResult(NULL);
+            return new ReturnResult(voidValue);
         ValuePtr v = evaluateToStatic(x->expr, env);
         return new ReturnResult(v);
     }
@@ -1503,7 +1549,7 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
     case RETURN_REF : {
         ReturnRef *x = (ReturnRef *)stmt.raw();
         pushTempBlock();
-        ValuePtr v = evaluate(x->expr, env);
+        ValuePtr v = evaluateNonVoid(x->expr, env);
         if (v->isOwned)
             error("cannot return a temporary by reference");
         popTempBlock();
@@ -1589,24 +1635,25 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env, vector<ValuePtr> &blockTemps) {
     pushTempBlock();
     switch (x->bindingKind) {
     case VAR :
-        right = evaluate(x->expr, env);
+        right = evaluateNonVoid(x->expr, env);
         if (!right->isOwned)
             right = cloneValue(right);
         blockTemps.push_back(right);
         right = new Value(right->type, right->buf, false);
     case REF :
-        right = evaluate(x->expr, env);
+        right = evaluateNonVoid(x->expr, env);
         if (right->isOwned) {
             blockTemps.push_back(right);
             right = new Value(right->type, right->buf, false);
         }
     case STATIC :
-        right = evaluate(x->expr, env);
+        right = evaluateNonVoid(x->expr, env);
         if (!right->isOwned)
             right = cloneValue(right);
     default :
         assert(false);
     }
+    popTempBlock();
     EnvPtr env2 = new Env(env);
     addLocal(env2, x->name, right.raw());
     return env2;
@@ -1632,4 +1679,107 @@ StatementPtr convertForStatement(ForPtr x) {
 
     block->statements.push_back(new While(hasNextCall.raw(), whileBody.raw()));
     return block.raw();
+}
+
+
+
+//
+// invokeExternal
+//
+
+ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args) {
+    if (!x->llvmFunc)
+        initExternalProcedure(x);
+    ensureArity(args, x->args.size());
+    for (unsigned i = 0; i < args.size(); ++i) {
+        ExternalArgPtr earg = x->args[i];
+        if (args[i]->type != x->args[i]->type2)
+            fmtError("type mismatch at argument %d", (i+1));
+    }
+    return execLLVMFunc(x->llvmFunc, args, x->returnType2);
+}
+
+void initExternalProcedure(ExternalProcedurePtr x) {
+    vector<TypePtr> argTypes;
+    for (unsigned i = 0; i < x->args.size(); ++i) {
+        TypePtr t = evaluateNonVoidType(x->args[i]->type, x->env);
+        argTypes.push_back(t);
+        x->args[i]->type2 = t;
+    }
+    TypePtr returnType = evaluateType(x->returnType, x->env);
+    x->returnType2 = returnType;
+    llvm::Function *func = generateExternalFunc(argTypes, returnType,
+                                                x->name->str);
+    x->llvmFunc = generateExternalWrapper(func, argTypes, returnType,
+                                          x->name->str);
+}
+
+llvm::Function *
+generateExternalFunc(const vector<TypePtr> &argTypes, TypePtr returnType,
+                     const string &name) {
+    vector<const llvm::Type*> llvmArgTypes;
+    for (unsigned i = 0; i < argTypes.size(); ++i)
+        llvmArgTypes.push_back(llvmType(argTypes[i]));
+    const llvm::Type *llvmReturnType = llvmType(returnType);
+    llvm::FunctionType *llvmFuncType =
+        llvm::FunctionType::get(llvmReturnType, llvmArgTypes, false);
+    llvm::Function *func =
+        llvm::Function::Create(llvmFuncType, llvm::Function::ExternalLinkage,
+                               name.c_str(), llvmModule);
+    return func;
+}
+
+llvm::Function *
+generateExternalWrapper(llvm::Function *func, const vector<TypePtr> &argTypes,
+                        TypePtr returnType, const string &name) {
+    vector<const llvm::Type*> llvmArgTypes;
+    for (unsigned i = 0; i < argTypes.size(); ++i)
+        llvmArgTypes.push_back(llvmType(pointerType(argTypes[i])));
+    if (returnType != voidType)
+        llvmArgTypes.push_back(llvmType(pointerType(returnType)));
+    const llvm::Type *llvmVoidType =
+        llvm::Type::getVoidTy(llvm::getGlobalContext());
+    llvm::FunctionType *llvmFuncType =
+        llvm::FunctionType::get(llvmVoidType, llvmArgTypes, false);
+    llvm::Function *wrapper =
+        llvm::Function::Create(llvmFuncType, llvm::Function::InternalLinkage,
+                               name.c_str(), llvmModule);
+    llvm::BasicBlock *block =
+        llvm::BasicBlock::Create(llvm::getGlobalContext(), "code", wrapper);
+    llvm::IRBuilder<> builder(block);
+    vector<llvm::Value*> llvmArgs;
+    llvm::Function::arg_iterator arg_i = wrapper->arg_begin();
+    for (unsigned i = 0; i < argTypes.size(); ++i, ++arg_i) {
+        llvm::Value *v = builder.CreateLoad(arg_i++);
+        llvmArgs.push_back(v);
+    }
+    llvm::Value *result =
+        builder.CreateCall(func, llvmArgs.begin(), llvmArgs.end());
+    if (returnType != voidType)
+        builder.CreateStore(result, arg_i);
+    builder.CreateRetVoid();
+    return wrapper;
+}
+
+
+
+//
+// execLLVMFunc
+//
+
+ValuePtr execLLVMFunc(llvm::Function *func, const vector<ValuePtr> &args,
+                      TypePtr returnType) {
+    vector<llvm::GenericValue> gvArgs;
+    for (unsigned i = 0; i < args.size(); ++i)
+        gvArgs.push_back(llvm::GenericValue(args[i]->buf));
+    ValuePtr out;
+    if (returnType != voidType) {
+        out = allocValue(returnType);
+        gvArgs.push_back(llvm::GenericValue(out->buf));
+    }
+    else {
+        out = voidValue;
+    }
+    llvmEngine->runFunction(func, gvArgs);
+    return out;
 }

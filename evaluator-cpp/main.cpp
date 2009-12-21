@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
     }
     initLLVM();
     initTypes();
+    initVoidValue();
 
     setSearchPath(argv[0]);
 

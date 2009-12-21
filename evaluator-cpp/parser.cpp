@@ -1145,19 +1145,19 @@ static bool overload(TopLevelItemPtr &x) {
 // external procedure
 //
 
-static bool externalArg(ValueArgPtr &x) {
+static bool externalArg(ExternalArgPtr &x) {
     LocationPtr location = currentLocation();
     IdentifierPtr y;
     if (!identifier(y)) return false;
     ExprPtr z;
     if (!typeSpec(z)) return false;
-    x = new ValueArg(y, z);
+    x = new ExternalArg(y, z);
     x->location = location;
     return true;
 }
 
-static bool externalArgs(vector<ValueArgPtr> &x) {
-    ValueArgPtr y;
+static bool externalArgs(vector<ExternalArgPtr> &x) {
+    ExternalArgPtr y;
     if (!externalArg(y)) return false;
     x.clear();
     x.push_back(y);
@@ -1172,7 +1172,7 @@ static bool externalArgs(vector<ValueArgPtr> &x) {
     return true;
 }
 
-static bool optExternalArgs(vector<ValueArgPtr> &x) {
+static bool optExternalArgs(vector<ExternalArgPtr> &x) {
     int p = save();
     if (!externalArgs(x)) {
         restore(p);
