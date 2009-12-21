@@ -1562,4 +1562,7 @@ ValuePtr integerBitwiseXor(ValuePtr a, ValuePtr b);
 
 ValuePtr numericConvert(TypePtr t, ValuePtr a);
 
+ValuePtr pointerToInt(IntegerTypePtr t, void *ptr);
+ValuePtr intToPointer(TypePtr pointeeType, ValuePtr a);
+
 #endif

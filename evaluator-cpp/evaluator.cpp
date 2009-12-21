@@ -1818,6 +1818,11 @@ static void ensureIntegerType(TypePtr t) {
         error("integer type expected");
 }
 
+static void ensurePointerType(TypePtr t) {
+    if (t->typeKind != POINTER_TYPE)
+        error("pointer type expected");
+}
+
 ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     switch (x->primOpCode) {
     case PRIM_TypeP : {
@@ -1990,22 +1995,91 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         return numericConvert(t, args[1]);
     }
 
-    case PRIM_VoidTypeP :
+    case PRIM_VoidTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t == voidType);
+    }
 
-    case PRIM_CompilerObjectTypeP :
+    case PRIM_CompilerObjectTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t == compilerObjectType);
+    }
 
-    case PRIM_PointerTypeP :
-    case PRIM_PointerType :
-    case PRIM_Pointer :
-    case PRIM_PointeeType :
+    case PRIM_PointerTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t->typeKind == POINTER_TYPE);
+    }
+    case PRIM_PointerType : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return coToValue(pointerType(t).raw());
+    }
+    case PRIM_Pointer : {
+        error("Pointer type constructor cannot be invoked");
+    }
+    case PRIM_PointeeType : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        ensurePointerType(t);
+        PointerType *pt = (PointerType *)t.raw();
+        return coToValue(pt->pointeeType.raw());
+    }
 
-    case PRIM_addressOf :
-    case PRIM_pointerDereference :
-    case PRIM_pointerToInt :
-    case PRIM_intToPointer :
-    case PRIM_pointerCast :
-    case PRIM_allocateMemory :
-    case PRIM_freeMemory :
+    case PRIM_addressOf : {
+        ensureArity(args, 1);
+        ValuePtr out = allocValue(pointerType(args[0]->type));
+        *((void **)out->buf) = args[0]->buf;
+        return out;
+    }
+    case PRIM_pointerDereference : {
+        ensureArity(args, 1);
+        ensurePointerType(args[0]->type);
+        PointerType *t = (PointerType *)args[0]->type.raw();
+        void *ptr_value = *((void **)args[0]->buf);
+        return new Value(t->pointeeType, (char *)ptr_value, false);
+    }
+    case PRIM_pointerToInt : {
+        ensureArity(args, 2);
+        TypePtr t = valueToType(args[0]);
+        ensureIntegerType(t);
+        IntegerType *t2 = (IntegerType *)t.raw();
+        ensurePointerType(args[1]->type);
+        void *ptrValue = *((void **)args[0]->buf);
+        return pointerToInt(t2, ptrValue);
+    }
+    case PRIM_intToPointer : {
+        ensureArity(args, 2);
+        TypePtr pointeeType = valueToType(args[0]);
+        ensureIntegerType(args[1]->type);
+        return intToPointer(pointeeType, args[1]);
+    }
+    case PRIM_pointerCast : {
+        ensureArity(args, 2);
+        TypePtr pointeeType = valueToType(args[0]);
+        ensurePointerType(args[1]->type);
+        ValuePtr out = allocValue(pointerType(pointeeType));
+        *((void **)out->buf) = *((void **)args[1]->buf);
+        return out;
+    }
+    case PRIM_allocateMemory : {
+        ensureArity(args, 2);
+        TypePtr t = valueToType(args[0]);
+        int n = valueToInt(args[1]);
+        void *ptr = malloc(typeSize(t) * n);
+        ValuePtr out = allocValue(pointerType(t));
+        *((void **)out->buf) = ptr;
+        return out;
+    }
+    case PRIM_freeMemory : {
+        ensureArity(args, 1);
+        ensurePointerType(args[0]->type);
+        void *ptr = *((void **)args[0]->buf);
+        free(ptr);
+        return voidValue;
+    }
 
     case PRIM_ArrayTypeP :
     case PRIM_ArrayType :
@@ -2439,5 +2513,68 @@ ValuePtr numericConvert(TypePtr t, ValuePtr a) {
     default :
         assert(false);
     }
+    return v;
+}
+
+
+
+//
+// pointer primitives
+//
+
+template <typename T>
+void _pointerToInt(void *dest, void *ptr) {
+    *((T *)dest) = (T)((long)ptr);
+}
+
+ValuePtr pointerToInt(IntegerTypePtr t, void *ptr) {
+    ValuePtr v = allocValue(t.raw());
+    switch (t->bits) {
+    case 8 :
+        _pointerToInt<char>(v->buf, ptr);
+        break;
+    case 16 :
+        _pointerToInt<short>(v->buf, ptr);
+        break;
+    case 32 :
+        _pointerToInt<long>(v->buf, ptr);
+        break;
+    case 64 :
+        _pointerToInt<long long>(v->buf, ptr);
+        break;
+    default :
+        assert(false);
+    }
+    return v;
+}
+
+template <typename T>
+void *_intToPointer(void *x) {
+    T y = *((T *)x);
+    return (void *)y;
+}
+
+ValuePtr intToPointer(TypePtr pointeeType, ValuePtr a) {
+    assert(a->type->typeKind == INTEGER_TYPE);
+    IntegerType *t = (IntegerType *)a->type.raw();
+    ValuePtr v = allocValue(pointerType(pointeeType));
+    void *ptrValue = NULL;
+    switch (t->bits) {
+    case 8 :
+        ptrValue = _intToPointer<char>(a->buf);
+        break;
+    case 16 :
+        ptrValue = _intToPointer<short>(a->buf);
+        break;
+    case 32 :
+        ptrValue = _intToPointer<long>(a->buf);
+        break;
+    case 64 :
+        ptrValue = _intToPointer<long long>(a->buf);
+        break;
+    default :
+        assert(false);
+    }
+    *((void **)v->buf) = ptrValue;
     return v;
 }
