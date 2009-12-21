@@ -37,7 +37,7 @@ numericMultiply[N](a:N, b:N): N if (NumericType?(N))
 numericDivide[N](a:N, b:N): N if (NumericType?(N))
 numericNegate[N](a:N): N if (NumericType?(N))
 
-integerRemainder[N](a:N, b:N): N if (NumericType?(N))
+integerRemainder[N](a:N, b:N): N if (IntegerType?(N))
 integerShiftLeft[I](a:I, n:I): I if (IntegerType?(I))
 integerShiftRight[I](a:I, n:I): I if (IntegerType?(I))
 integerBitwiseAnd[I](a:I, b:I): I if (IntegerType?(I))

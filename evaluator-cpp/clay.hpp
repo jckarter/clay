@@ -1553,4 +1553,13 @@ ValuePtr numericMultiply(ValuePtr a, ValuePtr b);
 ValuePtr numericDivide(ValuePtr a, ValuePtr b);
 ValuePtr numericNegate(ValuePtr a);
 
+ValuePtr integerRemainder(ValuePtr a, ValuePtr b);
+ValuePtr integerShiftLeft(ValuePtr a, ValuePtr b);
+ValuePtr integerShiftRight(ValuePtr a, ValuePtr b);
+ValuePtr integerBitwiseAnd(ValuePtr a, ValuePtr b);
+ValuePtr integerBitwiseOr(ValuePtr a, ValuePtr b);
+ValuePtr integerBitwiseXor(ValuePtr a, ValuePtr b);
+
+ValuePtr numericConvert(TypePtr t, ValuePtr a);
+
 #endif
