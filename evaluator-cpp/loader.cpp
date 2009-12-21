@@ -229,6 +229,21 @@ static string toPrimStr(const string &s) {
 
 static ModulePtr makePrimitivesModule() {
     ModulePtr prims = new Module();
+
+    prims->globals["Bool"] = boolType.raw();
+    prims->globals["Int8"] = int8Type.raw();
+    prims->globals["Int16"] = int16Type.raw();
+    prims->globals["Int32"] = int32Type.raw();
+    prims->globals["Int64"] = int64Type.raw();
+    prims->globals["UInt8"] = uint8Type.raw();
+    prims->globals["UInt16"] = uint16Type.raw();
+    prims->globals["UInt32"] = uint32Type.raw();
+    prims->globals["UInt64"] = uint64Type.raw();
+    prims->globals["Float32"] = float32Type.raw();
+    prims->globals["Float64"] = float64Type.raw();
+    prims->globals["CompilerObject"] = compilerObjectType.raw();
+    prims->globals["Void"] = voidType.raw();
+
 #define PRIMITIVE(x) prims->globals[toPrimStr(#x)] = new PrimOp(PRIM_##x)
     PRIMITIVE(TypeP);
     PRIMITIVE(TypeSize);
