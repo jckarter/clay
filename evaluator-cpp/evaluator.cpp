@@ -1823,6 +1823,16 @@ static void ensurePointerType(TypePtr t) {
         error("pointer type expected");
 }
 
+static void ensureArrayType(TypePtr t) {
+    if (t->typeKind != ARRAY_TYPE)
+        error("array type expected");
+}
+
+static void ensureTupleType(TypePtr t) {
+    if (t->typeKind != TUPLE_TYPE)
+        error("tuple type expected");
+}
+
 ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     switch (x->primOpCode) {
     case PRIM_TypeP : {
@@ -2081,22 +2091,129 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         return voidValue;
     }
 
-    case PRIM_ArrayTypeP :
-    case PRIM_ArrayType :
-    case PRIM_Array :
-    case PRIM_ArrayElementType :
-    case PRIM_ArraySize :
-    case PRIM_array :
-    case PRIM_arrayRef :
+    case PRIM_ArrayTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t->typeKind == ARRAY_TYPE);
+    }
+    case PRIM_ArrayType : {
+        ensureArity(args, 2);
+        TypePtr t = valueToType(args[0]);
+        int n = valueToInt(args[1]);
+        return coToValue(arrayType(t, n).raw());
+    }
+    case PRIM_Array : {
+        error("Array type constructor cannot be invoked");
+    }
+    case PRIM_ArrayElementType : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        ensureArrayType(t);
+        ArrayType *at = (ArrayType *)t.raw();
+        return coToValue(at->elementType.raw());
+    }
+    case PRIM_ArraySize : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        ensureArrayType(t);
+        ArrayType *at = (ArrayType *)t.raw();
+        return intToValue(at->size);
+    }
+    case PRIM_array : {
+        if (args.empty())
+            error("atleast one argument required for creating an array");
+        TypePtr elementType = args[0]->type;
+        int n = (int)args.size();
+        ValuePtr v = allocValue(arrayType(elementType, n));
+        int esize = typeSize(elementType);
+        for (int i = 0; i < n; ++i) {
+            if (args[i]->type != elementType)
+                fmtError("type mismatch at argument %d", (i+1));
+            ValuePtr eref = new Value(elementType, v->buf + i*esize, false);
+            valueInitCopy(eref, args[i]);
+        }
+        return v;
+    }
+    case PRIM_arrayRef : {
+        ensureArity(args, 2);
+        ensureArrayType(args[0]->type);
+        int i = valueToInt(args[1]);
+        ArrayType *at = (ArrayType *)args[0]->type.raw();
+        int esize = typeSize(at->elementType);
+        return new Value(at->elementType, args[0]->buf + i*esize, false);
+    }
 
-    case PRIM_TupleTypeP :
-    case PRIM_TupleType :
-    case PRIM_Tuple :
-    case PRIM_TupleElementType :
-    case PRIM_TupleFieldCount :
-    case PRIM_TupleFieldOffset :
-    case PRIM_tuple :
-    case PRIM_tupleFieldRef :
+    case PRIM_TupleTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t->typeKind == TUPLE_TYPE);
+    }
+    case PRIM_TupleType : {
+        if (args.size() < 2)
+            error("tuple type requires atleast two element types");
+        vector<TypePtr> elementTypes;
+        for (unsigned i = 0; i < args.size(); ++i)
+            elementTypes.push_back(valueToType(args[i]));
+        return coToValue(tupleType(elementTypes).raw());
+    }
+    case PRIM_Tuple : {
+        error("Tuple type constructor cannot be invoked");
+    }
+    case PRIM_TupleElementType : {
+        ensureArity(args, 2);
+        TypePtr t = valueToType(args[0]);
+        ensureTupleType(t);
+        TupleType *tt = (TupleType *)t.raw();
+        int i = valueToInt(args[1]);
+        if ((i < 0) || (i >= (int)tt->elementTypes.size()))
+            error("tuple type index out of range");
+        return coToValue(tt->elementTypes[i].raw());
+    }
+    case PRIM_TupleFieldCount : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        ensureTupleType(t);
+        TupleType *tt = (TupleType *)t.raw();
+        return intToValue(tt->elementTypes.size());
+    }
+    case PRIM_TupleFieldOffset : {
+        ensureArity(args, 2);
+        TypePtr t = valueToType(args[0]);
+        ensureTupleType(t);
+        TupleType *tt = (TupleType *)t.raw();
+        int i = valueToInt(args[1]);
+        if ((i < 0) || (i >= (int)tt->elementTypes.size()))
+            error("tuple type index out of range");
+        const llvm::StructLayout *layout = tupleTypeLayout(tt);
+        return intToValue(layout->getElementOffset(i));
+    }
+    case PRIM_tuple : {
+        if (args.size() < 2)
+            error("tuples require atleast two elements");
+        vector<TypePtr> elementTypes;
+        for (unsigned i = 0; i < args.size(); ++i)
+            elementTypes.push_back(args[i]->type);
+        TypePtr t = tupleType(elementTypes);
+        TupleType *tt = (TupleType *)t.raw();
+        ValuePtr v = allocValue(t);
+        const llvm::StructLayout *layout = tupleTypeLayout(tt);
+        for (unsigned i = 0; i < args.size(); ++i) {
+            char *p = v->buf + layout->getElementOffset(i);
+            valueInitCopy(new Value(elementTypes[i], p, false), args[i]);
+        }
+        return v;
+    }
+    case PRIM_tupleFieldRef : {
+        ensureArity(args, 2);
+        ensureTupleType(args[0]->type);
+        TupleType *tt = (TupleType *)args[0]->type.raw();
+        int i = valueToInt(args[1]);
+        if ((i < 0) || (i >= (int)tt->elementTypes.size()))
+            error("tuple type index out of range");
+        const llvm::StructLayout *layout = tupleTypeLayout(tt);
+        char *p = args[0]->buf + layout->getElementOffset(i);
+        return new Value(tt->elementTypes[i], p, false);
+    }
 
     case PRIM_RecordTypeP :
     case PRIM_RecordType :
