@@ -315,15 +315,15 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(RecordTypeP);
     PRIMITIVE(RecordType);
-    PRIMITIVE(RecordElementType);
     PRIMITIVE(RecordFieldCount);
+    PRIMITIVE(RecordFieldType);
     PRIMITIVE(RecordFieldOffset);
     PRIMITIVE(RecordFieldIndex);
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
     PRIMITIVE(recordInit);
     PRIMITIVE(recordDestroy);
-    PRIMITIVE(recordCopy);
+    PRIMITIVE(recordInitCopy);
     PRIMITIVE(recordAssign);
     PRIMITIVE(recordEqualsP);
     PRIMITIVE(recordHash);

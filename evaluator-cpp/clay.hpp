@@ -1075,15 +1075,15 @@ enum PrimOpCode {
 
     PRIM_RecordTypeP,
     PRIM_RecordType,
-    PRIM_RecordElementType,
     PRIM_RecordFieldCount,
+    PRIM_RecordFieldType,
     PRIM_RecordFieldOffset,
     PRIM_RecordFieldIndex,
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
     PRIM_recordInit,
     PRIM_recordDestroy,
-    PRIM_recordCopy,
+    PRIM_recordInitCopy,
     PRIM_recordAssign,
     PRIM_recordEqualsP,
     PRIM_recordHash,
@@ -1235,6 +1235,7 @@ TypePtr pointerType(TypePtr pointeeType);
 TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params);
 
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
+const map<string, int> &recordFieldIndexMap(RecordTypePtr t);
 
 const llvm::Type *llvmType(TypePtr t);
 

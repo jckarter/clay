@@ -185,9 +185,7 @@ TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params) {
 // recordFieldTypes
 //
 
-const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {
-    if (t->fieldsInitialized)
-        return t->fieldTypes;
+static void initializeRecordFields(RecordTypePtr t) {
     t->fieldsInitialized = true;
     RecordPtr r = t->record;
     assert(t->params.size() == r->patternVars.size());
@@ -210,7 +208,18 @@ const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {
             assert(false);
         }
     }
+}
+
+const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {
+    if (!t->fieldsInitialized)
+        initializeRecordFields(t);
     return t->fieldTypes;
+}
+
+const map<string, int> &recordFieldIndexMap(RecordTypePtr t) {
+    if (!t->fieldsInitialized)
+        initializeRecordFields(t);
+    return t->fieldIndexMap;
 }
 
 

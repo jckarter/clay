@@ -1173,11 +1173,10 @@ ValuePtr derefCell(PatternCellPtr cell) {
 ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args) {
     switch (obj->objKind) {
     case RECORD : {
-        vector<ValuePtr> args2;
-        args2.push_back(coToValue(obj));
-        for (unsigned i = 0; i < args.size(); ++i)
-            args2.push_back(args[i]);
-        return invoke(primName("RecordType"), args2);
+        RecordPtr r = (Record *)obj.raw();
+        if (r->patternVars.size() != args.size())
+            error("incorrect no. of arguments");
+        return coToValue(recordType(r, args).raw());
     }
     case PRIM_OP : {
         PrimOp *x = (PrimOp *)obj.raw();
@@ -1833,6 +1832,11 @@ static void ensureTupleType(TypePtr t) {
         error("tuple type expected");
 }
 
+static void ensureRecordType(TypePtr t) {
+    if (t->typeKind != RECORD_TYPE)
+        error("record type expected");
+}
+
 ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     switch (x->primOpCode) {
     case PRIM_TypeP : {
@@ -2215,21 +2219,185 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         return new Value(tt->elementTypes[i], p, false);
     }
 
-    case PRIM_RecordTypeP :
-    case PRIM_RecordType :
-    case PRIM_RecordElementType :
-    case PRIM_RecordFieldCount :
-    case PRIM_RecordFieldOffset :
-    case PRIM_RecordFieldIndex :
-    case PRIM_recordFieldRef :
-    case PRIM_recordFieldRefByName :
-    case PRIM_recordInit :
-    case PRIM_recordDestroy :
-    case PRIM_recordCopy :
-    case PRIM_recordAssign :
-    case PRIM_recordEqualsP :
-    case PRIM_recordHash :
-        break;
+    case PRIM_RecordTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t->typeKind == RECORD_TYPE);
+    }
+    case PRIM_RecordType : {
+        if (args.size() < 1)
+            error("insufficient no. of arguments");
+        ObjectPtr obj = valueToCO(args[0]);
+        if (obj->objKind != RECORD)
+            error("invalid record argument");
+        RecordPtr r = (Record *)obj.raw();
+        if (r->patternVars.size() != args.size()-1)
+            error("incorrect no. of arguments");
+        vector<ValuePtr> params;
+        for (unsigned i = 1; i < args.size(); ++i)
+            params.push_back(args[i]);
+        return coToValue(recordType(r, params).raw());
+    }
+    case PRIM_RecordFieldCount : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        ensureRecordType(t);
+        RecordType *rt = (RecordType *)t.raw();
+        return intToValue(recordFieldTypes(rt).size());
+    }
+    case PRIM_RecordFieldType : {
+        ensureArity(args, 2);
+        TypePtr t = valueToType(args[0]);
+        ensureRecordType(t);
+        RecordType *rt = (RecordType *)t.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        int i = valueToInt(args[1]);
+        if ((i < 0) || (i >= (int)fieldTypes.size()))
+            error("field index out of range");
+        return coToValue(fieldTypes[i].raw());
+    }
+    case PRIM_RecordFieldOffset : {
+        ensureArity(args, 2);
+        TypePtr t = valueToType(args[0]);
+        ensureRecordType(t);
+        RecordType *rt = (RecordType *)t.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        int i = valueToInt(args[1]);
+        if ((i < 0) || (i >= (int)fieldTypes.size()))
+            error("field index out of range");
+        const llvm::StructLayout *layout = recordTypeLayout(rt);
+        return intToValue(layout->getElementOffset(i));
+    }
+    case PRIM_RecordFieldIndex : {
+        ensureArity(args, 2);
+        TypePtr t = valueToType(args[0]);
+        ensureRecordType(t);
+        RecordType *rt = (RecordType *)t.raw();
+        ObjectPtr obj = valueToCO(args[1]);
+        if (obj->objKind != IDENTIFIER)
+            error("expecting an identifier value");
+        Identifier *name = (Identifier *)obj.raw();
+        const map<string, int> &fieldIndexMap = recordFieldIndexMap(rt);
+        map<string, int>::const_iterator fi = fieldIndexMap.find(name->str);
+        if (fi == fieldIndexMap.end())
+            error("field not in record");
+        return intToValue(fi->second);
+    }
+
+    case PRIM_recordFieldRef : {
+        ensureArity(args, 2);
+        ensureRecordType(args[0]->type);
+        RecordType *rt = (RecordType *)args[0]->type.raw();
+        int i = valueToInt(args[1]);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        if ((i < 0) || (i >= (int)fieldTypes.size()))
+            error("field index out of range");
+        const llvm::StructLayout *layout = recordTypeLayout(rt);
+        char *p = args[0]->buf + layout->getElementOffset(i);
+        return new Value(fieldTypes[i], p, false);
+    }
+    case PRIM_recordFieldRefByName : {
+        ensureArity(args, 2);
+        ensureRecordType(args[0]->type);
+        RecordType *rt = (RecordType *)args[0]->type.raw();
+        ObjectPtr obj = valueToCO(args[1]);
+        if (obj->objKind != IDENTIFIER)
+            error("expecting an identifier value");
+        Identifier *name = (Identifier *)obj.raw();
+        const map<string, int> &fieldIndexMap = recordFieldIndexMap(rt);
+        map<string, int>::const_iterator fi = fieldIndexMap.find(name->str);
+        if (fi == fieldIndexMap.end())
+            error("field not in record");
+        int i = fi->second;
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        const llvm::StructLayout *layout = recordTypeLayout(rt);
+        char *p = args[0]->buf + layout->getElementOffset(i);
+        return new Value(fieldTypes[i], p, false);
+    }
+
+    case PRIM_recordInit : {
+        ensureArity(args, 1);
+        ensureRecordType(args[0]->type);
+        RecordType *rt = (RecordType *)args[0]->type.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        const llvm::StructLayout *layout = recordTypeLayout(rt);
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            char *p = args[0]->buf + layout->getElementOffset(i);
+            valueInit(new Value(fieldTypes[i], p, false));
+        }
+        return voidValue;
+    }
+    case PRIM_recordDestroy : {
+        ensureArity(args, 1);
+        ensureRecordType(args[0]->type);
+        RecordType *rt = (RecordType *)args[0]->type.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        const llvm::StructLayout *layout = recordTypeLayout(rt);
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            char *p = args[0]->buf + layout->getElementOffset(i);
+            valueDestroy(new Value(fieldTypes[i], p, false));
+        }
+        return voidValue;
+    }
+    case PRIM_recordInitCopy : {
+        ensureArity(args, 2);
+        ensureRecordType(args[0]->type);
+        ensureSameType(args[0]->type, args[1]->type);
+        RecordType *rt = (RecordType *)args[0]->type.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        const llvm::StructLayout *layout = recordTypeLayout(rt);
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            unsigned offset = layout->getElementOffset(i);
+            TypePtr t = fieldTypes[i];
+            valueInitCopy(new Value(t, args[0]->buf + offset, false),
+                          new Value(t, args[1]->buf + offset, false));
+        }
+        return voidValue;
+    }
+    case PRIM_recordAssign : {
+        ensureArity(args, 2);
+        ensureRecordType(args[0]->type);
+        ensureSameType(args[0]->type, args[1]->type);
+        RecordType *rt = (RecordType *)args[0]->type.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        const llvm::StructLayout *layout = recordTypeLayout(rt);
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            unsigned offset = layout->getElementOffset(i);
+            TypePtr t = fieldTypes[i];
+            valueAssign(new Value(t, args[0]->buf + offset, false),
+                        new Value(t, args[1]->buf + offset, false));
+        }
+        return voidValue;
+    }
+    case PRIM_recordEqualsP : {
+        ensureArity(args, 2);
+        ensureRecordType(args[0]->type);
+        ensureSameType(args[0]->type, args[1]->type);
+        RecordType *rt = (RecordType *)args[0]->type.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        const llvm::StructLayout *layout = recordTypeLayout(rt);
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            unsigned offset = layout->getElementOffset(i);
+            TypePtr t = fieldTypes[i];
+            if (!valueEquals(new Value(t, args[0]->buf + offset, false),
+                             new Value(t, args[1]->buf + offset, false)))
+                return boolToValue(false);
+        }
+        return boolToValue(true);
+    }
+    case PRIM_recordHash : {
+        ensureArity(args, 1);
+        ensureRecordType(args[0]->type);
+        RecordType *rt = (RecordType *)args[0]->type.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        const llvm::StructLayout *layout = recordTypeLayout(rt);
+        int h = 0;
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            char *p = args[0]->buf + layout->getElementOffset(i);
+            h += valueHash(new Value(fieldTypes[i], p, false));
+        }
+        return intToValue(h);
+    }
     }
     error("invalid prim op");
     return NULL;
