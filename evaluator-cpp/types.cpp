@@ -5,9 +5,11 @@ llvm::ExecutionEngine *llvmEngine;
 const llvm::TargetData *llvmTargetData;
 
 void initLLVM() {
+    llvm::InitializeNativeTarget();
     llvmModule = new llvm::Module("clay", llvm::getGlobalContext());
     llvm::ModuleProvider *mp = new llvm::ExistingModuleProvider(llvmModule);
-    llvmEngine = llvm::ExecutionEngine::create(mp);
+    llvmEngine = llvm::EngineBuilder(mp).create();
+    assert(llvmEngine);
     llvmTargetData = llvmEngine->getTargetData();
 }
 

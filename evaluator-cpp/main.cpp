@@ -27,7 +27,10 @@ int main(int argc, char **argv) {
     setSearchPath(argv[0]);
 
     ModulePtr m = loadProgram(argv[1]);
-    
-    cout << m << '\n';
+    ObjectPtr mainProc = lookupEnv(m->env, new Identifier("main"));
+    ValuePtr result = invoke(mainProc, vector<ValuePtr>());
+
+    cout << result << '\n';
+
     return 0;
 }

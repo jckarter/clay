@@ -19,8 +19,10 @@
 #include <llvm/BasicBlock.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Target/TargetData.h>
+#include <llvm/Target/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
+#include <llvm/ExecutionEngine/JIT.h>
 
 using std::string;
 using std::vector;
