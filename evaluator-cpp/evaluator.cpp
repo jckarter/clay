@@ -569,7 +569,7 @@ void valuePrint(ValuePtr a, ostream &out) {
             out << *((float *)a->buf) << "#f32";
             break;
         case 64 :
-            out << *((double *)a->buf);
+            out << *((double *)a->buf) << "#f64";
             break;
         default :
             assert(false);
@@ -605,7 +605,7 @@ void valuePrint(ValuePtr a, ostream &out) {
     }
     case POINTER_TYPE : {
         PointerType *t = (PointerType *)a->type.raw();
-        out << *t << "(" << ((void *)a->buf) << ")";
+        out << *t << "(" << *((void **)a->buf) << ")";
         break;
     }
     case RECORD_TYPE : {
@@ -2183,8 +2183,8 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 1);
         ensurePointerType(args[0]->type);
         PointerType *t = (PointerType *)args[0]->type.raw();
-        void *ptr_value = *((void **)args[0]->buf);
-        return new Value(t->pointeeType, (char *)ptr_value, false);
+        void *ptrValue = *((void **)args[0]->buf);
+        return new Value(t->pointeeType, (char *)ptrValue, false);
     }
     case PRIM_pointerToInt : {
         ensureArity(args, 2);
@@ -2192,7 +2192,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureIntegerType(t);
         IntegerType *t2 = (IntegerType *)t.raw();
         ensurePointerType(args[1]->type);
-        void *ptrValue = *((void **)args[0]->buf);
+        void *ptrValue = *((void **)args[1]->buf);
         return pointerToInt(t2, ptrValue);
     }
     case PRIM_intToPointer : {

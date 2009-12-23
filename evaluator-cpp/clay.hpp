@@ -942,6 +942,7 @@ ModulePtr parse(SourcePtr source);
 //
 
 ostream &operator<<(ostream &out, const Object &obj);
+ostream &operator<<(ostream &out, const Object *obj);
 
 template <class T>
 ostream &operator<<(ostream &out, const Ptr<T> &p) {

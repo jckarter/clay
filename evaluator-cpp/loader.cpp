@@ -113,9 +113,16 @@ static void installGlobals(ModulePtr m) {
         TopLevelItem *x = i->raw();
         x->env = m->env;
         switch (x->objKind) {
-        case RECORD :
-            addGlobal(m, ((Record *)x)->name, x);
+        case RECORD : {
+            Record *y = (Record *)x;
+            ObjectPtr value;
+            if (y->patternVars.empty())
+                value = recordType(y, vector<ValuePtr>()).raw();
+            else
+                value = y;
+            addGlobal(m, ((Record *)x)->name, value);
             break;
+        }
         case PROCEDURE :
             addGlobal(m, ((Procedure *)x)->name, x);
             break;

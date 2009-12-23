@@ -16,6 +16,11 @@ ostream &operator<<(ostream &out, const Object &obj) {
     return out;
 }
 
+ostream &operator<<(ostream &out, const Object *obj) {
+    print(obj, out);
+    return out;
+}
+
 
 
 //
