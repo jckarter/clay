@@ -5,22 +5,22 @@ LLVM_LDFLAGS = `llvm-config --ldflags --libs backend engine`
 	g++ $(LLVM_CXXFLAGS) -MMD -Wall -g -c -o $@ $<
 
 OBJS = \
-	evaluator-cpp/error.o \
-	evaluator-cpp/printer.o \
-	evaluator-cpp/lexer.o \
-	evaluator-cpp/parser.o \
-	evaluator-cpp/env.o \
-	evaluator-cpp/loader.o \
-	evaluator-cpp/types.o \
-	evaluator-cpp/evaluator.o \
-	evaluator-cpp/main.o
+	src/error.o \
+	src/printer.o \
+	src/lexer.o \
+	src/parser.o \
+	src/env.o \
+	src/loader.o \
+	src/types.o \
+	src/evaluator.o \
+	src/main.o
 
 clayc : $(OBJS)
 	g++ -g -o clayc $(OBJS) $(LLVM_LDFLAGS)
 
 clean :
 	rm -f clayc
-	rm -f evaluator-cpp/*.o
-	rm -f evaluator-cpp/*.d
+	rm -f src/*.o
+	rm -f src/*.d
 
--include evaluator-cpp/*.d
+-include src/*.d
