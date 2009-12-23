@@ -1883,7 +1883,7 @@ generateExternalWrapper(llvm::Function *func, const vector<TypePtr> &argTypes,
     llvm::IRBuilder<> builder(block);
     vector<llvm::Value*> llvmArgs;
     llvm::Function::arg_iterator arg_i = wrapper->arg_begin();
-    for (unsigned i = 0; i < argTypes.size(); ++i, ++arg_i) {
+    for (unsigned i = 0; i < argTypes.size(); ++i) {
         llvm::Value *v = builder.CreateLoad(arg_i++);
         llvmArgs.push_back(v);
     }
