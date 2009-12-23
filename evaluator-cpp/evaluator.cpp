@@ -261,10 +261,10 @@ void valueDestroy(ValuePtr dest) {
 
 
 //
-// valueInitCopy
+// valueCopy
 //
 
-void valueInitCopy(ValuePtr dest, ValuePtr src) {
+void valueCopy(ValuePtr dest, ValuePtr src) {
     if (dest->type != src->type) {
         vector<ValuePtr> args;
         args.push_back(dest);
@@ -286,8 +286,8 @@ void valueInitCopy(ValuePtr dest, ValuePtr src) {
         TypePtr etype = t->elementType;
         int esize = typeSize(etype);
         for (int i = 0; i < t->size; ++i)
-            valueInitCopy(new Value(etype, dest->buf + i*esize, false),
-                          new Value(etype, src->buf + i*esize, false));
+            valueCopy(new Value(etype, dest->buf + i*esize, false),
+                      new Value(etype, src->buf + i*esize, false));
         break;
     }
     case TUPLE_TYPE : {
@@ -296,8 +296,8 @@ void valueInitCopy(ValuePtr dest, ValuePtr src) {
         for (unsigned i = 0; i < t->elementTypes.size(); ++i) {
             TypePtr etype = t->elementTypes[i];
             unsigned offset = layout->getElementOffset(i);
-            valueInitCopy(new Value(etype, dest->buf + offset, false),
-                          new Value(etype, src->buf + offset, false));
+            valueCopy(new Value(etype, dest->buf + offset, false),
+                      new Value(etype, src->buf + offset, false));
         }
         break;
     }
@@ -321,7 +321,7 @@ void valueInitCopy(ValuePtr dest, ValuePtr src) {
 
 ValuePtr cloneValue(ValuePtr src) {
     ValuePtr dest = allocValue(src->type);
-    valueInitCopy(dest, src);
+    valueCopy(dest, src);
     return dest;
 }
 
@@ -1308,7 +1308,7 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
         for (int i = 0; i < y->size; ++i) {
             if (args[i]->type != etype)
                 fmtError("type mismatch at argument %d", i+1);
-            valueInitCopy(new Value(etype, v->buf + i*esize, false), args[i]);
+            valueCopy(new Value(etype, v->buf + i*esize, false), args[i]);
         }
         return v;
     }
@@ -1322,7 +1322,7 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
             TypePtr etype = y->elementTypes[i];
             if (args[i]->type != etype)
                 fmtError("type mismatch at argument %d", i+1);
-            valueInitCopy(new Value(etype, p, false), args[i]);
+            valueCopy(new Value(etype, p, false), args[i]);
         }
         return v;
     }
@@ -1336,7 +1336,7 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
             char *p = v->buf + layout->getElementOffset(i);
             if (args[i]->type != fieldTypes[i])
                 fmtError("type mismatch at argument %d", i+1);
-            valueInitCopy(new Value(fieldTypes[i], p, false), args[i]);
+            valueCopy(new Value(fieldTypes[i], p, false), args[i]);
         }
         return v;
     }
@@ -1874,7 +1874,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 2);
         ensurePrimitiveType(args[0]->type);
         ensureSameType(args[0]->type, args[1]->type);
-        valueInitCopy(args[0], args[1]);
+        valueCopy(args[0], args[1]);
         return voidValue;
     }
     case PRIM_primitiveAssign : {
@@ -2142,7 +2142,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
             if (args[i]->type != elementType)
                 fmtError("type mismatch at argument %d", (i+1));
             ValuePtr eref = new Value(elementType, v->buf + i*esize, false);
-            valueInitCopy(eref, args[i]);
+            valueCopy(eref, args[i]);
         }
         return v;
     }
@@ -2211,7 +2211,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         const llvm::StructLayout *layout = tupleTypeLayout(tt);
         for (unsigned i = 0; i < args.size(); ++i) {
             char *p = v->buf + layout->getElementOffset(i);
-            valueInitCopy(new Value(elementTypes[i], p, false), args[i]);
+            valueCopy(new Value(elementTypes[i], p, false), args[i]);
         }
         return v;
     }
@@ -2347,7 +2347,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         }
         return voidValue;
     }
-    case PRIM_recordInitCopy : {
+    case PRIM_recordCopy : {
         ensureArity(args, 2);
         ensureRecordType(args[0]->type);
         ensureSameType(args[0]->type, args[1]->type);
@@ -2357,8 +2357,8 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         for (unsigned i = 0; i < fieldTypes.size(); ++i) {
             unsigned offset = layout->getElementOffset(i);
             TypePtr t = fieldTypes[i];
-            valueInitCopy(new Value(t, args[0]->buf + offset, false),
-                          new Value(t, args[1]->buf + offset, false));
+            valueCopy(new Value(t, args[0]->buf + offset, false),
+                      new Value(t, args[1]->buf + offset, false));
         }
         return voidValue;
     }

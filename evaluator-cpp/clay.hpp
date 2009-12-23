@@ -1090,7 +1090,7 @@ enum PrimOpCode {
     PRIM_recordFieldRefByName,
     PRIM_recordInit,
     PRIM_recordDestroy,
-    PRIM_recordInitCopy,
+    PRIM_recordCopy,
     PRIM_recordAssign,
     PRIM_recordEqualsP,
     PRIM_recordHash,
@@ -1344,7 +1344,7 @@ ObjectPtr lower(ValuePtr v);
 
 void valueInit(ValuePtr dest);
 void valueDestroy(ValuePtr dest);
-void valueInitCopy(ValuePtr dest, ValuePtr src);
+void valueCopy(ValuePtr dest, ValuePtr src);
 ValuePtr cloneValue(ValuePtr src);
 void valueAssign(ValuePtr dest, ValuePtr src);
 bool valueEquals(ValuePtr a, ValuePtr b);
