@@ -1687,6 +1687,7 @@ StatementPtr convertForStatement(ForPtr x) {
     nextCall->args.push_back(new NameRef(iterVar));
     BlockPtr whileBody = new Block();
     whileBody->statements.push_back(new Binding(REF, x->variable, nextCall.raw()));
+    whileBody->statements.push_back(x->body);
 
     block->statements.push_back(new While(hasNextCall.raw(), whileBody.raw()));
     return block.raw();
