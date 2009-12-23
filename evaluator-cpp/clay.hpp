@@ -69,8 +69,13 @@ public :
     T *operator->() { return ptr; }
     const T *operator->() const { return ptr; }
     T *raw() const { return ptr; }
-    operator bool() const { return ptr != 0; }
     bool operator!() const { return ptr == 0; }
+    bool operator==(const Ptr<T> &other) const {
+        return ptr == other.ptr;
+    }
+    bool operator!=(const Ptr<T> &other) const {
+        return ptr != other.ptr;
+    }
 };
 
 
@@ -407,10 +412,10 @@ struct LocationContext {
     LocationPtr loc;
     LocationContext(LocationPtr loc)
         : loc(loc) {
-        if (loc) pushLocation(loc);
+        if (loc.raw()) pushLocation(loc);
     }
     ~LocationContext() {
-        if (loc)
+        if (loc.raw())
             popLocation();
     }
 private :
@@ -424,7 +429,7 @@ void fmtError(const char *fmt, ...);
 
 template <class T>
 void error(Ptr<T> context, const string &msg) {
-    if (context->location)
+    if (context->location.raw())
         pushLocation(context->location);
     error(msg);
 }
@@ -1278,7 +1283,7 @@ enum PatternKind {
 struct Pattern : public Object {
     int patternKind;
     Pattern(int patternKind)
-        : Object(PATTERN) {}
+        : Object(PATTERN), patternKind(patternKind) {}
 };
 
 struct PatternCell : public Pattern {

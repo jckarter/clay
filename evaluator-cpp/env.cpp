@@ -27,7 +27,7 @@ ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name) {
     ObjectPtr result;
     for (ii = x.begin(), iend = x.end(); ii != iend; ++ii) {
         ObjectPtr entry = lookupPublic((*ii)->module, name);
-        if (entry) {
+        if (entry.raw()) {
             if (!result)
                 result = entry;
             else if (result != entry)
@@ -57,7 +57,7 @@ ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
     ObjectPtr result;
     for (ei = x.begin(), eend = x.end(); ei != eend; ++ei) {
         ObjectPtr entry = lookupPublic((*ei)->module, name);
-        if (entry) {
+        if (entry.raw()) {
             if (!result)
                 result = entry;
             else if (result != entry)
@@ -85,7 +85,7 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
     MapIter i = env->entries.find(name->str);
     if (i != env->entries.end())
         return i->second;
-    if (env->parent) {
+    if (env->parent.raw()) {
         switch (env->parent->objKind) {
         case ENV : {
             Env *y = (Env *)env->parent.raw();

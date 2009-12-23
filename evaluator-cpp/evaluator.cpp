@@ -1025,6 +1025,7 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env) {
             assert(z->patternKind == PATTERN_CELL);
             return z;
         }
+        break;
     }
     case INDEXING : {
         Indexing *x = (Indexing *)expr.raw();
@@ -1153,7 +1154,7 @@ bool unifyType(PatternPtr pattern, TypePtr type) {
 
 ValuePtr derefCell(PatternCellPtr cell) {
     if (!cell->value) {
-        if (cell->name)
+        if (cell->name.raw())
             error(cell->name, "unresolved pattern variable");
         else
             error("unresolved pattern variable");
@@ -1422,7 +1423,7 @@ matchInvokeCode(CodePtr code, EnvPtr env, const vector<ValuePtr> &args) {
         ValuePtr v = derefCell(cells[i]);
         addLocal(env2, code->patternVars[i], v.raw());
     }
-    if (code->predicate) {
+    if (code->predicate.raw()) {
         bool result = evaluateToBool(code->predicate, env2);
         if (!result)
             return new MatchInvokePredicateFailure();
@@ -1460,14 +1461,17 @@ ValuePtr evalCodeBody(CodePtr code, EnvPtr env) {
         GotoResult *x = (GotoResult *)result.raw();
         LocationContext loc(x->labelName->location);
         fmtError("label not found: %s", x->labelName->str.c_str());
+        break;
     }
     case BREAK_RESULT : {
         BreakResult *x = (BreakResult *)result.raw();
         error(x->stmt, "invalid break statement");
+        break;
     }
     case CONTINUE_RESULT : {
         ContinueResult *x = (ContinueResult *)result.raw();
         error(x->stmt, "invalid continue statement");
+        break;
     }
     case RETURN_RESULT : {
         ReturnResult *x = (ReturnResult *)result.raw();
@@ -1564,7 +1568,7 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
         bool cond = evaluateToBool(x->condition, env);
         if (cond)
             return evalStatement(x->thenPart, env);
-        if (x->elsePart)
+        if (x->elsePart.raw())
             return evalStatement(x->elsePart, env);
         return NULL;
             
@@ -1626,6 +1630,7 @@ void evalCollectLabels(const vector<StatementPtr> &statements,
         case LABEL : {
             Label *y = (Label *)x.raw();
             labels[y->name->str] = LabelInfo(env, i);
+            break;
         }
         case BINDING :
             return;
@@ -1643,16 +1648,19 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env, vector<ValuePtr> &blockTemps) {
             right = cloneValue(right);
         blockTemps.push_back(right);
         right = new Value(right->type, right->buf, false);
+        break;
     case REF :
         right = evaluateNonVoid(x->expr, env);
         if (right->isOwned) {
             blockTemps.push_back(right);
             right = new Value(right->type, right->buf, false);
         }
+        break;
     case STATIC :
         right = evaluateNonVoid(x->expr, env);
         if (!right->isOwned)
             right = cloneValue(right);
+        break;
     default :
         assert(false);
     }
@@ -2433,6 +2441,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
                 assert (false); \
             } \
         } \
+        break; \
     } \
     case FLOAT_TYPE : { \
         FloatType *t = (FloatType *)a->type.raw(); \
@@ -2442,6 +2451,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         default : \
             assert(false); \
         } \
+        break; \
     } \
     default : \
         assert(false); \
@@ -2553,6 +2563,7 @@ ValuePtr numericNegate(ValuePtr a) {
                 assert (false);
             }
         }
+        break;
     }
     case FLOAT_TYPE : {
         FloatType *t = (FloatType *)a->type.raw();
@@ -2562,6 +2573,7 @@ ValuePtr numericNegate(ValuePtr a) {
         default :
             assert(false);
         }
+        break;
     }
     default :
         assert(false);
@@ -2592,6 +2604,7 @@ ValuePtr numericNegate(ValuePtr a) {
                 assert (false); \
             } \
         } \
+        break; \
     } \
     default : \
         assert(false); \
@@ -2721,6 +2734,7 @@ void _numericConvert2(void *dest, ValuePtr a) {
                 assert(false);
             }
         }
+        break;
     }
     case FLOAT_TYPE : {
         FloatType *t = (FloatType *)a->type.raw();
@@ -2734,6 +2748,7 @@ void _numericConvert2(void *dest, ValuePtr a) {
         default :
             assert(false);
         }
+        break;
     }
     default :
         assert(false);
@@ -2781,6 +2796,7 @@ ValuePtr numericConvert(TypePtr t, ValuePtr a) {
                 assert(false);
             }
         }
+        break;
     }
     case FLOAT_TYPE : {
         FloatType *t2 = (FloatType *)t.raw();
@@ -2794,6 +2810,7 @@ ValuePtr numericConvert(TypePtr t, ValuePtr a) {
         default :
             assert(false);
         }
+        break;
     }
     default :
         assert(false);
