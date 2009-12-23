@@ -308,3 +308,59 @@ int typeSize(TypePtr t) {
         t->typeSize = llvmTargetData->getTypeAllocSize(llvmType(t));
     return t->typeSize;
 }
+
+
+
+//
+// typePrint
+//
+
+void typePrint(TypePtr t, ostream &out) {
+    switch (t->typeKind) {
+    case BOOL_TYPE :
+        out << "Bool";
+        break;
+    case INTEGER_TYPE : {
+        IntegerType *x = (IntegerType *)t.raw();
+        if (!x->isSigned)
+            out << "U";
+        out << "Int" << x->bits;
+        break;
+    }
+    case FLOAT_TYPE : {
+        FloatType *x = (FloatType *)t.raw();
+        out << "Float" << x->bits;
+        break;
+    }
+    case ARRAY_TYPE : {
+        ArrayType *x = (ArrayType *)t.raw();
+        out << "Array[" << x->elementType << ", " << x->size << "]";
+        break;
+    }
+    case TUPLE_TYPE : {
+        TupleType *x = (TupleType *)t.raw();
+        out << "Tuple" << x->elementTypes;
+        break;
+    }
+    case POINTER_TYPE : {
+        PointerType *x = (PointerType *)t.raw();
+        out << "Pointer[" << x->pointeeType << "]";
+        break;
+    }
+    case RECORD_TYPE : {
+        RecordType *x = (RecordType *)t.raw();
+        out << x->record->name->str;
+        if (!x->params.empty())
+            out << x->params;
+        break;
+    }
+    case COMPILER_OBJECT_TYPE :
+        out << "CompilerObject";
+        break;
+    case VOID_TYPE :
+        out << "Void";
+        break;
+    default :
+        assert(false);
+    }
+}

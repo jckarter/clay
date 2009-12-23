@@ -1248,6 +1248,8 @@ const llvm::Type *llvmType(TypePtr t);
 
 int typeSize(TypePtr t);
 
+void typePrint(TypePtr t, ostream &out);
+
 
 
 //
@@ -1349,6 +1351,8 @@ ValuePtr cloneValue(ValuePtr src);
 void valueAssign(ValuePtr dest, ValuePtr src);
 bool valueEquals(ValuePtr a, ValuePtr b);
 int valueHash(ValuePtr a);
+
+void valuePrint(ValuePtr a, ostream &out);
 
 ObjectPtr coreName(const string &name);
 ObjectPtr primName(const string &name);

@@ -514,6 +514,128 @@ int valueHash(ValuePtr a) {
 
 
 //
+// valuePrint
+//
+
+void valuePrint(ValuePtr a, ostream &out) {
+    switch (a->type->typeKind) {
+    case BOOL_TYPE :
+        out << (valueToBool(a) ? "true" : "false");
+        break;
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)a->type.raw();
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 :
+                out << int(*((char *)a->buf)) << "#i8";
+                break;
+            case 16 :
+                out << *((short *)a->buf) << "#i16";
+                break;
+            case 32 :
+                out << *((long *)a->buf);
+                break;
+            case 64 :
+                out << *((long long *)a->buf) << "#i64";
+                break;
+            default :
+                assert(false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 :
+                out << int(*((unsigned char *)a->buf)) << "#u8";
+                break;
+            case 16 :
+                out << *((unsigned short *)a->buf) << "#u16";
+                break;
+            case 32 :
+                out << *((unsigned long *)a->buf) << "#u32";
+                break;
+            case 64 :
+                out << *((unsigned long long *)a->buf) << "#u64";
+                break;
+            default :
+                assert(false);
+            }
+        }
+        break;
+    }
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)a->type.raw();
+        switch (t->bits) {
+        case 32 :
+            out << *((float *)a->buf) << "#f32";
+            break;
+        case 64 :
+            out << *((double *)a->buf);
+            break;
+        default :
+            assert(false);
+        }
+        break;
+    }
+    case ARRAY_TYPE : {
+        ArrayType *t = (ArrayType *)a->type.raw();
+        TypePtr etype = t->elementType;
+        int esize = typeSize(etype);
+        out << "[";
+        for (int i = 0; i < t->size; ++i) {
+            if (i != 0)
+                out << ", ";
+            out << new Value(etype, a->buf + i*esize, false);
+        }
+        out << "]";
+        break;
+    }
+    case TUPLE_TYPE : {
+        TupleType *t = (TupleType *)a->type.raw();
+        const llvm::StructLayout *layout = tupleTypeLayout(t);
+        out << "(";
+        for (unsigned i = 0; i < t->elementTypes.size(); ++i) {
+            TypePtr etype = t->elementTypes[i];
+            unsigned offset = layout->getElementOffset(i);
+            if (i != 0)
+                out << ", ";
+            out << new Value(etype, a->buf + offset, false);
+        }
+        out << ")";
+        break;
+    }
+    case POINTER_TYPE : {
+        PointerType *t = (PointerType *)a->type.raw();
+        out << *t << "(" << ((void *)a->buf) << ")";
+        break;
+    }
+    case RECORD_TYPE : {
+        RecordType *t = (RecordType *)a->type.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
+        const llvm::StructLayout *layout = recordTypeLayout(t);
+        out << *t << "(";
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            char *p = a->buf + layout->getElementOffset(i);
+            if (i != 0)
+                out << ", ";
+            out << new Value(fieldTypes[i], p, false);
+        }
+        out << ")";
+        break;
+    }
+    case COMPILER_OBJECT_TYPE :
+        out << valueToCO(a);
+        break;
+    case VOID_TYPE :
+        out << "void";
+        break;
+    default :
+        assert(false);
+    }
+}
+
+
+
+//
 // access names from other modules
 //
 

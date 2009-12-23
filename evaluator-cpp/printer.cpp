@@ -423,6 +423,19 @@ static void print(const Object *x, ostream &out) {
         out << ", " << bigVec(y->topLevelItems) << ")";
         break;
     }
+
+    case TYPE : {
+        Type *y = (Type *)x;
+        typePrint(y, out);
+        break;
+    }
+
+    case VALUE : {
+        Value *y = (Value *)x;
+        valuePrint(y, out);
+        break;
+    }
+
     default :
         assert(false);
     }

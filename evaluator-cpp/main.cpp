@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
     ObjectPtr mainProc = lookupEnv(m->env, new Identifier("main"));
     ValuePtr result = invoke(mainProc, vector<ValuePtr>());
 
+    cout << result->type << '\n';
     cout << result << '\n';
 
     return 0;
