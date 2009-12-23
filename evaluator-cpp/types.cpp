@@ -199,9 +199,9 @@ static void initializeRecordFields(RecordTypePtr t) {
         switch (x->objKind) {
         case VALUE_ARG : {
             ValueArg *y = (ValueArg *)x;
+            t->fieldIndexMap[y->name->str] = t->fieldTypes.size();
             TypePtr ftype = evaluateNonVoidType(y->type, env);
             t->fieldTypes.push_back(ftype);
-            t->fieldIndexMap[y->name->str] = t->fieldTypes.size();
             break;
         }
         case STATIC_ARG :
