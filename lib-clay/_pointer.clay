@@ -13,26 +13,26 @@ overload copy[T](dest:Pointer[T], src:Pointer[T]) {
 overload to [I,T|Integer?(I)] (static I, a:Pointer[T]) = pointerToInt(I, a);
 overload to [I,T|Integer?(I)] (static Pointer[T], a:I) = intToPointer(T, a);
 
-pointerToNativeInt[T](a:Pointer[T]) = to(Int32, a);
-nativeIntToPointer[T](a:Int32) = to(Pointer[T], a);
+pointerToInt32[T](a:Pointer[T]) = to(Int32, a);
+pointerToUInt32[T](a:Pointer[T]) = to(UInt32, a);
 
 overload equals?[T](a:Pointer[T], b:Pointer[T]) {
-    return equals?(pointerToNativeInt(a), pointerToNativeInt(b));
+    return equals?(pointerToInt32(a), pointerToInt32(b));
 }
 overload lesser?[T](a:Pointer[T], b:Pointer[T]) {
-    return lesser?(pointerToNativeInt(a), pointerToNativeInt(b));
+    return lesser?(pointerToUInt32(a), pointerToUInt32(b));
 }
 
-overload hash[T](a:Pointer[T]) = pointerToNativeInt(a);
+overload hash[T](a:Pointer[T]) = pointerToInt32(a);
 
 overload add [T,I|Integer?(I)] (p:Pointer[T], i:I) {
-    return to(Pointer[T], pointerToNativeInt(p) + i*TypeSize(T));
+    return to(Pointer[T], pointerToInt32(p) + i*TypeSize(T));
 }
 overload subtract [T,I|Integer?(I)] (p:Pointer[T], i:I) {
-    return to(Pointer[T], pointerToNativeInt(p) - i*TypeSize(T));
+    return to(Pointer[T], pointerToInt32(p) - i*TypeSize(T));
 }
 overload subtract[T](a:Pointer[T], b:Pointer[T]) {
-    return (pointerToNativeInt(a) - pointerToNativeInt(b)) / TypeSize(T);
+    return (pointerToInt32(a) - pointerToInt32(b)) / TypeSize(T);
 }
 
 overload inc[T](a:Pointer[T]) {
