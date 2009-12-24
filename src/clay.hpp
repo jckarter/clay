@@ -171,8 +171,7 @@ enum ObjectKind {
     VALUE,
     PATTERN,
 
-    MATCH_INVOKE_RESULT,
-    STATEMENT_RESULT,
+    DONT_CARE,
 };
 
 
@@ -269,12 +268,6 @@ struct MatchInvokeArgCountError;
 struct MatchInvokeArgMismatch;
 struct MatchInvokePredicateFailure;
 
-struct StatementResult;
-struct GotoResult;
-struct BreakResult;
-struct ContinueResult;
-struct ReturnResult;
-
 
 
 //
@@ -368,12 +361,6 @@ typedef Ptr<MatchInvokeSuccess> MatchInvokeSuccessPtr;
 typedef Ptr<MatchInvokeArgCountError> MatchInvokeArgCountErrorPtr;
 typedef Ptr<MatchInvokeArgMismatch> MatchInvokeArgMismatchPtr;
 typedef Ptr<MatchInvokePredicateFailure> MatchInvokePredicateFailurePtr;
-
-typedef Ptr<StatementResult> StatementResultPtr;
-typedef Ptr<GotoResult> GotoResultPtr;
-typedef Ptr<BreakResult> BreakResultPtr;
-typedef Ptr<ContinueResult> ContinueResultPtr;
-typedef Ptr<ReturnResult> ReturnResultPtr;
 
 
 
@@ -1382,7 +1369,7 @@ enum MatchInvokeResultKind {
 struct MatchInvokeResult : public Object {
     int resultKind;
     MatchInvokeResult(int resultKind)
-        : Object(MATCH_INVOKE_RESULT), resultKind(resultKind) {}
+        : Object(DONT_CARE), resultKind(resultKind) {}
 };
 
 struct MatchInvokeSuccess : public MatchInvokeResult {

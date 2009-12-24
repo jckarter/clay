@@ -50,6 +50,17 @@ MatchInvokeResultPtr
 matchInvokeCode(CodePtr code, EnvPtr env, const vector<ValuePtr> &args);
 EnvPtr bindValueArgs(EnvPtr env, const vector<ValuePtr> &args, CodePtr code);
 
+struct StatementResult;
+struct GotoResult;
+struct BreakResult;
+struct ContinueResult;
+struct ReturnResult;
+
+typedef Ptr<StatementResult> StatementResultPtr;
+typedef Ptr<GotoResult> GotoResultPtr;
+typedef Ptr<BreakResult> BreakResultPtr;
+typedef Ptr<ContinueResult> ContinueResultPtr;
+typedef Ptr<ReturnResult> ReturnResultPtr;
 
 enum StatementResultKind {
     GOTO_RESULT,
@@ -61,7 +72,7 @@ enum StatementResultKind {
 struct StatementResult : public Object {
     int resultKind;
     StatementResult(int resultKind)
-        : Object(STATEMENT_RESULT), resultKind(resultKind) {}
+        : Object(DONT_CARE), resultKind(resultKind) {}
 };
 
 struct GotoResult : public StatementResult {
