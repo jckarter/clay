@@ -3,6 +3,145 @@
 
 
 //
+// internal declarations
+//
+
+IdentifierPtr internIdentifier(IdentifierPtr x);
+
+int toCOIndex(ObjectPtr obj);
+ObjectPtr fromCOIndex(int i);
+
+ValuePtr allocValue(TypePtr t);
+
+void valueInit(ValuePtr dest);
+void valueDestroy(ValuePtr dest);
+void valueCopy(ValuePtr dest, ValuePtr src);
+void valueAssign(ValuePtr dest, ValuePtr src);
+
+void pushTempBlock();
+void popTempBlock();
+void installTemp(ValuePtr value);
+
+// the following versions of evaluate don't create a new temp block
+// but they push the expression's locaiton onto location stack
+ValuePtr evaluateNonVoid(ExprPtr expr, EnvPtr env);
+ValuePtr evaluate(ExprPtr expr, EnvPtr env);
+ValuePtr evaluateNested(ExprPtr expr, EnvPtr env);
+
+// the following versions of evaluate don't create a new temp block
+// and they don't push the expression's location onto location stack
+ValuePtr evaluateNonVoid2(ExprPtr expr, EnvPtr env);
+ValuePtr evaluate2(ExprPtr expr, EnvPtr env);
+
+PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args);
+
+ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args);
+bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args);
+int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args);
+
+
+ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args);
+bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env);
+ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args);
+ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args);
+ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args);
+
+MatchInvokeResultPtr
+matchInvokeCode(CodePtr code, EnvPtr env, const vector<ValuePtr> &args);
+EnvPtr bindValueArgs(EnvPtr env, const vector<ValuePtr> &args, CodePtr code);
+
+
+enum StatementResultKind {
+    GOTO_RESULT,
+    BREAK_RESULT,
+    CONTINUE_RESULT,
+    RETURN_RESULT,
+};
+
+struct StatementResult : public Object {
+    int resultKind;
+    StatementResult(int resultKind)
+        : Object(STATEMENT_RESULT), resultKind(resultKind) {}
+};
+
+struct GotoResult : public StatementResult {
+    IdentifierPtr labelName;
+    GotoResult(IdentifierPtr labelName)
+        : StatementResult(GOTO_RESULT), labelName(labelName) {}
+};
+
+struct BreakResult : public StatementResult {
+    StatementPtr stmt;
+    BreakResult(StatementPtr stmt)
+        : StatementResult(BREAK_RESULT), stmt(stmt) {}
+};
+
+struct ContinueResult : public StatementResult {
+    StatementPtr stmt;
+    ContinueResult(StatementPtr stmt)
+        : StatementResult(CONTINUE_RESULT), stmt(stmt) {}
+};
+
+struct ReturnResult : public StatementResult {
+    ValuePtr result;
+    ReturnResult(ValuePtr result)
+        : StatementResult(RETURN_RESULT), result(result) {}
+};
+
+ValuePtr evalCodeBody(CodePtr code, EnvPtr env);
+
+StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env);
+
+struct LabelInfo {
+    EnvPtr env;
+    unsigned blockPos;
+    LabelInfo() : env(NULL), blockPos((unsigned)-1) {}
+    LabelInfo(EnvPtr env, unsigned blockPos)
+        : env(env), blockPos(blockPos) {}
+};
+
+void evalCollectLabels(const vector<StatementPtr> &statements,
+                       unsigned startIndex, map<string, LabelInfo> &labels,
+                       EnvPtr env);
+
+EnvPtr evalBinding(BindingPtr x, EnvPtr env, vector<ValuePtr> &blockTemps);
+
+ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args);
+llvm::Function *
+generateExternalFunc(const vector<TypePtr> &argTypes, TypePtr returnType,
+                     const string &name);
+llvm::Function *
+generateExternalWrapper(llvm::Function *func, const vector<TypePtr> &argTypes,
+                        TypePtr returnType, const string &name);
+
+ValuePtr execLLVMFunc(llvm::Function *func, const vector<ValuePtr> &args,
+                      TypePtr returnType);
+
+ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args);
+
+bool numericEquals(ValuePtr a, ValuePtr b);
+bool numericLesser(ValuePtr a, ValuePtr b);
+ValuePtr numericAdd(ValuePtr a, ValuePtr b);
+ValuePtr numericSubtract(ValuePtr a, ValuePtr b);
+ValuePtr numericMultiply(ValuePtr a, ValuePtr b);
+ValuePtr numericDivide(ValuePtr a, ValuePtr b);
+ValuePtr numericNegate(ValuePtr a);
+
+ValuePtr integerRemainder(ValuePtr a, ValuePtr b);
+ValuePtr integerShiftLeft(ValuePtr a, ValuePtr b);
+ValuePtr integerShiftRight(ValuePtr a, ValuePtr b);
+ValuePtr integerBitwiseAnd(ValuePtr a, ValuePtr b);
+ValuePtr integerBitwiseOr(ValuePtr a, ValuePtr b);
+ValuePtr integerBitwiseXor(ValuePtr a, ValuePtr b);
+
+ValuePtr numericConvert(TypePtr t, ValuePtr a);
+
+ValuePtr pointerToInt(IntegerTypePtr t, void *ptr);
+ValuePtr intToPointer(TypePtr pointeeType, ValuePtr a);
+
+
+
+//
 // Value destructor
 //
 
@@ -631,33 +770,6 @@ void valuePrint(ValuePtr a, ostream &out) {
     default :
         assert(false);
     }
-}
-
-
-
-//
-// access names from other modules
-//
-
-ObjectPtr coreName(const string &name) {
-    return lookupPublic(loadedModule("_core"), new Identifier(name));
-}
-
-ObjectPtr primName(const string &name) {
-    return lookupPublic(loadedModule("__primitives__"), new Identifier(name));
-}
-
-ExprPtr moduleNameRef(const string &module, const string &name) {
-    ExprPtr nameRef = new NameRef(new Identifier(name));
-    return new SCExpr(loadedModule(module)->env, nameRef);
-}
-
-ExprPtr coreNameRef(const string &name) {
-    return moduleNameRef("_core", name);
-}
-
-ExprPtr primNameRef(const string &name) {
-    return moduleNameRef("__primitives__", name);
 }
 
 
@@ -1504,7 +1616,7 @@ ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args) {
 
 
 //
-// matchInvokeCode
+// signalMatchInvokeError
 //
 
 void signalMatchInvokeError(MatchInvokeResultPtr result) {
@@ -1525,6 +1637,12 @@ void signalMatchInvokeError(MatchInvokeResultPtr result) {
         break;
     }
 }
+
+
+
+//
+// matchInvokeCode
+//
 
 MatchInvokeResultPtr
 matchInvokeCode(CodePtr code, EnvPtr env, const vector<ValuePtr> &args) {

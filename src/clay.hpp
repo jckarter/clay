@@ -1006,6 +1006,12 @@ void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
 ModulePtr loadedModule(const string &module);
 
+ObjectPtr coreName(const string &name);
+ObjectPtr primName(const string &name);
+ExprPtr moduleNameRef(const string &module, const string &name);
+ExprPtr coreNameRef(const string &name);
+ExprPtr primNameRef(const string &name);
+
 
 
 //
@@ -1329,13 +1335,6 @@ struct RecordTypePattern : public Pattern {
 // evaluator module
 //
 
-IdentifierPtr internIdentifier(IdentifierPtr x);
-
-int toCOIndex(ObjectPtr obj);
-ObjectPtr fromCOIndex(int i);
-
-ValuePtr allocValue(TypePtr t);
-
 ValuePtr boolToValue(bool x);
 ValuePtr intToValue(int x);
 int valueToInt(ValuePtr v);
@@ -1345,25 +1344,11 @@ ObjectPtr valueToCO(ValuePtr v);
 TypePtr valueToType(ValuePtr v);
 ObjectPtr lower(ValuePtr v);
 
-void valueInit(ValuePtr dest);
-void valueDestroy(ValuePtr dest);
-void valueCopy(ValuePtr dest, ValuePtr src);
-ValuePtr cloneValue(ValuePtr src);
-void valueAssign(ValuePtr dest, ValuePtr src);
-bool valueEquals(ValuePtr a, ValuePtr b);
-int valueHash(ValuePtr a);
-
 void valuePrint(ValuePtr a, ostream &out);
 
-ObjectPtr coreName(const string &name);
-ObjectPtr primName(const string &name);
-ExprPtr moduleNameRef(const string &module, const string &name);
-ExprPtr coreNameRef(const string &name);
-ExprPtr primNameRef(const string &name);
-
-void pushTempBlock();
-void popTempBlock();
-void installTemp(ValuePtr value);
+ValuePtr cloneValue(ValuePtr src);
+bool valueEquals(ValuePtr a, ValuePtr b);
+int valueHash(ValuePtr a);
 
 // the following versions of evaluate create their own temp block
 // they also push the expression's location onto location stack
@@ -1373,19 +1358,7 @@ TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateNonVoidType(ExprPtr expr, EnvPtr env);
 bool evaluateToBool(ExprPtr expr, EnvPtr env);
 
-// the following versions of evaluate don't create a new temp block
-// but they push the expression's locaiton onto location stack
-ValuePtr evaluateNonVoid(ExprPtr expr, EnvPtr env);
-ValuePtr evaluate(ExprPtr expr, EnvPtr env);
-ValuePtr evaluateNested(ExprPtr expr, EnvPtr env);
-
-// the following versions of evaluate don't create a new temp block
-// and they don't push the expression's location onto location stack
-ValuePtr evaluateNonVoid2(ExprPtr expr, EnvPtr env);
-ValuePtr evaluate2(ExprPtr expr, EnvPtr env);
-
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
-PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args);
 bool unify(PatternPtr pattern, ValuePtr value);
 bool unifyType(PatternPtr pattern, TypePtr type);
 ValuePtr derefCell(PatternCellPtr cell);
@@ -1397,31 +1370,7 @@ ExprPtr convertArray(ArrayPtr x);
 ExprPtr convertUnaryOp(UnaryOpPtr x);
 ExprPtr convertBinaryOp(BinaryOpPtr x);
 
-
-
-//
-// invoke
-//
-
-ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args);
-bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args);
-int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args);
-
 ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
-
-ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args);
-bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env);
-
-ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args);
-
-ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args);
-ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args);
-
-
-
-//
-// matchInvokeCode
-//
 
 enum MatchInvokeResultKind {
     MATCH_INVOKE_SUCCESS,
@@ -1459,123 +1408,10 @@ struct MatchInvokePredicateFailure : public MatchInvokeResult {
 };
 
 void signalMatchInvokeError(MatchInvokeResultPtr result);
-MatchInvokeResultPtr
-matchInvokeCode(CodePtr code, EnvPtr env, const vector<ValuePtr> &args);
-EnvPtr bindValueArgs(EnvPtr env, const vector<ValuePtr> &args, CodePtr code);
-
-
-
-//
-// evalCodeBody
-//
-
-enum StatementResultKind {
-    GOTO_RESULT,
-    BREAK_RESULT,
-    CONTINUE_RESULT,
-    RETURN_RESULT,
-};
-
-struct StatementResult : public Object {
-    int resultKind;
-    StatementResult(int resultKind)
-        : Object(STATEMENT_RESULT), resultKind(resultKind) {}
-};
-
-struct GotoResult : public StatementResult {
-    IdentifierPtr labelName;
-    GotoResult(IdentifierPtr labelName)
-        : StatementResult(GOTO_RESULT), labelName(labelName) {}
-};
-
-struct BreakResult : public StatementResult {
-    StatementPtr stmt;
-    BreakResult(StatementPtr stmt)
-        : StatementResult(BREAK_RESULT), stmt(stmt) {}
-};
-
-struct ContinueResult : public StatementResult {
-    StatementPtr stmt;
-    ContinueResult(StatementPtr stmt)
-        : StatementResult(CONTINUE_RESULT), stmt(stmt) {}
-};
-
-struct ReturnResult : public StatementResult {
-    ValuePtr result;
-    ReturnResult(ValuePtr result)
-        : StatementResult(RETURN_RESULT), result(result) {}
-};
-
-ValuePtr evalCodeBody(CodePtr code, EnvPtr env);
-
-StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env);
-
-struct LabelInfo {
-    EnvPtr env;
-    unsigned blockPos;
-    LabelInfo() : env(NULL), blockPos((unsigned)-1) {}
-    LabelInfo(EnvPtr env, unsigned blockPos)
-        : env(env), blockPos(blockPos) {}
-};
-
-void evalCollectLabels(const vector<StatementPtr> &statements,
-                       unsigned startIndex, map<string, LabelInfo> &labels,
-                       EnvPtr env);
-
-EnvPtr evalBinding(BindingPtr x, EnvPtr env, vector<ValuePtr> &blockTemps);
 
 StatementPtr convertForStatement(ForPtr x);
 
-
-
-//
-// invokeExternal
-//
-
-ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args);
 void initExternalProcedure(ExternalProcedurePtr x);
-llvm::Function *
-generateExternalFunc(const vector<TypePtr> &argTypes, TypePtr returnType,
-                     const string &name);
-llvm::Function *
-generateExternalWrapper(llvm::Function *func, const vector<TypePtr> &argTypes,
-                        TypePtr returnType, const string &name);
 
-
-
-//
-// execLLVMFunc
-//
-
-ValuePtr execLLVMFunc(llvm::Function *func, const vector<ValuePtr> &args,
-                      TypePtr returnType);
-
-
-
-//
-// invokePrimOp
-//
-
-ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args);
-
-bool numericEquals(ValuePtr a, ValuePtr b);
-bool numericLesser(ValuePtr a, ValuePtr b);
-ValuePtr numericAdd(ValuePtr a, ValuePtr b);
-ValuePtr numericSubtract(ValuePtr a, ValuePtr b);
-ValuePtr numericMultiply(ValuePtr a, ValuePtr b);
-ValuePtr numericDivide(ValuePtr a, ValuePtr b);
-ValuePtr numericNegate(ValuePtr a);
-
-ValuePtr integerRemainder(ValuePtr a, ValuePtr b);
-ValuePtr integerShiftLeft(ValuePtr a, ValuePtr b);
-ValuePtr integerShiftRight(ValuePtr a, ValuePtr b);
-ValuePtr integerBitwiseAnd(ValuePtr a, ValuePtr b);
-ValuePtr integerBitwiseOr(ValuePtr a, ValuePtr b);
-ValuePtr integerBitwiseXor(ValuePtr a, ValuePtr b);
-
-ValuePtr numericConvert(TypePtr t, ValuePtr a);
-
-ValuePtr pointerToInt(IntegerTypePtr t, void *ptr);
-ValuePtr intToPointer(TypePtr pointeeType, ValuePtr a);
 
 #endif

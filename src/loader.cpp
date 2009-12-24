@@ -337,3 +337,30 @@ static ModulePtr makePrimitivesModule() {
 #undef PRIMITIVE
     return prims;
 }
+
+
+
+//
+// access names from other modules
+//
+
+ObjectPtr coreName(const string &name) {
+    return lookupPublic(loadedModule("_core"), new Identifier(name));
+}
+
+ObjectPtr primName(const string &name) {
+    return lookupPublic(loadedModule("__primitives__"), new Identifier(name));
+}
+
+ExprPtr moduleNameRef(const string &module, const string &name) {
+    ExprPtr nameRef = new NameRef(new Identifier(name));
+    return new SCExpr(loadedModule(module)->env, nameRef);
+}
+
+ExprPtr coreNameRef(const string &name) {
+    return moduleNameRef("_core", name);
+}
+
+ExprPtr primNameRef(const string &name) {
+    return moduleNameRef("__primitives__", name);
+}
