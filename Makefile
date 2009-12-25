@@ -13,6 +13,7 @@ OBJS = \
 	src/loader.o \
 	src/types.o \
 	src/evaluator.o \
+	src/analyzer.o \
 	src/main.o
 
 clayc : $(OBJS)

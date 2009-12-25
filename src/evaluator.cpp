@@ -1148,6 +1148,11 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
         return evaluate(x->expr, x->env);
     }
 
+    case VALUE_EXPR : {
+        ValueExpr *x = (ValueExpr *)expr.raw();
+        return cloneValue(x->value);
+    }
+
     default :
         assert(false);
         return NULL;
@@ -1420,8 +1425,7 @@ ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args) {
     switch (obj->objKind) {
     case RECORD : {
         RecordPtr r = (Record *)obj.raw();
-        if (r->patternVars.size() != args.size())
-            error("incorrect no. of arguments");
+        ensureArity(args, r->patternVars.size());
         return coToValue(recordType(r, args).raw());
     }
     case PRIM_OP : {

@@ -133,6 +133,7 @@ enum ObjectKind {
     OR,
 
     SC_EXPR,
+    VALUE_EXPR,
 
     BLOCK,
     LABEL,
@@ -171,6 +172,8 @@ enum ObjectKind {
     VALUE,
     PATTERN,
 
+    ANALYSIS,
+
     DONT_CARE,
 };
 
@@ -207,6 +210,7 @@ struct BinaryOp;
 struct And;
 struct Or;
 struct SCExpr;
+struct ValueExpr;
 
 struct Statement;
 struct Block;
@@ -301,6 +305,7 @@ typedef Ptr<BinaryOp> BinaryOpPtr;
 typedef Ptr<And> AndPtr;
 typedef Ptr<Or> OrPtr;
 typedef Ptr<SCExpr> SCExprPtr;
+typedef Ptr<ValueExpr> ValueExprPtr;
 
 typedef Ptr<Statement> StatementPtr;
 typedef Ptr<Block> BlockPtr;
@@ -653,6 +658,12 @@ struct SCExpr : public Expr {
     ExprPtr expr;
     SCExpr(EnvPtr env, ExprPtr expr)
         : Expr(SC_EXPR), env(env), expr(expr) {}
+};
+
+struct ValueExpr : public Expr {
+    ValuePtr value;
+    ValueExpr(ValuePtr value)
+        : Expr(VALUE_EXPR), value(value) {}
 };
 
 
