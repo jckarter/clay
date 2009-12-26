@@ -32,6 +32,8 @@ AnalysisPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args);
 
 bool analyzeMatchArg(AnalysisPtr arg, FormalArgPtr farg, EnvPtr fenv);
 
+AnalysisPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args);
+
 AnalysisPtr analyzeInvokeProcedure(ProcedurePtr x,
                                    const vector<AnalysisPtr> &args);
 
@@ -40,8 +42,6 @@ AnalysisPtr analyzeInvokeOverloadable(OverloadablePtr x,
 
 AnalysisPtr analyzeInvokeExternalProcedure(ExternalProcedurePtr x,
                                            const vector<AnalysisPtr> &args);
-
-AnalysisPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args);
 
 AnalysisPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args);
 
@@ -68,6 +68,11 @@ static void ensureStaticArgs(const vector<AnalysisPtr> &args) {
         if (!args[i]->isStatic)
             fmtError("static value expected at argument %d", (i+1));
     }
+}
+
+static void ensureArgType(const vector<AnalysisPtr> &args, int i, TypePtr t) {
+    if (args[i]->type != t)
+        fmtError("type mismatch at argument %d", (i+1));
 }
 
 
@@ -317,6 +322,8 @@ AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args) {
     switch (obj->objKind) {
     case RECORD :
         return analyzeInvokeRecord((Record *)obj.raw(), args);
+    case TYPE :
+        return analyzeInvokeType((Type *)obj.raw(), args);
     case PROCEDURE :
         return analyzeInvokeProcedure((Procedure *)obj.raw(), args);
     case OVERLOADABLE :
@@ -325,8 +332,6 @@ AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args) {
         ExternalProcedurePtr x = (ExternalProcedure *)obj.raw();
         return analyzeInvokeExternalProcedure(x, args);
     }
-    case TYPE :
-        return analyzeInvokeType((Type *)obj.raw(), args);
     case PRIM_OP :
         return analyzeInvokePrimOp((PrimOp *)obj.raw(), args);
     }
@@ -384,4 +389,43 @@ bool analyzeMatchArg(AnalysisPtr arg, FormalArgPtr farg, EnvPtr env) {
     }
     assert(false);
     return false;
+}
+
+
+
+//
+// analyzeInvokeType
+//
+
+AnalysisPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args) {
+    if (args.size() == 0)
+        return staticTemp(x);
+    if ((args.size() == 1) && (args[0]->type == x))
+        return new Analysis(x, true, args[0]->isStatic);
+    switch (x->typeKind) {
+    case ARRAY_TYPE : {
+        ArrayType *y = (ArrayType *)x.raw();
+        ensureArity(args, y->size);
+        for (unsigned i = 0; i < args.size(); ++i)
+            ensureArgType(args, i, y->elementType);
+        return new Analysis(x, true, allStatic(args));
+    }
+    case TUPLE_TYPE : {
+        TupleType *y = (TupleType *)x.raw();
+        ensureArity(args, y->elementTypes.size());
+        for (unsigned i = 0; i < args.size(); ++i)
+            ensureArgType(args, i, y->elementTypes[i]);
+        return new Analysis(x, true, allStatic(args));
+    }
+    case RECORD_TYPE : {
+        RecordType *y = (RecordType *)x.raw();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(y);
+        ensureArity(args, fieldTypes.size());
+        for (unsigned i = 0; i < args.size(); ++i)
+            ensureArgType(args, i, fieldTypes[i]);
+        return new Analysis(x, true, allStatic(args));
+    }
+    }
+    error("invalid constructor");
+    return NULL;
 }

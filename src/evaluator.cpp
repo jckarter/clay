@@ -1468,14 +1468,14 @@ ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args) {
     switch (callable->objKind) {
     case RECORD :
         return invokeRecord((Record *)callable.raw(), args);
+    case TYPE :
+        return invokeType((Type *)callable.raw(), args);
     case PROCEDURE :
         return invokeProcedure((Procedure *)callable.raw(), args);
     case OVERLOADABLE :
         return invokeOverloadable((Overloadable *)callable.raw(), args);
     case EXTERNAL_PROCEDURE :
         return invokeExternal((ExternalProcedure *)callable.raw(), args);
-    case TYPE :
-        return invokeType((Type *)callable.raw(), args);
     case PRIM_OP :
         return invokePrimOp((PrimOp *)callable.raw(), args);
     }
