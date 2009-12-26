@@ -13,17 +13,37 @@ struct Analysis : public Object {
     TypePtr type;
     bool isTemp;
     bool isStatic;
+    ExprPtr expr;
+    EnvPtr env;
 
     Analysis(TypePtr type, bool isTemp, bool isStatic)
         : Object(ANALYSIS), type(type), isTemp(isTemp),
           isStatic(isStatic) {}
 };
 
-AnalysisPtr analyze(ExprPtr, EnvPtr env);
-AnalysisPtr analyzeIndexing(ObjectPtr obj, const vector<ExprPtr> &args,
-                            EnvPtr env);
-AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<ExprPtr> &args,
-                          EnvPtr env);
+vector<AnalysisPtr> analyzeList(const vector<ExprPtr> &exprList, EnvPtr env);
+AnalysisPtr analyze(ExprPtr expr, EnvPtr env);
+AnalysisPtr analyze2(ExprPtr expr, EnvPtr env);
+
+AnalysisPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args);
+AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args);
+
+AnalysisPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args);
+
+bool analyzeMatchArg(AnalysisPtr arg, FormalArgPtr farg, EnvPtr fenv);
+
+AnalysisPtr analyzeInvokeProcedure(ProcedurePtr x,
+                                   const vector<AnalysisPtr> &args);
+
+AnalysisPtr analyzeInvokeOverloadable(OverloadablePtr x,
+                                      const vector<AnalysisPtr> &args);
+
+AnalysisPtr analyzeInvokeExternalProcedure(ExternalProcedurePtr x,
+                                           const vector<AnalysisPtr> &args);
+
+AnalysisPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args);
+
+AnalysisPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args);
 
 
 
@@ -35,10 +55,17 @@ static AnalysisPtr staticTemp(TypePtr t) {
     return new Analysis(t, true, true);
 }
 
-static void ensureStaticArgs(const vector<ExprPtr> &args, EnvPtr env) {
+static bool allStatic(const vector<AnalysisPtr> &args) {
     for (unsigned i = 0; i < args.size(); ++i) {
-        AnalysisPtr result = analyze(args[i], env);
-        if (!result->isStatic)
+        if (!args[i]->isStatic)
+            return false;
+    }
+    return true;
+}
+
+static void ensureStaticArgs(const vector<AnalysisPtr> &args) {
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (!args[i]->isStatic)
             fmtError("static value expected at argument %d", (i+1));
     }
 }
@@ -49,9 +76,22 @@ static void ensureStaticArgs(const vector<ExprPtr> &args, EnvPtr env) {
 // analyze
 //
 
+vector<AnalysisPtr> analyzeList(const vector<ExprPtr> &exprList, EnvPtr env) {
+    vector<AnalysisPtr> out;
+    for (unsigned i = 0; i < exprList.size(); ++i)
+        out.push_back(analyze(exprList[i], env));
+    return out;
+}
+
 AnalysisPtr analyze(ExprPtr expr, EnvPtr env) {
     LocationContext loc(expr->location);
+    AnalysisPtr result = analyze2(expr, env);
+    result->expr = expr;
+    result->env = env;
+    return result;
+}
 
+AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     switch (expr->objKind) {
 
     case BOOL_LITERAL :
@@ -140,7 +180,7 @@ AnalysisPtr analyze(ExprPtr expr, EnvPtr env) {
         AnalysisPtr indexable = analyze(x->expr, env);
         if (indexable->isStatic) {
             ObjectPtr indexable2 = lower(evaluateToStatic(x->expr, env));
-            return analyzeIndexing(indexable2, x->args, env);
+            return analyzeIndexing(indexable2, analyzeList(x->args, env));
         }
         error("invalid indexing operation");
         return NULL;
@@ -151,7 +191,7 @@ AnalysisPtr analyze(ExprPtr expr, EnvPtr env) {
         AnalysisPtr callable = analyze(x->expr, env);
         if (callable->isStatic) {
             ObjectPtr callable2 = lower(evaluateToStatic(x->expr, env));
-            return analyzeInvoke(callable2, x->args, env);
+            return analyzeInvoke(callable2, analyzeList(x->args, env));
         }
         error("invalid call operation");
         return NULL;
@@ -163,7 +203,8 @@ AnalysisPtr analyze(ExprPtr expr, EnvPtr env) {
         vector<ExprPtr> args;
         args.push_back(x->expr);
         args.push_back(new ValueExpr(name));
-        return analyzeInvoke(primName("recordFieldRefByName"), args, env);
+        return analyzeInvoke(primName("recordFieldRefByName"),
+                             analyzeList(args, env));
     }
 
     case TUPLE_REF : {
@@ -172,7 +213,8 @@ AnalysisPtr analyze(ExprPtr expr, EnvPtr env) {
         vector<ExprPtr> args;
         args.push_back(x->expr);
         args.push_back(new ValueExpr(index));
-        return analyzeInvoke(primName("tupleRef"), args, env);
+        return analyzeInvoke(primName("tupleRef"),
+                             analyzeList(args, env));
     }
 
     case UNARY_OP : {
@@ -235,22 +277,27 @@ AnalysisPtr analyze(ExprPtr expr, EnvPtr env) {
 // analyzeIndexing
 //
 
-AnalysisPtr analyzeIndexing(ObjectPtr obj, const vector<ExprPtr> &args,
-                            EnvPtr env) {
+AnalysisPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args) {
     switch (obj->objKind) {
     case RECORD : {
         Record *x = (Record *)obj.raw();
-        ensureArity(x->patternVars, args.size());
-        ensureStaticArgs(args, env);
+        ensureArity(args, x->patternVars.size());
+        ensureStaticArgs(args);
         return staticTemp(compilerObjectType);
     }
     case PRIM_OP : {
         PrimOp *x = (PrimOp *)obj.raw();
         switch (x->primOpCode) {
         case PRIM_Pointer :
+            ensureArity(args, 1);
+            ensureStaticArgs(args);
+            return staticTemp(compilerObjectType);
         case PRIM_Array :
+            ensureArity(args, 2);
+            ensureStaticArgs(args);
+            return staticTemp(compilerObjectType);
         case PRIM_Tuple :
-            ensureStaticArgs(args, env);
+            ensureStaticArgs(args);
             return staticTemp(compilerObjectType);
         }
         break;
@@ -266,6 +313,75 @@ AnalysisPtr analyzeIndexing(ObjectPtr obj, const vector<ExprPtr> &args,
 // analyzeInvoke
 //
 
-AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<ExprPtr> &args,
-                          EnvPtr env) {
+AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args) {
+    switch (obj->objKind) {
+    case RECORD :
+        return analyzeInvokeRecord((Record *)obj.raw(), args);
+    case PROCEDURE :
+        return analyzeInvokeProcedure((Procedure *)obj.raw(), args);
+    case OVERLOADABLE :
+        return analyzeInvokeOverloadable((Overloadable *)obj.raw(), args);
+    case EXTERNAL_PROCEDURE : {
+        ExternalProcedurePtr x = (ExternalProcedure *)obj.raw();
+        return analyzeInvokeExternalProcedure(x, args);
+    }
+    case TYPE :
+        return analyzeInvokeType((Type *)obj.raw(), args);
+    case PRIM_OP :
+        return analyzeInvokePrimOp((PrimOp *)obj.raw(), args);
+    }
+    error("invalid operation");
+    return NULL;
+}
+
+
+
+//
+// analyzeInvokeRecord
+//
+
+AnalysisPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args) {
+    ensureArity(args, x->formalArgs.size());
+    EnvPtr env = new Env(x->env);
+    vector<PatternCellPtr> cells;
+    for (unsigned i = 0; i < x->patternVars.size(); ++i) {
+        cells.push_back(new PatternCell(x->patternVars[i], NULL));
+        addLocal(env, x->patternVars[i], cells[i].raw());
+    }
+    for (unsigned i = 0; i < args.size(); ++i) {
+        FormalArgPtr farg = x->formalArgs[i];
+        if (!analyzeMatchArg(args[i], x->formalArgs[i], env))
+            fmtError("mismatch at argument %d", i+1);
+    }
+    vector<ValuePtr> cellValues;
+    for (unsigned i = 0; i < cells.size(); ++i)
+        cellValues.push_back(derefCell(cells[i]));
+    TypePtr t = recordType(x, cellValues);
+    return new Analysis(t, true, allStatic(args));
+}
+
+
+
+//
+// analyzeMatchArg
+//
+
+bool analyzeMatchArg(AnalysisPtr arg, FormalArgPtr farg, EnvPtr env) {
+    switch (farg->objKind) {
+    case VALUE_ARG : {
+        ValueArg *x = (ValueArg *)farg.raw();
+        if (!x->type)
+            return true;
+        PatternPtr pattern = evaluatePattern(x->type, env);
+        return unifyType(pattern, arg->type);
+    }
+    case STATIC_ARG : {
+        StaticArg *x = (StaticArg *)farg.raw();
+        PatternPtr pattern = evaluatePattern(x->pattern, env);
+        ValuePtr y = evaluateToStatic(arg->expr, arg->env);
+        return unify(pattern, y);
+    }
+    }
+    assert(false);
+    return false;
 }
