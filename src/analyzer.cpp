@@ -23,7 +23,8 @@ struct Analysis : public Object {
     ValuePtr evaluate();
 };
 
-vector<AnalysisPtr> analyzeList(const vector<ExprPtr> &exprList, EnvPtr env);
+bool analyzeList(const vector<ExprPtr> &exprList, EnvPtr env,
+                 vector<AnalysisPtr> &result);
 AnalysisPtr analyze(ExprPtr expr, EnvPtr env);
 AnalysisPtr analyze2(ExprPtr expr, EnvPtr env);
 
@@ -113,16 +114,22 @@ static void ensureArgType(const vector<AnalysisPtr> &args, int i, TypePtr t) {
 // analyze
 //
 
-vector<AnalysisPtr> analyzeList(const vector<ExprPtr> &exprList, EnvPtr env) {
-    vector<AnalysisPtr> out;
-    for (unsigned i = 0; i < exprList.size(); ++i)
-        out.push_back(analyze(exprList[i], env));
-    return out;
+bool analyzeList(const vector<ExprPtr> &exprList, EnvPtr env,
+                 vector<AnalysisPtr> &result) {
+    for (unsigned i = 0; i < exprList.size(); ++i) {
+        AnalysisPtr a = analyze(exprList[i], env);
+        if (!a)
+            return false;
+        result.push_back(a);
+    }
+    return true;
 }
 
 AnalysisPtr analyze(ExprPtr expr, EnvPtr env) {
     LocationContext loc(expr->location);
     AnalysisPtr result = analyze2(expr, env);
+    if (!result)
+        return NULL;
     result->expr = expr;
     result->env = env;
     return result;
@@ -215,9 +222,14 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     case INDEXING : {
         Indexing *x = (Indexing *)expr.raw();
         AnalysisPtr indexable = analyze(x->expr, env);
+        if (!indexable)
+            return NULL;
         if (indexable->isStatic) {
             ObjectPtr indexable2 = lower(evaluateToStatic(x->expr, env));
-            return analyzeIndexing(indexable2, analyzeList(x->args, env));
+            vector<AnalysisPtr> args;
+            if (!analyzeList(x->args, env, args))
+                return NULL;
+            return analyzeIndexing(indexable2, args);
         }
         error("invalid indexing operation");
         return NULL;
@@ -226,9 +238,14 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     case CALL : {
         Call *x = (Call *)expr.raw();
         AnalysisPtr callable = analyze(x->expr, env);
+        if (!callable)
+            return NULL;
         if (callable->isStatic) {
             ObjectPtr callable2 = lower(evaluateToStatic(x->expr, env));
-            return analyzeInvoke(callable2, analyzeList(x->args, env));
+            vector<AnalysisPtr> args;
+            if (!analyzeList(x->args, env, args))
+                return NULL;
+            return analyzeInvoke(callable2, args);
         }
         error("invalid call operation");
         return NULL;
@@ -240,8 +257,10 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
         vector<ExprPtr> args;
         args.push_back(x->expr);
         args.push_back(new ValueExpr(name));
-        return analyzeInvoke(primName("recordFieldRefByName"),
-                             analyzeList(args, env));
+        vector<AnalysisPtr> args2;
+        if (!analyzeList(args, env, args2))
+            return NULL;
+        return analyzeInvoke(primName("recordFieldRefByName"), args2);
     }
 
     case TUPLE_REF : {
@@ -250,8 +269,10 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
         vector<ExprPtr> args;
         args.push_back(x->expr);
         args.push_back(new ValueExpr(index));
-        return analyzeInvoke(primName("tupleRef"),
-                             analyzeList(args, env));
+        vector<AnalysisPtr> args2;
+        if (!analyzeList(args, env, args2))
+            return NULL;
+        return analyzeInvoke(primName("tupleRef"), args2);
     }
 
     case UNARY_OP : {
@@ -272,6 +293,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
         And *x = (And *)expr.raw();
         AnalysisPtr a1 = analyze(x->expr1, env);
         AnalysisPtr a2 = analyze(x->expr2, env);
+        if (!a1 || !a2)
+            return NULL;
         if (a1->type != a2->type)
             error("type mismatch in 'and' expression");
         AnalysisPtr result = new Analysis(a1->type,
@@ -284,6 +307,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
         Or *x = (Or *)expr.raw();
         AnalysisPtr a1 = analyze(x->expr1, env);
         AnalysisPtr a2 = analyze(x->expr2, env);
+        if (!a1 || !a2)
+            return NULL;
         if (a1->type != a2->type)
             error("type mismatch in 'or' expression");
         AnalysisPtr result = new Analysis(a1->type,
@@ -557,7 +582,8 @@ void ReturnCell::set(TypePtr type, bool isRef) {
 
 bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnCell &rcell) {
     bool result = analyzeStatement(code->body, env, rcell);
-    if (!result) return false;
+    if (!result)
+        return false;
     if (!rcell.type)
         rcell.set(voidType, false);
     return true;
@@ -572,6 +598,8 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
             StatementPtr y = x->statements[i];
             if (y->objKind == BINDING) {
                 env = analyzeBinding((Binding *)y.raw(), env);
+                if (!env)
+                    return false;
             }
             else {
                 bool result = analyzeStatement(y, env, rcell);
@@ -593,6 +621,8 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
         }
         else {
             AnalysisPtr result = analyze(x->expr, env);
+            if (!result)
+                return false;
             rcell.set(result->type, false);
         }
         break;
@@ -600,6 +630,8 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
     case RETURN_REF : {
         ReturnRef *x = (ReturnRef *)stmt.raw();
         AnalysisPtr result = analyze(x->expr, env);
+        if (!result)
+            return false;
         rcell.set(result->type, true);
         break;
     }
@@ -635,22 +667,22 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
 
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env) {
     EnvPtr env2 = new Env(env);
-    ObjectPtr right;
-    AnalysisPtr rightA;
-    ValuePtr rightV;
     switch (x->bindingKind) {
     case VAR :
-    case REF :
-        rightA = analyze(x->expr, env);
-        right = rightA.raw();
+    case REF : {
+        AnalysisPtr right = analyze(x->expr, env);
+        if (!right)
+            return NULL;
+        addLocal(env2, x->name, right.raw());
         break;
-    case STATIC :
-        rightV = evaluateToStatic(x->expr, env);
-        right = rightV.raw();
+    }
+    case STATIC : {
+        ValuePtr right = evaluateToStatic(x->expr, env);
+        addLocal(env2, x->name, right.raw());
         break;
+    }
     default :
         assert(false);
     }
-    addLocal(env2, x->name, right);
     return env2;
 }
