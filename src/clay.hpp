@@ -432,6 +432,15 @@ void ensureArity(const vector<T> &args, int size) {
         error("incorrect number of arguments");
 }
 
+void ensurePrimitiveType(TypePtr t);
+void ensureSameType(TypePtr ta, TypePtr tb);
+void ensureNumericType(TypePtr t);
+void ensureIntegerType(TypePtr t);
+void ensurePointerType(TypePtr t);
+void ensureArrayType(TypePtr t);
+void ensureTupleType(TypePtr t);
+void ensureRecordType(TypePtr t);
+
 
 
 //

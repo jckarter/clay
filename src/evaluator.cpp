@@ -2057,50 +2057,6 @@ ValuePtr execLLVMFunc(llvm::Function *func, const vector<ValuePtr> &args,
 // invokePrimOp
 //
 
-static void ensurePrimitiveType(TypePtr t) {
-    if (t->typeKind == RECORD_TYPE)
-        error("primitiveInit cannot be applied to record types");
-}
-
-static void ensureSameType(TypePtr ta, TypePtr tb) {
-    if (ta != tb)
-        error("type mismatch");
-}
-
-static void ensureNumericType(TypePtr t) {
-    switch (t->typeKind) {
-    case INTEGER_TYPE :
-    case FLOAT_TYPE :
-        return;
-    }
-    error("numeric type expected");
-}
-
-static void ensureIntegerType(TypePtr t) {
-    if (t->typeKind != INTEGER_TYPE)
-        error("integer type expected");
-}
-
-static void ensurePointerType(TypePtr t) {
-    if (t->typeKind != POINTER_TYPE)
-        error("pointer type expected");
-}
-
-static void ensureArrayType(TypePtr t) {
-    if (t->typeKind != ARRAY_TYPE)
-        error("array type expected");
-}
-
-static void ensureTupleType(TypePtr t) {
-    if (t->typeKind != TUPLE_TYPE)
-        error("tuple type expected");
-}
-
-static void ensureRecordType(TypePtr t) {
-    if (t->typeKind != RECORD_TYPE)
-        error("record type expected");
-}
-
 ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     switch (x->primOpCode) {
     case PRIM_TypeP : {
