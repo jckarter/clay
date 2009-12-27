@@ -29,42 +29,45 @@ bool analyzeList(const vector<ExprPtr> &exprList, EnvPtr env,
 AnalysisPtr analyze(ExprPtr expr, EnvPtr env);
 AnalysisPtr analyze2(ExprPtr expr, EnvPtr env);
 
-AnalysisPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args);
-AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args);
+struct ReturnInfo : public Object{
+    TypePtr type;
+    bool isRef;
+    ReturnInfo()
+        : Object(DONT_CARE), type(NULL), isRef(false) {}
+    ReturnInfo(TypePtr type, bool isRef)
+        : Object(DONT_CARE), type(type), isRef(isRef) {}
+    void set(TypePtr type, bool isRef);
+};
+typedef Ptr<ReturnInfo> ReturnInfoPtr;
 
-AnalysisPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args);
+ReturnInfoPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args);
+ReturnInfoPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args);
+
+ReturnInfoPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args);
 
 bool analyzeMatchArg(AnalysisPtr arg, FormalArgPtr farg, EnvPtr fenv);
 
-AnalysisPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args);
+ReturnInfoPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args);
 
-AnalysisPtr analyzeInvokeProcedure(ProcedurePtr x,
-                                   const vector<AnalysisPtr> &args);
+ReturnInfoPtr analyzeInvokeProcedure(ProcedurePtr x,
+                                     const vector<AnalysisPtr> &args);
 
-AnalysisPtr analyzeInvokeOverloadable(OverloadablePtr x,
-                                      const vector<AnalysisPtr> &args);
+ReturnInfoPtr analyzeInvokeOverloadable(OverloadablePtr x,
+                                        const vector<AnalysisPtr> &args);
 
 MatchInvokeResultPtr analyzeMatchInvokeCode(CodePtr code, EnvPtr env,
                                             const vector<AnalysisPtr> &args);
 EnvPtr analyzeBindValueArgs(EnvPtr env, const vector<AnalysisPtr> &args,
                             CodePtr code);
 
-struct ReturnCell {
-    TypePtr type;
-    bool isRef;
-    ReturnCell()
-        : type(NULL), isRef(false) {}
-    void set(TypePtr type, bool isRef);
-};
-
-bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnCell &rcell);
-bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell);
+bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnInfoPtr rinfo);
+bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 
-AnalysisPtr analyzeInvokeExternal(ExternalProcedurePtr x,
-                                  const vector<AnalysisPtr> &args);
+ReturnInfoPtr analyzeInvokeExternal(ExternalProcedurePtr x,
+                                    const vector<AnalysisPtr> &args);
 
-AnalysisPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args);
+ReturnInfoPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args);
 
 
 
@@ -99,18 +102,6 @@ static bool allStatic(const vector<AnalysisPtr> &args) {
             return false;
     }
     return true;
-}
-
-static void ensureStaticArgs(const vector<AnalysisPtr> &args) {
-    for (unsigned i = 0; i < args.size(); ++i) {
-        if (!args[i]->isStatic)
-            fmtError("static value expected at argument %d", (i+1));
-    }
-}
-
-static void ensureArgType(const vector<AnalysisPtr> &args, int i, TypePtr t) {
-    if (args[i]->type != t)
-        fmtError("type mismatch at argument %d", (i+1));
 }
 
 
@@ -234,7 +225,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
             vector<AnalysisPtr> args;
             if (!analyzeList(x->args, env, args))
                 return NULL;
-            return analyzeIndexing(indexable2, args);
+            ReturnInfoPtr rinfo = analyzeIndexing(indexable2, args);
+            return new Analysis(rinfo->type, !rinfo->isRef, allStatic(args));
         }
         error("invalid indexing operation");
         return NULL;
@@ -250,7 +242,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
             vector<AnalysisPtr> args;
             if (!analyzeList(x->args, env, args))
                 return NULL;
-            return analyzeInvoke(callable2, args);
+            ReturnInfoPtr rinfo = analyzeInvoke(callable2, args);
+            return new Analysis(rinfo->type, !rinfo->isRef, allStatic(args));
         }
         error("invalid call operation");
         return NULL;
@@ -265,7 +258,9 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
         vector<AnalysisPtr> args2;
         if (!analyzeList(args, env, args2))
             return NULL;
-        return analyzeInvoke(primName("recordFieldRefByName"), args2);
+        ObjectPtr prim = primName("recordFieldRefByName");
+        ReturnInfoPtr rinfo = analyzeInvoke(prim, args2);
+        return new Analysis(rinfo->type, !rinfo->isRef, allStatic(args2));
     }
 
     case TUPLE_REF : {
@@ -277,7 +272,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
         vector<AnalysisPtr> args2;
         if (!analyzeList(args, env, args2))
             return NULL;
-        return analyzeInvoke(primName("tupleRef"), args2);
+        ReturnInfoPtr rinfo = analyzeInvoke(primName("tupleRef"), args2);
+        return new Analysis(rinfo->type, !rinfo->isRef, allStatic(args2));
     }
 
     case UNARY_OP : {
@@ -341,31 +337,36 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
 
 
 //
+// ReturnInfo
+//
+
+void ReturnInfo::set(TypePtr type, bool isRef) {
+    if (!this->type) {
+        this->type = type;
+        this->isRef = isRef;
+    }
+    else if ((this->type != type) || (this->isRef != isRef)) {
+        error("return type mismatch");
+    }
+}
+
+
+
+//
 // analyzeIndexing
 //
 
-AnalysisPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args) {
+ReturnInfoPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args) {
     switch (obj->objKind) {
-    case RECORD : {
-        Record *x = (Record *)obj.raw();
-        ensureArity(args, x->patternVars.size());
-        ensureStaticArgs(args);
-        return staticTemp(compilerObjectType);
-    }
+    case RECORD :
+        return new ReturnInfo(compilerObjectType, false);
     case PRIM_OP : {
         PrimOp *x = (PrimOp *)obj.raw();
         switch (x->primOpCode) {
         case PRIM_Pointer :
-            ensureArity(args, 1);
-            ensureStaticArgs(args);
-            return staticTemp(compilerObjectType);
         case PRIM_Array :
-            ensureArity(args, 2);
-            ensureStaticArgs(args);
-            return staticTemp(compilerObjectType);
         case PRIM_Tuple :
-            ensureStaticArgs(args);
-            return staticTemp(compilerObjectType);
+            return new ReturnInfo(compilerObjectType, false);
         }
         break;
     }
@@ -380,7 +381,7 @@ AnalysisPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args) {
 // analyzeInvoke
 //
 
-AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args) {
+ReturnInfoPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args) {
     switch (obj->objKind) {
     case RECORD :
         return analyzeInvokeRecord((Record *)obj.raw(), args);
@@ -407,7 +408,7 @@ AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args) {
 // analyzeInvokeRecord
 //
 
-AnalysisPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args) {
+ReturnInfoPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args) {
     ensureArity(args, x->formalArgs.size());
     EnvPtr env = new Env(x->env);
     vector<PatternCellPtr> cells;
@@ -424,7 +425,7 @@ AnalysisPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args) {
     for (unsigned i = 0; i < cells.size(); ++i)
         cellValues.push_back(derefCell(cells[i]));
     TypePtr t = recordType(x, cellValues);
-    return new Analysis(t, true, allStatic(args));
+    return new ReturnInfo(t, false);
 }
 
 
@@ -458,37 +459,8 @@ bool analyzeMatchArg(AnalysisPtr arg, FormalArgPtr farg, EnvPtr env) {
 // analyzeInvokeType
 //
 
-AnalysisPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args) {
-    if (args.size() == 0)
-        return staticTemp(x);
-    if ((args.size() == 1) && (args[0]->type == x))
-        return new Analysis(x, true, args[0]->isStatic);
-    switch (x->typeKind) {
-    case ARRAY_TYPE : {
-        ArrayType *y = (ArrayType *)x.raw();
-        ensureArity(args, y->size);
-        for (unsigned i = 0; i < args.size(); ++i)
-            ensureArgType(args, i, y->elementType);
-        return new Analysis(x, true, allStatic(args));
-    }
-    case TUPLE_TYPE : {
-        TupleType *y = (TupleType *)x.raw();
-        ensureArity(args, y->elementTypes.size());
-        for (unsigned i = 0; i < args.size(); ++i)
-            ensureArgType(args, i, y->elementTypes[i]);
-        return new Analysis(x, true, allStatic(args));
-    }
-    case RECORD_TYPE : {
-        RecordType *y = (RecordType *)x.raw();
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(y);
-        ensureArity(args, fieldTypes.size());
-        for (unsigned i = 0; i < args.size(); ++i)
-            ensureArgType(args, i, fieldTypes[i]);
-        return new Analysis(x, true, allStatic(args));
-    }
-    }
-    error("invalid constructor");
-    return NULL;
+ReturnInfoPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args) {
+    return new ReturnInfo(x, false);
 }
 
 
@@ -497,25 +469,25 @@ AnalysisPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args) {
 // analyzeInvokeProcedure, analyzeInvokeOverloadable
 //
 
-AnalysisPtr analyzeInvokeProcedure(ProcedurePtr x,
+ReturnInfoPtr analyzeInvokeProcedure(ProcedurePtr x,
                                    const vector<AnalysisPtr> &args) {
     MatchInvokeResultPtr result =
         analyzeMatchInvokeCode(x->code, x->env, args);
     if (result->resultKind == MATCH_INVOKE_SUCCESS) {
         MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.raw();
         EnvPtr env = analyzeBindValueArgs(y->env, args, x->code);
-        ReturnCell rcell;
-        bool flag = analyzeCodeBody(x->code, env, rcell);
+        ReturnInfoPtr rinfo = new ReturnInfo();
+        bool flag = analyzeCodeBody(x->code, env, rinfo);
         if (!flag)
             return NULL;
-        return new Analysis(rcell.type, !rcell.isRef, allStatic(args));
+        return rinfo;
     }
     signalMatchInvokeError(result);
     return NULL;
 }
 
-AnalysisPtr analyzeInvokeOverloadable(OverloadablePtr x,
-                                      const vector<AnalysisPtr> &args) {
+ReturnInfoPtr analyzeInvokeOverloadable(OverloadablePtr x,
+                                        const vector<AnalysisPtr> &args) {
     for (unsigned i = 0; i < x->overloads.size(); ++i) {
         OverloadPtr y = x->overloads[i];
         MatchInvokeResultPtr result =
@@ -523,11 +495,11 @@ AnalysisPtr analyzeInvokeOverloadable(OverloadablePtr x,
         if (result->resultKind == MATCH_INVOKE_SUCCESS) {
             MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.raw();
             EnvPtr env = analyzeBindValueArgs(z->env, args, y->code);
-            ReturnCell rcell;
-            bool flag = analyzeCodeBody(y->code, env, rcell);
+            ReturnInfoPtr rinfo = new ReturnInfo();
+            bool flag = analyzeCodeBody(y->code, env, rinfo);
             if (!flag)
                 return NULL;
-            return new Analysis(rcell.type, !rcell.isRef, allStatic(args));
+            return rinfo;
         }
     }
     error("no matching overload");
@@ -575,26 +547,16 @@ EnvPtr analyzeBindValueArgs(EnvPtr env, const vector<AnalysisPtr> &args,
     return env2;
 }
 
-void ReturnCell::set(TypePtr type, bool isRef) {
-    if (!this->type) {
-        this->type = type;
-        this->isRef = isRef;
-    }
-    else if ((this->type != type) || (this->isRef != isRef)) {
-        error("return type mismatch");
-    }
-}
-
-bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnCell &rcell) {
-    bool result = analyzeStatement(code->body, env, rcell);
+bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnInfoPtr rinfo) {
+    bool result = analyzeStatement(code->body, env, rinfo);
     if (!result)
         return false;
-    if (!rcell.type)
-        rcell.set(voidType, false);
+    if (!rinfo->type)
+        rinfo->set(voidType, false);
     return true;
 }
 
-bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
+bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo) {
     LocationContext loc(stmt->location);
     switch (stmt->objKind) {
     case BLOCK : {
@@ -607,7 +569,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
                     return false;
             }
             else {
-                bool result = analyzeStatement(y, env, rcell);
+                bool result = analyzeStatement(y, env, rinfo);
                 if (!result)
                     return false;
             }
@@ -622,13 +584,13 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
     case RETURN : {
         Return *x = (Return *)stmt.raw();
         if (!x->expr) {
-            rcell.set(voidType, false);
+            rinfo->set(voidType, false);
         }
         else {
             AnalysisPtr result = analyze(x->expr, env);
             if (!result)
                 return false;
-            rcell.set(result->type, false);
+            rinfo->set(result->type, false);
         }
         break;
     }
@@ -637,22 +599,22 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
         AnalysisPtr result = analyze(x->expr, env);
         if (!result)
             return false;
-        rcell.set(result->type, true);
+        rinfo->set(result->type, true);
         break;
     }
     case IF : {
         If *x = (If *)stmt.raw();
-        bool thenResult = analyzeStatement(x->thenPart, env, rcell);
+        bool thenResult = analyzeStatement(x->thenPart, env, rinfo);
         bool elseResult = true;
         if (x->elsePart.raw())
-            elseResult = analyzeStatement(x->elsePart, env, rcell);
+            elseResult = analyzeStatement(x->elsePart, env, rinfo);
         return thenResult || elseResult;
     }
     case EXPR_STATEMENT :
         break;
     case WHILE : {
         While *x = (While *)stmt.raw();
-        analyzeStatement(x->body, env, rcell);
+        analyzeStatement(x->body, env, rinfo);
         break;
     }
     case BREAK :
@@ -662,7 +624,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
         For *x = (For *)stmt.raw();
         if (!x->converted)
             x->converted = convertForStatement(x);
-        return analyzeStatement(x->converted, env, rcell);
+        return analyzeStatement(x->converted, env, rinfo);
     }
     default :
         assert(false);
@@ -698,11 +660,11 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env) {
 // analyzeInvokeExternal
 //
 
-AnalysisPtr analyzeInvokeExternal(ExternalProcedurePtr x,
-                                  const vector<AnalysisPtr> &args) {
+ReturnInfoPtr analyzeInvokeExternal(ExternalProcedurePtr x,
+                                    const vector<AnalysisPtr> &args) {
     if (!x->llvmFunc)
         initExternalProcedure(x);
-    return new Analysis(x->returnType2, false, allStatic(args));
+    return new ReturnInfo(x->returnType2, false);
 }
 
 
@@ -711,169 +673,167 @@ AnalysisPtr analyzeInvokeExternal(ExternalProcedurePtr x,
 // analyzeInvokePrimOp
 //
 
-AnalysisPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args) {
+ReturnInfoPtr analyzeInvokePrimOp(PrimOpPtr x,
+                                  const vector<AnalysisPtr> &args) {
     switch (x->primOpCode) {
     case PRIM_TypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_TypeSize :
-        return new Analysis(int32Type, true, allStatic(args));
+        return new ReturnInfo(int32Type, false);
     case PRIM_primitiveInit :
-        return new Analysis(voidType, true, allStatic(args));
+        return new ReturnInfo(voidType, false);
     case PRIM_primitiveDestroy :
-        return new Analysis(voidType, true, allStatic(args));
+        return new ReturnInfo(voidType, false);
     case PRIM_primitiveCopy :
-        return new Analysis(voidType, true, allStatic(args));
+        return new ReturnInfo(voidType, false);
     case PRIM_primitiveAssign :
-        return new Analysis(voidType, true, allStatic(args));
+        return new ReturnInfo(voidType, false);
     case PRIM_primitiveEqualsP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_primitiveHash :
-        return new Analysis(int32Type, true, allStatic(args));
+        return new ReturnInfo(int32Type, false);
 
     case PRIM_BoolTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_boolNot :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_boolTruth :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
 
     case PRIM_IntegerTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_SignedIntegerTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_FloatTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_numericEqualsP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_numericLesserP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_numericAdd :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
     case PRIM_numericSubtract :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
     case PRIM_numericMultiply :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
     case PRIM_numericDivide :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
     case PRIM_numericNegate :
         ensureArity(args, 1);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
 
     case PRIM_integerRemainder :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
     case PRIM_integerShiftLeft :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
     case PRIM_integerShiftRight :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
     case PRIM_integerBitwiseAnd :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
     case PRIM_integerBitwiseOr :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
     case PRIM_integerBitwiseXor :
         ensureArity(args, 2);
-        return new Analysis(args[0]->type, true, allStatic(args));
+        return new ReturnInfo(args[0]->type, false);
 
     case PRIM_numericConvert :
         ensureArity(args, 2);
-        return new Analysis(args[0]->evaluateType(), true, allStatic(args));
+        return new ReturnInfo(args[0]->evaluateType(), false);
 
     case PRIM_VoidTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
 
     case PRIM_CompilerObjectTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
 
     case PRIM_PointerTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_PointerType :
-        return new Analysis(compilerObjectType, true, allStatic(args));
+        return new ReturnInfo(compilerObjectType, false);
     case PRIM_Pointer :
         error("Pointer type constructor cannot be invoked");
         break;
     case PRIM_PointeeType :
-        return new Analysis(compilerObjectType, true, allStatic(args));
+        return new ReturnInfo(compilerObjectType, false);
 
     case PRIM_addressOf :
         ensureArity(args, 1);
-        return new Analysis(pointerType(args[0]->type), true, allStatic(args));
+        return new ReturnInfo(pointerType(args[0]->type), false);
     case PRIM_pointerDereference : {
         ensureArity(args, 1);
         ensurePointerType(args[0]->type);
         PointerType *t = (PointerType *)args[0]->type.raw();
-        return new Analysis(t->pointeeType, false, allStatic(args));
+        return new ReturnInfo(t->pointeeType, true);
     }
     case PRIM_pointerToInt :
         ensureArity(args, 2);
-        return new Analysis(args[0]->evaluateType(), true, allStatic(args));
+        return new ReturnInfo(args[0]->evaluateType(), false);
     case PRIM_intToPointer :
         ensureArity(args, 2);
-        return new Analysis(pointerType(args[0]->evaluateType()),
-                            true, allStatic(args));
+        return new ReturnInfo(pointerType(args[0]->evaluateType()), false);
     case PRIM_pointerCast :
         ensureArity(args, 2);
-        return new Analysis(pointerType(args[0]->evaluateType()),
-                            true, allStatic(args));
+        return new ReturnInfo(pointerType(args[0]->evaluateType()), false);
     case PRIM_allocateMemory :
         ensureArity(args, 2);
-        return new Analysis(pointerType(args[0]->evaluateType()),
-                            true, allStatic(args));
+        return new ReturnInfo(pointerType(args[0]->evaluateType()), false);
     case PRIM_freeMemory :
-        return new Analysis(voidType, true, allStatic(args));
+        return new ReturnInfo(voidType, false);
 
     case PRIM_ArrayTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_ArrayType :
-        return new Analysis(compilerObjectType, true, allStatic(args));
+        return new ReturnInfo(compilerObjectType, false);
     case PRIM_Array :
         error("Array type constructor cannot be invoked");
         break;
     case PRIM_ArrayElementType :
-        return new Analysis(compilerObjectType, true, allStatic(args));
+        return new ReturnInfo(compilerObjectType, false);
     case PRIM_ArraySize :
-        return new Analysis(int32Type, true, allStatic(args));
+        return new ReturnInfo(int32Type, false);
     case PRIM_array : {
         if (args.empty())
             error("atleast one argument required for creating an array");
         TypePtr elementType = args[0]->type;
         int n = (int)args.size();
-        return new Analysis(arrayType(elementType, n), true, allStatic(args));
+        return new ReturnInfo(arrayType(elementType, n), false);
     }
     case PRIM_arrayRef : {
         ensureArity(args, 2);
         ensureArrayType(args[0]->type);
         ArrayType *t = (ArrayType *)args[0]->type.raw();
-        return new Analysis(t->elementType, false, allStatic(args));
+        return new ReturnInfo(t->elementType, true);
     }
 
     case PRIM_TupleTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_TupleType :
-        return new Analysis(compilerObjectType, true, allStatic(args));
+        return new ReturnInfo(compilerObjectType, false);
     case PRIM_Tuple :
         error("Tuple type constructor cannot be invoked");
         break;
     case PRIM_TupleSize :
-        return new Analysis(int32Type, true, allStatic(args));
+        return new ReturnInfo(int32Type, false);
     case PRIM_TupleElementType :
-        return new Analysis(compilerObjectType, true, allStatic(args));
+        return new ReturnInfo(compilerObjectType, false);
     case PRIM_TupleElementOffset :
-        return new Analysis(int32Type, true, allStatic(args));
+        return new ReturnInfo(int32Type, false);
     case PRIM_tuple : {
         if (args.size() < 2)
             error("tuples need atleast two elements");
         vector<TypePtr> elementTypes;
         for (unsigned i = 0; i < args.size(); ++i)
             elementTypes.push_back(args[i]->type);
-        return new Analysis(tupleType(elementTypes), true, allStatic(args));
+        return new ReturnInfo(tupleType(elementTypes), false);
     }
     case PRIM_tupleRef : {
         ensureArity(args, 2);
@@ -882,21 +842,21 @@ AnalysisPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args) {
         TupleType *t = (TupleType *)args[0]->type.raw();
         if ((i < 0) || (i >= (int)t->elementTypes.size()))
             error("tuple type index out of range");
-        return new Analysis(t->elementTypes[i], false, allStatic(args));
+        return new ReturnInfo(t->elementTypes[i], true);
     }
 
     case PRIM_RecordTypeP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_RecordType :
-        return new Analysis(compilerObjectType, true, allStatic(args));
+        return new ReturnInfo(compilerObjectType, false);
     case PRIM_RecordFieldCount :
-        return new Analysis(int32Type, true, allStatic(args));
+        return new ReturnInfo(int32Type, false);
     case PRIM_RecordFieldType :
-        return new Analysis(compilerObjectType, true, allStatic(args));
+        return new ReturnInfo(compilerObjectType, false);
     case PRIM_RecordFieldOffset :
-        return new Analysis(int32Type, true, allStatic(args));
+        return new ReturnInfo(int32Type, false);
     case PRIM_RecordFieldIndex :
-        return new Analysis(int32Type, true, allStatic(args));
+        return new ReturnInfo(int32Type, false);
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);
         ensureRecordType(args[0]->type);
@@ -905,7 +865,7 @@ AnalysisPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args) {
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if ((i < 0) || (i >= (int)fieldTypes.size()))
             error("field index out of range");
-        return new Analysis(fieldTypes[i], false, allStatic(args));
+        return new ReturnInfo(fieldTypes[i], true);
     }
     case PRIM_recordFieldRefByName : {
         ensureArity(args, 2);
@@ -921,20 +881,20 @@ AnalysisPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args) {
             error("field not in record");
         int i = fi->second;
         const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
-        return new Analysis(fieldTypes[i], false, allStatic(args));
+        return new ReturnInfo(fieldTypes[i], true);
     }
     case PRIM_recordInit :
-        return new Analysis(voidType, true, allStatic(args));
+        return new ReturnInfo(voidType, false);
     case PRIM_recordDestroy :
-        return new Analysis(voidType, true, allStatic(args));
+        return new ReturnInfo(voidType, false);
     case PRIM_recordCopy :
-        return new Analysis(voidType, true, allStatic(args));
+        return new ReturnInfo(voidType, false);
     case PRIM_recordAssign :
-        return new Analysis(voidType, true, allStatic(args));
+        return new ReturnInfo(voidType, false);
     case PRIM_recordEqualsP :
-        return new Analysis(boolType, true, allStatic(args));
+        return new ReturnInfo(boolType, false);
     case PRIM_recordHash :
-        return new Analysis(int32Type, true, allStatic(args));
+        return new ReturnInfo(int32Type, false);
     default :
         assert(false);
     }
