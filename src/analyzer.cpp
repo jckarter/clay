@@ -60,8 +60,8 @@ bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnCell &rcell);
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 
-AnalysisPtr analyzeInvokeExternalProcedure(ExternalProcedurePtr x,
-                                           const vector<AnalysisPtr> &args);
+AnalysisPtr analyzeInvokeExternal(ExternalProcedurePtr x,
+                                  const vector<AnalysisPtr> &args);
 
 AnalysisPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args);
 
@@ -387,7 +387,7 @@ AnalysisPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args) {
         return analyzeInvokeOverloadable((Overloadable *)obj.raw(), args);
     case EXTERNAL_PROCEDURE : {
         ExternalProcedurePtr x = (ExternalProcedure *)obj.raw();
-        return analyzeInvokeExternalProcedure(x, args);
+        return analyzeInvokeExternal(x, args);
     }
     case PRIM_OP :
         return analyzeInvokePrimOp((PrimOp *)obj.raw(), args);
@@ -685,4 +685,17 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env) {
         assert(false);
     }
     return env2;
+}
+
+
+
+//
+// analyzeInvokeExternal
+//
+
+AnalysisPtr analyzeInvokeExternal(ExternalProcedurePtr x,
+                                  const vector<AnalysisPtr> &args) {
+    if (!x->llvmFunc)
+        initExternalProcedure(x);
+    return new Analysis(x->returnType2, false, allStatic(args));
 }
