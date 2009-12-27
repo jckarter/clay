@@ -15,10 +15,12 @@ struct Analysis : public Object {
     bool isStatic;
     ExprPtr expr;
     EnvPtr env;
+    ValuePtr value;
 
     Analysis(TypePtr type, bool isTemp, bool isStatic)
         : Object(ANALYSIS), type(type), isTemp(isTemp),
           isStatic(isStatic) {}
+    ValuePtr evaluate();
 };
 
 vector<AnalysisPtr> analyzeList(const vector<ExprPtr> &exprList, EnvPtr env);
@@ -40,10 +42,40 @@ AnalysisPtr analyzeInvokeProcedure(ProcedurePtr x,
 AnalysisPtr analyzeInvokeOverloadable(OverloadablePtr x,
                                       const vector<AnalysisPtr> &args);
 
+MatchInvokeResultPtr analyzeMatchInvokeCode(CodePtr code, EnvPtr env,
+                                            const vector<AnalysisPtr> &args);
+EnvPtr analyzeBindValueArgs(EnvPtr env, const vector<AnalysisPtr> &args,
+                            CodePtr code);
+
+struct ReturnCell {
+    TypePtr type;
+    bool isRef;
+    ReturnCell()
+        : type(NULL), isRef(false) {}
+    void set(TypePtr type, bool isRef);
+};
+
+bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnCell &rcell);
+bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell);
+EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
+
 AnalysisPtr analyzeInvokeExternalProcedure(ExternalProcedurePtr x,
                                            const vector<AnalysisPtr> &args);
 
 AnalysisPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args);
+
+
+
+//
+// Analysis::evaluate
+//
+
+ValuePtr Analysis::evaluate() {
+    if (this->value.raw())
+        return this->value;
+    this->value = evaluateToStatic(this->expr, this->env);
+    return this->value;
+}
 
 
 
@@ -383,8 +415,7 @@ bool analyzeMatchArg(AnalysisPtr arg, FormalArgPtr farg, EnvPtr env) {
     case STATIC_ARG : {
         StaticArg *x = (StaticArg *)farg.raw();
         PatternPtr pattern = evaluatePattern(x->pattern, env);
-        ValuePtr y = evaluateToStatic(arg->expr, arg->env);
-        return unify(pattern, y);
+        return unify(pattern, arg->evaluate());
     }
     }
     assert(false);
@@ -428,4 +459,198 @@ AnalysisPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args) {
     }
     error("invalid constructor");
     return NULL;
+}
+
+
+
+//
+// analyzeInvokeProcedure, analyzeInvokeOverloadable
+//
+
+AnalysisPtr analyzeInvokeProcedure(ProcedurePtr x,
+                                   const vector<AnalysisPtr> &args) {
+    MatchInvokeResultPtr result =
+        analyzeMatchInvokeCode(x->code, x->env, args);
+    if (result->resultKind == MATCH_INVOKE_SUCCESS) {
+        MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.raw();
+        EnvPtr env = analyzeBindValueArgs(y->env, args, x->code);
+        ReturnCell rcell;
+        bool flag = analyzeCodeBody(x->code, env, rcell);
+        if (!flag)
+            return NULL;
+        return new Analysis(rcell.type, !rcell.isRef, allStatic(args));
+    }
+    signalMatchInvokeError(result);
+    return NULL;
+}
+
+AnalysisPtr analyzeInvokeOverloadable(OverloadablePtr x,
+                                      const vector<AnalysisPtr> &args) {
+    for (unsigned i = 0; i < x->overloads.size(); ++i) {
+        OverloadPtr y = x->overloads[i];
+        MatchInvokeResultPtr result =
+            analyzeMatchInvokeCode(y->code, y->env, args);
+        if (result->resultKind == MATCH_INVOKE_SUCCESS) {
+            MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.raw();
+            EnvPtr env = analyzeBindValueArgs(z->env, args, y->code);
+            ReturnCell rcell;
+            bool flag = analyzeCodeBody(y->code, env, rcell);
+            if (!flag)
+                return NULL;
+            return new Analysis(rcell.type, !rcell.isRef, allStatic(args));
+        }
+    }
+    error("no matching overload");
+    return NULL;
+}
+
+MatchInvokeResultPtr analyzeMatchInvokeCode(CodePtr code, EnvPtr env,
+                                            const vector<AnalysisPtr> &args) {
+    if (args.size() != code->formalArgs.size())
+        return new MatchInvokeArgCountError();
+    EnvPtr patternEnv = new Env(env);
+    vector<PatternCellPtr> cells;
+    for (unsigned i = 0; i < code->patternVars.size(); ++i) {
+        cells.push_back(new PatternCell(code->patternVars[i], NULL));
+        addLocal(patternEnv, code->patternVars[i], cells[i].raw());
+    }
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (!analyzeMatchArg(args[i], code->formalArgs[i], patternEnv))
+            return new MatchInvokeArgMismatch(i);
+    }
+    EnvPtr env2 = new Env(env);
+    for (unsigned i = 0; i < cells.size(); ++i) {
+        ValuePtr v = derefCell(cells[i]);
+        addLocal(env2, code->patternVars[i], v.raw());
+    }
+    if (code->predicate.raw()) {
+        bool result = evaluateToBool(code->predicate, env2);
+        if (!result)
+            return new MatchInvokePredicateFailure();
+    }
+    return new MatchInvokeSuccess(env2);
+}
+
+EnvPtr analyzeBindValueArgs(EnvPtr env, const vector<AnalysisPtr> &args,
+                            CodePtr code) {
+    EnvPtr env2 = new Env(env);
+    for (unsigned i = 0; i < args.size(); ++i) {
+        FormalArgPtr farg = code->formalArgs[i];
+        if (farg->objKind == VALUE_ARG) {
+            ValueArg *x = (ValueArg *)farg.raw();
+            AnalysisPtr arg2 = new Analysis(args[i]->type, false, false);
+            addLocal(env2, x->name, arg2.raw());
+        }
+    }
+    return env2;
+}
+
+void ReturnCell::set(TypePtr type, bool isRef) {
+    if (!this->type) {
+        this->type = type;
+        this->isRef = isRef;
+    }
+    else if ((this->type != type) || (this->isRef != isRef)) {
+        error("return type mismatch");
+    }
+}
+
+bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnCell &rcell) {
+    bool result = analyzeStatement(code->body, env, rcell);
+    if (!result) return false;
+    if (!rcell.type)
+        rcell.set(voidType, false);
+    return true;
+}
+
+bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnCell &rcell) {
+    LocationContext loc(stmt->location);
+    switch (stmt->objKind) {
+    case BLOCK : {
+        Block *x = (Block *)stmt.raw();
+        for (unsigned i = 0; i < x->statements.size(); ++i) {
+            StatementPtr y = x->statements[i];
+            if (y->objKind == BINDING) {
+                env = analyzeBinding((Binding *)y.raw(), env);
+            }
+            else {
+                bool result = analyzeStatement(y, env, rcell);
+                if (!result)
+                    return false;
+            }
+        }
+        break;
+    }
+    case LABEL :
+    case BINDING :
+    case ASSIGNMENT :
+    case GOTO :
+        break;
+    case RETURN : {
+        Return *x = (Return *)stmt.raw();
+        if (!x->expr) {
+            rcell.set(voidType, false);
+        }
+        else {
+            AnalysisPtr result = analyze(x->expr, env);
+            rcell.set(result->type, false);
+        }
+        break;
+    }
+    case RETURN_REF : {
+        ReturnRef *x = (ReturnRef *)stmt.raw();
+        AnalysisPtr result = analyze(x->expr, env);
+        rcell.set(result->type, true);
+        break;
+    }
+    case IF : {
+        If *x = (If *)stmt.raw();
+        bool thenResult = analyzeStatement(x->thenPart, env, rcell);
+        bool elseResult = true;
+        if (x->elsePart.raw())
+            elseResult = analyzeStatement(x->elsePart, env, rcell);
+        return thenResult || elseResult;
+    }
+    case EXPR_STATEMENT :
+        break;
+    case WHILE : {
+        While *x = (While *)stmt.raw();
+        analyzeStatement(x->body, env, rcell);
+        break;
+    }
+    case BREAK :
+    case CONTINUE :
+        break;
+    case FOR : {
+        For *x = (For *)stmt.raw();
+        if (!x->converted)
+            x->converted = convertForStatement(x);
+        return analyzeStatement(x->converted, env, rcell);
+    }
+    default :
+        assert(false);
+    }
+    return true;
+}
+
+EnvPtr analyzeBinding(BindingPtr x, EnvPtr env) {
+    EnvPtr env2 = new Env(env);
+    ObjectPtr right;
+    AnalysisPtr rightA;
+    ValuePtr rightV;
+    switch (x->bindingKind) {
+    case VAR :
+    case REF :
+        rightA = analyze(x->expr, env);
+        right = rightA.raw();
+        break;
+    case STATIC :
+        rightV = evaluateToStatic(x->expr, env);
+        right = rightV.raw();
+        break;
+    default :
+        assert(false);
+    }
+    addLocal(env2, x->name, right);
+    return env2;
 }
