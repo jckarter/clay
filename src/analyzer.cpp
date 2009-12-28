@@ -196,6 +196,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
             if (!analyzeList(x->args, env, args))
                 return NULL;
             ReturnInfoPtr rinfo = analyzeIndexing(indexable2, args);
+            if (!rinfo)
+                return NULL;
             return new Analysis(rinfo->type, !rinfo->isRef, allStatic(args));
         }
         error("invalid indexing operation");
@@ -213,6 +215,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
             if (!analyzeList(x->args, env, args))
                 return NULL;
             ReturnInfoPtr rinfo = analyzeInvoke(callable2, args);
+            if (!rinfo)
+                return NULL;
             return new Analysis(rinfo->type, !rinfo->isRef, allStatic(args));
         }
         error("invalid call operation");
@@ -230,6 +234,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
             return NULL;
         ObjectPtr prim = primName("recordFieldRefByName");
         ReturnInfoPtr rinfo = analyzeInvoke(prim, args2);
+        if (!rinfo)
+            return NULL;
         return new Analysis(rinfo->type, !rinfo->isRef, allStatic(args2));
     }
 
@@ -243,6 +249,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
         if (!analyzeList(args, env, args2))
             return NULL;
         ReturnInfoPtr rinfo = analyzeInvoke(primName("tupleRef"), args2);
+        if (!rinfo)
+            return NULL;
         return new Analysis(rinfo->type, !rinfo->isRef, allStatic(args2));
     }
 
@@ -551,19 +559,29 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo) {
     switch (stmt->objKind) {
     case BLOCK : {
         Block *x = (Block *)stmt.raw();
+        ReturnInfoPtr rinfo2 = new ReturnInfo();
+        bool recursive = false;
         for (unsigned i = 0; i < x->statements.size(); ++i) {
             StatementPtr y = x->statements[i];
             if (y->objKind == BINDING) {
                 env = analyzeBinding((Binding *)y.raw(), env);
-                if (!env)
-                    return false;
+                if (!env) {
+                    recursive = true;
+                    break;
+                }
             }
             else {
-                bool result = analyzeStatement(y, env, rinfo);
-                if (!result)
-                    return false;
+                bool result = analyzeStatement(y, env, rinfo2);
+                if (!result) {
+                    recursive = true;
+                    break;
+                }
             }
         }
+        if (recursive && !rinfo2->type)
+            return false;
+        if (rinfo2->type.raw())
+            rinfo->set(rinfo2->type, rinfo2->isRef);
         break;
     }
     case LABEL :
