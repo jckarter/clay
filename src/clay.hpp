@@ -453,6 +453,13 @@ void ensureArrayType(TypePtr t);
 void ensureTupleType(TypePtr t);
 void ensureRecordType(TypePtr t);
 
+struct DebugPrinter {
+    static int indent;
+    ObjectPtr obj;
+    DebugPrinter(ObjectPtr obj);
+    ~DebugPrinter();
+};
+
 
 
 //

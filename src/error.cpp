@@ -153,3 +153,26 @@ void ensureRecordType(TypePtr t) {
     if (t->typeKind != RECORD_TYPE)
         error("record type expected");
 }
+
+
+
+//
+// DebugPrinter
+//
+
+int DebugPrinter::indent = 0;
+
+DebugPrinter::DebugPrinter(ObjectPtr obj)
+    : obj(obj) {
+    for (int i = 0; i < indent; ++i)
+        std::cout << ' ';
+    std::cout << "BEGIN - " << obj << '\n';
+    ++indent;
+}
+
+DebugPrinter::~DebugPrinter() {
+    --indent;
+    for (int i = 0; i < indent; ++i)
+        std::cout << ' ';
+    std::cout << "DONE - " << obj << '\n';
+}
