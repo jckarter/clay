@@ -284,6 +284,15 @@ static void print(const Object *x, ostream &out) {
         Or *y = (Or *)x;
         out << "Or(" << y->expr1 << ", " << y->expr2 << ")";
         break;
+    }
+    case SC_EXPR : {
+        SCExpr *y = (SCExpr *)x;
+        out << "SCExpr(" << y->expr << ")";
+        break;
+    }
+    case VALUE_EXPR : {
+        ValueExpr *y = (ValueExpr *)x;
+        out << "ValueExpr(" << y->value << ")";
         break;
     }
 
