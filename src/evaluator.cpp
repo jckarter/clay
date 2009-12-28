@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "invoketable.hpp"
 
 
 
@@ -7,9 +8,6 @@
 //
 
 IdentifierPtr internIdentifier(IdentifierPtr x);
-
-int toCOIndex(ObjectPtr obj);
-ObjectPtr fromCOIndex(int i);
 
 ValuePtr allocValue(TypePtr t);
 
@@ -1597,15 +1595,21 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
 
 
 //
-// invokeProcedure, invokeOverloadable
-// invoke procedures and overloadables
+// invokeProcedure
 //
 
 ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args) {
+    InvokeTableEntry *entry = lookupProcedureInvoke(x, args);
+    if (entry->env.raw()) {
+        EnvPtr env = bindValueArgs(entry->env, args, entry->code);
+        return evalCodeBody(entry->code, env);
+    }
     MatchInvokeResultPtr result = matchInvokeCode(x->code, x->env, args);
     switch (result->resultKind) {
     case MATCH_INVOKE_SUCCESS : {
         MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.raw();
+        entry->env = y->env;
+        entry->code = x->code;
         EnvPtr env = bindValueArgs(y->env, args, x->code);
         return evalCodeBody(x->code, env);
     }
@@ -1614,12 +1618,25 @@ ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args) {
     return NULL;
 }
 
+
+
+//
+// invokeOverloadable
+//
+
 ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args) {
+    InvokeTableEntry *entry = lookupOverloadableInvoke(x, args);
+    if (entry->env.raw()) {
+        EnvPtr env = bindValueArgs(entry->env, args, entry->code);
+        return evalCodeBody(entry->code, env);
+    }
     for (unsigned i = 0; i < x->overloads.size(); ++i) {
         OverloadPtr y = x->overloads[i];
         MatchInvokeResultPtr result = matchInvokeCode(y->code, y->env, args);
         if (result->resultKind == MATCH_INVOKE_SUCCESS) {
             MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.raw();
+            entry->env = z->env;
+            entry->code = y->code;
             EnvPtr env = bindValueArgs(z->env, args, y->code);
             return evalCodeBody(y->code, env);
         }

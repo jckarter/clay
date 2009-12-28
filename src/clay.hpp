@@ -266,6 +266,9 @@ struct TupleTypePattern;
 struct PointerTypePattern;
 struct RecordTypePattern;
 
+struct InvokeTable;
+struct InvokeTableEntry;
+
 struct MatchInvokeResult;
 struct MatchInvokeSuccess;
 struct MatchInvokeArgCountError;
@@ -360,6 +363,9 @@ typedef Ptr<ArrayTypePattern> ArrayTypePatternPtr;
 typedef Ptr<TupleTypePattern> TupleTypePatternPtr;
 typedef Ptr<PointerTypePattern> PointerTypePatternPtr;
 typedef Ptr<RecordTypePattern> RecordTypePatternPtr;
+
+typedef Ptr<InvokeTable> InvokeTablePtr;
+typedef Ptr<InvokeTableEntry> InvokeTableEntryPtr;
 
 typedef Ptr<MatchInvokeResult> MatchInvokeResultPtr;
 typedef Ptr<MatchInvokeSuccess> MatchInvokeSuccessPtr;
@@ -849,6 +855,7 @@ struct Record : public TopLevelItem {
 struct Procedure : public TopLevelItem {
     IdentifierPtr name;
     CodePtr code;
+    InvokeTablePtr invokeTable;
     Procedure(IdentifierPtr name, CodePtr code)
         : TopLevelItem(PROCEDURE), name(name), code(code) {}
 };
@@ -863,6 +870,7 @@ struct Overload : public TopLevelItem {
 struct Overloadable : public TopLevelItem {
     IdentifierPtr name;
     vector<OverloadPtr> overloads;
+    vector<InvokeTablePtr> invokeTables;
     Overloadable(IdentifierPtr name)
         : TopLevelItem(OVERLOADABLE), name(name) {}
 };
@@ -1339,8 +1347,39 @@ struct RecordTypePattern : public Pattern {
 
 
 //
+// InvokeTable
+//
+
+struct InvokeTable : public Object {
+    vector<bool> isStaticFlags;
+    vector<vector<InvokeTableEntryPtr> > data;
+    InvokeTable() :
+        Object(DONT_CARE) {}
+};
+
+struct InvokeTableEntry : public Object {
+    vector<ObjectPtr> argsInfo;
+
+    // applicable to procedures and overloadables
+    EnvPtr env;
+    CodePtr code;
+
+    // results of analysis
+    TypePtr returnType;
+    bool returnByRef;
+
+    InvokeTableEntry() :
+        Object(DONT_CARE) {}
+};
+
+
+
+//
 // evaluator module
 //
+
+int toCOIndex(ObjectPtr obj);
+ObjectPtr fromCOIndex(int i);
 
 ValuePtr boolToValue(bool x);
 ValuePtr intToValue(int x);
