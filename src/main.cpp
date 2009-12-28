@@ -28,8 +28,16 @@ int main(int argc, char **argv) {
 
     ModulePtr m = loadProgram(argv[1]);
     ObjectPtr mainProc = lookupEnv(m->env, new Identifier("main"));
-    ValuePtr result = invoke(mainProc, vector<ValuePtr>());
 
+    cout << "analyzing main()\n";
+    ReturnInfoPtr rinfo = analyzeInvoke(mainProc, vector<AnalysisPtr>());
+    cout << "returns " << rinfo->type << " by ";
+    cout << (rinfo->isRef ? "ref" : "value") << '\n';
+
+    cout << '\n';
+
+    cout << "evaluating main()\n";
+    ValuePtr result = invoke(mainProc, vector<ValuePtr>());
     cout << result->type << '\n';
     cout << result << '\n';
 

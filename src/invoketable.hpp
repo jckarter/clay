@@ -1,21 +1,36 @@
 #ifndef __CLAY_INVOKETABLE_HPP
 #define __CLAY_INVOKETABLE_HPP
 
+template <typename ARG>
 static inline
-int hashArgs(const vector<ValuePtr> &args,
+ValuePtr evaluateArg(ARG arg) {
+    return arg->evaluate();
+}
+
+template <>
+static inline
+ValuePtr evaluateArg<ValuePtr>(ValuePtr arg) {
+    return arg;
+}
+
+template <typename ARG>
+int hashArgs(const vector<ARG> &args,
              const vector<bool> &isStaticFlags) {
     int h = 0;
     for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
-        if (!isStaticFlags[i])
+        if (!isStaticFlags[i]) {
             h += toCOIndex(args[i]->type.raw());
-        else
-            h += valueHash(args[i]);
+        }
+        else {
+            ValuePtr v = evaluateArg(args[i]);
+            h += valueHash(v);
+        }
     }
     return h;
 }
 
-static inline
-bool matchArgs(const vector<ValuePtr> &args,
+template <typename ARG>
+bool matchArgs(const vector<ARG> &args,
                const vector<bool> &isStaticFlags,
                InvokeTableEntry *entry) {
     for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
@@ -24,27 +39,31 @@ bool matchArgs(const vector<ValuePtr> &args,
                 return false;
         }
         else {
-            if (!valueEquals(args[i], (Value *)entry->argsInfo[i].raw()))
+            ValuePtr v = evaluateArg(args[i]);
+            if (!valueEquals(v, (Value *)entry->argsInfo[i].raw()))
                 return false;
         }
     }
     return true;
 }
 
-static inline
+template <typename ARG>
 void initArgsInfo(InvokeTableEntry *entry,
-                  const vector<ValuePtr> &args,
+                  const vector<ARG> &args,
                   const vector<bool> &isStaticFlags) {
     for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
-        if (!isStaticFlags[i])
+        if (!isStaticFlags[i]) {
             entry->argsInfo.push_back(args[i]->type.raw());
-        else
-            entry->argsInfo.push_back(cloneValue(args[i]).raw());
+        }
+        else {
+            ValuePtr v = evaluateArg(args[i]);
+            entry->argsInfo.push_back(cloneValue(v).raw());
+        }
     }
 }
 
-static inline
-InvokeTableEntry *findMatchingEntry(const vector<ValuePtr> &args,
+template <typename ARG>
+InvokeTableEntry *findMatchingEntry(const vector<ARG> &args,
                                     InvokeTable *table) {
     const vector<bool> &isStaticFlags = table->isStaticFlags;
     int h = hashArgs(args, isStaticFlags);
@@ -78,9 +97,9 @@ void initProcedureInvokeTable(ProcedurePtr x) {
     x->invokeTable = emptyInvokeTable(formalArgs);
 }
 
-static inline
+template <typename ARG>
 InvokeTableEntry *lookupProcedureInvoke(ProcedurePtr x,
-                                        const vector<ValuePtr> &args) {
+                                        const vector<ARG> &args) {
     InvokeTable *table = x->invokeTable.raw();
     if (!table) {
         initProcedureInvokeTable(x);
@@ -117,9 +136,9 @@ void initOverloadableInvokeTables(OverloadablePtr x) {
     }
 }
 
-static inline
+template <typename ARG>
 InvokeTableEntry *lookupOverloadableInvoke(OverloadablePtr x,
-                                           const vector<ValuePtr> &args) {
+                                           const vector<ARG> &args) {
     if (x->invokeTables.empty())
         initOverloadableInvokeTables(x);
     if (x->invokeTables.size() <= args.size())

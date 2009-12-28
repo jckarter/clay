@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "invoketable.hpp"
 
 
 
@@ -6,42 +7,11 @@
 // declarations
 //
 
-struct Analysis;
-typedef Ptr<Analysis> AnalysisPtr;
-
-struct Analysis : public Object {
-    TypePtr type;
-    bool isTemp;
-    bool isStatic;
-    ExprPtr expr;
-    EnvPtr env;
-    mutable ValuePtr value;
-
-    Analysis(TypePtr type, bool isTemp, bool isStatic)
-        : Object(ANALYSIS), type(type), isTemp(isTemp),
-          isStatic(isStatic) {}
-    ValuePtr evaluate() const;
-    TypePtr evaluateType() const;
-};
-
 bool analyzeList(const vector<ExprPtr> &exprList, EnvPtr env,
                  vector<AnalysisPtr> &result);
-AnalysisPtr analyze(ExprPtr expr, EnvPtr env);
 AnalysisPtr analyze2(ExprPtr expr, EnvPtr env);
 
-struct ReturnInfo : public Object{
-    TypePtr type;
-    bool isRef;
-    ReturnInfo()
-        : Object(DONT_CARE), type(NULL), isRef(false) {}
-    ReturnInfo(TypePtr type, bool isRef)
-        : Object(DONT_CARE), type(type), isRef(isRef) {}
-    void set(TypePtr type, bool isRef);
-};
-typedef Ptr<ReturnInfo> ReturnInfoPtr;
-
 ReturnInfoPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args);
-ReturnInfoPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args);
 
 ReturnInfoPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args);
 
@@ -470,7 +440,13 @@ ReturnInfoPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args) {
 //
 
 ReturnInfoPtr analyzeInvokeProcedure(ProcedurePtr x,
-                                   const vector<AnalysisPtr> &args) {
+                                     const vector<AnalysisPtr> &args) {
+    InvokeTableEntry *entry = lookupProcedureInvoke(x, args);
+    if (entry->returnType.raw())
+        return new ReturnInfo(entry->returnType, entry->returnByRef);
+    if (entry->analyzing)
+        return NULL;
+    entry->analyzing = true;
     MatchInvokeResultPtr result =
         analyzeMatchInvokeCode(x->code, x->env, args);
     if (result->resultKind == MATCH_INVOKE_SUCCESS) {
@@ -478,16 +454,26 @@ ReturnInfoPtr analyzeInvokeProcedure(ProcedurePtr x,
         EnvPtr env = analyzeBindValueArgs(y->env, args, x->code);
         ReturnInfoPtr rinfo = new ReturnInfo();
         bool flag = analyzeCodeBody(x->code, env, rinfo);
+        entry->analyzing = false;
         if (!flag)
-            return NULL;
+            error("recursive type propagation");
+        entry->returnType = rinfo->type;
+        entry->returnByRef = rinfo->isRef;
         return rinfo;
     }
+    entry->analyzing = false;
     signalMatchInvokeError(result);
     return NULL;
 }
 
 ReturnInfoPtr analyzeInvokeOverloadable(OverloadablePtr x,
                                         const vector<AnalysisPtr> &args) {
+    InvokeTableEntry *entry = lookupOverloadableInvoke(x, args);
+    if (entry->returnType.raw())
+        return new ReturnInfo(entry->returnType, entry->returnByRef);
+    if (entry->analyzing)
+        return NULL;
+    entry->analyzing = true;
     for (unsigned i = 0; i < x->overloads.size(); ++i) {
         OverloadPtr y = x->overloads[i];
         MatchInvokeResultPtr result =
@@ -497,11 +483,15 @@ ReturnInfoPtr analyzeInvokeOverloadable(OverloadablePtr x,
             EnvPtr env = analyzeBindValueArgs(z->env, args, y->code);
             ReturnInfoPtr rinfo = new ReturnInfo();
             bool flag = analyzeCodeBody(y->code, env, rinfo);
+            entry->analyzing = false;
             if (!flag)
-                return NULL;
+                error("recursive type propagation");
+            entry->returnType = rinfo->type;
+            entry->returnByRef = rinfo->isRef;
             return rinfo;
         }
     }
+    entry->analyzing = false;
     error("no matching overload");
     return NULL;
 }

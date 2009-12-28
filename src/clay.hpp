@@ -275,6 +275,9 @@ struct MatchInvokeArgCountError;
 struct MatchInvokeArgMismatch;
 struct MatchInvokePredicateFailure;
 
+struct Analysis;
+struct ReturnInfo;
+
 
 
 //
@@ -372,6 +375,9 @@ typedef Ptr<MatchInvokeSuccess> MatchInvokeSuccessPtr;
 typedef Ptr<MatchInvokeArgCountError> MatchInvokeArgCountErrorPtr;
 typedef Ptr<MatchInvokeArgMismatch> MatchInvokeArgMismatchPtr;
 typedef Ptr<MatchInvokePredicateFailure> MatchInvokePredicateFailurePtr;
+
+typedef Ptr<Analysis> AnalysisPtr;
+typedef Ptr<ReturnInfo> ReturnInfoPtr;
 
 
 
@@ -1367,9 +1373,10 @@ struct InvokeTableEntry : public Object {
     // results of analysis
     TypePtr returnType;
     bool returnByRef;
+    bool analyzing;
 
     InvokeTableEntry() :
-        Object(DONT_CARE) {}
+        Object(DONT_CARE), analyzing(false) {}
 };
 
 
@@ -1458,6 +1465,40 @@ void signalMatchInvokeError(MatchInvokeResultPtr result);
 StatementPtr convertForStatement(ForPtr x);
 
 void initExternalProcedure(ExternalProcedurePtr x);
+
+
+
+//
+// analyzer module
+//
+
+struct Analysis : public Object {
+    TypePtr type;
+    bool isTemp;
+    bool isStatic;
+    ExprPtr expr;
+    EnvPtr env;
+    mutable ValuePtr value;
+
+    Analysis(TypePtr type, bool isTemp, bool isStatic)
+        : Object(ANALYSIS), type(type), isTemp(isTemp),
+          isStatic(isStatic) {}
+    ValuePtr evaluate() const;
+    TypePtr evaluateType() const;
+};
+
+struct ReturnInfo : public Object{
+    TypePtr type;
+    bool isRef;
+    ReturnInfo()
+        : Object(DONT_CARE), type(NULL), isRef(false) {}
+    ReturnInfo(TypePtr type, bool isRef)
+        : Object(DONT_CARE), type(type), isRef(isRef) {}
+    void set(TypePtr type, bool isRef);
+};
+
+AnalysisPtr analyze(ExprPtr expr, EnvPtr env);
+ReturnInfoPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args);
 
 
 #endif
