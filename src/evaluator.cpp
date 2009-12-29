@@ -1,5 +1,5 @@
 #include "clay.hpp"
-#include "invoketable.hpp"
+#include "invokeutil.hpp"
 
 
 
@@ -37,16 +37,10 @@ ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args);
 bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args);
 int invokeToInt(ObjectPtr callable, const vector<ValuePtr> &args);
 
-
 ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args);
-bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env);
 ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args);
 ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args);
 ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args);
-
-MatchInvokeResultPtr
-matchInvokeCode(CodePtr code, EnvPtr env, const vector<ValuePtr> &args);
-EnvPtr bindValueArgs(EnvPtr env, const vector<ValuePtr> &args, CodePtr code);
 
 struct StatementResult;
 struct GotoResult;
@@ -1497,7 +1491,7 @@ ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args) {
     }
     vector<ValuePtr> nonStaticArgs;
     for (unsigned i = 0; i < args.size(); ++i) {
-        if (!matchArg(args[i], x->formalArgs[i], env))
+        if (!matchFormalArg(args[i], x->formalArgs[i], env))
             fmtError("mismatch at argument %d", i+1);
         if (x->formalArgs[i]->objKind == VALUE_ARG)
             nonStaticArgs.push_back(args[i]);
@@ -1507,25 +1501,6 @@ ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args) {
         cellValues.push_back(derefCell(cells[i]));
     TypePtr t = recordType(x, cellValues);
     return invokeType(t, nonStaticArgs);
-}
-
-bool matchArg(ValuePtr arg, FormalArgPtr farg, EnvPtr env) {
-    switch (farg->objKind) {
-    case VALUE_ARG : {
-        ValueArg *x = (ValueArg *)farg.raw();
-        if (!x->type)
-            return true;
-        PatternPtr pattern = evaluatePattern(x->type, env);
-        return unifyType(pattern, arg->type);
-    }
-    case STATIC_ARG : {
-        StaticArg *x = (StaticArg *)farg.raw();
-        PatternPtr pattern = evaluatePattern(x->pattern, env);
-        return unify(pattern, arg);
-    }
-    }
-    assert(false);
-    return false;
 }
 
 
@@ -1604,7 +1579,7 @@ ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args) {
         EnvPtr env = bindValueArgs(entry->env, args, entry->code);
         return evalCodeBody(entry->code, env);
     }
-    MatchInvokeResultPtr result = matchInvokeCode(x->code, x->env, args);
+    MatchInvokeResultPtr result = matchInvoke(x->code, x->env, args);
     switch (result->resultKind) {
     case MATCH_INVOKE_SUCCESS : {
         MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.raw();
@@ -1632,7 +1607,7 @@ ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args) {
     }
     for (unsigned i = 0; i < x->overloads.size(); ++i) {
         OverloadPtr y = x->overloads[i];
-        MatchInvokeResultPtr result = matchInvokeCode(y->code, y->env, args);
+        MatchInvokeResultPtr result = matchInvoke(y->code, y->env, args);
         if (result->resultKind == MATCH_INVOKE_SUCCESS) {
             MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.raw();
             entry->env = z->env;
@@ -1643,79 +1618,6 @@ ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args) {
     }
     error("no matching overload");
     return NULL;
-}
-
-
-
-//
-// signalMatchInvokeError
-//
-
-void signalMatchInvokeError(MatchInvokeResultPtr result) {
-    switch (result->resultKind) {
-    case MATCH_INVOKE_SUCCESS :
-        assert(false);
-        break;
-    case MATCH_INVOKE_ARG_COUNT_ERROR :
-        error("incorrect no. of arguments");
-        break;
-    case MATCH_INVOKE_ARG_MISMATCH : {
-        MatchInvokeArgMismatch *x = (MatchInvokeArgMismatch *)result.raw();
-        fmtError("mismatch at argument %d", (x->pos + 1));
-        break;
-    }
-    case MATCH_INVOKE_PREDICATE_FAILURE :
-        error("predicate failure");
-        break;
-    }
-}
-
-
-
-//
-// matchInvokeCode
-//
-
-MatchInvokeResultPtr
-matchInvokeCode(CodePtr code, EnvPtr env, const vector<ValuePtr> &args) {
-    if (args.size() != code->formalArgs.size())
-        return new MatchInvokeArgCountError();
-    EnvPtr patternEnv = new Env(env);
-    vector<PatternCellPtr> cells;
-    for (unsigned i = 0; i < code->patternVars.size(); ++i) {
-        cells.push_back(new PatternCell(code->patternVars[i], NULL));
-        addLocal(patternEnv, code->patternVars[i], cells[i].raw());
-    }
-    for (unsigned i = 0; i < args.size(); ++i) {
-        if (!matchArg(args[i], code->formalArgs[i], patternEnv))
-            return new MatchInvokeArgMismatch(i);
-    }
-    EnvPtr env2 = new Env(env);
-    for (unsigned i = 0; i < cells.size(); ++i) {
-        ValuePtr v = derefCell(cells[i]);
-        addLocal(env2, code->patternVars[i], v.raw());
-    }
-    if (code->predicate.raw()) {
-        bool result = evaluateToBool(code->predicate, env2);
-        if (!result)
-            return new MatchInvokePredicateFailure();
-    }
-    return new MatchInvokeSuccess(env2);
-}
-
-EnvPtr bindValueArgs(EnvPtr env, const vector<ValuePtr> &args, CodePtr code) {
-    EnvPtr env2 = new Env(env);
-    for (unsigned i = 0; i < args.size(); ++i) {
-        FormalArgPtr farg = code->formalArgs[i];
-        if (farg->objKind == VALUE_ARG) {
-            ValueArg *x = (ValueArg *)farg.raw();
-            ValuePtr v = args[i];
-            if (v->isOwned)
-                v = new Value(v->type, v->buf, false);
-            addLocal(env2, x->name, v.raw());
-        }
-    }
-    return env2;
 }
 
 

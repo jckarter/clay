@@ -1432,43 +1432,6 @@ ExprPtr convertBinaryOp(BinaryOpPtr x);
 
 ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
 
-enum MatchInvokeResultKind {
-    MATCH_INVOKE_SUCCESS,
-    MATCH_INVOKE_ARG_COUNT_ERROR,
-    MATCH_INVOKE_ARG_MISMATCH,
-    MATCH_INVOKE_PREDICATE_FAILURE,
-};
-
-struct MatchInvokeResult : public Object {
-    int resultKind;
-    MatchInvokeResult(int resultKind)
-        : Object(DONT_CARE), resultKind(resultKind) {}
-};
-
-struct MatchInvokeSuccess : public MatchInvokeResult {
-    EnvPtr env;
-    MatchInvokeSuccess(EnvPtr env)
-        : MatchInvokeResult(MATCH_INVOKE_SUCCESS), env(env) {}
-};
-
-struct MatchInvokeArgCountError : public MatchInvokeResult {
-    MatchInvokeArgCountError()
-        : MatchInvokeResult(MATCH_INVOKE_ARG_COUNT_ERROR) {}
-};
-
-struct MatchInvokeArgMismatch : public MatchInvokeResult {
-    int pos;
-    MatchInvokeArgMismatch(int pos)
-        : MatchInvokeResult(MATCH_INVOKE_ARG_MISMATCH), pos(pos) {}
-};
-
-struct MatchInvokePredicateFailure : public MatchInvokeResult {
-    MatchInvokePredicateFailure()
-        : MatchInvokeResult(MATCH_INVOKE_PREDICATE_FAILURE) {}
-};
-
-void signalMatchInvokeError(MatchInvokeResultPtr result);
-
 StatementPtr convertForStatement(ForPtr x);
 
 void initExternalProcedure(ExternalProcedurePtr x);

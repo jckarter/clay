@@ -1,5 +1,5 @@
 #include "clay.hpp"
-#include "invoketable.hpp"
+#include "invokeutil.hpp"
 
 
 
@@ -15,8 +15,6 @@ ReturnInfoPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args);
 
 ReturnInfoPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args);
 
-bool analyzeMatchArg(AnalysisPtr arg, FormalArgPtr farg, EnvPtr fenv);
-
 ReturnInfoPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args);
 
 ReturnInfoPtr analyzeInvokeProcedure(ProcedurePtr x,
@@ -24,11 +22,6 @@ ReturnInfoPtr analyzeInvokeProcedure(ProcedurePtr x,
 
 ReturnInfoPtr analyzeInvokeOverloadable(OverloadablePtr x,
                                         const vector<AnalysisPtr> &args);
-
-MatchInvokeResultPtr analyzeMatchInvokeCode(CodePtr code, EnvPtr env,
-                                            const vector<AnalysisPtr> &args);
-EnvPtr analyzeBindValueArgs(EnvPtr env, const vector<AnalysisPtr> &args,
-                            CodePtr code);
 
 bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnInfoPtr rinfo);
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo);
@@ -396,7 +389,7 @@ ReturnInfoPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args) 
     }
     for (unsigned i = 0; i < args.size(); ++i) {
         FormalArgPtr farg = x->formalArgs[i];
-        if (!analyzeMatchArg(args[i], x->formalArgs[i], env))
+        if (!matchFormalArg(args[i], x->formalArgs[i], env))
             fmtError("mismatch at argument %d", i+1);
     }
     vector<ValuePtr> cellValues;
@@ -404,31 +397,6 @@ ReturnInfoPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args) 
         cellValues.push_back(derefCell(cells[i]));
     TypePtr t = recordType(x, cellValues);
     return new ReturnInfo(t, false);
-}
-
-
-
-//
-// analyzeMatchArg
-//
-
-bool analyzeMatchArg(AnalysisPtr arg, FormalArgPtr farg, EnvPtr env) {
-    switch (farg->objKind) {
-    case VALUE_ARG : {
-        ValueArg *x = (ValueArg *)farg.raw();
-        if (!x->type)
-            return true;
-        PatternPtr pattern = evaluatePattern(x->type, env);
-        return unifyType(pattern, arg->type);
-    }
-    case STATIC_ARG : {
-        StaticArg *x = (StaticArg *)farg.raw();
-        PatternPtr pattern = evaluatePattern(x->pattern, env);
-        return unify(pattern, arg->evaluate());
-    }
-    }
-    assert(false);
-    return false;
 }
 
 
@@ -455,11 +423,10 @@ ReturnInfoPtr analyzeInvokeProcedure(ProcedurePtr x,
     if (entry->analyzing)
         return NULL;
     entry->analyzing = true;
-    MatchInvokeResultPtr result =
-        analyzeMatchInvokeCode(x->code, x->env, args);
+    MatchInvokeResultPtr result = matchInvoke(x->code, x->env, args);
     if (result->resultKind == MATCH_INVOKE_SUCCESS) {
         MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.raw();
-        EnvPtr env = analyzeBindValueArgs(y->env, args, x->code);
+        EnvPtr env = bindValueArgs(y->env, args, x->code);
         ReturnInfoPtr rinfo = new ReturnInfo();
         bool flag = analyzeCodeBody(x->code, env, rinfo);
         entry->analyzing = false;
@@ -484,11 +451,10 @@ ReturnInfoPtr analyzeInvokeOverloadable(OverloadablePtr x,
     entry->analyzing = true;
     for (unsigned i = 0; i < x->overloads.size(); ++i) {
         OverloadPtr y = x->overloads[i];
-        MatchInvokeResultPtr result =
-            analyzeMatchInvokeCode(y->code, y->env, args);
+        MatchInvokeResultPtr result = matchInvoke(y->code, y->env, args);
         if (result->resultKind == MATCH_INVOKE_SUCCESS) {
             MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.raw();
-            EnvPtr env = analyzeBindValueArgs(z->env, args, y->code);
+            EnvPtr env = bindValueArgs(z->env, args, y->code);
             ReturnInfoPtr rinfo = new ReturnInfo();
             bool flag = analyzeCodeBody(y->code, env, rinfo);
             entry->analyzing = false;
@@ -502,47 +468,6 @@ ReturnInfoPtr analyzeInvokeOverloadable(OverloadablePtr x,
     entry->analyzing = false;
     error("no matching overload");
     return NULL;
-}
-
-MatchInvokeResultPtr analyzeMatchInvokeCode(CodePtr code, EnvPtr env,
-                                            const vector<AnalysisPtr> &args) {
-    if (args.size() != code->formalArgs.size())
-        return new MatchInvokeArgCountError();
-    EnvPtr patternEnv = new Env(env);
-    vector<PatternCellPtr> cells;
-    for (unsigned i = 0; i < code->patternVars.size(); ++i) {
-        cells.push_back(new PatternCell(code->patternVars[i], NULL));
-        addLocal(patternEnv, code->patternVars[i], cells[i].raw());
-    }
-    for (unsigned i = 0; i < args.size(); ++i) {
-        if (!analyzeMatchArg(args[i], code->formalArgs[i], patternEnv))
-            return new MatchInvokeArgMismatch(i);
-    }
-    EnvPtr env2 = new Env(env);
-    for (unsigned i = 0; i < cells.size(); ++i) {
-        ValuePtr v = derefCell(cells[i]);
-        addLocal(env2, code->patternVars[i], v.raw());
-    }
-    if (code->predicate.raw()) {
-        bool result = evaluateToBool(code->predicate, env2);
-        if (!result)
-            return new MatchInvokePredicateFailure();
-    }
-    return new MatchInvokeSuccess(env2);
-}
-
-EnvPtr analyzeBindValueArgs(EnvPtr env, const vector<AnalysisPtr> &args,
-                            CodePtr code) {
-    EnvPtr env2 = new Env(env);
-    for (unsigned i = 0; i < args.size(); ++i) {
-        FormalArgPtr farg = code->formalArgs[i];
-        if (farg->objKind == VALUE_ARG) {
-            ValueArg *x = (ValueArg *)farg.raw();
-            AnalysisPtr arg2 = new Analysis(args[i]->type, false, false);
-            addLocal(env2, x->name, arg2.raw());
-        }
-    }
-    return env2;
 }
 
 bool analyzeCodeBody(CodePtr code, EnvPtr env, ReturnInfoPtr rinfo) {
