@@ -39,7 +39,7 @@ ReturnInfoPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<AnalysisPtr> &args);
 //
 
 ValuePtr Analysis::evaluate() const {
-    if (this->value.raw())
+    if (this->value.ptr())
         return this->value;
     this->value = evaluateToStatic(this->expr, this->env);
     return this->value;
@@ -101,7 +101,7 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
         return staticTemp(boolType);
 
     case INT_LITERAL : {
-        IntLiteral *x = (IntLiteral *)expr.raw();
+        IntLiteral *x = (IntLiteral *)expr.ptr();
         if (x->suffix == "i8")
             return staticTemp(int8Type);
         else if (x->suffix == "i16")
@@ -127,7 +127,7 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     }
 
     case FLOAT_LITERAL : {
-        FloatLiteral *x = (FloatLiteral *)expr.raw();
+        FloatLiteral *x = (FloatLiteral *)expr.ptr();
         if (x->suffix == "f32")
             return staticTemp(float32Type);
         else if ((x->suffix == "f64") || x->suffix.empty())
@@ -137,49 +137,49 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     }
 
     case CHAR_LITERAL : {
-        CharLiteral *x = (CharLiteral *)expr.raw();
+        CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->converted)
             x->converted = convertCharLiteral(x->value);
         return analyze(x->converted, env);
     }
 
     case STRING_LITERAL : {
-        StringLiteral *x = (StringLiteral *)expr.raw();
+        StringLiteral *x = (StringLiteral *)expr.ptr();
         if (!x->converted)
             x->converted = convertStringLiteral(x->value);
         return analyze(x->converted, env);
     }
 
     case NAME_REF : {
-        NameRef *x = (NameRef *)expr.raw();
+        NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
         if (y->objKind == VALUE) {
-            Value *z = (Value *)y.raw();
+            Value *z = (Value *)y.ptr();
             return staticTemp(z->type);
         }
         else if (y->objKind == ANALYSIS) {
-            Analysis *z = (Analysis *)y.raw();
+            Analysis *z = (Analysis *)y.ptr();
             return new Analysis(z->type, false, false);
         }
         return staticTemp(compilerObjectType);
     }
 
     case TUPLE : {
-        Tuple *x = (Tuple *)expr.raw();
+        Tuple *x = (Tuple *)expr.ptr();
         if (!x->converted)
             x->converted = convertTuple(x);
         return analyze(x->converted, env);
     }
 
     case ARRAY : {
-        Array *x = (Array *)expr.raw();
+        Array *x = (Array *)expr.ptr();
         if (!x->converted)
             x->converted = convertArray(x);
         return analyze(x->converted, env);
     }
 
     case INDEXING : {
-        Indexing *x = (Indexing *)expr.raw();
+        Indexing *x = (Indexing *)expr.ptr();
         AnalysisPtr indexable = analyze(x->expr, env);
         if (!indexable)
             return NULL;
@@ -198,7 +198,7 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     }
 
     case CALL : {
-        Call *x = (Call *)expr.raw();
+        Call *x = (Call *)expr.ptr();
         AnalysisPtr callable = analyze(x->expr, env);
         if (!callable)
             return NULL;
@@ -217,8 +217,8 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     }
 
     case FIELD_REF : {
-        FieldRef *x = (FieldRef *)expr.raw();
-        ValuePtr name = coToValue(x->name.raw());
+        FieldRef *x = (FieldRef *)expr.ptr();
+        ValuePtr name = coToValue(x->name.ptr());
         vector<ExprPtr> args;
         args.push_back(x->expr);
         args.push_back(new ValueExpr(name));
@@ -233,7 +233,7 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     }
 
     case TUPLE_REF : {
-        TupleRef *x = (TupleRef *)expr.raw();
+        TupleRef *x = (TupleRef *)expr.ptr();
         ValuePtr index = intToValue(x->index);
         vector<ExprPtr> args;
         args.push_back(x->expr);
@@ -248,21 +248,21 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     }
 
     case UNARY_OP : {
-        UnaryOp *x = (UnaryOp *)expr.raw();
+        UnaryOp *x = (UnaryOp *)expr.ptr();
         if (!x->converted)
             x->converted = convertUnaryOp(x);
         return analyze(x->converted, env);
     }
 
     case BINARY_OP : {
-        BinaryOp *x = (BinaryOp *)expr.raw();
+        BinaryOp *x = (BinaryOp *)expr.ptr();
         if (!x->converted)
             x->converted = convertBinaryOp(x);
         return analyze(x->converted, env);
     }
 
     case AND : {
-        And *x = (And *)expr.raw();
+        And *x = (And *)expr.ptr();
         AnalysisPtr a1 = analyze(x->expr1, env);
         AnalysisPtr a2 = analyze(x->expr2, env);
         if (!a1 || !a2)
@@ -276,7 +276,7 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     }
 
     case OR : {
-        Or *x = (Or *)expr.raw();
+        Or *x = (Or *)expr.ptr();
         AnalysisPtr a1 = analyze(x->expr1, env);
         AnalysisPtr a2 = analyze(x->expr2, env);
         if (!a1 || !a2)
@@ -290,12 +290,12 @@ AnalysisPtr analyze2(ExprPtr expr, EnvPtr env) {
     }
 
     case SC_EXPR : {
-        SCExpr *x = (SCExpr *)expr.raw();
+        SCExpr *x = (SCExpr *)expr.ptr();
         return analyze(x->expr, x->env);
     }
 
     case VALUE_EXPR : {
-        ValueExpr *x = (ValueExpr *)expr.raw();
+        ValueExpr *x = (ValueExpr *)expr.ptr();
         return staticTemp(x->value->type);
     }
 
@@ -332,7 +332,7 @@ ReturnInfoPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args) {
     case RECORD :
         return new ReturnInfo(compilerObjectType, false);
     case PRIM_OP : {
-        PrimOp *x = (PrimOp *)obj.raw();
+        PrimOp *x = (PrimOp *)obj.ptr();
         switch (x->primOpCode) {
         case PRIM_Pointer :
         case PRIM_Array :
@@ -355,19 +355,19 @@ ReturnInfoPtr analyzeIndexing(ObjectPtr obj, const vector<AnalysisPtr> &args) {
 ReturnInfoPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args) {
     switch (obj->objKind) {
     case RECORD :
-        return analyzeInvokeRecord((Record *)obj.raw(), args);
+        return analyzeInvokeRecord((Record *)obj.ptr(), args);
     case TYPE :
-        return analyzeInvokeType((Type *)obj.raw(), args);
+        return analyzeInvokeType((Type *)obj.ptr(), args);
     case PROCEDURE :
-        return analyzeInvokeProcedure((Procedure *)obj.raw(), args);
+        return analyzeInvokeProcedure((Procedure *)obj.ptr(), args);
     case OVERLOADABLE :
-        return analyzeInvokeOverloadable((Overloadable *)obj.raw(), args);
+        return analyzeInvokeOverloadable((Overloadable *)obj.ptr(), args);
     case EXTERNAL_PROCEDURE : {
-        ExternalProcedurePtr x = (ExternalProcedure *)obj.raw();
+        ExternalProcedurePtr x = (ExternalProcedure *)obj.ptr();
         return analyzeInvokeExternal(x, args);
     }
     case PRIM_OP :
-        return analyzeInvokePrimOp((PrimOp *)obj.raw(), args);
+        return analyzeInvokePrimOp((PrimOp *)obj.ptr(), args);
     }
     error("invalid operation");
     return NULL;
@@ -385,7 +385,7 @@ ReturnInfoPtr analyzeInvokeRecord(RecordPtr x, const vector<AnalysisPtr> &args) 
     vector<PatternCellPtr> cells;
     for (unsigned i = 0; i < x->patternVars.size(); ++i) {
         cells.push_back(new PatternCell(x->patternVars[i], NULL));
-        addLocal(env, x->patternVars[i], cells[i].raw());
+        addLocal(env, x->patternVars[i], cells[i].ptr());
     }
     for (unsigned i = 0; i < args.size(); ++i) {
         FormalArgPtr farg = x->formalArgs[i];
@@ -418,14 +418,14 @@ ReturnInfoPtr analyzeInvokeType(TypePtr x, const vector<AnalysisPtr> &args) {
 ReturnInfoPtr analyzeInvokeProcedure(ProcedurePtr x,
                                      const vector<AnalysisPtr> &args) {
     InvokeTableEntry *entry = lookupProcedureInvoke(x, args);
-    if (entry->returnType.raw())
+    if (entry->returnType.ptr())
         return new ReturnInfo(entry->returnType, entry->returnByRef);
     if (entry->analyzing)
         return NULL;
     entry->analyzing = true;
     MatchInvokeResultPtr result = matchInvoke(x->code, x->env, args);
     if (result->resultKind == MATCH_INVOKE_SUCCESS) {
-        MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.raw();
+        MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.ptr();
         EnvPtr env = bindValueArgs(y->env, args, x->code);
         ReturnInfoPtr rinfo = new ReturnInfo();
         bool flag = analyzeCodeBody(x->code, env, rinfo);
@@ -444,7 +444,7 @@ ReturnInfoPtr analyzeInvokeProcedure(ProcedurePtr x,
 ReturnInfoPtr analyzeInvokeOverloadable(OverloadablePtr x,
                                         const vector<AnalysisPtr> &args) {
     InvokeTableEntry *entry = lookupOverloadableInvoke(x, args);
-    if (entry->returnType.raw())
+    if (entry->returnType.ptr())
         return new ReturnInfo(entry->returnType, entry->returnByRef);
     if (entry->analyzing)
         return NULL;
@@ -453,7 +453,7 @@ ReturnInfoPtr analyzeInvokeOverloadable(OverloadablePtr x,
         OverloadPtr y = x->overloads[i];
         MatchInvokeResultPtr result = matchInvoke(y->code, y->env, args);
         if (result->resultKind == MATCH_INVOKE_SUCCESS) {
-            MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.raw();
+            MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.ptr();
             EnvPtr env = bindValueArgs(z->env, args, y->code);
             ReturnInfoPtr rinfo = new ReturnInfo();
             bool flag = analyzeCodeBody(y->code, env, rinfo);
@@ -483,13 +483,13 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo) {
     LocationContext loc(stmt->location);
     switch (stmt->objKind) {
     case BLOCK : {
-        Block *x = (Block *)stmt.raw();
+        Block *x = (Block *)stmt.ptr();
         ReturnInfoPtr rinfo2 = new ReturnInfo();
         bool recursive = false;
         for (unsigned i = 0; i < x->statements.size(); ++i) {
             StatementPtr y = x->statements[i];
             if (y->objKind == BINDING) {
-                env = analyzeBinding((Binding *)y.raw(), env);
+                env = analyzeBinding((Binding *)y.ptr(), env);
                 if (!env) {
                     recursive = true;
                     break;
@@ -505,7 +505,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo) {
         }
         if (recursive && !rinfo2->type)
             return false;
-        if (rinfo2->type.raw())
+        if (rinfo2->type.ptr())
             rinfo->set(rinfo2->type, rinfo2->isRef);
         break;
     }
@@ -515,7 +515,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo) {
     case GOTO :
         break;
     case RETURN : {
-        Return *x = (Return *)stmt.raw();
+        Return *x = (Return *)stmt.ptr();
         if (!x->expr) {
             rinfo->set(voidType, false);
         }
@@ -528,7 +528,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo) {
         break;
     }
     case RETURN_REF : {
-        ReturnRef *x = (ReturnRef *)stmt.raw();
+        ReturnRef *x = (ReturnRef *)stmt.ptr();
         AnalysisPtr result = analyze(x->expr, env);
         if (!result)
             return false;
@@ -536,17 +536,17 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo) {
         break;
     }
     case IF : {
-        If *x = (If *)stmt.raw();
+        If *x = (If *)stmt.ptr();
         bool thenResult = analyzeStatement(x->thenPart, env, rinfo);
         bool elseResult = true;
-        if (x->elsePart.raw())
+        if (x->elsePart.ptr())
             elseResult = analyzeStatement(x->elsePart, env, rinfo);
         return thenResult || elseResult;
     }
     case EXPR_STATEMENT :
         break;
     case WHILE : {
-        While *x = (While *)stmt.raw();
+        While *x = (While *)stmt.ptr();
         analyzeStatement(x->body, env, rinfo);
         break;
     }
@@ -554,7 +554,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ReturnInfoPtr rinfo) {
     case CONTINUE :
         break;
     case FOR : {
-        For *x = (For *)stmt.raw();
+        For *x = (For *)stmt.ptr();
         if (!x->converted)
             x->converted = convertForStatement(x);
         return analyzeStatement(x->converted, env, rinfo);
@@ -573,12 +573,12 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env) {
         AnalysisPtr right = analyze(x->expr, env);
         if (!right)
             return NULL;
-        addLocal(env2, x->name, right.raw());
+        addLocal(env2, x->name, right.ptr());
         break;
     }
     case STATIC : {
         ValuePtr right = evaluateToStatic(x->expr, env);
-        addLocal(env2, x->name, right.raw());
+        addLocal(env2, x->name, right.ptr());
         break;
     }
     default :
@@ -704,7 +704,7 @@ ReturnInfoPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_pointerDereference : {
         ensureArity(args, 1);
         ensurePointerType(args[0]->type);
-        PointerType *t = (PointerType *)args[0]->type.raw();
+        PointerType *t = (PointerType *)args[0]->type.ptr();
         return new ReturnInfo(t->pointeeType, true);
     }
     case PRIM_pointerToInt :
@@ -743,7 +743,7 @@ ReturnInfoPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_arrayRef : {
         ensureArity(args, 2);
         ensureArrayType(args[0]->type);
-        ArrayType *t = (ArrayType *)args[0]->type.raw();
+        ArrayType *t = (ArrayType *)args[0]->type.ptr();
         return new ReturnInfo(t->elementType, true);
     }
 
@@ -772,7 +772,7 @@ ReturnInfoPtr analyzeInvokePrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         ensureTupleType(args[0]->type);
         int i = valueToInt(args[1]->evaluate());
-        TupleType *t = (TupleType *)args[0]->type.raw();
+        TupleType *t = (TupleType *)args[0]->type.ptr();
         if ((i < 0) || (i >= (int)t->elementTypes.size()))
             error("tuple type index out of range");
         return new ReturnInfo(t->elementTypes[i], true);
@@ -793,7 +793,7 @@ ReturnInfoPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);
         ensureRecordType(args[0]->type);
-        RecordType *rt = (RecordType *)args[0]->type.raw();
+        RecordType *rt = (RecordType *)args[0]->type.ptr();
         int i = valueToInt(args[1]->evaluate());
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if ((i < 0) || (i >= (int)fieldTypes.size()))
@@ -803,11 +803,11 @@ ReturnInfoPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_recordFieldRefByName : {
         ensureArity(args, 2);
         ensureRecordType(args[0]->type);
-        RecordType *t = (RecordType *)args[0]->type.raw();
+        RecordType *t = (RecordType *)args[0]->type.ptr();
         ObjectPtr obj = valueToCO(args[1]->evaluate());
         if (obj->objKind != IDENTIFIER)
             error("expecting an identifier value");
-        Identifier *name = (Identifier *)obj.raw();
+        Identifier *name = (Identifier *)obj.ptr();
         const map<string, int> &fieldIndexMap = recordFieldIndexMap(t);
         map<string, int>::const_iterator fi = fieldIndexMap.find(name->str);
         if (fi == fieldIndexMap.end())

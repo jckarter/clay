@@ -57,7 +57,7 @@ int hashArgs(const vector<ARG> &args,
     int h = 0;
     for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
         if (!isStaticFlags[i]) {
-            h += toCOIndex(argumentType(args[i]).raw());
+            h += toCOIndex(argumentType(args[i]).ptr());
         }
         else {
             ValuePtr v = argumentValue(args[i]);
@@ -73,13 +73,13 @@ bool matchArgs(const vector<ARG> &args,
                InvokeTableEntry *entry) {
     for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
         if (!isStaticFlags[i]) {
-            Type *t = (Type *)entry->argsInfo[i].raw();
+            Type *t = (Type *)entry->argsInfo[i].ptr();
             if (argumentType(args[i]) != t)
                 return false;
         }
         else {
             ValuePtr v = argumentValue(args[i]);
-            if (!valueEquals(v, (Value *)entry->argsInfo[i].raw()))
+            if (!valueEquals(v, (Value *)entry->argsInfo[i].ptr()))
                 return false;
         }
     }
@@ -92,11 +92,11 @@ void initArgsInfo(InvokeTableEntry *entry,
                   const vector<bool> &isStaticFlags) {
     for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
         if (!isStaticFlags[i]) {
-            entry->argsInfo.push_back(argumentType(args[i]).raw());
+            entry->argsInfo.push_back(argumentType(args[i]).ptr());
         }
         else {
             ValuePtr v = argumentValue(args[i]);
-            entry->argsInfo.push_back(cloneValue(v).raw());
+            entry->argsInfo.push_back(cloneValue(v).ptr());
         }
     }
 }
@@ -109,14 +109,14 @@ InvokeTableEntry *findMatchingEntry(const vector<ARG> &args,
     h &= (table->data.size() - 1);
     vector<InvokeTableEntryPtr> &entries = table->data[h];
     for (unsigned i = 0; i < entries.size(); ++i) {
-        InvokeTableEntry *entry = entries[i].raw();
+        InvokeTableEntry *entry = entries[i].ptr();
         if (matchArgs(args, isStaticFlags, entry))
             return entry;
     }
     InvokeTableEntryPtr entry = new InvokeTableEntry();
     entries.push_back(entry);
-    initArgsInfo(entry.raw(), args, isStaticFlags);
-    return entry.raw();
+    initArgsInfo(entry.ptr(), args, isStaticFlags);
+    return entry.ptr();
 }
 
 static inline
@@ -145,10 +145,10 @@ void initProcedureInvokeTable(ProcedurePtr x) {
 template <typename ARG>
 InvokeTableEntry *lookupProcedureInvoke(ProcedurePtr x,
                                         const vector<ARG> &args) {
-    InvokeTable *table = x->invokeTable.raw();
+    InvokeTable *table = x->invokeTable.ptr();
     if (!table) {
         initProcedureInvokeTable(x);
-        table = x->invokeTable.raw();
+        table = x->invokeTable.ptr();
     }
     ensureArity(args, table->isStaticFlags.size());
     return findMatchingEntry(args, table);
@@ -194,7 +194,7 @@ InvokeTableEntry *lookupOverloadableInvoke(OverloadablePtr x,
         initOverloadableInvokeTables(x);
     if (x->invokeTables.size() <= args.size())
         error("no matching overload");
-    InvokeTable *table = x->invokeTables[args.size()].raw();
+    InvokeTable *table = x->invokeTables[args.size()].ptr();
     if (!table)
         error("no matching overload");
     return findMatchingEntry(args, table);
@@ -205,6 +205,18 @@ InvokeTableEntry *lookupOverloadableInvoke(OverloadablePtr x,
 //
 // MatchInvokeResult
 //
+
+struct MatchInvokeResult;
+struct MatchInvokeSuccess;
+struct MatchInvokeArgCountError;
+struct MatchInvokeArgMismatch;
+struct MatchInvokePredicateFailure;
+
+typedef Pointer<MatchInvokeResult> MatchInvokeResultPtr;
+typedef Pointer<MatchInvokeSuccess> MatchInvokeSuccessPtr;
+typedef Pointer<MatchInvokeArgCountError> MatchInvokeArgCountErrorPtr;
+typedef Pointer<MatchInvokeArgMismatch> MatchInvokeArgMismatchPtr;
+typedef Pointer<MatchInvokePredicateFailure> MatchInvokePredicateFailurePtr;
 
 enum MatchInvokeResultKind {
     MATCH_INVOKE_SUCCESS,
@@ -251,7 +263,7 @@ void signalMatchInvokeError(MatchInvokeResultPtr result) {
         error("incorrect no. of arguments");
         break;
     case MATCH_INVOKE_ARG_MISMATCH : {
-        MatchInvokeArgMismatch *x = (MatchInvokeArgMismatch *)result.raw();
+        MatchInvokeArgMismatch *x = (MatchInvokeArgMismatch *)result.ptr();
         fmtError("mismatch at argument %d", (x->pos + 1));
         break;
     }
@@ -276,7 +288,7 @@ matchInvoke(CodePtr code, EnvPtr env, const vector<ARG> &args) {
     vector<PatternCellPtr> cells;
     for (unsigned i = 0; i < code->patternVars.size(); ++i) {
         cells.push_back(new PatternCell(code->patternVars[i], NULL));
-        addLocal(patternEnv, code->patternVars[i], cells[i].raw());
+        addLocal(patternEnv, code->patternVars[i], cells[i].ptr());
     }
     for (unsigned i = 0; i < args.size(); ++i) {
         if (!matchFormalArg(args[i], code->formalArgs[i], patternEnv))
@@ -285,9 +297,9 @@ matchInvoke(CodePtr code, EnvPtr env, const vector<ARG> &args) {
     EnvPtr env2 = new Env(env);
     for (unsigned i = 0; i < cells.size(); ++i) {
         ValuePtr v = derefCell(cells[i]);
-        addLocal(env2, code->patternVars[i], v.raw());
+        addLocal(env2, code->patternVars[i], v.ptr());
     }
-    if (code->predicate.raw()) {
+    if (code->predicate.ptr()) {
         bool result = evaluateToBool(code->predicate, env2);
         if (!result)
             return new MatchInvokePredicateFailure();
@@ -299,14 +311,14 @@ template <typename ARG>
 bool matchFormalArg(ARG arg, FormalArgPtr farg, EnvPtr env) {
     switch (farg->objKind) {
     case VALUE_ARG : {
-        ValueArg *x = (ValueArg *)farg.raw();
+        ValueArg *x = (ValueArg *)farg.ptr();
         if (!x->type)
             return true;
         PatternPtr pattern = evaluatePattern(x->type, env);
         return unifyType(pattern, argumentType(arg));
     }
     case STATIC_ARG : {
-        StaticArg *x = (StaticArg *)farg.raw();
+        StaticArg *x = (StaticArg *)farg.ptr();
         PatternPtr pattern = evaluatePattern(x->pattern, env);
         return unify(pattern, argumentValue(arg));
     }
@@ -327,8 +339,8 @@ EnvPtr bindValueArgs(EnvPtr env, const vector<ARG> &args, CodePtr code) {
     for (unsigned i = 0; i < args.size(); ++i) {
         FormalArgPtr farg = code->formalArgs[i];
         if (farg->objKind == VALUE_ARG) {
-            ValueArg *x = (ValueArg *)farg.raw();
-            addLocal(env2, x->name, argumentRef(args[i]).raw());
+            ValueArg *x = (ValueArg *)farg.ptr();
+            addLocal(env2, x->name, argumentRef(args[i]).ptr());
         }
     }
     return env2;

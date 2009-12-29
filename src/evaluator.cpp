@@ -48,11 +48,11 @@ struct BreakResult;
 struct ContinueResult;
 struct ReturnResult;
 
-typedef Ptr<StatementResult> StatementResultPtr;
-typedef Ptr<GotoResult> GotoResultPtr;
-typedef Ptr<BreakResult> BreakResultPtr;
-typedef Ptr<ContinueResult> ContinueResultPtr;
-typedef Ptr<ReturnResult> ReturnResultPtr;
+typedef Pointer<StatementResult> StatementResultPtr;
+typedef Pointer<GotoResult> GotoResultPtr;
+typedef Pointer<BreakResult> BreakResultPtr;
+typedef Pointer<ContinueResult> ContinueResultPtr;
+typedef Pointer<ReturnResult> ReturnResultPtr;
 
 enum StatementResultKind {
     GOTO_RESULT,
@@ -196,7 +196,7 @@ static vector<ObjectPtr> coTable;
 int toCOIndex(ObjectPtr obj) {
     switch (obj->objKind) {
     case IDENTIFIER :
-        obj = internIdentifier((Identifier *)obj.raw()).raw();
+        obj = internIdentifier((Identifier *)obj.ptr()).ptr();
     case RECORD :
     case PROCEDURE :
     case OVERLOADABLE :
@@ -280,12 +280,12 @@ TypePtr valueToType(ValuePtr v) {
     ObjectPtr obj = valueToCO(v);
     if (obj->objKind != TYPE)
         error("expecting a type");
-    return (Type *)obj.raw();
+    return (Type *)obj.ptr();
 }
 
 ObjectPtr lower(ValuePtr v) {
     if (v->type != compilerObjectType)
-        return v.raw();
+        return v.ptr();
     int x = *((int *)v->buf);
     return fromCOIndex(x);
 }
@@ -330,7 +330,7 @@ void valueInit(ValuePtr dest) {
     case VOID_TYPE :
         break;
     case ARRAY_TYPE : {
-        ArrayType *t = (ArrayType *)dest->type.raw();
+        ArrayType *t = (ArrayType *)dest->type.ptr();
         TypePtr etype = t->elementType;
         int esize = typeSize(etype);
         for (int i = 0; i < t->size; ++i)
@@ -338,7 +338,7 @@ void valueInit(ValuePtr dest) {
         break;
     }
     case TUPLE_TYPE : {
-        TupleType *t = (TupleType *)dest->type.raw();
+        TupleType *t = (TupleType *)dest->type.ptr();
         const llvm::StructLayout *layout = tupleTypeLayout(t);
         for (unsigned i = 0; i < t->elementTypes.size(); ++i) {
             char *p = dest->buf + layout->getElementOffset(i);
@@ -373,7 +373,7 @@ void valueDestroy(ValuePtr dest) {
     case VOID_TYPE :
         break;
     case ARRAY_TYPE : {
-        ArrayType *t = (ArrayType *)dest->type.raw();
+        ArrayType *t = (ArrayType *)dest->type.ptr();
         TypePtr etype = t->elementType;
         int esize = typeSize(etype);
         for (int i = 0; i < t->size; ++i)
@@ -381,7 +381,7 @@ void valueDestroy(ValuePtr dest) {
         break;
     }
     case TUPLE_TYPE : {
-        TupleType *t = (TupleType *)dest->type.raw();
+        TupleType *t = (TupleType *)dest->type.ptr();
         const llvm::StructLayout *layout = tupleTypeLayout(t);
         for (unsigned i = 0; i < t->elementTypes.size(); ++i) {
             char *p = dest->buf + layout->getElementOffset(i);
@@ -424,7 +424,7 @@ void valueCopy(ValuePtr dest, ValuePtr src) {
         memcpy(dest->buf, src->buf, typeSize(dest->type));
         break;
     case ARRAY_TYPE : {
-        ArrayType *t = (ArrayType *)dest->type.raw();
+        ArrayType *t = (ArrayType *)dest->type.ptr();
         TypePtr etype = t->elementType;
         int esize = typeSize(etype);
         for (int i = 0; i < t->size; ++i)
@@ -433,7 +433,7 @@ void valueCopy(ValuePtr dest, ValuePtr src) {
         break;
     }
     case TUPLE_TYPE : {
-        TupleType *t = (TupleType *)dest->type.raw();
+        TupleType *t = (TupleType *)dest->type.ptr();
         const llvm::StructLayout *layout = tupleTypeLayout(t);
         for (unsigned i = 0; i < t->elementTypes.size(); ++i) {
             TypePtr etype = t->elementTypes[i];
@@ -491,7 +491,7 @@ void valueAssign(ValuePtr dest, ValuePtr src) {
         memcpy(dest->buf, src->buf, typeSize(dest->type));
         break;
     case ARRAY_TYPE : {
-        ArrayType *t = (ArrayType *)dest->type.raw();
+        ArrayType *t = (ArrayType *)dest->type.ptr();
         TypePtr etype = t->elementType;
         int esize = typeSize(etype);
         for (int i = 0; i < t->size; ++i)
@@ -500,7 +500,7 @@ void valueAssign(ValuePtr dest, ValuePtr src) {
         break;
     }
     case TUPLE_TYPE : {
-        TupleType *t = (TupleType *)dest->type.raw();
+        TupleType *t = (TupleType *)dest->type.ptr();
         const llvm::StructLayout *layout = tupleTypeLayout(t);
         for (unsigned i = 0; i < t->elementTypes.size(); ++i) {
             TypePtr etype = t->elementTypes[i];
@@ -544,7 +544,7 @@ bool valueEquals(ValuePtr a, ValuePtr b) {
     case VOID_TYPE :
         return memcmp(a->buf, b->buf, typeSize(a->type)) == 0;
     case ARRAY_TYPE : {
-        ArrayType *t = (ArrayType *)a->type.raw();
+        ArrayType *t = (ArrayType *)a->type.ptr();
         TypePtr etype = t->elementType;
         int esize = typeSize(etype);
         for (int i = 0; i < t->size; ++i) {
@@ -555,7 +555,7 @@ bool valueEquals(ValuePtr a, ValuePtr b) {
         return true;
     }
     case TUPLE_TYPE : {
-        TupleType *t = (TupleType *)a->type.raw();
+        TupleType *t = (TupleType *)a->type.ptr();
         const llvm::StructLayout *layout = tupleTypeLayout(t);
         for (unsigned i = 0; i < t->elementTypes.size(); ++i) {
             TypePtr etype = t->elementTypes[i];
@@ -589,7 +589,7 @@ int valueHash(ValuePtr a) {
     case BOOL_TYPE :
         return *((unsigned char *)a->buf);
     case INTEGER_TYPE : {
-        IntegerType *t = (IntegerType *)a->type.raw();
+        IntegerType *t = (IntegerType *)a->type.ptr();
         switch (t->bits) {
         case 8 :
             return *((unsigned char *)a->buf);
@@ -605,7 +605,7 @@ int valueHash(ValuePtr a) {
         }
     }
     case FLOAT_TYPE : {
-        FloatType *t = (FloatType *)a->type.raw();
+        FloatType *t = (FloatType *)a->type.ptr();
         switch (t->bits) {
         case 32 :
             return (int)(*((float *)a->buf));
@@ -623,7 +623,7 @@ int valueHash(ValuePtr a) {
     case VOID_TYPE :
         return 0;
     case ARRAY_TYPE : {
-        ArrayType *t = (ArrayType *)a->type.raw();
+        ArrayType *t = (ArrayType *)a->type.ptr();
         TypePtr etype = t->elementType;
         int esize = typeSize(etype);
         int h = 0;
@@ -632,7 +632,7 @@ int valueHash(ValuePtr a) {
         return h;
     }
     case TUPLE_TYPE : {
-        TupleType *t = (TupleType *)a->type.raw();
+        TupleType *t = (TupleType *)a->type.ptr();
         const llvm::StructLayout *layout = tupleTypeLayout(t);
         int h = 0;
         for (unsigned i = 0; i < t->elementTypes.size(); ++i) {
@@ -665,7 +665,7 @@ void valuePrint(ValuePtr a, ostream &out) {
         out << (valueToBool(a) ? "true" : "false");
         break;
     case INTEGER_TYPE : {
-        IntegerType *t = (IntegerType *)a->type.raw();
+        IntegerType *t = (IntegerType *)a->type.ptr();
         if (t->isSigned) {
             switch (t->bits) {
             case 8 :
@@ -705,7 +705,7 @@ void valuePrint(ValuePtr a, ostream &out) {
         break;
     }
     case FLOAT_TYPE : {
-        FloatType *t = (FloatType *)a->type.raw();
+        FloatType *t = (FloatType *)a->type.ptr();
         switch (t->bits) {
         case 32 :
             out << *((float *)a->buf) << "#f32";
@@ -719,7 +719,7 @@ void valuePrint(ValuePtr a, ostream &out) {
         break;
     }
     case ARRAY_TYPE : {
-        ArrayType *t = (ArrayType *)a->type.raw();
+        ArrayType *t = (ArrayType *)a->type.ptr();
         TypePtr etype = t->elementType;
         int esize = typeSize(etype);
         out << "[";
@@ -732,7 +732,7 @@ void valuePrint(ValuePtr a, ostream &out) {
         break;
     }
     case TUPLE_TYPE : {
-        TupleType *t = (TupleType *)a->type.raw();
+        TupleType *t = (TupleType *)a->type.ptr();
         const llvm::StructLayout *layout = tupleTypeLayout(t);
         out << "(";
         for (unsigned i = 0; i < t->elementTypes.size(); ++i) {
@@ -746,12 +746,12 @@ void valuePrint(ValuePtr a, ostream &out) {
         break;
     }
     case POINTER_TYPE : {
-        PointerType *t = (PointerType *)a->type.raw();
+        PointerType *t = (PointerType *)a->type.ptr();
         out << *t << "(" << *((void **)a->buf) << ")";
         break;
     }
     case RECORD_TYPE : {
-        RecordType *t = (RecordType *)a->type.raw();
+        RecordType *t = (RecordType *)a->type.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
         const llvm::StructLayout *layout = recordTypeLayout(t);
         out << *t << "(";
@@ -882,12 +882,12 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     switch (expr->objKind) {
 
     case BOOL_LITERAL : {
-        BoolLiteral *x = (BoolLiteral *)expr.raw();
+        BoolLiteral *x = (BoolLiteral *)expr.ptr();
         return boolToValue(x->value);
     }
 
     case INT_LITERAL : {
-        IntLiteral *x = (IntLiteral *)expr.raw();
+        IntLiteral *x = (IntLiteral *)expr.ptr();
         char *ptr = (char *)x->value.c_str();
         char *end = ptr;
         if (x->suffix == "i8") {
@@ -995,7 +995,7 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     }
 
     case FLOAT_LITERAL : {
-        FloatLiteral *x = (FloatLiteral *)expr.raw();
+        FloatLiteral *x = (FloatLiteral *)expr.ptr();
         char *ptr = (char *)x->value.c_str();
         char *end = ptr;
         if (x->suffix == "f32") {
@@ -1023,24 +1023,24 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     }
 
     case CHAR_LITERAL : {
-        CharLiteral *x = (CharLiteral *)expr.raw();
+        CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->converted)
             x->converted = convertCharLiteral(x->value);
         return evaluate(x->converted, env);
     }
 
     case STRING_LITERAL : {
-        StringLiteral *x = (StringLiteral *)expr.raw();
+        StringLiteral *x = (StringLiteral *)expr.ptr();
         if (!x->converted)
             x->converted = convertStringLiteral(x->value);
         return evaluate(x->converted, env);
     }
 
     case NAME_REF : {
-        NameRef *x = (NameRef *)expr.raw();
+        NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
         if (y->objKind == VALUE) {
-            ValuePtr z = (Value *)y.raw();
+            ValuePtr z = (Value *)y.ptr();
             if (z->isOwned) {
                 // static values
                 z = cloneValue(z);
@@ -1051,21 +1051,21 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     }
 
     case TUPLE : {
-        Tuple *x = (Tuple *)expr.raw();
+        Tuple *x = (Tuple *)expr.ptr();
         if (!x->converted)
             x->converted = convertTuple(x);
         return evaluate(x->converted, env);
     }
 
     case ARRAY : {
-        Array *x = (Array *)expr.raw();
+        Array *x = (Array *)expr.ptr();
         if (!x->converted)
             x->converted = convertArray(x);
         return evaluate(x->converted, env);
     }
 
     case INDEXING : {
-        Indexing *x = (Indexing *)expr.raw();
+        Indexing *x = (Indexing *)expr.ptr();
         ValuePtr thing = evaluateNested(x->expr, env);
         vector<ValuePtr> args;
         for (unsigned i = 0; i < x->args.size(); ++i)
@@ -1074,7 +1074,7 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     }
 
     case CALL : {
-        Call *x = (Call *)expr.raw();
+        Call *x = (Call *)expr.ptr();
         ValuePtr thing = evaluateNested(x->expr, env);
         vector<ValuePtr> args;
         for (unsigned i = 0; i < x->args.size(); ++i)
@@ -1083,9 +1083,9 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     }
 
     case FIELD_REF : {
-        FieldRef *x = (FieldRef *)expr.raw();
+        FieldRef *x = (FieldRef *)expr.ptr();
         ValuePtr thing = evaluateNested(x->expr, env);
-        ValuePtr name = coToValue(x->name.raw());
+        ValuePtr name = coToValue(x->name.ptr());
         vector<ValuePtr> args;
         args.push_back(thing);
         args.push_back(name);
@@ -1093,7 +1093,7 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     }
 
     case TUPLE_REF : {
-        TupleRef *x = (TupleRef *)expr.raw();
+        TupleRef *x = (TupleRef *)expr.ptr();
         ValuePtr thing = evaluateNested(x->expr, env);
         vector<ValuePtr> args;
         args.push_back(thing);
@@ -1102,21 +1102,21 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     }
 
     case UNARY_OP : {
-        UnaryOp *x = (UnaryOp *)expr.raw();
+        UnaryOp *x = (UnaryOp *)expr.ptr();
         if (!x->converted)
             x->converted = convertUnaryOp(x);
         return evaluate(x->converted, env);
     }
 
     case BINARY_OP : {
-        BinaryOp *x = (BinaryOp *)expr.raw();
+        BinaryOp *x = (BinaryOp *)expr.ptr();
         if (!x->converted)
             x->converted = convertBinaryOp(x);
         return evaluate(x->converted, env);
     }
 
     case AND : {
-        And *x = (And *)expr.raw();
+        And *x = (And *)expr.ptr();
         ValuePtr v1 = evaluate(x->expr1, env);
         vector<ValuePtr> args;
         args.push_back(v1);
@@ -1126,7 +1126,7 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     }
 
     case OR : {
-        Or *x = (Or *)expr.raw();
+        Or *x = (Or *)expr.ptr();
         ValuePtr v1 = evaluate(x->expr1, env);
         vector<ValuePtr> args;
         args.push_back(v1);
@@ -1136,12 +1136,12 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
     }
 
     case SC_EXPR : {
-        SCExpr *x = (SCExpr *)expr.raw();
+        SCExpr *x = (SCExpr *)expr.ptr();
         return evaluate(x->expr, x->env);
     }
 
     case VALUE_EXPR : {
-        ValueExpr *x = (ValueExpr *)expr.raw();
+        ValueExpr *x = (ValueExpr *)expr.ptr();
         return cloneValue(x->value);
     }
 
@@ -1157,7 +1157,7 @@ ExprPtr convertCharLiteral(char c) {
     ostringstream out;
     out << (int)c;
     call->args.push_back(new IntLiteral(out.str(), "i8"));
-    return call.raw();
+    return call.ptr();
 }
 
 ExprPtr convertStringLiteral(const string &s) {
@@ -1166,8 +1166,8 @@ ExprPtr convertStringLiteral(const string &s) {
         charArray->args.push_back(convertCharLiteral(s[i]));
     ExprPtr nameRef = moduleNameRef("_string", "string");
     CallPtr call = new Call(nameRef);
-    call->args.push_back(charArray.raw());
-    return call.raw();
+    call->args.push_back(charArray.ptr());
+    return call.ptr();
 }
 
 ExprPtr convertTuple(TuplePtr x) {
@@ -1203,7 +1203,7 @@ ExprPtr convertUnaryOp(UnaryOpPtr x) {
     }
     CallPtr call = new Call(callable);
     call->args.push_back(x->expr);
-    return call.raw();
+    return call.ptr();
 }
 
 ExprPtr convertBinaryOp(BinaryOpPtr x) {
@@ -1248,7 +1248,7 @@ ExprPtr convertBinaryOp(BinaryOpPtr x) {
     CallPtr call = new Call(callable);
     call->args.push_back(x->expr1);
     call->args.push_back(x->expr2);
-    return call.raw();
+    return call.ptr();
 }
 
 
@@ -1260,17 +1260,17 @@ ExprPtr convertBinaryOp(BinaryOpPtr x) {
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env) {
     switch (expr->objKind) {
     case NAME_REF : {
-        NameRef *x = (NameRef *)expr.raw();
+        NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
         if (y->objKind == PATTERN) {
-            PatternPtr z = (Pattern *)y.raw();
+            PatternPtr z = (Pattern *)y.ptr();
             assert(z->patternKind == PATTERN_CELL);
             return z;
         }
         break;
     }
     case INDEXING : {
-        Indexing *x = (Indexing *)expr.raw();
+        Indexing *x = (Indexing *)expr.ptr();
         ValuePtr thing = evaluateToStatic(x->expr, env);
         vector<PatternPtr> args;
         for (unsigned i = 0; i < x->args.size(); ++i)
@@ -1285,12 +1285,12 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env) {
 PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args) {
     switch(obj->objKind) {
     case RECORD : {
-        Record *x = (Record *)obj.raw();
+        Record *x = (Record *)obj.ptr();
         ensureArity(args, x->patternVars.size());
         return new RecordTypePattern(x, args);
     }
     case PRIM_OP : {
-        PrimOp *x = (PrimOp *)obj.raw();
+        PrimOp *x = (PrimOp *)obj.ptr();
         switch (x->primOpCode) {
         case PRIM_Pointer :
             ensureArity(args, 1);
@@ -1317,7 +1317,7 @@ PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args) {
 
 bool unify(PatternPtr pattern, ValuePtr value) {
     if (pattern->patternKind == PATTERN_CELL) {
-        PatternCell *x = (PatternCell *)pattern.raw();
+        PatternCell *x = (PatternCell *)pattern.ptr();
         if (!x->value) {
             x->value = value;
             return true;
@@ -1329,20 +1329,20 @@ bool unify(PatternPtr pattern, ValuePtr value) {
     ObjectPtr x = valueToCO(value);
     if (x->objKind != TYPE)
         return false;
-    TypePtr y = (Type *)x.raw();
+    TypePtr y = (Type *)x.ptr();
     return unifyType(pattern, y);
 }
 
 bool unifyType(PatternPtr pattern, TypePtr type) {
     switch (pattern->patternKind) {
     case PATTERN_CELL : {
-        return unify(pattern, coToValue(type.raw()));
+        return unify(pattern, coToValue(type.ptr()));
     }
     case ARRAY_TYPE_PATTERN : {
-        ArrayTypePattern *x = (ArrayTypePattern *)pattern.raw();
+        ArrayTypePattern *x = (ArrayTypePattern *)pattern.ptr();
         if (type->typeKind != ARRAY_TYPE)
             return false;
-        ArrayType *y = (ArrayType *)type.raw();
+        ArrayType *y = (ArrayType *)type.ptr();
         if (!unifyType(x->elementType, y->elementType))
             return false;
         if (!unify(x->size, intToValue(y->size)))
@@ -1350,10 +1350,10 @@ bool unifyType(PatternPtr pattern, TypePtr type) {
         return true;
     }
     case TUPLE_TYPE_PATTERN : {
-        TupleTypePattern *x = (TupleTypePattern *)pattern.raw();
+        TupleTypePattern *x = (TupleTypePattern *)pattern.ptr();
         if (type->typeKind != TUPLE_TYPE)
             return false;
-        TupleType *y = (TupleType *)type.raw();
+        TupleType *y = (TupleType *)type.ptr();
         if (x->elementTypes.size() != y->elementTypes.size())
             return false;
         for (unsigned i = 0; i < x->elementTypes.size(); ++i)
@@ -1362,17 +1362,17 @@ bool unifyType(PatternPtr pattern, TypePtr type) {
         return true;
     }
     case POINTER_TYPE_PATTERN : {
-        PointerTypePattern *x = (PointerTypePattern *)pattern.raw();
+        PointerTypePattern *x = (PointerTypePattern *)pattern.ptr();
         if (type->typeKind != POINTER_TYPE)
             return false;
-        PointerType *y = (PointerType *)type.raw();
+        PointerType *y = (PointerType *)type.ptr();
         return unifyType(x->pointeeType, y->pointeeType);
     }
     case RECORD_TYPE_PATTERN : {
-        RecordTypePattern *x = (RecordTypePattern *)pattern.raw();
+        RecordTypePattern *x = (RecordTypePattern *)pattern.ptr();
         if (type->typeKind != RECORD_TYPE)
             return false;
-        RecordType *y = (RecordType *)type.raw();
+        RecordType *y = (RecordType *)type.ptr();
         if (x->record != y->record)
             return false;
         if (x->params.size() != y->params.size())
@@ -1396,7 +1396,7 @@ bool unifyType(PatternPtr pattern, TypePtr type) {
 
 ValuePtr derefCell(PatternCellPtr cell) {
     if (!cell->value) {
-        if (cell->name.raw())
+        if (cell->name.ptr())
             error(cell->name, "unresolved pattern variable");
         else
             error("unresolved pattern variable");
@@ -1416,12 +1416,12 @@ ValuePtr derefCell(PatternCellPtr cell) {
 ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args) {
     switch (obj->objKind) {
     case RECORD : {
-        RecordPtr r = (Record *)obj.raw();
+        RecordPtr r = (Record *)obj.ptr();
         ensureArity(args, r->patternVars.size());
-        return coToValue(recordType(r, args).raw());
+        return coToValue(recordType(r, args).ptr());
     }
     case PRIM_OP : {
-        PrimOp *x = (PrimOp *)obj.raw();
+        PrimOp *x = (PrimOp *)obj.ptr();
         switch (x->primOpCode) {
         case PRIM_Pointer :
             return invoke(primName("PointerType"), args);
@@ -1459,17 +1459,17 @@ bool invokeToBool(ObjectPtr callable, const vector<ValuePtr> &args) {
 ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args) {
     switch (callable->objKind) {
     case RECORD :
-        return invokeRecord((Record *)callable.raw(), args);
+        return invokeRecord((Record *)callable.ptr(), args);
     case TYPE :
-        return invokeType((Type *)callable.raw(), args);
+        return invokeType((Type *)callable.ptr(), args);
     case PROCEDURE :
-        return invokeProcedure((Procedure *)callable.raw(), args);
+        return invokeProcedure((Procedure *)callable.ptr(), args);
     case OVERLOADABLE :
-        return invokeOverloadable((Overloadable *)callable.raw(), args);
+        return invokeOverloadable((Overloadable *)callable.ptr(), args);
     case EXTERNAL_PROCEDURE :
-        return invokeExternal((ExternalProcedure *)callable.raw(), args);
+        return invokeExternal((ExternalProcedure *)callable.ptr(), args);
     case PRIM_OP :
-        return invokePrimOp((PrimOp *)callable.raw(), args);
+        return invokePrimOp((PrimOp *)callable.ptr(), args);
     }
     error("invalid operation");
     return NULL;
@@ -1487,7 +1487,7 @@ ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args) {
     vector<PatternCellPtr> cells;
     for (unsigned i = 0; i < x->patternVars.size(); ++i) {
         cells.push_back(new PatternCell(x->patternVars[i], NULL));
-        addLocal(env, x->patternVars[i], cells[i].raw());
+        addLocal(env, x->patternVars[i], cells[i].ptr());
     }
     vector<ValuePtr> nonStaticArgs;
     for (unsigned i = 0; i < args.size(); ++i) {
@@ -1522,7 +1522,7 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
         return cloneValue(args[0]);
     switch (x->typeKind) {
     case ARRAY_TYPE : {
-        ArrayType *y = (ArrayType *)x.raw();
+        ArrayType *y = (ArrayType *)x.ptr();
         ensureArity(args, y->size);
         TypePtr etype = y->elementType;
         int esize = typeSize(etype);
@@ -1535,7 +1535,7 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
         return v;
     }
     case TUPLE_TYPE : {
-        TupleType *y = (TupleType *)x.raw();
+        TupleType *y = (TupleType *)x.ptr();
         ensureArity(args, y->elementTypes.size());
         const llvm::StructLayout *layout = tupleTypeLayout(y);
         ValuePtr v = allocValue(y);
@@ -1549,7 +1549,7 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
         return v;
     }
     case RECORD_TYPE : {
-        RecordType *y = (RecordType *)x.raw();
+        RecordType *y = (RecordType *)x.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(y);
         ensureArity(args, fieldTypes.size());
         const llvm::StructLayout *layout = recordTypeLayout(y);
@@ -1575,14 +1575,14 @@ ValuePtr invokeType(TypePtr x, const vector<ValuePtr> &args) {
 
 ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args) {
     InvokeTableEntry *entry = lookupProcedureInvoke(x, args);
-    if (entry->env.raw()) {
+    if (entry->env.ptr()) {
         EnvPtr env = bindValueArgs(entry->env, args, entry->code);
         return evalCodeBody(entry->code, env);
     }
     MatchInvokeResultPtr result = matchInvoke(x->code, x->env, args);
     switch (result->resultKind) {
     case MATCH_INVOKE_SUCCESS : {
-        MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.raw();
+        MatchInvokeSuccess *y = (MatchInvokeSuccess *)result.ptr();
         entry->env = y->env;
         entry->code = x->code;
         EnvPtr env = bindValueArgs(y->env, args, x->code);
@@ -1601,7 +1601,7 @@ ValuePtr invokeProcedure(ProcedurePtr x, const vector<ValuePtr> &args) {
 
 ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args) {
     InvokeTableEntry *entry = lookupOverloadableInvoke(x, args);
-    if (entry->env.raw()) {
+    if (entry->env.ptr()) {
         EnvPtr env = bindValueArgs(entry->env, args, entry->code);
         return evalCodeBody(entry->code, env);
     }
@@ -1609,7 +1609,7 @@ ValuePtr invokeOverloadable(OverloadablePtr x, const vector<ValuePtr> &args) {
         OverloadPtr y = x->overloads[i];
         MatchInvokeResultPtr result = matchInvoke(y->code, y->env, args);
         if (result->resultKind == MATCH_INVOKE_SUCCESS) {
-            MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.raw();
+            MatchInvokeSuccess *z = (MatchInvokeSuccess *)result.ptr();
             entry->env = z->env;
             entry->code = y->code;
             EnvPtr env = bindValueArgs(z->env, args, y->code);
@@ -1632,23 +1632,23 @@ ValuePtr evalCodeBody(CodePtr code, EnvPtr env) {
         result = new ReturnResult(voidValue);
     switch (result->resultKind) {
     case GOTO_RESULT : {
-        GotoResult *x = (GotoResult *)result.raw();
+        GotoResult *x = (GotoResult *)result.ptr();
         LocationContext loc(x->labelName->location);
         fmtError("label not found: %s", x->labelName->str.c_str());
         break;
     }
     case BREAK_RESULT : {
-        BreakResult *x = (BreakResult *)result.raw();
+        BreakResult *x = (BreakResult *)result.ptr();
         error(x->stmt, "invalid break statement");
         break;
     }
     case CONTINUE_RESULT : {
-        ContinueResult *x = (ContinueResult *)result.raw();
+        ContinueResult *x = (ContinueResult *)result.ptr();
         error(x->stmt, "invalid continue statement");
         break;
     }
     case RETURN_RESULT : {
-        ReturnResult *x = (ReturnResult *)result.raw();
+        ReturnResult *x = (ReturnResult *)result.ptr();
         return x->result;
     }
     }
@@ -1660,7 +1660,7 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
     LocationContext loc(stmt->location);
     switch (stmt->objKind) {
     case BLOCK : {
-        Block *x = (Block *)stmt.raw();
+        Block *x = (Block *)stmt.ptr();
         unsigned i = 0;
         map<string, LabelInfo> labels;
         vector<ValuePtr> blockTemps;
@@ -1668,7 +1668,7 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
         for (; i < x->statements.size(); ++i) {
             StatementPtr y = x->statements[i];
             if (y->objKind == BINDING) {
-                env = evalBinding((Binding *)y.raw(), env, blockTemps);
+                env = evalBinding((Binding *)y.ptr(), env, blockTemps);
                 evalCollectLabels(x->statements, i+1, labels, env);
             }
             else if (y->objKind == LABEL) {
@@ -1679,7 +1679,7 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
                 if (!result)
                     continue;
                 if (result->resultKind == GOTO_RESULT) {
-                    GotoResult *z = (GotoResult *)result.raw();
+                    GotoResult *z = (GotoResult *)result.ptr();
                     map<string, LabelInfo>::iterator li =
                         labels.find(z->labelName->str);
                     if (li != labels.end()) {
@@ -1703,7 +1703,7 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
         error("invalid statement");
 
     case ASSIGNMENT : {
-        Assignment *x = (Assignment *)stmt.raw();
+        Assignment *x = (Assignment *)stmt.ptr();
         pushTempBlock();
         ValuePtr right = evaluateNonVoid(x->right, env);
         ValuePtr left = evaluateNonVoid(x->left, env);
@@ -1715,12 +1715,12 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
     }
 
     case GOTO : {
-        Goto *x = (Goto *)stmt.raw();
+        Goto *x = (Goto *)stmt.ptr();
         return new GotoResult(x->labelName);
     }
 
     case RETURN : {
-        Return *x = (Return *)stmt.raw();
+        Return *x = (Return *)stmt.ptr();
         if (!x->expr)
             return new ReturnResult(voidValue);
         ValuePtr v = evaluateToStatic(x->expr, env);
@@ -1728,7 +1728,7 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
     }
 
     case RETURN_REF : {
-        ReturnRef *x = (ReturnRef *)stmt.raw();
+        ReturnRef *x = (ReturnRef *)stmt.ptr();
         pushTempBlock();
         ValuePtr v = evaluateNonVoid(x->expr, env);
         if (v->isOwned)
@@ -1738,18 +1738,18 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
     }
 
     case IF : {
-        If *x = (If *)stmt.raw();
+        If *x = (If *)stmt.ptr();
         bool cond = evaluateToBool(x->condition, env);
         if (cond)
             return evalStatement(x->thenPart, env);
-        if (x->elsePart.raw())
+        if (x->elsePart.ptr())
             return evalStatement(x->elsePart, env);
         return NULL;
             
     }
 
     case EXPR_STATEMENT : {
-        ExprStatement *x = (ExprStatement *)stmt.raw();
+        ExprStatement *x = (ExprStatement *)stmt.ptr();
         pushTempBlock();
         evaluate(x->expr, env);
         popTempBlock();
@@ -1757,7 +1757,7 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
     }
 
     case WHILE : {
-        While *x = (While *)stmt.raw();
+        While *x = (While *)stmt.ptr();
         while (true) {
             bool cond = evaluateToBool(x->condition, env);
             if (!cond) break;
@@ -1774,17 +1774,17 @@ StatementResultPtr evalStatement(StatementPtr stmt, EnvPtr env) {
     }
 
     case BREAK : {
-        Break *x = (Break *)stmt.raw();
+        Break *x = (Break *)stmt.ptr();
         return new BreakResult(x);
     }
 
     case CONTINUE : {
-        Continue *x = (Continue *)stmt.raw();
+        Continue *x = (Continue *)stmt.ptr();
         return new ContinueResult(x);
     }
 
     case FOR : {
-        For *x = (For *)stmt.raw();
+        For *x = (For *)stmt.ptr();
         if (!x->converted)
             x->converted = convertForStatement(x);
         return evalStatement(x->converted, env);
@@ -1802,7 +1802,7 @@ void evalCollectLabels(const vector<StatementPtr> &statements,
         StatementPtr x = statements[i];
         switch (x->objKind) {
         case LABEL : {
-            Label *y = (Label *)x.raw();
+            Label *y = (Label *)x.ptr();
             labels[y->name->str] = LabelInfo(env, i);
             break;
         }
@@ -1840,7 +1840,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env, vector<ValuePtr> &blockTemps) {
     }
     popTempBlock();
     EnvPtr env2 = new Env(env);
-    addLocal(env2, x->name, right.raw());
+    addLocal(env2, x->name, right.ptr());
     return env2;
 }
 
@@ -1853,18 +1853,18 @@ StatementPtr convertForStatement(ForPtr x) {
 
     CallPtr iteratorCall = new Call(coreNameRef("iterator"));
     iteratorCall->args.push_back(new NameRef(exprVar));
-    block->statements.push_back(new Binding(VAR, iterVar, iteratorCall.raw()));
+    block->statements.push_back(new Binding(VAR, iterVar, iteratorCall.ptr()));
 
     CallPtr hasNextCall = new Call(coreNameRef("hasNext?"));
     hasNextCall->args.push_back(new NameRef(iterVar));
     CallPtr nextCall = new Call(coreNameRef("next"));
     nextCall->args.push_back(new NameRef(iterVar));
     BlockPtr whileBody = new Block();
-    whileBody->statements.push_back(new Binding(REF, x->variable, nextCall.raw()));
+    whileBody->statements.push_back(new Binding(REF, x->variable, nextCall.ptr()));
     whileBody->statements.push_back(x->body);
 
-    block->statements.push_back(new While(hasNextCall.raw(), whileBody.raw()));
-    return block.raw();
+    block->statements.push_back(new While(hasNextCall.ptr(), whileBody.ptr()));
+    return block.ptr();
 }
 
 
@@ -2053,7 +2053,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         TypePtr t = valueToType(args[0]);
         if (t->typeKind != INTEGER_TYPE)
             return boolToValue(false);
-        IntegerType *y = (IntegerType *)t.raw();
+        IntegerType *y = (IntegerType *)t.ptr();
         return boolToValue(y->isSigned);
     }
     case PRIM_FloatTypeP : {
@@ -2168,7 +2168,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     case PRIM_PointerType : {
         ensureArity(args, 1);
         TypePtr t = valueToType(args[0]);
-        return coToValue(pointerType(t).raw());
+        return coToValue(pointerType(t).ptr());
     }
     case PRIM_Pointer : {
         error("Pointer type constructor cannot be invoked");
@@ -2177,8 +2177,8 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 1);
         TypePtr t = valueToType(args[0]);
         ensurePointerType(t);
-        PointerType *pt = (PointerType *)t.raw();
-        return coToValue(pt->pointeeType.raw());
+        PointerType *pt = (PointerType *)t.ptr();
+        return coToValue(pt->pointeeType.ptr());
     }
 
     case PRIM_addressOf : {
@@ -2190,7 +2190,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     case PRIM_pointerDereference : {
         ensureArity(args, 1);
         ensurePointerType(args[0]->type);
-        PointerType *t = (PointerType *)args[0]->type.raw();
+        PointerType *t = (PointerType *)args[0]->type.ptr();
         void *ptrValue = *((void **)args[0]->buf);
         return new Value(t->pointeeType, (char *)ptrValue, false);
     }
@@ -2198,7 +2198,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
         ensureIntegerType(t);
-        IntegerType *t2 = (IntegerType *)t.raw();
+        IntegerType *t2 = (IntegerType *)t.ptr();
         ensurePointerType(args[1]->type);
         void *ptrValue = *((void **)args[1]->buf);
         return pointerToInt(t2, ptrValue);
@@ -2243,7 +2243,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
         int n = valueToInt(args[1]);
-        return coToValue(arrayType(t, n).raw());
+        return coToValue(arrayType(t, n).ptr());
     }
     case PRIM_Array : {
         error("Array type constructor cannot be invoked");
@@ -2252,14 +2252,14 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 1);
         TypePtr t = valueToType(args[0]);
         ensureArrayType(t);
-        ArrayType *at = (ArrayType *)t.raw();
-        return coToValue(at->elementType.raw());
+        ArrayType *at = (ArrayType *)t.ptr();
+        return coToValue(at->elementType.ptr());
     }
     case PRIM_ArraySize : {
         ensureArity(args, 1);
         TypePtr t = valueToType(args[0]);
         ensureArrayType(t);
-        ArrayType *at = (ArrayType *)t.raw();
+        ArrayType *at = (ArrayType *)t.ptr();
         return intToValue(at->size);
     }
     case PRIM_array : {
@@ -2281,7 +2281,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 2);
         ensureArrayType(args[0]->type);
         int i = valueToInt(args[1]);
-        ArrayType *at = (ArrayType *)args[0]->type.raw();
+        ArrayType *at = (ArrayType *)args[0]->type.ptr();
         int esize = typeSize(at->elementType);
         return new Value(at->elementType, args[0]->buf + i*esize, false);
     }
@@ -2297,7 +2297,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         vector<TypePtr> elementTypes;
         for (unsigned i = 0; i < args.size(); ++i)
             elementTypes.push_back(valueToType(args[i]));
-        return coToValue(tupleType(elementTypes).raw());
+        return coToValue(tupleType(elementTypes).ptr());
     }
     case PRIM_Tuple : {
         error("Tuple type constructor cannot be invoked");
@@ -2306,24 +2306,24 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 1);
         TypePtr t = valueToType(args[0]);
         ensureTupleType(t);
-        TupleType *tt = (TupleType *)t.raw();
+        TupleType *tt = (TupleType *)t.ptr();
         return intToValue(tt->elementTypes.size());
     }
     case PRIM_TupleElementType : {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
         ensureTupleType(t);
-        TupleType *tt = (TupleType *)t.raw();
+        TupleType *tt = (TupleType *)t.ptr();
         int i = valueToInt(args[1]);
         if ((i < 0) || (i >= (int)tt->elementTypes.size()))
             error("tuple type index out of range");
-        return coToValue(tt->elementTypes[i].raw());
+        return coToValue(tt->elementTypes[i].ptr());
     }
     case PRIM_TupleElementOffset : {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
         ensureTupleType(t);
-        TupleType *tt = (TupleType *)t.raw();
+        TupleType *tt = (TupleType *)t.ptr();
         int i = valueToInt(args[1]);
         if ((i < 0) || (i >= (int)tt->elementTypes.size()))
             error("tuple type index out of range");
@@ -2337,7 +2337,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         for (unsigned i = 0; i < args.size(); ++i)
             elementTypes.push_back(args[i]->type);
         TypePtr t = tupleType(elementTypes);
-        TupleType *tt = (TupleType *)t.raw();
+        TupleType *tt = (TupleType *)t.ptr();
         ValuePtr v = allocValue(t);
         const llvm::StructLayout *layout = tupleTypeLayout(tt);
         for (unsigned i = 0; i < args.size(); ++i) {
@@ -2349,7 +2349,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     case PRIM_tupleRef : {
         ensureArity(args, 2);
         ensureTupleType(args[0]->type);
-        TupleType *tt = (TupleType *)args[0]->type.raw();
+        TupleType *tt = (TupleType *)args[0]->type.ptr();
         int i = valueToInt(args[1]);
         if ((i < 0) || (i >= (int)tt->elementTypes.size()))
             error("tuple type index out of range");
@@ -2369,37 +2369,37 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ObjectPtr obj = valueToCO(args[0]);
         if (obj->objKind != RECORD)
             error("invalid record argument");
-        RecordPtr r = (Record *)obj.raw();
+        RecordPtr r = (Record *)obj.ptr();
         if (r->patternVars.size() != args.size()-1)
             error("incorrect no. of arguments");
         vector<ValuePtr> params;
         for (unsigned i = 1; i < args.size(); ++i)
             params.push_back(args[i]);
-        return coToValue(recordType(r, params).raw());
+        return coToValue(recordType(r, params).ptr());
     }
     case PRIM_RecordFieldCount : {
         ensureArity(args, 1);
         TypePtr t = valueToType(args[0]);
         ensureRecordType(t);
-        RecordType *rt = (RecordType *)t.raw();
+        RecordType *rt = (RecordType *)t.ptr();
         return intToValue(recordFieldTypes(rt).size());
     }
     case PRIM_RecordFieldType : {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
         ensureRecordType(t);
-        RecordType *rt = (RecordType *)t.raw();
+        RecordType *rt = (RecordType *)t.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         int i = valueToInt(args[1]);
         if ((i < 0) || (i >= (int)fieldTypes.size()))
             error("field index out of range");
-        return coToValue(fieldTypes[i].raw());
+        return coToValue(fieldTypes[i].ptr());
     }
     case PRIM_RecordFieldOffset : {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
         ensureRecordType(t);
-        RecordType *rt = (RecordType *)t.raw();
+        RecordType *rt = (RecordType *)t.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         int i = valueToInt(args[1]);
         if ((i < 0) || (i >= (int)fieldTypes.size()))
@@ -2411,11 +2411,11 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
         ensureRecordType(t);
-        RecordType *rt = (RecordType *)t.raw();
+        RecordType *rt = (RecordType *)t.ptr();
         ObjectPtr obj = valueToCO(args[1]);
         if (obj->objKind != IDENTIFIER)
             error("expecting an identifier value");
-        Identifier *name = (Identifier *)obj.raw();
+        Identifier *name = (Identifier *)obj.ptr();
         const map<string, int> &fieldIndexMap = recordFieldIndexMap(rt);
         map<string, int>::const_iterator fi = fieldIndexMap.find(name->str);
         if (fi == fieldIndexMap.end())
@@ -2426,7 +2426,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);
         ensureRecordType(args[0]->type);
-        RecordType *rt = (RecordType *)args[0]->type.raw();
+        RecordType *rt = (RecordType *)args[0]->type.ptr();
         int i = valueToInt(args[1]);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if ((i < 0) || (i >= (int)fieldTypes.size()))
@@ -2438,11 +2438,11 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     case PRIM_recordFieldRefByName : {
         ensureArity(args, 2);
         ensureRecordType(args[0]->type);
-        RecordType *rt = (RecordType *)args[0]->type.raw();
+        RecordType *rt = (RecordType *)args[0]->type.ptr();
         ObjectPtr obj = valueToCO(args[1]);
         if (obj->objKind != IDENTIFIER)
             error("expecting an identifier value");
-        Identifier *name = (Identifier *)obj.raw();
+        Identifier *name = (Identifier *)obj.ptr();
         const map<string, int> &fieldIndexMap = recordFieldIndexMap(rt);
         map<string, int>::const_iterator fi = fieldIndexMap.find(name->str);
         if (fi == fieldIndexMap.end())
@@ -2457,7 +2457,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     case PRIM_recordInit : {
         ensureArity(args, 1);
         ensureRecordType(args[0]->type);
-        RecordType *rt = (RecordType *)args[0]->type.raw();
+        RecordType *rt = (RecordType *)args[0]->type.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt);
         for (unsigned i = 0; i < fieldTypes.size(); ++i) {
@@ -2469,7 +2469,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     case PRIM_recordDestroy : {
         ensureArity(args, 1);
         ensureRecordType(args[0]->type);
-        RecordType *rt = (RecordType *)args[0]->type.raw();
+        RecordType *rt = (RecordType *)args[0]->type.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt);
         for (unsigned i = 0; i < fieldTypes.size(); ++i) {
@@ -2482,7 +2482,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 2);
         ensureRecordType(args[0]->type);
         ensureSameType(args[0]->type, args[1]->type);
-        RecordType *rt = (RecordType *)args[0]->type.raw();
+        RecordType *rt = (RecordType *)args[0]->type.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt);
         for (unsigned i = 0; i < fieldTypes.size(); ++i) {
@@ -2497,7 +2497,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 2);
         ensureRecordType(args[0]->type);
         ensureSameType(args[0]->type, args[1]->type);
-        RecordType *rt = (RecordType *)args[0]->type.raw();
+        RecordType *rt = (RecordType *)args[0]->type.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt);
         for (unsigned i = 0; i < fieldTypes.size(); ++i) {
@@ -2512,7 +2512,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 2);
         ensureRecordType(args[0]->type);
         ensureSameType(args[0]->type, args[1]->type);
-        RecordType *rt = (RecordType *)args[0]->type.raw();
+        RecordType *rt = (RecordType *)args[0]->type.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt);
         for (unsigned i = 0; i < fieldTypes.size(); ++i) {
@@ -2527,7 +2527,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
     case PRIM_recordHash : {
         ensureArity(args, 1);
         ensureRecordType(args[0]->type);
-        RecordType *rt = (RecordType *)args[0]->type.raw();
+        RecordType *rt = (RecordType *)args[0]->type.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt);
         int h = 0;
@@ -2551,7 +2551,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
 #define NUMERIC_BINARY_OP(operation, a, b) \
     switch (a->type->typeKind) { \
     case INTEGER_TYPE : { \
-        IntegerType *t = (IntegerType *)a->type.raw(); \
+        IntegerType *t = (IntegerType *)a->type.ptr(); \
         if (t->isSigned) { \
             switch (t->bits) { \
             case 8 : return operation<char>(a, b); \
@@ -2575,7 +2575,7 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         break; \
     } \
     case FLOAT_TYPE : { \
-        FloatType *t = (FloatType *)a->type.raw(); \
+        FloatType *t = (FloatType *)a->type.ptr(); \
         switch (t->bits) { \
         case 32 : return operation<float>(a, b); \
         case 64 : return operation<double>(a, b); \
@@ -2673,7 +2673,7 @@ ValuePtr _numericNegate(ValuePtr a) {
 ValuePtr numericNegate(ValuePtr a) {
     switch (a->type->typeKind) {
     case INTEGER_TYPE : {
-        IntegerType *t = (IntegerType *)a->type.raw();
+        IntegerType *t = (IntegerType *)a->type.ptr();
         if (t->isSigned) {
             switch (t->bits) {
             case 8 : return _numericNegate<char>(a);
@@ -2697,7 +2697,7 @@ ValuePtr numericNegate(ValuePtr a) {
         break;
     }
     case FLOAT_TYPE : {
-        FloatType *t = (FloatType *)a->type.raw();
+        FloatType *t = (FloatType *)a->type.ptr();
         switch (t->bits) {
         case 32 : return _numericNegate<float>(a);
         case 64 : return _numericNegate<double>(a);
@@ -2714,7 +2714,7 @@ ValuePtr numericNegate(ValuePtr a) {
 #define INTEGER_BINARY_OP(operation, a, b) \
     switch (a->type->typeKind) { \
     case INTEGER_TYPE : { \
-        IntegerType *t = (IntegerType *)a->type.raw(); \
+        IntegerType *t = (IntegerType *)a->type.ptr(); \
         if (t->isSigned) { \
             switch (t->bits) { \
             case 8 : return operation<char>(a, b); \
@@ -2828,7 +2828,7 @@ template <typename DEST>
 void _numericConvert2(void *dest, ValuePtr a) {
     switch (a->type->typeKind) {
     case INTEGER_TYPE : {
-        IntegerType *t = (IntegerType *)a->type.raw();
+        IntegerType *t = (IntegerType *)a->type.ptr();
         if (t->isSigned) {
             switch (t->bits) {
             case 8 :
@@ -2868,7 +2868,7 @@ void _numericConvert2(void *dest, ValuePtr a) {
         break;
     }
     case FLOAT_TYPE : {
-        FloatType *t = (FloatType *)a->type.raw();
+        FloatType *t = (FloatType *)a->type.ptr();
         switch (t->bits) {
         case 32 :
             _numericConvert1<DEST, float>(dest, a->buf);
@@ -2890,7 +2890,7 @@ ValuePtr numericConvert(TypePtr t, ValuePtr a) {
     ValuePtr v = allocValue(t);
     switch (t->typeKind) {
     case INTEGER_TYPE : {
-        IntegerType *t2 = (IntegerType *)t.raw();
+        IntegerType *t2 = (IntegerType *)t.ptr();
         if (t2->isSigned) {
             switch (t2->bits) {
             case 8 :
@@ -2930,7 +2930,7 @@ ValuePtr numericConvert(TypePtr t, ValuePtr a) {
         break;
     }
     case FLOAT_TYPE : {
-        FloatType *t2 = (FloatType *)t.raw();
+        FloatType *t2 = (FloatType *)t.ptr();
         switch (t2->bits) {
         case 32 :
             _numericConvert2<float>(v->buf, a);
@@ -2961,7 +2961,7 @@ void _pointerToInt(void *dest, void *ptr) {
 }
 
 ValuePtr pointerToInt(IntegerTypePtr t, void *ptr) {
-    ValuePtr v = allocValue(t.raw());
+    ValuePtr v = allocValue(t.ptr());
     switch (t->bits) {
     case 8 :
         _pointerToInt<char>(v->buf, ptr);
@@ -2989,7 +2989,7 @@ void *_intToPointer(void *x) {
 
 ValuePtr intToPointer(TypePtr pointeeType, ValuePtr a) {
     assert(a->type->typeKind == INTEGER_TYPE);
-    IntegerType *t = (IntegerType *)a->type.raw();
+    IntegerType *t = (IntegerType *)a->type.ptr();
     ValuePtr v = allocValue(pointerType(pointeeType));
     void *ptrValue = NULL;
     switch (t->bits) {

@@ -100,18 +100,18 @@ TypePtr floatType(int bits) {
 }
 
 TypePtr arrayType(TypePtr elementType, int size) {
-    int h = ((int)elementType.raw()) + size;
+    int h = ((int)elementType.ptr()) + size;
     h &= arrayTypes.size() - 1;
     vector<ArrayTypePtr>::iterator i, end;
     for (i = arrayTypes[h].begin(), end = arrayTypes[h].end();
          i != end; ++i) {
-        ArrayType *t = i->raw();
+        ArrayType *t = i->ptr();
         if ((t->elementType == elementType) && (t->size == size))
             return t;
     }
     ArrayTypePtr t = new ArrayType(elementType, size);
     arrayTypes[h].push_back(t);
-    return t.raw();
+    return t.ptr();
 }
 
 TypePtr tupleType(const vector<TypePtr> &elementTypes) {
@@ -119,34 +119,34 @@ TypePtr tupleType(const vector<TypePtr> &elementTypes) {
     vector<TypePtr>::const_iterator ei, eend;
     for (ei = elementTypes.begin(), eend = elementTypes.end();
          ei != eend; ++ei) {
-        h += (int)ei->raw();
+        h += (int)ei->ptr();
     }
     h &= tupleTypes.size() - 1;
     vector<TupleTypePtr>::iterator i, end;
     for (i = tupleTypes[h].begin(), end = tupleTypes[h].end();
          i != end; ++i) {
-        TupleType *t = i->raw();
+        TupleType *t = i->ptr();
         if (t->elementTypes == elementTypes)
             return t;
     }
     TupleTypePtr t = new TupleType(elementTypes);
     tupleTypes[h].push_back(t);
-    return t.raw();
+    return t.ptr();
 }
 
 TypePtr pointerType(TypePtr pointeeType) {
-    int h = (int)pointeeType.raw();
+    int h = (int)pointeeType.ptr();
     h &= pointerTypes.size() - 1;
     vector<PointerTypePtr>::iterator i, end;
     for (i = pointerTypes[h].begin(), end = pointerTypes[h].end();
          i != end; ++i) {
-        PointerType *t = i->raw();
+        PointerType *t = i->ptr();
         if (t->pointeeType == pointeeType)
             return t;
     }
     PointerTypePtr t = new PointerType(pointeeType);
     pointerTypes[h].push_back(t);
-    return t.raw();
+    return t.ptr();
 }
 
 static bool valueVectorEquals(const vector<ValuePtr> &a,
@@ -162,7 +162,7 @@ static bool valueVectorEquals(const vector<ValuePtr> &a,
 }
 
 TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params) {
-    int h = (int)record.raw();
+    int h = (int)record.ptr();
     vector<ValuePtr>::const_iterator vi, vend;
     for (vi = params.begin(), vend = params.end(); vi != vend; ++vi)
         h += valueHash(*vi);
@@ -170,7 +170,7 @@ TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params) {
     vector<RecordTypePtr>::iterator i, end;
     for (i = recordTypes[h].begin(), end = recordTypes[h].end();
          i != end; ++i) {
-        RecordType *t = i->raw();
+        RecordType *t = i->ptr();
         if ((t->record == record) && valueVectorEquals(t->params, params))
             return t;
     }
@@ -178,7 +178,7 @@ TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params) {
     for (vi = params.begin(), vend = params.end(); vi != vend; ++vi)
         t->params.push_back(cloneValue(*vi));
     recordTypes[h].push_back(t);
-    return t.raw();
+    return t.ptr();
 }
 
 
@@ -193,9 +193,9 @@ static void initializeRecordFields(RecordTypePtr t) {
     assert(t->params.size() == r->patternVars.size());
     EnvPtr env = new Env(r->env);
     for (unsigned i = 0; i < t->params.size(); ++i)
-        addLocal(env, r->patternVars[i], t->params[i].raw());
+        addLocal(env, r->patternVars[i], t->params[i].ptr());
     for (unsigned i = 0; i < r->formalArgs.size(); ++i) {
-        FormalArg *x = r->formalArgs[i].raw();
+        FormalArg *x = r->formalArgs[i].ptr();
         switch (x->objKind) {
         case VALUE_ARG : {
             ValueArg *y = (ValueArg *)x;
@@ -246,11 +246,11 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
     case BOOL_TYPE :
         return llvm::Type::getInt8Ty(llvm::getGlobalContext());
     case INTEGER_TYPE : {
-        IntegerType *x = (IntegerType *)t.raw();
+        IntegerType *x = (IntegerType *)t.ptr();
         return llvm::IntegerType::get(llvm::getGlobalContext(), x->bits);
     }
     case FLOAT_TYPE : {
-        FloatType *x = (FloatType *)t.raw();
+        FloatType *x = (FloatType *)t.ptr();
         switch (x->bits) {
         case 32 :
             return llvm::Type::getFloatTy(llvm::getGlobalContext());
@@ -262,11 +262,11 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         }
     }
     case ARRAY_TYPE : {
-        ArrayType *x = (ArrayType *)t.raw();
+        ArrayType *x = (ArrayType *)t.ptr();
         return llvm::ArrayType::get(llvmType(x->elementType), x->size);
     }
     case TUPLE_TYPE : {
-        TupleType *x = (TupleType *)t.raw();
+        TupleType *x = (TupleType *)t.ptr();
         vector<const llvm::Type *> llTypes;
         vector<TypePtr>::iterator i, end;
         for (i = x->elementTypes.begin(), end = x->elementTypes.end();
@@ -275,11 +275,11 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
     case POINTER_TYPE : {
-        PointerType *x = (PointerType *)t.raw();
+        PointerType *x = (PointerType *)t.ptr();
         return llvm::PointerType::getUnqual(llvmType(x->pointeeType));
     }
     case RECORD_TYPE : {
-        RecordType *x = (RecordType *)t.raw();
+        RecordType *x = (RecordType *)t.ptr();
         llvm::OpaqueType *opaque =
             llvm::OpaqueType::get(llvm::getGlobalContext());
         x->llTypeHolder = new llvm::PATypeHolder(opaque);
@@ -321,34 +321,34 @@ void typePrint(TypePtr t, ostream &out) {
         out << "Bool";
         break;
     case INTEGER_TYPE : {
-        IntegerType *x = (IntegerType *)t.raw();
+        IntegerType *x = (IntegerType *)t.ptr();
         if (!x->isSigned)
             out << "U";
         out << "Int" << x->bits;
         break;
     }
     case FLOAT_TYPE : {
-        FloatType *x = (FloatType *)t.raw();
+        FloatType *x = (FloatType *)t.ptr();
         out << "Float" << x->bits;
         break;
     }
     case ARRAY_TYPE : {
-        ArrayType *x = (ArrayType *)t.raw();
+        ArrayType *x = (ArrayType *)t.ptr();
         out << "Array[" << x->elementType << ", " << x->size << "]";
         break;
     }
     case TUPLE_TYPE : {
-        TupleType *x = (TupleType *)t.raw();
+        TupleType *x = (TupleType *)t.ptr();
         out << "Tuple" << x->elementTypes;
         break;
     }
     case POINTER_TYPE : {
-        PointerType *x = (PointerType *)t.raw();
+        PointerType *x = (PointerType *)t.ptr();
         out << "Pointer[" << x->pointeeType << "]";
         break;
     }
     case RECORD_TYPE : {
-        RecordType *x = (RecordType *)t.raw();
+        RecordType *x = (RecordType *)t.ptr();
         out << x->record->name->str;
         if (!x->params.empty())
             out << x->params;

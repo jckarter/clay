@@ -225,7 +225,7 @@ static bool arrayExpr(ExprPtr &x) {
     ArrayPtr y = new Array();
     if (!expressionList(y->args)) return false;
     if (!symbol("]")) return false;
-    x = y.raw();
+    x = y.ptr();
     x->location = location;
     return true;
 }
@@ -236,7 +236,7 @@ static bool tupleExpr(ExprPtr &x) {
     TuplePtr y = new Tuple();
     if (!expressionList(y->args)) return false;
     if (!symbol(")")) return false;
-    x = y.raw();
+    x = y.ptr();
     x->location = location;
     return true;
 }
@@ -271,7 +271,7 @@ static bool indexingSuffix(ExprPtr &x) {
     IndexingPtr y = new Indexing(NULL);
     if (!expressionList(y->args)) return false;
     if (!symbol("]")) return false;
-    x = y.raw();
+    x = y.ptr();
     x->location = location;
     return true;
 }
@@ -282,7 +282,7 @@ static bool callSuffix(ExprPtr &x) {
     CallPtr y = new Call(NULL);
     if (!optExpressionList(y->args)) return false;
     if (!symbol(")")) return false;
-    x = y.raw();
+    x = y.ptr();
     x->location = location;
     return true;
 }
@@ -372,7 +372,7 @@ static bool suffixExpr(ExprPtr &x) {
             restore(p);
             break;
         }
-        setSuffixBase(y.raw(), x);
+        setSuffixBase(y.ptr(), x);
         x = y;
     }
     return true;
@@ -464,7 +464,7 @@ static bool mulDivExpr(ExprPtr &x) {
             break;
         }
         y->expr1 = x;
-        x = y.raw();
+        x = y.ptr();
     }
     return true;
 }
@@ -501,7 +501,7 @@ static bool addSubExpr(ExprPtr &x) {
             break;
         }
         y->expr1 = x;
-        x = y.raw();
+        x = y.ptr();
     }
     return true;
 }
@@ -549,7 +549,7 @@ static bool compareExpr(ExprPtr &x) {
             break;
         }
         y->expr1 = x;
-        x = y.raw();
+        x = y.ptr();
     }
     return true;
 }
@@ -594,7 +594,7 @@ static bool andExpr(ExprPtr &x) {
             break;
         }
         y->expr1 = x;
-        x = y.raw();
+        x = y.ptr();
     }
     return true;
 }
@@ -619,7 +619,7 @@ static bool orExpr(ExprPtr &x) {
             break;
         }
         y->expr1 = x;
-        x = y.raw();
+        x = y.ptr();
     }
     return true;
 }
@@ -702,7 +702,7 @@ static bool block(StatementPtr &x) {
         y->statements.push_back(z);
     }
     if (!symbol("}")) return false;
-    x = y.raw();
+    x = y.ptr();
     x->location = location;
     return true;
 }
@@ -1094,7 +1094,7 @@ static bool record(TopLevelItemPtr &x) {
     if (!optRecordFormalArgs(y->formalArgs)) return false;
     if (!symbol(")")) return false;
     if (!symbol(";")) return false;
-    x = y.raw();
+    x = y.ptr();
     x->location = location;
     return true;
 }
@@ -1191,7 +1191,7 @@ static bool external(TopLevelItemPtr &x) {
     if (!symbol(")")) return false;
     if (!typeSpec(y->returnType)) return false;
     if (!symbol(";")) return false;
-    x = y.raw();
+    x = y.ptr();
     x->location = location;
     return true;
 }
@@ -1282,7 +1282,7 @@ static bool module(ModulePtr &x) {
     if (!imports(y->imports)) return false;
     if (!exports(y->exports)) return false;
     if (!topLevelItems(y->topLevelItems)) return false;
-    x = y.raw();
+    x = y.ptr();
     x->location = location;
     return true;
 }

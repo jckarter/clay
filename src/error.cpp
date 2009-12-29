@@ -26,7 +26,7 @@ static LocationPtr topLocation() {
     begin = errorLocations->begin();
     while (i != begin) {
         --i;
-        if (i->raw()) return *i;
+        if (i->ptr()) return *i;
     }
     return NULL;
 }
@@ -82,7 +82,7 @@ static void displayLocation(LocationPtr location, int &line, int &column) {
 
 void error(const string &msg) {
     LocationPtr location = topLocation();
-    if (location.raw()) {
+    if (location.ptr()) {
         int line, column;
         displayLocation(location, line, column);
         fprintf(stderr, "%s(%d,%d): error: %s\n",

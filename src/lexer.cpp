@@ -30,7 +30,7 @@ static char *end;
 static char *maxPtr;
 
 static void initLexer(SourcePtr source) {
-    lexerSource = source.raw();
+    lexerSource = source.ptr();
     begin = source->data;
     end = begin + source->size;
     ptr = begin;

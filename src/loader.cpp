@@ -110,14 +110,14 @@ static void installGlobals(ModulePtr m) {
     vector<TopLevelItemPtr>::iterator i, end;
     for (i = m->topLevelItems.begin(), end = m->topLevelItems.end();
          i != end; ++i) {
-        TopLevelItem *x = i->raw();
+        TopLevelItem *x = i->ptr();
         x->env = m->env;
         switch (x->objKind) {
         case RECORD : {
             Record *y = (Record *)x;
             ObjectPtr value;
             if (y->patternVars.empty())
-                value = recordType(y, vector<ValuePtr>()).raw();
+                value = recordType(y, vector<ValuePtr>()).ptr();
             else
                 value = y;
             addGlobal(m, ((Record *)x)->name, value);
@@ -209,13 +209,13 @@ static void initializeModule(ModulePtr m) {
     vector<TopLevelItemPtr>::iterator ti, tend;
     for (ti = m->topLevelItems.begin(), tend = m->topLevelItems.end();
          ti != tend; ++ti) {
-        Object *obj = ti->raw();
+        Object *obj = ti->ptr();
         if (obj->objKind == OVERLOAD) {
             Overload *x = (Overload *)obj;
             ObjectPtr y = lookupGlobal(m, x->name);
             if (y->objKind != OVERLOADABLE)
                 error(x->name, "invalid overloadable");
-            Overloadable *z = (Overloadable *)y.raw();
+            Overloadable *z = (Overloadable *)y.ptr();
             z->overloads.insert(z->overloads.begin(), x);
         }
     }
@@ -237,19 +237,19 @@ static string toPrimStr(const string &s) {
 static ModulePtr makePrimitivesModule() {
     ModulePtr prims = new Module();
 
-    prims->globals["Bool"] = boolType.raw();
-    prims->globals["Int8"] = int8Type.raw();
-    prims->globals["Int16"] = int16Type.raw();
-    prims->globals["Int32"] = int32Type.raw();
-    prims->globals["Int64"] = int64Type.raw();
-    prims->globals["UInt8"] = uint8Type.raw();
-    prims->globals["UInt16"] = uint16Type.raw();
-    prims->globals["UInt32"] = uint32Type.raw();
-    prims->globals["UInt64"] = uint64Type.raw();
-    prims->globals["Float32"] = float32Type.raw();
-    prims->globals["Float64"] = float64Type.raw();
-    prims->globals["CompilerObject"] = compilerObjectType.raw();
-    prims->globals["Void"] = voidType.raw();
+    prims->globals["Bool"] = boolType.ptr();
+    prims->globals["Int8"] = int8Type.ptr();
+    prims->globals["Int16"] = int16Type.ptr();
+    prims->globals["Int32"] = int32Type.ptr();
+    prims->globals["Int64"] = int64Type.ptr();
+    prims->globals["UInt8"] = uint8Type.ptr();
+    prims->globals["UInt16"] = uint16Type.ptr();
+    prims->globals["UInt32"] = uint32Type.ptr();
+    prims->globals["UInt64"] = uint64Type.ptr();
+    prims->globals["Float32"] = float32Type.ptr();
+    prims->globals["Float64"] = float64Type.ptr();
+    prims->globals["CompilerObject"] = compilerObjectType.ptr();
+    prims->globals["Void"] = voidType.ptr();
 
 #define PRIMITIVE(x) prims->globals[toPrimStr(#x)] = new PrimOp(PRIM_##x)
     PRIMITIVE(TypeP);

@@ -34,47 +34,47 @@ using std::ostringstream;
 
 
 //
-// Ptr
+// Pointer
 //
 
 template<class T>
-class Ptr {
-    T *ptr;
+class Pointer {
+    T *p;
 public :
-    Ptr()
-        : ptr(0) {}
-    Ptr(T *ptr)
-        : ptr(ptr) {
-        if (ptr)
-            ptr->incRef();
+    Pointer()
+        : p(0) {}
+    Pointer(T *p)
+        : p(p) {
+        if (p)
+            p->incRef();
     }
-    Ptr(const Ptr<T> &other)
-        : ptr(other.ptr) {
-        if (ptr)
-            ptr->incRef();
+    Pointer(const Pointer<T> &other)
+        : p(other.p) {
+        if (p)
+            p->incRef();
     }
-    ~Ptr() {
-        if (ptr)
-            ptr->decRef();
+    ~Pointer() {
+        if (p)
+            p->decRef();
     }
-    Ptr<T> &operator=(const Ptr<T> &other) {
-        T *p = other.ptr;
-        if (p) p->incRef();
-        if (ptr) ptr->decRef();
-        ptr = p;
+    Pointer<T> &operator=(const Pointer<T> &other) {
+        T *q = other.p;
+        if (q) q->incRef();
+        if (p) p->decRef();
+        p = q;
         return *this;
     }
-    T &operator*() { return *ptr; }
-    const T &operator*() const { return *ptr; }
-    T *operator->() { return ptr; }
-    const T *operator->() const { return ptr; }
-    T *raw() const { return ptr; }
-    bool operator!() const { return ptr == 0; }
-    bool operator==(const Ptr<T> &other) const {
-        return ptr == other.ptr;
+    T &operator*() { return *p; }
+    const T &operator*() const { return *p; }
+    T *operator->() { return p; }
+    const T *operator->() const { return p; }
+    T *ptr() const { return p; }
+    bool operator!() const { return p == 0; }
+    bool operator==(const Pointer<T> &other) const {
+        return p == other.p;
     }
-    bool operator!=(const Ptr<T> &other) const {
-        return ptr != other.ptr;
+    bool operator!=(const Pointer<T> &other) const {
+        return p != other.p;
     }
 };
 
@@ -98,7 +98,7 @@ struct Object {
     }
 };
 
-typedef Ptr<Object> ObjectPtr;
+typedef Pointer<Object> ObjectPtr;
 
 
 
@@ -269,115 +269,103 @@ struct RecordTypePattern;
 struct InvokeTable;
 struct InvokeTableEntry;
 
-struct MatchInvokeResult;
-struct MatchInvokeSuccess;
-struct MatchInvokeArgCountError;
-struct MatchInvokeArgMismatch;
-struct MatchInvokePredicateFailure;
-
 struct Analysis;
 struct ReturnInfo;
 
 
 
 //
-// Ptr typedefs
+// Pointer typedefs
 //
 
-typedef Ptr<Source> SourcePtr;
-typedef Ptr<Location> LocationPtr;
+typedef Pointer<Source> SourcePtr;
+typedef Pointer<Location> LocationPtr;
 
-typedef Ptr<Token> TokenPtr;
+typedef Pointer<Token> TokenPtr;
 
-typedef Ptr<ANode> ANodePtr;
-typedef Ptr<Identifier> IdentifierPtr;
-typedef Ptr<DottedName> DottedNamePtr;
+typedef Pointer<ANode> ANodePtr;
+typedef Pointer<Identifier> IdentifierPtr;
+typedef Pointer<DottedName> DottedNamePtr;
 
-typedef Ptr<Expr> ExprPtr;
-typedef Ptr<BoolLiteral> BoolLiteralPtr;
-typedef Ptr<IntLiteral> IntLiteralPtr;
-typedef Ptr<FloatLiteral> FloatLiteralPtr;
-typedef Ptr<CharLiteral> CharLiteralPtr;
-typedef Ptr<StringLiteral> StringLiteralPtr;
-typedef Ptr<NameRef> NameRefPtr;
-typedef Ptr<Tuple> TuplePtr;
-typedef Ptr<Array> ArrayPtr;
-typedef Ptr<Indexing> IndexingPtr;
-typedef Ptr<Call> CallPtr;
-typedef Ptr<FieldRef> FieldRefPtr;
-typedef Ptr<TupleRef> TupleRefPtr;
-typedef Ptr<UnaryOp> UnaryOpPtr;
-typedef Ptr<BinaryOp> BinaryOpPtr;
-typedef Ptr<And> AndPtr;
-typedef Ptr<Or> OrPtr;
-typedef Ptr<SCExpr> SCExprPtr;
-typedef Ptr<ValueExpr> ValueExprPtr;
+typedef Pointer<Expr> ExprPtr;
+typedef Pointer<BoolLiteral> BoolLiteralPtr;
+typedef Pointer<IntLiteral> IntLiteralPtr;
+typedef Pointer<FloatLiteral> FloatLiteralPtr;
+typedef Pointer<CharLiteral> CharLiteralPtr;
+typedef Pointer<StringLiteral> StringLiteralPtr;
+typedef Pointer<NameRef> NameRefPtr;
+typedef Pointer<Tuple> TuplePtr;
+typedef Pointer<Array> ArrayPtr;
+typedef Pointer<Indexing> IndexingPtr;
+typedef Pointer<Call> CallPtr;
+typedef Pointer<FieldRef> FieldRefPtr;
+typedef Pointer<TupleRef> TupleRefPtr;
+typedef Pointer<UnaryOp> UnaryOpPtr;
+typedef Pointer<BinaryOp> BinaryOpPtr;
+typedef Pointer<And> AndPtr;
+typedef Pointer<Or> OrPtr;
+typedef Pointer<SCExpr> SCExprPtr;
+typedef Pointer<ValueExpr> ValueExprPtr;
 
-typedef Ptr<Statement> StatementPtr;
-typedef Ptr<Block> BlockPtr;
-typedef Ptr<Label> LabelPtr;
-typedef Ptr<Binding> BindingPtr;
-typedef Ptr<Assignment> AssignmentPtr;
-typedef Ptr<Goto> GotoPtr;
-typedef Ptr<Return> ReturnPtr;
-typedef Ptr<ReturnRef> ReturnRefPtr;
-typedef Ptr<If> IfPtr;
-typedef Ptr<ExprStatement> ExprStatementPtr;
-typedef Ptr<While> WhilePtr;
-typedef Ptr<Break> BreakPtr;
-typedef Ptr<Continue> ContinuePtr;
-typedef Ptr<For> ForPtr;
+typedef Pointer<Statement> StatementPtr;
+typedef Pointer<Block> BlockPtr;
+typedef Pointer<Label> LabelPtr;
+typedef Pointer<Binding> BindingPtr;
+typedef Pointer<Assignment> AssignmentPtr;
+typedef Pointer<Goto> GotoPtr;
+typedef Pointer<Return> ReturnPtr;
+typedef Pointer<ReturnRef> ReturnRefPtr;
+typedef Pointer<If> IfPtr;
+typedef Pointer<ExprStatement> ExprStatementPtr;
+typedef Pointer<While> WhilePtr;
+typedef Pointer<Break> BreakPtr;
+typedef Pointer<Continue> ContinuePtr;
+typedef Pointer<For> ForPtr;
 
-typedef Ptr<FormalArg> FormalArgPtr;
-typedef Ptr<ValueArg> ValueArgPtr;
-typedef Ptr<StaticArg> StaticArgPtr;
-typedef Ptr<Code> CodePtr;
+typedef Pointer<FormalArg> FormalArgPtr;
+typedef Pointer<ValueArg> ValueArgPtr;
+typedef Pointer<StaticArg> StaticArgPtr;
+typedef Pointer<Code> CodePtr;
 
-typedef Ptr<TopLevelItem> TopLevelItemPtr;
-typedef Ptr<Record> RecordPtr;
-typedef Ptr<Procedure> ProcedurePtr;
-typedef Ptr<Overload> OverloadPtr;
-typedef Ptr<Overloadable> OverloadablePtr;
-typedef Ptr<ExternalProcedure> ExternalProcedurePtr;
-typedef Ptr<ExternalArg> ExternalArgPtr;
+typedef Pointer<TopLevelItem> TopLevelItemPtr;
+typedef Pointer<Record> RecordPtr;
+typedef Pointer<Procedure> ProcedurePtr;
+typedef Pointer<Overload> OverloadPtr;
+typedef Pointer<Overloadable> OverloadablePtr;
+typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
+typedef Pointer<ExternalArg> ExternalArgPtr;
 
-typedef Ptr<Import> ImportPtr;
-typedef Ptr<Export> ExportPtr;
-typedef Ptr<Module> ModulePtr;
+typedef Pointer<Import> ImportPtr;
+typedef Pointer<Export> ExportPtr;
+typedef Pointer<Module> ModulePtr;
 
-typedef Ptr<Env> EnvPtr;
+typedef Pointer<Env> EnvPtr;
 
-typedef Ptr<PrimOp> PrimOpPtr;
+typedef Pointer<PrimOp> PrimOpPtr;
 
-typedef Ptr<Type> TypePtr;
-typedef Ptr<BoolType> BoolTypePtr;
-typedef Ptr<IntegerType> IntegerTypePtr;
-typedef Ptr<FloatType> FloatTypePtr;
-typedef Ptr<ArrayType> ArrayTypePtr;
-typedef Ptr<TupleType> TupleTypePtr;
-typedef Ptr<PointerType> PointerTypePtr;
-typedef Ptr<RecordType> RecordTypePtr;
+typedef Pointer<Type> TypePtr;
+typedef Pointer<BoolType> BoolTypePtr;
+typedef Pointer<IntegerType> IntegerTypePtr;
+typedef Pointer<FloatType> FloatTypePtr;
+typedef Pointer<ArrayType> ArrayTypePtr;
+typedef Pointer<TupleType> TupleTypePtr;
+typedef Pointer<PointerType> PointerTypePtr;
+typedef Pointer<RecordType> RecordTypePtr;
 
-typedef Ptr<Value> ValuePtr;
+typedef Pointer<Value> ValuePtr;
 
-typedef Ptr<Pattern> PatternPtr;
-typedef Ptr<PatternCell> PatternCellPtr;
-typedef Ptr<ArrayTypePattern> ArrayTypePatternPtr;
-typedef Ptr<TupleTypePattern> TupleTypePatternPtr;
-typedef Ptr<PointerTypePattern> PointerTypePatternPtr;
-typedef Ptr<RecordTypePattern> RecordTypePatternPtr;
+typedef Pointer<Pattern> PatternPtr;
+typedef Pointer<PatternCell> PatternCellPtr;
+typedef Pointer<ArrayTypePattern> ArrayTypePatternPtr;
+typedef Pointer<TupleTypePattern> TupleTypePatternPtr;
+typedef Pointer<PointerTypePattern> PointerTypePatternPtr;
+typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 
-typedef Ptr<InvokeTable> InvokeTablePtr;
-typedef Ptr<InvokeTableEntry> InvokeTableEntryPtr;
+typedef Pointer<InvokeTable> InvokeTablePtr;
+typedef Pointer<InvokeTableEntry> InvokeTableEntryPtr;
 
-typedef Ptr<MatchInvokeResult> MatchInvokeResultPtr;
-typedef Ptr<MatchInvokeSuccess> MatchInvokeSuccessPtr;
-typedef Ptr<MatchInvokeArgCountError> MatchInvokeArgCountErrorPtr;
-typedef Ptr<MatchInvokeArgMismatch> MatchInvokeArgMismatchPtr;
-typedef Ptr<MatchInvokePredicateFailure> MatchInvokePredicateFailurePtr;
-
-typedef Ptr<Analysis> AnalysisPtr;
-typedef Ptr<ReturnInfo> ReturnInfoPtr;
+typedef Pointer<Analysis> AnalysisPtr;
+typedef Pointer<ReturnInfo> ReturnInfoPtr;
 
 
 
@@ -416,10 +404,10 @@ struct LocationContext {
     LocationPtr loc;
     LocationContext(LocationPtr loc)
         : loc(loc) {
-        if (loc.raw()) pushLocation(loc);
+        if (loc.ptr()) pushLocation(loc);
     }
     ~LocationContext() {
-        if (loc.raw())
+        if (loc.ptr())
             popLocation();
     }
 private :
@@ -432,8 +420,8 @@ void error(const string &msg);
 void fmtError(const char *fmt, ...);
 
 template <class T>
-void error(Ptr<T> context, const string &msg) {
-    if (context->location.raw())
+void error(Pointer<T> context, const string &msg) {
+    if (context->location.ptr())
         pushLocation(context->location);
     error(msg);
 }
@@ -973,7 +961,7 @@ ostream &operator<<(ostream &out, const Object &obj);
 ostream &operator<<(ostream &out, const Object *obj);
 
 template <class T>
-ostream &operator<<(ostream &out, const Ptr<T> &p) {
+ostream &operator<<(ostream &out, const Pointer<T> &p) {
     out << *p;
     return out;
 }
@@ -1005,9 +993,9 @@ struct Env : public Object {
     Env()
         : Object(ENV) {}
     Env(ModulePtr parent)
-        : Object(ENV), parent(parent.raw()) {}
+        : Object(ENV), parent(parent.ptr()) {}
     Env(EnvPtr parent)
-        : Object(ENV), parent(parent.raw()) {}
+        : Object(ENV), parent(parent.ptr()) {}
 };
 
 
