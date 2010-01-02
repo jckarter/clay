@@ -26,10 +26,10 @@ PValuePtr
 partialInvokeOverloadable(OverloadablePtr x,
                           ArgListPtr args);
 
-struct ReturnInfo2 {
+struct ReturnInfo {
     TypePtr type;
     bool byRef;
-    ReturnInfo2()
+    ReturnInfo()
         : byRef(false) {}
     void set(TypePtr type, bool byRef);
 };
@@ -37,7 +37,7 @@ struct ReturnInfo2 {
 bool
 partialEvalCodeBody(CodePtr code,
                     EnvPtr env,
-                    ReturnInfo2 &rinfo);
+                    ReturnInfo &rinfo);
 
 EnvPtr
 partialEvalBinding(BindingPtr x,
@@ -46,7 +46,7 @@ partialEvalBinding(BindingPtr x,
 bool
 partialEvalStatement(StatementPtr stmt,
                      EnvPtr env,
-                     ReturnInfo2 &rinfo);
+                     ReturnInfo &rinfo);
 
 PValuePtr
 partialInvokeExternal(ExternalProcedurePtr x,
@@ -642,7 +642,7 @@ partialInvokeProcedure(ProcedurePtr x,
 
     EnvPtr env = bindPartialDynamicArgs(entry, args);
 
-    ReturnInfo2 rinfo;
+    ReturnInfo rinfo;
     bool flag = partialEvalCodeBody(entry->code, env, rinfo);
     if (!flag)
         error("recursive type inference");
@@ -747,7 +747,7 @@ partialInvokeOverloadable(OverloadablePtr x,
 
     EnvPtr env = bindPartialDynamicArgs(entry, args);
 
-    ReturnInfo2 rinfo;
+    ReturnInfo rinfo;
     bool flag = partialEvalCodeBody(entry->code, env, rinfo);
     if (!flag)
         error("recursive type inference");
@@ -766,7 +766,7 @@ partialInvokeOverloadable(OverloadablePtr x,
 //
 
 void
-ReturnInfo2::set(TypePtr type,
+ReturnInfo::set(TypePtr type,
                  bool byRef)
 {
     if (!this->type) {
@@ -781,7 +781,7 @@ ReturnInfo2::set(TypePtr type,
 bool
 partialEvalCodeBody(CodePtr code,
                     EnvPtr env,
-                    ReturnInfo2 &rinfo)
+                    ReturnInfo &rinfo)
 {
     bool result = partialEvalStatement(code->body, env, rinfo);
     if (!result)
@@ -794,14 +794,14 @@ partialEvalCodeBody(CodePtr code,
 bool
 partialEvalStatement(StatementPtr stmt,
                      EnvPtr env,
-                     ReturnInfo2 &rinfo)
+                     ReturnInfo &rinfo)
 {
     LocationContext loc(stmt->location);
 
     switch (stmt->objKind) {
     case BLOCK : {
         Block *x = (Block *)stmt.ptr();
-        ReturnInfo2 rinfo2;
+        ReturnInfo rinfo2;
         bool recursive = false;
         for (unsigned i = 0; i < x->statements.size(); ++i) {
             StatementPtr y = x->statements[i];
