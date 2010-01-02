@@ -172,7 +172,6 @@ enum ObjectKind {
     VALUE,
     PATTERN,
 
-    ANALYSIS,
     PVALUE,
 
     DONT_CARE,
@@ -270,9 +269,6 @@ struct RecordTypePattern;
 struct InvokeTable;
 struct InvokeTableEntry;
 
-struct Analysis;
-struct ReturnInfo;
-
 struct PValue;
 struct ArgList;
 
@@ -367,9 +363,6 @@ typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 
 typedef Pointer<InvokeTable> InvokeTablePtr;
 typedef Pointer<InvokeTableEntry> InvokeTableEntryPtr;
-
-typedef Pointer<Analysis> AnalysisPtr;
-typedef Pointer<ReturnInfo> ReturnInfoPtr;
 
 typedef Pointer<PValue> PValuePtr;
 typedef Pointer<ArgList> ArgListPtr;
@@ -1373,7 +1366,7 @@ struct InvokeTableEntry : public Object {
     EnvPtr env;
     CodePtr code;
 
-    // results of analysis
+    // results of partial evaluation
     TypePtr returnType;
     bool returnByRef;
     bool analyzing;
@@ -1431,40 +1424,6 @@ ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
 StatementPtr convertForStatement(ForPtr x);
 
 void initExternalProcedure(ExternalProcedurePtr x);
-
-
-
-//
-// analyzer module
-//
-
-struct Analysis : public Object {
-    TypePtr type;
-    bool isTemp;
-    bool isStatic;
-    ExprPtr expr;
-    EnvPtr env;
-    mutable ValuePtr value;
-
-    Analysis(TypePtr type, bool isTemp, bool isStatic)
-        : Object(ANALYSIS), type(type), isTemp(isTemp),
-          isStatic(isStatic) {}
-    ValuePtr evaluate() const;
-    TypePtr evaluateType() const;
-};
-
-struct ReturnInfo : public Object{
-    TypePtr type;
-    bool isRef;
-    ReturnInfo()
-        : Object(DONT_CARE), type(NULL), isRef(false) {}
-    ReturnInfo(TypePtr type, bool isRef)
-        : Object(DONT_CARE), type(type), isRef(isRef) {}
-    void set(TypePtr type, bool isRef);
-};
-
-AnalysisPtr analyze(ExprPtr expr, EnvPtr env);
-ReturnInfoPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args);
 
 
 

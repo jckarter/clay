@@ -13,7 +13,6 @@ OBJS = \
 	src/loader.o \
 	src/types.o \
 	src/evaluator.o \
-	src/analyzer.o \
 	src/partialeval.o \
 	src/main.o
 

@@ -39,12 +39,6 @@ ValuePtr argumentRef<ValuePtr>(ValuePtr arg) {
     return arg;
 }
 
-template <>
-static inline
-AnalysisPtr argumentRef<AnalysisPtr>(AnalysisPtr arg) {
-    return new Analysis(arg->type, false, false);
-}
-
 
 
 //
