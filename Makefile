@@ -12,6 +12,7 @@ OBJS = \
 	src/env.o \
 	src/loader.o \
 	src/types.o \
+	src/invokeutil2.o \
 	src/evaluator.o \
 	src/partialeval.o \
 	src/main.o
