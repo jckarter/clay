@@ -30,9 +30,10 @@ int main(int argc, char **argv) {
     ObjectPtr mainProc = lookupEnv(m->env, new Identifier("main"));
 
     cout << "analyzing main()\n";
-    ReturnInfoPtr rinfo = analyzeInvoke(mainProc, vector<AnalysisPtr>());
-    cout << "returns " << rinfo->type << " by ";
-    cout << (rinfo->isRef ? "ref" : "value") << '\n';
+    ArgListPtr args = new ArgList(vector<ExprPtr>(), new Env());
+    PValuePtr pvalue = partialInvoke(mainProc, args);
+    cout << "returns " << pvalue->type << " by ";
+    cout << (pvalue->isTemp ? "value" : "ref") << '\n';
 
     cout << '\n';
 

@@ -173,6 +173,7 @@ enum ObjectKind {
     PATTERN,
 
     ANALYSIS,
+    PVALUE,
 
     DONT_CARE,
 };
@@ -272,6 +273,9 @@ struct InvokeTableEntry;
 struct Analysis;
 struct ReturnInfo;
 
+struct PValue;
+struct ArgList;
+
 
 
 //
@@ -366,6 +370,9 @@ typedef Pointer<InvokeTableEntry> InvokeTableEntryPtr;
 
 typedef Pointer<Analysis> AnalysisPtr;
 typedef Pointer<ReturnInfo> ReturnInfoPtr;
+
+typedef Pointer<PValue> PValuePtr;
+typedef Pointer<ArgList> ArgListPtr;
 
 
 
@@ -1359,6 +1366,7 @@ struct InvokeTable : public Object {
 };
 
 struct InvokeTableEntry : public Object {
+    InvokeTablePtr table;
     vector<ObjectPtr> argsInfo;
 
     // applicable to procedures and overloadables
@@ -1457,6 +1465,56 @@ struct ReturnInfo : public Object{
 
 AnalysisPtr analyze(ExprPtr expr, EnvPtr env);
 ReturnInfoPtr analyzeInvoke(ObjectPtr obj, const vector<AnalysisPtr> &args);
+
+
+
+//
+// partial evaluator module
+//
+
+struct PValue : public Object {
+    TypePtr type;
+    bool isTemp;
+    bool isStatic;
+    PValue(TypePtr type, bool isTemp, bool isStatic)
+        : Object(PVALUE), type(type), isTemp(isTemp),
+          isStatic(isStatic) {}
+};
+
+struct ArgList : public Object {
+    vector<ExprPtr> exprs;
+    EnvPtr env;
+    vector<PValuePtr> pvalues;
+    vector<ValuePtr> staticValues;
+    bool allStatic;
+    bool recursionError;
+
+    ArgList(const vector<ExprPtr> &exprs,
+            EnvPtr env);
+    unsigned size() const { return exprs.size(); }
+    PValuePtr partialValue(int i);
+    TypePtr type(int i);
+    ValuePtr staticValue(int i);
+    TypePtr typeValue(int i);
+
+    void ensureArity(int n);
+
+    bool unifyFormalArg(int i,
+                        FormalArgPtr farg,
+                        EnvPtr env);
+    bool unifyFormalArgs(const vector<FormalArgPtr> &fargs,
+                         EnvPtr fenv);
+    void ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs,
+                               EnvPtr fenv);
+};
+
+PValuePtr
+partialEval(ExprPtr expr,
+            EnvPtr env);
+
+PValuePtr
+partialInvoke(ObjectPtr obj,
+              ArgListPtr args);
 
 
 #endif
