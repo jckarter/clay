@@ -1586,7 +1586,8 @@ evaluateToBool(ExprPtr expr,
                EnvPtr env);
 
 PatternPtr
-evaluatePattern(ExprPtr expr, EnvPtr env);
+evaluatePattern(ExprPtr expr,
+                EnvPtr env);
 
 bool
 unify(PatternPtr pattern,
