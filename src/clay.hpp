@@ -173,6 +173,7 @@ enum ObjectKind {
     PATTERN,
 
     PVALUE,
+    CVALUE,
 
     DONT_CARE,
 };

@@ -15,6 +15,7 @@ OBJS = \
 	src/invokeutil2.o \
 	src/evaluator.o \
 	src/partialeval.o \
+	src/codegen.o \
 	src/main.o
 
 clayc : $(OBJS)
