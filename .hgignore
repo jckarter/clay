@@ -2,5 +2,5 @@ syntax: regexp
 
 ^clayc$
 ^src/.*\.o$
-^src/.*\.d$
+^src/.*\.dep$
 ^\.gdb_history$
