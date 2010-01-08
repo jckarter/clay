@@ -17,7 +17,29 @@ struct CValue : public Object {
         : Object(CVALUE), type(type), llval(llval) {}
 };
 
+llvm::Function *llvmFunction;
+llvm::IRBuilder<> *initBuilder;
 llvm::IRBuilder<> *builder;
+
+
+// value operations codegen
+
+llvm::Value *
+codegenAllocValue(TypePtr t);
+
+void
+codegenValueInit(CValuePtr dest);
+
+void
+codegenValueDestroy(CValuePtr dest);
+
+void
+codegenValueCopy(CValuePtr dest,
+                 CValuePtr src);
+
+void
+codegenValueAssign(CValuePtr dest,
+                   CValuePtr src);
 
 llvm::Value *
 codegen(ExprPtr expr,
@@ -41,6 +63,19 @@ codegenValue(ValuePtr v,
 static
 llvm::Value *
 numericConstant(ValuePtr v);
+
+
+
+//
+// codegenAllocValue
+//
+
+llvm::Value *
+codegenAllocValue(TypePtr t)
+{
+    const llvm::Type *llt = llvmType(t);
+    return initBuilder->CreateAlloca(llt);
+}
 
 
 
@@ -173,7 +208,36 @@ codegen(ExprPtr expr,
         BinaryOp *x = (BinaryOp *)expr.ptr();
         if (!x->converted)
             x->converted = convertBinaryOp(x);
-        return codegen(x->converted, env, outPtr);;
+        return codegen(x->converted, env, outPtr);
+    }
+
+    case AND : {
+        And *x = (And *)expr.ptr();
+        PValuePtr pv1 = partialEval(x->expr1, env);
+        PValuePtr pv2 = partialEval(x->expr2, env);
+        if (pv1->type != pv2->type)
+            error("type mismatch in 'and' expression");
+        if (pv1->isTemp || pv2->isTemp) {
+            // codegenTemp(expr1, env, outPtr);
+            // llvm::Value *tempBool = codegenAllocValue(boolType);
+            // codegenInvoke(boolTruth, [outPtr], tempBool)
+            // codegen(if !tempBool goto end)
+            // codegenValueDestroy(outPtr);
+            // codegenTemp(expr2, env, outPtr);
+            // codegen(goto end)
+            // return outPtr
+        }
+        else {
+            // result = codegenRef(expr1, env);
+            // tempBool = alloc bool value
+            // codegenInvoke(boolTruth, [result], tempBool)
+            // codegen(if !tempBool goto end)
+            // result = codegenRef(expr2, env);
+            // codegen(goto end)
+            // return result
+        }
+        if (pv1->type != boolType)
+            error("expecting bool type in 'and' expression");
     }
 
     default :
@@ -182,6 +246,32 @@ codegen(ExprPtr expr,
     }
 
     return NULL;
+}
+
+
+
+//
+// codegenIndexing
+//
+
+llvm::Value *
+codegenIndexing(ObjectPtr obj,
+                ArgListPtr args,
+                llvm::Value *outPtr)
+{
+}
+
+
+
+//
+// codegenInvoke
+//
+
+llvm::Value *
+codegenInvoke(ObjectPtr obj,
+              ArgListPtr args,
+              llvm::Value *outPtr)
+{
 }
 
 
