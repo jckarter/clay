@@ -104,12 +104,13 @@ static bool identStr(string &x) {
 static std::set<string> *keywords = NULL;
 
 static void initKeywords() {
-    char *s[] = {"import", "export", "record", "overloadable", "overload",
-                 "external", "static", "var", "ref", "and", "or", "not",
-                 "if", "else", "goto", "return", "returnref", "while",
-                 "break", "continue", "for", "in", "true", "false", NULL};
+    const char *s[] =
+        {"import", "export", "record", "overloadable", "overload",
+         "external", "static", "var", "ref", "and", "or", "not",
+         "if", "else", "goto", "return", "returnref", "while",
+         "break", "continue", "for", "in", "true", "false", NULL};
     keywords = new std::set<string>();
-    for (char **p = s; *p; ++p)
+    for (const char **p = s; *p; ++p)
         keywords->insert(*p);
 }
 
@@ -130,15 +131,17 @@ static bool keywordIdentifier(TokenPtr &x) {
 // symbols
 //
 
-static char *symbols[] = {"==", "!=", "<=", ">=",
-                          "<", ">",
-                          "+", "-", "*", "/", "%", "=", "&", "^", "|",
-                          "(", ")", "[", "]", "{", "}",
-                          ":", ";", ",", ".",
-                          NULL};
+static const char *symbols[] = {
+    "==", "!=", "<=", ">=",
+    "<", ">",
+    "+", "-", "*", "/", "%", "=", "&", "^", "|",
+    "(", ")", "[", "]", "{", "}",
+    ":", ";", ",", ".",
+    NULL
+};
 
 static bool symbol(TokenPtr &x) {
-    char **s = symbols;
+    const char **s = symbols;
     char *p = save();
     while (*s) {
         restore(p);

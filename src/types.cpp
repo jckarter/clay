@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "common.hpp"
 
 llvm::Module *llvmModule;
 llvm::ExecutionEngine *llvmEngine;
@@ -100,7 +101,7 @@ TypePtr floatType(int bits) {
 }
 
 TypePtr arrayType(TypePtr elementType, int size) {
-    int h = ((int)elementType.ptr()) + size;
+    int h = pointerToInt(elementType.ptr()) + size;
     h &= arrayTypes.size() - 1;
     vector<ArrayTypePtr>::iterator i, end;
     for (i = arrayTypes[h].begin(), end = arrayTypes[h].end();
@@ -119,7 +120,7 @@ TypePtr tupleType(const vector<TypePtr> &elementTypes) {
     vector<TypePtr>::const_iterator ei, eend;
     for (ei = elementTypes.begin(), eend = elementTypes.end();
          ei != eend; ++ei) {
-        h += (int)ei->ptr();
+        h += pointerToInt(ei->ptr());
     }
     h &= tupleTypes.size() - 1;
     vector<TupleTypePtr>::iterator i, end;
@@ -135,7 +136,7 @@ TypePtr tupleType(const vector<TypePtr> &elementTypes) {
 }
 
 TypePtr pointerType(TypePtr pointeeType) {
-    int h = (int)pointeeType.ptr();
+    int h = pointerToInt(pointeeType.ptr());
     h &= pointerTypes.size() - 1;
     vector<PointerTypePtr>::iterator i, end;
     for (i = pointerTypes[h].begin(), end = pointerTypes[h].end();
@@ -162,7 +163,7 @@ static bool valueVectorEquals(const vector<ValuePtr> &a,
 }
 
 TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params) {
-    int h = (int)record.ptr();
+    int h = pointerToInt(record.ptr());
     vector<ValuePtr>::const_iterator vi, vend;
     for (vi = params.begin(), vend = params.end(); vi != vend; ++vi)
         h += valueHash(*vi);

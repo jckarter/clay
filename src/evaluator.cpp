@@ -1,5 +1,6 @@
 #include "clay.hpp"
 #include "invokeutil.hpp"
+#include "common.hpp"
 
 
 
@@ -617,7 +618,7 @@ int valueHash(ValuePtr a) {
         }
     }
     case POINTER_TYPE :
-        return (int)(*((void **)a->buf));
+        return pointerToInt(*((void **)a->buf));
     case COMPILER_OBJECT_TYPE :
         return *((int *)a->buf);
     case VOID_TYPE :

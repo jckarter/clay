@@ -2,7 +2,7 @@ LLVM_CXXFLAGS = `llvm-config --cxxflags`
 LLVM_LDFLAGS = `llvm-config --ldflags --libs backend engine`
 
 .cpp.o :
-	g++ $(LLVM_CXXFLAGS) -Wall -g -c -MMD -MF$@.dep -o $@ $<
+	g++ $(LLVM_CXXFLAGS) -m32 -Wall -g -c -MMD -MF$@.dep -o $@ $<
 
 OBJS = \
 	src/error.o \
@@ -19,7 +19,7 @@ OBJS = \
 	src/main.o
 
 clayc : $(OBJS)
-	g++ -g -o clayc $(OBJS) $(LLVM_LDFLAGS)
+	g++ -m32 -g -o clayc $(OBJS) $(LLVM_LDFLAGS)
 
 clean :
 	rm -f clayc
