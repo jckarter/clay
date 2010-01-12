@@ -17,19 +17,19 @@ ArgList::ArgList(const vector<ExprPtr> &exprs, EnvPtr env)
             recursionError = true;
         else if (!pv->isStatic)
             allStatic = false;
-        this->pvalues.push_back(pv);
+        this->_pvalues.push_back(pv);
     }
     this->_values.resize(exprs.size());
 }
 
 PValuePtr ArgList::partialValue(int i)
 {
-    return this->pvalues[i];
+    return this->_pvalues[i];
 }
 
 TypePtr ArgList::type(int i)
 {
-    return this->pvalues[i]->type;
+    return this->_pvalues[i]->type;
 }
 
 ValuePtr ArgList::value(int i)
