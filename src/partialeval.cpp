@@ -758,7 +758,7 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
     case PRIM_tupleRef : {
         args->ensureArity(2);
         ensureTupleType(args->type(0));
-        int i = valueToInt(args->staticValue(1));
+        int i = valueToInt(args->value(1));
         TupleType *t = (TupleType *)args->type(0).ptr();
         if ((i < 0) || (i >= (int)t->elementTypes.size()))
             error("tuple type index out of range");
@@ -781,7 +781,7 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
         args->ensureArity(2);
         ensureRecordType(args->type(0));
         RecordType *rt = (RecordType *)args->type(0).ptr();
-        int i = valueToInt(args->staticValue(1));
+        int i = valueToInt(args->value(1));
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if ((i < 0) || (i >= (int)fieldTypes.size()))
             error("field index out of range");
@@ -791,7 +791,7 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
         args->ensureArity(2);
         ensureRecordType(args->type(0));
         RecordType *t = (RecordType *)args->type(0).ptr();
-        ObjectPtr obj = valueToCO(args->staticValue(1));
+        ObjectPtr obj = valueToCO(args->value(1));
         if (obj->objKind != IDENTIFIER)
             error("expecting an identifier value");
         Identifier *name = (Identifier *)obj.ptr();

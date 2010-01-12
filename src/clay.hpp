@@ -1455,7 +1455,7 @@ struct ArgList : public Object {
     vector<ExprPtr> exprs;
     EnvPtr env;
     vector<PValuePtr> pvalues;
-    vector<ValuePtr> staticValues;
+    vector<ValuePtr> _values;
     bool allStatic;
     bool recursionError;
 
@@ -1463,7 +1463,7 @@ struct ArgList : public Object {
     unsigned size() const { return exprs.size(); }
     PValuePtr partialValue(int i);
     TypePtr type(int i);
-    ValuePtr staticValue(int i);
+    ValuePtr value(int i);
     TypePtr typeValue(int i);
 
     void ensureArity(int n);

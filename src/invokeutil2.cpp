@@ -19,7 +19,7 @@ ArgList::ArgList(const vector<ExprPtr> &exprs, EnvPtr env)
             allStatic = false;
         this->pvalues.push_back(pv);
     }
-    this->staticValues.resize(exprs.size());
+    this->_values.resize(exprs.size());
 }
 
 PValuePtr ArgList::partialValue(int i)
@@ -32,16 +32,16 @@ TypePtr ArgList::type(int i)
     return this->pvalues[i]->type;
 }
 
-ValuePtr ArgList::staticValue(int i)
+ValuePtr ArgList::value(int i)
 {
-    if (!this->staticValues[i])
-        this->staticValues[i] = evaluateToStatic(this->exprs[i], this->env);
-    return this->staticValues[i];
+    if (!this->_values[i])
+        this->_values[i] = evaluateToStatic(this->exprs[i], this->env);
+    return this->_values[i];
 }
 
 TypePtr ArgList::typeValue(int i)
 {
-    return valueToType(this->staticValue(i));
+    return valueToType(this->value(i));
 }
 
 void ArgList::ensureArity(int n)
@@ -63,7 +63,7 @@ bool ArgList::unifyFormalArg(int i, FormalArgPtr farg, EnvPtr fenv)
     case STATIC_ARG : {
         StaticArg *x = (StaticArg *)farg.ptr();
         PatternPtr pattern = evaluatePattern(x->pattern, fenv);
-        return unify(pattern, this->staticValue(i));
+        return unify(pattern, this->value(i));
     }
     default :
         assert(false);
@@ -147,7 +147,7 @@ int hashArgs(ArgListPtr args, const vector<bool> &isStaticFlags)
         if (!isStaticFlags[i])
             h += toCOIndex(args->type(i).ptr());
         else
-            h += valueHash(args->staticValue(i));
+            h += valueHash(args->value(i));
     }
     return h;
 }
@@ -163,7 +163,7 @@ bool matchingArgs(ArgListPtr args, InvokeTableEntryPtr entry)
                 return false;
         }
         else {
-            ValuePtr v = args->staticValue(i);
+            ValuePtr v = args->value(i);
             if (!valueEquals(v, (Value *)argsInfo[i].ptr()))
                 return false;
         }
@@ -179,7 +179,7 @@ void initArgsInfo(InvokeTableEntryPtr entry, ArgListPtr args)
         if (!isStaticFlags[i])
             argsInfo.push_back(args->type(i).ptr());
         else
-            argsInfo.push_back(cloneValue(args->staticValue(i)).ptr());
+            argsInfo.push_back(cloneValue(args->value(i)).ptr());
     }
 }
 
