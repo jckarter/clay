@@ -24,41 +24,22 @@ llvm::IRBuilder<> *builder;
 
 // value operations codegen
 
-llvm::Value *
-codegenAllocValue(TypePtr t);
-
-void
-codegenValueInit(CValuePtr dest);
-
-void
-codegenValueDestroy(CValuePtr dest);
-
-void
-codegenValueCopy(CValuePtr dest,
-                 CValuePtr src);
-
-void
-codegenValueAssign(CValuePtr dest,
-                   CValuePtr src);
+llvm::Value * codegenAllocValue(TypePtr t);
+void codegenValueInit(CValuePtr dest);
+void codegenValueDestroy(CValuePtr dest);
+void codegenValueCopy(CValuePtr dest, CValuePtr src);
+void codegenValueAssign(CValuePtr dest, CValuePtr src);
 
 llvm::Value *
-codegen(ExprPtr expr,
-        EnvPtr env,
-        llvm::Value *outPtr);
+codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr);
 
 llvm::Value *
-codegenIndexing(ObjectPtr obj,
-                ArgListPtr args,
-                llvm::Value *outPtr);
+codegenIndexing(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr);
 
 llvm::Value *
-codegenInvoke(ObjectPtr obj,
-              ArgListPtr args,
-              llvm::Value *outPtr);
+codegenInvoke(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr);
 
-void
-codegenValue(ValuePtr v,
-             llvm::Value *outPtr);
+void codegenValue(ValuePtr v, llvm::Value *outPtr);
 
 static
 llvm::Value *
@@ -70,8 +51,7 @@ numericConstant(ValuePtr v);
 // codegenAllocValue
 //
 
-llvm::Value *
-codegenAllocValue(TypePtr t)
+llvm::Value * codegenAllocValue(TypePtr t)
 {
     const llvm::Type *llt = llvmType(t);
     return initBuilder->CreateAlloca(llt);
@@ -84,9 +64,7 @@ codegenAllocValue(TypePtr t)
 //
 
 llvm::Value *
-codegen(ExprPtr expr,
-        EnvPtr env,
-        llvm::Value *outPtr)
+codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
 {
     LocationContext loc(expr->location);
 
@@ -255,9 +233,7 @@ codegen(ExprPtr expr,
 //
 
 llvm::Value *
-codegenIndexing(ObjectPtr obj,
-                ArgListPtr args,
-                llvm::Value *outPtr)
+codegenIndexing(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr)
 {
 }
 
@@ -268,9 +244,7 @@ codegenIndexing(ObjectPtr obj,
 //
 
 llvm::Value *
-codegenInvoke(ObjectPtr obj,
-              ArgListPtr args,
-              llvm::Value *outPtr)
+codegenInvoke(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr)
 {
 }
 
@@ -280,9 +254,7 @@ codegenInvoke(ObjectPtr obj,
 // codegenValue
 //
 
-void
-codegenValue(ValuePtr v,
-             llvm::Value *outPtr)
+void codegenValue(ValuePtr v, llvm::Value *outPtr)
 {
     switch (v->type->typeKind) {
 
