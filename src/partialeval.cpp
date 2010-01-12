@@ -8,24 +8,19 @@
 //
 
 PValuePtr
-partialIndexing(ObjectPtr obj,
-                ArgListPtr args);
+partialIndexing(ObjectPtr obj, ArgListPtr args);
 
 PValuePtr
-partialInvokeRecord(RecordPtr x,
-                    ArgListPtr args);
+partialInvokeRecord(RecordPtr x, ArgListPtr args);
 
 PValuePtr
-partialInvokeType(TypePtr x,
-                  ArgListPtr args);
+partialInvokeType(TypePtr x, ArgListPtr args);
 
 PValuePtr
-partialInvokeProcedure(ProcedurePtr x,
-                       ArgListPtr args);
+partialInvokeProcedure(ProcedurePtr x, ArgListPtr args);
 
 PValuePtr
-partialInvokeOverloadable(OverloadablePtr x,
-                          ArgListPtr args);
+partialInvokeOverloadable(OverloadablePtr x, ArgListPtr args);
 
 struct ReturnInfo {
     TypePtr type;
@@ -36,26 +31,19 @@ struct ReturnInfo {
 };
 
 bool
-partialEvalCodeBody(CodePtr code,
-                    EnvPtr env,
-                    ReturnInfo &rinfo);
+partialEvalCodeBody(CodePtr code, EnvPtr env, ReturnInfo &rinfo);
 
 EnvPtr
-partialEvalBinding(BindingPtr x,
-                   EnvPtr env);
+partialEvalBinding(BindingPtr x, EnvPtr env);
 
 bool
-partialEvalStatement(StatementPtr stmt,
-                     EnvPtr env,
-                     ReturnInfo &rinfo);
+partialEvalStatement(StatementPtr stmt, EnvPtr env, ReturnInfo &rinfo);
 
 PValuePtr
-partialInvokeExternal(ExternalProcedurePtr x,
-                      ArgListPtr args);
+partialInvokeExternal(ExternalProcedurePtr x, ArgListPtr args);
 
 PValuePtr
-partialInvokePrimOp(PrimOpPtr x,
-                    ArgListPtr args);
+partialInvokePrimOp(PrimOpPtr x, ArgListPtr args);
 
 
 
@@ -268,8 +256,7 @@ partialEval(ExprPtr expr, EnvPtr env)
 //
 
 PValuePtr
-partialIndexing(ObjectPtr obj,
-                ArgListPtr args)
+partialIndexing(ObjectPtr obj, ArgListPtr args)
 {
     if (args->recursionError)
         return NULL;
@@ -297,8 +284,7 @@ partialIndexing(ObjectPtr obj,
 //
 
 PValuePtr
-partialInvoke(ObjectPtr obj,
-              ArgListPtr args)
+partialInvoke(ObjectPtr obj, ArgListPtr args)
 {
     if (args->recursionError)
         return NULL;
@@ -327,8 +313,7 @@ partialInvoke(ObjectPtr obj,
 //
 
 PValuePtr
-partialInvokeRecord(RecordPtr x,
-                    ArgListPtr args)
+partialInvokeRecord(RecordPtr x, ArgListPtr args)
 {
     vector<PatternCellPtr> cells;
     EnvPtr env = initPatternVars(x->env, x->patternVars, cells);
@@ -346,8 +331,7 @@ partialInvokeRecord(RecordPtr x,
 //
 
 PValuePtr
-partialInvokeType(TypePtr x,
-                  ArgListPtr args)
+partialInvokeType(TypePtr x, ArgListPtr args)
 {
     return new PValue(x, true, args->allStatic);
 }
@@ -359,8 +343,7 @@ partialInvokeType(TypePtr x,
 //
 
 EnvPtr
-bindPartialDynamicArgs(InvokeTableEntryPtr entry,
-                       ArgListPtr args)
+bindPartialDynamicArgs(InvokeTableEntryPtr entry, ArgListPtr args)
 {
     EnvPtr env = new Env(entry->env);
     const vector<FormalArgPtr> &formalArgs = entry->code->formalArgs;
@@ -376,8 +359,7 @@ bindPartialDynamicArgs(InvokeTableEntryPtr entry,
 }
 
 PValuePtr
-partialInvokeProcedure(ProcedurePtr x,
-                       ArgListPtr args)
+partialInvokeProcedure(ProcedurePtr x, ArgListPtr args)
 {
     InvokeTableEntryPtr entry = lookupProcedureInvoke(x, args);
     if (entry->returnType.ptr())
@@ -414,8 +396,7 @@ partialInvokeProcedure(ProcedurePtr x,
 //
 
 PValuePtr
-partialInvokeOverloadable(OverloadablePtr x,
-                          ArgListPtr args)
+partialInvokeOverloadable(OverloadablePtr x, ArgListPtr args)
 {
     InvokeTableEntryPtr entry = lookupOverloadableInvoke(x, args);
     if (entry->returnType.ptr())
@@ -452,8 +433,7 @@ partialInvokeOverloadable(OverloadablePtr x,
 //
 
 void
-ReturnInfo::set(TypePtr type,
-                 bool byRef)
+ReturnInfo::set(TypePtr type, bool byRef)
 {
     if (!this->type) {
         this->type = type;
@@ -465,9 +445,7 @@ ReturnInfo::set(TypePtr type,
 }
 
 bool
-partialEvalCodeBody(CodePtr code,
-                    EnvPtr env,
-                    ReturnInfo &rinfo)
+partialEvalCodeBody(CodePtr code, EnvPtr env, ReturnInfo &rinfo)
 {
     bool result = partialEvalStatement(code->body, env, rinfo);
     if (!result)
@@ -478,9 +456,7 @@ partialEvalCodeBody(CodePtr code,
 }
 
 bool
-partialEvalStatement(StatementPtr stmt,
-                     EnvPtr env,
-                     ReturnInfo &rinfo)
+partialEvalStatement(StatementPtr stmt, EnvPtr env, ReturnInfo &rinfo)
 {
     LocationContext loc(stmt->location);
 
@@ -569,8 +545,7 @@ partialEvalStatement(StatementPtr stmt,
 }
 
 EnvPtr
-partialEvalBinding(BindingPtr x,
-                   EnvPtr env)
+partialEvalBinding(BindingPtr x, EnvPtr env)
 {
     EnvPtr env2 = new Env(env);
     switch (x->bindingKind) {
@@ -600,8 +575,7 @@ partialEvalBinding(BindingPtr x,
 //
 
 PValuePtr
-partialInvokeExternal(ExternalProcedurePtr x,
-                      ArgListPtr args)
+partialInvokeExternal(ExternalProcedurePtr x, ArgListPtr args)
 {
     if (!x->llvmFunc)
         initExternalProcedure(x);
@@ -615,8 +589,7 @@ partialInvokeExternal(ExternalProcedurePtr x,
 //
 
 PValuePtr
-partialInvokePrimOp(PrimOpPtr x,
-                    ArgListPtr args)
+partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
 {
     switch (x->primOpCode) {
     case PRIM_TypeP :

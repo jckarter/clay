@@ -15,20 +15,12 @@ bindPatternVars(EnvPtr parentEnv,
                 const vector<IdentifierPtr> &patternVars,
                 const vector<PatternCellPtr> &cells);
 
-int
-hashArgs(ArgListPtr args, const vector<bool> &isStaticFlags);
-
-bool
-matchingArgs(ArgListPtr args,
-             InvokeTableEntryPtr entry);
-
-void
-initArgsInfo(InvokeTableEntryPtr entry,
-             ArgListPtr args);
+int hashArgs(ArgListPtr args, const vector<bool> &isStaticFlags);
+bool matchingArgs(ArgListPtr args, InvokeTableEntryPtr entry);
+void initArgsInfo(InvokeTableEntryPtr entry, ArgListPtr args);
 
 InvokeTableEntryPtr
-findMatchingEntry(InvokeTablePtr table,
-                  ArgListPtr args);
+findMatchingEntry(InvokeTablePtr table, ArgListPtr args);
 
 InvokeTablePtr
 newInvokeTable(const vector<FormalArgPtr> &formalArgs);
@@ -37,20 +29,18 @@ void
 initProcedureInvokeTable(ProcedurePtr x);
 
 InvokeTableEntryPtr
-lookupProcedureInvoke(ProcedurePtr x,
-                      ArgListPtr args);
+lookupProcedureInvoke(ProcedurePtr x, ArgListPtr args);
 
 void
 initProcedureEnv(ProcedurePtr x,
                  ArgListPtr args,
                  InvokeTableEntryPtr entry);
 
-void
-initOverloadableInvokeTables(OverloadablePtr x);
+void 
+nitOverloadableInvokeTables(OverloadablePtr x);
 
 InvokeTableEntryPtr
-lookupOverloadableInvoke(OverloadablePtr x,
-                         ArgListPtr args);
+lookupOverloadableInvoke(OverloadablePtr x, ArgListPtr args);
 
 void
 initOverloadableEnv(OverloadablePtr x,

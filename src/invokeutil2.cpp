@@ -7,8 +7,7 @@
 // ArgList
 //
 
-ArgList::ArgList(const vector<ExprPtr> &exprs,
-                 EnvPtr env)
+ArgList::ArgList(const vector<ExprPtr> &exprs, EnvPtr env)
     : Object(DONT_CARE), exprs(exprs), env(env), allStatic(true),
       recursionError(false)
 {
@@ -23,43 +22,35 @@ ArgList::ArgList(const vector<ExprPtr> &exprs,
     this->staticValues.resize(exprs.size());
 }
 
-PValuePtr
-ArgList::partialValue(int i)
+PValuePtr ArgList::partialValue(int i)
 {
     return this->pvalues[i];
 }
 
-TypePtr
-ArgList::type(int i)
+TypePtr ArgList::type(int i)
 {
     return this->pvalues[i]->type;
 }
 
-ValuePtr
-ArgList::staticValue(int i)
+ValuePtr ArgList::staticValue(int i)
 {
     if (!this->staticValues[i])
         this->staticValues[i] = evaluateToStatic(this->exprs[i], this->env);
     return this->staticValues[i];
 }
 
-TypePtr
-ArgList::typeValue(int i)
+TypePtr ArgList::typeValue(int i)
 {
     return valueToType(this->staticValue(i));
 }
 
-void 
-ArgList::ensureArity(int n)
+void ArgList::ensureArity(int n)
 {
     if ((int)this->exprs.size() != n)
         error("incorrect no. of arguments");
 }
 
-bool
-ArgList::unifyFormalArg(int i,
-                        FormalArgPtr farg,
-                        EnvPtr fenv)
+bool ArgList::unifyFormalArg(int i, FormalArgPtr farg, EnvPtr fenv)
 {
     switch (farg->objKind) {
     case VALUE_ARG : {
@@ -81,8 +72,7 @@ ArgList::unifyFormalArg(int i,
 }
 
 bool
-ArgList::unifyFormalArgs(const vector<FormalArgPtr> &fargs,
-                         EnvPtr fenv)
+ArgList::unifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv)
 {
     if (this->size() != fargs.size())
         return false;
@@ -150,8 +140,7 @@ bindPatternVars(EnvPtr parentEnv,
 // invoke table procs
 //
 
-int
-hashArgs(ArgListPtr args, const vector<bool> &isStaticFlags)
+int hashArgs(ArgListPtr args, const vector<bool> &isStaticFlags)
 {
     int h = 0;
     for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
@@ -163,9 +152,7 @@ hashArgs(ArgListPtr args, const vector<bool> &isStaticFlags)
     return h;
 }
 
-bool
-matchingArgs(ArgListPtr args,
-             InvokeTableEntryPtr entry)
+bool matchingArgs(ArgListPtr args, InvokeTableEntryPtr entry)
 {
     const vector<bool> &isStaticFlags = entry->table->isStaticFlags;
     const vector<ObjectPtr> &argsInfo = entry->argsInfo;
@@ -184,9 +171,7 @@ matchingArgs(ArgListPtr args,
     return true;
 }
 
-void
-initArgsInfo(InvokeTableEntryPtr entry,
-             ArgListPtr args)
+void initArgsInfo(InvokeTableEntryPtr entry, ArgListPtr args)
 {
     const vector<bool> &isStaticFlags = entry->table->isStaticFlags;
     vector<ObjectPtr> &argsInfo = entry->argsInfo;
@@ -198,9 +183,7 @@ initArgsInfo(InvokeTableEntryPtr entry,
     }
 }
 
-InvokeTableEntryPtr
-findMatchingEntry(InvokeTablePtr table,
-                  ArgListPtr args)
+InvokeTableEntryPtr findMatchingEntry(InvokeTablePtr table, ArgListPtr args)
 {
     int h = hashArgs(args, table->isStaticFlags);
     h &= (table->data.size() - 1);
@@ -216,8 +199,7 @@ findMatchingEntry(InvokeTablePtr table,
     return entry;
 }
 
-InvokeTablePtr
-newInvokeTable(const vector<FormalArgPtr> &formalArgs)
+InvokeTablePtr newInvokeTable(const vector<FormalArgPtr> &formalArgs)
 {
     InvokeTablePtr table = new InvokeTable();
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
@@ -234,15 +216,13 @@ newInvokeTable(const vector<FormalArgPtr> &formalArgs)
 // procedure invoke table
 //
 
-void
-initProcedureInvokeTable(ProcedurePtr x)
+void initProcedureInvokeTable(ProcedurePtr x)
 {
     x->invokeTable = newInvokeTable(x->code->formalArgs);
 }
 
 InvokeTableEntryPtr
-lookupProcedureInvoke(ProcedurePtr x,
-                      ArgListPtr args)
+lookupProcedureInvoke(ProcedurePtr x, ArgListPtr args)
 {
     InvokeTablePtr table = x->invokeTable;
     if (!table) {
@@ -278,8 +258,7 @@ initProcedureEnv(ProcedurePtr x,
 // overloadable invoke table
 //
 
-void
-initOverloadableInvokeTables(OverloadablePtr x)
+void initOverloadableInvokeTables(OverloadablePtr x)
 {
     for (unsigned i = 0; i < x->overloads.size(); ++i) {
         const vector<FormalArgPtr> &formalArgs =
@@ -307,8 +286,7 @@ initOverloadableInvokeTables(OverloadablePtr x)
 }
 
 InvokeTableEntryPtr
-lookupOverloadableInvoke(OverloadablePtr x,
-                         ArgListPtr args)
+lookupOverloadableInvoke(OverloadablePtr x, ArgListPtr args)
 {
     if (x->invokeTables.empty())
         initOverloadableInvokeTables(x);

@@ -378,9 +378,7 @@ struct Source : public Object {
     string fileName;
     char *data;
     int size;
-    Source(const string &fileName,
-           char *data,
-           int size)
+    Source(const string &fileName, char *data, int size)
         : Object(SOURCE), fileName(fileName), data(data), size(size) {}
     ~Source() {
         delete [] data;
@@ -390,8 +388,7 @@ struct Source : public Object {
 struct Location : public Object {
     SourcePtr source;
     int offset;
-    Location(const SourcePtr &source,
-             int offset)
+    Location(const SourcePtr &source, int offset)
         : Object(LOCATION), source(source), offset(offset) {}
 };
 
@@ -401,11 +398,8 @@ struct Location : public Object {
 // error module
 //
 
-void
-pushLocation(LocationPtr location);
-
-void
-popLocation();
+void pushLocation(LocationPtr location);
+void popLocation();
 
 struct LocationContext {
     LocationPtr loc;
@@ -422,16 +416,11 @@ private :
     void operator=(const LocationContext &) {}
 };
 
-void
-error(const string &msg);
-
-void
-fmtError(const char *fmt, ...);
+void error(const string &msg);
+void fmtError(const char *fmt, ...);
 
 template <class T>
-void
-error(Pointer<T> context,
-      const string &msg)
+void error(Pointer<T> context, const string &msg)
 {
     if (context->location.ptr())
         pushLocation(context->location);
@@ -439,37 +428,20 @@ error(Pointer<T> context,
 }
 
 template <class T>
-void
-ensureArity(const vector<T> &args,
-            int size)
+void ensureArity(const vector<T> &args, int size)
 {
     if ((int)args.size() != size)
         error("incorrect number of arguments");
 }
 
-void
-ensurePrimitiveType(TypePtr t);
-
-void
-ensureSameType(TypePtr ta, TypePtr tb);
-
-void
-ensureNumericType(TypePtr t);
-
-void
-ensureIntegerType(TypePtr t);
-
-void
-ensurePointerType(TypePtr t);
-
-void
-ensureArrayType(TypePtr t);
-
-void
-ensureTupleType(TypePtr t);
-
-void
-ensureRecordType(TypePtr t);
+void ensurePrimitiveType(TypePtr t);
+void ensureSameType(TypePtr ta, TypePtr tb);
+void ensureNumericType(TypePtr t);
+void ensureIntegerType(TypePtr t);
+void ensurePointerType(TypePtr t);
+void ensureArrayType(TypePtr t);
+void ensureTupleType(TypePtr t);
+void ensureRecordType(TypePtr t);
 
 struct DebugPrinter {
     static int indent;
@@ -514,9 +486,7 @@ struct Token : public Object {
 // lexer module
 //
 
-void
-tokenize(SourcePtr source,
-         vector<TokenPtr> &tokens);
+void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
 
 
 
@@ -567,8 +537,7 @@ struct IntLiteral : public Expr {
     string suffix;
     IntLiteral(const string &value)
         : Expr(INT_LITERAL), value(value) {}
-    IntLiteral(const string &value,
-               const string &suffix)
+    IntLiteral(const string &value, const string &suffix)
         : Expr(INT_LITERAL), value(value), suffix(suffix) {}
 };
 
@@ -577,8 +546,7 @@ struct FloatLiteral : public Expr {
     string suffix;
     FloatLiteral(const string &value)
         : Expr(FLOAT_LITERAL), value(value) {}
-    FloatLiteral(const string &value,
-                 const string &suffix)
+    FloatLiteral(const string &value, const string &suffix)
         : Expr(FLOAT_LITERAL), value(value), suffix(suffix) {}
 };
 
@@ -625,8 +593,7 @@ struct Indexing : public Expr {
     vector<ExprPtr> args;
     Indexing(ExprPtr expr)
         : Expr(INDEXING), expr(expr) {}
-    Indexing(ExprPtr expr,
-             const vector<ExprPtr> &args)
+    Indexing(ExprPtr expr, const vector<ExprPtr> &args)
         : Expr(INDEXING), expr(expr), args(args) {}
 };
 
@@ -635,24 +602,21 @@ struct Call : public Expr {
     vector<ExprPtr> args;
     Call(ExprPtr expr)
         : Expr(CALL), expr(expr) {}
-    Call(ExprPtr expr,
-         const vector<ExprPtr> &args)
+    Call(ExprPtr expr, const vector<ExprPtr> &args)
         : Expr(CALL), expr(expr), args(args) {}
 };
 
 struct FieldRef : public Expr {
     ExprPtr expr;
     IdentifierPtr name;
-    FieldRef(ExprPtr expr,
-             IdentifierPtr name)
+    FieldRef(ExprPtr expr, IdentifierPtr name)
         : Expr(FIELD_REF), expr(expr), name(name) {}
 };
 
 struct TupleRef : public Expr {
     ExprPtr expr;
     int index;
-    TupleRef(ExprPtr expr,
-             int index)
+    TupleRef(ExprPtr expr, int index)
         : Expr(TUPLE_REF), expr(expr), index(index) {}
 };
 
@@ -668,8 +632,7 @@ struct UnaryOp : public Expr {
     int op;
     ExprPtr expr;
     ExprPtr converted;
-    UnaryOp(int op,
-            ExprPtr expr)
+    UnaryOp(int op, ExprPtr expr)
         : Expr(UNARY_OP), op(op), expr(expr) {}
 };
 
@@ -692,31 +655,26 @@ struct BinaryOp : public Expr {
     int op;
     ExprPtr expr1, expr2;
     ExprPtr converted;
-    BinaryOp(int op,
-             ExprPtr expr1,
-             ExprPtr expr2)
+    BinaryOp(int op, ExprPtr expr1, ExprPtr expr2)
         : Expr(BINARY_OP), op(op), expr1(expr1), expr2(expr2) {}
 };
 
 struct And : public Expr {
     ExprPtr expr1, expr2;
-    And(ExprPtr expr1,
-        ExprPtr expr2)
+    And(ExprPtr expr1, ExprPtr expr2)
         : Expr(AND), expr1(expr1), expr2(expr2) {}
 };
 
 struct Or : public Expr {
     ExprPtr expr1, expr2;
-    Or(ExprPtr expr1,
-       ExprPtr expr2)
+    Or(ExprPtr expr1, ExprPtr expr2)
         : Expr(OR), expr1(expr1), expr2(expr2) {}
 };
 
 struct SCExpr : public Expr {
     EnvPtr env;
     ExprPtr expr;
-    SCExpr(EnvPtr env,
-           ExprPtr expr)
+    SCExpr(EnvPtr env, ExprPtr expr)
         : Expr(SC_EXPR), env(env), expr(expr) {}
 };
 
@@ -761,17 +719,14 @@ struct Binding : public Statement {
     int bindingKind;
     IdentifierPtr name;
     ExprPtr expr;
-    Binding(int bindingKind,
-            IdentifierPtr name,
-            ExprPtr expr)
+    Binding(int bindingKind, IdentifierPtr name, ExprPtr expr)
         : Statement(BINDING), bindingKind(bindingKind),
           name(name), expr(expr) {}
 };
 
 struct Assignment : public Statement {
     ExprPtr left, right;
-    Assignment(ExprPtr left,
-               ExprPtr right)
+    Assignment(ExprPtr left, ExprPtr right)
         : Statement(ASSIGNMENT), left(left), right(right) {}
 };
 
@@ -800,12 +755,9 @@ struct ReturnRef : public Statement {
 struct If : public Statement {
     ExprPtr condition;
     StatementPtr thenPart, elsePart;
-    If(ExprPtr condition,
-       StatementPtr thenPart)
+    If(ExprPtr condition, StatementPtr thenPart)
         : Statement(IF), condition(condition), thenPart(thenPart) {}
-    If(ExprPtr condition,
-       StatementPtr thenPart,
-       StatementPtr elsePart)
+    If(ExprPtr condition, StatementPtr thenPart, StatementPtr elsePart)
         : Statement(IF), condition(condition), thenPart(thenPart),
           elsePart(elsePart) {}
 };
@@ -819,8 +771,7 @@ struct ExprStatement : public Statement {
 struct While : public Statement {
     ExprPtr condition;
     StatementPtr body;
-    While(ExprPtr condition,
-          StatementPtr body)
+    While(ExprPtr condition, StatementPtr body)
         : Statement(WHILE), condition(condition), body(body) {}
 };
 
@@ -839,9 +790,7 @@ struct For : public Statement {
     ExprPtr expr;
     StatementPtr body;
     StatementPtr converted;
-    For(IdentifierPtr variable,
-        ExprPtr expr,
-        StatementPtr body)
+    For(IdentifierPtr variable, ExprPtr expr, StatementPtr body)
         : Statement(FOR), variable(variable), expr(expr), body(body) {}
 };
 
@@ -859,8 +808,7 @@ struct FormalArg : public ANode {
 struct ValueArg : public FormalArg {
     IdentifierPtr name;
     ExprPtr type;
-    ValueArg(IdentifierPtr name,
-             ExprPtr type)
+    ValueArg(IdentifierPtr name, ExprPtr type)
         : FormalArg(VALUE_ARG), name(name), type(type) {}
 };
 
@@ -914,16 +862,14 @@ struct Procedure : public TopLevelItem {
     IdentifierPtr name;
     CodePtr code;
     InvokeTablePtr invokeTable;
-    Procedure(IdentifierPtr name,
-              CodePtr code)
+    Procedure(IdentifierPtr name, CodePtr code)
         : TopLevelItem(PROCEDURE), name(name), code(code) {}
 };
 
 struct Overload : public TopLevelItem {
     IdentifierPtr name;
     CodePtr code;
-    Overload(IdentifierPtr name,
-             CodePtr code)
+    Overload(IdentifierPtr name, CodePtr code)
         : TopLevelItem(OVERLOAD), name(name), code(code) {}
 };
 
@@ -954,8 +900,7 @@ struct ExternalArg : public ANode {
     IdentifierPtr name;
     ExprPtr type;
     TypePtr type2;
-    ExternalArg(IdentifierPtr name,
-                ExprPtr type)
+    ExternalArg(IdentifierPtr name, ExprPtr type)
         : ANode(EXTERNAL_ARG), name(name), type(type) {}
 };
 
@@ -1011,8 +956,7 @@ struct Module : public ANode {
 // parser module
 //
 
-ModulePtr
-parse(SourcePtr source);
+ModulePtr parse(SourcePtr source);
 
 
 
@@ -1020,27 +964,19 @@ parse(SourcePtr source);
 // printer module
 //
 
-ostream &
-operator<<(ostream &out,
-           const Object &obj);
+ostream &operator<<(ostream &out, const Object &obj);
 
-ostream &
-operator<<(ostream &out,
-           const Object *obj);
+ostream &operator<<(ostream &out, const Object *obj);
 
 template <class T>
-ostream &
-operator<<(ostream &out,
-           const Pointer<T> &p)
+ostream &operator<<(ostream &out, const Pointer<T> &p)
 {
     out << *p;
     return out;
 }
 
 template <class T>
-ostream &
-operator<<(ostream &out,
-           const vector<T> &v)
+ostream &operator<<(ostream &out, const vector<T> &v)
 {
     out << "[";
     typename vector<T>::const_iterator i, end;
@@ -1078,27 +1014,12 @@ struct Env : public Object {
 // env module
 //
 
-void
-addGlobal(ModulePtr module,
-          IdentifierPtr name,
-          ObjectPtr value);
+void addGlobal(ModulePtr module, IdentifierPtr name, ObjectPtr value);
+ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name);
+ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
 
-ObjectPtr
-lookupGlobal(ModulePtr module,
-             IdentifierPtr name);
-
-ObjectPtr
-lookupPublic(ModulePtr module,
-             IdentifierPtr name);
-
-void
-addLocal(EnvPtr env,
-         IdentifierPtr name,
-         ObjectPtr value);
-
-ObjectPtr
-lookupEnv(EnvPtr env,
-          IdentifierPtr name);
+void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);
+ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
 
 
 
@@ -1106,29 +1027,16 @@ lookupEnv(EnvPtr env,
 // loader module
 //
 
-void
-addSearchPath(const string &path);
+void addSearchPath(const string &path);
+ModulePtr loadProgram(const string &fileName);
 
-ModulePtr
-loadProgram(const string &fileName);
+ModulePtr loadedModule(const string &module);
+ObjectPtr coreName(const string &name);
+ObjectPtr primName(const string &name);
 
-ModulePtr
-loadedModule(const string &module);
-
-ObjectPtr
-coreName(const string &name);
-
-ObjectPtr
-primName(const string &name);
-
-ExprPtr
-moduleNameRef(const string &module, const string &name);
-
-ExprPtr
-coreNameRef(const string &name);
-
-ExprPtr
-primNameRef(const string &name);
+ExprPtr moduleNameRef(const string &module, const string &name);
+ExprPtr coreNameRef(const string &name);
+ExprPtr primNameRef(const string &name);
 
 
 
@@ -1266,8 +1174,7 @@ struct BoolType : public Type {
 struct IntegerType : public Type {
     int bits;
     bool isSigned;
-    IntegerType(int bits,
-                bool isSigned)
+    IntegerType(int bits, bool isSigned)
         : Type(INTEGER_TYPE), bits(bits), isSigned(isSigned) {}
 };
 
@@ -1280,8 +1187,7 @@ struct FloatType : public Type {
 struct ArrayType : public Type {
     TypePtr elementType;
     int size;
-    ArrayType(TypePtr elementType,
-              int size)
+    ArrayType(TypePtr elementType, int size)
         : Type(ARRAY_TYPE), elementType(elementType), size(size) {}
 };
 
@@ -1314,8 +1220,7 @@ struct RecordType : public Type {
     RecordType(RecordPtr record)
         : Type(RECORD_TYPE), record(record), fieldsInitialized(false),
           layout(NULL) {}
-    RecordType(RecordPtr record,
-               const vector<ValuePtr> &params)
+    RecordType(RecordPtr record, const vector<ValuePtr> &params)
         : Type(RECORD_TYPE), record(record), params(params),
           fieldsInitialized(false), layout(NULL) {}
 };
@@ -1340,8 +1245,7 @@ extern llvm::Module *llvmModule;
 extern llvm::ExecutionEngine *llvmEngine;
 extern const llvm::TargetData *llvmTargetData;
 
-void
-initLLVM();
+void initLLVM();
 
 extern TypePtr boolType;
 extern TypePtr int8Type;
@@ -1359,49 +1263,23 @@ extern TypePtr compilerObjectType;
 
 extern TypePtr voidType;
 
-void
-initTypes();
+void initTypes();
 
-TypePtr
-integerType(int bits,
-            bool isSigned);
+TypePtr integerType(int bits, bool isSigned);
+TypePtr intType(int bits);
+TypePtr uintType(int bits);
+TypePtr floatType(int bits);
+TypePtr arrayType(TypePtr elememtType, int size);
+TypePtr tupleType(const vector<TypePtr> &elementTypes);
+TypePtr pointerType(TypePtr pointeeType);
+TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params);
 
-TypePtr
-intType(int bits);
+const vector<TypePtr> & recordFieldTypes(RecordTypePtr t);
+const map<string, int> & recordFieldIndexMap(RecordTypePtr t);
 
-TypePtr
-uintType(int bits);
-
-TypePtr
-floatType(int bits);
-
-TypePtr
-arrayType(TypePtr elememtType,
-          int size);
-TypePtr
-tupleType(const vector<TypePtr> &elementTypes);
-
-TypePtr
-pointerType(TypePtr pointeeType);
-
-TypePtr
-recordType(RecordPtr record,
-           const vector<ValuePtr> &params);
-
-const vector<TypePtr> &
-recordFieldTypes(RecordTypePtr t);
-
-const map<string, int> &
-recordFieldIndexMap(RecordTypePtr t);
-
-const llvm::Type *
-llvmType(TypePtr t);
-
-int
-typeSize(TypePtr t);
-
-void
-typePrint(TypePtr t, ostream &out);
+const llvm::Type * llvmType(TypePtr t);
+int typeSize(TypePtr t);
+void typePrint(TypePtr t, ostream &out);
 
 
 
@@ -1413,9 +1291,7 @@ struct Value : public Object {
     TypePtr type;
     char *buf;
     bool isOwned;
-    Value(TypePtr type,
-          char *buf,
-          bool isOwned)
+    Value(TypePtr type, char *buf, bool isOwned)
         : Object(VALUE), type(type), buf(buf), isOwned(isOwned) {}
     ~Value();
 };
@@ -1448,16 +1324,14 @@ struct Pattern : public Object {
 struct PatternCell : public Pattern {
     IdentifierPtr name;
     ValuePtr value;
-    PatternCell(IdentifierPtr name,
-                ValuePtr value)
+    PatternCell(IdentifierPtr name, ValuePtr value)
         : Pattern(PATTERN_CELL), name(name), value(value) {}
 };
 
 struct ArrayTypePattern : public Pattern {
     PatternPtr elementType;
     PatternPtr size;
-    ArrayTypePattern(PatternPtr elementType,
-                     PatternPtr size)
+    ArrayTypePattern(PatternPtr elementType, PatternPtr size)
         : Pattern(ARRAY_TYPE_PATTERN), elementType(elementType),
           size(size) {}
 };
@@ -1477,8 +1351,7 @@ struct PointerTypePattern : public Pattern {
 struct RecordTypePattern : public Pattern {
     RecordPtr record;
     vector<PatternPtr> params;
-    RecordTypePattern(RecordPtr record,
-                      const vector<PatternPtr> &params)
+    RecordTypePattern(RecordPtr record, const vector<PatternPtr> &params)
         : Pattern(RECORD_TYPE_PATTERN), record(record), params(params) {}
 };
 
@@ -1518,117 +1391,50 @@ struct InvokeTableEntry : public Object {
 // evaluator module
 //
 
-int
-toCOIndex(ObjectPtr obj);
+int toCOIndex(ObjectPtr obj);
+ObjectPtr fromCOIndex(int i);
 
-ObjectPtr
-fromCOIndex(int i);
+ValuePtr boolToValue(bool x);
+ValuePtr intToValue(int x);
+int valueToInt(ValuePtr v);
+bool valueToBool(ValuePtr v);
+ValuePtr coToValue(ObjectPtr x);
+ObjectPtr valueToCO(ValuePtr v);
+TypePtr valueToType(ValuePtr v);
+ObjectPtr lower(ValuePtr v);
 
-ValuePtr
-boolToValue(bool x);
-
-ValuePtr
-intToValue(int x);
-
-int
-valueToInt(ValuePtr v);
-
-bool
-valueToBool(ValuePtr v);
-
-ValuePtr
-coToValue(ObjectPtr x);
-
-ObjectPtr
-valueToCO(ValuePtr v);
-
-TypePtr
-valueToType(ValuePtr v);
-
-ObjectPtr
-lower(ValuePtr v);
-
-void
-valuePrint(ValuePtr a,
-           ostream &out);
-
-ValuePtr
-cloneValue(ValuePtr src);
-
-bool
-valueEquals(ValuePtr a,
-            ValuePtr b);
-
-int
-valueHash(ValuePtr a);
+void valuePrint(ValuePtr a, ostream &out);
+ValuePtr cloneValue(ValuePtr src);
+bool valueEquals(ValuePtr a, ValuePtr b);
+int valueHash(ValuePtr a);
 
 
 // the following versions of evaluate create their own temp block
 // they also push the expression's location onto location stack
 
-ValuePtr
-evaluateToStatic(ExprPtr expr,
-                 EnvPtr env);
+ValuePtr evaluateToStatic(ExprPtr expr, EnvPtr env);
+ObjectPtr evaluateToCO(ExprPtr expr, EnvPtr env);
+TypePtr evaluateType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateNonVoidType(ExprPtr expr, EnvPtr env);
+bool evaluateToBool(ExprPtr expr, EnvPtr env);
+PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
+bool unify(PatternPtr pattern, ValuePtr value);
+bool unifyType(PatternPtr pattern, TypePtr type);
 
-ObjectPtr
-evaluateToCO(ExprPtr expr,
-             EnvPtr env);
+ValuePtr derefCell(PatternCellPtr cell);
 
-TypePtr
-evaluateType(ExprPtr expr,
-             EnvPtr env);
+ExprPtr convertCharLiteral(char c);
+ExprPtr convertStringLiteral(const string &s);
+ExprPtr convertTuple(TuplePtr x);
+ExprPtr convertArray(ArrayPtr x);
+ExprPtr convertUnaryOp(UnaryOpPtr x);
+ExprPtr convertBinaryOp(BinaryOpPtr x);
 
-TypePtr
-evaluateNonVoidType(ExprPtr expr,
-                    EnvPtr env);
+ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args);
 
-bool
-evaluateToBool(ExprPtr expr,
-               EnvPtr env);
+StatementPtr convertForStatement(ForPtr x);
 
-PatternPtr
-evaluatePattern(ExprPtr expr,
-                EnvPtr env);
-
-bool
-unify(PatternPtr pattern,
-      ValuePtr value);
-
-bool
-unifyType(PatternPtr pattern,
-          TypePtr type);
-
-ValuePtr
-derefCell(PatternCellPtr cell);
-
-ExprPtr
-convertCharLiteral(char c);
-
-ExprPtr
-convertStringLiteral(const string &s);
-
-ExprPtr
-convertTuple(TuplePtr x);
-
-ExprPtr
-convertArray(ArrayPtr x);
-
-ExprPtr
-convertUnaryOp(UnaryOpPtr x);
-
-ExprPtr
-convertBinaryOp(BinaryOpPtr x);
-
-
-ValuePtr
-invoke(ObjectPtr callable,
-       const vector<ValuePtr> &args);
-
-StatementPtr
-convertForStatement(ForPtr x);
-
-void
-initExternalProcedure(ExternalProcedurePtr x);
+void initExternalProcedure(ExternalProcedurePtr x);
 
 
 
@@ -1640,9 +1446,7 @@ struct PValue : public Object {
     TypePtr type;
     bool isTemp;
     bool isStatic;
-    PValue(TypePtr type,
-           bool isTemp,
-           bool isStatic)
+    PValue(TypePtr type, bool isTemp, bool isStatic)
         : Object(PVALUE), type(type), isTemp(isTemp),
           isStatic(isStatic) {}
 };
@@ -1655,8 +1459,7 @@ struct ArgList : public Object {
     bool allStatic;
     bool recursionError;
 
-    ArgList(const vector<ExprPtr> &exprs,
-            EnvPtr env);
+    ArgList(const vector<ExprPtr> &exprs, EnvPtr env);
     unsigned size() const { return exprs.size(); }
     PValuePtr partialValue(int i);
     TypePtr type(int i);
@@ -1665,22 +1468,14 @@ struct ArgList : public Object {
 
     void ensureArity(int n);
 
-    bool unifyFormalArg(int i,
-                        FormalArgPtr farg,
-                        EnvPtr env);
-    bool unifyFormalArgs(const vector<FormalArgPtr> &fargs,
-                         EnvPtr fenv);
-    void ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs,
-                               EnvPtr fenv);
+    bool unifyFormalArg(int i, FormalArgPtr farg, EnvPtr env);
+    bool unifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv);
+    void ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv);
 };
 
-PValuePtr
-partialEval(ExprPtr expr,
-            EnvPtr env);
+PValuePtr partialEval(ExprPtr expr, EnvPtr env);
 
-PValuePtr
-partialInvoke(ObjectPtr obj,
-              ArgListPtr args);
+PValuePtr partialInvoke(ObjectPtr obj, ArgListPtr args);
 
 
 #endif
