@@ -499,7 +499,9 @@ partialEvalStatement(StatementPtr stmt, EnvPtr env, ReturnInfo &rinfo)
             rinfo.set(voidType, false);
         }
         else {
+            pushTempBlock();
             PValuePtr result = partialEval(x->expr, env);
+            popTempBlock();
             if (!result)
                 return false;
             rinfo.set(result->type, false);
@@ -508,7 +510,9 @@ partialEvalStatement(StatementPtr stmt, EnvPtr env, ReturnInfo &rinfo)
     }
     case RETURN_REF : {
         ReturnRef *x = (ReturnRef *)stmt.ptr();
+        pushTempBlock();
         PValuePtr right = partialEval(x->expr, env);
+        popTempBlock();
         if (!right)
             return false;
         rinfo.set(right->type, true);
@@ -551,7 +555,9 @@ partialEvalBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
     case VAR :
     case REF : {
+        pushTempBlock();
         PValuePtr right = partialEval(x->expr, env);
+        popTempBlock();
         if (!right)
             return NULL;
         addLocal(env2, x->name, right.ptr());

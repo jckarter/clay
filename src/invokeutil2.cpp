@@ -35,7 +35,7 @@ TypePtr ArgList::type(int i)
 ValuePtr ArgList::value(int i)
 {
     if (!this->_values[i])
-        this->_values[i] = evaluateToStatic(this->exprs[i], this->env);
+        this->_values[i] = evaluateNonVoid(this->exprs[i], this->env);
     return this->_values[i];
 }
 

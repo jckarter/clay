@@ -1408,6 +1408,8 @@ ValuePtr cloneValue(ValuePtr src);
 bool valueEquals(ValuePtr a, ValuePtr b);
 int valueHash(ValuePtr a);
 
+void pushTempBlock();
+void popTempBlock();
 
 // the following versions of evaluate create their own temp block
 // they also push the expression's location onto location stack
@@ -1418,6 +1420,13 @@ TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateNonVoidType(ExprPtr expr, EnvPtr env);
 bool evaluateToBool(ExprPtr expr, EnvPtr env);
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
+
+// the following versions of evaluate don't create a new temp block
+// but they push the expression's location onto location stack
+ValuePtr evaluateNonVoid(ExprPtr expr, EnvPtr env);
+ValuePtr evaluate(ExprPtr expr, EnvPtr env);
+ValuePtr evaluateNested(ExprPtr expr, EnvPtr env);
+
 bool unify(PatternPtr pattern, ValuePtr value);
 bool unifyType(PatternPtr pattern, TypePtr type);
 

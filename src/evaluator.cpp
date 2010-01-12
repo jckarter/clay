@@ -17,15 +17,7 @@ void valueDestroy(ValuePtr dest);
 void valueCopy(ValuePtr dest, ValuePtr src);
 void valueAssign(ValuePtr dest, ValuePtr src);
 
-void pushTempBlock();
-void popTempBlock();
 void installTemp(ValuePtr value);
-
-// the following versions of evaluate don't create a new temp block
-// but they push the expression's locaiton onto location stack
-ValuePtr evaluateNonVoid(ExprPtr expr, EnvPtr env);
-ValuePtr evaluate(ExprPtr expr, EnvPtr env);
-ValuePtr evaluateNested(ExprPtr expr, EnvPtr env);
 
 // the following versions of evaluate don't create a new temp block
 // and they don't push the expression's location onto location stack
