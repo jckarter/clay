@@ -22,11 +22,6 @@ ArgList::ArgList(const vector<ExprPtr> &exprs, EnvPtr env)
     this->_values.resize(exprs.size());
 }
 
-PValuePtr ArgList::partialValue(int i)
-{
-    return this->_pvalues[i];
-}
-
 TypePtr ArgList::type(int i)
 {
     return this->_pvalues[i]->type;

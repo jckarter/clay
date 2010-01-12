@@ -1470,7 +1470,6 @@ struct ArgList : public Object {
 
     ArgList(const vector<ExprPtr> &exprs, EnvPtr env);
     unsigned size() const { return exprs.size(); }
-    PValuePtr partialValue(int i);
     TypePtr type(int i);
     ValuePtr value(int i);
     TypePtr typeValue(int i);
