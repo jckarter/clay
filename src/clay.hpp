@@ -1488,6 +1488,7 @@ struct ArgList : public Object {
     ArgList(const vector<ExprPtr> &exprs, EnvPtr env);
     unsigned size() const { return exprs.size(); }
     TypePtr type(int i);
+    bool isTemp(int i );
     ValuePtr value(int i);
     TypePtr typeValue(int i);
 
@@ -1497,6 +1498,8 @@ struct ArgList : public Object {
     bool unifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv);
     void ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv);
     void removeStaticArgs(const vector<FormalArgPtr> &fargs);
+
+    CValuePtr codegen(int i, llvm::Value *outPtr);
 };
 
 
@@ -1530,6 +1533,12 @@ struct CValue : public Object {
     CValue(TypePtr type, llvm::Value *llval)
         : Object(CVALUE), type(type), llval(llval) {}
 };
+
+CValuePtr
+codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr);
+
+CValuePtr
+codegenInvoke(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr);
 
 
 #endif

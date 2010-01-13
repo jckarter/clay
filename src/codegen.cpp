@@ -21,14 +21,8 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src);
 void codegenValueAssign(CValuePtr dest, CValuePtr src);
 llvm::Value *codegenToBool(CValuePtr a);
 
-CValuePtr
-codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr);
-
 void
 codegenInvokeVoid(ObjectPtr obj, ArgListPtr args);
-
-CValuePtr
-codegenInvoke(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr);
 
 CValuePtr
 codegenInvokeRecord(RecordPtr x, ArgListPtr args, llvm::Value *outPtr);
@@ -502,6 +496,100 @@ codegenInvokeRecord(RecordPtr x, ArgListPtr args, llvm::Value *outPtr)
     TypePtr t = recordType(x, cellValues);
     args->removeStaticArgs(x->formalArgs);
     return codegenInvokeType(t, args, outPtr);
+}
+
+
+
+//
+// codegenInvokeType
+//
+// support constructors for array types, tuple types, and record types.
+// support default constructor, copy constructor for all types
+//
+
+CValuePtr
+codegenInvokeType(TypePtr x, ArgListPtr args, llvm::Value *outPtr)
+{
+    CValuePtr result = new CValue(x, outPtr);
+
+    if (args->size() == 0) {
+        codegenValueInit(result);
+        return result;
+    }
+
+    if ((args->size() == 1) && (args->type(0) == x)) {
+        if (args->isTemp(0))
+            args->codegen(0, outPtr);
+        else
+            codegenValueCopy(result, args->codegen(0, NULL));
+        return result;
+    }
+
+    switch (x->typeKind) {
+
+    case ARRAY_TYPE : {
+        ArrayType *y = (ArrayType *)x.ptr();
+        args->ensureArity(y->size);
+        TypePtr etype = y->elementType;
+        for (unsigned i = 0; i < args->size(); ++i) {
+            ensureSameType(args->type(i), etype);
+            llvm::Value *ptr =
+                builder->CreateConstGEP2_32(outPtr, 0, i);
+            if (args->isTemp(i)) {
+                args->codegen(i, ptr);
+            }
+            else {
+                CValuePtr dest = new CValue(etype, ptr);
+                CValuePtr src = args->codegen(i, NULL);
+                codegenValueCopy(dest, src);
+            }
+        }
+        return result;
+    }
+
+    case TUPLE_TYPE : {
+        TupleType *y = (TupleType *)x.ptr();
+        args->ensureArity(y->elementTypes.size());
+        for (unsigned i = 0; i < args->size(); ++i) {
+            ensureSameType(args->type(i), y->elementTypes[i]);
+            llvm::Value *ptr =
+                builder->CreateConstGEP2_32(outPtr, 0, i);
+            if (args->isTemp(i)) {
+                args->codegen(i, ptr);
+            }
+            else {
+                CValuePtr dest = new CValue(y->elementTypes[i], ptr);
+                CValuePtr src = args->codegen(i, NULL);
+                codegenValueCopy(dest, src);
+            }
+        }
+        return result;
+    }
+
+    case RECORD_TYPE : {
+        RecordType *y = (RecordType *)x.ptr();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(y);
+        args->ensureArity(fieldTypes.size());
+        for (unsigned i = 0; i < args->size(); ++i) {
+            ensureSameType(args->type(i), fieldTypes[i]);
+            llvm::Value *ptr =
+                builder->CreateConstGEP2_32(outPtr, 0, i);
+            if (args->isTemp(i)) {
+                args->codegen(i, ptr);
+            }
+            else {
+                CValuePtr dest = new CValue(fieldTypes[i], ptr);
+                CValuePtr src = args->codegen(i, NULL);
+                codegenValueCopy(dest, src);
+            }
+        }
+        return result;
+    }
+
+    }
+
+    error("invalid constructor");
+    return NULL;
 }
 
 

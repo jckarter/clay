@@ -27,6 +27,11 @@ TypePtr ArgList::type(int i)
     return this->_pvalues[i]->type;
 }
 
+bool ArgList::isTemp(int i )
+{
+    return this->_pvalues[i]->isTemp;
+}
+
 ValuePtr ArgList::value(int i)
 {
     if (!this->_values[i])
@@ -103,6 +108,11 @@ void ArgList::removeStaticArgs(const vector<FormalArgPtr> &fargs)
             ++j;
         }
     }
+}
+
+CValuePtr ArgList::codegen(int i, llvm::Value *outPtr)
+{
+    return ::codegen(this->exprs[i], this->env, outPtr);
 }
 
 
