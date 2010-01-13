@@ -30,6 +30,28 @@ codegenInvokeVoid(ObjectPtr obj, ArgListPtr args);
 CValuePtr
 codegenInvoke(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr);
 
+CValuePtr
+codegenInvokeRecord(RecordPtr x, ArgListPtr args, llvm::Value *outPtr);
+
+CValuePtr
+codegenInvokeType(TypePtr x, ArgListPtr args, llvm::Value *outPtr);
+
+CValuePtr
+codegenInvokeProcedure(ProcedurePtr x, ArgListPtr args, llvm::Value *outPtr);
+
+CValuePtr
+codegenInvokeOverloadable(OverloadablePtr x,
+                          ArgListPtr args,
+                          llvm::Value *outPtr);
+
+CValuePtr
+codegenInvokeExternal(ExternalProcedurePtr x,
+                      ArgListPtr args,
+                      llvm::Value *outPtr);
+
+CValuePtr
+codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr);
+
 void codegenValue(ValuePtr v, llvm::Value *outPtr);
 
 static
@@ -441,6 +463,45 @@ codegenInvokeVoid(ObjectPtr obj, ArgListPtr args)
 CValuePtr
 codegenInvoke(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr)
 {
+    switch (obj->objKind) {
+    case RECORD :
+        return codegenInvokeRecord((Record *)obj.ptr(), args, outPtr);
+    case TYPE :
+        return codegenInvokeType((Type *)obj.ptr(), args, outPtr);
+    case PROCEDURE :
+        return codegenInvokeProcedure((Procedure *)obj.ptr(), args, outPtr);
+    case OVERLOADABLE :
+        return codegenInvokeOverloadable((Overloadable *)obj.ptr(),
+                                         args,
+                                         outPtr);
+    case EXTERNAL_PROCEDURE :
+        return codegenInvokeExternal((ExternalProcedure *)obj.ptr(),
+                                     args,
+                                     outPtr);
+    case PRIM_OP :
+        return codegenInvokePrimOp((PrimOp *)obj.ptr(), args, outPtr);
+    }
+    error("invalid operation");
+    return NULL;
+}
+
+
+
+//
+// codegenInvokeRecord
+//
+
+CValuePtr
+codegenInvokeRecord(RecordPtr x, ArgListPtr args, llvm::Value *outPtr)
+{
+    vector<PatternCellPtr> cells;
+    EnvPtr env = initPatternVars(x->env, x->patternVars, cells);
+    args->ensureUnifyFormalArgs(x->formalArgs, env);
+    vector<ValuePtr> cellValues;
+    derefCells(cells, cellValues);
+    TypePtr t = recordType(x, cellValues);
+    args->removeStaticArgs(x->formalArgs);
+    return codegenInvokeType(t, args, outPtr);
 }
 
 
