@@ -134,6 +134,7 @@ enum ObjectKind {
 
     SC_EXPR,
     VALUE_EXPR,
+    CVALUE_EXPR,
 
     BLOCK,
     LABEL,
@@ -212,6 +213,7 @@ struct And;
 struct Or;
 struct SCExpr;
 struct ValueExpr;
+struct CValueExpr;
 
 struct Statement;
 struct Block;
@@ -270,9 +272,9 @@ struct RecordTypePattern;
 struct InvokeTable;
 struct InvokeTableEntry;
 
-struct PValue;
 struct ArgList;
-
+struct PValue;
+struct CValue;
 
 
 //
@@ -307,6 +309,7 @@ typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
 typedef Pointer<SCExpr> SCExprPtr;
 typedef Pointer<ValueExpr> ValueExprPtr;
+typedef Pointer<CValueExpr> CValueExprPtr;
 
 typedef Pointer<Statement> StatementPtr;
 typedef Pointer<Block> BlockPtr;
@@ -365,8 +368,9 @@ typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 typedef Pointer<InvokeTable> InvokeTablePtr;
 typedef Pointer<InvokeTableEntry> InvokeTableEntryPtr;
 
-typedef Pointer<PValue> PValuePtr;
 typedef Pointer<ArgList> ArgListPtr;
+typedef Pointer<PValue> PValuePtr;
+typedef Pointer<CValue> CValuePtr;
 
 
 
@@ -436,12 +440,14 @@ void ensureArity(const vector<T> &args, int size)
 
 void ensurePrimitiveType(TypePtr t);
 void ensureSameType(TypePtr ta, TypePtr tb);
+void ensureBoolType(TypePtr t);
 void ensureNumericType(TypePtr t);
 void ensureIntegerType(TypePtr t);
 void ensurePointerType(TypePtr t);
 void ensureArrayType(TypePtr t);
 void ensureTupleType(TypePtr t);
 void ensureRecordType(TypePtr t);
+void ensureVoidType(TypePtr t);
 
 struct DebugPrinter {
     static int indent;
@@ -682,6 +688,12 @@ struct ValueExpr : public Expr {
     ValuePtr value;
     ValueExpr(ValuePtr value)
         : Expr(VALUE_EXPR), value(value) {}
+};
+
+struct CValueExpr : public Expr {
+    CValuePtr cvalue;
+    CValueExpr(CValuePtr cvalue)
+        : Expr(CVALUE_EXPR), cvalue(cvalue) {}
 };
 
 
@@ -1448,17 +1460,8 @@ void initExternalProcedure(ExternalProcedurePtr x);
 
 
 //
-// partial evaluator module
+// invoke utilities module
 //
-
-struct PValue : public Object {
-    TypePtr type;
-    bool isTemp;
-    bool isStatic;
-    PValue(TypePtr type, bool isTemp, bool isStatic)
-        : Object(PVALUE), type(type), isTemp(isTemp),
-          isStatic(isStatic) {}
-};
 
 struct ArgList : public Object {
     vector<ExprPtr> exprs;
@@ -1481,9 +1484,37 @@ struct ArgList : public Object {
     void ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv);
 };
 
+
+
+//
+// partial evaluator module
+//
+
+struct PValue : public Object {
+    TypePtr type;
+    bool isTemp;
+    bool isStatic;
+    PValue(TypePtr type, bool isTemp, bool isStatic)
+        : Object(PVALUE), type(type), isTemp(isTemp),
+          isStatic(isStatic) {}
+};
+
 PValuePtr partialEval(ExprPtr expr, EnvPtr env);
 
 PValuePtr partialInvoke(ObjectPtr obj, ArgListPtr args);
+
+
+
+//
+// code generator module
+//
+
+struct CValue : public Object {
+    TypePtr type;
+    llvm::Value *llval;
+    CValue(TypePtr type, llvm::Value *llval)
+        : Object(CVALUE), type(type), llval(llval) {}
+};
 
 
 #endif

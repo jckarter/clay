@@ -1040,6 +1040,9 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
             }
             return z;
         }
+        else if ((y->objKind == PVALUE) || (y->objKind == CVALUE)) {
+            error("variable cannot be evaluated at compile time");
+        }
         return coToValue(y);
     }
 
@@ -1137,6 +1140,9 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
         ValueExpr *x = (ValueExpr *)expr.ptr();
         return cloneValue(x->value);
     }
+
+    case CVALUE_EXPR :
+        error("expression cannot be evaluated at compile time");
 
     default :
         assert(false);

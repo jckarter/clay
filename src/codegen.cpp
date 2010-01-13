@@ -7,16 +7,6 @@
 // declarations
 //
 
-struct CValue;
-typedef Pointer<CValue> CValuePtr;
-
-struct CValue : public Object {
-    TypePtr type;
-    llvm::Value *llval;
-    CValue(TypePtr type, llvm::Value *llval)
-        : Object(CVALUE), type(type), llval(llval) {}
-};
-
 llvm::Function *llvmFunction;
 llvm::IRBuilder<> *initBuilder;
 llvm::IRBuilder<> *builder;
@@ -24,19 +14,20 @@ llvm::IRBuilder<> *builder;
 
 // value operations codegen
 
-llvm::Value * codegenAllocValue(TypePtr t);
+CValuePtr codegenAllocValue(TypePtr t);
 void codegenValueInit(CValuePtr dest);
 void codegenValueDestroy(CValuePtr dest);
 void codegenValueCopy(CValuePtr dest, CValuePtr src);
 void codegenValueAssign(CValuePtr dest, CValuePtr src);
+llvm::Value *codegenToBool(CValuePtr a);
 
-llvm::Value *
+CValuePtr
 codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr);
 
-llvm::Value *
-codegenIndexing(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr);
+void
+codegenInvokeVoid(ObjectPtr obj, ArgListPtr args);
 
-llvm::Value *
+CValuePtr
 codegenInvoke(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr);
 
 void codegenValue(ValuePtr v, llvm::Value *outPtr);
@@ -48,13 +39,70 @@ numericConstant(ValuePtr v);
 
 
 //
-// codegenAllocValue
+// codegen value ops
 //
 
-llvm::Value * codegenAllocValue(TypePtr t)
+CValuePtr codegenAllocValue(TypePtr t)
 {
     const llvm::Type *llt = llvmType(t);
-    return initBuilder->CreateAlloca(llt);
+    llvm::Value *llval = initBuilder->CreateAlloca(llt);
+    return new CValue(t, llval);
+}
+
+void codegenValueInit(CValuePtr dest)
+{
+    vector<ExprPtr> exprs;
+    exprs.push_back(new CValueExpr(dest));
+    ArgListPtr args = new ArgList(exprs, new Env());
+    codegenInvokeVoid(coreName("init"), args);
+}
+
+void codegenValueDestroy(CValuePtr dest)
+{
+    vector<ExprPtr> exprs;
+    exprs.push_back(new CValueExpr(dest));
+    ArgListPtr args = new ArgList(exprs, new Env());
+    codegenInvokeVoid(coreName("destroy"), args);
+}
+
+void codegenValueCopy(CValuePtr dest, CValuePtr src)
+{
+    vector<ExprPtr> exprs;
+    exprs.push_back(new CValueExpr(dest));
+    exprs.push_back(new CValueExpr(src));
+    ArgListPtr args = new ArgList(exprs, new Env());
+    codegenInvokeVoid(coreName("copy"), args);
+}
+
+void codegenValueAssign(CValuePtr dest, CValuePtr src)
+{
+    vector<ExprPtr> exprs;
+    exprs.push_back(new CValueExpr(dest));
+    exprs.push_back(new CValueExpr(src));
+    ArgListPtr args = new ArgList(exprs, new Env());
+    codegenInvokeVoid(coreName("assign"), args);
+}
+
+llvm::Value *codegenToBool(CValuePtr a)
+{
+    vector<ExprPtr> exprs;
+    exprs.push_back(new CValueExpr(a));
+    ArgListPtr args = new ArgList(exprs, new Env());
+    ObjectPtr callable = primName("boolTruth");
+    PValuePtr pv = partialInvoke(callable, args);
+    ensureBoolType(pv->type);
+    CValuePtr result;
+    if (pv->isTemp) {
+        result = codegenAllocValue(boolType);
+        codegenInvoke(callable, args, result->llval);
+    }
+    else {
+        result = codegenInvoke(callable, args, NULL);
+    }
+    llvm::Value *b1 = builder->CreateLoad(result->llval);
+    llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
+    llvm::Value *flag1 = builder->CreateICmpNE(b1, zero);
+    return flag1;
 }
 
 
@@ -63,7 +111,7 @@ llvm::Value * codegenAllocValue(TypePtr t)
 // codegen
 //
 
-llvm::Value *
+CValuePtr
 codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
 {
     LocationContext loc(expr->location);
@@ -76,7 +124,7 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
         ValuePtr v = evaluateToStatic(expr, env);
         llvm::Value *val = numericConstant(v);
         builder->CreateStore(val, outPtr);
-        return outPtr;
+        return new CValue(v->type, outPtr);
     }
 
     case CHAR_LITERAL : {
@@ -99,17 +147,17 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
         if (y->objKind == VALUE) {
             Value *z = (Value *)y.ptr();
             codegenValue(z, outPtr);
-            return outPtr;
+            return new CValue(z->type, outPtr);
         }
         else if (y->objKind == CVALUE) {
             CValue *z = (CValue *)y.ptr();
             assert(outPtr == NULL);
-            return z->llval;
+            return z;
         }
         else {
             ValuePtr z = coToValue(y);
             codegenValue(z, outPtr);
-            return outPtr;
+            return new CValue(z->type, outPtr);
         }
     }
 
@@ -130,12 +178,8 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
         PValuePtr indexable = partialEval(x->expr, env);
-        if ((indexable->type == compilerObjectType)
-            && indexable->isStatic)
-        {
-            ObjectPtr indexable2 = lower(evaluateToStatic(x->expr, env));
-            ArgListPtr args = new ArgList(x->args, env);
-            return codegenIndexing(indexable2, args, outPtr);
+        if (indexable->type == compilerObjectType) {
+            error("codegen for type creation not-supported");
         }
         error("invalid indexing operation");
         return NULL;
@@ -195,27 +239,175 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
         PValuePtr pv2 = partialEval(x->expr2, env);
         if (pv1->type != pv2->type)
             error("type mismatch in 'and' expression");
-        if (pv1->isTemp || pv2->isTemp) {
-            // codegenTemp(expr1, env, outPtr);
-            // llvm::Value *tempBool = codegenAllocValue(boolType);
-            // codegenInvoke(boolTruth, [outPtr], tempBool)
-            // codegen(if !tempBool goto end)
-            // codegenValueDestroy(outPtr);
-            // codegenTemp(expr2, env, outPtr);
-            // codegen(goto end)
-            // return outPtr
+        llvm::BasicBlock *trueBlock =
+            llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                     "andTrue1",
+                                     llvmFunction);
+        llvm::BasicBlock *falseBlock =
+            llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                     "andFalse1",
+                                     llvmFunction);
+        llvm::BasicBlock *mergeBlock =
+            llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                     "andMerge",
+                                     llvmFunction);
+        CValuePtr result;
+        if (pv1->isTemp) {
+            result = codegen(x->expr1, env, outPtr);
+            llvm::Value *flag1 = codegenToBool(result);
+            builder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+            builder->SetInsertPoint(trueBlock);
+            codegenValueDestroy(result);
+            if (pv2->isTemp) {
+                result = codegen(x->expr2, env, outPtr);
+            }
+            else {
+                CValuePtr ref2 = codegen(x->expr2, env, NULL);
+                codegenValueCopy(result, ref2);
+            }
+            builder->CreateBr(mergeBlock);
+
+            builder->SetInsertPoint(falseBlock);
+            builder->CreateBr(mergeBlock);
+
+            builder->SetInsertPoint(mergeBlock);
         }
         else {
-            // result = codegenRef(expr1, env);
-            // tempBool = alloc bool value
-            // codegenInvoke(boolTruth, [result], tempBool)
-            // codegen(if !tempBool goto end)
-            // result = codegenRef(expr2, env);
-            // codegen(goto end)
-            // return result
+            if (pv2->isTemp) {
+                result = new CValue(pv1->type, outPtr);
+                CValuePtr ref1 = codegen(x->expr1, env, NULL);
+                llvm::Value *flag1 = codegenToBool(ref1);
+                builder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+                builder->SetInsertPoint(trueBlock);
+                codegen(x->expr2, env, outPtr);
+                builder->CreateBr(mergeBlock);
+
+                builder->SetInsertPoint(falseBlock);
+                codegenValueCopy(result, ref1);
+                builder->CreateBr(mergeBlock);
+
+                builder->SetInsertPoint(mergeBlock);
+            }
+            else {
+                CValuePtr ref1 = codegen(x->expr1, env, NULL);
+                llvm::Value *flag1 = codegenToBool(ref1);
+                builder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+                builder->SetInsertPoint(trueBlock);
+                CValuePtr ref2 = codegen(x->expr2, env, NULL);
+                builder->CreateBr(mergeBlock);
+                trueBlock = builder->GetInsertBlock();
+
+                builder->SetInsertPoint(falseBlock);
+                builder->CreateBr(mergeBlock);
+
+                builder->SetInsertPoint(mergeBlock);
+                llvm::PHINode *phi = builder->CreatePHI(llvmType(ref1->type));
+                phi->addIncoming(ref1->llval, falseBlock);
+                phi->addIncoming(ref2->llval, trueBlock);
+                result = new CValue(pv1->type, phi);
+            }
         }
-        if (pv1->type != boolType)
-            error("expecting bool type in 'and' expression");
+        return result;
+    }
+
+    case OR : {
+        Or *x = (Or *)expr.ptr();
+        PValuePtr pv1 = partialEval(x->expr1, env);
+        PValuePtr pv2 = partialEval(x->expr2, env);
+        if (pv1->type != pv2->type)
+            error("type mismatch in 'or' expression");
+        llvm::BasicBlock *trueBlock =
+            llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                     "orTrue1",
+                                     llvmFunction);
+        llvm::BasicBlock *falseBlock =
+            llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                     "orFalse1",
+                                     llvmFunction);
+        llvm::BasicBlock *mergeBlock =
+            llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                     "orMerge",
+                                     llvmFunction);
+        CValuePtr result;
+        if (pv1->isTemp) {
+            result = codegen(x->expr1, env, outPtr);
+            llvm::Value *flag1 = codegenToBool(result);
+            builder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+            builder->SetInsertPoint(trueBlock);
+            builder->CreateBr(mergeBlock);
+
+            builder->SetInsertPoint(falseBlock);
+            codegenValueDestroy(result);
+            if (pv2->isTemp) {
+                result = codegen(x->expr2, env, outPtr);
+            }
+            else {
+                CValuePtr ref2 = codegen(x->expr2, env, NULL);
+                codegenValueCopy(result, ref2);
+            }
+            builder->CreateBr(mergeBlock);
+
+            builder->SetInsertPoint(mergeBlock);
+        }
+        else {
+            if (pv2->isTemp) {
+                result = new CValue(pv1->type, outPtr);
+                CValuePtr ref1 = codegen(x->expr1, env, NULL);
+                llvm::Value *flag1 = codegenToBool(ref1);
+                builder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+                builder->SetInsertPoint(trueBlock);
+                codegenValueCopy(result, ref1);
+                builder->CreateBr(mergeBlock);
+
+                builder->SetInsertPoint(falseBlock);
+                codegen(x->expr2, env, outPtr);
+                builder->CreateBr(mergeBlock);
+
+                builder->SetInsertPoint(mergeBlock);
+            }
+            else {
+                CValuePtr ref1 = codegen(x->expr1, env, NULL);
+                llvm::Value *flag1 = codegenToBool(ref1);
+                builder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+                builder->SetInsertPoint(trueBlock);
+                builder->CreateBr(mergeBlock);
+
+                builder->SetInsertPoint(falseBlock);
+                CValuePtr ref2 = codegen(x->expr2, env, NULL);
+                builder->CreateBr(mergeBlock);
+                falseBlock = builder->GetInsertBlock();
+
+                builder->SetInsertPoint(mergeBlock);
+                const llvm::Type *ptrType = llvmType(pointerType(pv1->type));
+                llvm::PHINode *phi = builder->CreatePHI(ptrType);
+                phi->addIncoming(ref1->llval, trueBlock);
+                phi->addIncoming(ref2->llval, falseBlock);
+                result = new CValue(pv1->type, phi);
+            }
+        }
+        return result;
+    }
+
+    case SC_EXPR : {
+        SCExpr *x = (SCExpr *)expr.ptr();
+        return codegen(x->expr, x->env, outPtr);
+    }
+
+    case VALUE_EXPR : {
+        ValueExpr *x = (ValueExpr *)expr.ptr();
+        codegenValue(x->value, outPtr);
+        return new CValue(x->value->type, outPtr);
+    }
+
+    case CVALUE_EXPR : {
+        CValueExpr *x = (CValueExpr *)expr.ptr();
+        return x->cvalue;
     }
 
     default :
@@ -229,12 +421,15 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
 
 
 //
-// codegenIndexing
+// codegenInvokeVoid
 //
 
-llvm::Value *
-codegenIndexing(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr)
+void
+codegenInvokeVoid(ObjectPtr obj, ArgListPtr args)
 {
+    PValuePtr pv = partialInvoke(obj, args);
+    ensureVoidType(pv->type);
+    codegenInvoke(obj, args, NULL);
 }
 
 
@@ -243,7 +438,7 @@ codegenIndexing(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr)
 // codegenInvoke
 //
 
-llvm::Value *
+CValuePtr
 codegenInvoke(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr)
 {
 }

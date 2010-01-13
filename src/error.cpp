@@ -120,6 +120,11 @@ void ensureSameType(TypePtr ta, TypePtr tb) {
         error("type mismatch");
 }
 
+void ensureBoolType(TypePtr t) {
+    if (t->typeKind != BOOL_TYPE)
+        error("bool type expected");
+}
+
 void ensureNumericType(TypePtr t) {
     switch (t->typeKind) {
     case INTEGER_TYPE :
@@ -152,6 +157,11 @@ void ensureTupleType(TypePtr t) {
 void ensureRecordType(TypePtr t) {
     if (t->typeKind != RECORD_TYPE)
         error("record type expected");
+}
+
+void ensureVoidType(TypePtr t) {
+    if (t->typeKind != VOID_TYPE)
+        error("void type expected");
 }
 
 

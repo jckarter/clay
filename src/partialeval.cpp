@@ -126,6 +126,10 @@ partialEval(ExprPtr expr, EnvPtr env)
             PValue *z = (PValue *)y.ptr();
             return new PValue(z->type, false, false);
         }
+        else if (y->objKind == CVALUE) {
+            CValue *z = (CValue *)y.ptr();
+            return new PValue(z->type, false, false);
+        }
         return new PValue(compilerObjectType, true, true);
     }
 
@@ -241,6 +245,11 @@ partialEval(ExprPtr expr, EnvPtr env)
     case VALUE_EXPR : {
         ValueExpr *x = (ValueExpr *)expr.ptr();
         return new PValue(x->value->type, true, true);
+    }
+
+    case CVALUE_EXPR : {
+        CValueExpr *x = (CValueExpr *)expr.ptr();
+        return new PValue(x->cvalue->type, false, false);
     }
 
     default :
