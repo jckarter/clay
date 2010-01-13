@@ -1409,6 +1409,46 @@ ValuePtr derefCell(PatternCellPtr cell) {
 
 
 //
+// pattern var procs
+//
+
+EnvPtr
+initPatternVars(EnvPtr parentEnv,
+                const vector<IdentifierPtr> &patternVars,
+                vector<PatternCellPtr> &cells)
+{
+    EnvPtr env = new Env(parentEnv);
+    for (unsigned i = 0; i < patternVars.size(); ++i) {
+        cells.push_back(new PatternCell(patternVars[i], NULL));
+        addLocal(env, patternVars[i], cells[i].ptr());
+    }
+    return env;
+}
+
+void
+derefCells(const vector<PatternCellPtr> &cells,
+           vector<ValuePtr> &cellValues)
+{
+    for (unsigned i = 0; i < cells.size(); ++i)
+        cellValues.push_back(derefCell(cells[i]));
+}
+
+EnvPtr
+bindPatternVars(EnvPtr parentEnv,
+                const vector<IdentifierPtr> &patternVars,
+                const vector<PatternCellPtr> &cells)
+{
+    EnvPtr env = new Env(parentEnv);
+    for (unsigned i = 0; i < patternVars.size(); ++i) {
+        ValuePtr v = derefCell(cells[i]);
+        addLocal(env, patternVars[i], v.ptr());
+    }
+    return env;
+}
+
+
+
+//
 // invokeIndexing
 //
 
@@ -1482,12 +1522,8 @@ ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args) {
 
 ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args) {
     ensureArity(args, x->formalArgs.size());
-    EnvPtr env = new Env(x->env);
     vector<PatternCellPtr> cells;
-    for (unsigned i = 0; i < x->patternVars.size(); ++i) {
-        cells.push_back(new PatternCell(x->patternVars[i], NULL));
-        addLocal(env, x->patternVars[i], cells[i].ptr());
-    }
+    EnvPtr env = initPatternVars(x->env, x->patternVars, cells);
     vector<ValuePtr> nonStaticArgs;
     for (unsigned i = 0; i < args.size(); ++i) {
         if (!matchFormalArg(args[i], x->formalArgs[i], env))
@@ -1496,8 +1532,7 @@ ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args) {
             nonStaticArgs.push_back(args[i]);
     }
     vector<ValuePtr> cellValues;
-    for (unsigned i = 0; i < cells.size(); ++i)
-        cellValues.push_back(derefCell(cells[i]));
+    derefCells(cells, cellValues);
     TypePtr t = recordType(x, cellValues);
     return invokeType(t, nonStaticArgs);
 }

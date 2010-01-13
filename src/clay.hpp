@@ -1444,6 +1444,20 @@ bool unifyType(PatternPtr pattern, TypePtr type);
 
 ValuePtr derefCell(PatternCellPtr cell);
 
+EnvPtr
+initPatternVars(EnvPtr parentEnv,
+                const vector<IdentifierPtr> &patternVars,
+                vector<PatternCellPtr> &cells);
+
+void
+derefCells(const vector<PatternCellPtr> &cells,
+           vector<ValuePtr> &cellValues);
+
+EnvPtr
+bindPatternVars(EnvPtr parentEnv,
+                const vector<IdentifierPtr> &patternVars,
+                const vector<PatternCellPtr> &cells);
+
 ExprPtr convertCharLiteral(char c);
 ExprPtr convertStringLiteral(const string &s);
 ExprPtr convertTuple(TuplePtr x);

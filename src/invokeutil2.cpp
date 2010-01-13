@@ -92,46 +92,6 @@ ArgList::ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs,
 
 
 //
-// pattern var procs
-//
-
-EnvPtr
-initPatternVars(EnvPtr parentEnv,
-                const vector<IdentifierPtr> &patternVars,
-                vector<PatternCellPtr> &cells)
-{
-    EnvPtr env = new Env(parentEnv);
-    for (unsigned i = 0; i < patternVars.size(); ++i) {
-        cells.push_back(new PatternCell(patternVars[i], NULL));
-        addLocal(env, patternVars[i], cells[i].ptr());
-    }
-    return env;
-}
-
-void
-derefCells(const vector<PatternCellPtr> &cells,
-           vector<ValuePtr> &cellValues)
-{
-    for (unsigned i = 0; i < cells.size(); ++i)
-        cellValues.push_back(derefCell(cells[i]));
-}
-
-EnvPtr
-bindPatternVars(EnvPtr parentEnv,
-                const vector<IdentifierPtr> &patternVars,
-                const vector<PatternCellPtr> &cells)
-{
-    EnvPtr env = new Env(parentEnv);
-    for (unsigned i = 0; i < patternVars.size(); ++i) {
-        ValuePtr v = derefCell(cells[i]);
-        addLocal(env, patternVars[i], v.ptr());
-    }
-    return env;
-}
-
-
-
-//
 // invoke table procs
 //
 
