@@ -1497,7 +1497,7 @@ struct ArgList : public Object {
     bool unifyFormalArg(int i, FormalArgPtr farg, EnvPtr env);
     bool unifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv);
     void ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv);
-    void removeStaticArgs(const vector<FormalArgPtr> &fargs);
+    ArgListPtr removeStaticArgs(const vector<FormalArgPtr> &fargs);
 
     CValuePtr codegen(int i, llvm::Value *outPtr);
 };

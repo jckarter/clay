@@ -494,7 +494,7 @@ codegenInvokeRecord(RecordPtr x, ArgListPtr args, llvm::Value *outPtr)
     vector<ValuePtr> cellValues;
     derefCells(cells, cellValues);
     TypePtr t = recordType(x, cellValues);
-    args->removeStaticArgs(x->formalArgs);
+    args = args->removeStaticArgs(x->formalArgs);
     return codegenInvokeType(t, args, outPtr);
 }
 

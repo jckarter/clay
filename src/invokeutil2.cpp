@@ -94,20 +94,24 @@ ArgList::ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs,
     }
 }
 
-void ArgList::removeStaticArgs(const vector<FormalArgPtr> &fargs)
+ArgListPtr ArgList::removeStaticArgs(const vector<FormalArgPtr> &fargs)
 {
     assert(fargs.size() == this->size());
     ensureArity(fargs.size());
-    for (unsigned i = 0, j = 0; i < fargs.size(); ++i) {
+
+    ArgListPtr args = new ArgList(vector<ExprPtr>(), this->env);
+    args->allStatic = this->allStatic;
+    args->recursionError = this->recursionError;
+
+    for (unsigned i = 0; i < fargs.size(); ++i) {
         if (fargs[i]->objKind == STATIC_ARG) {
-            this->exprs.erase(this->exprs.begin() + j);
-            this->_pvalues.erase(this->_pvalues.begin() + j);
-            this->_values.erase(this->_values.begin() + j);
-        }
-        else {
-            ++j;
+            args->exprs.push_back(this->exprs[i]);
+            args->_pvalues.push_back(this->_pvalues[i]);
+            args->_values.push_back(this->_values[i]);
         }
     }
+
+    return args;
 }
 
 CValuePtr ArgList::codegen(int i, llvm::Value *outPtr)
