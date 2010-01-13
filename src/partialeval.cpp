@@ -330,7 +330,8 @@ partialInvokeRecord(RecordPtr x, ArgListPtr args)
     vector<ValuePtr> cellValues;
     derefCells(cells, cellValues);
     TypePtr t = recordType(x, cellValues);
-    return new PValue(t, true, args->allStatic);
+    args->removeStaticArgs(x->formalArgs);
+    return partialInvokeType(t, args);
 }
 
 
