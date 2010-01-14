@@ -1336,3 +1336,43 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env)
 
     return env2;
 }
+
+
+
+//
+// codegenInvokeExternal
+//
+
+CValuePtr
+codegenInvokeExternal(ExternalProcedurePtr x,
+                      ArgListPtr args,
+                      llvm::Value *outPtr)
+{
+    if (!x->llvmFunc)
+        initExternalProcedure(x);
+    args->ensureArity(x->args.size());
+    vector<llvm::Value *> llArgs;
+    for (unsigned i = 0; i < args->size(); ++i) {
+        CValuePtr carg;
+        if (args->isTemp(i)) {
+            carg = codegenAllocValue(args->type(i));
+            args->codegen(i, carg->llval);
+        }
+        else {
+            carg = args->codegen(i, NULL);
+        }
+        if (carg->type != x->args[i]->type2)
+            error(args->exprs[i], "argument type mismatch");
+        llArgs.push_back(carg->llval);
+    }
+    if (x->returnType2 != voidType) {
+        assert(outPtr != NULL);
+        llArgs.push_back(outPtr);
+    }
+    else {
+        assert(outPtr == NULL);
+    }
+    builder->CreateCall(x->llvmFunc, llArgs.begin(), llArgs.end());
+
+    return new CValue(x->returnType2, outPtr);
+}
