@@ -1393,8 +1393,11 @@ struct InvokeTableEntry : public Object {
     bool returnByRef;
     bool analyzing;
 
+    // generated code
+    llvm::Function *llFunc;
+
     InvokeTableEntry() :
-        Object(DONT_CARE), analyzing(false) {}
+        Object(DONT_CARE), analyzing(false), llFunc(false) {}
 };
 
 
@@ -1517,6 +1520,7 @@ struct PValue : public Object {
           isStatic(isStatic) {}
 };
 
+PValuePtr partialEvalRoot(ExprPtr expr, EnvPtr env);
 PValuePtr partialEval(ExprPtr expr, EnvPtr env);
 
 PValuePtr partialInvoke(ObjectPtr obj, ArgListPtr args);

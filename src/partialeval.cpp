@@ -51,8 +51,15 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args);
 // partialEval
 //
 
-PValuePtr
-partialEval(ExprPtr expr, EnvPtr env)
+PValuePtr partialEvalRoot(ExprPtr expr, EnvPtr env)
+{
+    pushTempBlock();
+    PValuePtr pv = partialEval(expr, env);
+    popTempBlock();
+    return pv;
+}
+
+PValuePtr partialEval(ExprPtr expr, EnvPtr env)
 {
     LocationContext loc(expr->location);
 
@@ -509,9 +516,7 @@ partialEvalStatement(StatementPtr stmt, EnvPtr env, ReturnInfo &rinfo)
             rinfo.set(voidType, false);
         }
         else {
-            pushTempBlock();
-            PValuePtr result = partialEval(x->expr, env);
-            popTempBlock();
+            PValuePtr result = partialEvalRoot(x->expr, env);
             if (!result)
                 return false;
             rinfo.set(result->type, false);
@@ -520,9 +525,7 @@ partialEvalStatement(StatementPtr stmt, EnvPtr env, ReturnInfo &rinfo)
     }
     case RETURN_REF : {
         ReturnRef *x = (ReturnRef *)stmt.ptr();
-        pushTempBlock();
-        PValuePtr right = partialEval(x->expr, env);
-        popTempBlock();
+        PValuePtr right = partialEvalRoot(x->expr, env);
         if (!right)
             return false;
         rinfo.set(right->type, true);
@@ -565,9 +568,7 @@ partialEvalBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
     case VAR :
     case REF : {
-        pushTempBlock();
-        PValuePtr right = partialEval(x->expr, env);
-        popTempBlock();
+        PValuePtr right = partialEvalRoot(x->expr, env);
         if (!right)
             return NULL;
         addLocal(env2, x->name, right.ptr());
