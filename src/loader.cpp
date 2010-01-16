@@ -262,13 +262,9 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(primitiveEqualsP);
     PRIMITIVE(primitiveHash);
 
-    PRIMITIVE(BoolTypeP);
     PRIMITIVE(boolNot);
     PRIMITIVE(boolTruth);
 
-    PRIMITIVE(IntegerTypeP);
-    PRIMITIVE(SignedIntegerTypeP);
-    PRIMITIVE(FloatTypeP);
     PRIMITIVE(numericEqualsP);
     PRIMITIVE(numericLesserP);
     PRIMITIVE(numericAdd);
@@ -286,14 +282,7 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(numericConvert);
 
-    PRIMITIVE(VoidTypeP);
-
-    PRIMITIVE(CompilerObjectTypeP);
-
-    PRIMITIVE(PointerTypeP);
-    PRIMITIVE(PointerType);
     PRIMITIVE(Pointer);
-    PRIMITIVE(PointeeType);
 
     PRIMITIVE(addressOf);
     PRIMITIVE(pointerDereference);
@@ -303,25 +292,19 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(allocateMemory);
     PRIMITIVE(freeMemory);
 
-    PRIMITIVE(ArrayTypeP);
-    PRIMITIVE(ArrayType);
     PRIMITIVE(Array);
-    PRIMITIVE(ArrayElementType);
-    PRIMITIVE(ArraySize);
     PRIMITIVE(array);
     PRIMITIVE(arrayRef);
 
     PRIMITIVE(TupleTypeP);
-    PRIMITIVE(TupleType);
     PRIMITIVE(Tuple);
-    PRIMITIVE(TupleSize);
+    PRIMITIVE(TupleElementCount);
     PRIMITIVE(TupleElementType);
     PRIMITIVE(TupleElementOffset);
     PRIMITIVE(tuple);
     PRIMITIVE(tupleRef);
 
     PRIMITIVE(RecordTypeP);
-    PRIMITIVE(RecordType);
     PRIMITIVE(RecordFieldCount);
     PRIMITIVE(RecordFieldType);
     PRIMITIVE(RecordFieldOffset);

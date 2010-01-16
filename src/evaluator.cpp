@@ -1461,13 +1461,31 @@ ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args) {
     }
     case PRIM_OP : {
         PrimOp *x = (PrimOp *)obj.ptr();
+
         switch (x->primOpCode) {
-        case PRIM_Pointer :
-            return invoke(primName("PointerType"), args);
-        case PRIM_Array :
-            return invoke(primName("ArrayType"), args);
-        case PRIM_Tuple :
-            return invoke(primName("TupleType"), args);
+
+        case PRIM_Pointer : {
+            ensureArity(args, 1);
+            TypePtr t = valueToType(args[0]);
+            return coToValue(pointerType(t).ptr());
+        }
+
+        case PRIM_Array : {
+            ensureArity(args, 2);
+            TypePtr t = valueToType(args[0]);
+            int n = valueToInt(args[1]);
+            return coToValue(arrayType(t, n).ptr());
+        }
+
+        case PRIM_Tuple : {
+            if (args.size() < 2)
+                error("tuple type requires atleast two element types");
+            vector<TypePtr> elementTypes;
+            for (unsigned i = 0; i < args.size(); ++i)
+                elementTypes.push_back(valueToType(args[i]));
+            return coToValue(tupleType(elementTypes).ptr());
+        }
+
         }
     }
     }
@@ -2061,11 +2079,6 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         return intToValue(valueHash(args[0]));
     }
 
-    case PRIM_BoolTypeP : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        return boolToValue(t == boolType);
-    }
     case PRIM_boolNot : {
         ensureArity(args, 1);
         bool x = valueToBool(args[0]);
@@ -2077,24 +2090,6 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         return boolToValue(x);
     }
 
-    case PRIM_IntegerTypeP : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        return boolToValue(t->typeKind == INTEGER_TYPE);
-    }
-    case PRIM_SignedIntegerTypeP : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        if (t->typeKind != INTEGER_TYPE)
-            return boolToValue(false);
-        IntegerType *y = (IntegerType *)t.ptr();
-        return boolToValue(y->isSigned);
-    }
-    case PRIM_FloatTypeP : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        return boolToValue(t->typeKind == FLOAT_TYPE);
-    }
     case PRIM_numericEqualsP : {
         ensureArity(args, 2);
         ensureNumericType(args[0]->type);
@@ -2182,37 +2177,8 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         return numericConvert(t, args[1]);
     }
 
-    case PRIM_VoidTypeP : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        return boolToValue(t == voidType);
-    }
-
-    case PRIM_CompilerObjectTypeP : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        return boolToValue(t == compilerObjectType);
-    }
-
-    case PRIM_PointerTypeP : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        return boolToValue(t->typeKind == POINTER_TYPE);
-    }
-    case PRIM_PointerType : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        return coToValue(pointerType(t).ptr());
-    }
     case PRIM_Pointer : {
         error("Pointer type constructor cannot be invoked");
-    }
-    case PRIM_PointeeType : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        ensurePointerType(t);
-        PointerType *pt = (PointerType *)t.ptr();
-        return coToValue(pt->pointeeType.ptr());
     }
 
     case PRIM_addressOf : {
@@ -2268,33 +2234,8 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         return voidValue;
     }
 
-    case PRIM_ArrayTypeP : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        return boolToValue(t->typeKind == ARRAY_TYPE);
-    }
-    case PRIM_ArrayType : {
-        ensureArity(args, 2);
-        TypePtr t = valueToType(args[0]);
-        int n = valueToInt(args[1]);
-        return coToValue(arrayType(t, n).ptr());
-    }
     case PRIM_Array : {
         error("Array type constructor cannot be invoked");
-    }
-    case PRIM_ArrayElementType : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        ensureArrayType(t);
-        ArrayType *at = (ArrayType *)t.ptr();
-        return coToValue(at->elementType.ptr());
-    }
-    case PRIM_ArraySize : {
-        ensureArity(args, 1);
-        TypePtr t = valueToType(args[0]);
-        ensureArrayType(t);
-        ArrayType *at = (ArrayType *)t.ptr();
-        return intToValue(at->size);
     }
     case PRIM_array : {
         if (args.empty())
@@ -2325,18 +2266,10 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         TypePtr t = valueToType(args[0]);
         return boolToValue(t->typeKind == TUPLE_TYPE);
     }
-    case PRIM_TupleType : {
-        if (args.size() < 2)
-            error("tuple type requires atleast two element types");
-        vector<TypePtr> elementTypes;
-        for (unsigned i = 0; i < args.size(); ++i)
-            elementTypes.push_back(valueToType(args[i]));
-        return coToValue(tupleType(elementTypes).ptr());
-    }
     case PRIM_Tuple : {
         error("Tuple type constructor cannot be invoked");
     }
-    case PRIM_TupleSize : {
+    case PRIM_TupleElementCount : {
         ensureArity(args, 1);
         TypePtr t = valueToType(args[0]);
         ensureTupleType(t);
@@ -2396,20 +2329,6 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureArity(args, 1);
         TypePtr t = valueToType(args[0]);
         return boolToValue(t->typeKind == RECORD_TYPE);
-    }
-    case PRIM_RecordType : {
-        if (args.size() < 1)
-            error("insufficient no. of arguments");
-        ObjectPtr obj = valueToCO(args[0]);
-        if (obj->objKind != RECORD)
-            error("invalid record argument");
-        RecordPtr r = (Record *)obj.ptr();
-        if (r->patternVars.size() != args.size()-1)
-            error("incorrect no. of arguments");
-        vector<ValuePtr> params;
-        for (unsigned i = 1; i < args.size(); ++i)
-            params.push_back(args[i]);
-        return coToValue(recordType(r, params).ptr());
     }
     case PRIM_RecordFieldCount : {
         ensureArity(args, 1);

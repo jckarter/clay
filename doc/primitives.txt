@@ -18,16 +18,8 @@ primitiveAssign[T](dest:T, src:T):Void
 primitiveEquals?[T](a:T, b:T):Bool
 primitiveHash[T](a:T):Int32
 
-BoolType?(T:CompilerObject):Bool
 boolNot(a:Bool):Bool
 boolTruth(a:Bool):Bool
-
-IntegerType?(T:CompilerObject):Bool
-SignedIntegerType?(T:CompilerObject):Bool
-
-FloatType?(T:CompilerObject):Bool
-
-NumericType?(T:CompilerObject):Bool = IntegerType?(T) or FloatType?(T);
 
 numericEquals?[N](a:N, b:N): Bool if (NumericType?(N))
 numericLesser?[N](a:N, b:N): Bool if (NumericType?(N))
@@ -47,20 +39,12 @@ integerBitwiseXor[I](a:I, b:I): I if (IntegerType?(I))
 numericConvert[Dest,Src](static Dest, a:Src): Dest
     if (NumericType?(Dest) and NumericType?(Src))
 
-VoidType?(T:CompilerObject):Bool
-
-CompilerObjectType?(T:CompilerObject):Bool
-
-AnyType?(T:CompilerObject):Bool
 box[T](x:T):Any
 boxRef[T](x:T):Any
 unbox[T](static T, x:Any):T
 unboxRef[T](static T, x:Any) ref :T
 
-PointerType?(T:CompilerObject):Bool
-PointerType(T:CompilerObject):CompilerObject
 Pointer[T]
-PointeeType(T:CompilerObject):CompilerObject
 
 addressOf[T](a:T) : Pointer[T]
 pointerDereference[T](a:Pointer[T]) ref : T
@@ -70,25 +54,19 @@ pointerCast[T1,T2](static T2, a:Pointer[T1]): Pointer[T2]
 allocateMemory[T](static T, n:Int32): Pointer[T]
 freeMemory[T](p:Pointer[T]): Void
 
-ArrayType?(T:CompilerObject):Bool
-ArrayType(T:CompilerObject, n:Int32):CompilerObject
 Array[T,n]
-ArrayElementType(T:CompilerObject):CompilerObject
-ArraySize(T:CompilerObject):Int32
 array(v1, ..., vn): Array[T,n]
 arrayRef[T,n](a:Array[T,n], i:Int32) ref : T
 
 TupleType?(T:CompilerObject):Bool
-TupleType(T1, ...,Tn): CompilerObject
 Tuple[T1, ..., Tn]
-TupleSize(T:CompilerObject): Int32
+TupleElementCount(T:CompilerObject): Int32
 TupleElementType(T:CompilerObject, i:Int32): CompilerObject
 TupleElementOffset(T:CompilerObject, i:Int32): Int32
 tuple(v1, ...,vn): tuple type
 tupleRef [T|TupleType?(T)] (a:T, static i)
 
 RecordType?(R:CompilerObject):Bool
-RecordType(R:CompilerObject, v1, ..., vn):CompilerObject
 R[v1, ...,vn]
 RecordFieldCount(R:CompilerObject):Int32
 RecordFieldType(R:CompilerObject, i:Int32):CompilerObject

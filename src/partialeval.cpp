@@ -626,19 +626,11 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
     case PRIM_primitiveHash :
         return new PValue(int32Type, true, args->allStatic);
 
-    case PRIM_BoolTypeP :
-        return new PValue(boolType, true, args->allStatic);
     case PRIM_boolNot :
         return new PValue(boolType, true, args->allStatic);
     case PRIM_boolTruth :
         return new PValue(boolType, true, args->allStatic);
 
-    case PRIM_IntegerTypeP :
-        return new PValue(boolType, true, args->allStatic);
-    case PRIM_SignedIntegerTypeP :
-        return new PValue(boolType, true, args->allStatic);
-    case PRIM_FloatTypeP :
-        return new PValue(boolType, true, args->allStatic);
     case PRIM_numericEqualsP :
         return new PValue(boolType, true, args->allStatic);
     case PRIM_numericLesserP :
@@ -682,21 +674,9 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
         args->ensureArity(2);
         return new PValue(args->typeValue(0), true, args->allStatic);
 
-    case PRIM_VoidTypeP :
-        return new PValue(boolType, true, args->allStatic);
-
-    case PRIM_CompilerObjectTypeP :
-        return new PValue(boolType, true, args->allStatic);
-
-    case PRIM_PointerTypeP :
-        return new PValue(boolType, true, args->allStatic);
-    case PRIM_PointerType :
-        return new PValue(compilerObjectType, true, args->allStatic);
     case PRIM_Pointer :
         error("Pointer type constructor cannot be invoked");
         break;
-    case PRIM_PointeeType :
-        return new PValue(compilerObjectType, true, args->allStatic);
 
     case PRIM_addressOf :
         args->ensureArity(1);
@@ -726,17 +706,9 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
     case PRIM_freeMemory :
         return new PValue(voidType, true, args->allStatic);
 
-    case PRIM_ArrayTypeP :
-        return new PValue(boolType, true, args->allStatic);
-    case PRIM_ArrayType :
-        return new PValue(compilerObjectType, true, args->allStatic);
     case PRIM_Array :
         error("Array type constructor cannot be invoked");
         break;
-    case PRIM_ArrayElementType :
-        return new PValue(compilerObjectType, true, args->allStatic);
-    case PRIM_ArraySize :
-        return new PValue(int32Type, true, args->allStatic);
     case PRIM_array : {
         if (args->size() == 0)
             error("atleast one argument required for creating an array");
@@ -753,12 +725,10 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
 
     case PRIM_TupleTypeP :
         return new PValue(boolType, true, args->allStatic);
-    case PRIM_TupleType :
-        return new PValue(compilerObjectType, true, args->allStatic);
     case PRIM_Tuple :
         error("Tuple type constructor cannot be invoked");
         break;
-    case PRIM_TupleSize :
+    case PRIM_TupleElementCount :
         return new PValue(int32Type, true, args->allStatic);
     case PRIM_TupleElementType :
         return new PValue(compilerObjectType, true, args->allStatic);
@@ -784,8 +754,6 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
 
     case PRIM_RecordTypeP :
         return new PValue(boolType, true, args->allStatic);
-    case PRIM_RecordType :
-        return new PValue(compilerObjectType, true, args->allStatic);
     case PRIM_RecordFieldCount :
         return new PValue(int32Type, true, args->allStatic);
     case PRIM_RecordFieldType :

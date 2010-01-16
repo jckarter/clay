@@ -1067,13 +1067,9 @@ enum PrimOpCode {
     PRIM_primitiveEqualsP,
     PRIM_primitiveHash,
 
-    PRIM_BoolTypeP,
     PRIM_boolNot,
     PRIM_boolTruth,
 
-    PRIM_IntegerTypeP,
-    PRIM_SignedIntegerTypeP,
-    PRIM_FloatTypeP,
     PRIM_numericEqualsP,
     PRIM_numericLesserP,
     PRIM_numericAdd,
@@ -1091,14 +1087,7 @@ enum PrimOpCode {
 
     PRIM_numericConvert,
 
-    PRIM_VoidTypeP,
-
-    PRIM_CompilerObjectTypeP,
-
-    PRIM_PointerTypeP,
-    PRIM_PointerType,
     PRIM_Pointer,
-    PRIM_PointeeType,
 
     PRIM_addressOf,
     PRIM_pointerDereference,
@@ -1108,25 +1097,19 @@ enum PrimOpCode {
     PRIM_allocateMemory,
     PRIM_freeMemory,
 
-    PRIM_ArrayTypeP,
-    PRIM_ArrayType,
     PRIM_Array,
-    PRIM_ArrayElementType,
-    PRIM_ArraySize,
     PRIM_array,
     PRIM_arrayRef,
 
     PRIM_TupleTypeP,
-    PRIM_TupleType,
     PRIM_Tuple,
-    PRIM_TupleSize,
+    PRIM_TupleElementCount,
     PRIM_TupleElementType,
     PRIM_TupleElementOffset,
     PRIM_tuple,
     PRIM_tupleRef,
 
     PRIM_RecordTypeP,
-    PRIM_RecordType,
     PRIM_RecordFieldCount,
     PRIM_RecordFieldType,
     PRIM_RecordFieldOffset,
