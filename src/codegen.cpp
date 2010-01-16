@@ -306,7 +306,7 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
         Indexing *x = (Indexing *)expr.ptr();
         PValuePtr indexable = partialEvalRoot(x->expr, env);
         if (indexable->type == compilerObjectType) {
-            error("codegen for type creation not-supported");
+            error("invalid indexing operation");
         }
         error("invalid indexing operation");
         return NULL;
