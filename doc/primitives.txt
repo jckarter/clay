@@ -74,9 +74,3 @@ RecordFieldOffset(R:CompilerObject, i:Int32): Int32
 RecordFieldIndex(R:CompilerObject, name:CompilerObject): Int32
 recordFieldRef [R|RecordType?(R)] (a:R, static i)
 recordFieldRefByName [R|RecordType?(R)] (a:R, static name)
-recordInit [R|RecordType?(R)] (a:R) :Void
-recordDestroy [R|RecordType?(R)] (a:R) :Void
-recordCopy [R|RecordType?(R)] (dest:R, src:R) :Void
-recordAssign [R|RecordType?(R)] (dest:R, src:R) :Void
-recordEquals? [R|RecordType?(R)] (a:R, b:R) :Bool
-recordHash [R|RecordType?(R)] (a:R) :Int32

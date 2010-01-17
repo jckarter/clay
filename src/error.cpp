@@ -111,8 +111,12 @@ void fmtError(const char *fmt, ...) {
 //
 
 void ensurePrimitiveType(TypePtr t) {
-    if (t->typeKind == RECORD_TYPE)
+    switch (t->typeKind) {
+    case ARRAY_TYPE :
+    case TUPLE_TYPE :
+    case RECORD_TYPE :
         error("primitive type expected");
+    }
 }
 
 void ensureSameType(TypePtr ta, TypePtr tb) {

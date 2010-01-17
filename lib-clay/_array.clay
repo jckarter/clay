@@ -58,40 +58,35 @@ overload iterator[T,n](a:Array[T,n]) = CoordinateRange(begin(a), end(a));
 //
 
 overload init[T,n](a:Array[T,n]) {
-    // for (x in a)
-    //     init(x);
-    primitiveInit(a);
+    for (x in a)
+        init(x);
 }
 
 overload copy[T,n](dest:Array[T,n], src:Array[T,n]) {
-    // ref d = iterator(dest);
-    // ref s = iterator(src);
-    // while (hasNext?(s))
-    //     copy(next(d), next(s));
-    primitiveCopy(dest, src);
+    ref d = iterator(dest);
+    ref s = iterator(src);
+    while (hasNext?(s))
+        copy(next(d), next(s));
 }
 
 overload destroy[T,n](a:Array[T,n]) {
-    // for (x in a)
-    //     destroy(x);
-    primitiveDestroy(a);
+    for (x in a)
+        destroy(x);
 }
 
 overload equals?[T,n](a:Array[T,n], b:Array[T,n]) {
-    // ref i = iterator(a);
-    // ref j = iterator(b);
-    // while (hasNext?(i)) {
-    //     if (next(i) != next(j))
-    //         return false;
-    // }
-    // return true;
-    return primitiveEquals?(a, b);
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i)) {
+        if (next(i) != next(j))
+            return false;
+    }
+    return true;
 }
 
 overload hash[T,n](a:Array[T,n]) {
-    // var h = 0;
-    // for (x in a)
-    //     h = h + hash(x);
-    // return h;
-    return primitiveHash(a);
+    var h = 0;
+    for (x in a)
+        h = h + hash(x);
+    return h;
 }

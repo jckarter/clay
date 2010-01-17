@@ -788,18 +788,6 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
         const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
         return new PValue(fieldTypes[i], false, args->allStatic);
     }
-    case PRIM_recordInit :
-        return new PValue(voidType, true, args->allStatic);
-    case PRIM_recordDestroy :
-        return new PValue(voidType, true, args->allStatic);
-    case PRIM_recordCopy :
-        return new PValue(voidType, true, args->allStatic);
-    case PRIM_recordAssign :
-        return new PValue(voidType, true, args->allStatic);
-    case PRIM_recordEqualsP :
-        return new PValue(boolType, true, args->allStatic);
-    case PRIM_recordHash :
-        return new PValue(int32Type, true, args->allStatic);
     default :
         assert(false);
     }

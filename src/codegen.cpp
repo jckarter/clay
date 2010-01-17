@@ -1376,3 +1376,14 @@ codegenInvokeExternal(ExternalProcedurePtr x,
 
     return new CValue(x->returnType2, outPtr);
 }
+
+
+
+//
+// codegenPrimOp
+//
+
+CValuePtr
+codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
+{
+}

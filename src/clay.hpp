@@ -1116,12 +1116,6 @@ enum PrimOpCode {
     PRIM_RecordFieldIndex,
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
-    PRIM_recordInit,
-    PRIM_recordDestroy,
-    PRIM_recordCopy,
-    PRIM_recordAssign,
-    PRIM_recordEqualsP,
-    PRIM_recordHash,
 };
 
 struct PrimOp : public Object {

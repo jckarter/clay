@@ -311,12 +311,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(RecordFieldIndex);
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
-    PRIMITIVE(recordInit);
-    PRIMITIVE(recordDestroy);
-    PRIMITIVE(recordCopy);
-    PRIMITIVE(recordAssign);
-    PRIMITIVE(recordEqualsP);
-    PRIMITIVE(recordHash);
 #undef PRIMITIVE
     return prims;
 }

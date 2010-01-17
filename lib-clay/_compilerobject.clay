@@ -5,22 +5,22 @@ import _core;
 //
 
 overload init(a:CompilerObject) {
-    compilerObjectInit(a);
+    primitiveInit(a);
 }
 
 overload destroy(a:CompilerObject) {
-    compilerObjectDestroy(a);
+    primitiveDestroy(a);
 }
 
 overload copy(dest:CompilerObject, src:CompilerObject) {
-    compilerObjectCopy(dest, src);
+    primitiveCopy(dest, src);
 }
 
 overload assign(dest:CompilerObject, src:CompilerObject) {
-    compilerObjectAssign(dest, src);
+    primitiveAssign(dest, src);
 }
 
 overload equals?(a:CompilerObject, b:CompilerObject) =
-    compilerObjectEquals?(a, b);
+    primitiveEquals?(a, b);
 
-overload hash(a:CompilerObject) = compilerObjectHash(a);
+overload hash(a:CompilerObject) = primitiveHash(a);

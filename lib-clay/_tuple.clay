@@ -1,25 +1,130 @@
 import _core;
 
+
+//
+// init
+//
+
 overload init [T|TupleType?(T)] (a:T) {
-    primitiveInit(a);
+    initTupleElements(a, 0);
 }
+
+overloadable initTupleElements;
+
+overload initTupleElements[i](a, static i) {
+    init(tupleRef(a, i));
+    initTupleElements(a, i+1);
+}
+
+overload initTupleElements[T, i | (i == TupleElementCount(T))]
+        (a:T, static i) {
+}
+
+
+
+//
+// destroy
+//
 
 overload destroy [T|TupleType?(T)] (a:T) {
-    primitiveDestroy(a);
+    destroyTupleElements(a, 0);
 }
+
+overloadable destroyTupleElements;
+
+overload destroyTupleElements[i](a, static i) {
+    destroy(tupleRef(a, i));
+    destroyTupleElements(a, i+1);
+}
+
+overload destroyTupleElements[T, i |(i == TupleElementCount(T))]
+        (a:T, static i) {
+}
+
+
+
+//
+// copy
+//
 
 overload copy [T|TupleType?(T)] (dest:T, src:T) {
-    primitiveCopy(dest, src);
+    copyTupleElements(dest, src, 0);
 }
+
+overloadable copyTupleElements;
+
+overload copyTupleElements[T,i](dest:T, src:T, static i)
+{
+    copy(tupleRef(dest, i), tupleRef(src, i));
+    copyTupleElements(dest, src, i+1);
+}
+
+overload copyTupleElements[T,i | (i == TupleElementCount(T))]
+        (dest:T, src:T, static i) {
+}
+
+
+
+//
+// assign
+//
 
 overload assign [T|TupleType?(T)] (dest:T, src:T) {
-    primitiveAssign(dest, src);
+    assignTupleElements(dest, src, 0);
 }
+
+overloadable assignTupleElements;
+
+overload assignTupleElements[T,i](dest:T, src:T, static i) {
+    assign(tupleRef(dest, i), tupleRef(src, i));
+    assignTupleElements(dest, src, i+1);
+}
+
+overload assignTupleElements[T,i | (i == TupleElementCount(T))]
+        (dest:T, src:T, static i) {
+}
+
+
+
+//
+// equals?
+//
+
 
 overload equals? [T|TupleType?(T)] (a:T, b:T) {
-    return primitiveEquals?(a, b);
+    return equalTupleElements?(a, b, 0);
 }
 
+overloadable equalTupleElements?;
+
+overload equalTupleElements?[T,i](a:T, b:T, static i) {
+    if (not equals?(tupleRef(a, i), tupleRef(b, i)))
+        return false;
+    return equalTupleElements(a, b, i+1);
+}
+
+overload equalTupleElements?[T,i |(i == TupleElementCount(T))]
+        (a:T, b:T, static i) {
+    return true;
+}
+
+
+
+//
+// hash
+//
+
 overload hash [T|TupleType?(T)] (a:T) {
-    return primitiveHash(a);
+    return hashTupleElements?(a, 0);
+}
+
+overloadable hashTupleElements;
+
+overload hashTupleElements[T,i](a:T, static i) {
+    return hash(tupleRef(a, i)) + hashTupleElements(a, i+1);
+}
+
+overload hashTupleElements[T,i |(i == TupleElementCount(T))]
+        (a:T, static i) {
+    return 0;
 }

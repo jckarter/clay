@@ -1,25 +1,130 @@
 import _core;
 
+
+//
+// init
+//
+
 overload init [T|RecordType?(T)] (a:T) {
-    recordInit(a);
+    initRecordFields(a, 0);
 }
+
+overloadable initRecordFields;
+
+overload initRecordFields[i](a, static i) {
+    init(recordFieldRef(a, i));
+    initRecordFields(a, i+1);
+}
+
+overload initRecordFields[T, i | (i == RecordFieldCount(T))]
+        (a:T, static i) {
+}
+
+
+
+//
+// destroy
+//
 
 overload destroy [T|RecordType?(T)] (a:T) {
-    recordDestroy(a);
+    destroyRecordFields(a, 0);
 }
+
+overloadable destroyRecordFields;
+
+overload destroyRecordFields[i](a, static i) {
+    destroy(recordFieldRef(a, i));
+    destroyRecordFields(a, i+1);
+}
+
+overload destroyRecordFields[T, i |(i == RecordFieldCount(T))]
+        (a:T, static i) {
+}
+
+
+
+//
+// copy
+//
 
 overload copy [T|RecordType?(T)] (dest:T, src:T) {
-    recordCopy(dest, src);
+    copyRecordFields(dest, src, 0);
 }
+
+overloadable copyRecordFields;
+
+overload copyRecordFields[T,i](dest:T, src:T, static i)
+{
+    copy(recordFieldRef(dest, i), recordFieldRef(src, i));
+    copyRecordFields(dest, src, i+1);
+}
+
+overload copyRecordFields[T,i | (i == RecordFieldCount(T))]
+        (dest:T, src:T, static i) {
+}
+
+
+
+//
+// assign
+//
 
 overload assign [T|RecordType?(T)] (dest:T, src:T) {
-    recordAssign(dest, src);
+    assignRecordFields(dest, src, 0);
 }
+
+overloadable assignRecordFields;
+
+overload assignRecordFields[T,i](dest:T, src:T, static i) {
+    assign(recordFieldRef(dest, i), recordFieldRef(src, i));
+    assignRecordFields(dest, src, i+1);
+}
+
+overload assignRecordFields[T,i | (i == RecordFieldCount(T))]
+        (dest:T, src:T, static i) {
+}
+
+
+
+//
+// equals?
+//
+
 
 overload equals? [T|RecordType?(T)] (a:T, b:T) {
-    return recordEquals?(a, b);
+    return equalRecordFields?(a, b, 0);
 }
 
+overloadable equalRecordFields?;
+
+overload equalRecordFields?[T,i](a:T, b:T, static i) {
+    if (not equals?(recordFieldRef(a, i), recordFieldRef(b, i)))
+        return false;
+    return equalRecordFields(a, b, i+1);
+}
+
+overload equalRecordFields?[T,i |(i == RecordFieldCount(T))]
+        (a:T, b:T, static i) {
+    return true;
+}
+
+
+
+//
+// hash
+//
+
 overload hash [T|RecordType?(T)] (a:T) {
-    return recordHash(a);
+    return hashRecordFields?(a, 0);
+}
+
+overloadable hashRecordFields;
+
+overload hashRecordFields[T,i](a:T, static i) {
+    return hash(recordFieldRef(a, i)) + hashRecordFields(a, i+1);
+}
+
+overload hashRecordFields[T,i |(i == RecordFieldCount(T))]
+        (a:T, static i) {
+    return 0;
 }
