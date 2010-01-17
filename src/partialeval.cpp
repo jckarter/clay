@@ -159,9 +159,7 @@ PValuePtr partialEval(ExprPtr expr, EnvPtr env)
         PValuePtr indexable = partialEval(x->expr, env);
         if (!indexable)
             return NULL;
-        if ((indexable->type == compilerObjectType)
-            && indexable->isStatic)
-        {
+        if (indexable->type == compilerObjectType) {
             ObjectPtr indexable2 = lower(evaluateToStatic(x->expr, env));
             return partialIndexing(indexable2, new ArgList(x->args, env));
         }
@@ -174,9 +172,7 @@ PValuePtr partialEval(ExprPtr expr, EnvPtr env)
         PValuePtr callable = partialEval(x->expr, env);
         if (!callable)
             return NULL;
-        if ((callable->type == compilerObjectType)
-            && callable->isStatic)
-        {
+        if (callable->type == compilerObjectType) {
             ObjectPtr callable2 = lower(evaluateToStatic(x->expr, env));
             return partialInvoke(callable2, new ArgList(x->args, env));
         }

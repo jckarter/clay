@@ -315,9 +315,7 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
     case CALL : {
         Call *x = (Call *)expr.ptr();
         PValuePtr callable = partialEvalRoot(x->expr, env);
-        if ((callable->type == compilerObjectType)
-            && callable->isStatic)
-        {
+        if (callable->type == compilerObjectType) {
             ObjectPtr callable2 = lower(evaluateToStatic(x->expr, env));
             ArgListPtr args = new ArgList(x->args, env);
             return codegenInvoke(callable2, args, outPtr);
