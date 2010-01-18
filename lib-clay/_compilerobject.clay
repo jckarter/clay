@@ -21,6 +21,6 @@ overload assign(dest:CompilerObject, src:CompilerObject) {
 }
 
 overload equals?(a:CompilerObject, b:CompilerObject) =
-    primitiveEquals?(a, b);
+    compilerObjectEquals?(a, b);
 
-overload hash(a:CompilerObject) = primitiveHash(a);
+overload hash(a:CompilerObject) = compilerObjectHash(a);

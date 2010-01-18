@@ -2067,17 +2067,6 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         valueAssign(args[0], args[1]);
         return voidValue;
     }
-    case PRIM_primitiveEqualsP : {
-        ensureArity(args, 2);
-        ensurePrimitiveType(args[0]->type);
-        ensureSameType(args[0]->type, args[1]->type);
-        return boolToValue(valueEquals(args[0], args[1]));
-    }
-    case PRIM_primitiveHash : {
-        ensureArity(args, 1);
-        ensurePrimitiveType(args[0]->type);
-        return intToValue(valueHash(args[0]));
-    }
 
     case PRIM_boolNot : {
         ensureArity(args, 1);

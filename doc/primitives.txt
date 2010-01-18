@@ -15,8 +15,6 @@ primitiveInit[T](a:T):Void
 primitiveDestroy[T](a:T):Void
 primitiveCopy[T](dest:T, src:T):Void
 primitiveAssign[T](dest:T, src:T):Void
-primitiveEquals?[T](a:T, b:T):Bool
-primitiveHash[T](a:T):Int32
 
 boolNot(a:Bool):Bool
 boolTruth(a:Bool):Bool

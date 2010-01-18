@@ -617,10 +617,6 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
         return new PValue(voidType, true, args->allStatic);
     case PRIM_primitiveAssign :
         return new PValue(voidType, true, args->allStatic);
-    case PRIM_primitiveEqualsP :
-        return new PValue(boolType, true, args->allStatic);
-    case PRIM_primitiveHash :
-        return new PValue(int32Type, true, args->allStatic);
 
     case PRIM_boolNot :
         return new PValue(boolType, true, args->allStatic);

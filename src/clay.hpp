@@ -1064,8 +1064,6 @@ enum PrimOpCode {
     PRIM_primitiveDestroy,
     PRIM_primitiveCopy,
     PRIM_primitiveAssign,
-    PRIM_primitiveEqualsP,
-    PRIM_primitiveHash,
 
     PRIM_boolNot,
     PRIM_boolTruth,

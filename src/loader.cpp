@@ -259,8 +259,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(primitiveDestroy);
     PRIMITIVE(primitiveCopy);
     PRIMITIVE(primitiveAssign);
-    PRIMITIVE(primitiveEqualsP);
-    PRIMITIVE(primitiveHash);
 
     PRIMITIVE(boolNot);
     PRIMITIVE(boolTruth);
