@@ -32,6 +32,11 @@ bool ArgList::isTemp(int i )
     return this->_pvalues[i]->isTemp;
 }
 
+PValuePtr ArgList::pvalue(int i)
+{
+    return this->_pvalues[i];
+}
+
 ValuePtr ArgList::value(int i)
 {
     if (!this->_values[i])
@@ -112,11 +117,6 @@ ArgListPtr ArgList::removeStaticArgs(const vector<FormalArgPtr> &fargs)
     }
 
     return args;
-}
-
-CValuePtr ArgList::codegen(int i, llvm::Value *outPtr)
-{
-    return ::codegen(this->exprs[i], this->env, outPtr);
 }
 
 

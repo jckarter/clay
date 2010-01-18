@@ -1469,6 +1469,7 @@ struct ArgList : public Object {
     unsigned size() const { return exprs.size(); }
     TypePtr type(int i);
     bool isTemp(int i );
+    PValuePtr pvalue(int i);
     ValuePtr value(int i);
     TypePtr typeValue(int i);
 
@@ -1480,6 +1481,8 @@ struct ArgList : public Object {
     ArgListPtr removeStaticArgs(const vector<FormalArgPtr> &fargs);
 
     CValuePtr codegen(int i, llvm::Value *outPtr);
+    CValuePtr codegenAsRef(int i);
+    CValuePtr codegenAsValue(int i, llvm::Value *outPtr);
 };
 
 
