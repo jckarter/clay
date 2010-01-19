@@ -1082,6 +1082,7 @@ enum PrimOpCode {
     PRIM_integerBitwiseAnd,
     PRIM_integerBitwiseOr,
     PRIM_integerBitwiseXor,
+    PRIM_integerBitwiseNot,
 
     PRIM_numericConvert,
 

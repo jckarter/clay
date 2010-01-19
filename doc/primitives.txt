@@ -33,6 +33,7 @@ integerShiftRight[I](a:I, n:I): I if (IntegerType?(I))
 integerBitwiseAnd[I](a:I, b:I): I if (IntegerType?(I))
 integerBitwiseOr[I](a:I, b:I): I if (IntegerType?(I))
 integerBitwiseXor[I](a:I, b:I): I if (IntegerType?(I))
+integerBitwiseNot[I](a:I): I if (IntegerType?(I))
 
 numericConvert[Dest,Src](static Dest, a:Src): Dest
     if (NumericType?(Dest) and NumericType?(Src))

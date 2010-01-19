@@ -277,6 +277,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(integerBitwiseAnd);
     PRIMITIVE(integerBitwiseOr);
     PRIMITIVE(integerBitwiseXor);
+    PRIMITIVE(integerBitwiseNot);
 
     PRIMITIVE(numericConvert);
 

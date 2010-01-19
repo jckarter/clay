@@ -661,6 +661,9 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
     case PRIM_integerBitwiseXor :
         args->ensureArity(2);
         return new PValue(args->type(0), true, args->allStatic);
+    case PRIM_integerBitwiseNot :
+        args->ensureArity(1);
+        return new PValue(args->type(0), true, args->allStatic);
 
     case PRIM_numericConvert :
         args->ensureArity(2);

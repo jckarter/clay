@@ -129,6 +129,7 @@ ValuePtr integerShiftRight(ValuePtr a, ValuePtr b);
 ValuePtr integerBitwiseAnd(ValuePtr a, ValuePtr b);
 ValuePtr integerBitwiseOr(ValuePtr a, ValuePtr b);
 ValuePtr integerBitwiseXor(ValuePtr a, ValuePtr b);
+ValuePtr integerBitwiseNot(ValuePtr a);
 
 ValuePtr numericConvert(TypePtr t, ValuePtr a);
 
@@ -2157,6 +2158,11 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureSameType(args[0]->type, args[1]->type);
         return integerBitwiseXor(args[0], args[1]);
     }
+    case PRIM_integerBitwiseNot : {
+        ensureArity(args, 1);
+        ensureIntegerType(args[0]->type);
+        return integerBitwiseNot(args[0]);
+    }
 
     case PRIM_numericConvert : {
         ensureArity(args, 2);
@@ -2674,6 +2680,26 @@ ValuePtr _integerBitwiseXor(ValuePtr a, ValuePtr b) {
 ValuePtr integerBitwiseXor(ValuePtr a, ValuePtr b) {
     assert(a->type == b->type);
     INTEGER_BINARY_OP(_integerBitwiseXor, a, b);
+    return NULL;
+}
+
+template <typename T>
+ValuePtr _integerBitwiseNot(ValuePtr a) {
+    ValuePtr v = allocValue(a->type);
+    *((T *)v->buf) = ~ *((T *)a->buf);
+    return v;
+}
+
+ValuePtr integerBitwiseNot(ValuePtr a) {
+    IntegerType *t = (IntegerType *)a->type.ptr();
+    switch (t->bits) {
+    case 8 : return _integerBitwiseNot<unsigned char>(a);
+    case 16 : return _integerBitwiseNot<unsigned short>(a);
+    case 32 : return _integerBitwiseNot<unsigned long>(a);
+    case 64 : return _integerBitwiseNot<unsigned long long>(a);
+    default :
+        assert(false);
+    }
     return NULL;
 }
 
