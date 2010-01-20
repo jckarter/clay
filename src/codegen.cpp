@@ -1844,5 +1844,45 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
         return new CValue(at->elementType, ptr);
     }
 
+    case PRIM_TupleTypeP : {
+        return codegenValue(evaluatePrimOp(x, args), outPtr);
+    }
+
+    case PRIM_TupleElementCount : {
+        return codegenValue(evaluatePrimOp(x, args), outPtr);
+    }
+
+    case PRIM_TupleElementType : {
+        return codegenValue(evaluatePrimOp(x, args), outPtr);
+    }
+
+    case PRIM_TupleElementOffset : {
+        return codegenValue(evaluatePrimOp(x, args), outPtr);
+    }
+
+    case PRIM_tuple : {
+        if (args->size() < 2)
+            error("tuples require atleast two elements");
+        vector<TypePtr> elementTypes;
+        for (unsigned i = 0; i < args->size(); ++i) {
+            elementTypes.push_back(args->type(i));
+            llvm::Value *ptr = builder->CreateConstGEP2_32(outPtr, 0, i);
+            args->codegenAsValue(i, ptr);
+        }
+        return new CValue(tupleType(elementTypes), outPtr);
+    }
+
+    case PRIM_tupleRef : {
+        args->ensureArity(2);
+        ensureTupleType(args->type(0));
+        int i = valueToInt(args->value(1));
+        TupleType *tt = (TupleType *)args->type(0).ptr();
+        if ((i < 0) || (i >= (int)tt->elementTypes.size()))
+            error("tuple type index out of range");
+        CValuePtr a = args->codegenAsRef(0);
+        llvm::Value *result = builder->CreateConstGEP2_32(a->llval, 0, i);
+        return new CValue(tt->elementTypes[i], result);
+    }
+
     }
 }
