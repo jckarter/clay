@@ -1383,5 +1383,357 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
         return new CValue(voidType, NULL);
     }
 
+    case PRIM_boolNot : {
+        args->ensureArity(1);
+        ensureBoolType(args->type(0));
+        CValuePtr cv = args->codegenAsRef(0);
+        llvm::Value *v = builder->CreateLoad(cv->llval);
+        llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
+        llvm::Value *flag = builder->CreateICmpEQ(v, zero);
+        llvm::Value *result = builder->CreateZExt(flag, llvmType(boolType));
+        builder->CreateStore(result, outPtr);
+        return new CValue(boolType, outPtr);
+    }
+
+    case PRIM_boolTruth : {
+        args->ensureArity(1);
+        ensureBoolType(args->type(0));
+        CValuePtr cv = args->codegenAsRef(0);
+        llvm::Value *v = builder->CreateLoad(cv->llval);
+        llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
+        llvm::Value *flag = builder->CreateICmpNE(v, zero);
+        llvm::Value *result = builder->CreateZExt(flag, llvmType(boolType));
+        builder->CreateStore(result, outPtr);
+        return new CValue(boolType, outPtr);
+    }
+
+    case PRIM_numericEqualsP : {
+        args->ensureArity(2);
+        ensureNumericType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *flag;
+        switch (args->type(0)->typeKind) {
+        case INTEGER_TYPE :
+            flag = builder->CreateICmpEQ(v1, v2);
+            break;
+        case FLOAT_TYPE :
+            flag = builder->CreateFCmpUEQ(v1, v2);
+            break;
+        default :
+            assert(false);
+        }
+        llvm::Value *result = builder->CreateZExt(flag, llvmType(boolType));
+        builder->CreateStore(result, outPtr);
+        return new CValue(boolType, outPtr);
+    }
+
+    case PRIM_numericLesserP : {
+        args->ensureArity(2);
+        ensureNumericType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *flag;
+        switch (args->type(0)->typeKind) {
+        case INTEGER_TYPE : {
+            IntegerType *t = (IntegerType *)args->type(0).ptr();
+            if (t->isSigned)
+                flag = builder->CreateICmpSLT(v1, v2);
+            else
+                flag = builder->CreateICmpULT(v1, v2);
+            break;
+        }
+        case FLOAT_TYPE :
+            flag = builder->CreateFCmpUEQ(v1, v2);
+            break;
+        default :
+            assert(false);
+        }
+        llvm::Value *result = builder->CreateZExt(flag, llvmType(boolType));
+        builder->CreateStore(result, outPtr);
+        return new CValue(boolType, outPtr);
+    }
+
+    case PRIM_numericAdd : {
+        args->ensureArity(2);
+        ensureNumericType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result;
+        switch (args->type(0)->typeKind) {
+        case INTEGER_TYPE :
+            result = builder->CreateAdd(v1, v2);
+            break;
+        case FLOAT_TYPE :
+            result = builder->CreateFAdd(v1, v2);
+            break;
+        default :
+            assert(false);
+        }
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_numericSubtract : {
+        args->ensureArity(2);
+        ensureNumericType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result;
+        switch (args->type(0)->typeKind) {
+        case INTEGER_TYPE :
+            result = builder->CreateSub(v1, v2);
+            break;
+        case FLOAT_TYPE :
+            result = builder->CreateFSub(v1, v2);
+            break;
+        default :
+            assert(false);
+        }
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_numericMultiply : {
+        args->ensureArity(2);
+        ensureNumericType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result;
+        switch (args->type(0)->typeKind) {
+        case INTEGER_TYPE :
+            result = builder->CreateMul(v1, v2);
+            break;
+        case FLOAT_TYPE :
+            result = builder->CreateFMul(v1, v2);
+            break;
+        default :
+            assert(false);
+        }
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_numericDivide : {
+        args->ensureArity(2);
+        ensureNumericType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result;
+        switch (args->type(0)->typeKind) {
+        case INTEGER_TYPE : {
+            IntegerType *t = (IntegerType *)args->type(0).ptr();
+            if (t->isSigned)
+                result = builder->CreateSDiv(v1, v2);
+            else
+                result = builder->CreateUDiv(v1, v2);
+            break;
+        }
+        case FLOAT_TYPE :
+            result = builder->CreateFDiv(v1, v2);
+            break;
+        default :
+            assert(false);
+        }
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_numericNegate : {
+        args->ensureArity(1);
+        ensureNumericType(args->type(0));
+        CValuePtr a = args->codegenAsRef(0);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        llvm::Value *result;
+        switch (args->type(0)->typeKind) {
+        case INTEGER_TYPE :
+            result = builder->CreateNeg(v);
+            break;
+        case FLOAT_TYPE :
+            result = builder->CreateFNeg(v);
+            break;
+        default :
+            assert(false);
+        }
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_integerRemainder : {
+        args->ensureArity(2);
+        ensureIntegerType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result;
+        IntegerType *t = (IntegerType *)args->type(0).ptr();
+        if (t->isSigned)
+            result = builder->CreateSRem(v1, v2);
+        else
+            result = builder->CreateURem(v1, v2);
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_integerShiftLeft : {
+        args->ensureArity(2);
+        ensureIntegerType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result = builder->CreateShl(v1, v2);
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_integerShiftRight : {
+        args->ensureArity(2);
+        ensureIntegerType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result;
+        IntegerType *t = (IntegerType *)args->type(0).ptr();
+        if (t->isSigned)
+            result = builder->CreateAShr(v1, v2);
+        else
+            result = builder->CreateLShr(v1, v2);
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_integerBitwiseAnd : {
+        args->ensureArity(2);
+        ensureIntegerType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result = builder->CreateAnd(v1, v2);
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_integerBitwiseOr : {
+        args->ensureArity(2);
+        ensureIntegerType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result = builder->CreateOr(v1, v2);
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_integerBitwiseXor : {
+        args->ensureArity(2);
+        ensureIntegerType(args->type(0));
+        ensureSameType(args->type(0), args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *v1 = builder->CreateLoad(a->llval);
+        llvm::Value *v2 = builder->CreateLoad(b->llval);
+        llvm::Value *result = builder->CreateXor(v1, v2);
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_integerBitwiseNot : {
+        args->ensureArity(1);
+        ensureIntegerType(args->type(0));
+        CValuePtr a = args->codegenAsRef(0);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        llvm::Value *result = builder->CreateNot(v);
+        builder->CreateStore(result, outPtr);
+        return new CValue(args->type(0), outPtr);
+    }
+
+    case PRIM_numericConvert : {
+        args->ensureArity(2);
+        TypePtr dest = args->typeValue(0);
+        ensureNumericType(dest);
+        ensureNumericType(args->type(1));
+        CValuePtr a = args->codegenAsRef(1);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        TypePtr src = args->type(1);
+        llvm::Value *result;
+        if (dest == src) {
+            result = v;
+        }
+        else if (dest->typeKind == INTEGER_TYPE) {
+            IntegerType *dest2 = (IntegerType *)dest.ptr();
+            if (src->typeKind == INTEGER_TYPE) {
+                IntegerType *src2 = (IntegerType *)src.ptr();
+                if (dest2->bits < src2->bits)
+                    result = builder->CreateTrunc(v, llvmType(dest));
+                else if (src2->isSigned)
+                    result = builder->CreateSExt(v, llvmType(dest));
+                else
+                    result = builder->CreateZExt(v, llvmType(dest));
+            }
+            else if (src->typeKind == FLOAT_TYPE) {
+                if (dest2->isSigned)
+                    result = builder->CreateFPToSI(v, llvmType(dest));
+                else
+                    result = builder->CreateFPToUI(v, llvmType(dest));
+            }
+            else {
+                assert(false);
+            }
+        }
+        else if (dest->typeKind == FLOAT_TYPE) {
+            FloatType *dest2 = (FloatType *)dest.ptr();
+            if (src->typeKind == INTEGER_TYPE) {
+                IntegerType *src2 = (IntegerType *)src.ptr();
+                if (src2->isSigned)
+                    result = builder->CreateSIToFP(v, llvmType(dest));
+                else
+                    result = builder->CreateUIToFP(v, llvmType(dest));
+            }
+            else if (src->typeKind == FLOAT_TYPE) {
+                FloatType *src2 = (FloatType *)src.ptr();
+                if (dest2->bits < src2->bits)
+                    result = builder->CreateFPTrunc(v, llvmType(dest));
+                else
+                    result = builder->CreateFPExt(v, llvmType(dest));
+            }
+            else {
+                assert(false);
+            }
+        }
+        else {
+            assert(false);
+        }
+        builder->CreateStore(result, outPtr);
+        return new CValue(dest, outPtr);
+    }
+
     }
 }
