@@ -1735,5 +1735,81 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
         return new CValue(dest, outPtr);
     }
 
+    case PRIM_Pointer : {
+        error("Pointer type constructor cannot be invoked");
+    }
+
+    case PRIM_addressOf : {
+        args->ensureArity(1);
+        if (args->isTemp(0))
+            error("Cannot take address of a temporary");
+        CValuePtr a = args->codegenAsRef(0);
+        builder->CreateStore(a->llval, outPtr);
+        return new CValue(pointerType(a->type), outPtr);
+    }
+
+    case PRIM_pointerDereference : {
+        args->ensureArity(1);
+        ensurePointerType(args->type(0));
+        CValuePtr a = args->codegenAsRef(0);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        PointerType *pt = (PointerType *)a->type.ptr();
+        return new CValue(pt->pointeeType, v);
+    }
+
+    case PRIM_pointerToInt : {
+        args->ensureArity(2);
+        TypePtr dest = args->typeValue(0);
+        ensureIntegerType(dest);
+        ensurePointerType(args->type(1));
+        CValuePtr a = args->codegenAsRef(1);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        llvm::Value *result = builder->CreatePtrToInt(v, llvmType(dest));
+        builder->CreateStore(result, outPtr);
+        return new CValue(dest, outPtr);
+    }
+
+    case PRIM_intToPointer : {
+        args->ensureArity(2);
+        TypePtr dest = pointerType(args->typeValue(0));
+        ensureIntegerType(args->type(1));
+        CValuePtr a = args->codegenAsRef(1);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        llvm::Value *result = builder->CreateIntToPtr(v, llvmType(dest));
+        builder->CreateStore(result, outPtr);
+        return new CValue(dest, outPtr);
+    }
+
+    case PRIM_pointerCast : {
+        args->ensureArity(2);
+        TypePtr dest = pointerType(args->typeValue(0));
+        ensurePointerType(args->type(1));
+        CValuePtr a = args->codegenAsRef(1);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        llvm::Value *result = builder->CreateBitCast(v, llvmType(dest));
+        builder->CreateStore(result, outPtr);
+        return new CValue(dest, outPtr);
+    }
+
+    case PRIM_allocateMemory : {
+        args->ensureArity(2);
+        TypePtr etype = args->typeValue(0);
+        ensureIntegerType(args->type(1));
+        CValuePtr a = args->codegenAsRef(1);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        llvm::Value *result = builder->CreateMalloc(llvmType(etype), v);
+        builder->CreateStore(result, outPtr);
+        return new CValue(pointerType(etype), outPtr);
+    }
+
+    case PRIM_freeMemory : {
+        args->ensureArity(1);
+        ensurePointerType(args->type(0));
+        CValuePtr a = args->codegenAsRef(0);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        builder->CreateFree(v);
+        return new CValue(voidType, NULL);
+    }
+
     }
 }
