@@ -1844,21 +1844,11 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
         return new CValue(at->elementType, ptr);
     }
 
-    case PRIM_TupleTypeP : {
+    case PRIM_TupleTypeP :
+    case PRIM_TupleElementCount :
+    case PRIM_TupleElementType :
+    case PRIM_TupleElementOffset :
         return codegenValue(evaluatePrimOp(x, args), outPtr);
-    }
-
-    case PRIM_TupleElementCount : {
-        return codegenValue(evaluatePrimOp(x, args), outPtr);
-    }
-
-    case PRIM_TupleElementType : {
-        return codegenValue(evaluatePrimOp(x, args), outPtr);
-    }
-
-    case PRIM_TupleElementOffset : {
-        return codegenValue(evaluatePrimOp(x, args), outPtr);
-    }
 
     case PRIM_tuple : {
         if (args->size() < 2)
@@ -1884,5 +1874,47 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
         return new CValue(tt->elementTypes[i], result);
     }
 
+    case PRIM_RecordTypeP :
+    case PRIM_RecordFieldCount :
+    case PRIM_RecordFieldType :
+    case PRIM_RecordFieldOffset :
+    case PRIM_RecordFieldIndex :
+        return codegenValue(evaluatePrimOp(x, args), outPtr);
+
+    case PRIM_recordFieldRef : {
+        args->ensureArity(2);
+        ensureRecordType(args->type(0));
+        int i = valueToInt(args->value(1));
+        RecordType *rt = (RecordType *)args->type(0).ptr();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        if ((i < 0) || (i >= (int)fieldTypes.size()))
+            error("field index out of range");
+        CValuePtr a = args->codegenAsRef(0);
+        llvm::Value *result = builder->CreateConstGEP2_32(a->llval, 0, i);
+        return new CValue(fieldTypes[i], result);
     }
+
+    case PRIM_recordFieldRefByName : {
+        args->ensureArity(2);
+        ensureRecordType(args->type(0));
+        RecordType *rt = (RecordType *)args->type(0).ptr();
+        ObjectPtr obj = valueToCO(args->value(1));
+        if (obj->objKind != IDENTIFIER)
+            error("expecting an identifier value");
+        Identifier *name = (Identifier *)obj.ptr();
+        const map<string, int> &fieldIndexMap = recordFieldIndexMap(rt);
+        map<string, int>::const_iterator fi = fieldIndexMap.find(name->str);
+        if (fi == fieldIndexMap.end())
+            error("field not in record");
+        int i = fi->second;
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        CValuePtr a = args->codegenAsRef(0);
+        llvm::Value *result = builder->CreateConstGEP2_32(a->llval, 0, i);
+        return new CValue(fieldTypes[i], result);
+    }
+
+    }
+
+    assert(false);
+    return NULL;
 }
