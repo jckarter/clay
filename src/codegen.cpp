@@ -1811,5 +1811,38 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
         return new CValue(voidType, NULL);
     }
 
+    case PRIM_Array : {
+        error("Array type constructor cannot be invoked");
+    }
+
+    case PRIM_array : {
+        if (args->size() == 0)
+            error("atleast one argument required for creating an array");
+        TypePtr etype = args->type(0);
+        int n = (int)args->size();
+        for (unsigned i = 0; i < args->size(); ++i) {
+            ensureSameType(args->type(i), etype);
+            llvm::Value *ptr = builder->CreateConstGEP2_32(outPtr, 0, i);
+            args->codegenAsValue(i, ptr);
+        }
+        return new CValue(arrayType(etype, n), outPtr);
+    }
+
+    case PRIM_arrayRef : {
+        args->ensureArity(2);
+        ensureArrayType(args->type(0));
+        ensureIntegerType(args->type(1));
+        CValuePtr a = args->codegenAsRef(0);
+        CValuePtr b = args->codegenAsRef(1);
+        llvm::Value *i = builder->CreateLoad(b->llval);
+        vector<llvm::Value *> indices;
+        indices.push_back(llvm::ConstantInt::get(llvmType(int32Type), 0));
+        indices.push_back(i);
+        llvm::Value *ptr =
+            builder->CreateGEP(a->llval, indices.begin(), indices.end());
+        ArrayType *at = (ArrayType *)args->type(0).ptr();
+        return new CValue(at->elementType, ptr);
+    }
+
     }
 }
