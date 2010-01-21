@@ -295,6 +295,11 @@ static void print(const Object *x, ostream &out) {
         out << "ValueExpr(" << y->value << ")";
         break;
     }
+    case CVALUE_EXPR : {
+        CValueExpr *y = (CValueExpr *)x;
+        out << "CValueExpr(" << y->cvalue << ")";
+        break;
+    }
 
     case BLOCK : {
         Block *y = (Block *)x;
@@ -438,6 +443,12 @@ static void print(const Object *x, ostream &out) {
         break;
     }
 
+    case PRIM_OP : {
+        PrimOp *y = (PrimOp *)x;
+        out << "PrimOp(" << y->primOpCode << ")";
+        break;
+    }
+
     case TYPE : {
         Type *y = (Type *)x;
         typePrint(y, out);
@@ -450,7 +461,21 @@ static void print(const Object *x, ostream &out) {
         break;
     }
 
+    case PVALUE : {
+        PValue *y = (PValue *)x;
+        out << "PValue(" << y->type << ", " << y->isTemp << ", "
+            << y->isStatic << ")";
+        break;
+    }
+
+    case CVALUE : {
+        CValue *y = (CValue *)x;
+        out << "CValue(" << y->type << ")";
+        break;
+    }
+
     default :
+        out << "UnknownObj(" << x->objKind << ")";
         assert(false);
     }
 }
