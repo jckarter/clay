@@ -12,6 +12,7 @@ void initLLVM() {
     llvmEngine = llvm::EngineBuilder(mp).create();
     assert(llvmEngine);
     llvmTargetData = llvmEngine->getTargetData();
+    llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
 }
 
 TypePtr boolType;
