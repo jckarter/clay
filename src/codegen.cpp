@@ -695,6 +695,7 @@ numericConstant(ValuePtr v)
                 assert(false);
             }
         }
+        break;
     }
     case FLOAT_TYPE : {
         FloatType *t = (FloatType *)v->type.ptr();
@@ -708,6 +709,7 @@ numericConstant(ValuePtr v)
         default :
             assert(false);
         }
+        break;
     }
     default :
         assert(false);
@@ -1917,4 +1919,61 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
 
     assert(false);
     return NULL;
+}
+
+
+
+//
+// codegenMain
+//
+
+void codegenMain(ModulePtr module)
+{
+    llvm::FunctionType *llMainType =
+        llvm::FunctionType::get(llvmType(int32Type),
+                                vector<const llvm::Type *>(),
+                                false);
+    llvm::Function *llMain =
+        llvm::Function::Create(llMainType,
+                               llvm::Function::ExternalLinkage,
+                               "main",
+                               llvmModule);
+
+    llvm::Function *savedLLVMFunction = llvmFunction;
+    llvm::IRBuilder<> *savedInitBuilder = initBuilder;
+    llvm::IRBuilder<> *savedBuilder = builder;
+
+    llvmFunction = llMain;
+
+    llvm::BasicBlock *initBlock = newBasicBlock("initBlock");
+    llvm::BasicBlock *codeBlock = newBasicBlock("codeBlock");
+
+    initBuilder = new llvm::IRBuilder<>(initBlock);
+    builder = new llvm::IRBuilder<>(codeBlock);
+
+    ObjectPtr mainObj = lookupEnv(module->env, new Identifier("main"));
+    if (mainObj->objKind != PROCEDURE)
+        error("expecting 'main' to be a procedure");
+    ProcedurePtr mainProc = (Procedure *)mainObj.ptr();
+    ArgListPtr args = new ArgList(vector<ExprPtr>(), new Env());
+
+    PValuePtr pvalue = partialInvoke(mainObj, args);
+    if (pvalue->type != int32Type)
+        error(mainProc, "expecting Int32 return type from main proc");
+    if (!pvalue->isTemp)
+        error(mainProc, "expecting Int32 return by value");
+
+    CValuePtr result = codegenAllocValue(int32Type);
+    codegenInvoke(mainObj, args, result->llval);
+    llvm::Value *v = builder->CreateLoad(result->llval);
+    builder->CreateRet(v);
+
+    initBuilder->CreateBr(codeBlock);
+
+    delete initBuilder;
+    delete builder;
+
+    initBuilder = savedInitBuilder;
+    builder = savedBuilder;
+    llvmFunction = savedLLVMFunction;
 }
