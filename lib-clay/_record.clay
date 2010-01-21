@@ -100,12 +100,40 @@ overloadable equalRecordFields?;
 overload equalRecordFields?[T,i](a:T, b:T, static i) {
     if (not equals?(recordFieldRef(a, i), recordFieldRef(b, i)))
         return false;
-    return equalRecordFields(a, b, i+1);
+    return equalRecordFields?(a, b, i+1);
 }
 
 overload equalRecordFields?[T,i |(i == RecordFieldCount(T))]
         (a:T, b:T, static i) {
     return true;
+}
+
+
+
+//
+// lesser?
+//
+
+
+overload lesser? [T|RecordType?(T)] (a:T, b:T) {
+    return lesserRecordFields?(a, b, 0);
+}
+
+overloadable lesserRecordFields?;
+
+overload lesserRecordFields?[T,i](a:T, b:T, static i) {
+    ref af = recordFieldRef(a, i);
+    ref bf = recordFieldRef(b, i);
+    if (lesser?(af, bf))
+        return true;
+    if (lesser?(bf, af))
+        return false;
+    return lesserRecordFields?(a, b, i+1);
+}
+
+overload lesserRecordFields?[T,i |(i == RecordFieldCount(T))]
+        (a:T, b:T, static i) {
+    return false;
 }
 
 

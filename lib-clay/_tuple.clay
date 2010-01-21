@@ -111,6 +111,34 @@ overload equalTupleElements?[T,i |(i == TupleElementCount(T))]
 
 
 //
+// lesser?
+//
+
+
+overload lesser? [T|TupleType?(T)] (a:T, b:T) {
+    return lesserTupleElements?(a, b, 0);
+}
+
+overloadable lesserTupleElements?;
+
+overload lesserTupleElements?[T,i](a:T, b:T, static i) {
+    ref av = tupleRef(a, i);
+    ref bv = tupleRef(b, i);
+    if (lesser?(av, bv))
+        return true;
+    if (lesser?(bv, av))
+        return false;
+    return lesserTupleElements(a, b, i+1);
+}
+
+overload lesserTupleElements?[T,i |(i == TupleElementCount(T))]
+        (a:T, b:T, static i) {
+    return false;
+}
+
+
+
+//
 // hash
 //
 
