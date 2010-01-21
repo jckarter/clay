@@ -108,6 +108,7 @@ InvokeTableEntry *findMatchingEntry(const vector<ARG> &args,
             return entry;
     }
     InvokeTableEntryPtr entry = new InvokeTableEntry();
+    entry->table = table;
     entries.push_back(entry);
     initArgsInfo(entry.ptr(), args, isStaticFlags);
     return entry.ptr();
