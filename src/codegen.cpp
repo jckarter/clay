@@ -1927,8 +1927,36 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
 // codegenMain
 //
 
+static llvm::Function *declarePrintf()
+{
+    vector<const llvm::Type *> llArgTypes;
+    llArgTypes.push_back(llvmType(pointerType(int8Type)));
+    llvm::FunctionType *llFuncType =
+        llvm::FunctionType::get(llvmType(int32Type), llArgTypes, true);
+    llvm::Function *llFunc =
+        llvm::Function::Create(llFuncType,
+                               llvm::Function::ExternalLinkage,
+                               "printf",
+                               llvmModule);
+    return llFunc;
+}
+
 void codegenMain(ModulePtr module)
 {
+    llvm::Function *llPrintf = declarePrintf();
+    llvm::GlobalVariable *llStr = new llvm::GlobalVariable(
+        *llvmModule,
+        llvm::ArrayType::get(llvmType(int8Type), 13),
+        true,
+        llvm::GlobalValue::InternalLinkage,
+        NULL,
+        ".str");
+    llvm::Constant *llStrData =
+        llvm::ConstantArray::get(llvm::getGlobalContext(),
+                                 "result = %d\n",
+                                 true);
+    llStr->setInitializer(llStrData);
+
     llvm::FunctionType *llMainType =
         llvm::FunctionType::get(llvmType(int32Type),
                                 vector<const llvm::Type *>(),
@@ -1966,6 +1994,11 @@ void codegenMain(ModulePtr module)
     CValuePtr result = codegenAllocValue(int32Type);
     codegenInvoke(mainObj, args, result->llval);
     llvm::Value *v = builder->CreateLoad(result->llval);
+    llvm::Value *llStrPtr = builder->CreateConstGEP2_32(llStr, 0, 0);
+    vector<llvm::Value *> llArgs;
+    llArgs.push_back(llStrPtr);
+    llArgs.push_back(v);
+    builder->CreateCall(llPrintf, llArgs.begin(), llArgs.end());
     builder->CreateRet(v);
 
     initBuilder->CreateBr(codeBlock);
