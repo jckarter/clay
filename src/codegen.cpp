@@ -108,7 +108,7 @@ struct CodeContext {
 
 void codegenCode(InvokeTableEntryPtr entry, IdentifierPtr name);
 
-void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx);
+bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx);
 
 void
 codegenCollectLabels(const vector<StatementPtr> &statements,
@@ -991,10 +991,11 @@ void codegenCode(InvokeTableEntryPtr entry, IdentifierPtr name)
     JumpTarget returnTarget(returnBlock, markStack());
     CodeContext ctx(entry, outPtr, returnTarget);
 
-    codegenStatement(entry->code->body, env, ctx);
+    bool terminated = codegenStatement(entry->code->body, env, ctx);
+    if (!terminated)
+        builder->CreateBr(returnBlock);
 
     initBuilder->CreateBr(codeBlock);
-    builder->CreateBr(returnBlock);
 
     builder->SetInsertPoint(returnBlock);
 
@@ -1023,7 +1024,7 @@ void codegenCode(InvokeTableEntryPtr entry, IdentifierPtr name)
 // codegenStatement
 //
 
-void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
+bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 {
     LocationContext loc(stmt->location);
 
@@ -1033,27 +1034,34 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         Block *x = (Block *)stmt.ptr();
         int blockMarker = markStack();
         codegenCollectLabels(x->statements, 0, ctx);
+        bool terminated = false;
         for (unsigned i = 0; i < x->statements.size(); ++i) {
             StatementPtr y = x->statements[i];
-            if (y->objKind == BINDING) {
-                env = codegenBinding((Binding *)y.ptr(), env);
-                codegenCollectLabels(x->statements, i+1, ctx);
-            }
-            else if (y->objKind == LABEL) {
+            if (y->objKind == LABEL) {
                 Label *z = (Label *)y.ptr();
                 map<string, JumpTarget>::iterator li =
                     ctx.labels.find(z->name->str);
                 assert(li != ctx.labels.end());
                 const JumpTarget &jt = li->second;
-                builder->CreateBr(jt.block);
+                if (!terminated)
+                    builder->CreateBr(jt.block);
                 builder->SetInsertPoint(jt.block);
             }
+            else if (terminated) {
+                error(y, "unreachable code");
+            }
+            else if (y->objKind == BINDING) {
+                env = codegenBinding((Binding *)y.ptr(), env);
+                codegenCollectLabels(x->statements, i+1, ctx);
+            }
             else {
-                codegenStatement(y, env, ctx);
+                terminated = codegenStatement(y, env, ctx);
             }
         }
-        sweepStack(blockMarker);
-        break;
+        if (!terminated)
+            destroyStack(blockMarker);
+        popStack(blockMarker);
+        return terminated;
     }
 
     case LABEL :
@@ -1073,7 +1081,7 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         codegenValueAssign(cvLeft, cvRight);
         sweepStack(marker);
         popTempBlock();
-        break;
+        return false;
     }
 
     case GOTO : {
@@ -1085,7 +1093,7 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         const JumpTarget &jt = li->second;
         destroyStack(jt.stackMarker);
         builder->CreateBr(jt.block);
-        break;
+        return true;
     }
 
     case RETURN : {
@@ -1114,7 +1122,7 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         const JumpTarget &jt = ctx.returnTarget;
         destroyStack(jt.stackMarker);
         builder->CreateBr(jt.block);
-        break;
+        return true;
     }
 
     case RETURN_REF : {
@@ -1135,7 +1143,7 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         const JumpTarget &jt = ctx.returnTarget;
         destroyStack(jt.stackMarker);
         builder->CreateBr(jt.block);
-        break;
+        return true;
     }
 
     case IF : {
@@ -1150,22 +1158,34 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 
         llvm::BasicBlock *trueBlock = newBasicBlock("ifTrue");
         llvm::BasicBlock *falseBlock = newBasicBlock("ifFalse");
-        llvm::BasicBlock *mergeBlock = newBasicBlock("ifMerge");
+        llvm::BasicBlock *mergeBlock = NULL;
 
         builder->CreateCondBr(cond, trueBlock, falseBlock);
 
+        bool terminated1 = false;
+        bool terminated2 = false;
+
         builder->SetInsertPoint(trueBlock);
-        codegenStatement(x->thenPart, env, ctx);
-        builder->CreateBr(mergeBlock);
+        terminated1 = codegenStatement(x->thenPart, env, ctx);
+        if (!terminated1) {
+            if (!mergeBlock)
+                mergeBlock = newBasicBlock("ifMerge");
+            builder->CreateBr(mergeBlock);
+        }
 
         builder->SetInsertPoint(falseBlock);
         if (x->elsePart.ptr())
-            codegenStatement(x->elsePart, env, ctx);
-        builder->CreateBr(mergeBlock);
+            terminated2 = codegenStatement(x->elsePart, env, ctx);
+        if (!terminated2) {
+            if (!mergeBlock)
+                mergeBlock = newBasicBlock("ifMerge");
+            builder->CreateBr(mergeBlock);
+        }
 
-        builder->SetInsertPoint(mergeBlock);
+        if (!terminated1 || !terminated2)
+            builder->SetInsertPoint(mergeBlock);
 
-        break;
+        return terminated1 && terminated2;
     }
 
     case EXPR_STATEMENT : {
@@ -1179,7 +1199,7 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         codegen(x->expr, env, outPtr);
         sweepStack(marker);
         popTempBlock();
-        break;
+        return false;
     }
 
     case WHILE : {
@@ -1211,7 +1231,7 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         ctx.continues.pop_back();
 
         builder->SetInsertPoint(whileEnd);
-        break;
+        return false;
     }
 
     case BREAK : {
@@ -1220,7 +1240,7 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         const JumpTarget &jt = ctx.breaks.back();
         destroyStack(jt.stackMarker);
         builder->CreateBr(jt.block);
-        break;
+        return true;
     }
 
     case CONTINUE : {
@@ -1229,20 +1249,19 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         const JumpTarget &jt = ctx.breaks.back();
         destroyStack(jt.stackMarker);
         builder->CreateBr(jt.block);
-        break;
+        return true;
     }
 
     case FOR : {
         For *x = (For *)stmt.ptr();
         if (!x->converted)
             x->converted = convertForStatement(x);
-        codegenStatement(x->converted, env, ctx);
-        break;
+        return codegenStatement(x->converted, env, ctx);
     }
 
     default :
         assert(false);
-
+        return false;
     }
 }
 
