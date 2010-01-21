@@ -95,15 +95,15 @@ struct JumpTarget {
 struct CodeContext {
     InvokeTableEntryPtr entry;
     llvm::Value *returnOutPtr;
-    int stackMarker;
+    JumpTarget returnTarget;
     map<string, JumpTarget> labels;
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
     CodeContext(InvokeTableEntryPtr entry,
                 llvm::Value *returnOutPtr,
-                int stackMarker)
+                const JumpTarget &returnTarget)
         : entry(entry), returnOutPtr(returnOutPtr),
-          stackMarker(stackMarker) {}
+          returnTarget(returnTarget) {}
 };
 
 void codegenCode(InvokeTableEntryPtr entry, IdentifierPtr name);
@@ -330,9 +330,7 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
     case INT_LITERAL :
     case FLOAT_LITERAL : {
         ValuePtr v = evaluateToStatic(expr, env);
-        llvm::Value *val = numericConstant(v);
-        builder->CreateStore(val, outPtr);
-        return new CValue(v->type, outPtr);
+        return codegenValue(v, outPtr);
     }
 
     case CHAR_LITERAL : {
@@ -957,6 +955,19 @@ void codegenCode(InvokeTableEntryPtr entry, IdentifierPtr name)
                                llvmModule);
     entry->llFunc = llFunc;
 
+    llvm::Function *savedLLVMFunction = llvmFunction;
+    llvm::IRBuilder<> *savedInitBuilder = initBuilder;
+    llvm::IRBuilder<> *savedBuilder = builder;
+
+    llvmFunction = llFunc;
+
+    llvm::BasicBlock *initBlock = newBasicBlock("init");
+    llvm::BasicBlock *codeBlock = newBasicBlock("code");
+    llvm::BasicBlock *returnBlock = newBasicBlock("return");
+
+    initBuilder = new llvm::IRBuilder<>(initBlock);
+    builder = new llvm::IRBuilder<>(codeBlock);
+
     EnvPtr env = new Env(entry->env);
 
     llvm::Function::arg_iterator ai = llFunc->arg_begin();
@@ -966,29 +977,37 @@ void codegenCode(InvokeTableEntryPtr entry, IdentifierPtr name)
         CValuePtr cvalue = new CValue(argTypes[i], llArgValue);
         addLocal(env, argNames[i], cvalue.ptr());
     }
-    llvm::Argument *outPtr = NULL;
-    if ((entry->returnType != voidType) && !entry->returnByRef)
-        outPtr = &(*ai);
+    llvm::Value *outPtr = NULL;
+    if (entry->returnType != voidType) {
+        if (entry->returnByRef) {
+            const llvm::Type *llt = llvmType(pointerType(entry->returnType));
+            outPtr = initBuilder->CreateAlloca(llt);
+        }
+        else {
+            outPtr = &(*ai);
+        }
+    }
 
-    llvm::Function *savedLLVMFunction = llvmFunction;
-    llvm::IRBuilder<> *savedInitBuilder = initBuilder;
-    llvm::IRBuilder<> *savedBuilder = builder;
-
-    llvmFunction = llFunc;
-
-    llvm::BasicBlock *initBlock = newBasicBlock("initBlock");
-    llvm::BasicBlock *codeBlock = newBasicBlock("codeBlock");
-
-    initBuilder = new llvm::IRBuilder<>(initBlock);
-    builder = new llvm::IRBuilder<>(codeBlock);
-
-    CodeContext ctx(entry, outPtr, markStack());
+    JumpTarget returnTarget(returnBlock, markStack());
+    CodeContext ctx(entry, outPtr, returnTarget);
 
     codegenStatement(entry->code->body, env, ctx);
 
-    builder->CreateRetVoid();
-
     initBuilder->CreateBr(codeBlock);
+    builder->CreateBr(returnBlock);
+
+    builder->SetInsertPoint(returnBlock);
+
+    if (entry->returnType == voidType) {
+        builder->CreateRetVoid();
+    }
+    else if (entry->returnByRef) {
+        llvm::Value *v = builder->CreateLoad(outPtr);
+        builder->CreateRet(v);
+    }
+    else {
+        builder->CreateRetVoid();
+    }
 
     delete initBuilder;
     delete builder;
@@ -1076,8 +1095,6 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         if (rt == voidType) {
             if (x->expr.ptr())
                 error("void return expected");
-            destroyStack(ctx.stackMarker);
-            builder->CreateRetVoid();
         }
         else {
             if (!x->expr)
@@ -1093,10 +1110,10 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
             codegenAsValue(x->expr, env, pv, ctx.returnOutPtr);
             sweepStack(marker);
             popTempBlock();
-
-            destroyStack(ctx.stackMarker);
-            builder->CreateRetVoid();
         }
+        const JumpTarget &jt = ctx.returnTarget;
+        destroyStack(jt.stackMarker);
+        builder->CreateBr(jt.block);
         break;
     }
 
@@ -1114,8 +1131,10 @@ void codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         if (pv->isTemp)
             error("cannot return a temporary by reference");
         CValuePtr ref = codegenRoot(x->expr, env, NULL);
-        destroyStack(ctx.stackMarker);
-        builder->CreateRet(ref->llval);
+        builder->CreateStore(ref->llval, ctx.returnOutPtr);
+        const JumpTarget &jt = ctx.returnTarget;
+        destroyStack(jt.stackMarker);
+        builder->CreateBr(jt.block);
         break;
     }
 
