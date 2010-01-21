@@ -109,7 +109,7 @@ ArgListPtr ArgList::removeStaticArgs(const vector<FormalArgPtr> &fargs)
     args->recursionError = this->recursionError;
 
     for (unsigned i = 0; i < fargs.size(); ++i) {
-        if (fargs[i]->objKind == STATIC_ARG) {
+        if (fargs[i]->objKind != STATIC_ARG) {
             args->exprs.push_back(this->exprs[i]);
             args->_pvalues.push_back(this->_pvalues[i]);
             args->_values.push_back(this->_values[i]);
