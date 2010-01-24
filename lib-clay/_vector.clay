@@ -13,11 +13,24 @@ record Vector[T](size:Int32, capacity:Int32, data:Pointer[T]);
 
 
 //
+// vector default constructor
+//
+
+overload init[T](v:Vector[T]) {
+    v.size = 0;
+    v.capacity = 0;
+    v.data = null(T);
+}
+
+
+//
 // create vector
 //
 
-vector[T,n](a:Array[T,n]) {
-    var v = Vector[T](0, 0, null(T));
+overloadable makeVector;
+
+overload makeVector[T,n](a:Array[T,n]) {
+    var v = Vector[T]();
     for (x in a)
         pushBack(v, x);
     return v;
