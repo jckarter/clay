@@ -245,9 +245,9 @@ initProcedureEnv(ProcedurePtr x,
 
 void initOverloadableInvokeTables(OverloadablePtr x)
 {
-    for (unsigned i = 0; i < x->overloads.size(); ++i) {
+    for (unsigned i = x->overloads.size(); i > 0; --i) {
         const vector<FormalArgPtr> &formalArgs =
-            x->overloads[i]->code->formalArgs;
+            x->overloads[i-1]->code->formalArgs;
         unsigned nArgs = formalArgs.size();
         if (x->invokeTables.size() <= nArgs)
             x->invokeTables.resize(nArgs + 1);
