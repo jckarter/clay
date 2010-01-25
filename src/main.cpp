@@ -34,6 +34,14 @@ static void evalProgram(ModulePtr m)
     cout << result << '\n';
 }
 
+static int runProgram(ModulePtr m)
+{
+    llvm::Function *llMain = codegenMain(m);
+    vector<llvm::GenericValue> llArgs;
+    llvm::GenericValue result = llvmEngine->runFunction(llMain, llArgs);
+    return (int)result.IntVal.getSExtValue();
+}
+
 static void compileProgram(ModulePtr m)
 {
     codegenMain(m);
@@ -42,7 +50,7 @@ static void compileProgram(ModulePtr m)
 
 static void usage()
 {
-    cerr << "usage: clayc [--eval] <clayfile>\n";
+    cerr << "usage: clayc [--eval | --run] <clayfile>\n";
 }
 
 int main(int argc, char **argv) {
@@ -52,12 +60,18 @@ int main(int argc, char **argv) {
     }
 
     bool doEval = false;
+    bool doRun = false;
     if (argc == 3) {
-        if (strcmp(argv[1], "--eval") != 0) {
+        if (strcmp(argv[1], "--eval") == 0) {
+            doEval = true;
+        }
+        else if (strcmp(argv[1], "--run") == 0) {
+            doRun = true;
+        }
+        else {
             usage();
             return -1;
         }
-        doEval = true;
     }
     const char *clayFile = argv[argc-1];
 
@@ -68,10 +82,15 @@ int main(int argc, char **argv) {
     setSearchPath(argv[0]);
 
     ModulePtr m = loadProgram(clayFile);
-    if (doEval)
+    if (doEval) {
         evalProgram(m);
-    else
+        return 0;
+    }
+    else if (doRun) {
+        return runProgram(m);
+    }
+    else {
         compileProgram(m);
-
-    return 0;
+        return 0;
+    }
 }

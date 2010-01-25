@@ -1562,6 +1562,6 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr);
 CValuePtr
 codegenInvoke(ObjectPtr obj, ArgListPtr args, llvm::Value *outPtr);
 
-void codegenMain(ModulePtr module);
+llvm::Function *codegenMain(ModulePtr module);
 
 #endif

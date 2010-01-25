@@ -1979,7 +1979,7 @@ static llvm::Function *declarePrintf()
     return llFunc;
 }
 
-void codegenMain(ModulePtr module)
+llvm::Function *codegenMain(ModulePtr module)
 {
     llvm::Function *llPrintf = declarePrintf();
     llvm::GlobalVariable *llStr = new llvm::GlobalVariable(
@@ -2047,4 +2047,6 @@ void codegenMain(ModulePtr module)
     initBuilder = savedInitBuilder;
     builder = savedBuilder;
     llvmFunction = savedLLVMFunction;
+
+    return llMain;
 }

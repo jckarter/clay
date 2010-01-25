@@ -8,8 +8,8 @@ const llvm::TargetData *llvmTargetData;
 void initLLVM() {
     llvm::InitializeNativeTarget();
     llvmModule = new llvm::Module("clay", llvm::getGlobalContext());
-    llvm::ModuleProvider *mp = new llvm::ExistingModuleProvider(llvmModule);
-    llvmEngine = llvm::EngineBuilder(mp).create();
+    llvm::EngineBuilder eb(llvmModule);
+    llvmEngine = eb.create();
     assert(llvmEngine);
     llvmTargetData = llvmEngine->getTargetData();
     llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
