@@ -1,4 +1,5 @@
 import kernel.operators.*;
+import kernel.sequences.*;
 import kernel.numbers.*;
 import kernel.pointers.*;
 import kernel.ranges.*;
@@ -32,18 +33,18 @@ overloadable makeVector;
 overload makeVector[T,n](a:Array[T,n]) {
     var v = Vector[T]();
     for (x in a)
-        pushBack(v, x);
+        push(v, x);
     return v;
 }
 
 
 //
-// size, at
+// size, item
 //
 
 overload size[T](a:Vector[T]) = a.size;
 
-overload at[T](a:Vector[T], i) = ref at(a.data + i);
+overload item[T](a:Vector[T], i) = ref deref(a.data + i);
 
 
 //
@@ -52,7 +53,7 @@ overload at[T](a:Vector[T], i) = ref at(a.data + i);
 
 record VectorCoordinate[T](ptr:Pointer[T]);
 
-overload at[T](c:VectorCoordinate[T]) = ref at(c.ptr);
+overload deref[T](c:VectorCoordinate[T]) = ref deref(c.ptr);
 
 overload begin[T](a:Vector[T]) = VectorCoordinate(a.data);
 overload end[T](a:Vector[T]) = VectorCoordinate(a.data + a.size);
@@ -137,21 +138,21 @@ overload hash[T](a:Vector[T]) {
 
 
 //
-// front, back, pushBack, popBack
+// front, back, push, pop
 //
 
-overload front[T](a:Vector[T]) = ref at(a, 0);
-overload back[T](a:Vector[T]) = ref at(a, size(a)-1);
+overload front[T](a:Vector[T]) = ref item(a, 0);
+overload back[T](a:Vector[T]) = ref item(a, size(a)-1);
 
-overload pushBack[T](a:Vector[T], x:T) {
+overload push[T](a:Vector[T], x:T) {
     insert(a, size(a), x);
 }
 
-overload pushBack[T](a:Vector[T], a:Movable[T]) {
+overload push[T](a:Vector[T], a:Movable[T]) {
     insert(a, size(a), x);
 }
 
-overload popBack[T](a:Vector[T]) {
+overload pop[T](a:Vector[T]) {
     // FIXME: get rid of extra copy
     var x = back(a);
     remove(a, end(a)-1);
@@ -172,7 +173,7 @@ setCapacity[T](a:Vector[T], capacity:Int32) {
     var data = allocateMemory(T, capacity);
     var ptr = data;
     for (x in a) {
-        move(at(ptr), x);
+        move(deref(ptr), x);
         inc(ptr);
     }
     freeMemory(a.data);
@@ -190,11 +191,11 @@ insertionPoint [T,I|Integer?(I)] (a:Vector[T], pos:I) {
     var i = begin(a) + pos;
     var j = end(a);
     while (i < j) {
-        move(at(j), at(j-1));
+        move(deref(j), deref(j-1));
         dec(j);
     }
     inc(a.size);
-    returnref at(i);
+    returnref deref(i);
 }
 
 overload insert [T,I|Integer?(I)] (a:Vector[T], i:I, x:T) {
@@ -214,10 +215,10 @@ overload insert[T](a:Vector[T], i:VectorCoordinate[T], x:Movable[T]) {
 }
 
 overload remove[T](a:Vector[T], i:VectorCoordinate[T]) {
-    destroy(at(i));
+    destroy(deref(i));
     var j = end(a);
     while (true) {
-        move(at(i), at(i+1));
+        move(deref(i), deref(i+1));
         inc(i);
         if (i == j) break;
     }

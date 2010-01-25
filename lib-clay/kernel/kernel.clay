@@ -1,5 +1,6 @@
 import __primitives__.*;
 import kernel.operators.*;
+import kernel.sequences.*;
 import kernel.compilerobjects.*;
 import kernel.booleans.*;
 import kernel.numbers.*;

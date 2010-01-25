@@ -2,7 +2,7 @@ import kernel.operators.*;
 
 //
 // Coordinate types should support:
-// inc, dec, at, equals
+// inc, dec, deref, equals?
 //
 
 overloadable Coordinate?;

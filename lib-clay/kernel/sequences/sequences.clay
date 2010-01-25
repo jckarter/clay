@@ -1,0 +1,14 @@
+overloadable size;
+overloadable item;
+
+overloadable begin;
+overloadable end;
+
+overloadable front;
+overloadable back;
+
+overloadable push;
+overloadable pop;
+overloadable clear;
+overloadable insert;
+overloadable remove;

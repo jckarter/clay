@@ -11,4 +11,4 @@ record Movable[T](data:Pointer[T]);
 
 overload move[T](a:T) = Movable(&a);
 
-overload at[T](a:Movable[T]) = ref at(a.data);
+overload deref[T](a:Movable[T]) = ref deref(a.data);

@@ -19,6 +19,8 @@ overloadable multiply;
 overloadable divide;
 overloadable remainder;
 
+overloadable deref;
+
 overloadable hash;
 
 overloadable iterator;
@@ -32,19 +34,6 @@ overloadable one;
 
 overloadable inc;
 overloadable dec;
-
-overloadable size;
-overloadable at;
-overloadable begin;
-overloadable end;
-
-overloadable front;
-overloadable back;
-overloadable pushBack;
-overloadable popBack;
-overloadable clear;
-overloadable insert;
-overloadable remove;
 
 
 //

@@ -34,7 +34,7 @@ overload iterator[T](r:CoordinateRange[T]) = r;
 overload hasNext?[T](r:CoordinateRange[T]) = r.first < r.last;
 
 overload next[T](r:CoordinateRange[T]) {
-    ref obj = at(r.first);
+    ref obj = deref(r.first);
     inc(r.first);
     returnref obj;
 }

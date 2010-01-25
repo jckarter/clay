@@ -1,4 +1,5 @@
 import kernel.operators.*;
+import kernel.sequences.*;
 import kernel.numbers.*;
 import kernel.ranges.*;
 
@@ -12,7 +13,7 @@ import kernel.ranges.*;
 
 overload size[T,n](a:Array[T,n]) = n;
 
-overload at[T,n](a:Array[T,n], i) = ref arrayRef(a, i);
+overload item[T,n](a:Array[T,n], i) = ref arrayRef(a, i);
 
 
 //
@@ -21,9 +22,9 @@ overload at[T,n](a:Array[T,n], i) = ref arrayRef(a, i);
 
 record ArrayCoordinate[T](ptr:Pointer[T]);
 
-overload at[T](c:ArrayCoordinate[T]) = ref at(c.ptr);
-overload begin[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, 0));
-overload end[T,n](a:Array[T,n]) = ArrayCoordinate(&at(a, n));
+overload deref[T](c:ArrayCoordinate[T]) = ref deref(c.ptr);
+overload begin[T,n](a:Array[T,n]) = ArrayCoordinate(&item(a, 0));
+overload end[T,n](a:Array[T,n]) = ArrayCoordinate(&item(a, n));
 
 overload add [T,I | Integer?(I)] (c:ArrayCoordinate[T], i:I)
     = ArrayCoordinate(c.ptr + i);

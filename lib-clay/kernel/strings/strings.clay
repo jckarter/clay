@@ -1,6 +1,7 @@
 import kernel.operators.*;
 import kernel.characters.*;
 import kernel.vectors.*;
+import kernel.sequences.*;
 import kernel.ranges.*;
 
 
@@ -17,12 +18,12 @@ record String(data:Vector[Char]);
 
 overload init(a:String) {
     init(a.data);
-    pushBack(a.data, char(0));
+    push(a.data, char(0));
 }
 
 string[n](a:Array[Char,n]) {
     var s = String(makeVector(a));
-    pushBack(s.data, char(0));
+    push(s.data, char(0));
     return s;
 }
 
@@ -31,9 +32,9 @@ string[n](a:Array[Char,n]) {
 // size, at
 //
 
-overload size(a:String) = size(a.data);
+overload size(a:String) = size(a.data) - 1;
 
-overload at(a:String, i) = ref at(a.data, i);
+overload item(a:String, i) = ref item(a.data, i);
 
 
 //
@@ -48,4 +49,4 @@ overload iterator(a:String) = CoordinateRange(begin(a), end(a));
 // c-string compatibility
 //
 
-cstring(s:String) = &at(s, 0).code;
+cstring(s:String) = &item(s, 0).code;
