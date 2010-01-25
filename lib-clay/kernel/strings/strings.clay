@@ -21,7 +21,7 @@ overload init(a:String) {
 }
 
 string[n](a:Array[Char,n]) {
-    var s = String(vector(a));
+    var s = String(makeVector(a));
     pushBack(s.data, char(0));
     return s;
 }
