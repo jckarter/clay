@@ -1,4 +1,4 @@
-import base.*;
+import kernel.*;
 
 factorial(n) {
     if (n == 0)

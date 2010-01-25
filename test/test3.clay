@@ -1,4 +1,4 @@
-import base.*;
+import kernel.*;
 
 testSignedInt() = (1, 1#i8, 1#i16, 1#i32, 1#i64);
 

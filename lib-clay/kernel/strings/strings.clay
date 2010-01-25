@@ -1,5 +1,5 @@
 import kernel.operators.*;
-import kernel.chars.*;
+import kernel.characters.*;
 import kernel.vectors.*;
 import kernel.ranges.*;
 

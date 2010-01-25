@@ -1,7 +1,7 @@
 import __primitives__.*;
 import kernel.operators.*;
 import kernel.compilerobjects.*;
-import kernel.bools.*;
+import kernel.booleans.*;
 import kernel.numbers.*;
 import kernel.coordinates.*;
 import kernel.pointers.*;
@@ -10,5 +10,5 @@ import kernel.records.*;
 import kernel.ranges.*;
 import kernel.arrays.*;
 import kernel.vectors.*;
-import kernel.chars.*;
+import kernel.characters.*;
 import kernel.strings.*;

@@ -1,4 +1,4 @@
-import base.*;
+import kernel.*;
 
 insertionSort(a) {
     var i = begin(a) + 1;

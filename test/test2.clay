@@ -1,4 +1,4 @@
-import base.*;
+import kernel.*;
 
 record CustomCompare[T,F](x:T, static F);
 
