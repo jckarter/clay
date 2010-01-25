@@ -18,11 +18,11 @@ OBJS = \
 	src/codegen.o \
 	src/main.o
 
-clayc : $(OBJS)
-	g++ -m32 -g -o clayc $(OBJS) $(LLVM_LDFLAGS)
+clay2llvm : $(OBJS)
+	g++ -m32 -g -o clay2llvm $(OBJS) $(LLVM_LDFLAGS)
 
 clean :
-	rm -f clayc
+	rm -f clay2llvm
 	rm -f src/*.o
 	rm -f src/*.dep
 
