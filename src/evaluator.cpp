@@ -1152,7 +1152,7 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
 }
 
 ExprPtr convertCharLiteral(char c) {
-    ExprPtr nameRef = moduleNameRef("_char", "Char");
+    ExprPtr nameRef = kernelNameRef("Char");
     CallPtr call = new Call(nameRef);
     ostringstream out;
     out << (int)c;
@@ -1164,7 +1164,7 @@ ExprPtr convertStringLiteral(const string &s) {
     ArrayPtr charArray = new Array();
     for (unsigned i = 0; i < s.size(); ++i)
         charArray->args.push_back(convertCharLiteral(s[i]));
-    ExprPtr nameRef = moduleNameRef("_string", "string");
+    ExprPtr nameRef = kernelNameRef("string");
     CallPtr call = new Call(nameRef);
     call->args.push_back(charArray.ptr());
     return call.ptr();

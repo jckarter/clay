@@ -592,7 +592,7 @@ partialInvokeExternal(ExternalProcedurePtr x, ArgListPtr args)
 {
     if (!x->llvmFunc)
         initExternalProcedure(x);
-    return new PValue(x->returnType2, false, args->allStatic);
+    return new PValue(x->returnType2, true, args->allStatic);
 }
 
 
