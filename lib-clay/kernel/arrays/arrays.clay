@@ -1,6 +1,6 @@
-import _core.*;
-import _numeric.*;
-import _range.*;
+import kernel.operators.*;
+import kernel.numbers.*;
+import kernel.ranges.*;
 
 //
 // Array[T,n]

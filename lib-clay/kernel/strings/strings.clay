@@ -1,7 +1,7 @@
-import _core.*;
-import _char.*;
-import _vector.*;
-import _range.*;
+import kernel.operators.*;
+import kernel.chars.*;
+import kernel.vectors.*;
+import kernel.ranges.*;
 
 
 //

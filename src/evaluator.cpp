@@ -343,7 +343,7 @@ void valueInit(ValuePtr dest) {
     case RECORD_TYPE : {
         vector<ValuePtr> args;
         args.push_back(dest);
-        invoke(coreName("init"), args);
+        invoke(kernelName("init"), args);
         break;
     }
     default :
@@ -386,7 +386,7 @@ void valueDestroy(ValuePtr dest) {
     case RECORD_TYPE : {
         vector<ValuePtr> args;
         args.push_back(dest);
-        invoke(coreName("destroy"), args);
+        invoke(kernelName("destroy"), args);
         break;
     }
     default :
@@ -405,7 +405,7 @@ void valueCopy(ValuePtr dest, ValuePtr src) {
         vector<ValuePtr> args;
         args.push_back(dest);
         args.push_back(src);
-        invoke(coreName("copy"), args);
+        invoke(kernelName("copy"), args);
         return;
     }
     switch (dest->type->typeKind) {
@@ -441,7 +441,7 @@ void valueCopy(ValuePtr dest, ValuePtr src) {
         vector<ValuePtr> args;
         args.push_back(dest);
         args.push_back(src);
-        invoke(coreName("copy"), args);
+        invoke(kernelName("copy"), args);
         break;
     }
     default :
@@ -472,7 +472,7 @@ void valueAssign(ValuePtr dest, ValuePtr src) {
         vector<ValuePtr> args;
         args.push_back(dest);
         args.push_back(src);
-        invoke(coreName("assign"), args);
+        invoke(kernelName("assign"), args);
         return;
     }
     switch (dest->type->typeKind) {
@@ -508,7 +508,7 @@ void valueAssign(ValuePtr dest, ValuePtr src) {
         vector<ValuePtr> args;
         args.push_back(dest);
         args.push_back(src);
-        invoke(coreName("assign"), args);
+        invoke(kernelName("assign"), args);
         break;
     }
     default :
@@ -527,7 +527,7 @@ bool valueEquals(ValuePtr a, ValuePtr b) {
         vector<ValuePtr> args;
         args.push_back(a);
         args.push_back(b);
-        return invokeToBool(coreName("equals?"), args);
+        return invokeToBool(kernelName("equals?"), args);
     }
     switch (a->type->typeKind) {
     case BOOL_TYPE :
@@ -564,7 +564,7 @@ bool valueEquals(ValuePtr a, ValuePtr b) {
         vector<ValuePtr> args;
         args.push_back(a);
         args.push_back(b);
-        return invokeToBool(coreName("equals?"), args);
+        return invokeToBool(kernelName("equals?"), args);
     }
     default :
         assert(false);
@@ -639,7 +639,7 @@ int valueHash(ValuePtr a) {
     case RECORD_TYPE : {
         vector<ValuePtr> args;
         args.push_back(a);
-        return invokeToInt(coreName("hash"), args);
+        return invokeToInt(kernelName("hash"), args);
     }
     default :
         assert(false);
@@ -1190,10 +1190,10 @@ ExprPtr convertUnaryOp(UnaryOpPtr x) {
         callable = primNameRef("addressOf");
         break;
     case PLUS :
-        callable = coreNameRef("plus");
+        callable = kernelNameRef("plus");
         break;
     case MINUS :
-        callable = coreNameRef("minus");
+        callable = kernelNameRef("minus");
         break;
     case NOT :
         callable = primNameRef("boolNot");
@@ -1210,37 +1210,37 @@ ExprPtr convertBinaryOp(BinaryOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
     case ADD :
-        callable = coreNameRef("add");
+        callable = kernelNameRef("add");
         break;
     case SUBTRACT :
-        callable = coreNameRef("subtract");
+        callable = kernelNameRef("subtract");
         break;
     case MULTIPLY :
-        callable = coreNameRef("multiply");
+        callable = kernelNameRef("multiply");
         break;
     case DIVIDE :
-        callable = coreNameRef("divide");
+        callable = kernelNameRef("divide");
         break;
     case REMAINDER :
-        callable = coreNameRef("remainder");
+        callable = kernelNameRef("remainder");
         break;
     case EQUALS :
-        callable = coreNameRef("equals?");
+        callable = kernelNameRef("equals?");
         break;
     case NOT_EQUALS :
-        callable = coreNameRef("notEquals?");
+        callable = kernelNameRef("notEquals?");
         break;
     case LESSER :
-        callable = coreNameRef("lesser?");
+        callable = kernelNameRef("lesser?");
         break;
     case LESSER_EQUALS :
-        callable = coreNameRef("lesserEquals?");
+        callable = kernelNameRef("lesserEquals?");
         break;
     case GREATER :
-        callable = coreNameRef("greater?");
+        callable = kernelNameRef("greater?");
         break;
     case GREATER_EQUALS :
-        callable = coreNameRef("greaterEquals?");
+        callable = kernelNameRef("greaterEquals?");
         break;
     default :
         assert(false);
@@ -1904,13 +1904,13 @@ StatementPtr convertForStatement(ForPtr x) {
     BlockPtr block = new Block();
     block->statements.push_back(new Binding(REF, exprVar, x->expr));
 
-    CallPtr iteratorCall = new Call(coreNameRef("iterator"));
+    CallPtr iteratorCall = new Call(kernelNameRef("iterator"));
     iteratorCall->args.push_back(new NameRef(exprVar));
     block->statements.push_back(new Binding(VAR, iterVar, iteratorCall.ptr()));
 
-    CallPtr hasNextCall = new Call(coreNameRef("hasNext?"));
+    CallPtr hasNextCall = new Call(kernelNameRef("hasNext?"));
     hasNextCall->args.push_back(new NameRef(iterVar));
-    CallPtr nextCall = new Call(coreNameRef("next"));
+    CallPtr nextCall = new Call(kernelNameRef("next"));
     nextCall->args.push_back(new NameRef(iterVar));
     BlockPtr whileBody = new Block();
     whileBody->statements.push_back(new Binding(REF, x->variable, nextCall.ptr()));

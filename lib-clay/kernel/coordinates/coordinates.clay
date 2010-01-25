@@ -1,4 +1,4 @@
-import _core.*;
+import kernel.operators.*;
 
 //
 // Coordinate types should support:

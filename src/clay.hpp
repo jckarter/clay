@@ -1082,11 +1082,11 @@ void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
 
 ModulePtr loadedModule(const string &module);
-ObjectPtr coreName(const string &name);
+ObjectPtr kernelName(const string &name);
 ObjectPtr primName(const string &name);
 
 ExprPtr moduleNameRef(const string &module, const string &name);
-ExprPtr coreNameRef(const string &name);
+ExprPtr kernelNameRef(const string &name);
 ExprPtr primNameRef(const string &name);
 
 

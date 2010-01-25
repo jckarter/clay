@@ -149,7 +149,7 @@ void codegenValueInit(CValuePtr dest)
     vector<ExprPtr> exprs;
     exprs.push_back(new CValueExpr(dest));
     ArgListPtr args = new ArgList(exprs, new Env());
-    codegenInvokeVoid(coreName("init"), args);
+    codegenInvokeVoid(kernelName("init"), args);
 }
 
 void codegenValueDestroy(CValuePtr dest)
@@ -157,7 +157,7 @@ void codegenValueDestroy(CValuePtr dest)
     vector<ExprPtr> exprs;
     exprs.push_back(new CValueExpr(dest));
     ArgListPtr args = new ArgList(exprs, new Env());
-    codegenInvokeVoid(coreName("destroy"), args);
+    codegenInvokeVoid(kernelName("destroy"), args);
 }
 
 void codegenValueCopy(CValuePtr dest, CValuePtr src)
@@ -166,7 +166,7 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src)
     exprs.push_back(new CValueExpr(dest));
     exprs.push_back(new CValueExpr(src));
     ArgListPtr args = new ArgList(exprs, new Env());
-    codegenInvokeVoid(coreName("copy"), args);
+    codegenInvokeVoid(kernelName("copy"), args);
 }
 
 void codegenValueAssign(CValuePtr dest, CValuePtr src)
@@ -175,7 +175,7 @@ void codegenValueAssign(CValuePtr dest, CValuePtr src)
     exprs.push_back(new CValueExpr(dest));
     exprs.push_back(new CValueExpr(src));
     ArgListPtr args = new ArgList(exprs, new Env());
-    codegenInvokeVoid(coreName("assign"), args);
+    codegenInvokeVoid(kernelName("assign"), args);
 }
 
 llvm::Value *codegenToBool(CValuePtr a)

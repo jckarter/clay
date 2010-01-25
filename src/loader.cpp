@@ -46,29 +46,21 @@ static bool locateFile(const string &relativePath, string &path) {
 
 static string toRelativePath(DottedNamePtr name) {
     string relativePath;
-    vector<IdentifierPtr>::iterator i, end;
-    bool first = true;
-    for (i = name->parts.begin(), end = name->parts.end(); i != end; ++i) {
-        if (!first)
-            relativePath.push_back(PATH_SEPARATOR);
-        else
-            first = false;
-        relativePath.append((*i)->str);
+    for (unsigned i = 0; i < name->parts.size(); ++i) {
+        relativePath.append(name->parts[i]->str);
+        relativePath.push_back(PATH_SEPARATOR);
     }
+    relativePath.append(name->parts.back()->str);
     relativePath.append(".clay");
     return relativePath;
 }
 
 static string toKey(DottedNamePtr name) {
     string key;
-    vector<IdentifierPtr>::iterator i, end;
-    bool first = true;
-    for (i = name->parts.begin(), end = name->parts.end(); i != end; ++i) {
-        if (!first)
+    for (unsigned i = 0; i < name->parts.size(); ++i) {
+        if (i != 0)
             key.push_back('.');
-        else
-            first = false;
-        key.append((*i)->str);
+        key.append(name->parts[i]->str);
     }
     return key;
 }
@@ -363,8 +355,8 @@ static ModulePtr makePrimitivesModule() {
 // access names from other modules
 //
 
-ObjectPtr coreName(const string &name) {
-    return lookupPublic(loadedModule("_core"), new Identifier(name));
+ObjectPtr kernelName(const string &name) {
+    return lookupPublic(loadedModule("kernel"), new Identifier(name));
 }
 
 ObjectPtr primName(const string &name) {
@@ -376,8 +368,8 @@ ExprPtr moduleNameRef(const string &module, const string &name) {
     return new SCExpr(loadedModule(module)->env, nameRef);
 }
 
-ExprPtr coreNameRef(const string &name) {
-    return moduleNameRef("_core", name);
+ExprPtr kernelNameRef(const string &name) {
+    return moduleNameRef("kernel", name);
 }
 
 ExprPtr primNameRef(const string &name) {

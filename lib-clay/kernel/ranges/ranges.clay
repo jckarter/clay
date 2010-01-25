@@ -1,5 +1,5 @@
-import _core.*;
-import _numeric.*;
+import kernel.operators.*;
+import kernel.numbers.*;
 
 //
 // Range

@@ -1,6 +1,6 @@
-import _core.*;
-import _numeric.*;
-import _coordinate.*;
+import kernel.operators.*;
+import kernel.numbers.*;
+import kernel.coordinates.*;
 
 //
 // Pointer[T]
