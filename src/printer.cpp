@@ -428,18 +428,38 @@ static void print(const Object *x, ostream &out) {
 
     case IMPORT : {
         Import *y = (Import *)x;
-        out << "Import(" << y->dottedName << ")";
-        break;
-    }
-    case EXPORT : {
-        Export *y = (Export *)x;
-        out << "Export(" << y->dottedName << ")";
+        switch (y->importKind) {
+        case IMPORT_MODULE : {
+            ImportModule *z = (ImportModule *)y;
+            out << "Import(" << z->dottedName << ", " << z->alias << ")";
+            break;
+        }
+        case IMPORT_STAR : {
+            ImportStar *z = (ImportStar *)y;
+            out << "ImportStar(" << z->dottedName << ")";
+            break;
+        }
+        case IMPORT_MEMBERS : {
+            ImportMembers *z = (ImportMembers *)y;
+            out << "ImportMembers(" << z->dottedName << ", [";
+            for (unsigned i = 0; i < z->members.size(); ++i) {
+                if (i != 0)
+                    out << ", ";
+                ImportedMember &a = z->members[i];
+                out << "(" << a.name << ", " << a.alias << ")";
+            }
+            out << "])";
+            break;
+        }
+        default :
+            assert(false);
+        }
         break;
     }
     case MODULE : {
         Module *y = (Module *)x;
-        out << "Module(" << bigVec(y->imports) << ", " << bigVec(y->exports);
-        out << ", " << bigVec(y->topLevelItems) << ")";
+        out << "Module(" << bigVec(y->imports) << ", "
+            << bigVec(y->topLevelItems) << ")";
         break;
     }
 

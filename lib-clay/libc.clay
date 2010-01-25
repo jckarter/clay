@@ -1,4 +1,4 @@
-import _core;
+import _core.*;
 
 external fopen(path:Pointer[Int8], mode:Pointer[Int8]): Pointer[Int8];
 external fdopen(fd:Int32, mode:Pointer[Int8]): Pointer[Int8];

@@ -1,4 +1,4 @@
-import base;
+import base.*;
 
 factorial(n) {
     if (n == 0)

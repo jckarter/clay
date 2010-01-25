@@ -1,6 +1,5 @@
-
-import base;
-import libc;
+import base.*;
+import libc.*;
 
 main() {
     var f = fdopen(1, cstring("w"));

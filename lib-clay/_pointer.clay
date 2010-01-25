@@ -1,6 +1,6 @@
-import _core;
-import _numeric;
-import _coordinate;
+import _core.*;
+import _numeric.*;
+import _coordinate.*;
 
 //
 // Pointer[T]

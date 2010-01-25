@@ -162,7 +162,7 @@ enum ObjectKind {
     EXTERNAL_ARG,
 
     IMPORT,
-    EXPORT,
+    MODULE_HOLDER,
     MODULE,
 
     ENV,
@@ -244,7 +244,10 @@ struct ExternalProcedure;
 struct ExternalArg;
 
 struct Import;
-struct Export;
+struct ImportModule;
+struct ImportStar;
+struct ImportMembers;
+struct ModuleHolder;
 struct Module;
 
 struct Env;
@@ -340,7 +343,10 @@ typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
 
 typedef Pointer<Import> ImportPtr;
-typedef Pointer<Export> ExportPtr;
+typedef Pointer<ImportModule> ImportModulePtr;
+typedef Pointer<ImportStar> ImportStarPtr;
+typedef Pointer<ImportMembers> ImportMembersPtr;
+typedef Pointer<ModuleHolder> ModuleHolderPtr;
 typedef Pointer<Module> ModulePtr;
 
 typedef Pointer<Env> EnvPtr;
@@ -919,21 +925,47 @@ struct ExternalArg : public ANode {
 
 
 //
-// Import, Export
+// Imports
 //
 
-struct Import : public ANode {
-    DottedNamePtr dottedName;
-    ModulePtr module;
-    Import(DottedNamePtr dottedName)
-        : ANode(IMPORT), dottedName(dottedName) {}
+enum ImportKind {
+    IMPORT_MODULE,
+    IMPORT_STAR,
+    IMPORT_MEMBERS,
 };
 
-struct Export : public ANode {
+struct Import : public ANode {
+    int importKind;
     DottedNamePtr dottedName;
     ModulePtr module;
-    Export(DottedNamePtr dottedName)
-        : ANode(EXPORT), dottedName(dottedName) {}
+    Import(int importKind, DottedNamePtr dottedName)
+        : ANode(IMPORT), importKind(importKind), dottedName(dottedName) {}
+};
+
+struct ImportModule : public Import {
+    IdentifierPtr alias;
+    ImportModule(DottedNamePtr dottedName, IdentifierPtr alias)
+        : Import(IMPORT_MODULE, dottedName), alias(alias) {}
+};
+
+struct ImportStar : public Import {
+    ImportStar(DottedNamePtr dottedName)
+        : Import(IMPORT_STAR, dottedName) {}
+};
+
+struct ImportedMember {
+    IdentifierPtr name;
+    IdentifierPtr alias;
+    ImportedMember() {}
+    ImportedMember(IdentifierPtr name, IdentifierPtr alias)
+        : name(name), alias(alias) {}
+};
+
+struct ImportMembers : public Import {
+    vector<ImportedMember> members;
+    map<string, IdentifierPtr> aliasMap;
+    ImportMembers(DottedNamePtr dottedName)
+        : Import(IMPORT_MEMBERS, dottedName) {}
 };
 
 
@@ -942,11 +974,18 @@ struct Export : public ANode {
 // Module
 //
 
+struct ModuleHolder : public Object {
+    ImportModulePtr import;
+    map<string, ModuleHolderPtr> children;
+    ModuleHolder()
+        : Object(MODULE_HOLDER) {}
+};
+
 struct Module : public ANode {
     vector<ImportPtr> imports;
-    vector<ExportPtr> exports;
     vector<TopLevelItemPtr> topLevelItems;
 
+    ModuleHolderPtr rootHolder;
     map<string, ObjectPtr> globals;
     EnvPtr env;
     bool initialized;
@@ -956,9 +995,8 @@ struct Module : public ANode {
     Module()
         : ANode(MODULE), initialized(false), lookupBusy(false) {}
     Module(const vector<ImportPtr> &imports,
-           const vector<ExportPtr> &exports,
            const vector<TopLevelItemPtr> &topLevelItems)
-        : ANode(MODULE), imports(imports), exports(exports),
+        : ANode(MODULE), imports(imports),
           initialized(false), lookupBusy(false) {}
 };
 
@@ -1027,6 +1065,7 @@ struct Env : public Object {
 //
 
 void addGlobal(ModulePtr module, IdentifierPtr name, ObjectPtr value);
+ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name);
 ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name);
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
 

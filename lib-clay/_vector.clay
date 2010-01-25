@@ -1,8 +1,8 @@
-import _core;
-import _numeric;
-import _pointer;
-import _range;
-import _move;
+import _core.*;
+import _numeric.*;
+import _pointer.*;
+import _range.*;
+import _move.*;
 
 
 //

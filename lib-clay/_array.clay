@@ -1,6 +1,6 @@
-import _core;
-import _numeric;
-import _range;
+import _core.*;
+import _numeric.*;
+import _range.*;
 
 //
 // Array[T,n]

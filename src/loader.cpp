@@ -167,13 +167,59 @@ static ModulePtr loadModuleByName(DottedNamePtr name) {
     return module;
 }
 
+static ModuleHolderPtr installHolder(ModuleHolderPtr mh, IdentifierPtr name) {
+    ModuleHolderPtr holder;
+    map<string, ModuleHolderPtr>::iterator i = mh->children.find(name->str);
+    if (i != mh->children.end())
+        return i->second;
+    holder = new ModuleHolder();
+    mh->children[name->str] = holder;
+    return holder;
+}
+
 static void loadDependents(ModulePtr m) {
+    m->rootHolder = new ModuleHolder();
     vector<ImportPtr>::iterator ii, iend;
-    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
-        (*ii)->module = loadModuleByName((*ii)->dottedName);
-    vector<ExportPtr>::iterator ei, eend;
-    for (ei = m->exports.begin(), eend = m->exports.end(); ei != eend; ++ei)
-        (*ei)->module = loadModuleByName((*ei)->dottedName);
+    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
+        ImportPtr x = *ii;
+        x->module = loadModuleByName(x->dottedName);
+        switch (x->importKind) {
+        case IMPORT_MODULE : {
+            ImportModule *y = (ImportModule *)x.ptr();
+            ModuleHolderPtr holder = m->rootHolder;
+            if (y->alias.ptr()) {
+                holder = installHolder(holder, y->alias);
+            }
+            else {
+                vector<IdentifierPtr> &parts = y->dottedName->parts;
+                for (unsigned i = 0; i < parts.size(); ++i)
+                    holder = installHolder(holder, parts[i]);
+            }
+            if (holder->import.ptr())
+                error(x, "module already imported");
+            holder->import = y;
+            break;
+        }
+        case IMPORT_STAR : {
+            break;
+        }
+        case IMPORT_MEMBERS : {
+            ImportMembers *y = (ImportMembers *)x.ptr();
+            for (unsigned i = 0; i < y->members.size(); ++i) {
+                ImportedMember &z = y->members[i];
+                IdentifierPtr alias = z.alias;
+                if (!alias)
+                    alias = z.name;
+                if (y->aliasMap.count(alias->str))
+                    error(alias, "name imported already: " + alias->str);
+                y->aliasMap[alias->str] = z.name;
+            }
+            break;
+        }
+        default :
+            assert(false);
+        }
+    }
 }
 
 ModulePtr loadProgram(const string &fileName) {
@@ -202,9 +248,6 @@ static void initializeModule(ModulePtr m) {
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
         initializeModule((*ii)->module);
-    vector<ExportPtr>::iterator ei, eend;
-    for (ei = m->exports.begin(), eend = m->exports.end(); ei != eend; ++ei)
-        initializeModule((*ei)->module);
 
     vector<TopLevelItemPtr>::iterator ti, tend;
     for (ti = m->topLevelItems.begin(), tend = m->topLevelItems.end();
@@ -212,7 +255,7 @@ static void initializeModule(ModulePtr m) {
         Object *obj = ti->ptr();
         if (obj->objKind == OVERLOAD) {
             Overload *x = (Overload *)obj;
-            ObjectPtr y = lookupGlobal(m, x->name);
+            ObjectPtr y = lookupEnv(m->env, x->name);
             if (y->objKind != OVERLOADABLE)
                 error(x->name, "invalid overloadable");
             Overloadable *z = (Overloadable *)y.ptr();

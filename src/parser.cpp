@@ -1199,18 +1199,94 @@ static bool external(TopLevelItemPtr &x) {
 
 
 //
-// import, export, module
+// imports
 //
 
-static bool import(ImportPtr &x) {
+static bool importAlias(IdentifierPtr &x) {
+    if (!keyword("as")) return false;
+    if (!identifier(x)) return false;
+    return true;
+}
+
+static bool optImportAlias(IdentifierPtr &x) {
+    int p = save();
+    if (!importAlias(x)) {
+        restore(p);
+        x = NULL;
+    }
+    return true;
+}
+
+static bool importModule(ImportPtr &x) {
     LocationPtr location = currentLocation();
     if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
+    IdentifierPtr z;
+    if (!optImportAlias(z)) return false;
     if (!symbol(";")) return false;
-    x = new Import(y);
+    x = new ImportModule(y, z);
     x->location = location;
     return true;
+}
+
+static bool importStar(ImportPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("import")) return false;
+    DottedNamePtr y;
+    if (!dottedName(y)) return false;
+    if (!symbol(".")) return false;
+    if (!symbol("*")) return false;
+    if (!symbol(";")) return false;
+    x = new ImportStar(y);
+    x->location = location;
+    return true;
+}
+
+static bool importedMember(ImportedMember &x) {
+    if (!identifier(x.name)) return false;
+    if (!importAlias(x.alias)) return false;
+    return true;
+}
+
+static bool importedMemberList(vector<ImportedMember> &x) {
+    ImportedMember y;
+    if (!importedMember(y)) return false;
+    x.clear();
+    x.push_back(y);
+    while (true) {
+        int p = save();
+        if (!symbol(",") || !importedMember(y)) {
+            restore(p);
+            break;
+        }
+        x.push_back(y);
+    }
+    return true;
+}
+
+static bool importMembers(ImportPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("import")) return false;
+    DottedNamePtr y;
+    if (!dottedName(y)) return false;
+    if (!symbol(".")) return false;
+    if (!symbol("(")) return false;
+    ImportMembersPtr z = new ImportMembers(y);
+    if (!importedMemberList(z->members)) return false;
+    if (!symbol(")")) return false;
+    if (!symbol(";")) return false;
+    x = z.ptr();
+    x->location = location;
+    return true;
+}
+
+static bool import(ImportPtr &x) {
+    int p = save();
+    if (importModule(x)) return true;
+    if (restore(p), importStar(x)) return true;
+    if (restore(p), importMembers(x)) return true;
+    return false;
 }
 
 static bool imports(vector<ImportPtr> &x) {
@@ -1227,30 +1303,11 @@ static bool imports(vector<ImportPtr> &x) {
     return true;
 }
 
-static bool export_(ExportPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!keyword("export")) return false;
-    DottedNamePtr y;
-    if (!dottedName(y)) return false;
-    if (!symbol(";")) return false;
-    x = new Export(y);
-    x->location = location;
-    return true;
-}
 
-static bool exports(vector<ExportPtr> &x) {
-    x.clear();
-    while (true) {
-        int p = save();
-        ExportPtr y;
-        if (!export_(y)) {
-            restore(p);
-            break;
-        }
-        x.push_back(y);
-    }
-    return true;
-}
+
+//
+// module
+//
 
 static bool topLevelItem(TopLevelItemPtr &x) {
     int p = save();
@@ -1280,7 +1337,6 @@ static bool module(ModulePtr &x) {
     LocationPtr location = currentLocation();
     ModulePtr y = new Module();
     if (!imports(y->imports)) return false;
-    if (!exports(y->exports)) return false;
     if (!topLevelItems(y->topLevelItems)) return false;
     x = y.ptr();
     x->location = location;

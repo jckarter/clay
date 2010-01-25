@@ -1,5 +1,4 @@
-import __primitives__;
-export __primitives__;
+import __primitives__.*;
 
 overloadable init;
 overloadable copy;

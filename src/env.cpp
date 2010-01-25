@@ -18,15 +18,35 @@ void addGlobal(ModulePtr module, IdentifierPtr name, ObjectPtr value) {
     module->globals[name->str] = value;
 }
 
-ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name) {
-    MapIter i = module->globals.find(name->str);
-    if (i != module->globals.end())
-        return i->second;
+static ObjectPtr
+lookupImportedNames(ModulePtr module, IdentifierPtr name) {
     vector<ImportPtr> &x = module->imports;
     vector<ImportPtr>::iterator ii, iend;
     ObjectPtr result;
     for (ii = x.begin(), iend = x.end(); ii != iend; ++ii) {
-        ObjectPtr entry = lookupPublic((*ii)->module, name);
+        ImportPtr y = *ii;
+        ObjectPtr entry;
+        switch (y->importKind) {
+        case IMPORT_MODULE :
+            break;
+        case IMPORT_STAR : {
+            ImportStar *z = (ImportStar *)y.ptr();
+            entry = lookupPublic(z->module, name);
+            break;
+        }
+        case IMPORT_MEMBERS : {
+            ImportMembers *z = (ImportMembers *)y.ptr();
+            IdentifierPtr name2;
+            map<string, IdentifierPtr>::iterator i =
+                z->aliasMap.find(name->str);
+            if (i != z->aliasMap.end())
+                entry = lookupPublic(z->module, i->second);
+            break;
+        }
+        default :
+            assert(false);
+            break;
+        }
         if (entry.ptr()) {
             if (!result)
                 result = entry;
@@ -34,9 +54,44 @@ ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name) {
                 error(name, "ambiguous imported symbol: " + name->str);
         }
     }
-    if (!result)
-        error(name, "undefined name: " + name->str);
     return result;
+}
+
+ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
+    ObjectPtr result1, result2;
+    map<string, ModuleHolderPtr>::iterator i = mh->children.find(name->str);
+    if (i != mh->children.end())
+        result1 = i->second.ptr();
+    if (mh->import.ptr())
+        result2 = lookupPublic(mh->import->module, name);
+    if (result1.ptr()) {
+        if (result2.ptr() && (result1 != result2))
+            error(name, "ambiguous imported symbol: " + name->str);
+        return result1;
+    }
+    else {
+        return result2;
+    }
+}
+
+ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name) {
+    if (module->lookupBusy)
+        return NULL;
+    MapIter i = module->globals.find(name->str);
+    if (i != module->globals.end())
+        return i->second;
+    module->lookupBusy = true;
+    ObjectPtr result1 = lookupImportedNames(module, name);
+    ObjectPtr result2 = lookupModuleHolder(module->rootHolder, name);
+    module->lookupBusy = false;
+    if (result1.ptr()) {
+        if (result2.ptr() && (result1 != result2))
+            error(name, "ambiguous imported symbol: " + name->str);
+        return result1;
+    }
+    else {
+        return result2;
+    }
 }
 
 
@@ -46,26 +101,9 @@ ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name) {
 //
 
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
-    if (module->lookupBusy)
-        return NULL;
-    MapIter i = module->globals.find(name->str);
-    if (i != module->globals.end())
-        return i->second;
-    module->lookupBusy = true;
-    vector<ExportPtr> &x = module->exports;
-    vector<ExportPtr>::iterator ei, eend;
-    ObjectPtr result;
-    for (ei = x.begin(), eend = x.end(); ei != eend; ++ei) {
-        ObjectPtr entry = lookupPublic((*ei)->module, name);
-        if (entry.ptr()) {
-            if (!result)
-                result = entry;
-            else if (result != entry)
-                error(name, "ambiguous public symbol: " + name->str);
-        }
-    }
-    module->lookupBusy = false;
-    return result;
+    // since we don't have private definitions yet,
+    // lookupPublic is the same as lookupGlobal.
+    return lookupGlobal(module, name);
 }
 
 
@@ -93,12 +131,18 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
         }
         case MODULE : {
             Module *y = (Module *)env->parent.ptr();
-            return lookupGlobal(y, name);
+            ObjectPtr z = lookupGlobal(y, name);
+            if (!z)
+                error(name, "undefined name: " + name->str);
+            return z;
         }
         default :
             assert(false);
+            return NULL;
         }
     }
-    error(name, "undefined name: " + name->str);
-    return NULL;
+    else {
+        error(name, "undefined name: " + name->str);
+        return NULL;
+    }
 }
