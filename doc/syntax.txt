@@ -42,8 +42,10 @@ Overloadable -> "overloadable" Identifier ";"
 
 Overload -> "overload" DottedName Code
 
-ExternalProcedure -> "external" Identifier "(" comma_list(ExternalArg)? ")"
+ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
                      TypeSpec ";"
+ExternalArgs -> comma_list(ExternalArg) ("," "...")?
+              | ("...")?
 ExternalArg -> Identifier TypeSpec
 
 Block -> "{" Statement+ "}"

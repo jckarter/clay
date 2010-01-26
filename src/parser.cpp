@@ -1156,46 +1156,53 @@ static bool externalArg(ExternalArgPtr &x) {
     return true;
 }
 
-static bool varArgs(bool &hasVarArgs) {
-    int p = save();
-    if (symbol(".") && symbol(".") && symbol(".")) {
-        hasVarArgs = true;
-        return true;
-    }
-    restore(p);
-    return false;
+static bool varArgs() {
+    return symbol(".") && symbol(".") && symbol(".");
 }
 
-static bool externalArgs(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
+static bool externalArgs1(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
     ExternalArgPtr y;
-    if (varArgs(hasVarArgs)) return true;
     if (!externalArg(y)) return false;
     x.clear();
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",")) {
-            restore(p);
-            break;
-        }
-        if (varArgs(hasVarArgs)) {
-            break;
-        } else if (!externalArg(y)) {
+        if (!symbol(",") || !externalArg(y)) {
             restore(p);
             break;
         }
         x.push_back(y);
     }
+    int p = save();
+    if (symbol(",") && varArgs()) {
+        hasVarArgs = true;
+    }
+    else {
+        restore(p);
+        hasVarArgs = false;
+    }
     return true;
 }
 
-static bool optExternalArgs(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
+static bool externalArgs2(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
+    x.clear();
     int p = save();
-    if (!externalArgs(x, hasVarArgs)) {
+    if (varArgs()) {
+        hasVarArgs = true;
+    }
+    else {
         restore(p);
-        x.clear();
+        hasVarArgs = false;
     }
     return true;
+}
+
+static bool externalArgs(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
+    int p = save();
+    if (externalArgs1(x, hasVarArgs)) return true;
+    restore(p);
+    if (externalArgs2(x, hasVarArgs)) return true;
+    return false;
 }
 
 static bool external(TopLevelItemPtr &x) {
@@ -1204,7 +1211,7 @@ static bool external(TopLevelItemPtr &x) {
     ExternalProcedurePtr y = new ExternalProcedure();
     if (!identifier(y->name)) return false;
     if (!symbol("(")) return false;
-    if (!optExternalArgs(y->args, y->hasVarArgs)) return false;
+    if (!externalArgs(y->args, y->hasVarArgs)) return false;
     if (!symbol(")")) return false;
     if (!typeSpec(y->returnType)) return false;
     if (!symbol(";")) return false;
