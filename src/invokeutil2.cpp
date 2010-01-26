@@ -55,6 +55,14 @@ void ArgList::ensureArity(int n)
         error("incorrect no. of arguments");
 }
 
+void ArgList::ensureArity2(int n, bool hasVarArgs)
+{
+    if (!hasVarArgs) 
+        ensureArity(n);
+    else if ((int)this->exprs.size() < n)
+        error("incorrect no of arguments");
+}
+
 bool ArgList::unifyFormalArg(int i, FormalArgPtr farg, EnvPtr fenv)
 {
     switch (farg->objKind) {

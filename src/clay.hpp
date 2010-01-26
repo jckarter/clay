@@ -902,16 +902,18 @@ struct Overloadable : public TopLevelItem {
 struct ExternalProcedure : public TopLevelItem {
     IdentifierPtr name;
     vector<ExternalArgPtr> args;
+    bool hasVarArgs;
     ExprPtr returnType;
     TypePtr returnType2;
     llvm::Function *llvmFunc;
     ExternalProcedure()
-        : TopLevelItem(EXTERNAL_PROCEDURE), llvmFunc(NULL) {}
+        : TopLevelItem(EXTERNAL_PROCEDURE), hasVarArgs(false), llvmFunc(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       const vector<ExternalArgPtr> &args,
+                      bool hasVarArgs,
                       ExprPtr returnType)
-        : TopLevelItem(EXTERNAL_PROCEDURE), name(name), args(args),
-          returnType(returnType), llvmFunc(NULL) {}
+        : TopLevelItem(EXTERNAL_PROCEDURE), name(name), args(args), 
+          hasVarArgs(hasVarArgs), returnType(returnType), llvmFunc(NULL) {}
 };
 
 struct ExternalArg : public ANode {
@@ -1511,6 +1513,7 @@ struct ArgList : public Object {
     ValuePtr value(int i);
     TypePtr typeValue(int i);
 
+    void ensureArity2(int n, bool hasVarArgs);
     void ensureArity(int n);
 
     bool unifyFormalArg(int i, FormalArgPtr farg, EnvPtr env);

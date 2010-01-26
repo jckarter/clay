@@ -1353,23 +1353,29 @@ codegenInvokeExternal(ExternalProcedurePtr x,
 {
     if (!x->llvmFunc)
         initExternalProcedure(x);
-    args->ensureArity(x->args.size());
+    args->ensureArity2(x->args.size(), x->hasVarArgs);
     vector<llvm::Value *> llArgs;
-    for (unsigned i = 0; i < args->size(); ++i) {
+    for (unsigned i = 0; i < x->args.size(); ++i) {
         CValuePtr carg = args->codegenAsRef(i);
         if (carg->type != x->args[i]->type2)
             error(args->exprs[i], "argument type mismatch");
-        llArgs.push_back(carg->llval);
+        llArgs.push_back(builder->CreateLoad(carg->llval));
     }
+    if (x->hasVarArgs) {
+        for(unsigned i = x->args.size(); i < args->size(); ++i) {
+            CValuePtr carg = args->codegenAsRef(i);
+            llArgs.push_back(builder->CreateLoad(carg->llval));
+        }
+    }
+    llvm::Value *result = builder->CreateCall(x->llvmFunc, 
+                                              llArgs.begin(), llArgs.end());
     if (x->returnType2 != voidType) {
         assert(outPtr != NULL);
-        llArgs.push_back(outPtr);
+        builder->CreateStore(result, outPtr);
     }
     else {
         assert(outPtr == NULL);
     }
-    builder->CreateCall(x->llvmFunc, llArgs.begin(), llArgs.end());
-
     return new CValue(x->returnType2, outPtr);
 }
 
@@ -1967,6 +1973,11 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
 
 static llvm::Function *declarePrintf()
 {
+    // We don't want to declare printf twice. The program we are compiling 
+    // might have defined it already.
+    llvm::Function *func = llvmModule->getFunction("printf");
+    if (func)
+        return func;
     vector<const llvm::Type *> llArgTypes;
     llArgTypes.push_back(llvmType(pointerType(int8Type)));
     llvm::FunctionType *llFuncType =
@@ -1981,7 +1992,6 @@ static llvm::Function *declarePrintf()
 
 llvm::Function *codegenMain(ModulePtr module)
 {
-    llvm::Function *llPrintf = declarePrintf();
     llvm::GlobalVariable *llStr = new llvm::GlobalVariable(
         *llvmModule,
         llvm::ArrayType::get(llvmType(int8Type), 13),
@@ -2036,6 +2046,7 @@ llvm::Function *codegenMain(ModulePtr module)
     vector<llvm::Value *> llArgs;
     llArgs.push_back(llStrPtr);
     llArgs.push_back(v);
+    llvm::Function *llPrintf = declarePrintf();
     builder->CreateCall(llPrintf, llArgs.begin(), llArgs.end());
     builder->CreateRet(v);
 

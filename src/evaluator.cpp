@@ -105,7 +105,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env, vector<ValuePtr> &blockTemps);
 ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args);
 llvm::Function *
 generateExternalFunc(const vector<TypePtr> &argTypes, TypePtr returnType,
-                     const string &name);
+                     const string &name, bool hasVarArgs);
 llvm::Function *
 generateExternalWrapper(llvm::Function *func, const vector<TypePtr> &argTypes,
                         TypePtr returnType, const string &name);
@@ -1947,21 +1947,20 @@ void initExternalProcedure(ExternalProcedurePtr x) {
     }
     TypePtr returnType = evaluateType(x->returnType, x->env);
     x->returnType2 = returnType;
-    llvm::Function *func = generateExternalFunc(argTypes, returnType,
-                                                x->name->str);
-    x->llvmFunc = generateExternalWrapper(func, argTypes, returnType,
-                                          x->name->str);
+    x->llvmFunc = generateExternalFunc(argTypes, returnType,
+                                       x->name->str, x->hasVarArgs);
 }
 
+// FIXME: We no longer need this function
 llvm::Function *
 generateExternalFunc(const vector<TypePtr> &argTypes, TypePtr returnType,
-                     const string &name) {
+                     const string &name, bool hasVarArgs) {
     vector<const llvm::Type*> llvmArgTypes;
     for (unsigned i = 0; i < argTypes.size(); ++i)
         llvmArgTypes.push_back(llvmType(argTypes[i]));
     const llvm::Type *llvmReturnType = llvmType(returnType);
     llvm::FunctionType *llvmFuncType =
-        llvm::FunctionType::get(llvmReturnType, llvmArgTypes, false);
+        llvm::FunctionType::get(llvmReturnType, llvmArgTypes, hasVarArgs);
     llvm::Function *func =
         llvm::Function::Create(llvmFuncType, llvm::Function::ExternalLinkage,
                                name.c_str(), llvmModule);

@@ -1156,14 +1156,31 @@ static bool externalArg(ExternalArgPtr &x) {
     return true;
 }
 
-static bool externalArgs(vector<ExternalArgPtr> &x) {
+static bool varArgs(bool &hasVarArgs) {
+    int p = save();
+    if (symbol(".") && symbol(".") && symbol(".")) {
+        hasVarArgs = true;
+        return true;
+    }
+    restore(p);
+    return false;
+}
+
+static bool externalArgs(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
     ExternalArgPtr y;
+    if (varArgs(hasVarArgs)) return true;
     if (!externalArg(y)) return false;
     x.clear();
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",") || !externalArg(y)) {
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        if (varArgs(hasVarArgs)) {
+            break;
+        } else if (!externalArg(y)) {
             restore(p);
             break;
         }
@@ -1172,9 +1189,9 @@ static bool externalArgs(vector<ExternalArgPtr> &x) {
     return true;
 }
 
-static bool optExternalArgs(vector<ExternalArgPtr> &x) {
+static bool optExternalArgs(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
     int p = save();
-    if (!externalArgs(x)) {
+    if (!externalArgs(x, hasVarArgs)) {
         restore(p);
         x.clear();
     }
@@ -1187,7 +1204,7 @@ static bool external(TopLevelItemPtr &x) {
     ExternalProcedurePtr y = new ExternalProcedure();
     if (!identifier(y->name)) return false;
     if (!symbol("(")) return false;
-    if (!optExternalArgs(y->args)) return false;
+    if (!optExternalArgs(y->args, y->hasVarArgs)) return false;
     if (!symbol(")")) return false;
     if (!typeSpec(y->returnType)) return false;
     if (!symbol(";")) return false;
