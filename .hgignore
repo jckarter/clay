@@ -3,5 +3,4 @@ syntax: regexp
 ^clay2llvm$
 ^src/.*\.o$
 ^src/.*\.dep$
-^src/.*\.d$
 ^\.gdb_history$

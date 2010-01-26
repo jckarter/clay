@@ -1,8 +1,10 @@
 import kernel.*;
+import libc.*;
 
 main() {
     var sum = 0;
     for (c in "Hello World!")
         sum = sum + ord(c);
-    return sum;
+    printf(cstring("sum = %d\n"), sum);
+    return 0;
 }

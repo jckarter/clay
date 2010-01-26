@@ -1,5 +1,7 @@
 import kernel.operators.*;
 
+external printf(formatString:Pointer[Int8], ...): Int32;
+
 external fopen(path:Pointer[Int8], mode:Pointer[Int8]): Pointer[Int8];
 external fdopen(fd:Int32, mode:Pointer[Int8]): Pointer[Int8];
 

@@ -1,4 +1,5 @@
 import kernel.*;
+import libc.*;
 
 insertionSort(a) {
     var i = begin(a) + 1;
@@ -29,5 +30,6 @@ main() {
         insertionSort(a);
         reverse(a);
     }
-    return item(a, 0);
+    printf(cstring("a[0] = %d\n"), item(a, 0));
+    return 0;
 }

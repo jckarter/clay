@@ -1,4 +1,5 @@
 import kernel.*;
+import libc.*;
 
 overloadable foo;
 
@@ -12,5 +13,6 @@ main() {
     var v = true;
     var f = Foo(Int32);
     var g = f;
-    return foo(v) + 10*foo(Int32) + 100*foo(10);
+    printf(cstring("%d\n"), foo(v) + 10*foo(Int32) + 100*foo(10));
+    return 0;
 }

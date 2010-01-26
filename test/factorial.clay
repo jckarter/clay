@@ -1,4 +1,5 @@
 import kernel.*;
+import libc.*;
 
 factorial1(n) {
     if (n == 0)
@@ -37,5 +38,6 @@ main() {
     var n = 7;
     n = n - 1;
     var f = factorial4(n);
-    return f;
+    printf(cstring("factiral(%d) = %d\n"), n, f);
+    return 0;
 }

@@ -1,8 +1,10 @@
 import kernel.*;
+import libc.*;
 
 main() {
     var sum = 0;
     for (i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         sum = sum + i;
-    return sum + ord(' ');
+    printf(cstring("sum = %d\n"), sum+ord(' '));
+    return 0;
 }
