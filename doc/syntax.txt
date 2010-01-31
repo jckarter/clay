@@ -14,12 +14,12 @@ PatternVars -> "[" comma_list(Identifier) "]"
 RecordField -> Identifier TypeSpec ";"
 TypeSpec -> ":" TypeExpr
 
-Procedure -> Identifier Code
-
-Code -> PatternVarsWithCond? "(" comma_list(Argument)? ")" Body
+Procedure -> PatternVarsWithCond? Identifier Arguments Body
 
 PatternVarsWithCond -> "[" comma_list(Identifier) Predicate? "]"
 Predicate -> "|" Expression
+
+Arguments -> "(" comma_list(Argument) ")"
 
 Argument -> ValueArgument
           | StaticArgument
@@ -33,7 +33,7 @@ Body -> "=" Expression ";"
 
 Overloadable -> "overloadable" Identifier ";"
 
-Overload -> "overload" DottedName Code
+Overload -> PatternVarsWithCond? "overload" DottedName Arguments Body
 
 ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
                      TypeSpec ";"

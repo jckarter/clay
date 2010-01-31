@@ -21,7 +21,8 @@ record Vector[T] {
 // vector default constructor
 //
 
-overload init[T](v:Vector[T]) {
+[T]
+overload init(v:Vector[T]) {
     v.size = 0;
     v.capacity = 0;
     v.data = null(T);
@@ -34,7 +35,8 @@ overload init[T](v:Vector[T]) {
 
 overloadable makeVector;
 
-overload makeVector[T,n](a:Array[T,n]) {
+[T,n]
+overload makeVector(a:Array[T,n]) {
     var v = Vector[T]();
     for (x in a)
         push(v, x);
@@ -46,9 +48,11 @@ overload makeVector[T,n](a:Array[T,n]) {
 // size, item
 //
 
-overload size[T](a:Vector[T]) = a.size;
+[T]
+overload size(a:Vector[T]) = a.size;
 
-overload item[T](a:Vector[T], i) = ref deref(a.data + i);
+[T]
+overload item(a:Vector[T], i) = ref deref(a.data + i);
 
 
 //
@@ -59,29 +63,37 @@ record VectorCoordinate[T] {
     ptr:Pointer[T];
 }
 
-overload deref[T](c:VectorCoordinate[T]) = ref deref(c.ptr);
+[T]
+overload deref(c:VectorCoordinate[T]) = ref deref(c.ptr);
 
-overload begin[T](a:Vector[T]) = VectorCoordinate(a.data);
-overload end[T](a:Vector[T]) = VectorCoordinate(a.data + a.size);
+[T]
+overload begin(a:Vector[T]) = VectorCoordinate(a.data);
 
-overload add [T,I|Integer?(I)] (c:VectorCoordinate[T], i:I)
-    = VectorCoordinate(c.ptr + i);
+[T]
+overload end(a:Vector[T]) = VectorCoordinate(a.data + a.size);
 
-overload subtract [T,I|Integer?(I)] (c:VectorCoordinate[T], i:I)
-    = VectorCoordinate(c.ptr - i);
+[T,I|Integer?(I)]
+overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
 
-overload subtract[T](c1:VectorCoordinate[T], c2:VectorCoordinate[T]) =
-    c1.ptr - c2.ptr;
+[T,I|Integer?(I)]
+overload subtract(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr - i);
 
-overload inc[T](c:VectorCoordinate[T]) {
+[T]
+overload subtract(c1:VectorCoordinate[T], c2:VectorCoordinate[T])
+    = c1.ptr - c2.ptr;
+
+[T]
+overload inc(c:VectorCoordinate[T]) {
     inc(c.ptr);
 }
 
-overload dec[T](c:VectorCoordinate[T]) {
+[T]
+overload dec(c:VectorCoordinate[T]) {
     dec(c.ptr);
 }
 
-overload lesser?[T](a:VectorCoordinate[T], b:VectorCoordinate[T])
+[T]
+overload lesser?(a:VectorCoordinate[T], b:VectorCoordinate[T])
     = a.ptr < b.ptr;
 
 
@@ -89,20 +101,23 @@ overload lesser?[T](a:VectorCoordinate[T], b:VectorCoordinate[T])
 // vector iteration
 //
 
-overload iterator[T](a:Vector[T]) = CoordinateRange(begin(a), end(a));
+[T]
+overload iterator(a:Vector[T]) = CoordinateRange(begin(a), end(a));
 
 
 //
 // init, copy, destroy, equals, lesser, hash
 //
 
-overload init[T](a:Vector[T]) {
+[T]
+overload init(a:Vector[T]) {
     a.size = 0;
     a.capacity = 0;
     a.data = null(T);
 }
 
-overload copy[T](dest:Vector[T], src:Vector[T]) {
+[T]
+overload copy(dest:Vector[T], src:Vector[T]) {
     dest.size = src.size;
     dest.capacity = src.size;
     if (dest.capacity > 0) {
@@ -117,13 +132,15 @@ overload copy[T](dest:Vector[T], src:Vector[T]) {
     }
 }
 
-overload destroy[T](a:Vector[T]) {
+[T]
+overload destroy(a:Vector[T]) {
     for (x in a)
         destroy(x);
     freeMemory(a.data);
 }
 
-overload equals?[T](a:Vector[T], b:Vector[T]) {
+[T]
+overload equals?(a:Vector[T], b:Vector[T]) {
     if (size(a) != size(b))
         return false;
     ref i = iterator(a);
@@ -135,7 +152,8 @@ overload equals?[T](a:Vector[T], b:Vector[T]) {
     return true;
 }
 
-overload hash[T](a:Vector[T]) {
+[T]
+overload hash(a:Vector[T]) {
     var h = 0;
     for (x in a)
         h = h + hash(x);
@@ -147,18 +165,24 @@ overload hash[T](a:Vector[T]) {
 // front, back, push, pop
 //
 
-overload front[T](a:Vector[T]) = ref item(a, 0);
-overload back[T](a:Vector[T]) = ref item(a, size(a)-1);
+[T]
+overload front(a:Vector[T]) = ref item(a, 0);
 
-overload push[T](a:Vector[T], x:T) {
+[T]
+overload back(a:Vector[T]) = ref item(a, size(a)-1);
+
+[T]
+overload push(a:Vector[T], x:T) {
     insert(a, size(a), x);
 }
 
-overload push[T](a:Vector[T], a:Movable[T]) {
+[T]
+overload push(a:Vector[T], a:Movable[T]) {
     insert(a, size(a), x);
 }
 
-overload pop[T](a:Vector[T]) {
+[T]
+overload pop(a:Vector[T]) {
     // FIXME: get rid of extra copy
     var x = back(a);
     remove(a, end(a)-1);
@@ -170,12 +194,14 @@ overload pop[T](a:Vector[T]) {
 // clear, insert, remove
 //
 
-overload clear[T](a:Vector[T]) {
+[T]
+overload clear(a:Vector[T]) {
     destroy(a);
     init(a);
 }
 
-setCapacity[T](a:Vector[T], capacity:Int32) {
+[T]
+setCapacity(a:Vector[T], capacity:Int32) {
     var data = allocateMemory(T, capacity);
     var ptr = data;
     for (x in a) {
@@ -187,12 +213,14 @@ setCapacity[T](a:Vector[T], capacity:Int32) {
     a.capacity = capacity;
 }
 
-ensureSpace[T](a:Vector[T], space:Int32) {
+[T]
+ensureSpace(a:Vector[T], space:Int32) {
     if (a.size + space > a.capacity)
         setCapacity(a, 2*(a.size + space));
 }
 
-insertionPoint [T,I|Integer?(I)] (a:Vector[T], pos:I) {
+[T,I|Integer?(I)]
+insertionPoint(a:Vector[T], pos:I) {
     ensureSpace(a, 1);
     var i = begin(a) + pos;
     var j = end(a);
@@ -204,23 +232,28 @@ insertionPoint [T,I|Integer?(I)] (a:Vector[T], pos:I) {
     returnref deref(i);
 }
 
-overload insert [T,I|Integer?(I)] (a:Vector[T], i:I, x:T) {
+[T,I|Integer?(I)]
+overload insert(a:Vector[T], i:I, x:T) {
     copy(insertionPoint(a, i), x);
 }
 
-overload insert [T,I|Integer?(I)] (a:Vector[T], i:I, x:Movable[T]) {
+[T,I|Integer?(I)]
+overload insert(a:Vector[T], i:I, x:Movable[T]) {
     move(insertionPoint(a, i), x);
 }
 
-overload insert[T](a:Vector[T], i:VectorCoordinate[T], x:T) {
+[T]
+overload insert(a:Vector[T], i:VectorCoordinate[T], x:T) {
     insert(a, i-begin(a), x);
 }
 
-overload insert[T](a:Vector[T], i:VectorCoordinate[T], x:Movable[T]) {
+[T]
+overload insert(a:Vector[T], i:VectorCoordinate[T], x:Movable[T]) {
     insert(a, i-begin(a), x);
 }
 
-overload remove[T](a:Vector[T], i:VectorCoordinate[T]) {
+[T]
+overload remove(a:Vector[T], i:VectorCoordinate[T]) {
     destroy(deref(i));
     var j = end(a);
     while (true) {
@@ -232,6 +265,7 @@ overload remove[T](a:Vector[T], i:VectorCoordinate[T]) {
         setCapacity(2*(a.size + 1));
 }
 
-overload remove [T,I|Integer?(I)] (a:Vector[T], i:I) {
+[T,I|Integer?(I)]
+overload remove(a:Vector[T], i:I) {
     remove(a, begin(a)+i);
 }

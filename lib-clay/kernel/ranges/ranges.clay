@@ -10,11 +10,14 @@ record Range[T] {
     last:T;
 }
 
-overload iterator[T](r:Range[T]) = r;
+[T]
+overload iterator(r:Range[T]) = r;
 
-overload hasNext?[T](r:Range[T]) = r.first < r.last;
+[T]
+overload hasNext?(r:Range[T]) = r.first < r.last;
 
-overload next[T](r:Range[T]) {
+[T]
+overload next(r:Range[T]) {
     var x = r.first;
     inc(r.first);
     return x;
@@ -23,7 +26,9 @@ overload next[T](r:Range[T]) {
 overloadable range;
 
 overload range(first, last) = Range(first, last);
-overload range[I|Integer?(I)](last:I) = Range(zero(I), last);
+
+[I|Integer?(I)]
+overload range(last:I) = Range(zero(I), last);
 
 
 //
@@ -35,11 +40,14 @@ record CoordinateRange[T] {
     last:T;
 }
 
-overload iterator[T](r:CoordinateRange[T]) = r;
+[T]
+overload iterator(r:CoordinateRange[T]) = r;
 
-overload hasNext?[T](r:CoordinateRange[T]) = r.first < r.last;
+[T]
+overload hasNext?(r:CoordinateRange[T]) = r.first < r.last;
 
-overload next[T](r:CoordinateRange[T]) {
+[T]
+overload next(r:CoordinateRange[T]) {
     ref obj = deref(r.first);
     inc(r.first);
     returnref obj;

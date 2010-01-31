@@ -40,23 +40,32 @@ overloadable dec;
 // defaults
 //
 
-overload init[T](a:T) {
+[T]
+overload init(a:T) {
 }
 
-overload destroy[T](a:T) {
+[T]
+overload destroy(a:T) {
 }
 
-overload assign[T](dest:T, src:T) {
+[T]
+overload assign(dest:T, src:T) {
     if (equals?(&dest, &src)) return;
     destroy(dest);
     copy(dest, src);
 }
 
-notEquals?[T](a:T, b:T) = not equals?(a, b);
+[T]
+notEquals?(a:T, b:T) = not equals?(a, b);
 
-overload lesserEquals?[T](a:T, b:T) = equals?(a, b) or lesser?(a, b);
-overload greater?[T](a:T, b:T) = not lesserEquals?(a, b);
-overload greaterEquals?[T](a:T, b:T) = not lesser?(a, b);
+[T]
+overload lesserEquals?(a:T, b:T) = equals?(a, b) or lesser?(a, b);
+
+[T]
+overload greater?(a:T, b:T) = not lesserEquals?(a, b);
+
+[T]
+overload greaterEquals?(a:T, b:T) = not lesser?(a, b);
 
 
 //

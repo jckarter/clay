@@ -958,6 +958,13 @@ static bool optFormalArgs(vector<FormalArgPtr> &x) {
     return true;
 }
 
+static bool arguments(vector<FormalArgPtr> &x) {
+    if (!symbol("(")) return false;
+    if (!optFormalArgs(x)) return false;
+    if (!symbol(")")) return false;
+    return true;
+}
+
 static bool predicate(ExprPtr &x) {
     if (!symbol("|")) return false;
     return expression(x);
@@ -1022,19 +1029,6 @@ static bool body(StatementPtr &x) {
     return false;
 }
 
-static bool code(CodePtr &x) {
-    LocationPtr location = currentLocation();
-    CodePtr y = new Code();
-    if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
-    if (!symbol("(")) return false;
-    if (!optFormalArgs(y->formalArgs)) return false;
-    if (!symbol(")")) return false;
-    if (!body(y->body)) return false;
-    x = y;
-    x->location = location;
-    return true;
-}
-
 
 
 //
@@ -1091,11 +1085,14 @@ static bool record(TopLevelItemPtr &x) {
 
 static bool procedure(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
-    IdentifierPtr y;
-    if (!identifier(y)) return false;
-    CodePtr z;
-    if (!code(z)) return false;
-    x = new Procedure(y, z);
+    CodePtr y = new Code();
+    if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
+    IdentifierPtr z;
+    if (!identifier(z)) return false;
+    if (!arguments(y->formalArgs)) return false;
+    if (!body(y->body)) return false;
+    y->location = location;
+    x = new Procedure(z, y);
     x->location = location;
     return true;
 }
@@ -1113,12 +1110,15 @@ static bool overloadable(TopLevelItemPtr &x) {
 
 static bool overload(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    CodePtr y = new Code();
+    if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     if (!keyword("overload")) return false;
-    IdentifierPtr y;
-    if (!identifier(y)) return false;
-    CodePtr z;
-    if (!code(z)) return false;
-    x = new Overload(y, z);
+    IdentifierPtr z;
+    if (!identifier(z)) return false;
+    if (!arguments(y->formalArgs)) return false;
+    if (!body(y->body)) return false;
+    y->location = location;
+    x = new Overload(z, y);
     x->location = location;
     return true;
 }

@@ -5,19 +5,21 @@ import kernel.operators.*;
 // init
 //
 
-overload init [T|RecordType?(T)] (a:T) {
+[T|RecordType?(T)]
+overload init(a:T) {
     initRecordFields(a, 0);
 }
 
 overloadable initRecordFields;
 
-overload initRecordFields[i](a, static i) {
+[i]
+overload initRecordFields(a, static i) {
     init(recordFieldRef(a, i));
     initRecordFields(a, i+1);
 }
 
-overload initRecordFields[T, i | (i == RecordFieldCount(T))]
-        (a:T, static i) {
+[T,i | (i == RecordFieldCount(T))]
+overload initRecordFields(a:T, static i) {
 }
 
 
@@ -26,19 +28,21 @@ overload initRecordFields[T, i | (i == RecordFieldCount(T))]
 // destroy
 //
 
-overload destroy [T|RecordType?(T)] (a:T) {
+[T|RecordType?(T)]
+overload destroy(a:T) {
     destroyRecordFields(a, 0);
 }
 
 overloadable destroyRecordFields;
 
-overload destroyRecordFields[i](a, static i) {
+[i]
+overload destroyRecordFields(a, static i) {
     destroy(recordFieldRef(a, i));
     destroyRecordFields(a, i+1);
 }
 
-overload destroyRecordFields[T, i |(i == RecordFieldCount(T))]
-        (a:T, static i) {
+[T, i |(i == RecordFieldCount(T))]
+overload destroyRecordFields (a:T, static i) {
 }
 
 
@@ -47,20 +51,21 @@ overload destroyRecordFields[T, i |(i == RecordFieldCount(T))]
 // copy
 //
 
-overload copy [T|RecordType?(T)] (dest:T, src:T) {
+[T|RecordType?(T)]
+overload copy(dest:T, src:T) {
     copyRecordFields(dest, src, 0);
 }
 
 overloadable copyRecordFields;
 
-overload copyRecordFields[T,i](dest:T, src:T, static i)
-{
+[T,i]
+overload copyRecordFields(dest:T, src:T, static i) {
     copy(recordFieldRef(dest, i), recordFieldRef(src, i));
     copyRecordFields(dest, src, i+1);
 }
 
-overload copyRecordFields[T,i | (i == RecordFieldCount(T))]
-        (dest:T, src:T, static i) {
+[T,i | (i == RecordFieldCount(T))]
+overload copyRecordFields(dest:T, src:T, static i) {
 }
 
 
@@ -69,19 +74,21 @@ overload copyRecordFields[T,i | (i == RecordFieldCount(T))]
 // assign
 //
 
-overload assign [T|RecordType?(T)] (dest:T, src:T) {
+[T|RecordType?(T)]
+overload assign(dest:T, src:T) {
     assignRecordFields(dest, src, 0);
 }
 
 overloadable assignRecordFields;
 
-overload assignRecordFields[T,i](dest:T, src:T, static i) {
+[T,i]
+overload assignRecordFields(dest:T, src:T, static i) {
     assign(recordFieldRef(dest, i), recordFieldRef(src, i));
     assignRecordFields(dest, src, i+1);
 }
 
-overload assignRecordFields[T,i | (i == RecordFieldCount(T))]
-        (dest:T, src:T, static i) {
+[T,i | (i == RecordFieldCount(T))]
+overload assignRecordFields(dest:T, src:T, static i) {
 }
 
 
@@ -91,20 +98,22 @@ overload assignRecordFields[T,i | (i == RecordFieldCount(T))]
 //
 
 
-overload equals? [T|RecordType?(T)] (a:T, b:T) {
+[T|RecordType?(T)]
+overload equals?(a:T, b:T) {
     return equalRecordFields?(a, b, 0);
 }
 
 overloadable equalRecordFields?;
 
-overload equalRecordFields?[T,i](a:T, b:T, static i) {
+[T,i]
+overload equalRecordFields?(a:T, b:T, static i) {
     if (not equals?(recordFieldRef(a, i), recordFieldRef(b, i)))
         return false;
     return equalRecordFields?(a, b, i+1);
 }
 
-overload equalRecordFields?[T,i |(i == RecordFieldCount(T))]
-        (a:T, b:T, static i) {
+[T,i |(i == RecordFieldCount(T))]
+overload equalRecordFields?(a:T, b:T, static i) {
     return true;
 }
 
@@ -115,13 +124,15 @@ overload equalRecordFields?[T,i |(i == RecordFieldCount(T))]
 //
 
 
-overload lesser? [T|RecordType?(T)] (a:T, b:T) {
+[T|RecordType?(T)]
+overload lesser?(a:T, b:T) {
     return lesserRecordFields?(a, b, 0);
 }
 
 overloadable lesserRecordFields?;
 
-overload lesserRecordFields?[T,i](a:T, b:T, static i) {
+[T,i]
+overload lesserRecordFields?(a:T, b:T, static i) {
     ref af = recordFieldRef(a, i);
     ref bf = recordFieldRef(b, i);
     if (lesser?(af, bf))
@@ -131,8 +142,8 @@ overload lesserRecordFields?[T,i](a:T, b:T, static i) {
     return lesserRecordFields?(a, b, i+1);
 }
 
-overload lesserRecordFields?[T,i |(i == RecordFieldCount(T))]
-        (a:T, b:T, static i) {
+[T,i |(i == RecordFieldCount(T))]
+overload lesserRecordFields?(a:T, b:T, static i) {
     return false;
 }
 
@@ -142,17 +153,19 @@ overload lesserRecordFields?[T,i |(i == RecordFieldCount(T))]
 // hash
 //
 
-overload hash [T|RecordType?(T)] (a:T) {
+[T|RecordType?(T)]
+overload hash(a:T) {
     return hashRecordFields?(a, 0);
 }
 
 overloadable hashRecordFields;
 
-overload hashRecordFields[T,i](a:T, static i) {
+[T,i]
+overload hashRecordFields(a:T, static i) {
     return hash(recordFieldRef(a, i)) + hashRecordFields(a, i+1);
 }
 
-overload hashRecordFields[T,i |(i == RecordFieldCount(T))]
-        (a:T, static i) {
+[T,i |(i == RecordFieldCount(T))]
+overload hashRecordFields(a:T, static i) {
     return 0;
 }

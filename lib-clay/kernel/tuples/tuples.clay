@@ -5,19 +5,21 @@ import kernel.operators.*;
 // init
 //
 
-overload init [T|TupleType?(T)] (a:T) {
+[T|TupleType?(T)]
+overload init(a:T) {
     initTupleElements(a, 0);
 }
 
 overloadable initTupleElements;
 
-overload initTupleElements[i](a, static i) {
+[i]
+overload initTupleElements(a, static i) {
     init(tupleRef(a, i));
     initTupleElements(a, i+1);
 }
 
-overload initTupleElements[T, i | (i == TupleElementCount(T))]
-        (a:T, static i) {
+[T, i | (i == TupleElementCount(T))]
+overload initTupleElements(a:T, static i) {
 }
 
 
@@ -26,19 +28,21 @@ overload initTupleElements[T, i | (i == TupleElementCount(T))]
 // destroy
 //
 
-overload destroy [T|TupleType?(T)] (a:T) {
+[T|TupleType?(T)]
+overload destroy(a:T) {
     destroyTupleElements(a, 0);
 }
 
 overloadable destroyTupleElements;
 
-overload destroyTupleElements[i](a, static i) {
+[i]
+overload destroyTupleElements(a, static i) {
     destroy(tupleRef(a, i));
     destroyTupleElements(a, i+1);
 }
 
-overload destroyTupleElements[T, i |(i == TupleElementCount(T))]
-        (a:T, static i) {
+[T, i |(i == TupleElementCount(T))]
+overload destroyTupleElements(a:T, static i) {
 }
 
 
@@ -47,20 +51,22 @@ overload destroyTupleElements[T, i |(i == TupleElementCount(T))]
 // copy
 //
 
-overload copy [T|TupleType?(T)] (dest:T, src:T) {
+[T|TupleType?(T)]
+overload copy(dest:T, src:T) {
     copyTupleElements(dest, src, 0);
 }
 
 overloadable copyTupleElements;
 
-overload copyTupleElements[T,i](dest:T, src:T, static i)
+[T,i]
+overload copyTupleElements(dest:T, src:T, static i)
 {
     copy(tupleRef(dest, i), tupleRef(src, i));
     copyTupleElements(dest, src, i+1);
 }
 
-overload copyTupleElements[T,i | (i == TupleElementCount(T))]
-        (dest:T, src:T, static i) {
+[T,i | (i == TupleElementCount(T))]
+overload copyTupleElements(dest:T, src:T, static i) {
 }
 
 
@@ -69,19 +75,21 @@ overload copyTupleElements[T,i | (i == TupleElementCount(T))]
 // assign
 //
 
-overload assign [T|TupleType?(T)] (dest:T, src:T) {
+[T|TupleType?(T)]
+overload assign(dest:T, src:T) {
     assignTupleElements(dest, src, 0);
 }
 
 overloadable assignTupleElements;
 
-overload assignTupleElements[T,i](dest:T, src:T, static i) {
+[T,i]
+overload assignTupleElements(dest:T, src:T, static i) {
     assign(tupleRef(dest, i), tupleRef(src, i));
     assignTupleElements(dest, src, i+1);
 }
 
-overload assignTupleElements[T,i | (i == TupleElementCount(T))]
-        (dest:T, src:T, static i) {
+[T,i | (i == TupleElementCount(T))]
+overload assignTupleElements(dest:T, src:T, static i) {
 }
 
 
@@ -91,20 +99,22 @@ overload assignTupleElements[T,i | (i == TupleElementCount(T))]
 //
 
 
-overload equals? [T|TupleType?(T)] (a:T, b:T) {
+[T|TupleType?(T)]
+overload equals?(a:T, b:T) {
     return equalTupleElements?(a, b, 0);
 }
 
 overloadable equalTupleElements?;
 
-overload equalTupleElements?[T,i](a:T, b:T, static i) {
+[T,i]
+overload equalTupleElements?(a:T, b:T, static i) {
     if (not equals?(tupleRef(a, i), tupleRef(b, i)))
         return false;
     return equalTupleElements(a, b, i+1);
 }
 
-overload equalTupleElements?[T,i |(i == TupleElementCount(T))]
-        (a:T, b:T, static i) {
+[T,i |(i == TupleElementCount(T))]
+overload equalTupleElements?(a:T, b:T, static i) {
     return true;
 }
 
@@ -115,13 +125,15 @@ overload equalTupleElements?[T,i |(i == TupleElementCount(T))]
 //
 
 
-overload lesser? [T|TupleType?(T)] (a:T, b:T) {
+[T|TupleType?(T)]
+overload lesser?(a:T, b:T) {
     return lesserTupleElements?(a, b, 0);
 }
 
 overloadable lesserTupleElements?;
 
-overload lesserTupleElements?[T,i](a:T, b:T, static i) {
+[T,i]
+overload lesserTupleElements?(a:T, b:T, static i) {
     ref av = tupleRef(a, i);
     ref bv = tupleRef(b, i);
     if (lesser?(av, bv))
@@ -131,8 +143,8 @@ overload lesserTupleElements?[T,i](a:T, b:T, static i) {
     return lesserTupleElements(a, b, i+1);
 }
 
-overload lesserTupleElements?[T,i |(i == TupleElementCount(T))]
-        (a:T, b:T, static i) {
+[T,i |(i == TupleElementCount(T))]
+overload lesserTupleElements?(a:T, b:T, static i) {
     return false;
 }
 
@@ -142,17 +154,19 @@ overload lesserTupleElements?[T,i |(i == TupleElementCount(T))]
 // hash
 //
 
-overload hash [T|TupleType?(T)] (a:T) {
+[T|TupleType?(T)]
+overload hash(a:T) {
     return hashTupleElements?(a, 0);
 }
 
 overloadable hashTupleElements;
 
-overload hashTupleElements[T,i](a:T, static i) {
+[T,i]
+overload hashTupleElements(a:T, static i) {
     return hash(tupleRef(a, i)) + hashTupleElements(a, i+1);
 }
 
-overload hashTupleElements[T,i |(i == TupleElementCount(T))]
-        (a:T, static i) {
+[T,i |(i == TupleElementCount(T))]
+overload hashTupleElements(a:T, static i) {
     return 0;
 }

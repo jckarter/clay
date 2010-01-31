@@ -5,8 +5,10 @@ record Char {
     code:Int8;
 }
 
-char [I|Integer?(I)] (c:I) = Char(to(Int8, c));
+[I|Integer?(I)]
+char(c:I) = Char(to(Int8, c));
 
 ord(c:Char) = to(Int32, c.code);
 
-overload to [I|Integer?(I)] (static I, c:Char) = to(I, c.code);
+[I|Integer?(I)]
+overload to(static I, c:Char) = to(I, c.code);

@@ -16,11 +16,14 @@ overloadable Coordinate?;
 overloadable RandomAccessCoordinate?;
 
 
-overload Coordinate?[T](static T) = false;
+[T]
+overload Coordinate?(static T) = false;
 
-overload RandomAccessCoordinate?[T](static T) = false;
+[T]
+overload RandomAccessCoordinate?(static T) = false;
 
-overload Coordinate? [T|RandomAccessCoordinate?(T)] (static T) = true;
+[T|RandomAccessCoordinate?(T)]
+overload Coordinate?(static T) = true;
 
 
 //

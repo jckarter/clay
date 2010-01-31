@@ -23,7 +23,8 @@ overload init(a:String) {
     push(a.data, char(0));
 }
 
-string[n](a:Array[Char,n]) {
+[n]
+string(a:Array[Char,n]) {
     var s = String(makeVector(a));
     push(s.data, char(0));
     return s;

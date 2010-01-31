@@ -6,46 +6,69 @@ import kernel.coordinates.*;
 // Pointer[T]
 //
 
-overload copy[T](dest:Pointer[T], src:Pointer[T]) {
+[T]
+overload copy(dest:Pointer[T], src:Pointer[T]) {
     primitiveCopy(dest, src);
 }
 
-overload to [I,T|Integer?(I)] (static I, a:Pointer[T]) = pointerToInt(I, a);
-overload to [I,T|Integer?(I)] (static Pointer[T], a:I) = intToPointer(T, a);
+[I,T|Integer?(I)]
+overload to(static I, a:Pointer[T]) = pointerToInt(I, a);
 
-pointerToInt32[T](a:Pointer[T]) = to(Int32, a);
-pointerToUInt32[T](a:Pointer[T]) = to(UInt32, a);
+[I,T|Integer?(I)]
+overload to(static Pointer[T], a:I) = intToPointer(T, a);
 
-overload equals?[T](a:Pointer[T], b:Pointer[T]) {
+[T]
+pointerToInt32(a:Pointer[T]) = to(Int32, a);
+
+[T]
+pointerToUInt32(a:Pointer[T]) = to(UInt32, a);
+
+[T]
+overload equals?(a:Pointer[T], b:Pointer[T]) {
     return equals?(pointerToInt32(a), pointerToInt32(b));
 }
-overload lesser?[T](a:Pointer[T], b:Pointer[T]) {
+
+[T]
+overload lesser?(a:Pointer[T], b:Pointer[T]) {
     return lesser?(pointerToUInt32(a), pointerToUInt32(b));
 }
 
-overload hash[T](a:Pointer[T]) = pointerToInt32(a);
+[T]
+overload hash(a:Pointer[T]) = pointerToInt32(a);
 
-overload add [T,I|Integer?(I)] (p:Pointer[T], i:I) {
+[T,I|Integer?(I)]
+overload add(p:Pointer[T], i:I) {
     return to(Pointer[T], pointerToInt32(p) + i*TypeSize(T));
 }
-overload subtract [T,I|Integer?(I)] (p:Pointer[T], i:I) {
+
+[T,I|Integer?(I)]
+overload subtract(p:Pointer[T], i:I) {
     return to(Pointer[T], pointerToInt32(p) - i*TypeSize(T));
 }
-overload subtract[T](a:Pointer[T], b:Pointer[T]) {
+
+[T]
+overload subtract(a:Pointer[T], b:Pointer[T]) {
     return (pointerToInt32(a) - pointerToInt32(b)) / TypeSize(T);
 }
 
-overload inc[T](a:Pointer[T]) {
+[T]
+overload inc(a:Pointer[T]) {
     a = a + 1;
 }
 
-overload dec[T](a:Pointer[T]) {
+[T]
+overload dec(a:Pointer[T]) {
     a = a - 1;
 }
 
-null[T](static T) = to(Pointer[T], 0);
+[T]
+null(static T) = to(Pointer[T], 0);
 
-overload deref[T](p:Pointer[T]) = ref pointerDereference(p);
+[T]
+overload deref(p:Pointer[T]) = ref pointerDereference(p);
 
-overload RandomAccessCoordinate?[T](static Pointer[T]) = true;
-overload CoordinateTarget[T](static Pointer[T]) = T;
+[T]
+overload RandomAccessCoordinate?(static Pointer[T]) = true;
+
+[T]
+overload CoordinateTarget(static Pointer[T]) = T;

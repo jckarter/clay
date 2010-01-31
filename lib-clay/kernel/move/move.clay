@@ -2,7 +2,8 @@ import kernel.operators.*;
 
 overloadable move;
 
-overload move[T](dest:T, src:T) {
+[T]
+overload move(dest:T, src:T) {
     copy(dest, src);
     destroy(src);
 }
@@ -11,6 +12,8 @@ record Movable[T] {
     data:Pointer[T];
 }
 
-overload move[T](a:T) = Movable(&a);
+[T]
+overload move(a:T) = Movable(&a);
 
-overload deref[T](a:Movable[T]) = ref deref(a.data);
+[T]
+overload deref(a:Movable[T]) = ref deref(a.data);
