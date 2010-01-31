@@ -333,14 +333,12 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TupleTypeP);
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
-    PRIMITIVE(TupleElementType);
     PRIMITIVE(TupleElementOffset);
     PRIMITIVE(tuple);
     PRIMITIVE(tupleRef);
 
     PRIMITIVE(RecordTypeP);
     PRIMITIVE(RecordFieldCount);
-    PRIMITIVE(RecordFieldType);
     PRIMITIVE(RecordFieldOffset);
     PRIMITIVE(RecordFieldIndex);
     PRIMITIVE(recordFieldRef);

@@ -1891,7 +1891,6 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
 
     case PRIM_TupleTypeP :
     case PRIM_TupleElementCount :
-    case PRIM_TupleElementType :
     case PRIM_TupleElementOffset :
         return codegenValue(evaluatePrimOp(x, args), outPtr);
 
@@ -1921,7 +1920,6 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
 
     case PRIM_RecordTypeP :
     case PRIM_RecordFieldCount :
-    case PRIM_RecordFieldType :
     case PRIM_RecordFieldOffset :
     case PRIM_RecordFieldIndex :
         return codegenValue(evaluatePrimOp(x, args), outPtr);

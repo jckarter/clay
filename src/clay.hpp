@@ -1154,14 +1154,12 @@ enum PrimOpCode {
     PRIM_TupleTypeP,
     PRIM_Tuple,
     PRIM_TupleElementCount,
-    PRIM_TupleElementType,
     PRIM_TupleElementOffset,
     PRIM_tuple,
     PRIM_tupleRef,
 
     PRIM_RecordTypeP,
     PRIM_RecordFieldCount,
-    PRIM_RecordFieldType,
     PRIM_RecordFieldOffset,
     PRIM_RecordFieldIndex,
     PRIM_recordFieldRef,
@@ -1411,7 +1409,7 @@ struct InvokeTableEntry : public Object {
     InvokeTablePtr table;
     vector<ObjectPtr> argsInfo;
 
-    // applicable to procedures and overloadables
+    // results of matching code.
     EnvPtr env;
     CodePtr code;
 

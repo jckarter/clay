@@ -60,14 +60,12 @@ arrayRef[T,n](a:Array[T,n], i:Int32) ref : T
 TupleType?[T](static T):Bool
 Tuple[T1, ..., Tn]
 TupleElementCount[T](static T): Int32
-TupleElementType[T,i](static T, static i): CompilerObject
 TupleElementOffset[T,i](static T, static i): Int32
 tuple(v1, ...,vn): tuple type
 tupleRef [T|TupleType?(T)] (a:T, static i)
 
 RecordType?[R](static R):Bool
 RecordFieldCount[R](static R):Int32
-RecordFieldType[R,i](static R, static i):CompilerObject
 RecordFieldOffset[R,i](static R, static i): Int32
 RecordFieldIndex[R,name](static R, static name): Int32
 recordFieldRef[R,i](a:R, static i)

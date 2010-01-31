@@ -724,8 +724,6 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
         break;
     case PRIM_TupleElementCount :
         return new PValue(int32Type, true, args->allStatic);
-    case PRIM_TupleElementType :
-        return new PValue(compilerObjectType, true, args->allStatic);
     case PRIM_TupleElementOffset :
         return new PValue(int32Type, true, args->allStatic);
     case PRIM_tuple : {
@@ -750,8 +748,6 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
         return new PValue(boolType, true, args->allStatic);
     case PRIM_RecordFieldCount :
         return new PValue(int32Type, true, args->allStatic);
-    case PRIM_RecordFieldType :
-        return new PValue(compilerObjectType, true, args->allStatic);
     case PRIM_RecordFieldOffset :
         return new PValue(int32Type, true, args->allStatic);
     case PRIM_RecordFieldIndex :

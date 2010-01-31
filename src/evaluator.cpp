@@ -2267,16 +2267,6 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         TupleType *tt = (TupleType *)t.ptr();
         return intToValue(tt->elementTypes.size());
     }
-    case PRIM_TupleElementType : {
-        ensureArity(args, 2);
-        TypePtr t = valueToType(args[0]);
-        ensureTupleType(t);
-        TupleType *tt = (TupleType *)t.ptr();
-        int i = valueToInt(args[1]);
-        if ((i < 0) || (i >= (int)tt->elementTypes.size()))
-            error("tuple type index out of range");
-        return coToValue(tt->elementTypes[i].ptr());
-    }
     case PRIM_TupleElementOffset : {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
@@ -2327,17 +2317,6 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureRecordType(t);
         RecordType *rt = (RecordType *)t.ptr();
         return intToValue(recordFieldTypes(rt).size());
-    }
-    case PRIM_RecordFieldType : {
-        ensureArity(args, 2);
-        TypePtr t = valueToType(args[0]);
-        ensureRecordType(t);
-        RecordType *rt = (RecordType *)t.ptr();
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
-        int i = valueToInt(args[1]);
-        if ((i < 0) || (i >= (int)fieldTypes.size()))
-            error("field index out of range");
-        return coToValue(fieldTypes[i].ptr());
     }
     case PRIM_RecordFieldOffset : {
         ensureArity(args, 2);
