@@ -20,9 +20,15 @@ isOdd(n) {
 
 foo() = Array[Int32, 10]();
 
-record NodeA[T] (value:T, next:Pointer[NodeB[T]]);
+record NodeA[T] {
+    value:T;
+    next:Pointer[NodeB[T]];
+}
 
-record NodeB[T] (ptr:Pointer[T], next:Pointer[NodeA[T]]);
+record NodeB[T] {
+    ptr:Pointer[T];
+    next:Pointer[NodeA[T]];
+}
 
 main() {
     var n = 7;

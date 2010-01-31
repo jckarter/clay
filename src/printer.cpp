@@ -401,7 +401,12 @@ static void print(const Object *x, ostream &out) {
     case RECORD : {
         Record *y = (Record *)x;
         out << "Record(" << y->name << ", " << y->patternVars;
-        out << ", " << y->formalArgs << ")";
+        out << ", " << y->fields << ")";
+        break;
+    }
+    case RECORD_FIELD : {
+        RecordField *y = (RecordField *)x;
+        out << "RecordField(" << y->name << ", " << y->type << ")";
         break;
     }
     case PROCEDURE : {

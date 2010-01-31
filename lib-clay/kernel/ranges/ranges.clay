@@ -5,7 +5,10 @@ import kernel.numbers.*;
 // Range
 //
 
-record Range[T](first:T, last:T);
+record Range[T] {
+    first:T;
+    last:T;
+}
 
 overload iterator[T](r:Range[T]) = r;
 
@@ -27,7 +30,10 @@ overload range[I|Integer?(I)](last:I) = Range(zero(I), last);
 // CoordinateRange
 //
 
-record CoordinateRange[T](first:T, last:T);
+record CoordinateRange[T] {
+    first:T;
+    last:T;
+}
 
 overload iterator[T](r:CoordinateRange[T]) = r;
 

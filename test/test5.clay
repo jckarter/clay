@@ -7,7 +7,9 @@ overload foo(x) = 0;
 overload foo(t:CompilerObject) = 1;
 overload foo(x:Int32) = 2;
 
-record Foo(x:CompilerObject);
+record Foo {
+    x:CompilerObject;
+}
 
 main() {
     var v = true;

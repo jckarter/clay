@@ -155,6 +155,7 @@ enum ObjectKind {
     STATIC_ARG,
 
     RECORD,
+    RECORD_FIELD,
     PROCEDURE,
     OVERLOAD,
     OVERLOADABLE,
@@ -237,6 +238,7 @@ struct Code;
 
 struct TopLevelItem;
 struct Record;
+struct RecordField;
 struct Procedure;
 struct Overload;
 struct Overloadable;
@@ -336,6 +338,7 @@ typedef Pointer<Code> CodePtr;
 
 typedef Pointer<TopLevelItem> TopLevelItemPtr;
 typedef Pointer<Record> RecordPtr;
+typedef Pointer<RecordField> RecordFieldPtr;
 typedef Pointer<Procedure> ProcedurePtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Overloadable> OverloadablePtr;
@@ -866,14 +869,21 @@ struct TopLevelItem : public ANode {
 struct Record : public TopLevelItem {
     IdentifierPtr name;
     vector<IdentifierPtr> patternVars;
-    vector<FormalArgPtr> formalArgs;
+    vector<RecordFieldPtr> fields;
     Record()
         : TopLevelItem(RECORD) {}
     Record(IdentifierPtr name,
            const vector<IdentifierPtr> &patternVars,
-           const vector<FormalArgPtr> &formalArgs)
+           const vector<RecordFieldPtr> &fields)
         : TopLevelItem(RECORD), name(name), patternVars(patternVars),
-          formalArgs(formalArgs) {}
+          fields(fields) {}
+};
+
+struct RecordField : public ANode {
+    IdentifierPtr name;
+    ExprPtr type;
+    RecordField(IdentifierPtr name, ExprPtr type)
+        : ANode(RECORD_FIELD), name(name), type(type) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -1520,6 +1530,11 @@ struct ArgList : public Object {
     bool unifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv);
     void ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs, EnvPtr fenv);
     ArgListPtr removeStaticArgs(const vector<FormalArgPtr> &fargs);
+
+    bool unifyRecordField(int i, RecordFieldPtr field, EnvPtr env);
+    bool unifyRecordFields(const vector<RecordFieldPtr> &fields, EnvPtr env);
+    void ensureUnifyRecordFields(const vector<RecordFieldPtr> &fields,
+                                 EnvPtr env);
 
     CValuePtr codegen(int i, llvm::Value *outPtr);
     CValuePtr codegenAsRef(int i);

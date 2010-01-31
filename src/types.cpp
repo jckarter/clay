@@ -196,21 +196,11 @@ static void initializeRecordFields(RecordTypePtr t) {
     EnvPtr env = new Env(r->env);
     for (unsigned i = 0; i < t->params.size(); ++i)
         addLocal(env, r->patternVars[i], t->params[i].ptr());
-    for (unsigned i = 0; i < r->formalArgs.size(); ++i) {
-        FormalArg *x = r->formalArgs[i].ptr();
-        switch (x->objKind) {
-        case VALUE_ARG : {
-            ValueArg *y = (ValueArg *)x;
-            t->fieldIndexMap[y->name->str] = t->fieldTypes.size();
-            TypePtr ftype = evaluateNonVoidType(y->type, env);
-            t->fieldTypes.push_back(ftype);
-            break;
-        }
-        case STATIC_ARG :
-            break;
-        default :
-            assert(false);
-        }
+    for (unsigned i = 0; i < r->fields.size(); ++i) {
+        RecordField *x = r->fields[i].ptr();
+        t->fieldIndexMap[x->name->str] = i;
+        TypePtr ftype = evaluateNonVoidType(x->type, env);
+        t->fieldTypes.push_back(ftype);
     }
 }
 

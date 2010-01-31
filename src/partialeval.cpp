@@ -329,11 +329,10 @@ partialInvokeRecord(RecordPtr x, ArgListPtr args)
 {
     vector<PatternCellPtr> cells;
     EnvPtr env = initPatternVars(x->env, x->patternVars, cells);
-    args->ensureUnifyFormalArgs(x->formalArgs, env);
+    args->ensureUnifyRecordFields(x->fields, env);
     vector<ValuePtr> cellValues;
     derefCells(cells, cellValues);
     TypePtr t = recordType(x, cellValues);
-    args = args->removeStaticArgs(x->formalArgs);
     return partialInvokeType(t, args);
 }
 

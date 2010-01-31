@@ -20,7 +20,9 @@ overload item[T,n](a:Array[T,n], i) = ref arrayRef(a, i);
 // array coordinates
 //
 
-record ArrayCoordinate[T](ptr:Pointer[T]);
+record ArrayCoordinate[T] {
+    ptr:Pointer[T];
+}
 
 overload deref[T](c:ArrayCoordinate[T]) = ref deref(c.ptr);
 overload begin[T,n](a:Array[T,n]) = ArrayCoordinate(&item(a, 0));

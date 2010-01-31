@@ -10,7 +10,11 @@ import kernel.move.*;
 // Vector[T]
 //
 
-record Vector[T](size:Int32, capacity:Int32, data:Pointer[T]);
+record Vector[T] {
+    size:Int32;
+    capacity:Int32;
+    data:Pointer[T];
+}
 
 
 //
@@ -51,7 +55,9 @@ overload item[T](a:Vector[T], i) = ref deref(a.data + i);
 // vector coordinates
 //
 
-record VectorCoordinate[T](ptr:Pointer[T]);
+record VectorCoordinate[T] {
+    ptr:Pointer[T];
+}
 
 overload deref[T](c:VectorCoordinate[T]) = ref deref(c.ptr);
 

@@ -1,7 +1,11 @@
 import kernel.*;
 import libc.*;
 
-record CustomCompare[T,F](x:T, static F);
+record CustomCompare[T,F] {
+    x:T;
+}
+
+newCustomCompare[T,F](x:T, static F) = CustomCompare[T,F](x);
 
 overload lesser?[T,F](a:CustomCompare[T,F], b:CustomCompare[T,F]) =
     F(a.x, b.x);
@@ -14,7 +18,7 @@ min(a, b) {
 myLesser(a, b) = lesser?(a, b);
 
 main() {
-    var a = CustomCompare(10, myLesser);
+    var a = newCustomCompare(10, myLesser);
     var b = CustomCompare[Int32,myLesser](-20);
     printf(cstring("%d\n"), min(a, b).x);
     return 0;

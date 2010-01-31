@@ -1041,45 +1041,30 @@ static bool code(CodePtr &x) {
 // records
 //
 
-static bool recordValueArg(FormalArgPtr &x) {
+static bool recordField(RecordFieldPtr &x) {
     LocationPtr location = currentLocation();
     IdentifierPtr y;
-    ExprPtr z;
     if (!identifier(y)) return false;
+    ExprPtr z;
     if (!typeSpec(z)) return false;
-    x = new ValueArg(y, z);
+    if (!symbol(";")) return false;
+    x = new RecordField(y, z);
     x->location = location;
     return true;
 }
 
-static bool recordFormalArg(FormalArgPtr &x) {
-    int p = save();
-    if (recordValueArg(x)) return true;
-    if (restore(p), staticArg(x)) return true;
-    return false;
-}
-
-static bool recordFormalArgs(vector<FormalArgPtr> &x) {
-    FormalArgPtr y;
-    if (!recordFormalArg(y)) return false;
+static bool recordFields(vector<RecordFieldPtr> &x) {
+    RecordFieldPtr y;
+    if (!recordField(y)) return false;
     x.clear();
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",") || !recordFormalArg(y)) {
+        if (!recordField(y)) {
             restore(p);
             break;
         }
         x.push_back(y);
-    }
-    return true;
-}
-
-static bool optRecordFormalArgs(vector<FormalArgPtr> &x) {
-    int p = save();
-    if (!recordFormalArgs(x)) {
-        restore(p);
-        x.clear();
     }
     return true;
 }
@@ -1090,10 +1075,9 @@ static bool record(TopLevelItemPtr &x) {
     RecordPtr y = new Record();
     if (!identifier(y->name)) return false;
     if (!optPatternVars(y->patternVars)) return false;
-    if (!symbol("(")) return false;
-    if (!optRecordFormalArgs(y->formalArgs)) return false;
-    if (!symbol(")")) return false;
-    if (!symbol(";")) return false;
+    if (!symbol("{")) return false;
+    if (!recordFields(y->fields)) return false;
+    if (!symbol("}")) return false;
     x = y.ptr();
     x->location = location;
     return true;

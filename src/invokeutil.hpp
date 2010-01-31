@@ -271,7 +271,7 @@ void signalMatchInvokeError(MatchInvokeResultPtr result) {
 
 
 //
-// matchInvoke, matchFormalArg
+// matchInvoke, matchFormalArg, matchRecordField
 //
 
 template <typename ARG>
@@ -320,6 +320,12 @@ bool matchFormalArg(ARG arg, FormalArgPtr farg, EnvPtr env) {
     }
     assert(false);
     return false;
+}
+
+template <typename ARG>
+bool matchRecordField(ARG arg, RecordFieldPtr field, EnvPtr env) {
+    PatternPtr pattern = evaluatePattern(field->type, env);
+    return unifyType(pattern, argumentType(arg));
 }
 
 

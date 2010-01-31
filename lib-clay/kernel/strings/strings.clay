@@ -9,7 +9,9 @@ import kernel.ranges.*;
 // String
 //
 
-record String(data:Vector[Char]);
+record String {
+    data:Vector[Char];
+}
 
 
 //

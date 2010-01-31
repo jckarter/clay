@@ -7,7 +7,9 @@ overload move[T](dest:T, src:T) {
     destroy(src);
 }
 
-record Movable[T](data:Pointer[T]);
+record Movable[T] {
+    data:Pointer[T];
+}
 
 overload move[T](a:T) = Movable(&a);
 

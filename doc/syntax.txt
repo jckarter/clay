@@ -9,16 +9,9 @@ DottedName -> Identifier ("." Identifier)*
 TopLevelItem -> Record | Procedure | Overloadable | Overload
               | ExternalProcedure
 
-Record -> "record" Identifier PatternVars? "("
-          comma_list(RecordArg)? ")" ";"
-
-RecordArg -> ValueRecordArg
-           | StaticRecordArg
-
-ValueRecordArg -> Identifier TypeSpec
-StaticRecordArg -> "static" Expression
-
+Record -> "record" Identifier PatternVars? "{" RecordField+ "}"
 PatternVars -> "[" comma_list(Identifier) "]"
+RecordField -> Identifier TypeSpec ";"
 TypeSpec -> ":" TypeExpr
 
 Procedure -> Identifier Code

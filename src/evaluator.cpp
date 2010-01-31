@@ -1540,20 +1540,17 @@ ValuePtr invoke(ObjectPtr callable, const vector<ValuePtr> &args) {
 //
 
 ValuePtr invokeRecord(RecordPtr x, const vector<ValuePtr> &args) {
-    ensureArity(args, x->formalArgs.size());
+    ensureArity(args, x->fields.size());
     vector<PatternCellPtr> cells;
     EnvPtr env = initPatternVars(x->env, x->patternVars, cells);
-    vector<ValuePtr> nonStaticArgs;
     for (unsigned i = 0; i < args.size(); ++i) {
-        if (!matchFormalArg(args[i], x->formalArgs[i], env))
+        if (!matchRecordField(args[i], x->fields[i], env))
             fmtError("mismatch at argument %d", i+1);
-        if (x->formalArgs[i]->objKind == VALUE_ARG)
-            nonStaticArgs.push_back(args[i]);
     }
     vector<ValuePtr> cellValues;
     derefCells(cells, cellValues);
     TypePtr t = recordType(x, cellValues);
-    return invokeType(t, nonStaticArgs);
+    return invokeType(t, args);
 }
 
 

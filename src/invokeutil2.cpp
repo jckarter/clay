@@ -103,7 +103,7 @@ ArgList::ensureUnifyFormalArgs(const vector<FormalArgPtr> &fargs,
     ensureArity(fargs.size());
     for (unsigned i = 0; i < fargs.size(); ++i) {
         if (!this->unifyFormalArg(i, fargs[i], fenv))
-            error(this->exprs[i], "non-matching argment");
+            error(this->exprs[i], "non-matching argument");
     }
 }
 
@@ -125,6 +125,36 @@ ArgListPtr ArgList::removeStaticArgs(const vector<FormalArgPtr> &fargs)
     }
 
     return args;
+}
+
+bool
+ArgList::unifyRecordField(int i, RecordFieldPtr field, EnvPtr env)
+{
+    PatternPtr pattern = evaluatePattern(field->type, env);
+    return unifyType(pattern, type(i));
+}
+
+bool
+ArgList::unifyRecordFields(const vector<RecordFieldPtr> &fields, EnvPtr env)
+{
+    if (this->size() != fields.size())
+        return false;
+    for (unsigned i = 0; i < fields.size(); ++i) {
+        if (!this->unifyRecordField(i, fields[i], env))
+            return false;
+    }
+    return true;
+}
+
+void
+ArgList::ensureUnifyRecordFields(const vector<RecordFieldPtr> &fields,
+                                 EnvPtr env)
+{
+    ensureArity(fields.size());
+    for (unsigned i = 0; i < fields.size(); ++i) {
+        if (!this->unifyRecordField(i, fields[i], env))
+            error(this->exprs[i], "non-matching argument");
+    }
 }
 
 

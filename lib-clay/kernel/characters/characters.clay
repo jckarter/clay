@@ -1,7 +1,9 @@
 import kernel.operators.*;
 import kernel.numbers.*;
 
-record Char(code:Int8);
+record Char {
+    code:Int8;
+}
 
 char [I|Integer?(I)] (c:I) = Char(to(Int8, c));
 
