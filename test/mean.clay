@@ -1,0 +1,14 @@
+import kernel.*;
+import libc.*;
+
+main() {
+    var result = 0.0;
+    for (i in range(10000)) {
+        result = 0.0;
+        for (j in range(10000)) {
+            result = result + to(Float64, j);
+        }
+    }
+    result = result / 10000;
+    return to(Int32, result);
+}
