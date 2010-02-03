@@ -28,10 +28,10 @@ llvm::Value *codegenToBool(CValuePtr a);
 
 vector<CValuePtr> stackCValues;
 
-int markStack();
-void destroyStack(int marker);
-void popStack(int marker);
-void sweepStack(int marker);
+static int markStack();
+static void destroyStack(int marker);
+static void popStack(int marker);
+static void sweepStack(int marker);
 
 CValuePtr codegenAllocValue(TypePtr t);
 
@@ -206,12 +206,12 @@ llvm::Value *codegenToBool(CValuePtr a)
 // codegen temps
 //
 
-int markStack()
+static int markStack()
 {
     return stackCValues.size();
 }
 
-void destroyStack(int marker)
+static void destroyStack(int marker)
 {
     int i = (int)stackCValues.size();
     assert(marker <= i);
@@ -221,14 +221,14 @@ void destroyStack(int marker)
     }
 }
 
-void popStack(int marker)
+static void popStack(int marker)
 {
     assert(marker <= (int)stackCValues.size());
     while (marker < (int)stackCValues.size())
         stackCValues.pop_back();
 }
 
-void sweepStack(int marker)
+static void sweepStack(int marker)
 {
     assert(marker <= (int)stackCValues.size());
     while (marker < (int)stackCValues.size()) {
