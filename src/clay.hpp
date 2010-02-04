@@ -447,6 +447,15 @@ void ensureArity(const vector<T> &args, int size)
         error("incorrect number of arguments");
 }
 
+template <class T>
+void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
+{
+    if (!hasVarArgs) 
+        ensureArity(args, size);
+    else if ((int)args.size() < size)
+        error("incorrect no of arguments");
+}
+
 void ensurePrimitiveType(TypePtr t);
 void ensureSameType(TypePtr ta, TypePtr tb);
 void ensureBoolType(TypePtr t);
