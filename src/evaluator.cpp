@@ -1926,13 +1926,20 @@ StatementPtr convertForStatement(ForPtr x) {
 ValuePtr invokeExternal(ExternalProcedurePtr x, const vector<ValuePtr> &args) {
     if (!x->llvmFunc)
         initExternalProcedure(x);
-    ensureArity(args, x->args.size());
-    for (unsigned i = 0; i < args.size(); ++i) {
+    ensureArity2(args, x->args.size(), x->hasVarArgs);
+    for (unsigned i = 0; i < x->args.size(); ++i) {
         ExternalArgPtr earg = x->args[i];
         if (args[i]->type != x->args[i]->type2)
             fmtError("type mismatch at argument %d", (i+1));
     }
-    return execLLVMFunc(x->llvmFunc, args, x->returnType2);
+    vector<TypePtr> argTypes;
+    for (unsigned i = 0; i < args.size(); ++i) {
+        argTypes.push_back(args[i]->type);
+    }
+    // TODO: Reclaim the wrapper memory once JIT::runFunction gets patched
+    llvm::Function *wrapper = generateExternalWrapper(x->llvmFunc,
+            argTypes, x->returnType2, "");
+    return execLLVMFunc(wrapper, args, x->returnType2);
 }
 
 void initExternalProcedure(ExternalProcedurePtr x) {
