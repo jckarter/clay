@@ -5,8 +5,8 @@ external qsort(base:Pointer[Int8], n:Int32, width:Int32,
                compare:FunctionPointer[Pointer[Int8], Pointer[Int8], Int32]): Void;
 
 compare(pa, pb) {
-    if (a^ < b^) return -1;
-    if (a^ > b^) return 1;
+    if (pa^ < pb^) return -1;
+    if (pa^ > pb^) return 1;
     return 0;
 }
 
@@ -18,7 +18,13 @@ main() {
         x = x - 1;
     }
 
+    printf(cstring("item[0], item[2] = %d, %d\n"), item(a, 0), item(a, 2));
+
     var fp = makeFunctionPointer(compare, Pointer[Int32], Pointer[Int32]);
+
+    printf(cstring("compare test = %d\n"), fp(&item(a,0), &item(a,2)));
+    printf(cstring("compare test = %d\n"), fp(&item(a,0), &item(a,0)));
+    printf(cstring("compare test = %d\n"), fp(&item(a,2), &item(a,0)));
 
     var fp2 = to(
         FunctionPointer[Pointer[Int8], Pointer[Int8], Int32],
@@ -29,6 +35,6 @@ main() {
           TypeSize(Int32),
           fp2);
 
-    printf(cstring("item[2] = %d\n"), item(a, 2));
+    printf(cstring("item[0], item[2] = %d, %d\n"), item(a, 0), item(a, 2));
     return 0;
 }

@@ -176,6 +176,12 @@ PValuePtr partialEval(ExprPtr expr, EnvPtr env)
             ObjectPtr callable2 = lower(evaluateToStatic(x->expr, env));
             return partialInvoke(callable2, new ArgList(x->args, env));
         }
+        else if (callable->type->typeKind == FUNCTION_POINTER_TYPE) {
+            FunctionPointerType *t =
+                (FunctionPointerType *)callable->type.ptr();
+            ArgListPtr args = new ArgList(x->args, env);
+            return new PValue(t->returnType, true, args->allStatic);
+        }
         error("invalid call operation");
         return NULL;
     }

@@ -1088,6 +1088,8 @@ ValuePtr evaluate2(ExprPtr expr, EnvPtr env) {
         vector<ValuePtr> args;
         for (unsigned i = 0; i < x->args.size(); ++i)
             args.push_back(evaluateNested(x->args[i], env));
+        if (thing->type->typeKind == FUNCTION_POINTER_TYPE)
+            error("function pointer invoke not supported in the evaluator");
         return invoke(lower(thing), args);
     }
 

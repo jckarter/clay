@@ -90,6 +90,9 @@ codegenInvokeTargetWrapper(ObjectPtr x, ArgListPtr args);
 void
 codegenCWrapper(InvokeTableEntryPtr entry, IdentifierPtr name);
 
+CValuePtr
+codegenInvokeFP(CValuePtr callable, ArgListPtr args, llvm::Value *outPtr);
+
 
 struct JumpTarget {
     llvm::BasicBlock *block;
@@ -403,6 +406,11 @@ codegen(ExprPtr expr, EnvPtr env, llvm::Value *outPtr)
             ObjectPtr callable2 = lower(evaluateToStatic(x->expr, env));
             ArgListPtr args = new ArgList(x->args, env);
             return codegenInvoke(callable2, args, outPtr);
+        }
+        else if (callable->type->typeKind == FUNCTION_POINTER_TYPE) {
+            CValuePtr callable2 = codegenAsRef(x->expr, env, callable);
+            ArgListPtr args = new ArgList(x->args, env);
+            return codegenInvokeFP(callable2, args, outPtr);
         }
         error("invalid call operation");
         return NULL;
@@ -1000,6 +1008,40 @@ void codegenCWrapper(InvokeTableEntryPtr entry, IdentifierPtr name)
         llvm::Value *llRet = llBuilder.CreateLoad(llRetVal);
         llBuilder.CreateRet(llRet);
     }
+}
+
+
+
+//
+// codegenInvokeFP
+//
+
+CValuePtr
+codegenInvokeFP(CValuePtr callable, ArgListPtr args, llvm::Value *outPtr)
+{
+    assert(callable->type->typeKind == FUNCTION_POINTER_TYPE);
+    FunctionPointerType *t = (FunctionPointerType *)callable->type.ptr();
+    args->ensureArity(t->argTypes.size());
+
+    llvm::Value *llCallable = builder->CreateLoad(callable->llval);
+    vector<llvm::Value *> llArgs;
+    for (unsigned i = 0; i < args->size(); ++i) {
+        CValuePtr carg = args->codegenAsRef(i);
+        if (carg->type != t->argTypes[i])
+            error(args->exprs[i], "argument type mismatch");
+        llArgs.push_back(builder->CreateLoad(carg->llval));
+    }
+    llvm::Value *result =
+        builder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+
+    if (t->returnType != voidType) {
+        assert(outPtr != NULL);
+        builder->CreateStore(result, outPtr);
+    }
+    else {
+        assert(outPtr == NULL);
+    }
+    return new CValue(t->returnType, outPtr);
 }
 
 
