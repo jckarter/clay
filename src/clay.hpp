@@ -263,6 +263,7 @@ struct FloatType;
 struct ArrayType;
 struct TupleType;
 struct PointerType;
+struct FunctionPointerType;
 struct RecordType;
 
 struct Value;
@@ -272,6 +273,7 @@ struct PatternCell;
 struct ArrayTypePattern;
 struct TupleTypePattern;
 struct PointerTypePattern;
+struct FunctionPointerTypePattern;
 struct RecordTypePattern;
 
 struct InvokeTable;
@@ -363,6 +365,7 @@ typedef Pointer<FloatType> FloatTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
 typedef Pointer<PointerType> PointerTypePtr;
+typedef Pointer<FunctionPointerType> FunctionPointerTypePtr;
 typedef Pointer<RecordType> RecordTypePtr;
 
 typedef Pointer<Value> ValuePtr;
@@ -372,6 +375,7 @@ typedef Pointer<PatternCell> PatternCellPtr;
 typedef Pointer<ArrayTypePattern> ArrayTypePatternPtr;
 typedef Pointer<TupleTypePattern> TupleTypePatternPtr;
 typedef Pointer<PointerTypePattern> PointerTypePatternPtr;
+typedef Pointer<FunctionPointerTypePattern> FunctionPointerTypePatternPtr;
 typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 
 typedef Pointer<InvokeTable> InvokeTablePtr;
@@ -462,6 +466,7 @@ void ensureBoolType(TypePtr t);
 void ensureNumericType(TypePtr t);
 void ensureIntegerType(TypePtr t);
 void ensurePointerType(TypePtr t);
+void ensurePointerOrFunctionPointerType(TypePtr t);
 void ensureArrayType(TypePtr t);
 void ensureTupleType(TypePtr t);
 void ensureRecordType(TypePtr t);
@@ -1152,9 +1157,14 @@ enum PrimOpCode {
     PRIM_pointerDereference,
     PRIM_pointerToInt,
     PRIM_intToPointer,
-    PRIM_pointerCast,
     PRIM_allocateMemory,
     PRIM_freeMemory,
+
+    PRIM_FunctionPointerTypeP,
+    PRIM_FunctionPointer,
+    PRIM_makeFunctionPointer,
+
+    PRIM_pointerCast,
 
     PRIM_Array,
     PRIM_array,
@@ -1207,6 +1217,7 @@ enum TypeKind {
     ARRAY_TYPE,
     TUPLE_TYPE,
     POINTER_TYPE,
+    FUNCTION_POINTER_TYPE,
     RECORD_TYPE,
     COMPILER_OBJECT_TYPE,
     VOID_TYPE,
@@ -1251,6 +1262,14 @@ struct PointerType : public Type {
     TypePtr pointeeType;
     PointerType(TypePtr pointeeType)
         : Type(POINTER_TYPE), pointeeType(pointeeType) {}
+};
+
+struct FunctionPointerType : public Type {
+    vector<TypePtr> argTypes;
+    TypePtr returnType;
+    FunctionPointerType(const vector<TypePtr> &argTypes, TypePtr returnType)
+        : Type(FUNCTION_POINTER_TYPE), argTypes(argTypes),
+          returnType(returnType) {}
 };
 
 struct RecordType : public Type {
@@ -1318,6 +1337,7 @@ TypePtr floatType(int bits);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr pointerType(TypePtr pointeeType);
+TypePtr functionPointerType(const vector<TypePtr> &argTypes, TypePtr returnType);
 TypePtr recordType(RecordPtr record, const vector<ValuePtr> &params);
 
 const vector<TypePtr> & recordFieldTypes(RecordTypePtr t);
@@ -1358,6 +1378,7 @@ enum PatternKind {
     ARRAY_TYPE_PATTERN,
     TUPLE_TYPE_PATTERN,
     POINTER_TYPE_PATTERN,
+    FUNCTION_POINTER_TYPE_PATTERN,
     RECORD_TYPE_PATTERN,
 };
 
@@ -1392,6 +1413,15 @@ struct PointerTypePattern : public Pattern {
     PatternPtr pointeeType;
     PointerTypePattern(PatternPtr pointeeType)
         : Pattern(POINTER_TYPE_PATTERN), pointeeType(pointeeType) {}
+};
+
+struct FunctionPointerTypePattern : public Pattern {
+    vector<PatternPtr> argTypes;
+    PatternPtr returnType;
+    FunctionPointerTypePattern(const vector<PatternPtr> &argTypes,
+                               PatternPtr returnType)
+        : Pattern(FUNCTION_POINTER_TYPE_PATTERN), argTypes(argTypes),
+          returnType(returnType) {}
 };
 
 struct RecordTypePattern : public Pattern {
@@ -1430,8 +1460,12 @@ struct InvokeTableEntry : public Object {
     // generated code
     llvm::Function *llFunc;
 
+    // c compatible wrapper (for making function pointer)
+    llvm::Function *llCWrapper;
+
     InvokeTableEntry() :
-        Object(DONT_CARE), analyzing(false), llFunc(false) {}
+        Object(DONT_CARE), analyzing(false), llFunc(NULL),
+        llCWrapper(NULL) {}
 };
 
 

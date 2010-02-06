@@ -148,6 +148,15 @@ void ensurePointerType(TypePtr t) {
         error("pointer type expected");
 }
 
+void ensurePointerOrFunctionPointerType(TypePtr t) {
+    switch (t->typeKind) {
+    case POINTER_TYPE :
+    case FUNCTION_POINTER_TYPE :
+        return;
+    }
+    error("pointer type expected");
+}
+
 void ensureArrayType(TypePtr t) {
     if (t->typeKind != ARRAY_TYPE)
         error("array type expected");

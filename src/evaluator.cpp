@@ -320,6 +320,7 @@ void valueInit(ValuePtr dest) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
     case POINTER_TYPE :
+    case FUNCTION_POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
     case VOID_TYPE :
         break;
@@ -363,6 +364,7 @@ void valueDestroy(ValuePtr dest) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
     case POINTER_TYPE :
+    case FUNCTION_POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
     case VOID_TYPE :
         break;
@@ -413,6 +415,7 @@ void valueCopy(ValuePtr dest, ValuePtr src) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
     case POINTER_TYPE :
+    case FUNCTION_POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
     case VOID_TYPE :
         memcpy(dest->buf, src->buf, typeSize(dest->type));
@@ -480,6 +483,7 @@ void valueAssign(ValuePtr dest, ValuePtr src) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
     case POINTER_TYPE :
+    case FUNCTION_POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
     case VOID_TYPE :
         memcpy(dest->buf, src->buf, typeSize(dest->type));
@@ -534,6 +538,7 @@ bool valueEquals(ValuePtr a, ValuePtr b) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
     case POINTER_TYPE :
+    case FUNCTION_POINTER_TYPE :
     case COMPILER_OBJECT_TYPE :
     case VOID_TYPE :
         return memcmp(a->buf, b->buf, typeSize(a->type)) == 0;
@@ -611,6 +616,8 @@ int valueHash(ValuePtr a) {
         }
     }
     case POINTER_TYPE :
+        return pointerToInt(*((void **)a->buf));
+    case FUNCTION_POINTER_TYPE :
         return pointerToInt(*((void **)a->buf));
     case COMPILER_OBJECT_TYPE :
         return *((int *)a->buf);
@@ -741,6 +748,11 @@ void valuePrint(ValuePtr a, ostream &out) {
     }
     case POINTER_TYPE : {
         PointerType *t = (PointerType *)a->type.ptr();
+        out << *t << "(" << *((void **)a->buf) << ")";
+        break;
+    }
+    case FUNCTION_POINTER_TYPE : {
+        FunctionPointerType *t = (FunctionPointerType *)a->type.ptr();
         out << *t << "(" << *((void **)a->buf) << ")";
         break;
     }
@@ -1295,6 +1307,13 @@ PatternPtr indexingPattern(ObjectPtr obj, const vector<PatternPtr> &args) {
         case PRIM_Pointer :
             ensureArity(args, 1);
             return new PointerTypePattern(args[0]);
+        case PRIM_FunctionPointer : {
+            if (args.size() < 1)
+                error("function pointer type requires return type");
+            vector<PatternPtr> argTypes(args.begin(), args.end()-1);
+            PatternPtr returnType = args.back();
+            return new FunctionPointerTypePattern(argTypes, returnType);
+        }
         case PRIM_Array :
             ensureArity(args, 2);
             return new ArrayTypePattern(args[0], args[1]);
@@ -1367,6 +1386,19 @@ bool unifyType(PatternPtr pattern, TypePtr type) {
             return false;
         PointerType *y = (PointerType *)type.ptr();
         return unifyType(x->pointeeType, y->pointeeType);
+    }
+    case FUNCTION_POINTER_TYPE_PATTERN : {
+        FunctionPointerTypePattern *x = (FunctionPointerTypePattern *)pattern.ptr();
+        if (type->typeKind != FUNCTION_POINTER_TYPE)
+            return false;
+        FunctionPointerType *y = (FunctionPointerType *)type.ptr();
+        if (x->argTypes.size() != y->argTypes.size())
+            return false;
+        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            if (!unifyType(x->argTypes[i], y->argTypes[i]))
+                return false;
+        }
+        return unifyType(x->returnType, y->returnType);
     }
     case RECORD_TYPE_PATTERN : {
         RecordTypePattern *x = (RecordTypePattern *)pattern.ptr();
@@ -1469,6 +1501,17 @@ ValuePtr invokeIndexing(ObjectPtr obj, const vector<ValuePtr> &args) {
             ensureArity(args, 1);
             TypePtr t = valueToType(args[0]);
             return coToValue(pointerType(t).ptr());
+        }
+
+        case PRIM_FunctionPointer : {
+            if (args.size() < 1)
+                error("function pointer type requires return type");
+            vector<TypePtr> argTypes;
+            for (unsigned i = 0; i < args.size(); ++i)
+                argTypes.push_back(valueToType(args[i]));
+            TypePtr returnType = argTypes.back();
+            argTypes.pop_back();
+            return coToValue(functionPointerType(argTypes, returnType).ptr());
         }
 
         case PRIM_Array : {
@@ -1955,7 +1998,6 @@ void initExternalProcedure(ExternalProcedurePtr x) {
                                        x->name->str, x->hasVarArgs);
 }
 
-// FIXME: We no longer need this function
 llvm::Function *
 generateExternalFunc(const vector<TypePtr> &argTypes, TypePtr returnType,
                      const string &name, bool hasVarArgs) {
@@ -2207,14 +2249,6 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureIntegerType(args[1]->type);
         return intToPointer(pointeeType, args[1]);
     }
-    case PRIM_pointerCast : {
-        ensureArity(args, 2);
-        TypePtr pointeeType = valueToType(args[0]);
-        ensurePointerType(args[1]->type);
-        ValuePtr out = allocValue(pointerType(pointeeType));
-        *((void **)out->buf) = *((void **)args[1]->buf);
-        return out;
-    }
     case PRIM_allocateMemory : {
         ensureArity(args, 2);
         TypePtr t = valueToType(args[0]);
@@ -2230,6 +2264,28 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         void *ptr = *((void **)args[0]->buf);
         free(ptr);
         return voidValue;
+    }
+
+    case PRIM_FunctionPointerTypeP : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args[0]);
+        return boolToValue(t->typeKind == FUNCTION_POINTER_TYPE);
+    }
+    case PRIM_FunctionPointer : {
+        error("FunctionPointer type constructor cannot be invoked");
+    }
+    case PRIM_makeFunctionPointer : {
+        error("makeFunctionPointer not yet supported in evaluator");
+    }
+
+    case PRIM_pointerCast : {
+        ensureArity(args, 2);
+        TypePtr targetPointerType = valueToType(args[0]);
+        ensurePointerOrFunctionPointerType(targetPointerType);
+        ensurePointerOrFunctionPointerType(args[1]->type);
+        ValuePtr out = allocValue(targetPointerType);
+        *((void **)out->buf) = *((void **)args[1]->buf);
+        return out;
     }
 
     case PRIM_Array : {

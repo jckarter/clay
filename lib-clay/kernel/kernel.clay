@@ -6,6 +6,7 @@ import kernel.booleans.*;
 import kernel.numbers.*;
 import kernel.coordinates.*;
 import kernel.pointers.*;
+import kernel.functionpointers.*;
 import kernel.tuples.*;
 import kernel.records.*;
 import kernel.ranges.*;

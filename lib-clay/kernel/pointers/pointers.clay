@@ -18,7 +18,8 @@ overload to(static I, a:Pointer[T]) = pointerToInt(I, a);
 overload to(static Pointer[T], a:I) = intToPointer(T, a);
 
 [DEST, SRC]
-overload to(static Pointer[DEST], a:Pointer[SRC]) = pointerCast(DEST, a);
+overload to(static Pointer[DEST], a:Pointer[SRC]) =
+    pointerCast(Pointer[DEST], a);
 
 [T]
 pointerToInt32(a:Pointer[T]) = to(Int32, a);

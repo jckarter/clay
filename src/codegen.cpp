@@ -84,6 +84,13 @@ codegenInvokeCode(InvokeTableEntryPtr entry,
                   ArgListPtr args,
                   llvm::Value *outPtr);
 
+InvokeTableEntryPtr
+codegenInvokeTargetWrapper(ObjectPtr x, ArgListPtr args);
+
+void
+codegenCWrapper(InvokeTableEntryPtr entry, IdentifierPtr name);
+
+
 struct JumpTarget {
     llvm::BasicBlock *block;
     int stackMarker;
@@ -902,6 +909,96 @@ codegenInvokeCode(InvokeTableEntryPtr entry,
         llArgs.push_back(outPtr);
         builder->CreateCall(entry->llFunc, llArgs.begin(), llArgs.end());
         return new CValue(entry->returnType, outPtr);
+    }
+}
+
+
+
+//
+// codegenInvokeTargetWrapper, codegenCWrapper
+//
+
+InvokeTableEntryPtr
+codegenInvokeTargetWrapper(ObjectPtr x, ArgListPtr args)
+{
+    InvokeTableEntryPtr entry = lookupInvokeTableEntry(x, args);
+    assert(entry->env.ptr() && entry->code.ptr());
+    assert(entry->returnType.ptr());
+    IdentifierPtr name;
+    switch (x->objKind) {
+    case PROCEDURE :
+        name = ((Procedure *)x.ptr())->name;
+        break;
+    case OVERLOADABLE :
+        name = ((Overloadable *)x.ptr())->name;
+        break;
+    default :
+        assert(false);
+        break;
+    }
+    if (!entry->llFunc)
+        codegenCode(entry, name);
+    if (!entry->llCWrapper)
+        codegenCWrapper(entry, name);
+    return entry;
+}
+
+void codegenCWrapper(InvokeTableEntryPtr entry, IdentifierPtr name)
+{
+    vector<TypePtr> argTypes;
+    vector<const llvm::Type *> llArgTypes;
+
+    for (unsigned i = 0; i < entry->argsInfo.size(); ++i) {
+        if (entry->table->isStaticFlags[i])
+            continue;
+
+        assert(entry->argsInfo[i]->objKind == TYPE);
+        Type *t = (Type *)entry->argsInfo[i].ptr();
+        argTypes.push_back(t);
+
+        llArgTypes.push_back(llvmType(t));
+    }
+
+    TypePtr returnType = entry->returnType;
+    const llvm::Type *llReturnType = llvmType(returnType);
+
+    llvm::FunctionType *llFuncType =
+        llvm::FunctionType::get(llReturnType, llArgTypes, false);
+
+    llvm::Function *llCWrapper =
+        llvm::Function::Create(llFuncType,
+                               llvm::Function::InternalLinkage,
+                               "clay_cwrapper_" + name->str,
+                               llvmModule);
+
+    entry->llCWrapper = llCWrapper;
+
+    llvm::BasicBlock *llBlock =
+        llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                 "body",
+                                 llCWrapper);
+    llvm::IRBuilder<> llBuilder(llBlock);
+
+    vector<llvm::Value *> innerArgs;
+    llvm::Function::arg_iterator ai = llCWrapper->arg_begin();
+    for (unsigned i = 0; i < argTypes.size(); ++i, ++ai) {
+        llvm::Argument *llArg = &(*ai);
+        llvm::Value *llv = llBuilder.CreateAlloca(llvmType(argTypes[i]));
+        llBuilder.CreateStore(llArg, llv);
+        innerArgs.push_back(llv);
+    }
+
+    if (returnType == voidType) {
+        llBuilder.CreateCall(entry->llFunc, innerArgs.begin(), innerArgs.end());
+        llBuilder.CreateRetVoid();
+    }
+    else {
+        llvm::Value *llRetVal =
+            llBuilder.CreateAlloca(llvmType(returnType));
+        innerArgs.push_back(llRetVal);
+        llBuilder.CreateCall(entry->llFunc, innerArgs.begin(), innerArgs.end());
+        llvm::Value *llRet = llBuilder.CreateLoad(llRetVal);
+        llBuilder.CreateRet(llRet);
     }
 }
 
@@ -1825,17 +1922,6 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
         return new CValue(dest, outPtr);
     }
 
-    case PRIM_pointerCast : {
-        args->ensureArity(2);
-        TypePtr dest = pointerType(args->typeValue(0));
-        ensurePointerType(args->type(1));
-        CValuePtr a = args->codegenAsRef(1);
-        llvm::Value *v = builder->CreateLoad(a->llval);
-        llvm::Value *result = builder->CreateBitCast(v, llvmType(dest));
-        builder->CreateStore(result, outPtr);
-        return new CValue(dest, outPtr);
-    }
-
     case PRIM_allocateMemory : {
         args->ensureArity(2);
         TypePtr etype = args->typeValue(0);
@@ -1854,6 +1940,55 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
         llvm::Value *v = builder->CreateLoad(a->llval);
         builder->CreateFree(v);
         return new CValue(voidType, NULL);
+    }
+
+    case PRIM_FunctionPointerTypeP : {
+        return codegenValue(evaluatePrimOp(x, args), outPtr);
+    }
+
+    case PRIM_FunctionPointer : {
+        error("FunctionPointer type constructor cannot be invoked");
+    }
+
+    case PRIM_makeFunctionPointer : {
+        if (args->size() < 1)
+            error("incorrect no. of arguments");
+        ValuePtr callable = args->value(0);
+        ObjectPtr y = lower(callable);
+        InvokeTablePtr table = getInvokeTable(y, args->size()-1);
+        const vector<bool> &isStaticFlags = table->isStaticFlags;
+        vector<ExprPtr> argExprs;
+        vector<TypePtr> nonStaticArgTypes;
+        for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
+            if (!isStaticFlags[i]) {
+                TypePtr t = args->typeValue(i+1);
+                CValuePtr cv = new CValue(t, NULL);
+                argExprs.push_back(new CValueExpr(cv));
+                nonStaticArgTypes.push_back(t);
+            }
+            else {
+                ValuePtr v = args->value(i+1);
+                argExprs.push_back(new ValueExpr(v));
+            }
+        }
+        ArgListPtr dummyArgs = new ArgList(argExprs, new Env());
+        PValuePtr pv = partialInvoke(y, dummyArgs);
+        TypePtr fpType = functionPointerType(nonStaticArgTypes, pv->type);
+        InvokeTableEntryPtr entry = codegenInvokeTargetWrapper(y, dummyArgs);
+        builder->CreateStore(entry->llCWrapper, outPtr);
+        return new CValue(fpType, outPtr);
+    }
+
+    case PRIM_pointerCast : {
+        args->ensureArity(2);
+        TypePtr dest = args->typeValue(0);
+        ensurePointerOrFunctionPointerType(dest);
+        ensurePointerOrFunctionPointerType(args->type(1));
+        CValuePtr a = args->codegenAsRef(1);
+        llvm::Value *v = builder->CreateLoad(a->llval);
+        llvm::Value *result = builder->CreateBitCast(v, llvmType(dest));
+        builder->CreateStore(result, outPtr);
+        return new CValue(dest, outPtr);
     }
 
     case PRIM_Array : {

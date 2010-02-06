@@ -279,6 +279,7 @@ partialIndexing(ObjectPtr obj, ArgListPtr args)
         PrimOp *x = (PrimOp *)obj.ptr();
         switch (x->primOpCode) {
         case PRIM_Pointer :
+        case PRIM_FunctionPointer :
         case PRIM_Array :
         case PRIM_Tuple :
             return new PValue(compilerObjectType, true, args->allStatic);
@@ -689,16 +690,46 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
         return new PValue(pointerType(args->typeValue(0)),
                           true,
                           args->allStatic);
-    case PRIM_pointerCast :
-        args->ensureArity(2);
-        return new PValue(pointerType(args->typeValue(0)),
-                          true,
-                          args->allStatic);
     case PRIM_allocateMemory :
         args->ensureArity(2);
         return new PValue(pointerType(args->typeValue(0)), true, args->allStatic);
     case PRIM_freeMemory :
         return new PValue(voidType, true, args->allStatic);
+
+    case PRIM_FunctionPointerTypeP :
+        return new PValue(boolType, true, args->allStatic);
+    case PRIM_FunctionPointer :
+        error("FunctionPointer type constructor cannot be invoked");
+    case PRIM_makeFunctionPointer : {
+        if (args->size() < 1)
+            error("incorrect no. of arguments");
+        ValuePtr callable = args->value(0);
+        ObjectPtr y = lower(callable);
+        InvokeTablePtr table = getInvokeTable(y, args->size()-1);
+        const vector<bool> &isStaticFlags = table->isStaticFlags;
+        vector<ExprPtr> argExprs;
+        vector<TypePtr> nonStaticArgTypes;
+        for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
+            if (!isStaticFlags[i]) {
+                TypePtr t = args->typeValue(i+1);
+                CValuePtr cv = new CValue(t, NULL);
+                argExprs.push_back(new CValueExpr(cv));
+                nonStaticArgTypes.push_back(t);
+            }
+            else {
+                ValuePtr v = args->value(i+1);
+                argExprs.push_back(new ValueExpr(v));
+            }
+        }
+        ArgListPtr dummyArgs = new ArgList(argExprs, new Env());
+        PValuePtr pv = partialInvoke(y, dummyArgs);
+        TypePtr fpType = functionPointerType(nonStaticArgTypes, pv->type);
+        return new PValue(fpType, true, true);
+    }
+
+    case PRIM_pointerCast :
+        args->ensureArity(2);
+        return new PValue(args->typeValue(0), true, args->allStatic);
 
     case PRIM_Array :
         error("Array type constructor cannot be invoked");

@@ -322,9 +322,14 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(pointerDereference);
     PRIMITIVE(pointerToInt);
     PRIMITIVE(intToPointer);
-    PRIMITIVE(pointerCast);
     PRIMITIVE(allocateMemory);
     PRIMITIVE(freeMemory);
+
+    PRIMITIVE(FunctionPointerTypeP);
+    PRIMITIVE(FunctionPointer);
+    PRIMITIVE(makeFunctionPointer);
+
+    PRIMITIVE(pointerCast);
 
     PRIMITIVE(Array);
     PRIMITIVE(array);

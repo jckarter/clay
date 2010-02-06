@@ -244,15 +244,22 @@ void initProcedureInvokeTable(ProcedurePtr x)
     x->invokeTable = newInvokeTable(x->code->formalArgs);
 }
 
-InvokeTableEntryPtr
-lookupProcedureInvoke(ProcedurePtr x, ArgListPtr args)
+InvokeTablePtr getProcedureInvokeTable(ProcedurePtr x, unsigned nArgs)
 {
     InvokeTablePtr table = x->invokeTable;
     if (!table) {
         initProcedureInvokeTable(x);
         table = x->invokeTable;
     }
-    args->ensureArity(x->code->formalArgs.size());
+    if (nArgs != x->code->formalArgs.size())
+        error("incorrect no. of arguments");
+    return table;
+}
+
+InvokeTableEntryPtr
+lookupProcedureInvoke(ProcedurePtr x, ArgListPtr args)
+{
+    InvokeTablePtr table = getProcedureInvokeTable(x, args->size());
     return findMatchingEntry(table, args);
 }
 
@@ -308,16 +315,22 @@ void initOverloadableInvokeTables(OverloadablePtr x)
     }
 }
 
-InvokeTableEntryPtr
-lookupOverloadableInvoke(OverloadablePtr x, ArgListPtr args)
+InvokeTablePtr getOverloadableInvokeTable(OverloadablePtr x, unsigned nArgs)
 {
     if (x->invokeTables.empty())
         initOverloadableInvokeTables(x);
-    if (x->invokeTables.size() <= args->size())
+    if (x->invokeTables.size() <= nArgs)
         error("no matching overload");
-    InvokeTablePtr table = x->invokeTables[args->size()];
+    InvokeTablePtr table = x->invokeTables[nArgs];
     if (!table)
         error("no matching overload");
+    return table;
+}
+
+InvokeTableEntryPtr
+lookupOverloadableInvoke(OverloadablePtr x, ArgListPtr args)
+{
+    InvokeTablePtr table = getOverloadableInvokeTable(x, args->size());
     return findMatchingEntry(table, args);
 }
 
@@ -344,4 +357,30 @@ initOverloadableEnv(OverloadablePtr x,
         return;
     }
     error("no matching overload");
+}
+
+InvokeTablePtr getInvokeTable(ObjectPtr x, unsigned nArgs)
+{
+    switch (x->objKind) {
+    case PROCEDURE :
+        return getProcedureInvokeTable((Procedure *)x.ptr(), nArgs);
+    case OVERLOADABLE :
+        return getOverloadableInvokeTable((Overloadable *)x.ptr(), nArgs);
+    default :
+        error("expecting procedure or overloadable");
+        return NULL;
+    }
+}
+
+InvokeTableEntryPtr lookupInvokeTableEntry(ObjectPtr x, ArgListPtr args)
+{
+    switch (x->objKind) {
+    case PROCEDURE :
+        return lookupProcedureInvoke((Procedure *)x.ptr(), args);
+    case OVERLOADABLE :
+        return lookupOverloadableInvoke((Overloadable *)x.ptr(), args);
+    default :
+        error("expecting procedure or overloadable");
+        return NULL;
+    }
 }

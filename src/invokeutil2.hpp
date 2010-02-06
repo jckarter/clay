@@ -14,6 +14,9 @@ newInvokeTable(const vector<FormalArgPtr> &formalArgs);
 void
 initProcedureInvokeTable(ProcedurePtr x);
 
+InvokeTablePtr
+getProcedureInvokeTable(ProcedurePtr x, unsigned nArgs);
+
 InvokeTableEntryPtr
 lookupProcedureInvoke(ProcedurePtr x, ArgListPtr args);
 
@@ -23,7 +26,10 @@ initProcedureEnv(ProcedurePtr x,
                  InvokeTableEntryPtr entry);
 
 void 
-nitOverloadableInvokeTables(OverloadablePtr x);
+initOverloadableInvokeTables(OverloadablePtr x);
+
+InvokeTablePtr
+getOverloadableInvokeTable(OverloadablePtr x, unsigned nArgs);
 
 InvokeTableEntryPtr
 lookupOverloadableInvoke(OverloadablePtr x, ArgListPtr args);
@@ -32,5 +38,11 @@ void
 initOverloadableEnv(OverloadablePtr x,
                     ArgListPtr args,
                     InvokeTableEntryPtr entry);
+
+InvokeTablePtr
+getInvokeTable(ObjectPtr x, unsigned nArgs);
+
+InvokeTableEntryPtr
+lookupInvokeTableEntry(ObjectPtr x, ArgListPtr args);
 
 #endif

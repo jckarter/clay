@@ -34,6 +34,7 @@ TypePtr voidType;
 static vector<vector<ArrayTypePtr> > arrayTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<PointerTypePtr> > pointerTypes;
+static vector<vector<FunctionPointerTypePtr> > functionPointerTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
 
 void initTypes() {
@@ -57,6 +58,7 @@ void initTypes() {
     arrayTypes.resize(N);
     tupleTypes.resize(N);
     pointerTypes.resize(N);
+    functionPointerTypes.resize(N);
     recordTypes.resize(N);
 }
 
@@ -148,6 +150,25 @@ TypePtr pointerType(TypePtr pointeeType) {
     }
     PointerTypePtr t = new PointerType(pointeeType);
     pointerTypes[h].push_back(t);
+    return t.ptr();
+}
+
+TypePtr functionPointerType(const vector<TypePtr> &argTypes,
+                            TypePtr returnType) {
+    int h = 0;
+    for (unsigned i = 0; i < argTypes.size(); ++i) {
+        h += pointerToInt(argTypes[i].ptr());
+    }
+    h += pointerToInt(returnType.ptr());
+    h &= functionPointerTypes.size() - 1;
+    vector<FunctionPointerTypePtr> &bucket = functionPointerTypes[h];
+    for (unsigned i = 0; i < bucket.size(); ++i) {
+        FunctionPointerType *t = bucket[i].ptr();
+        if ((t->argTypes == argTypes) && (t->returnType == returnType))
+            return t;
+    }
+    FunctionPointerTypePtr t = new FunctionPointerType(argTypes, returnType);
+    bucket.push_back(t);
     return t.ptr();
 }
 
@@ -270,6 +291,16 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         PointerType *x = (PointerType *)t.ptr();
         return llvm::PointerType::getUnqual(llvmType(x->pointeeType));
     }
+    case FUNCTION_POINTER_TYPE : {
+        FunctionPointerType *x = (FunctionPointerType *)t.ptr();
+        vector<const llvm::Type *> llArgTypes;
+        for (unsigned i = 0; i < x->argTypes.size(); ++i)
+            llArgTypes.push_back(llvmType(x->argTypes[i]));
+        const llvm::Type *llReturnType = llvmType(x->returnType);
+        llvm::FunctionType *llFuncType =
+            llvm::FunctionType::get(llReturnType, llArgTypes, false);
+        return llvm::PointerType::getUnqual(llFuncType);
+    }
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
         llvm::OpaqueType *opaque =
@@ -337,6 +368,13 @@ void typePrint(TypePtr t, ostream &out) {
     case POINTER_TYPE : {
         PointerType *x = (PointerType *)t.ptr();
         out << "Pointer[" << x->pointeeType << "]";
+        break;
+    }
+    case FUNCTION_POINTER_TYPE : {
+        FunctionPointerType *x = (FunctionPointerType *)t.ptr();
+        vector<TypePtr> t = x->argTypes;
+        t.push_back(x->returnType);
+        out << "FunctionPointer" << t;
         break;
     }
     case RECORD_TYPE : {
