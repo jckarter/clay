@@ -30,7 +30,7 @@ main() {
     var a = Array[Int32, 1000]();
     for (i in range(size(a)))
         item(a, i) = i*2;
-    for (i in range(10000)) {
+    for (i in range(1000)) {
         quickSort(a);
         reverse(a);
     }
