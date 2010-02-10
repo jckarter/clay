@@ -14,10 +14,11 @@
 #include <llvm/Type.h>
 #include <llvm/DerivedTypes.h>
 #include <llvm/Module.h>
-#include <llvm/ModuleProvider.h>
+#include <llvm/LLVMContext.h>
 #include <llvm/Function.h>
 #include <llvm/BasicBlock.h>
 #include <llvm/Support/IRBuilder.h>
+#include <llvm/Support/raw_ostream.h>
 #include <llvm/Target/TargetData.h>
 #include <llvm/Target/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -1157,8 +1158,6 @@ enum PrimOpCode {
     PRIM_pointerDereference,
     PRIM_pointerToInt,
     PRIM_intToPointer,
-    PRIM_allocateMemory,
-    PRIM_freeMemory,
 
     PRIM_FunctionPointerTypeP,
     PRIM_FunctionPointer,
