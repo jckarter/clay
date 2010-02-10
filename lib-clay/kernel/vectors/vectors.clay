@@ -4,6 +4,7 @@ import kernel.numbers.*;
 import kernel.pointers.*;
 import kernel.ranges.*;
 import kernel.move.*;
+import kernel.malloc.*;
 
 
 //

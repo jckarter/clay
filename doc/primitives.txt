@@ -49,8 +49,6 @@ addressOf[T](a:T) : Pointer[T]
 pointerDereference[T](a:Pointer[T]) ref : T
 pointerToInt[T,I](static I, a:Pointer[T]) : I if IntegerType?(I)
 intToPointer[I,T](static T, a:I) : Pointer[T] if IntegerType?(I)
-allocateMemory[T](static T, n:Int32): Pointer[T]
-freeMemory[T](p:Pointer[T]): Void
 
 FunctionPointerType?[T](static T):Bool
 FunctionPointer[A1, ..., An, RT]
