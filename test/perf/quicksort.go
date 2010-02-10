@@ -2,6 +2,10 @@ package main
 
 // import "fmt"
 
+func quickSort(array []int) {
+	sortRange(array, 0, len(array));
+}
+
 func sortRange(array []int, start, end int) {
 	if start < end - 1 {
 		m := start;
@@ -17,10 +21,6 @@ func sortRange(array []int, start, end int) {
 	}
 }
 
-func quickSort(array []int) {
-	sortRange(array, 0, len(array));
-}
-
 func reverse(array []int) {
 	for start, end := 0, len(array)-1; start < end; start, end = start+1, end-1 {
 		array[start], array[end] = array[end], array[start]
@@ -32,7 +32,7 @@ func main() {
 	for i := 0; i < 1000; i++ {
 		array[i] = i * 2;
 	}
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 1000; i++ {
 		quickSort(array[0:1000]);
 		reverse(array[0:1000]);
 	}
