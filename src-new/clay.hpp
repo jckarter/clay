@@ -173,6 +173,8 @@ enum ObjectKind {
     VOID_VALUE,
     VALUE_HOLDER,
 
+    PVALUE,
+
     DONT_CARE,
 };
 
@@ -271,6 +273,8 @@ struct RecordTypePattern;
 struct VoidValue;
 struct ValueHolder;
 
+struct PValue;
+
 
 
 //
@@ -365,6 +369,8 @@ typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 
 typedef Pointer<VoidValue> VoidValuePtr;
 typedef Pointer<ValueHolder> ValueHolderPtr;
+
+typedef Pointer<PValue> PValuePtr;
 
 
 
@@ -561,14 +567,14 @@ struct FloatLiteral : public Expr {
 
 struct CharLiteral : public Expr {
     char value;
-    ExprPtr converted;
+    ExprPtr desugared;
     CharLiteral(char value)
         : Expr(CHAR_LITERAL), value(value) {}
 };
 
 struct StringLiteral : public Expr {
     string value;
-    ExprPtr converted;
+    ExprPtr desugared;
     StringLiteral(const string &value)
         : Expr(STRING_LITERAL), value(value) {}
 };
@@ -581,7 +587,7 @@ struct NameRef : public Expr {
 
 struct Tuple : public Expr {
     vector<ExprPtr> args;
-    ExprPtr converted;
+    ExprPtr desugared;
     Tuple()
         : Expr(TUPLE) {}
     Tuple(const vector<ExprPtr> &args)
@@ -590,7 +596,7 @@ struct Tuple : public Expr {
 
 struct Array : public Expr {
     vector<ExprPtr> args;
-    ExprPtr converted;
+    ExprPtr desugared;
     Array()
         : Expr(ARRAY) {}
     Array(const vector<ExprPtr> &args)
@@ -640,7 +646,7 @@ enum UnaryOpKind {
 struct UnaryOp : public Expr {
     int op;
     ExprPtr expr;
-    ExprPtr converted;
+    ExprPtr desugared;
     UnaryOp(int op, ExprPtr expr)
         : Expr(UNARY_OP), op(op), expr(expr) {}
 };
@@ -663,7 +669,7 @@ enum BinaryOpKind {
 struct BinaryOp : public Expr {
     int op;
     ExprPtr expr1, expr2;
-    ExprPtr converted;
+    ExprPtr desugared;
     BinaryOp(int op, ExprPtr expr1, ExprPtr expr2)
         : Expr(BINARY_OP), op(op), expr1(expr1), expr2(expr2) {}
 };
@@ -792,7 +798,7 @@ struct For : public Statement {
     IdentifierPtr variable;
     ExprPtr expr;
     StatementPtr body;
-    StatementPtr converted;
+    StatementPtr desugared;
     For(IdentifierPtr variable, ExprPtr expr, StatementPtr body)
         : Statement(FOR), variable(variable), expr(expr), body(body) {}
 };
@@ -1399,10 +1405,42 @@ struct ValueHolder : public Object {
 
 
 //
-// temps stack
+// desugar
 //
 
+ExprPtr desugarCharLiteral(char c);
+ExprPtr desugarStringLiteral(const string &s);
+ExprPtr desugarTuple(TuplePtr x);
+ExprPtr desugarArray(ArrayPtr x);
+ExprPtr desugarUnaryOp(UnaryOpPtr x);
+ExprPtr desugarBinaryOp(BinaryOpPtr x);
 
+
+
+//
+// analyzer
+//
+
+struct PValue : public Object {
+    TypePtr type;
+    bool isTemp;
+    PValue(TypePtr type, bool isTemp)
+        : Object(PVALUE), type(type), isTemp(isTemp) {}
+};
+
+ObjectPtr analyze(ExprPtr expr, EnvPtr env);
+PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
+ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeInvokeType(TypePtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeInvokeRecord(RecordPtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeInvokeProcedure(ProcedurePtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeInvokeValue(PValuePtr x, const vector<ExprPtr> &args, EnvPtr env);
+TypePtr evaluateType(ExprPtr expr, EnvPtr env);
+ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
+int evaluateInt(ExprPtr expr, EnvPtr env);
 
 
 

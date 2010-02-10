@@ -13,6 +13,8 @@ OBJS = \
 	src-new/loader.o \
 	src-new/llvm.o \
 	src-new/types.o \
+	src-new/desugar.o \
+	src-new/analyzer.o \
 	src-new/main.o
 
 clay2llvm : $(OBJS)
