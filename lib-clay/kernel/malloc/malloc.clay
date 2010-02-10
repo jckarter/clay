@@ -1,0 +1,14 @@
+import kernel.numbers.*;
+
+external malloc(size:Int32):Pointer[Int8];
+external free(ptr:Pointer[Int8]):Void;
+
+[T]
+allocateMemory(static T, count:Int32) {
+    var ptr = malloc(TypeSize(T) * count);
+    return to(Pointer[T], ptr);
+}
+
+freeMemory(ptr) {
+    free(to(Pointer[Int8], ptr));
+}

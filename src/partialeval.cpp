@@ -696,11 +696,6 @@ partialInvokePrimOp(PrimOpPtr x, ArgListPtr args)
         return new PValue(pointerType(args->typeValue(0)),
                           true,
                           args->allStatic);
-    case PRIM_allocateMemory :
-        args->ensureArity(2);
-        return new PValue(pointerType(args->typeValue(0)), true, args->allStatic);
-    case PRIM_freeMemory :
-        return new PValue(voidType, true, args->allStatic);
 
     case PRIM_FunctionPointerTypeP :
         return new PValue(boolType, true, args->allStatic);

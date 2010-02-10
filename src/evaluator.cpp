@@ -2251,22 +2251,6 @@ ValuePtr invokePrimOp(PrimOpPtr x, const vector<ValuePtr> &args) {
         ensureIntegerType(args[1]->type);
         return intToPointer(pointeeType, args[1]);
     }
-    case PRIM_allocateMemory : {
-        ensureArity(args, 2);
-        TypePtr t = valueToType(args[0]);
-        int n = valueToInt(args[1]);
-        void *ptr = malloc(typeSize(t) * n);
-        ValuePtr out = allocValue(pointerType(t));
-        *((void **)out->buf) = ptr;
-        return out;
-    }
-    case PRIM_freeMemory : {
-        ensureArity(args, 1);
-        ensurePointerType(args[0]->type);
-        void *ptr = *((void **)args[0]->buf);
-        free(ptr);
-        return voidValue;
-    }
 
     case PRIM_FunctionPointerTypeP : {
         ensureArity(args, 1);

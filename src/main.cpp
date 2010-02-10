@@ -45,7 +45,8 @@ static int runProgram(ModulePtr m)
 static void compileProgram(ModulePtr m)
 {
     codegenMain(m);
-    cout << *llvmModule;
+    llvm::raw_stdout_ostream out;
+    out << *llvmModule;
 }
 
 static void usage()

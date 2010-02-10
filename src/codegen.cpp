@@ -1964,26 +1964,6 @@ codegenInvokePrimOp(PrimOpPtr x, ArgListPtr args, llvm::Value *outPtr)
         return new CValue(dest, outPtr);
     }
 
-    case PRIM_allocateMemory : {
-        args->ensureArity(2);
-        TypePtr etype = args->typeValue(0);
-        ensureIntegerType(args->type(1));
-        CValuePtr a = args->codegenAsRef(1);
-        llvm::Value *v = builder->CreateLoad(a->llval);
-        llvm::Value *result = builder->CreateMalloc(llvmType(etype), v);
-        builder->CreateStore(result, outPtr);
-        return new CValue(pointerType(etype), outPtr);
-    }
-
-    case PRIM_freeMemory : {
-        args->ensureArity(1);
-        ensurePointerType(args->type(0));
-        CValuePtr a = args->codegenAsRef(0);
-        llvm::Value *v = builder->CreateLoad(a->llval);
-        builder->CreateFree(v);
-        return new CValue(voidType, NULL);
-    }
-
     case PRIM_FunctionPointerTypeP : {
         return codegenValue(evaluatePrimOp(x, args), outPtr);
     }
