@@ -14,6 +14,8 @@ OBJS = \
 	src-new/llvm.o \
 	src-new/types.o \
 	src-new/desugar.o \
+	src-new/patterns.o \
+	src-new/invoketables.o \
 	src-new/analyzer.o \
 	src-new/main.o
 

@@ -172,11 +172,6 @@ void ensureRecordType(TypePtr t) {
         error("record type expected");
 }
 
-void ensureVoidType(TypePtr t) {
-    if (t->typeKind != VOID_TYPE)
-        error("void type expected");
-}
-
 
 
 //

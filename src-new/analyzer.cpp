@@ -96,6 +96,70 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         return analyzeInvoke(callable, x->args, env);
     }
 
+    case FIELD_REF : {
+        FieldRef *x = (FieldRef *)expr.ptr();
+        vector<ExprPtr> args;
+        args.push_back(x->expr);
+        args.push_back(new ObjectExpr(x->name.ptr()));
+        ObjectPtr prim = primName("recordFieldRefByName");
+        return analyzeInvoke(prim, args, env);
+    }
+
+    case TUPLE_REF : {
+        TupleRef *x = (TupleRef *)expr.ptr();
+        vector<ExprPtr> args;
+        args.push_back(x->expr);
+        args.push_back(new ObjectExpr(intToValueHolder(x->index).ptr()));
+        ObjectPtr prim = primName("tupleRef");
+        return analyzeInvoke(prim, args, env);
+    }
+
+    case UNARY_OP : {
+        UnaryOp *x = (UnaryOp *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarUnaryOp(x);
+        return analyze(x->desugared, env);
+    }
+
+    case BINARY_OP : {
+        BinaryOp *x = (BinaryOp *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarBinaryOp(x);
+        return analyze(x->desugared, env);
+    }
+
+    case AND : {
+        And *x = (And *)expr.ptr();
+        PValuePtr a = analyzeValue(x->expr1, env);
+        PValuePtr b = analyzeValue(x->expr2, env);
+        if (!a || !b)
+            return NULL;
+        if (a->type != b->type)
+            error("type mismatch in 'and' expression");
+        return new PValue(a->type, a->isTemp || b->isTemp);
+    }
+
+    case OR : {
+        Or *x = (Or *)expr.ptr();
+        PValuePtr a = analyzeValue(x->expr1, env);
+        PValuePtr b = analyzeValue(x->expr2, env);
+        if (!a || !b)
+            return NULL;
+        if (a->type != b->type)
+            error("type mismatch in 'or' expression");
+        return new PValue(a->type, a->isTemp || b->isTemp);
+    }
+
+    case SC_EXPR : {
+        SCExpr *x = (SCExpr *)expr.ptr();
+        return analyze(x->expr, x->env);
+    }
+
+    case OBJECT_EXPR : {
+        ObjectExpr *x = (ObjectExpr *)expr.ptr();
+        return x->obj;
+    }
+
     default :
         assert(false);
         return NULL;
@@ -123,10 +187,9 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
                 error("atleast one argument required for"
                       " function pointer types.");
             vector<TypePtr> types;
-            for (unsigned i = 0; i < args.size(); ++i)
+            for (unsigned i = 0; i+1 < args.size(); ++i)
                 types.push_back(evaluateType(args[i], env));
-            TypePtr returnType = types.back();
-            types.pop_back();
+            ObjectPtr returnType = evaluateReturnType(args.back(), env);
             return functionPointerType(types, returnType).ptr();
         }
 
@@ -182,3 +245,83 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
     error("invalid call operation");
     return NULL;
 }
+
+ObjectPtr analyzeInvokeType(TypePtr x, const vector<ExprPtr> &args, EnvPtr env)
+{
+    return new PValue(x, true);
+}
+
+ObjectPtr analyzeInvokeRecord(RecordPtr x, const vector<ExprPtr> &args,
+                              EnvPtr env)
+{
+    ensureArity(args, x->fields.size());
+    vector<PatternCellPtr> cells;
+    EnvPtr renv = new Env(x->env);
+    for (unsigned i = 0; i < x->patternVars.size(); ++i) {
+        PatternCellPtr cell = new PatternCell(x->patternVars[i], NULL);
+        addLocal(renv, x->patternVars[i], cell.ptr());
+        cells.push_back(cell);
+    }
+    for (unsigned i = 0; i < args.size(); ++i) {
+        PatternPtr fieldType = evaluatePattern(x->fields[i]->type, renv);
+        PValuePtr pv = analyzeValue(args[i], env);
+        if (!unify(fieldType, pv->type.ptr()))
+            error(args[i], "type mismatch");
+    }
+    vector<ObjectPtr> params;
+    for (unsigned i = 0; i < cells.size(); ++i)
+        params.push_back(derefCell(cells[i]));
+    TypePtr t = recordType(x, params);
+    return analyzeInvokeType(t, args, env);
+}
+
+ObjectPtr analyzeInvokeProcedure(ProcedurePtr x, const vector<ExprPtr> &args,
+                                 EnvPtr env)
+{
+    if (!x->staticFlagsInitialized)
+        initIsStaticFlags(x);
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(x.ptr(), args.size());
+    vector<ObjectPtr> argsKey;
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (isStaticFlags[i])
+            argsKey.push_back(evaluateStatic(args[i], env));
+        else
+            argsKey.push_back(analyzeValue(args[i], env)->type.ptr());
+    }
+    // lookup invoke table entry
+    // if no entry, create entry
+    // if analyzed, return info
+    // if analyzing return NULL
+    // analyzing = true
+    // analyze
+    // analyzing = false
+    // analyzed = true
+}
+
+ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x,
+                                    const vector<ExprPtr> &args, EnvPtr env)
+{
+    if (!x->staticFlagsInitialized)
+        initIsStaticFlags(x);
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(x.ptr(), args.size());
+    vector<ObjectPtr> argsKey;
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (isStaticFlags[i])
+            argsKey.push_back(evaluateStatic(args[i], env));
+        else
+            argsKey.push_back(analyzeValue(args[i], env)->type.ptr());
+    }
+    // lookup invoke table entry
+    // if no entry, create entry
+    // if analyzed return info
+    // if analyzing return NULL
+    // analyzing = true
+    // analyze
+    // analyzing = false
+    // analyzed = true
+}
+
+ObjectPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeInvokeValue(PValuePtr x, const vector<ExprPtr> &args, EnvPtr env);

@@ -27,6 +27,8 @@
 
 using std::string;
 using std::vector;
+using std::pair;
+using std::make_pair;
 using std::map;
 using std::set;
 using std::ostream;
@@ -76,6 +78,9 @@ public :
     }
     bool operator!=(const Pointer<T> &other) const {
         return p != other.p;
+    }
+    bool operator<(const Pointer<T> &other) const {
+        return p <= other.p;
     }
 };
 
@@ -133,6 +138,7 @@ enum ObjectKind {
     OR,
 
     SC_EXPR,
+    OBJECT_EXPR,
 
     BLOCK,
     LABEL,
@@ -171,9 +177,9 @@ enum ObjectKind {
     TYPE,
     PATTERN,
 
+    VOID_TYPE,
     VOID_VALUE,
     VALUE_HOLDER,
-
     PVALUE,
 
     DONT_CARE,
@@ -212,6 +218,7 @@ struct BinaryOp;
 struct And;
 struct Or;
 struct SCExpr;
+struct ObjectExpr;
 
 struct Statement;
 struct Block;
@@ -271,9 +278,9 @@ struct PointerTypePattern;
 struct FunctionPointerTypePattern;
 struct RecordTypePattern;
 
+struct VoidType;
 struct VoidValue;
 struct ValueHolder;
-
 struct PValue;
 
 
@@ -309,6 +316,7 @@ typedef Pointer<BinaryOp> BinaryOpPtr;
 typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
 typedef Pointer<SCExpr> SCExprPtr;
+typedef Pointer<ObjectExpr> ObjectExprPtr;
 
 typedef Pointer<Statement> StatementPtr;
 typedef Pointer<Block> BlockPtr;
@@ -368,9 +376,9 @@ typedef Pointer<PointerTypePattern> PointerTypePatternPtr;
 typedef Pointer<FunctionPointerTypePattern> FunctionPointerTypePatternPtr;
 typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 
+typedef Pointer<VoidType> VoidTypePtr;
 typedef Pointer<VoidValue> VoidValuePtr;
 typedef Pointer<ValueHolder> ValueHolderPtr;
-
 typedef Pointer<PValue> PValuePtr;
 
 
@@ -694,6 +702,12 @@ struct SCExpr : public Expr {
         : Expr(SC_EXPR), env(env), expr(expr) {}
 };
 
+struct ObjectExpr : public Expr {
+    ObjectPtr obj;
+    ObjectExpr(ObjectPtr obj)
+        : Expr(OBJECT_EXPR), obj(obj) {}
+};
+
 
 
 //
@@ -878,8 +892,10 @@ struct RecordField : public ANode {
 struct Procedure : public TopLevelItem {
     IdentifierPtr name;
     CodePtr code;
+    bool staticFlagsInitialized;
     Procedure(IdentifierPtr name, CodePtr code)
-        : TopLevelItem(PROCEDURE), name(name), code(code) {}
+        : TopLevelItem(PROCEDURE), name(name), code(code),
+          staticFlagsInitialized(false) {}
 };
 
 struct Overload : public TopLevelItem {
@@ -892,8 +908,10 @@ struct Overload : public TopLevelItem {
 struct Overloadable : public TopLevelItem {
     IdentifierPtr name;
     vector<OverloadPtr> overloads;
+    bool staticFlagsInitialized;
     Overloadable(IdentifierPtr name)
-        : TopLevelItem(OVERLOADABLE), name(name) {}
+        : TopLevelItem(OVERLOADABLE), name(name),
+          staticFlagsInitialized(false) {}
 };
 
 struct ExternalProcedure : public TopLevelItem {
@@ -901,7 +919,7 @@ struct ExternalProcedure : public TopLevelItem {
     vector<ExternalArgPtr> args;
     bool hasVarArgs;
     ExprPtr returnType;
-    TypePtr returnType2;
+    ObjectPtr returnType2;
     llvm::Function *llvmFunc;
     ExternalProcedure()
         : TopLevelItem(EXTERNAL_PROCEDURE), hasVarArgs(false), llvmFunc(NULL) {}
@@ -1187,12 +1205,11 @@ enum TypeKind {
     BOOL_TYPE,
     INTEGER_TYPE,
     FLOAT_TYPE,
-    ARRAY_TYPE,
-    TUPLE_TYPE,
     POINTER_TYPE,
     FUNCTION_POINTER_TYPE,
+    ARRAY_TYPE,
+    TUPLE_TYPE,
     RECORD_TYPE,
-    VOID_TYPE,
 };
 
 struct BoolType : public Type {
@@ -1213,6 +1230,20 @@ struct FloatType : public Type {
         : Type(FLOAT_TYPE), bits(bits) {}
 };
 
+struct PointerType : public Type {
+    TypePtr pointeeType;
+    PointerType(TypePtr pointeeType)
+        : Type(POINTER_TYPE), pointeeType(pointeeType) {}
+};
+
+struct FunctionPointerType : public Type {
+    vector<TypePtr> argTypes;
+    ObjectPtr returnType;
+    FunctionPointerType(const vector<TypePtr> &argTypes, ObjectPtr returnType)
+        : Type(FUNCTION_POINTER_TYPE), argTypes(argTypes),
+          returnType(returnType) {}
+};
+
 struct ArrayType : public Type {
     TypePtr elementType;
     int size;
@@ -1228,20 +1259,6 @@ struct TupleType : public Type {
     TupleType(const vector<TypePtr> &elementTypes)
         : Type(TUPLE_TYPE), elementTypes(elementTypes),
           layout(NULL) {}
-};
-
-struct PointerType : public Type {
-    TypePtr pointeeType;
-    PointerType(TypePtr pointeeType)
-        : Type(POINTER_TYPE), pointeeType(pointeeType) {}
-};
-
-struct FunctionPointerType : public Type {
-    vector<TypePtr> argTypes;
-    TypePtr returnType;
-    FunctionPointerType(const vector<TypePtr> &argTypes, TypePtr returnType)
-        : Type(FUNCTION_POINTER_TYPE), argTypes(argTypes),
-          returnType(returnType) {}
 };
 
 struct RecordType : public Type {
@@ -1296,21 +1313,26 @@ extern TypePtr uint64Type;
 extern TypePtr float32Type;
 extern TypePtr float64Type;
 
+extern VoidTypePtr voidType;
+extern VoidValuePtr voidValue;
+
 void initTypes();
 
 TypePtr integerType(int bits, bool isSigned);
 TypePtr intType(int bits);
 TypePtr uintType(int bits);
 TypePtr floatType(int bits);
+TypePtr pointerType(TypePtr pointeeType);
+TypePtr functionPointerType(const vector<TypePtr> &argTypes,
+                            ObjectPtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
-TypePtr pointerType(TypePtr pointeeType);
-TypePtr functionPointerType(const vector<TypePtr> &argTypes, TypePtr returnType);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
 
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
 const map<string, int> &recordFieldIndexMap(RecordTypePtr t);
 
+const llvm::Type *llvmReturnType(ObjectPtr returnType);
 const llvm::Type *llvmType(TypePtr t);
 int typeSize(TypePtr t);
 void typePrint(TypePtr t, ostream &out);
@@ -1323,10 +1345,10 @@ void typePrint(TypePtr t, ostream &out);
 
 enum PatternKind {
     PATTERN_CELL,
-    ARRAY_TYPE_PATTERN,
-    TUPLE_TYPE_PATTERN,
     POINTER_TYPE_PATTERN,
     FUNCTION_POINTER_TYPE_PATTERN,
+    ARRAY_TYPE_PATTERN,
+    TUPLE_TYPE_PATTERN,
     RECORD_TYPE_PATTERN,
 };
 
@@ -1341,20 +1363,6 @@ struct PatternCell : public Pattern {
     ObjectPtr obj;
     PatternCell(IdentifierPtr name, ObjectPtr obj)
         : Pattern(PATTERN_CELL), name(name), obj(obj) {}
-};
-
-struct ArrayTypePattern : public Pattern {
-    PatternPtr elementType;
-    PatternPtr size;
-    ArrayTypePattern(PatternPtr elementType, PatternPtr size)
-        : Pattern(ARRAY_TYPE_PATTERN), elementType(elementType),
-          size(size) {}
-};
-
-struct TupleTypePattern : public Pattern {
-    vector<PatternPtr> elementTypes;
-    TupleTypePattern(const vector<PatternPtr> &elementTypes)
-        : Pattern(TUPLE_TYPE_PATTERN), elementTypes(elementTypes) {}
 };
 
 struct PointerTypePattern : public Pattern {
@@ -1372,6 +1380,20 @@ struct FunctionPointerTypePattern : public Pattern {
           returnType(returnType) {}
 };
 
+struct ArrayTypePattern : public Pattern {
+    PatternPtr elementType;
+    PatternPtr size;
+    ArrayTypePattern(PatternPtr elementType, PatternPtr size)
+        : Pattern(ARRAY_TYPE_PATTERN), elementType(elementType),
+          size(size) {}
+};
+
+struct TupleTypePattern : public Pattern {
+    vector<PatternPtr> elementTypes;
+    TupleTypePattern(const vector<PatternPtr> &elementTypes)
+        : Pattern(TUPLE_TYPE_PATTERN), elementTypes(elementTypes) {}
+};
+
 struct RecordTypePattern : public Pattern {
     RecordPtr record;
     vector<PatternPtr> params;
@@ -1382,8 +1404,13 @@ struct RecordTypePattern : public Pattern {
 
 
 //
-// VoidValue
+// VoidType, VoidValue
 //
+
+struct VoidType : public Object {
+    VoidType()
+        : Object(VOID_TYPE) {}
+};
 
 struct VoidValue : public Object {
     VoidValue()
@@ -1419,6 +1446,37 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x);
 
 
 //
+// invoke tables
+//
+
+void initIsStaticFlags(ProcedurePtr x);
+void initIsStaticFlags(OverloadablePtr x);
+const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs);
+
+struct InvokeEntry : public Object {
+    ObjectPtr callable;
+    vector<ObjectPtr> argsMeta;
+
+    bool analyzed;
+    bool analyzing;
+    ObjectPtr returnType;
+    bool returnIsTemp;
+    EnvPtr staticEnv;
+    CodePtr code;
+
+    InvokeEntry(ObjectPtr callable, const vector<ObjectPtr> &argsMeta)
+        : Object(DONT_CARE), callable(callable), argsMeta(argsMeta),
+          analyzed(false), analyzing(false), returnIsTemp(false) {}
+};
+
+typedef Pointer<InvokeEntry> InvokeEntryPtr;
+
+InvokeEntryPtr lookupInvoke(ObjectPtr callable,
+                            const vector<ObjectPtr> &argsMeta);
+
+
+
+//
 // analyzer
 //
 
@@ -1431,18 +1489,38 @@ struct PValue : public Object {
 
 ObjectPtr analyze(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
-ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeIndexing(ObjectPtr x,
+                          const vector<ExprPtr> &args,
+                          EnvPtr env);
 ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env);
-ObjectPtr analyzeInvokeType(TypePtr x, const vector<ExprPtr> &args, EnvPtr env);
-ObjectPtr analyzeInvokeRecord(RecordPtr x, const vector<ExprPtr> &args, EnvPtr env);
-ObjectPtr analyzeInvokeProcedure(ProcedurePtr x, const vector<ExprPtr> &args, EnvPtr env);
-ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x, const vector<ExprPtr> &args, EnvPtr env);
-ObjectPtr analyzeInvokePrimOp(PrimOpPtr x, const vector<ExprPtr> &args, EnvPtr env);
-ObjectPtr analyzeInvokeValue(PValuePtr x, const vector<ExprPtr> &args, EnvPtr env);
+ObjectPtr analyzeInvokeType(TypePtr x,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env);
+ObjectPtr analyzeInvokeRecord(RecordPtr x,
+                              const vector<ExprPtr> &args,
+                              EnvPtr env);
+ObjectPtr analyzeInvokeProcedure(ProcedurePtr x,
+                                 const vector<ExprPtr> &args,
+                                 EnvPtr env);
+ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x,
+                                    const vector<ExprPtr> &args,
+                                    EnvPtr env);
+ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
+                              const vector<ExprPtr> &args,
+                              EnvPtr env);
+ObjectPtr analyzeInvokeValue(PValuePtr x,
+                             const vector<ExprPtr> &args,
+                             EnvPtr env);
+
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
+ObjectPtr evaluateReturnType(ExprPtr expr, EnvPtr env);
+
 ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
 int evaluateInt(ExprPtr expr, EnvPtr env);
-
+ValueHolderPtr intToValueHolder(int x);
+PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
+bool unify(PatternPtr pattern, ObjectPtr obj);
+ObjectPtr derefCell(PatternCellPtr cell);
 
 
 //
