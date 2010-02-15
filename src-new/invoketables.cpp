@@ -88,10 +88,51 @@ void initIsStaticFlags(OverloadablePtr x)
 
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
 {
+    switch (callable->objKind) {
+    case PROCEDURE : {
+        Procedure *x = (Procedure *)callable.ptr();
+        if (!x->staticFlagsInitialized)
+            initIsStaticFlags(x);
+        break;
+    }
+    case OVERLOADABLE : {
+        Overloadable *x = (Overloadable *)callable.ptr();
+        if (!x->staticFlagsInitialized)
+            initIsStaticFlags(x);
+        break;
+    }
+    default :
+        assert(false);
+    }
+
     FlagsMapEntry &entry = getIsStaticFlags(callable, nArgs);
     if (!entry.initialized)
         error("incorrect no. of arguments");
     return entry.isStaticFlags;
+}
+
+bool computeArgsKey(ObjectPtr callable,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env,
+                    vector<ObjectPtr> &argsKey,
+                    vector<LocationPtr> &argLocations)
+{
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(callable, args.size());
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (isStaticFlags[i]) {
+            ObjectPtr v = evaluateStatic(args[i], env);
+            argsKey.push_back(v);
+        }
+        else {
+            PValuePtr pv = analyzeValue(args[i], env);
+            if (!pv)
+                return false;
+            argsKey.push_back(pv->type.ptr());
+        }
+        argLocations.push_back(args[i]->location);
+    }
+    return true;
 }
 
 
@@ -110,22 +151,22 @@ static void initInvokeTable() {
 }
 
 InvokeEntryPtr lookupInvoke(ObjectPtr callable,
-                          const vector<ObjectPtr> &argsMeta)
+                          const vector<ObjectPtr> &argsKey)
 {
     if (!invokeTableInitialized)
         initInvokeTable();
-    int h = objectHash(callable) + objectVectorHash(argsMeta);
+    int h = objectHash(callable) + objectVectorHash(argsKey);
     h &= (invokeTable.size() - 1);
     vector<InvokeEntryPtr> &bucket = invokeTable[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         InvokeEntryPtr entry = bucket[i];
         if (objectEquals(entry->callable, callable) &&
-            objectVectorEquals(entry->argsMeta, argsMeta))
+            objectVectorEquals(entry->argsKey, argsKey))
         {
             return entry;
         }
     }
-    InvokeEntryPtr entry = new InvokeEntry(callable, argsMeta);
+    InvokeEntryPtr entry = new InvokeEntry(callable, argsKey);
     bucket.push_back(entry);
     return entry;
 }

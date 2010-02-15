@@ -16,6 +16,7 @@ OBJS = \
 	src-new/desugar.o \
 	src-new/patterns.o \
 	src-new/invoketables.o \
+	src-new/matchinvoke.o \
 	src-new/analyzer.o \
 	src-new/main.o
 

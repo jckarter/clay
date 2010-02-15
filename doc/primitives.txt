@@ -11,13 +11,9 @@ Primitive Operations
 Type?[T](static T):Bool
 TypeSize[T](static T):Int32
 
-primitiveInit[T](a:T):Void
-primitiveDestroy[T](a:T):Void
 primitiveCopy[T](dest:T, src:T):Void
-primitiveAssign[T](dest:T, src:T):Void
 
 boolNot(a:Bool):Bool
-boolTruth(a:Bool):Bool
 
 numericEquals?[N](a:N, b:N): Bool if (NumericType?(N))
 numericLesser?[N](a:N, b:N): Bool if (NumericType?(N))

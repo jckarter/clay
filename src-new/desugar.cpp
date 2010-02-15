@@ -99,3 +99,26 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
     call->args.push_back(x->expr2);
     return call.ptr();
 }
+
+StatementPtr desugarForStatement(ForPtr x) {
+    IdentifierPtr exprVar = new Identifier("%expr");
+    IdentifierPtr iterVar = new Identifier("%iter");
+
+    BlockPtr block = new Block();
+    block->statements.push_back(new Binding(REF, exprVar, x->expr));
+
+    CallPtr iteratorCall = new Call(kernelNameRef("iterator"));
+    iteratorCall->args.push_back(new NameRef(exprVar));
+    block->statements.push_back(new Binding(VAR, iterVar, iteratorCall.ptr()));
+
+    CallPtr hasNextCall = new Call(kernelNameRef("hasNext?"));
+    hasNextCall->args.push_back(new NameRef(iterVar));
+    CallPtr nextCall = new Call(kernelNameRef("next"));
+    nextCall->args.push_back(new NameRef(iterVar));
+    BlockPtr whileBody = new Block();
+    whileBody->statements.push_back(new Binding(REF, x->variable, nextCall.ptr()));
+    whileBody->statements.push_back(x->body);
+
+    block->statements.push_back(new While(hasNextCall.ptr(), whileBody.ptr()));
+    return block.ptr();
+}

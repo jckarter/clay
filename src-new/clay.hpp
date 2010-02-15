@@ -178,7 +178,6 @@ enum ObjectKind {
     PATTERN,
 
     VOID_TYPE,
-    VOID_VALUE,
     VALUE_HOLDER,
     PVALUE,
 
@@ -279,7 +278,6 @@ struct FunctionPointerTypePattern;
 struct RecordTypePattern;
 
 struct VoidType;
-struct VoidValue;
 struct ValueHolder;
 struct PValue;
 
@@ -377,7 +375,6 @@ typedef Pointer<FunctionPointerTypePattern> FunctionPointerTypePatternPtr;
 typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 
 typedef Pointer<VoidType> VoidTypePtr;
-typedef Pointer<VoidValue> VoidValuePtr;
 typedef Pointer<ValueHolder> ValueHolderPtr;
 typedef Pointer<PValue> PValuePtr;
 
@@ -455,17 +452,6 @@ void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
     else if ((int)args.size() < size)
         error("incorrect no of arguments");
 }
-
-void ensurePrimitiveType(TypePtr t);
-void ensureSameType(TypePtr ta, TypePtr tb);
-void ensureBoolType(TypePtr t);
-void ensureNumericType(TypePtr t);
-void ensureIntegerType(TypePtr t);
-void ensurePointerType(TypePtr t);
-void ensurePointerOrFunctionPointerType(TypePtr t);
-void ensureArrayType(TypePtr t);
-void ensureTupleType(TypePtr t);
-void ensureRecordType(TypePtr t);
 
 struct DebugPrinter {
     static int indent;
@@ -1116,13 +1102,9 @@ enum PrimOpCode {
     PRIM_TypeP,
     PRIM_TypeSize,
 
-    PRIM_primitiveInit,
-    PRIM_primitiveDestroy,
     PRIM_primitiveCopy,
-    PRIM_primitiveAssign,
 
     PRIM_boolNot,
-    PRIM_boolTruth,
 
     PRIM_numericEqualsP,
     PRIM_numericLesserP,
@@ -1314,7 +1296,6 @@ extern TypePtr float32Type;
 extern TypePtr float64Type;
 
 extern VoidTypePtr voidType;
-extern VoidValuePtr voidValue;
 
 void initTypes();
 
@@ -1331,6 +1312,9 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
 
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
 const map<string, int> &recordFieldIndexMap(RecordTypePtr t);
+
+const llvm::StructLayout *tupleTypeLayout(TupleType *t);
+const llvm::StructLayout *recordTypeLayout(RecordType *t);
 
 const llvm::Type *llvmReturnType(ObjectPtr returnType);
 const llvm::Type *llvmType(TypePtr t);
@@ -1404,17 +1388,12 @@ struct RecordTypePattern : public Pattern {
 
 
 //
-// VoidType, VoidValue
+// VoidType
 //
 
 struct VoidType : public Object {
     VoidType()
         : Object(VOID_TYPE) {}
-};
-
-struct VoidValue : public Object {
-    VoidValue()
-        : Object(VOID_VALUE) {}
 };
 
 
@@ -1442,6 +1421,7 @@ ExprPtr desugarTuple(TuplePtr x);
 ExprPtr desugarArray(ArrayPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
+StatementPtr desugarForStatement(ForPtr x);
 
 
 
@@ -1452,27 +1432,75 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x);
 void initIsStaticFlags(ProcedurePtr x);
 void initIsStaticFlags(OverloadablePtr x);
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs);
+bool computeArgsKey(ObjectPtr callable,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env,
+                    vector<ObjectPtr> &argsKey,
+                    vector<LocationPtr> &argLocations);
+
 
 struct InvokeEntry : public Object {
     ObjectPtr callable;
-    vector<ObjectPtr> argsMeta;
+    vector<ObjectPtr> argsKey;
 
     bool analyzed;
     bool analyzing;
-    ObjectPtr returnType;
-    bool returnIsTemp;
-    EnvPtr staticEnv;
+    EnvPtr env;
     CodePtr code;
+    ObjectPtr analysis;
 
-    InvokeEntry(ObjectPtr callable, const vector<ObjectPtr> &argsMeta)
-        : Object(DONT_CARE), callable(callable), argsMeta(argsMeta),
-          analyzed(false), analyzing(false), returnIsTemp(false) {}
+    InvokeEntry(ObjectPtr callable, const vector<ObjectPtr> &argsKey)
+        : Object(DONT_CARE), callable(callable), argsKey(argsKey),
+          analyzed(false), analyzing(false) {}
 };
 
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
 InvokeEntryPtr lookupInvoke(ObjectPtr callable,
-                            const vector<ObjectPtr> &argsMeta);
+                            const vector<ObjectPtr> &argsKey);
+
+
+
+//
+// match invoke
+//
+
+enum MatchCode {
+    MATCH_SUCCESS,
+    MATCH_ARGUMENT_ERROR,
+    MATCH_PREDICATE_ERROR,
+};
+
+struct MatchResult : public Object {
+    int matchCode;
+    MatchResult(int matchCode)
+        : Object(DONT_CARE), matchCode(matchCode) {}
+};
+
+typedef Pointer<MatchResult> MatchResultPtr;
+
+struct MatchSuccess : public MatchResult {
+    EnvPtr env;
+    MatchSuccess(EnvPtr env)
+        : MatchResult(MATCH_SUCCESS), env(env) {}
+};
+
+struct MatchArgumentError : public MatchResult {
+    unsigned argIndex;
+    MatchArgumentError(unsigned argIndex)
+        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex) {}
+};
+
+struct MatchPredicateError : public MatchResult {
+    MatchPredicateError()
+        : MatchResult(MATCH_PREDICATE_ERROR) {}
+};
+
+MatchResultPtr matchInvoke(CodePtr code, EnvPtr env,
+                           const vector<ObjectPtr> &argsKey);
+
+void signalMatchError(MatchResultPtr result,
+                      const vector<LocationPtr> &argLocations);
 
 
 
@@ -1489,6 +1517,10 @@ struct PValue : public Object {
 
 ObjectPtr analyze(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
+PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env);
+PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env);
+PValuePtr analyzeTupleValue(ExprPtr expr, EnvPtr env);
+PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env);
 ObjectPtr analyzeIndexing(ObjectPtr x,
                           const vector<ExprPtr> &args,
                           EnvPtr env);
@@ -1502,22 +1534,48 @@ ObjectPtr analyzeInvokeRecord(RecordPtr x,
 ObjectPtr analyzeInvokeProcedure(ProcedurePtr x,
                                  const vector<ExprPtr> &args,
                                  EnvPtr env);
+ObjectPtr analyzeInvokeProcedure2(ProcedurePtr x,
+                                  const vector<ObjectPtr> &argsKey,
+                                  const vector<LocationPtr> &argLocations);
 ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x,
                                     const vector<ExprPtr> &args,
                                     EnvPtr env);
-ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env);
+ObjectPtr analyzeInvokeOverloadable2(OverloadablePtr x,
+                                     const vector<ObjectPtr> &argsKey,
+                                     const vector<LocationPtr> &argLocations);
+EnvPtr bindDynamicArgs(EnvPtr env, CodePtr code,
+                       const vector<ObjectPtr> &argsKey);
+ObjectPtr analyzeCodeBody(CodePtr code, EnvPtr env);
+bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result);
+EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
+ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env);
 ObjectPtr analyzeInvokeValue(PValuePtr x,
                              const vector<ExprPtr> &args,
                              EnvPtr env);
+ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
+                              const vector<ExprPtr> &args,
+                              EnvPtr env);
+
+ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
 
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 ObjectPtr evaluateReturnType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
+TypePtr evaluatePointerOrFunctionPointerType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateTupleType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env);
 
-ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
+IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
+
 int evaluateInt(ExprPtr expr, EnvPtr env);
+bool evaluateBool(ExprPtr expr, EnvPtr env);
+
 ValueHolderPtr intToValueHolder(int x);
+ValueHolderPtr boolToValueHolder(bool x);
+
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
 bool unify(PatternPtr pattern, ObjectPtr obj);
 ObjectPtr derefCell(PatternCellPtr cell);

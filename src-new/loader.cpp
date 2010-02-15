@@ -283,13 +283,9 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TypeP);
     PRIMITIVE(TypeSize);
 
-    PRIMITIVE(primitiveInit);
-    PRIMITIVE(primitiveDestroy);
     PRIMITIVE(primitiveCopy);
-    PRIMITIVE(primitiveAssign);
 
     PRIMITIVE(boolNot);
-    PRIMITIVE(boolTruth);
 
     PRIMITIVE(numericEqualsP);
     PRIMITIVE(numericLesserP);
