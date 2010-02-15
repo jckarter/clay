@@ -18,6 +18,7 @@ OBJS = \
 	src-new/invoketables.o \
 	src-new/matchinvoke.o \
 	src-new/analyzer.o \
+	src-new/evaluator.o \
 	src-new/main.o
 
 clay2llvm : $(OBJS)

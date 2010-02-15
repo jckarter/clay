@@ -158,25 +158,23 @@ TypePtr tupleType(const vector<TypePtr> &elementTypes) {
 }
 
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
-    assert(false);
-    return NULL;
-//     int h = pointerHash(record.ptr());
-//     vector<ObjectPtr>::const_iterator pi, pend;
-//     for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
-//         h += objectHash(*pi);
-//     h &= recordTypes.size() - 1;
-//     vector<RecordTypePtr>::iterator i, end;
-//     for (i = recordTypes[h].begin(), end = recordTypes[h].end();
-//          i != end; ++i) {
-//         RecordType *t = i->ptr();
-//         if ((t->record == record) && objectVectorEquals(t->params, params))
-//             return t;
-//     }
-//     RecordTypePtr t = new RecordType(record);
-//     for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
-//         t->params.push_back(cloneValue(*pi));
-//     recordTypes[h].push_back(t);
-//     return t.ptr();
+    int h = pointerHash(record.ptr());
+    vector<ObjectPtr>::const_iterator pi, pend;
+    for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
+        h += objectHash(*pi);
+    h &= recordTypes.size() - 1;
+    vector<RecordTypePtr>::iterator i, end;
+    for (i = recordTypes[h].begin(), end = recordTypes[h].end();
+         i != end; ++i) {
+        RecordType *t = i->ptr();
+        if ((t->record == record) && objectVectorEquals(t->params, params))
+            return t;
+    }
+    RecordTypePtr t = new RecordType(record);
+    for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
+        t->params.push_back(*pi);
+    recordTypes[h].push_back(t);
+    return t.ptr();
 }
 
 
@@ -186,19 +184,19 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
 //
 
 static void initializeRecordFields(RecordTypePtr t) {
-    assert(false);
-//     t->fieldsInitialized = true;
-//     RecordPtr r = t->record;
-//     assert(t->params.size() == r->patternVars.size());
-//     EnvPtr env = new Env(r->env);
-//     for (unsigned i = 0; i < t->params.size(); ++i)
-//         addLocal(env, r->patternVars[i], t->params[i].ptr());
-//     for (unsigned i = 0; i < r->fields.size(); ++i) {
-//         RecordField *x = r->fields[i].ptr();
-//         t->fieldIndexMap[x->name->str] = i;
-//         TypePtr ftype = evaluateNonVoidType(x->type, env);
-//         t->fieldTypes.push_back(ftype);
-//     }
+    assert(!t->fieldsInitialized);
+    t->fieldsInitialized = true;
+    RecordPtr r = t->record;
+    assert(t->params.size() == r->patternVars.size());
+    EnvPtr env = new Env(r->env);
+    for (unsigned i = 0; i < t->params.size(); ++i)
+        addLocal(env, r->patternVars[i], t->params[i].ptr());
+    for (unsigned i = 0; i < r->fields.size(); ++i) {
+        RecordField *x = r->fields[i].ptr();
+        t->fieldIndexMap[x->name->str] = i;
+        TypePtr ftype = evaluateType(x->type, env);
+        t->fieldTypes.push_back(ftype);
+    }
 }
 
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {

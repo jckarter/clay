@@ -1558,31 +1558,10 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env);
 
-ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
-
-TypePtr evaluateType(ExprPtr expr, EnvPtr env);
-ObjectPtr evaluateReturnType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
-TypePtr evaluatePointerOrFunctionPointerType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateTupleType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env);
-
-IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
-
-int evaluateInt(ExprPtr expr, EnvPtr env);
-bool evaluateBool(ExprPtr expr, EnvPtr env);
-
-ValueHolderPtr intToValueHolder(int x);
-ValueHolderPtr boolToValueHolder(bool x);
-
-PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
-bool unify(PatternPtr pattern, ObjectPtr obj);
-ObjectPtr derefCell(PatternCellPtr cell);
 
 
 //
-// object ops
+// evaluator
 //
 
 bool objectEquals(ObjectPtr a, ObjectPtr b);
@@ -1606,5 +1585,29 @@ int objectVectorHash(const vector<Pointer<T> > &a) {
         h += objectHash(a[i].ptr());
     return h;
 }
+
+ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
+
+TypePtr evaluateType(ExprPtr expr, EnvPtr env);
+ObjectPtr evaluateReturnType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
+TypePtr evaluatePointerOrFunctionPointerType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateTupleType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env);
+
+IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
+
+int evaluateInt(ExprPtr expr, EnvPtr env);
+bool evaluateBool(ExprPtr expr, EnvPtr env);
+
+ValueHolderPtr intToValueHolder(int x);
+ValueHolderPtr boolToValueHolder(bool x);
+
+void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v);
+
+PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
+bool unify(PatternPtr pattern, ObjectPtr obj);
+ObjectPtr derefCell(PatternCellPtr cell);
 
 #endif

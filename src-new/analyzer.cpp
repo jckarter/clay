@@ -1,5 +1,58 @@
 #include "clay.hpp"
 
+PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
+{
+    ObjectPtr v = analyze(expr, env);
+
+    switch (v->objKind) {
+
+    case VALUE_HOLDER : {
+        ValueHolder *x = (ValueHolder *)expr.ptr();
+        return new PValue(x->type, true);
+    }
+
+    case PVALUE :
+        return (PValue *)v.ptr();
+
+    default :
+        error(expr, "expecting a value");
+        assert(false);
+        return NULL;
+    }
+}
+
+PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (pv->type->typeKind != POINTER_TYPE)
+        error(expr, "expecting a pointer value");
+    return pv;
+}
+
+PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (pv->type->typeKind != ARRAY_TYPE)
+        error(expr, "expecting an array value");
+    return pv;
+}
+
+PValuePtr analyzeTupleValue(ExprPtr expr, EnvPtr env)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (pv->type->typeKind != TUPLE_TYPE)
+        error(expr, "expecting a tuple value");
+    return pv;
+}
+
+PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (pv->type->typeKind != RECORD_TYPE)
+        error(expr, "expecting a record value");
+    return pv;
+}
+
 ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 {
     LocationContext loc(expr->location);
