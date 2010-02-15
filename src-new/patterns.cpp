@@ -1,5 +1,101 @@
 #include "clay.hpp"
 
+PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env)
+{
+    LocationContext loc(expr->location);
+
+    switch (expr->objKind) {
+
+    case NAME_REF : {
+        NameRef *x = (NameRef *)expr.ptr();
+        ObjectPtr y = lookupEnv(env, x->name);
+        if (y->objKind == PATTERN) {
+            PatternPtr z = (Pattern *)y.ptr();
+            assert(z->patternKind == PATTERN_CELL);
+            return z;
+        }
+        return new PatternCell(NULL, y);
+    }
+
+    case INDEXING : {
+        Indexing *x = (Indexing *)expr.ptr();
+        ObjectPtr indexable = evaluateStatic(x->expr, env);
+        PatternPtr y = evaluateIndexingPattern(indexable, x->args, env);
+        if (!y)
+            y = new PatternCell(NULL, evaluateStatic(expr, env));
+        return y;
+    }
+
+    default : {
+        ObjectPtr y = evaluateStatic(expr, env);
+        return new PatternCell(NULL, y);
+    }
+
+    }
+}
+
+PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
+                                   const vector<ExprPtr> &args,
+                                   EnvPtr env)
+{
+    switch (indexable->objKind) {
+
+    case PRIM_OP : {
+        PrimOpPtr x = (PrimOp *)indexable.ptr();
+
+        switch (x->primOpCode) {
+
+        case PRIM_Pointer : {
+            ensureArity(args, 1);
+            PatternPtr p = evaluatePattern(args[0], env);
+            return new PointerTypePattern(p);
+        }
+
+        case PRIM_FunctionPointer : {
+            if (args.size() < 1)
+                error("function pointer type requires return type");
+            vector<PatternPtr> argTypes;
+            for (unsigned i = 0; i+1 < args.size(); ++i)
+                argTypes.push_back(evaluatePattern(args[i], env));
+            PatternPtr returnType = evaluatePattern(args.back(), env);
+            return new FunctionPointerTypePattern(argTypes, returnType);
+        }
+
+        case PRIM_Array : {
+            ensureArity(args, 2);
+            PatternPtr elementType = evaluatePattern(args[0], env);
+            PatternPtr size = evaluatePattern(args[1], env);
+            return new ArrayTypePattern(elementType, size);
+        }
+
+        case PRIM_Tuple : {
+            if (args.size() < 2)
+                error("tuples require atleast 2 elements");
+            vector<PatternPtr> elementTypes;
+            for (unsigned i = 0; i < args.size(); ++i)
+                elementTypes.push_back(evaluatePattern(args[i], env));
+            return new TupleTypePattern(elementTypes);
+        }
+
+        }
+
+        break;
+    }
+
+    case RECORD : {
+        Record *x = (Record *)indexable.ptr();
+        ensureArity(args, x->patternVars.size());
+        vector<PatternPtr> params;
+        for (unsigned i = 0; i < args.size(); ++i)
+            params.push_back(evaluatePattern(args[i], env));
+        return new RecordTypePattern(x, params);
+    }
+
+    }
+
+    return NULL;
+}
+
 bool unify(PatternPtr pattern, ObjectPtr obj) {
 
     switch (pattern->patternKind) {

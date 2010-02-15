@@ -1426,6 +1426,19 @@ StatementPtr desugarForStatement(ForPtr x);
 
 
 //
+// patterns
+//
+
+PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
+PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
+                                   const vector<ExprPtr> &args,
+                                   EnvPtr env);
+bool unify(PatternPtr pattern, ObjectPtr obj);
+ObjectPtr derefCell(PatternCellPtr cell);
+
+
+
+//
 // invoke tables
 //
 
@@ -1606,8 +1619,5 @@ ValueHolderPtr boolToValueHolder(bool x);
 
 void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v);
 
-PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
-bool unify(PatternPtr pattern, ObjectPtr obj);
-ObjectPtr derefCell(PatternCellPtr cell);
 
 #endif
