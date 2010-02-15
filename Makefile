@@ -5,27 +5,25 @@ LLVM_LDFLAGS = `llvm-config --ldflags --libs backend engine`
 	g++ $(LLVM_CXXFLAGS) -m32 -Wall -g -c -MMD -MF$@.dep -o $@ $<
 
 OBJS = \
-	src-new/error.o \
-	src-new/printer.o \
-	src-new/lexer.o \
-	src-new/parser.o \
-	src-new/env.o \
-	src-new/loader.o \
-	src-new/llvm.o \
-	src-new/types.o \
-	src-new/desugar.o \
-	src-new/patterns.o \
-	src-new/invoketables.o \
-	src-new/matchinvoke.o \
-	src-new/analyzer.o \
-	src-new/main.o
+	src/error.o \
+	src/printer.o \
+	src/lexer.o \
+	src/parser.o \
+	src/env.o \
+	src/loader.o \
+	src/types.o \
+	src/invokeutil2.o \
+	src/evaluator.o \
+	src/partialeval.o \
+	src/codegen.o \
+	src/main.o
 
 clay2llvm : $(OBJS)
 	g++ -m32 -g -o clay2llvm $(OBJS) $(LLVM_LDFLAGS)
 
 clean :
 	rm -f clay2llvm
-	rm -f src-new/*.o
-	rm -f src-new/*.dep
+	rm -f src/*.o
+	rm -f src/*.dep
 
--include src-new/*.dep
+-include src/*.dep
