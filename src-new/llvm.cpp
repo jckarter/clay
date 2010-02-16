@@ -21,3 +21,10 @@ void initLLVM() {
     llvmInitBuilder = NULL;
     llvmBuilder = NULL;
 }
+
+llvm::BasicBlock *newBasicBlock(const char *name)
+{
+    return llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                    name,
+                                    llvmFunction);
+}

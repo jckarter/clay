@@ -215,6 +215,11 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         return x->obj;
     }
 
+    case CVALUE_EXPR : {
+        CValueExpr *x = (CValueExpr *)expr.ptr();
+        return new PValue(x->cv->type, false);
+    }
+
     default :
         assert(false);
         return NULL;
@@ -361,7 +366,8 @@ ObjectPtr analyzeInvokeProcedure2(ProcedurePtr x,
         signalMatchError(result, argLocations);
     entry->env = ((MatchSuccess *)result.ptr())->env;
     entry->code = x->code;
-    EnvPtr bodyEnv = bindDynamicArgs(entry->env, entry->code, argsKey);
+    EnvPtr bodyEnv =
+        bindDynamicArgsForAnalysis(entry->env, entry->code, argsKey);
     entry->analysis = analyzeCodeBody(entry->code, bodyEnv);
     entry->analyzing = false;
     if (!entry->analysis)
@@ -404,7 +410,8 @@ ObjectPtr analyzeInvokeOverloadable2(OverloadablePtr x,
     }
     if (i == x->overloads.size())
         error("no matching overload");
-    EnvPtr bodyEnv = bindDynamicArgs(entry->env, entry->code, argsKey);
+    EnvPtr bodyEnv =
+        bindDynamicArgsForAnalysis(entry->env, entry->code, argsKey);
     entry->analysis = analyzeCodeBody(entry->code, bodyEnv);
     entry->analyzing = false;
     if (!entry->analysis)
@@ -413,8 +420,8 @@ ObjectPtr analyzeInvokeOverloadable2(OverloadablePtr x,
     return entry->analysis;
 }
 
-EnvPtr bindDynamicArgs(EnvPtr env, CodePtr code,
-                       const vector<ObjectPtr> &argsKey)
+EnvPtr bindDynamicArgsForAnalysis(EnvPtr env, CodePtr code,
+                                  const vector<ObjectPtr> &argsKey)
 {
     EnvPtr bodyEnv = new Env(env);
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;

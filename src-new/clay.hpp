@@ -139,6 +139,7 @@ enum ObjectKind {
 
     SC_EXPR,
     OBJECT_EXPR,
+    CVALUE_EXPR,
 
     BLOCK,
     LABEL,
@@ -180,6 +181,7 @@ enum ObjectKind {
     VOID_TYPE,
     VALUE_HOLDER,
     PVALUE,
+    CVALUE,
 
     DONT_CARE,
 };
@@ -218,6 +220,7 @@ struct And;
 struct Or;
 struct SCExpr;
 struct ObjectExpr;
+struct CValueExpr;
 
 struct Statement;
 struct Block;
@@ -280,6 +283,7 @@ struct RecordTypePattern;
 struct VoidType;
 struct ValueHolder;
 struct PValue;
+struct CValue;
 
 
 
@@ -315,6 +319,7 @@ typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
 typedef Pointer<SCExpr> SCExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
+typedef Pointer<CValueExpr> CValueExprPtr;
 
 typedef Pointer<Statement> StatementPtr;
 typedef Pointer<Block> BlockPtr;
@@ -377,6 +382,7 @@ typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 typedef Pointer<VoidType> VoidTypePtr;
 typedef Pointer<ValueHolder> ValueHolderPtr;
 typedef Pointer<PValue> PValuePtr;
+typedef Pointer<CValue> CValuePtr;
 
 
 
@@ -692,6 +698,12 @@ struct ObjectExpr : public Expr {
     ObjectPtr obj;
     ObjectExpr(ObjectPtr obj)
         : Expr(OBJECT_EXPR), obj(obj) {}
+};
+
+struct CValueExpr : public Expr {
+    CValuePtr cv;
+    CValueExpr(CValuePtr cv)
+        : Expr(CVALUE_EXPR), cv(cv) {}
 };
 
 
@@ -1272,10 +1284,12 @@ extern llvm::ExecutionEngine *llvmEngine;
 extern const llvm::TargetData *llvmTargetData;
 
 extern llvm::Function *llvmFunction;
-extern llvm::IRBuilder<> *initBuilder;
-extern llvm::IRBuilder<> *builder;
+extern llvm::IRBuilder<> *llvmInitBuilder;
+extern llvm::IRBuilder<> *llvmBuilder;
 
 void initLLVM();
+
+llvm::BasicBlock *newBasicBlock(const char *name);
 
 
 
@@ -1462,9 +1476,11 @@ struct InvokeEntry : public Object {
     CodePtr code;
     ObjectPtr analysis;
 
+    llvm::Function *llvmFunc;
+
     InvokeEntry(ObjectPtr callable, const vector<ObjectPtr> &argsKey)
         : Object(DONT_CARE), callable(callable), argsKey(argsKey),
-          analyzed(false), analyzing(false) {}
+          analyzed(false), analyzing(false), llvmFunc(NULL) {}
 };
 
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -1556,8 +1572,8 @@ ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x,
 ObjectPtr analyzeInvokeOverloadable2(OverloadablePtr x,
                                      const vector<ObjectPtr> &argsKey,
                                      const vector<LocationPtr> &argLocations);
-EnvPtr bindDynamicArgs(EnvPtr env, CodePtr code,
-                       const vector<ObjectPtr> &argsKey);
+EnvPtr bindDynamicArgsForAnalysis(EnvPtr env, CodePtr code,
+                                  const vector<ObjectPtr> &argsKey);
 ObjectPtr analyzeCodeBody(CodePtr code, EnvPtr env);
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
@@ -1618,6 +1634,19 @@ ValueHolderPtr intToValueHolder(int x);
 ValueHolderPtr boolToValueHolder(bool x);
 
 void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v);
+
+
+
+//
+// codegen
+//
+
+struct CValue : public Object {
+    TypePtr type;
+    llvm::Value *llValue;
+    CValue(TypePtr type, llvm::Value *llValue)
+        : Object(CVALUE), type(type), llValue(llValue) {}
+};
 
 
 #endif
