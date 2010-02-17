@@ -13,9 +13,8 @@ ValuePtr argumentValue(ARG arg) {
     return arg->evaluate();
 }
 
-template <>
 static inline
-ValuePtr argumentValue<ValuePtr>(ValuePtr arg) {
+ValuePtr argumentValue(ValuePtr arg) {
     return arg;
 }
 
@@ -31,9 +30,8 @@ ARG argumentRef(ARG arg) {
     return arg->asRef(); // dummy
 }
 
-template <>
 static inline
-ValuePtr argumentRef<ValuePtr>(ValuePtr arg) {
+ValuePtr argumentRef(ValuePtr arg) {
     if (arg->isOwned)
         return new Value(arg->type, arg->buf, false);
     return arg;
