@@ -63,10 +63,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env);
 void codegenRootIntoValue(ExprPtr expr,
                           EnvPtr env,
                           PValuePtr pv,
-                          CValuePtr cv);
+                          CValuePtr out);
 CValuePtr codegenRootValue(ExprPtr expr, EnvPtr env, CValuePtr out);
 
-void codegenIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, CValuePtr cv);
+void codegenIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, CValuePtr out);
 CValuePtr codegenAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv);
 CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
@@ -622,3 +622,61 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env)
 
     }
 }
+
+
+
+//
+// codegen expressions
+//
+
+void codegenRootIntoValue(ExprPtr expr,
+                          EnvPtr env,
+                          PValuePtr pv,
+                          CValuePtr out)
+{
+    int marker = markStack();
+    codegenIntoValue(expr, env, pv, out);
+    destroyAndPopStack(marker);
+}
+
+CValuePtr codegenRootValue(ExprPtr expr, EnvPtr env, CValuePtr out)
+{
+    int marker = markStack();
+    CValuePtr cv = codegenValue(expr, env, out);
+    destroyAndPopStack(marker);
+    return cv;
+}
+
+void codegenIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, CValuePtr out)
+{
+    if (pv->isTemp) {
+        codegenValue(expr, env, out);
+    }
+    else {
+        CValuePtr ref = codegenValue(expr, env, NULL);
+        codegenValueCopy(out, ref);
+    }
+}
+
+CValuePtr codegenAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv)
+{
+    CValuePtr result;
+    if (pv->isTemp) {
+        result = codegenAllocValue(pv->type);
+        codegenValue(expr, env, result);
+    }
+    else {
+        result = codegenValue(expr, env, NULL);
+    }
+    return result;
+}
+
+CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out)
+{
+    CValuePtr result = codegenMaybeVoid(expr, env, out);
+    if (!result)
+        error(expr, "expected non-void value");
+    return result;
+}
+
+CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
