@@ -70,10 +70,18 @@ void codegenIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, CValuePtr out);
 CValuePtr codegenAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv);
 CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
+CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out);
+void codegenValueHolder(ValueHolderPtr v, CValuePtr out);
+llvm::Value *codegenConstant(ValueHolderPtr v);
 
 void codegenInvokeVoid(ObjectPtr callable,
                        const vector<ExprPtr> &args,
                        EnvPtr env);
+CValuePtr codegenInvoke(ObjectPtr callable,
+                        const vector<ExprPtr> &args,
+                        EnvPtr env,
+                        CValuePtr out);
+
 
 
 //
@@ -679,4 +687,509 @@ CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out)
     return result;
 }
 
-CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
+CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out)
+{
+    return codegenExpr(expr, env, out);
+}
+
+CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
+{
+    LocationContext loc(expr->location);
+
+    switch (expr->objKind) {
+
+    case BOOL_LITERAL : {
+        BoolLiteral *x = (BoolLiteral *)expr.ptr();
+        int bv = (x->value ? 1 : 0);
+        llvm::Value *llv = llvm::ConstantInt::get(llvmType(boolType), bv);
+        llvmBuilder->CreateStore(llv, out->llValue);
+        return out;
+    }
+
+    case INT_LITERAL : {
+        IntLiteral *x = (IntLiteral *)expr.ptr();
+        char *ptr = (char *)x->value.c_str();
+        char *end = ptr;
+        llvm::Value *llv;
+        if (x->suffix == "i8") {
+            long y = strtol(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int8 literal");
+            if ((errno == ERANGE) || (y < SCHAR_MIN) || (y > SCHAR_MAX))
+                error("int8 literal out of range");
+            llv = llvm::ConstantInt::getSigned(llvmType(int8Type), y);
+        }
+        else if (x->suffix == "i16") {
+            long y = strtol(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int16 literal");
+            if ((errno == ERANGE) || (y < SHRT_MIN) || (y > SHRT_MAX))
+                error("int16 literal out of range");
+            llv = llvm::ConstantInt::getSigned(llvmType(int16Type), y);
+        }
+        else if ((x->suffix == "i32") || x->suffix.empty()) {
+            long y = strtol(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int32 literal");
+            if (errno == ERANGE)
+                error("int32 literal out of range");
+            llv = llvm::ConstantInt::getSigned(llvmType(int32Type), y);
+        }
+        else if (x->suffix == "i64") {
+            long long y = strtoll(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int64 literal");
+            if (errno == ERANGE)
+                error("int64 literal out of range");
+            llv = llvm::ConstantInt::getSigned(llvmType(int64Type), y);
+        }
+        else if (x->suffix == "u8") {
+            unsigned long y = strtoul(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint8 literal");
+            if ((errno == ERANGE) || (y > UCHAR_MAX))
+                error("uint8 literal out of range");
+            llv = llvm::ConstantInt::get(llvmType(uint8Type), y);
+        }
+        else if (x->suffix == "u16") {
+            unsigned long y = strtoul(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint16 literal");
+            if ((errno == ERANGE) || (y > USHRT_MAX))
+                error("uint16 literal out of range");
+            llv = llvm::ConstantInt::get(llvmType(uint16Type), y);
+        }
+        else if (x->suffix == "u32") {
+            unsigned long y = strtoul(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint32 literal");
+            if (errno == ERANGE)
+                error("uint32 literal out of range");
+            llv = llvm::ConstantInt::get(llvmType(uint32Type), y);
+        }
+        else if (x->suffix == "u64") {
+            unsigned long long y = strtoull(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint64 literal");
+            if (errno == ERANGE)
+                error("uint64 literal out of range");
+            llv = llvm::ConstantInt::get(llvmType(uint64Type), y);
+        }
+        else if (x->suffix == "f32") {
+            float y = strtof(ptr, &end);
+            if (*end != 0)
+                error("invalid float32 literal");
+            if (errno == ERANGE)
+                error("float32 literal out of range");
+            llv = llvm::ConstantFP::get(llvmType(float32Type), y);
+        }
+        else if (x->suffix == "f64") {
+            double y = strtod(ptr, &end);
+            if (*end != 0)
+                error("invalid float64 literal");
+            if (errno == ERANGE)
+                error("float64 literal out of range");
+            llv = llvm::ConstantFP::get(llvmType(float64Type), y);
+        }
+        else {
+            error("invalid literal suffix: " + x->suffix);
+        }
+        llvmBuilder->CreateStore(llv, out->llValue);
+        return out;
+    }
+
+    case FLOAT_LITERAL : {
+        FloatLiteral *x = (FloatLiteral *)expr.ptr();
+        char *ptr = (char *)x->value.c_str();
+        char *end = ptr;
+        llvm::Value *llv;
+        if (x->suffix == "f32") {
+            float y = strtof(ptr, &end);
+            if (*end != 0)
+                error("invalid float32 literal");
+            if (errno == ERANGE)
+                error("float32 literal out of range");
+            llv = llvm::ConstantFP::get(llvmType(float32Type), y);
+        }
+        else if ((x->suffix == "f64") || x->suffix.empty()) {
+            double y = strtod(ptr, &end);
+            if (*end != 0)
+                error("invalid float64 literal");
+            if (errno == ERANGE)
+                error("float64 literal out of range");
+            llv = llvm::ConstantFP::get(llvmType(float64Type), y);
+        }
+        else {
+            error("invalid float literal suffix: " + x->suffix);
+        }
+        llvmBuilder->CreateStore(llv, out->llValue);
+        return out;
+    }
+
+    case CHAR_LITERAL : {
+        CharLiteral *x = (CharLiteral *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarCharLiteral(x->value);
+        return codegenExpr(x->desugared, env, out);
+    }
+
+    case STRING_LITERAL : {
+        StringLiteral *x = (StringLiteral *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarStringLiteral(x->value);
+        return codegenExpr(x->desugared, env, out);
+    }
+
+    case NAME_REF : {
+        NameRef *x = (NameRef *)expr.ptr();
+        ObjectPtr y = lookupEnv(env, x->name);
+        switch (y->objKind) {
+        case VALUE_HOLDER : {
+            ValueHolder *z = (ValueHolder *)y.ptr();
+            codegenValueHolder(z, out);
+            return out;
+        }
+        case CVALUE : {
+            CValue *z = (CValue *)y.ptr();
+            return z;
+        }
+        }
+        error("invalid name ref");
+        return NULL;
+    }
+
+    case TUPLE : {
+        Tuple *x = (Tuple *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarTuple(x);
+        return codegenExpr(x->desugared, env, out);
+    }
+
+    case ARRAY : {
+        Array *x = (Array *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarArray(x);
+        return codegenExpr(x->desugared, env, out);
+    }
+
+    case INDEXING : {
+        error("invalid indexing operation");
+        return NULL;
+    }
+
+    case CALL : {
+        Call *x = (Call *)expr.ptr();
+        ObjectPtr callable = analyze(x->expr, env);
+        assert(callable.ptr());
+        return codegenInvoke(callable, x->args, env, out);
+    }
+
+    case FIELD_REF : {
+        FieldRef *x = (FieldRef *)expr.ptr();
+        vector<ExprPtr> args;
+        args.push_back(x->expr);
+        args.push_back(new ObjectExpr(x->name.ptr()));
+        ObjectPtr prim = primName("recordFieldRefByName");
+        return codegenInvoke(prim, args, env, out);
+    }
+
+    case TUPLE_REF : {
+        TupleRef *x = (TupleRef *)expr.ptr();
+        vector<ExprPtr> args;
+        args.push_back(x->expr);
+        args.push_back(new ObjectExpr(intToValueHolder(x->index).ptr()));
+        ObjectPtr prim = primName("tupleRef");
+        return codegenInvoke(prim, args, env, out);
+    }
+
+    case UNARY_OP : {
+        UnaryOp *x = (UnaryOp *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarUnaryOp(x);
+        return codegenExpr(x->desugared, env, out);
+    }
+
+    case BINARY_OP : {
+        BinaryOp *x = (BinaryOp *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarBinaryOp(x);
+        return codegenExpr(x->desugared, env, out);
+    }
+
+    case AND : {
+        And *x = (And *)expr.ptr();
+        PValuePtr pv1 = analyzeValue(x->expr1, env);
+        PValuePtr pv2 = analyzeValue(x->expr2, env);
+        if (pv1->type != pv2->type)
+            error("type mismatch in 'and' expression");
+        llvm::BasicBlock *trueBlock = newBasicBlock("andTrue1");
+        llvm::BasicBlock *falseBlock = newBasicBlock("andFalse1");
+        llvm::BasicBlock *mergeBlock = newBasicBlock("andMerge");
+        CValuePtr result;
+        if (pv1->isTemp) {
+            codegenIntoValue(x->expr1, env, pv1, out);
+            llvm::Value *flag1 = codegenToBoolFlag(out);
+            llvmBuilder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+            llvmBuilder->SetInsertPoint(trueBlock);
+            codegenValueDestroy(out);
+            codegenIntoValue(x->expr2, env, pv2, out);
+            llvmBuilder->CreateBr(mergeBlock);
+
+            llvmBuilder->SetInsertPoint(falseBlock);
+            llvmBuilder->CreateBr(mergeBlock);
+
+            llvmBuilder->SetInsertPoint(mergeBlock);
+            result = out;
+        }
+        else {
+            if (pv2->isTemp) {
+                CValuePtr ref1 = codegenExpr(x->expr1, env, NULL);
+                llvm::Value *flag1 = codegenToBoolFlag(ref1);
+                llvmBuilder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+                llvmBuilder->SetInsertPoint(trueBlock);
+                codegenIntoValue(x->expr2, env, pv2, out);
+                llvmBuilder->CreateBr(mergeBlock);
+
+                llvmBuilder->SetInsertPoint(falseBlock);
+                codegenValueCopy(out, ref1);
+                llvmBuilder->CreateBr(mergeBlock);
+
+                llvmBuilder->SetInsertPoint(mergeBlock);
+                result = out;
+            }
+            else {
+                CValuePtr ref1 = codegenExpr(x->expr1, env, NULL);
+                llvm::Value *flag1 = codegenToBoolFlag(ref1);
+                llvmBuilder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+                llvmBuilder->SetInsertPoint(trueBlock);
+                CValuePtr ref2 = codegenExpr(x->expr2, env, NULL);
+                llvmBuilder->CreateBr(mergeBlock);
+                trueBlock = llvmBuilder->GetInsertBlock();
+
+                llvmBuilder->SetInsertPoint(falseBlock);
+                llvmBuilder->CreateBr(mergeBlock);
+
+                llvmBuilder->SetInsertPoint(mergeBlock);
+                const llvm::Type *ptrType = llvmType(pointerType(pv1->type));
+                llvm::PHINode *phi = llvmBuilder->CreatePHI(ptrType);
+                phi->addIncoming(ref1->llValue, falseBlock);
+                phi->addIncoming(ref2->llValue, trueBlock);
+                result = new CValue(pv1->type, phi);
+            }
+        }
+        return result;
+    }
+
+    case OR : {
+        Or *x = (Or *)expr.ptr();
+        PValuePtr pv1 = analyzeValue(x->expr1, env);
+        PValuePtr pv2 = analyzeValue(x->expr2, env);
+        if (pv1->type != pv2->type)
+            error("type mismatch in 'or' expression");
+        llvm::BasicBlock *trueBlock = newBasicBlock("orTrue1");
+        llvm::BasicBlock *falseBlock = newBasicBlock("orFalse1");
+        llvm::BasicBlock *mergeBlock = newBasicBlock("orMerge");
+        CValuePtr result;
+        if (pv1->isTemp) {
+            codegenIntoValue(x->expr1, env, pv1, out);
+            llvm::Value *flag1 = codegenToBoolFlag(out);
+            llvmBuilder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+            llvmBuilder->SetInsertPoint(trueBlock);
+            llvmBuilder->CreateBr(mergeBlock);
+
+            llvmBuilder->SetInsertPoint(falseBlock);
+            codegenValueDestroy(out);
+            codegenIntoValue(x->expr2, env, pv2, out);
+            llvmBuilder->CreateBr(mergeBlock);
+
+            llvmBuilder->SetInsertPoint(mergeBlock);
+            result = out;
+        }
+        else {
+            if (pv2->isTemp) {
+                CValuePtr ref1 = codegenExpr(x->expr1, env, NULL);
+                llvm::Value *flag1 = codegenToBoolFlag(ref1);
+                llvmBuilder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+                llvmBuilder->SetInsertPoint(trueBlock);
+                codegenValueCopy(out, ref1);
+                llvmBuilder->CreateBr(mergeBlock);
+
+                llvmBuilder->SetInsertPoint(falseBlock);
+                codegenIntoValue(x->expr2, env, pv2, out);
+                llvmBuilder->CreateBr(mergeBlock);
+
+                llvmBuilder->SetInsertPoint(mergeBlock);
+                result = out;
+            }
+            else {
+                CValuePtr ref1 = codegenExpr(x->expr1, env, NULL);
+                llvm::Value *flag1 = codegenToBoolFlag(ref1);
+                llvmBuilder->CreateCondBr(flag1, trueBlock, falseBlock);
+
+                llvmBuilder->SetInsertPoint(trueBlock);
+                llvmBuilder->CreateBr(mergeBlock);
+
+                llvmBuilder->SetInsertPoint(falseBlock);
+                CValuePtr ref2 = codegenExpr(x->expr2, env, NULL);
+                llvmBuilder->CreateBr(mergeBlock);
+                falseBlock = llvmBuilder->GetInsertBlock();
+
+                llvmBuilder->SetInsertPoint(mergeBlock);
+                const llvm::Type *ptrType = llvmType(pointerType(pv1->type));
+                llvm::PHINode *phi = llvmBuilder->CreatePHI(ptrType);
+                phi->addIncoming(ref1->llValue, trueBlock);
+                phi->addIncoming(ref2->llValue, falseBlock);
+                result = new CValue(pv1->type, phi);
+            }
+        }
+        return result;
+    }
+
+    case SC_EXPR : {
+        SCExpr *x = (SCExpr *)expr.ptr();
+        return codegenExpr(x->expr, x->env, out);
+    }
+
+    case OBJECT_EXPR : {
+        ObjectExpr *x = (ObjectExpr *)expr.ptr();
+        switch (x->obj->objKind) {
+        case VALUE_HOLDER : {
+            ValueHolder *y = (ValueHolder *)x->obj.ptr();
+            codegenValueHolder(y, out);
+            return out;
+        }
+        }
+        error("invalid expression");
+        return NULL;
+    }
+
+    case CVALUE_EXPR : {
+        CValueExpr *x = (CValueExpr *)expr.ptr();
+        return x->cv;
+    }
+
+    default :
+        assert(false);
+        return NULL;
+
+    }
+}
+
+
+
+//
+// codegenValueHolder
+//
+
+void codegenValueHolder(ValueHolderPtr v, CValuePtr out)
+{
+    assert(v->type == out->type);
+
+    switch (v->type->typeKind) {
+
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE : {
+        llvm::Value *llv = codegenConstant(v);
+        llvmBuilder->CreateStore(llv, out->llValue);
+        break;
+    }
+
+    default :
+        assert(false);
+
+    }
+}
+
+
+
+//
+// codegenConstant
+//
+
+template <typename T>
+llvm::Value *
+_sintConstant(ValueHolderPtr v)
+{
+    return llvm::ConstantInt::getSigned(llvmType(v->type), *((T *)v->buf));
+}
+
+template <typename T>
+llvm::Value *
+_uintConstant(ValueHolderPtr v)
+{
+    return llvm::ConstantInt::get(llvmType(v->type), *((T *)v->buf));
+}
+
+llvm::Value *codegenConstant(ValueHolderPtr v) 
+{
+    llvm::Value *val = NULL;
+    switch (v->type->typeKind) {
+    case BOOL_TYPE : {
+        int bv = (*(bool *)v->buf) ? 1 : 0;
+        return llvm::ConstantInt::get(llvmType(boolType), bv);
+    }
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)v->type.ptr();
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 :
+                val = _sintConstant<char>(v);
+                break;
+            case 16 :
+                val = _sintConstant<short>(v);
+                break;
+            case 32 :
+                val = _sintConstant<long>(v);
+                break;
+            case 64 :
+                val = _sintConstant<long long>(v);
+                break;
+            default :
+                assert(false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 :
+                val = _uintConstant<unsigned char>(v);
+                break;
+            case 16 :
+                val = _uintConstant<unsigned short>(v);
+                break;
+            case 32 :
+                val = _uintConstant<unsigned long>(v);
+                break;
+            case 64 :
+                val = _uintConstant<unsigned long long>(v);
+                break;
+            default :
+                assert(false);
+            }
+        }
+        break;
+    }
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)v->type.ptr();
+        switch (t->bits) {
+        case 32 :
+            val = llvm::ConstantFP::get(llvmType(t), *((float *)v->buf));
+            break;
+        case 64 :
+            val = llvm::ConstantFP::get(llvmType(t), *((double *)v->buf));
+            break;
+        default :
+            assert(false);
+        }
+        break;
+    }
+    default :
+        assert(false);
+    }
+    return val;
+}
