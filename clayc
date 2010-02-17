@@ -1,2 +1,3 @@
 #!/bin/sh
-./clay2llvm $1 | llvm-as | opt -O3 | llc | gcc -m32 -x assembler -
+CLAYDIR=`dirname $0`
+$CLAYDIR/clay2llvm $1 | llvm-as | opt -O3 | llc | gcc -m32 -x assembler -
