@@ -118,7 +118,18 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
-        return lookupEnv(env, x->name);
+        ObjectPtr y = lookupEnv(env, x->name);
+        switch (y->objKind) {
+        case VALUE_HOLDER : {
+            ValueHolder *z = (ValueHolder *)y.ptr();
+            return new PValue(z->type, true);
+        }
+        case CVALUE : {
+            CValue *z = (CValue *)y.ptr();
+            return new PValue(z->type, false);
+        }
+        }
+        return y;
     }
 
     case TUPLE : {
@@ -570,7 +581,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         if (!right)
             return NULL;
         EnvPtr env2 = new Env(env);
-        addLocal(env2, x->name, right.ptr());
+        addLocal(env2, x->name, new PValue(right->type, false));
         return env2;
     }
 
