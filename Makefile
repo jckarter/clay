@@ -20,6 +20,11 @@ OBJS = \
 
 clay2llvm : $(OBJS)
 	g++ -m32 -g -o clay2llvm $(OBJS) $(LLVM_LDFLAGS)
+.PHONY: clean test
+
+test: clay2llvm
+	echo Looking into subdir $@ 
+	cd $@; make
 
 clean :
 	rm -f clay2llvm
