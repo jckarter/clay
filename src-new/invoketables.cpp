@@ -151,7 +151,7 @@ static void initInvokeTable() {
 }
 
 InvokeEntryPtr lookupInvoke(ObjectPtr callable,
-                          const vector<ObjectPtr> &argsKey)
+                            const vector<ObjectPtr> &argsKey)
 {
     if (!invokeTableInitialized)
         initInvokeTable();
@@ -166,7 +166,9 @@ InvokeEntryPtr lookupInvoke(ObjectPtr callable,
             return entry;
         }
     }
-    InvokeEntryPtr entry = new InvokeEntry(callable, argsKey);
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(callable, argsKey.size());
+    InvokeEntryPtr entry = new InvokeEntry(callable, isStaticFlags, argsKey);
     bucket.push_back(entry);
     return entry;
 }
