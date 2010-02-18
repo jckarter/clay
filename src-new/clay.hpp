@@ -1468,6 +1468,7 @@ bool computeArgsKey(ObjectPtr callable,
 
 struct InvokeEntry : public Object {
     ObjectPtr callable;
+    const vector<bool> &isStaticFlags;
     vector<ObjectPtr> argsKey;
 
     bool analyzed;
@@ -1478,8 +1479,11 @@ struct InvokeEntry : public Object {
 
     llvm::Function *llvmFunc;
 
-    InvokeEntry(ObjectPtr callable, const vector<ObjectPtr> &argsKey)
-        : Object(DONT_CARE), callable(callable), argsKey(argsKey),
+    InvokeEntry(ObjectPtr callable,
+                const vector<bool> &isStaticFlags,
+                const vector<ObjectPtr> &argsKey)
+        : Object(DONT_CARE),
+          callable(callable), isStaticFlags(isStaticFlags), argsKey(argsKey),
           analyzed(false), analyzing(false), llvmFunc(NULL) {}
 };
 
