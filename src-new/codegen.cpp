@@ -74,13 +74,45 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out);
 void codegenValueHolder(ValueHolderPtr v, CValuePtr out);
 llvm::Value *codegenConstant(ValueHolderPtr v);
 
-void codegenInvokeVoid(ObjectPtr callable,
+CValuePtr codegenInvokeValue(CValuePtr x,
+                             const vector<ExprPtr> &args,
+                             EnvPtr env,
+                             CValuePtr out);
+void codegenInvokeVoid(ObjectPtr x,
                        const vector<ExprPtr> &args,
                        EnvPtr env);
-CValuePtr codegenInvoke(ObjectPtr callable,
+CValuePtr codegenInvoke(ObjectPtr x,
                         const vector<ExprPtr> &args,
                         EnvPtr env,
                         CValuePtr out);
+CValuePtr codegenInvokeType(TypePtr x,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env,
+                            CValuePtr out);
+CValuePtr codegenInvokeRecord(RecordPtr x,
+                              const vector<ExprPtr> &args,
+                              EnvPtr env,
+                              CValuePtr out);
+CValuePtr codegenInvokeProcedure(ProcedurePtr x,
+                                 const vector<ExprPtr> &args,
+                                 EnvPtr env,
+                                 CValuePtr out);
+CValuePtr codegenInvokeOverloadable(OverloadablePtr x,
+                                    const vector<ExprPtr> &args,
+                                    EnvPtr env,
+                                    CValuePtr out);
+CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env,
+                            CValuePtr out);
+CValuePtr codegenInvokeExternal(ExternalProcedurePtr x,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env,
+                                CValuePtr out);
+CValuePtr codegenInvokePrimOp(PrimOpPtr x,
+                              const vector<ExprPtr> &args,
+                              EnvPtr env,
+                              CValuePtr out);
 
 
 
@@ -879,9 +911,13 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        ObjectPtr callable = analyze(x->expr, env);
-        assert(callable.ptr());
-        return codegenInvoke(callable, x->args, env, out);
+        ObjectPtr y = analyze(x->expr, env);
+        assert(y.ptr());
+        if (y->objKind == PVALUE) {
+            CValuePtr cv = codegenAsRef(x->expr, env, (PValue *)y.ptr());
+            return codegenInvokeValue(cv, x->args, env, out);
+        }
+        return codegenInvoke(y, x->args, env, out);
     }
 
     case FIELD_REF : {
@@ -1192,4 +1228,309 @@ llvm::Value *codegenConstant(ValueHolderPtr v)
         assert(false);
     }
     return val;
+}
+
+
+
+//
+// codegenInvokeValue
+//
+
+CValuePtr codegenInvokeValue(CValuePtr x,
+                             const vector<ExprPtr> &args,
+                             EnvPtr env,
+                             CValuePtr out)
+{
+    if (x->type->typeKind != FUNCTION_POINTER_TYPE)
+        error("invalid call operation");
+    FunctionPointerType *t = (FunctionPointerType *)x->type.ptr();
+    ensureArity(args, t->argTypes.size());
+
+    llvm::Value *llCallable = llvmBuilder->CreateLoad(x->llValue);
+    vector<llvm::Value *> llArgs;
+    for (unsigned i = 0; i < args.size(); ++i) {
+        PValuePtr parg = analyzeValue(args[i], env);
+        if (parg->type != t->argTypes[i])
+            error(args[i], "argument type mismatch");
+        CValuePtr carg = codegenAsRef(args[i], env, parg);
+        llvm::Value *llArg = llvmBuilder->CreateLoad(carg->llValue);
+        llArgs.push_back(llArg);
+    }
+    llvm::Value *result =
+        llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+
+    if (t->returnType->objKind == VOID_TYPE) {
+        assert(!out);
+        return NULL;
+    }
+    else {
+        assert(t->returnType->objKind == TYPE);
+        TypePtr retType = (Type *)t->returnType.ptr();
+        assert(out.ptr());
+        assert(out->type == retType);
+        llvmBuilder->CreateStore(result, out->llValue);
+        return out;
+    }
+}
+
+
+
+//
+// codegenInvoke
+//
+
+void codegenInvokeVoid(ObjectPtr x,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env)
+{
+    CValuePtr result = codegenInvoke(x, args, env, NULL);
+    if (result.ptr())
+        error("non-void expression expected");
+}
+
+CValuePtr codegenInvoke(ObjectPtr x,
+                        const vector<ExprPtr> &args,
+                        EnvPtr env,
+                        CValuePtr out)
+{
+    switch (x->objKind) {
+    case TYPE :
+        return codegenInvokeType((Type *)x.ptr(), args, env, out);
+    case RECORD :
+        return codegenInvokeRecord((Record *)x.ptr(), args, env, out);
+    case PROCEDURE :
+        return codegenInvokeProcedure((Procedure *)x.ptr(), args, env, out);
+    case OVERLOADABLE :
+        return codegenInvokeOverloadable((Overloadable *)x.ptr(),
+                                         args, env, out);
+    case EXTERNAL_PROCEDURE :
+        return codegenInvokeExternal((ExternalProcedure *)x.ptr(),
+                                     args, env, out);
+    case PRIM_OP :
+        return codegenInvokePrimOp((PrimOp *)x.ptr(), args, env, out);
+    default :
+        error("invalid call operation");
+        return NULL;
+    }
+}
+
+
+
+//
+// codegenInvokeType
+//
+
+CValuePtr codegenInvokeType(TypePtr x,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env,
+                            CValuePtr out)
+{
+    if (args.empty()) {
+        codegenValueInit(out);
+        return out;
+    }
+    if (args.size() == 1) {
+        ObjectPtr y = analyze(args[0], env);
+        if (y->objKind == PVALUE) {
+            PValuePtr z = (PValue *)y.ptr();
+            if (z->type == x) {
+                codegenIntoValue(args[0], env, z, out);
+                return out;
+            }
+        }
+    }
+
+    switch (x->typeKind) {
+
+    case ARRAY_TYPE : {
+        ArrayType *y = (ArrayType *)x.ptr();
+        ensureArity(args, y->size);
+        for (unsigned i = 0; i < args.size(); ++i) {
+            PValuePtr z = analyzeValue(args[i], env);
+            if (z->type != y->elementType)
+                error(args[i], "argument type mismatch");
+            llvm::Value *ptr =
+                llvmBuilder->CreateConstGEP2_32(out->llValue, 0, i);
+            codegenIntoValue(args[i], env, z, new CValue(z->type, ptr));
+        }
+        return out;
+    }
+
+    case TUPLE_TYPE : {
+        TupleType *y = (TupleType *)x.ptr();
+        ensureArity(args, y->elementTypes.size());
+        for (unsigned i = 0; i < args.size(); ++i) {
+            PValuePtr z = analyzeValue(args[i], env);
+            if (z->type != y->elementTypes[i])
+                error(args[i], "argument type mismatch");
+            llvm::Value *ptr =
+                llvmBuilder->CreateConstGEP2_32(out->llValue, 0, i);
+            codegenIntoValue(args[i], env, z, new CValue(z->type, ptr));
+        }
+        return out;
+    }
+
+    case RECORD_TYPE : {
+        RecordType *y = (RecordType *)x.ptr();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(y);
+        ensureArity(args, fieldTypes.size());
+        for (unsigned i = 0; i < args.size(); ++i) {
+            PValuePtr z = analyzeValue(args[i], env);
+            if (z->type != fieldTypes[i])
+                error(args[i], "argument type mismatch");
+            llvm::Value *ptr =
+                llvmBuilder->CreateConstGEP2_32(out->llValue, 0, i);
+            codegenIntoValue(args[i], env, z, new CValue(z->type, ptr));
+        }
+        return out;
+    }
+
+    }
+
+    error("invalid constructor");
+    return NULL;
+}
+
+
+
+//
+// codegenInvokeRecord
+//
+
+CValuePtr codegenInvokeRecord(RecordPtr x,
+                              const vector<ExprPtr> &args,
+                              EnvPtr env,
+                              CValuePtr out)
+{
+    assert(out.ptr());
+    return codegenInvokeType(out->type, args, env, out);
+}
+
+
+
+//
+// codegenInvokeProcedure, codegenInvokeOverloadable
+//
+
+CValuePtr codegenInvokeProcedure(ProcedurePtr x,
+                                 const vector<ExprPtr> &args,
+                                 EnvPtr env,
+                                 CValuePtr out)
+{
+    vector<ObjectPtr> argsKey;
+    vector<LocationPtr> argLocations;
+    bool result = computeArgsKey(x.ptr(), args, env, argsKey, argLocations);
+    assert(result);
+    InvokeEntryPtr entry = codegenProcedure(x, argsKey, argLocations);
+    return codegenInvokeCode(entry, args, env, out);
+}
+
+CValuePtr codegenInvokeOverloadable(OverloadablePtr x,
+                                    const vector<ExprPtr> &args,
+                                    EnvPtr env,
+                                    CValuePtr out)
+{
+    vector<ObjectPtr> argsKey;
+    vector<LocationPtr> argLocations;
+    bool result = computeArgsKey(x.ptr(), args, env, argsKey, argLocations);
+    assert(result);
+    InvokeEntryPtr entry = codegenOverloadable(x, argsKey, argLocations);
+    return codegenInvokeCode(entry, args, env, out);
+}
+
+
+
+//
+// codegenInvokeCode
+//
+
+CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env,
+                            CValuePtr out)
+{
+    vector<llvm::Value *> llArgs;
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (entry->isStaticFlags[i])
+            continue;
+        assert(entry->argsKey[i]->objKind == TYPE);
+        TypePtr argType = (Type *)entry->argsKey[i].ptr();
+        PValuePtr parg = analyzeValue(args[i], env);
+        assert(parg->type == argType);
+        CValuePtr carg = codegenAsRef(args[i], env, parg);
+        llArgs.push_back(carg->llValue);
+    }
+    if (entry->analysis->objKind == VOID_TYPE) {
+        llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(), llArgs.end());
+        return NULL;
+    }
+    else {
+        PValuePtr pret = (PValue *)entry->analysis.ptr();
+        if (pret->isTemp) {
+            llArgs.push_back(out->llValue);
+            llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(),
+                                    llArgs.end());
+            return out;
+        }
+        else {
+            llvm::Value *result =
+                llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(),
+                                        llArgs.end());
+            return new CValue(pret->type, result);
+        }
+    }
+}
+
+
+
+//
+// codegenInvokeExternal
+//
+
+CValuePtr codegenInvokeExternal(ExternalProcedurePtr x,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env,
+                                CValuePtr out)
+{
+    assert(x->returnType2.ptr());
+    if (!x->llvmFunc) {
+        vector<const llvm::Type *> llArgTypes;
+        for (unsigned i = 0; i < x->args.size(); ++i)
+            llArgTypes.push_back(llvmType(x->args[i]->type2));
+        const llvm::Type *llRetType = llvmReturnType(x->returnType2);
+        llvm::FunctionType *llFuncType =
+            llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
+        x->llvmFunc = llvm::Function::Create(llFuncType,
+                                             llvm::Function::ExternalLinkage,
+                                             x->name->str.c_str(),
+                                             llvmModule);
+    }
+    ensureArity2(args, x->args.size(), x->hasVarArgs);
+    vector<llvm::Value *> llArgs;
+    for (unsigned i = 0; i < x->args.size(); ++i) {
+        PValuePtr parg = analyzeValue(args[i], env);
+        if (parg->type != x->args[i]->type2)
+            error(args[i], "argument type mismatch");
+        CValuePtr carg = codegenAsRef(args[i], env, parg);
+        llvm::Value *llArg = llvmBuilder->CreateLoad(carg->llValue);
+        llArgs.push_back(llArg);
+    }
+    if (x->hasVarArgs) {
+        for (unsigned i = x->args.size(); i < args.size(); ++i) {
+            PValuePtr parg = analyzeValue(args[i], env);
+            CValuePtr carg = codegenAsRef(args[i], env, parg);
+            llvm::Value *llArg = llvmBuilder->CreateLoad(carg->llValue);
+            llArgs.push_back(llArg);
+        }
+    }
+    llvm::Value *result =
+        llvmBuilder->CreateCall(x->llvmFunc, llArgs.begin(), llArgs.end());
+    if (x->returnType2->objKind == VOID_TYPE) {
+        assert(!out);
+        return NULL;
+    }
+    else {
+        llvmBuilder->CreateStore(result, out->llValue);
+        return out;
+    }
 }
