@@ -966,7 +966,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         const map<string, int> &fieldIndexMap = recordFieldIndexMap(z);
         map<string, int>::const_iterator fi = fieldIndexMap.find(fname->str);
         if (fi == fieldIndexMap.end())
-            error("field not in record");
+            error(args[1], "field not in record");
         const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
         return new PValue(fieldTypes[fi->second], false);
     }

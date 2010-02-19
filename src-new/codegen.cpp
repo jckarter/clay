@@ -1253,23 +1253,20 @@ CValuePtr codegenInvokeValue(CValuePtr x,
         if (parg->type != t->argTypes[i])
             error(args[i], "argument type mismatch");
         CValuePtr carg = codegenAsRef(args[i], env, parg);
-        llvm::Value *llArg = llvmBuilder->CreateLoad(carg->llValue);
-        llArgs.push_back(llArg);
+        llArgs.push_back(carg->llValue);
     }
-    llvm::Value *result =
+    if (t->returnType->objKind == TYPE) {
+        TypePtr retType = (Type *)t->returnType.ptr();
+        assert(retType == out->type);
+        llArgs.push_back(out->llValue);
         llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
-
-    if (t->returnType->objKind == VOID_TYPE) {
-        assert(!out);
-        return NULL;
+        return out;
     }
     else {
-        assert(t->returnType->objKind == TYPE);
-        TypePtr retType = (Type *)t->returnType.ptr();
-        assert(out.ptr());
-        assert(out->type == retType);
-        llvmBuilder->CreateStore(result, out->llValue);
-        return out;
+        assert(t->returnType->objKind == VOID_TYPE);
+        assert(!out);
+        llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+        return NULL;
     }
 }
 
@@ -1572,6 +1569,43 @@ static llvm::Value *_cgInteger(ExprPtr expr, EnvPtr env, TypePtr &type)
     else {
         if (pv->type->typeKind != INTEGER_TYPE)
             error(expr, "expecting integer type");
+        type = pv->type;
+    }
+    CValuePtr cv = codegenAsRef(expr, env, pv);
+    return llvmBuilder->CreateLoad(cv->llValue);
+}
+
+static llvm::Value *_cgPointer(ExprPtr expr, EnvPtr env, PointerTypePtr &type)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (type.ptr()) {
+        if (pv->type != (Type *)type.ptr())
+            error(expr, "argument type mismatch");
+    }
+    else {
+        if (pv->type->typeKind != POINTER_TYPE)
+            error(expr, "expecting pointer type");
+        type = (PointerType *)pv->type.ptr();
+    }
+    CValuePtr cv = codegenAsRef(expr, env, pv);
+    return llvmBuilder->CreateLoad(cv->llValue);
+}
+
+static llvm::Value *_cgPointerLike(ExprPtr expr, EnvPtr env, TypePtr &type)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (type.ptr()) {
+        if (pv->type != type)
+            error(expr, "argument type mismatch");
+    }
+    else {
+        switch (pv->type->typeKind) {
+        case POINTER_TYPE :
+        case FUNCTION_POINTER_TYPE :
+            break;
+        default :
+            error(expr, "expecting a pointer or a function pointer");
+        }
         type = pv->type;
     }
     CValuePtr cv = codegenAsRef(expr, env, pv);
@@ -1914,6 +1948,212 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         }
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
+    }
+
+    case PRIM_addressOf : {
+        ensureArity(args, 1);
+        PValuePtr pv = analyzeValue(args[0], env);
+        if (pv->isTemp)
+            error("cannot take address of a temporary");
+        CValuePtr cv = codegenAsRef(args[0], env, pv);
+        llvmBuilder->CreateStore(cv->llValue, out->llValue);
+        return out;
+    }
+
+    case PRIM_pointerDereference : {
+        ensureArity(args, 1);
+        PointerTypePtr t;
+        llvm::Value *v = _cgPointer(args[0], env, t);
+        return new CValue(t->pointeeType, v);
+    }
+
+    case PRIM_pointerToInt : {
+        ensureArity(args, 2);
+        TypePtr dest = evaluateType(args[0], env);
+        if (dest->typeKind != INTEGER_TYPE)
+            error(args[0], "invalid integer type");
+        PointerTypePtr pt;
+        llvm::Value *v = _cgPointer(args[1], env, pt);
+        llvm::Value *result = llvmBuilder->CreatePtrToInt(v, llvmType(dest));
+        llvmBuilder->CreateStore(result, out->llValue);
+        return out;
+    }
+
+    case PRIM_intToPointer : {
+        ensureArity(args, 2);
+        TypePtr pointeeType = evaluateType(args[0], env);
+        TypePtr dest = pointerType(pointeeType);
+        TypePtr t;
+        llvm::Value *v = _cgInteger(args[1], env, t);
+        llvm::Value *result = llvmBuilder->CreateIntToPtr(v, llvmType(dest));
+        llvmBuilder->CreateStore(result, out->llValue);
+        return out;
+    }
+
+    case PRIM_makeFunctionPointer : {
+        if (args.size() < 1)
+            error("incorrect number of arguments");
+        ObjectPtr callable = evaluateStatic(args[0], env);
+        switch (callable->objKind) {
+        case PROCEDURE :
+        case OVERLOADABLE :
+            break;
+        default :
+            error(args[0], "invalid procedure or overloadable");
+        }
+        const vector<bool> &isStaticFlags =
+            lookupIsStaticFlags(callable, args.size()-1);
+        vector<ObjectPtr> argsKey;
+        vector<LocationPtr> argLocations;
+        vector<TypePtr> dynamicArgTypes;
+        for (unsigned i = 1; i < args.size(); ++i) {
+            if (!isStaticFlags[i-1]) {
+                TypePtr t = evaluateType(args[i], env);
+                argsKey.push_back(t.ptr());
+                dynamicArgTypes.push_back(t);
+            }
+            else {
+                ObjectPtr param = evaluateStatic(args[i], env);
+                argsKey.push_back(param);
+            }
+            argLocations.push_back(args[i]->location);
+        }
+        InvokeEntryPtr entry;
+        switch (callable->objKind) {
+        case PROCEDURE : {
+            Procedure *y = (Procedure *)callable.ptr();
+            entry = codegenProcedure(y, argsKey, argLocations);
+            break;
+        }
+        case OVERLOADABLE : {
+            Overloadable *y = (Overloadable *)callable.ptr();
+            entry = codegenOverloadable(y, argsKey, argLocations);
+            break;
+        }
+        default :
+            assert(false);
+        }
+        llvmBuilder->CreateStore(entry->llvmFunc, out->llValue);
+        return out;
+    }
+
+    case PRIM_pointerCast : {
+        ensureArity(args, 2);
+        TypePtr dest = evaluateType(args[0], env);
+        switch (dest->typeKind) {
+        case POINTER_TYPE :
+        case FUNCTION_POINTER_TYPE :
+            break;
+        default :
+            error(args[0], "expecting a pointer or function pointer value");
+        }
+        TypePtr t;
+        llvm::Value *v = _cgPointerLike(args[1], env, t);
+        assert(out.ptr());
+        assert(out->type == dest);
+        llvmBuilder->CreateStore(v, out->llValue);
+        return out;
+    }
+
+    case PRIM_array : {
+        if (args.empty())
+            error("atleast one element required for creating an array");
+        PValuePtr pv = analyzeValue(args[0], env);
+        TypePtr etype = pv->type;
+        int n = (int)args.size();
+        assert(out.ptr());
+        assert(arrayType(etype, n) == out->type);
+        for (unsigned i = 0; i < args.size(); ++i) {
+            PValuePtr parg = analyzeValue(args[i], env);
+            if (parg->type != etype)
+                error(args[i], "array element type mismatch");
+            llvm::Value *ptr =
+                llvmBuilder->CreateConstGEP2_32(out->llValue, 0, i);
+            codegenIntoValue(args[i], env, parg, new CValue(etype, ptr));
+        }
+        return out;
+    }
+
+    case PRIM_arrayRef : {
+        ensureArity(args, 2);
+        PValuePtr parray = analyzeValue(args[0], env);
+        if (parray->type->typeKind != ARRAY_TYPE)
+            error(args[0], "expecting array type");
+        ArrayType *at = (ArrayType *)parray->type.ptr();
+        CValuePtr carray = codegenAsRef(args[0], env, parray);
+        TypePtr indexType;
+        llvm::Value *i = _cgInteger(args[1], env, indexType);
+        vector<llvm::Value *> indices;
+        indices.push_back(llvm::ConstantInt::get(llvmType(int32Type), 0));
+        indices.push_back(i);
+        llvm::Value *ptr =
+            llvmBuilder->CreateGEP(carray->llValue,
+                                   indices.begin(),
+                                   indices.end());
+        return new CValue(at->elementType, ptr);
+    }
+
+    case PRIM_tuple : {
+        assert(out.ptr());
+        assert(out->type->typeKind == TUPLE_TYPE);
+        TupleType *tt = (TupleType *)out->type.ptr();
+        ensureArity(args, tt->elementTypes.size());
+        for (unsigned i = 0; i < args.size(); ++i) {
+            PValuePtr parg = analyzeValue(args[i], env);
+            if (parg->type != tt->elementTypes[i])
+                error(args[i], "argument type mismatch");
+            llvm::Value *ptr =
+                llvmBuilder->CreateConstGEP2_32(out->llValue, 0, i);
+            CValuePtr cargDest = new CValue(tt->elementTypes[i], ptr);
+            codegenIntoValue(args[i], env, parg, cargDest);
+        }
+        return out;
+    }
+
+    case PRIM_tupleRef : {
+        ensureArity(args, 2);
+        PValuePtr ptuple = analyzeValue(args[0], env);
+        if (ptuple->type->typeKind != TUPLE_TYPE)
+            error(args[0], "expecting a tuple");
+        TupleType *tt = (TupleType *)ptuple->type.ptr();
+        CValuePtr ctuple = codegenAsRef(args[0], env, ptuple);
+        int i = evaluateInt(args[1], env);
+        llvm::Value *ptr =
+            llvmBuilder->CreateConstGEP2_32(ctuple->llValue, 0, i);
+        return new CValue(tt->elementTypes[i], ptr);
+    }
+
+    case PRIM_recordFieldRef : {
+        ensureArity(args, 2);
+        PValuePtr prec = analyzeValue(args[0], env);
+        if (prec->type->typeKind != RECORD_TYPE)
+            error(args[0], "expecting a record");
+        RecordType *rt = (RecordType *)prec->type.ptr();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        CValuePtr crec = codegenAsRef(args[0], env, prec);
+        int i = evaluateInt(args[1], env);
+        llvm::Value *ptr =
+            llvmBuilder->CreateConstGEP2_32(crec->llValue, 0, i);
+        return new CValue(fieldTypes[i], ptr);
+    }
+
+    case PRIM_recordFieldRefByName : {
+        ensureArity(args, 2);
+        PValuePtr prec = analyzeValue(args[0], env);
+        if (prec->type->typeKind != RECORD_TYPE)
+            error(args[0], "expecting a record");
+        RecordType *rt = (RecordType *)prec->type.ptr();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        CValuePtr crec = codegenAsRef(args[0], env, prec);
+        IdentifierPtr fname = evaluateIdentifier(args[1], env);
+        const map<string, int> &fieldIndexMap = recordFieldIndexMap(rt);
+        map<string, int>::const_iterator fi = fieldIndexMap.find(fname->str);
+        if (fi == fieldIndexMap.end())
+            error(args[1], "field not in record");
+        int i = fi->second;
+        llvm::Value *ptr =
+            llvmBuilder->CreateConstGEP2_32(crec->llValue, 0, i);
+        return new CValue(fieldTypes[i], ptr);
     }
 
     default :
