@@ -292,8 +292,12 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         FunctionPointerType *x = (FunctionPointerType *)t.ptr();
         vector<const llvm::Type *> llArgTypes;
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
-            llArgTypes.push_back(llvmType(x->argTypes[i]));
-        const llvm::Type *llReturnType = llvmReturnType(x->returnType);
+            llArgTypes.push_back(llvmType(pointerType(x->argTypes[i])));
+        if (x->returnType->objKind == TYPE) {
+            TypePtr retType = (Type *)x->returnType.ptr();
+            llArgTypes.push_back(llvmType(pointerType(retType)));
+        }
+        const llvm::Type *llReturnType = llvmReturnType(voidType.ptr());
         llvm::FunctionType *llFuncType =
             llvm::FunctionType::get(llReturnType, llArgTypes, false);
         return llvm::PointerType::getUnqual(llFuncType);
