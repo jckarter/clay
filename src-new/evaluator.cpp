@@ -199,3 +199,28 @@ ValueHolderPtr boolToValueHolder(bool x)
     *(bool *)v->buf = x;
     return v;
 }
+
+
+
+//
+// evaluateIntoValueHolder
+//
+
+void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v)
+{
+    CodePtr code = new Code();
+    code->body = new Return(expr);
+    IdentifierPtr name = new Identifier("clay_eval_temp");
+    ProcedurePtr proc = new Procedure(name, code);
+    proc->env = env;
+    InvokeEntryPtr entry = codegenProcedure(proc, vector<ObjectPtr>(),
+                                            vector<LocationPtr>());
+    assert(entry->analysis->objKind == PVALUE);
+    PValuePtr pv = (PValue *)entry->analysis.ptr();
+    if (pv->type != v->type)
+        error(expr, "type mismatch in evaluating");
+
+    vector<llvm::GenericValue> gvArgs;
+    gvArgs.push_back(llvm::GenericValue(v->buf));
+    llvmEngine->runFunction(entry->llvmFunc, gvArgs);
+}

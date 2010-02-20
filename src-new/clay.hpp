@@ -1652,5 +1652,113 @@ struct CValue : public Object {
         : Object(CVALUE), type(type), llValue(llValue) {}
 };
 
+struct JumpTarget {
+    llvm::BasicBlock *block;
+    int stackMarker;
+    JumpTarget() : block(NULL), stackMarker(-1) {}
+    JumpTarget(llvm::BasicBlock *block, int stackMarker)
+        : block(block), stackMarker(stackMarker) {}
+};
+
+struct CodeContext {
+    InvokeEntryPtr entry;
+    CValuePtr returnVal;
+    JumpTarget returnTarget;
+    map<string, JumpTarget> labels;
+    vector<JumpTarget> breaks;
+    vector<JumpTarget> continues;
+    CodeContext(InvokeEntryPtr entry,
+                CValuePtr returnVal,
+                const JumpTarget &returnTarget)
+        : entry(entry), returnVal(returnVal),
+          returnTarget(returnTarget) {}
+};
+
+void codegenValueInit(CValuePtr dest);
+void codegenValueDestroy(CValuePtr dest);
+void codegenValueCopy(CValuePtr dest, CValuePtr src);
+void codegenValueAssign(CValuePtr dest, CValuePtr src);
+
+llvm::Value *codegenToBoolFlag(CValuePtr a);
+
+int cgMarkStack();
+void cgDestroyStack(int marker);
+void cgPopStack(int marker);
+void cgDestroyAndPopStack(int marker);
+
+CValuePtr codegenAllocValue(TypePtr t);
+
+InvokeEntryPtr codegenProcedure(ProcedurePtr x,
+                                const vector<ObjectPtr> &argsKey,
+                                const vector<LocationPtr> &argLocations);
+InvokeEntryPtr codegenOverloadable(OverloadablePtr x,
+                                   const vector<ObjectPtr> &argsKey,
+                                   const vector<LocationPtr> &argLocations);
+InvokeEntryPtr codegenCodeBody(ObjectPtr callable,
+                               const vector<ObjectPtr> &argsKey,
+                               const string &callableName);
+
+bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx);
+
+void codegenCollectLabels(const vector<StatementPtr> &statements,
+                          unsigned startIndex,
+                          CodeContext &ctx);
+EnvPtr codegenBinding(BindingPtr x, EnvPtr env);
+
+void codegenRootIntoValue(ExprPtr expr,
+                          EnvPtr env,
+                          PValuePtr pv,
+                          CValuePtr out);
+CValuePtr codegenRootValue(ExprPtr expr, EnvPtr env, CValuePtr out);
+
+void codegenIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, CValuePtr out);
+CValuePtr codegenAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv);
+CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out);
+CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
+CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out);
+void codegenValueHolder(ValueHolderPtr v, CValuePtr out);
+llvm::Value *codegenConstant(ValueHolderPtr v);
+
+CValuePtr codegenInvokeValue(CValuePtr x,
+                             const vector<ExprPtr> &args,
+                             EnvPtr env,
+                             CValuePtr out);
+void codegenInvokeVoid(ObjectPtr x,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env);
+CValuePtr codegenInvoke(ObjectPtr x,
+                        const vector<ExprPtr> &args,
+                        EnvPtr env,
+                        CValuePtr out);
+CValuePtr codegenInvokeType(TypePtr x,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env,
+                            CValuePtr out);
+CValuePtr codegenInvokeRecord(RecordPtr x,
+                              const vector<ExprPtr> &args,
+                              EnvPtr env,
+                              CValuePtr out);
+CValuePtr codegenInvokeProcedure(ProcedurePtr x,
+                                 const vector<ExprPtr> &args,
+                                 EnvPtr env,
+                                 CValuePtr out);
+CValuePtr codegenInvokeOverloadable(OverloadablePtr x,
+                                    const vector<ExprPtr> &args,
+                                    EnvPtr env,
+                                    CValuePtr out);
+CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env,
+                            CValuePtr out);
+CValuePtr codegenInvokeExternal(ExternalProcedurePtr x,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env,
+                                CValuePtr out);
+CValuePtr codegenInvokePrimOp(PrimOpPtr x,
+                              const vector<ExprPtr> &args,
+                              EnvPtr env,
+                              CValuePtr out);
+
+llvm::Function *codegenMain(ModulePtr module);
 
 #endif

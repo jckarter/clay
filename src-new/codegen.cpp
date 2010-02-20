@@ -1,119 +1,7 @@
 #include "clay.hpp"
 
-
-//
-// declarations
-//
-
-struct JumpTarget {
-    llvm::BasicBlock *block;
-    int stackMarker;
-    JumpTarget() : block(NULL), stackMarker(-1) {}
-    JumpTarget(llvm::BasicBlock *block, int stackMarker)
-        : block(block), stackMarker(stackMarker) {}
-};
-
-struct CodeContext {
-    InvokeEntryPtr entry;
-    CValuePtr returnVal;
-    JumpTarget returnTarget;
-    map<string, JumpTarget> labels;
-    vector<JumpTarget> breaks;
-    vector<JumpTarget> continues;
-    CodeContext(InvokeEntryPtr entry,
-                CValuePtr returnVal,
-                const JumpTarget &returnTarget)
-        : entry(entry), returnVal(returnVal),
-          returnTarget(returnTarget) {}
-};
-
-void codegenValueInit(CValuePtr dest);
-void codegenValueDestroy(CValuePtr dest);
-void codegenValueCopy(CValuePtr dest, CValuePtr src);
-void codegenValueAssign(CValuePtr dest, CValuePtr src);
-
-llvm::Value *codegenToBoolFlag(CValuePtr a);
 
 vector<CValuePtr> stackCValues;
-
-static int markStack();
-static void destroyStack(int marker);
-static void popStack(int marker);
-static void destroyAndPopStack(int marker);
-
-CValuePtr codegenAllocValue(TypePtr t);
-
-InvokeEntryPtr codegenProcedure(ProcedurePtr x,
-                                const vector<ObjectPtr> &argsKey,
-                                const vector<LocationPtr> &argLocations);
-InvokeEntryPtr codegenOverloadable(OverloadablePtr x,
-                                   const vector<ObjectPtr> &argsKey,
-                                   const vector<LocationPtr> &argLocations);
-InvokeEntryPtr codegenCodeBody(ObjectPtr callable,
-                               const vector<ObjectPtr> &argsKey,
-                               const string &callableName);
-
-bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx);
-
-void codegenCollectLabels(const vector<StatementPtr> &statements,
-                          unsigned startIndex,
-                          CodeContext &ctx);
-EnvPtr codegenBinding(BindingPtr x, EnvPtr env);
-
-void codegenRootIntoValue(ExprPtr expr,
-                          EnvPtr env,
-                          PValuePtr pv,
-                          CValuePtr out);
-CValuePtr codegenRootValue(ExprPtr expr, EnvPtr env, CValuePtr out);
-
-void codegenIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, CValuePtr out);
-CValuePtr codegenAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv);
-CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out);
-CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
-CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out);
-void codegenValueHolder(ValueHolderPtr v, CValuePtr out);
-llvm::Value *codegenConstant(ValueHolderPtr v);
-
-CValuePtr codegenInvokeValue(CValuePtr x,
-                             const vector<ExprPtr> &args,
-                             EnvPtr env,
-                             CValuePtr out);
-void codegenInvokeVoid(ObjectPtr x,
-                       const vector<ExprPtr> &args,
-                       EnvPtr env);
-CValuePtr codegenInvoke(ObjectPtr x,
-                        const vector<ExprPtr> &args,
-                        EnvPtr env,
-                        CValuePtr out);
-CValuePtr codegenInvokeType(TypePtr x,
-                            const vector<ExprPtr> &args,
-                            EnvPtr env,
-                            CValuePtr out);
-CValuePtr codegenInvokeRecord(RecordPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env,
-                              CValuePtr out);
-CValuePtr codegenInvokeProcedure(ProcedurePtr x,
-                                 const vector<ExprPtr> &args,
-                                 EnvPtr env,
-                                 CValuePtr out);
-CValuePtr codegenInvokeOverloadable(OverloadablePtr x,
-                                    const vector<ExprPtr> &args,
-                                    EnvPtr env,
-                                    CValuePtr out);
-CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
-                            const vector<ExprPtr> &args,
-                            EnvPtr env,
-                            CValuePtr out);
-CValuePtr codegenInvokeExternal(ExternalProcedurePtr x,
-                                const vector<ExprPtr> &args,
-                                EnvPtr env,
-                                CValuePtr out);
-CValuePtr codegenInvokePrimOp(PrimOpPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env,
-                              CValuePtr out);
-
 
 
 //
@@ -166,12 +54,12 @@ llvm::Value *codegenToBoolFlag(CValuePtr a)
 // codegen temps
 //
 
-static int markStack()
+int cgMarkStack()
 {
     return stackCValues.size();
 }
 
-static void destroyStack(int marker)
+void cgDestroyStack(int marker)
 {
     int i = (int)stackCValues.size();
     assert(marker <= i);
@@ -181,14 +69,14 @@ static void destroyStack(int marker)
     }
 }
 
-static void popStack(int marker)
+void cgPopStack(int marker)
 {
     assert(marker <= (int)stackCValues.size());
     while (marker < (int)stackCValues.size())
         stackCValues.pop_back();
 }
 
-static void destroyAndPopStack(int marker)
+void cgDestroyAndPopStack(int marker)
 {
     assert(marker <= (int)stackCValues.size());
     while (marker < (int)stackCValues.size()) {
@@ -316,15 +204,15 @@ InvokeEntryPtr codegenCodeBody(ObjectPtr callable,
         }
     }
 
-    JumpTarget returnTarget(returnBlock, markStack());
+    JumpTarget returnTarget(returnBlock, cgMarkStack());
     CodeContext ctx(entry, returnVal, returnTarget);
 
     bool terminated = codegenStatement(entry->code->body, env, ctx);
     if (!terminated) {
-        destroyStack(returnTarget.stackMarker);
+        cgDestroyStack(returnTarget.stackMarker);
         llvmBuilder->CreateBr(returnBlock);
     }
-    popStack(returnTarget.stackMarker);
+    cgPopStack(returnTarget.stackMarker);
 
     llvmInitBuilder->CreateBr(codeBlock);
 
@@ -368,7 +256,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 
     case BLOCK : {
         Block *x = (Block *)stmt.ptr();
-        int blockMarker = markStack();
+        int blockMarker = cgMarkStack();
         codegenCollectLabels(x->statements, 0, ctx);
         bool terminated = false;
         for (unsigned i = 0; i < x->statements.size(); ++i) {
@@ -395,8 +283,8 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
             }
         }
         if (!terminated)
-            destroyStack(blockMarker);
-        popStack(blockMarker);
+            cgDestroyStack(blockMarker);
+        cgPopStack(blockMarker);
         return terminated;
     }
 
@@ -410,11 +298,11 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         PValuePtr pvRight = analyzeValue(x->right, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        int marker = markStack();
+        int marker = cgMarkStack();
         CValuePtr cvLeft = codegenValue(x->left, env, NULL);
         CValuePtr cvRight = codegenAsRef(x->right, env, pvRight);
         codegenValueAssign(cvLeft, cvRight);
-        destroyAndPopStack(marker);
+        cgDestroyAndPopStack(marker);
         return false;
     }
 
@@ -425,7 +313,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         if (li == ctx.labels.end())
             error("goto label not found");
         const JumpTarget &jt = li->second;
-        destroyStack(jt.stackMarker);
+        cgDestroyStack(jt.stackMarker);
         llvmBuilder->CreateBr(jt.block);
         return true;
     }
@@ -449,7 +337,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
             codegenRootIntoValue(x->expr, env, pv, ctx.returnVal);
         }
         const JumpTarget &jt = ctx.returnTarget;
-        destroyStack(jt.stackMarker);
+        cgDestroyStack(jt.stackMarker);
         llvmBuilder->CreateBr(jt.block);
         return true;
     }
@@ -469,7 +357,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         CValuePtr ref = codegenRootValue(x->expr, env, NULL);
         llvmBuilder->CreateStore(ref->llValue, ctx.returnVal->llValue);
         const JumpTarget &jt = ctx.returnTarget;
-        destroyStack(jt.stackMarker);
+        cgDestroyStack(jt.stackMarker);
         llvmBuilder->CreateBr(jt.block);
         return true;
     }
@@ -477,10 +365,10 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
     case IF : {
         If *x = (If *)stmt.ptr();
         PValuePtr pv = analyzeValue(x->condition, env);
-        int marker = markStack();
+        int marker = cgMarkStack();
         CValuePtr cv = codegenAsRef(x->condition, env, pv);
         llvm::Value *cond = codegenToBoolFlag(cv);
-        destroyAndPopStack(marker);
+        cgDestroyAndPopStack(marker);
 
         llvm::BasicBlock *trueBlock = newBasicBlock("ifTrue");
         llvm::BasicBlock *falseBlock = newBasicBlock("ifFalse");
@@ -517,7 +405,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
     case EXPR_STATEMENT : {
         ExprStatement *x = (ExprStatement *)stmt.ptr();
         ObjectPtr a = analyze(x->expr, env);
-        int marker = markStack();
+        int marker = cgMarkStack();
         if (a->objKind == VOID_TYPE) {
             codegenMaybeVoid(x->expr, env, NULL);
         }
@@ -528,7 +416,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         else {
             error("invalid expression statement");
         }
-        destroyAndPopStack(marker);
+        cgDestroyAndPopStack(marker);
         return false;
     }
 
@@ -543,15 +431,15 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         llvmBuilder->SetInsertPoint(whileBegin);
 
         PValuePtr pv = analyzeValue(x->condition, env);
-        int marker = markStack();
+        int marker = cgMarkStack();
         CValuePtr cv = codegenAsRef(x->condition, env, pv);
         llvm::Value *cond = codegenToBoolFlag(cv);
-        destroyAndPopStack(marker);
+        cgDestroyAndPopStack(marker);
 
         llvmBuilder->CreateCondBr(cond, whileBody, whileEnd);
 
-        ctx.breaks.push_back(JumpTarget(whileEnd, markStack()));
-        ctx.continues.push_back(JumpTarget(whileBegin, markStack()));
+        ctx.breaks.push_back(JumpTarget(whileEnd, cgMarkStack()));
+        ctx.continues.push_back(JumpTarget(whileBegin, cgMarkStack()));
         llvmBuilder->SetInsertPoint(whileBody);
         bool terminated = codegenStatement(x->body, env, ctx);
         if (!terminated)
@@ -567,7 +455,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         if (ctx.breaks.empty())
             error("invalid break statement");
         const JumpTarget &jt = ctx.breaks.back();
-        destroyStack(jt.stackMarker);
+        cgDestroyStack(jt.stackMarker);
         llvmBuilder->CreateBr(jt.block);
         return true;
     }
@@ -576,7 +464,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         if (ctx.continues.empty())
             error("invalid continue statement");
         const JumpTarget &jt = ctx.breaks.back();
-        destroyStack(jt.stackMarker);
+        cgDestroyStack(jt.stackMarker);
         llvmBuilder->CreateBr(jt.block);
         return true;
     }
@@ -610,7 +498,7 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
             if (li != ctx.labels.end())
                 error(x, "label redefined");
             llvm::BasicBlock *bb = newBasicBlock(y->name->str.c_str());
-            ctx.labels[y->name->str] = JumpTarget(bb, markStack());
+            ctx.labels[y->name->str] = JumpTarget(bb, cgMarkStack());
             break;
         }
 
@@ -674,16 +562,16 @@ void codegenRootIntoValue(ExprPtr expr,
                           PValuePtr pv,
                           CValuePtr out)
 {
-    int marker = markStack();
+    int marker = cgMarkStack();
     codegenIntoValue(expr, env, pv, out);
-    destroyAndPopStack(marker);
+    cgDestroyAndPopStack(marker);
 }
 
 CValuePtr codegenRootValue(ExprPtr expr, EnvPtr env, CValuePtr out)
 {
-    int marker = markStack();
+    int marker = cgMarkStack();
     CValuePtr cv = codegenValue(expr, env, out);
-    destroyAndPopStack(marker);
+    cgDestroyAndPopStack(marker);
     return cv;
 }
 
@@ -2160,4 +2048,71 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         assert(false);
         return NULL;
     }
+}
+
+
+
+//
+// codegenMain
+//
+
+llvm::Function *codegenMain(ModulePtr module)
+{
+    llvm::FunctionType *llMainType =
+        llvm::FunctionType::get(llvmType(int32Type),
+                                vector<const llvm::Type *>(),
+                                false);
+    llvm::Function *llMain =
+        llvm::Function::Create(llMainType,
+                               llvm::Function::ExternalLinkage,
+                               "main",
+                               llvmModule);
+
+    llvm::Function *savedLLVMFunction = llvmFunction;
+    llvm::IRBuilder<> *savedLLVMInitBuilder = llvmInitBuilder;
+    llvm::IRBuilder<> *savedLLVMBuilder = llvmBuilder;
+
+    llvmFunction = llMain;
+
+    llvm::BasicBlock *initBlock = newBasicBlock("initBlock");
+    llvm::BasicBlock *codeBlock = newBasicBlock("codeBlock");
+
+    llvmInitBuilder = new llvm::IRBuilder<>(initBlock);
+    llvmBuilder = new llvm::IRBuilder<>(codeBlock);
+
+    ObjectPtr mainObj = lookupEnv(module->env, new Identifier("main"));
+    if (mainObj->objKind != PROCEDURE)
+        error("expecting 'main' to be a procedure");
+    ProcedurePtr mainProc = (Procedure *)mainObj.ptr();
+    InvokeEntryPtr entry = codegenProcedure(mainProc, vector<ObjectPtr>(),
+                                            vector<LocationPtr>());
+    if (entry->analysis->objKind == PVALUE) {
+        PValuePtr pv = (PValue *)entry->analysis.ptr();
+        CValuePtr result = codegenAllocValue(pv->type);
+        codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), result);
+        if (pv->type == int32Type) {
+            llvm::Value *v = llvmBuilder->CreateLoad(result->llValue);
+            llvmBuilder->CreateRet(v);
+        }
+        else {
+            llvm::Value *zero = llvm::ConstantInt::get(llvmType(int32Type), 0);
+            llvmBuilder->CreateRet(zero);
+        }
+    }
+    else {
+        assert(entry->analysis->objKind == VOID_TYPE);
+        codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), NULL);
+        llvm::Value *zero = llvm::ConstantInt::get(llvmType(int32Type), 0);
+        llvmBuilder->CreateRet(zero);
+    }
+    llvmInitBuilder->CreateBr(codeBlock);
+
+    delete llvmInitBuilder;
+    delete llvmBuilder;
+
+    llvmBuilder = savedLLVMBuilder;
+    llvmInitBuilder = savedLLVMInitBuilder;
+    llvmFunction = savedLLVMFunction;
+
+    return llMain;
 }
