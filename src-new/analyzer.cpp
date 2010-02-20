@@ -7,7 +7,7 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
     switch (v->objKind) {
 
     case VALUE_HOLDER : {
-        ValueHolder *x = (ValueHolder *)expr.ptr();
+        ValueHolder *x = (ValueHolder *)v.ptr();
         return new PValue(x->type, true);
     }
 
