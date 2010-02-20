@@ -376,7 +376,7 @@ void typePrint(TypePtr t, ostream &out) {
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
             v.push_back(x->argTypes[i].ptr());
         v.push_back(x->returnType);
-        out << "FunctionPointer" << t;
+        out << "FunctionPointer" << v;
         break;
     }
     case ARRAY_TYPE : {

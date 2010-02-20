@@ -1500,6 +1500,7 @@ InvokeEntryPtr lookupInvoke(ObjectPtr callable,
 
 enum MatchCode {
     MATCH_SUCCESS,
+    MATCH_ARITY_ERROR,
     MATCH_ARGUMENT_ERROR,
     MATCH_PREDICATE_ERROR,
 };
@@ -1516,6 +1517,11 @@ struct MatchSuccess : public MatchResult {
     EnvPtr env;
     MatchSuccess(EnvPtr env)
         : MatchResult(MATCH_SUCCESS), env(env) {}
+};
+
+struct MatchArityError : public MatchResult {
+    MatchArityError()
+        : MatchResult(MATCH_ARITY_ERROR) {}
 };
 
 struct MatchArgumentError : public MatchResult {

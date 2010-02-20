@@ -3,7 +3,8 @@
 MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
                            const vector<ObjectPtr> &argsKey)
 {
-    assert(code->formalArgs.size() == argsKey.size());
+    if (code->formalArgs.size() != argsKey.size())
+        return new MatchArityError();
     vector<PatternCellPtr> cells;
     EnvPtr patternEnv = new Env(codeEnv);
     for (unsigned i = 0; i < code->patternVars.size(); ++i) {
@@ -52,6 +53,9 @@ void signalMatchError(MatchResultPtr result,
     case MATCH_SUCCESS :
         assert(false);
         break;
+    case MATCH_ARITY_ERROR : {
+        error("incorrect no. of arguments");
+    }
     case MATCH_ARGUMENT_ERROR : {
         MatchArgumentError *e = (MatchArgumentError *)result.ptr();
         LocationPtr loc = argLocations[e->argIndex];
