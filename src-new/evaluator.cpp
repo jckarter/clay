@@ -183,7 +183,7 @@ bool evaluateBool(ExprPtr expr, EnvPtr env)
     ValueHolderPtr vh = (ValueHolder *)v.ptr();
     if (vh->type != boolType)
         error(expr, "expecting a bool value");
-    return *(bool *)vh->buf;
+    return (*(char *)vh->buf) != 0;
 }
 
 ValueHolderPtr intToValueHolder(int x)
@@ -195,8 +195,8 @@ ValueHolderPtr intToValueHolder(int x)
 
 ValueHolderPtr boolToValueHolder(bool x)
 {
-    ValueHolderPtr v = new ValueHolder(int32Type);
-    *(bool *)v->buf = x;
+    ValueHolderPtr v = new ValueHolder(boolType);
+    *(char *)v->buf = x ? 1 : 0;
     return v;
 }
 

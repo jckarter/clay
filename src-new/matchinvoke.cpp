@@ -17,15 +17,19 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
         switch (farg->objKind) {
         case VALUE_ARG : {
             ValueArg *x = (ValueArg *)farg.ptr();
-            PatternPtr pattern = evaluatePattern(x->type, patternEnv);
-            if (!unify(pattern, argsKey[i]))
-                return new MatchArgumentError(i);
+            if (x->type.ptr()) {
+                PatternPtr pattern = evaluatePattern(x->type, patternEnv);
+                if (!unify(pattern, argsKey[i]))
+                    return new MatchArgumentError(i);
+            }
+            break;
         }
         case STATIC_ARG : {
             StaticArg *x = (StaticArg *)farg.ptr();
             PatternPtr pattern = evaluatePattern(x->pattern, patternEnv);
             if (!unify(pattern, argsKey[i]))
                 return new MatchArgumentError(i);
+            break;
         }
         default :
             assert(false);
