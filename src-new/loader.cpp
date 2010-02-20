@@ -107,7 +107,12 @@ static void installGlobals(ModulePtr m) {
         switch (x->objKind) {
         case RECORD : {
             Record *y = (Record *)x;
-            addGlobal(m, y->name, y);
+            Object *z = y;
+            if (y->patternVars.empty()) {
+                TypePtr t = recordType(y, vector<ObjectPtr>());
+                z = t.ptr();
+            }
+            addGlobal(m, y->name, z);
             break;
         }
         case PROCEDURE :

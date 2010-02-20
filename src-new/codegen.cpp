@@ -1507,6 +1507,24 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
 {
     switch (x->primOpCode) {
 
+    case PRIM_TypeP :
+    case PRIM_TypeSize :
+    case PRIM_FunctionPointerTypeP :
+    case PRIM_TupleTypeP :
+    case PRIM_TupleElementCount :
+    case PRIM_TupleElementOffset :
+    case PRIM_RecordTypeP :
+    case PRIM_RecordFieldCount :
+    case PRIM_RecordFieldOffset :
+    case PRIM_RecordFieldIndex : {
+        // handle static primitives
+        ObjectPtr obj = analyzeInvokePrimOp(x, args, env);
+        assert(obj->objKind == VALUE_HOLDER);
+        ValueHolderPtr vh = (ValueHolder *)obj.ptr();
+        codegenValueHolder(vh, out);
+        return out;
+    }
+
     case PRIM_primitiveCopy : {
         ensureArity(args, 2);
         PValuePtr pv0 = analyzeValue(args[0], env);
