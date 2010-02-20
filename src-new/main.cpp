@@ -35,6 +35,10 @@ int main(int argc, char **argv) {
     setSearchPath(argv[0]);
 
     ModulePtr m = loadProgram(clayFile);
-    cout << m << endl;
+    codegenMain(m);
+
+    llvm::raw_stdout_ostream out;
+    out << *llvmModule;
+
     return 0;
 }
