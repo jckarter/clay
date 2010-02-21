@@ -144,10 +144,11 @@ InvokeEntryPtr codegenCodeBody(ObjectPtr callable,
     }
 
     const llvm::Type *llReturnType;
-    if (entry->analysis->objKind == VOID_TYPE) {
+    if (entry->analysis->objKind == VOID_VALUE) {
         llReturnType = llvmReturnType(voidType.ptr());
     }
     else {
+        assert(entry->analysis->objKind == PVALUE);
         PValue *x = (PValue *)entry->analysis.ptr();
         if (x->isTemp) {
             llArgTypes.push_back(llvmType(pointerType(x->type)));
@@ -193,7 +194,8 @@ InvokeEntryPtr codegenCodeBody(ObjectPtr callable,
     }
 
     CValuePtr returnVal;
-    if (entry->analysis->objKind != VOID_TYPE) {
+    if (entry->analysis->objKind != VOID_VALUE) {
+        assert(entry->analysis->objKind == PVALUE);
         PValue *x = (PValue *)entry->analysis.ptr();
         if (x->isTemp) {
             returnVal = new CValue(x->type, &(*ai));
@@ -218,10 +220,11 @@ InvokeEntryPtr codegenCodeBody(ObjectPtr callable,
 
     llvmBuilder->SetInsertPoint(returnBlock);
 
-    if (entry->analysis->objKind == VOID_TYPE) {
+    if (entry->analysis->objKind == VOID_VALUE) {
         llvmBuilder->CreateRetVoid();
     }
     else {
+        assert(entry->analysis->objKind == PVALUE);
         PValue *x = (PValue *)entry->analysis.ptr();
         if (x->isTemp) {
             llvmBuilder->CreateRetVoid();
@@ -321,11 +324,12 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
         ObjectPtr returnAnalysis = ctx.entry->analysis;
-        if (returnAnalysis->objKind == VOID_TYPE) {
+        if (returnAnalysis->objKind == VOID_VALUE) {
             if (x->expr.ptr())
                 error("void return expected");
         }
         else {
+            assert(returnAnalysis->objKind == PVALUE);
             PValuePtr returnPV = (PValue *)returnAnalysis.ptr();
             if (!x->expr)
                 error("non-void return expected");
@@ -344,8 +348,9 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 
     case RETURN_REF : {
         ReturnRef *x = (ReturnRef *)stmt.ptr();
-        if (ctx.entry->analysis->objKind == VOID_TYPE)
+        if (ctx.entry->analysis->objKind == VOID_VALUE)
             error("void return expected");
+        assert(ctx.entry->analysis->objKind == PVALUE);
         PValuePtr returnPV = (PValue *)ctx.entry->analysis.ptr();
         if (returnPV->isTemp)
             error("return by value expected");
@@ -406,7 +411,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         ExprStatement *x = (ExprStatement *)stmt.ptr();
         ObjectPtr a = analyze(x->expr, env);
         int marker = cgMarkStack();
-        if (a->objKind == VOID_TYPE) {
+        if (a->objKind == VOID_VALUE) {
             codegenMaybeVoid(x->expr, env, NULL);
         }
         else if (a->objKind == PVALUE) {
@@ -1170,7 +1175,7 @@ void codegenInvokeVoid(ObjectPtr x,
 {
     CValuePtr result = codegenInvoke(x, args, env, NULL);
     if (result.ptr())
-        error("non-void expression expected");
+        error("void expression expected");
 }
 
 CValuePtr codegenInvoke(ObjectPtr x,
@@ -1345,11 +1350,12 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
         CValuePtr carg = codegenAsRef(args[i], env, parg);
         llArgs.push_back(carg->llValue);
     }
-    if (entry->analysis->objKind == VOID_TYPE) {
+    if (entry->analysis->objKind == VOID_VALUE) {
         llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(), llArgs.end());
         return NULL;
     }
     else {
+        assert(entry->analysis->objKind == PVALUE);
         PValuePtr pret = (PValue *)entry->analysis.ptr();
         if (pret->isTemp) {
             llArgs.push_back(out->llValue);
@@ -2119,7 +2125,7 @@ llvm::Function *codegenMain(ModulePtr module)
         }
     }
     else {
-        assert(entry->analysis->objKind == VOID_TYPE);
+        assert(entry->analysis->objKind == VOID_VALUE);
         codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), NULL);
         llvm::Value *zero = llvm::ConstantInt::get(llvmType(int32Type), 0);
         llvmBuilder->CreateRet(zero);

@@ -470,7 +470,7 @@ ObjectPtr analyzeCodeBody(CodePtr code, EnvPtr env) {
         return result;
     if (!ok)
         return NULL;
-    return voidType.ptr();
+    return voidValue.ptr();
 }
 
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
@@ -505,8 +505,8 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
         Return *x = (Return *)stmt.ptr();
         if (!x->expr) {
             if (!result)
-                result = voidType.ptr();
-            else if (result->objKind != VOID_TYPE)
+                result = voidValue.ptr();
+            else if (result->objKind != VOID_VALUE)
                 error("mismatching return kind");
         }
         else {
@@ -624,7 +624,7 @@ ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
     }
     switch (x->returnType2->objKind) {
     case VOID_TYPE :
-        return voidType.ptr();
+        return voidValue.ptr();
     case TYPE :
         return new PValue((Type *)x->returnType2.ptr(), true);
     default :
@@ -642,7 +642,7 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
         ObjectPtr retType = y->returnType;
         switch (retType->objKind) {
         case VOID_TYPE :
-            return voidType.ptr();
+            return voidValue.ptr();
         case TYPE :
             return new PValue((Type *)retType.ptr(), true);
         default :
@@ -675,7 +675,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_primitiveCopy :
-        return voidType.ptr();
+        return voidValue.ptr();
 
     case PRIM_boolNot :
         return new PValue(boolType, true);
@@ -826,7 +826,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             return NULL;
         TypePtr fpType;
         switch (result->objKind) {
-        case VOID_TYPE :
+        case VOID_VALUE :
             fpType = functionPointerType(dynamicArgTypes, voidType.ptr());
             break;
         case PVALUE : {
