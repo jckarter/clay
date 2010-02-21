@@ -1955,9 +1955,10 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         }
         TypePtr t;
         llvm::Value *v = _cgPointerLike(args[1], env, t);
+        llvm::Value *result = llvmBuilder->CreateBitCast(v, llvmType(dest));
         assert(out.ptr());
         assert(out->type == dest);
-        llvmBuilder->CreateStore(v, out->llValue);
+        llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
 

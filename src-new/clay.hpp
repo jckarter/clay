@@ -1142,8 +1142,6 @@ enum PrimOpCode {
     PRIM_pointerDereference,
     PRIM_pointerToInt,
     PRIM_intToPointer,
-    PRIM_allocateMemory,
-    PRIM_freeMemory,
 
     PRIM_FunctionPointerTypeP,
     PRIM_FunctionPointer,
