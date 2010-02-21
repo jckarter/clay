@@ -11,15 +11,20 @@ OBJS = \
 	src/parser.o \
 	src/env.o \
 	src/loader.o \
+	src/llvm.o \
 	src/types.o \
-	src/invokeutil2.o \
+	src/desugar.o \
+	src/patterns.o \
+	src/invoketables.o \
+	src/matchinvoke.o \
+	src/analyzer.o \
 	src/evaluator.o \
-	src/partialeval.o \
 	src/codegen.o \
 	src/main.o
 
 clay2llvm : $(OBJS)
 	g++ -m32 -g -o clay2llvm $(OBJS) $(LLVM_LDFLAGS)
+
 .PHONY: clean test
 
 test: clay2llvm

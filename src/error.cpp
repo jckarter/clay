@@ -92,7 +92,8 @@ void error(const string &msg) {
     else {
         fprintf(stderr, "error: %s\n", msg.c_str());
     }
-    exit(-1);
+    abort();
+    //exit(-1);
 }
 
 void fmtError(const char *fmt, ...) {
@@ -102,79 +103,6 @@ void fmtError(const char *fmt, ...) {
     vsnprintf(s, sizeof(s)-1, fmt, ap);
     va_end(ap);
     error(s);
-}
-
-
-
-//
-// error checking helper procs
-//
-
-void ensurePrimitiveType(TypePtr t) {
-    switch (t->typeKind) {
-    case ARRAY_TYPE :
-    case TUPLE_TYPE :
-    case RECORD_TYPE :
-        error("primitive type expected");
-    }
-}
-
-void ensureSameType(TypePtr ta, TypePtr tb) {
-    if (ta != tb)
-        error("type mismatch");
-}
-
-void ensureBoolType(TypePtr t) {
-    if (t->typeKind != BOOL_TYPE)
-        error("bool type expected");
-}
-
-void ensureNumericType(TypePtr t) {
-    switch (t->typeKind) {
-    case INTEGER_TYPE :
-    case FLOAT_TYPE :
-        return;
-    }
-    error("numeric type expected");
-}
-
-void ensureIntegerType(TypePtr t) {
-    if (t->typeKind != INTEGER_TYPE)
-        error("integer type expected");
-}
-
-void ensurePointerType(TypePtr t) {
-    if (t->typeKind != POINTER_TYPE)
-        error("pointer type expected");
-}
-
-void ensurePointerOrFunctionPointerType(TypePtr t) {
-    switch (t->typeKind) {
-    case POINTER_TYPE :
-    case FUNCTION_POINTER_TYPE :
-        return;
-    }
-    error("pointer type expected");
-}
-
-void ensureArrayType(TypePtr t) {
-    if (t->typeKind != ARRAY_TYPE)
-        error("array type expected");
-}
-
-void ensureTupleType(TypePtr t) {
-    if (t->typeKind != TUPLE_TYPE)
-        error("tuple type expected");
-}
-
-void ensureRecordType(TypePtr t) {
-    if (t->typeKind != RECORD_TYPE)
-        error("record type expected");
-}
-
-void ensureVoidType(TypePtr t) {
-    if (t->typeKind != VOID_TYPE)
-        error("void type expected");
 }
 
 
