@@ -3,6 +3,8 @@
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = analyze(expr, env);
+    if (!v)
+        return NULL;
 
     switch (v->objKind) {
 
@@ -24,6 +26,8 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
 PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env)
 {
     PValuePtr pv = analyzeValue(expr, env);
+    if (!pv)
+        return NULL;
     if (pv->type->typeKind != POINTER_TYPE)
         error(expr, "expecting a pointer value");
     return pv;
@@ -32,6 +36,8 @@ PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env)
 PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env)
 {
     PValuePtr pv = analyzeValue(expr, env);
+    if (!pv)
+        return NULL;
     if (pv->type->typeKind != ARRAY_TYPE)
         error(expr, "expecting an array value");
     return pv;
@@ -40,6 +46,8 @@ PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env)
 PValuePtr analyzeTupleValue(ExprPtr expr, EnvPtr env)
 {
     PValuePtr pv = analyzeValue(expr, env);
+    if (!pv)
+        return NULL;
     if (pv->type->typeKind != TUPLE_TYPE)
         error(expr, "expecting a tuple value");
     return pv;
@@ -48,6 +56,8 @@ PValuePtr analyzeTupleValue(ExprPtr expr, EnvPtr env)
 PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env)
 {
     PValuePtr pv = analyzeValue(expr, env);
+    if (!pv)
+        return NULL;
     if (pv->type->typeKind != RECORD_TYPE)
         error(expr, "expecting a record value");
     return pv;
@@ -843,6 +853,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         if (args.size() < 1)
             error("atleast one element required for creating an array");
         PValuePtr y = analyzeValue(args[0], env);
+        if (!y)
+            return NULL;
         TypePtr z = arrayType(y->type, args.size());
         return new PValue(z, true);
     }
@@ -850,6 +862,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_arrayRef : {
         ensureArity(args, 2);
         PValuePtr y = analyzeArrayValue(args[0], env);
+        if (!y)
+            return NULL;
         ArrayType *z = (ArrayType *)y->type.ptr();
         return new PValue(z->elementType, false);
     }
@@ -891,6 +905,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         vector<TypePtr> elementTypes;
         for (unsigned i = 0; i < args.size(); ++i) {
             PValuePtr y = analyzeValue(args[i], env);
+            if (!y)
+                return NULL;
             elementTypes.push_back(y->type);
         }
         return new PValue(tupleType(elementTypes), true);
@@ -899,6 +915,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_tupleRef : {
         ensureArity(args, 2);
         PValuePtr y = analyzeTupleValue(args[0], env);
+        if (!y)
+            return NULL;
         int i = evaluateInt(args[1], env);
         TupleType *z = (TupleType *)y->type.ptr();
         if ((i < 0) || (i >= (int)z->elementTypes.size()))
@@ -953,6 +971,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);
         PValuePtr y = analyzeRecordValue(args[0], env);
+        if (!y)
+            return NULL;
         RecordType *z = (RecordType *)y->type.ptr();
         int i = evaluateInt(args[1], env);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
@@ -964,6 +984,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_recordFieldRefByName : {
         ensureArity(args, 2);
         PValuePtr y = analyzeRecordValue(args[0], env);
+        if (!y)
+            return NULL;
         RecordType *z = (RecordType *)y->type.ptr();
         IdentifierPtr fname = evaluateIdentifier(args[1], env);
         const map<string, int> &fieldIndexMap = recordFieldIndexMap(z);
