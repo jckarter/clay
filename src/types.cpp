@@ -13,6 +13,7 @@ TypePtr float32Type;
 TypePtr float64Type;
 
 VoidTypePtr voidType;
+VoidValuePtr voidValue;
 
 static vector<vector<PointerTypePtr> > pointerTypes;
 static vector<vector<FunctionPointerTypePtr> > functionPointerTypes;
@@ -33,6 +34,7 @@ void initTypes() {
     float32Type = new FloatType(32);
     float64Type = new FloatType(64);
     voidType = new VoidType();
+    voidValue = new VoidValue();
 
     int N = 1024;
     pointerTypes.resize(N);

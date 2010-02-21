@@ -179,6 +179,7 @@ enum ObjectKind {
     PATTERN,
 
     VOID_TYPE,
+    VOID_VALUE,
     VALUE_HOLDER,
     PVALUE,
     CVALUE,
@@ -281,6 +282,7 @@ struct FunctionPointerTypePattern;
 struct RecordTypePattern;
 
 struct VoidType;
+struct VoidValue;
 struct ValueHolder;
 struct PValue;
 struct CValue;
@@ -380,6 +382,7 @@ typedef Pointer<FunctionPointerTypePattern> FunctionPointerTypePatternPtr;
 typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 
 typedef Pointer<VoidType> VoidTypePtr;
+typedef Pointer<VoidValue> VoidValuePtr;
 typedef Pointer<ValueHolder> ValueHolderPtr;
 typedef Pointer<PValue> PValuePtr;
 typedef Pointer<CValue> CValuePtr;
@@ -1308,6 +1311,7 @@ extern TypePtr float32Type;
 extern TypePtr float64Type;
 
 extern VoidTypePtr voidType;
+extern VoidValuePtr voidValue;
 
 void initTypes();
 
@@ -1400,12 +1404,17 @@ struct RecordTypePattern : public Pattern {
 
 
 //
-// VoidType
+// VoidType, VoidValue
 //
 
 struct VoidType : public Object {
     VoidType()
         : Object(VOID_TYPE) {}
+};
+
+struct VoidValue : public Object {
+    VoidValue()
+        : Object(VOID_VALUE) {}
 };
 
 
