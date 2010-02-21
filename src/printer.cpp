@@ -290,6 +290,16 @@ static void print(const Object *x, ostream &out) {
         out << "SCExpr(" << y->expr << ")";
         break;
     }
+    case OBJECT_EXPR : {
+        ObjectExpr *y = (ObjectExpr *)x;
+        out << "ObjectExpr(" << y->obj << ")";
+        break;
+    }
+    case CVALUE_EXPR : {
+        CValueExpr *y = (CValueExpr *)x;
+        out << "CValueExpr(" << y->cv << ")";
+        break;
+    }
 
     case BLOCK : {
         Block *y = (Block *)x;
@@ -472,6 +482,38 @@ static void print(const Object *x, ostream &out) {
     case TYPE : {
         Type *y = (Type *)x;
         typePrint(y, out);
+        break;
+    }
+
+    case PATTERN : {
+        Pattern *y = (Pattern *)x;
+        patternPrint(y, out);
+        break;
+    }
+
+    case VOID_TYPE :
+        out << "VoidType()";
+        break;
+
+    case VOID_VALUE :
+        out << "VoidValue()";
+        break;
+
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x;
+        out << "ValueHolder(" << y->type << ")";
+        break;
+    }
+
+    case PVALUE : {
+        PValue *y = (PValue *)x;
+        out << "PValue(" << y->type << ")";
+        break;
+    }
+
+    case CVALUE : {
+        CValue *y = (CValue *)x;
+        out << "CValue(" << y->type << ")";
         break;
     }
 

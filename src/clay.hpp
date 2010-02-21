@@ -1471,6 +1471,8 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
 bool unify(PatternPtr pattern, ObjectPtr obj);
 ObjectPtr derefCell(PatternCellPtr cell);
 
+void patternPrint(PatternPtr x, ostream &out);
+
 
 
 //
