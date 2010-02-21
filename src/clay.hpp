@@ -1332,8 +1332,17 @@ const map<string, int> &recordFieldIndexMap(RecordTypePtr t);
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
 const llvm::StructLayout *recordTypeLayout(RecordType *t);
 
+const llvm::Type *llvmIntType(int bits);
+const llvm::Type *llvmFloatType(int bits);
+const llvm::Type *llvmPointerType(const llvm::Type *llType);
+const llvm::Type *llvmPointerType(TypePtr t);
+const llvm::Type *llvmArrayType(const llvm::Type *llType, int size);
+const llvm::Type *llvmArrayType(TypePtr type, int size);
+const llvm::Type *llvmVoidType();
+
 const llvm::Type *llvmReturnType(ObjectPtr returnType);
 const llvm::Type *llvmType(TypePtr t);
+
 int typeSize(TypePtr t);
 void typePrint(TypePtr t, ostream &out);
 

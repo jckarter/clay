@@ -240,15 +240,55 @@ const llvm::StructLayout *recordTypeLayout(RecordType *t) {
 
 
 //
+// llvmIntType, llvmFloatType, llvmPointerType, llvmArrayType, llvmVoidType
+//
+
+const llvm::Type *llvmIntType(int bits) {
+    return llvm::IntegerType::get(llvm::getGlobalContext(), bits);
+}
+
+const llvm::Type *llvmFloatType(int bits) {
+    switch (bits) {
+    case 32 :
+        return llvm::Type::getFloatTy(llvm::getGlobalContext());
+    case 64 :
+        return llvm::Type::getDoubleTy(llvm::getGlobalContext());
+    default :
+        assert(false);
+        return NULL;
+    }
+}
+
+const llvm::Type *llvmPointerType(const llvm::Type *llType) {
+    return llvm::PointerType::getUnqual(llType);
+}
+
+const llvm::Type *llvmPointerType(TypePtr t) {
+    return llvmPointerType(llvmType(t));
+}
+
+const llvm::Type *llvmArrayType(const llvm::Type *llType, int size) {
+    return llvm::ArrayType::get(llType, size);
+}
+
+const llvm::Type *llvmArrayType(TypePtr type, int size) {
+    return llvmArrayType(llvmType(type), size);
+}
+
+const llvm::Type *llvmVoidType() {
+    return llvm::Type::getVoidTy(llvm::getGlobalContext());
+}
+
+
+
+//
 // llvmReturnType, llvmType
 //
 
-const llvm::Type *llvmReturnType(ObjectPtr returnType) {
-    switch (returnType->objKind) {
-    case VOID_TYPE :
-        return llvm::Type::getVoidTy(llvm::getGlobalContext());
-    case TYPE :
-        return llvmType((Type *)returnType.ptr());
+const llvm::Type *llvmReturnType(ObjectPtr t) {
+    switch (t->objKind) {
+    case VOID_TYPE : return llvmVoidType();
+    case TYPE : return llvmType((Type *)t.ptr());
     default :
         assert(false);
         return NULL;
@@ -268,45 +308,35 @@ const llvm::Type *llvmType(TypePtr t) {
 
 static const llvm::Type *makeLLVMType(TypePtr t) {
     switch (t->typeKind) {
-    case BOOL_TYPE :
-        return llvm::Type::getInt8Ty(llvm::getGlobalContext());
+    case BOOL_TYPE : return llvmIntType(8);
     case INTEGER_TYPE : {
         IntegerType *x = (IntegerType *)t.ptr();
-        return llvm::IntegerType::get(llvm::getGlobalContext(), x->bits);
+        return llvmIntType(x->bits);
     }
     case FLOAT_TYPE : {
         FloatType *x = (FloatType *)t.ptr();
-        switch (x->bits) {
-        case 32 :
-            return llvm::Type::getFloatTy(llvm::getGlobalContext());
-        case 64 :
-            return llvm::Type::getDoubleTy(llvm::getGlobalContext());
-        default :
-            assert(false);
-            return NULL;
-        }
+        return llvmFloatType(x->bits);
     }
     case POINTER_TYPE : {
         PointerType *x = (PointerType *)t.ptr();
-        return llvm::PointerType::getUnqual(llvmType(x->pointeeType));
+        return llvmPointerType(x->pointeeType);
     }
     case FUNCTION_POINTER_TYPE : {
         FunctionPointerType *x = (FunctionPointerType *)t.ptr();
         vector<const llvm::Type *> llArgTypes;
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
-            llArgTypes.push_back(llvmType(pointerType(x->argTypes[i])));
+            llArgTypes.push_back(llvmPointerType(x->argTypes[i]));
         if (x->returnType->objKind == TYPE) {
             TypePtr retType = (Type *)x->returnType.ptr();
-            llArgTypes.push_back(llvmType(pointerType(retType)));
+            llArgTypes.push_back(llvmPointerType(retType));
         }
-        const llvm::Type *llReturnType = llvmReturnType(voidType.ptr());
         llvm::FunctionType *llFuncType =
-            llvm::FunctionType::get(llReturnType, llArgTypes, false);
+            llvm::FunctionType::get(llvmVoidType(), llArgTypes, false);
         return llvm::PointerType::getUnqual(llFuncType);
     }
     case ARRAY_TYPE : {
         ArrayType *x = (ArrayType *)t.ptr();
-        return llvm::ArrayType::get(llvmType(x->elementType), x->size);
+        return llvmArrayType(x->elementType, x->size);
     }
     case TUPLE_TYPE : {
         TupleType *x = (TupleType *)t.ptr();
@@ -338,17 +368,17 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
     }
 }
 
+
+
+//
+// typeSize, typePrint
+//
+
 int typeSize(TypePtr t) {
     if (t->typeSize < 0)
         t->typeSize = llvmTargetData->getTypeAllocSize(llvmType(t));
     return t->typeSize;
 }
-
-
-
-//
-// typePrint
-//
 
 void typePrint(TypePtr t, ostream &out) {
     switch (t->typeKind) {
