@@ -213,3 +213,43 @@ ObjectPtr derefCell(PatternCellPtr cell) {
     }
     return cell->obj;
 }
+
+void patternPrint(PatternPtr x, ostream &out)
+{
+    switch (x->patternKind) {
+    case PATTERN_CELL : {
+        PatternCell *y = (PatternCell *)x.ptr();
+        out << "PatternCell(" << y->name << ", " << y->obj << ")";
+        break;
+    }
+    case POINTER_TYPE_PATTERN : {
+        PointerTypePattern *y = (PointerTypePattern *)x.ptr();
+        out << "PointerTypePattern(" << y->pointeeType << ")";
+        break;
+    }
+    case FUNCTION_POINTER_TYPE_PATTERN : {
+        FunctionPointerTypePattern *y = (FunctionPointerTypePattern *)x.ptr();
+        out << "FunctionPointerTypePattern(" << y->argTypes << ", "
+            << y->returnType << ")";
+        break;
+    }
+    case ARRAY_TYPE_PATTERN : {
+        ArrayTypePattern *y = (ArrayTypePattern *)x.ptr();
+        out << "ArrayTypePattern(" << y->elementType << ", " << y->size << ")";
+        break;
+    }
+    case TUPLE_TYPE_PATTERN : {
+        TupleTypePattern *y = (TupleTypePattern *)x.ptr();
+        out << "TupleTypePattern(" << y->elementTypes << ")";
+        break;
+    }
+    case RECORD_TYPE_PATTERN : {
+        RecordTypePattern *y = (RecordTypePattern *)x.ptr();
+        out << "RecordTypePattern(" << y->record->name->str << ", "
+            << y->params << ")";
+        break;
+    }
+    default :
+        assert(false);
+    }
+}
