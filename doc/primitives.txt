@@ -8,64 +8,59 @@ void : Void
 
 Primitive Operations
 
-Type?[T](static T):Bool
-TypeSize[T](static T):Int32
+[T] Type?(static T):Bool
+[T] TypeSize(static T):Int32
 
-primitiveCopy[T](dest:T, src:T):Void
+[T] primitiveCopy(dest:T, src:T):Void
 
 boolNot(a:Bool):Bool
 
-numericEquals?[N](a:N, b:N): Bool if (NumericType?(N))
-numericLesser?[N](a:N, b:N): Bool if (NumericType?(N))
-numericAdd[N](a:N, b:N): N if (NumericType?(N))
-numericSubtract[N](a:N, b:N): N if (NumericType?(N))
-numericMultiply[N](a:N, b:N): N if (NumericType?(N))
-numericDivide[N](a:N, b:N): N if (NumericType?(N))
-numericNegate[N](a:N): N if (NumericType?(N))
+[N|NumericType?(N)] numericEquals?(a:N, b:N): Bool
+[N|NumericType?(N)] numericLesser?(a:N, b:N): Bool
+[N|NumericType?(N)] numericAdd(a:N, b:N): N
+[N|NumericType?(N)] numericSubtract(a:N, b:N): N
+[N|NumericType?(N)] numericMultiply(a:N, b:N): N
+[N|NumericType?(N)] numericDivide(a:N, b:N): N
+[N|NumericType?(N)] numericNegate(a:N): N
 
-integerRemainder[N](a:N, b:N): N if (IntegerType?(N))
-integerShiftLeft[I](a:I, n:I): I if (IntegerType?(I))
-integerShiftRight[I](a:I, n:I): I if (IntegerType?(I))
-integerBitwiseAnd[I](a:I, b:I): I if (IntegerType?(I))
-integerBitwiseOr[I](a:I, b:I): I if (IntegerType?(I))
-integerBitwiseXor[I](a:I, b:I): I if (IntegerType?(I))
-integerBitwiseNot[I](a:I): I if (IntegerType?(I))
+[I|IntegerType?(I)] integerRemainder(a:I, b:I): I
+[I|IntegerType?(I)] integerShiftLeft(a:I, b:I): I
+[I|IntegerType?(I)] integerShiftRight(a:I, b:I): I
+[I|IntegerType?(I)] integerBitwiseAnd(a:I, b:I): I
+[I|IntegerType?(I)] integerBitwiseOr(a:I, b:I): I
+[I|IntegerType?(I)] integerBitwiseXor(a:I, b:I): I
+[I|IntegerType?(I)] integerBitwiseNot(a:I): I
 
-numericConvert[Dest,Src](static Dest, a:Src): Dest
-    if (NumericType?(Dest) and NumericType?(Src))
-
-box[T](x:T):Any
-boxRef[T](x:T):Any
-unbox[T](static T, x:Any):T
-unboxRef[T](static T, x:Any) ref :T
+[DEST,SRC | NumericType?(DEST) and NumericType?(SRC)]
+numericConvert(static DEST, a:SRC): DEST
 
 Pointer[T]
 
-addressOf[T](a:T) : Pointer[T]
-pointerDereference[T](a:Pointer[T]) ref : T
-pointerToInt[T,I](static I, a:Pointer[T]) : I if IntegerType?(I)
-intToPointer[I,T](static T, a:I) : Pointer[T] if IntegerType?(I)
+[T] addressOf(a:T) : Pointer[T]
+[T] pointerDereference(a:Pointer[T]) ref : T
+[T,I|IntegerType?(I)] pointerToInt(static I, a:Pointer[T]) : I
+[I,T|IntegerType?(I)] intToPointer(static T, a:I) : Pointer[T]
 
-FunctionPointerType?[T](static T):Bool
+[T] FunctionPointerType?(static T):Bool
 FunctionPointer[A1, ..., An, RT]
-makeFunctionPointer[F, A1, ..., An](static F, static A1, ..., static An)
+[F, A1, ..., An] makeFunctionPointer(static F, static A1, ..., static An)
 
-pointerCast[T1,T2](static T2, a:Pointer[T1]): T2
+[T1,T2] pointerCast(static T2, a:Pointer[T1]): T2
 
 Array[T,n]
 array(v1, ..., vn): Array[T,n]
-arrayRef[T,n](a:Array[T,n], i:Int32) ref : T
+[T,n] arrayRef(a:Array[T,n], i:Int32) ref : T
 
-TupleType?[T](static T):Bool
+[T] TupleType?(static T):Bool
 Tuple[T1, ..., Tn]
-TupleElementCount[T](static T): Int32
-TupleElementOffset[T,i](static T, static i): Int32
+[T] TupleElementCount(static T): Int32
+[T,i] TupleElementOffset(static T, static i): Int32
 tuple(v1, ...,vn): tuple type
-tupleRef [T|TupleType?(T)] (a:T, static i)
+[T|TupleType?(T)] tupleRef(a:T, static i)
 
-RecordType?[R](static R):Bool
-RecordFieldCount[R](static R):Int32
-RecordFieldOffset[R,i](static R, static i): Int32
-RecordFieldIndex[R,name](static R, static name): Int32
-recordFieldRef[R,i](a:R, static i)
-recordFieldRefByName[R,name](a:R, static name)
+[R] RecordType?(static R):Bool
+[R] RecordFieldCount(static R):Int32
+[R,i] RecordFieldOffset(static R, static i): Int32
+[R,name] RecordFieldIndex(static R, static name): Int32
+[R,i] recordFieldRef(a:R, static i)
+[R,name] recordFieldRefByName(a:R, static name)
