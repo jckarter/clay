@@ -4,17 +4,11 @@ import libc.*;
 overloadable foo;
 
 overload foo(x) = 0;
-overload foo(t:CompilerObject) = 1;
+overload foo(x:Bool) = 1;
 overload foo(x:Int32) = 2;
-
-record Foo {
-    x:CompilerObject;
-}
 
 main() {
     var v = true;
-    var f = Foo(Int32);
-    var g = f;
-    printf(cstring("%d\n"), foo(v) + 10*foo(Int32) + 100*foo(10));
+    printf(cstring("%d\n"), foo(v) + 10*foo(true) + 100*foo(10));
     return 0;
 }
