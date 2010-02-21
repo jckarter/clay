@@ -140,22 +140,22 @@ InvokeEntryPtr codegenCodeBody(ObjectPtr callable,
         assert(argsKey[i]->objKind == TYPE);
         Type *y = (Type *)argsKey[i].ptr();
         argTypes.push_back(y);
-        llArgTypes.push_back(llvmType(pointerType(y)));
+        llArgTypes.push_back(llvmPointerType(y));
     }
 
     const llvm::Type *llReturnType;
     if (entry->analysis->objKind == VOID_VALUE) {
-        llReturnType = llvmReturnType(voidType.ptr());
+        llReturnType = llvmVoidType();
     }
     else {
         assert(entry->analysis->objKind == PVALUE);
         PValue *x = (PValue *)entry->analysis.ptr();
         if (x->isTemp) {
-            llArgTypes.push_back(llvmType(pointerType(x->type)));
-            llReturnType = llvmReturnType(voidType.ptr());
+            llArgTypes.push_back(llvmPointerType(x->type));
+            llReturnType = llvmVoidType();
         }
         else {
-            llReturnType = llvmType(pointerType(x->type));
+            llReturnType = llvmPointerType(x->type);
         }
     }
 
@@ -201,7 +201,7 @@ InvokeEntryPtr codegenCodeBody(ObjectPtr callable,
             returnVal = new CValue(x->type, &(*ai));
         }
         else {
-            const llvm::Type *llt = llvmType(pointerType(x->type));
+            const llvm::Type *llt = llvmPointerType(x->type);
             returnVal = new CValue(x->type, llvmInitBuilder->CreateAlloca(llt));
         }
     }
@@ -642,7 +642,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid int8 literal");
             if ((errno == ERANGE) || (y < SCHAR_MIN) || (y > SCHAR_MAX))
                 error("int8 literal out of range");
-            llv = llvm::ConstantInt::getSigned(llvmType(int8Type), y);
+            llv = llvm::ConstantInt::getSigned(llvmIntType(8), y);
         }
         else if (x->suffix == "i16") {
             long y = strtol(ptr, &end, 0);
@@ -650,7 +650,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid int16 literal");
             if ((errno == ERANGE) || (y < SHRT_MIN) || (y > SHRT_MAX))
                 error("int16 literal out of range");
-            llv = llvm::ConstantInt::getSigned(llvmType(int16Type), y);
+            llv = llvm::ConstantInt::getSigned(llvmIntType(16), y);
         }
         else if ((x->suffix == "i32") || x->suffix.empty()) {
             long y = strtol(ptr, &end, 0);
@@ -658,7 +658,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid int32 literal");
             if (errno == ERANGE)
                 error("int32 literal out of range");
-            llv = llvm::ConstantInt::getSigned(llvmType(int32Type), y);
+            llv = llvm::ConstantInt::getSigned(llvmIntType(32), y);
         }
         else if (x->suffix == "i64") {
             long long y = strtoll(ptr, &end, 0);
@@ -666,7 +666,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid int64 literal");
             if (errno == ERANGE)
                 error("int64 literal out of range");
-            llv = llvm::ConstantInt::getSigned(llvmType(int64Type), y);
+            llv = llvm::ConstantInt::getSigned(llvmIntType(64), y);
         }
         else if (x->suffix == "u8") {
             unsigned long y = strtoul(ptr, &end, 0);
@@ -674,7 +674,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid uint8 literal");
             if ((errno == ERANGE) || (y > UCHAR_MAX))
                 error("uint8 literal out of range");
-            llv = llvm::ConstantInt::get(llvmType(uint8Type), y);
+            llv = llvm::ConstantInt::get(llvmIntType(8), y);
         }
         else if (x->suffix == "u16") {
             unsigned long y = strtoul(ptr, &end, 0);
@@ -682,7 +682,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid uint16 literal");
             if ((errno == ERANGE) || (y > USHRT_MAX))
                 error("uint16 literal out of range");
-            llv = llvm::ConstantInt::get(llvmType(uint16Type), y);
+            llv = llvm::ConstantInt::get(llvmIntType(16), y);
         }
         else if (x->suffix == "u32") {
             unsigned long y = strtoul(ptr, &end, 0);
@@ -690,7 +690,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid uint32 literal");
             if (errno == ERANGE)
                 error("uint32 literal out of range");
-            llv = llvm::ConstantInt::get(llvmType(uint32Type), y);
+            llv = llvm::ConstantInt::get(llvmIntType(32), y);
         }
         else if (x->suffix == "u64") {
             unsigned long long y = strtoull(ptr, &end, 0);
@@ -698,7 +698,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid uint64 literal");
             if (errno == ERANGE)
                 error("uint64 literal out of range");
-            llv = llvm::ConstantInt::get(llvmType(uint64Type), y);
+            llv = llvm::ConstantInt::get(llvmIntType(64), y);
         }
         else if (x->suffix == "f32") {
             float y = strtof(ptr, &end);
@@ -706,7 +706,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid float32 literal");
             if (errno == ERANGE)
                 error("float32 literal out of range");
-            llv = llvm::ConstantFP::get(llvmType(float32Type), y);
+            llv = llvm::ConstantFP::get(llvmFloatType(32), y);
         }
         else if (x->suffix == "f64") {
             double y = strtod(ptr, &end);
@@ -714,7 +714,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid float64 literal");
             if (errno == ERANGE)
                 error("float64 literal out of range");
-            llv = llvm::ConstantFP::get(llvmType(float64Type), y);
+            llv = llvm::ConstantFP::get(llvmFloatType(64), y);
         }
         else {
             error("invalid literal suffix: " + x->suffix);
@@ -734,7 +734,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid float32 literal");
             if (errno == ERANGE)
                 error("float32 literal out of range");
-            llv = llvm::ConstantFP::get(llvmType(float32Type), y);
+            llv = llvm::ConstantFP::get(llvmFloatType(32), y);
         }
         else if ((x->suffix == "f64") || x->suffix.empty()) {
             double y = strtod(ptr, &end);
@@ -742,7 +742,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 error("invalid float64 literal");
             if (errno == ERANGE)
                 error("float64 literal out of range");
-            llv = llvm::ConstantFP::get(llvmType(float64Type), y);
+            llv = llvm::ConstantFP::get(llvmFloatType(64), y);
         }
         else {
             error("invalid float literal suffix: " + x->suffix);
@@ -902,7 +902,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 llvmBuilder->CreateBr(mergeBlock);
 
                 llvmBuilder->SetInsertPoint(mergeBlock);
-                const llvm::Type *ptrType = llvmType(pointerType(pv1->type));
+                const llvm::Type *ptrType = llvmPointerType(pv1->type);
                 llvm::PHINode *phi = llvmBuilder->CreatePHI(ptrType);
                 phi->addIncoming(ref1->llValue, falseBlock);
                 phi->addIncoming(ref2->llValue, trueBlock);
@@ -969,7 +969,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 falseBlock = llvmBuilder->GetInsertBlock();
 
                 llvmBuilder->SetInsertPoint(mergeBlock);
-                const llvm::Type *ptrType = llvmType(pointerType(pv1->type));
+                const llvm::Type *ptrType = llvmPointerType(pv1->type);
                 llvm::PHINode *phi = llvmBuilder->CreatePHI(ptrType);
                 phi->addIncoming(ref1->llValue, trueBlock);
                 phi->addIncoming(ref2->llValue, falseBlock);
@@ -1997,7 +1997,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         TypePtr indexType;
         llvm::Value *i = _cgInteger(args[1], env, indexType);
         vector<llvm::Value *> indices;
-        indices.push_back(llvm::ConstantInt::get(llvmType(int32Type), 0));
+        indices.push_back(llvm::ConstantInt::get(llvmIntType(32), 0));
         indices.push_back(i);
         llvm::Value *ptr =
             llvmBuilder->CreateGEP(carray->llValue,
@@ -2084,7 +2084,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
 llvm::Function *codegenMain(ModulePtr module)
 {
     llvm::FunctionType *llMainType =
-        llvm::FunctionType::get(llvmType(int32Type),
+        llvm::FunctionType::get(llvmIntType(32),
                                 vector<const llvm::Type *>(),
                                 false);
     llvm::Function *llMain =
@@ -2120,14 +2120,14 @@ llvm::Function *codegenMain(ModulePtr module)
             llvmBuilder->CreateRet(v);
         }
         else {
-            llvm::Value *zero = llvm::ConstantInt::get(llvmType(int32Type), 0);
+            llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
             llvmBuilder->CreateRet(zero);
         }
     }
     else {
         assert(entry->analysis->objKind == VOID_VALUE);
         codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), NULL);
-        llvm::Value *zero = llvm::ConstantInt::get(llvmType(int32Type), 0);
+        llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
         llvmBuilder->CreateRet(zero);
     }
     llvmInitBuilder->CreateBr(codeBlock);
