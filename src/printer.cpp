@@ -290,16 +290,6 @@ static void print(const Object *x, ostream &out) {
         out << "SCExpr(" << y->expr << ")";
         break;
     }
-    case VALUE_EXPR : {
-        ValueExpr *y = (ValueExpr *)x;
-        out << "ValueExpr(" << y->value << ")";
-        break;
-    }
-    case CVALUE_EXPR : {
-        CValueExpr *y = (CValueExpr *)x;
-        out << "CValueExpr(" << y->cvalue << ")";
-        break;
-    }
 
     case BLOCK : {
         Block *y = (Block *)x;
@@ -482,25 +472,6 @@ static void print(const Object *x, ostream &out) {
     case TYPE : {
         Type *y = (Type *)x;
         typePrint(y, out);
-        break;
-    }
-
-    case VALUE : {
-        Value *y = (Value *)x;
-        valuePrint(y, out);
-        break;
-    }
-
-    case PVALUE : {
-        PValue *y = (PValue *)x;
-        out << "PValue(" << y->type << ", " << y->isTemp << ", "
-            << y->isStatic << ")";
-        break;
-    }
-
-    case CVALUE : {
-        CValue *y = (CValue *)x;
-        out << "CValue(" << y->type << ")";
         break;
     }
 

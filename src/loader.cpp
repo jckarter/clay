@@ -107,12 +107,12 @@ static void installGlobals(ModulePtr m) {
         switch (x->objKind) {
         case RECORD : {
             Record *y = (Record *)x;
-            ObjectPtr value;
-            if (y->patternVars.empty())
-                value = recordType(y, vector<ValuePtr>()).ptr();
-            else
-                value = y;
-            addGlobal(m, ((Record *)x)->name, value);
+            Object *z = y;
+            if (y->patternVars.empty()) {
+                TypePtr t = recordType(y, vector<ObjectPtr>());
+                z = t.ptr();
+            }
+            addGlobal(m, y->name, z);
             break;
         }
         case PROCEDURE :
@@ -283,20 +283,15 @@ static ModulePtr makePrimitivesModule() {
     prims->globals["UInt64"] = uint64Type.ptr();
     prims->globals["Float32"] = float32Type.ptr();
     prims->globals["Float64"] = float64Type.ptr();
-    prims->globals["CompilerObject"] = compilerObjectType.ptr();
     prims->globals["Void"] = voidType.ptr();
 
 #define PRIMITIVE(x) prims->globals[toPrimStr(#x)] = new PrimOp(PRIM_##x)
     PRIMITIVE(TypeP);
     PRIMITIVE(TypeSize);
 
-    PRIMITIVE(primitiveInit);
-    PRIMITIVE(primitiveDestroy);
     PRIMITIVE(primitiveCopy);
-    PRIMITIVE(primitiveAssign);
 
     PRIMITIVE(boolNot);
-    PRIMITIVE(boolTruth);
 
     PRIMITIVE(numericEqualsP);
     PRIMITIVE(numericLesserP);
