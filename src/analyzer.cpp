@@ -270,7 +270,7 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
             vector<TypePtr> types;
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 types.push_back(evaluateType(args[i], env));
-            ObjectPtr returnType = evaluateReturnType(args.back(), env);
+            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
             return functionPointerType(types, returnType).ptr();
         }
 
@@ -365,112 +365,122 @@ ObjectPtr analyzeInvokeProcedure(ProcedurePtr x,
                                  const vector<ExprPtr> &args,
                                  EnvPtr env)
 {
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(x.ptr(), args.size());
     vector<ObjectPtr> argsKey;
     vector<LocationPtr> argLocations;
-    if (!computeArgsKey(x.ptr(), args, env, argsKey, argLocations))
+    if (!computeArgsKey(isStaticFlags, args, env, argsKey, argLocations))
         return NULL;
-    return analyzeInvokeProcedure2(x, argsKey, argLocations);
+    InvokeEntryPtr entry =
+        analyzeProcedure(x, isStaticFlags, argsKey, argLocations);
+    if (!entry->analyzed)
+        return NULL;
+    return entry->analysis;
 }
 
-ObjectPtr analyzeInvokeProcedure2(ProcedurePtr x,
-                                  const vector<ObjectPtr> &argsKey,
-                                  const vector<LocationPtr> &argLocations)
+InvokeEntryPtr analyzeProcedure(ProcedurePtr x,
+                                const vector<bool> &isStaticFlags,
+                                const vector<ObjectPtr> &argsKey,
+                                const vector<LocationPtr> &argLocations)
 {
-    InvokeEntryPtr entry = lookupInvoke(x.ptr(), argsKey);
-    if (entry->analyzed)
-        return entry->analysis;
-    if (entry->analyzing)
-        return NULL;
+    InvokeEntryPtr entry = lookupInvoke(x.ptr(), isStaticFlags, argsKey);
+    if (entry->analyzed || entry->analyzing)
+        return entry;
+
     entry->analyzing = true;
+
     MatchResultPtr result = matchInvoke(x->code, x->env, argsKey);
     if (result->matchCode != MATCH_SUCCESS)
         signalMatchError(result, argLocations);
-    entry->env = ((MatchSuccess *)result.ptr())->env;
+
     entry->code = x->code;
-    EnvPtr bodyEnv =
-        bindDynamicArgsForAnalysis(entry->env, entry->code, argsKey);
-    entry->analysis = analyzeCodeBody(entry->code, bodyEnv);
+    MatchSuccess *y = (MatchSuccess *)result.ptr();
+    entry->staticArgs = y->staticArgs;
+    entry->argTypes = y->argTypes;
+    entry->argNames = y->argNames;
+    entry->env = y->env;
+
+    analyzeCodeBody(entry);
+
     entry->analyzing = false;
-    if (!entry->analysis)
-        return NULL;
-    entry->analyzed = true;
-    return entry->analysis;
+
+    return entry;
 }
 
 ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x,
                                     const vector<ExprPtr> &args,
                                     EnvPtr env)
 {
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(x.ptr(), args.size());
     vector<ObjectPtr> argsKey;
     vector<LocationPtr> argLocations;
-    if (!computeArgsKey(x.ptr(), args, env, argsKey, argLocations))
+    if (!computeArgsKey(isStaticFlags, args, env, argsKey, argLocations))
         return NULL;
-    return analyzeInvokeOverloadable2(x, argsKey, argLocations);
+    InvokeEntryPtr entry =
+        analyzeOverloadable(x, isStaticFlags, argsKey, argLocations);
+    if (!entry->analyzed)
+        return NULL;
+    return entry->analysis;
 }
 
-ObjectPtr analyzeInvokeOverloadable2(OverloadablePtr x,
-                                     const vector<ObjectPtr> &argsKey,
-                                     const vector<LocationPtr> &argLocations)
+InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
+                                   const vector<bool> &isStaticFlags,
+                                   const vector<ObjectPtr> &argsKey,
+                                   const vector<LocationPtr> &argLocations)
 {
-    InvokeEntryPtr entry = lookupInvoke(x.ptr(), argsKey);
-    if (entry->analyzed)
-        return entry->analysis;
-    if (entry->analyzing)
-        return NULL;
-
+    InvokeEntryPtr entry = lookupInvoke(x.ptr(), isStaticFlags, argsKey);
+    if (entry->analyzed || entry->analyzing)
+        return entry;
     entry->analyzing = true;
+
     unsigned i = 0;
     for (; i < x->overloads.size(); ++i) {
         OverloadPtr y = x->overloads[i];
         MatchResultPtr result = matchInvoke(y->code, y->env, argsKey);
         if (result->matchCode == MATCH_SUCCESS) {
-            entry->env = ((MatchSuccess *)result.ptr())->env;
             entry->code = y->code;
+            MatchSuccess *z = (MatchSuccess *)result.ptr();
+            entry->staticArgs = z->staticArgs;
+            entry->argTypes = z->argTypes;
+            entry->argNames = z->argNames;
+            entry->env = z->env;
             break;
         }
     }
     if (i == x->overloads.size())
         error("no matching overload");
-    EnvPtr bodyEnv =
-        bindDynamicArgsForAnalysis(entry->env, entry->code, argsKey);
-    entry->analysis = analyzeCodeBody(entry->code, bodyEnv);
+
+    analyzeCodeBody(entry);
+
     entry->analyzing = false;
-    if (!entry->analysis)
-        return NULL;
-    entry->analyzed = true;
-    return entry->analysis;
+
+    return entry;
 }
 
-EnvPtr bindDynamicArgsForAnalysis(EnvPtr env, CodePtr code,
-                                  const vector<ObjectPtr> &argsKey)
-{
-    EnvPtr bodyEnv = new Env(env);
-    const vector<FormalArgPtr> &formalArgs = code->formalArgs;
-    for (unsigned i = 0; i < formalArgs.size(); ++i) {
-        switch (formalArgs[i]->objKind) {
-        case VALUE_ARG : {
-            ValueArg *x = (ValueArg *)formalArgs[i].ptr();
-            PValuePtr parg = new PValue((Type *)argsKey[i].ptr(), false);
-            addLocal(bodyEnv, x->name, parg.ptr());
-            break;
-        }
-        case STATIC_ARG :
-            break;
-        default :
-            assert(false);
-        }
+void analyzeCodeBody(InvokeEntryPtr entry) {
+    assert(!entry->analyzed);
+    EnvPtr bodyEnv = new Env(entry->env);
+    for (unsigned i = 0; i < entry->argNames.size(); ++i) {
+        PValuePtr parg = new PValue(entry->argTypes[i], false);
+        addLocal(bodyEnv, entry->argNames[i], parg.ptr());
     }
-    return bodyEnv;
-}
-
-ObjectPtr analyzeCodeBody(CodePtr code, EnvPtr env) {
     ObjectPtr result;
-    bool ok = analyzeStatement(code->body, env, result);
-    if (result.ptr())
-        return result;
-    if (!ok)
-        return NULL;
-    return voidValue.ptr();
+    bool ok = analyzeStatement(entry->code->body, bodyEnv, result);
+    if (!result && !ok)
+        return;
+    if (!result)
+        result = voidValue.ptr();
+    entry->analysis = result;
+    entry->analyzed = true;
+    if (result->objKind == PVALUE) {
+        PValuePtr pret = (PValue *)result.ptr();
+        entry->returnType = pret->type;
+        entry->returnIsTemp = pret->isTemp;
+    }
+    else {
+        assert(result->objKind == VOID_VALUE);
+    }
 }
 
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
@@ -615,22 +625,17 @@ ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env)
 {
-    if (!x->returnType2) {
+    if (!x->analyzed) {
         for (unsigned i = 0; i < x->args.size(); ++i) {
             ExternalArgPtr y = x->args[i];
             y->type2 = evaluateType(y->type, x->env);
         }
-        x->returnType2 = evaluateReturnType(x->returnType, x->env);
+        x->returnType2 = evaluateMaybeVoidType(x->returnType, x->env);
+        x->analyzed = true;
     }
-    switch (x->returnType2->objKind) {
-    case VOID_TYPE :
+    if (!x->returnType2)
         return voidValue.ptr();
-    case TYPE :
-        return new PValue((Type *)x->returnType2.ptr(), true);
-    default :
-        assert(false);
-        return NULL;
-    }
+    return new PValue(x->returnType2, true);
 }
 
 ObjectPtr analyzeInvokeValue(PValuePtr x, 
@@ -639,16 +644,9 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
 {
     if (x->type->typeKind == FUNCTION_POINTER_TYPE) {
         FunctionPointerType *y = (FunctionPointerType *)x->type.ptr();
-        ObjectPtr retType = y->returnType;
-        switch (retType->objKind) {
-        case VOID_TYPE :
+        if (!y->returnType)
             return voidValue.ptr();
-        case TYPE :
-            return new PValue((Type *)retType.ptr(), true);
-        default :
-            assert(false);
-            return NULL;
-        }
+        return new PValue(y->returnType, true);
     }
     else {
         error("invalid call operation");
@@ -794,12 +792,10 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             lookupIsStaticFlags(callable, args.size()-1);
         vector<ObjectPtr> argsKey;
         vector<LocationPtr> argLocations;
-        vector<TypePtr> dynamicArgTypes;
         for (unsigned i = 1; i < args.size(); ++i) {
             if (!isStaticFlags[i-1]) {
                 TypePtr t = evaluateType(args[i], env);
                 argsKey.push_back(t.ptr());
-                dynamicArgTypes.push_back(t);
             }
             else {
                 ObjectPtr param = evaluateStatic(args[i], env);
@@ -807,36 +803,27 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             }
             argLocations.push_back(args[i]->location);
         }
-        ObjectPtr result;
+        InvokeEntryPtr entry;
         switch (callable->objKind) {
         case PROCEDURE : {
             Procedure *y = (Procedure *)callable.ptr();
-            result = analyzeInvokeProcedure2(y, argsKey, argLocations);
+            entry = analyzeProcedure(y, isStaticFlags,
+                                     argsKey, argLocations);
             break;
         }
         case OVERLOADABLE : {
             Overloadable *y = (Overloadable *)callable.ptr();
-            result = analyzeInvokeOverloadable2(y, argsKey, argLocations);
+            entry = analyzeOverloadable(y, isStaticFlags,
+                                        argsKey, argLocations);
             break;
         }
         default :
             assert(false);
         }
-        if (!result)
+        if (!entry->analyzed)
             return NULL;
-        TypePtr fpType;
-        switch (result->objKind) {
-        case VOID_VALUE :
-            fpType = functionPointerType(dynamicArgTypes, voidType.ptr());
-            break;
-        case PVALUE : {
-            PValue *pv = (PValue *)result.ptr();
-            fpType = functionPointerType(dynamicArgTypes, pv->type.ptr());
-            break;
-        }
-        default :
-            assert(false);
-        }
+        TypePtr fpType = functionPointerType(entry->argTypes,
+                                             entry->returnType);
         return new PValue(fpType, true);
     }
 

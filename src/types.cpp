@@ -106,12 +106,13 @@ TypePtr pointerType(TypePtr pointeeType) {
 }
 
 TypePtr functionPointerType(const vector<TypePtr> &argTypes,
-                            ObjectPtr returnType) {
+                            TypePtr returnType) {
     int h = 0;
     for (unsigned i = 0; i < argTypes.size(); ++i) {
         h += pointerHash(argTypes[i].ptr());
     }
-    h += pointerHash(returnType.ptr());
+    if (returnType.ptr())
+        h += pointerHash(returnType.ptr());
     h &= functionPointerTypes.size() - 1;
     vector<FunctionPointerTypePtr> &bucket = functionPointerTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
@@ -282,18 +283,8 @@ const llvm::Type *llvmVoidType() {
 
 
 //
-// llvmReturnType, llvmType
+// llvmType
 //
-
-const llvm::Type *llvmReturnType(ObjectPtr t) {
-    switch (t->objKind) {
-    case VOID_TYPE : return llvmVoidType();
-    case TYPE : return llvmType((Type *)t.ptr());
-    default :
-        assert(false);
-        return NULL;
-    }
-}
 
 static const llvm::Type *makeLLVMType(TypePtr t);
 
@@ -326,10 +317,8 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         vector<const llvm::Type *> llArgTypes;
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
             llArgTypes.push_back(llvmPointerType(x->argTypes[i]));
-        if (x->returnType->objKind == TYPE) {
-            TypePtr retType = (Type *)x->returnType.ptr();
-            llArgTypes.push_back(llvmPointerType(retType));
-        }
+        if (x->returnType.ptr())
+            llArgTypes.push_back(llvmPointerType(x->returnType));
         llvm::FunctionType *llFuncType =
             llvm::FunctionType::get(llvmVoidType(), llArgTypes, false);
         return llvm::PointerType::getUnqual(llFuncType);
@@ -407,7 +396,7 @@ void typePrint(TypePtr t, ostream &out) {
         vector<ObjectPtr> v;
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
             v.push_back(x->argTypes[i].ptr());
-        v.push_back(x->returnType);
+        v.push_back(x->returnType.ptr());
         out << "FunctionPointer" << v;
         break;
     }

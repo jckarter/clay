@@ -111,14 +111,12 @@ const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
     return entry.isStaticFlags;
 }
 
-bool computeArgsKey(ObjectPtr callable,
+bool computeArgsKey(const vector<bool> &isStaticFlags,
                     const vector<ExprPtr> &args,
                     EnvPtr env,
                     vector<ObjectPtr> &argsKey,
                     vector<LocationPtr> &argLocations)
 {
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(callable, args.size());
     for (unsigned i = 0; i < args.size(); ++i) {
         if (isStaticFlags[i]) {
             ObjectPtr v = evaluateStatic(args[i], env);
@@ -151,6 +149,7 @@ static void initInvokeTable() {
 }
 
 InvokeEntryPtr lookupInvoke(ObjectPtr callable,
+                            const vector<bool> &isStaticFlags,
                             const vector<ObjectPtr> &argsKey)
 {
     if (!invokeTableInitialized)
@@ -166,8 +165,6 @@ InvokeEntryPtr lookupInvoke(ObjectPtr callable,
             return entry;
         }
     }
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(callable, argsKey.size());
     InvokeEntryPtr entry = new InvokeEntry(callable, isStaticFlags, argsKey);
     bucket.push_back(entry);
     return entry;

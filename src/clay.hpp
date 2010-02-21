@@ -920,16 +920,22 @@ struct ExternalProcedure : public TopLevelItem {
     vector<ExternalArgPtr> args;
     bool hasVarArgs;
     ExprPtr returnType;
-    ObjectPtr returnType2;
+
+    bool analyzed;
+    TypePtr returnType2;
+
     llvm::Function *llvmFunc;
+
     ExternalProcedure()
-        : TopLevelItem(EXTERNAL_PROCEDURE), hasVarArgs(false), llvmFunc(NULL) {}
+        : TopLevelItem(EXTERNAL_PROCEDURE), hasVarArgs(false),
+          analyzed(false), llvmFunc(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       const vector<ExternalArgPtr> &args,
                       bool hasVarArgs,
                       ExprPtr returnType)
         : TopLevelItem(EXTERNAL_PROCEDURE), name(name), args(args), 
-          hasVarArgs(hasVarArgs), returnType(returnType), llvmFunc(NULL) {}
+          hasVarArgs(hasVarArgs), returnType(returnType),
+          analyzed(false), llvmFunc(NULL) {}
 };
 
 struct ExternalArg : public ANode {
@@ -1233,8 +1239,8 @@ struct PointerType : public Type {
 
 struct FunctionPointerType : public Type {
     vector<TypePtr> argTypes;
-    ObjectPtr returnType;
-    FunctionPointerType(const vector<TypePtr> &argTypes, ObjectPtr returnType)
+    TypePtr returnType; // NULL if void return
+    FunctionPointerType(const vector<TypePtr> &argTypes, TypePtr returnType)
         : Type(FUNCTION_POINTER_TYPE), argTypes(argTypes),
           returnType(returnType) {}
 };
@@ -1321,7 +1327,7 @@ TypePtr uintType(int bits);
 TypePtr floatType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr functionPointerType(const vector<TypePtr> &argTypes,
-                            ObjectPtr returnType);
+                            TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
@@ -1340,7 +1346,6 @@ const llvm::Type *llvmArrayType(const llvm::Type *llType, int size);
 const llvm::Type *llvmArrayType(TypePtr type, int size);
 const llvm::Type *llvmVoidType();
 
-const llvm::Type *llvmReturnType(ObjectPtr returnType);
 const llvm::Type *llvmType(TypePtr t);
 
 int typeSize(TypePtr t);
@@ -1475,7 +1480,7 @@ ObjectPtr derefCell(PatternCellPtr cell);
 void initIsStaticFlags(ProcedurePtr x);
 void initIsStaticFlags(OverloadablePtr x);
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs);
-bool computeArgsKey(ObjectPtr callable,
+bool computeArgsKey(const vector<bool> &isStaticFlags,
                     const vector<ExprPtr> &args,
                     EnvPtr env,
                     vector<ObjectPtr> &argsKey,
@@ -1489,9 +1494,16 @@ struct InvokeEntry : public Object {
 
     bool analyzed;
     bool analyzing;
-    EnvPtr env;
+
     CodePtr code;
+    vector<ObjectPtr> staticArgs;
+    vector<TypePtr> argTypes;
+    vector<IdentifierPtr> argNames;
+    EnvPtr env;
+
     ObjectPtr analysis;
+    TypePtr returnType; // NULL if void return
+    bool returnIsTemp; // invalid for void return
 
     llvm::Function *llvmFunc;
 
@@ -1500,12 +1512,14 @@ struct InvokeEntry : public Object {
                 const vector<ObjectPtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), isStaticFlags(isStaticFlags), argsKey(argsKey),
-          analyzed(false), analyzing(false), llvmFunc(NULL) {}
+          analyzed(false), analyzing(false), returnIsTemp(false),
+          llvmFunc(NULL) {}
 };
 
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
 InvokeEntryPtr lookupInvoke(ObjectPtr callable,
+                            const vector<bool> &isStaticFlags,
                             const vector<ObjectPtr> &argsKey);
 
 
@@ -1526,14 +1540,17 @@ struct MatchResult : public Object {
     MatchResult(int matchCode)
         : Object(DONT_CARE), matchCode(matchCode) {}
 };
-
 typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
     EnvPtr env;
+    vector<ObjectPtr> staticArgs;
+    vector<TypePtr> argTypes;
+    vector<IdentifierPtr> argNames;
     MatchSuccess(EnvPtr env)
         : MatchResult(MATCH_SUCCESS), env(env) {}
 };
+typedef Pointer<MatchSuccess> MatchSuccessPtr;
 
 struct MatchArityError : public MatchResult {
     MatchArityError()
@@ -1589,18 +1606,18 @@ ObjectPtr analyzeInvokeRecord(RecordPtr x,
 ObjectPtr analyzeInvokeProcedure(ProcedurePtr x,
                                  const vector<ExprPtr> &args,
                                  EnvPtr env);
-ObjectPtr analyzeInvokeProcedure2(ProcedurePtr x,
-                                  const vector<ObjectPtr> &argsKey,
-                                  const vector<LocationPtr> &argLocations);
+InvokeEntryPtr analyzeProcedure(ProcedurePtr x,
+                                const vector<bool> &isStaticFlags,
+                                const vector<ObjectPtr> &argsKey,
+                                const vector<LocationPtr> &argLocations);
 ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x,
                                     const vector<ExprPtr> &args,
                                     EnvPtr env);
-ObjectPtr analyzeInvokeOverloadable2(OverloadablePtr x,
-                                     const vector<ObjectPtr> &argsKey,
-                                     const vector<LocationPtr> &argLocations);
-EnvPtr bindDynamicArgsForAnalysis(EnvPtr env, CodePtr code,
-                                  const vector<ObjectPtr> &argsKey);
-ObjectPtr analyzeCodeBody(CodePtr code, EnvPtr env);
+InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
+                                   const vector<bool> &isStaticFlags,
+                                   const vector<ObjectPtr> &argsKey,
+                                   const vector<LocationPtr> &argLocations);
+void analyzeCodeBody(InvokeEntryPtr entry);
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
@@ -1643,8 +1660,8 @@ int objectVectorHash(const vector<Pointer<T> > &a) {
 
 ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
 
+TypePtr evaluateMaybeVoidType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
-ObjectPtr evaluateReturnType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
 TypePtr evaluatePointerOrFunctionPointerType(ExprPtr expr, EnvPtr env);
@@ -1711,14 +1728,15 @@ void cgDestroyAndPopStack(int marker);
 CValuePtr codegenAllocValue(TypePtr t);
 
 InvokeEntryPtr codegenProcedure(ProcedurePtr x,
+                                const vector<bool> &isStaticFlags,
                                 const vector<ObjectPtr> &argsKey,
                                 const vector<LocationPtr> &argLocations);
 InvokeEntryPtr codegenOverloadable(OverloadablePtr x,
+                                   const vector<bool> &isStaticFlags,
                                    const vector<ObjectPtr> &argsKey,
                                    const vector<LocationPtr> &argLocations);
-InvokeEntryPtr codegenCodeBody(ObjectPtr callable,
-                               const vector<ObjectPtr> &argsKey,
-                               const string &callableName);
+void codegenCodeBody(InvokeEntryPtr entry,
+                     const string &callableName);
 
 bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx);
 

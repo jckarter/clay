@@ -85,25 +85,26 @@ ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env)
     return analysis;
 }
 
+TypePtr evaluateMaybeVoidType(ExprPtr expr, EnvPtr env)
+{
+    ObjectPtr v = evaluateStatic(expr, env);
+    switch (v->objKind) {
+    case VOID_TYPE :
+        return NULL;
+    case TYPE :
+        return (Type *)v.ptr();
+    default :
+        error(expr, "expecting a type");
+        return NULL;
+    }
+}
+
 TypePtr evaluateType(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = evaluateStatic(expr, env);
     if (v->objKind != TYPE)
         error(expr, "expecting a type");
     return (Type *)v.ptr();
-}
-
-ObjectPtr evaluateReturnType(ExprPtr expr, EnvPtr env)
-{
-    ObjectPtr v = evaluateStatic(expr, env);
-    switch (v->objKind) {
-    case TYPE :
-    case VOID_TYPE :
-        break;
-    default :
-        error(expr, "expecting a return type");
-    }
-    return v;
 }
 
 TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env)
@@ -213,11 +214,11 @@ void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v)
     IdentifierPtr name = new Identifier("clay_eval_temp");
     ProcedurePtr proc = new Procedure(name, code);
     proc->env = env;
-    InvokeEntryPtr entry = codegenProcedure(proc, vector<ObjectPtr>(),
+    InvokeEntryPtr entry = codegenProcedure(proc,
+                                            vector<bool>(),
+                                            vector<ObjectPtr>(),
                                             vector<LocationPtr>());
-    assert(entry->analysis->objKind == PVALUE);
-    PValuePtr pv = (PValue *)entry->analysis.ptr();
-    if (pv->type != v->type)
+    if (entry->returnType != v->type)
         error(expr, "type mismatch in evaluating");
 
     vector<llvm::GenericValue> gvArgs;

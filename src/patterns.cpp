@@ -129,8 +129,14 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
         if (type->typeKind != FUNCTION_POINTER_TYPE)
             return false;
         FunctionPointerTypePtr t = (FunctionPointerType *)type.ptr();
-        if (!unify(x->returnType, t->returnType.ptr()))
-            return false;
+        if (!t->returnType) {
+            if (!unify(x->returnType, voidType.ptr()))
+                return false;
+        }
+        else {
+            if (!unify(x->returnType, t->returnType.ptr()))
+                return false;
+        }
         if (x->argTypes.size() != t->argTypes.size())
             return false;
         for (unsigned i = 0; i < x->argTypes.size(); ++i) {

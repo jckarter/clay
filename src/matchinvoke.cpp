@@ -36,14 +36,36 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
             assert(false);
         }
     }
-    EnvPtr bodyEnv = new Env(codeEnv);
+    EnvPtr staticEnv = new Env(codeEnv);
     for (unsigned i = 0; i < cells.size(); ++i)
-        addLocal(bodyEnv, code->patternVars[i], derefCell(cells[i]));
+        addLocal(staticEnv, code->patternVars[i], derefCell(cells[i]));
     if (code->predicate.ptr()) {
-        if (!evaluateBool(code->predicate, bodyEnv))
+        if (!evaluateBool(code->predicate, staticEnv))
             return new MatchPredicateError();
     }
-    return new MatchSuccess(bodyEnv);
+    MatchSuccessPtr result = new MatchSuccess(staticEnv);
+    for (unsigned i = 0; i < formalArgs.size(); ++i) {
+        FormalArgPtr farg = formalArgs[i];
+        switch (farg->objKind) {
+        case VALUE_ARG : {
+            ValueArg *x = (ValueArg *)farg.ptr();
+            result->argNames.push_back(x->name);
+            assert(argsKey[i]->objKind == TYPE);
+            TypePtr y = (Type *)argsKey[i].ptr();
+            result->argTypes.push_back(y);
+            break;
+        }
+        case STATIC_ARG : {
+            StaticArg *x = (StaticArg *)farg.ptr();
+            ObjectPtr y = evaluateStatic(x->pattern, staticEnv);
+            result->staticArgs.push_back(y);
+            break;
+        }
+        default :
+            assert(false);
+        }
+    }
+    return result.ptr();
 }
 
 void signalMatchError(MatchResultPtr result,
