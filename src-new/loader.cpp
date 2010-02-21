@@ -283,6 +283,7 @@ static ModulePtr makePrimitivesModule() {
     prims->globals["UInt64"] = uint64Type.ptr();
     prims->globals["Float32"] = float32Type.ptr();
     prims->globals["Float64"] = float64Type.ptr();
+    prims->globals["Void"] = voidType.ptr();
 
 #define PRIMITIVE(x) prims->globals[toPrimStr(#x)] = new PrimOp(PRIM_##x)
     PRIMITIVE(TypeP);
@@ -316,8 +317,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(pointerDereference);
     PRIMITIVE(pointerToInt);
     PRIMITIVE(intToPointer);
-    PRIMITIVE(allocateMemory);
-    PRIMITIVE(freeMemory);
 
     PRIMITIVE(FunctionPointerTypeP);
     PRIMITIVE(FunctionPointer);

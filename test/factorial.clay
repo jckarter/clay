@@ -38,6 +38,6 @@ main() {
     var n = 7;
     n = n - 1;
     var f = factorial4(n);
-    printf(cstring("factiral(%d) = %d\n"), n, f);
+    printf(cstring("factorial(%d) = %d\n"), n, f);
     return 0;
 }

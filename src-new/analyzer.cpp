@@ -667,6 +667,9 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_primitiveCopy :
         return voidType.ptr();
 
+    case PRIM_boolNot :
+        return new PValue(boolType, true);
+
     case PRIM_numericEqualsP :
         return new PValue(boolType, true);
 
