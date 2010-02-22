@@ -41,9 +41,10 @@ Pointer[T]
 [T,I|IntegerType?(I)] pointerToInt(static I, a:Pointer[T]) : I
 [I,T|IntegerType?(I)] intToPointer(static T, a:I) : Pointer[T]
 
-[T] FunctionPointerType?(static T):Bool
-FunctionPointer[A1, ..., An, RT]
-[F, A1, ..., An] makeFunctionPointer(static F, static A1, ..., static An)
+[T] CodePointerType?(static T):Bool
+CodePointer[A1, ..., An, RT]
+RefCodePointer[A1, ..., An, RT]
+[F, A1, ..., An] makeCodePointer(static F, static A1, ..., static An)
 
 [T1,T2] pointerCast(static T2, a:Pointer[T1]): T2
 

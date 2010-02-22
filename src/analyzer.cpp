@@ -263,15 +263,26 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
             return pointerType(t).ptr();
         }
 
-        case PRIM_FunctionPointer : {
+        case PRIM_CodePointer : {
             if (args.size() < 1)
                 error("atleast one argument required for"
-                      " function pointer types.");
+                      " code pointer types.");
             vector<TypePtr> types;
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 types.push_back(evaluateType(args[i], env));
             TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return functionPointerType(types, returnType).ptr();
+            return codePointerType(types, returnType, true).ptr();
+        }
+
+        case PRIM_RefCodePointer : {
+            if (args.size() < 1)
+                error("atleast one argument required for"
+                      " code pointer types.");
+            vector<TypePtr> types;
+            for (unsigned i = 0; i+1 < args.size(); ++i)
+                types.push_back(evaluateType(args[i], env));
+            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
+            return codePointerType(types, returnType, false).ptr();
         }
 
         case PRIM_Array : {
@@ -642,11 +653,11 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
                              const vector<ExprPtr> &args,
                              EnvPtr env)
 {
-    if (x->type->typeKind == FUNCTION_POINTER_TYPE) {
-        FunctionPointerType *y = (FunctionPointerType *)x->type.ptr();
+    if (x->type->typeKind == CODE_POINTER_TYPE) {
+        CodePointerType *y = (CodePointerType *)x->type.ptr();
         if (!y->returnType)
             return voidValue.ptr();
-        return new PValue(y->returnType, true);
+        return new PValue(y->returnType, y->returnIsTemp);
     }
     else {
         error("invalid call operation");
@@ -762,22 +773,25 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         return new PValue(pointerType(t), true);
     }
 
-    case PRIM_FunctionPointerTypeP : {
+    case PRIM_CodePointerTypeP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateStatic(args[0], env);
         bool isFPType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
-            if (t->typeKind == FUNCTION_POINTER_TYPE)
+            if (t->typeKind == CODE_POINTER_TYPE)
                 isFPType = true;
         }
         return boolToValueHolder(isFPType).ptr();
     }
 
-    case PRIM_FunctionPointer :
-        error("FunctionPointer type constructor cannot be called");
+    case PRIM_CodePointer :
+        error("CodePointer type constructor cannot be called");
 
-    case PRIM_makeFunctionPointer : {
+    case PRIM_RefCodePointer :
+        error("RefCodePointer type constructor cannot be called");
+
+    case PRIM_makeCodePointer : {
         if (args.size() < 1)
             error("incorrect no. of parameters");
         ObjectPtr callable = evaluateStatic(args[0], env);
@@ -822,14 +836,14 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         }
         if (!entry->analyzed)
             return NULL;
-        TypePtr fpType = functionPointerType(entry->argTypes,
-                                             entry->returnType);
+        TypePtr fpType = codePointerType(entry->argTypes, entry->returnType,
+                                         entry->returnIsTemp);
         return new PValue(fpType, true);
     }
 
     case PRIM_pointerCast : {
         ensureArity(args, 2);
-        TypePtr t = evaluatePointerOrFunctionPointerType(args[0], env);
+        TypePtr t = evaluatePointerOrCodePointerType(args[0], env);
         return new PValue(t, true);
     }
 

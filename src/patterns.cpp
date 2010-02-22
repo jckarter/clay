@@ -51,14 +51,24 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
             return new PointerTypePattern(p);
         }
 
-        case PRIM_FunctionPointer : {
+        case PRIM_CodePointer : {
             if (args.size() < 1)
-                error("function pointer type requires return type");
+                error("code pointer type requires return type");
             vector<PatternPtr> argTypes;
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 argTypes.push_back(evaluatePattern(args[i], env));
             PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new FunctionPointerTypePattern(argTypes, returnType);
+            return new CodePointerTypePattern(argTypes, returnType, true);
+        }
+
+        case PRIM_RefCodePointer : {
+            if (args.size() < 1)
+                error("code pointer type requires return type");
+            vector<PatternPtr> argTypes;
+            for (unsigned i = 0; i+1 < args.size(); ++i)
+                argTypes.push_back(evaluatePattern(args[i], env));
+            PatternPtr returnType = evaluatePattern(args.back(), env);
+            return new CodePointerTypePattern(argTypes, returnType, false);
         }
 
         case PRIM_Array : {
@@ -120,20 +130,22 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
         return unify(x->pointeeType, t->pointeeType.ptr());
     }
 
-    case FUNCTION_POINTER_TYPE_PATTERN : {
-        FunctionPointerTypePattern *x =
-            (FunctionPointerTypePattern *)pattern.ptr();
+    case CODE_POINTER_TYPE_PATTERN : {
+        CodePointerTypePattern *x =
+            (CodePointerTypePattern *)pattern.ptr();
         if (obj->objKind != TYPE)
             return false;
         TypePtr type = (Type *)obj.ptr();
-        if (type->typeKind != FUNCTION_POINTER_TYPE)
+        if (type->typeKind != CODE_POINTER_TYPE)
             return false;
-        FunctionPointerTypePtr t = (FunctionPointerType *)type.ptr();
+        CodePointerTypePtr t = (CodePointerType *)type.ptr();
         if (!t->returnType) {
             if (!unify(x->returnType, voidType.ptr()))
                 return false;
         }
         else {
+            if (x->returnIsTemp != t->returnIsTemp)
+                return false;
             if (!unify(x->returnType, t->returnType.ptr()))
                 return false;
         }
@@ -227,10 +239,10 @@ void patternPrint(PatternPtr x, ostream &out)
         out << "PointerTypePattern(" << y->pointeeType << ")";
         break;
     }
-    case FUNCTION_POINTER_TYPE_PATTERN : {
-        FunctionPointerTypePattern *y = (FunctionPointerTypePattern *)x.ptr();
-        out << "FunctionPointerTypePattern(" << y->argTypes << ", "
-            << y->returnType << ")";
+    case CODE_POINTER_TYPE_PATTERN : {
+        CodePointerTypePattern *y = (CodePointerTypePattern *)x.ptr();
+        out << "CodePointerTypePattern(" << y->argTypes << ", "
+            << y->returnType << ", " << y->returnIsTemp << ")";
         break;
     }
     case ARRAY_TYPE_PATTERN : {
