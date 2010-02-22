@@ -5,7 +5,7 @@ external sched_init():Void;
 external sched_run():Void;
 external sched_destroy():Void;
 external sched_ready(task:Pointer[Int8]):Void;
-external sched_task_create(stacksize:Int32, func:FunctionPointer[Pointer[Int8], Pointer[Int8], Int32], arg1:Pointer[Int8], arg2:Int32):Pointer[Int8];
+external sched_task_create(stacksize:Int32, func:CCodePointer[Pointer[Int8], Pointer[Int8], Int32], arg1:Pointer[Int8], arg2:Int32):Pointer[Int8];
 
 external chan_create(size:Int32):Pointer[Int8];
 external chan_send(chan:Pointer[Int8], ptr:Pointer[Int8]):Void;
@@ -61,8 +61,8 @@ m2(p, val) {
 
 m(p, val) {
     var ch = chan_create(TypeSize(Int32));
-    var fp = makeFunctionPointer(generator, Pointer[Int8], Int32);
-    var fp2 = to(FunctionPointer[Pointer[Int8], Pointer[Int8], Int32], fp);
+    var fp = makeCCodePointer(generator, Pointer[Int8], Int32);
+    var fp2 = to(CCodePointer[Pointer[Int8], Pointer[Int8], Int32], fp);
     var task = sched_task_create(8192, fp2, ch, 10);
     var ch_ = ch;
     sched_ready(task);
@@ -73,8 +73,8 @@ m(p, val) {
             break;
         }
         printf(cstring("%d\n"), prime);
-        var fp2 = makeFunctionPointer(filter, Pointer[Channels], Int32);
-        var fp22 = to(FunctionPointer[Pointer[Int8], Pointer[Int8], Int32], fp2);
+        var fp2 = makeCCodePointer(filter, Pointer[Channels], Int32);
+        var fp22 = to(CCodePointer[Pointer[Int8], Pointer[Int8], Int32], fp2);
         var c = Channels();
         c.chanin = ch_;
         c.chanout = chan_create(TypeSize(Int32));
@@ -87,8 +87,8 @@ m(p, val) {
 main() {
     sched_init();
     var v = 'c';
-    var fp = makeFunctionPointer(m, Pointer[Int8], Int32);
-    var fp2 = to(FunctionPointer[Pointer[Int8], Pointer[Int8], Int32], fp);
+    var fp = makeCCodePointer(m, Pointer[Int8], Int32);
+    var fp2 = to(CCodePointer[Pointer[Int8], Pointer[Int8], Int32], fp);
     var task = sched_task_create(8192, fp2, to(Pointer[Int8], &v), 10);
     sched_ready(task);
     sched_run();

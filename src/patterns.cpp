@@ -71,6 +71,16 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
             return new CodePointerTypePattern(argTypes, returnType, false);
         }
 
+        case PRIM_CCodePointer : {
+            if (args.size() < 1)
+                error("c-code pointer type requries return type");
+            vector<PatternPtr> argTypes;
+            for (unsigned i = 0; i+1 < args.size(); ++i)
+                argTypes.push_back(evaluatePattern(args[i], env));
+            PatternPtr returnType = evaluatePattern(args.back(), env);
+            return new CCodePointerTypePattern(argTypes, returnType);
+        }
+
         case PRIM_Array : {
             ensureArity(args, 2);
             PatternPtr elementType = evaluatePattern(args[0], env);
@@ -148,6 +158,31 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
                 return false;
             if (!unify(x->returnType, t->returnType.ptr()))
                 return false;
+        }
+        if (x->argTypes.size() != t->argTypes.size())
+            return false;
+        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            if (!unify(x->argTypes[i], t->argTypes[i].ptr()))
+                return false;
+        }
+        return true;
+    }
+
+    case CCODE_POINTER_TYPE_PATTERN : {
+        CCodePointerTypePattern *x =
+            (CCodePointerTypePattern *)pattern.ptr();
+        if (obj->objKind != TYPE)
+            return false;
+        TypePtr type = (Type *)obj.ptr();
+        if (type->typeKind != CCODE_POINTER_TYPE)
+            return false;
+        CCodePointerTypePtr t = (CCodePointerType *)type.ptr();
+        if (!t->returnType) {
+            if (!unify(x->returnType, voidType.ptr()))
+                return false;
+        }
+        else if (!unify(x->returnType, t->returnType.ptr())) {
+            return false;
         }
         if (x->argTypes.size() != t->argTypes.size())
             return false;
@@ -243,6 +278,12 @@ void patternPrint(PatternPtr x, ostream &out)
         CodePointerTypePattern *y = (CodePointerTypePattern *)x.ptr();
         out << "CodePointerTypePattern(" << y->argTypes << ", "
             << y->returnType << ", " << y->returnIsTemp << ")";
+        break;
+    }
+    case CCODE_POINTER_TYPE_PATTERN : {
+        CCodePointerTypePattern *y = (CCodePointerTypePattern *)x.ptr();
+        out << "CCodePointerTypePattern(" << y->argTypes << ", "
+            << y->returnType << ")";
         break;
     }
     case ARRAY_TYPE_PATTERN : {

@@ -128,12 +128,13 @@ TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env)
     return t;
 }
 
-TypePtr evaluatePointerOrCodePointerType(ExprPtr expr, EnvPtr env)
+TypePtr evaluatePointerLikeType(ExprPtr expr, EnvPtr env)
 {
     TypePtr t = evaluateType(expr, env);
     switch (t->typeKind) {
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
         break;
     default :
         error(expr, "expecting a pointer or code pointer type");

@@ -6,6 +6,7 @@ import kernel.numbers.*;
 import kernel.coordinates.*;
 import kernel.pointers.*;
 import kernel.codepointers.*;
+import kernel.ccodepointers.*;
 import kernel.tuples.*;
 import kernel.records.*;
 import kernel.ranges.*;
