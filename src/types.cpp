@@ -17,6 +17,7 @@ VoidValuePtr voidValue;
 
 static vector<vector<PointerTypePtr> > pointerTypes;
 static vector<vector<CodePointerTypePtr> > codePointerTypes;
+static vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
 static vector<vector<ArrayTypePtr> > arrayTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
@@ -39,6 +40,7 @@ void initTypes() {
     int N = 1024;
     pointerTypes.resize(N);
     codePointerTypes.resize(N);
+    cCodePointerTypes.resize(N);
     arrayTypes.resize(N);
     tupleTypes.resize(N);
     recordTypes.resize(N);
@@ -111,8 +113,10 @@ TypePtr codePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
     for (unsigned i = 0; i < argTypes.size(); ++i) {
         h += pointerHash(argTypes[i].ptr());
     }
-    if (returnType.ptr())
+    if (returnType.ptr()) {
         h += pointerHash(returnType.ptr());
+        h += returnIsTemp ? 1 : 0;
+    }
     h &= codePointerTypes.size() - 1;
     vector<CodePointerTypePtr> &bucket = codePointerTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
@@ -124,6 +128,25 @@ TypePtr codePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
     }
     CodePointerTypePtr t = new CodePointerType(argTypes, returnType,
                                                returnIsTemp);
+    bucket.push_back(t);
+    return t.ptr();
+}
+
+TypePtr cCodePointerType(const vector<TypePtr> &argTypes, TypePtr returnType) {
+    int h = 0;
+    for (unsigned i = 0; i < argTypes.size(); ++i) {
+        h += pointerHash(argTypes[i].ptr());
+    }
+    if (returnType.ptr())
+        h += pointerHash(returnType.ptr());
+    h &= cCodePointerTypes.size() - 1;
+    vector<CCodePointerTypePtr> &bucket = cCodePointerTypes[h];
+    for (unsigned i = 0; i < bucket.size(); ++i) {
+        CCodePointerType *t = bucket[i].ptr();
+        if ((t->argTypes == argTypes) && (t->returnType == returnType))
+            return t;
+    }
+    CCodePointerTypePtr t = new CCodePointerType(argTypes, returnType);
     bucket.push_back(t);
     return t.ptr();
 }
@@ -335,6 +358,17 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
             llvm::FunctionType::get(llReturnType, llArgTypes, false);
         return llvm::PointerType::getUnqual(llFuncType);
     }
+    case CCODE_POINTER_TYPE : {
+        CCodePointerType *x = (CCodePointerType *)t.ptr();
+        vector<const llvm::Type *> llArgTypes;
+        for (unsigned i = 0; i < x->argTypes.size(); ++i)
+            llArgTypes.push_back(llvmType(x->argTypes[i]));
+        const llvm::Type *llReturnType =
+            x->returnType.ptr() ? llvmType(x->returnType) : llvmVoidType();
+        llvm::FunctionType *llFuncType =
+            llvm::FunctionType::get(llReturnType, llArgTypes, false);
+        return llvm::PointerType::getUnqual(llFuncType);
+    }
     case ARRAY_TYPE : {
         ArrayType *x = (ArrayType *)t.ptr();
         return llvmArrayType(x->elementType, x->size);
@@ -412,6 +446,15 @@ void typePrint(TypePtr t, ostream &out) {
         if (!x->returnIsTemp)
             out << "Ref";
         out << "CodePointer" << v;
+        break;
+    }
+    case CCODE_POINTER_TYPE : {
+        CCodePointerType *x = (CCodePointerType *)t.ptr();
+        vector<ObjectPtr> v;
+        for (unsigned i = 0; i < x->argTypes.size(); ++i)
+            v.push_back(x->argTypes[i].ptr());
+        v.push_back(x->returnType.ptr());
+        out << "CCodePointer" << v;
         break;
     }
     case ARRAY_TYPE : {

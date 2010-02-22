@@ -1107,37 +1107,75 @@ CValuePtr codegenInvokeValue(CValuePtr x,
                              EnvPtr env,
                              CValuePtr out)
 {
-    if (x->type->typeKind != CODE_POINTER_TYPE)
-        error("invalid call operation");
-    CodePointerType *t = (CodePointerType *)x->type.ptr();
-    ensureArity(args, t->argTypes.size());
+    switch (x->type->typeKind) {
 
-    llvm::Value *llCallable = llvmBuilder->CreateLoad(x->llValue);
-    vector<llvm::Value *> llArgs;
-    for (unsigned i = 0; i < args.size(); ++i) {
-        PValuePtr parg = analyzeValue(args[i], env);
-        if (parg->type != t->argTypes[i])
-            error(args[i], "argument type mismatch");
-        CValuePtr carg = codegenAsRef(args[i], env, parg);
-        llArgs.push_back(carg->llValue);
+    case CODE_POINTER_TYPE : {
+        CodePointerType *t = (CodePointerType *)x->type.ptr();
+        ensureArity(args, t->argTypes.size());
+
+        llvm::Value *llCallable = llvmBuilder->CreateLoad(x->llValue);
+        vector<llvm::Value *> llArgs;
+        for (unsigned i = 0; i < args.size(); ++i) {
+            PValuePtr parg = analyzeValue(args[i], env);
+            if (parg->type != t->argTypes[i])
+                error(args[i], "argument type mismatch");
+            CValuePtr carg = codegenAsRef(args[i], env, parg);
+            llArgs.push_back(carg->llValue);
+        }
+        if (!t->returnType) {
+            assert(!out);
+            llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+            return NULL;
+        }
+        else if (t->returnIsTemp) {
+            assert(out.ptr());
+            assert(t->returnType == out->type);
+            llArgs.push_back(out->llValue);
+            llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+            return out;
+        }
+        else {
+            assert(!out);
+            llvm::Value *result =
+                llvmBuilder->CreateCall(llCallable, llArgs.begin(),
+                                        llArgs.end());
+            return new CValue(t->returnType, result);
+        }
+        assert(false);
     }
-    if (!t->returnType) {
-        assert(!out);
-        llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
-        return NULL;
-    }
-    else if (t->returnIsTemp) {
-        assert(out.ptr());
-        assert(t->returnType == out->type);
-        llArgs.push_back(out->llValue);
-        llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
-        return out;
-    }
-    else {
-        assert(!out);
+
+    case CCODE_POINTER_TYPE : {
+        CCodePointerType *t = (CCodePointerType *)x->type.ptr();
+        ensureArity(args, t->argTypes.size());
+
+        llvm::Value *llCallable = llvmBuilder->CreateLoad(x->llValue);
+        vector<llvm::Value *> llArgs;
+        for (unsigned i = 0; i < args.size(); ++i) {
+            PValuePtr parg = analyzeValue(args[i], env);
+            if (parg->type != t->argTypes[i])
+                error(args[i], "argument type mismatch");
+            CValuePtr carg = codegenAsRef(args[i], env, parg);
+            llvm::Value *llArg = llvmBuilder->CreateLoad(carg->llValue);
+            llArgs.push_back(llArg);
+        }
         llvm::Value *result =
             llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
-        return new CValue(t->returnType, result);
+        if (!t->returnType) {
+            assert(!out);
+            return NULL;
+        }
+        else {
+            assert(out.ptr());
+            assert(t->returnType == out->type);
+            llvmBuilder->CreateStore(result, out->llValue);
+            return out;
+        }
+        assert(false);
+    }
+
+    default :
+        error("invalid call operation");
+        return NULL;
     }
 }
 
@@ -1356,6 +1394,66 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
 
 
 //
+// codegenCWrapper
+//
+
+void codegenCWrapper(InvokeEntryPtr entry, const string &callableName)
+{
+    assert(!entry->llvmCWrapper);
+
+    vector<const llvm::Type *> llArgTypes;
+    for (unsigned i = 0; i < entry->argTypes.size(); ++i)
+        llArgTypes.push_back(llvmType(entry->argTypes[i]));
+    const llvm::Type *llReturnType =
+        entry->returnType.ptr() ? llvmType(entry->returnType) : llvmVoidType();
+
+    llvm::FunctionType *llFuncType =
+        llvm::FunctionType::get(llReturnType, llArgTypes, false);
+
+    llvm::Function *llCWrapper =
+        llvm::Function::Create(llFuncType,
+                               llvm::Function::InternalLinkage,
+                               "clay_cwrapper_" + callableName,
+                               llvmModule);
+
+    entry->llvmCWrapper = llCWrapper;
+
+    llvm::BasicBlock *llBlock =
+        llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                 "body",
+                                 llCWrapper);
+    llvm::IRBuilder<> llBuilder(llBlock);
+
+    vector<llvm::Value *> innerArgs;
+    llvm::Function::arg_iterator ai = llCWrapper->arg_begin();
+    for (unsigned i = 0; i < llArgTypes.size(); ++i, ++ai) {
+        llvm::Argument *llArg = &(*ai);
+        llvm::Value *llv = llBuilder.CreateAlloca(llArgTypes[i]);
+        llBuilder.CreateStore(llArg, llv);
+        innerArgs.push_back(llv);
+    }
+
+    if (!entry->returnType) {
+        llBuilder.CreateCall(entry->llvmFunc, innerArgs.begin(),
+                             innerArgs.end());
+        llBuilder.CreateRetVoid();
+    }
+    else {
+        if (!entry->returnIsTemp)
+            error("c-code pointers don't support return by reference");
+        llvm::Value *llRetVal =
+            llBuilder.CreateAlloca(llvmType(entry->returnType));
+        innerArgs.push_back(llRetVal);
+        llBuilder.CreateCall(entry->llvmFunc, innerArgs.begin(),
+                             innerArgs.end());
+        llvm::Value *llRet = llBuilder.CreateLoad(llRetVal);
+        llBuilder.CreateRet(llRet);
+    }
+}
+
+
+
+//
 // codegenInvokeExternal
 //
 
@@ -1478,6 +1576,7 @@ static llvm::Value *_cgPointerLike(ExprPtr expr, EnvPtr env, TypePtr &type)
         switch (pv->type->typeKind) {
         case POINTER_TYPE :
         case CODE_POINTER_TYPE :
+        case CCODE_POINTER_TYPE :
             break;
         default :
             error(expr, "expecting a pointer or a code pointer");
@@ -1498,6 +1597,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
     case PRIM_TypeP :
     case PRIM_TypeSize :
     case PRIM_CodePointerTypeP :
+    case PRIM_CCodePointerTypeP :
     case PRIM_TupleTypeP :
     case PRIM_TupleElementCount :
     case PRIM_TupleElementOffset :
@@ -1523,6 +1623,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         case FLOAT_TYPE :
         case POINTER_TYPE :
         case CODE_POINTER_TYPE :
+        case CCODE_POINTER_TYPE :
             break;
         default :
             error(args[0], "expecting primitive type");
@@ -1899,12 +2000,10 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             lookupIsStaticFlags(callable, args.size()-1);
         vector<ObjectPtr> argsKey;
         vector<LocationPtr> argLocations;
-        vector<TypePtr> dynamicArgTypes;
         for (unsigned i = 1; i < args.size(); ++i) {
             if (!isStaticFlags[i-1]) {
                 TypePtr t = evaluateType(args[i], env);
                 argsKey.push_back(t.ptr());
-                dynamicArgTypes.push_back(t);
             }
             else {
                 ObjectPtr param = evaluateStatic(args[i], env);
@@ -1933,9 +2032,61 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return out;
     }
 
+    case PRIM_makeCCodePointer : {
+        if (args.size() < 1)
+            error("incorrect number of arguments");
+        ObjectPtr callable = evaluateStatic(args[0], env);
+        switch (callable->objKind) {
+        case PROCEDURE :
+        case OVERLOADABLE :
+            break;
+        default :
+            error(args[0], "invalid procedure or overloadable");
+        }
+        const vector<bool> &isStaticFlags =
+            lookupIsStaticFlags(callable, args.size()-1);
+        vector<ObjectPtr> argsKey;
+        vector<LocationPtr> argLocations;
+        for (unsigned i = 1; i < args.size(); ++i) {
+            if (!isStaticFlags[i-1]) {
+                TypePtr t = evaluateType(args[i], env);
+                argsKey.push_back(t.ptr());
+            }
+            else {
+                ObjectPtr param = evaluateStatic(args[i], env);
+                argsKey.push_back(param);
+            }
+            argLocations.push_back(args[i]->location);
+        }
+        InvokeEntryPtr entry;
+        string callableName;
+        switch (callable->objKind) {
+        case PROCEDURE : {
+            Procedure *y = (Procedure *)callable.ptr();
+            entry = codegenProcedure(y, isStaticFlags,
+                                     argsKey, argLocations);
+            callableName = y->name->str;
+            break;
+        }
+        case OVERLOADABLE : {
+            Overloadable *y = (Overloadable *)callable.ptr();
+            entry = codegenOverloadable(y, isStaticFlags,
+                                        argsKey, argLocations);
+            callableName = y->name->str;
+            break;
+        }
+        default :
+            assert(false);
+        }
+        if (!entry->llvmCWrapper)
+            codegenCWrapper(entry, callableName);
+        llvmBuilder->CreateStore(entry->llvmCWrapper, out->llValue);
+        return out;
+    }
+
     case PRIM_pointerCast : {
         ensureArity(args, 2);
-        TypePtr dest = evaluatePointerOrCodePointerType(args[0], env);
+        TypePtr dest = evaluatePointerLikeType(args[0], env);
         TypePtr t;
         llvm::Value *v = _cgPointerLike(args[1], env, t);
         llvm::Value *result = llvmBuilder->CreateBitCast(v, llvmType(dest));

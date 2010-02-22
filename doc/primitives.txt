@@ -46,6 +46,10 @@ CodePointer[A1, ..., An, RT]
 RefCodePointer[A1, ..., An, RT]
 [F, A1, ..., An] makeCodePointer(static F, static A1, ..., static An)
 
+[T] CCodePointerType?(static T):Bool
+CCodePointer[A1, ..., An, RT]
+[F, A1, ..., An] makeCCodePointer(static F, static A1, ..., static An)
+
 [T1,T2] pointerCast(static T2, a:Pointer[T1]): T2
 
 Array[T,n]

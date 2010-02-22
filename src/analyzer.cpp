@@ -285,6 +285,17 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
             return codePointerType(types, returnType, false).ptr();
         }
 
+        case PRIM_CCodePointer : {
+            if (args.size() < 1)
+                error("atleast one argument required for"
+                      " code pointer types.");
+            vector<TypePtr> types;
+            for (unsigned i = 0; i+1 < args.size(); ++i)
+                types.push_back(evaluateType(args[i], env));
+            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
+            return cCodePointerType(types, returnType).ptr();
+        }
+
         case PRIM_Array : {
             ensureArity(args, 2);
             TypePtr t = evaluateType(args[0], env);
@@ -653,13 +664,23 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
                              const vector<ExprPtr> &args,
                              EnvPtr env)
 {
-    if (x->type->typeKind == CODE_POINTER_TYPE) {
+    switch (x->type->typeKind) {
+
+    case CODE_POINTER_TYPE : {
         CodePointerType *y = (CodePointerType *)x->type.ptr();
         if (!y->returnType)
             return voidValue.ptr();
         return new PValue(y->returnType, y->returnIsTemp);
     }
-    else {
+
+    case CCODE_POINTER_TYPE : {
+        CCodePointerType *y = (CCodePointerType *)x->type.ptr();
+        if (!y->returnType)
+            return voidValue.ptr();
+        return new PValue(y->returnType, true);
+    }
+
+    default :
         error("invalid call operation");
         return NULL;
     }
@@ -776,13 +797,13 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_CodePointerTypeP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateStatic(args[0], env);
-        bool isFPType = false;
+        bool isCPType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
             if (t->typeKind == CODE_POINTER_TYPE)
-                isFPType = true;
+                isCPType = true;
         }
-        return boolToValueHolder(isFPType).ptr();
+        return boolToValueHolder(isCPType).ptr();
     }
 
     case PRIM_CodePointer :
@@ -836,14 +857,78 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         }
         if (!entry->analyzed)
             return NULL;
-        TypePtr fpType = codePointerType(entry->argTypes, entry->returnType,
+        TypePtr cpType = codePointerType(entry->argTypes, entry->returnType,
                                          entry->returnIsTemp);
-        return new PValue(fpType, true);
+        return new PValue(cpType, true);
+    }
+
+    case PRIM_CCodePointerTypeP : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        bool isCCPType = false;
+        if (y->objKind == TYPE) {
+            Type *t = (Type *)y.ptr();
+            if (t->typeKind == CCODE_POINTER_TYPE)
+                isCCPType = true;
+        }
+        return boolToValueHolder(isCCPType).ptr();
+    }
+
+    case PRIM_CCodePointer :
+        error("CCodePointer type constructor cannot be called");
+
+    case PRIM_makeCCodePointer : {
+        if (args.size() < 1)
+            error("incorrect no. of parameters");
+        ObjectPtr callable = evaluateStatic(args[0], env);
+        switch (callable->objKind) {
+        case PROCEDURE :
+        case OVERLOADABLE :
+            break;
+        default :
+            error(args[0], "invalid procedure/overloadable");
+        }
+        const vector<bool> &isStaticFlags =
+            lookupIsStaticFlags(callable, args.size()-1);
+        vector<ObjectPtr> argsKey;
+        vector<LocationPtr> argLocations;
+        for (unsigned i = 1; i < args.size(); ++i) {
+            if (!isStaticFlags[i-1]) {
+                TypePtr t = evaluateType(args[i], env);
+                argsKey.push_back(t.ptr());
+            }
+            else {
+                ObjectPtr param = evaluateStatic(args[i], env);
+                argsKey.push_back(param);
+            }
+            argLocations.push_back(args[i]->location);
+        }
+        InvokeEntryPtr entry;
+        switch (callable->objKind) {
+        case PROCEDURE : {
+            Procedure *y = (Procedure *)callable.ptr();
+            entry = analyzeProcedure(y, isStaticFlags,
+                                     argsKey, argLocations);
+            break;
+        }
+        case OVERLOADABLE : {
+            Overloadable *y = (Overloadable *)callable.ptr();
+            entry = analyzeOverloadable(y, isStaticFlags,
+                                        argsKey, argLocations);
+            break;
+        }
+        default :
+            assert(false);
+        }
+        if (!entry->analyzed)
+            return NULL;
+        TypePtr ccpType = cCodePointerType(entry->argTypes, entry->returnType);
+        return new PValue(ccpType, true);
     }
 
     case PRIM_pointerCast : {
         ensureArity(args, 2);
-        TypePtr t = evaluatePointerOrCodePointerType(args[0], env);
+        TypePtr t = evaluatePointerLikeType(args[0], env);
         return new PValue(t, true);
     }
 

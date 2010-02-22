@@ -271,6 +271,7 @@ struct ArrayType;
 struct TupleType;
 struct PointerType;
 struct CodePointerType;
+struct CCodePointerType;
 struct RecordType;
 
 struct Pattern;
@@ -279,6 +280,7 @@ struct ArrayTypePattern;
 struct TupleTypePattern;
 struct PointerTypePattern;
 struct CodePointerTypePattern;
+struct CCodePointerTypePattern;
 struct RecordTypePattern;
 
 struct VoidType;
@@ -371,6 +373,7 @@ typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
 typedef Pointer<PointerType> PointerTypePtr;
 typedef Pointer<CodePointerType> CodePointerTypePtr;
+typedef Pointer<CCodePointerType> CCodePointerTypePtr;
 typedef Pointer<RecordType> RecordTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
@@ -379,6 +382,7 @@ typedef Pointer<ArrayTypePattern> ArrayTypePatternPtr;
 typedef Pointer<TupleTypePattern> TupleTypePatternPtr;
 typedef Pointer<PointerTypePattern> PointerTypePatternPtr;
 typedef Pointer<CodePointerTypePattern> CodePointerTypePatternPtr;
+typedef Pointer<CCodePointerTypePattern> CCodePointerTypePatternPtr;
 typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 
 typedef Pointer<VoidType> VoidTypePtr;
@@ -1157,6 +1161,10 @@ enum PrimOpCode {
     PRIM_RefCodePointer,
     PRIM_makeCodePointer,
 
+    PRIM_CCodePointerTypeP,
+    PRIM_CCodePointer,
+    PRIM_makeCCodePointer,
+
     PRIM_pointerCast,
 
     PRIM_Array,
@@ -1209,6 +1217,7 @@ enum TypeKind {
     FLOAT_TYPE,
     POINTER_TYPE,
     CODE_POINTER_TYPE,
+    CCODE_POINTER_TYPE,
     ARRAY_TYPE,
     TUPLE_TYPE,
     RECORD_TYPE,
@@ -1246,6 +1255,14 @@ struct CodePointerType : public Type {
                     bool returnIsTemp)
         : Type(CODE_POINTER_TYPE), argTypes(argTypes),
           returnType(returnType), returnIsTemp(returnIsTemp) {}
+};
+
+struct CCodePointerType : public Type {
+    vector<TypePtr> argTypes;
+    TypePtr returnType; // NULL if void return
+    CCodePointerType(const vector<TypePtr> &argTypes, TypePtr returnType)
+        : Type(CCODE_POINTER_TYPE), argTypes(argTypes),
+          returnType(returnType) {}
 };
 
 struct ArrayType : public Type {
@@ -1331,6 +1348,7 @@ TypePtr floatType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
                         bool returnIsTemp);
+TypePtr cCodePointerType(const vector<TypePtr> &argTypes, TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
@@ -1364,6 +1382,7 @@ enum PatternKind {
     PATTERN_CELL,
     POINTER_TYPE_PATTERN,
     CODE_POINTER_TYPE_PATTERN,
+    CCODE_POINTER_TYPE_PATTERN,
     ARRAY_TYPE_PATTERN,
     TUPLE_TYPE_PATTERN,
     RECORD_TYPE_PATTERN,
@@ -1396,6 +1415,15 @@ struct CodePointerTypePattern : public Pattern {
                            PatternPtr returnType, bool returnIsTemp)
         : Pattern(CODE_POINTER_TYPE_PATTERN), argTypes(argTypes),
           returnType(returnType), returnIsTemp(returnIsTemp) {}
+};
+
+struct CCodePointerTypePattern : public Pattern {
+    vector<PatternPtr> argTypes;
+    PatternPtr returnType;
+    CCodePointerTypePattern(const vector<PatternPtr> &argTypes,
+                            PatternPtr returnType)
+        : Pattern(CCODE_POINTER_TYPE_PATTERN), argTypes(argTypes),
+          returnType(returnType) {}
 };
 
 struct ArrayTypePattern : public Pattern {
@@ -1512,6 +1540,7 @@ struct InvokeEntry : public Object {
     bool returnIsTemp; // invalid for void return
 
     llvm::Function *llvmFunc;
+    llvm::Function *llvmCWrapper;
 
     InvokeEntry(ObjectPtr callable,
                 const vector<bool> &isStaticFlags,
@@ -1519,7 +1548,7 @@ struct InvokeEntry : public Object {
         : Object(DONT_CARE),
           callable(callable), isStaticFlags(isStaticFlags), argsKey(argsKey),
           analyzed(false), analyzing(false), returnIsTemp(false),
-          llvmFunc(NULL) {}
+          llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -1670,7 +1699,7 @@ TypePtr evaluateMaybeVoidType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
-TypePtr evaluatePointerOrCodePointerType(ExprPtr expr, EnvPtr env);
+TypePtr evaluatePointerLikeType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateTupleType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env);
 
@@ -1796,10 +1825,14 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
                             const vector<ExprPtr> &args,
                             EnvPtr env,
                             CValuePtr out);
+
+void codegenCWrapper(InvokeEntryPtr entry, const string &callableName);
+
 CValuePtr codegenInvokeExternal(ExternalProcedurePtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env,
                                 CValuePtr out);
+
 CValuePtr codegenInvokePrimOp(PrimOpPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env,

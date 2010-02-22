@@ -2,7 +2,7 @@ import kernel.*;
 import libc.*;
 
 external qsort(base:Pointer[Int8], n:Int32, width:Int32,
-               compare:CodePointer[Pointer[Int8], Pointer[Int8], Int32]): Void;
+               compare:CCodePointer[Pointer[Int8], Pointer[Int8], Int32]): Void;
 
 compare(pa, pb) {
     if (pa^ < pb^) return -1;
@@ -20,14 +20,14 @@ main() {
 
     printf(cstring("item[0], item[2] = %d, %d\n"), item(a, 0), item(a, 2));
 
-    var fp = makeCodePointer(compare, Pointer[Int32], Pointer[Int32]);
+    var fp = makeCCodePointer(compare, Pointer[Int32], Pointer[Int32]);
 
     printf(cstring("compare test = %d\n"), fp(&item(a,0), &item(a,2)));
     printf(cstring("compare test = %d\n"), fp(&item(a,0), &item(a,0)));
     printf(cstring("compare test = %d\n"), fp(&item(a,2), &item(a,0)));
 
     var fp2 = to(
-        CodePointer[Pointer[Int8], Pointer[Int8], Int32],
+        CCodePointer[Pointer[Int8], Pointer[Int8], Int32],
         fp);
 
     qsort(to(Pointer[Int8], &item(a, 0)),
