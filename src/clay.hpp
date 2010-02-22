@@ -270,7 +270,7 @@ struct FloatType;
 struct ArrayType;
 struct TupleType;
 struct PointerType;
-struct FunctionPointerType;
+struct CodePointerType;
 struct RecordType;
 
 struct Pattern;
@@ -278,7 +278,7 @@ struct PatternCell;
 struct ArrayTypePattern;
 struct TupleTypePattern;
 struct PointerTypePattern;
-struct FunctionPointerTypePattern;
+struct CodePointerTypePattern;
 struct RecordTypePattern;
 
 struct VoidType;
@@ -370,7 +370,7 @@ typedef Pointer<FloatType> FloatTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
 typedef Pointer<PointerType> PointerTypePtr;
-typedef Pointer<FunctionPointerType> FunctionPointerTypePtr;
+typedef Pointer<CodePointerType> CodePointerTypePtr;
 typedef Pointer<RecordType> RecordTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
@@ -378,7 +378,7 @@ typedef Pointer<PatternCell> PatternCellPtr;
 typedef Pointer<ArrayTypePattern> ArrayTypePatternPtr;
 typedef Pointer<TupleTypePattern> TupleTypePatternPtr;
 typedef Pointer<PointerTypePattern> PointerTypePatternPtr;
-typedef Pointer<FunctionPointerTypePattern> FunctionPointerTypePatternPtr;
+typedef Pointer<CodePointerTypePattern> CodePointerTypePatternPtr;
 typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 
 typedef Pointer<VoidType> VoidTypePtr;
@@ -1152,9 +1152,10 @@ enum PrimOpCode {
     PRIM_pointerToInt,
     PRIM_intToPointer,
 
-    PRIM_FunctionPointerTypeP,
-    PRIM_FunctionPointer,
-    PRIM_makeFunctionPointer,
+    PRIM_CodePointerTypeP,
+    PRIM_CodePointer,
+    PRIM_RefCodePointer,
+    PRIM_makeCodePointer,
 
     PRIM_pointerCast,
 
@@ -1207,7 +1208,7 @@ enum TypeKind {
     INTEGER_TYPE,
     FLOAT_TYPE,
     POINTER_TYPE,
-    FUNCTION_POINTER_TYPE,
+    CODE_POINTER_TYPE,
     ARRAY_TYPE,
     TUPLE_TYPE,
     RECORD_TYPE,
@@ -1237,12 +1238,14 @@ struct PointerType : public Type {
         : Type(POINTER_TYPE), pointeeType(pointeeType) {}
 };
 
-struct FunctionPointerType : public Type {
+struct CodePointerType : public Type {
     vector<TypePtr> argTypes;
     TypePtr returnType; // NULL if void return
-    FunctionPointerType(const vector<TypePtr> &argTypes, TypePtr returnType)
-        : Type(FUNCTION_POINTER_TYPE), argTypes(argTypes),
-          returnType(returnType) {}
+    bool returnIsTemp; // invalid if void return
+    CodePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
+                    bool returnIsTemp)
+        : Type(CODE_POINTER_TYPE), argTypes(argTypes),
+          returnType(returnType), returnIsTemp(returnIsTemp) {}
 };
 
 struct ArrayType : public Type {
@@ -1326,8 +1329,8 @@ TypePtr intType(int bits);
 TypePtr uintType(int bits);
 TypePtr floatType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
-TypePtr functionPointerType(const vector<TypePtr> &argTypes,
-                            TypePtr returnType);
+TypePtr codePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
+                        bool returnIsTemp);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
@@ -1360,7 +1363,7 @@ void typePrint(TypePtr t, ostream &out);
 enum PatternKind {
     PATTERN_CELL,
     POINTER_TYPE_PATTERN,
-    FUNCTION_POINTER_TYPE_PATTERN,
+    CODE_POINTER_TYPE_PATTERN,
     ARRAY_TYPE_PATTERN,
     TUPLE_TYPE_PATTERN,
     RECORD_TYPE_PATTERN,
@@ -1385,13 +1388,14 @@ struct PointerTypePattern : public Pattern {
         : Pattern(POINTER_TYPE_PATTERN), pointeeType(pointeeType) {}
 };
 
-struct FunctionPointerTypePattern : public Pattern {
+struct CodePointerTypePattern : public Pattern {
     vector<PatternPtr> argTypes;
     PatternPtr returnType;
-    FunctionPointerTypePattern(const vector<PatternPtr> &argTypes,
-                               PatternPtr returnType)
-        : Pattern(FUNCTION_POINTER_TYPE_PATTERN), argTypes(argTypes),
-          returnType(returnType) {}
+    bool returnIsTemp;
+    CodePointerTypePattern(const vector<PatternPtr> &argTypes,
+                           PatternPtr returnType, bool returnIsTemp)
+        : Pattern(CODE_POINTER_TYPE_PATTERN), argTypes(argTypes),
+          returnType(returnType), returnIsTemp(returnIsTemp) {}
 };
 
 struct ArrayTypePattern : public Pattern {
@@ -1666,7 +1670,7 @@ TypePtr evaluateMaybeVoidType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
-TypePtr evaluatePointerOrFunctionPointerType(ExprPtr expr, EnvPtr env);
+TypePtr evaluatePointerOrCodePointerType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateTupleType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env);
 

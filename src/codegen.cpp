@@ -1107,9 +1107,9 @@ CValuePtr codegenInvokeValue(CValuePtr x,
                              EnvPtr env,
                              CValuePtr out)
 {
-    if (x->type->typeKind != FUNCTION_POINTER_TYPE)
+    if (x->type->typeKind != CODE_POINTER_TYPE)
         error("invalid call operation");
-    FunctionPointerType *t = (FunctionPointerType *)x->type.ptr();
+    CodePointerType *t = (CodePointerType *)x->type.ptr();
     ensureArity(args, t->argTypes.size());
 
     llvm::Value *llCallable = llvmBuilder->CreateLoad(x->llValue);
@@ -1126,10 +1126,19 @@ CValuePtr codegenInvokeValue(CValuePtr x,
         llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
         return NULL;
     }
-    assert(t->returnType == out->type);
-    llArgs.push_back(out->llValue);
-    llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
-    return out;
+    else if (t->returnIsTemp) {
+        assert(out.ptr());
+        assert(t->returnType == out->type);
+        llArgs.push_back(out->llValue);
+        llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+        return out;
+    }
+    else {
+        assert(!out);
+        llvm::Value *result =
+            llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+        return new CValue(t->returnType, result);
+    }
 }
 
 
@@ -1468,10 +1477,10 @@ static llvm::Value *_cgPointerLike(ExprPtr expr, EnvPtr env, TypePtr &type)
     else {
         switch (pv->type->typeKind) {
         case POINTER_TYPE :
-        case FUNCTION_POINTER_TYPE :
+        case CODE_POINTER_TYPE :
             break;
         default :
-            error(expr, "expecting a pointer or a function pointer");
+            error(expr, "expecting a pointer or a code pointer");
         }
         type = pv->type;
     }
@@ -1488,7 +1497,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
 
     case PRIM_TypeP :
     case PRIM_TypeSize :
-    case PRIM_FunctionPointerTypeP :
+    case PRIM_CodePointerTypeP :
     case PRIM_TupleTypeP :
     case PRIM_TupleElementCount :
     case PRIM_TupleElementOffset :
@@ -1513,7 +1522,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         case INTEGER_TYPE :
         case FLOAT_TYPE :
         case POINTER_TYPE :
-        case FUNCTION_POINTER_TYPE :
+        case CODE_POINTER_TYPE :
             break;
         default :
             error(args[0], "expecting primitive type");
@@ -1875,7 +1884,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return out;
     }
 
-    case PRIM_makeFunctionPointer : {
+    case PRIM_makeCodePointer : {
         if (args.size() < 1)
             error("incorrect number of arguments");
         ObjectPtr callable = evaluateStatic(args[0], env);
@@ -1926,14 +1935,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
 
     case PRIM_pointerCast : {
         ensureArity(args, 2);
-        TypePtr dest = evaluateType(args[0], env);
-        switch (dest->typeKind) {
-        case POINTER_TYPE :
-        case FUNCTION_POINTER_TYPE :
-            break;
-        default :
-            error(args[0], "expecting a pointer or function pointer value");
-        }
+        TypePtr dest = evaluatePointerOrCodePointerType(args[0], env);
         TypePtr t;
         llvm::Value *v = _cgPointerLike(args[1], env, t);
         llvm::Value *result = llvmBuilder->CreateBitCast(v, llvmType(dest));

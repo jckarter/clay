@@ -1,0 +1,32 @@
+import kernel.operators.*;
+import kernel.pointers.*;
+
+[CP | CodePointerType?(CP)]
+overload copy(dest:CP, src:CP) {
+    primitiveCopy(dest, src);
+}
+
+[T, CP | CodePointerType?(CP)]
+overload to(static Pointer[T], a:CP) = pointerCast(Pointer[T], a);
+
+[T, CP | CodePointerType?(CP)]
+overload to(static CP, a:Pointer[T]) = pointerCast(CP, a);
+
+[CP1, CP2 | CodePointerType?(CP1) and CodePointerType?(CP2)]
+overload to(static CP1, a:CP2) = pointerCast(CP1, a);
+
+[CP | CodePointerType?(CP)]
+overload equals?(a:CP, b:CP) {
+    return equals?(to(Pointer[Int8], a), to(Pointer[Int8], b));
+}
+
+[CP | CodePointerType?(CP)]
+overload lesser?(a:CP, b:CP) {
+    return lesser?(to(Pointer[Int8], a), to(Pointer[Int8], b));
+}
+
+[CP | CodePointerType?(CP)]
+overload hash(a:CP) = hash(to(Pointer[Int8], a));
+
+[CP | CodePointerType?(CP)]
+nullCP(static CP) = to(CP, null(Int8));
