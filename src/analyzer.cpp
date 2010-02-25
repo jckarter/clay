@@ -497,17 +497,27 @@ InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
 
 void analyzeCodeBody(InvokeEntryPtr entry) {
     assert(!entry->analyzed);
-    EnvPtr bodyEnv = new Env(entry->env);
-    for (unsigned i = 0; i < entry->argNames.size(); ++i) {
-        PValuePtr parg = new PValue(entry->argTypes[i], false);
-        addLocal(bodyEnv, entry->argNames[i], parg.ptr());
-    }
     ObjectPtr result;
-    bool ok = analyzeStatement(entry->code->body, bodyEnv, result);
-    if (!result && !ok)
-        return;
-    if (!result)
-        result = voidValue.ptr();
+    CodePtr code = entry->code;
+    if (code->returnType.ptr()) {
+        TypePtr retType = evaluateMaybeVoidType(code->returnType, entry->env);
+        if (!retType)
+            result = voidValue.ptr();
+        else
+            result = new PValue(retType, !code->returnRef);
+    }
+    else {
+        EnvPtr bodyEnv = new Env(entry->env);
+        for (unsigned i = 0; i < entry->argNames.size(); ++i) {
+            PValuePtr parg = new PValue(entry->argTypes[i], false);
+            addLocal(bodyEnv, entry->argNames[i], parg.ptr());
+        }
+        bool ok = analyzeStatement(code->body, bodyEnv, result);
+        if (!result && !ok)
+            return;
+        if (!result)
+            result = voidValue.ptr();
+    }
     entry->analysis = result;
     entry->analyzed = true;
     if (result->objKind == PVALUE) {

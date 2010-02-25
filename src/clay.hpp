@@ -852,6 +852,10 @@ struct Code : public ANode {
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
     StatementPtr body;
+
+    ExprPtr returnType;
+    bool returnRef; // valid only if returnType != NULL
+
     Code()
         : ANode(CODE) {}
     Code(const vector<IdentifierPtr> &patternVars,
