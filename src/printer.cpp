@@ -416,7 +416,7 @@ static void print(const Object *x, ostream &out) {
     }
     case OVERLOAD : {
         Overload *y = (Overload *)x;
-        out << "Overload(" << y->name << ", " << y->code << ")";
+        out << "Overload(" << y->target << ", " << y->code << ")";
         break;
     }
     case OVERLOADABLE : {

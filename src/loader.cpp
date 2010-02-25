@@ -13,7 +13,6 @@ using namespace std;
 static vector<string> searchPath;
 static map<string, ModulePtr> modules;
 
-
 
 //
 // addSearchPath, locateFile
@@ -231,8 +230,38 @@ ModulePtr loadedModule(const string &module) {
 
 
 //
-// initializeModule
+// initializeOverload, initializeModule
 //
+
+static void initializeOverload(OverloadPtr x) {
+    EnvPtr env = new Env(x->env);
+    for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
+        PatternCellPtr cell = new PatternCell(x->code->patternVars[i], NULL);
+        addLocal(env, x->code->patternVars[i], cell.ptr());
+    }
+    PatternPtr pattern = evaluatePattern(x->target, env);
+    ObjectPtr y = reducePattern(pattern);
+    switch (y->objKind) {
+    case OVERLOADABLE : {
+        Overloadable *z = (Overloadable *)y.ptr();
+        z->overloads.insert(z->overloads.begin(), x);
+        break;
+    }
+    case RECORD : {
+        Record *z = (Record *)y.ptr();
+        z->overloads.insert(z->overloads.begin(), x);
+        break;
+    }
+    case TYPE :
+    case PATTERN : {
+        addTypeOverload(x);
+        break;
+    }
+    default : {
+        error(x->target, "invalid overload target");
+    }
+    }
+}
 
 static void initializeModule(ModulePtr m) {
     if (m->initialized) return;
@@ -245,14 +274,8 @@ static void initializeModule(ModulePtr m) {
     for (ti = m->topLevelItems.begin(), tend = m->topLevelItems.end();
          ti != tend; ++ti) {
         Object *obj = ti->ptr();
-        if (obj->objKind == OVERLOAD) {
-            Overload *x = (Overload *)obj;
-            ObjectPtr y = lookupEnv(m->env, x->name);
-            if (y->objKind != OVERLOADABLE)
-                error(x->name, "invalid overloadable");
-            Overloadable *z = (Overloadable *)y.ptr();
-            z->overloads.insert(z->overloads.begin(), x);
-        }
+        if (obj->objKind == OVERLOAD)
+            initializeOverload((Overload *)obj);
     }
 }
 

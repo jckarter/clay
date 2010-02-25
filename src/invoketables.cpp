@@ -86,6 +86,48 @@ void initIsStaticFlags(OverloadablePtr x)
     x->staticFlagsInitialized = true;
 }
 
+void initIsStaticFlags(TypePtr x)
+{
+    assert(!x->staticFlagsInitialized);
+    for (unsigned i = 0; i < x->overloads.size(); ++i) {
+        const vector<FormalArgPtr> &formalArgs =
+            x->overloads[i]->code->formalArgs;
+        FlagsMapEntry &entry = getIsStaticFlags(x.ptr(), formalArgs.size());
+        if (!entry.initialized) {
+            for (unsigned j = 0; j < formalArgs.size(); ++j) {
+                switch (formalArgs[j]->objKind) {
+                case VALUE_ARG :
+                    entry.isStaticFlags.push_back(false);
+                    break;
+                case STATIC_ARG :
+                    entry.isStaticFlags.push_back(true);
+                    break;
+                default :
+                    assert(false);
+                }
+            }
+            entry.initialized = true;
+        }
+        else {
+            for (unsigned j = 0; j < formalArgs.size(); ++j) {
+                switch(formalArgs[j]->objKind) {
+                case VALUE_ARG :
+                    if (entry.isStaticFlags[j])
+                        error(formalArgs[j], "expecting static argument");
+                    break;
+                case STATIC_ARG :
+                    if (!entry.isStaticFlags[j])
+                        error(formalArgs[j], "expecting non-static argument");
+                    break;
+                default :
+                    assert(false);
+                }
+            }
+        }
+    }
+    x->staticFlagsInitialized = true;
+}
+
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
 {
     switch (callable->objKind) {
@@ -97,6 +139,14 @@ const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
     }
     case OVERLOADABLE : {
         Overloadable *x = (Overloadable *)callable.ptr();
+        if (!x->staticFlagsInitialized)
+            initIsStaticFlags(x);
+        break;
+    }
+    case TYPE : {
+        Type *x = (Type *)callable.ptr();
+        if (!x->overloadsInitialized)
+            initializeTypeOverloads(x);
         if (!x->staticFlagsInitialized)
             initIsStaticFlags(x);
         break;
