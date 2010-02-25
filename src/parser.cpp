@@ -1135,6 +1135,34 @@ static bool record(TopLevelItemPtr &x) {
 
 
 //
+// returnSpec, optReturnSpec
+//
+
+static bool returnSpec(ExprPtr &returnType, bool &returnRef) {
+    int p = save();
+    if (!keyword("ref")) {
+        restore(p);
+        returnRef = false;
+    }
+    else {
+        returnRef = true;
+    }
+    if (!typeSpec(returnType)) return false;
+    return true;
+}
+
+static bool optReturnSpec(ExprPtr &returnType, bool &returnRef) {
+    int p = save();
+    if (!returnSpec(returnType, returnRef)) {
+        restore(p);
+        returnType = NULL;
+    }
+    return true;
+}
+
+
+
+//
 // procedure, overloadable, overload
 //
 
@@ -1145,6 +1173,7 @@ static bool procedure(TopLevelItemPtr &x) {
     IdentifierPtr z;
     if (!identifier(z)) return false;
     if (!arguments(y->formalArgs)) return false;
+    if (!optReturnSpec(y->returnType, y->returnRef)) return false;
     if (!body(y->body)) return false;
     y->location = location;
     x = new Procedure(z, y);
@@ -1171,6 +1200,7 @@ static bool overload(TopLevelItemPtr &x) {
     ExprPtr z;
     if (!pattern(z)) return false;
     if (!arguments(y->formalArgs)) return false;
+    if (!optReturnSpec(y->returnType, y->returnRef)) return false;
     if (!body(y->body)) return false;
     y->location = location;
     x = new Overload(z, y);
