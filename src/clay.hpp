@@ -878,6 +878,7 @@ struct Record : public TopLevelItem {
     IdentifierPtr name;
     vector<IdentifierPtr> patternVars;
     vector<RecordFieldPtr> fields;
+    vector<OverloadPtr> overloads;
     Record()
         : TopLevelItem(RECORD) {}
     Record(IdentifierPtr name,
@@ -904,10 +905,10 @@ struct Procedure : public TopLevelItem {
 };
 
 struct Overload : public TopLevelItem {
-    IdentifierPtr name;
+    ExprPtr target;
     CodePtr code;
-    Overload(IdentifierPtr name, CodePtr code)
-        : TopLevelItem(OVERLOAD), name(name), code(code) {}
+    Overload(ExprPtr target, CodePtr code)
+        : TopLevelItem(OVERLOAD), target(target), code(code) {}
 };
 
 struct Overloadable : public TopLevelItem {
@@ -1195,16 +1196,41 @@ struct PrimOp : public Object {
 
 
 //
-// Type
+// llvm module
+//
+
+extern llvm::Module *llvmModule;
+extern llvm::ExecutionEngine *llvmEngine;
+extern const llvm::TargetData *llvmTargetData;
+
+extern llvm::Function *llvmFunction;
+extern llvm::IRBuilder<> *llvmInitBuilder;
+extern llvm::IRBuilder<> *llvmBuilder;
+
+void initLLVM();
+
+llvm::BasicBlock *newBasicBlock(const char *name);
+
+
+
+//
+// types module
 //
 
 struct Type : public Object {
     int typeKind;
     llvm::PATypeHolder *llTypeHolder;
     int typeSize;
+
+    bool overloadsInitialized;
+    vector<OverloadPtr> overloads;
+
+    bool staticFlagsInitialized;
+
     Type(int typeKind)
         : Object(TYPE), typeKind(typeKind), llTypeHolder(NULL),
-          typeSize(-1) {}
+          typeSize(-1), overloadsInitialized(false),
+          staticFlagsInitialized(false) {}
     ~Type() {
         if (llTypeHolder)
             delete llTypeHolder;
@@ -1300,29 +1326,6 @@ struct RecordType : public Type {
           fieldsInitialized(false), layout(NULL) {}
 };
 
-
-
-//
-// llvm module
-//
-
-extern llvm::Module *llvmModule;
-extern llvm::ExecutionEngine *llvmEngine;
-extern const llvm::TargetData *llvmTargetData;
-
-extern llvm::Function *llvmFunction;
-extern llvm::IRBuilder<> *llvmInitBuilder;
-extern llvm::IRBuilder<> *llvmBuilder;
-
-void initLLVM();
-
-llvm::BasicBlock *newBasicBlock(const char *name);
-
-
-
-//
-// types module
-//
 
 extern TypePtr boolType;
 extern TypePtr int8Type;
@@ -1502,6 +1505,7 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
                                    EnvPtr env);
 bool unify(PatternPtr pattern, ObjectPtr obj);
 ObjectPtr derefCell(PatternCellPtr cell);
+ObjectPtr reducePattern(PatternPtr pattern);
 
 void patternPrint(PatternPtr x, ostream &out);
 
@@ -1513,6 +1517,7 @@ void patternPrint(PatternPtr x, ostream &out);
 
 void initIsStaticFlags(ProcedurePtr x);
 void initIsStaticFlags(OverloadablePtr x);
+void initIsStaticFlags(TypePtr x);
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs);
 bool computeArgsKey(const vector<bool> &isStaticFlags,
                     const vector<ExprPtr> &args,
@@ -1612,6 +1617,17 @@ void signalMatchError(MatchResultPtr result,
 
 
 //
+// constructors
+//
+
+extern vector<OverloadPtr> typeOverloads;
+
+void addTypeOverload(OverloadPtr x);
+void initializeTypeOverloads(TypePtr t);
+
+
+
+//
 // analyzer
 //
 
@@ -1635,6 +1651,9 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env);
 ObjectPtr analyzeInvokeType(TypePtr x,
                             const vector<ExprPtr> &args,
                             EnvPtr env);
+ObjectPtr analyzeInvokeTypeDefault(TypePtr x,
+                                   const vector<ExprPtr> &args,
+                                   EnvPtr env);
 ObjectPtr analyzeInvokeRecord(RecordPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env);

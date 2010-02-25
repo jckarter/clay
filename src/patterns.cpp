@@ -261,6 +261,15 @@ ObjectPtr derefCell(PatternCellPtr cell) {
     return cell->obj;
 }
 
+ObjectPtr reducePattern(PatternPtr pattern) {
+    if (pattern->patternKind == PATTERN_CELL) {
+        PatternCellPtr x = (PatternCell *)pattern.ptr();
+        if (x->obj.ptr())
+            return x->obj;
+    }
+    return pattern.ptr();
+}
+
 void patternPrint(PatternPtr x, ostream &out)
 {
     switch (x->patternKind) {

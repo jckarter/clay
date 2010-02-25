@@ -12,7 +12,7 @@ TopLevelItem -> Record | Procedure | Overloadable | Overload
 Record -> "record" Identifier PatternVars? "{" RecordField+ "}"
 PatternVars -> "[" comma_list(Identifier) "]"
 RecordField -> Identifier TypeSpec ";"
-TypeSpec -> ":" TypeExpr
+TypeSpec -> ":" Pattern
 
 Procedure -> PatternVarsWithCond? Identifier Arguments Body
 
@@ -33,13 +33,18 @@ Body -> "=" Expression ";"
 
 Overloadable -> "overloadable" Identifier ";"
 
-Overload -> PatternVarsWithCond? "overload" DottedName Arguments Body
+Overload -> PatternVarsWithCond? "overload" Pattern Arguments Body
 
 ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
                      TypeSpec ";"
 ExternalArgs -> comma_list(ExternalArg) ("," "...")?
               | ("...")?
 ExternalArg -> Identifier TypeSpec
+
+
+//
+// Statement
+//
 
 Block -> "{" Statement+ "}"
 
@@ -81,7 +86,20 @@ ContinueStatement -> "continue" ";"
 
 ForStatement -> "for" "(" Identifier "in" Expression ")" Statement
 
-TypeExpr -> Expression
+
+//
+// Pattern
+//
+
+Pattern -> AtomicPattern PatternSuffix?
+AtomicPattern -> IntLiteral
+               | NameRef
+PatternSuffix -> "[" comma_list(Pattern) "]"
+
+
+//
+// Expression
+//
 
 Expression -> OrExpr
 

@@ -353,6 +353,21 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 
 ObjectPtr analyzeInvokeType(TypePtr x, const vector<ExprPtr> &args, EnvPtr env)
 {
+//     const vector<bool> *isStaticFlagsPtr =
+//         lookupIsStaticFlags2(x.ptr(), args.size());
+//     if (!isStaticFlagsPtr)
+//         return analyzeInvokeTypeDefault(x, args, env);
+//     vector<ObjectPtr> argsKey;
+//     vector<LocationPtr> argLocations;
+//     if (!computeArgsKey(*isStaticFlagsPtr, args, env, argsKey, argLocations))
+//         return NULL;
+    return analyzeInvokeTypeDefault(x, args, env);
+}
+
+ObjectPtr analyzeInvokeTypeDefault(TypePtr x,
+                                   const vector<ExprPtr> &args,
+                                   EnvPtr env)
+{
     return new PValue(x, true);
 }
 

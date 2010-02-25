@@ -637,6 +637,61 @@ static bool expression(ExprPtr &x) {
 
 
 //
+// pattern
+//
+
+static bool pattern(ExprPtr &x);
+
+static bool patternList(vector<ExprPtr> &x) {
+    ExprPtr a;
+    if (!pattern(a)) return false;
+    x.clear();
+    x.push_back(a);
+    while (true) {
+        int p = save();
+        if (!symbol(",") || !pattern(a)) {
+            restore(p);
+            break;
+        }
+        x.push_back(a);
+    }
+    return true;
+}
+
+static bool atomicPattern(ExprPtr &x) {
+    int p = save();
+    if (nameRef(x)) return true;
+    if (restore(p), intLiteral(x)) return true;
+    return false;
+}
+
+static bool patternSuffix(IndexingPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("[")) return false;
+    IndexingPtr y = new Indexing(NULL);
+    if (!patternList(y->args)) return false;
+    if (!symbol("]")) return false;
+    x = y;
+    x->location = location;
+    return true;
+}
+
+static bool pattern(ExprPtr &x) {
+    if (!atomicPattern(x)) return false;
+    int p = save();
+    IndexingPtr y;
+    if (!patternSuffix(y)) {
+        restore(p);
+        return true;
+    }
+    y->expr = x;
+    x = y.ptr();
+    return true;
+}
+
+
+
+//
 // statements
 //
 
@@ -887,7 +942,7 @@ static bool optPatternVars(vector<IdentifierPtr> &x) {
 
 static bool typeSpec(ExprPtr &x) {
     if (!symbol(":")) return false;
-    return expression(x);
+    return pattern(x);
 }
 
 static bool optTypeSpec(ExprPtr &x) {
@@ -1113,8 +1168,8 @@ static bool overload(TopLevelItemPtr &x) {
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     if (!keyword("overload")) return false;
-    IdentifierPtr z;
-    if (!identifier(z)) return false;
+    ExprPtr z;
+    if (!pattern(z)) return false;
     if (!arguments(y->formalArgs)) return false;
     if (!body(y->body)) return false;
     y->location = location;

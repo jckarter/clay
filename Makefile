@@ -17,6 +17,7 @@ OBJS = \
 	src/patterns.o \
 	src/invoketables.o \
 	src/matchinvoke.o \
+	src/constructors.o \
 	src/analyzer.o \
 	src/evaluator.o \
 	src/codegen.o \
