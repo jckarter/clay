@@ -289,6 +289,21 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         return false;
     }
 
+    case INIT_ASSIGNMENT : {
+        InitAssignment *x = (InitAssignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeValue(x->left, env);
+        PValuePtr pvRight = analyzeValue(x->right, env);
+        if (pvLeft->type != pvRight->type)
+            error("type mismatch in assignment");
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        int marker = cgMarkStack();
+        CValuePtr cvLeft = codegenValue(x->left, env, NULL);
+        codegenIntoValue(x->right, env, pvRight, cvLeft);
+        cgDestroyAndPopStack(marker);
+        return false;
+    }
+
     case GOTO : {
         Goto *x = (Goto *)stmt.ptr();
         map<string, JumpTarget>::iterator li =

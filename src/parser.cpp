@@ -783,6 +783,18 @@ static bool assignment(StatementPtr &x) {
     return true;
 }
 
+static bool initAssignment(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr y, z;
+    if (!expression(y)) return false;
+    if (!symbol("<==")) return false;
+    if (!expression(z)) return false;
+    if (!symbol(";")) return false;
+    x = new InitAssignment(y, z);
+    x->location = location;
+    return true;
+}
+
 static bool gotoStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
     IdentifierPtr y;
@@ -896,6 +908,7 @@ static bool statement(StatementPtr &x) {
     int p = save();
     if (block(x)) return true;
     if (restore(p), assignment(x)) return true;
+    if (restore(p), initAssignment(x)) return true;
     if (restore(p), ifStatement(x)) return true;
     if (restore(p), gotoStatement(x)) return true;
     if (restore(p), returnStatement(x)) return true;
