@@ -26,11 +26,9 @@ main() {
     printf(cstring("compare test = %d\n"), fp(&item(a,0), &item(a,0)));
     printf(cstring("compare test = %d\n"), fp(&item(a,2), &item(a,0)));
 
-    var fp2 = to(
-        CCodePointer[Pointer[Int8], Pointer[Int8], Int32],
-        fp);
+    var fp2 = CCodePointer[Pointer[Int8], Pointer[Int8], Int32](fp);
 
-    qsort(to(Pointer[Int8], &item(a, 0)),
+    qsort(Pointer[Int8](&item(a, 0)),
           size(a),
           TypeSize(Int32),
           fp2);
