@@ -6,18 +6,9 @@
 // isStaticFlags
 //
 
-typedef pair<ObjectPtr, unsigned> FlagsMapKey;
-
-struct FlagsMapEntry {
-    bool initialized;
-    vector<bool> isStaticFlags;
-    FlagsMapEntry()
-        : initialized(false) {}
-};
-
 static map<FlagsMapKey, FlagsMapEntry> flagsMap;
 
-static FlagsMapEntry & getIsStaticFlags(ObjectPtr callable, unsigned nArgs)
+FlagsMapEntry &lookupFlagsMapEntry(ObjectPtr callable, unsigned nArgs)
 {
     return flagsMap[make_pair(callable, nArgs)];
 }
@@ -26,7 +17,7 @@ void initIsStaticFlags(ProcedurePtr x)
 {
     assert(!x->staticFlagsInitialized);
     const vector<FormalArgPtr> &formalArgs = x->code->formalArgs;
-    FlagsMapEntry &entry = getIsStaticFlags(x.ptr(), formalArgs.size());
+    FlagsMapEntry &entry = lookupFlagsMapEntry(x.ptr(), formalArgs.size());
     assert(!entry.initialized);
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         switch (formalArgs[i]->objKind) {
@@ -44,13 +35,14 @@ void initIsStaticFlags(ProcedurePtr x)
     x->staticFlagsInitialized = true;
 }
 
-void initIsStaticFlags(OverloadablePtr x)
+void initIsStaticFlags(ObjectPtr callable,
+                       const vector<OverloadPtr> &overloads)
 {
-    assert(!x->staticFlagsInitialized);
-    for (unsigned i = 0; i < x->overloads.size(); ++i) {
+    for (unsigned i = 0; i < overloads.size(); ++i) {
         const vector<FormalArgPtr> &formalArgs =
-            x->overloads[i]->code->formalArgs;
-        FlagsMapEntry &entry = getIsStaticFlags(x.ptr(), formalArgs.size());
+            overloads[i]->code->formalArgs;
+        FlagsMapEntry &entry =
+            lookupFlagsMapEntry(callable, formalArgs.size());
         if (!entry.initialized) {
             for (unsigned j = 0; j < formalArgs.size(); ++j) {
                 switch (formalArgs[j]->objKind) {
@@ -83,48 +75,20 @@ void initIsStaticFlags(OverloadablePtr x)
             }
         }
     }
+}
+
+void initIsStaticFlags(OverloadablePtr x)
+{
+    assert(!x->staticFlagsInitialized);
+    initIsStaticFlags(x.ptr(), x->overloads);
     x->staticFlagsInitialized = true;
 }
 
 void initIsStaticFlags(TypePtr x)
 {
     assert(!x->staticFlagsInitialized);
-    for (unsigned i = 0; i < x->overloads.size(); ++i) {
-        const vector<FormalArgPtr> &formalArgs =
-            x->overloads[i]->code->formalArgs;
-        FlagsMapEntry &entry = getIsStaticFlags(x.ptr(), formalArgs.size());
-        if (!entry.initialized) {
-            for (unsigned j = 0; j < formalArgs.size(); ++j) {
-                switch (formalArgs[j]->objKind) {
-                case VALUE_ARG :
-                    entry.isStaticFlags.push_back(false);
-                    break;
-                case STATIC_ARG :
-                    entry.isStaticFlags.push_back(true);
-                    break;
-                default :
-                    assert(false);
-                }
-            }
-            entry.initialized = true;
-        }
-        else {
-            for (unsigned j = 0; j < formalArgs.size(); ++j) {
-                switch(formalArgs[j]->objKind) {
-                case VALUE_ARG :
-                    if (entry.isStaticFlags[j])
-                        error(formalArgs[j], "expecting static argument");
-                    break;
-                case STATIC_ARG :
-                    if (!entry.isStaticFlags[j])
-                        error(formalArgs[j], "expecting non-static argument");
-                    break;
-                default :
-                    assert(false);
-                }
-            }
-        }
-    }
+    initBuiltinIsStaticFlags(x);
+    initIsStaticFlags(x.ptr(), x->overloads);
     x->staticFlagsInitialized = true;
 }
 
@@ -146,7 +110,7 @@ const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
     case TYPE : {
         Type *x = (Type *)callable.ptr();
         if (!x->overloadsInitialized)
-            initializeTypeOverloads(x);
+            initTypeOverloads(x);
         if (!x->staticFlagsInitialized)
             initIsStaticFlags(x);
         break;
@@ -155,7 +119,7 @@ const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
         assert(false);
     }
 
-    FlagsMapEntry &entry = getIsStaticFlags(callable, nArgs);
+    FlagsMapEntry &entry = lookupFlagsMapEntry(callable, nArgs);
     if (!entry.initialized)
         error("incorrect no. of arguments");
     return entry.isStaticFlags;

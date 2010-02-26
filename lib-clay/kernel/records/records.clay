@@ -2,24 +2,47 @@ import kernel.operators.*;
 
 
 //
-// init
+// default constructor
 //
 
 [T|RecordType?(T)]
-overload init(a:T) {
-    initRecordFields(a, 0);
+overload T() : T {
+    initRecordFields(returned, 0);
 }
 
 overloadable initRecordFields;
 
 [i]
 overload initRecordFields(a, static i) {
-    init(recordFieldRef(a, i));
+    initialize(recordFieldRef(a, i));
     initRecordFields(a, i+1);
 }
 
 [T,i | (i == RecordFieldCount(T))]
 overload initRecordFields(a:T, static i) {
+}
+
+
+
+//
+// copy constructor
+//
+
+[T|RecordType?(T)]
+overload T(src:T) : T {
+    copyRecordFields(returned, src, 0);
+}
+
+overloadable copyRecordFields;
+
+[T,i]
+overload copyRecordFields(dest:T, src:T, static i) {
+    recordFieldRef(dest, i) <== recordFieldRef(src, i);
+    copyRecordFields(dest, src, i+1);
+}
+
+[T,i | (i == RecordFieldCount(T))]
+overload copyRecordFields(dest:T, src:T, static i) {
 }
 
 
@@ -43,29 +66,6 @@ overload destroyRecordFields(a, static i) {
 
 [T, i |(i == RecordFieldCount(T))]
 overload destroyRecordFields (a:T, static i) {
-}
-
-
-
-//
-// copy
-//
-
-[T|RecordType?(T)]
-overload copy(dest:T, src:T) {
-    copyRecordFields(dest, src, 0);
-}
-
-overloadable copyRecordFields;
-
-[T,i]
-overload copyRecordFields(dest:T, src:T, static i) {
-    copy(recordFieldRef(dest, i), recordFieldRef(src, i));
-    copyRecordFields(dest, src, i+1);
-}
-
-[T,i | (i == RecordFieldCount(T))]
-overload copyRecordFields(dest:T, src:T, static i) {
 }
 
 

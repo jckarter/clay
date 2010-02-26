@@ -13,7 +13,7 @@ ExprPtr desugarStringLiteral(const string &s) {
     ArrayPtr charArray = new Array();
     for (unsigned i = 0; i < s.size(); ++i)
         charArray->args.push_back(desugarCharLiteral(s[i]));
-    ExprPtr nameRef = kernelNameRef("string");
+    ExprPtr nameRef = kernelNameRef("String");
     CallPtr call = new Call(nameRef);
     call->args.push_back(charArray.ptr());
     return call.ptr();

@@ -2,24 +2,48 @@ import kernel.operators.*;
 
 
 //
-// init
+// default constructor
 //
 
 [T|TupleType?(T)]
-overload init(a:T) {
-    initTupleElements(a, 0);
+overload T() : T {
+    initTupleElements(returned, 0);
 }
 
 overloadable initTupleElements;
 
 [i]
 overload initTupleElements(a, static i) {
-    init(tupleRef(a, i));
+    initialize(tupleRef(a, i));
     initTupleElements(a, i+1);
 }
 
 [T, i | (i == TupleElementCount(T))]
 overload initTupleElements(a:T, static i) {
+}
+
+
+
+//
+// copy constructor
+//
+
+[T|TupleType?(T)]
+overload T(src:T) : T {
+    copyTupleElements(returned, src, 0);
+}
+
+overloadable copyTupleElements;
+
+[T,i]
+overload copyTupleElements(dest:T, src:T, static i)
+{
+    tupleRef(dest, i) <== tupleRef(src, i);
+    copyTupleElements(dest, src, i+1);
+}
+
+[T,i | (i == TupleElementCount(T))]
+overload copyTupleElements(dest:T, src:T, static i) {
 }
 
 
@@ -43,30 +67,6 @@ overload destroyTupleElements(a, static i) {
 
 [T, i |(i == TupleElementCount(T))]
 overload destroyTupleElements(a:T, static i) {
-}
-
-
-
-//
-// copy
-//
-
-[T|TupleType?(T)]
-overload copy(dest:T, src:T) {
-    copyTupleElements(dest, src, 0);
-}
-
-overloadable copyTupleElements;
-
-[T,i]
-overload copyTupleElements(dest:T, src:T, static i)
-{
-    copy(tupleRef(dest, i), tupleRef(src, i));
-    copyTupleElements(dest, src, i+1);
-}
-
-[T,i | (i == TupleElementCount(T))]
-overload copyTupleElements(dest:T, src:T, static i) {
 }
 
 

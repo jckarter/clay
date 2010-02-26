@@ -4,7 +4,9 @@ overloadable move;
 
 [T]
 overload move(dest:T, src:T) {
-    copy(dest, src);
+    if (&dest == &src)
+        return;
+    dest <== src;
     destroy(src);
 }
 

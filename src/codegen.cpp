@@ -10,9 +10,7 @@ vector<CValuePtr> stackCValues;
 
 void codegenValueInit(CValuePtr dest)
 {
-    vector<ExprPtr> args;
-    args.push_back(new CValueExpr(dest));
-    codegenInvokeVoid(kernelName("init"), args, new Env());
+    codegenInvokeType(dest->type, vector<ExprPtr>(), new Env(), dest);
 }
 
 void codegenValueDestroy(CValuePtr dest)
@@ -25,9 +23,8 @@ void codegenValueDestroy(CValuePtr dest)
 void codegenValueCopy(CValuePtr dest, CValuePtr src)
 {
     vector<ExprPtr> args;
-    args.push_back(new CValueExpr(dest));
     args.push_back(new CValueExpr(src));
-    codegenInvokeVoid(kernelName("copy"), args, new Env());
+    codegenInvokeType(dest->type, args, new Env(), dest);
 }
 
 void codegenValueAssign(CValuePtr dest, CValuePtr src)
@@ -1261,21 +1258,29 @@ CValuePtr codegenInvokeType(TypePtr x,
                             EnvPtr env,
                             CValuePtr out)
 {
-    if (args.empty()) {
-        codegenValueInit(out);
-        return out;
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(x.ptr(), args.size());
+    vector<ObjectPtr> argsKey;
+    vector<LocationPtr> argLocations;
+    bool result = computeArgsKey(isStaticFlags, args, env,
+                                 argsKey, argLocations);
+    assert(result);
+    InvokeEntryPtr entry =
+        analyzeConstructor(x, isStaticFlags, argsKey, argLocations);
+    if (entry->isBuiltin) {
+        return codegenInvokeBuiltinConstructor(x, args, env, out);
     }
-    if (args.size() == 1) {
-        ObjectPtr y = analyze(args[0], env);
-        if (y->objKind == PVALUE) {
-            PValuePtr z = (PValue *)y.ptr();
-            if (z->type == x) {
-                codegenIntoValue(args[0], env, z, out);
-                return out;
-            }
-        }
+    else {
+        codegenCodeBody(entry, "constructor");
+        return codegenInvokeCode(entry, args, env, out);
     }
+}
 
+CValuePtr codegenInvokeBuiltinConstructor(TypePtr x,
+                                          const vector<ExprPtr> &args,
+                                          EnvPtr env,
+                                          CValuePtr out)
+{
     switch (x->typeKind) {
 
     case ARRAY_TYPE : {

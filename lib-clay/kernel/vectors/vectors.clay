@@ -19,29 +19,56 @@ record Vector[T] {
 
 
 //
-// vector default constructor
+// default constructor
 //
 
 [T]
-overload init(v:Vector[T]) {
-    v.size = 0;
-    v.capacity = 0;
-    v.data = null(T);
+overload Vector[T]() = Vector[T](0, 0, null(T));
+
+
+//
+// other constructors
+//
+
+[T,n]
+overload Vector[T](a:Array[T,n]) : Vector[T] {
+    returned <== Vector[T]();
+    for (x in a)
+        push(returned, x);
 }
 
 
 //
-// create vector
+// copy constructor
 //
 
-overloadable makeVector;
+[T]
+overload Vector[T](src:Vector[T]) : Vector[T] {
+    ref dest = returned;
+    dest.size = src.size;
+    dest.capacity = src.size;
+    if (dest.capacity > 0) {
+        dest.data = allocateMemory(T, dest.capacity);
+        ref d = iterator(dest);
+        ref s = iterator(src);
+        while (hasNext?(s))
+            next(d) <== next(s);
+    }
+    else {
+        dest.data = null(T);
+    }
+}
 
-[T,n]
-overload makeVector(a:Array[T,n]) {
-    var v = Vector[T]();
+
+//
+// destructor
+//
+
+[T]
+overload destroy(a:Vector[T]) {
     for (x in a)
-        push(v, x);
-    return v;
+        destroy(x);
+    freeMemory(a.data);
 }
 
 
@@ -107,38 +134,8 @@ overload iterator(a:Vector[T]) = CoordinateRange(begin(a), end(a));
 
 
 //
-// init, copy, destroy, equals, lesser, hash
+// equals, lesser, hash
 //
-
-[T]
-overload init(a:Vector[T]) {
-    a.size = 0;
-    a.capacity = 0;
-    a.data = null(T);
-}
-
-[T]
-overload copy(dest:Vector[T], src:Vector[T]) {
-    dest.size = src.size;
-    dest.capacity = src.size;
-    if (dest.capacity > 0) {
-        dest.data = allocateMemory(T, dest.capacity);
-        ref d = iterator(dest);
-        ref s = iterator(src);
-        while (hasNext?(s))
-            copy(next(d), next(s));
-    }
-    else {
-        dest.data = null(T);
-    }
-}
-
-[T]
-overload destroy(a:Vector[T]) {
-    for (x in a)
-        destroy(x);
-    freeMemory(a.data);
-}
 
 [T]
 overload equals?(a:Vector[T], b:Vector[T]) {
@@ -198,7 +195,7 @@ overload pop(a:Vector[T]) {
 [T]
 overload clear(a:Vector[T]) {
     destroy(a);
-    init(a);
+    initialize(a);
 }
 
 [T]
@@ -235,7 +232,7 @@ insertionPoint(a:Vector[T], pos:I) {
 
 [T,I|Integer?(I)]
 overload insert(a:Vector[T], i:I, x:T) {
-    copy(insertionPoint(a, i), x);
+    insertionPoint(a, i) <== x;
 }
 
 [T,I|Integer?(I)]

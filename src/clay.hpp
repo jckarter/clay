@@ -1536,7 +1536,19 @@ void patternPrint(PatternPtr x, ostream &out);
 // invoke tables
 //
 
+typedef pair<ObjectPtr, unsigned> FlagsMapKey;
+
+struct FlagsMapEntry {
+    bool initialized;
+    vector<bool> isStaticFlags;
+    FlagsMapEntry()
+        : initialized(false) {}
+};
+
+FlagsMapEntry &lookupFlagsMapEntry(ObjectPtr callable, unsigned nArgs);
 void initIsStaticFlags(ProcedurePtr x);
+void initIsStaticFlags(ObjectPtr callable,
+                       const vector<OverloadPtr> &overloads);
 void initIsStaticFlags(OverloadablePtr x);
 void initIsStaticFlags(TypePtr x);
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs);
@@ -1554,6 +1566,10 @@ struct InvokeEntry : public Object {
 
     bool analyzed;
     bool analyzing;
+
+    // isBuiltin is false for procedures and overloadables
+    // it's true for builtin constructors
+    bool isBuiltin;
 
     CodePtr code;
     vector<ObjectPtr> staticArgs;
@@ -1573,8 +1589,8 @@ struct InvokeEntry : public Object {
                 const vector<ObjectPtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), isStaticFlags(isStaticFlags), argsKey(argsKey),
-          analyzed(false), analyzing(false), returnIsTemp(false),
-          llvmFunc(NULL), llvmCWrapper(NULL) {}
+          analyzed(false), analyzing(false), isBuiltin(false),
+          returnIsTemp(false), llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -1591,6 +1607,7 @@ InvokeEntryPtr lookupInvoke(ObjectPtr callable,
 
 enum MatchCode {
     MATCH_SUCCESS,
+    MATCH_CALLABLE_ERROR,
     MATCH_ARITY_ERROR,
     MATCH_ARGUMENT_ERROR,
     MATCH_PREDICATE_ERROR,
@@ -1613,6 +1630,11 @@ struct MatchSuccess : public MatchResult {
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 
+struct MatchCallableError : public MatchResult {
+    MatchCallableError()
+        : MatchResult(MATCH_CALLABLE_ERROR) {}
+};
+
 struct MatchArityError : public MatchResult {
     MatchArityError()
         : MatchResult(MATCH_ARITY_ERROR) {}
@@ -1629,8 +1651,9 @@ struct MatchPredicateError : public MatchResult {
         : MatchResult(MATCH_PREDICATE_ERROR) {}
 };
 
-MatchResultPtr matchInvoke(CodePtr code, EnvPtr env,
-                           const vector<ObjectPtr> &argsKey);
+MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
+                           const vector<ObjectPtr> &argsKey,
+                           ExprPtr callableExpr, ObjectPtr callable);
 
 void signalMatchError(MatchResultPtr result,
                       const vector<LocationPtr> &argLocations);
@@ -1644,7 +1667,12 @@ void signalMatchError(MatchResultPtr result,
 extern vector<OverloadPtr> typeOverloads;
 
 void addTypeOverload(OverloadPtr x);
-void initializeTypeOverloads(TypePtr t);
+void initTypeOverloads(TypePtr t);
+void initBuiltinIsStaticFlags(TypePtr t);
+void verifyBuiltinConstructor(TypePtr t,
+                              const vector<bool> &isStaticFlags,
+                              const vector<ObjectPtr> &argsKey,
+                              const vector<LocationPtr> &argLocations);
 
 
 
@@ -1684,12 +1712,14 @@ ObjectPtr analyzeIndexing(ObjectPtr x,
                           const vector<ExprPtr> &args,
                           EnvPtr env);
 ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env);
+
 ObjectPtr analyzeInvokeType(TypePtr x,
                             const vector<ExprPtr> &args,
                             EnvPtr env);
-ObjectPtr analyzeInvokeTypeDefault(TypePtr x,
-                                   const vector<ExprPtr> &args,
-                                   EnvPtr env);
+InvokeEntryPtr analyzeConstructor(TypePtr x,
+                                  const vector<bool> &isStaticFlags,
+                                  const vector<ObjectPtr> &argsKey,
+                                  const vector<LocationPtr> &argLocations);
 ObjectPtr analyzeInvokeRecord(RecordPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env);
@@ -1864,6 +1894,10 @@ CValuePtr codegenInvokeType(TypePtr x,
                             const vector<ExprPtr> &args,
                             EnvPtr env,
                             CValuePtr out);
+CValuePtr codegenInvokeBuiltinConstructor(TypePtr x,
+                                          const vector<ExprPtr> &args,
+                                          EnvPtr env,
+                                          CValuePtr out);
 CValuePtr codegenInvokeRecord(RecordPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env,
