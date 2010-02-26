@@ -142,6 +142,18 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         return y;
     }
 
+    case RETURNED : {
+        ObjectPtr y = lookupEnv(env, new Identifier("%returned"));
+        if (!y)
+            error("'returned' requires explicit return type declaration");
+        ReturnedInfo *z = (ReturnedInfo *)y.ptr();
+        if (!z->returnType)
+            error("'returned' cannot be used when returning void");
+        if (!z->returnIsTemp)
+            error("'returned' cannot be used when returning by reference");
+        return new PValue(z->returnType, false);
+    }
+
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
         if (!x->desugared)
@@ -512,6 +524,7 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
             PValuePtr parg = new PValue(entry->argTypes[i], false);
             addLocal(bodyEnv, entry->argNames[i], parg.ptr());
         }
+        addLocal(bodyEnv, new Identifier("%returned"), NULL);
         bool ok = analyzeStatement(code->body, bodyEnv, result);
         if (!result && !ok)
             return;

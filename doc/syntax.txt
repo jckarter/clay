@@ -136,11 +136,14 @@ DereferenceSuffix -> "^"
 
 AtomicExpr -> ArrayExpr
             | TupleExpr
+            | Returned
             | NameRef
             | Literal
 
 ArrayExpr -> "[" comma_list(Expression) "]"
 TupleExpr -> "(" comma_list(Expression) ")"
+
+Returned -> "returned"
 
 NameRef -> DottedName
 

@@ -250,10 +250,19 @@ static bool nameRef(ExprPtr &x) {
     return true;
 }
 
+static bool returned(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("returned")) return false;
+    x = new Returned();
+    x->location = location;
+    return true;
+}
+
 static bool atomicExpr(ExprPtr &x) {
     int p = save();
     if (arrayExpr(x)) return true;
     if (restore(p), tupleExpr(x)) return true;
+    if (restore(p), returned(x)) return true;
     if (restore(p), nameRef(x)) return true;
     if (restore(p), literal(x)) return true;
     return false;
