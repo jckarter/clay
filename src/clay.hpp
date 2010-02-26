@@ -146,6 +146,7 @@ enum ObjectKind {
     LABEL,
     BINDING,
     ASSIGNMENT,
+    INIT_ASSIGNMENT,
     GOTO,
     RETURN,
     RETURN_REF,
@@ -230,6 +231,7 @@ struct Block;
 struct Label;
 struct Binding;
 struct Assignment;
+struct InitAssignment;
 struct Goto;
 struct Return;
 struct ReturnRef;
@@ -333,6 +335,7 @@ typedef Pointer<Block> BlockPtr;
 typedef Pointer<Label> LabelPtr;
 typedef Pointer<Binding> BindingPtr;
 typedef Pointer<Assignment> AssignmentPtr;
+typedef Pointer<InitAssignment> InitAssignmentPtr;
 typedef Pointer<Goto> GotoPtr;
 typedef Pointer<Return> ReturnPtr;
 typedef Pointer<ReturnRef> ReturnRefPtr;
@@ -765,6 +768,12 @@ struct Assignment : public Statement {
     ExprPtr left, right;
     Assignment(ExprPtr left, ExprPtr right)
         : Statement(ASSIGNMENT), left(left), right(right) {}
+};
+
+struct InitAssignment : public Statement {
+    ExprPtr left, right;
+    InitAssignment(ExprPtr left, ExprPtr right)
+        : Statement(INIT_ASSIGNMENT), left(left), right(right) {}
 };
 
 struct Goto : public Statement {

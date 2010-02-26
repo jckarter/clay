@@ -568,6 +568,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
     case LABEL :
     case BINDING :
     case ASSIGNMENT :
+    case INIT_ASSIGNMENT :
     case GOTO :
         return true;
 
