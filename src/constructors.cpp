@@ -21,7 +21,7 @@ void initTypeOverloads(TypePtr t)
         }
         PatternPtr pattern = evaluatePattern(x->target, env);
         if (unify(pattern, t.ptr()))
-            t->overloads.insert(t->overloads.begin(), x);
+            t->overloads.push_back(x);
     }
 
     t->overloadsInitialized = true;
