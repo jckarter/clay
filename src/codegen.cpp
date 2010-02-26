@@ -190,6 +190,10 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
             returnVal = new CValue(entry->returnType, llv);
         }
     }
+    ObjectPtr rinfo = new ReturnedInfo(entry->returnType,
+                                       entry->returnIsTemp,
+                                       returnVal);
+    addLocal(env, new Identifier("%returned"), rinfo);
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
     CodeContext ctx(entry, returnVal, returnTarget);
@@ -754,6 +758,17 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         }
         error("invalid name ref");
         return NULL;
+    }
+
+    case RETURNED : {
+        ObjectPtr y = lookupEnv(env, new Identifier("%returned"));
+        assert(y.ptr());
+        ReturnedInfo *z = (ReturnedInfo *)y.ptr();
+        if (!z->returnType)
+            error("'returned' cannot be used when returning void");
+        if (!z->returnIsTemp)
+            error("'returned' cannot be used when returning by reference");
+        return z->returnVal;
     }
 
     case TUPLE : {

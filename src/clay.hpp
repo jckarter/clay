@@ -126,6 +126,7 @@ enum ObjectKind {
     STRING_LITERAL,
 
     NAME_REF,
+    RETURNED,
     TUPLE,
     ARRAY,
     INDEXING,
@@ -209,6 +210,7 @@ struct FloatLiteral;
 struct CharLiteral;
 struct StringLiteral;
 struct NameRef;
+struct Returned;
 struct Tuple;
 struct Array;
 struct Indexing;
@@ -311,6 +313,7 @@ typedef Pointer<FloatLiteral> FloatLiteralPtr;
 typedef Pointer<CharLiteral> CharLiteralPtr;
 typedef Pointer<StringLiteral> StringLiteralPtr;
 typedef Pointer<NameRef> NameRefPtr;
+typedef Pointer<Returned> ReturnedPtr;
 typedef Pointer<Tuple> TuplePtr;
 typedef Pointer<Array> ArrayPtr;
 typedef Pointer<Indexing> IndexingPtr;
@@ -591,6 +594,11 @@ struct NameRef : public Expr {
     IdentifierPtr name;
     NameRef(IdentifierPtr name)
         : Expr(NAME_REF), name(name) {}
+};
+
+struct Returned : public Expr {
+    Returned()
+        : Expr(RETURNED) {}
 };
 
 struct Tuple : public Expr {
@@ -1628,6 +1636,21 @@ extern vector<OverloadPtr> typeOverloads;
 
 void addTypeOverload(OverloadPtr x);
 void initializeTypeOverloads(TypePtr t);
+
+
+
+//
+// ReturnedInfo
+//
+
+struct ReturnedInfo : public Object {
+    TypePtr returnType;
+    bool returnIsTemp;
+    CValuePtr returnVal;
+    ReturnedInfo(TypePtr returnType, bool returnIsTemp, CValuePtr returnVal)
+        : Object(DONT_CARE), returnType(returnType),
+          returnIsTemp(returnIsTemp), returnVal(returnVal) {}
+};
 
 
 
