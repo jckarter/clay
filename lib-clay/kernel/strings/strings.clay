@@ -18,16 +18,15 @@ record String {
 // create string
 //
 
-overload init(a:String) {
-    init(a.data);
-    push(a.data, char(0));
+overload String() : String {
+    initialize(returned.data);
+    push(returned.data, Char(0));
 }
 
 [n]
-string(a:Array[Char,n]) {
-    var s = String(makeVector(a));
-    push(s.data, char(0));
-    return s;
+overload String(a:Array[Char,n]) : String {
+    returned <== String(Vector[Char](a));
+    push(returned.data, Char(0));
 }
 
 

@@ -1,7 +1,8 @@
 #include "clay.hpp"
 
 MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
-                           const vector<ObjectPtr> &argsKey)
+                           const vector<ObjectPtr> &argsKey,
+                           ExprPtr callableExpr, ObjectPtr callable)
 {
     if (code->formalArgs.size() != argsKey.size())
         return new MatchArityError();
@@ -11,6 +12,11 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
         PatternCellPtr cell = new PatternCell(code->patternVars[i], NULL);
         addLocal(patternEnv, code->patternVars[i], cell.ptr());
         cells.push_back(cell);
+    }
+    if (callableExpr.ptr()) {
+        PatternPtr pattern = evaluatePattern(callableExpr, patternEnv);
+        if (!unify(pattern, callable))
+            return new MatchCallableError();
     }
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
@@ -75,6 +81,10 @@ void signalMatchError(MatchResultPtr result,
     case MATCH_SUCCESS :
         assert(false);
         break;
+    case MATCH_CALLABLE_ERROR : {
+        error("callable mismatch");
+        break;
+    }
     case MATCH_ARITY_ERROR : {
         error("incorrect no. of arguments");
     }
@@ -88,5 +98,7 @@ void signalMatchError(MatchResultPtr result,
     }
     case MATCH_PREDICATE_ERROR :
         error("invoke predicate failure");
+    default :
+        assert(false);
     }
 }

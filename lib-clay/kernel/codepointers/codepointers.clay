@@ -2,18 +2,18 @@ import kernel.operators.*;
 import kernel.pointers.*;
 
 [CP | CodePointerType?(CP)]
-overload copy(dest:CP, src:CP) {
-    primitiveCopy(dest, src);
+overload CP(src:CP) : CP {
+    primitiveCopy(returned, src);
 }
 
 [T, CP | CodePointerType?(CP)]
-overload to(static Pointer[T], a:CP) = pointerCast(Pointer[T], a);
+overload Pointer[T](a:CP) = pointerCast(Pointer[T], a);
 
 [T, CP | CodePointerType?(CP)]
-overload to(static CP, a:Pointer[T]) = pointerCast(CP, a);
+overload CP(a:Pointer[T]) = pointerCast(CP, a);
 
 [CP1, CP2 | CodePointerType?(CP1) and CodePointerType?(CP2)]
-overload to(static CP1, a:CP2) = pointerCast(CP1, a);
+overload CP1(a:CP2) = pointerCast(CP1, a);
 
 [CP | CodePointerType?(CP)]
 overload equals?(a:CP, b:CP) {

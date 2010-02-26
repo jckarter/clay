@@ -4,8 +4,8 @@ import kernel.operators.*;
 // Bool
 //
 
-overload copy(dest:Bool, src:Bool) {
-    primitiveCopy(dest, src);
+overload Bool(src:Bool) : Bool {
+    primitiveCopy(returned, src);
 }
 
 overload equals?(a:Bool, b:Bool) {

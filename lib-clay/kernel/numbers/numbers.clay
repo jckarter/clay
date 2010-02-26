@@ -73,8 +73,8 @@ BiggerNumericType(static A, static B) {
 }
 
 [T|Numeric?(T)]
-overload copy(dest:T, src:T) {
-    primitiveCopy(dest, src);
+overload T(src:T) : T {
+    primitiveCopy(returned, src);
 }
 
 [T|Numeric?(T)]
@@ -84,15 +84,15 @@ overload equals?(a:T, b:T) = numericEquals?(a, b);
 overload lesser?(a:T, b:T) = numericLesser?(a, b);
 
 [T|Numeric?(T)]
-overload hash(a:T) = numericConvert(Int32,a);
+overload hash(a:T) = numericConvert(Int32, a);
 
 [A,B|Numeric?(A,B)]
-overload to(static A, b:B) = numericConvert(A, b);
+overload A(b:B) = numericConvert(A, b);
 
 [A,B|Numeric?(A,B)]
 overload add(a:A, b:B) {
     static T = BiggerNumericType(A, B);
-    return numericAdd(to(T, a), to(T, b));
+    return numericAdd(T(a), T(b));
 }
 
 [A|Numeric?(A)]
@@ -101,7 +101,7 @@ overload add(a:A, b:A) = numericAdd(a, b);
 [A,B|Numeric?(A,B)]
 overload subtract(a:A, b:B) {
     static T = BiggerNumericType(A, B);
-    return numericSubtract(to(T, a), to(T, b));
+    return numericSubtract(T(a), T(b));
 }
 
 [A|Numeric?(A)]
@@ -110,7 +110,7 @@ overload subtract(a:A, b:A) = numericSubtract(a, b);
 [A,B|Numeric?(A,B)]
 overload multiply(a:A, b:B) {
     static T = BiggerNumericType(A, B);
-    return numericMultiply(to(T, a), to(T, b));
+    return numericMultiply(T(a), T(b));
 }
 
 [A|Numeric?(A)]
@@ -119,7 +119,7 @@ overload multiply(a:A, b:A) = numericMultiply(a, b);
 [A,B|Numeric?(A,B)]
 overload divide(a:A, b:B) {
     static T = BiggerNumericType(A, B);
-    return numericDivide(to(T, a), to(T, b));
+    return numericDivide(T(a), T(b));
 }
 
 [A|Numeric?(A)]
@@ -128,7 +128,7 @@ overload divide(a:A, b:A) = numericDivide(a, b);
 [A,B|Numeric?(A,B)]
 overload remainder(a:A, b:B) {
     static T = BiggerNumericType(A, B);
-    return numericRemainder(to(T, a), to(T, b));
+    return numericRemainder(T(a), T(b));
 }
 
 [A|Numeric?(A)]
@@ -141,10 +141,10 @@ overload plus(a:T) = a;
 overload minus(a:T) = numericNegate(a);
 
 [A|Numeric?(A)]
-overload zero(static A) = to(A, 0);
+overload zero(static A) = A(0);
 
 [A|Numeric?(A)]
-overload one(static A) = to(A, 1);
+overload one(static A) = A(1);
 
 [T|Numeric?(T)]
 overload inc(a:T) {

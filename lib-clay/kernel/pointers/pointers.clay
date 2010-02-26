@@ -7,25 +7,25 @@ import kernel.coordinates.*;
 //
 
 [T]
-overload copy(dest:Pointer[T], src:Pointer[T]) {
-    primitiveCopy(dest, src);
+overload Pointer[T](src:Pointer[T]) : Pointer[T] {
+    primitiveCopy(returned, src);
 }
 
 [I,T|Integer?(I)]
-overload to(static I, a:Pointer[T]) = pointerToInt(I, a);
+overload I(a:Pointer[T]) = pointerToInt(I, a);
 
 [I,T|Integer?(I)]
-overload to(static Pointer[T], a:I) = intToPointer(T, a);
+overload Pointer[T](a:I) = intToPointer(T, a);
 
 [DEST, SRC]
-overload to(static Pointer[DEST], a:Pointer[SRC]) =
+overload Pointer[DEST](a:Pointer[SRC]) =
     pointerCast(Pointer[DEST], a);
 
 [T]
-pointerToInt32(a:Pointer[T]) = to(Int32, a);
+pointerToInt32(a:Pointer[T]) = Int32(a);
 
 [T]
-pointerToUInt32(a:Pointer[T]) = to(UInt32, a);
+pointerToUInt32(a:Pointer[T]) = UInt32(a);
 
 [T]
 overload equals?(a:Pointer[T], b:Pointer[T]) {
@@ -42,12 +42,12 @@ overload hash(a:Pointer[T]) = pointerToInt32(a);
 
 [T,I|Integer?(I)]
 overload add(p:Pointer[T], i:I) {
-    return to(Pointer[T], pointerToInt32(p) + i*TypeSize(T));
+    return Pointer[T](pointerToInt32(p) + i*TypeSize(T));
 }
 
 [T,I|Integer?(I)]
 overload subtract(p:Pointer[T], i:I) {
-    return to(Pointer[T], pointerToInt32(p) - i*TypeSize(T));
+    return Pointer[T](pointerToInt32(p) - i*TypeSize(T));
 }
 
 [T]
@@ -66,7 +66,7 @@ overload dec(a:Pointer[T]) {
 }
 
 [T]
-null(static T) = to(Pointer[T], 0);
+null(static T) = Pointer[T](0);
 
 [T]
 overload deref(p:Pointer[T]) = ref pointerDereference(p);

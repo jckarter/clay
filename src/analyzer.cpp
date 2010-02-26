@@ -365,22 +365,58 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 
 ObjectPtr analyzeInvokeType(TypePtr x, const vector<ExprPtr> &args, EnvPtr env)
 {
-//     const vector<bool> *isStaticFlagsPtr =
-//         lookupIsStaticFlags2(x.ptr(), args.size());
-//     if (!isStaticFlagsPtr)
-//         return analyzeInvokeTypeDefault(x, args, env);
-//     vector<ObjectPtr> argsKey;
-//     vector<LocationPtr> argLocations;
-//     if (!computeArgsKey(*isStaticFlagsPtr, args, env, argsKey, argLocations))
-//         return NULL;
-    return analyzeInvokeTypeDefault(x, args, env);
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(x.ptr(), args.size());
+    vector<ObjectPtr> argsKey;
+    vector<LocationPtr> argLocations;
+    if (!computeArgsKey(isStaticFlags, args, env, argsKey, argLocations))
+        return NULL;
+    InvokeEntryPtr entry =
+        analyzeConstructor(x, isStaticFlags, argsKey, argLocations);
+    if (!entry->analyzed)
+        return NULL;
+    return entry->analysis;
 }
 
-ObjectPtr analyzeInvokeTypeDefault(TypePtr x,
-                                   const vector<ExprPtr> &args,
-                                   EnvPtr env)
+InvokeEntryPtr analyzeConstructor(TypePtr x,
+                                  const vector<bool> &isStaticFlags,
+                                  const vector<ObjectPtr> &argsKey,
+                                  const vector<LocationPtr> &argLocations)
 {
-    return new PValue(x, true);
+    InvokeEntryPtr entry = lookupInvoke(x.ptr(), isStaticFlags, argsKey);
+    if (entry->analyzed || entry->analyzing)
+        return entry;
+    entry->analyzing = true;
+
+    unsigned i = 0;
+    for (; i < x->overloads.size(); ++i) {
+        OverloadPtr y = x->overloads[i];
+        MatchResultPtr result = matchInvoke(y->code, y->env, argsKey,
+                                            y->target, x.ptr());
+        if (result->matchCode == MATCH_SUCCESS) {
+            entry->code = y->code;
+            MatchSuccess *z = (MatchSuccess *)result.ptr();
+            entry->staticArgs = z->staticArgs;
+            entry->argTypes = z->argTypes;
+            entry->argNames = z->argNames;
+            entry->env = z->env;
+            break;
+        }
+    }
+    if (i < x->overloads.size()) {
+        analyzeCodeBody(entry);
+    }
+    else {
+        verifyBuiltinConstructor(x, isStaticFlags, argsKey, argLocations);
+        entry->isBuiltin = true;
+        entry->analysis = new PValue(x, true);
+        entry->returnType = x;
+        entry->returnIsTemp = true;
+        entry->analyzed = true;
+    }
+
+    entry->analyzing = false;
+    return entry;
 }
 
 ObjectPtr analyzeInvokeRecord(RecordPtr x,
@@ -438,7 +474,7 @@ InvokeEntryPtr analyzeProcedure(ProcedurePtr x,
 
     entry->analyzing = true;
 
-    MatchResultPtr result = matchInvoke(x->code, x->env, argsKey);
+    MatchResultPtr result = matchInvoke(x->code, x->env, argsKey, NULL, NULL);
     if (result->matchCode != MATCH_SUCCESS)
         signalMatchError(result, argLocations);
 
@@ -452,7 +488,6 @@ InvokeEntryPtr analyzeProcedure(ProcedurePtr x,
     analyzeCodeBody(entry);
 
     entry->analyzing = false;
-
     return entry;
 }
 
@@ -486,7 +521,8 @@ InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
     unsigned i = 0;
     for (; i < x->overloads.size(); ++i) {
         OverloadPtr y = x->overloads[i];
-        MatchResultPtr result = matchInvoke(y->code, y->env, argsKey);
+        MatchResultPtr result = matchInvoke(y->code, y->env, argsKey,
+                                            NULL, NULL);
         if (result->matchCode == MATCH_SUCCESS) {
             entry->code = y->code;
             MatchSuccess *z = (MatchSuccess *)result.ptr();
@@ -497,13 +533,14 @@ InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
             break;
         }
     }
-    if (i == x->overloads.size())
+    if (i < x->overloads.size()) {
+        analyzeCodeBody(entry);
+    }
+    else {
         error("no matching overload");
-
-    analyzeCodeBody(entry);
+    }
 
     entry->analyzing = false;
-
     return entry;
 }
 
