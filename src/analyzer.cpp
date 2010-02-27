@@ -423,27 +423,54 @@ ObjectPtr analyzeInvokeRecord(RecordPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env)
 {
-    ensureArity(args, x->fields.size());
-    vector<PatternCellPtr> cells;
-    EnvPtr renv = new Env(x->env);
-    for (unsigned i = 0; i < x->patternVars.size(); ++i) {
-        PatternCellPtr cell = new PatternCell(x->patternVars[i], NULL);
-        addLocal(renv, x->patternVars[i], cell.ptr());
-        cells.push_back(cell);
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(x.ptr(), args.size());
+    vector<ObjectPtr> argsKey;
+    vector<LocationPtr> argLocations;
+    if (!computeArgsKey(isStaticFlags, args, env, argsKey, argLocations))
+        return NULL;
+    InvokeEntryPtr entry =
+        analyzeRecordConstructor(x, isStaticFlags, argsKey, argLocations);
+    if (!entry->analyzed)
+        return NULL;
+    return entry->analysis;
+}
+
+InvokeEntryPtr
+analyzeRecordConstructor(RecordPtr x,
+                         const vector<bool> &isStaticFlags,
+                         const vector<ObjectPtr> &argsKey,
+                         const vector<LocationPtr> &argLocations)
+{
+    InvokeEntryPtr entry = lookupInvoke(x.ptr(), isStaticFlags, argsKey);
+    if (entry->analyzed || entry->analyzing)
+        return entry;
+    entry->analyzing = true;
+
+    unsigned i = 0;
+    for (; i < x->overloads.size(); ++i) {
+        OverloadPtr y = x->overloads[i];
+        MatchResultPtr result = matchInvoke(y->code, y->env, argsKey,
+                                            NULL, NULL);
+        if (result->matchCode == MATCH_SUCCESS) {
+            entry->code = y->code;
+            MatchSuccess *z = (MatchSuccess *)result.ptr();
+            entry->staticArgs = z->staticArgs;
+            entry->argTypes = z->argTypes;
+            entry->argNames = z->argNames;
+            entry->env = z->env;
+            break;
+        }
     }
-    for (unsigned i = 0; i < args.size(); ++i) {
-        PatternPtr fieldType = evaluatePattern(x->fields[i]->type, renv);
-        PValuePtr pv = analyzeValue(args[i], env);
-        if (!pv)
-            return NULL;
-        if (!unify(fieldType, pv->type.ptr()))
-            error(args[i], "type mismatch");
+    if (i < x->overloads.size()) {
+        analyzeCodeBody(entry);
     }
-    vector<ObjectPtr> params;
-    for (unsigned i = 0; i < cells.size(); ++i)
-        params.push_back(derefCell(cells[i]));
-    TypePtr t = recordType(x, params);
-    return analyzeInvokeType(t, args, env);
+    else {
+        error("no matching record constructor");
+    }
+
+    entry->analyzing = false;
+    return entry;
 }
 
 ObjectPtr analyzeInvokeProcedure(ProcedurePtr x,
