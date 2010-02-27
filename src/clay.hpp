@@ -899,14 +899,21 @@ struct Record : public TopLevelItem {
     IdentifierPtr name;
     vector<IdentifierPtr> patternVars;
     vector<RecordFieldPtr> fields;
+
     vector<OverloadPtr> overloads;
+    bool builtinOverloadInitialized;
+
+    bool staticFlagsInitialized;
+
     Record()
-        : TopLevelItem(RECORD) {}
+        : TopLevelItem(RECORD), builtinOverloadInitialized(false),
+          staticFlagsInitialized(false) {}
     Record(IdentifierPtr name,
            const vector<IdentifierPtr> &patternVars,
            const vector<RecordFieldPtr> &fields)
         : TopLevelItem(RECORD), name(name), patternVars(patternVars),
-          fields(fields) {}
+          fields(fields), builtinOverloadInitialized(false),
+          staticFlagsInitialized(false) {}
 };
 
 struct RecordField : public ANode {
@@ -1551,6 +1558,7 @@ void initIsStaticFlags(ObjectPtr callable,
                        const vector<OverloadPtr> &overloads);
 void initIsStaticFlags(OverloadablePtr x);
 void initIsStaticFlags(TypePtr x);
+void initIsStaticFlags(RecordPtr x);
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs);
 bool computeArgsKey(const vector<bool> &isStaticFlags,
                     const vector<ExprPtr> &args,
@@ -1674,6 +1682,9 @@ void verifyBuiltinConstructor(TypePtr t,
                               const vector<ObjectPtr> &argsKey,
                               const vector<LocationPtr> &argLocations);
 
+void initBuiltinIsStaticFlags(RecordPtr x);
+void initBuiltinConstructor(RecordPtr x);
+
 
 
 //
@@ -1723,6 +1734,11 @@ InvokeEntryPtr analyzeConstructor(TypePtr x,
 ObjectPtr analyzeInvokeRecord(RecordPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env);
+InvokeEntryPtr
+analyzeRecordConstructor(RecordPtr x,
+                         const vector<bool> &isStaticFlags,
+                         const vector<ObjectPtr> &argsKey,
+                         const vector<LocationPtr> &argLocations);
 ObjectPtr analyzeInvokeProcedure(ProcedurePtr x,
                                  const vector<ExprPtr> &args,
                                  EnvPtr env);

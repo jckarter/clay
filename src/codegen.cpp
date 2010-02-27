@@ -1343,8 +1343,17 @@ CValuePtr codegenInvokeRecord(RecordPtr x,
                               EnvPtr env,
                               CValuePtr out)
 {
-    assert(out.ptr());
-    return codegenInvokeType(out->type, args, env, out);
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(x.ptr(), args.size());
+    vector<ObjectPtr> argsKey;
+    vector<LocationPtr> argLocations;
+    bool result = computeArgsKey(isStaticFlags, args, env,
+                                 argsKey, argLocations);
+    assert(result);
+    InvokeEntryPtr entry =
+        analyzeRecordConstructor(x, isStaticFlags, argsKey, argLocations);
+    codegenCodeBody(entry, x->name->str);
+    return codegenInvokeCode(entry, args, env, out);
 }
 
 

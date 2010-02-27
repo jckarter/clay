@@ -123,3 +123,58 @@ void verifyBuiltinConstructor(TypePtr t,
 
     }
 }
+
+void initBuiltinIsStaticFlags(RecordPtr x)
+{
+    assert(x->patternVars.size() > 0);
+    FlagsMapEntry &flags = lookupFlagsMapEntry(x.ptr(), x->fields.size());
+    assert(!flags.initialized);
+    flags.initialized = true;
+    flags.isStaticFlags.assign(x->fields.size(), false);
+}
+
+void initBuiltinConstructor(RecordPtr x)
+{
+    assert(!(x->builtinOverloadInitialized));
+    x->builtinOverloadInitialized = true;
+
+    assert(x->patternVars.size() > 0);
+
+    ExprPtr recName = new NameRef(x->name);
+    recName->location = x->name->location;
+
+    CodePtr code = new Code();
+    code->location = x->location;
+    code->patternVars = x->patternVars;
+
+    for (unsigned i = 0; i < x->fields.size(); ++i) {
+        RecordFieldPtr f = x->fields[i];
+        ValueArgPtr arg = new ValueArg(f->name, f->type);
+        arg->location = f->location;
+        code->formalArgs.push_back(arg.ptr());
+    }
+
+    IndexingPtr retType = new Indexing(recName);
+    retType->location = x->location;
+    for (unsigned i = 0; i < x->patternVars.size(); ++i) {
+        ExprPtr typeArg = new NameRef(x->patternVars[i]);
+        typeArg->location = x->patternVars[i]->location;
+        retType->args.push_back(typeArg);
+    }
+
+    CallPtr returnExpr = new Call(retType.ptr());
+    returnExpr->location = x->location;
+    for (unsigned i = 0; i < x->fields.size(); ++i) {
+        ExprPtr callArg = new NameRef(x->fields[i]->name);
+        callArg->location = x->fields[i]->location;
+        returnExpr->args.push_back(callArg);
+    }
+
+    code->body = new Return(returnExpr.ptr());
+    code->body->location = returnExpr->location;
+
+    OverloadPtr defaultOverload = new Overload(recName, code);
+    defaultOverload->location = x->location;
+    defaultOverload->env = x->env;
+    x->overloads.push_back(defaultOverload);
+}

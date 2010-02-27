@@ -92,6 +92,14 @@ void initIsStaticFlags(TypePtr x)
     x->staticFlagsInitialized = true;
 }
 
+void initIsStaticFlags(RecordPtr x)
+{
+    assert(!x->staticFlagsInitialized);
+    initBuiltinIsStaticFlags(x);
+    initIsStaticFlags(x.ptr(), x->overloads);
+    x->staticFlagsInitialized = true;
+}
+
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
 {
     switch (callable->objKind) {
@@ -111,6 +119,14 @@ const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
         Type *x = (Type *)callable.ptr();
         if (!x->overloadsInitialized)
             initTypeOverloads(x);
+        if (!x->staticFlagsInitialized)
+            initIsStaticFlags(x);
+        break;
+    }
+    case RECORD : {
+        Record *x = (Record *)callable.ptr();
+        if (!x->builtinOverloadInitialized)
+            initBuiltinConstructor(x);
         if (!x->staticFlagsInitialized)
             initIsStaticFlags(x);
         break;

@@ -23,7 +23,7 @@ record Vector[T] {
 //
 
 [T]
-overload Vector[T]() = Vector[T](0, 0, null(T));
+overload Vector[T]() = Vector(0, 0, null(T));
 
 
 //
@@ -36,6 +36,9 @@ overload Vector[T](a:Array[T,n]) : Vector[T] {
     for (x in a)
         push(returned, x);
 }
+
+[T,n]
+overload Vector(a:Array[T,n]) = Vector[T](a);
 
 
 //
