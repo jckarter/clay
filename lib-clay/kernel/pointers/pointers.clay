@@ -11,10 +11,10 @@ overload Pointer[T](src:Pointer[T]) : Pointer[T] {
     primitiveCopy(returned, src);
 }
 
-[I,T|Integer?(I)]
+[I,T|IntegerType?(I)]
 overload I(a:Pointer[T]) = pointerToInt(I, a);
 
-[I,T|Integer?(I)]
+[I,T|IntegerType?(I)]
 overload Pointer[T](a:I) = intToPointer(T, a);
 
 [DEST, SRC]
@@ -40,12 +40,12 @@ overload lesser?(a:Pointer[T], b:Pointer[T]) {
 [T]
 overload hash(a:Pointer[T]) = pointerToInt32(a);
 
-[T,I|Integer?(I)]
+[T,I|IntegerType?(I)]
 overload add(p:Pointer[T], i:I) {
     return Pointer[T](pointerToInt32(p) + i*TypeSize(T));
 }
 
-[T,I|Integer?(I)]
+[T,I|IntegerType?(I)]
 overload subtract(p:Pointer[T], i:I) {
     return Pointer[T](pointerToInt32(p) - i*TypeSize(T));
 }

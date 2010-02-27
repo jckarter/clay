@@ -27,8 +27,8 @@ overloadable range;
 
 overload range(first, last) = Range(first, last);
 
-[I|Integer?(I)]
-overload range(last:I) = Range(zero(I), last);
+[I|IntegerType?(I)]
+overload range(last:I) = Range(I(0), last);
 
 
 //

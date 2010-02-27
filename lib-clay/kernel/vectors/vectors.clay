@@ -103,10 +103,10 @@ overload begin(a:Vector[T]) = VectorCoordinate(a.data);
 [T]
 overload end(a:Vector[T]) = VectorCoordinate(a.data + a.size);
 
-[T,I|Integer?(I)]
+[T,I|IntegerType?(I)]
 overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
 
-[T,I|Integer?(I)]
+[T,I|IntegerType?(I)]
 overload subtract(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr - i);
 
 [T]
@@ -220,7 +220,7 @@ ensureSpace(a:Vector[T], space:Int32) {
         setCapacity(a, 2*(a.size + space));
 }
 
-[T,I|Integer?(I)]
+[T,I|IntegerType?(I)]
 insertionPoint(a:Vector[T], pos:I) {
     ensureSpace(a, 1);
     var i = begin(a) + pos;
@@ -233,12 +233,12 @@ insertionPoint(a:Vector[T], pos:I) {
     returnref deref(i);
 }
 
-[T,I|Integer?(I)]
+[T,I|IntegerType?(I)]
 overload insert(a:Vector[T], i:I, x:T) {
     insertionPoint(a, i) <== x;
 }
 
-[T,I|Integer?(I)]
+[T,I|IntegerType?(I)]
 overload insert(a:Vector[T], i:I, x:Movable[T]) {
     move(insertionPoint(a, i), x);
 }
@@ -266,7 +266,7 @@ overload remove(a:Vector[T], i:VectorCoordinate[T]) {
         setCapacity(2*(a.size + 1));
 }
 
-[T,I|Integer?(I)]
+[T,I|IntegerType?(I)]
 overload remove(a:Vector[T], i:I) {
     remove(a, begin(a)+i);
 }

@@ -35,10 +35,10 @@ overload begin(a:Array[T,n]) = ArrayCoordinate(&item(a, 0));
 [T,n]
 overload end(a:Array[T,n]) = ArrayCoordinate(&item(a, n));
 
-[T,I | Integer?(I)]
+[T,I | IntegerType?(I)]
 overload add(c:ArrayCoordinate[T], i:I) = ArrayCoordinate(c.ptr + i);
 
-[T,I | Integer?(I)]
+[T,I | IntegerType?(I)]
 overload subtract(c:ArrayCoordinate[T], i:I) = ArrayCoordinate(c.ptr - i);
 
 [T]

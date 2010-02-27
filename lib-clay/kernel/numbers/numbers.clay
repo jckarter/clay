@@ -1,157 +1,212 @@
 import kernel.operators.*;
 
+
+
 //
-// numeric types
+// numeric type predicates
 //
 
-overloadable SignedInteger?;
+overloadable SignedIntegerType?;
 
 [T]
-overload SignedInteger?(static T) = false;
+overload SignedIntegerType?(static T) = false;
 
-overload SignedInteger?(static Int8) = true;
-overload SignedInteger?(static Int16) = true;
-overload SignedInteger?(static Int32) = true;
-overload SignedInteger?(static Int64) = true;
+overload SignedIntegerType?(static Int8) = true;
+overload SignedIntegerType?(static Int16) = true;
+overload SignedIntegerType?(static Int32) = true;
+overload SignedIntegerType?(static Int64) = true;
 
 
-overloadable UnsignedInteger?;
-
-[T]
-overload UnsignedInteger?(static T) = false;
-
-overload UnsignedInteger?(static UInt8) = true;
-overload UnsignedInteger?(static UInt16) = true;
-overload UnsignedInteger?(static UInt32) = true;
-overload UnsignedInteger?(static UInt64) = true;
+overloadable UnsignedIntegerType?;
 
 [T]
-Integer?(static T) = SignedInteger?(T) or UnsignedInteger?(T);
+overload UnsignedIntegerType?(static T) = false;
+
+overload UnsignedIntegerType?(static UInt8) = true;
+overload UnsignedIntegerType?(static UInt16) = true;
+overload UnsignedIntegerType?(static UInt32) = true;
+overload UnsignedIntegerType?(static UInt64) = true;
 
 
-overloadable FloatingPoint?;
-[T]
-overload FloatingPoint?(static T) = false;
-overload FloatingPoint?(static Float32) = true;
-overload FloatingPoint?(static Float64) = true;
-
-
-overloadable Numeric?;
+overloadable IntegerType?;
 
 [T]
-overload Numeric?(static T) = Integer?(T) or FloatingPoint?(T);
+overload IntegerType?(static T) =
+    SignedIntegerType?(T) or UnsignedIntegerType?(T);
 
 [T1, T2]
-overload Numeric?(static T1, static T2) = Numeric?(T1) and Numeric?(T2);
+overload IntegerType?(static T1, static T2) =
+    IntegerType?(T1) and IntegerType?(T2);
 
-[A, B]
-BiggerNumericType(static A, static B) {
-    if (FloatingPoint?(A)) {
-        if (Integer?(B))
-            return A;
-        if (FloatingPoint?(B)) {
-            if (TypeSize(A) > TypeSize(B))
-                return A;
-            else
-                return B;
-        }
-    }
-    else if (Integer?(A)) {
-        if (Integer?(B)) {
-            if (TypeSize(A) > TypeSize(B))
-                return A;
-            if (TypeSize(B) > TypeSize(A))
-                return B;
-            if (UnsignedInteger?(A))
-                return A;
-            return B;
-        }
-        if (FloatingPoint?(B)) {
-            return B;
-        }
-    }
-}
 
-[T|Numeric?(T)]
+overloadable FloatType?;
+
+[T]
+overload FloatType?(static T) = false;
+
+overload FloatType?(static Float32) = true;
+overload FloatType?(static Float64) = true;
+
+[T1, T2]
+overload FloatType?(static T1, static T2) =
+    FloatType?(T1) and FloatType?(T2);
+
+
+overloadable NumericType?;
+
+[T]
+overload NumericType?(static T) = IntegerType?(T) or FloatType?(T);
+
+[T1, T2]
+overload NumericType?(static T1, static T2) =
+    NumericType?(T1) and NumericType?(T2);
+
+
+
+//
+// BiggerIntegerType?, BiggerFloatType?, BiggerNumericType?
+//
+
+[A,B | IntegerType?(A,B)]
+BiggerIntegerType?(static A, static B) =
+    (TypeSize(A) > TypeSize(B)) or ((TypeSize(A) == TypeSize(B)) and
+                                    UnsignedIntegerType?(A) and
+                                    SignedIntegerType?(B));
+
+[A,B | FloatType?(A,B)]
+BiggerFloatType?(static A, static B) = TypeSize(A) > TypeSize(B);
+
+
+overloadable BiggerNumericType?;
+
+[A,B | FloatType?(A) and IntegerType?(B)]
+overload BiggerNumericType?(static A, static B) = true;
+
+[A,B | IntegerType?(A) and FloatType?(B)]
+overload BiggerNumericType?(static A, static B) = false;
+
+[A,B | IntegerType?(A,B)]
+overload BiggerNumericType?(static A, static B) = BiggerIntegerType?(A,B);
+
+[A,B | FloatType?(A,B)]
+overload BiggerNumericType?(static A, static B) = BiggerFloatType?(A,B);
+
+
+
+//
+// toBiggerNumericType
+//
+
+overloadable toBiggerNumericType;
+
+[A | NumericType?(A)]
+overload toBiggerNumericType(static A, static A, v) = v;
+
+[A,B | NumericType?(A,B) and BiggerNumericType?(A,B)]
+overload toBiggerNumericType(static A, static B, v) = A(v);
+
+[A,B | NumericType?(A,B) and BiggerNumericType?(B,A)]
+overload toBiggerNumericType(static A, static B, v) = B(v);
+
+
+
+//
+// constructors
+//
+
+[T | NumericType?(T)]
 overload T(src:T) : T {
     primitiveCopy(returned, src);
 }
 
-[T|Numeric?(T)]
+[T1,T2 | NumericType?(T1,T2)]
+overload T1(src:T2) = numericConvert(T1, src);
+
+
+
+//
+// equals?, lesser?
+//
+
+[T | NumericType?(T)]
 overload equals?(a:T, b:T) = numericEquals?(a, b);
 
-[T|Numeric?(T)]
+[T | NumericType?(T)]
 overload lesser?(a:T, b:T) = numericLesser?(a, b);
 
-[T|Numeric?(T)]
-overload hash(a:T) = numericConvert(Int32, a);
 
-[A,B|Numeric?(A,B)]
-overload A(b:B) = numericConvert(A, b);
+
+//
+// binary ops
+//
 
-[A,B|Numeric?(A,B)]
-overload add(a:A, b:B) {
-    static T = BiggerNumericType(A, B);
-    return numericAdd(T(a), T(b));
-}
-
-[A|Numeric?(A)]
+[A,B | NumericType?(A,B)]
+overload add(a:A, b:B) = numericAdd(toBiggerNumericType(A, B, a),
+                                    toBiggerNumericType(A, B, b));
+[A | NumericType?(A)]
 overload add(a:A, b:A) = numericAdd(a, b);
 
-[A,B|Numeric?(A,B)]
-overload subtract(a:A, b:B) {
-    static T = BiggerNumericType(A, B);
-    return numericSubtract(T(a), T(b));
-}
 
-[A|Numeric?(A)]
+[A,B | NumericType?(A,B)]
+overload subtract(a:A, b:B) = numericSubtract(toBiggerNumericType(A, B, a),
+                                              toBiggerNumericType(A, B, b));
+[A | NumericType?(A)]
 overload subtract(a:A, b:A) = numericSubtract(a, b);
 
-[A,B|Numeric?(A,B)]
-overload multiply(a:A, b:B) {
-    static T = BiggerNumericType(A, B);
-    return numericMultiply(T(a), T(b));
-}
 
-[A|Numeric?(A)]
+[A,B | NumericType?(A,B)]
+overload multiply(a:A, b:B) = numericMultiply(toBiggerNumericType(A, B, a),
+                                              toBiggerNumericType(A, B, b));
+[A | NumericType?(A)]
 overload multiply(a:A, b:A) = numericMultiply(a, b);
 
-[A,B|Numeric?(A,B)]
-overload divide(a:A, b:B) {
-    static T = BiggerNumericType(A, B);
-    return numericDivide(T(a), T(b));
-}
 
-[A|Numeric?(A)]
+[A,B | NumericType?(A,B)]
+overload divide(a:A, b:B) = numericDivide(toBiggerNumericType(A, B, a),
+                                          toBiggerNumericType(A, B, b));
+[A | NumericType?(A)]
 overload divide(a:A, b:A) = numericDivide(a, b);
 
-[A,B|Numeric?(A,B)]
-overload remainder(a:A, b:B) {
-    static T = BiggerNumericType(A, B);
-    return numericRemainder(T(a), T(b));
-}
 
-[A|Numeric?(A)]
+[A,B | NumericType?(A,B)]
+overload remainder(a:A, b:B) = numericRemainder(toBiggerNumericType(A, B, a),
+                                                toBiggerNumericType(A, B, b));
+[A | NumericType?(A)]
 overload remainder(a:A, b:A) = numericRemainder(a, b);
 
-[T|Numeric?(T)]
-overload plus(a:T) = a;
 
-[T|Numeric?(T)]
-overload minus(a:T) = numericNegate(a);
+
+//
+// unary ops
+//
 
-[A|Numeric?(A)]
-overload zero(static A) = A(0);
+[A | NumericType?(A)]
+overload plus(a:A) = a;
 
-[A|Numeric?(A)]
-overload one(static A) = A(1);
+[A | NumericType?(A)]
+overload minus(a:A) = numericNegate(a);
 
-[T|Numeric?(T)]
-overload inc(a:T) {
-    a = a + one(T);
+
+
+//
+// inc, dec
+//
+
+[A | NumericType?(A)]
+overload inc(a:A) {
+    a = a + A(1);
 }
 
-[T|Numeric?(T)]
-overload dec(a:T) {
-    a = a - one(T);
+[A | NumericType?(A)]
+overload dec(a:A) {
+    a = a - A(1);
 }
+
+
+
+//
+// hash
+//
+
+[T | NumericType?(T)]
+overload hash(a:T) = Int32(a);

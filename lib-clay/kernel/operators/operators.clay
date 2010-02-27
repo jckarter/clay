@@ -17,6 +17,9 @@ overloadable multiply;
 overloadable divide;
 overloadable remainder;
 
+overloadable inc;
+overloadable dec;
+
 overloadable deref;
 
 overloadable hash;
@@ -24,12 +27,6 @@ overloadable hash;
 overloadable iterator;
 overloadable hasNext?;
 overloadable next;
-
-overloadable zero;
-overloadable one;
-
-overloadable inc;
-overloadable dec;
 
 
 //
