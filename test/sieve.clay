@@ -20,14 +20,14 @@ record Channels {
 [T]
 send(c:Pointer[Int8], val:T) {
     //printf(cstring("Sending from %p val %d\n"), c, val);
-    chan_send(c, to(Pointer[Int8], &val));
+    chan_send(c, Pointer[Int8](&val));
 }
 
 [T]
 recv(c:Pointer[Int8], val:T) {
-    var temp = zero(T);
+    var temp = T(0);
     //printf(cstring("Reading from %p\n"), c, temp);
-    chan_recv(c, to(Pointer[Int8], &temp));
+    chan_recv(c, Pointer[Int8](&temp));
     //printf(cstring("Reading from %p got %d\n"), c, temp);
     val = temp;
 }
@@ -62,7 +62,7 @@ m2(p, val) {
 m(p, val) {
     var ch = chan_create(TypeSize(Int32));
     var fp = makeCCodePointer(generator, Pointer[Int8], Int32);
-    var fp2 = to(CCodePointer[Pointer[Int8], Pointer[Int8], Int32], fp);
+    var fp2 = CCodePointer[Pointer[Int8], Pointer[Int8], Int32](fp);
     var task = sched_task_create(8192, fp2, ch, 10);
     var ch_ = ch;
     sched_ready(task);
@@ -74,11 +74,11 @@ m(p, val) {
         }
         printf(cstring("%d\n"), prime);
         var fp2 = makeCCodePointer(filter, Pointer[Channels], Int32);
-        var fp22 = to(CCodePointer[Pointer[Int8], Pointer[Int8], Int32], fp2);
+        var fp22 = CCodePointer[Pointer[Int8], Pointer[Int8], Int32](fp2);
         var c = Channels();
         c.chanin = ch_;
         c.chanout = chan_create(TypeSize(Int32));
-        task = sched_task_create(8192, fp22, to(Pointer[Int8], &c), prime);
+        task = sched_task_create(8192, fp22, Pointer[Int8](&c), prime);
         sched_ready(task);
         ch_ = c.chanout;
     }
@@ -88,8 +88,8 @@ main() {
     sched_init();
     var v = 'c';
     var fp = makeCCodePointer(m, Pointer[Int8], Int32);
-    var fp2 = to(CCodePointer[Pointer[Int8], Pointer[Int8], Int32], fp);
-    var task = sched_task_create(8192, fp2, to(Pointer[Int8], &v), 10);
+    var fp2 = CCodePointer[Pointer[Int8], Pointer[Int8], Int32](fp);
+    var task = sched_task_create(8192, fp2, Pointer[Int8](&v), 10);
     sched_ready(task);
     sched_run();
     sched_destroy();
