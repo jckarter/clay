@@ -334,6 +334,9 @@ static ModulePtr makePrimitivesModule() {
     prims->globals["Void"] = voidType.ptr();
 
 #define PRIMITIVE(x) prims->globals[toPrimStr(#x)] = new PrimOp(PRIM_##x)
+
+    PRIMITIVE(TypeOf);
+
     PRIMITIVE(TypeP);
     PRIMITIVE(TypeSize);
 

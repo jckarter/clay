@@ -37,9 +37,8 @@ overloadable next;
 overload T() : T {
 }
 
-[T]
-initialize(a:T) {
-    a <== T();
+initialize(a) {
+    a <== TypeOf(a)();
 }
 
 [T]
