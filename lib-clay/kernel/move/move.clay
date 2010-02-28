@@ -6,7 +6,7 @@ overloadable move;
 overload move(dest:T, src:T) {
     if (&dest == &src)
         return;
-    dest <== src;
+    dest <-- src;
     destroy(src);
 }
 

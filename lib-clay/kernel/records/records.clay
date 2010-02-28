@@ -37,7 +37,7 @@ overloadable copyRecordFields;
 
 [T,i]
 overload copyRecordFields(dest:T, src:T, static i) {
-    recordFieldRef(dest, i) <== recordFieldRef(src, i);
+    recordFieldRef(dest, i) <-- recordFieldRef(src, i);
     copyRecordFields(dest, src, i+1);
 }
 

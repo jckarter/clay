@@ -45,7 +45,7 @@ overload T() : T {
 }
 
 initialize(a) {
-    a <== TypeOf(a)();
+    a <-- TypeOf(a)();
 }
 
 [T]
@@ -56,7 +56,7 @@ overload destroy(a:T) {
 overload assign(dest:T, src:T) {
     if (equals?(&dest, &src)) return;
     destroy(dest);
-    dest <== src;
+    dest <-- src;
 }
 
 [T]
