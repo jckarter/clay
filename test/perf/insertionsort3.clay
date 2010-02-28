@@ -19,7 +19,7 @@ insertionSort(a) {
 reverse(a) {
     var n = size(a);
     for (i in range(n / 2))
-        swap(item(a, i), item(a, n-i-1));
+        swap(a[i], a[n-i-1]);
 }
 
 main() {
@@ -30,6 +30,6 @@ main() {
         insertionSort(a);
         reverse(a);
     }
-    printf(cstring("a[0] = %d\n"), item(a, 0));
+    printf(cstring("a[0] = %d\n"), a[0]);
     return 0;
 }

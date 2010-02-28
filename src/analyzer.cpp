@@ -317,6 +317,19 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 {
     switch (x->objKind) {
 
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        return analyzeIndexing(new PValue(y->type, true), args, env);
+    }
+
+    case PVALUE : {
+        vector<ExprPtr> args2;
+        args2.push_back(new ObjectExpr(x));
+        args2.insert(args2.end(), args.begin(), args.end());
+        ObjectPtr z = kernelName("index");
+        return analyzeInvoke(z, args2, env);
+    }
+
     case PRIM_OP : {
         PrimOpPtr y = (PrimOp *)x.ptr();
 

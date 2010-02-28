@@ -18,21 +18,21 @@ main() {
         x = x - 1;
     }
 
-    printf(cstring("item[0], item[2] = %d, %d\n"), item(a, 0), item(a, 2));
+    printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
 
     var fp = makeCCodePointer(compare, Pointer[Int32], Pointer[Int32]);
 
-    printf(cstring("compare test = %d\n"), fp(&item(a,0), &item(a,2)));
-    printf(cstring("compare test = %d\n"), fp(&item(a,0), &item(a,0)));
-    printf(cstring("compare test = %d\n"), fp(&item(a,2), &item(a,0)));
+    printf(cstring("compare test = %d\n"), fp(&a[0], &a[2]));
+    printf(cstring("compare test = %d\n"), fp(&a[0], &a[0]));
+    printf(cstring("compare test = %d\n"), fp(&a[2], &a[0]));
 
     var fp2 = CCodePointer[Pointer[Int8], Pointer[Int8], Int32](fp);
 
-    qsort(Pointer[Int8](&item(a, 0)),
+    qsort(Pointer[Int8](&a[0]),
           size(a),
           TypeSize(Int32),
           fp2);
 
-    printf(cstring("item[0], item[2] = %d, %d\n"), item(a, 0), item(a, 2));
+    printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
     return 0;
 }

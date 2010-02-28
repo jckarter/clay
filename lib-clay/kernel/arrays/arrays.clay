@@ -16,7 +16,7 @@ import kernel.ranges.*;
 overload size(a:Array[T,n]) = n;
 
 [T,n]
-overload item(a:Array[T,n], i) = ref arrayRef(a, i);
+overload index(a:Array[T,n], i) = ref arrayRef(a, i);
 
 
 //
@@ -31,10 +31,10 @@ record ArrayCoordinate[T] {
 overload dereference(c:ArrayCoordinate[T]) = ref dereference(c.ptr);
 
 [T,n]
-overload begin(a:Array[T,n]) = ArrayCoordinate(&item(a, 0));
+overload begin(a:Array[T,n]) = ArrayCoordinate(&a[0]);
 
 [T,n]
-overload end(a:Array[T,n]) = ArrayCoordinate(&item(a, n));
+overload end(a:Array[T,n]) = ArrayCoordinate(&a[n]);
 
 [T,I | IntegerType?(I)]
 overload add(c:ArrayCoordinate[T], i:I) = ArrayCoordinate(c.ptr + i);
