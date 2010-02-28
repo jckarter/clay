@@ -76,14 +76,14 @@ overload destroy(a:Vector[T]) {
 
 
 //
-// size, item
+// size, index
 //
 
 [T]
 overload size(a:Vector[T]) = a.size;
 
 [T]
-overload item(a:Vector[T], i) = ref (a.data + i)^;
+overload index(a:Vector[T], i) = ref (a.data + i)^;
 
 
 //
@@ -173,10 +173,10 @@ overload hash(a:Vector[T]) {
 //
 
 [T]
-overload front(a:Vector[T]) = ref item(a, 0);
+overload front(a:Vector[T]) = ref a[0];
 
 [T]
-overload back(a:Vector[T]) = ref item(a, size(a)-1);
+overload back(a:Vector[T]) = ref a[size(a)-1];
 
 [T]
 overload push(a:Vector[T], x:T) {

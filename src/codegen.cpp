@@ -806,8 +806,14 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
     }
 
     case INDEXING : {
-        error("invalid indexing operation");
-        return NULL;
+        Indexing *x = (Indexing *)expr.ptr();
+        PValuePtr y = analyzeValue(x->expr, env);
+        CValuePtr z = codegenAsRef(x->expr, env, y);
+        vector<ExprPtr> args2;
+        args2.push_back(new CValueExpr(z));
+        args2.insert(args2.end(), x->args.begin(), x->args.end());
+        ObjectPtr op = kernelName("index");
+        return codegenInvoke(op, args2, env, out);
     }
 
     case CALL : {

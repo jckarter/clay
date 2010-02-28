@@ -36,7 +36,7 @@ overload String(a:Array[Char,n]) : String {
 
 overload size(a:String) = size(a.data) - 1;
 
-overload item(a:String, i) = ref item(a.data, i);
+overload index(a:String, i) = ref a.data[i];
 
 
 //
@@ -51,4 +51,4 @@ overload iterator(a:String) = CoordinateRange(begin(a), end(a));
 // c-string compatibility
 //
 
-cstring(s:String) = &item(s, 0).code;
+cstring(s:String) = &s[0].code;

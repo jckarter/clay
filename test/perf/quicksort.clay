@@ -5,12 +5,12 @@ sortRange(a, start, end) {
     if (start < end-1) {
         var m = start;
         for (i in range(start+1, end)) {
-            if (item(a, i) < item(a, start)) {
+            if (a[i] < a[start]) {
                 m = m + 1;
-                swap(item(a, i), item(a, m));
+                swap(a[i], a[m]);
             }
         }
-        swap(item(a, start), item(a, m));
+        swap(a[start], a[m]);
         sortRange(a, start, m);
         sortRange(a, m+1, end);
     }
@@ -23,17 +23,17 @@ quickSort(a) {
 reverse(a) {
     var n = size(a);
     for (i in range(n / 2))
-        swap(item(a, i), item(a, n-i-1));
+        swap(a[i], a[n-i-1]);
 }
 
 main() {
     var a = Array[Int32, 1000]();
     for (i in range(size(a)))
-        item(a, i) = i*2;
+        a[i] = i*2;
     for (i in range(1000)) {
         quickSort(a);
         reverse(a);
     }
-    printf(cstring("a[0] = %d\n"), item(a, 0));
+    printf(cstring("a[0] = %d\n"), a[0]);
     return 0;
 }
