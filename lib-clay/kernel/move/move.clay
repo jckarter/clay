@@ -18,4 +18,4 @@ record Movable[T] {
 overload move(a:T) = Movable(&a);
 
 [T]
-overload deref(a:Movable[T]) = ref deref(a.data);
+overload dereference(a:Movable[T]) = ref a.data^;

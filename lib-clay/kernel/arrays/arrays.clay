@@ -28,7 +28,7 @@ record ArrayCoordinate[T] {
 }
 
 [T]
-overload deref(c:ArrayCoordinate[T]) = ref deref(c.ptr);
+overload dereference(c:ArrayCoordinate[T]) = ref dereference(c.ptr);
 
 [T,n]
 overload begin(a:Array[T,n]) = ArrayCoordinate(&item(a, 0));

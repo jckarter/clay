@@ -48,7 +48,7 @@ overload hasNext?(r:CoordinateRange[T]) = r.first < r.last;
 
 [T]
 overload next(r:CoordinateRange[T]) {
-    ref obj = deref(r.first);
+    ref obj = r.first^;
     inc(r.first);
     returnref obj;
 }
