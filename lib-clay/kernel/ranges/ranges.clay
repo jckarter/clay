@@ -18,7 +18,7 @@ overload hasNext?(r:ValueRange[T]) = r.first < r.last;
 
 [T]
 overload next(r:ValueRange[T]) : T {
-    returned <== r.first;
+    returned <-- r.first;
     inc(r.first);
 }
 

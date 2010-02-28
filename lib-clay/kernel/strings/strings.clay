@@ -25,7 +25,7 @@ overload String() : String {
 
 [n]
 overload String(a:Array[Char,n]) : String {
-    returned <== String(Vector(a));
+    returned <-- String(Vector(a));
     push(returned.data, Char(0));
 }
 

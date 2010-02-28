@@ -87,7 +87,7 @@ StaticBinding -> "static" Identifier "=" Expression ";"
 
 Assignment -> Expression "=" Expression ";"
 
-InitAssignment -> Expression "<==" Expression ";"
+InitAssignment -> Expression "<--" Expression ";"
 
 UpdateAssignment -> Expression UpdateOp Expression ";"
 UpdateOp -> "+=" | "-=" | "*=" | "/=" | "%="

@@ -38,7 +38,7 @@ overloadable copyTupleElements;
 [T,i]
 overload copyTupleElements(dest:T, src:T, static i)
 {
-    tupleRef(dest, i) <== tupleRef(src, i);
+    tupleRef(dest, i) <-- tupleRef(src, i);
     copyTupleElements(dest, src, i+1);
 }
 

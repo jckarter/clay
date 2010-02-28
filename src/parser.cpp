@@ -787,7 +787,7 @@ static bool initAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr y, z;
     if (!expression(y)) return false;
-    if (!symbol("<==")) return false;
+    if (!symbol("<--")) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
     x = new InitAssignment(y, z);

@@ -32,7 +32,7 @@ overload Vector[T]() = Vector(0, 0, null(T));
 
 [T,n]
 overload Vector[T](a:Array[T,n]) : Vector[T] {
-    returned <== Vector[T]();
+    returned <-- Vector[T]();
     for (x in a)
         push(returned, x);
 }
@@ -55,7 +55,7 @@ overload Vector[T](src:Vector[T]) : Vector[T] {
         ref d = iterator(dest);
         ref s = iterator(src);
         while (hasNext?(s))
-            next(d) <== next(s);
+            next(d) <-- next(s);
     }
     else {
         dest.data = null(T);
@@ -190,7 +190,7 @@ overload push(a:Vector[T], a:Movable[T]) {
 
 [T]
 overload pop(a:Vector[T]) : T {
-    returned <== back(a);
+    returned <-- back(a);
     remove(a, end(a)-1);
 }
 
@@ -239,7 +239,7 @@ insertionPoint(a:Vector[T], pos:I) {
 
 [T,I|IntegerType?(I)]
 overload insert(a:Vector[T], i:I, x:T) {
-    insertionPoint(a, i) <== x;
+    insertionPoint(a, i) <-- x;
 }
 
 [T,I|IntegerType?(I)]

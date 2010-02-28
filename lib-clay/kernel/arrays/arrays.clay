@@ -83,7 +83,7 @@ overload iterator(a:Array[T,n]) = CoordinateRange(begin(a), end(a));
 [T,n]
 overload Array[T,n]() : Array[T,n] {
     for (x in returned)
-        x <== T();
+        x <-- T();
 }
 
 [T,n]
@@ -91,7 +91,7 @@ overload Array[T,n](src:Array[T,n]) : Array[T,n] {
     ref d = iterator(returned);
     ref s = iterator(src);
     while (hasNext?(s))
-        next(d) <== next(s);
+        next(d) <-- next(s);
 }
 
 [T,n]
