@@ -189,11 +189,9 @@ overload push(a:Vector[T], a:Movable[T]) {
 }
 
 [T]
-overload pop(a:Vector[T]) {
-    // FIXME: get rid of extra copy
-    var x = back(a);
+overload pop(a:Vector[T]) : T {
+    returned <== back(a);
     remove(a, end(a)-1);
-    return x;
 }
 
 

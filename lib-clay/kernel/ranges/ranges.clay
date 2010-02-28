@@ -17,10 +17,9 @@ overload iterator(r:ValueRange[T]) = r;
 overload hasNext?(r:ValueRange[T]) = r.first < r.last;
 
 [T]
-overload next(r:ValueRange[T]) {
-    var x = r.first;
+overload next(r:ValueRange[T]) : T {
+    returned <== r.first;
     inc(r.first);
-    return x;
 }
 
 overloadable range;
