@@ -8,6 +8,8 @@ DottedName -> Identifier ("." Identifier)*
 
 TopLevelItem -> Record | Procedure | Overloadable | Overload
               | ExternalProcedure
+              | StaticGlobal
+              | StaticProcedure | StaticOverloadable | StaticOverload
 
 Record -> "record" Identifier PatternVars? "{" RecordField+ "}"
 PatternVars -> "[" comma_list(Identifier) "]"
@@ -42,6 +44,16 @@ ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
 ExternalArgs -> comma_list(ExternalArg) ("," "...")?
               | ("...")?
 ExternalArg -> Identifier TypeSpec
+
+StaticGlobal -> "static" Identifier "=" Expression ";"
+
+StaticProcedure -> PatternVarsWithCond? "static" Identifier
+                   "(" comma_list(Expression) ")" "=" Expression ";"
+
+StaticOverloadable -> "static" "overloadable" Identifier ";"
+
+StaticOverload -> PatternVarsWithCond? "static" "overload" Pattern
+                  "(" comma_list(Expression) ")" "=" Expression ";"
 
 
 //

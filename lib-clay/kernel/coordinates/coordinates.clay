@@ -5,7 +5,7 @@ import kernel.operators.*;
 // inc, dec, deref, equals?
 //
 
-overloadable Coordinate?;
+static overloadable Coordinate?;
 
 
 //
@@ -13,21 +13,21 @@ overloadable Coordinate?;
 // add(x, integer), subtract(x, integer), subtract(x, x), lesser
 // 
 
-overloadable RandomAccessCoordinate?;
+static overloadable RandomAccessCoordinate?;
 
 
 [T]
-overload Coordinate?(static T) = false;
+static overload Coordinate?(T) = false;
 
 [T]
-overload RandomAccessCoordinate?(static T) = false;
+static overload RandomAccessCoordinate?(T) = false;
 
 [T|RandomAccessCoordinate?(T)]
-overload Coordinate?(static T) = true;
+static overload Coordinate?(T) = true;
 
 
 //
 // CoordinateTarget returns the type element addressed by a coordinate
 //
 
-overloadable CoordinateTarget;
+static overloadable CoordinateTarget;

@@ -93,7 +93,7 @@ static SourcePtr loadFile(const string &fileName) {
 //
 
 static void loadDependents(ModulePtr m);
-static void initializeModule(ModulePtr m);
+static void initModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
 
 static void installGlobals(ModulePtr m) {
@@ -124,6 +124,17 @@ static void installGlobals(ModulePtr m) {
             addGlobal(m, ((ExternalProcedure *)x)->name, x);
             break;
         case OVERLOAD :
+            break;
+        case STATIC_GLOBAL :
+            addGlobal(m, ((StaticGlobal *)x)->name, x);
+            break;
+        case STATIC_PROCEDURE :
+            addGlobal(m, ((StaticProcedure *)x)->name, x);
+            break;
+        case STATIC_OVERLOADABLE :
+            addGlobal(m, ((StaticOverloadable *)x)->name, x);
+            break;
+        case STATIC_OVERLOAD :
             break;
         default :
             assert(false);
@@ -217,7 +228,7 @@ ModulePtr loadProgram(const string &fileName) {
     ModulePtr m = parse(loadFile(fileName));
     loadDependents(m);
     installGlobals(m);
-    initializeModule(m);
+    initModule(m);
     return m;
 }
 
@@ -230,10 +241,10 @@ ModulePtr loadedModule(const string &module) {
 
 
 //
-// initializeOverload, initializeModule
+// initOverload, initStaticOverload, initModule
 //
 
-static void initializeOverload(OverloadPtr x) {
+static void initOverload(OverloadPtr x) {
     EnvPtr env = new Env(x->env);
     for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
         PatternCellPtr cell = new PatternCell(x->code->patternVars[i], NULL);
@@ -263,19 +274,33 @@ static void initializeOverload(OverloadPtr x) {
     }
 }
 
-static void initializeModule(ModulePtr m) {
+static void initStaticOverload(StaticOverloadPtr x) {
+    ObjectPtr y = evaluateStatic(x->target, x->env);
+    if (y->objKind != STATIC_OVERLOADABLE)
+        error(x->target, "invalid static overload target");
+    StaticOverloadable *z = (StaticOverloadable *)y.ptr();
+    z->overloads.insert(z->overloads.begin(), x);
+}
+
+static void initModule(ModulePtr m) {
     if (m->initialized) return;
     m->initialized = true;
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
-        initializeModule((*ii)->module);
+        initModule((*ii)->module);
 
-    vector<TopLevelItemPtr>::iterator ti, tend;
-    for (ti = m->topLevelItems.begin(), tend = m->topLevelItems.end();
-         ti != tend; ++ti) {
+    const vector<TopLevelItemPtr> &items = m->topLevelItems;
+    vector<TopLevelItemPtr>::const_iterator ti, tend;
+    for (ti = items.begin(), tend = items.end(); ti != tend; ++ti) {
         Object *obj = ti->ptr();
-        if (obj->objKind == OVERLOAD)
-            initializeOverload((Overload *)obj);
+        switch (obj->objKind) {
+        case OVERLOAD :
+            initOverload((Overload *)obj);
+            break;
+        case STATIC_OVERLOAD :
+            initStaticOverload((StaticOverload *)obj);
+            break;
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 import kernel.operators.*;
 import kernel.sequences.*;
 import kernel.numbers.*;
+import kernel.coordinates.*;
 import kernel.ranges.*;
 
 //
@@ -58,6 +59,13 @@ overload dec(c:ArrayCoordinate[T]) {
 [T]
 overload lesser?(a:ArrayCoordinate[T], b:ArrayCoordinate[T])
     = a.ptr < b.ptr;
+
+
+[T]
+static overload RandomAccessCoordinate?(ArrayCoordinate[T]) = true;
+
+[T]
+static overload CoordinateTarget(ArrayCoordinate[T]) = T;
 
 
 //
