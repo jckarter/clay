@@ -2,7 +2,7 @@ LLVM_CXXFLAGS = `llvm-config --cxxflags`
 LLVM_LDFLAGS = `llvm-config --ldflags --libs backend engine`
 
 .cpp.o :
-	g++ $(LLVM_CXXFLAGS) -m32 -Wall -g -c -MMD -MF$@.dep -o $@ $<
+	g++ $(LLVM_CXXFLAGS) -m32 -Wall -c -MMD -MF$@.dep -o $@ $<
 
 OBJS = \
 	src/error.o \
@@ -24,7 +24,7 @@ OBJS = \
 	src/main.o
 
 clay2llvm : $(OBJS)
-	g++ -m32 -g -o clay2llvm $(OBJS) $(LLVM_LDFLAGS)
+	g++ -m32 -o clay2llvm $(OBJS) $(LLVM_LDFLAGS)
 
 .PHONY: clean test
 
