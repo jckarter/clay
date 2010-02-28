@@ -4,14 +4,14 @@ import libc.*;
 insertionSort(a) {
     var i = begin(a) + 1;
     while (i < end(a)) {
-        var x = deref(i);
+        var x = i^;
         var j = i;
-        while (deref(j-1) > x) {
-            deref(j) = deref(j-1);
+        while ((j-1)^ > x) {
+            j^ = (j-1)^;
             j = j - 1;
             if (j == begin(a)) break;
         }
-        deref(j) = x;
+        j^ = x;
         i = i + 1;
     }
 }

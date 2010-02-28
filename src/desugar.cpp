@@ -33,7 +33,7 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
     case DEREFERENCE :
-        callable = primNameRef("pointerDereference");
+        callable = kernelNameRef("dereference");
         break;
     case ADDRESS_OF :
         callable = primNameRef("addressOf");

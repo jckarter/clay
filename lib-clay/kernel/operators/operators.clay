@@ -20,7 +20,7 @@ overloadable remainder;
 overloadable inc;
 overloadable dec;
 
-overloadable deref;
+overloadable dereference;
 
 overloadable hash;
 

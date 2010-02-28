@@ -83,7 +83,7 @@ overload destroy(a:Vector[T]) {
 overload size(a:Vector[T]) = a.size;
 
 [T]
-overload item(a:Vector[T], i) = ref deref(a.data + i);
+overload item(a:Vector[T], i) = ref (a.data + i)^;
 
 
 //
@@ -95,7 +95,7 @@ record VectorCoordinate[T] {
 }
 
 [T]
-overload deref(c:VectorCoordinate[T]) = ref deref(c.ptr);
+overload dereference(c:VectorCoordinate[T]) = ref c.ptr^;
 
 [T]
 overload begin(a:Vector[T]) = VectorCoordinate(a.data);
@@ -212,7 +212,7 @@ setCapacity(a:Vector[T], capacity:Int32) {
     var data = allocateMemory(T, capacity);
     var ptr = data;
     for (x in a) {
-        move(deref(ptr), x);
+        move(ptr^, x);
         inc(ptr);
     }
     freeMemory(a.data);
@@ -232,11 +232,11 @@ insertionPoint(a:Vector[T], pos:I) {
     var i = begin(a) + pos;
     var j = end(a);
     while (i < j) {
-        move(deref(j), deref(j-1));
+        move(j^, (j-1)^);
         dec(j);
     }
     inc(a.size);
-    returnref deref(i);
+    returnref i^;
 }
 
 [T,I|IntegerType?(I)]
@@ -261,10 +261,10 @@ overload insert(a:Vector[T], i:VectorCoordinate[T], x:Movable[T]) {
 
 [T]
 overload remove(a:Vector[T], i:VectorCoordinate[T]) {
-    destroy(deref(i));
+    destroy(i^);
     var j = end(a);
     while (true) {
-        move(deref(i), deref(i+1));
+        move(i^, (i+1)^);
         inc(i);
         if (i == j) break;
     }
