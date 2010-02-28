@@ -6,60 +6,60 @@ import kernel.operators.*;
 // numeric type predicates
 //
 
-overloadable SignedIntegerType?;
+static overloadable SignedIntegerType?;
 
 [T]
-overload SignedIntegerType?(static T) = false;
+static overload SignedIntegerType?(T) = false;
 
-overload SignedIntegerType?(static Int8) = true;
-overload SignedIntegerType?(static Int16) = true;
-overload SignedIntegerType?(static Int32) = true;
-overload SignedIntegerType?(static Int64) = true;
-
-
-overloadable UnsignedIntegerType?;
-
-[T]
-overload UnsignedIntegerType?(static T) = false;
-
-overload UnsignedIntegerType?(static UInt8) = true;
-overload UnsignedIntegerType?(static UInt16) = true;
-overload UnsignedIntegerType?(static UInt32) = true;
-overload UnsignedIntegerType?(static UInt64) = true;
+static overload SignedIntegerType?(Int8) = true;
+static overload SignedIntegerType?(Int16) = true;
+static overload SignedIntegerType?(Int32) = true;
+static overload SignedIntegerType?(Int64) = true;
 
 
-overloadable IntegerType?;
+static overloadable UnsignedIntegerType?;
 
 [T]
-overload IntegerType?(static T) =
+static overload UnsignedIntegerType?(T) = false;
+
+static overload UnsignedIntegerType?(UInt8) = true;
+static overload UnsignedIntegerType?(UInt16) = true;
+static overload UnsignedIntegerType?(UInt32) = true;
+static overload UnsignedIntegerType?(UInt64) = true;
+
+
+static overloadable IntegerType?;
+
+[T]
+static overload IntegerType?(T) =
     SignedIntegerType?(T) or UnsignedIntegerType?(T);
 
-[T1, T2]
-overload IntegerType?(static T1, static T2) =
-    IntegerType?(T1) and IntegerType?(T2);
+[A, B]
+static overload IntegerType?(A, B) =
+    IntegerType?(A) and IntegerType?(B);
 
 
-overloadable FloatType?;
-
-[T]
-overload FloatType?(static T) = false;
-
-overload FloatType?(static Float32) = true;
-overload FloatType?(static Float64) = true;
-
-[T1, T2]
-overload FloatType?(static T1, static T2) =
-    FloatType?(T1) and FloatType?(T2);
-
-
-overloadable NumericType?;
+static overloadable FloatType?;
 
 [T]
-overload NumericType?(static T) = IntegerType?(T) or FloatType?(T);
+static overload FloatType?(T) = false;
 
-[T1, T2]
-overload NumericType?(static T1, static T2) =
-    NumericType?(T1) and NumericType?(T2);
+static overload FloatType?(Float32) = true;
+static overload FloatType?(Float64) = true;
+
+[A, B]
+static overload FloatType?(A, B) =
+    FloatType?(A) and FloatType?(B);
+
+
+static overloadable NumericType?;
+
+[T]
+static overload NumericType?(T) = IntegerType?(T) or FloatType?(T);
+
+[A, B]
+static overload NumericType?(A, B) =
+    NumericType?(A) and NumericType?(B);
 
 
 
@@ -68,28 +68,28 @@ overload NumericType?(static T1, static T2) =
 //
 
 [A,B | IntegerType?(A,B)]
-BiggerIntegerType?(static A, static B) =
+static BiggerIntegerType?(A, B) =
     (TypeSize(A) > TypeSize(B)) or ((TypeSize(A) == TypeSize(B)) and
                                     UnsignedIntegerType?(A) and
                                     SignedIntegerType?(B));
 
 [A,B | FloatType?(A,B)]
-BiggerFloatType?(static A, static B) = TypeSize(A) > TypeSize(B);
+static BiggerFloatType?(A, B) = TypeSize(A) > TypeSize(B);
 
 
-overloadable BiggerNumericType?;
+static overloadable BiggerNumericType?;
 
 [A,B | FloatType?(A) and IntegerType?(B)]
-overload BiggerNumericType?(static A, static B) = true;
+static overload BiggerNumericType?(A, B) = true;
 
 [A,B | IntegerType?(A) and FloatType?(B)]
-overload BiggerNumericType?(static A, static B) = false;
+static overload BiggerNumericType?(A, B) = false;
 
 [A,B | IntegerType?(A,B)]
-overload BiggerNumericType?(static A, static B) = BiggerIntegerType?(A,B);
+static overload BiggerNumericType?(A, B) = BiggerIntegerType?(A,B);
 
 [A,B | FloatType?(A,B)]
-overload BiggerNumericType?(static A, static B) = BiggerFloatType?(A,B);
+static overload BiggerNumericType?(A, B) = BiggerFloatType?(A,B);
 
 
 

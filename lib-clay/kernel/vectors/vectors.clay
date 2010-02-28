@@ -127,6 +127,12 @@ overload dec(c:VectorCoordinate[T]) {
 overload lesser?(a:VectorCoordinate[T], b:VectorCoordinate[T])
     = a.ptr < b.ptr;
 
+[T]
+static overload RandomAccessCoordinate?(VectorCoordinate[T]) = true;
+
+[T]
+static overload CoordinateTarget(VectorCoordinate[T]) = T;
+
 
 //
 // vector iteration

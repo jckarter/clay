@@ -1,5 +1,11 @@
 #include "clay.hpp"
 
+
+
+//
+// analyzeValue
+//
+
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = analyze(expr, env);
@@ -62,6 +68,12 @@ PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env)
         error(expr, "expecting a record value");
     return pv;
 }
+
+
+
+//
+// analyze
+//
 
 ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 {
@@ -130,6 +142,17 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
         switch (y->objKind) {
+        case STATIC_GLOBAL : {
+            StaticGlobal *z = (StaticGlobal *)y.ptr();
+            if (!z->result) {
+                if (z->analyzing)
+                    return false;
+                z->analyzing = true;
+                z->result = evaluateStatic(z->expr, z->env);
+                z->analyzing = false;
+            }
+            return z->result;
+        }
         case VALUE_HOLDER : {
             ValueHolder *z = (ValueHolder *)y.ptr();
             return new PValue(z->type, true);
@@ -260,6 +283,12 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
     }
 }
 
+
+
+//
+// analyzeIndexing
+//
+
 ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 {
     switch (x->objKind) {
@@ -341,6 +370,12 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
     return NULL;
 }
 
+
+
+//
+// analyzeInvoke
+//
+
 ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 {
     switch (x->objKind) {
@@ -354,6 +389,14 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
         return analyzeInvokeOverloadable((Overloadable *)x.ptr(), args, env);
     case EXTERNAL_PROCEDURE :
         return analyzeInvokeExternal((ExternalProcedure *)x.ptr(), args, env);
+    case STATIC_PROCEDURE : {
+        StaticProcedurePtr y = (StaticProcedure *)x.ptr();
+        return analyzeInvokeStaticProcedure(y, args, env);
+    }
+    case STATIC_OVERLOADABLE : {
+        StaticOverloadablePtr y = (StaticOverloadable *)x.ptr();
+        return analyzeInvokeStaticOverloadable(y, args, env);
+    }
     case PVALUE :
         return analyzeInvokeValue((PValue *)x.ptr(), args, env);
     case PRIM_OP :
@@ -362,6 +405,12 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
     error("invalid call operation");
     return NULL;
 }
+
+
+
+//
+// analyzeInvokeType
+//
 
 ObjectPtr analyzeInvokeType(TypePtr x, const vector<ExprPtr> &args, EnvPtr env)
 {
@@ -419,6 +468,12 @@ InvokeEntryPtr analyzeConstructor(TypePtr x,
     return entry;
 }
 
+
+
+//
+// analyzeInvokeRecord
+//
+
 ObjectPtr analyzeInvokeRecord(RecordPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env)
@@ -472,6 +527,12 @@ analyzeRecordConstructor(RecordPtr x,
     entry->analyzing = false;
     return entry;
 }
+
+
+
+//
+// analyzeInvokeProcedure, analyzeInvokeOverloadable
+//
 
 ObjectPtr analyzeInvokeProcedure(ProcedurePtr x,
                                  const vector<ExprPtr> &args,
@@ -606,6 +667,12 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
         assert(result->objKind == VOID_VALUE);
     }
 }
+
+
+
+//
+// analyzeStatement
+//
 
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
 {
@@ -746,6 +813,12 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
     }
 }
 
+
+
+//
+// analyzeInvokeExternal
+//
+
 ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env)
@@ -761,6 +834,75 @@ ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
     if (!x->returnType2)
         return voidValue.ptr();
     return new PValue(x->returnType2, true);
+}
+
+
+
+//
+// analyzeInvokeStaticProcedure, analyzeInvokeStaticOverloadable
+//
+
+ObjectPtr analyzeInvokeStaticProcedure(StaticProcedurePtr x,
+                                       const vector<ExprPtr> &argExprs,
+                                       EnvPtr env)
+{
+    vector<ObjectPtr> args;
+    vector<LocationPtr> argLocations;
+    for (unsigned i = 0; i < argExprs.size(); ++i) {
+        args.push_back(evaluateStatic(argExprs[i], env));
+        argLocations.push_back(argExprs[i]->location);
+    }
+
+    StaticInvokeEntryPtr entry = lookupStaticInvoke(x.ptr(), args);
+    if (!entry->result) {
+        if (entry->analyzing)
+            return NULL;
+        entry->analyzing = true;
+
+        MatchResultPtr result = matchStaticInvoke(x->code, x->env, args);
+        if (result->matchCode != MATCH_SUCCESS)
+            signalMatchError(result, argLocations);
+        MatchSuccess *y = (MatchSuccess *)result.ptr();
+        entry->result = evaluateStatic(x->code->body, y->env);
+
+        entry->analyzing = false;
+    }
+    return entry->result;
+}
+
+ObjectPtr analyzeInvokeStaticOverloadable(StaticOverloadablePtr x,
+                                          const vector<ExprPtr> &argExprs,
+                                          EnvPtr env)
+{
+    vector<ObjectPtr> args;
+    vector<LocationPtr> argLocations;
+    for (unsigned i = 0; i < argExprs.size(); ++i) {
+        args.push_back(evaluateStatic(argExprs[i], env));
+        argLocations.push_back(argExprs[i]->location);
+    }
+
+    StaticInvokeEntryPtr entry = lookupStaticInvoke(x.ptr(), args);
+    if (!entry->result) {
+        if (entry->analyzing)
+            return NULL;
+        entry->analyzing = true;
+
+        unsigned i = 0;
+        for (; i < x->overloads.size(); ++i) {
+            StaticOverloadPtr y = x->overloads[i];
+            MatchResultPtr result = matchStaticInvoke(y->code, y->env, args);
+            if (result->matchCode == MATCH_SUCCESS) {
+                MatchSuccess *z = (MatchSuccess *)result.ptr();
+                entry->result = evaluateStatic(y->code->body, z->env);
+                break;
+            }
+        }
+        if (i == x->overloads.size())
+            error("no matching static overload");
+
+        entry->analyzing = false;
+    }
+    return entry->result;
 }
 
 ObjectPtr analyzeInvokeValue(PValuePtr x, 

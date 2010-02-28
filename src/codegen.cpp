@@ -758,6 +758,14 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
         switch (y->objKind) {
+        case STATIC_GLOBAL : {
+            y = evaluateStatic(x, env);
+            if (y->objKind != VALUE_HOLDER)
+                error("invalid expression");
+            ValueHolder *z = (ValueHolder *)y.ptr();
+            codegenValueHolder(z, out);
+            return out;
+        }
         case VALUE_HOLDER : {
             ValueHolder *z = (ValueHolder *)y.ptr();
             codegenValueHolder(z, out);
@@ -1239,6 +1247,17 @@ CValuePtr codegenInvoke(ObjectPtr x,
     case EXTERNAL_PROCEDURE :
         return codegenInvokeExternal((ExternalProcedure *)x.ptr(),
                                      args, env, out);
+
+    case STATIC_PROCEDURE :
+    case STATIC_OVERLOADABLE : {
+        ObjectPtr y = analyzeInvoke(x, args, env);
+        if (y->objKind != VALUE_HOLDER)
+            error("invalid expression");
+        ValueHolder *z = (ValueHolder *)y.ptr();
+        codegenValueHolder(z, out);
+        return out;
+    }
+
     case PRIM_OP :
         return codegenInvokePrimOp((PrimOp *)x.ptr(), args, env, out);
     default :

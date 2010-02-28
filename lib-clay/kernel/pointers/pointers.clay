@@ -71,8 +71,9 @@ null(static T) = Pointer[T](0);
 [T]
 overload deref(p:Pointer[T]) = ref pointerDereference(p);
 
-[T]
-overload RandomAccessCoordinate?(static Pointer[T]) = true;
 
 [T]
-overload CoordinateTarget(static Pointer[T]) = T;
+static overload RandomAccessCoordinate?(Pointer[T]) = true;
+
+[T]
+static overload CoordinateTarget(Pointer[T]) = T;

@@ -169,6 +169,12 @@ enum ObjectKind {
     EXTERNAL_PROCEDURE,
     EXTERNAL_ARG,
 
+    STATIC_GLOBAL,
+    STATIC_CODE,
+    STATIC_PROCEDURE,
+    STATIC_OVERLOADABLE,
+    STATIC_OVERLOAD,
+
     IMPORT,
     MODULE_HOLDER,
     MODULE,
@@ -255,6 +261,12 @@ struct Overload;
 struct Overloadable;
 struct ExternalProcedure;
 struct ExternalArg;
+
+struct StaticGlobal;
+struct StaticCode;
+struct StaticProcedure;
+struct StaticOverloadable;
+struct StaticOverload;
 
 struct Import;
 struct ImportModule;
@@ -359,6 +371,12 @@ typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Overloadable> OverloadablePtr;
 typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
+
+typedef Pointer<StaticGlobal> StaticGlobalPtr;
+typedef Pointer<StaticCode> StaticCodePtr;
+typedef Pointer<StaticProcedure> StaticProcedurePtr;
+typedef Pointer<StaticOverloadable> StaticOverloadablePtr;
+typedef Pointer<StaticOverload> StaticOverloadPtr;
 
 typedef Pointer<Import> ImportPtr;
 typedef Pointer<ImportModule> ImportModulePtr;
@@ -977,6 +995,64 @@ struct ExternalArg : public ANode {
     TypePtr type2;
     ExternalArg(IdentifierPtr name, ExprPtr type)
         : ANode(EXTERNAL_ARG), name(name), type(type) {}
+};
+
+
+
+//
+// StaticGlobal, StaticCode, StaticProcedure,
+// StaticOverloadable, StaticOverload
+//
+
+struct StaticGlobal : public TopLevelItem {
+    IdentifierPtr name;
+    ExprPtr expr;
+
+    bool analyzing;
+    ObjectPtr result;
+
+    StaticGlobal(IdentifierPtr name, ExprPtr expr)
+        : TopLevelItem(STATIC_GLOBAL), name(name), expr(expr),
+          analyzing(false) {}
+};
+
+struct StaticCode : public ANode {
+    vector<IdentifierPtr> patternVars;
+    ExprPtr predicate;
+    vector<ExprPtr> args;
+    ExprPtr body;
+
+    StaticCode() :
+        ANode(STATIC_CODE) {}
+    StaticCode(const vector<IdentifierPtr> &patternVars,
+               ExprPtr predicate,
+               const vector<ExprPtr> &args,
+               ExprPtr body)
+        : ANode(STATIC_CODE), patternVars(patternVars),
+          predicate(predicate), args(args), body(body) {}
+};
+
+struct StaticProcedure : public TopLevelItem {
+    IdentifierPtr name;
+    StaticCodePtr code;
+
+    StaticProcedure(IdentifierPtr name, StaticCodePtr code)
+        : TopLevelItem(STATIC_PROCEDURE), name(name), code(code) {}
+};
+
+struct StaticOverloadable : public TopLevelItem {
+    IdentifierPtr name;
+    vector<StaticOverloadPtr> overloads;
+    StaticOverloadable(IdentifierPtr name)
+        : TopLevelItem(STATIC_OVERLOADABLE), name(name) {}
+};
+
+struct StaticOverload : public TopLevelItem {
+    ExprPtr target;
+    StaticCodePtr code;
+
+    StaticOverload(ExprPtr target, StaticCodePtr code)
+        : TopLevelItem(STATIC_OVERLOAD), target(target), code(code) {}
 };
 
 
@@ -1608,6 +1684,25 @@ InvokeEntryPtr lookupInvoke(ObjectPtr callable,
                             const vector<ObjectPtr> &argsKey);
 
 
+struct StaticInvokeEntry : public Object {
+    ObjectPtr callable;
+    vector<ObjectPtr> args;
+
+    bool analyzing;
+    ObjectPtr result;
+
+    StaticInvokeEntry(ObjectPtr callable,
+                      const vector<ObjectPtr> &args)
+        : Object(DONT_CARE), callable(callable), args(args),
+          analyzing(false) {}
+};
+
+typedef Pointer<StaticInvokeEntry> StaticInvokeEntryPtr;
+
+StaticInvokeEntryPtr lookupStaticInvoke(ObjectPtr callable,
+                                        const vector<ObjectPtr> &args);
+
+
 
 //
 // match invoke
@@ -1662,6 +1757,9 @@ struct MatchPredicateError : public MatchResult {
 MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
                            const vector<ObjectPtr> &argsKey,
                            ExprPtr callableExpr, ObjectPtr callable);
+
+MatchResultPtr matchStaticInvoke(StaticCodePtr code, EnvPtr codeEnv,
+                                 const vector<ObjectPtr> &args);
 
 void signalMatchError(MatchResultPtr result,
                       const vector<LocationPtr> &argLocations);
@@ -1759,6 +1857,12 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env);
+ObjectPtr analyzeInvokeStaticProcedure(StaticProcedurePtr x,
+                                       const vector<ExprPtr> &argExprs,
+                                       EnvPtr env);
+ObjectPtr analyzeInvokeStaticOverloadable(StaticOverloadablePtr x,
+                                          const vector<ExprPtr> &argExprs,
+                                          EnvPtr env);
 ObjectPtr analyzeInvokeValue(PValuePtr x,
                              const vector<ExprPtr> &args,
                              EnvPtr env);
