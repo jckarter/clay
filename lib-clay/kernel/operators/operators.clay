@@ -11,11 +11,18 @@ overloadable greaterEquals?;
 
 overloadable plus;
 overloadable minus;
+
 overloadable add;
 overloadable subtract;
 overloadable multiply;
 overloadable divide;
 overloadable remainder;
+
+overloadable addAssign;
+overloadable subtractAssign;
+overloadable multiplyAssign;
+overloadable divideAssign;
+overloadable remainderAssign;
 
 overloadable inc;
 overloadable dec;
@@ -63,6 +70,12 @@ overload greater?(a:T, b:T) = not lesserEquals?(a, b);
 
 [T]
 overload greaterEquals?(a:T, b:T) = not lesser?(a, b);
+
+overload addAssign(a, b)       { a = a + b; }
+overload subtractAssign(a, b)  { a = a - b; }
+overload multiplyAssign(a, b)  { a = a * b; }
+overload divideAssign(a, b)    { a = a / b; }
+overload remainderAssign(a, b) { a = a % b; }
 
 
 //

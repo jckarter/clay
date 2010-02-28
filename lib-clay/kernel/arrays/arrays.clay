@@ -115,6 +115,6 @@ overload equals?(a:Array[T,n], b:Array[T,n]) {
 overload hash(a:Array[T,n]) {
     var h = 0;
     for (x in a)
-        h = h + hash(x);
+        h += hash(x);
     return h;
 }

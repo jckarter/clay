@@ -12,8 +12,8 @@ factorial2(n) {
     again :
     if (n == 0)
         return p;
-    p = p * n;
-    n = n - 1;
+    p *= n;
+    n -= 1;
     goto again;
 }
 
@@ -21,8 +21,8 @@ factorial3(n) {
     var p = 1;
     while (true) {
         if (n == 0) break;
-        p = p * n;
-        n = n - 1;
+        p *= n;
+        n -= 1;
     }
     return p;
 }
@@ -30,13 +30,13 @@ factorial3(n) {
 factorial4(n) {
     var p = 1;
     for (i in range(n))
-        p = p * (i+1);
+        p *= i+1;
     return p;
 }
 
 main() {
     var n = 7;
-    n = n - 1;
+    n -= 1;
     var f = factorial4(n);
     printf(cstring("factorial(%d) = %d\n"), n, f);
     return 0;

@@ -335,6 +335,17 @@ static void print(const Object *x, ostream &out) {
         out << "Assignment(" << y->left << ", " << y->right << ")";
         break;
     }
+    case INIT_ASSIGNMENT : {
+        InitAssignment *y = (InitAssignment *)x;
+        out << "InitAssignment(" << y->left << ", " << y->right << ")";
+        break;
+    }
+    case UPDATE_ASSIGNMENT : {
+        UpdateAssignment *y = (UpdateAssignment *)x;
+        out << "UpdateAssignment(" << y->op << ", " << y->left;
+        out << ", " << y->right << ")";
+        break;
+    }
     case GOTO : {
         Goto *y = (Goto *)x;
         out << "Goto(" << y->labelName << ")";

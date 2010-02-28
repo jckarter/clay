@@ -5,12 +5,12 @@ test() {
     for (i in range(100000)) {
         result = 0.0;
         for (j in range(10000))
-            result = result + j;
+            result += j;
     }
-    result = result / 10000;
+    result /= 10000;
     return result;
 }
 
 main() {
-    return to(Int32, test());
+    return Int32(test());
 }

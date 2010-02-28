@@ -15,7 +15,7 @@ main() {
     var x = size(a);
     for (e in a) {
         e = 2*x;
-        x = x - 1;
+        x -= 1;
     }
 
     printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
