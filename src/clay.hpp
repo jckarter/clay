@@ -1229,6 +1229,8 @@ ExprPtr primNameRef(const string &name);
 //
 
 enum PrimOpCode {
+    PRIM_TypeOf,
+
     PRIM_TypeP,
     PRIM_TypeSize,
 
@@ -1812,6 +1814,7 @@ struct PValue : public Object {
 };
 
 ObjectPtr analyze(ExprPtr expr, EnvPtr env);
+ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env);

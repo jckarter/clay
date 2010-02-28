@@ -6,6 +6,31 @@
 // analyzeValue
 //
 
+ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
+{
+    ObjectPtr v = analyze(expr, env);
+    if (!v)
+        return NULL;
+
+    switch (v->objKind) {
+
+    case VALUE_HOLDER : {
+        ValueHolder *x = (ValueHolder *)v.ptr();
+        return new PValue(x->type, true);
+    }
+
+    case PVALUE :
+        return (PValue *)v.ptr();
+
+    case VOID_VALUE :
+        return voidValue.ptr();
+
+    default :
+        error(expr, "expecting a value or void");
+        return NULL;
+    }
+}
+
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = analyze(expr, env);
@@ -24,7 +49,6 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
 
     default :
         error(expr, "expecting a value");
-        assert(false);
         return NULL;
     }
 }
@@ -936,6 +960,24 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                               EnvPtr env)
 {
     switch (x->primOpCode) {
+
+    case PRIM_TypeOf : {
+        ensureArity(args, 1);
+        ObjectPtr y = analyzeMaybeVoidValue(args[0], env);
+        if (!y)
+            return NULL;
+        switch (y->objKind) {
+        case PVALUE : {
+            PValue *z = (PValue *)y.ptr();
+            return z->type.ptr();
+        }
+        case VOID_VALUE :
+            return voidType.ptr();
+        default :
+            assert(false);
+        }
+        return NULL;
+    }
 
     case PRIM_TypeP : {
         ensureArity(args, 1);
