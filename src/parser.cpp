@@ -795,6 +795,35 @@ static bool initAssignment(StatementPtr &x) {
     return true;
 }
 
+static bool updateOp(int &op) {
+    int p = save();
+    const char *s[] = {"+=", "-=", "*=", "/=", "%=", NULL};
+    const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
+                       UPDATE_DIVIDE, UPDATE_REMAINDER};
+    for (const char **a = s; *a; ++a) {
+        restore(p);
+        if (symbol(*a)) {
+            int i = a - s;
+            op = ops[i];
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool updateAssignment(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr y, z;
+    if (!expression(y)) return false;
+    int op;
+    if (!updateOp(op)) return false;
+    if (!expression(z)) return false;
+    if (!symbol(";")) return false;
+    x = new UpdateAssignment(op, y, z);
+    x->location = location;
+    return true;
+}
+
 static bool gotoStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
     IdentifierPtr y;
@@ -909,6 +938,7 @@ static bool statement(StatementPtr &x) {
     if (block(x)) return true;
     if (restore(p), assignment(x)) return true;
     if (restore(p), initAssignment(x)) return true;
+    if (restore(p), updateAssignment(x)) return true;
     if (restore(p), ifStatement(x)) return true;
     if (restore(p), gotoStatement(x)) return true;
     if (restore(p), returnStatement(x)) return true;

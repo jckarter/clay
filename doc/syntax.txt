@@ -69,6 +69,7 @@ Statement -> Block
            | StaticBinding
            | Assignment
            | InitAssignment
+           | UpdateAssignment
            | IfStatement
            | GotoStatement
            | ReturnStatement
@@ -87,6 +88,9 @@ StaticBinding -> "static" Identifier "=" Expression ";"
 Assignment -> Expression "=" Expression ";"
 
 InitAssignment -> Expression "<==" Expression ";"
+
+UpdateAssignment -> Expression UpdateOp Expression ";"
+UpdateOp -> "+=" | "-=" | "*=" | "/=" | "%="
 
 IfStatement -> "if" "(" Expression ")" Statement
                ("else" Statement)?

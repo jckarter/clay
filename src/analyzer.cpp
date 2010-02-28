@@ -737,6 +737,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
     case BINDING :
     case ASSIGNMENT :
     case INIT_ASSIGNMENT :
+    case UPDATE_ASSIGNMENT :
     case GOTO :
         return true;
 

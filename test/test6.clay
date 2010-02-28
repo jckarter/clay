@@ -4,7 +4,7 @@ import libc.*;
 main() {
     var sum = 0;
     for (c in "Hello World!")
-        sum = sum + Int32(c);
+        sum += Int32(c);
     printf(cstring("sum = %d\n"), sum);
     return 0;
 }

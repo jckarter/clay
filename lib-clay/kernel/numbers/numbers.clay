@@ -194,12 +194,12 @@ overload minus(a:A) = numericNegate(a);
 
 [A | NumericType?(A)]
 overload inc(a:A) {
-    a = a + A(1);
+    a += A(1);
 }
 
 [A | NumericType?(A)]
 overload dec(a:A) {
-    a = a - A(1);
+    a -= A(1);
 }
 
 

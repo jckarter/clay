@@ -57,12 +57,12 @@ overload subtract(a:Pointer[T], b:Pointer[T]) {
 
 [T]
 overload inc(a:Pointer[T]) {
-    a = a + 1;
+    a += 1;
 }
 
 [T]
 overload dec(a:Pointer[T]) {
-    a = a - 1;
+    a -= 1;
 }
 
 [T]

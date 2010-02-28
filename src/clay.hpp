@@ -147,6 +147,7 @@ enum ObjectKind {
     BINDING,
     ASSIGNMENT,
     INIT_ASSIGNMENT,
+    UPDATE_ASSIGNMENT,
     GOTO,
     RETURN,
     RETURN_REF,
@@ -238,6 +239,7 @@ struct Label;
 struct Binding;
 struct Assignment;
 struct InitAssignment;
+struct UpdateAssignment;
 struct Goto;
 struct Return;
 struct ReturnRef;
@@ -348,6 +350,7 @@ typedef Pointer<Label> LabelPtr;
 typedef Pointer<Binding> BindingPtr;
 typedef Pointer<Assignment> AssignmentPtr;
 typedef Pointer<InitAssignment> InitAssignmentPtr;
+typedef Pointer<UpdateAssignment> UpdateAssignmentPtr;
 typedef Pointer<Goto> GotoPtr;
 typedef Pointer<Return> ReturnPtr;
 typedef Pointer<ReturnRef> ReturnRefPtr;
@@ -792,6 +795,22 @@ struct InitAssignment : public Statement {
     ExprPtr left, right;
     InitAssignment(ExprPtr left, ExprPtr right)
         : Statement(INIT_ASSIGNMENT), left(left), right(right) {}
+};
+
+enum UpdateOpKind {
+    UPDATE_ADD,
+    UPDATE_SUBTRACT,
+    UPDATE_MULTIPLY,
+    UPDATE_DIVIDE,
+    UPDATE_REMAINDER,
+};
+
+struct UpdateAssignment : public Statement {
+    int op;
+    ExprPtr left, right;
+    UpdateAssignment(int op, ExprPtr left, ExprPtr right)
+        : Statement(UPDATE_ASSIGNMENT), op(op), left(left),
+          right(right) {}
 };
 
 struct Goto : public Statement {

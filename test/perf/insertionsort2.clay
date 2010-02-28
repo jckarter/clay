@@ -8,11 +8,11 @@ insertionSort(a) {
         var j = i;
         while ((j-1)^ > x) {
             j^ = (j-1)^;
-            j = j - 1;
+            j -= 1;
             if (j == begin(a)) break;
         }
         j^ = x;
-        i = i + 1;
+        i += 1;
     }
 }
 

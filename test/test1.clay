@@ -32,7 +32,7 @@ record NodeB[T] {
 
 main() {
     var n = 7;
-    n = n - 1;
+    n -= 1;
     var f = factorial(n);
     var p = NodeA[Tuple[Int32,Bool]]();
     return (foo(), isEven(n), f, p, 'a');

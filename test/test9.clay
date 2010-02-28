@@ -5,7 +5,7 @@ main() {
     var v = Vector([1, 2, 3, 4, 5]);
     var sum = 0;
     for (x in v)
-        sum = sum + x;
+        sum += x;
     printf(cstring("%d\n"), sum);
     return 0;
 }

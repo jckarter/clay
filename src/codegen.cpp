@@ -225,6 +225,25 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
 
 
 //
+// _getUpdateOperator
+//
+
+static const char *_getUpdateOperator(int op) {
+    switch (op) {
+    case UPDATE_ADD : return "addAssign";
+    case UPDATE_SUBTRACT : return "subtractAssign";
+    case UPDATE_MULTIPLY : return "multiplyAssign";
+    case UPDATE_DIVIDE : return "divideAssign";
+    case UPDATE_REMAINDER : return "remainderAssign";
+    default :
+        assert(false);
+        return NULL;
+    }
+}
+
+
+
+//
 // codegenStatement
 //
 
@@ -297,6 +316,30 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         int marker = cgMarkStack();
         CValuePtr cvLeft = codegenValue(x->left, env, NULL);
         codegenIntoValue(x->right, env, pvRight, cvLeft);
+        cgDestroyAndPopStack(marker);
+        return false;
+    }
+
+    case UPDATE_ASSIGNMENT : {
+        UpdateAssignment *x = (UpdateAssignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeValue(x->left, env);
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        CallPtr call = new Call(kernelNameRef(_getUpdateOperator(x->op)));
+        call->args.push_back(x->left);
+        call->args.push_back(x->right);
+        int marker = cgMarkStack();
+        ObjectPtr obj = analyzeMaybeVoidValue(call.ptr(), env);
+        switch (obj->objKind) {
+        case VOID_VALUE :
+            codegenMaybeVoid(call.ptr(), env, NULL);
+            break;
+        case PVALUE :
+            codegenAsRef(call.ptr(), env, (PValue *)obj.ptr());
+            break;
+        default :
+            assert(false);
+        }
         cgDestroyAndPopStack(marker);
         return false;
     }

@@ -163,7 +163,7 @@ overload equals?(a:Vector[T], b:Vector[T]) {
 overload hash(a:Vector[T]) {
     var h = 0;
     for (x in a)
-        h = h + hash(x);
+        h += hash(x);
     return h;
 }
 
