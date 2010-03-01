@@ -77,7 +77,7 @@ overload iterator(a:Array[T,n]) = CoordinateRange(begin(a), end(a));
 
 
 //
-// init, copy, destroy, equals, hash
+// constructors, destroy, equals, hash
 //
 
 [T,n]
