@@ -1257,9 +1257,13 @@ CValuePtr codegenInvokeValue(CValuePtr x,
         assert(false);
     }
 
-    default :
-        error("invalid call operation");
-        return NULL;
+    default : {
+        vector<ExprPtr> args2;
+        args2.push_back(new CValueExpr(x));
+        args2.insert(args2.end(), args.begin(), args.end());
+        return codegenInvoke(kernelName("call"), args2, env, out);
+    }
+
     }
 }
 

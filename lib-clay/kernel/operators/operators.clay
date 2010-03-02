@@ -35,6 +35,8 @@ overloadable iterator;
 overloadable hasNext?;
 overloadable next;
 
+overloadable call;
+
 
 //
 // defaults

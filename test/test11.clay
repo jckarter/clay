@@ -1,0 +1,25 @@
+import kernel.*;
+import libc.*;
+
+record Multiplier[N] {
+    factor:N;
+}
+
+[N]
+overload call(x:Multiplier[N], y) = x.factor * y;
+
+[F,T]
+map(f:F, a:Vector[T]) {
+    static ResultElement = TypeOf(f(a[0]));
+    var b = Vector[ResultElement]();
+    for (x in a)
+        push(b, f(x));
+    return b;
+}
+
+main() {
+    var a = Vector([1, 2, 3]);
+    var b = map(Multiplier(10), a);
+    for (x in b)
+        printf(cstring("%d\n"), x);
+}
