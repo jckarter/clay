@@ -963,9 +963,13 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
         return new PValue(y->returnType, true);
     }
 
-    default :
-        error("invalid call operation");
-        return NULL;
+    default : {
+        vector<ExprPtr> args2;
+        args2.push_back(new ObjectExpr(x.ptr()));
+        args2.insert(args2.end(), args.begin(), args.end());
+        return analyzeInvoke(kernelName("call"), args2, env);
+    }
+
     }
 }
 
