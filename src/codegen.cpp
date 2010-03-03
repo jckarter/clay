@@ -750,6 +750,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         }
         else {
             error("invalid literal suffix: " + x->suffix);
+            llv = NULL;
         }
         llvmBuilder->CreateStore(llv, out->llValue);
         return out;
@@ -778,6 +779,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         }
         else {
             error("invalid float literal suffix: " + x->suffix);
+            llv = NULL;
         }
         llvmBuilder->CreateStore(llv, out->llValue);
         return out;
@@ -2029,6 +2031,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             }
             else {
                 error(args[1], "expecting numeric type");
+                result = NULL;
             }
             break;
         }
@@ -2050,6 +2053,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             }
             else {
                 error(args[1], "expecting numeric type");
+                result = NULL;
             }
             break;
         }
