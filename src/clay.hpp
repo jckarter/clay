@@ -138,6 +138,8 @@ enum ObjectKind {
     AND,
     OR,
 
+    LAMBDA,
+
     SC_EXPR,
     OBJECT_EXPR,
     CVALUE_EXPR,
@@ -229,6 +231,7 @@ struct UnaryOp;
 struct BinaryOp;
 struct And;
 struct Or;
+struct Lambda;
 struct SCExpr;
 struct ObjectExpr;
 struct CValueExpr;
@@ -340,6 +343,7 @@ typedef Pointer<UnaryOp> UnaryOpPtr;
 typedef Pointer<BinaryOp> BinaryOpPtr;
 typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
+typedef Pointer<Lambda> LambdaPtr;
 typedef Pointer<SCExpr> SCExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
 typedef Pointer<CValueExpr> CValueExprPtr;
@@ -724,6 +728,17 @@ struct Or : public Expr {
     ExprPtr expr1, expr2;
     Or(ExprPtr expr1, ExprPtr expr2)
         : Expr(OR), expr1(expr1), expr2(expr2) {}
+};
+
+struct Lambda : public Expr {
+    vector<IdentifierPtr> formalArgs;
+    StatementPtr body;
+
+    Lambda() :
+        Expr(LAMBDA) {}
+    Lambda(const vector<IdentifierPtr> &formalArgs,
+           StatementPtr body)
+        : Expr(LAMBDA), formalArgs(formalArgs), body(body) {}
 };
 
 struct SCExpr : public Expr {
