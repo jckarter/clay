@@ -54,7 +54,7 @@ static bool keyword(const char *s) {
 
 
 //
-// identifier, dottedName
+// identifier, identifierList, optIdentifierList, dottedName
 //
 
 static bool identifier(IdentifierPtr &x) {
@@ -64,6 +64,31 @@ static bool identifier(IdentifierPtr &x) {
         return false;
     x = new Identifier(t->str);
     x->location = location;
+    return true;
+}
+
+static bool identifierList(vector<IdentifierPtr> &x) {
+    IdentifierPtr y;
+    if (!identifier(y)) return false;
+    x.clear();
+    x.push_back(y);
+    while (true) {
+        int p = save();
+        if (!symbol(",") || !identifier(y)) {
+            restore(p);
+            break;
+        }
+        x.push_back(y);
+    }
+    return true;
+}
+
+static bool optIdentifierList(vector<IdentifierPtr> &x) {
+    int p = save();
+    if (!identifierList(x)) {
+        restore(p);
+        x.clear();
+    }
     return true;
 }
 
@@ -636,11 +661,35 @@ static bool orExpr(ExprPtr &x) {
 
 
 //
+// lambda
+//
+
+static bool block(StatementPtr &x);
+
+static bool lambda(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("lambda")) return false;
+    if (!symbol("(")) return false;
+    LambdaPtr y = new Lambda();
+    if (!optIdentifierList(y->formalArgs)) return false;
+    if (!symbol(")")) return false;
+    if (!block(y->body)) return false;
+    x = y.ptr();
+    x->location = location;
+    return true;
+}
+
+
+
+//
 // expression
 //
 
 static bool expression(ExprPtr &x) {
-    return orExpr(x);
+    int p = save();
+    if (orExpr(x)) return true;
+    if (restore(p), lambda(x)) return true;
+    return false;
 }
 
 
@@ -954,24 +1003,8 @@ static bool statement(StatementPtr &x) {
 
 
 //
-// identifierList, patternVars, typeSpec, optTypeSpec
+// patternVars, typeSpec, optTypeSpec
 //
-
-static bool identifierList(vector<IdentifierPtr> &x) {
-    IdentifierPtr y;
-    if (!identifier(y)) return false;
-    x.clear();
-    x.push_back(y);
-    while (true) {
-        int p = save();
-        if (!symbol(",") || !identifier(y)) {
-            restore(p);
-            break;
-        }
-        x.push_back(y);
-    }
-    return true;
-}
 
 static bool patternVars(vector<IdentifierPtr> &x) {
     if (!symbol("[")) return false;
