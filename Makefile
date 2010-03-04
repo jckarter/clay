@@ -16,6 +16,7 @@ OBJS = \
 	src/types.o \
 	src/desugar.o \
 	src/patterns.o \
+	src/lambdas.o \
 	src/invoketables.o \
 	src/matchinvoke.o \
 	src/constructors.o \

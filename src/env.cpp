@@ -146,3 +146,50 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
         return NULL;
     }
 }
+
+
+
+//
+// lookupEnvEx
+//
+
+ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
+                      EnvPtr nonLocalEnv, bool &isNonLocal,
+                      bool &isGlobal)
+{
+    if (nonLocalEnv == env)
+        nonLocalEnv = NULL;
+
+    MapIter i = env->entries.find(name->str);
+    if (i != env->entries.end()) {
+        if (!nonLocalEnv)
+            isNonLocal = true;
+        else
+            isNonLocal = false;
+        isGlobal = false;
+        return i->second;
+    }
+
+    if (!env->parent) {
+        error(name, "undefined name: " + name->str);
+    }
+
+    switch (env->parent->objKind) {
+    case ENV : {
+        Env *y = (Env *)env->parent.ptr();
+        return lookupEnvEx(y, name, nonLocalEnv, isNonLocal, isGlobal);
+    }
+    case MODULE : {
+        Module *y = (Module *)env->parent.ptr();
+        ObjectPtr z = lookupGlobal(y, name);
+        if (!z)
+            error(name, "undefined name: " + name->str);
+        isNonLocal = true;
+        isGlobal = true;
+        return z;
+    }
+    default :
+        assert(false);
+        return NULL;
+    }
+}

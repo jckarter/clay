@@ -1042,7 +1042,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         Lambda *x = (Lambda *)expr.ptr();
         if (!x->initialized)
             initializeLambda(x, env);
-        return codegenInvokeType(x->lambdaType, vector<ExprPtr>(), env, out);
+        return codegenExpr(x->converted, env, out);
     }
 
     case SC_EXPR : {
