@@ -289,7 +289,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         Lambda *x = (Lambda *)expr.ptr();
         if (!x->initialized)
             initializeLambda(x, env);
-        return analyzeInvokeType(x->lambdaType, vector<ExprPtr>(), env);
+        return analyze(x->converted, env);
     }
 
     case SC_EXPR : {
@@ -1398,46 +1398,4 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         assert(false);
         return NULL;
     }
-}
-
-
-
-//
-// initializeLambda
-//
-
-void initializeLambda(LambdaPtr x, EnvPtr env)
-{
-    assert(!x->initialized);
-    x->initialized = true;
-    RecordPtr r = new Record();
-    r->location = x->location;
-    r->name = new Identifier("LambdaFreeVars");
-    x->lambdaRecord = r;
-    TypePtr t = recordType(r, vector<ObjectPtr>());
-    x->lambdaType = t;
-    ExprPtr typeExpr = new ObjectExpr(t.ptr());
-    CodePtr code = new Code();
-    code->location = x->location;
-    IdentifierPtr freeVarsName = new Identifier("%freeVars");
-    ValueArgPtr freeVarsArg = new ValueArg(freeVarsName, typeExpr);
-    code->formalArgs.push_back(freeVarsArg.ptr());
-    for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
-        ValueArgPtr y = new ValueArg(x->formalArgs[i], NULL);
-        y->location = x->formalArgs[i]->location;
-        code->formalArgs.push_back(y.ptr());
-    }
-    code->body = x->body;
-    OverloadPtr overload = new Overload(kernelNameRef("call"), code);
-    overload->env = env;
-    overload->location = x->location;
-    ObjectPtr obj = kernelName("call");
-    if (obj->objKind != OVERLOADABLE)
-        error("'call' operator not found!");
-    Overloadable *callObj = (Overloadable *)obj.ptr();
-    callObj->overloads.insert(callObj->overloads.begin(), overload);
-    if (!callObj->staticFlagsInitialized)
-        initIsStaticFlags(callObj);
-    else
-        updateIsStaticFlags(obj, overload);
 }

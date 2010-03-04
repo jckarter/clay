@@ -734,6 +734,8 @@ struct Lambda : public Expr {
     vector<IdentifierPtr> formalArgs;
     StatementPtr body;
 
+    ExprPtr converted;
+
     bool initialized;
     RecordPtr lambdaRecord;
     TypePtr lambdaType;
@@ -1261,6 +1263,10 @@ ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
 void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);
 ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
 
+ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
+                      EnvPtr nonLocalEnv, bool &isNonLocal,
+                      bool &isGlobal);
+
 
 
 //
@@ -1674,6 +1680,14 @@ void patternPrint(PatternPtr x, ostream &out);
 
 
 //
+// lambdas
+//
+
+void initializeLambda(LambdaPtr x, EnvPtr env);
+
+
+
+//
 // invoke tables
 //
 
@@ -1929,7 +1943,6 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
 ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env);
-void initializeLambda(LambdaPtr x, EnvPtr env);
 
 
 
