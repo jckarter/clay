@@ -11,8 +11,16 @@ map(f:F, a:Vector[T]) {
 }
 
 main() {
-    var a = Vector([1, 2, 3]);
-    var b = map(lambda (x) { return x*10; }, a);
+    var a = Vector([1, 2, 3, 4, 5, 6]);
+
+    var f = lambda (x) { return x*10; };
+    var b = map(f, a);
+
     for (x in b)
+        printf(cstring("%d\n"), x);
+
+    var c = map(lambda (x) { return x*x*x; }, a);
+
+    for (x in c)
         printf(cstring("%d\n"), x);
 }

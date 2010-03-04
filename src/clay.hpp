@@ -734,11 +734,16 @@ struct Lambda : public Expr {
     vector<IdentifierPtr> formalArgs;
     StatementPtr body;
 
+    bool initialized;
+    RecordPtr lambdaRecord;
+    TypePtr lambdaType;
+
     Lambda() :
-        Expr(LAMBDA) {}
+        Expr(LAMBDA), initialized(false) {}
     Lambda(const vector<IdentifierPtr> &formalArgs,
            StatementPtr body)
-        : Expr(LAMBDA), formalArgs(formalArgs), body(body) {}
+        : Expr(LAMBDA), formalArgs(formalArgs), body(body),
+          initialized(false) {}
 };
 
 struct SCExpr : public Expr {
@@ -1683,6 +1688,7 @@ struct FlagsMapEntry {
 
 FlagsMapEntry &lookupFlagsMapEntry(ObjectPtr callable, unsigned nArgs);
 void initIsStaticFlags(ProcedurePtr x);
+void updateIsStaticFlags(ObjectPtr callable, OverloadPtr overload);
 void initIsStaticFlags(ObjectPtr callable,
                        const vector<OverloadPtr> &overloads);
 void initIsStaticFlags(OverloadablePtr x);
@@ -1923,6 +1929,7 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
 ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env);
+void initializeLambda(LambdaPtr x, EnvPtr env);
 
 
 
