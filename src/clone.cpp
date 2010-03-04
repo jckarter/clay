@@ -149,9 +149,11 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
-    case OBJECT_EXPR :
-        assert(false);
+    case OBJECT_EXPR : {
+        ObjectExpr *y = (ObjectExpr *)x.ptr();
+        out = new ObjectExpr(y->obj);
         break;
+    }
 
     case CVALUE_EXPR :
         assert(false);

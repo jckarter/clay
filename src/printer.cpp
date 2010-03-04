@@ -285,6 +285,11 @@ static void print(const Object *x, ostream &out) {
         out << "Or(" << y->expr1 << ", " << y->expr2 << ")";
         break;
     }
+    case LAMBDA : {
+        Lambda *y = (Lambda *)x;
+        out << "Lambda(" << y->formalArgs << ", " << y->body << ")";
+        break;
+    }
     case SC_EXPR : {
         SCExpr *y = (SCExpr *)x;
         out << "SCExpr(" << y->expr << ")";
