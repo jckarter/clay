@@ -480,7 +480,7 @@ InvokeEntryPtr analyzeConstructor(TypePtr x,
         MatchResultPtr result = matchInvoke(y->code, y->env, argsKey,
                                             y->target, x.ptr());
         if (result->matchCode == MATCH_SUCCESS) {
-            entry->code = y->code;
+            entry->code = clone(y->code);
             MatchSuccess *z = (MatchSuccess *)result.ptr();
             entry->staticArgs = z->staticArgs;
             entry->argTypes = z->argTypes;
@@ -545,7 +545,7 @@ analyzeRecordConstructor(RecordPtr x,
         MatchResultPtr result = matchInvoke(y->code, y->env, argsKey,
                                             NULL, NULL);
         if (result->matchCode == MATCH_SUCCESS) {
-            entry->code = y->code;
+            entry->code = clone(y->code);
             MatchSuccess *z = (MatchSuccess *)result.ptr();
             entry->staticArgs = z->staticArgs;
             entry->argTypes = z->argTypes;
@@ -603,7 +603,7 @@ InvokeEntryPtr analyzeProcedure(ProcedurePtr x,
     if (result->matchCode != MATCH_SUCCESS)
         signalMatchError(result, argLocations);
 
-    entry->code = x->code;
+    entry->code = clone(x->code);
     MatchSuccess *y = (MatchSuccess *)result.ptr();
     entry->staticArgs = y->staticArgs;
     entry->argTypes = y->argTypes;
@@ -649,7 +649,7 @@ InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
         MatchResultPtr result = matchInvoke(y->code, y->env, argsKey,
                                             NULL, NULL);
         if (result->matchCode == MATCH_SUCCESS) {
-            entry->code = y->code;
+            entry->code = clone(y->code);
             MatchSuccess *z = (MatchSuccess *)result.ptr();
             entry->staticArgs = z->staticArgs;
             entry->argTypes = z->argTypes;

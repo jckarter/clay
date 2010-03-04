@@ -1211,6 +1211,23 @@ ostream &operator<<(ostream &out, const vector<T> &v)
 
 
 //
+// clone ast
+//
+
+CodePtr clone(CodePtr x);
+void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out);
+ExprPtr clone(ExprPtr x);
+ExprPtr cloneOpt(ExprPtr x);
+void clone(const vector<ExprPtr> &x, vector<ExprPtr> &out);
+void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out);
+FormalArgPtr clone(FormalArgPtr x);
+StatementPtr clone(StatementPtr x);
+StatementPtr cloneOpt(StatementPtr x);
+void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out);
+
+
+
+//
 // Env
 //
 

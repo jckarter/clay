@@ -9,6 +9,7 @@ OBJS = \
 	src/printer.o \
 	src/lexer.o \
 	src/parser.o \
+	src/clone.o \
 	src/env.o \
 	src/loader.o \
 	src/llvm.o \
