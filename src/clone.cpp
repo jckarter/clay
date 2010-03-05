@@ -136,7 +136,7 @@ ExprPtr clone(ExprPtr x)
 
     case LAMBDA : {
         Lambda *y = (Lambda *)x.ptr();
-        LambdaPtr z = new Lambda();
+        LambdaPtr z = new Lambda(y->isBlockLambda);
         clone(y->formalArgs, z->formalArgs);
         z->body = clone(y->body);
         out = z.ptr();

@@ -1,0 +1,25 @@
+import kernel.*;
+import libc.*;
+
+foreach(f, a) {
+    for (x in a)
+        f(x);
+}
+
+sumWithLambda(a) {
+    var sum = 0;
+    foreach(lambda (x) { sum += x; }, a);
+    printf(cstring("sum with lambda = %d\n"), sum);
+}
+
+sumWithBlock(a) {
+    var sum = 0;
+    foreach(block(x) { sum += x; }, a);
+    printf(cstring("sum with block = %d\n"), sum);
+}
+
+main() {
+    var a = Vector([1, 2, 3, 4, 5, 6]);
+    sumWithLambda(a);
+    sumWithBlock(a);
+}

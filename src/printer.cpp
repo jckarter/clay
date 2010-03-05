@@ -287,7 +287,8 @@ static void print(const Object *x, ostream &out) {
     }
     case LAMBDA : {
         Lambda *y = (Lambda *)x;
-        out << "Lambda(" << y->formalArgs << ", " << y->body << ")";
+        out << "Lambda(" << y->isBlockLambda << ", " << y->formalArgs
+            << ", " << y->body << ")";
         break;
     }
     case SC_EXPR : {
