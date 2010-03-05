@@ -731,6 +731,7 @@ struct Or : public Expr {
 };
 
 struct Lambda : public Expr {
+    bool isBlockLambda;
     vector<IdentifierPtr> formalArgs;
     StatementPtr body;
 
@@ -740,12 +741,13 @@ struct Lambda : public Expr {
     RecordPtr lambdaRecord;
     TypePtr lambdaType;
 
-    Lambda() :
-        Expr(LAMBDA), initialized(false) {}
-    Lambda(const vector<IdentifierPtr> &formalArgs,
+    Lambda(bool isBlockLambda) :
+        Expr(LAMBDA), isBlockLambda(isBlockLambda), initialized(false) {}
+    Lambda(bool isBlockLambda,
+           const vector<IdentifierPtr> &formalArgs,
            StatementPtr body)
-        : Expr(LAMBDA), formalArgs(formalArgs), body(body),
-          initialized(false) {}
+        : Expr(LAMBDA), isBlockLambda(isBlockLambda),
+          formalArgs(formalArgs), body(body), initialized(false) {}
 };
 
 struct SCExpr : public Expr {

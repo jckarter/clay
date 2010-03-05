@@ -664,16 +664,29 @@ static bool orExpr(ExprPtr &x) {
 // lambda
 //
 
-static bool block(StatementPtr &x);
+static bool body(StatementPtr &x);
 
 static bool lambda(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!keyword("lambda")) return false;
     if (!symbol("(")) return false;
-    LambdaPtr y = new Lambda();
+    LambdaPtr y = new Lambda(false);
     if (!optIdentifierList(y->formalArgs)) return false;
     if (!symbol(")")) return false;
-    if (!block(y->body)) return false;
+    if (!body(y->body)) return false;
+    x = y.ptr();
+    x->location = location;
+    return true;
+}
+
+static bool blockLambda(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("block")) return false;
+    if (!symbol("(")) return false;
+    LambdaPtr y = new Lambda(true);
+    if (!optIdentifierList(y->formalArgs)) return false;
+    if (!symbol(")")) return false;
+    if (!body(y->body)) return false;
     x = y.ptr();
     x->location = location;
     return true;
@@ -689,6 +702,7 @@ static bool expression(ExprPtr &x) {
     int p = save();
     if (orExpr(x)) return true;
     if (restore(p), lambda(x)) return true;
+    if (restore(p), blockLambda(x)) return true;
     return false;
 }
 
