@@ -8,10 +8,9 @@ record Multiplier[N] {
 [N]
 overload call(x:Multiplier[N], y) = x.factor * y;
 
-[F,T]
-map(f:F, a:Vector[T]) {
-    static ResultElement = TypeOf(f(a[0]));
-    var b = Vector[ResultElement]();
+map(f, a) {
+    static ResultType = TypeOf(f(a[0]));
+    var b = Vector[ResultType]();
     for (x in a)
         push(b, f(x));
     return b;
