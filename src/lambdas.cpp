@@ -1,17 +1,17 @@
 #include "clay.hpp"
 
 
-void convertClosure(LambdaPtr x, EnvPtr env,
-                    const string &closureDataName,
-                    vector<string> &freeVars);
-
-void convertClosure(StatementPtr x, EnvPtr env, EnvPtr nonLocalEnv,
-                    const string &closureDataName,
-                    vector<string> &freeVars);
-
-void  convertClosure(ExprPtr &x, EnvPtr env, EnvPtr nonLocalEnv,
+void convertFreeVars(LambdaPtr x, EnvPtr env,
                      const string &closureDataName,
                      vector<string> &freeVars);
+
+void convertFreeVars(StatementPtr x, EnvPtr env, EnvPtr nonLocalEnv,
+                     const string &closureDataName,
+                     vector<string> &freeVars);
+
+void  convertFreeVars(ExprPtr &x, EnvPtr env, EnvPtr nonLocalEnv,
+                      const string &closureDataName,
+                      vector<string> &freeVars);
 
 
 
@@ -41,7 +41,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     string closureDataName = ostr.str();
 
     vector<string> freeVars;
-    convertClosure(x, env, closureDataName, freeVars);
+    convertFreeVars(x, env, closureDataName, freeVars);
 
     CallPtr converted = new Call(typeExpr);
     for (unsigned i = 0; i < freeVars.size(); ++i) {
@@ -102,24 +102,24 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
 
 
 //
-// convertClosure
+// convertFreeVars
 //
 
-void convertClosure(LambdaPtr x, EnvPtr env,
-                    const string &closureDataName,
-                    vector<string> &freeVars)
+void convertFreeVars(LambdaPtr x, EnvPtr env,
+                     const string &closureDataName,
+                     vector<string> &freeVars)
 {
     EnvPtr env2 = new Env(env);
     for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
         IdentifierPtr name = x->formalArgs[i];
         addLocal(env2, name, name.ptr());
     }
-    convertClosure(x->body, env2, env, closureDataName, freeVars);
+    convertFreeVars(x->body, env2, env, closureDataName, freeVars);
 }
 
-void convertClosure(StatementPtr x, EnvPtr env, EnvPtr nonLocalEnv,
-                    const string &closureDataName,
-                    vector<string> &freeVars)
+void convertFreeVars(StatementPtr x, EnvPtr env, EnvPtr nonLocalEnv,
+                     const string &closureDataName,
+                     vector<string> &freeVars)
 {
     switch (x->objKind) {
 
@@ -129,15 +129,15 @@ void convertClosure(StatementPtr x, EnvPtr env, EnvPtr nonLocalEnv,
             StatementPtr z = y->statements[i];
             if (z->objKind == BINDING) {
                 Binding *a = (Binding *)z.ptr();
-                convertClosure(a->expr, env, nonLocalEnv,
-                               closureDataName, freeVars);
+                convertFreeVars(a->expr, env, nonLocalEnv,
+                                closureDataName, freeVars);
                 EnvPtr env2 = new Env(env);
                 addLocal(env2, a->name, a->name.ptr());
                 env = env2;
             }
             else {
-                convertClosure(z, env, nonLocalEnv,
-                               closureDataName, freeVars);
+                convertFreeVars(z, env, nonLocalEnv,
+                                closureDataName, freeVars);
             }
         }
         break;
@@ -150,22 +150,28 @@ void convertClosure(StatementPtr x, EnvPtr env, EnvPtr nonLocalEnv,
 
     case ASSIGNMENT : {
         Assignment *y = (Assignment *)x.ptr();
-        convertClosure(y->left, env, nonLocalEnv, closureDataName, freeVars);
-        convertClosure(y->right, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->left, env, nonLocalEnv,
+                        closureDataName, freeVars);
+        convertFreeVars(y->right, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
     case INIT_ASSIGNMENT : {
         InitAssignment *y = (InitAssignment *)x.ptr();
-        convertClosure(y->left, env, nonLocalEnv, closureDataName, freeVars);
-        convertClosure(y->right, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->left, env, nonLocalEnv,
+                        closureDataName, freeVars);
+        convertFreeVars(y->right, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
     case UPDATE_ASSIGNMENT : {
         UpdateAssignment *y = (UpdateAssignment *)x.ptr();
-        convertClosure(y->left, env, nonLocalEnv, closureDataName, freeVars);
-        convertClosure(y->right, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->left, env, nonLocalEnv,
+                        closureDataName, freeVars);
+        convertFreeVars(y->right, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
@@ -176,40 +182,43 @@ void convertClosure(StatementPtr x, EnvPtr env, EnvPtr nonLocalEnv,
     case RETURN : {
         Return *y = (Return *)x.ptr();
         if (y->expr.ptr())
-            convertClosure(y->expr, env, nonLocalEnv,
-                           closureDataName, freeVars);
+            convertFreeVars(y->expr, env, nonLocalEnv,
+                            closureDataName, freeVars);
         break;
     }
 
     case RETURN_REF : {
         ReturnRef *y = (ReturnRef *)x.ptr();
-        convertClosure(y->expr, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
     case IF : {
         If *y = (If *)x.ptr();
-        convertClosure(y->condition, env, nonLocalEnv,
-                       closureDataName, freeVars);
-        convertClosure(y->thenPart, env, nonLocalEnv,
-                       closureDataName, freeVars);
+        convertFreeVars(y->condition, env, nonLocalEnv,
+                        closureDataName, freeVars);
+        convertFreeVars(y->thenPart, env, nonLocalEnv,
+                        closureDataName, freeVars);
         if (y->elsePart.ptr())
-            convertClosure(y->elsePart, env, nonLocalEnv,
-                           closureDataName, freeVars);
+            convertFreeVars(y->elsePart, env, nonLocalEnv,
+                            closureDataName, freeVars);
         break;
     }
 
     case EXPR_STATEMENT : {
         ExprStatement *y = (ExprStatement *)x.ptr();
-        convertClosure(y->expr, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
     case WHILE : {
         While *y = (While *)x.ptr();
-        convertClosure(y->condition, env, nonLocalEnv,
-                       closureDataName, freeVars);
-        convertClosure(y->body, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->condition, env, nonLocalEnv,
+                        closureDataName, freeVars);
+        convertFreeVars(y->body, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
@@ -220,10 +229,12 @@ void convertClosure(StatementPtr x, EnvPtr env, EnvPtr nonLocalEnv,
 
     case FOR : {
         For *y = (For *)x.ptr();
-        convertClosure(y->expr, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr, env, nonLocalEnv,
+                        closureDataName, freeVars);
         EnvPtr env2 = new Env(env);
         addLocal(env2, y->variable, y->variable.ptr());
-        convertClosure(y->body, env2, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->body, env2, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
@@ -233,7 +244,7 @@ void convertClosure(StatementPtr x, EnvPtr env, EnvPtr nonLocalEnv,
     }
 }
 
-void convertClosure(ExprPtr &x, EnvPtr env, EnvPtr nonLocalEnv,
+void convertFreeVars(ExprPtr &x, EnvPtr env, EnvPtr nonLocalEnv,
                     const string &closureDataName,
                     vector<string> &freeVars)
 {
@@ -277,73 +288,84 @@ void convertClosure(ExprPtr &x, EnvPtr env, EnvPtr nonLocalEnv,
     case TUPLE : {
         Tuple *y = (Tuple *)x.ptr();
         for (unsigned i = 0; i < y->args.size(); ++i)
-            convertClosure(y->args[i], env, nonLocalEnv,
-                           closureDataName, freeVars);
+            convertFreeVars(y->args[i], env, nonLocalEnv,
+                            closureDataName, freeVars);
         break;
     }
 
     case ARRAY : {
         Array *y = (Array *)x.ptr();
         for (unsigned i = 0; i < y->args.size(); ++i)
-            convertClosure(y->args[i], env, nonLocalEnv,
-                           closureDataName, freeVars);
+            convertFreeVars(y->args[i], env, nonLocalEnv,
+                            closureDataName, freeVars);
         break;
     }
 
     case INDEXING : {
         Indexing *y = (Indexing *)x.ptr();
-        convertClosure(y->expr, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr, env, nonLocalEnv,
+                        closureDataName, freeVars);
         for (unsigned i = 0; i < y->args.size(); ++i)
-            convertClosure(y->args[i], env, nonLocalEnv,
-                           closureDataName, freeVars);
+            convertFreeVars(y->args[i], env, nonLocalEnv,
+                            closureDataName, freeVars);
         break;
     }
 
     case CALL : {
         Call *y = (Call *)x.ptr();
-        convertClosure(y->expr, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr, env, nonLocalEnv,
+                        closureDataName, freeVars);
         for (unsigned i = 0; i < y->args.size(); ++i)
-            convertClosure(y->args[i], env, nonLocalEnv,
-                           closureDataName, freeVars);
+            convertFreeVars(y->args[i], env, nonLocalEnv,
+                            closureDataName, freeVars);
         break;
     }
 
     case FIELD_REF : {
         FieldRef *y = (FieldRef *)x.ptr();
-        convertClosure(y->expr, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
     case TUPLE_REF : {
         TupleRef *y = (TupleRef *)x.ptr();
-        convertClosure(y->expr, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
     case UNARY_OP : {
         UnaryOp *y = (UnaryOp *)x.ptr();
-        convertClosure(y->expr, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
     case BINARY_OP : {
         BinaryOp *y = (BinaryOp *)x.ptr();
-        convertClosure(y->expr1, env, nonLocalEnv, closureDataName, freeVars);
-        convertClosure(y->expr2, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr1, env, nonLocalEnv,
+                        closureDataName, freeVars);
+        convertFreeVars(y->expr2, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
     case AND : {
         And *y = (And *)x.ptr();
-        convertClosure(y->expr1, env, nonLocalEnv, closureDataName, freeVars);
-        convertClosure(y->expr2, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr1, env, nonLocalEnv,
+                        closureDataName, freeVars);
+        convertFreeVars(y->expr2, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
     case OR : {
         Or *y = (Or *)x.ptr();
-        convertClosure(y->expr1, env, nonLocalEnv, closureDataName, freeVars);
-        convertClosure(y->expr2, env, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->expr1, env, nonLocalEnv,
+                        closureDataName, freeVars);
+        convertFreeVars(y->expr2, env, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 
@@ -352,7 +374,8 @@ void convertClosure(ExprPtr &x, EnvPtr env, EnvPtr nonLocalEnv,
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < y->formalArgs.size(); ++i)
             addLocal(env2, y->formalArgs[i], y->formalArgs[i].ptr());
-        convertClosure(y->body, env2, nonLocalEnv, closureDataName, freeVars);
+        convertFreeVars(y->body, env2, nonLocalEnv,
+                        closureDataName, freeVars);
         break;
     }
 

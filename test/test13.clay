@@ -1,17 +1,15 @@
 import kernel.*;
 import libc.*;
 
-[F,T]
-map(f:F, a:Vector[T]) {
-    static ResultElement = TypeOf(f(a[0]));
-    var b = Vector[ResultElement]();
+map(f, a) {
+    static ResultType = TypeOf(f(a[0]));
+    var b = Vector[ResultType]();
     for (x in a)
         push(b, f(x));
     return b;
 }
 
-[T]
-scale(factor, a:Vector[T]) {
+scale(factor, a) {
     var f = lambda (x) { return x*factor; };
     return map(f, a);
 }
