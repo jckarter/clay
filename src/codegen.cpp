@@ -16,22 +16,22 @@ void codegenValueInit(CValuePtr dest)
 void codegenValueDestroy(CValuePtr dest)
 {
     vector<ExprPtr> args;
-    args.push_back(new CValueExpr(dest));
+    args.push_back(new ObjectExpr(dest.ptr()));
     codegenInvokeVoid(kernelName("destroy"), args, new Env());
 }
 
 void codegenValueCopy(CValuePtr dest, CValuePtr src)
 {
     vector<ExprPtr> args;
-    args.push_back(new CValueExpr(src));
+    args.push_back(new ObjectExpr(src.ptr()));
     codegenInvokeType(dest->type, args, new Env(), dest);
 }
 
 void codegenValueAssign(CValuePtr dest, CValuePtr src)
 {
     vector<ExprPtr> args;
-    args.push_back(new CValueExpr(dest));
-    args.push_back(new CValueExpr(src));
+    args.push_back(new ObjectExpr(dest.ptr()));
+    args.push_back(new ObjectExpr(src.ptr()));
     codegenInvokeVoid(kernelName("assign"), args, new Env());
 }
 
@@ -802,27 +802,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
-        switch (y->objKind) {
-        case STATIC_GLOBAL : {
-            y = evaluateStatic(x, env);
-            if (y->objKind != VALUE_HOLDER)
-                error("invalid expression");
-            ValueHolder *z = (ValueHolder *)y.ptr();
-            codegenValueHolder(z, out);
-            return out;
-        }
-        case VALUE_HOLDER : {
-            ValueHolder *z = (ValueHolder *)y.ptr();
-            codegenValueHolder(z, out);
-            return out;
-        }
-        case CVALUE : {
-            CValue *z = (CValue *)y.ptr();
-            return z;
-        }
-        }
-        error("invalid name ref");
-        return NULL;
+        return codegenNamed(y, out);
     }
 
     case RETURNED : {
@@ -855,7 +835,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         PValuePtr y = analyzeValue(x->expr, env);
         CValuePtr z = codegenAsRef(x->expr, env, y);
         vector<ExprPtr> args2;
-        args2.push_back(new CValueExpr(z));
+        args2.push_back(new ObjectExpr(z.ptr()));
         args2.insert(args2.end(), x->args.begin(), x->args.end());
         ObjectPtr op = kernelName("index");
         return codegenInvoke(op, args2, env, out);
@@ -1052,20 +1032,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case OBJECT_EXPR : {
         ObjectExpr *x = (ObjectExpr *)expr.ptr();
-        switch (x->obj->objKind) {
-        case VALUE_HOLDER : {
-            ValueHolder *y = (ValueHolder *)x->obj.ptr();
-            codegenValueHolder(y, out);
-            return out;
-        }
-        }
-        error("invalid expression");
-        return NULL;
-    }
-
-    case CVALUE_EXPR : {
-        CValueExpr *x = (CValueExpr *)expr.ptr();
-        return x->cv;
+        return codegenNamed(x->obj, out);
     }
 
     default :
@@ -1073,6 +1040,32 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         return NULL;
 
     }
+}
+
+
+
+//
+// codegenNamed
+//
+
+CValuePtr codegenNamed(ObjectPtr x, CValuePtr out)
+{
+    switch (x->objKind) {
+    case STATIC_GLOBAL : {
+        return codegenNamed(analyzeNamed(x), out);
+    }
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        codegenValueHolder(y, out);
+        return out;
+    }
+    case CVALUE : {
+        CValue *y = (CValue *)x.ptr();
+        return y;
+    }
+    }
+    error("invalid named object");
+    return NULL;
 }
 
 
@@ -1268,7 +1261,7 @@ CValuePtr codegenInvokeValue(CValuePtr x,
 
     default : {
         vector<ExprPtr> args2;
-        args2.push_back(new CValueExpr(x));
+        args2.push_back(new ObjectExpr(x.ptr()));
         args2.insert(args2.end(), args.begin(), args.end());
         return codegenInvoke(kernelName("call"), args2, env, out);
     }

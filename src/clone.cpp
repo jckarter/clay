@@ -155,10 +155,6 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
-    case CVALUE_EXPR :
-        assert(false);
-        break;
-
     default :
         assert(false);
         break;

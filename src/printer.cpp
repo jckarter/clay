@@ -301,11 +301,6 @@ static void print(const Object *x, ostream &out) {
         out << "ObjectExpr(" << y->obj << ")";
         break;
     }
-    case CVALUE_EXPR : {
-        CValueExpr *y = (CValueExpr *)x;
-        out << "CValueExpr(" << y->cv << ")";
-        break;
-    }
 
     case BLOCK : {
         Block *y = (Block *)x;
