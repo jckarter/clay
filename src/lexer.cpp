@@ -488,7 +488,7 @@ static bool nextToken(TokenPtr &x) {
     }
     return false;
 success :
-    assert(x);
+    assert(x.ptr());
     x->location = new Location(lexerSource, p-begin);
     return true;
 }
