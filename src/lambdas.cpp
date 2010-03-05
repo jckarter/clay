@@ -370,7 +370,6 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
 
     case SC_EXPR :
     case OBJECT_EXPR :
-    case CVALUE_EXPR :
         break;
 
     default :

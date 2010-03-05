@@ -3,7 +3,7 @@
 
 
 //
-// analyzeValue
+// analyze wrappers
 //
 
 ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
@@ -165,28 +165,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
-        switch (y->objKind) {
-        case STATIC_GLOBAL : {
-            StaticGlobal *z = (StaticGlobal *)y.ptr();
-            if (!z->result) {
-                if (z->analyzing)
-                    return false;
-                z->analyzing = true;
-                z->result = evaluateStatic(z->expr, z->env);
-                z->analyzing = false;
-            }
-            return z->result;
-        }
-        case VALUE_HOLDER : {
-            ValueHolder *z = (ValueHolder *)y.ptr();
-            return new PValue(z->type, true);
-        }
-        case CVALUE : {
-            CValue *z = (CValue *)y.ptr();
-            return new PValue(z->type, false);
-        }
-        }
-        return y;
+        return analyzeNamed(y);
     }
 
     case RETURNED : {
@@ -299,12 +278,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case OBJECT_EXPR : {
         ObjectExpr *x = (ObjectExpr *)expr.ptr();
-        return x->obj;
-    }
-
-    case CVALUE_EXPR : {
-        CValueExpr *x = (CValueExpr *)expr.ptr();
-        return new PValue(x->cv->type, false);
+        return analyzeNamed(x->obj);
     }
 
     default :
@@ -312,6 +286,38 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         return NULL;
 
     }
+}
+
+
+
+//
+// analyzeNamed
+//
+
+ObjectPtr analyzeNamed(ObjectPtr x)
+{
+    switch (x->objKind) {
+    case STATIC_GLOBAL : {
+        StaticGlobal *y = (StaticGlobal *)x.ptr();
+        if (!y->result) {
+            if (y->analyzing)
+                return false;
+            y->analyzing = true;
+            y->result = evaluateStatic(y->expr, y->env);
+            y->analyzing = false;
+        }
+        return y->result;
+    }
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        return new PValue(y->type, true);
+    }
+    case CVALUE : {
+        CValue *y = (CValue *)x.ptr();
+        return new PValue(y->type, false);
+    }
+    }
+    return x;
 }
 
 

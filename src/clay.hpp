@@ -142,7 +142,6 @@ enum ObjectKind {
 
     SC_EXPR,
     OBJECT_EXPR,
-    CVALUE_EXPR,
 
     BLOCK,
     LABEL,
@@ -234,7 +233,6 @@ struct Or;
 struct Lambda;
 struct SCExpr;
 struct ObjectExpr;
-struct CValueExpr;
 
 struct Statement;
 struct Block;
@@ -346,7 +344,6 @@ typedef Pointer<Or> OrPtr;
 typedef Pointer<Lambda> LambdaPtr;
 typedef Pointer<SCExpr> SCExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
-typedef Pointer<CValueExpr> CValueExprPtr;
 
 typedef Pointer<Statement> StatementPtr;
 typedef Pointer<Block> BlockPtr;
@@ -761,12 +758,6 @@ struct ObjectExpr : public Expr {
     ObjectPtr obj;
     ObjectExpr(ObjectPtr obj)
         : Expr(OBJECT_EXPR), obj(obj) {}
-};
-
-struct CValueExpr : public Expr {
-    CValuePtr cv;
-    CValueExpr(CValuePtr cv)
-        : Expr(CVALUE_EXPR), cv(cv) {}
 };
 
 
@@ -1886,13 +1877,15 @@ struct PValue : public Object {
         : Object(PVALUE), type(type), isTemp(isTemp) {}
 };
 
-ObjectPtr analyze(ExprPtr expr, EnvPtr env);
 ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeTupleValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env);
+
+ObjectPtr analyze(ExprPtr expr, EnvPtr env);
+ObjectPtr analyzeNamed(ObjectPtr x);
 ObjectPtr analyzeIndexing(ObjectPtr x,
                           const vector<ExprPtr> &args,
                           EnvPtr env);
@@ -2072,6 +2065,7 @@ CValuePtr codegenAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv);
 CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out);
+CValuePtr codegenNamed(ObjectPtr x, CValuePtr out);
 void codegenValueHolder(ValueHolderPtr v, CValuePtr out);
 llvm::Value *codegenConstant(ValueHolderPtr v);
 
