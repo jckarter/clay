@@ -81,6 +81,15 @@ overload remainderAssign(a, b) { a = a % b; }
 
 
 //
+// static objects
+//
+
+[A]
+overload StaticObject[A](src:StaticObject[A]) : StaticObject[A] {
+}
+
+
+//
 // swap
 //
 

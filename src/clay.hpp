@@ -292,6 +292,7 @@ struct PointerType;
 struct CodePointerType;
 struct CCodePointerType;
 struct RecordType;
+struct StaticObjectType;
 
 struct Pattern;
 struct PatternCell;
@@ -301,6 +302,7 @@ struct PointerTypePattern;
 struct CodePointerTypePattern;
 struct CCodePointerTypePattern;
 struct RecordTypePattern;
+struct StaticObjectTypePattern;
 
 struct VoidType;
 struct VoidValue;
@@ -403,6 +405,7 @@ typedef Pointer<PointerType> PointerTypePtr;
 typedef Pointer<CodePointerType> CodePointerTypePtr;
 typedef Pointer<CCodePointerType> CCodePointerTypePtr;
 typedef Pointer<RecordType> RecordTypePtr;
+typedef Pointer<StaticObjectType> StaticObjectTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
 typedef Pointer<PatternCell> PatternCellPtr;
@@ -412,6 +415,7 @@ typedef Pointer<PointerTypePattern> PointerTypePatternPtr;
 typedef Pointer<CodePointerTypePattern> CodePointerTypePatternPtr;
 typedef Pointer<CCodePointerTypePattern> CCodePointerTypePatternPtr;
 typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
+typedef Pointer<StaticObjectTypePattern> StaticObjectTypePatternPtr;
 
 typedef Pointer<VoidType> VoidTypePtr;
 typedef Pointer<VoidValue> VoidValuePtr;
@@ -1346,6 +1350,8 @@ enum PrimOpCode {
     PRIM_RecordFieldIndex,
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
+
+    PRIM_StaticObject,
 };
 
 struct PrimOp : public Object {
@@ -1408,6 +1414,7 @@ enum TypeKind {
     ARRAY_TYPE,
     TUPLE_TYPE,
     RECORD_TYPE,
+    STATIC_OBJECT_TYPE,
 };
 
 struct BoolType : public Type {
@@ -1487,6 +1494,12 @@ struct RecordType : public Type {
           fieldsInitialized(false), layout(NULL) {}
 };
 
+struct StaticObjectType : public Type {
+    ObjectPtr obj;
+    StaticObjectType(ObjectPtr obj)
+        : Type(STATIC_OBJECT_TYPE), obj(obj) {}
+};
+
 
 extern TypePtr boolType;
 extern TypePtr int8Type;
@@ -1516,6 +1529,7 @@ TypePtr cCodePointerType(const vector<TypePtr> &argTypes, TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
+TypePtr staticObjectType(ObjectPtr obj);
 
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
 const map<string, int> &recordFieldIndexMap(RecordTypePtr t);
@@ -1550,6 +1564,7 @@ enum PatternKind {
     ARRAY_TYPE_PATTERN,
     TUPLE_TYPE_PATTERN,
     RECORD_TYPE_PATTERN,
+    STATIC_OBJECT_TYPE_PATTERN,
 };
 
 struct Pattern : public Object {
@@ -1609,6 +1624,12 @@ struct RecordTypePattern : public Pattern {
     vector<PatternPtr> params;
     RecordTypePattern(RecordPtr record, const vector<PatternPtr> &params)
         : Pattern(RECORD_TYPE_PATTERN), record(record), params(params) {}
+};
+
+struct StaticObjectTypePattern : public Pattern {
+    PatternPtr obj;
+    StaticObjectTypePattern(PatternPtr obj)
+        : Pattern(STATIC_OBJECT_TYPE_PATTERN), obj(obj) {}
 };
 
 

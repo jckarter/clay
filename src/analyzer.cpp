@@ -20,6 +20,17 @@ ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
     case VOID_VALUE :
         return voidValue.ptr();
 
+    case TYPE :
+    case VOID_TYPE :
+    case PRIM_OP :
+    case PROCEDURE :
+    case OVERLOADABLE :
+    case RECORD :
+    case EXTERNAL_PROCEDURE :
+    case STATIC_PROCEDURE :
+    case STATIC_OVERLOADABLE :
+        return new PValue(staticObjectType(v), true);
+
     default :
         error(expr, "expecting a value or void");
         return NULL;
@@ -36,6 +47,17 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
 
     case PVALUE :
         return (PValue *)v.ptr();
+
+    case TYPE :
+    case VOID_TYPE :
+    case PRIM_OP :
+    case PROCEDURE :
+    case OVERLOADABLE :
+    case RECORD :
+    case EXTERNAL_PROCEDURE :
+    case STATIC_PROCEDURE :
+    case STATIC_OVERLOADABLE :
+        return new PValue(staticObjectType(v), true);
 
     default :
         error(expr, "expecting a value");
@@ -326,6 +348,11 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
     }
 
     case PVALUE : {
+        PValue *y = (PValue *)x.ptr();
+        if (y->type->typeKind == STATIC_OBJECT_TYPE) {
+            StaticObjectType *t = (StaticObjectType *)y->type.ptr();
+            return analyzeIndexing(t->obj, args, env);
+        }
         vector<ExprPtr> args2;
         args2.push_back(new ObjectExpr(x));
         args2.insert(args2.end(), args.begin(), args.end());
@@ -393,6 +420,12 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
             return tupleType(types).ptr();
         }
 
+        case PRIM_StaticObject : {
+            ensureArity(args, 1);
+            ObjectPtr obj = evaluateStatic(args[0], env);
+            return staticObjectType(obj).ptr();
+        }
+
         }
     }
 
@@ -443,8 +476,14 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
             return NULL;
         return analyzeStaticObject(entry->result);
     }
-    case PVALUE :
-        return analyzeInvokeValue((PValue *)x.ptr(), args, env);
+    case PVALUE : {
+        PValue *y = (PValue *)x.ptr();
+        if (y->type->typeKind == STATIC_OBJECT_TYPE) {
+            StaticObjectType *t = (StaticObjectType *)y->type.ptr();
+            return analyzeInvoke(t->obj, args, env);
+        }
+        return analyzeInvokeValue(y, args, env);
+    }
     case PRIM_OP :
         return analyzeInvokePrimOp((PrimOp *)x.ptr(), args, env);
     }
@@ -1329,6 +1368,9 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
         return new PValue(fieldTypes[fi->second], false);
     }
+
+    case PRIM_StaticObject :
+        error("StaticObject type constructor cannot be called");
 
     default :
         assert(false);
