@@ -14,11 +14,6 @@ ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
 
     switch (v->objKind) {
 
-    case VALUE_HOLDER : {
-        ValueHolder *x = (ValueHolder *)v.ptr();
-        return new PValue(x->type, true);
-    }
-
     case PVALUE :
         return (PValue *)v.ptr();
 
@@ -38,11 +33,6 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
         return NULL;
 
     switch (v->objKind) {
-
-    case VALUE_HOLDER : {
-        ValueHolder *x = (ValueHolder *)v.ptr();
-        return new PValue(x->type, true);
-    }
 
     case PVALUE :
         return (PValue *)v.ptr();
@@ -165,7 +155,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
-        return analyzeNamed(y);
+        return analyzeStaticObject(y);
     }
 
     case RETURNED : {
@@ -278,7 +268,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case OBJECT_EXPR : {
         ObjectExpr *x = (ObjectExpr *)expr.ptr();
-        return analyzeNamed(x->obj);
+        return analyzeStaticObject(x->obj);
     }
 
     default :
@@ -291,10 +281,10 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
 
 //
-// analyzeNamed
+// analyzeStaticObject
 //
 
-ObjectPtr analyzeNamed(ObjectPtr x)
+ObjectPtr analyzeStaticObject(ObjectPtr x)
 {
     switch (x->objKind) {
     case STATIC_GLOBAL : {
@@ -306,7 +296,7 @@ ObjectPtr analyzeNamed(ObjectPtr x)
             y->result = evaluateStatic(y->expr, y->env);
             y->analyzing = false;
         }
-        return y->result;
+        return analyzeStaticObject(y->result);
     }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
@@ -441,11 +431,17 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
         return analyzeInvokeExternal((ExternalProcedure *)x.ptr(), args, env);
     case STATIC_PROCEDURE : {
         StaticProcedurePtr y = (StaticProcedure *)x.ptr();
-        return analyzeInvokeStaticProcedure(y, args, env);
+        StaticInvokeEntryPtr entry = analyzeStaticProcedure(y, args, env);
+        if (!entry->result)
+            return NULL;
+        return analyzeStaticObject(entry->result);
     }
     case STATIC_OVERLOADABLE : {
         StaticOverloadablePtr y = (StaticOverloadable *)x.ptr();
-        return analyzeInvokeStaticOverloadable(y, args, env);
+        StaticInvokeEntryPtr entry = analyzeStaticOverloadable(y, args, env);
+        if (!entry->result)
+            return NULL;
+        return analyzeStaticObject(entry->result);
     }
     case PVALUE :
         return analyzeInvokeValue((PValue *)x.ptr(), args, env);
@@ -893,9 +889,10 @@ ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
 // analyzeInvokeStaticProcedure, analyzeInvokeStaticOverloadable
 //
 
-ObjectPtr analyzeInvokeStaticProcedure(StaticProcedurePtr x,
-                                       const vector<ExprPtr> &argExprs,
-                                       EnvPtr env)
+StaticInvokeEntryPtr
+analyzeStaticProcedure(StaticProcedurePtr x,
+                       const vector<ExprPtr> &argExprs,
+                       EnvPtr env)
 {
     vector<ObjectPtr> args;
     vector<LocationPtr> argLocations;
@@ -905,9 +902,7 @@ ObjectPtr analyzeInvokeStaticProcedure(StaticProcedurePtr x,
     }
 
     StaticInvokeEntryPtr entry = lookupStaticInvoke(x.ptr(), args);
-    if (!entry->result) {
-        if (entry->analyzing)
-            return NULL;
+    if (!entry->result && !entry->analyzing) {
         entry->analyzing = true;
 
         MatchResultPtr result = matchStaticInvoke(x->code, x->env, args);
@@ -918,12 +913,13 @@ ObjectPtr analyzeInvokeStaticProcedure(StaticProcedurePtr x,
 
         entry->analyzing = false;
     }
-    return entry->result;
+    return entry;
 }
 
-ObjectPtr analyzeInvokeStaticOverloadable(StaticOverloadablePtr x,
-                                          const vector<ExprPtr> &argExprs,
-                                          EnvPtr env)
+StaticInvokeEntryPtr
+analyzeStaticOverloadable(StaticOverloadablePtr x,
+                          const vector<ExprPtr> &argExprs,
+                          EnvPtr env)
 {
     vector<ObjectPtr> args;
     vector<LocationPtr> argLocations;
@@ -933,9 +929,7 @@ ObjectPtr analyzeInvokeStaticOverloadable(StaticOverloadablePtr x,
     }
 
     StaticInvokeEntryPtr entry = lookupStaticInvoke(x.ptr(), args);
-    if (!entry->result) {
-        if (entry->analyzing)
-            return NULL;
+    if (!entry->result && !entry->analyzing) {
         entry->analyzing = true;
 
         unsigned i = 0;
@@ -953,7 +947,7 @@ ObjectPtr analyzeInvokeStaticOverloadable(StaticOverloadablePtr x,
 
         entry->analyzing = false;
     }
-    return entry->result;
+    return entry;
 }
 
 ObjectPtr analyzeInvokeValue(PValuePtr x, 
@@ -1011,15 +1005,11 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_TypeP : {
-        ensureArity(args, 1);
-        ObjectPtr obj = evaluateStatic(args[0], env);
-        return boolToValueHolder(obj->objKind == TYPE).ptr();
+        return new PValue(boolType, true);
     }
 
     case PRIM_TypeSize : {
-        ensureArity(args, 1);
-        TypePtr t = evaluateType(args[0], env);
-        return intToValueHolder(typeSize(t)).ptr();
+        return new PValue(int32Type, true);
     }
 
     case PRIM_primitiveCopy :
@@ -1113,15 +1103,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_CodePointerTypeP : {
-        ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
-        bool isCPType = false;
-        if (y->objKind == TYPE) {
-            Type *t = (Type *)y.ptr();
-            if (t->typeKind == CODE_POINTER_TYPE)
-                isCPType = true;
-        }
-        return boolToValueHolder(isCPType).ptr();
+        return new PValue(boolType, true);
     }
 
     case PRIM_CodePointer :
@@ -1181,15 +1163,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_CCodePointerTypeP : {
-        ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
-        bool isCCPType = false;
-        if (y->objKind == TYPE) {
-            Type *t = (Type *)y.ptr();
-            if (t->typeKind == CCODE_POINTER_TYPE)
-                isCCPType = true;
-        }
-        return boolToValueHolder(isCCPType).ptr();
+        return new PValue(boolType, true);
     }
 
     case PRIM_CCodePointer :
@@ -1273,34 +1247,18 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_TupleTypeP : {
-        ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
-        bool isTupleType = false;
-        if (y->objKind == TYPE) {
-            Type *t = (Type *)y.ptr();
-            if (t->typeKind == TUPLE_TYPE)
-                isTupleType = true;
-        }
-        return boolToValueHolder(isTupleType).ptr();
+        return new PValue(boolType, true);
     }
 
     case PRIM_Tuple :
         error("Tuple type constructor cannot be called");
 
     case PRIM_TupleElementCount : {
-        ensureArity(args, 1);
-        TypePtr y = evaluateTupleType(args[0], env);
-        TupleType *z = (TupleType *)y.ptr();
-        return intToValueHolder(z->elementTypes.size()).ptr();
+        return new PValue(int32Type, true);
     }
 
     case PRIM_TupleElementOffset : {
-        ensureArity(args, 2);
-        TypePtr y = evaluateTupleType(args[0], env);
-        TupleType *z = (TupleType *)y.ptr();
-        int i = evaluateInt(args[1], env);
-        const llvm::StructLayout *layout = tupleTypeLayout(z);
-        return intToValueHolder(layout->getElementOffset(i)).ptr();
+        return new PValue(int32Type, true);
     }
 
     case PRIM_tuple : {
@@ -1329,47 +1287,19 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_RecordTypeP : {
-        ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
-        bool isRecordType = false;
-        if (y->objKind == TYPE) {
-            Type *t = (Type *)y.ptr();
-            if (t->typeKind == RECORD_TYPE)
-                isRecordType = true;
-        }
-        return boolToValueHolder(isRecordType).ptr();
+        return new PValue(boolType, true);
     }
 
     case PRIM_RecordFieldCount : {
-        ensureArity(args, 1);
-        TypePtr y = evaluateRecordType(args[0], env);
-        RecordType *z = (RecordType *)y.ptr();
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
-        return intToValueHolder(fieldTypes.size()).ptr();
+        return new PValue(int32Type, true);
     }
 
     case PRIM_RecordFieldOffset : {
-        ensureArity(args, 2);
-        TypePtr y = evaluateRecordType(args[0], env);
-        RecordType *z = (RecordType *)y.ptr();
-        int i = evaluateInt(args[1], env);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
-        if ((i < 0) || (i >= (int)fieldTypes.size()))
-            error("field index out of range");
-        const llvm::StructLayout *layout = recordTypeLayout(z);
-        return intToValueHolder(layout->getElementOffset(i)).ptr();
+        return new PValue(int32Type, true);
     }
 
     case PRIM_RecordFieldIndex : {
-        ensureArity(args, 2);
-        TypePtr y = evaluateRecordType(args[0], env);
-        RecordType *z = (RecordType *)y.ptr();
-        IdentifierPtr fname = evaluateIdentifier(args[1], env);
-        const map<string, int> &fieldIndexMap = recordFieldIndexMap(z);
-        map<string, int>::const_iterator fi = fieldIndexMap.find(fname->str);
-        if (fi == fieldIndexMap.end())
-            error("field not in record");
-        return intToValueHolder(fi->second).ptr();
+        return new PValue(int32Type, true);
     }
 
     case PRIM_recordFieldRef : {

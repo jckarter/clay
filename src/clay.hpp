@@ -1885,7 +1885,7 @@ PValuePtr analyzeTupleValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env);
 
 ObjectPtr analyze(ExprPtr expr, EnvPtr env);
-ObjectPtr analyzeNamed(ObjectPtr x);
+ObjectPtr analyzeStaticObject(ObjectPtr x);
 ObjectPtr analyzeIndexing(ObjectPtr x,
                           const vector<ExprPtr> &args,
                           EnvPtr env);
@@ -1926,12 +1926,16 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env);
-ObjectPtr analyzeInvokeStaticProcedure(StaticProcedurePtr x,
-                                       const vector<ExprPtr> &argExprs,
-                                       EnvPtr env);
-ObjectPtr analyzeInvokeStaticOverloadable(StaticOverloadablePtr x,
-                                          const vector<ExprPtr> &argExprs,
-                                          EnvPtr env);
+
+StaticInvokeEntryPtr
+analyzeStaticProcedure(StaticProcedurePtr x,
+                       const vector<ExprPtr> &argExprs,
+                       EnvPtr env);
+StaticInvokeEntryPtr
+analyzeStaticOverloadable(StaticOverloadablePtr x,
+                          const vector<ExprPtr> &argExprs,
+                          EnvPtr env);
+
 ObjectPtr analyzeInvokeValue(PValuePtr x,
                              const vector<ExprPtr> &args,
                              EnvPtr env);
@@ -2065,7 +2069,7 @@ CValuePtr codegenAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv);
 CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out);
-CValuePtr codegenNamed(ObjectPtr x, CValuePtr out);
+CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out);
 void codegenValueHolder(ValueHolderPtr v, CValuePtr out);
 llvm::Value *codegenConstant(ValueHolderPtr v);
 
