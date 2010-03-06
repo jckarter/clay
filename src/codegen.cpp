@@ -834,7 +834,13 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         Indexing *x = (Indexing *)expr.ptr();
         ObjectPtr y = analyze(x->expr, env);
         if (y->objKind == PVALUE) {
-            CValuePtr cv = codegenAsRef(x->expr, env, (PValue *)y.ptr());
+            PValue *z = (PValue *)y.ptr();
+            if (z->type->typeKind == STATIC_OBJECT_TYPE) {
+                StaticObjectType *t = (StaticObjectType *)z->type.ptr();
+                ObjectPtr obj = analyzeIndexing(t->obj, x->args, env);
+                return codegenStaticObject(obj, out);
+            }
+            CValuePtr cv = codegenAsRef(x->expr, env, z);
             vector<ExprPtr> args2;
             args2.push_back(new ObjectExpr(cv.ptr()));
             args2.insert(args2.end(), x->args.begin(), x->args.end());
@@ -850,6 +856,11 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         ObjectPtr y = analyze(x->expr, env);
         assert(y.ptr());
         if (y->objKind == PVALUE) {
+            PValue *z = (PValue *)y.ptr();
+            if (z->type->typeKind == STATIC_OBJECT_TYPE) {
+                StaticObjectType *t = (StaticObjectType *)z->type.ptr();
+                return codegenInvoke(t->obj, x->args, env, out);
+            }
             CValuePtr cv = codegenAsRef(x->expr, env, (PValue *)y.ptr());
             return codegenInvokeValue(cv, x->args, env, out);
         }
@@ -1067,9 +1078,22 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
         CValue *y = (CValue *)x.ptr();
         return y;
     }
+    case TYPE :
+    case VOID_TYPE :
+    case PRIM_OP :
+    case PROCEDURE :
+    case OVERLOADABLE :
+    case RECORD :
+    case EXTERNAL_PROCEDURE :
+    case STATIC_PROCEDURE :
+    case STATIC_OVERLOADABLE :
+        assert(out.ptr());
+        assert(out->type == staticObjectType(x));
+        return out;
+    default :
+        error("invalid static object");
+        return NULL;
     }
-    error("invalid static object");
-    return NULL;
 }
 
 
@@ -2461,6 +2485,9 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             llvmBuilder->CreateConstGEP2_32(crec->llValue, 0, i);
         return new CValue(fieldTypes[i], ptr);
     }
+
+    case PRIM_StaticObject :
+        error("StaticObject type constructor cannot be called");
 
     default :
         assert(false);

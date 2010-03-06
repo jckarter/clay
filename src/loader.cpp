@@ -397,6 +397,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(RecordFieldIndex);
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
+
+    PRIMITIVE(StaticObject);
 #undef PRIMITIVE
     return prims;
 }

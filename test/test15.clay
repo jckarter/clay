@@ -1,0 +1,37 @@
+import kernel.*;
+import libc.*;
+
+map(f, a) {
+    static ResultType = TypeOf(f(a[0]));
+    var b = Vector[ResultType]();
+    for (x in a)
+        push(b, f(x));
+    return b;
+}
+
+double(x) = 2*x;
+doubleVec(v) = map(double, v);
+
+cube(x) = x*x*x;
+cubeVec(v) = map(cube, v);
+
+pack(f, a) = (f, a);
+
+main() {
+    var V = Vector;
+    var VI = V[Int32];
+    static T = VI;
+    var a = VI([1, 2, 3, 4, 5, 6]);
+
+    var f = doubleVec;
+    var b = f(a);
+    for (x in b)
+        printf(cstring("%d\n"), x);
+
+    var g = cubeVec;
+    var c = g(a);
+    for (x in c)
+        printf(cstring("%d\n"), x);
+    
+    return pack(Vector[Int32], double);
+}

@@ -97,6 +97,12 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
             return new TupleTypePattern(elementTypes);
         }
 
+        case PRIM_StaticObject : {
+            ensureArity(args, 1);
+            PatternPtr obj = evaluatePattern(args[0], env);
+            return new StaticObjectTypePattern(obj);
+        }
+
         }
 
         break;
@@ -244,6 +250,17 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
         return true;
     }
 
+    case STATIC_OBJECT_TYPE_PATTERN : {
+        StaticObjectTypePattern *x = (StaticObjectTypePattern *)pattern.ptr();
+        if (obj->objKind != TYPE)
+            return false;
+        TypePtr type = (Type *)obj.ptr();
+        if (type->typeKind != STATIC_OBJECT_TYPE)
+            return false;
+        StaticObjectTypePtr t = (StaticObjectType *)type.ptr();
+        return unify(x->obj, t->obj);
+    }
+
     default :
         assert(false);
         return false;
@@ -309,6 +326,11 @@ void patternPrint(PatternPtr x, ostream &out)
         RecordTypePattern *y = (RecordTypePattern *)x.ptr();
         out << "RecordTypePattern(" << y->record->name->str << ", "
             << y->params << ")";
+        break;
+    }
+    case STATIC_OBJECT_TYPE_PATTERN : {
+        StaticObjectTypePattern *y = (StaticObjectTypePattern *)x.ptr();
+        out << "StaticObjectTypePattern(" << y->obj << ")";
         break;
     }
     default :

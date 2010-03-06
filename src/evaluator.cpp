@@ -78,6 +78,10 @@ ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env)
         error(expr, "recursion during static evaluation");
     if (analysis->objKind == PVALUE) {
         PValue *pv = (PValue *)analysis.ptr();
+        if (pv->type->typeKind == STATIC_OBJECT_TYPE) {
+            StaticObjectType *t = (StaticObjectType *)pv->type.ptr();
+            return t->obj;
+        }
         ValueHolderPtr v = new ValueHolder(pv->type);
         evaluateIntoValueHolder(expr, env, v);
         return v.ptr();

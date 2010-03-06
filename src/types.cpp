@@ -21,6 +21,7 @@ static vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
 static vector<vector<ArrayTypePtr> > arrayTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
+static vector<vector<StaticObjectTypePtr> > staticObjectTypes;
 
 void initTypes() {
     boolType = new BoolType();
@@ -44,6 +45,7 @@ void initTypes() {
     arrayTypes.resize(N);
     tupleTypes.resize(N);
     recordTypes.resize(N);
+    staticObjectTypes.resize(N);
 }
 
 TypePtr integerType(int bits, bool isSigned) {
@@ -203,6 +205,20 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
     for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
         t->params.push_back(*pi);
     recordTypes[h].push_back(t);
+    return t.ptr();
+}
+
+TypePtr staticObjectType(ObjectPtr obj)
+{
+    int h = objectHash(obj);
+    h &= staticObjectTypes.size() - 1;
+    vector<StaticObjectTypePtr> &bucket = staticObjectTypes[h];
+    for (unsigned i = 0; i < bucket.size(); ++i) {
+        if (objectEquals(obj, bucket[i]->obj))
+            return bucket[i].ptr();
+    }
+    StaticObjectTypePtr t = new StaticObjectType(obj);
+    bucket.push_back(t);
     return t.ptr();
 }
 
@@ -397,6 +413,10 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         opaque->refineAbstractTypeTo(st);
         return x->llTypeHolder->get();
     }
+    case STATIC_OBJECT_TYPE : {
+        vector<const llvm::Type *> llTypes;
+        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+    }
     default :
         assert(false);
         return NULL;
@@ -472,6 +492,11 @@ void typePrint(TypePtr t, ostream &out) {
         out << x->record->name->str;
         if (!x->params.empty())
             out << x->params;
+        break;
+    }
+    case STATIC_OBJECT_TYPE : {
+        StaticObjectType *x = (StaticObjectType *)t.ptr();
+        out << "StaticObject[" << x->obj << "]";
         break;
     }
     default :
