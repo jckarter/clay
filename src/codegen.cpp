@@ -802,7 +802,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
-        return codegenNamed(y, out);
+        return codegenStaticObject(y, out);
     }
 
     case RETURNED : {
@@ -832,13 +832,17 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
-        PValuePtr y = analyzeValue(x->expr, env);
-        CValuePtr z = codegenAsRef(x->expr, env, y);
-        vector<ExprPtr> args2;
-        args2.push_back(new ObjectExpr(z.ptr()));
-        args2.insert(args2.end(), x->args.begin(), x->args.end());
-        ObjectPtr op = kernelName("index");
-        return codegenInvoke(op, args2, env, out);
+        ObjectPtr y = analyze(x->expr, env);
+        if (y->objKind == PVALUE) {
+            CValuePtr cv = codegenAsRef(x->expr, env, (PValue *)y.ptr());
+            vector<ExprPtr> args2;
+            args2.push_back(new ObjectExpr(cv.ptr()));
+            args2.insert(args2.end(), x->args.begin(), x->args.end());
+            ObjectPtr op = kernelName("index");
+            return codegenInvoke(op, args2, env, out);
+        }
+        ObjectPtr obj = analyzeIndexing(y, x->args, env);
+        return codegenStaticObject(obj, out);
     }
 
     case CALL : {
@@ -1032,7 +1036,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case OBJECT_EXPR : {
         ObjectExpr *x = (ObjectExpr *)expr.ptr();
-        return codegenNamed(x->obj, out);
+        return codegenStaticObject(x->obj, out);
     }
 
     default :
@@ -1045,14 +1049,14 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
 
 //
-// codegenNamed
+// codegenStaticObject
 //
 
-CValuePtr codegenNamed(ObjectPtr x, CValuePtr out)
+CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
 {
     switch (x->objKind) {
     case STATIC_GLOBAL : {
-        return codegenNamed(analyzeNamed(x), out);
+        return codegenStaticObject(analyzeStaticObject(x), out);
     }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
@@ -1064,7 +1068,7 @@ CValuePtr codegenNamed(ObjectPtr x, CValuePtr out)
         return y;
     }
     }
-    error("invalid named object");
+    error("invalid static object");
     return NULL;
 }
 
@@ -1303,14 +1307,17 @@ CValuePtr codegenInvoke(ObjectPtr x,
         return codegenInvokeExternal((ExternalProcedure *)x.ptr(),
                                      args, env, out);
 
-    case STATIC_PROCEDURE :
+    case STATIC_PROCEDURE : {
+        StaticProcedurePtr y = (StaticProcedure *)x.ptr();
+        StaticInvokeEntryPtr entry = analyzeStaticProcedure(y, args, env);
+        assert(entry->result.ptr());
+        return codegenStaticObject(entry->result, out);
+    }
     case STATIC_OVERLOADABLE : {
-        ObjectPtr y = analyzeInvoke(x, args, env);
-        if (y->objKind != VALUE_HOLDER)
-            error("invalid expression");
-        ValueHolder *z = (ValueHolder *)y.ptr();
-        codegenValueHolder(z, out);
-        return out;
+        StaticOverloadablePtr y = (StaticOverloadable *)x.ptr();
+        StaticInvokeEntryPtr entry = analyzeStaticOverloadable(y, args, env);
+        assert(entry->result.ptr());
+        return codegenStaticObject(entry->result, out);
     }
 
     case PRIM_OP :
@@ -1712,23 +1719,38 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
 {
     switch (x->primOpCode) {
 
-    case PRIM_TypeP :
-    case PRIM_TypeSize :
-    case PRIM_CodePointerTypeP :
-    case PRIM_CCodePointerTypeP :
-    case PRIM_TupleTypeP :
-    case PRIM_TupleElementCount :
-    case PRIM_TupleElementOffset :
-    case PRIM_RecordTypeP :
-    case PRIM_RecordFieldCount :
-    case PRIM_RecordFieldOffset :
-    case PRIM_RecordFieldIndex : {
-        // handle static primitives
-        ObjectPtr obj = analyzeInvokePrimOp(x, args, env);
-        assert(obj->objKind == VALUE_HOLDER);
-        ValueHolderPtr vh = (ValueHolder *)obj.ptr();
-        codegenValueHolder(vh, out);
-        return out;
+    case PRIM_TypeOf : {
+        ensureArity(args, 1);
+        ObjectPtr y = analyzeMaybeVoidValue(args[0], env);
+        ObjectPtr obj;
+        switch (y->objKind) {
+        case PVALUE : {
+            PValue *z = (PValue *)y.ptr();
+            obj = z->type.ptr();
+            break;
+        }
+        case VOID_VALUE : {
+            obj = voidType.ptr();
+            break;
+        }
+        default :
+            assert(false);
+        }
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_TypeP : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr obj = boolToValueHolder(y->objKind == TYPE).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_TypeSize : {
+        ensureArity(args, 1);
+        TypePtr t = evaluateType(args[0], env);
+        ObjectPtr obj = intToValueHolder(typeSize(t)).ptr();
+        return codegenStaticObject(obj, out);
     }
 
     case PRIM_primitiveCopy : {
@@ -2065,6 +2087,9 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return out;
     }
 
+    case PRIM_Pointer :
+        error("Pointer type constructor cannot be called");
+
     case PRIM_addressOf : {
         ensureArity(args, 1);
         PValuePtr pv = analyzeValue(args[0], env);
@@ -2104,6 +2129,25 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
+
+    case PRIM_CodePointerTypeP : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        bool isCPType = false;
+        if (y->objKind == TYPE) {
+            Type *t = (Type *)y.ptr();
+            if (t->typeKind == CODE_POINTER_TYPE)
+                isCPType = true;
+        }
+        ObjectPtr obj = boolToValueHolder(isCPType).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_CodePointer :
+        error("CodePointer type constructor cannot be called");
+
+    case PRIM_RefCodePointer :
+        error("RefCodePointer type constructor cannot be called");
 
     case PRIM_makeCodePointer : {
         if (args.size() < 1)
@@ -2151,6 +2195,22 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvmBuilder->CreateStore(entry->llvmFunc, out->llValue);
         return out;
     }
+
+    case PRIM_CCodePointerTypeP : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        bool isCCPType = false;
+        if (y->objKind == TYPE) {
+            Type *t = (Type *)y.ptr();
+            if (t->typeKind == CCODE_POINTER_TYPE)
+                isCCPType = true;
+        }
+        ObjectPtr obj = boolToValueHolder(isCCPType).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_CCodePointer :
+        error("CCodePointer type constructor cannot be called");
 
     case PRIM_makeCCodePointer : {
         if (args.size() < 1)
@@ -2216,6 +2276,9 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return out;
     }
 
+    case PRIM_Array :
+        error("Array type constructor cannot be called");
+
     case PRIM_array : {
         if (args.empty())
             error("atleast one element required for creating an array");
@@ -2254,6 +2317,40 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return new CValue(at->elementType, ptr);
     }
 
+    case PRIM_TupleTypeP : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        bool isTupleType = false;
+        if (y->objKind == TYPE) {
+            Type *t = (Type *)y.ptr();
+            if (t->typeKind == TUPLE_TYPE)
+                isTupleType = true;
+        }
+        ObjectPtr obj = boolToValueHolder(isTupleType).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_Tuple :
+        error("Tuple type constructor cannot be called");
+
+    case PRIM_TupleElementCount : {
+        ensureArity(args, 1);
+        TypePtr y = evaluateTupleType(args[0], env);
+        TupleType *z = (TupleType *)y.ptr();
+        ObjectPtr obj = intToValueHolder(z->elementTypes.size()).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_TupleElementOffset : {
+        ensureArity(args, 2);
+        TypePtr y = evaluateTupleType(args[0], env);
+        TupleType *z = (TupleType *)y.ptr();
+        int i = evaluateInt(args[1], env);
+        const llvm::StructLayout *layout = tupleTypeLayout(z);
+        ObjectPtr obj =  intToValueHolder(layout->getElementOffset(i)).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
     case PRIM_tuple : {
         assert(out.ptr());
         assert(out->type->typeKind == TUPLE_TYPE);
@@ -2282,6 +2379,54 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvm::Value *ptr =
             llvmBuilder->CreateConstGEP2_32(ctuple->llValue, 0, i);
         return new CValue(tt->elementTypes[i], ptr);
+    }
+
+    case PRIM_RecordTypeP : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        bool isRecordType = false;
+        if (y->objKind == TYPE) {
+            Type *t = (Type *)y.ptr();
+            if (t->typeKind == RECORD_TYPE)
+                isRecordType = true;
+        }
+        ObjectPtr obj = boolToValueHolder(isRecordType).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_RecordFieldCount : {
+        ensureArity(args, 1);
+        TypePtr y = evaluateRecordType(args[0], env);
+        RecordType *z = (RecordType *)y.ptr();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
+        ObjectPtr obj = intToValueHolder(fieldTypes.size()).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_RecordFieldOffset : {
+        ensureArity(args, 2);
+        TypePtr y = evaluateRecordType(args[0], env);
+        RecordType *z = (RecordType *)y.ptr();
+        int i = evaluateInt(args[1], env);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
+        if ((i < 0) || (i >= (int)fieldTypes.size()))
+            error("field index out of range");
+        const llvm::StructLayout *layout = recordTypeLayout(z);
+        ObjectPtr obj = intToValueHolder(layout->getElementOffset(i)).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_RecordFieldIndex : {
+        ensureArity(args, 2);
+        TypePtr y = evaluateRecordType(args[0], env);
+        RecordType *z = (RecordType *)y.ptr();
+        IdentifierPtr fname = evaluateIdentifier(args[1], env);
+        const map<string, int> &fieldIndexMap = recordFieldIndexMap(z);
+        map<string, int>::const_iterator fi = fieldIndexMap.find(fname->str);
+        if (fi == fieldIndexMap.end())
+            error("field not in record");
+        ObjectPtr obj = intToValueHolder(fi->second).ptr();
+        return codegenStaticObject(obj, out);
     }
 
     case PRIM_recordFieldRef : {
