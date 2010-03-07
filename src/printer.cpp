@@ -440,6 +440,18 @@ static void print(const Object *x, ostream &out) {
         out << "Overloadable(" << y->name << ")";
         break;
     }
+
+    case ENUMERATION : {
+        Enumeration *y = (Enumeration *)x;
+        out << "Enumeration(" << y->name << ", " << y->members << ")";
+        break;
+    }
+    case ENUM_MEMBER : {
+        EnumMember *y = (EnumMember *)x;
+        out << "EnumMember(" << y->name << ")";
+        break;
+    }
+
     case EXTERNAL_PROCEDURE : {
         ExternalProcedure *y = (ExternalProcedure *)x;
         out << "ExternalProcedure(" << y->name << ", " << y->args;
@@ -476,17 +488,6 @@ static void print(const Object *x, ostream &out) {
     case STATIC_OVERLOAD : {
         StaticOverload *y = (StaticOverload *)x;
         out << "StaticOverload(" << y->target << ", " << y->code << ")";
-        break;
-    }
-
-    case ENUMERATION : {
-        Enumeration *y = (Enumeration *)x;
-        out << "Enumeration(" << y->name << ", " << y->members << ")";
-        break;
-    }
-    case ENUM_MEMBER : {
-        EnumMember *y = (EnumMember *)x;
-        out << "EnumMember(" << y->name << ")";
         break;
     }
 
