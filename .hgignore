@@ -10,3 +10,4 @@ syntax: regexp
 .*\.swp
 cscope.out
 tags
+.*\.out$
