@@ -320,6 +320,10 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
         }
         return analyzeStaticObject(y->result);
     }
+    case ENUM_MEMBER : {
+        EnumMember *y = (EnumMember *)x.ptr();
+        return new PValue(y->type, true);
+    }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
         return new PValue(y->type, true);
@@ -1371,6 +1375,20 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
 
     case PRIM_StaticObject :
         error("StaticObject type constructor cannot be called");
+
+    case PRIM_EnumTypeP : {
+        return new PValue(boolType, true);
+    }
+
+    case PRIM_enumToInt : {
+        return new PValue(int32Type, true);
+    }
+
+    case PRIM_intToEnum : {
+        ensureArity(args, 2);
+        TypePtr t = evaluateEnumerationType(args[0], env);
+        return new PValue(t, true);
+    }
 
     default :
         assert(false);

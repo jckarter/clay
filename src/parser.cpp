@@ -1460,6 +1460,51 @@ static bool staticOverload(TopLevelItemPtr &x) {
 
 
 //
+// enumerations
+//
+
+static bool enumMember(EnumMemberPtr &x) {
+    LocationPtr location = currentLocation();
+    IdentifierPtr y;
+    if (!identifier(y)) return false;
+    x = new EnumMember(y);
+    x->location = location;
+    return true;
+}
+
+static bool enumMemberList(vector<EnumMemberPtr> &x) {
+    EnumMemberPtr y;
+    if (!enumMember(y)) return false;
+    x.clear();
+    x.push_back(y);
+    while (true) {
+        int p = save();
+        if (!symbol(",") || !enumMember(y)) {
+            restore(p);
+            break;
+        }
+        x.push_back(y);
+    }
+    return true;
+}
+
+static bool enumeration(TopLevelItemPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("enum")) return false;
+    IdentifierPtr y;
+    if (!identifier(y)) return false;
+    EnumerationPtr z = new Enumeration(y);
+    if (!symbol("{")) return false;
+    if (!enumMemberList(z->members)) return false;
+    if (!symbol("}")) return false;
+    x = z.ptr();
+    x->location = location;
+    return true;
+}
+
+
+
+//
 // imports
 //
 
@@ -1581,6 +1626,7 @@ static bool topLevelItem(TopLevelItemPtr &x) {
     if (restore(p), staticProcedure(x)) return true;
     if (restore(p), staticOverloadable(x)) return true;
     if (restore(p), staticOverload(x)) return true;
+    if (restore(p), enumeration(x)) return true;
     return false;
 }
 

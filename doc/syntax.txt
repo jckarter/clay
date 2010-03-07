@@ -10,6 +10,7 @@ TopLevelItem -> Record | Procedure | Overloadable | Overload
               | ExternalProcedure
               | StaticGlobal
               | StaticProcedure | StaticOverloadable | StaticOverload
+              | Enumeration
 
 Record -> "record" Identifier PatternVars? "{" RecordField+ "}"
 PatternVars -> "[" comma_list(Identifier) "]"
@@ -54,6 +55,8 @@ StaticOverloadable -> "static" "overloadable" Identifier ";"
 
 StaticOverload -> PatternVarsWithCond? "static" "overload" Pattern
                   "(" comma_list(Expression) ")" "=" Expression ";"
+
+Enumeration -> "enum" Identifier "{" comma_list(Identifier) "}"
 
 
 //

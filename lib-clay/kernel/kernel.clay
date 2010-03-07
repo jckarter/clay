@@ -9,6 +9,7 @@ import kernel.codepointers.*;
 import kernel.ccodepointers.*;
 import kernel.tuples.*;
 import kernel.records.*;
+import kernel.enumerations.*;
 import kernel.ranges.*;
 import kernel.arrays.*;
 import kernel.vectors.*;

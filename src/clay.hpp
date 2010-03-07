@@ -177,6 +177,9 @@ enum ObjectKind {
     STATIC_OVERLOADABLE,
     STATIC_OVERLOAD,
 
+    ENUMERATION,
+    ENUM_MEMBER,
+
     IMPORT,
     MODULE_HOLDER,
     MODULE,
@@ -271,6 +274,9 @@ struct StaticProcedure;
 struct StaticOverloadable;
 struct StaticOverload;
 
+struct Enumeration;
+struct EnumMember;
+
 struct Import;
 struct ImportModule;
 struct ImportStar;
@@ -293,6 +299,7 @@ struct CodePointerType;
 struct CCodePointerType;
 struct RecordType;
 struct StaticObjectType;
+struct EnumType;
 
 struct Pattern;
 struct PatternCell;
@@ -384,6 +391,9 @@ typedef Pointer<StaticProcedure> StaticProcedurePtr;
 typedef Pointer<StaticOverloadable> StaticOverloadablePtr;
 typedef Pointer<StaticOverload> StaticOverloadPtr;
 
+typedef Pointer<Enumeration> EnumerationPtr;
+typedef Pointer<EnumMember> EnumMemberPtr;
+
 typedef Pointer<Import> ImportPtr;
 typedef Pointer<ImportModule> ImportModulePtr;
 typedef Pointer<ImportStar> ImportStarPtr;
@@ -406,6 +416,7 @@ typedef Pointer<CodePointerType> CodePointerTypePtr;
 typedef Pointer<CCodePointerType> CCodePointerTypePtr;
 typedef Pointer<RecordType> RecordTypePtr;
 typedef Pointer<StaticObjectType> StaticObjectTypePtr;
+typedef Pointer<EnumType> EnumTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
 typedef Pointer<PatternCell> PatternCellPtr;
@@ -1096,6 +1107,32 @@ struct StaticOverload : public TopLevelItem {
 
 
 //
+// Enumeration, EnumMember
+//
+
+struct Enumeration : public TopLevelItem {
+    IdentifierPtr name;
+    vector<EnumMemberPtr> members;
+
+    TypePtr type;
+    
+    Enumeration(IdentifierPtr name)
+        : TopLevelItem(ENUMERATION), name(name) {}
+    Enumeration(IdentifierPtr name, const vector<EnumMemberPtr> &members)
+        : TopLevelItem(ENUMERATION), name(name), members(members) {}
+};
+
+struct EnumMember : public ANode {
+    IdentifierPtr name;
+    int index;
+    TypePtr type;
+    EnumMember(IdentifierPtr name)
+        : ANode(ENUM_MEMBER), name(name), index(-1) {}
+};
+
+
+
+//
 // Imports
 //
 
@@ -1352,6 +1389,10 @@ enum PrimOpCode {
     PRIM_recordFieldRefByName,
 
     PRIM_StaticObject,
+
+    PRIM_EnumTypeP,
+    PRIM_enumToInt,
+    PRIM_intToEnum,
 };
 
 struct PrimOp : public Object {
@@ -1415,6 +1456,7 @@ enum TypeKind {
     TUPLE_TYPE,
     RECORD_TYPE,
     STATIC_OBJECT_TYPE,
+    ENUM_TYPE,
 };
 
 struct BoolType : public Type {
@@ -1500,6 +1542,12 @@ struct StaticObjectType : public Type {
         : Type(STATIC_OBJECT_TYPE), obj(obj) {}
 };
 
+struct EnumType : public Type {
+    EnumerationPtr enumeration;
+    EnumType(EnumerationPtr enumeration)
+        : Type(ENUM_TYPE), enumeration(enumeration) {}
+};
+
 
 extern TypePtr boolType;
 extern TypePtr int8Type;
@@ -1530,6 +1578,7 @@ TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
 TypePtr staticObjectType(ObjectPtr obj);
+TypePtr enumType(EnumerationPtr enumeration);
 
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
 const map<string, int> &recordFieldIndexMap(RecordTypePtr t);
@@ -2001,6 +2050,7 @@ TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
 TypePtr evaluatePointerLikeType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateTupleType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env);
+TypePtr evaluateEnumerationType(ExprPtr expr, EnvPtr env);
 
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
 

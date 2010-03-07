@@ -177,6 +177,10 @@ static void print(const Object *x, ostream &out) {
         out << "NameRef(" << y->name << ")";
         break;
     }
+    case RETURNED : {
+        out << "Returned";
+        break;
+    }
     case TUPLE : {
         Tuple *y = (Tuple *)x;
         out << "Tuple(" << y->args << ")";
@@ -472,6 +476,17 @@ static void print(const Object *x, ostream &out) {
     case STATIC_OVERLOAD : {
         StaticOverload *y = (StaticOverload *)x;
         out << "StaticOverload(" << y->target << ", " << y->code << ")";
+        break;
+    }
+
+    case ENUMERATION : {
+        Enumeration *y = (Enumeration *)x;
+        out << "Enumeration(" << y->name << ", " << y->members << ")";
+        break;
+    }
+    case ENUM_MEMBER : {
+        EnumMember *y = (EnumMember *)x;
+        out << "EnumMember(" << y->name << ")";
         break;
     }
 

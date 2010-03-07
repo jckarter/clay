@@ -1,6 +1,9 @@
 LLVM_CXXFLAGS = `llvm-config --cxxflags`
 LLVM_LDFLAGS = `llvm-config --ldflags --libs backend engine`
 
+.PHONY: default
+default : clay2llvm
+
 .cpp.o :
 	g++ $(LLVM_CXXFLAGS) -m32 -Wall -c -MMD -MF$@.dep -o $@ $<
 

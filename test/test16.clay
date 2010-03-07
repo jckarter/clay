@@ -1,0 +1,18 @@
+import kernel.*;
+import libc.*;
+
+enum Kind {
+    GOOD,
+    BAD,
+    UGLY
+}
+
+main() {
+    var a = UGLY;
+    var b = BAD;
+    var c = a > b;
+    var d = a == b;
+    var y = Int32(a);
+    var z = Kind(y);
+    printf(cstring("c, d, y = %d, %d, %d\n"), Int32(c), Int32(d), y);
+}
