@@ -134,6 +134,11 @@ static void installGlobals(ModulePtr m) {
             }
             break;
         }
+        case GLOBAL_VARIABLE : {
+            GlobalVariable *y = (GlobalVariable *)x;
+            addGlobal(m, y->name, y);
+            break;
+        }
         case EXTERNAL_PROCEDURE :
             addGlobal(m, ((ExternalProcedure *)x)->name, x);
             break;

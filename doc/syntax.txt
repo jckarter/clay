@@ -7,7 +7,7 @@ DottedName -> Identifier ("." Identifier)*
 
 
 TopLevelItem -> Record | Procedure | Overloadable | Overload
-              | Enumeration
+              | Enumeration | GlobalVariable
               | ExternalProcedure
               | StaticGlobal
               | StaticProcedure | StaticOverloadable | StaticOverload
@@ -41,6 +41,8 @@ Overloadable -> "overloadable" Identifier ";"
 Overload -> PatternVarsWithCond? "overload" Pattern Arguments ReturnSpec? Body
 
 Enumeration -> "enum" Identifier "{" comma_list(Identifier) "}"
+
+GlobalVariable -> "var" Identifier "=" Expression ";"
 
 ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
                      TypeSpec ";"

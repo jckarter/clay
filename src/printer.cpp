@@ -452,6 +452,12 @@ static void print(const Object *x, ostream &out) {
         break;
     }
 
+    case GLOBAL_VARIABLE : {
+        GlobalVariable *y = (GlobalVariable *)x;
+        out << "GlobalVariable(" << y->name << ", " << y->expr << ")";
+        break;
+    }
+
     case EXTERNAL_PROCEDURE : {
         ExternalProcedure *y = (ExternalProcedure *)x;
         out << "ExternalProcedure(" << y->name << ", " << y->args;

@@ -168,6 +168,9 @@ enum ObjectKind {
     PROCEDURE,
     OVERLOAD,
     OVERLOADABLE,
+    ENUMERATION,
+    ENUM_MEMBER,
+    GLOBAL_VARIABLE,
     EXTERNAL_PROCEDURE,
     EXTERNAL_ARG,
 
@@ -176,9 +179,6 @@ enum ObjectKind {
     STATIC_PROCEDURE,
     STATIC_OVERLOADABLE,
     STATIC_OVERLOAD,
-
-    ENUMERATION,
-    ENUM_MEMBER,
 
     IMPORT,
     MODULE_HOLDER,
@@ -267,6 +267,7 @@ struct Overload;
 struct Overloadable;
 struct Enumeration;
 struct EnumMember;
+struct GlobalVariable;
 struct ExternalProcedure;
 struct ExternalArg;
 
@@ -383,6 +384,7 @@ typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Overloadable> OverloadablePtr;
 typedef Pointer<Enumeration> EnumerationPtr;
 typedef Pointer<EnumMember> EnumMemberPtr;
+typedef Pointer<GlobalVariable> GlobalVariablePtr;
 typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
 
@@ -1029,6 +1031,20 @@ struct EnumMember : public ANode {
     TypePtr type;
     EnumMember(IdentifierPtr name)
         : ANode(ENUM_MEMBER), name(name), index(-1) {}
+};
+
+struct GlobalVariable : public TopLevelItem {
+    IdentifierPtr name;
+    ExprPtr expr;
+
+    bool analyzing;
+    TypePtr type;
+
+    llvm::GlobalVariable *llGlobal;
+
+    GlobalVariable(IdentifierPtr name, ExprPtr expr)
+        : TopLevelItem(GLOBAL_VARIABLE), name(name), expr(expr),
+          analyzing(false), llGlobal(false) {}
 };
 
 struct ExternalProcedure : public TopLevelItem {
