@@ -548,6 +548,8 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
 
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env)
 {
+    LocationContext loc(x->location);
+
     switch (x->bindingKind) {
 
     case VAR : {
@@ -1068,6 +1070,15 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
     switch (x->objKind) {
     case STATIC_GLOBAL : {
         return codegenStaticObject(analyzeStaticObject(x), out);
+    }
+    case ENUM_MEMBER : {
+        EnumMember *y = (EnumMember *)x.ptr();
+        assert(out.ptr());
+        assert(out->type == y->type);
+        llvm::Value *llv = llvm::ConstantInt::getSigned(
+            llvmType(y->type), y->index);
+        llvmBuilder->CreateStore(llv, out->llValue);
+        return out;
     }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
@@ -1788,6 +1799,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         case POINTER_TYPE :
         case CODE_POINTER_TYPE :
         case CCODE_POINTER_TYPE :
+        case ENUM_TYPE :
             break;
         default :
             error(args[0], "expecting primitive type");
@@ -2489,9 +2501,47 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
     case PRIM_StaticObject :
         error("StaticObject type constructor cannot be called");
 
+    case PRIM_EnumTypeP : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        bool isEnumType = false;
+        if (y->objKind == TYPE) {
+            Type *t = (Type *)y.ptr();
+            if (t->typeKind == ENUM_TYPE)
+                isEnumType = true;
+        }
+        ObjectPtr obj = boolToValueHolder(isEnumType).ptr();
+        return codegenStaticObject(obj, out);
+    }
+
+    case PRIM_enumToInt : {
+        ensureArity(args, 1);
+        PValuePtr pv = analyzeValue(args[0], env);
+        if (pv->type->typeKind != ENUM_TYPE)
+            error(args[0], "expecting enum value");
+        CValuePtr cv = codegenAsRef(args[0], env, pv);
+        llvm::Value *llv = llvmBuilder->CreateLoad(cv->llValue);
+        assert(out.ptr());
+        assert(out->type == int32Type);
+        llvmBuilder->CreateStore(llv, out->llValue);
+        return out;
+    }
+
+    case PRIM_intToEnum : {
+        ensureArity(args, 2);
+        TypePtr t = evaluateEnumerationType(args[0], env);
+        assert(out.ptr());
+        assert(out->type == t);
+        TypePtr intType = int32Type;
+        llvm::Value *v = _cgInteger(args[1], env, intType);
+        llvmBuilder->CreateStore(v, out->llValue);
+        return out;
+    }
+
     default :
         assert(false);
         return NULL;
+
     }
 }
 

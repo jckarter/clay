@@ -222,6 +222,13 @@ TypePtr staticObjectType(ObjectPtr obj)
     return t.ptr();
 }
 
+TypePtr enumType(EnumerationPtr enumeration)
+{
+    if (!enumeration->type)
+        enumeration->type = new EnumType(enumeration);
+    return enumeration->type;
+}
+
 
 
 //
@@ -417,6 +424,9 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         vector<const llvm::Type *> llTypes;
         return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
+    case ENUM_TYPE : {
+        return llvmIntType(32);
+    }
     default :
         assert(false);
         return NULL;
@@ -497,6 +507,11 @@ void typePrint(TypePtr t, ostream &out) {
     case STATIC_OBJECT_TYPE : {
         StaticObjectType *x = (StaticObjectType *)t.ptr();
         out << "StaticObject[" << x->obj << "]";
+        break;
+    }
+    case ENUM_TYPE : {
+        EnumType *x = (EnumType *)t.ptr();
+        out << x->enumeration->name->str;
         break;
     }
     default :

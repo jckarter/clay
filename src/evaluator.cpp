@@ -162,6 +162,14 @@ TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env)
     return t;
 }
 
+TypePtr evaluateEnumerationType(ExprPtr expr, EnvPtr env)
+{
+    TypePtr t = evaluateType(expr, env);
+    if (t->typeKind != ENUM_TYPE)
+        error(expr, "expecting an enumeration type");
+    return t;
+}
+
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = evaluateStatic(expr, env);

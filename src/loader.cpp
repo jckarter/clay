@@ -136,6 +136,18 @@ static void installGlobals(ModulePtr m) {
             break;
         case STATIC_OVERLOAD :
             break;
+        case ENUMERATION : {
+            Enumeration *y = (Enumeration *)x;
+            TypePtr t = enumType(y);
+            addGlobal(m, y->name, t.ptr());
+            for (unsigned i = 0 ; i < y->members.size(); ++i) {
+                EnumMember *z = y->members[i].ptr();
+                z->index = (int)i;
+                z->type = t;
+                addGlobal(m, z->name, z);
+            }
+            break;
+        }
         default :
             assert(false);
         }
@@ -399,7 +411,13 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(recordFieldRefByName);
 
     PRIMITIVE(StaticObject);
+
+    PRIMITIVE(EnumTypeP);
+    PRIMITIVE(enumToInt);
+    PRIMITIVE(intToEnum);
+
 #undef PRIMITIVE
+
     return prims;
 }
 
