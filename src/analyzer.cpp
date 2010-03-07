@@ -309,6 +309,24 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 ObjectPtr analyzeStaticObject(ObjectPtr x)
 {
     switch (x->objKind) {
+    case ENUM_MEMBER : {
+        EnumMember *y = (EnumMember *)x.ptr();
+        return new PValue(y->type, true);
+    }
+    case GLOBAL_VARIABLE : {
+        GlobalVariable *y = (GlobalVariable *)x.ptr();
+        if (!y->type) {
+            if (y->analyzing)
+                return NULL;
+            y->analyzing = true;
+            PValuePtr pv = analyzeValue(y->expr, y->env);
+            y->analyzing = false;
+            if (!pv)
+                return NULL;
+            y->type = pv->type;
+        }
+        return new PValue(y->type, false);
+    }
     case STATIC_GLOBAL : {
         StaticGlobal *y = (StaticGlobal *)x.ptr();
         if (!y->result) {
@@ -319,10 +337,6 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
             y->analyzing = false;
         }
         return analyzeStaticObject(y->result);
-    }
-    case ENUM_MEMBER : {
-        EnumMember *y = (EnumMember *)x.ptr();
-        return new PValue(y->type, true);
     }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();

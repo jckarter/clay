@@ -1068,9 +1068,6 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
 {
     switch (x->objKind) {
-    case STATIC_GLOBAL : {
-        return codegenStaticObject(analyzeStaticObject(x), out);
-    }
     case ENUM_MEMBER : {
         EnumMember *y = (EnumMember *)x.ptr();
         assert(out.ptr());
@@ -1079,6 +1076,26 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
             llvmType(y->type), y->index);
         llvmBuilder->CreateStore(llv, out->llValue);
         return out;
+    }
+    case GLOBAL_VARIABLE : {
+        GlobalVariable *y = (GlobalVariable *)x.ptr();
+        if (!y->llGlobal) {
+            ObjectPtr z = analyzeStaticObject(y);
+            assert(z->objKind == PVALUE);
+            PValue *pv = (PValue *)z.ptr();
+            llvm::Constant *initializer =
+                llvm::Constant::getNullValue(llvmType(pv->type));
+            y->llGlobal =
+                new llvm::GlobalVariable(
+                    *llvmModule, llvmType(pv->type), false,
+                    llvm::GlobalVariable::InternalLinkage,
+                    initializer, "clay_" + y->name->str);
+        }
+        assert(!out);
+        return new CValue(y->type, y->llGlobal);
+    }
+    case STATIC_GLOBAL : {
+        return codegenStaticObject(analyzeStaticObject(x), out);
     }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
@@ -2500,6 +2517,24 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
 
     case PRIM_StaticObject :
         error("StaticObject type constructor cannot be called");
+
+    default : {
+        CValuePtr codegenInvokePrimOp2(PrimOpPtr x,
+                                       const vector<ExprPtr> &args,
+                                       EnvPtr env,
+                                       CValuePtr out);
+        return codegenInvokePrimOp2(x, args, env, out);
+    }
+
+    }
+}
+
+CValuePtr codegenInvokePrimOp2(PrimOpPtr x,
+                               const vector<ExprPtr> &args,
+                               EnvPtr env,
+                               CValuePtr out)
+{
+    switch (x->primOpCode) {
 
     case PRIM_EnumTypeP : {
         ensureArity(args, 1);

@@ -1355,6 +1355,26 @@ static bool enumeration(TopLevelItemPtr &x) {
 
 
 //
+// global variable
+//
+
+static bool globalVariable(TopLevelItemPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("var")) return false;
+    IdentifierPtr y;
+    if (!identifier(y)) return false;
+    if (!symbol("=")) return false;
+    ExprPtr z;
+    if (!expression(z)) return false;
+    if (!symbol(";")) return false;
+    x = new GlobalVariable(y, z);
+    x->location = location;
+    return true;
+}
+
+
+
+//
 // external procedure
 //
 
@@ -1622,6 +1642,7 @@ static bool topLevelItem(TopLevelItemPtr &x) {
     if (restore(p), overloadable(x)) return true;
     if (restore(p), overload(x)) return true;
     if (restore(p), enumeration(x)) return true;
+    if (restore(p), globalVariable(x)) return true;
     if (restore(p), external(x)) return true;
     if (restore(p), staticGlobal(x)) return true;
     if (restore(p), staticProcedure(x)) return true;
