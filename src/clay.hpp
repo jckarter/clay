@@ -265,6 +265,8 @@ struct RecordField;
 struct Procedure;
 struct Overload;
 struct Overloadable;
+struct Enumeration;
+struct EnumMember;
 struct ExternalProcedure;
 struct ExternalArg;
 
@@ -273,9 +275,6 @@ struct StaticCode;
 struct StaticProcedure;
 struct StaticOverloadable;
 struct StaticOverload;
-
-struct Enumeration;
-struct EnumMember;
 
 struct Import;
 struct ImportModule;
@@ -382,6 +381,8 @@ typedef Pointer<RecordField> RecordFieldPtr;
 typedef Pointer<Procedure> ProcedurePtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Overloadable> OverloadablePtr;
+typedef Pointer<Enumeration> EnumerationPtr;
+typedef Pointer<EnumMember> EnumMemberPtr;
 typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
 
@@ -390,9 +391,6 @@ typedef Pointer<StaticCode> StaticCodePtr;
 typedef Pointer<StaticProcedure> StaticProcedurePtr;
 typedef Pointer<StaticOverloadable> StaticOverloadablePtr;
 typedef Pointer<StaticOverload> StaticOverloadPtr;
-
-typedef Pointer<Enumeration> EnumerationPtr;
-typedef Pointer<EnumMember> EnumMemberPtr;
 
 typedef Pointer<Import> ImportPtr;
 typedef Pointer<ImportModule> ImportModulePtr;
@@ -1015,6 +1013,24 @@ struct Overloadable : public TopLevelItem {
           staticFlagsInitialized(false) {}
 };
 
+struct Enumeration : public TopLevelItem {
+    IdentifierPtr name;
+    vector<EnumMemberPtr> members;
+    TypePtr type;
+    Enumeration(IdentifierPtr name)
+        : TopLevelItem(ENUMERATION), name(name) {}
+    Enumeration(IdentifierPtr name, const vector<EnumMemberPtr> &members)
+        : TopLevelItem(ENUMERATION), name(name), members(members) {}
+};
+
+struct EnumMember : public ANode {
+    IdentifierPtr name;
+    int index;
+    TypePtr type;
+    EnumMember(IdentifierPtr name)
+        : ANode(ENUM_MEMBER), name(name), index(-1) {}
+};
+
 struct ExternalProcedure : public TopLevelItem {
     IdentifierPtr name;
     vector<ExternalArgPtr> args;
@@ -1102,32 +1118,6 @@ struct StaticOverload : public TopLevelItem {
 
     StaticOverload(ExprPtr target, StaticCodePtr code)
         : TopLevelItem(STATIC_OVERLOAD), target(target), code(code) {}
-};
-
-
-
-//
-// Enumeration, EnumMember
-//
-
-struct Enumeration : public TopLevelItem {
-    IdentifierPtr name;
-    vector<EnumMemberPtr> members;
-
-    TypePtr type;
-    
-    Enumeration(IdentifierPtr name)
-        : TopLevelItem(ENUMERATION), name(name) {}
-    Enumeration(IdentifierPtr name, const vector<EnumMemberPtr> &members)
-        : TopLevelItem(ENUMERATION), name(name), members(members) {}
-};
-
-struct EnumMember : public ANode {
-    IdentifierPtr name;
-    int index;
-    TypePtr type;
-    EnumMember(IdentifierPtr name)
-        : ANode(ENUM_MEMBER), name(name), index(-1) {}
 };
 
 

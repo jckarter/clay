@@ -120,21 +120,7 @@ static void installGlobals(ModulePtr m) {
         case OVERLOADABLE :
             addGlobal(m, ((Overloadable *)x)->name, x);
             break;
-        case EXTERNAL_PROCEDURE :
-            addGlobal(m, ((ExternalProcedure *)x)->name, x);
-            break;
         case OVERLOAD :
-            break;
-        case STATIC_GLOBAL :
-            addGlobal(m, ((StaticGlobal *)x)->name, x);
-            break;
-        case STATIC_PROCEDURE :
-            addGlobal(m, ((StaticProcedure *)x)->name, x);
-            break;
-        case STATIC_OVERLOADABLE :
-            addGlobal(m, ((StaticOverloadable *)x)->name, x);
-            break;
-        case STATIC_OVERLOAD :
             break;
         case ENUMERATION : {
             Enumeration *y = (Enumeration *)x;
@@ -148,6 +134,20 @@ static void installGlobals(ModulePtr m) {
             }
             break;
         }
+        case EXTERNAL_PROCEDURE :
+            addGlobal(m, ((ExternalProcedure *)x)->name, x);
+            break;
+        case STATIC_GLOBAL :
+            addGlobal(m, ((StaticGlobal *)x)->name, x);
+            break;
+        case STATIC_PROCEDURE :
+            addGlobal(m, ((StaticProcedure *)x)->name, x);
+            break;
+        case STATIC_OVERLOADABLE :
+            addGlobal(m, ((StaticOverloadable *)x)->name, x);
+            break;
+        case STATIC_OVERLOAD :
+            break;
         default :
             assert(false);
         }
