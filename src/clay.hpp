@@ -1326,6 +1326,8 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
 void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
 
+BlockPtr globalVarInitializers();
+
 ModulePtr loadedModule(const string &module);
 ObjectPtr kernelName(const string &name);
 ObjectPtr primName(const string &name);
