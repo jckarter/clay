@@ -35,7 +35,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     assert(!x->initialized);
     x->initialized = true;
 
-    RecordPtr r = new Record();
+    RecordPtr r = new Record(PRIVATE);
     r->location = x->location;
     r->name = new Identifier("LambdaFreeVars");
     x->lambdaRecord = r;

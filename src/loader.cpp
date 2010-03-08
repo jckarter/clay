@@ -114,50 +114,25 @@ static void installGlobals(ModulePtr m) {
                 TypePtr t = recordType(y, vector<ObjectPtr>());
                 z = t.ptr();
             }
-            addGlobal(m, y->name, z);
+            addGlobal(m, y->name, y->visibility, z);
             break;
         }
-        case PROCEDURE :
-            addGlobal(m, ((Procedure *)x)->name, x);
-            break;
-        case OVERLOADABLE :
-            addGlobal(m, ((Overloadable *)x)->name, x);
-            break;
-        case OVERLOAD :
-            break;
         case ENUMERATION : {
             Enumeration *y = (Enumeration *)x;
             TypePtr t = enumType(y);
-            addGlobal(m, y->name, t.ptr());
+            addGlobal(m, y->name, y->visibility, t.ptr());
             for (unsigned i = 0 ; i < y->members.size(); ++i) {
                 EnumMember *z = y->members[i].ptr();
                 z->index = (int)i;
                 z->type = t;
-                addGlobal(m, z->name, z);
+                addGlobal(m, z->name, y->visibility, z);
             }
             break;
         }
-        case GLOBAL_VARIABLE : {
-            GlobalVariable *y = (GlobalVariable *)x;
-            addGlobal(m, y->name, y);
-            break;
-        }
-        case EXTERNAL_PROCEDURE :
-            addGlobal(m, ((ExternalProcedure *)x)->name, x);
-            break;
-        case STATIC_GLOBAL :
-            addGlobal(m, ((StaticGlobal *)x)->name, x);
-            break;
-        case STATIC_PROCEDURE :
-            addGlobal(m, ((StaticProcedure *)x)->name, x);
-            break;
-        case STATIC_OVERLOADABLE :
-            addGlobal(m, ((StaticOverloadable *)x)->name, x);
-            break;
-        case STATIC_OVERLOAD :
-            break;
         default :
-            assert(false);
+            if (x->name.ptr())
+                addGlobal(m, x->name, x->visibility, x);
+            break;
         }
     }
 }
@@ -201,6 +176,7 @@ static ModuleHolderPtr installHolder(ModuleHolderPtr mh, IdentifierPtr name) {
 
 static void loadDependents(ModulePtr m) {
     m->rootHolder = new ModuleHolder();
+    m->publicRootHolder = new ModuleHolder();
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
         ImportPtr x = *ii;
@@ -208,18 +184,34 @@ static void loadDependents(ModulePtr m) {
         switch (x->importKind) {
         case IMPORT_MODULE : {
             ImportModule *y = (ImportModule *)x.ptr();
-            ModuleHolderPtr holder = m->rootHolder;
-            if (y->alias.ptr()) {
-                holder = installHolder(holder, y->alias);
+            {
+                ModuleHolderPtr holder = m->rootHolder;
+                if (y->alias.ptr()) {
+                    holder = installHolder(holder, y->alias);
+                }
+                else {
+                    vector<IdentifierPtr> &parts = y->dottedName->parts;
+                    for (unsigned i = 0; i < parts.size(); ++i)
+                        holder = installHolder(holder, parts[i]);
+                }
+                if (holder->import.ptr())
+                    error(x, "module already imported");
+                holder->import = y;
             }
-            else {
-                vector<IdentifierPtr> &parts = y->dottedName->parts;
-                for (unsigned i = 0; i < parts.size(); ++i)
-                    holder = installHolder(holder, parts[i]);
+            if (y->visibility == PUBLIC) {
+                ModuleHolderPtr holder = m->publicRootHolder;
+                if (y->alias.ptr()) {
+                    holder = installHolder(holder, y->alias);
+                }
+                else {
+                    vector<IdentifierPtr> &parts = y->dottedName->parts;
+                    for (unsigned i = 0; i < parts.size(); ++i)
+                        holder = installHolder(holder, parts[i]);
+                }
+                if (holder->import.ptr())
+                    error(x, "module already imported");
+                holder->import = y;
             }
-            if (holder->import.ptr())
-                error(x, "module already imported");
-            holder->import = y;
             break;
         }
         case IMPORT_STAR : {
@@ -353,23 +345,28 @@ static string toPrimStr(const string &s) {
     return name;
 }
 
+static void addPrim(ModulePtr m, const string &name, ObjectPtr x) {
+    m->globals[name] = x;
+    m->publicGlobals[name] = x;
+}
+
 static ModulePtr makePrimitivesModule() {
     ModulePtr prims = new Module();
 
-    prims->globals["Bool"] = boolType.ptr();
-    prims->globals["Int8"] = int8Type.ptr();
-    prims->globals["Int16"] = int16Type.ptr();
-    prims->globals["Int32"] = int32Type.ptr();
-    prims->globals["Int64"] = int64Type.ptr();
-    prims->globals["UInt8"] = uint8Type.ptr();
-    prims->globals["UInt16"] = uint16Type.ptr();
-    prims->globals["UInt32"] = uint32Type.ptr();
-    prims->globals["UInt64"] = uint64Type.ptr();
-    prims->globals["Float32"] = float32Type.ptr();
-    prims->globals["Float64"] = float64Type.ptr();
-    prims->globals["Void"] = voidType.ptr();
+    addPrim(prims, "Bool", boolType.ptr());
+    addPrim(prims, "Int8", int8Type.ptr());
+    addPrim(prims, "Int16", int16Type.ptr());
+    addPrim(prims, "Int32", int32Type.ptr());
+    addPrim(prims, "Int64", int64Type.ptr());
+    addPrim(prims, "UInt8", uint8Type.ptr());
+    addPrim(prims, "UInt16", uint16Type.ptr());
+    addPrim(prims, "UInt32", uint32Type.ptr());
+    addPrim(prims, "UInt64", uint64Type.ptr());
+    addPrim(prims, "Float32", float32Type.ptr());
+    addPrim(prims, "Float64", float64Type.ptr());
+    addPrim(prims, "Void", voidType.ptr());
 
-#define PRIMITIVE(x) prims->globals[toPrimStr(#x)] = new PrimOp(PRIM_##x)
+#define PRIMITIVE(x) addPrim(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
 
     PRIMITIVE(TypeOf);
 

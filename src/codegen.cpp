@@ -2595,7 +2595,7 @@ static ProcedurePtr makeInitializerProcedure() {
     CodePtr code = new Code();
     code->body = globalVarInitializers().ptr();
     IdentifierPtr name = new Identifier("%initGlobals");
-    ProcedurePtr proc = new Procedure(name, code);
+    ProcedurePtr proc = new Procedure(name, PRIVATE, code);
     proc->env = new Env();
     return proc;
 }

@@ -1186,6 +1186,36 @@ static bool body(StatementPtr &x) {
 
 
 //
+// topLevelVisibility, importVisibility
+//
+
+bool optVisibility(Visibility defaultVisibility, Visibility &x) {
+    int p = save();
+    if (keyword("public")) {
+        x = PUBLIC;
+        return true;
+    }
+    restore(p);
+    if (keyword("private")) {
+        x = PRIVATE;
+        return true;
+    }
+    restore(p);
+    x = defaultVisibility;
+    return true;
+}
+
+bool topLevelVisibility(Visibility &x) {
+    return optVisibility(PUBLIC, x);
+}
+
+bool importVisibility(Visibility &x) {
+    return optVisibility(PRIVATE, x);
+}
+
+
+
+//
 // records
 //
 
@@ -1219,8 +1249,10 @@ static bool recordFields(vector<RecordFieldPtr> &x) {
 
 static bool record(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     if (!keyword("record")) return false;
-    RecordPtr y = new Record();
+    RecordPtr y = new Record(vis);
     if (!identifier(y->name)) return false;
     if (!optPatternVars(y->patternVars)) return false;
     if (!symbol("{")) return false;
@@ -1269,24 +1301,28 @@ static bool procedure(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     IdentifierPtr z;
     if (!identifier(z)) return false;
     if (!arguments(y->formalArgs)) return false;
     if (!optReturnSpec(y->returnType, y->returnRef)) return false;
     if (!body(y->body)) return false;
     y->location = location;
-    x = new Procedure(z, y);
+    x = new Procedure(z, vis, y);
     x->location = location;
     return true;
 }
 
 static bool overloadable(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     if (!keyword("overloadable")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
     if (!symbol(";")) return false;
-    x = new Overloadable(y);
+    x = new Overloadable(y, vis);
     x->location = location;
     return true;
 }
@@ -1340,10 +1376,12 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
 
 static bool enumeration(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     if (!keyword("enum")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
-    EnumerationPtr z = new Enumeration(y);
+    EnumerationPtr z = new Enumeration(y, vis);
     if (!symbol("{")) return false;
     if (!enumMemberList(z->members)) return false;
     if (!symbol("}")) return false;
@@ -1360,6 +1398,8 @@ static bool enumeration(TopLevelItemPtr &x) {
 
 static bool globalVariable(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     if (!keyword("var")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
@@ -1367,7 +1407,7 @@ static bool globalVariable(TopLevelItemPtr &x) {
     ExprPtr z;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    x = new GlobalVariable(y, z);
+    x = new GlobalVariable(y, vis, z);
     x->location = location;
     return true;
 }
@@ -1440,8 +1480,10 @@ static bool externalArgs(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
 
 static bool external(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     if (!keyword("external")) return false;
-    ExternalProcedurePtr y = new ExternalProcedure();
+    ExternalProcedurePtr y = new ExternalProcedure(vis);
     if (!identifier(y->name)) return false;
     if (!symbol("(")) return false;
     if (!externalArgs(y->args, y->hasVarArgs)) return false;
@@ -1461,6 +1503,8 @@ static bool external(TopLevelItemPtr &x) {
 
 static bool staticGlobal(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     if (!keyword("static")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
@@ -1468,7 +1512,7 @@ static bool staticGlobal(TopLevelItemPtr &x) {
     ExprPtr z;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    x = new StaticGlobal(y, z);
+    x = new StaticGlobal(y, vis, z);
     x->location = location;
     return true;
 }
@@ -1477,6 +1521,8 @@ static bool staticProcedure(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     StaticCodePtr y = new StaticCode();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     if (!keyword("static")) return false;
     IdentifierPtr z;
     if (!identifier(z)) return false;
@@ -1486,19 +1532,21 @@ static bool staticProcedure(TopLevelItemPtr &x) {
     if (!symbol("=")) return false;
     if (!expression(y->body)) return false;
     if (!symbol(";")) return false;
-    x = new StaticProcedure(z, y);
+    x = new StaticProcedure(z, vis, y);
     x->location = location;
     return true;
 }
 
 static bool staticOverloadable(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     if (!keyword("static")) return false;
     if (!keyword("overloadable")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
     if (!symbol(";")) return false;
-    x = new StaticOverloadable(y);
+    x = new StaticOverloadable(y, vis);
     x->location = location;
     return true;
 }
@@ -1545,26 +1593,30 @@ static bool optImportAlias(IdentifierPtr &x) {
 
 static bool importModule(ImportPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!importVisibility(vis)) return false;
     if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     IdentifierPtr z;
     if (!optImportAlias(z)) return false;
     if (!symbol(";")) return false;
-    x = new ImportModule(y, z);
+    x = new ImportModule(y, vis, z);
     x->location = location;
     return true;
 }
 
 static bool importStar(ImportPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!importVisibility(vis)) return false;
     if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     if (!symbol(".")) return false;
     if (!symbol("*")) return false;
     if (!symbol(";")) return false;
-    x = new ImportStar(y);
+    x = new ImportStar(y, vis);
     x->location = location;
     return true;
 }
@@ -1593,12 +1645,14 @@ static bool importedMemberList(vector<ImportedMember> &x) {
 
 static bool importMembers(ImportPtr &x) {
     LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!importVisibility(vis)) return false;
     if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     if (!symbol(".")) return false;
     if (!symbol("(")) return false;
-    ImportMembersPtr z = new ImportMembers(y);
+    ImportMembersPtr z = new ImportMembers(y, vis);
     if (!importedMemberList(z->members)) return false;
     if (!symbol(")")) return false;
     if (!symbol(";")) return false;

@@ -225,7 +225,7 @@ void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v)
     CodePtr code = new Code();
     code->body = new Return(expr);
     IdentifierPtr name = new Identifier("clay_eval_temp");
-    ProcedurePtr proc = new Procedure(name, code);
+    ProcedurePtr proc = new Procedure(name, PRIVATE, code);
     proc->env = env;
     InvokeEntryPtr entry = codegenProcedure(proc,
                                             vector<bool>(),

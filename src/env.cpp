@@ -8,18 +8,28 @@ typedef map<string, ObjectPtr>::iterator MapIter;
 
 
 //
-// addGlobal, lookupGlobal
+// addGlobal
 //
 
-void addGlobal(ModulePtr module, IdentifierPtr name, ObjectPtr value) {
+void addGlobal(ModulePtr module,
+               IdentifierPtr name,
+               Visibility visibility,
+               ObjectPtr value)
+{
     MapIter i = module->globals.find(name->str);
     if (i != module->globals.end())
         error(name, "name redefined: " + name->str);
     module->globals[name->str] = value;
+    if (visibility == PUBLIC) {
+        module->publicGlobals[name->str] = value;
+    }
 }
 
 static ObjectPtr
-lookupImportedNames(ModulePtr module, IdentifierPtr name) {
+lookupImportedNames(ModulePtr module,
+                    IdentifierPtr name,
+                    Visibility visibility)
+{
     vector<ImportPtr> &x = module->imports;
     vector<ImportPtr>::iterator ii, iend;
     ObjectPtr result;
@@ -31,16 +41,20 @@ lookupImportedNames(ModulePtr module, IdentifierPtr name) {
             break;
         case IMPORT_STAR : {
             ImportStar *z = (ImportStar *)y.ptr();
-            entry = lookupPublic(z->module, name);
+            if ((visibility == PRIVATE) || (z->visibility == PUBLIC)) {
+                entry = lookupPublic(z->module, name);
+            }
             break;
         }
         case IMPORT_MEMBERS : {
             ImportMembers *z = (ImportMembers *)y.ptr();
-            IdentifierPtr name2;
-            map<string, IdentifierPtr>::iterator i =
-                z->aliasMap.find(name->str);
-            if (i != z->aliasMap.end())
-                entry = lookupPublic(z->module, i->second);
+            if ((visibility == PRIVATE) || (z->visibility == PUBLIC)) {
+                IdentifierPtr name2;
+                map<string, IdentifierPtr>::iterator i =
+                    z->aliasMap.find(name->str);
+                if (i != z->aliasMap.end())
+                    entry = lookupPublic(z->module, i->second);
+            }
             break;
         }
         default :
@@ -74,14 +88,20 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     }
 }
 
-ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name) {
+
+
+//
+// lookupPrivate
+//
+
+ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
     if (module->lookupBusy)
         return NULL;
     MapIter i = module->globals.find(name->str);
     if (i != module->globals.end())
         return i->second;
     module->lookupBusy = true;
-    ObjectPtr result1 = lookupImportedNames(module, name);
+    ObjectPtr result1 = lookupImportedNames(module, name, PRIVATE);
     ObjectPtr result2 = lookupModuleHolder(module->rootHolder, name);
     module->lookupBusy = false;
     if (result1.ptr()) {
@@ -101,9 +121,23 @@ ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name) {
 //
 
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
-    // since we don't have private definitions yet,
-    // lookupPublic is the same as lookupGlobal.
-    return lookupGlobal(module, name);
+    if (module->lookupBusy)
+        return NULL;
+    MapIter i = module->publicGlobals.find(name->str);
+    if (i != module->publicGlobals.end())
+        return i->second;
+    module->lookupBusy = true;
+    ObjectPtr result1 = lookupImportedNames(module, name, PUBLIC);
+    ObjectPtr result2 = lookupModuleHolder(module->publicRootHolder, name);
+    module->lookupBusy = false;
+    if (result1.ptr()) {
+        if (result2.ptr() && (result1 != result2))
+            error(name, "ambiguous imported symbol: " + name->str);
+        return result1;
+    }
+    else {
+        return result2;
+    }
 }
 
 
@@ -131,7 +165,7 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
         }
         case MODULE : {
             Module *y = (Module *)env->parent.ptr();
-            ObjectPtr z = lookupGlobal(y, name);
+            ObjectPtr z = lookupPrivate(y, name);
             if (!z)
                 error(name, "undefined name: " + name->str);
             return z;
@@ -181,7 +215,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
     }
     case MODULE : {
         Module *y = (Module *)env->parent.ptr();
-        ObjectPtr z = lookupGlobal(y, name);
+        ObjectPtr z = lookupPrivate(y, name);
         if (!z)
             error(name, "undefined name: " + name->str);
         isNonLocal = true;
