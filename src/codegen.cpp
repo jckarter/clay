@@ -2591,6 +2591,15 @@ CValuePtr codegenInvokePrimOp2(PrimOpPtr x,
 // codegenMain
 //
 
+static ProcedurePtr makeInitializerProcedure() {
+    CodePtr code = new Code();
+    code->body = globalVarInitializers().ptr();
+    IdentifierPtr name = new Identifier("%initGlobals");
+    ProcedurePtr proc = new Procedure(name, code);
+    proc->env = new Env();
+    return proc;
+}
+
 llvm::Function *codegenMain(ModulePtr module)
 {
     llvm::FunctionType *llMainType =
@@ -2614,6 +2623,13 @@ llvm::Function *codegenMain(ModulePtr module)
 
     llvmInitBuilder = new llvm::IRBuilder<>(initBlock);
     llvmBuilder = new llvm::IRBuilder<>(codeBlock);
+
+    ProcedurePtr initProc = makeInitializerProcedure();
+    ObjectPtr initProcAnalysis = analyzeInvokeProcedure(initProc,
+                                                        vector<ExprPtr>(),
+                                                        module->env);
+    assert(initProcAnalysis->objKind == VOID_VALUE);
+    codegenInvokeVoid(initProc.ptr(), vector<ExprPtr>(), module->env);
 
     ObjectPtr mainObj = lookupEnv(module->env, new Identifier("main"));
     if (mainObj->objKind != PROCEDURE)

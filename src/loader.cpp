@@ -13,6 +13,9 @@ using namespace std;
 static vector<string> searchPath;
 static map<string, ModulePtr> modules;
 
+static BlockPtr gvarInitializers;;
+
+
 
 //
 // addSearchPath, locateFile
@@ -245,8 +248,13 @@ ModulePtr loadProgram(const string &fileName) {
     ModulePtr m = parse(loadFile(fileName));
     loadDependents(m);
     installGlobals(m);
+    gvarInitializers = new Block();
     initModule(m);
     return m;
+}
+
+BlockPtr globalVarInitializers() {
+    return gvarInitializers;
 }
 
 ModulePtr loadedModule(const string &module) {
@@ -314,6 +322,17 @@ static void initModule(ModulePtr m) {
         case OVERLOAD :
             initOverload((Overload *)obj);
             break;
+        case GLOBAL_VARIABLE : {
+            GlobalVariable *x = (GlobalVariable *)obj;
+            ExprPtr lhs = new NameRef(x->name);
+            lhs->location = x->name->location;
+            StatementPtr y = new InitAssignment(lhs, x->expr);
+            y->location = x->location;
+            StatementPtr z = new SCStatement(x->env, y);
+            z->location = y->location;
+            gvarInitializers->statements.push_back(z);
+            break;
+        }
         case STATIC_OVERLOAD :
             initStaticOverload((StaticOverload *)obj);
             break;
