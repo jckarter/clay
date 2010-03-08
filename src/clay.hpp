@@ -158,6 +158,7 @@ enum ObjectKind {
     BREAK,
     CONTINUE,
     FOR,
+    SC_STATEMENT,
 
     CODE,
     VALUE_ARG,
@@ -253,6 +254,7 @@ struct While;
 struct Break;
 struct Continue;
 struct For;
+struct SCStatement;
 
 struct FormalArg;
 struct ValueArg;
@@ -370,6 +372,7 @@ typedef Pointer<While> WhilePtr;
 typedef Pointer<Break> BreakPtr;
 typedef Pointer<Continue> ContinuePtr;
 typedef Pointer<For> ForPtr;
+typedef Pointer<SCStatement> SCStatementPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ValueArg> ValueArgPtr;
@@ -905,6 +908,13 @@ struct For : public Statement {
     StatementPtr desugared;
     For(IdentifierPtr variable, ExprPtr expr, StatementPtr body)
         : Statement(FOR), variable(variable), expr(expr), body(body) {}
+};
+
+struct SCStatement : public Statement {
+    EnvPtr env;
+    StatementPtr statement;
+    SCStatement(EnvPtr env, StatementPtr statement)
+        : Statement(SC_STATEMENT), env(env), statement(statement) {}
 };
 
 
