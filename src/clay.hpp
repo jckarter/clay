@@ -963,17 +963,33 @@ struct Code : public ANode {
 
 
 //
+// Visibility
+//
+
+enum Visibility {
+    PUBLIC,
+    PRIVATE,
+};
+
+
+
+//
 // TopLevelItem
 //
 
 struct TopLevelItem : public ANode {
     EnvPtr env;
+    IdentifierPtr name; // for named top level items
+    Visibility visibility; // valid only if name != NULL
     TopLevelItem(int objKind)
         : ANode(objKind) {}
+    TopLevelItem(int objKind, Visibility visibility)
+        : ANode(objKind), visibility(visibility) {}
+    TopLevelItem(int objKind, IdentifierPtr name, Visibility visibility)
+        : ANode(objKind), name(name), visibility(visibility) {}
 };
 
 struct Record : public TopLevelItem {
-    IdentifierPtr name;
     vector<IdentifierPtr> patternVars;
     vector<RecordFieldPtr> fields;
 
@@ -982,13 +998,15 @@ struct Record : public TopLevelItem {
 
     bool staticFlagsInitialized;
 
-    Record()
-        : TopLevelItem(RECORD), builtinOverloadInitialized(false),
+    Record(Visibility visibility)
+        : TopLevelItem(RECORD, visibility),
+          builtinOverloadInitialized(false),
           staticFlagsInitialized(false) {}
     Record(IdentifierPtr name,
+           Visibility visibility,
            const vector<IdentifierPtr> &patternVars,
            const vector<RecordFieldPtr> &fields)
-        : TopLevelItem(RECORD), name(name), patternVars(patternVars),
+        : TopLevelItem(RECORD, name, visibility), patternVars(patternVars),
           fields(fields), builtinOverloadInitialized(false),
           staticFlagsInitialized(false) {}
 };
@@ -1001,11 +1019,10 @@ struct RecordField : public ANode {
 };
 
 struct Procedure : public TopLevelItem {
-    IdentifierPtr name;
     CodePtr code;
     bool staticFlagsInitialized;
-    Procedure(IdentifierPtr name, CodePtr code)
-        : TopLevelItem(PROCEDURE), name(name), code(code),
+    Procedure(IdentifierPtr name, Visibility visibility, CodePtr code)
+        : TopLevelItem(PROCEDURE, name, visibility), code(code),
           staticFlagsInitialized(false) {}
 };
 
@@ -1017,22 +1034,21 @@ struct Overload : public TopLevelItem {
 };
 
 struct Overloadable : public TopLevelItem {
-    IdentifierPtr name;
     vector<OverloadPtr> overloads;
     bool staticFlagsInitialized;
-    Overloadable(IdentifierPtr name)
-        : TopLevelItem(OVERLOADABLE), name(name),
+    Overloadable(IdentifierPtr name, Visibility visibility)
+        : TopLevelItem(OVERLOADABLE, name, visibility),
           staticFlagsInitialized(false) {}
 };
 
 struct Enumeration : public TopLevelItem {
-    IdentifierPtr name;
     vector<EnumMemberPtr> members;
     TypePtr type;
-    Enumeration(IdentifierPtr name)
-        : TopLevelItem(ENUMERATION), name(name) {}
-    Enumeration(IdentifierPtr name, const vector<EnumMemberPtr> &members)
-        : TopLevelItem(ENUMERATION), name(name), members(members) {}
+    Enumeration(IdentifierPtr name, Visibility visibility)
+        : TopLevelItem(ENUMERATION, name, visibility) {}
+    Enumeration(IdentifierPtr name, Visibility visibility,
+                const vector<EnumMemberPtr> &members)
+        : TopLevelItem(ENUMERATION, name, visibility), members(members) {}
 };
 
 struct EnumMember : public ANode {
@@ -1044,7 +1060,6 @@ struct EnumMember : public ANode {
 };
 
 struct GlobalVariable : public TopLevelItem {
-    IdentifierPtr name;
     ExprPtr expr;
 
     bool analyzing;
@@ -1052,13 +1067,12 @@ struct GlobalVariable : public TopLevelItem {
 
     llvm::GlobalVariable *llGlobal;
 
-    GlobalVariable(IdentifierPtr name, ExprPtr expr)
-        : TopLevelItem(GLOBAL_VARIABLE), name(name), expr(expr),
+    GlobalVariable(IdentifierPtr name, Visibility visibility, ExprPtr expr)
+        : TopLevelItem(GLOBAL_VARIABLE, name, visibility), expr(expr),
           analyzing(false), llGlobal(false) {}
 };
 
 struct ExternalProcedure : public TopLevelItem {
-    IdentifierPtr name;
     vector<ExternalArgPtr> args;
     bool hasVarArgs;
     ExprPtr returnType;
@@ -1068,14 +1082,15 @@ struct ExternalProcedure : public TopLevelItem {
 
     llvm::Function *llvmFunc;
 
-    ExternalProcedure()
-        : TopLevelItem(EXTERNAL_PROCEDURE), hasVarArgs(false),
+    ExternalProcedure(Visibility visibility)
+        : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
           analyzed(false), llvmFunc(NULL) {}
     ExternalProcedure(IdentifierPtr name,
+                      Visibility visibility,
                       const vector<ExternalArgPtr> &args,
                       bool hasVarArgs,
                       ExprPtr returnType)
-        : TopLevelItem(EXTERNAL_PROCEDURE), name(name), args(args), 
+        : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
           hasVarArgs(hasVarArgs), returnType(returnType),
           analyzed(false), llvmFunc(NULL) {}
 };
@@ -1096,14 +1111,13 @@ struct ExternalArg : public ANode {
 //
 
 struct StaticGlobal : public TopLevelItem {
-    IdentifierPtr name;
     ExprPtr expr;
 
     bool analyzing;
     ObjectPtr result;
 
-    StaticGlobal(IdentifierPtr name, ExprPtr expr)
-        : TopLevelItem(STATIC_GLOBAL), name(name), expr(expr),
+    StaticGlobal(IdentifierPtr name, Visibility visibility, ExprPtr expr)
+        : TopLevelItem(STATIC_GLOBAL, name, visibility), expr(expr),
           analyzing(false) {}
 };
 
@@ -1124,18 +1138,18 @@ struct StaticCode : public ANode {
 };
 
 struct StaticProcedure : public TopLevelItem {
-    IdentifierPtr name;
     StaticCodePtr code;
 
-    StaticProcedure(IdentifierPtr name, StaticCodePtr code)
-        : TopLevelItem(STATIC_PROCEDURE), name(name), code(code) {}
+    StaticProcedure(IdentifierPtr name,
+                    Visibility visibility,
+                    StaticCodePtr code)
+        : TopLevelItem(STATIC_PROCEDURE, name, visibility), code(code) {}
 };
 
 struct StaticOverloadable : public TopLevelItem {
-    IdentifierPtr name;
     vector<StaticOverloadPtr> overloads;
-    StaticOverloadable(IdentifierPtr name)
-        : TopLevelItem(STATIC_OVERLOADABLE), name(name) {}
+    StaticOverloadable(IdentifierPtr name, Visibility visibility)
+        : TopLevelItem(STATIC_OVERLOADABLE, name, visibility) {}
 };
 
 struct StaticOverload : public TopLevelItem {
@@ -1161,20 +1175,24 @@ enum ImportKind {
 struct Import : public ANode {
     int importKind;
     DottedNamePtr dottedName;
+    Visibility visibility;
     ModulePtr module;
-    Import(int importKind, DottedNamePtr dottedName)
-        : ANode(IMPORT), importKind(importKind), dottedName(dottedName) {}
+    Import(int importKind, DottedNamePtr dottedName, Visibility visibility)
+        : ANode(IMPORT), importKind(importKind), dottedName(dottedName),
+          visibility(visibility) {}
 };
 
 struct ImportModule : public Import {
     IdentifierPtr alias;
-    ImportModule(DottedNamePtr dottedName, IdentifierPtr alias)
-        : Import(IMPORT_MODULE, dottedName), alias(alias) {}
+    ImportModule(DottedNamePtr dottedName,
+                 Visibility visibility,
+                 IdentifierPtr alias)
+        : Import(IMPORT_MODULE, dottedName, visibility), alias(alias) {}
 };
 
 struct ImportStar : public Import {
-    ImportStar(DottedNamePtr dottedName)
-        : Import(IMPORT_STAR, dottedName) {}
+    ImportStar(DottedNamePtr dottedName, Visibility visibility)
+        : Import(IMPORT_STAR, dottedName, visibility) {}
 };
 
 struct ImportedMember {
@@ -1188,8 +1206,8 @@ struct ImportedMember {
 struct ImportMembers : public Import {
     vector<ImportedMember> members;
     map<string, IdentifierPtr> aliasMap;
-    ImportMembers(DottedNamePtr dottedName)
-        : Import(IMPORT_MEMBERS, dottedName) {}
+    ImportMembers(DottedNamePtr dottedName, Visibility visibility)
+        : Import(IMPORT_MEMBERS, dottedName, visibility) {}
 };
 
 
@@ -1211,6 +1229,10 @@ struct Module : public ANode {
 
     ModuleHolderPtr rootHolder;
     map<string, ObjectPtr> globals;
+
+    ModuleHolderPtr publicRootHolder;
+    map<string, ObjectPtr> publicGlobals;
+
     EnvPtr env;
     bool initialized;
 
@@ -1305,9 +1327,12 @@ struct Env : public Object {
 // env module
 //
 
-void addGlobal(ModulePtr module, IdentifierPtr name, ObjectPtr value);
+void addGlobal(ModulePtr module,
+               IdentifierPtr name,
+               Visibility visibility,
+               ObjectPtr value);
 ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name);
-ObjectPtr lookupGlobal(ModulePtr module, IdentifierPtr name);
+ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name);
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
 
 void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);

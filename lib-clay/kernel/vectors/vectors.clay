@@ -1,4 +1,6 @@
+import __primitives__.*;
 import kernel.operators.*;
+import kernel.coordinates.*;
 import kernel.sequences.*;
 import kernel.numbers.*;
 import kernel.pointers.*;

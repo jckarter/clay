@@ -1,4 +1,4 @@
-import kernel.operators.*;
+import kernel.*;
 
 external printf(formatString:Pointer[Int8], ...): Int32;
 
