@@ -308,6 +308,12 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case SC_STATEMENT : {
+        SCStatement *y = (SCStatement *)x.ptr();
+        out = new SCStatement(y->env, clone(y->statement));
+        break;
+    }
+
     default :
         assert(false);
 

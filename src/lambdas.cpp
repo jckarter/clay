@@ -237,6 +237,10 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case SC_STATEMENT : {
+        break;
+    }
+
     default :
         assert(false);
 
