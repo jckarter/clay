@@ -396,6 +396,11 @@ static void print(const Object *x, ostream &out) {
         out << ", " << y->body << ")";
         break;
     }
+    case SC_STATEMENT : {
+        SCStatement *y = (SCStatement *)x;
+        out << "SCStatement(" << y->statement << ")";
+        break;
+    }
 
     case CODE : {
         Code *y = (Code *)x;

@@ -513,6 +513,11 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         return codegenStatement(x->desugared, env, ctx);
     }
 
+    case SC_STATEMENT : {
+        SCStatement *x = (SCStatement *)stmt.ptr();
+        return codegenStatement(x->statement, x->env, ctx);
+    }
+
     default :
         assert(false);
         return false;

@@ -881,6 +881,11 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
         return analyzeStatement(x->desugared, env, result);
     }
 
+    case SC_STATEMENT : {
+        SCStatement *x = (SCStatement *)stmt.ptr();
+        return analyzeStatement(x->statement, x->env, result);
+    }
+
     default :
         assert(false);
         return false;
