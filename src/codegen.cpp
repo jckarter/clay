@@ -309,8 +309,6 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         InitAssignment *x = (InitAssignment *)stmt.ptr();
         PValuePtr pvLeft = analyzeValue(x->left, env);
         PValuePtr pvRight = analyzeValue(x->right, env);
-        if (pvLeft->type != pvRight->type)
-            error("type mismatch in assignment");
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
         int marker = cgMarkStack();
@@ -621,7 +619,7 @@ CValuePtr codegenRootValue(ExprPtr expr, EnvPtr env, CValuePtr out)
 
 void codegenIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, CValuePtr out)
 {
-    if (pv->isTemp) {
+    if (pv->isTemp && (pv->type == out->type)) {
         codegenValue(expr, env, out);
     }
     else {
