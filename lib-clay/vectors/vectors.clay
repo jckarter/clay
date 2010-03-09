@@ -237,9 +237,10 @@ ensureSpace(a:Vector[T], space:Int32) {
         setCapacity(a, 2*(a.size + space));
 }
 
-[T]
-insertLocation(a:Vector[T], i:VectorCoordinate[T]) {
+[T,I | IntegerType?(I)]
+insertLocation(a:Vector[T], pos:I) {
     ensureSpace(a, 1);
+    var i = begin(a) + pos;
     var j = end(a);
     while (i < j) {
         j^ <-- move((j-1)^);
@@ -251,12 +252,12 @@ insertLocation(a:Vector[T], i:VectorCoordinate[T]) {
 
 [T,I|IntegerType?(I)]
 overload insert(a:Vector[T], i:I, x) {
-    insertLocation(a, begin(a)+i) <-- x;
+    insertLocation(a, i) <-- x;
 }
 
 [T]
 overload insert(a:Vector[T], i:VectorCoordinate[T], x) {
-    insertLocation(a, i) <-- x;
+    insertLocation(a, i-begin(a)) <-- x;
 }
 
 [T]
