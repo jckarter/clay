@@ -70,7 +70,7 @@ overload iterator(a:Array[T,n]) = CoordinateRange(begin(a), end(a));
 
 
 //
-// constructors, destroy, equals, hash
+// constructors, destroy, equals?, lesser?
 //
 
 [T,n]
@@ -117,12 +117,4 @@ overload lesser?(a:Array[T,n], b:Array[T,n]) {
             return false;
     }
     return false;
-}
-
-[T,n]
-overload hash(a:Array[T,n]) {
-    var h = 0;
-    for (x in a)
-        h += hash(x);
-    return h;
 }

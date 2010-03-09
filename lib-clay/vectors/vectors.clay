@@ -137,7 +137,7 @@ overload iterator(a:Vector[T]) = CoordinateRange(begin(a), end(a));
 
 
 //
-// equals?, lesser?, hash
+// equals?, lesser?
 //
 
 [T]
@@ -170,14 +170,6 @@ overload lesser?(a:Vector[T], b:Vector[T]) {
     if (hasNext?(j))
         return true;
     return false;
-}
-
-[T]
-overload hash(a:Vector[T]) {
-    var h = 0;
-    for (x in a)
-        h += hash(x);
-    return h;
 }
 
 

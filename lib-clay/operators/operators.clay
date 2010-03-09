@@ -44,8 +44,6 @@ overloadable dec;
 
 overloadable dereference;
 
-overloadable hash;
-
 overloadable iterator;
 overloadable hasNext?;
 overloadable next;
@@ -242,26 +240,6 @@ overload lesserTupleElements?(a:T, b:T, static i) {
 }
 
 
-// hash
-
-[T|TupleType?(T)]
-overload hash(a:T) {
-    return hashTupleElements?(a, 0);
-}
-
-private overloadable hashTupleElements;
-
-[T,i]
-overload hashTupleElements(a:T, static i) {
-    return hash(tupleRef(a, i)) + hashTupleElements(a, i+1);
-}
-
-[T,i |(i == TupleElementCount(T))]
-overload hashTupleElements(a:T, static i) {
-    return 0;
-}
-
-
 
 //
 // records
@@ -395,26 +373,6 @@ overload lesserRecordFields?(a:T, b:T, static i) {
 }
 
 
-// hash
-
-[T|RecordType?(T)]
-overload hash(a:T) {
-    return hashRecordFields?(a, 0);
-}
-
-private overloadable hashRecordFields;
-
-[T,i]
-overload hashRecordFields(a:T, static i) {
-    return hash(recordFieldRef(a, i)) + hashRecordFields(a, i+1);
-}
-
-[T,i |(i == RecordFieldCount(T))]
-overload hashRecordFields(a:T, static i) {
-    return 0;
-}
-
-
 
 //
 // enumerations
@@ -446,16 +404,13 @@ overload E(a:I) = intToEnum(E, Int32(a));
 overload E(a:Int32) = intToEnum(E, a);
 
 
-// equals?, lesser?, hash
+// equals?, lesser?
 
 [E | EnumType?(E)]
 overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));
 
 [E | EnumType?(E)]
 overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));
-
-[E | EnumType?(E)]
-overload hash(a:E) = enumToInt(a);
 
 
 

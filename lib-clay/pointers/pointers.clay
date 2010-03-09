@@ -49,9 +49,6 @@ overload lesser?(a:Pointer[T], b:Pointer[T]) {
     return lesser?(pointerToUInt32(a), pointerToUInt32(b));
 }
 
-[T]
-overload hash(a:Pointer[T]) = pointerToInt32(a);
-
 [T,I|IntegerType?(I)]
 overload add(p:Pointer[T], i:I) {
     return Pointer[T](pointerToInt32(p) + i*TypeSize(T));
@@ -124,9 +121,6 @@ overload lesser?(a:CP, b:CP) {
 }
 
 [CP | CodePointerType?(CP)]
-overload hash(a:CP) = hash(to(Pointer[Int8], a));
-
-[CP | CodePointerType?(CP)]
 nullCode(static CP) = to(CP, null(Int8));
 
 
@@ -158,9 +152,6 @@ overload equals?(a:CP, b:CP) {
 overload lesser?(a:CP, b:CP) {
     return lesser?(to(Pointer[Int8], a), to(Pointer[Int8], b));
 }
-
-[CP | CCodePointerType?(CP)]
-overload hash(a:CP) = hash(to(Pointer[Int8], a));
 
 [CP | CCodePointerType?(CP)]
 nullCCode(static CP) = to(CP, null(Int8));
