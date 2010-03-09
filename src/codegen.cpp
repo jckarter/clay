@@ -619,11 +619,12 @@ CValuePtr codegenRootValue(ExprPtr expr, EnvPtr env, CValuePtr out)
 
 void codegenIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, CValuePtr out)
 {
+    assert(out.ptr());
     if (pv->isTemp && (pv->type == out->type)) {
         codegenValue(expr, env, out);
     }
     else {
-        CValuePtr ref = codegenValue(expr, env, NULL);
+        CValuePtr ref = codegenAsRef(expr, env, pv);
         codegenValueCopy(out, ref);
     }
 }
