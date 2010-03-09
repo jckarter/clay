@@ -111,7 +111,7 @@ swap(a, b) {
 
 [T|TupleType?(T)]
 overload T() : T {
-    initTupleElements(returned, 0);
+    initTupleElements(returned, SizeT(0));
 }
 
 private overloadable initTupleElements;
@@ -131,7 +131,7 @@ overload initTupleElements(a:T, static i) {
 
 [T|TupleType?(T)]
 overload T(src:T) : T {
-    copyTupleElements(returned, src, 0);
+    copyTupleElements(returned, src, SizeT(0));
 }
 
 private overloadable copyTupleElements;
@@ -152,7 +152,7 @@ overload copyTupleElements(dest:T, src:T, static i) {
 
 [T|TupleType?(T)]
 overload destroy(a:T) {
-    destroyTupleElements(a, 0);
+    destroyTupleElements(a, SizeT(0));
 }
 
 private overloadable destroyTupleElements;
@@ -172,7 +172,7 @@ overload destroyTupleElements(a:T, static i) {
 
 [T|TupleType?(T)]
 overload assign(dest:T, src:T) {
-    assignTupleElements(dest, src, 0);
+    assignTupleElements(dest, src, SizeT(0));
 }
 
 private overloadable assignTupleElements;
@@ -193,7 +193,7 @@ overload assignTupleElements(dest:T, src:T, static i) {
 
 [T|TupleType?(T)]
 overload equals?(a:T, b:T) {
-    return equalTupleElements?(a, b, 0);
+    return equalTupleElements?(a, b, SizeT(0));
 }
 
 private overloadable equalTupleElements?;
@@ -215,7 +215,7 @@ overload equalTupleElements?(a:T, b:T, static i) {
 
 [T|TupleType?(T)]
 overload lesser?(a:T, b:T) {
-    return lesserTupleElements?(a, b, 0);
+    return lesserTupleElements?(a, b, SizeT(0));
 }
 
 private overloadable lesserTupleElements?;
@@ -246,7 +246,7 @@ overload lesserTupleElements?(a:T, b:T, static i) {
 
 [T|RecordType?(T)]
 overload T() : T {
-    initRecordFields(returned, 0);
+    initRecordFields(returned, SizeT(0));
 }
 
 private overloadable initRecordFields;
@@ -266,7 +266,7 @@ overload initRecordFields(a:T, static i) {
 
 [T|RecordType?(T)]
 overload T(src:T) : T {
-    copyRecordFields(returned, src, 0);
+    copyRecordFields(returned, src, SizeT(0));
 }
 
 private overloadable copyRecordFields;
@@ -286,7 +286,7 @@ overload copyRecordFields(dest:T, src:T, static i) {
 
 [T|RecordType?(T)]
 overload destroy(a:T) {
-    destroyRecordFields(a, 0);
+    destroyRecordFields(a, SizeT(0));
 }
 
 private overloadable destroyRecordFields;
@@ -306,7 +306,7 @@ overload destroyRecordFields (a:T, static i) {
 
 [T|RecordType?(T)]
 overload assign(dest:T, src:T) {
-    assignRecordFields(dest, src, 0);
+    assignRecordFields(dest, src, SizeT(0));
 }
 
 private overloadable assignRecordFields;
@@ -326,7 +326,7 @@ overload assignRecordFields(dest:T, src:T, static i) {
 
 [T|RecordType?(T)]
 overload equals?(a:T, b:T) {
-    return equalRecordFields?(a, b, 0);
+    return equalRecordFields?(a, b, SizeT(0));
 }
 
 private overloadable equalRecordFields?;
@@ -348,7 +348,7 @@ overload equalRecordFields?(a:T, b:T, static i) {
 
 [T|RecordType?(T)]
 overload lesser?(a:T, b:T) {
-    return lesserRecordFields?(a, b, 0);
+    return lesserRecordFields?(a, b, SizeT(0));
 }
 
 private overloadable lesserRecordFields?;

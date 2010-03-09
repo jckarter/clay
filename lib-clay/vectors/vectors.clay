@@ -81,7 +81,7 @@ overload destroy(a:Vector[T]) {
 //
 
 [T]
-overload size(a:Vector[T]) = a.size;
+overload size(a:Vector[T]) = Int(a.size);
 
 [T]
 overload index(a:Vector[T], i) = ref (a.data + i)^;

@@ -235,7 +235,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         TupleRef *x = (TupleRef *)expr.ptr();
         vector<ExprPtr> args;
         args.push_back(x->expr);
-        args.push_back(new ObjectExpr(intToValueHolder(x->index).ptr()));
+        args.push_back(new ObjectExpr(sizeTToValueHolder(x->index).ptr()));
         ObjectPtr prim = primName("tupleRef");
         return analyzeInvoke(prim, args, env);
     }
@@ -1071,7 +1071,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_TypeSize : {
-        return new PValue(int32Type, true);
+        return new PValue(cSizeTType, true);
     }
 
     case PRIM_primitiveCopy :
@@ -1316,11 +1316,11 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         error("Tuple type constructor cannot be called");
 
     case PRIM_TupleElementCount : {
-        return new PValue(int32Type, true);
+        return new PValue(cSizeTType, true);
     }
 
     case PRIM_TupleElementOffset : {
-        return new PValue(int32Type, true);
+        return new PValue(cSizeTType, true);
     }
 
     case PRIM_tuple : {
@@ -1341,9 +1341,9 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         PValuePtr y = analyzeTupleValue(args[0], env);
         if (!y)
             return NULL;
-        int i = evaluateInt(args[1], env);
+        size_t i = evaluateSizeT(args[1], env);
         TupleType *z = (TupleType *)y->type.ptr();
-        if ((i < 0) || (i >= (int)z->elementTypes.size()))
+        if (i >= z->elementTypes.size())
             error(args[1], "tuple index out of range");
         return new PValue(z->elementTypes[i], false);
     }
@@ -1353,15 +1353,15 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_RecordFieldCount : {
-        return new PValue(int32Type, true);
+        return new PValue(cSizeTType, true);
     }
 
     case PRIM_RecordFieldOffset : {
-        return new PValue(int32Type, true);
+        return new PValue(cSizeTType, true);
     }
 
     case PRIM_RecordFieldIndex : {
-        return new PValue(int32Type, true);
+        return new PValue(cSizeTType, true);
     }
 
     case PRIM_recordFieldRef : {
@@ -1370,9 +1370,9 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         if (!y)
             return NULL;
         RecordType *z = (RecordType *)y->type.ptr();
-        int i = evaluateInt(args[1], env);
+        size_t i = evaluateSizeT(args[1], env);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
-        if ((i < 0) || (i >= (int)fieldTypes.size()))
+        if (i >= fieldTypes.size())
             error("field index out of range");
         return new PValue(fieldTypes[i], false);
     }
@@ -1384,8 +1384,9 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             return NULL;
         RecordType *z = (RecordType *)y->type.ptr();
         IdentifierPtr fname = evaluateIdentifier(args[1], env);
-        const map<string, int> &fieldIndexMap = recordFieldIndexMap(z);
-        map<string, int>::const_iterator fi = fieldIndexMap.find(fname->str);
+        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(z);
+        map<string, size_t>::const_iterator fi =
+            fieldIndexMap.find(fname->str);
         if (fi == fieldIndexMap.end())
             error(args[1], "field not in record");
         const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
@@ -1400,7 +1401,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_enumToInt : {
-        return new PValue(int32Type, true);
+        return new PValue(cIntType, true);
     }
 
     case PRIM_intToEnum : {

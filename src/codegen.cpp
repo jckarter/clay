@@ -886,7 +886,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         TupleRef *x = (TupleRef *)expr.ptr();
         vector<ExprPtr> args;
         args.push_back(x->expr);
-        args.push_back(new ObjectExpr(intToValueHolder(x->index).ptr()));
+        args.push_back(new ObjectExpr(sizeTToValueHolder(x->index).ptr()));
         ObjectPtr prim = primName("tupleRef");
         return codegenInvoke(prim, args, env, out);
     }
@@ -1805,7 +1805,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
     case PRIM_TypeSize : {
         ensureArity(args, 1);
         TypePtr t = evaluateType(args[0], env);
-        ObjectPtr obj = intToValueHolder(typeSize(t)).ptr();
+        ObjectPtr obj = sizeTToValueHolder(typeSize(t)).ptr();
         return codegenStaticObject(obj, out);
     }
 
@@ -2394,7 +2394,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         ensureArity(args, 1);
         TypePtr y = evaluateTupleType(args[0], env);
         TupleType *z = (TupleType *)y.ptr();
-        ObjectPtr obj = intToValueHolder(z->elementTypes.size()).ptr();
+        ObjectPtr obj = sizeTToValueHolder(z->elementTypes.size()).ptr();
         return codegenStaticObject(obj, out);
     }
 
@@ -2402,9 +2402,9 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         TypePtr y = evaluateTupleType(args[0], env);
         TupleType *z = (TupleType *)y.ptr();
-        int i = evaluateInt(args[1], env);
+        size_t i = evaluateSizeT(args[1], env);
         const llvm::StructLayout *layout = tupleTypeLayout(z);
-        ObjectPtr obj =  intToValueHolder(layout->getElementOffset(i)).ptr();
+        ObjectPtr obj =  sizeTToValueHolder(layout->getElementOffset(i)).ptr();
         return codegenStaticObject(obj, out);
     }
 
@@ -2432,7 +2432,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             error(args[0], "expecting a tuple");
         TupleType *tt = (TupleType *)ptuple->type.ptr();
         CValuePtr ctuple = codegenAsRef(args[0], env, ptuple);
-        int i = evaluateInt(args[1], env);
+        size_t i = evaluateSizeT(args[1], env);
         llvm::Value *ptr =
             llvmBuilder->CreateConstGEP2_32(ctuple->llValue, 0, i);
         return new CValue(tt->elementTypes[i], ptr);
@@ -2456,7 +2456,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         TypePtr y = evaluateRecordType(args[0], env);
         RecordType *z = (RecordType *)y.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
-        ObjectPtr obj = intToValueHolder(fieldTypes.size()).ptr();
+        ObjectPtr obj = sizeTToValueHolder(fieldTypes.size()).ptr();
         return codegenStaticObject(obj, out);
     }
 
@@ -2464,12 +2464,12 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         TypePtr y = evaluateRecordType(args[0], env);
         RecordType *z = (RecordType *)y.ptr();
-        int i = evaluateInt(args[1], env);
+        size_t i = evaluateSizeT(args[1], env);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
-        if ((i < 0) || (i >= (int)fieldTypes.size()))
+        if (i >= fieldTypes.size())
             error("field index out of range");
         const llvm::StructLayout *layout = recordTypeLayout(z);
-        ObjectPtr obj = intToValueHolder(layout->getElementOffset(i)).ptr();
+        ObjectPtr obj = sizeTToValueHolder(layout->getElementOffset(i)).ptr();
         return codegenStaticObject(obj, out);
     }
 
@@ -2478,11 +2478,12 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         TypePtr y = evaluateRecordType(args[0], env);
         RecordType *z = (RecordType *)y.ptr();
         IdentifierPtr fname = evaluateIdentifier(args[1], env);
-        const map<string, int> &fieldIndexMap = recordFieldIndexMap(z);
-        map<string, int>::const_iterator fi = fieldIndexMap.find(fname->str);
+        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(z);
+        map<string, size_t>::const_iterator fi =
+            fieldIndexMap.find(fname->str);
         if (fi == fieldIndexMap.end())
             error("field not in record");
-        ObjectPtr obj = intToValueHolder(fi->second).ptr();
+        ObjectPtr obj = sizeTToValueHolder(fi->second).ptr();
         return codegenStaticObject(obj, out);
     }
 
@@ -2494,7 +2495,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         RecordType *rt = (RecordType *)prec->type.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         CValuePtr crec = codegenAsRef(args[0], env, prec);
-        int i = evaluateInt(args[1], env);
+        size_t i = evaluateSizeT(args[1], env);
         llvm::Value *ptr =
             llvmBuilder->CreateConstGEP2_32(crec->llValue, 0, i);
         return new CValue(fieldTypes[i], ptr);
@@ -2509,11 +2510,11 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         CValuePtr crec = codegenAsRef(args[0], env, prec);
         IdentifierPtr fname = evaluateIdentifier(args[1], env);
-        const map<string, int> &fieldIndexMap = recordFieldIndexMap(rt);
-        map<string, int>::const_iterator fi = fieldIndexMap.find(fname->str);
+        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
+        map<string, size_t>::const_iterator fi = fieldIndexMap.find(fname->str);
         if (fi == fieldIndexMap.end())
             error(args[1], "field not in record");
-        int i = fi->second;
+        size_t i = fi->second;
         llvm::Value *ptr =
             llvmBuilder->CreateConstGEP2_32(crec->llValue, 0, i);
         return new CValue(fieldTypes[i], ptr);
@@ -2561,7 +2562,7 @@ CValuePtr codegenInvokePrimOp2(PrimOpPtr x,
         CValuePtr cv = codegenAsRef(args[0], env, pv);
         llvm::Value *llv = llvmBuilder->CreateLoad(cv->llValue);
         assert(out.ptr());
-        assert(out->type == int32Type);
+        assert(out->type == cIntType);
         llvmBuilder->CreateStore(llv, out->llValue);
         return out;
     }
@@ -2571,8 +2572,8 @@ CValuePtr codegenInvokePrimOp2(PrimOpPtr x,
         TypePtr t = evaluateEnumerationType(args[0], env);
         assert(out.ptr());
         assert(out->type == t);
-        TypePtr intType = int32Type;
-        llvm::Value *v = _cgInteger(args[1], env, intType);
+        TypePtr t2 = cIntType;
+        llvm::Value *v = _cgInteger(args[1], env, t2);
         llvmBuilder->CreateStore(v, out->llValue);
         return out;
     }
@@ -2602,7 +2603,7 @@ static ProcedurePtr makeInitializerProcedure() {
 llvm::Function *codegenMain(ModulePtr module)
 {
     llvm::FunctionType *llMainType =
-        llvm::FunctionType::get(llvmIntType(32),
+        llvm::FunctionType::get(llvmType(cIntType),
                                 vector<const llvm::Type *>(),
                                 false);
     llvm::Function *llMain =
@@ -2640,32 +2641,32 @@ llvm::Function *codegenMain(ModulePtr module)
                                             vector<LocationPtr>());
     if (!entry->returnType) {
         codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), NULL);
-        llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
+        llvm::Value *zero = llvm::ConstantInt::get(llvmType(cIntType), 0);
         llvmBuilder->CreateRet(zero);
     }
     else if (entry->returnIsTemp) {
         CValuePtr result = codegenAllocValue(entry->returnType);
         codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), result);
-        if (entry->returnType == int32Type) {
+        if (entry->returnType == cIntType) {
             llvm::Value *v = llvmBuilder->CreateLoad(result->llValue);
             codegenValueDestroy(result);
             llvmBuilder->CreateRet(v);
         }
         else {
             codegenValueDestroy(result);
-            llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
+            llvm::Value *zero = llvm::ConstantInt::get(llvmType(cIntType), 0);
             llvmBuilder->CreateRet(zero);
         }
     }
     else {
         CValuePtr result =
             codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), NULL);
-        if (entry->returnType == int32Type) {
+        if (entry->returnType == cIntType) {
             llvm::Value *v = llvmBuilder->CreateLoad(result->llValue);
             llvmBuilder->CreateRet(v);
         }
         else {
-            llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
+            llvm::Value *zero = llvm::ConstantInt::get(llvmType(cIntType), 0);
             llvmBuilder->CreateRet(zero);
         }
     }
