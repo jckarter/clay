@@ -1098,6 +1098,21 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
         assert(!out);
         return new CValue(y->type, y->llGlobal);
     }
+    case EXTERNAL_VARIABLE : {
+        ExternalVariable *y = (ExternalVariable *)x.ptr();
+        if (!y->llGlobal) {
+            ObjectPtr z = analyzeStaticObject(y);
+            assert(z->objKind == PVALUE);
+            PValue *pv = (PValue *)z.ptr();
+            y->llGlobal =
+                new llvm::GlobalVariable(
+                    *llvmModule, llvmType(pv->type), false,
+                    llvm::GlobalVariable::ExternalLinkage,
+                    NULL, y->name->str);
+        }
+        assert(!out);
+        return new CValue(y->type2, y->llGlobal);
+    }
     case STATIC_GLOBAL : {
         return codegenStaticObject(analyzeStaticObject(x), out);
     }

@@ -8,7 +8,7 @@ DottedName -> Identifier ("." Identifier)*
 
 TopLevelItem -> Record | Procedure | Overloadable | Overload
               | Enumeration | GlobalVariable
-              | ExternalProcedure
+              | ExternalProcedure | ExternalVariable
               | StaticGlobal
               | StaticProcedure | StaticOverloadable | StaticOverload
 
@@ -49,6 +49,8 @@ ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
 ExternalArgs -> comma_list(ExternalArg) ("," "...")?
               | ("...")?
 ExternalArg -> Identifier TypeSpec
+
+ExternalVariable -> "external" Identifier TypeSpec ";"
 
 StaticGlobal -> "static" Identifier "=" Expression ";"
 

@@ -174,6 +174,7 @@ enum ObjectKind {
     GLOBAL_VARIABLE,
     EXTERNAL_PROCEDURE,
     EXTERNAL_ARG,
+    EXTERNAL_VARIABLE,
 
     STATIC_GLOBAL,
     STATIC_CODE,
@@ -272,6 +273,7 @@ struct EnumMember;
 struct GlobalVariable;
 struct ExternalProcedure;
 struct ExternalArg;
+struct ExternalVariable;
 
 struct StaticGlobal;
 struct StaticCode;
@@ -390,6 +392,7 @@ typedef Pointer<EnumMember> EnumMemberPtr;
 typedef Pointer<GlobalVariable> GlobalVariablePtr;
 typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
+typedef Pointer<ExternalVariable> ExternalVariablePtr;
 
 typedef Pointer<StaticGlobal> StaticGlobalPtr;
 typedef Pointer<StaticCode> StaticCodePtr;
@@ -1069,7 +1072,7 @@ struct GlobalVariable : public TopLevelItem {
 
     GlobalVariable(IdentifierPtr name, Visibility visibility, ExprPtr expr)
         : TopLevelItem(GLOBAL_VARIABLE, name, visibility), expr(expr),
-          analyzing(false), llGlobal(false) {}
+          analyzing(false), llGlobal(NULL) {}
 };
 
 struct ExternalProcedure : public TopLevelItem {
@@ -1101,6 +1104,15 @@ struct ExternalArg : public ANode {
     TypePtr type2;
     ExternalArg(IdentifierPtr name, ExprPtr type)
         : ANode(EXTERNAL_ARG), name(name), type(type) {}
+};
+
+struct ExternalVariable : public TopLevelItem {
+    ExprPtr type;
+    TypePtr type2;
+    llvm::GlobalVariable *llGlobal;
+    ExternalVariable(IdentifierPtr name, Visibility visibility, ExprPtr type)
+        : TopLevelItem(EXTERNAL_VARIABLE, name, visibility), type(type),
+          llGlobal(NULL) {}
 };
 
 

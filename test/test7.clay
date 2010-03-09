@@ -1,8 +1,12 @@
 import base.*;
 
+external __stdoutp:RawPointer;
+
 main() {
-    var f = fdopen(1, cstring("w"));
     var s = "Hello World!\n";
-    fwrite(cstring(s), SizeT(1), size(s), f);
-    return 0;
+
+    fwrite(cstring(s), SizeT(1), SizeT(size(s)), __stdoutp);
+
+    var f = fdopen(1, cstring("w"));
+    fwrite(cstring(s), SizeT(1), SizeT(size(s)), f);
 }

@@ -1495,6 +1495,21 @@ static bool external(TopLevelItemPtr &x) {
     return true;
 }
 
+static bool externalVariable(TopLevelItemPtr &x) {
+    LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
+    if (!keyword("external")) return false;
+    IdentifierPtr y;
+    if (!identifier(y)) return false;
+    ExprPtr z;
+    if (!typeSpec(z)) return false;
+    if (!symbol(";")) return false;
+    x = new ExternalVariable(y, vis, z);
+    x->location = location;
+    return true;
+}
+
 
 
 //
@@ -1698,6 +1713,7 @@ static bool topLevelItem(TopLevelItemPtr &x) {
     if (restore(p), enumeration(x)) return true;
     if (restore(p), globalVariable(x)) return true;
     if (restore(p), external(x)) return true;
+    if (restore(p), externalVariable(x)) return true;
     if (restore(p), staticGlobal(x)) return true;
     if (restore(p), staticProcedure(x)) return true;
     if (restore(p), staticOverloadable(x)) return true;
