@@ -1,11 +1,21 @@
-import __primitives__.*;
-import kernel.operators.*;
+
+public import __primitives__.(Int8, Int16, Int32, Int64,
+                              UInt8, UInt16, UInt32, UInt64,
+                              Float32, Float64,
+                              numericEquals?, numericLesser?,
+                              numericAdd, numericSubtract, numericMultiply,
+                              numericDivide, numericNegate,
+                              integerRemainder,
+                              integerShiftLeft, integerShiftRight,
+                              integerBitwiseAnd, integerBitwiseOr,
+                              integerBitwiseXor, integerBitwiseNot,
+                              numericConvert);
+
+import operators.*;
+import __primitives__.(primitiveCopy);
 
 
-
-//
 // numeric type predicates
-//
 
 static overloadable SignedIntegerType?;
 
@@ -63,22 +73,19 @@ static overload NumericType?(A, B) =
     NumericType?(A) and NumericType?(B);
 
 
-
-//
 // BiggerIntegerType?, BiggerFloatType?, BiggerNumericType?
-//
 
 [A,B | IntegerType?(A,B)]
-static BiggerIntegerType?(A, B) =
+private static BiggerIntegerType?(A, B) =
     (TypeSize(A) > TypeSize(B)) or ((TypeSize(A) == TypeSize(B)) and
                                     UnsignedIntegerType?(A) and
                                     SignedIntegerType?(B));
 
 [A,B | FloatType?(A,B)]
-static BiggerFloatType?(A, B) = TypeSize(A) > TypeSize(B);
+private static BiggerFloatType?(A, B) = TypeSize(A) > TypeSize(B);
 
 
-static overloadable BiggerNumericType?;
+private static overloadable BiggerNumericType?;
 
 [A,B | FloatType?(A) and IntegerType?(B)]
 static overload BiggerNumericType?(A, B) = true;
@@ -93,12 +100,9 @@ static overload BiggerNumericType?(A, B) = BiggerIntegerType?(A,B);
 static overload BiggerNumericType?(A, B) = BiggerFloatType?(A,B);
 
 
-
-//
 // toBiggerNumericType
-//
 
-overloadable toBiggerNumericType;
+private overloadable toBiggerNumericType;
 
 [A | NumericType?(A)]
 overload toBiggerNumericType(static A, static A, v) = v;
@@ -110,10 +114,7 @@ overload toBiggerNumericType(static A, static B, v) = A(v);
 overload toBiggerNumericType(static A, static B, v) = B(v);
 
 
-
-//
 // constructors
-//
 
 [T | NumericType?(T)]
 overload T(src:T) : T {
@@ -124,10 +125,7 @@ overload T(src:T) : T {
 overload T1(src:T2) = numericConvert(T1, src);
 
 
-
-//
 // equals?, lesser?
-//
 
 [T | NumericType?(T)]
 overload equals?(a:T, b:T) = numericEquals?(a, b);
@@ -136,10 +134,7 @@ overload equals?(a:T, b:T) = numericEquals?(a, b);
 overload lesser?(a:T, b:T) = numericLesser?(a, b);
 
 
-
-//
 // binary ops
-//
 
 [A,B | NumericType?(A,B)]
 overload add(a:A, b:B) = numericAdd(toBiggerNumericType(A, B, a),
@@ -176,10 +171,7 @@ overload remainder(a:A, b:B) = numericRemainder(toBiggerNumericType(A, B, a),
 overload remainder(a:A, b:A) = numericRemainder(a, b);
 
 
-
-//
 // unary ops
-//
 
 [A | NumericType?(A)]
 overload plus(a:A) = a;
@@ -188,10 +180,7 @@ overload plus(a:A) = a;
 overload minus(a:A) = numericNegate(a);
 
 
-
-//
 // inc, dec
-//
 
 [A | NumericType?(A)]
 overload inc(a:A) {
@@ -204,10 +193,7 @@ overload dec(a:A) {
 }
 
 
-
-//
 // hash
-//
 
 [T | NumericType?(T)]
 overload hash(a:T) = Int32(a);

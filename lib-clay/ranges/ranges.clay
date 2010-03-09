@@ -1,5 +1,5 @@
-import kernel.operators.*;
-import kernel.numbers.*;
+import operators.*;
+import numbers.*;
 
 //
 // ValueRange

@@ -1,5 +1,4 @@
-import kernel.*;
-import libc.*;
+import base.*;
 
 map(f, a) {
     static ResultType = TypeOf(f(a[0]));

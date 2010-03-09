@@ -1,9 +1,9 @@
-import __primitives__.*;
-import kernel.operators.*;
-import kernel.characters.*;
-import kernel.vectors.*;
-import kernel.sequences.*;
-import kernel.ranges.*;
+import operators.*;
+import characters.*;
+import arrays.*;
+import vectors.*;
+import sequences.*;
+import ranges.*;
 
 
 //

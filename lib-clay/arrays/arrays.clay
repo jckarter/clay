@@ -1,13 +1,12 @@
-import __primitives__.*;
-import kernel.operators.*;
-import kernel.sequences.*;
-import kernel.numbers.*;
-import kernel.coordinates.*;
-import kernel.ranges.*;
 
-//
-// Array[T,n]
-//
+public import __primitives__.(Array, array, arrayRef);
+
+import operators.*;
+import sequences.*;
+import pointers.*;
+import numbers.*;
+import ranges.*;
+
 
 //
 // size, at
@@ -62,13 +61,6 @@ overload lesser?(a:ArrayCoordinate[T], b:ArrayCoordinate[T])
     = a.ptr < b.ptr;
 
 
-[T]
-static overload RandomAccessCoordinate?(ArrayCoordinate[T]) = true;
-
-[T]
-static overload CoordinateTarget(ArrayCoordinate[T]) = T;
-
-
 //
 // array iteration
 //
@@ -110,6 +102,21 @@ overload equals?(a:Array[T,n], b:Array[T,n]) {
             return false;
     }
     return true;
+}
+
+[T,n]
+overload lesser?(a:Array[T,n], b:Array[T,n]) {
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i)) {
+        ref x = next(i);
+        ref y = next(j);
+        if (x < y)
+            return true;
+        if (x > y)
+            return false;
+    }
+    return false;
 }
 
 [T,n]

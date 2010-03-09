@@ -1,5 +1,4 @@
-import kernel.*;
-import libc.*;
+import base.*;
 
 insertionSort(a) {
     var i = begin(a) + 1;
