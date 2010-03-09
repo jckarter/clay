@@ -9,12 +9,7 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
-        if (y->objKind == PATTERN) {
-            PatternPtr z = (Pattern *)y.ptr();
-            assert(z->patternKind == PATTERN_CELL);
-            return z;
-        }
-        return new PatternCell(NULL, y);
+        return evaluateStaticObjectPattern(y);
     }
 
     case INDEXING : {
@@ -31,6 +26,22 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env)
         return new PatternCell(NULL, y);
     }
 
+    }
+}
+
+PatternPtr evaluateStaticObjectPattern(ObjectPtr x)
+{
+    switch (x->objKind) {
+    case PATTERN : {
+        PatternPtr y = (Pattern *)x.ptr();
+        assert(y->patternKind == PATTERN_CELL);
+        return y;
+    }
+    case STATIC_GLOBAL : {
+        return new PatternCell(NULL, analyzeStaticObject(x));
+    }
+    default :
+        return new PatternCell(NULL, x);
     }
 }
 

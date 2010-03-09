@@ -1774,6 +1774,7 @@ StatementPtr desugarForStatement(ForPtr x);
 //
 
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
+PatternPtr evaluateStaticObjectPattern(ObjectPtr x);
 PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
                                    const vector<ExprPtr> &args,
                                    EnvPtr env);
