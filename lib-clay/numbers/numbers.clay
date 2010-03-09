@@ -191,9 +191,3 @@ overload inc(a:A) {
 overload dec(a:A) {
     a -= A(1);
 }
-
-
-// hash
-
-[T | NumericType?(T)]
-overload hash(a:T) = Int32(a);

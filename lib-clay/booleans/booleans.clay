@@ -24,8 +24,3 @@ overload equals?(a:Bool, b:Bool) {
 }
 
 overload lesser?(a:Bool, b:Bool) = ((not a) and b);
-
-overload hash(a:Bool) {
-    if (a) return 1;
-    return 0;
-}
