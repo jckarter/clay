@@ -43,3 +43,6 @@ clean :
 	rm -f src/*.dep
 
 -include src/*.dep
+
+a.out : a.ll
+	cat a.ll | llvm-as | opt -O3 | llc | gcc -m32 -g -x assembler -
