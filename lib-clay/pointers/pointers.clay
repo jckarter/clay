@@ -7,6 +7,7 @@ public import __primitives__.(CodePointer, RefCodePointer, CodePointerType?,
 public import __primitives__.(CCodePointer, CCodePointerType?,
                               makeCCodePointer);
 
+import types.*;
 import operators.*;
 import __primitives__.(primitiveCopy);
 import numbers.*;
@@ -34,34 +35,28 @@ overload Pointer[DEST](a:Pointer[SRC]) =
     pointerCast(Pointer[DEST], a);
 
 [T]
-private pointerToInt32(a:Pointer[T]) = Int32(a);
-
-[T]
-private pointerToUInt32(a:Pointer[T]) = UInt32(a);
-
-[T]
 overload equals?(a:Pointer[T], b:Pointer[T]) {
-    return equals?(pointerToInt32(a), pointerToInt32(b));
+    return equals?(SizeT(a), SizeT(b));
 }
 
 [T]
 overload lesser?(a:Pointer[T], b:Pointer[T]) {
-    return lesser?(pointerToUInt32(a), pointerToUInt32(b));
+    return lesser?(SizeT(a), SizeT(b));
 }
 
 [T,I|IntegerType?(I)]
 overload add(p:Pointer[T], i:I) {
-    return Pointer[T](pointerToInt32(p) + i*TypeSize(T));
+    return Pointer[T](SizeT(p) + i*TypeSize(T));
 }
 
 [T,I|IntegerType?(I)]
 overload subtract(p:Pointer[T], i:I) {
-    return Pointer[T](pointerToInt32(p) - i*TypeSize(T));
+    return Pointer[T](SizeT(p) - i*TypeSize(T));
 }
 
 [T]
 overload subtract(a:Pointer[T], b:Pointer[T]) {
-    return (pointerToInt32(a) - pointerToInt32(b)) / TypeSize(T);
+    return (PtrDiffT(a) - PtrDiffT(b)) / PtrDiffT(TypeSize(T));
 }
 
 [T]
@@ -81,13 +76,13 @@ null(static T) = Pointer[T](0);
 overload dereference(p:Pointer[T]) = ref pointerDereference(p);
 
 [T]
-allocateMemory(static T, count:Int32) {
+allocateMemory(static T, count:SizeT) {
     var ptr = malloc(TypeSize(T) * count);
     return Pointer[T](ptr);
 }
 
 freeMemory(ptr) {
-    free(Pointer[Int8](ptr));
+    free(RawPointer(ptr));
 }
 
 
@@ -112,16 +107,16 @@ overload CP1(a:CP2) = pointerCast(CP1, a);
 
 [CP | CodePointerType?(CP)]
 overload equals?(a:CP, b:CP) {
-    return equals?(to(Pointer[Int8], a), to(Pointer[Int8], b));
+    return equals?(RawPointer(a), RawPointer(b));
 }
 
 [CP | CodePointerType?(CP)]
 overload lesser?(a:CP, b:CP) {
-    return lesser?(to(Pointer[Int8], a), to(Pointer[Int8], b));
+    return lesser?(RawPointer(a), RawPointer(b));
 }
 
 [CP | CodePointerType?(CP)]
-nullCode(static CP) = to(CP, null(Int8));
+nullCode(static CP) = CP(null(Int8));
 
 
 
@@ -145,13 +140,13 @@ overload CP1(a:CP2) = pointerCast(CP1, a);
 
 [CP | CCodePointerType?(CP)]
 overload equals?(a:CP, b:CP) {
-    return equals?(to(Pointer[Int8], a), to(Pointer[Int8], b));
+    return equals?(RawPointer(a), RawPointer(b));
 }
 
 [CP | CCodePointerType?(CP)]
 overload lesser?(a:CP, b:CP) {
-    return lesser?(to(Pointer[Int8], a), to(Pointer[Int8], b));
+    return lesser?(RawPointer(a), RawPointer(b));
 }
 
 [CP | CCodePointerType?(CP)]
-nullCCode(static CP) = to(CP, null(Int8));
+nullCCode(static CP) = CP(null(Int8));

@@ -13,6 +13,7 @@ public import __primitives__.(EnumType?, enumToInt, intToEnum);
 public import __primitives__.(StaticObject);
 
 import __primitives__.(primitiveCopy);
+import types.*;
 import numbers.*;
 
 overloadable destroy;
@@ -75,17 +76,13 @@ overload assign(dest:T, src:T) {
     dest <-- src;
 }
 
-[T]
-notEquals?(a:T, b:T) = not equals?(a, b);
+notEquals?(a, b) = not equals?(a, b);
 
-[T]
-overload lesserEquals?(a:T, b:T) = equals?(a, b) or lesser?(a, b);
+overload lesserEquals?(a, b) = equals?(a, b) or lesser?(a, b);
 
-[T]
-overload greater?(a:T, b:T) = not lesserEquals?(a, b);
+overload greater?(a, b) = not lesserEquals?(a, b);
 
-[T]
-overload greaterEquals?(a:T, b:T) = not lesser?(a, b);
+overload greaterEquals?(a, b) = not lesser?(a, b);
 
 overload addAssign(a, b)       { a = a + b; }
 overload subtractAssign(a, b)  { a = a - b; }
@@ -392,16 +389,16 @@ overload E(src:E) : E {
 overload I(a:E) = I(enumToInt(a));
 
 [E | EnumType?(E)]
-overload Int32(a:E) = enumToInt(a);
+overload Int(a:E) = enumToInt(a);
 
 
 // convert from integers
 
 [E,I | EnumType?(E) and IntegerType?(I)]
-overload E(a:I) = intToEnum(E, Int32(a));
+overload E(a:I) = intToEnum(E, Int(a));
 
 [E | EnumType?(E)]
-overload E(a:Int32) = intToEnum(E, a);
+overload E(a:Int) = intToEnum(E, a);
 
 
 // equals?, lesser?

@@ -1,3 +1,4 @@
+import types.*;
 import operators.*;
 import sequences.*;
 import numbers.*;
@@ -12,8 +13,8 @@ import move.*;
 //
 
 record Vector[T] {
-    size:Int32;
-    capacity:Int32;
+    size:SizeT;
+    capacity:SizeT;
     data:Pointer[T];
 }
 
@@ -23,7 +24,7 @@ record Vector[T] {
 //
 
 [T]
-overload Vector[T]() = Vector(0, 0, null(T));
+overload Vector[T]() = Vector(SizeT(0), SizeT(0), null(T));
 
 
 //
@@ -211,7 +212,7 @@ overload clear(a:Vector[T]) {
 }
 
 [T]
-setCapacity(a:Vector[T], capacity:Int32) {
+setCapacity(a:Vector[T], capacity:SizeT) {
     var data = allocateMemory(T, capacity);
     var ptr = data;
     for (x in a) {
@@ -224,14 +225,14 @@ setCapacity(a:Vector[T], capacity:Int32) {
 }
 
 [T]
-ensureSpace(a:Vector[T], space:Int32) {
+ensureSpace(a:Vector[T], space:SizeT) {
     if (a.size + space > a.capacity)
         setCapacity(a, 2*(a.size + space));
 }
 
 [T,I | IntegerType?(I)]
 insertLocation(a:Vector[T], pos:I) {
-    ensureSpace(a, 1);
+    ensureSpace(a, SizeT(1));
     var i = begin(a) + pos;
     var j = end(a);
     while (i < j) {
