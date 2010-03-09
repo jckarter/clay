@@ -1,19 +1,13 @@
-import __primitives__.*;
-import kernel.operators.*;
-import kernel.numbers.*;
 
-//
-// copy constructor
-//
+public import __primitives__.(Bool);
+
+import operators.*;
+import __primitives__.(primitiveCopy);
+import numbers.*;
 
 overload Bool(src:Bool) : Bool {
     primitiveCopy(returned, src);
 }
-
-
-//
-// convert to/from integers
-//
 
 [I | IntegerType?(I)]
 overload I(a:Bool) {
@@ -23,11 +17,6 @@ overload I(a:Bool) {
 
 [I | IntegerType?(I)]
 overload Bool(a:I) = (a != I(0));
-
-
-//
-// equals?, lesser?, hash
-//
 
 overload equals?(a:Bool, b:Bool) {
     if (a) return b;

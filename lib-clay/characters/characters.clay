@@ -1,6 +1,4 @@
-import __primitives__.*;
-import kernel.operators.*;
-import kernel.numbers.*;
+import numbers.*;
 
 record Char {
     code:Int8;

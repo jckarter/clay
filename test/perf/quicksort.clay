@@ -1,5 +1,4 @@
-import kernel.*;
-import libc.*;
+import base.*;
 
 quickSort(a) {
     sortRange(a, 0, size(a));

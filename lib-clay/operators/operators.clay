@@ -1,0 +1,474 @@
+
+public import __primitives__.(Void, TypeOf, Type?, TypeSize);
+
+public import __primitives__.(TupleType?, Tuple, TupleElementCount,
+                              TupleElementOffset, tuple, tupleRef);
+
+public import __primitives__.(RecordType?, RecordFieldCount,
+                              RecordFieldOffset, RecordFieldIndex,
+                              recordFieldRef, recordFieldRefByName);
+
+public import __primitives__.(EnumType?, enumToInt, intToEnum);
+
+public import __primitives__.(StaticObject);
+
+import __primitives__.(primitiveCopy);
+import numbers.*;
+
+overloadable destroy;
+overloadable assign;
+
+overloadable equals?;
+overloadable lesser?;
+overloadable lesserEquals?;
+overloadable greater?;
+overloadable greaterEquals?;
+
+overloadable plus;
+overloadable minus;
+
+overloadable add;
+overloadable subtract;
+overloadable multiply;
+overloadable divide;
+overloadable remainder;
+
+overloadable addAssign;
+overloadable subtractAssign;
+overloadable multiplyAssign;
+overloadable divideAssign;
+overloadable remainderAssign;
+
+overloadable inc;
+overloadable dec;
+
+overloadable dereference;
+
+overloadable hash;
+
+overloadable iterator;
+overloadable hasNext?;
+overloadable next;
+
+overloadable call;
+
+
+
+//
+// defaults
+//
+
+[T]
+overload T() : T {
+}
+
+initialize(a) {
+    a <-- TypeOf(a)();
+}
+
+[T]
+overload destroy(a:T) {
+}
+
+[T]
+overload assign(dest:T, src:T) {
+    if (equals?(&dest, &src)) return;
+    destroy(dest);
+    dest <-- src;
+}
+
+[T]
+notEquals?(a:T, b:T) = not equals?(a, b);
+
+[T]
+overload lesserEquals?(a:T, b:T) = equals?(a, b) or lesser?(a, b);
+
+[T]
+overload greater?(a:T, b:T) = not lesserEquals?(a, b);
+
+[T]
+overload greaterEquals?(a:T, b:T) = not lesser?(a, b);
+
+overload addAssign(a, b)       { a = a + b; }
+overload subtractAssign(a, b)  { a = a - b; }
+overload multiplyAssign(a, b)  { a = a * b; }
+overload divideAssign(a, b)    { a = a / b; }
+overload remainderAssign(a, b) { a = a % b; }
+
+
+//
+// swap
+//
+
+swap(a, b) {
+    var temp = a;
+    a = b;
+    b = temp;
+}
+
+
+
+//
+// Tuple
+//
+
+// default constructor
+
+[T|TupleType?(T)]
+overload T() : T {
+    initTupleElements(returned, 0);
+}
+
+private overloadable initTupleElements;
+
+[i]
+overload initTupleElements(a, static i) {
+    initialize(tupleRef(a, i));
+    initTupleElements(a, i+1);
+}
+
+[T, i | (i == TupleElementCount(T))]
+overload initTupleElements(a:T, static i) {
+}
+
+
+// copy constructor
+
+[T|TupleType?(T)]
+overload T(src:T) : T {
+    copyTupleElements(returned, src, 0);
+}
+
+private overloadable copyTupleElements;
+
+[T,i]
+overload copyTupleElements(dest:T, src:T, static i)
+{
+    tupleRef(dest, i) <-- tupleRef(src, i);
+    copyTupleElements(dest, src, i+1);
+}
+
+[T,i | (i == TupleElementCount(T))]
+overload copyTupleElements(dest:T, src:T, static i) {
+}
+
+
+// destroy
+
+[T|TupleType?(T)]
+overload destroy(a:T) {
+    destroyTupleElements(a, 0);
+}
+
+private overloadable destroyTupleElements;
+
+[i]
+overload destroyTupleElements(a, static i) {
+    destroy(tupleRef(a, i));
+    destroyTupleElements(a, i+1);
+}
+
+[T, i |(i == TupleElementCount(T))]
+overload destroyTupleElements(a:T, static i) {
+}
+
+
+// assign
+
+[T|TupleType?(T)]
+overload assign(dest:T, src:T) {
+    assignTupleElements(dest, src, 0);
+}
+
+private overloadable assignTupleElements;
+
+[T,i]
+overload assignTupleElements(dest:T, src:T, static i) {
+    assign(tupleRef(dest, i), tupleRef(src, i));
+    assignTupleElements(dest, src, i+1);
+}
+
+[T,i | (i == TupleElementCount(T))]
+overload assignTupleElements(dest:T, src:T, static i) {
+}
+
+
+// equals?
+
+
+[T|TupleType?(T)]
+overload equals?(a:T, b:T) {
+    return equalTupleElements?(a, b, 0);
+}
+
+private overloadable equalTupleElements?;
+
+[T,i]
+overload equalTupleElements?(a:T, b:T, static i) {
+    if (not equals?(tupleRef(a, i), tupleRef(b, i)))
+        return false;
+    return equalTupleElements(a, b, i+1);
+}
+
+[T,i |(i == TupleElementCount(T))]
+overload equalTupleElements?(a:T, b:T, static i) {
+    return true;
+}
+
+
+// lesser?
+
+[T|TupleType?(T)]
+overload lesser?(a:T, b:T) {
+    return lesserTupleElements?(a, b, 0);
+}
+
+private overloadable lesserTupleElements?;
+
+[T,i]
+overload lesserTupleElements?(a:T, b:T, static i) {
+    ref av = tupleRef(a, i);
+    ref bv = tupleRef(b, i);
+    if (lesser?(av, bv))
+        return true;
+    if (lesser?(bv, av))
+        return false;
+    return lesserTupleElements(a, b, i+1);
+}
+
+[T,i |(i == TupleElementCount(T))]
+overload lesserTupleElements?(a:T, b:T, static i) {
+    return false;
+}
+
+
+// hash
+
+[T|TupleType?(T)]
+overload hash(a:T) {
+    return hashTupleElements?(a, 0);
+}
+
+private overloadable hashTupleElements;
+
+[T,i]
+overload hashTupleElements(a:T, static i) {
+    return hash(tupleRef(a, i)) + hashTupleElements(a, i+1);
+}
+
+[T,i |(i == TupleElementCount(T))]
+overload hashTupleElements(a:T, static i) {
+    return 0;
+}
+
+
+
+//
+// records
+//
+
+// default constructor
+
+[T|RecordType?(T)]
+overload T() : T {
+    initRecordFields(returned, 0);
+}
+
+private overloadable initRecordFields;
+
+[i]
+overload initRecordFields(a, static i) {
+    initialize(recordFieldRef(a, i));
+    initRecordFields(a, i+1);
+}
+
+[T,i | (i == RecordFieldCount(T))]
+overload initRecordFields(a:T, static i) {
+}
+
+
+// copy constructor
+
+[T|RecordType?(T)]
+overload T(src:T) : T {
+    copyRecordFields(returned, src, 0);
+}
+
+private overloadable copyRecordFields;
+
+[T,i]
+overload copyRecordFields(dest:T, src:T, static i) {
+    recordFieldRef(dest, i) <-- recordFieldRef(src, i);
+    copyRecordFields(dest, src, i+1);
+}
+
+[T,i | (i == RecordFieldCount(T))]
+overload copyRecordFields(dest:T, src:T, static i) {
+}
+
+
+// destroy
+
+[T|RecordType?(T)]
+overload destroy(a:T) {
+    destroyRecordFields(a, 0);
+}
+
+private overloadable destroyRecordFields;
+
+[i]
+overload destroyRecordFields(a, static i) {
+    destroy(recordFieldRef(a, i));
+    destroyRecordFields(a, i+1);
+}
+
+[T, i |(i == RecordFieldCount(T))]
+overload destroyRecordFields (a:T, static i) {
+}
+
+
+// assign
+
+[T|RecordType?(T)]
+overload assign(dest:T, src:T) {
+    assignRecordFields(dest, src, 0);
+}
+
+private overloadable assignRecordFields;
+
+[T,i]
+overload assignRecordFields(dest:T, src:T, static i) {
+    assign(recordFieldRef(dest, i), recordFieldRef(src, i));
+    assignRecordFields(dest, src, i+1);
+}
+
+[T,i | (i == RecordFieldCount(T))]
+overload assignRecordFields(dest:T, src:T, static i) {
+}
+
+
+// equals?
+
+[T|RecordType?(T)]
+overload equals?(a:T, b:T) {
+    return equalRecordFields?(a, b, 0);
+}
+
+private overloadable equalRecordFields?;
+
+[T,i]
+overload equalRecordFields?(a:T, b:T, static i) {
+    if (not equals?(recordFieldRef(a, i), recordFieldRef(b, i)))
+        return false;
+    return equalRecordFields?(a, b, i+1);
+}
+
+[T,i |(i == RecordFieldCount(T))]
+overload equalRecordFields?(a:T, b:T, static i) {
+    return true;
+}
+
+
+// lesser?
+
+[T|RecordType?(T)]
+overload lesser?(a:T, b:T) {
+    return lesserRecordFields?(a, b, 0);
+}
+
+private overloadable lesserRecordFields?;
+
+[T,i]
+overload lesserRecordFields?(a:T, b:T, static i) {
+    ref af = recordFieldRef(a, i);
+    ref bf = recordFieldRef(b, i);
+    if (lesser?(af, bf))
+        return true;
+    if (lesser?(bf, af))
+        return false;
+    return lesserRecordFields?(a, b, i+1);
+}
+
+[T,i |(i == RecordFieldCount(T))]
+overload lesserRecordFields?(a:T, b:T, static i) {
+    return false;
+}
+
+
+// hash
+
+[T|RecordType?(T)]
+overload hash(a:T) {
+    return hashRecordFields?(a, 0);
+}
+
+private overloadable hashRecordFields;
+
+[T,i]
+overload hashRecordFields(a:T, static i) {
+    return hash(recordFieldRef(a, i)) + hashRecordFields(a, i+1);
+}
+
+[T,i |(i == RecordFieldCount(T))]
+overload hashRecordFields(a:T, static i) {
+    return 0;
+}
+
+
+
+//
+// enumerations
+//
+
+// copy constructor
+
+[E | EnumType?(E)]
+overload E(src:E) : E {
+    primitiveCopy(returned, src);
+}
+
+
+// convert to integers
+
+[E,I | EnumType?(E) and IntegerType?(I)]
+overload I(a:E) = I(enumToInt(a));
+
+[E | EnumType?(E)]
+overload Int32(a:E) = enumToInt(a);
+
+
+// convert from integers
+
+[E,I | EnumType?(E) and IntegerType?(I)]
+overload E(a:I) = intToEnum(E, Int32(a));
+
+[E | EnumType?(E)]
+overload E(a:Int32) = intToEnum(E, a);
+
+
+// equals?, lesser?, hash
+
+[E | EnumType?(E)]
+overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));
+
+[E | EnumType?(E)]
+overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));
+
+[E | EnumType?(E)]
+overload hash(a:E) = enumToInt(a);
+
+
+
+//
+// StaticObject
+//
+
+[A]
+overload StaticObject[A](src:StaticObject[A]) : StaticObject[A] {
+}
+
+[A]
+overload equals?(a:StaticObject[A], b:StaticObject[A]) = true;
+
+[A]
+overload lesser?(a:StaticObject[A], b:StaticObject[A]) = false;

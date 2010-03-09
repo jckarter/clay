@@ -449,7 +449,7 @@ static ModulePtr makePrimitivesModule() {
 //
 
 ObjectPtr kernelName(const string &name) {
-    return lookupPublic(loadedModule("kernel"), new Identifier(name));
+    return lookupPublic(loadedModule("base"), new Identifier(name));
 }
 
 ObjectPtr primName(const string &name) {
@@ -462,7 +462,7 @@ ExprPtr moduleNameRef(const string &module, const string &name) {
 }
 
 ExprPtr kernelNameRef(const string &name) {
-    return moduleNameRef("kernel", name);
+    return moduleNameRef("base", name);
 }
 
 ExprPtr primNameRef(const string &name) {

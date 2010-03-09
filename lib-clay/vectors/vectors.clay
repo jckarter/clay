@@ -1,12 +1,10 @@
-import __primitives__.*;
-import kernel.operators.*;
-import kernel.coordinates.*;
-import kernel.sequences.*;
-import kernel.numbers.*;
-import kernel.pointers.*;
-import kernel.ranges.*;
-import kernel.move.*;
-import kernel.malloc.*;
+import operators.*;
+import sequences.*;
+import numbers.*;
+import pointers.*;
+import arrays.*;
+import ranges.*;
+import move.*;
 
 
 //
@@ -129,12 +127,6 @@ overload dec(c:VectorCoordinate[T]) {
 overload lesser?(a:VectorCoordinate[T], b:VectorCoordinate[T])
     = a.ptr < b.ptr;
 
-[T]
-static overload RandomAccessCoordinate?(VectorCoordinate[T]) = true;
-
-[T]
-static overload CoordinateTarget(VectorCoordinate[T]) = T;
-
 
 //
 // vector iteration
@@ -145,7 +137,7 @@ overload iterator(a:Vector[T]) = CoordinateRange(begin(a), end(a));
 
 
 //
-// equals, lesser, hash
+// equals?, lesser?, hash
 //
 
 [T]
@@ -159,6 +151,25 @@ overload equals?(a:Vector[T], b:Vector[T]) {
             return false;
     }
     return true;
+}
+
+[T]
+overload lesser?(a:Vector[T], b:Vector[T]) {
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i) and hasNext?(j)) {
+        ref x = next(i);
+        ref y = next(j);
+        if (x < y)
+            return true;
+        if (x > y)
+            return false;
+    }
+    if (hasNext?(i))
+        return false;
+    if (hasNext?(j))
+        return true;
+    return false;
 }
 
 [T]
@@ -192,8 +203,8 @@ overload push(a:Vector[T], a:Movable[T]) {
 
 [T]
 overload pop(a:Vector[T]) : T {
-    returned <-- back(a);
-    remove(a, end(a)-1);
+    returned <-- move(back(a));
+    removeLocation(a, end(a)-1);
 }
 
 
@@ -212,7 +223,7 @@ setCapacity(a:Vector[T], capacity:Int32) {
     var data = allocateMemory(T, capacity);
     var ptr = data;
     for (x in a) {
-        move(ptr^, x);
+        ptr^ <-- move(x);
         inc(ptr);
     }
     freeMemory(a.data);
@@ -226,13 +237,12 @@ ensureSpace(a:Vector[T], space:Int32) {
         setCapacity(a, 2*(a.size + space));
 }
 
-[T,I|IntegerType?(I)]
-insertionPoint(a:Vector[T], pos:I) {
+[T]
+insertLocation(a:Vector[T], i:VectorCoordinate[T]) {
     ensureSpace(a, 1);
-    var i = begin(a) + pos;
     var j = end(a);
     while (i < j) {
-        move(j^, (j-1)^);
+        j^ <-- move((j-1)^);
         dec(j);
     }
     inc(a.size);
@@ -240,36 +250,31 @@ insertionPoint(a:Vector[T], pos:I) {
 }
 
 [T,I|IntegerType?(I)]
-overload insert(a:Vector[T], i:I, x:T) {
-    insertionPoint(a, i) <-- x;
-}
-
-[T,I|IntegerType?(I)]
-overload insert(a:Vector[T], i:I, x:Movable[T]) {
-    move(insertionPoint(a, i), x);
+overload insert(a:Vector[T], i:I, x) {
+    insertLocation(a, begin(a)+i) <-- x;
 }
 
 [T]
-overload insert(a:Vector[T], i:VectorCoordinate[T], x:T) {
-    insert(a, i-begin(a), x);
+overload insert(a:Vector[T], i:VectorCoordinate[T], x) {
+    insertLocation(a, i) <-- x;
 }
 
 [T]
-overload insert(a:Vector[T], i:VectorCoordinate[T], x:Movable[T]) {
-    insert(a, i-begin(a), x);
-}
-
-[T]
-overload remove(a:Vector[T], i:VectorCoordinate[T]) {
-    destroy(i^);
+removeLocation(a:Vector[T], i:VectorCoordinate[T]) {
     var j = end(a);
     while (true) {
-        move(i^, (i+1)^);
+        i^ <-- move((i+1)^);
         inc(i);
         if (i == j) break;
     }
     if (a.capacity > 3*(a.size+1))
         setCapacity(2*(a.size + 1));
+}
+
+[T]
+overload remove(a:Vector[T], i:VectorCoordinate[T]) {
+    destroy(i^);
+    removeLocation(a, i);
 }
 
 [T,I|IntegerType?(I)]

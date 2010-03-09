@@ -1,5 +1,4 @@
-import kernel.*;
-import libc.*;
+import base.*;
 
 foreach(f, a) {
     for (x in a)

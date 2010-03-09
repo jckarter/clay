@@ -1,4 +1,8 @@
-import kernel.*;
+import numbers.*;
+import pointers.*;
+
+external malloc(size:Int32) : Pointer[Int8];
+external free(ptr:Pointer[Int8]) : Void;
 
 external printf(formatString:Pointer[Int8], ...): Int32;
 

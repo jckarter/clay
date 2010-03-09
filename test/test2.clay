@@ -1,5 +1,4 @@
-import kernel.*;
-import libc.*;
+import base.*;
 
 record CustomCompare[T,F] {
     x:T;
