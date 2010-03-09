@@ -331,7 +331,7 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
         StaticGlobal *y = (StaticGlobal *)x.ptr();
         if (!y->result) {
             if (y->analyzing)
-                return false;
+                return NULL;
             y->analyzing = true;
             y->result = evaluateStatic(y->expr, y->env);
             y->analyzing = false;
