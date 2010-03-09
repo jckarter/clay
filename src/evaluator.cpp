@@ -182,11 +182,33 @@ int evaluateInt(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = evaluateStatic(expr, env);
     if (v->objKind != VALUE_HOLDER)
-        error(expr, "expecting an Int32 value");
+        error(expr, "expecting an Int value");
     ValueHolderPtr vh = (ValueHolder *)v.ptr();
-    if (vh->type != int32Type)
-        error(expr, "expecting an Int32 value");
+    if (vh->type != cIntType)
+        error(expr, "expecting an Int value");
     return *(int *)vh->buf;
+}
+
+size_t evaluateSizeT(ExprPtr expr, EnvPtr env)
+{
+    ObjectPtr v = evaluateStatic(expr, env);
+    if (v->objKind != VALUE_HOLDER)
+        error(expr, "expecting a SizeT value");
+    ValueHolderPtr vh = (ValueHolder *)v.ptr();
+    if (vh->type != cSizeTType)
+        error(expr, "expecting a SizeT value");
+    return *(size_t *)vh->buf;
+}
+
+ptrdiff_t evaluatePtrDiffT(ExprPtr expr, EnvPtr env)
+{
+    ObjectPtr v = evaluateStatic(expr, env);
+    if (v->objKind != VALUE_HOLDER)
+        error(expr, "expecting a PtrDiffT value");
+    ValueHolderPtr vh = (ValueHolder *)v.ptr();
+    if (vh->type != cSizeTType)
+        error(expr, "expecting a PtrDiffT value");
+    return *(ptrdiff_t *)vh->buf;
 }
 
 bool evaluateBool(ExprPtr expr, EnvPtr env)
@@ -202,8 +224,22 @@ bool evaluateBool(ExprPtr expr, EnvPtr env)
 
 ValueHolderPtr intToValueHolder(int x)
 {
-    ValueHolderPtr v = new ValueHolder(int32Type);
+    ValueHolderPtr v = new ValueHolder(cIntType);
     *(int *)v->buf = x;
+    return v;
+}
+
+ValueHolderPtr sizeTToValueHolder(size_t x)
+{
+    ValueHolderPtr v = new ValueHolder(cSizeTType);
+    *(size_t *)v->buf = x;
+    return v;
+}
+
+ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x)
+{
+    ValueHolderPtr v = new ValueHolder(cPtrDiffTType);
+    *(ptrdiff_t *)v->buf = x;
     return v;
 }
 

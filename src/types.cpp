@@ -15,6 +15,10 @@ TypePtr float64Type;
 VoidTypePtr voidType;
 VoidValuePtr voidValue;
 
+TypePtr cIntType;
+TypePtr cSizeTType;
+TypePtr cPtrDiffTType;
+
 static vector<vector<PointerTypePtr> > pointerTypes;
 static vector<vector<CodePointerTypePtr> > codePointerTypes;
 static vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
@@ -37,6 +41,20 @@ void initTypes() {
     float64Type = new FloatType(64);
     voidType = new VoidType();
     voidValue = new VoidValue();
+
+    cIntType = int32Type;
+    switch (sizeof(void*)) {
+    case 4 :
+        cSizeTType = uint32Type;
+        cPtrDiffTType = int32Type;
+        break;
+    case 8 :
+        cSizeTType = uint64Type;
+        cPtrDiffTType = int64Type;
+        break;
+    default :
+        assert(false);
+    }
 
     int N = 1024;
     pointerTypes.resize(N);
@@ -257,7 +275,7 @@ const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {
     return t->fieldTypes;
 }
 
-const map<string, int> &recordFieldIndexMap(RecordTypePtr t) {
+const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t) {
     if (!t->fieldsInitialized)
         initializeRecordFields(t);
     return t->fieldIndexMap;
@@ -425,7 +443,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
     case ENUM_TYPE : {
-        return llvmIntType(32);
+        return llvmType(cIntType);
     }
     default :
         assert(false);
@@ -439,9 +457,11 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
 // typeSize, typePrint
 //
 
-int typeSize(TypePtr t) {
-    if (t->typeSize < 0)
+size_t typeSize(TypePtr t) {
+    if (!t->typeSizeInitialized) {
+        t->typeSizeInitialized = true;
         t->typeSize = llvmTargetData->getTypeAllocSize(llvmType(t));
+    }
     return t->typeSize;
 }
 

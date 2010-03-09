@@ -689,8 +689,8 @@ struct FieldRef : public Expr {
 
 struct TupleRef : public Expr {
     ExprPtr expr;
-    int index;
-    TupleRef(ExprPtr expr, int index)
+    size_t index;
+    TupleRef(ExprPtr expr, size_t index)
         : Expr(TUPLE_REF), expr(expr), index(index) {}
 };
 
@@ -1471,7 +1471,9 @@ llvm::BasicBlock *newBasicBlock(const char *name);
 struct Type : public Object {
     int typeKind;
     llvm::PATypeHolder *llTypeHolder;
-    int typeSize;
+
+    bool typeSizeInitialized;
+    size_t typeSize;
 
     bool overloadsInitialized;
     vector<OverloadPtr> overloads;
@@ -1480,7 +1482,7 @@ struct Type : public Object {
 
     Type(int typeKind)
         : Object(TYPE), typeKind(typeKind), llTypeHolder(NULL),
-          typeSize(-1), overloadsInitialized(false),
+          typeSizeInitialized(false), overloadsInitialized(false),
           staticFlagsInitialized(false) {}
     ~Type() {
         if (llTypeHolder)
@@ -1567,7 +1569,7 @@ struct RecordType : public Type {
 
     bool fieldsInitialized;
     vector<TypePtr> fieldTypes;
-    map<string,int> fieldIndexMap;
+    map<string, size_t> fieldIndexMap;
 
     const llvm::StructLayout *layout;
 
@@ -1607,6 +1609,11 @@ extern TypePtr float64Type;
 extern VoidTypePtr voidType;
 extern VoidValuePtr voidValue;
 
+// aliases
+extern TypePtr cIntType;
+extern TypePtr cSizeTType;
+extern TypePtr cPtrDiffTType;
+
 void initTypes();
 
 TypePtr integerType(int bits, bool isSigned);
@@ -1624,7 +1631,7 @@ TypePtr staticObjectType(ObjectPtr obj);
 TypePtr enumType(EnumerationPtr enumeration);
 
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
-const map<string, int> &recordFieldIndexMap(RecordTypePtr t);
+const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t);
 
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
 const llvm::StructLayout *recordTypeLayout(RecordType *t);
@@ -1639,7 +1646,7 @@ const llvm::Type *llvmVoidType();
 
 const llvm::Type *llvmType(TypePtr t);
 
-int typeSize(TypePtr t);
+size_t typeSize(TypePtr t);
 void typePrint(TypePtr t, ostream &out);
 
 
@@ -2099,9 +2106,13 @@ TypePtr evaluateEnumerationType(ExprPtr expr, EnvPtr env);
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
 
 int evaluateInt(ExprPtr expr, EnvPtr env);
+size_t evaluateSizeT(ExprPtr expr, EnvPtr env);
+ptrdiff_t evaluatePtrDiffT(ExprPtr expr, EnvPtr env);
 bool evaluateBool(ExprPtr expr, EnvPtr env);
 
 ValueHolderPtr intToValueHolder(int x);
+ValueHolderPtr sizeTToValueHolder(size_t x);
+ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x);
 ValueHolderPtr boolToValueHolder(bool x);
 
 void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v);

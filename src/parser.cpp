@@ -339,9 +339,9 @@ static bool tupleRefSuffix(ExprPtr &x) {
         return false;
     char *b = (char *)(t->str.c_str());
     char *end = b;
-    long c = strtol(b, &end, 0);
+    unsigned long c = strtoul(b, &end, 0);
     assert(*end == 0);
-    x = new TupleRef(NULL, (int)c);
+    x = new TupleRef(NULL, (size_t)c);
     x->location = location;
     return true;
 }

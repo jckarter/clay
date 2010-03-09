@@ -12,5 +12,5 @@ test() {
 }
 
 main() {
-    return Int32(test());
+    return Int(test());
 }

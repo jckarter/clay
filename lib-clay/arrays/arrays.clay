@@ -1,6 +1,7 @@
 
 public import __primitives__.(Array, array, arrayRef);
 
+import types.*;
 import operators.*;
 import sequences.*;
 import pointers.*;
@@ -16,7 +17,7 @@ import ranges.*;
 overload size(a:Array[T,n]) = n;
 
 [T,n]
-overload index(a:Array[T,n], i) = ref arrayRef(a, i);
+overload index(a:Array[T,n], i) = ref arrayRef(a, SizeT(i));
 
 
 //
