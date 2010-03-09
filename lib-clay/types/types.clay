@@ -1,0 +1,35 @@
+public import __primitives__.(Bool,
+                              Int8, Int16, Int32, Int64,
+                              UInt8, UInt16, UInt32, UInt64,
+                              Float32, Float64,
+                              Pointer,
+                              CodePointer, RefCodePointer, CCodePointer,
+                              Array, Tuple,
+                              Void,
+                              TypeOf, Type?, TypeSize);
+
+static Byte = Int8;
+static UByte = UInt8;
+
+static CChar = Int8;
+static CUChar = UInt8;
+
+static CString = Pointer[Int8];
+
+static Short = Int16;
+static UShort = UInt16;
+
+static Int = Int32;
+static UInt = UInt32;
+
+static Long = Int32;
+static ULong = UInt32;
+
+static LongLong = Int64;
+static ULongLong = UInt64;
+
+static SizeT = UInt32;
+
+static PtrDiffT = Int32;
+
+static RawPointer = Pointer[Int8];

@@ -3,6 +3,6 @@ import base.*;
 main() {
     var f = fdopen(1, cstring("w"));
     var s = "Hello World!\n";
-    fwrite(cstring(s), 1, size(s), f);
+    fwrite(cstring(s), SizeT(1), size(s), f);
     return 0;
 }

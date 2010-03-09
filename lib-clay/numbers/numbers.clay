@@ -127,11 +127,17 @@ overload T1(src:T2) = numericConvert(T1, src);
 
 // equals?, lesser?
 
-[T | NumericType?(T)]
-overload equals?(a:T, b:T) = numericEquals?(a, b);
+[A,B | NumericType?(A,B)]
+overload equals?(a:A, b:B) = numericEquals?(toBiggerNumericType(A, B, a),
+                                            toBiggerNumericType(A, B, b));
+[A | NumericType?(A)]
+overload equals?(a:A, b:A) = numericEquals?(a, b);
 
-[T | NumericType?(T)]
-overload lesser?(a:T, b:T) = numericLesser?(a, b);
+[A,B | NumericType?(A,B)]
+overload lesser?(a:A, b:B) = numericLesser?(toBiggerNumericType(A, B, a),
+                                            toBiggerNumericType(A, B, b));
+[A | NumericType?(A)]
+overload lesser?(a:A, b:A) = numericLesser?(a, b);
 
 
 // binary ops

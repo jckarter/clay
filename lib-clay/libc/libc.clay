@@ -1,16 +1,17 @@
+import types.*;
 import operators.*;
 import numbers.*;
 import pointers.*;
 
-external malloc(size:Int32) : Pointer[Int8];
-external free(ptr:Pointer[Int8]) : Void;
+external malloc(size:SizeT) : RawPointer;
+external free(ptr:RawPointer) : Void;
 
-external printf(formatString:Pointer[Int8], ...): Int32;
+external printf(formatString:CString, ...): Int;
 
-external fopen(path:Pointer[Int8], mode:Pointer[Int8]): Pointer[Int8];
-external fdopen(fd:Int32, mode:Pointer[Int8]): Pointer[Int8];
+external fopen(path:CString, mode:CString): RawPointer;
+external fdopen(fd:Int, mode:CString): RawPointer;
 
-external fclose(f:Pointer[Int8]): Void;
+external fclose(f:RawPointer): Void;
 
-external fread(ptr:Pointer[Int8], size:Int32, n:Int32, f:Pointer[Int8]): Int32;
-external fwrite(ptr:Pointer[Int8], size:Int32, n:Int32, f:Pointer[Int8]): Int32;
+external fread(ptr:RawPointer, size:SizeT, n:SizeT, f:RawPointer): SizeT;
+external fwrite(ptr:RawPointer, size:SizeT, n:SizeT, f:RawPointer): SizeT;
