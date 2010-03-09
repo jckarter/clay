@@ -475,6 +475,12 @@ static void print(const Object *x, ostream &out) {
         break;
     }
 
+    case EXTERNAL_VARIABLE : {
+        ExternalVariable *y = (ExternalVariable *)x;
+        out << "ExternalVariable(" << y->name << ", " << y->type << ")";
+        break;
+    }
+
     case STATIC_GLOBAL : {
         StaticGlobal *y = (StaticGlobal *)x;
         out << "StaticGlobal(" << y->name << ", " << y->expr << ")";

@@ -327,6 +327,12 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
         }
         return new PValue(y->type, false);
     }
+    case EXTERNAL_VARIABLE : {
+        ExternalVariable *y = (ExternalVariable *)x.ptr();
+        if (!y->type2)
+            y->type2 = evaluateType(y->type, y->env);
+        return new PValue(y->type2, false);
+    }
     case STATIC_GLOBAL : {
         StaticGlobal *y = (StaticGlobal *)x.ptr();
         if (!y->result) {
