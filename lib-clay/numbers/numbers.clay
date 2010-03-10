@@ -116,13 +116,21 @@ overload toBiggerNumericType(static A, static B, v) = B(v);
 
 // constructors
 
+[T1,T2 | NumericType?(T1,T2)]
+overload T1(src:T2) = numericConvert(T1, src);
+
 [T | NumericType?(T)]
 overload T(src:T) : T {
     primitiveCopy(returned, src);
 }
 
-[T1,T2 | NumericType?(T1,T2)]
-overload T1(src:T2) = numericConvert(T1, src);
+
+// assign
+
+[T | NumericType?(T)]
+overload assign(dest:T, src:T) {
+    primitiveCopy(dest, src);
+}
 
 
 // equals?, lesser?
