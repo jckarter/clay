@@ -421,7 +421,12 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         for (i = x->elementTypes.begin(), end = x->elementTypes.end();
              i != end; ++i)
             llTypes.push_back(llvmType(*i));
-        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+        const llvm::Type *llType =
+            llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+        ostringstream out;
+        out << t;
+        llvmModule->addTypeName(out.str(), llType);
+        return llType;
     }
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
@@ -436,7 +441,11 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         llvm::StructType *st =
             llvm::StructType::get(llvm::getGlobalContext(), llTypes);
         opaque->refineAbstractTypeTo(st);
-        return x->llTypeHolder->get();
+        const llvm::Type *llType = x->llTypeHolder->get();
+        ostringstream out;
+        out << t;
+        llvmModule->addTypeName(out.str(), llType);
+        return llType;
     }
     case STATIC_OBJECT_TYPE : {
         vector<const llvm::Type *> llTypes;
