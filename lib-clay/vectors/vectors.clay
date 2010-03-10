@@ -261,6 +261,7 @@ removeLocation(a:Vector[T], i:VectorCoordinate[T]) {
         inc(i);
         if (i == j) break;
     }
+    dec(a.size);
     if (a.capacity > 3*(a.size+1))
         setCapacity(2*(a.size + 1));
 }
