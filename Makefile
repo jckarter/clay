@@ -44,5 +44,11 @@ clean :
 
 -include src/*.dep
 
-a.out : a.ll
-	cat a.ll | llvm-as | opt -O3 | llc | gcc -m32 -g -x assembler -
+a.opt.ll : a.ll
+	cat a.ll | llvm-as | opt -O3 | llvm-dis > a.opt.ll
+
+a.s : a.opt.ll
+	cat a.opt.ll | llvm-as | llc > a.s
+
+a.out : a.s
+	gcc -m32 a.s
