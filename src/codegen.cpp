@@ -179,11 +179,14 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     CValuePtr returnVal;
     if (entry->returnType.ptr()) {
         if (entry->returnIsTemp) {
-            returnVal = new CValue(entry->returnType, &(*ai));
+            llvm::Argument *llArgValue = &(*ai);
+            llArgValue->setName("%returnedValue");
+            returnVal = new CValue(entry->returnType, llArgValue);
         }
         else {
             const llvm::Type *llt = llvmPointerType(entry->returnType);
             llvm::Value *llv = llvmInitBuilder->CreateAlloca(llt);
+            llv->setName("%returnedRef");
             returnVal = new CValue(entry->returnType, llv);
         }
     }
@@ -558,6 +561,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env)
     case VAR : {
         PValuePtr pv = analyzeValue(x->expr, env);
         CValuePtr cv = codegenAllocValue(pv->type);
+        cv->llValue->setName(x->name->str);
         codegenRootIntoValue(x->expr, env, pv, cv);
         EnvPtr env2 = new Env(env);
         addLocal(env2, x->name, cv.ptr());
