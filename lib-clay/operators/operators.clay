@@ -14,7 +14,6 @@ public import __primitives__.(StaticObject);
 
 import __primitives__.(primitiveCopy);
 import types.*;
-import numbers.*;
 
 overloadable destroy;
 overloadable assign;
@@ -368,46 +367,6 @@ overload lesserRecordFields?(a:T, b:T, static i) {
 overload lesserRecordFields?(a:T, b:T, static i) {
     return false;
 }
-
-
-
-//
-// enumerations
-//
-
-// copy constructor
-
-[E | EnumType?(E)]
-overload E(src:E) : E {
-    primitiveCopy(returned, src);
-}
-
-
-// convert to integers
-
-[E,I | EnumType?(E) and IntegerType?(I)]
-overload I(a:E) = I(enumToInt(a));
-
-[E | EnumType?(E)]
-overload Int(a:E) = enumToInt(a);
-
-
-// convert from integers
-
-[E,I | EnumType?(E) and IntegerType?(I)]
-overload E(a:I) = intToEnum(E, Int(a));
-
-[E | EnumType?(E)]
-overload E(a:Int) = intToEnum(E, a);
-
-
-// equals?, lesser?
-
-[E | EnumType?(E)]
-overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));
-
-[E | EnumType?(E)]
-overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));
 
 
 

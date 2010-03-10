@@ -2,6 +2,7 @@ public import types.*;
 public import operators.*;
 public import booleans.*;
 public import numbers.*;
+public import enumerations.*;
 public import pointers.*;
 
 public import sequences.*;
