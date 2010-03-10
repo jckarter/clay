@@ -35,6 +35,11 @@ overload Pointer[DEST](a:Pointer[SRC]) =
     pointerCast(Pointer[DEST], a);
 
 [T]
+overload assign(dest:Pointer[T], src:Pointer[T]) {
+    primitiveCopy(dest, src);
+}
+
+[T]
 overload equals?(a:Pointer[T], b:Pointer[T]) {
     return equals?(SizeT(a), SizeT(b));
 }
