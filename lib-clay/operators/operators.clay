@@ -77,9 +77,9 @@ overload assign(dest:T, src:T) {
 
 notEquals?(a, b) = not equals?(a, b);
 
-overload lesserEquals?(a, b) = equals?(a, b) or lesser?(a, b);
+overload lesserEquals?(a, b) = not lesser?(b, a);
 
-overload greater?(a, b) = not lesserEquals?(a, b);
+overload greater?(a, b) = lesser?(b, a);
 
 overload greaterEquals?(a, b) = not lesser?(a, b);
 
