@@ -1905,7 +1905,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             break;
         }
         case FLOAT_TYPE :
-            flag = llvmBuilder->CreateFCmpUEQ(v0, v1);
+            flag = llvmBuilder->CreateFCmpULT(v0, v1);
             break;
         default :
             assert(false);
