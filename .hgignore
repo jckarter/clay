@@ -10,3 +10,9 @@ syntax: regexp
 .*\.swp
 cscope.out
 tags
+
+^compiler/vs2008/.*\.ncb$
+^compiler/vs2008/.*\.suo$
+^compiler/vs2008/.*\.user$
+^compiler/vs2008/Debug/
+^compiler/vs2008/Release/
