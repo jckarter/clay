@@ -174,7 +174,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\src\clay.hpp"
+				RelativePath="..\src\clay.hpp"
 				>
 			</File>
 		</Filter>
@@ -190,79 +190,79 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\analyzer.cpp"
+				RelativePath="..\src\analyzer.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\clone.cpp"
+				RelativePath="..\src\clone.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\codegen.cpp"
+				RelativePath="..\src\codegen.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\constructors.cpp"
+				RelativePath="..\src\constructors.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\desugar.cpp"
+				RelativePath="..\src\desugar.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\env.cpp"
+				RelativePath="..\src\env.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\error.cpp"
+				RelativePath="..\src\error.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\evaluator.cpp"
+				RelativePath="..\src\evaluator.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\invoketables.cpp"
+				RelativePath="..\src\invoketables.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\lambdas.cpp"
+				RelativePath="..\src\lambdas.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\lexer.cpp"
+				RelativePath="..\src\lexer.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\llvm.cpp"
+				RelativePath="..\src\llvm.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\loader.cpp"
+				RelativePath="..\src\loader.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main.cpp"
+				RelativePath="..\src\main.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\matchinvoke.cpp"
+				RelativePath="..\src\matchinvoke.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\parser.cpp"
+				RelativePath="..\src\parser.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\patterns.cpp"
+				RelativePath="..\src\patterns.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\printer.cpp"
+				RelativePath="..\src\printer.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\types.cpp"
+				RelativePath="..\src\types.cpp"
 				>
 			</File>
 		</Filter>

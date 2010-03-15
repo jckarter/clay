@@ -1,15 +1,13 @@
 syntax: regexp
 
-^clay2llvm$
-^src/.*\.o$
-^src/.*\.dep$
-^src-new/.*\.o$
-^src-new/.*\.dep$
-^\.gdb_history$
-
 .*\.swp
 cscope.out
 tags
+
+^compiler/clay2llvm$
+^compiler/src/.*\.o$
+^compiler/src/.*\.dep$
+^\.gdb_history$
 
 ^compiler/vs2008/.*\.ncb$
 ^compiler/vs2008/.*\.suo$
