@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="clay"
 	ProjectGUID="{7ECDB677-E21F-4C6D-B0DA-D8AC4B3DCDBC}"
+	RootNamespace="clay"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="0"
 	>
@@ -26,6 +27,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine="copy /y $(OutDir)\$(ProjectName).exe ..\..\"
+				AdditionalDependencies="$(OutDir)\$(ProjectName).exe"
+				Outputs="..\..\$(ProjectName).exe"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -101,6 +105,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine="copy /y $(OutDir)\$(ProjectName).exe ..\..\"
+				AdditionalDependencies="$(OutDir)\$(ProjectName).exe"
+				Outputs="..\..\$(ProjectName).exe"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
