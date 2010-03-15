@@ -743,7 +743,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
             llv = llvm::ConstantInt::get(llvmIntType(64), y);
         }
         else if (x->suffix == "f32") {
-            float y = strtof(ptr, &end);
+            float y = (float)strtod(ptr, &end);
             if (*end != 0)
                 error("invalid float32 literal");
             if (errno == ERANGE)
@@ -772,7 +772,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         char *end = ptr;
         llvm::Value *llv;
         if (x->suffix == "f32") {
-            float y = strtof(ptr, &end);
+            float y = (float)strtod(ptr, &end);
             if (*end != 0)
                 error("invalid float32 literal");
             if (errno == ERANGE)
