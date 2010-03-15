@@ -1,5 +1,0 @@
-#!/bin/sh
-CLAYDIR=`dirname $0`
-echo "$CLAYDIR/clay2llvm $1 > a.ll"
-$CLAYDIR/clay2llvm $1 > a.ll
-make a.out
