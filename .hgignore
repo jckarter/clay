@@ -9,6 +9,7 @@ tags
 ^compiler/src/.*\.dep$
 ^\.gdb_history$
 
+^clay.exe$
 ^compiler/vs2008/.*\.ncb$
 ^compiler/vs2008/.*\.suo$
 ^compiler/vs2008/.*\.user$
