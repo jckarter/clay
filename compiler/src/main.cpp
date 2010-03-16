@@ -14,24 +14,13 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/StandardPasses.h"
 #include "llvm/System/Host.h"
+#include "llvm/System/Path.h"
 #include "llvm/Target/TargetRegistry.h"
 
 #include <iostream>
 #include <cstring>
 
 using namespace std;
-
-static void setSearchPath(const char *exePath)
-{
-    const char *end = exePath + strlen(exePath);
-    while (end != exePath) {
-        if ((end[-1] == '\\') || (end[-1] == '/'))
-            break;
-        --end;
-    }
-    string dirPath(exePath, end);
-    addSearchPath(dirPath + "lib-clay");
-}
 
 static void addOptimizationPasses(llvm::PassManager &passes,
                                   llvm::FunctionPassManager &fpasses,
@@ -88,14 +77,16 @@ static void optimizeLLVM(llvm::Module *module)
     passes.run(*module);
 }
 
-static void generateLLVMAssembly(llvm::Module *module)
+static void generateLLVMAssembly(llvm::Module *module,
+                                 llvm::raw_ostream *out)
 {
     llvm::PassManager passes;
-    passes.add(llvm::createPrintModulePass(&llvm::outs()));
+    passes.add(llvm::createPrintModulePass(out));
     passes.run(*module);
 }
 
-static void generateNativeAssembly(llvm::Module *module)
+static void generateNativeAssembly(llvm::Module *module,
+                                   llvm::raw_ostream *out)
 {
     llvm::Triple theTriple(module->getTargetTriple());
     string err;
@@ -115,9 +106,10 @@ static void generateNativeAssembly(llvm::Module *module)
 
     target->setAsmVerbosityDefault(true);
 
+    llvm::formatted_raw_ostream fout(*out);
     bool result =
         target->addPassesToEmitFile(fpasses,
-                                    llvm::fouts(),
+                                    fout,
                                     llvm::TargetMachine::CGFT_AssemblyFile,
                                     optLevel);
     assert(!result);
@@ -135,13 +127,14 @@ static void usage()
 {
     cerr << "usage: clay <options> <clayfile>\n";
     cerr << "options:\n";
+    cerr << "  -o <file>       - specify output file\n";
     cerr << "  --unoptimized   - generate unoptimized code\n";
     cerr << "  --emit-llvm     - emit llvm assembly language\n";
     cerr << "  --emit-native   - emit native assembly language\n";
 }
 
 int main(int argc, char **argv) {
-    if (argc < 2) {
+    if (argc == 1) {
         usage();
         return -1;
     }
@@ -150,25 +143,58 @@ int main(int argc, char **argv) {
     bool emitLLVM = false;
     bool emitNative = false;
 
-    for (int i = 1; i+1 < argc; ++i) {
-        if (strcmp(argv[i], "--unoptimized") == 0)
+    char *clayFile = NULL;
+    char *outputFile = NULL;
+
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "--unoptimized") == 0) {
             optimize = false;
-        else if (strcmp(argv[i], "--emit-llvm") == 0)
+        }
+        else if (strcmp(argv[i], "--emit-llvm") == 0) {
             emitLLVM = true;
-        else if (strcmp(argv[i], "--emit-native") == 0)
+        }
+        else if (strcmp(argv[i], "--emit-native") == 0) {
             emitNative = true;
-        else
-            cerr << "unrecognized option: " << argv[i] << '\n';
+        }
+        else if (strcmp(argv[i], "-o") == 0) {
+            if (i+1 == argc) {
+                cerr << "error: filename missing after -o\n";
+                return -1;
+            }
+            if (outputFile != NULL) {
+                cerr << "error: output file already specified: "
+                     << outputFile
+                     << ", specified again as " << argv[i] << '\n';
+                return -1;
+            }
+            ++i;
+            outputFile = argv[i];
+        }
+        else if (strstr(argv[i], "-") != argv[i]) {
+            if (clayFile != NULL) {
+                cerr << "error: clay file already specified: " << clayFile
+                     << ", unrecognized parameter: " << argv[i] << '\n';
+                return -1;
+            }
+            clayFile = argv[i];
+        }
+        else {
+            cerr << "error: unrecognized option " << argv[i] << '\n';
+            return -1;
+        }
+    }
+
+    if (!clayFile) {
+        cerr << "error: clay file not specified\n";
+        return -1;
     }
 
     if (emitLLVM && emitNative) {
-        cerr << "use either --emit-llvm or --emit-native, not both\n";
+        cerr << "error: use either --emit-llvm or --emit-native, not both\n";
         return -1;
     }
     if (!emitLLVM && !emitNative)
         emitNative = true;
-
-    const char *clayFile = argv[argc-1];
 
     llvm::InitializeAllTargets();
     llvm::InitializeAllAsmPrinters();
@@ -177,7 +203,27 @@ int main(int argc, char **argv) {
 
     initTypes();
 
-    setSearchPath(argv[0]);
+    llvm::sys::Path clayExe =
+        llvm::sys::Path::GetMainExecutable(argv[0], &main);
+    llvm::sys::Path clayDir(clayExe.getDirname());
+    llvm::sys::Path libDir(clayDir);
+    bool result = libDir.appendComponent("lib-clay");
+    assert(result);
+    addSearchPath(libDir.str());
+
+    llvm::raw_ostream *out = &llvm::outs();
+    if ((outputFile != NULL) && (strcmp(outputFile, "-") != 0)) {
+        llvm::sys::RemoveFileOnSignal(llvm::sys::Path(outputFile));
+        string errorInfo;
+        out = new llvm::raw_fd_ostream(outputFile,
+                                       errorInfo,
+                                       llvm::raw_fd_ostream::F_Binary);
+        if (!errorInfo.empty()) {
+            cerr << errorInfo << '\n';
+            delete out;
+            return -1;
+        }
+    }
 
     ModulePtr m = loadProgram(clayFile);
     codegenMain(m);
@@ -186,9 +232,12 @@ int main(int argc, char **argv) {
         optimizeLLVM(llvmModule);
 
     if (emitLLVM)
-        generateLLVMAssembly(llvmModule);
+        generateLLVMAssembly(llvmModule, out);
     else if (emitNative)
-        generateNativeAssembly(llvmModule);
+        generateNativeAssembly(llvmModule, out);
+
+    if (out != &llvm::outs())
+        delete out;
 
     return 0;
 }
