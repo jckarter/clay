@@ -1,5 +1,5 @@
 #!/bin/sh
 CLAYDIR=`dirname $0`
-echo "$CLAYDIR/clay $1 > a.ll"
-$CLAYDIR/clay $1 > a.ll
+echo "$CLAYDIR/clay $1 > a.s"
+$CLAYDIR/clay $1 > a.s
 make a.out

@@ -1,5 +1,5 @@
 LLVM_CXXFLAGS = `llvm-config --cxxflags`
-LLVM_LDFLAGS = `llvm-config --ldflags --libs backend engine`
+LLVM_LDFLAGS = `llvm-config --ldflags --libs all`
 
 .PHONY: default
 default : clay
@@ -43,12 +43,6 @@ clean :
 	rm -f compiler/src/*.dep
 
 -include compiler/src/*.dep
-
-a.opt.ll : a.ll
-	cat a.ll | llvm-as | opt -O3 | llvm-dis > a.opt.ll
-
-a.s : a.opt.ll
-	cat a.opt.ll | llvm-as | llc > a.s
 
 a.out : a.s
 	gcc -m32 a.s
