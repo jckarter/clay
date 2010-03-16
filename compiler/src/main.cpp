@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
     initTypes();
 
     llvm::sys::Path clayExe =
-        llvm::sys::Path::GetMainExecutable(argv[0], &main);
+        llvm::sys::Path::GetMainExecutable(argv[0], (void *)&main);
     llvm::sys::Path clayDir(clayExe.getDirname());
     llvm::sys::Path libDir(clayDir);
     bool result = libDir.appendComponent("lib-clay");
