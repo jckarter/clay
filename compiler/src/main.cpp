@@ -127,7 +127,9 @@ static void generateAssembly(llvm::Module *module, llvm::raw_ostream *out)
     fpasses.doFinalization();
 }
 
-static bool generateExe(llvm::Module *module, const string &outputFile)
+static bool generateExe(llvm::Module *module,
+                        const string &outputFile,
+                        const llvm::sys::Path &gccPath)
 {
     llvm::sys::Path tempAsm("clayasm");
     string errMsg;
@@ -149,12 +151,6 @@ static bool generateExe(llvm::Module *module, const string &outputFile)
     generateAssembly(module, &asmOut);
     asmOut.close();
 
-    llvm::sys::Path gccPath = llvm::sys::Program::FindProgramByName("gcc");
-    if (!gccPath.isValid()) {
-        cerr << "error: unable to find gcc on the path\n";
-        tempAsm.eraseFromDisk();
-        return false;
-    }
     const char *gccArgs[] = {"gcc", "-m32", "-o", outputFile.c_str(),
                              "-x", "assembler", tempAsm.c_str(), NULL};
     llvm::sys::Program::ExecuteAndWait(gccPath, gccArgs);
@@ -283,7 +279,28 @@ int main(int argc, char **argv) {
             generateAssembly(llvmModule, &out);
     }
     else {
-        bool result = generateExe(llvmModule, outputFile);
+        bool result;
+        llvm::sys::Path gccPath;
+#ifdef WIN32
+        gccPath = clayDir;
+        result = gccPath.appendComponent("mingw");
+        assert(result);
+        result = gccPath.appendComponent("bin");
+        assert(result);
+        result = gccPath.appendComponent("gcc.exe");
+        assert(result);
+        if (!gccPath.exists())
+            gccPath = llvm::sys::Path();
+#endif
+        if (!gccPath.isValid()) {
+            gccPath = llvm::sys::Program::FindProgramByName("gcc");
+        }
+        if (!gccPath.isValid()) {
+            cerr << "error: unable to find gcc on the path\n";
+            return false;
+        }
+
+        result = generateExe(llvmModule, outputFile, gccPath);
         if (!result)
             return -1;
     }
