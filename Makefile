@@ -43,6 +43,3 @@ clean :
 	rm -f compiler/src/*.dep
 
 -include compiler/src/*.dep
-
-a.out : a.s
-	gcc -m32 a.s
