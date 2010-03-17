@@ -20,6 +20,12 @@
 #include <iostream>
 #include <cstring>
 
+#ifdef WIN32
+#define DEFAULT_EXE "a.exe"
+#else
+#define DEFAULT_EXE "a.out"
+#endif
+
 using namespace std;
 
 static void addOptimizationPasses(llvm::PassManager &passes,
@@ -77,16 +83,14 @@ static void optimizeLLVM(llvm::Module *module)
     passes.run(*module);
 }
 
-static void generateLLVMAssembly(llvm::Module *module,
-                                 llvm::raw_ostream *out)
+static void generateLLVM(llvm::Module *module, llvm::raw_ostream *out)
 {
     llvm::PassManager passes;
     passes.add(llvm::createPrintModulePass(out));
     passes.run(*module);
 }
 
-static void generateNativeAssembly(llvm::Module *module,
-                                   llvm::raw_ostream *out)
+static void generateAssembly(llvm::Module *module, llvm::raw_ostream *out)
 {
     llvm::Triple theTriple(module->getTargetTriple());
     string err;
@@ -123,14 +127,52 @@ static void generateNativeAssembly(llvm::Module *module,
     fpasses.doFinalization();
 }
 
+static bool generateExe(llvm::Module *module, const string &outputFile)
+{
+    llvm::sys::Path tempAsm("clayasm");
+    string errMsg;
+    if (tempAsm.createTemporaryFileOnDisk(false, &errMsg)) {
+        cerr << "error: " << errMsg << '\n';
+        return false;
+    }
+    llvm::sys::RemoveFileOnSignal(tempAsm);
+
+    errMsg.clear();
+    llvm::raw_fd_ostream asmOut(tempAsm.c_str(),
+                                errMsg,
+                                llvm::raw_fd_ostream::F_Binary);
+    if (!errMsg.empty()) {
+        cerr << "error: " << errMsg << '\n';
+        return false;
+    }
+
+    generateAssembly(module, &asmOut);
+    asmOut.close();
+
+    llvm::sys::Path gccPath = llvm::sys::Program::FindProgramByName("gcc");
+    if (!gccPath.isValid()) {
+        cerr << "error: unable to find gcc on the path\n";
+        return false;
+    }
+    const char *gccArgs[] = {"gcc", "-m32", "-o", outputFile.c_str(),
+                             "-x", "assembler", tempAsm.c_str(), NULL};
+    llvm::sys::Program::ExecuteAndWait(gccPath, gccArgs);
+
+    if (tempAsm.eraseFromDisk(false, &errMsg)) {
+        cerr << "error: " << errMsg << '\n';
+        return false;
+    }
+    return true;
+}
+
 static void usage()
 {
     cerr << "usage: clay <options> <clayfile>\n";
     cerr << "options:\n";
     cerr << "  -o <file>       - specify output file\n";
     cerr << "  --unoptimized   - generate unoptimized code\n";
-    cerr << "  --emit-llvm     - emit llvm assembly language\n";
-    cerr << "  --emit-native   - emit native assembly language\n";
+    cerr << "  --emit-llvm     - emit llvm code\n";
+    cerr << "  --emit-asm      - emit assember code\n";
 }
 
 int main(int argc, char **argv) {
@@ -141,10 +183,10 @@ int main(int argc, char **argv) {
 
     bool optimize = true;
     bool emitLLVM = false;
-    bool emitNative = false;
+    bool emitAsm = false;
 
-    char *clayFile = NULL;
-    char *outputFile = NULL;
+    string clayFile;
+    string outputFile;
 
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--unoptimized") == 0) {
@@ -153,15 +195,15 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--emit-llvm") == 0) {
             emitLLVM = true;
         }
-        else if (strcmp(argv[i], "--emit-native") == 0) {
-            emitNative = true;
+        else if (strcmp(argv[i], "--emit-asm") == 0) {
+            emitAsm = true;
         }
         else if (strcmp(argv[i], "-o") == 0) {
             if (i+1 == argc) {
                 cerr << "error: filename missing after -o\n";
                 return -1;
             }
-            if (outputFile != NULL) {
+            if (!outputFile.empty()) {
                 cerr << "error: output file already specified: "
                      << outputFile
                      << ", specified again as " << argv[i] << '\n';
@@ -171,7 +213,7 @@ int main(int argc, char **argv) {
             outputFile = argv[i];
         }
         else if (strstr(argv[i], "-") != argv[i]) {
-            if (clayFile != NULL) {
+            if (!clayFile.empty()) {
                 cerr << "error: clay file already specified: " << clayFile
                      << ", unrecognized parameter: " << argv[i] << '\n';
                 return -1;
@@ -184,17 +226,15 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (!clayFile) {
+    if (clayFile.empty()) {
         cerr << "error: clay file not specified\n";
         return -1;
     }
 
-    if (emitLLVM && emitNative) {
-        cerr << "error: use either --emit-llvm or --emit-native, not both\n";
+    if (emitLLVM && emitAsm) {
+        cerr << "error: use either --emit-llvm or --emit-asm, not both\n";
         return -1;
     }
-    if (!emitLLVM && !emitNative)
-        emitNative = true;
 
     llvm::InitializeAllTargets();
     llvm::InitializeAllAsmPrinters();
@@ -211,19 +251,15 @@ int main(int argc, char **argv) {
     assert(result);
     addSearchPath(libDir.str());
 
-    llvm::raw_ostream *out = &llvm::outs();
-    if ((outputFile != NULL) && (strcmp(outputFile, "-") != 0)) {
-        llvm::sys::RemoveFileOnSignal(llvm::sys::Path(outputFile));
-        string errorInfo;
-        out = new llvm::raw_fd_ostream(outputFile,
-                                       errorInfo,
-                                       llvm::raw_fd_ostream::F_Binary);
-        if (!errorInfo.empty()) {
-            cerr << errorInfo << '\n';
-            delete out;
-            return -1;
-        }
+    if (outputFile.empty()) {
+        if (emitLLVM)
+            outputFile = "a.ll";
+        else if (emitAsm)
+            outputFile = "a.s";
+        else
+            outputFile = DEFAULT_EXE;
     }
+    llvm::sys::RemoveFileOnSignal(llvm::sys::Path(outputFile));
 
     ModulePtr m = loadProgram(clayFile);
     codegenMain(m);
@@ -231,13 +267,25 @@ int main(int argc, char **argv) {
     if (optimize)
         optimizeLLVM(llvmModule);
 
-    if (emitLLVM)
-        generateLLVMAssembly(llvmModule, out);
-    else if (emitNative)
-        generateNativeAssembly(llvmModule, out);
-
-    if (out != &llvm::outs())
-        delete out;
+    if (emitLLVM || emitAsm) {
+        string errorInfo;
+        llvm::raw_fd_ostream out(outputFile.c_str(),
+                                 errorInfo,
+                                 llvm::raw_fd_ostream::F_Binary);
+        if (!errorInfo.empty()) {
+            cerr << "error: " << errorInfo << '\n';
+            return -1;
+        }
+        if (emitLLVM)
+            generateLLVM(llvmModule, &out);
+        else if (emitAsm)
+            generateAssembly(llvmModule, &out);
+    }
+    else {
+        bool result = generateExe(llvmModule, outputFile);
+        if (!result)
+            return -1;
+    }
 
     return 0;
 }
