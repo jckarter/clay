@@ -4,7 +4,7 @@ syntax: regexp
 cscope.out
 tags
 
-^clay$
+p^clay$
 ^compiler/src/.*\.o$
 ^compiler/src/.*\.dep$
 ^\.gdb_history$
@@ -15,3 +15,5 @@ tags
 ^compiler/vs2008/.*\.user$
 ^compiler/vs2008/Debug/
 ^compiler/vs2008/Release/
+
+^mingw/
