@@ -152,6 +152,7 @@ static bool generateExe(llvm::Module *module, const string &outputFile)
     llvm::sys::Path gccPath = llvm::sys::Program::FindProgramByName("gcc");
     if (!gccPath.isValid()) {
         cerr << "error: unable to find gcc on the path\n";
+        tempAsm.eraseFromDisk();
         return false;
     }
     const char *gccArgs[] = {"gcc", "-m32", "-o", outputFile.c_str(),
