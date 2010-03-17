@@ -151,8 +151,12 @@ static bool generateExe(llvm::Module *module,
     generateAssembly(module, &asmOut);
     asmOut.close();
 
-    const char *gccArgs[] = {"gcc", "-m32", "-o", outputFile.c_str(),
-                             "-x", "assembler", tempAsm.c_str(), NULL};
+    const char *gccArgs[] = {gccPath.c_str(),
+                             "-m32",
+                             "-o", outputFile.c_str(),
+                             "-x", "assembler",
+                             tempAsm.c_str(),
+                             NULL};
     llvm::sys::Program::ExecuteAndWait(gccPath, gccArgs);
 
     if (tempAsm.eraseFromDisk(false, &errMsg)) {
