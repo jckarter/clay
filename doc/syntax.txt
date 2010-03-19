@@ -45,10 +45,12 @@ Enumeration -> "enum" Identifier "{" comma_list(Identifier) "}"
 GlobalVariable -> "var" Identifier "=" Expression ";"
 
 ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
-                     TypeSpec ";"
+                     TypeSpec (ExternalBody | ";")
 ExternalArgs -> comma_list(ExternalArg) ("," "...")?
               | ("...")?
 ExternalArg -> Identifier TypeSpec
+ExternalBody -> "=" Expression ";"
+              | Block
 
 ExternalVariable -> "external" Identifier TypeSpec ";"
 

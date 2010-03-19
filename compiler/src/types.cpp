@@ -152,21 +152,29 @@ TypePtr codePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
     return t.ptr();
 }
 
-TypePtr cCodePointerType(const vector<TypePtr> &argTypes, TypePtr returnType) {
+TypePtr cCodePointerType(const vector<TypePtr> &argTypes,
+                         bool hasVarArgs,
+                         TypePtr returnType) {
     int h = 0;
     for (unsigned i = 0; i < argTypes.size(); ++i) {
         h += pointerHash(argTypes[i].ptr());
     }
+    h += (hasVarArgs ? 1 : 0);
     if (returnType.ptr())
         h += pointerHash(returnType.ptr());
     h &= cCodePointerTypes.size() - 1;
     vector<CCodePointerTypePtr> &bucket = cCodePointerTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         CCodePointerType *t = bucket[i].ptr();
-        if ((t->argTypes == argTypes) && (t->returnType == returnType))
+        if ((t->argTypes == argTypes) && (t->hasVarArgs == hasVarArgs)
+            && (t->returnType == returnType))
+        {
             return t;
+        }
     }
-    CCodePointerTypePtr t = new CCodePointerType(argTypes, returnType);
+    CCodePointerTypePtr t = new CCodePointerType(argTypes,
+                                                 hasVarArgs,
+                                                 returnType);
     bucket.push_back(t);
     return t.ptr();
 }
@@ -407,7 +415,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         const llvm::Type *llReturnType =
             x->returnType.ptr() ? llvmType(x->returnType) : llvmVoidType();
         llvm::FunctionType *llFuncType =
-            llvm::FunctionType::get(llReturnType, llArgTypes, false);
+            llvm::FunctionType::get(llReturnType, llArgTypes, x->hasVarArgs);
         return llvm::PointerType::getUnqual(llFuncType);
     }
     case ARRAY_TYPE : {

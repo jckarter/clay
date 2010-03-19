@@ -360,7 +360,23 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
         InvokeEntryPtr entry = ctx.entry;
-        if (!x->expr) {
+        if (!entry) {
+            // external proc body
+            ExternalProcedurePtr y = ctx.externalProc;
+            if (!x->expr) {
+                if (y->returnType2.ptr())
+                    error("non-void return expected");
+            }
+            else {
+                if (!y->returnType2)
+                    error("void return expected");
+                PValuePtr pv = analyzeValue(x->expr, env);
+                if (pv->type != y->returnType2)
+                    error("type mismatch in return");
+                codegenRootIntoValue(x->expr, env, pv, ctx.returnVal);
+            }
+        }
+        else if (!x->expr) {
             if (entry->returnType.ptr())
                 error("non-void return expected");
         }
@@ -383,6 +399,8 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
     case RETURN_REF : {
         ReturnRef *x = (ReturnRef *)stmt.ptr();
         InvokeEntryPtr entry = ctx.entry;
+        if (!entry)
+            error("cannot return by ref from an external procedure");
         if (!entry->returnType)
             error("void return expected");
         if (entry->returnIsTemp)
@@ -1117,6 +1135,15 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
         assert(!out);
         return new CValue(y->type2, y->llGlobal);
     }
+    case EXTERNAL_PROCEDURE : {
+        ExternalProcedure *y = (ExternalProcedure *)x.ptr();
+        if (!y->llvmFunc)
+            codegenExternal(y);
+        assert(out.ptr());
+        assert(out->type == y->ptrType);
+        llvmBuilder->CreateStore(y->llvmFunc, out->llValue);
+        return out;
+    }
     case STATIC_GLOBAL : {
         return codegenStaticObject(analyzeStaticObject(x), out);
     }
@@ -1135,7 +1162,6 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
     case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
-    case EXTERNAL_PROCEDURE :
     case STATIC_PROCEDURE :
     case STATIC_OVERLOADABLE :
         assert(out.ptr());
@@ -1145,6 +1171,96 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
         error("invalid static object");
         return NULL;
     }
+}
+
+
+
+//
+// codegenExternal
+//
+
+void codegenExternal(ExternalProcedurePtr x)
+{
+    assert(x->analyzed);
+    assert(!x->llvmFunc);
+    vector<const llvm::Type *> llArgTypes;
+    for (unsigned i = 0; i < x->args.size(); ++i)
+        llArgTypes.push_back(llvmType(x->args[i]->type2));
+    const llvm::Type *llRetType =
+        x->returnType2.ptr() ? llvmType(x->returnType2) : llvmVoidType();
+    llvm::FunctionType *llFuncType =
+        llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
+    x->llvmFunc = llvm::Function::Create(llFuncType,
+                                         llvm::Function::ExternalLinkage,
+                                         x->name->str.c_str(),
+                                         llvmModule);
+
+    if (!x->body) return;
+
+    llvm::Function *savedLLVMFunction = llvmFunction;
+    llvm::IRBuilder<> *savedLLVMInitBuilder = llvmInitBuilder;
+    llvm::IRBuilder<> *savedLLVMBuilder = llvmBuilder;
+
+    llvmFunction = x->llvmFunc;
+
+    llvm::BasicBlock *initBlock = newBasicBlock("init");
+    llvm::BasicBlock *codeBlock = newBasicBlock("code");
+    llvm::BasicBlock *returnBlock = newBasicBlock("return");
+
+    llvmInitBuilder = new llvm::IRBuilder<>(initBlock);
+    llvmBuilder = new llvm::IRBuilder<>(codeBlock);
+
+    EnvPtr env = new Env(x->env);
+
+    llvm::Function::arg_iterator ai = llvmFunction->arg_begin();
+    for (unsigned i = 0; i < x->args.size(); ++i, ++ai) {
+        ExternalArgPtr arg = x->args[i];
+        llvm::Argument *llArg = &(*ai);
+        llArg->setName(arg->name->str);
+        llvm::Value *llArgVar =
+            llvmInitBuilder->CreateAlloca(llvmType(arg->type2));
+        llArgVar->setName(arg->name->str);
+        llvmBuilder->CreateStore(llArg, llArgVar);
+        CValuePtr cvalue = new CValue(arg->type2, llArgVar);
+        addLocal(env, arg->name, cvalue.ptr());
+    }
+
+    CValuePtr returnVal;
+    if (x->returnType2.ptr()) {
+        llvm::Value *llRetVal =
+            llvmInitBuilder->CreateAlloca(llvmType(x->returnType2));
+        returnVal = new CValue(x->returnType2, llRetVal);
+    }
+    ObjectPtr rinfo = new ReturnedInfo(x->returnType2, true, returnVal);
+    addLocal(env, new Identifier("%returned"), rinfo);
+
+    JumpTarget returnTarget(returnBlock, cgMarkStack());
+    CodeContext ctx(x, returnVal, returnTarget);
+
+    bool terminated = codegenStatement(x->body, env, ctx);
+    if (!terminated) {
+        cgDestroyStack(returnTarget.stackMarker);
+        llvmBuilder->CreateBr(returnBlock);
+    }
+    cgPopStack(returnTarget.stackMarker);
+
+    llvmInitBuilder->CreateBr(codeBlock);
+
+    llvmBuilder->SetInsertPoint(returnBlock);
+    if (!x->returnType2) {
+        llvmBuilder->CreateRetVoid();
+    }
+    else {
+        llvm::Value *v = llvmBuilder->CreateLoad(returnVal->llValue);
+        llvmBuilder->CreateRet(v);
+    }
+
+    delete llvmInitBuilder;
+    delete llvmBuilder;
+
+    llvmInitBuilder = savedLLVMInitBuilder;
+    llvmBuilder = savedLLVMBuilder;
+    llvmFunction = savedLLVMFunction;
 }
 
 
@@ -1311,17 +1427,25 @@ CValuePtr codegenInvokeValue(CValuePtr x,
 
     case CCODE_POINTER_TYPE : {
         CCodePointerType *t = (CCodePointerType *)x->type.ptr();
-        ensureArity(args, t->argTypes.size());
+        ensureArity2(args, t->argTypes.size(), t->hasVarArgs);
 
         llvm::Value *llCallable = llvmBuilder->CreateLoad(x->llValue);
         vector<llvm::Value *> llArgs;
-        for (unsigned i = 0; i < args.size(); ++i) {
+        for (unsigned i = 0; i < t->argTypes.size(); ++i) {
             PValuePtr parg = analyzeValue(args[i], env);
             if (parg->type != t->argTypes[i])
                 error(args[i], "argument type mismatch");
             CValuePtr carg = codegenAsRef(args[i], env, parg);
             llvm::Value *llArg = llvmBuilder->CreateLoad(carg->llValue);
             llArgs.push_back(llArg);
+        }
+        if (t->hasVarArgs) {
+            for (unsigned i = t->argTypes.size(); i < args.size(); ++i) {
+                PValuePtr parg = analyzeValue(args[i], env);
+                CValuePtr carg = codegenAsRef(args[i], env, parg);
+                llvm::Value *llArg = llvmBuilder->CreateLoad(carg->llValue);
+                llArgs.push_back(llArg);
+            }
         }
         llvm::Value *result =
             llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
@@ -1378,9 +1502,6 @@ CValuePtr codegenInvoke(ObjectPtr x,
     case OVERLOADABLE :
         return codegenInvokeOverloadable((Overloadable *)x.ptr(),
                                          args, env, out);
-    case EXTERNAL_PROCEDURE :
-        return codegenInvokeExternal((ExternalProcedure *)x.ptr(),
-                                     args, env, out);
 
     case STATIC_PROCEDURE : {
         StaticProcedurePtr y = (StaticProcedure *)x.ptr();
@@ -1648,61 +1769,6 @@ void codegenCWrapper(InvokeEntryPtr entry, const string &callableName)
                              innerArgs.end());
         llvm::Value *llRet = llBuilder.CreateLoad(llRetVal);
         llBuilder.CreateRet(llRet);
-    }
-}
-
-
-
-//
-// codegenInvokeExternal
-//
-
-CValuePtr codegenInvokeExternal(ExternalProcedurePtr x,
-                                const vector<ExprPtr> &args,
-                                EnvPtr env,
-                                CValuePtr out)
-{
-    assert(x->analyzed);
-    if (!x->llvmFunc) {
-        vector<const llvm::Type *> llArgTypes;
-        for (unsigned i = 0; i < x->args.size(); ++i)
-            llArgTypes.push_back(llvmType(x->args[i]->type2));
-        const llvm::Type *llRetType =
-            x->returnType2.ptr() ? llvmType(x->returnType2) : llvmVoidType();
-        llvm::FunctionType *llFuncType =
-            llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
-        x->llvmFunc = llvm::Function::Create(llFuncType,
-                                             llvm::Function::ExternalLinkage,
-                                             x->name->str.c_str(),
-                                             llvmModule);
-    }
-    ensureArity2(args, x->args.size(), x->hasVarArgs);
-    vector<llvm::Value *> llArgs;
-    for (unsigned i = 0; i < x->args.size(); ++i) {
-        PValuePtr parg = analyzeValue(args[i], env);
-        if (parg->type != x->args[i]->type2)
-            error(args[i], "argument type mismatch");
-        CValuePtr carg = codegenAsRef(args[i], env, parg);
-        llvm::Value *llArg = llvmBuilder->CreateLoad(carg->llValue);
-        llArgs.push_back(llArg);
-    }
-    if (x->hasVarArgs) {
-        for (unsigned i = x->args.size(); i < args.size(); ++i) {
-            PValuePtr parg = analyzeValue(args[i], env);
-            CValuePtr carg = codegenAsRef(args[i], env, parg);
-            llvm::Value *llArg = llvmBuilder->CreateLoad(carg->llValue);
-            llArgs.push_back(llArg);
-        }
-    }
-    llvm::Value *result =
-        llvmBuilder->CreateCall(x->llvmFunc, llArgs.begin(), llArgs.end());
-    if (!x->returnType2) {
-        assert(!out);
-        return NULL;
-    }
-    else {
-        llvmBuilder->CreateStore(result, out->llValue);
-        return out;
     }
 }
 
