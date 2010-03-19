@@ -1,0 +1,10 @@
+import types.*;
+import numbers.*;
+
+record Char {
+    code:Int8;
+}
+
+overload Char(c:Int) = Char(Int8(c));
+
+overload Int(c:Char) = Int(c.code);

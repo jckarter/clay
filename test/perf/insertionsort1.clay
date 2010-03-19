@@ -1,5 +1,4 @@
-import kernel.*;
-import libc.*;
+import base.*;
 
 insertionSort(a) {
     var i = 1;
@@ -23,7 +22,7 @@ reverse(a) {
 }
 
 main() {
-    var a = Array[Int32, 1000]();
+    var a = Array[Int, 1000]();
     for (i in range(size(a)))
         a[i] = i*2;
     for (i in range(100)) {

@@ -1,0 +1,9 @@
+import base.*;
+
+var sum = 1000;
+
+main() {
+    for (x in range(10))
+        sum += x+1;
+    printf(cstring("sum = %d\n"), sum);
+}

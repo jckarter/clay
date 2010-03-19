@@ -1,5 +1,4 @@
-import kernel.*;
-import libc.*;
+import base.*;
 
 factorial1(n) {
     if (n == 0)
