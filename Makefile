@@ -1,45 +1,45 @@
 LLVM_CXXFLAGS = `llvm-config --cxxflags`
-LLVM_LDFLAGS = `llvm-config --ldflags --libs backend engine`
+LLVM_LDFLAGS = `llvm-config --ldflags --libs all`
 
 .PHONY: default
-default : clay2llvm
+default : clay
 
 .cpp.o :
 	g++ $(LLVM_CXXFLAGS) -m32 -Wall -c -MMD -MF$@.dep -o $@ $<
 
 OBJS = \
-	src/error.o \
-	src/printer.o \
-	src/lexer.o \
-	src/parser.o \
-	src/clone.o \
-	src/env.o \
-	src/loader.o \
-	src/llvm.o \
-	src/types.o \
-	src/desugar.o \
-	src/patterns.o \
-	src/lambdas.o \
-	src/invoketables.o \
-	src/matchinvoke.o \
-	src/constructors.o \
-	src/analyzer.o \
-	src/evaluator.o \
-	src/codegen.o \
-	src/main.o
+	compiler/src/error.o \
+	compiler/src/printer.o \
+	compiler/src/lexer.o \
+	compiler/src/parser.o \
+	compiler/src/clone.o \
+	compiler/src/env.o \
+	compiler/src/loader.o \
+	compiler/src/llvm.o \
+	compiler/src/types.o \
+	compiler/src/desugar.o \
+	compiler/src/patterns.o \
+	compiler/src/lambdas.o \
+	compiler/src/invoketables.o \
+	compiler/src/matchinvoke.o \
+	compiler/src/constructors.o \
+	compiler/src/analyzer.o \
+	compiler/src/evaluator.o \
+	compiler/src/codegen.o \
+	compiler/src/main.o
 
-clay2llvm : $(OBJS)
-	g++ -m32 -o clay2llvm $(OBJS) $(LLVM_LDFLAGS)
+clay : $(OBJS)
+	g++ -m32 -o clay $(OBJS) $(LLVM_LDFLAGS)
 
 .PHONY: clean test
 
-test: clay2llvm
+test: clay
 	echo Looking into subdir $@ 
 	cd $@; make
 
 clean :
-	rm -f clay2llvm
-	rm -f src/*.o
-	rm -f src/*.dep
+	rm -f clay
+	rm -f compiler/src/*.o
+	rm -f compiler/src/*.dep
 
--include src/*.dep
+-include compiler/src/*.dep

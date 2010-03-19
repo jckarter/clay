@@ -1,4 +1,4 @@
-import kernel.*;
+import base.*;
 
 test() {
     var result = 0.0;
@@ -12,5 +12,5 @@ test() {
 }
 
 main() {
-    return Int32(test());
+    return Int(test());
 }

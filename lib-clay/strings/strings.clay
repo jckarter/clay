@@ -1,0 +1,55 @@
+import operators.*;
+import characters.*;
+import arrays.*;
+import vectors.*;
+import sequences.*;
+import ranges.*;
+
+
+//
+// String
+//
+
+record String {
+    data:Vector[Char];
+}
+
+
+//
+// create string
+//
+
+overload String() : String {
+    initialize(returned.data);
+    push(returned.data, Char(0));
+}
+
+[n]
+overload String(a:Array[Char,n]) : String {
+    returned <-- String(Vector(a));
+    push(returned.data, Char(0));
+}
+
+
+//
+// size, at
+//
+
+overload size(a:String) = size(a.data) - 1;
+
+overload index(a:String, i) = ref a.data[i];
+
+
+//
+// begin, end, iterator
+//
+
+overload begin(a:String) = begin(a.data);
+overload end(a:String) = end(a.data) - 1;
+overload iterator(a:String) = CoordinateRange(begin(a), end(a));
+
+//
+// c-string compatibility
+//
+
+cstring(s:String) = &s[0].code;

@@ -1,0 +1,41 @@
+import base.*;
+
+quickSort(a) {
+    sortRange(begin(a), end(a));
+}
+
+sortRange(start, end) {
+    if (start < end-1) {
+        var m = start;
+        for (p in range(start+1, end)) {
+            if (p^ < start^) {
+                m += 1;
+                swap(p^, m^);
+            }
+        }
+        swap(start^, m^);
+        sortRange(start, m);
+        sortRange(m+1, end);
+    }
+}
+
+reverse(a) {
+    var n = size(a);
+    for (i in range(n / 2))
+        swap(a[i], a[n-i-1]);
+}
+
+main() {
+//     var a = Array[Int, 1000]();
+//     for (i in range(size(a)))
+//         a[i] = i*2;
+    var a = Vector[Int]();
+    for (i in range(1000))
+        push(a, i*2);
+    for (i in range(1000)) {
+        quickSort(a);
+        reverse(a);
+    }
+    printf(cstring("a[0] = %d\n"), a[0]);
+    return 0;
+}

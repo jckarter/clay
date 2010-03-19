@@ -1,0 +1,22 @@
+import operators.*;
+import pointers.*;
+
+record Movable[T] {
+    location:Pointer[T];
+}
+
+move(x) = Movable(&x);
+
+[T]
+overload T(src:Movable[T]) : T {
+    returned <-- src.location^;
+    destroy(src.location^);
+}
+
+[T]
+overload assign(dest:T, src:Movable[T]) {
+    if (&dest == src.location)
+        return;
+    destroy(dest);
+    dest <-- T(src);
+}

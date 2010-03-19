@@ -1,0 +1,121 @@
+
+public import __primitives__.(Array, array, arrayRef);
+
+import types.*;
+import operators.*;
+import sequences.*;
+import pointers.*;
+import numbers.*;
+import ranges.*;
+
+
+//
+// size, at
+//
+
+[T,n]
+overload size(a:Array[T,n]) = n;
+
+[T,n]
+overload index(a:Array[T,n], i) = ref arrayRef(a, SizeT(i));
+
+
+//
+// array coordinates
+//
+
+record ArrayCoordinate[T] {
+    ptr:Pointer[T];
+}
+
+[T]
+overload dereference(c:ArrayCoordinate[T]) = ref dereference(c.ptr);
+
+[T,n]
+overload begin(a:Array[T,n]) = ArrayCoordinate(&a[0]);
+
+[T,n]
+overload end(a:Array[T,n]) = ArrayCoordinate(&a[n]);
+
+[T,I | IntegerType?(I)]
+overload add(c:ArrayCoordinate[T], i:I) = ArrayCoordinate(c.ptr + i);
+
+[T,I | IntegerType?(I)]
+overload subtract(c:ArrayCoordinate[T], i:I) = ArrayCoordinate(c.ptr - i);
+
+[T]
+overload subtract(c1:ArrayCoordinate[T], c2:ArrayCoordinate[T])
+    = c1.ptr - c2.ptr;
+
+[T]
+overload inc(c:ArrayCoordinate[T]) {
+    inc(c.ptr);
+}
+
+[T]
+overload dec(c:ArrayCoordinate[T]) {
+    dec(c.ptr);
+}
+
+[T]
+overload lesser?(a:ArrayCoordinate[T], b:ArrayCoordinate[T])
+    = a.ptr < b.ptr;
+
+
+//
+// array iteration
+//
+
+[T,n]
+overload iterator(a:Array[T,n]) = CoordinateRange(begin(a), end(a));
+
+
+//
+// constructors, destroy, equals?, lesser?
+//
+
+[T,n]
+overload Array[T,n]() : Array[T,n] {
+    for (x in returned)
+        x <-- T();
+}
+
+[T,n]
+overload Array[T,n](src:Array[T,n]) : Array[T,n] {
+    ref d = iterator(returned);
+    ref s = iterator(src);
+    while (hasNext?(s))
+        next(d) <-- next(s);
+}
+
+[T,n]
+overload destroy(a:Array[T,n]) {
+    for (x in a)
+        destroy(x);
+}
+
+[T,n]
+overload equals?(a:Array[T,n], b:Array[T,n]) {
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i)) {
+        if (next(i) != next(j))
+            return false;
+    }
+    return true;
+}
+
+[T,n]
+overload lesser?(a:Array[T,n], b:Array[T,n]) {
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i)) {
+        ref x = next(i);
+        ref y = next(j);
+        if (x < y)
+            return true;
+        if (x > y)
+            return false;
+    }
+    return false;
+}

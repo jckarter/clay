@@ -1,0 +1,26 @@
+
+public import __primitives__.(Bool);
+
+import operators.*;
+import __primitives__.(primitiveCopy);
+import numbers.*;
+
+overload Bool(src:Bool) : Bool {
+    primitiveCopy(returned, src);
+}
+
+[I | IntegerType?(I)]
+overload I(a:Bool) {
+    if (a) return I(1);
+    else return I(0);
+}
+
+[I | IntegerType?(I)]
+overload Bool(a:I) = (a != I(0));
+
+overload equals?(a:Bool, b:Bool) {
+    if (a) return b;
+    return not b;
+}
+
+overload lesser?(a:Bool, b:Bool) = ((not a) and b);

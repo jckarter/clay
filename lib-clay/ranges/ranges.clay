@@ -1,0 +1,53 @@
+import operators.*;
+import numbers.*;
+
+//
+// ValueRange
+//
+
+record ValueRange[T] {
+    first:T;
+    last:T;
+}
+
+[T]
+overload iterator(r:ValueRange[T]) = r;
+
+[T]
+overload hasNext?(r:ValueRange[T]) = r.first < r.last;
+
+[T]
+overload next(r:ValueRange[T]) : T {
+    returned <-- r.first;
+    inc(r.first);
+}
+
+overloadable range;
+
+overload range(first, last) = ValueRange(first, last);
+
+[I|IntegerType?(I)]
+overload range(last:I) = ValueRange(I(0), last);
+
+
+//
+// CoordinateRange
+//
+
+record CoordinateRange[T] {
+    first:T;
+    last:T;
+}
+
+[T]
+overload iterator(r:CoordinateRange[T]) = r;
+
+[T]
+overload hasNext?(r:CoordinateRange[T]) = r.first < r.last;
+
+[T]
+overload next(r:CoordinateRange[T]) {
+    ref obj = r.first^;
+    inc(r.first);
+    returnref obj;
+}
