@@ -466,7 +466,8 @@ static void print(const Object *x, ostream &out) {
     case EXTERNAL_PROCEDURE : {
         ExternalProcedure *y = (ExternalProcedure *)x;
         out << "ExternalProcedure(" << y->name << ", " << y->args;
-        out << ", " << y->hasVarArgs << ", " << y->returnType << ")";
+        out << ", " << y->hasVarArgs << ", " << y->returnType;
+        out << ", " << y->body << ")";
         break;
     }
     case EXTERNAL_ARG: {

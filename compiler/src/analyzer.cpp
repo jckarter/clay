@@ -26,7 +26,6 @@ ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
     case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
-    case EXTERNAL_PROCEDURE :
     case STATIC_PROCEDURE :
     case STATIC_OVERLOADABLE :
         return new PValue(staticObjectType(v), true);
@@ -54,7 +53,6 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
     case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
-    case EXTERNAL_PROCEDURE :
     case STATIC_PROCEDURE :
     case STATIC_OVERLOADABLE :
         return new PValue(staticObjectType(v), true);
@@ -333,6 +331,12 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
             y->type2 = evaluateType(y->type, y->env);
         return new PValue(y->type2, false);
     }
+    case EXTERNAL_PROCEDURE : {
+        ExternalProcedure *y = (ExternalProcedure *)x.ptr();
+        if (!y->analyzed)
+            analyzeExternal(y);
+        return new PValue(y->ptrType, true);
+    }
     case STATIC_GLOBAL : {
         StaticGlobal *y = (StaticGlobal *)x.ptr();
         if (!y->result) {
@@ -354,6 +358,26 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
     }
     }
     return x;
+}
+
+
+
+//
+// analyzeExternal
+//
+
+void analyzeExternal(ExternalProcedurePtr x)
+{
+    assert(!x->analyzed);
+    vector<TypePtr> argTypes;
+    for (unsigned i = 0; i < x->args.size(); ++i) {
+        ExternalArgPtr y = x->args[i];
+        y->type2 = evaluateType(y->type, x->env);
+        argTypes.push_back(y->type2);
+    }
+    x->returnType2 = evaluateMaybeVoidType(x->returnType, x->env);
+    x->ptrType = cCodePointerType(argTypes, x->hasVarArgs, x->returnType2);
+    x->analyzed = true;
 }
 
 
@@ -425,7 +449,7 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 types.push_back(evaluateType(args[i], env));
             TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return cCodePointerType(types, returnType).ptr();
+            return cCodePointerType(types, false, returnType).ptr();
         }
 
         case PRIM_Array : {
@@ -484,8 +508,6 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
         return analyzeInvokeProcedure((Procedure *)x.ptr(), args, env);
     case OVERLOADABLE :
         return analyzeInvokeOverloadable((Overloadable *)x.ptr(), args, env);
-    case EXTERNAL_PROCEDURE :
-        return analyzeInvokeExternal((ExternalProcedure *)x.ptr(), args, env);
     case STATIC_PROCEDURE : {
         StaticProcedurePtr y = (StaticProcedure *)x.ptr();
         StaticInvokeEntryPtr entry = analyzeStaticProcedure(y, args, env);
@@ -931,29 +953,6 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
 
 //
-// analyzeInvokeExternal
-//
-
-ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
-                                const vector<ExprPtr> &args,
-                                EnvPtr env)
-{
-    if (!x->analyzed) {
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            ExternalArgPtr y = x->args[i];
-            y->type2 = evaluateType(y->type, x->env);
-        }
-        x->returnType2 = evaluateMaybeVoidType(x->returnType, x->env);
-        x->analyzed = true;
-    }
-    if (!x->returnType2)
-        return voidValue.ptr();
-    return new PValue(x->returnType2, true);
-}
-
-
-
-//
 // analyzeInvokeStaticProcedure, analyzeInvokeStaticOverloadable
 //
 
@@ -1282,7 +1281,9 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         }
         if (!entry->analyzed)
             return NULL;
-        TypePtr ccpType = cCodePointerType(entry->argTypes, entry->returnType);
+        TypePtr ccpType = cCodePointerType(entry->argTypes,
+                                           false,
+                                           entry->returnType);
         return new PValue(ccpType, true);
     }
 

@@ -1478,6 +1478,17 @@ static bool externalArgs(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
     return false;
 }
 
+static bool externalBody(StatementPtr &x) {
+    int p = save();
+    if (exprBody(x)) return true;
+    if (restore(p), block(x)) return true;
+    if (restore(p), symbol(";")) {
+        x = NULL;
+        return true;
+    }
+    return false;
+}
+
 static bool external(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     Visibility vis;
@@ -1489,7 +1500,7 @@ static bool external(TopLevelItemPtr &x) {
     if (!externalArgs(y->args, y->hasVarArgs)) return false;
     if (!symbol(")")) return false;
     if (!typeSpec(y->returnType)) return false;
-    if (!symbol(";")) return false;
+    if (!externalBody(y->body)) return false;
     x = y.ptr();
     x->location = location;
     return true;

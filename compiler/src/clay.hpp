@@ -1079,9 +1079,11 @@ struct ExternalProcedure : public TopLevelItem {
     vector<ExternalArgPtr> args;
     bool hasVarArgs;
     ExprPtr returnType;
+    StatementPtr body;
 
     bool analyzed;
     TypePtr returnType2;
+    TypePtr ptrType;
 
     llvm::Function *llvmFunc;
 
@@ -1092,9 +1094,10 @@ struct ExternalProcedure : public TopLevelItem {
                       Visibility visibility,
                       const vector<ExternalArgPtr> &args,
                       bool hasVarArgs,
-                      ExprPtr returnType)
+                      ExprPtr returnType,
+                      StatementPtr body)
         : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
-          hasVarArgs(hasVarArgs), returnType(returnType),
+          hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           analyzed(false), llvmFunc(NULL) {}
 };
 
@@ -1552,10 +1555,13 @@ struct CodePointerType : public Type {
 
 struct CCodePointerType : public Type {
     vector<TypePtr> argTypes;
+    bool hasVarArgs;
     TypePtr returnType; // NULL if void return
-    CCodePointerType(const vector<TypePtr> &argTypes, TypePtr returnType)
+    CCodePointerType(const vector<TypePtr> &argTypes,
+                     bool hasVarArgs,
+                     TypePtr returnType)
         : Type(CCODE_POINTER_TYPE), argTypes(argTypes),
-          returnType(returnType) {}
+          hasVarArgs(hasVarArgs), returnType(returnType) {}
 };
 
 struct ArrayType : public Type {
@@ -1635,7 +1641,9 @@ TypePtr floatType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
                         bool returnIsTemp);
-TypePtr cCodePointerType(const vector<TypePtr> &argTypes, TypePtr returnType);
+TypePtr cCodePointerType(const vector<TypePtr> &argTypes,
+                         bool hasVarArgs,
+                         TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
@@ -1709,11 +1717,13 @@ struct CodePointerTypePattern : public Pattern {
 
 struct CCodePointerTypePattern : public Pattern {
     vector<PatternPtr> argTypes;
+    bool hasVarArgs;
     PatternPtr returnType;
     CCodePointerTypePattern(const vector<PatternPtr> &argTypes,
+                            bool hasVarArgs,
                             PatternPtr returnType)
         : Pattern(CCODE_POINTER_TYPE_PATTERN), argTypes(argTypes),
-          returnType(returnType) {}
+          hasVarArgs(hasVarArgs), returnType(returnType) {}
 };
 
 struct ArrayTypePattern : public Pattern {
@@ -2019,6 +2029,7 @@ PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env);
 
 ObjectPtr analyze(ExprPtr expr, EnvPtr env);
 ObjectPtr analyzeStaticObject(ObjectPtr x);
+void analyzeExternal(ExternalProcedurePtr x);
 ObjectPtr analyzeIndexing(ObjectPtr x,
                           const vector<ExprPtr> &args,
                           EnvPtr env);
@@ -2056,9 +2067,6 @@ InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
 void analyzeCodeBody(InvokeEntryPtr entry);
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
-ObjectPtr analyzeInvokeExternal(ExternalProcedurePtr x,
-                                const vector<ExprPtr> &args,
-                                EnvPtr env);
 
 StaticInvokeEntryPtr
 analyzeStaticProcedure(StaticProcedurePtr x,
@@ -2152,6 +2160,8 @@ struct JumpTarget {
 
 struct CodeContext {
     InvokeEntryPtr entry;
+    ExternalProcedurePtr externalProc;
+
     CValuePtr returnVal;
     JumpTarget returnTarget;
     map<string, JumpTarget> labels;
@@ -2161,6 +2171,11 @@ struct CodeContext {
                 CValuePtr returnVal,
                 const JumpTarget &returnTarget)
         : entry(entry), returnVal(returnVal),
+          returnTarget(returnTarget) {}
+    CodeContext(ExternalProcedurePtr externalProc,
+                CValuePtr returnVal,
+                const JumpTarget &returnTarget)
+        : externalProc(externalProc), returnVal(returnVal),
           returnTarget(returnTarget) {}
 };
 
@@ -2208,6 +2223,7 @@ CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out);
+void codegenExternal(ExternalProcedurePtr x);
 void codegenValueHolder(ValueHolderPtr v, CValuePtr out);
 llvm::Value *codegenConstant(ValueHolderPtr v);
 
@@ -2248,11 +2264,6 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
                             CValuePtr out);
 
 void codegenCWrapper(InvokeEntryPtr entry, const string &callableName);
-
-CValuePtr codegenInvokeExternal(ExternalProcedurePtr x,
-                                const vector<ExprPtr> &args,
-                                EnvPtr env,
-                                CValuePtr out);
 
 CValuePtr codegenInvokePrimOp(PrimOpPtr x,
                               const vector<ExprPtr> &args,

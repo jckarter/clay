@@ -89,7 +89,7 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 argTypes.push_back(evaluatePattern(args[i], env));
             PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new CCodePointerTypePattern(argTypes, returnType);
+            return new CCodePointerTypePattern(argTypes, false, returnType);
         }
 
         case PRIM_Array : {
