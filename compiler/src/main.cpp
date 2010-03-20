@@ -22,8 +22,10 @@
 
 #ifdef WIN32
 #define DEFAULT_EXE "a.exe"
+#define DEFAULT_DLL "a.dll"
 #else
 #define DEFAULT_EXE "a.out"
+#define DEFAULT_DLL "a.out"
 #endif
 
 using namespace std;
@@ -166,7 +168,7 @@ static bool generateBinary(llvm::Module *module,
     gccArgs.push_back("assembler");
     gccArgs.push_back(tempAsm.c_str());
     gccArgs.push_back(NULL);
-    llvm::sys::Program::ExecuteAndWait(gccPath, gccArgs.data());
+    llvm::sys::Program::ExecuteAndWait(gccPath, &gccArgs[0]);
 
     if (tempAsm.eraseFromDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
@@ -274,6 +276,8 @@ int main(int argc, char **argv) {
             outputFile = "a.ll";
         else if (emitAsm)
             outputFile = "a.s";
+        else if (sharedLib)
+            outputFile = DEFAULT_DLL;
         else
             outputFile = DEFAULT_EXE;
     }
