@@ -171,9 +171,9 @@ static void usage()
     cerr << "usage: clay <options> <clayfile>\n";
     cerr << "options:\n";
     cerr << "  -o <file>       - specify output file\n";
-    cerr << "  --unoptimized   - generate unoptimized code\n";
-    cerr << "  --emit-llvm     - emit llvm code\n";
-    cerr << "  --emit-asm      - emit assember code\n";
+    cerr << "  -llvm           - emit llvm code\n";
+    cerr << "  -asm            - emit assember code\n";
+    cerr << "  -unoptimized    - generate unoptimized code\n";
 }
 
 int main(int argc, char **argv) {
@@ -190,13 +190,13 @@ int main(int argc, char **argv) {
     string outputFile;
 
     for (int i = 1; i < argc; ++i) {
-        if (strcmp(argv[i], "--unoptimized") == 0) {
+        if (strcmp(argv[i], "-unoptimized") == 0) {
             optimize = false;
         }
-        else if (strcmp(argv[i], "--emit-llvm") == 0) {
+        else if (strcmp(argv[i], "-llvm") == 0) {
             emitLLVM = true;
         }
-        else if (strcmp(argv[i], "--emit-asm") == 0) {
+        else if (strcmp(argv[i], "-asm") == 0) {
             emitAsm = true;
         }
         else if (strcmp(argv[i], "-o") == 0) {
@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
     }
 
     if (emitLLVM && emitAsm) {
-        cerr << "error: use either --emit-llvm or --emit-asm, not both\n";
+        cerr << "error: use either -llvm or -asm, not both\n";
         return -1;
     }
 
