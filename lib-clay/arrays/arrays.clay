@@ -14,10 +14,13 @@ import ranges.*;
 //
 
 [T,n]
-overload size(a:Array[T,n]) = n;
+overload size(a:Array[T,n]) = SizeT(n);
+
+[T,n,I | IntegerType?(I)]
+overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
 
 [T,n]
-overload index(a:Array[T,n], i) = ref arrayRef(a, SizeT(i));
+overload index(a:Array[T,n], i:SizeT) = ref arrayRef(a, i);
 
 
 //
