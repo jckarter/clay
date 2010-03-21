@@ -15,7 +15,7 @@ testCompare(a, b) = compare(RawPointer(&a), RawPointer(&b));
 
 main() {
     var a = Array[Int, 100]();
-    var x = size(a);
+    var x = Int(size(a));
     for (e in a) {
         e = 2*x;
         x -= 1;
