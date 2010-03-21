@@ -8,5 +8,5 @@ main() {
 
     printf(cstring("sizeof(RawPointer) = %d\n"), TypeSize(RawPointer));
     printf(cstring("sizeof(SizeT) = %d\n"), TypeSize(SizeT));
-    printf(cstring("sizeof(PtrDiffT) = %d\n"), TypeSize(PtrDiffT));
+    printf(cstring("sizeof(PtrInt) = %d\n"), TypeSize(PtrInt));
 }
