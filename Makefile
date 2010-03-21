@@ -4,8 +4,12 @@ LLVM_LDFLAGS = `llvm-config --ldflags --libs all`
 .PHONY: default
 default : clay
 
+.PHONY: default
+32bit :
+	$(MAKE) EXTRA_FLAGS=-m32
+
 .cpp.o :
-	g++ $(LLVM_CXXFLAGS) -m32 -Wall -c -MMD -MF$@.dep -o $@ $<
+	g++ $(LLVM_CXXFLAGS) $(EXTRA_FLAGS) -Wall -c -MMD -MF$@.dep -o $@ $<
 
 OBJS = \
 	compiler/src/error.o \
@@ -29,7 +33,7 @@ OBJS = \
 	compiler/src/main.o
 
 clay : $(OBJS)
-	g++ -m32 -o clay $(OBJS) $(LLVM_LDFLAGS)
+	g++ $(EXTRA_FLAGS) -o clay $(OBJS) $(LLVM_LDFLAGS)
 
 .PHONY: clean test
 
