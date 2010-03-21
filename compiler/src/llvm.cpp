@@ -1,6 +1,4 @@
 #include "clay.hpp"
-#include "llvm/System/Host.h"
-#include <llvm/Target/TargetSelect.h>
 
 llvm::Module *llvmModule;
 llvm::ExecutionEngine *llvmEngine;
