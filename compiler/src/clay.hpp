@@ -20,7 +20,6 @@
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Target/TargetData.h>
-#include <llvm/Target/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/JIT.h>

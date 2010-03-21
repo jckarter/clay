@@ -13,7 +13,6 @@
 #include "llvm/Support/IRReader.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/StandardPasses.h"
-#include "llvm/System/Host.h"
 #include "llvm/System/Path.h"
 #include "llvm/Target/TargetRegistry.h"
 
@@ -256,11 +255,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllAsmPrinters();
     initLLVM();
-    llvmModule->setTargetTriple(llvm::sys::getHostTriple());
-
     initTypes();
 
     llvm::sys::Path clayExe =
