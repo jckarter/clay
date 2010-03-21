@@ -287,7 +287,9 @@ int main(int argc, char **argv) {
         else
             outputFile = DEFAULT_EXE;
     }
-    llvm::sys::RemoveFileOnSignal(llvm::sys::Path(outputFile));
+    llvm::sys::Path outputFilePath(outputFile);
+    outputFilePath.eraseFromDisk();
+    llvm::sys::RemoveFileOnSignal(outputFilePath);
 
     ModulePtr m = loadProgram(clayFile);
     codegenMain(m);
