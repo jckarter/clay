@@ -1,0 +1,4 @@
+import __primitives__.(Int64, UInt64);
+
+static PtrDiffT = Int64;
+static SizeT = UInt64;

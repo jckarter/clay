@@ -103,6 +103,7 @@ static void generateAssembly(llvm::Module *module,
     assert(theTarget != NULL);
     if (sharedLib)
         llvm::TargetMachine::setRelocationModel(llvm::Reloc::PIC_);
+    llvm::TargetMachine::setCodeModel(llvm::CodeModel::Default);
     llvm::TargetMachine *target =
         theTarget->createTargetMachine(theTriple.getTriple(), "");
     assert(target != NULL);
@@ -158,7 +159,17 @@ static bool generateBinary(llvm::Module *module,
 
     vector<const char *> gccArgs;
     gccArgs.push_back(gccPath.c_str());
-    gccArgs.push_back("-m32");
+
+    switch (sizeof(void*)) {
+    case 4 :
+        gccArgs.push_back("-m32");
+        break;
+    case 8 :
+        break;
+    default :
+        assert(false);
+    }
+
     if (sharedLib)
         gccArgs.push_back("-shared");
     gccArgs.push_back("-o");
