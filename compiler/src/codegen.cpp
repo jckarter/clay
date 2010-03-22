@@ -1181,6 +1181,10 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
 
 void codegenExternal(ExternalProcedurePtr x)
 {
+    if (x->llvmFunc != NULL)
+        return;
+    if (!x->analyzed)
+        analyzeExternal(x);
     assert(x->analyzed);
     assert(!x->llvmFunc);
     vector<const llvm::Type *> llArgTypes;

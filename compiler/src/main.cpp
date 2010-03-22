@@ -292,7 +292,19 @@ int main(int argc, char **argv) {
     llvm::sys::RemoveFileOnSignal(outputFilePath);
 
     ModulePtr m = loadProgram(clayFile);
-    codegenMain(m);
+    if (sharedLib) {
+        for (unsigned i = 0; i < m->topLevelItems.size(); ++i) {
+            TopLevelItemPtr x = m->topLevelItems[i];
+            if (x->objKind == EXTERNAL_PROCEDURE) {
+                ExternalProcedurePtr y = (ExternalProcedure *)x.ptr();
+                if (y->body.ptr())
+                    codegenExternal(y);
+            }
+        }
+    }
+    else {
+        codegenMain(m);
+    }
 
     if (optimize)
         optimizeLLVM(llvmModule, sharedLib);
