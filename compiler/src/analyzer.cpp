@@ -953,7 +953,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
 
 //
-// analyzeInvokeStaticProcedure, analyzeInvokeStaticOverloadable
+// analyzeStaticProcedure, analyzeStaticOverloadable
 //
 
 StaticInvokeEntryPtr
