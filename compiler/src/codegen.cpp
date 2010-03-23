@@ -683,133 +683,13 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     switch (expr->objKind) {
 
-    case BOOL_LITERAL : {
-        BoolLiteral *x = (BoolLiteral *)expr.ptr();
-        int bv = (x->value ? 1 : 0);
-        llvm::Value *llv = llvm::ConstantInt::get(llvmType(boolType), bv);
-        llvmBuilder->CreateStore(llv, out->llValue);
-        return out;
-    }
-
-    case INT_LITERAL : {
-        IntLiteral *x = (IntLiteral *)expr.ptr();
-        char *ptr = (char *)x->value.c_str();
-        char *end = ptr;
-        llvm::Value *llv;
-        if (x->suffix == "i8") {
-            long y = strtol(ptr, &end, 0);
-            if (*end != 0)
-                error("invalid int8 literal");
-            if ((errno == ERANGE) || (y < SCHAR_MIN) || (y > SCHAR_MAX))
-                error("int8 literal out of range");
-            llv = llvm::ConstantInt::getSigned(llvmIntType(8), y);
-        }
-        else if (x->suffix == "i16") {
-            long y = strtol(ptr, &end, 0);
-            if (*end != 0)
-                error("invalid int16 literal");
-            if ((errno == ERANGE) || (y < SHRT_MIN) || (y > SHRT_MAX))
-                error("int16 literal out of range");
-            llv = llvm::ConstantInt::getSigned(llvmIntType(16), y);
-        }
-        else if ((x->suffix == "i32") || x->suffix.empty()) {
-            long y = strtol(ptr, &end, 0);
-            if (*end != 0)
-                error("invalid int32 literal");
-            if (errno == ERANGE)
-                error("int32 literal out of range");
-            llv = llvm::ConstantInt::getSigned(llvmIntType(32), y);
-        }
-        else if (x->suffix == "i64") {
-            long long y = strtoll(ptr, &end, 0);
-            if (*end != 0)
-                error("invalid int64 literal");
-            if (errno == ERANGE)
-                error("int64 literal out of range");
-            llv = llvm::ConstantInt::getSigned(llvmIntType(64), y);
-        }
-        else if (x->suffix == "u8") {
-            unsigned long y = strtoul(ptr, &end, 0);
-            if (*end != 0)
-                error("invalid uint8 literal");
-            if ((errno == ERANGE) || (y > UCHAR_MAX))
-                error("uint8 literal out of range");
-            llv = llvm::ConstantInt::get(llvmIntType(8), y);
-        }
-        else if (x->suffix == "u16") {
-            unsigned long y = strtoul(ptr, &end, 0);
-            if (*end != 0)
-                error("invalid uint16 literal");
-            if ((errno == ERANGE) || (y > USHRT_MAX))
-                error("uint16 literal out of range");
-            llv = llvm::ConstantInt::get(llvmIntType(16), y);
-        }
-        else if (x->suffix == "u32") {
-            unsigned long y = strtoul(ptr, &end, 0);
-            if (*end != 0)
-                error("invalid uint32 literal");
-            if (errno == ERANGE)
-                error("uint32 literal out of range");
-            llv = llvm::ConstantInt::get(llvmIntType(32), y);
-        }
-        else if (x->suffix == "u64") {
-            unsigned long long y = strtoull(ptr, &end, 0);
-            if (*end != 0)
-                error("invalid uint64 literal");
-            if (errno == ERANGE)
-                error("uint64 literal out of range");
-            llv = llvm::ConstantInt::get(llvmIntType(64), y);
-        }
-        else if (x->suffix == "f32") {
-            float y = (float)strtod(ptr, &end);
-            if (*end != 0)
-                error("invalid float32 literal");
-            if (errno == ERANGE)
-                error("float32 literal out of range");
-            llv = llvm::ConstantFP::get(llvmFloatType(32), y);
-        }
-        else if (x->suffix == "f64") {
-            double y = strtod(ptr, &end);
-            if (*end != 0)
-                error("invalid float64 literal");
-            if (errno == ERANGE)
-                error("float64 literal out of range");
-            llv = llvm::ConstantFP::get(llvmFloatType(64), y);
-        }
-        else {
-            error("invalid literal suffix: " + x->suffix);
-            llv = NULL;
-        }
-        llvmBuilder->CreateStore(llv, out->llValue);
-        return out;
-    }
-
+    case BOOL_LITERAL :
+    case INT_LITERAL :
     case FLOAT_LITERAL : {
-        FloatLiteral *x = (FloatLiteral *)expr.ptr();
-        char *ptr = (char *)x->value.c_str();
-        char *end = ptr;
-        llvm::Value *llv;
-        if (x->suffix == "f32") {
-            float y = (float)strtod(ptr, &end);
-            if (*end != 0)
-                error("invalid float32 literal");
-            if (errno == ERANGE)
-                error("float32 literal out of range");
-            llv = llvm::ConstantFP::get(llvmFloatType(32), y);
-        }
-        else if ((x->suffix == "f64") || x->suffix.empty()) {
-            double y = strtod(ptr, &end);
-            if (*end != 0)
-                error("invalid float64 literal");
-            if (errno == ERANGE)
-                error("float64 literal out of range");
-            llv = llvm::ConstantFP::get(llvmFloatType(64), y);
-        }
-        else {
-            error("invalid float literal suffix: " + x->suffix);
-            llv = NULL;
-        }
-        llvmBuilder->CreateStore(llv, out->llValue);
+        ObjectPtr x = analyze(expr, env);
+        assert(x->objKind == VALUE_HOLDER);
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        codegenValueHolder(y, out);
         return out;
     }
 
