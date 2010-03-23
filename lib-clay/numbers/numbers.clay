@@ -87,10 +87,6 @@ private static BiggerFloatType?(A, B) = TypeSize(A) > TypeSize(B);
 
 private static overloadable BiggerNumericType?;
 
-// FIXME: this default overload shouldn't be required.
-[A,B]
-static overload BiggerNumericType?(A, B) = false;
-
 [A,B | FloatType?(A) and IntegerType?(B)]
 static overload BiggerNumericType?(A, B) = true;
 
