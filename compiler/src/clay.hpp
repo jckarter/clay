@@ -2021,6 +2021,7 @@ struct PValue : public Object {
         : Object(PVALUE), type(type), isTemp(isTemp) {}
 };
 
+PValuePtr analysisToPValue(ObjectPtr x);
 ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env);
