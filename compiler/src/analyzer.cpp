@@ -14,6 +14,11 @@ ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
 
     switch (v->objKind) {
 
+    case VALUE_HOLDER : {
+        ValueHolder *x = (ValueHolder *)v.ptr();
+        return new PValue(x->type, true);
+    }
+
     case PVALUE :
         return (PValue *)v.ptr();
 
@@ -43,6 +48,11 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
         return NULL;
 
     switch (v->objKind) {
+
+    case VALUE_HOLDER : {
+        ValueHolder *x = (ValueHolder *)v.ptr();
+        return new PValue(x->type, true);
+    }
 
     case PVALUE :
         return (PValue *)v.ptr();
@@ -348,10 +358,6 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
         }
         return analyzeStaticObject(y->result);
     }
-    case VALUE_HOLDER : {
-        ValueHolder *y = (ValueHolder *)x.ptr();
-        return new PValue(y->type, true);
-    }
     case CVALUE : {
         CValue *y = (CValue *)x.ptr();
         return new PValue(y->type, false);
@@ -389,11 +395,6 @@ void analyzeExternal(ExternalProcedurePtr x)
 ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 {
     switch (x->objKind) {
-
-    case VALUE_HOLDER : {
-        ValueHolder *y = (ValueHolder *)x.ptr();
-        return analyzeIndexing(new PValue(y->type, true), args, env);
-    }
 
     case PVALUE : {
         PValue *y = (PValue *)x.ptr();
