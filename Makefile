@@ -35,11 +35,7 @@ OBJS = \
 clay : $(OBJS)
 	g++ $(EXTRA_FLAGS) -o clay $(OBJS) $(LLVM_LDFLAGS)
 
-.PHONY: clean test
-
-test: clay
-	echo Looking into subdir $@ 
-	cd $@; make
+.PHONY: clean
 
 clean :
 	rm -f clay
