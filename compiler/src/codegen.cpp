@@ -809,7 +809,19 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case AND : {
         And *x = (And *)expr.ptr();
-        PValuePtr pv1 = analyzeValue(x->expr1, env);
+        ObjectPtr first = analyze(x->expr1, env);
+        if (first->objKind == VALUE_HOLDER) {
+            ValueHolder *y = (ValueHolder *)first.ptr();
+            if (y->type == boolType) {
+                if (*((char *)y->buf) == 0) {
+                    codegenValueHolder(y, out);
+                    return out;
+                }
+            }
+        }
+        PValuePtr pv1;
+        if (!analysisToPValue(first, pv1))
+            error(x->expr1, "expecting a value");
         PValuePtr pv2 = analyzeValue(x->expr2, env);
         if (pv1->type != pv2->type)
             error("type mismatch in 'and' expression");
@@ -876,7 +888,19 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case OR : {
         Or *x = (Or *)expr.ptr();
-        PValuePtr pv1 = analyzeValue(x->expr1, env);
+        ObjectPtr first = analyze(x->expr1, env);
+        if (first->objKind == VALUE_HOLDER) {
+            ValueHolder *y = (ValueHolder *)first.ptr();
+            if (y->type == boolType) {
+                if (*((char *)y->buf) != 0) {
+                    codegenValueHolder(y, out);
+                    return out;
+                }
+            }
+        }
+        PValuePtr pv1;
+        if (!analysisToPValue(first, pv1))
+            error(x->expr1, "expecting a value");
         PValuePtr pv2 = analyzeValue(x->expr2, env);
         if (pv1->type != pv2->type)
             error("type mismatch in 'or' expression");

@@ -60,7 +60,7 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
         return NULL;
     PValuePtr pv;
     if (!analysisToPValue(v, pv))
-        error("expecting a value");
+        error(expr, "expecting a value");
     return pv;
 }
 
@@ -347,7 +347,19 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case AND : {
         And *x = (And *)expr.ptr();
-        PValuePtr a = analyzeValue(x->expr1, env);
+        ObjectPtr first = analyze(x->expr1, env);
+        if (!first)
+            return NULL;
+        if (first->objKind == VALUE_HOLDER) {
+            ValueHolder *y = (ValueHolder *)first.ptr();
+            if (y->type == boolType) {
+                if (*((char *)y->buf) == 0)
+                    return first;
+            }
+        }
+        PValuePtr a;
+        if (!analysisToPValue(first, a))
+            error(x->expr1, "expecting a value");
         PValuePtr b = analyzeValue(x->expr2, env);
         if (!a || !b)
             return NULL;
@@ -358,7 +370,19 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case OR : {
         Or *x = (Or *)expr.ptr();
-        PValuePtr a = analyzeValue(x->expr1, env);
+        ObjectPtr first = analyze(x->expr1, env);
+        if (!first)
+            return NULL;
+        if (first->objKind == VALUE_HOLDER) {
+            ValueHolder *y = (ValueHolder *)first.ptr();
+            if (y->type == boolType) {
+                if (*((char *)y->buf) != 0)
+                    return first;
+            }
+        }
+        PValuePtr a;
+        if (!analysisToPValue(first, a))
+            error(x->expr1, "expecting a value");
         PValuePtr b = analyzeValue(x->expr2, env);
         if (!a || !b)
             return NULL;
