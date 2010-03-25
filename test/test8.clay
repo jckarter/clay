@@ -1,7 +1,7 @@
 import base.*;
 
-external qsort(base:Pointer[Int8], n:Int32, width:Int32,
-               compare:CCodePointer[Pointer[Int8], Pointer[Int8], Int32]): Void;
+external qsort(base:RawPointer, n:SizeT, width:SizeT,
+               compare:CCodePointer[RawPointer, RawPointer, Int]): Void;
 
 compare(pa, pb) {
     if (pa^ < pb^) return -1;
@@ -10,8 +10,8 @@ compare(pa, pb) {
 }
 
 main() {
-    var a = Array[Int32, 100]();
-    var x = size(a);
+    var a = Array[Int, 100]();
+    var x = Int(size(a));
     for (e in a) {
         e = 2*x;
         x -= 1;
@@ -19,17 +19,17 @@ main() {
 
     printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
 
-    var fp = makeCCodePointer(compare, Pointer[Int32], Pointer[Int32]);
+    var fp = makeCCodePointer(compare, Pointer[Int], Pointer[Int]);
 
     printf(cstring("compare test = %d\n"), fp(&a[0], &a[2]));
     printf(cstring("compare test = %d\n"), fp(&a[0], &a[0]));
     printf(cstring("compare test = %d\n"), fp(&a[2], &a[0]));
 
-    var fp2 = CCodePointer[Pointer[Int8], Pointer[Int8], Int32](fp);
+    var fp2 = CCodePointer[RawPointer, RawPointer, Int](fp);
 
     qsort(Pointer[Int8](&a[0]),
           size(a),
-          TypeSize(Int32),
+          TypeSize(Int),
           fp2);
 
     printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);

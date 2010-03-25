@@ -4,21 +4,63 @@
 
 using namespace std;
 
-#ifdef WIN32
+#ifdef _WIN32
 #define PATH_SEPARATOR '\\'
 #else
 #define PATH_SEPARATOR '/'
 #endif
 
+
 static vector<string> searchPath;
+static vector<string> moduleSuffixes;
 static map<string, ModulePtr> modules;
 
-static BlockPtr gvarInitializers;;
+static BlockPtr gvarInitializers;
 
 
 
 //
-// addSearchPath, locateFile
+// initModuleSuffixes
+//
+
+static const char *getOS() {
+#if defined(__APPLE__)
+    return "macosx";
+#elif defined(linux)
+    return "linux";
+#elif defined(_WIN32)
+    return "windows";
+#else
+    #error "Unsupported operating system"
+#endif
+}
+
+static const char *getPtrSize() {
+    switch (sizeof(void*)) {
+    case 4 : return "32";
+    case 8 : return "64";
+    default :
+        assert(false);
+        return NULL;
+    }
+}
+
+static void initModuleSuffixes() {
+    string os = getOS();
+    string bits = getPtrSize();
+    moduleSuffixes.push_back("." + os + "." + bits + ".clay");
+    moduleSuffixes.push_back("." + os + ".clay");
+    moduleSuffixes.push_back("." + bits + ".clay");
+#ifndef _WIN32
+    moduleSuffixes.push_back(".unix.clay");
+#endif    
+    moduleSuffixes.push_back(".clay");
+}
+
+
+
+//
+// addSearchPath, locateFile, toRelativePath
 //
 
 void addSearchPath(const string &path) {
@@ -26,25 +68,24 @@ void addSearchPath(const string &path) {
 }
 
 static bool locateFile(const string &relativePath, string &path) {
+    // relativePath has no suffix
+    if (moduleSuffixes.empty())
+        initModuleSuffixes();
     string tail = PATH_SEPARATOR + relativePath;
-    vector<string>::iterator i, end;
-    for (i = searchPath.begin(), end = searchPath.end(); i != end; ++i) {
-        string p = (*i) + tail;
-        FILE *f = fopen(p.c_str(), "rb");
-        if (f != NULL) {
-            fclose(f);
-            path = p;
-            return true;
+    for (unsigned i = 0; i < searchPath.size(); ++i) {
+        string pathWOSuffix = searchPath[i] + tail;
+        for (unsigned j = 0; j < moduleSuffixes.size(); ++j) {
+            string p = pathWOSuffix + moduleSuffixes[j];
+            FILE *f = fopen(p.c_str(), "rb");
+            if (f != NULL) {
+                fclose(f);
+                path = p;
+                return true;
+            }
         }
     }
     return false;
 }
-
-
-
-//
-// toRelativePath, toKey
-//
 
 static string toRelativePath(DottedNamePtr name) {
     string relativePath;
@@ -53,18 +94,8 @@ static string toRelativePath(DottedNamePtr name) {
         relativePath.push_back(PATH_SEPARATOR);
     }
     relativePath.append(name->parts.back()->str);
-    relativePath.append(".clay");
+    // relative path has no suffix
     return relativePath;
-}
-
-static string toKey(DottedNamePtr name) {
-    string key;
-    for (unsigned i = 0; i < name->parts.size(); ++i) {
-        if (i != 0)
-            key.push_back('.');
-        key.append(name->parts[i]->str);
-    }
-    return key;
 }
 
 
@@ -135,6 +166,16 @@ static void installGlobals(ModulePtr m) {
             break;
         }
     }
+}
+
+static string toKey(DottedNamePtr name) {
+    string key;
+    for (unsigned i = 0; i < name->parts.size(); ++i) {
+        if (i != 0)
+            key.push_back('.');
+        key.append(name->parts[i]->str);
+    }
+    return key;
 }
 
 static ModulePtr loadModuleByName(DottedNamePtr name) {

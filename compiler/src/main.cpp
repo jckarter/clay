@@ -13,7 +13,6 @@
 #include "llvm/Support/IRReader.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/StandardPasses.h"
-#include "llvm/System/Host.h"
 #include "llvm/System/Path.h"
 #include "llvm/Target/TargetRegistry.h"
 
@@ -22,15 +21,18 @@
 
 #ifdef WIN32
 #define DEFAULT_EXE "a.exe"
+#define DEFAULT_DLL "a.dll"
 #else
 #define DEFAULT_EXE "a.out"
+#define DEFAULT_DLL "a.out"
 #endif
 
 using namespace std;
 
 static void addOptimizationPasses(llvm::PassManager &passes,
                                   llvm::FunctionPassManager &fpasses,
-                                  unsigned optLevel)
+                                  unsigned optLevel,
+                                  bool sharedLib)
 {
     llvm::createStandardFunctionPasses(&fpasses, optLevel);
 
@@ -52,12 +54,12 @@ static void addOptimizationPasses(llvm::PassManager &passes,
                                      /*HaveExceptions=*/ true,
                                      inliningPass);
     llvm::createStandardLTOPasses(&passes,
-                                  /*Internalize=*/ true,
+                                  /*Internalize=*/ !sharedLib,
                                   /*RunInliner=*/ true,
                                   /*VerifyEach=*/ false);
 }
 
-static void optimizeLLVM(llvm::Module *module)
+static void optimizeLLVM(llvm::Module *module, bool sharedLib)
 {
     llvm::PassManager passes;
 
@@ -69,7 +71,7 @@ static void optimizeLLVM(llvm::Module *module)
 
     fpasses.add(new llvm::TargetData(*td));
 
-    addOptimizationPasses(passes, fpasses, 3);
+    addOptimizationPasses(passes, fpasses, 3, sharedLib);
 
     fpasses.doInitialization();
     for (llvm::Module::iterator i = module->begin(), e = module->end();
@@ -90,18 +92,21 @@ static void generateLLVM(llvm::Module *module, llvm::raw_ostream *out)
     passes.run(*module);
 }
 
-static void generateAssembly(llvm::Module *module, llvm::raw_ostream *out)
+static void generateAssembly(llvm::Module *module,
+                             llvm::raw_ostream *out,
+                             bool sharedLib)
 {
     llvm::Triple theTriple(module->getTargetTriple());
     string err;
     const llvm::Target *theTarget =
         llvm::TargetRegistry::lookupTarget(theTriple.getTriple(), err);
     assert(theTarget != NULL);
+    if (sharedLib)
+        llvm::TargetMachine::setRelocationModel(llvm::Reloc::PIC_);
+    llvm::TargetMachine::setCodeModel(llvm::CodeModel::Default);
     llvm::TargetMachine *target =
         theTarget->createTargetMachine(theTriple.getTriple(), "");
     assert(target != NULL);
-
-    llvm::CodeGenOpt::Level optLevel = llvm::CodeGenOpt::Aggressive;
 
     llvm::FunctionPassManager fpasses(module);
 
@@ -115,7 +120,7 @@ static void generateAssembly(llvm::Module *module, llvm::raw_ostream *out)
         target->addPassesToEmitFile(fpasses,
                                     fout,
                                     llvm::TargetMachine::CGFT_AssemblyFile,
-                                    optLevel);
+                                    llvm::CodeGenOpt::Aggressive);
     assert(!result);
 
     fpasses.doInitialization();
@@ -127,9 +132,10 @@ static void generateAssembly(llvm::Module *module, llvm::raw_ostream *out)
     fpasses.doFinalization();
 }
 
-static bool generateExe(llvm::Module *module,
-                        const string &outputFile,
-                        const llvm::sys::Path &gccPath)
+static bool generateBinary(llvm::Module *module,
+                           const string &outputFile,
+                           const llvm::sys::Path &gccPath,
+                           bool sharedLib)
 {
     llvm::sys::Path tempAsm("clayasm");
     string errMsg;
@@ -148,16 +154,31 @@ static bool generateExe(llvm::Module *module,
         return false;
     }
 
-    generateAssembly(module, &asmOut);
+    generateAssembly(module, &asmOut, sharedLib);
     asmOut.close();
 
-    const char *gccArgs[] = {gccPath.c_str(),
-                             "-m32",
-                             "-o", outputFile.c_str(),
-                             "-x", "assembler",
-                             tempAsm.c_str(),
-                             NULL};
-    llvm::sys::Program::ExecuteAndWait(gccPath, gccArgs);
+    vector<const char *> gccArgs;
+    gccArgs.push_back(gccPath.c_str());
+
+    switch (sizeof(void*)) {
+    case 4 :
+        gccArgs.push_back("-m32");
+        break;
+    case 8 :
+        break;
+    default :
+        assert(false);
+    }
+
+    if (sharedLib)
+        gccArgs.push_back("-shared");
+    gccArgs.push_back("-o");
+    gccArgs.push_back(outputFile.c_str());
+    gccArgs.push_back("-x");
+    gccArgs.push_back("assembler");
+    gccArgs.push_back(tempAsm.c_str());
+    gccArgs.push_back(NULL);
+    llvm::sys::Program::ExecuteAndWait(gccPath, &gccArgs[0]);
 
     if (tempAsm.eraseFromDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
@@ -171,9 +192,11 @@ static void usage()
     cerr << "usage: clay <options> <clayfile>\n";
     cerr << "options:\n";
     cerr << "  -o <file>       - specify output file\n";
-    cerr << "  --unoptimized   - generate unoptimized code\n";
-    cerr << "  --emit-llvm     - emit llvm code\n";
-    cerr << "  --emit-asm      - emit assember code\n";
+    cerr << "  -shared         - create a dynamically linkable library\n";
+    cerr << "  -dll            - create a dynamically linkable library\n";
+    cerr << "  -llvm           - emit llvm code\n";
+    cerr << "  -asm            - emit assember code\n";
+    cerr << "  -unoptimized    - generate unoptimized code\n";
 }
 
 int main(int argc, char **argv) {
@@ -185,19 +208,25 @@ int main(int argc, char **argv) {
     bool optimize = true;
     bool emitLLVM = false;
     bool emitAsm = false;
+    bool sharedLib = false;
 
     string clayFile;
     string outputFile;
 
     for (int i = 1; i < argc; ++i) {
-        if (strcmp(argv[i], "--unoptimized") == 0) {
-            optimize = false;
+        if ((strcmp(argv[i], "-shared") == 0) ||
+            (strcmp(argv[i], "-dll") == 0))
+        {
+            sharedLib = true;
         }
-        else if (strcmp(argv[i], "--emit-llvm") == 0) {
+        else if (strcmp(argv[i], "-llvm") == 0) {
             emitLLVM = true;
         }
-        else if (strcmp(argv[i], "--emit-asm") == 0) {
+        else if (strcmp(argv[i], "-asm") == 0) {
             emitAsm = true;
+        }
+        else if (strcmp(argv[i], "-unoptimized") == 0) {
+            optimize = false;
         }
         else if (strcmp(argv[i], "-o") == 0) {
             if (i+1 == argc) {
@@ -233,15 +262,11 @@ int main(int argc, char **argv) {
     }
 
     if (emitLLVM && emitAsm) {
-        cerr << "error: use either --emit-llvm or --emit-asm, not both\n";
+        cerr << "error: use either -llvm or -asm, not both\n";
         return -1;
     }
 
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllAsmPrinters();
     initLLVM();
-    llvmModule->setTargetTriple(llvm::sys::getHostTriple());
-
     initTypes();
 
     llvm::sys::Path clayExe =
@@ -257,16 +282,32 @@ int main(int argc, char **argv) {
             outputFile = "a.ll";
         else if (emitAsm)
             outputFile = "a.s";
+        else if (sharedLib)
+            outputFile = DEFAULT_DLL;
         else
             outputFile = DEFAULT_EXE;
     }
-    llvm::sys::RemoveFileOnSignal(llvm::sys::Path(outputFile));
+    llvm::sys::Path outputFilePath(outputFile);
+    outputFilePath.eraseFromDisk();
+    llvm::sys::RemoveFileOnSignal(outputFilePath);
 
     ModulePtr m = loadProgram(clayFile);
-    codegenMain(m);
+    if (sharedLib) {
+        for (unsigned i = 0; i < m->topLevelItems.size(); ++i) {
+            TopLevelItemPtr x = m->topLevelItems[i];
+            if (x->objKind == EXTERNAL_PROCEDURE) {
+                ExternalProcedurePtr y = (ExternalProcedure *)x.ptr();
+                if (y->body.ptr())
+                    codegenExternal(y);
+            }
+        }
+    }
+    else {
+        codegenMain(m);
+    }
 
     if (optimize)
-        optimizeLLVM(llvmModule);
+        optimizeLLVM(llvmModule, sharedLib);
 
     if (emitLLVM || emitAsm) {
         string errorInfo;
@@ -280,7 +321,7 @@ int main(int argc, char **argv) {
         if (emitLLVM)
             generateLLVM(llvmModule, &out);
         else if (emitAsm)
-            generateAssembly(llvmModule, &out);
+            generateAssembly(llvmModule, &out, sharedLib);
     }
     else {
         bool result;
@@ -304,7 +345,7 @@ int main(int argc, char **argv) {
             return false;
         }
 
-        result = generateExe(llvmModule, outputFile, gccPath);
+        result = generateBinary(llvmModule, outputFile, gccPath, sharedLib);
         if (!result)
             return -1;
     }

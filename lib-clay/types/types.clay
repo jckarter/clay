@@ -8,6 +8,8 @@ public import __primitives__.(Bool,
                               Void,
                               TypeOf, Type?, TypeSize);
 
+public import types.platform.*;
+
 static Byte = Int8;
 static UByte = UInt8;
 
@@ -22,14 +24,9 @@ static UShort = UInt16;
 static Int = Int32;
 static UInt = UInt32;
 
-static Long = Int32;
-static ULong = UInt32;
-
-static LongLong = Int64;
-static ULongLong = UInt64;
-
-static SizeT = UInt32;
-
-static PtrDiffT = Int32;
+static Long = Int64;
+static ULong = UInt64;
 
 static RawPointer = Pointer[Int8];
+
+static SizeT = UPtrInt;

@@ -1,0 +1,12 @@
+import base.*;
+
+main() {
+    printf(cstring("sizeof(Byte) = %d\n"), TypeSize(Byte));
+    printf(cstring("sizeof(Short) = %d\n"), TypeSize(Short));
+    printf(cstring("sizeof(Int) = %d\n"), TypeSize(Int));
+    printf(cstring("sizeof(Long) = %d\n"), TypeSize(Long));
+
+    printf(cstring("sizeof(RawPointer) = %d\n"), TypeSize(RawPointer));
+    printf(cstring("sizeof(SizeT) = %d\n"), TypeSize(SizeT));
+    printf(cstring("sizeof(PtrInt) = %d\n"), TypeSize(PtrInt));
+}

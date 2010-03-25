@@ -9,13 +9,15 @@ llvm::IRBuilder<> *llvmInitBuilder;
 llvm::IRBuilder<> *llvmBuilder;
 
 void initLLVM() {
-    llvm::InitializeNativeTarget();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllAsmPrinters();
     llvmModule = new llvm::Module("clay", llvm::getGlobalContext());
     llvm::EngineBuilder eb(llvmModule);
     llvmEngine = eb.create();
     assert(llvmEngine);
     llvmTargetData = llvmEngine->getTargetData();
     llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
+    llvmModule->setTargetTriple(llvm::sys::getHostTriple());
 
     llvmFunction = NULL;
     llvmInitBuilder = NULL;

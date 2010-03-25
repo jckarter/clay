@@ -127,6 +127,16 @@ overload T(src:T) : T {
 
 // assign
 
+[A, B | NumericType?(A,B) and BiggerNumericType?(A,B)]
+overload assign(dest:A, src:B) {
+    primitiveCopy(dest, A(src));
+}
+
+[A, B | IntegerType?(A,B) and (TypeSize(A) == TypeSize(B))]
+overload assign(dest:A, src:B) {
+    primitiveCopy(dest, A(src));
+}
+
 [T | NumericType?(T)]
 overload assign(dest:T, src:T) {
     primitiveCopy(dest, src);

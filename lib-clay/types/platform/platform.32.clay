@@ -1,0 +1,4 @@
+import __primitives__.(Int32, UInt32);
+
+static PtrInt = Int32;
+static UPtrInt = UInt32;

@@ -24,7 +24,7 @@ reverse(a) {
 main() {
     var a = Array[Int, 1000]();
     for (i in range(size(a)))
-        a[i] = i*2;
+        a[i] = Int(i*2);
     for (i in range(100)) {
         insertionSort(a);
         reverse(a);

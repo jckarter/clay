@@ -92,8 +92,8 @@ void error(const string &msg) {
     else {
         fprintf(stderr, "error: %s\n", msg.c_str());
     }
-    abort();
-    //exit(-1);
+    //abort();
+    exit(-1);
 }
 
 void fmtError(const char *fmt, ...) {
