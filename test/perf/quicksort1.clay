@@ -1,11 +1,11 @@
 import base.*;
 
 quickSort(a) {
-    sortRange(a, 0, size(a));
+    sortRange(a, SizeT(0), size(a));
 }
 
 sortRange(a, start, end) {
-    if (start < end-1) {
+    if (start+1 < end) {
         var m = start;
         for (i in range(start+1, end)) {
             if (a[i] < a[start]) {
@@ -28,7 +28,7 @@ reverse(a) {
 main() {
     var a = Array[Int, 1000]();
     for (i in range(size(a)))
-        a[i] = i*2;
+        a[i] = Int(i*2);
     for (i in range(1000)) {
         quickSort(a);
         reverse(a);

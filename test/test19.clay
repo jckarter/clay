@@ -1,0 +1,19 @@
+import base.*;
+
+static overloadable IsInt64;
+[T]
+static overload IsInt64(T) = false;
+static overload IsInt64(Int64) = true;
+
+static overloadable Foo;
+static overload Foo(Int64) = true;
+
+f(x) = x;
+
+main() {
+    static T = Int32;
+    var x = 0;
+    if (IsInt64(T) and Foo(T))
+        x += 1;
+    printf(cstring("x = %d\n"), x);
+}

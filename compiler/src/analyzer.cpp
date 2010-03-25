@@ -6,19 +6,19 @@
 // analyze wrappers
 //
 
-ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
+bool analysisToPValue(ObjectPtr x, PValuePtr &pv)
 {
-    ObjectPtr v = analyze(expr, env);
-    if (!v)
-        return NULL;
+    switch (x->objKind) {
 
-    switch (v->objKind) {
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        pv = new PValue(y->type, true);
+        return true;
+    }
 
     case PVALUE :
-        return (PValue *)v.ptr();
-
-    case VOID_VALUE :
-        return voidValue.ptr();
+        pv = (PValue *)x.ptr();
+        return true;
 
     case TYPE :
     case VOID_TYPE :
@@ -28,11 +28,28 @@ ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
     case RECORD :
     case STATIC_PROCEDURE :
     case STATIC_OVERLOADABLE :
-        return new PValue(staticObjectType(v), true);
+        pv = new PValue(staticObjectType(x), true);
+        return true;
 
     default :
-        error(expr, "expecting a value or void");
+        return false;
+    }
+}
+
+ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
+{
+    ObjectPtr v = analyze(expr, env);
+    if (!v)
         return NULL;
+    switch (v->objKind) {
+    case VOID_VALUE :
+        return voidValue.ptr();
+    default : {
+        PValuePtr pv;
+        if (!analysisToPValue(v, pv))
+            error(expr, "expecting a value or void");
+        return pv.ptr();
+    }
     }
 }
 
@@ -41,26 +58,10 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
     ObjectPtr v = analyze(expr, env);
     if (!v)
         return NULL;
-
-    switch (v->objKind) {
-
-    case PVALUE :
-        return (PValue *)v.ptr();
-
-    case TYPE :
-    case VOID_TYPE :
-    case PRIM_OP :
-    case PROCEDURE :
-    case OVERLOADABLE :
-    case RECORD :
-    case STATIC_PROCEDURE :
-    case STATIC_OVERLOADABLE :
-        return new PValue(staticObjectType(v), true);
-
-    default :
+    PValuePtr pv;
+    if (!analysisToPValue(v, pv))
         error(expr, "expecting a value");
-        return NULL;
-    }
+    return pv;
 }
 
 PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env)
@@ -115,47 +116,139 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     switch (expr->objKind) {
 
-    case BOOL_LITERAL :
-        return new PValue(boolType, true);
+    case BOOL_LITERAL : {
+        BoolLiteral *x = (BoolLiteral *)expr.ptr();
+        return boolToValueHolder(x->value).ptr();
+    }
 
     case INT_LITERAL : {
         IntLiteral *x = (IntLiteral *)expr.ptr();
-        TypePtr t;
-        if (x->suffix == "i8")
-            t = int8Type;
-        else if (x->suffix == "i16")
-            t = int16Type;
-        else if ((x->suffix == "i32") || x->suffix.empty())
-            t = int32Type;
-        else if (x->suffix == "i64")
-            t = int64Type;
-        else if (x->suffix == "u8")
-            t = uint8Type;
-        else if (x->suffix == "u16")
-            t = uint16Type;
-        else if (x->suffix == "u32")
-            t = uint32Type;
-        else if (x->suffix == "u64")
-            t = uint64Type;
-        else if (x->suffix == "f32")
-            t = float32Type;
-        else if (x->suffix == "f64")
-            t = float64Type;
-        else
+        char *ptr = (char *)x->value.c_str();
+        char *end = ptr;
+        ValueHolderPtr vh;
+        if (x->suffix == "i8") {
+            long y = strtol(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int8 literal");
+            if ((errno == ERANGE) || (y < SCHAR_MIN) || (y > SCHAR_MAX))
+                error("int8 literal out of range");
+            vh = new ValueHolder(int8Type);
+            *((char *)vh->buf) = (char)y;
+        }
+        else if (x->suffix == "i16") {
+            long y = strtol(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int16 literal");
+            if ((errno == ERANGE) || (y < SHRT_MIN) || (y > SHRT_MAX))
+                error("int16 literal out of range");
+            vh = new ValueHolder(int16Type);
+            *((short *)vh->buf) = (short)y;
+        }
+        else if ((x->suffix == "i32") || x->suffix.empty()) {
+            long y = strtol(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int32 literal");
+            if (errno == ERANGE)
+                error("int32 literal out of range");
+            vh = new ValueHolder(int32Type);
+            *((int *)vh->buf) = (int)y;
+        }
+        else if (x->suffix == "i64") {
+            long long y = strtoll(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid int64 literal");
+            if (errno == ERANGE)
+                error("int64 literal out of range");
+            vh = new ValueHolder(int64Type);
+            *((long long *)vh->buf) = y;
+        }
+        else if (x->suffix == "u8") {
+            unsigned long y = strtoul(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint8 literal");
+            if ((errno == ERANGE) || (y > UCHAR_MAX))
+                error("uint8 literal out of range");
+            vh = new ValueHolder(uint8Type);
+            *((unsigned char *)vh->buf) = (unsigned char)y;
+        }
+        else if (x->suffix == "u16") {
+            unsigned long y = strtoul(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint16 literal");
+            if ((errno == ERANGE) || (y > USHRT_MAX))
+                error("uint16 literal out of range");
+            vh = new ValueHolder(uint16Type);
+            *((unsigned short *)vh->buf) = (unsigned short)y;
+        }
+        else if (x->suffix == "u32") {
+            unsigned long y = strtoul(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint32 literal");
+            if (errno == ERANGE)
+                error("uint32 literal out of range");
+            vh = new ValueHolder(uint32Type);
+            *((unsigned int *)vh->buf) = (unsigned int)y;
+        }
+        else if (x->suffix == "u64") {
+            unsigned long long y = strtoull(ptr, &end, 0);
+            if (*end != 0)
+                error("invalid uint64 literal");
+            if (errno == ERANGE)
+                error("uint64 literal out of range");
+            vh = new ValueHolder(uint64Type);
+            *((unsigned long long *)vh->buf) = y;
+        }
+        else if (x->suffix == "f32") {
+            float y = (float)strtod(ptr, &end);
+            if (*end != 0)
+                error("invalid float32 literal");
+            if (errno == ERANGE)
+                error("float32 literal out of range");
+            vh = new ValueHolder(float32Type);
+            *((float *)vh->buf) = y;
+        }
+        else if (x->suffix == "f64") {
+            double y = strtod(ptr, &end);
+            if (*end != 0)
+                error("invalid float64 literal");
+            if (errno == ERANGE)
+                error("float64 literal out of range");
+            vh = new ValueHolder(float64Type);
+            *((double *)vh->buf) = y;
+        }
+        else {
             error("invalid literal suffix: " + x->suffix);
-        return new PValue(t, true);
+        }
+        return vh.ptr();
     }
 
     case FLOAT_LITERAL : {
         FloatLiteral *x = (FloatLiteral *)expr.ptr();
-        TypePtr t;
-        if (x->suffix == "f32")
-            t = float32Type;
-        else if ((x->suffix == "f64") || x->suffix.empty())
-            t = float64Type;
-        else
+        char *ptr = (char *)x->value.c_str();
+        char *end = ptr;
+        ValueHolderPtr vh;
+        if (x->suffix == "f32") {
+            float y = (float)strtod(ptr, &end);
+            if (*end != 0)
+                error("invalid float32 literal");
+            if (errno == ERANGE)
+                error("float32 literal out of range");
+            vh = new ValueHolder(float32Type);
+            *((float *)vh->buf) = y;
+        }
+        else if ((x->suffix == "f64") || x->suffix.empty()) {
+            double y = strtod(ptr, &end);
+            if (*end != 0)
+                error("invalid float64 literal");
+            if (errno == ERANGE)
+                error("float64 literal out of range");
+            vh = new ValueHolder(float64Type);
+            *((double *)vh->buf) = y;
+        }
+        else {
             error("invalid float literal suffix: " + x->suffix);
-        return new PValue(t, true);
+        }
+        return vh.ptr();
     }
 
     case CHAR_LITERAL : {
@@ -254,7 +347,19 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case AND : {
         And *x = (And *)expr.ptr();
-        PValuePtr a = analyzeValue(x->expr1, env);
+        ObjectPtr first = analyze(x->expr1, env);
+        if (!first)
+            return NULL;
+        if (first->objKind == VALUE_HOLDER) {
+            ValueHolder *y = (ValueHolder *)first.ptr();
+            if (y->type == boolType) {
+                if (*((char *)y->buf) == 0)
+                    return first;
+            }
+        }
+        PValuePtr a;
+        if (!analysisToPValue(first, a))
+            error(x->expr1, "expecting a value");
         PValuePtr b = analyzeValue(x->expr2, env);
         if (!a || !b)
             return NULL;
@@ -265,7 +370,19 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case OR : {
         Or *x = (Or *)expr.ptr();
-        PValuePtr a = analyzeValue(x->expr1, env);
+        ObjectPtr first = analyze(x->expr1, env);
+        if (!first)
+            return NULL;
+        if (first->objKind == VALUE_HOLDER) {
+            ValueHolder *y = (ValueHolder *)first.ptr();
+            if (y->type == boolType) {
+                if (*((char *)y->buf) != 0)
+                    return first;
+            }
+        }
+        PValuePtr a;
+        if (!analysisToPValue(first, a))
+            error(x->expr1, "expecting a value");
         PValuePtr b = analyzeValue(x->expr2, env);
         if (!a || !b)
             return NULL;
@@ -348,10 +465,6 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
         }
         return analyzeStaticObject(y->result);
     }
-    case VALUE_HOLDER : {
-        ValueHolder *y = (ValueHolder *)x.ptr();
-        return new PValue(y->type, true);
-    }
     case CVALUE : {
         CValue *y = (CValue *)x.ptr();
         return new PValue(y->type, false);
@@ -389,11 +502,6 @@ void analyzeExternal(ExternalProcedurePtr x)
 ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 {
     switch (x->objKind) {
-
-    case VALUE_HOLDER : {
-        ValueHolder *y = (ValueHolder *)x.ptr();
-        return analyzeIndexing(new PValue(y->type, true), args, env);
-    }
 
     case PVALUE : {
         PValue *y = (PValue *)x.ptr();
@@ -953,7 +1061,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
 
 //
-// analyzeInvokeStaticProcedure, analyzeInvokeStaticOverloadable
+// analyzeStaticProcedure, analyzeStaticOverloadable
 //
 
 StaticInvokeEntryPtr

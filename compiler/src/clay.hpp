@@ -19,6 +19,7 @@
 #include <llvm/BasicBlock.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/System/Host.h>
 #include <llvm/Target/TargetData.h>
 #include <llvm/Target/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -2020,6 +2021,7 @@ struct PValue : public Object {
         : Object(PVALUE), type(type), isTemp(isTemp) {}
 };
 
+bool analysisToPValue(ObjectPtr x, PValuePtr &pv);
 ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env);
