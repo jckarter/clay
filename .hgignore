@@ -5,6 +5,7 @@ syntax: regexp
 
 cscope.out
 tags
+.*\.o$
 .*\.out$
 ^clay$
 ^compiler/src/.*\.o$
