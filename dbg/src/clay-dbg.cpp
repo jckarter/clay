@@ -12,7 +12,6 @@ using namespace std;
 
 #include "Shell.h"
 #include "ShellConsumer.h"
-#include "clay/clay.hpp"
 
 class ClayConsumer : public ShellConsumer {
     public:
@@ -28,9 +27,9 @@ void ClayConsumer::consume(string str) {
 
 int main(int argc, char *argv[])
 {
-    EchoConsumer echo;
+    ClayConsumer clay;
 
-    Shell::run(echo);
+    Shell::run(clay);
 
     return 0;
 }
