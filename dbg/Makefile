@@ -17,7 +17,7 @@ LLVM_OBJS=
 all:$(TARGETS)
 
 $(BINDIR)clay-dbg: $(OBJS)
-	if [ ! -e $(BINDIR)]; then mkdir $(BINDIR); fi;
+	if [ ! -e $(BINDIR) ]; then mkdir $(BINDIR); fi;
 	$(CC) $(LLVM_LDFLAGS) $(LDFLAGS) $^ -o $@ 
 
 ${OBJS}: obj/%.o : src/%.cpp 
