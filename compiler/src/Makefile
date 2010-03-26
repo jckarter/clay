@@ -41,7 +41,7 @@ OBJS = \
 	main.o
 
 $(BINDIR)clay : $(OBJS)
-	if [ ! -e $(BINDIR)]; then mkdir $(BINDIR); fi;
+	if [ ! -e $(BINDIR) ]; then mkdir $(BINDIR); fi;
 	$(CC) $(EXTRA_FLAGS) -o $@ $^ $(LLVM_LDFLAGS) $(LDFLAGS)
 
 .PHONY: clean

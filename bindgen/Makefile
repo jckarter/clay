@@ -16,7 +16,7 @@ OBJS=obj/clay-bindgen.o obj/BindingsConverter.o obj/InitHeaderSearch.o
 all:$(TARGETS)
 
 $(BINDIR)clay-bindgen: $(OBJS)
-	if [ ! -e $(BINDIR)]; then mkdir $(BINDIR); fi;
+	if [ ! -e $(BINDIR) ]; then mkdir $(BINDIR); fi;
 	$(CC) $(LLVM_LDFLAGS) $(LDFLAGS) $^ -o $@ 
 
 ${OBJS}: obj/%.o : src/%.cpp 
