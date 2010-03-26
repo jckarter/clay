@@ -1,19 +1,23 @@
-# Makefile
+# Clay Makefile
 
-CC = g++
+ROOTDIR	=	../
+BINDIR	=	$(ROOTDIR)bin/
+DIRS	=	
+include $(ROOTDIR)Makefile.inc
+
 LLVM_CXXFLAGS=`llvm-config --cxxflags`
 LLVM_LDFLAGS=`llvm-config --ldflags` -lCIndex 
-CXXFLAGS=-fno-rtti -m32 -fexceptions -Iinclude/ -Wall -g
-LDFLAGS=-m32 -lreadline
+CXXFLAGS+=-fno-rtti -m32 -fexceptions -Iinclude/ -Wall -g -I$(ROOTDIR)/compiler/src
+LDFLAGS+=-m32 -lreadline
 
-TARGETS=bin/clay-dbg
+TARGETS=$(BINDIR)clay-dbg
 OBJS=obj/clay-dbg.o obj/Shell.o obj/ShellConsumer.o
 LLVM_OBJS=
 
 all:$(TARGETS)
 
-bin/clay-dbg: $(OBJS)
-	if [ ! -e bin ]; then mkdir bin; fi;
+$(BINDIR)clay-dbg: $(OBJS)
+	if [ ! -e $(BINDIR)]; then mkdir $(BINDIR); fi;
 	$(CC) $(LLVM_LDFLAGS) $(LDFLAGS) $^ -o $@ 
 
 ${OBJS}: obj/%.o : src/%.cpp 
@@ -27,6 +31,6 @@ ${LLVM_OBJS}: obj/%.o : src/%.cpp
 .PHONY: clean 
 
 clean :
-	rm -rf bin/*
+	rm -rf $(BINDIR)clay-dbg
 	rm -rf obj/*
 

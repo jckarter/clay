@@ -1,45 +1,28 @@
-LLVM_CXXFLAGS = `llvm-config --cxxflags`
-LLVM_LDFLAGS = `llvm-config --ldflags --libs all`
+# Clay Makefile
 
-.PHONY: default
-default : clay
+ROOTDIR	=	./
+BINDIR	=	$(ROOTDIR)bin/
+DIRS	=	compiler dbg bindgen
+include $(ROOTDIR)Makefile.inc
 
-.PHONY: default
-32bit :
-	$(MAKE) EXTRA_FLAGS=-m32
+.PHONY: clay clay-bindgen clay-dbg clean
 
-.cpp.o :
-	g++ $(LLVM_CXXFLAGS) $(EXTRA_FLAGS) -Wall -c -MMD -MF$@.dep -o $@ $<
+all: clay clay-bindgen clay-dbg
 
-OBJS = \
-	compiler/src/error.o \
-	compiler/src/printer.o \
-	compiler/src/lexer.o \
-	compiler/src/parser.o \
-	compiler/src/clone.o \
-	compiler/src/env.o \
-	compiler/src/loader.o \
-	compiler/src/llvm.o \
-	compiler/src/types.o \
-	compiler/src/desugar.o \
-	compiler/src/patterns.o \
-	compiler/src/lambdas.o \
-	compiler/src/invoketables.o \
-	compiler/src/matchinvoke.o \
-	compiler/src/constructors.o \
-	compiler/src/analyzer.o \
-	compiler/src/evaluator.o \
-	compiler/src/codegen.o \
-	compiler/src/main.o
+clay: 
+	echo "Looking into subdir compiler"
+	cd compiler; make
 
-clay : $(OBJS)
-	g++ $(EXTRA_FLAGS) -o clay $(OBJS) $(LLVM_LDFLAGS)
+clay-bindgen: 
+	echo "Looking into subdir bindgen"
+	cd bindgen; make
+
+clay-dbg: 
+	echo "Looking into subdir dbg"
+	cd dbg; make
 
 .PHONY: clean
 
-clean :
-	rm -f clay
-	rm -f compiler/src/*.o
-	rm -f compiler/src/*.dep
+clean:
+	-for d in $(DIRS); do (cd $$d; make clean ); done
 
--include compiler/src/*.dep
