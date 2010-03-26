@@ -12,16 +12,17 @@ using namespace std;
 
 #include "Shell.h"
 #include "ShellConsumer.h"
+#include "clay/clay.hpp"
 
-class EchoConsumer : public ShellConsumer {
+class ClayConsumer : public ShellConsumer {
     public:
-        EchoConsumer() { }
-        virtual ~EchoConsumer() { }
+        ClayConsumer() { }
+        virtual ~ClayConsumer() { }
 
         virtual void consume(string str);
 };
 
-void EchoConsumer::consume(string str) {
+void ClayConsumer::consume(string str) {
     cout << str << endl;
 }
 
