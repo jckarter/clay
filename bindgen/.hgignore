@@ -1,0 +1,8 @@
+syntax: regexp
+
+bin/.*
+obj/.*
+
+\.o$
+\.swp$
+\.out$
