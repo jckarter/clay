@@ -74,6 +74,7 @@ int main(int argc, char* argv[]) {
             selectorTable, builtins);
 
     // Parse it
+    converter.printHeader();
     ParseAST(context.pp, &converter, astContext);  // calls pp.EnterMainSourceFile() for us
 
     return 0;

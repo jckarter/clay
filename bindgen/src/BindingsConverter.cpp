@@ -51,10 +51,10 @@ void BindingsConverter::printVarDecl(const VarDecl*& D) {
     out << D->getNameAsString();
     QualType type = D->getType();       // The return value
     if(useCTypes) {
-        out << " : " << type.getAsString() << "\n"; 
+        out << " : " << type.getAsString() << ";\n"; 
     }
     else {
-        out << " : " << printType(convert(type)) << "\n"; 
+        out << " : " << printType(convert(type)) << ";\n"; 
     }
 }
 
@@ -72,18 +72,21 @@ void BindingsConverter::printFuncDecl(const FunctionDecl*& D) {
             out << "\t" << "argument_" << i + 1<< " : ";
         QualType cType = param->getOriginalType();
         if(useCTypes) {
-            out << cType.getAsString() <<  "\n";
+            out << cType.getAsString();
         }
         else {
-            out << printType(convert(cType)) <<  "\n";
+            out << printType(convert(cType));
         }
+        if (i+1 < numParams)
+            out << ",";
+        out << "\n";
     }
     QualType ret = D->getResultType();       // The return value
     if(useCTypes) {
-        out << ") : " << ret.getAsString() << "\n"; 
+        out << ") : " << ret.getAsString() << ";\n"; 
     }
     else {
-        out << ") : " << printType(convert(ret)) << "\n"; 
+        out << ") : " << printType(convert(ret)) << ";\n"; 
     }
 }
 
@@ -93,7 +96,7 @@ void BindingsConverter::printEnumDecl(const EnumDecl*& D) {
     {
         EnumConstantDecl* CD = *it;
         out << "static " << CD->getNameAsString() << " = " ;
-        out << CD->getInitVal().getLimitedValue() << "\n"; // XXX: Warning, this limits enum values to 64-bits which is safe, I think
+        out << CD->getInitVal().getLimitedValue() << ";\n"; // XXX: Warning, this limits enum values to 64-bits which is safe, I think
     }
 }
 
@@ -107,10 +110,10 @@ void BindingsConverter::printRecordDecl(const RecordDecl*& D) {
 
         out << FD->getNameAsString();
         if(useCTypes) {
-            out << " : " << type.getAsString() << "\n"; 
+            out << " : " << type.getAsString() << ";\n"; 
         }
         else {
-            out << " : " << printType(convert(type)) << "\n"; 
+            out << " : " << printType(convert(type)) << ";\n"; 
         }
     }
     out << "}\n";
