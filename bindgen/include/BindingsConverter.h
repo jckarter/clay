@@ -21,6 +21,7 @@ class BindingsConverter : public ASTConsumer {
 
         QualType& convert(QualType& cType);
         string printType(const QualType& type);
+        string printBuiltinType(const BuiltinType *type);
 
         void printHeader();
         void printFooter();
