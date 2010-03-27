@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 using namespace std;
 
@@ -124,21 +125,14 @@ QualType& BindingsConverter::convert(QualType& cType) {
 }
 
 string BindingsConverter::printType(const QualType& qtype) {
-    Type& type = *qtype;
+    const Type& type = *qtype;
+    const Type& canonType = *type.getCanonicalTypeUnqualified().getTypePtr();
 
-    if(type.isBooleanType()) {
-        return "Bool";
+    if (canonType.getTypeClass() == Type::Builtin) {
+        return printBuiltinType((const BuiltinType *)&canonType);
     }
-    else if(type.isSignedIntegerType()){
-        return "Int";
-    }
-    else if(type.isUnsignedIntegerType()){
-        return "UInt";
-    }
-    else if(type.isRealFloatingType()) {
-        return "Float";
-    }
-    else if(type.isPointerType()) {
+
+    if(type.isPointerType()) {
         PointerType& type_ = (PointerType&)type;
         QualType qtype_ = type_.getPointeeType();
         if((*qtype_).isFunctionType())
@@ -158,7 +152,9 @@ string BindingsConverter::printType(const QualType& qtype) {
         }
         else
         {
-            if (qtype_.isVoidType())
+            const Type& canonType_ =
+                *(qtype_->getCanonicalTypeUnqualified().getTypePtr());
+            if (canonType_.isVoidType())
                 return "RawPointer";
             return "Pointer[" + printType(qtype_) + "]";
         }
@@ -180,36 +176,62 @@ string BindingsConverter::printType(const QualType& qtype) {
     else if(type.isEnumeralType()) {
         return "Enum";
     }
-    else if(type.isVoidType()) {
-        return "Void";
-    }
     else{
-        return "???";
-        //assert(false);
+        return "UnsupportedCType";
     }
 
     return "null";
-    }
+}
 
-    // Handle top level declarations observed in the program
-    void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG) {
-        for (DeclGroupRef::iterator it = DG.begin(); it != DG.end(); ++it) {
-            const FunctionDecl *FD = dyn_cast<FunctionDecl>(*it);
-            const VarDecl *VD = dyn_cast<VarDecl>(*it);
-            const EnumDecl *ED = dyn_cast<EnumDecl>(*it);
-            const RecordDecl *RD = dyn_cast<RecordDecl>(*it);
-            if (FD) {
-                printFuncDecl(FD);
-            }
-            else if (VD) {
-                printVarDecl(VD);
-            }
-            else if (ED) {
-                printEnumDecl(ED);
-            }
-            else if (RD) {
-                printRecordDecl(RD);
-            }
+string BindingsConverter::printBuiltinType(const BuiltinType *type) {
+    switch (type->getKind()) {
+    case BuiltinType::Void : return "Void";
+
+    case BuiltinType::Bool : return "Bool";
+
+    case BuiltinType::Char_U : return "UInt8";
+    case BuiltinType::UChar : return "UInt8";
+    case BuiltinType::UShort : return "UInt16";
+    case BuiltinType::UInt : return "UInt";
+    case BuiltinType::ULong : return "UInt";
+    case BuiltinType::ULongLong : return "UInt64";
+
+    case BuiltinType::Char_S : return "Int8";
+    case BuiltinType::SChar : return "Int8";
+    case BuiltinType::Short : return "Int16";
+    case BuiltinType::Int : return "Int";
+    case BuiltinType::Long : return "Int";
+    case BuiltinType::LongLong : return "Int64";
+
+    case BuiltinType::Float : return "Float";
+    case BuiltinType::Double : return "Double";
+
+    default : {
+        ostringstream out;
+        out << type->getKind();
+        return "UnsupportedCBuiltinType" + out.str();
+    }
+    }
+}
+
+// Handle top level declarations observed in the program
+void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG) {
+    for (DeclGroupRef::iterator it = DG.begin(); it != DG.end(); ++it) {
+        const FunctionDecl *FD = dyn_cast<FunctionDecl>(*it);
+        const VarDecl *VD = dyn_cast<VarDecl>(*it);
+        const EnumDecl *ED = dyn_cast<EnumDecl>(*it);
+        const RecordDecl *RD = dyn_cast<RecordDecl>(*it);
+        if (FD) {
+            printFuncDecl(FD);
+        }
+        else if (VD) {
+            printVarDecl(VD);
+        }
+        else if (ED) {
+            printEnumDecl(ED);
+        }
+        else if (RD) {
+            printRecordDecl(RD);
         }
     }
-
+}
