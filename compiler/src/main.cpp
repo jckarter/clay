@@ -272,8 +272,11 @@ int main(int argc, char **argv) {
     llvm::sys::Path clayExe =
         llvm::sys::Path::GetMainExecutable(argv[0], (void *)&main);
     llvm::sys::Path clayDir(clayExe.getDirname());
+    bool result;
+    result = clayDir.appendComponent("..");
+    assert(result);
     llvm::sys::Path libDir(clayDir);
-    bool result = libDir.appendComponent("lib-clay");
+    result = libDir.appendComponent("lib-clay");
     assert(result);
     addSearchPath(libDir.str());
 
