@@ -159,9 +159,16 @@ string BindingsConverter::printType(const QualType& qtype) {
             return "Pointer[" + printType(qtype_) + "]";
         }
     }
+    else if (type.isConstantArrayType()) {
+        ConstantArrayType& type_ = (ConstantArrayType&)type;
+        ostringstream out;
+        out << "Array[" << printType(type_.getElementType())
+            << ", " << type_.getSize().getZExtValue() << "]";
+        return out.str();
+    }
     else if(type.isArrayType()) {
       ArrayType& type_ = (ArrayType&)type;
-      return "Array[" + printType(type_.getElementType()) + "]";
+      return "Pointer[" + printType(type_.getElementType()) + "]";
     }
     else if(type.isRecordType()) {
         // TODO: Handle
