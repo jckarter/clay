@@ -158,14 +158,9 @@ string BindingsConverter::printType(const QualType& qtype) {
         }
         else
         {
-            if(useCTypes)
-            {
-                return "Pointer[" + qtype_.getAsString() + "]";
-            }
-            else
-            {
-                return "Pointer[" + printType(qtype_) + "]";
-            }
+            if (qtype_.isVoidType())
+                return "RawPointer";
+            return "Pointer[" + printType(qtype_) + "]";
         }
     }
     else if(type.isArrayType()) {
