@@ -10,7 +10,7 @@ perfTests = ("insertionsort1 insertionsort2 insertionsort3 " +
              "mean quicksort1 quicksort2").split()
 
 def runtest(input) :
-    compiler = os.path.join(".", "clay")
+    compiler = os.path.join(".", "bin", "clay")
     print "TEST:", input
     command = compiler + " " + input
     print command
