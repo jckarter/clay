@@ -7,7 +7,6 @@ include $(ROOTDIR)Makefile.inc
 
 LLVM_CXXFLAGS 	= `llvm-config --cxxflags`
 LLVM_LDFLAGS 	= `llvm-config --ldflags --libs all`
-CXXFLAGS		+= -Wall
 
 .PHONY: default
 default : $(BINDIR)clay
