@@ -5,7 +5,9 @@ BINDIR	=	$(ROOTDIR)bin/
 DIRS	=	compiler dbg bindgen
 include $(ROOTDIR)Makefile.inc
 
-.PHONY: clay clay-bindgen clay-dbg clean
+.PHONY: default all clay clay-bindgen clay-dbg clean
+
+default : clay
 
 all: clay clay-bindgen clay-dbg
 
