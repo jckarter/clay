@@ -6,9 +6,12 @@ DIRS	=
 include $(ROOTDIR)Makefile.inc
 
 LLVM_CXXFLAGS=`llvm-config --cxxflags`
-LLVM_LDFLAGS=`llvm-config --ldflags` -lCIndex
-CXXFLAGS+=-fno-rtti -m32 -Iinclude/ -Wall -g
-LDFLAGS+=-m32
+LLVM_LDFLAGS=`llvm-config --ldflags --libs all`
+CXXFLAGS+=-fno-rtti -Iinclude/ -g
+
+CLANG_LDFLAGS = \
+	-lclangAST -lclangBasic -lclangFrontend -lclangLex \
+	-lclangIndex -lclangParse -lclangSema -lclangAnalysis -lclangIndex
 
 TARGETS=$(BINDIR)clay-bindgen
 OBJS=obj/clay-bindgen.o obj/BindingsConverter.o obj/InitHeaderSearch.o
@@ -17,7 +20,7 @@ all:$(TARGETS)
 
 $(BINDIR)clay-bindgen: $(OBJS)
 	if [ ! -e $(BINDIR) ]; then mkdir $(BINDIR); fi;
-	$(CC) $(LLVM_LDFLAGS) $(LDFLAGS) $^ -o $@ 
+	$(CC) $(LLVM_LDFLAGS) $(CLANG_LDFLAGS) $^ -o $@
 
 ${OBJS}: obj/%.o : src/%.cpp 
 	if [ ! -e obj ]; then mkdir obj; fi;
