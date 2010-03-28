@@ -1,0 +1,12 @@
+import base.*;
+
+var x = 10;
+
+static Y = x;
+
+static P = printf;
+
+main() {
+    inc(Y);
+    P(cstring("Hello World %d\n"), x);
+}
