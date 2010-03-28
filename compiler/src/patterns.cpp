@@ -38,7 +38,8 @@ PatternPtr evaluateStaticObjectPattern(ObjectPtr x)
         return y;
     }
     case STATIC_GLOBAL : {
-        return new PatternCell(NULL, analyzeStaticObject(x));
+        StaticGlobal *y = (StaticGlobal *)x.ptr();
+        return evaluatePattern(y->expr, y->env);
     }
     default :
         return new PatternCell(NULL, x);

@@ -460,7 +460,7 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
             if (y->analyzing)
                 return NULL;
             y->analyzing = true;
-            y->result = evaluateStatic(y->expr, y->env);
+            y->result = analyze(y->expr, y->env);
             y->analyzing = false;
         }
         return analyzeStaticObject(y->result);

@@ -1049,7 +1049,8 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
         return out;
     }
     case STATIC_GLOBAL : {
-        return codegenStaticObject(analyzeStaticObject(x), out);
+        StaticGlobal *y = (StaticGlobal *)x.ptr();
+        return codegenExpr(y->expr, y->env, out);
     }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
