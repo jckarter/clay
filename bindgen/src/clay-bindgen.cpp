@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     // Initialase ASTContext
     IdentifierTable identifierTable(context.opts);
     SelectorTable selectorTable;
-    Builtin::Context::Context builtins(*context.target);
+    Builtin::Context builtins(*context.target);
 
     ASTContext astContext(context.opts, context.sm, *context.target, identifierTable,
             selectorTable, builtins);
