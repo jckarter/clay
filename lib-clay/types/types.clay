@@ -16,7 +16,7 @@ static UByte = UInt8;
 static CChar = Int8;
 static CUChar = UInt8;
 
-static CString = Pointer[Int8];
+static CString = Pointer[CChar];
 
 static Short = Int16;
 static UShort = UInt16;

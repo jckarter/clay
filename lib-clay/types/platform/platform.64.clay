@@ -2,3 +2,6 @@ import __primitives__.(Int64, UInt64);
 
 static PtrInt = Int64;
 static UPtrInt = UInt64;
+
+static CLong = Int64;
+static CULong = UInt64;
