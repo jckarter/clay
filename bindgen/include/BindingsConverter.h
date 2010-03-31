@@ -1,3 +1,4 @@
+/* emacs: -*- C++ -*- */
 /* vim: set sw=4 ts=4: */
 /*
  * BindingsConverter.h 
@@ -8,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <set>
 using namespace std;
 
 #include "clang/AST/ASTConsumer.h"
@@ -15,26 +17,32 @@ using namespace clang;
 
 
 class BindingsConverter : public ASTConsumer {
+public:
+    BindingsConverter(ostream& out);
 
-    public:
-        BindingsConverter(bool useCTypes=false, ostream& out=cout);
+private:
+    string allocateName(const string &base);
+    string convertBuiltinType(const BuiltinType *type);
+    string convertFPType(FunctionNoProtoType *type);
+    string convertFPType(FunctionProtoType *type);
+    string convertType(const Type *type);
 
-        QualType& convert(QualType& cType);
-        string printType(const QualType& type);
-        string printBuiltinType(const BuiltinType *type);
+public :
+    virtual void HandleTopLevelDecl(DeclGroupRef DG);
+    void generate();
 
-        void printHeader();
-        void printFooter();
-        void printVarDecl(const VarDecl*& D);
-        void printFuncDecl(const FunctionDecl*& D);
-        void printEnumDecl(const EnumDecl*& D);
-        void printRecordDecl(const RecordDecl*& D);
+private :
+    void generateHeader();
 
-        virtual void HandleTopLevelDecl(DeclGroupRef DG);
+private :
+    ostream& out;
+    vector<Decl*> decls;
+    map<string, RecordDecl*> recordBodies;
+    set<string> allocatedNames;
 
-    private:
-        bool useCTypes;
-        ostream& out;
+    map<RecordDecl*, string> anonRecordNames;
+    map<string, string> recordNames;
+    map<string, string> typedefNames;
+
+    set<string> externsDeclared;
 };
-
-
