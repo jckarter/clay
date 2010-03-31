@@ -26,19 +26,13 @@ using namespace clang;
 
 int main(int argc, char* argv[]) {
     string filename;
-    bool useCTypes = false;
 
     if(argc == 2) {
         filename = argv[1];
     }
-    else if(argc == 3 && (strcmp(argv[1], "-c") == 0) ) {
-        useCTypes = true;
-        filename = argv[2];
-    }
     else {
         cerr << "clay-bindgen: Generates clay bindings for C libraries" << endl;
-        cerr << "Usage: " << argv[0] << " [-c] <c-file-to-be-parsed>" <<  endl;
-        cerr << "The -c flag produces output with C types." << endl; 
+        cerr << "Usage: " << argv[0] << " <c-file-to-be-parsed>" <<  endl;
         return EXIT_FAILURE;
     }
 
@@ -63,7 +57,7 @@ int main(int argc, char* argv[]) {
     }
     context.sm.createMainFileID(file, SourceLocation());
 
-    BindingsConverter converter(useCTypes);
+    BindingsConverter converter(cout);
 
     // Initialase ASTContext
     IdentifierTable identifierTable(context.opts);
@@ -74,8 +68,8 @@ int main(int argc, char* argv[]) {
             selectorTable, builtins);
 
     // Parse it
-    converter.printHeader();
     ParseAST(context.pp, &converter, astContext);  // calls pp.EnterMainSourceFile() for us
+    converter.generate();
 
     return 0;
 }
