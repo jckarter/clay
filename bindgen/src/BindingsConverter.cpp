@@ -54,18 +54,18 @@ string BindingsConverter::convertBuiltinType(const BuiltinType *type) {
 
     case BuiltinType::Bool : return "Bool";
 
-    case BuiltinType::Char_U : return "UInt8";
-    case BuiltinType::UChar : return "UInt8";
-    case BuiltinType::UShort : return "UInt16";
+    case BuiltinType::Char_U : return "CUChar";
+    case BuiltinType::UChar : return "CUChar";
+    case BuiltinType::UShort : return "UShort";
     case BuiltinType::UInt : return "UInt";
-    case BuiltinType::ULong : return "UInt";
+    case BuiltinType::ULong : return "CULong";
     case BuiltinType::ULongLong : return "UInt64";
 
-    case BuiltinType::Char_S : return "Int8";
-    case BuiltinType::SChar : return "Int8";
-    case BuiltinType::Short : return "Int16";
+    case BuiltinType::Char_S : return "CChar";
+    case BuiltinType::SChar : return "CChar";
+    case BuiltinType::Short : return "Short";
     case BuiltinType::Int : return "Int";
-    case BuiltinType::Long : return "Int";
+    case BuiltinType::Long : return "CLong";
     case BuiltinType::LongLong : return "Int64";
 
     case BuiltinType::Float : return "Float";
