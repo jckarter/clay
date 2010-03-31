@@ -1,4 +1,5 @@
 import base.*;
+import libc.(printf);
 
 external sayHello() : Void {
     printf(cstring("Hello World\n"));

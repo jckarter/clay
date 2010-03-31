@@ -1,4 +1,5 @@
 import base.*;
+import libc.(printf);
 
 main() {
     var v = Vector([1, 2, 3, 4, 5]);
