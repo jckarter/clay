@@ -1,6 +1,5 @@
 import base.*;
-
-external __stdoutp:RawPointer;
+import libc.(fwrite, fdopen, __stdoutp);
 
 main() {
     var s = "Hello World!\n";
