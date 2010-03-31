@@ -1,10 +1,10 @@
 import base.*;
-import libc.(fwrite, fdopen, __stdoutp);
+import libc.(fwrite, fdopen, stdout);
 
 main() {
     var s = "Hello World!\n";
 
-    fwrite(cstring(s), SizeT(1), SizeT(size(s)), __stdoutp);
+    fwrite(cstring(s), SizeT(1), SizeT(size(s)), stdout);
 
     var f = fdopen(1, cstring("w"));
     fwrite(cstring(s), SizeT(1), SizeT(size(s)), f);
