@@ -10,8 +10,8 @@ LLVM_LDFLAGS=`llvm-config --ldflags --libs all`
 CXXFLAGS+=-fno-rtti -Iinclude/ -g
 
 CLANG_LDFLAGS = \
-	-lclangAST -lclangBasic -lclangFrontend -lclangLex \
-	-lclangIndex -lclangParse -lclangSema -lclangAnalysis -lclangIndex
+	-lclangFrontend -lclangSema -lclangChecker -lclangAnalysis \
+	-lclangAST -lclangParse -lclangLex -lclangBasic
 
 TARGETS=$(BINDIR)clay-bindgen
 OBJS=obj/clay-bindgen.o obj/BindingsConverter.o obj/InitHeaderSearch.o
@@ -20,7 +20,7 @@ all:$(TARGETS)
 
 $(BINDIR)clay-bindgen: $(OBJS)
 	if [ ! -e $(BINDIR) ]; then mkdir $(BINDIR); fi;
-	$(CC) $(LLVM_LDFLAGS) $(CLANG_LDFLAGS) $^ -o $@
+	$(CC) -o $@ $^ $(CLANG_LDFLAGS) $(LLVM_LDFLAGS)
 
 ${OBJS}: obj/%.o : src/%.cpp 
 	if [ ! -e obj ]; then mkdir obj; fi;
