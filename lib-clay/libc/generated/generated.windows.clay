@@ -31,7 +31,7 @@ record _iobuf {
 
 static FILE = _iobuf;
 
-external _iob : Pointer[FILE];
+external (dllimport) _iob : Array[FILE,0];
 
 external fopen(
     argument0 : Pointer[CChar],
@@ -616,7 +616,7 @@ external __p___argv() : Pointer[Pointer[Pointer[CChar]]];
 
 external __p___wargv() : Pointer[Pointer[Pointer[UShort]]];
 
-external __mb_cur_max : Int;
+external (dllimport) __mb_cur_max : Int;
 
 external _errno() : Pointer[Int];
 
@@ -626,9 +626,9 @@ external __p__environ() : Pointer[Pointer[Pointer[CChar]]];
 
 external __p__wenviron() : Pointer[Pointer[Pointer[UShort]]];
 
-external _sys_nerr : Int;
+external (dllimport) _sys_nerr : Int;
 
-external _sys_errlist : Pointer[Pointer[CChar]];
+external (dllimport) _sys_errlist : Array[Pointer[CChar],0];
 
 external __p__osver() : Pointer[UInt];
 
@@ -638,19 +638,19 @@ external __p__winmajor() : Pointer[UInt];
 
 external __p__winminor() : Pointer[UInt];
 
-external _osver : UInt;
+external (dllimport) _osver : UInt;
 
-external _winver : UInt;
+external (dllimport) _winver : UInt;
 
-external _winmajor : UInt;
+external (dllimport) _winmajor : UInt;
 
-external _winminor : UInt;
+external (dllimport) _winminor : UInt;
 
 external __p__pgmptr() : Pointer[Pointer[CChar]];
 
 external __p__wpgmptr() : Pointer[Pointer[UShort]];
 
-external _fmode : Int;
+external (dllimport) _fmode : Int;
 
 external atof(
     argument0 : Pointer[CChar]) : Double;
