@@ -134,11 +134,12 @@ string BindingsConverter::convertType(const Type *type)
     case Type::Pointer : {
         PointerType *t = (PointerType *)type;
         const Type *pt = t->getPointeeType().getTypePtr();
-        switch (pt->getTypeClass()) {
+        const Type *pt2 = pt->getCanonicalTypeUnqualified().getTypePtr();
+        switch (pt2->getTypeClass()) {
         case Type::FunctionNoProto :
-            return convertFPType((FunctionNoProtoType *)pt);
+            return convertFPType((FunctionNoProtoType *)pt2);
         case Type::FunctionProto :
-            return convertFPType((FunctionProtoType *)pt);
+            return convertFPType((FunctionProtoType *)pt2);
         default :
             break;
         }
@@ -203,9 +204,12 @@ void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG)
         }
         case Decl::Typedef : {
             TypedefDecl *x = (TypedefDecl *)decl;
-            string name = x->getName().str();
-            string outName = allocateName(name);
-            typedefNames[name] = outName;
+            const Type *t = x->getTypeSourceInfo()->getType().getTypePtr();
+            if (!t->isFunctionType()) {
+                string name = x->getName().str();
+                string outName = allocateName(name);
+                typedefNames[name] = outName;
+            }
             break;
         }
         default :
@@ -224,10 +228,12 @@ void BindingsConverter::generate()
             TypedefDecl *x = (TypedefDecl *)decl;
             string name = x->getName().str();
             const Type *t = x->getTypeSourceInfo()->getType().getTypePtr();
-            string type = convertType(t);
-            out << '\n';
-            out << "static " << typedefNames[name] << " = "
-                << convertType(t) << ";" << '\n';
+            if (!t->isFunctionType()) {
+                string type = convertType(t);
+                out << '\n';
+                out << "static " << typedefNames[name] << " = "
+                    << convertType(t) << ";" << '\n';
+            }
             break;
         }
         case Decl::Enum : {
