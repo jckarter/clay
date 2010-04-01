@@ -1415,8 +1415,24 @@ static bool globalVariable(TopLevelItemPtr &x) {
 
 
 //
-// external procedure
+// external procedure, external variable
 //
+
+static bool externalAttributes(vector<IdentifierPtr> &x) {
+    if (!symbol("(")) return false;
+    if (!identifierList(x)) return false;
+    if (!symbol(")")) return false;
+    return true;
+}
+
+static bool optExternalAttributes(vector<IdentifierPtr> &x) {
+    int p = save();
+    if (!externalAttributes(x)) {
+        restore(p);
+        x.clear();
+    }
+    return true;
+}
 
 static bool externalArg(ExternalArgPtr &x) {
     LocationPtr location = currentLocation();
@@ -1495,6 +1511,7 @@ static bool external(TopLevelItemPtr &x) {
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("external")) return false;
     ExternalProcedurePtr y = new ExternalProcedure(vis);
+    if (!optExternalAttributes(y->attributes)) return false;
     if (!identifier(y->name)) return false;
     if (!symbol("(")) return false;
     if (!externalArgs(y->args, y->hasVarArgs)) return false;
@@ -1511,12 +1528,12 @@ static bool externalVariable(TopLevelItemPtr &x) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("external")) return false;
-    IdentifierPtr y;
-    if (!identifier(y)) return false;
-    ExprPtr z;
-    if (!typeSpec(z)) return false;
+    ExternalVariablePtr y = new ExternalVariable(vis);
+    if (!optExternalAttributes(y->attributes)) return false;
+    if (!identifier(y->name)) return false;
+    if (!typeSpec(y->type)) return false;
     if (!symbol(";")) return false;
-    x = new ExternalVariable(y, vis, z);
+    x = y.ptr();
     x->location = location;
     return true;
 }

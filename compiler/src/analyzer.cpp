@@ -482,6 +482,8 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
 void analyzeExternal(ExternalProcedurePtr x)
 {
     assert(!x->analyzed);
+    if (!x->attributesVerified)
+        verifyAttributes(x);
     vector<TypePtr> argTypes;
     for (unsigned i = 0; i < x->args.size(); ++i) {
         ExternalArgPtr y = x->args[i];
@@ -491,6 +493,60 @@ void analyzeExternal(ExternalProcedurePtr x)
     x->returnType2 = evaluateMaybeVoidType(x->returnType, x->env);
     x->ptrType = cCodePointerType(argTypes, x->hasVarArgs, x->returnType2);
     x->analyzed = true;
+}
+
+
+
+//
+// verifyAttributes
+//
+
+void verifyAttributes(ExternalProcedurePtr x)
+{
+    assert(!x->attributesVerified);
+    x->attributesVerified = true;
+    x->attrDLLImport = false;
+    x->attrDLLExport = false;
+    for (unsigned i = 0; i < x->attributes.size(); ++i) {
+        const string &s = x->attributes[i]->str;
+        if (s == "dllimport") {
+            if (x->attrDLLExport)
+                error(x->attributes[i], "dllimport specified after dllexport");
+            x->attrDLLImport = true;
+        }
+        else if (s == "dllexport") {
+            if (x->attrDLLImport)
+                error(x->attributes[i], "dllexport specified after dllimport");
+            x->attrDLLExport = true;
+        }
+        else {
+            error(x->attributes[i], "invalid attribute");
+        }
+    }
+}
+
+void verifyAttributes(ExternalVariablePtr x)
+{
+    assert(!x->attributesVerified);
+    x->attributesVerified = true;
+    x->attrDLLImport = false;
+    x->attrDLLExport = false;
+    for (unsigned i = 0; i < x->attributes.size(); ++i) {
+        const string &s = x->attributes[i]->str;
+        if (s == "dllimport") {
+            if (x->attrDLLExport)
+                error(x->attributes[i], "dllimport specified after dllexport");
+            x->attrDLLImport = true;
+        }
+        else if (s == "dllexport") {
+            if (x->attrDLLImport)
+                error(x->attributes[i], "dllexport specified after dllimport");
+            x->attrDLLExport = true;
+        }
+        else {
+            error(x->attributes[i], "invalid attribute");
+        }
+    }
 }
 
 
