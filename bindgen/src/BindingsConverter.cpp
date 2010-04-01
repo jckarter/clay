@@ -79,16 +79,31 @@ string BindingsConverter::convertBuiltinType(const BuiltinType *type) {
     }
 }
 
+static const char *getCodePointerConstructor(FunctionType *ft)
+{
+    switch (ft->getCallConv()) {
+    case CC_X86StdCall : return "StdCallCodePointer";
+    case CC_X86FastCall : return "FastCallCodePointer";
+    default : return "CCodePointer";
+    }
+}
+
 string BindingsConverter::convertFPType(FunctionNoProtoType *type)
 {
     const Type *rt = type->getResultType().getTypePtr();
-    return "CCodePointer[" + convertType(rt) + "]";
+    ostringstream sout;
+    sout << getCodePointerConstructor(type);
+    sout << "[";
+    sout << convertType(rt);
+    sout << "]";
+    return sout.str();
 }
 
 string BindingsConverter::convertFPType(FunctionProtoType *type)
 {
     ostringstream sout;
-    sout << "CCodePointer[";
+    sout << getCodePointerConstructor(type);
+    sout << "[";
     FunctionProtoType::arg_type_iterator i, e;
     for (i = type->arg_type_begin(), e = type->arg_type_end(); i != e; ++i) {
         const Type *argType = i->getTypePtr();
@@ -309,7 +324,14 @@ void BindingsConverter::generateDecl(Decl *decl)
             out << "external ";
             bool attrDLLImport = x->hasAttr<DLLImportAttr>();
             bool attrDLLExport = x->hasAttr<DLLExportAttr>();
-            if (attrDLLImport || attrDLLExport) {
+            const Type *t = x->getType().getTypePtr();
+            assert(t->isFunctionType());
+            FunctionType *ft = (FunctionType *)t;
+            bool attrStdCall = ft->getCallConv() == CC_X86StdCall;
+            bool attrFastCall = ft->getCallConv() == CC_X86FastCall;
+            if (attrDLLImport || attrDLLExport ||
+                attrStdCall || attrFastCall)
+            {
                 out << "(";
                 bool first = true;
                 if (attrDLLImport) {
@@ -325,6 +347,20 @@ void BindingsConverter::generateDecl(Decl *decl)
                     else
                         out << ",";
                     out << "dllexport";
+                }
+                if (attrStdCall) {
+                    if (first)
+                        first = false;
+                    else
+                        out << ",";
+                    out << "stdcall";
+                }
+                if (attrFastCall) {
+                    if (first)
+                        first = false;
+                    else
+                        out << ",";
+                    out << "fastcall";
                 }
                 out << ") ";
             }
@@ -345,7 +381,6 @@ void BindingsConverter::generateDecl(Decl *decl)
                 out << " : " << convertType(t);
                 ++index;
             }
-            const Type *ft = x->getType().getTypePtr();
             if (ft->getTypeClass() == Type::FunctionProto) {
                 FunctionProtoType *fpt = (FunctionProtoType *)ft;
                 if (fpt->isVariadic()) {
