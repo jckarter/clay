@@ -1,0 +1,7 @@
+import base.*;
+
+external (stdcall) Beep(freq:UInt, duration:UInt): Int;
+
+main() {
+    Beep(1000#u32, 1000#u32);
+}

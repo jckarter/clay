@@ -1086,6 +1086,8 @@ struct ExternalProcedure : public TopLevelItem {
     bool attributesVerified;
     bool attrDLLImport;
     bool attrDLLExport;
+    bool attrStdCall;
+    bool attrFastCall;
 
     bool analyzed;
     TypePtr returnType2;
@@ -1575,15 +1577,24 @@ struct CodePointerType : public Type {
           returnType(returnType), returnIsTemp(returnIsTemp) {}
 };
 
+enum CallingConv {
+    CC_DEFAULT,
+    CC_STDCALL,
+    CC_FASTCALL
+};
+
 struct CCodePointerType : public Type {
+    CallingConv callingConv;
     vector<TypePtr> argTypes;
     bool hasVarArgs;
     TypePtr returnType; // NULL if void return
-    CCodePointerType(const vector<TypePtr> &argTypes,
+    CCodePointerType(CallingConv callingConv,
+                     const vector<TypePtr> &argTypes,
                      bool hasVarArgs,
                      TypePtr returnType)
-        : Type(CCODE_POINTER_TYPE), argTypes(argTypes),
-          hasVarArgs(hasVarArgs), returnType(returnType) {}
+        : Type(CCODE_POINTER_TYPE), callingConv(callingConv),
+          argTypes(argTypes), hasVarArgs(hasVarArgs),
+          returnType(returnType) {}
 };
 
 struct ArrayType : public Type {
@@ -1663,7 +1674,8 @@ TypePtr floatType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
                         bool returnIsTemp);
-TypePtr cCodePointerType(const vector<TypePtr> &argTypes,
+TypePtr cCodePointerType(CallingConv callingConv,
+                         const vector<TypePtr> &argTypes,
                          bool hasVarArgs,
                          TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
@@ -1738,14 +1750,17 @@ struct CodePointerTypePattern : public Pattern {
 };
 
 struct CCodePointerTypePattern : public Pattern {
+    CallingConv callingConv;
     vector<PatternPtr> argTypes;
     bool hasVarArgs;
     PatternPtr returnType;
-    CCodePointerTypePattern(const vector<PatternPtr> &argTypes,
+    CCodePointerTypePattern(CallingConv callingConv,
+                            const vector<PatternPtr> &argTypes,
                             bool hasVarArgs,
                             PatternPtr returnType)
-        : Pattern(CCODE_POINTER_TYPE_PATTERN), argTypes(argTypes),
-          hasVarArgs(hasVarArgs), returnType(returnType) {}
+        : Pattern(CCODE_POINTER_TYPE_PATTERN), callingConv(callingConv),
+          argTypes(argTypes), hasVarArgs(hasVarArgs),
+          returnType(returnType) {}
 };
 
 struct ArrayTypePattern : public Pattern {

@@ -1118,6 +1118,10 @@ void codegenExternal(ExternalProcedurePtr x)
                                          linkage,
                                          x->name->str.c_str(),
                                          llvmModule);
+    if (x->attrStdCall)
+        x->llvmFunc->setCallingConv(llvm::CallingConv::X86_StdCall);
+    else if (x->attrFastCall)
+        x->llvmFunc->setCallingConv(llvm::CallingConv::X86_FastCall);
 
     if (!x->body) return;
 
@@ -1371,8 +1375,19 @@ CValuePtr codegenInvokeValue(CValuePtr x,
                 llArgs.push_back(llArg);
             }
         }
-        llvm::Value *result =
+        llvm::CallInst *callInst =
             llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+        switch (t->callingConv) {
+        case CC_DEFAULT :
+            break;
+        case CC_STDCALL :
+            callInst->setCallingConv(llvm::CallingConv::X86_StdCall);
+            break;
+        case CC_FASTCALL :
+            callInst->setCallingConv(llvm::CallingConv::X86_FastCall);
+            break;
+        }
+        llvm::Value *result = callInst;
         if (!t->returnType) {
             assert(!out);
             return NULL;

@@ -90,7 +90,8 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 argTypes.push_back(evaluatePattern(args[i], env));
             PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new CCodePointerTypePattern(argTypes, false, returnType);
+            return new CCodePointerTypePattern(CC_DEFAULT, argTypes,
+                                               false, returnType);
         }
 
         case PRIM_Array : {
@@ -195,18 +196,22 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
         if (type->typeKind != CCODE_POINTER_TYPE)
             return false;
         CCodePointerTypePtr t = (CCodePointerType *)type.ptr();
+        if (x->callingConv != t->callingConv)
+            return false;
+        if (x->argTypes.size() != t->argTypes.size())
+            return false;
+        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            if (!unify(x->argTypes[i], t->argTypes[i].ptr()))
+                return false;
+        }
+        if (x->hasVarArgs != t->hasVarArgs)
+            return false;
         if (!t->returnType) {
             if (!unify(x->returnType, voidType.ptr()))
                 return false;
         }
         else if (!unify(x->returnType, t->returnType.ptr())) {
             return false;
-        }
-        if (x->argTypes.size() != t->argTypes.size())
-            return false;
-        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
-            if (!unify(x->argTypes[i], t->argTypes[i].ptr()))
-                return false;
         }
         return true;
     }

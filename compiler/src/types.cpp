@@ -152,10 +152,11 @@ TypePtr codePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
     return t.ptr();
 }
 
-TypePtr cCodePointerType(const vector<TypePtr> &argTypes,
+TypePtr cCodePointerType(CallingConv callingConv,
+                         const vector<TypePtr> &argTypes,
                          bool hasVarArgs,
                          TypePtr returnType) {
-    int h = 0;
+    int h = int(callingConv)*100;
     for (unsigned i = 0; i < argTypes.size(); ++i) {
         h += pointerHash(argTypes[i].ptr());
     }
@@ -166,13 +167,16 @@ TypePtr cCodePointerType(const vector<TypePtr> &argTypes,
     vector<CCodePointerTypePtr> &bucket = cCodePointerTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         CCodePointerType *t = bucket[i].ptr();
-        if ((t->argTypes == argTypes) && (t->hasVarArgs == hasVarArgs)
-            && (t->returnType == returnType))
+        if ((t->callingConv == callingConv) &&
+            (t->argTypes == argTypes) &&
+            (t->hasVarArgs == hasVarArgs) &&
+            (t->returnType == returnType))
         {
             return t;
         }
     }
-    CCodePointerTypePtr t = new CCodePointerType(argTypes,
+    CCodePointerTypePtr t = new CCodePointerType(callingConv,
+                                                 argTypes,
                                                  hasVarArgs,
                                                  returnType);
     bucket.push_back(t);
