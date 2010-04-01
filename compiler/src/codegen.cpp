@@ -1027,14 +1027,22 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
     case EXTERNAL_VARIABLE : {
         ExternalVariable *y = (ExternalVariable *)x.ptr();
         if (!y->llGlobal) {
+            if (!y->attributesVerified)
+                verifyAttributes(y);
             ObjectPtr z = analyzeStaticObject(y);
             assert(z->objKind == PVALUE);
             PValue *pv = (PValue *)z.ptr();
+            llvm::GlobalVariable::LinkageTypes linkage;
+            if (y->attrDLLImport)
+                linkage = llvm::GlobalVariable::DLLImportLinkage;
+            else if (y->attrDLLExport)
+                linkage = llvm::GlobalVariable::DLLExportLinkage;
+            else
+                linkage = llvm::GlobalVariable::ExternalLinkage;
             y->llGlobal =
                 new llvm::GlobalVariable(
                     *llvmModule, llvmType(pv->type), false,
-                    llvm::GlobalVariable::ExternalLinkage,
-                    NULL, y->name->str);
+                    linkage, NULL, y->name->str);
         }
         assert(!out);
         return new CValue(y->type2, y->llGlobal);
@@ -1099,8 +1107,15 @@ void codegenExternal(ExternalProcedurePtr x)
         x->returnType2.ptr() ? llvmType(x->returnType2) : llvmVoidType();
     llvm::FunctionType *llFuncType =
         llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
+    llvm::GlobalVariable::LinkageTypes linkage;
+    if (x->attrDLLImport)
+        linkage = llvm::GlobalVariable::DLLImportLinkage;
+    else if (x->attrDLLExport)
+        linkage = llvm::GlobalVariable::DLLExportLinkage;
+    else
+        linkage = llvm::GlobalVariable::ExternalLinkage;
     x->llvmFunc = llvm::Function::Create(llFuncType,
-                                         llvm::Function::ExternalLinkage,
+                                         linkage,
                                          x->name->str.c_str(),
                                          llvmModule);
 

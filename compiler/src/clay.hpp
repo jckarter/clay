@@ -1081,6 +1081,11 @@ struct ExternalProcedure : public TopLevelItem {
     bool hasVarArgs;
     ExprPtr returnType;
     StatementPtr body;
+    vector<IdentifierPtr> attributes;
+
+    bool attributesVerified;
+    bool attrDLLImport;
+    bool attrDLLExport;
 
     bool analyzed;
     TypePtr returnType2;
@@ -1090,15 +1095,17 @@ struct ExternalProcedure : public TopLevelItem {
 
     ExternalProcedure(Visibility visibility)
         : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
-          analyzed(false), llvmFunc(NULL) {}
+          attributesVerified(false), analyzed(false), llvmFunc(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       Visibility visibility,
                       const vector<ExternalArgPtr> &args,
                       bool hasVarArgs,
                       ExprPtr returnType,
-                      StatementPtr body)
+                      StatementPtr body,
+                      const vector<IdentifierPtr> &attributes)
         : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
+          attributes(attributes), attributesVerified(false),
           analyzed(false), llvmFunc(NULL) {}
 };
 
@@ -1112,11 +1119,25 @@ struct ExternalArg : public ANode {
 
 struct ExternalVariable : public TopLevelItem {
     ExprPtr type;
+    vector<IdentifierPtr> attributes;
+
+    bool attributesVerified;
+    bool attrDLLImport;
+    bool attrDLLExport;
+
     TypePtr type2;
     llvm::GlobalVariable *llGlobal;
-    ExternalVariable(IdentifierPtr name, Visibility visibility, ExprPtr type)
-        : TopLevelItem(EXTERNAL_VARIABLE, name, visibility), type(type),
-          llGlobal(NULL) {}
+
+    ExternalVariable(Visibility visibility)
+        : TopLevelItem(EXTERNAL_VARIABLE, visibility),
+          attributesVerified(false), llGlobal(NULL) {}
+    ExternalVariable(IdentifierPtr name,
+                     Visibility visibility,
+                     ExprPtr type,
+                     const vector<IdentifierPtr> &attributes)
+        : TopLevelItem(EXTERNAL_VARIABLE, name, visibility),
+          type(type), attributes(attributes),
+          attributesVerified(false), llGlobal(NULL) {}
 };
 
 
@@ -2032,6 +2053,8 @@ PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env);
 ObjectPtr analyze(ExprPtr expr, EnvPtr env);
 ObjectPtr analyzeStaticObject(ObjectPtr x);
 void analyzeExternal(ExternalProcedurePtr x);
+void verifyAttributes(ExternalProcedurePtr x);
+void verifyAttributes(ExternalVariablePtr x);
 ObjectPtr analyzeIndexing(ObjectPtr x,
                           const vector<ExprPtr> &args,
                           EnvPtr env);
