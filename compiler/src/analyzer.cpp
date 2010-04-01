@@ -491,7 +491,13 @@ void analyzeExternal(ExternalProcedurePtr x)
         argTypes.push_back(y->type2);
     }
     x->returnType2 = evaluateMaybeVoidType(x->returnType, x->env);
-    x->ptrType = cCodePointerType(argTypes, x->hasVarArgs, x->returnType2);
+    CallingConv callingConv = CC_DEFAULT;
+    if (x->attrStdCall)
+        callingConv = CC_STDCALL;
+    else if (x->attrFastCall)
+        callingConv = CC_FASTCALL;
+    x->ptrType = cCodePointerType(callingConv, argTypes,
+                                  x->hasVarArgs, x->returnType2);
     x->analyzed = true;
 }
 
@@ -507,6 +513,8 @@ void verifyAttributes(ExternalProcedurePtr x)
     x->attributesVerified = true;
     x->attrDLLImport = false;
     x->attrDLLExport = false;
+    x->attrStdCall = false;
+    x->attrFastCall = false;
     for (unsigned i = 0; i < x->attributes.size(); ++i) {
         const string &s = x->attributes[i]->str;
         if (s == "dllimport") {
@@ -518,6 +526,16 @@ void verifyAttributes(ExternalProcedurePtr x)
             if (x->attrDLLImport)
                 error(x->attributes[i], "dllexport specified after dllimport");
             x->attrDLLExport = true;
+        }
+        else if (s == "stdcall") {
+            if (x->attrFastCall)
+                error(x->attributes[i], "stdcall specified after fastcall");
+            x->attrStdCall = true;
+        }
+        else if (s == "fastcall") {
+            if (x->attrStdCall)
+                error(x->attributes[i], "fastcall specified after stdcall");
+            x->attrFastCall = true;
         }
         else {
             error(x->attributes[i], "invalid attribute");
@@ -613,7 +631,8 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 types.push_back(evaluateType(args[i], env));
             TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return cCodePointerType(types, false, returnType).ptr();
+            return cCodePointerType(CC_DEFAULT, types,
+                                    false, returnType).ptr();
         }
 
         case PRIM_Array : {
@@ -1445,7 +1464,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         }
         if (!entry->analyzed)
             return NULL;
-        TypePtr ccpType = cCodePointerType(entry->argTypes,
+        TypePtr ccpType = cCodePointerType(CC_DEFAULT,
+                                           entry->argTypes,
                                            false,
                                            entry->returnType);
         return new PValue(ccpType, true);

@@ -9,6 +9,8 @@ tests = ("factorial platform " +
 perfTests = ("insertionsort1 insertionsort2 insertionsort3 " +
              "mean quicksort1 quicksort2").split()
 
+win32Tests = "beep".split()
+
 def runtest(input) :
     compiler = os.path.join(".", "bin", "clay")
     print "TEST:", input
@@ -23,13 +25,19 @@ def runtest(input) :
     return True
 
 def runtests() :
+    paths = []
     for x in tests :
-        input = os.path.join("test", x) + ".clay"
-        if not runtest(input) :
-            print "Test Failed"
+        p = os.path.join("test", x) + ".clay"
+        paths.append(p)
+    if sys.platform == "win32" :
+        for x in win32Tests :
+            p = os.path.join("test", "win32", x) + ".clay"
+            paths.append(p)
     for x in perfTests :
-        input = os.path.join("test", "perf", x) + ".clay"
-        if not runtest(input) :
+        p = os.path.join("test", "perf", x) + ".clay"
+        paths.append(p)
+    for p in paths :
+        if not runtest(p) :
             print "Test Failed"
 
 runtests()
