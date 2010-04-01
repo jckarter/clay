@@ -165,7 +165,7 @@ string BindingsConverter::convertType(const Type *type)
     case Type::IncompleteArray : {
         IncompleteArrayType *t = (IncompleteArrayType *)type;
         const Type *et = t->getElementType().getTypePtr();
-        return "Pointer[" + convertType(et) + "]";
+        return "Array[" + convertType(et) + ",0]";
     }
     default : {
         string str = type->getCanonicalTypeInternal().getAsString();
@@ -287,7 +287,29 @@ void BindingsConverter::generate()
             {
                 externsDeclared.insert(name);
                 out << '\n';
-                out << "external " << name << "(";
+                out << "external ";
+                bool attrDLLImport = x->hasAttr<DLLImportAttr>();
+                bool attrDLLExport = x->hasAttr<DLLExportAttr>();
+                if (attrDLLImport || attrDLLExport) {
+                    out << "(";
+                    bool first = true;
+                    if (attrDLLImport) {
+                        if (first)
+                            first = false;
+                        else
+                            out << ",";
+                        out << "dllimport";
+                    }
+                    if (attrDLLExport) {
+                        if (first)
+                            first = false;
+                        else
+                            out << ",";
+                        out << "dllexport";
+                    }
+                    out << ") ";
+                }
+                out << name << "(";
                 FunctionDecl::param_iterator i, e;
                 int index = 0;
                 for (i = x->param_begin(), e = x->param_end(); i != e; ++i) {
@@ -329,8 +351,29 @@ void BindingsConverter::generate()
                 externsDeclared.insert(name);
                 const Type *t = x->getType().getTypePtr();
                 out << '\n';
-                out << "external " << name << " : "
-                    << convertType(t) << ";\n";
+                out << "external ";
+                bool attrDLLImport = x->hasAttr<DLLImportAttr>();
+                bool attrDLLExport = x->hasAttr<DLLExportAttr>();
+                if (attrDLLImport || attrDLLExport) {
+                    out << "(";
+                    bool first = true;
+                    if (attrDLLImport) {
+                        if (first)
+                            first = false;
+                        else
+                            out << ",";
+                        out << "dllimport";
+                    }
+                    if (attrDLLExport) {
+                        if (first)
+                            first = false;
+                        else
+                            out << ",";
+                        out << "dllexport";
+                    }
+                    out << ") ";
+                }
+                out << name << " : " << convertType(t) << ";\n";
             }
             break;
         }
