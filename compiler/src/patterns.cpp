@@ -94,6 +94,28 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
                                                false, returnType);
         }
 
+        case PRIM_StdCallCodePointer : {
+            if (args.size() < 1)
+                error("c-code pointer type requries return type");
+            vector<PatternPtr> argTypes;
+            for (unsigned i = 0; i+1 < args.size(); ++i)
+                argTypes.push_back(evaluatePattern(args[i], env));
+            PatternPtr returnType = evaluatePattern(args.back(), env);
+            return new CCodePointerTypePattern(CC_STDCALL, argTypes,
+                                               false, returnType);
+        }
+
+        case PRIM_FastCallCodePointer : {
+            if (args.size() < 1)
+                error("c-code pointer type requries return type");
+            vector<PatternPtr> argTypes;
+            for (unsigned i = 0; i+1 < args.size(); ++i)
+                argTypes.push_back(evaluatePattern(args[i], env));
+            PatternPtr returnType = evaluatePattern(args.back(), env);
+            return new CCodePointerTypePattern(CC_FASTCALL, argTypes,
+                                               false, returnType);
+        }
+
         case PRIM_Array : {
             ensureArity(args, 2);
             PatternPtr elementType = evaluatePattern(args[0], env);

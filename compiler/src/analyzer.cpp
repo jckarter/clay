@@ -635,6 +635,30 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
                                     false, returnType).ptr();
         }
 
+        case PRIM_StdCallCodePointer : {
+            if (args.size() < 1)
+                error("atleast one argument required for"
+                      " code pointer types.");
+            vector<TypePtr> types;
+            for (unsigned i = 0; i+1 < args.size(); ++i)
+                types.push_back(evaluateType(args[i], env));
+            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
+            return cCodePointerType(CC_STDCALL, types,
+                                    false, returnType).ptr();
+        }
+
+        case PRIM_FastCallCodePointer : {
+            if (args.size() < 1)
+                error("atleast one argument required for"
+                      " code pointer types.");
+            vector<TypePtr> types;
+            for (unsigned i = 0; i+1 < args.size(); ++i)
+                types.push_back(evaluateType(args[i], env));
+            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
+            return cCodePointerType(CC_FASTCALL, types,
+                                    false, returnType).ptr();
+        }
+
         case PRIM_Array : {
             ensureArity(args, 2);
             TypePtr t = evaluateType(args[0], env);
@@ -1418,6 +1442,12 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
 
     case PRIM_CCodePointer :
         error("CCodePointer type constructor cannot be called");
+
+    case PRIM_StdCallCodePointer :
+        error("StdCallCodePointer type constructor cannot be called");
+
+    case PRIM_FastCallCodePointer :
+        error("FastCallCodePointer type constructor cannot be called");
 
     case PRIM_makeCCodePointer : {
         if (args.size() < 1)

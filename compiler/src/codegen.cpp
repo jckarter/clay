@@ -2293,6 +2293,12 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
     case PRIM_CCodePointer :
         error("CCodePointer type constructor cannot be called");
 
+    case PRIM_StdCallCodePointer :
+        error("StdCallCodePointer type constructor cannot be called");
+
+    case PRIM_FastCallCodePointer :
+        error("FastCallCodePointer type constructor cannot be called");
+
     case PRIM_makeCCodePointer : {
         if (args.size() < 1)
             error("incorrect number of arguments");

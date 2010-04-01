@@ -1448,6 +1448,8 @@ enum PrimOpCode {
 
     PRIM_CCodePointerTypeP,
     PRIM_CCodePointer,
+    PRIM_StdCallCodePointer,
+    PRIM_FastCallCodePointer,
     PRIM_makeCCodePointer,
 
     PRIM_pointerCast,
