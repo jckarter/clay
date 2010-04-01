@@ -1,5 +1,5 @@
 public import libc.generated.*;
 
-var stdin = _iob + 0;
-var stdout = _iob + 1;
-var stderr = _iob + 2;
+var stdin = &_iob[0];
+var stdout = &_iob[1];
+var stderr = &_iob[2];
