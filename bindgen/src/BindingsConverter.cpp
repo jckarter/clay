@@ -34,7 +34,7 @@ string BindingsConverter::allocateName(const string &base)
         allocatedNames.insert(base);
         return base;
     }
-    unsigned i = 0;
+    unsigned i = 2;
     string s;
     while (true) {
         ostringstream out;
@@ -121,7 +121,11 @@ string BindingsConverter::convertType(const Type *type)
             return "AUnionType";
         string name = decl->getName().str();
         if (name.empty()) {
-            assert(anonRecordNames.count(decl));
+            if (!anonRecordNames.count(decl)) {
+                pendingAnonRecords.push_back(decl);
+                string outName = allocateName("UnnamedRecord");
+                anonRecordNames[decl] = outName;
+            }
             return anonRecordNames[decl];
         }
         if (recordBodies.count(name)) {
@@ -221,165 +225,179 @@ void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG)
 void BindingsConverter::generate()
 {
     generateHeader();
-    for (unsigned i = 0; i < decls.size(); ++i) {
-        Decl *decl = decls[i];
-        switch (decl->getKind()) {
-        case Decl::Typedef : {
-            TypedefDecl *x = (TypedefDecl *)decl;
-            string name = x->getName().str();
-            const Type *t = x->getTypeSourceInfo()->getType().getTypePtr();
-            if (!t->isFunctionType()) {
-                string type = convertType(t);
-                out << '\n';
-                out << "static " << typedefNames[name] << " = "
-                    << convertType(t) << ";" << '\n';
-            }
-            break;
+    unsigned i = 0;
+    while ((pendingAnonRecords.size() > 0) || (i < decls.size())) {
+        if (pendingAnonRecords.size() > 0) {
+            vector<RecordDecl*> pending = pendingAnonRecords;
+            pendingAnonRecords.clear();
+            for (unsigned j = 0; j < pending.size(); ++j)
+                generateDecl(pending[j]);
         }
-        case Decl::Enum : {
-            EnumDecl *x = (EnumDecl *)decl;
-            EnumDecl::enumerator_iterator i = x->enumerator_begin();
-            EnumDecl::enumerator_iterator e = x->enumerator_end();
+        else if (i < decls.size()) {
+            generateDecl(decls[i]);
+            ++i;
+        }
+    }
+}
+
+void BindingsConverter::generateDecl(Decl *decl)
+{
+    switch (decl->getKind()) {
+    case Decl::Typedef : {
+        TypedefDecl *x = (TypedefDecl *)decl;
+        string name = x->getName().str();
+        const Type *t = x->getTypeSourceInfo()->getType().getTypePtr();
+        if (!t->isFunctionType()) {
+            string type = convertType(t);
             out << '\n';
-            for (; i != e; ++i) {
-                EnumConstantDecl *y = *i;
-                out << "static " << y->getName().str() << " = "
-                    << y->getInitVal().getZExtValue() << ";\n";
-            }
-            break;
+            out << "static " << typedefNames[name] << " = "
+                << convertType(t) << ";" << '\n';
         }
-        case Decl::Record : {
-            RecordDecl *x = (RecordDecl *)decl;
-            string name = x->getName().str();
-            if (!x->isUnion() &&
-                x->isDefinition())
-            {
-                string outName = name.empty() ?
-                    anonRecordNames[x] : recordNames[name];
-                out << '\n';
-                out << "record " << outName << " {\n";
-                RecordDecl::field_iterator i, e;
-                int index = 0;
-                for (i = x->field_begin(), e = x->field_end(); i != e; ++i) {
-                    FieldDecl *y = *i;
-                    string fname = y->getName().str();
-                    const Type *t = y->getType().getTypePtr();
-                    out << "    ";
-                    if (fname.empty())
-                        out << "unnamed_field" << index;
+        break;
+    }
+    case Decl::Enum : {
+        EnumDecl *x = (EnumDecl *)decl;
+        EnumDecl::enumerator_iterator i = x->enumerator_begin();
+        EnumDecl::enumerator_iterator e = x->enumerator_end();
+        out << '\n';
+        for (; i != e; ++i) {
+            EnumConstantDecl *y = *i;
+            out << "static " << y->getName().str() << " = "
+                << y->getInitVal().getZExtValue() << ";\n";
+        }
+        break;
+    }
+    case Decl::Record : {
+        RecordDecl *x = (RecordDecl *)decl;
+        string name = x->getName().str();
+        if (!x->isUnion() &&
+            x->isDefinition())
+        {
+            string outName = name.empty() ?
+                anonRecordNames[x] : recordNames[name];
+            out << '\n';
+            out << "record " << outName << " {\n";
+            RecordDecl::field_iterator i, e;
+            int index = 0;
+            for (i = x->field_begin(), e = x->field_end(); i != e; ++i) {
+                FieldDecl *y = *i;
+                string fname = y->getName().str();
+                const Type *t = y->getType().getTypePtr();
+                out << "    ";
+                if (fname.empty())
+                    out << "unnamed_field" << index;
+                else
+                    out << fname;
+                out << " : " << convertType(t) << ";\n";
+                ++index;
+            }
+            out << "}\n";
+        }
+        break;
+    }
+    case Decl::Function : {
+        FunctionDecl *x = (FunctionDecl *)decl;
+        string name = x->getName().str();
+        if (!x->isThisDeclarationADefinition() &&
+            !x->isInlineSpecified() &&
+            (x->getStorageClass() == FunctionDecl::Extern ||
+             x->getStorageClass() == FunctionDecl::None) &&
+            !externsDeclared.count(name))
+        {
+            externsDeclared.insert(name);
+            out << '\n';
+            out << "external ";
+            bool attrDLLImport = x->hasAttr<DLLImportAttr>();
+            bool attrDLLExport = x->hasAttr<DLLExportAttr>();
+            if (attrDLLImport || attrDLLExport) {
+                out << "(";
+                bool first = true;
+                if (attrDLLImport) {
+                    if (first)
+                        first = false;
                     else
-                        out << fname;
-                    out << " : " << convertType(t) << ";\n";
-                    ++index;
+                        out << ",";
+                    out << "dllimport";
                 }
-                out << "}\n";
+                if (attrDLLExport) {
+                    if (first)
+                        first = false;
+                    else
+                        out << ",";
+                    out << "dllexport";
+                }
+                out << ") ";
             }
-            break;
-        }
-        case Decl::Function : {
-            FunctionDecl *x = (FunctionDecl *)decl;
-            string name = x->getName().str();
-            if (!x->isThisDeclarationADefinition() &&
-                !x->isInlineSpecified() &&
-                (x->getStorageClass() == FunctionDecl::Extern ||
-                 x->getStorageClass() == FunctionDecl::None) &&
-                !externsDeclared.count(name))
-            {
-                externsDeclared.insert(name);
-                out << '\n';
-                out << "external ";
-                bool attrDLLImport = x->hasAttr<DLLImportAttr>();
-                bool attrDLLExport = x->hasAttr<DLLExportAttr>();
-                if (attrDLLImport || attrDLLExport) {
-                    out << "(";
-                    bool first = true;
-                    if (attrDLLImport) {
-                        if (first)
-                            first = false;
-                        else
-                            out << ",";
-                        out << "dllimport";
-                    }
-                    if (attrDLLExport) {
-                        if (first)
-                            first = false;
-                        else
-                            out << ",";
-                        out << "dllexport";
-                    }
-                    out << ") ";
-                }
-                out << name << "(";
-                FunctionDecl::param_iterator i, e;
-                int index = 0;
-                for (i = x->param_begin(), e = x->param_end(); i != e; ++i) {
-                    ParmVarDecl *y = *i;
-                    string pname = y->getName().str();
+            out << name << "(";
+            FunctionDecl::param_iterator i, e;
+            int index = 0;
+            for (i = x->param_begin(), e = x->param_end(); i != e; ++i) {
+                ParmVarDecl *y = *i;
+                string pname = y->getName().str();
+                if (index != 0)
+                    out << ",";
+                out << "\n    ";
+                if (pname.empty())
+                    out << "argument" << index;
+                else
+                    out << pname;
+                const Type *t = y->getType().getTypePtr();
+                out << " : " << convertType(t);
+                ++index;
+            }
+            const Type *ft = x->getType().getTypePtr();
+            if (ft->getTypeClass() == Type::FunctionProto) {
+                FunctionProtoType *fpt = (FunctionProtoType *)ft;
+                if (fpt->isVariadic()) {
                     if (index != 0)
                         out << ",";
                     out << "\n    ";
-                    if (pname.empty())
-                        out << "argument" << index;
+                    out << "...";
+                }
+            }
+            const Type *rt = x->getResultType().getTypePtr();
+            out << ") : " << convertType(rt) << ";\n";
+        }
+        break;
+    }
+    case Decl::Var : {
+        VarDecl *x = (VarDecl *)decl;
+        string name = x->getName().str();
+        if ((x->getStorageClass() == VarDecl::Extern) &&
+            !x->hasInit() &&
+            !externsDeclared.count(name))
+        {
+            externsDeclared.insert(name);
+            const Type *t = x->getType().getTypePtr();
+            out << '\n';
+            out << "external ";
+            bool attrDLLImport = x->hasAttr<DLLImportAttr>();
+            bool attrDLLExport = x->hasAttr<DLLExportAttr>();
+            if (attrDLLImport || attrDLLExport) {
+                out << "(";
+                bool first = true;
+                if (attrDLLImport) {
+                    if (first)
+                        first = false;
                     else
-                        out << pname;
-                    const Type *t = y->getType().getTypePtr();
-                    out << " : " << convertType(t);
-                    ++index;
+                        out << ",";
+                    out << "dllimport";
                 }
-                const Type *ft = x->getType().getTypePtr();
-                if (ft->getTypeClass() == Type::FunctionProto) {
-                    FunctionProtoType *fpt = (FunctionProtoType *)ft;
-                    if (fpt->isVariadic()) {
-                        if (index != 0)
-                            out << ",";
-                        out << "\n    ";
-                        out << "...";
-                    }
+                if (attrDLLExport) {
+                    if (first)
+                        first = false;
+                    else
+                        out << ",";
+                    out << "dllexport";
                 }
-                const Type *rt = x->getResultType().getTypePtr();
-                out << ") : " << convertType(rt) << ";\n";
+                out << ") ";
             }
-            break;
+            out << name << " : " << convertType(t) << ";\n";
         }
-        case Decl::Var : {
-            VarDecl *x = (VarDecl *)decl;
-            string name = x->getName().str();
-            if ((x->getStorageClass() == VarDecl::Extern) &&
-                !x->hasInit() &&
-                !externsDeclared.count(name))
-            {
-                externsDeclared.insert(name);
-                const Type *t = x->getType().getTypePtr();
-                out << '\n';
-                out << "external ";
-                bool attrDLLImport = x->hasAttr<DLLImportAttr>();
-                bool attrDLLExport = x->hasAttr<DLLExportAttr>();
-                if (attrDLLImport || attrDLLExport) {
-                    out << "(";
-                    bool first = true;
-                    if (attrDLLImport) {
-                        if (first)
-                            first = false;
-                        else
-                            out << ",";
-                        out << "dllimport";
-                    }
-                    if (attrDLLExport) {
-                        if (first)
-                            first = false;
-                        else
-                            out << ",";
-                        out << "dllexport";
-                    }
-                    out << ") ";
-                }
-                out << name << " : " << convertType(t) << ";\n";
-            }
-            break;
-        }
-        default :
-            break;
-        }
+        break;
+    }
+    default :
+        break;
     }
 }
 

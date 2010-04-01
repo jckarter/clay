@@ -32,6 +32,7 @@ public :
     void generate();
 
 private :
+    void generateDecl(Decl *decl);
     void generateHeader();
 
 private :
@@ -41,6 +42,7 @@ private :
     set<string> allocatedNames;
 
     map<RecordDecl*, string> anonRecordNames;
+    vector<RecordDecl*> pendingAnonRecords;
     map<string, string> recordNames;
     map<string, string> typedefNames;
 
