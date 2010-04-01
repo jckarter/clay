@@ -450,6 +450,8 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(CCodePointerTypeP);
     PRIMITIVE(CCodePointer);
+    PRIMITIVE(StdCallCodePointer);
+    PRIMITIVE(FastCallCodePointer);
     PRIMITIVE(makeCCodePointer);
 
     PRIMITIVE(pointerCast);
