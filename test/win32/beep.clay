@@ -1,6 +1,6 @@
 import base.*;
-import win32.(Beep);
+import win32;
 
 main() {
-    Beep(1000#u32, 1000#u32);
+    win32.Beep(1000#u32, 1000#u32);
 }

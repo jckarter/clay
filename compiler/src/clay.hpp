@@ -2072,6 +2072,7 @@ ObjectPtr analyzeStaticObject(ObjectPtr x);
 void analyzeExternal(ExternalProcedurePtr x);
 void verifyAttributes(ExternalProcedurePtr x);
 void verifyAttributes(ExternalVariablePtr x);
+ObjectPtr analyzeFieldRef(ObjectPtr x, IdentifierPtr name);
 ObjectPtr analyzeIndexing(ObjectPtr x,
                           const vector<ExprPtr> &args,
                           EnvPtr env);

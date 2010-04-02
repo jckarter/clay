@@ -1,5 +1,5 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 map(f, a) {
     static ResultType = TypeOf(f(a[0]));
@@ -23,15 +23,18 @@ main() {
     static T = VI;
     var a = VI([1, 2, 3, 4, 5, 6]);
 
+    var lc = libc;
+    var pf = lc.printf;
+
     var f = doubleVec;
     var b = f(a);
     for (x in b)
-        printf(cstring("%d\n"), x);
+        pf(cstring("%d\n"), x);
 
     var g = cubeVec;
     var c = g(a);
     for (x in c)
-        printf(cstring("%d\n"), x);
+        pf(cstring("%d\n"), x);
     
     return pack(Vector[Int32], double);
 }

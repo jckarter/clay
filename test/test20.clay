@@ -1,11 +1,11 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 var x = 10;
 
 static Y = x;
 
-static P = printf;
+static P = libc.printf;
 
 main() {
     inc(Y);
