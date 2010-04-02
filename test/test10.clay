@@ -1,18 +1,18 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 overloadable print;
 
 overload print(x:Int32) {
-    printf(cstring("int value = %d\n"), x);
+    libc.printf(cstring("int value = %d\n"), x);
 }
 
 overload print(x:UInt32) {
-    printf(cstring("uint value = %d\n"), x);
+    libc.printf(cstring("uint value = %d\n"), x);
 }
 
 overload print(x:Float64) {
-    printf(cstring("double value = %f\n"), x);
+    libc.printf(cstring("double value = %f\n"), x);
 }
 
 main() {

@@ -745,8 +745,8 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
             PValue *z = (PValue *)y.ptr();
             if (z->type->typeKind == STATIC_OBJECT_TYPE) {
                 StaticObjectType *t = (StaticObjectType *)z->type.ptr();
-                ObjectPtr obj = analyzeIndexing(t->obj, x->args, env);
-                return codegenStaticObject(obj, out);
+                ExprPtr inner = new Indexing(new ObjectExpr(t->obj), x->args);
+                return codegenExpr(inner, env, out);
             }
             CValuePtr cv = codegenAsRef(x->expr, env, z);
             vector<ExprPtr> args2;
@@ -769,7 +769,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
                 StaticObjectType *t = (StaticObjectType *)z->type.ptr();
                 return codegenInvoke(t->obj, x->args, env, out);
             }
-            CValuePtr cv = codegenAsRef(x->expr, env, (PValue *)y.ptr());
+            CValuePtr cv = codegenAsRef(x->expr, env, z);
             return codegenInvokeValue(cv, x->args, env, out);
         }
         return codegenInvoke(y, x->args, env, out);
@@ -777,11 +777,28 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        vector<ExprPtr> args;
-        args.push_back(x->expr);
-        args.push_back(new ObjectExpr(x->name.ptr()));
-        ObjectPtr prim = primName("recordFieldRefByName");
-        return codegenInvoke(prim, args, env, out);
+        ObjectPtr y = analyze(x->expr, env);
+        if (y->objKind == PVALUE) {
+            PValue *z = (PValue *)y.ptr();
+            if (z->type->typeKind == STATIC_OBJECT_TYPE) {
+                StaticObjectType *t = (StaticObjectType *)z->type.ptr();
+                ExprPtr inner = new FieldRef(new ObjectExpr(t->obj), x->name);
+                return codegenExpr(inner, env, out);
+            }
+            CValuePtr cv = codegenAsRef(x->expr, env, z);
+            vector<ExprPtr> args2;
+            args2.push_back(new ObjectExpr(cv.ptr()));
+            args2.push_back(new ObjectExpr(x->name.ptr()));
+            ObjectPtr prim = primName("recordFieldRefByName");
+            return codegenInvoke(prim, args2, env, out);
+        }
+        if (y->objKind == MODULE_HOLDER) {
+            ModuleHolderPtr z = (ModuleHolder *)y.ptr();
+            ObjectPtr obj = lookupModuleHolder(z, x->name);
+            return codegenStaticObject(obj, out);
+        }
+        error("invalid member access operation");
+        return NULL;
     }
 
     case TUPLE_REF : {
@@ -1077,6 +1094,7 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
     case RECORD :
     case STATIC_PROCEDURE :
     case STATIC_OVERLOADABLE :
+    case MODULE_HOLDER :
         assert(out.ptr());
         assert(out->type == staticObjectType(x));
         return out;

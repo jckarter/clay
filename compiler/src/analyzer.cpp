@@ -28,6 +28,7 @@ bool analysisToPValue(ObjectPtr x, PValuePtr &pv)
     case RECORD :
     case STATIC_PROCEDURE :
     case STATIC_OVERLOADABLE :
+    case MODULE_HOLDER :
         pv = new PValue(staticObjectType(x), true);
         return true;
 
@@ -315,11 +316,10 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        vector<ExprPtr> args;
-        args.push_back(x->expr);
-        args.push_back(new ObjectExpr(x->name.ptr()));
-        ObjectPtr prim = primName("recordFieldRefByName");
-        return analyzeInvoke(prim, args, env);
+        ObjectPtr base = analyze(x->expr, env);
+        if (!base)
+            return NULL;
+        return analyzeFieldRef(base, x->name);
     }
 
     case TUPLE_REF : {
@@ -564,6 +564,38 @@ void verifyAttributes(ExternalVariablePtr x)
         else {
             error(x->attributes[i], "invalid attribute");
         }
+    }
+}
+
+
+
+//
+// analyzeFieldRef
+//
+
+ObjectPtr analyzeFieldRef(ObjectPtr x, IdentifierPtr name)
+{
+    switch (x->objKind) {
+    case PVALUE : {
+        PValuePtr y = (PValue *)x.ptr();
+        if (y->type->typeKind == STATIC_OBJECT_TYPE) {
+            StaticObjectType *t = (StaticObjectType *)y->type.ptr();
+            return analyzeFieldRef(t->obj, name);
+        }
+        vector<ExprPtr> args;
+        args.push_back(new ObjectExpr(x));
+        args.push_back(new ObjectExpr(name.ptr()));
+        ObjectPtr prim = primName("recordFieldRefByName");
+        return analyzeInvoke(prim, args, new Env());
+    }
+    case MODULE_HOLDER : {
+        ModuleHolderPtr y = (ModuleHolder *)x.ptr();
+        ObjectPtr z = lookupModuleHolder(y, name);
+        return analyzeStaticObject(z);
+    }
+    default :
+        error("invalid field access operation");
+        return NULL;
     }
 }
 

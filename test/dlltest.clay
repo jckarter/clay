@@ -1,8 +1,8 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 external sayHello() : Void {
-    printf(cstring("Hello World\n"));
+    libc.printf(cstring("Hello World\n"));
 }
 
 external factorial(n:Int):Int {

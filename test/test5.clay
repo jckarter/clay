@@ -1,5 +1,5 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 overloadable foo;
 
@@ -9,6 +9,6 @@ overload foo(x:Int32) = 2;
 
 main() {
     var v = true;
-    printf(cstring("%d\n"), foo(v) + 10*foo(true) + 100*foo(10));
+    libc.printf(cstring("%d\n"), foo(v) + 10*foo(true) + 100*foo(10));
     return 0;
 }

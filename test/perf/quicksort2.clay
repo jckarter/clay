@@ -1,5 +1,5 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 quickSort(a) {
     sortRange(begin(a), end(a));
@@ -37,6 +37,6 @@ main() {
         quickSort(a);
         reverse(a);
     }
-    printf(cstring("a[0] = %d\n"), a[0]);
+    libc.printf(cstring("a[0] = %d\n"), a[0]);
     return 0;
 }

@@ -1,5 +1,5 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 map(f, a) {
     static ResultType = TypeOf(f(a[0]));
@@ -16,10 +16,10 @@ main() {
     var b = map(f, a);
 
     for (x in b)
-        printf(cstring("%d\n"), x);
+        libc.printf(cstring("%d\n"), x);
 
     var c = map(lambda (x) { return x*x*x; }, a);
 
     for (x in c)
-        printf(cstring("%d\n"), x);
+        libc.printf(cstring("%d\n"), x);
 }

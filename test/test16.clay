@@ -1,5 +1,5 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 enum Kind {
     GOOD,
@@ -14,5 +14,5 @@ main() {
     var d = a == b;
     var y = Int32(a);
     var z = Kind(y);
-    printf(cstring("c, d, y = %d, %d, %d\n"), Int32(c), Int32(d), y);
+    libc.printf(cstring("c, d, y = %d, %d, %d\n"), Int32(c), Int32(d), y);
 }

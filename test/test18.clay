@@ -1,5 +1,5 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 external qsort(base:RawPointer, n:SizeT, width:SizeT,
                compare:CCodePointer[RawPointer, RawPointer, Int]): Void;
@@ -22,17 +22,17 @@ main() {
         x -= 1;
     }
 
-    printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
+    libc.printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
 
-    printf(cstring("compare test = %d\n"), testCompare(a[0], a[2]));
-    printf(cstring("compare test = %d\n"), testCompare(a[0], a[0]));
-    printf(cstring("compare test = %d\n"), testCompare(a[2], a[0]));
+    libc.printf(cstring("compare test = %d\n"), testCompare(a[0], a[2]));
+    libc.printf(cstring("compare test = %d\n"), testCompare(a[0], a[0]));
+    libc.printf(cstring("compare test = %d\n"), testCompare(a[2], a[0]));
 
     qsort(RawPointer(&a[0]),
           SizeT(size(a)),
           TypeSize(Int),
           compare);
 
-    printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
+    libc.printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
     return 0;
 }

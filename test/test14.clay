@@ -1,5 +1,5 @@
 import base.*;
-import libc.(printf);
+import libc;
 
 foreach(f, a) {
     for (x in a)
@@ -9,13 +9,13 @@ foreach(f, a) {
 sumWithLambda(a) {
     var sum = 0;
     foreach(lambda (x) { sum += x; }, a);
-    printf(cstring("sum with lambda = %d\n"), sum);
+    libc.printf(cstring("sum with lambda = %d\n"), sum);
 }
 
 sumWithBlock(a) {
     var sum = 0;
     foreach(block(x) { sum += x; }, a);
-    printf(cstring("sum with block = %d\n"), sum);
+    libc.printf(cstring("sum with block = %d\n"), sum);
 }
 
 main() {
