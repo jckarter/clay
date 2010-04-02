@@ -443,12 +443,12 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(pointerToInt);
     PRIMITIVE(intToPointer);
 
-    PRIMITIVE(CodePointerTypeP);
+    PRIMITIVE(CodePointerP);
     PRIMITIVE(CodePointer);
     PRIMITIVE(RefCodePointer);
     PRIMITIVE(makeCodePointer);
 
-    PRIMITIVE(CCodePointerTypeP);
+    PRIMITIVE(CCodePointerP);
     PRIMITIVE(CCodePointer);
     PRIMITIVE(StdCallCodePointer);
     PRIMITIVE(FastCallCodePointer);
@@ -460,14 +460,14 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(array);
     PRIMITIVE(arrayRef);
 
-    PRIMITIVE(TupleTypeP);
+    PRIMITIVE(TupleP);
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
     PRIMITIVE(TupleElementOffset);
     PRIMITIVE(tuple);
     PRIMITIVE(tupleRef);
 
-    PRIMITIVE(RecordTypeP);
+    PRIMITIVE(RecordP);
     PRIMITIVE(RecordFieldCount);
     PRIMITIVE(RecordFieldOffset);
     PRIMITIVE(RecordFieldIndex);
@@ -476,7 +476,7 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(StaticObject);
 
-    PRIMITIVE(EnumTypeP);
+    PRIMITIVE(EnumP);
     PRIMITIVE(enumToInt);
     PRIMITIVE(intToEnum);
 

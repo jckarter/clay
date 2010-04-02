@@ -9,13 +9,13 @@ overload Bool(src:Bool) : Bool {
     primitiveCopy(returned, src);
 }
 
-[I | IntegerType?(I)]
+[I | Integer?(I)]
 overload I(a:Bool) {
     if (a) return I(1);
     else return I(0);
 }
 
-[I | IntegerType?(I)]
+[I | Integer?(I)]
 overload Bool(a:I) = (a != I(0));
 
 overload equals?(a:Bool, b:Bool) {

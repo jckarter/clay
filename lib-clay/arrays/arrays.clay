@@ -16,7 +16,7 @@ import ranges.*;
 [T,n]
 overload size(a:Array[T,n]) = SizeT(n);
 
-[T,n,I | IntegerType?(I)]
+[T,n,I | Integer?(I)]
 overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
 
 [T,n]
@@ -40,10 +40,10 @@ overload begin(a:Array[T,n]) = ArrayCoordinate(&a[0]);
 [T,n]
 overload end(a:Array[T,n]) = ArrayCoordinate(&a[n]);
 
-[T,I | IntegerType?(I)]
+[T,I | Integer?(I)]
 overload add(c:ArrayCoordinate[T], i:I) = ArrayCoordinate(c.ptr + i);
 
-[T,I | IntegerType?(I)]
+[T,I | Integer?(I)]
 overload subtract(c:ArrayCoordinate[T], i:I) = ArrayCoordinate(c.ptr - i);
 
 [T]

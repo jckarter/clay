@@ -1408,7 +1408,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         return new PValue(pointerType(t), true);
     }
 
-    case PRIM_CodePointerTypeP : {
+    case PRIM_CodePointerP : {
         return new PValue(boolType, true);
     }
 
@@ -1468,7 +1468,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         return new PValue(cpType, true);
     }
 
-    case PRIM_CCodePointerTypeP : {
+    case PRIM_CCodePointerP : {
         return new PValue(boolType, true);
     }
 
@@ -1561,7 +1561,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         return new PValue(z->elementType, false);
     }
 
-    case PRIM_TupleTypeP : {
+    case PRIM_TupleP : {
         return new PValue(boolType, true);
     }
 
@@ -1601,7 +1601,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         return new PValue(z->elementTypes[i], false);
     }
 
-    case PRIM_RecordTypeP : {
+    case PRIM_RecordP : {
         return new PValue(boolType, true);
     }
 
@@ -1649,7 +1649,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_StaticObject :
         error("StaticObject type constructor cannot be called");
 
-    case PRIM_EnumTypeP : {
+    case PRIM_EnumP : {
         return new PValue(boolType, true);
     }
 

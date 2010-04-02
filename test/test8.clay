@@ -28,7 +28,7 @@ main() {
 
     var fp2 = CCodePointer[RawPointer, RawPointer, Int](fp);
 
-    qsort(Pointer[Int8](&a[0]),
+    qsort(RawPointer(&a[0]),
           size(a),
           TypeSize(Int),
           fp2);
