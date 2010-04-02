@@ -50,6 +50,17 @@ overloadable next;
 
 overloadable call;
 
+overloadable unimplemented; // used for triggering compile time errors
+
+
+//
+// SameType?
+//
+
+static overloadable SameType?;
+[A,B] static overload SameType?(A, B) = false;
+[A]   static overload SameType?(A, A) = true;
+
 
 
 //
