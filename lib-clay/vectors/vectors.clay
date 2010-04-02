@@ -83,7 +83,7 @@ overload destroy(a:Vector[T]) {
 [T]
 overload size(a:Vector[T]) = a.size;
 
-[T,I | IntegerType?(I)]
+[T,I | Integer?(I)]
 overload index(a:Vector[T], i:I) = ref (a.data + SizeT(i))^;
 
 [T]
@@ -107,10 +107,10 @@ overload begin(a:Vector[T]) = VectorCoordinate(a.data);
 [T]
 overload end(a:Vector[T]) = VectorCoordinate(a.data + a.size);
 
-[T,I|IntegerType?(I)]
+[T,I|Integer?(I)]
 overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
 
-[T,I|IntegerType?(I)]
+[T,I|Integer?(I)]
 overload subtract(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr - i);
 
 [T]
@@ -233,7 +233,7 @@ ensureSpace(a:Vector[T], space:SizeT) {
         setCapacity(a, 2*(a.size + space));
 }
 
-[T,I | IntegerType?(I)]
+[T,I | Integer?(I)]
 insertLocation(a:Vector[T], pos:I) {
     ensureSpace(a, SizeT(1));
     var i = begin(a) + pos;
@@ -246,7 +246,7 @@ insertLocation(a:Vector[T], pos:I) {
     returnref i^;
 }
 
-[T,I|IntegerType?(I)]
+[T,I|Integer?(I)]
 overload insert(a:Vector[T], i:I, x) {
     insertLocation(a, i) <-- x;
 }
@@ -275,7 +275,7 @@ overload remove(a:Vector[T], i:VectorCoordinate[T]) {
     removeLocation(a, i);
 }
 
-[T,I|IntegerType?(I)]
+[T,I|Integer?(I)]
 overload remove(a:Vector[T], i:I) {
     remove(a, begin(a)+i);
 }

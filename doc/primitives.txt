@@ -16,38 +16,38 @@ static TypeOf(a) = Type or VoidType
 
 boolNot(a:Bool):Bool
 
-[N|NumericType?(N)] numericEquals?(a:N, b:N): Bool
-[N|NumericType?(N)] numericLesser?(a:N, b:N): Bool
-[N|NumericType?(N)] numericAdd(a:N, b:N): N
-[N|NumericType?(N)] numericSubtract(a:N, b:N): N
-[N|NumericType?(N)] numericMultiply(a:N, b:N): N
-[N|NumericType?(N)] numericDivide(a:N, b:N): N
-[N|NumericType?(N)] numericNegate(a:N): N
+[N|Numeric?(N)] numericEquals?(a:N, b:N): Bool
+[N|Numeric?(N)] numericLesser?(a:N, b:N): Bool
+[N|Numeric?(N)] numericAdd(a:N, b:N): N
+[N|Numeric?(N)] numericSubtract(a:N, b:N): N
+[N|Numeric?(N)] numericMultiply(a:N, b:N): N
+[N|Numeric?(N)] numericDivide(a:N, b:N): N
+[N|Numeric?(N)] numericNegate(a:N): N
 
-[I|IntegerType?(I)] integerRemainder(a:I, b:I): I
-[I|IntegerType?(I)] integerShiftLeft(a:I, b:I): I
-[I|IntegerType?(I)] integerShiftRight(a:I, b:I): I
-[I|IntegerType?(I)] integerBitwiseAnd(a:I, b:I): I
-[I|IntegerType?(I)] integerBitwiseOr(a:I, b:I): I
-[I|IntegerType?(I)] integerBitwiseXor(a:I, b:I): I
-[I|IntegerType?(I)] integerBitwiseNot(a:I): I
+[I|Integer?(I)] integerRemainder(a:I, b:I): I
+[I|Integer?(I)] integerShiftLeft(a:I, b:I): I
+[I|Integer?(I)] integerShiftRight(a:I, b:I): I
+[I|Integer?(I)] integerBitwiseAnd(a:I, b:I): I
+[I|Integer?(I)] integerBitwiseOr(a:I, b:I): I
+[I|Integer?(I)] integerBitwiseXor(a:I, b:I): I
+[I|Integer?(I)] integerBitwiseNot(a:I): I
 
-[DEST,SRC | NumericType?(DEST) and NumericType?(SRC)]
+[DEST,SRC | Numeric?(DEST) and Numeric?(SRC)]
 numericConvert(static DEST, a:SRC): DEST
 
 Pointer[T]
 
 [T] addressOf(a:T) : Pointer[T]
 [T] pointerDereference(a:Pointer[T]) ref : T
-[T,I|IntegerType?(I)] pointerToInt(static I, a:Pointer[T]) : I
-[I,T|IntegerType?(I)] intToPointer(static T, a:I) : Pointer[T]
+[T,I|Integer?(I)] pointerToInt(static I, a:Pointer[T]) : I
+[I,T|Integer?(I)] intToPointer(static T, a:I) : Pointer[T]
 
-[T] CodePointerType?(static T):Bool
+[T] CodePointer?(static T):Bool
 CodePointer[A1, ..., An, RT]
 RefCodePointer[A1, ..., An, RT]
 [F, A1, ..., An] makeCodePointer(static F, static A1, ..., static An)
 
-[T] CCodePointerType?(static T):Bool
+[T] CCodePointer?(static T):Bool
 CCodePointer[A1, ..., An, RT]
 StdCallCodePointer[A1, ..., An, RT]
 FastCallCodePointer[A1, ..., An, RT]
@@ -59,20 +59,20 @@ Array[T,n]
 array(v1, ..., vn): Array[T,n]
 [T,n] arrayRef(a:Array[T,n], i:SizeT) ref : T
 
-[T] TupleType?(static T):Bool
+[T] Tuple?(static T):Bool
 Tuple[T1, ..., Tn]
 [T] TupleElementCount(static T): SizeT
 [T,i] TupleElementOffset(static T, static i): SizeT
 tuple(v1, ...,vn): tuple type
-[T|TupleType?(T)] tupleRef(a:T, static i)
+[T|Tuple?(T)] tupleRef(a:T, static i)
 
-[R] RecordType?(static R):Bool
+[R] Record?(static R):Bool
 [R] RecordFieldCount(static R):SizeT
 [R,i] RecordFieldOffset(static R, static i): SizeT
 [R,name] RecordFieldIndex(static R, static name): SizeT
 [R,i] recordFieldRef(a:R, static i)
 [R,name] recordFieldRefByName(a:R, static name)
 
-[E] EnumType?(static E):Bool
-[E|EnumType?(E)] enumToInt(x:E):Int
-[E|EnumType?(E)] intToEnum(static E, x:Int):E
+[E] Enum?(static E):Bool
+[E|Enum?(E)] enumToInt(x:E):Int
+[E|Enum?(E)] intToEnum(static E, x:Int):E

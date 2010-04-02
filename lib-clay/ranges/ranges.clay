@@ -26,7 +26,7 @@ overloadable range;
 
 overload range(first, last) = ValueRange(first, last);
 
-[I|IntegerType?(I)]
+[I|Integer?(I)]
 overload range(last:I) = ValueRange(I(0), last);
 
 

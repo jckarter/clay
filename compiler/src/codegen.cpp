@@ -2229,7 +2229,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return out;
     }
 
-    case PRIM_CodePointerTypeP : {
+    case PRIM_CodePointerP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateStatic(args[0], env);
         bool isCPType = false;
@@ -2295,7 +2295,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return out;
     }
 
-    case PRIM_CCodePointerTypeP : {
+    case PRIM_CCodePointerP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateStatic(args[0], env);
         bool isCCPType = false;
@@ -2422,7 +2422,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return new CValue(at->elementType, ptr);
     }
 
-    case PRIM_TupleTypeP : {
+    case PRIM_TupleP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateStatic(args[0], env);
         bool isTupleType = false;
@@ -2486,7 +2486,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return new CValue(tt->elementTypes[i], ptr);
     }
 
-    case PRIM_RecordTypeP : {
+    case PRIM_RecordP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateStatic(args[0], env);
         bool isRecordType = false;
@@ -2589,7 +2589,7 @@ CValuePtr codegenInvokePrimOp2(PrimOpPtr x,
 {
     switch (x->primOpCode) {
 
-    case PRIM_EnumTypeP : {
+    case PRIM_EnumP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateStatic(args[0], env);
         bool isEnumType = false;

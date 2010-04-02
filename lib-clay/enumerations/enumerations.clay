@@ -5,7 +5,7 @@ import numbers.*;
 
 // copy constructor
 
-[E | EnumType?(E)]
+[E | Enum?(E)]
 overload E(src:E) : E {
     primitiveCopy(returned, src);
 }
@@ -13,26 +13,26 @@ overload E(src:E) : E {
 
 // convert to integers
 
-[E,I | EnumType?(E) and IntegerType?(I)]
+[E,I | Enum?(E) and Integer?(I)]
 overload I(a:E) = I(enumToInt(a));
 
-[E | EnumType?(E)]
+[E | Enum?(E)]
 overload Int(a:E) = enumToInt(a);
 
 
 // convert from integers
 
-[E,I | EnumType?(E) and IntegerType?(I)]
+[E,I | Enum?(E) and Integer?(I)]
 overload E(a:I) = intToEnum(E, Int(a));
 
-[E | EnumType?(E)]
+[E | Enum?(E)]
 overload E(a:Int) = intToEnum(E, a);
 
 
 // equals?, lesser?
 
-[E | EnumType?(E)]
+[E | Enum?(E)]
 overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));
 
-[E | EnumType?(E)]
+[E | Enum?(E)]
 overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));

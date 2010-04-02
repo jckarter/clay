@@ -1441,12 +1441,12 @@ enum PrimOpCode {
     PRIM_pointerToInt,
     PRIM_intToPointer,
 
-    PRIM_CodePointerTypeP,
+    PRIM_CodePointerP,
     PRIM_CodePointer,
     PRIM_RefCodePointer,
     PRIM_makeCodePointer,
 
-    PRIM_CCodePointerTypeP,
+    PRIM_CCodePointerP,
     PRIM_CCodePointer,
     PRIM_StdCallCodePointer,
     PRIM_FastCallCodePointer,
@@ -1458,14 +1458,14 @@ enum PrimOpCode {
     PRIM_array,
     PRIM_arrayRef,
 
-    PRIM_TupleTypeP,
+    PRIM_TupleP,
     PRIM_Tuple,
     PRIM_TupleElementCount,
     PRIM_TupleElementOffset,
     PRIM_tuple,
     PRIM_tupleRef,
 
-    PRIM_RecordTypeP,
+    PRIM_RecordP,
     PRIM_RecordFieldCount,
     PRIM_RecordFieldOffset,
     PRIM_RecordFieldIndex,
@@ -1474,7 +1474,7 @@ enum PrimOpCode {
 
     PRIM_StaticObject,
 
-    PRIM_EnumTypeP,
+    PRIM_EnumP,
     PRIM_enumToInt,
     PRIM_intToEnum,
 };

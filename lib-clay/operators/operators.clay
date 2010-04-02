@@ -1,14 +1,14 @@
 
 public import __primitives__.(Void, TypeOf, Type?, TypeSize);
 
-public import __primitives__.(TupleType?, Tuple, TupleElementCount,
+public import __primitives__.(Tuple?, Tuple, TupleElementCount,
                               TupleElementOffset, tuple, tupleRef);
 
-public import __primitives__.(RecordType?, RecordFieldCount,
+public import __primitives__.(Record?, RecordFieldCount,
                               RecordFieldOffset, RecordFieldIndex,
                               recordFieldRef, recordFieldRefByName);
 
-public import __primitives__.(EnumType?, enumToInt, intToEnum);
+public import __primitives__.(Enum?, enumToInt, intToEnum);
 
 public import __primitives__.(StaticObject);
 
@@ -54,12 +54,12 @@ overloadable unimplemented; // used for triggering compile time errors
 
 
 //
-// SameType?
+// Equals? (equality for types)
 //
 
-static overloadable SameType?;
-[A,B] static overload SameType?(A, B) = false;
-[A]   static overload SameType?(A, A) = true;
+static overloadable Equals?;
+[A,B] static overload Equals?(A, B) = false;
+[A]   static overload Equals?(A, A) = true;
 
 
 
@@ -119,7 +119,7 @@ swap(a, b) {
 
 // default constructor
 
-[T|TupleType?(T)]
+[T|Tuple?(T)]
 overload T() : T {
     initTupleElements(returned, SizeT(0));
 }
@@ -139,7 +139,7 @@ overload initTupleElements(a:T, static i) {
 
 // copy constructor
 
-[T|TupleType?(T)]
+[T|Tuple?(T)]
 overload T(src:T) : T {
     copyTupleElements(returned, src, SizeT(0));
 }
@@ -160,7 +160,7 @@ overload copyTupleElements(dest:T, src:T, static i) {
 
 // destroy
 
-[T|TupleType?(T)]
+[T|Tuple?(T)]
 overload destroy(a:T) {
     destroyTupleElements(a, SizeT(0));
 }
@@ -180,7 +180,7 @@ overload destroyTupleElements(a:T, static i) {
 
 // assign
 
-[T|TupleType?(T)]
+[T|Tuple?(T)]
 overload assign(dest:T, src:T) {
     assignTupleElements(dest, src, SizeT(0));
 }
@@ -201,7 +201,7 @@ overload assignTupleElements(dest:T, src:T, static i) {
 // equals?
 
 
-[T|TupleType?(T)]
+[T|Tuple?(T)]
 overload equals?(a:T, b:T) {
     return equalTupleElements?(a, b, SizeT(0));
 }
@@ -223,7 +223,7 @@ overload equalTupleElements?(a:T, b:T, static i) {
 
 // lesser?
 
-[T|TupleType?(T)]
+[T|Tuple?(T)]
 overload lesser?(a:T, b:T) {
     return lesserTupleElements?(a, b, SizeT(0));
 }
@@ -254,7 +254,7 @@ overload lesserTupleElements?(a:T, b:T, static i) {
 
 // default constructor
 
-[T|RecordType?(T)]
+[T|Record?(T)]
 overload T() : T {
     initRecordFields(returned, SizeT(0));
 }
@@ -274,7 +274,7 @@ overload initRecordFields(a:T, static i) {
 
 // copy constructor
 
-[T|RecordType?(T)]
+[T|Record?(T)]
 overload T(src:T) : T {
     copyRecordFields(returned, src, SizeT(0));
 }
@@ -294,7 +294,7 @@ overload copyRecordFields(dest:T, src:T, static i) {
 
 // destroy
 
-[T|RecordType?(T)]
+[T|Record?(T)]
 overload destroy(a:T) {
     destroyRecordFields(a, SizeT(0));
 }
@@ -314,7 +314,7 @@ overload destroyRecordFields (a:T, static i) {
 
 // assign
 
-[T|RecordType?(T)]
+[T|Record?(T)]
 overload assign(dest:T, src:T) {
     assignRecordFields(dest, src, SizeT(0));
 }
@@ -334,7 +334,7 @@ overload assignRecordFields(dest:T, src:T, static i) {
 
 // equals?
 
-[T|RecordType?(T)]
+[T|Record?(T)]
 overload equals?(a:T, b:T) {
     return equalRecordFields?(a, b, SizeT(0));
 }
@@ -356,7 +356,7 @@ overload equalRecordFields?(a:T, b:T, static i) {
 
 // lesser?
 
-[T|RecordType?(T)]
+[T|Record?(T)]
 overload lesser?(a:T, b:T) {
     return lesserRecordFields?(a, b, SizeT(0));
 }
