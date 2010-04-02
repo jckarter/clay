@@ -10,8 +10,7 @@ public import __primitives__.(Bool,
 
 public import types.platform.*;
 
-static Byte = Int8;
-static UByte = UInt8;
+static Byte = UInt8;
 
 static CChar = Int8;
 static CUChar = UInt8;
@@ -30,6 +29,6 @@ static ULong = UInt64;
 static Float = Float32;
 static Doulble = Float64;
 
-static RawPointer = Pointer[Int8];
+static RawPointer = Pointer[Byte];
 
 static SizeT = UPtrInt;
