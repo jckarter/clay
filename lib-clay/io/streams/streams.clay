@@ -1,0 +1,12 @@
+
+// byte streams
+
+overloadable readByte;
+overloadable readBytes;
+
+overloadable writeByte;
+overloadable writeBytes;
+
+overloadable flush;
+
+
