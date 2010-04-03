@@ -24,104 +24,120 @@ void initTypeOverloads(TypePtr t)
             t->overloads.push_back(x);
     }
 
+    switch (t->typeKind) {
+    case ARRAY_TYPE :
+        initBuiltinConstructor((ArrayType *)t.ptr());
+        break;
+    case TUPLE_TYPE :
+        initBuiltinConstructor((TupleType *)t.ptr());
+        break;
+    case RECORD_TYPE :
+        initBuiltinConstructor((RecordType *)t.ptr());
+        break;
+    }
+
     t->overloadsInitialized = true;
 }
 
-void initBuiltinIsStaticFlags(TypePtr t) {
-    switch (t->typeKind) {
-
-    case ARRAY_TYPE : {
-        ArrayType *x = (ArrayType *)t.ptr();
-        FlagsMapEntry &flags = lookupFlagsMapEntry(t.ptr(), x->size);
-        assert(!flags.initialized);
-        flags.initialized = true;
-        flags.isStaticFlags.assign(x->size, false);
-        break;
+void initBuiltinConstructor(ArrayTypePtr t)
+{
+    CodePtr code = new Code();
+    unsigned size = t->size;
+    vector<IdentifierPtr> argNames;
+    for (unsigned i = 0; i < size; ++i) {
+        ostringstream sout;
+        sout << "arg" << i;
+        IdentifierPtr argName = new Identifier(sout.str());
+        argNames.push_back(argName);
+        ExprPtr type = new ObjectExpr(t->elementType.ptr());
+        ValueArgPtr arg = new ValueArg(argName, type);
+        code->formalArgs.push_back(arg.ptr());
     }
+    code->returnType = new ObjectExpr(t.ptr());
+    code->returnRef = false;
 
-    case TUPLE_TYPE : {
-        TupleType *x = (TupleType *)t.ptr();
-        FlagsMapEntry &flags =
-            lookupFlagsMapEntry(t.ptr(), x->elementTypes.size());
-        assert(!flags.initialized);
-        flags.initialized = true;
-        flags.isStaticFlags.assign(x->elementTypes.size(), false);
-        break;
+    BlockPtr body = new Block();
+    for (unsigned i = 0; i < size; ++i) {
+        IndexingPtr left = new Indexing(new Returned());
+        ExprPtr indexExpr = new ObjectExpr(sizeTToValueHolder(i).ptr());
+        left->args.push_back(indexExpr);
+        ExprPtr right = new NameRef(argNames[i]);
+        StatementPtr stmt = new InitAssignment(left.ptr(), right);
+        body->statements.push_back(stmt);
     }
+    code->body = body.ptr();
 
-    case RECORD_TYPE : {
-        RecordType *x = (RecordType *)t.ptr();
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(x);
-        FlagsMapEntry &flags = lookupFlagsMapEntry(t.ptr(), fieldTypes.size());
-        assert(!flags.initialized);
-        flags.initialized = true;
-        flags.isStaticFlags.assign(fieldTypes.size(), false);
-        break;
-    }
-
-    }
+    ExprPtr returnTypeExpr = new ObjectExpr(t.ptr());
+    OverloadPtr overload = new Overload(returnTypeExpr, code, true);
+    overload->env = new Env();
+    t->overloads.push_back(overload);
 }
 
-void verifyBuiltinConstructor(TypePtr t,
-                              const vector<bool> &isStaticFlags,
-                              const vector<ObjectPtr> &argsKey,
-                              const vector<LocationPtr> &argLocations)
+void initBuiltinConstructor(TupleTypePtr t)
 {
-    switch (t->typeKind) {
-
-    case ARRAY_TYPE : {
-        ArrayType *x = (ArrayType *)t.ptr();
-        if (x->size != (int)isStaticFlags.size())
-            error("incorrect no. of arguments");
-        for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
-            assert(isStaticFlags[i]);
-            assert(argsKey[i]->objKind == TYPE);
-            TypePtr y = (Type *)argsKey[i].ptr();
-            if (y != x->elementType) {
-                LocationContext loc(argLocations[i]);
-                error("type mismatch");
-            }
-        }
-        break;
+    CodePtr code = new Code();
+    const vector<TypePtr> &elementTypes = t->elementTypes;
+    vector<IdentifierPtr> argNames;
+    for (unsigned i = 0; i < elementTypes.size(); ++i) {
+        ostringstream sout;
+        sout << "arg" << i;
+        IdentifierPtr argName = new Identifier(sout.str());
+        argNames.push_back(argName);
+        ExprPtr type = new ObjectExpr(elementTypes[i].ptr());
+        ValueArgPtr arg = new ValueArg(argName, type);
+        code->formalArgs.push_back(arg.ptr());
     }
+    code->returnType = new ObjectExpr(t.ptr());
+    code->returnRef = false;
 
-    case TUPLE_TYPE : {
-        TupleType *x = (TupleType *)t.ptr();
-        if (x->elementTypes.size() != isStaticFlags.size())
-            error("incorrect no. of arguments");
-        for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
-            assert(isStaticFlags[i]);
-            assert(argsKey[i]->objKind == TYPE);
-            TypePtr y = (Type *)argsKey[i].ptr();
-            if (y != x->elementTypes[i]) {
-                LocationContext loc(argLocations[i]);
-                error("type mismatch");
-            }
-        }
-        break;
+    BlockPtr body = new Block();
+    for (unsigned i = 0; i < elementTypes.size(); ++i) {
+        ExprPtr left = new TupleRef(new Returned(), i);
+        ExprPtr right = new NameRef(argNames[i]);
+        StatementPtr stmt = new InitAssignment(left, right);
+        body->statements.push_back(stmt);
     }
+    code->body = body.ptr();
 
-    case RECORD_TYPE : {
-        RecordType *x = (RecordType *)t.ptr();
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(x);
-        if (fieldTypes.size() != isStaticFlags.size())
-            error("incorrect no. of arguments");
-        for (unsigned i = 0; i < isStaticFlags.size(); ++i) {
-            assert(!isStaticFlags[i]);
-            assert(argsKey[i]->objKind == TYPE);
-            TypePtr y = (Type *)argsKey[i].ptr();
-            if (y != fieldTypes[i]) {
-                LocationContext loc(argLocations[i]);
-                error("type mismatch");
-            }
-        }
-        break;
+    ExprPtr returnTypeExpr = new ObjectExpr(t.ptr());
+    OverloadPtr overload = new Overload(returnTypeExpr, code, true);
+    overload->env = new Env();
+    t->overloads.push_back(overload);
+}
+
+void initBuiltinConstructor(RecordTypePtr t)
+{
+    CodePtr code = new Code();
+    const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
+    vector<IdentifierPtr> argNames;
+    for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+        ostringstream sout;
+        sout << "arg" << i;
+        IdentifierPtr argName = new Identifier(sout.str());
+        argNames.push_back(argName);
+        ExprPtr type = new ObjectExpr(fieldTypes[i].ptr());
+        ValueArgPtr arg = new ValueArg(argName, type);
+        code->formalArgs.push_back(arg.ptr());
     }
+    code->returnType = new ObjectExpr(t.ptr());
+    code->returnRef = false;
 
-    default :
-        error("no matching constructor found");
-
+    BlockPtr body = new Block();
+    for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+        CallPtr left = new Call(primNameRef("recordFieldRef"));
+        left->args.push_back(new Returned());
+        ExprPtr indexExpr = new ObjectExpr(sizeTToValueHolder(i).ptr());
+        left->args.push_back(indexExpr);
+        ExprPtr right = new NameRef(argNames[i]);
+        StatementPtr stmt = new InitAssignment(left.ptr(), right);
+        body->statements.push_back(stmt);
     }
+    code->body = body.ptr();
+
+    ExprPtr returnTypeExpr = new ObjectExpr(t.ptr());
+    OverloadPtr overload = new Overload(returnTypeExpr, code, true);
+    overload->env = new Env();
+    t->overloads.push_back(overload);
 }
 
 void initBuiltinConstructor(RecordPtr x)

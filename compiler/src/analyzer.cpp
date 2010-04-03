@@ -826,12 +826,7 @@ InvokeEntryPtr analyzeConstructor(TypePtr x,
         analyzeCodeBody(entry);
     }
     else {
-        verifyBuiltinConstructor(x, isStaticFlags, argsKey, argLocations);
-        entry->isBuiltin = true;
-        entry->analysis = new PValue(x, true);
-        entry->returnType = x;
-        entry->returnIsTemp = true;
-        entry->analyzed = true;
+        error("no matching constructor");
     }
 
     entry->analyzing = false;

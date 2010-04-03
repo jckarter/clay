@@ -89,7 +89,6 @@ void initIsStaticFlags(OverloadablePtr x)
 void initIsStaticFlags(TypePtr x)
 {
     assert(!x->staticFlagsInitialized);
-    initBuiltinIsStaticFlags(x);
     initIsStaticFlags(x.ptr(), x->overloads);
     x->staticFlagsInitialized = true;
 }

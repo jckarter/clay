@@ -1903,10 +1903,6 @@ struct InvokeEntry : public Object {
     bool analyzed;
     bool analyzing;
 
-    // isBuiltin is false for procedures and overloadables
-    // it's true for builtin constructors
-    bool isBuiltin;
-
     CodePtr code;
     vector<ObjectPtr> staticArgs;
     vector<TypePtr> argTypes;
@@ -1925,8 +1921,8 @@ struct InvokeEntry : public Object {
                 const vector<ObjectPtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), isStaticFlags(isStaticFlags), argsKey(argsKey),
-          analyzed(false), analyzing(false), isBuiltin(false),
-          returnIsTemp(false), llvmFunc(NULL), llvmCWrapper(NULL) {}
+          analyzed(false), analyzing(false), returnIsTemp(false),
+          llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -2026,11 +2022,9 @@ extern vector<OverloadPtr> typeOverloads;
 
 void addTypeOverload(OverloadPtr x);
 void initTypeOverloads(TypePtr t);
-void initBuiltinIsStaticFlags(TypePtr t);
-void verifyBuiltinConstructor(TypePtr t,
-                              const vector<bool> &isStaticFlags,
-                              const vector<ObjectPtr> &argsKey,
-                              const vector<LocationPtr> &argLocations);
+void initBuiltinConstructor(ArrayTypePtr t);
+void initBuiltinConstructor(TupleTypePtr t);
+void initBuiltinConstructor(RecordTypePtr t);
 void initBuiltinConstructor(RecordPtr x);
 
 
@@ -2287,10 +2281,6 @@ CValuePtr codegenInvokeType(TypePtr x,
                             const vector<ExprPtr> &args,
                             EnvPtr env,
                             CValuePtr out);
-CValuePtr codegenInvokeBuiltinConstructor(TypePtr x,
-                                          const vector<ExprPtr> &args,
-                                          EnvPtr env,
-                                          CValuePtr out);
 CValuePtr codegenInvokeRecord(RecordPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env,
