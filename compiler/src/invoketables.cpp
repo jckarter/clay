@@ -97,7 +97,6 @@ void initIsStaticFlags(TypePtr x)
 void initIsStaticFlags(RecordPtr x)
 {
     assert(!x->staticFlagsInitialized);
-    initBuiltinIsStaticFlags(x);
     initIsStaticFlags(x.ptr(), x->overloads);
     x->staticFlagsInitialized = true;
 }
