@@ -1,0 +1,29 @@
+import base.*;
+import libc;
+
+var counter = 0;
+
+record Foo {
+    value:Int;
+}
+
+overload Foo() = Foo(0);
+
+overload Foo(value:Int) : Foo {
+    returned.value = value;
+    libc.printf(cstring("constructed value = %d\n"), returned.value);
+}
+
+overload Foo(f:Foo) = Foo(f.value);
+
+overload destroy(f:Foo) {
+    libc.printf(cstring("destroyed value = %d\n"), f.value);
+}
+
+main() {
+    var p = allocate(Foo(10));
+    var q = allocate(Foo());
+    libc.printf(cstring("assigning\n"));
+    q = p;
+    libc.printf(cstring("assigned\n"));
+}

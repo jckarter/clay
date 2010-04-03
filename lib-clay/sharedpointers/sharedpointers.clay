@@ -1,0 +1,52 @@
+import types.*;
+import operators.*;
+import pointers.*;
+
+record RefCounted[T] {
+    refCount:Int;
+    value:T;
+}
+
+record SharedPointer[T] {
+    ptr: Pointer[RefCounted[T]];
+}
+
+[T]
+allocate(x:T) {
+    var ptr = allocateMemory(RefCounted[T], SizeT(1));
+    ptr^.refCount = 1;
+    ptr^.value <-- x;
+    return SharedPointer(ptr);
+}
+
+[T]
+overload SharedPointer[T]() {
+    return SharedPointer(null(RefCounted[T]));
+}
+
+[T]
+overload SharedPointer[T](src:SharedPointer[T]) {
+    if (not isNull(src.ptr))
+        src.ptr^.refCount += 1;
+    return SharedPointer(src.ptr);
+}
+
+[T]
+overload assign(dest:SharedPointer[T], src:SharedPointer[T]) {
+    if (dest.ptr == src.ptr)
+        return;
+    destroy(dest);
+    dest <-- src;
+}
+
+[T]
+overload destroy(p : SharedPointer[T]) {
+    p.ptr^.refCount -= 1;
+    if (p.ptr^.refCount == 0) {
+        destroy(p.ptr^.value);
+        freeMemory(p.ptr);
+    }
+}
+
+[T]
+overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
