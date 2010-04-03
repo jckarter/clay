@@ -1,0 +1,18 @@
+import strings.*;
+import libc;
+
+overloadable assert;
+
+overload assert(cond:Bool) {
+    if (not cond) {
+        libc.fprintf(stderr, "assertion failed");
+        libc.abort();
+    }
+}
+
+overload assert(cond:Bool, message:String) {
+    if (not cond) {
+        libc.fprintf(stderr, "assertion failed: %s\n", cstring(message));
+        libc.abort();
+    }
+}

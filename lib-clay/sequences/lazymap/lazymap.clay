@@ -1,0 +1,84 @@
+import operators.*;
+import pointers.*;
+import sequences.operators.*;
+
+
+record LazyMap[F,A] {
+    mapper : F;
+    innerSequence : A;
+}
+
+[F,A | SizedSequence?(A)]
+static overload SizedSequence?(LazyMap[F,A]) = true;
+
+[F,A | RandomAccessSequence?(A)]
+static overload RandomAccessSequence?(LazyMap[F,A]) = true;
+
+// [F,A]
+// private static LValueMapping?(F, A) =
+//     LValue?(F()(SequenceElementType(A)()));
+
+[F,A]
+private static LValueMapping?(F, A) = false;
+
+[F,A | LValueMapping?(F, A)]
+static overload LValueSequence?(LazyMap[F,A]) = true;
+
+[F,A | Lightweight?(A)]
+static overload Lightweight?(LazyMap[F,A]) = true;
+
+
+[F,A | Sequence?(A)]
+lazyMap(mapper:F, seq:A) = LazyMap(mapper, seq);
+
+[F,A | SizedSequence?(A)]
+overload size(a:LazyMap[F,A]) = size(a.innerSequence);
+
+
+[F,A | RandomAccessSequence?(A)]
+overload index(a:LazyMap[F,A], i) =
+    a.mapper(index(a.innerSequence, i));
+
+[F,A | LValueSequence?(LazyMap[F,A]) and RandomAccessSequence?(A)]
+overload index(a:LazyMap[F,A], i) =
+    ref a.mapper(index(a.innerSequence, i));
+
+
+// iterator when not LValueSequence?
+
+record LazyMapIterator_Val[F,ITER] {
+    mapper:F;
+    innerIterator : ITER;
+}
+
+[F,A]
+overload iterator(a:LazyMap[F,A]) =
+    LazyMapIterator_Val(a.mapper, iterator(a.innerSequence));
+
+[F,ITER]
+overload hasNext?(iter:LazyMapIterator_Val[F,ITER]) =
+    hasNext?(iter.innerIterator);
+
+[F,ITER]
+overload next(iter:LazyMapIterator_Val[F,ITER]) =
+    iter.mapper(next(iter.innerIterator));
+
+
+// iterator when LValueSequence?
+
+record LazyMapIterator_Ref[F,ITER] {
+    mapper:F;
+    innerIterator : ITER;
+}
+
+[F,A | LValueSequence?(LazyMap[F,A])]
+overload iterator(a:LazyMap[F,A]) =
+    LazyMapIterator_Ref(a.mapper, iterator(a.innerSequence));
+
+[F,ITER]
+overload hasNext?(iter:LazyMapIterator_Ref[F,ITER]) =
+    hasNext?(iter.innerIterator);
+
+[F,ITER]
+overload next(iter:LazyMapIterator_Ref[F,ITER]) =
+    ref iter.mapper(next(iter.innerIterator));

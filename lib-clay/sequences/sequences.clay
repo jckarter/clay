@@ -1,14 +1,4 @@
-overloadable size;
-overloadable index;
-
-overloadable begin;
-overloadable end;
-
-overloadable front;
-overloadable back;
-
-overloadable push;
-overloadable pop;
-overloadable clear;
-overloadable insert;
-overloadable remove;
+public import sequences.operators.*;
+public import sequences.lazymap.*;
+public import sequences.lazyfilter.*;
+public import sequences.handle.*;

@@ -1,0 +1,95 @@
+import operators.*;
+import pointers.*;
+import sequences.operators.*;
+import assert.*;
+
+
+// LazyFilter
+
+record LazyFilter[F,A] {
+    predicate : F;
+    innerSequence : A;
+}
+
+[F,A]
+static overload Sequence?(LazyFilter[F,A]) = true;
+
+[F,A | LValueSequence?(A)]
+static overload LValueSequence?(LazyFilter[F,A]) = true;
+
+[F,A | Lightweight?(A)]
+static overload Lightweight?(LazyFilter[F,A]) = true;
+
+
+[F,A | Sequence?(A)]
+lazyFilter(predicate:F, seq:A) = LazyFilter(predicate, seq);
+
+
+// iterator when not LValueSequence?(innerSequence)
+
+record LazyFilterIterator_Val[F,ITER,X] {
+    predicate : F;
+    innerIterator : ITER;
+    hasQueued? : Bool;
+    queued : X;
+}
+
+[F,A]
+overload iterator(a:LazyFilter[F,A]) {
+    static X = SequenceElementType(A);
+    return LazyFilterIterator_Val(a.predicate, iterator(a.innerSequence),
+                                  false, X());
+}
+
+[F,ITER,X]
+overload hasNext?(iter:LazyFilterIterator_Val[F,ITER,X]) {
+    while (not iter.hasQueued?) {
+        if (not hasNext?(iter.innerIterator))
+            return false;
+        iter.queued = next(iter.innerIterator);
+        iter.hasQueued? = iter.predicate(iter.queued);
+    }
+    return true;
+}
+
+[F,ITER,X]
+overload next(iter:LazyFilterIterator_Val[F,ITER,X]) {
+    assert(iter.hasQueued?, "hasNext? not called");
+    iter.hasQueued? = false;
+    return iter.queued;
+}
+
+
+// iterator when LValueSequence?(innerSequence)
+
+record LazyFilterIterator_Ref[F,ITER,X] {
+    predicate : F;
+    innerIterator : ITER;
+    hasQueued? : Bool;
+    queued : Pointer[X];
+}
+
+[F,A | LValueSequence?(A)]
+overload iterator(a:LazyFilter[F,A]) {
+    static X = SequenceElementType(A);
+    return LazyFilterIterator_Ref(a.predicate, iterator(a.innerSequence),
+                                  false, null(X));
+}
+
+[F,ITER,X]
+overload hasNext?(iter:LazyFilterIterator_Ref[F,ITER,X]) {
+    while (not iter.hasQueued?) {
+        if (not hasNext?(iter.innerIterator))
+            return false;
+        iter.queued = &next(iter.innerIterator);
+        iter.hasQueued? = iter.predicate(iter.queued^);
+    }
+    return true;
+}
+
+[F,ITER,X]
+overload next(iter:LazyFilterIterator_Ref[F,ITER,X]) {
+    // assert(iter.hasQueued?, "hasNext? not called");
+    iter.hasQueued? = false;
+    returnref iter.queued^;
+}

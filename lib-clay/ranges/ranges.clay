@@ -1,4 +1,5 @@
 import operators.*;
+import sequences.*;
 import numbers.*;
 
 //
