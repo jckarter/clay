@@ -1024,17 +1024,21 @@ struct RecordField : public ANode {
 
 struct Procedure : public TopLevelItem {
     CodePtr code;
+    bool inlined;
     bool staticFlagsInitialized;
-    Procedure(IdentifierPtr name, Visibility visibility, CodePtr code)
+    Procedure(IdentifierPtr name, Visibility visibility,
+              CodePtr code, bool inlined)
         : TopLevelItem(PROCEDURE, name, visibility), code(code),
-          staticFlagsInitialized(false) {}
+          inlined(inlined), staticFlagsInitialized(false) {}
 };
 
 struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
-    Overload(ExprPtr target, CodePtr code)
-        : TopLevelItem(OVERLOAD), target(target), code(code) {}
+    bool inlined;
+    Overload(ExprPtr target, CodePtr code, bool inlined)
+        : TopLevelItem(OVERLOAD), target(target), code(code),
+          inlined(inlined) {}
 };
 
 struct Overloadable : public TopLevelItem {

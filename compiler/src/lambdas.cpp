@@ -103,7 +103,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     }
     code->body = x->body;
 
-    OverloadPtr overload = new Overload(kernelNameRef("call"), code);
+    OverloadPtr overload = new Overload(kernelNameRef("call"), code, false);
     overload->env = env;
     overload->location = x->location;
     ObjectPtr obj = kernelName("call");

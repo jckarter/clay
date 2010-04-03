@@ -1297,19 +1297,32 @@ static bool optReturnSpec(ExprPtr &returnType, bool &returnRef) {
 // procedure, overloadable, overload
 //
 
+static bool optInlined(bool &inlined) {
+    int p = save();
+    if (!keyword("inlined")) {
+        restore(p);
+        inlined = false;
+        return true;
+    }
+    inlined = true;
+    return true;
+}
+
 static bool procedure(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
+    bool inlined;
+    if (!optInlined(inlined)) return false;
     IdentifierPtr z;
     if (!identifier(z)) return false;
     if (!arguments(y->formalArgs)) return false;
     if (!optReturnSpec(y->returnType, y->returnRef)) return false;
     if (!body(y->body)) return false;
     y->location = location;
-    x = new Procedure(z, vis, y);
+    x = new Procedure(z, vis, y, inlined);
     x->location = location;
     return true;
 }
@@ -1331,6 +1344,8 @@ static bool overload(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
+    bool inlined;
+    if (!optInlined(inlined)) return false;
     if (!keyword("overload")) return false;
     ExprPtr z;
     if (!pattern(z)) return false;
@@ -1338,7 +1353,7 @@ static bool overload(TopLevelItemPtr &x) {
     if (!optReturnSpec(y->returnType, y->returnRef)) return false;
     if (!body(y->body)) return false;
     y->location = location;
-    x = new Overload(z, y);
+    x = new Overload(z, y, inlined);
     x->location = location;
     return true;
 }

@@ -432,12 +432,14 @@ static void print(const Object *x, ostream &out) {
     }
     case PROCEDURE : {
         Procedure *y = (Procedure *)x;
-        out << "Procedure(" << y->name << ", " << y->code << ")";
+        out << "Procedure(" << y->name << ", " << y->code << ", "
+            << y->inlined << ")";
         break;
     }
     case OVERLOAD : {
         Overload *y = (Overload *)x;
-        out << "Overload(" << y->target << ", " << y->code << ")";
+        out << "Overload(" << y->target << ", " << y->code << ", "
+            << y->inlined << ")";
         break;
     }
     case OVERLOADABLE : {
