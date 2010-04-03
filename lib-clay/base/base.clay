@@ -4,6 +4,7 @@ public import booleans.*;
 public import numbers.*;
 public import enumerations.*;
 public import pointers.*;
+public import sharedpointers.*;
 
 public import sequences.*;
 public import ranges.*;
