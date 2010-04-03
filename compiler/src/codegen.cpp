@@ -1501,69 +1501,8 @@ CValuePtr codegenInvokeType(TypePtr x,
     assert(result);
     InvokeEntryPtr entry =
         analyzeConstructor(x, isStaticFlags, argsKey, argLocations);
-    if (entry->isBuiltin) {
-        return codegenInvokeBuiltinConstructor(x, args, env, out);
-    }
-    else {
-        codegenCodeBody(entry, "constructor");
-        return codegenInvokeCode(entry, args, env, out);
-    }
-}
-
-CValuePtr codegenInvokeBuiltinConstructor(TypePtr x,
-                                          const vector<ExprPtr> &args,
-                                          EnvPtr env,
-                                          CValuePtr out)
-{
-    switch (x->typeKind) {
-
-    case ARRAY_TYPE : {
-        ArrayType *y = (ArrayType *)x.ptr();
-        ensureArity(args, y->size);
-        for (unsigned i = 0; i < args.size(); ++i) {
-            PValuePtr z = analyzeValue(args[i], env);
-            if (z->type != y->elementType)
-                error(args[i], "argument type mismatch");
-            llvm::Value *ptr =
-                llvmBuilder->CreateConstGEP2_32(out->llValue, 0, i);
-            codegenIntoValue(args[i], env, z, new CValue(z->type, ptr));
-        }
-        return out;
-    }
-
-    case TUPLE_TYPE : {
-        TupleType *y = (TupleType *)x.ptr();
-        ensureArity(args, y->elementTypes.size());
-        for (unsigned i = 0; i < args.size(); ++i) {
-            PValuePtr z = analyzeValue(args[i], env);
-            if (z->type != y->elementTypes[i])
-                error(args[i], "argument type mismatch");
-            llvm::Value *ptr =
-                llvmBuilder->CreateConstGEP2_32(out->llValue, 0, i);
-            codegenIntoValue(args[i], env, z, new CValue(z->type, ptr));
-        }
-        return out;
-    }
-
-    case RECORD_TYPE : {
-        RecordType *y = (RecordType *)x.ptr();
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(y);
-        ensureArity(args, fieldTypes.size());
-        for (unsigned i = 0; i < args.size(); ++i) {
-            PValuePtr z = analyzeValue(args[i], env);
-            if (z->type != fieldTypes[i])
-                error(args[i], "argument type mismatch");
-            llvm::Value *ptr =
-                llvmBuilder->CreateConstGEP2_32(out->llValue, 0, i);
-            codegenIntoValue(args[i], env, z, new CValue(z->type, ptr));
-        }
-        return out;
-    }
-
-    }
-
-    error("invalid constructor");
-    return NULL;
+    codegenCodeBody(entry, "constructor");
+    return codegenInvokeCode(entry, args, env, out);
 }
 
 
