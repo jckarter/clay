@@ -124,15 +124,6 @@ void verifyBuiltinConstructor(TypePtr t,
     }
 }
 
-void initBuiltinIsStaticFlags(RecordPtr x)
-{
-    assert(x->patternVars.size() > 0);
-    FlagsMapEntry &flags = lookupFlagsMapEntry(x.ptr(), x->fields.size());
-    assert(!flags.initialized);
-    flags.initialized = true;
-    flags.isStaticFlags.assign(x->fields.size(), false);
-}
-
 void initBuiltinConstructor(RecordPtr x)
 {
     assert(!(x->builtinOverloadInitialized));

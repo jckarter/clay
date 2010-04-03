@@ -2031,8 +2031,6 @@ void verifyBuiltinConstructor(TypePtr t,
                               const vector<bool> &isStaticFlags,
                               const vector<ObjectPtr> &argsKey,
                               const vector<LocationPtr> &argLocations);
-
-void initBuiltinIsStaticFlags(RecordPtr x);
 void initBuiltinConstructor(RecordPtr x);
 
 
