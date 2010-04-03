@@ -78,6 +78,9 @@ overload dec(a:Pointer[T]) {
 null(static T) = Pointer[T](0);
 
 [T]
+isNull(x:Pointer[T]) = (x == null(T));
+
+[T]
 overload dereference(p:Pointer[T]) = ref pointerDereference(p);
 
 [T]

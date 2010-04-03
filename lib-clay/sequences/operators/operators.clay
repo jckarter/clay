@@ -1,0 +1,74 @@
+
+
+static overloadable Sequence?;
+static overloadable SequenceElementType;
+
+static overloadable SizedSequence?;
+static overloadable RandomAccessSequence?;
+static overloadable LValueSequence?;
+
+static overloadable Lightweight?;
+
+
+// basic sequence protocol
+overloadable iterator;
+overloadable hasNext?;
+overloadable next;
+
+overloadable size; // requires SizedSequence?
+overloadable index; // requires RandomAccessSequence?
+
+overloadable begin; 
+overloadable end;
+
+overloadable front;
+overloadable back;
+
+overloadable push;
+overloadable pop;
+overloadable clear;
+overloadable insert;
+overloadable remove;
+
+overloadable map;
+overloadable filter;
+
+
+// defaults
+
+[T] static overload Sequence?(T) = false;
+
+[T] static overload SizedSequence?(T) = false;
+[T] static overload RandomAccessSequence?(T) = false;
+[T] static overload LValueSequence?(T) = false;
+
+[T] static overload Lightweight?(T) = false;
+
+
+[T | SizedSequence?(T)]
+static overload Sequence?(T) = true;
+
+[T | RandomAccessSequence?(T)]
+static overload Sequence?(T) = true;
+
+[T | LValueSequence?(T)]
+static overload Sequence?(T) = true;
+
+
+// reduce
+
+overloadable reduce;
+
+[F, A | Sequence?(A)]
+overload reduce(f:F, seq:A) {
+    static X = SequenceElementType(A);
+    return reduce(f, X(0), seq);
+}
+
+[F, A, X | Sequence?(A) and Equal?(X, SequenceElementType(A))]
+overload reduce(f:F, initial:X, seq:A) {
+    var result = initial;
+    for (x in seq)
+        result = f(result, x);
+    return result;
+}

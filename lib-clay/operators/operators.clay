@@ -44,10 +44,6 @@ overloadable dec;
 
 overloadable dereference;
 
-overloadable iterator;
-overloadable hasNext?;
-overloadable next;
-
 overloadable call;
 
 overloadable unimplemented; // used for triggering compile time errors

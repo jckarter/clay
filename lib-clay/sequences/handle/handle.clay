@@ -1,0 +1,44 @@
+import operators.*;
+import pointers.*;
+import sharedpointers.*;
+import sequences.operators.*;
+
+record SequenceHandle[PTR] {
+    inner : PTR;
+}
+
+overloadable sequenceHandle;
+
+[A | Sequence?(A)]
+overload sequenceHandle(seq:A) = SequenceHandle(&seq);
+
+[A | Sequence?(A)]
+overload sequenceHandle(seqPtr:Pointer[A]) = SequenceHandle(seqPtr);
+
+[A | Sequence?(A)]
+overload sequenceHandle(seqPtr:SharedPointer[A]) = SequenceHandle(seqPtr);
+
+
+[A | SizedSequence?(A)]
+static overload SizedSequence?(SequenceHandle[A]) = true;
+
+[A | RandomAccessSequence?(A)]
+static overload RandomAccessSequence?(SequenceHandle[A]) = true;
+
+[A | LValueSequence?(A)]
+static overload LValueSequence?(SequenceHandle[A]) = true;
+
+[A]
+static overload Lightweight?(SequenceHandle[A]) = true;
+
+[A]
+overload iterator(seq:SequenceHandle[A]) = iterator(seq.inner^);
+
+[A | SizedSequence?(A)]
+overload size(seq:SequenceHandle[A]) = size(seq.inner^);
+
+[A | RandomAccessSequence?(A)]
+overload index(seq:SequenceHandle[A], i) = index(seq.inner^, i);
+
+[A | RandomAccessSequence?(A) and LValueSequence?(A)]
+overload index(seq:SequenceHandle[A], i) = ref index(seq.inner^, i);
