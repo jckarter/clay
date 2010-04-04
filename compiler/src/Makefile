@@ -5,7 +5,7 @@ BINDIR	=	$(ROOTDIR)bin/
 DIRS	=	src
 include $(ROOTDIR)Makefile.inc
 
-LLVM_CXXFLAGS 	= `llvm-config --cxxflags`
+LLVM_CXXFLAGS 	= `llvm-config --cxxflags | sed -e 's/-fno-exc/-fexc/'`
 LLVM_LDFLAGS 	= `llvm-config --ldflags --libs all`
 
 .PHONY: default
