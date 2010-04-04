@@ -28,9 +28,9 @@
 #endif
 
 #ifdef WIN32
-#define ENV_SEPARATOR ";"
+#define ENV_SEPARATOR ';'
 #else
-#define ENV_SEPARATOR ":"
+#define ENV_SEPARATOR ':'
 #endif
 
 using namespace std;
@@ -281,17 +281,18 @@ int main(int argc, char **argv) {
     {
         // Parse the environment variable
         // Format expected is standard PATH form, i.e
-        // CLAY_PATH=path1:path2:path3
-        char* saveptr = NULL; 
-        char* path;
-        path = strtok_r(libclayPath, ENV_SEPARATOR, &saveptr); 
-
+        // CLAY_PATH=path1:path2:path3  (on unix)
+        // CLAY_PATH=path1;path2;path3  (on windows)
+        char *begin = libclayPath;
+        char *end;
         do {
-            if(path && *path) // Make sure it isn't a null string
-            {
-                addSearchPath(path);
-            }
-        } while((path = strtok_r(NULL, ENV_SEPARATOR, &saveptr)) != NULL);
+            end = begin;
+            while (*end && (*end != ENV_SEPARATOR))
+                ++end;
+            addSearchPath(string(begin, end));
+            begin = end + 1;
+        }
+        while (*end);
     }
     // Add the relative path from the executable
     llvm::sys::Path clayExe =
