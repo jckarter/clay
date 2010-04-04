@@ -27,6 +27,12 @@
 #define DEFAULT_DLL "a.out"
 #endif
 
+#ifdef WIN32
+#define ENV_SEPARATOR ";"
+#else
+#define ENV_SEPARATOR ":"
+#endif
+
 using namespace std;
 
 static void addOptimizationPasses(llvm::PassManager &passes,
@@ -269,6 +275,25 @@ int main(int argc, char **argv) {
     initLLVM();
     initTypes();
 
+    // Try environment variables first
+    char* libclayPath = getenv("CLAY_PATH");
+    if( libclayPath )
+    {
+        // Parse the environment variable
+        // Format expected is standard PATH form, i.e
+        // CLAY_PATH=path1:path2:path3
+        char* saveptr = NULL; 
+        char* path;
+        path = strtok_r(libclayPath, ENV_SEPARATOR, &saveptr); 
+
+        do {
+            if(path && *path) // Make sure it isn't a null string
+            {
+                addSearchPath(path);
+            }
+        } while((path = strtok_r(NULL, ENV_SEPARATOR, &saveptr)) != NULL);
+    }
+    // Add the relative path from the executable
     llvm::sys::Path clayExe =
         llvm::sys::Path::GetMainExecutable(argv[0], (void *)&main);
     llvm::sys::Path clayDir(clayExe.getDirname());
