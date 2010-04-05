@@ -365,7 +365,7 @@ static bool suffix(ExprPtr &x) {
 }
 
 static void setSuffixBase(Expr *a, ExprPtr base) {
-    switch (a->objKind) {
+    switch (a->exprKind) {
     case INDEXING : {
         Indexing *b = (Indexing *)a;
         b->expr = base;

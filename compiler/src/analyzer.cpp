@@ -115,7 +115,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 {
     LocationContext loc(expr->location);
 
-    switch (expr->objKind) {
+    switch (expr->exprKind) {
 
     case BOOL_LITERAL : {
         BoolLiteral *x = (BoolLiteral *)expr.ptr();
@@ -269,8 +269,8 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
-        if (y->objKind == SC_EXPR)
-            return analyze((SCExpr *)y.ptr(), env);
+        if (y->objKind == EXPRESSION)
+            return analyze((Expr *)y.ptr(), env);
         return analyzeStaticObject(y);
     }
 
@@ -931,13 +931,13 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
 {
     LocationContext loc(stmt->location);
 
-    switch (stmt->objKind) {
+    switch (stmt->stmtKind) {
 
     case BLOCK : {
         Block *x = (Block *)stmt.ptr();
         for (unsigned i = 0; i < x->statements.size(); ++i) {
             StatementPtr y = x->statements[i];
-            if (y->objKind == BINDING) {
+            if (y->stmtKind == BINDING) {
                 env = analyzeBinding((Binding *)y.ptr(), env);
                 if (!env)
                     return false;

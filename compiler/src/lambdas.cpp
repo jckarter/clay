@@ -138,13 +138,13 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
 
 void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 {
-    switch (x->objKind) {
+    switch (x->stmtKind) {
 
     case BLOCK : {
         Block *y = (Block *)x.ptr();
         for (unsigned i = 0; i < y->statements.size(); ++i) {
             StatementPtr z = y->statements[i];
-            if (z->objKind == BINDING) {
+            if (z->stmtKind == BINDING) {
                 Binding *a = (Binding *)z.ptr();
                 convertFreeVars(a->expr, env, ctx);
                 EnvPtr env2 = new Env(env);
@@ -249,7 +249,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
 void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
 {
-    switch (x->objKind) {
+    switch (x->exprKind) {
 
     case BOOL_LITERAL :
     case INT_LITERAL :

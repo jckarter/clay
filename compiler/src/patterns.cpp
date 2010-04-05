@@ -4,7 +4,7 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env)
 {
     LocationContext loc(expr->location);
 
-    switch (expr->objKind) {
+    switch (expr->exprKind) {
 
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
