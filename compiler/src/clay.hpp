@@ -1907,6 +1907,8 @@ struct InvokeEntry : public Object {
     vector<IdentifierPtr> argNames;
     EnvPtr env;
 
+    bool inlined; // if inlined the rest of InvokeEntry is not set
+
     ObjectPtr analysis;
     TypePtr returnType; // NULL if void return
     bool returnIsTemp; // invalid for void return
@@ -1919,8 +1921,8 @@ struct InvokeEntry : public Object {
                 const vector<ObjectPtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), isStaticFlags(isStaticFlags), argsKey(argsKey),
-          analyzed(false), analyzing(false), returnIsTemp(false),
-          llvmFunc(NULL), llvmCWrapper(NULL) {}
+          analyzed(false), analyzing(false), inlined(false),
+          returnIsTemp(false), llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -2079,6 +2081,9 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
                                const vector<LocationPtr> &argLocations);
+ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
+                               const vector<ExprPtr> &args,
+                               EnvPtr env);
 void analyzeCodeBody(InvokeEntryPtr entry);
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
@@ -2174,24 +2179,19 @@ struct JumpTarget {
 };
 
 struct CodeContext {
-    InvokeEntryPtr entry;
-    ExternalProcedurePtr externalProc;
-
+    TypePtr returnType;
+    bool returnIsTemp;
     CValuePtr returnVal;
     JumpTarget returnTarget;
     map<string, JumpTarget> labels;
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
-    CodeContext(InvokeEntryPtr entry,
+    CodeContext(TypePtr returnType,
+                bool returnIsTemp,
                 CValuePtr returnVal,
                 const JumpTarget &returnTarget)
-        : entry(entry), returnVal(returnVal),
-          returnTarget(returnTarget) {}
-    CodeContext(ExternalProcedurePtr externalProc,
-                CValuePtr returnVal,
-                const JumpTarget &returnTarget)
-        : externalProc(externalProc), returnVal(returnVal),
-          returnTarget(returnTarget) {}
+        : returnType(returnType), returnIsTemp(returnIsTemp),
+          returnVal(returnVal), returnTarget(returnTarget) {}
 };
 
 void codegenValueInit(CValuePtr dest);
@@ -2257,6 +2257,10 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
                             const vector<ExprPtr> &args,
                             EnvPtr env,
                             CValuePtr out);
+CValuePtr codegenInvokeInlined(InvokeEntryPtr entry,
+                               const vector<ExprPtr> &args,
+                               EnvPtr env,
+                               CValuePtr out);
 
 void codegenCWrapper(InvokeEntryPtr entry, const string &callableName);
 

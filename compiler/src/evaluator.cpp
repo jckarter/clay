@@ -267,6 +267,7 @@ void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v)
                                            vector<bool>(),
                                            vector<ObjectPtr>(),
                                            vector<LocationPtr>());
+    assert(!entry->inlined);
     if (entry->returnType != v->type)
         error(expr, "type mismatch in evaluating");
 

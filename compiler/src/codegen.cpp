@@ -164,7 +164,7 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
             const llvm::Type *llt = llvmPointerType(entry->returnType);
             llvm::Value *llv = llvmInitBuilder->CreateAlloca(llt);
             llv->setName("%returnedRef");
-            returnVal = new CValue(entry->returnType, llv);
+            returnVal = new CValue(pointerType(entry->returnType), llv);
         }
     }
     ObjectPtr rinfo = new ReturnedInfo(entry->returnType,
@@ -173,7 +173,8 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     addLocal(env, new Identifier("%returned"), rinfo);
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
-    CodeContext ctx(entry, returnVal, returnTarget);
+    CodeContext ctx(entry->returnType, entry->returnIsTemp,
+                    returnVal, returnTarget);
 
     bool terminated = codegenStatement(entry->code->body, env, ctx);
     if (!terminated) {
@@ -336,34 +337,17 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        InvokeEntryPtr entry = ctx.entry;
-        if (!entry) {
-            // external proc body
-            ExternalProcedurePtr y = ctx.externalProc;
-            if (!x->expr) {
-                if (y->returnType2.ptr())
-                    error("non-void return expected");
-            }
-            else {
-                if (!y->returnType2)
-                    error("void return expected");
-                PValuePtr pv = analyzeValue(x->expr, env);
-                if (pv->type != y->returnType2)
-                    error("type mismatch in return");
-                codegenRootIntoValue(x->expr, env, pv, ctx.returnVal);
-            }
-        }
-        else if (!x->expr) {
-            if (entry->returnType.ptr())
+        if (!x->expr) {
+            if (ctx.returnType.ptr())
                 error("non-void return expected");
         }
         else {
-            if (!entry->returnType)
+            if (!ctx.returnType)
                 error("void return expected");
-            if (!entry->returnIsTemp)
+            if (!ctx.returnIsTemp)
                 error("return by reference expected");
             PValuePtr pv = analyzeValue(x->expr, env);
-            if (pv->type != entry->returnType)
+            if (pv->type != ctx.returnType)
                 error("type mismatch in return");
             codegenRootIntoValue(x->expr, env, pv, ctx.returnVal);
         }
@@ -375,15 +359,12 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 
     case RETURN_REF : {
         ReturnRef *x = (ReturnRef *)stmt.ptr();
-        InvokeEntryPtr entry = ctx.entry;
-        if (!entry)
-            error("cannot return by ref from an external procedure");
-        if (!entry->returnType)
+        if (!ctx.returnType)
             error("void return expected");
-        if (entry->returnIsTemp)
+        if (ctx.returnIsTemp)
             error("return by value expected");
         PValuePtr pv = analyzeValue(x->expr, env);
-        if (pv->type != entry->returnType)
+        if (pv->type != ctx.returnType)
             error("type mismatch in return");
         if (pv->isTemp)
             error("cannot return a temporary by reference");
@@ -687,6 +668,8 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
+        if (y->objKind == SC_EXPR)
+            return codegenExpr((SCExpr *)y.ptr(), env, out);
         return codegenStaticObject(y, out);
     }
 
@@ -1158,7 +1141,7 @@ void codegenExternal(ExternalProcedurePtr x)
     addLocal(env, new Identifier("%returned"), rinfo);
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
-    CodeContext ctx(x, returnVal, returnTarget);
+    CodeContext ctx(x->returnType2, true, returnVal, returnTarget);
 
     bool terminated = codegenStatement(x->body, env, ctx);
     if (!terminated) {
@@ -1474,6 +1457,8 @@ CValuePtr codegenInvokeCallable(ObjectPtr x,
     assert(result);
     InvokeEntryPtr entry = codegenCallable(x, isStaticFlags,
                                            argsKey, argLocations);
+    if (entry->inlined)
+        return codegenInvokeInlined(entry, args, env, out);
     return codegenInvokeCode(entry, args, env, out);
 }
 
@@ -1510,7 +1495,8 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
 {
     InvokeEntryPtr entry =
         analyzeCallable(x, isStaticFlags, argsKey, argLocations);
-    codegenCodeBody(entry, getCodeName(x));
+    if (!entry->inlined)
+        codegenCodeBody(entry, getCodeName(x));
     return entry;
 }
 
@@ -1550,6 +1536,80 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
             llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(),
                                     llArgs.end());
         return new CValue(entry->returnType, result);
+    }
+}
+
+
+
+//
+// codegenInvokeInlined
+//
+
+CValuePtr codegenInvokeInlined(InvokeEntryPtr entry,
+                               const vector<ExprPtr> &args,
+                               EnvPtr env,
+                               CValuePtr out)
+{
+    assert(entry->inlined);
+
+    CodePtr code = entry->code;
+
+    EnvPtr bodyEnv = new Env(entry->env);
+    assert(args.size() == entry->argNames.size());
+    for (unsigned i = 0; i < entry->argNames.size(); ++i) {
+        ExprPtr expr = new SCExpr(env, args[i]);
+        addLocal(bodyEnv, entry->argNames[i], expr.ptr());
+    }
+
+    ObjectPtr analysis = analyzeInvokeInlined(entry, args, env);
+    assert(analysis.ptr());
+    TypePtr returnType;
+    bool returnIsTemp = false;
+    if (analysis->objKind == PVALUE) {
+        PValue *pv = (PValue *)analysis.ptr();
+        returnType = pv->type;
+        returnIsTemp = pv->isTemp;
+    }
+
+    CValuePtr returnVal;
+    if (returnType.ptr()) {
+        if (returnIsTemp) {
+            assert(out->type == returnType);
+            returnVal = out;
+        }
+        else {
+            const llvm::Type *llt = llvmPointerType(entry->returnType);
+            llvm::Value *llv = llvmInitBuilder->CreateAlloca(llt);
+            llv->setName("%returnedRef");
+            returnVal = new CValue(pointerType(entry->returnType), llv);
+        }
+    }
+    ObjectPtr rinfo = new ReturnedInfo(returnType, returnIsTemp, returnVal);
+    addLocal(bodyEnv, new Identifier("%returned"), rinfo);
+
+    llvm::BasicBlock *returnBlock = newBasicBlock("return");
+
+    JumpTarget returnTarget(returnBlock, cgMarkStack());
+    CodeContext ctx(returnType, returnIsTemp, returnVal, returnTarget);
+
+    bool terminated = codegenStatement(entry->code->body, bodyEnv, ctx);
+    if (!terminated) {
+        cgDestroyStack(returnTarget.stackMarker);
+        llvmBuilder->CreateBr(returnBlock);
+    }
+    cgPopStack(returnTarget.stackMarker);
+
+    llvmBuilder->SetInsertPoint(returnBlock);
+
+    if (!returnType) {
+        return NULL;
+    }
+    else if (returnIsTemp) {
+        return out;
+    }
+    else {
+        llvm::Value *v = llvmBuilder->CreateLoad(returnVal->llValue);
+        return new CValue(returnType, v);
     }
 }
 
@@ -2160,6 +2220,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         }
         InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
                                                argsKey, argLocations);
+        if (entry->inlined)
+            error(args[0], "cannot create pointer to inlined code");
         llvmBuilder->CreateStore(entry->llvmFunc, out->llValue);
         return out;
     }
@@ -2214,6 +2276,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         }
         InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
                                                argsKey, argLocations);
+        if (entry->inlined)
+            error(args[0], "cannot create pointer to inlined code");
         string callableName = getCodeName(callable);
         if (!entry->llvmCWrapper)
             codegenCWrapper(entry, callableName);
@@ -2539,6 +2603,8 @@ llvm::Function *codegenMain(ModulePtr module)
                                            vector<bool>(),
                                            vector<ObjectPtr>(),
                                            vector<LocationPtr>());
+    if (entry->inlined)
+        error("main procedure should not be inlined");
     if (!entry->returnType) {
         codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), NULL);
         llvm::Value *zero = llvm::ConstantInt::get(llvmType(cIntType), 0);

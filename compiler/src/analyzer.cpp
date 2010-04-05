@@ -269,6 +269,8 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
+        if (y->objKind == SC_EXPR)
+            return analyze((SCExpr *)y.ptr(), env);
         return analyzeStaticObject(y);
     }
 
@@ -791,6 +793,8 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
         return NULL;
     InvokeEntryPtr entry =
         analyzeCallable(x, isStaticFlags, argsKey, argLocations);
+    if (entry->inlined)
+        return analyzeInvokeInlined(entry, args, env);
     if (!entry->analyzed)
         return NULL;
     return entry->analysis;
@@ -819,11 +823,13 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
             entry->argTypes = z->argTypes;
             entry->argNames = z->argNames;
             entry->env = z->env;
+            entry->inlined = y->inlined;
             break;
         }
     }
     if (i < overloads.size()) {
-        analyzeCodeBody(entry);
+        if (!entry->inlined)
+            analyzeCodeBody(entry);
     }
     else if (overloads.size() == 1) {
         signalMatchError(result, argLocations);
@@ -834,6 +840,43 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 
     entry->analyzing = false;
     return entry;
+}
+
+
+
+//
+// analyzeInvokeInlined
+//
+
+ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
+                               const vector<ExprPtr> &args,
+                               EnvPtr env)
+{
+    assert(entry->inlined);
+
+    CodePtr code = entry->code;
+
+    if (code->returnType.ptr()) {
+        TypePtr retType = evaluateMaybeVoidType(code->returnType, entry->env);
+        if (!retType)
+            return voidValue.ptr();
+        return new PValue(retType, !code->returnRef);
+    }
+
+    EnvPtr bodyEnv = new Env(entry->env);
+    assert(args.size() == entry->argNames.size());
+    for (unsigned i = 0; i < entry->argNames.size(); ++i) {
+        ExprPtr expr = new SCExpr(env, args[i]);
+        addLocal(bodyEnv, entry->argNames[i], expr.ptr());
+    }
+    addLocal(bodyEnv, new Identifier("%returned"), NULL);
+    ObjectPtr result;
+    bool ok = analyzeStatement(code->body, bodyEnv, result);
+    if (!result && !ok)
+        return NULL;
+    if (!result)
+        return voidValue.ptr();
+    return result;
 }
 
 
@@ -1286,6 +1329,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         }
         InvokeEntryPtr entry = analyzeCallable(callable, isStaticFlags,
                                                argsKey, argLocations);
+        if (entry->inlined)
+            error(args[0], "cannot create pointer to inlined code");
         if (!entry->analyzed)
             return NULL;
         TypePtr cpType = codePointerType(entry->argTypes, entry->returnType,
@@ -1334,6 +1379,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         }
         InvokeEntryPtr entry = analyzeCallable(callable, isStaticFlags,
                                                argsKey, argLocations);
+        if (entry->inlined)
+            error(args[0], "cannot create pointer to inlined code");
         if (!entry->analyzed)
             return NULL;
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
