@@ -263,10 +263,10 @@ void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v)
     IdentifierPtr name = new Identifier("clay_eval_temp");
     ProcedurePtr proc = new Procedure(name, PRIVATE, code, false);
     proc->env = env;
-    InvokeEntryPtr entry = codegenProcedure(proc,
-                                            vector<bool>(),
-                                            vector<ObjectPtr>(),
-                                            vector<LocationPtr>());
+    InvokeEntryPtr entry = codegenCallable(proc.ptr(),
+                                           vector<bool>(),
+                                           vector<ObjectPtr>(),
+                                           vector<LocationPtr>());
     if (entry->returnType != v->type)
         error(expr, "type mismatch in evaluating");
 

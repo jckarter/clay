@@ -10,7 +10,7 @@ vector<CValuePtr> stackCValues;
 
 void codegenValueInit(CValuePtr dest)
 {
-    codegenInvokeType(dest->type, vector<ExprPtr>(), new Env(), dest);
+    codegenInvoke(dest->type.ptr(), vector<ExprPtr>(), new Env(), dest);
 }
 
 void codegenValueDestroy(CValuePtr dest)
@@ -24,7 +24,7 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src)
 {
     vector<ExprPtr> args;
     args.push_back(new ObjectExpr(src.ptr()));
-    codegenInvokeType(dest->type, args, new Env(), dest);
+    codegenInvoke(dest->type.ptr(), args, new Env(), dest);
 }
 
 void codegenValueAssign(CValuePtr dest, CValuePtr src)
@@ -94,31 +94,8 @@ CValuePtr codegenAllocValue(TypePtr t)
 
 
 //
-// codegenProcedure, codegenOverloadable, codegenCodeBody
+// codegenCodeBody
 //
-
-InvokeEntryPtr codegenProcedure(ProcedurePtr x,
-                                const vector<bool> &isStaticFlags,
-                                const vector<ObjectPtr> &argsKey,
-                                const vector<LocationPtr> &argLocations)
-{
-    
-    InvokeEntryPtr entry =
-        analyzeProcedure(x, isStaticFlags, argsKey, argLocations);
-    codegenCodeBody(entry, x->name->str);
-    return entry;
-}
-
-InvokeEntryPtr codegenOverloadable(OverloadablePtr x,
-                                   const vector<bool> &isStaticFlags,
-                                   const vector<ObjectPtr> &argsKey,
-                                   const vector<LocationPtr> &argLocations)
-{
-    InvokeEntryPtr entry =
-        analyzeOverloadable(x, isStaticFlags, argsKey, argLocations);
-    codegenCodeBody(entry, x->name->str);
-    return entry;
-}
 
 void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
 {
@@ -1451,14 +1428,10 @@ CValuePtr codegenInvoke(ObjectPtr x,
 {
     switch (x->objKind) {
     case TYPE :
-        return codegenInvokeType((Type *)x.ptr(), args, env, out);
     case RECORD :
-        return codegenInvokeRecord((Record *)x.ptr(), args, env, out);
     case PROCEDURE :
-        return codegenInvokeProcedure((Procedure *)x.ptr(), args, env, out);
     case OVERLOADABLE :
-        return codegenInvokeOverloadable((Overloadable *)x.ptr(),
-                                         args, env, out);
+        return codegenInvokeCallable(x, args, env, out);
 
     case STATIC_PROCEDURE : {
         StaticProcedurePtr y = (StaticProcedure *)x.ptr();
@@ -1484,89 +1457,61 @@ CValuePtr codegenInvoke(ObjectPtr x,
 
 
 //
-// codegenInvokeType
+// codegenInvokeCallable, codegenCallable
 //
 
-CValuePtr codegenInvokeType(TypePtr x,
-                            const vector<ExprPtr> &args,
-                            EnvPtr env,
-                            CValuePtr out)
+CValuePtr codegenInvokeCallable(ObjectPtr x,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env,
+                                CValuePtr out)
 {
     const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x.ptr(), args.size());
+        lookupIsStaticFlags(x, args.size());
     vector<ObjectPtr> argsKey;
     vector<LocationPtr> argLocations;
     bool result = computeArgsKey(isStaticFlags, args, env,
                                  argsKey, argLocations);
     assert(result);
-    InvokeEntryPtr entry =
-        analyzeConstructor(x, isStaticFlags, argsKey, argLocations);
-    codegenCodeBody(entry, "constructor");
+    InvokeEntryPtr entry = codegenCallable(x, isStaticFlags,
+                                           argsKey, argLocations);
     return codegenInvokeCode(entry, args, env, out);
 }
 
-
-
-//
-// codegenInvokeRecord
-//
-
-CValuePtr codegenInvokeRecord(RecordPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env,
-                              CValuePtr out)
+static string getCodeName(ObjectPtr x)
 {
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x.ptr(), args.size());
-    vector<ObjectPtr> argsKey;
-    vector<LocationPtr> argLocations;
-    bool result = computeArgsKey(isStaticFlags, args, env,
-                                 argsKey, argLocations);
-    assert(result);
-    InvokeEntryPtr entry =
-        analyzeRecordConstructor(x, isStaticFlags, argsKey, argLocations);
-    codegenCodeBody(entry, x->name->str);
-    return codegenInvokeCode(entry, args, env, out);
+    switch (x->objKind) {
+    case TYPE : {
+        ostringstream sout;
+        sout << x;
+        return sout.str();
+    }
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        return y->name->str;
+    }
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
+        return y->name->str;
+    }
+    case OVERLOADABLE : {
+        Overloadable *y = (Overloadable *)x.ptr();
+        return y->name->str;
+    }
+    default :
+        assert(false);
+        return "";
+    }
 }
 
-
-
-//
-// codegenInvokeProcedure, codegenInvokeOverloadable
-//
-
-CValuePtr codegenInvokeProcedure(ProcedurePtr x,
-                                 const vector<ExprPtr> &args,
-                                 EnvPtr env,
-                                 CValuePtr out)
+InvokeEntryPtr codegenCallable(ObjectPtr x,
+                               const vector<bool> &isStaticFlags,
+                               const vector<ObjectPtr> &argsKey,
+                               const vector<LocationPtr> &argLocations)
 {
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x.ptr(), args.size());
-    vector<ObjectPtr> argsKey;
-    vector<LocationPtr> argLocations;
-    bool result = computeArgsKey(isStaticFlags, args, env,
-                                 argsKey, argLocations);
-    assert(result);
     InvokeEntryPtr entry =
-        codegenProcedure(x, isStaticFlags, argsKey, argLocations);
-    return codegenInvokeCode(entry, args, env, out);
-}
-
-CValuePtr codegenInvokeOverloadable(OverloadablePtr x,
-                                    const vector<ExprPtr> &args,
-                                    EnvPtr env,
-                                    CValuePtr out)
-{
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x.ptr(), args.size());
-    vector<ObjectPtr> argsKey;
-    vector<LocationPtr> argLocations;
-    bool result = computeArgsKey(isStaticFlags, args, env,
-                                 argsKey, argLocations);
-    assert(result);
-    InvokeEntryPtr entry =
-        codegenOverloadable(x, isStaticFlags, argsKey, argLocations);
-    return codegenInvokeCode(entry, args, env, out);
+        analyzeCallable(x, isStaticFlags, argsKey, argLocations);
+    codegenCodeBody(entry, getCodeName(x));
+    return entry;
 }
 
 
@@ -2213,23 +2158,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             }
             argLocations.push_back(args[i]->location);
         }
-        InvokeEntryPtr entry;
-        switch (callable->objKind) {
-        case PROCEDURE : {
-            Procedure *y = (Procedure *)callable.ptr();
-            entry = codegenProcedure(y, isStaticFlags,
-                                     argsKey, argLocations);
-            break;
-        }
-        case OVERLOADABLE : {
-            Overloadable *y = (Overloadable *)callable.ptr();
-            entry = codegenOverloadable(y, isStaticFlags,
-                                        argsKey, argLocations);
-            break;
-        }
-        default :
-            assert(false);
-        }
+        InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
+                                               argsKey, argLocations);
         llvmBuilder->CreateStore(entry->llvmFunc, out->llValue);
         return out;
     }
@@ -2282,26 +2212,9 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             }
             argLocations.push_back(args[i]->location);
         }
-        InvokeEntryPtr entry;
-        string callableName;
-        switch (callable->objKind) {
-        case PROCEDURE : {
-            Procedure *y = (Procedure *)callable.ptr();
-            entry = codegenProcedure(y, isStaticFlags,
-                                     argsKey, argLocations);
-            callableName = y->name->str;
-            break;
-        }
-        case OVERLOADABLE : {
-            Overloadable *y = (Overloadable *)callable.ptr();
-            entry = codegenOverloadable(y, isStaticFlags,
-                                        argsKey, argLocations);
-            callableName = y->name->str;
-            break;
-        }
-        default :
-            assert(false);
-        }
+        InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
+                                               argsKey, argLocations);
+        string callableName = getCodeName(callable);
         if (!entry->llvmCWrapper)
             codegenCWrapper(entry, callableName);
         llvmBuilder->CreateStore(entry->llvmCWrapper, out->llValue);
@@ -2612,9 +2525,9 @@ llvm::Function *codegenMain(ModulePtr module)
     llvmBuilder = new llvm::IRBuilder<>(codeBlock);
 
     ProcedurePtr initProc = makeInitializerProcedure();
-    ObjectPtr initProcAnalysis = analyzeInvokeProcedure(initProc,
-                                                        vector<ExprPtr>(),
-                                                        module->env);
+    ObjectPtr initProcAnalysis = analyzeInvokeCallable(initProc.ptr(),
+                                                       vector<ExprPtr>(),
+                                                       module->env);
     assert(initProcAnalysis->objKind == VOID_VALUE);
     codegenInvokeVoid(initProc.ptr(), vector<ExprPtr>(), module->env);
 
@@ -2622,10 +2535,10 @@ llvm::Function *codegenMain(ModulePtr module)
     if (mainObj->objKind != PROCEDURE)
         error("expecting 'main' to be a procedure");
     ProcedurePtr mainProc = (Procedure *)mainObj.ptr();
-    InvokeEntryPtr entry = codegenProcedure(mainProc,
-                                            vector<bool>(),
-                                            vector<ObjectPtr>(),
-                                            vector<LocationPtr>());
+    InvokeEntryPtr entry = codegenCallable(mainProc.ptr(),
+                                           vector<bool>(),
+                                           vector<ObjectPtr>(),
+                                           vector<LocationPtr>());
     if (!entry->returnType) {
         codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), NULL);
         llvm::Value *zero = llvm::ConstantInt::get(llvmType(cIntType), 0);
