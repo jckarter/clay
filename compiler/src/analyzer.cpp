@@ -740,13 +740,10 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 {
     switch (x->objKind) {
     case TYPE :
-        return analyzeInvokeType((Type *)x.ptr(), args, env);
     case RECORD :
-        return analyzeInvokeRecord((Record *)x.ptr(), args, env);
     case PROCEDURE :
-        return analyzeInvokeProcedure((Procedure *)x.ptr(), args, env);
     case OVERLOADABLE :
-        return analyzeInvokeOverloadable((Overloadable *)x.ptr(), args, env);
+        return analyzeInvokeCallable(x, args, env);
     case STATIC_PROCEDURE : {
         StaticProcedurePtr y = (StaticProcedure *)x.ptr();
         StaticInvokeEntryPtr entry = analyzeStaticProcedure(y, args, env);
@@ -779,39 +776,42 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 
 
 //
-// analyzeInvokeType
+// analyzeInvokeCallable, analyzeCallable
 //
 
-ObjectPtr analyzeInvokeType(TypePtr x, const vector<ExprPtr> &args, EnvPtr env)
+ObjectPtr analyzeInvokeCallable(ObjectPtr x,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env)
 {
     const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x.ptr(), args.size());
+        lookupIsStaticFlags(x, args.size());
     vector<ObjectPtr> argsKey;
     vector<LocationPtr> argLocations;
     if (!computeArgsKey(isStaticFlags, args, env, argsKey, argLocations))
         return NULL;
     InvokeEntryPtr entry =
-        analyzeConstructor(x, isStaticFlags, argsKey, argLocations);
+        analyzeCallable(x, isStaticFlags, argsKey, argLocations);
     if (!entry->analyzed)
         return NULL;
     return entry->analysis;
 }
 
-InvokeEntryPtr analyzeConstructor(TypePtr x,
-                                  const vector<bool> &isStaticFlags,
-                                  const vector<ObjectPtr> &argsKey,
-                                  const vector<LocationPtr> &argLocations)
+InvokeEntryPtr analyzeCallable(ObjectPtr x,
+                               const vector<bool> &isStaticFlags,
+                               const vector<ObjectPtr> &argsKey,
+                               const vector<LocationPtr> &argLocations)
 {
-    InvokeEntryPtr entry = lookupInvoke(x.ptr(), isStaticFlags, argsKey);
+    InvokeEntryPtr entry = lookupInvoke(x, isStaticFlags, argsKey);
     if (entry->analyzed || entry->analyzing)
         return entry;
     entry->analyzing = true;
 
+    const vector<OverloadPtr> &overloads = callableOverloads(x);
+    MatchResultPtr result;
     unsigned i = 0;
-    for (; i < x->overloads.size(); ++i) {
-        OverloadPtr y = x->overloads[i];
-        MatchResultPtr result = matchInvoke(y->code, y->env, argsKey,
-                                            y->target, x.ptr());
+    for (; i < overloads.size(); ++i) {
+        OverloadPtr y = overloads[i];
+        result = matchInvoke(y->code, y->env, argsKey, y->target, x);
         if (result->matchCode == MATCH_SUCCESS) {
             entry->code = clone(y->code);
             MatchSuccess *z = (MatchSuccess *)result.ptr();
@@ -822,172 +822,11 @@ InvokeEntryPtr analyzeConstructor(TypePtr x,
             break;
         }
     }
-    if (i < x->overloads.size()) {
+    if (i < overloads.size()) {
         analyzeCodeBody(entry);
     }
-    else {
-        error("no matching constructor");
-    }
-
-    entry->analyzing = false;
-    return entry;
-}
-
-
-
-//
-// analyzeInvokeRecord
-//
-
-ObjectPtr analyzeInvokeRecord(RecordPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env)
-{
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x.ptr(), args.size());
-    vector<ObjectPtr> argsKey;
-    vector<LocationPtr> argLocations;
-    if (!computeArgsKey(isStaticFlags, args, env, argsKey, argLocations))
-        return NULL;
-    InvokeEntryPtr entry =
-        analyzeRecordConstructor(x, isStaticFlags, argsKey, argLocations);
-    if (!entry->analyzed)
-        return NULL;
-    return entry->analysis;
-}
-
-InvokeEntryPtr
-analyzeRecordConstructor(RecordPtr x,
-                         const vector<bool> &isStaticFlags,
-                         const vector<ObjectPtr> &argsKey,
-                         const vector<LocationPtr> &argLocations)
-{
-    InvokeEntryPtr entry = lookupInvoke(x.ptr(), isStaticFlags, argsKey);
-    if (entry->analyzed || entry->analyzing)
-        return entry;
-    entry->analyzing = true;
-
-    unsigned i = 0;
-    for (; i < x->overloads.size(); ++i) {
-        OverloadPtr y = x->overloads[i];
-        MatchResultPtr result = matchInvoke(y->code, y->env, argsKey,
-                                            NULL, NULL);
-        if (result->matchCode == MATCH_SUCCESS) {
-            entry->code = clone(y->code);
-            MatchSuccess *z = (MatchSuccess *)result.ptr();
-            entry->staticArgs = z->staticArgs;
-            entry->argTypes = z->argTypes;
-            entry->argNames = z->argNames;
-            entry->env = z->env;
-            break;
-        }
-    }
-    if (i < x->overloads.size()) {
-        analyzeCodeBody(entry);
-    }
-    else {
-        error("no matching record constructor");
-    }
-
-    entry->analyzing = false;
-    return entry;
-}
-
-
-
-//
-// analyzeInvokeProcedure, analyzeInvokeOverloadable
-//
-
-ObjectPtr analyzeInvokeProcedure(ProcedurePtr x,
-                                 const vector<ExprPtr> &args,
-                                 EnvPtr env)
-{
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x.ptr(), args.size());
-    vector<ObjectPtr> argsKey;
-    vector<LocationPtr> argLocations;
-    if (!computeArgsKey(isStaticFlags, args, env, argsKey, argLocations))
-        return NULL;
-    InvokeEntryPtr entry =
-        analyzeProcedure(x, isStaticFlags, argsKey, argLocations);
-    if (!entry->analyzed)
-        return NULL;
-    return entry->analysis;
-}
-
-InvokeEntryPtr analyzeProcedure(ProcedurePtr x,
-                                const vector<bool> &isStaticFlags,
-                                const vector<ObjectPtr> &argsKey,
-                                const vector<LocationPtr> &argLocations)
-{
-    InvokeEntryPtr entry = lookupInvoke(x.ptr(), isStaticFlags, argsKey);
-    if (entry->analyzed || entry->analyzing)
-        return entry;
-
-    entry->analyzing = true;
-
-    MatchResultPtr result = matchInvoke(x->code, x->env, argsKey, NULL, NULL);
-    if (result->matchCode != MATCH_SUCCESS)
+    else if (overloads.size() == 1) {
         signalMatchError(result, argLocations);
-
-    entry->code = clone(x->code);
-    MatchSuccess *y = (MatchSuccess *)result.ptr();
-    entry->staticArgs = y->staticArgs;
-    entry->argTypes = y->argTypes;
-    entry->argNames = y->argNames;
-    entry->env = y->env;
-
-    analyzeCodeBody(entry);
-
-    entry->analyzing = false;
-    return entry;
-}
-
-ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x,
-                                    const vector<ExprPtr> &args,
-                                    EnvPtr env)
-{
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x.ptr(), args.size());
-    vector<ObjectPtr> argsKey;
-    vector<LocationPtr> argLocations;
-    if (!computeArgsKey(isStaticFlags, args, env, argsKey, argLocations))
-        return NULL;
-    InvokeEntryPtr entry =
-        analyzeOverloadable(x, isStaticFlags, argsKey, argLocations);
-    if (!entry->analyzed)
-        return NULL;
-    return entry->analysis;
-}
-
-InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
-                                   const vector<bool> &isStaticFlags,
-                                   const vector<ObjectPtr> &argsKey,
-                                   const vector<LocationPtr> &argLocations)
-{
-    InvokeEntryPtr entry = lookupInvoke(x.ptr(), isStaticFlags, argsKey);
-    if (entry->analyzed || entry->analyzing)
-        return entry;
-    entry->analyzing = true;
-
-    unsigned i = 0;
-    for (; i < x->overloads.size(); ++i) {
-        OverloadPtr y = x->overloads[i];
-        MatchResultPtr result = matchInvoke(y->code, y->env, argsKey,
-                                            NULL, NULL);
-        if (result->matchCode == MATCH_SUCCESS) {
-            entry->code = clone(y->code);
-            MatchSuccess *z = (MatchSuccess *)result.ptr();
-            entry->staticArgs = z->staticArgs;
-            entry->argTypes = z->argTypes;
-            entry->argNames = z->argNames;
-            entry->env = z->env;
-            break;
-        }
-    }
-    if (i < x->overloads.size()) {
-        analyzeCodeBody(entry);
     }
     else {
         error("no matching overload");
@@ -996,6 +835,12 @@ InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
     entry->analyzing = false;
     return entry;
 }
+
+
+
+//
+// analyzeCodeBody
+//
 
 void analyzeCodeBody(InvokeEntryPtr entry) {
     assert(!entry->analyzed);
@@ -1439,23 +1284,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             }
             argLocations.push_back(args[i]->location);
         }
-        InvokeEntryPtr entry;
-        switch (callable->objKind) {
-        case PROCEDURE : {
-            Procedure *y = (Procedure *)callable.ptr();
-            entry = analyzeProcedure(y, isStaticFlags,
-                                     argsKey, argLocations);
-            break;
-        }
-        case OVERLOADABLE : {
-            Overloadable *y = (Overloadable *)callable.ptr();
-            entry = analyzeOverloadable(y, isStaticFlags,
-                                        argsKey, argLocations);
-            break;
-        }
-        default :
-            assert(false);
-        }
+        InvokeEntryPtr entry = analyzeCallable(callable, isStaticFlags,
+                                               argsKey, argLocations);
         if (!entry->analyzed)
             return NULL;
         TypePtr cpType = codePointerType(entry->argTypes, entry->returnType,
@@ -1502,23 +1332,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             }
             argLocations.push_back(args[i]->location);
         }
-        InvokeEntryPtr entry;
-        switch (callable->objKind) {
-        case PROCEDURE : {
-            Procedure *y = (Procedure *)callable.ptr();
-            entry = analyzeProcedure(y, isStaticFlags,
-                                     argsKey, argLocations);
-            break;
-        }
-        case OVERLOADABLE : {
-            Overloadable *y = (Overloadable *)callable.ptr();
-            entry = analyzeOverloadable(y, isStaticFlags,
-                                        argsKey, argLocations);
-            break;
-        }
-        default :
-            assert(false);
-        }
+        InvokeEntryPtr entry = analyzeCallable(callable, isStaticFlags,
+                                               argsKey, argLocations);
         if (!entry->analyzed)
             return NULL;
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,

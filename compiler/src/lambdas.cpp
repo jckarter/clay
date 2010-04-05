@@ -114,7 +114,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     if (!callObj->staticFlagsInitialized)
         initIsStaticFlags(callObj);
     else
-        updateIsStaticFlags(obj, overload);
+        updateIsStaticFlags(callObj, overload);
 }
 
 

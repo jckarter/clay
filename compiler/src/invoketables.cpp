@@ -3,36 +3,53 @@
 
 
 //
+// callableOverloads
+//
+
+const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
+{
+    switch (x->objKind) {
+    case TYPE : {
+        Type *y = (Type *)x.ptr();
+        return y->overloads;
+    }
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        return y->overloads;
+    }
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
+        if (y->overloads.empty()) {
+            ExprPtr target = new ObjectExpr(y);
+            OverloadPtr z = new Overload(target, y->code, y->inlined);
+            z->env = y->env;
+            y->overloads.push_back(z);
+        }
+        return y->overloads;
+    }
+    case OVERLOADABLE : {
+        Overloadable *y = (Overloadable *)x.ptr();
+        return y->overloads;
+    }
+    default : {
+        assert(false);
+        const vector<OverloadPtr> *ptr = NULL;
+        return *ptr;
+    }
+    }
+}
+
+
+
+//
 // isStaticFlags
 //
 
 static map<FlagsMapKey, FlagsMapEntry> flagsMap;
 
-FlagsMapEntry &lookupFlagsMapEntry(ObjectPtr callable, unsigned nArgs)
+static FlagsMapEntry &lookupFlagsMapEntry(ObjectPtr callable, unsigned nArgs)
 {
     return flagsMap[make_pair(callable, nArgs)];
-}
-
-void initIsStaticFlags(ProcedurePtr x)
-{
-    assert(!x->staticFlagsInitialized);
-    const vector<FormalArgPtr> &formalArgs = x->code->formalArgs;
-    FlagsMapEntry &entry = lookupFlagsMapEntry(x.ptr(), formalArgs.size());
-    assert(!entry.initialized);
-    for (unsigned i = 0; i < formalArgs.size(); ++i) {
-        switch (formalArgs[i]->objKind) {
-        case VALUE_ARG :
-            entry.isStaticFlags.push_back(false);
-            break;
-        case STATIC_ARG :
-            entry.isStaticFlags.push_back(true);
-            break;
-        default :
-            assert(false);
-        }
-    }
-    entry.initialized = true;
-    x->staticFlagsInitialized = true;
 }
 
 void updateIsStaticFlags(ObjectPtr callable, OverloadPtr overload)
@@ -72,69 +89,60 @@ void updateIsStaticFlags(ObjectPtr callable, OverloadPtr overload)
     }
 }
 
-void initIsStaticFlags(ObjectPtr callable,
-                       const vector<OverloadPtr> &overloads)
+static void initIsStaticFlags(ObjectPtr callable,
+                              const vector<OverloadPtr> &overloads)
 {
     for (unsigned i = 0; i < overloads.size(); ++i)
         updateIsStaticFlags(callable, overloads[i]);
 }
 
-void initIsStaticFlags(OverloadablePtr x)
+void initIsStaticFlags(ObjectPtr x)
 {
-    assert(!x->staticFlagsInitialized);
-    initIsStaticFlags(x.ptr(), x->overloads);
-    x->staticFlagsInitialized = true;
-}
-
-void initIsStaticFlags(TypePtr x)
-{
-    assert(!x->staticFlagsInitialized);
-    initIsStaticFlags(x.ptr(), x->overloads);
-    x->staticFlagsInitialized = true;
-}
-
-void initIsStaticFlags(RecordPtr x)
-{
-    assert(!x->staticFlagsInitialized);
-    initIsStaticFlags(x.ptr(), x->overloads);
-    x->staticFlagsInitialized = true;
-}
-
-const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
-{
-    switch (callable->objKind) {
-    case PROCEDURE : {
-        Procedure *x = (Procedure *)callable.ptr();
-        if (!x->staticFlagsInitialized)
-            initIsStaticFlags(x);
-        break;
-    }
-    case OVERLOADABLE : {
-        Overloadable *x = (Overloadable *)callable.ptr();
-        if (!x->staticFlagsInitialized)
-            initIsStaticFlags(x);
-        break;
-    }
+    switch (x->objKind) {
     case TYPE : {
-        Type *x = (Type *)callable.ptr();
-        if (!x->overloadsInitialized)
-            initTypeOverloads(x);
-        if (!x->staticFlagsInitialized)
-            initIsStaticFlags(x);
+        Type *y = (Type *)x.ptr();
+        if (!y->overloadsInitialized)
+            initTypeOverloads(y);
+        if (!y->staticFlagsInitialized) {
+            initIsStaticFlags(y, callableOverloads(y));
+            y->staticFlagsInitialized = true;
+        }
         break;
     }
     case RECORD : {
-        Record *x = (Record *)callable.ptr();
-        if (!x->builtinOverloadInitialized)
-            initBuiltinConstructor(x);
-        if (!x->staticFlagsInitialized)
-            initIsStaticFlags(x);
+        Record *y = (Record *)x.ptr();
+        if (!y->builtinOverloadInitialized)
+            initBuiltinConstructor(y);
+        if (!y->staticFlagsInitialized) {
+            initIsStaticFlags(y, callableOverloads(y));
+            y->staticFlagsInitialized = true;
+        }
+        break;
+    }
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
+        if (!y->staticFlagsInitialized) {
+            initIsStaticFlags(y, callableOverloads(y));
+            y->staticFlagsInitialized = true;
+        }
+        break;
+    }
+    case OVERLOADABLE : {
+        Overloadable *y = (Overloadable *)x.ptr();
+        if (!y->staticFlagsInitialized) {
+            initIsStaticFlags(y, callableOverloads(y));
+            y->staticFlagsInitialized = true;
+        }
         break;
     }
     default :
         assert(false);
     }
+}
 
+const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
+{
+    initIsStaticFlags(callable);
     FlagsMapEntry &entry = lookupFlagsMapEntry(callable, nArgs);
     if (!entry.initialized)
         error("incorrect no. of arguments");

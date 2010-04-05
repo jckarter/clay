@@ -1026,6 +1026,9 @@ struct Procedure : public TopLevelItem {
     CodePtr code;
     bool inlined;
     bool staticFlagsInitialized;
+
+    vector<OverloadPtr> overloads;
+
     Procedure(IdentifierPtr name, Visibility visibility,
               CodePtr code, bool inlined)
         : TopLevelItem(PROCEDURE, name, visibility), code(code),
@@ -1879,14 +1882,9 @@ struct FlagsMapEntry {
         : initialized(false) {}
 };
 
-FlagsMapEntry &lookupFlagsMapEntry(ObjectPtr callable, unsigned nArgs);
-void initIsStaticFlags(ProcedurePtr x);
+const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
 void updateIsStaticFlags(ObjectPtr callable, OverloadPtr overload);
-void initIsStaticFlags(ObjectPtr callable,
-                       const vector<OverloadPtr> &overloads);
-void initIsStaticFlags(OverloadablePtr x);
-void initIsStaticFlags(TypePtr x);
-void initIsStaticFlags(RecordPtr x);
+void initIsStaticFlags(ObjectPtr x);
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs);
 bool computeArgsKey(const vector<bool> &isStaticFlags,
                     const vector<ExprPtr> &args,
@@ -2074,35 +2072,13 @@ ObjectPtr analyzeIndexing(ObjectPtr x,
                           EnvPtr env);
 ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env);
 
-ObjectPtr analyzeInvokeType(TypePtr x,
-                            const vector<ExprPtr> &args,
-                            EnvPtr env);
-InvokeEntryPtr analyzeConstructor(TypePtr x,
-                                  const vector<bool> &isStaticFlags,
-                                  const vector<ObjectPtr> &argsKey,
-                                  const vector<LocationPtr> &argLocations);
-ObjectPtr analyzeInvokeRecord(RecordPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env);
-InvokeEntryPtr
-analyzeRecordConstructor(RecordPtr x,
-                         const vector<bool> &isStaticFlags,
-                         const vector<ObjectPtr> &argsKey,
-                         const vector<LocationPtr> &argLocations);
-ObjectPtr analyzeInvokeProcedure(ProcedurePtr x,
-                                 const vector<ExprPtr> &args,
-                                 EnvPtr env);
-InvokeEntryPtr analyzeProcedure(ProcedurePtr x,
-                                const vector<bool> &isStaticFlags,
-                                const vector<ObjectPtr> &argsKey,
-                                const vector<LocationPtr> &argLocations);
-ObjectPtr analyzeInvokeOverloadable(OverloadablePtr x,
-                                    const vector<ExprPtr> &args,
-                                    EnvPtr env);
-InvokeEntryPtr analyzeOverloadable(OverloadablePtr x,
-                                   const vector<bool> &isStaticFlags,
-                                   const vector<ObjectPtr> &argsKey,
-                                   const vector<LocationPtr> &argLocations);
+ObjectPtr analyzeInvokeCallable(ObjectPtr x,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env);
+InvokeEntryPtr analyzeCallable(ObjectPtr x,
+                               const vector<bool> &isStaticFlags,
+                               const vector<ObjectPtr> &argsKey,
+                               const vector<LocationPtr> &argLocations);
 void analyzeCodeBody(InvokeEntryPtr entry);
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
@@ -2232,14 +2208,6 @@ void cgDestroyAndPopStack(int marker);
 
 CValuePtr codegenAllocValue(TypePtr t);
 
-InvokeEntryPtr codegenProcedure(ProcedurePtr x,
-                                const vector<bool> &isStaticFlags,
-                                const vector<ObjectPtr> &argsKey,
-                                const vector<LocationPtr> &argLocations);
-InvokeEntryPtr codegenOverloadable(OverloadablePtr x,
-                                   const vector<bool> &isStaticFlags,
-                                   const vector<ObjectPtr> &argsKey,
-                                   const vector<LocationPtr> &argLocations);
 void codegenCodeBody(InvokeEntryPtr entry,
                      const string &callableName);
 
@@ -2277,22 +2245,14 @@ CValuePtr codegenInvoke(ObjectPtr x,
                         const vector<ExprPtr> &args,
                         EnvPtr env,
                         CValuePtr out);
-CValuePtr codegenInvokeType(TypePtr x,
-                            const vector<ExprPtr> &args,
-                            EnvPtr env,
-                            CValuePtr out);
-CValuePtr codegenInvokeRecord(RecordPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env,
-                              CValuePtr out);
-CValuePtr codegenInvokeProcedure(ProcedurePtr x,
-                                 const vector<ExprPtr> &args,
-                                 EnvPtr env,
-                                 CValuePtr out);
-CValuePtr codegenInvokeOverloadable(OverloadablePtr x,
-                                    const vector<ExprPtr> &args,
-                                    EnvPtr env,
-                                    CValuePtr out);
+CValuePtr codegenInvokeCallable(ObjectPtr x,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env,
+                                CValuePtr out);
+InvokeEntryPtr codegenCallable(ObjectPtr x,
+                               const vector<bool> &isStaticFlags,
+                               const vector<ObjectPtr> &argsKey,
+                               const vector<LocationPtr> &argLocations);
 CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
                             const vector<ExprPtr> &args,
                             EnvPtr env,
