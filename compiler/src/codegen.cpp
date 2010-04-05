@@ -659,9 +659,16 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case STRING_LITERAL : {
         StringLiteral *x = (StringLiteral *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarStringLiteral(x->value);
-        return codegenExpr(x->desugared, env, out);
+        llvm::Value *v =
+            llvm::ConstantArray::get(llvm::getGlobalContext(),
+                                     x->value,
+                                     false);
+        TypePtr type = arrayType(int8Type, x->value.size());
+        CValuePtr cv = codegenAllocValue(type);
+        llvmBuilder->CreateStore(v, cv->llValue);
+        vector<ExprPtr> args;
+        args.push_back(new ObjectExpr(cv.ptr()));
+        return codegenInvoke(kernelName("String"), args, env, out);
     }
 
     case NAME_REF : {

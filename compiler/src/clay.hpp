@@ -621,7 +621,6 @@ struct CharLiteral : public Expr {
 
 struct StringLiteral : public Expr {
     string value;
-    ExprPtr desugared;
     StringLiteral(const string &value)
         : Expr(STRING_LITERAL), value(value) {}
 };
@@ -1844,7 +1843,6 @@ struct ValueHolder : public Object {
 //
 
 ExprPtr desugarCharLiteral(char c);
-ExprPtr desugarStringLiteral(const string &s);
 ExprPtr desugarTuple(TuplePtr x);
 ExprPtr desugarArray(ArrayPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);

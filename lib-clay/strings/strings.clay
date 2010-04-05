@@ -1,3 +1,4 @@
+import types.*;
 import operators.*;
 import characters.*;
 import arrays.*;
@@ -27,6 +28,14 @@ overload String() : String {
 [n]
 overload String(a:Array[Char,n]) : String {
     returned <-- String(Vector(a));
+    push(returned.data, Char(0));
+}
+
+[n]
+overload String(a:Array[Int8,n]) : String {
+    returned.data <-- Vector[Char]();
+    for (x in a)
+        push(returned.data, Char(x));
     push(returned.data, Char(0));
 }
 

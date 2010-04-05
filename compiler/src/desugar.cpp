@@ -9,16 +9,6 @@ ExprPtr desugarCharLiteral(char c) {
     return call.ptr();
 }
 
-ExprPtr desugarStringLiteral(const string &s) {
-    ArrayPtr charArray = new Array();
-    for (unsigned i = 0; i < s.size(); ++i)
-        charArray->args.push_back(desugarCharLiteral(s[i]));
-    ExprPtr nameRef = kernelNameRef("String");
-    CallPtr call = new Call(nameRef);
-    call->args.push_back(charArray.ptr());
-    return call.ptr();
-}
-
 ExprPtr desugarTuple(TuplePtr x) {
     if (x->args.size() == 1)
         return x->args[0];
