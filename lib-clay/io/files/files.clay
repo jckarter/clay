@@ -29,10 +29,10 @@ overload File(path:String, mode:FileMode) {
 overload File(path:String) = File(path, READ);
 
 // disable copy constructor
-overload File(f:File) = unimplemented();
+overload File(f:File) = unsupported();
 
 // disable assignment
-overload assign(dest:File, src:File) = unimplemented();
+overload assign(dest:File, src:File) = unsupported();
 
 overload destroy(f:File) {
     if (f.owned)

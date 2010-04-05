@@ -46,7 +46,7 @@ overloadable dereference;
 
 overloadable call;
 
-overloadable unimplemented; // used for triggering compile time errors
+overloadable unsupported; // used for triggering compile time errors
 
 
 //
