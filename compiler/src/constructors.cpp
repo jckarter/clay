@@ -135,7 +135,7 @@ void initBuiltinConstructor(RecordTypePtr t)
     code->body = body.ptr();
 
     ExprPtr returnTypeExpr = new ObjectExpr(t.ptr());
-    OverloadPtr overload = new Overload(returnTypeExpr, code, true);
+    OverloadPtr overload = new Overload(returnTypeExpr, code, false);
     overload->env = new Env();
     t->overloads.push_back(overload);
 }
@@ -180,7 +180,7 @@ void initBuiltinConstructor(RecordPtr x)
     code->body = new Return(returnExpr.ptr());
     code->body->location = returnExpr->location;
 
-    OverloadPtr defaultOverload = new Overload(recName, code, true);
+    OverloadPtr defaultOverload = new Overload(recName, code, false);
     defaultOverload->location = x->location;
     defaultOverload->env = x->env;
     x->overloads.push_back(defaultOverload);
