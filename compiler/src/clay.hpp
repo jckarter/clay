@@ -120,46 +120,8 @@ enum ObjectKind {
     IDENTIFIER,
     DOTTED_NAME,
 
-    BOOL_LITERAL,
-    INT_LITERAL,
-    FLOAT_LITERAL,
-    CHAR_LITERAL,
-    STRING_LITERAL,
-
-    NAME_REF,
-    RETURNED,
-    TUPLE,
-    ARRAY,
-    INDEXING,
-    CALL,
-    FIELD_REF,
-    TUPLE_REF,
-    UNARY_OP,
-    BINARY_OP,
-    AND,
-    OR,
-
-    LAMBDA,
-
-    SC_EXPR,
-    OBJECT_EXPR,
-
-    BLOCK,
-    LABEL,
-    BINDING,
-    ASSIGNMENT,
-    INIT_ASSIGNMENT,
-    UPDATE_ASSIGNMENT,
-    GOTO,
-    RETURN,
-    RETURN_REF,
-    IF,
-    EXPR_STATEMENT,
-    WHILE,
-    BREAK,
-    CONTINUE,
-    FOR,
-    SC_STATEMENT,
+    EXPRESSION,
+    STATEMENT,
 
     CODE,
     VALUE_ARG,
@@ -594,9 +556,36 @@ struct DottedName : public ANode {
 // Expr
 //
 
+enum ExprKind {
+    BOOL_LITERAL,
+    INT_LITERAL,
+    FLOAT_LITERAL,
+    CHAR_LITERAL,
+    STRING_LITERAL,
+
+    NAME_REF,
+    RETURNED,
+    TUPLE,
+    ARRAY,
+    INDEXING,
+    CALL,
+    FIELD_REF,
+    TUPLE_REF,
+    UNARY_OP,
+    BINARY_OP,
+    AND,
+    OR,
+
+    LAMBDA,
+
+    SC_EXPR,
+    OBJECT_EXPR,
+};
+
 struct Expr : public ANode {
-    Expr(int objKind)
-        : ANode(objKind) {}
+    ExprKind exprKind;
+    Expr(ExprKind exprKind)
+        : ANode(EXPRESSION), exprKind(exprKind) {}
 };
 
 struct BoolLiteral : public Expr {
@@ -788,9 +777,29 @@ struct ObjectExpr : public Expr {
 // Stmt
 //
 
+enum StatementKind {
+    BLOCK,
+    LABEL,
+    BINDING,
+    ASSIGNMENT,
+    INIT_ASSIGNMENT,
+    UPDATE_ASSIGNMENT,
+    GOTO,
+    RETURN,
+    RETURN_REF,
+    IF,
+    EXPR_STATEMENT,
+    WHILE,
+    BREAK,
+    CONTINUE,
+    FOR,
+    SC_STATEMENT,
+};
+
 struct Statement : public ANode {
-    Statement(int objKind)
-        : ANode(objKind) {}
+    StatementKind stmtKind;
+    Statement(StatementKind stmtKind)
+        : ANode(STATEMENT), stmtKind(stmtKind) {}
 };
 
 struct Block : public Statement {

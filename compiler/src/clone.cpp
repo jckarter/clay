@@ -23,7 +23,7 @@ ExprPtr clone(ExprPtr x)
 {
     ExprPtr out;
 
-    switch (x->objKind) {
+    switch (x->exprKind) {
 
     case BOOL_LITERAL : {
         BoolLiteral *y = (BoolLiteral *)x.ptr();
@@ -215,7 +215,7 @@ StatementPtr clone(StatementPtr x)
 {
     StatementPtr out;
 
-    switch (x->objKind) {
+    switch (x->stmtKind) {
 
     case BLOCK : {
         Block *y = (Block *)x.ptr();

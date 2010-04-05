@@ -232,7 +232,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 {
     LocationContext loc(stmt->location);
 
-    switch (stmt->objKind) {
+    switch (stmt->stmtKind) {
 
     case BLOCK : {
         Block *x = (Block *)stmt.ptr();
@@ -241,7 +241,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         bool terminated = false;
         for (unsigned i = 0; i < x->statements.size(); ++i) {
             StatementPtr y = x->statements[i];
-            if (y->objKind == LABEL) {
+            if (y->stmtKind == LABEL) {
                 Label *z = (Label *)y.ptr();
                 map<string, JumpTarget>::iterator li =
                     ctx.labels.find(z->name->str);
@@ -254,7 +254,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
             else if (terminated) {
                 error(y, "unreachable code");
             }
-            else if (y->objKind == BINDING) {
+            else if (y->stmtKind == BINDING) {
                 env = codegenBinding((Binding *)y.ptr(), env);
                 codegenCollectLabels(x->statements, i+1, ctx);
             }
@@ -508,8 +508,7 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
 {
     for (unsigned i = startIndex; i < statements.size(); ++i) {
         StatementPtr x = statements[i];
-        switch (x->objKind) {
-
+        switch (x->stmtKind) {
         case LABEL : {
             Label *y = (Label *)x.ptr();
             map<string, JumpTarget>::iterator li =
@@ -520,10 +519,10 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
             ctx.labels[y->name->str] = JumpTarget(bb, cgMarkStack());
             break;
         }
-
         case BINDING :
             return;
-
+        default :
+            break;
         }
     }
 }
@@ -639,7 +638,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 {
     LocationContext loc(expr->location);
 
-    switch (expr->objKind) {
+    switch (expr->exprKind) {
 
     case BOOL_LITERAL :
     case INT_LITERAL :
@@ -668,8 +667,8 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
-        if (y->objKind == SC_EXPR)
-            return codegenExpr((SCExpr *)y.ptr(), env, out);
+        if (y->objKind == EXPRESSION)
+            return codegenExpr((Expr *)y.ptr(), env, out);
         return codegenStaticObject(y, out);
     }
 

@@ -67,79 +67,8 @@ ostream &operator<<(ostream &out, const BigVec<T> &v) {
 // print
 //
 
-static void print(const Object *x, ostream &out) {
-    if (x == NULL) {
-        out << "NULL";
-        return;
-    }
-
-    switch (x->objKind) {
-
-    case SOURCE : {
-        Source *y = (Source *)x;
-        out << "Source(" << y->fileName << ")";
-        break;
-    }
-    case LOCATION : {
-        Location *y = (Location *)x;
-        out << "Location(" << y->source << ", " << y->offset << ")";
-        break;
-    }
-    case TOKEN : {
-        Token *y = (Token *)x;
-        out << "Token(";
-        switch (y->tokenKind) {
-        case T_SYMBOL :
-            out << "T_SYMBOL";
-            break;
-        case T_KEYWORD :
-            out << "T_KEYWORD";
-            break;
-        case T_IDENTIFIER :
-            out << "T_IDENTIFIER";
-            break;
-        case T_STRING_LITERAL :
-            out << "T_STRING_LITERAL";
-            break;
-        case T_CHAR_LITERAL :
-            out << "T_CHAR_LITERAL";
-            break;
-        case T_INT_LITERAL :
-            out << "T_INT_LITERAL";
-            break;
-        case T_FLOAT_LITERAL :
-            out << "T_FLOAT_LITERAL";
-            break;
-        case T_LITERAL_SUFFIX :
-            out << "T_LITERAL_SUFFIX";
-            break;
-        case T_SPACE :
-            out << "T_SPACE";
-            break;
-        case T_LINE_COMMENT :
-            out << "T_LINE_COMMENT";
-            break;
-        case T_BLOCK_COMMENT :
-            out << "T_BLOCK_COMMENT";
-            break;
-        default :
-            assert(false);
-        }
-        out << ", " << y->str << ")";
-        break;
-    }
-
-    case IDENTIFIER : {
-        Identifier *y = (Identifier *)x;
-        out << "Identifier(" << y->str << ")";
-        break;
-    }
-    case DOTTED_NAME : {
-        DottedName *y = (DottedName *)x;
-        out << "DottedName(" << y->parts << ")";
-        break;
-    }
-
+static void printExpr(const Expr *x, ostream &out) {
+    switch (x->exprKind) {
     case BOOL_LITERAL : {
         BoolLiteral *y = (BoolLiteral *)x;
         out << "BoolLiteral(" << y->value << ")";
@@ -305,7 +234,11 @@ static void print(const Object *x, ostream &out) {
         out << "ObjectExpr(" << y->obj << ")";
         break;
     }
+    }
+}
 
+static void printStatement(const Statement *x, ostream &out) {
+    switch (x->stmtKind) {
     case BLOCK : {
         Block *y = (Block *)x;
         out << "Block(" << bigVec(y->statements) << ")";
@@ -399,6 +332,93 @@ static void print(const Object *x, ostream &out) {
     case SC_STATEMENT : {
         SCStatement *y = (SCStatement *)x;
         out << "SCStatement(" << y->statement << ")";
+        break;
+    }
+    }
+}
+
+static void print(const Object *x, ostream &out) {
+    if (x == NULL) {
+        out << "NULL";
+        return;
+    }
+
+    switch (x->objKind) {
+
+    case SOURCE : {
+        Source *y = (Source *)x;
+        out << "Source(" << y->fileName << ")";
+        break;
+    }
+    case LOCATION : {
+        Location *y = (Location *)x;
+        out << "Location(" << y->source << ", " << y->offset << ")";
+        break;
+    }
+    case TOKEN : {
+        Token *y = (Token *)x;
+        out << "Token(";
+        switch (y->tokenKind) {
+        case T_SYMBOL :
+            out << "T_SYMBOL";
+            break;
+        case T_KEYWORD :
+            out << "T_KEYWORD";
+            break;
+        case T_IDENTIFIER :
+            out << "T_IDENTIFIER";
+            break;
+        case T_STRING_LITERAL :
+            out << "T_STRING_LITERAL";
+            break;
+        case T_CHAR_LITERAL :
+            out << "T_CHAR_LITERAL";
+            break;
+        case T_INT_LITERAL :
+            out << "T_INT_LITERAL";
+            break;
+        case T_FLOAT_LITERAL :
+            out << "T_FLOAT_LITERAL";
+            break;
+        case T_LITERAL_SUFFIX :
+            out << "T_LITERAL_SUFFIX";
+            break;
+        case T_SPACE :
+            out << "T_SPACE";
+            break;
+        case T_LINE_COMMENT :
+            out << "T_LINE_COMMENT";
+            break;
+        case T_BLOCK_COMMENT :
+            out << "T_BLOCK_COMMENT";
+            break;
+        default :
+            assert(false);
+        }
+        out << ", " << y->str << ")";
+        break;
+    }
+
+    case IDENTIFIER : {
+        Identifier *y = (Identifier *)x;
+        out << "Identifier(" << y->str << ")";
+        break;
+    }
+    case DOTTED_NAME : {
+        DottedName *y = (DottedName *)x;
+        out << "DottedName(" << y->parts << ")";
+        break;
+    }
+
+    case EXPRESSION : {
+        Expr *y = (Expr *)x;
+        printExpr(y, out);
+        break;
+    }
+
+    case STATEMENT : {
+        Statement *y = (Statement *)x;
+        printStatement(y, out);
         break;
     }
 
