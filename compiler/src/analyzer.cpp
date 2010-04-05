@@ -261,9 +261,10 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case STRING_LITERAL : {
         StringLiteral *x = (StringLiteral *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarStringLiteral(x->value);
-        return analyze(x->desugared, env);
+        PValuePtr pv = new PValue(arrayType(int8Type, x->value.size()), true);
+        vector<ExprPtr> args;
+        args.push_back(new ObjectExpr(pv.ptr()));
+        return analyzeInvoke(kernelName("String"), args, env);
     }
 
     case NAME_REF : {
