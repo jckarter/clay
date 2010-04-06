@@ -192,7 +192,7 @@ FormalArgPtr clone(FormalArgPtr x)
 
     case VALUE_ARG : {
         ValueArg *y = (ValueArg *)x.ptr();
-        out = new ValueArg(y->name, cloneOpt(y->type));
+        out = new ValueArg(y->name, cloneOpt(y->type), y->tempness);
         break;
     }
 

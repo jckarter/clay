@@ -940,11 +940,22 @@ struct FormalArg : public ANode {
         : ANode(objKind) {}
 };
 
+enum ValueTempness {
+    LVALUE = 1,
+    RVALUE = 2,
+    LVALUE_OR_RVALUE = 3,
+};
+
 struct ValueArg : public FormalArg {
     IdentifierPtr name;
     ExprPtr type;
+    ValueTempness tempness;
     ValueArg(IdentifierPtr name, ExprPtr type)
-        : FormalArg(VALUE_ARG), name(name), type(type) {}
+        : FormalArg(VALUE_ARG), name(name), type(type),
+          tempness(LVALUE_OR_RVALUE) {}
+    ValueArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
+        : FormalArg(VALUE_ARG), name(name), type(type),
+          tempness(tempness) {}
 };
 
 struct StaticArg : public FormalArg {

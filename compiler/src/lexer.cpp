@@ -107,7 +107,7 @@ static void initKeywords() {
     const char *s[] =
         {"public", "private", "import", "as", "record",
          "overloadable", "overload", "external",
-         "static", "inlined",
+         "static", "inlined", "lvalue", "rvalue",
          "enum", "var", "ref",
          "and", "or", "not",
          "if", "else", "goto", "return", "returnref", "while",

@@ -430,7 +430,8 @@ static void print(const Object *x, ostream &out) {
     }
     case VALUE_ARG : {
         ValueArg *y = (ValueArg *)x;
-        out << "ValueArg(" << y->name << ", " << y->type << ")";
+        out << "ValueArg(" << y->name << ", " << y->type << ", "
+            << y->tempness << ")";
         break;
     }
     case STATIC_ARG : {
