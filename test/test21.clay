@@ -1,8 +1,6 @@
 import base.*;
 import libc;
 
-var counter = 0;
-
 record Foo {
     value:Int;
 }

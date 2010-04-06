@@ -266,6 +266,7 @@ void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v)
     InvokeEntryPtr entry = codegenCallable(proc.ptr(),
                                            vector<bool>(),
                                            vector<ObjectPtr>(),
+                                           vector<ValueTempness>(),
                                            vector<LocationPtr>());
     assert(!entry->inlined);
     if (entry->returnType != v->type)
