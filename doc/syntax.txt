@@ -27,7 +27,7 @@ Arguments -> "(" comma_list(Argument) ")"
 Argument -> ValueArgument
           | StaticArgument
 
-ValueArgument -> Identifier TypeSpec?
+ValueArgument -> ("rvalue" | "lvalue")? Identifier TypeSpec?
 StaticArgument -> "static" Expression
 
 ReturnSpec -> "ref"? TypeSpec

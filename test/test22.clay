@@ -1,0 +1,12 @@
+import base.*;
+import libc;
+
+overloadable RValue?;
+inlined overload RValue?(rvalue x) = 1;
+inlined overload RValue?(lvalue x) = 0;
+
+main() {
+    var x = 5;
+    libc.printf(cstring("RValue?(5) = %d\n"), RValue?(5));
+    libc.printf(cstring("RValue?(x) = %d\n"), RValue?(x));
+}

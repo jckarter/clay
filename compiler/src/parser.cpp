@@ -1059,13 +1059,31 @@ static bool optTypeSpec(ExprPtr &x) {
 // code
 //
 
+static bool optArgTempness(ValueTempness &tempness) {
+    int p = save();
+    if (keyword("rvalue")) {
+        tempness = RVALUE;
+        return true;
+    }
+    restore(p);
+    if (keyword("lvalue")) {
+        tempness = LVALUE;
+        return true;
+    }
+    restore(p);
+    tempness = LVALUE_OR_RVALUE;
+    return true;
+}
+
 static bool valueArg(FormalArgPtr &x) {
     LocationPtr location = currentLocation();
+    ValueTempness tempness;
+    if (!optArgTempness(tempness)) return false;
     IdentifierPtr y;
     ExprPtr z;
     if (!identifier(y)) return false;
     if (!optTypeSpec(z)) return false;
-    x = new ValueArg(y, z);
+    x = new ValueArg(y, z, tempness);
     x->location = location;
     return true;
 }
