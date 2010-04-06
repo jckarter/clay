@@ -5,8 +5,21 @@ overloadable RValue?;
 inlined overload RValue?(rvalue x) = 1;
 inlined overload RValue?(lvalue x) = 0;
 
+foo1() {
+    libc.printf(cstring("returning a rvalue\n"));
+    return 5;
+}
+
+var x = 5;
+
+foo2() {
+    libc.printf(cstring("returning a lvalue\n"));
+    returnref x;
+}
+
 main() {
-    var x = 5;
-    libc.printf(cstring("RValue?(5) = %d\n"), RValue?(5));
-    libc.printf(cstring("RValue?(x) = %d\n"), RValue?(x));
+    var result1 = RValue?(foo1());
+    libc.printf(cstring("RValue?(foo1()) = %d\n"), result1);
+    var result2 = RValue?(foo2());
+    libc.printf(cstring("RValue?(foo2()) = %d\n"), result2);
 }

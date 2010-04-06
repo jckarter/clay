@@ -1457,12 +1457,15 @@ CValuePtr codegenInvokeCallable(ObjectPtr x,
     const vector<bool> &isStaticFlags =
         lookupIsStaticFlags(x, args.size());
     vector<ObjectPtr> argsKey;
+    vector<ValueTempness> argsTempness;
     vector<LocationPtr> argLocations;
     bool result = computeArgsKey(isStaticFlags, args, env,
-                                 argsKey, argLocations);
+                                 argsKey, argsTempness,
+                                 argLocations);
     assert(result);
     InvokeEntryPtr entry = codegenCallable(x, isStaticFlags,
-                                           argsKey, argLocations);
+                                           argsKey, argsTempness,
+                                           argLocations);
     if (entry->inlined)
         return codegenInvokeInlined(entry, args, env, out);
     return codegenInvokeCode(entry, args, env, out);
@@ -1497,10 +1500,13 @@ static string getCodeName(ObjectPtr x)
 InvokeEntryPtr codegenCallable(ObjectPtr x,
                                const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
+                               const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations)
 {
     InvokeEntryPtr entry =
-        analyzeCallable(x, isStaticFlags, argsKey, argLocations);
+        analyzeCallable(x, isStaticFlags,
+                        argsKey, argsTempness,
+                        argLocations);
     if (!entry->inlined)
         codegenCodeBody(entry, getCodeName(x));
     return entry;
@@ -2212,11 +2218,13 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         const vector<bool> &isStaticFlags =
             lookupIsStaticFlags(callable, args.size()-1);
         vector<ObjectPtr> argsKey;
+        vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
             if (!isStaticFlags[i-1]) {
                 TypePtr t = evaluateType(args[i], env);
                 argsKey.push_back(t.ptr());
+                argsTempness.push_back(LVALUE);
             }
             else {
                 ObjectPtr param = evaluateStatic(args[i], env);
@@ -2225,7 +2233,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             argLocations.push_back(args[i]->location);
         }
         InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
-                                               argsKey, argLocations);
+                                               argsKey, argsTempness,
+                                               argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
         llvmBuilder->CreateStore(entry->llvmFunc, out->llValue);
@@ -2268,11 +2277,13 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         const vector<bool> &isStaticFlags =
             lookupIsStaticFlags(callable, args.size()-1);
         vector<ObjectPtr> argsKey;
+        vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
             if (!isStaticFlags[i-1]) {
                 TypePtr t = evaluateType(args[i], env);
                 argsKey.push_back(t.ptr());
+                argsTempness.push_back(LVALUE);
             }
             else {
                 ObjectPtr param = evaluateStatic(args[i], env);
@@ -2281,7 +2292,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             argLocations.push_back(args[i]->location);
         }
         InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
-                                               argsKey, argLocations);
+                                               argsKey, argsTempness,
+                                               argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
         string callableName = getCodeName(callable);
@@ -2608,6 +2620,7 @@ llvm::Function *codegenMain(ModulePtr module)
     InvokeEntryPtr entry = codegenCallable(mainProc.ptr(),
                                            vector<bool>(),
                                            vector<ObjectPtr>(),
+                                           vector<ValueTempness>(),
                                            vector<LocationPtr>());
     if (entry->inlined)
         error("main procedure should not be inlined");

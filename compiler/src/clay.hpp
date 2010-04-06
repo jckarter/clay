@@ -1908,6 +1908,7 @@ bool computeArgsKey(const vector<bool> &isStaticFlags,
                     const vector<ExprPtr> &args,
                     EnvPtr env,
                     vector<ObjectPtr> &argsKey,
+                    vector<ValueTempness> &argsTempness,
                     vector<LocationPtr> &argLocations);
 
 
@@ -1942,12 +1943,26 @@ struct InvokeEntry : public Object {
           analyzed(false), analyzing(false), inlined(false),
           returnIsTemp(false), llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
-
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
-InvokeEntryPtr lookupInvoke(ObjectPtr callable,
-                            const vector<bool> &isStaticFlags,
-                            const vector<ObjectPtr> &argsKey);
+struct InvokeSet : public Object {
+    ObjectPtr callable;
+    vector<bool> isStaticFlags;
+    vector<ObjectPtr> argsKey;
+    vector<InvokeEntryPtr> entries;
+    vector<unsigned> overloadIndices;
+    InvokeSet(ObjectPtr callable,
+              const vector<bool> &isStaticFlags,
+              const vector<ObjectPtr> &argsKey)
+        : Object(DONT_CARE), callable(callable), isStaticFlags(isStaticFlags),
+          argsKey(argsKey) {}
+};
+typedef Pointer<InvokeSet> InvokeSetPtr;
+
+
+InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
+                             const vector<bool> &isStaticFlags,
+                             const vector<ObjectPtr> &argsKey);
 
 
 struct StaticInvokeEntry : public Object {
@@ -2098,6 +2113,7 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
+                               const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations);
 ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
                                const vector<ExprPtr> &args,
@@ -2270,6 +2286,7 @@ CValuePtr codegenInvokeCallable(ObjectPtr x,
 InvokeEntryPtr codegenCallable(ObjectPtr x,
                                const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
+                               const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations);
 CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
                             const vector<ExprPtr> &args,

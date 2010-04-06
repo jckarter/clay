@@ -153,6 +153,7 @@ bool computeArgsKey(const vector<bool> &isStaticFlags,
                     const vector<ExprPtr> &args,
                     EnvPtr env,
                     vector<ObjectPtr> &argsKey,
+                    vector<ValueTempness> &argsTempness,
                     vector<LocationPtr> &argLocations)
 {
     for (unsigned i = 0; i < args.size(); ++i) {
@@ -165,6 +166,7 @@ bool computeArgsKey(const vector<bool> &isStaticFlags,
             if (!pv)
                 return false;
             argsKey.push_back(pv->type.ptr());
+            argsTempness.push_back(pv->isTemp ? RVALUE : LVALUE);
         }
         argLocations.push_back(args[i]->location);
     }
@@ -177,44 +179,58 @@ bool computeArgsKey(const vector<bool> &isStaticFlags,
 // invoke tables
 //
 
-static bool invokeTableInitialized = false;
-static vector< vector<InvokeEntryPtr> > invokeTable;
+static bool invokeTablesInitialized = false;
+
+static vector< vector<InvokeSetPtr> > invokeTable;
+
 static vector< vector<StaticInvokeEntryPtr> > staticInvokeTable;
 
-static void initInvokeTable() {
-    assert(!invokeTableInitialized);
+
+
+//
+// initInvokeTable
+//
+
+static void initInvokeTables() {
+    assert(!invokeTablesInitialized);
     invokeTable.resize(16384);
     staticInvokeTable.resize(8192);
-    invokeTableInitialized = true;
+    invokeTablesInitialized = true;
 }
 
-InvokeEntryPtr lookupInvoke(ObjectPtr callable,
-                            const vector<bool> &isStaticFlags,
-                            const vector<ObjectPtr> &argsKey)
+
+
+//
+// lookupInvokeSet
+//
+
+InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
+                             const vector<bool> &isStaticFlags,
+                             const vector<ObjectPtr> &argsKey)
 {
-    if (!invokeTableInitialized)
-        initInvokeTable();
+    if (!invokeTablesInitialized)
+        initInvokeTables();
     int h = objectHash(callable) + objectVectorHash(argsKey);
     h &= (invokeTable.size() - 1);
-    vector<InvokeEntryPtr> &bucket = invokeTable[h];
+    vector<InvokeSetPtr> &bucket = invokeTable[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
-        InvokeEntryPtr entry = bucket[i];
-        if (objectEquals(entry->callable, callable) &&
-            objectVectorEquals(entry->argsKey, argsKey))
+        InvokeSetPtr invokeSet = bucket[i];
+        if (objectEquals(invokeSet->callable, callable) &&
+            objectVectorEquals(invokeSet->argsKey, argsKey))
         {
-            return entry;
+            return invokeSet;
         }
     }
-    InvokeEntryPtr entry = new InvokeEntry(callable, isStaticFlags, argsKey);
-    bucket.push_back(entry);
-    return entry;
+    InvokeSetPtr invokeSet = new InvokeSet(callable, isStaticFlags, argsKey);
+    bucket.push_back(invokeSet);
+    return invokeSet;
 }
 
 StaticInvokeEntryPtr lookupStaticInvoke(ObjectPtr callable,
                                         const vector<ObjectPtr> &args)
 {
-    if (!invokeTableInitialized)
-        initInvokeTable();
+    if (!invokeTablesInitialized)
+        initInvokeTables();
     int h = objectHash(callable) + objectVectorHash(args);
     h &= (staticInvokeTable.size() - 1);
     vector<StaticInvokeEntryPtr> &bucket = staticInvokeTable[h];
