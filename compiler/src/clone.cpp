@@ -314,6 +314,12 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case TRY : {
+        Try *y = (Try *)x.ptr();
+        out = new Try(clone(y->tryBlock), clone(y->catchBlock));
+        break;
+    }
+
     default :
         assert(false);
 

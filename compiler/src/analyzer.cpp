@@ -1087,6 +1087,13 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
         return analyzeStatement(x->statement, x->env, result);
     }
 
+    case TRY : {
+        Try *x = (Try *)stmt.ptr();
+        bool tryResult = analyzeStatement(x->tryBlock, env, result);
+        bool catchResult = analyzeStatement(x->catchBlock, env, result);
+        return tryResult || catchResult; // FIXME
+    }
+
     default :
         assert(false);
         return false;

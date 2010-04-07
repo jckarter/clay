@@ -996,6 +996,18 @@ static bool forStatement(StatementPtr &x) {
     return true;
 }
 
+static bool tryStatement(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    StatementPtr a, b;
+    if (!keyword("try")) return false;
+    if (!statement(a)) return false;
+    if (!keyword("catch")) return false;
+    if (!statement(b)) return false;
+    x = new Try(a, b);
+    x->location = location;
+    return true;
+}
+
 static bool statement(StatementPtr &x) {
     int p = save();
     if (block(x)) return true;
@@ -1011,6 +1023,8 @@ static bool statement(StatementPtr &x) {
     if (restore(p), breakStatement(x)) return true;
     if (restore(p), continueStatement(x)) return true;
     if (restore(p), forStatement(x)) return true;
+    if (restore(p), tryStatement(x)) return true;
+
     return false;
 }
 

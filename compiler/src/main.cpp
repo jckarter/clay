@@ -178,6 +178,7 @@ static bool generateBinary(llvm::Module *module,
 
     if (sharedLib)
         gccArgs.push_back("-shared");
+    gccArgs.push_back("-lstdc++");
     gccArgs.push_back("-o");
     gccArgs.push_back(outputFile.c_str());
     gccArgs.push_back("-x");
