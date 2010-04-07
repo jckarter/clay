@@ -25,6 +25,7 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/Intrinsics.h>
 
 using std::string;
 using std::vector;
@@ -150,6 +151,7 @@ enum ObjectKind {
     MODULE,
 
     ENV,
+    CODE_CONTEXT,
 
     PRIM_OP,
 
@@ -219,6 +221,7 @@ struct Break;
 struct Continue;
 struct For;
 struct SCStatement;
+struct Try;
 
 struct FormalArg;
 struct ValueArg;
@@ -252,6 +255,7 @@ struct ModuleHolder;
 struct Module;
 
 struct Env;
+struct CodeContext;
 
 struct PrimOp;
 
@@ -338,6 +342,7 @@ typedef Pointer<Break> BreakPtr;
 typedef Pointer<Continue> ContinuePtr;
 typedef Pointer<For> ForPtr;
 typedef Pointer<SCStatement> SCStatementPtr;
+typedef Pointer<Try> TryPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ValueArg> ValueArgPtr;
@@ -371,6 +376,7 @@ typedef Pointer<ModuleHolder> ModuleHolderPtr;
 typedef Pointer<Module> ModulePtr;
 
 typedef Pointer<Env> EnvPtr;
+typedef Pointer<CodeContext> CodeContextPtr;
 
 typedef Pointer<PrimOp> PrimOpPtr;
 
@@ -793,6 +799,7 @@ enum StatementKind {
     CONTINUE,
     FOR,
     SC_STATEMENT,
+    TRY,
 };
 
 struct Statement : public ANode {
@@ -927,6 +934,13 @@ struct SCStatement : public Statement {
     StatementPtr statement;
     SCStatement(EnvPtr env, StatementPtr statement)
         : Statement(SC_STATEMENT), env(env), statement(statement) {}
+};
+
+struct Try : public Statement {
+    StatementPtr tryBlock;
+    StatementPtr catchBlock;
+    Try(StatementPtr tryBlock, StatementPtr catchBlock) 
+        : Statement(TRY), tryBlock(tryBlock), catchBlock(catchBlock) {}
 };
 
 
@@ -1378,12 +1392,18 @@ void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out);
 struct Env : public Object {
     ObjectPtr parent;
     map<string, ObjectPtr> entries;
+    CodeContextPtr ctx;
     Env()
-        : Object(ENV) {}
+        : Object(ENV), ctx(NULL) {}
     Env(ModulePtr parent)
-        : Object(ENV), parent(parent.ptr()) {}
+        : Object(ENV), parent(parent.ptr()), ctx(NULL) {}
     Env(EnvPtr parent)
-        : Object(ENV), parent(parent.ptr()) {}
+        : Object(ENV), parent(parent.ptr()) {
+        if (parent.ptr())
+            ctx = parent->ctx;
+        else
+            ctx = NULL;
+    }
 };
 
 
@@ -2200,8 +2220,11 @@ void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v);
 struct CValue : public Object {
     TypePtr type;
     llvm::Value *llValue;
+    llvm::BasicBlock *landingPad;
+    llvm::BasicBlock *destructor;
     CValue(TypePtr type, llvm::Value *llValue)
-        : Object(CVALUE), type(type), llValue(llValue) {}
+        : Object(CVALUE), type(type), llValue(llValue),
+          landingPad(NULL), destructor(NULL) {}
 };
 
 struct JumpTarget {
@@ -2212,7 +2235,7 @@ struct JumpTarget {
         : block(block), stackMarker(stackMarker) {}
 };
 
-struct CodeContext {
+struct CodeContext : public Object {
     TypePtr returnType;
     bool returnIsTemp;
     CValuePtr returnVal;
@@ -2220,12 +2243,18 @@ struct CodeContext {
     map<string, JumpTarget> labels;
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
+    llvm::BasicBlock *catchBlock;
+	llvm::BasicBlock *unwindBlock;
+    llvm::Value *exception;
+	int tryBlockStackMarker;
     CodeContext(TypePtr returnType,
                 bool returnIsTemp,
                 CValuePtr returnVal,
                 const JumpTarget &returnTarget)
-        : returnType(returnType), returnIsTemp(returnIsTemp),
-          returnVal(returnVal), returnTarget(returnTarget) {}
+        : Object(CODE_CONTEXT), returnType(returnType), 
+          returnIsTemp(returnIsTemp),
+          returnVal(returnVal), returnTarget(returnTarget),
+          catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}
 };
 
 void codegenValueInit(CValuePtr dest);
@@ -2245,11 +2274,11 @@ CValuePtr codegenAllocValue(TypePtr t);
 void codegenCodeBody(InvokeEntryPtr entry,
                      const string &callableName);
 
-bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx);
+bool codegenStatement(StatementPtr stmt, EnvPtr env);
 
 void codegenCollectLabels(const vector<StatementPtr> &statements,
                           unsigned startIndex,
-                          CodeContext &ctx);
+                          CodeContextPtr ctx);
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env);
 
 void codegenRootIntoValue(ExprPtr expr,

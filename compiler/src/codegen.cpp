@@ -3,6 +3,148 @@
 
 vector<CValuePtr> stackCValues;
 
+static bool llvmExceptionsInited = false;
+
+static void initExceptions() 
+{
+    getDeclaration(llvmModule, llvm::Intrinsic::eh_selector);
+    getDeclaration(llvmModule, llvm::Intrinsic::eh_exception);
+    
+    llvm::FunctionType *llFunc1Type =
+        llvm::FunctionType::get(llvmIntType(32), true);
+    
+    llvm::Function::Create(llFunc1Type,
+                           llvm::Function::ExternalLinkage,
+                           "__gxx_personality_v0",
+                           llvmModule);
+                            
+    vector<const llvm::Type *> argTypes;
+    argTypes.push_back(llvmBuilder->getInt8Ty()->getPointerTo());
+
+    llvm::FunctionType *llFunc2Type = 
+        llvm::FunctionType::get(llvmVoidType(), argTypes, false);
+    llvm::Function::Create(llFunc2Type,
+                           llvm::Function::ExternalLinkage,
+                           "_Unwind_Resume_or_Rethrow",
+                           llvmModule);
+    
+    llvmExceptionsInited = true;    
+}
+
+static llvm::BasicBlock *createLandingPad(CodeContextPtr ctx) 
+{
+    if (!llvmExceptionsInited) 
+        initExceptions();
+    if (!ctx->exception) {
+        ctx->exception = llvmInitBuilder->CreateAlloca(
+                llvmBuilder->getInt8Ty()->getPointerTo());
+    }
+
+    llvm::BasicBlock *lpad = newBasicBlock("lpad");
+    llvmBuilder->SetInsertPoint(lpad);
+    llvm::Function *ehException = llvmModule->getFunction("llvm.eh.exception");
+    llvm::Function *ehSelector = llvmModule->getFunction("llvm.eh.selector");
+    llvm::Function *personality = 
+        llvmModule->getFunction("__gxx_personality_v0");
+    llvm::Value *ehPtr = llvmBuilder->CreateCall(ehException);
+    llvmBuilder->CreateStore(ehPtr, ctx->exception);
+    llvm::Value* funcPtr = llvmBuilder->CreateBitCast(personality,
+                                    llvmBuilder->getInt8Ty()->getPointerTo());
+    std::vector<llvm::Value*> llArgs;
+    llArgs.push_back(ehPtr);
+    llArgs.push_back(funcPtr);
+    llArgs.push_back(
+        llvm::Constant::getNullValue(
+            llvm::PointerType::getUnqual(
+                llvm::IntegerType::getInt8Ty(llvm::getGlobalContext()))));
+    llvmBuilder->CreateCall(ehSelector, llArgs.begin(), llArgs.end());
+    return lpad;
+}
+
+static llvm::BasicBlock *createUnwindBlock(CodeContextPtr ctx) {
+    llvm::BasicBlock *unwindBlock = newBasicBlock("Unwind");
+    llvm::IRBuilder<> llBuilder(unwindBlock);
+    llvm::Function *unwindResume = 
+        llvmModule->getFunction("_Unwind_Resume_or_Rethrow");
+    llvm::Value *arg = llBuilder.CreateLoad(ctx->exception);
+    llBuilder.CreateCall(unwindResume, arg);
+    llBuilder.CreateUnreachable();
+    return unwindBlock;
+}
+
+static llvm::Value *createCall(llvm::Value *llCallable, 
+                               vector<llvm::Value *>::iterator argBegin,
+                               vector<llvm::Value *>::iterator argEnd,
+                               EnvPtr env) 
+{  
+    // We don't have a context
+    if (!env->ctx.ptr())
+        return llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
+
+    CodeContextPtr ctx = env->ctx;
+    llvm::BasicBlock *landingPad;
+
+    int startMarker = ctx->returnTarget.stackMarker;
+    int endMarker = cgMarkStack();
+
+    // If we are inside a try block then adjust marker
+    if (ctx->catchBlock)
+        startMarker = ctx->tryBlockStackMarker;
+
+    if (endMarker <= startMarker && !ctx->catchBlock)
+        return llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
+
+    llvm::BasicBlock *savedInsertPoint = llvmBuilder->GetInsertBlock();
+    
+    for (int i = startMarker; i < endMarker; ++i) {
+        CValuePtr val = stackCValues[i];
+        if (val->landingPad) 
+            continue;
+            
+        val->landingPad = createLandingPad(ctx);
+        if (!val->destructor) {
+            val->destructor = newBasicBlock("destructor");
+        }
+        llvmBuilder->CreateBr(val->destructor);
+        llvmBuilder->SetInsertPoint(val->destructor);
+        codegenValueDestroy(val);
+        
+        if (ctx->catchBlock && ctx->tryBlockStackMarker == i)
+            llvmBuilder->CreateBr(ctx->catchBlock);
+        else if (i == ctx->returnTarget.stackMarker) {
+            if (!ctx->unwindBlock) {
+                ctx->unwindBlock = createUnwindBlock(ctx);
+            }
+            llvmBuilder->CreateBr(ctx->unwindBlock);
+        }
+        else {
+            if (!stackCValues[i-1]->destructor) {
+                stackCValues[i-1]->destructor = newBasicBlock("destructor");
+            }
+            llvmBuilder->CreateBr(stackCValues[i-1]->destructor);
+        }
+    }
+
+    // No live vars, but we were inside a try block
+    if (endMarker <= startMarker) {
+        landingPad = createLandingPad(ctx);
+        llvmBuilder->SetInsertPoint(landingPad);
+        llvmBuilder->CreateBr(ctx->catchBlock);
+    }
+    else
+        landingPad = stackCValues[endMarker-1]->landingPad;
+
+
+    llvmBuilder->SetInsertPoint(savedInsertPoint);
+    
+    llvm::BasicBlock *normalBlock = newBasicBlock("normal");
+    llvm::Value *result = llvmBuilder->CreateInvoke(llCallable, normalBlock, 
+            landingPad, argBegin, argEnd);
+    llvmBuilder->SetInsertPoint(normalBlock);
+    return result;
+}
+
+
 
 //
 // codegen value ops
@@ -173,10 +315,10 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     addLocal(env, new Identifier("%returned"), rinfo);
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
-    CodeContext ctx(entry->returnType, entry->returnIsTemp,
+    env->ctx = new CodeContext(entry->returnType, entry->returnIsTemp,
                     returnVal, returnTarget);
 
-    bool terminated = codegenStatement(entry->code->body, env, ctx);
+    bool terminated = codegenStatement(entry->code->body, env);
     if (!terminated) {
         cgDestroyStack(returnTarget.stackMarker);
         llvmBuilder->CreateBr(returnBlock);
@@ -228,7 +370,7 @@ static const char *_getUpdateOperator(int op) {
 // codegenStatement
 //
 
-bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
+bool codegenStatement(StatementPtr stmt, EnvPtr env)
 {
     LocationContext loc(stmt->location);
 
@@ -237,15 +379,15 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
     case BLOCK : {
         Block *x = (Block *)stmt.ptr();
         int blockMarker = cgMarkStack();
-        codegenCollectLabels(x->statements, 0, ctx);
+        codegenCollectLabels(x->statements, 0, env->ctx);
         bool terminated = false;
         for (unsigned i = 0; i < x->statements.size(); ++i) {
             StatementPtr y = x->statements[i];
             if (y->stmtKind == LABEL) {
                 Label *z = (Label *)y.ptr();
                 map<string, JumpTarget>::iterator li =
-                    ctx.labels.find(z->name->str);
-                assert(li != ctx.labels.end());
+                    env->ctx->labels.find(z->name->str);
+                assert(li != env->ctx->labels.end());
                 const JumpTarget &jt = li->second;
                 if (!terminated)
                     llvmBuilder->CreateBr(jt.block);
@@ -256,10 +398,10 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
             }
             else if (y->stmtKind == BINDING) {
                 env = codegenBinding((Binding *)y.ptr(), env);
-                codegenCollectLabels(x->statements, i+1, ctx);
+                codegenCollectLabels(x->statements, i+1, env->ctx);
             }
             else {
-                terminated = codegenStatement(y, env, ctx);
+                terminated = codegenStatement(y, env);
             }
         }
         if (!terminated)
@@ -326,8 +468,8 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
     case GOTO : {
         Goto *x = (Goto *)stmt.ptr();
         map<string, JumpTarget>::iterator li =
-            ctx.labels.find(x->labelName->str);
-        if (li == ctx.labels.end())
+            env->ctx->labels.find(x->labelName->str);
+        if (li == env->ctx->labels.end())
             error("goto label not found");
         const JumpTarget &jt = li->second;
         cgDestroyStack(jt.stackMarker);
@@ -338,20 +480,20 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
         if (!x->expr) {
-            if (ctx.returnType.ptr())
+            if (env->ctx->returnType.ptr())
                 error("non-void return expected");
         }
         else {
-            if (!ctx.returnType)
+            if (!env->ctx->returnType)
                 error("void return expected");
-            if (!ctx.returnIsTemp)
+            if (!env->ctx->returnIsTemp)
                 error("return by reference expected");
             PValuePtr pv = analyzeValue(x->expr, env);
-            if (pv->type != ctx.returnType)
+            if (pv->type != env->ctx->returnType)
                 error("type mismatch in return");
-            codegenRootIntoValue(x->expr, env, pv, ctx.returnVal);
+            codegenRootIntoValue(x->expr, env, pv, env->ctx->returnVal);
         }
-        const JumpTarget &jt = ctx.returnTarget;
+        const JumpTarget &jt = env->ctx->returnTarget;
         cgDestroyStack(jt.stackMarker);
         llvmBuilder->CreateBr(jt.block);
         return true;
@@ -359,18 +501,18 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 
     case RETURN_REF : {
         ReturnRef *x = (ReturnRef *)stmt.ptr();
-        if (!ctx.returnType)
+        if (!env->ctx->returnType)
             error("void return expected");
-        if (ctx.returnIsTemp)
+        if (env->ctx->returnIsTemp)
             error("return by value expected");
         PValuePtr pv = analyzeValue(x->expr, env);
-        if (pv->type != ctx.returnType)
+        if (pv->type != env->ctx->returnType)
             error("type mismatch in return");
         if (pv->isTemp)
             error("cannot return a temporary by reference");
         CValuePtr ref = codegenRootValue(x->expr, env, NULL);
-        llvmBuilder->CreateStore(ref->llValue, ctx.returnVal->llValue);
-        const JumpTarget &jt = ctx.returnTarget;
+        llvmBuilder->CreateStore(ref->llValue, env->ctx->returnVal->llValue);
+        const JumpTarget &jt = env->ctx->returnTarget;
         cgDestroyStack(jt.stackMarker);
         llvmBuilder->CreateBr(jt.block);
         return true;
@@ -394,7 +536,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         bool terminated2 = false;
 
         llvmBuilder->SetInsertPoint(trueBlock);
-        terminated1 = codegenStatement(x->thenPart, env, ctx);
+        terminated1 = codegenStatement(x->thenPart, env);
         if (!terminated1) {
             if (!mergeBlock)
                 mergeBlock = newBasicBlock("ifMerge");
@@ -403,7 +545,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 
         llvmBuilder->SetInsertPoint(falseBlock);
         if (x->elsePart.ptr())
-            terminated2 = codegenStatement(x->elsePart, env, ctx);
+            terminated2 = codegenStatement(x->elsePart, env);
         if (!terminated2) {
             if (!mergeBlock)
                 mergeBlock = newBasicBlock("ifMerge");
@@ -452,32 +594,32 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 
         llvmBuilder->CreateCondBr(cond, whileBody, whileEnd);
 
-        ctx.breaks.push_back(JumpTarget(whileEnd, cgMarkStack()));
-        ctx.continues.push_back(JumpTarget(whileBegin, cgMarkStack()));
+        env->ctx->breaks.push_back(JumpTarget(whileEnd, cgMarkStack()));
+        env->ctx->continues.push_back(JumpTarget(whileBegin, cgMarkStack()));
         llvmBuilder->SetInsertPoint(whileBody);
-        bool terminated = codegenStatement(x->body, env, ctx);
+        bool terminated = codegenStatement(x->body, env);
         if (!terminated)
             llvmBuilder->CreateBr(whileBegin);
-        ctx.breaks.pop_back();
-        ctx.continues.pop_back();
+        env->ctx->breaks.pop_back();
+        env->ctx->continues.pop_back();
 
         llvmBuilder->SetInsertPoint(whileEnd);
         return false;
     }
 
     case BREAK : {
-        if (ctx.breaks.empty())
+        if (env->ctx->breaks.empty())
             error("invalid break statement");
-        const JumpTarget &jt = ctx.breaks.back();
+        const JumpTarget &jt = env->ctx->breaks.back();
         cgDestroyStack(jt.stackMarker);
         llvmBuilder->CreateBr(jt.block);
         return true;
     }
 
     case CONTINUE : {
-        if (ctx.continues.empty())
+        if (env->ctx->continues.empty())
             error("invalid continue statement");
-        const JumpTarget &jt = ctx.breaks.back();
+        const JumpTarget &jt = env->ctx->breaks.back();
         cgDestroyStack(jt.stackMarker);
         llvmBuilder->CreateBr(jt.block);
         return true;
@@ -487,13 +629,37 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
         For *x = (For *)stmt.ptr();
         if (!x->desugared)
             x->desugared = desugarForStatement(x);
-        return codegenStatement(x->desugared, env, ctx);
+        return codegenStatement(x->desugared, env);
     }
 
     case SC_STATEMENT : {
         SCStatement *x = (SCStatement *)stmt.ptr();
-        return codegenStatement(x->statement, x->env, ctx);
+        return codegenStatement(x->statement, x->env);
     }
+
+    case TRY : {
+        Try *x = (Try *)stmt.ptr();
+
+        llvm::BasicBlock *catchBegin = newBasicBlock("catchBegin");
+        llvm::BasicBlock *savedCatchBegin = env->ctx->catchBlock;
+        env->ctx->catchBlock = catchBegin;
+        env->ctx->tryBlockStackMarker = cgMarkStack();
+        
+        codegenStatement(x->tryBlock, env);
+        env->ctx->catchBlock = savedCatchBegin;
+        
+        llvm::BasicBlock *catchEnd = newBasicBlock("catchEnd");
+        llvmBuilder->CreateBr(catchEnd);
+        
+        llvmBuilder->SetInsertPoint(catchBegin);
+        codegenStatement(x->catchBlock, env);
+        llvmBuilder->CreateBr(catchEnd);
+
+        llvmBuilder->SetInsertPoint(catchEnd);
+        
+        return false;
+    }
+
 
     default :
         assert(false);
@@ -504,7 +670,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodeContext &ctx)
 
 void codegenCollectLabels(const vector<StatementPtr> &statements,
                           unsigned startIndex,
-                          CodeContext &ctx)
+                          CodeContextPtr ctx)
 {
     for (unsigned i = startIndex; i < statements.size(); ++i) {
         StatementPtr x = statements[i];
@@ -512,11 +678,11 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
         case LABEL : {
             Label *y = (Label *)x.ptr();
             map<string, JumpTarget>::iterator li =
-                ctx.labels.find(y->name->str);
-            if (li != ctx.labels.end())
+                ctx->labels.find(y->name->str);
+            if (li != ctx->labels.end())
                 error(x, "label redefined");
             llvm::BasicBlock *bb = newBasicBlock(y->name->str.c_str());
-            ctx.labels[y->name->str] = JumpTarget(bb, cgMarkStack());
+            ctx->labels[y->name->str] = JumpTarget(bb, cgMarkStack());
             break;
         }
         case BINDING :
@@ -1147,9 +1313,9 @@ void codegenExternal(ExternalProcedurePtr x)
     addLocal(env, new Identifier("%returned"), rinfo);
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
-    CodeContext ctx(x->returnType2, true, returnVal, returnTarget);
+    env->ctx = new CodeContext(x->returnType2, true, returnVal, returnTarget);
 
-    bool terminated = codegenStatement(x->body, env, ctx);
+    bool terminated = codegenStatement(x->body, env);
     if (!terminated) {
         cgDestroyStack(returnTarget.stackMarker);
         llvmBuilder->CreateBr(returnBlock);
@@ -1317,21 +1483,20 @@ CValuePtr codegenInvokeValue(CValuePtr x,
         }
         if (!t->returnType) {
             assert(!out);
-            llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+            createCall(llCallable, llArgs.begin(), llArgs.end(), env);
             return NULL;
         }
         else if (t->returnIsTemp) {
             assert(out.ptr());
             assert(t->returnType == out->type);
             llArgs.push_back(out->llValue);
-            llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+            createCall(llCallable, llArgs.begin(), llArgs.end(), env);
             return out;
         }
         else {
             assert(!out);
             llvm::Value *result =
-                llvmBuilder->CreateCall(llCallable, llArgs.begin(),
-                                        llArgs.end());
+                createCall(llCallable, llArgs.begin(), llArgs.end(), env);
             return new CValue(t->returnType, result);
         }
         assert(false);
@@ -1535,18 +1700,17 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
         llArgs.push_back(carg->llValue);
     }
     if (!entry->returnType) {
-        llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(), llArgs.end());
+        createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), env);
         return NULL;
     }
     else if (entry->returnIsTemp) {
         llArgs.push_back(out->llValue);
-        llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(), llArgs.end());
+        createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), env);
         return out;
     }
     else {
         llvm::Value *result =
-            llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(),
-                                    llArgs.end());
+            createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), env);
         return new CValue(entry->returnType, result);
     }
 }
@@ -1602,9 +1766,10 @@ CValuePtr codegenInvokeInlined(InvokeEntryPtr entry,
     llvm::BasicBlock *returnBlock = newBasicBlock("return");
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
-    CodeContext ctx(returnType, returnIsTemp, returnVal, returnTarget);
+    bodyEnv->ctx = new CodeContext(returnType, returnIsTemp, 
+            returnVal, returnTarget);
 
-    bool terminated = codegenStatement(entry->code->body, bodyEnv, ctx);
+    bool terminated = codegenStatement(entry->code->body, bodyEnv);
     if (!terminated) {
         cgDestroyStack(returnTarget.stackMarker);
         llvmBuilder->CreateBr(returnBlock);

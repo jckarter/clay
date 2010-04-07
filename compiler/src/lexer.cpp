@@ -112,7 +112,7 @@ static void initKeywords() {
          "and", "or", "not",
          "if", "else", "goto", "return", "returnref", "while",
          "break", "continue", "for", "in", "returned",
-         "lambda", "block", "true", "false", NULL};
+         "lambda", "block", "true", "false", "try", "catch", NULL};
     keywords = new std::set<string>();
     for (const char **p = s; *p; ++p)
         keywords->insert(*p);

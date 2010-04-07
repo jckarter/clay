@@ -334,6 +334,11 @@ static void printStatement(const Statement *x, ostream &out) {
         out << "SCStatement(" << y->statement << ")";
         break;
     }
+    case TRY : {
+        Try *y = (Try *)x;
+        out << "Try(" << y->tryBlock << ", " << y->catchBlock;
+        break;
+    }
     }
 }
 
