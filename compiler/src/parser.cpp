@@ -259,7 +259,7 @@ static bool tupleExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("(")) return false;
     TuplePtr y = new Tuple();
-    if (!expressionList(y->args)) return false;
+    if (!optExpressionList(y->args)) return false;
     if (!symbol(")")) return false;
     x = y.ptr();
     x->location = location;
