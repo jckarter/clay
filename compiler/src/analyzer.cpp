@@ -702,8 +702,6 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
         }
 
         case PRIM_Tuple : {
-            if (args.size() < 2)
-                error("atleast two arguments required for tuple types");
             vector<TypePtr> types;
             for (unsigned i = 0; i < args.size(); ++i)
                 types.push_back(evaluateType(args[i], env));
@@ -1498,8 +1496,6 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_tuple : {
-        if (args.size() < 2)
-            error("tuples require atleast two elements");
         vector<TypePtr> elementTypes;
         for (unsigned i = 0; i < args.size(); ++i) {
             PValuePtr y = analyzeValue(args[i], env);

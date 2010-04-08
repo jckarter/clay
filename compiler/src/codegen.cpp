@@ -2580,6 +2580,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         TupleType *tt = (TupleType *)ptuple->type.ptr();
         CValuePtr ctuple = codegenAsRef(args[0], env, ptuple);
         size_t i = evaluateSizeT(args[1], env);
+        if (i >= tt->elementTypes.size())
+            error(args[1], "tuple index out of range");
         llvm::Value *ptr =
             llvmBuilder->CreateConstGEP2_32(ctuple->llValue, 0, i);
         return new CValue(tt->elementTypes[i], ptr);

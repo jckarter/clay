@@ -124,8 +124,6 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
         }
 
         case PRIM_Tuple : {
-            if (args.size() < 2)
-                error("tuples require atleast 2 elements");
             vector<PatternPtr> elementTypes;
             for (unsigned i = 0; i < args.size(); ++i)
                 elementTypes.push_back(evaluatePattern(args[i], env));
