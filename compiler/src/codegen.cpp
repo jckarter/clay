@@ -2751,85 +2751,26 @@ static ProcedurePtr makeInitializerProcedure() {
 
 llvm::Function *codegenMain(ModulePtr module)
 {
-    llvm::FunctionType *llMainType =
-        llvm::FunctionType::get(llvmType(cIntType),
-                                vector<const llvm::Type *>(),
-                                false);
-    llvm::Function *llMain =
-        llvm::Function::Create(llMainType,
-                               llvm::Function::ExternalLinkage,
-                               "main",
-                               llvmModule);
+    BlockPtr mainBody = new Block();
+    ObjectPtr initializer = makeInitializerProcedure().ptr();
+    ExprPtr initCall = new Call(new ObjectExpr(initializer));
+    mainBody->statements.push_back(new ExprStatement(initCall));
+    ExprPtr mainCall = new Call(new NameRef(new Identifier("main")));
+    mainBody->statements.push_back(new ExprStatement(mainCall));
+    mainBody->statements.push_back(new Return(new IntLiteral("0")));
 
-    llvm::Function *savedLLVMFunction = llvmFunction;
-    llvm::IRBuilder<> *savedLLVMInitBuilder = llvmInitBuilder;
-    llvm::IRBuilder<> *savedLLVMBuilder = llvmBuilder;
+    ExternalProcedurePtr entryProc =
+        new ExternalProcedure(new Identifier("main"),
+                              PUBLIC,
+                              vector<ExternalArgPtr>(),
+                              false,
+                              new ObjectExpr(cIntType.ptr()),
+                              mainBody.ptr(),
+                              vector<IdentifierPtr>());
 
-    llvmFunction = llMain;
+    entryProc->env = module->env;
 
-    llvm::BasicBlock *initBlock = newBasicBlock("initBlock");
-    llvm::BasicBlock *codeBlock = newBasicBlock("codeBlock");
+    codegenExternal(entryProc);
 
-    llvmInitBuilder = new llvm::IRBuilder<>(initBlock);
-    llvmBuilder = new llvm::IRBuilder<>(codeBlock);
-
-    ProcedurePtr initProc = makeInitializerProcedure();
-    ObjectPtr initProcAnalysis = analyzeInvokeCallable(initProc.ptr(),
-                                                       vector<ExprPtr>(),
-                                                       module->env);
-    assert(initProcAnalysis->objKind == VOID_VALUE);
-    codegenInvokeVoid(initProc.ptr(), vector<ExprPtr>(), module->env);
-
-    ObjectPtr mainObj = lookupEnv(module->env, new Identifier("main"));
-    if (mainObj->objKind != PROCEDURE)
-        error("expecting 'main' to be a procedure");
-    ProcedurePtr mainProc = (Procedure *)mainObj.ptr();
-    InvokeEntryPtr entry = codegenCallable(mainProc.ptr(),
-                                           vector<bool>(),
-                                           vector<ObjectPtr>(),
-                                           vector<ValueTempness>(),
-                                           vector<LocationPtr>());
-    if (entry->inlined)
-        error("main procedure should not be inlined");
-    if (!entry->returnType) {
-        codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), NULL);
-        llvm::Value *zero = llvm::ConstantInt::get(llvmType(cIntType), 0);
-        llvmBuilder->CreateRet(zero);
-    }
-    else if (entry->returnIsTemp) {
-        CValuePtr result = codegenAllocValue(entry->returnType);
-        codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), result);
-        if (entry->returnType == cIntType) {
-            llvm::Value *v = llvmBuilder->CreateLoad(result->llValue);
-            codegenValueDestroy(result);
-            llvmBuilder->CreateRet(v);
-        }
-        else {
-            codegenValueDestroy(result);
-            llvm::Value *zero = llvm::ConstantInt::get(llvmType(cIntType), 0);
-            llvmBuilder->CreateRet(zero);
-        }
-    }
-    else {
-        CValuePtr result =
-            codegenInvokeCode(entry, vector<ExprPtr>(), new Env(), NULL);
-        if (entry->returnType == cIntType) {
-            llvm::Value *v = llvmBuilder->CreateLoad(result->llValue);
-            llvmBuilder->CreateRet(v);
-        }
-        else {
-            llvm::Value *zero = llvm::ConstantInt::get(llvmType(cIntType), 0);
-            llvmBuilder->CreateRet(zero);
-        }
-    }
-    llvmInitBuilder->CreateBr(codeBlock);
-
-    delete llvmInitBuilder;
-    delete llvmBuilder;
-
-    llvmBuilder = savedLLVMBuilder;
-    llvmInitBuilder = savedLLVMInitBuilder;
-    llvmFunction = savedLLVMFunction;
-
-    return llMain;
+    return entryProc->llvmFunc;
 }
