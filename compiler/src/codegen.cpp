@@ -33,13 +33,6 @@ static void initExceptions()
 
 static llvm::BasicBlock *createLandingPad(CodeContextPtr ctx) 
 {
-    if (!llvmExceptionsInited) 
-        initExceptions();
-    if (!ctx->exception) {
-        ctx->exception = llvmInitBuilder->CreateAlloca(
-                llvmBuilder->getInt8Ty()->getPointerTo());
-    }
-
     llvm::BasicBlock *lpad = newBasicBlock("lpad");
     llvmBuilder->SetInsertPoint(lpad);
     llvm::Function *ehException = llvmModule->getFunction("llvm.eh.exception");
@@ -95,45 +88,47 @@ static llvm::Value *createCall(llvm::Value *llCallable,
         return llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
 
     llvm::BasicBlock *savedInsertPoint = llvmBuilder->GetInsertBlock();
+   
+    if (!llvmExceptionsInited) 
+       initExceptions(); 
+    if (!ctx->exception)
+        ctx->exception = llvmInitBuilder->CreateAlloca(
+                llvmBuilder->getInt8Ty()->getPointerTo());
     
     for (int i = startMarker; i < endMarker; ++i) {
         CValuePtr val = stackCValues[i];
-        if (val->landingPad) 
+        if (val->destructor) 
             continue;
-            
-        val->landingPad = createLandingPad(ctx);
-        if (!val->destructor) {
-            val->destructor = newBasicBlock("destructor");
-        }
-        llvmBuilder->CreateBr(val->destructor);
+        
+        val->destructor = newBasicBlock("destructor");
         llvmBuilder->SetInsertPoint(val->destructor);
         codegenValueDestroy(val);
         
         if (ctx->catchBlock && ctx->tryBlockStackMarker == i)
             llvmBuilder->CreateBr(ctx->catchBlock);
         else if (i == ctx->returnTarget.stackMarker) {
-            if (!ctx->unwindBlock) {
+            if (!ctx->unwindBlock)
                 ctx->unwindBlock = createUnwindBlock(ctx);
-            }
             llvmBuilder->CreateBr(ctx->unwindBlock);
         }
         else {
-            if (!stackCValues[i-1]->destructor) {
-                stackCValues[i-1]->destructor = newBasicBlock("destructor");
-            }
+            assert(stackCValues[i-1]->destructor);
             llvmBuilder->CreateBr(stackCValues[i-1]->destructor);
         }
     }
-
+        
     // No live vars, but we were inside a try block
     if (endMarker <= startMarker) {
         landingPad = createLandingPad(ctx);
-        llvmBuilder->SetInsertPoint(landingPad);
         llvmBuilder->CreateBr(ctx->catchBlock);
     }
-    else
+    else {
+        if (!stackCValues[endMarker-1]->landingPad) {
+            stackCValues[endMarker-1]->landingPad = createLandingPad(ctx);
+            llvmBuilder->CreateBr(stackCValues[endMarker-1]->destructor);
+        }
         landingPad = stackCValues[endMarker-1]->landingPad;
-
+    }
 
     llvmBuilder->SetInsertPoint(savedInsertPoint);
     
