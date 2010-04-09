@@ -224,6 +224,10 @@ static void printExpr(const Expr *x, ostream &out) {
             << ", " << y->body << ")";
         break;
     }
+    case VAR_ARGS_REF : {
+        out << "VarArgsRef";
+        break;
+    }
     case SC_EXPR : {
         SCExpr *y = (SCExpr *)x;
         out << "SCExpr(" << y->expr << ")";

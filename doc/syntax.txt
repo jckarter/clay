@@ -22,7 +22,9 @@ Procedure -> PatternVarsWithCond? "inlined"? Identifier Arguments ReturnSpec? Bo
 PatternVarsWithCond -> "[" comma_list(Identifier) Predicate? "]"
 Predicate -> "|" Expression
 
-Arguments -> "(" comma_list(Argument) ")"
+Arguments -> "(" comma_list(Argument) ("," "...")? ")"
+           | "(" "..." ")"
+           | "(" ")"
 
 Argument -> ValueArgument
           | StaticArgument
@@ -133,6 +135,7 @@ PatternSuffix -> "[" comma_list(Pattern) "]"
 
 Expression -> OrExpr
             | Lambda
+            | VarArgsRef
 
 OrExpr -> AndExpr ("or" AndExpr)*
 AndExpr -> NotExpr ("and" NotExpr)*
@@ -158,7 +161,7 @@ Suffix -> IndexSuffix
         | DereferenceSuffix
 
 IndexSuffix -> "[" comma_list(Expression) "]"
-CallSuffix -> "(" comma_list(Expression) ")"
+CallSuffix -> "(" comma_list(Expression)? ")"
 FieldRefSuffix -> "." Identifier
 TupleRefSuffix -> "." IntLiteral
 DereferenceSuffix -> "^"
@@ -170,7 +173,7 @@ AtomicExpr -> ArrayExpr
             | Literal
 
 ArrayExpr -> "[" comma_list(Expression) "]"
-TupleExpr -> "(" comma_list(Expression) ")"
+TupleExpr -> "(" comma_list(Expression)? ")"
 
 Returned -> "returned"
 
@@ -184,3 +187,5 @@ Literal -> BoolLiteral
 BoolLiteral -> "true" | "false"
 
 Lambda -> "lambda" "(" comma_list(Identifier) ")" Block
+
+VarArgsRef -> "..."

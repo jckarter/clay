@@ -7,6 +7,7 @@ CodePtr clone(CodePtr x)
     clone(x->patternVars, y->patternVars);
     y->predicate = cloneOpt(x->predicate);
     clone(x->formalArgs, y->formalArgs);
+    y->hasVarArgs = x->hasVarArgs;
     y->body = clone(x->body);
     y->returnType = cloneOpt(x->returnType);
     y->returnRef = x->returnRef;
@@ -140,6 +141,11 @@ ExprPtr clone(ExprPtr x)
         clone(y->formalArgs, z->formalArgs);
         z->body = clone(y->body);
         out = z.ptr();
+        break;
+    }
+
+    case VAR_ARGS_REF : {
+        out = new VarArgsRef();
         break;
     }
 

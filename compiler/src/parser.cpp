@@ -695,6 +695,20 @@ static bool blockLambda(ExprPtr &x) {
 
 
 //
+// varArgsRef
+//
+
+static bool varArgsRef(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("...")) return false;
+    x = new VarArgsRef();
+    x->location = location;
+    return true;
+}
+
+
+
+//
 // expression
 //
 
@@ -703,6 +717,7 @@ static bool expression(ExprPtr &x) {
     if (orExpr(x)) return true;
     if (restore(p), lambda(x)) return true;
     if (restore(p), blockLambda(x)) return true;
+    if (restore(p), varArgsRef(x)) return true;
     return false;
 }
 
@@ -1135,18 +1150,43 @@ static bool formalArgs(vector<FormalArgPtr> &x) {
     return true;
 }
 
-static bool optFormalArgs(vector<FormalArgPtr> &x) {
+static bool commaVarArgs() {
+    if (!symbol(",")) return false;
+    if (!symbol("...")) return false;
+    return true;
+}
+
+static bool optCommaVarArgs(bool &hasVarArgs) {
     int p = save();
-    if (!formalArgs(x)) {
+    hasVarArgs = true;
+    if (commaVarArgs()) return true;
+    restore(p);
+    hasVarArgs = false;
+    return true;
+}
+
+static bool formalArgsWithVArgs(vector<FormalArgPtr> &x, bool &hasVarArgs) {
+    if (!formalArgs(x)) return false;
+    if (!optCommaVarArgs(hasVarArgs)) return false;
+    return true;
+}
+
+static bool argumentsBody(vector<FormalArgPtr> &x, bool &hasVarArgs) {
+    int p = save();
+    if (formalArgsWithVArgs(x, hasVarArgs)) return true;
+    x.clear();
+    restore(p);
+    hasVarArgs = true;
+    if (!symbol("...")) {
         restore(p);
-        x.clear();
+        hasVarArgs = false;
     }
     return true;
 }
 
-static bool arguments(vector<FormalArgPtr> &x) {
+static bool arguments(vector<FormalArgPtr> &x, bool &hasVarArgs) {
     if (!symbol("(")) return false;
-    if (!optFormalArgs(x)) return false;
+    if (!argumentsBody(x, hasVarArgs)) return false;
     if (!symbol(")")) return false;
     return true;
 }
@@ -1350,7 +1390,7 @@ static bool procedure(TopLevelItemPtr &x) {
     if (!optInlined(inlined)) return false;
     IdentifierPtr z;
     if (!identifier(z)) return false;
-    if (!arguments(y->formalArgs)) return false;
+    if (!arguments(y->formalArgs, y->hasVarArgs)) return false;
     if (!optReturnSpec(y->returnType, y->returnRef)) return false;
     if (!body(y->body)) return false;
     y->location = location;
@@ -1381,7 +1421,7 @@ static bool overload(TopLevelItemPtr &x) {
     if (!keyword("overload")) return false;
     ExprPtr z;
     if (!pattern(z)) return false;
-    if (!arguments(y->formalArgs)) return false;
+    if (!arguments(y->formalArgs, y->hasVarArgs)) return false;
     if (!optReturnSpec(y->returnType, y->returnRef)) return false;
     if (!body(y->body)) return false;
     y->location = location;
@@ -1492,11 +1532,7 @@ static bool externalArg(ExternalArgPtr &x) {
     return true;
 }
 
-static bool varArgs() {
-    return symbol(".") && symbol(".") && symbol(".");
-}
-
-static bool externalArgs1(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
+static bool externalArgs(vector<ExternalArgPtr> &x) {
     ExternalArgPtr y;
     if (!externalArg(y)) return false;
     x.clear();
@@ -1509,36 +1545,28 @@ static bool externalArgs1(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
         }
         x.push_back(y);
     }
-    int p = save();
-    if (symbol(",") && varArgs()) {
-        hasVarArgs = true;
-    }
-    else {
-        restore(p);
-        hasVarArgs = false;
-    }
     return true;
 }
 
-static bool externalArgs2(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
+static bool externalArgsWithVArgs(vector<ExternalArgPtr> &x,
+                                  bool &hasVarArgs) {
+    if (!externalArgs(x)) return false;
+    if (!optCommaVarArgs(hasVarArgs)) return false;
+    return true;
+}
+
+static bool externalArgsBody(vector<ExternalArgPtr> &x,
+                             bool &hasVarArgs) {
+    int p = save();
+    if (externalArgsWithVArgs(x, hasVarArgs)) return true;
     x.clear();
-    int p = save();
-    if (varArgs()) {
-        hasVarArgs = true;
-    }
-    else {
+    restore(p);
+    hasVarArgs = true;
+    if (!symbol("...")) {
         restore(p);
         hasVarArgs = false;
     }
     return true;
-}
-
-static bool externalArgs(vector<ExternalArgPtr> &x, bool &hasVarArgs) {
-    int p = save();
-    if (externalArgs1(x, hasVarArgs)) return true;
-    restore(p);
-    if (externalArgs2(x, hasVarArgs)) return true;
-    return false;
 }
 
 static bool externalBody(StatementPtr &x) {
@@ -1561,7 +1589,7 @@ static bool external(TopLevelItemPtr &x) {
     if (!optExternalAttributes(y->attributes)) return false;
     if (!identifier(y->name)) return false;
     if (!symbol("(")) return false;
-    if (!externalArgs(y->args, y->hasVarArgs)) return false;
+    if (!externalArgsBody(y->args, y->hasVarArgs)) return false;
     if (!symbol(")")) return false;
     if (!typeSpec(y->returnType)) return false;
     if (!externalBody(y->body)) return false;
