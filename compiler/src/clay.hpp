@@ -201,6 +201,7 @@ struct BinaryOp;
 struct And;
 struct Or;
 struct Lambda;
+struct VarArgsRef;
 struct SCExpr;
 struct ObjectExpr;
 
@@ -322,6 +323,7 @@ typedef Pointer<BinaryOp> BinaryOpPtr;
 typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
 typedef Pointer<Lambda> LambdaPtr;
+typedef Pointer<VarArgsRef> VarArgsRefPtr;
 typedef Pointer<SCExpr> SCExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
 
@@ -583,6 +585,7 @@ enum ExprKind {
     OR,
 
     LAMBDA,
+    VAR_ARGS_REF,
 
     SC_EXPR,
     OBJECT_EXPR,
@@ -761,6 +764,11 @@ struct Lambda : public Expr {
            StatementPtr body)
         : Expr(LAMBDA), isBlockLambda(isBlockLambda),
           formalArgs(formalArgs), body(body), initialized(false) {}
+};
+
+struct VarArgsRef : public Expr {
+    VarArgsRef() :
+        Expr(VAR_ARGS_REF) {}
 };
 
 struct SCExpr : public Expr {
@@ -982,19 +990,21 @@ struct Code : public ANode {
     vector<IdentifierPtr> patternVars;
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
+    bool hasVarArgs;
     StatementPtr body;
 
     ExprPtr returnType;
     bool returnRef; // valid only if returnType != NULL
 
     Code()
-        : ANode(CODE) {}
+        : ANode(CODE), hasVarArgs(false) {}
     Code(const vector<IdentifierPtr> &patternVars,
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
+         bool hasVarArgs,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
-          formalArgs(formalArgs), body(body) {}
+          formalArgs(formalArgs), hasVarArgs(hasVarArgs), body(body) {}
 };
 
 

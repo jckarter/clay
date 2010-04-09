@@ -1,0 +1,16 @@
+import base.*;
+import libc;
+
+overloadable printAll;
+
+overload printAll(a:Int, ...) {
+    libc.printf("%d\n", a);
+    printAll(...);
+}
+
+overload printAll() {
+}
+
+main() {
+    printAll(1, 2, 3, 4, 5);
+}
