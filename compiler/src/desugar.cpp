@@ -9,16 +9,6 @@ ExprPtr desugarCharLiteral(char c) {
     return call.ptr();
 }
 
-ExprPtr desugarTuple(TuplePtr x) {
-    if (x->args.size() == 1)
-        return x->args[0];
-    return new Call(primNameRef("tuple"), x->args);
-}
-
-ExprPtr desugarArray(ArrayPtr x) {
-    return new Call(primNameRef("array"), x->args);
-}
-
 ExprPtr desugarUnaryOp(UnaryOpPtr x) {
     ExprPtr callable;
     switch (x->op) {

@@ -647,7 +647,6 @@ struct Returned : public Expr {
 
 struct Tuple : public Expr {
     vector<ExprPtr> args;
-    ExprPtr desugared;
     Tuple()
         : Expr(TUPLE) {}
     Tuple(const vector<ExprPtr> &args)
@@ -656,7 +655,6 @@ struct Tuple : public Expr {
 
 struct Array : public Expr {
     vector<ExprPtr> args;
-    ExprPtr desugared;
     Array()
         : Expr(ARRAY) {}
     Array(const vector<ExprPtr> &args)
@@ -1043,19 +1041,15 @@ struct Record : public TopLevelItem {
     vector<OverloadPtr> overloads;
     bool builtinOverloadInitialized;
 
-    bool staticFlagsInitialized;
-
     Record(Visibility visibility)
         : TopLevelItem(RECORD, visibility),
-          builtinOverloadInitialized(false),
-          staticFlagsInitialized(false) {}
+          builtinOverloadInitialized(false) {}
     Record(IdentifierPtr name,
            Visibility visibility,
            const vector<IdentifierPtr> &patternVars,
            const vector<RecordFieldPtr> &fields)
         : TopLevelItem(RECORD, name, visibility), patternVars(patternVars),
-          fields(fields), builtinOverloadInitialized(false),
-          staticFlagsInitialized(false) {}
+          fields(fields), builtinOverloadInitialized(false) {}
 };
 
 struct RecordField : public ANode {
@@ -1068,14 +1062,13 @@ struct RecordField : public ANode {
 struct Procedure : public TopLevelItem {
     CodePtr code;
     bool inlined;
-    bool staticFlagsInitialized;
 
     vector<OverloadPtr> overloads;
 
     Procedure(IdentifierPtr name, Visibility visibility,
               CodePtr code, bool inlined)
         : TopLevelItem(PROCEDURE, name, visibility), code(code),
-          inlined(inlined), staticFlagsInitialized(false) {}
+          inlined(inlined) {}
 };
 
 struct Overload : public TopLevelItem {
@@ -1089,10 +1082,8 @@ struct Overload : public TopLevelItem {
 
 struct Overloadable : public TopLevelItem {
     vector<OverloadPtr> overloads;
-    bool staticFlagsInitialized;
     Overloadable(IdentifierPtr name, Visibility visibility)
-        : TopLevelItem(OVERLOADABLE, name, visibility),
-          staticFlagsInitialized(false) {}
+        : TopLevelItem(OVERLOADABLE, name, visibility) {}
 };
 
 struct Enumeration : public TopLevelItem {
@@ -1575,12 +1566,9 @@ struct Type : public Object {
     bool overloadsInitialized;
     vector<OverloadPtr> overloads;
 
-    bool staticFlagsInitialized;
-
     Type(int typeKind)
         : Object(TYPE), typeKind(typeKind), llTypeHolder(NULL),
-          typeSizeInitialized(false), overloadsInitialized(false),
-          staticFlagsInitialized(false) {}
+          typeSizeInitialized(false), overloadsInitialized(false) {}
     ~Type() {
         if (llTypeHolder)
             delete llTypeHolder;
@@ -1884,8 +1872,6 @@ struct ValueHolder : public Object {
 //
 
 ExprPtr desugarCharLiteral(char c);
-ExprPtr desugarTuple(TuplePtr x);
-ExprPtr desugarArray(ArrayPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
 StatementPtr desugarForStatement(ForPtr x);
@@ -1921,18 +1907,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env);
 // invoke tables
 //
 
-typedef pair<ObjectPtr, unsigned> FlagsMapKey;
-
-struct FlagsMapEntry {
-    bool initialized;
-    vector<bool> isStaticFlags;
-    FlagsMapEntry()
-        : initialized(false) {}
-};
-
 const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
-void updateIsStaticFlags(ObjectPtr callable, OverloadPtr overload);
-void initIsStaticFlags(ObjectPtr x);
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs);
 bool computeArgsKey(const vector<bool> &isStaticFlags,
                     const vector<ExprPtr> &args,
@@ -1952,9 +1927,11 @@ struct InvokeEntry : public Object {
 
     CodePtr code;
     vector<ObjectPtr> staticArgs;
-    vector<TypePtr> argTypes;
-    vector<IdentifierPtr> argNames;
     EnvPtr env;
+    vector<TypePtr> fixedArgTypes;
+    vector<IdentifierPtr> fixedArgNames;
+    bool hasVarArgs;
+    vector<TypePtr> varArgTypes;
 
     bool inlined; // if inlined the rest of InvokeEntry is not set
 
@@ -1970,7 +1947,7 @@ struct InvokeEntry : public Object {
                 const vector<ObjectPtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), isStaticFlags(isStaticFlags), argsKey(argsKey),
-          analyzed(false), analyzing(false), inlined(false),
+          analyzed(false), analyzing(false), hasVarArgs(false), inlined(false),
           returnIsTemp(false), llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -2037,10 +2014,12 @@ typedef Pointer<MatchResult> MatchResultPtr;
 struct MatchSuccess : public MatchResult {
     EnvPtr env;
     vector<ObjectPtr> staticArgs;
-    vector<TypePtr> argTypes;
-    vector<IdentifierPtr> argNames;
+    vector<TypePtr> fixedArgTypes;
+    vector<IdentifierPtr> fixedArgNames;
+    bool hasVarArgs;
+    vector<TypePtr> varArgTypes;
     MatchSuccess(EnvPtr env)
-        : MatchResult(MATCH_SUCCESS), env(env) {}
+        : MatchResult(MATCH_SUCCESS), env(env), hasVarArgs(false) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 
@@ -2066,6 +2045,7 @@ struct MatchPredicateError : public MatchResult {
 };
 
 MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
+                           const vector<bool> &isStaticFlags,
                            const vector<ObjectPtr> &argsKey,
                            ExprPtr callableExpr, ObjectPtr callable);
 
@@ -2108,6 +2088,21 @@ struct ReturnedInfo : public Object {
 
 
 //
+// VarArgsInfo
+//
+
+struct VarArgsInfo : public Object {
+    bool hasVarArgs;
+    vector<ExprPtr> varArgs;
+    VarArgsInfo(bool hasVarArgs)
+        : Object(DONT_CARE), hasVarArgs(hasVarArgs) {}
+};
+
+typedef Pointer<VarArgsInfo> VarArgsInfoPtr;
+
+
+
+//
 // analyzer
 //
 
@@ -2127,6 +2122,9 @@ PValuePtr analyzeTupleValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env);
 
 ObjectPtr analyze(ExprPtr expr, EnvPtr env);
+bool expandVarArgs(const vector<ExprPtr> &args,
+                   EnvPtr env,
+                   vector<ExprPtr> &outArgs);
 ObjectPtr analyzeStaticObject(ObjectPtr x);
 void analyzeExternal(ExternalProcedurePtr x);
 void verifyAttributes(ExternalProcedurePtr x);

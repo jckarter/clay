@@ -1,11 +1,19 @@
 #include "clay.hpp"
 
 MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
+                           const vector<bool> &isStaticFlags,
                            const vector<ObjectPtr> &argsKey,
                            ExprPtr callableExpr, ObjectPtr callable)
 {
-    if (code->formalArgs.size() != argsKey.size())
-        return new MatchArityError();
+    assert(isStaticFlags.size() == argsKey.size());
+    if (code->hasVarArgs) {
+        if (argsKey.size() < code->formalArgs.size())
+            return new MatchArityError();
+    }
+    else {
+        if (code->formalArgs.size() != argsKey.size())
+            return new MatchArityError();
+    }
     vector<PatternCellPtr> cells;
     EnvPtr patternEnv = new Env(codeEnv);
     for (unsigned i = 0; i < code->patternVars.size(); ++i) {
@@ -23,6 +31,10 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
         FormalArgPtr farg = formalArgs[i];
         switch (farg->objKind) {
         case VALUE_ARG : {
+            if (isStaticFlags[i]) {
+                error(farg, "mismatching overloads, "
+                      "expecting a static argument");
+            }
             ValueArg *x = (ValueArg *)farg.ptr();
             if (x->type.ptr()) {
                 PatternPtr pattern = evaluatePattern(x->type, patternEnv);
@@ -32,6 +44,10 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
             break;
         }
         case STATIC_ARG : {
+            if (!isStaticFlags[i]) {
+                error(farg, "mismatching overloads, "
+                      "expecting a non-static argument");
+            }
             StaticArg *x = (StaticArg *)farg.ptr();
             PatternPtr pattern = evaluatePattern(x->pattern, patternEnv);
             if (!unify(pattern, argsKey[i]))
@@ -55,10 +71,10 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
         switch (farg->objKind) {
         case VALUE_ARG : {
             ValueArg *x = (ValueArg *)farg.ptr();
-            result->argNames.push_back(x->name);
+            result->fixedArgNames.push_back(x->name);
             assert(argsKey[i]->objKind == TYPE);
             TypePtr y = (Type *)argsKey[i].ptr();
-            result->argTypes.push_back(y);
+            result->fixedArgTypes.push_back(y);
             break;
         }
         case STATIC_ARG : {
@@ -69,6 +85,16 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
         }
         default :
             assert(false);
+        }
+    }
+
+    if (code->hasVarArgs) {
+        result->hasVarArgs = true;
+        for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i) {
+            if (isStaticFlags[i])
+                return new MatchArgumentError(i);
+            TypePtr y = (Type *)argsKey[i].ptr();
+            result->varArgTypes.push_back(y);
         }
     }
     return result.ptr();

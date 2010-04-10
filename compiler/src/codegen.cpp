@@ -246,8 +246,13 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
         return;
 
     vector<const llvm::Type *> llArgTypes;
-    for (unsigned i = 0; i < entry->argTypes.size(); ++i)
-        llArgTypes.push_back(llvmPointerType(entry->argTypes[i]));
+    for (unsigned i = 0; i < entry->fixedArgTypes.size(); ++i)
+        llArgTypes.push_back(llvmPointerType(entry->fixedArgTypes[i]));
+
+    if (entry->hasVarArgs) {
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i)
+            llArgTypes.push_back(llvmPointerType(entry->varArgTypes[i]));
+    }
 
     const llvm::Type *llReturnType;
     if (!entry->returnType) {
@@ -288,12 +293,25 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     EnvPtr env = new Env(entry->env);
 
     llvm::Function::arg_iterator ai = llFunc->arg_begin();
-    for (unsigned i = 0; i < entry->argTypes.size(); ++i, ++ai) {
+    for (unsigned i = 0; i < entry->fixedArgTypes.size(); ++i, ++ai) {
         llvm::Argument *llArgValue = &(*ai);
-        llArgValue->setName(entry->argNames[i]->str);
-        CValuePtr cvalue = new CValue(entry->argTypes[i], llArgValue);
-        addLocal(env, entry->argNames[i], cvalue.ptr());
+        llArgValue->setName(entry->fixedArgNames[i]->str);
+        CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
+        addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
     }
+
+    VarArgsInfoPtr vaInfo = new VarArgsInfo(entry->hasVarArgs);
+    if (entry->hasVarArgs) {
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai) {
+            llvm::Argument *llArgValue = &(*ai);
+            ostringstream sout;
+            sout << "varg" << i;
+            llArgValue->setName(sout.str());
+            CValuePtr cvalue = new CValue(entry->varArgTypes[i], llArgValue);
+            vaInfo->varArgs.push_back(new ObjectExpr(cvalue.ptr()));
+        }
+    }
+    addLocal(env, new Identifier("%varArgs"), vaInfo.ptr());
 
     CValuePtr returnVal;
     if (entry->returnType.ptr()) {
@@ -858,36 +876,40 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarTuple(x);
-        return codegenExpr(x->desugared, env, out);
+        vector<ExprPtr> args2;
+        bool expanded = expandVarArgs(x->args, env, args2);
+        if (!expanded && (args2.size() == 1))
+            return codegenExpr(args2[0], env, out);
+        return codegenInvoke(primName("tuple"), args2, env, out);
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarArray(x);
-        return codegenExpr(x->desugared, env, out);
+        vector<ExprPtr> args2;
+        expandVarArgs(x->args, env, args2);
+        return codegenInvoke(primName("array"), args2, env, out);
     }
 
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
         ObjectPtr y = analyze(x->expr, env);
+        vector<ExprPtr> args2;
+        expandVarArgs(x->args, env, args2);
         if (y->objKind == PVALUE) {
             PValue *z = (PValue *)y.ptr();
             if (z->type->typeKind == STATIC_OBJECT_TYPE) {
                 StaticObjectType *t = (StaticObjectType *)z->type.ptr();
-                ExprPtr inner = new Indexing(new ObjectExpr(t->obj), x->args);
+                ExprPtr inner = new Indexing(new ObjectExpr(t->obj), args2);
                 return codegenExpr(inner, env, out);
             }
             CValuePtr cv = codegenAsRef(x->expr, env, z);
-            vector<ExprPtr> args2;
-            args2.push_back(new ObjectExpr(cv.ptr()));
-            args2.insert(args2.end(), x->args.begin(), x->args.end());
+            vector<ExprPtr> args3;
+            args3.push_back(new ObjectExpr(cv.ptr()));
+            args3.insert(args3.end(), args2.begin(), args2.end());
             ObjectPtr op = kernelName("index");
-            return codegenInvoke(op, args2, env, out);
+            return codegenInvoke(op, args3, env, out);
         }
-        ObjectPtr obj = analyzeIndexing(y, x->args, env);
+        ObjectPtr obj = analyzeIndexing(y, args2, env);
         return codegenStaticObject(obj, out);
     }
 
@@ -895,16 +917,18 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         Call *x = (Call *)expr.ptr();
         ObjectPtr y = analyze(x->expr, env);
         assert(y.ptr());
+        vector<ExprPtr> args2;
+        expandVarArgs(x->args, env, args2);
         if (y->objKind == PVALUE) {
             PValue *z = (PValue *)y.ptr();
             if (z->type->typeKind == STATIC_OBJECT_TYPE) {
                 StaticObjectType *t = (StaticObjectType *)z->type.ptr();
-                return codegenInvoke(t->obj, x->args, env, out);
+                return codegenInvoke(t->obj, args2, env, out);
             }
             CValuePtr cv = codegenAsRef(x->expr, env, z);
-            return codegenInvokeValue(cv, x->args, env, out);
+            return codegenInvokeValue(cv, args2, env, out);
         }
-        return codegenInvoke(y, x->args, env, out);
+        return codegenInvoke(y, args2, env, out);
     }
 
     case FIELD_REF : {
@@ -1120,6 +1144,9 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
             initializeLambda(x, env);
         return codegenExpr(x->converted, env, out);
     }
+
+    case VAR_ARGS_REF :
+        error("invalid use of '...'");
 
     case SC_EXPR : {
         SCExpr *x = (SCExpr *)expr.ptr();
@@ -1730,12 +1757,26 @@ CValuePtr codegenInvokeInlined(InvokeEntryPtr entry,
 
     CodePtr code = entry->code;
 
+    if (entry->hasVarArgs)
+        assert(args.size() >= entry->fixedArgNames.size());
+    else
+        assert(args.size() == entry->fixedArgNames.size());
+
     EnvPtr bodyEnv = new Env(entry->env);
-    assert(args.size() == entry->argNames.size());
-    for (unsigned i = 0; i < entry->argNames.size(); ++i) {
+
+    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
         ExprPtr expr = new SCExpr(env, args[i]);
-        addLocal(bodyEnv, entry->argNames[i], expr.ptr());
+        addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
+
+    VarArgsInfoPtr vaInfo = new VarArgsInfo(entry->hasVarArgs);
+    if (entry->hasVarArgs) {
+        for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
+            ExprPtr expr = new SCExpr(env, args[i]);
+            vaInfo->varArgs.push_back(expr);
+        }
+    }
+    addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
 
     ObjectPtr analysis = analyzeInvokeInlined(entry, args, env);
     assert(analysis.ptr());
@@ -1801,8 +1842,12 @@ void codegenCWrapper(InvokeEntryPtr entry, const string &callableName)
     assert(!entry->llvmCWrapper);
 
     vector<const llvm::Type *> llArgTypes;
-    for (unsigned i = 0; i < entry->argTypes.size(); ++i)
-        llArgTypes.push_back(llvmType(entry->argTypes[i]));
+    for (unsigned i = 0; i < entry->fixedArgTypes.size(); ++i)
+        llArgTypes.push_back(llvmType(entry->fixedArgTypes[i]));
+    if (entry->hasVarArgs) {
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i)
+            llArgTypes.push_back(llvmType(entry->varArgTypes[i]));
+    }
     const llvm::Type *llReturnType =
         entry->returnType.ptr() ? llvmType(entry->returnType) : llvmVoidType();
 

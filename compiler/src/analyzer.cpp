@@ -289,16 +289,18 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarTuple(x);
-        return analyze(x->desugared, env);
+        vector<ExprPtr> args2;
+        bool expanded = expandVarArgs(x->args, env, args2);
+        if (!expanded && (args2.size() == 1))
+            return analyze(args2[0], env);
+        return analyzeInvoke(primName("tuple"), args2, env);
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarArray(x);
-        return analyze(x->desugared, env);
+        vector<ExprPtr> args2;
+        expandVarArgs(x->args, env, args2);
+        return analyzeInvoke(primName("array"), args2, env);
     }
 
     case INDEXING : {
@@ -306,7 +308,9 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         ObjectPtr indexable = analyze(x->expr, env);
         if (!indexable)
             return NULL;
-        return analyzeIndexing(indexable, x->args, env);
+        vector<ExprPtr> args2;
+        expandVarArgs(x->args, env, args2);
+        return analyzeIndexing(indexable, args2, env);
     }
 
     case CALL : {
@@ -314,7 +318,9 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         ObjectPtr callable = analyze(x->expr, env);
         if (!callable)
             return NULL;
-        return analyzeInvoke(callable, x->args, env);
+        vector<ExprPtr> args2;
+        expandVarArgs(x->args, env, args2);
+        return analyzeInvoke(callable, args2, env);
     }
 
     case FIELD_REF : {
@@ -401,6 +407,9 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         return analyze(x->converted, env);
     }
 
+    case VAR_ARGS_REF :
+        error("invalid use of '...'");
+
     case SC_EXPR : {
         SCExpr *x = (SCExpr *)expr.ptr();
         return analyze(x->expr, x->env);
@@ -416,6 +425,35 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         return NULL;
 
     }
+}
+
+
+
+//
+// expandVarArgs
+//
+
+bool expandVarArgs(const vector<ExprPtr> &args,
+                   EnvPtr env,
+                   vector<ExprPtr> &outArgs)
+{
+    bool expanded = false;
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (args[i]->exprKind == VAR_ARGS_REF) {
+            ObjectPtr z = lookupEnv(env, new Identifier("%varArgs"));
+            VarArgsInfo *vaInfo = (VarArgsInfo *)z.ptr();
+            if (!vaInfo->hasVarArgs)
+                error(args[i], "varargs unavailable");
+            expanded = true;
+            outArgs.insert(outArgs.end(),
+                           vaInfo->varArgs.begin(),
+                           vaInfo->varArgs.end());
+        }
+        else {
+            outArgs.push_back(args[i]);
+        }
+    }
+    return expanded;
 }
 
 
@@ -821,6 +859,7 @@ static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
     for (; overloadIndex < overloads.size(); ++overloadIndex) {
         OverloadPtr y = overloads[overloadIndex];
         MatchResultPtr result = matchInvoke(y->code, y->env,
+                                            invokeSet->isStaticFlags,
                                             invokeSet->argsKey,
                                             y->target, invokeSet->callable);
         if (result->matchCode == MATCH_SUCCESS) {
@@ -833,9 +872,11 @@ static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
             entry->code = clone(y->code);
             MatchSuccess *z = (MatchSuccess *)result.ptr();
             entry->staticArgs = z->staticArgs;
-            entry->argTypes = z->argTypes;
-            entry->argNames = z->argNames;
             entry->env = z->env;
+            entry->fixedArgTypes = z->fixedArgTypes;
+            entry->fixedArgNames = z->fixedArgNames;
+            entry->hasVarArgs = z->hasVarArgs;
+            entry->varArgTypes = z->varArgTypes;
             entry->inlined = y->inlined;
             return entry;
         }
@@ -857,7 +898,10 @@ static bool tempnessMatches(CodePtr code,
         if ((vt & arg->tempness) == 0)
             return false;
     }
-    assert(j == tempness.size());
+    if (code->hasVarArgs)
+        assert(j <= tempness.size());
+    else
+        assert(j == tempness.size());
     return true;
 }
 
@@ -912,12 +956,27 @@ ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
         return new PValue(retType, !code->returnRef);
     }
 
+    if (entry->hasVarArgs)
+        assert(args.size() >= entry->fixedArgNames.size());
+    else
+        assert(args.size() == entry->fixedArgNames.size());
+
     EnvPtr bodyEnv = new Env(entry->env);
-    assert(args.size() == entry->argNames.size());
-    for (unsigned i = 0; i < entry->argNames.size(); ++i) {
+
+    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
         ExprPtr expr = new SCExpr(env, args[i]);
-        addLocal(bodyEnv, entry->argNames[i], expr.ptr());
+        addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
+
+    VarArgsInfoPtr vaInfo = new VarArgsInfo(entry->hasVarArgs);
+    if (entry->hasVarArgs) {
+        for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
+            ExprPtr expr = new SCExpr(env, args[i]);
+            vaInfo->varArgs.push_back(expr);
+        }
+    }
+    addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
+
     addLocal(bodyEnv, new Identifier("%returned"), NULL);
     ObjectPtr result;
     bool ok = analyzeStatement(code->body, bodyEnv, result);
@@ -947,11 +1006,24 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
     }
     else {
         EnvPtr bodyEnv = new Env(entry->env);
-        for (unsigned i = 0; i < entry->argNames.size(); ++i) {
-            PValuePtr parg = new PValue(entry->argTypes[i], false);
-            addLocal(bodyEnv, entry->argNames[i], parg.ptr());
+
+        for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+            PValuePtr parg = new PValue(entry->fixedArgTypes[i], false);
+            addLocal(bodyEnv, entry->fixedArgNames[i], parg.ptr());
         }
+
+        VarArgsInfoPtr vaInfo = new VarArgsInfo(entry->hasVarArgs);
+        if (entry->hasVarArgs) {
+            for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
+                PValuePtr parg = new PValue(entry->varArgTypes[i], false);
+                ExprPtr expr = new ObjectExpr(parg.ptr());
+                vaInfo->varArgs.push_back(expr);
+            }
+        }
+        addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
+
         addLocal(bodyEnv, new Identifier("%returned"), NULL);
+
         bool ok = analyzeStatement(code->body, bodyEnv, result);
         if (!result && !ok)
             return;
@@ -1392,7 +1464,14 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             error(args[0], "cannot create pointer to inlined code");
         if (!entry->analyzed)
             return NULL;
-        TypePtr cpType = codePointerType(entry->argTypes, entry->returnType,
+        vector<TypePtr> argTypes = entry->fixedArgTypes;
+        if (entry->hasVarArgs) {
+            argTypes.insert(argTypes.end(),
+                            entry->varArgTypes.begin(),
+                            entry->varArgTypes.end());
+        }
+        TypePtr cpType = codePointerType(argTypes,
+                                         entry->returnType,
                                          entry->returnIsTemp);
         return new PValue(cpType, true);
     }
@@ -1445,8 +1524,14 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             error(args[0], "cannot create pointer to inlined code");
         if (!entry->analyzed)
             return NULL;
+        vector<TypePtr> argTypes = entry->fixedArgTypes;
+        if (entry->hasVarArgs) {
+            argTypes.insert(argTypes.end(),
+                            entry->varArgTypes.begin(),
+                            entry->varArgTypes.end());
+        }
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
-                                           entry->argTypes,
+                                           argTypes,
                                            false,
                                            entry->returnType);
         return new PValue(ccpType, true);
