@@ -32,6 +32,12 @@ overload SharedPointer[T](src:SharedPointer[T]) {
 }
 
 [T]
+overload move(src:SharedPointer[T]) : SharedPointer[T] {
+    returned.ptr = src.ptr;
+    src.ptr = null(RefCounted[T]);
+}
+
+[T]
 overload assign(dest:SharedPointer[T], src:SharedPointer[T]) {
     if (dest.ptr == src.ptr)
         return;
@@ -41,10 +47,12 @@ overload assign(dest:SharedPointer[T], src:SharedPointer[T]) {
 
 [T]
 overload destroy(p : SharedPointer[T]) {
-    p.ptr^.refCount -= 1;
-    if (p.ptr^.refCount == 0) {
-        destroy(p.ptr^.value);
-        freeMemory(p.ptr);
+    if (not isNull(p.ptr)) {
+        p.ptr^.refCount -= 1;
+        if (p.ptr^.refCount == 0) {
+            destroy(p.ptr^.value);
+            freeMemory(p.ptr);
+        }
     }
 }
 

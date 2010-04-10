@@ -1,0 +1,14 @@
+import base.*;
+import libc;
+
+double(x) = 2*x;
+
+main() {
+    var a = Vector([1, 2, 3, 4, 5, 6]);
+    var b = mapped(addressOf, a);
+    var c = mapped(dereference, b);
+    for (x in c)
+        x += 2;
+    for (x in mapped(double, mapped(double, a)))
+        libc.printf(cstring("%d\n"), x);
+}

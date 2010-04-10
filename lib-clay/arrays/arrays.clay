@@ -10,6 +10,23 @@ import ranges.*;
 
 
 //
+// predicates
+//
+
+[T,n]
+static overload SizedSequence?(Array[T,n]) = true;
+
+[T,n]
+static overload RandomAccessSequence?(Array[T,n]) = true;
+
+[T,n]
+static overload LValueSequence?(Array[T,n]) = true;
+
+[T,n]
+static overload SequenceElementType(Array[T,n]) = T;
+
+
+//
 // size, at
 //
 
@@ -95,6 +112,14 @@ overload Array[T,n](src:Array[T,n]) : Array[T,n] {
 overload destroy(a:Array[T,n]) {
     for (x in a)
         destroy(x);
+}
+
+[T,n]
+overload move(src:Array[T,n]) : Array[T,n] {
+    ref d = iterator(returned);
+    ref s = iterator(src);
+    while (hasNext?(s))
+        next(d) <-- move(next(s));
 }
 
 [T,n]
