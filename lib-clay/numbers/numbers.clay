@@ -184,11 +184,11 @@ overload divide(a:A, b:B) = numericDivide(toBiggerNumericType(A, B, a),
 overload divide(a:A, b:A) = numericDivide(a, b);
 
 
-[A,B | Numeric?(A,B)]
-overload remainder(a:A, b:B) = numericRemainder(toBiggerNumericType(A, B, a),
+[A,B | Integer?(A,B)]
+overload remainder(a:A, b:B) = integerRemainder(toBiggerNumericType(A, B, a),
                                                 toBiggerNumericType(A, B, b));
-[A | Numeric?(A)]
-overload remainder(a:A, b:A) = numericRemainder(a, b);
+[A | Integer?(A)]
+overload remainder(a:A, b:A) = integerRemainder(a, b);
 
 
 // unary ops
