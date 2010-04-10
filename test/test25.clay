@@ -1,0 +1,15 @@
+import base.*;
+import libc;
+
+even?(x) = (x % 2 == 0);
+
+main() {
+    var a = Vector[Int](1, 2, 3, 4, 5, 6);
+    for (x in filtered(even?, a))
+        x *= 10;
+    var odd? = lambda (x) { return x % 2 == 1; };
+    for (x in filtered(odd?, a))
+        x *= 100;
+    for (x in filtered(even?, move(a)))
+        libc.printf(cstring("%d\n"), x);
+}

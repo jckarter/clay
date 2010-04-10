@@ -1,4 +1,22 @@
 public import sequences.operators.*;
-public import sequences.lazymap.*;
-public import sequences.lazyfilter.*;
-public import sequences.handle.*;
+public import sequences.mapped.*;
+public import sequences.filtered.*;
+
+
+// reduce
+
+overloadable reduce;
+
+[F, A | Sequence?(A)]
+overload reduce(f:F, seq:A) {
+    static X = SequenceElementType(A);
+    return reduce(f, X(0), seq);
+}
+
+[F, A, X | Sequence?(A) and Equal?(X, SequenceElementType(A))]
+overload reduce(f:F, initial:X, seq:A) {
+    var result = initial;
+    for (x in seq)
+        result = f(result, x);
+    return result;
+}

@@ -1,33 +1,43 @@
+import types.*;
 import operators.*;
 import pointers.*;
 import sequences.operators.*;
+import sequences.handle.*;
 import assert.*;
 
 
-// LazyFilter
+overloadable filtered;
 
-record LazyFilter[F,A] {
+private record Filtered[F,A] {
     predicate : F;
     innerSequence : A;
 }
 
 [F,A]
-static overload Sequence?(LazyFilter[F,A]) = true;
+static overload Sequence?(Filtered[F,A]) = true;
 
 [F,A | LValueSequence?(A)]
-static overload LValueSequence?(LazyFilter[F,A]) = true;
+static overload LValueSequence?(Filtered[F,A]) = true;
 
-[F,A | Lightweight?(A)]
-static overload Lightweight?(LazyFilter[F,A]) = true;
+[F,A]
+static overload SequenceElementType(Filtered[F,A]) =
+    SequenceElementType(A);
 
 
 [F,A | Sequence?(A)]
-lazyFilter(predicate:F, seq:A) = LazyFilter(predicate, seq);
+overload filtered(predicate:F, rvalue seq:A) : Filtered[F,A] {
+    returned.predicate <-- predicate;
+    returned.innerSequence <-- move(seq);
+}
+
+[F,A | Sequence?(A)]
+overload filtered(predicate:F, lvalue seq:A)
+    = filtered(predicate, sequenceHandle(seq));
 
 
 // iterator when not LValueSequence?(innerSequence)
 
-record LazyFilterIterator_Val[F,ITER,X] {
+private record FilteredIterator_Val[F,ITER,X] {
     predicate : F;
     innerIterator : ITER;
     hasQueued? : Bool;
@@ -35,14 +45,14 @@ record LazyFilterIterator_Val[F,ITER,X] {
 }
 
 [F,A]
-overload iterator(a:LazyFilter[F,A]) {
+overload iterator(a:Filtered[F,A]) {
     static X = SequenceElementType(A);
-    return LazyFilterIterator_Val(a.predicate, iterator(a.innerSequence),
-                                  false, X());
+    return FilteredIterator_Val(a.predicate, iterator(a.innerSequence),
+                                false, X());
 }
 
 [F,ITER,X]
-overload hasNext?(iter:LazyFilterIterator_Val[F,ITER,X]) {
+overload hasNext?(iter:FilteredIterator_Val[F,ITER,X]) {
     while (not iter.hasQueued?) {
         if (not hasNext?(iter.innerIterator))
             return false;
@@ -53,7 +63,7 @@ overload hasNext?(iter:LazyFilterIterator_Val[F,ITER,X]) {
 }
 
 [F,ITER,X]
-overload next(iter:LazyFilterIterator_Val[F,ITER,X]) {
+overload next(iter:FilteredIterator_Val[F,ITER,X]) {
     assert(iter.hasQueued?, "hasNext? not called");
     iter.hasQueued? = false;
     return iter.queued;
@@ -62,7 +72,7 @@ overload next(iter:LazyFilterIterator_Val[F,ITER,X]) {
 
 // iterator when LValueSequence?(innerSequence)
 
-record LazyFilterIterator_Ref[F,ITER,X] {
+private record FilteredIterator_Ref[F,ITER,X] {
     predicate : F;
     innerIterator : ITER;
     hasQueued? : Bool;
@@ -70,14 +80,14 @@ record LazyFilterIterator_Ref[F,ITER,X] {
 }
 
 [F,A | LValueSequence?(A)]
-overload iterator(a:LazyFilter[F,A]) {
+overload iterator(a:Filtered[F,A]) {
     static X = SequenceElementType(A);
-    return LazyFilterIterator_Ref(a.predicate, iterator(a.innerSequence),
-                                  false, null(X));
+    return FilteredIterator_Ref(a.predicate, iterator(a.innerSequence),
+                                false, null(X));
 }
 
 [F,ITER,X]
-overload hasNext?(iter:LazyFilterIterator_Ref[F,ITER,X]) {
+overload hasNext?(iter:FilteredIterator_Ref[F,ITER,X]) {
     while (not iter.hasQueued?) {
         if (not hasNext?(iter.innerIterator))
             return false;
@@ -88,8 +98,8 @@ overload hasNext?(iter:LazyFilterIterator_Ref[F,ITER,X]) {
 }
 
 [F,ITER,X]
-overload next(iter:LazyFilterIterator_Ref[F,ITER,X]) {
-    // assert(iter.hasQueued?, "hasNext? not called");
+overload next(iter:FilteredIterator_Ref[F,ITER,X]) {
+    assert(iter.hasQueued?, "hasNext? not called");
     iter.hasQueued? = false;
     returnref iter.queued^;
 }

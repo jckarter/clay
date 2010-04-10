@@ -3,9 +3,7 @@ import operators.*;
 import sequences.*;
 import numbers.*;
 import pointers.*;
-import arrays.*;
 import ranges.*;
-import move.*;
 
 
 //
@@ -20,52 +18,72 @@ record Vector[T] {
 
 
 //
-// default constructor
+// predicates
 //
 
 [T]
-overload Vector[T]() = Vector(SizeT(0), SizeT(0), null(T));
+static overload SizedSequence?(Vector[T]) = true;
 
+[T]
+static overload RandomAccessSequence?(Vector[T]) = true;
+
+[T]
+static overload LValueSequence?(Vector[T]) = true;
+
+[T]
+static overload SequenceElementType(Vector[T]) = T;
 
 //
-// other constructors
+// constructors
 //
 
-[T,n]
-overload Vector[T](a:Array[T,n]) : Vector[T] {
+[T]
+overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
+
+[T,A | Sequence?(A) and Equals?(T, SequenceElementType(A))]
+overload Vector[T](a:A) : Vector[T] {
     returned <-- Vector[T]();
     for (x in a)
         push(returned, x);
 }
 
-[T,n]
-overload Vector(a:Array[T,n]) = Vector[T](a);
+[T,A | SizedSequence?(A) and Equals?(T, SequenceElementType(A))]
+overload Vector[T](a:A) : Vector[T] {
+    returned <-- Vector[T]();
+    reserve(returned, size(a));
+    for (x in a)
+        push(returned, x);
+}
 
-
-//
-// copy constructor
-//
-
-[T]
-overload Vector[T](src:Vector[T]) : Vector[T] {
-    ref dest = returned;
-    dest.size = src.size;
-    dest.capacity = src.size;
-    if (dest.capacity > 0) {
-        dest.data = allocateMemory(T, dest.capacity);
-        ref d = iterator(dest);
-        ref s = iterator(src);
-        while (hasNext?(s))
-            next(d) <-- next(s);
-    }
-    else {
-        dest.data = null(T);
-    }
+[A | Sequence?(A)]
+overload Vector(a:A) {
+    static T = SequenceElementType(A);
+    return Vector[T](a);
 }
 
 
 //
-// destructor
+// varargs constructor
+//
+
+[T]
+overload Vector[T](x:T, ...) : Vector[T] {
+    returned <-- Vector[T]();
+    reserve(returned, countArgs(x, ...));
+    pushAll(returned, x, ...);
+}
+
+private overloadable countArgs;
+overload countArgs(x, ...) = 1 + countArgs(...);
+overload countArgs() = 0;
+
+private overloadable pushAll;
+overload pushAll(a, x, ...) { push(a, x); pushAll(a, ...); }
+overload pushAll(a) {}
+
+
+//
+// destroy
 //
 
 [T]
@@ -73,6 +91,17 @@ overload destroy(a:Vector[T]) {
     for (x in a)
         destroy(x);
     freeMemory(a.data);
+}
+
+
+//
+// move
+//
+
+[T]
+overload move(a:Vector[T]) : Vector[T] {
+    returned <-- Vector[T](a.size, a.capacity, a.data);
+    a <-- Vector[T]();
 }
 
 
@@ -193,14 +222,38 @@ overload push(a:Vector[T], x:T) {
 }
 
 [T]
-overload push(a:Vector[T], a:Movable[T]) {
-    insert(a, size(a), x);
+overload push(a:Vector[T], rvalue x:T) {
+    insert(a, size(a), move(x));
 }
 
 [T]
 overload pop(a:Vector[T]) : T {
     returned <-- move(back(a));
     removeLocation(a, end(a)-1);
+}
+
+
+//
+// reserve
+//
+
+[T]
+private setCapacity(a:Vector[T], capacity:SizeT) {
+    var data = allocateMemory(T, capacity);
+    var ptr = data;
+    for (x in a) {
+        ptr^ <-- move(x);
+        inc(ptr);
+    }
+    freeMemory(a.data);
+    a.data = data;
+    a.capacity = capacity;
+}
+
+[T, I | Integer?(I)]
+reserve(a:Vector[T], n:I) {
+    if (a.capacity < SizeT(n))
+        setCapacity(a, SizeT(n));
 }
 
 
@@ -215,26 +268,13 @@ overload clear(a:Vector[T]) {
 }
 
 [T]
-setCapacity(a:Vector[T], capacity:SizeT) {
-    var data = allocateMemory(T, capacity);
-    var ptr = data;
-    for (x in a) {
-        ptr^ <-- move(x);
-        inc(ptr);
-    }
-    freeMemory(a.data);
-    a.data = data;
-    a.capacity = capacity;
-}
-
-[T]
-ensureSpace(a:Vector[T], space:SizeT) {
+private ensureSpace(a:Vector[T], space:SizeT) {
     if (a.size + space > a.capacity)
         setCapacity(a, 2*(a.size + space));
 }
 
 [T,I | Integer?(I)]
-insertLocation(a:Vector[T], pos:I) {
+private insertLocation(a:Vector[T], pos:I) {
     ensureSpace(a, SizeT(1));
     var i = begin(a) + pos;
     var j = end(a);
@@ -252,8 +292,13 @@ overload insert(a:Vector[T], i:I, x) {
 }
 
 [T]
-overload insert(a:Vector[T], i:VectorCoordinate[T], x) {
+overload insert(a:Vector[T], i:VectorCoordinate[T], x:T) {
     insertLocation(a, i-begin(a)) <-- x;
+}
+
+[T]
+overload insert(a:Vector[T], i:VectorCoordinate[T], rvalue x:T) {
+    insertLocation(a, i-begin(a)) <-- move(x);
 }
 
 [T]

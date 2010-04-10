@@ -3,21 +3,14 @@ import pointers.*;
 import sharedpointers.*;
 import sequences.operators.*;
 
-record SequenceHandle[PTR] {
-    inner : PTR;
+record SequenceHandle[A] {
+    inner : Pointer[A];
 }
 
 overloadable sequenceHandle;
 
 [A | Sequence?(A)]
 overload sequenceHandle(seq:A) = SequenceHandle(&seq);
-
-[A | Sequence?(A)]
-overload sequenceHandle(seqPtr:Pointer[A]) = SequenceHandle(seqPtr);
-
-[A | Sequence?(A)]
-overload sequenceHandle(seqPtr:SharedPointer[A]) = SequenceHandle(seqPtr);
-
 
 [A | SizedSequence?(A)]
 static overload SizedSequence?(SequenceHandle[A]) = true;
@@ -29,7 +22,9 @@ static overload RandomAccessSequence?(SequenceHandle[A]) = true;
 static overload LValueSequence?(SequenceHandle[A]) = true;
 
 [A]
-static overload Lightweight?(SequenceHandle[A]) = true;
+static overload SequenceElementType(SequenceHandle[A])
+    = SequenceElementType(A);
+
 
 [A]
 overload iterator(seq:SequenceHandle[A]) = iterator(seq.inner^);

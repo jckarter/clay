@@ -1,0 +1,77 @@
+import operators.*;
+import pointers.*;
+import sequences.operators.*;
+import sequences.handle.*;
+
+
+overloadable mapped;
+
+
+[F,A]
+private static LValueMapping?(F, A) =
+    LValue?(F()(next(iterator(A()))));
+
+
+// Mapped
+
+private record Mapped[F,A] {
+    mapper : F;
+    innerSequence : A;
+}
+
+[F,A | SizedSequence?(A)]
+static overload SizedSequence?(Mapped[F,A]) = true;
+
+[F,A | RandomAccessSequence?(A)]
+static overload RandomAccessSequence?(Mapped[F,A]) = true;
+
+[F,A | Sequence?(A) and LValueMapping?(F, A)]
+static overload LValueSequence?(Mapped[F,A]) = true;
+
+[F,A]
+static overload SequenceElementType(Mapped[F,A]) =
+    TypeOf( F()(SequenceElementType(A)()) );
+
+
+[F,A | Sequence?(A)]
+overload mapped(mapper:F, rvalue seq:A) = Mapped(mapper, move(seq));
+
+[F,A | Sequence?(A)]
+overload mapped(mapper:F, lvalue seq:A)
+    = Mapped(mapper, sequenceHandle(seq));
+
+
+[F,A | SizedSequence?(A)]
+overload size(a:Mapped[F,A]) = size(a.innerSequence);
+
+[F,A | RandomAccessSequence?(A)]
+overload index(a:Mapped[F,A], i) =
+    a.mapper(index(a.innerSequence, i));
+
+[F,A | LValueSequence?(Mapped[F,A]) and RandomAccessSequence?(A)]
+overload index(a:Mapped[F,A], i) =
+    ref a.mapper(index(a.innerSequence, i));
+
+
+// MappedIterator
+
+private record MappedIterator[F,ITER] {
+    mapper:F;
+    innerIterator : ITER;
+}
+
+[F,A]
+overload iterator(a:Mapped[F,A]) =
+    MappedIterator(a.mapper, iterator(a.innerSequence));
+
+[F,ITER]
+overload hasNext?(iter:MappedIterator[F,ITER]) =
+    hasNext?(iter.innerIterator);
+
+[F,ITER]
+overload next(iter:MappedIterator[F,ITER]) =
+    iter.mapper(next(iter.innerIterator));
+
+[F,ITER | LValue?(F()(next(ITER())))]
+overload next(iter:MappedIterator[F,ITER]) =
+    ref iter.mapper(next(iter.innerIterator));
