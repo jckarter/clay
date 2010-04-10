@@ -111,10 +111,6 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         error("'call' operator not found!");
     Overloadable *callObj = (Overloadable *)obj.ptr();
     callObj->overloads.insert(callObj->overloads.begin(), overload);
-    if (!callObj->staticFlagsInitialized)
-        initIsStaticFlags(callObj);
-    else
-        updateIsStaticFlags(callObj, overload);
 }
 
 
@@ -372,12 +368,12 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case VAR_ARGS_REF :
+        // FIXME: what should be done here?
+        break;
+
     case SC_EXPR :
     case OBJECT_EXPR :
         break;
-
-    default :
-        assert(false);
-
     }
 }

@@ -45,6 +45,15 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
 // isStaticFlags
 //
 
+typedef pair<ObjectPtr, unsigned> FlagsMapKey;
+
+struct FlagsMapEntry {
+    bool initialized;
+    vector<bool> isStaticFlags;
+    FlagsMapEntry()
+        : initialized(false) {}
+};
+
 static map<FlagsMapKey, FlagsMapEntry> flagsMap;
 
 static FlagsMapEntry &lookupFlagsMapEntry(ObjectPtr callable, unsigned nArgs)
@@ -52,100 +61,69 @@ static FlagsMapEntry &lookupFlagsMapEntry(ObjectPtr callable, unsigned nArgs)
     return flagsMap[make_pair(callable, nArgs)];
 }
 
-void updateIsStaticFlags(ObjectPtr callable, OverloadPtr overload)
-{
-    const vector<FormalArgPtr> &formalArgs = overload->code->formalArgs;
-    FlagsMapEntry &entry = lookupFlagsMapEntry(callable, formalArgs.size());
-    if (!entry.initialized) {
-        for (unsigned j = 0; j < formalArgs.size(); ++j) {
-            switch (formalArgs[j]->objKind) {
-            case VALUE_ARG :
-                entry.isStaticFlags.push_back(false);
-                break;
-            case STATIC_ARG :
-                entry.isStaticFlags.push_back(true);
-                break;
-            default :
-                assert(false);
-            }
-        }
-        entry.initialized = true;
-    }
-    else {
-        for (unsigned j = 0; j < formalArgs.size(); ++j) {
-            switch(formalArgs[j]->objKind) {
-            case VALUE_ARG :
-                if (entry.isStaticFlags[j])
-                    error(formalArgs[j], "expecting static argument");
-                break;
-            case STATIC_ARG :
-                if (!entry.isStaticFlags[j])
-                    error(formalArgs[j], "expecting non-static argument");
-                break;
-            default :
-                assert(false);
-            }
-        }
-    }
-}
-
-static void initIsStaticFlags(ObjectPtr callable,
-                              const vector<OverloadPtr> &overloads)
-{
-    for (unsigned i = 0; i < overloads.size(); ++i)
-        updateIsStaticFlags(callable, overloads[i]);
-}
-
-void initIsStaticFlags(ObjectPtr x)
+static void initCallable(ObjectPtr x)
 {
     switch (x->objKind) {
     case TYPE : {
         Type *y = (Type *)x.ptr();
         if (!y->overloadsInitialized)
             initTypeOverloads(y);
-        if (!y->staticFlagsInitialized) {
-            initIsStaticFlags(y, callableOverloads(y));
-            y->staticFlagsInitialized = true;
-        }
         break;
     }
     case RECORD : {
         Record *y = (Record *)x.ptr();
         if (!y->builtinOverloadInitialized)
             initBuiltinConstructor(y);
-        if (!y->staticFlagsInitialized) {
-            initIsStaticFlags(y, callableOverloads(y));
-            y->staticFlagsInitialized = true;
-        }
         break;
     }
-    case PROCEDURE : {
-        Procedure *y = (Procedure *)x.ptr();
-        if (!y->staticFlagsInitialized) {
-            initIsStaticFlags(y, callableOverloads(y));
-            y->staticFlagsInitialized = true;
-        }
+    case PROCEDURE :
+    case OVERLOADABLE :
         break;
-    }
-    case OVERLOADABLE : {
-        Overloadable *y = (Overloadable *)x.ptr();
-        if (!y->staticFlagsInitialized) {
-            initIsStaticFlags(y, callableOverloads(y));
-            y->staticFlagsInitialized = true;
-        }
-        break;
-    }
     default :
         assert(false);
     }
 }
 
+static bool isStaticArg(FormalArgPtr farg) {
+    switch (farg->objKind) {
+    case VALUE_ARG : return false;
+    case STATIC_ARG : return true;
+    default : assert(false); return false;
+    }
+}
+
+static void computeIsStaticFlags(ObjectPtr x,
+                                 unsigned nArgs,
+                                 vector<bool> &isStaticFlags)
+{
+    initCallable(x);
+    const vector<OverloadPtr> &overloads = callableOverloads(x);
+    for (unsigned i = 0; i < overloads.size(); ++i) {
+        CodePtr y = overloads[i]->code;
+        const vector<FormalArgPtr> &fargs = y->formalArgs;
+        if (y->hasVarArgs && (fargs.size() <= nArgs)) {
+            for (unsigned j = 0; j < fargs.size(); ++j)
+                isStaticFlags.push_back(isStaticArg(fargs[j]));
+            for (unsigned j = fargs.size(); j < nArgs; ++j)
+                isStaticFlags.push_back(false);
+            return;
+        }
+        else if (fargs.size() == nArgs) {
+            for (unsigned j = 0; j < fargs.size(); ++j)
+                isStaticFlags.push_back(isStaticArg(fargs[j]));
+            return;
+        }
+    }
+    error("incorrect no. of arguments");
+}
+
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
 {
-    initIsStaticFlags(callable);
     FlagsMapEntry &entry = lookupFlagsMapEntry(callable, nArgs);
-    if (!entry.initialized)
-        error("incorrect no. of arguments");
+    if (!entry.initialized) {
+        computeIsStaticFlags(callable, nArgs, entry.isStaticFlags);
+        entry.initialized = true;
+    }
     return entry.isStaticFlags;
 }
 

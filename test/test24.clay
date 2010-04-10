@@ -4,7 +4,7 @@ import libc;
 overloadable printAll;
 
 overload printAll(a:Int, ...) {
-    libc.printf("%d\n", a);
+    libc.printf(cstring("%d\n"), a);
     printAll(...);
 }
 
