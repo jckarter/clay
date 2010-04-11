@@ -2265,6 +2265,8 @@ struct CodeContext : public Object {
           catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}
 };
 
+void setExceptionsEnabled(bool enabled);
+
 void codegenValueInit(CValuePtr dest);
 void codegenValueDestroy(CValuePtr dest);
 void codegenValueCopy(CValuePtr dest, CValuePtr src);

@@ -3,7 +3,13 @@
 
 vector<CValuePtr> stackCValues;
 
+static bool exceptionsEnabled = true;
 static bool llvmExceptionsInited = false;
+
+void setExceptionsEnabled(bool enabled)
+{
+    exceptionsEnabled = enabled;
+}
 
 static void initExceptions() 
 {
@@ -71,7 +77,7 @@ static llvm::Value *createCall(llvm::Value *llCallable,
                                EnvPtr env) 
 {  
     // We don't have a context
-    if (!env->ctx.ptr())
+    if (!exceptionsEnabled || !env->ctx.ptr())
         return llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
 
     CodeContextPtr ctx = env->ctx;
