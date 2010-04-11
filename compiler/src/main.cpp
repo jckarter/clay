@@ -204,6 +204,8 @@ static void usage()
     cerr << "  -llvm           - emit llvm code\n";
     cerr << "  -asm            - emit assember code\n";
     cerr << "  -unoptimized    - generate unoptimized code\n";
+    cerr << "  -exceptions     - enable exception handling\n";
+    cerr << "  -no-exceptions     - enable exception handling\n";
 }
 
 int main(int argc, char **argv) {
@@ -216,6 +218,7 @@ int main(int argc, char **argv) {
     bool emitLLVM = false;
     bool emitAsm = false;
     bool sharedLib = false;
+    bool exceptions = true;
 
     string clayFile;
     string outputFile;
@@ -234,6 +237,12 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-unoptimized") == 0) {
             optimize = false;
+        }
+        else if (strcmp(argv[i], "-exceptions") == 0) {
+            exceptions = true;
+        }
+        else if (strcmp(argv[i], "-no-exceptions") == 0) {
+            exceptions = false;
         }
         else if (strcmp(argv[i], "-o") == 0) {
             if (i+1 == argc) {
@@ -275,6 +284,8 @@ int main(int argc, char **argv) {
 
     initLLVM();
     initTypes();
+
+    setExceptionsEnabled(exceptions);
 
     // Try environment variables first
     char* libclayPath = getenv("CLAY_PATH");
