@@ -433,6 +433,8 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         for (i = x->elementTypes.begin(), end = x->elementTypes.end();
              i != end; ++i)
             llTypes.push_back(llvmType(*i));
+        if (x->elementTypes.empty())
+            llTypes.push_back(llvmIntType(8));
         const llvm::Type *llType =
             llvm::StructType::get(llvm::getGlobalContext(), llTypes);
         ostringstream out;
@@ -450,6 +452,8 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         vector<TypePtr>::const_iterator i, end;
         for (i = fieldTypes.begin(), end = fieldTypes.end(); i != end; ++i)
             llTypes.push_back(llvmType(*i));
+        if (fieldTypes.empty())
+            llTypes.push_back(llvmIntType(8));
         llvm::StructType *st =
             llvm::StructType::get(llvm::getGlobalContext(), llTypes);
         opaque->refineAbstractTypeTo(st);
@@ -461,6 +465,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
     }
     case STATIC_OBJECT_TYPE : {
         vector<const llvm::Type *> llTypes;
+        llTypes.push_back(llvmIntType(8));
         return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
     case ENUM_TYPE : {
