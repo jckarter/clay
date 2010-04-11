@@ -205,7 +205,7 @@ static void usage()
     cerr << "  -asm            - emit assember code\n";
     cerr << "  -unoptimized    - generate unoptimized code\n";
     cerr << "  -exceptions     - enable exception handling\n";
-    cerr << "  -no-exceptions     - enable exception handling\n";
+    cerr << "  -no-exceptions  - enable exception handling\n";
 }
 
 int main(int argc, char **argv) {
