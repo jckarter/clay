@@ -129,9 +129,9 @@ overload remainderAssign(a, b) { a = a % b; }
 //
 
 swap(a, b) {
-    var temp = a;
-    a = b;
-    b = temp;
+    var temp = move(a);
+    a = move(b);
+    b = move(temp);
 }
 
 
