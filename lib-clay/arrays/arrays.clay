@@ -140,10 +140,8 @@ overload lesser?(a:Array[T,n], b:Array[T,n]) {
     while (hasNext?(i)) {
         ref x = next(i);
         ref y = next(j);
-        if (x < y)
-            return true;
-        if (x > y)
-            return false;
+        if (x != y)
+            return x < y;
     }
     return false;
 }
