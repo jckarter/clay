@@ -7,4 +7,5 @@ record Char {
 
 overload Char(c:Int) = Char(Int8(c));
 
-overload Int(c:Char) = Int(c.code);
+[I | Integer?(I)]
+overload I(c:Char) = I(c.code);
