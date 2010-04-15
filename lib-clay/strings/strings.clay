@@ -1,9 +1,10 @@
 import types.*;
 import operators.*;
 import characters.*;
+import pointers.*;
+import sequences.*;
 import arrays.*;
 import vectors.*;
-import sequences.*;
 import ranges.*;
 
 
@@ -12,53 +13,162 @@ import ranges.*;
 //
 
 record String {
-    data:Vector[Char];
+    data : Pointer[Char];
+    size : SizeT;
+    owned : Bool;
 }
 
 
 //
-// create string
+// predicates
 //
 
-overload String() : String {
-    initialize(returned.data);
-    push(returned.data, Char(0));
+static overload SizedSequence?(String) = true;
+static overload RandomAccessSequence?(String) = true;
+static overload LValueSequence?(String) = true;
+static overload SequenceElementType(String) = Char;
+
+
+//
+// constructors
+//
+
+overload String() = String(null(Char), 0, true);
+
+[A | SizedSequence?(A) and Equals?(Char, SequenceElementType(A))]
+overload String(a:A) {
+    var n = size(a);
+    var data = allocateMemory(Char, n);
+    var p = data;
+    for (x in a) {
+        p^ = x;
+        p += 1;
+    }
+    return String(data, n, true);
 }
 
-[n]
-overload String(a:Array[Char,n]) : String {
-    returned <-- String(Vector(a));
-    push(returned.data, Char(0));
+[A | SizedSequence?(A) and Equals?(Int8, SequenceElementType(A))]
+overload String(a:A) {
+    var n = size(a);
+    var data = allocateMemory(Char, n);
+    var p = data;
+    for (x in a) {
+        p^ = Char(x);
+        p += 1;
+    }
+    return String(data, n, true);
 }
 
-[n]
-overload String(a:Array[Int8,n]) : String {
-    returned.data <-- Vector[Char]();
-    for (x in a)
-        push(returned.data, Char(x));
-    push(returned.data, Char(0));
+
+//
+// stringRef constructors
+//
+
+private static overloadable ArrayLike?;
+[T]
+static overload ArrayLike?(T) = false;
+static overload ArrayLike?(String) = true;
+[T,n]
+static overload ArrayLike?(Array[T,n]) = true;
+[T]
+static overload ArrayLike?(Vector[T]) = true;
+
+
+overloadable stringRef;
+
+[A | ArrayLike?(A) and Equals?(Char, SequenceElementType(A))]
+overload stringRef(a:A) = String(&a[0], size(a), false);
+
+[A | ArrayLike?(A) and Equals?(Int8, SequenceElementType(A))]
+overload stringRef(a:A) = String(Pointer[Char](&a[0], size(a), false));
+
+
+//
+// destroy
+//
+
+overload destroy(a:String) {
+    if (a.owned)
+        freeMemory(a.data);
 }
 
 
 //
-// size, at
+// move
 //
 
-overload size(a:String) = size(a.data) - 1;
-
-overload index(a:String, i) = ref a.data[i];
+overload move(a:String) : String {
+    if (a.owned) {
+        returned <-- String(a.data, a.size, true);
+        a <-- String();
+    }
+    else {
+        returned <-- a;
+    }
+}
 
 
 //
-// begin, end, iterator
+// size, index
 //
 
-overload begin(a:String) = begin(a.data);
-overload end(a:String) = end(a.data) - 1;
+overload size(a:String) = a.size;
+
+[I | Integer?(I)]
+overload index(a:String, i:I) = ref (a.data + SizeT(i))^;
+
+
+//
+// coordinates and iteration
+//
+
+overload begin(a:String) = a.data;
+overload end(a:String) = a.data + a.size;
+
 overload iterator(a:String) = CoordinateRange(begin(a), end(a));
+
+
+//
+// equals?, lesser?
+//
+
+overload equals?(a:String, b:String) {
+    if (size(a) != size(b))
+        return false;
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i)) {
+        if (next(i) != next(j))
+            return false;
+    }
+    return true;
+}
+
+
+overload lesser?(a:String, b:String) {
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i) and hasNext?(j)) {
+        ref x = next(i);
+        ref y = next(j);
+        if (x != y)
+            return x < y;
+    }
+    return hasNext?(j);
+}
+
 
 //
 // c-string compatibility
 //
 
-cstring(s:String) = &s[0].code;
+cstring(s:String) {
+    var p = allocateMemory(Int8, size(s) + 1);
+    var q = p;
+    for (c in s) {
+        q^ = Int8(c);
+        q += 1;
+    }
+    q^ = Int8(0);
+    return p;
+}
