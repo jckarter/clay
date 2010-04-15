@@ -27,7 +27,7 @@ static Long = Int64;
 static ULong = UInt64;
 
 static Float = Float32;
-static Doulble = Float64;
+static Double = Float64;
 
 static RawPointer = Pointer[Byte];
 
