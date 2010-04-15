@@ -115,9 +115,6 @@ overload size(a:Vector[T]) = a.size;
 [T,I | Integer?(I)]
 overload index(a:Vector[T], i:I) = ref (a.data + SizeT(i))^;
 
-[T]
-overload index(a:Vector[T], i:SizeT) = ref (a.data + i)^;
-
 
 //
 // vector coordinates
@@ -193,16 +190,10 @@ overload lesser?(a:Vector[T], b:Vector[T]) {
     while (hasNext?(i) and hasNext?(j)) {
         ref x = next(i);
         ref y = next(j);
-        if (x < y)
-            return true;
-        if (x > y)
-            return false;
+        if (x != y)
+            return x < y;
     }
-    if (hasNext?(i))
-        return false;
-    if (hasNext?(j))
-        return true;
-    return false;
+    return hasNext?(j);
 }
 
 
