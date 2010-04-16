@@ -33,30 +33,27 @@ static overload SequenceElementType(String) = Char;
 // constructors
 //
 
-overload String() = String(null(Char), 0, true);
+overload String() = String(null(Char), 0, false);
 
 [A | SizedSequence?(A) and Equals?(Char, SequenceElementType(A))]
 overload String(a:A) {
+    var data = allocateStringData(a);
+    return String(data, size(a), true);
+}
+
+[A | SizedSequence?(A) and Equals?(Int8, SequenceElementType(A))]
+overload String(a:A) = String(mapped(Char, a));
+
+private allocateStringData(a) {
     var n = size(a);
-    var data = allocateMemory(Char, n);
+    var data = allocateMemory(Char, n+1);
     var p = data;
     for (x in a) {
         p^ = x;
         p += 1;
     }
-    return String(data, n, true);
-}
-
-[A | SizedSequence?(A) and Equals?(Int8, SequenceElementType(A))]
-overload String(a:A) {
-    var n = size(a);
-    var data = allocateMemory(Char, n);
-    var p = data;
-    for (x in a) {
-        p^ = Char(x);
-        p += 1;
-    }
-    return String(data, n, true);
+    p^ = Char(0);
+    return data;
 }
 
 
@@ -163,12 +160,9 @@ overload lesser?(a:String, b:String) {
 //
 
 cstring(s:String) {
-    var p = allocateMemory(Int8, size(s) + 1);
-    var q = p;
-    for (c in s) {
-        q^ = Int8(c);
-        q += 1;
+    if (not s.owned) {
+        s.data = allocateStringData(s);
+        s.owned = true;
     }
-    q^ = Int8(0);
-    return p;
+    return Pointer[Int8](s.data);
 }
