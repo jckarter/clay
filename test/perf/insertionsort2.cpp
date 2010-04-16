@@ -3,40 +3,20 @@
 
 using namespace std;
 
-void insertionSortWithPointers(int *begin, int *end) {
-    int *i = begin + 1;
-    while (i < end) {
+void insertionSort(vector<int> &a) {
+    vector<int>::iterator i = a.begin() + 1;
+    while (i < a.end()) {
         int x = *i;
-        int *j = i;
+        vector<int>::iterator j = i;
         while (*(j-1) > x) {
             *j = *(j-1);
             --j;
-            if (j == begin) break;
+            if (j == a.begin()) break;
         }
         *j = x;
         ++i;
     }
 }
-
-void insertionSort(vector<int> &a) {
-    int *p = &a[0];
-    insertionSortWithPointers(p, p+a.size());
-}
-
-// void insertionSort(vector<int> &a) {
-//     vector<int>::iterator i = a.begin() + 1;
-//     while (i < a.end()) {
-//         int x = *i;
-//         vector<int>::iterator j = i;
-//         while (*(j-1) > x) {
-//             *j = *(j-1);
-//             --j;
-//             if (j == a.begin()) break;
-//         }
-//         *j = x;
-//         ++i;
-//     }
-// }
 
 void swap(int &a, int &b) {
     int temp = a;
