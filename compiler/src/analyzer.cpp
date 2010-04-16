@@ -1407,6 +1407,20 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         return new PValue(t->pointeeType, false);
     }
 
+    case PRIM_pointerEqualsP : {
+        return new PValue(boolType, true);
+    }
+
+    case PRIM_pointerLesserP : {
+        return new PValue(boolType, true);
+    }
+
+    case PRIM_pointerOffset : {
+        ensureArity(args, 2);
+        PValuePtr y = analyzePointerValue(args[0], env);
+        return new PValue(y->type, true);
+    }
+
     case PRIM_pointerToInt : {
         ensureArity(args, 2);
         TypePtr t = evaluateIntegerType(args[0], env);

@@ -2373,6 +2373,43 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return new CValue(t->pointeeType, v);
     }
 
+    case PRIM_pointerEqualsP : {
+        ensureArity(args, 2);
+        PointerTypePtr t;
+        llvm::Value *v0 = _cgPointer(args[0], env, t);
+        llvm::Value *v1 = _cgPointer(args[1], env, t);
+        llvm::Value *flag = llvmBuilder->CreateICmpEQ(v0, v1);
+        llvm::Value *result = llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        llvmBuilder->CreateStore(result, out->llValue);
+        return out;
+    }
+
+    case PRIM_pointerLesserP : {
+        ensureArity(args, 2);
+        PointerTypePtr t;
+        llvm::Value *v0 = _cgPointer(args[0], env, t);
+        llvm::Value *v1 = _cgPointer(args[1], env, t);
+        llvm::Value *flag = llvmBuilder->CreateICmpULT(v0, v1);
+        llvm::Value *result = llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        llvmBuilder->CreateStore(result, out->llValue);
+        return out;
+    }
+
+    case PRIM_pointerOffset : {
+        ensureArity(args, 2);
+        PointerTypePtr t;
+        llvm::Value *v0 = _cgPointer(args[0], env, t);
+        TypePtr offsetT;
+        llvm::Value *v1 = _cgInteger(args[1], env, offsetT);
+        vector<llvm::Value *> indices;
+        indices.push_back(v1);
+        llvm::Value *result = llvmBuilder->CreateGEP(v0,
+                                                     indices.begin(),
+                                                     indices.end());
+        llvmBuilder->CreateStore(result, out->llValue);
+        return out;
+    }
+
     case PRIM_pointerToInt : {
         ensureArity(args, 2);
         TypePtr dest = evaluateType(args[0], env);

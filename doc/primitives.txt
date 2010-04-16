@@ -39,6 +39,9 @@ Pointer[T]
 
 [T] addressOf(a:T) : Pointer[T]
 [T] pointerDereference(a:Pointer[T]) ref : T
+[T] pointerEquals?(a:Pointer[T], b:Pointer[T]) : Bool
+[T] pointerLesser?(a:Pointer[T], b:Pointer[T]) : Bool
+[T,I] pointerOffset(a:Pointer[T], i:I) : Pointer[T]
 [T,I|Integer?(I)] pointerToInt(static I, a:Pointer[T]) : I
 [I,T|Integer?(I)] intToPointer(static T, a:I) : Pointer[T]
 

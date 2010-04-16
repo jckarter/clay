@@ -1485,6 +1485,9 @@ enum PrimOpCode {
 
     PRIM_addressOf,
     PRIM_pointerDereference,
+    PRIM_pointerEqualsP,
+    PRIM_pointerLesserP,
+    PRIM_pointerOffset,
     PRIM_pointerToInt,
     PRIM_intToPointer,
 
