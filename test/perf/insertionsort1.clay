@@ -23,10 +23,10 @@ reverse(a) {
 }
 
 main() {
-    var a = Array[Int, 1000]();
-    for (i in range(size(a)))
-        a[i] = Int(i*2);
-    for (i in range(100)) {
+    var a = Vector[Int]();
+    for (i in range(1000))
+        push(a, i*2);
+    for (i in range(1000)) {
         insertionSort(a);
         reverse(a);
     }

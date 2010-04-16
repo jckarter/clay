@@ -10,11 +10,11 @@ void insertionSort(vector<int> &a) {
         int j = i;
         while (a[j-1] > x) {
             a[j] = a[j-1];
-            j = j - 1;
+            --j;
             if (j == 0) break;
         }
         a[j] = x;
-        i = i + 1;
+        ++i;
     }
 }
 
@@ -31,19 +31,15 @@ void reverse(vector<int> &a) {
     }
 }
 
-int test() {
+int main() {
     vector<int> a;
     for (int i = 0; i < 1000; ++i) {
         a.push_back(i*2);
     }
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         insertionSort(a);
         reverse(a);
     }
-    return a[0];
-}
-
-int main() {
-    cout << test() << endl;
+    cout << "a[0] = " << a[0] << '\n';
     return 0;
 }
