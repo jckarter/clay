@@ -7,7 +7,7 @@ tests = ("factorial platform " +
          "test18 test19 test20 test21 test22 test23 exception " +
          "test24 test25 test26").split()
 
-perfTests = ("insertionsort1 insertionsort2 insertionsort3 " +
+perfTests = ("insertionsort1 insertionsort2 " +
              "mean quicksort1 quicksort2").split()
 
 win32Tests = "beep".split()
