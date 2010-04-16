@@ -1,4 +1,5 @@
 public import __primitives__.(Pointer, addressOf, pointerDereference,
+                              pointerEquals?, pointerLesser?, pointerOffset,
                               pointerToInt, intToPointer, pointerCast);
 
 public import __primitives__.(CodePointer, RefCodePointer, CodePointer?,
@@ -41,22 +42,22 @@ overload assign(dest:Pointer[T], src:Pointer[T]) {
 
 [T]
 overload equals?(a:Pointer[T], b:Pointer[T]) {
-    return equals?(SizeT(a), SizeT(b));
+    return pointerEquals?(a, b);
 }
 
 [T]
 overload lesser?(a:Pointer[T], b:Pointer[T]) {
-    return lesser?(SizeT(a), SizeT(b));
+    return pointerLesser?(a, b);
 }
 
 [T,I|Integer?(I)]
 overload add(p:Pointer[T], i:I) {
-    return Pointer[T](SizeT(p) + i*TypeSize(T));
+    return pointerOffset(p, i);
 }
 
 [T,I|Integer?(I)]
 overload subtract(p:Pointer[T], i:I) {
-    return Pointer[T](SizeT(p) - i*TypeSize(T));
+    return pointerOffset(p, -i);
 }
 
 [T]

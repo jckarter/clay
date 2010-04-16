@@ -440,6 +440,9 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(addressOf);
     PRIMITIVE(pointerDereference);
+    PRIMITIVE(pointerEqualsP);
+    PRIMITIVE(pointerLesserP);
+    PRIMITIVE(pointerOffset);
     PRIMITIVE(pointerToInt);
     PRIMITIVE(intToPointer);
 
