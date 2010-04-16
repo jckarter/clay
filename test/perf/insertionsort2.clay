@@ -1,20 +1,40 @@
 import base.*;
 import libc;
 
-insertionSort(a) {
-    var i = begin(a) + 1;
-    while (i < end(a)) {
+insertionSortWithPointers(begin, end) {
+    var i = begin + 1;
+    while (i < end) {
         var x = i^;
         var j = i;
         while ((j-1)^ > x) {
             j^ = (j-1)^;
             j -= 1;
-            if (j == begin(a)) break;
+            if (j == begin) break;
         }
         j^ = x;
         i += 1;
     }
 }
+
+insertionSort(a) {
+    var p = &a[0];
+    insertionSortWithPointers(p, p + size(a));
+}
+
+// insertionSort(a) {
+//     var i = begin(a) + 1;
+//     while (i < end(a)) {
+//         var x = i^;
+//         var j = i;
+//         while ((j-1)^ > x) {
+//             j^ = (j-1)^;
+//             j -= 1;
+//             if (j == begin(a)) break;
+//         }
+//         j^ = x;
+//         i += 1;
+//     }
+// }
 
 reverse(a) {
     var n = size(a);
@@ -26,7 +46,7 @@ main() {
     var a = Array[Int, 1000]();
     for (i in range(size(a)))
         a[i] = Int(i*2);
-    for (i in range(100)) {
+    for (i in range(1000)) {
         insertionSort(a);
         reverse(a);
     }
