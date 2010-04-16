@@ -141,6 +141,7 @@ static void generateAssembly(llvm::Module *module,
 static bool generateBinary(llvm::Module *module,
                            const string &outputFile,
                            const llvm::sys::Path &gccPath,
+                           bool exceptions,
                            bool sharedLib)
 {
     llvm::sys::Path tempAsm("clayasm");
@@ -178,7 +179,8 @@ static bool generateBinary(llvm::Module *module,
 
     if (sharedLib)
         gccArgs.push_back("-shared");
-    gccArgs.push_back("-lstdc++");
+    if (exceptions)
+        gccArgs.push_back("-lstdc++");
     gccArgs.push_back("-o");
     gccArgs.push_back(outputFile.c_str());
     gccArgs.push_back("-x");
@@ -218,7 +220,7 @@ int main(int argc, char **argv) {
     bool emitLLVM = false;
     bool emitAsm = false;
     bool sharedLib = false;
-    bool exceptions = true;
+    bool exceptions = false;
 
     string clayFile;
     string outputFile;
@@ -386,7 +388,8 @@ int main(int argc, char **argv) {
             return false;
         }
 
-        result = generateBinary(llvmModule, outputFile, gccPath, sharedLib);
+        result = generateBinary(llvmModule, outputFile, gccPath,
+                                exceptions, sharedLib);
         if (!result)
             return -1;
     }
