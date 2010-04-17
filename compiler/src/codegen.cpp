@@ -844,13 +844,16 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
 
     case STRING_LITERAL : {
         StringLiteral *x = (StringLiteral *)expr.ptr();
-        llvm::Value *v =
+        llvm::Constant *initializer =
             llvm::ConstantArray::get(llvm::getGlobalContext(),
                                      x->value,
                                      false);
         TypePtr type = arrayType(int8Type, x->value.size());
-        CValuePtr cv = codegenAllocValue(type);
-        llvmBuilder->CreateStore(v, cv->llValue);
+        llvm::GlobalVariable *gvar = new llvm::GlobalVariable(
+            *llvmModule, llvmType(type), true,
+            llvm::GlobalVariable::PrivateLinkage,
+            initializer, "clayliteral_str");
+        CValuePtr cv = new CValue(type, gvar);
         vector<ExprPtr> args;
         args.push_back(new ObjectExpr(cv.ptr()));
         return codegenInvoke(kernelName("String"), args, env, out);
