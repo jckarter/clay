@@ -4,6 +4,7 @@
 #include <cstdarg>
 
 
+
 //
 // invoke stack - a compilation call stack
 //
@@ -21,6 +22,7 @@ void popInvokeStack() {
 }
 
 
+
 //
 // source location of the current item being processed
 //
@@ -45,6 +47,41 @@ static LocationPtr topLocation() {
     }
     return NULL;
 }
+
+
+
+//
+// DebugPrinter
+//
+
+static vector<ObjectPtr> debugStack;
+
+int DebugPrinter::indent = 0;
+
+DebugPrinter::DebugPrinter(ObjectPtr obj)
+    : obj(obj)
+{
+    for (int i = 0; i < indent; ++i)
+        std::cout << ' ';
+    std::cout << "BEGIN - " << obj << '\n';
+    ++indent;
+    debugStack.push_back(obj);
+}
+
+DebugPrinter::~DebugPrinter()
+{
+    debugStack.pop_back();
+    --indent;
+    for (int i = 0; i < indent; ++i)
+        std::cout << ' ';
+    std::cout << "DONE - " << obj << '\n';
+}
+
+
+
+//
+// report error
+//
 
 static void computeLineCol(LocationPtr location, int &line, int &column) {
     char *p = location->source->data;
@@ -113,6 +150,18 @@ static void displayInvokeStack() {
     }
 }
 
+static void displayDebugStack() {
+    if (debugStack.empty())
+        return;
+    fprintf(stderr, "\n");
+    fprintf(stderr, "debug stack: \n");
+    for (unsigned i = debugStack.size(); i > 0; --i) {
+        ostringstream sout;
+        sout << debugStack[i-1];
+        fprintf(stderr, "  %s\n", sout.str().c_str());
+    }
+}
+
 void error(const string &msg) {
     LocationPtr location = topLocation();
     if (location.ptr()) {
@@ -122,6 +171,7 @@ void error(const string &msg) {
                 location->source->fileName.c_str(),
                 line+1, column, msg.c_str());
         displayInvokeStack();
+        displayDebugStack();
     }
     else {
         fprintf(stderr, "error: %s\n", msg.c_str());
@@ -137,27 +187,4 @@ void fmtError(const char *fmt, ...) {
     vsnprintf(s, sizeof(s)-1, fmt, ap);
     va_end(ap);
     error(s);
-}
-
-
-
-//
-// DebugPrinter
-//
-
-int DebugPrinter::indent = 0;
-
-DebugPrinter::DebugPrinter(ObjectPtr obj)
-    : obj(obj) {
-    for (int i = 0; i < indent; ++i)
-        std::cout << ' ';
-    std::cout << "BEGIN - " << obj << '\n';
-    ++indent;
-}
-
-DebugPrinter::~DebugPrinter() {
-    --indent;
-    for (int i = 0; i < indent; ++i)
-        std::cout << ' ';
-    std::cout << "DONE - " << obj << '\n';
 }
