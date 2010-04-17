@@ -1,5 +1,4 @@
 import base.*;
-import libc;
 
 map(f, a) {
     static ResultType = TypeOf(f(a[0]));
@@ -18,10 +17,10 @@ main() {
     var a = Vector([1, 2, 3, 4, 5, 6]);
 
     for (x in a)
-        libc.printf(cstring("%d\n"), x);
+        println(x);
 
     var b = scale(100, a);
 
     for (x in b)
-        libc.printf(cstring("%d\n"), x);
+        println(x);
 }

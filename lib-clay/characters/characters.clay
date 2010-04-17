@@ -5,7 +5,10 @@ record Char {
     code:Int8;
 }
 
-overload Char(c:Int) = Char(Int8(c));
+[I | Integer?(I)]
+overload Char(c:I) : Char {
+    returned.code = Int8(c);
+}
 
 [I | Integer?(I)]
 overload I(c:Char) = I(c.code);

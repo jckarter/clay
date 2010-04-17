@@ -1,5 +1,4 @@
 import base.*;
-import libc;
 
 factorial1(n) {
     if (n == 0)
@@ -38,6 +37,6 @@ main() {
     var n = 7;
     n -= 1;
     var f = factorial4(n);
-    libc.printf(cstring("factorial(%d) = %d\n"), n, f);
+    println("factorial(", n, ") = ", f);
     return 0;
 }

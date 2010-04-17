@@ -1,5 +1,4 @@
 import base.*;
-import libc;
 
 record Foo {
     value:Int;
@@ -9,19 +8,19 @@ overload Foo() = Foo(0);
 
 overload Foo(value:Int) : Foo {
     returned.value = value;
-    libc.printf(cstring("constructed value = %d\n"), returned.value);
+    println("constructed value = ", returned.value);
 }
 
 overload Foo(f:Foo) = Foo(f.value);
 
 overload destroy(f:Foo) {
-    libc.printf(cstring("destroyed value = %d\n"), f.value);
+    println("destroyed value = ", f.value);
 }
 
 main() {
     var p = allocate(Foo(10));
     var q = allocate(Foo());
-    libc.printf(cstring("assigning\n"));
+    println("assigning");
     q = p;
-    libc.printf(cstring("assigned\n"));
+    println("assigned");
 }

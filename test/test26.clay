@@ -1,5 +1,4 @@
 import base.*;
-import libc;
 
 double(x) = 2*x;
 
@@ -10,5 +9,5 @@ main() {
     for (x in c)
         x += 2;
     for (x in mapped(double, mapped(double, a)))
-        libc.printf(cstring("%d\n"), x);
+        println(x);
 }

@@ -1,15 +1,15 @@
 import base.*;
-import io.streams.*;
+import streams.*;
 import libc;
 
 record File {
-    handle : Pointer[FILE];
+    handle : Pointer[libc.FILE];
     owned : Bool;
 }
 
-var standardInput = File(libc.stdin, false);
-var standardOutput = File(libc.stdout, false);
-var standardError = File(libc.stderr, false);
+var stdin = File(libc.stdin, false);
+var stdout = File(libc.stdout, false);
+var stderr = File(libc.stderr, false);
 
 enum FileMode {
     READ,
@@ -19,10 +19,8 @@ enum FileMode {
 
 overload File(path:String, mode:FileMode) {
     var f = libc.fopen(cstring(path), mode);
-    if (f == null(FILE)) {
-        libc.printf(standardError, "error opening file: %s", cstring(path));
-        libc.exit(-1);
-    }
+    if (isNull(f))
+        error("unable to open file: ", path);
     return File(f, true);
 }
 
@@ -42,23 +40,11 @@ overload destroy(f:File) {
 
 // implement byte stream operations
 
-overload readByte(f:File, byte:Byte) : Bool {
-    var value = libc.fgetc(f.handle);
-    if (value < 0)
-        return false;
-    byte = Byte(value);
-    return true;
-}
-
-overload readBytes(f:File, buffer:Pointer[Byte], n:SizeT) : SizeT {
+overload read(f:File, buffer:Pointer[Byte], n:SizeT) : SizeT {
     return libc.fread(buffer, SizeT(1), n, f.handle);
 }
 
-overload writeByte(f:File, byte:Byte) {
-    libc.fputc(Int(byte), f.handle);
-}
-
-overload writeBytes(f:File, buffer:Pointer[Byte], n:SizeT) {
+overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
     libc.fwrite(buffer, SizeT(1), n, f.handle);
 }
 

@@ -6,6 +6,7 @@ import sequences.*;
 import arrays.*;
 import vectors.*;
 import ranges.*;
+import numbers.*;
 
 
 //

@@ -1,5 +1,4 @@
 import base.*;
-import libc;
 
 static overloadable IsInt64;
 [T]
@@ -16,5 +15,5 @@ main() {
     var x = 0;
     if (IsInt64(T) and Foo(T))
         x += 1;
-    libc.printf(cstring("x = %d\n"), x);
+    println("x = ", x);
 }

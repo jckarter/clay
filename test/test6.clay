@@ -1,10 +1,9 @@
 import base.*;
-import libc;
 
 main() {
     var sum = 0;
     for (c in "Hello World!")
         sum += Int32(c);
-    libc.printf(cstring("sum = %d\n"), sum);
+    println("sum = ", sum);
     return 0;
 }

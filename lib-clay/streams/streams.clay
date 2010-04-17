@@ -1,0 +1,11 @@
+
+// byte streams
+
+// read(stream, buf:Pointer[Byte], n:SizeT) : SizeT
+overloadable read;
+
+// write(stream, buf:Pointer[Byte], n:SizeT) : Void
+overloadable write;
+
+// flush(stream) : Void
+overloadable flush;

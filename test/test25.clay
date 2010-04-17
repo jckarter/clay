@@ -1,5 +1,4 @@
 import base.*;
-import libc;
 
 even?(x) = (x % 2 == 0);
 
@@ -11,5 +10,5 @@ main() {
     for (x in filtered(odd?, a))
         x *= 100;
     for (x in filtered(even?, move(a)))
-        libc.printf(cstring("%d\n"), x);
+        println(x);
 }

@@ -3,7 +3,7 @@ import operators.*;
 import pointers.*;
 import sequences.operators.*;
 import sequences.handle.*;
-import assert.*;
+import errors.*;
 
 
 overloadable filtered;

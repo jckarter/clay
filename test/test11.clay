@@ -1,5 +1,4 @@
 import base.*;
-import libc;
 
 record Multiplier[N] {
     factor:N;
@@ -20,5 +19,5 @@ main() {
     var a = Vector([1, 2, 3]);
     var b = map(Multiplier(10), a);
     for (x in b)
-        libc.printf(cstring("%d\n"), x);
+        println(x);
 }
