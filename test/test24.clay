@@ -1,10 +1,9 @@
 import base.*;
-import libc;
 
 overloadable printAll;
 
 overload printAll(a:Int, ...) {
-    libc.printf(cstring("%d\n"), a);
+    println(a);
     printAll(...);
 }
 

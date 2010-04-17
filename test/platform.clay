@@ -1,13 +1,12 @@
 import base.*;
-import libc;
 
 main() {
-    libc.printf(cstring("sizeof(Byte) = %d\n"), TypeSize(Byte));
-    libc.printf(cstring("sizeof(Short) = %d\n"), TypeSize(Short));
-    libc.printf(cstring("sizeof(Int) = %d\n"), TypeSize(Int));
-    libc.printf(cstring("sizeof(Long) = %d\n"), TypeSize(Long));
+    println("sizeof(Byte) = ", TypeSize(Byte));
+    println("sizeof(Short) = ", TypeSize(Short));
+    println("sizeof(Int) = ", TypeSize(Int));
+    println("sizeof(Long) = ", TypeSize(Long));
 
-    libc.printf(cstring("sizeof(RawPointer) = %d\n"), TypeSize(RawPointer));
-    libc.printf(cstring("sizeof(SizeT) = %d\n"), TypeSize(SizeT));
-    libc.printf(cstring("sizeof(PtrInt) = %d\n"), TypeSize(PtrInt));
+    println("sizeof(RawPointer) = ", TypeSize(RawPointer));
+    println("sizeof(SizeT) = ", TypeSize(SizeT));
+    println("sizeof(PtrInt) = ", TypeSize(PtrInt));
 }

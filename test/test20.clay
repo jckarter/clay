@@ -1,13 +1,12 @@
 import base.*;
-import libc;
 
 var x = 10;
 
 static Y = x;
 
-static P = libc.printf;
+static P = println;
 
 main() {
     inc(Y);
-    P(cstring("Hello World %d\n"), x);
+    P("Hello World ", x);
 }

@@ -1,0 +1,22 @@
+import types.*;
+import strings.*;
+import printer;
+import files;
+import libc;
+
+error(...) {
+    printer.printTo(files.stderr, "error: ", ..., '\n');
+    libc.exit(-1);
+}
+
+overloadable assert;
+
+inlined overload assert(cond:Bool) {
+    if (not cond)
+        error("assertion failed");
+}
+
+inlined overload assert(cond:Bool, message:String) {
+    if (not cond)
+        error("assertion failed: ", message);
+}

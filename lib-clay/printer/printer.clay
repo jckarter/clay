@@ -1,0 +1,65 @@
+import base.*;
+import streams.*;
+import files.*;
+import libc;
+
+
+//
+// printTo - print to a stream
+//
+
+overloadable printTo;
+
+overload printTo(stream) {
+}
+
+overload printTo(stream, first, ...) {
+    printTo(stream, first);
+    printTo(stream, ...);
+}
+
+overload printTo(stream, x:Char) {
+    write(stream, Pointer[Byte](&x), SizeT(1));
+}
+
+overload printTo(stream, x:String) {
+    write(stream, Pointer[Byte](&x[0]), size(x));
+}
+
+overload printTo(stream, x:Bool) {
+    if (x)
+        printTo(stream, "true");
+    else
+        printTo(stream, "false");
+}
+
+[I | Integer?(I)]
+overload printTo(stream, x:I) {
+    var buf = Array[CChar, 100]();
+    libc.sprintf(&buf[0], cstring("%d"), Int(x));
+    var n = libc.strlen(&buf[0]);
+    var ptr = Pointer[Byte](&buf[0]);
+    write(stream, ptr, SizeT(n));
+}
+
+[F | Float?(F)]
+overload printTo(stream, x:F) {
+    var buf = Array[CChar, 100]();
+    libc.sprintf(&buf[0], cstring("%f"), Double(x));
+    var n = libc.strlen(&buf[0]);
+    var ptr = Pointer[Byte](&buf[0]);
+    write(stream, ptr, SizeT(n));
+}
+
+
+//
+// print
+//
+
+print(...) {
+    printTo(stdout, ...);
+}
+
+println(...) {
+    printTo(stdout, ..., '\n');
+}

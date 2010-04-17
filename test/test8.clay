@@ -1,5 +1,4 @@
 import base.*;
-import libc;
 
 external qsort(base:RawPointer, n:SizeT, width:SizeT,
                compare:CCodePointer[RawPointer, RawPointer, Int]): Void;
@@ -18,13 +17,13 @@ main() {
         x -= 1;
     }
 
-    libc.printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
+    println("a[0], a[2] = ", a[0], ", ", a[2]);
 
     var fp = makeCCodePointer(compare, Pointer[Int], Pointer[Int]);
 
-    libc.printf(cstring("compare test = %d\n"), fp(&a[0], &a[2]));
-    libc.printf(cstring("compare test = %d\n"), fp(&a[0], &a[0]));
-    libc.printf(cstring("compare test = %d\n"), fp(&a[2], &a[0]));
+    println("compare test = ", fp(&a[0], &a[2]));
+    println("compare test = ", fp(&a[0], &a[0]));
+    println("compare test = ", fp(&a[2], &a[0]));
 
     var fp2 = CCodePointer[RawPointer, RawPointer, Int](fp);
 
@@ -33,6 +32,6 @@ main() {
           TypeSize(Int),
           fp2);
 
-    libc.printf(cstring("a[0], a[2] = %d, %d\n"), a[0], a[2]);
+    println("a[0], a[2] = ", a[0], ", ", a[2]);
     return 0;
 }

@@ -1,5 +1,4 @@
 import base.*;
-import libc;
 
 record _Unwind_Exception {
     exception_class: Int32;
@@ -12,7 +11,7 @@ external _Unwind_RaiseException(p:Pointer[_Unwind_Exception]):Int32;
 
 throw() {
     var exception = allocateMemory(_Unwind_Exception, SizeT(1));
-    libc.printf(cstring("Throwing\n"));
+    println("Throwing");
     _Unwind_RaiseException(exception); 
 }
 
@@ -23,17 +22,17 @@ record Test {
 overload Test() = Test(-1);
 
 overload Test(x:Int32) : Test {
-    libc.printf(cstring("Created %d\n"), x);
+    println("Created ", x);
     returned.x = x;
 }
 
 overload Test(other:Test) : Test {
-    libc.printf(cstring("Copied %d\n"), x);
+    println("Copied ", other.x);
     returned.x = other.x;
 }
 
 overload destroy(t:Test) {
-    libc.printf(cstring("Destroyed %d\n"), t.x);
+    println("Destroyed ", t.x);
 }
 
 main () {
@@ -43,6 +42,6 @@ main () {
         var b = Test(2);
     }
     catch {
-        libc.printf(cstring("Caught!\n"));
+        println("Caught!");
     }
 }

@@ -1,11 +1,10 @@
 import base.*;
-import libc;
 
 main() {
     var v = Vector([1, 2, 3, 4, 5]);
     var sum = 0;
     for (x in v)
         sum += x;
-    libc.printf(cstring("%d\n"), sum);
+    println(sum);
     return 0;
 }

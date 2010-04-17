@@ -1,22 +1,21 @@
 import base.*;
-import libc;
 
-overloadable print;
+overloadable printValue;
 
-overload print(x:Int32) {
-    libc.printf(cstring("int value = %d\n"), x);
+overload printValue(x:Int32) {
+    println("int value = ", x);
 }
 
-overload print(x:UInt32) {
-    libc.printf(cstring("uint value = %d\n"), x);
+overload printValue(x:UInt32) {
+    println("uint value = ", x);
 }
 
-overload print(x:Float64) {
-    libc.printf(cstring("double value = %f\n"), x);
+overload printValue(x:Float64) {
+    println("double value = ", x);
 }
 
 main() {
     var a = 1 + 2#u32;
-    print(a);
+    printValue(a);
     return 0;
 }
