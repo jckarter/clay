@@ -830,6 +830,7 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
     if (!computeArgsKey(isStaticFlags, args, env,
                         argsKey, argsTempness, argLocations))
         return NULL;
+    InvokeStackContext invokeStackContext(x, argsKey);
     InvokeEntryPtr entry =
         analyzeCallable(x, isStaticFlags,
                         argsKey, argsTempness,
@@ -1218,6 +1219,8 @@ analyzeStaticProcedure(StaticProcedurePtr x,
         argLocations.push_back(argExprs[i]->location);
     }
 
+    InvokeStackContext invokeStackContext(x.ptr(), args);
+
     StaticInvokeEntryPtr entry = lookupStaticInvoke(x.ptr(), args);
     if (!entry->result && !entry->analyzing) {
         entry->analyzing = true;
@@ -1244,6 +1247,8 @@ analyzeStaticOverloadable(StaticOverloadablePtr x,
         args.push_back(evaluateStatic(argExprs[i], env));
         argLocations.push_back(argExprs[i]->location);
     }
+
+    InvokeStackContext invokeStackContext(x.ptr(), args);
 
     StaticInvokeEntryPtr entry = lookupStaticInvoke(x.ptr(), args);
     if (!entry->result && !entry->analyzing) {

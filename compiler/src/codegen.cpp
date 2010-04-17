@@ -1659,6 +1659,7 @@ CValuePtr codegenInvokeCallable(ObjectPtr x,
                                  argsKey, argsTempness,
                                  argLocations);
     assert(result);
+    InvokeStackContext invokeStackContext(x, argsKey);
     InvokeEntryPtr entry = codegenCallable(x, isStaticFlags,
                                            argsKey, argsTempness,
                                            argLocations);

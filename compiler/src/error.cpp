@@ -3,27 +3,42 @@
 #include <cstdlib>
 #include <cstdarg>
 
-static vector<LocationPtr> *errorLocations = NULL;
 
-static void init() {
-    if (errorLocations == NULL)
-        errorLocations = new vector<LocationPtr>();
+//
+// invoke stack - a compilation call stack
+//
+
+typedef pair<ObjectPtr, const vector<ObjectPtr> *> InvokeStackEntry;
+
+static vector<InvokeStackEntry> invokeStack;
+
+void pushInvokeStack(ObjectPtr callable, const vector<ObjectPtr> &argsKey) {
+    invokeStack.push_back(make_pair(callable, &argsKey));
 }
 
+void popInvokeStack() {
+    invokeStack.pop_back();
+}
+
+
+//
+// source location of the current item being processed
+//
+
+static vector<LocationPtr> errorLocations;
+
 void pushLocation(LocationPtr location) {
-    init();
-    errorLocations->push_back(location);
+    errorLocations.push_back(location);
 }
 
 void popLocation() {
-    errorLocations->pop_back();
+    errorLocations.pop_back();
 }
 
 static LocationPtr topLocation() {
-    init();
     vector<LocationPtr>::iterator i, begin;
-    i = errorLocations->end();
-    begin = errorLocations->begin();
+    i = errorLocations.end();
+    begin = errorLocations.begin();
     while (i != begin) {
         --i;
         if (i->ptr()) return *i;
@@ -80,6 +95,24 @@ static void displayLocation(LocationPtr location, int &line, int &column) {
     fprintf(stderr, "###############################\n");
 }
 
+static void displayInvokeStack() {
+    if (invokeStack.empty())
+        return;
+    fprintf(stderr, "\n");
+    fprintf(stderr, "compilation context: \n");
+    for (unsigned i = invokeStack.size(); i > 0; --i) {
+        ObjectPtr callable = invokeStack[i-1].first;
+        const vector<ObjectPtr> &argsKey = *invokeStack[i-1].second;
+
+        ostringstream sout;
+        printName(sout, callable);
+        sout << "(";
+        printNameList(sout, argsKey);
+        sout << ")";
+        fprintf(stderr, "  %s\n", sout.str().c_str());
+    }
+}
+
 void error(const string &msg) {
     LocationPtr location = topLocation();
     if (location.ptr()) {
@@ -88,6 +121,7 @@ void error(const string &msg) {
         fprintf(stderr, "%s(%d,%d): error: %s\n",
                 location->source->fileName.c_str(),
                 line+1, column, msg.c_str());
+        displayInvokeStack();
     }
     else {
         fprintf(stderr, "error: %s\n", msg.c_str());
