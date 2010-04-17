@@ -376,6 +376,20 @@ static void initModule(ModulePtr m) {
 
 
 //
+// prim op names
+//
+
+static map<int, string> primOpNames;
+
+const string &primOpName(PrimOpPtr x) {
+    map<int, string>::iterator i = primOpNames.find(x->primOpCode);
+    assert(i != primOpNames.end());
+    return i->second;
+}
+
+
+
+//
 // makePrimitivesModule
 //
 
@@ -389,6 +403,11 @@ static string toPrimStr(const string &s) {
 static void addPrim(ModulePtr m, const string &name, ObjectPtr x) {
     m->globals[name] = x;
     m->publicGlobals[name] = x;
+}
+
+static void addPrimOp(ModulePtr m, const string &name, PrimOpPtr x) {
+    primOpNames[x->primOpCode] = name;
+    addPrim(m, name, x.ptr());
 }
 
 static ModulePtr makePrimitivesModule() {
@@ -407,7 +426,7 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "Float64", float64Type.ptr());
     addPrim(prims, "Void", voidType.ptr());
 
-#define PRIMITIVE(x) addPrim(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
+#define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
 
     PRIMITIVE(TypeOf);
 

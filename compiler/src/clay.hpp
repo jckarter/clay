@@ -441,6 +441,18 @@ struct Location : public Object {
 // error module
 //
 
+void pushInvokeStack(ObjectPtr callable, const vector<ObjectPtr> &argsKey);
+void popInvokeStack();
+
+struct InvokeStackContext {
+    InvokeStackContext(ObjectPtr callable, const vector<ObjectPtr> &argsKey) {
+        pushInvokeStack(callable, argsKey);
+    }
+    ~InvokeStackContext() {
+        popInvokeStack();
+    }
+};
+
 void pushLocation(LocationPtr location);
 void popLocation();
 
@@ -1367,6 +1379,9 @@ ostream &operator<<(ostream &out, const vector<T> &v)
     return out;
 }
 
+void printNameList(ostream &out, const vector<ObjectPtr> &x);
+void printName(ostream &out, ObjectPtr x);
+
 
 
 //
@@ -1440,6 +1455,9 @@ ModulePtr loadProgram(const string &fileName);
 BlockPtr globalVarInitializers();
 
 ModulePtr loadedModule(const string &module);
+
+const string &primOpName(PrimOpPtr x);
+
 ObjectPtr kernelName(const string &name);
 ObjectPtr primName(const string &name);
 
@@ -1750,7 +1768,7 @@ const llvm::Type *llvmVoidType();
 const llvm::Type *llvmType(TypePtr t);
 
 size_t typeSize(TypePtr t);
-void typePrint(TypePtr t, ostream &out);
+void typePrint(ostream &out, TypePtr t);
 
 
 
@@ -1894,7 +1912,7 @@ bool unify(PatternPtr pattern, ObjectPtr obj);
 ObjectPtr derefCell(PatternCellPtr cell);
 ObjectPtr reducePattern(PatternPtr pattern);
 
-void patternPrint(PatternPtr x, ostream &out);
+void patternPrint(ostream &out, PatternPtr x);
 
 
 

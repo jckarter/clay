@@ -324,7 +324,7 @@ ObjectPtr reducePattern(PatternPtr pattern) {
     return pattern.ptr();
 }
 
-void patternPrint(PatternPtr x, ostream &out)
+void patternPrint(ostream &out, PatternPtr x)
 {
     switch (x->patternKind) {
     case PATTERN_CELL : {

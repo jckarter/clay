@@ -491,7 +491,7 @@ size_t typeSize(TypePtr t) {
     return t->typeSize;
 }
 
-void typePrint(TypePtr t, ostream &out) {
+void typePrint(ostream &out, TypePtr t) {
     switch (t->typeKind) {
     case BOOL_TYPE :
         out << "Bool";
@@ -546,13 +546,18 @@ void typePrint(TypePtr t, ostream &out) {
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
         out << x->record->name->str;
-        if (!x->params.empty())
-            out << x->params;
+        if (!x->params.empty()) {
+            out << "[";
+            printNameList(out, x->params);
+            out << "]";
+        }
         break;
     }
     case STATIC_OBJECT_TYPE : {
         StaticObjectType *x = (StaticObjectType *)t.ptr();
-        out << "StaticObject[" << x->obj << "]";
+        out << "StaticObject[";
+        printName(out, x->obj);
+        out << "]";
         break;
     }
     case ENUM_TYPE : {

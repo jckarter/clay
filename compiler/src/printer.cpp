@@ -9,15 +9,15 @@ using namespace std;
 // overload <<
 //
 
-static void print(const Object *x, ostream &out);
+static void print(ostream &out, const Object *x);
 
 ostream &operator<<(ostream &out, const Object &obj) {
-    print(&obj, out);
+    print(out, &obj);
     return out;
 }
 
 ostream &operator<<(ostream &out, const Object *obj) {
-    print(obj, out);
+    print(out, obj);
     return out;
 }
 
@@ -67,7 +67,7 @@ ostream &operator<<(ostream &out, const BigVec<T> &v) {
 // print
 //
 
-static void printExpr(const Expr *x, ostream &out) {
+static void printExpr(ostream &out, const Expr *x) {
     switch (x->exprKind) {
     case BOOL_LITERAL : {
         BoolLiteral *y = (BoolLiteral *)x;
@@ -241,7 +241,7 @@ static void printExpr(const Expr *x, ostream &out) {
     }
 }
 
-static void printStatement(const Statement *x, ostream &out) {
+static void printStatement(ostream &out, const Statement *x) {
     switch (x->stmtKind) {
     case BLOCK : {
         Block *y = (Block *)x;
@@ -346,7 +346,7 @@ static void printStatement(const Statement *x, ostream &out) {
     }
 }
 
-static void print(const Object *x, ostream &out) {
+static void print(ostream &out, const Object *x) {
     if (x == NULL) {
         out << "NULL";
         return;
@@ -421,13 +421,13 @@ static void print(const Object *x, ostream &out) {
 
     case EXPRESSION : {
         Expr *y = (Expr *)x;
-        printExpr(y, out);
+        printExpr(out, y);
         break;
     }
 
     case STATEMENT : {
         Statement *y = (Statement *)x;
-        printStatement(y, out);
+        printStatement(out, y);
         break;
     }
 
@@ -571,6 +571,10 @@ static void print(const Object *x, ostream &out) {
         }
         break;
     }
+    case MODULE_HOLDER : {
+        out << "ModuleHolder()";
+        break;
+    }
     case MODULE : {
         Module *y = (Module *)x;
         out << "Module(" << bigVec(y->imports) << ", "
@@ -580,19 +584,19 @@ static void print(const Object *x, ostream &out) {
 
     case PRIM_OP : {
         PrimOp *y = (PrimOp *)x;
-        out << "PrimOp(" << y->primOpCode << ")";
+        out << "PrimOp(" << primOpName(y) << ")";
         break;
     }
 
     case TYPE : {
         Type *y = (Type *)x;
-        typePrint(y, out);
+        typePrint(out, y);
         break;
     }
 
     case PATTERN : {
         Pattern *y = (Pattern *)x;
-        patternPrint(y, out);
+        patternPrint(out, y);
         break;
     }
 
@@ -625,5 +629,72 @@ static void print(const Object *x, ostream &out) {
     default :
         out << "UnknownObj(" << x->objKind << ")";
         assert(false);
+    }
+}
+
+
+
+//
+// printName
+//
+
+void printNameList(ostream &out, const vector<ObjectPtr> &x)
+{
+    for (unsigned i = 0; i < x.size(); ++i) {
+        if (i != 0)
+            out << ", ";
+        printName(out, x[i]);
+    }
+}
+
+void printName(ostream &out, ObjectPtr x)
+{
+    switch (x->objKind) {
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        out << y->name->str;
+        break;
+    }
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
+        out << y->name->str;
+        break;
+    }
+    case OVERLOADABLE : {
+        Overloadable *y = (Overloadable *)x.ptr();
+        out << y->name->str;
+        break;
+    }
+    case STATIC_PROCEDURE : {
+        StaticProcedure *y = (StaticProcedure *)x.ptr();
+        out << y->name->str;
+        break;
+    }
+    case STATIC_OVERLOADABLE : {
+        StaticOverloadable *y = (StaticOverloadable *)x.ptr();
+        out << y->name->str;
+        break;
+    }
+    case MODULE_HOLDER : {
+        out << "ModuleHolder()";
+        break;
+    }
+    case PRIM_OP : {
+        out << primOpName((PrimOp *)x.ptr());
+        break;
+    }
+    case TYPE : {
+        typePrint(out, (Type *)x.ptr());
+        break;
+    }
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        out << "ValueHolder(" << y->type << ")";
+        break;
+    }
+    default : {
+        out << "UnknownNamedObject(" << x->objKind << ")";
+        break;
+    }
     }
 }
