@@ -745,9 +745,24 @@ static bool patternList(vector<ExprPtr> &x) {
     return true;
 }
 
+static bool dottedNameRef(ExprPtr &x) {
+    if (!nameRef(x)) return false;
+    while (true) {
+        int p = save();
+        ExprPtr y;
+        if (!fieldRefSuffix(y)) {
+            restore(p);
+            break;
+        }
+        setSuffixBase(y.ptr(), x);
+        x = y;
+    }
+    return true;
+}
+
 static bool atomicPattern(ExprPtr &x) {
     int p = save();
-    if (nameRef(x)) return true;
+    if (dottedNameRef(x)) return true;
     if (restore(p), intLiteral(x)) return true;
     return false;
 }
