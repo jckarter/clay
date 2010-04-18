@@ -25,7 +25,7 @@ static vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
 static vector<vector<ArrayTypePtr> > arrayTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
-static vector<vector<StaticObjectTypePtr> > staticObjectTypes;
+static vector<vector<StaticTypePtr> > staticTypes;
 
 void initTypes() {
     boolType = new BoolType();
@@ -63,7 +63,7 @@ void initTypes() {
     arrayTypes.resize(N);
     tupleTypes.resize(N);
     recordTypes.resize(N);
-    staticObjectTypes.resize(N);
+    staticTypes.resize(N);
 }
 
 TypePtr integerType(int bits, bool isSigned) {
@@ -238,16 +238,16 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
     return t.ptr();
 }
 
-TypePtr staticObjectType(ObjectPtr obj)
+TypePtr staticType(ObjectPtr obj)
 {
     int h = objectHash(obj);
-    h &= staticObjectTypes.size() - 1;
-    vector<StaticObjectTypePtr> &bucket = staticObjectTypes[h];
+    h &= staticTypes.size() - 1;
+    vector<StaticTypePtr> &bucket = staticTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         if (objectEquals(obj, bucket[i]->obj))
             return bucket[i].ptr();
     }
-    StaticObjectTypePtr t = new StaticObjectType(obj);
+    StaticTypePtr t = new StaticType(obj);
     bucket.push_back(t);
     return t.ptr();
 }
@@ -463,7 +463,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         llvmModule->addTypeName(out.str(), llType);
         return llType;
     }
-    case STATIC_OBJECT_TYPE : {
+    case STATIC_TYPE : {
         vector<const llvm::Type *> llTypes;
         llTypes.push_back(llvmIntType(8));
         return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
@@ -553,9 +553,9 @@ void typePrint(ostream &out, TypePtr t) {
         }
         break;
     }
-    case STATIC_OBJECT_TYPE : {
-        StaticObjectType *x = (StaticObjectType *)t.ptr();
-        out << "StaticObject[";
+    case STATIC_TYPE : {
+        StaticType *x = (StaticType *)t.ptr();
+        out << "Static[";
         printName(out, x->obj);
         out << "]";
         break;

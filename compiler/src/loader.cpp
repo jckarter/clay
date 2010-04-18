@@ -496,7 +496,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
 
-    PRIMITIVE(StaticObject);
+    PRIMITIVE(Static);
 
     PRIMITIVE(EnumP);
     PRIMITIVE(enumToInt);
