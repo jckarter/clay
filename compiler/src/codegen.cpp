@@ -901,8 +901,8 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         expandVarArgs(x->args, env, args2);
         if (y->objKind == PVALUE) {
             PValue *z = (PValue *)y.ptr();
-            if (z->type->typeKind == STATIC_OBJECT_TYPE) {
-                StaticObjectType *t = (StaticObjectType *)z->type.ptr();
+            if (z->type->typeKind == STATIC_TYPE) {
+                StaticType *t = (StaticType *)z->type.ptr();
                 ExprPtr inner = new Indexing(new ObjectExpr(t->obj), args2);
                 return codegenExpr(inner, env, out);
             }
@@ -925,8 +925,8 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         expandVarArgs(x->args, env, args2);
         if (y->objKind == PVALUE) {
             PValue *z = (PValue *)y.ptr();
-            if (z->type->typeKind == STATIC_OBJECT_TYPE) {
-                StaticObjectType *t = (StaticObjectType *)z->type.ptr();
+            if (z->type->typeKind == STATIC_TYPE) {
+                StaticType *t = (StaticType *)z->type.ptr();
                 return codegenInvoke(t->obj, args2, env, out);
             }
             CValuePtr cv = codegenAsRef(x->expr, env, z);
@@ -940,8 +940,8 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         ObjectPtr y = analyze(x->expr, env);
         if (y->objKind == PVALUE) {
             PValue *z = (PValue *)y.ptr();
-            if (z->type->typeKind == STATIC_OBJECT_TYPE) {
-                StaticObjectType *t = (StaticObjectType *)z->type.ptr();
+            if (z->type->typeKind == STATIC_TYPE) {
+                StaticType *t = (StaticType *)z->type.ptr();
                 ExprPtr inner = new FieldRef(new ObjectExpr(t->obj), x->name);
                 return codegenExpr(inner, env, out);
             }
@@ -1259,7 +1259,7 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
     case STATIC_OVERLOADABLE :
     case MODULE_HOLDER :
         assert(out.ptr());
-        assert(out->type == staticObjectType(x));
+        assert(out->type == staticType(x));
         return out;
     default :
         error("invalid static object");
@@ -2756,8 +2756,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         return new CValue(fieldTypes[i], ptr);
     }
 
-    case PRIM_StaticObject :
-        error("StaticObject type constructor cannot be called");
+    case PRIM_Static :
+        error("Static type constructor cannot be called");
 
     default : {
         CValuePtr codegenInvokePrimOp2(PrimOpPtr x,

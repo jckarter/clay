@@ -130,10 +130,10 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
             return new TupleTypePattern(elementTypes);
         }
 
-        case PRIM_StaticObject : {
+        case PRIM_Static : {
             ensureArity(args, 1);
             PatternPtr obj = evaluatePattern(args[0], env);
-            return new StaticObjectTypePattern(obj);
+            return new StaticTypePattern(obj);
         }
 
         }
@@ -287,14 +287,14 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
         return true;
     }
 
-    case STATIC_OBJECT_TYPE_PATTERN : {
-        StaticObjectTypePattern *x = (StaticObjectTypePattern *)pattern.ptr();
+    case STATIC_TYPE_PATTERN : {
+        StaticTypePattern *x = (StaticTypePattern *)pattern.ptr();
         if (obj->objKind != TYPE)
             return false;
         TypePtr type = (Type *)obj.ptr();
-        if (type->typeKind != STATIC_OBJECT_TYPE)
+        if (type->typeKind != STATIC_TYPE)
             return false;
-        StaticObjectTypePtr t = (StaticObjectType *)type.ptr();
+        StaticTypePtr t = (StaticType *)type.ptr();
         return unify(x->obj, t->obj);
     }
 
@@ -365,9 +365,9 @@ void patternPrint(ostream &out, PatternPtr x)
             << y->params << ")";
         break;
     }
-    case STATIC_OBJECT_TYPE_PATTERN : {
-        StaticObjectTypePattern *y = (StaticObjectTypePattern *)x.ptr();
-        out << "StaticObjectTypePattern(" << y->obj << ")";
+    case STATIC_TYPE_PATTERN : {
+        StaticTypePattern *y = (StaticTypePattern *)x.ptr();
+        out << "StaticTypePattern(" << y->obj << ")";
         break;
     }
     default :
