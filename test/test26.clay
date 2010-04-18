@@ -10,4 +10,6 @@ main() {
         x += 2;
     for (x in mapped(double, mapped(double, a)))
         println(x);
+    for (x in mapped(double, range(5)))
+        println(x);
 }

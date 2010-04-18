@@ -12,6 +12,12 @@ record ValueRange[T] {
 }
 
 [T]
+static overload Sequence?(ValueRange[T]) = true;
+
+[T]
+static overload SequenceElementType(ValueRange[T]) = T;
+
+[T]
 overload iterator(r:ValueRange[T]) = r;
 
 [T]
@@ -39,6 +45,13 @@ record CoordinateRange[T] {
     first:T;
     last:T;
 }
+
+[T]
+static overload Sequence?(CoordinateRange[T]) = true;
+
+[T]
+static overload SequenceElementType(CoordinateRange[T]) =
+    TypeOf(T()^);
 
 [T]
 overload iterator(r:CoordinateRange[T]) = r;
