@@ -36,13 +36,13 @@ static overload SequenceElementType(String) = Char;
 
 overload String() = String(null(Char), 0, false);
 
-[A | SizedSequence?(A) and Equals?(Char, SequenceElementType(A))]
+[A | SizedSequence?(A) and (Char == SequenceElementType(A))]
 overload String(a:A) {
     var data = allocateStringData(a);
     return String(data, size(a), true);
 }
 
-[A | SizedSequence?(A) and Equals?(Int8, SequenceElementType(A))]
+[A | SizedSequence?(A) and (Int8 == SequenceElementType(A))]
 overload String(a:A) = String(mapped(Char, a));
 
 private allocateStringData(a) {
@@ -74,10 +74,10 @@ static overload ArrayLike?(Vector[T]) = true;
 
 overloadable stringRef;
 
-[A | ArrayLike?(A) and Equals?(Char, SequenceElementType(A))]
+[A | ArrayLike?(A) and (Char == SequenceElementType(A))]
 overload stringRef(a:A) = String(&a[0], size(a), false);
 
-[A | ArrayLike?(A) and Equals?(Int8, SequenceElementType(A))]
+[A | ArrayLike?(A) and (Int8 == SequenceElementType(A))]
 overload stringRef(a:A) = String(Pointer[Char](&a[0], size(a), false));
 
 

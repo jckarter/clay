@@ -40,14 +40,14 @@ static overload SequenceElementType(Vector[T]) = T;
 [T]
 overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
 
-[T,A | Sequence?(A) and Equals?(T, SequenceElementType(A))]
+[T,A | Sequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](a:A) : Vector[T] {
     returned <-- Vector[T]();
     for (x in a)
         push(returned, x);
 }
 
-[T,A | SizedSequence?(A) and Equals?(T, SequenceElementType(A))]
+[T,A | SizedSequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](a:A) : Vector[T] {
     returned <-- Vector[T]();
     reserve(returned, size(a));
