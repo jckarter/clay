@@ -49,15 +49,6 @@ overloadable call;
 
 overloadable unsupported; // used for triggering compile time errors
 
-
-//
-// Equals? (equality for types)
-//
-
-static overloadable Equals?;
-[A,B] static overload Equals?(A, B) = false;
-[A]   static overload Equals?(A, A) = true;
-
 
 
 //
@@ -452,6 +443,9 @@ overload lesserRecordFields?(a:T, b:T, static i) {
 [A]
 overload StaticObject[A](src:StaticObject[A]) : StaticObject[A] {
 }
+
+[A, B]
+overload equals?(a:StaticObject[A], b:StaticObject[B]) = false;
 
 [A]
 overload equals?(a:StaticObject[A], b:StaticObject[A]) = true;
