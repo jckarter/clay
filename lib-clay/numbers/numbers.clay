@@ -211,3 +211,33 @@ overload inc(a:A) {
 overload dec(a:A) {
     a -= A(1);
 }
+
+
+// bitwise ops
+
+[A,B | Integer?(A,B)]
+overload shiftLeft(a:A, b:B) = integerShiftLeft(a, A(b));
+
+[A,B | Integer?(A,B)]
+overload shiftRight(a:A, b:B) = integerShiftRight(a, A(b));
+
+[A,B | Integer?(A,B)]
+overload bitwiseAnd(a:A, b:B) = integerBitwiseAnd(toBiggerNumericType(A, B, a),
+                                                  toBiggerNumericType(A, B, b));
+[A | Integer?(A)]
+overload bitwiseAnd(a:A, b:A) = integerBitwiseAnd(a, b);
+
+[A,B | Integer?(A,B)]
+overload bitwiseOr(a:A, b:B) = integerBitwiseOr(toBiggerNumericType(A, B, a),
+                                                toBiggerNumericType(A, B, b));
+[A | Integer?(A)]
+overload bitwiseOr(a:A, b:A) = integerBitwiseOr(a, b);
+
+[A,B | Integer?(A,B)]
+overload bitwiseXor(a:A, b:B) = integerBitwiseXor(toBiggerNumericType(A, B, a),
+                                                  toBiggerNumericType(A, B, b));
+[A | Integer?(A)]
+overload bitwiseXor(a:A, b:A) = integerBitwiseXor(a, b);
+
+[A | Integer?(A)]
+overload bitwiseNot(a:A) = integerBitwiseNot(a);
