@@ -209,13 +209,13 @@ void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG)
                 x->isDefinition())
             {
                 if (name.empty()) {
-                    string outName = allocateName("UnnamedRecord");
+                    string outName = allocateName("UnnamedStruct");
                     anonRecordNames[x] = outName;
                 }
                 else {
                     assert(!recordBodies.count(name));
                     recordBodies[name] = x;
-                    string outName = allocateName(name);
+                    string outName = allocateName("Struct_" + name);
                     recordNames[name] = outName;
                 }
             }
