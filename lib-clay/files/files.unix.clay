@@ -40,9 +40,11 @@ overload File(path:String, mode:OpenMode) {
     var flags = openFlags(mode);
     var handle = Int();
     if (bitwiseAnd(flags, unix.O_CREAT) != 0)
-        handle = unix.syscall(unix.open, cstring(path), flags, 0644);
+        handle = unix.open(cstring(path), flags, 0644);
     else
-        handle = unix.syscall(unix.open, cstring(path), flags);
+        handle = unix.open(cstring(path), flags);
+    if (handle == -1)
+        unix.syscallError(path);
     return File(handle, true);
 }
 
