@@ -1,0 +1,75 @@
+import base.*;
+import streams.*;
+import unix;
+
+record File {
+    handle : Int;
+    owned : Bool;
+}
+
+var stdin = File(0, false);
+var stdout = File(1, false);
+var stderr = File(2, false);
+
+enum OpenMode {
+    READ,
+    READ_WRITE,
+    WRITE,
+    WRITE_READ,
+    APPEND,
+    APPEND_READ
+}
+
+private openFlags(mode) {
+    if (mode == READ)
+        return unix.O_RDONLY;
+    if (mode == READ_WRITE)
+        return unix.O_RDWR;
+    if (mode == WRITE)
+        return bitwiseOr(unix.O_WRONLY, unix.O_CREAT, unix.O_TRUNC);
+    if (mode == WRITE_READ)
+        return bitwiseOr(unix.O_RDWR, unix.O_CREAT, unix.O_TRUNC);
+    if (mode == APPEND)
+        return bitwiseOr(unix.O_WRONLY, unix.O_CREAT, unix.O_APPEND);
+    if (mode == APPEND_READ)
+        return bitwiseOr(unix.O_RDWR, unix.O_CREAT, unix.O_APPEND);
+    assert(false);
+}
+
+overload File(path:String, mode:OpenMode) {
+    var flags = openFlags(mode);
+    var handle = Int();
+    if (bitwiseAnd(flags, unix.O_CREAT) != 0)
+        handle = unix.syscall(unix.open, cstring(path), flags, 0755);
+    else
+        handle = unix.syscall(unix.open, cstring(path), flags);
+    return File(handle, true);
+}
+
+overload File(path:String) = File(path, READ);
+
+// disable copy constructor
+overload File(f:File) = unsupported();
+
+// disable assignment
+overload assign(dest:File, src:File) = unsupported();
+
+overload destroy(f:File) {
+    if (f.owned)
+        unix.syscall(unix.close, f.handle);
+}
+
+
+// implement byte stream operations
+
+overload read(f:File, buffer:Pointer[Byte], n:SizeT) : SizeT {
+    var result = unix.syscall(unix.read, f.handle, buffer, n);
+    return SizeT(result);
+}
+
+overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
+    unix.syscall(unix.write, f.handle, buffer, n);
+}
+
+overload flush(f:File) {
+}
