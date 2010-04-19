@@ -1,0 +1,16 @@
+import libc;
+import strings;
+import errors;
+
+public import unix.generated.*;
+public import unix.constants.*;
+public import unix.errno.*;
+
+inlined syscall(callable, ...) {
+    var result = callable(...);
+    if (result == -1) {
+        var cstr = libc.strerror(errno());
+        errors.error(strings.stringRef(cstr));
+    }
+    return result;
+}
