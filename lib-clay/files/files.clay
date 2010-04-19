@@ -11,7 +11,7 @@ var stdin = File(libc.stdin, false);
 var stdout = File(libc.stdout, false);
 var stderr = File(libc.stderr, false);
 
-enum FileMode {
+enum OpenMode {
     READ,
     READ_WRITE,
     WRITE,
@@ -36,7 +36,7 @@ private modeString(mode) {
     assert(false);
 }
 
-overload File(path:String, mode:FileMode) {
+overload File(path:String, mode:OpenMode) {
     var f = libc.fopen(cstring(path), cstring(modeString(mode)));
     if (isNull(f))
         error("unable to open file: ", path);
