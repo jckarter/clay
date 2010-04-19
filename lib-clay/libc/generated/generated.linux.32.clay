@@ -60,11 +60,11 @@ static __off64_t = Int64;
 
 static __pid_t = Int;
 
-record UnnamedRecord {
+record UnnamedStruct {
     __val : Array[Int,2];
 }
 
-static __fsid_t = UnnamedRecord;
+static __fsid_t = UnnamedStruct;
 
 static __clock_t = CLong;
 
@@ -116,30 +116,30 @@ static __intptr_t = Int;
 
 static __socklen_t = UInt;
 
-static FILE = _IO_FILE;
+static FILE = Struct__IO_FILE;
 
-static __FILE = _IO_FILE;
+static __FILE = Struct__IO_FILE;
 
-record UnnamedRecord0 {
+record UnnamedStruct2 {
     __count : Int;
     __value : AUnionType;
 }
 
-static __mbstate_t = UnnamedRecord0;
+static __mbstate_t = UnnamedStruct2;
 
-record UnnamedRecord1 {
+record UnnamedStruct3 {
     __pos : CLong;
     __state : __mbstate_t;
 }
 
-static _G_fpos_t = UnnamedRecord1;
+static _G_fpos_t = UnnamedStruct3;
 
-record UnnamedRecord2 {
+record UnnamedStruct4 {
     __pos : Int64;
     __state : __mbstate_t;
 }
 
-static _G_fpos64_t = UnnamedRecord2;
+static _G_fpos64_t = UnnamedStruct4;
 
 static _G_int16_t = Short;
 
@@ -153,9 +153,9 @@ static __gnuc_va_list = Int;
 
 static _IO_lock_t = Void;
 
-record _IO_marker {
-    _next : Pointer[_IO_marker];
-    _sbuf : Pointer[_IO_FILE];
+record Struct__IO_marker {
+    _next : Pointer[Struct__IO_marker];
+    _sbuf : Pointer[Struct__IO_FILE];
     _pos : Int;
 }
 
@@ -164,7 +164,7 @@ static __codecvt_partial = 1;
 static __codecvt_error = 2;
 static __codecvt_noconv = 3;
 
-record _IO_FILE {
+record Struct__IO_FILE {
     _flags : Int;
     _IO_read_ptr : Pointer[CChar];
     _IO_read_end : Pointer[CChar];
@@ -177,8 +177,8 @@ record _IO_FILE {
     _IO_save_base : Pointer[CChar];
     _IO_backup_base : Pointer[CChar];
     _IO_save_end : Pointer[CChar];
-    _markers : Pointer[_IO_marker];
-    _chain : Pointer[_IO_FILE];
+    _markers : Pointer[Struct__IO_marker];
+    _chain : Pointer[Struct__IO_FILE];
     _fileno : Int;
     _flags2 : Int;
     _old_offset : CLong;
@@ -196,7 +196,7 @@ record _IO_FILE {
     _unused2 : Array[CChar,40];
 }
 
-static _IO_FILE0 = _IO_FILE;
+static _IO_FILE = Struct__IO_FILE;
 
 external _IO_2_1_stdin_ : Opaque;
 
@@ -204,91 +204,83 @@ external _IO_2_1_stdout_ : Opaque;
 
 external _IO_2_1_stderr_ : Opaque;
 
-static __io_read_fn = UnknownType;
-
-static __io_write_fn = UnknownType;
-
-static __io_seek_fn = UnknownType;
-
-static __io_close_fn = UnknownType;
-
 external __underflow(
-    argument0 : Pointer[_IO_FILE0]) : Int;
+    argument0 : Pointer[_IO_FILE]) : Int;
 
 external __uflow(
-    argument0 : Pointer[_IO_FILE0]) : Int;
+    argument0 : Pointer[_IO_FILE]) : Int;
 
 external __overflow(
-    argument0 : Pointer[_IO_FILE0],
+    argument0 : Pointer[_IO_FILE],
     argument1 : Int) : Int;
 
 external _IO_getc(
-    __fp : Pointer[_IO_FILE0]) : Int;
+    __fp : Pointer[_IO_FILE]) : Int;
 
 external _IO_putc(
     __c : Int,
-    __fp : Pointer[_IO_FILE0]) : Int;
+    __fp : Pointer[_IO_FILE]) : Int;
 
 external _IO_feof(
-    __fp : Pointer[_IO_FILE0]) : Int;
+    __fp : Pointer[_IO_FILE]) : Int;
 
 external _IO_ferror(
-    __fp : Pointer[_IO_FILE0]) : Int;
+    __fp : Pointer[_IO_FILE]) : Int;
 
 external _IO_peekc_locked(
-    __fp : Pointer[_IO_FILE0]) : Int;
+    __fp : Pointer[_IO_FILE]) : Int;
 
 external _IO_flockfile(
-    argument0 : Pointer[_IO_FILE0]) : Void;
+    argument0 : Pointer[_IO_FILE]) : Void;
 
 external _IO_funlockfile(
-    argument0 : Pointer[_IO_FILE0]) : Void;
+    argument0 : Pointer[_IO_FILE]) : Void;
 
 external _IO_ftrylockfile(
-    argument0 : Pointer[_IO_FILE0]) : Int;
+    argument0 : Pointer[_IO_FILE]) : Int;
 
 external _IO_vfscanf(
-    argument0 : Pointer[_IO_FILE0],
+    argument0 : Pointer[_IO_FILE],
     argument1 : Pointer[CChar],
     argument2 : Int,
     argument3 : Pointer[Int]) : Int;
 
 external _IO_vfprintf(
-    argument0 : Pointer[_IO_FILE0],
+    argument0 : Pointer[_IO_FILE],
     argument1 : Pointer[CChar],
     argument2 : Int) : Int;
 
 external _IO_padn(
-    argument0 : Pointer[_IO_FILE0],
+    argument0 : Pointer[_IO_FILE],
     argument1 : Int,
     argument2 : Int) : Int;
 
 external _IO_sgetn(
-    argument0 : Pointer[_IO_FILE0],
+    argument0 : Pointer[_IO_FILE],
     argument1 : RawPointer,
     argument2 : UInt) : UInt;
 
 external _IO_seekoff(
-    argument0 : Pointer[_IO_FILE0],
+    argument0 : Pointer[_IO_FILE],
     argument1 : Int64,
     argument2 : Int,
     argument3 : Int) : Int64;
 
 external _IO_seekpos(
-    argument0 : Pointer[_IO_FILE0],
+    argument0 : Pointer[_IO_FILE],
     argument1 : Int64,
     argument2 : Int) : Int64;
 
 external _IO_free_backup_area(
-    argument0 : Pointer[_IO_FILE0]) : Void;
+    argument0 : Pointer[_IO_FILE]) : Void;
 
 static fpos_t = _G_fpos_t;
 
-external stdin : Pointer[_IO_FILE];
+external stdin : Pointer[Struct__IO_FILE];
 
-external stdout : Pointer[_IO_FILE];
+external stdout : Pointer[Struct__IO_FILE];
 
-external stderr : Pointer[_IO_FILE];
+external stderr : Pointer[Struct__IO_FILE];
 
 external remove(
     __filename : Pointer[CChar]) : Int;
@@ -597,7 +589,7 @@ external perror(
 
 external sys_nerr : Int;
 
-external sys_errlist : Pointer[Pointer[CChar]];
+external sys_errlist : Array[Pointer[CChar],0];
 
 external fileno(
     __stream : Pointer[FILE]) : Int;
@@ -626,26 +618,26 @@ external funlockfile(
 
 static wchar_t = Int;
 
-record UnnamedRecord3 {
+record UnnamedStruct5 {
     quot : Int;
     rem : Int;
 }
 
-static div_t = UnnamedRecord3;
+static div_t = UnnamedStruct5;
 
-record UnnamedRecord4 {
+record UnnamedStruct6 {
     quot : CLong;
     rem : CLong;
 }
 
-static ldiv_t = UnnamedRecord4;
+static ldiv_t = UnnamedStruct6;
 
-record UnnamedRecord5 {
+record UnnamedStruct7 {
     quot : Int64;
     rem : Int64;
 }
 
-static lldiv_t = UnnamedRecord5;
+static lldiv_t = UnnamedStruct7;
 
 external __ctype_get_mb_cur_max() : UInt;
 
@@ -783,20 +775,20 @@ static register_t = Int;
 
 static __sig_atomic_t = Int;
 
-record UnnamedRecord6 {
+record UnnamedStruct8 {
     __val : Array[CULong,32];
 }
 
-static __sigset_t = UnnamedRecord6;
+static __sigset_t = UnnamedStruct8;
 
 static sigset_t = __sigset_t;
 
-record timespec {
+record Struct_timespec {
     tv_sec : CLong;
     tv_nsec : CLong;
 }
 
-record timeval {
+record Struct_timeval {
     tv_sec : CLong;
     tv_usec : CLong;
 }
@@ -805,11 +797,11 @@ static suseconds_t = CLong;
 
 static __fd_mask = CLong;
 
-record UnnamedRecord7 {
+record UnnamedStruct9 {
     __fds_bits : Array[CLong,32];
 }
 
-static fd_set = UnnamedRecord7;
+static fd_set = UnnamedStruct9;
 
 static fd_mask = CLong;
 
@@ -818,14 +810,14 @@ external select(
     __readfds : Pointer[fd_set],
     __writefds : Pointer[fd_set],
     __exceptfds : Pointer[fd_set],
-    __timeout : Pointer[timeval]) : Int;
+    __timeout : Pointer[Struct_timeval]) : Int;
 
 external pselect(
     __nfds : Int,
     __readfds : Pointer[fd_set],
     __writefds : Pointer[fd_set],
     __exceptfds : Pointer[fd_set],
-    __timeout : Pointer[timespec],
+    __timeout : Pointer[Struct_timespec],
     __sigmask : Pointer[__sigset_t]) : Int;
 
 external gnu_dev_major(
@@ -848,11 +840,11 @@ static pthread_t = CULong;
 
 static pthread_attr_t = AUnionType;
 
-record __pthread_internal_slist {
-    __next : Pointer[__pthread_internal_slist];
+record Struct___pthread_internal_slist {
+    __next : Pointer[Struct___pthread_internal_slist];
 }
 
-static __pthread_slist_t = __pthread_internal_slist;
+static __pthread_slist_t = Struct___pthread_internal_slist;
 
 static pthread_mutex_t = AUnionType;
 
@@ -889,7 +881,7 @@ external initstate(
 external setstate(
     __statebuf : Pointer[CChar]) : Pointer[CChar];
 
-record random_data {
+record Struct_random_data {
     fptr : Pointer[Int];
     rptr : Pointer[Int];
     state : Pointer[Int];
@@ -900,22 +892,22 @@ record random_data {
 }
 
 external random_r(
-    __buf : Pointer[random_data],
+    __buf : Pointer[Struct_random_data],
     __result : Pointer[Int]) : Int;
 
 external srandom_r(
     __seed : UInt,
-    __buf : Pointer[random_data]) : Int;
+    __buf : Pointer[Struct_random_data]) : Int;
 
 external initstate_r(
     __seed : UInt,
     __statebuf : Pointer[CChar],
     __statelen : UInt,
-    __buf : Pointer[random_data]) : Int;
+    __buf : Pointer[Struct_random_data]) : Int;
 
 external setstate_r(
     __statebuf : Pointer[CChar],
-    __buf : Pointer[random_data]) : Int;
+    __buf : Pointer[Struct_random_data]) : Int;
 
 external rand() : Int;
 
@@ -949,7 +941,7 @@ external seed48(
 external lcong48(
     __param : Pointer[UShort]) : Void;
 
-record drand48_data {
+record Struct_drand48_data {
     __x : Array[UShort,3];
     __old_x : Array[UShort,3];
     __c : UShort;
@@ -958,43 +950,43 @@ record drand48_data {
 }
 
 external drand48_r(
-    __buffer : Pointer[drand48_data],
+    __buffer : Pointer[Struct_drand48_data],
     __result : Pointer[Double]) : Int;
 
 external erand48_r(
     __xsubi : Pointer[UShort],
-    __buffer : Pointer[drand48_data],
+    __buffer : Pointer[Struct_drand48_data],
     __result : Pointer[Double]) : Int;
 
 external lrand48_r(
-    __buffer : Pointer[drand48_data],
+    __buffer : Pointer[Struct_drand48_data],
     __result : Pointer[CLong]) : Int;
 
 external nrand48_r(
     __xsubi : Pointer[UShort],
-    __buffer : Pointer[drand48_data],
+    __buffer : Pointer[Struct_drand48_data],
     __result : Pointer[CLong]) : Int;
 
 external mrand48_r(
-    __buffer : Pointer[drand48_data],
+    __buffer : Pointer[Struct_drand48_data],
     __result : Pointer[CLong]) : Int;
 
 external jrand48_r(
     __xsubi : Pointer[UShort],
-    __buffer : Pointer[drand48_data],
+    __buffer : Pointer[Struct_drand48_data],
     __result : Pointer[CLong]) : Int;
 
 external srand48_r(
     __seedval : CLong,
-    __buffer : Pointer[drand48_data]) : Int;
+    __buffer : Pointer[Struct_drand48_data]) : Int;
 
 external seed48_r(
     __seed16v : Pointer[UShort],
-    __buffer : Pointer[drand48_data]) : Int;
+    __buffer : Pointer[Struct_drand48_data]) : Int;
 
 external lcong48_r(
     __param : Pointer[UShort],
-    __buffer : Pointer[drand48_data]) : Int;
+    __buffer : Pointer[Struct_drand48_data]) : Int;
 
 external malloc(
     __size : UInt) : RawPointer;
@@ -1276,7 +1268,7 @@ external strxfrm(
     __src : Pointer[CChar],
     __n : UInt) : UInt;
 
-record __locale_struct {
+record Struct___locale_struct {
     __locales : Array[OpaquePointer,13];
     __ctype_b : Pointer[UShort];
     __ctype_tolower : Pointer[Int];
@@ -1284,7 +1276,7 @@ record __locale_struct {
     __names : Array[Pointer[CChar],13];
 }
 
-static __locale_t = Pointer[__locale_struct];
+static __locale_t = Pointer[Struct___locale_struct];
 
 static locale_t = __locale_t;
 
@@ -2894,7 +2886,7 @@ static _LIB_VERSION_TYPE = Int;
 
 external _LIB_VERSION : _LIB_VERSION_TYPE;
 
-record exception {
+record Struct_exception {
     type : Int;
     name : Pointer[CChar];
     arg1 : Double;
@@ -2903,4 +2895,4 @@ record exception {
 }
 
 external matherr(
-    __exc : Pointer[exception]) : Int;
+    __exc : Pointer[Struct_exception]) : Int;
