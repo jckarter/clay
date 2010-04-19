@@ -7,6 +7,7 @@ import arrays.*;
 import vectors.*;
 import ranges.*;
 import numbers.*;
+import libc;
 
 
 //
@@ -36,15 +37,6 @@ static overload SequenceElementType(String) = Char;
 
 overload String() = String(null(Char), 0, false);
 
-[A | SizedSequence?(A) and (Char == SequenceElementType(A))]
-overload String(a:A) {
-    var data = allocateStringData(a);
-    return String(data, size(a), true);
-}
-
-[A | SizedSequence?(A) and (Int8 == SequenceElementType(A))]
-overload String(a:A) = String(mapped(Char, a));
-
 private allocateStringData(a) {
     var n = size(a);
     var data = allocateMemory(Char, n+1);
@@ -56,6 +48,17 @@ private allocateStringData(a) {
     p^ = Char(0);
     return data;
 }
+
+[A | SizedSequence?(A) and (Char == SequenceElementType(A))]
+overload String(a:A) {
+    var data = allocateStringData(a);
+    return String(data, size(a), true);
+}
+
+[A | SizedSequence?(A) and (Int8 == SequenceElementType(A))]
+overload String(a:A) = String(mapped(Char, a));
+
+overload String(cstr : Pointer[Byte]) = String(stringRef(cstr));
 
 
 //
@@ -79,6 +82,11 @@ overload stringRef(a:A) = String(&a[0], size(a), false);
 
 [A | ArrayLike?(A) and (Int8 == SequenceElementType(A))]
 overload stringRef(a:A) = String(Pointer[Char](&a[0], size(a), false));
+
+overload stringRef(cstr : Pointer[CChar]) {
+    var n = libc.strlen(cstr);
+    return String(Pointer[Char](cstr), n, false);
+}
 
 
 //
@@ -157,7 +165,7 @@ overload lesser?(a:String, b:String) {
 
 
 //
-// c-string compatibility
+// convert to c-compatible string
 //
 
 cstring(s:String) {
