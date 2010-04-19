@@ -8,9 +8,19 @@ public import unix.errno.*;
 
 inlined syscall(callable, ...) {
     var result = callable(...);
-    if (result == -1) {
-        var cstr = libc.strerror(errno());
-        errors.error(strings.stringRef(cstr));
-    }
+    if (result == -1)
+        syscallError();
     return result;
+}
+
+overloadable syscallError;
+
+overload syscallError(x) {
+    var cstr = libc.strerror(errno());
+    errors.error(strings.stringRef(cstr), ": ", x);
+}
+
+overload syscallError() {
+    var cstr = libc.strerror(errno());
+    errors.error(strings.stringRef(cstr));
 }
