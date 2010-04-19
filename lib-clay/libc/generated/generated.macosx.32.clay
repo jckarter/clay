@@ -10,13 +10,13 @@ private static UnknownType = Int;
 private static AUnionType = Int;
 
 
-static __int8_t = Int8;
+static __int8_t = CChar;
 
-static __uint8_t = UInt8;
+static __uint8_t = CUChar;
 
-static __int16_t = Int16;
+static __int16_t = Short;
 
-static __uint16_t = UInt16;
+static __uint16_t = UShort;
 
 static __int32_t = Int;
 
@@ -26,7 +26,7 @@ static __int64_t = Int64;
 
 static __uint64_t = UInt64;
 
-static __darwin_intptr_t = Int;
+static __darwin_intptr_t = CLong;
 
 static __darwin_natural_t = UInt;
 
@@ -38,7 +38,7 @@ static __darwin_mbstate_t = __mbstate_t;
 
 static __darwin_ptrdiff_t = Int;
 
-static __darwin_size_t = UInt;
+static __darwin_size_t = CULong;
 
 static __darwin_va_list = Int;
 
@@ -48,64 +48,64 @@ static __darwin_rune_t = Int;
 
 static __darwin_wint_t = Int;
 
-static __darwin_clock_t = UInt;
+static __darwin_clock_t = CULong;
 
 static __darwin_socklen_t = UInt;
 
-static __darwin_ssize_t = Int;
+static __darwin_ssize_t = CLong;
 
-static __darwin_time_t = Int;
+static __darwin_time_t = CLong;
 
-record __darwin_pthread_handler_rec {
+record Struct___darwin_pthread_handler_rec {
     __routine : CCodePointer[RawPointer,Void];
     __arg : RawPointer;
-    __next : Pointer[__darwin_pthread_handler_rec];
+    __next : Pointer[Struct___darwin_pthread_handler_rec];
 }
 
-record _opaque_pthread_attr_t {
-    __sig : Int;
-    __opaque : Array[Int8,36];
+record Struct__opaque_pthread_attr_t {
+    __sig : CLong;
+    __opaque : Array[CChar,36];
 }
 
-record _opaque_pthread_cond_t {
-    __sig : Int;
-    __opaque : Array[Int8,24];
+record Struct__opaque_pthread_cond_t {
+    __sig : CLong;
+    __opaque : Array[CChar,24];
 }
 
-record _opaque_pthread_condattr_t {
-    __sig : Int;
-    __opaque : Array[Int8,4];
+record Struct__opaque_pthread_condattr_t {
+    __sig : CLong;
+    __opaque : Array[CChar,4];
 }
 
-record _opaque_pthread_mutex_t {
-    __sig : Int;
-    __opaque : Array[Int8,40];
+record Struct__opaque_pthread_mutex_t {
+    __sig : CLong;
+    __opaque : Array[CChar,40];
 }
 
-record _opaque_pthread_mutexattr_t {
-    __sig : Int;
-    __opaque : Array[Int8,8];
+record Struct__opaque_pthread_mutexattr_t {
+    __sig : CLong;
+    __opaque : Array[CChar,8];
 }
 
-record _opaque_pthread_once_t {
-    __sig : Int;
-    __opaque : Array[Int8,4];
+record Struct__opaque_pthread_once_t {
+    __sig : CLong;
+    __opaque : Array[CChar,4];
 }
 
-record _opaque_pthread_rwlock_t {
-    __sig : Int;
-    __opaque : Array[Int8,124];
+record Struct__opaque_pthread_rwlock_t {
+    __sig : CLong;
+    __opaque : Array[CChar,124];
 }
 
-record _opaque_pthread_rwlockattr_t {
-    __sig : Int;
-    __opaque : Array[Int8,12];
+record Struct__opaque_pthread_rwlockattr_t {
+    __sig : CLong;
+    __opaque : Array[CChar,12];
 }
 
-record _opaque_pthread_t {
-    __sig : Int;
-    __cleanup_stack : Pointer[__darwin_pthread_handler_rec];
-    __opaque : Array[Int8,596];
+record Struct__opaque_pthread_t {
+    __sig : CLong;
+    __cleanup_stack : Pointer[Struct___darwin_pthread_handler_rec];
+    __opaque : Array[CChar,596];
 }
 
 static __darwin_blkcnt_t = Int64;
@@ -130,31 +130,31 @@ static __darwin_mach_port_name_t = UInt;
 
 static __darwin_mach_port_t = UInt;
 
-static __darwin_mode_t = UInt16;
+static __darwin_mode_t = UShort;
 
 static __darwin_off_t = Int64;
 
 static __darwin_pid_t = Int;
 
-static __darwin_pthread_attr_t = _opaque_pthread_attr_t;
+static __darwin_pthread_attr_t = Struct__opaque_pthread_attr_t;
 
-static __darwin_pthread_cond_t = _opaque_pthread_cond_t;
+static __darwin_pthread_cond_t = Struct__opaque_pthread_cond_t;
 
-static __darwin_pthread_condattr_t = _opaque_pthread_condattr_t;
+static __darwin_pthread_condattr_t = Struct__opaque_pthread_condattr_t;
 
-static __darwin_pthread_key_t = UInt;
+static __darwin_pthread_key_t = CULong;
 
-static __darwin_pthread_mutex_t = _opaque_pthread_mutex_t;
+static __darwin_pthread_mutex_t = Struct__opaque_pthread_mutex_t;
 
-static __darwin_pthread_mutexattr_t = _opaque_pthread_mutexattr_t;
+static __darwin_pthread_mutexattr_t = Struct__opaque_pthread_mutexattr_t;
 
-static __darwin_pthread_once_t = _opaque_pthread_once_t;
+static __darwin_pthread_once_t = Struct__opaque_pthread_once_t;
 
-static __darwin_pthread_rwlock_t = _opaque_pthread_rwlock_t;
+static __darwin_pthread_rwlock_t = Struct__opaque_pthread_rwlock_t;
 
-static __darwin_pthread_rwlockattr_t = _opaque_pthread_rwlockattr_t;
+static __darwin_pthread_rwlockattr_t = Struct__opaque_pthread_rwlockattr_t;
 
-static __darwin_pthread_t = Pointer[_opaque_pthread_t];
+static __darwin_pthread_t = Pointer[Struct__opaque_pthread_t];
 
 static __darwin_sigset_t = UInt;
 
@@ -164,53 +164,53 @@ static __darwin_uid_t = UInt;
 
 static __darwin_useconds_t = UInt;
 
-static __darwin_uuid_t = Array[UInt8,16];
+static __darwin_uuid_t = Array[CUChar,16];
 
-static __darwin_uuid_string_t = Array[Int8,37];
+static __darwin_uuid_string_t = Array[CChar,37];
 
 static __darwin_nl_item = Int;
 
 static __darwin_wctrans_t = Int;
 
-static __darwin_wctype_t = UInt;
+static __darwin_wctype_t = CULong;
 
 static va_list = Int;
 
 static off_t = Int64;
 
-static size_t = UInt;
+static size_t = CULong;
 
 static fpos_t = Int64;
 
-record __sbuf {
-    _base : Pointer[UInt8];
+record Struct___sbuf {
+    _base : Pointer[CUChar];
     _size : Int;
 }
 
-record __sFILE {
-    _p : Pointer[UInt8];
+record Struct___sFILE {
+    _p : Pointer[CUChar];
     _r : Int;
     _w : Int;
-    _flags : Int16;
-    _file : Int16;
-    _bf : __sbuf;
+    _flags : Short;
+    _file : Short;
+    _bf : Struct___sbuf;
     _lbfsize : Int;
     _cookie : RawPointer;
     _close : CCodePointer[RawPointer,Int];
-    _read : CCodePointer[RawPointer,Pointer[Int8],Int,Int];
+    _read : CCodePointer[RawPointer,Pointer[CChar],Int,Int];
     _seek : CCodePointer[RawPointer,Int64,Int,Int64];
-    _write : CCodePointer[RawPointer,Pointer[Int8],Int,Int];
-    _ub : __sbuf;
+    _write : CCodePointer[RawPointer,Pointer[CChar],Int,Int];
+    _ub : Struct___sbuf;
     _extra : OpaquePointer;
     _ur : Int;
-    _ubuf : Array[UInt8,3];
-    _nbuf : Array[UInt8,1];
-    _lb : __sbuf;
+    _ubuf : Array[CUChar,3];
+    _nbuf : Array[CUChar,1];
+    _lb : Struct___sbuf;
     _blksize : Int;
     _offset : Int64;
 }
 
-static FILE = __sFILE;
+static FILE = Struct___sFILE;
 
 external __stdinp : Pointer[FILE];
 
@@ -241,17 +241,17 @@ external fgetpos(
     argument1 : Pointer[Int64]) : Int;
 
 external fgets(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     argument1 : Int,
-    argument2 : Pointer[FILE]) : Pointer[Int8];
+    argument2 : Pointer[FILE]) : Pointer[CChar];
 
 external fopen(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[FILE];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[FILE];
 
 external fprintf(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int8],
+    argument1 : Pointer[CChar],
     ...) : Int;
 
 external fputc(
@@ -259,28 +259,28 @@ external fputc(
     argument1 : Pointer[FILE]) : Int;
 
 external fputs(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     argument1 : Pointer[FILE]) : Int;
 
 external fread(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
-    argument3 : Pointer[FILE]) : UInt;
+    argument1 : CULong,
+    argument2 : CULong,
+    argument3 : Pointer[FILE]) : CULong;
 
 external freopen(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
     argument2 : Pointer[FILE]) : Pointer[FILE];
 
 external fscanf(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int8],
+    argument1 : Pointer[CChar],
     ...) : Int;
 
 external fseek(
     argument0 : Pointer[FILE],
-    argument1 : Int,
+    argument1 : CLong,
     argument2 : Int) : Int;
 
 external fsetpos(
@@ -288,13 +288,13 @@ external fsetpos(
     argument1 : Pointer[Int64]) : Int;
 
 external ftell(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) : CLong;
 
 external fwrite(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
-    argument3 : Pointer[FILE]) : UInt;
+    argument1 : CULong,
+    argument2 : CULong,
+    argument3 : Pointer[FILE]) : CULong;
 
 external getc(
     argument0 : Pointer[FILE]) : Int;
@@ -302,17 +302,17 @@ external getc(
 external getchar() : Int;
 
 external gets(
-    argument0 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external sys_nerr : Int;
 
-external sys_errlist : Pointer[Pointer[Int8]];
+external sys_errlist : Array[Pointer[CChar],0];
 
 external perror(
-    argument0 : Pointer[Int8]) : Void;
+    argument0 : Pointer[CChar]) : Void;
 
 external printf(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     ...) : Int;
 
 external putc(
@@ -323,46 +323,46 @@ external putchar(
     argument0 : Int) : Int;
 
 external puts(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external remove(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external rename(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Int;
 
 external rewind(
     argument0 : Pointer[FILE]) : Void;
 
 external scanf(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     ...) : Int;
 
 external setbuf(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int8]) : Void;
+    argument1 : Pointer[CChar]) : Void;
 
 external setvbuf(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int8],
+    argument1 : Pointer[CChar],
     argument2 : Int,
-    argument3 : UInt) : Int;
+    argument3 : CULong) : Int;
 
 external sprintf(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
     ...) : Int;
 
 external sscanf(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
     ...) : Int;
 
 external tmpfile() : Pointer[FILE];
 
 external tmpnam(
-    argument0 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external ungetc(
     argument0 : Int,
@@ -370,41 +370,41 @@ external ungetc(
 
 external vfprintf(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int8],
+    argument1 : Pointer[CChar],
     argument2 : Int) : Int;
 
 external vprintf(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     argument1 : Int) : Int;
 
 external vsprintf(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
     argument2 : Int) : Int;
 
 external asprintf(
-    argument0 : Pointer[Pointer[Int8]],
-    argument1 : Pointer[Int8],
+    argument0 : Pointer[Pointer[CChar]],
+    argument1 : Pointer[CChar],
     ...) : Int;
 
 external vasprintf(
-    argument0 : Pointer[Pointer[Int8]],
-    argument1 : Pointer[Int8],
+    argument0 : Pointer[Pointer[CChar]],
+    argument1 : Pointer[CChar],
     argument2 : Int) : Int;
 
 external ctermid(
-    argument0 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external ctermid_r(
-    argument0 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external fdopen(
     argument0 : Int,
-    argument1 : Pointer[Int8]) : Pointer[FILE];
+    argument1 : Pointer[CChar]) : Pointer[FILE];
 
 external fgetln(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[UInt]) : Pointer[Int8];
+    argument1 : Pointer[CULong]) : Pointer[CChar];
 
 external fileno(
     argument0 : Pointer[FILE]) : Int;
@@ -413,8 +413,8 @@ external flockfile(
     argument0 : Pointer[FILE]) : Void;
 
 external fmtcheck(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external fpurge(
     argument0 : Pointer[FILE]) : Int;
@@ -445,8 +445,8 @@ external pclose(
     argument0 : Pointer[FILE]) : Int;
 
 external popen(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[FILE];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[FILE];
 
 external putc_unlocked(
     argument0 : Int,
@@ -461,51 +461,51 @@ external putw(
 
 external setbuffer(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int8],
+    argument1 : Pointer[CChar],
     argument2 : Int) : Void;
 
 external setlinebuf(
     argument0 : Pointer[FILE]) : Int;
 
 external snprintf(
-    argument0 : Pointer[Int8],
-    argument1 : UInt,
-    argument2 : Pointer[Int8],
+    argument0 : Pointer[CChar],
+    argument1 : CULong,
+    argument2 : Pointer[CChar],
     ...) : Int;
 
 external tempnam(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external vfscanf(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int8],
+    argument1 : Pointer[CChar],
     argument2 : Int) : Int;
 
 external vscanf(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     argument1 : Int) : Int;
 
 external vsnprintf(
-    argument0 : Pointer[Int8],
-    argument1 : UInt,
-    argument2 : Pointer[Int8],
+    argument0 : Pointer[CChar],
+    argument1 : CULong,
+    argument2 : Pointer[CChar],
     argument3 : Int) : Int;
 
 external vsscanf(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
     argument2 : Int) : Int;
 
 external zopen(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
     argument2 : Int) : Pointer[FILE];
 
 external funopen(
     argument0 : RawPointer,
-    argument1 : CCodePointer[RawPointer,Pointer[Int8],Int,Int],
-    argument2 : CCodePointer[RawPointer,Pointer[Int8],Int,Int],
+    argument1 : CCodePointer[RawPointer,Pointer[CChar],Int,Int],
+    argument2 : CCodePointer[RawPointer,Pointer[CChar],Int,Int],
     argument3 : CCodePointer[RawPointer,Int64,Int,Int64],
     argument4 : CCodePointer[RawPointer,Int]) : Pointer[FILE];
 
@@ -514,7 +514,7 @@ external __srget(
 
 external __svfscanf(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int8],
+    argument1 : Pointer[CChar],
     argument2 : Int) : Int;
 
 external __swbuf(
@@ -522,33 +522,33 @@ external __swbuf(
     argument1 : Pointer[FILE]) : Int;
 
 external __sprintf_chk(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     argument1 : Int,
-    argument2 : UInt,
-    argument3 : Pointer[Int8],
+    argument2 : CULong,
+    argument3 : Pointer[CChar],
     ...) : Int;
 
 external __snprintf_chk(
-    argument0 : Pointer[Int8],
-    argument1 : UInt,
+    argument0 : Pointer[CChar],
+    argument1 : CULong,
     argument2 : Int,
-    argument3 : UInt,
-    argument4 : Pointer[Int8],
+    argument3 : CULong,
+    argument4 : Pointer[CChar],
     ...) : Int;
 
 external __vsprintf_chk(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     argument1 : Int,
-    argument2 : UInt,
-    argument3 : Pointer[Int8],
+    argument2 : CULong,
+    argument3 : Pointer[CChar],
     argument4 : Int) : Int;
 
 external __vsnprintf_chk(
-    argument0 : Pointer[Int8],
-    argument1 : UInt,
+    argument0 : Pointer[CChar],
+    argument1 : CULong,
     argument2 : Int,
-    argument3 : UInt,
-    argument4 : Pointer[Int8],
+    argument3 : CULong,
+    argument4 : Pointer[CChar],
     argument5 : Int) : Int;
 
 static P_ALL = 0;
@@ -563,7 +563,7 @@ static id_t = UInt;
 
 static sig_atomic_t = Int;
 
-record __darwin_i386_thread_state {
+record Struct___darwin_i386_thread_state {
     __eax : UInt;
     __ebx : UInt;
     __ecx : UInt;
@@ -582,92 +582,92 @@ record __darwin_i386_thread_state {
     __gs : UInt;
 }
 
-record __darwin_fp_control {
-    __invalid : UInt16;
-    __denorm : UInt16;
-    __zdiv : UInt16;
-    __ovrfl : UInt16;
-    __undfl : UInt16;
-    __precis : UInt16;
-    unnamed_field6 : UInt16;
-    __pc : UInt16;
-    __rc : UInt16;
-    unnamed_field9 : UInt16;
-    unnamed_field10 : UInt16;
+record Struct___darwin_fp_control {
+    __invalid : UShort;
+    __denorm : UShort;
+    __zdiv : UShort;
+    __ovrfl : UShort;
+    __undfl : UShort;
+    __precis : UShort;
+    unnamed_field6 : UShort;
+    __pc : UShort;
+    __rc : UShort;
+    unnamed_field9 : UShort;
+    unnamed_field10 : UShort;
 }
 
-static __darwin_fp_control_t = __darwin_fp_control;
+static __darwin_fp_control_t = Struct___darwin_fp_control;
 
-record __darwin_fp_status {
-    __invalid : UInt16;
-    __denorm : UInt16;
-    __zdiv : UInt16;
-    __ovrfl : UInt16;
-    __undfl : UInt16;
-    __precis : UInt16;
-    __stkflt : UInt16;
-    __errsumm : UInt16;
-    __c0 : UInt16;
-    __c1 : UInt16;
-    __c2 : UInt16;
-    __tos : UInt16;
-    __c3 : UInt16;
-    __busy : UInt16;
+record Struct___darwin_fp_status {
+    __invalid : UShort;
+    __denorm : UShort;
+    __zdiv : UShort;
+    __ovrfl : UShort;
+    __undfl : UShort;
+    __precis : UShort;
+    __stkflt : UShort;
+    __errsumm : UShort;
+    __c0 : UShort;
+    __c1 : UShort;
+    __c2 : UShort;
+    __tos : UShort;
+    __c3 : UShort;
+    __busy : UShort;
 }
 
-static __darwin_fp_status_t = __darwin_fp_status;
+static __darwin_fp_status_t = Struct___darwin_fp_status;
 
-record __darwin_mmst_reg {
-    __mmst_reg : Array[Int8,10];
-    __mmst_rsrv : Array[Int8,6];
+record Struct___darwin_mmst_reg {
+    __mmst_reg : Array[CChar,10];
+    __mmst_rsrv : Array[CChar,6];
 }
 
-record __darwin_xmm_reg {
-    __xmm_reg : Array[Int8,16];
+record Struct___darwin_xmm_reg {
+    __xmm_reg : Array[CChar,16];
 }
 
-record __darwin_i386_float_state {
+record Struct___darwin_i386_float_state {
     __fpu_reserved : Array[Int,2];
-    __fpu_fcw : __darwin_fp_control;
-    __fpu_fsw : __darwin_fp_status;
-    __fpu_ftw : UInt8;
-    __fpu_rsrv1 : UInt8;
-    __fpu_fop : UInt16;
+    __fpu_fcw : Struct___darwin_fp_control;
+    __fpu_fsw : Struct___darwin_fp_status;
+    __fpu_ftw : CUChar;
+    __fpu_rsrv1 : CUChar;
+    __fpu_fop : UShort;
     __fpu_ip : UInt;
-    __fpu_cs : UInt16;
-    __fpu_rsrv2 : UInt16;
+    __fpu_cs : UShort;
+    __fpu_rsrv2 : UShort;
     __fpu_dp : UInt;
-    __fpu_ds : UInt16;
-    __fpu_rsrv3 : UInt16;
+    __fpu_ds : UShort;
+    __fpu_rsrv3 : UShort;
     __fpu_mxcsr : UInt;
     __fpu_mxcsrmask : UInt;
-    __fpu_stmm0 : __darwin_mmst_reg;
-    __fpu_stmm1 : __darwin_mmst_reg;
-    __fpu_stmm2 : __darwin_mmst_reg;
-    __fpu_stmm3 : __darwin_mmst_reg;
-    __fpu_stmm4 : __darwin_mmst_reg;
-    __fpu_stmm5 : __darwin_mmst_reg;
-    __fpu_stmm6 : __darwin_mmst_reg;
-    __fpu_stmm7 : __darwin_mmst_reg;
-    __fpu_xmm0 : __darwin_xmm_reg;
-    __fpu_xmm1 : __darwin_xmm_reg;
-    __fpu_xmm2 : __darwin_xmm_reg;
-    __fpu_xmm3 : __darwin_xmm_reg;
-    __fpu_xmm4 : __darwin_xmm_reg;
-    __fpu_xmm5 : __darwin_xmm_reg;
-    __fpu_xmm6 : __darwin_xmm_reg;
-    __fpu_xmm7 : __darwin_xmm_reg;
-    __fpu_rsrv4 : Array[Int8,224];
+    __fpu_stmm0 : Struct___darwin_mmst_reg;
+    __fpu_stmm1 : Struct___darwin_mmst_reg;
+    __fpu_stmm2 : Struct___darwin_mmst_reg;
+    __fpu_stmm3 : Struct___darwin_mmst_reg;
+    __fpu_stmm4 : Struct___darwin_mmst_reg;
+    __fpu_stmm5 : Struct___darwin_mmst_reg;
+    __fpu_stmm6 : Struct___darwin_mmst_reg;
+    __fpu_stmm7 : Struct___darwin_mmst_reg;
+    __fpu_xmm0 : Struct___darwin_xmm_reg;
+    __fpu_xmm1 : Struct___darwin_xmm_reg;
+    __fpu_xmm2 : Struct___darwin_xmm_reg;
+    __fpu_xmm3 : Struct___darwin_xmm_reg;
+    __fpu_xmm4 : Struct___darwin_xmm_reg;
+    __fpu_xmm5 : Struct___darwin_xmm_reg;
+    __fpu_xmm6 : Struct___darwin_xmm_reg;
+    __fpu_xmm7 : Struct___darwin_xmm_reg;
+    __fpu_rsrv4 : Array[CChar,224];
     __fpu_reserved1 : Int;
 }
 
-record __darwin_i386_exception_state {
+record Struct___darwin_i386_exception_state {
     __trapno : UInt;
     __err : UInt;
     __faultvaddr : UInt;
 }
 
-record __darwin_x86_debug_state32 {
+record Struct___darwin_x86_debug_state32 {
     __dr0 : UInt;
     __dr1 : UInt;
     __dr2 : UInt;
@@ -678,7 +678,7 @@ record __darwin_x86_debug_state32 {
     __dr7 : UInt;
 }
 
-record __darwin_x86_thread_state64 {
+record Struct___darwin_x86_thread_state64 {
     __rax : UInt64;
     __rbx : UInt64;
     __rcx : UInt64;
@@ -702,56 +702,56 @@ record __darwin_x86_thread_state64 {
     __gs : UInt64;
 }
 
-record __darwin_x86_float_state64 {
+record Struct___darwin_x86_float_state64 {
     __fpu_reserved : Array[Int,2];
-    __fpu_fcw : __darwin_fp_control;
-    __fpu_fsw : __darwin_fp_status;
-    __fpu_ftw : UInt8;
-    __fpu_rsrv1 : UInt8;
-    __fpu_fop : UInt16;
+    __fpu_fcw : Struct___darwin_fp_control;
+    __fpu_fsw : Struct___darwin_fp_status;
+    __fpu_ftw : CUChar;
+    __fpu_rsrv1 : CUChar;
+    __fpu_fop : UShort;
     __fpu_ip : UInt;
-    __fpu_cs : UInt16;
-    __fpu_rsrv2 : UInt16;
+    __fpu_cs : UShort;
+    __fpu_rsrv2 : UShort;
     __fpu_dp : UInt;
-    __fpu_ds : UInt16;
-    __fpu_rsrv3 : UInt16;
+    __fpu_ds : UShort;
+    __fpu_rsrv3 : UShort;
     __fpu_mxcsr : UInt;
     __fpu_mxcsrmask : UInt;
-    __fpu_stmm0 : __darwin_mmst_reg;
-    __fpu_stmm1 : __darwin_mmst_reg;
-    __fpu_stmm2 : __darwin_mmst_reg;
-    __fpu_stmm3 : __darwin_mmst_reg;
-    __fpu_stmm4 : __darwin_mmst_reg;
-    __fpu_stmm5 : __darwin_mmst_reg;
-    __fpu_stmm6 : __darwin_mmst_reg;
-    __fpu_stmm7 : __darwin_mmst_reg;
-    __fpu_xmm0 : __darwin_xmm_reg;
-    __fpu_xmm1 : __darwin_xmm_reg;
-    __fpu_xmm2 : __darwin_xmm_reg;
-    __fpu_xmm3 : __darwin_xmm_reg;
-    __fpu_xmm4 : __darwin_xmm_reg;
-    __fpu_xmm5 : __darwin_xmm_reg;
-    __fpu_xmm6 : __darwin_xmm_reg;
-    __fpu_xmm7 : __darwin_xmm_reg;
-    __fpu_xmm8 : __darwin_xmm_reg;
-    __fpu_xmm9 : __darwin_xmm_reg;
-    __fpu_xmm10 : __darwin_xmm_reg;
-    __fpu_xmm11 : __darwin_xmm_reg;
-    __fpu_xmm12 : __darwin_xmm_reg;
-    __fpu_xmm13 : __darwin_xmm_reg;
-    __fpu_xmm14 : __darwin_xmm_reg;
-    __fpu_xmm15 : __darwin_xmm_reg;
-    __fpu_rsrv4 : Array[Int8,96];
+    __fpu_stmm0 : Struct___darwin_mmst_reg;
+    __fpu_stmm1 : Struct___darwin_mmst_reg;
+    __fpu_stmm2 : Struct___darwin_mmst_reg;
+    __fpu_stmm3 : Struct___darwin_mmst_reg;
+    __fpu_stmm4 : Struct___darwin_mmst_reg;
+    __fpu_stmm5 : Struct___darwin_mmst_reg;
+    __fpu_stmm6 : Struct___darwin_mmst_reg;
+    __fpu_stmm7 : Struct___darwin_mmst_reg;
+    __fpu_xmm0 : Struct___darwin_xmm_reg;
+    __fpu_xmm1 : Struct___darwin_xmm_reg;
+    __fpu_xmm2 : Struct___darwin_xmm_reg;
+    __fpu_xmm3 : Struct___darwin_xmm_reg;
+    __fpu_xmm4 : Struct___darwin_xmm_reg;
+    __fpu_xmm5 : Struct___darwin_xmm_reg;
+    __fpu_xmm6 : Struct___darwin_xmm_reg;
+    __fpu_xmm7 : Struct___darwin_xmm_reg;
+    __fpu_xmm8 : Struct___darwin_xmm_reg;
+    __fpu_xmm9 : Struct___darwin_xmm_reg;
+    __fpu_xmm10 : Struct___darwin_xmm_reg;
+    __fpu_xmm11 : Struct___darwin_xmm_reg;
+    __fpu_xmm12 : Struct___darwin_xmm_reg;
+    __fpu_xmm13 : Struct___darwin_xmm_reg;
+    __fpu_xmm14 : Struct___darwin_xmm_reg;
+    __fpu_xmm15 : Struct___darwin_xmm_reg;
+    __fpu_rsrv4 : Array[CChar,96];
     __fpu_reserved1 : Int;
 }
 
-record __darwin_x86_exception_state64 {
+record Struct___darwin_x86_exception_state64 {
     __trapno : UInt;
     __err : UInt;
     __faultvaddr : UInt64;
 }
 
-record __darwin_x86_debug_state64 {
+record Struct___darwin_x86_debug_state64 {
     __dr0 : UInt64;
     __dr1 : UInt64;
     __dr2 : UInt64;
@@ -762,38 +762,38 @@ record __darwin_x86_debug_state64 {
     __dr7 : UInt64;
 }
 
-record __darwin_mcontext32 {
-    __es : __darwin_i386_exception_state;
-    __ss : __darwin_i386_thread_state;
-    __fs : __darwin_i386_float_state;
+record Struct___darwin_mcontext32 {
+    __es : Struct___darwin_i386_exception_state;
+    __ss : Struct___darwin_i386_thread_state;
+    __fs : Struct___darwin_i386_float_state;
 }
 
-record __darwin_mcontext64 {
-    __es : __darwin_x86_exception_state64;
-    __ss : __darwin_x86_thread_state64;
-    __fs : __darwin_x86_float_state64;
+record Struct___darwin_mcontext64 {
+    __es : Struct___darwin_x86_exception_state64;
+    __ss : Struct___darwin_x86_thread_state64;
+    __fs : Struct___darwin_x86_float_state64;
 }
 
-static mcontext_t = Pointer[__darwin_mcontext32];
+static mcontext_t = Pointer[Struct___darwin_mcontext32];
 
-record __darwin_sigaltstack {
+record Struct___darwin_sigaltstack {
     ss_sp : RawPointer;
-    ss_size : UInt;
+    ss_size : CULong;
     ss_flags : Int;
 }
 
-record __darwin_ucontext {
+record Struct___darwin_ucontext {
     uc_onstack : Int;
     uc_sigmask : UInt;
-    uc_stack : __darwin_sigaltstack;
-    uc_link : Pointer[__darwin_ucontext];
-    uc_mcsize : UInt;
-    uc_mcontext : Pointer[__darwin_mcontext32];
+    uc_stack : Struct___darwin_sigaltstack;
+    uc_link : Pointer[Struct___darwin_ucontext];
+    uc_mcsize : CULong;
+    uc_mcontext : Pointer[Struct___darwin_mcontext32];
 }
 
-static stack_t = __darwin_sigaltstack;
+static stack_t = Struct___darwin_sigaltstack;
 
-static ucontext_t = __darwin_ucontext;
+static ucontext_t = Struct___darwin_ucontext;
 
 static pthread_attr_t = __darwin_pthread_attr_t;
 
@@ -801,7 +801,7 @@ static sigset_t = UInt;
 
 static uid_t = UInt;
 
-record sigevent {
+record Struct_sigevent {
     sigev_notify : Int;
     sigev_signo : Int;
     sigev_value : AUnionType;
@@ -809,7 +809,7 @@ record sigevent {
     sigev_notify_attributes : Pointer[pthread_attr_t];
 }
 
-record __siginfo {
+record Struct___siginfo {
     si_signo : Int;
     si_errno : Int;
     si_code : Int;
@@ -818,20 +818,20 @@ record __siginfo {
     si_status : Int;
     si_addr : RawPointer;
     si_value : AUnionType;
-    si_band : Int;
-    __pad : Array[UInt,7];
+    si_band : CLong;
+    __pad : Array[CULong,7];
 }
 
-static siginfo_t = __siginfo;
+static siginfo_t = Struct___siginfo;
 
-record __sigaction {
+record Struct___sigaction {
     __sigaction_u : AUnionType;
-    sa_tramp : CCodePointer[RawPointer,Int,Int,Pointer[siginfo_t],RawPointer,Void];
+    sa_tramp : CCodePointer[RawPointer,Int,Int,Pointer[Struct___siginfo],RawPointer,Void];
     sa_mask : UInt;
     sa_flags : Int;
 }
 
-record sigaction {
+record Struct_sigaction {
     __sigaction_u : AUnionType;
     sa_mask : UInt;
     sa_flags : Int;
@@ -839,14 +839,14 @@ record sigaction {
 
 static sig_t = CCodePointer[Int,Void];
 
-record sigvec {
+record Struct_sigvec {
     sv_handler : CCodePointer[Int,Void];
     sv_mask : Int;
     sv_flags : Int;
 }
 
-record sigstack {
-    ss_sp : Pointer[Int8];
+record Struct_sigstack {
+    ss_sp : Pointer[CChar];
     ss_onstack : Int;
 }
 
@@ -854,33 +854,33 @@ external signal(
     argument0 : Int,
     argument1 : CCodePointer[Int,Void]) : CCodePointer[Int,Void];
 
-record timeval {
-    tv_sec : Int;
+record Struct_timeval {
+    tv_sec : CLong;
     tv_usec : Int;
 }
 
 static rlim_t = UInt64;
 
-record rusage {
-    ru_utime : timeval;
-    ru_stime : timeval;
-    ru_maxrss : Int;
-    ru_ixrss : Int;
-    ru_idrss : Int;
-    ru_isrss : Int;
-    ru_minflt : Int;
-    ru_majflt : Int;
-    ru_nswap : Int;
-    ru_inblock : Int;
-    ru_oublock : Int;
-    ru_msgsnd : Int;
-    ru_msgrcv : Int;
-    ru_nsignals : Int;
-    ru_nvcsw : Int;
-    ru_nivcsw : Int;
+record Struct_rusage {
+    ru_utime : Struct_timeval;
+    ru_stime : Struct_timeval;
+    ru_maxrss : CLong;
+    ru_ixrss : CLong;
+    ru_idrss : CLong;
+    ru_isrss : CLong;
+    ru_minflt : CLong;
+    ru_majflt : CLong;
+    ru_nswap : CLong;
+    ru_inblock : CLong;
+    ru_oublock : CLong;
+    ru_msgsnd : CLong;
+    ru_msgrcv : CLong;
+    ru_nsignals : CLong;
+    ru_nvcsw : CLong;
+    ru_nivcsw : CLong;
 }
 
-record rlimit {
+record Struct_rlimit {
     rlim_cur : UInt64;
     rlim_max : UInt64;
 }
@@ -895,11 +895,11 @@ external getiopolicy_np(
 
 external getrlimit(
     argument0 : Int,
-    argument1 : Pointer[rlimit]) : Int;
+    argument1 : Pointer[Struct_rlimit]) : Int;
 
 external getrusage(
     argument0 : Int,
-    argument1 : Pointer[rusage]) : Int;
+    argument1 : Pointer[Struct_rusage]) : Int;
 
 external setpriority(
     argument0 : Int,
@@ -913,7 +913,7 @@ external setiopolicy_np(
 
 external setrlimit(
     argument0 : Int,
-    argument1 : Pointer[rlimit]) : Int;
+    argument1 : Pointer[Struct_rlimit]) : Int;
 
 external wait(
     argument0 : Pointer[Int]) : Int;
@@ -932,16 +932,16 @@ external waitid(
 external wait3(
     argument0 : Pointer[Int],
     argument1 : Int,
-    argument2 : Pointer[rusage]) : Int;
+    argument2 : Pointer[Struct_rusage]) : Int;
 
 external wait4(
     argument0 : Int,
     argument1 : Pointer[Int],
     argument2 : Int,
-    argument3 : Pointer[rusage]) : Int;
+    argument3 : Pointer[Struct_rusage]) : Int;
 
 external alloca(
-    argument0 : UInt) : RawPointer;
+    argument0 : CULong) : RawPointer;
 
 static ct_rune_t = Int;
 
@@ -949,26 +949,26 @@ static rune_t = Int;
 
 static wchar_t = Int;
 
-record UnnamedRecord {
+record UnnamedStruct {
     quot : Int;
     rem : Int;
 }
 
-static div_t = UnnamedRecord;
+static div_t = UnnamedStruct;
 
-record UnnamedRecord0 {
-    quot : Int;
-    rem : Int;
+record UnnamedStruct2 {
+    quot : CLong;
+    rem : CLong;
 }
 
-static ldiv_t = UnnamedRecord0;
+static ldiv_t = UnnamedStruct2;
 
-record UnnamedRecord1 {
+record UnnamedStruct3 {
     quot : Int64;
     rem : Int64;
 }
 
-static lldiv_t = UnnamedRecord1;
+static lldiv_t = UnnamedStruct3;
 
 external __mb_cur_max : Int;
 
@@ -981,27 +981,27 @@ external atexit(
     argument0 : CCodePointer[Void]) : Int;
 
 external atof(
-    argument0 : Pointer[Int8]) : Double;
+    argument0 : Pointer[CChar]) : Double;
 
 external atoi(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external atol(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : CLong;
 
 external atoll(
-    argument0 : Pointer[Int8]) : Int64;
+    argument0 : Pointer[CChar]) : Int64;
 
 external bsearch(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt,
-    argument3 : UInt,
+    argument2 : CULong,
+    argument3 : CULong,
     argument4 : CCodePointer[RawPointer,RawPointer,Int]) : RawPointer;
 
 external calloc(
-    argument0 : UInt,
-    argument1 : UInt) : RawPointer;
+    argument0 : CULong,
+    argument1 : CULong) : RawPointer;
 
 external div(
     argument0 : Int,
@@ -1014,14 +1014,14 @@ external free(
     argument0 : RawPointer) : Void;
 
 external getenv(
-    argument0 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external labs(
-    argument0 : Int) : Int;
+    argument0 : CLong) : CLong;
 
 external ldiv(
-    argument0 : Int,
-    argument1 : Int) : ldiv_t;
+    argument0 : CLong,
+    argument1 : CLong) : ldiv_t;
 
 external llabs(
     argument0 : Int64) : Int64;
@@ -1031,91 +1031,91 @@ external lldiv(
     argument1 : Int64) : lldiv_t;
 
 external malloc(
-    argument0 : UInt) : RawPointer;
+    argument0 : CULong) : RawPointer;
 
 external mblen(
-    argument0 : Pointer[Int8],
-    argument1 : UInt) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : CULong) : Int;
 
 external mbstowcs(
     argument0 : Pointer[Int],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : UInt;
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : CULong;
 
 external mbtowc(
     argument0 : Pointer[Int],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : Int;
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : Int;
 
 external posix_memalign(
     argument0 : Pointer[RawPointer],
-    argument1 : UInt,
-    argument2 : UInt) : Int;
+    argument1 : CULong,
+    argument2 : CULong) : Int;
 
 external qsort(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : CCodePointer[RawPointer,RawPointer,Int]) : Void;
 
 external rand() : Int;
 
 external realloc(
     argument0 : RawPointer,
-    argument1 : UInt) : RawPointer;
+    argument1 : CULong) : RawPointer;
 
 external srand(
     argument0 : UInt) : Void;
 
 external strtod(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Pointer[Int8]]) : Double;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[CChar]]) : Double;
 
 external strtof(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Pointer[Int8]]) : Float;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[CChar]]) : Float;
 
 external strtol(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Pointer[Int8]],
-    argument2 : Int) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[CChar]],
+    argument2 : Int) : CLong;
 
 external strtold(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Pointer[Int8]]) : UnsupportedCBuiltinType21;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[CChar]]) : UnsupportedCBuiltinType21;
 
 external strtoll(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Pointer[Int8]],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[CChar]],
     argument2 : Int) : Int64;
 
 external strtoul(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Pointer[Int8]],
-    argument2 : Int) : UInt;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[CChar]],
+    argument2 : Int) : CULong;
 
 external strtoull(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Pointer[Int8]],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[CChar]],
     argument2 : Int) : UInt64;
 
 external system(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external wcstombs(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     argument1 : Pointer[Int],
-    argument2 : UInt) : UInt;
+    argument2 : CULong) : CULong;
 
 external wctomb(
-    argument0 : Pointer[Int8],
+    argument0 : Pointer[CChar],
     argument1 : Int) : Int;
 
 external _Exit(
     argument0 : Int) : Void;
 
 external a64l(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : CLong;
 
 external drand48() : Double;
 
@@ -1123,91 +1123,91 @@ external ecvt(
     argument0 : Double,
     argument1 : Int,
     argument2 : Pointer[Int],
-    argument3 : Pointer[Int]) : Pointer[Int8];
+    argument3 : Pointer[Int]) : Pointer[CChar];
 
 external erand48(
-    argument0 : Pointer[UInt16]) : Double;
+    argument0 : Pointer[UShort]) : Double;
 
 external fcvt(
     argument0 : Double,
     argument1 : Int,
     argument2 : Pointer[Int],
-    argument3 : Pointer[Int]) : Pointer[Int8];
+    argument3 : Pointer[Int]) : Pointer[CChar];
 
 external gcvt(
     argument0 : Double,
     argument1 : Int,
-    argument2 : Pointer[Int8]) : Pointer[Int8];
+    argument2 : Pointer[CChar]) : Pointer[CChar];
 
 external getsubopt(
-    argument0 : Pointer[Pointer[Int8]],
-    argument1 : Pointer[Pointer[Int8]],
-    argument2 : Pointer[Pointer[Int8]]) : Int;
+    argument0 : Pointer[Pointer[CChar]],
+    argument1 : Pointer[Pointer[CChar]],
+    argument2 : Pointer[Pointer[CChar]]) : Int;
 
 external grantpt(
     argument0 : Int) : Int;
 
 external initstate(
     argument0 : UInt,
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : Pointer[Int8];
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : Pointer[CChar];
 
 external jrand48(
-    argument0 : Pointer[UInt16]) : Int;
+    argument0 : Pointer[UShort]) : CLong;
 
 external l64a(
-    argument0 : Int) : Pointer[Int8];
+    argument0 : CLong) : Pointer[CChar];
 
 external lcong48(
-    argument0 : Pointer[UInt16]) : Void;
+    argument0 : Pointer[UShort]) : Void;
 
-external lrand48() : Int;
+external lrand48() : CLong;
 
 external mktemp(
-    argument0 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external mkstemp(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : Int;
 
-external mrand48() : Int;
+external mrand48() : CLong;
 
 external nrand48(
-    argument0 : Pointer[UInt16]) : Int;
+    argument0 : Pointer[UShort]) : CLong;
 
 external posix_openpt(
     argument0 : Int) : Int;
 
 external ptsname(
-    argument0 : Int) : Pointer[Int8];
+    argument0 : Int) : Pointer[CChar];
 
 external putenv(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : Int;
 
-external random() : Int;
+external random() : CLong;
 
 external rand_r(
     argument0 : Pointer[UInt]) : Int;
 
 external realpath(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external seed48(
-    argument0 : Pointer[UInt16]) : Pointer[UInt16];
+    argument0 : Pointer[UShort]) : Pointer[UShort];
 
 external setenv(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
     argument2 : Int) : Int;
 
 external setkey(
-    argument0 : Pointer[Int8]) : Void;
+    argument0 : Pointer[CChar]) : Void;
 
 external setstate(
-    argument0 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external srand48(
-    argument0 : Int) : Void;
+    argument0 : CLong) : Void;
 
 external srandom(
     argument0 : UInt) : Void;
@@ -1216,15 +1216,15 @@ external unlockpt(
     argument0 : Int) : Int;
 
 external unsetenv(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : Int;
 
-static int8_t = Int8;
+static int8_t = CChar;
 
-static u_int8_t = UInt8;
+static u_int8_t = CUChar;
 
-static int16_t = Int16;
+static int16_t = Short;
 
-static u_int16_t = UInt16;
+static u_int16_t = UShort;
 
 static int32_t = Int;
 
@@ -1236,9 +1236,9 @@ static u_int64_t = UInt64;
 
 static register_t = Int;
 
-static intptr_t = Int;
+static intptr_t = CLong;
 
-static uintptr_t = UInt;
+static uintptr_t = CULong;
 
 static user_addr_t = UInt64;
 
@@ -1258,12 +1258,12 @@ static syscall_arg_t = UInt64;
 
 static dev_t = Int;
 
-static mode_t = UInt16;
+static mode_t = UShort;
 
 external arc4random() : UInt;
 
 external arc4random_addrandom(
-    dat : Pointer[UInt8],
+    dat : Pointer[CUChar],
     datlen : Int) : Void;
 
 external arc4random_stir() : Void;
@@ -1274,51 +1274,51 @@ external atexit_b(
 external bsearch_b(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt,
-    argument3 : UInt,
+    argument2 : CULong,
+    argument3 : CULong,
     argument4 : UnknownType) : RawPointer;
 
 external cgetcap(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : Int) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : Int) : Pointer[CChar];
 
 external cgetclose() : Int;
 
 external cgetent(
-    argument0 : Pointer[Pointer[Int8]],
-    argument1 : Pointer[Pointer[Int8]],
-    argument2 : Pointer[Int8]) : Int;
+    argument0 : Pointer[Pointer[CChar]],
+    argument1 : Pointer[Pointer[CChar]],
+    argument2 : Pointer[CChar]) : Int;
 
 external cgetfirst(
-    argument0 : Pointer[Pointer[Int8]],
-    argument1 : Pointer[Pointer[Int8]]) : Int;
+    argument0 : Pointer[Pointer[CChar]],
+    argument1 : Pointer[Pointer[CChar]]) : Int;
 
 external cgetmatch(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Int;
 
 external cgetnext(
-    argument0 : Pointer[Pointer[Int8]],
-    argument1 : Pointer[Pointer[Int8]]) : Int;
+    argument0 : Pointer[Pointer[CChar]],
+    argument1 : Pointer[Pointer[CChar]]) : Int;
 
 external cgetnum(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : Pointer[Int]) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : Pointer[CLong]) : Int;
 
 external cgetset(
-    argument0 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external cgetstr(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : Pointer[Pointer[Int8]]) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : Pointer[Pointer[CChar]]) : Int;
 
 external cgetustr(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : Pointer[Pointer[Int8]]) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : Pointer[Pointer[CChar]]) : Int;
 
 external daemon(
     argument0 : Int,
@@ -1326,93 +1326,93 @@ external daemon(
 
 external devname(
     argument0 : Int,
-    argument1 : UInt16) : Pointer[Int8];
+    argument1 : UShort) : Pointer[CChar];
 
 external devname_r(
     argument0 : Int,
-    argument1 : UInt16,
-    buf : Pointer[Int8],
-    len : Int) : Pointer[Int8];
+    argument1 : UShort,
+    buf : Pointer[CChar],
+    len : Int) : Pointer[CChar];
 
 external getbsize(
     argument0 : Pointer[Int],
-    argument1 : Pointer[Int]) : Pointer[Int8];
+    argument1 : Pointer[CLong]) : Pointer[CChar];
 
 external getloadavg(
     argument0 : Pointer[Double],
     argument1 : Int) : Int;
 
-external getprogname() : Pointer[Int8];
+external getprogname() : Pointer[CChar];
 
 external heapsort(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : CCodePointer[RawPointer,RawPointer,Int]) : Int;
 
 external heapsort_b(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : UnknownType) : Int;
 
 external mergesort(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : CCodePointer[RawPointer,RawPointer,Int]) : Int;
 
 external mergesort_b(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : UnknownType) : Int;
 
 external psort(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : CCodePointer[RawPointer,RawPointer,Int]) : Void;
 
 external psort_b(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : UnknownType) : Void;
 
 external psort_r(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : RawPointer,
     argument4 : CCodePointer[RawPointer,RawPointer,RawPointer,Int]) : Void;
 
 external qsort_b(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : UnknownType) : Void;
 
 external qsort_r(
     argument0 : RawPointer,
-    argument1 : UInt,
-    argument2 : UInt,
+    argument1 : CULong,
+    argument2 : CULong,
     argument3 : RawPointer,
     argument4 : CCodePointer[RawPointer,RawPointer,RawPointer,Int]) : Void;
 
 external radixsort(
-    argument0 : Pointer[Pointer[UInt8]],
+    argument0 : Pointer[Pointer[CUChar]],
     argument1 : Int,
-    argument2 : Pointer[UInt8],
+    argument2 : Pointer[CUChar],
     argument3 : UInt) : Int;
 
 external setprogname(
-    argument0 : Pointer[Int8]) : Void;
+    argument0 : Pointer[CChar]) : Void;
 
 external sradixsort(
-    argument0 : Pointer[Pointer[UInt8]],
+    argument0 : Pointer[Pointer[CUChar]],
     argument1 : Int,
-    argument2 : Pointer[UInt8],
+    argument2 : Pointer[CUChar],
     argument3 : UInt) : Int;
 
 external sranddev() : Void;
@@ -1421,235 +1421,235 @@ external srandomdev() : Void;
 
 external reallocf(
     argument0 : RawPointer,
-    argument1 : UInt) : RawPointer;
+    argument1 : CULong) : RawPointer;
 
 external strtoq(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Pointer[Int8]],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[CChar]],
     argument2 : Int) : Int64;
 
 external strtouq(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Pointer[Int8]],
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[CChar]],
     argument2 : Int) : UInt64;
 
-external suboptarg : Pointer[Int8];
+external suboptarg : Pointer[CChar];
 
 external valloc(
-    argument0 : UInt) : RawPointer;
+    argument0 : CULong) : RawPointer;
 
-static ssize_t = Int;
+static ssize_t = CLong;
 
 external memchr(
     argument0 : RawPointer,
     argument1 : Int,
-    argument2 : UInt) : RawPointer;
+    argument2 : CULong) : RawPointer;
 
 external memcmp(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : Int;
+    argument2 : CULong) : Int;
 
 external memcpy(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : RawPointer;
+    argument2 : CULong) : RawPointer;
 
 external memmove(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : RawPointer;
+    argument2 : CULong) : RawPointer;
 
 external memset(
     argument0 : RawPointer,
     argument1 : Int,
-    argument2 : UInt) : RawPointer;
+    argument2 : CULong) : RawPointer;
 
 external stpcpy(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external strcasestr(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external strcat(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external strchr(
-    argument0 : Pointer[Int8],
-    argument1 : Int) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Pointer[CChar];
 
 external strcmp(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Int;
 
 external strcoll(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Int;
 
 external strcpy(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external strcspn(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : UInt;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : CULong;
 
 external strerror(
-    argument0 : Int) : Pointer[Int8];
+    argument0 : Int) : Pointer[CChar];
 
 external strerror_r(
     argument0 : Int,
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : Int;
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : Int;
 
 external strlen(
-    argument0 : Pointer[Int8]) : UInt;
+    argument0 : Pointer[CChar]) : CULong;
 
 external strncat(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : Pointer[CChar];
 
 external strncmp(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : Int;
 
 external strncpy(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : Pointer[CChar];
 
 external strnstr(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : Pointer[CChar];
 
 external strpbrk(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external strrchr(
-    argument0 : Pointer[Int8],
-    argument1 : Int) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Pointer[CChar];
 
 external strspn(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : UInt;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : CULong;
 
 external strstr(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external strtok(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external strxfrm(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : UInt;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : CULong;
 
 external memccpy(
     argument0 : RawPointer,
     argument1 : RawPointer,
     argument2 : Int,
-    argument3 : UInt) : RawPointer;
+    argument3 : CULong) : RawPointer;
 
 external strtok_r(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : Pointer[Pointer[Int8]]) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : Pointer[Pointer[CChar]]) : Pointer[CChar];
 
 external strdup(
-    argument0 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external bcmp(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : Int;
+    argument2 : CULong) : Int;
 
 external bcopy(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : Void;
+    argument2 : CULong) : Void;
 
 external bzero(
     argument0 : RawPointer,
-    argument1 : UInt) : Void;
+    argument1 : CULong) : Void;
 
 external ffs(
     argument0 : Int) : Int;
 
 external ffsl(
-    argument0 : Int) : Int;
+    argument0 : CLong) : Int;
 
 external fls(
     argument0 : Int) : Int;
 
 external flsl(
-    argument0 : Int) : Int;
+    argument0 : CLong) : Int;
 
 external index(
-    argument0 : Pointer[Int8],
-    argument1 : Int) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Pointer[CChar];
 
 external memset_pattern4(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : Void;
+    argument2 : CULong) : Void;
 
 external memset_pattern8(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : Void;
+    argument2 : CULong) : Void;
 
 external memset_pattern16(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : Void;
+    argument2 : CULong) : Void;
 
 external rindex(
-    argument0 : Pointer[Int8],
-    argument1 : Int) : Pointer[Int8];
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Pointer[CChar];
 
 external strcasecmp(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8]) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Int;
 
 external strlcat(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : UInt;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : CULong;
 
 external strlcpy(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : UInt;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : CULong;
 
 external strmode(
     argument0 : Int,
-    argument1 : Pointer[Int8]) : Void;
+    argument1 : Pointer[CChar]) : Void;
 
 external strncasecmp(
-    argument0 : Pointer[Int8],
-    argument1 : Pointer[Int8],
-    argument2 : UInt) : Int;
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : Int;
 
 external strsep(
-    argument0 : Pointer[Pointer[Int8]],
-    argument1 : Pointer[Int8]) : Pointer[Int8];
+    argument0 : Pointer[Pointer[CChar]],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external strsignal(
-    sig : Int) : Pointer[Int8];
+    sig : Int) : Pointer[CChar];
 
 external swab(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : Int) : Void;
+    argument2 : CLong) : Void;
 
 static float_t = Float;
 
@@ -1834,11 +1834,11 @@ external scalbnf(
 
 external scalbln(
     argument0 : Double,
-    argument1 : Int) : Double;
+    argument1 : CLong) : Double;
 
 external scalblnf(
     argument0 : Float,
-    argument1 : Int) : Float;
+    argument1 : CLong) : Float;
 
 external fabs(
     argument0 : Double) : Double;
@@ -1923,10 +1923,10 @@ external rintf(
     argument0 : Float) : Float;
 
 external lrint(
-    argument0 : Double) : Int;
+    argument0 : Double) : CLong;
 
 external lrintf(
-    argument0 : Float) : Int;
+    argument0 : Float) : CLong;
 
 external round(
     argument0 : Double) : Double;
@@ -1935,10 +1935,10 @@ external roundf(
     argument0 : Float) : Float;
 
 external lround(
-    argument0 : Double) : Int;
+    argument0 : Double) : CLong;
 
 external lroundf(
-    argument0 : Float) : Int;
+    argument0 : Float) : CLong;
 
 external llrint(
     argument0 : Double) : Int64;
@@ -1993,10 +1993,10 @@ external copysignf(
     argument1 : Float) : Float;
 
 external nan(
-    argument0 : Pointer[Int8]) : Double;
+    argument0 : Pointer[CChar]) : Double;
 
 external nanf(
-    argument0 : Pointer[Int8]) : Float;
+    argument0 : Pointer[CChar]) : Float;
 
 external nextafter(
     argument0 : Double,
@@ -2125,7 +2125,7 @@ external scalbnl(
 
 external scalblnl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : Int) : UnsupportedCBuiltinType21;
+    argument1 : CLong) : UnsupportedCBuiltinType21;
 
 external fabsl(
     argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
@@ -2169,13 +2169,13 @@ external rintl(
     argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
 
 external lrintl(
-    argument0 : UnsupportedCBuiltinType21) : Int;
+    argument0 : UnsupportedCBuiltinType21) : CLong;
 
 external roundl(
     argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
 
 external lroundl(
-    argument0 : UnsupportedCBuiltinType21) : Int;
+    argument0 : UnsupportedCBuiltinType21) : CLong;
 
 external llrintl(
     argument0 : UnsupportedCBuiltinType21) : Int64;
@@ -2204,7 +2204,7 @@ external copysignl(
     argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
 
 external nanl(
-    argument0 : Pointer[Int8]) : UnsupportedCBuiltinType21;
+    argument0 : Pointer[CChar]) : UnsupportedCBuiltinType21;
 
 external nextafterl(
     argument0 : UnsupportedCBuiltinType21,
@@ -2274,14 +2274,14 @@ external scalb(
 external signgam : Int;
 
 external rinttol(
-    argument0 : Double) : Int;
+    argument0 : Double) : CLong;
 
 external roundtol(
-    argument0 : Double) : Int;
+    argument0 : Double) : CLong;
 
-record exception {
+record Struct_exception {
     type : Int;
-    name : Pointer[Int8];
+    name : Pointer[CChar];
     arg1 : Double;
     arg2 : Double;
     retval : Double;
@@ -2294,7 +2294,7 @@ external gamma(
     argument0 : Double) : Double;
 
 external matherr(
-    argument0 : Pointer[exception]) : Int;
+    argument0 : Pointer[Struct_exception]) : Int;
 
 external significand(
     argument0 : Double) : Double;
