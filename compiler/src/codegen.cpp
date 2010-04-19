@@ -856,7 +856,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         CValuePtr cv = new CValue(type, gvar);
         vector<ExprPtr> args;
         args.push_back(new ObjectExpr(cv.ptr()));
-        return codegenInvoke(kernelName("String"), args, env, out);
+        return codegenInvoke(kernelName("stringRef"), args, env, out);
     }
 
     case NAME_REF : {

@@ -264,7 +264,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         PValuePtr pv = new PValue(arrayType(int8Type, x->value.size()), true);
         vector<ExprPtr> args;
         args.push_back(new ObjectExpr(pv.ptr()));
-        return analyzeInvoke(kernelName("String"), args, env);
+        return analyzeInvoke(kernelName("stringRef"), args, env);
     }
 
     case NAME_REF : {
