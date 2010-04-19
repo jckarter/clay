@@ -43,6 +43,13 @@ overloadable remainderAssign;
 overloadable inc;
 overloadable dec;
 
+overloadable shiftLeft;
+overloadable shiftRight;
+overloadable bitwiseAnd;
+overloadable bitwiseOr;
+overloadable bitwiseXor;
+overloadable bitwiseNot;
+
 overloadable dereference;
 
 overloadable call;
@@ -113,6 +120,10 @@ overload subtractAssign(a, b)  { a = a - b; }
 overload multiplyAssign(a, b)  { a = a * b; }
 overload divideAssign(a, b)    { a = a / b; }
 overload remainderAssign(a, b) { a = a % b; }
+
+overload bitwiseAnd(a, b, c, ...) = bitwiseAnd(bitwiseAnd(a,b), c, ...);
+overload bitwiseOr(a, b, c, ...) = bitwiseOr(bitwiseOr(a,b), c, ...);
+overload bitwiseXor(a, b, c, ...) = bitwiseXor(bitwiseXor(a,b), c, ...);
 
 
 //
