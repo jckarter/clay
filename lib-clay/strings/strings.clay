@@ -81,7 +81,7 @@ overloadable stringRef;
 overload stringRef(a:A) = String(&a[0], size(a), false);
 
 [A | ArrayLike?(A) and (Int8 == SequenceElementType(A))]
-overload stringRef(a:A) = String(Pointer[Char](&a[0], size(a), false));
+overload stringRef(a:A) = String(Pointer[Char](&a[0]), size(a), false);
 
 overload stringRef(cstr : Pointer[CChar]) {
     var n = libc.strlen(cstr);
