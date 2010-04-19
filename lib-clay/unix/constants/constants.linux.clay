@@ -1,0 +1,39 @@
+
+
+// flags for 'open'
+
+static O_RDONLY   = 00;
+static O_WRONLY   = 01;
+static O_RDWR     = 02;
+static O_CREAT    = 0100;
+static O_EXCL     = 0200;
+static O_NOCTTY   = 0400;
+static O_TRUNC    = 01000;
+static O_APPEND   = 02000;
+static O_NONBLOCK = 04000;
+static O_NDELAY   = O_NONBLOCK;
+static O_SYNC     = 010000;
+static O_FSYNC    = O_SYNC;
+static O_ASYNC    = 020000;
+
+
+// flags for 'chmod'
+
+static S_IRWXU = 0700;
+static S_IRUSR = 0400;
+static S_IWUSR = 0200;
+static S_IXUSR = 0100;
+
+static S_IRWXG = 070;
+static S_IRGRP = 040;
+static S_IWGRP = 020;
+static S_IXGRP = 010;
+
+static S_IRWXO = 07;
+static S_IROTH = 04;
+static S_IWOTH = 02;
+static S_IXOTH = 01;
+
+static S_ISUID = 04000;
+static S_ISGID = 02000;
+static S_ISVTX = 01000;
