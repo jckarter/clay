@@ -45,3 +45,7 @@ static overload Sequence?(T) = true;
 
 [T | LValueSequence?(T)]
 static overload Sequence?(T) = true;
+
+
+[T | SizedSequence?(T)]
+empty?(a:T) = (size(a) == 0);

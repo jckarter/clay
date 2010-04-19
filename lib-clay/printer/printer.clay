@@ -53,7 +53,7 @@ overload printTo(stream, x:F) {
 
 
 //
-// print
+// print, println, printlnTo
 //
 
 print(...) {
@@ -62,4 +62,8 @@ print(...) {
 
 println(...) {
     printTo(stdout, ..., '\n');
+}
+
+printlnTo(stream, ...) {
+    printTo(stream, ..., '\n');
 }

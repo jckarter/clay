@@ -1,0 +1,26 @@
+import base.*;
+
+main() {
+    { 
+        println("Writing...");
+        var f = File("tempfile.txt", WRITE);
+        printlnTo(f, "Hello World");
+    }
+    {
+        println("Appending...");
+        var g = File("tempfile.txt", APPEND);
+        printlnTo(g, "Hello World!");
+    }
+    {
+        println("Reading...");
+        var f = File("tempfile.txt", READ);
+        var i = 1;
+        while (true) {
+            var s = readLine(f);
+            if (empty?(s))
+                break;
+            print(i, ") ", s);
+            i += 1;
+        }
+    }
+}

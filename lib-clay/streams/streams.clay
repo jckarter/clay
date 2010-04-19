@@ -1,3 +1,8 @@
+import types.*;
+import characters.*;
+import vectors.*;
+import sequences.*;
+import strings.*;
 
 // byte streams
 
@@ -9,3 +14,26 @@ overloadable write;
 
 // flush(stream) : Void
 overloadable flush;
+
+
+readByte(stream, b:Byte) : Bool {
+    var result = read(stream, &b, SizeT(1));
+    return result == 1;
+}
+
+readChar(stream, c:Char) : Bool {
+    var ptr = Pointer[Byte](&c);
+    var result = read(stream, ptr, SizeT(1));
+    return result == 1;
+}
+
+readLine(stream) : String {
+    var v = Vector[Char]();
+    var c = Char();
+    while (readChar(stream, c)) {
+        push(v, c);
+        if (c == '\n')
+            break;
+    }
+    return String(v);
+}
