@@ -1,0 +1,3 @@
+import unix.generated.*;
+
+errno() = __error()^;
