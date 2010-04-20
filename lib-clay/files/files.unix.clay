@@ -50,16 +50,15 @@ overload File(path:String, mode:OpenMode) {
 
 overload File(path:String) = File(path, READ);
 
-// disable copy constructor
-overload File(f:File) = unsupported();
-
-// disable assignment
-overload assign(dest:File, src:File) = unsupported();
-
 overload destroy(f:File) {
     if (f.owned)
         unix.syscall(unix.close, f.handle);
 }
+
+// disable default constructor, copy constructor, assignment
+overload File() = unsupported();
+overload File(f:File) = unsupported();
+overload assign(dest:File, src:File) = unsupported();
 
 
 // implement byte stream operations
