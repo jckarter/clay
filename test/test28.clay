@@ -1,0 +1,7 @@
+import base.*;
+
+main() {
+    var name = "LICENSE.txt";
+    var f = File(name);
+    println(name, " is ", fileSize(f), " bytes.");
+}
