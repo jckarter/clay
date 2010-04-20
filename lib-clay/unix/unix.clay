@@ -1,3 +1,4 @@
+import types.*;
 import libc;
 import strings;
 import errors;
@@ -8,7 +9,7 @@ public import unix.errno.*;
 
 inlined syscall(callable, ...) {
     var result = callable(...);
-    if (result == -1)
+    if (result == TypeOf(result)(-1))
         errors.error(errorMessage());
     return result;
 }

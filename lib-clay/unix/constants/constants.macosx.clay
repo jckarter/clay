@@ -1,5 +1,6 @@
+import types.*;
 
-
+
 // flags for 'open'
 
 static O_RDONLY   = 0;
@@ -17,6 +18,7 @@ static O_SYMLINK  = 0x200000;
 static O_EVTONLY  = 0x8000;
 
 
+
 // flags for 'chmod'
 
 static S_IRWXU = 0700;
@@ -37,3 +39,26 @@ static S_IXOTH = 01;
 static S_ISUID = 04000;
 static S_ISGID = 02000;
 static S_ISVTX = 01000;
+
+
+
+// flags for mmap
+
+static PROT_NONE  = 0;
+static PROT_READ  = 1;
+static PROT_WRITE = 2;
+static PROT_EXEC  = 4;
+
+static MAP_ANON         = 4096;
+static MAP_FILE         = 0;
+static MAP_FIXED        = 16;
+static MAP_HASSEMAPHORE = 512;
+static MAP_PRIVATE      = 2;
+static MAP_SHARED       = 1;
+static MAP_NOCACHE      = 1024;
+
+static MAP_FAILED = RawPointer(-1);
+
+static MS_ASYNC      = 1;
+static MS_SYNC       = 16;
+static MS_INVALIDATE = 2;

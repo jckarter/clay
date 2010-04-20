@@ -1,0 +1,37 @@
+import base.*;
+import files.*;
+import unix;
+import libc;
+
+record FileMap {
+    addr : Pointer[Byte];
+    len : SizeT;
+}
+
+overload FileMap(f:File, offset, length, protection, flags) {
+    var addr = unix.syscall(unix.mmap,
+                            RawPointer(0),
+                            SizeT(length),
+                            Int(protection),
+                            Int(flags),
+                            f.handle,
+                            Int64(offset));
+    return FileMap(addr, SizeT(length));
+}
+
+overload FileMap(f:File, offset, len) {
+    var prot = bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
+    var flags = unix.MAP_SHARED;
+    return FileMap(f, offset, len, prot, flags);
+}
+
+overload FileMap(f:File) = FileMap(f, 0, fileSize(f));
+
+overload destroy(fm:FileMap) {
+    unix.syscall(unix.munmap, fm.addr, fm.len);
+}
+
+// disable default constructor, copy constructor, assignment
+overload FileMap() = unsupported();
+overload FileMap(x:FileMap) = unsupported();
+overload assign(dest:FileMap, src:FileMap) = unsupported();
