@@ -44,7 +44,7 @@ overload File(path:String, mode:OpenMode) {
     else
         handle = unix.open(cstring(path), flags);
     if (handle == -1)
-        unix.syscallError(path);
+        error(unix.errorMessage(), ": ", path);
     return File(handle, true);
 }
 
@@ -73,4 +73,13 @@ overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
 }
 
 overload flush(f:File) {
+}
+
+
+// filesSize
+
+fileSize(f:File) {
+    var statBuf = unix.StatBuf();
+    unix.syscall(unix.fstat, f.handle, &statBuf);
+    return Int64(statBuf.st_size);
 }

@@ -2,25 +2,18 @@ import libc;
 import strings;
 import errors;
 
-public import unix.generated.*;
+public import unix.wrappers.*;
 public import unix.constants.*;
 public import unix.errno.*;
 
 inlined syscall(callable, ...) {
     var result = callable(...);
     if (result == -1)
-        syscallError();
+        errors.error(errorMessage());
     return result;
 }
 
-overloadable syscallError;
+overloadable errorMessage;
 
-overload syscallError(x) {
-    var cstr = libc.strerror(errno());
-    errors.error(strings.stringRef(cstr), ": ", x);
-}
-
-overload syscallError() {
-    var cstr = libc.strerror(errno());
-    errors.error(strings.stringRef(cstr));
-}
+overload errorMessage() = errorMessage(errno());
+overload errorMessage(err) = strings.stringRef(libc.strerror(err));
