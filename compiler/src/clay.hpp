@@ -1134,13 +1134,14 @@ struct ExternalProcedure : public TopLevelItem {
     bool hasVarArgs;
     ExprPtr returnType;
     StatementPtr body;
-    vector<IdentifierPtr> attributes;
+    vector<ExprPtr> attributes;
 
     bool attributesVerified;
     bool attrDLLImport;
     bool attrDLLExport;
     bool attrStdCall;
     bool attrFastCall;
+    string attrAsmLabel;
 
     bool analyzed;
     TypePtr returnType2;
@@ -1157,7 +1158,7 @@ struct ExternalProcedure : public TopLevelItem {
                       bool hasVarArgs,
                       ExprPtr returnType,
                       StatementPtr body,
-                      const vector<IdentifierPtr> &attributes)
+                      const vector<ExprPtr> &attributes)
         : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           attributes(attributes), attributesVerified(false),
@@ -1174,7 +1175,7 @@ struct ExternalArg : public ANode {
 
 struct ExternalVariable : public TopLevelItem {
     ExprPtr type;
-    vector<IdentifierPtr> attributes;
+    vector<ExprPtr> attributes;
 
     bool attributesVerified;
     bool attrDLLImport;
@@ -1189,7 +1190,7 @@ struct ExternalVariable : public TopLevelItem {
     ExternalVariable(IdentifierPtr name,
                      Visibility visibility,
                      ExprPtr type,
-                     const vector<IdentifierPtr> &attributes)
+                     const vector<ExprPtr> &attributes)
         : TopLevelItem(EXTERNAL_VARIABLE, name, visibility),
           type(type), attributes(attributes),
           attributesVerified(false), llGlobal(NULL) {}

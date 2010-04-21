@@ -556,30 +556,41 @@ void verifyAttributes(ExternalProcedurePtr x)
     x->attrDLLExport = false;
     x->attrStdCall = false;
     x->attrFastCall = false;
+    x->attrAsmLabel = "";
     for (unsigned i = 0; i < x->attributes.size(); ++i) {
-        const string &s = x->attributes[i]->str;
-        if (s == "dllimport") {
-            if (x->attrDLLExport)
-                error(x->attributes[i], "dllimport specified after dllexport");
-            x->attrDLLImport = true;
+        ExprPtr expr = x->attributes[i];
+        if (expr->exprKind == NAME_REF) {
+            const string &s = ((NameRef *)expr.ptr())->name->str;
+            if (s == "dllimport") {
+                if (x->attrDLLExport)
+                    error(expr, "dllimport specified after dllexport");
+                x->attrDLLImport = true;
+            }
+            else if (s == "dllexport") {
+                if (x->attrDLLImport)
+                    error(expr, "dllexport specified after dllimport");
+                x->attrDLLExport = true;
+            }
+            else if (s == "stdcall") {
+                if (x->attrFastCall)
+                    error(expr, "stdcall specified after fastcall");
+                x->attrStdCall = true;
+            }
+            else if (s == "fastcall") {
+                if (x->attrStdCall)
+                    error(expr, "fastcall specified after stdcall");
+                x->attrFastCall = true;
+            }
+            else {
+                error(expr, "invalid attribute");
+            }
         }
-        else if (s == "dllexport") {
-            if (x->attrDLLImport)
-                error(x->attributes[i], "dllexport specified after dllimport");
-            x->attrDLLExport = true;
-        }
-        else if (s == "stdcall") {
-            if (x->attrFastCall)
-                error(x->attributes[i], "stdcall specified after fastcall");
-            x->attrStdCall = true;
-        }
-        else if (s == "fastcall") {
-            if (x->attrStdCall)
-                error(x->attributes[i], "fastcall specified after stdcall");
-            x->attrFastCall = true;
+        else if (expr->exprKind == STRING_LITERAL) {
+            StringLiteral *y = (StringLiteral *)expr.ptr();
+            x->attrAsmLabel = y->value;
         }
         else {
-            error(x->attributes[i], "invalid attribute");
+            error(expr, "invalid attribute");
         }
     }
 }
@@ -591,19 +602,22 @@ void verifyAttributes(ExternalVariablePtr x)
     x->attrDLLImport = false;
     x->attrDLLExport = false;
     for (unsigned i = 0; i < x->attributes.size(); ++i) {
-        const string &s = x->attributes[i]->str;
+        ExprPtr expr = x->attributes[i];
+        if (expr->exprKind != NAME_REF)
+            error(expr, "invalid attribute");
+        const string &s = ((NameRef *)expr.ptr())->name->str;
         if (s == "dllimport") {
             if (x->attrDLLExport)
-                error(x->attributes[i], "dllimport specified after dllexport");
+                error(expr, "dllimport specified after dllexport");
             x->attrDLLImport = true;
         }
         else if (s == "dllexport") {
             if (x->attrDLLImport)
-                error(x->attributes[i], "dllexport specified after dllimport");
+                error(expr, "dllexport specified after dllimport");
             x->attrDLLExport = true;
         }
         else {
-            error(x->attributes[i], "invalid attribute");
+            error(expr, "invalid attribute");
         }
     }
 }

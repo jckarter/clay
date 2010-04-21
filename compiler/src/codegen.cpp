@@ -1295,9 +1295,19 @@ void codegenExternal(ExternalProcedurePtr x)
         linkage = llvm::GlobalVariable::DLLExportLinkage;
     else
         linkage = llvm::GlobalVariable::ExternalLinkage;
+
+    string llvmFuncName;
+    if (!x->attrAsmLabel.empty()) {
+        // '\01' is the llvm marker to specify asm label
+        llvmFuncName = "\01" + x->attrAsmLabel;
+    }
+    else {
+        llvmFuncName = x->name->str;
+    }
+
     x->llvmFunc = llvm::Function::Create(llFuncType,
                                          linkage,
-                                         x->name->str.c_str(),
+                                         llvmFuncName,
                                          llvmModule);
     if (x->attrStdCall)
         x->llvmFunc->setCallingConv(llvm::CallingConv::X86_StdCall);
@@ -2853,7 +2863,7 @@ llvm::Function *codegenMain(ModulePtr module)
                               false,
                               new ObjectExpr(cIntType.ptr()),
                               mainBody.ptr(),
-                              vector<IdentifierPtr>());
+                              vector<ExprPtr>());
 
     entryProc->env = module->env;
 
