@@ -14,10 +14,8 @@ var stderr = File(2, false);
 enum OpenMode {
     READ,
     READ_WRITE,
-    WRITE,
-    WRITE_READ,
-    APPEND,
-    APPEND_READ
+    CREATE,
+    APPEND
 }
 
 private openFlags(mode) {
@@ -25,14 +23,10 @@ private openFlags(mode) {
         return unix.O_RDONLY;
     if (mode == READ_WRITE)
         return unix.O_RDWR;
-    if (mode == WRITE)
-        return bitwiseOr(unix.O_WRONLY, unix.O_CREAT, unix.O_TRUNC);
-    if (mode == WRITE_READ)
+    if (mode == CREATE)
         return bitwiseOr(unix.O_RDWR, unix.O_CREAT, unix.O_TRUNC);
     if (mode == APPEND)
         return bitwiseOr(unix.O_WRONLY, unix.O_CREAT, unix.O_APPEND);
-    if (mode == APPEND_READ)
-        return bitwiseOr(unix.O_RDWR, unix.O_CREAT, unix.O_APPEND);
     assert(false);
 }
 
@@ -102,9 +96,13 @@ private seekWhence(x) {
     assert(false);
 }
 
-seek(f:File, offset, whence) {
+overloadable seek;
+
+overload seek(f:File, offset, whence) {
     return unix.syscall(unix.lseek,
                         f.handle,
                         Int64(offset),
                         seekWhence(whence));
 }
+
+overload seek(f:File, offset) = seek(f, offset, SEEK_SET);
