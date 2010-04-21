@@ -245,7 +245,7 @@ external fgets(
     argument1 : Int,
     argument2 : Pointer[FILE]) : Pointer[CChar];
 
-external fopen(
+external ("_fopen") fopen(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar]) : Pointer[FILE];
 
@@ -258,7 +258,7 @@ external fputc(
     argument0 : Int,
     argument1 : Pointer[FILE]) : Int;
 
-external fputs(
+external ("_fputs") fputs(
     argument0 : Pointer[CChar],
     argument1 : Pointer[FILE]) : Int;
 
@@ -268,7 +268,7 @@ external fread(
     argument2 : CULong,
     argument3 : Pointer[FILE]) : CULong;
 
-external freopen(
+external ("_freopen") freopen(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
     argument2 : Pointer[FILE]) : Pointer[FILE];
@@ -290,7 +290,7 @@ external fsetpos(
 external ftell(
     argument0 : Pointer[FILE]) : CLong;
 
-external fwrite(
+external ("_fwrite") fwrite(
     argument0 : RawPointer,
     argument1 : CULong,
     argument2 : CULong,
@@ -398,7 +398,7 @@ external ctermid(
 external ctermid_r(
     argument0 : Pointer[CChar]) : Pointer[CChar];
 
-external fdopen(
+external ("_fdopen") fdopen(
     argument0 : Int,
     argument1 : Pointer[CChar]) : Pointer[FILE];
 
@@ -444,7 +444,7 @@ external getw(
 external pclose(
     argument0 : Pointer[FILE]) : Int;
 
-external popen(
+external ("_popen") popen(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar]) : Pointer[FILE];
 
@@ -473,7 +473,7 @@ external snprintf(
     argument2 : Pointer[CChar],
     ...) : Int;
 
-external tempnam(
+external ("_tempnam") tempnam(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar]) : Pointer[CChar];
 
@@ -893,7 +893,7 @@ external getiopolicy_np(
     argument0 : Int,
     argument1 : Int) : Int;
 
-external getrlimit(
+external ("_getrlimit") getrlimit(
     argument0 : Int,
     argument1 : Pointer[Struct_rlimit]) : Int;
 
@@ -911,19 +911,19 @@ external setiopolicy_np(
     argument1 : Int,
     argument2 : Int) : Int;
 
-external setrlimit(
+external ("_setrlimit") setrlimit(
     argument0 : Int,
     argument1 : Pointer[Struct_rlimit]) : Int;
 
-external wait(
+external ("_wait") wait(
     argument0 : Pointer[Int]) : Int;
 
-external waitpid(
+external ("_waitpid") waitpid(
     argument0 : Int,
     argument1 : Pointer[Int],
     argument2 : Int) : Int;
 
-external waitid(
+external ("_waitid") waitid(
     argument0 : idtype_t,
     argument1 : UInt,
     argument2 : Pointer[siginfo_t],
@@ -1067,11 +1067,11 @@ external realloc(
 external srand(
     argument0 : UInt) : Void;
 
-external strtod(
+external ("_strtod") strtod(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]]) : Double;
 
-external strtof(
+external ("_strtof") strtof(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]]) : Float;
 
@@ -1099,7 +1099,7 @@ external strtoull(
     argument1 : Pointer[Pointer[CChar]],
     argument2 : Int) : UInt64;
 
-external system(
+external ("_system") system(
     argument0 : Pointer[CChar]) : Int;
 
 external wcstombs(
@@ -1180,7 +1180,7 @@ external posix_openpt(
 external ptsname(
     argument0 : Int) : Pointer[CChar];
 
-external putenv(
+external ("_putenv") putenv(
     argument0 : Pointer[CChar]) : Int;
 
 external random() : CLong;
@@ -1188,19 +1188,19 @@ external random() : CLong;
 external rand_r(
     argument0 : Pointer[UInt]) : Int;
 
-external realpath(
+external ("_realpath$DARWIN_EXTSN") realpath(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external seed48(
     argument0 : Pointer[UShort]) : Pointer[UShort];
 
-external setenv(
+external ("_setenv") setenv(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
     argument2 : Int) : Int;
 
-external setkey(
+external ("_setkey") setkey(
     argument0 : Pointer[CChar]) : Void;
 
 external setstate(
@@ -1215,7 +1215,7 @@ external srandom(
 external unlockpt(
     argument0 : Int) : Int;
 
-external unsetenv(
+external ("_unsetenv") unsetenv(
     argument0 : Pointer[CChar]) : Int;
 
 static int8_t = CChar;
@@ -1320,7 +1320,7 @@ external cgetustr(
     argument1 : Pointer[CChar],
     argument2 : Pointer[Pointer[CChar]]) : Int;
 
-external daemon(
+external ("_daemon$1050") daemon(
     argument0 : Int,
     argument1 : Int) : Int;
 
@@ -1497,7 +1497,7 @@ external strcspn(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar]) : CULong;
 
-external strerror(
+external ("_strerror") strerror(
     argument0 : Int) : Pointer[CChar];
 
 external strerror_r(

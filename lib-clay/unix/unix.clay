@@ -3,7 +3,7 @@ import libc;
 import strings;
 import errors;
 
-public import unix.wrappers.*;
+public import unix.generated.*;
 public import unix.constants.*;
 public import unix.errno.*;
 
