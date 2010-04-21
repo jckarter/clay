@@ -1434,6 +1434,7 @@ void addGlobal(ModulePtr module,
                Visibility visibility,
                ObjectPtr value);
 ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name);
+ObjectPtr lookupModuleMember(ModuleHolderPtr mh, IdentifierPtr name);
 ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name);
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
 

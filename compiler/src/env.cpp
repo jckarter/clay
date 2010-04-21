@@ -88,6 +88,13 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     }
 }
 
+ObjectPtr lookupModuleMember(ModuleHolderPtr mh, IdentifierPtr name) {
+    ObjectPtr x = lookupModuleHolder(mh, name);
+    if (!x)
+        error(name, "undefined name: " + name->str);
+    return x;
+}
+
 
 
 //

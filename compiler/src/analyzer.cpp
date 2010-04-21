@@ -645,7 +645,7 @@ ObjectPtr analyzeFieldRef(ObjectPtr x, IdentifierPtr name)
     }
     case MODULE_HOLDER : {
         ModuleHolderPtr y = (ModuleHolder *)x.ptr();
-        ObjectPtr z = lookupModuleHolder(y, name);
+        ObjectPtr z = lookupModuleMember(y, name);
         return analyzeStaticObject(z);
     }
     default :

@@ -954,7 +954,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
         }
         if (y->objKind == MODULE_HOLDER) {
             ModuleHolderPtr z = (ModuleHolder *)y.ptr();
-            ObjectPtr obj = lookupModuleHolder(z, x->name);
+            ObjectPtr obj = lookupModuleMember(z, x->name);
             return codegenStaticObject(obj, out);
         }
         error("invalid member access operation");
