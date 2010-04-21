@@ -42,6 +42,15 @@ overload printTo(stream, x:I) {
     write(stream, ptr, SizeT(n));
 }
 
+[I | Integer?(I) and TypeSize(I) == 8]
+overload printTo(stream, x:I) {
+    var buf = Array[CChar, 100]();
+    libc.sprintf(&buf[0], cstring("%lld"), Int64(x));
+    var n = libc.strlen(&buf[0]);
+    var ptr = Pointer[Byte](&buf[0]);
+    write(stream, ptr, SizeT(n));
+}
+
 [F | Float?(F)]
 overload printTo(stream, x:F) {
     var buf = Array[CChar, 100]();
