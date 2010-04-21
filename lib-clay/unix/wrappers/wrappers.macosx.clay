@@ -1,7 +1,0 @@
-public import unix.generated.*;
-
-static StatBuf = Struct_stat64;
-
-static fstat = fstat64;
-static lstat = lstat64;
-static stat = stat64;

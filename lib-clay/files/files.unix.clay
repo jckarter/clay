@@ -81,7 +81,7 @@ overload flush(f:File) {
 // filesSize
 
 fileSize(f:File) {
-    var statBuf = unix.StatBuf();
+    var statBuf = unix.Struct_stat();
     unix.syscall(unix.fstat, f.handle, &statBuf);
     return Int64(statBuf.st_size);
 }
