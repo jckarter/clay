@@ -4,8 +4,8 @@ import libc;
 main() {
     var s = "Hello World!\n";
 
-    libc.fwrite(RawPointer(cstring(s)), SizeT(1), SizeT(size(s)), libc.stdout);
+    libc.fwrite(RawPointer(cstring(s)), SizeT(1), size(s), libc.stdout);
 
     var f = libc.fdopen(1, cstring("w"));
-    libc.fwrite(RawPointer(cstring(s)), SizeT(1), SizeT(size(s)), f);
+    libc.fwrite(RawPointer(cstring(s)), SizeT(1), size(s), f);
 }

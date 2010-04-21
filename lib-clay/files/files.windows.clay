@@ -58,12 +58,14 @@ overload assign(dest:File, src:File) = unsupported();
 
 // implement byte stream operations
 
-overload read(f:File, buffer:Pointer[Byte], n:SizeT) : SizeT {
-    return libc.fread(buffer, SizeT(1), n, f.handle);
+[I | Integer?(I)]
+overload read(f:File, buffer:Pointer[Byte], n:I) : SizeT {
+    return libc.fread(buffer, SizeT(1), SizeT(n), f.handle);
 }
 
-overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
-    libc.fwrite(buffer, SizeT(1), n, f.handle);
+[I | Integer?(I)]
+overload write(f:File, buffer:Pointer[Byte], n:I) {
+    libc.fwrite(buffer, SizeT(1), SizeT(n), f.handle);
 }
 
 overload flush(f:File) {

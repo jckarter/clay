@@ -6,10 +6,12 @@ import strings.*;
 
 // byte streams
 
-// read(stream, buf:Pointer[Byte], n:SizeT) : SizeT
+// [I | Integer?(I)]
+// read(stream, buf:Pointer[Byte], n:I) : SizeT
 overloadable read;
 
-// write(stream, buf:Pointer[Byte], n:SizeT) : Void
+// [I | Integer?(I)]
+// write(stream, buf:Pointer[Byte], n:I) : Void
 overloadable write;
 
 // flush(stream) : Void
@@ -17,13 +19,13 @@ overloadable flush;
 
 
 readByte(stream, b:Byte) : Bool {
-    var result = read(stream, &b, SizeT(1));
+    var result = read(stream, &b, 1);
     return result == 1;
 }
 
 readChar(stream, c:Char) : Bool {
     var ptr = Pointer[Byte](&c);
-    var result = read(stream, ptr, SizeT(1));
+    var result = read(stream, ptr, 1);
     return result == 1;
 }
 

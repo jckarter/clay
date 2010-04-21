@@ -19,7 +19,8 @@ overload FileMap(f:File, offset, length, protection, flags) {
     return FileMap(addr, SizeT(length));
 }
 
-overload FileMap(f:File, offset, len) {
+[A,B | Integer?(A,B)]
+overload FileMap(f:File, offset:A, len:B) {
     var prot = bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
     var flags = unix.MAP_SHARED;
     return FileMap(f, offset, len, prot, flags);

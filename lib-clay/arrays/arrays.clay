@@ -36,9 +36,6 @@ overload size(a:Array[T,n]) = SizeT(n);
 [T,n,I | Integer?(I)]
 overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
 
-[T,n]
-overload index(a:Array[T,n], i:SizeT) = ref arrayRef(a, i);
-
 
 //
 // array coordinates
