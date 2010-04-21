@@ -322,45 +322,29 @@ void BindingsConverter::generateDecl(Decl *decl)
             externsDeclared.insert(name);
             out << '\n';
             out << "external ";
-            bool attrDLLImport = x->hasAttr<DLLImportAttr>();
-            bool attrDLLExport = x->hasAttr<DLLExportAttr>();
+            vector<string> attributes;
+            if (x->hasAttr<DLLImportAttr>())
+                attributes.push_back("dllimport");
+            if (x->hasAttr<DLLExportAttr>())
+                attributes.push_back("dllexport");
             const Type *t = x->getType().getTypePtr();
             assert(t->isFunctionType());
             FunctionType *ft = (FunctionType *)t;
-            bool attrStdCall = ft->getCallConv() == CC_X86StdCall;
-            bool attrFastCall = ft->getCallConv() == CC_X86FastCall;
-            if (attrDLLImport || attrDLLExport ||
-                attrStdCall || attrFastCall)
-            {
+            if (ft->getCallConv() == CC_X86StdCall)
+                attributes.push_back("stdcall");
+            if (ft->getCallConv() == CC_X86FastCall)
+                attributes.push_back("fastcall");
+            if (x->hasAttr<AsmLabelAttr>()) {
+                const AsmLabelAttr *attr = x->getAttr<AsmLabelAttr>();
+                string asmLabel(attr->getLabel());
+                attributes.push_back("\"" + asmLabel + "\"");
+            }
+            if (!attributes.empty()) {
                 out << "(";
-                bool first = true;
-                if (attrDLLImport) {
-                    if (first)
-                        first = false;
-                    else
-                        out << ",";
-                    out << "dllimport";
-                }
-                if (attrDLLExport) {
-                    if (first)
-                        first = false;
-                    else
-                        out << ",";
-                    out << "dllexport";
-                }
-                if (attrStdCall) {
-                    if (first)
-                        first = false;
-                    else
-                        out << ",";
-                    out << "stdcall";
-                }
-                if (attrFastCall) {
-                    if (first)
-                        first = false;
-                    else
-                        out << ",";
-                    out << "fastcall";
+                for (unsigned i = 0; i < attributes.size(); ++i) {
+                    if (i != 0)
+                        out << ", ";
+                    out << attributes[i];
                 }
                 out << ") ";
             }
@@ -406,24 +390,17 @@ void BindingsConverter::generateDecl(Decl *decl)
             const Type *t = x->getType().getTypePtr();
             out << '\n';
             out << "external ";
-            bool attrDLLImport = x->hasAttr<DLLImportAttr>();
-            bool attrDLLExport = x->hasAttr<DLLExportAttr>();
-            if (attrDLLImport || attrDLLExport) {
+            vector<string> attributes;
+            if (x->hasAttr<DLLImportAttr>())
+                attributes.push_back("dllimport");
+            if (x->hasAttr<DLLExportAttr>())
+                attributes.push_back("dllexport");
+            if (!attributes.empty()) {
                 out << "(";
-                bool first = true;
-                if (attrDLLImport) {
-                    if (first)
-                        first = false;
-                    else
-                        out << ",";
-                    out << "dllimport";
-                }
-                if (attrDLLExport) {
-                    if (first)
-                        first = false;
-                    else
-                        out << ",";
-                    out << "dllexport";
+                for (unsigned i = 0; i < attributes.size(); ++i) {
+                    if (i != 0)
+                        out << ", ";
+                    out << attributes[i];
                 }
                 out << ") ";
             }
