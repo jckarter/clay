@@ -1520,14 +1520,14 @@ static bool globalVariable(TopLevelItemPtr &x) {
 // external procedure, external variable
 //
 
-static bool externalAttributes(vector<IdentifierPtr> &x) {
+static bool externalAttributes(vector<ExprPtr> &x) {
     if (!symbol("(")) return false;
-    if (!identifierList(x)) return false;
+    if (!expressionList(x)) return false;
     if (!symbol(")")) return false;
     return true;
 }
 
-static bool optExternalAttributes(vector<IdentifierPtr> &x) {
+static bool optExternalAttributes(vector<ExprPtr> &x) {
     int p = save();
     if (!externalAttributes(x)) {
         restore(p);
