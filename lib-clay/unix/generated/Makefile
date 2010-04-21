@@ -18,6 +18,6 @@ macosx32 :
 linux : linux32
 
 linux32 :
-	gcc -E generated_from_linux.h > temp32.h
+	gcc -E -D_FILE_OFFSET_BITS=64 generated_from_linux.h > temp32.h
 	clay-bindgen temp32.h > generated.linux.32.clay
 	rm -f temp32.h

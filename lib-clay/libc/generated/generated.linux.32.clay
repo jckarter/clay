@@ -274,7 +274,7 @@ external _IO_seekpos(
 external _IO_free_backup_area(
     argument0 : Pointer[_IO_FILE]) : Void;
 
-static fpos_t = _G_fpos_t;
+static fpos_t = _G_fpos64_t;
 
 external stdin : Pointer[Struct__IO_FILE];
 
@@ -295,7 +295,7 @@ external renameat(
     __newfd : Int,
     __new : Pointer[CChar]) : Int;
 
-external tmpfile() : Pointer[FILE];
+external ("tmpfile64") tmpfile() : Pointer[FILE];
 
 external tmpnam(
     __s : Pointer[CChar]) : Pointer[CChar];
@@ -316,11 +316,11 @@ external fflush(
 external fflush_unlocked(
     __stream : Pointer[FILE]) : Int;
 
-external fopen(
+external ("fopen64") fopen(
     __filename : Pointer[CChar],
     __modes : Pointer[CChar]) : Pointer[FILE];
 
-external freopen(
+external ("freopen64") freopen(
     __filename : Pointer[CChar],
     __modes : Pointer[CChar],
     __stream : Pointer[FILE]) : Pointer[FILE];
@@ -550,19 +550,19 @@ external ftell(
 external rewind(
     __stream : Pointer[FILE]) : Void;
 
-external fseeko(
+external ("fseeko64") fseeko(
     __stream : Pointer[FILE],
-    __off : CLong,
+    __off : Int64,
     __whence : Int) : Int;
 
-external ftello(
-    __stream : Pointer[FILE]) : CLong;
+external ("ftello64") ftello(
+    __stream : Pointer[FILE]) : Int64;
 
-external fgetpos(
+external ("fgetpos64") fgetpos(
     __stream : Pointer[FILE],
     __pos : Pointer[fpos_t]) : Int;
 
-external fsetpos(
+external ("fsetpos64") fsetpos(
     __stream : Pointer[FILE],
     __pos : Pointer[fpos_t]) : Int;
 
@@ -717,7 +717,7 @@ static fsid_t = __fsid_t;
 
 static loff_t = Int64;
 
-static ino_t = CULong;
+static ino_t = UInt64;
 
 static dev_t = UInt64;
 
@@ -729,7 +729,7 @@ static nlink_t = UInt;
 
 static uid_t = UInt;
 
-static off_t = CLong;
+static off_t = Int64;
 
 static pid_t = Int;
 
@@ -830,11 +830,11 @@ external gnu_dev_makedev(
     __major : UInt,
     __minor : UInt) : UInt64;
 
-static blkcnt_t = CLong;
+static blkcnt_t = Int64;
 
-static fsblkcnt_t = CULong;
+static fsblkcnt_t = UInt64;
 
-static fsfilcnt_t = CULong;
+static fsfilcnt_t = UInt64;
 
 static pthread_t = CULong;
 
@@ -1053,7 +1053,7 @@ external clearenv() : Int;
 external mktemp(
     __template : Pointer[CChar]) : Pointer[CChar];
 
-external mkstemp(
+external ("mkstemp64") mkstemp(
     __template : Pointer[CChar]) : Int;
 
 external mkdtemp(
@@ -1346,7 +1346,7 @@ external strnlen(
 external strerror(
     __errnum : Int) : Pointer[CChar];
 
-external strerror_r(
+external ("__xpg_strerror_r") strerror_r(
     __errnum : Int,
     __buf : Pointer[CChar],
     __buflen : UInt) : Int;

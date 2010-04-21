@@ -67,6 +67,10 @@ static MAP_NOCACHE      = 1024;
 
 static MAP_FAILED = RawPointer(-1);
 
+
+
+// flags for msync
+
 static MS_ASYNC      = 1;
 static MS_SYNC       = 16;
 static MS_INVALIDATE = 2;
