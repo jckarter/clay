@@ -42,6 +42,14 @@ static S_ISVTX = 01000;
 
 
 
+// flags for lseek
+
+static SEEK_SET = 0;
+static SEEK_CUR = 1;
+static SEEK_END = 2;
+
+
+
 // flags for mmap
 
 static PROT_NONE  = 0;

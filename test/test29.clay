@@ -2,13 +2,15 @@ import base.*;
 import filemaps.*;
 
 main() {
-    static N = 100;
+    static N = 500*1000;
+    println(N);
+    var f = File("tempfile.txt", WRITE_READ);
     {
-        var f = File("tempfile.txt", WRITE_READ);
-        printTo(f, String(Array[Char,N]()));
+        seek(f, N-1, SEEK_SET);
+        var b = Byte(66);
+        write(f, &b, SizeT(1));
     }
     {
-        var f = File("tempfile.txt", READ_WRITE);
         var fmap = FileMap(f, 0, N);
         for (i in range(N))
             (fmap.addr + i)^ = Byte((i % 26) + 65);
