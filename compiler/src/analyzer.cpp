@@ -923,7 +923,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
         ++i;
     }
     if (!entry)
-        error("no matching callee");
+        error("no matching operation");
     if (entry->analyzed || entry->analyzing)
         return entry;
     if (entry->inlined)
