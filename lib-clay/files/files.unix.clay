@@ -83,3 +83,26 @@ fileSize(f:File) {
     unix.syscall(unix.fstat, f.handle, &statBuf);
     return Int64(statBuf.st_size);
 }
+
+
+// seek
+
+enum SeekOrigin {
+    SEEK_SET,
+    SEEK_CUR,
+    SEEK_END
+}
+
+private seekWhence(x) {
+    if (x == SEEK_SET) return unix.SEEK_SET;
+    if (x == SEEK_CUR) return unix.SEEK_CUR;
+    if (x == SEEK_END) return unix.SEEK_END;
+    assert(false);
+}
+
+seek(f:File, offset, whence) {
+    return unix.syscall(unix.lseek,
+                        f.handle,
+                        Int64(offset),
+                        seekWhence(whence));
+}
