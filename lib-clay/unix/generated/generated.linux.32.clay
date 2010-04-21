@@ -122,7 +122,7 @@ static gid_t = UInt;
 
 static uid_t = UInt;
 
-static off_t = CLong;
+static off_t = Int64;
 
 static useconds_t = UInt;
 
@@ -142,10 +142,10 @@ external faccessat(
     __type : Int,
     __flag : Int) : Int;
 
-external lseek(
+external ("lseek64") lseek(
     __fd : Int,
-    __offset : CLong,
-    __whence : Int) : CLong;
+    __offset : Int64,
+    __whence : Int) : Int64;
 
 external close(
     __fd : Int) : Int;
@@ -775,13 +775,13 @@ external getpagesize() : Int;
 
 external getdtablesize() : Int;
 
-external truncate(
+external ("truncate64") truncate(
     __file : Pointer[CChar],
-    __length : CLong) : Int;
+    __length : Int64) : Int;
 
-external ftruncate(
+external ("ftruncate64") ftruncate(
     __fd : Int,
-    __length : CLong) : Int;
+    __length : Int64) : Int;
 
 external brk(
     __addr : RawPointer) : Int;
@@ -793,10 +793,10 @@ external syscall(
     __sysno : CLong,
     ...) : CLong;
 
-external lockf(
+external ("lockf64") lockf(
     __fd : Int,
     __cmd : Int,
-    __len : CLong) : Int;
+    __len : Int64) : Int;
 
 external fdatasync(
     __fildes : Int) : Int;
@@ -1509,7 +1509,7 @@ static fsid_t = __fsid_t;
 
 static loff_t = Int64;
 
-static ino_t = CULong;
+static ino_t = UInt64;
 
 static dev_t = UInt64;
 
@@ -1591,17 +1591,17 @@ external gnu_dev_makedev(
     __major : UInt,
     __minor : UInt) : UInt64;
 
-static blkcnt_t = CLong;
+static blkcnt_t = Int64;
 
-static fsblkcnt_t = CULong;
+static fsblkcnt_t = UInt64;
 
-static fsfilcnt_t = CULong;
+static fsfilcnt_t = UInt64;
 
 record Struct_flock {
     l_type : Short;
     l_whence : Short;
-    l_start : CLong;
-    l_len : CLong;
+    l_start : Int64;
+    l_len : Int64;
     l_pid : Int;
 }
 
@@ -1610,12 +1610,12 @@ external fcntl(
     __cmd : Int,
     ...) : Int;
 
-external open(
+external ("open64") open(
     __file : Pointer[CChar],
     __oflag : Int,
     ...) : Int;
 
-external openat(
+external ("openat64") openat(
     __fd : Int,
     __file : Pointer[CChar],
     __oflag : Int,
@@ -1627,20 +1627,20 @@ external openat64(
     __oflag : Int,
     ...) : Int;
 
-external creat(
+external ("creat64") creat(
     __file : Pointer[CChar],
     __mode : UInt) : Int;
 
-external posix_fadvise(
+external ("posix_fadvise64") posix_fadvise(
     __fd : Int,
-    __offset : CLong,
-    __len : CLong,
+    __offset : Int64,
+    __len : Int64,
     __advise : Int) : Int;
 
-external posix_fallocate(
+external ("posix_fallocate64") posix_fallocate(
     __fd : Int,
-    __offset : CLong,
-    __len : CLong) : Int;
+    __offset : Int64,
+    __len : Int64) : Int;
 
 record Struct_timezone {
     tz_minuteswest : Int;
@@ -1696,38 +1696,37 @@ external futimes(
 record Struct_stat {
     st_dev : UInt64;
     __pad1 : UShort;
-    st_ino : CULong;
+    __st_ino : CULong;
     st_mode : UInt;
     st_nlink : UInt;
     st_uid : UInt;
     st_gid : UInt;
     st_rdev : UInt64;
     __pad2 : UShort;
-    st_size : CLong;
+    st_size : Int64;
     st_blksize : CLong;
-    st_blocks : CLong;
+    st_blocks : Int64;
     st_atim : Struct_timespec;
     st_mtim : Struct_timespec;
     st_ctim : Struct_timespec;
-    __unused4 : CULong;
-    __unused5 : CULong;
+    st_ino : UInt64;
 }
 
-external stat(
+external ("stat64") stat(
     __file : Pointer[CChar],
     __buf : Pointer[Struct_stat]) : Int;
 
-external fstat(
+external ("fstat64") fstat(
     __fd : Int,
     __buf : Pointer[Struct_stat]) : Int;
 
-external fstatat(
+external ("fstatat64") fstatat(
     __fd : Int,
     __file : Pointer[CChar],
     __buf : Pointer[Struct_stat],
     __flag : Int) : Int;
 
-external lstat(
+external ("lstat64") lstat(
     __file : Pointer[CChar],
     __buf : Pointer[Struct_stat]) : Int;
 
@@ -1791,22 +1790,22 @@ external futimens(
     __fd : Int,
     __times : Pointer[Struct_timespec]) : Int;
 
-external __fxstat(
+external ("__fxstat64") __fxstat(
     __ver : Int,
     __fildes : Int,
     __stat_buf : Pointer[Struct_stat]) : Int;
 
-external __xstat(
+external ("__xstat64") __xstat(
     __ver : Int,
     __filename : Pointer[CChar],
     __stat_buf : Pointer[Struct_stat]) : Int;
 
-external __lxstat(
+external ("__lxstat64") __lxstat(
     __ver : Int,
     __filename : Pointer[CChar],
     __stat_buf : Pointer[Struct_stat]) : Int;
 
-external __fxstatat(
+external ("__fxstatat64") __fxstatat(
     __ver : Int,
     __fildes : Int,
     __filename : Pointer[CChar],
@@ -1826,13 +1825,13 @@ external __xmknodat(
     __mode : UInt,
     __dev : Pointer[UInt64]) : Int;
 
-external mmap(
+external ("mmap64") mmap(
     __addr : RawPointer,
     __len : UInt,
     __prot : Int,
     __flags : Int,
     __fd : Int,
-    __offset : CLong) : RawPointer;
+    __offset : Int64) : RawPointer;
 
 external munmap(
     __addr : RawPointer,
@@ -1899,13 +1898,13 @@ external writev(
     __iovec : Pointer[Struct_iovec],
     __count : Int) : Int;
 
-external preadv(
+external ("preadv64") preadv(
     __fd : Int,
     __iovec : Pointer[Struct_iovec],
     __count : Int,
     __offset : CLong) : Int;
 
-external pwritev(
+external ("pwritev64") pwritev(
     __fd : Int,
     __iovec : Pointer[Struct_iovec],
     __count : Int,
