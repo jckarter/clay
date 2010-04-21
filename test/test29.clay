@@ -3,16 +3,12 @@ import filemaps.*;
 
 main() {
     static N = 500*1000;
-    println(N);
-    var f = File("tempfile.txt", WRITE_READ);
-    {
-        seek(f, N-1, SEEK_SET);
-        var b = Byte(66);
-        write(f, &b, 1);
-    }
-    {
-        var fmap = FileMap(f, 0, N);
-        for (i in range(N))
-            (fmap.addr + i)^ = Byte((i % 26) + 65);
-    }
+
+    var file = File("tempfile.txt", CREATE);
+    seek(file, N-1);
+    writeByte(file, 'B');
+
+    var mapping = FileMap(file, 0, N);
+    for (i in range(N))
+        (mapping.address + i)^ = Byte((i % 26) + 65);
 }
