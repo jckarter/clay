@@ -32,3 +32,4 @@ static Double = Float64;
 static RawPointer = Pointer[Byte];
 
 static SizeT = UPtrInt;
+static SSizeT = PtrInt;

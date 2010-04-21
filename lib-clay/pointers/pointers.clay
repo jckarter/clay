@@ -84,9 +84,9 @@ isNull(x:Pointer[T]) = (x == null(T));
 [T]
 overload dereference(p:Pointer[T]) = ref pointerDereference(p);
 
-[T]
-allocateMemory(static T, count:SizeT) {
-    var ptr = malloc(TypeSize(T) * count);
+[T,I | Integer?(I)]
+allocateMemory(static T, count:I) {
+    var ptr = malloc(TypeSize(T) * SizeT(count));
     return Pointer[T](ptr);
 }
 

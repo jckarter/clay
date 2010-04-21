@@ -28,7 +28,7 @@ main() {
     println("compare test = ", testCompare(a[2], a[0]));
 
     qsort(RawPointer(&a[0]),
-          SizeT(size(a)),
+          size(a),
           TypeSize(Int),
           compare);
 

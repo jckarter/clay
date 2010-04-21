@@ -8,7 +8,7 @@ main() {
     {
         seek(f, N-1, SEEK_SET);
         var b = Byte(66);
-        write(f, &b, SizeT(1));
+        write(f, &b, 1);
     }
     {
         var fmap = FileMap(f, 0, N);
