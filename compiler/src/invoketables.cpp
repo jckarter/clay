@@ -114,7 +114,7 @@ static void computeIsStaticFlags(ObjectPtr x,
             return;
         }
     }
-    error("incorrect no. of arguments");
+    error("no matching operation");
 }
 
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
