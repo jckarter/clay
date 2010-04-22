@@ -58,7 +58,8 @@ overload String(a:A) {
 [A | SizedSequence?(A) and (Int8 == SequenceElementType(A))]
 overload String(a:A) = String(mapped(Char, a));
 
-overload String(cstr : Pointer[Byte]) = String(stringRef(cstr));
+[T | ByteSizedInteger?(T)]
+overload String(cstr : Pointer[T]) = String(stringRef(cstr));
 
 
 //
@@ -80,11 +81,12 @@ overloadable stringRef;
 [A | ArrayLike?(A) and (Char == SequenceElementType(A))]
 overload stringRef(a:A) = String(&a[0], size(a), false);
 
-[A | ArrayLike?(A) and (Int8 == SequenceElementType(A))]
+[A | ArrayLike?(A) and (ByteSizedInteger?(SequenceElementType(A)))]
 overload stringRef(a:A) = String(Pointer[Char](&a[0]), size(a), false);
 
-overload stringRef(cstr : Pointer[CChar]) {
-    var n = libc.strlen(cstr);
+[T | ByteSizedInteger?(T)]
+overload stringRef(cstr : Pointer[T]) {
+    var n = libc.strlen(Pointer[CChar](cstr));
     return String(Pointer[Char](cstr), n, false);
 }
 
