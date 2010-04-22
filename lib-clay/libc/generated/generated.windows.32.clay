@@ -18,7 +18,7 @@ static wint_t = UShort;
 
 static __gnuc_va_list = Int;
 
-record _iobuf {
+record Struct__iobuf {
     _ptr : Pointer[CChar];
     _cnt : Int;
     _base : Pointer[CChar];
@@ -29,7 +29,7 @@ record _iobuf {
     _tmpfname : Pointer[CChar];
 }
 
-static FILE = _iobuf;
+static FILE = Struct__iobuf;
 
 external (dllimport) _iob : Array[FILE,0];
 
@@ -822,19 +822,19 @@ external abs(
 external labs(
     argument0 : CLong) : CLong;
 
-record UnnamedRecord {
+record UnnamedStruct {
     quot : Int;
     rem : Int;
 }
 
-static div_t = UnnamedRecord;
+static div_t = UnnamedStruct;
 
-record UnnamedRecord0 {
+record UnnamedStruct2 {
     quot : CLong;
     rem : CLong;
 }
 
-static ldiv_t = UnnamedRecord0;
+static ldiv_t = UnnamedStruct2;
 
 external div(
     argument0 : Int,
@@ -1019,12 +1019,12 @@ external gcvt(
 external _Exit(
     argument0 : Int) : Void;
 
-record UnnamedRecord1 {
+record UnnamedStruct3 {
     quot : Int64;
     rem : Int64;
 }
 
-static lldiv_t = UnnamedRecord1;
+static lldiv_t = UnnamedStruct3;
 
 external lldiv(
     argument0 : Int64,
@@ -1443,7 +1443,7 @@ external wcsset(
 external wcsupr(
     argument0 : Pointer[UShort]) : Pointer[UShort];
 
-record _exception {
+record Struct__exception {
     type : Int;
     name : Pointer[CChar];
     arg1 : Double;
@@ -1523,13 +1523,13 @@ external fmod(
     argument0 : Double,
     argument1 : Double) : Double;
 
-record _complex {
+record Struct__complex {
     x : Double;
     y : Double;
 }
 
 external _cabs(
-    argument0 : _complex) : Double;
+    argument0 : Struct__complex) : Double;
 
 external _hypot(
     argument0 : Double,
@@ -1556,7 +1556,7 @@ external _yn(
     argument1 : Double) : Double;
 
 external _matherr(
-    argument0 : Pointer[_exception]) : Int;
+    argument0 : Pointer[Struct__exception]) : Int;
 
 external _chgsign(
     argument0 : Double) : Double;
@@ -2145,3 +2145,312 @@ external fmal(
     argument0 : UnsupportedCBuiltinType21,
     argument1 : UnsupportedCBuiltinType21,
     argument2 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+
+static intptr_t = Int;
+
+static _fsize_t = CULong;
+
+record Struct__finddata_t {
+    attrib : UInt;
+    time_create : CLong;
+    time_access : CLong;
+    time_write : CLong;
+    size : CULong;
+    name : Array[CChar,260];
+}
+
+record Struct__finddatai64_t {
+    attrib : UInt;
+    time_create : CLong;
+    time_access : CLong;
+    time_write : CLong;
+    size : Int64;
+    name : Array[CChar,260];
+}
+
+record Struct__wfinddata_t {
+    attrib : UInt;
+    time_create : CLong;
+    time_access : CLong;
+    time_write : CLong;
+    size : CULong;
+    name : Array[UShort,260];
+}
+
+record Struct__wfinddatai64_t {
+    attrib : UInt;
+    time_create : CLong;
+    time_access : CLong;
+    time_write : CLong;
+    size : Int64;
+    name : Array[UShort,260];
+}
+
+external _findfirst(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Struct__finddata_t]) : CLong;
+
+external _findnext(
+    argument0 : CLong,
+    argument1 : Pointer[Struct__finddata_t]) : Int;
+
+external _findclose(
+    argument0 : CLong) : Int;
+
+external _chdir(
+    argument0 : Pointer[CChar]) : Int;
+
+external _getcwd(
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Pointer[CChar];
+
+external _mkdir(
+    argument0 : Pointer[CChar]) : Int;
+
+external _mktemp(
+    argument0 : Pointer[CChar]) : Pointer[CChar];
+
+external _rmdir(
+    argument0 : Pointer[CChar]) : Int;
+
+external _chmod(
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Int;
+
+external _filelengthi64(
+    argument0 : Int) : Int64;
+
+external _findfirsti64(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Struct__finddatai64_t]) : CLong;
+
+external _findnexti64(
+    argument0 : CLong,
+    argument1 : Pointer[Struct__finddatai64_t]) : Int;
+
+external _lseeki64(
+    argument0 : Int,
+    argument1 : Int64,
+    argument2 : Int) : Int64;
+
+external _telli64(
+    argument0 : Int) : Int64;
+
+external chdir(
+    argument0 : Pointer[CChar]) : Int;
+
+external getcwd(
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Pointer[CChar];
+
+external mkdir(
+    argument0 : Pointer[CChar]) : Int;
+
+external mktemp(
+    argument0 : Pointer[CChar]) : Pointer[CChar];
+
+external rmdir(
+    argument0 : Pointer[CChar]) : Int;
+
+external chmod(
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Int;
+
+external _access(
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Int;
+
+external _chsize(
+    argument0 : Int,
+    argument1 : CLong) : Int;
+
+external _close(
+    argument0 : Int) : Int;
+
+external _commit(
+    argument0 : Int) : Int;
+
+external _creat(
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Int;
+
+external _dup(
+    argument0 : Int) : Int;
+
+external _dup2(
+    argument0 : Int,
+    argument1 : Int) : Int;
+
+external _filelength(
+    argument0 : Int) : CLong;
+
+external _get_osfhandle(
+    argument0 : Int) : CLong;
+
+external _isatty(
+    argument0 : Int) : Int;
+
+external _eof(
+    argument0 : Int) : Int;
+
+external _locking(
+    argument0 : Int,
+    argument1 : Int,
+    argument2 : CLong) : Int;
+
+external _lseek(
+    argument0 : Int,
+    argument1 : CLong,
+    argument2 : Int) : CLong;
+
+external _open(
+    argument0 : Pointer[CChar],
+    argument1 : Int,
+    ...) : Int;
+
+external _open_osfhandle(
+    argument0 : Int,
+    argument1 : Int) : Int;
+
+external _pipe(
+    argument0 : Pointer[Int],
+    argument1 : UInt,
+    argument2 : Int) : Int;
+
+external _read(
+    argument0 : Int,
+    argument1 : RawPointer,
+    argument2 : UInt) : Int;
+
+external _setmode(
+    argument0 : Int,
+    argument1 : Int) : Int;
+
+external _sopen(
+    argument0 : Pointer[CChar],
+    argument1 : Int,
+    argument2 : Int,
+    ...) : Int;
+
+external _tell(
+    argument0 : Int) : CLong;
+
+external _umask(
+    argument0 : Int) : Int;
+
+external _write(
+    argument0 : Int,
+    argument1 : RawPointer,
+    argument2 : UInt) : Int;
+
+external _waccess(
+    argument0 : Pointer[UShort],
+    argument1 : Int) : Int;
+
+external _wchmod(
+    argument0 : Pointer[UShort],
+    argument1 : Int) : Int;
+
+external _wcreat(
+    argument0 : Pointer[UShort],
+    argument1 : Int) : Int;
+
+external _wfindfirst(
+    argument0 : Pointer[UShort],
+    argument1 : Pointer[Struct__wfinddata_t]) : CLong;
+
+external _wfindnext(
+    argument0 : CLong,
+    argument1 : Pointer[Struct__wfinddata_t]) : Int;
+
+external _wunlink(
+    argument0 : Pointer[UShort]) : Int;
+
+external _wopen(
+    argument0 : Pointer[UShort],
+    argument1 : Int,
+    ...) : Int;
+
+external _wsopen(
+    argument0 : Pointer[UShort],
+    argument1 : Int,
+    argument2 : Int,
+    ...) : Int;
+
+external _wmktemp(
+    argument0 : Pointer[UShort]) : Pointer[UShort];
+
+external _wfindfirsti64(
+    argument0 : Pointer[UShort],
+    argument1 : Pointer[Struct__wfinddatai64_t]) : CLong;
+
+external _wfindnexti64(
+    argument0 : CLong,
+    argument1 : Pointer[Struct__wfinddatai64_t]) : Int;
+
+external access(
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Int;
+
+external chsize(
+    argument0 : Int,
+    argument1 : CLong) : Int;
+
+external close(
+    argument0 : Int) : Int;
+
+external creat(
+    argument0 : Pointer[CChar],
+    argument1 : Int) : Int;
+
+external dup(
+    argument0 : Int) : Int;
+
+external dup2(
+    argument0 : Int,
+    argument1 : Int) : Int;
+
+external eof(
+    argument0 : Int) : Int;
+
+external filelength(
+    argument0 : Int) : CLong;
+
+external isatty(
+    argument0 : Int) : Int;
+
+external lseek(
+    argument0 : Int,
+    argument1 : CLong,
+    argument2 : Int) : CLong;
+
+external open(
+    argument0 : Pointer[CChar],
+    argument1 : Int,
+    ...) : Int;
+
+external read(
+    argument0 : Int,
+    argument1 : RawPointer,
+    argument2 : UInt) : Int;
+
+external setmode(
+    argument0 : Int,
+    argument1 : Int) : Int;
+
+external sopen(
+    argument0 : Pointer[CChar],
+    argument1 : Int,
+    argument2 : Int,
+    ...) : Int;
+
+external tell(
+    argument0 : Int) : CLong;
+
+external umask(
+    argument0 : Int) : Int;
+
+external write(
+    argument0 : Int,
+    argument1 : RawPointer,
+    argument2 : UInt) : Int;
