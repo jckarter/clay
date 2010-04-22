@@ -4,32 +4,32 @@ import unix;
 import libc;
 
 record FileMap {
-    addr : Pointer[Byte];
-    len : SizeT;
+    address : Pointer[Byte];
+    length : SizeT;
 }
 
 overload FileMap(f:File, offset, length, protection, flags) {
-    var addr = unix.syscall(unix.mmap,
-                            RawPointer(0),
-                            SizeT(length),
-                            Int(protection),
-                            Int(flags),
-                            f.handle,
-                            Int64(offset));
-    return FileMap(addr, SizeT(length));
+    var address = unix.syscall(unix.mmap,
+                               RawPointer(0),
+                               SizeT(length),
+                               Int(protection),
+                               Int(flags),
+                               f.handle,
+                               Int64(offset));
+    return FileMap(address, SizeT(length));
 }
 
 [A,B | Integer?(A,B)]
-overload FileMap(f:File, offset:A, len:B) {
-    var prot = bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
+overload FileMap(f:File, offset:A, length:B) {
+    var protection = bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
     var flags = unix.MAP_SHARED;
-    return FileMap(f, offset, len, prot, flags);
+    return FileMap(f, offset, length, protection, flags);
 }
 
 overload FileMap(f:File) = FileMap(f, 0, fileSize(f));
 
 overload destroy(fm:FileMap) {
-    unix.syscall(unix.munmap, fm.addr, fm.len);
+    unix.syscall(unix.munmap, fm.address, fm.length);
 }
 
 // disable default constructor, copy constructor, assignment

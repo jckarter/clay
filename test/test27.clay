@@ -2,8 +2,8 @@ import base.*;
 
 main() {
     { 
-        println("Writing...");
-        var f = File("tempfile.txt", WRITE);
+        println("Creating...");
+        var f = File("tempfile.txt", CREATE);
         printlnTo(f, "Hello World");
     }
     {

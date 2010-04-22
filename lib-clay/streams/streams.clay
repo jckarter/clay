@@ -3,6 +3,7 @@ import characters.*;
 import vectors.*;
 import sequences.*;
 import strings.*;
+import numbers.*;
 
 // byte streams
 
@@ -17,6 +18,11 @@ overloadable write;
 // flush(stream) : Void
 overloadable flush;
 
+
+
+//
+// readByte, readChar, readLine
+//
 
 readByte(stream, b:Byte) : Bool {
     var result = read(stream, &b, 1);
@@ -38,4 +44,22 @@ readLine(stream) : String {
             break;
     }
     return String(v);
+}
+
+
+
+//
+// writeByte
+//
+
+overloadable writeByte;
+
+[I | Integer?(I)]
+overload writeByte(stream, x:I) {
+    var b = Byte(x);
+    write(stream, &b, 1);
+}
+
+overload writeByte(stream, x:Char) {
+    writeByte(stream, Byte(x));
 }
