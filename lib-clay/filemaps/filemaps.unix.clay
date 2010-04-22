@@ -1,7 +1,6 @@
 import base.*;
 import files.*;
 import unix;
-import libc;
 
 record FileMap {
     address : Pointer[Byte];

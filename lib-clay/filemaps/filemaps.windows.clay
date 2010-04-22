@@ -1,0 +1,50 @@
+import base.*;
+import files.*;
+import win32;
+
+record FileMap {
+    mappingObject : win32.HANDLE;
+    address : Pointer[Byte];
+    length : SizeT;
+}
+
+[A,B | Integer?(A,B)]
+overload FileMap(f:File, offset:A, length:B) {
+    var mappingObject = win32.CreateFileMappingA(
+        f.handle,
+        win32.LPSECURITY_ATTRIBUTES(0),
+        win32.DWORD(win32.PAGE_READWRITE),
+        win32.DWORD(0),
+        win32.DWORD(0),
+        win32.LPCSTR(0));
+    if (mappingObject == win32.HANDLE(0))
+        error(win32.errorMessage());
+    var offset64 = UInt64(offset);
+    var offsetHigh = shiftRight(offset64, 32);
+    var offsetLow = bitwiseAnd(offset64, shiftLeft(1#u64,32)-1);
+    var address = win32.MapViewOfFile(
+        mappingObject,
+        win32.DWORD(win32.FILE_MAP_ALL_ACCESS),
+        win32.DWORD(offsetHigh),
+        win32.DWORD(offsetLow),
+        win32.DWORD(length));
+    if (address == win32.LPVOID(0))
+        error(win32.errorMessage());
+    return FileMap(mappingObject, address, SizeT(length));
+}
+
+overload FileMap(f:File) = FileMap(f, 0, fileSize(f));
+
+overload destroy(fm:FileMap) {
+    var result = win32.UnmapViewOfFile(fm.address);
+    if (result == 0)
+        error(win32.errorMessage());
+    result = win32.CloseHandle(fm.mappingObject);
+    if (result == 0)
+        error(win32.errorMessage());
+}
+
+// disable default constructor, copy constructor, assignment
+overload FileMap() = unsupported();
+overload FileMap(x:FileMap) = unsupported();
+overload assign(dest:FileMap, src:FileMap) = unsupported();

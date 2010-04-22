@@ -70,3 +70,28 @@ static FILE_FLAG_OPEN_NO_RECALL     = 1048576#u32;
 static FILE_BEGIN   = 0#u32;
 static FILE_CURRENT = 1#u32;
 static FILE_END     = 2#u32;
+
+static PAGE_NOACCESS          = 0x0001#u32;
+static PAGE_READONLY          = 0x0002#u32;
+static PAGE_READWRITE         = 0x0004#u32;
+static PAGE_WRITECOPY         = 0x0008#u32;
+static PAGE_EXECUTE           = 0x0010#u32;
+static PAGE_EXECUTE_READ      = 0x0020#u32;
+static PAGE_EXECUTE_READWRITE = 0x0040#u32;
+static PAGE_EXECUTE_WRITECOPY = 0x0080#u32;
+static PAGE_GUARD             = 0x0100#u32;
+static PAGE_NOCACHE           = 0x0200#u32;
+
+static SEC_BASED     = 0x00200000#u32;
+static SEC_NO_CHANGE = 0x00400000#u32;
+static SEC_FILE      = 0x00800000#u32;
+static SEC_IMAGE     = 0x01000000#u32;
+static SEC_VLM       = 0x02000000#u32;
+static SEC_RESERVE   = 0x04000000#u32;
+static SEC_COMMIT    = 0x08000000#u32;
+static SEC_NOCACHE   = 0x10000000#u32;
+
+static FILE_MAP_ALL_ACCESS = 0xf001f#u32;
+static FILE_MAP_READ       = 4#u32;
+static FILE_MAP_WRITE      = 2#u32;
+static FILE_MAP_COPY       = 1#u32;
