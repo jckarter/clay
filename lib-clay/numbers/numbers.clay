@@ -19,9 +19,7 @@ import __primitives__.(primitiveCopy);
 
 static overloadable SignedInteger?;
 
-[T]
-static overload SignedInteger?(T) = false;
-
+[T] static overload SignedInteger?(T) = false;
 static overload SignedInteger?(Int8) = true;
 static overload SignedInteger?(Int16) = true;
 static overload SignedInteger?(Int32) = true;
@@ -30,9 +28,7 @@ static overload SignedInteger?(Int64) = true;
 
 static overloadable UnsignedInteger?;
 
-[T]
-static overload UnsignedInteger?(T) = false;
-
+[T] static overload UnsignedInteger?(T) = false;
 static overload UnsignedInteger?(UInt8) = true;
 static overload UnsignedInteger?(UInt16) = true;
 static overload UnsignedInteger?(UInt32) = true;
@@ -41,32 +37,30 @@ static overload UnsignedInteger?(UInt64) = true;
 
 static overloadable Integer?;
 
-[T]
-static overload Integer?(T) = SignedInteger?(T) or UnsignedInteger?(T);
+[T] static overload Integer?(T) = SignedInteger?(T) or UnsignedInteger?(T);
+[A, B] static overload Integer?(A, B) = Integer?(A) and Integer?(B);
 
-[A, B]
-static overload Integer?(A, B) = Integer?(A) and Integer?(B);
+
+static overloadable ByteSizedInteger?;
+
+[T] static overload ByteSizedInteger?(T) = false;
+static overload ByteSizedInteger?(Int8) = true;
+static overload ByteSizedInteger?(UInt8) = true;
 
 
 static overloadable Float?;
 
-[T]
-static overload Float?(T) = false;
-
+[T] static overload Float?(T) = false;
 static overload Float?(Float32) = true;
 static overload Float?(Float64) = true;
-
-[A, B]
-static overload Float?(A, B) = Float?(A) and Float?(B);
+[A, B] static overload Float?(A, B) = Float?(A) and Float?(B);
 
 
 static overloadable Numeric?;
 
-[T]
-static overload Numeric?(T) = Integer?(T) or Float?(T);
+[T] static overload Numeric?(T) = Integer?(T) or Float?(T);
+[A, B] static overload Numeric?(A, B) = Numeric?(A) and Numeric?(B);
 
-[A, B]
-static overload Numeric?(A, B) = Numeric?(A) and Numeric?(B);
 
 
 // BiggerInteger?, BiggerFloat?, BiggerNumeric?
