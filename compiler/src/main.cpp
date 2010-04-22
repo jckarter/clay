@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
     bool emitLLVM = false;
     bool emitAsm = false;
     bool sharedLib = false;
-    bool exceptions = true;
+    bool exceptions = false;
 
     string clayFile;
     string outputFile;
