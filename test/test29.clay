@@ -8,7 +8,8 @@ main() {
     seek(file, N-1);
     writeByte(file, 'B');
 
-    var mapping = FileMapping(file, 0, N);
+    var mapping = FileMapping(file, MAP_READ_WRITE);
     for (i in range(N))
         (mapping.address + i)^ = Byte((i % 26) + 65);
+    flushMapping(mapping);
 }
