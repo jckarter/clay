@@ -14,10 +14,8 @@ var stderr = File(libc.stderr, false);
 enum OpenMode {
     READ,
     READ_WRITE,
-    WRITE,
-    WRITE_READ,
-    APPEND,
-    APPEND_READ
+    CREATE,
+    APPEND
 }
 
 private modeString(mode) {
@@ -25,14 +23,10 @@ private modeString(mode) {
         return "rb";
     if (mode == READ_WRITE)
         return "r+b";
-    if (mode == WRITE)
-        return "wb";
-    if (mode == WRITE_READ)
+    if (mode == CREATE)
         return "w+b";
     if (mode == APPEND)
         return "ab";
-    if (mode == APPEND_READ)
-        return "a+b";
     assert(false);
 }
 
