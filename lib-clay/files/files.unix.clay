@@ -72,7 +72,7 @@ overload flush(f:File) {
 }
 
 
-// filesSize
+// fileSize
 
 fileSize(f:File) {
     var statBuf = unix.Struct_stat();

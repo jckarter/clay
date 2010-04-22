@@ -1,15 +1,17 @@
 import base.*;
-import streams.*;
 import libc;
+import win32;
 
 record File {
-    handle : Pointer[libc.FILE];
+    handle : win32.HANDLE;
     owned : Bool;
 }
 
-var stdin = File(libc.stdin, false);
-var stdout = File(libc.stdout, false);
-var stderr = File(libc.stderr, false);
+private stdHandle(x) = win32.GetStdHandle(win32.DWORD(x));
+
+var stdin  = File(stdHandle(win32.STD_INPUT_HANDLE), false);
+var stdout = File(stdHandle(win32.STD_OUTPUT_HANDLE), false);
+var stderr = File(stdHandle(win32.STD_ERROR_HANDLE), false);
 
 enum OpenMode {
     READ,
@@ -18,30 +20,66 @@ enum OpenMode {
     APPEND
 }
 
-private modeString(mode) {
+private accessFlags(mode) {
     if (mode == READ)
-        return "rb";
+        return win32.GENERIC_READ;
     if (mode == READ_WRITE)
-        return "r+b";
+        return bitwiseOr(win32.GENERIC_READ, win32.GENERIC_WRITE);
     if (mode == CREATE)
-        return "w+b";
+        return bitwiseOr(win32.GENERIC_READ, win32.GENERIC_WRITE);
     if (mode == APPEND)
-        return "ab";
+        return win32.GENERIC_WRITE;
     assert(false);
 }
 
-overload File(path:String, mode:OpenMode) {
-    var f = libc.fopen(cstring(path), cstring(modeString(mode)));
-    if (isNull(f))
-        error("unable to open file: ", path);
-    return File(f, true);
+private sharingFlags(mode) {
+    if (mode == READ)
+        return win32.FILE_SHARE_READ;
+    if (mode == READ_WRITE)
+        return 0#u32;
+    if (mode == CREATE)
+        return 0#u32;
+    if (mode == APPEND)
+        return 0#u32;
+    assert(false);
+}
+
+private creationFlags(mode) {
+    if (mode == READ)
+        return win32.OPEN_EXISTING;
+    if (mode == READ_WRITE)
+        return win32.OPEN_EXISTING;
+    if (mode == CREATE)
+        return win32.CREATE_ALWAYS;
+    if (mode == APPEND)
+        return win32.OPEN_ALWAYS;
+    assert(false);
+}
+
+overload File(path:String, mode:OpenMode) : File {
+    var handle = win32.CreateFileA(
+        cstring(path),
+        win32.DWORD(accessFlags(mode)),
+        win32.DWORD(sharingFlags(mode)),
+        win32.LPSECURITY_ATTRIBUTES(0),
+        win32.DWORD(creationFlags(mode)),
+        win32.DWORD(win32.FILE_ATTRIBUTE_NORMAL),
+        win32.HANDLE(0));
+    if (handle == win32.INVALID_HANDLE_VALUE)
+        error(win32.errorMessage(), ": ", path);
+    returned <-- File(handle, true);
+    if (mode == APPEND)
+        seek(returned, 0, SEEK_END);
 }
 
 overload File(path:String) = File(path, READ);
 
 overload destroy(f:File) {
-    if (f.owned)
-        libc.fclose(f.handle);
+    if (f.owned) {
+        var result = win32.CloseHandle(f.handle);
+        if (result == 0)
+            error(win32.errorMessage());
+    }
 }
 
 // disable default constructor, copy constructor, assignment
@@ -54,14 +92,77 @@ overload assign(dest:File, src:File) = unsupported();
 
 [I | Integer?(I)]
 overload read(f:File, buffer:Pointer[Byte], n:I) : SizeT {
-    return libc.fread(buffer, SizeT(1), SizeT(n), f.handle);
+    var nRead = win32.DWORD();
+    var result = win32.ReadFile(
+        f.handle,
+        win32.LPVOID(buffer),
+        win32.DWORD(n),
+        &nRead,
+        win32.LPOVERLAPPED(0));
+    if (result == 0)
+        error(win32.errorMessage());
+    return SizeT(nRead);
 }
 
 [I | Integer?(I)]
 overload write(f:File, buffer:Pointer[Byte], n:I) {
-    libc.fwrite(buffer, SizeT(1), SizeT(n), f.handle);
+    var nWritten = win32.DWORD();
+    var result = win32.WriteFile(
+        f.handle,
+        win32.LPVOID(buffer),
+        win32.DWORD(n),
+        &nWritten,
+        win32.LPOVERLAPPED(0));
+    if (result == 0)
+        error(win32.errorMessage());
+    assert(nWritten == n);
 }
 
 overload flush(f:File) {
-    libc.fflush(f.handle);
+    var result = win32.FlushFileBuffers(f.handle);
+    if (result == 0)
+        error(win32.errorMessage());
 }
+
+
+// fileSize
+
+fileSize(f:File) {
+    var size = Int64();
+    var result = win32.GetFileSizeEx(f.handle, &size);
+    if (result == 0)
+        error(win32.errorMessage());
+    return size;
+}
+
+
+// seek
+
+enum SeekOrigin {
+    SEEK_SET,
+    SEEK_CUR,
+    SEEK_END
+}
+
+private seekMethod(x) {
+    if (x == SEEK_SET) return win32.FILE_BEGIN;
+    if (x == SEEK_CUR) return win32.FILE_CURRENT;
+    if (x == SEEK_END) return win32.FILE_END;
+    assert(false);
+}
+
+overloadable seek;
+
+overload seek(f:File, offset, whence) {
+    var newPos = Int64();
+    var result = win32.SetFilePointerEx(
+        f.handle,
+        Int64(offset),
+        &newPos,
+        seekMethod(whence));
+    if (result == 0)
+        error(win32.errorMessage());
+    return newPos;
+}
+
+overload seek(f:File, offset) = seek(f, offset, SEEK_SET);
