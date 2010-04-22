@@ -3,17 +3,44 @@ import files.*;
 import win32;
 
 record FileMapping {
+    fileHandle : win32.HANDLE;
     mappingObject : win32.HANDLE;
     address : Pointer[Byte];
     length : SizeT;
 }
 
+enum MappingMode {
+    MAP_READ,
+    MAP_READ_WRITE,
+    MAP_COPY_ON_WRITE
+}
+
+private modeProtection(mode) {
+    if (mode == MAP_READ)
+        return win32.PAGE_READONLY;
+    if (mode == MAP_READ_WRITE)
+        return win32.PAGE_READWRITE;
+    if (mode == MAP_COPY_ON_WRITE)
+        return win32.PAGE_WRITECOPY;
+    assert(false);
+}
+
+private modeAccess(mode) {
+    if (mode == MAP_READ)
+        return win32.FILE_MAP_READ;
+    if (mode == MAP_READ_WRITE)
+        return win32.FILE_MAP_WRITE;
+    if (mode == MAP_COPY_ON_WRITE)
+        return win32.FILE_MAP_COPY;
+    assert(false);
+}
+
 [A,B | Integer?(A,B)]
-overload FileMapping(f:File, offset:A, length:B) {
+overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     var mappingObject = win32.CreateFileMappingA(
         f.handle,
         win32.LPSECURITY_ATTRIBUTES(0),
-        win32.DWORD(win32.PAGE_READWRITE),
+        win32.DWORD(modeProtection(mode)),
         win32.DWORD(0),
         win32.DWORD(0),
         win32.LPCSTR(0));
@@ -24,16 +51,17 @@ overload FileMapping(f:File, offset:A, length:B) {
     var offsetLow = bitwiseAnd(offset64, shiftLeft(1#u64,32)-1);
     var address = win32.MapViewOfFile(
         mappingObject,
-        win32.DWORD(win32.FILE_MAP_ALL_ACCESS),
+        win32.DWORD(modeAccess(mode)),
         win32.DWORD(offsetHigh),
         win32.DWORD(offsetLow),
         win32.DWORD(length));
     if (address == win32.LPVOID(0))
         error(win32.errorMessage());
-    return FileMapping(mappingObject, address, SizeT(length));
+    return FileMapping(f.handle, mappingObject, address, SizeT(length));
 }
 
-overload FileMapping(f:File) = FileMapping(f, 0, fileSize(f));
+overload FileMapping(f:File, mode:MappingMode) =
+    FileMapping(f, mode, 0, fileSize(f));
 
 overload destroy(fm:FileMapping) {
     var result = win32.UnmapViewOfFile(fm.address);
@@ -44,7 +72,22 @@ overload destroy(fm:FileMapping) {
         error(win32.errorMessage());
 }
 
+
 // disable default constructor, copy constructor, assignment
 overload FileMapping() = unsupported();
 overload FileMapping(x:FileMapping) = unsupported();
 overload assign(dest:FileMapping, src:FileMapping) = unsupported();
+
+
+//
+// flushMapping
+//
+
+flushMapping(fm:FileMapping) {
+    var result = win32.FlushViewOfFile(fm.address, fm.length);
+    if (result == 0)
+        error(win32.errorMessage());
+    result = win32.FlushFileBuffers(fm.fileHandle);
+    if (result == 0)
+        error(win32.errorMessage());
+}

@@ -7,7 +7,36 @@ record FileMapping {
     length : SizeT;
 }
 
-overload FileMapping(f:File, offset, length, protection, flags) {
+enum MappingMode {
+    MAP_READ,
+    MAP_READ_WRITE,
+    MAP_COPY_ON_WRITE
+}
+
+private modeProtection(mode) {
+    if (mode == MAP_READ)
+        return unix.PROT_READ;
+    if (mode == MAP_READ_WRITE)
+        return bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
+    if (mode == MAP_COPY_ON_WRITE)
+        return bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
+    assert(false);
+}
+
+private modeFlags(mode) {
+    if (mode == MAP_READ)
+        return unix.MAP_SHARED;
+    if (mode == MAP_READ_WRITE)
+        return unix.MAP_SHARED;
+    if (mode == MAP_COPY_ON_WRITE)
+        return unix.MAP_PRIVATE;
+    assert(false);
+}
+
+[A,B | Integer?(A,B)]
+overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
+    var protection = modeProtection(mode);
+    var flags = modeFlags(mode);
     var address = unix.syscall(unix.mmap,
                                RawPointer(0),
                                SizeT(length),
@@ -18,20 +47,24 @@ overload FileMapping(f:File, offset, length, protection, flags) {
     return FileMapping(address, SizeT(length));
 }
 
-[A,B | Integer?(A,B)]
-overload FileMapping(f:File, offset:A, length:B) {
-    var protection = bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
-    var flags = unix.MAP_SHARED;
-    return FileMapping(f, offset, length, protection, flags);
-}
-
-overload FileMapping(f:File) = FileMapping(f, 0, fileSize(f));
+overload FileMapping(f:File, mode:MappingMode) =
+    FileMapping(f, mode, 0, fileSize(f));
 
 overload destroy(fm:FileMapping) {
     unix.syscall(unix.munmap, fm.address, fm.length);
 }
 
+
 // disable default constructor, copy constructor, assignment
 overload FileMapping() = unsupported();
 overload FileMapping(x:FileMapping) = unsupported();
 overload assign(dest:FileMapping, src:FileMapping) = unsupported();
+
+
+//
+// flushMapping
+//
+
+flushMapping(fm:FileMapping) {
+    unix.syscall(unix.msync, fm.address, fm.length, unix.MS_SYNC);
+}
