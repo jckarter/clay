@@ -5,10 +5,17 @@ import strings.*;
 import errors;
 
 public import win32.generated.*;
+public import win32.constants.*;
 
 external (stdcall) GetFileSizeEx(
     handle : HANDLE,
     lpFileSize : Pointer[Int64]) : BOOL;
+
+external (stdcall) SetFilePointerEx(
+    handle : HANDLE,
+    offset : Int64,
+    newPosition : Pointer[Int64],
+    moveMethod : DWORD) : BOOL;
 
 static FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
 
