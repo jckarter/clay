@@ -1,30 +1,21 @@
-# Clay Makefile
 
-ROOTDIR	=	./
-BINDIR	=	$(ROOTDIR)bin/
-DIRS	=	compiler dbg bindgen
-include $(ROOTDIR)Makefile.inc
-
-.PHONY: default all clay clay-bindgen clay-dbg clean
 
 default : clay
 
 all: clay clay-bindgen clay-dbg
 
 clay: 
-	echo "Looking into subdir compiler"
 	cd compiler; make
 
 clay-bindgen: 
-	echo "Looking into subdir bindgen"
-	cd bindgen; make
+	cd misc/bindgen; make
 
 clay-dbg: 
-	echo "Looking into subdir dbg"
-	cd dbg; make
+	cd misc/dbg; make
 
 .PHONY: clean
 
 clean:
-	-for d in $(DIRS); do (cd $$d; make clean ); done
-
+	cd compiler; make clean
+	cd misc/bindgen; make clean
+	cd misc/dbg; make clean

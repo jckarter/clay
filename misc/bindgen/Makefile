@@ -1,9 +1,14 @@
 # Clay Makefile
 
-ROOTDIR	=	../
+ROOTDIR	=	../../
 BINDIR	=	$(ROOTDIR)bin/
 DIRS	=	
-include $(ROOTDIR)Makefile.inc
+
+CC		 = g++
+DEBUG    = -O0 -ggdb -pg
+CFLAGS	 = -Wall 
+CXXFLAGS = $(CFLAGS)
+LDFLAGS	 = -g
 
 LLVM_CXXFLAGS=`llvm-config --cxxflags`
 LLVM_LDFLAGS=`llvm-config --ldflags --libs all`

@@ -13,7 +13,7 @@ perfTests = ("insertionsort1 insertionsort2 " +
 win32Tests = "beep".split()
 
 def runtest(input) :
-    compiler = os.path.join(".", "bin", "clay")
+    compiler = os.path.join("..", "bin", "clay")
     print "TEST:", input
     command = compiler + " " + input
     print command
@@ -28,14 +28,14 @@ def runtest(input) :
 def runtests() :
     paths = []
     for x in tests :
-        p = os.path.join("test", x) + ".clay"
+        p = x + ".clay"
         paths.append(p)
     if sys.platform == "win32" :
         for x in win32Tests :
-            p = os.path.join("test", "win32", x) + ".clay"
+            p = os.path.join("win32", x) + ".clay"
             paths.append(p)
     for x in perfTests :
-        p = os.path.join("test", "perf", x) + ".clay"
+        p = os.path.join("perf", x) + ".clay"
         paths.append(p)
     for p in paths :
         if not runtest(p) :
