@@ -20,10 +20,10 @@ tags
 ^compiler/vs2008/Debug/
 ^compiler/vs2008/Release/
 
-^bindgen/vs2008/.*\.ncb$
-^bindgen/vs2008/.*\.suo$
-^bindgen/vs2008/.*\.user$
-^bindgen/vs2008/Debug/
-^bindgen/vs2008/Release/
+^misc/bindgen/vs2008/.*\.ncb$
+^misc/bindgen/vs2008/.*\.suo$
+^misc/bindgen/vs2008/.*\.user$
+^misc/bindgen/vs2008/Debug/
+^misc/bindgen/vs2008/Release/
 
 ^mingw/

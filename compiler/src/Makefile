@@ -2,8 +2,6 @@
 
 ROOTDIR	=	../../
 BINDIR	=	$(ROOTDIR)bin/
-DIRS	=	src
-include $(ROOTDIR)Makefile.inc
 
 LLVM_CXXFLAGS 	= `llvm-config --cxxflags | sed -e 's/-fno-exc/-fexc/'`
 LLVM_LDFLAGS 	= `llvm-config --ldflags --libs all`
@@ -16,7 +14,7 @@ default : $(BINDIR)clay
 	$(MAKE) EXTRA_FLAGS=-m32
 
 .cpp.o :
-	$(CC) $(LLVM_CXXFLAGS) $(CXXFLAGS) $(EXTRA_FLAGS) -c -MMD -MF$@.dep -o $@ $<
+	g++ $(LLVM_CXXFLAGS) $(EXTRA_FLAGS) -Wall -c -MMD -MF$@.dep -o $@ $<
 
 OBJS = \
 	error.o \
@@ -41,7 +39,7 @@ OBJS = \
 
 $(BINDIR)clay : $(OBJS)
 	if [ ! -e $(BINDIR) ]; then mkdir $(BINDIR); fi;
-	$(CC) $(EXTRA_FLAGS) -o $@ $^ $(LLVM_LDFLAGS) $(LDFLAGS)
+	g++ $(EXTRA_FLAGS) -o $@ $^ $(LLVM_LDFLAGS)
 
 .PHONY: clean
 
