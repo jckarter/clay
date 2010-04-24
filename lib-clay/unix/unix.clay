@@ -1,7 +1,5 @@
-import types.*;
+import base.*;
 import libc;
-import strings;
-import errors;
 
 public import unix.generated.*;
 public import unix.constants.*;
@@ -10,11 +8,11 @@ public import unix.errno.*;
 inlined syscall(callable, ...) {
     var result = callable(...);
     if (result == TypeOf(result)(-1))
-        errors.error(errorMessage());
+        error(errorMessage());
     return result;
 }
 
 overloadable errorMessage;
 
 overload errorMessage() = errorMessage(errno());
-overload errorMessage(err) = strings.stringRef(libc.strerror(err));
+overload errorMessage(err) = stringRef(libc.strerror(err));

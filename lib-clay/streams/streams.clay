@@ -1,9 +1,4 @@
-import types.*;
-import characters.*;
-import vectors.*;
-import sequences.*;
-import strings.*;
-import numbers.*;
+import base.*;
 
 // byte streams
 

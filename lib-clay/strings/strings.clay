@@ -1,12 +1,4 @@
-import types.*;
-import operators.*;
-import characters.*;
-import pointers.*;
-import sequences.*;
-import arrays.*;
-import vectors.*;
-import ranges.*;
-import numbers.*;
+import base.*;
 import libc;
 
 

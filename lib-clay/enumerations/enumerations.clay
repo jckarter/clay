@@ -1,6 +1,4 @@
-import types.*;
-import operators.*;
-import numbers.*;
+import base.*;
 
 
 // copy constructor

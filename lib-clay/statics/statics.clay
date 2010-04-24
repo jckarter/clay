@@ -1,0 +1,17 @@
+import base.*;
+
+public import __primitives__.(Static);
+
+
+[A]
+overload Static[A](src:Static[A]) : Static[A] {
+}
+
+[A, B]
+overload equals?(a:Static[A], b:Static[B]) = false;
+
+[A]
+overload equals?(a:Static[A], b:Static[A]) = true;
+
+[A]
+overload lesser?(a:Static[A], b:Static[A]) = false;

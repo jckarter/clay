@@ -1,4 +1,7 @@
+import base.*;
+
 public import sequences.operators.*;
+public import sequences.handle.*;
 public import sequences.mapped.*;
 public import sequences.filtered.*;
 

@@ -1,9 +1,4 @@
-
-public import __primitives__.(Bool);
-
-import operators.*;
-import __primitives__.(primitiveCopy);
-import numbers.*;
+import base.*;
 
 overload Bool(src:Bool) : Bool {
     primitiveCopy(returned, src);

@@ -1,8 +1,4 @@
-import types.*;
-import pointers.*;
-import sequences.*;
-import strings.*;
-import errors;
+import base.*;
 
 public import win32.generated.*;
 public import win32.constants.*;

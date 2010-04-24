@@ -1,3 +1,4 @@
-import unix.generated.*;
+import base.*;
+import unix.*;
 
 errno() = __error()^;

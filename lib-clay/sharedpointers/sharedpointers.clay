@@ -1,6 +1,4 @@
-import types.*;
-import operators.*;
-import pointers.*;
+import base.*;
 
 record RefCounted[T] {
     refCount:Int;
