@@ -1,4 +1,3 @@
-import base.*;
 
 test() {
     var result = 0.0;

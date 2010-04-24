@@ -1,4 +1,3 @@
-import base.*;
 
 record Multiplier[N] {
     factor:N;

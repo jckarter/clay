@@ -1,4 +1,3 @@
-import base.*;
 
 record CustomCompare[T,F] {
     x:T;

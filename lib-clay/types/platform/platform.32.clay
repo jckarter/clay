@@ -1,4 +1,3 @@
-import base.*;
 
 static PtrInt = Int32;
 static UPtrInt = UInt32;

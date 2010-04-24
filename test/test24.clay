@@ -1,4 +1,3 @@
-import base.*;
 
 overloadable printAll;
 

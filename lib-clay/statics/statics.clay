@@ -1,4 +1,3 @@
-import base.*;
 
 public import __primitives__.(Static);
 

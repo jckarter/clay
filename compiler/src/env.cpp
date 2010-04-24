@@ -98,6 +98,23 @@ ObjectPtr lookupModuleMember(ModuleHolderPtr mh, IdentifierPtr name) {
 
 
 //
+// ModuleBusySetter
+//
+
+struct ModuleBusySetter {
+    ModulePtr module;
+    ModuleBusySetter(ModulePtr module)
+        : module(module) {
+        module->lookupBusy = true;
+    }
+    ~ModuleBusySetter() {
+        module->lookupBusy = false;
+    }
+};
+
+
+
+//
 // lookupPrivate
 //
 
@@ -107,17 +124,23 @@ ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
     MapIter i = module->globals.find(name->str);
     if (i != module->globals.end())
         return i->second;
-    module->lookupBusy = true;
+
+    ModuleBusySetter busySetter(module);
+
     ObjectPtr result1 = lookupImportedNames(module, name, PRIVATE);
     ObjectPtr result2 = lookupModuleHolder(module->rootHolder, name);
-    module->lookupBusy = false;
+
     if (result1.ptr()) {
         if (result2.ptr() && (result1 != result2))
             error(name, "ambiguous imported symbol: " + name->str);
         return result1;
     }
-    else {
+    else if (result2.ptr()) {
         return result2;
+    }
+    else {
+        ModulePtr prelude = loadedModule("prelude");
+        return lookupPublic(prelude, name);
     }
 }
 
@@ -133,17 +156,22 @@ ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
     MapIter i = module->publicGlobals.find(name->str);
     if (i != module->publicGlobals.end())
         return i->second;
-    module->lookupBusy = true;
+
+    ModuleBusySetter busySetter(module);
+
     ObjectPtr result1 = lookupImportedNames(module, name, PUBLIC);
     ObjectPtr result2 = lookupModuleHolder(module->publicRootHolder, name);
-    module->lookupBusy = false;
+
     if (result1.ptr()) {
         if (result2.ptr() && (result1 != result2))
             error(name, "ambiguous imported symbol: " + name->str);
         return result1;
     }
-    else {
+    else if (result2.ptr()) {
         return result2;
+    }
+    else {
+        return NULL;
     }
 }
 

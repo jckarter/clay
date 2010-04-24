@@ -1,4 +1,3 @@
-import base.*;
 
 external sayHello() : Void {
     println("Hello World");

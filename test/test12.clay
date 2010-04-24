@@ -1,4 +1,3 @@
-import base.*;
 
 map(f, a) {
     static ResultType = TypeOf(f(a[0]));

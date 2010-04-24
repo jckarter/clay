@@ -1,4 +1,3 @@
-import base.*;
 
 record Foo {
     value:Int;

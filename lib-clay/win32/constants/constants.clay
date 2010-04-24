@@ -1,4 +1,3 @@
-import base.*;
 import win32.*;
 
 static STD_INPUT_HANDLE  = -10;

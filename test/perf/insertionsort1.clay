@@ -1,4 +1,3 @@
-import base.*;
 
 insertionSort(a) {
     var i = 1;
