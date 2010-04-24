@@ -88,7 +88,11 @@ overload toBiggerNumericType(static A, static B, v) = A(v);
 overload toBiggerNumericType(static A, static B, v) = B(v);
 
 
-// constructors
+// constructors, destructor
+
+[T | Numeric?(T)]
+overload T() : T {
+}
 
 [T1,T2 | Numeric?(T1,T2)]
 overload T1(src:T2) = numericConvert(T1, src);
@@ -96,6 +100,10 @@ overload T1(src:T2) = numericConvert(T1, src);
 [T | Numeric?(T)]
 overload T(src:T) : T {
     primitiveCopy(returned, src);
+}
+
+[T | Numeric?(T)]
+overload destroy(x:T) {
 }
 
 

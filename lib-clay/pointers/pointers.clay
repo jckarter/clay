@@ -7,8 +7,16 @@ import libc.(malloc, free);
 //
 
 [T]
+overload Pointer[T]() : Pointer[T] {
+}
+
+[T]
 overload Pointer[T](src:Pointer[T]) : Pointer[T] {
     primitiveCopy(returned, src);
+}
+
+[T]
+overload destroy(x:Pointer[T]) {
 }
 
 [I,T|Integer?(I)]
@@ -87,8 +95,16 @@ freeMemory(ptr) {
 //
 
 [CP | CodePointer?(CP)]
+overload CP() : CP {
+}
+
+[CP | CodePointer?(CP)]
 overload CP(src:CP) : CP {
     primitiveCopy(returned, src);
+}
+
+[CP | CodePointer?(CP)]
+overload destroy(x:CP) {
 }
 
 [T, CP | CodePointer?(CP)]
@@ -120,8 +136,16 @@ nullCode(static CP) = CP(null(Int8));
 //
 
 [CP | CCodePointer?(CP)]
+overload CP() : CP {
+}
+
+[CP | CCodePointer?(CP)]
 overload CP(src:CP) : CP {
     primitiveCopy(returned, src);
+}
+
+[CP | CCodePointer?(CP)]
+overload destroy(x:CP) {
 }
 
 [T, CP | CCodePointer?(CP)]
