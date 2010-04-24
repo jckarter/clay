@@ -259,6 +259,23 @@ TypePtr enumType(EnumerationPtr enumeration)
     return enumeration->type;
 }
 
+bool isPrimitiveType(TypePtr t)
+{
+    switch (t->typeKind) {
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+    case STATIC_TYPE :
+    case ENUM_TYPE :
+        return true;
+    default :
+        return false;
+    }
+}
+
 
 
 //

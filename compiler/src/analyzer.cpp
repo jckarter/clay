@@ -829,7 +829,7 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 
 
 //
-// analyzeInvokeCallable, analyzeCallable
+// analyzeInvokeCallable, analyzeInvokeSpecialCase, analyzeanalyzeCallable
 //
 
 ObjectPtr analyzeInvokeCallable(ObjectPtr x,
@@ -844,6 +844,9 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
     if (!computeArgsKey(isStaticFlags, args, env,
                         argsKey, argsTempness, argLocations))
         return NULL;
+    ObjectPtr result = analyzeInvokeSpecialCase(x, isStaticFlags, argsKey);
+    if (result.ptr())
+        return result;
     InvokeStackContext invokeStackContext(x, argsKey);
     InvokeEntryPtr entry =
         analyzeCallable(x, isStaticFlags,
@@ -854,6 +857,33 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
     if (!entry->analyzed)
         return NULL;
     return entry->analysis;
+}
+
+ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
+                                   const vector<bool> &isStaticFlags,
+                                   const vector<ObjectPtr> &argsKey)
+{
+    switch (x->objKind) {
+    case TYPE : {
+        Type *y = (Type *)x.ptr();
+        if (isPrimitiveType(y) && isStaticFlags.empty())
+            return new PValue(y, true);
+        break;
+    }
+    case OVERLOADABLE : {
+        if ((x == kernelName("destroy")) &&
+            (isStaticFlags.size() == 1) &&
+            (!isStaticFlags[0]))
+        {
+            ObjectPtr y = argsKey[0];
+            assert(y->objKind == TYPE);
+            if (isPrimitiveType((Type *)y.ptr()))
+                return voidValue.ptr();
+        }
+        break;
+    }
+    }
+    return NULL;
 }
 
 static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,

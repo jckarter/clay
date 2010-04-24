@@ -1652,7 +1652,7 @@ CValuePtr codegenInvoke(ObjectPtr x,
 
 
 //
-// codegenInvokeCallable, codegenCallable
+// codegenInvokeCallable, codegenInvokeSpecialCase, codegenCallable
 //
 
 CValuePtr codegenInvokeCallable(ObjectPtr x,
@@ -1669,6 +1669,8 @@ CValuePtr codegenInvokeCallable(ObjectPtr x,
                                  argsKey, argsTempness,
                                  argLocations);
     assert(result);
+    if (codegenInvokeSpecialCase(x, isStaticFlags, argsKey))
+        return out;
     InvokeStackContext invokeStackContext(x, argsKey);
     InvokeEntryPtr entry = codegenCallable(x, isStaticFlags,
                                            argsKey, argsTempness,
@@ -1676,6 +1678,33 @@ CValuePtr codegenInvokeCallable(ObjectPtr x,
     if (entry->inlined)
         return codegenInvokeInlined(entry, args, env, out);
     return codegenInvokeCode(entry, args, env, out);
+}
+
+bool codegenInvokeSpecialCase(ObjectPtr x,
+                              const vector<bool> &isStaticFlags,
+                              const vector<ObjectPtr> &argsKey)
+{
+    switch (x->objKind) {
+    case TYPE : {
+        Type *y = (Type *)x.ptr();
+        if (isPrimitiveType(y) && isStaticFlags.empty())
+            return true;
+        break;
+    }
+    case OVERLOADABLE : {
+        if ((x == kernelName("destroy")) &&
+            (isStaticFlags.size() == 1) &&
+            (!isStaticFlags[0]))
+        {
+            ObjectPtr y = argsKey[0];
+            assert(y->objKind == TYPE);
+            if (isPrimitiveType((Type *)y.ptr()))
+                return true;
+        }
+        break;
+    }
+    }
+    return false;
 }
 
 static string getCodeName(ObjectPtr x)
@@ -2036,18 +2065,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         PValuePtr pv0 = analyzeValue(args[0], env);
         PValuePtr pv1 = analyzeValue(args[1], env);
-        switch (pv0->type->typeKind) {
-        case BOOL_TYPE :
-        case INTEGER_TYPE :
-        case FLOAT_TYPE :
-        case POINTER_TYPE :
-        case CODE_POINTER_TYPE :
-        case CCODE_POINTER_TYPE :
-        case ENUM_TYPE :
-            break;
-        default :
+        if (!isPrimitiveType(pv0->type))
             error(args[0], "expecting primitive type");
-        }
         if (pv0->type != pv1->type)
             error(args[1], "argument type mismatch");
         CValuePtr cv0 = codegenAsRef(args[0], env, pv0);

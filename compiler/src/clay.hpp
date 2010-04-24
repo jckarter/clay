@@ -1754,6 +1754,8 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
 TypePtr staticType(ObjectPtr obj);
 TypePtr enumType(EnumerationPtr enumeration);
 
+bool isPrimitiveType(TypePtr t);
+
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
 const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t);
 
@@ -2162,6 +2164,9 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env);
 ObjectPtr analyzeInvokeCallable(ObjectPtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env);
+ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
+                                   const vector<bool> &isStaticFlags,
+                                   const vector<ObjectPtr> &argsKey);
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
@@ -2346,6 +2351,9 @@ CValuePtr codegenInvokeCallable(ObjectPtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env,
                                 CValuePtr out);
+bool codegenInvokeSpecialCase(ObjectPtr x,
+                              const vector<bool> &isStaticFlags,
+                              const vector<ObjectPtr> &argsKey);
 InvokeEntryPtr codegenCallable(ObjectPtr x,
                                const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
