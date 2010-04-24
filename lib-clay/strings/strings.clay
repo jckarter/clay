@@ -26,7 +26,7 @@ static overload SequenceElementType(String) = Char;
 // constructors
 //
 
-overload String() = String(null(Char), 0, false);
+overload String() = String(null(Char), SizeT(0), false);
 
 private allocateStringData(a) {
     var n = size(a);
