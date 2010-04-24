@@ -866,7 +866,7 @@ ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
     switch (x->objKind) {
     case TYPE : {
         Type *y = (Type *)x.ptr();
-        if (isPrimitiveType(y) && isStaticFlags.empty())
+        if (isStaticFlags.empty())
             return new PValue(y, true);
         break;
     }
