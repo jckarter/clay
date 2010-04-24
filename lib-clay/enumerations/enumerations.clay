@@ -1,9 +1,17 @@
 
-// copy constructor
+// constructor, copy constructor, destructor
+
+[E | Enum?(E)]
+overload E() : E {
+}
 
 [E | Enum?(E)]
 overload E(src:E) : E {
     primitiveCopy(returned, src);
+}
+
+[E | Enum?(E)]
+overload destroy(x:E) {
 }
 
 

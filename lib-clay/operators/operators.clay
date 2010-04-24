@@ -58,16 +58,8 @@ inlined RValue?(x) = not LValue?(x);
 // defaults
 //
 
-[T]
-overload T() : T {
-}
-
 initialize(a) {
     a <-- TypeOf(a)();
-}
-
-[T]
-overload destroy(a:T) {
 }
 
 [T]

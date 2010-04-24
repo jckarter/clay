@@ -1,6 +1,12 @@
 
+overload Bool() : Bool {
+}
+
 overload Bool(src:Bool) : Bool {
     primitiveCopy(returned, src);
+}
+
+overload destroy(x:Bool) {
 }
 
 [I | Integer?(I)]
