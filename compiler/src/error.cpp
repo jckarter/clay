@@ -162,6 +162,12 @@ static void displayDebugStack() {
     }
 }
 
+static bool abortOnError = false;
+
+void setAbortOnError(bool flag) {
+    abortOnError = flag;
+}
+
 void error(const string &msg) {
     LocationPtr location = topLocation();
     if (location.ptr()) {
@@ -176,8 +182,10 @@ void error(const string &msg) {
     else {
         fprintf(stderr, "error: %s\n", msg.c_str());
     }
-    //abort();
-    exit(-1);
+    if (abortOnError)
+        abort();
+    else
+        exit(-1);
 }
 
 void fmtError(const char *fmt, ...) {

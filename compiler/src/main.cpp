@@ -208,6 +208,7 @@ static void usage()
     cerr << "  -unoptimized    - generate unoptimized code\n";
     cerr << "  -exceptions     - enable exception handling\n";
     cerr << "  -no-exceptions  - disable exception handling\n";
+    cerr << "  -abort          - abort on error (to get stacktrace in gdb)\n";
 }
 
 int main(int argc, char **argv) {
@@ -221,6 +222,7 @@ int main(int argc, char **argv) {
     bool emitAsm = false;
     bool sharedLib = false;
     bool exceptions = false;
+    bool abortOnError = false;
 
     string clayFile;
     string outputFile;
@@ -245,6 +247,9 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-no-exceptions") == 0) {
             exceptions = false;
+        }
+        else if (strcmp(argv[i], "-abort") == 0) {
+            abortOnError = true;
         }
         else if (strcmp(argv[i], "-o") == 0) {
             if (i+1 == argc) {
@@ -288,6 +293,8 @@ int main(int argc, char **argv) {
     initTypes();
 
     setExceptionsEnabled(exceptions);
+
+    setAbortOnError(abortOnError);
 
     // Try environment variables first
     char* libclayPath = getenv("CLAY_PATH");
