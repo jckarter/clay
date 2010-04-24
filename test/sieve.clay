@@ -1,4 +1,3 @@
-import base.*;
 
 external sched_init():Void;
 external sched_run():Void;

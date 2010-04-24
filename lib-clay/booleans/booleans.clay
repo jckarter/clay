@@ -1,4 +1,3 @@
-import base.*;
 
 overload Bool(src:Bool) : Bool {
     primitiveCopy(returned, src);

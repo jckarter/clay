@@ -1,4 +1,3 @@
-import base.*;
 
 public import sequences.operators.*;
 public import sequences.handle.*;

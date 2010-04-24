@@ -1,4 +1,3 @@
-import base.*;
 
 public import win32.generated.*;
 public import win32.constants.*;

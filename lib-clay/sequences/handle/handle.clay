@@ -1,4 +1,3 @@
-import base.*;
 
 record SequenceHandle[A] {
     inner : Pointer[A];

@@ -1,4 +1,3 @@
-import base.*;
 
 enum Kind {
     GOOD,

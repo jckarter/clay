@@ -1,4 +1,3 @@
-import base.*;
 
 external qsort(base:RawPointer, n:SizeT, width:SizeT,
                compare:CCodePointer[RawPointer, RawPointer, Int]): Void;

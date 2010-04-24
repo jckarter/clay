@@ -1,4 +1,3 @@
-import base.*;
 import unix.*;
 
 errno() = __error()^;

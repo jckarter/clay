@@ -1,4 +1,3 @@
-import base.*;
 public import types.platform.*;
 
 static Byte = UInt8;

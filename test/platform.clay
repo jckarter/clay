@@ -1,4 +1,3 @@
-import base.*;
 
 main() {
     println("sizeof(Byte) = ", TypeSize(Byte));

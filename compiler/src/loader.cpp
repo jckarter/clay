@@ -277,11 +277,19 @@ static void loadDependents(ModulePtr m) {
     }
 }
 
+static ModulePtr loadPrelude() {
+    DottedNamePtr dottedName = new DottedName();
+    dottedName->parts.push_back(new Identifier("prelude"));
+    return loadModuleByName(dottedName);
+}
+
 ModulePtr loadProgram(const string &fileName) {
     ModulePtr m = parse(loadFile(fileName));
+    ModulePtr prelude = loadPrelude();
     loadDependents(m);
     installGlobals(m);
     gvarInitializers = new Block();
+    initModule(prelude);
     initModule(m);
     return m;
 }
@@ -514,7 +522,7 @@ static ModulePtr makePrimitivesModule() {
 //
 
 ObjectPtr kernelName(const string &name) {
-    return lookupPublic(loadedModule("base"), new Identifier(name));
+    return lookupPublic(loadedModule("prelude"), new Identifier(name));
 }
 
 ObjectPtr primName(const string &name) {
@@ -527,7 +535,7 @@ ExprPtr moduleNameRef(const string &module, const string &name) {
 }
 
 ExprPtr kernelNameRef(const string &name) {
-    return moduleNameRef("base", name);
+    return moduleNameRef("prelude", name);
 }
 
 ExprPtr primNameRef(const string &name) {

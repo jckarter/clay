@@ -1,4 +1,3 @@
-import base.*;
 
 record Char {
     code:Int8;

@@ -1,4 +1,3 @@
-import base.*;
 
 static overloadable IsInt64;
 [T]

@@ -1,4 +1,3 @@
-import base.*;
 
 static overloadable Sequence?;
 static overloadable SequenceElementType;
