@@ -116,6 +116,12 @@ overload CP(a:Pointer[T]) = pointerCast(CP, a);
 [CP1, CP2 | CodePointer?(CP1) and CodePointer?(CP2)]
 overload CP1(a:CP2) = pointerCast(CP1, a);
 
+[CP,I | CodePointer?(CP) and Integer?(I)]
+overload CP(i:I) = CP(Pointer[Int8](i));
+
+[CP,I | CodePointer?(CP) and Integer?(I)]
+overload I(a:CP) = I(Pointer[Int8](a));
+
 [CP | CodePointer?(CP)]
 overload equals?(a:CP, b:CP) {
     return equals?(RawPointer(a), RawPointer(b));
@@ -156,6 +162,12 @@ overload CP(a:Pointer[T]) = pointerCast(CP, a);
 
 [CP1, CP2 | CCodePointer?(CP1) and CCodePointer?(CP2)]
 overload CP1(a:CP2) = pointerCast(CP1, a);
+
+[CP,I | CCodePointer?(CP) and Integer?(I)]
+overload CP(i:I) = CP(Pointer[Int8](i));
+
+[CP,I | CCodePointer?(CP) and Integer?(I)]
+overload I(a:CP) = I(Pointer[Int8](a));
 
 [CP | CCodePointer?(CP)]
 overload equals?(a:CP, b:CP) {
