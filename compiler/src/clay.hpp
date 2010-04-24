@@ -471,6 +471,7 @@ private :
     void operator=(const LocationContext &) {}
 };
 
+void setAbortOnError(bool flag);
 void error(const string &msg);
 void fmtError(const char *fmt, ...);
 
