@@ -10,9 +10,9 @@ overloadable printTo;
 overload printTo(stream) {
 }
 
-overload printTo(stream, first, ...) {
-    printTo(stream, first);
-    printTo(stream, ...);
+overload printTo(stream, a, b, ...) {
+    printTo(stream, a);
+    printTo(stream, b, ...);
 }
 
 overload printTo(stream, x:Char) {
