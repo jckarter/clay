@@ -1,6 +1,4 @@
 import base.*;
-import streams.*;
-import files.*;
 import libc;
 
 

@@ -1,7 +1,4 @@
-import operators.*;
-import pointers.*;
-import sharedpointers.*;
-import sequences.operators.*;
+import base.*;
 
 record SequenceHandle[A] {
     inner : Pointer[A];

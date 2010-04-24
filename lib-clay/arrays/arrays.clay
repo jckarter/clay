@@ -1,12 +1,4 @@
-
-public import __primitives__.(Array, array, arrayRef);
-
-import types.*;
-import operators.*;
-import sequences.*;
-import pointers.*;
-import numbers.*;
-import ranges.*;
+import base.*;
 
 
 //

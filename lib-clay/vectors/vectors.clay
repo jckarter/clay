@@ -1,9 +1,4 @@
-import types.*;
-import operators.*;
-import sequences.*;
-import numbers.*;
-import pointers.*;
-import ranges.*;
+import base.*;
 
 
 //

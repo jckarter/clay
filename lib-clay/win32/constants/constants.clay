@@ -1,4 +1,5 @@
-import win32.generated.*;
+import base.*;
+import win32.*;
 
 static STD_INPUT_HANDLE  = -10;
 static STD_OUTPUT_HANDLE = -11;

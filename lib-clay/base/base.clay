@@ -1,5 +1,9 @@
+public import __primitives__.*;
 public import types.*;
 public import operators.*;
+public import records.*;
+public import tuples.*;
+public import statics.*;
 public import booleans.*;
 public import numbers.*;
 public import enumerations.*;

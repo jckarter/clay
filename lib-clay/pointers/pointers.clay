@@ -1,17 +1,4 @@
-public import __primitives__.(Pointer, addressOf, pointerDereference,
-                              pointerEquals?, pointerLesser?, pointerOffset,
-                              pointerToInt, intToPointer, pointerCast);
-
-public import __primitives__.(CodePointer, RefCodePointer, CodePointer?,
-                              makeCodePointer);
-
-public import __primitives__.(CCodePointer, CCodePointer?,
-                              makeCCodePointer);
-
-import types.*;
-import operators.*;
-import __primitives__.(primitiveCopy);
-import numbers.*;
+import base.*;
 import libc.(malloc, free);
 
 

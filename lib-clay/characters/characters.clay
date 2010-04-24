@@ -1,5 +1,4 @@
-import types.*;
-import numbers.*;
+import base.*;
 
 record Char {
     code:Int8;

@@ -1,13 +1,11 @@
-import types.*;
-import strings.*;
-import printer;
-import files;
+import base.*;
 import libc;
 
 error(...) {
-    printer.printTo(files.stderr, "error: ", ..., '\n');
+    printlnTo(stderr, "error: ", ...);
     libc.exit(-1);
 }
+
 
 overloadable assert;
 

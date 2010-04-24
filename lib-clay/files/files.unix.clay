@@ -1,5 +1,4 @@
 import base.*;
-import streams.*;
 import unix;
 
 record File {
