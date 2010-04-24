@@ -1,0 +1,95 @@
+
+//
+// Opaque
+//
+
+static Opaque = Int;
+
+
+//
+// display
+//
+
+overloadable display;
+
+overload display(x) {
+    println(x);
+}
+
+
+//
+// DisplayableVTable
+//
+
+record DisplayableVTable {
+    size : SizeT;
+    destructor : CodePointer[Opaque,Void];
+    copyConstructor : CodePointer[Opaque,Opaque];
+    display : CodePointer[Opaque,Void];
+}
+
+[T]
+makeDisplayableVTable(static T) {
+    var destructor = makeCodePointer(destroy, T);
+    var copyConstructor = makeCodePointer(T, T);
+    var display = makeCodePointer(display, T);
+    return DisplayableVTable(TypeSize(T),
+                             CodePointer[Opaque,Void](destructor),
+                             CodePointer[Opaque,Opaque](copyConstructor),
+                             CodePointer[Opaque,Void](display));
+}
+
+
+//
+// Displayable
+//
+
+record Displayable {
+    obj : Pointer[Opaque];
+    vtable : Pointer[DisplayableVTable];
+}
+
+
+// constructor
+[T]
+overload Displayable(x:T) {
+    var obj = allocateMemory(T, 1);
+    obj^ <-- x;
+    var vtable = allocateMemory(DisplayableVTable, 1);
+    vtable^ <-- makeDisplayableVTable(T);
+    return Displayable(Pointer[Opaque](obj), vtable);
+}
+
+// default constructor
+overload Displayable() = Displayable(null(Opaque), null(DisplayableVTable));
+
+// copy constructor
+overload Displayable(x:Displayable) {
+    if (isNull(x.obj)) return Displayable();
+    var p = allocateMemory(Int8, x.vtable^.size);
+    var obj = Pointer[Opaque](p);
+    obj^ <-- x.vtable^.copyConstructor(x.obj^);
+    return Displayable(obj, x.vtable);
+}
+
+// destructor
+overload destroy(x:Displayable) {
+    if (not isNull(x.obj)) {
+        x.vtable^.destructor(x.obj^);
+        freeMemory(x.obj);
+    }
+}
+
+
+overload display(x:Displayable) {
+    x.vtable^.display(x.obj^);
+}
+
+main() {
+    var v = Vector[Displayable]();
+    push(v, Displayable(1));
+    push(v, Displayable(3.2));
+    push(v, Displayable("Hi!"));
+    for (x in v)
+        display(x);
+}

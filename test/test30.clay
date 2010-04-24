@@ -5,11 +5,6 @@
 
 static Opaque = Int;
 
-allocateOpaque(size) {
-    var p = allocateMemory(Int8, size);
-    return Pointer[Opaque](p);
-}
-
 
 //
 // display
@@ -61,9 +56,10 @@ overload Displayable() {
 
 // copy constructor
 overload Displayable(x:Displayable) {
-    var p = allocateOpaque(x.size);
-    p^ <-- x.copyConstructor(x.obj^);
-    return Displayable(p, x.size, x.destructor, x.copyConstructor, x.display);
+    var p = allocateMemory(Int8, x.size);
+    var obj = Pointer[Opaque](p);
+    obj^ <-- x.copyConstructor(x.obj^);
+    return Displayable(obj, x.size, x.destructor, x.copyConstructor, x.display);
 }
 
 // destructor
