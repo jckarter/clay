@@ -2471,11 +2471,13 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             error("incorrect number of arguments");
         ObjectPtr callable = evaluateStatic(args[0], env);
         switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
         case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :
-            error(args[0], "invalid procedure or overloadable");
+            error(args[0], "invalid callable");
         }
         const vector<bool> &isStaticFlags =
             lookupIsStaticFlags(callable, args.size()-1);
@@ -2530,11 +2532,13 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             error("incorrect number of arguments");
         ObjectPtr callable = evaluateStatic(args[0], env);
         switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
         case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :
-            error(args[0], "invalid procedure or overloadable");
+            error(args[0], "invalid callable");
         }
         const vector<bool> &isStaticFlags =
             lookupIsStaticFlags(callable, args.size()-1);

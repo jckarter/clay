@@ -1467,11 +1467,13 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             error("incorrect no. of parameters");
         ObjectPtr callable = evaluateStatic(args[0], env);
         switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
         case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :
-            error(args[0], "invalid procedure/overloadable");
+            error(args[0], "invalid callable");
         }
         const vector<bool> &isStaticFlags =
             lookupIsStaticFlags(callable, args.size()-1);
@@ -1527,11 +1529,13 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             error("incorrect no. of parameters");
         ObjectPtr callable = evaluateStatic(args[0], env);
         switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
         case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :
-            error(args[0], "invalid procedure/overloadable");
+            error(args[0], "invalid callable");
         }
         const vector<bool> &isStaticFlags =
             lookupIsStaticFlags(callable, args.size()-1);
