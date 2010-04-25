@@ -5,7 +5,7 @@ BINDIR	=	$(ROOTDIR)bin/
 
 
 default :
-	@echo "use 'make macosx' or 'make linux'."
+	@echo "use 'make macosx[32|64]' or 'make linux[32|64]'."
 
 macosx : macosx64 macosx32
 
@@ -18,8 +18,6 @@ macosx32 :
 	gcc -E -m32 generated_from_macosx.h > temp32.h
 	$(BINDIR)clay-bindgen temp32.h > generated.macosx.32.clay
 	rm -f temp32.h
-
-linux : linux32 linux64
 
 linux32 :
 	gcc -E -D_FILE_OFFSET_BITS=64 generated_from_linux.h > temp32.h
