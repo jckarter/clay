@@ -2896,11 +2896,3 @@ record Struct_exception {
 
 external matherr(
     __exc : Pointer[Struct_exception]) : Int;
-
-external ioperm(
-    __from : CULong,
-    __num : CULong,
-    __turn_on : Int) : Int;
-
-external iopl(
-    __level : Int) : Int;
