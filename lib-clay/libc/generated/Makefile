@@ -1,3 +1,7 @@
+# Clay Makefile
+
+ROOTDIR	=	../../../
+BINDIR	=	$(ROOTDIR)bin/
 
 
 default :
@@ -7,24 +11,30 @@ macosx : macosx64 macosx32
 
 macosx64 :
 	gcc -E generated_from.h > temp64.h
-	clay-bindgen temp64.h > generated.macosx.64.clay
+	$(BINDIR)clay-bindgen temp64.h > generated.macosx.64.clay
 	rm -f temp64.h
 
 macosx32 :
 	gcc -E -m32 generated_from.h > temp32.h
-	clay-bindgen temp32.h > generated.macosx.32.clay
+	$(BINDIR)clay-bindgen temp32.h > generated.macosx.32.clay
 	rm -f temp32.h
 
-linux : linux32
+linux : linux32 linux64
 
 linux32 :
 	gcc -E -D_FILE_OFFSET_BITS=64 generated_from.h > temp32.h
-	clay-bindgen temp32.h > generated.linux.32.clay
+	$(BINDIR)clay-bindgen temp32.h > generated.linux.32.clay
 	rm -f temp32.h
+
+linux64 :
+	gcc -E generated_from_linux_64.h > temp64.h
+	$(BINDIR)clay-bindgen temp64.h > generated.linux.64.clay
+	rm -f temp64.h
+
 
 windows : windows32
 
 windows32 :
 	gcc -E generated_from.h > temp32.h
-	clay-bindgen temp32.h > generated.windows.32.clay
+	$(BINDIR)clay-bindgen temp32.h > generated.windows.32.clay
 	rm -f temp32.h
