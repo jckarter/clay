@@ -13,8 +13,10 @@ perfTests = ("insertionsort1 insertionsort2 " +
 
 win32Tests = "beep".split()
 
+testDir = os.path.dirname(__file__)
+compiler = os.path.join(testDir, "..", "bin", "clay")
+
 def runtest(input) :
-    compiler = os.path.join("..", "bin", "clay")
     print "TEST:", input
     command = compiler + " " + input
     print command
@@ -39,7 +41,7 @@ def runtests() :
         p = os.path.join("perf", x) + ".clay"
         paths.append(p)
     for p in paths :
-        if not runtest(p) :
+        if not runtest(os.path.join(testDir, p)) :
             print "Test Failed"
 
 runtests()
