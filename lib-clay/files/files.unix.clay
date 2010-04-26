@@ -5,6 +5,8 @@ record File {
     owned : Bool;
 }
 
+static overload SafeRecord?(File) = false;
+
 var stdin = File(0, false);
 var stdout = File(1, false);
 var stderr = File(2, false);
