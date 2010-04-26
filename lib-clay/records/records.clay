@@ -113,8 +113,8 @@ private overloadable destroyRecordFields;
 
 [i]
 overload destroyRecordFields(a, static i) {
-    destroy(recordFieldRef(a, i));
     destroyRecordFields(a, i+1);
+    destroy(recordFieldRef(a, i));
 }
 
 [T,i | (i == RecordFieldCount(T))]
