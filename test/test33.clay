@@ -1,4 +1,4 @@
 main() {
     var p = new (10, true);
-    println(TypeOf(p));
+    println(Type(p)); // prints "SharedPointer[Tuple[Int32,Bool]]"
 }

@@ -1485,7 +1485,7 @@ ExprPtr primNameRef(const string &name);
 //
 
 enum PrimOpCode {
-    PRIM_TypeOf,
+    PRIM_Type,
 
     PRIM_TypeP,
     PRIM_TypeSize,

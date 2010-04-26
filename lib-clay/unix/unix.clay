@@ -6,7 +6,7 @@ public import unix.errno.*;
 
 inlined syscall(callable, ...) {
     var result = callable(...);
-    if (result == TypeOf(result)(-1))
+    if (result == Type(result)(-1))
         error(errorMessage());
     return result;
 }

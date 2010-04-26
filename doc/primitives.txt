@@ -7,7 +7,7 @@ true, false : Bool
 
 Primitive Operations
 
-static TypeOf(a) = Type or VoidType
+static Type(a) = Type or VoidType
 
 [T] Type?(static T):Bool
 [T] TypeSize(static T):SizeT
