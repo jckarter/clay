@@ -65,7 +65,7 @@ overload Displayable() = Displayable(null(Opaque), null(DisplayableVTable));
 
 // copy constructor
 overload Displayable(x:Displayable) {
-    if (isNull(x.obj)) return Displayable();
+    if (null?(x.obj)) return Displayable();
     var p = allocateMemory(Int8, x.vtable^.size);
     var obj = Pointer[Opaque](p);
     obj^ <-- x.vtable^.copyConstructor(x.obj^);
@@ -76,7 +76,7 @@ overload Displayable(x:Displayable) {
 
 // destructor
 overload destroy(x:Displayable) {
-    if (not isNull(x.obj)) {
+    if (not null?(x.obj)) {
         x.vtable^.destructor(x.obj^);
         freeMemory(x.obj);
         freeMemory(x.vtable);
