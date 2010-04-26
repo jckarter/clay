@@ -410,6 +410,13 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
     case VAR_ARGS_REF :
         error("invalid use of '...'");
 
+    case NEW : {
+        New *x = (New *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarNew(x);
+        return analyze(x->desugared, env);
+    }
+
     case SC_EXPR : {
         SCExpr *x = (SCExpr *)expr.ptr();
         return analyze(x->expr, x->env);

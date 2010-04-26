@@ -17,8 +17,8 @@ overload destroy(f:Foo) {
 }
 
 main() {
-    var p = allocate(Foo(10));
-    var q = allocate(Foo());
+    var p = new Foo(10);
+    var q = new Foo();
     println("assigning");
     q = p;
     println("assigned");

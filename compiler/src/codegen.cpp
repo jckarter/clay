@@ -1152,6 +1152,13 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
     case VAR_ARGS_REF :
         error("invalid use of '...'");
 
+    case NEW : {
+        New *x = (New *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarNew(x);
+        return codegenExpr(x->desugared, env, out);
+    }
+
     case SC_EXPR : {
         SCExpr *x = (SCExpr *)expr.ptr();
         return codegenExpr(x->expr, x->env, out);

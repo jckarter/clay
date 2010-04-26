@@ -109,7 +109,7 @@ static void initKeywords() {
          "overloadable", "overload", "external",
          "static", "inlined", "lvalue", "rvalue",
          "enum", "var", "ref",
-         "and", "or", "not",
+         "and", "or", "not", "new",
          "if", "else", "goto", "return", "returnref", "while",
          "break", "continue", "for", "in", "returned",
          "lambda", "block", "true", "false", "try", "catch", NULL};
