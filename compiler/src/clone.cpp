@@ -149,6 +149,12 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case NEW : {
+        New *y = (New *)x.ptr();
+        out = new New(clone(y->expr));
+        break;
+    }
+
     case SC_EXPR : {
         SCExpr *y = (SCExpr *)x.ptr();
         out = new SCExpr(y->env, clone(y->expr));

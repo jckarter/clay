@@ -372,6 +372,12 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         // FIXME: what should be done here?
         break;
 
+    case NEW : {
+        New *y = (New *)x.ptr();
+        convertFreeVars(y->expr, env, ctx);
+        break;
+    }
+
     case SC_EXPR :
     case OBJECT_EXPR :
         break;

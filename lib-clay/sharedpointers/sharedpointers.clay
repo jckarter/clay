@@ -9,7 +9,7 @@ record SharedPointer[T] {
 }
 
 [T]
-inlined allocate(x:T) {
+inlined allocateShared(x:T) {
     var ptr = allocateMemory(RefCounted[T], SizeT(1));
     ptr^.refCount = 1;
     ptr^.value <-- x;

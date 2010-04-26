@@ -709,6 +709,22 @@ static bool varArgsRef(ExprPtr &x) {
 
 
 //
+// newExpr
+//
+
+static bool newExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("new")) return false;
+    ExprPtr y;
+    if (!expression(y)) return false;
+    x = new New(y);
+    x->location = location;
+    return true;
+}
+
+
+
+//
 // expression
 //
 
@@ -718,6 +734,7 @@ static bool expression(ExprPtr &x) {
     if (restore(p), lambda(x)) return true;
     if (restore(p), blockLambda(x)) return true;
     if (restore(p), varArgsRef(x)) return true;
+    if (restore(p), newExpr(x)) return true;
     return false;
 }
 

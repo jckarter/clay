@@ -80,6 +80,13 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
     return call.ptr();
 }
 
+ExprPtr desugarNew(NewPtr x) {
+    ExprPtr callable = kernelNameRef("allocateShared");
+    CallPtr call = new Call(callable);
+    call->args.push_back(x->expr);
+    return call.ptr();
+}
+
 StatementPtr desugarForStatement(ForPtr x) {
     IdentifierPtr exprVar = new Identifier("%expr");
     IdentifierPtr iterVar = new Identifier("%iter");

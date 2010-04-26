@@ -202,6 +202,7 @@ struct And;
 struct Or;
 struct Lambda;
 struct VarArgsRef;
+struct New;
 struct SCExpr;
 struct ObjectExpr;
 
@@ -324,6 +325,7 @@ typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
 typedef Pointer<Lambda> LambdaPtr;
 typedef Pointer<VarArgsRef> VarArgsRefPtr;
+typedef Pointer<New> NewPtr;
 typedef Pointer<SCExpr> SCExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
 
@@ -599,6 +601,7 @@ enum ExprKind {
 
     LAMBDA,
     VAR_ARGS_REF,
+    NEW,
 
     SC_EXPR,
     OBJECT_EXPR,
@@ -780,6 +783,13 @@ struct Lambda : public Expr {
 struct VarArgsRef : public Expr {
     VarArgsRef() :
         Expr(VAR_ARGS_REF) {}
+};
+
+struct New : public Expr {
+    ExprPtr expr;
+    ExprPtr desugared;
+    New(ExprPtr expr) :
+        Expr(NEW), expr(expr) {}
 };
 
 struct SCExpr : public Expr {
@@ -1900,6 +1910,7 @@ struct ValueHolder : public Object {
 ExprPtr desugarCharLiteral(char c);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
+ExprPtr desugarNew(NewPtr x);
 StatementPtr desugarForStatement(ForPtr x);
 
 

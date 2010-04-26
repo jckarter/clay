@@ -136,6 +136,7 @@ PatternSuffix -> "[" comma_list(Pattern) "]"
 Expression -> OrExpr
             | Lambda
             | VarArgsRef
+            | New
 
 OrExpr -> AndExpr ("or" AndExpr)*
 AndExpr -> NotExpr ("and" NotExpr)*
@@ -189,3 +190,5 @@ BoolLiteral -> "true" | "false"
 Lambda -> "lambda" "(" comma_list(Identifier) ")" Block
 
 VarArgsRef -> "..."
+
+New -> "new" Expression;
