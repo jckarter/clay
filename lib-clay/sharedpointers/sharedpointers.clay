@@ -23,7 +23,7 @@ overload SharedPointer[T]() {
 
 [T]
 overload SharedPointer[T](src:SharedPointer[T]) {
-    if (not isNull(src.ptr))
+    if (not null?(src))
         src.ptr^.refCount += 1;
     return SharedPointer(src.ptr);
 }
@@ -44,7 +44,7 @@ overload assign(dest:SharedPointer[T], src:SharedPointer[T]) {
 
 [T]
 overload destroy(p : SharedPointer[T]) {
-    if (not isNull(p.ptr)) {
+    if (not null?(p)) {
         p.ptr^.refCount -= 1;
         if (p.ptr^.refCount == 0) {
             destroy(p.ptr^.value);
@@ -55,3 +55,9 @@ overload destroy(p : SharedPointer[T]) {
 
 [T]
 overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
+
+[T]
+overload null?(p : SharedPointer[T]) = null?(p.ptr);
+
+[T]
+nullShared(static T) = SharedPointer[T]();

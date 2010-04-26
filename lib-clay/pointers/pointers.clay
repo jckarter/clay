@@ -1,6 +1,9 @@
 import libc.(malloc, free);
 
 
+overloadable null?;
+
+
 
 //
 // Pointer
@@ -73,7 +76,7 @@ overload dec(a:Pointer[T]) {
 null(static T) = Pointer[T](0);
 
 [T]
-isNull(x:Pointer[T]) = (x == null(T));
+overload null?(x:Pointer[T]) = (x == null(T));
 
 [T]
 overload dereference(p:Pointer[T]) = ref pointerDereference(p);
@@ -133,7 +136,7 @@ overload lesser?(a:CP, b:CP) {
 }
 
 [CP | CodePointer?(CP)]
-nullCode(static CP) = CP(null(Int8));
+overload null?(p:CP) = null?(RawPointer(p));
 
 
 
@@ -180,4 +183,4 @@ overload lesser?(a:CP, b:CP) {
 }
 
 [CP | CCodePointer?(CP)]
-nullCCode(static CP) = CP(null(Int8));
+overload null?(p:CP) = null?(RawPointer(p));

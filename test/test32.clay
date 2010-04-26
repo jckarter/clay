@@ -75,7 +75,7 @@ overload Displayable(x:Displayable) {
 
 // destructor
 overload destroy(x:Displayable) {
-    if (not isNull(x.obj)) {
+    if (not null?(x.obj)) {
         x.destructor(x.obj^);
         freeMemory(x.obj);
     }
