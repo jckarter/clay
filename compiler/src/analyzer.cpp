@@ -1725,6 +1725,15 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_Static :
         error("Static type constructor cannot be called");
 
+    case PRIM_StaticName : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        ostringstream sout;
+        printName(sout, y);
+        ExprPtr z = new StringLiteral(sout.str());
+        return analyze(z, env);
+    }
+
     case PRIM_EnumP : {
         return new PValue(boolType, true);
     }

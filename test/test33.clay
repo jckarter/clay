@@ -1,0 +1,4 @@
+main() {
+    var p = new (10, true);
+    println(TypeOf(p));
+}

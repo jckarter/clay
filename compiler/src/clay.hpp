@@ -1554,6 +1554,7 @@ enum PrimOpCode {
     PRIM_recordFieldRefByName,
 
     PRIM_Static,
+    PRIM_StaticName,
 
     PRIM_EnumP,
     PRIM_enumToInt,

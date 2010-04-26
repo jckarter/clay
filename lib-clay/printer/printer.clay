@@ -57,6 +57,11 @@ overload printTo(stream, x:F) {
     write(stream, ptr, SizeT(n));
 }
 
+[A]
+overload printTo(stream, x:Static[A]) {
+    printTo(stream, StaticName(A));
+}
+
 
 //
 // print, println, printlnTo

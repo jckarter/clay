@@ -2799,6 +2799,15 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
     case PRIM_Static :
         error("Static type constructor cannot be called");
 
+    case PRIM_StaticName : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        ostringstream sout;
+        printName(sout, y);
+        ExprPtr z = new StringLiteral(sout.str());
+        return codegenExpr(z, env, out);
+    }
+
     default : {
         CValuePtr codegenInvokePrimOp2(PrimOpPtr x,
                                        const vector<ExprPtr> &args,
