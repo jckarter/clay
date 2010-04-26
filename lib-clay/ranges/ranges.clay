@@ -48,7 +48,7 @@ static overload Sequence?(CoordinateRange[T]) = true;
 
 [T]
 static overload SequenceElementType(CoordinateRange[T]) =
-    TypeOf(T()^);
+    Type(T()^);
 
 [T]
 overload iterator(r:CoordinateRange[T]) = r;

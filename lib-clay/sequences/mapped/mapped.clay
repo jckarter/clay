@@ -25,7 +25,7 @@ static overload LValueSequence?(Mapped[F,A]) = true;
 
 [F,A]
 static overload SequenceElementType(Mapped[F,A]) =
-    TypeOf( F()(SequenceElementType(A)()) );
+    Type( F()(SequenceElementType(A)()) );
 
 
 [F,A | Sequence?(A)]

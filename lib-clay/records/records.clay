@@ -4,7 +4,7 @@
 //
 
 [T,i | Record?(T)]
-static RecordFieldType(T, i) = TypeOf(recordFieldRef(T(), SizeT(i)));
+static RecordFieldType(T, i) = Type(recordFieldRef(T(), SizeT(i)));
 
 
 //

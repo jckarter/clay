@@ -59,7 +59,7 @@ inlined RValue?(x) = not LValue?(x);
 //
 
 initialize(a) {
-    a <-- TypeOf(a)();
+    a <-- Type(a)();
 }
 
 [T]

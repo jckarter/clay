@@ -2034,7 +2034,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
 {
     switch (x->primOpCode) {
 
-    case PRIM_TypeOf : {
+    case PRIM_Type : {
         ensureArity(args, 1);
         ObjectPtr y = analyzeMaybeVoidValue(args[0], env);
         ObjectPtr obj;
