@@ -606,7 +606,7 @@ static void print(ostream &out, const Object *x) {
     }
 
     case VOID_TYPE :
-        out << "VoidType()";
+        out << "Void";
         break;
 
     case VOID_VALUE :
