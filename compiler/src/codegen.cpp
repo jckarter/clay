@@ -2522,6 +2522,9 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             }
             argLocations.push_back(args[i]->location);
         }
+
+        InvokeStackContext invokeStackContext(callable, argsKey);
+
         InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
                                                argsKey, argsTempness,
                                                argLocations);
@@ -2583,6 +2586,9 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             }
             argLocations.push_back(args[i]->location);
         }
+
+        InvokeStackContext invokeStackContext(callable, argsKey);
+
         InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
                                                argsKey, argsTempness,
                                                argLocations);
