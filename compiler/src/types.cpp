@@ -535,8 +535,11 @@ void typePrint(ostream &out, TypePtr t) {
         vector<ObjectPtr> v;
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
             v.push_back(x->argTypes[i].ptr());
-        v.push_back(x->returnType.ptr());
-        if (!x->returnIsTemp)
+        if (!x->returnType)
+            v.push_back(voidType.ptr());
+        else
+            v.push_back(x->returnType.ptr());
+        if (x->returnType.ptr() && (!x->returnIsTemp))
             out << "Ref";
         out << "CodePointer" << v;
         break;
@@ -546,7 +549,10 @@ void typePrint(ostream &out, TypePtr t) {
         vector<ObjectPtr> v;
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
             v.push_back(x->argTypes[i].ptr());
-        v.push_back(x->returnType.ptr());
+        if (!x->returnType)
+            v.push_back(voidType.ptr());
+        else
+            v.push_back(x->returnType.ptr());
         out << "CCodePointer" << v;
         break;
     }
