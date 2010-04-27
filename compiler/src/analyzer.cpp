@@ -1529,6 +1529,9 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             }
             argLocations.push_back(args[i]->location);
         }
+
+        InvokeStackContext invokeStackContext(callable, argsKey);
+
         InvokeEntryPtr entry = analyzeCallable(callable, isStaticFlags,
                                                argsKey, argsTempness,
                                                argLocations);
@@ -1591,6 +1594,9 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             }
             argLocations.push_back(args[i]->location);
         }
+
+        InvokeStackContext invokeStackContext(callable, argsKey);
+
         InvokeEntryPtr entry = analyzeCallable(callable, isStaticFlags,
                                                argsKey, argsTempness,
                                                argLocations);
