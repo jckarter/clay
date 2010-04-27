@@ -1,0 +1,187 @@
+import files.mapping.*;
+import libc;
+
+
+
+//
+// bit manipulation
+//
+
+alignUp(x, align) = bitwiseAnd(x+align-1, bitwiseNot(align-1));
+
+alignDown(x, align) = bitwiseAnd(x, bitwiseNot(align-1));
+
+higherPower2(x) {
+    assert(x <= shiftLeft(SizeT(1), TypeSize(SizeT)*8-1), "higherPower2");
+    var y = SizeT(1);
+    while (x > y)
+        y *= 2;
+    return y;
+}
+
+lowerPower2(x) {
+    assert(x >= 1, "lowerPower2");
+    var y = SizeT(1);
+    while (x/2 >= y)
+        y *= 2;
+    return y;
+}
+
+floorLog2(n_) {
+    var n = n_;
+    assert(n > 0, "floorLog2");
+    var x = 0;
+    while (n > 1) {
+        n /= 2;
+        x += 1;
+    }
+    return x;
+}
+
+[T]
+ceilLog2(n:T) {
+    var x = floorLog2(n);
+    if (shiftLeft(T(1), x) != n)
+        return x+1;
+    return x;
+}
+
+
+
+//
+// paged allocator global state
+//
+
+static nullBlock = SizeT(-1);
+
+nullBlock?(b) = (b == nullBlock);
+
+
+record State {
+    fileName : String;
+    file : SharedPointer[File];
+    mapping : SharedPointer[FileMapping];
+    freeListBuckets : Vector[SizeT];
+    fileBegin : Pointer[Byte];
+    fileEnd : Pointer[Byte];
+}
+
+var state = State();
+
+fileBegin() = state.fileBegin;
+
+
+
+//
+// Header (block header)
+//
+
+record Header {
+    sizeAndFlag : SizeT;
+    previous : SizeT;
+    nextInBucket : SizeT;
+    previousInBucket : SizeT;
+}
+
+private hptr(b:SizeT) = Pointer[Header](fileBegin() + b);
+
+blockSize(b) = bitwiseAnd(hptr(b)^.sizeAndFlag, bitwiseNot(1));
+
+blockFree?(b) = (bitwiseAnd(hptr(b)^.sizeAndFlag, 1) != 0);
+
+blockNext(b) = b + blockSize(b);
+
+blockPrevious(b) = hptr(b)^.previous;
+
+blockNextInBucket(b) = hptr(b)^.nextInBucket;
+
+blockPreviousInBucket(b) = hptr(b)^.previousInBucket;
+
+blockSetSize(b, size) {
+    hptr(b)^.sizeAndFlag = bitwiseOr(SizeT(size), SizeT(blockFree?(b)));
+}
+
+blockSetFree(b, free?) {
+    hptr(b)^.sizeAndFlag = bitwiseOr(blockSize(b), SizeT(free?));
+}
+
+blockSetPrevious(b, prev) {
+    assert(nullBlock?(prev) or (prev <= b), "blockSetPrevious");
+    hptr(b)^.previous = prev;
+}
+
+blockSetNextInBucket(b, next) {
+    hptr(b)^.nextInBucket = next;
+}
+
+blockSetPreviousInBucket(b, prev) {
+    hptr(b)^.previousInBucket = prev;
+}
+
+blockInit(b, size) {
+    blockSetSize(b, size);
+    blockSetFree(b, true);
+    blockSetPrevious(b, nullBlock);
+    blockSetNextInBucket(b, nullBlock);
+    blockSetPreviousInBucket(b, nullBlock);
+}
+
+bucketId(size) = floorLog2(size);
+
+bucketHead(blockSize) {
+    var i = bucketId(blockSize);
+    while (i >= size(state.freeListBuckets))
+        push(state.freeListBuckets, nullBlock);
+    returnref state.freeListBuckets[i];
+}
+
+addToFreeList(b) {
+    var size = blockSize(b);
+    ref head = bucketHead(size);
+    if (not nullBlock?(head))
+        blockSetPreviousInBucket(head, b);
+    blockSetNextInBucket(b, head);
+    head = b;
+}
+
+fileExists?(p) {
+    var fp = libc.fopen(cstring(p), cstring("rb"));
+    if (null?(fp))
+        return false;
+    libc.fclose(fp);
+    return true;
+}
+
+resizeFile(file, newSize) {
+    assert(fileSize(file) < newSize, "resizeFile");
+    seek(file, newSize-1);
+    writeByte(file, 0);
+}
+
+createBackingFile(fileName, size) {
+    destroy(state);
+    state <-- State();
+
+    state.file = new File(fileName, CREATE);
+    resizeFile(state.file^, size);
+    state.mapping = new FileMapping(state.file^, MAP_READ_WRITE);
+    state.fileBegin = state.mapping^.address;
+    assert(size == state.mapping^.length, "createBackingFile");
+    state.fileEnd = state.fileBegin + state.mapping^.length;
+
+    var b= SizeT(0);
+    blockInit(b, size);
+    addToFreeList(b);
+}
+
+openBackingFile(fileName:String) {
+    var file = new File(fileName, READ_WRITE);
+    var mapping = new FileMapping(file^, MAP_READ_WRITE);
+}
+
+initialize(fileName:String) {
+    if (fileExists?(fileName))
+        openBackingFile(fileName);
+    else
+        createBackingFile(fileName, 1*1024*1024);
+}
