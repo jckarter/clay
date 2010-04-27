@@ -1,0 +1,5 @@
+import paged;
+
+main() {
+    paged.initialize("paged.data");
+}
