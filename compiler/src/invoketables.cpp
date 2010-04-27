@@ -114,7 +114,13 @@ static void computeIsStaticFlags(ObjectPtr x,
             return;
         }
     }
-    error("no matching operation");
+
+    // when no overload matches, don't report error here
+    // instead, assume all args are non-static.
+    // errors reported at a later point have more context info
+    // that could be displayed to the user.
+    for (unsigned i = 0; i < nArgs; ++i)
+        isStaticFlags.push_back(false);
 }
 
 const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs)
