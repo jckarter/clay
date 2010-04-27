@@ -75,6 +75,17 @@ overload pushAll(a, x, ...) { push(a, x); pushAll(a, ...); }
 overload pushAll(a) {}
 
 
+// re-implement builtin constructor to avoid clash with varargs constructor
+// in the case where the element type is SizeT
+
+[T]
+overload Vector[T](size:SizeT, capacity:SizeT, data:Pointer[T]) : Vector[T] {
+    returned.size = size;
+    returned.capacity = capacity;
+    returned.data = data;
+}
+
+
 //
 // destroy
 //
