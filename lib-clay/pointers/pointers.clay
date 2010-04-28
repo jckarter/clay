@@ -53,6 +53,11 @@ overload add(p:Pointer[T], i:I) {
 }
 
 [T,I|Integer?(I)]
+overload add(i:I, p:Pointer[T]) {
+    return pointerOffset(p, i);
+}
+
+[T,I|Integer?(I)]
 overload subtract(p:Pointer[T], i:I) {
     return pointerOffset(p, -i);
 }
