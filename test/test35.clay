@@ -3,17 +3,13 @@ import paged;
 main() {
     paged.initializePaging("paged.data");
 
-    var v = Vector[paged.PagedPointer[Int]]();
+    var v = Vector[paged.String]();
 
-    for (i in range(5)) {
-        var n = (i+1)*100000;
-        var p = paged.allocatePaged(Int, n);
-        println("size = ", n, ", p.offset = ", p.offset);
-        push(v, p);
-    }
+    for (i in range(5))
+        push(v, paged.String("Hello World"));
 
-    for (p in v)
-        paged.freePaged(p);
+    for (x in v)
+        println(x);
 
     paged.printPagingState();
 }
