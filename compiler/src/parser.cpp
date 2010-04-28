@@ -1351,6 +1351,15 @@ static bool recordFields(vector<RecordFieldPtr> &x) {
     return true;
 }
 
+static bool optRecordFields(vector<RecordFieldPtr> &x) {
+    int p = save();
+    if (!recordFields(x)) {
+        restore(p);
+        x.clear();
+    }
+    return true;
+}
+
 static bool record(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     Visibility vis;
@@ -1360,7 +1369,7 @@ static bool record(TopLevelItemPtr &x) {
     if (!identifier(y->name)) return false;
     if (!optPatternVars(y->patternVars)) return false;
     if (!symbol("{")) return false;
-    if (!recordFields(y->fields)) return false;
+    if (!optRecordFields(y->fields)) return false;
     if (!symbol("}")) return false;
     x = y.ptr();
     x->location = location;

@@ -12,7 +12,7 @@ TopLevelItem -> Record | Procedure | Overloadable | Overload
               | StaticGlobal
               | StaticProcedure | StaticOverloadable | StaticOverload
 
-Record -> "record" Identifier PatternVars? "{" RecordField+ "}"
+Record -> "record" Identifier PatternVars? "{" RecordField* "}"
 PatternVars -> "[" comma_list(Identifier) "]"
 RecordField -> Identifier TypeSpec ";"
 TypeSpec -> ":" Pattern
