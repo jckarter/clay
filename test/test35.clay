@@ -1,0 +1,19 @@
+import paged;
+
+main() {
+    paged.initializePaging("paged.data");
+
+    var v = Vector[SizeT]();
+
+    for (i in range(5)) {
+        var size = 100000;
+        var offset = paged.allocatePaged(size);
+        println("size = ", size, ", offset = ", offset);
+        push(v, offset);
+    }
+
+    for (x in v)
+        paged.freePaged(x);
+
+    paged.printPagingState();
+}

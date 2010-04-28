@@ -1,0 +1,353 @@
+import files.mapping.*;
+import libc;
+
+
+
+//
+// bit manipulation
+//
+
+alignUp(x, align) = bitwiseAnd(x+align-1, bitwiseNot(align-1));
+
+alignDown(x, align) = bitwiseAnd(x, bitwiseNot(align-1));
+
+higherPower2(x) {
+    assert(x <= shiftLeft(SizeT(1), TypeSize(SizeT)*8-1), "higherPower2");
+    var y = SizeT(1);
+    while (x > y)
+        y *= 2;
+    return y;
+}
+
+lowerPower2(x) {
+    assert(x >= 1, "lowerPower2");
+    var y = SizeT(1);
+    while (x/2 >= y)
+        y *= 2;
+    return y;
+}
+
+floorLog2(n_) {
+    var n = n_;
+    assert(n > 0, "floorLog2");
+    var x = 0;
+    while (n > 1) {
+        n /= 2;
+        x += 1;
+    }
+    return x;
+}
+
+[T]
+ceilLog2(n:T) {
+    var x = floorLog2(n);
+    if (shiftLeft(T(1), x) != n)
+        return x+1;
+    return x;
+}
+
+
+
+//
+// paged allocator global state
+//
+
+static nullBlock = SizeT(-1);
+nullBlock?(b) = (b == nullBlock);
+
+static BucketCount = Int(TypeSize(SizeT) * 8);
+static BucketArray = Array[SizeT, BucketCount];
+
+record State {
+    fileName : String;
+    file : SharedPointer[File];
+    mapping : SharedPointer[FileMapping];
+    freeListBuckets : Pointer[BucketArray];
+    dataBegin : Pointer[Byte];
+    dataEnd : Pointer[Byte];
+}
+
+var state = State();
+
+dataBegin() = state.dataBegin;
+dataEnd() = state.dataEnd;
+
+
+
+//
+// Header (block header)
+//
+
+record Header {
+    sizeAndFlag : SizeT;
+    previous : SizeT;
+    nextInBucket : SizeT;
+    previousInBucket : SizeT;
+}
+
+private hptr(b:SizeT) = Pointer[Header](dataBegin() + b);
+
+blockSize(b) = bitwiseAnd(hptr(b)^.sizeAndFlag, bitwiseNot(1));
+
+blockFree?(b) = (bitwiseAnd(hptr(b)^.sizeAndFlag, 1) != 0);
+
+blockNext(b) = b + blockSize(b);
+
+blockPrevious(b) = hptr(b)^.previous;
+
+blockNextInBucket(b) = hptr(b)^.nextInBucket;
+
+blockPreviousInBucket(b) = hptr(b)^.previousInBucket;
+
+blockSetSize(b, size) {
+    hptr(b)^.sizeAndFlag = bitwiseOr(SizeT(size), SizeT(blockFree?(b)));
+}
+
+blockSetFree(b, free?) {
+    hptr(b)^.sizeAndFlag = bitwiseOr(blockSize(b), SizeT(free?));
+}
+
+blockSetPrevious(b, previous) {
+    assert(nullBlock?(previous) or (previous <= b), "blockSetPrevious");
+    hptr(b)^.previous = previous;
+}
+
+blockSetNextInBucket(b, next) {
+    hptr(b)^.nextInBucket = next;
+}
+
+blockSetPreviousInBucket(b, previous) {
+    hptr(b)^.previousInBucket = previous;
+}
+
+blockInit(b, size, previous, nextInBucket, previousInBucket) {
+    blockSetSize(b, size);
+    blockSetFree(b, true);
+    blockSetPrevious(b, previous);
+    blockSetNextInBucket(b, nextInBucket);
+    blockSetPreviousInBucket(b, previousInBucket);
+}
+
+
+
+//
+// free list
+//
+
+bucketId(size) = floorLog2(size);
+
+bucketHead(blockSize) {
+    var i = bucketId(blockSize);
+    returnref state.freeListBuckets^[i];
+}
+
+pushBucket(head, b) {
+    blockSetFree(b, true);
+    if (not nullBlock?(head))
+        blockSetPreviousInBucket(head, b);
+    blockSetNextInBucket(b, head);
+    head = b;
+}
+
+pushFreeList(b) {
+    ref head = bucketHead(blockSize(b));
+    pushBucket(head, b);
+}
+
+popBucket(head) {
+    var b = head;
+    var newHead = blockNextInBucket(head);
+    if (not nullBlock?(newHead))
+        blockSetPreviousInBucket(newHead, nullBlock);
+    blockSetNextInBucket(b, nullBlock);
+    assert(nullBlock?(blockPreviousInBucket(b)), "popBucket");
+    blockSetFree(b, false);
+    head = newHead;
+    return b;
+}
+
+popFreeList(minSize) {
+    var i = bucketId(higherPower2(minSize));
+    while (i < size(state.freeListBuckets^)) {
+        ref head = state.freeListBuckets^[i];
+        if (not nullBlock?(head))
+            return popBucket(head);
+        i += 1;
+    }
+    return nullBlock;
+}
+
+removeFromFreeList(b) {
+    var next = blockNextInBucket(b);
+    var prev = blockPreviousInBucket(b);
+    if (nullBlock?(prev))
+        bucketHead(blockSize(b)) = next;
+    else
+        blockSetNextInBucket(prev, next);
+    if (not nullBlock?(next))
+        blockSetPreviousInBucket(next, prev);
+    blockSetNextInBucket(b, nullBlock);
+    blockSetPreviousInBucket(b, nullBlock);
+    blockSetFree(b, false);
+}
+
+
+
+//
+// initializePaging
+//
+
+fileExists?(p) {
+    var fp = libc.fopen(cstring(p), cstring("rb"));
+    if (null?(fp))
+        return false;
+    libc.fclose(fp);
+    return true;
+}
+
+resizeFile(file, newSize) {
+    assert(fileSize(file) < newSize, "resizeFile");
+    seek(file, newSize-1);
+    writeByte(file, 0);
+}
+
+resetState() {
+    destroy(state);
+    state <-- State();
+}
+
+initNewFile() {
+    ref x = state;
+    for (head in x.freeListBuckets^)
+        head = nullBlock;
+
+    var b = SizeT(0);
+    var blockSize = x.dataEnd - x.dataBegin;
+    blockInit(b, blockSize, nullBlock, nullBlock, nullBlock);
+    pushFreeList(b);
+}
+
+initializePaging(fileName:String) {
+    resetState();
+    var newFile? = not fileExists?(fileName);
+    var fileMode = READ_WRITE;
+    if (newFile?)
+        fileMode = CREATE;
+
+    ref x = state;
+    x.fileName = fileName;
+    x.file = new File(fileName, fileMode);
+    if (newFile?)
+        resizeFile(x.file^, SizeT(5)*1024*1024);
+    x.mapping = new FileMapping(x.file^, MAP_READ_WRITE);
+    x.dataBegin = x.mapping^.address + TypeSize(BucketArray);
+    x.dataEnd = x.mapping^.address + x.mapping^.length;
+    x.freeListBuckets = Pointer[BucketArray](x.mapping^.address);
+
+    if (newFile?)
+        initNewFile();
+}
+
+
+
+//
+// allocatePaged
+//
+
+splitBlock?(b, n) {
+    assert(blockSize(b) >= n, "splitBlock?");
+    var remaining = n - blockSize(b);
+    return remaining > (TypeSize(Header) + 16);
+}
+
+[I | Integer?(I)]
+allocatePaged(n_:I) {
+    var n = SizeT(n_);
+
+    // include header in size and align up to 16
+    n += TypeSize(Header);
+    n = alignUp(n, 16);
+
+    var b = popFreeList(n);
+    if (nullBlock?(b))
+        return SizeT(0);
+    if (splitBlock?(b,n)) {
+        blockInit(b+n, blockSize(b)-n, b, nullBlock, nullBlock);
+        blockSetSize(b, n);
+        pushFreeList(b+n);
+    }
+    return b + TypeSize(Header);
+}
+
+
+
+//
+// freePaged
+//
+
+firstBlock?(b) = (b == 0);
+lastBlock?(b) = (blockNext(b) == dataEnd() - dataBegin());
+
+mergePrevious?(b) = (not firstBlock?(b)) and blockFree?(blockPrevious(b));
+mergeNext?(b) = (not lastBlock?(b)) and blockFree?(blockNext(b));
+
+mergePrevious(b) {
+    var prev = blockPrevious(b);
+    removeFromFreeList(prev);
+    if (not lastBlock?(b))
+        blockSetPrevious(blockNext(b), prev);
+    blockSetSize(prev, blockSize(prev) + blockSize(b));
+    return prev;
+}
+
+mergeNext(b) {
+    var next = blockNext(b);
+    removeFromFreeList(next);
+    if (not lastBlock?(next))
+        blockSetPrevious(blockNext(next), b);
+    blockSetSize(b, blockSize(b) + blockSize(next));
+    return b;
+}
+
+freePaged(offset:SizeT) {
+    if (offset == 0) return;
+    var b = offset - TypeSize(Header);
+    if (mergePrevious?(b))
+        b = mergePrevious(b);
+    if (mergeNext?(b))
+        b = mergeNext(b);
+    pushFreeList(b);
+}
+
+
+
+//
+// display state
+//
+
+printPagingState() {
+    ref x = state;
+    println("fileName = ", x.fileName);
+   for (i in range(size(x.freeListBuckets^)))
+        printBucket(shiftLeft(SizeT(1), i));
+}
+
+printBucket(i) {
+    print("bucket ", i, ": ");
+    var b = bucketHead(i);
+    while (not nullBlock?(b)) {
+        printBlock(b);
+        print(", ");
+        b = blockNextInBucket(b);
+    }
+    println();
+}
+
+printBlock(b) {
+    print("(offset=", b,
+          ",size=", blockSize(b),
+          ",free?=", blockFree?(b),
+          ",prev=", blockPrevious(b),
+          ",next=", blockNext(b),
+          ")");
+}
