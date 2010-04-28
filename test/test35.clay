@@ -3,7 +3,7 @@ import paged;
 main() {
     paged.initializePaging("paged.data");
 
-    var v = Vector[paged.String]();
+    var v = paged.Vector[paged.String]();
 
     for (i in range(5))
         push(v, paged.String("Hello World"));
@@ -11,5 +11,6 @@ main() {
     for (x in v)
         println(x);
 
+    clear(v);
     paged.printPagingState();
 }
