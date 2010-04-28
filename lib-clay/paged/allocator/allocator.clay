@@ -145,6 +145,7 @@ pushBucket(head, b) {
     blockSetFree(b, true);
     if (not nullBlock?(head))
         blockSetPreviousInBucket(head, b);
+    assert(nullBlock?(blockPreviousInBucket(b)), "pushFreeList");
     blockSetNextInBucket(b, head);
     head = b;
 }
@@ -303,7 +304,7 @@ nullPaged(static T) = PagedPointer[T]();
 
 splitBlock?(b, n) {
     assert(blockSize(b) >= n, "splitBlock?");
-    var remaining = n - blockSize(b);
+    var remaining = blockSize(b) - n;
     return remaining > (TypeSize(Header) + 16);
 }
 
@@ -319,10 +320,13 @@ allocatePaged(static T, n_:I) {
     if (nullBlock?(b))
         return nullPaged(T);
     if (splitBlock?(b,n)) {
+        if (not lastBlock?(b))
+            blockSetPrevious(blockNext(b), b+n);
         blockInit(b+n, blockSize(b)-n, b, nullBlock, nullBlock);
         blockSetSize(b, n);
         pushFreeList(b+n);
     }
+    assert(not blockFree?(b), "allocatePaged");
     return PagedPointer[T](b + TypeSize(Header));
 }
 
@@ -360,6 +364,7 @@ mergeNext(b) {
 freePaged(p:PagedPointer[T]) {
     if (null?(p)) return;
     var b = p.offset - TypeSize(Header);
+    assert(not blockFree?(b), "freePaged");
     if (mergePrevious?(b))
         b = mergePrevious(b);
     if (mergeNext?(b))
@@ -376,7 +381,7 @@ freePaged(p:PagedPointer[T]) {
 printPagingState() {
     ref x = state;
     println("fileName = ", x.fileName);
-   for (i in range(size(x.freeListBuckets^)))
+    for (i in range(size(x.freeListBuckets^)))
         printBucket(shiftLeft(SizeT(1), i));
 }
 
