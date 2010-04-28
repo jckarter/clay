@@ -2891,14 +2891,30 @@ static ProcedurePtr makeInitializerProcedure() {
     return proc;
 }
 
+static ProcedurePtr makeDestructorProcedure() {
+    CodePtr code = new Code();
+    code->body = globalVarDestructors().ptr();
+    IdentifierPtr name = new Identifier("%destroyGlobals");
+    ProcedurePtr proc = new Procedure(name, PRIVATE, code, false);
+    proc->env = new Env();
+    return proc;
+}
+
 llvm::Function *codegenMain(ModulePtr module)
 {
     BlockPtr mainBody = new Block();
+
     ObjectPtr initializer = makeInitializerProcedure().ptr();
     ExprPtr initCall = new Call(new ObjectExpr(initializer));
     mainBody->statements.push_back(new ExprStatement(initCall));
+
     ExprPtr mainCall = new Call(new NameRef(new Identifier("main")));
     mainBody->statements.push_back(new ExprStatement(mainCall));
+
+    ObjectPtr destructor = makeDestructorProcedure().ptr();
+    ExprPtr destroyCall = new Call(new ObjectExpr(destructor));
+    mainBody->statements.push_back(new ExprStatement(destroyCall));
+
     mainBody->statements.push_back(new Return(new IntLiteral("0")));
 
     ExternalProcedurePtr entryProc =

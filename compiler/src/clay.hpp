@@ -1466,6 +1466,7 @@ void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
 
 BlockPtr globalVarInitializers();
+BlockPtr globalVarDestructors();
 
 ModulePtr loadedModule(const string &module);
 
