@@ -251,6 +251,46 @@ initializePaging(fileName:String) {
 
 
 //
+// PagedPointer
+//
+
+record PagedPointer[T] {
+    offset : SizeT;
+}
+
+[T]
+overload PagedPointer[T]() = PagedPointer[T](SizeT(0));
+
+[T,I | Integer?(I)]
+overload add(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset + i*TypeSize(T));
+
+[T,I | Integer?(I)]
+overload subtract(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset - i*TypeSize(T));
+
+[T]
+overload inc(p:PagedPointer[T]) {
+    p += 1;
+}
+
+[T]
+overload dec(p:PagedPointer[T]) {
+    p -= 1;
+}
+
+[T]
+overload dereference(p : PagedPointer[T]) {
+    returnref Pointer[T](p.offset + dataBegin())^;
+}
+
+[T]
+overload null?(p : PagedPointer[T]) = (p.offset == 0);
+
+[T]
+nullPaged(static T) = PagedPointer[T]();
+
+
+
+//
 // allocatePaged
 //
 
@@ -260,9 +300,9 @@ splitBlock?(b, n) {
     return remaining > (TypeSize(Header) + 16);
 }
 
-[I | Integer?(I)]
-allocatePaged(n_:I) {
-    var n = SizeT(n_);
+[T,I | Integer?(I)]
+allocatePaged(static T, n_:I) {
+    var n = SizeT(n_) * TypeSize(T);
 
     // include header in size and align up to 16
     n += TypeSize(Header);
@@ -270,13 +310,13 @@ allocatePaged(n_:I) {
 
     var b = popFreeList(n);
     if (nullBlock?(b))
-        return SizeT(0);
+        return nullPaged(T);
     if (splitBlock?(b,n)) {
         blockInit(b+n, blockSize(b)-n, b, nullBlock, nullBlock);
         blockSetSize(b, n);
         pushFreeList(b+n);
     }
-    return b + TypeSize(Header);
+    return PagedPointer[T](b + TypeSize(Header));
 }
 
 
@@ -309,9 +349,10 @@ mergeNext(b) {
     return b;
 }
 
-freePaged(offset:SizeT) {
-    if (offset == 0) return;
-    var b = offset - TypeSize(Header);
+[T]
+freePaged(p:PagedPointer[T]) {
+    if (null?(p)) return;
+    var b = p.offset - TypeSize(Header);
     if (mergePrevious?(b))
         b = mergePrevious(b);
     if (mergeNext?(b))
