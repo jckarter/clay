@@ -1,6 +1,9 @@
 
 public import paged.allocator.(initializePaging,
                                PagedPointer,
+                               nullPaged,
                                allocatePaged,
                                freePaged,
                                printPagingState);
+
+public import paged.strings.*;
