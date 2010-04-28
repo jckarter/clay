@@ -2260,7 +2260,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         if (it->isSigned)
             result = llvmBuilder->CreateSRem(v0, v1);
         else
-            result = llvmBuilder->CreateUDiv(v0, v1);
+            result = llvmBuilder->CreateURem(v0, v1);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
