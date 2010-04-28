@@ -258,6 +258,8 @@ record PagedPointer[T] {
     offset : SizeT;
 }
 
+[T] static overload SafeType?(PagedPointer[T]) = false;
+
 [T]
 overload PagedPointer[T]() = PagedPointer[T](SizeT(0));
 
@@ -266,6 +268,11 @@ overload add(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset + i*TypeSize(T))
 
 [T,I | Integer?(I)]
 overload subtract(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset - i*TypeSize(T));
+
+[T]
+overload subtract(a:PagedPointer[T], b:PagedPointer[T]) {
+    return (PtrInt(a.offset) - PtrInt(b.offset)) / PtrInt(TypeSize(T));
+}
 
 [T]
 overload inc(p:PagedPointer[T]) {
