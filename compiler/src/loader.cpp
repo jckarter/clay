@@ -16,6 +16,7 @@ static vector<string> moduleSuffixes;
 static map<string, ModulePtr> modules;
 
 static BlockPtr gvarInitializers;
+static BlockPtr gvarDestructors;
 
 
 
@@ -289,6 +290,7 @@ ModulePtr loadProgram(const string &fileName) {
     loadDependents(m);
     installGlobals(m);
     gvarInitializers = new Block();
+    gvarDestructors = new Block();
     initModule(prelude);
     initModule(m);
     return m;
@@ -296,6 +298,10 @@ ModulePtr loadProgram(const string &fileName) {
 
 BlockPtr globalVarInitializers() {
     return gvarInitializers;
+}
+
+BlockPtr globalVarDestructors() {
+    return gvarDestructors;
 }
 
 ModulePtr loadedModule(const string &module) {
@@ -367,11 +373,20 @@ static void initModule(ModulePtr m) {
             GlobalVariable *x = (GlobalVariable *)obj;
             ExprPtr lhs = new NameRef(x->name);
             lhs->location = x->name->location;
+
             StatementPtr y = new InitAssignment(lhs, x->expr);
             y->location = x->location;
             StatementPtr z = new SCStatement(x->env, y);
             z->location = y->location;
             gvarInitializers->statements.push_back(z);
+
+            ExprPtr destructor = kernelNameRef("destroy");
+            CallPtr destroyCall = new Call(destructor);
+            destroyCall->location = lhs->location;
+            destroyCall->args.push_back(new SCExpr(x->env, lhs));
+            StatementPtr a = new ExprStatement(destroyCall.ptr());
+            gvarDestructors->statements.insert(
+                gvarDestructors->statements.begin(), a);
             break;
         }
         case STATIC_OVERLOAD :

@@ -1,6 +1,9 @@
-import paged;
+record Foo {}
+
+overload Foo() : Foo { println("constructing Foo"); }
+overload destroy(x:Foo) { println("destroying Foo"); }
+
+var foo = Foo();
 
 main() {
-    paged.initialize("paged.data");
-    paged.printState();
 }
