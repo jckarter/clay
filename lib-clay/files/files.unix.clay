@@ -72,6 +72,15 @@ overload flush(f:File) {
 }
 
 
+// fileExists?
+
+fileExists?(p) {
+    var statBuf = unix.Struct_stat();
+    var result = unix.lstat(cstring(p), &statBuf);
+    return result == 0;
+}
+
+
 // fileSize
 
 fileSize(f:File) {
