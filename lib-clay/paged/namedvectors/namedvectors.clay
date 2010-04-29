@@ -1,0 +1,277 @@
+
+import paged.*;
+import paged.misc.*;
+
+import strings;
+import files.mapping.*;
+
+
+//
+// NamedVector[T]
+//
+
+record NamedVector[T] {
+    fileName : strings.String;
+    file : File;
+    mapping : FileMapping;
+    header : Pointer[Header];
+    data : Pointer[T];
+}
+
+record Header {
+    size : SizeT;
+    capacity : SizeT;
+}
+
+
+//
+// predicates
+//
+
+[T] static overload SizedSequence?(NamedVector[T]) = true;
+[T] static overload RandomAccessSequence?(NamedVector[T]) = true;
+[T] static overload LValueSequence?(NamedVector[T]) = true;
+[T] static overload SequenceElementType(NamedVector[T]) = T;
+
+
+//
+// constructor
+//
+
+private headerSpace() = alignUp(TypeSize(Header), 16);
+
+[T]
+private requiredFileSize(static T, capacity) =
+    capacity*TypeSize(T) + headerSpace();
+
+[T]
+overload NamedVector[T](fileName : strings.String) : NamedVector[T] {
+    ref x = returned;
+    x.fileName <-- fileName;
+    if (fileExists?(fileName)) {
+        x.file <-- File(fileName, READ_WRITE);
+        x.mapping <-- FileMapping(x.file, MAP_READ_WRITE);
+        x.header = Pointer[Header](x.mapping.address);
+        x.data = Pointer[T](x.mapping.address + headerSpace());
+    }
+    else {
+        x.file <-- File(fileName, CREATE);
+        var capacity = 16;
+        var size = 0;
+        resizeFile(x.file, requiredFileSize(T, capacity));
+        x.mapping <-- FileMapping(x.file, MAP_READ_WRITE);
+        x.header = Pointer[Header](x.mapping.address);
+        x.data = Pointer[T](x.mapping.address + headerSpace());
+        x.header^.size = size;
+        x.header^.capacity = capacity;
+    }
+}
+
+
+//
+// size, index
+//
+
+[T]
+overload size(a:NamedVector[T]) = a.header^.size;
+
+[T,I | Integer?(I)]
+overload index(a:NamedVector[T], i:I) = ref (a.data + SizeT(i))^;
+
+
+//
+// coordinates
+//
+
+record NamedVectorCoordinate[T] {
+    ptr:Pointer[T];
+}
+
+[T]
+overload dereference(c:NamedVectorCoordinate[T]) = ref c.ptr^;
+
+[T]
+overload begin(a:NamedVector[T]) = NamedVectorCoordinate(&a[0]);
+
+[T]
+overload end(a:NamedVector[T]) = NamedVectorCoordinate(&a[0] + size(a));
+
+[T,I|Integer?(I)]
+overload add(c:NamedVectorCoordinate[T], i:I) =
+    NamedVectorCoordinate(c.ptr + i);
+
+[T,I|Integer?(I)]
+overload subtract(c:NamedVectorCoordinate[T], i:I) =
+    NamedVectorCoordinate(c.ptr - i);
+
+[T]
+overload subtract(c1:NamedVectorCoordinate[T], c2:NamedVectorCoordinate[T])
+    = c1.ptr - c2.ptr;
+
+[T]
+overload inc(c:NamedVectorCoordinate[T]) {
+    inc(c.ptr);
+}
+
+[T]
+overload dec(c:NamedVectorCoordinate[T]) {
+    dec(c.ptr);
+}
+
+[T]
+overload lesser?(a:NamedVectorCoordinate[T], b:NamedVectorCoordinate[T])
+    = a.ptr < b.ptr;
+
+
+//
+// iteration
+//
+
+[T]
+overload iterator(a:NamedVector[T]) = CoordinateRange(begin(a), end(a));
+
+
+//
+// equals?, lesser?
+//
+
+[T]
+overload equals?(a:NamedVector[T], b:NamedVector[T]) {
+    if (size(a) != size(b))
+        return false;
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i)) {
+        if (next(i) != next(j))
+            return false;
+    }
+    return true;
+}
+
+[T]
+overload lesser?(a:NamedVector[T], b:NamedVector[T]) {
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i) and hasNext?(j)) {
+        ref x = next(i);
+        ref y = next(j);
+        if (x != y)
+            return x < y;
+    }
+    return hasNext?(j);
+}
+
+
+//
+// front, back, push, pop
+//
+
+[T]
+overload front(a:NamedVector[T]) = ref a[0];
+
+[T]
+overload back(a:NamedVector[T]) = ref a[size(a)-1];
+
+[T]
+overload push(a:NamedVector[T], x:T) {
+    insert(a, size(a), x);
+}
+
+[T]
+overload push(a:NamedVector[T], rvalue x:T) {
+    insert(a, size(a), move(x));
+}
+
+[T]
+overload pop(a:NamedVector[T]) : T {
+    returned <-- move(back(a));
+    removeLocation(a, end(a)-1);
+}
+
+
+//
+// reserve
+//
+
+[T]
+private setCapacity(a:NamedVector[T], capacity:SizeT) {
+    destroy(a.mapping);
+    resizeFile(a.file, requiredFileSize(T, capacity));
+    a.mapping <-- FileMapping(a.file, MAP_READ_WRITE);
+    a.header = Pointer[Header](a.mapping.address);
+    a.data = Pointer[T](a.mapping.address + headerSpace());
+    a.header^.capacity = capacity;
+}
+
+[T, I | Integer?(I)]
+overload reserve(a:NamedVector[T], n:I) {
+    if (a.header^.capacity < SizeT(n))
+        setCapacity(a, SizeT(n));
+}
+
+
+//
+// clear, insert, remove
+//
+
+[T]
+overload clear(a:NamedVector[T]) {
+    for (x in a)
+        destroy(x);
+    a.header^.size = 0;
+}
+
+[T]
+private ensureSpace(a:NamedVector[T], space:SizeT) {
+    if (size(a) + space > a.header^.capacity)
+        setCapacity(a, 2*(size(a) + space));
+}
+
+[T,I | Integer?(I)]
+private insertLocation(a:NamedVector[T], pos:I) {
+    ensureSpace(a, SizeT(1));
+    var i = begin(a) + pos;
+    var j = end(a);
+    while (i < j) {
+        j^ <-- move((j-1)^);
+        dec(j);
+    }
+    a.header^.size += 1;
+    returnref i^;
+}
+
+[T,I|Integer?(I)]
+overload insert(a:NamedVector[T], i:I, x) {
+    insertLocation(a, i) <-- x;
+}
+
+[T]
+overload insert(a:NamedVector[T], i:NamedVectorCoordinate[T], x:T) {
+    insertLocation(a, i-begin(a)) <-- x;
+}
+
+[T]
+overload insert(a:NamedVector[T], i:NamedVectorCoordinate[T], rvalue x:T) {
+    insertLocation(a, i-begin(a)) <-- move(x);
+}
+
+[T]
+private removeLocation(a:NamedVector[T], i:NamedVectorCoordinate[T]) {
+    var j = end(a);
+    while (i+1 != j) {
+        i^ <-- move((i+1)^);
+        inc(i);
+    }
+    a.header^.size -= 1;
+}
+
+[T]
+overload remove(a:NamedVector[T], i:NamedVectorCoordinate[T]) {
+    destroy(i^);
+    removeLocation(a, i);
+}
+
+[T,I|Integer?(I)]
+overload remove(a:NamedVector[T], i:I) {
+    remove(a, begin(a)+i);
+}

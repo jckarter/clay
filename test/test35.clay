@@ -12,5 +12,5 @@ main() {
         println(x);
 
     clear(v);
-    paged.printPagingState();
+    //paged.printPagingState();
 }
