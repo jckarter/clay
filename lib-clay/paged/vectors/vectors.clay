@@ -295,14 +295,13 @@ overload insert(a:Vector[T], i:VectorCoordinate[T], rvalue x:T) {
 [T]
 removeLocation(a:Vector[T], i:VectorCoordinate[T]) {
     var j = end(a);
-    while (true) {
+    while (i+1 != j) {
         i^ <-- move((i+1)^);
         inc(i);
-        if (i == j) break;
     }
     dec(a.size);
     if (a.capacity > 3*(a.size+1))
-        setCapacity(2*(a.size + 1));
+        setCapacity(a, 2*(a.size + 1));
 }
 
 [T]
