@@ -8,3 +8,4 @@ public import paged.allocator.(initializePaging,
 
 public import paged.strings.*;
 public import paged.vectors.*;
+public import paged.namedvectors.*;

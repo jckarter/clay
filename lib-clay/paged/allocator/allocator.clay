@@ -1,50 +1,5 @@
 import files.mapping.*;
-import libc;
-
-
-
-//
-// bit manipulation
-//
-
-alignUp(x, align) = bitwiseAnd(x+align-1, bitwiseNot(align-1));
-
-alignDown(x, align) = bitwiseAnd(x, bitwiseNot(align-1));
-
-higherPower2(x) {
-    assert(x <= shiftLeft(SizeT(1), TypeSize(SizeT)*8-1), "higherPower2");
-    var y = SizeT(1);
-    while (x > y)
-        y *= 2;
-    return y;
-}
-
-lowerPower2(x) {
-    assert(x >= 1, "lowerPower2");
-    var y = SizeT(1);
-    while (x/2 >= y)
-        y *= 2;
-    return y;
-}
-
-floorLog2(n_) {
-    var n = n_;
-    assert(n > 0, "floorLog2");
-    var x = 0;
-    while (n > 1) {
-        n /= 2;
-        x += 1;
-    }
-    return x;
-}
-
-[T]
-ceilLog2(n:T) {
-    var x = floorLog2(n);
-    if (shiftLeft(T(1), x) != n)
-        return x+1;
-    return x;
-}
+import paged.misc.*;
 
 
 
@@ -197,20 +152,6 @@ removeFromFreeList(b) {
 //
 // initializePaging
 //
-
-fileExists?(p) {
-    var fp = libc.fopen(cstring(p), cstring("rb"));
-    if (null?(fp))
-        return false;
-    libc.fclose(fp);
-    return true;
-}
-
-resizeFile(file, newSize) {
-    assert(fileSize(file) < newSize, "resizeFile");
-    seek(file, newSize-1);
-    writeByte(file, 0);
-}
 
 resetState() {
     destroy(state);

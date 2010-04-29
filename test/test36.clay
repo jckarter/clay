@@ -1,0 +1,36 @@
+import paged.*;
+
+record Address {
+    name : String;
+    email : String;
+    age : Int;
+}
+
+overload printTo(stream, x:Address) {
+    print("Address(",
+          "name=", x.name,
+          ", email=", x.email,
+          ", age=", x.age,
+          ")");
+}
+
+
+addToAddressBook() {
+    var addressBook = NamedVector[Address]("addressbook.data");
+    for (i in range(3)) {
+        var a = Address(String("Foo"), String("Bar"), (i+1)*10);
+        push(addressBook, a);
+    }
+}
+
+showAddressBook() {
+    var addressBook = NamedVector[Address]("addressbook.data");
+    for (a in addressBook)
+        println(a);
+}
+
+main() {
+    initializePaging("paged.data");
+    addToAddressBook();
+    showAddressBook();
+}
