@@ -1,7 +1,7 @@
 import paged;
 
 main() {
-    paged.initializePaging("paged.data");
+    paged.initializePaging("temppaged.data");
 
     var v = paged.Vector[paged.String]();
 

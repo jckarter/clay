@@ -1,0 +1,37 @@
+import paged.*;
+
+record Node {
+    value : Int;
+    next : SharedPointer[Node];
+}
+
+printList(node_) {
+    var node = node_;
+    while (not null?(node)) {
+        print(node^.value, ", ");
+        node = node^.next;
+    }
+    println();
+}
+
+listLength(node_) {
+    var node = node_;
+    var n = 0;
+    while (not null?(node)) {
+        n += 1;
+        node = node^.next;
+    }
+    return n;
+}
+
+main() {
+    initializePaging("temppaged.data");
+
+    var root = NamedScalar[SharedPointer[Node]]("temp_stack.data", nullShared(Node));
+
+    var n = listLength(root^);
+    var node = allocateShared(Node(n, root^));
+    root^ = node;
+
+    printList(root^);
+}

@@ -16,7 +16,7 @@ overload printTo(stream, x:Address) {
 
 
 addToAddressBook() {
-    var addressBook = NamedVector[Address]("addressbook.data");
+    var addressBook = NamedVector[Address]("temp_addressbook.data");
     for (i in range(3)) {
         var a = Address(String("Foo"), String("Bar"), (i+1)*10);
         push(addressBook, a);
@@ -24,13 +24,13 @@ addToAddressBook() {
 }
 
 showAddressBook() {
-    var addressBook = NamedVector[Address]("addressbook.data");
+    var addressBook = NamedVector[Address]("temp_addressbook.data");
     for (a in addressBook)
         println(a);
 }
 
 main() {
-    initializePaging("paged.data");
+    initializePaging("temppaged.data");
     addToAddressBook();
     showAddressBook();
 }
