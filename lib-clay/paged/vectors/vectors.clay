@@ -293,7 +293,7 @@ overload insert(a:Vector[T], i:VectorCoordinate[T], rvalue x:T) {
 }
 
 [T]
-removeLocation(a:Vector[T], i:VectorCoordinate[T]) {
+private removeLocation(a:Vector[T], i:VectorCoordinate[T]) {
     var j = end(a);
     while (i+1 != j) {
         i^ <-- move((i+1)^);
