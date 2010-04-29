@@ -2388,6 +2388,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
                               EnvPtr env,
                               CValuePtr out);
 
-llvm::Function *codegenMain(ModulePtr module);
+void codegenSharedLib(ModulePtr module);
+void codegenExe(ModulePtr module);
 
 #endif
