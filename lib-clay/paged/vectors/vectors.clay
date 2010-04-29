@@ -15,17 +15,11 @@ record Vector[T] {
 // predicates
 //
 
-[T]
-static overload SizedSequence?(Vector[T]) = true;
+[T] static overload SizedSequence?(Vector[T]) = true;
+[T] static overload RandomAccessSequence?(Vector[T]) = true;
+[T] static overload LValueSequence?(Vector[T]) = true; 
+[T] static overload SequenceElementType(Vector[T]) = T;
 
-[T]
-static overload RandomAccessSequence?(Vector[T]) = true;
-
-[T]
-static overload LValueSequence?(Vector[T]) = true;
-
-[T]
-static overload SequenceElementType(Vector[T]) = T;
 
 //
 // constructors
@@ -248,7 +242,7 @@ private setCapacity(a:Vector[T], capacity:SizeT) {
 }
 
 [T, I | Integer?(I)]
-reserve(a:Vector[T], n:I) {
+overload reserve(a:Vector[T], n:I) {
     if (a.capacity < SizeT(n))
         setCapacity(a, SizeT(n));
 }
