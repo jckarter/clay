@@ -2879,7 +2879,7 @@ CValuePtr codegenInvokePrimOp2(PrimOpPtr x,
 
 
 //
-// codegenMain
+// codegenSharedLib, codegenExe
 //
 
 static ProcedurePtr makeInitializerProcedure() {
@@ -2900,21 +2900,93 @@ static ProcedurePtr makeDestructorProcedure() {
     return proc;
 }
 
-llvm::Function *codegenMain(ModulePtr module)
-{
-    BlockPtr mainBody = new Block();
-
+static void generateLLVMCtorsAndDtors() {
     ObjectPtr initializer = makeInitializerProcedure().ptr();
-    ExprPtr initCall = new Call(new ObjectExpr(initializer));
-    mainBody->statements.push_back(new ExprStatement(initCall));
+    InvokeEntryPtr entry1 = codegenCallable(initializer,
+                                            vector<bool>(),
+                                            vector<ObjectPtr>(),
+                                            vector<ValueTempness>(),
+                                            vector<LocationPtr>());
+    codegenCWrapper(entry1, getCodeName(initializer));
+    ObjectPtr destructor = makeDestructorProcedure().ptr();
+    InvokeEntryPtr entry2 = codegenCallable(destructor,
+                                            vector<bool>(),
+                                            vector<ObjectPtr>(),
+                                            vector<ValueTempness>(),
+                                            vector<LocationPtr>());
+    codegenCWrapper(entry2, getCodeName(destructor));
 
+    // make types for llvm.global_ctors, llvm.global_dtors
+    vector<const llvm::Type *> fieldTypes;
+    fieldTypes.push_back(llvmIntType(32));
+    const llvm::Type *funcType = entry1->llvmCWrapper->getFunctionType();
+    const llvm::Type *funcPtrType = llvm::PointerType::getUnqual(funcType);
+    fieldTypes.push_back(funcPtrType);
+    const llvm::StructType *structType =
+        llvm::StructType::get(llvm::getGlobalContext(), fieldTypes);
+    const llvm::ArrayType *arrayType = llvm::ArrayType::get(structType, 1);
+
+    // make constants for llvm.global_ctors
+    vector<llvm::Constant*> structElems1;
+    llvm::ConstantInt *prio1 =
+        llvm::ConstantInt::get(llvm::getGlobalContext(),
+                               llvm::APInt(32, llvm::StringRef("65535"), 10));
+    structElems1.push_back(prio1);
+    structElems1.push_back(entry1->llvmCWrapper);
+    llvm::Constant *structVal1 = llvm::ConstantStruct::get(structType,
+                                                           structElems1);
+    vector<llvm::Constant*> arrayElems1;
+    arrayElems1.push_back(structVal1);
+    llvm::Constant *arrayVal1 = llvm::ConstantArray::get(arrayType,
+                                                         arrayElems1);
+
+    // make constants for llvm.global_dtors
+    vector<llvm::Constant*> structElems2;
+    llvm::ConstantInt *prio2 =
+        llvm::ConstantInt::get(llvm::getGlobalContext(),
+                               llvm::APInt(32, llvm::StringRef("65535"), 10));
+    structElems2.push_back(prio2);
+    structElems2.push_back(entry2->llvmCWrapper);
+    llvm::Constant *structVal2 = llvm::ConstantStruct::get(structType,
+                                                           structElems2);
+    vector<llvm::Constant*> arrayElems2;
+    arrayElems2.push_back(structVal2);
+    llvm::Constant *arrayVal2 = llvm::ConstantArray::get(arrayType,
+                                                         arrayElems2);
+
+    // define llvm.global_ctors
+    new llvm::GlobalVariable(*llvmModule, arrayType, true,
+                             llvm::GlobalVariable::AppendingLinkage,
+                             arrayVal1, "llvm.global_ctors");
+
+    // define llvm.global_dtors
+    new llvm::GlobalVariable(*llvmModule, arrayType, true,
+                             llvm::GlobalVariable::AppendingLinkage,
+                             arrayVal2, "llvm.global_dtors");
+}
+
+
+void codegenSharedLib(ModulePtr module)
+{
+    generateLLVMCtorsAndDtors();
+
+    for (unsigned i = 0; i < module->topLevelItems.size(); ++i) {
+        TopLevelItemPtr x = module->topLevelItems[i];
+        if (x->objKind == EXTERNAL_PROCEDURE) {
+            ExternalProcedurePtr y = (ExternalProcedure *)x.ptr();
+            if (y->body.ptr())
+                codegenExternal(y);
+        }
+    }
+}
+
+void codegenExe(ModulePtr module)
+{
+    generateLLVMCtorsAndDtors();
+
+    BlockPtr mainBody = new Block();
     ExprPtr mainCall = new Call(new NameRef(new Identifier("main")));
     mainBody->statements.push_back(new ExprStatement(mainCall));
-
-    ObjectPtr destructor = makeDestructorProcedure().ptr();
-    ExprPtr destroyCall = new Call(new ObjectExpr(destructor));
-    mainBody->statements.push_back(new ExprStatement(destroyCall));
-
     mainBody->statements.push_back(new Return(new IntLiteral("0")));
 
     ExternalProcedurePtr entryProc =
@@ -2929,6 +3001,4 @@ llvm::Function *codegenMain(ModulePtr module)
     entryProc->env = module->env;
 
     codegenExternal(entryProc);
-
-    return entryProc->llvmFunc;
 }
