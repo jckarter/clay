@@ -121,17 +121,17 @@ overload index(a:Vector[T], i:I) = ref (a.data + SizeT(i))^;
 //
 
 record VectorCoordinate[T] {
-    ptr:PagedPointer[T];
+    ptr:Pointer[T];
 }
 
 [T]
 overload dereference(c:VectorCoordinate[T]) = ref c.ptr^;
 
 [T]
-overload begin(a:Vector[T]) = VectorCoordinate(a.data);
+overload begin(a:Vector[T]) = VectorCoordinate(&a[0]);
 
 [T]
-overload end(a:Vector[T]) = VectorCoordinate(a.data + a.size);
+overload end(a:Vector[T]) = VectorCoordinate(&a[0] + a.size);
 
 [T,I|Integer?(I)]
 overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);

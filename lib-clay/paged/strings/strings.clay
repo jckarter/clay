@@ -82,8 +82,8 @@ overload index(a:String, i:I) = ref (a.data + SizeT(i))^;
 // coordinates and iteration
 //
 
-overload begin(a:String) = a.data;
-overload end(a:String) = a.data + a.size;
+overload begin(a:String) = &a[0];
+overload end(a:String) = &a[0] + a.size;
 
 overload iterator(a:String) = CoordinateRange(begin(a), end(a));
 
