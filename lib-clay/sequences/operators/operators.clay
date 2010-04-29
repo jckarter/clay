@@ -26,6 +26,7 @@ overloadable pop;
 overloadable clear;
 overloadable insert;
 overloadable remove;
+overloadable reserve;
 
 
 // defaults
