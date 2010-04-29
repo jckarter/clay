@@ -39,6 +39,8 @@ static OPEN_EXISTING     = 3#u32;
 static OPEN_ALWAYS       = 4#u32;
 static TRUNCATE_EXISTING = 5#u32;
 
+static INVALID_FILE_ATTRIBUTES = DWORD(-1);
+
 static FILE_ATTRIBUTE_READONLY            = 0x00000001#u32;
 static FILE_ATTRIBUTE_HIDDEN              = 0x00000002#u32;
 static FILE_ATTRIBUTE_SYSTEM              = 0x00000004#u32;

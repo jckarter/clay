@@ -125,6 +125,14 @@ overload flush(f:File) {
 }
 
 
+// fileExists?
+
+fileExists?(p) {
+    var result = win32.GetFileAttributesA(cstring(p));
+    return result != win32.INVALID_FILE_ATTRIBUTES;
+}
+
+
 // fileSize
 
 fileSize(f:File) {
