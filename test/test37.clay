@@ -1,0 +1,9 @@
+import paged.*;
+
+main() {
+    initializePaging("paged.data");
+
+    var count = NamedScalar[Int]("count.data", 100);
+    count^ += 1;
+    println("count = ", count^);
+}
