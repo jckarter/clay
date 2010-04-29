@@ -1397,6 +1397,7 @@ void codegenExternal(ExternalProcedurePtr x)
 
 void codegenValueHolder(ValueHolderPtr v, CValuePtr out)
 {
+    assert(out.ptr());
     assert(v->type == out->type);
 
     switch (v->type->typeKind) {
@@ -1782,6 +1783,8 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
         return NULL;
     }
     else if (entry->returnIsTemp) {
+        assert(out.ptr());
+        assert(out->type == entry->returnType);
         llArgs.push_back(out->llValue);
         createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), env);
         return out;
@@ -1842,6 +1845,7 @@ CValuePtr codegenInvokeInlined(InvokeEntryPtr entry,
     CValuePtr returnVal;
     if (returnType.ptr()) {
         if (returnIsTemp) {
+            assert(out.ptr());
             assert(out->type == returnType);
             returnVal = out;
         }
@@ -2093,6 +2097,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
         llvm::Value *flag = llvmBuilder->CreateICmpEQ(v, zero);
         llvm::Value *v2 = llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        assert(out.ptr());
+        assert(out->type == boolType);
         llvmBuilder->CreateStore(v2, out->llValue);
         return out;
     }
@@ -2115,6 +2121,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         }
         llvm::Value *result =
             llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        assert(out.ptr());
+        assert(out->type == boolType);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2142,6 +2150,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         }
         llvm::Value *result =
             llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        assert(out.ptr());
+        assert(out->type == boolType);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2162,6 +2172,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         default :
             assert(false);
         }
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2182,6 +2194,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         default :
             assert(false);
         }
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2202,6 +2216,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         default :
             assert(false);
         }
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2227,6 +2243,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         default :
             assert(false);
         }
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2246,6 +2264,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         default :
             assert(false);
         }
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2261,6 +2281,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             result = llvmBuilder->CreateSRem(v0, v1);
         else
             result = llvmBuilder->CreateURem(v0, v1);
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2271,6 +2293,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvm::Value *v0 = _cgInteger(args[0], env, t);
         llvm::Value *v1 = _cgInteger(args[1], env, t);
         llvm::Value *result = llvmBuilder->CreateShl(v0, v1);
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2286,6 +2310,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             result = llvmBuilder->CreateAShr(v0, v1);
         else
             result = llvmBuilder->CreateLShr(v0, v1);
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2296,6 +2322,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvm::Value *v0 = _cgInteger(args[0], env, t);
         llvm::Value *v1 = _cgInteger(args[1], env, t);
         llvm::Value *result = llvmBuilder->CreateAnd(v0, v1);
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2306,6 +2334,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvm::Value *v0 = _cgInteger(args[0], env, t);
         llvm::Value *v1 = _cgInteger(args[1], env, t);
         llvm::Value *result = llvmBuilder->CreateOr(v0, v1);
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2316,6 +2346,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvm::Value *v0 = _cgInteger(args[0], env, t);
         llvm::Value *v1 = _cgInteger(args[1], env, t);
         llvm::Value *result = llvmBuilder->CreateXor(v0, v1);
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2325,6 +2357,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         llvm::Value *v0 = _cgInteger(args[0], env, t);
         llvm::Value *result = llvmBuilder->CreateNot(v0);
+        assert(out.ptr());
+        assert(out->type == t);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2335,6 +2369,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         TypePtr src;
         llvm::Value *v = _cgNumeric(args[1], env, src);
         if (src == dest) {
+            assert(out.ptr());
+            assert(out->type == dest);
             llvmBuilder->CreateStore(v, out->llValue);
             return out;
         }
@@ -2389,6 +2425,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             error(args[0], "expecting numeric type");
             return NULL;
         }
+        assert(out.ptr());
+        assert(out->type == dest);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2402,6 +2440,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         if (pv->isTemp)
             error("cannot take address of a temporary");
         CValuePtr cv = codegenAsRef(args[0], env, pv);
+        assert(out.ptr());
+        assert(out->type == pointerType(cv->type));
         llvmBuilder->CreateStore(cv->llValue, out->llValue);
         return out;
     }
@@ -2420,6 +2460,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvm::Value *v1 = _cgPointer(args[1], env, t);
         llvm::Value *flag = llvmBuilder->CreateICmpEQ(v0, v1);
         llvm::Value *result = llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        assert(out.ptr());
+        assert(out->type == boolType);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2431,6 +2473,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvm::Value *v1 = _cgPointer(args[1], env, t);
         llvm::Value *flag = llvmBuilder->CreateICmpULT(v0, v1);
         llvm::Value *result = llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        assert(out.ptr());
+        assert(out->type == boolType);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2446,6 +2490,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         llvm::Value *result = llvmBuilder->CreateGEP(v0,
                                                      indices.begin(),
                                                      indices.end());
+        assert(out.ptr());
+        assert(out->type == t.ptr());
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2458,6 +2504,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         PointerTypePtr pt;
         llvm::Value *v = _cgPointer(args[1], env, pt);
         llvm::Value *result = llvmBuilder->CreatePtrToInt(v, llvmType(dest));
+        assert(out.ptr());
+        assert(out->type == dest);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2469,6 +2517,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         llvm::Value *v = _cgInteger(args[1], env, t);
         llvm::Value *result = llvmBuilder->CreateIntToPtr(v, llvmType(dest));
+        assert(out.ptr());
+        assert(out->type == dest);
         llvmBuilder->CreateStore(result, out->llValue);
         return out;
     }
@@ -2530,6 +2580,17 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
                                                argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
+        vector<TypePtr> argTypes = entry->fixedArgTypes;
+        if (entry->hasVarArgs) {
+            argTypes.insert(argTypes.end(),
+                            entry->varArgTypes.begin(),
+                            entry->varArgTypes.end());
+        }
+        TypePtr cpType = codePointerType(argTypes,
+                                         entry->returnType,
+                                         entry->returnIsTemp);
+        assert(out.ptr());
+        assert(out->type == cpType);
         llvmBuilder->CreateStore(entry->llvmFunc, out->llValue);
         return out;
     }
@@ -2594,9 +2655,21 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
                                                argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
+        vector<TypePtr> argTypes = entry->fixedArgTypes;
+        if (entry->hasVarArgs) {
+            argTypes.insert(argTypes.end(),
+                            entry->varArgTypes.begin(),
+                            entry->varArgTypes.end());
+        }
+        TypePtr ccpType = cCodePointerType(CC_DEFAULT,
+                                           argTypes,
+                                           false,
+                                           entry->returnType);
         string callableName = getCodeName(callable);
         if (!entry->llvmCWrapper)
             codegenCWrapper(entry, callableName);
+        assert(out.ptr());
+        assert(out->type == ccpType);
         llvmBuilder->CreateStore(entry->llvmCWrapper, out->llValue);
         return out;
     }
