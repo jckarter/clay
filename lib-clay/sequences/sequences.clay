@@ -49,7 +49,7 @@ overloadable slice;
 overload slice(a:A, begin, end) {
     static T = SequenceElementType(A);
     var v = Vector[T]();
-    for (i in range(SizeT(begin), SizeT(end)))
+    for (i in range(begin, end))
         push(v, a[i]);
     return move(v);
 }
