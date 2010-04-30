@@ -1,5 +1,5 @@
 
-overloadable filtered;
+overloadable filter;
 
 private record Filtered[F,A] {
     predicate : F;
@@ -18,14 +18,14 @@ static overload SequenceElementType(Filtered[F,A]) =
 
 
 [F,A | Sequence?(A)]
-overload filtered(predicate:F, rvalue seq:A) : Filtered[F,A] {
+overload filter(predicate:F, rvalue seq:A) : Filtered[F,A] {
     returned.predicate <-- predicate;
     returned.innerSequence <-- move(seq);
 }
 
 [F,A | Sequence?(A)]
-overload filtered(predicate:F, lvalue seq:A)
-    = filtered(predicate, sequenceHandle(seq));
+overload filter(predicate:F, lvalue seq:A)
+    = filter(predicate, sequenceHandle(seq));
 
 
 // iterator when not LValueSequence?(innerSequence)
