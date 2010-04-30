@@ -1,0 +1,12 @@
+
+main() {
+    {
+        var f = File("LICENSE.txt");
+        for (line in lines(f))
+            print(line);
+    }
+    {
+        for (line in lines(File("LICENSE.txt")))
+            print(line);
+    }
+}

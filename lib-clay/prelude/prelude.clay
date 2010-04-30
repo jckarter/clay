@@ -20,6 +20,7 @@ public import strings.*;
 
 public import streams.*;
 public import files.*;
+public import files.lines.*;
 public import printer.*;
 
 public import errors.*;
