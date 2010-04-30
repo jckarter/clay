@@ -22,3 +22,36 @@ overload reduce(f:F, initial:X, seq:A) {
         result = f(result, x);
     return result;
 }
+
+
+// split
+
+[A | Sequence?(A)]
+split(a:A, sep) {
+    static T = SequenceElementType(A);
+    var result = Vector[Vector[T]]();
+    push(result, Vector[T]());
+    for (x in a) {
+        if (x == sep)
+            push(result, Vector[T]());
+        else
+            push(back(result), x);
+    }
+    return move(result);
+}
+
+
+// slice
+
+overloadable slice;
+
+[A | RandomAccessSequence?(A)]
+overload slice(a:A, begin, end) {
+    static T = SequenceElementType(A);
+    var v = Vector[T]();
+    for (i in range(SizeT(begin), SizeT(end)))
+        push(v, a[i]);
+    return move(v);
+}
+
+overload slice(a:A, begin) = slice(a, begin, size(a));
