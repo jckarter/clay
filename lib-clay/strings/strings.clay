@@ -60,7 +60,7 @@ overload String(a:A) : String {
 }
 
 [A | Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
-overload String(a:A) = String(mapped(Char, a));
+overload String(a:A) = String(map(Char, a));
 
 
 //
@@ -86,7 +86,7 @@ overload String(a:A) {
 }
 
 [A | SizedSequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
-overload String(a:A) = String(mapped(Char, a));
+overload String(a:A) = String(map(Char, a));
 
 
 //

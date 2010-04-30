@@ -1,5 +1,5 @@
 
-overloadable mapped;
+overloadable map;
 
 
 [F,A]
@@ -29,10 +29,10 @@ static overload SequenceElementType(Mapped[F,A]) =
 
 
 [F,A | Sequence?(A)]
-overload mapped(mapper:F, rvalue seq:A) = Mapped(mapper, move(seq));
+overload map(mapper:F, rvalue seq:A) = Mapped(mapper, move(seq));
 
 [F,A | Sequence?(A)]
-overload mapped(mapper:F, lvalue seq:A)
+overload map(mapper:F, lvalue seq:A)
     = Mapped(mapper, sequenceHandle(seq));
 
 

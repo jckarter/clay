@@ -3,11 +3,11 @@ even?(x) = (x % 2 == 0);
 
 main() {
     var a = Vector[Int](1, 2, 3, 4, 5, 6);
-    for (x in filtered(even?, a))
+    for (x in filter(even?, a))
         x *= 10;
     var odd? = lambda (x) { return x % 2 == 1; };
-    for (x in filtered(odd?, a))
+    for (x in filter(odd?, a))
         x *= 100;
-    for (x in filtered(even?, move(a)))
+    for (x in filter(even?, move(a)))
         println(x);
 }
