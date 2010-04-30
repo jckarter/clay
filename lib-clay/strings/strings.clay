@@ -11,6 +11,10 @@ static String?(A) = Sequence?(A) and (Char == SequenceElementType(A));
 [A]
 static SizedString?(A) = SizedSequence?(A) and (Char == SequenceElementType(A));
 
+[A]
+static ContiguousString?(A) =
+    ContiguousSequence?(A) and (Char == SequenceElementType(A));
+
 
 //
 // String
