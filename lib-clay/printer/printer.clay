@@ -28,7 +28,8 @@ overload printTo(stream, x:S) {
     flush(b);
 }
 
-overload printTo(stream, x:String) {
+[S | ContiguousString?(S)]
+overload printTo(stream, x:S) {
     write(stream, Pointer[Byte](&x[0]), size(x));
 }
 
