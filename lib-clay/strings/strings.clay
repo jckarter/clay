@@ -2,6 +2,17 @@ import libc;
 
 
 //
+// generic string predicate
+//
+
+[A]
+static String?(A) = Sequence?(A) and (Char == SequenceElementType(A));
+
+[A]
+static SizedString?(A) = SizedSequence?(A) and (Char == SequenceElementType(A));
+
+
+//
 // String
 //
 
@@ -23,10 +34,33 @@ static overload SequenceElementType(String) = Char;
 
 
 //
-// constructors
+// default constructor
 //
 
 overload String() = String(null(Char), SizeT(0), false);
+
+
+//
+// construct from unsized sequence
+//
+
+[A | Sequence?(A) and (Char == SequenceElementType(A))]
+overload String(a:A) : String {
+    var v = Vector[Char]();
+    for (x in a)
+        push(v, x);
+    push(v, Char(0));
+    returned <-- String(v.data, size(v), true);
+    v <-- Vector[Char]();
+}
+
+[A | Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
+overload String(a:A) = String(mapped(Char, a));
+
+
+//
+// construct from sized sequence
+//
 
 private allocateStringData(a) {
     var n = size(a);
@@ -46,8 +80,13 @@ overload String(a:A) {
     return String(data, size(a), true);
 }
 
-[A | SizedSequence?(A) and (Int8 == SequenceElementType(A))]
+[A | SizedSequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
 overload String(a:A) = String(mapped(Char, a));
+
+
+//
+// construct from c-string
+//
 
 [T | ByteSizedInteger?(T)]
 overload String(cstr : Pointer[T]) = String(stringRef(cstr));
@@ -131,7 +170,21 @@ overload iterator(a:String) = CoordinateRange(begin(a), end(a));
 // equals?, lesser?
 //
 
-overload equals?(a:String, b:String) {
+[A,B | String?(A) and String?(B)]
+overload equals?(a:A, b:B) {
+    ref i = iterator(a);
+    ref j = iterator(b);
+    while (hasNext?(i)) {
+        if (not hasNext?(j))
+            return false;
+        if (next(i) != next(j))
+            return false;
+    }
+    return not hasNext?(j);
+}
+
+[A,B | SizedString?(A) and SizedString?(B)]
+overload equals?(a:A, b:B) {
     if (size(a) != size(b))
         return false;
     ref i = iterator(a);
@@ -144,10 +197,13 @@ overload equals?(a:String, b:String) {
 }
 
 
-overload lesser?(a:String, b:String) {
+[A,B | String?(A) and String?(B)]
+overload lesser?(a:A, b:B) {
     ref i = iterator(a);
     ref j = iterator(b);
-    while (hasNext?(i) and hasNext?(j)) {
+    while (hasNext?(i)) {
+        if (not hasNext?(j))
+            return false;
         ref x = next(i);
         ref y = next(j);
         if (x != y)

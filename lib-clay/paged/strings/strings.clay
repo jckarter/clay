@@ -22,10 +22,33 @@ static overload SequenceElementType(String) = Char;
 
 
 //
-// constructors
+// default constructor
 //
 
 overload String() = String(nullPaged(Char), SizeT(0));
+
+
+//
+// construct from unsized sequence
+//
+
+[A | Sequence?(A) and (Char == SequenceElementType(A))]
+overload String(a:A) : String {
+    var v = Vector[Char]();
+    for (x in a)
+        push(v, x);
+    push(v, Char(0));
+    returned <-- String(v.data, size(v));
+    v <-- Vector[Char]();
+}
+
+[A | Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
+overload String(a:A) = String(mapped(Char, a));
+
+
+//
+// construct from sized sequence
+//
 
 private allocateStringData(a) {
     var n = size(a);
@@ -47,6 +70,14 @@ overload String(a:A) {
 
 [A | SizedSequence?(A) and (Int8 == SequenceElementType(A))]
 overload String(a:A) = String(mapped(Char, a));
+
+
+//
+// construct from c-string
+//
+
+[T | ByteSizedInteger?(T)]
+overload String(cstr : Pointer[T]) = String(strings.stringRef(cstr));
 
 
 //
@@ -86,49 +117,3 @@ overload begin(a:String) = &a[0];
 overload end(a:String) = &a[0] + a.size;
 
 overload iterator(a:String) = CoordinateRange(begin(a), end(a));
-
-
-//
-// equals?, lesser?
-//
-
-private stringEquals?(a, b) {
-    if (size(a) != size(b))
-        return false;
-    ref i = iterator(a);
-    ref j = iterator(b);
-    while (hasNext?(i)) {
-        if (next(i) != next(j))
-            return false;
-    }
-    return true;
-}
-
-overload equals?(a:String, b:String) = stringEquals?(a, b);
-overload equals?(a:strings.String, b:String) = stringEquals?(a, b);
-overload equals?(a:String, b:strings.String) = stringEquals?(a, b);
-
-private stringLesser?(a, b) {
-    ref i = iterator(a);
-    ref j = iterator(b);
-    while (hasNext?(i) and hasNext?(j)) {
-        ref x = next(i);
-        ref y = next(j);
-        if (x != y)
-            return x < y;
-    }
-    return hasNext?(j);
-}
-
-overload lesser?(a:String, b:String) = stringLesser?(a, b);
-overload lesser?(a:strings.String, b:String) = stringLesser?(a, b);
-overload lesser?(a:String, b:strings.String) = stringLesser?(a, b);
-
-
-//
-// printing support
-//
-
-overload printTo(stream, x:String) {
-    write(stream, Pointer[Byte](&x[0]), size(x));
-}

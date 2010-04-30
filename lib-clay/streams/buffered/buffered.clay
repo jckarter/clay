@@ -1,0 +1,38 @@
+
+record BufferedOutputStream[STREAM,SIZE] {
+    stream : Pointer[STREAM];
+    buffer : Array[Byte, SIZE];
+    used : SizeT;
+}
+
+[STREAM, SIZE]
+overload BufferedOutputStream(stream:STREAM, static SIZE) : BufferedOutputStream[STREAM,SIZE] {
+    returned.stream = &stream;
+    returned.used = SizeT(0);
+}
+
+overload BufferedOutputStream(stream) = BufferedOutputStream(stream, 4096);
+
+[STREAM,SIZE,I | Integer?(I)]
+overload write(s:BufferedOutputStream[STREAM,SIZE], buffer:Pointer[Byte], n_:I) {
+    var p = buffer;
+    var n = n_;
+    while (n > 0) {
+        writeOne(s, p^);
+        p += 1;
+        n -= 1;
+    }
+}
+
+private writeOne(s, b) {
+    if (s.used == size(s.buffer))
+        flush(s);
+    s.buffer[s.used] = b;
+    s.used += 1;
+}
+
+[STREAM,SIZE]
+overload flush(s:BufferedOutputStream[STREAM,SIZE]) {
+    write(s.stream^, &s.buffer[0], s.used);
+    s.used = SizeT(0);
+}
