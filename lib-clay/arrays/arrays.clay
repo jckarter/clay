@@ -13,6 +13,9 @@ static overload RandomAccessSequence?(Array[T,n]) = true;
 static overload LValueSequence?(Array[T,n]) = true;
 
 [T,n]
+static overload ContiguousSequence?(Array[T,n]) = true;
+
+[T,n]
 static overload SequenceElementType(Array[T,n]) = T;
 
 

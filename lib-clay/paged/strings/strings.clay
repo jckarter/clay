@@ -18,6 +18,7 @@ record String {
 static overload SizedSequence?(String) = true;
 static overload RandomAccessSequence?(String) = true;
 static overload LValueSequence?(String) = true;
+static overload ContiguousSequence?(String) = true;
 static overload SequenceElementType(String) = Char;
 
 
@@ -68,7 +69,7 @@ overload String(a:A) {
     return String(data, size(a));
 }
 
-[A | SizedSequence?(A) and (Int8 == SequenceElementType(A))]
+[A | SizedSequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
 overload String(a:A) = String(mapped(Char, a));
 
 

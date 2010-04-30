@@ -30,6 +30,7 @@ record String {
 static overload SizedSequence?(String) = true;
 static overload RandomAccessSequence?(String) = true;
 static overload LValueSequence?(String) = true;
+static overload ContiguousSequence?(String) = true;
 static overload SequenceElementType(String) = Char;
 
 
@@ -96,22 +97,12 @@ overload String(cstr : Pointer[T]) = String(stringRef(cstr));
 // stringRef constructors
 //
 
-private static overloadable ArrayLike?;
-[T]
-static overload ArrayLike?(T) = false;
-static overload ArrayLike?(String) = true;
-[T,n]
-static overload ArrayLike?(Array[T,n]) = true;
-[T]
-static overload ArrayLike?(Vector[T]) = true;
-
-
 overloadable stringRef;
 
-[A | ArrayLike?(A) and (Char == SequenceElementType(A))]
+[A | ContiguousSequence?(A) and (Char == SequenceElementType(A))]
 overload stringRef(a:A) = String(&a[0], size(a), false);
 
-[A | ArrayLike?(A) and (ByteSizedInteger?(SequenceElementType(A)))]
+[A | ContiguousSequence?(A) and (ByteSizedInteger?(SequenceElementType(A)))]
 overload stringRef(a:A) = String(Pointer[Char](&a[0]), size(a), false);
 
 [T | ByteSizedInteger?(T)]
