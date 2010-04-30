@@ -897,6 +897,7 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
         ObjectPtr y = analyze(x->expr, env);
+        assert(y.ptr());
         vector<ExprPtr> args2;
         expandVarArgs(x->args, env, args2);
         if (y->objKind == PVALUE) {

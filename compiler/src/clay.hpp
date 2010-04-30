@@ -161,6 +161,7 @@ enum ObjectKind {
     VOID_TYPE,
     VOID_VALUE,
     VALUE_HOLDER,
+    EVALUE,
     PVALUE,
     CVALUE,
 
@@ -287,6 +288,7 @@ struct StaticTypePattern;
 struct VoidType;
 struct VoidValue;
 struct ValueHolder;
+struct EValue;
 struct PValue;
 struct CValue;
 
@@ -410,6 +412,7 @@ typedef Pointer<StaticTypePattern> StaticTypePatternPtr;
 typedef Pointer<VoidType> VoidTypePtr;
 typedef Pointer<VoidValue> VoidValuePtr;
 typedef Pointer<ValueHolder> ValueHolderPtr;
+typedef Pointer<EValue> EValuePtr;
 typedef Pointer<PValue> PValuePtr;
 typedef Pointer<CValue> CValuePtr;
 
@@ -2207,6 +2210,19 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
 ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                               const vector<ExprPtr> &args,
                               EnvPtr env);
+
+
+
+//
+// evaluator 2
+//
+
+struct EValue : public Object {
+    TypePtr type;
+    char *addr;
+    EValue(TypePtr type, char *addr)
+        : Object(EVALUE), type(type), addr(addr) {}
+};
 
 
 
