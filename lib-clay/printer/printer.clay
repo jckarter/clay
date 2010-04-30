@@ -1,3 +1,4 @@
+import streams.buffered.*;
 import libc;
 
 
@@ -17,6 +18,14 @@ overload printTo(stream, a, b, ...) {
 
 overload printTo(stream, x:Char) {
     write(stream, Pointer[Byte](&x), SizeT(1));
+}
+
+[S | String?(S)]
+overload printTo(stream, x:S) {
+    var b = BufferedOutputStream(stream);
+    for (c in x)
+        writeByte(b, c);
+    flush(b);
 }
 
 overload printTo(stream, x:String) {
