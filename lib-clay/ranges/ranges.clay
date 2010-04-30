@@ -1,37 +1,67 @@
 
+
 //
-// ValueRange
+// Range
 //
 
-record ValueRange[T] {
+record Range[T] {
     first:T;
     last:T;
 }
 
-[T]
-static overload Sequence?(ValueRange[T]) = true;
+[T] static overload Sequence?(Range[T]) = true;
+[T] static overload SizedSequence?(Range[T]) = true;
+[T] static overload RandomAccessSequence?(Range[T]) = true;
+[T] static overload SequenceElementType(Range[T]) = T;
+
+
+//
+// Range - size, index
+//
 
 [T]
-static overload SequenceElementType(ValueRange[T]) = T;
+overload size(a:Range[T]) = SizeT(a.last - a.first);
+
+[T,I | Integer?(I)]
+overload index(a:Range[T], i:I) = T(a.first + i);
+
+
+//
+// Range - iteration
+//
 
 [T]
-overload iterator(r:ValueRange[T]) = r;
+overload iterator(r:Range[T]) = r;
 
 [T]
-overload hasNext?(r:ValueRange[T]) = r.first < r.last;
+overload hasNext?(r:Range[T]) = r.first < r.last;
 
 [T]
-overload next(r:ValueRange[T]) : T {
+overload next(r:Range[T]) : T {
     returned <-- r.first;
     inc(r.first);
 }
 
+
+
+//
+// range procedure
+//
+
 overloadable range;
 
-overload range(first, last) = ValueRange(first, last);
+overload range(first, last) = Range(first, last);
 
-[I|Integer?(I)]
-overload range(last:I) = ValueRange(I(0), last);
+[A,B | Integer?(A) and Integer?(B)]
+overload range(first:A, last:B) =
+    Range(toBiggerNumericType(A, B, first),
+          toBiggerNumericType(A, B, last));
+
+[I | Integer?(I)]
+overload range(first:I, last:I) = Range(first, last);
+
+[I | Integer?(I)]
+overload range(last:I) = Range(I(0), last);
 
 
 //
@@ -43,12 +73,29 @@ record CoordinateRange[T] {
     last:T;
 }
 
-[T]
-static overload Sequence?(CoordinateRange[T]) = true;
+[T] static overload Sequence?(CoordinateRange[T]) = true;
+[T] static overload SizedSequence?(CoordinateRange[T]) = true;
+[T] static overload RandomAccessSequence?(CoordinateRange[T]) = true;
 
 [T]
 static overload SequenceElementType(CoordinateRange[T]) =
     Type(T()^);
+
+
+//
+// CoordinateRange - size, index
+//
+
+[T]
+overload size(a:CoordinateRange[T]) = SizeT(a.last - a.first);
+
+[T,I | Integer?(I)]
+overload index(a:CoordinateRange[T], i:I) = ref (a.first + i)^;
+
+
+//
+// CoordinateRange - iteration
+//
 
 [T]
 overload iterator(r:CoordinateRange[T]) = r;
