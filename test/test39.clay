@@ -6,7 +6,10 @@ main() {
             print(line);
     }
     {
-        for (line in lines(File("LICENSE.txt")))
-            print(line);
+        var lines = Vector[String]();
+        for (line in prelude.lines(File("LICENSE.txt")))
+            push(lines, line);
+        for (x in lines)
+            print(x);
     }
 }
