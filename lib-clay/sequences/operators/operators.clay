@@ -6,6 +6,9 @@ static overloadable SizedSequence?;
 static overloadable RandomAccessSequence?;
 static overloadable LValueSequence?;
 
+// true if sequence elements are stored contiguously in memory
+static overloadable ContiguousSequence?;
+
 
 // basic sequence protocol
 overloadable iterator;
@@ -36,6 +39,8 @@ overloadable reserve;
 [T] static overload SizedSequence?(T) = false;
 [T] static overload RandomAccessSequence?(T) = false;
 [T] static overload LValueSequence?(T) = false;
+
+[T] static overload ContiguousSequence?(T) = false;
 
 
 [T | SizedSequence?(T)]
