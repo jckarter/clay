@@ -1,5 +1,8 @@
 
+
+//
 // default constructor
+//
 
 [T|Tuple?(T)]
 overload T() : T {
@@ -19,7 +22,10 @@ overload initTupleElements(a:T, static i) {
 }
 
 
+
+//
 // copy constructor
+//
 
 [T|Tuple?(T)]
 overload T(src:T) : T {
@@ -40,7 +46,10 @@ overload copyTupleElements(dest:T, src:T, static i) {
 }
 
 
+
+//
 // move constructor
+//
 
 [T|Tuple?(T)]
 overload move(src:T) : T {
@@ -61,7 +70,10 @@ overload moveTupleElements(dest:T, src:T, static i) {
 }
 
 
+
+//
 // destroy
+//
 
 [T|Tuple?(T)]
 overload destroy(a:T) {
@@ -81,7 +93,10 @@ overload destroyTupleElements(a:T, static i) {
 }
 
 
+
+//
 // assign
+//
 
 [T|Tuple?(T)]
 overload assign(dest:T, src:T) {
@@ -101,8 +116,10 @@ overload assignTupleElements(dest:T, src:T, static i) {
 }
 
 
+
+//
 // equals?
-
+//
 
 [T|Tuple?(T)]
 overload equals?(a:T, b:T) {
@@ -124,7 +141,10 @@ overload equalTupleElements?(a:T, b:T, static i) {
 }
 
 
+
+//
 // lesser?
+//
 
 [T|Tuple?(T)]
 overload lesser?(a:T, b:T) {

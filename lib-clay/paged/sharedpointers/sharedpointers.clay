@@ -1,5 +1,10 @@
 import paged.*;
 
+
+//
+// SharedPointer
+//
+
 record RefCounted[T] {
     refCount:Int;
     value:T;
@@ -8,6 +13,12 @@ record RefCounted[T] {
 record SharedPointer[T] {
     ptr: PagedPointer[RefCounted[T]];
 }
+
+
+
+//
+// allocateShared, constructors, assign, destroy
+//
 
 [T]
 inlined allocateShared(x:T) {
@@ -54,8 +65,20 @@ overload destroy(p : SharedPointer[T]) {
     }
 }
 
+
+
+//
+// dereference
+//
+
 [T]
 overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
+
+
+
+//
+// null?, nullShared
+//
 
 [T]
 overload null?(p : SharedPointer[T]) = null?(p.ptr);

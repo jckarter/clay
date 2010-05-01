@@ -1,5 +1,6 @@
 import paged.*;
 
+
 //
 // Vector[T]
 //
@@ -11,6 +12,7 @@ record Vector[T] {
 }
 
 
+
 //
 // predicates
 //
@@ -22,6 +24,7 @@ record Vector[T] {
 [T] static overload SequenceElementType(Vector[T]) = T;
 
 
+
 //
 // constructors
 //
@@ -53,6 +56,7 @@ overload Vector(a:A) {
 }
 
 
+
 //
 // varargs constructor
 //
@@ -86,8 +90,9 @@ overload Vector[T](size:SizeT, capacity:SizeT,
 }
 
 
+
 //
-// destroy
+// destroy, move
 //
 
 [T]
@@ -97,11 +102,6 @@ overload destroy(a:Vector[T]) {
     freePaged(a.data);
 }
 
-
-//
-// move
-//
-
 [T]
 overload move(a:Vector[T]) : Vector[T] {
     returned <-- Vector[T](a.size, a.capacity, a.data);
@@ -109,6 +109,7 @@ overload move(a:Vector[T]) : Vector[T] {
 }
 
 
+
 //
 // size, index
 //
@@ -120,6 +121,7 @@ overload size(a:Vector[T]) = a.size;
 overload index(a:Vector[T], i:I) = ref (a.data + SizeT(i))^;
 
 
+
 //
 // vector iteration
 //
@@ -134,6 +136,7 @@ overload begin(a:Vector[T]) = &a[0];
 overload end(a:Vector[T]) = &a[0] + a.size;
 
 
+
 //
 // equals?, lesser?
 //
@@ -165,6 +168,7 @@ overload lesser?(a:Vector[T], b:Vector[T]) {
 }
 
 
+
 //
 // front, back, push, pop
 //
@@ -192,6 +196,7 @@ overload pop(a:Vector[T]) : T {
 }
 
 
+
 //
 // reserve
 //
@@ -216,6 +221,7 @@ overload reserve(a:Vector[T], n:I) {
 }
 
 
+
 //
 // clear, insert, remove
 //

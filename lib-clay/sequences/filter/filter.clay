@@ -1,5 +1,25 @@
 
+
+
+//
+// filter
+//
+
 overloadable filter;
+
+[F,A | Sequence?(A)]
+overload filter(predicate:F, rvalue seq:A) =
+    Filtered[F,A](predicate, move(seq));
+
+[F,A | Sequence?(A)]
+overload filter(predicate:F, lvalue seq:A)
+    = filter(predicate, sequenceHandle(seq));
+
+
+
+//
+// Filtered
+//
 
 private record Filtered[F,A] {
     predicate : F;
@@ -17,16 +37,10 @@ static overload SequenceElementType(Filtered[F,A]) =
     SequenceElementType(A);
 
 
-[F,A | Sequence?(A)]
-overload filter(predicate:F, rvalue seq:A) =
-    Filtered[F,A](predicate, move(seq));
-
-[F,A | Sequence?(A)]
-overload filter(predicate:F, lvalue seq:A)
-    = filter(predicate, sequenceHandle(seq));
-
-
-// iterator when not LValueSequence?(innerSequence)
+
+//
+// FilteredIterator_Val - iterator when not LValueSequence?(innerSequence)
+//
 
 private record FilteredIterator_Val[F,ITER,X] {
     predicate : F;
@@ -61,7 +75,10 @@ overload next(iter:FilteredIterator_Val[F,ITER,X]) {
 }
 
 
-// iterator when LValueSequence?(innerSequence)
+
+//
+// FilteredIterator_Ref - iterator when LValueSequence?(innerSequence)
+//
 
 private record FilteredIterator_Ref[F,ITER,X] {
     predicate : F;

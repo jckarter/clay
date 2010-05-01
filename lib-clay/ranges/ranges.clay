@@ -15,6 +15,7 @@ record Range[T] {
 [T] static overload SequenceElementType(Range[T]) = T;
 
 
+
 //
 // Range - size, index
 //
@@ -26,6 +27,7 @@ overload size(a:Range[T]) = SizeT(a.last - a.first);
 overload index(a:Range[T], i:I) = T(a.first + i);
 
 
+
 //
 // Range - iteration
 //
@@ -64,6 +66,7 @@ overload range(first:I, last:I) = Range(first, last);
 overload range(last:I) = Range(I(0), last);
 
 
+
 //
 // CoordinateRange
 //
@@ -82,6 +85,7 @@ static overload SequenceElementType(CoordinateRange[T]) =
     Type(T()^);
 
 
+
 //
 // CoordinateRange - size, index
 //
@@ -93,6 +97,7 @@ overload size(a:CoordinateRange[T]) = SizeT(a.last - a.first);
 overload index(a:CoordinateRange[T], i:I) = ref (a.first + i)^;
 
 
+
 //
 // CoordinateRange - coordinates
 //
@@ -104,6 +109,7 @@ overload begin(a:CoordinateRange[T]) = a.first;
 overload end(a:CoordinateRange[T]) = a.last;
 
 
+
 //
 // CoordinateRange - iteration
 //

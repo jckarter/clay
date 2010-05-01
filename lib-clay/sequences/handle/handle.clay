@@ -1,12 +1,18 @@
 
+
+//
+// SequenceHandle
+//
+
 record SequenceHandle[A] {
     inner : Pointer[A];
 }
 
-overloadable sequenceHandle;
 
-[A | Sequence?(A)]
-overload sequenceHandle(seq:A) = SequenceHandle(&seq);
+
+//
+// predicates
+//
 
 [A | SizedSequence?(A)]
 static overload SizedSequence?(SequenceHandle[A]) = true;
@@ -21,6 +27,22 @@ static overload LValueSequence?(SequenceHandle[A]) = true;
 static overload SequenceElementType(SequenceHandle[A])
     = SequenceElementType(A);
 
+
+
+//
+// sequenceHandle
+//
+
+overloadable sequenceHandle;
+
+[A | Sequence?(A)]
+overload sequenceHandle(seq:A) = SequenceHandle(&seq);
+
+
+
+//
+// iterator, size, index
+//
 
 [A]
 overload iterator(seq:SequenceHandle[A]) = iterator(seq.inner^);

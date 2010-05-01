@@ -2,6 +2,14 @@
 public import win32.generated.*;
 public import win32.constants.*;
 
+
+
+//
+// GetFileSizeEx, SetFilePointerEx
+//
+// redefined because LARGE_INTEGER definition is wrong
+//
+
 external (stdcall) GetFileSizeEx(
     handle : HANDLE,
     lpFileSize : Pointer[Int64]) : BOOL;
@@ -11,6 +19,12 @@ external (stdcall) SetFilePointerEx(
     offset : Int64,
     newPosition : Pointer[Int64],
     moveMethod : DWORD) : BOOL;
+
+
+
+//
+// errorMessage
+//
 
 static FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
 

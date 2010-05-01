@@ -1,5 +1,8 @@
 
-// byte streams
+
+//
+// read, write, flush - byte stream operations
+//
 
 // [I | Integer?(I)]
 // read(stream, buf:Pointer[Byte], n:I) : SizeT

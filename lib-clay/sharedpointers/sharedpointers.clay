@@ -1,4 +1,10 @@
 
+
+
+//
+// SharedPointer
+//
+
 record RefCounted[T] {
     refCount:Int;
     value:T;
@@ -8,6 +14,12 @@ record SharedPointer[T] {
     ptr: Pointer[RefCounted[T]];
 }
 
+
+
+//
+// allocateShared
+//
+
 [T]
 inlined allocateShared(x:T) {
     var ptr = allocateMemory(RefCounted[T], SizeT(1));
@@ -15,6 +27,12 @@ inlined allocateShared(x:T) {
     ptr^.value <-- x;
     return SharedPointer(ptr);
 }
+
+
+
+//
+// constructors, move, assign, destroy
+//
 
 [T]
 overload SharedPointer[T]() {
@@ -52,6 +70,12 @@ overload destroy(p : SharedPointer[T]) {
         }
     }
 }
+
+
+
+//
+// dereference, null?, nullShared
+//
 
 [T]
 overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;

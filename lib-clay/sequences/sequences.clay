@@ -5,7 +5,10 @@ public import sequences.map.*;
 public import sequences.filter.*;
 
 
+
+//
 // reduce
+//
 
 overloadable reduce;
 
@@ -24,7 +27,10 @@ overload reduce(f:F, initial:X, seq:A) {
 }
 
 
+
+//
 // split
+//
 
 [A | Sequence?(A)]
 split(a:A, sep) {
@@ -41,7 +47,10 @@ split(a:A, sep) {
 }
 
 
+
+//
 // slice
+//
 
 overloadable slice;
 

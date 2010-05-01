@@ -1,5 +1,10 @@
 import win32;
 
+
+//
+// File
+//
+
 record File {
     handle : win32.HANDLE;
     owned : Bool;
@@ -12,6 +17,12 @@ private stdHandle(x) = win32.GetStdHandle(win32.DWORD(x));
 var stdin  = File(stdHandle(win32.STD_INPUT_HANDLE), false);
 var stdout = File(stdHandle(win32.STD_OUTPUT_HANDLE), false);
 var stderr = File(stdHandle(win32.STD_ERROR_HANDLE), false);
+
+
+
+//
+// constructors, destroy
+//
 
 enum OpenMode {
     READ,
@@ -88,7 +99,10 @@ overload File(f:File) = unsupported();
 overload assign(dest:File, src:File) = unsupported();
 
 
-// implement byte stream operations
+
+//
+// read, write, flush
+//
 
 [I | Integer?(I)]
 overload read(f:File, buffer:Pointer[Byte], n:I) : SizeT {
@@ -125,15 +139,15 @@ overload flush(f:File) {
 }
 
 
-// fileExists?
+
+//
+// fileExists?, fileSize, seek
+//
 
 fileExists?(p) {
     var result = win32.GetFileAttributesA(cstring(p));
     return result != win32.INVALID_FILE_ATTRIBUTES;
 }
-
-
-// fileSize
 
 fileSize(f:File) {
     var size = Int64();
@@ -142,9 +156,6 @@ fileSize(f:File) {
         error(win32.errorMessage());
     return size;
 }
-
-
-// seek
 
 enum SeekOrigin {
     SEEK_SET,

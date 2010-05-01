@@ -1,6 +1,6 @@
 import libc;
 
-
+
 //
 // generic string predicate
 //
@@ -16,6 +16,7 @@ static ContiguousString?(A) =
     ContiguousSequence?(A) and (Char == SequenceElementType(A));
 
 
+
 //
 // String
 //
@@ -27,6 +28,7 @@ record String {
 }
 
 
+
 //
 // predicates
 //
@@ -38,6 +40,7 @@ static overload ContiguousSequence?(String) = true;
 static overload SequenceElementType(String) = Char;
 
 
+
 //
 // default constructor
 //
@@ -45,6 +48,7 @@ static overload SequenceElementType(String) = Char;
 overload String() = String(null(Char), SizeT(0), false);
 
 
+
 //
 // construct from unsized sequence
 //
@@ -63,6 +67,7 @@ overload String(a:A) : String {
 overload String(a:A) = String(map(Char, a));
 
 
+
 //
 // construct from sized sequence
 //
@@ -89,6 +94,7 @@ overload String(a:A) {
 overload String(a:A) = String(map(Char, a));
 
 
+
 //
 // construct from c-string
 //
@@ -97,6 +103,7 @@ overload String(a:A) = String(map(Char, a));
 overload String(cstr : Pointer[T]) = String(stringRef(cstr));
 
 
+
 //
 // stringRef constructors
 //
@@ -116,6 +123,7 @@ overload stringRef(cstr : Pointer[T]) {
 }
 
 
+
 //
 // destroy
 //
@@ -126,6 +134,7 @@ overload destroy(a:String) {
 }
 
 
+
 //
 // move
 //
@@ -141,6 +150,7 @@ overload move(a:String) : String {
 }
 
 
+
 //
 // size, index
 //
@@ -151,6 +161,7 @@ overload size(a:String) = a.size;
 overload index(a:String, i:I) = ref (a.data + SizeT(i))^;
 
 
+
 //
 // coordinates and iteration
 //
@@ -161,6 +172,7 @@ overload end(a:String) = a.data + a.size;
 overload iterator(a:String) = CoordinateRange(begin(a), end(a));
 
 
+
 //
 // equals?, lesser?
 //
@@ -208,6 +220,7 @@ overload lesser?(a:A, b:B) {
 }
 
 
+
 //
 // convert to c-compatible string
 //

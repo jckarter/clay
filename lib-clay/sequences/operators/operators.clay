@@ -1,4 +1,9 @@
 
+
+//
+// predicates
+//
+
 static overloadable Sequence?;
 static overloadable SequenceElementType;
 
@@ -10,13 +15,19 @@ static overloadable LValueSequence?;
 static overloadable ContiguousSequence?;
 
 
+
+//
 // iteration protocol
+//
 overloadable iterator; // create iterator
 overloadable hasNext?; // iterator operation
 overloadable next;     // iterator operation
 
 
+
+//
 // sequence protocol
+//
 
 overloadable size; // requires SizedSequence?
 overloadable index; // requires RandomAccessSequence?
@@ -35,7 +46,10 @@ overloadable remove;
 overloadable reserve;
 
 
+
+//
 // defaults
+//
 
 [T] static overload Sequence?(T) = false;
 
@@ -55,6 +69,11 @@ static overload Sequence?(T) = true;
 [T | LValueSequence?(T)]
 static overload Sequence?(T) = true;
 
+
+
+//
+// empty?
+//
 
 [T | SizedSequence?(T)]
 empty?(a:T) = (size(a) == 0);
