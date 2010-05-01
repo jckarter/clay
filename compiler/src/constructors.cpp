@@ -180,7 +180,7 @@ void initBuiltinConstructor(RecordPtr x)
     code->body = new Return(returnExpr.ptr());
     code->body->location = returnExpr->location;
 
-    OverloadPtr defaultOverload = new Overload(recName, code, false);
+    OverloadPtr defaultOverload = new Overload(recName, code, true);
     defaultOverload->location = x->location;
     defaultOverload->env = x->env;
     x->overloads.push_back(defaultOverload);
