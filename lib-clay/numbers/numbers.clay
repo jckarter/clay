@@ -1,3 +1,4 @@
+import numbers.parser.*;
 
 
 //
@@ -256,3 +257,29 @@ overload bitwiseXor(a:A, b:A) = integerBitwiseXor(a, b);
 
 [A | Integer?(A)]
 overload bitwiseNot(a:A) = integerBitwiseNot(a);
+
+
+
+//
+// parse numbers from strings
+//
+
+[I,S | Integer?(I) and String?(S)]
+overload I(s:S) = I(String(s));
+
+overload Int8(s:String)  = parseInt8(s);
+overload Int16(s:String) = parseInt16(s);
+overload Int32(s:String) = parseInt32(s);
+overload Int64(s:String) = parseInt64(s);
+
+overload UInt8(s:String)  = parseUInt8(s);
+overload UInt16(s:String) = parseUInt16(s);
+overload UInt32(s:String) = parseUInt32(s);
+overload UInt64(s:String) = parseUInt64(s);
+
+
+[F,S | Float?(F) and String?(S)]
+overload F(s:S) = F(String(s));
+
+overload Float32(s:String) = parseFloat32(s);
+overload Float64(s:String) = parseFloat64(s);
