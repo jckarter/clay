@@ -1,0 +1,36 @@
+
+testParser(parser, min, max) {
+    println("testing ", parser);
+    var v = Vector[Char]();
+    printTo(v, min);
+    println("min = ", parser(v));
+    clear(v);
+    printTo(v, max);
+    println("max = ", parser(v));
+}
+
+testParser2(parser, a, b) {
+    println("testing ", parser);
+    var v = Vector[Char]();
+    printTo(v, a);
+    println("a = ", parser(v));
+    clear(v);
+    printTo(v, b);
+    println("b = ", parser(v));
+}
+
+main() {
+    testParser(Int8, INT8_MIN, INT8_MAX);
+    testParser(UInt8, 0#u8, UINT8_MAX);
+    testParser(Int16, INT16_MIN, INT16_MAX);
+    testParser(UInt16, 0#u16, UINT16_MAX);
+    testParser(Int32, INT32_MIN, INT32_MAX);
+    testParser(UInt32, 0#u32, UINT32_MAX);
+    testParser(Int64, INT64_MIN, INT64_MAX);
+    testParser(UInt64, 0#u64, UINT64_MAX);
+
+    testParser2(Float32, 1.2, -3.4);
+    testParser2(Float64, 1.2, -3.4);
+
+    println(Int("42"));
+}

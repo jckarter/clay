@@ -1,0 +1,197 @@
+import libc;
+import numbers.parser.errno.*;
+
+
+//
+// parseInt8, parseUInt8
+//
+
+overloadable parseInt8;
+
+[S | String?(S)]
+overload parseInt8(s:S) = parseInt8(String(s));
+
+overload parseInt8(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtol(p, &end, 0);
+    if (end^ != 0)
+        error("invalid Int8: ", s);
+    if ((errno() == ERANGE) or (value < INT8_MIN) or (value > INT8_MAX))
+        error("Int8 out of range: ", s);
+    return Int8(value);
+}
+
+overloadable parseUInt8;
+
+[S | String?(S)]
+overload parseUInt8(s:S) = parseUInt8(String(s));
+
+overload parseUInt8(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtoul(p, &end, 0);
+    if (end^ != 0)
+        error("invalid UInt8: ", s);
+    if ((errno() == ERANGE) or (value > UINT8_MAX))
+        error("UInt8 out of range: ", s);
+    return UInt8(value);
+}
+
+
+
+//
+// parseInt16, parseUInt16
+//
+
+overloadable parseInt16;
+
+[S | String?(S)]
+overload parseInt16(s:S) = parseInt16(String(s));
+
+overload parseInt16(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtol(p, &end, 0);
+    if (end^ != 0)
+        error("invalid Int16: ", s);
+    if ((errno() == ERANGE) or (value < INT16_MIN) or (value > INT16_MAX))
+        error("Int16 out of range: ", s);
+    return Int16(value);
+}
+
+overloadable parseUInt16;
+
+[S | String?(S)]
+overload parseUInt16(s:S) = parseUInt16(String(s));
+
+overload parseUInt16(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtoul(p, &end, 0);
+    if (end^ != 0)
+        error("invalid UInt16: ", s);
+    if ((errno() == ERANGE) or (value > UINT16_MAX))
+        error("UInt16 out of range: ", s);
+    return UInt16(value);
+}
+
+
+
+//
+// parseInt32, parseUInt32
+//
+
+overloadable parseInt32;
+
+[S | String?(S)]
+overload parseInt32(s:S) = parseInt32(String(s));
+
+overload parseInt32(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtoll(p, &end, 0);
+    if (end^ != 0)
+        error("invalid Int32: ", s);
+    if ((errno() == ERANGE) or (value < INT32_MIN) or (value > INT32_MAX))
+        error("Int32 out of range: ", s);
+    return Int32(value);
+}
+
+overloadable parseUInt32;
+
+[S | String?(S)]
+overload parseUInt32(s:S) = parseUInt32(String(s));
+
+overload parseUInt32(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtoull(p, &end, 0);
+    if (end^ != 0)
+        error("invalid UInt32: ", s);
+    if ((errno() == ERANGE) or (value > UINT32_MAX))
+        error("UInt32 out of range: ", s);
+    return UInt32(value);
+}
+
+
+
+//
+// parseInt64, parseUInt64
+//
+
+overloadable parseInt64;
+
+[S | String?(S)]
+overload parseInt64(s:S) = parseInt64(String(s));
+
+overload parseInt64(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtoll(p, &end, 0);
+    if (end^ != 0)
+        error("invalid Int64: ", s);
+    if (errno() == ERANGE)
+        error("Int64 out of range: ", s);
+    return Int64(value);
+}
+
+overloadable parseUInt64;
+
+[S | String?(S)]
+overload parseUInt64(s:S) = parseUInt64(String(s));
+
+overload parseUInt64(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtoull(p, &end, 0);
+    if (end^ != 0)
+        error("invalid UInt64: ", s);
+    if (errno() == ERANGE)
+        error("UInt64 out of range: ", s);
+    return UInt64(value);
+}
+
+
+
+//
+// parseFloat32
+//
+
+overloadable parseFloat32;
+
+[S | String?(S)]
+overload parseFloat32(s:S) = parseFloat32(String(s));
+
+overload parseFloat32(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtof(p, &end);
+    if (end^ != 0)
+        error("invalid Float32: ", s);
+    if (errno() == ERANGE)
+        error("Float32 out of range: ", s);
+    return Float32(value);
+}
+
+
+
+//
+// parseFloat64
+//
+
+overloadable parseFloat64;
+
+[S | String?(S)]
+overload parseFloat64(s:S) = parseFloat64(String(s));
+
+overload parseFloat64(s:String) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtod(p, &end);
+    if (end^ != 0)
+        error("invalid Float64: ", s);
+    if (errno() == ERANGE)
+        error("Float64 out of range: ", s);
+    return Float64(value);
+}
