@@ -1,6 +1,21 @@
 
+
+//
+// type aliases for 32-bit platforms
+//
+
 static PtrInt = Int32;
 static UPtrInt = UInt32;
 
 static CLong = Int32;
 static CULong = UInt32;
+
+
+
+//
+// limits
+//
+
+static PTRINT_MIN = INT32_MIN;
+static PTRINT_MAX = INT32_MAX;
+static UPTRINT_MAX = UINT32_MAX;

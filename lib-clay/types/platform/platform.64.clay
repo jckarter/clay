@@ -1,6 +1,21 @@
 
+
+//
+// type aliases for 64-bit platforms
+//
+
 static PtrInt = Int64;
 static UPtrInt = UInt64;
 
 static CLong = Int64;
 static CULong = UInt64;
+
+
+
+//
+// limits
+//
+
+static PTRINT_MIN = INT64_MIN;
+static PTRINT_MAX = INT64_MAX;
+static UPTRINT_MAX = UINT64_MAX;
