@@ -18,10 +18,8 @@ static overload SequenceElementType(Filtered[F,A]) =
 
 
 [F,A | Sequence?(A)]
-overload filter(predicate:F, rvalue seq:A) : Filtered[F,A] {
-    returned.predicate <-- predicate;
-    returned.innerSequence <-- move(seq);
-}
+overload filter(predicate:F, rvalue seq:A) =
+    Filtered[F,A](predicate, move(seq));
 
 [F,A | Sequence?(A)]
 overload filter(predicate:F, lvalue seq:A)
