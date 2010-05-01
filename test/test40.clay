@@ -1,0 +1,14 @@
+
+main() {
+    var a = Vector[Char]();
+    printTo(a, "foo", -10, "bar");
+    println(a);
+
+    var b = Vector[UInt8]();
+    printTo(b, "foo", -20, "bar");
+    println(String(b));
+
+    var c = Vector[Int8]();
+    printTo(c, "foo", -30, "bar");
+    println(String(c));
+}
