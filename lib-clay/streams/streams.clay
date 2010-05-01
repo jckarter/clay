@@ -60,3 +60,44 @@ overload writeByte(stream, x:I) {
 overload writeByte(stream, x:Char) {
     writeByte(stream, Byte(x));
 }
+
+
+
+//
+// write, flush - Vector[ByteSizedInteger]
+//
+
+[T,I | ByteSizedInteger?(T) and Integer?(I)]
+overload write(v:Vector[T], buf:Pointer[Byte], n:I) {
+    reserve(v, size(v) + n);
+    var p = buf;
+    var end = buf + n;
+    while (p != end) {
+        push(v, T(p^));
+        p += 1;
+    }
+}
+
+[T | ByteSizedInteger?(T)]
+overload flush(v:Vector[T]) {
+}
+
+
+
+//
+// write, flush - Vector[Char]
+//
+
+[I | Integer?(I)]
+overload write(v:Vector[Char], buf:Pointer[Byte], n:I) {
+    reserve(v, size(v) + n);
+    var p = buf;
+    var end = buf + n;
+    while (p != end) {
+        push(v, Char(p^));
+        p += 1;
+    }
+}
+
+overload flush(v:Vector[Char]) {
+}
