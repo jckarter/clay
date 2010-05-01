@@ -20,7 +20,7 @@ static overload SequenceElementType(Array[T,n]) = T;
 
 
 //
-// size, at
+// size, index
 //
 
 [T,n]
@@ -31,53 +31,17 @@ overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
 
 
 //
-// array coordinates
-//
-
-record ArrayCoordinate[T] {
-    ptr:Pointer[T];
-}
-
-[T]
-overload dereference(c:ArrayCoordinate[T]) = ref dereference(c.ptr);
-
-[T,n]
-overload begin(a:Array[T,n]) = ArrayCoordinate(&a[0]);
-
-[T,n]
-overload end(a:Array[T,n]) = ArrayCoordinate(&a[n]);
-
-[T,I | Integer?(I)]
-overload add(c:ArrayCoordinate[T], i:I) = ArrayCoordinate(c.ptr + i);
-
-[T,I | Integer?(I)]
-overload subtract(c:ArrayCoordinate[T], i:I) = ArrayCoordinate(c.ptr - i);
-
-[T]
-overload subtract(c1:ArrayCoordinate[T], c2:ArrayCoordinate[T])
-    = c1.ptr - c2.ptr;
-
-[T]
-overload inc(c:ArrayCoordinate[T]) {
-    inc(c.ptr);
-}
-
-[T]
-overload dec(c:ArrayCoordinate[T]) {
-    dec(c.ptr);
-}
-
-[T]
-overload lesser?(a:ArrayCoordinate[T], b:ArrayCoordinate[T])
-    = a.ptr < b.ptr;
-
-
-//
 // array iteration
 //
 
 [T,n]
 overload iterator(a:Array[T,n]) = CoordinateRange(begin(a), end(a));
+
+[T,n]
+overload begin(a:Array[T,n]) = &a[0];
+
+[T,n]
+overload end(a:Array[T,n]) = &a[n];
 
 
 //

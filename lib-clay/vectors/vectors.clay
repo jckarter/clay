@@ -116,53 +116,17 @@ overload index(a:Vector[T], i:I) = ref (a.data + SizeT(i))^;
 
 
 //
-// vector coordinates
-//
-
-record VectorCoordinate[T] {
-    ptr:Pointer[T];
-}
-
-[T]
-overload dereference(c:VectorCoordinate[T]) = ref c.ptr^;
-
-[T]
-overload begin(a:Vector[T]) = VectorCoordinate(a.data);
-
-[T]
-overload end(a:Vector[T]) = VectorCoordinate(a.data + a.size);
-
-[T,I|Integer?(I)]
-overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
-
-[T,I|Integer?(I)]
-overload subtract(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr - i);
-
-[T]
-overload subtract(c1:VectorCoordinate[T], c2:VectorCoordinate[T])
-    = c1.ptr - c2.ptr;
-
-[T]
-overload inc(c:VectorCoordinate[T]) {
-    inc(c.ptr);
-}
-
-[T]
-overload dec(c:VectorCoordinate[T]) {
-    dec(c.ptr);
-}
-
-[T]
-overload lesser?(a:VectorCoordinate[T], b:VectorCoordinate[T])
-    = a.ptr < b.ptr;
-
-
-//
 // vector iteration
 //
 
 [T]
 overload iterator(a:Vector[T]) = CoordinateRange(begin(a), end(a));
+
+[T]
+overload begin(a:Vector[T]) = a.data;
+
+[T]
+overload end(a:Vector[T]) = a.data + a.size;
 
 
 //
@@ -282,17 +246,17 @@ overload insert(a:Vector[T], i:I, x) {
 }
 
 [T]
-overload insert(a:Vector[T], i:VectorCoordinate[T], x:T) {
+overload insert(a:Vector[T], i:Pointer[T], x:T) {
     insertLocation(a, i-begin(a)) <-- x;
 }
 
 [T]
-overload insert(a:Vector[T], i:VectorCoordinate[T], rvalue x:T) {
+overload insert(a:Vector[T], i:Pointer[T], rvalue x:T) {
     insertLocation(a, i-begin(a)) <-- move(x);
 }
 
 [T]
-private removeLocation(a:Vector[T], i:VectorCoordinate[T]) {
+private removeLocation(a:Vector[T], i:Pointer[T]) {
     var j = end(a);
     while (i+1 != j) {
         i^ <-- move((i+1)^);
@@ -304,7 +268,7 @@ private removeLocation(a:Vector[T], i:VectorCoordinate[T]) {
 }
 
 [T]
-overload remove(a:Vector[T], i:VectorCoordinate[T]) {
+overload remove(a:Vector[T], i:Pointer[T]) {
     destroy(i^);
     removeLocation(a, i);
 }
