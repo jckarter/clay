@@ -94,6 +94,17 @@ overload index(a:CoordinateRange[T], i:I) = ref (a.first + i)^;
 
 
 //
+// CoordinateRange - coordinates
+//
+
+[T]
+overload begin(a:CoordinateRange[T]) = a.first;
+
+[T]
+overload end(a:CoordinateRange[T]) = a.last;
+
+
+//
 // CoordinateRange - iteration
 //
 

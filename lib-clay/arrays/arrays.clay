@@ -56,8 +56,8 @@ overload Array[T,n]() : Array[T,n] {
 
 [T,n]
 overload Array[T,n](src:Array[T,n]) : Array[T,n] {
-    ref d = iterator(returned);
-    ref s = iterator(src);
+    var d = iterator(returned);
+    var s = iterator(src);
     while (hasNext?(s))
         next(d) <-- next(s);
 }
@@ -70,16 +70,16 @@ overload destroy(a:Array[T,n]) {
 
 [T,n]
 overload move(src:Array[T,n]) : Array[T,n] {
-    ref d = iterator(returned);
-    ref s = iterator(src);
+    var d = iterator(returned);
+    var s = iterator(src);
     while (hasNext?(s))
         next(d) <-- move(next(s));
 }
 
 [T,n]
 overload equals?(a:Array[T,n], b:Array[T,n]) {
-    ref i = iterator(a);
-    ref j = iterator(b);
+    var i = iterator(a);
+    var j = iterator(b);
     while (hasNext?(i)) {
         if (next(i) != next(j))
             return false;
@@ -89,8 +89,8 @@ overload equals?(a:Array[T,n], b:Array[T,n]) {
 
 [T,n]
 overload lesser?(a:Array[T,n], b:Array[T,n]) {
-    ref i = iterator(a);
-    ref j = iterator(b);
+    var i = iterator(a);
+    var j = iterator(b);
     while (hasNext?(i)) {
         ref x = next(i);
         ref y = next(j);
