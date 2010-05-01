@@ -167,8 +167,8 @@ overload iterator(a:String) = CoordinateRange(begin(a), end(a));
 
 [A,B | String?(A) and String?(B)]
 overload equals?(a:A, b:B) {
-    ref i = iterator(a);
-    ref j = iterator(b);
+    var i = iterator(a);
+    var j = iterator(b);
     while (hasNext?(i)) {
         if (not hasNext?(j))
             return false;
@@ -182,8 +182,8 @@ overload equals?(a:A, b:B) {
 overload equals?(a:A, b:B) {
     if (size(a) != size(b))
         return false;
-    ref i = iterator(a);
-    ref j = iterator(b);
+    var i = iterator(a);
+    var j = iterator(b);
     while (hasNext?(i)) {
         if (next(i) != next(j))
             return false;
@@ -194,8 +194,8 @@ overload equals?(a:A, b:B) {
 
 [A,B | String?(A) and String?(B)]
 overload lesser?(a:A, b:B) {
-    ref i = iterator(a);
-    ref j = iterator(b);
+    var i = iterator(a);
+    var j = iterator(b);
     while (hasNext?(i)) {
         if (not hasNext?(j))
             return false;

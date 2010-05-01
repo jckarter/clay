@@ -139,8 +139,8 @@ overload iterator(a:NamedVector[T]) = CoordinateRange(begin(a), end(a));
 overload equals?(a:NamedVector[T], b:NamedVector[T]) {
     if (size(a) != size(b))
         return false;
-    ref i = iterator(a);
-    ref j = iterator(b);
+    var i = iterator(a);
+    var j = iterator(b);
     while (hasNext?(i)) {
         if (next(i) != next(j))
             return false;
@@ -150,8 +150,8 @@ overload equals?(a:NamedVector[T], b:NamedVector[T]) {
 
 [T]
 overload lesser?(a:NamedVector[T], b:NamedVector[T]) {
-    ref i = iterator(a);
-    ref j = iterator(b);
+    var i = iterator(a);
+    var j = iterator(b);
     while (hasNext?(i) and hasNext?(j)) {
         ref x = next(i);
         ref y = next(j);

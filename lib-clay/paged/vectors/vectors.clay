@@ -139,8 +139,8 @@ overload end(a:Vector[T]) = &a[0] + a.size;
 overload equals?(a:Vector[T], b:Vector[T]) {
     if (size(a) != size(b))
         return false;
-    ref i = iterator(a);
-    ref j = iterator(b);
+    var i = iterator(a);
+    var j = iterator(b);
     while (hasNext?(i)) {
         if (next(i) != next(j))
             return false;
@@ -150,8 +150,8 @@ overload equals?(a:Vector[T], b:Vector[T]) {
 
 [T]
 overload lesser?(a:Vector[T], b:Vector[T]) {
-    ref i = iterator(a);
-    ref j = iterator(b);
+    var i = iterator(a);
+    var j = iterator(b);
     while (hasNext?(i) and hasNext?(j)) {
         ref x = next(i);
         ref y = next(j);

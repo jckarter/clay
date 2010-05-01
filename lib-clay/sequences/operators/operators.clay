@@ -10,10 +10,13 @@ static overloadable LValueSequence?;
 static overloadable ContiguousSequence?;
 
 
-// basic sequence protocol
-overloadable iterator;
-overloadable hasNext?;
-overloadable next;
+// iteration protocol
+overloadable iterator; // create iterator
+overloadable hasNext?; // iterator operation
+overloadable next;     // iterator operation
+
+
+// sequence protocol
 
 overloadable size; // requires SizedSequence?
 overloadable index; // requires RandomAccessSequence?
