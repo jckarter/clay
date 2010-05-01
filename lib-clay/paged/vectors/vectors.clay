@@ -30,18 +30,20 @@ record Vector[T] {
 overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), nullPaged(T));
 
 [T,A | Sequence?(A) and (T == SequenceElementType(A))]
-overload Vector[T](a:A) : Vector[T] {
-    returned <-- Vector[T]();
+overload Vector[T](a:A) {
+    var v = Vector[T]();
     for (x in a)
-        push(returned, x);
+        push(v, x);
+    return move(v);
 }
 
 [T,A | SizedSequence?(A) and (T == SequenceElementType(A))]
-overload Vector[T](a:A) : Vector[T] {
-    returned <-- Vector[T]();
-    reserve(returned, size(a));
+overload Vector[T](a:A) {
+    var v = Vector[T]();
+    reserve(v, size(a));
     for (x in a)
-        push(returned, x);
+        push(v, x);
+    return move(v);
 }
 
 [A | Sequence?(A)]
@@ -56,10 +58,11 @@ overload Vector(a:A) {
 //
 
 [T]
-overload Vector[T](x:T, ...) : Vector[T] {
-    returned <-- Vector[T]();
-    reserve(returned, countArgs(x, ...));
-    pushAll(returned, x, ...);
+overload Vector[T](x:T, ...) {
+    var v = Vector[T]();
+    reserve(v, countArgs(x, ...));
+    pushAll(v, x, ...);
+    return move(v);
 }
 
 private overloadable countArgs;
