@@ -6,7 +6,7 @@ overloadable null?;
 
 
 //
-// Pointer
+// Pointer - constructors, destroy
 //
 
 [T]
@@ -22,6 +22,12 @@ overload Pointer[T](src:Pointer[T]) : Pointer[T] {
 overload destroy(x:Pointer[T]) {
 }
 
+
+
+//
+// Pointer - convert to/from integers and other pointers
+//
+
 [I,T|Integer?(I)]
 overload I(a:Pointer[T]) = pointerToInt(I, a);
 
@@ -31,6 +37,12 @@ overload Pointer[T](a:I) = intToPointer(T, a);
 [DEST, SRC]
 overload Pointer[DEST](a:Pointer[SRC]) =
     pointerCast(Pointer[DEST], a);
+
+
+
+//
+// Pointer - assign, equals?, lesser?
+//
 
 [T]
 overload assign(dest:Pointer[T], src:Pointer[T]) {
@@ -46,6 +58,12 @@ overload equals?(a:Pointer[T], b:Pointer[T]) {
 overload lesser?(a:Pointer[T], b:Pointer[T]) {
     return pointerLesser?(a, b);
 }
+
+
+
+//
+// Pointer - arithmetic
+//
 
 [T,I|Integer?(I)]
 overload add(p:Pointer[T], i:I) {
@@ -77,6 +95,12 @@ overload dec(a:Pointer[T]) {
     a -= 1;
 }
 
+
+
+//
+// Pointer - null, null?, dereference
+//
+
 [T]
 null(static T) = Pointer[T](0);
 
@@ -85,6 +109,12 @@ overload null?(x:Pointer[T]) = (x == null(T));
 
 [T]
 overload dereference(p:Pointer[T]) = ref pointerDereference(p);
+
+
+
+//
+// allocateMemory, freeMemory
+//
 
 [T,I | Integer?(I)]
 allocateMemory(static T, count:I) {
@@ -99,7 +129,7 @@ freeMemory(ptr) {
 
 
 //
-// CodePointer
+// CodePointer - constructors, destroy
 //
 
 [CP | CodePointer?(CP)]
@@ -115,6 +145,12 @@ overload CP(src:CP) : CP {
 overload destroy(x:CP) {
 }
 
+
+
+//
+// CodePointer - convert to/from other pointers/integers
+//
+
 [T, CP | CodePointer?(CP)]
 overload Pointer[T](a:CP) = pointerCast(Pointer[T], a);
 
@@ -129,6 +165,11 @@ overload CP(i:I) = CP(Pointer[Int8](i));
 
 [CP,I | CodePointer?(CP) and Integer?(I)]
 overload I(a:CP) = I(Pointer[Int8](a));
+
+
+
+//
+// CodePointer - equals?, lesser?, null?
 
 [CP | CodePointer?(CP)]
 overload equals?(a:CP, b:CP) {
@@ -146,7 +187,7 @@ overload null?(p:CP) = null?(RawPointer(p));
 
 
 //
-// CCodePointer
+// CCodePointer - constructors, destroy
 //
 
 [CP | CCodePointer?(CP)]
@@ -162,6 +203,12 @@ overload CP(src:CP) : CP {
 overload destroy(x:CP) {
 }
 
+
+
+//
+// CCodePointer - convert to/from other pointers/integers
+//
+
 [T, CP | CCodePointer?(CP)]
 overload Pointer[T](a:CP) = pointerCast(Pointer[T], a);
 
@@ -176,6 +223,12 @@ overload CP(i:I) = CP(Pointer[Int8](i));
 
 [CP,I | CCodePointer?(CP) and Integer?(I)]
 overload I(a:CP) = I(Pointer[Int8](a));
+
+
+
+//
+// CCodePointer - equals?, lesser?, null?
+//
 
 [CP | CCodePointer?(CP)]
 overload equals?(a:CP, b:CP) {

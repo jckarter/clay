@@ -1,5 +1,8 @@
 
+
+//
 // numeric type predicates
+//
 
 static overloadable SignedInteger?;
 
@@ -46,8 +49,10 @@ static overloadable Numeric?;
 [A, B] static overload Numeric?(A, B) = Numeric?(A) and Numeric?(B);
 
 
-
+
+//
 // BiggerInteger?, BiggerFloat?, BiggerNumeric?
+//
 
 [A,B | Integer?(A,B)]
 private static BiggerInteger?(A, B) =
@@ -74,7 +79,10 @@ static overload BiggerNumeric?(A, B) = BiggerInteger?(A,B);
 static overload BiggerNumeric?(A, B) = BiggerFloat?(A,B);
 
 
+
+//
 // toBiggerNumericType
+//
 
 private overloadable toBiggerNumericType;
 
@@ -88,7 +96,10 @@ overload toBiggerNumericType(static A, static B, v) = A(v);
 overload toBiggerNumericType(static A, static B, v) = B(v);
 
 
-// constructors, destructor
+
+//
+// constructors, destroy
+//
 
 [T | Numeric?(T)]
 overload T() : T {
@@ -107,7 +118,10 @@ overload destroy(x:T) {
 }
 
 
+
+//
 // assign
+//
 
 [A, B | Numeric?(A,B) and BiggerNumeric?(A,B)]
 overload assign(dest:A, src:B) {
@@ -125,7 +139,10 @@ overload assign(dest:T, src:T) {
 }
 
 
+
+//
 // equals?, lesser?
+//
 
 [A,B | Numeric?(A,B)]
 overload equals?(a:A, b:B) = numericEquals?(toBiggerNumericType(A, B, a),
@@ -140,7 +157,10 @@ overload lesser?(a:A, b:B) = numericLesser?(toBiggerNumericType(A, B, a),
 overload lesser?(a:A, b:A) = numericLesser?(a, b);
 
 
+
+//
 // binary ops
+//
 
 [A,B | Numeric?(A,B)]
 overload add(a:A, b:B) = numericAdd(toBiggerNumericType(A, B, a),
@@ -177,7 +197,10 @@ overload remainder(a:A, b:B) = integerRemainder(toBiggerNumericType(A, B, a),
 overload remainder(a:A, b:A) = integerRemainder(a, b);
 
 
+
+//
 // unary ops
+//
 
 [A | Numeric?(A)]
 overload plus(a:A) = a;
@@ -186,7 +209,10 @@ overload plus(a:A) = a;
 overload minus(a:A) = numericNegate(a);
 
 
+
+//
 // inc, dec
+//
 
 [A | Numeric?(A)]
 overload inc(a:A) {
@@ -199,7 +225,10 @@ overload dec(a:A) {
 }
 
 
+
+//
 // bitwise ops
+//
 
 [A,B | Integer?(A,B)]
 overload shiftLeft(a:A, b:B) = integerShiftLeft(a, A(b));

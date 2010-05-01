@@ -1,4 +1,5 @@
 
+
 //
 // RecordFieldType
 //
@@ -7,6 +8,7 @@
 static RecordFieldType(T, i) = Type(recordFieldRef(T(), SizeT(i)));
 
 
+
 //
 // SafeRecord? - true if record doesn't contains unsafe types such as pointers
 //
@@ -28,6 +30,7 @@ private static overloadable SafeFields?;
 static overload SafeFields?(T, i) = true;
 
 
+
 //
 // SafeType?
 //
@@ -38,11 +41,10 @@ static overloadable SafeType?;
 [T] static overload SafeType?(Pointer[T]) = false;
 
 
+
 //
-// constructor/destructor implementations for records
-//
-
 // default constructor
+//
 
 [T | Record?(T)]
 overload T() : T {
@@ -62,7 +64,10 @@ overload initRecordFields(a:T, static i) {
 }
 
 
+
+//
 // copy constructor
+//
 
 [T | Record?(T)]
 overload T(src:T) : T {
@@ -82,7 +87,10 @@ overload copyRecordFields(dest:T, src:T, static i) {
 }
 
 
+
+//
 // move constructor
+//
 
 [T | SafeRecord?(T)]
 overload move(src:T) : T {
@@ -102,7 +110,10 @@ overload moveRecordFields(dest:T, src:T, static i) {
 }
 
 
+
+//
 // destroy
+//
 
 [T | Record?(T)]
 overload destroy(a:T) {
@@ -122,7 +133,10 @@ overload destroyRecordFields (a:T, static i) {
 }
 
 
+
+//
 // assign
+//
 
 [T | SafeRecord?(T)]
 overload assign(dest:T, src:T) {
@@ -142,7 +156,10 @@ overload assignRecordFields(dest:T, src:T, static i) {
 }
 
 
+
+//
 // equals?
+//
 
 [T|Record?(T)]
 overload equals?(a:T, b:T) {
@@ -164,7 +181,10 @@ overload equalRecordFields?(a:T, b:T, static i) {
 }
 
 
+
+//
 // lesser?
+//
 
 [T|Record?(T)]
 overload lesser?(a:T, b:T) {

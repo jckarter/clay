@@ -6,6 +6,7 @@ import strings;
 import files.mapping.*;
 
 
+
 //
 // NamedVector[T]
 //
@@ -24,6 +25,7 @@ record Header {
 }
 
 
+
 //
 // predicates
 //
@@ -34,6 +36,7 @@ record Header {
 [T] static overload SequenceElementType(NamedVector[T]) = T;
 
 
+
 //
 // constructor
 //
@@ -68,6 +71,7 @@ overload NamedVector[T](fileName : strings.String) : NamedVector[T] {
 }
 
 
+
 //
 // size, index
 //
@@ -79,6 +83,7 @@ overload size(a:NamedVector[T]) = a.header^.size;
 overload index(a:NamedVector[T], i:I) = ref (a.data + SizeT(i))^;
 
 
+
 //
 // coordinates
 //
@@ -123,6 +128,7 @@ overload lesser?(a:NamedVectorCoordinate[T], b:NamedVectorCoordinate[T])
     = a.ptr < b.ptr;
 
 
+
 //
 // iteration
 //
@@ -131,6 +137,7 @@ overload lesser?(a:NamedVectorCoordinate[T], b:NamedVectorCoordinate[T])
 overload iterator(a:NamedVector[T]) = CoordinateRange(begin(a), end(a));
 
 
+
 //
 // equals?, lesser?
 //
@@ -162,6 +169,7 @@ overload lesser?(a:NamedVector[T], b:NamedVector[T]) {
 }
 
 
+
 //
 // front, back, push, pop
 //
@@ -189,6 +197,7 @@ overload pop(a:NamedVector[T]) : T {
 }
 
 
+
 //
 // reserve
 //
@@ -210,6 +219,7 @@ overload reserve(a:NamedVector[T], n:I) {
 }
 
 
+
 //
 // clear, insert, remove
 //

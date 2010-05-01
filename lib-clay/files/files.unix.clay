@@ -1,5 +1,11 @@
 import unix;
 
+
+
+//
+// File
+//
+
 record File {
     handle : Int;
     owned : Bool;
@@ -7,9 +13,21 @@ record File {
 
 static overload SafeRecord?(File) = false;
 
+
+
+//
+// stdin, stdout, stderr
+//
+
 var stdin = File(0, false);
 var stdout = File(1, false);
 var stderr = File(2, false);
+
+
+
+//
+// constructors, destroy
+//
 
 enum OpenMode {
     READ,
@@ -55,7 +73,10 @@ overload File(f:File) = unsupported();
 overload assign(dest:File, src:File) = unsupported();
 
 
-// implement byte stream operations
+
+//
+// read, write, flush
+//
 
 [I | Integer?(I)]
 overload read(f:File, buffer:Pointer[Byte], n:I) : SizeT {
@@ -72,7 +93,10 @@ overload flush(f:File) {
 }
 
 
-// fileExists?
+
+//
+// fileExists?, fileSize, seek
+//
 
 fileExists?(p) {
     var statBuf = unix.Struct_stat();
@@ -80,17 +104,11 @@ fileExists?(p) {
     return result == 0;
 }
 
-
-// fileSize
-
 fileSize(f:File) {
     var statBuf = unix.Struct_stat();
     unix.syscall(unix.fstat, f.handle, &statBuf);
     return Int64(statBuf.st_size);
 }
-
-
-// seek
 
 enum SeekOrigin {
     SEEK_SET,

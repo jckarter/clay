@@ -1,5 +1,8 @@
 
-// constructor, copy constructor, destructor
+
+//
+// constructors, destory
+//
 
 [E | Enum?(E)]
 overload E() : E {
@@ -15,16 +18,16 @@ overload destroy(x:E) {
 }
 
 
-// convert to integers
+
+//
+// convert to/from integers
+//
 
 [E,I | Enum?(E) and Integer?(I)]
 overload I(a:E) = I(enumToInt(a));
 
 [E | Enum?(E)]
 overload Int(a:E) = enumToInt(a);
-
-
-// convert from integers
 
 [E,I | Enum?(E) and Integer?(I)]
 overload E(a:I) = intToEnum(E, Int(a));
@@ -33,7 +36,10 @@ overload E(a:I) = intToEnum(E, Int(a));
 overload E(a:Int) = intToEnum(E, a);
 
 
+
+//
 // equals?, lesser?
+//
 
 [E | Enum?(E)]
 overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));

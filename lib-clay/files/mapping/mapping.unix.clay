@@ -1,9 +1,20 @@
 import unix;
 
+
+//
+// FileMapping
+//
+
 record FileMapping {
     address : Pointer[Byte];
     length : SizeT;
 }
+
+
+
+//
+// constructors, destroy
+//
 
 enum MappingMode {
     MAP_READ,
@@ -59,6 +70,7 @@ overload FileMapping(x:FileMapping) = unsupported();
 overload assign(dest:FileMapping, src:FileMapping) = unsupported();
 
 
+
 //
 // flushMapping
 //

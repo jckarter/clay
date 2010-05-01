@@ -1,9 +1,20 @@
 
+
+//
+// BufferedOutputStream
+//
+
 record BufferedOutputStream[STREAM,SIZE] {
     stream : Pointer[STREAM];
     buffer : Array[Byte, SIZE];
     used : SizeT;
 }
+
+
+
+//
+// constructor
+//
 
 [STREAM, SIZE]
 overload BufferedOutputStream(stream:STREAM, static SIZE) : BufferedOutputStream[STREAM,SIZE] {
@@ -12,6 +23,12 @@ overload BufferedOutputStream(stream:STREAM, static SIZE) : BufferedOutputStream
 }
 
 overload BufferedOutputStream(stream) = BufferedOutputStream(stream, 4096);
+
+
+
+//
+// write
+//
 
 [STREAM,SIZE,I | Integer?(I)]
 overload write(s:BufferedOutputStream[STREAM,SIZE], buffer:Pointer[Byte], n_:I) {
@@ -30,6 +47,12 @@ private writeOne(s, b) {
     s.buffer[s.used] = b;
     s.used += 1;
 }
+
+
+
+//
+// flush
+//
 
 [STREAM,SIZE]
 overload flush(s:BufferedOutputStream[STREAM,SIZE]) {

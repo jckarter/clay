@@ -1,4 +1,5 @@
 
+
 //
 // predicates
 //
@@ -19,8 +20,9 @@ static overload ContiguousSequence?(Array[T,n]) = true;
 static overload SequenceElementType(Array[T,n]) = T;
 
 
+
 //
-// size, index
+// size, index, iterator, begin, end
 //
 
 [T,n]
@@ -28,11 +30,6 @@ overload size(a:Array[T,n]) = SizeT(n);
 
 [T,n,I | Integer?(I)]
 overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
-
-
-//
-// array iteration
-//
 
 [T,n]
 overload iterator(a:Array[T,n]) = CoordinateRange(begin(a), end(a));
@@ -44,6 +41,7 @@ overload begin(a:Array[T,n]) = &a[0];
 overload end(a:Array[T,n]) = &a[n];
 
 
+
 //
 // constructors, destroy, equals?, lesser?
 //

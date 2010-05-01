@@ -1,6 +1,8 @@
 
 
+//
 // flags for 'open'
+//
 
 static O_RDONLY   = 0;
 static O_WRONLY   = 1;
@@ -18,7 +20,9 @@ static O_EVTONLY  = 0x8000;
 
 
 
+//
 // flags for 'chmod'
+//
 
 static S_IRWXU = 0700;
 static S_IRUSR = 0400;
@@ -41,7 +45,9 @@ static S_ISVTX = 01000;
 
 
 
+//
 // flags for lseek
+//
 
 static SEEK_SET = 0;
 static SEEK_CUR = 1;
@@ -49,7 +55,9 @@ static SEEK_END = 2;
 
 
 
+//
 // flags for mmap
+//
 
 static PROT_NONE  = 0;
 static PROT_READ  = 1;
@@ -68,7 +76,9 @@ static MAP_FAILED = RawPointer(-1);
 
 
 
+//
 // flags for msync
+//
 
 static MS_ASYNC      = 1;
 static MS_SYNC       = 16;

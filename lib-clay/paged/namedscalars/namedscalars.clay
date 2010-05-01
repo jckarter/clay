@@ -5,6 +5,7 @@ import strings;
 import files.mapping.*;
 
 
+
 //
 // NamedScalar[T]
 //
@@ -16,6 +17,7 @@ record NamedScalar[T] {
 }
 
 
+
 //
 // constructor
 //
@@ -37,6 +39,7 @@ overload NamedScalar[T](fileName : strings.String, initial:T) : NamedScalar[T] {
 }
 
 
+
 //
 // dereference
 //

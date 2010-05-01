@@ -1,11 +1,22 @@
 import win32;
 
+
+//
+// FileMapping
+//
+
 record FileMapping {
     fileHandle : win32.HANDLE;
     mappingObject : win32.HANDLE;
     address : Pointer[Byte];
     length : SizeT;
 }
+
+
+
+//
+// constructors, destroy
+//
 
 enum MappingMode {
     MAP_READ,
@@ -77,6 +88,7 @@ overload FileMapping(x:FileMapping) = unsupported();
 overload assign(dest:FileMapping, src:FileMapping) = unsupported();
 
 
+
 //
 // flushMapping
 //

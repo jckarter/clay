@@ -1,6 +1,7 @@
 import paged.*;
 import strings;
 
+
 //
 // String
 //
@@ -11,6 +12,7 @@ record String {
 }
 
 
+
 //
 // predicates
 //
@@ -22,6 +24,7 @@ static overload ContiguousSequence?(String) = true;
 static overload SequenceElementType(String) = Char;
 
 
+
 //
 // default constructor
 //
@@ -29,6 +32,7 @@ static overload SequenceElementType(String) = Char;
 overload String() = String(nullPaged(Char), SizeT(0));
 
 
+
 //
 // construct from unsized sequence
 //
@@ -47,6 +51,7 @@ overload String(a:A) : String {
 overload String(a:A) = String(map(Char, a));
 
 
+
 //
 // construct from sized sequence
 //
@@ -73,6 +78,7 @@ overload String(a:A) {
 overload String(a:A) = String(map(Char, a));
 
 
+
 //
 // construct from c-string
 //
@@ -81,18 +87,14 @@ overload String(a:A) = String(map(Char, a));
 overload String(cstr : Pointer[T]) = String(strings.stringRef(cstr));
 
 
+
 //
-// destroy
+// destroy, move
 //
 
 overload destroy(a:String) {
     freePaged(a.data);
 }
-
-
-//
-// move
-//
 
 overload move(a:String) : String {
     returned <-- String(a.data, a.size);
@@ -100,6 +102,7 @@ overload move(a:String) : String {
 }
 
 
+
 //
 // size, index
 //
@@ -110,6 +113,7 @@ overload size(a:String) = a.size;
 overload index(a:String, i:I) = ref (a.data + SizeT(i))^;
 
 
+
 //
 // coordinates and iteration
 //

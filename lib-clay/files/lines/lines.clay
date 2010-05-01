@@ -1,4 +1,9 @@
 
+
+//
+// lines
+//
+
 overloadable lines;
 
 overload lines(lvalue f:File) = LineSequenceRef(&f);
@@ -6,7 +11,10 @@ overload lines(lvalue f:File) = LineSequenceRef(&f);
 inlined overload lines(rvalue f:File) = LineSequenceVal(f);
 
 
-// LineSequenceRef
+
+//
+// LineSequenceRef, LineSequenceVal
+//
 
 private record LineSequenceRef {
     f : Pointer[File];
@@ -18,8 +26,6 @@ static overload SequenceElementType(LineSequenceRef) = String;
 overload iterator(x:LineSequenceRef) = LineIterator(x.f, false, String());
 
 
-// LineSequenceVal
-
 private record LineSequenceVal {
     f : File;
 }
@@ -30,7 +36,10 @@ static overload SequenceElementType(LineSequenceVal) = String;
 overload iterator(x:LineSequenceVal) = LineIterator(&x.f, false, String());
 
 
+
+//
 // LineIterator
+//
 
 private record LineIterator {
     file : Pointer[File];
