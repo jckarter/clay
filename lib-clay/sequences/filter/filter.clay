@@ -59,7 +59,7 @@ overload hasNext?(iter:FilteredIterator_Val[F,ITER,X]) {
 overload next(iter:FilteredIterator_Val[F,ITER,X]) {
     assert(iter.hasQueued?, "hasNext? not called");
     iter.hasQueued? = false;
-    return iter.queued;
+    return move(iter.queued);
 }
 
 
