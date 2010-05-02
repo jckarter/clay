@@ -211,7 +211,7 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
     case STRING_LITERAL : {
         StringLiteral *x = (StringLiteral *)expr.ptr();
         TypePtr type = arrayType(int8Type, x->value.size());
-        EValuePtr ev = new EValue(type, (char *)x->value.data());
+        EValuePtr ev = new EValue(type, const_cast<char *>(x->value.data()));
         vector<ExprPtr> args;
         args.push_back(new ObjectExpr(ev.ptr()));
         return evalInvoke(kernelName("String"), args, env, out);

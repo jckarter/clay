@@ -124,7 +124,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case INT_LITERAL : {
         IntLiteral *x = (IntLiteral *)expr.ptr();
-        char *ptr = (char *)x->value.c_str();
+        char *ptr = const_cast<char *>(x->value.c_str());
         char *end = ptr;
         ValueHolderPtr vh;
         if (x->suffix == "i8") {
@@ -225,7 +225,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
     case FLOAT_LITERAL : {
         FloatLiteral *x = (FloatLiteral *)expr.ptr();
-        char *ptr = (char *)x->value.c_str();
+        char *ptr = const_cast<char *>(x->value.c_str());
         char *end = ptr;
         ValueHolderPtr vh;
         if (x->suffix == "f32") {

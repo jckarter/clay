@@ -70,12 +70,12 @@ ostream &operator<<(ostream &out, const BigVec<T> &v) {
 static void printExpr(ostream &out, const Expr *x) {
     switch (x->exprKind) {
     case BOOL_LITERAL : {
-        BoolLiteral *y = (BoolLiteral *)x;
+        const BoolLiteral *y = (const BoolLiteral *)x;
         out << "BoolLiteral(" << y->value << ")";
         break;
     }
     case INT_LITERAL : {
-        IntLiteral *y = (IntLiteral *)x;
+        const IntLiteral *y = (const IntLiteral *)x;
         out << "IntLiteral(" << y->value;
         if (!y->suffix.empty())
             out << ", " << y->suffix;
@@ -83,7 +83,7 @@ static void printExpr(ostream &out, const Expr *x) {
         break;
     }
     case FLOAT_LITERAL : {
-        FloatLiteral *y = (FloatLiteral *)x;
+        const FloatLiteral *y = (const FloatLiteral *)x;
         out << "FloatLiteral(" << y->value;
         if (!y->suffix.empty())
             out << ", " << y->suffix;
@@ -91,18 +91,18 @@ static void printExpr(ostream &out, const Expr *x) {
         break;
     }
     case CHAR_LITERAL : {
-        CharLiteral *y = (CharLiteral *)x;
+        const CharLiteral *y = (const CharLiteral *)x;
         out << "CharLiteral(" << y->value << ")";
         break;
     }
     case STRING_LITERAL : {
-        StringLiteral *y = (StringLiteral *)x;
+        const StringLiteral *y = (const StringLiteral *)x;
         out << "StringLiteral(" << y->value << ")";
         break;
     }
 
     case NAME_REF : {
-        NameRef *y = (NameRef *)x;
+        const NameRef *y = (const NameRef *)x;
         out << "NameRef(" << y->name << ")";
         break;
     }
@@ -111,37 +111,37 @@ static void printExpr(ostream &out, const Expr *x) {
         break;
     }
     case TUPLE : {
-        Tuple *y = (Tuple *)x;
+        const Tuple *y = (const Tuple *)x;
         out << "Tuple(" << y->args << ")";
         break;
     }
     case ARRAY : {
-        Array *y = (Array *)x;
+        const Array *y = (const Array *)x;
         out << "Array(" << y->args << ")";
         break;
     }
     case INDEXING : {
-        Indexing *y = (Indexing *)x;
+        const Indexing *y = (const Indexing *)x;
         out << "Indexing(" << y->expr << ", " << y->args << ")";
         break;
     }
     case CALL : {
-        Call *y = (Call *)x;
+        const Call *y = (const Call *)x;
         out << "Call(" << y->expr << ", " << y->args << ")";
         break;
     }
     case FIELD_REF : {
-        FieldRef *y = (FieldRef *)x;
+        const FieldRef *y = (const FieldRef *)x;
         out << "FieldRef(" << y->expr << ", " << y->name << ")";
         break;
     }
     case TUPLE_REF : {
-        TupleRef *y = (TupleRef *)x;
+        const TupleRef *y = (const TupleRef *)x;
         out << "TupleRef(" << y->expr << ", " << y->index << ")";
         break;
     }
     case UNARY_OP : {
-        UnaryOp *y = (UnaryOp *)x;
+        const UnaryOp *y = (const UnaryOp *)x;
         out << "UnaryOp(";
         switch (y->op) {
         case DEREFERENCE :
@@ -166,7 +166,7 @@ static void printExpr(ostream &out, const Expr *x) {
         break;
     }
     case BINARY_OP : {
-        BinaryOp *y = (BinaryOp *)x;
+        const BinaryOp *y = (const BinaryOp *)x;
         out << "BinaryOp(";
         switch (y->op) {
         case ADD :
@@ -209,17 +209,17 @@ static void printExpr(ostream &out, const Expr *x) {
         break;
     }
     case AND : {
-        And *y = (And *)x;
+        const And *y = (const And *)x;
         out << "And(" << y->expr1 << ", " << y->expr2 << ")";
         break;
     }
     case OR : {
-        Or *y = (Or *)x;
+        const Or *y = (const Or *)x;
         out << "Or(" << y->expr1 << ", " << y->expr2 << ")";
         break;
     }
     case LAMBDA : {
-        Lambda *y = (Lambda *)x;
+        const Lambda *y = (const Lambda *)x;
         out << "Lambda(" << y->isBlockLambda << ", " << y->formalArgs
             << ", " << y->body << ")";
         break;
@@ -229,17 +229,17 @@ static void printExpr(ostream &out, const Expr *x) {
         break;
     }
     case NEW : {
-        New *y = (New *)x;
+        const New *y = (const New *)x;
         out << "New(" << y->expr << ")";
         break;
     }
     case SC_EXPR : {
-        SCExpr *y = (SCExpr *)x;
+        const SCExpr *y = (const SCExpr *)x;
         out << "SCExpr(" << y->expr << ")";
         break;
     }
     case OBJECT_EXPR : {
-        ObjectExpr *y = (ObjectExpr *)x;
+        const ObjectExpr *y = (const ObjectExpr *)x;
         out << "ObjectExpr(" << y->obj << ")";
         break;
     }
@@ -249,17 +249,17 @@ static void printExpr(ostream &out, const Expr *x) {
 static void printStatement(ostream &out, const Statement *x) {
     switch (x->stmtKind) {
     case BLOCK : {
-        Block *y = (Block *)x;
+        const Block *y = (const Block *)x;
         out << "Block(" << bigVec(y->statements) << ")";
         break;
     }
     case LABEL : {
-        Label *y = (Label *)x;
+        const Label *y = (const Label *)x;
         out << "Label(" << y->name << ")";
         break;
     }
     case BINDING : {
-        Binding *y = (Binding *)x;
+        const Binding *y = (const Binding *)x;
         out << "Binding(";
         switch (y->bindingKind) {
         case VAR :
@@ -278,49 +278,49 @@ static void printStatement(ostream &out, const Statement *x) {
         break;
     }
     case ASSIGNMENT : {
-        Assignment *y = (Assignment *)x;
+        const Assignment *y = (const Assignment *)x;
         out << "Assignment(" << y->left << ", " << y->right << ")";
         break;
     }
     case INIT_ASSIGNMENT : {
-        InitAssignment *y = (InitAssignment *)x;
+        const InitAssignment *y = (const InitAssignment *)x;
         out << "InitAssignment(" << y->left << ", " << y->right << ")";
         break;
     }
     case UPDATE_ASSIGNMENT : {
-        UpdateAssignment *y = (UpdateAssignment *)x;
+        const UpdateAssignment *y = (const UpdateAssignment *)x;
         out << "UpdateAssignment(" << y->op << ", " << y->left;
         out << ", " << y->right << ")";
         break;
     }
     case GOTO : {
-        Goto *y = (Goto *)x;
+        const Goto *y = (const Goto *)x;
         out << "Goto(" << y->labelName << ")";
         break;
     }
     case RETURN : {
-        Return *y = (Return *)x;
+        const Return *y = (const Return *)x;
         out << "Return(" << y->expr << ")";
         break;
     }
     case RETURN_REF : {
-        ReturnRef *y = (ReturnRef *)x;
+        const ReturnRef *y = (const ReturnRef *)x;
         out << "ReturnRef(" << y->expr << ")";
         break;
     }
     case IF : {
-        If *y = (If *)x;
+        const If *y = (const If *)x;
         out << "If(" << y->condition << ", " << y->thenPart;
         out << ", " << y->elsePart << ")";
         break;
     }
     case EXPR_STATEMENT : {
-        ExprStatement *y = (ExprStatement *)x;
+        const ExprStatement *y = (const ExprStatement *)x;
         out << "ExprStatement(" << y->expr << ")";
         break;
     }
     case WHILE : {
-        While *y = (While *)x;
+        const While *y = (const While *)x;
         out << "While(" << y->condition << ", " << y->body << ")";
         break;
     }
@@ -333,18 +333,18 @@ static void printStatement(ostream &out, const Statement *x) {
         break;
     }
     case FOR : {
-        For *y = (For *)x;
+        const For *y = (const For *)x;
         out << "For(" << y->variable << ", " << y->expr;
         out << ", " << y->body << ")";
         break;
     }
     case SC_STATEMENT : {
-        SCStatement *y = (SCStatement *)x;
+        const SCStatement *y = (const SCStatement *)x;
         out << "SCStatement(" << y->statement << ")";
         break;
     }
     case TRY : {
-        Try *y = (Try *)x;
+        const Try *y = (const Try *)x;
         out << "Try(" << y->tryBlock << ", " << y->catchBlock;
         break;
     }
@@ -360,17 +360,17 @@ static void print(ostream &out, const Object *x) {
     switch (x->objKind) {
 
     case SOURCE : {
-        Source *y = (Source *)x;
+        const Source *y = (const Source *)x;
         out << "Source(" << y->fileName << ")";
         break;
     }
     case LOCATION : {
-        Location *y = (Location *)x;
+        const Location *y = (const Location *)x;
         out << "Location(" << y->source << ", " << y->offset << ")";
         break;
     }
     case TOKEN : {
-        Token *y = (Token *)x;
+        const Token *y = (const Token *)x;
         out << "Token(";
         switch (y->tokenKind) {
         case T_SYMBOL :
@@ -414,158 +414,158 @@ static void print(ostream &out, const Object *x) {
     }
 
     case IDENTIFIER : {
-        Identifier *y = (Identifier *)x;
+        const Identifier *y = (const Identifier *)x;
         out << "Identifier(" << y->str << ")";
         break;
     }
     case DOTTED_NAME : {
-        DottedName *y = (DottedName *)x;
+        const DottedName *y = (const DottedName *)x;
         out << "DottedName(" << y->parts << ")";
         break;
     }
 
     case EXPRESSION : {
-        Expr *y = (Expr *)x;
+        const Expr *y = (const Expr *)x;
         printExpr(out, y);
         break;
     }
 
     case STATEMENT : {
-        Statement *y = (Statement *)x;
+        const Statement *y = (const Statement *)x;
         printStatement(out, y);
         break;
     }
 
     case CODE : {
-        Code *y = (Code *)x;
+        const Code *y = (const Code *)x;
         out << "Code(" << y->patternVars << ", " << y->predicate;
         out << ", " << y->formalArgs << ", " << y->body << ")";
         break;
     }
     case VALUE_ARG : {
-        ValueArg *y = (ValueArg *)x;
+        const ValueArg *y = (const ValueArg *)x;
         out << "ValueArg(" << y->name << ", " << y->type << ", "
             << y->tempness << ")";
         break;
     }
     case STATIC_ARG : {
-        StaticArg *y = (StaticArg *)x;
+        const StaticArg *y = (const StaticArg *)x;
         out << "StaticArg(" << y->pattern << ")";
         break;
     }
 
     case RECORD : {
-        Record *y = (Record *)x;
+        const Record *y = (const Record *)x;
         out << "Record(" << y->name << ", " << y->patternVars;
         out << ", " << y->fields << ")";
         break;
     }
     case RECORD_FIELD : {
-        RecordField *y = (RecordField *)x;
+        const RecordField *y = (const RecordField *)x;
         out << "RecordField(" << y->name << ", " << y->type << ")";
         break;
     }
     case PROCEDURE : {
-        Procedure *y = (Procedure *)x;
+        const Procedure *y = (const Procedure *)x;
         out << "Procedure(" << y->name << ", " << y->code << ", "
             << y->inlined << ")";
         break;
     }
     case OVERLOAD : {
-        Overload *y = (Overload *)x;
+        const Overload *y = (const Overload *)x;
         out << "Overload(" << y->target << ", " << y->code << ", "
             << y->inlined << ")";
         break;
     }
     case OVERLOADABLE : {
-        Overloadable *y = (Overloadable *)x;
+        const Overloadable *y = (const Overloadable *)x;
         out << "Overloadable(" << y->name << ")";
         break;
     }
 
     case ENUMERATION : {
-        Enumeration *y = (Enumeration *)x;
+        const Enumeration *y = (const Enumeration *)x;
         out << "Enumeration(" << y->name << ", " << y->members << ")";
         break;
     }
     case ENUM_MEMBER : {
-        EnumMember *y = (EnumMember *)x;
+        const EnumMember *y = (const EnumMember *)x;
         out << "EnumMember(" << y->name << ")";
         break;
     }
 
     case GLOBAL_VARIABLE : {
-        GlobalVariable *y = (GlobalVariable *)x;
+        const GlobalVariable *y = (const GlobalVariable *)x;
         out << "GlobalVariable(" << y->name << ", " << y->expr << ")";
         break;
     }
 
     case EXTERNAL_PROCEDURE : {
-        ExternalProcedure *y = (ExternalProcedure *)x;
+        const ExternalProcedure *y = (const ExternalProcedure *)x;
         out << "ExternalProcedure(" << y->name << ", " << y->args;
         out << ", " << y->hasVarArgs << ", " << y->returnType;
         out << ", " << y->body << ")";
         break;
     }
     case EXTERNAL_ARG: {
-        ExternalArg *y = (ExternalArg *)x;
+        const ExternalArg *y = (const ExternalArg *)x;
         out << "ExternalArg(" << y->name << ", " << y->type << ")";
         break;
     }
 
     case EXTERNAL_VARIABLE : {
-        ExternalVariable *y = (ExternalVariable *)x;
+        const ExternalVariable *y = (const ExternalVariable *)x;
         out << "ExternalVariable(" << y->name << ", " << y->type << ")";
         break;
     }
 
     case STATIC_GLOBAL : {
-        StaticGlobal *y = (StaticGlobal *)x;
+        const StaticGlobal *y = (const StaticGlobal *)x;
         out << "StaticGlobal(" << y->name << ", " << y->expr << ")";
         break;
     }
     case STATIC_CODE : {
-        StaticCode *y = (StaticCode *)x;
+        const StaticCode *y = (const StaticCode *)x;
         out << "StaticCode(" << y->patternVars << ", " << y->predicate;
         out << ", " << y->args << ", " << y->body << ")";
         break;
     }
     case STATIC_PROCEDURE : {
-        StaticProcedure *y = (StaticProcedure *)x;
+        const StaticProcedure *y = (const StaticProcedure *)x;
         out << "StaticProcedure(" << y->name << ", " << y->code << ")";
         break;
     }
     case STATIC_OVERLOADABLE : {
-        StaticOverloadable *y = (StaticOverloadable *)x;
+        const StaticOverloadable *y = (const StaticOverloadable *)x;
         out << "StaticOverloadable(" << y->name << ")";
         break;
     }
     case STATIC_OVERLOAD : {
-        StaticOverload *y = (StaticOverload *)x;
+        const StaticOverload *y = (const StaticOverload *)x;
         out << "StaticOverload(" << y->target << ", " << y->code << ")";
         break;
     }
 
     case IMPORT : {
-        Import *y = (Import *)x;
+        const Import *y = (const Import *)x;
         switch (y->importKind) {
         case IMPORT_MODULE : {
-            ImportModule *z = (ImportModule *)y;
+            const ImportModule *z = (const ImportModule *)y;
             out << "Import(" << z->dottedName << ", " << z->alias << ")";
             break;
         }
         case IMPORT_STAR : {
-            ImportStar *z = (ImportStar *)y;
+            const ImportStar *z = (const ImportStar *)y;
             out << "ImportStar(" << z->dottedName << ")";
             break;
         }
         case IMPORT_MEMBERS : {
-            ImportMembers *z = (ImportMembers *)y;
+            const ImportMembers *z = (const ImportMembers *)y;
             out << "ImportMembers(" << z->dottedName << ", [";
             for (unsigned i = 0; i < z->members.size(); ++i) {
                 if (i != 0)
                     out << ", ";
-                ImportedMember &a = z->members[i];
+                const ImportedMember &a = z->members[i];
                 out << "(" << a.name << ", " << a.alias << ")";
             }
             out << "])";
@@ -581,27 +581,27 @@ static void print(ostream &out, const Object *x) {
         break;
     }
     case MODULE : {
-        Module *y = (Module *)x;
+        const Module *y = (const Module *)x;
         out << "Module(" << bigVec(y->imports) << ", "
             << bigVec(y->topLevelItems) << ")";
         break;
     }
 
     case PRIM_OP : {
-        PrimOp *y = (PrimOp *)x;
-        out << "PrimOp(" << primOpName(y) << ")";
+        const PrimOp *y = (const PrimOp *)x;
+        out << "PrimOp(" << primOpName(const_cast<PrimOp *>(y)) << ")";
         break;
     }
 
     case TYPE : {
-        Type *y = (Type *)x;
-        typePrint(out, y);
+        const Type *y = (const Type *)x;
+        typePrint(out, const_cast<Type *>(y));
         break;
     }
 
     case PATTERN : {
-        Pattern *y = (Pattern *)x;
-        patternPrint(out, y);
+        const Pattern *y = (const Pattern *)x;
+        patternPrint(out, const_cast<Pattern *>(y));
         break;
     }
 
@@ -614,19 +614,19 @@ static void print(ostream &out, const Object *x) {
         break;
 
     case VALUE_HOLDER : {
-        ValueHolder *y = (ValueHolder *)x;
+        const ValueHolder *y = (const ValueHolder *)x;
         out << "ValueHolder(" << y->type << ")";
         break;
     }
 
     case PVALUE : {
-        PValue *y = (PValue *)x;
+        const PValue *y = (const PValue *)x;
         out << "PValue(" << y->type << ")";
         break;
     }
 
     case CVALUE : {
-        CValue *y = (CValue *)x;
+        const CValue *y = (const CValue *)x;
         out << "CValue(" << y->type << ")";
         break;
     }

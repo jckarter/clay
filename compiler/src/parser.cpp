@@ -337,7 +337,7 @@ static bool tupleRefSuffix(ExprPtr &x) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
         return false;
-    char *b = (char *)(t->str.c_str());
+    char *b = const_cast<char *>(t->str.c_str());
     char *end = b;
     unsigned long c = strtoul(b, &end, 0);
     assert(*end == 0);
