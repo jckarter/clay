@@ -1,0 +1,48 @@
+import win32;
+
+errno() = win32._errno()^;
+
+static EPERM           = 1;       /* Operation not permitted */
+static ENOFILE         = 2;       /* No such file or directory */
+static ENOENT          = 2;
+static ESRCH           = 3;       /* No such process */
+static EINTR           = 4;       /* Interrupted function call */
+static EIO             = 5;       /* Input/output error */
+static ENXIO           = 6;       /* No such device or address */
+static E2BIG           = 7;       /* Arg list too long */
+static ENOEXEC         = 8;       /* Exec format error */
+static EBADF           = 9;       /* Bad file descriptor */
+static ECHILD          = 10;      /* No child processes */
+static EAGAIN          = 11;      /* Resource temporarily unavailable */
+static ENOMEM          = 12;      /* Not enough space */
+static EACCES          = 13;      /* Permission denied */
+static EFAULT          = 14;      /* Bad address */
+/* 15 - Unknown Error */
+static EBUSY           = 16;      /* strerror reports "Resource device" */
+static EEXIST          = 17;      /* File exists */
+static EXDEV           = 18;      /* Improper link (cross-device link?) */
+static ENODEV          = 19;      /* No such device */
+static ENOTDIR         = 20;      /* Not a directory */
+static EISDIR          = 21;      /* Is a directory */
+static EINVAL          = 22;      /* Invalid argument */
+static ENFILE          = 23;      /* Too many open files in system */
+static EMFILE          = 24;      /* Too many open files */
+static ENOTTY          = 25;      /* Inappropriate I/O control operation */
+/* 26 - Unknown Error */
+static EFBIG           = 27;      /* File too large */
+static ENOSPC          = 28;      /* No space left on device */
+static ESPIPE          = 29;      /* Invalid seek (seek on a pipe?) */
+static EROFS           = 30;      /* Read-only file system */
+static EMLINK          = 31;      /* Too many links */
+static EPIPE           = 32;      /* Broken pipe */
+static EDOM            = 33;      /* Domain error (math functions) */
+static ERANGE          = 34;      /* Result too large (possibly too small) */
+/* 35 - Unknown Error */
+static EDEADLOCK       = 36;      /* Resource deadlock avoided (non-Cyg) */
+static EDEADLK         = 36;
+/* 37 - Unknown Error */
+static ENAMETOOLONG    = 38;      /* Filename too long (91 in Cyg?) */
+static ENOLCK          = 39;      /* No locks available (46 in Cyg?) */
+static ENOSYS          = 40;      /* Function not implemented (88 in Cyg?) */
+static ENOTEMPTY       = 41;      /* Directory not empty (90 in Cyg?) */
+static EILSEQ          = 42;      /* Illegal byte sequence */
