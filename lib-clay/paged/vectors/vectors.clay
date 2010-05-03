@@ -123,17 +123,50 @@ overload index(a:Vector[T], i:I) = ref (a.data + SizeT(i))^;
 
 
 //
+// vector coordinates
+//
+
+[T]
+overload begin(a:Vector[T]) = VectorCoordinate[T](&a[0]);
+
+[T]
+overload end(a:Vector[T]) = VectorCoordinate[T](&a[0] + a.size);
+
+record VectorCoordinate[T] {
+    ptr : Pointer[T];
+}
+
+[T]
+overload dereference(x:VectorCoordinate[T]) = ref x.ptr^;
+
+[T,I|Integer?(I)]
+overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
+
+[T,I|Integer?(I)]
+overload subtract(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr - i);
+
+[T]
+overload subtract(c1:VectorCoordinate[T], c2:VectorCoordinate[T])
+    = c1.ptr - c2.ptr;
+
+[T]
+overload inc(c:VectorCoordinate[T]) {
+    inc(c.ptr);
+}
+
+[T]
+overload dec(c:VectorCoordinate[T]) {
+    dec(c.ptr);
+}
+
+
+
+//
 // vector iteration
 //
 
 [T]
 overload iterator(a:Vector[T]) = CoordinateRange(begin(a), end(a));
-
-[T]
-overload begin(a:Vector[T]) = &a[0];
-
-[T]
-overload end(a:Vector[T]) = &a[0] + a.size;
 
 
 
@@ -257,17 +290,17 @@ overload insert(a:Vector[T], i:I, x) {
 }
 
 [T]
-overload insert(a:Vector[T], i:PagedPointer[T], x:T) {
+overload insert(a:Vector[T], i:VectorCoordinate[T], x:T) {
     insertLocation(a, i-begin(a)) <-- x;
 }
 
 [T]
-overload insert(a:Vector[T], i:PagedPointer[T], rvalue x:T) {
+overload insert(a:Vector[T], i:VectorCoordinate[T], rvalue x:T) {
     insertLocation(a, i-begin(a)) <-- move(x);
 }
 
 [T]
-private removeLocation(a:Vector[T], i:PagedPointer[T]) {
+private removeLocation(a:Vector[T], i:VectorCoordinate[T]) {
     var j = end(a);
     while (i+1 != j) {
         i^ <-- move((i+1)^);
@@ -279,7 +312,7 @@ private removeLocation(a:Vector[T], i:PagedPointer[T]) {
 }
 
 [T]
-overload remove(a:Vector[T], i:PagedPointer[T]) {
+overload remove(a:Vector[T], i:VectorCoordinate[T]) {
     destroy(i^);
     removeLocation(a, i);
 }
