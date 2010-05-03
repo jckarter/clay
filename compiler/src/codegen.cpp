@@ -1197,41 +1197,15 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
     }
     case GLOBAL_VARIABLE : {
         GlobalVariable *y = (GlobalVariable *)x.ptr();
-        if (!y->llGlobal) {
-            ObjectPtr z = analyzeStaticObject(y);
-            assert(z->objKind == PVALUE);
-            PValue *pv = (PValue *)z.ptr();
-            llvm::Constant *initializer =
-                llvm::Constant::getNullValue(llvmType(pv->type));
-            y->llGlobal =
-                new llvm::GlobalVariable(
-                    *llvmModule, llvmType(pv->type), false,
-                    llvm::GlobalVariable::InternalLinkage,
-                    initializer, "clay_" + y->name->str);
-        }
+        if (!y->llGlobal)
+            codegenGlobalVariable(y);
         assert(!out);
         return new CValue(y->type, y->llGlobal);
     }
     case EXTERNAL_VARIABLE : {
         ExternalVariable *y = (ExternalVariable *)x.ptr();
-        if (!y->llGlobal) {
-            if (!y->attributesVerified)
-                verifyAttributes(y);
-            ObjectPtr z = analyzeStaticObject(y);
-            assert(z->objKind == PVALUE);
-            PValue *pv = (PValue *)z.ptr();
-            llvm::GlobalVariable::LinkageTypes linkage;
-            if (y->attrDLLImport)
-                linkage = llvm::GlobalVariable::DLLImportLinkage;
-            else if (y->attrDLLExport)
-                linkage = llvm::GlobalVariable::DLLExportLinkage;
-            else
-                linkage = llvm::GlobalVariable::ExternalLinkage;
-            y->llGlobal =
-                new llvm::GlobalVariable(
-                    *llvmModule, llvmType(pv->type), false,
-                    linkage, NULL, y->name->str);
-        }
+        if (!y->llGlobal)
+            codegenExternalVariable(y);
         assert(!out);
         return new CValue(y->type2, y->llGlobal);
     }
@@ -1273,6 +1247,54 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
         error("invalid static object");
         return NULL;
     }
+}
+
+
+
+//
+// codegenGlobalVariable
+//
+
+void codegenGlobalVariable(GlobalVariablePtr x)
+{
+    assert(!x->llGlobal);
+    ObjectPtr y = analyzeStaticObject(x.ptr());
+    assert(y->objKind == PVALUE);
+    PValue *pv = (PValue *)y.ptr();
+    llvm::Constant *initializer =
+        llvm::Constant::getNullValue(llvmType(pv->type));
+    x->llGlobal =
+        new llvm::GlobalVariable(
+            *llvmModule, llvmType(pv->type), false,
+            llvm::GlobalVariable::InternalLinkage,
+            initializer, "clay_" + x->name->str);
+}
+
+
+
+//
+// codegenExternalVariable
+//
+
+void codegenExternalVariable(ExternalVariablePtr x)
+{
+    assert(!x->llGlobal);
+    if (!x->attributesVerified)
+        verifyAttributes(x);
+    ObjectPtr y = analyzeStaticObject(x.ptr());
+    assert(y->objKind == PVALUE);
+    PValue *pv = (PValue *)y.ptr();
+    llvm::GlobalVariable::LinkageTypes linkage;
+    if (x->attrDLLImport)
+        linkage = llvm::GlobalVariable::DLLImportLinkage;
+    else if (x->attrDLLExport)
+        linkage = llvm::GlobalVariable::DLLExportLinkage;
+    else
+        linkage = llvm::GlobalVariable::ExternalLinkage;
+    x->llGlobal =
+        new llvm::GlobalVariable(
+            *llvmModule, llvmType(pv->type), false,
+            linkage, NULL, x->name->str);
 }
 
 

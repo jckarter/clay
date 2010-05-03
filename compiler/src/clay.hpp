@@ -2361,6 +2361,8 @@ CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out);
 CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out);
+void codegenGlobalVariable(GlobalVariablePtr x);
+void codegenExternalVariable(ExternalVariablePtr x);
 void codegenExternal(ExternalProcedurePtr x);
 void codegenValueHolder(ValueHolderPtr v, CValuePtr out);
 llvm::Value *codegenConstant(ValueHolderPtr v);
