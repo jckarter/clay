@@ -24,6 +24,7 @@ EValuePtr evalMaybeVoid(ExprPtr expr, EnvPtr env, EValuePtr out);
 EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out);
 
 EValuePtr evalStaticObject(ObjectPtr x, EValuePtr out);
+void evalValueHolder(ValueHolderPtr v, EValuePtr out);
 
 EValuePtr evalInvokeValue(EValuePtr x,
                           const vector<ExprPtr> &args,
@@ -195,9 +196,7 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
         ObjectPtr x = analyze(expr, env);
         assert(x->objKind == VALUE_HOLDER);
         ValueHolder *y = (ValueHolder *)x.ptr();
-        assert(out.ptr());
-        assert(out->type == y->type);
-        memcpy(out->addr, y->buf, typeSize(y->type));
+        evalValueHolder(y, out);
         return out;
     }
 
@@ -442,13 +441,82 @@ EValuePtr evalStaticObject(ObjectPtr x, EValuePtr out)
     }
     case GLOBAL_VARIABLE : {
         GlobalVariable *y = (GlobalVariable *)x.ptr();
-        if (!y->llGlobal) {
-            ObjectPtr z = analyzeStaticObject(y);
-            assert(z->objKind == PVALUE);
-        }
+        if (!y->llGlobal)
+            codegenGlobalVariable(y);
+        void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
+        assert(!out);
+        return new EValue(y->type, (char *)ptr);
     }
+    case EXTERNAL_VARIABLE : {
+        ExternalVariable *y = (ExternalVariable *)x.ptr();
+        if (!y->llGlobal)
+            codegenExternalVariable(y);
+        void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
+        assert(!out);
+        return new EValue(y->type2, (char *)ptr);
     }
-    return out;
+    case EXTERNAL_PROCEDURE : {
+        ExternalProcedure *y = (ExternalProcedure *)x.ptr();
+        if (!y->llvmFunc)
+            codegenExternal(y);
+        void *funcPtr = llvmEngine->getPointerToGlobal(y->llvmFunc);
+        assert(out.ptr());
+        assert(out->type == y->ptrType);
+        *((void **)out->addr) = funcPtr;
+        return out;
+    }
+    case STATIC_GLOBAL : {
+        StaticGlobal *y = (StaticGlobal *)x.ptr();
+        return evalExpr(y->expr, y->env, out);
+    }
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        evalValueHolder(y, out);
+        return out;
+    }
+    case EVALUE : {
+        EValue *y = (EValue *)x.ptr();
+        assert(!out);
+        return y;
+    }
+    case TYPE :
+    case VOID_TYPE :
+    case PRIM_OP :
+    case PROCEDURE :
+    case OVERLOADABLE :
+    case RECORD :
+    case STATIC_PROCEDURE :
+    case STATIC_OVERLOADABLE :
+    case MODULE_HOLDER :
+        assert(out.ptr());
+        assert(out->type == staticType(x));
+        return out;
+    default :
+        error("invalid static object");
+        return NULL;
+    }
+}
+
+
+
+//
+// evalValueHolder
+//
+
+void evalValueHolder(ValueHolderPtr v, EValuePtr out)
+{
+    assert(out.ptr());
+    assert(v->type == out->type);
+
+    switch (v->type->typeKind) {
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+        memcpy(out->addr, v->buf, typeSize(v->type));
+        break;
+    default :
+        assert(false);
+    }
 }
 
 
