@@ -25,7 +25,7 @@ listLength(node_) {
 }
 
 main() {
-    initializePaging("temppaged.data");
+    initializePaging("temppaged.data", 100*1000);
 
     var root = NamedScalar[SharedPointer[Node]]("temp_stack.data", nullShared(Node));
 

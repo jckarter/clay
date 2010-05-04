@@ -30,7 +30,7 @@ showAddressBook() {
 }
 
 main() {
-    initializePaging("temppaged.data");
+    initializePaging("temppaged.data", 100*1000);
     addToAddressBook();
     showAddressBook();
 }
