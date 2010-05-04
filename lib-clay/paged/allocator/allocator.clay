@@ -258,8 +258,10 @@ allocatePaged(static T, n_:I) {
     n = alignUp(n, 16);
 
     var b = popFreeList(n);
-    if (nullBlock?(b))
+    if (nullBlock?(b)) {
+        error("out of paged memory: allocatePaged(", T, ", ", n_, ")");
         return nullPaged(T);
+    }
     if (splitBlock?(b,n)) {
         if (not lastBlock?(b))
             blockSetPrevious(blockNext(b), b+n);
