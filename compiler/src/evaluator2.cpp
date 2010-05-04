@@ -38,7 +38,25 @@ EValuePtr evalInvoke(ObjectPtr x,
                      const vector<ExprPtr> &args,
                      EnvPtr env,
                      EValuePtr out);
-
+EValuePtr evalInvokeCallable(ObjectPtr x,
+                             const vector<ExprPtr> &args,
+                             EnvPtr env,
+                             EValuePtr out);
+bool evalInvokeSpecialCase(ObjectPtr x,
+                           const vector<bool> &isStaticFlags,
+                           const vector<ObjectPtr> &argsKey);
+EValuePtr evalInvokeCode(InvokeEntryPtr entry,
+                         const vector<ExprPtr> &args,
+                         EnvPtr env,
+                         EValuePtr out);
+EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env,
+                            EValuePtr out);
+EValuePtr evalInvokePrimOp(PrimOpPtr x,
+                           const vector<ExprPtr> &args,
+                           EnvPtr env,
+                           EValuePtr out);
 
 static vector<EValuePtr> stackEValues;
 
@@ -530,7 +548,27 @@ EValuePtr evalInvokeValue(EValuePtr x,
                           EnvPtr env,
                           EValuePtr out)
 {
-    return out;
+    switch (x->type->typeKind) {
+
+    case CODE_POINTER_TYPE : {
+        // TODO: implement it
+        error("invoking a CodePointer not yet supported in evaluator");
+        return out;
+    }
+
+    case CCODE_POINTER_TYPE : {
+        // TODO: implement it
+        error("invoking a CCodePointer not yet supported in evaluator");
+    }
+
+    default : {
+        vector<ExprPtr> args2;
+        args2.push_back(new ObjectExpr(x.ptr()));
+        args2.insert(args2.end(), args.begin(), args.end());
+        return evalInvoke(kernelName("call"), args2, env, out);
+    }
+
+    }
 }
 
 
@@ -543,6 +581,9 @@ void evalInvokeVoid(ObjectPtr x,
                     const vector<ExprPtr> &args,
                     EnvPtr env)
 {
+    EValuePtr result = evalInvoke(x, args, env, NULL);
+    if (result.ptr())
+        error("void expression expected");
 }
 
 EValuePtr evalInvoke(ObjectPtr x,
@@ -550,5 +591,376 @@ EValuePtr evalInvoke(ObjectPtr x,
                      EnvPtr env,
                      EValuePtr out)
 {
+    switch (x->objKind) {
+
+    case TYPE :
+    case RECORD :
+    case PROCEDURE :
+    case OVERLOADABLE :
+        return evalInvokeCallable(x, args, env, out);
+
+    case STATIC_PROCEDURE : {
+        StaticProcedurePtr y = (StaticProcedure *)x.ptr();
+        StaticInvokeEntryPtr entry = analyzeStaticProcedure(y, args, env);
+        assert(entry->result.ptr());
+        return evalStaticObject(entry->result, out);
+    }
+
+    case STATIC_OVERLOADABLE : {
+        StaticOverloadablePtr y = (StaticOverloadable *)x.ptr();
+        StaticInvokeEntryPtr entry = analyzeStaticOverloadable(y, args, env);
+        assert(entry->result.ptr());
+        return evalStaticObject(entry->result, out);
+    }
+
+    case PRIM_OP :
+        return evalInvokePrimOp((PrimOp *)x.ptr(), args, env, out);
+
+    default :
+        error("invalid call operation");
+        return NULL;
+
+    }
+}
+
+
+
+//
+// evalInvokeCallable
+//
+
+EValuePtr evalInvokeCallable(ObjectPtr x,
+                             const vector<ExprPtr> &args,
+                             EnvPtr env,
+                             EValuePtr out)
+{
+    const vector<bool> &isStaticFlags =
+        lookupIsStaticFlags(x, args.size());
+    vector<ObjectPtr> argsKey;
+    vector<ValueTempness> argsTempness;
+    vector<LocationPtr> argLocations;
+    bool result = computeArgsKey(isStaticFlags, args, env,
+                                 argsKey, argsTempness,
+                                 argLocations);
+    assert(result);
+    if (evalInvokeSpecialCase(x, isStaticFlags, argsKey))
+        return out;
+    InvokeStackContext invokeStackContext(x, argsKey);
+    InvokeEntryPtr entry = codegenCallable(x, isStaticFlags,
+                                           argsKey, argsTempness,
+                                           argLocations);
+    if (entry->inlined)
+        return evalInvokeInlined(entry, args, env, out);
+    return evalInvokeCode(entry, args, env, out);
+}
+
+
+
+//
+// evalInvokeSpecialCase
+//
+
+bool evalInvokeSpecialCase(ObjectPtr x,
+                           const vector<bool> &isStaticFlags,
+                           const vector<ObjectPtr> &argsKey)
+{
+    switch (x->objKind) {
+    case TYPE : {
+        Type *y = (Type *)x.ptr();
+        if (isPrimitiveType(y) && isStaticFlags.empty())
+            return true;
+        break;
+    }
+    case OVERLOADABLE : {
+        if ((x == kernelName("destroy")) &&
+            (isStaticFlags.size() == 1) &&
+            (!isStaticFlags[0]))
+        {
+            ObjectPtr y = argsKey[0];
+            assert(y->objKind == TYPE);
+            if (isPrimitiveType((Type *)y.ptr()))
+                return true;
+        }
+        break;
+    }
+    }
+    return false;
+}
+
+
+
+//
+// evalInvokeCode
+//
+
+EValuePtr evalInvokeCode(InvokeEntryPtr entry,
+                         const vector<ExprPtr> &args,
+                         EnvPtr env,
+                         EValuePtr out)
+{
+    vector<llvm::GenericValue> gvArgs;
+    for (unsigned i = 0; i < args.size(); ++i) {
+        if (entry->isStaticFlags[i])
+            continue;
+        assert(entry->argsKey[i]->objKind == TYPE);
+        TypePtr argType = (Type *)entry->argsKey[i].ptr();
+        PValuePtr parg = analyzeValue(args[i], env);
+        assert(parg->type == argType);
+        EValuePtr earg = evalAsRef(args[i], env, parg);
+        gvArgs.push_back(llvm::GenericValue(earg->addr));
+    }
+    if (!entry->returnType) {
+        assert(!out);
+        llvmEngine->runFunction(entry->llvmFunc, gvArgs);
+        return NULL;
+    }
+    else if (entry->returnIsTemp) {
+        assert(out.ptr());
+        assert(out->type == entry->returnType);
+        gvArgs.push_back(llvm::GenericValue(out->addr));
+        llvmEngine->runFunction(entry->llvmFunc, gvArgs);
+        return out;
+    }
+    else {
+        assert(!out);
+        llvm::GenericValue returnGV =
+            llvmEngine->runFunction(entry->llvmFunc, gvArgs);
+        void *ptr = returnGV.PointerVal;
+        return new EValue(entry->returnType, (char *)ptr);
+    }
+}
+
+
+
+//
+// evalInvokeInlined
+//
+
+EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env,
+                            EValuePtr out)
+{
+    // TODO: inlined procedures are not supported yet.
     return out;
+}
+
+
+
+//
+// evalInvokePrimOp
+//
+
+static EValuePtr _evalNumeric(ExprPtr expr, EnvPtr env, TypePtr &type)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (type.ptr()) {
+        if (pv->type != type)
+            error(expr, "argument type mismatch");
+    }
+    else {
+        switch (pv->type->typeKind) {
+        case INTEGER_TYPE :
+        case FLOAT_TYPE :
+            break;
+        default :
+            error(expr, "expecting numeric type");
+        }
+        type = pv->type;
+    }
+    return evalAsRef(expr, env, pv);
+}
+
+static EValuePtr _evalInteger(ExprPtr expr, EnvPtr env, TypePtr &type)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (type.ptr()) {
+        if (pv->type != type)
+            error(expr, "argument type mismatch");
+    }
+    else {
+        if (pv->type->typeKind != INTEGER_TYPE)
+            error(expr, "expecting integer type");
+        type = pv->type;
+    }
+    return evalAsRef(expr, env, pv);
+}
+
+static EValuePtr _evalPointer(ExprPtr expr, EnvPtr env, PointerTypePtr &type)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (type.ptr()) {
+        if (pv->type != (Type *)type.ptr())
+            error(expr, "argument type mismatch");
+    }
+    else {
+        if (pv->type->typeKind != POINTER_TYPE)
+            error(expr, "expecting pointer type");
+        type = (PointerType *)pv->type.ptr();
+    }
+    return evalAsRef(expr, env, pv);
+}
+
+static EValuePtr _evalPointerLike(ExprPtr expr, EnvPtr env, TypePtr &type)
+{
+    PValuePtr pv = analyzeValue(expr, env);
+    if (type.ptr()) {
+        if (pv->type != type)
+            error(expr, "argument type mismatch");
+    }
+    else {
+        switch (pv->type->typeKind) {
+        case POINTER_TYPE :
+        case CODE_POINTER_TYPE :
+        case CCODE_POINTER_TYPE :
+            break;
+        default :
+            error(expr, "expecting a pointer or a code pointer");
+        }
+        type = pv->type;
+    }
+    return evalAsRef(expr, env, pv);
+}
+
+template <template<typename> class T>
+static void evalNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
+{
+    assert(a->type == b->type);
+    switch (a->type->typeKind) {
+
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)a->type.ptr();
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 :  T<char>().eval(a, b, out); break;
+            case 16 : T<short>().eval(a, b, out); break;
+            case 32 : T<int>().eval(a, b, out); break;
+            case 64 : T<long long>().eval(a, b, out); break;
+            default : assert(false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 :  T<unsigned char>().eval(a, b, out); break;
+            case 16 : T<unsigned short>().eval(a, b, out); break;
+            case 32 : T<unsigned int>().eval(a, b, out); break;
+            case 64 : T<long long>().eval(a, b, out); break;
+            default : assert(false);
+            }
+        }
+        break;
+    }
+
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)a->type.ptr();
+        switch (t->bits) {
+        case 32 : T<float>().eval(a, b, out); break;
+        case 64 : T<double>().eval(a, b, out); break;
+        default : assert(false);
+        }
+    }
+
+    default :
+        assert(false);
+    }
+}
+
+template <typename T>
+class EvalHelper {
+public :
+    void eval(EValuePtr a, EValuePtr b, EValuePtr out) {
+        eval2(*((T *)a->addr), *((T *)b->addr), out->addr);
+    }
+    virtual void eval2(T &a, T &b, void *out) = 0;
+};
+
+template <typename T>
+class Eval_numericEqualsP : public EvalHelper<T> {
+public :
+    virtual void eval2(T &a, T &b, void *out) {
+        *((char *)out) = (a == b) ? 1 : 0;
+    }
+};
+
+EValuePtr evalInvokePrimOp(PrimOpPtr x,
+                           const vector<ExprPtr> &args,
+                           EnvPtr env,
+                           EValuePtr out)
+{
+    switch (x->primOpCode) {
+
+    case PRIM_Type : {
+        ensureArity(args, 1);
+        ObjectPtr y = analyzeMaybeVoidValue(args[0], env);
+        ObjectPtr obj;
+        switch (y->objKind) {
+        case PVALUE : {
+            PValue *z = (PValue *)y.ptr();
+            obj = z->type.ptr();
+            break;
+        }
+        case VOID_VALUE : {
+            obj = voidType.ptr();
+            break;
+        }
+        default :
+            assert(false);
+        }
+        return evalStaticObject(obj, out);
+    }
+
+    case PRIM_TypeP : {
+        ensureArity(args, 1);
+        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr obj = boolToValueHolder(y->objKind == TYPE).ptr();
+        return evalStaticObject(obj, out);
+    }
+
+    case PRIM_TypeSize : {
+        ensureArity(args, 1);
+        TypePtr t = evaluateType(args[0], env);
+        ObjectPtr obj = sizeTToValueHolder(typeSize(t)).ptr();
+        return evalStaticObject(obj, out);
+    }
+
+    case PRIM_primitiveCopy : {
+        ensureArity(args, 2);
+        PValuePtr pv0 = analyzeValue(args[0], env);
+        PValuePtr pv1 = analyzeValue(args[1], env);
+        if (!isPrimitiveType(pv0->type))
+            error(args[0], "expecting primitive type");
+        if (pv0->type != pv1->type)
+            error(args[1], "argument type mismatch");
+        EValuePtr ev0 = evalAsRef(args[0], env, pv0);
+        EValuePtr ev1 = evalAsRef(args[1], env, pv1);
+        memcpy(ev0->addr, ev1->addr, typeSize(pv0->type));
+        return NULL;
+    }
+
+    case PRIM_boolNot : {
+        ensureArity(args, 1);
+        PValuePtr pv = analyzeValue(args[0], env);
+        if (pv->type != boolType)
+            error(args[0], "expecting bool type");
+        EValuePtr ev = evalAsRef(args[0], env, pv);
+        assert(out.ptr());
+        assert(out->type == boolType);
+        char *p = (char *)ev->addr;
+        *((char *)out->addr) = (*p == 0);
+        return out;
+    }
+
+    case PRIM_numericEqualsP : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = _evalNumeric(args[0], env, t);
+        EValuePtr ev1 = _evalNumeric(args[1], env, t);
+        evalNumericOp<Eval_numericEqualsP>(ev0, ev1, out);
+        return out;
+    }
+
+    default :
+        assert(false);
+
+    }
 }

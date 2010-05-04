@@ -1802,6 +1802,7 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
         llArgs.push_back(carg->llValue);
     }
     if (!entry->returnType) {
+        assert(!out);
         createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), env);
         return NULL;
     }
@@ -1813,6 +1814,7 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
         return out;
     }
     else {
+        assert(!out);
         llvm::Value *result =
             createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), env);
         return new CValue(entry->returnType, result);
