@@ -85,7 +85,7 @@ static overload BiggerNumeric?(A, B) = BiggerFloat?(A,B);
 // toBiggerNumericType
 //
 
-private overloadable toBiggerNumericType;
+overloadable toBiggerNumericType;
 
 [A | Numeric?(A)]
 overload toBiggerNumericType(static A, static A, v) = v;
