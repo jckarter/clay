@@ -1738,32 +1738,6 @@ bool codegenInvokeSpecialCase(ObjectPtr x,
     return false;
 }
 
-static string getCodeName(ObjectPtr x)
-{
-    switch (x->objKind) {
-    case TYPE : {
-        ostringstream sout;
-        sout << x;
-        return sout.str();
-    }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
-        return y->name->str;
-    }
-    case PROCEDURE : {
-        Procedure *y = (Procedure *)x.ptr();
-        return y->name->str;
-    }
-    case OVERLOADABLE : {
-        Overloadable *y = (Overloadable *)x.ptr();
-        return y->name->str;
-    }
-    default :
-        assert(false);
-        return "";
-    }
-}
-
 InvokeEntryPtr codegenCallable(ObjectPtr x,
                                const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
@@ -2109,6 +2083,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         CValuePtr cv1 = codegenAsRef(args[1], env, pv1);
         llvm::Value *v = llvmBuilder->CreateLoad(cv1->llValue);
         llvmBuilder->CreateStore(v, cv0->llValue);
+        assert(!out);
         return NULL;
     }
 
@@ -2475,6 +2450,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         ensureArity(args, 1);
         PointerTypePtr t;
         llvm::Value *v = _cgPointer(args[0], env, t);
+        assert(!out);
         return new CValue(t->pointeeType, v);
     }
 
@@ -2715,13 +2691,11 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         error("Array type constructor cannot be called");
 
     case PRIM_array : {
-        if (args.empty())
-            error("atleast one element required for creating an array");
-        PValuePtr pv = analyzeValue(args[0], env);
-        TypePtr etype = pv->type;
-        int n = (int)args.size();
         assert(out.ptr());
-        assert(arrayType(etype, n) == out->type);
+        assert(out->type->typeKind == ARRAY_TYPE);
+        ArrayType *t = (ArrayType *)out->type.ptr();
+        assert((int)args.size() == t->size);
+        TypePtr etype = t->elementType;
         for (unsigned i = 0; i < args.size(); ++i) {
             PValuePtr parg = analyzeValue(args[i], env);
             if (parg->type != etype)
@@ -2749,6 +2723,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             llvmBuilder->CreateGEP(carray->llValue,
                                    indices.begin(),
                                    indices.end());
+        assert(!out);
         return new CValue(at->elementType, ptr);
     }
 
@@ -2790,7 +2765,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         assert(out.ptr());
         assert(out->type->typeKind == TUPLE_TYPE);
         TupleType *tt = (TupleType *)out->type.ptr();
-        ensureArity(args, tt->elementTypes.size());
+        assert(args.size() == tt->elementTypes.size());
         for (unsigned i = 0; i < args.size(); ++i) {
             PValuePtr parg = analyzeValue(args[i], env);
             if (parg->type != tt->elementTypes[i])
@@ -2815,6 +2790,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
             error(args[1], "tuple index out of range");
         llvm::Value *ptr =
             llvmBuilder->CreateConstGEP2_32(ctuple->llValue, 0, i);
+        assert(!out);
         return new CValue(tt->elementTypes[i], ptr);
     }
 
@@ -2878,6 +2854,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         size_t i = evaluateSizeT(args[1], env);
         llvm::Value *ptr =
             llvmBuilder->CreateConstGEP2_32(crec->llValue, 0, i);
+        assert(!out);
         return new CValue(fieldTypes[i], ptr);
     }
 
@@ -2897,6 +2874,7 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
         size_t i = fi->second;
         llvm::Value *ptr =
             llvmBuilder->CreateConstGEP2_32(crec->llValue, 0, i);
+        assert(!out);
         return new CValue(fieldTypes[i], ptr);
     }
 
