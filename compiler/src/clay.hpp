@@ -1917,6 +1917,7 @@ ExprPtr desugarCharLiteral(char c);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
 ExprPtr desugarNew(NewPtr x);
+const char *updateOperatorName(int op);
 StatementPtr desugarForStatement(ForPtr x);
 
 
@@ -2122,10 +2123,18 @@ void initBuiltinConstructor(RecordPtr x);
 struct ReturnedInfo : public Object {
     TypePtr returnType;
     bool returnIsTemp;
-    CValuePtr returnVal;
-    ReturnedInfo(TypePtr returnType, bool returnIsTemp, CValuePtr returnVal)
+    CValuePtr codegenReturnVal;
+    EValuePtr evalReturnVal;
+    ReturnedInfo(TypePtr returnType,
+                 bool returnIsTemp,
+                 CValuePtr codegenReturnVal)
         : Object(DONT_CARE), returnType(returnType),
-          returnIsTemp(returnIsTemp), returnVal(returnVal) {}
+          returnIsTemp(returnIsTemp), codegenReturnVal(codegenReturnVal) {}
+    ReturnedInfo(TypePtr returnType,
+                 bool returnIsTemp,
+                 EValuePtr evalReturnVal)
+        : Object(DONT_CARE), returnType(returnType),
+          returnIsTemp(returnIsTemp), evalReturnVal(evalReturnVal) {}
 };
 
 
@@ -2287,6 +2296,7 @@ void evalRootIntoValue(ExprPtr expr,
                        EnvPtr env,
                        PValuePtr pv,
                        EValuePtr out);
+EValuePtr evalRootValue(ExprPtr expr, EnvPtr env, EValuePtr out);
 void evalIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, EValuePtr out);
 EValuePtr evalAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv);
 EValuePtr evalValue(ExprPtr expr, EnvPtr env, EValuePtr out);
@@ -2323,6 +2333,60 @@ EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
                             const vector<ExprPtr> &args,
                             EnvPtr env,
                             EValuePtr out);
+
+enum TerminationKind {
+    TERMINATE_RETURN,
+    TERMINATE_BREAK,
+    TERMINATE_CONTINUE,
+    TERMINATE_GOTO
+};
+
+struct Termination : public Object {
+    TerminationKind terminationKind;
+    LocationPtr location;
+    Termination(TerminationKind terminationKind, LocationPtr location)
+        : Object(DONT_CARE), terminationKind(terminationKind),
+          location(location) {}
+};
+typedef Pointer<Termination> TerminationPtr;
+
+struct TerminateReturn : Termination {
+    TerminateReturn(LocationPtr location)
+        : Termination(TERMINATE_RETURN, location) {}
+};
+
+struct TerminateBreak : Termination {
+    TerminateBreak(LocationPtr location)
+        : Termination(TERMINATE_BREAK, location) {}
+};
+
+struct TerminateContinue : Termination {
+    TerminateContinue(LocationPtr location)
+        : Termination(TERMINATE_CONTINUE, location) {}
+};
+
+struct TerminateGoto : Termination {
+    IdentifierPtr targetLabel;
+    TerminateGoto(IdentifierPtr targetLabel, LocationPtr location)
+        : Termination(TERMINATE_GOTO, location) {}
+};
+
+struct LabelInfo {
+    EnvPtr env;
+    int stackMarker;
+    int blockPosition;
+    LabelInfo() {}
+    LabelInfo(EnvPtr env, int stackMarker, int blockPosition)
+        : env(env), stackMarker(stackMarker), blockPosition(blockPosition) {}
+};
+
+TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env);
+void evalCollectLabels(const vector<StatementPtr> &statements,
+                       unsigned startIndex,
+                       EnvPtr env,
+                       map<string, LabelInfo> &labels);
+EnvPtr evalBinding(BindingPtr x, EnvPtr env);
+
 EValuePtr evalInvokePrimOp(PrimOpPtr x,
                            const vector<ExprPtr> &args,
                            EnvPtr env,

@@ -87,6 +87,19 @@ ExprPtr desugarNew(NewPtr x) {
     return call.ptr();
 }
 
+const char *updateOperatorName(int op) {
+    switch (op) {
+    case UPDATE_ADD : return "addAssign";
+    case UPDATE_SUBTRACT : return "subtractAssign";
+    case UPDATE_MULTIPLY : return "multiplyAssign";
+    case UPDATE_DIVIDE : return "divideAssign";
+    case UPDATE_REMAINDER : return "remainderAssign";
+    default :
+        assert(false);
+        return NULL;
+    }
+}
+
 StatementPtr desugarForStatement(ForPtr x) {
     IdentifierPtr exprVar = new Identifier("%expr");
     IdentifierPtr iterVar = new Identifier("%iter");

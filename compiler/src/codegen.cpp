@@ -367,25 +367,6 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
 
 
 //
-// _getUpdateOperator
-//
-
-static const char *_getUpdateOperator(int op) {
-    switch (op) {
-    case UPDATE_ADD : return "addAssign";
-    case UPDATE_SUBTRACT : return "subtractAssign";
-    case UPDATE_MULTIPLY : return "multiplyAssign";
-    case UPDATE_DIVIDE : return "divideAssign";
-    case UPDATE_REMAINDER : return "remainderAssign";
-    default :
-        assert(false);
-        return NULL;
-    }
-}
-
-
-
-//
 // codegenStatement
 //
 
@@ -465,23 +446,10 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env)
         PValuePtr pvLeft = analyzeValue(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(kernelNameRef(_getUpdateOperator(x->op)));
+        CallPtr call = new Call(kernelNameRef(updateOperatorName(x->op)));
         call->args.push_back(x->left);
         call->args.push_back(x->right);
-        int marker = cgMarkStack();
-        ObjectPtr obj = analyzeMaybeVoidValue(call.ptr(), env);
-        switch (obj->objKind) {
-        case VOID_VALUE :
-            codegenMaybeVoid(call.ptr(), env, NULL);
-            break;
-        case PVALUE :
-            codegenAsRef(call.ptr(), env, (PValue *)obj.ptr());
-            break;
-        default :
-            assert(false);
-        }
-        cgDestroyAndPopStack(marker);
-        return false;
+        return codegenStatement(new ExprStatement(call.ptr()), env);
     }
 
     case GOTO : {
@@ -579,7 +547,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env)
 
     case EXPR_STATEMENT : {
         ExprStatement *x = (ExprStatement *)stmt.ptr();
-        ObjectPtr a = analyze(x->expr, env);
+        ObjectPtr a = analyzeMaybeVoidValue(x->expr, env);
         int marker = cgMarkStack();
         if (a->objKind == VOID_VALUE) {
             codegenMaybeVoid(x->expr, env, NULL);
@@ -589,7 +557,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env)
             codegenAsRef(x->expr, env, pv);
         }
         else {
-            error("invalid expression statement");
+            assert(false);
         }
         cgDestroyAndPopStack(marker);
         return false;
@@ -875,7 +843,9 @@ CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CValuePtr out)
             error("'returned' cannot be used when returning void");
         if (!z->returnIsTemp)
             error("'returned' cannot be used when returning by reference");
-        return z->returnVal;
+        if (!z->codegenReturnVal)
+            error("invalid use of 'returned'");
+        return z->codegenReturnVal;
     }
 
     case TUPLE : {
@@ -1849,11 +1819,15 @@ CValuePtr codegenInvokeInlined(InvokeEntryPtr entry,
             returnVal = out;
         }
         else {
+            assert(!out);
             const llvm::Type *llt = llvmPointerType(entry->returnType);
             llvm::Value *llv = llvmInitBuilder->CreateAlloca(llt);
             llv->setName("%returnedRef");
             returnVal = new CValue(pointerType(entry->returnType), llv);
         }
+    }
+    else {
+        assert(!out);
     }
     ObjectPtr rinfo = new ReturnedInfo(returnType, returnIsTemp, returnVal);
     addLocal(bodyEnv, new Identifier("%returned"), rinfo);
