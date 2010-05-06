@@ -4,15 +4,15 @@
 // predicates
 //
 
-static overloadable Sequence?;
-static overloadable SequenceElementType;
+overloadable Sequence?;
+overloadable SequenceElementType;
 
-static overloadable SizedSequence?;
-static overloadable RandomAccessSequence?;
-static overloadable LValueSequence?;
+overloadable SizedSequence?;
+overloadable RandomAccessSequence?;
+overloadable LValueSequence?;
 
 // true if sequence elements are stored contiguously in memory
-static overloadable ContiguousSequence?;
+overloadable ContiguousSequence?;
 
 
 
@@ -51,23 +51,23 @@ overloadable reserve;
 // defaults
 //
 
-[T] static overload Sequence?(T) = false;
+[T] overload Sequence?(static T) = false;
 
-[T] static overload SizedSequence?(T) = false;
-[T] static overload RandomAccessSequence?(T) = false;
-[T] static overload LValueSequence?(T) = false;
+[T] overload SizedSequence?(static T) = false;
+[T] overload RandomAccessSequence?(static T) = false;
+[T] overload LValueSequence?(static T) = false;
 
-[T] static overload ContiguousSequence?(T) = false;
+[T] overload ContiguousSequence?(static T) = false;
 
 
 [T | SizedSequence?(T)]
-static overload Sequence?(T) = true;
+overload Sequence?(static T) = true;
 
 [T | RandomAccessSequence?(T)]
-static overload Sequence?(T) = true;
+overload Sequence?(static T) = true;
 
 [T | LValueSequence?(T)]
-static overload Sequence?(T) = true;
+overload Sequence?(static T) = true;
 
 
 

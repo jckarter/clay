@@ -15,16 +15,16 @@ record SequenceHandle[A] {
 //
 
 [A | SizedSequence?(A)]
-static overload SizedSequence?(SequenceHandle[A]) = true;
+overload SizedSequence?(static SequenceHandle[A]) = true;
 
 [A | RandomAccessSequence?(A)]
-static overload RandomAccessSequence?(SequenceHandle[A]) = true;
+overload RandomAccessSequence?(static SequenceHandle[A]) = true;
 
 [A | LValueSequence?(A)]
-static overload LValueSequence?(SequenceHandle[A]) = true;
+overload LValueSequence?(static SequenceHandle[A]) = true;
 
 [A]
-static overload SequenceElementType(SequenceHandle[A])
+overload SequenceElementType(static SequenceHandle[A])
     = SequenceElementType(A);
 
 

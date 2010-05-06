@@ -100,33 +100,6 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
     return result.ptr();
 }
 
-MatchResultPtr matchStaticInvoke(StaticCodePtr code, EnvPtr codeEnv,
-                                 const vector<ObjectPtr> &args)
-{
-    if (code->args.size() != args.size())
-        return new MatchArityError();
-    vector<PatternCellPtr> cells;
-    EnvPtr patternEnv = new Env(codeEnv);
-    for (unsigned i = 0; i < code->patternVars.size(); ++i) {
-        PatternCellPtr cell = new PatternCell(code->patternVars[i], NULL);
-        addLocal(patternEnv, code->patternVars[i], cell.ptr());
-        cells.push_back(cell);
-    }
-    const vector<ExprPtr> &formalArgs = code->args;
-    for (unsigned i = 0; i < formalArgs.size(); ++i) {
-        PatternPtr pattern = evaluatePattern(formalArgs[i], patternEnv);
-        if (!unify(pattern, args[i]))
-            return new MatchArgumentError(i);
-    }
-    EnvPtr staticEnv = new Env(codeEnv);
-    for (unsigned i = 0; i < cells.size(); ++i)
-        addLocal(staticEnv, code->patternVars[i], derefCell(cells[i]));
-    if (code->predicate.ptr())
-        if (!evaluateBool(code->predicate, staticEnv))
-            return new MatchPredicateError();
-    return new MatchSuccess(staticEnv);
-}
-
 void signalMatchError(MatchResultPtr result,
                       const vector<LocationPtr> &argLocations)
 {

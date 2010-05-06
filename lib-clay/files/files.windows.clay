@@ -10,7 +10,7 @@ record File {
     owned : Bool;
 }
 
-static overload SafeRecord?(File) = false;
+overload SafeRecord?(static File) = false;
 
 private stdHandle(x) = win32.GetStdHandle(win32.DWORD(x));
 

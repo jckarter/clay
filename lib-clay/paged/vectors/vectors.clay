@@ -17,11 +17,11 @@ record Vector[T] {
 // predicates
 //
 
-[T] static overload SizedSequence?(Vector[T]) = true;
-[T] static overload RandomAccessSequence?(Vector[T]) = true;
-[T] static overload LValueSequence?(Vector[T]) = true; 
-[T] static overload ContiguousSequence?(Vector[T]) = true; 
-[T] static overload SequenceElementType(Vector[T]) = T;
+[T] overload SizedSequence?(static Vector[T]) = true;
+[T] overload RandomAccessSequence?(static Vector[T]) = true;
+[T] overload LValueSequence?(static Vector[T]) = true; 
+[T] overload ContiguousSequence?(static Vector[T]) = true; 
+[T] overload SequenceElementType(static Vector[T]) = T;
 
 
 

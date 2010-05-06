@@ -30,10 +30,10 @@ record Header {
 // predicates
 //
 
-[T] static overload SizedSequence?(NamedVector[T]) = true;
-[T] static overload RandomAccessSequence?(NamedVector[T]) = true;
-[T] static overload LValueSequence?(NamedVector[T]) = true;
-[T] static overload SequenceElementType(NamedVector[T]) = T;
+[T] overload SizedSequence?(static NamedVector[T]) = true;
+[T] overload RandomAccessSequence?(static NamedVector[T]) = true;
+[T] overload LValueSequence?(static NamedVector[T]) = true;
+[T] overload SequenceElementType(static NamedVector[T]) = T;
 
 
 

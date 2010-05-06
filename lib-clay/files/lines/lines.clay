@@ -20,8 +20,8 @@ private record LineSequenceRef {
     f : Pointer[File];
 }
 
-static overload Sequence?(LineSequenceRef) = true;
-static overload SequenceElementType(LineSequenceRef) = String;
+overload Sequence?(static LineSequenceRef) = true;
+overload SequenceElementType(static LineSequenceRef) = String;
 
 overload iterator(x:LineSequenceRef) = LineIterator(x.f, false, String());
 
@@ -30,8 +30,8 @@ private record LineSequenceVal {
     f : File;
 }
 
-static overload Sequence?(LineSequenceVal) = true;
-static overload SequenceElementType(LineSequenceVal) = String;
+overload Sequence?(static LineSequenceVal) = true;
+overload SequenceElementType(static LineSequenceVal) = String;
 
 overload iterator(x:LineSequenceVal) = LineIterator(&x.f, false, String());
 

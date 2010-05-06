@@ -346,14 +346,6 @@ static void initOverload(OverloadPtr x) {
     }
 }
 
-static void initStaticOverload(StaticOverloadPtr x) {
-    ObjectPtr y = evaluateStatic(x->target, x->env);
-    if (y->objKind != STATIC_OVERLOADABLE)
-        error(x->target, "invalid static overload target");
-    StaticOverloadable *z = (StaticOverloadable *)y.ptr();
-    z->overloads.insert(z->overloads.begin(), x);
-}
-
 static void initModule(ModulePtr m) {
     if (m->initialized) return;
     m->initialized = true;
@@ -389,9 +381,6 @@ static void initModule(ModulePtr m) {
                 gvarDestructors->statements.begin(), a);
             break;
         }
-        case STATIC_OVERLOAD :
-            initStaticOverload((StaticOverload *)obj);
-            break;
         }
     }
 }
