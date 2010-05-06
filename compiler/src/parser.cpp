@@ -1657,7 +1657,7 @@ static bool externalVariable(TopLevelItemPtr &x) {
 
 
 //
-// static globals, static procedure, static overloadable, static overloads
+// static globals
 //
 
 static bool staticGlobal(TopLevelItemPtr &x) {
@@ -1672,59 +1672,6 @@ static bool staticGlobal(TopLevelItemPtr &x) {
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
     x = new StaticGlobal(y, vis, z);
-    x->location = location;
-    return true;
-}
-
-static bool staticProcedure(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
-    StaticCodePtr y = new StaticCode();
-    if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
-    Visibility vis;
-    if (!topLevelVisibility(vis)) return false;
-    if (!keyword("static")) return false;
-    IdentifierPtr z;
-    if (!identifier(z)) return false;
-    if (!symbol("(")) return false;
-    if (!expressionList(y->args)) return false;
-    if (!symbol(")")) return false;
-    if (!symbol("=")) return false;
-    if (!expression(y->body)) return false;
-    if (!symbol(";")) return false;
-    x = new StaticProcedure(z, vis, y);
-    x->location = location;
-    return true;
-}
-
-static bool staticOverloadable(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
-    Visibility vis;
-    if (!topLevelVisibility(vis)) return false;
-    if (!keyword("static")) return false;
-    if (!keyword("overloadable")) return false;
-    IdentifierPtr y;
-    if (!identifier(y)) return false;
-    if (!symbol(";")) return false;
-    x = new StaticOverloadable(y, vis);
-    x->location = location;
-    return true;
-}
-
-static bool staticOverload(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
-    StaticCodePtr y = new StaticCode();
-    if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
-    if (!keyword("static")) return false;
-    if (!keyword("overload")) return false;
-    ExprPtr z;
-    if (!pattern(z)) return false;
-    if (!symbol("(")) return false;
-    if (!expressionList(y->args)) return false;
-    if (!symbol(")")) return false;
-    if (!symbol("=")) return false;
-    if (!expression(y->body)) return false;
-    if (!symbol(";")) return false;
-    x = new StaticOverload(z, y);
     x->location = location;
     return true;
 }
@@ -1859,9 +1806,6 @@ static bool topLevelItem(TopLevelItemPtr &x) {
     if (restore(p), external(x)) return true;
     if (restore(p), externalVariable(x)) return true;
     if (restore(p), staticGlobal(x)) return true;
-    if (restore(p), staticProcedure(x)) return true;
-    if (restore(p), staticOverloadable(x)) return true;
-    if (restore(p), staticOverload(x)) return true;
     return false;
 }
 

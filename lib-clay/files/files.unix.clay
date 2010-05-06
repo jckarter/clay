@@ -11,7 +11,7 @@ record File {
     owned : Bool;
 }
 
-static overload SafeRecord?(File) = false;
+overload SafeRecord?(static File) = false;
 
 
 

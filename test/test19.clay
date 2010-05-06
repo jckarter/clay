@@ -1,11 +1,11 @@
 
-static overloadable IsInt64;
-[T]
-static overload IsInt64(T) = false;
-static overload IsInt64(Int64) = true;
+overloadable IsInt64;
+[T] overload IsInt64(static T) = false;
+overload IsInt64(static Int64) = true;
 
-static overloadable Foo;
-static overload Foo(Int64) = true;
+overloadable Foo;
+[T] overload Foo(static T) = false;
+overload Foo(static Int64) = true;
 
 f(x) = x;
 

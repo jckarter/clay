@@ -2,18 +2,44 @@ import libc;
 
 
 //
-// generic string predicate
+// String?
 //
 
-[A]
-static String?(A) = Sequence?(A) and (Char == SequenceElementType(A));
+overloadable String?;
 
 [A]
-static SizedString?(A) = SizedSequence?(A) and (Char == SequenceElementType(A));
+overload String?(static A) = false;
+
+[A | Sequence?(A) and (Char == SequenceElementType(A))]
+overload String?(static A) = true;
+
+
+
+//
+// SizedString?
+//
+
+overloadable SizedString?;
 
 [A]
-static ContiguousString?(A) =
-    ContiguousSequence?(A) and (Char == SequenceElementType(A));
+overload SizedString?(static A) = false;
+
+[A | SizedSequence?(A) and (Char == SequenceElementType(A))]
+overload SizedString?(static A) = true;
+
+
+
+//
+// ContiguousString?
+//
+
+overloadable ContiguousString?;
+
+[A]
+overload ContiguousString?(static A) = false;
+
+[A | ContiguousSequence?(A) and (Char == SequenceElementType(A))]
+overload ContiguousString?(static A) = true;
 
 
 
@@ -33,11 +59,11 @@ record String {
 // predicates
 //
 
-static overload SizedSequence?(String) = true;
-static overload RandomAccessSequence?(String) = true;
-static overload LValueSequence?(String) = true;
-static overload ContiguousSequence?(String) = true;
-static overload SequenceElementType(String) = Char;
+overload SizedSequence?(static String) = true;
+overload RandomAccessSequence?(static String) = true;
+overload LValueSequence?(static String) = true;
+overload ContiguousSequence?(static String) = true;
+overload SequenceElementType(static String) = Char;
 
 
 

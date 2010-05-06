@@ -167,8 +167,6 @@ static bool invokeTablesInitialized = false;
 
 static vector< vector<InvokeSetPtr> > invokeTable;
 
-static vector< vector<StaticInvokeEntryPtr> > staticInvokeTable;
-
 
 
 //
@@ -178,7 +176,6 @@ static vector< vector<StaticInvokeEntryPtr> > staticInvokeTable;
 static void initInvokeTables() {
     assert(!invokeTablesInitialized);
     invokeTable.resize(16384);
-    staticInvokeTable.resize(8192);
     invokeTablesInitialized = true;
 }
 
@@ -208,25 +205,4 @@ InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
     InvokeSetPtr invokeSet = new InvokeSet(callable, isStaticFlags, argsKey);
     bucket.push_back(invokeSet);
     return invokeSet;
-}
-
-StaticInvokeEntryPtr lookupStaticInvoke(ObjectPtr callable,
-                                        const vector<ObjectPtr> &args)
-{
-    if (!invokeTablesInitialized)
-        initInvokeTables();
-    int h = objectHash(callable) + objectVectorHash(args);
-    h &= (staticInvokeTable.size() - 1);
-    vector<StaticInvokeEntryPtr> &bucket = staticInvokeTable[h];
-    for (unsigned i = 0; i < bucket.size(); ++i) {
-        StaticInvokeEntryPtr entry = bucket[i];
-        if (objectEquals(entry->callable, callable) &&
-            objectVectorEquals(entry->args, args))
-        {
-            return entry;
-        }
-    }
-    StaticInvokeEntryPtr entry = new StaticInvokeEntry(callable, args);
-    bucket.push_back(entry);
-    return entry;
 }

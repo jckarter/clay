@@ -5,7 +5,7 @@
 //
 
 [T,i | Record?(T)]
-static RecordFieldType(T, i) = Type(recordFieldRef(T(), SizeT(i)));
+RecordFieldType(static T, static i) = Type(recordFieldRef(T(), SizeT(i)));
 
 
 
@@ -13,21 +13,21 @@ static RecordFieldType(T, i) = Type(recordFieldRef(T(), SizeT(i)));
 // SafeRecord? - true if record doesn't contains unsafe types such as pointers
 //
 
-static overloadable SafeRecord?;
+overloadable SafeRecord?;
 
 [T]
-static overload SafeRecord?(T) = false;
+overload SafeRecord?(static T) = false;
 
 [T | Record?(T)]
-static overload SafeRecord?(T) = SafeFields?(T, 0);
+overload SafeRecord?(static T) = SafeFields?(T, 0);
 
-private static overloadable SafeFields?;
+private overloadable SafeFields?;
 
-[T,i] static overload SafeFields?(T, i) =
+[T,i] overload SafeFields?(static T, static i) =
     SafeType?(RecordFieldType(T, i)) and SafeFields?(T, i+1);
 
 [T,i | i == RecordFieldCount(T)]
-static overload SafeFields?(T, i) = true;
+overload SafeFields?(static T, static i) = true;
 
 
 
@@ -35,10 +35,10 @@ static overload SafeFields?(T, i) = true;
 // SafeType?
 //
 
-static overloadable SafeType?;
+overloadable SafeType?;
 
-[T] static overload SafeType?(T) = true;
-[T] static overload SafeType?(Pointer[T]) = false;
+[T] overload SafeType?(static T) = true;
+[T] overload SafeType?(static Pointer[T]) = false;
 
 
 

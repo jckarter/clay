@@ -5,19 +5,19 @@
 //
 
 [T,n]
-static overload SizedSequence?(Array[T,n]) = true;
+overload SizedSequence?(static Array[T,n]) = true;
 
 [T,n]
-static overload RandomAccessSequence?(Array[T,n]) = true;
+overload RandomAccessSequence?(static Array[T,n]) = true;
 
 [T,n]
-static overload LValueSequence?(Array[T,n]) = true;
+overload LValueSequence?(static Array[T,n]) = true;
 
 [T,n]
-static overload ContiguousSequence?(Array[T,n]) = true;
+overload ContiguousSequence?(static Array[T,n]) = true;
 
 [T,n]
-static overload SequenceElementType(Array[T,n]) = T;
+overload SequenceElementType(static Array[T,n]) = T;
 
 
 

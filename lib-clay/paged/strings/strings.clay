@@ -17,11 +17,11 @@ record String {
 // predicates
 //
 
-static overload SizedSequence?(String) = true;
-static overload RandomAccessSequence?(String) = true;
-static overload LValueSequence?(String) = true;
-static overload ContiguousSequence?(String) = true;
-static overload SequenceElementType(String) = Char;
+overload SizedSequence?(static String) = true;
+overload RandomAccessSequence?(static String) = true;
+overload LValueSequence?(static String) = true;
+overload ContiguousSequence?(static String) = true;
+overload SequenceElementType(static String) = Char;
 
 
 

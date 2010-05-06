@@ -31,20 +31,20 @@ private record Mapped[F,A] {
 //
 
 [F,A | SizedSequence?(A)]
-static overload SizedSequence?(Mapped[F,A]) = true;
+overload SizedSequence?(static Mapped[F,A]) = true;
 
 [F,A | RandomAccessSequence?(A)]
-static overload RandomAccessSequence?(Mapped[F,A]) = true;
+overload RandomAccessSequence?(static Mapped[F,A]) = true;
 
 [F,A]
-private static LValueMapping?(F, A) =
+private LValueMapping?(static F, static A) =
     LValue?(F()(next(iterator(A()))));
 
 [F,A | Sequence?(A) and LValueMapping?(F, A)]
-static overload LValueSequence?(Mapped[F,A]) = true;
+overload LValueSequence?(static Mapped[F,A]) = true;
 
 [F,A]
-static overload SequenceElementType(Mapped[F,A]) =
+overload SequenceElementType(static Mapped[F,A]) =
     Type( F()(SequenceElementType(A)()) );
 
 

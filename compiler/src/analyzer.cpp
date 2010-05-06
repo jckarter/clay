@@ -26,8 +26,6 @@ bool analysisToPValue(ObjectPtr x, PValuePtr &pv)
     case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
-    case STATIC_PROCEDURE :
-    case STATIC_OVERLOADABLE :
     case MODULE_HOLDER :
         pv = new PValue(staticType(x), true);
         return true;
@@ -812,20 +810,6 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
     case PROCEDURE :
     case OVERLOADABLE :
         return analyzeInvokeCallable(x, args, env);
-    case STATIC_PROCEDURE : {
-        StaticProcedurePtr y = (StaticProcedure *)x.ptr();
-        StaticInvokeEntryPtr entry = analyzeStaticProcedure(y, args, env);
-        if (!entry->result)
-            return NULL;
-        return analyzeStaticObject(entry->result);
-    }
-    case STATIC_OVERLOADABLE : {
-        StaticOverloadablePtr y = (StaticOverloadable *)x.ptr();
-        StaticInvokeEntryPtr entry = analyzeStaticOverloadable(y, args, env);
-        if (!entry->result)
-            return NULL;
-        return analyzeStaticObject(entry->result);
-    }
     case PVALUE : {
         PValue *y = (PValue *)x.ptr();
         if (y->type->typeKind == STATIC_TYPE) {
@@ -1263,73 +1247,8 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
 
 //
-// analyzeStaticProcedure, analyzeStaticOverloadable
+// analyzeInvokeValue
 //
-
-StaticInvokeEntryPtr
-analyzeStaticProcedure(StaticProcedurePtr x,
-                       const vector<ExprPtr> &argExprs,
-                       EnvPtr env)
-{
-    vector<ObjectPtr> args;
-    vector<LocationPtr> argLocations;
-    for (unsigned i = 0; i < argExprs.size(); ++i) {
-        args.push_back(evaluateStatic(argExprs[i], env));
-        argLocations.push_back(argExprs[i]->location);
-    }
-
-    InvokeStackContext invokeStackContext(x.ptr(), args);
-
-    StaticInvokeEntryPtr entry = lookupStaticInvoke(x.ptr(), args);
-    if (!entry->result && !entry->analyzing) {
-        entry->analyzing = true;
-
-        MatchResultPtr result = matchStaticInvoke(x->code, x->env, args);
-        if (result->matchCode != MATCH_SUCCESS)
-            signalMatchError(result, argLocations);
-        MatchSuccess *y = (MatchSuccess *)result.ptr();
-        entry->result = evaluateStatic(x->code->body, y->env);
-
-        entry->analyzing = false;
-    }
-    return entry;
-}
-
-StaticInvokeEntryPtr
-analyzeStaticOverloadable(StaticOverloadablePtr x,
-                          const vector<ExprPtr> &argExprs,
-                          EnvPtr env)
-{
-    vector<ObjectPtr> args;
-    vector<LocationPtr> argLocations;
-    for (unsigned i = 0; i < argExprs.size(); ++i) {
-        args.push_back(evaluateStatic(argExprs[i], env));
-        argLocations.push_back(argExprs[i]->location);
-    }
-
-    InvokeStackContext invokeStackContext(x.ptr(), args);
-
-    StaticInvokeEntryPtr entry = lookupStaticInvoke(x.ptr(), args);
-    if (!entry->result && !entry->analyzing) {
-        entry->analyzing = true;
-
-        unsigned i = 0;
-        for (; i < x->overloads.size(); ++i) {
-            StaticOverloadPtr y = x->overloads[i];
-            MatchResultPtr result = matchStaticInvoke(y->code, y->env, args);
-            if (result->matchCode == MATCH_SUCCESS) {
-                MatchSuccess *z = (MatchSuccess *)result.ptr();
-                entry->result = evaluateStatic(y->code->body, z->env);
-                break;
-            }
-        }
-        if (i == x->overloads.size())
-            error("no matching static overload");
-
-        entry->analyzing = false;
-    }
-    return entry;
-}
 
 ObjectPtr analyzeInvokeValue(PValuePtr x, 
                              const vector<ExprPtr> &args,
@@ -1360,6 +1279,12 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
 
     }
 }
+
+
+
+//
+// analyzeInvokePrimOp
+//
 
 ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                               const vector<ExprPtr> &args,

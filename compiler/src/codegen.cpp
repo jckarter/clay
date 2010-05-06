@@ -1207,8 +1207,6 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
     case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
-    case STATIC_PROCEDURE :
-    case STATIC_OVERLOADABLE :
     case MODULE_HOLDER :
         assert(out.ptr());
         assert(out->type == staticType(x));
@@ -1628,20 +1626,6 @@ CValuePtr codegenInvoke(ObjectPtr x,
     case PROCEDURE :
     case OVERLOADABLE :
         return codegenInvokeCallable(x, args, env, out);
-
-    case STATIC_PROCEDURE : {
-        StaticProcedurePtr y = (StaticProcedure *)x.ptr();
-        StaticInvokeEntryPtr entry = analyzeStaticProcedure(y, args, env);
-        assert(entry->result.ptr());
-        return codegenStaticObject(entry->result, out);
-    }
-    case STATIC_OVERLOADABLE : {
-        StaticOverloadablePtr y = (StaticOverloadable *)x.ptr();
-        StaticInvokeEntryPtr entry = analyzeStaticOverloadable(y, args, env);
-        assert(entry->result.ptr());
-        return codegenStaticObject(entry->result, out);
-    }
-
     case PRIM_OP :
         return codegenInvokePrimOp((PrimOp *)x.ptr(), args, env, out);
     default :

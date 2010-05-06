@@ -524,27 +524,6 @@ static void print(ostream &out, const Object *x) {
         out << "StaticGlobal(" << y->name << ", " << y->expr << ")";
         break;
     }
-    case STATIC_CODE : {
-        const StaticCode *y = (const StaticCode *)x;
-        out << "StaticCode(" << y->patternVars << ", " << y->predicate;
-        out << ", " << y->args << ", " << y->body << ")";
-        break;
-    }
-    case STATIC_PROCEDURE : {
-        const StaticProcedure *y = (const StaticProcedure *)x;
-        out << "StaticProcedure(" << y->name << ", " << y->code << ")";
-        break;
-    }
-    case STATIC_OVERLOADABLE : {
-        const StaticOverloadable *y = (const StaticOverloadable *)x;
-        out << "StaticOverloadable(" << y->name << ")";
-        break;
-    }
-    case STATIC_OVERLOAD : {
-        const StaticOverload *y = (const StaticOverload *)x;
-        out << "StaticOverload(" << y->target << ", " << y->code << ")";
-        break;
-    }
 
     case IMPORT : {
         const Import *y = (const Import *)x;
@@ -667,16 +646,6 @@ void printName(ostream &out, ObjectPtr x)
     }
     case OVERLOADABLE : {
         Overloadable *y = (Overloadable *)x.ptr();
-        out << y->name->str;
-        break;
-    }
-    case STATIC_PROCEDURE : {
-        StaticProcedure *y = (StaticProcedure *)x.ptr();
-        out << y->name->str;
-        break;
-    }
-    case STATIC_OVERLOADABLE : {
-        StaticOverloadable *y = (StaticOverloadable *)x.ptr();
         out << y->name->str;
         break;
     }

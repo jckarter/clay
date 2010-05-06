@@ -27,13 +27,13 @@ private record Filtered[F,A] {
 }
 
 [F,A]
-static overload Sequence?(Filtered[F,A]) = true;
+overload Sequence?(static Filtered[F,A]) = true;
 
 [F,A | LValueSequence?(A)]
-static overload LValueSequence?(Filtered[F,A]) = true;
+overload LValueSequence?(static Filtered[F,A]) = true;
 
 [F,A]
-static overload SequenceElementType(Filtered[F,A]) =
+overload SequenceElementType(static Filtered[F,A]) =
     SequenceElementType(A);
 
 
