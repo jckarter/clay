@@ -168,11 +168,6 @@ static bool invokeTablesInitialized = false;
 static vector< vector<InvokeSetPtr> > invokeTable;
 
 
-
-//
-// initInvokeTable
-//
-
 static void initInvokeTables() {
     assert(!invokeTablesInitialized);
     invokeTable.resize(16384);
