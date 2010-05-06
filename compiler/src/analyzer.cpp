@@ -517,6 +517,10 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
         CValue *y = (CValue *)x.ptr();
         return new PValue(y->type, false);
     }
+    case EVALUE : {
+        EValue *y = (EValue *)x.ptr();
+        return new PValue(y->type, false);
+    }
     }
     return x;
 }

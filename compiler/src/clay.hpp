@@ -1396,6 +1396,7 @@ ostream &operator<<(ostream &out, const vector<T> &v)
 
 void printNameList(ostream &out, const vector<ObjectPtr> &x);
 void printName(ostream &out, ObjectPtr x);
+string getCodeName(ObjectPtr x);
 
 
 
@@ -2214,19 +2215,6 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
 
 
 //
-// evaluator 2
-//
-
-struct EValue : public Object {
-    TypePtr type;
-    char *addr;
-    EValue(TypePtr type, char *addr)
-        : Object(EVALUE), type(type), addr(addr) {}
-};
-
-
-
-//
 // evaluator
 //
 
@@ -2275,7 +2263,70 @@ ValueHolderPtr sizeTToValueHolder(size_t x);
 ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x);
 ValueHolderPtr boolToValueHolder(bool x);
 
-void evaluateIntoValueHolder(ExprPtr expr, EnvPtr env, ValueHolderPtr v);
+struct EValue : public Object {
+    TypePtr type;
+    char *addr;
+    EValue(TypePtr type, char *addr)
+        : Object(EVALUE), type(type), addr(addr) {}
+};
+
+
+void evalValueInit(EValuePtr dest);
+void evalValueDestroy(EValuePtr dest);
+void evalValueCopy(EValuePtr dest, EValuePtr src);
+void evalValueAssign(EValuePtr dest, EValuePtr src);
+bool evalToBoolFlag(EValuePtr a);
+
+int evalMarkStack();
+void evalDestroyStack(int marker);
+void evalPopStack(int marker);
+void evalDestroyAndPopStack(int marker);
+EValuePtr evalAllocValue(TypePtr t);
+
+void evalRootIntoValue(ExprPtr expr,
+                       EnvPtr env,
+                       PValuePtr pv,
+                       EValuePtr out);
+void evalIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, EValuePtr out);
+EValuePtr evalAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv);
+EValuePtr evalValue(ExprPtr expr, EnvPtr env, EValuePtr out);
+EValuePtr evalMaybeVoid(ExprPtr expr, EnvPtr env, EValuePtr out);
+EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out);
+
+EValuePtr evalStaticObject(ObjectPtr x, EValuePtr out);
+void evalValueHolder(ValueHolderPtr v, EValuePtr out);
+
+EValuePtr evalInvokeValue(EValuePtr x,
+                          const vector<ExprPtr> &args,
+                          EnvPtr env,
+                          EValuePtr out);
+
+void evalInvokeVoid(ObjectPtr x,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env);
+EValuePtr evalInvoke(ObjectPtr x,
+                     const vector<ExprPtr> &args,
+                     EnvPtr env,
+                     EValuePtr out);
+EValuePtr evalInvokeCallable(ObjectPtr x,
+                             const vector<ExprPtr> &args,
+                             EnvPtr env,
+                             EValuePtr out);
+bool evalInvokeSpecialCase(ObjectPtr x,
+                           const vector<bool> &isStaticFlags,
+                           const vector<ObjectPtr> &argsKey);
+EValuePtr evalInvokeCode(InvokeEntryPtr entry,
+                         const vector<ExprPtr> &args,
+                         EnvPtr env,
+                         EValuePtr out);
+EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
+                            const vector<ExprPtr> &args,
+                            EnvPtr env,
+                            EValuePtr out);
+EValuePtr evalInvokePrimOp(PrimOpPtr x,
+                           const vector<ExprPtr> &args,
+                           EnvPtr env,
+                           EValuePtr out);
 
 
 
