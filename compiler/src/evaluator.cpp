@@ -362,6 +362,14 @@ void evalRootIntoValue(ExprPtr expr,
     evalDestroyAndPopStack(marker);
 }
 
+EValuePtr evalRootValue(ExprPtr expr, EnvPtr env, EValuePtr out)
+{
+    int marker = evalMarkStack();
+    EValuePtr ev = evalValue(expr, env, out);
+    evalDestroyAndPopStack(marker);
+    return ev;
+}
+
 void evalIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, EValuePtr out)
 {
     assert(out.ptr());
@@ -939,9 +947,364 @@ EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
                             EnvPtr env,
                             EValuePtr out)
 {
-    // TODO: inlined procedures are not supported yet.
-    error("inlined procedures are not yet supported in the evaluator.");
+    assert(entry->inlined);
+
+    CodePtr code = entry->code;
+
+    if (entry->hasVarArgs)
+        assert(args.size() >= entry->fixedArgNames.size());
+    else
+        assert(args.size() == entry->fixedArgNames.size());
+
+    EnvPtr bodyEnv = new Env(entry->env);
+
+    for (unsigned i= 0; i < entry->fixedArgNames.size(); ++i) {
+        ExprPtr expr = new SCExpr(env, args[i]);
+        addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+    }
+
+    VarArgsInfoPtr vaInfo = new VarArgsInfo(entry->hasVarArgs);
+    if (entry->hasVarArgs) {
+        for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
+            ExprPtr expr = new SCExpr(env, args[i]);
+            vaInfo->varArgs.push_back(expr);
+        }
+    }
+    addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
+
+    ObjectPtr analysis = analyzeInvokeInlined(entry, args, env);
+    assert(analysis.ptr());
+    TypePtr returnType;
+    bool returnIsTemp = false;
+    if (analysis->objKind == PVALUE) {
+        PValue *pv = (PValue *)analysis.ptr();
+        returnType = pv->type;
+        returnIsTemp = pv->isTemp;
+    }
+
+    EValuePtr returnVal;
+    void *returnRefVal;
+    if (returnType.ptr()) {
+        if (returnIsTemp) {
+            assert(out.ptr());
+            assert(out->type == returnType);
+            returnVal = out;
+        }
+        else {
+            assert(!out);
+            returnVal = new EValue(pointerType(entry->returnType),
+                                   (char *)(&returnRefVal));
+        }
+    }
+    else {
+        assert(!out);
+    }
+    ObjectPtr rinfo = new ReturnedInfo(returnType, returnIsTemp, returnVal);
+    addLocal(bodyEnv, new Identifier("%returned"), rinfo);
+
+    TerminationPtr term = evalStatement(entry->code->body, bodyEnv);
+    if (term.ptr()) {
+        switch (term->terminationKind) {
+        case TERMINATE_RETURN :
+            break;
+        case TERMINATE_BREAK :
+            error(term, "invalid 'break' statement");
+        case TERMINATE_CONTINUE :
+            error(term, "invalid 'continue' statement");
+        case TERMINATE_GOTO :
+            error(term, "invalid 'goto' statement");
+        default :
+            assert(false);
+        }
+    }
+
+    if (returnType.ptr() && !returnIsTemp)
+        return new EValue(returnType.ptr(), (char *)returnRefVal);
     return out;
+}
+
+
+
+//
+// evalStatement
+//
+
+TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env)
+{
+    LocationContext loc(stmt->location);
+
+    switch (stmt->stmtKind) {
+    case BLOCK : {
+        Block *x = (Block *)stmt.ptr();
+        int blockMarker = evalMarkStack();
+        map<string,LabelInfo> labels;
+        evalCollectLabels(x->statements, 0, env, labels);
+        TerminationPtr termination;
+        unsigned pos = 0;
+        while (pos < x->statements.size()) {
+            StatementPtr y = x->statements[pos];
+            if (y->stmtKind == LABEL) {
+            }
+            else if (y->stmtKind == BINDING) {
+                env = evalBinding((Binding *)y.ptr(), env);
+                evalCollectLabels(x->statements, pos+1, env, labels);
+            }
+            else {
+                termination = evalStatement(y, env);
+                if (termination.ptr()) {
+                    if (termination->terminationKind == TERMINATE_GOTO) {
+                        TerminateGoto *z = (TerminateGoto *)termination.ptr();
+                        if (labels.count(z->targetLabel->str)) {
+                            LabelInfo &info = labels[z->targetLabel->str];
+                            env = info.env;
+                            evalDestroyAndPopStack(info.stackMarker);
+                            pos = info.blockPosition;
+                            continue;
+                        }
+                    }
+                    break;
+                }
+            }
+            ++pos;
+        }
+        evalDestroyAndPopStack(blockMarker);
+        return termination;
+    }
+
+    case LABEL :
+    case BINDING :
+        error("invalid statement");
+
+    case ASSIGNMENT : {
+        Assignment *x = (Assignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeValue(x->left, env);
+        PValuePtr pvRight = analyzeValue(x->right, env);
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        int marker = evalMarkStack();
+        EValuePtr evLeft = evalValue(x->left, env, NULL);
+        EValuePtr evRight = evalAsRef(x->right, env, pvRight);
+        evalValueAssign(evLeft, evRight);
+        evalDestroyAndPopStack(marker);
+        return NULL;
+    }
+
+    case INIT_ASSIGNMENT : {
+        InitAssignment *x = (InitAssignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeValue(x->left, env);
+        PValuePtr pvRight = analyzeValue(x->right, env);
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        int marker = evalMarkStack();
+        EValuePtr evLeft = evalValue(x->left, env, NULL);
+        EValuePtr evRight = evalAsRef(x->right, env, pvRight);
+        evalValueAssign(evLeft, evRight);
+        evalDestroyAndPopStack(marker);
+        return NULL;
+    }
+
+    case UPDATE_ASSIGNMENT : {
+        UpdateAssignment *x = (UpdateAssignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeValue(x->left, env);
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        CallPtr call = new Call(kernelNameRef(updateOperatorName(x->op)));
+        call->args.push_back(x->left);
+        call->args.push_back(x->right);
+        return evalStatement(new ExprStatement(call.ptr()), env);
+    }
+
+    case GOTO : {
+        Goto *x = (Goto *)stmt.ptr();
+        return new TerminateGoto(x->labelName, x->location);
+    }
+
+    case RETURN : {
+        Return *x = (Return *)stmt.ptr();
+        ObjectPtr y = lookupEnv(env, new Identifier("%returned"));
+        assert(y.ptr());
+        ReturnedInfo *z = (ReturnedInfo *)y.ptr();
+        if (!x->expr) {
+            if (z->returnType.ptr())
+                error("non-void return expected");
+        }
+        else {
+            if (!z->returnType)
+                error("void return expected");
+            if (!z->returnIsTemp)
+                error("return by reference expected");
+            PValuePtr pv = analyzeValue(x->expr, env);
+            if (pv->type != z->returnType)
+                error("type mismatch in return");
+            assert(z->evalReturnVal.ptr());
+            evalRootIntoValue(x->expr, env, pv, z->evalReturnVal);
+        }
+        return new TerminateReturn(x->location);
+    }
+
+    case RETURN_REF : {
+        ReturnRef *x = (ReturnRef *)stmt.ptr();
+        ObjectPtr y = lookupEnv(env, new Identifier("%returned"));
+        assert(y.ptr());
+        ReturnedInfo *z = (ReturnedInfo *)y.ptr();
+        if (!z->returnType)
+            error("void return expected");
+        if (z->returnIsTemp)
+            error("return by value expected");
+        PValuePtr pv = analyzeValue(x->expr, env);
+        if (pv->type != env->ctx->returnType)
+            error("type mismatch in return");
+        if (pv->isTemp)
+            error("cannot return a temporary by reference");
+        EValuePtr ev = evalRootValue(x->expr, env, NULL);
+        assert(z->evalReturnVal.ptr());
+        *((void **)z->evalReturnVal->addr) = (void *)ev->addr;
+        return new TerminateReturn(x->location);
+    }
+
+    case IF : {
+        If *x = (If *)stmt.ptr();
+        PValuePtr pv = analyzeValue(x->condition, env);
+        int marker = evalMarkStack();
+        EValuePtr ev = evalAsRef(x->condition, env, pv);
+        bool flag = evalToBoolFlag(ev);
+        evalDestroyAndPopStack(marker);
+        if (flag)
+            return evalStatement(x->thenPart, env);
+        if (x->elsePart.ptr())
+            return evalStatement(x->elsePart, env);
+        return NULL;
+    }
+
+    case EXPR_STATEMENT : {
+        ExprStatement *x = (ExprStatement *)stmt.ptr();
+        ObjectPtr a = analyzeMaybeVoidValue(x->expr, env);
+        int marker = evalMarkStack();
+        if (a->objKind == VOID_VALUE) {
+            evalMaybeVoid(x->expr, env, NULL);
+        }
+        else if (a->objKind == PVALUE) {
+            PValuePtr pv = (PValue *)a.ptr();
+            evalAsRef(x->expr, env, pv);
+        }
+        else {
+            assert(false);
+        }
+        evalDestroyAndPopStack(marker);
+        return NULL;
+    }
+
+    case WHILE : {
+        While *x = (While *)stmt.ptr();
+        PValuePtr pv = analyzeValue(x->condition, env);
+        while (true) {
+            int marker = evalMarkStack();
+            EValuePtr ev = evalAsRef(x->condition, env, pv);
+            bool flag = evalToBoolFlag(ev);
+            evalDestroyAndPopStack(marker);
+            if (!flag) break;
+            TerminationPtr term = evalStatement(x->body, env);
+            if (term.ptr()) {
+                if (term->terminationKind == TERMINATE_BREAK)
+                    break;
+                if (term->terminationKind == TERMINATE_CONTINUE)
+                    continue;
+                return term;
+            }
+        }
+        return NULL;
+    }
+
+    case BREAK :
+        return new TerminateBreak(stmt->location);
+
+    case CONTINUE :
+        return new TerminateContinue(stmt->location);
+
+    case FOR : {
+        For *x = (For *)stmt.ptr();
+        if (!x->desugared)
+            x->desugared = desugarForStatement(x);
+        return evalStatement(x->desugared, env);
+    }
+
+    case SC_STATEMENT : {
+        SCStatement *x = (SCStatement *)stmt.ptr();
+        return evalStatement(x->statement, x->env);
+    }
+
+    case TRY :
+        error("try statement not yet supported in the evaluator");
+        return NULL;
+
+    default :
+        assert(false);
+        return NULL;
+    }
+}
+
+void evalCollectLabels(const vector<StatementPtr> &statements,
+                       unsigned startIndex,
+                       EnvPtr env,
+                       map<string, LabelInfo> &labels)
+{
+    for (unsigned i = startIndex; i < statements.size(); ++i) {
+        StatementPtr x = statements[i];
+        switch (x->stmtKind) {
+        case LABEL : {
+            Label *y = (Label *)x.ptr();
+            if (labels.count(y->name->str))
+                error(x, "label redefined");
+            labels[y->name->str] = LabelInfo(env, evalMarkStack(), i+1);
+            break;
+        }
+        case BINDING :
+            return;
+        default :
+            break;
+        }
+    }
+}
+
+EnvPtr evalBinding(BindingPtr x, EnvPtr env)
+{
+    switch (x->bindingKind) {
+
+    case VAR : {
+        PValuePtr pv = analyzeValue(x->expr, env);
+        EValuePtr ev = evalAllocValue(pv->type);
+        evalRootIntoValue(x->expr, env, pv, ev);
+        EnvPtr env2 = new Env(env);
+        addLocal(env2, x->name, ev.ptr());
+        return env2;
+    }
+
+    case REF : {
+        PValuePtr pv = analyzeValue(x->expr, env);
+        EValuePtr ev;
+        if (pv->isTemp) {
+            ev = evalAllocValue(ev->type);
+            evalRootValue(x->expr, env, ev);
+        }
+        else {
+            ev = evalRootValue(x->expr, env, NULL);
+        }
+        EnvPtr env2 = new Env(env);
+        addLocal(env2, x->name, ev.ptr());
+        return env2;
+    }
+
+    case STATIC : {
+        ObjectPtr v = evaluateStatic(x->expr, env);
+        EnvPtr env2 = new Env(env);
+        addLocal(env2, x->name, v.ptr());
+        return env2;
+    }
+
+    default :
+        assert(false);
+        return NULL;
+    }
 }
 
 
