@@ -568,6 +568,8 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
                 return ev1;
             evalValueDestroy(ev1);
             PValuePtr pv2 = analyzeValue(x->expr2, env);
+            if (pv2->type != pv1->type)
+                error("type mismatch in 'and' expression");
             evalIntoValue(x->expr2, env, pv2, out);
             return out;
         }
@@ -581,6 +583,9 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
                 }
                 return ev1;
             }
+            PValuePtr pv2 = analyzeValue(x->expr2, env);
+            if (pv2->type != pv1->type)
+                error("type mismatch in 'and' expression");
             return evalValue(x->expr2, env, out);
         }
         assert(false);
@@ -595,6 +600,8 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
                 return ev1;
             evalValueDestroy(ev1);
             PValuePtr pv2 = analyzeValue(x->expr2, env);
+            if (pv2->type != pv1->type)
+                error("type mismatch in 'or' expression");
             evalIntoValue(x->expr2, env, pv2, out);
             return out;
         }
@@ -608,6 +615,9 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
                 }
                 return ev1;
             }
+            PValuePtr pv2 = analyzeValue(x->expr2, env);
+            if (pv2->type != pv1->type)
+                error("type mismatch in 'or' expression");
             return evalValue(x->expr2, env, out);
         }
         assert(false);

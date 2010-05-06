@@ -369,6 +369,8 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         PValuePtr a;
         if (!analysisToPValue(first, a))
             error(x->expr1, "expecting a value");
+        if (a->isTemp)
+            return new PValue(a->type, true);
         PValuePtr b = analyzeValue(x->expr2, env);
         if (!a || !b)
             return NULL;
@@ -392,6 +394,8 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         PValuePtr a;
         if (!analysisToPValue(first, a))
             error(x->expr1, "expecting a value");
+        if (a->isTemp)
+            return new PValue(a->type, true);
         PValuePtr b = analyzeValue(x->expr2, env);
         if (!a || !b)
             return NULL;
