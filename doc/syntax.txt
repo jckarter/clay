@@ -57,14 +57,6 @@ ExternalVariable -> "external" Identifier TypeSpec ";"
 
 StaticGlobal -> "static" Identifier "=" Expression ";"
 
-StaticProcedure -> PatternVarsWithCond? "static" Identifier
-                   "(" comma_list(Expression) ")" "=" Expression ";"
-
-StaticOverloadable -> "static" "overloadable" Identifier ";"
-
-StaticOverload -> PatternVarsWithCond? "static" "overload" Pattern
-                  "(" comma_list(Expression) ")" "=" Expression ";"
-
 
 //
 // Statement
@@ -186,7 +178,7 @@ Literal -> BoolLiteral
 
 BoolLiteral -> "true" | "false"
 
-Lambda -> "lambda" "(" comma_list(Identifier) ")" Block
+Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" Block
 
 VarArgsRef -> "..."
 
