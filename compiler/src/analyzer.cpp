@@ -523,8 +523,27 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
         EValue *y = (EValue *)x.ptr();
         return new PValue(y->type, false);
     }
+    case VALUE_HOLDER :
+    case PVALUE :
+
+    case TYPE :
+    case VOID_TYPE :
+    case PRIM_OP :
+    case PROCEDURE :
+    case OVERLOADABLE :
+    case RECORD :
+    case MODULE_HOLDER :
+    case IDENTIFIER :
+        return x;
+
+    case PATTERN :
+        error("pattern cannot be used as value");
+        return NULL;
+
+    default :
+        error("invalid static object");
+        return NULL;
     }
-    return x;
 }
 
 

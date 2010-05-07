@@ -1323,12 +1323,17 @@ bool importVisibility(Visibility &x) {
 // records
 //
 
+static bool fieldTypeSpec(ExprPtr &x) {
+    if (!symbol(":")) return false;
+    return expression(x);
+}
+
 static bool recordField(RecordFieldPtr &x) {
     LocationPtr location = currentLocation();
     IdentifierPtr y;
     if (!identifier(y)) return false;
     ExprPtr z;
-    if (!typeSpec(z)) return false;
+    if (!fieldTypeSpec(z)) return false;
     if (!symbol(";")) return false;
     x = new RecordField(y, z);
     x->location = location;
