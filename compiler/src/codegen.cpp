@@ -1208,6 +1208,7 @@ CValuePtr codegenStaticObject(ObjectPtr x, CValuePtr out)
     case OVERLOADABLE :
     case RECORD :
     case MODULE_HOLDER :
+    case IDENTIFIER :
         assert(out.ptr());
         assert(out->type == staticType(x));
         return out;
