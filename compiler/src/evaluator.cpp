@@ -1144,7 +1144,7 @@ TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env)
         if (z->returnIsTemp)
             error("return by value expected");
         PValuePtr pv = analyzeValue(x->expr, env);
-        if (pv->type != env->ctx->returnType)
+        if (pv->type != z->returnType)
             error("type mismatch in return");
         if (pv->isTemp)
             error("cannot return a temporary by reference");
