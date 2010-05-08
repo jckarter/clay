@@ -2298,7 +2298,20 @@ struct LabelInfo {
         : env(env), stackMarker(stackMarker), blockPosition(blockPosition) {}
 };
 
-TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env);
+struct EvalContext : public Object {
+    TypePtr returnType;
+    bool returnIsTemp;
+    EValuePtr returnVal;
+    EvalContext(TypePtr returnType, bool returnIsTemp, EValuePtr returnVal)
+        : Object(DONT_CARE), returnType(returnType),
+          returnIsTemp(returnIsTemp), returnVal(returnVal) {}
+};
+typedef Pointer<EvalContext> EvalContextPtr;
+
+TerminationPtr evalStatement(StatementPtr stmt,
+                             EnvPtr env,
+                             EvalContextPtr ctx);
+
 void evalCollectLabels(const vector<StatementPtr> &statements,
                        unsigned startIndex,
                        EnvPtr env,
@@ -2335,14 +2348,8 @@ struct JumpTarget {
 };
 
 struct CodegenContext : public Object {
-
-    // one of 'invokeEntry' and 'externalProc' is non-null
-    InvokeEntryPtr _invokeEntry;
-    ExternalProcedurePtr _externalProc;
-
     TypePtr returnType;
     bool returnIsTemp;
-
     CValuePtr returnVal;
     JumpTarget returnTarget;
     map<string, JumpTarget> labels;
@@ -2357,7 +2364,7 @@ struct CodegenContext : public Object {
     CodegenContext(InvokeEntryPtr invokeEntry,
                    CValuePtr returnVal,
                    const JumpTarget &returnTarget)
-        : Object(DONT_CARE), _invokeEntry(invokeEntry),
+        : Object(DONT_CARE),
           returnType(invokeEntry->returnType),
           returnIsTemp(invokeEntry->returnIsTemp),
           returnVal(returnVal), returnTarget(returnTarget),
@@ -2367,7 +2374,7 @@ struct CodegenContext : public Object {
     CodegenContext(ExternalProcedurePtr externalProc,
                    CValuePtr returnVal,
                    const JumpTarget &returnTarget)
-        : Object(DONT_CARE), _externalProc(externalProc),
+        : Object(DONT_CARE),
           returnType(externalProc->returnType2), returnIsTemp(true),
           returnVal(returnVal), returnTarget(returnTarget),
           catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}
@@ -2377,7 +2384,7 @@ struct CodegenContext : public Object {
                    TypePtr returnType, bool returnIsTemp,
                    CValuePtr returnVal,
                    const JumpTarget &returnTarget)
-        : Object(DONT_CARE), _invokeEntry(invokeEntry),
+        : Object(DONT_CARE),
           returnType(returnType), returnIsTemp(returnIsTemp),
           returnVal(returnVal), returnTarget(returnTarget),
           catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}

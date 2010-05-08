@@ -994,7 +994,9 @@ EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
     ObjectPtr rinfo = new ReturnedInfo(returnType, returnIsTemp, returnVal);
     addLocal(bodyEnv, new Identifier("%returned"), rinfo);
 
-    TerminationPtr term = evalStatement(entry->code->body, bodyEnv);
+    EvalContextPtr ctx = new EvalContext(returnType, returnIsTemp, returnVal);
+
+    TerminationPtr term = evalStatement(entry->code->body, bodyEnv, ctx);
     if (term.ptr()) {
         switch (term->terminationKind) {
         case TERMINATE_RETURN :
@@ -1021,7 +1023,9 @@ EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
 // evalStatement
 //
 
-TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env)
+TerminationPtr evalStatement(StatementPtr stmt,
+                             EnvPtr env,
+                             EvalContextPtr ctx)
 {
     LocationContext loc(stmt->location);
 
@@ -1042,7 +1046,7 @@ TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env)
                 evalCollectLabels(x->statements, pos+1, env, labels);
             }
             else {
-                termination = evalStatement(y, env);
+                termination = evalStatement(y, env, ctx);
                 if (termination.ptr()) {
                     if (termination->terminationKind == TERMINATE_GOTO) {
                         TerminateGoto *z = (TerminateGoto *)termination.ptr();
@@ -1103,7 +1107,7 @@ TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env)
         CallPtr call = new Call(kernelNameRef(updateOperatorName(x->op)));
         call->args.push_back(x->left);
         call->args.push_back(x->right);
-        return evalStatement(new ExprStatement(call.ptr()), env);
+        return evalStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 
     case GOTO : {
@@ -1113,44 +1117,36 @@ TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env)
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        ObjectPtr y = lookupEnv(env, new Identifier("%returned"));
-        assert(y.ptr());
-        ReturnedInfo *z = (ReturnedInfo *)y.ptr();
         if (!x->expr) {
-            if (z->returnType.ptr())
+            if (ctx->returnType.ptr())
                 error("non-void return expected");
         }
         else {
-            if (!z->returnType)
+            if (!ctx->returnType)
                 error("void return expected");
-            if (!z->returnIsTemp)
+            if (!ctx->returnIsTemp)
                 error("return by reference expected");
             PValuePtr pv = analyzeValue(x->expr, env);
-            if (pv->type != z->returnType)
+            if (pv->type != ctx->returnType)
                 error("type mismatch in return");
-            assert(z->evalReturnVal.ptr());
-            evalRootIntoValue(x->expr, env, pv, z->evalReturnVal);
+            evalRootIntoValue(x->expr, env, pv, ctx->returnVal);
         }
         return new TerminateReturn(x->location);
     }
 
     case RETURN_REF : {
         ReturnRef *x = (ReturnRef *)stmt.ptr();
-        ObjectPtr y = lookupEnv(env, new Identifier("%returned"));
-        assert(y.ptr());
-        ReturnedInfo *z = (ReturnedInfo *)y.ptr();
-        if (!z->returnType)
+        if (!ctx->returnType)
             error("void return expected");
-        if (z->returnIsTemp)
+        if (ctx->returnIsTemp)
             error("return by value expected");
         PValuePtr pv = analyzeValue(x->expr, env);
-        if (pv->type != z->returnType)
+        if (pv->type != ctx->returnType)
             error("type mismatch in return");
         if (pv->isTemp)
             error("cannot return a temporary by reference");
         EValuePtr ev = evalRootValue(x->expr, env, NULL);
-        assert(z->evalReturnVal.ptr());
-        *((void **)z->evalReturnVal->addr) = (void *)ev->addr;
+        *((void **)ctx->returnVal->addr) = (void *)ev->addr;
         return new TerminateReturn(x->location);
     }
 
@@ -1162,9 +1158,9 @@ TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env)
         bool flag = evalToBoolFlag(ev);
         evalDestroyAndPopStack(marker);
         if (flag)
-            return evalStatement(x->thenPart, env);
+            return evalStatement(x->thenPart, env, ctx);
         if (x->elsePart.ptr())
-            return evalStatement(x->elsePart, env);
+            return evalStatement(x->elsePart, env, ctx);
         return NULL;
     }
 
@@ -1195,7 +1191,7 @@ TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env)
             bool flag = evalToBoolFlag(ev);
             evalDestroyAndPopStack(marker);
             if (!flag) break;
-            TerminationPtr term = evalStatement(x->body, env);
+            TerminationPtr term = evalStatement(x->body, env, ctx);
             if (term.ptr()) {
                 if (term->terminationKind == TERMINATE_BREAK)
                     break;
@@ -1217,12 +1213,12 @@ TerminationPtr evalStatement(StatementPtr stmt, EnvPtr env)
         For *x = (For *)stmt.ptr();
         if (!x->desugared)
             x->desugared = desugarForStatement(x);
-        return evalStatement(x->desugared, env);
+        return evalStatement(x->desugared, env, ctx);
     }
 
     case SC_STATEMENT : {
         SCStatement *x = (SCStatement *)stmt.ptr();
-        return evalStatement(x->statement, x->env);
+        return evalStatement(x->statement, x->env, ctx);
     }
 
     case TRY :
