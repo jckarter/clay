@@ -102,7 +102,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         code->formalArgs.push_back(y.ptr());
     }
     code->hasVarArgs = false;
-    code->returnByRef = false;
+    code->returnByRef = x->returnByRef;
     code->body = x->body;
 
     OverloadPtr overload = new Overload(kernelNameRef("call"), code, false);

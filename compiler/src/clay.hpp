@@ -749,6 +749,7 @@ struct Or : public Expr {
 struct Lambda : public Expr {
     bool isBlockLambda;
     vector<IdentifierPtr> formalArgs;
+    bool returnByRef;
     StatementPtr body;
 
     ExprPtr converted;
@@ -758,12 +759,15 @@ struct Lambda : public Expr {
     TypePtr lambdaType;
 
     Lambda(bool isBlockLambda) :
-        Expr(LAMBDA), isBlockLambda(isBlockLambda), initialized(false) {}
+        Expr(LAMBDA), isBlockLambda(isBlockLambda), returnByRef(false),
+        initialized(false) {}
     Lambda(bool isBlockLambda,
            const vector<IdentifierPtr> &formalArgs,
+           bool returnByRef,
            StatementPtr body)
         : Expr(LAMBDA), isBlockLambda(isBlockLambda),
-          formalArgs(formalArgs), body(body), initialized(false) {}
+          formalArgs(formalArgs), returnByRef(returnByRef), body(body),
+          initialized(false) {}
 };
 
 struct VarArgsRef : public Expr {
