@@ -110,7 +110,7 @@ static void initKeywords() {
          "static", "inlined", "lvalue", "rvalue",
          "enum", "var", "ref",
          "and", "or", "not", "new",
-         "if", "else", "goto", "return", "returnref", "while",
+         "if", "else", "goto", "return", "while",
          "break", "continue", "for", "in", "returned",
          "lambda", "block", "true", "false", "try", "catch", NULL};
     keywords = new std::set<string>();

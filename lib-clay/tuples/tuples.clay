@@ -5,7 +5,7 @@
 //
 
 [T|Tuple?(T)]
-overload T() : T {
+overload T() T {
     initTupleElements(returned, SizeT(0));
 }
 
@@ -28,7 +28,7 @@ overload initTupleElements(a:T, static i) {
 //
 
 [T|Tuple?(T)]
-overload T(src:T) : T {
+overload T(src:T) T {
     copyTupleElements(returned, src, SizeT(0));
 }
 
@@ -52,7 +52,7 @@ overload copyTupleElements(dest:T, src:T, static i) {
 //
 
 [T|Tuple?(T)]
-overload move(src:T) : T {
+overload move(src:T) T {
     moveTupleElements(returned, src, SizeT(0));
 }
 

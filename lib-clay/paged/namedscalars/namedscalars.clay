@@ -23,7 +23,7 @@ record NamedScalar[T] {
 //
 
 [T]
-overload NamedScalar[T](fileName : strings.String, initial:T) : NamedScalar[T] {
+overload NamedScalar[T](fileName : strings.String, initial:T) NamedScalar[T] {
     ref x = returned;
     x.fileName <-- fileName;
     if (fileExists?(fileName)) {
@@ -45,4 +45,4 @@ overload NamedScalar[T](fileName : strings.String, initial:T) : NamedScalar[T] {
 //
 
 [T]
-overload dereference(x:NamedScalar[T]) = ref Pointer[T](x.mapping.address)^;
+overload dereference(x:NamedScalar[T]) ref = Pointer[T](x.mapping.address)^;

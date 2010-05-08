@@ -375,7 +375,7 @@ void BindingsConverter::generateDecl(Decl *decl)
                 }
             }
             const Type *rt = x->getResultType().getTypePtr();
-            out << ") : " << convertType(rt) << ";\n";
+            out << ") " << convertType(rt) << ";\n";
         }
         break;
     }

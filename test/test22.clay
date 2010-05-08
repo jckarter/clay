@@ -10,9 +10,9 @@ foo1() {
 
 var x = 5;
 
-foo2() {
+foo2() ref {
     println("returning a lvalue");
-    returnref x;
+    return x;
 }
 
 main() {

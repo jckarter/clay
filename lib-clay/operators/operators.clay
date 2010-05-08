@@ -68,7 +68,7 @@ initialize(a) {
 }
 
 [T]
-overload move(a:T) : T {
+overload move(a:T) T {
     returned <-- a;
     destroy(a);
     a <-- T();

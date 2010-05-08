@@ -41,7 +41,7 @@ overload SharedPointer[T](src:SharedPointer[T]) {
 }
 
 [T]
-overload move(src:SharedPointer[T]) : SharedPointer[T] {
+overload move(src:SharedPointer[T]) SharedPointer[T] {
     returned.ptr = src.ptr;
     src.ptr = nullPaged(RefCounted[T]);
 }
@@ -72,7 +72,7 @@ overload destroy(p : SharedPointer[T]) {
 //
 
 [T]
-overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
+overload dereference(p : SharedPointer[T]) ref = p.ptr^.value;
 
 
 

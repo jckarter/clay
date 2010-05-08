@@ -7,11 +7,11 @@ public import __primitives__.(Static);
 //
 
 [A]
-overload Static[A]() : Static[A] {
+overload Static[A]() Static[A] {
 }
 
 [A]
-overload Static[A](src:Static[A]) : Static[A] {
+overload Static[A](src:Static[A]) Static[A] {
 }
 
 [A]

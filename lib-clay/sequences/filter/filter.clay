@@ -106,8 +106,8 @@ overload hasNext?(iter:FilteredIterator_Ref[F,ITER,X]) {
 }
 
 [F,ITER,X]
-overload next(iter:FilteredIterator_Ref[F,ITER,X]) {
+overload next(iter:FilteredIterator_Ref[F,ITER,X]) ref {
     assert(iter.hasQueued?, "hasNext? not called");
     iter.hasQueued? = false;
-    returnref iter.queued^;
+    return iter.queued^;
 }

@@ -67,7 +67,7 @@ private creationFlags(mode) {
     assert(false);
 }
 
-overload File(path:String, mode:OpenMode) : File {
+overload File(path:String, mode:OpenMode) File {
     var handle = win32.CreateFileA(
         cstring(path),
         win32.DWORD(accessFlags(mode)),
@@ -105,7 +105,7 @@ overload assign(dest:File, src:File) = unsupported();
 //
 
 [I | Integer?(I)]
-overload read(f:File, buffer:Pointer[Byte], n:I) : SizeT {
+overload read(f:File, buffer:Pointer[Byte], n:I) SizeT {
     var nRead = win32.DWORD();
     var result = win32.ReadFile(
         f.handle,

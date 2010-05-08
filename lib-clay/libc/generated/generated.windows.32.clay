@@ -30,340 +30,340 @@ external (dllimport) _iob : Array[FILE,0];
 
 external fopen(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[FILE];
+    argument1 : Pointer[CChar]) Pointer[FILE];
 
 external freopen(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Pointer[FILE]) : Pointer[FILE];
+    argument2 : Pointer[FILE]) Pointer[FILE];
 
 external fflush(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 external fclose(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 external remove(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external rename(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
-external tmpfile() : Pointer[FILE];
+external tmpfile() Pointer[FILE];
 
 external tmpnam(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external _tempnam(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[CChar];
+    argument1 : Pointer[CChar]) Pointer[CChar];
 
-external _rmtmp() : Int;
+external _rmtmp() Int;
 
 external _unlink(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external tempnam(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[CChar];
+    argument1 : Pointer[CChar]) Pointer[CChar];
 
-external rmtmp() : Int;
+external rmtmp() Int;
 
 external unlink(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external setvbuf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
     argument2 : Int,
-    argument3 : UInt) : Int;
+    argument3 : UInt) Int;
 
 external setbuf(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[CChar]) : Void;
+    argument1 : Pointer[CChar]) Void;
 
 external __mingw_fprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external __mingw_printf(
     argument0 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external __mingw_sprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external __mingw_snprintf(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external __mingw_vfprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external __mingw_vprintf(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external __mingw_vsprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external __mingw_vsnprintf(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    argument3 : Int) : Int;
+    argument3 : Int) Int;
 
 external fprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external printf(
     argument0 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external sprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external vfprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external vprintf(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external vsprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external __msvcrt_fprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external __msvcrt_printf(
     argument0 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external __msvcrt_sprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external __msvcrt_vfprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external __msvcrt_vprintf(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external __msvcrt_vsprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external _snprintf(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external _vsnprintf(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    argument3 : Int) : Int;
+    argument3 : Int) Int;
 
 external _vscprintf(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external snprintf(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external vsnprintf(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    argument3 : Int) : Int;
+    argument3 : Int) Int;
 
 external vscanf(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external vfscanf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external vsscanf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external fscanf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external scanf(
     argument0 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external sscanf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) : Int;
+    ...) Int;
 
 external fgetc(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 external fgets(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    argument2 : Pointer[FILE]) : Pointer[CChar];
+    argument2 : Pointer[FILE]) Pointer[CChar];
 
 external fputc(
     argument0 : Int,
-    argument1 : Pointer[FILE]) : Int;
+    argument1 : Pointer[FILE]) Int;
 
 external fputs(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[FILE]) : Int;
+    argument1 : Pointer[FILE]) Int;
 
 external gets(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external puts(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external ungetc(
     argument0 : Int,
-    argument1 : Pointer[FILE]) : Int;
+    argument1 : Pointer[FILE]) Int;
 
 external _filbuf(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 external _flsbuf(
     argument0 : Int,
-    argument1 : Pointer[FILE]) : Int;
+    argument1 : Pointer[FILE]) Int;
 
 external fread(
     argument0 : RawPointer,
     argument1 : UInt,
     argument2 : UInt,
-    argument3 : Pointer[FILE]) : UInt;
+    argument3 : Pointer[FILE]) UInt;
 
 external fwrite(
     argument0 : RawPointer,
     argument1 : UInt,
     argument2 : UInt,
-    argument3 : Pointer[FILE]) : UInt;
+    argument3 : Pointer[FILE]) UInt;
 
 external fseek(
     argument0 : Pointer[FILE],
     argument1 : CLong,
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external ftell(
-    argument0 : Pointer[FILE]) : CLong;
+    argument0 : Pointer[FILE]) CLong;
 
 external rewind(
-    argument0 : Pointer[FILE]) : Void;
+    argument0 : Pointer[FILE]) Void;
 
 static fpos_t = Int64;
 
 external fgetpos(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int64]) : Int;
+    argument1 : Pointer[Int64]) Int;
 
 external fsetpos(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[Int64]) : Int;
+    argument1 : Pointer[Int64]) Int;
 
 external feof(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 external ferror(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 external clearerr(
-    argument0 : Pointer[FILE]) : Void;
+    argument0 : Pointer[FILE]) Void;
 
 external perror(
-    argument0 : Pointer[CChar]) : Void;
+    argument0 : Pointer[CChar]) Void;
 
 external _popen(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[FILE];
+    argument1 : Pointer[CChar]) Pointer[FILE];
 
 external _pclose(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 external popen(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[FILE];
+    argument1 : Pointer[CChar]) Pointer[FILE];
 
 external pclose(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
-external _flushall() : Int;
+external _flushall() Int;
 
-external _fgetchar() : Int;
+external _fgetchar() Int;
 
 external _fputchar(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external _fdopen(
     argument0 : Int,
-    argument1 : Pointer[CChar]) : Pointer[FILE];
+    argument1 : Pointer[CChar]) Pointer[FILE];
 
 external _fileno(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
-external _fcloseall() : Int;
+external _fcloseall() Int;
 
 external _fsopen(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[FILE];
+    argument2 : Int) Pointer[FILE];
 
-external _getmaxstdio() : Int;
+external _getmaxstdio() Int;
 
 external _setmaxstdio(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
-external fgetchar() : Int;
+external fgetchar() Int;
 
 external fputchar(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external fdopen(
     argument0 : Int,
-    argument1 : Pointer[CChar]) : Pointer[FILE];
+    argument1 : Pointer[CChar]) Pointer[FILE];
 
 external fileno(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 static ptrdiff_t = Int;
 
@@ -410,228 +410,228 @@ static useconds_t = UInt;
 external fseeko64(
     argument0 : Pointer[FILE],
     argument1 : Int64,
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external fwprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[UShort],
-    ...) : Int;
+    ...) Int;
 
 external wprintf(
     argument0 : Pointer[UShort],
-    ...) : Int;
+    ...) Int;
 
 external _snwprintf(
     argument0 : Pointer[UShort],
     argument1 : UInt,
     argument2 : Pointer[UShort],
-    ...) : Int;
+    ...) Int;
 
 external vfwprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[UShort],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external vwprintf(
     argument0 : Pointer[UShort],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _vsnwprintf(
     argument0 : Pointer[UShort],
     argument1 : UInt,
     argument2 : Pointer[UShort],
-    argument3 : Int) : Int;
+    argument3 : Int) Int;
 
 external _vscwprintf(
     argument0 : Pointer[UShort],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external fwscanf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[UShort],
-    ...) : Int;
+    ...) Int;
 
 external wscanf(
     argument0 : Pointer[UShort],
-    ...) : Int;
+    ...) Int;
 
 external swscanf(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    ...) : Int;
+    ...) Int;
 
 external fgetwc(
-    argument0 : Pointer[FILE]) : UShort;
+    argument0 : Pointer[FILE]) UShort;
 
 external fputwc(
     argument0 : UShort,
-    argument1 : Pointer[FILE]) : UShort;
+    argument1 : Pointer[FILE]) UShort;
 
 external ungetwc(
     argument0 : UShort,
-    argument1 : Pointer[FILE]) : UShort;
+    argument1 : Pointer[FILE]) UShort;
 
 external swprintf(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    ...) : Int;
+    ...) Int;
 
 external vswprintf(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external fgetws(
     argument0 : Pointer[UShort],
     argument1 : Int,
-    argument2 : Pointer[FILE]) : Pointer[UShort];
+    argument2 : Pointer[FILE]) Pointer[UShort];
 
 external fputws(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[FILE]) : Int;
+    argument1 : Pointer[FILE]) Int;
 
 external getwc(
-    argument0 : Pointer[FILE]) : UShort;
+    argument0 : Pointer[FILE]) UShort;
 
-external getwchar() : UShort;
+external getwchar() UShort;
 
 external _getws(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external putwc(
     argument0 : UShort,
-    argument1 : Pointer[FILE]) : UShort;
+    argument1 : Pointer[FILE]) UShort;
 
 external _putws(
-    argument0 : Pointer[UShort]) : Int;
+    argument0 : Pointer[UShort]) Int;
 
 external putwchar(
-    argument0 : UShort) : UShort;
+    argument0 : UShort) UShort;
 
 external _wfdopen(
     argument0 : Int,
-    argument1 : Pointer[UShort]) : Pointer[FILE];
+    argument1 : Pointer[UShort]) Pointer[FILE];
 
 external _wfopen(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Pointer[FILE];
+    argument1 : Pointer[UShort]) Pointer[FILE];
 
 external _wfreopen(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : Pointer[FILE]) : Pointer[FILE];
+    argument2 : Pointer[FILE]) Pointer[FILE];
 
 external _wfsopen(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : Int) : Pointer[FILE];
+    argument2 : Int) Pointer[FILE];
 
 external _wtmpnam(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external _wtempnam(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Pointer[UShort];
+    argument1 : Pointer[UShort]) Pointer[UShort];
 
 external _wrename(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Int;
+    argument1 : Pointer[UShort]) Int;
 
 external _wremove(
-    argument0 : Pointer[UShort]) : Int;
+    argument0 : Pointer[UShort]) Int;
 
 external _wperror(
-    argument0 : Pointer[UShort]) : Void;
+    argument0 : Pointer[UShort]) Void;
 
 external _wpopen(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Pointer[FILE];
+    argument1 : Pointer[UShort]) Pointer[FILE];
 
 external snwprintf(
     s : Pointer[UShort],
     n : UInt,
     format : Pointer[UShort],
-    ...) : Int;
+    ...) Int;
 
 external vsnwprintf(
     s : Pointer[UShort],
     n : UInt,
     format : Pointer[UShort],
-    arg : Int) : Int;
+    arg : Int) Int;
 
 external vwscanf(
     argument0 : Pointer[UShort],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external vfwscanf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[UShort],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external vswscanf(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external wpopen(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Pointer[FILE];
+    argument1 : Pointer[UShort]) Pointer[FILE];
 
-external _fgetwchar() : UShort;
+external _fgetwchar() UShort;
 
 external _fputwchar(
-    argument0 : UShort) : UShort;
+    argument0 : UShort) UShort;
 
 external _getw(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 external _putw(
     argument0 : Int,
-    argument1 : Pointer[FILE]) : Int;
+    argument1 : Pointer[FILE]) Int;
 
-external fgetwchar() : UShort;
+external fgetwchar() UShort;
 
 external fputwchar(
-    argument0 : UShort) : UShort;
+    argument0 : UShort) UShort;
 
 external getw(
-    argument0 : Pointer[FILE]) : Int;
+    argument0 : Pointer[FILE]) Int;
 
 external putw(
     argument0 : Int,
-    argument1 : Pointer[FILE]) : Int;
+    argument1 : Pointer[FILE]) Int;
 
 external _argc : Int;
 
 external _argv : Pointer[Pointer[CChar]];
 
-external __p___argc() : Pointer[Int];
+external __p___argc() Pointer[Int];
 
-external __p___argv() : Pointer[Pointer[Pointer[CChar]]];
+external __p___argv() Pointer[Pointer[Pointer[CChar]]];
 
-external __p___wargv() : Pointer[Pointer[Pointer[UShort]]];
+external __p___wargv() Pointer[Pointer[Pointer[UShort]]];
 
 external (dllimport) __mb_cur_max : Int;
 
-external _errno() : Pointer[Int];
+external _errno() Pointer[Int];
 
-external __doserrno() : Pointer[Int];
+external __doserrno() Pointer[Int];
 
-external __p__environ() : Pointer[Pointer[Pointer[CChar]]];
+external __p__environ() Pointer[Pointer[Pointer[CChar]]];
 
-external __p__wenviron() : Pointer[Pointer[Pointer[UShort]]];
+external __p__wenviron() Pointer[Pointer[Pointer[UShort]]];
 
 external (dllimport) _sys_nerr : Int;
 
 external (dllimport) _sys_errlist : Array[Pointer[CChar],0];
 
-external __p__osver() : Pointer[UInt];
+external __p__osver() Pointer[UInt];
 
-external __p__winver() : Pointer[UInt];
+external __p__winver() Pointer[UInt];
 
-external __p__winmajor() : Pointer[UInt];
+external __p__winmajor() Pointer[UInt];
 
-external __p__winminor() : Pointer[UInt];
+external __p__winminor() Pointer[UInt];
 
 external (dllimport) _osver : UInt;
 
@@ -641,181 +641,181 @@ external (dllimport) _winmajor : UInt;
 
 external (dllimport) _winminor : UInt;
 
-external __p__pgmptr() : Pointer[Pointer[CChar]];
+external __p__pgmptr() Pointer[Pointer[CChar]];
 
-external __p__wpgmptr() : Pointer[Pointer[UShort]];
+external __p__wpgmptr() Pointer[Pointer[UShort]];
 
 external (dllimport) _fmode : Int;
 
 external atof(
-    argument0 : Pointer[CChar]) : Double;
+    argument0 : Pointer[CChar]) Double;
 
 external atoi(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external atol(
-    argument0 : Pointer[CChar]) : CLong;
+    argument0 : Pointer[CChar]) CLong;
 
 external _wtof(
-    argument0 : Pointer[UShort]) : Double;
+    argument0 : Pointer[UShort]) Double;
 
 external _wtoi(
-    argument0 : Pointer[UShort]) : Int;
+    argument0 : Pointer[UShort]) Int;
 
 external _wtol(
-    argument0 : Pointer[UShort]) : CLong;
+    argument0 : Pointer[UShort]) CLong;
 
 external __strtod(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Pointer[CChar]]) : Double;
+    argument1 : Pointer[Pointer[CChar]]) Double;
 
 external strtof(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Pointer[CChar]]) : Float;
+    argument1 : Pointer[Pointer[CChar]]) Float;
 
 external strtold(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Pointer[CChar]]) : UnsupportedCBuiltinType21;
+    argument1 : Pointer[Pointer[CChar]]) UnsupportedCBuiltinType21;
 
 external strtol(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]],
-    argument2 : Int) : CLong;
+    argument2 : Int) CLong;
 
 external strtoul(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]],
-    argument2 : Int) : CULong;
+    argument2 : Int) CULong;
 
 external wcstol(
     argument0 : Pointer[UShort],
     argument1 : Pointer[Pointer[UShort]],
-    argument2 : Int) : CLong;
+    argument2 : Int) CLong;
 
 external wcstoul(
     argument0 : Pointer[UShort],
     argument1 : Pointer[Pointer[UShort]],
-    argument2 : Int) : CULong;
+    argument2 : Int) CULong;
 
 external wcstod(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[Pointer[UShort]]) : Double;
+    argument1 : Pointer[Pointer[UShort]]) Double;
 
 external wcstof(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[Pointer[UShort]]) : Float;
+    argument1 : Pointer[Pointer[UShort]]) Float;
 
 external wcstold(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[Pointer[UShort]]) : UnsupportedCBuiltinType21;
+    argument1 : Pointer[Pointer[UShort]]) UnsupportedCBuiltinType21;
 
 external _wgetenv(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external _wputenv(
-    argument0 : Pointer[UShort]) : Int;
+    argument0 : Pointer[UShort]) Int;
 
 external _wsearchenv(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : Pointer[UShort]) : Void;
+    argument2 : Pointer[UShort]) Void;
 
 external _wsystem(
-    argument0 : Pointer[UShort]) : Int;
+    argument0 : Pointer[UShort]) Int;
 
 external _wmakepath(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
     argument2 : Pointer[UShort],
     argument3 : Pointer[UShort],
-    argument4 : Pointer[UShort]) : Void;
+    argument4 : Pointer[UShort]) Void;
 
 external _wsplitpath(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
     argument2 : Pointer[UShort],
     argument3 : Pointer[UShort],
-    argument4 : Pointer[UShort]) : Void;
+    argument4 : Pointer[UShort]) Void;
 
 external _wfullpath(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : Pointer[UShort];
+    argument2 : UInt) Pointer[UShort];
 
 external wcstombs(
     argument0 : Pointer[CChar],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : UInt;
+    argument2 : UInt) UInt;
 
 external wctomb(
     argument0 : Pointer[CChar],
-    argument1 : UShort) : Int;
+    argument1 : UShort) Int;
 
 external mblen(
     argument0 : Pointer[CChar],
-    argument1 : UInt) : Int;
+    argument1 : UInt) Int;
 
 external mbstowcs(
     argument0 : Pointer[UShort],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : UInt;
+    argument2 : UInt) UInt;
 
 external mbtowc(
     argument0 : Pointer[UShort],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
-external rand() : Int;
+external rand() Int;
 
 external srand(
-    argument0 : UInt) : Void;
+    argument0 : UInt) Void;
 
 external calloc(
     argument0 : UInt,
-    argument1 : UInt) : RawPointer;
+    argument1 : UInt) RawPointer;
 
 external malloc(
-    argument0 : UInt) : RawPointer;
+    argument0 : UInt) RawPointer;
 
 external realloc(
     argument0 : RawPointer,
-    argument1 : UInt) : RawPointer;
+    argument1 : UInt) RawPointer;
 
 external free(
-    argument0 : RawPointer) : Void;
+    argument0 : RawPointer) Void;
 
-external abort() : Void;
+external abort() Void;
 
 external exit(
-    argument0 : Int) : Void;
+    argument0 : Int) Void;
 
 external atexit(
-    argument0 : CCodePointer[Void]) : Int;
+    argument0 : CCodePointer[Void]) Int;
 
 external system(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external getenv(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external bsearch(
     argument0 : RawPointer,
     argument1 : RawPointer,
     argument2 : UInt,
     argument3 : UInt,
-    argument4 : CCodePointer[RawPointer,RawPointer,Int]) : RawPointer;
+    argument4 : CCodePointer[RawPointer,RawPointer,Int]) RawPointer;
 
 external qsort(
     argument0 : RawPointer,
     argument1 : UInt,
     argument2 : UInt,
-    argument3 : CCodePointer[RawPointer,RawPointer,Int]) : Void;
+    argument3 : CCodePointer[RawPointer,RawPointer,Int]) Void;
 
 external abs(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external labs(
-    argument0 : CLong) : CLong;
+    argument0 : CLong) CLong;
 
 record UnnamedStruct {
     quot : Int;
@@ -833,186 +833,186 @@ static ldiv_t = UnnamedStruct2;
 
 external div(
     argument0 : Int,
-    argument1 : Int) : div_t;
+    argument1 : Int) div_t;
 
 external ldiv(
     argument0 : CLong,
-    argument1 : CLong) : ldiv_t;
+    argument1 : CLong) ldiv_t;
 
 external _beep(
     argument0 : UInt,
-    argument1 : UInt) : Void;
+    argument1 : UInt) Void;
 
 external _seterrormode(
-    argument0 : Int) : Void;
+    argument0 : Int) Void;
 
 external _sleep(
-    argument0 : CULong) : Void;
+    argument0 : CULong) Void;
 
 external _exit(
-    argument0 : Int) : Void;
+    argument0 : Int) Void;
 
 static _onexit_t = CCodePointer[Int];
 
 external _onexit(
-    argument0 : _onexit_t) : _onexit_t;
+    argument0 : _onexit_t) _onexit_t;
 
 external _putenv(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external _searchenv(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Pointer[CChar]) : Void;
+    argument2 : Pointer[CChar]) Void;
 
 external _ecvt(
     argument0 : Double,
     argument1 : Int,
     argument2 : Pointer[Int],
-    argument3 : Pointer[Int]) : Pointer[CChar];
+    argument3 : Pointer[Int]) Pointer[CChar];
 
 external _fcvt(
     argument0 : Double,
     argument1 : Int,
     argument2 : Pointer[Int],
-    argument3 : Pointer[Int]) : Pointer[CChar];
+    argument3 : Pointer[Int]) Pointer[CChar];
 
 external _gcvt(
     argument0 : Double,
     argument1 : Int,
-    argument2 : Pointer[CChar]) : Pointer[CChar];
+    argument2 : Pointer[CChar]) Pointer[CChar];
 
 external _makepath(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
     argument2 : Pointer[CChar],
     argument3 : Pointer[CChar],
-    argument4 : Pointer[CChar]) : Void;
+    argument4 : Pointer[CChar]) Void;
 
 external _splitpath(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
     argument2 : Pointer[CChar],
     argument3 : Pointer[CChar],
-    argument4 : Pointer[CChar]) : Void;
+    argument4 : Pointer[CChar]) Void;
 
 external _fullpath(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Pointer[CChar];
+    argument2 : UInt) Pointer[CChar];
 
 external _itoa(
     argument0 : Int,
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[CChar];
+    argument2 : Int) Pointer[CChar];
 
 external _ltoa(
     argument0 : CLong,
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[CChar];
+    argument2 : Int) Pointer[CChar];
 
 external _ultoa(
     argument0 : CULong,
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[CChar];
+    argument2 : Int) Pointer[CChar];
 
 external _itow(
     argument0 : Int,
     argument1 : Pointer[UShort],
-    argument2 : Int) : Pointer[UShort];
+    argument2 : Int) Pointer[UShort];
 
 external _ltow(
     argument0 : CLong,
     argument1 : Pointer[UShort],
-    argument2 : Int) : Pointer[UShort];
+    argument2 : Int) Pointer[UShort];
 
 external _ultow(
     argument0 : CULong,
     argument1 : Pointer[UShort],
-    argument2 : Int) : Pointer[UShort];
+    argument2 : Int) Pointer[UShort];
 
 external _atoi64(
-    argument0 : Pointer[CChar]) : Int64;
+    argument0 : Pointer[CChar]) Int64;
 
 external _i64toa(
     argument0 : Int64,
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[CChar];
+    argument2 : Int) Pointer[CChar];
 
 external _ui64toa(
     argument0 : UInt64,
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[CChar];
+    argument2 : Int) Pointer[CChar];
 
 external _wtoi64(
-    argument0 : Pointer[UShort]) : Int64;
+    argument0 : Pointer[UShort]) Int64;
 
 external _i64tow(
     argument0 : Int64,
     argument1 : Pointer[UShort],
-    argument2 : Int) : Pointer[UShort];
+    argument2 : Int) Pointer[UShort];
 
 external _ui64tow(
     argument0 : UInt64,
     argument1 : Pointer[UShort],
-    argument2 : Int) : Pointer[UShort];
+    argument2 : Int) Pointer[UShort];
 
 external _rotl(
     argument0 : UInt,
-    argument1 : Int) : UInt;
+    argument1 : Int) UInt;
 
 external _rotr(
     argument0 : UInt,
-    argument1 : Int) : UInt;
+    argument1 : Int) UInt;
 
 external _lrotl(
     argument0 : CULong,
-    argument1 : Int) : CULong;
+    argument1 : Int) CULong;
 
 external _lrotr(
     argument0 : CULong,
-    argument1 : Int) : CULong;
+    argument1 : Int) CULong;
 
 external _set_error_mode(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external putenv(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external searchenv(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Pointer[CChar]) : Void;
+    argument2 : Pointer[CChar]) Void;
 
 external itoa(
     argument0 : Int,
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[CChar];
+    argument2 : Int) Pointer[CChar];
 
 external ltoa(
     argument0 : CLong,
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[CChar];
+    argument2 : Int) Pointer[CChar];
 
 external ecvt(
     argument0 : Double,
     argument1 : Int,
     argument2 : Pointer[Int],
-    argument3 : Pointer[Int]) : Pointer[CChar];
+    argument3 : Pointer[Int]) Pointer[CChar];
 
 external fcvt(
     argument0 : Double,
     argument1 : Int,
     argument2 : Pointer[Int],
-    argument3 : Pointer[Int]) : Pointer[CChar];
+    argument3 : Pointer[Int]) Pointer[CChar];
 
 external gcvt(
     argument0 : Double,
     argument1 : Int,
-    argument2 : Pointer[CChar]) : Pointer[CChar];
+    argument2 : Pointer[CChar]) Pointer[CChar];
 
 external _Exit(
-    argument0 : Int) : Void;
+    argument0 : Int) Void;
 
 record UnnamedStruct3 {
     quot : Int64;
@@ -1023,420 +1023,420 @@ static lldiv_t = UnnamedStruct3;
 
 external lldiv(
     argument0 : Int64,
-    argument1 : Int64) : lldiv_t;
+    argument1 : Int64) lldiv_t;
 
 external llabs(
-    argument0 : Int64) : Int64;
+    argument0 : Int64) Int64;
 
 external strtoll(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]],
-    argument2 : Int) : Int64;
+    argument2 : Int) Int64;
 
 external strtoull(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]],
-    argument2 : Int) : UInt64;
+    argument2 : Int) UInt64;
 
 external atoll(
-    argument0 : Pointer[CChar]) : Int64;
+    argument0 : Pointer[CChar]) Int64;
 
 external wtoll(
-    argument0 : Pointer[UShort]) : Int64;
+    argument0 : Pointer[UShort]) Int64;
 
 external lltoa(
     argument0 : Int64,
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[CChar];
+    argument2 : Int) Pointer[CChar];
 
 external ulltoa(
     argument0 : UInt64,
     argument1 : Pointer[CChar],
-    argument2 : Int) : Pointer[CChar];
+    argument2 : Int) Pointer[CChar];
 
 external lltow(
     argument0 : Int64,
     argument1 : Pointer[UShort],
-    argument2 : Int) : Pointer[UShort];
+    argument2 : Int) Pointer[UShort];
 
 external ulltow(
     argument0 : UInt64,
     argument1 : Pointer[UShort],
-    argument2 : Int) : Pointer[UShort];
+    argument2 : Int) Pointer[UShort];
 
 external memchr(
     argument0 : RawPointer,
     argument1 : Int,
-    argument2 : UInt) : RawPointer;
+    argument2 : UInt) RawPointer;
 
 external memcmp(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external memcpy(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : RawPointer;
+    argument2 : UInt) RawPointer;
 
 external memmove(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : RawPointer;
+    argument2 : UInt) RawPointer;
 
 external memset(
     argument0 : RawPointer,
     argument1 : Int,
-    argument2 : UInt) : RawPointer;
+    argument2 : UInt) RawPointer;
 
 external strcat(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[CChar];
+    argument1 : Pointer[CChar]) Pointer[CChar];
 
 external strchr(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Pointer[CChar];
+    argument1 : Int) Pointer[CChar];
 
 external strcmp(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
 external strcoll(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
 external strcpy(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[CChar];
+    argument1 : Pointer[CChar]) Pointer[CChar];
 
 external strcspn(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : UInt;
+    argument1 : Pointer[CChar]) UInt;
 
 external strerror(
-    argument0 : Int) : Pointer[CChar];
+    argument0 : Int) Pointer[CChar];
 
 external strlen(
-    argument0 : Pointer[CChar]) : UInt;
+    argument0 : Pointer[CChar]) UInt;
 
 external strncat(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Pointer[CChar];
+    argument2 : UInt) Pointer[CChar];
 
 external strncmp(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external strncpy(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Pointer[CChar];
+    argument2 : UInt) Pointer[CChar];
 
 external strpbrk(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[CChar];
+    argument1 : Pointer[CChar]) Pointer[CChar];
 
 external strrchr(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Pointer[CChar];
+    argument1 : Int) Pointer[CChar];
 
 external strspn(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : UInt;
+    argument1 : Pointer[CChar]) UInt;
 
 external strstr(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[CChar];
+    argument1 : Pointer[CChar]) Pointer[CChar];
 
 external strtok(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[CChar];
+    argument1 : Pointer[CChar]) Pointer[CChar];
 
 external strxfrm(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : UInt;
+    argument2 : UInt) UInt;
 
 external _strerror(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external _memccpy(
     argument0 : RawPointer,
     argument1 : RawPointer,
     argument2 : Int,
-    argument3 : UInt) : RawPointer;
+    argument3 : UInt) RawPointer;
 
 external _memicmp(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external _strdup(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external _strcmpi(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
 external _stricmp(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
 external _stricoll(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
 external _strlwr(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external _strnicmp(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external _strnset(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    argument2 : UInt) : Pointer[CChar];
+    argument2 : UInt) Pointer[CChar];
 
 external _strrev(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external _strset(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Pointer[CChar];
+    argument1 : Int) Pointer[CChar];
 
 external _strupr(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external _swab(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Void;
+    argument2 : UInt) Void;
 
 external _strncoll(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external _strnicoll(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external memccpy(
     argument0 : RawPointer,
     argument1 : RawPointer,
     argument2 : Int,
-    argument3 : UInt) : RawPointer;
+    argument3 : UInt) RawPointer;
 
 external memicmp(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external strdup(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external strcmpi(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
 external stricmp(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
 external strcasecmp(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
 external stricoll(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
+    argument1 : Pointer[CChar]) Int;
 
 external strlwr(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external strnicmp(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external strncasecmp(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external strnset(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    argument2 : UInt) : Pointer[CChar];
+    argument2 : UInt) Pointer[CChar];
 
 external strrev(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external strset(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Pointer[CChar];
+    argument1 : Int) Pointer[CChar];
 
 external strupr(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external swab(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) : Void;
+    argument2 : UInt) Void;
 
 external wcscat(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Pointer[UShort];
+    argument1 : Pointer[UShort]) Pointer[UShort];
 
 external wcschr(
     argument0 : Pointer[UShort],
-    argument1 : UShort) : Pointer[UShort];
+    argument1 : UShort) Pointer[UShort];
 
 external wcscmp(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Int;
+    argument1 : Pointer[UShort]) Int;
 
 external wcscoll(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Int;
+    argument1 : Pointer[UShort]) Int;
 
 external wcscpy(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Pointer[UShort];
+    argument1 : Pointer[UShort]) Pointer[UShort];
 
 external wcscspn(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : UInt;
+    argument1 : Pointer[UShort]) UInt;
 
 external wcslen(
-    argument0 : Pointer[UShort]) : UInt;
+    argument0 : Pointer[UShort]) UInt;
 
 external wcsncat(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : Pointer[UShort];
+    argument2 : UInt) Pointer[UShort];
 
 external wcsncmp(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external wcsncpy(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : Pointer[UShort];
+    argument2 : UInt) Pointer[UShort];
 
 external wcspbrk(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Pointer[UShort];
+    argument1 : Pointer[UShort]) Pointer[UShort];
 
 external wcsrchr(
     argument0 : Pointer[UShort],
-    argument1 : UShort) : Pointer[UShort];
+    argument1 : UShort) Pointer[UShort];
 
 external wcsspn(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : UInt;
+    argument1 : Pointer[UShort]) UInt;
 
 external wcsstr(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Pointer[UShort];
+    argument1 : Pointer[UShort]) Pointer[UShort];
 
 external wcstok(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Pointer[UShort];
+    argument1 : Pointer[UShort]) Pointer[UShort];
 
 external wcsxfrm(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : UInt;
+    argument2 : UInt) UInt;
 
 external _wcsdup(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external _wcsicmp(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Int;
+    argument1 : Pointer[UShort]) Int;
 
 external _wcsicoll(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Int;
+    argument1 : Pointer[UShort]) Int;
 
 external _wcslwr(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external _wcsnicmp(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external _wcsnset(
     argument0 : Pointer[UShort],
     argument1 : UShort,
-    argument2 : UInt) : Pointer[UShort];
+    argument2 : UInt) Pointer[UShort];
 
 external _wcsrev(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external _wcsset(
     argument0 : Pointer[UShort],
-    argument1 : UShort) : Pointer[UShort];
+    argument1 : UShort) Pointer[UShort];
 
 external _wcsupr(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external _wcsncoll(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external _wcsnicoll(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external wcscmpi(
     __ws1 : Pointer[UShort],
-    __ws2 : Pointer[UShort]) : Int;
+    __ws2 : Pointer[UShort]) Int;
 
 external wcsdup(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external wcsicmp(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Int;
+    argument1 : Pointer[UShort]) Int;
 
 external wcsicoll(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[UShort]) : Int;
+    argument1 : Pointer[UShort]) Int;
 
 external wcslwr(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external wcsnicmp(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external wcsnset(
     argument0 : Pointer[UShort],
     argument1 : UShort,
-    argument2 : UInt) : Pointer[UShort];
+    argument2 : UInt) Pointer[UShort];
 
 external wcsrev(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external wcsset(
     argument0 : Pointer[UShort],
-    argument1 : UShort) : Pointer[UShort];
+    argument1 : UShort) Pointer[UShort];
 
 external wcsupr(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 record Struct__exception {
     type : Int;
@@ -1447,76 +1447,76 @@ record Struct__exception {
 }
 
 external sin(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external cos(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external tan(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external sinh(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external cosh(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external tanh(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external asin(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external acos(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external atan(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external atan2(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external exp(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external log(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external log10(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external pow(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external sqrt(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external ceil(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external floor(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external fabs(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external ldexp(
     argument0 : Double,
-    argument1 : Int) : Double;
+    argument1 : Int) Double;
 
 external frexp(
     argument0 : Double,
-    argument1 : Pointer[Int]) : Double;
+    argument1 : Pointer[Int]) Double;
 
 external modf(
     argument0 : Double,
-    argument1 : Pointer[Double]) : Double;
+    argument1 : Pointer[Double]) Double;
 
 external fmod(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 record Struct__complex {
     x : Double;
@@ -1524,622 +1524,622 @@ record Struct__complex {
 }
 
 external _cabs(
-    argument0 : Struct__complex) : Double;
+    argument0 : Struct__complex) Double;
 
 external _hypot(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external _j0(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external _j1(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external _jn(
     argument0 : Int,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external _y0(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external _y1(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external _yn(
     argument0 : Int,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external _matherr(
-    argument0 : Pointer[Struct__exception]) : Int;
+    argument0 : Pointer[Struct__exception]) Int;
 
 external _chgsign(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external _copysign(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external _logb(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external _nextafter(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external _scalb(
     argument0 : Double,
-    argument1 : CLong) : Double;
+    argument1 : CLong) Double;
 
 external _finite(
-    argument0 : Double) : Int;
+    argument0 : Double) Int;
 
 external _fpclass(
-    argument0 : Double) : Int;
+    argument0 : Double) Int;
 
 external _isnan(
-    argument0 : Double) : Int;
+    argument0 : Double) Int;
 
 external j0(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external j1(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external jn(
     argument0 : Int,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external y0(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external y1(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external yn(
     argument0 : Int,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external chgsign(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external finite(
-    argument0 : Double) : Int;
+    argument0 : Double) Int;
 
 external fpclass(
-    argument0 : Double) : Int;
+    argument0 : Double) Int;
 
 static float_t = UnsupportedCBuiltinType21;
 
 static double_t = UnsupportedCBuiltinType21;
 
 external __fpclassifyf(
-    argument0 : Float) : Int;
+    argument0 : Float) Int;
 
 external __fpclassify(
-    argument0 : Double) : Int;
+    argument0 : Double) Int;
 
 external __fpclassifyl(
-    argument0 : UnsupportedCBuiltinType21) : Int;
+    argument0 : UnsupportedCBuiltinType21) Int;
 
 external __isnan(
-    argument0 : Double) : Int;
+    argument0 : Double) Int;
 
 external __isnanf(
-    argument0 : Float) : Int;
+    argument0 : Float) Int;
 
 external __isnanl(
-    argument0 : UnsupportedCBuiltinType21) : Int;
+    argument0 : UnsupportedCBuiltinType21) Int;
 
 external __signbit(
-    argument0 : Double) : Int;
+    argument0 : Double) Int;
 
 external __signbitf(
-    argument0 : Float) : Int;
+    argument0 : Float) Int;
 
 external __signbitl(
-    argument0 : UnsupportedCBuiltinType21) : Int;
+    argument0 : UnsupportedCBuiltinType21) Int;
 
 external sinf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external sinl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external cosf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external cosl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external tanf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external tanl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external asinf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external asinl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external acosf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external acosl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external atanf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external atanl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external atan2f(
     argument0 : Float,
-    argument1 : Float) : Float;
+    argument1 : Float) Float;
 
 external atan2l(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external sinhf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external sinhl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external coshf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external coshl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external tanhf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external tanhl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external acosh(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external acoshf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external acoshl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external asinh(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external asinhf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external asinhl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external atanh(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external atanhf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external atanhl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external expf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external expl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external exp2(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external exp2f(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external exp2l(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external expm1(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external expm1f(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external expm1l(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external frexpf(
     argument0 : Float,
-    argument1 : Pointer[Int]) : Float;
+    argument1 : Pointer[Int]) Float;
 
 external frexpl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : Pointer[Int]) : UnsupportedCBuiltinType21;
+    argument1 : Pointer[Int]) UnsupportedCBuiltinType21;
 
 external ilogb(
-    argument0 : Double) : Int;
+    argument0 : Double) Int;
 
 external ilogbf(
-    argument0 : Float) : Int;
+    argument0 : Float) Int;
 
 external ilogbl(
-    argument0 : UnsupportedCBuiltinType21) : Int;
+    argument0 : UnsupportedCBuiltinType21) Int;
 
 external ldexpf(
     argument0 : Float,
-    argument1 : Int) : Float;
+    argument1 : Int) Float;
 
 external ldexpl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : Int) : UnsupportedCBuiltinType21;
+    argument1 : Int) UnsupportedCBuiltinType21;
 
 external logf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external logl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external log10f(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external log10l(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external log1p(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external log1pf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external log1pl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external log2(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external log2f(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external log2l(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external logb(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external logbf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external logbl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external modff(
     argument0 : Float,
-    argument1 : Pointer[Float]) : Float;
+    argument1 : Pointer[Float]) Float;
 
 external modfl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : Pointer[UnsupportedCBuiltinType21]) : UnsupportedCBuiltinType21;
+    argument1 : Pointer[UnsupportedCBuiltinType21]) UnsupportedCBuiltinType21;
 
 external scalbn(
     argument0 : Double,
-    argument1 : Int) : Double;
+    argument1 : Int) Double;
 
 external scalbnf(
     argument0 : Float,
-    argument1 : Int) : Float;
+    argument1 : Int) Float;
 
 external scalbnl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : Int) : UnsupportedCBuiltinType21;
+    argument1 : Int) UnsupportedCBuiltinType21;
 
 external scalbln(
     argument0 : Double,
-    argument1 : CLong) : Double;
+    argument1 : CLong) Double;
 
 external scalblnf(
     argument0 : Float,
-    argument1 : CLong) : Float;
+    argument1 : CLong) Float;
 
 external scalblnl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : CLong) : UnsupportedCBuiltinType21;
+    argument1 : CLong) UnsupportedCBuiltinType21;
 
 external cbrt(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external cbrtf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external cbrtl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external fabsf(
-    x : Float) : Float;
+    x : Float) Float;
 
 external fabsl(
-    x : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    x : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external hypot(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external hypotf(
     argument0 : Float,
-    argument1 : Float) : Float;
+    argument1 : Float) Float;
 
 external hypotl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external powf(
     argument0 : Float,
-    argument1 : Float) : Float;
+    argument1 : Float) Float;
 
 external powl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external sqrtf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external sqrtl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external erf(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external erff(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external erfl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external erfc(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external erfcf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external erfcl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external lgamma(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external lgammaf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external lgammal(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external tgamma(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external tgammaf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external tgammal(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external ceilf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external ceill(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external floorf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external floorl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external nearbyint(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external nearbyintf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external nearbyintl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external rint(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external rintf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external rintl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external lrint(
-    argument0 : Double) : CLong;
+    argument0 : Double) CLong;
 
 external lrintf(
-    argument0 : Float) : CLong;
+    argument0 : Float) CLong;
 
 external lrintl(
-    argument0 : UnsupportedCBuiltinType21) : CLong;
+    argument0 : UnsupportedCBuiltinType21) CLong;
 
 external llrint(
-    argument0 : Double) : Int64;
+    argument0 : Double) Int64;
 
 external llrintf(
-    argument0 : Float) : Int64;
+    argument0 : Float) Int64;
 
 external llrintl(
-    argument0 : UnsupportedCBuiltinType21) : Int64;
+    argument0 : UnsupportedCBuiltinType21) Int64;
 
 external round(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external roundf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external roundl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external lround(
-    argument0 : Double) : CLong;
+    argument0 : Double) CLong;
 
 external lroundf(
-    argument0 : Float) : CLong;
+    argument0 : Float) CLong;
 
 external lroundl(
-    argument0 : UnsupportedCBuiltinType21) : CLong;
+    argument0 : UnsupportedCBuiltinType21) CLong;
 
 external llround(
-    argument0 : Double) : Int64;
+    argument0 : Double) Int64;
 
 external llroundf(
-    argument0 : Float) : Int64;
+    argument0 : Float) Int64;
 
 external llroundl(
-    argument0 : UnsupportedCBuiltinType21) : Int64;
+    argument0 : UnsupportedCBuiltinType21) Int64;
 
 external trunc(
-    argument0 : Double) : Double;
+    argument0 : Double) Double;
 
 external truncf(
-    argument0 : Float) : Float;
+    argument0 : Float) Float;
 
 external truncl(
-    argument0 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external fmodf(
     argument0 : Float,
-    argument1 : Float) : Float;
+    argument1 : Float) Float;
 
 external fmodl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external remainder(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external remainderf(
     argument0 : Float,
-    argument1 : Float) : Float;
+    argument1 : Float) Float;
 
 external remainderl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external remquo(
     argument0 : Double,
     argument1 : Double,
-    argument2 : Pointer[Int]) : Double;
+    argument2 : Pointer[Int]) Double;
 
 external remquof(
     argument0 : Float,
     argument1 : Float,
-    argument2 : Pointer[Int]) : Float;
+    argument2 : Pointer[Int]) Float;
 
 external remquol(
     argument0 : UnsupportedCBuiltinType21,
     argument1 : UnsupportedCBuiltinType21,
-    argument2 : Pointer[Int]) : UnsupportedCBuiltinType21;
+    argument2 : Pointer[Int]) UnsupportedCBuiltinType21;
 
 external copysign(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external copysignf(
     argument0 : Float,
-    argument1 : Float) : Float;
+    argument1 : Float) Float;
 
 external copysignl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external nan(
-    tagp : Pointer[CChar]) : Double;
+    tagp : Pointer[CChar]) Double;
 
 external nanf(
-    tagp : Pointer[CChar]) : Float;
+    tagp : Pointer[CChar]) Float;
 
 external nanl(
-    tagp : Pointer[CChar]) : UnsupportedCBuiltinType21;
+    tagp : Pointer[CChar]) UnsupportedCBuiltinType21;
 
 external nextafter(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external nextafterf(
     argument0 : Float,
-    argument1 : Float) : Float;
+    argument1 : Float) Float;
 
 external nextafterl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external nexttoward(
     argument0 : Double,
-    argument1 : UnsupportedCBuiltinType21) : Double;
+    argument1 : UnsupportedCBuiltinType21) Double;
 
 external nexttowardf(
     argument0 : Float,
-    argument1 : UnsupportedCBuiltinType21) : Float;
+    argument1 : UnsupportedCBuiltinType21) Float;
 
 external nexttowardl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external fdim(
     x : Double,
-    y : Double) : Double;
+    y : Double) Double;
 
 external fdimf(
     x : Float,
-    y : Float) : Float;
+    y : Float) Float;
 
 external fdiml(
     x : UnsupportedCBuiltinType21,
-    y : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    y : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external fmax(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external fmaxf(
     argument0 : Float,
-    argument1 : Float) : Float;
+    argument1 : Float) Float;
 
 external fmaxl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external fmin(
     argument0 : Double,
-    argument1 : Double) : Double;
+    argument1 : Double) Double;
 
 external fminf(
     argument0 : Float,
-    argument1 : Float) : Float;
+    argument1 : Float) Float;
 
 external fminl(
     argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 external fma(
     argument0 : Double,
     argument1 : Double,
-    argument2 : Double) : Double;
+    argument2 : Double) Double;
 
 external fmaf(
     argument0 : Float,
     argument1 : Float,
-    argument2 : Float) : Float;
+    argument2 : Float) Float;
 
 external fmal(
     argument0 : UnsupportedCBuiltinType21,
     argument1 : UnsupportedCBuiltinType21,
-    argument2 : UnsupportedCBuiltinType21) : UnsupportedCBuiltinType21;
+    argument2 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
 
 static intptr_t = Int;
 
@@ -2183,269 +2183,269 @@ record Struct__wfinddatai64_t {
 
 external _findfirst(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Struct__finddata_t]) : CLong;
+    argument1 : Pointer[Struct__finddata_t]) CLong;
 
 external _findnext(
     argument0 : CLong,
-    argument1 : Pointer[Struct__finddata_t]) : Int;
+    argument1 : Pointer[Struct__finddata_t]) Int;
 
 external _findclose(
-    argument0 : CLong) : Int;
+    argument0 : CLong) Int;
 
 external _chdir(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external _getcwd(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Pointer[CChar];
+    argument1 : Int) Pointer[CChar];
 
 external _mkdir(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external _mktemp(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external _rmdir(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external _chmod(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _filelengthi64(
-    argument0 : Int) : Int64;
+    argument0 : Int) Int64;
 
 external _findfirsti64(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Struct__finddatai64_t]) : CLong;
+    argument1 : Pointer[Struct__finddatai64_t]) CLong;
 
 external _findnexti64(
     argument0 : CLong,
-    argument1 : Pointer[Struct__finddatai64_t]) : Int;
+    argument1 : Pointer[Struct__finddatai64_t]) Int;
 
 external _lseeki64(
     argument0 : Int,
     argument1 : Int64,
-    argument2 : Int) : Int64;
+    argument2 : Int) Int64;
 
 external _telli64(
-    argument0 : Int) : Int64;
+    argument0 : Int) Int64;
 
 external chdir(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external getcwd(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Pointer[CChar];
+    argument1 : Int) Pointer[CChar];
 
 external mkdir(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external mktemp(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
+    argument0 : Pointer[CChar]) Pointer[CChar];
 
 external rmdir(
-    argument0 : Pointer[CChar]) : Int;
+    argument0 : Pointer[CChar]) Int;
 
 external chmod(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _access(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _chsize(
     argument0 : Int,
-    argument1 : CLong) : Int;
+    argument1 : CLong) Int;
 
 external _close(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external _commit(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external _creat(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _dup(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external _dup2(
     argument0 : Int,
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _filelength(
-    argument0 : Int) : CLong;
+    argument0 : Int) CLong;
 
 external _get_osfhandle(
-    argument0 : Int) : CLong;
+    argument0 : Int) CLong;
 
 external _isatty(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external _eof(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external _locking(
     argument0 : Int,
     argument1 : Int,
-    argument2 : CLong) : Int;
+    argument2 : CLong) Int;
 
 external _lseek(
     argument0 : Int,
     argument1 : CLong,
-    argument2 : Int) : CLong;
+    argument2 : Int) CLong;
 
 external _open(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    ...) : Int;
+    ...) Int;
 
 external _open_osfhandle(
     argument0 : Int,
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _pipe(
     argument0 : Pointer[Int],
     argument1 : UInt,
-    argument2 : Int) : Int;
+    argument2 : Int) Int;
 
 external _read(
     argument0 : Int,
     argument1 : RawPointer,
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external _setmode(
     argument0 : Int,
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _sopen(
     argument0 : Pointer[CChar],
     argument1 : Int,
     argument2 : Int,
-    ...) : Int;
+    ...) Int;
 
 external _tell(
-    argument0 : Int) : CLong;
+    argument0 : Int) CLong;
 
 external _umask(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external _write(
     argument0 : Int,
     argument1 : RawPointer,
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external _waccess(
     argument0 : Pointer[UShort],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _wchmod(
     argument0 : Pointer[UShort],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _wcreat(
     argument0 : Pointer[UShort],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external _wfindfirst(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[Struct__wfinddata_t]) : CLong;
+    argument1 : Pointer[Struct__wfinddata_t]) CLong;
 
 external _wfindnext(
     argument0 : CLong,
-    argument1 : Pointer[Struct__wfinddata_t]) : Int;
+    argument1 : Pointer[Struct__wfinddata_t]) Int;
 
 external _wunlink(
-    argument0 : Pointer[UShort]) : Int;
+    argument0 : Pointer[UShort]) Int;
 
 external _wopen(
     argument0 : Pointer[UShort],
     argument1 : Int,
-    ...) : Int;
+    ...) Int;
 
 external _wsopen(
     argument0 : Pointer[UShort],
     argument1 : Int,
     argument2 : Int,
-    ...) : Int;
+    ...) Int;
 
 external _wmktemp(
-    argument0 : Pointer[UShort]) : Pointer[UShort];
+    argument0 : Pointer[UShort]) Pointer[UShort];
 
 external _wfindfirsti64(
     argument0 : Pointer[UShort],
-    argument1 : Pointer[Struct__wfinddatai64_t]) : CLong;
+    argument1 : Pointer[Struct__wfinddatai64_t]) CLong;
 
 external _wfindnexti64(
     argument0 : CLong,
-    argument1 : Pointer[Struct__wfinddatai64_t]) : Int;
+    argument1 : Pointer[Struct__wfinddatai64_t]) Int;
 
 external access(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external chsize(
     argument0 : Int,
-    argument1 : CLong) : Int;
+    argument1 : CLong) Int;
 
 external close(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external creat(
     argument0 : Pointer[CChar],
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external dup(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external dup2(
     argument0 : Int,
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external eof(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external filelength(
-    argument0 : Int) : CLong;
+    argument0 : Int) CLong;
 
 external isatty(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external lseek(
     argument0 : Int,
     argument1 : CLong,
-    argument2 : Int) : CLong;
+    argument2 : Int) CLong;
 
 external open(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    ...) : Int;
+    ...) Int;
 
 external read(
     argument0 : Int,
     argument1 : RawPointer,
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;
 
 external setmode(
     argument0 : Int,
-    argument1 : Int) : Int;
+    argument1 : Int) Int;
 
 external sopen(
     argument0 : Pointer[CChar],
     argument1 : Int,
     argument2 : Int,
-    ...) : Int;
+    ...) Int;
 
 external tell(
-    argument0 : Int) : CLong;
+    argument0 : Int) CLong;
 
 external umask(
-    argument0 : Int) : Int;
+    argument0 : Int) Int;
 
 external write(
     argument0 : Int,
     argument1 : RawPointer,
-    argument2 : UInt) : Int;
+    argument2 : UInt) Int;

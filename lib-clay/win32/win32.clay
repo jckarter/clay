@@ -13,13 +13,13 @@ public import win32.errno.*;
 
 external (stdcall) GetFileSizeEx(
     handle : HANDLE,
-    lpFileSize : Pointer[Int64]) : BOOL;
+    lpFileSize : Pointer[Int64]) BOOL;
 
 external (stdcall) SetFilePointerEx(
     handle : HANDLE,
     offset : Int64,
     newPosition : Pointer[Int64],
-    moveMethod : DWORD) : BOOL;
+    moveMethod : DWORD) BOOL;
 
 
 

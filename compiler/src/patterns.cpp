@@ -70,7 +70,7 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 argTypes.push_back(evaluatePattern(args[i], env));
             PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new CodePointerTypePattern(argTypes, returnType, true);
+            return new CodePointerTypePattern(argTypes, false, returnType);
         }
 
         case PRIM_RefCodePointer : {
@@ -80,7 +80,7 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 argTypes.push_back(evaluatePattern(args[i], env));
             PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new CodePointerTypePattern(argTypes, returnType, false);
+            return new CodePointerTypePattern(argTypes, true, returnType);
         }
 
         case PRIM_CCodePointer : {
@@ -193,7 +193,7 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
                 return false;
         }
         else {
-            if (x->returnIsTemp != t->returnIsTemp)
+            if (x->returnByRef != t->returnByRef)
                 return false;
             if (!unify(x->returnType, t->returnType.ptr()))
                 return false;
@@ -340,7 +340,7 @@ void patternPrint(ostream &out, PatternPtr x)
     case CODE_POINTER_TYPE_PATTERN : {
         CodePointerTypePattern *y = (CodePointerTypePattern *)x.ptr();
         out << "CodePointerTypePattern(" << y->argTypes << ", "
-            << y->returnType << ", " << y->returnIsTemp << ")";
+            << y->returnByRef << ", " << y->returnType << ")";
         break;
     }
     case CCODE_POINTER_TYPE_PATTERN : {

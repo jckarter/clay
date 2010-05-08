@@ -1,8 +1,8 @@
 
-overload Bool() : Bool {
+overload Bool() Bool {
 }
 
-overload Bool(src:Bool) : Bool {
+overload Bool(src:Bool) Bool {
     primitiveCopy(returned, src);
 }
 

@@ -127,27 +127,28 @@ TypePtr pointerType(TypePtr pointeeType) {
     return t.ptr();
 }
 
-TypePtr codePointerType(const vector<TypePtr> &argTypes, TypePtr returnType,
-                        bool returnIsTemp) {
+TypePtr codePointerType(const vector<TypePtr> &argTypes,
+                        bool returnByRef,
+                        TypePtr returnType) {
     int h = 0;
     for (unsigned i = 0; i < argTypes.size(); ++i) {
         h += pointerHash(argTypes[i].ptr());
     }
     if (returnType.ptr()) {
         h += pointerHash(returnType.ptr());
-        h += returnIsTemp ? 1 : 0;
+        h += returnByRef ? 1 : 0;
     }
     h &= codePointerTypes.size() - 1;
     vector<CodePointerTypePtr> &bucket = codePointerTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         CodePointerType *t = bucket[i].ptr();
         if ((t->argTypes == argTypes) && (t->returnType == returnType)) {
-            if (!returnType || (t->returnIsTemp == returnIsTemp))
+            if (!returnType || (t->returnByRef == returnByRef))
                 return t;
         }
     }
-    CodePointerTypePtr t = new CodePointerType(argTypes, returnType,
-                                               returnIsTemp);
+    CodePointerTypePtr t =
+        new CodePointerType(argTypes, returnByRef, returnType);
     bucket.push_back(t);
     return t.ptr();
 }
@@ -417,12 +418,12 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         if (!x->returnType) {
             llReturnType = llvmVoidType();
         }
-        else if (x->returnIsTemp) {
-            llArgTypes.push_back(llvmPointerType(x->returnType));
-            llReturnType = llvmVoidType();
+        else if (x->returnByRef) {
+            llReturnType = llvmPointerType(x->returnType);
         }
         else {
-            llReturnType = llvmPointerType(x->returnType);
+            llArgTypes.push_back(llvmPointerType(x->returnType));
+            llReturnType = llvmVoidType();
         }
         llvm::FunctionType *llFuncType =
             llvm::FunctionType::get(llReturnType, llArgTypes, false);
@@ -539,7 +540,7 @@ void typePrint(ostream &out, TypePtr t) {
             v.push_back(voidType.ptr());
         else
             v.push_back(x->returnType.ptr());
-        if (x->returnType.ptr() && (!x->returnIsTemp))
+        if (x->returnType.ptr() && (x->returnByRef))
             out << "Ref";
         out << "CodePointer" << v;
         break;
