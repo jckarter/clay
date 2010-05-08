@@ -178,7 +178,7 @@ Literal -> BoolLiteral
 
 BoolLiteral -> "true" | "false"
 
-Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" Block
+Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" "ref"? Block
 
 VarArgsRef -> "..."
 

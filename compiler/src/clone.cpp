@@ -139,6 +139,7 @@ ExprPtr clone(ExprPtr x)
         Lambda *y = (Lambda *)x.ptr();
         LambdaPtr z = new Lambda(y->isBlockLambda);
         clone(y->formalArgs, z->formalArgs);
+        z->returnByRef = y->returnByRef;
         z->body = clone(y->body);
         out = z.ptr();
         break;
