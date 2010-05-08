@@ -80,7 +80,7 @@ overload String() = String(null(Char), SizeT(0), false);
 //
 
 [A | Sequence?(A) and (Char == SequenceElementType(A))]
-overload String(a:A) : String {
+overload String(a:A) String {
     var v = Vector[Char]();
     for (x in a)
         push(v, x);
@@ -165,7 +165,7 @@ overload destroy(a:String) {
 // move
 //
 
-overload move(a:String) : String {
+overload move(a:String) String {
     if (a.owned) {
         returned <-- String(a.data, a.size, true);
         a <-- String();
@@ -184,7 +184,7 @@ overload move(a:String) : String {
 overload size(a:String) = a.size;
 
 [I | Integer?(I)]
-overload index(a:String, i:I) = ref (a.data + SizeT(i))^;
+overload index(a:String, i:I) ref = (a.data + SizeT(i))^;
 
 
 

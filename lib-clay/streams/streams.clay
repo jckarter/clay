@@ -5,14 +5,14 @@
 //
 
 // [I | Integer?(I)]
-// read(stream, buf:Pointer[Byte], n:I) : SizeT
+// read(stream, buf:Pointer[Byte], n:I) SizeT
 overloadable read;
 
 // [I | Integer?(I)]
-// write(stream, buf:Pointer[Byte], n:I) : Void
+// write(stream, buf:Pointer[Byte], n:I) Void
 overloadable write;
 
-// flush(stream) : Void
+// flush(stream) Void
 overloadable flush;
 
 
@@ -21,18 +21,18 @@ overloadable flush;
 // readByte, readChar, readLine
 //
 
-readByte(stream, b:Byte) : Bool {
+readByte(stream, b:Byte) Bool {
     var result = read(stream, &b, 1);
     return result == 1;
 }
 
-readChar(stream, c:Char) : Bool {
+readChar(stream, c:Char) Bool {
     var ptr = Pointer[Byte](&c);
     var result = read(stream, ptr, 1);
     return result == 1;
 }
 
-readLine(stream) : String {
+readLine(stream) String {
     var v = Vector[Char]();
     var c = Char();
     while (readChar(stream, c)) {

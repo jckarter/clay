@@ -280,7 +280,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         ReturnedInfo *z = (ReturnedInfo *)y.ptr();
         if (!z->returnType)
             error("'returned' cannot be used when returning void");
-        if (!z->returnIsTemp)
+        if (z->returnByRef)
             error("'returned' cannot be used when returning by reference");
         return new PValue(z->returnType, false);
     }
@@ -728,7 +728,7 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 types.push_back(evaluateType(args[i], env));
             TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return codePointerType(types, returnType, true).ptr();
+            return codePointerType(types, false, returnType).ptr();
         }
 
         case PRIM_RefCodePointer : {
@@ -739,7 +739,7 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
             for (unsigned i = 0; i+1 < args.size(); ++i)
                 types.push_back(evaluateType(args[i], env));
             TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return codePointerType(types, returnType, false).ptr();
+            return codePointerType(types, true, returnType).ptr();
         }
 
         case PRIM_CCodePointer : {
@@ -1016,7 +1016,7 @@ ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
         TypePtr retType = evaluateMaybeVoidType(code->returnType, entry->env);
         if (!retType)
             return voidValue.ptr();
-        return new PValue(retType, !code->returnRef);
+        return new PValue(retType, !code->returnByRef);
     }
 
     if (entry->hasVarArgs)
@@ -1041,12 +1041,12 @@ ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
     addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
 
     addLocal(bodyEnv, new Identifier("%returned"), NULL);
-    AnalysisContextPtr ctx = new AnalysisContext();
+    AnalysisContextPtr ctx = new AnalysisContext(code->returnByRef);
     bool ok = analyzeStatement(code->body, bodyEnv, ctx);
-    if (ctx->returnInitialized) {
+    if (ctx->returnTypeInitialized) {
         if (!ctx->returnType)
             return voidValue.ptr();
-        return new PValue(ctx->returnType, ctx->returnIsTemp);
+        return new PValue(ctx->returnType, !ctx->returnByRef);
     }
     else if (ok) {
         return voidValue.ptr();
@@ -1071,7 +1071,7 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
         if (!retType)
             result = voidValue.ptr();
         else
-            result = new PValue(retType, !code->returnRef);
+            result = new PValue(retType, !code->returnByRef);
     }
     else {
         EnvPtr bodyEnv = new Env(entry->env);
@@ -1093,13 +1093,13 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
 
         addLocal(bodyEnv, new Identifier("%returned"), NULL);
 
-        AnalysisContextPtr ctx = new AnalysisContext();
+        AnalysisContextPtr ctx = new AnalysisContext(code->returnByRef);
         bool ok = analyzeStatement(code->body, bodyEnv, ctx);
-        if (ctx->returnInitialized) {
+        if (ctx->returnTypeInitialized) {
             if (!ctx->returnType)
                 result = voidValue.ptr();
             else
-                result = new PValue(ctx->returnType, ctx->returnIsTemp);
+                result = new PValue(ctx->returnType, !ctx->returnByRef);
         }
         else if (ok) {
             result = voidValue.ptr();
@@ -1114,7 +1114,7 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
         if (result->objKind == PVALUE) {
             PValuePtr pret = (PValue *)result.ptr();
             entry->returnType = pret->type;
-            entry->returnIsTemp = pret->isTemp;
+            assert(entry->code->returnByRef == !pret->isTemp);
         }
         else {
             assert(result->objKind == VOID_VALUE);
@@ -1161,55 +1161,33 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
         if (!x->expr) {
-            if (!ctx->returnInitialized) {
-                ctx->returnInitialized = true;
+            if (ctx->returnByRef) {
+                error("return by reference expected");
+            }
+            else if (!ctx->returnTypeInitialized) {
+                ctx->returnTypeInitialized = true;
                 ctx->returnType = NULL;
             }
-            else {
-                if (ctx->returnType.ptr())
-                    error("mismatching return kind");
+            else if (ctx->returnType.ptr()) {
+                error("mismatching return kind");
             }
         }
         else {
             PValuePtr pv = analyzeValue(x->expr, env);
             if (!pv)
                 return false;
-            if (!ctx->returnInitialized) {
-                ctx->returnInitialized = true;
+            if (pv->isTemp && ctx->returnByRef)
+                error("cannot return a temporary by reference");
+            if (!ctx->returnTypeInitialized) {
+                ctx->returnTypeInitialized = true;
                 ctx->returnType = pv->type;
-                ctx->returnIsTemp = true;
             }
             else {
                 if (!ctx->returnType)
                     error("mismatching return kind");
                 if (ctx->returnType != pv->type)
                     error("mismatching return type");
-                if (!ctx->returnIsTemp)
-                    error("mismatching return by ref & by value");
             }
-        }
-        return true;
-    }
-
-    case RETURN_REF : {
-        ReturnRef *x = (ReturnRef *)stmt.ptr();
-        PValuePtr y = analyzeValue(x->expr, env);
-        if (!y)
-            return false;
-        if (y->isTemp)
-            error("cannot return a temporary by reference");
-        if (!ctx->returnInitialized) {
-            ctx->returnInitialized = true;
-            ctx->returnType = y->type;
-            ctx->returnIsTemp = false;
-        }
-        else {
-            if (!ctx->returnType)
-                error("mismatching return kind");
-            if (ctx->returnType != y->type)
-                error("mismatching return type");
-            if (ctx->returnIsTemp)
-                error("mismatching return by ref & by value");
         }
         return true;
     }
@@ -1307,7 +1285,7 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
         CodePointerType *y = (CodePointerType *)x->type.ptr();
         if (!y->returnType)
             return voidValue.ptr();
-        return new PValue(y->returnType, y->returnIsTemp);
+        return new PValue(y->returnType, !y->returnByRef);
     }
 
     case CCODE_POINTER_TYPE : {
@@ -1526,8 +1504,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                             entry->varArgTypes.end());
         }
         TypePtr cpType = codePointerType(argTypes,
-                                         entry->returnType,
-                                         entry->returnIsTemp);
+                                         entry->code->returnByRef,
+                                         entry->returnType);
         return new PValue(cpType, true);
     }
 

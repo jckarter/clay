@@ -91,9 +91,9 @@ blockInit(b, size, previous, nextInBucket, previousInBucket) {
 
 bucketId(size) = floorLog2(size);
 
-bucketHead(blockSize) {
+bucketHead(blockSize) ref {
     var i = bucketId(blockSize);
-    returnref state.freeListBuckets^[i];
+    return state.freeListBuckets^[i];
 }
 
 pushBucket(head, b) {
@@ -227,8 +227,8 @@ overload dec(p:PagedPointer[T]) {
 }
 
 [T]
-overload dereference(p : PagedPointer[T]) {
-    returnref Pointer[T](p.offset + dataBegin())^;
+overload dereference(p : PagedPointer[T]) ref {
+    return Pointer[T](p.offset + dataBegin())^;
 }
 
 [T]

@@ -16,7 +16,8 @@ PatternVars -> "[" comma_list(Identifier) "]"
 RecordField -> Identifier TypeSpec ";"
 TypeSpec -> ":" Pattern
 
-Procedure -> PatternVarsWithCond? "inlined"? Identifier Arguments ReturnSpec? Body
+Procedure -> PatternVarsWithCond? "inlined"? Identifier Arguments
+             ReturnSpec? Body
 
 PatternVarsWithCond -> "[" comma_list(Identifier) Predicate? "]"
 Predicate -> "|" Expression
@@ -31,10 +32,9 @@ Argument -> ValueArgument
 ValueArgument -> ("rvalue" | "lvalue")? Identifier TypeSpec?
 StaticArgument -> "static" Expression
 
-ReturnSpec -> "ref"? TypeSpec
+ReturnSpec -> ":" ("ref" Type | "ref" | Type)
 
 Body -> "=" Expression ";"
-      | "=" "ref" Expression ";"
       | Block
 
 Overloadable -> "overloadable" Identifier ";"

@@ -912,19 +912,19 @@ EValuePtr evalInvokeCode(InvokeEntryPtr entry,
         llvmEngine->runFunction(entry->llvmFunc, gvArgs);
         return NULL;
     }
-    else if (entry->returnIsTemp) {
-        assert(out.ptr());
-        assert(out->type == entry->returnType);
-        gvArgs.push_back(llvm::GenericValue(out->addr));
-        llvmEngine->runFunction(entry->llvmFunc, gvArgs);
-        return out;
-    }
-    else {
+    else if (entry->code->returnByRef) {
         assert(!out);
         llvm::GenericValue returnGV =
             llvmEngine->runFunction(entry->llvmFunc, gvArgs);
         void *ptr = returnGV.PointerVal;
         return new EValue(entry->returnType, (char *)ptr);
+    }
+    else {
+        assert(out.ptr());
+        assert(out->type == entry->returnType);
+        gvArgs.push_back(llvm::GenericValue(out->addr));
+        llvmEngine->runFunction(entry->llvmFunc, gvArgs);
+        return out;
     }
 }
 
@@ -967,34 +967,34 @@ EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
     ObjectPtr analysis = analyzeInvokeInlined(entry, args, env);
     assert(analysis.ptr());
     TypePtr returnType;
-    bool returnIsTemp = false;
     if (analysis->objKind == PVALUE) {
         PValue *pv = (PValue *)analysis.ptr();
         returnType = pv->type;
-        returnIsTemp = pv->isTemp;
     }
 
     EValuePtr returnVal;
     void *returnRefVal;
     if (returnType.ptr()) {
-        if (returnIsTemp) {
+        if (code->returnByRef) {
+            assert(!out);
+            returnVal = new EValue(pointerType(returnType),
+                                   (char *)(&returnRefVal));
+        }
+        else {
             assert(out.ptr());
             assert(out->type == returnType);
             returnVal = out;
-        }
-        else {
-            assert(!out);
-            returnVal = new EValue(pointerType(entry->returnType),
-                                   (char *)(&returnRefVal));
         }
     }
     else {
         assert(!out);
     }
-    ObjectPtr rinfo = new ReturnedInfo(returnType, returnIsTemp, returnVal);
+    ObjectPtr rinfo = new ReturnedInfo(code->returnByRef,
+                                       returnType, returnVal);
     addLocal(bodyEnv, new Identifier("%returned"), rinfo);
 
-    EvalContextPtr ctx = new EvalContext(returnType, returnIsTemp, returnVal);
+    EvalContextPtr ctx = new EvalContext(code->returnByRef,
+                                         returnType, returnVal);
 
     TerminationPtr term = evalStatement(entry->code->body, bodyEnv, ctx);
     if (term.ptr()) {
@@ -1012,7 +1012,7 @@ EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
         }
     }
 
-    if (returnType.ptr() && !returnIsTemp)
+    if (returnType.ptr() && entry->code->returnByRef)
         return new EValue(returnType.ptr(), (char *)returnRefVal);
     return out;
 }
@@ -1124,29 +1124,19 @@ TerminationPtr evalStatement(StatementPtr stmt,
         else {
             if (!ctx->returnType)
                 error("void return expected");
-            if (!ctx->returnIsTemp)
-                error("return by reference expected");
             PValuePtr pv = analyzeValue(x->expr, env);
             if (pv->type != ctx->returnType)
                 error("type mismatch in return");
-            evalRootIntoValue(x->expr, env, pv, ctx->returnVal);
+            if (ctx->returnByRef) {
+                if (pv->isTemp)
+                    error("cannot return a temporary by reference");
+                EValuePtr ev = evalRootValue(x->expr, env, NULL);
+                *((void **)ctx->returnVal->addr) = (void *)ev->addr;
+            }
+            else {
+                evalRootIntoValue(x->expr, env, pv, ctx->returnVal);
+            }
         }
-        return new TerminateReturn(x->location);
-    }
-
-    case RETURN_REF : {
-        ReturnRef *x = (ReturnRef *)stmt.ptr();
-        if (!ctx->returnType)
-            error("void return expected");
-        if (ctx->returnIsTemp)
-            error("return by value expected");
-        PValuePtr pv = analyzeValue(x->expr, env);
-        if (pv->type != ctx->returnType)
-            error("type mismatch in return");
-        if (pv->isTemp)
-            error("cannot return a temporary by reference");
-        EValuePtr ev = evalRootValue(x->expr, env, NULL);
-        *((void **)ctx->returnVal->addr) = (void *)ev->addr;
         return new TerminateReturn(x->location);
     }
 
@@ -2220,8 +2210,8 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
                             entry->varArgTypes.end());
         }
         TypePtr cpType = codePointerType(argTypes,
-                                         entry->returnType,
-                                         entry->returnIsTemp);
+                                         entry->code->returnByRef,
+                                         entry->returnType);
         assert(out.ptr());
         assert(out->type == cpType);
         void *funcPtr = llvmEngine->getPointerToGlobal(entry->llvmFunc);

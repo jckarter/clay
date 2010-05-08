@@ -8,9 +8,9 @@ CodePtr clone(CodePtr x)
     y->predicate = cloneOpt(x->predicate);
     clone(x->formalArgs, y->formalArgs);
     y->hasVarArgs = x->hasVarArgs;
-    y->body = clone(x->body);
+    y->returnByRef = x->returnByRef;
     y->returnType = cloneOpt(x->returnType);
-    y->returnRef = x->returnRef;
+    y->body = clone(x->body);
     return y;
 }
 
@@ -276,12 +276,6 @@ StatementPtr clone(StatementPtr x)
     case RETURN : {
         Return *y = (Return *)x.ptr();
         out = new Return(cloneOpt(y->expr));
-        break;
-    }
-
-    case RETURN_REF : {
-        ReturnRef *y = (ReturnRef *)x.ptr();
-        out = new ReturnRef(clone(y->expr));
         break;
     }
 

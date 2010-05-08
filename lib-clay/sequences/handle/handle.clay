@@ -54,4 +54,4 @@ overload size(seq:SequenceHandle[A]) = size(seq.inner^);
 overload index(seq:SequenceHandle[A], i) = index(seq.inner^, i);
 
 [A | RandomAccessSequence?(A) and LValueSequence?(A)]
-overload index(seq:SequenceHandle[A], i) = ref index(seq.inner^, i);
+overload index(seq:SequenceHandle[A], i) ref = index(seq.inner^, i);

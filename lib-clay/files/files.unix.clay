@@ -79,7 +79,7 @@ overload assign(dest:File, src:File) = unsupported();
 //
 
 [I | Integer?(I)]
-overload read(f:File, buffer:Pointer[Byte], n:I) : SizeT {
+overload read(f:File, buffer:Pointer[Byte], n:I) SizeT {
     var result = unix.syscall(unix.read, f.handle, buffer, SizeT(n));
     return SizeT(result);
 }

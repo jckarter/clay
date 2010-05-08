@@ -101,6 +101,8 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         y->location = x->formalArgs[i]->location;
         code->formalArgs.push_back(y.ptr());
     }
+    code->hasVarArgs = false;
+    code->returnByRef = false;
     code->body = x->body;
 
     OverloadPtr overload = new Overload(kernelNameRef("call"), code, false);
@@ -188,12 +190,6 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         Return *y = (Return *)x.ptr();
         if (y->expr.ptr())
             convertFreeVars(y->expr, env, ctx);
-        break;
-    }
-
-    case RETURN_REF : {
-        ReturnRef *y = (ReturnRef *)x.ptr();
-        convertFreeVars(y->expr, env, ctx);
         break;
     }
 

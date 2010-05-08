@@ -48,7 +48,7 @@ private requiredFileSize(static T, capacity) =
     capacity*TypeSize(T) + headerSpace();
 
 [T]
-overload NamedVector[T](fileName : strings.String) : NamedVector[T] {
+overload NamedVector[T](fileName : strings.String) NamedVector[T] {
     ref x = returned;
     x.fileName <-- fileName;
     if (fileExists?(fileName)) {
@@ -80,7 +80,7 @@ overload NamedVector[T](fileName : strings.String) : NamedVector[T] {
 overload size(a:NamedVector[T]) = a.header^.size;
 
 [T,I | Integer?(I)]
-overload index(a:NamedVector[T], i:I) = ref (a.data + SizeT(i))^;
+overload index(a:NamedVector[T], i:I) ref = (a.data + SizeT(i))^;
 
 
 
@@ -93,7 +93,7 @@ record NamedVectorCoordinate[T] {
 }
 
 [T]
-overload dereference(c:NamedVectorCoordinate[T]) = ref c.ptr^;
+overload dereference(c:NamedVectorCoordinate[T]) ref = c.ptr^;
 
 [T]
 overload begin(a:NamedVector[T]) = NamedVectorCoordinate(&a[0]);
@@ -175,10 +175,10 @@ overload lesser?(a:NamedVector[T], b:NamedVector[T]) {
 //
 
 [T]
-overload front(a:NamedVector[T]) = ref a[0];
+overload front(a:NamedVector[T]) ref = a[0];
 
 [T]
-overload back(a:NamedVector[T]) = ref a[size(a)-1];
+overload back(a:NamedVector[T]) ref = a[size(a)-1];
 
 [T]
 overload push(a:NamedVector[T], x:T) {
@@ -191,7 +191,7 @@ overload push(a:NamedVector[T], rvalue x:T) {
 }
 
 [T]
-overload pop(a:NamedVector[T]) : T {
+overload pop(a:NamedVector[T]) T {
     returned <-- move(back(a));
     removeLocation(a, end(a)-1);
 }
@@ -238,7 +238,7 @@ private ensureSpace(a:NamedVector[T], space:SizeT) {
 }
 
 [T,I | Integer?(I)]
-private insertLocation(a:NamedVector[T], pos:I) {
+private insertLocation(a:NamedVector[T], pos:I) ref {
     ensureSpace(a, SizeT(1));
     var i = begin(a) + pos;
     var j = end(a);
@@ -247,7 +247,7 @@ private insertLocation(a:NamedVector[T], pos:I) {
         dec(j);
     }
     a.header^.size += 1;
-    returnref i^;
+    return i^;
 }
 
 [T,I|Integer?(I)]

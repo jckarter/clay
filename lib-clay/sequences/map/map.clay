@@ -61,8 +61,8 @@ overload index(a:Mapped[F,A], i) =
     a.mapper(index(a.innerSequence, i));
 
 [F,A | LValueSequence?(Mapped[F,A]) and RandomAccessSequence?(A)]
-overload index(a:Mapped[F,A], i) =
-    ref a.mapper(index(a.innerSequence, i));
+overload index(a:Mapped[F,A], i) ref =
+    a.mapper(index(a.innerSequence, i));
 
 
 
@@ -88,5 +88,5 @@ overload next(iter:MappedIterator[F,ITER]) =
     iter.mapper(next(iter.innerIterator));
 
 [F,ITER | LValue?(F()(next(ITER())))]
-overload next(iter:MappedIterator[F,ITER]) =
-    ref iter.mapper(next(iter.innerIterator));
+overload next(iter:MappedIterator[F,ITER]) ref =
+    iter.mapper(next(iter.innerIterator));

@@ -303,11 +303,6 @@ static void printStatement(ostream &out, const Statement *x) {
         out << "Return(" << y->expr << ")";
         break;
     }
-    case RETURN_REF : {
-        const ReturnRef *y = (const ReturnRef *)x;
-        out << "ReturnRef(" << y->expr << ")";
-        break;
-    }
     case IF : {
         const If *y = (const If *)x;
         out << "If(" << y->condition << ", " << y->thenPart;
@@ -439,7 +434,9 @@ static void print(ostream &out, const Object *x) {
     case CODE : {
         const Code *y = (const Code *)x;
         out << "Code(" << y->patternVars << ", " << y->predicate;
-        out << ", " << y->formalArgs << ", " << y->body << ")";
+        out << ", " << y->formalArgs << ", " << y->hasVarArgs;
+        out << ", " << y->returnByRef << ", " << y->returnType;
+        out << ", " << y->body << ")";
         break;
     }
     case VALUE_ARG : {

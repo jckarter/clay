@@ -1,9 +1,9 @@
 
-external sayHello() : Void {
+external sayHello() Void {
     println("Hello World");
 }
 
-external factorial(n:Int):Int {
+external factorial(n:Int) Int {
     var p = 1;
     for (i in range(2,n+1))
         p *= i;

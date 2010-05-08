@@ -5,11 +5,11 @@
 //
 
 [E | Enum?(E)]
-overload E() : E {
+overload E() E {
 }
 
 [E | Enum?(E)]
-overload E(src:E) : E {
+overload E(src:E) E {
     primitiveCopy(returned, src);
 }
 

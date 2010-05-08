@@ -1,14 +1,14 @@
 
-external sched_init():Void;
-external sched_run():Void;
-external sched_destroy():Void;
-external sched_ready(task:Pointer[Int8]):Void;
-external sched_task_create(stacksize:Int32, func:CCodePointer[Pointer[Int8], Pointer[Int8], Int32], arg1:Pointer[Int8], arg2:Int32):Pointer[Int8];
+external sched_init() Void;
+external sched_run() Void;
+external sched_destroy() Void;
+external sched_ready(task:Pointer[Int8]) Void;
+external sched_task_create(stacksize:Int32, func:CCodePointer[Pointer[Int8], Pointer[Int8], Int32], arg1:Pointer[Int8], arg2:Int32) Pointer[Int8];
 
-external chan_create(size:Int32):Pointer[Int8];
-external chan_send(chan:Pointer[Int8], ptr:Pointer[Int8]):Void;
-external chan_recv(chan:Pointer[Int8], ptr:Pointer[Int8]):Void;
-external chan_destroy(chan:Pointer[Int8]):Void;
+external chan_create(size:Int32) Pointer[Int8];
+external chan_send(chan:Pointer[Int8], ptr:Pointer[Int8]) Void;
+external chan_recv(chan:Pointer[Int8], ptr:Pointer[Int8]) Void;
+external chan_destroy(chan:Pointer[Int8]) Void;
 
 record Channels {
     chanin: Pointer[Int8];

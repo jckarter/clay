@@ -53,8 +53,9 @@ void initBuiltinConstructor(ArrayTypePtr t)
         ValueArgPtr arg = new ValueArg(argName, type);
         code->formalArgs.push_back(arg.ptr());
     }
+    code->hasVarArgs = false;
+    code->returnByRef = false;
     code->returnType = new ObjectExpr(t.ptr());
-    code->returnRef = false;
 
     BlockPtr body = new Block();
     for (unsigned i = 0; i < size; ++i) {
@@ -87,8 +88,9 @@ void initBuiltinConstructor(TupleTypePtr t)
         ValueArgPtr arg = new ValueArg(argName, type);
         code->formalArgs.push_back(arg.ptr());
     }
+    code->hasVarArgs = false;
+    code->returnByRef = false;
     code->returnType = new ObjectExpr(t.ptr());
-    code->returnRef = false;
 
     BlockPtr body = new Block();
     for (unsigned i = 0; i < elementTypes.size(); ++i) {
@@ -119,8 +121,9 @@ void initBuiltinConstructor(RecordTypePtr t)
         ValueArgPtr arg = new ValueArg(argName, type);
         code->formalArgs.push_back(arg.ptr());
     }
+    code->hasVarArgs = false;
+    code->returnByRef = false;
     code->returnType = new ObjectExpr(t.ptr());
-    code->returnRef = false;
 
     BlockPtr body = new Block();
     for (unsigned i = 0; i < fieldTypes.size(); ++i) {
@@ -160,6 +163,8 @@ void initBuiltinConstructor(RecordPtr x)
         arg->location = f->location;
         code->formalArgs.push_back(arg.ptr());
     }
+    code->hasVarArgs = false;
+    code->returnByRef = false;
 
     IndexingPtr retType = new Indexing(recName);
     retType->location = x->location;

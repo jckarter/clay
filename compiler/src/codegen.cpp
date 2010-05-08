@@ -261,12 +261,12 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     if (!entry->returnType) {
         llReturnType = llvmVoidType();
     }
-    else if (entry->returnIsTemp) {
-        llArgTypes.push_back(llvmPointerType(entry->returnType));
-        llReturnType = llvmVoidType();
+    else if (entry->code->returnByRef) {
+        llReturnType = llvmPointerType(entry->returnType);
     }
     else {
-        llReturnType = llvmPointerType(entry->returnType);
+        llArgTypes.push_back(llvmPointerType(entry->returnType));
+        llReturnType = llvmVoidType();
     }
 
     llvm::FunctionType *llFuncType =
@@ -318,20 +318,20 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
 
     CValuePtr returnVal;
     if (entry->returnType.ptr()) {
-        if (entry->returnIsTemp) {
-            llvm::Argument *llArgValue = &(*ai);
-            llArgValue->setName("%returnedValue");
-            returnVal = new CValue(entry->returnType, llArgValue);
-        }
-        else {
+        if (entry->code->returnByRef) {
             const llvm::Type *llt = llvmPointerType(entry->returnType);
             llvm::Value *llv = llvmInitBuilder->CreateAlloca(llt);
             llv->setName("%returnedRef");
             returnVal = new CValue(pointerType(entry->returnType), llv);
         }
+        else {
+            llvm::Argument *llArgValue = &(*ai);
+            llArgValue->setName("%returnedValue");
+            returnVal = new CValue(entry->returnType, llArgValue);
+        }
     }
-    ObjectPtr rinfo = new ReturnedInfo(entry->returnType,
-                                       entry->returnIsTemp,
+    ObjectPtr rinfo = new ReturnedInfo(entry->code->returnByRef,
+                                       entry->returnType,
                                        returnVal);
     addLocal(env, new Identifier("%returned"), rinfo);
 
@@ -350,12 +350,12 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
 
     llvmBuilder->SetInsertPoint(returnBlock);
 
-    if (!entry->returnType || entry->returnIsTemp) {
-        llvmBuilder->CreateRetVoid();
-    }
-    else {
+    if (entry->returnType.ptr() && entry->code->returnByRef) {
         llvm::Value *v = llvmBuilder->CreateLoad(returnVal->llValue);
         llvmBuilder->CreateRet(v);
+    }
+    else {
+        llvmBuilder->CreateRetVoid();
     }
 
     delete llvmInitBuilder;
@@ -475,32 +475,20 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodegenContextPtr ctx)
         else {
             if (!ctx->returnType)
                 error("void return expected");
-            if (!ctx->returnIsTemp)
-                error("return by reference expected");
             PValuePtr pv = analyzeValue(x->expr, env);
             if (pv->type != ctx->returnType)
                 error("type mismatch in return");
-            codegenRootIntoValue(x->expr, env, ctx, pv, ctx->returnVal);
+            if (ctx->returnByRef) {
+                if (pv->isTemp)
+                    error("cannot return a temporary by reference");
+                CValuePtr ref = codegenRootValue(x->expr, env, ctx, NULL);
+                llvmBuilder->CreateStore(ref->llValue,
+                                         ctx->returnVal->llValue);
+            }
+            else {
+                codegenRootIntoValue(x->expr, env, ctx, pv, ctx->returnVal);
+            }
         }
-        const JumpTarget &jt = ctx->returnTarget;
-        cgDestroyStack(jt.stackMarker, env, ctx);
-        llvmBuilder->CreateBr(jt.block);
-        return true;
-    }
-
-    case RETURN_REF : {
-        ReturnRef *x = (ReturnRef *)stmt.ptr();
-        if (!ctx->returnType)
-            error("void return expected");
-        if (ctx->returnIsTemp)
-            error("return by value expected");
-        PValuePtr pv = analyzeValue(x->expr, env);
-        if (pv->type != ctx->returnType)
-            error("type mismatch in return");
-        if (pv->isTemp)
-            error("cannot return a temporary by reference");
-        CValuePtr ref = codegenRootValue(x->expr, env, ctx, NULL);
-        llvmBuilder->CreateStore(ref->llValue, ctx->returnVal->llValue);
         const JumpTarget &jt = ctx->returnTarget;
         cgDestroyStack(jt.stackMarker, env, ctx);
         llvmBuilder->CreateBr(jt.block);
@@ -863,7 +851,7 @@ CValuePtr codegenExpr(ExprPtr expr,
         ReturnedInfo *z = (ReturnedInfo *)y.ptr();
         if (!z->returnType)
             error("'returned' cannot be used when returning void");
-        if (!z->returnIsTemp)
+        if (z->returnByRef)
             error("'returned' cannot be used when returning by reference");
         if (!z->codegenReturnVal)
             error("invalid use of 'returned'");
@@ -1374,7 +1362,7 @@ void codegenExternal(ExternalProcedurePtr x)
             llvmInitBuilder->CreateAlloca(llvmType(x->returnType2));
         returnVal = new CValue(x->returnType2, llRetVal);
     }
-    ObjectPtr rinfo = new ReturnedInfo(x->returnType2, true, returnVal);
+    ObjectPtr rinfo = new ReturnedInfo(true, x->returnType2, returnVal);
     addLocal(env, new Identifier("%returned"), rinfo);
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
@@ -1553,19 +1541,19 @@ CValuePtr codegenInvokeValue(CValuePtr x,
             createCall(llCallable, llArgs.begin(), llArgs.end(), env, ctx);
             return NULL;
         }
-        else if (t->returnIsTemp) {
-            assert(out.ptr());
-            assert(t->returnType == out->type);
-            llArgs.push_back(out->llValue);
-            createCall(llCallable, llArgs.begin(), llArgs.end(), env, ctx);
-            return out;
-        }
-        else {
+        else if (t->returnByRef) {
             assert(!out);
             llvm::Value *result =
                 createCall(llCallable, llArgs.begin(), llArgs.end(),
                            env, ctx);
             return new CValue(t->returnType, result);
+        }
+        else {
+            assert(out.ptr());
+            assert(t->returnType == out->type);
+            llArgs.push_back(out->llValue);
+            createCall(llCallable, llArgs.begin(), llArgs.end(), env, ctx);
+            return out;
         }
         assert(false);
     }
@@ -1766,19 +1754,19 @@ CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
         createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), env, ctx);
         return NULL;
     }
-    else if (entry->returnIsTemp) {
-        assert(out.ptr());
-        assert(out->type == entry->returnType);
-        llArgs.push_back(out->llValue);
-        createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), env, ctx);
-        return out;
-    }
-    else {
+    else if (entry->code->returnByRef) {
         assert(!out);
         llvm::Value *result =
             createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(),
                        env, ctx);
         return new CValue(entry->returnType, result);
+    }
+    else {
+        assert(out.ptr());
+        assert(out->type == entry->returnType);
+        llArgs.push_back(out->llValue);
+        createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), env, ctx);
+        return out;
     }
 }
 
@@ -1822,40 +1810,38 @@ CValuePtr codegenInvokeInlined(InvokeEntryPtr entry,
     ObjectPtr analysis = analyzeInvokeInlined(entry, args, env);
     assert(analysis.ptr());
     TypePtr returnType;
-    bool returnIsTemp = false;
     if (analysis->objKind == PVALUE) {
         PValue *pv = (PValue *)analysis.ptr();
         returnType = pv->type;
-        returnIsTemp = pv->isTemp;
     }
 
     CValuePtr returnVal;
     if (returnType.ptr()) {
-        if (returnIsTemp) {
-            assert(out.ptr());
-            assert(out->type == returnType);
-            returnVal = out;
-        }
-        else {
+        if (code->returnByRef) {
             assert(!out);
             const llvm::Type *llt = llvmPointerType(entry->returnType);
             llvm::Value *llv = llvmInitBuilder->CreateAlloca(llt);
             llv->setName("%returnedRef");
             returnVal = new CValue(pointerType(entry->returnType), llv);
         }
+        else {
+            assert(out.ptr());
+            assert(out->type == returnType);
+            returnVal = out;
+        }
     }
     else {
         assert(!out);
     }
-    ObjectPtr rinfo = new ReturnedInfo(returnType, returnIsTemp, returnVal);
+    ObjectPtr rinfo = new ReturnedInfo(code->returnByRef,
+                                       returnType, returnVal);
     addLocal(bodyEnv, new Identifier("%returned"), rinfo);
 
     llvm::BasicBlock *returnBlock = newBasicBlock("return");
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
     CodegenContextPtr bodyCtx =
-        new CodegenContext(entry, returnType, returnIsTemp,
-                           returnVal, returnTarget);
+        new CodegenContext(entry, returnType, returnVal, returnTarget);
 
     bool terminated = codegenStatement(entry->code->body, bodyEnv, bodyCtx);
     if (!terminated) {
@@ -1869,12 +1855,12 @@ CValuePtr codegenInvokeInlined(InvokeEntryPtr entry,
     if (!returnType) {
         return NULL;
     }
-    else if (returnIsTemp) {
-        return out;
-    }
-    else {
+    else if (code->returnByRef) {
         llvm::Value *v = llvmBuilder->CreateLoad(returnVal->llValue);
         return new CValue(returnType, v);
+    }
+    else {
+        return out;
     }
 }
 
@@ -1930,7 +1916,7 @@ void codegenCWrapper(InvokeEntryPtr entry, const string &callableName)
         llBuilder.CreateRetVoid();
     }
     else {
-        if (!entry->returnIsTemp)
+        if (entry->code->returnByRef)
             error("c-code pointers don't support return by reference");
         llvm::Value *llRetVal =
             llBuilder.CreateAlloca(llvmType(entry->returnType));
@@ -2594,8 +2580,8 @@ CValuePtr codegenInvokePrimOp(PrimOpPtr x,
                             entry->varArgTypes.end());
         }
         TypePtr cpType = codePointerType(argTypes,
-                                         entry->returnType,
-                                         entry->returnIsTemp);
+                                         entry->code->returnByRef,
+                                         entry->returnType);
         assert(out.ptr());
         assert(out->type == cpType);
         llvmBuilder->CreateStore(entry->llvmFunc, out->llValue);
