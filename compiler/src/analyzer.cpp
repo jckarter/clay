@@ -1041,13 +1041,19 @@ ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
     addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
 
     addLocal(bodyEnv, new Identifier("%returned"), NULL);
-    ObjectPtr result;
-    bool ok = analyzeStatement(code->body, bodyEnv, result);
-    if (!result && !ok)
-        return NULL;
-    if (!result)
+    AnalysisContextPtr ctx = new AnalysisContext();
+    bool ok = analyzeStatement(code->body, bodyEnv, ctx);
+    if (ctx->returnInitialized) {
+        if (!ctx->returnType)
+            return voidValue.ptr();
+        return new PValue(ctx->returnType, ctx->returnIsTemp);
+    }
+    else if (ok) {
         return voidValue.ptr();
-    return result;
+    }
+    else {
+        return NULL;
+    }
 }
 
 
@@ -1087,21 +1093,32 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
 
         addLocal(bodyEnv, new Identifier("%returned"), NULL);
 
-        bool ok = analyzeStatement(code->body, bodyEnv, result);
-        if (!result && !ok)
-            return;
-        if (!result)
+        AnalysisContextPtr ctx = new AnalysisContext();
+        bool ok = analyzeStatement(code->body, bodyEnv, ctx);
+        if (ctx->returnInitialized) {
+            if (!ctx->returnType)
+                result = voidValue.ptr();
+            else
+                result = new PValue(ctx->returnType, ctx->returnIsTemp);
+        }
+        else if (ok) {
             result = voidValue.ptr();
+        }
+        else {
+            result = NULL;
+        }
     }
-    entry->analysis = result;
-    entry->analyzed = true;
-    if (result->objKind == PVALUE) {
-        PValuePtr pret = (PValue *)result.ptr();
-        entry->returnType = pret->type;
-        entry->returnIsTemp = pret->isTemp;
-    }
-    else {
-        assert(result->objKind == VOID_VALUE);
+    if (result.ptr()) {
+        entry->analysis = result;
+        entry->analyzed = true;
+        if (result->objKind == PVALUE) {
+            PValuePtr pret = (PValue *)result.ptr();
+            entry->returnType = pret->type;
+            entry->returnIsTemp = pret->isTemp;
+        }
+        else {
+            assert(result->objKind == VOID_VALUE);
+        }
     }
 }
 
@@ -1111,7 +1128,7 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
 // analyzeStatement
 //
 
-bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
+bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 {
     LocationContext loc(stmt->location);
 
@@ -1126,7 +1143,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
                 if (!env)
                     return false;
             }
-            else if (!analyzeStatement(y, env, result)) {
+            else if (!analyzeStatement(y, env, ctx)) {
                 return false;
             }
         }
@@ -1144,25 +1161,32 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
         if (!x->expr) {
-            if (!result)
-                result = voidValue.ptr();
-            else if (result->objKind != VOID_VALUE)
-                error("mismatching return kind");
+            if (!ctx->returnInitialized) {
+                ctx->returnInitialized = true;
+                ctx->returnType = NULL;
+            }
+            else {
+                if (ctx->returnType.ptr())
+                    error("mismatching return kind");
+            }
         }
         else {
             PValuePtr pv = analyzeValue(x->expr, env);
             if (!pv)
                 return false;
-            PValuePtr y = new PValue(pv->type, true);
-            if (!result)
-                result = y.ptr();
-            else if (result->objKind != PVALUE)
-                error("mismatching return kind");
-            PValue *prev = (PValue *)result.ptr();
-            if (y->type != prev->type)
-                error("mismatching return type");
-            if (!prev->isTemp)
-                error("mismatching return by ref & by value");
+            if (!ctx->returnInitialized) {
+                ctx->returnInitialized = true;
+                ctx->returnType = pv->type;
+                ctx->returnIsTemp = true;
+            }
+            else {
+                if (!ctx->returnType)
+                    error("mismatching return kind");
+                if (ctx->returnType != pv->type)
+                    error("mismatching return type");
+                if (!ctx->returnIsTemp)
+                    error("mismatching return by ref & by value");
+            }
         }
         return true;
     }
@@ -1174,24 +1198,28 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
             return false;
         if (y->isTemp)
             error("cannot return a temporary by reference");
-        if (!result)
-            result = y.ptr();
-        else if (result->objKind != PVALUE)
-            error("mismatching return kind");
-        PValue *prev = (PValue *)result.ptr();
-        if (y->type != prev->type)
-            error("mismatching return type");
-        if (prev->isTemp)
-            error("mismatching return by ref & by value");
+        if (!ctx->returnInitialized) {
+            ctx->returnInitialized = true;
+            ctx->returnType = y->type;
+            ctx->returnIsTemp = false;
+        }
+        else {
+            if (!ctx->returnType)
+                error("mismatching return kind");
+            if (ctx->returnType != y->type)
+                error("mismatching return type");
+            if (ctx->returnIsTemp)
+                error("mismatching return by ref & by value");
+        }
         return true;
     }
 
     case IF : {
         If *x = (If *)stmt.ptr();
-        bool thenResult = analyzeStatement(x->thenPart, env, result);
+        bool thenResult = analyzeStatement(x->thenPart, env, ctx);
         bool elseResult = true;
         if (x->elsePart.ptr())
-            elseResult = analyzeStatement(x->elsePart, env, result);
+            elseResult = analyzeStatement(x->elsePart, env, ctx);
         return thenResult || elseResult;
     }
 
@@ -1200,7 +1228,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
 
     case WHILE : {
         While *x = (While *)stmt.ptr();
-        analyzeStatement(x->body, env, result);
+        analyzeStatement(x->body, env, ctx);
         return true;
     }
 
@@ -1212,18 +1240,18 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result)
         For *x = (For *)stmt.ptr();
         if (!x->desugared)
             x->desugared = desugarForStatement(x);
-        return analyzeStatement(x->desugared, env, result);
+        return analyzeStatement(x->desugared, env, ctx);
     }
 
     case SC_STATEMENT : {
         SCStatement *x = (SCStatement *)stmt.ptr();
-        return analyzeStatement(x->statement, x->env, result);
+        return analyzeStatement(x->statement, x->env, ctx);
     }
 
     case TRY : {
         Try *x = (Try *)stmt.ptr();
-        bool tryResult = analyzeStatement(x->tryBlock, env, result);
-        bool catchResult = analyzeStatement(x->catchBlock, env, result);
+        bool tryResult = analyzeStatement(x->tryBlock, env, ctx);
+        bool catchResult = analyzeStatement(x->catchBlock, env, ctx);
         return tryResult || catchResult; // FIXME
     }
 

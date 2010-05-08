@@ -2119,7 +2119,17 @@ ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
                                const vector<ExprPtr> &args,
                                EnvPtr env);
 void analyzeCodeBody(InvokeEntryPtr entry);
-bool analyzeStatement(StatementPtr stmt, EnvPtr env, ObjectPtr &result);
+
+struct AnalysisContext : public Object {
+    bool returnInitialized;
+    TypePtr returnType;
+    bool returnIsTemp;
+    AnalysisContext()
+        : Object(DONT_CARE), returnInitialized(false) {}
+};
+typedef Pointer<AnalysisContext> AnalysisContextPtr;
+
+bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 
 ObjectPtr analyzeInvokeValue(PValuePtr x,
