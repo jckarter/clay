@@ -54,12 +54,13 @@ void initBuiltinConstructor(ArrayTypePtr t)
         code->formalArgs.push_back(arg.ptr());
     }
     code->hasVarArgs = false;
-    code->returnByRef = false;
-    code->returnType = new ObjectExpr(t.ptr());
+    ExprPtr retType = new ObjectExpr(t.ptr());
+    IdentifierPtr retName = new Identifier("%ret");
+    code->returnSpecs.push_back(new ReturnSpec(false, retType, retName));
 
     BlockPtr body = new Block();
     for (unsigned i = 0; i < size; ++i) {
-        IndexingPtr left = new Indexing(new Returned());
+        IndexingPtr left = new Indexing(new NameRef(retName));
         ExprPtr indexExpr = new ObjectExpr(sizeTToValueHolder(i).ptr());
         left->args.push_back(indexExpr);
         ExprPtr right = new NameRef(argNames[i]);
@@ -68,8 +69,7 @@ void initBuiltinConstructor(ArrayTypePtr t)
     }
     code->body = body.ptr();
 
-    ExprPtr returnTypeExpr = new ObjectExpr(t.ptr());
-    OverloadPtr overload = new Overload(returnTypeExpr, code, true);
+    OverloadPtr overload = new Overload(retType, code, true);
     overload->env = new Env();
     t->overloads.push_back(overload);
 }
@@ -89,20 +89,20 @@ void initBuiltinConstructor(TupleTypePtr t)
         code->formalArgs.push_back(arg.ptr());
     }
     code->hasVarArgs = false;
-    code->returnByRef = false;
-    code->returnType = new ObjectExpr(t.ptr());
+    ExprPtr retType = new ObjectExpr(t.ptr());
+    IdentifierPtr retName = new Identifier("%ret");
+    code->returnSpecs.push_back(new ReturnSpec(false, retType, retName));
 
     BlockPtr body = new Block();
     for (unsigned i = 0; i < elementTypes.size(); ++i) {
-        ExprPtr left = new TupleRef(new Returned(), i);
+        ExprPtr left = new TupleRef(new NameRef(retName), i);
         ExprPtr right = new NameRef(argNames[i]);
         StatementPtr stmt = new InitAssignment(left, right);
         body->statements.push_back(stmt);
     }
     code->body = body.ptr();
 
-    ExprPtr returnTypeExpr = new ObjectExpr(t.ptr());
-    OverloadPtr overload = new Overload(returnTypeExpr, code, true);
+    OverloadPtr overload = new Overload(retType, code, true);
     overload->env = new Env();
     t->overloads.push_back(overload);
 }
@@ -122,13 +122,14 @@ void initBuiltinConstructor(RecordTypePtr t)
         code->formalArgs.push_back(arg.ptr());
     }
     code->hasVarArgs = false;
-    code->returnByRef = false;
-    code->returnType = new ObjectExpr(t.ptr());
+    ExprPtr retType = new ObjectExpr(t.ptr());
+    IdentifierPtr retName = new Identifier("%ret");
+    code->returnSpecs.push_back(new ReturnSpec(false, retType, retName));
 
     BlockPtr body = new Block();
     for (unsigned i = 0; i < fieldTypes.size(); ++i) {
         CallPtr left = new Call(primNameRef("recordFieldRef"));
-        left->args.push_back(new Returned());
+        left->args.push_back(new NameRef(retName));
         ExprPtr indexExpr = new ObjectExpr(sizeTToValueHolder(i).ptr());
         left->args.push_back(indexExpr);
         ExprPtr right = new NameRef(argNames[i]);
@@ -137,8 +138,7 @@ void initBuiltinConstructor(RecordTypePtr t)
     }
     code->body = body.ptr();
 
-    ExprPtr returnTypeExpr = new ObjectExpr(t.ptr());
-    OverloadPtr overload = new Overload(returnTypeExpr, code, true);
+    OverloadPtr overload = new Overload(retType, code, true);
     overload->env = new Env();
     t->overloads.push_back(overload);
 }
@@ -164,7 +164,6 @@ void initBuiltinConstructor(RecordPtr x)
         code->formalArgs.push_back(arg.ptr());
     }
     code->hasVarArgs = false;
-    code->returnByRef = false;
 
     IndexingPtr retType = new Indexing(recName);
     retType->location = x->location;
@@ -182,7 +181,9 @@ void initBuiltinConstructor(RecordPtr x)
         returnExpr->args.push_back(callArg);
     }
 
-    code->body = new Return(returnExpr.ptr());
+    vector<bool> isRef; isRef.push_back(false);
+    vector<ExprPtr> exprs; exprs.push_back(returnExpr.ptr());
+    code->body = new Return(isRef, exprs);
     code->body->location = returnExpr->location;
 
     OverloadPtr defaultOverload = new Overload(recName, code, true);

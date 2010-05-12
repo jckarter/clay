@@ -8,10 +8,11 @@ ValueHolder::ValueHolder(TypePtr type)
 
 ValueHolder::~ValueHolder()
 {
-    // TODO: call clay 'destroy'
+    // FIXME: call clay 'destroy'
     free(this->buf);
 }
 
+// FIXME: this doesn't handle arbitrary values (need to call clay)
 bool objectEquals(ObjectPtr a, ObjectPtr b)
 {
     switch (a->objKind) {
@@ -32,7 +33,6 @@ bool objectEquals(ObjectPtr a, ObjectPtr b)
         if (a1->type != b1->type)
             return false;
         int n = typeSize(a1->type);
-        // TODO: call clay 'equals?'
         return memcmp(a1->buf, b1->buf, n) == 0;
     }
 
@@ -41,6 +41,7 @@ bool objectEquals(ObjectPtr a, ObjectPtr b)
     }
 }
 
+// FIXME: this doesn't handle arbitrary values (need to call clay)
 int objectHash(ObjectPtr a)
 {
     switch (a->objKind) {
@@ -71,12 +72,72 @@ int objectHash(ObjectPtr a)
     }
 }
 
+vector<TypePtr> evaluateTypeTuple(ExprPtr expr, EnvPtr env)
+{
+    PValuePtr x = analyzeValue(expr, env);
+    if (!x)
+        error(expr, "recursion during static evaluation");
+
+    switch (x->type->typeKind) {
+
+    case TUPLE_TYPE : {
+        TupleType *y = (TupleType *)x->type.ptr();
+        vector<TypePtr> types;
+        bool ok = true;
+        for (unsigned i = 0; i < y->elementTypes.size(); ++i) {
+            if (y->elementTypes[i]->typeKind != STATIC_TYPE) {
+                ok = false;
+                break;
+            }
+            StaticType *z = (StaticType *)y->elementTypes[i].ptr();
+            if (z->obj->objKind != TYPE) {
+                ok = false;
+                break;
+            }
+            types.push_back((Type *)z->obj.ptr());
+        }
+        if (ok)
+            return types;
+        break;
+    }
+
+    case STATIC_TYPE : {
+        StaticType *y = (StaticType *)x->type.ptr();
+        if (y->obj->objKind == TYPE) {
+            vector<TypePtr> types;
+            types.push_back((Type *)y->obj.ptr());
+            return types;
+        }
+        break;
+    }
+
+    }
+
+    error(expr, "expecting zero or more types");
+    return vector<TypePtr>();
+}
+
+void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
+                         EnvPtr env,
+                         vector<bool> &returnIsRef,
+                         vector<TypePtr> &returnTypes)
+{
+    returnIsRef.clear();
+    returnTypes.clear();
+    for (unsigned i = 0; i < returnSpecs.size(); ++i) {
+        ReturnSpecPtr x = returnSpecs[i];
+        returnIsRef.push_back(x->byRef);
+        returnTypes.push_back(evaluateType(x->expr, env));
+    }
+}
+
 ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr analysis = analyze(expr, env);
     if (!analysis)
         error(expr, "recursion during static evaluation");
-    if (analysis->objKind == PVALUE) {
+    switch (analysis->objKind) {
+    case PVALUE : {
         PValue *pv = (PValue *)analysis.ptr();
         if (pv->type->typeKind == STATIC_TYPE) {
             StaticType *t = (StaticType *)pv->type.ptr();
@@ -87,7 +148,13 @@ ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env)
         evalRootIntoValue(expr, env, pv, out);
         return v.ptr();
     }
-    return analysis;
+    case MULTI_PVALUE : {
+        error(expr, "multi-valued expression in single value context");
+        return NULL;
+    }
+    default :
+        return analysis;
+    }
 }
 
 TypePtr evaluateMaybeVoidType(ExprPtr expr, EnvPtr env)

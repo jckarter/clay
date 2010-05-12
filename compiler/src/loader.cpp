@@ -436,7 +436,6 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "UInt64", uint64Type.ptr());
     addPrim(prims, "Float32", float32Type.ptr());
     addPrim(prims, "Float64", float64Type.ptr());
-    addPrim(prims, "Void", voidType.ptr());
 
 #define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
 

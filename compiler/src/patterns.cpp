@@ -63,58 +63,16 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
             return new PointerTypePattern(p);
         }
 
-        case PRIM_CodePointer : {
-            if (args.size() < 1)
-                error("code pointer type requires return type");
-            vector<PatternPtr> argTypes;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                argTypes.push_back(evaluatePattern(args[i], env));
-            PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new CodePointerTypePattern(argTypes, false, returnType);
-        }
+        case PRIM_CodePointer :
+        case PRIM_RefCodePointer :
+            // FIXME: code pointer patterns are not yet supported
+            return NULL;
 
-        case PRIM_RefCodePointer : {
-            if (args.size() < 1)
-                error("code pointer type requires return type");
-            vector<PatternPtr> argTypes;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                argTypes.push_back(evaluatePattern(args[i], env));
-            PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new CodePointerTypePattern(argTypes, true, returnType);
-        }
-
-        case PRIM_CCodePointer : {
-            if (args.size() < 1)
-                error("c-code pointer type requries return type");
-            vector<PatternPtr> argTypes;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                argTypes.push_back(evaluatePattern(args[i], env));
-            PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new CCodePointerTypePattern(CC_DEFAULT, argTypes,
-                                               false, returnType);
-        }
-
-        case PRIM_StdCallCodePointer : {
-            if (args.size() < 1)
-                error("c-code pointer type requries return type");
-            vector<PatternPtr> argTypes;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                argTypes.push_back(evaluatePattern(args[i], env));
-            PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new CCodePointerTypePattern(CC_STDCALL, argTypes,
-                                               false, returnType);
-        }
-
-        case PRIM_FastCallCodePointer : {
-            if (args.size() < 1)
-                error("c-code pointer type requries return type");
-            vector<PatternPtr> argTypes;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                argTypes.push_back(evaluatePattern(args[i], env));
-            PatternPtr returnType = evaluatePattern(args.back(), env);
-            return new CCodePointerTypePattern(CC_FASTCALL, argTypes,
-                                               false, returnType);
-        }
+        case PRIM_CCodePointer :
+        case PRIM_StdCallCodePointer :
+        case PRIM_FastCallCodePointer :
+            // FIXME: code pointer patterns are not yet supported
+            return NULL;
 
         case PRIM_Array : {
             ensureArity(args, 2);
@@ -188,20 +146,16 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
         if (type->typeKind != CODE_POINTER_TYPE)
             return false;
         CodePointerTypePtr t = (CodePointerType *)type.ptr();
-        if (!t->returnType) {
-            if (!unify(x->returnType, voidType.ptr()))
-                return false;
-        }
-        else {
-            if (x->returnByRef != t->returnByRef)
-                return false;
-            if (!unify(x->returnType, t->returnType.ptr()))
-                return false;
-        }
         if (x->argTypes.size() != t->argTypes.size())
+            return false;
+        if (x->returnTypes.size() != t->returnTypes.size())
             return false;
         for (unsigned i = 0; i < x->argTypes.size(); ++i) {
             if (!unify(x->argTypes[i], t->argTypes[i].ptr()))
+                return false;
+        }
+        for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
+            if (!unify(x->returnTypes[i], t->returnTypes[i].ptr()))
                 return false;
         }
         return true;
@@ -227,8 +181,11 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
         if (x->hasVarArgs != t->hasVarArgs)
             return false;
         if (!t->returnType) {
-            if (!unify(x->returnType, voidType.ptr()))
+            if (x->returnType.ptr())
                 return false;
+        }
+        else if (!x->returnType) {
+            return false;
         }
         else if (!unify(x->returnType, t->returnType.ptr())) {
             return false;
@@ -340,7 +297,7 @@ void patternPrint(ostream &out, PatternPtr x)
     case CODE_POINTER_TYPE_PATTERN : {
         CodePointerTypePattern *y = (CodePointerTypePattern *)x.ptr();
         out << "CodePointerTypePattern(" << y->argTypes << ", "
-            << y->returnByRef << ", " << y->returnType << ")";
+            << y->returnIsRef << ", " << y->returnTypes << ")";
         break;
     }
     case CCODE_POINTER_TYPE_PATTERN : {

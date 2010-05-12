@@ -124,9 +124,10 @@ enum ObjectKind {
     EXPRESSION,
     STATEMENT,
 
-    CODE,
     VALUE_ARG,
     STATIC_ARG,
+    RETURN_SPEC,
+    CODE,
 
     RECORD,
     RECORD_FIELD,
@@ -153,11 +154,12 @@ enum ObjectKind {
     TYPE,
     PATTERN,
 
-    VOID_TYPE,
-    VOID_VALUE,
     VALUE_HOLDER,
-    EVALUE,
+
     PVALUE,
+    MULTI_PVALUE,
+
+    EVALUE,
     CVALUE,
 
     DONT_CARE,
@@ -185,7 +187,6 @@ struct FloatLiteral;
 struct CharLiteral;
 struct StringLiteral;
 struct NameRef;
-struct Returned;
 struct Tuple;
 struct Array;
 struct Indexing;
@@ -223,6 +224,7 @@ struct Try;
 struct FormalArg;
 struct ValueArg;
 struct StaticArg;
+struct ReturnSpec;
 struct Code;
 
 struct TopLevelItem;
@@ -274,11 +276,12 @@ struct CCodePointerTypePattern;
 struct RecordTypePattern;
 struct StaticTypePattern;
 
-struct VoidType;
-struct VoidValue;
 struct ValueHolder;
-struct EValue;
+
 struct PValue;
+struct MultiPValue;
+
+struct EValue;
 struct CValue;
 
 
@@ -303,7 +306,6 @@ typedef Pointer<FloatLiteral> FloatLiteralPtr;
 typedef Pointer<CharLiteral> CharLiteralPtr;
 typedef Pointer<StringLiteral> StringLiteralPtr;
 typedef Pointer<NameRef> NameRefPtr;
-typedef Pointer<Returned> ReturnedPtr;
 typedef Pointer<Tuple> TuplePtr;
 typedef Pointer<Array> ArrayPtr;
 typedef Pointer<Indexing> IndexingPtr;
@@ -341,6 +343,7 @@ typedef Pointer<Try> TryPtr;
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ValueArg> ValueArgPtr;
 typedef Pointer<StaticArg> StaticArgPtr;
+typedef Pointer<ReturnSpec> ReturnSpecPtr;
 typedef Pointer<Code> CodePtr;
 
 typedef Pointer<TopLevelItem> TopLevelItemPtr;
@@ -392,11 +395,12 @@ typedef Pointer<CCodePointerTypePattern> CCodePointerTypePatternPtr;
 typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 typedef Pointer<StaticTypePattern> StaticTypePatternPtr;
 
-typedef Pointer<VoidType> VoidTypePtr;
-typedef Pointer<VoidValue> VoidValuePtr;
 typedef Pointer<ValueHolder> ValueHolderPtr;
-typedef Pointer<EValue> EValuePtr;
+
 typedef Pointer<PValue> PValuePtr;
+typedef Pointer<MultiPValue> MultiPValuePtr;
+
+typedef Pointer<EValue> EValuePtr;
 typedef Pointer<CValue> CValuePtr;
 
 
@@ -573,7 +577,6 @@ enum ExprKind {
     STRING_LITERAL,
 
     NAME_REF,
-    RETURNED,
     TUPLE,
     ARRAY,
     INDEXING,
@@ -640,11 +643,6 @@ struct NameRef : public Expr {
     IdentifierPtr name;
     NameRef(IdentifierPtr name)
         : Expr(NAME_REF), name(name) {}
-};
-
-struct Returned : public Expr {
-    Returned()
-        : Expr(RETURNED) {}
 };
 
 struct Tuple : public Expr {
@@ -749,7 +747,6 @@ struct Or : public Expr {
 struct Lambda : public Expr {
     bool isBlockLambda;
     vector<IdentifierPtr> formalArgs;
-    bool returnByRef;
     StatementPtr body;
 
     ExprPtr converted;
@@ -759,14 +756,13 @@ struct Lambda : public Expr {
     TypePtr lambdaType;
 
     Lambda(bool isBlockLambda) :
-        Expr(LAMBDA), isBlockLambda(isBlockLambda), returnByRef(false),
+        Expr(LAMBDA), isBlockLambda(isBlockLambda),
         initialized(false) {}
     Lambda(bool isBlockLambda,
            const vector<IdentifierPtr> &formalArgs,
-           bool returnByRef,
            StatementPtr body)
         : Expr(LAMBDA), isBlockLambda(isBlockLambda),
-          formalArgs(formalArgs), returnByRef(returnByRef), body(body),
+          formalArgs(formalArgs), body(body),
           initialized(false) {}
 };
 
@@ -848,11 +844,11 @@ enum BindingKind {
 
 struct Binding : public Statement {
     int bindingKind;
-    IdentifierPtr name;
+    vector<IdentifierPtr> names;
     ExprPtr expr;
-    Binding(int bindingKind, IdentifierPtr name, ExprPtr expr)
+    Binding(int bindingKind, const vector<IdentifierPtr> &names, ExprPtr expr)
         : Statement(BINDING), bindingKind(bindingKind),
-          name(name), expr(expr) {}
+          names(names), expr(expr) {}
 };
 
 struct Assignment : public Statement {
@@ -890,11 +886,12 @@ struct Goto : public Statement {
 };
 
 struct Return : public Statement {
-    ExprPtr expr;
+    vector<bool> isRef;
+    vector<ExprPtr> exprs;
     Return()
         : Statement(RETURN) {}
-    Return(ExprPtr expr)
-        : Statement(RETURN), expr(expr) {}
+    Return(const vector<bool> &isRef, const vector<ExprPtr> &exprs)
+        : Statement(RETURN), isRef(isRef), exprs(exprs) {}
 };
 
 struct If : public Statement {
@@ -988,13 +985,22 @@ struct StaticArg : public FormalArg {
         : FormalArg(STATIC_ARG), pattern(pattern) {}
 };
 
+struct ReturnSpec : public ANode {
+    bool byRef;
+    ExprPtr type;
+    IdentifierPtr name; // can be valid only if byRef==false
+    ReturnSpec(bool byRef, ExprPtr type)
+        : ANode(RETURN_SPEC), byRef(byRef), type(type) {}
+    ReturnSpec(bool byRef, ExprPtr type, IdentifierPtr name)
+        : ANode(RETURN_SPEC), byRef(byRef), type(type), name(name) {}
+};
+
 struct Code : public ANode {
     vector<IdentifierPtr> patternVars;
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
     bool hasVarArgs;
-    bool returnByRef;
-    ExprPtr returnType;
+    vector<ReturnSpecPtr> returnSpecs;
     StatementPtr body;
 
     Code()
@@ -1003,12 +1009,11 @@ struct Code : public ANode {
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
          bool hasVarArgs,
-         bool returnByRef,
-         ExprPtr returnType,
+         const vector<ReturnSpecPtr> &returnSpecs,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
           formalArgs(formalArgs), hasVarArgs(hasVarArgs),
-          returnByRef(returnByRef), returnType(returnType), body(body) {}
+          returnSpecs(returnSpecs), body(body) {}
 };
 
 
@@ -1351,6 +1356,8 @@ ExprPtr cloneOpt(ExprPtr x);
 void clone(const vector<ExprPtr> &x, vector<ExprPtr> &out);
 void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out);
 FormalArgPtr clone(FormalArgPtr x);
+void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out);
+ReturnSpecPtr clone(ReturnSpecPtr x);
 StatementPtr clone(StatementPtr x);
 StatementPtr cloneOpt(StatementPtr x);
 void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out);
@@ -1589,12 +1596,15 @@ struct PointerType : public Type {
 
 struct CodePointerType : public Type {
     vector<TypePtr> argTypes;
-    bool returnByRef;
-    TypePtr returnType; // NULL if void return
+
+    vector<bool> returnIsRef;
+    vector<TypePtr> returnTypes;
+
     CodePointerType(const vector<TypePtr> &argTypes,
-                    bool returnByRef, TypePtr returnType)
+                    const vector<bool> &returnIsRef,
+                    const vector<TypePtr> &returnTypes)
         : Type(CODE_POINTER_TYPE), argTypes(argTypes),
-          returnByRef(returnByRef), returnType(returnType) {}
+          returnIsRef(returnIsRef), returnTypes(returnTypes) {}
 };
 
 enum CallingConv {
@@ -1677,9 +1687,6 @@ extern TypePtr uint64Type;
 extern TypePtr float32Type;
 extern TypePtr float64Type;
 
-extern VoidTypePtr voidType;
-extern VoidValuePtr voidValue;
-
 // aliases
 extern TypePtr cIntType;
 extern TypePtr cSizeTType;
@@ -1693,8 +1700,8 @@ TypePtr uintType(int bits);
 TypePtr floatType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(const vector<TypePtr> &argTypes,
-                        bool returnByRef,
-                        TypePtr returnType);
+                        const vector<bool> &returnIsRef,
+                        const vector<TypePtr> &returnTypes);
 TypePtr cCodePointerType(CallingConv callingConv,
                          const vector<TypePtr> &argTypes,
                          bool hasVarArgs,
@@ -1764,13 +1771,13 @@ struct PointerTypePattern : public Pattern {
 
 struct CodePointerTypePattern : public Pattern {
     vector<PatternPtr> argTypes;
-    bool returnByRef;
-    PatternPtr returnType;
+    vector<bool> returnIsRef;
+    vector<PatternPtr> returnTypes;
     CodePointerTypePattern(const vector<PatternPtr> &argTypes,
-                           bool returnByRef,
-                           PatternPtr returnType)
+                           const vector<bool> &returnIsRef,
+                           const vector<PatternPtr> &returnTypes)
         : Pattern(CODE_POINTER_TYPE_PATTERN), argTypes(argTypes),
-          returnByRef(returnByRef), returnType(returnType) {}
+          returnIsRef(returnIsRef), returnTypes(returnTypes) {}
 };
 
 struct CCodePointerTypePattern : public Pattern {
@@ -1812,22 +1819,6 @@ struct StaticTypePattern : public Pattern {
     PatternPtr obj;
     StaticTypePattern(PatternPtr obj)
         : Pattern(STATIC_TYPE_PATTERN), obj(obj) {}
-};
-
-
-
-//
-// VoidType, VoidValue
-//
-
-struct VoidType : public Object {
-    VoidType()
-        : Object(VOID_TYPE) {}
-};
-
-struct VoidValue : public Object {
-    VoidValue()
-        : Object(VOID_VALUE) {}
 };
 
 
@@ -1916,7 +1907,8 @@ struct InvokeEntry : public Object {
     bool inlined; // if inlined the rest of InvokeEntry is not set
 
     ObjectPtr analysis;
-    TypePtr returnType; // NULL if void return
+    vector<bool> returnIsRef;
+    vector<TypePtr> returnTypes;
 
     llvm::Function *llvmFunc;
     llvm::Function *llvmCWrapper;
@@ -2030,29 +2022,6 @@ void initBuiltinConstructor(RecordPtr x);
 
 
 //
-// ReturnedInfo
-//
-
-struct ReturnedInfo : public Object {
-    bool returnByRef;
-    TypePtr returnType;
-    CValuePtr codegenReturnVal;
-    EValuePtr evalReturnVal;
-    ReturnedInfo(bool returnByRef,
-                 TypePtr returnType,
-                 CValuePtr codegenReturnVal)
-        : Object(DONT_CARE), returnByRef(returnByRef),
-          returnType(returnType), codegenReturnVal(codegenReturnVal) {}
-    ReturnedInfo(bool returnByRef,
-                 TypePtr returnType,
-                 EValuePtr evalReturnVal)
-        : Object(DONT_CARE), returnByRef(returnByRef),
-          returnType(returnType), evalReturnVal(evalReturnVal) {}
-};
-
-
-
-//
 // VarArgsInfo
 //
 
@@ -2078,8 +2047,24 @@ struct PValue : public Object {
         : Object(PVALUE), type(type), isTemp(isTemp) {}
 };
 
+struct MultiPValue : public Object {
+    vector<PValuePtr> values;
+    MultiPValue()
+        : Object(MULTI_PVALUE) {}
+    MultiPValue(PValuePtr pv)
+        : Object(MULTI_PVALUE) {
+        values.push_back(pv);
+    }
+    MultiPValue(const vector<PValuePtr> &values)
+        : Object(MULTI_PVALUE), values(values) {}
+    unsigned size() { return values.size(); }
+    bool empty() { return size() == 0; }
+    bool unary() { return size() == 1; }
+};
+
+
 bool analysisToPValue(ObjectPtr x, PValuePtr &pv);
-ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env);
+MultiPValuePtr analyzeMultiValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env);
@@ -2111,18 +2096,19 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<ObjectPtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations);
+ObjectPtr analyzeReturn(const vector<bool> &returnIsRef,
+                        const vector<TypePtr> &returnTypes);
 ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
                                const vector<ExprPtr> &args,
                                EnvPtr env);
 void analyzeCodeBody(InvokeEntryPtr entry);
 
 struct AnalysisContext : public Object {
-    bool returnByRef;
-    bool returnTypeInitialized;
-    TypePtr returnType;
-    AnalysisContext(bool returnByRef)
-        : Object(DONT_CARE), returnByRef(returnByRef),
-          returnTypeInitialized(false) {}
+    bool returnInitialized;
+    vector<bool> returnIsRef;
+    vector<TypePtr> returnTypes;
+    AnalysisContext()
+        : Object(DONT_CARE), returnInitialized(false) {}
 };
 typedef Pointer<AnalysisContext> AnalysisContextPtr;
 
@@ -2163,6 +2149,12 @@ int objectVectorHash(const vector<Pointer<T> > &a) {
         h += objectHash(a[i].ptr());
     return h;
 }
+
+vector<TypePtr> evaluateTypeTuple(ExprPtr expr, EnvPtr env);
+void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
+                         EnvPtr env,
+                         vector<bool> &isRef,
+                         vector<TypePtr> &types);
 
 ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
 
@@ -2344,10 +2336,16 @@ struct JumpTarget {
         : block(block), stackMarker(stackMarker) {}
 };
 
+struct CReturnValue {
+    bool byRef;
+    TypePtr type;
+    CValuePtr cval;
+    CReturnValue(bool byRef, TypePtr type, CValuePtr cval)
+        : byRef(byRef), type(type), cval(cval) {}
+};
+
 struct CodegenContext : public Object {
-    bool returnByRef;
-    TypePtr returnType;
-    CValuePtr returnVal;
+    vector<CReturnValue> returnValues;
     JumpTarget returnTarget;
     map<string, JumpTarget> labels;
     vector<JumpTarget> breaks;
@@ -2357,34 +2355,11 @@ struct CodegenContext : public Object {
     llvm::Value *exception;
 	int tryBlockStackMarker;
 
-    // regular callables
-    CodegenContext(InvokeEntryPtr invokeEntry,
+    CodegenContext(const vector<CReturnValue> &returnValues,
                    CValuePtr returnVal,
                    const JumpTarget &returnTarget)
         : Object(DONT_CARE),
-          returnByRef(invokeEntry->code->returnByRef),
-          returnType(invokeEntry->returnType),
-          returnVal(returnVal), returnTarget(returnTarget),
-          catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}
-
-    // externals
-    CodegenContext(ExternalProcedurePtr externalProc,
-                   CValuePtr returnVal,
-                   const JumpTarget &returnTarget)
-        : Object(DONT_CARE),
-          returnByRef(false), returnType(externalProc->returnType2),
-          returnVal(returnVal), returnTarget(returnTarget),
-          catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}
-
-    // inlined callables
-    CodegenContext(InvokeEntryPtr invokeEntry,
-                   TypePtr returnType,
-                   CValuePtr returnVal,
-                   const JumpTarget &returnTarget)
-        : Object(DONT_CARE),
-          returnByRef(invokeEntry->code->returnByRef),
-          returnType(returnType), returnVal(returnVal),
-          returnTarget(returnTarget),
+          returnValues(returnValues), returnTarget(returnTarget),
           catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}
 };
 

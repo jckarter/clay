@@ -100,23 +100,32 @@ const char *updateOperatorName(int op) {
     }
 }
 
+
+static vector<IdentifierPtr> identV(IdentifierPtr x) {
+    vector<IdentifierPtr> v;
+    v.push_back(x);
+    return v;
+}
+
 StatementPtr desugarForStatement(ForPtr x) {
     IdentifierPtr exprVar = new Identifier("%expr");
     IdentifierPtr iterVar = new Identifier("%iter");
 
     BlockPtr block = new Block();
-    block->statements.push_back(new Binding(REF, exprVar, x->expr));
+    block->statements.push_back(new Binding(REF, identV(exprVar), x->expr));
 
     CallPtr iteratorCall = new Call(kernelNameRef("iterator"));
     iteratorCall->args.push_back(new NameRef(exprVar));
-    block->statements.push_back(new Binding(VAR, iterVar, iteratorCall.ptr()));
+    block->statements.push_back(new Binding(VAR, identV(iterVar),
+                                            iteratorCall.ptr()));
 
     CallPtr hasNextCall = new Call(kernelNameRef("hasNext?"));
     hasNextCall->args.push_back(new NameRef(iterVar));
     CallPtr nextCall = new Call(kernelNameRef("next"));
     nextCall->args.push_back(new NameRef(iterVar));
     BlockPtr whileBody = new Block();
-    whileBody->statements.push_back(new Binding(REF, x->variable, nextCall.ptr()));
+    whileBody->statements.push_back(new Binding(REF, identV(x->variable),
+                                                nextCall.ptr()));
     whileBody->statements.push_back(x->body);
 
     block->statements.push_back(new While(hasNextCall.ptr(), whileBody.ptr()));

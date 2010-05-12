@@ -106,10 +106,6 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "NameRef(" << y->name << ")";
         break;
     }
-    case RETURNED : {
-        out << "Returned";
-        break;
-    }
     case TUPLE : {
         const Tuple *y = (const Tuple *)x;
         out << "Tuple(" << y->args << ")";
@@ -274,7 +270,7 @@ static void printStatement(ostream &out, const Statement *x) {
         default :
             assert(false);
         }
-        out << ", " << y->name << ", " << y->expr << ")";
+        out << ", " << y->names << ", " << y->expr << ")";
         break;
     }
     case ASSIGNMENT : {
@@ -300,7 +296,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
     case RETURN : {
         const Return *y = (const Return *)x;
-        out << "Return(" << y->expr << ")";
+        out << "Return(" << y->isRef << ", " << y->exprs << ")";
         break;
     }
     case IF : {
@@ -435,8 +431,7 @@ static void print(ostream &out, const Object *x) {
         const Code *y = (const Code *)x;
         out << "Code(" << y->patternVars << ", " << y->predicate;
         out << ", " << y->formalArgs << ", " << y->hasVarArgs;
-        out << ", " << y->returnByRef << ", " << y->returnType;
-        out << ", " << y->body << ")";
+        out << ", " << y->returnSpecs << ", " << y->body << ")";
         break;
     }
     case VALUE_ARG : {
@@ -448,6 +443,12 @@ static void print(ostream &out, const Object *x) {
     case STATIC_ARG : {
         const StaticArg *y = (const StaticArg *)x;
         out << "StaticArg(" << y->pattern << ")";
+        break;
+    }
+    case RETURN_SPEC : {
+        const ReturnSpec *y = (const ReturnSpec *)x;
+        out << "ReturnSpec(" << y->byRef << ", " << y->type;
+        out << ", " << y->name << ")";
         break;
     }
 
@@ -581,14 +582,6 @@ static void print(ostream &out, const Object *x) {
         break;
     }
 
-    case VOID_TYPE :
-        out << "Void";
-        break;
-
-    case VOID_VALUE :
-        out << "VoidValue()";
-        break;
-
     case VALUE_HOLDER : {
         const ValueHolder *y = (const ValueHolder *)x;
         out << "ValueHolder(" << y->type << ")";
@@ -598,6 +591,12 @@ static void print(ostream &out, const Object *x) {
     case PVALUE : {
         const PValue *y = (const PValue *)x;
         out << "PValue(" << y->type << ")";
+        break;
+    }
+
+    case MULTI_PVALUE : {
+        const MultiPValue *y = (const MultiPValue *)x;
+        out << "MultiPValue(" << y->values << ")";
         break;
     }
 
