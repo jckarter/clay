@@ -32,21 +32,26 @@ Argument -> ValueArgument
 ValueArgument -> ("rvalue" | "lvalue")? Identifier TypeSpec?
 StaticArgument -> "static" Expression
 
-ReturnSpec -> ":" ("ref" Type | "ref" | Type)
+ReturnSpec -> comma_list(ReturnSpecOne)
+ReturnSpecOne -> "ref" Type
+               | (Identifier ":")? Type
 
-Body -> "=" Expression ";"
+Type -> Expression
+
+Body -> "=" ReturnExpression ";"
       | Block
 
 Overloadable -> "overloadable" Identifier ";"
 
-Overload -> PatternVarsWithCond? "inlined"? "overload" Pattern Arguments ReturnSpec? Body
+Overload -> PatternVarsWithCond? "inlined"? "overload" Pattern Arguments
+            ReturnSpec? Body
 
 Enumeration -> "enum" Identifier "{" comma_list(Identifier) "}"
 
 GlobalVariable -> "var" Identifier "=" Expression ";"
 
 ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
-                     TypeSpec (ExternalBody | ";")
+                     Type? (ExternalBody | ";")
 ExternalArgs -> comma_list(ExternalArg) ("," "...")?
               | ("...")?
 ExternalArg -> Identifier TypeSpec
@@ -83,8 +88,8 @@ Statement -> Block
 
 LabelDef -> Identifier ":"
 
-VarBinding -> "var" Identifier "=" Expression ";"
-RefBinding -> "ref" Identifier "=" Expression ";"
+VarBinding -> "var" comma_list(Identifier) "=" Expression ";"
+RefBinding -> "ref" comma_list(Identifier) "=" Expression ";"
 StaticBinding -> "static" Identifier "=" Expression ";"
 
 Assignment -> Expression "=" Expression ";"
@@ -99,7 +104,8 @@ IfStatement -> "if" "(" Expression ")" Statement
 
 GotoStatement -> "goto" Identifier ";"
 
-ReturnStatement -> "return" Expression? ";"
+ReturnStatement -> "return" ReturnExpression? ";"
+ReturnExpression -> comma_list("ref"? Expression)
 
 ExpressionStatement -> Expression ";"
 
@@ -160,14 +166,11 @@ DereferenceSuffix -> "^"
 
 AtomicExpr -> ArrayExpr
             | TupleExpr
-            | Returned
             | NameRef
             | Literal
 
 ArrayExpr -> "[" comma_list(Expression) "]"
 TupleExpr -> "(" comma_list(Expression)? ")"
-
-Returned -> "returned"
 
 NameRef -> DottedName
 

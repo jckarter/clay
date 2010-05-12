@@ -21,7 +21,6 @@ bool analysisToPValue(ObjectPtr x, PValuePtr &pv)
         return true;
 
     case TYPE :
-    case VOID_TYPE :
     case PRIM_OP :
     case PROCEDURE :
     case OVERLOADABLE :
@@ -35,20 +34,26 @@ bool analysisToPValue(ObjectPtr x, PValuePtr &pv)
     }
 }
 
-ObjectPtr analyzeMaybeVoidValue(ExprPtr expr, EnvPtr env)
+MultiPValuePtr analyzeMultiValue(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = analyze(expr, env);
     if (!v)
         return NULL;
+
     switch (v->objKind) {
-    case VOID_VALUE :
-        return voidValue.ptr();
+
+    case MULTI_PVALUE : {
+        MultiPValue *x = (MultiPValue *)v.ptr();
+        return x;
+    }
+
     default : {
         PValuePtr pv;
         if (!analysisToPValue(v, pv))
-            error(expr, "expecting a value or void");
-        return pv.ptr();
+            error(expr, "invalid value");
+        return new MultiPValue(pv);
     }
+
     }
 }
 
@@ -57,6 +62,8 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
     ObjectPtr v = analyze(expr, env);
     if (!v)
         return NULL;
+    if (v->objKind == MULTI_PVALUE)
+        error(expr, "multi-valued expression in single value context");
     PValuePtr pv;
     if (!analysisToPValue(v, pv))
         error(expr, "expecting a value");
@@ -271,18 +278,6 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         if (y->objKind == EXPRESSION)
             return analyze((Expr *)y.ptr(), env);
         return analyzeStaticObject(y);
-    }
-
-    case RETURNED : {
-        ObjectPtr y = lookupEnv(env, new Identifier("%returned"));
-        if (!y)
-            error("'returned' requires explicit return type declaration");
-        ReturnedInfo *z = (ReturnedInfo *)y.ptr();
-        if (!z->returnType)
-            error("'returned' cannot be used when returning void");
-        if (z->returnByRef)
-            error("'returned' cannot be used when returning by reference");
-        return new PValue(z->returnType, false);
     }
 
     case TUPLE : {
@@ -525,9 +520,9 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
     }
     case VALUE_HOLDER :
     case PVALUE :
+    case MULTI_PVALUE :
 
     case TYPE :
-    case VOID_TYPE :
     case PRIM_OP :
     case PROCEDURE :
     case OVERLOADABLE :
@@ -721,60 +716,57 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
         }
 
         case PRIM_CodePointer : {
-            if (args.size() < 1)
-                error("atleast one argument required for"
-                      " code pointer types.");
-            vector<TypePtr> types;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                types.push_back(evaluateType(args[i], env));
-            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return codePointerType(types, false, returnType).ptr();
+            ensureArity(args, 2);
+            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
+            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
+            vector<bool> returnIsRef(returnTypes.size(), false);
+            return codePointerType(argTypes, returnIsRef, returnTypes).ptr();
         }
 
         case PRIM_RefCodePointer : {
-            if (args.size() < 1)
-                error("atleast one argument required for"
-                      " code pointer types.");
-            vector<TypePtr> types;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                types.push_back(evaluateType(args[i], env));
-            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return codePointerType(types, true, returnType).ptr();
+            ensureArity(args, 2);
+            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
+            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
+            vector<bool> returnIsRef(returnTypes.size(), true);
+            return codePointerType(argTypes, returnIsRef, returnTypes).ptr();
         }
 
         case PRIM_CCodePointer : {
-            if (args.size() < 1)
-                error("atleast one argument required for"
-                      " code pointer types.");
-            vector<TypePtr> types;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                types.push_back(evaluateType(args[i], env));
-            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return cCodePointerType(CC_DEFAULT, types,
+            ensureArity(args, 2);
+            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
+            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
+            if (returnTypes.size() > 1)
+                error(args[1], "C code cannot return more than one value");
+            TypePtr returnType;
+            if (returnTypes.size() == 1)
+                returnType = returnTypes[0];
+            return cCodePointerType(CC_DEFAULT, argTypes,
                                     false, returnType).ptr();
         }
 
         case PRIM_StdCallCodePointer : {
-            if (args.size() < 1)
-                error("atleast one argument required for"
-                      " code pointer types.");
-            vector<TypePtr> types;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                types.push_back(evaluateType(args[i], env));
-            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return cCodePointerType(CC_STDCALL, types,
+            ensureArity(args, 2);
+            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
+            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
+            if (returnTypes.size() > 1)
+                error(args[1], "C code cannot return more than one value");
+            TypePtr returnType;
+            if (returnTypes.size() == 1)
+                returnType = returnTypes[0];
+            return cCodePointerType(CC_STDCALL, argTypes,
                                     false, returnType).ptr();
         }
 
         case PRIM_FastCallCodePointer : {
-            if (args.size() < 1)
-                error("atleast one argument required for"
-                      " code pointer types.");
-            vector<TypePtr> types;
-            for (unsigned i = 0; i+1 < args.size(); ++i)
-                types.push_back(evaluateType(args[i], env));
-            TypePtr returnType = evaluateMaybeVoidType(args.back(), env);
-            return cCodePointerType(CC_FASTCALL, types,
+            ensureArity(args, 2);
+            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
+            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
+            if (returnTypes.size() > 1)
+                error(args[1], "C code cannot return more than one value");
+            TypePtr returnType;
+            if (returnTypes.size() == 1)
+                returnType = returnTypes[0];
+            return cCodePointerType(CC_FASTCALL, argTypes,
                                     false, returnType).ptr();
         }
 
@@ -896,7 +888,7 @@ ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
             ObjectPtr y = argsKey[0];
             assert(y->objKind == TYPE);
             if (isPrimitiveType((Type *)y.ptr()))
-                return voidValue.ptr();
+                return new MultiPValue();
         }
         break;
     }
@@ -1001,6 +993,25 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 
 
 //
+// analyzeReturn
+//
+
+ObjectPtr analyzeReturn(const vector<bool> &returnIsRef,
+                        const vector<TypePtr> &returnTypes)
+{
+    if (returnTypes.size() == 1)
+        return new PValue(returnTypes[0], !returnIsRef[0]);
+    MultiPValuePtr x = new MultiPValue();
+    for (unsigned i = 0; i < returnTypes.size(); ++i) {
+        PValuePtr pv = new PValue(returnTypes[i], !returnIsRef[i]);
+        x->values.push_back(pv);
+    }
+    return x.ptr();
+}
+
+
+
+//
 // analyzeInvokeInlined
 //
 
@@ -1012,11 +1023,12 @@ ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
 
     CodePtr code = entry->code;
 
-    if (code->returnType.ptr()) {
-        TypePtr retType = evaluateMaybeVoidType(code->returnType, entry->env);
-        if (!retType)
-            return voidValue.ptr();
-        return new PValue(retType, !code->returnByRef);
+    if (!code->returnSpecs.empty()) {
+        vector<bool> returnIsRef;
+        vector<TypePtr> returnTypes;
+        evaluateReturnSpecs(code->returnSpecs, entry->env,
+                            returnIsRef, returnTypes);
+        return analyzeReturn(returnIsRef, returnTypes);
     }
 
     if (entry->hasVarArgs)
@@ -1040,20 +1052,15 @@ ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
     }
     addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
 
-    addLocal(bodyEnv, new Identifier("%returned"), NULL);
-    AnalysisContextPtr ctx = new AnalysisContext(code->returnByRef);
+    AnalysisContextPtr ctx = new AnalysisContext();
     bool ok = analyzeStatement(code->body, bodyEnv, ctx);
-    if (ctx->returnTypeInitialized) {
-        if (!ctx->returnType)
-            return voidValue.ptr();
-        return new PValue(ctx->returnType, !ctx->returnByRef);
-    }
-    else if (ok) {
-        return voidValue.ptr();
-    }
-    else {
+
+    if (ctx->returnInitialized)
+        return analyzeReturn(ctx->returnIsRef, ctx->returnTypes);
+    else if (ok)
+        return new MultiPValue();
+    else
         return NULL;
-    }
 }
 
 
@@ -1066,12 +1073,10 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
     assert(!entry->analyzed);
     ObjectPtr result;
     CodePtr code = entry->code;
-    if (code->returnType.ptr()) {
-        TypePtr retType = evaluateMaybeVoidType(code->returnType, entry->env);
-        if (!retType)
-            result = voidValue.ptr();
-        else
-            result = new PValue(retType, !code->returnByRef);
+    if (!code->returnSpecs.empty()) {
+        evaluateReturnSpecs(code->returnSpecs, entry->env,
+                            entry->returnIsRef, entry->returnTypes);
+        result = analyzeReturn(entry->returnIsRef, entry->returnTypes);
     }
     else {
         EnvPtr bodyEnv = new Env(entry->env);
@@ -1091,18 +1096,17 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
         }
         addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
 
-        addLocal(bodyEnv, new Identifier("%returned"), NULL);
-
-        AnalysisContextPtr ctx = new AnalysisContext(code->returnByRef);
+        AnalysisContextPtr ctx = new AnalysisContext();
         bool ok = analyzeStatement(code->body, bodyEnv, ctx);
-        if (ctx->returnTypeInitialized) {
-            if (!ctx->returnType)
-                result = voidValue.ptr();
-            else
-                result = new PValue(ctx->returnType, !ctx->returnByRef);
+        if (ctx->returnInitialized) {
+            result = analyzeReturn(ctx->returnIsRef, ctx->returnTypes);
+            entry->returnIsRef = ctx->returnIsRef;
+            entry->returnTypes = ctx->returnTypes;
         }
         else if (ok) {
-            result = voidValue.ptr();
+            result = new MultiPValue();
+            entry->returnIsRef.clear();
+            entry->returnTypes.clear();
         }
         else {
             result = NULL;
@@ -1111,14 +1115,6 @@ void analyzeCodeBody(InvokeEntryPtr entry) {
     if (result.ptr()) {
         entry->analysis = result;
         entry->analyzed = true;
-        if (result->objKind == PVALUE) {
-            PValuePtr pret = (PValue *)result.ptr();
-            entry->returnType = pret->type;
-            assert(entry->code->returnByRef == !pret->isTemp);
-        }
-        else {
-            assert(result->objKind == VOID_VALUE);
-        }
     }
 }
 
@@ -1160,34 +1156,41 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        if (!x->expr) {
-            if (ctx->returnByRef) {
-                error("return by reference expected");
-            }
-            else if (!ctx->returnTypeInitialized) {
-                ctx->returnTypeInitialized = true;
-                ctx->returnType = NULL;
-            }
-            else if (ctx->returnType.ptr()) {
-                error("mismatching return kind");
+        assert(x->isRef.size() == x->exprs.size());
+        if (ctx->returnInitialized) {
+            if (x->exprs.size() != ctx->returnTypes.size())
+                error("mismatching number of return values");
+            for (unsigned i = 0; i < x->exprs.size(); ++i) {
+                if (x->isRef[i] != ctx->returnIsRef[i]) {
+                    error(x->exprs[i],
+                          "mismatching by-ref and by-value returns");
+                }
+                PValuePtr pv = analyzeValue(x->exprs[i], env);
+                if (!pv)
+                    return false;
+                if (pv->type != ctx->returnTypes[i])
+                    error(x->exprs[i], "type mismatch");
+                if (pv->isTemp && x->isRef[i]) {
+                    error(x->exprs[i],
+                          "cannot return a temporary by reference");
+                }
             }
         }
         else {
-            PValuePtr pv = analyzeValue(x->expr, env);
-            if (!pv)
-                return false;
-            if (pv->isTemp && ctx->returnByRef)
-                error("cannot return a temporary by reference");
-            if (!ctx->returnTypeInitialized) {
-                ctx->returnTypeInitialized = true;
-                ctx->returnType = pv->type;
+            ctx->returnIsRef.clear();
+            ctx->returnTypes.clear();
+            for (unsigned i = 0; i < x->exprs.size(); ++i) {
+                ctx->returnIsRef.push_back(x->isRef[i]);
+                PValuePtr pv = analyzeValue(x->exprs[i], env);
+                if (!pv)
+                    return false;
+                if (pv->isTemp && x->isRef[i]) {
+                    error(x->exprs[i],
+                          "cannot return a temporary by reference");
+                }
+                ctx->returnTypes.push_back(pv->type);
             }
-            else {
-                if (!ctx->returnType)
-                    error("mismatching return kind");
-                if (ctx->returnType != pv->type)
-                    error("mismatching return type");
-            }
+            ctx->returnInitialized = true;
         }
         return true;
     }
@@ -1245,20 +1248,26 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
     case VAR :
     case REF : {
-        PValuePtr right = analyzeValue(x->expr, env);
+        MultiPValuePtr right = analyzeMultiValue(x->expr, env);
         if (!right)
             return NULL;
+        if (right->size() != x->names.size())
+            error("mismatching no. of values");
         EnvPtr env2 = new Env(env);
-        addLocal(env2, x->name, new PValue(right->type, false));
+        for (unsigned i = 0; i < right->size(); ++i)
+            addLocal(env2, x->names[i], right->values[i].ptr());
         return env2;
     }
 
     case STATIC : {
+        // FIXME: support multi values here
+        if (x->names.size() != 1)
+            error("static multiple values are not supported");
         ObjectPtr right = evaluateStatic(x->expr, env);
         if (!right)
             return NULL;
         EnvPtr env2 = new Env(env);
-        addLocal(env2, x->name, right.ptr());
+        addLocal(env2, x->names[0], right.ptr());
         return env2;
     }
 
@@ -1283,15 +1292,13 @@ ObjectPtr analyzeInvokeValue(PValuePtr x,
 
     case CODE_POINTER_TYPE : {
         CodePointerType *y = (CodePointerType *)x->type.ptr();
-        if (!y->returnType)
-            return voidValue.ptr();
-        return new PValue(y->returnType, !y->returnByRef);
+        return analyzeReturn(y->returnIsRef, y->returnTypes);
     }
 
     case CCODE_POINTER_TYPE : {
         CCodePointerType *y = (CCodePointerType *)x->type.ptr();
         if (!y->returnType)
-            return voidValue.ptr();
+            return new MultiPValue();
         return new PValue(y->returnType, true);
     }
 
@@ -1319,20 +1326,10 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
 
     case PRIM_Type : {
         ensureArity(args, 1);
-        ObjectPtr y = analyzeMaybeVoidValue(args[0], env);
+        PValuePtr y = analyzeValue(args[0], env);
         if (!y)
             return NULL;
-        switch (y->objKind) {
-        case PVALUE : {
-            PValue *z = (PValue *)y.ptr();
-            return z->type.ptr();
-        }
-        case VOID_VALUE :
-            return voidType.ptr();
-        default :
-            assert(false);
-        }
-        return NULL;
+        return y->type.ptr();
     }
 
     case PRIM_TypeP : {
@@ -1344,7 +1341,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     }
 
     case PRIM_primitiveCopy :
-        return voidValue.ptr();
+        return new MultiPValue();
 
     case PRIM_boolNot :
         return new PValue(boolType, true);
@@ -1504,8 +1501,8 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                             entry->varArgTypes.end());
         }
         TypePtr cpType = codePointerType(argTypes,
-                                         entry->code->returnByRef,
-                                         entry->returnType);
+                                         entry->returnIsRef,
+                                         entry->returnTypes);
         return new PValue(cpType, true);
     }
 
@@ -1568,10 +1565,24 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                             entry->varArgTypes.begin(),
                             entry->varArgTypes.end());
         }
+        TypePtr returnType;
+        if (entry->returnTypes.empty()) {
+            returnType = NULL;
+        }
+        else if (entry->returnTypes.size() == 1) {
+            if (entry->returnIsRef[0])
+                error(args[0],
+                      "cannot create c-code pointer to ref-return code");
+            returnType = entry->returnTypes[0];
+        }
+        else {
+            error(args[0],
+                  "cannot create c-code pointer to multi-return code");
+        }
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
                                            argTypes,
                                            false,
-                                           entry->returnType);
+                                           returnType);
         return new PValue(ccpType, true);
     }
 

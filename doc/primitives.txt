@@ -46,14 +46,14 @@ Pointer[T]
 [I,T|Integer?(I)] intToPointer(static T, a:I) : Pointer[T]
 
 [T] CodePointer?(static T):Bool
-CodePointer[A1, ..., An, RT]
-RefCodePointer[A1, ..., An, RT]
+CodePointer[(A1, ..., An), (R1, ...,Rn)]
+RefCodePointer[(A1, ..., An), (R1, ...,Rn)]
 [F, A1, ..., An] makeCodePointer(static F, static A1, ..., static An)
 
 [T] CCodePointer?(static T):Bool
-CCodePointer[A1, ..., An, RT]
-StdCallCodePointer[A1, ..., An, RT]
-FastCallCodePointer[A1, ..., An, RT]
+CCodePointer[(A1, ..., An), (RT?)]
+StdCallCodePointer[(A1, ..., An), (RT?)]
+FastCallCodePointer[(A1, ..., An), (RT?)]
 [F, A1, ..., An] makeCCodePointer(static F, static A1, ..., static An)
 
 [T1,T2] pointerCast(static T2, a:Pointer[T1]): T2

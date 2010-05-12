@@ -8,8 +8,7 @@ CodePtr clone(CodePtr x)
     y->predicate = cloneOpt(x->predicate);
     clone(x->formalArgs, y->formalArgs);
     y->hasVarArgs = x->hasVarArgs;
-    y->returnByRef = x->returnByRef;
-    y->returnType = cloneOpt(x->returnType);
+    clone(x->returnSpecs, y->returnSpecs);
     y->body = clone(x->body);
     return y;
 }
@@ -59,11 +58,6 @@ ExprPtr clone(ExprPtr x)
     case NAME_REF : {
         NameRef *y = (NameRef *)x.ptr();
         out = new NameRef(y->name);
-        break;
-    }
-
-    case RETURNED : {
-        out = new Returned();
         break;
     }
 
@@ -139,7 +133,6 @@ ExprPtr clone(ExprPtr x)
         Lambda *y = (Lambda *)x.ptr();
         LambdaPtr z = new Lambda(y->isBlockLambda);
         clone(y->formalArgs, z->formalArgs);
-        z->returnByRef = y->returnByRef;
         z->body = clone(y->body);
         out = z.ptr();
         break;
@@ -224,6 +217,17 @@ FormalArgPtr clone(FormalArgPtr x)
     return out;
 }
 
+void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out)
+{
+    for (unsigned i = 0; i < x.size(); ++i)
+        out.push_back(clone(x[i]));
+}
+
+ReturnSpecPtr clone(ReturnSpecPtr x)
+{
+    return new ReturnSpec(x->byRef, x->type, x->name);
+}
+
 StatementPtr clone(StatementPtr x)
 {
     StatementPtr out;
@@ -246,7 +250,9 @@ StatementPtr clone(StatementPtr x)
 
     case BINDING : {
         Binding *y = (Binding *)x.ptr();
-        out = new Binding(y->bindingKind, y->name, clone(y->expr));
+        vector<IdentifierPtr> names;
+        clone(y->names, names);
+        out = new Binding(y->bindingKind, names, clone(y->expr));
         break;
     }
 
@@ -276,7 +282,10 @@ StatementPtr clone(StatementPtr x)
 
     case RETURN : {
         Return *y = (Return *)x.ptr();
-        out = new Return(cloneOpt(y->expr));
+        ReturnPtr z = new Return();
+        z->isRef = y->isRef;
+        clone(y->exprs, z->exprs);
+        out = z.ptr();
         break;
     }
 

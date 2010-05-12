@@ -102,7 +102,6 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         code->formalArgs.push_back(y.ptr());
     }
     code->hasVarArgs = false;
-    code->returnByRef = x->returnByRef;
     code->body = x->body;
 
     OverloadPtr overload = new Overload(kernelNameRef("call"), code, false);
@@ -146,7 +145,8 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
                 Binding *a = (Binding *)z.ptr();
                 convertFreeVars(a->expr, env, ctx);
                 EnvPtr env2 = new Env(env);
-                addLocal(env2, a->name, a->name.ptr());
+                for (unsigned j = 0; j < a->names.size(); ++j)
+                    addLocal(env2, a->names[j], a->names[j].ptr());
                 env = env2;
             }
             else {
@@ -188,8 +188,8 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case RETURN : {
         Return *y = (Return *)x.ptr();
-        if (y->expr.ptr())
-            convertFreeVars(y->expr, env, ctx);
+        for (unsigned i = 0; i < y->exprs.size(); ++i)
+            convertFreeVars(y->exprs[i], env, ctx);
         break;
     }
 
@@ -282,9 +282,6 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         }
         break;
     }
-
-    case RETURNED :
-        break;
 
     case TUPLE : {
         Tuple *y = (Tuple *)x.ptr();
