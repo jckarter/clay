@@ -596,7 +596,7 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodegenContextPtr ctx)
     case CONTINUE : {
         if (ctx->continues.empty())
             error("invalid continue statement");
-        const JumpTarget &jt = ctx->breaks.back();
+        const JumpTarget &jt = ctx->continues.back();
         cgDestroyStack(jt.stackMarker, env, ctx);
         llvmBuilder->CreateBr(jt.block);
         return true;
