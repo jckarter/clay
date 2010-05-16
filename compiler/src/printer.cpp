@@ -600,9 +600,27 @@ static void print(ostream &out, const Object *x) {
         break;
     }
 
+    case EVALUE : {
+        const EValue *y = (const EValue *)x;
+        out << "EValue(" << y->type << ")";
+        break;
+    }
+
+    case MULTI_EVALUE : {
+        const MultiEValue *y = (const MultiEValue *)x;
+        out << "MultiEValue(" << y->values << ")";
+        break;
+    }
+
     case CVALUE : {
         const CValue *y = (const CValue *)x;
         out << "CValue(" << y->type << ")";
+        break;
+    }
+
+    case MULTI_CVALUE : {
+        const MultiCValue *y = (const MultiCValue *)x;
+        out << "MultiCValue(" << y->values << ")";
         break;
     }
 

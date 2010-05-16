@@ -196,3 +196,25 @@ void fmtError(const char *fmt, ...) {
     va_end(ap);
     error(s);
 }
+
+static const char *valuesStr(int n) {
+    if (n == 1)
+        return "value";
+    else
+        return "values";
+}
+
+void arityError(int expected, int received) {
+    ostringstream sout;
+    sout << "expected " << expected << " " << valuesStr(expected);
+    sout << ", but received " << received << " " << valuesStr(received);
+    error(sout.str());
+}
+
+void arityError2(int minExpected, int received) {
+    ostringstream sout;
+    sout << "expected atleast " << minExpected
+         << " " << valuesStr(minExpected);
+    sout << ", but received " << received << " " << valuesStr(received);
+    error(sout.str());
+}
