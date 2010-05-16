@@ -34,36 +34,48 @@ bool analysisToPValue(ObjectPtr x, PValuePtr &pv)
     }
 }
 
+bool analysisToMultiPValue(ObjectPtr x, MultiPValuePtr &mpv)
+{
+    switch (x->objKind) {
+    case MULTI_PVALUE : {
+        MultiPValue *y = (MultiPValue *)x.ptr();
+        mpv = y;
+        return true;
+    }
+    default : {
+        PValuePtr pv;
+        if (!analysisToPValue(x, pv))
+            return false;
+        mpv = new MultiPValue(pv);
+        return true;
+    }
+    }
+}
+
 MultiPValuePtr analyzeMultiValue(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = analyze(expr, env);
     if (!v)
         return NULL;
-
-    switch (v->objKind) {
-
-    case MULTI_PVALUE : {
-        MultiPValue *x = (MultiPValue *)v.ptr();
-        return x;
-    }
-
-    default : {
-        PValuePtr pv;
-        if (!analysisToPValue(v, pv))
-            error(expr, "invalid value");
-        return new MultiPValue(pv);
-    }
-
-    }
+    MultiPValuePtr mpv;
+    if (!analysisToMultiPValue(v, mpv))
+        error(expr, "invalid value");
+    return mpv;
 }
 
-PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
+ObjectPtr analyzeOne(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = analyze(expr, env);
     if (!v)
         return NULL;
     if (v->objKind == MULTI_PVALUE)
         error(expr, "multi-valued expression in single value context");
+    return v;
+}
+
+PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
+{
+    ObjectPtr v = analyzeOne(expr, env);
     PValuePtr pv;
     if (!analysisToPValue(v, pv))
         error(expr, "expecting a value");
@@ -510,13 +522,27 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
         }
         return analyzeStaticObject(y->result);
     }
+    case EVALUE : {
+        EValue *y = (EValue *)x.ptr();
+        return new PValue(y->type, false);
+    }
+    case MULTI_EVALUE : {
+        MultiEValue *y = (MultiEValue *)x.ptr();
+        MultiPValuePtr z = new MultiPValue();
+        for (unsigned i = 0; i < y->values.size(); ++i)
+            z->values.push_back(new PValue(y->values[i]->type, false));
+        return z.ptr();
+    }
     case CVALUE : {
         CValue *y = (CValue *)x.ptr();
         return new PValue(y->type, false);
     }
-    case EVALUE : {
-        EValue *y = (EValue *)x.ptr();
-        return new PValue(y->type, false);
+    case MULTI_CVALUE : {
+        MultiCValue *y = (MultiCValue *)x.ptr();
+        MultiPValuePtr z = new MultiPValue();
+        for (unsigned i = 0; i < y->values.size(); ++i)
+            z->values.push_back(new PValue(y->values[i]->type, false));
+        return z.ptr();
     }
     case VALUE_HOLDER :
     case PVALUE :
@@ -558,7 +584,10 @@ void analyzeExternal(ExternalProcedurePtr x)
         y->type2 = evaluateType(y->type, x->env);
         argTypes.push_back(y->type2);
     }
-    x->returnType2 = evaluateMaybeVoidType(x->returnType, x->env);
+    if (!x->returnType)
+        x->returnType2 = NULL;
+    else
+        x->returnType2 = evaluateType(x->returnType, x->env);
     CallingConv callingConv = CC_DEFAULT;
     if (x->attrStdCall)
         callingConv = CC_STDCALL;

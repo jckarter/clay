@@ -160,7 +160,10 @@ enum ObjectKind {
     MULTI_PVALUE,
 
     EVALUE,
+    MULTI_EVALUE,
+
     CVALUE,
+    MULTI_CVALUE,
 
     DONT_CARE,
 };
@@ -282,7 +285,10 @@ struct PValue;
 struct MultiPValue;
 
 struct EValue;
+struct MultiEValue;
+
 struct CValue;
+struct MultiCValue;
 
 
 
@@ -401,7 +407,10 @@ typedef Pointer<PValue> PValuePtr;
 typedef Pointer<MultiPValue> MultiPValuePtr;
 
 typedef Pointer<EValue> EValuePtr;
+typedef Pointer<MultiEValue> MultiEValuePtr;
+
 typedef Pointer<CValue> CValuePtr;
+typedef Pointer<MultiCValue> MultiCValuePtr;
 
 
 
@@ -475,11 +484,30 @@ void error(Pointer<T> context, const string &msg)
     error(msg);
 }
 
+void arityError(int expected, int received);
+void arityError2(int minExpected, int received);
+
+template <class T>
+void arityError(Pointer<T> context, int expected, int received)
+{
+    if (context->location.ptr())
+        pushLocation(context->location);
+    arityError(expected, received);
+}
+
+template <class T>
+void arityError2(Pointer<T> context, int minExpected, int received)
+{
+    if (context->location.ptr())
+        pushLocation(context->location);
+    arityError2(minExpected, received);
+}
+
 template <class T>
 void ensureArity(const vector<T> &args, int size)
 {
     if ((int)args.size() != size)
-        error("incorrect number of arguments");
+        arityError(size, args.size());
 }
 
 template <class T>
@@ -488,7 +516,7 @@ void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
     if (!hasVarArgs) 
         ensureArity(args, size);
     else if ((int)args.size() < size)
-        error("incorrect no of arguments");
+        arityError2(size, args.size());
 }
 
 struct DebugPrinter {
@@ -2058,13 +2086,13 @@ struct MultiPValue : public Object {
     MultiPValue(const vector<PValuePtr> &values)
         : Object(MULTI_PVALUE), values(values) {}
     unsigned size() { return values.size(); }
-    bool empty() { return size() == 0; }
-    bool unary() { return size() == 1; }
 };
 
 
 bool analysisToPValue(ObjectPtr x, PValuePtr &pv);
+bool analysisToMultiPValue(ObjectPtr x, MultiPValuePtr &mpv);
 MultiPValuePtr analyzeMultiValue(ExprPtr expr, EnvPtr env);
+ObjectPtr analyzeOne(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env);
@@ -2158,7 +2186,6 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
 
 ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
 
-TypePtr evaluateMaybeVoidType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
@@ -2186,131 +2213,18 @@ struct EValue : public Object {
         : Object(EVALUE), type(type), addr(addr) {}
 };
 
-
-void evalValueInit(EValuePtr dest);
-void evalValueDestroy(EValuePtr dest);
-void evalValueCopy(EValuePtr dest, EValuePtr src);
-void evalValueAssign(EValuePtr dest, EValuePtr src);
-bool evalToBoolFlag(EValuePtr a);
-
-int evalMarkStack();
-void evalDestroyStack(int marker);
-void evalPopStack(int marker);
-void evalDestroyAndPopStack(int marker);
-EValuePtr evalAllocValue(TypePtr t);
-
-void evalRootIntoValue(ExprPtr expr,
-                       EnvPtr env,
-                       PValuePtr pv,
-                       EValuePtr out);
-EValuePtr evalRootValue(ExprPtr expr, EnvPtr env, EValuePtr out);
-void evalIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, EValuePtr out);
-EValuePtr evalAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv);
-EValuePtr evalValue(ExprPtr expr, EnvPtr env, EValuePtr out);
-EValuePtr evalMaybeVoid(ExprPtr expr, EnvPtr env, EValuePtr out);
-EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out);
-
-EValuePtr evalStaticObject(ObjectPtr x, EValuePtr out);
-void evalValueHolder(ValueHolderPtr v, EValuePtr out);
-
-EValuePtr evalInvokeValue(EValuePtr x,
-                          const vector<ExprPtr> &args,
-                          EnvPtr env,
-                          EValuePtr out);
-
-void evalInvokeVoid(ObjectPtr x,
-                    const vector<ExprPtr> &args,
-                    EnvPtr env);
-EValuePtr evalInvoke(ObjectPtr x,
-                     const vector<ExprPtr> &args,
-                     EnvPtr env,
-                     EValuePtr out);
-EValuePtr evalInvokeCallable(ObjectPtr x,
-                             const vector<ExprPtr> &args,
-                             EnvPtr env,
-                             EValuePtr out);
-bool evalInvokeSpecialCase(ObjectPtr x,
-                           const vector<bool> &isStaticFlags,
-                           const vector<ObjectPtr> &argsKey);
-EValuePtr evalInvokeCode(InvokeEntryPtr entry,
-                         const vector<ExprPtr> &args,
-                         EnvPtr env,
-                         EValuePtr out);
-EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
-                            const vector<ExprPtr> &args,
-                            EnvPtr env,
-                            EValuePtr out);
-
-enum TerminationKind {
-    TERMINATE_RETURN,
-    TERMINATE_BREAK,
-    TERMINATE_CONTINUE,
-    TERMINATE_GOTO
+struct MultiEValue : public Object {
+    vector<EValuePtr> values;
+    MultiEValue()
+        : Object(MULTI_EVALUE) {}
+    MultiEValue(EValuePtr pv)
+        : Object(MULTI_EVALUE) {
+        values.push_back(pv);
+    }
+    MultiEValue(const vector<EValuePtr> &values)
+        : Object(MULTI_EVALUE), values(values) {}
+    unsigned size() { return values.size(); }
 };
-
-struct Termination : public Object {
-    TerminationKind terminationKind;
-    LocationPtr location;
-    Termination(TerminationKind terminationKind, LocationPtr location)
-        : Object(DONT_CARE), terminationKind(terminationKind),
-          location(location) {}
-};
-typedef Pointer<Termination> TerminationPtr;
-
-struct TerminateReturn : Termination {
-    TerminateReturn(LocationPtr location)
-        : Termination(TERMINATE_RETURN, location) {}
-};
-
-struct TerminateBreak : Termination {
-    TerminateBreak(LocationPtr location)
-        : Termination(TERMINATE_BREAK, location) {}
-};
-
-struct TerminateContinue : Termination {
-    TerminateContinue(LocationPtr location)
-        : Termination(TERMINATE_CONTINUE, location) {}
-};
-
-struct TerminateGoto : Termination {
-    IdentifierPtr targetLabel;
-    TerminateGoto(IdentifierPtr targetLabel, LocationPtr location)
-        : Termination(TERMINATE_GOTO, location) {}
-};
-
-struct LabelInfo {
-    EnvPtr env;
-    int stackMarker;
-    int blockPosition;
-    LabelInfo() {}
-    LabelInfo(EnvPtr env, int stackMarker, int blockPosition)
-        : env(env), stackMarker(stackMarker), blockPosition(blockPosition) {}
-};
-
-struct EvalContext : public Object {
-    bool returnByRef;
-    TypePtr returnType;
-    EValuePtr returnVal;
-    EvalContext(bool returnByRef, TypePtr returnType, EValuePtr returnVal)
-        : Object(DONT_CARE), returnByRef(returnByRef),
-          returnType(returnType), returnVal(returnVal) {}
-};
-typedef Pointer<EvalContext> EvalContextPtr;
-
-TerminationPtr evalStatement(StatementPtr stmt,
-                             EnvPtr env,
-                             EvalContextPtr ctx);
-
-void evalCollectLabels(const vector<StatementPtr> &statements,
-                       unsigned startIndex,
-                       EnvPtr env,
-                       map<string, LabelInfo> &labels);
-EnvPtr evalBinding(BindingPtr x, EnvPtr env);
-
-EValuePtr evalInvokePrimOp(PrimOpPtr x,
-                           const vector<ExprPtr> &args,
-                           EnvPtr env,
-                           EValuePtr out);
 
 
 
@@ -2328,6 +2242,19 @@ struct CValue : public Object {
           landingPad(NULL), destructor(NULL) {}
 };
 
+struct MultiCValue : public Object {
+    vector<CValuePtr> values;
+    MultiCValue()
+        : Object(MULTI_CVALUE) {}
+    MultiCValue(CValuePtr pv)
+        : Object(MULTI_CVALUE) {
+        values.push_back(pv);
+    }
+    MultiCValue(const vector<CValuePtr> &values)
+        : Object(MULTI_CVALUE), values(values) {}
+    unsigned size() { return values.size(); }
+};
+
 struct JumpTarget {
     llvm::BasicBlock *block;
     int stackMarker;
@@ -2336,16 +2263,18 @@ struct JumpTarget {
         : block(block), stackMarker(stackMarker) {}
 };
 
-struct CReturnValue {
+struct CReturn {
     bool byRef;
     TypePtr type;
-    CValuePtr cval;
-    CReturnValue(bool byRef, TypePtr type, CValuePtr cval)
-        : byRef(byRef), type(type), cval(cval) {}
+    CValuePtr value;
+    CReturn(bool byRef, TypePtr type, CValuePtr value)
+        : byRef(byRef), type(type), value(value) {}
 };
 
+typedef vector<CReturn> CReturns;
+
 struct CodegenContext : public Object {
-    vector<CReturnValue> returnValues;
+    CReturns returns;
     JumpTarget returnTarget;
     map<string, JumpTarget> labels;
     vector<JumpTarget> breaks;
@@ -2355,11 +2284,10 @@ struct CodegenContext : public Object {
     llvm::Value *exception;
 	int tryBlockStackMarker;
 
-    CodegenContext(const vector<CReturnValue> &returnValues,
-                   CValuePtr returnVal,
+    CodegenContext(const CReturns &returns,
                    const JumpTarget &returnTarget)
         : Object(DONT_CARE),
-          returnValues(returnValues), returnTarget(returnTarget),
+          returns(returns), returnTarget(returnTarget),
           catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}
 };
 

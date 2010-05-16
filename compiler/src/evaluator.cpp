@@ -1,5 +1,142 @@
 #include "clay.hpp"
 
+
+
+//
+// HEADER
+//
+
+void evalValueInit(EValuePtr dest);
+void evalValueDestroy(EValuePtr dest);
+void evalValueCopy(EValuePtr dest, EValuePtr src);
+void evalValueAssign(EValuePtr dest, EValuePtr src);
+bool evalToBoolFlag(EValuePtr a);
+
+int evalMarkStack();
+void evalDestroyStack(int marker);
+void evalPopStack(int marker);
+void evalDestroyAndPopStack(int marker);
+EValuePtr evalAllocValue(TypePtr t);
+
+void evalIntoValues(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
+void evalIntoOne(ExprPtr expr, EnvPtr env, EValuePtr out);
+EValuePtr evalOne(ExprPtr expr, EnvPtr env, EValuePtr out);
+EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
+void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
+
+void evalStaticObject(ObjectPtr x, MultiEValuePtr out);
+void evalValueHolder(ValueHolderPtr v, MultiEValuePtr out);
+
+void evalInvokeValue(EValuePtr x,
+                     const vector<ExprPtr> &args,
+                     EnvPtr env,
+                     MultiEValuePtr out);
+
+void evalInvokeVoid(ObjectPtr x,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env);
+void evalInvoke(ObjectPtr x,
+                const vector<ExprPtr> &args,
+                EnvPtr env,
+                MultiEValuePtr out);
+void evalInvokeCallable(ObjectPtr x,
+                        const vector<ExprPtr> &args,
+                        EnvPtr env,
+                        MultiEValuePtr out);
+bool evalInvokeSpecialCase(ObjectPtr x,
+                           const vector<bool> &isStaticFlags,
+                           const vector<ObjectPtr> &argsKey);
+void evalInvokeCode(InvokeEntryPtr entry,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env,
+                    MultiEValuePtr out);
+void evalInvokeInlined(InvokeEntryPtr entry,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env,
+                       MultiEValuePtr out);
+
+enum TerminationKind {
+    TERMINATE_RETURN,
+    TERMINATE_BREAK,
+    TERMINATE_CONTINUE,
+    TERMINATE_GOTO
+};
+
+struct Termination : public Object {
+    TerminationKind terminationKind;
+    LocationPtr location;
+    Termination(TerminationKind terminationKind, LocationPtr location)
+        : Object(DONT_CARE), terminationKind(terminationKind),
+          location(location) {}
+};
+typedef Pointer<Termination> TerminationPtr;
+
+struct TerminateReturn : Termination {
+    TerminateReturn(LocationPtr location)
+        : Termination(TERMINATE_RETURN, location) {}
+};
+
+struct TerminateBreak : Termination {
+    TerminateBreak(LocationPtr location)
+        : Termination(TERMINATE_BREAK, location) {}
+};
+
+struct TerminateContinue : Termination {
+    TerminateContinue(LocationPtr location)
+        : Termination(TERMINATE_CONTINUE, location) {}
+};
+
+struct TerminateGoto : Termination {
+    IdentifierPtr targetLabel;
+    TerminateGoto(IdentifierPtr targetLabel, LocationPtr location)
+        : Termination(TERMINATE_GOTO, location) {}
+};
+
+struct LabelInfo {
+    EnvPtr env;
+    int stackMarker;
+    int blockPosition;
+    LabelInfo() {}
+    LabelInfo(EnvPtr env, int stackMarker, int blockPosition)
+        : env(env), stackMarker(stackMarker), blockPosition(blockPosition) {}
+};
+
+struct EReturn {
+    bool byRef;
+    TypePtr type;
+    EValuePtr value;
+    EReturn(bool byRef, TypePtr type, EValuePtr value)
+        : byRef(byRef), type(type), value(value) {}
+};
+
+struct EvalContext : public Object {
+    vector<EReturn> returns;
+    EvalContext(const vector<EReturn> &returns)
+        : Object(DONT_CARE), returns(returns) {}
+};
+typedef Pointer<EvalContext> EvalContextPtr;
+
+TerminationPtr evalStatement(StatementPtr stmt,
+                             EnvPtr env,
+                             EvalContextPtr ctx);
+
+void evalCollectLabels(const vector<StatementPtr> &statements,
+                       unsigned startIndex,
+                       EnvPtr env,
+                       map<string, LabelInfo> &labels);
+EnvPtr evalBinding(BindingPtr x, EnvPtr env);
+
+void evalInvokePrimOp(PrimOpPtr x,
+                      const vector<ExprPtr> &args,
+                      EnvPtr env,
+                      MultiEValuePtr out);
+
+
+
+//
+// IMPLEMENTATION
+//
+
 ValueHolder::ValueHolder(TypePtr type)
     : Object(VALUE_HOLDER), type(type)
 {
@@ -127,7 +264,7 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
     for (unsigned i = 0; i < returnSpecs.size(); ++i) {
         ReturnSpecPtr x = returnSpecs[i];
         returnIsRef.push_back(x->byRef);
-        returnTypes.push_back(evaluateType(x->expr, env));
+        returnTypes.push_back(evaluateType(x->type, env));
     }
 }
 
@@ -145,7 +282,9 @@ ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env)
         }
         ValueHolderPtr v = new ValueHolder(pv->type);
         EValuePtr out = new EValue(pv->type, (char *)v->buf);
-        evalRootIntoValue(expr, env, pv, out);
+        int marker = evalMarkStack();
+        evalIntoOne(expr, env, out);
+        evalDestroyAndPopStack(marker);
         return v.ptr();
     }
     case MULTI_PVALUE : {
@@ -154,20 +293,6 @@ ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env)
     }
     default :
         return analysis;
-    }
-}
-
-TypePtr evaluateMaybeVoidType(ExprPtr expr, EnvPtr env)
-{
-    ObjectPtr v = evaluateStatic(expr, env);
-    switch (v->objKind) {
-    case VOID_TYPE :
-        return NULL;
-    case TYPE :
-        return (Type *)v.ptr();
-    default :
-        error(expr, "expecting a type");
-        return NULL;
     }
 }
 
@@ -333,7 +458,8 @@ static vector<EValuePtr> stackEValues;
 
 void evalValueInit(EValuePtr dest)
 {
-    evalInvoke(dest->type.ptr(), vector<ExprPtr>(), new Env(), dest);
+    evalInvoke(dest->type.ptr(), vector<ExprPtr>(), new Env(),
+               new MultiEValue(dest));
 }
 
 void evalValueDestroy(EValuePtr dest)
@@ -347,7 +473,7 @@ void evalValueCopy(EValuePtr dest, EValuePtr src)
 {
     vector<ExprPtr> args;
     args.push_back(new ObjectExpr(src.ptr()));
-    evalInvoke(dest->type.ptr(), args, new Env(), dest);
+    evalInvoke(dest->type.ptr(), args, new Env(), new MultiEValue(dest));
 }
 
 void evalValueAssign(EValuePtr dest, EValuePtr src)
@@ -419,63 +545,63 @@ EValuePtr evalAllocValue(TypePtr t)
 // evaluate expressions
 //
 
-void evalRootIntoValue(ExprPtr expr,
-                       EnvPtr env,
-                       PValuePtr pv,
-                       EValuePtr out)
+void evalIntoValues(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 {
-    int marker = evalMarkStack();
-    evalIntoValue(expr, env, pv, out);
-    evalDestroyAndPopStack(marker);
-}
-
-EValuePtr evalRootValue(ExprPtr expr, EnvPtr env, EValuePtr out)
-{
-    int marker = evalMarkStack();
-    EValuePtr ev = evalValue(expr, env, out);
-    evalDestroyAndPopStack(marker);
-    return ev;
-}
-
-void evalIntoValue(ExprPtr expr, EnvPtr env, PValuePtr pv, EValuePtr out)
-{
-    assert(out.ptr());
-    if (pv->isTemp && (pv->type == out->type)) {
-        evalValue(expr, env, out);
+    MultiPValuePtr mpv = analyzeMultiValue(expr, env);
+    if (mpv->size() != out->size())
+        arityError(expr, out->size(), mpv->size());
+    MultiEValuePtr out2 = new MultiEValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        if (mpv->values[i]->isTemp)
+            out2->values.push_back(out->values[i]);
+        else
+            out2->values.push_back(NULL);
     }
-    else {
-        EValuePtr ref = evalAsRef(expr, env, pv);
-        evalValueCopy(out, ref);
+    evalExpr(expr, env, out2);
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        if (!mpv->values[i]->isTemp) {
+            assert(out->values[i].ptr());
+            assert(out2->values[i].ptr());
+            evalValueCopy(out->values[i], out2->values[i]);
+        }
     }
 }
 
-EValuePtr evalAsRef(ExprPtr expr, EnvPtr env, PValuePtr pv)
+void evalIntoOne(ExprPtr expr, EnvPtr env, EValuePtr out)
 {
-    EValuePtr result;
+    evalIntoValues(expr, env, new MultiEValue(out));
+}
+
+EValuePtr evalOne(ExprPtr expr, EnvPtr env, EValuePtr out)
+{
+    PValuePtr pv = analyzeValue(expr, env);
     if (pv->isTemp) {
-        result = evalAllocValue(pv->type);
-        evalValue(expr, env, result);
+        assert(out.ptr());
+        assert(out->type == pv->type);
+        evalIntoOne(expr, env, out);
+        return out;
     }
     else {
-        result = evalValue(expr, env, NULL);
+        assert(!out);
+        MultiEValuePtr mev = new MultiEValue(NULL);
+        evalExpr(expr, env, mev);
+        assert(mev->values[0].ptr());
+        return mev->values[0];
     }
-    return result;
 }
 
-EValuePtr evalValue(ExprPtr expr, EnvPtr env, EValuePtr out)
+EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env)
 {
-    EValuePtr result = evalMaybeVoid(expr, env, out);
-    if (!result)
-        error(expr, "expected non-void value");
-    return result;
+    PValuePtr pv = analyzeValue(expr, env);
+    EValuePtr out;
+    if (pv->isTemp)
+        out = evalAllocValue(pv->type);
+    else
+        out = NULL;
+    return evalOne(expr, env, out);
 }
 
-EValuePtr evalMaybeVoid(ExprPtr expr, EnvPtr env, EValuePtr out)
-{
-    return evalExpr(expr, env, out);
-}
-
-EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
+void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 {
     LocationContext loc(expr->location);
 
@@ -488,14 +614,15 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
         assert(x->objKind == VALUE_HOLDER);
         ValueHolder *y = (ValueHolder *)x.ptr();
         evalValueHolder(y, out);
-        return out;
+        break;
     }
 
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarCharLiteral(x->value);
-        return evalExpr(x->desugared, env, out);
+        evalExpr(x->desugared, env, out);
+        break;
     }
 
     case STRING_LITERAL : {
@@ -504,19 +631,18 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
         EValuePtr ev = new EValue(type, const_cast<char *>(x->value.data()));
         vector<ExprPtr> args;
         args.push_back(new ObjectExpr(ev.ptr()));
-        return evalInvoke(kernelName("String"), args, env, out);
+        evalInvoke(kernelName("String"), args, env, out);
+        break;
     }
 
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
         if (y->objKind == EXPRESSION)
-            return evalExpr((Expr *)y.ptr(), env, out);
-        return evalStaticObject(y, out);
-    }
-
-    case RETURNED : {
-        error(expr, "invalid use of 'returned' keyword");
+            evalExpr((Expr *)y.ptr(), env, out);
+        else
+            evalStaticObject(y, out);
+        break;
     }
 
     case TUPLE : {
@@ -524,20 +650,23 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
         vector<ExprPtr> args2;
         bool expanded = expandVarArgs(x->args, env, args2);
         if (!expanded && (args2.size() == 1))
-            return evalExpr(args2[0], env, out);
-        return evalInvoke(primName("tuple"), args2, env, out);
+            evalExpr(args2[0], env, out);
+        else
+            evalInvoke(primName("tuple"), args2, env, out);
+        break;
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
         vector<ExprPtr> args2;
         expandVarArgs(x->args, env, args2);
-        return evalInvoke(primName("array"), args2, env, out);
+        evalInvoke(primName("array"), args2, env, out);
+        break;
     }
 
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
-        ObjectPtr y = analyze(x->expr, env);
+        ObjectPtr y = analyzeOne(x->expr, env);
         assert(y.ptr());
         vector<ExprPtr> args2;
         expandVarArgs(x->args, env, args2);
@@ -546,22 +675,27 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
             if (z->type->typeKind == STATIC_TYPE) {
                 StaticType *t = (StaticType *)z->type.ptr();
                 ExprPtr inner = new Indexing(new ObjectExpr(t->obj), args2);
-                return evalExpr(inner, env, out);
+                evalExpr(inner, env, out);
             }
-            EValuePtr ev = evalAsRef(x->expr, env, z);
-            vector<ExprPtr> args3;
-            args3.push_back(new ObjectExpr(ev.ptr()));
-            args3.insert(args3.end(), args2.begin(), args2.end());
-            ObjectPtr op = kernelName("index");
-            return evalInvoke(op, args3, env, out);
+            else {
+                EValuePtr ev = evalOneAsRef(x->expr, env);
+                vector<ExprPtr> args3;
+                args3.push_back(new ObjectExpr(ev.ptr()));
+                args3.insert(args3.end(), args2.begin(), args2.end());
+                ObjectPtr op = kernelName("index");
+                evalInvoke(op, args3, env, out);
+            }
         }
-        ObjectPtr obj = analyzeIndexing(y, args2, env);
-        return evalStaticObject(obj, out);
+        else {
+            ObjectPtr obj = analyzeIndexing(y, args2, env);
+            evalStaticObject(obj, out);
+        }
+        break;
     }
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        ObjectPtr y = analyze(x->expr, env);
+        ObjectPtr y = analyzeOne(x->expr, env);
         assert(y.ptr());
         vector<ExprPtr> args2;
         expandVarArgs(x->args, env, args2);
@@ -569,38 +703,47 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
             PValue *z = (PValue *)y.ptr();
             if (z->type->typeKind == STATIC_TYPE) {
                 StaticType *t = (StaticType *)z->type.ptr();
-                return evalInvoke(t->obj, args2, env, out);
+                evalInvoke(t->obj, args2, env, out);
             }
-            EValuePtr ev = evalAsRef(x->expr, env, z);
-            return evalInvokeValue(ev, args2, env, out);
+            else {
+                EValuePtr ev = evalOneAsRef(x->expr, env);
+                evalInvokeValue(ev, args2, env, out);
+            }
         }
-        return evalInvoke(y, args2, env, out);
+        else {
+            evalInvoke(y, args2, env, out);
+        }
+        break;
     }
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        ObjectPtr y = analyze(x->expr, env);
+        ObjectPtr y = analyzeOne(x->expr, env);
         if (y->objKind == PVALUE) {
             PValue *z = (PValue *)y.ptr();
             if (z->type->typeKind == STATIC_TYPE) {
                 StaticType *t = (StaticType *)z->type.ptr();
                 ExprPtr inner = new FieldRef(new ObjectExpr(t->obj), x->name);
-                return evalExpr(inner, env, out);
+                evalExpr(inner, env, out);
             }
-            EValuePtr ev = evalAsRef(x->expr, env, z);
-            vector<ExprPtr> args2;
-            args2.push_back(new ObjectExpr(ev.ptr()));
-            args2.push_back(new ObjectExpr(x->name.ptr()));
-            ObjectPtr prim = primName("recordFieldRefByName");
-            return evalInvoke(prim, args2, env, out);
+            else {
+                EValuePtr ev = evalOneAsRef(x->expr, env);
+                vector<ExprPtr> args2;
+                args2.push_back(new ObjectExpr(ev.ptr()));
+                args2.push_back(new ObjectExpr(x->name.ptr()));
+                ObjectPtr prim = primName("recordFieldRefByName");
+                evalInvoke(prim, args2, env, out);
+            }
         }
-        if (y->objKind == MODULE_HOLDER) {
+        else if (y->objKind == MODULE_HOLDER) {
             ModuleHolderPtr z = (ModuleHolder *)y.ptr();
             ObjectPtr obj = lookupModuleMember(z, x->name);
-            return evalStaticObject(obj, out);
+            evalStaticObject(obj, out);
         }
-        error("invalid member access operation");
-        return NULL;
+        else {
+            error("invalid member access operation");
+        }
+        break;
     }
 
     case TUPLE_REF : {
@@ -609,117 +752,120 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
         args.push_back(x->expr);
         args.push_back(new ObjectExpr(sizeTToValueHolder(x->index).ptr()));
         ObjectPtr prim = primName("tupleRef");
-        return evalInvoke(prim, args, env, out);
+        evalInvoke(prim, args, env, out);
+        break;
     }
 
     case UNARY_OP : {
         UnaryOp *x = (UnaryOp *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarUnaryOp(x);
-        return evalExpr(x->desugared, env, out);
+        evalExpr(x->desugared, env, out);
+        break;
     }
 
     case BINARY_OP : {
         BinaryOp *x = (BinaryOp *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarBinaryOp(x);
-        return evalExpr(x->desugared, env, out);
+        evalExpr(x->desugared, env, out);
+        break;
     }
 
     case AND : {
         And *x = (And *)expr.ptr();
-        PValuePtr pv1 = analyzeValue(x->expr1, env);
-        if (pv1->isTemp) {
-            EValuePtr ev1 = evalValue(x->expr1, env, out);
-            if (!evalToBoolFlag(ev1))
-                return ev1;
-            evalValueDestroy(ev1);
-            PValuePtr pv2 = analyzeValue(x->expr2, env);
-            if (pv2->type != pv1->type)
-                error("type mismatch in 'and' expression");
-            evalIntoValue(x->expr2, env, pv2, out);
-            return out;
+        PValuePtr pv = analyzeValue(expr, env);
+        assert(out->size() == 1);
+        if (pv->isTemp) {
+            assert(out->values[0].ptr());
+            EValuePtr ev1 = out->values[0];
+            evalIntoOne(x->expr1, env, ev1);
+            if (evalToBoolFlag(ev1)) {
+                evalValueDestroy(ev1);
+                PValuePtr pv2 = analyzeValue(x->expr2, env);
+                if (pv2->type != pv->type)
+                    error("type mismatch in 'and' expression");
+                evalIntoOne(x->expr2, env, ev1);
+            }
         }
         else {
-            EValuePtr ev1 = evalValue(x->expr1, env, NULL);
-            if (!evalToBoolFlag(ev1)) {
-                if (out.ptr()) {
-                    assert(out->type == ev1->type);
-                    evalValueCopy(out, ev1);
-                    return out;
-                }
-                return ev1;
+            assert(!out->values[0]);
+            EValuePtr ev = evalOne(x->expr1, env, NULL);
+            if (evalToBoolFlag(ev)) {
+                PValuePtr pv2 = analyzeValue(x->expr2, env);
+                if (pv2->type != pv->type)
+                    error("type mismatch in 'and' expression");
+                ev = evalOne(x->expr2, env, NULL);
             }
-            PValuePtr pv2 = analyzeValue(x->expr2, env);
-            if (pv2->type != pv1->type)
-                error("type mismatch in 'and' expression");
-            return evalValue(x->expr2, env, out);
+            out->values[0] = ev;
         }
-        assert(false);
+        break;
     }
 
     case OR : {
         Or *x = (Or *)expr.ptr();
-        PValuePtr pv1 = analyzeValue(x->expr1, env);
-        if (pv1->isTemp) {
-            EValuePtr ev1 = evalValue(x->expr1, env, out);
-            if (evalToBoolFlag(ev1))
-                return ev1;
-            evalValueDestroy(ev1);
-            PValuePtr pv2 = analyzeValue(x->expr2, env);
-            if (pv2->type != pv1->type)
-                error("type mismatch in 'or' expression");
-            evalIntoValue(x->expr2, env, pv2, out);
-            return out;
+        PValuePtr pv = analyzeValue(expr, env);
+        assert(out->size() == 1);
+        if (pv->isTemp) {
+            assert(out->values[0].ptr());
+            EValuePtr ev1 = out->values[0];
+            evalIntoOne(x->expr1, env, ev1);
+            if (!evalToBoolFlag(ev1)) {
+                evalValueDestroy(ev1);
+                PValuePtr pv2 = analyzeValue(x->expr2, env);
+                if (pv2->type != pv->type)
+                    error("type mismatch in 'or' expression");
+                evalIntoOne(x->expr2, env, ev1);
+            }
         }
         else {
-            EValuePtr ev1 = evalValue(x->expr1, env, NULL);
-            if (evalToBoolFlag(ev1)) {
-                if (out.ptr()) {
-                    assert(out->type == ev1->type);
-                    evalValueCopy(out, ev1);
-                    return out;
-                }
-                return ev1;
+            assert(!out->values[0]);
+            EValuePtr ev = evalOne(x->expr1, env, NULL);
+            if (!evalToBoolFlag(ev)) {
+                PValuePtr pv2 = analyzeValue(x->expr2, env);
+                if (pv2->type != pv->type)
+                    error("type mismatch in 'or' expression");
+                ev = evalOne(x->expr2, env, NULL);
             }
-            PValuePtr pv2 = analyzeValue(x->expr2, env);
-            if (pv2->type != pv1->type)
-                error("type mismatch in 'or' expression");
-            return evalValue(x->expr2, env, out);
+            out->values[0] = ev;
         }
-        assert(false);
+        break;
     }
 
     case LAMBDA : {
         Lambda *x = (Lambda *)expr.ptr();
         if (!x->initialized)
             initializeLambda(x, env);
-        return evalExpr(x->converted, env, out);
+        evalExpr(x->converted, env, out);
+        break;
     }
 
     case VAR_ARGS_REF :
         error("invalid use of ...");
+        break;
 
     case NEW : {
         New *x = (New *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarNew(x);
-        return evalExpr(x->desugared, env, out);
+        evalExpr(x->desugared, env, out);
+        break;
     }
 
     case SC_EXPR : {
         SCExpr *x = (SCExpr *)expr.ptr();
-        return evalExpr(x->expr, x->env, out);
+        evalExpr(x->expr, x->env, out);
+        break;
     }
 
     case OBJECT_EXPR : {
         ObjectExpr *x = (ObjectExpr *)expr.ptr();
-        return evalStaticObject(x->obj, out);
+        evalStaticObject(x->obj, out);
+        break;
     }
 
     default :
         assert(false);
-        return NULL;
 
     }
 }
@@ -730,70 +876,81 @@ EValuePtr evalExpr(ExprPtr expr, EnvPtr env, EValuePtr out)
 // evalStaticObject
 //
 
-EValuePtr evalStaticObject(ObjectPtr x, EValuePtr out)
+void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
 {
     switch (x->objKind) {
     case ENUM_MEMBER : {
         EnumMember *y = (EnumMember *)x.ptr();
-        assert(out.ptr());
-        assert(out->type == y->type);
-        *((int *)out->addr) = y->index;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == y->type);
+        *((int *)out0->addr) = y->index;
+        break;
     }
     case GLOBAL_VARIABLE : {
         GlobalVariable *y = (GlobalVariable *)x.ptr();
         if (!y->llGlobal)
             codegenGlobalVariable(y);
         void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
-        assert(!out);
-        return new EValue(y->type, (char *)ptr);
+        assert(out->size() == 1);
+        assert(!out->values[0]);
+        out->values[0] = new EValue(y->type, (char *)ptr);
+        break;
     }
     case EXTERNAL_VARIABLE : {
         ExternalVariable *y = (ExternalVariable *)x.ptr();
         if (!y->llGlobal)
             codegenExternalVariable(y);
         void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
-        assert(!out);
-        return new EValue(y->type2, (char *)ptr);
+        assert(out->size() == 1);
+        assert(!out->values[0]);
+        out->values[0] = new EValue(y->type2, (char *)ptr);
+        break;
     }
     case EXTERNAL_PROCEDURE : {
         ExternalProcedure *y = (ExternalProcedure *)x.ptr();
         if (!y->llvmFunc)
             codegenExternal(y);
         void *funcPtr = llvmEngine->getPointerToGlobal(y->llvmFunc);
-        assert(out.ptr());
-        assert(out->type == y->ptrType);
-        *((void **)out->addr) = funcPtr;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == y->ptrType);
+        *((void **)out0->addr) = funcPtr;
+        break;
     }
     case STATIC_GLOBAL : {
         StaticGlobal *y = (StaticGlobal *)x.ptr();
-        return evalExpr(y->expr, y->env, out);
+        evalExpr(y->expr, y->env, out);
+        break;
     }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
         evalValueHolder(y, out);
-        return out;
+        break;
     }
     case EVALUE : {
         EValue *y = (EValue *)x.ptr();
-        assert(!out);
-        return y;
+        assert(out->size() == 1);
+        assert(!out->values[0]);
+        out->values[0] = y;
+        break;
     }
     case TYPE :
-    case VOID_TYPE :
     case PRIM_OP :
     case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
     case MODULE_HOLDER :
     case IDENTIFIER :
-        assert(out.ptr());
-        assert(out->type == staticType(x));
-        return out;
+        assert(out->size() == 1);
+        assert(out->values[0].ptr());
+        assert(out->values[0]->type == staticType(x));
+        break;
     default :
         error("invalid static object");
-        return NULL;
+        break;
     }
 }
 
@@ -803,16 +960,18 @@ EValuePtr evalStaticObject(ObjectPtr x, EValuePtr out)
 // evalValueHolder
 //
 
-void evalValueHolder(ValueHolderPtr v, EValuePtr out)
+void evalValueHolder(ValueHolderPtr v, MultiEValuePtr out)
 {
-    assert(out.ptr());
-    assert(v->type == out->type);
+    assert(out->size() == 1);
+    EValuePtr out0 = out->values[0];
+    assert(out0.ptr());
+    assert(v->type == out0->type);
 
     switch (v->type->typeKind) {
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
-        memcpy(out->addr, v->buf, typeSize(v->type));
+        memcpy(out0->addr, v->buf, typeSize(v->type));
         break;
     default :
         assert(false);
@@ -825,29 +984,31 @@ void evalValueHolder(ValueHolderPtr v, EValuePtr out)
 // evalInvokeValue
 //
 
-EValuePtr evalInvokeValue(EValuePtr x,
-                          const vector<ExprPtr> &args,
-                          EnvPtr env,
-                          EValuePtr out)
+void evalInvokeValue(EValuePtr x,
+                     const vector<ExprPtr> &args,
+                     EnvPtr env,
+                     MultiEValuePtr out)
 {
     switch (x->type->typeKind) {
 
     case CODE_POINTER_TYPE : {
         // TODO: implement it
         error("invoking a CodePointer not yet supported in evaluator");
-        return out;
+        break;
     }
 
     case CCODE_POINTER_TYPE : {
         // TODO: implement it
         error("invoking a CCodePointer not yet supported in evaluator");
+        break;
     }
 
     default : {
         vector<ExprPtr> args2;
         args2.push_back(new ObjectExpr(x.ptr()));
         args2.insert(args2.end(), args.begin(), args.end());
-        return evalInvoke(kernelName("call"), args2, env, out);
+        evalInvoke(kernelName("call"), args2, env, out);
+        break;
     }
 
     }
@@ -863,28 +1024,27 @@ void evalInvokeVoid(ObjectPtr x,
                     const vector<ExprPtr> &args,
                     EnvPtr env)
 {
-    EValuePtr result = evalInvoke(x, args, env, NULL);
-    if (result.ptr())
-        error("void expression expected");
+    evalInvoke(x, args, env, new MultiEValue());
 }
 
-EValuePtr evalInvoke(ObjectPtr x,
-                     const vector<ExprPtr> &args,
-                     EnvPtr env,
-                     EValuePtr out)
+void evalInvoke(ObjectPtr x,
+                const vector<ExprPtr> &args,
+                EnvPtr env,
+                MultiEValuePtr out)
 {
     switch (x->objKind) {
     case TYPE :
     case RECORD :
     case PROCEDURE :
     case OVERLOADABLE :
-        return evalInvokeCallable(x, args, env, out);
+        evalInvokeCallable(x, args, env, out);
+        break;
     case PRIM_OP :
-        return evalInvokePrimOp((PrimOp *)x.ptr(), args, env, out);
+        evalInvokePrimOp((PrimOp *)x.ptr(), args, env, out);
+        break;
     default :
         error("invalid call operation");
-        return NULL;
-
+        break;
     }
 }
 
@@ -894,10 +1054,10 @@ EValuePtr evalInvoke(ObjectPtr x,
 // evalInvokeCallable
 //
 
-EValuePtr evalInvokeCallable(ObjectPtr x,
-                             const vector<ExprPtr> &args,
-                             EnvPtr env,
-                             EValuePtr out)
+void evalInvokeCallable(ObjectPtr x,
+                        const vector<ExprPtr> &args,
+                        EnvPtr env,
+                        MultiEValuePtr out)
 {
     const vector<bool> &isStaticFlags =
         lookupIsStaticFlags(x, args.size());
@@ -909,14 +1069,15 @@ EValuePtr evalInvokeCallable(ObjectPtr x,
                                  argLocations);
     assert(result);
     if (evalInvokeSpecialCase(x, isStaticFlags, argsKey))
-        return out;
+        return;
     InvokeStackContext invokeStackContext(x, argsKey);
     InvokeEntryPtr entry = codegenCallable(x, isStaticFlags,
                                            argsKey, argsTempness,
                                            argLocations);
     if (entry->inlined)
-        return evalInvokeInlined(entry, args, env, out);
-    return evalInvokeCode(entry, args, env, out);
+        evalInvokeInlined(entry, args, env, out);
+    else
+        evalInvokeCode(entry, args, env, out);
 }
 
 
@@ -958,10 +1119,10 @@ bool evalInvokeSpecialCase(ObjectPtr x,
 // evalInvokeCode
 //
 
-EValuePtr evalInvokeCode(InvokeEntryPtr entry,
-                         const vector<ExprPtr> &args,
-                         EnvPtr env,
-                         EValuePtr out)
+void evalInvokeCode(InvokeEntryPtr entry,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env,
+                    MultiEValuePtr out)
 {
     vector<llvm::GenericValue> gvArgs;
     for (unsigned i = 0; i < args.size(); ++i) {
@@ -969,30 +1130,26 @@ EValuePtr evalInvokeCode(InvokeEntryPtr entry,
             continue;
         assert(entry->argsKey[i]->objKind == TYPE);
         TypePtr argType = (Type *)entry->argsKey[i].ptr();
-        PValuePtr parg = analyzeValue(args[i], env);
-        assert(parg->type == argType);
-        EValuePtr earg = evalAsRef(args[i], env, parg);
+        EValuePtr earg = evalOneAsRef(args[i], env);
+        assert(earg->type == argType);
         gvArgs.push_back(llvm::GenericValue(earg->addr));
     }
-    if (!entry->returnType) {
-        assert(!out);
-        llvmEngine->runFunction(entry->llvmFunc, gvArgs);
-        return NULL;
+    assert(out->size() == entry->returnTypes.size());
+    for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
+        TypePtr t = entry->returnTypes[i];
+        if (entry->returnIsRef[i]) {
+            assert(!out->values[i]);
+            EValuePtr eret = new EValue(t, NULL);
+            gvArgs.push_back(llvm::GenericValue(&eret->addr));
+            out->values[i] = eret;
+        }
+        else {
+            EValuePtr eret = out->values[i];
+            assert(eret.ptr());
+            gvArgs.push_back(llvm::GenericValue(eret->addr));
+        }
     }
-    else if (entry->code->returnByRef) {
-        assert(!out);
-        llvm::GenericValue returnGV =
-            llvmEngine->runFunction(entry->llvmFunc, gvArgs);
-        void *ptr = returnGV.PointerVal;
-        return new EValue(entry->returnType, (char *)ptr);
-    }
-    else {
-        assert(out.ptr());
-        assert(out->type == entry->returnType);
-        gvArgs.push_back(llvm::GenericValue(out->addr));
-        llvmEngine->runFunction(entry->llvmFunc, gvArgs);
-        return out;
-    }
+    llvmEngine->runFunction(entry->llvmFunc, gvArgs);
 }
 
 
@@ -1001,10 +1158,10 @@ EValuePtr evalInvokeCode(InvokeEntryPtr entry,
 // evalInvokeInlined
 //
 
-EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
-                            const vector<ExprPtr> &args,
-                            EnvPtr env,
-                            EValuePtr out)
+void evalInvokeInlined(InvokeEntryPtr entry,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env,
+                       MultiEValuePtr out)
 {
     assert(entry->inlined);
 
@@ -1033,35 +1190,44 @@ EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
 
     ObjectPtr analysis = analyzeInvokeInlined(entry, args, env);
     assert(analysis.ptr());
-    TypePtr returnType;
-    if (analysis->objKind == PVALUE) {
-        PValue *pv = (PValue *)analysis.ptr();
-        returnType = pv->type;
+    MultiPValuePtr mpv;
+    if (!analysisToMultiPValue(analysis, mpv))
+        error("invalid value");
+    assert(mpv->size() == out->size());
+
+    const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+    if (!returnSpecs.empty()) {
+        assert(returnSpecs.size() == mpv->size());
     }
 
-    EValuePtr returnVal;
-    void *returnRefVal;
-    if (returnType.ptr()) {
-        if (code->returnByRef) {
-            assert(!out);
-            returnVal = new EValue(pointerType(returnType),
-                                   (char *)(&returnRefVal));
+    vector<EReturn> returns;
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        PValuePtr pv = mpv->values[i];
+        EValuePtr ev = out->values[i];
+        ReturnSpecPtr rspec;
+        if (!returnSpecs.empty())
+            rspec = returnSpecs[i];
+        if (pv->isTemp) {
+            assert(ev.ptr());
+            assert(ev->type == pv->type);
+            returns.push_back(EReturn(false, pv->type, ev));
+            if (rspec.ptr() && rspec->name.ptr()) {
+                addLocal(bodyEnv, rspec->name, ev.ptr());
+            }
         }
         else {
-            assert(out.ptr());
-            assert(out->type == returnType);
-            returnVal = out;
+            assert(!ev);
+            EValuePtr ev = new EValue(pv->type, NULL);
+            out->values[i] = ev;
+            EValuePtr evPtr = new EValue(pointerType(pv->type),
+                                         (char *)(&(ev->addr)));
+            returns.push_back(EReturn(true, pv->type, evPtr));
+            if (rspec.ptr()) {
+                assert(!rspec->name);
+            }
         }
     }
-    else {
-        assert(!out);
-    }
-    ObjectPtr rinfo = new ReturnedInfo(code->returnByRef,
-                                       returnType, returnVal);
-    addLocal(bodyEnv, new Identifier("%returned"), rinfo);
-
-    EvalContextPtr ctx = new EvalContext(code->returnByRef,
-                                         returnType, returnVal);
+    EvalContextPtr ctx = new EvalContext(returns);
 
     TerminationPtr term = evalStatement(entry->code->body, bodyEnv, ctx);
     if (term.ptr()) {
@@ -1078,10 +1244,6 @@ EValuePtr evalInvokeInlined(InvokeEntryPtr entry,
             assert(false);
         }
     }
-
-    if (returnType.ptr() && entry->code->returnByRef)
-        return new EValue(returnType.ptr(), (char *)returnRefVal);
-    return out;
 }
 
 
@@ -1145,8 +1307,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
         int marker = evalMarkStack();
-        EValuePtr evLeft = evalValue(x->left, env, NULL);
-        EValuePtr evRight = evalAsRef(x->right, env, pvRight);
+        EValuePtr evLeft = evalOneAsRef(x->left, env);
+        EValuePtr evRight = evalOneAsRef(x->right, env);
         evalValueAssign(evLeft, evRight);
         evalDestroyAndPopStack(marker);
         return NULL;
@@ -1159,9 +1321,9 @@ TerminationPtr evalStatement(StatementPtr stmt,
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
         int marker = evalMarkStack();
-        EValuePtr evLeft = evalValue(x->left, env, NULL);
-        EValuePtr evRight = evalAsRef(x->right, env, pvRight);
-        evalValueAssign(evLeft, evRight);
+        EValuePtr evLeft = evalOneAsRef(x->left, env);
+        EValuePtr evRight = evalOneAsRef(x->right, env);
+        evalValueCopy(evLeft, evRight);
         evalDestroyAndPopStack(marker);
         return NULL;
     }
@@ -1184,34 +1346,36 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        if (!x->expr) {
-            if (ctx->returnType.ptr())
-                error("non-void return expected");
-        }
-        else {
-            if (!ctx->returnType)
-                error("void return expected");
-            PValuePtr pv = analyzeValue(x->expr, env);
-            if (pv->type != ctx->returnType)
-                error("type mismatch in return");
-            if (ctx->returnByRef) {
-                if (pv->isTemp)
-                    error("cannot return a temporary by reference");
-                EValuePtr ev = evalRootValue(x->expr, env, NULL);
-                *((void **)ctx->returnVal->addr) = (void *)ev->addr;
+        if (x->exprs.size() != ctx->returns.size())
+            arityError(ctx->returns.size(), x->exprs.size());
+        int marker = evalMarkStack();
+        for (unsigned i = 0; i < x->exprs.size(); ++i) {
+            EReturn &y = ctx->returns[i];
+            if (y.byRef) {
+                if (!x->isRef[i])
+                    error(x->exprs[i], "return by reference expected");
+                EValuePtr eret = evalOneAsRef(x->exprs[i], env);
+                if (eret->type != y.type)
+                    error(x->exprs[i], "type mismatch");
+                *((char **)y.value->addr) = eret->addr;
             }
             else {
-                evalRootIntoValue(x->expr, env, pv, ctx->returnVal);
+                if (x->isRef[i])
+                    error(x->exprs[i], "return by value expected");
+                PValuePtr pret = analyzeValue(x->exprs[i], env);
+                if (pret->type != y.type)
+                    error(x->exprs[i], "type mismatch");
+                evalIntoOne(x->exprs[i], env, y.value);
             }
         }
+        evalDestroyAndPopStack(marker);
         return new TerminateReturn(x->location);
     }
 
     case IF : {
         If *x = (If *)stmt.ptr();
-        PValuePtr pv = analyzeValue(x->condition, env);
         int marker = evalMarkStack();
-        EValuePtr ev = evalAsRef(x->condition, env, pv);
+        EValuePtr ev = evalOneAsRef(x->condition, env);
         bool flag = evalToBoolFlag(ev);
         evalDestroyAndPopStack(marker);
         if (flag)
@@ -1223,28 +1387,26 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case EXPR_STATEMENT : {
         ExprStatement *x = (ExprStatement *)stmt.ptr();
-        ObjectPtr a = analyzeMaybeVoidValue(x->expr, env);
         int marker = evalMarkStack();
-        if (a->objKind == VOID_VALUE) {
-            evalMaybeVoid(x->expr, env, NULL);
+        MultiPValuePtr mpv = analyzeMultiValue(x->expr, env);
+        MultiEValuePtr mev = new MultiEValue();
+        for (unsigned i = 0; i < mpv->size(); ++i) {
+            PValuePtr pv = mpv->values[i];
+            if (pv->isTemp)
+                mev->values.push_back(evalAllocValue(pv->type));
+            else
+                mev->values.push_back(NULL);
         }
-        else if (a->objKind == PVALUE) {
-            PValuePtr pv = (PValue *)a.ptr();
-            evalAsRef(x->expr, env, pv);
-        }
-        else {
-            assert(false);
-        }
+        evalExpr(x->expr, env, mev);
         evalDestroyAndPopStack(marker);
         return NULL;
     }
 
     case WHILE : {
         While *x = (While *)stmt.ptr();
-        PValuePtr pv = analyzeValue(x->condition, env);
         while (true) {
             int marker = evalMarkStack();
-            EValuePtr ev = evalAsRef(x->condition, env, pv);
+            EValuePtr ev = evalOneAsRef(x->condition, env);
             bool flag = evalToBoolFlag(ev);
             evalDestroyAndPopStack(marker);
             if (!flag) break;
@@ -1316,39 +1478,64 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
 
     case VAR : {
-        PValuePtr pv = analyzeValue(x->expr, env);
-        EValuePtr ev = evalAllocValue(pv->type);
-        evalRootIntoValue(x->expr, env, pv, ev);
+        MultiPValuePtr mpv = analyzeMultiValue(x->expr, env);
+        if (mpv->size() != x->names.size())
+            arityError(x->names.size(), mpv->size());
+        MultiEValuePtr mev = new MultiEValue();
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            EValuePtr ev = evalAllocValue(mpv->values[i]->type);
+            mev->values.push_back(ev);
+        }
+        int marker = evalMarkStack();
+        evalIntoValues(x->expr, env, mev);
+        evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
-        addLocal(env2, x->name, ev.ptr());
+        for (unsigned i = 0; i < x->names.size(); ++i)
+            addLocal(env2, x->names[i], mev->values[i].ptr());
         return env2;
     }
 
     case REF : {
-        PValuePtr pv = analyzeValue(x->expr, env);
-        EValuePtr ev;
-        if (pv->isTemp) {
-            ev = evalAllocValue(ev->type);
-            evalRootValue(x->expr, env, ev);
+        MultiPValuePtr mpv = analyzeMultiValue(x->expr, env);
+        if (mpv->size() != x->names.size())
+            arityError(x->names.size(), mpv->size());
+        MultiEValuePtr mev = new MultiEValue();
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            PValuePtr pv = mpv->values[i];
+            if (pv->isTemp) {
+                EValuePtr ev = evalAllocValue(pv->type);
+                mev->values.push_back(ev);
+            }
+            else {
+                mev->values.push_back(NULL);
+            }
         }
-        else {
-            ev = evalRootValue(x->expr, env, NULL);
-        }
+        int marker = evalMarkStack();
+        evalExpr(x->expr, env, mev);
+        evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
-        addLocal(env2, x->name, ev.ptr());
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            EValuePtr ev = mev->values[i].ptr();
+            assert(ev.ptr());
+            addLocal(env2, x->names[i], ev.ptr());
+        }
         return env2;
     }
 
     case STATIC : {
-        ObjectPtr v = evaluateStatic(x->expr, env);
+        if (x->names.size() != 1)
+            error("static multiple values are not supported");
+        ObjectPtr right = evaluateStatic(x->expr, env);
         EnvPtr env2 = new Env(env);
-        addLocal(env2, x->name, v.ptr());
+        addLocal(env2, x->names[0], right.ptr());
         return env2;
     }
 
-    default :
+    default : {
         assert(false);
         return NULL;
+    }
+
     }
 }
 
@@ -1360,63 +1547,63 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
 static EValuePtr _evalNumeric(ExprPtr expr, EnvPtr env, TypePtr &type)
 {
-    PValuePtr pv = analyzeValue(expr, env);
+    EValuePtr ev = evalOneAsRef(expr, env);
     if (type.ptr()) {
-        if (pv->type != type)
+        if (ev->type != type)
             error(expr, "argument type mismatch");
     }
     else {
-        switch (pv->type->typeKind) {
+        switch (ev->type->typeKind) {
         case INTEGER_TYPE :
         case FLOAT_TYPE :
             break;
         default :
             error(expr, "expecting numeric type");
         }
-        type = pv->type;
+        type = ev->type;
     }
-    return evalAsRef(expr, env, pv);
+    return ev;
 }
 
 static EValuePtr _evalInteger(ExprPtr expr, EnvPtr env, TypePtr &type)
 {
-    PValuePtr pv = analyzeValue(expr, env);
+    EValuePtr ev = evalOneAsRef(expr, env);
     if (type.ptr()) {
-        if (pv->type != type)
+        if (ev->type != type)
             error(expr, "argument type mismatch");
     }
     else {
-        if (pv->type->typeKind != INTEGER_TYPE)
+        if (ev->type->typeKind != INTEGER_TYPE)
             error(expr, "expecting integer type");
-        type = pv->type;
+        type = ev->type;
     }
-    return evalAsRef(expr, env, pv);
+    return ev;
 }
 
 static EValuePtr _evalPointer(ExprPtr expr, EnvPtr env, PointerTypePtr &type)
 {
-    PValuePtr pv = analyzeValue(expr, env);
+    EValuePtr ev = evalOneAsRef(expr, env);
     if (type.ptr()) {
-        if (pv->type != (Type *)type.ptr())
+        if (ev->type != (Type *)type.ptr())
             error(expr, "argument type mismatch");
     }
     else {
-        if (pv->type->typeKind != POINTER_TYPE)
+        if (ev->type->typeKind != POINTER_TYPE)
             error(expr, "expecting pointer type");
-        type = (PointerType *)pv->type.ptr();
+        type = (PointerType *)ev->type.ptr();
     }
-    return evalAsRef(expr, env, pv);
+    return ev;
 }
 
 static EValuePtr _evalPointerLike(ExprPtr expr, EnvPtr env, TypePtr &type)
 {
-    PValuePtr pv = analyzeValue(expr, env);
+    EValuePtr ev = evalOneAsRef(expr, env);
     if (type.ptr()) {
-        if (pv->type != type)
+        if (ev->type != type)
             error(expr, "argument type mismatch");
     }
     else {
-        switch (pv->type->typeKind) {
+        switch (ev->type->typeKind) {
         case POINTER_TYPE :
         case CODE_POINTER_TYPE :
         case CCODE_POINTER_TYPE :
@@ -1424,9 +1611,9 @@ static EValuePtr _evalPointerLike(ExprPtr expr, EnvPtr env, TypePtr &type)
         default :
             error(expr, "expecting a pointer or a code pointer");
         }
-        type = pv->type;
+        type = ev->type;
     }
-    return evalAsRef(expr, env, pv);
+    return ev;
 }
 
 
@@ -1887,75 +2074,65 @@ static void op_pointerToInt(EValuePtr dest, void *ptr)
 // evalInvokePrimOp
 //
 
-EValuePtr evalInvokePrimOp(PrimOpPtr x,
-                           const vector<ExprPtr> &args,
-                           EnvPtr env,
-                           EValuePtr out)
+void evalInvokePrimOp(PrimOpPtr x,
+                      const vector<ExprPtr> &args,
+                      EnvPtr env,
+                      MultiEValuePtr out)
 {
     switch (x->primOpCode) {
 
     case PRIM_Type : {
         ensureArity(args, 1);
-        ObjectPtr y = analyzeMaybeVoidValue(args[0], env);
-        ObjectPtr obj;
-        switch (y->objKind) {
-        case PVALUE : {
-            PValue *z = (PValue *)y.ptr();
-            obj = z->type.ptr();
-            break;
-        }
-        case VOID_VALUE : {
-            obj = voidType.ptr();
-            break;
-        }
-        default :
-            assert(false);
-        }
-        return evalStaticObject(obj, out);
+        PValuePtr y = analyzeValue(args[0], env);
+        evalStaticObject(y->type.ptr(), out);
+        break;
     }
 
     case PRIM_TypeP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateStatic(args[0], env);
         bool flag = y->objKind == TYPE;
-        assert(out.ptr());
-        assert(out->type == boolType);
-        *((char *)out->addr) = flag ? 1 : 0;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = flag ? 1 : 0;
+        break;
     }
 
     case PRIM_TypeSize : {
         ensureArity(args, 1);
         TypePtr t = evaluateType(args[0], env);
         ObjectPtr obj = sizeTToValueHolder(typeSize(t)).ptr();
-        return evalStaticObject(obj, out);
+        evalStaticObject(obj, out);
+        break;
     }
 
     case PRIM_primitiveCopy : {
         ensureArity(args, 2);
-        PValuePtr pv0 = analyzeValue(args[0], env);
-        PValuePtr pv1 = analyzeValue(args[1], env);
-        if (!isPrimitiveType(pv0->type))
+        EValuePtr ev0 = evalOneAsRef(args[0], env);
+        EValuePtr ev1 = evalOneAsRef(args[1], env);
+        if (!isPrimitiveType(ev0->type))
             error(args[0], "expecting primitive type");
-        if (pv0->type != pv1->type)
+        if (ev0->type != ev1->type)
             error(args[1], "argument type mismatch");
-        EValuePtr ev0 = evalAsRef(args[0], env, pv0);
-        EValuePtr ev1 = evalAsRef(args[1], env, pv1);
-        memcpy(ev0->addr, ev1->addr, typeSize(pv0->type));
-        return NULL;
+        memcpy(ev0->addr, ev1->addr, typeSize(ev0->type));
+        assert(out->size() == 0);
+        break;
     }
 
     case PRIM_boolNot : {
         ensureArity(args, 1);
-        PValuePtr pv = analyzeValue(args[0], env);
-        if (pv->type != boolType)
+        EValuePtr ev = evalOneAsRef(args[0], env);
+        if (ev->type != boolType)
             error(args[0], "expecting bool type");
-        EValuePtr ev = evalAsRef(args[0], env, pv);
-        assert(out.ptr());
-        assert(out->type == boolType);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
         char *p = (char *)ev->addr;
-        *((char *)out->addr) = (*p == 0);
-        return out;
+        *((char *)out0->addr) = (*p == 0);
+        break;
     }
 
     case PRIM_numericEqualsP : {
@@ -1963,10 +2140,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalNumeric(args[0], env, t);
         EValuePtr ev1 = _evalNumeric(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == boolType);
-        binaryNumericOp<Op_numericEqualsP>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        binaryNumericOp<Op_numericEqualsP>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_numericLesserP : {
@@ -1974,10 +2153,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalNumeric(args[0], env, t);
         EValuePtr ev1 = _evalNumeric(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == boolType);
-        binaryNumericOp<Op_numericLesserP>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        binaryNumericOp<Op_numericLesserP>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_numericAdd : {
@@ -1985,10 +2166,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalNumeric(args[0], env, t);
         EValuePtr ev1 = _evalNumeric(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryNumericOp<Op_numericAdd>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryNumericOp<Op_numericAdd>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_numericSubtract : {
@@ -1996,10 +2179,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalNumeric(args[0], env, t);
         EValuePtr ev1 = _evalNumeric(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryNumericOp<Op_numericSubtract>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryNumericOp<Op_numericSubtract>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_numericMultiply : {
@@ -2007,10 +2192,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalNumeric(args[0], env, t);
         EValuePtr ev1 = _evalNumeric(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryNumericOp<Op_numericMultiply>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryNumericOp<Op_numericMultiply>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_numericDivide : {
@@ -2018,20 +2205,24 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalNumeric(args[0], env, t);
         EValuePtr ev1 = _evalNumeric(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryNumericOp<Op_numericDivide>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryNumericOp<Op_numericDivide>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_numericNegate : {
         ensureArity(args, 1);
         TypePtr t;
         EValuePtr ev = _evalNumeric(args[0], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        unaryNumericOp<Op_numericNegate>(ev, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        unaryNumericOp<Op_numericNegate>(ev, out0);
+        break;
     }
 
     case PRIM_integerRemainder : {
@@ -2039,10 +2230,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalInteger(args[0], env, t);
         EValuePtr ev1 = _evalInteger(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryIntegerOp<Op_integerRemainder>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerRemainder>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_integerShiftLeft : {
@@ -2050,10 +2243,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalInteger(args[0], env, t);
         EValuePtr ev1 = _evalInteger(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryIntegerOp<Op_integerShiftLeft>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerShiftLeft>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_integerShiftRight : {
@@ -2061,10 +2256,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalInteger(args[0], env, t);
         EValuePtr ev1 = _evalInteger(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryIntegerOp<Op_integerShiftRight>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerShiftRight>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_integerBitwiseAnd : {
@@ -2072,10 +2269,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalInteger(args[0], env, t);
         EValuePtr ev1 = _evalInteger(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryIntegerOp<Op_integerBitwiseAnd>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerBitwiseAnd>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_integerBitwiseOr : {
@@ -2083,10 +2282,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalInteger(args[0], env, t);
         EValuePtr ev1 = _evalInteger(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryIntegerOp<Op_integerBitwiseOr>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerBitwiseOr>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_integerBitwiseXor : {
@@ -2094,20 +2295,24 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr t;
         EValuePtr ev0 = _evalInteger(args[0], env, t);
         EValuePtr ev1 = _evalInteger(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        binaryIntegerOp<Op_integerBitwiseXor>(ev0, ev1, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerBitwiseXor>(ev0, ev1, out0);
+        break;
     }
 
     case PRIM_integerBitwiseNot : {
         ensureArity(args, 1);
         TypePtr t;
         EValuePtr ev0 = _evalInteger(args[0], env, t);
-        assert(out.ptr());
-        assert(out->type == t);
-        unaryIntegerOp<Op_integerBitwiseNot>(ev0, out);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
+        unaryIntegerOp<Op_integerBitwiseNot>(ev0, out0);
+        break;
     }
 
     case PRIM_numericConvert : {
@@ -2115,10 +2320,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr dest = evaluateType(args[0], env);
         TypePtr src;
         EValuePtr ev = _evalNumeric(args[1], env, src);
-        assert(out.ptr());
-        assert(out->type == dest);
-        op_numericConvert(out, ev);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == dest);
+        op_numericConvert(out0, ev);
+        break;
     }
 
     case PRIM_Pointer :
@@ -2129,11 +2336,13 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         PValuePtr pv = analyzeValue(args[0], env);
         if (pv->isTemp)
             error("cannot take address of a temporary");
-        EValuePtr ev = evalAsRef(args[0], env, pv);
-        assert(out.ptr());
-        assert(out->type == pointerType(ev->type));
-        *((void **)out->addr) = (void *)ev->addr;
-        return out;
+        EValuePtr ev = evalOneAsRef(args[0], env);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == pointerType(ev->type));
+        *((void **)out0->addr) = (void *)ev->addr;
+        break;
     }
 
     case PRIM_pointerDereference : {
@@ -2141,8 +2350,10 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         PointerTypePtr t;
         EValuePtr ev = _evalPointer(args[0], env, t);
         void *ptr = *((void **)ev->addr);
-        assert(!out);
-        return new EValue(t->pointeeType, (char *)ptr);
+        assert(out->size() == 1);
+        assert(!out->values[0]);
+        out->values[0] = new EValue(t->pointeeType, (char *)ptr);
+        break;
     }
 
     case PRIM_pointerEqualsP : {
@@ -2151,10 +2362,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         EValuePtr v0 = _evalPointer(args[0], env, t);
         EValuePtr v1 = _evalPointer(args[1], env, t);
         bool flag = *((void **)v0->addr) == *((void **)v1->addr);
-        assert(out.ptr());
-        assert(out->type == boolType);
-        *((char *)out->addr) = flag ? 1 : 0;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = flag ? 1 : 0;
+        break;
     }
 
     case PRIM_pointerLesserP : {
@@ -2163,10 +2376,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         EValuePtr v0 = _evalPointer(args[0], env, t);
         EValuePtr v1 = _evalPointer(args[1], env, t);
         bool flag = *((void **)v0->addr) < *((void **)v1->addr);
-        assert(out.ptr());
-        assert(out->type == boolType);
-        *((char *)out->addr) = flag ? 1 : 0;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = flag ? 1 : 0;
+        break;
     }
 
     case PRIM_pointerOffset : {
@@ -2178,10 +2393,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         ptrdiff_t offset = op_intToPtrInt(v1);
         char *ptr = *((char **)v0->addr);
         ptr += offset*typeSize(t->pointeeType);
-        assert(out.ptr());
-        assert(out->type == t.ptr());
-        *((void **)out->addr) = (void *)ptr;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t.ptr());
+        *((void **)out0->addr) = (void *)ptr;
+        break;
     }
 
     case PRIM_pointerToInt : {
@@ -2191,11 +2408,13 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
             error(args[0], "invalid integer type");
         PointerTypePtr pt;
         EValuePtr ev = _evalPointer(args[1], env, pt);
-        assert(out.ptr());
-        assert(out->type == dest);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == dest);
         void *ptr = *((void **)ev->addr);
-        op_pointerToInt(out, ptr);
-        return out;
+        op_pointerToInt(out0, ptr);
+        break;
     }
 
     case PRIM_intToPointer : {
@@ -2204,11 +2423,13 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr dest = pointerType(pointeeType);
         TypePtr t;
         EValuePtr ev = _evalInteger(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == dest);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == dest);
         ptrdiff_t ptrInt = op_intToPtrInt(ev);
-        *((void **)out->addr) = (void *)ptrInt;
-        return out;
+        *((void **)out0->addr) = (void *)ptrInt;
+        break;
     }
 
     case PRIM_CodePointerP : {
@@ -2220,10 +2441,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
             if (t->typeKind == CODE_POINTER_TYPE)
                 isCPType = true;
         }
-        assert(out.ptr());
-        assert(out->type == boolType);
-        *((char *)out->addr) = isCPType ? 1 : 0;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isCPType ? 1 : 0;
+        break;
     }
 
     case PRIM_CodePointer :
@@ -2277,13 +2500,15 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
                             entry->varArgTypes.end());
         }
         TypePtr cpType = codePointerType(argTypes,
-                                         entry->code->returnByRef,
-                                         entry->returnType);
-        assert(out.ptr());
-        assert(out->type == cpType);
+                                         entry->returnIsRef,
+                                         entry->returnTypes);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == cpType);
         void *funcPtr = llvmEngine->getPointerToGlobal(entry->llvmFunc);
-        *((void **)out->addr) = funcPtr;
-        return out;
+        *((void **)out0->addr) = funcPtr;
+        break;
     }
 
     case PRIM_CCodePointerP : {
@@ -2295,10 +2520,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
             if (t->typeKind == CCODE_POINTER_TYPE)
                 isCCPType = true;
         }
-        assert(out.ptr());
-        assert(out->type == boolType);
-        *((char *)out->addr) = isCCPType ? 1 : 0;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isCCPType ? 1 : 0;
+        break;
     }
 
     case PRIM_CCodePointer :
@@ -2354,18 +2581,28 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
                             entry->varArgTypes.begin(),
                             entry->varArgTypes.end());
         }
+        TypePtr returnType;
+        if (entry->returnTypes.size() == 0)
+            returnType = NULL;
+        else if (entry->returnTypes.size() == 1)
+            returnType = entry->returnTypes[0];
+        else
+            error(args[0], "cannot create C compatible pointer "
+                  "to multi-return code");
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
                                            argTypes,
                                            false,
-                                           entry->returnType);
+                                           returnType);
         string callableName = getCodeName(callable);
         if (!entry->llvmCWrapper)
             codegenCWrapper(entry, callableName);
-        assert(out.ptr());
-        assert(out->type == ccpType);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == ccpType);
         void *funcPtr = llvmEngine->getPointerToGlobal(entry->llvmCWrapper);
-        *((void **)out->addr) = funcPtr;
-        return out;
+        *((void **)out0->addr) = funcPtr;
+        break;
     }
 
     case PRIM_pointerCast : {
@@ -2373,43 +2610,49 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr dest = evaluatePointerLikeType(args[0], env);
         TypePtr t;
         EValuePtr v = _evalPointerLike(args[1], env, t);
-        assert(out.ptr());
-        assert(out->type == dest);
-        *((void **)out->addr) = *((void **)v->addr);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == dest);
+        *((void **)out0->addr) = *((void **)v->addr);
+        break;
     }
 
     case PRIM_Array :
         error("Array type constructor cannot be called");
 
     case PRIM_array : {
-        assert(out.ptr());
-        assert(out->type->typeKind == ARRAY_TYPE);
-        ArrayType *t = (ArrayType *)out->type.ptr();
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type->typeKind == ARRAY_TYPE);
+        ArrayType *t = (ArrayType *)out0->type.ptr();
         assert((int)args.size() == t->size);
         TypePtr etype = t->elementType;
         for (unsigned i = 0; i < args.size(); ++i) {
             PValuePtr parg = analyzeValue(args[i], env);
             if (parg->type != etype)
                 error(args[i], "array element type mismatch");
-            char *ptr = out->addr + typeSize(etype)*i;
-            evalIntoValue(args[i], env, parg, new EValue(etype, ptr));
+            char *ptr = out0->addr + typeSize(etype)*i;
+            evalIntoOne(args[i], env, new EValue(etype, ptr));
         }
-        return out;
+        break;
     }
 
     case PRIM_arrayRef : {
         ensureArity(args, 2);
-        PValuePtr parray = analyzeValue(args[0], env);
-        if (parray->type->typeKind != ARRAY_TYPE)
+        EValuePtr earray = evalOneAsRef(args[0], env);
+        if (earray->type->typeKind != ARRAY_TYPE)
             error(args[0], "expecting array type");
-        ArrayType *at = (ArrayType *)parray->type.ptr();
-        EValuePtr earray = evalAsRef(args[0], env, parray);
+        ArrayType *at = (ArrayType *)earray->type.ptr();
         TypePtr indexType;
         EValuePtr iv = _evalInteger(args[1], env, indexType);
         ptrdiff_t i = op_intToPtrInt(iv);
         char *ptr = earray->addr + i*typeSize(at->elementType);
-        return new EValue(at->elementType, ptr);
+        assert(out->size() == 1);
+        assert(!out->values[0]);
+        out->values[0] = new EValue(at->elementType, ptr);
+        break;
     }
 
     case PRIM_TupleP : {
@@ -2421,10 +2664,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
             if (t->typeKind == TUPLE_TYPE)
                 isTupleType = true;
         }
-        assert(out.ptr());
-        assert(out->type == boolType);
-        *((char *)out->addr) = isTupleType ? 1 : 0;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isTupleType ? 1 : 0;
+        break;
     }
 
     case PRIM_Tuple :
@@ -2435,7 +2680,8 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         TypePtr y = evaluateTupleType(args[0], env);
         TupleType *z = (TupleType *)y.ptr();
         ObjectPtr obj = sizeTToValueHolder(z->elementTypes.size()).ptr();
-        return evalStaticObject(obj, out);
+        evalStaticObject(obj, out);
+        break;
     }
 
     case PRIM_TupleElementOffset : {
@@ -2445,40 +2691,44 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         size_t i = evaluateSizeT(args[1], env);
         const llvm::StructLayout *layout = tupleTypeLayout(z);
         ObjectPtr obj =  sizeTToValueHolder(layout->getElementOffset(i)).ptr();
-        return evalStaticObject(obj, out);
+        evalStaticObject(obj, out);
+        break;
     }
 
     case PRIM_tuple : {
-        assert(out.ptr());
-        assert(out->type->typeKind == TUPLE_TYPE);
-        TupleType *tt = (TupleType *)out->type.ptr();
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type->typeKind == TUPLE_TYPE);
+        TupleType *tt = (TupleType *)out0->type.ptr();
         assert(args.size() == tt->elementTypes.size());
         const llvm::StructLayout *layout = tupleTypeLayout(tt);
         for (unsigned i = 0; i < args.size(); ++i) {
             PValuePtr parg = analyzeValue(args[i], env);
             if (parg->type != tt->elementTypes[i])
                 error(args[i], "argument type mismatch");
-            char *ptr = out->addr + layout->getElementOffset(i);
+            char *ptr = out0->addr + layout->getElementOffset(i);
             EValuePtr eargDest = new EValue(tt->elementTypes[i], ptr);
-            evalIntoValue(args[i], env, parg, eargDest);
+            evalIntoOne(args[i], env, eargDest);
         }
-        return out;
+        break;
     }
 
     case PRIM_tupleRef : {
         ensureArity(args, 2);
-        PValuePtr ptuple = analyzeValue(args[0], env);
-        if (ptuple->type->typeKind != TUPLE_TYPE)
+        EValuePtr etuple = evalOneAsRef(args[0], env);
+        if (etuple->type->typeKind != TUPLE_TYPE)
             error(args[0], "expecting a tuple");
-        TupleType *tt = (TupleType *)ptuple->type.ptr();
+        TupleType *tt = (TupleType *)etuple->type.ptr();
         const llvm::StructLayout *layout = tupleTypeLayout(tt);
-        EValuePtr etuple = evalAsRef(args[0], env, ptuple);
         size_t i = evaluateSizeT(args[1], env);
         if (i >= tt->elementTypes.size())
             error(args[1], "tuple index out of range");
         char *ptr = etuple->addr + layout->getElementOffset(i);
-        assert(!out);
-        return new EValue(tt->elementTypes[i], ptr);
+        assert(out->size() == 1);
+        assert(!out->values[0]);
+        out->values[0] = new EValue(tt->elementTypes[i], ptr);
+        break;
     }
 
     case PRIM_RecordP : {
@@ -2490,10 +2740,12 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
             if (t->typeKind == RECORD_TYPE)
                 isRecordType = true;
         }
-        assert(out.ptr());
-        assert(out->type == boolType);
-        *((char *)out->addr) = isRecordType ? 1 : 0;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isRecordType ? 1 : 0;
+        break;
     }
 
     case PRIM_RecordFieldCount : {
@@ -2502,7 +2754,8 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         RecordType *z = (RecordType *)y.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
         ObjectPtr obj = sizeTToValueHolder(fieldTypes.size()).ptr();
-        return evalStaticObject(obj, out);
+        evalStaticObject(obj, out);
+        break;
     }
 
     case PRIM_RecordFieldOffset : {
@@ -2515,7 +2768,8 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
             error("field index out of range");
         const llvm::StructLayout *layout = recordTypeLayout(z);
         ObjectPtr obj = sizeTToValueHolder(layout->getElementOffset(i)).ptr();
-        return evalStaticObject(obj, out);
+        evalStaticObject(obj, out);
+        break;
     }
 
     case PRIM_RecordFieldIndex : {
@@ -2529,33 +2783,34 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         if (fi == fieldIndexMap.end())
             error("field not in record");
         ObjectPtr obj = sizeTToValueHolder(fi->second).ptr();
-        return evalStaticObject(obj, out);
+        evalStaticObject(obj, out);
+        break;
     }
 
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);
-        PValuePtr prec = analyzeValue(args[0], env);
-        if (prec->type->typeKind != RECORD_TYPE)
+        EValuePtr erec = evalOneAsRef(args[0], env);
+        if (erec->type->typeKind != RECORD_TYPE)
             error(args[0], "expecting a record");
-        RecordType *rt = (RecordType *)prec->type.ptr();
+        RecordType *rt = (RecordType *)erec->type.ptr();
         const llvm::StructLayout *layout = recordTypeLayout(rt);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
-        EValuePtr erec = evalAsRef(args[0], env, prec);
         size_t i = evaluateSizeT(args[1], env);
         char *ptr = erec->addr + layout->getElementOffset(i);
-        assert(!out);
-        return new EValue(fieldTypes[i], ptr);
+        assert(out->size() == 1);
+        assert(!out->values[0]);
+        out->values[0] = new EValue(fieldTypes[i], ptr);
+        break;
     }
 
     case PRIM_recordFieldRefByName : {
         ensureArity(args, 2);
-        PValuePtr prec = analyzeValue(args[0], env);
-        if (prec->type->typeKind != RECORD_TYPE)
+        EValuePtr erec = evalOneAsRef(args[0], env);
+        if (erec->type->typeKind != RECORD_TYPE)
             error(args[0], "expecting a record");
-        RecordType *rt = (RecordType *)prec->type.ptr();
+        RecordType *rt = (RecordType *)erec->type.ptr();
         const llvm::StructLayout *layout = recordTypeLayout(rt);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
-        EValuePtr erec = evalAsRef(args[0], env, prec);
         IdentifierPtr fname = evaluateIdentifier(args[1], env);
         const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
         map<string, size_t>::const_iterator fi = fieldIndexMap.find(fname->str);
@@ -2563,8 +2818,10 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
             error(args[1], "field not in record");
         size_t i = fi->second;
         char *ptr = erec->addr + layout->getElementOffset(i);
-        assert(!out);
-        return new EValue(fieldTypes[i], ptr);
+        assert(out->size() == 1);
+        assert(!out->values[0]);
+        out->values[0] = new EValue(fieldTypes[i], ptr);
+        break;
     }
 
     case PRIM_Static :
@@ -2576,7 +2833,8 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
         ostringstream sout;
         printName(sout, y);
         ExprPtr z = new StringLiteral(sout.str());
-        return evalExpr(z, env, out);
+        evalExpr(z, env, out);
+        break;
     }
 
     case PRIM_EnumP : {
@@ -2588,37 +2846,41 @@ EValuePtr evalInvokePrimOp(PrimOpPtr x,
             if (t->typeKind == ENUM_TYPE)
                 isEnumType = true;
         }
-        assert(out.ptr());
-        assert(out->type == boolType);
-        *((char *)out->addr) = isEnumType ? 1 : 0;
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isEnumType ? 1 : 0;
+        break;
     }
 
     case PRIM_enumToInt : {
         ensureArity(args, 1);
-        PValuePtr pv = analyzeValue(args[0], env);
-        if (pv->type->typeKind != ENUM_TYPE)
+        EValuePtr ev = evalOneAsRef(args[0], env);
+        if (ev->type->typeKind != ENUM_TYPE)
             error(args[0], "expecting enum value");
-        EValuePtr ev = evalAsRef(args[0], env, pv);
-        assert(out.ptr());
-        assert(out->type == cIntType);
-        *((int *)out->addr) = *((int *)ev->addr);
-        return out;
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == cIntType);
+        *((int *)out0->addr) = *((int *)ev->addr);
+        break;
     }
 
     case PRIM_intToEnum : {
         ensureArity(args, 2);
         TypePtr t = evaluateEnumerationType(args[0], env);
-        assert(out.ptr());
-        assert(out->type == t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0.ptr());
+        assert(out0->type == t);
         TypePtr t2 = cIntType;
         EValuePtr v = _evalInteger(args[1], env, t2);
-        *((int *)out->addr) = *((int *)v->addr);
-        return out;
+        *((int *)out0->addr) = *((int *)v->addr);
+        break;
     }
 
     default :
         assert(false);
-        return NULL;
     }
 }
