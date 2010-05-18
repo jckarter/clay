@@ -2226,6 +2226,131 @@ struct MultiEValue : public Object {
     unsigned size() { return values.size(); }
 };
 
+void evalValueInit(EValuePtr dest);
+void evalValueDestroy(EValuePtr dest);
+void evalValueCopy(EValuePtr dest, EValuePtr src);
+void evalValueAssign(EValuePtr dest, EValuePtr src);
+bool evalToBoolFlag(EValuePtr a);
+
+int evalMarkStack();
+void evalDestroyStack(int marker);
+void evalPopStack(int marker);
+void evalDestroyAndPopStack(int marker);
+EValuePtr evalAllocValue(TypePtr t);
+
+void evalIntoValues(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
+void evalIntoOne(ExprPtr expr, EnvPtr env, EValuePtr out);
+EValuePtr evalOne(ExprPtr expr, EnvPtr env, EValuePtr out);
+EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
+void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
+
+void evalStaticObject(ObjectPtr x, MultiEValuePtr out);
+void evalValueHolder(ValueHolderPtr v, MultiEValuePtr out);
+
+void evalInvokeValue(EValuePtr x,
+                     const vector<ExprPtr> &args,
+                     EnvPtr env,
+                     MultiEValuePtr out);
+
+void evalInvokeVoid(ObjectPtr x,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env);
+void evalInvoke(ObjectPtr x,
+                const vector<ExprPtr> &args,
+                EnvPtr env,
+                MultiEValuePtr out);
+void evalInvokeCallable(ObjectPtr x,
+                        const vector<ExprPtr> &args,
+                        EnvPtr env,
+                        MultiEValuePtr out);
+bool evalInvokeSpecialCase(ObjectPtr x,
+                           const vector<bool> &isStaticFlags,
+                           const vector<ObjectPtr> &argsKey);
+void evalInvokeCode(InvokeEntryPtr entry,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env,
+                    MultiEValuePtr out);
+void evalInvokeInlined(InvokeEntryPtr entry,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env,
+                       MultiEValuePtr out);
+
+enum TerminationKind {
+    TERMINATE_RETURN,
+    TERMINATE_BREAK,
+    TERMINATE_CONTINUE,
+    TERMINATE_GOTO
+};
+
+struct Termination : public Object {
+    TerminationKind terminationKind;
+    LocationPtr location;
+    Termination(TerminationKind terminationKind, LocationPtr location)
+        : Object(DONT_CARE), terminationKind(terminationKind),
+          location(location) {}
+};
+typedef Pointer<Termination> TerminationPtr;
+
+struct TerminateReturn : Termination {
+    TerminateReturn(LocationPtr location)
+        : Termination(TERMINATE_RETURN, location) {}
+};
+
+struct TerminateBreak : Termination {
+    TerminateBreak(LocationPtr location)
+        : Termination(TERMINATE_BREAK, location) {}
+};
+
+struct TerminateContinue : Termination {
+    TerminateContinue(LocationPtr location)
+        : Termination(TERMINATE_CONTINUE, location) {}
+};
+
+struct TerminateGoto : Termination {
+    IdentifierPtr targetLabel;
+    TerminateGoto(IdentifierPtr targetLabel, LocationPtr location)
+        : Termination(TERMINATE_GOTO, location) {}
+};
+
+struct LabelInfo {
+    EnvPtr env;
+    int stackMarker;
+    int blockPosition;
+    LabelInfo() {}
+    LabelInfo(EnvPtr env, int stackMarker, int blockPosition)
+        : env(env), stackMarker(stackMarker), blockPosition(blockPosition) {}
+};
+
+struct EReturn {
+    bool byRef;
+    TypePtr type;
+    EValuePtr value;
+    EReturn(bool byRef, TypePtr type, EValuePtr value)
+        : byRef(byRef), type(type), value(value) {}
+};
+
+struct EvalContext : public Object {
+    vector<EReturn> returns;
+    EvalContext(const vector<EReturn> &returns)
+        : Object(DONT_CARE), returns(returns) {}
+};
+typedef Pointer<EvalContext> EvalContextPtr;
+
+TerminationPtr evalStatement(StatementPtr stmt,
+                             EnvPtr env,
+                             EvalContextPtr ctx);
+
+void evalCollectLabels(const vector<StatementPtr> &statements,
+                       unsigned startIndex,
+                       EnvPtr env,
+                       map<string, LabelInfo> &labels);
+EnvPtr evalBinding(BindingPtr x, EnvPtr env);
+
+void evalInvokePrimOp(PrimOpPtr x,
+                      const vector<ExprPtr> &args,
+                      EnvPtr env,
+                      MultiEValuePtr out);
+
 
 
 //
@@ -2271,10 +2396,8 @@ struct CReturn {
         : byRef(byRef), type(type), value(value) {}
 };
 
-typedef vector<CReturn> CReturns;
-
 struct CodegenContext : public Object {
-    CReturns returns;
+    vector<CReturn> returns;
     JumpTarget returnTarget;
     map<string, JumpTarget> labels;
     vector<JumpTarget> breaks;
@@ -2284,7 +2407,7 @@ struct CodegenContext : public Object {
     llvm::Value *exception;
 	int tryBlockStackMarker;
 
-    CodegenContext(const CReturns &returns,
+    CodegenContext(const vector<CReturn> &returns,
                    const JumpTarget &returnTarget)
         : Object(DONT_CARE),
           returns(returns), returnTarget(returnTarget),
@@ -2324,50 +2447,43 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
                           CodegenContextPtr ctx);
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx);
 
-void codegenRootIntoValue(ExprPtr expr,
-                          EnvPtr env,
-                          CodegenContextPtr ctx,
-                          PValuePtr pv,
-                          CValuePtr out);
-CValuePtr codegenRootValue(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                           CValuePtr out);
-void codegenIntoValue(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                      PValuePtr pv, CValuePtr out);
-CValuePtr codegenAsRef(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                       PValuePtr pv);
-CValuePtr codegenValue(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                       CValuePtr out);
-CValuePtr codegenMaybeVoid(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                           CValuePtr out);
-CValuePtr codegenExpr(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                      CValuePtr out);
-CValuePtr codegenStaticObject(ObjectPtr x, EnvPtr env, CodegenContextPtr ctx,
-                              CValuePtr out);
+void codegenIntoValues(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
+                       MultiCValuePtr out);
+void codegenIntoOne(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
+                    CValuePtr out);
+CValuePtr codegenOne(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
+                     CValuePtr out);
+CValuePtr codegenOneAsRef(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx);
+
+void codegenExpr(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
+                 MultiCValuePtr out);
+void codegenStaticObject(ObjectPtr x, EnvPtr env, CodegenContextPtr ctx,
+                         MultiCValuePtr out);
 void codegenGlobalVariable(GlobalVariablePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);
 void codegenExternal(ExternalProcedurePtr x);
-void codegenValueHolder(ValueHolderPtr v, CValuePtr out);
+void codegenValueHolder(ValueHolderPtr v, MultiCValuePtr out);
 llvm::Value *codegenConstant(ValueHolderPtr v);
 
-CValuePtr codegenInvokeValue(CValuePtr x,
-                             const vector<ExprPtr> &args,
-                             EnvPtr env,
-                             CodegenContextPtr ctx,
-                             CValuePtr out);
+void codegenInvokeValue(CValuePtr x,
+                        const vector<ExprPtr> &args,
+                        EnvPtr env,
+                        CodegenContextPtr ctx,
+                        MultiCValuePtr out);
 void codegenInvokeVoid(ObjectPtr x,
                        const vector<ExprPtr> &args,
                        EnvPtr env,
                        CodegenContextPtr ctx);
-CValuePtr codegenInvoke(ObjectPtr x,
-                        const vector<ExprPtr> &args,
-                        EnvPtr env,
-                        CodegenContextPtr ctx,
-                        CValuePtr out);
-CValuePtr codegenInvokeCallable(ObjectPtr x,
-                                const vector<ExprPtr> &args,
-                                EnvPtr env,
-                                CodegenContextPtr ctx,
-                                CValuePtr out);
+void codegenInvoke(ObjectPtr x,
+                   const vector<ExprPtr> &args,
+                   EnvPtr env,
+                   CodegenContextPtr ctx,
+                   MultiCValuePtr out);
+void codegenInvokeCallable(ObjectPtr x,
+                           const vector<ExprPtr> &args,
+                           EnvPtr env,
+                           CodegenContextPtr ctx,
+                           MultiCValuePtr out);
 bool codegenInvokeSpecialCase(ObjectPtr x,
                               const vector<bool> &isStaticFlags,
                               const vector<ObjectPtr> &argsKey);
@@ -2376,24 +2492,24 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
                                const vector<ObjectPtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations);
-CValuePtr codegenInvokeCode(InvokeEntryPtr entry,
-                            const vector<ExprPtr> &args,
-                            EnvPtr env,
-                            CodegenContextPtr ctx,
-                            CValuePtr out);
-CValuePtr codegenInvokeInlined(InvokeEntryPtr entry,
-                               const vector<ExprPtr> &args,
-                               EnvPtr env,
-                               CodegenContextPtr ctx,
-                               CValuePtr out);
+void codegenInvokeCode(InvokeEntryPtr entry,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env,
+                       CodegenContextPtr ctx,
+                       MultiCValuePtr out);
+void codegenInvokeInlined(InvokeEntryPtr entry,
+                          const vector<ExprPtr> &args,
+                          EnvPtr env,
+                          CodegenContextPtr ctx,
+                          MultiCValuePtr out);
 
 void codegenCWrapper(InvokeEntryPtr entry, const string &callableName);
 
-CValuePtr codegenInvokePrimOp(PrimOpPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env,
-                              CodegenContextPtr ctx,
-                              CValuePtr out);
+void codegenInvokePrimOp(PrimOpPtr x,
+                         const vector<ExprPtr> &args,
+                         EnvPtr env,
+                         CodegenContextPtr ctx,
+                         MultiCValuePtr out);
 
 void codegenSharedLib(ModulePtr module);
 void codegenExe(ModulePtr module);
