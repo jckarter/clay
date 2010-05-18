@@ -1,142 +1,6 @@
 #include "clay.hpp"
 
 
-
-//
-// HEADER
-//
-
-void evalValueInit(EValuePtr dest);
-void evalValueDestroy(EValuePtr dest);
-void evalValueCopy(EValuePtr dest, EValuePtr src);
-void evalValueAssign(EValuePtr dest, EValuePtr src);
-bool evalToBoolFlag(EValuePtr a);
-
-int evalMarkStack();
-void evalDestroyStack(int marker);
-void evalPopStack(int marker);
-void evalDestroyAndPopStack(int marker);
-EValuePtr evalAllocValue(TypePtr t);
-
-void evalIntoValues(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
-void evalIntoOne(ExprPtr expr, EnvPtr env, EValuePtr out);
-EValuePtr evalOne(ExprPtr expr, EnvPtr env, EValuePtr out);
-EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
-void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
-
-void evalStaticObject(ObjectPtr x, MultiEValuePtr out);
-void evalValueHolder(ValueHolderPtr v, MultiEValuePtr out);
-
-void evalInvokeValue(EValuePtr x,
-                     const vector<ExprPtr> &args,
-                     EnvPtr env,
-                     MultiEValuePtr out);
-
-void evalInvokeVoid(ObjectPtr x,
-                    const vector<ExprPtr> &args,
-                    EnvPtr env);
-void evalInvoke(ObjectPtr x,
-                const vector<ExprPtr> &args,
-                EnvPtr env,
-                MultiEValuePtr out);
-void evalInvokeCallable(ObjectPtr x,
-                        const vector<ExprPtr> &args,
-                        EnvPtr env,
-                        MultiEValuePtr out);
-bool evalInvokeSpecialCase(ObjectPtr x,
-                           const vector<bool> &isStaticFlags,
-                           const vector<ObjectPtr> &argsKey);
-void evalInvokeCode(InvokeEntryPtr entry,
-                    const vector<ExprPtr> &args,
-                    EnvPtr env,
-                    MultiEValuePtr out);
-void evalInvokeInlined(InvokeEntryPtr entry,
-                       const vector<ExprPtr> &args,
-                       EnvPtr env,
-                       MultiEValuePtr out);
-
-enum TerminationKind {
-    TERMINATE_RETURN,
-    TERMINATE_BREAK,
-    TERMINATE_CONTINUE,
-    TERMINATE_GOTO
-};
-
-struct Termination : public Object {
-    TerminationKind terminationKind;
-    LocationPtr location;
-    Termination(TerminationKind terminationKind, LocationPtr location)
-        : Object(DONT_CARE), terminationKind(terminationKind),
-          location(location) {}
-};
-typedef Pointer<Termination> TerminationPtr;
-
-struct TerminateReturn : Termination {
-    TerminateReturn(LocationPtr location)
-        : Termination(TERMINATE_RETURN, location) {}
-};
-
-struct TerminateBreak : Termination {
-    TerminateBreak(LocationPtr location)
-        : Termination(TERMINATE_BREAK, location) {}
-};
-
-struct TerminateContinue : Termination {
-    TerminateContinue(LocationPtr location)
-        : Termination(TERMINATE_CONTINUE, location) {}
-};
-
-struct TerminateGoto : Termination {
-    IdentifierPtr targetLabel;
-    TerminateGoto(IdentifierPtr targetLabel, LocationPtr location)
-        : Termination(TERMINATE_GOTO, location) {}
-};
-
-struct LabelInfo {
-    EnvPtr env;
-    int stackMarker;
-    int blockPosition;
-    LabelInfo() {}
-    LabelInfo(EnvPtr env, int stackMarker, int blockPosition)
-        : env(env), stackMarker(stackMarker), blockPosition(blockPosition) {}
-};
-
-struct EReturn {
-    bool byRef;
-    TypePtr type;
-    EValuePtr value;
-    EReturn(bool byRef, TypePtr type, EValuePtr value)
-        : byRef(byRef), type(type), value(value) {}
-};
-
-struct EvalContext : public Object {
-    vector<EReturn> returns;
-    EvalContext(const vector<EReturn> &returns)
-        : Object(DONT_CARE), returns(returns) {}
-};
-typedef Pointer<EvalContext> EvalContextPtr;
-
-TerminationPtr evalStatement(StatementPtr stmt,
-                             EnvPtr env,
-                             EvalContextPtr ctx);
-
-void evalCollectLabels(const vector<StatementPtr> &statements,
-                       unsigned startIndex,
-                       EnvPtr env,
-                       map<string, LabelInfo> &labels);
-EnvPtr evalBinding(BindingPtr x, EnvPtr env);
-
-void evalInvokePrimOp(PrimOpPtr x,
-                      const vector<ExprPtr> &args,
-                      EnvPtr env,
-                      MultiEValuePtr out);
-
-
-
-//
-// IMPLEMENTATION
-//
-
 ValueHolder::ValueHolder(TypePtr type)
     : Object(VALUE_HOLDER), type(type)
 {
@@ -1024,6 +888,13 @@ void evalInvokeVoid(ObjectPtr x,
                     const vector<ExprPtr> &args,
                     EnvPtr env)
 {
+    ObjectPtr y = analyzeInvoke(x, args, env);
+    assert(y.ptr());
+    if (y->objKind != MULTI_PVALUE)
+        error("void return expected");
+    MultiPValuePtr mpv = (MultiPValue *)y.ptr();
+    if (mpv->size() != 0)
+        error("void return expected");
     evalInvoke(x, args, env, new MultiEValue());
 }
 
@@ -1203,28 +1074,25 @@ void evalInvokeInlined(InvokeEntryPtr entry,
     vector<EReturn> returns;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
-        EValuePtr ev = out->values[i];
-        ReturnSpecPtr rspec;
-        if (!returnSpecs.empty())
-            rspec = returnSpecs[i];
         if (pv->isTemp) {
+            EValuePtr ev = out->values[i];
             assert(ev.ptr());
             assert(ev->type == pv->type);
             returns.push_back(EReturn(false, pv->type, ev));
-            if (rspec.ptr() && rspec->name.ptr()) {
-                addLocal(bodyEnv, rspec->name, ev.ptr());
+            if (!returnSpecs.empty()) {
+                ReturnSpecPtr rspec = returnSpecs[i];
+                if (rspec.ptr() && rspec->name.ptr()) {
+                    addLocal(bodyEnv, rspec->name, ev.ptr());
+                }
             }
         }
         else {
-            assert(!ev);
+            assert(!out->values[i]);
             EValuePtr ev = new EValue(pv->type, NULL);
             out->values[i] = ev;
             EValuePtr evPtr = new EValue(pointerType(pv->type),
                                          (char *)(&(ev->addr)));
             returns.push_back(EReturn(true, pv->type, evPtr));
-            if (rspec.ptr()) {
-                assert(!rspec->name);
-            }
         }
     }
     EvalContextPtr ctx = new EvalContext(returns);
@@ -1322,8 +1190,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             error(x->left, "cannot assign to a temporary");
         int marker = evalMarkStack();
         EValuePtr evLeft = evalOneAsRef(x->left, env);
-        EValuePtr evRight = evalOneAsRef(x->right, env);
-        evalValueCopy(evLeft, evRight);
+        evalIntoOne(x->right, env, evLeft);
         evalDestroyAndPopStack(marker);
         return NULL;
     }
@@ -1475,12 +1342,14 @@ void evalCollectLabels(const vector<StatementPtr> &statements,
 
 EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 {
+    LocationContext loc(x->location);
+
     switch (x->bindingKind) {
 
     case VAR : {
         MultiPValuePtr mpv = analyzeMultiValue(x->expr, env);
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityError(x->expr, x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             EValuePtr ev = evalAllocValue(mpv->values[i]->type);
@@ -1498,7 +1367,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     case REF : {
         MultiPValuePtr mpv = analyzeMultiValue(x->expr, env);
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityError(x->expr, x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
@@ -1515,7 +1384,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            EValuePtr ev = mev->values[i].ptr();
+            EValuePtr ev = mev->values[i];
             assert(ev.ptr());
             addLocal(env2, x->names[i], ev.ptr());
         }
@@ -2582,13 +2451,19 @@ void evalInvokePrimOp(PrimOpPtr x,
                             entry->varArgTypes.end());
         }
         TypePtr returnType;
-        if (entry->returnTypes.size() == 0)
+        if (entry->returnTypes.size() == 0) {
             returnType = NULL;
-        else if (entry->returnTypes.size() == 1)
+        }
+        else if (entry->returnTypes.size() == 1) {
+            if (entry->returnIsRef[0])
+                error(args[0], "cannot create C compatible pointer "
+                      "to return-by-reference code");
             returnType = entry->returnTypes[0];
-        else
+        }
+        else {
             error(args[0], "cannot create C compatible pointer "
                   "to multi-return code");
+        }
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
                                            argTypes,
                                            false,
