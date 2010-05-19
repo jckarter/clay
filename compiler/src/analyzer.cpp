@@ -76,6 +76,8 @@ ObjectPtr analyzeOne(ExprPtr expr, EnvPtr env)
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = analyzeOne(expr, env);
+    if (!v)
+        return NULL;
     PValuePtr pv;
     if (!analysisToPValue(v, pv))
         error(expr, "expecting a value");
