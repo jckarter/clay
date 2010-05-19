@@ -110,7 +110,7 @@ overload T() T {
 overload T1(src:T2) = numericConvert(T1, src);
 
 [T | Numeric?(T)]
-overload T(src:T) T {
+overload T(src:T) returned:T {
     primitiveCopy(returned, src);
 }
 

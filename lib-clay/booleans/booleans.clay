@@ -2,7 +2,7 @@
 overload Bool() Bool {
 }
 
-overload Bool(src:Bool) Bool {
+overload Bool(src:Bool) returned:Bool {
     primitiveCopy(returned, src);
 }
 

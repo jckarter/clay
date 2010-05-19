@@ -47,7 +47,7 @@ overloadable SafeType?;
 //
 
 [T | Record?(T)]
-overload T() T {
+overload T() returned:T {
     initRecordFields(returned, SizeT(0));
 }
 
@@ -70,7 +70,7 @@ overload initRecordFields(a:T, static i) {
 //
 
 [T | Record?(T)]
-overload T(src:T) T {
+overload T(src:T) returned:T {
     copyRecordFields(returned, src, SizeT(0));
 }
 
@@ -93,7 +93,7 @@ overload copyRecordFields(dest:T, src:T, static i) {
 //
 
 [T | SafeRecord?(T)]
-overload move(src:T) T {
+overload move(src:T) returned:T {
     moveRecordFields(returned, src, SizeT(0));
 }
 

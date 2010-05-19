@@ -5,7 +5,7 @@ record Foo {
 
 overload Foo() = Foo(0);
 
-overload Foo(value:Int) Foo {
+overload Foo(value:Int) returned:Foo {
     returned.value = value;
     println("constructed value = ", returned.value);
 }

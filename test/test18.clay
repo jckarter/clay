@@ -1,6 +1,6 @@
 
 external qsort(base:RawPointer, n:SizeT, width:SizeT,
-               compare:CCodePointer[RawPointer, RawPointer, Int]) Void;
+               compare:CCodePointer[(RawPointer, RawPointer), Int]);
 
 external compare(pa:RawPointer, pb:RawPointer) Int {
     var x = Pointer[Int](pa);

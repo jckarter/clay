@@ -24,9 +24,9 @@ overload display(x) {
 record Displayable {
     obj : Pointer[Opaque];
     size : SizeT;
-    destructor : CodePointer[Opaque,Void];
+    destructor : CodePointer[Opaque,()];
     copyConstructor : CodePointer[Opaque,Opaque];
-    display : CodePointer[Opaque,Void];
+    display : CodePointer[Opaque,()];
 }
 
 
@@ -41,17 +41,17 @@ overload Displayable(x:T) {
 
     return Displayable(Pointer[Opaque](obj),
                        TypeSize(T),
-                       CodePointer[Opaque,Void](destructor),
+                       CodePointer[Opaque,()](destructor),
                        CodePointer[Opaque,Opaque](copyConstructor),
-                       CodePointer[Opaque,Void](displayPtr));
+                       CodePointer[Opaque,()](displayPtr));
 }
 
 // default constructor
 overload Displayable() {
     return Displayable(null(Opaque), SizeT(0),
-                       CodePointer[Opaque,Void](0),
+                       CodePointer[Opaque,()](0),
                        CodePointer[Opaque,Opaque](0),
-                       CodePointer[Opaque,Void](0));
+                       CodePointer[Opaque,()](0));
 }
 
 // copy constructor

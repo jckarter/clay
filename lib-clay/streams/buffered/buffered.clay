@@ -17,7 +17,7 @@ record BufferedOutputStream[STREAM,SIZE] {
 //
 
 [STREAM, SIZE]
-overload BufferedOutputStream(stream:STREAM, static SIZE) BufferedOutputStream[STREAM,SIZE] {
+overload BufferedOutputStream(stream:STREAM, static SIZE) returned:BufferedOutputStream[STREAM,SIZE] {
     returned.stream = &stream;
     returned.used = SizeT(0);
 }

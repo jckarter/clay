@@ -52,7 +52,7 @@ static __darwin_ssize_t = CLong;
 static __darwin_time_t = CLong;
 
 record Struct___darwin_pthread_handler_rec {
-    __routine : CCodePointer[RawPointer,Void];
+    __routine : CCodePointer[(RawPointer),()];
     __arg : RawPointer;
     __next : Pointer[Struct___darwin_pthread_handler_rec];
 }
@@ -198,7 +198,7 @@ static useconds_t = UInt;
 static uuid_t = __darwin_uuid_t;
 
 external _exit(
-    argument0 : Int) Void;
+    argument0 : Int);
 
 external access(
     argument0 : Pointer[CChar],
@@ -239,7 +239,7 @@ external dup2(
 
 external ("_encrypt") encrypt(
     argument0 : Pointer[CChar],
-    argument1 : Int) Void;
+    argument1 : Int);
 
 external execl(
     argument0 : Pointer[CChar],
@@ -431,13 +431,13 @@ external ("_sleep") sleep(
 external swab(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : CLong) Void;
+    argument2 : CLong);
 
 external symlink(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar]) Int;
 
-external sync() Void;
+external sync();
 
 external sysconf(
     argument0 : Int) CLong;
@@ -524,7 +524,7 @@ external ("_select$1050") select(
     argument4 : Pointer[Struct_timeval]) Int;
 
 external _Exit(
-    argument0 : Int) Void;
+    argument0 : Int);
 
 external accessx_np(
     argument0 : Pointer[Struct_accessx_descriptor],
@@ -547,7 +547,7 @@ external brk(
 external chroot(
     argument0 : Pointer[CChar]) Int;
 
-external endusershell() Void;
+external endusershell();
 
 external execvP(
     argument0 : Pointer[CChar],
@@ -700,14 +700,14 @@ external setgroups(
     argument1 : Pointer[UInt]) Int;
 
 external sethostid(
-    argument0 : CLong) Void;
+    argument0 : CLong);
 
 external sethostname(
     argument0 : Pointer[CChar],
     argument1 : Int) Int;
 
 external ("_setkey") setkey(
-    argument0 : Pointer[CChar]) Void;
+    argument0 : Pointer[CChar]);
 
 external setlogin(
     argument0 : Pointer[CChar]) Int;
@@ -725,7 +725,7 @@ external setsgroups_np(
     argument0 : Int,
     argument1 : Pointer[CUChar]) Int;
 
-external setusershell() Void;
+external setusershell();
 
 external setwgroups_np(
     argument0 : Int,
@@ -903,7 +903,7 @@ external ("_strptime") strptime(
 external time(
     argument0 : Pointer[CLong]) CLong;
 
-external tzset() Void;
+external tzset();
 
 external asctime_r(
     argument0 : Pointer[Struct_tm],
@@ -924,7 +924,7 @@ external localtime_r(
 external posix2time(
     argument0 : CLong) CLong;
 
-external tzsetwall() Void;
+external tzsetwall();
 
 external time2posix(
     argument0 : CLong) CLong;
@@ -962,9 +962,9 @@ static pthread_t = __darwin_pthread_t;
 static mach_port_t = UInt;
 
 external pthread_atfork(
-    argument0 : CCodePointer[Void],
-    argument1 : CCodePointer[Void],
-    argument2 : CCodePointer[Void]) Int;
+    argument0 : CCodePointer[(),()],
+    argument1 : CCodePointer[(),()],
+    argument2 : CCodePointer[(),()]) Int;
 
 external pthread_attr_destroy(
     argument0 : Pointer[pthread_attr_t]) Int;
@@ -1088,7 +1088,7 @@ external pthread_condattr_setpshared(
 external pthread_create(
     argument0 : Pointer[pthread_t],
     argument1 : Pointer[pthread_attr_t],
-    argument2 : CCodePointer[RawPointer,RawPointer],
+    argument2 : CCodePointer[(RawPointer),(RawPointer)],
     argument3 : RawPointer) Int;
 
 external pthread_detach(
@@ -1099,7 +1099,7 @@ external pthread_equal(
     argument1 : pthread_t) Int;
 
 external pthread_exit(
-    argument0 : RawPointer) Void;
+    argument0 : RawPointer);
 
 external pthread_getconcurrency() Int;
 
@@ -1117,7 +1117,7 @@ external ("_pthread_join") pthread_join(
 
 external pthread_key_create(
     argument0 : Pointer[CULong],
-    argument1 : CCodePointer[RawPointer,Void]) Int;
+    argument1 : CCodePointer[(RawPointer),()]) Int;
 
 external pthread_key_delete(
     argument0 : CULong) Int;
@@ -1187,7 +1187,7 @@ external pthread_mutexattr_settype(
 
 external pthread_once(
     argument0 : Pointer[pthread_once_t],
-    argument1 : CCodePointer[Void]) Int;
+    argument1 : CCodePointer[(),()]) Int;
 
 external ("_pthread_rwlock_destroy") pthread_rwlock_destroy(
     argument0 : Pointer[pthread_rwlock_t]) Int;
@@ -1247,7 +1247,7 @@ external pthread_setspecific(
     argument0 : CULong,
     argument1 : RawPointer) Int;
 
-external ("_pthread_testcancel") pthread_testcancel() Void;
+external ("_pthread_testcancel") pthread_testcancel();
 
 external pthread_is_threaded_np() Int;
 
@@ -1286,7 +1286,7 @@ external pthread_cond_timedwait_relative_np(
 external pthread_create_suspended_np(
     argument0 : Pointer[pthread_t],
     argument1 : Pointer[pthread_attr_t],
-    argument2 : CCodePointer[RawPointer,RawPointer],
+    argument2 : CCodePointer[(RawPointer),(RawPointer)],
     argument3 : RawPointer) Int;
 
 external pthread_kill(
@@ -1301,7 +1301,7 @@ external ("_pthread_sigmask") pthread_sigmask(
     argument1 : Pointer[UInt],
     argument2 : Pointer[UInt]) Int;
 
-external pthread_yield_np() Void;
+external pthread_yield_np();
 
 record Struct_flock {
     l_start : Int64;
@@ -1390,7 +1390,7 @@ external filesec_dup(
     argument0 : filesec_t) filesec_t;
 
 external filesec_free(
-    argument0 : filesec_t) Void;
+    argument0 : filesec_t);
 
 external filesec_get_property(
     argument0 : filesec_t,
@@ -1951,7 +1951,7 @@ external sendfile(
 
 external pfctlinput(
     argument0 : Int,
-    argument1 : Pointer[Struct_sockaddr]) Void;
+    argument1 : Pointer[Struct_sockaddr]);
 
 static uint8_t = CUChar;
 

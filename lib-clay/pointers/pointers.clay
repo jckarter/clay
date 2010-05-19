@@ -14,7 +14,7 @@ overload Pointer[T]() Pointer[T] {
 }
 
 [T]
-overload Pointer[T](src:Pointer[T]) Pointer[T] {
+overload Pointer[T](src:Pointer[T]) returned:Pointer[T] {
     primitiveCopy(returned, src);
 }
 
@@ -108,7 +108,7 @@ null(static T) = Pointer[T](0);
 overload null?(x:Pointer[T]) = (x == null(T));
 
 [T]
-overload dereference(p:Pointer[T]) ref = pointerDereference(p);
+overload dereference(p:Pointer[T]) = ref pointerDereference(p);
 
 
 
@@ -137,7 +137,7 @@ overload CP() CP {
 }
 
 [CP | CodePointer?(CP)]
-overload CP(src:CP) CP {
+overload CP(src:CP) returned:CP {
     primitiveCopy(returned, src);
 }
 
@@ -195,7 +195,7 @@ overload CP() CP {
 }
 
 [CP | CCodePointer?(CP)]
-overload CP(src:CP) CP {
+overload CP(src:CP) returned:CP {
     primitiveCopy(returned, src);
 }
 

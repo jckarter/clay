@@ -1,6 +1,6 @@
 
 external qsort(base:RawPointer, n:SizeT, width:SizeT,
-               compare:CCodePointer[RawPointer, RawPointer, Int]) Void;
+               compare:CCodePointer[(RawPointer, RawPointer), Int]);
 
 compare(pa, pb) {
     if (pa^ < pb^) return -1;
@@ -24,7 +24,7 @@ main() {
     println("compare test = ", fp(&a[0], &a[0]));
     println("compare test = ", fp(&a[2], &a[0]));
 
-    var fp2 = CCodePointer[RawPointer, RawPointer, Int](fp);
+    var fp2 = CCodePointer[(RawPointer, RawPointer), Int](fp);
 
     qsort(RawPointer(&a[0]),
           size(a),
