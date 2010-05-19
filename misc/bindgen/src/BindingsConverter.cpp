@@ -93,9 +93,11 @@ string BindingsConverter::convertFPType(FunctionNoProtoType *type)
     const Type *rt = type->getResultType().getTypePtr();
     ostringstream sout;
     sout << getCodePointerConstructor(type);
-    sout << "[";
-    sout << convertType(rt);
-    sout << "]";
+    sout << "[(),";
+    string s = convertType(rt);
+    if (s == "Void")
+        s = "";
+    sout << "(" << s << ")]";
     return sout.str();
 }
 
@@ -103,14 +105,23 @@ string BindingsConverter::convertFPType(FunctionProtoType *type)
 {
     ostringstream sout;
     sout << getCodePointerConstructor(type);
-    sout << "[";
+    sout << "[(";
     FunctionProtoType::arg_type_iterator i, e;
+    bool first = true;
     for (i = type->arg_type_begin(), e = type->arg_type_end(); i != e; ++i) {
+        if (!first)
+            sout << ",";
+        else
+            first = false;
         const Type *argType = i->getTypePtr();
-        sout << convertType(argType) << ",";
+        sout << convertType(argType);
     }
+    sout << "),";
     const Type *rt = type->getResultType().getTypePtr();
-    sout << convertType(rt) << "]";
+    string s = convertType(rt);
+    if (s == "Void")
+        s = "";
+    sout << "(" << s << ")]";
     return sout.str();
 }
 
@@ -374,8 +385,12 @@ void BindingsConverter::generateDecl(Decl *decl)
                     out << "...";
                 }
             }
+            out << ")";
             const Type *rt = x->getResultType().getTypePtr();
-            out << ") " << convertType(rt) << ";\n";
+            string s = convertType(rt);
+            if (s != "Void")
+                out << " " << s;
+            out << ";\n";
         }
         break;
     }
