@@ -1,0 +1,6 @@
+swap(a, b) { return b, a; }
+
+main() {
+    var a, b = swap(10, 20);
+    println(a, ", ", b);
+}
