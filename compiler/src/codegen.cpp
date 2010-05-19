@@ -260,9 +260,9 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
         TypePtr rt = entry->returnTypes[i];
         if (entry->returnIsRef[i])
-            llArgTypes.push_back(llvmPointerType(rt));
-        else
             llArgTypes.push_back(llvmPointerType(pointerType(rt)));
+        else
+            llArgTypes.push_back(llvmPointerType(rt));
     }
 
     llvm::FunctionType *llFuncType =
@@ -432,6 +432,8 @@ bool codegenStatement(StatementPtr stmt, EnvPtr env, CodegenContextPtr ctx)
         InitAssignment *x = (InitAssignment *)stmt.ptr();
         PValuePtr pvLeft = analyzeValue(x->left, env);
         PValuePtr pvRight = analyzeValue(x->right, env);
+        if (pvLeft->type != pvRight->type)
+            error("type mismatch");
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
         int marker = cgMarkStack();

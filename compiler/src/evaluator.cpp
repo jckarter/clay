@@ -1186,6 +1186,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
         InitAssignment *x = (InitAssignment *)stmt.ptr();
         PValuePtr pvLeft = analyzeValue(x->left, env);
         PValuePtr pvRight = analyzeValue(x->right, env);
+        if (pvLeft->type != pvRight->type)
+            error("type mismatch");
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
         int marker = evalMarkStack();
