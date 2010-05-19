@@ -226,10 +226,10 @@ external _IO_peekc_locked(
     __fp : Pointer[_IO_FILE]) Int;
 
 external _IO_flockfile(
-    argument0 : Pointer[_IO_FILE]) Void;
+    argument0 : Pointer[_IO_FILE]);
 
 external _IO_funlockfile(
-    argument0 : Pointer[_IO_FILE]) Void;
+    argument0 : Pointer[_IO_FILE]);
 
 external _IO_ftrylockfile(
     argument0 : Pointer[_IO_FILE]) Int;
@@ -267,7 +267,7 @@ external _IO_seekpos(
     argument2 : Int) Int64;
 
 external _IO_free_backup_area(
-    argument0 : Pointer[_IO_FILE]) Void;
+    argument0 : Pointer[_IO_FILE]);
 
 static fpos_t = _G_fpos64_t;
 
@@ -335,7 +335,7 @@ external open_memstream(
 
 external setbuf(
     __stream : Pointer[FILE],
-    __buf : Pointer[CChar]) Void;
+    __buf : Pointer[CChar]);
 
 external setvbuf(
     __stream : Pointer[FILE],
@@ -346,10 +346,10 @@ external setvbuf(
 external setbuffer(
     __stream : Pointer[FILE],
     __buf : Pointer[CChar],
-    __size : UInt) Void;
+    __size : UInt);
 
 external setlinebuf(
-    __stream : Pointer[FILE]) Void;
+    __stream : Pointer[FILE]);
 
 external fprintf(
     __stream : Pointer[FILE],
@@ -543,7 +543,7 @@ external ftell(
     __stream : Pointer[FILE]) CLong;
 
 external rewind(
-    __stream : Pointer[FILE]) Void;
+    __stream : Pointer[FILE]);
 
 external ("fseeko64") fseeko(
     __stream : Pointer[FILE],
@@ -562,7 +562,7 @@ external ("fsetpos64") fsetpos(
     __pos : Pointer[fpos_t]) Int;
 
 external clearerr(
-    __stream : Pointer[FILE]) Void;
+    __stream : Pointer[FILE]);
 
 external feof(
     __stream : Pointer[FILE]) Int;
@@ -571,7 +571,7 @@ external ferror(
     __stream : Pointer[FILE]) Int;
 
 external clearerr_unlocked(
-    __stream : Pointer[FILE]) Void;
+    __stream : Pointer[FILE]);
 
 external feof_unlocked(
     __stream : Pointer[FILE]) Int;
@@ -580,7 +580,7 @@ external ferror_unlocked(
     __stream : Pointer[FILE]) Int;
 
 external perror(
-    __s : Pointer[CChar]) Void;
+    __s : Pointer[CChar]);
 
 external sys_nerr : Int;
 
@@ -603,13 +603,13 @@ external ctermid(
     __s : Pointer[CChar]) Pointer[CChar];
 
 external flockfile(
-    __stream : Pointer[FILE]) Void;
+    __stream : Pointer[FILE]);
 
 external ftrylockfile(
     __stream : Pointer[FILE]) Int;
 
 external funlockfile(
-    __stream : Pointer[FILE]) Void;
+    __stream : Pointer[FILE]);
 
 static wchar_t = Int;
 
@@ -866,7 +866,7 @@ static pthread_barrierattr_t = AUnionType;
 external random() CLong;
 
 external srandom(
-    __seed : UInt) Void;
+    __seed : UInt);
 
 external initstate(
     __seed : UInt,
@@ -907,7 +907,7 @@ external setstate_r(
 external rand() Int;
 
 external srand(
-    __seed : UInt) Void;
+    __seed : UInt);
 
 external rand_r(
     __seed : Pointer[UInt]) Int;
@@ -928,13 +928,13 @@ external jrand48(
     __xsubi : Pointer[UShort]) CLong;
 
 external srand48(
-    __seedval : CLong) Void;
+    __seedval : CLong);
 
 external seed48(
     __seed16v : Pointer[UShort]) Pointer[UShort];
 
 external lcong48(
-    __param : Pointer[UShort]) Void;
+    __param : Pointer[UShort]);
 
 record Struct_drand48_data {
     __x : Array[UShort,3];
@@ -995,10 +995,10 @@ external realloc(
     __size : UInt) RawPointer;
 
 external free(
-    __ptr : RawPointer) Void;
+    __ptr : RawPointer);
 
 external cfree(
-    __ptr : RawPointer) Void;
+    __ptr : RawPointer);
 
 external alloca(
     __size : UInt) RawPointer;
@@ -1011,20 +1011,20 @@ external posix_memalign(
     __alignment : UInt,
     __size : UInt) Int;
 
-external abort() Void;
+external abort();
 
 external atexit(
-    __func : CCodePointer[Void]) Int;
+    __func : CCodePointer[(),()]) Int;
 
 external on_exit(
-    __func : CCodePointer[Int,RawPointer,Void],
+    __func : CCodePointer[(Int,RawPointer),()],
     __arg : RawPointer) Int;
 
 external exit(
-    __status : Int) Void;
+    __status : Int);
 
 external _Exit(
-    __status : Int) Void;
+    __status : Int);
 
 external getenv(
     __name : Pointer[CChar]) Pointer[CChar];
@@ -1061,7 +1061,7 @@ external realpath(
     __name : Pointer[CChar],
     __resolved : Pointer[CChar]) Pointer[CChar];
 
-static __compar_fn_t = CCodePointer[RawPointer,RawPointer,Int];
+static __compar_fn_t = CCodePointer[(RawPointer,RawPointer),(Int)];
 
 external bsearch(
     __key : RawPointer,
@@ -1074,7 +1074,7 @@ external qsort(
     __base : RawPointer,
     __nmemb : UInt,
     __size : UInt,
-    __compar : __compar_fn_t) Void;
+    __compar : __compar_fn_t);
 
 external abs(
     __x : Int) Int;
@@ -1352,16 +1352,16 @@ external strerror_l(
 
 external __bzero(
     __s : RawPointer,
-    __n : UInt) Void;
+    __n : UInt);
 
 external bcopy(
     __src : RawPointer,
     __dest : RawPointer,
-    __n : UInt) Void;
+    __n : UInt);
 
 external bzero(
     __s : RawPointer,
-    __n : UInt) Void;
+    __n : UInt);
 
 external bcmp(
     __s1 : RawPointer,
