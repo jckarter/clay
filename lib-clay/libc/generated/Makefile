@@ -3,6 +3,9 @@
 ROOTDIR	=	../../../
 BINDIR	=	$(ROOTDIR)bin/
 
+WIN32_ROOTDIR	=	..\..\..\
+WIN32_BINDIR	=	$(WIN32_ROOTDIR)bin\
+
 
 default :
 	@echo "use 'make macosx[32|64]' or 'make linux[32|64]' or 'make windows'."
@@ -34,5 +37,5 @@ windows : windows32
 
 windows32 :
 	gcc -E generated_from_win32.h > temp32.h
-	$(BINDIR)clay-bindgen temp32.h > generated.windows.32.clay
+	$(WIN32_BINDIR)clay-bindgen temp32.h > generated.windows.32.clay
 	rm -f temp32.h
