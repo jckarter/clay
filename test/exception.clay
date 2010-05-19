@@ -1,7 +1,7 @@
 
 record _Unwind_Exception {
     exception_class: Int32;
-    exception_cleanup: CodePointer[Int32, Pointer[_Unwind_Exception], Void];    
+    exception_cleanup: CodePointer[(Int32, Pointer[_Unwind_Exception]), ()];
     private_1: Int32;
     private_2: Int32;
 }
