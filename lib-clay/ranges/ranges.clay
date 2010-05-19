@@ -39,7 +39,7 @@ overload iterator(r:Range[T]) = r;
 overload hasNext?(r:Range[T]) = r.first < r.last;
 
 [T]
-overload next(r:Range[T]) T {
+overload next(r:Range[T]) returned:T {
     returned <-- r.first;
     inc(r.first);
 }
@@ -93,7 +93,7 @@ overload SequenceElementType(static CoordinateRange[T]) = Type(T()^);
 overload size(a:CoordinateRange[T]) = SizeT(a.last - a.first);
 
 [T,I | Integer?(I)]
-overload index(a:CoordinateRange[T], i:I) ref = (a.first + i)^;
+overload index(a:CoordinateRange[T], i:I) = ref (a.first + i)^;
 
 
 
@@ -120,8 +120,8 @@ overload iterator(r:CoordinateRange[T]) = r;
 overload hasNext?(r:CoordinateRange[T]) = r.first < r.last;
 
 [T]
-overload next(r:CoordinateRange[T]) ref {
+overload next(r:CoordinateRange[T]) {
     ref obj = r.first^;
     inc(r.first);
-    return obj;
+    return ref obj;
 }

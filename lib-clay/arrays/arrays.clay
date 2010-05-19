@@ -29,7 +29,7 @@ overload SequenceElementType(static Array[T,n]) = T;
 overload size(a:Array[T,n]) = SizeT(n);
 
 [T,n,I | Integer?(I)]
-overload index(a:Array[T,n], i:I) ref = arrayRef(a, SizeT(i));
+overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
 
 [T,n]
 overload iterator(a:Array[T,n]) = CoordinateRange(begin(a), end(a));
@@ -47,13 +47,13 @@ overload end(a:Array[T,n]) = &a[n];
 //
 
 [T,n]
-overload Array[T,n]() Array[T,n] {
+overload Array[T,n]() returned:Array[T,n] {
     for (x in returned)
         x <-- T();
 }
 
 [T,n]
-overload Array[T,n](src:Array[T,n]) Array[T,n] {
+overload Array[T,n](src:Array[T,n]) returned:Array[T,n] {
     var d = iterator(returned);
     var s = iterator(src);
     while (hasNext?(s))
@@ -67,7 +67,7 @@ overload destroy(a:Array[T,n]) {
 }
 
 [T,n]
-overload move(src:Array[T,n]) Array[T,n] {
+overload move(src:Array[T,n]) returned:Array[T,n] {
     var d = iterator(returned);
     var s = iterator(src);
     while (hasNext?(s))

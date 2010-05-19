@@ -1,7 +1,7 @@
 
 record _Unwind_Exception {
     exception_class: Int32;
-    exception_cleanup: CodePointer[Int32, Pointer[_Unwind_Exception], Void];    
+    exception_cleanup: CodePointer[(Int32, Pointer[_Unwind_Exception]), ()];    
     private_1: Int32;
     private_2: Int32;
 }
@@ -20,12 +20,12 @@ record Test {
 
 overload Test() = Test(-1);
 
-overload Test(x:Int32) Test {
+overload Test(x:Int32) returned:Test {
     println("Created ", x);
     returned.x = x;
 }
 
-overload Test(other:Test) Test {
+overload Test(other:Test) returned:Test {
     println("Copied ", other.x);
     returned.x = other.x;
 }

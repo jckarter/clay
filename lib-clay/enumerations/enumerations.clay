@@ -9,7 +9,7 @@ overload E() E {
 }
 
 [E | Enum?(E)]
-overload E(src:E) E {
+overload E(src:E) returned:E {
     primitiveCopy(returned, src);
 }
 

@@ -18,7 +18,7 @@ sumWithBlock(a) {
 
 testReturnByRef() {
     var a = [0, 1, 2];
-    var f = block (i) ref { return a[i]; };
+    var f = block (i) { return ref a[i]; };
     for (x in a)
         f(x) += 10;
     for (x in a)

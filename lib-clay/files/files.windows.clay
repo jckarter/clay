@@ -67,7 +67,7 @@ private creationFlags(mode) {
     assert(false);
 }
 
-overload File(path:String, mode:OpenMode) File {
+overload File(path:String, mode:OpenMode) returned:File {
     var handle = win32.CreateFileA(
         cstring(path),
         win32.DWORD(accessFlags(mode)),

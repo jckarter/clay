@@ -4,7 +4,7 @@ record Char {
 }
 
 [I | Integer?(I)]
-overload Char(c:I) Char {
+overload Char(c:I) returned:Char {
     returned.code = Int8(c);
 }
 

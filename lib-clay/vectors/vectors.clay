@@ -81,7 +81,7 @@ overload pushAll(a) {}
 // in the case where the element type is SizeT
 
 [T]
-overload Vector[T](size:SizeT, capacity:SizeT, data:Pointer[T]) Vector[T] {
+overload Vector[T](size:SizeT, capacity:SizeT, data:Pointer[T]) returned:Vector[T] {
     returned.size = size;
     returned.capacity = capacity;
     returned.data = data;
@@ -101,7 +101,7 @@ overload destroy(a:Vector[T]) {
 }
 
 [T]
-overload move(a:Vector[T]) Vector[T] {
+overload move(a:Vector[T]) returned:Vector[T] {
     returned <-- Vector[T](a.size, a.capacity, a.data);
     a <-- Vector[T]();
 }
@@ -116,7 +116,7 @@ overload move(a:Vector[T]) Vector[T] {
 overload size(a:Vector[T]) = a.size;
 
 [T,I | Integer?(I)]
-overload index(a:Vector[T], i:I) ref = (a.data + SizeT(i))^;
+overload index(a:Vector[T], i:I) = ref (a.data + SizeT(i))^;
 
 
 
@@ -135,7 +135,7 @@ record VectorCoordinate[T] {
 }
 
 [T]
-overload dereference(x:VectorCoordinate[T]) ref = x.ptr^;
+overload dereference(x:VectorCoordinate[T]) = ref x.ptr^;
 
 [T,I|Integer?(I)]
 overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
@@ -205,10 +205,10 @@ overload lesser?(a:Vector[T], b:Vector[T]) {
 //
 
 [T]
-overload front(a:Vector[T]) ref = a[0];
+overload front(a:Vector[T]) = ref a[0];
 
 [T]
-overload back(a:Vector[T]) ref = a[size(a)-1];
+overload back(a:Vector[T]) = ref a[size(a)-1];
 
 [T]
 overload push(a:Vector[T], x:T) {
@@ -221,7 +221,7 @@ overload push(a:Vector[T], rvalue x:T) {
 }
 
 [T]
-overload pop(a:Vector[T]) T {
+overload pop(a:Vector[T]) returned:T {
     returned <-- move(back(a));
     removeLocation(a, end(a)-1);
 }
@@ -270,7 +270,7 @@ private ensureSpace(a:Vector[T], space:SizeT) {
 }
 
 [T,I | Integer?(I)]
-private insertLocation(a:Vector[T], pos:I) ref {
+private insertLocation(a:Vector[T], pos:I) {
     ensureSpace(a, SizeT(1));
     var i = begin(a) + pos;
     var j = end(a);
@@ -279,7 +279,7 @@ private insertLocation(a:Vector[T], pos:I) ref {
         dec(j);
     }
     inc(a.size);
-    return i^;
+    return ref i^;
 }
 
 [T,I|Integer?(I)]

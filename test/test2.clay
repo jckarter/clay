@@ -9,9 +9,9 @@ newCustomCompare(x:T, static F) = CustomCompare[T,F](x);
 [T,F]
 overload lesser?(a:CustomCompare[T,F], b:CustomCompare[T,F]) = F(a.x, b.x);
 
-min(a, b) ref {
-    if (a <= b) return a;
-    return b;
+min(a, b) {
+    if (a <= b) return ref a;
+    return ref b;
 }
 
 myLesser(a, b) = lesser?(a, b);
