@@ -81,7 +81,7 @@ external setvbuf(
 
 external setbuf(
     argument0 : Pointer[FILE],
-    argument1 : Pointer[CChar]) Void;
+    argument1 : Pointer[CChar]);
 
 external __mingw_fprintf(
     argument0 : Pointer[FILE],
@@ -289,7 +289,7 @@ external ftell(
     argument0 : Pointer[FILE]) CLong;
 
 external rewind(
-    argument0 : Pointer[FILE]) Void;
+    argument0 : Pointer[FILE]);
 
 static fpos_t = Int64;
 
@@ -308,10 +308,10 @@ external ferror(
     argument0 : Pointer[FILE]) Int;
 
 external clearerr(
-    argument0 : Pointer[FILE]) Void;
+    argument0 : Pointer[FILE]);
 
 external perror(
-    argument0 : Pointer[CChar]) Void;
+    argument0 : Pointer[CChar]);
 
 external _popen(
     argument0 : Pointer[CChar],
@@ -541,7 +541,7 @@ external _wremove(
     argument0 : Pointer[UShort]) Int;
 
 external _wperror(
-    argument0 : Pointer[UShort]) Void;
+    argument0 : Pointer[UShort]);
 
 external _wpopen(
     argument0 : Pointer[UShort],
@@ -718,7 +718,7 @@ external _wputenv(
 external _wsearchenv(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    argument2 : Pointer[UShort]) Void;
+    argument2 : Pointer[UShort]);
 
 external _wsystem(
     argument0 : Pointer[UShort]) Int;
@@ -728,14 +728,14 @@ external _wmakepath(
     argument1 : Pointer[UShort],
     argument2 : Pointer[UShort],
     argument3 : Pointer[UShort],
-    argument4 : Pointer[UShort]) Void;
+    argument4 : Pointer[UShort]);
 
 external _wsplitpath(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
     argument2 : Pointer[UShort],
     argument3 : Pointer[UShort],
-    argument4 : Pointer[UShort]) Void;
+    argument4 : Pointer[UShort]);
 
 external _wfullpath(
     argument0 : Pointer[UShort],
@@ -768,7 +768,7 @@ external mbtowc(
 external rand() Int;
 
 external srand(
-    argument0 : UInt) Void;
+    argument0 : UInt);
 
 external calloc(
     argument0 : UInt,
@@ -782,15 +782,15 @@ external realloc(
     argument1 : UInt) RawPointer;
 
 external free(
-    argument0 : RawPointer) Void;
+    argument0 : RawPointer);
 
-external abort() Void;
+external abort();
 
 external exit(
-    argument0 : Int) Void;
+    argument0 : Int);
 
 external atexit(
-    argument0 : CCodePointer[Void]) Int;
+    argument0 : CCodePointer[(),()]) Int;
 
 external system(
     argument0 : Pointer[CChar]) Int;
@@ -803,13 +803,13 @@ external bsearch(
     argument1 : RawPointer,
     argument2 : UInt,
     argument3 : UInt,
-    argument4 : CCodePointer[RawPointer,RawPointer,Int]) RawPointer;
+    argument4 : CCodePointer[(RawPointer,RawPointer),(Int)]) RawPointer;
 
 external qsort(
     argument0 : RawPointer,
     argument1 : UInt,
     argument2 : UInt,
-    argument3 : CCodePointer[RawPointer,RawPointer,Int]) Void;
+    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]);
 
 external abs(
     argument0 : Int) Int;
@@ -841,18 +841,18 @@ external ldiv(
 
 external _beep(
     argument0 : UInt,
-    argument1 : UInt) Void;
+    argument1 : UInt);
 
 external _seterrormode(
-    argument0 : Int) Void;
+    argument0 : Int);
 
 external _sleep(
-    argument0 : CULong) Void;
+    argument0 : CULong);
 
 external _exit(
-    argument0 : Int) Void;
+    argument0 : Int);
 
-static _onexit_t = CCodePointer[Int];
+static _onexit_t = CCodePointer[(),(Int)];
 
 external _onexit(
     argument0 : _onexit_t) _onexit_t;
@@ -863,7 +863,7 @@ external _putenv(
 external _searchenv(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Pointer[CChar]) Void;
+    argument2 : Pointer[CChar]);
 
 external _ecvt(
     argument0 : Double,
@@ -887,14 +887,14 @@ external _makepath(
     argument1 : Pointer[CChar],
     argument2 : Pointer[CChar],
     argument3 : Pointer[CChar],
-    argument4 : Pointer[CChar]) Void;
+    argument4 : Pointer[CChar]);
 
 external _splitpath(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
     argument2 : Pointer[CChar],
     argument3 : Pointer[CChar],
-    argument4 : Pointer[CChar]) Void;
+    argument4 : Pointer[CChar]);
 
 external _fullpath(
     argument0 : Pointer[CChar],
@@ -982,7 +982,7 @@ external putenv(
 external searchenv(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Pointer[CChar]) Void;
+    argument2 : Pointer[CChar]);
 
 external itoa(
     argument0 : Int,
@@ -1012,7 +1012,7 @@ external gcvt(
     argument2 : Pointer[CChar]) Pointer[CChar];
 
 external _Exit(
-    argument0 : Int) Void;
+    argument0 : Int);
 
 record UnnamedStruct3 {
     quot : Int64;
@@ -1214,7 +1214,7 @@ external _strupr(
 external _swab(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) Void;
+    argument2 : UInt);
 
 external _strncoll(
     argument0 : Pointer[CChar],
@@ -1287,7 +1287,7 @@ external strupr(
 external swab(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) Void;
+    argument2 : UInt);
 
 external wcscat(
     argument0 : Pointer[UShort],
