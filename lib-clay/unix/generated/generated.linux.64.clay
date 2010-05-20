@@ -254,7 +254,7 @@ external nice(
     __inc : Int) Int;
 
 external _exit(
-    __status : Int) Void;
+    __status : Int);
 
 static _PC_LINK_MAX = 0;
 static _PC_MAX_CANON = 1;
@@ -745,9 +745,9 @@ external acct(
 
 external getusershell() Pointer[CChar];
 
-external endusershell() Void;
+external endusershell();
 
-external setusershell() Void;
+external setusershell();
 
 external daemon(
     __nochdir : Int,
@@ -764,7 +764,7 @@ external fsync(
 
 external gethostid() CLong;
 
-external sync() Void;
+external sync();
 
 external getpagesize() Int;
 
@@ -808,7 +808,7 @@ record Struct_sched_param {
 }
 
 external clone(
-    __fn : CCodePointer[RawPointer,Int],
+    __fn : CCodePointer[(RawPointer),(Int)],
     __child_stack : RawPointer,
     __flags : Int,
     __arg : RawPointer,
@@ -839,7 +839,7 @@ external __sched_cpualloc(
     __count : CULong) Pointer[cpu_set_t];
 
 external __sched_cpufree(
-    __set : Pointer[cpu_set_t]) Void;
+    __set : Pointer[cpu_set_t]);
 
 external sched_setparam(
     __pid : Int,
@@ -969,7 +969,7 @@ external __timezone : CLong;
 
 external tzname : Array[Pointer[CChar],2];
 
-external tzset() Void;
+external tzset();
 
 external daylight : Int;
 
@@ -1107,7 +1107,7 @@ static PTHREAD_PROCESS_PRIVATE = 0;
 static PTHREAD_PROCESS_SHARED = 1;
 
 record Struct__pthread_cleanup_buffer {
-    __routine : CCodePointer[RawPointer,Void];
+    __routine : CCodePointer[(RawPointer),()];
     __arg : RawPointer;
     __canceltype : Int;
     __prev : Pointer[Struct__pthread_cleanup_buffer];
@@ -1122,11 +1122,11 @@ static PTHREAD_CANCEL_ASYNCHRONOUS = 1;
 external pthread_create(
     __newthread : Pointer[CULong],
     __attr : Pointer[pthread_attr_t],
-    __start_routine : CCodePointer[RawPointer,RawPointer],
+    __start_routine : CCodePointer[(RawPointer),(RawPointer)],
     __arg : RawPointer) Int;
 
 external pthread_exit(
-    __retval : RawPointer) Void;
+    __retval : RawPointer);
 
 external pthread_join(
     __th : CULong,
@@ -1237,7 +1237,7 @@ external pthread_setschedprio(
 
 external pthread_once(
     __once_control : Pointer[Int],
-    __init_routine : CCodePointer[Void]) Int;
+    __init_routine : CCodePointer[(),()]) Int;
 
 external pthread_setcancelstate(
     __state : Int,
@@ -1250,7 +1250,7 @@ external pthread_setcanceltype(
 external pthread_cancel(
     __th : CULong) Int;
 
-external pthread_testcancel() Void;
+external pthread_testcancel();
 
 record UnnamedStruct4 {
     __cancel_jmp_buf : Array[UnnamedRecord,1];
@@ -1265,20 +1265,20 @@ record UnnamedRecord {
 static __pthread_unwind_buf_t = UnnamedStruct4;
 
 record Struct___pthread_cleanup_frame {
-    __cancel_routine : CCodePointer[RawPointer,Void];
+    __cancel_routine : CCodePointer[(RawPointer),()];
     __cancel_arg : RawPointer;
     __do_it : Int;
     __cancel_type : Int;
 }
 
 external __pthread_register_cancel(
-    __buf : Pointer[__pthread_unwind_buf_t]) Void;
+    __buf : Pointer[__pthread_unwind_buf_t]);
 
 external __pthread_unregister_cancel(
-    __buf : Pointer[__pthread_unwind_buf_t]) Void;
+    __buf : Pointer[__pthread_unwind_buf_t]);
 
 external __pthread_unwind_next(
-    __buf : Pointer[__pthread_unwind_buf_t]) Void;
+    __buf : Pointer[__pthread_unwind_buf_t]);
 
 external __sigsetjmp(
     __env : OpaquePointer,
@@ -1468,7 +1468,7 @@ external pthread_barrierattr_setpshared(
 
 external pthread_key_create(
     __key : Pointer[UInt],
-    __destr_function : CCodePointer[RawPointer,Void]) Int;
+    __destr_function : CCodePointer[(RawPointer),()]) Int;
 
 external pthread_key_delete(
     __key : UInt) Int;
@@ -1485,9 +1485,9 @@ external pthread_getcpuclockid(
     __clock_id : Pointer[Int]) Int;
 
 external pthread_atfork(
-    __prepare : CCodePointer[Void],
-    __parent : CCodePointer[Void],
-    __child : CCodePointer[Void]) Int;
+    __prepare : CCodePointer[(),()],
+    __parent : CCodePointer[(),()],
+    __child : CCodePointer[(),()]) Int;
 
 static u_char = CUChar;
 
