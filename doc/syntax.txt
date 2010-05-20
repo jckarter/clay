@@ -1,9 +1,12 @@
-Module -> Import* Export* TopLevelItem*
+Module -> Import* TopLevelItem*
 
-Import -> "import" DottedName ";"
-Export -> "export" DottedName ";"
+Import -> "import" DottedName ("as" Identifier)? ";"
+        | "import" DottedName "." "*" ";"
+        | "import" DottedName "." "(" comma_list(ImportedItem) ")" ";"
 
 DottedName -> Identifier ("." Identifier)*
+
+ImportedItem -> Identifier ("as" Identifier)?
 
 
 TopLevelItem -> Record | Procedure | Overloadable | Overload
@@ -181,7 +184,7 @@ Literal -> BoolLiteral
 
 BoolLiteral -> "true" | "false"
 
-Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" "ref"? Block
+Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" Block
 
 VarArgsRef -> "..."
 
