@@ -1817,9 +1817,7 @@ void codegenInvokeInlined(InvokeEntryPtr entry,
 
     ObjectPtr analysis = analyzeInvokeInlined(entry, args, env);
     assert(analysis.ptr());
-    MultiPValuePtr mpv;
-    if (!analysisToMultiPValue(analysis, mpv))
-        error("invalid value");
+    MultiPValuePtr mpv = analysisToMultiPValue(analysis);
     assert(mpv->size() == out->size());
 
     const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;

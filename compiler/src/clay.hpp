@@ -2089,8 +2089,8 @@ struct MultiPValue : public Object {
 };
 
 
-bool analysisToPValue(ObjectPtr x, PValuePtr &pv);
-bool analysisToMultiPValue(ObjectPtr x, MultiPValuePtr &mpv);
+PValuePtr analysisToPValue(ObjectPtr x);
+MultiPValuePtr analysisToMultiPValue(ObjectPtr x);
 MultiPValuePtr analyzeMultiValue(ExprPtr expr, EnvPtr env);
 ObjectPtr analyzeOne(ExprPtr expr, EnvPtr env);
 PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
