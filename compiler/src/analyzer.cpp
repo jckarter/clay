@@ -6,19 +6,17 @@
 // analyze wrappers
 //
 
-bool analysisToPValue(ObjectPtr x, PValuePtr &pv)
+PValuePtr analysisToPValue(ObjectPtr x)
 {
     switch (x->objKind) {
 
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
-        pv = new PValue(y->type, true);
-        return true;
+        return new PValue(y->type, true);
     }
 
     case PVALUE :
-        pv = (PValue *)x.ptr();
-        return true;
+        return (PValue *)x.ptr();
 
     case TYPE :
     case PRIM_OP :
@@ -26,29 +24,21 @@ bool analysisToPValue(ObjectPtr x, PValuePtr &pv)
     case OVERLOADABLE :
     case RECORD :
     case MODULE_HOLDER :
-        pv = new PValue(staticType(x), true);
-        return true;
+        return new PValue(staticType(x), true);
 
     default :
-        return false;
+        error("invalid value");
+        return NULL;
     }
 }
 
-bool analysisToMultiPValue(ObjectPtr x, MultiPValuePtr &mpv)
+MultiPValuePtr analysisToMultiPValue(ObjectPtr x)
 {
     switch (x->objKind) {
-    case MULTI_PVALUE : {
-        MultiPValue *y = (MultiPValue *)x.ptr();
-        mpv = y;
-        return true;
-    }
-    default : {
-        PValuePtr pv;
-        if (!analysisToPValue(x, pv))
-            return false;
-        mpv = new MultiPValue(pv);
-        return true;
-    }
+    case MULTI_PVALUE :
+        return (MultiPValue *)x.ptr();
+    default :
+        return new MultiPValue(analysisToPValue(x));
     }
 }
 
@@ -57,10 +47,7 @@ MultiPValuePtr analyzeMultiValue(ExprPtr expr, EnvPtr env)
     ObjectPtr v = analyze(expr, env);
     if (!v)
         return NULL;
-    MultiPValuePtr mpv;
-    if (!analysisToMultiPValue(v, mpv))
-        error(expr, "invalid value");
-    return mpv;
+    return analysisToMultiPValue(v);
 }
 
 ObjectPtr analyzeOne(ExprPtr expr, EnvPtr env)
@@ -78,10 +65,7 @@ PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
     ObjectPtr v = analyzeOne(expr, env);
     if (!v)
         return NULL;
-    PValuePtr pv;
-    if (!analysisToPValue(v, pv))
-        error(expr, "expecting a value");
-    return pv;
+    return analysisToPValue(v);
 }
 
 PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env)
@@ -373,9 +357,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
                     return first;
             }
         }
-        PValuePtr a;
-        if (!analysisToPValue(first, a))
-            error(x->expr1, "expecting a value");
+        PValuePtr a = analysisToPValue(first);
         if (a->isTemp)
             return new PValue(a->type, true);
         PValuePtr b = analyzeValue(x->expr2, env);
@@ -398,9 +380,7 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
                     return first;
             }
         }
-        PValuePtr a;
-        if (!analysisToPValue(first, a))
-            error(x->expr1, "expecting a value");
+        PValuePtr a = analysisToPValue(first);
         if (a->isTemp)
             return new PValue(a->type, true);
         PValuePtr b = analyzeValue(x->expr2, env);
