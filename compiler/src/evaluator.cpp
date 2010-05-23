@@ -724,9 +724,9 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
-    case SC_EXPR : {
-        SCExpr *x = (SCExpr *)expr.ptr();
-        evalExpr(x->expr, x->env, out);
+    case FOREIGN_EXPR : {
+        ForeignExpr *x = (ForeignExpr *)expr.ptr();
+        evalExpr(x->expr, x->getEnv(), out);
         break;
     }
 
@@ -1054,14 +1054,14 @@ void evalInvokeInlined(InvokeEntryPtr entry,
     EnvPtr bodyEnv = new Env(entry->env);
 
     for (unsigned i= 0; i < entry->fixedArgNames.size(); ++i) {
-        ExprPtr expr = new SCExpr(env, args[i]);
+        ExprPtr expr = new ForeignExpr(env, args[i]);
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
 
     VarArgsInfoPtr vaInfo = new VarArgsInfo(entry->hasVarArgs);
     if (entry->hasVarArgs) {
         for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
-            ExprPtr expr = new SCExpr(env, args[i]);
+            ExprPtr expr = new ForeignExpr(env, args[i]);
             vaInfo->varArgs.push_back(expr);
         }
     }
@@ -1310,9 +1310,9 @@ TerminationPtr evalStatement(StatementPtr stmt,
         return evalStatement(x->desugared, env, ctx);
     }
 
-    case SC_STATEMENT : {
-        SCStatement *x = (SCStatement *)stmt.ptr();
-        return evalStatement(x->statement, x->env, ctx);
+    case FOREIGN_STATEMENT : {
+        ForeignStatement *x = (ForeignStatement *)stmt.ptr();
+        return evalStatement(x->statement, x->getEnv(), ctx);
     }
 
     case TRY :

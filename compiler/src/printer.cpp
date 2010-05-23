@@ -234,9 +234,9 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "StaticExpr(" << y->expr << ")";
         break;
     }
-    case SC_EXPR : {
-        const SCExpr *y = (const SCExpr *)x;
-        out << "SCExpr(" << y->expr << ")";
+    case FOREIGN_EXPR : {
+        const ForeignExpr *y = (const ForeignExpr *)x;
+        out << "ForeignExpr(" << y->expr << ")";
         break;
     }
     case OBJECT_EXPR : {
@@ -334,9 +334,9 @@ static void printStatement(ostream &out, const Statement *x) {
         out << ", " << y->body << ")";
         break;
     }
-    case SC_STATEMENT : {
-        const SCStatement *y = (const SCStatement *)x;
-        out << "SCStatement(" << y->statement << ")";
+    case FOREIGN_STATEMENT : {
+        const ForeignStatement *y = (const ForeignStatement *)x;
+        out << "ForeignStatement(" << y->statement << ")";
         break;
     }
     case TRY : {

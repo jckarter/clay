@@ -368,14 +368,14 @@ static void initModule(ModulePtr m) {
 
             StatementPtr y = new InitAssignment(lhs, x->expr);
             y->location = x->location;
-            StatementPtr z = new SCStatement(x->env, y);
+            StatementPtr z = new ForeignStatement(x->env, y);
             z->location = y->location;
             gvarInitializers->statements.push_back(z);
 
             ExprPtr destructor = kernelNameRef("destroy");
             CallPtr destroyCall = new Call(destructor);
             destroyCall->location = lhs->location;
-            destroyCall->args.push_back(new SCExpr(x->env, lhs));
+            destroyCall->args.push_back(new ForeignExpr(x->env, lhs));
             StatementPtr a = new ExprStatement(destroyCall.ptr());
             gvarDestructors->statements.insert(
                 gvarDestructors->statements.begin(), a);
@@ -535,7 +535,7 @@ ObjectPtr primName(const string &name) {
 
 ExprPtr moduleNameRef(const string &module, const string &name) {
     ExprPtr nameRef = new NameRef(new Identifier(name));
-    return new SCExpr(loadedModule(module)->env, nameRef);
+    return new ForeignExpr(loadedModule(module)->env, nameRef);
 }
 
 ExprPtr kernelNameRef(const string &name) {
@@ -544,4 +544,26 @@ ExprPtr kernelNameRef(const string &name) {
 
 ExprPtr primNameRef(const string &name) {
     return moduleNameRef("__primitives__", name);
+}
+
+
+
+//
+// ForeignExpr::getEnv, ForeignStatement::getEnv
+//
+
+EnvPtr ForeignExpr::getEnv() {
+    if (!foreignEnv.ptr()) {
+        assert(moduleName.size() > 0);
+        foreignEnv = loadedModule(moduleName)->env;
+    }
+    return foreignEnv;
+}
+
+EnvPtr ForeignStatement::getEnv() {
+    if (!foreignEnv.ptr()) {
+        assert(moduleName.size() > 0);
+        foreignEnv = loadedModule(moduleName)->env;
+    }
+    return foreignEnv;
 }
