@@ -5,48 +5,36 @@ import numbers.parser.*;
 // numeric type predicates
 //
 
-overloadable SignedInteger?;
-
-[T] overload SignedInteger?(static T) = false;
+[T] SignedInteger?(static T) = false;
 overload SignedInteger?(static Int8) = true;
 overload SignedInteger?(static Int16) = true;
 overload SignedInteger?(static Int32) = true;
 overload SignedInteger?(static Int64) = true;
 
 
-overloadable UnsignedInteger?;
-
-[T] overload UnsignedInteger?(static T) = false;
+[T] UnsignedInteger?(static T) = false;
 overload UnsignedInteger?(static UInt8) = true;
 overload UnsignedInteger?(static UInt16) = true;
 overload UnsignedInteger?(static UInt32) = true;
 overload UnsignedInteger?(static UInt64) = true;
 
 
-overloadable Integer?;
-
-[T] overload Integer?(static T) = SignedInteger?(T) or UnsignedInteger?(T);
+[T] Integer?(static T) = SignedInteger?(T) or UnsignedInteger?(T);
 [A, B] overload Integer?(static A, static B) = Integer?(A) and Integer?(B);
 
 
-overloadable ByteSizedInteger?;
-
-[T] overload ByteSizedInteger?(static T) = false;
+[T] ByteSizedInteger?(static T) = false;
 overload ByteSizedInteger?(static Int8) = true;
 overload ByteSizedInteger?(static UInt8) = true;
 
 
-overloadable Float?;
-
-[T] overload Float?(static T) = false;
+[T] Float?(static T) = false;
 overload Float?(static Float32) = true;
 overload Float?(static Float64) = true;
 [A, B] overload Float?(static A, static B) = Float?(A) and Float?(B);
 
 
-overloadable Numeric?;
-
-[T] overload Numeric?(static T) = Integer?(T) or Float?(T);
+[T] Numeric?(static T) = Integer?(T) or Float?(T);
 [A, B] overload Numeric?(static A, static B) = Numeric?(A) and Numeric?(B);
 
 
@@ -65,7 +53,7 @@ private BiggerInteger?(static A, static B) =
 private BiggerFloat?(static A, static B) = TypeSize(A) > TypeSize(B);
 
 
-private overloadable BiggerNumeric?;
+private procedure BiggerNumeric?;
 
 [A,B | Float?(A) and Integer?(B)]
 overload BiggerNumeric?(static A, static B) = true;
@@ -85,7 +73,7 @@ overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
 // toBiggerNumericType
 //
 
-overloadable toBiggerNumericType;
+procedure toBiggerNumericType;
 
 [A | Numeric?(A)]
 overload toBiggerNumericType(static A, static A, v) = v;

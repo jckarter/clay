@@ -1,5 +1,5 @@
 
-overloadable printAll;
+procedure printAll;
 
 overload printAll(a:Int, ...) {
     println(a);

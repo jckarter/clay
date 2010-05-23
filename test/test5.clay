@@ -1,5 +1,5 @@
 
-overloadable foo;
+procedure foo;
 
 overload foo(x) = 0;
 overload foo(x:Bool) = 1;

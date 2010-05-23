@@ -11,7 +11,5 @@ inlined syscall(callable, ...) {
     return result;
 }
 
-overloadable errorMessage;
-
+errorMessage(err) = stringRef(libc.strerror(err));
 overload errorMessage() = errorMessage(errno());
-overload errorMessage(err) = stringRef(libc.strerror(err));

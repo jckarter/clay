@@ -1,9 +1,9 @@
 
-overloadable IsInt64;
+procedure IsInt64;
 [T] overload IsInt64(static T) = false;
 overload IsInt64(static Int64) = true;
 
-overloadable Foo;
+procedure Foo;
 [T] overload Foo(static T) = false;
 overload Foo(static Int64) = true;
 

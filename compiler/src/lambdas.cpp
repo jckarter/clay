@@ -108,9 +108,9 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     overload->env = env;
     overload->location = x->location;
     ObjectPtr obj = kernelName("call");
-    if (obj->objKind != OVERLOADABLE)
+    if (obj->objKind != PROCEDURE)
         error("'call' operator not found!");
-    Overloadable *callObj = (Overloadable *)obj.ptr();
+    Procedure *callObj = (Procedure *)obj.ptr();
     callObj->overloads.insert(callObj->overloads.begin(), overload);
 }
 

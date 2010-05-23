@@ -10,10 +10,8 @@ public import sequences.filter.*;
 // reduce
 //
 
-overloadable reduce;
-
 [F, A | Sequence?(A)]
-overload reduce(f:F, seq:A) {
+reduce(f:F, seq:A) {
     static X = SequenceElementType(A);
     return reduce(f, X(0), seq);
 }
@@ -52,10 +50,8 @@ split(a:A, sep) {
 // slice
 //
 
-overloadable slice;
-
 [A | RandomAccessSequence?(A)]
-overload slice(a:A, begin, end) {
+slice(a:A, begin, end) {
     static T = SequenceElementType(A);
     var v = Vector[T]();
     for (i in range(begin, end))

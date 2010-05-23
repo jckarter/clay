@@ -13,17 +13,14 @@ RecordFieldType(static T, static i) = Type(recordFieldRef(T(), static SizeT(i)))
 // SafeRecord? - true if record doesn't contains unsafe types such as pointers
 //
 
-overloadable SafeRecord?;
-
 [T]
-overload SafeRecord?(static T) = false;
+SafeRecord?(static T) = false;
 
 [T | Record?(T)]
 overload SafeRecord?(static T) = SafeFields?(T, static 0);
 
-private overloadable SafeFields?;
-
-[T,i] overload SafeFields?(static T, static i) =
+[T,i]
+private SafeFields?(static T, static i) =
     SafeType?(RecordFieldType(T, static i)) and SafeFields?(T, static i+1);
 
 [T,i | i == RecordFieldCount(T)]
@@ -35,9 +32,7 @@ overload SafeFields?(static T, static i) = true;
 // SafeType?
 //
 
-overloadable SafeType?;
-
-[T] overload SafeType?(static T) = true;
+[T] SafeType?(static T) = true;
 [T] overload SafeType?(static Pointer[T]) = false;
 
 
@@ -51,10 +46,8 @@ overload T() returned:T {
     initRecordFields(returned, static SizeT(0));
 }
 
-private overloadable initRecordFields;
-
 [i]
-overload initRecordFields(a, static i) {
+private initRecordFields(a, static i) {
     initialize(recordFieldRef(a, static i));
     initRecordFields(a, static i+1);
 }
@@ -74,10 +67,8 @@ overload T(src:T) returned:T {
     copyRecordFields(returned, src, static SizeT(0));
 }
 
-private overloadable copyRecordFields;
-
 [T,i]
-overload copyRecordFields(dest:T, src:T, static i) {
+private copyRecordFields(dest:T, src:T, static i) {
     recordFieldRef(dest, static i) <-- recordFieldRef(src, static i);
     copyRecordFields(dest, src, static i+1);
 }
@@ -97,10 +88,8 @@ overload move(src:T) returned:T {
     moveRecordFields(returned, src, static SizeT(0));
 }
 
-private overloadable moveRecordFields;
-
 [T,i]
-overload moveRecordFields(dest:T, src:T, static i) {
+private moveRecordFields(dest:T, src:T, static i) {
     recordFieldRef(dest, static i) <-- move(recordFieldRef(src, static i));
     moveRecordFields(dest, src, static i+1);
 }
@@ -120,10 +109,8 @@ overload destroy(a:T) {
     destroyRecordFields(a, static SizeT(0));
 }
 
-private overloadable destroyRecordFields;
-
 [i]
-overload destroyRecordFields(a, static i) {
+private destroyRecordFields(a, static i) {
     destroyRecordFields(a, static i+1);
     destroy(recordFieldRef(a, static i));
 }
@@ -143,10 +130,8 @@ overload assign(dest:T, src:T) {
     assignRecordFields(dest, src, static SizeT(0));
 }
 
-private overloadable assignRecordFields;
-
 [T,i]
-overload assignRecordFields(dest:T, src:T, static i) {
+private assignRecordFields(dest:T, src:T, static i) {
     assign(recordFieldRef(dest, static i), recordFieldRef(src, static i));
     assignRecordFields(dest, src, static i+1);
 }
@@ -166,10 +151,8 @@ overload equals?(a:T, b:T) {
     return equalRecordFields?(a, b, static SizeT(0));
 }
 
-private overloadable equalRecordFields?;
-
 [T,i]
-overload equalRecordFields?(a:T, b:T, static i) {
+private equalRecordFields?(a:T, b:T, static i) {
     if (not equals?(recordFieldRef(a, static i), recordFieldRef(b, static i)))
         return false;
     return equalRecordFields?(a, b, static i+1);
@@ -191,10 +174,8 @@ overload lesser?(a:T, b:T) {
     return lesserRecordFields?(a, b, static SizeT(0));
 }
 
-private overloadable lesserRecordFields?;
-
 [T,i]
-overload lesserRecordFields?(a:T, b:T, static i) {
+private lesserRecordFields?(a:T, b:T, static i) {
     ref af = recordFieldRef(a, static i);
     ref bf = recordFieldRef(b, static i);
     if (lesser?(af, bf))

@@ -21,7 +21,7 @@ static void initCallable(ObjectPtr x)
             initBuiltinConstructor(y);
         break;
     }
-    case OVERLOADABLE :
+    case PROCEDURE :
         break;
     default :
         assert(false);
@@ -40,8 +40,8 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
         Record *y = (Record *)x.ptr();
         return y->overloads;
     }
-    case OVERLOADABLE : {
-        Overloadable *y = (Overloadable *)x.ptr();
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
         return y->overloads;
     }
     default : {

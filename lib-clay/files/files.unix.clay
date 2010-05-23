@@ -123,9 +123,7 @@ private seekWhence(x) {
     assert(false);
 }
 
-overloadable seek;
-
-overload seek(f:File, offset, whence) {
+seek(f:File, offset, whence) {
     return unix.syscall(unix.lseek,
                         f.handle,
                         Int64(offset),

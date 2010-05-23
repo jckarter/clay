@@ -5,10 +5,8 @@ import libc;
 // String?
 //
 
-overloadable String?;
-
 [A]
-overload String?(static A) = false;
+String?(static A) = false;
 
 [A | Sequence?(A) and (Char == SequenceElementType(A))]
 overload String?(static A) = true;
@@ -19,10 +17,8 @@ overload String?(static A) = true;
 // SizedString?
 //
 
-overloadable SizedString?;
-
 [A]
-overload SizedString?(static A) = false;
+SizedString?(static A) = false;
 
 [A | SizedSequence?(A) and (Char == SequenceElementType(A))]
 overload SizedString?(static A) = true;
@@ -33,10 +29,8 @@ overload SizedString?(static A) = true;
 // ContiguousString?
 //
 
-overloadable ContiguousString?;
-
 [A]
-overload ContiguousString?(static A) = false;
+ContiguousString?(static A) = false;
 
 [A | ContiguousSequence?(A) and (Char == SequenceElementType(A))]
 overload ContiguousString?(static A) = true;
@@ -134,7 +128,7 @@ overload String(cstr : Pointer[T]) = String(stringRef(cstr));
 // stringRef constructors
 //
 
-overloadable stringRef;
+procedure stringRef;
 
 [A | ContiguousSequence?(A) and (Char == SequenceElementType(A))]
 overload stringRef(a:A) = String(&a[0], size(a), false);

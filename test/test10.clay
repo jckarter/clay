@@ -1,5 +1,5 @@
 
-overloadable printValue;
+procedure printValue;
 
 overload printValue(x:Int32) {
     println("int value = ", x);

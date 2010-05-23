@@ -1,7 +1,7 @@
 import libc.(malloc, free);
 
 
-overloadable null?;
+procedure null?;
 
 
 

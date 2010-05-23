@@ -131,7 +131,7 @@ enum ObjectKind {
     RECORD,
     RECORD_FIELD,
     OVERLOAD,
-    OVERLOADABLE,
+    PROCEDURE,
     ENUMERATION,
     ENUM_MEMBER,
     GLOBAL_VARIABLE,
@@ -231,7 +231,7 @@ struct TopLevelItem;
 struct Record;
 struct RecordField;
 struct Overload;
-struct Overloadable;
+struct Procedure;
 struct Enumeration;
 struct EnumMember;
 struct GlobalVariable;
@@ -351,7 +351,7 @@ typedef Pointer<TopLevelItem> TopLevelItemPtr;
 typedef Pointer<Record> RecordPtr;
 typedef Pointer<RecordField> RecordFieldPtr;
 typedef Pointer<Overload> OverloadPtr;
-typedef Pointer<Overloadable> OverloadablePtr;
+typedef Pointer<Procedure> ProcedurePtr;
 typedef Pointer<Enumeration> EnumerationPtr;
 typedef Pointer<EnumMember> EnumMemberPtr;
 typedef Pointer<GlobalVariable> GlobalVariablePtr;
@@ -1119,10 +1119,10 @@ struct Overload : public TopLevelItem {
           inlined(inlined) {}
 };
 
-struct Overloadable : public TopLevelItem {
+struct Procedure : public TopLevelItem {
     vector<OverloadPtr> overloads;
-    Overloadable(IdentifierPtr name, Visibility visibility)
-        : TopLevelItem(OVERLOADABLE, name, visibility) {}
+    Procedure(IdentifierPtr name, Visibility visibility)
+        : TopLevelItem(PROCEDURE, name, visibility) {}
 };
 
 struct Enumeration : public TopLevelItem {

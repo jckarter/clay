@@ -6,7 +6,7 @@ import libc;
 // printTo
 //
 
-overloadable printTo;
+procedure printTo;
 
 overload printTo(stream) {
 }

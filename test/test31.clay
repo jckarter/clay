@@ -10,7 +10,7 @@ static Opaque = Int;
 // display
 //
 
-overloadable display;
+procedure display;
 
 overload display(x) {
     println(x);

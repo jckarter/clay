@@ -325,8 +325,8 @@ static void initOverload(OverloadPtr x) {
     PatternPtr pattern = evaluatePattern(x->target, env);
     ObjectPtr y = reducePattern(pattern);
     switch (y->objKind) {
-    case OVERLOADABLE : {
-        Overloadable *z = (Overloadable *)y.ptr();
+    case PROCEDURE : {
+        Procedure *z = (Procedure *)y.ptr();
         z->overloads.insert(z->overloads.begin(), x);
         break;
     }

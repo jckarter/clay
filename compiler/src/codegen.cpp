@@ -1211,7 +1211,7 @@ void codegenStaticObject(ObjectPtr x,
     }
     case TYPE :
     case PRIM_OP :
-    case OVERLOADABLE :
+    case PROCEDURE :
     case RECORD :
     case MODULE_HOLDER :
     case IDENTIFIER : {
@@ -1648,7 +1648,7 @@ void codegenInvoke(ObjectPtr x,
     switch (x->objKind) {
     case TYPE :
     case RECORD :
-    case OVERLOADABLE :
+    case PROCEDURE :
         codegenInvokeCallable(x, args, env, ctx, out);
         break;
     case PRIM_OP :
@@ -1699,7 +1699,7 @@ bool codegenInvokeSpecialCase(ObjectPtr x,
             return true;
         break;
     }
-    case OVERLOADABLE : {
+    case PROCEDURE : {
         if ((x == kernelName("destroy")) &&
             (argsKey.size() == 1))
         {
@@ -2588,7 +2588,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case OVERLOADABLE :
+        case PROCEDURE :
             break;
         default :
             error(args[0], "invalid callable");
@@ -2656,7 +2656,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case OVERLOADABLE :
+        case PROCEDURE :
             break;
         default :
             error(args[0], "invalid callable");
@@ -3020,7 +3020,7 @@ void codegenInvokePrimOp2(PrimOpPtr x,
 // codegenSharedLib, codegenExe
 //
 
-static OverloadablePtr makeInitializerProcedure() {
+static ProcedurePtr makeInitializerProcedure() {
     CodePtr code = new Code();
     code->body = globalVarInitializers().ptr();
     IdentifierPtr name = new Identifier("%initGlobals");
@@ -3028,14 +3028,14 @@ static OverloadablePtr makeInitializerProcedure() {
     OverloadPtr overload = new Overload(target, code, false);
     EnvPtr env = new Env();
     overload->env = env;
-    OverloadablePtr proc = new Overloadable(name, PRIVATE);
+    ProcedurePtr proc = new Procedure(name, PRIVATE);
     proc->overloads.push_back(overload);
     proc->env = env;
     env->entries[name->str] = proc.ptr();
     return proc;
 }
 
-static OverloadablePtr makeDestructorProcedure() {
+static ProcedurePtr makeDestructorProcedure() {
     CodePtr code = new Code();
     code->body = globalVarDestructors().ptr();
     IdentifierPtr name = new Identifier("%destroyGlobals");
@@ -3043,7 +3043,7 @@ static OverloadablePtr makeDestructorProcedure() {
     OverloadPtr overload = new Overload(target, code, false);
     EnvPtr env = new Env();
     overload->env = env;
-    OverloadablePtr proc = new Overloadable(name, PRIVATE);
+    ProcedurePtr proc = new Procedure(name, PRIVATE);
     proc->overloads.push_back(overload);
     proc->env = env;
     env->entries[name->str] = proc.ptr();
