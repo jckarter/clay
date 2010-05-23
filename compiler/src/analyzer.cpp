@@ -581,11 +581,6 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
     switch (x->objKind) {
 
     case PVALUE : {
-        PValue *y = (PValue *)x.ptr();
-        if (y->type->typeKind == STATIC_TYPE) {
-            StaticType *t = (StaticType *)y->type.ptr();
-            return analyzeIndexing(t->obj, args, env);
-        }
         vector<ExprPtr> args2;
         args2.push_back(new ObjectExpr(x));
         args2.insert(args2.end(), args.begin(), args.end());
