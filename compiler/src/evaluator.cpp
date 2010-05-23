@@ -716,6 +716,14 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
+    case STATIC_EXPR : {
+        StaticExpr *x = (StaticExpr *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarStaticExpr(x);
+        evalExpr(x->desugared, env, out);
+        break;
+    }
+
     case SC_EXPR : {
         SCExpr *x = (SCExpr *)expr.ptr();
         evalExpr(x->expr, x->env, out);

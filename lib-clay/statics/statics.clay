@@ -32,3 +32,13 @@ overload equals?(a:Static[A], b:Static[A]) = true;
 
 [A]
 overload lesser?(a:Static[A], b:Static[A]) = false;
+
+
+
+//
+// staticValue
+//
+
+inlined staticValue(x) {
+    return Static[x]();
+}

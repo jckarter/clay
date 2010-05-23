@@ -700,7 +700,7 @@ static bool varArgsRef(ExprPtr &x) {
 
 
 //
-// newExpr
+// newExpr, staticExpr
 //
 
 static bool newExpr(ExprPtr &x) {
@@ -709,6 +709,16 @@ static bool newExpr(ExprPtr &x) {
     ExprPtr y;
     if (!expression(y)) return false;
     x = new New(y);
+    x->location = location;
+    return true;
+}
+
+static bool staticExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("static")) return false;
+    ExprPtr y;
+    if (!expression(y)) return false;
+    x = new StaticExpr(y);
     x->location = location;
     return true;
 }
@@ -726,6 +736,7 @@ static bool expression(ExprPtr &x) {
     if (restore(p), blockLambda(x)) return true;
     if (restore(p), varArgsRef(x)) return true;
     if (restore(p), newExpr(x)) return true;
+    if (restore(p), staticExpr(x)) return true;
     return false;
 }
 

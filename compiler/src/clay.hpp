@@ -203,6 +203,7 @@ struct Or;
 struct Lambda;
 struct VarArgsRef;
 struct New;
+struct StaticExpr;
 struct SCExpr;
 struct ObjectExpr;
 
@@ -325,6 +326,7 @@ typedef Pointer<Or> OrPtr;
 typedef Pointer<Lambda> LambdaPtr;
 typedef Pointer<VarArgsRef> VarArgsRefPtr;
 typedef Pointer<New> NewPtr;
+typedef Pointer<StaticExpr> StaticExprPtr;;
 typedef Pointer<SCExpr> SCExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
 
@@ -619,6 +621,7 @@ enum ExprKind {
     LAMBDA,
     VAR_ARGS_REF,
     NEW,
+    STATIC_EXPR,
 
     SC_EXPR,
     OBJECT_EXPR,
@@ -804,6 +807,13 @@ struct New : public Expr {
     ExprPtr desugared;
     New(ExprPtr expr) :
         Expr(NEW), expr(expr) {}
+};
+
+struct StaticExpr : public Expr {
+    ExprPtr expr;
+    ExprPtr desugared;
+    StaticExpr(ExprPtr expr) :
+        Expr(STATIC_EXPR), expr(expr) {}
 };
 
 struct SCExpr : public Expr {
@@ -1872,6 +1882,7 @@ ExprPtr desugarCharLiteral(char c);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
 ExprPtr desugarNew(NewPtr x);
+ExprPtr desugarStaticExpr(StaticExprPtr x);
 const char *updateOperatorName(int op);
 StatementPtr desugarForStatement(ForPtr x);
 
