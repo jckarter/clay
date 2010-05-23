@@ -381,14 +381,7 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
     }
     case STATIC_GLOBAL : {
         StaticGlobal *y = (StaticGlobal *)x.ptr();
-        if (!y->result) {
-            if (y->analyzing)
-                return NULL;
-            y->analyzing = true;
-            y->result = analyze(y->expr, y->env);
-            y->analyzing = false;
-        }
-        return analyzeStaticObject(y->result);
+        return analyze(y->expr, y->env);
     }
     case EVALUE : {
         EValue *y = (EValue *)x.ptr();

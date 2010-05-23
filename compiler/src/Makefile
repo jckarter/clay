@@ -34,6 +34,7 @@ OBJS = \
 	constructors.o \
 	literals.o \
 	analyzer.o \
+	analyzer2.o \
 	evaluator.o \
 	codegen.o \
 	main.o
