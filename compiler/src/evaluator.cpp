@@ -811,7 +811,6 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
     }
     case TYPE :
     case PRIM_OP :
-    case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
     case MODULE_HOLDER :
@@ -914,7 +913,6 @@ void evalInvoke(ObjectPtr x,
     switch (x->objKind) {
     case TYPE :
     case RECORD :
-    case PROCEDURE :
     case OVERLOADABLE :
         evalInvokeCallable(x, args, env, out);
         break;
@@ -2332,7 +2330,6 @@ void evalInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :
@@ -2405,7 +2402,6 @@ void evalInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :

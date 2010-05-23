@@ -1511,7 +1511,7 @@ static bool optInlined(bool &inlined) {
     return true;
 }
 
-static bool procedure(TopLevelItemPtr &x) {
+static bool procedure(vector<TopLevelItemPtr> &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
@@ -1525,8 +1525,17 @@ static bool procedure(TopLevelItemPtr &x) {
     if (!optReturnSpecList(y->returnSpecs)) return false;
     if (!body(y->body)) return false;
     y->location = location;
-    x = new Procedure(z, vis, y, inlined);
-    x->location = location;
+
+    OverloadablePtr u = new Overloadable(z, vis);
+    u->location = location;
+    x.push_back(u.ptr());
+
+    ExprPtr target = new NameRef(z);
+    target->location = location;
+    OverloadPtr v = new Overload(target, y, inlined);
+    v->location = location;
+    x.push_back(v.ptr());
+
     return true;
 }
 
@@ -1885,30 +1894,33 @@ static bool imports(vector<ImportPtr> &x) {
 // module
 //
 
-static bool topLevelItem(TopLevelItemPtr &x) {
+static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     int p = save();
-    if (record(x)) return true;
-    if (restore(p), procedure(x)) return true;
-    if (restore(p), overloadable(x)) return true;
-    if (restore(p), overload(x)) return true;
-    if (restore(p), enumeration(x)) return true;
-    if (restore(p), globalVariable(x)) return true;
-    if (restore(p), external(x)) return true;
-    if (restore(p), externalVariable(x)) return true;
-    if (restore(p), staticGlobal(x)) return true;
+    TopLevelItemPtr y;
+    if (record(y)) goto success;
+    if (restore(p), procedure(x)) goto success2;
+    if (restore(p), overloadable(y)) goto success;
+    if (restore(p), overload(y)) goto success;
+    if (restore(p), enumeration(y)) goto success;
+    if (restore(p), globalVariable(y)) goto success;
+    if (restore(p), external(y)) goto success;
+    if (restore(p), externalVariable(y)) goto success;
+    if (restore(p), staticGlobal(y)) goto success;
     return false;
+success :
+    x.push_back(y);
+success2 :
+    return true;
 }
 
 static bool topLevelItems(vector<TopLevelItemPtr> &x) {
     x.clear();
     while (true) {
         int p = save();
-        TopLevelItemPtr y;
-        if (!topLevelItem(y)) {
+        if (!topLevelItem(x)) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }

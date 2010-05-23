@@ -130,7 +130,6 @@ enum ObjectKind {
 
     RECORD,
     RECORD_FIELD,
-    PROCEDURE,
     OVERLOAD,
     OVERLOADABLE,
     ENUMERATION,
@@ -231,7 +230,6 @@ struct Code;
 struct TopLevelItem;
 struct Record;
 struct RecordField;
-struct Procedure;
 struct Overload;
 struct Overloadable;
 struct Enumeration;
@@ -352,7 +350,6 @@ typedef Pointer<Code> CodePtr;
 typedef Pointer<TopLevelItem> TopLevelItemPtr;
 typedef Pointer<Record> RecordPtr;
 typedef Pointer<RecordField> RecordFieldPtr;
-typedef Pointer<Procedure> ProcedurePtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Overloadable> OverloadablePtr;
 typedef Pointer<Enumeration> EnumerationPtr;
@@ -1111,18 +1108,6 @@ struct RecordField : public ANode {
     ExprPtr type;
     RecordField(IdentifierPtr name, ExprPtr type)
         : ANode(RECORD_FIELD), name(name), type(type) {}
-};
-
-struct Procedure : public TopLevelItem {
-    CodePtr code;
-    bool inlined;
-
-    vector<OverloadPtr> overloads;
-
-    Procedure(IdentifierPtr name, Visibility visibility,
-              CodePtr code, bool inlined)
-        : TopLevelItem(PROCEDURE, name, visibility), code(code),
-          inlined(inlined) {}
 };
 
 struct Overload : public TopLevelItem {
