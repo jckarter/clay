@@ -229,7 +229,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case SC_STATEMENT : {
+    case FOREIGN_STATEMENT : {
         break;
     }
 
@@ -377,7 +377,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case SC_EXPR :
+    case FOREIGN_EXPR :
     case OBJECT_EXPR :
         break;
     }

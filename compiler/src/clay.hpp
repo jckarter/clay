@@ -204,7 +204,7 @@ struct Lambda;
 struct VarArgsRef;
 struct New;
 struct StaticExpr;
-struct SCExpr;
+struct ForeignExpr;
 struct ObjectExpr;
 
 struct Statement;
@@ -222,7 +222,7 @@ struct While;
 struct Break;
 struct Continue;
 struct For;
-struct SCStatement;
+struct ForeignStatement;
 struct Try;
 
 struct FormalArg;
@@ -327,7 +327,7 @@ typedef Pointer<Lambda> LambdaPtr;
 typedef Pointer<VarArgsRef> VarArgsRefPtr;
 typedef Pointer<New> NewPtr;
 typedef Pointer<StaticExpr> StaticExprPtr;;
-typedef Pointer<SCExpr> SCExprPtr;
+typedef Pointer<ForeignExpr> ForeignExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
 
 typedef Pointer<Statement> StatementPtr;
@@ -345,7 +345,7 @@ typedef Pointer<While> WhilePtr;
 typedef Pointer<Break> BreakPtr;
 typedef Pointer<Continue> ContinuePtr;
 typedef Pointer<For> ForPtr;
-typedef Pointer<SCStatement> SCStatementPtr;
+typedef Pointer<ForeignStatement> ForeignStatementPtr;
 typedef Pointer<Try> TryPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
@@ -623,7 +623,7 @@ enum ExprKind {
     NEW,
     STATIC_EXPR,
 
-    SC_EXPR,
+    FOREIGN_EXPR,
     OBJECT_EXPR,
 };
 
@@ -816,11 +816,21 @@ struct StaticExpr : public Expr {
         Expr(STATIC_EXPR), expr(expr) {}
 };
 
-struct SCExpr : public Expr {
-    EnvPtr env;
+struct ForeignExpr : public Expr {
+    string moduleName;
+    EnvPtr foreignEnv;
     ExprPtr expr;
-    SCExpr(EnvPtr env, ExprPtr expr)
-        : Expr(SC_EXPR), env(env), expr(expr) {}
+
+    ForeignExpr(const string &moduleName, ExprPtr expr)
+        : Expr(FOREIGN_EXPR), moduleName(moduleName), expr(expr) {}
+    ForeignExpr(EnvPtr foreignEnv, ExprPtr expr)
+        : Expr(FOREIGN_EXPR), foreignEnv(foreignEnv), expr(expr) {}
+
+    ForeignExpr(const string &moduleName, EnvPtr foreignEnv, ExprPtr expr)
+        : Expr(FOREIGN_EXPR), moduleName(moduleName),
+          foreignEnv(foreignEnv), expr(expr) {}
+
+    EnvPtr getEnv();
 };
 
 struct ObjectExpr : public Expr {
@@ -850,7 +860,7 @@ enum StatementKind {
     BREAK,
     CONTINUE,
     FOR,
-    SC_STATEMENT,
+    FOREIGN_STATEMENT,
     TRY,
 };
 
@@ -974,11 +984,22 @@ struct For : public Statement {
         : Statement(FOR), variable(variable), expr(expr), body(body) {}
 };
 
-struct SCStatement : public Statement {
-    EnvPtr env;
+struct ForeignStatement : public Statement {
+    string moduleName;
+    EnvPtr foreignEnv;
     StatementPtr statement;
-    SCStatement(EnvPtr env, StatementPtr statement)
-        : Statement(SC_STATEMENT), env(env), statement(statement) {}
+    ForeignStatement(const string &moduleName, StatementPtr statement)
+        : Statement(FOREIGN_STATEMENT), moduleName(moduleName),
+          statement(statement) {}
+    ForeignStatement(EnvPtr foreignEnv, StatementPtr statement)
+        : Statement(FOREIGN_STATEMENT), foreignEnv(foreignEnv),
+          statement(statement) {}
+    ForeignStatement(const string &moduleName, EnvPtr foreignEnv,
+                     StatementPtr statement)
+        : Statement(FOREIGN_STATEMENT), moduleName(moduleName),
+          statement(statement) {}
+
+    EnvPtr getEnv();
 };
 
 struct Try : public Statement {

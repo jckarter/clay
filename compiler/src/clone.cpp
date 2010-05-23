@@ -155,9 +155,9 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
-    case SC_EXPR : {
-        SCExpr *y = (SCExpr *)x.ptr();
-        out = new SCExpr(y->env, clone(y->expr));
+    case FOREIGN_EXPR : {
+        ForeignExpr *y = (ForeignExpr *)x.ptr();
+        out = new ForeignExpr(y->moduleName, y->foreignEnv, clone(y->expr));
         break;
     }
 
@@ -330,9 +330,11 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
-    case SC_STATEMENT : {
-        SCStatement *y = (SCStatement *)x.ptr();
-        out = new SCStatement(y->env, clone(y->statement));
+    case FOREIGN_STATEMENT : {
+        ForeignStatement *y = (ForeignStatement *)x.ptr();
+        out = new ForeignStatement(y->moduleName,
+                                   y->foreignEnv,
+                                   clone(y->statement));
         break;
     }
 
