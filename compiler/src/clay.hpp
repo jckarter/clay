@@ -1232,12 +1232,8 @@ struct ExternalVariable : public TopLevelItem {
 struct StaticGlobal : public TopLevelItem {
     ExprPtr expr;
 
-    bool analyzing;
-    ObjectPtr result;
-
     StaticGlobal(IdentifierPtr name, Visibility visibility, ExprPtr expr)
-        : TopLevelItem(STATIC_GLOBAL, name, visibility), expr(expr),
-          analyzing(false) {}
+        : TopLevelItem(STATIC_GLOBAL, name, visibility), expr(expr) {}
 };
 
 
