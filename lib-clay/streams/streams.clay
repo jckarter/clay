@@ -6,14 +6,14 @@
 
 // [I | Integer?(I)]
 // read(stream, buf:Pointer[Byte], n:I) SizeT
-overloadable read;
+procedure read;
 
 // [I | Integer?(I)]
 // write(stream, buf:Pointer[Byte], n:I) Void
-overloadable write;
+procedure write;
 
 // flush(stream) Void
-overloadable flush;
+procedure flush;
 
 
 
@@ -49,10 +49,8 @@ readLine(stream) String {
 // writeByte
 //
 
-overloadable writeByte;
-
 [I | Integer?(I)]
-overload writeByte(stream, x:I) {
+writeByte(stream, x:I) {
     var b = Byte(x);
     write(stream, &b, 1);
 }

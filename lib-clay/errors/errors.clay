@@ -6,9 +6,7 @@ error(...) {
 }
 
 
-overloadable assert;
-
-inlined overload assert(cond:Bool) {
+inlined assert(cond:Bool) {
     if (not cond)
         error("assertion failed");
 }

@@ -4,10 +4,8 @@
 // map
 //
 
-overloadable map;
-
 [F,A | Sequence?(A)]
-overload map(mapper:F, rvalue seq:A) = Mapped(mapper, move(seq));
+map(mapper:F, rvalue seq:A) = Mapped(mapper, move(seq));
 
 [F,A | Sequence?(A)]
 overload map(mapper:F, lvalue seq:A)

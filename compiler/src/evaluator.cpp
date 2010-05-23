@@ -811,7 +811,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
     }
     case TYPE :
     case PRIM_OP :
-    case OVERLOADABLE :
+    case PROCEDURE :
     case RECORD :
     case MODULE_HOLDER :
     case IDENTIFIER :
@@ -913,7 +913,7 @@ void evalInvoke(ObjectPtr x,
     switch (x->objKind) {
     case TYPE :
     case RECORD :
-    case OVERLOADABLE :
+    case PROCEDURE :
         evalInvokeCallable(x, args, env, out);
         break;
     case PRIM_OP :
@@ -970,7 +970,7 @@ bool evalInvokeSpecialCase(ObjectPtr x,
             return true;
         break;
     }
-    case OVERLOADABLE : {
+    case PROCEDURE : {
         if ((x == kernelName("destroy")) &&
             (argsKey.size() == 1))
         {
@@ -2330,7 +2330,7 @@ void evalInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case OVERLOADABLE :
+        case PROCEDURE :
             break;
         default :
             error(args[0], "invalid callable");
@@ -2402,7 +2402,7 @@ void evalInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case OVERLOADABLE :
+        case PROCEDURE :
             break;
         default :
             error(args[0], "invalid callable");

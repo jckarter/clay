@@ -29,11 +29,7 @@ external (stdcall) SetFilePointerEx(
 
 static FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
 
-overloadable errorMessage;
-
-overload errorMessage() = errorMessage(GetLastError());
-
-overload errorMessage(errorCode) {
+errorMessage(errorCode) {
     var buf = Array[Byte, 1024]();
     var result = FormatMessageA(
         FORMAT_MESSAGE_FROM_SYSTEM,
@@ -47,3 +43,5 @@ overload errorMessage(errorCode) {
         return "Unknown error";
     return String(&buf[0]);
 }
+
+overload errorMessage() = errorMessage(GetLastError());

@@ -1497,7 +1497,7 @@ static bool optReturnSpecList(vector<ReturnSpecPtr> &x) {
 
 
 //
-// procedure, overloadable, overload
+// procedure, overload
 //
 
 static bool optInlined(bool &inlined) {
@@ -1511,7 +1511,7 @@ static bool optInlined(bool &inlined) {
     return true;
 }
 
-static bool procedure(vector<TopLevelItemPtr> &x) {
+static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
@@ -1526,7 +1526,7 @@ static bool procedure(vector<TopLevelItemPtr> &x) {
     if (!body(y->body)) return false;
     y->location = location;
 
-    OverloadablePtr u = new Overloadable(z, vis);
+    ProcedurePtr u = new Procedure(z, vis);
     u->location = location;
     x.push_back(u.ptr());
 
@@ -1539,15 +1539,15 @@ static bool procedure(vector<TopLevelItemPtr> &x) {
     return true;
 }
 
-static bool overloadable(TopLevelItemPtr &x) {
+static bool procedure(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
-    if (!keyword("overloadable")) return false;
+    if (!keyword("procedure")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
     if (!symbol(";")) return false;
-    x = new Overloadable(y, vis);
+    x = new Procedure(y, vis);
     x->location = location;
     return true;
 }
@@ -1898,8 +1898,8 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     int p = save();
     TopLevelItemPtr y;
     if (record(y)) goto success;
-    if (restore(p), procedure(x)) goto success2;
-    if (restore(p), overloadable(y)) goto success;
+    if (restore(p), procedure(y)) goto success;
+    if (restore(p), procedureWithBody(x)) goto success2;
     if (restore(p), overload(y)) goto success;
     if (restore(p), enumeration(y)) goto success;
     if (restore(p), globalVariable(y)) goto success;
@@ -1908,6 +1908,7 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     if (restore(p), staticGlobal(y)) goto success;
     return false;
 success :
+    assert(y.ptr());
     x.push_back(y);
 success2 :
     return true;

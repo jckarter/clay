@@ -170,9 +170,7 @@ private seekMethod(x) {
     assert(false);
 }
 
-overloadable seek;
-
-overload seek(f:File, offset, whence) {
+seek(f:File, offset, whence) {
     var newPos = Int64();
     var result = win32.SetFilePointerEx(
         f.handle,

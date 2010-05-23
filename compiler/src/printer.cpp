@@ -469,9 +469,9 @@ static void print(ostream &out, const Object *x) {
             << y->inlined << ")";
         break;
     }
-    case OVERLOADABLE : {
-        const Overloadable *y = (const Overloadable *)x;
-        out << "Overloadable(" << y->name << ")";
+    case PROCEDURE : {
+        const Procedure *y = (const Procedure *)x;
+        out << "Procedure(" << y->name << ")";
         break;
     }
 
@@ -647,8 +647,8 @@ void printName(ostream &out, ObjectPtr x)
         out << y->name->str;
         break;
     }
-    case OVERLOADABLE : {
-        Overloadable *y = (Overloadable *)x.ptr();
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
         out << y->name->str;
         break;
     }
@@ -694,8 +694,8 @@ string getCodeName(ObjectPtr x)
         Record *y = (Record *)x.ptr();
         return y->name->str;
     }
-    case OVERLOADABLE : {
-        Overloadable *y = (Overloadable *)x.ptr();
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
         return y->name->str;
     }
     default :

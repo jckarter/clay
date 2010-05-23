@@ -4,9 +4,7 @@
 // lines
 //
 
-overloadable lines;
-
-overload lines(lvalue f:File) = LineSequenceRef(&f);
+lines(lvalue f:File) = LineSequenceRef(&f);
 
 inlined overload lines(rvalue f:File) = LineSequenceVal(f);
 

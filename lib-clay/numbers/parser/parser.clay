@@ -6,10 +6,8 @@ import numbers.parser.errno.*;
 // parseInt8, parseUInt8
 //
 
-overloadable parseInt8;
-
 [S | String?(S)]
-overload parseInt8(s:S) = parseInt8(String(s));
+parseInt8(s:S) = parseInt8(String(s));
 
 overload parseInt8(s:String) {
     var p = cstring(s);
@@ -22,10 +20,8 @@ overload parseInt8(s:String) {
     return Int8(value);
 }
 
-overloadable parseUInt8;
-
 [S | String?(S)]
-overload parseUInt8(s:S) = parseUInt8(String(s));
+parseUInt8(s:S) = parseUInt8(String(s));
 
 overload parseUInt8(s:String) {
     var p = cstring(s);
@@ -44,10 +40,8 @@ overload parseUInt8(s:String) {
 // parseInt16, parseUInt16
 //
 
-overloadable parseInt16;
-
 [S | String?(S)]
-overload parseInt16(s:S) = parseInt16(String(s));
+parseInt16(s:S) = parseInt16(String(s));
 
 overload parseInt16(s:String) {
     var p = cstring(s);
@@ -60,10 +54,8 @@ overload parseInt16(s:String) {
     return Int16(value);
 }
 
-overloadable parseUInt16;
-
 [S | String?(S)]
-overload parseUInt16(s:S) = parseUInt16(String(s));
+parseUInt16(s:S) = parseUInt16(String(s));
 
 overload parseUInt16(s:String) {
     var p = cstring(s);
@@ -82,10 +74,8 @@ overload parseUInt16(s:String) {
 // parseInt32, parseUInt32
 //
 
-overloadable parseInt32;
-
 [S | String?(S)]
-overload parseInt32(s:S) = parseInt32(String(s));
+parseInt32(s:S) = parseInt32(String(s));
 
 overload parseInt32(s:String) {
     var p = cstring(s);
@@ -98,10 +88,8 @@ overload parseInt32(s:String) {
     return Int32(value);
 }
 
-overloadable parseUInt32;
-
 [S | String?(S)]
-overload parseUInt32(s:S) = parseUInt32(String(s));
+parseUInt32(s:S) = parseUInt32(String(s));
 
 overload parseUInt32(s:String) {
     var p = cstring(s);
@@ -120,10 +108,8 @@ overload parseUInt32(s:String) {
 // parseInt64, parseUInt64
 //
 
-overloadable parseInt64;
-
 [S | String?(S)]
-overload parseInt64(s:S) = parseInt64(String(s));
+parseInt64(s:S) = parseInt64(String(s));
 
 overload parseInt64(s:String) {
     var p = cstring(s);
@@ -136,10 +122,8 @@ overload parseInt64(s:String) {
     return Int64(value);
 }
 
-overloadable parseUInt64;
-
 [S | String?(S)]
-overload parseUInt64(s:S) = parseUInt64(String(s));
+parseUInt64(s:S) = parseUInt64(String(s));
 
 overload parseUInt64(s:String) {
     var p = cstring(s);
@@ -158,10 +142,8 @@ overload parseUInt64(s:String) {
 // parseFloat32
 //
 
-overloadable parseFloat32;
-
 [S | String?(S)]
-overload parseFloat32(s:S) = parseFloat32(String(s));
+parseFloat32(s:S) = parseFloat32(String(s));
 
 overload parseFloat32(s:String) {
     var p = cstring(s);
@@ -180,10 +162,8 @@ overload parseFloat32(s:String) {
 // parseFloat64
 //
 
-overloadable parseFloat64;
-
 [S | String?(S)]
-overload parseFloat64(s:S) = parseFloat64(String(s));
+parseFloat64(s:S) = parseFloat64(String(s));
 
 overload parseFloat64(s:String) {
     var p = cstring(s);

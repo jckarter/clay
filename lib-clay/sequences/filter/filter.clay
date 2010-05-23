@@ -5,10 +5,8 @@
 // filter
 //
 
-overloadable filter;
-
 [F,A | Sequence?(A)]
-overload filter(predicate:F, rvalue seq:A) =
+filter(predicate:F, rvalue seq:A) =
     Filtered[F,A](predicate, move(seq));
 
 [F,A | Sequence?(A)]

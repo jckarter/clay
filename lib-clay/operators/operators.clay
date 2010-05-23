@@ -4,46 +4,46 @@
 // core operations
 //
 
-overloadable destroy;
-overloadable move;
-overloadable assign;
+procedure destroy;
+procedure move;
+procedure assign;
 
-overloadable equals?;
-overloadable lesser?;
-overloadable lesserEquals?;
-overloadable greater?;
-overloadable greaterEquals?;
+procedure equals?;
+procedure lesser?;
+procedure lesserEquals?;
+procedure greater?;
+procedure greaterEquals?;
 
-overloadable plus;
-overloadable minus;
+procedure plus;
+procedure minus;
 
-overloadable add;
-overloadable subtract;
-overloadable multiply;
-overloadable divide;
-overloadable remainder;
+procedure add;
+procedure subtract;
+procedure multiply;
+procedure divide;
+procedure remainder;
 
-overloadable addAssign;
-overloadable subtractAssign;
-overloadable multiplyAssign;
-overloadable divideAssign;
-overloadable remainderAssign;
+procedure addAssign;
+procedure subtractAssign;
+procedure multiplyAssign;
+procedure divideAssign;
+procedure remainderAssign;
 
-overloadable inc;
-overloadable dec;
+procedure inc;
+procedure dec;
 
-overloadable shiftLeft;
-overloadable shiftRight;
-overloadable bitwiseAnd;
-overloadable bitwiseOr;
-overloadable bitwiseXor;
-overloadable bitwiseNot;
+procedure shiftLeft;
+procedure shiftRight;
+procedure bitwiseAnd;
+procedure bitwiseOr;
+procedure bitwiseXor;
+procedure bitwiseNot;
 
-overloadable dereference;
+procedure dereference;
 
-overloadable call;
+procedure call;
 
-overloadable unsupported; // used for triggering compile time errors
+procedure unsupported; // used for triggering compile time errors
 
 
 
@@ -51,7 +51,7 @@ overloadable unsupported; // used for triggering compile time errors
 // LValue?, RValue?
 //
 
-overloadable LValue?;
+procedure LValue?;
 inlined overload LValue?(lvalue a) = true;
 inlined overload LValue?(rvalue a) = false;
 

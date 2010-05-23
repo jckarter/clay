@@ -1,5 +1,5 @@
 
-overloadable RValue?;
+procedure RValue?;
 inlined overload RValue?(rvalue x) = 1;
 inlined overload RValue?(lvalue x) = 0;
 

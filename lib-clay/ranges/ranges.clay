@@ -50,7 +50,7 @@ overload next(r:Range[T]) returned:T {
 // range procedure
 //
 
-overloadable range;
+procedure range;
 
 overload range(first, last) = Range(first, last);
 

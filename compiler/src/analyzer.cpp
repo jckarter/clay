@@ -20,7 +20,7 @@ PValuePtr analysisToPValue(ObjectPtr x)
 
     case TYPE :
     case PRIM_OP :
-    case OVERLOADABLE :
+    case PROCEDURE :
     case RECORD :
     case MODULE_HOLDER :
         return new PValue(staticType(x), true);
@@ -538,7 +538,7 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
 
     case TYPE :
     case PRIM_OP :
-    case OVERLOADABLE :
+    case PROCEDURE :
     case RECORD :
     case MODULE_HOLDER :
     case IDENTIFIER :
@@ -834,7 +834,7 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
     switch (x->objKind) {
     case TYPE :
     case RECORD :
-    case OVERLOADABLE :
+    case PROCEDURE :
         return analyzeInvokeCallable(x, args, env);
     case PVALUE : {
         PValue *y = (PValue *)x.ptr();
@@ -889,7 +889,7 @@ ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
             return new PValue(y, true);
         break;
     }
-    case OVERLOADABLE : {
+    case PROCEDURE : {
         if ((x == kernelName("destroy")) &&
             (argsKey.size() == 1))
         {
@@ -1461,7 +1461,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case OVERLOADABLE :
+        case PROCEDURE :
             break;
         default :
             error(args[0], "invalid callable");
@@ -1517,7 +1517,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case OVERLOADABLE :
+        case PROCEDURE :
             break;
         default :
             error(args[0], "invalid callable");

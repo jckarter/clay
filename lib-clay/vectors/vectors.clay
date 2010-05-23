@@ -68,12 +68,10 @@ overload Vector[T](x:T, ...) {
     return move(v);
 }
 
-private overloadable countArgs;
-overload countArgs(x, ...) = 1 + countArgs(...);
+private countArgs(x, ...) = 1 + countArgs(...);
 overload countArgs() = 0;
 
-private overloadable pushAll;
-overload pushAll(a, x, ...) { push(a, x); pushAll(a, ...); }
+private pushAll(a, x, ...) { push(a, x); pushAll(a, ...); }
 overload pushAll(a) {}
 
 
