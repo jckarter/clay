@@ -21,7 +21,6 @@ static void initCallable(ObjectPtr x)
             initBuiltinConstructor(y);
         break;
     }
-    case PROCEDURE :
     case OVERLOADABLE :
         break;
     default :
@@ -39,16 +38,6 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
     }
     case RECORD : {
         Record *y = (Record *)x.ptr();
-        return y->overloads;
-    }
-    case PROCEDURE : {
-        Procedure *y = (Procedure *)x.ptr();
-        if (y->overloads.empty()) {
-            ExprPtr target = new ObjectExpr(y);
-            OverloadPtr z = new Overload(target, y->code, y->inlined);
-            z->env = y->env;
-            y->overloads.push_back(z);
-        }
         return y->overloads;
     }
     case OVERLOADABLE : {

@@ -20,7 +20,6 @@ PValuePtr analysisToPValue(ObjectPtr x)
 
     case TYPE :
     case PRIM_OP :
-    case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
     case MODULE_HOLDER :
@@ -539,7 +538,6 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
 
     case TYPE :
     case PRIM_OP :
-    case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
     case MODULE_HOLDER :
@@ -836,7 +834,6 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
     switch (x->objKind) {
     case TYPE :
     case RECORD :
-    case PROCEDURE :
     case OVERLOADABLE :
         return analyzeInvokeCallable(x, args, env);
     case PVALUE : {
@@ -1464,7 +1461,6 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :
@@ -1521,7 +1517,6 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :

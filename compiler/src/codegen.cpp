@@ -1211,7 +1211,6 @@ void codegenStaticObject(ObjectPtr x,
     }
     case TYPE :
     case PRIM_OP :
-    case PROCEDURE :
     case OVERLOADABLE :
     case RECORD :
     case MODULE_HOLDER :
@@ -1649,7 +1648,6 @@ void codegenInvoke(ObjectPtr x,
     switch (x->objKind) {
     case TYPE :
     case RECORD :
-    case PROCEDURE :
     case OVERLOADABLE :
         codegenInvokeCallable(x, args, env, ctx, out);
         break;
@@ -2590,7 +2588,6 @@ void codegenInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :
@@ -2659,7 +2656,6 @@ void codegenInvokePrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
-        case PROCEDURE :
         case OVERLOADABLE :
             break;
         default :
@@ -3024,21 +3020,33 @@ void codegenInvokePrimOp2(PrimOpPtr x,
 // codegenSharedLib, codegenExe
 //
 
-static ProcedurePtr makeInitializerProcedure() {
+static OverloadablePtr makeInitializerProcedure() {
     CodePtr code = new Code();
     code->body = globalVarInitializers().ptr();
     IdentifierPtr name = new Identifier("%initGlobals");
-    ProcedurePtr proc = new Procedure(name, PRIVATE, code, false);
-    proc->env = new Env();
+    ExprPtr target = new NameRef(name);
+    OverloadPtr overload = new Overload(target, code, false);
+    EnvPtr env = new Env();
+    overload->env = env;
+    OverloadablePtr proc = new Overloadable(name, PRIVATE);
+    proc->overloads.push_back(overload);
+    proc->env = env;
+    env->entries[name->str] = proc.ptr();
     return proc;
 }
 
-static ProcedurePtr makeDestructorProcedure() {
+static OverloadablePtr makeDestructorProcedure() {
     CodePtr code = new Code();
     code->body = globalVarDestructors().ptr();
     IdentifierPtr name = new Identifier("%destroyGlobals");
-    ProcedurePtr proc = new Procedure(name, PRIVATE, code, false);
-    proc->env = new Env();
+    ExprPtr target = new NameRef(name);
+    OverloadPtr overload = new Overload(target, code, false);
+    EnvPtr env = new Env();
+    overload->env = env;
+    OverloadablePtr proc = new Overloadable(name, PRIVATE);
+    proc->overloads.push_back(overload);
+    proc->env = env;
+    env->entries[name->str] = proc.ptr();
     return proc;
 }
 

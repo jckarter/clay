@@ -463,12 +463,6 @@ static void print(ostream &out, const Object *x) {
         out << "RecordField(" << y->name << ", " << y->type << ")";
         break;
     }
-    case PROCEDURE : {
-        const Procedure *y = (const Procedure *)x;
-        out << "Procedure(" << y->name << ", " << y->code << ", "
-            << y->inlined << ")";
-        break;
-    }
     case OVERLOAD : {
         const Overload *y = (const Overload *)x;
         out << "Overload(" << y->target << ", " << y->code << ", "
@@ -653,11 +647,6 @@ void printName(ostream &out, ObjectPtr x)
         out << y->name->str;
         break;
     }
-    case PROCEDURE : {
-        Procedure *y = (Procedure *)x.ptr();
-        out << y->name->str;
-        break;
-    }
     case OVERLOADABLE : {
         Overloadable *y = (Overloadable *)x.ptr();
         out << y->name->str;
@@ -703,10 +692,6 @@ string getCodeName(ObjectPtr x)
     }
     case RECORD : {
         Record *y = (Record *)x.ptr();
-        return y->name->str;
-    }
-    case PROCEDURE : {
-        Procedure *y = (Procedure *)x.ptr();
         return y->name->str;
     }
     case OVERLOADABLE : {
