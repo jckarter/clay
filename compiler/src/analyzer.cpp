@@ -23,6 +23,7 @@ PValuePtr analysisToPValue(ObjectPtr x)
     case PROCEDURE :
     case RECORD :
     case MODULE_HOLDER :
+    case IDENTIFIER :
         return new PValue(staticType(x), true);
 
     default :
