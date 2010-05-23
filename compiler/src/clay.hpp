@@ -997,7 +997,7 @@ struct ForeignStatement : public Statement {
     ForeignStatement(const string &moduleName, EnvPtr foreignEnv,
                      StatementPtr statement)
         : Statement(FOREIGN_STATEMENT), moduleName(moduleName),
-          statement(statement) {}
+          foreignEnv(foreignEnv), statement(statement) {}
 
     EnvPtr getEnv();
 };

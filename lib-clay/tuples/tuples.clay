@@ -6,15 +6,15 @@
 
 [T|Tuple?(T)]
 overload T() returned:T {
-    initTupleElements(returned, SizeT(0));
+    initTupleElements(returned, static SizeT(0));
 }
 
 private overloadable initTupleElements;
 
 [i]
 overload initTupleElements(a, static i) {
-    initialize(tupleRef(a, i));
-    initTupleElements(a, i+1);
+    initialize(tupleRef(a, static i));
+    initTupleElements(a, static i+1);
 }
 
 [T, i | (i == TupleElementCount(T))]
@@ -29,7 +29,7 @@ overload initTupleElements(a:T, static i) {
 
 [T|Tuple?(T)]
 overload T(src:T) returned:T {
-    copyTupleElements(returned, src, SizeT(0));
+    copyTupleElements(returned, src, static SizeT(0));
 }
 
 private overloadable copyTupleElements;
@@ -37,8 +37,8 @@ private overloadable copyTupleElements;
 [T,i]
 overload copyTupleElements(dest:T, src:T, static i)
 {
-    tupleRef(dest, i) <-- tupleRef(src, i);
-    copyTupleElements(dest, src, i+1);
+    tupleRef(dest, static i) <-- tupleRef(src, static i);
+    copyTupleElements(dest, src, static i+1);
 }
 
 [T,i | (i == TupleElementCount(T))]
@@ -53,7 +53,7 @@ overload copyTupleElements(dest:T, src:T, static i) {
 
 [T|Tuple?(T)]
 overload move(src:T) returned:T {
-    moveTupleElements(returned, src, SizeT(0));
+    moveTupleElements(returned, src, static SizeT(0));
 }
 
 private overloadable moveTupleElements;
@@ -61,8 +61,8 @@ private overloadable moveTupleElements;
 [T,i]
 overload moveTupleElements(dest:T, src:T, static i)
 {
-    tupleRef(dest, i) <-- move(tupleRef(src, i));
-    moveTupleElements(dest, src, i+1);
+    tupleRef(dest, static i) <-- move(tupleRef(src, static i));
+    moveTupleElements(dest, src, static i+1);
 }
 
 [T,i | (i == TupleElementCount(T))]
@@ -77,15 +77,15 @@ overload moveTupleElements(dest:T, src:T, static i) {
 
 [T|Tuple?(T)]
 overload destroy(a:T) {
-    destroyTupleElements(a, SizeT(0));
+    destroyTupleElements(a, static SizeT(0));
 }
 
 private overloadable destroyTupleElements;
 
 [i]
 overload destroyTupleElements(a, static i) {
-    destroy(tupleRef(a, i));
-    destroyTupleElements(a, i+1);
+    destroy(tupleRef(a, static i));
+    destroyTupleElements(a, static i+1);
 }
 
 [T, i |(i == TupleElementCount(T))]
@@ -100,15 +100,15 @@ overload destroyTupleElements(a:T, static i) {
 
 [T|Tuple?(T)]
 overload assign(dest:T, src:T) {
-    assignTupleElements(dest, src, SizeT(0));
+    assignTupleElements(dest, src, static SizeT(0));
 }
 
 private overloadable assignTupleElements;
 
 [T,i]
 overload assignTupleElements(dest:T, src:T, static i) {
-    assign(tupleRef(dest, i), tupleRef(src, i));
-    assignTupleElements(dest, src, i+1);
+    assign(tupleRef(dest, static i), tupleRef(src, static i));
+    assignTupleElements(dest, src, static i+1);
 }
 
 [T,i | (i == TupleElementCount(T))]
@@ -123,16 +123,16 @@ overload assignTupleElements(dest:T, src:T, static i) {
 
 [T|Tuple?(T)]
 overload equals?(a:T, b:T) {
-    return equalTupleElements?(a, b, SizeT(0));
+    return equalTupleElements?(a, b, static SizeT(0));
 }
 
 private overloadable equalTupleElements?;
 
 [T,i]
 overload equalTupleElements?(a:T, b:T, static i) {
-    if (not equals?(tupleRef(a, i), tupleRef(b, i)))
+    if (not equals?(tupleRef(a, static i), tupleRef(b, static i)))
         return false;
-    return equalTupleElements(a, b, i+1);
+    return equalTupleElements(a, b, static i+1);
 }
 
 [T,i |(i == TupleElementCount(T))]
@@ -148,20 +148,20 @@ overload equalTupleElements?(a:T, b:T, static i) {
 
 [T|Tuple?(T)]
 overload lesser?(a:T, b:T) {
-    return lesserTupleElements?(a, b, SizeT(0));
+    return lesserTupleElements?(a, b, static SizeT(0));
 }
 
 private overloadable lesserTupleElements?;
 
 [T,i]
 overload lesserTupleElements?(a:T, b:T, static i) {
-    ref av = tupleRef(a, i);
-    ref bv = tupleRef(b, i);
+    ref av = tupleRef(a, static i);
+    ref bv = tupleRef(b, static i);
     if (lesser?(av, bv))
         return true;
     if (lesser?(bv, av))
         return false;
-    return lesserTupleElements(a, b, i+1);
+    return lesserTupleElements(a, b, static i+1);
 }
 
 [T,i |(i == TupleElementCount(T))]

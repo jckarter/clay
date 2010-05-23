@@ -1175,7 +1175,7 @@ static bool optArgTempness(ValueTempness &tempness) {
     return true;
 }
 
-static bool valueArg(FormalArgPtr &x) {
+static bool valueArg(unsigned index, FormalArgPtr &x) {
     LocationPtr location = currentLocation();
     ValueTempness tempness;
     if (!optArgTempness(tempness)) return false;
@@ -1188,31 +1188,44 @@ static bool valueArg(FormalArgPtr &x) {
     return true;
 }
 
-static bool staticArg(FormalArgPtr &x) {
+static bool staticArg(unsigned index, FormalArgPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr y;
     if (!keyword("static")) return false;
     if (!expression(y)) return false;
-    x = new StaticArg(y);
+
+    // desugar static args
+    ostringstream sout;
+    sout << "%arg" << index;
+    IdentifierPtr argName = new Identifier(sout.str());
+
+    ExprPtr staticName =
+        new ForeignExpr("prelude",
+                        new NameRef(new Identifier("Static")));
+
+    IndexingPtr indexing = new Indexing(staticName);
+    indexing->args.push_back(y);
+    
+    x = new ValueArg(argName, indexing.ptr());
     x->location = location;
     return true;
 }
 
-static bool formalArg(FormalArgPtr &x) {
+static bool formalArg(unsigned index, FormalArgPtr &x) {
     int p = save();
-    if (valueArg(x)) return true;
-    if (restore(p), staticArg(x)) return true;
+    if (valueArg(index, x)) return true;
+    if (restore(p), staticArg(index, x)) return true;
     return false;
 }
 
 static bool formalArgs(vector<FormalArgPtr> &x) {
     FormalArgPtr y;
-    if (!formalArg(y)) return false;
+    if (!formalArg(x.size(), y)) return false;
     x.clear();
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",") || !formalArg(y)) {
+        if (!symbol(",") || !formalArg(x.size(), y)) {
             restore(p);
             break;
         }

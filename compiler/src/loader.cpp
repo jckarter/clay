@@ -553,7 +553,7 @@ ExprPtr primNameRef(const string &name) {
 //
 
 EnvPtr ForeignExpr::getEnv() {
-    if (!foreignEnv.ptr()) {
+    if (!foreignEnv) {
         assert(moduleName.size() > 0);
         foreignEnv = loadedModule(moduleName)->env;
     }
@@ -561,7 +561,7 @@ EnvPtr ForeignExpr::getEnv() {
 }
 
 EnvPtr ForeignStatement::getEnv() {
-    if (!foreignEnv.ptr()) {
+    if (!foreignEnv) {
         assert(moduleName.size() > 0);
         foreignEnv = loadedModule(moduleName)->env;
     }
