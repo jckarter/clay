@@ -1923,9 +1923,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env);
 //
 
 const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
-const vector<bool> &lookupIsStaticFlags(ObjectPtr callable, unsigned nArgs);
-bool computeArgsKey(const vector<bool> &isStaticFlags,
-                    const vector<ExprPtr> &args,
+bool computeArgsKey(const vector<ExprPtr> &args,
                     EnvPtr env,
                     vector<ObjectPtr> &argsKey,
                     vector<ValueTempness> &argsTempness,
@@ -1934,7 +1932,6 @@ bool computeArgsKey(const vector<bool> &isStaticFlags,
 
 struct InvokeEntry : public Object {
     ObjectPtr callable;
-    const vector<bool> &isStaticFlags;
     vector<ObjectPtr> argsKey;
 
     bool analyzed;
@@ -1958,10 +1955,9 @@ struct InvokeEntry : public Object {
     llvm::Function *llvmCWrapper;
 
     InvokeEntry(ObjectPtr callable,
-                const vector<bool> &isStaticFlags,
                 const vector<ObjectPtr> &argsKey)
         : Object(DONT_CARE),
-          callable(callable), isStaticFlags(isStaticFlags), argsKey(argsKey),
+          callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), hasVarArgs(false), inlined(false),
           llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
@@ -1969,21 +1965,17 @@ typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
 struct InvokeSet : public Object {
     ObjectPtr callable;
-    vector<bool> isStaticFlags;
     vector<ObjectPtr> argsKey;
     vector<InvokeEntryPtr> entries;
     vector<unsigned> overloadIndices;
     InvokeSet(ObjectPtr callable,
-              const vector<bool> &isStaticFlags,
               const vector<ObjectPtr> &argsKey)
-        : Object(DONT_CARE), callable(callable), isStaticFlags(isStaticFlags),
-          argsKey(argsKey) {}
+        : Object(DONT_CARE), callable(callable), argsKey(argsKey) {}
 };
 typedef Pointer<InvokeSet> InvokeSetPtr;
 
 
 InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
-                             const vector<bool> &isStaticFlags,
                              const vector<ObjectPtr> &argsKey);
 
 
@@ -2041,7 +2033,6 @@ struct MatchPredicateError : public MatchResult {
 };
 
 MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
-                           const vector<bool> &isStaticFlags,
                            const vector<ObjectPtr> &argsKey,
                            ExprPtr callableExpr, ObjectPtr callable);
 
@@ -2133,10 +2124,8 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env);
 ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
-                                   const vector<bool> &isStaticFlags,
                                    const vector<ObjectPtr> &argsKey);
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
-                               const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations);
@@ -2280,7 +2269,6 @@ void evalInvokeCallable(ObjectPtr x,
                         EnvPtr env,
                         MultiEValuePtr out);
 bool evalInvokeSpecialCase(ObjectPtr x,
-                           const vector<bool> &isStaticFlags,
                            const vector<ObjectPtr> &argsKey);
 void evalInvokeCode(InvokeEntryPtr entry,
                     const vector<ExprPtr> &args,
@@ -2501,10 +2489,8 @@ void codegenInvokeCallable(ObjectPtr x,
                            CodegenContextPtr ctx,
                            MultiCValuePtr out);
 bool codegenInvokeSpecialCase(ObjectPtr x,
-                              const vector<bool> &isStaticFlags,
                               const vector<ObjectPtr> &argsKey);
 InvokeEntryPtr codegenCallable(ObjectPtr x,
-                               const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations);

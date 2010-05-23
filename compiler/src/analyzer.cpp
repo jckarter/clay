@@ -864,22 +864,17 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env)
 {
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x, args.size());
     vector<ObjectPtr> argsKey;
     vector<ValueTempness> argsTempness;
     vector<LocationPtr> argLocations;
-    if (!computeArgsKey(isStaticFlags, args, env,
-                        argsKey, argsTempness, argLocations))
+    if (!computeArgsKey(args, env, argsKey, argsTempness, argLocations))
         return NULL;
-    ObjectPtr result = analyzeInvokeSpecialCase(x, isStaticFlags, argsKey);
+    ObjectPtr result = analyzeInvokeSpecialCase(x, argsKey);
     if (result.ptr())
         return result;
     InvokeStackContext invokeStackContext(x, argsKey);
     InvokeEntryPtr entry =
-        analyzeCallable(x, isStaticFlags,
-                        argsKey, argsTempness,
-                        argLocations);
+        analyzeCallable(x, argsKey, argsTempness, argLocations);
     if (entry->inlined)
         return analyzeInvokeInlined(entry, args, env);
     if (!entry->analyzed)
@@ -888,20 +883,18 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
 }
 
 ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
-                                   const vector<bool> &isStaticFlags,
                                    const vector<ObjectPtr> &argsKey)
 {
     switch (x->objKind) {
     case TYPE : {
         Type *y = (Type *)x.ptr();
-        if (isStaticFlags.empty())
+        if (argsKey.empty())
             return new PValue(y, true);
         break;
     }
     case OVERLOADABLE : {
         if ((x == kernelName("destroy")) &&
-            (isStaticFlags.size() == 1) &&
-            (!isStaticFlags[0]))
+            (argsKey.size() == 1))
         {
             ObjectPtr y = argsKey[0];
             assert(y->objKind == TYPE);
@@ -932,13 +925,11 @@ static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
     for (; overloadIndex < overloads.size(); ++overloadIndex) {
         OverloadPtr y = overloads[overloadIndex];
         MatchResultPtr result = matchInvoke(y->code, y->env,
-                                            invokeSet->isStaticFlags,
                                             invokeSet->argsKey,
                                             y->target, invokeSet->callable);
         if (result->matchCode == MATCH_SUCCESS) {
             InvokeEntryPtr entry =
                 new InvokeEntry(invokeSet->callable,
-                                invokeSet->isStaticFlags,
                                 invokeSet->argsKey);
             invokeSet->entries.push_back(entry);
             invokeSet->overloadIndices.push_back(overloadIndex);
@@ -974,12 +965,11 @@ static bool tempnessMatches(CodePtr code,
 }
 
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
-                               const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations)
 {
-    InvokeSetPtr invokeSet = lookupInvokeSet(x, isStaticFlags, argsKey);
+    InvokeSetPtr invokeSet = lookupInvokeSet(x, argsKey);
     const vector<OverloadPtr> &overloads = callableOverloads(x);
 
     unsigned i = 0;
@@ -1480,29 +1470,21 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        const vector<bool> &isStaticFlags =
-            lookupIsStaticFlags(callable, args.size()-1);
         vector<ObjectPtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
-            if (!isStaticFlags[i-1]) {
-                TypePtr t = evaluateType(args[i], env);
-                argsKey.push_back(t.ptr());
-                argsTempness.push_back(LVALUE);
-            }
-            else {
-                ObjectPtr param = evaluateStatic(args[i], env);
-                argsKey.push_back(param);
-            }
+            TypePtr t = evaluateType(args[i], env);
+            argsKey.push_back(t.ptr());
+            argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
 
-        InvokeEntryPtr entry = analyzeCallable(callable, isStaticFlags,
-                                               argsKey, argsTempness,
-                                               argLocations);
+        InvokeEntryPtr entry =
+            analyzeCallable(callable, argsKey,
+                            argsTempness, argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
         if (!entry->analyzed)
@@ -1545,29 +1527,21 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        const vector<bool> &isStaticFlags =
-            lookupIsStaticFlags(callable, args.size()-1);
         vector<ObjectPtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
-            if (!isStaticFlags[i-1]) {
-                TypePtr t = evaluateType(args[i], env);
-                argsKey.push_back(t.ptr());
-                argsTempness.push_back(LVALUE);
-            }
-            else {
-                ObjectPtr param = evaluateStatic(args[i], env);
-                argsKey.push_back(param);
-            }
+            TypePtr t = evaluateType(args[i], env);
+            argsKey.push_back(t.ptr());
+            argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
 
-        InvokeEntryPtr entry = analyzeCallable(callable, isStaticFlags,
-                                               argsKey, argsTempness,
-                                               argLocations);
+        InvokeEntryPtr entry =
+            analyzeCallable(callable, argsKey,
+                            argsTempness, argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
         if (!entry->analyzed)
