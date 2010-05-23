@@ -439,15 +439,10 @@ static void print(ostream &out, const Object *x) {
         out << ", " << y->returnSpecs << ", " << y->body << ")";
         break;
     }
-    case VALUE_ARG : {
-        const ValueArg *y = (const ValueArg *)x;
-        out << "ValueArg(" << y->name << ", " << y->type << ", "
+    case FORMAL_ARG : {
+        const FormalArg *y = (const FormalArg *)x;
+        out << "FormalArg(" << y->name << ", " << y->type << ", "
             << y->tempness << ")";
-        break;
-    }
-    case STATIC_ARG : {
-        const StaticArg *y = (const StaticArg *)x;
-        out << "StaticArg(" << y->pattern << ")";
         break;
     }
     case RETURN_SPEC : {

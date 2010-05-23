@@ -857,7 +857,7 @@ ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 
 
 //
-// analyzeInvokeCallable, analyzeInvokeSpecialCase, analyzeanalyzeCallable
+// analyzeInvokeCallable, analyzeInvokeSpecialCase, analyzeCallable
 //
 
 ObjectPtr analyzeInvokeCallable(ObjectPtr x,
@@ -960,21 +960,16 @@ static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
 static bool tempnessMatches(CodePtr code,
                             const vector<ValueTempness> &tempness)
 {
-    unsigned j = 0;
+    if (code->hasVarArgs)
+        assert(code->formalArgs.size() <= tempness.size());
+    else
+        assert(code->formalArgs.size() == tempness.size());
+
     for (unsigned i = 0; i < code->formalArgs.size(); ++i) {
-        FormalArgPtr farg = code->formalArgs[i];
-        if (farg->objKind != VALUE_ARG)
-            continue;
-        ValueArg *arg = (ValueArg *)farg.ptr();
-        assert(j < tempness.size());
-        ValueTempness vt = tempness[j++];
-        if ((vt & arg->tempness) == 0)
+        FormalArgPtr arg = code->formalArgs[i];
+        if ((tempness[i] & arg->tempness) == 0)
             return false;
     }
-    if (code->hasVarArgs)
-        assert(j <= tempness.size());
-    else
-        assert(j == tempness.size());
     return true;
 }
 

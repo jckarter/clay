@@ -198,27 +198,7 @@ void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out)
 
 FormalArgPtr clone(FormalArgPtr x)
 {
-    FormalArgPtr out;
-
-    switch (x->objKind) {
-
-    case VALUE_ARG : {
-        ValueArg *y = (ValueArg *)x.ptr();
-        out = new ValueArg(y->name, cloneOpt(y->type), y->tempness);
-        break;
-    }
-
-    case STATIC_ARG : {
-        StaticArg *y = (StaticArg *)x.ptr();
-        out = new StaticArg(clone(y->pattern));
-        break;
-    }
-
-    default :
-        assert(false);
-
-    }
-
+    FormalArgPtr out = new FormalArg(x->name, cloneOpt(x->type), x->tempness);
     out->location = x->location;
     return out;
 }

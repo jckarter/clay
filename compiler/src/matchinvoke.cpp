@@ -28,34 +28,12 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
     }
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
-        FormalArgPtr farg = formalArgs[i];
-        switch (farg->objKind) {
-        case VALUE_ARG : {
-            if (isStaticFlags[i]) {
-                error(farg, "mismatching overloads, "
-                      "expecting a static argument");
-            }
-            ValueArg *x = (ValueArg *)farg.ptr();
-            if (x->type.ptr()) {
-                PatternPtr pattern = evaluatePattern(x->type, patternEnv);
-                if (!unify(pattern, argsKey[i]))
-                    return new MatchArgumentError(i);
-            }
-            break;
-        }
-        case STATIC_ARG : {
-            if (!isStaticFlags[i]) {
-                error(farg, "mismatching overloads, "
-                      "expecting a non-static argument");
-            }
-            StaticArg *x = (StaticArg *)farg.ptr();
-            PatternPtr pattern = evaluatePattern(x->pattern, patternEnv);
+        FormalArgPtr x = formalArgs[i];
+        assert(!isStaticFlags[i]);
+        if (x->type.ptr()) {
+            PatternPtr pattern = evaluatePattern(x->type, patternEnv);
             if (!unify(pattern, argsKey[i]))
                 return new MatchArgumentError(i);
-            break;
-        }
-        default :
-            assert(false);
         }
     }
     EnvPtr staticEnv = new Env(codeEnv);
@@ -67,25 +45,11 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
     }
     MatchSuccessPtr result = new MatchSuccess(staticEnv);
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
-        FormalArgPtr farg = formalArgs[i];
-        switch (farg->objKind) {
-        case VALUE_ARG : {
-            ValueArg *x = (ValueArg *)farg.ptr();
-            result->fixedArgNames.push_back(x->name);
-            assert(argsKey[i]->objKind == TYPE);
-            TypePtr y = (Type *)argsKey[i].ptr();
-            result->fixedArgTypes.push_back(y);
-            break;
-        }
-        case STATIC_ARG : {
-            StaticArg *x = (StaticArg *)farg.ptr();
-            ObjectPtr y = evaluateStatic(x->pattern, staticEnv);
-            result->staticArgs.push_back(y);
-            break;
-        }
-        default :
-            assert(false);
-        }
+        FormalArgPtr x = formalArgs[i];
+        result->fixedArgNames.push_back(x->name);
+        assert(argsKey[i]->objKind == TYPE);
+        TypePtr y = (Type *)argsKey[i].ptr();
+        result->fixedArgTypes.push_back(y);
     }
 
     if (code->hasVarArgs) {
