@@ -42,3 +42,12 @@ overload lesser?(a:Static[A], b:Static[A]) = false;
 inlined staticValue(x) {
     return Static[x]();
 }
+
+
+
+//
+// index
+//
+
+[A]
+inlined overload index(a:Static[A], ...) = A[...];

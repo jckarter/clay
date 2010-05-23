@@ -535,20 +535,12 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         vector<ExprPtr> args2;
         expandVarArgs(x->args, env, args2);
         if (y->objKind == PVALUE) {
-            PValue *z = (PValue *)y.ptr();
-            if (z->type->typeKind == STATIC_TYPE) {
-                StaticType *t = (StaticType *)z->type.ptr();
-                ExprPtr inner = new Indexing(new ObjectExpr(t->obj), args2);
-                evalExpr(inner, env, out);
-            }
-            else {
-                EValuePtr ev = evalOneAsRef(x->expr, env);
-                vector<ExprPtr> args3;
-                args3.push_back(new ObjectExpr(ev.ptr()));
-                args3.insert(args3.end(), args2.begin(), args2.end());
-                ObjectPtr op = kernelName("index");
-                evalInvoke(op, args3, env, out);
-            }
+            EValuePtr ev = evalOneAsRef(x->expr, env);
+            vector<ExprPtr> args3;
+            args3.push_back(new ObjectExpr(ev.ptr()));
+            args3.insert(args3.end(), args2.begin(), args2.end());
+            ObjectPtr op = kernelName("index");
+            evalInvoke(op, args3, env, out);
         }
         else {
             ObjectPtr obj = analyzeIndexing(y, args2, env);

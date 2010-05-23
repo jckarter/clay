@@ -885,20 +885,12 @@ void codegenExpr(ExprPtr expr,
         vector<ExprPtr> args2;
         expandVarArgs(x->args, env, args2);
         if (y->objKind == PVALUE) {
-            PValue *z = (PValue *)y.ptr();
-            if (z->type->typeKind == STATIC_TYPE) {
-                StaticType *t = (StaticType *)z->type.ptr();
-                ExprPtr inner = new Indexing(new ObjectExpr(t->obj), args2);
-                codegenExpr(inner, env, ctx, out);
-            }
-            else {
-                CValuePtr cv = codegenOneAsRef(x->expr, env, ctx);
-                vector<ExprPtr> args3;
-                args3.push_back(new ObjectExpr(cv.ptr()));
-                args3.insert(args3.end(), args2.begin(), args2.end());
-                ObjectPtr op = kernelName("index");
-                codegenInvoke(op, args3, env, ctx, out);
-            }
+            CValuePtr cv = codegenOneAsRef(x->expr, env, ctx);
+            vector<ExprPtr> args3;
+            args3.push_back(new ObjectExpr(cv.ptr()));
+            args3.insert(args3.end(), args2.begin(), args2.end());
+            ObjectPtr op = kernelName("index");
+            codegenInvoke(op, args3, env, ctx, out);
         }
         else {
             ObjectPtr obj = analyzeIndexing(y, args2, env);
