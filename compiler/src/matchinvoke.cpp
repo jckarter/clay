@@ -1,11 +1,9 @@
 #include "clay.hpp"
 
 MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
-                           const vector<bool> &isStaticFlags,
                            const vector<ObjectPtr> &argsKey,
                            ExprPtr callableExpr, ObjectPtr callable)
 {
-    assert(isStaticFlags.size() == argsKey.size());
     if (code->hasVarArgs) {
         if (argsKey.size() < code->formalArgs.size())
             return new MatchArityError();
@@ -29,7 +27,6 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
-        assert(!isStaticFlags[i]);
         if (x->type.ptr()) {
             PatternPtr pattern = evaluatePattern(x->type, patternEnv);
             if (!unify(pattern, argsKey[i]))
@@ -55,8 +52,6 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
     if (code->hasVarArgs) {
         result->hasVarArgs = true;
         for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i) {
-            if (isStaticFlags[i])
-                return new MatchArgumentError(i);
             TypePtr y = (Type *)argsKey[i].ptr();
             result->varArgTypes.push_back(y);
         }

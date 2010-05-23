@@ -1673,21 +1673,18 @@ void codegenInvokeCallable(ObjectPtr x,
                            CodegenContextPtr ctx,
                            MultiCValuePtr out)
 {
-    const vector<bool> &isStaticFlags =
-        lookupIsStaticFlags(x, args.size());
     vector<ObjectPtr> argsKey;
     vector<ValueTempness> argsTempness;
     vector<LocationPtr> argLocations;
-    bool result = computeArgsKey(isStaticFlags, args, env,
+    bool result = computeArgsKey(args, env,
                                  argsKey, argsTempness,
                                  argLocations);
     assert(result);
-    if (codegenInvokeSpecialCase(x, isStaticFlags, argsKey))
+    if (codegenInvokeSpecialCase(x, argsKey))
         return;
     InvokeStackContext invokeStackContext(x, argsKey);
-    InvokeEntryPtr entry = codegenCallable(x, isStaticFlags,
-                                           argsKey, argsTempness,
-                                           argLocations);
+    InvokeEntryPtr entry =
+        codegenCallable(x, argsKey, argsTempness, argLocations);
     if (entry->inlined)
         codegenInvokeInlined(entry, args, env, ctx, out);
     else
@@ -1695,20 +1692,18 @@ void codegenInvokeCallable(ObjectPtr x,
 }
 
 bool codegenInvokeSpecialCase(ObjectPtr x,
-                              const vector<bool> &isStaticFlags,
                               const vector<ObjectPtr> &argsKey)
 {
     switch (x->objKind) {
     case TYPE : {
         Type *y = (Type *)x.ptr();
-        if (isPrimitiveType(y) && isStaticFlags.empty())
+        if (isPrimitiveType(y) && argsKey.empty())
             return true;
         break;
     }
     case OVERLOADABLE : {
         if ((x == kernelName("destroy")) &&
-            (isStaticFlags.size() == 1) &&
-            (!isStaticFlags[0]))
+            (argsKey.size() == 1))
         {
             ObjectPtr y = argsKey[0];
             assert(y->objKind == TYPE);
@@ -1722,15 +1717,12 @@ bool codegenInvokeSpecialCase(ObjectPtr x,
 }
 
 InvokeEntryPtr codegenCallable(ObjectPtr x,
-                               const vector<bool> &isStaticFlags,
                                const vector<ObjectPtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations)
 {
     InvokeEntryPtr entry =
-        analyzeCallable(x, isStaticFlags,
-                        argsKey, argsTempness,
-                        argLocations);
+        analyzeCallable(x, argsKey, argsTempness, argLocations);
     if (!entry->inlined)
         codegenCodeBody(entry, getCodeName(x));
     return entry;
@@ -1750,8 +1742,6 @@ void codegenInvokeCode(InvokeEntryPtr entry,
 {
     vector<llvm::Value *> llArgs;
     for (unsigned i = 0; i < args.size(); ++i) {
-        if (entry->isStaticFlags[i])
-            continue;
         assert(entry->argsKey[i]->objKind == TYPE);
         TypePtr argType = (Type *)entry->argsKey[i].ptr();
         CValuePtr carg = codegenOneAsRef(args[i], env, ctx);
@@ -2606,29 +2596,20 @@ void codegenInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        const vector<bool> &isStaticFlags =
-            lookupIsStaticFlags(callable, args.size()-1);
         vector<ObjectPtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
-            if (!isStaticFlags[i-1]) {
-                TypePtr t = evaluateType(args[i], env);
-                argsKey.push_back(t.ptr());
-                argsTempness.push_back(LVALUE);
-            }
-            else {
-                ObjectPtr param = evaluateStatic(args[i], env);
-                argsKey.push_back(param);
-            }
+            TypePtr t = evaluateType(args[i], env);
+            argsKey.push_back(t.ptr());
+            argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
 
-        InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
-                                               argsKey, argsTempness,
-                                               argLocations);
+        InvokeEntryPtr entry =
+            codegenCallable(callable, argsKey, argsTempness, argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
         vector<TypePtr> argTypes = entry->fixedArgTypes;
@@ -2684,29 +2665,20 @@ void codegenInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        const vector<bool> &isStaticFlags =
-            lookupIsStaticFlags(callable, args.size()-1);
         vector<ObjectPtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
-            if (!isStaticFlags[i-1]) {
-                TypePtr t = evaluateType(args[i], env);
-                argsKey.push_back(t.ptr());
-                argsTempness.push_back(LVALUE);
-            }
-            else {
-                ObjectPtr param = evaluateStatic(args[i], env);
-                argsKey.push_back(param);
-            }
+            TypePtr t = evaluateType(args[i], env);
+            argsKey.push_back(t.ptr());
+            argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
 
-        InvokeEntryPtr entry = codegenCallable(callable, isStaticFlags,
-                                               argsKey, argsTempness,
-                                               argLocations);
+        InvokeEntryPtr entry =
+            codegenCallable(callable, argsKey, argsTempness, argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
         vector<TypePtr> argTypes = entry->fixedArgTypes;
@@ -3073,14 +3045,12 @@ static ProcedurePtr makeDestructorProcedure() {
 static void generateLLVMCtorsAndDtors() {
     ObjectPtr initializer = makeInitializerProcedure().ptr();
     InvokeEntryPtr entry1 = codegenCallable(initializer,
-                                            vector<bool>(),
                                             vector<ObjectPtr>(),
                                             vector<ValueTempness>(),
                                             vector<LocationPtr>());
     codegenCWrapper(entry1, getCodeName(initializer));
     ObjectPtr destructor = makeDestructorProcedure().ptr();
     InvokeEntryPtr entry2 = codegenCallable(destructor,
-                                            vector<bool>(),
                                             vector<ObjectPtr>(),
                                             vector<ValueTempness>(),
                                             vector<LocationPtr>());
