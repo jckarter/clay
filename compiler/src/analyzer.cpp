@@ -408,6 +408,13 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
         return analyze(x->desugared, env);
     }
 
+    case STATIC_EXPR : {
+        StaticExpr *x = (StaticExpr *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarStaticExpr(x);
+        return analyze(x->desugared, env);
+    }
+
     case SC_EXPR : {
         SCExpr *x = (SCExpr *)expr.ptr();
         return analyze(x->expr, x->env);

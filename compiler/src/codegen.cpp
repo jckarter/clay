@@ -1114,6 +1114,14 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
+    case STATIC_EXPR : {
+        StaticExpr *x = (StaticExpr *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarStaticExpr(x);
+        codegenExpr(x->desugared, env, ctx, out);
+        break;
+    }
+
     case SC_EXPR : {
         SCExpr *x = (SCExpr *)expr.ptr();
         codegenExpr(x->expr, x->env, ctx, out);

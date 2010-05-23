@@ -371,6 +371,12 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case STATIC_EXPR : {
+        StaticExpr *y = (StaticExpr *)x.ptr();
+        convertFreeVars(y->expr, env, ctx);
+        break;
+    }
+
     case SC_EXPR :
     case OBJECT_EXPR :
         break;

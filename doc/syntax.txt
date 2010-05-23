@@ -137,6 +137,7 @@ Expression -> OrExpr
             | Lambda
             | VarArgsRef
             | New
+            | StaticExpr
 
 OrExpr -> AndExpr ("or" AndExpr)*
 AndExpr -> NotExpr ("and" NotExpr)*
@@ -188,4 +189,6 @@ Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" Block
 
 VarArgsRef -> "..."
 
-New -> "new" Expression;
+New -> "new" Expression
+
+StaticExpr -> "static" Expression

@@ -149,6 +149,12 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case STATIC_EXPR : {
+        StaticExpr *y = (StaticExpr *)x.ptr();
+        out = new StaticExpr(clone(y->expr));
+        break;
+    }
+
     case SC_EXPR : {
         SCExpr *y = (SCExpr *)x.ptr();
         out = new SCExpr(y->env, clone(y->expr));

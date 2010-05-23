@@ -87,6 +87,13 @@ ExprPtr desugarNew(NewPtr x) {
     return call.ptr();
 }
 
+ExprPtr desugarStaticExpr(StaticExprPtr x) {
+    ExprPtr callable = kernelNameRef("staticValue");
+    CallPtr call = new Call(callable);
+    call->args.push_back(x->expr);
+    return call.ptr();
+}
+
 const char *updateOperatorName(int op) {
     switch (op) {
     case UPDATE_ADD : return "addAssign";
