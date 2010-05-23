@@ -32,6 +32,7 @@ OBJS = \
 	invoketables.o \
 	matchinvoke.o \
 	constructors.o \
+	literals.o \
 	analyzer.o \
 	evaluator.o \
 	codegen.o \

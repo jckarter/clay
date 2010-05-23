@@ -2042,6 +2042,15 @@ void initBuiltinConstructor(RecordPtr x);
 
 
 //
+// literals
+//
+
+ValueHolderPtr parseIntLiteral(IntLiteral *x);
+ValueHolderPtr parseFloatLiteral(FloatLiteral *x);
+
+
+
+//
 // VarArgsInfo
 //
 
