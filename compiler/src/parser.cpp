@@ -1175,7 +1175,7 @@ static bool optArgTempness(ValueTempness &tempness) {
     return true;
 }
 
-static bool valueArg(unsigned index, FormalArgPtr &x) {
+static bool valueFormalArg(FormalArgPtr &x) {
     LocationPtr location = currentLocation();
     ValueTempness tempness;
     if (!optArgTempness(tempness)) return false;
@@ -1183,12 +1183,12 @@ static bool valueArg(unsigned index, FormalArgPtr &x) {
     ExprPtr z;
     if (!identifier(y)) return false;
     if (!optTypeSpec(z)) return false;
-    x = new ValueArg(y, z, tempness);
+    x = new FormalArg(y, z, tempness);
     x->location = location;
     return true;
 }
 
-static bool staticArg(unsigned index, FormalArgPtr &x) {
+static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr y;
     if (!keyword("static")) return false;
@@ -1206,15 +1206,15 @@ static bool staticArg(unsigned index, FormalArgPtr &x) {
     IndexingPtr indexing = new Indexing(staticName);
     indexing->args.push_back(y);
     
-    x = new ValueArg(argName, indexing.ptr());
+    x = new FormalArg(argName, indexing.ptr());
     x->location = location;
     return true;
 }
 
 static bool formalArg(unsigned index, FormalArgPtr &x) {
     int p = save();
-    if (valueArg(index, x)) return true;
-    if (restore(p), staticArg(index, x)) return true;
+    if (valueFormalArg(x)) return true;
+    if (restore(p), staticFormalArg(index, x)) return true;
     return false;
 }
 

@@ -124,8 +124,7 @@ enum ObjectKind {
     EXPRESSION,
     STATEMENT,
 
-    VALUE_ARG,
-    STATIC_ARG,
+    FORMAL_ARG,
     RETURN_SPEC,
     CODE,
 
@@ -226,8 +225,6 @@ struct ForeignStatement;
 struct Try;
 
 struct FormalArg;
-struct ValueArg;
-struct StaticArg;
 struct ReturnSpec;
 struct Code;
 
@@ -349,8 +346,6 @@ typedef Pointer<ForeignStatement> ForeignStatementPtr;
 typedef Pointer<Try> TryPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
-typedef Pointer<ValueArg> ValueArgPtr;
-typedef Pointer<StaticArg> StaticArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
 typedef Pointer<Code> CodePtr;
 
@@ -1015,33 +1010,22 @@ struct Try : public Statement {
 // Code
 //
 
-struct FormalArg : public ANode {
-    FormalArg(int objKind)
-        : ANode(objKind) {}
-};
-
 enum ValueTempness {
     LVALUE = 1,
     RVALUE = 2,
     LVALUE_OR_RVALUE = 3,
 };
 
-struct ValueArg : public FormalArg {
+struct FormalArg : public ANode {
     IdentifierPtr name;
     ExprPtr type;
     ValueTempness tempness;
-    ValueArg(IdentifierPtr name, ExprPtr type)
-        : FormalArg(VALUE_ARG), name(name), type(type),
+    FormalArg(IdentifierPtr name, ExprPtr type)
+        : ANode(FORMAL_ARG), name(name), type(type),
           tempness(LVALUE_OR_RVALUE) {}
-    ValueArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
-        : FormalArg(VALUE_ARG), name(name), type(type),
+    FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
+        : ANode(FORMAL_ARG), name(name), type(type),
           tempness(tempness) {}
-};
-
-struct StaticArg : public FormalArg {
-    ExprPtr pattern;
-    StaticArg(ExprPtr pattern)
-        : FormalArg(STATIC_ARG), pattern(pattern) {}
 };
 
 struct ReturnSpec : public ANode {

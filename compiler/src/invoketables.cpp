@@ -85,11 +85,7 @@ static void initCallable(ObjectPtr x)
 }
 
 static bool isStaticArg(FormalArgPtr farg) {
-    switch (farg->objKind) {
-    case VALUE_ARG : return false;
-    case STATIC_ARG : return true;
-    default : assert(false); return false;
-    }
+    return false;
 }
 
 static void computeIsStaticFlags(ObjectPtr x,

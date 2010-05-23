@@ -50,7 +50,7 @@ void initBuiltinConstructor(ArrayTypePtr t)
         IdentifierPtr argName = new Identifier(sout.str());
         argNames.push_back(argName);
         ExprPtr type = new ObjectExpr(t->elementType.ptr());
-        ValueArgPtr arg = new ValueArg(argName, type);
+        FormalArgPtr arg = new FormalArg(argName, type);
         code->formalArgs.push_back(arg.ptr());
     }
     code->hasVarArgs = false;
@@ -85,7 +85,7 @@ void initBuiltinConstructor(TupleTypePtr t)
         IdentifierPtr argName = new Identifier(sout.str());
         argNames.push_back(argName);
         ExprPtr type = new ObjectExpr(elementTypes[i].ptr());
-        ValueArgPtr arg = new ValueArg(argName, type);
+        FormalArgPtr arg = new FormalArg(argName, type);
         code->formalArgs.push_back(arg.ptr());
     }
     code->hasVarArgs = false;
@@ -118,7 +118,7 @@ void initBuiltinConstructor(RecordTypePtr t)
         IdentifierPtr argName = new Identifier(sout.str());
         argNames.push_back(argName);
         ExprPtr type = new ObjectExpr(fieldTypes[i].ptr());
-        ValueArgPtr arg = new ValueArg(argName, type);
+        FormalArgPtr arg = new FormalArg(argName, type);
         code->formalArgs.push_back(arg.ptr());
     }
     code->hasVarArgs = false;
@@ -159,7 +159,7 @@ void initBuiltinConstructor(RecordPtr x)
 
     for (unsigned i = 0; i < x->fields.size(); ++i) {
         RecordFieldPtr f = x->fields[i];
-        ValueArgPtr arg = new ValueArg(f->name, f->type);
+        FormalArgPtr arg = new FormalArg(f->name, f->type);
         arg->location = f->location;
         code->formalArgs.push_back(arg.ptr());
     }

@@ -94,10 +94,10 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     CodePtr code = new Code();
     code->location = x->location;
     IdentifierPtr closureDataIdent = new Identifier(closureDataName);
-    ValueArgPtr closureDataArg = new ValueArg(closureDataIdent, typeExpr);
+    FormalArgPtr closureDataArg = new FormalArg(closureDataIdent, typeExpr);
     code->formalArgs.push_back(closureDataArg.ptr());
     for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
-        ValueArgPtr y = new ValueArg(x->formalArgs[i], NULL);
+        FormalArgPtr y = new FormalArg(x->formalArgs[i], NULL);
         y->location = x->formalArgs[i]->location;
         code->formalArgs.push_back(y.ptr());
     }
