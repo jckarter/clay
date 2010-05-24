@@ -88,7 +88,7 @@ ExprPtr desugarNew(NewPtr x) {
 }
 
 ExprPtr desugarStaticExpr(StaticExprPtr x) {
-    ExprPtr callable = kernelNameRef("staticValue");
+    ExprPtr callable = kernelNameRef("wrapStatic");
     CallPtr call = new Call(callable);
     call->args.push_back(x->expr);
     return call.ptr();

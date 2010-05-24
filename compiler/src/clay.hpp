@@ -153,6 +153,7 @@ enum ObjectKind {
     PATTERN,
 
     VALUE_HOLDER,
+    MULTI_STATIC,
 
     PVALUE,
     MULTI_PVALUE,
@@ -276,6 +277,7 @@ struct RecordTypePattern;
 struct StaticTypePattern;
 
 struct ValueHolder;
+struct MultiStatic;
 
 struct PValue;
 struct MultiPValue;
@@ -396,6 +398,7 @@ typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 typedef Pointer<StaticTypePattern> StaticTypePatternPtr;
 
 typedef Pointer<ValueHolder> ValueHolderPtr;
+typedef Pointer<MultiStatic> MultiStaticPtr;
 
 typedef Pointer<PValue> PValuePtr;
 typedef Pointer<MultiPValue> MultiPValuePtr;
@@ -1861,6 +1864,25 @@ struct ValueHolder : public Object {
 
 
 //
+// MultiStatic
+//
+
+struct MultiStatic : public Object {
+    vector<ObjectPtr> values;
+    MultiStatic()
+        : Object(MULTI_STATIC) {}
+    MultiStatic(ObjectPtr x)
+        : Object(MULTI_STATIC) {
+        values.push_back(x);
+    }
+    MultiStatic(const vector<ObjectPtr> &values)
+        : Object(MULTI_STATIC), values(values) {}
+    unsigned size() { return values.size(); }
+};
+
+
+
+//
 // desugar
 //
 
@@ -2085,6 +2107,8 @@ struct MultiPValue : public Object {
     unsigned size() { return values.size(); }
 };
 
+TypePtr objectType(ObjectPtr x);
+ObjectPtr lowerValueHolder(ValueHolderPtr vh);
 
 PValuePtr analysisToPValue(ObjectPtr x);
 MultiPValuePtr analysisToMultiPValue(ObjectPtr x);
@@ -2179,6 +2203,7 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
                          vector<bool> &isRef,
                          vector<TypePtr> &types);
 
+MultiStaticPtr evaluateMultiStatic(ExprPtr expr, EnvPtr env);
 ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
 
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);

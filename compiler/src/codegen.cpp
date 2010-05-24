@@ -723,11 +723,12 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     }
 
     case STATIC : {
-        if (x->names.size() != 1)
-            error("static multiple values are not supported");
-        ObjectPtr right = evaluateStatic(x->expr, env);
+        MultiStaticPtr right = evaluateMultiStatic(x->expr, env);
+        if (right->size() != x->names.size())
+            arityError(x->expr, x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
-        addLocal(env2, x->names[0], right.ptr());
+        for (unsigned i = 0; i < right->size(); ++i)
+            addLocal(env2, x->names[i], right->values[i]);
         return env2;
     }
 

@@ -3,6 +3,45 @@
 
 
 //
+// utility procs
+//
+
+TypePtr objectType(ObjectPtr x)
+{
+    switch (x->objKind) {
+
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        return y->type;
+    }
+
+    case TYPE :
+    case PRIM_OP :
+    case PROCEDURE :
+    case RECORD :
+    case MODULE_HOLDER :
+    case IDENTIFIER :
+        return staticType(x);
+
+    default :
+        error("untypeable object");
+        return NULL;
+
+    }
+}
+
+ObjectPtr lowerValueHolder(ValueHolderPtr vh)
+{
+    if (vh->type->typeKind == STATIC_TYPE) {
+        StaticType *t = (StaticType *)vh->type.ptr();
+        return t->obj;
+    }
+    return vh.ptr();
+}
+
+
+
+//
 // analyze wrappers
 //
 
@@ -407,6 +446,7 @@ ObjectPtr analyzeStaticObject(ObjectPtr x)
         return z.ptr();
     }
     case VALUE_HOLDER :
+    case MULTI_STATIC :
     case PVALUE :
     case MULTI_PVALUE :
 
@@ -1121,7 +1161,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         if (!right)
             return NULL;
         if (right->size() != x->names.size())
-            error("mismatching no. of values");
+            arityError(x->expr, x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < right->size(); ++i)
             addLocal(env2, x->names[i], right->values[i].ptr());
@@ -1129,14 +1169,12 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
     }
 
     case STATIC : {
-        // FIXME: support multi values here
-        if (x->names.size() != 1)
-            error("static multiple values are not supported");
-        ObjectPtr right = evaluateStatic(x->expr, env);
-        if (!right)
-            return NULL;
+        MultiStaticPtr right = evaluateMultiStatic(x->expr, env);
+        if (right->size() != x->names.size())
+            arityError(x->expr, x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
-        addLocal(env2, x->names[0], right.ptr());
+        for (unsigned i = 0; i < right->size(); ++i)
+            addLocal(env2, x->names[i], right->values[i]);
         return env2;
     }
 

@@ -132,32 +132,33 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
     }
 }
 
+MultiStaticPtr evaluateMultiStatic(ExprPtr expr, EnvPtr env)
+{
+    MultiPValuePtr mpv = analyzeMultiValue(expr, env);
+    vector<ValueHolderPtr> valueHolders;
+    MultiEValuePtr mev = new MultiEValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        TypePtr t = mpv->values[i]->type;
+        ValueHolderPtr vh = new ValueHolder(t);
+        valueHolders.push_back(vh);
+        EValuePtr ev = new EValue(t, (char *)vh->buf);
+        mev->values.push_back(ev);
+    }
+    int marker = evalMarkStack();
+    evalIntoValues(expr, env, mev);
+    evalDestroyAndPopStack(marker);
+    MultiStaticPtr ms = new MultiStatic();
+    for (unsigned i = 0; i < valueHolders.size(); ++i)
+        ms->values.push_back(lowerValueHolder(valueHolders[i]));
+    return ms;
+}
+
 ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env)
 {
-    ObjectPtr analysis = analyze(expr, env);
-    if (!analysis)
-        error(expr, "recursion during static evaluation");
-    switch (analysis->objKind) {
-    case PVALUE : {
-        PValue *pv = (PValue *)analysis.ptr();
-        if (pv->type->typeKind == STATIC_TYPE) {
-            StaticType *t = (StaticType *)pv->type.ptr();
-            return t->obj;
-        }
-        ValueHolderPtr v = new ValueHolder(pv->type);
-        EValuePtr out = new EValue(pv->type, (char *)v->buf);
-        int marker = evalMarkStack();
-        evalIntoOne(expr, env, out);
-        evalDestroyAndPopStack(marker);
-        return v.ptr();
-    }
-    case MULTI_PVALUE : {
-        error(expr, "multi-valued expression in single value context");
-        return NULL;
-    }
-    default :
-        return analysis;
-    }
+    MultiStaticPtr ms = evaluateMultiStatic(expr, env);
+    if (ms->size() != 1)
+        arityError(expr, 1, ms->size());
+    return ms->values[0];
 }
 
 TypePtr evaluateType(ExprPtr expr, EnvPtr env)
@@ -1383,11 +1384,12 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case STATIC : {
-        if (x->names.size() != 1)
-            error("static multiple values are not supported");
-        ObjectPtr right = evaluateStatic(x->expr, env);
+        MultiStaticPtr right = evaluateMultiStatic(x->expr, env);
+        if (right->size() != x->names.size())
+            arityError(x->expr, x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
-        addLocal(env2, x->names[0], right.ptr());
+        for (unsigned i = 0; i < right->size(); ++i)
+            addLocal(env2, x->names[i], right->values[i]);
         return env2;
     }
 
