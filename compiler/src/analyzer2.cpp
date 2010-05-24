@@ -2,9 +2,6 @@
 
 namespace two {
 
-PValuePtr staticPValue(ObjectPtr x);
-PValuePtr kernelPValue(const string &name);
-
 MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
 MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env);
@@ -31,13 +28,13 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
 // staticPValue, kernelPValue
 //
 
-PValuePtr staticPValue(ObjectPtr x)
+static PValuePtr staticPValue(ObjectPtr x)
 {
     TypePtr t = staticType(x);
     return new PValue(t, true);
 }
 
-PValuePtr kernelPValue(const string &name)
+static PValuePtr kernelPValue(const string &name)
 {
     return staticPValue(kernelName(name));
 }
