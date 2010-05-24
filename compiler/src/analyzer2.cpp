@@ -351,6 +351,16 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
         return new MultiPValue(pv);
     }
 
+    case MULTI_STATIC : {
+        MultiStatic *y = (MultiStatic *)x.ptr();
+        MultiPValuePtr mpv = new MultiPValue();
+        for (unsigned i = 0; i < y->size(); ++i) {
+            TypePtr t = objectType(y->values[i]);
+            mpv->values.push_back(new PValue(t, true));
+        }
+        return mpv;
+    }
+
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :

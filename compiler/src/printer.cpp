@@ -582,6 +582,12 @@ static void print(ostream &out, const Object *x) {
         break;
     }
 
+    case MULTI_STATIC : {
+        const MultiStatic *y = (const MultiStatic *)x;
+        out << "MultiStatic(" << y->values << ")";
+        break;
+    }
+
     case PVALUE : {
         const PValue *y = (const PValue *)x;
         out << "PValue(" << y->type << ")";

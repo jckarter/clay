@@ -36,12 +36,15 @@ overload lesser?(a:Static[A], b:Static[A]) = false;
 
 
 //
-// staticValue
+// wrapStatic, unwrapStatic
 //
 
-inlined staticValue(x) {
+inlined wrapStatic(x) {
     return Static[x]();
 }
+
+[A]
+inlined unwrapStatic(x:Static[A]) = A;
 
 
 
