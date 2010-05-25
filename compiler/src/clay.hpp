@@ -439,11 +439,11 @@ struct Location : public Object {
 // error module
 //
 
-void pushInvokeStack(ObjectPtr callable, const vector<ObjectPtr> &argsKey);
+void pushInvokeStack(ObjectPtr callable, const vector<TypePtr> &argsKey);
 void popInvokeStack();
 
 struct InvokeStackContext {
-    InvokeStackContext(ObjectPtr callable, const vector<ObjectPtr> &argsKey) {
+    InvokeStackContext(ObjectPtr callable, const vector<TypePtr> &argsKey) {
         pushInvokeStack(callable, argsKey);
     }
     ~InvokeStackContext() {
@@ -1374,6 +1374,7 @@ ostream &operator<<(ostream &out, const vector<T> &v)
 }
 
 void printNameList(ostream &out, const vector<ObjectPtr> &x);
+void printNameList(ostream &out, const vector<TypePtr> &x);
 void printName(ostream &out, ObjectPtr x);
 string getCodeName(ObjectPtr x);
 
@@ -1939,14 +1940,14 @@ void initializeLambda(LambdaPtr x, EnvPtr env);
 const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
 bool computeArgsKey(const vector<ExprPtr> &args,
                     EnvPtr env,
-                    vector<ObjectPtr> &argsKey,
+                    vector<TypePtr> &argsKey,
                     vector<ValueTempness> &argsTempness,
                     vector<LocationPtr> &argLocations);
 
 
 struct InvokeEntry : public Object {
     ObjectPtr callable;
-    vector<ObjectPtr> argsKey;
+    vector<TypePtr> argsKey;
 
     bool analyzed;
     bool analyzing;
@@ -1968,7 +1969,7 @@ struct InvokeEntry : public Object {
     llvm::Function *llvmCWrapper;
 
     InvokeEntry(ObjectPtr callable,
-                const vector<ObjectPtr> &argsKey)
+                const vector<TypePtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), hasVarArgs(false), inlined(false),
@@ -1978,18 +1979,18 @@ typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
 struct InvokeSet : public Object {
     ObjectPtr callable;
-    vector<ObjectPtr> argsKey;
+    vector<TypePtr> argsKey;
     vector<InvokeEntryPtr> entries;
     vector<unsigned> overloadIndices;
     InvokeSet(ObjectPtr callable,
-              const vector<ObjectPtr> &argsKey)
+              const vector<TypePtr> &argsKey)
         : Object(DONT_CARE), callable(callable), argsKey(argsKey) {}
 };
 typedef Pointer<InvokeSet> InvokeSetPtr;
 
 
 InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
-                             const vector<ObjectPtr> &argsKey);
+                             const vector<TypePtr> &argsKey);
 
 
 
@@ -2045,7 +2046,7 @@ struct MatchPredicateError : public MatchResult {
 };
 
 MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
-                           const vector<ObjectPtr> &argsKey,
+                           const vector<TypePtr> &argsKey,
                            ExprPtr callableExpr, ObjectPtr callable);
 
 void signalMatchError(MatchResultPtr result,
@@ -2159,9 +2160,9 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env);
 ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
-                                   const vector<ObjectPtr> &argsKey);
+                                   const vector<TypePtr> &argsKey);
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
-                               const vector<ObjectPtr> &argsKey,
+                               const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations);
 ObjectPtr analyzeReturn(const vector<bool> &returnIsRef,
@@ -2310,7 +2311,7 @@ void evalInvokeCallable(ObjectPtr x,
                         EnvPtr env,
                         MultiEValuePtr out);
 bool evalInvokeSpecialCase(ObjectPtr x,
-                           const vector<ObjectPtr> &argsKey);
+                           const vector<TypePtr> &argsKey);
 void evalInvokeCode(InvokeEntryPtr entry,
                     const vector<ExprPtr> &args,
                     EnvPtr env,
@@ -2534,9 +2535,9 @@ void codegenInvokeCallable(ObjectPtr x,
                            CodegenContextPtr ctx,
                            MultiCValuePtr out);
 bool codegenInvokeSpecialCase(ObjectPtr x,
-                              const vector<ObjectPtr> &argsKey);
+                              const vector<TypePtr> &argsKey);
 InvokeEntryPtr codegenCallable(ObjectPtr x,
-                               const vector<ObjectPtr> &argsKey,
+                               const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations);
 void codegenInvokeCode(InvokeEntryPtr entry,

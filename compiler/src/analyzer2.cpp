@@ -720,6 +720,8 @@ MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
                                    EnvPtr env)
 {
     PValuePtr pv = two::analyzeOne(base, env);
+    if (!pv)
+        return NULL;
     ObjectPtr obj = unwrapStaticType(pv->type);
     if (obj.ptr()) {
         if (obj->objKind == MODULE_HOLDER) {
@@ -745,7 +747,16 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                const vector<ExprPtr> &args,
                                EnvPtr env)
 {
-    return NULL;
+    PValuePtr pv = two::analyzeOne(callable, env);
+    if (!pv)
+        return NULL;
+    MultiPValuePtr mpv = analyzeMulti(args, env);
+    if (!mpv)
+        return NULL;
+    ObjectPtr obj = unwrapStaticType(pv->type);
+    if (obj.ptr()) {
+    }
+    return analyzeCallValue(pv, mpv);
 }
 
 

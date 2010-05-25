@@ -731,7 +731,7 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
                                 const vector<ExprPtr> &args,
                                 EnvPtr env)
 {
-    vector<ObjectPtr> argsKey;
+    vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
     vector<LocationPtr> argLocations;
     if (!computeArgsKey(args, env, argsKey, argsTempness, argLocations))
@@ -750,7 +750,7 @@ ObjectPtr analyzeInvokeCallable(ObjectPtr x,
 }
 
 ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
-                                   const vector<ObjectPtr> &argsKey)
+                                   const vector<TypePtr> &argsKey)
 {
     switch (x->objKind) {
     case TYPE : {
@@ -761,12 +761,10 @@ ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
     }
     case PROCEDURE : {
         if ((x == kernelName("destroy")) &&
-            (argsKey.size() == 1))
+            (argsKey.size() == 1) &&
+            isPrimitiveType(argsKey[0]))
         {
-            ObjectPtr y = argsKey[0];
-            assert(y->objKind == TYPE);
-            if (isPrimitiveType((Type *)y.ptr()))
-                return new MultiPValue();
+            return new MultiPValue();
         }
         break;
     }
@@ -831,7 +829,7 @@ static bool tempnessMatches(CodePtr code,
 }
 
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
-                               const vector<ObjectPtr> &argsKey,
+                               const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations)
 {
@@ -1333,12 +1331,12 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        vector<ObjectPtr> argsKey;
+        vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
             TypePtr t = evaluateType(args[i], env);
-            argsKey.push_back(t.ptr());
+            argsKey.push_back(t);
             argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }
@@ -1389,12 +1387,12 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        vector<ObjectPtr> argsKey;
+        vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
             TypePtr t = evaluateType(args[i], env);
-            argsKey.push_back(t.ptr());
+            argsKey.push_back(t);
             argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }
