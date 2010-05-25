@@ -1952,7 +1952,6 @@ struct InvokeEntry : public Object {
     bool analyzing;
 
     CodePtr code;
-    vector<ObjectPtr> staticArgs;
     EnvPtr env;
     vector<TypePtr> fixedArgTypes;
     vector<IdentifierPtr> fixedArgNames;
@@ -2015,7 +2014,6 @@ typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
     EnvPtr env;
-    vector<ObjectPtr> staticArgs;
     vector<TypePtr> fixedArgTypes;
     vector<IdentifierPtr> fixedArgNames;
     bool hasVarArgs;

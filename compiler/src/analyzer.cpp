@@ -802,7 +802,6 @@ static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
             invokeSet->overloadIndices.push_back(overloadIndex);
             entry->code = clone(y->code);
             MatchSuccess *z = (MatchSuccess *)result.ptr();
-            entry->staticArgs = z->staticArgs;
             entry->env = z->env;
             entry->fixedArgTypes = z->fixedArgTypes;
             entry->fixedArgNames = z->fixedArgNames;
