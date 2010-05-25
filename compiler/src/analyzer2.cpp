@@ -597,10 +597,14 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
     if (!pv)
         return NULL;
     ObjectPtr obj = unwrapStaticType(pv->type);
-    if (obj.ptr() && isTypeConstructor(obj)) {
-        MultiStaticPtr params = evaluateMultiStatic(args, env);
-        PValuePtr out = analyzeTypeConstructor(obj, params);
-        return new MultiPValue(out);
+    if (obj.ptr()) {
+        if (isTypeConstructor(obj)) {
+            MultiStaticPtr params = evaluateMultiStatic(args, env);
+            PValuePtr out = analyzeTypeConstructor(obj, params);
+            return new MultiPValue(out);
+        }
+        if (obj->objKind != VALUE_HOLDER)
+            error("invalid indexing operation");
     }
     MultiPValuePtr mpv = analyzeMulti(args, env);
     if (!mpv)
@@ -691,9 +695,7 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
         default :
             assert(false);
             return NULL;
-
         }
-
     }
     else if (obj->objKind == RECORD) {
         RecordPtr x = (Record *)obj.ptr();
@@ -717,7 +719,20 @@ MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
                                    IdentifierPtr name,
                                    EnvPtr env)
 {
-    return NULL;
+    PValuePtr pv = two::analyzeOne(base, env);
+    ObjectPtr obj = unwrapStaticType(pv->type);
+    if (obj.ptr()) {
+        if (obj->objKind == MODULE_HOLDER) {
+            ModuleHolderPtr y = (ModuleHolder *)obj.ptr();
+            ObjectPtr z = lookupModuleMember(y, name);
+            return two::analyzeStaticObject(z);
+        }
+        if (obj->objKind != VALUE_HOLDER)
+            error("invalid field access");
+    }
+    MultiPValuePtr args = new MultiPValue(pv);
+    args->values.push_back(staticPValue(name.ptr()));
+    return analyzeCallValue(kernelPValue("fieldRef"), args);
 }
 
 
