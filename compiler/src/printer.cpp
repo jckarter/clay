@@ -645,6 +645,15 @@ void printNameList(ostream &out, const vector<ObjectPtr> &x)
     }
 }
 
+void printNameList(ostream &out, const vector<TypePtr> &x)
+{
+    for (unsigned i = 0; i < x.size(); ++i) {
+        if (i != 0)
+            out << ", ";
+        printName(out, x[i].ptr());
+    }
+}
+
 void printName(ostream &out, ObjectPtr x)
 {
     switch (x->objKind) {

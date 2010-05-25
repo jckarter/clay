@@ -1,7 +1,7 @@
 #include "clay.hpp"
 
 MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
-                           const vector<ObjectPtr> &argsKey,
+                           const vector<TypePtr> &argsKey,
                            ExprPtr callableExpr, ObjectPtr callable)
 {
     if (code->hasVarArgs) {
@@ -29,7 +29,7 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
         FormalArgPtr x = formalArgs[i];
         if (x->type.ptr()) {
             PatternPtr pattern = evaluatePattern(x->type, patternEnv);
-            if (!unify(pattern, argsKey[i]))
+            if (!unify(pattern, argsKey[i].ptr()))
                 return new MatchArgumentError(i);
         }
     }
@@ -44,16 +44,13 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         result->fixedArgNames.push_back(x->name);
-        assert(argsKey[i]->objKind == TYPE);
-        TypePtr y = (Type *)argsKey[i].ptr();
-        result->fixedArgTypes.push_back(y);
+        result->fixedArgTypes.push_back(argsKey[i]);
     }
 
     if (code->hasVarArgs) {
         result->hasVarArgs = true;
         for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i) {
-            TypePtr y = (Type *)argsKey[i].ptr();
-            result->varArgTypes.push_back(y);
+            result->varArgTypes.push_back(argsKey[i]);
         }
     }
     return result.ptr();

@@ -1664,7 +1664,7 @@ void codegenInvokeCallable(ObjectPtr x,
                            CodegenContextPtr ctx,
                            MultiCValuePtr out)
 {
-    vector<ObjectPtr> argsKey;
+    vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
     vector<LocationPtr> argLocations;
     bool result = computeArgsKey(args, env,
@@ -1683,7 +1683,7 @@ void codegenInvokeCallable(ObjectPtr x,
 }
 
 bool codegenInvokeSpecialCase(ObjectPtr x,
-                              const vector<ObjectPtr> &argsKey)
+                              const vector<TypePtr> &argsKey)
 {
     switch (x->objKind) {
     case TYPE : {
@@ -1694,12 +1694,10 @@ bool codegenInvokeSpecialCase(ObjectPtr x,
     }
     case PROCEDURE : {
         if ((x == kernelName("destroy")) &&
-            (argsKey.size() == 1))
+            (argsKey.size() == 1) &&
+            isPrimitiveType(argsKey[0]))
         {
-            ObjectPtr y = argsKey[0];
-            assert(y->objKind == TYPE);
-            if (isPrimitiveType((Type *)y.ptr()))
-                return true;
+            return true;
         }
         break;
     }
@@ -1708,7 +1706,7 @@ bool codegenInvokeSpecialCase(ObjectPtr x,
 }
 
 InvokeEntryPtr codegenCallable(ObjectPtr x,
-                               const vector<ObjectPtr> &argsKey,
+                               const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness,
                                const vector<LocationPtr> &argLocations)
 {
@@ -1733,10 +1731,8 @@ void codegenInvokeCode(InvokeEntryPtr entry,
 {
     vector<llvm::Value *> llArgs;
     for (unsigned i = 0; i < args.size(); ++i) {
-        assert(entry->argsKey[i]->objKind == TYPE);
-        TypePtr argType = (Type *)entry->argsKey[i].ptr();
         CValuePtr carg = codegenOneAsRef(args[i], env, ctx);
-        assert(carg->type == argType);
+        assert(carg->type == entry->argsKey[i]);
         llArgs.push_back(carg->llValue);
     }
     assert(out->size() == entry->returnTypes.size());
@@ -2586,12 +2582,12 @@ void codegenInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        vector<ObjectPtr> argsKey;
+        vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
             TypePtr t = evaluateType(args[i], env);
-            argsKey.push_back(t.ptr());
+            argsKey.push_back(t);
             argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }
@@ -2654,12 +2650,12 @@ void codegenInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        vector<ObjectPtr> argsKey;
+        vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
             TypePtr t = evaluateType(args[i], env);
-            argsKey.push_back(t.ptr());
+            argsKey.push_back(t);
             argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }
@@ -3046,13 +3042,13 @@ static ProcedurePtr makeDestructorProcedure() {
 static void generateLLVMCtorsAndDtors() {
     ObjectPtr initializer = makeInitializerProcedure().ptr();
     InvokeEntryPtr entry1 = codegenCallable(initializer,
-                                            vector<ObjectPtr>(),
+                                            vector<TypePtr>(),
                                             vector<ValueTempness>(),
                                             vector<LocationPtr>());
     codegenCWrapper(entry1, getCodeName(initializer));
     ObjectPtr destructor = makeDestructorProcedure().ptr();
     InvokeEntryPtr entry2 = codegenCallable(destructor,
-                                            vector<ObjectPtr>(),
+                                            vector<TypePtr>(),
                                             vector<ValueTempness>(),
                                             vector<LocationPtr>());
     codegenCWrapper(entry2, getCodeName(destructor));
