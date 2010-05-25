@@ -648,6 +648,11 @@ void printNameList(ostream &out, const vector<ObjectPtr> &x)
 void printName(ostream &out, ObjectPtr x)
 {
     switch (x->objKind) {
+    case IDENTIFIER : {
+        Identifier *y = (Identifier *)x.ptr();
+        out << "#" << y->str;
+        break;
+    }
     case RECORD : {
         Record *y = (Record *)x.ptr();
         out << y->name->str;
