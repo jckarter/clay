@@ -723,7 +723,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     }
 
     case STATIC : {
-        MultiStaticPtr right = evaluateMultiStatic(x->expr, env);
+        MultiStaticPtr right = evaluateExprStatic(x->expr, env);
         if (right->size() != x->names.size())
             arityError(x->expr, x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
@@ -2039,7 +2039,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
 
     case PRIM_TypeP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         ObjectPtr obj = boolToValueHolder(y->objKind == TYPE).ptr();
         codegenStaticObject(obj, env, ctx, out);
         break;
@@ -2556,7 +2556,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
 
     case PRIM_CodePointerP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isCPType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
@@ -2577,7 +2577,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
     case PRIM_makeCodePointer : {
         if (args.size() < 1)
             error("incorrect number of arguments");
-        ObjectPtr callable = evaluateStatic(args[0], env);
+        ObjectPtr callable = evaluateOneStatic(args[0], env);
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
@@ -2621,7 +2621,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
 
     case PRIM_CCodePointerP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isCCPType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
@@ -2645,7 +2645,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
     case PRIM_makeCCodePointer : {
         if (args.size() < 1)
             error("incorrect number of arguments");
-        ObjectPtr callable = evaluateStatic(args[0], env);
+        ObjectPtr callable = evaluateOneStatic(args[0], env);
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
@@ -2765,7 +2765,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
 
     case PRIM_TupleP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isTupleType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
@@ -2838,7 +2838,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
 
     case PRIM_RecordP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isRecordType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
@@ -2931,7 +2931,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
 
     case PRIM_StaticName : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         ostringstream sout;
         printName(sout, y);
         ExprPtr z = new StringLiteral(sout.str());
@@ -2962,7 +2962,7 @@ void codegenInvokePrimOp2(PrimOpPtr x,
 
     case PRIM_EnumP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isEnumType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();

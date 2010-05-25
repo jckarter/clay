@@ -132,7 +132,7 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
     }
 }
 
-MultiStaticPtr evaluateMultiStatic(ExprPtr expr, EnvPtr env)
+MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
 {
     MultiPValuePtr mpv = analyzeMultiValue(expr, env);
     vector<ValueHolderPtr> valueHolders;
@@ -153,17 +153,34 @@ MultiStaticPtr evaluateMultiStatic(ExprPtr expr, EnvPtr env)
     return ms;
 }
 
-ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env)
+ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env)
 {
-    MultiStaticPtr ms = evaluateMultiStatic(expr, env);
+    MultiStaticPtr ms = evaluateExprStatic(expr, env);
     if (ms->size() != 1)
         arityError(expr, 1, ms->size());
     return ms->values[0];
 }
 
+MultiStaticPtr evaluateMultiStatic(const vector<ExprPtr> &exprs, EnvPtr env)
+{
+    MultiStaticPtr out = new MultiStatic();
+    for (unsigned i = 0; i < exprs.size(); ++i) {
+        ExprPtr x = exprs[i];
+        if (x->exprKind == VAR_ARGS_REF) {
+            MultiStaticPtr y = evaluateExprStatic(x, env);
+            out->add(y);
+        }
+        else {
+            ObjectPtr y = evaluateOneStatic(x, env);
+            out->add(y);
+        }
+    }
+    return out;
+}
+
 TypePtr evaluateType(ExprPtr expr, EnvPtr env)
 {
-    ObjectPtr v = evaluateStatic(expr, env);
+    ObjectPtr v = evaluateOneStatic(expr, env);
     if (v->objKind != TYPE)
         error(expr, "expecting a type");
     return (Type *)v.ptr();
@@ -230,7 +247,7 @@ TypePtr evaluateEnumerationType(ExprPtr expr, EnvPtr env)
 
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env)
 {
-    ObjectPtr v = evaluateStatic(expr, env);
+    ObjectPtr v = evaluateOneStatic(expr, env);
     if (v->objKind != IDENTIFIER)
         error(expr, "expecting an identifier value");
     return (Identifier *)v.ptr();
@@ -238,7 +255,7 @@ IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env)
 
 int evaluateInt(ExprPtr expr, EnvPtr env)
 {
-    ObjectPtr v = evaluateStatic(expr, env);
+    ObjectPtr v = evaluateOneStatic(expr, env);
     if (v->objKind != VALUE_HOLDER)
         error(expr, "expecting an Int value");
     ValueHolderPtr vh = (ValueHolder *)v.ptr();
@@ -249,7 +266,7 @@ int evaluateInt(ExprPtr expr, EnvPtr env)
 
 size_t evaluateSizeT(ExprPtr expr, EnvPtr env)
 {
-    ObjectPtr v = evaluateStatic(expr, env);
+    ObjectPtr v = evaluateOneStatic(expr, env);
     if (v->objKind != VALUE_HOLDER)
         error(expr, "expecting a SizeT value");
     ValueHolderPtr vh = (ValueHolder *)v.ptr();
@@ -260,7 +277,7 @@ size_t evaluateSizeT(ExprPtr expr, EnvPtr env)
 
 ptrdiff_t evaluatePtrDiffT(ExprPtr expr, EnvPtr env)
 {
-    ObjectPtr v = evaluateStatic(expr, env);
+    ObjectPtr v = evaluateOneStatic(expr, env);
     if (v->objKind != VALUE_HOLDER)
         error(expr, "expecting a PtrDiffT value");
     ValueHolderPtr vh = (ValueHolder *)v.ptr();
@@ -271,7 +288,7 @@ ptrdiff_t evaluatePtrDiffT(ExprPtr expr, EnvPtr env)
 
 bool evaluateBool(ExprPtr expr, EnvPtr env)
 {
-    ObjectPtr v = evaluateStatic(expr, env);
+    ObjectPtr v = evaluateOneStatic(expr, env);
     if (v->objKind != VALUE_HOLDER)
         error(expr, "expecting a bool value");
     ValueHolderPtr vh = (ValueHolder *)v.ptr();
@@ -1384,7 +1401,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case STATIC : {
-        MultiStaticPtr right = evaluateMultiStatic(x->expr, env);
+        MultiStaticPtr right = evaluateExprStatic(x->expr, env);
         if (right->size() != x->names.size())
             arityError(x->expr, x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
@@ -1952,7 +1969,7 @@ void evalInvokePrimOp(PrimOpPtr x,
 
     case PRIM_TypeP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool flag = y->objKind == TYPE;
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
@@ -2296,7 +2313,7 @@ void evalInvokePrimOp(PrimOpPtr x,
 
     case PRIM_CodePointerP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isCPType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
@@ -2320,7 +2337,7 @@ void evalInvokePrimOp(PrimOpPtr x,
     case PRIM_makeCodePointer : {
         if (args.size() < 1)
             error("incorrect number of arguments");
-        ObjectPtr callable = evaluateStatic(args[0], env);
+        ObjectPtr callable = evaluateOneStatic(args[0], env);
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
@@ -2365,7 +2382,7 @@ void evalInvokePrimOp(PrimOpPtr x,
 
     case PRIM_CCodePointerP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isCCPType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
@@ -2392,7 +2409,7 @@ void evalInvokePrimOp(PrimOpPtr x,
     case PRIM_makeCCodePointer : {
         if (args.size() < 1)
             error("incorrect number of arguments");
-        ObjectPtr callable = evaluateStatic(args[0], env);
+        ObjectPtr callable = evaluateOneStatic(args[0], env);
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
@@ -2505,7 +2522,7 @@ void evalInvokePrimOp(PrimOpPtr x,
 
     case PRIM_TupleP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isTupleType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
@@ -2581,7 +2598,7 @@ void evalInvokePrimOp(PrimOpPtr x,
 
     case PRIM_RecordP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isRecordType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();
@@ -2677,7 +2694,7 @@ void evalInvokePrimOp(PrimOpPtr x,
 
     case PRIM_StaticName : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         ostringstream sout;
         printName(sout, y);
         ExprPtr z = new StringLiteral(sout.str());
@@ -2687,7 +2704,7 @@ void evalInvokePrimOp(PrimOpPtr x,
 
     case PRIM_EnumP : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         bool isEnumType = false;
         if (y->objKind == TYPE) {
             Type *t = (Type *)y.ptr();

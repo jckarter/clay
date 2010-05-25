@@ -12,6 +12,7 @@ void analyzeExternalProcedure(ExternalProcedurePtr x);
 MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
                                    const vector<ExprPtr> &args,
                                    EnvPtr env);
+PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
 MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
                                    IdentifierPtr name,
                                    EnvPtr env);
@@ -22,11 +23,124 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
 MultiPValuePtr analyzeCallValue(PValuePtr callable,
                                 MultiPValuePtr args);
 
+}
+
+
+//
+// utility procs
+//
+
+TypePtr objectType(ObjectPtr x)
+{
+    switch (x->objKind) {
+
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        return y->type;
+    }
+
+    case TYPE :
+    case PRIM_OP :
+    case PROCEDURE :
+    case RECORD :
+    case MODULE_HOLDER :
+    case IDENTIFIER :
+        return staticType(x);
+
+    default :
+        error("untypeable object");
+        return NULL;
+
+    }
+}
+
+ObjectPtr unwrapStaticType(TypePtr t) {
+    if (t->typeKind != STATIC_TYPE)
+        return NULL;
+    StaticType *st = (StaticType *)t.ptr();
+    return st->obj;
+}
+
+ObjectPtr lowerValueHolder(ValueHolderPtr vh)
+{
+    ObjectPtr x = unwrapStaticType(vh->type);
+    if (!x)
+        return vh.ptr();
+    return x;
+}
+
+bool unwrapStaticToType(ObjectPtr x, TypePtr &out)
+{
+    if (x->objKind != TYPE)
+        return false;
+    out = (Type *)x.ptr();
+    return true;
+}
+
+TypePtr unwrapStaticToType(MultiStaticPtr x, unsigned index)
+{
+    TypePtr out;
+    if (!unwrapStaticToType(x->values[index], out))
+        argumentError(0, "expecting a type");
+    return out;
+}
+
+bool unwrapStaticToTypeTuple(ObjectPtr x, vector<TypePtr> &out)
+{
+    TypePtr t;
+    if (unwrapStaticToType(x, t)) {
+        out.push_back(t);
+        return true;
+    }
+    if (x->objKind != VALUE_HOLDER)
+        return false;
+    ValueHolderPtr y = (ValueHolder *)x.ptr();
+    assert(y->type->typeKind != STATIC_TYPE);
+    if (y->type->typeKind != TUPLE_TYPE)
+        return false;
+    TupleTypePtr z = (TupleType *)y->type.ptr();
+    for (unsigned i = 0; i < z->elementTypes.size(); ++i) {
+        ObjectPtr obj = unwrapStaticType(z->elementTypes[i]);
+        if ((!obj) || (obj->objKind != TYPE))
+            return false;
+        out.push_back((Type *)obj.ptr());
+    }
+    return true;
+}
+
+void unwrapStaticToTypeTuple(MultiStaticPtr x, unsigned index,
+                             vector<TypePtr> &out)
+{
+    if (!unwrapStaticToTypeTuple(x->values[index], out))
+        argumentError(index, "expecting zero-or-more types");
+}
+
+bool unwrapStaticToInt(ObjectPtr x, int &out)
+{
+    if (x->objKind != VALUE_HOLDER)
+        return false;
+    ValueHolderPtr vh = (ValueHolder *)x.ptr();
+    if (vh->type != cIntType)
+        return false;
+    out = *((int *)vh->buf);
+    return true;
+}
+
+int unwrapStaticToInt(MultiStaticPtr x, unsigned index)
+{
+    int out = -1;
+    if (!unwrapStaticToInt(x->values[index], out))
+        argumentError(index, "expecting Int value");
+    return out;
+}
+
 
 
 //
 // staticPValue, kernelPValue
 //
+
+namespace two {
 
 static PValuePtr staticPValue(ObjectPtr x)
 {
@@ -54,9 +168,7 @@ MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env)
             MultiPValuePtr y = analyzeExpr(x, env);
             if (!y)
                 return NULL;
-            out->values.insert(out->values.end(),
-                               y->values.begin(),
-                               y->values.end());
+            out->add(y);
         }
         else {
             PValuePtr y = two::analyzeOne(x, env);
@@ -79,8 +191,7 @@ PValuePtr analyzeOne(ExprPtr expr, EnvPtr env)
     MultiPValuePtr x = analyzeExpr(expr, env);
     if (!x)
         return NULL;
-    if (x->size() != 1)
-        arityError(expr, 1, x->size());
+    ensureArity(x, 1);
     return x->values[0];
 }
 
@@ -452,11 +563,148 @@ void analyzeExternalProcedure(ExternalProcedurePtr x)
 // analyzeIndexingExpr
 //
 
+static bool isTypeConstructor(ObjectPtr x) {
+    if (x->objKind == PRIM_OP) {
+        PrimOpPtr y = (PrimOp *)x.ptr();
+        switch (y->primOpCode) {
+        case PRIM_Pointer :
+        case PRIM_CodePointer :
+        case PRIM_RefCodePointer :
+        case PRIM_CCodePointer :
+        case PRIM_StdCallCodePointer :
+        case PRIM_FastCallCodePointer :
+        case PRIM_Array :
+        case PRIM_Tuple :
+        case PRIM_Static :
+            return true;
+        default :
+            return false;
+        }
+    }
+    else if (x->objKind == RECORD) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
                                    const vector<ExprPtr> &args,
                                    EnvPtr env)
 {
-    return NULL;
+    PValuePtr pv = two::analyzeOne(indexable, env);
+    if (!pv)
+        return NULL;
+    ObjectPtr obj = unwrapStaticType(pv->type);
+    if (obj.ptr() && isTypeConstructor(obj)) {
+        MultiStaticPtr params = evaluateMultiStatic(args, env);
+        PValuePtr out = analyzeTypeConstructor(obj, params);
+        return new MultiPValue(out);
+    }
+    MultiPValuePtr mpv = analyzeMulti(args, env);
+    if (!mpv)
+        return NULL;
+    MultiPValuePtr args2 = new MultiPValue(pv);
+    args2->add(mpv);
+    return analyzeCallValue(kernelPValue("index"), args2);
+}
+
+
+
+//
+// analyzeTypeConstructor
+//
+
+PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
+{
+    if (obj->objKind == PRIM_OP) {
+        PrimOpPtr x = (PrimOp *)obj.ptr();
+
+        switch (x->objKind) {
+
+        case PRIM_Pointer : {
+            ensureArity(args, 1);
+            TypePtr pointeeType = unwrapStaticToType(args, 0);
+            return staticPValue(pointerType(pointeeType).ptr());
+        }
+
+        case PRIM_CodePointer :
+        case PRIM_RefCodePointer : {
+            ensureArity(args, 2);
+            vector<TypePtr> argTypes;
+            unwrapStaticToTypeTuple(args, 0, argTypes);
+            vector<TypePtr> returnTypes;
+            unwrapStaticToTypeTuple(args, 1, returnTypes);
+            bool byRef = (x->objKind == PRIM_RefCodePointer);
+            vector<bool> returnIsRef(returnTypes.size(), byRef);
+            TypePtr t = codePointerType(argTypes, returnIsRef, returnTypes);
+            return staticPValue(t.ptr());
+        }
+
+        case PRIM_CCodePointer :
+        case PRIM_StdCallCodePointer :
+        case PRIM_FastCallCodePointer : {
+            ensureArity(args, 2);
+            vector<TypePtr> argTypes;
+            unwrapStaticToTypeTuple(args, 0, argTypes);
+            vector<TypePtr> returnTypes;
+            unwrapStaticToTypeTuple(args, 1, returnTypes);
+            if (returnTypes.size() > 1)
+                argumentError(1, "C code cannot return more than one value");
+            TypePtr returnType;
+            if (returnTypes.size() == 1)
+                returnType = returnTypes[0];
+            CallingConv cc;
+            switch (x->objKind) {
+            case PRIM_CCodePointer : cc = CC_DEFAULT; break;
+            case PRIM_StdCallCodePointer : cc = CC_STDCALL; break;
+            case PRIM_FastCallCodePointer : cc = CC_FASTCALL; break;
+            default : assert(false);
+            }
+            TypePtr t = cCodePointerType(cc, argTypes, false, returnType);
+            return staticPValue(t.ptr());
+        }
+
+        case PRIM_Array : {
+            ensureArity(args, 2);
+            TypePtr t = unwrapStaticToType(args, 0);
+            int size = unwrapStaticToInt(args, 1);
+            TypePtr at = arrayType(t, size);
+            return staticPValue(at.ptr());
+        }
+
+        case PRIM_Tuple : {
+            vector<TypePtr> types;
+            for (unsigned i = 0; i < args->size(); ++i)
+                types.push_back(unwrapStaticToType(args, i));
+            TypePtr t = tupleType(types);
+            return staticPValue(t.ptr());
+        }
+
+        case PRIM_Static : {
+            ensureArity(args, 1);
+            TypePtr t = staticType(args->values[0]);
+            return staticPValue(t.ptr());
+        }
+
+        default :
+            assert(false);
+            return NULL;
+
+        }
+
+    }
+    else if (obj->objKind == RECORD) {
+        RecordPtr x = (Record *)obj.ptr();
+        if (args->size() != x->patternVars.size())
+            arityError(x->patternVars.size(), args->size());
+        return staticPValue(recordType(x, args->values).ptr());
+    }
+    else {
+        assert(false);
+        return NULL;
+    }
 }
 
 

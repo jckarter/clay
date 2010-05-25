@@ -481,6 +481,8 @@ void error(Pointer<T> context, const string &msg)
     error(msg);
 }
 
+void argumentError(unsigned int index, const string &msg);
+
 void arityError(int expected, int received);
 void arityError2(int minExpected, int received);
 
@@ -499,6 +501,11 @@ void arityError2(Pointer<T> context, int minExpected, int received)
         pushLocation(context->location);
     arityError2(minExpected, received);
 }
+
+void ensureArity(MultiStaticPtr args, unsigned int size);
+void ensureArity(MultiEValuePtr args, unsigned int size);
+void ensureArity(MultiPValuePtr args, unsigned int size);
+void ensureArity(MultiCValuePtr args, unsigned int size);
 
 template <class T>
 void ensureArity(const vector<T> &args, int size)
@@ -1878,6 +1885,10 @@ struct MultiStatic : public Object {
     MultiStatic(const vector<ObjectPtr> &values)
         : Object(MULTI_STATIC), values(values) {}
     unsigned size() { return values.size(); }
+    void add(ObjectPtr x) { values.push_back(x); }
+    void add(MultiStaticPtr x) {
+        values.insert(values.end(), x->values.begin(), x->values.end());
+    }
 };
 
 
@@ -2105,10 +2116,22 @@ struct MultiPValue : public Object {
     MultiPValue(const vector<PValuePtr> &values)
         : Object(MULTI_PVALUE), values(values) {}
     unsigned size() { return values.size(); }
+    void add(PValuePtr x) { values.push_back(x); }
+    void add(MultiPValuePtr x) {
+        values.insert(values.end(), x->values.begin(), x->values.end());
+    }
 };
 
 TypePtr objectType(ObjectPtr x);
+ObjectPtr unwrapStaticType(TypePtr t);
 ObjectPtr lowerValueHolder(ValueHolderPtr vh);
+bool unwrapStaticToType(ObjectPtr x, TypePtr &out);
+TypePtr unwrapStaticToType(MultiStaticPtr x, unsigned index);
+bool unwrapStaticToTypeTuple(ObjectPtr x, vector<TypePtr> &out);
+void unwrapStaticToTypeTuple(MultiStaticPtr x, unsigned index,
+                             vector<TypePtr> &out);
+bool unwrapStaticToInt(ObjectPtr x, int &out);
+int unwrapStaticToInt(MultiStaticPtr x, unsigned index);
 
 PValuePtr analysisToPValue(ObjectPtr x);
 MultiPValuePtr analysisToMultiPValue(ObjectPtr x);
@@ -2203,8 +2226,9 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
                          vector<bool> &isRef,
                          vector<TypePtr> &types);
 
-MultiStaticPtr evaluateMultiStatic(ExprPtr expr, EnvPtr env);
-ObjectPtr evaluateStatic(ExprPtr expr, EnvPtr env);
+MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env);
+ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env);
+MultiStaticPtr evaluateMultiStatic(const vector<ExprPtr> &exprs, EnvPtr env);
 
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
@@ -2244,6 +2268,10 @@ struct MultiEValue : public Object {
     MultiEValue(const vector<EValuePtr> &values)
         : Object(MULTI_EVALUE), values(values) {}
     unsigned size() { return values.size(); }
+    void add(EValuePtr x) { values.push_back(x); }
+    void add(MultiEValuePtr x) {
+        values.insert(values.end(), x->values.begin(), x->values.end());
+    }
 };
 
 void evalValueInit(EValuePtr dest);
@@ -2397,6 +2425,10 @@ struct MultiCValue : public Object {
     MultiCValue(const vector<CValuePtr> &values)
         : Object(MULTI_CVALUE), values(values) {}
     unsigned size() { return values.size(); }
+    void add(CValuePtr x) { values.push_back(x); }
+    void add(MultiCValuePtr x) {
+        values.insert(values.end(), x->values.begin(), x->values.end());
+    }
 };
 
 struct JumpTarget {
