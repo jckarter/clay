@@ -3,45 +3,6 @@
 
 
 //
-// utility procs
-//
-
-TypePtr objectType(ObjectPtr x)
-{
-    switch (x->objKind) {
-
-    case VALUE_HOLDER : {
-        ValueHolder *y = (ValueHolder *)x.ptr();
-        return y->type;
-    }
-
-    case TYPE :
-    case PRIM_OP :
-    case PROCEDURE :
-    case RECORD :
-    case MODULE_HOLDER :
-    case IDENTIFIER :
-        return staticType(x);
-
-    default :
-        error("untypeable object");
-        return NULL;
-
-    }
-}
-
-ObjectPtr lowerValueHolder(ValueHolderPtr vh)
-{
-    if (vh->type->typeKind == STATIC_TYPE) {
-        StaticType *t = (StaticType *)vh->type.ptr();
-        return t->obj;
-    }
-    return vh.ptr();
-}
-
-
-
-//
 // analyze wrappers
 //
 
@@ -711,7 +672,7 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
 
         case PRIM_Static : {
             ensureArity(args, 1);
-            ObjectPtr obj = evaluateStatic(args[0], env);
+            ObjectPtr obj = evaluateOneStatic(args[0], env);
             return staticType(obj).ptr();
         }
 
@@ -723,7 +684,7 @@ ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
         ensureArity(args, y->patternVars.size());
         vector<ObjectPtr> params;
         for (unsigned i = 0; i < args.size(); ++i)
-            params.push_back(evaluateStatic(args[i], env));
+            params.push_back(evaluateOneStatic(args[i], env));
         return recordType(y, params).ptr();
     }
 
@@ -1169,7 +1130,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
     }
 
     case STATIC : {
-        MultiStaticPtr right = evaluateMultiStatic(x->expr, env);
+        MultiStaticPtr right = evaluateExprStatic(x->expr, env);
         if (right->size() != x->names.size())
             arityError(x->expr, x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
@@ -1364,7 +1325,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_makeCodePointer : {
         if (args.size() < 1)
             error("incorrect no. of parameters");
-        ObjectPtr callable = evaluateStatic(args[0], env);
+        ObjectPtr callable = evaluateOneStatic(args[0], env);
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
@@ -1420,7 +1381,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_makeCCodePointer : {
         if (args.size() < 1)
             error("incorrect no. of parameters");
-        ObjectPtr callable = evaluateStatic(args[0], env);
+        ObjectPtr callable = evaluateOneStatic(args[0], env);
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
@@ -1591,7 +1552,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
 
     case PRIM_StaticName : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateStatic(args[0], env);
+        ObjectPtr y = evaluateOneStatic(args[0], env);
         ostringstream sout;
         printName(sout, y);
         ExprPtr z = new StringLiteral(sout.str());

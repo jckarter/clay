@@ -197,6 +197,12 @@ void fmtError(const char *fmt, ...) {
     error(s);
 }
 
+void argumentError(unsigned int index, const string &msg) {
+    ostringstream sout;
+    sout << "argument " << index << ": " << msg;
+    error(sout.str());
+}
+
 static const char *valuesStr(int n) {
     if (n == 1)
         return "value";
@@ -217,4 +223,24 @@ void arityError2(int minExpected, int received) {
          << " " << valuesStr(minExpected);
     sout << ", but received " << received << " " << valuesStr(received);
     error(sout.str());
+}
+
+void ensureArity(MultiStaticPtr args, unsigned int size) {
+    if (args->size() != size)
+        arityError(size, args->size());
+}
+
+void ensureArity(MultiEValuePtr args, unsigned int size) {
+    if (args->size() != size)
+        arityError(size, args->size());
+}
+
+void ensureArity(MultiPValuePtr args, unsigned int size) {
+    if (args->size() != size)
+        arityError(size, args->size());
+}
+
+void ensureArity(MultiCValuePtr args, unsigned int size) {
+    if (args->size() != size)
+        arityError(size, args->size());
 }

@@ -14,15 +14,15 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env)
 
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
-        ObjectPtr indexable = evaluateStatic(x->expr, env);
+        ObjectPtr indexable = evaluateOneStatic(x->expr, env);
         PatternPtr y = evaluateIndexingPattern(indexable, x->args, env);
         if (!y)
-            y = new PatternCell(NULL, evaluateStatic(expr, env));
+            y = new PatternCell(NULL, evaluateOneStatic(expr, env));
         return y;
     }
 
     default : {
-        ObjectPtr y = evaluateStatic(expr, env);
+        ObjectPtr y = evaluateOneStatic(expr, env);
         return new PatternCell(NULL, y);
     }
 
