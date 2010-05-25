@@ -189,3 +189,14 @@ private lesserRecordFields?(a:T, b:T, static i) {
 overload lesserRecordFields?(a:T, b:T, static i) {
     return false;
 }
+
+
+
+//
+// fieldRef
+//
+
+[T, FIELD | Record?(T)]
+overload fieldRef(x:T, static FIELD) {
+    return ref recordFieldRefByName(x, static FIELD);
+}

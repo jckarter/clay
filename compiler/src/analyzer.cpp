@@ -558,7 +558,7 @@ ObjectPtr analyzeFieldRef(ObjectPtr x, IdentifierPtr name)
         vector<ExprPtr> args;
         args.push_back(new ObjectExpr(x));
         args.push_back(new ObjectExpr(name.ptr()));
-        ObjectPtr prim = primName("recordFieldRefByName");
+        ObjectPtr prim = kernelName("fieldRef");
         return analyzeInvoke(prim, args, new Env());
     }
     case MODULE_HOLDER : {

@@ -938,7 +938,7 @@ void codegenExpr(ExprPtr expr,
                 vector<ExprPtr> args2;
                 args2.push_back(new ObjectExpr(cv.ptr()));
                 args2.push_back(new ObjectExpr(x->name.ptr()));
-                ObjectPtr prim = primName("recordFieldRefByName");
+                ObjectPtr prim = kernelName("fieldRef");
                 codegenInvoke(prim, args2, env, ctx, out);
             }
         }
