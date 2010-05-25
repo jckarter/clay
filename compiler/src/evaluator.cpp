@@ -605,7 +605,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
                 vector<ExprPtr> args2;
                 args2.push_back(new ObjectExpr(ev.ptr()));
                 args2.push_back(new ObjectExpr(x->name.ptr()));
-                ObjectPtr prim = primName("recordFieldRefByName");
+                ObjectPtr prim = kernelName("fieldRef");
                 evalInvoke(prim, args2, env, out);
             }
         }

@@ -40,8 +40,8 @@ procedure bitwiseXor;
 procedure bitwiseNot;
 
 procedure dereference;
-
 procedure call;
+procedure fieldRef;
 
 procedure unsupported; // used for triggering compile time errors
 
