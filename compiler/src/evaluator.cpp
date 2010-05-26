@@ -148,8 +148,16 @@ MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
     evalIntoValues(expr, env, mev);
     evalDestroyAndPopStack(marker);
     MultiStaticPtr ms = new MultiStatic();
-    for (unsigned i = 0; i < valueHolders.size(); ++i)
-        ms->values.push_back(lowerValueHolder(valueHolders[i]));
+    for (unsigned i = 0; i < valueHolders.size(); ++i) {
+        Type *t = (Type *)valueHolders[i]->type.ptr();
+        if (t->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)t;
+            ms->values.push_back(st->obj);
+        }
+        else {
+            ms->values.push_back(valueHolders[i].ptr());
+        }
+    }
     return ms;
 }
 

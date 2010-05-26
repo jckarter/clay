@@ -2,6 +2,28 @@
 
 namespace two {
 
+static TypePtr objectType(ObjectPtr x);
+static ObjectPtr unwrapStaticType(TypePtr t);
+
+static bool staticToType(ObjectPtr x, TypePtr &out);
+static TypePtr staticToType(MultiStaticPtr x, unsigned index);
+static TypePtr valueToType(MultiPValuePtr x, unsigned index);
+static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index);
+static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index);
+
+static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out);
+static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
+                             vector<TypePtr> &out);
+static bool staticToInt(ObjectPtr x, int &out);
+static int staticToInt(MultiStaticPtr x, unsigned index);
+
+static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index);
+static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index);
+static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index);
+
+static PValuePtr staticPValue(ObjectPtr x);
+static PValuePtr kernelPValue(const string &name);
+
 MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
 MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env);
@@ -52,14 +74,13 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
-}
 
 
 //
 // utility procs
 //
 
-TypePtr objectType(ObjectPtr x)
+static TypePtr objectType(ObjectPtr x)
 {
     switch (x->objKind) {
 
@@ -83,22 +104,14 @@ TypePtr objectType(ObjectPtr x)
     }
 }
 
-ObjectPtr unwrapStaticType(TypePtr t) {
+static ObjectPtr unwrapStaticType(TypePtr t) {
     if (t->typeKind != STATIC_TYPE)
         return NULL;
     StaticType *st = (StaticType *)t.ptr();
     return st->obj;
 }
 
-ObjectPtr lowerValueHolder(ValueHolderPtr vh)
-{
-    ObjectPtr x = unwrapStaticType(vh->type);
-    if (!x)
-        return vh.ptr();
-    return x;
-}
-
-bool unwrapStaticToType(ObjectPtr x, TypePtr &out)
+static bool staticToType(ObjectPtr x, TypePtr &out)
 {
     if (x->objKind != TYPE)
         return false;
@@ -106,18 +119,50 @@ bool unwrapStaticToType(ObjectPtr x, TypePtr &out)
     return true;
 }
 
-TypePtr unwrapStaticToType(MultiStaticPtr x, unsigned index)
+static TypePtr staticToType(MultiStaticPtr x, unsigned index)
 {
     TypePtr out;
-    if (!unwrapStaticToType(x->values[index], out))
-        argumentError(0, "expecting a type");
+    if (!staticToType(x->values[index], out))
+        argumentError(index, "expecting a type");
     return out;
 }
 
-bool unwrapStaticToTypeTuple(ObjectPtr x, vector<TypePtr> &out)
+static TypePtr valueToType(MultiPValuePtr x, unsigned index)
+{
+    ObjectPtr obj = unwrapStaticType(x->values[index]->type);
+    if (!obj)
+        argumentError(index, "expecting a type");
+    TypePtr t;
+    if (!staticToType(obj, t))
+        argumentError(index, "expecting a type");
+    return t;
+}
+
+static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = valueToType(x, index);
+    switch (t->typeKind) {
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+        return t;
+    default :
+        argumentError(index, "expecting a numeric type");
+        return NULL;
+    }
+}
+
+static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = valueToType(x, index);
+    if (t->typeKind != INTEGER_TYPE)
+        argumentError(index, "expecting an integer type");
+    return (IntegerType *)t.ptr();
+}
+
+static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out)
 {
     TypePtr t;
-    if (unwrapStaticToType(x, t)) {
+    if (staticToType(x, t)) {
         out.push_back(t);
         return true;
     }
@@ -137,14 +182,14 @@ bool unwrapStaticToTypeTuple(ObjectPtr x, vector<TypePtr> &out)
     return true;
 }
 
-void unwrapStaticToTypeTuple(MultiStaticPtr x, unsigned index,
+static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
                              vector<TypePtr> &out)
 {
-    if (!unwrapStaticToTypeTuple(x->values[index], out))
+    if (!staticToTypeTuple(x->values[index], out))
         argumentError(index, "expecting zero-or-more types");
 }
 
-bool unwrapStaticToInt(ObjectPtr x, int &out)
+static bool staticToInt(ObjectPtr x, int &out)
 {
     if (x->objKind != VALUE_HOLDER)
         return false;
@@ -155,21 +200,42 @@ bool unwrapStaticToInt(ObjectPtr x, int &out)
     return true;
 }
 
-int unwrapStaticToInt(MultiStaticPtr x, unsigned index)
+static int staticToInt(MultiStaticPtr x, unsigned index)
 {
     int out = -1;
-    if (!unwrapStaticToInt(x->values[index], out))
+    if (!staticToInt(x->values[index], out))
         argumentError(index, "expecting Int value");
     return out;
 }
 
+static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    switch (t->typeKind) {
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+        return t;
+    default :
+        argumentError(index, "expecting numeric value");
+        return NULL;
+    }
+}
 
-
-//
-// staticPValue, kernelPValue
-//
+static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != INTEGER_TYPE)
+        argumentError(index, "expecting integer value");
+    return (IntegerType *)t.ptr();
+}
 
-namespace two {
+static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != POINTER_TYPE)
+        argumentError(index, "expecting pointer value");
+    return (PointerType *)t.ptr();
+}
 
 static PValuePtr staticPValue(ObjectPtr x)
 {
@@ -664,7 +730,7 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
 
         case PRIM_Pointer : {
             ensureArity(args, 1);
-            TypePtr pointeeType = unwrapStaticToType(args, 0);
+            TypePtr pointeeType = staticToType(args, 0);
             return staticPValue(pointerType(pointeeType).ptr());
         }
 
@@ -672,9 +738,9 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
         case PRIM_RefCodePointer : {
             ensureArity(args, 2);
             vector<TypePtr> argTypes;
-            unwrapStaticToTypeTuple(args, 0, argTypes);
+            staticToTypeTuple(args, 0, argTypes);
             vector<TypePtr> returnTypes;
-            unwrapStaticToTypeTuple(args, 1, returnTypes);
+            staticToTypeTuple(args, 1, returnTypes);
             bool byRef = (x->objKind == PRIM_RefCodePointer);
             vector<bool> returnIsRef(returnTypes.size(), byRef);
             TypePtr t = codePointerType(argTypes, returnIsRef, returnTypes);
@@ -686,9 +752,9 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
         case PRIM_FastCallCodePointer : {
             ensureArity(args, 2);
             vector<TypePtr> argTypes;
-            unwrapStaticToTypeTuple(args, 0, argTypes);
+            staticToTypeTuple(args, 0, argTypes);
             vector<TypePtr> returnTypes;
-            unwrapStaticToTypeTuple(args, 1, returnTypes);
+            staticToTypeTuple(args, 1, returnTypes);
             if (returnTypes.size() > 1)
                 argumentError(1, "C code cannot return more than one value");
             TypePtr returnType;
@@ -707,8 +773,8 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
 
         case PRIM_Array : {
             ensureArity(args, 2);
-            TypePtr t = unwrapStaticToType(args, 0);
-            int size = unwrapStaticToInt(args, 1);
+            TypePtr t = staticToType(args, 0);
+            int size = staticToInt(args, 1);
             TypePtr at = arrayType(t, size);
             return staticPValue(at.ptr());
         }
@@ -716,7 +782,7 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
         case PRIM_Tuple : {
             vector<TypePtr> types;
             for (unsigned i = 0; i < args->size(); ++i)
-                types.push_back(unwrapStaticToType(args, i));
+                types.push_back(staticToType(args, i));
             TypePtr t = tupleType(types);
             return staticPValue(t.ptr());
         }
@@ -1296,7 +1362,107 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 {
-    return NULL;
+
+    switch (x->primOpCode) {
+
+    case PRIM_TypeP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_TypeSize :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_primitiveCopy :
+        return new MultiPValue();
+
+    case PRIM_boolNot :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_numericEqualsP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_numericLesserP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_numericAdd :
+    case PRIM_numericSubtract :
+    case PRIM_numericMultiply :
+    case PRIM_numericDivide : {
+        ensureArity(args, 2);
+        TypePtr t = numericTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t, true));
+    }
+
+    case PRIM_numericNegate : {
+        ensureArity(args, 1);
+        TypePtr t = numericTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t, true));
+    }
+
+    case PRIM_integerRemainder :
+    case PRIM_integerShiftLeft :
+    case PRIM_integerShiftRight :
+    case PRIM_integerBitwiseAnd :
+    case PRIM_integerBitwiseOr :
+    case PRIM_integerBitwiseXor : {
+        ensureArity(args, 2);
+        IntegerTypePtr t = integerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t.ptr(), true));
+    }
+
+    case PRIM_integerBitwiseNot : {
+        ensureArity(args, 1);
+        IntegerTypePtr t = integerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t.ptr(), true));
+    }
+
+    case PRIM_numericConvert : {
+        ensureArity(args, 2);
+        TypePtr t = valueToNumericType(args, 0);
+        return new MultiPValue(new PValue(t, true));
+    }
+
+    case PRIM_Pointer :
+        error("Pointer type constructor cannot be called");
+
+    case PRIM_addressOf : {
+        ensureArity(args, 1);
+        TypePtr t = pointerType(args->values[0]->type);
+        return new MultiPValue(new PValue(t, true));
+    }
+
+    case PRIM_pointerDereference : {
+        ensureArity(args, 1);
+        PointerTypePtr pt = pointerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(pt->pointeeType, false));
+    }
+
+    case PRIM_pointerEqualsP :
+    case PRIM_pointerLesserP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_pointerOffset : {
+        ensureArity(args, 2);
+        PointerTypePtr pt = pointerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(pt.ptr(), true));
+    }
+
+    case PRIM_pointerToInt : {
+        ensureArity(args, 2);
+        IntegerTypePtr t = valueToIntegerType(args, 0);
+        return new MultiPValue(new PValue(t.ptr(), true));
+    }
+
+    case PRIM_intToPointer : {
+        ensureArity(args, 2);
+        TypePtr t = valueToType(args, 0);
+        return new MultiPValue(new PValue(pointerType(t), true));
+    }
+
+    default :
+        assert(false);
+        return NULL;
+
+    }
 }
 
 

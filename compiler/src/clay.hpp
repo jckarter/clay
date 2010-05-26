@@ -2145,17 +2145,6 @@ struct MultiPValue : public Object {
     }
 };
 
-TypePtr objectType(ObjectPtr x);
-ObjectPtr unwrapStaticType(TypePtr t);
-ObjectPtr lowerValueHolder(ValueHolderPtr vh);
-bool unwrapStaticToType(ObjectPtr x, TypePtr &out);
-TypePtr unwrapStaticToType(MultiStaticPtr x, unsigned index);
-bool unwrapStaticToTypeTuple(ObjectPtr x, vector<TypePtr> &out);
-void unwrapStaticToTypeTuple(MultiStaticPtr x, unsigned index,
-                             vector<TypePtr> &out);
-bool unwrapStaticToInt(ObjectPtr x, int &out);
-int unwrapStaticToInt(MultiStaticPtr x, unsigned index);
-
 PValuePtr analysisToPValue(ObjectPtr x);
 MultiPValuePtr analysisToMultiPValue(ObjectPtr x);
 MultiPValuePtr analyzeMultiValue(ExprPtr expr, EnvPtr env);
