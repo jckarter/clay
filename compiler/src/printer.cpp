@@ -588,6 +588,12 @@ static void print(ostream &out, const Object *x) {
         break;
     }
 
+    case MULTI_EXPR : {
+        const MultiExpr *y = (const MultiExpr *)x;
+        out << "MultiExpr(" << y->values << ")";
+        break;
+    }
+
     case PVALUE : {
         const PValue *y = (const PValue *)x;
         out << "PValue(" << y->type << ")";

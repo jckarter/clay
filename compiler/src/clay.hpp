@@ -154,6 +154,7 @@ enum ObjectKind {
 
     VALUE_HOLDER,
     MULTI_STATIC,
+    MULTI_EXPR,
 
     PVALUE,
     MULTI_PVALUE,
@@ -278,6 +279,7 @@ struct StaticTypePattern;
 
 struct ValueHolder;
 struct MultiStatic;
+struct MultiExpr;
 
 struct PValue;
 struct MultiPValue;
@@ -399,6 +401,7 @@ typedef Pointer<StaticTypePattern> StaticTypePatternPtr;
 
 typedef Pointer<ValueHolder> ValueHolderPtr;
 typedef Pointer<MultiStatic> MultiStaticPtr;
+typedef Pointer<MultiExpr> MultiExprPtr;
 
 typedef Pointer<PValue> PValuePtr;
 typedef Pointer<MultiPValue> MultiPValuePtr;
@@ -1888,6 +1891,29 @@ struct MultiStatic : public Object {
     unsigned size() { return values.size(); }
     void add(ObjectPtr x) { values.push_back(x); }
     void add(MultiStaticPtr x) {
+        values.insert(values.end(), x->values.begin(), x->values.end());
+    }
+};
+
+
+
+//
+// MultiExpr
+//
+
+struct MultiExpr : public Object {
+    vector<ExprPtr> values;
+    MultiExpr()
+        : Object(MULTI_EXPR) {}
+    MultiExpr(ExprPtr x)
+        : Object(MULTI_EXPR) {
+        values.push_back(x);
+    }
+    MultiExpr(const vector<ExprPtr> &values)
+        : Object(MULTI_EXPR), values(values) {}
+    unsigned size() { return values.size(); }
+    void add(ExprPtr x) { values.push_back(x); }
+    void add(MultiExprPtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());
     }
 };
