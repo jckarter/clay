@@ -1956,13 +1956,6 @@ void evalInvokePrimOp(PrimOpPtr x,
 {
     switch (x->primOpCode) {
 
-    case PRIM_Type : {
-        ensureArity(args, 1);
-        PValuePtr y = analyzeValue(args[0], env);
-        evalStaticObject(y->type.ptr(), out);
-        break;
-    }
-
     case PRIM_TypeP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateOneStatic(args[0], env);

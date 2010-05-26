@@ -1189,14 +1189,6 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
 {
     switch (x->primOpCode) {
 
-    case PRIM_Type : {
-        ensureArity(args, 1);
-        PValuePtr y = analyzeValue(args[0], env);
-        if (!y)
-            return NULL;
-        return y->type.ptr();
-    }
-
     case PRIM_TypeP : {
         return new PValue(boolType, true);
     }
