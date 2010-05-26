@@ -10,16 +10,22 @@ static TypePtr staticToType(MultiStaticPtr x, unsigned index);
 static TypePtr valueToType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index);
 static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index);
+static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index);
+static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index);
 
 static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out);
 static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
                              vector<TypePtr> &out);
 static bool staticToInt(ObjectPtr x, int &out);
 static int staticToInt(MultiStaticPtr x, unsigned index);
+static bool staticToSizeT(ObjectPtr x, size_t &out);
 
 static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index);
 static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index);
 static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index);
+static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index);
+static TupleTypePtr tupleTypeOfValue(MultiPValuePtr x, unsigned index);
+static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index);
 
 static PValuePtr staticPValue(ObjectPtr x);
 static PValuePtr kernelPValue(const string &name);
@@ -159,6 +165,28 @@ static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index)
     return (IntegerType *)t.ptr();
 }
 
+static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = valueToType(x, index);
+    switch (t->typeKind) {
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+        return t;
+    default :
+        argumentError(index, "expecting a pointer type");
+        return NULL;
+    }
+}
+
+static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = valueToType(x, index);
+    if (t->typeKind != ENUM_TYPE)
+        argumentError(index, "expecting an enumeration type");
+    return t;
+}
+
 static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out)
 {
     TypePtr t;
@@ -208,6 +236,17 @@ static int staticToInt(MultiStaticPtr x, unsigned index)
     return out;
 }
 
+static bool staticToSizeT(ObjectPtr x, size_t &out)
+{
+    if (x->objKind != VALUE_HOLDER)
+        return false;
+    ValueHolderPtr vh = (ValueHolder *)x.ptr();
+    if (vh->type != cSizeTType)
+        return false;
+    out = *((size_t *)vh->buf);
+    return true;
+}
+
 static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
@@ -216,7 +255,7 @@ static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
     case FLOAT_TYPE :
         return t;
     default :
-        argumentError(index, "expecting numeric value");
+        argumentError(index, "expecting a numeric value");
         return NULL;
     }
 }
@@ -225,7 +264,7 @@ static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
     if (t->typeKind != INTEGER_TYPE)
-        argumentError(index, "expecting integer value");
+        argumentError(index, "expecting an integer value");
     return (IntegerType *)t.ptr();
 }
 
@@ -233,8 +272,32 @@ static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
     if (t->typeKind != POINTER_TYPE)
-        argumentError(index, "expecting pointer value");
+        argumentError(index, "expecting a pointer value");
     return (PointerType *)t.ptr();
+}
+
+static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != ARRAY_TYPE)
+        argumentError(index, "expecting an array");
+    return (ArrayType *)t.ptr();
+}
+
+static TupleTypePtr tupleTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != TUPLE_TYPE)
+        argumentError(index, "expecting a tuple");
+    return (TupleType *)t.ptr();
+}
+
+static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != RECORD_TYPE)
+        argumentError(index, "expecting a record");
+    return (RecordType *)t.ptr();
 }
 
 static PValuePtr staticPValue(ObjectPtr x)
@@ -1456,6 +1519,235 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ensureArity(args, 2);
         TypePtr t = valueToType(args, 0);
         return new MultiPValue(new PValue(pointerType(t), true));
+    }
+
+    case PRIM_CodePointerP : {
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
+    case PRIM_CodePointer :
+        error("CodePointer type constructor cannot be called");
+
+    case PRIM_RefCodePointer :
+        error("RefCodePointer type constructor cannot be called");
+
+    case PRIM_makeCodePointer : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+        if (!callable)
+            argumentError(0, "static callable expected");
+        switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
+        case PROCEDURE :
+            break;
+        default :
+            argumentError(0, "invalid callable");
+        }
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        for (unsigned i = 1; i < args->size(); ++i) {
+            TypePtr t = valueToType(args, i);
+            argsKey.push_back(t);
+            argsTempness.push_back(LVALUE);
+        }
+
+        InvokeStackContext invokeStackContext(callable, argsKey);
+
+        InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
+        if (entry->inlined)
+            argumentError(0, "cannot create pointer to inlined code");
+        if (!entry->analyzed)
+            return NULL;
+        TypePtr cpType = codePointerType(argsKey,
+                                         entry->returnIsRef,
+                                         entry->returnTypes);
+        return new MultiPValue(new PValue(cpType, true));
+    }
+
+    case PRIM_CCodePointerP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_CCodePointer :
+        error("CCodePointer type constructor cannot be called");
+
+    case PRIM_StdCallCodePointer :
+        error("StdCallCodePointer type constructor cannot be called");
+
+    case PRIM_FastCallCodePointer :
+        error("FastCallCodePointer type constructor cannot be called");
+
+    case PRIM_makeCCodePointer : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+        if (!callable)
+            argumentError(0, "static callable expected");
+        switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
+        case PROCEDURE :
+            break;
+        default :
+            argumentError(0, "invalid callable");
+        }
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        for (unsigned i = 1; i < args->size(); ++i) {
+            TypePtr t = valueToType(args, i);
+            argsKey.push_back(t);
+            argsTempness.push_back(LVALUE);
+        }
+
+        InvokeStackContext invokeStackContext(callable, argsKey);
+
+        InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
+        if (entry->inlined)
+            argumentError(0, "cannot create pointer to inlined code");
+        if (!entry->analyzed)
+            return NULL;
+        TypePtr returnType;
+        if (entry->returnTypes.empty()) {
+            returnType = NULL;
+        }
+        else if (entry->returnTypes.size() == 1) {
+            if (entry->returnIsRef[0]) {
+                argumentError(0, "cannot create c-code pointer to "
+                              " return-by-reference code");
+            }
+            returnType = entry->returnTypes[0];
+        }
+        else {
+            argumentError(0, "cannot create c-code pointer to "
+                          "multi-return code");
+        }
+        TypePtr ccpType = cCodePointerType(CC_DEFAULT,
+                                           argsKey,
+                                           false,
+                                           returnType);
+        return new MultiPValue(new PValue(ccpType, true));
+    }
+
+    case PRIM_pointerCast : {
+        ensureArity(args, 2);
+        TypePtr t = valueToPointerLikeType(args, 0);
+        return new MultiPValue(new PValue(t, true));
+    }
+
+    case PRIM_Array :
+        error("Array type constructor cannot be called");
+
+    case PRIM_array : {
+        if (args->size() < 1)
+            error("atleast one element required for creating an array");
+        TypePtr t = arrayType(args->values[0]->type, args->size());
+        return new MultiPValue(new PValue(t, true));
+    }
+
+    case PRIM_arrayRef : {
+        ensureArity(args, 2);
+        ArrayTypePtr t = arrayTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t->elementType, false));
+    }
+
+    case PRIM_TupleP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_Tuple :
+        error("Tuple type constructor cannot be called");
+
+    case PRIM_TupleElementCount :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_TupleElementOffset :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_tuple : {
+        vector<TypePtr> elementTypes;
+        for (unsigned i = 0; i < args->size(); ++i)
+            elementTypes.push_back(args->values[i]->type);
+        TypePtr t = tupleType(elementTypes);
+        return new MultiPValue(new PValue(t, true));
+    }
+
+    case PRIM_tupleRef : {
+        ensureArity(args, 2);
+        TupleTypePtr t = tupleTypeOfValue(args, 0);
+        ObjectPtr obj = unwrapStaticType(args->values[1]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeT(obj, i))
+            argumentError(1, "expecting SizeT value");
+        if (i >= t->elementTypes.size())
+            argumentError(1, "tuple index out of range");
+        return new MultiPValue(new PValue(t->elementTypes[i], false));
+    }
+
+    case PRIM_RecordP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_RecordFieldCount :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_RecordFieldOffset :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_RecordFieldIndex :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_recordFieldRef : {
+        ensureArity(args, 2);
+        RecordTypePtr t = recordTypeOfValue(args, 0);
+        ObjectPtr obj = unwrapStaticType(args->values[1]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeT(obj, i))
+            argumentError(1, "expecting SizeT value");
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
+        if (i >= fieldTypes.size())
+            argumentError(1, "field index out of range");
+        return new MultiPValue(new PValue(fieldTypes[i], false));
+    }
+
+    case PRIM_recordFieldRefByName : {
+        ensureArity(args, 2);
+        RecordTypePtr t = recordTypeOfValue(args, 0);
+        ObjectPtr obj = unwrapStaticType(args->values[1]->type);
+        if (!obj || (obj->objKind != IDENTIFIER))
+            argumentError(1, "expecting field name identifier");
+        IdentifierPtr fname = (Identifier *)obj.ptr();
+        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(t);
+        map<string, size_t>::const_iterator fi =
+            fieldIndexMap.find(fname->str);
+        if (fi == fieldIndexMap.end())
+            argumentError(1, "field not in record");
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
+        return new MultiPValue(new PValue(fieldTypes[fi->second], false));
+    }
+
+    case PRIM_Static :
+        error("Static type constructor cannot be called");
+
+    case PRIM_StaticName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj)
+            argumentError(0, "expecting static object");
+        ostringstream sout;
+        printName(sout, obj);
+        ExprPtr z = new StringLiteral(sout.str());
+        return analyzeExpr(z, new Env());
+    }
+
+    case PRIM_EnumP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_enumToInt :
+        return new MultiPValue(new PValue(cIntType, true));
+
+    case PRIM_intToEnum : {
+        ensureArity(args, 2);
+        TypePtr t = valueToEnumerationType(args, 0);
+        return new MultiPValue(new PValue(t, true));
     }
 
     default :
