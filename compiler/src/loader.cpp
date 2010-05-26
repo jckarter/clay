@@ -439,8 +439,6 @@ static ModulePtr makePrimitivesModule() {
 
 #define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
 
-    PRIMITIVE(Type);
-
     PRIMITIVE(TypeP);
     PRIMITIVE(TypeSize);
 
