@@ -48,6 +48,15 @@ procedure unsupported; // used for triggering compile time errors
 
 
 //
+// Type
+//
+
+[T]
+inlined Type(x:T) = T;
+
+
+
+//
 // LValue?, RValue?
 //
 

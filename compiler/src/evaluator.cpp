@@ -946,7 +946,7 @@ void evalInvokeCallable(ObjectPtr x,
                         EnvPtr env,
                         MultiEValuePtr out)
 {
-    vector<ObjectPtr> argsKey;
+    vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
     vector<LocationPtr> argLocations;
     bool result = computeArgsKey(args, env,
@@ -971,7 +971,7 @@ void evalInvokeCallable(ObjectPtr x,
 //
 
 bool evalInvokeSpecialCase(ObjectPtr x,
-                           const vector<ObjectPtr> &argsKey)
+                           const vector<TypePtr> &argsKey)
 {
     switch (x->objKind) {
     case TYPE : {
@@ -982,12 +982,10 @@ bool evalInvokeSpecialCase(ObjectPtr x,
     }
     case PROCEDURE : {
         if ((x == kernelName("destroy")) &&
-            (argsKey.size() == 1))
+            (argsKey.size() == 1) &&
+            isPrimitiveType(argsKey[0]))
         {
-            ObjectPtr y = argsKey[0];
-            assert(y->objKind == TYPE);
-            if (isPrimitiveType((Type *)y.ptr()))
-                return true;
+            return true;
         }
         break;
     }
@@ -1008,10 +1006,8 @@ void evalInvokeCode(InvokeEntryPtr entry,
 {
     vector<llvm::GenericValue> gvArgs;
     for (unsigned i = 0; i < args.size(); ++i) {
-        assert(entry->argsKey[i]->objKind == TYPE);
-        TypePtr argType = (Type *)entry->argsKey[i].ptr();
         EValuePtr earg = evalOneAsRef(args[i], env);
-        assert(earg->type == argType);
+        assert(earg->type == entry->argsKey[i]);
         gvArgs.push_back(llvm::GenericValue(earg->addr));
     }
     assert(out->size() == entry->returnTypes.size());
@@ -1960,13 +1956,6 @@ void evalInvokePrimOp(PrimOpPtr x,
 {
     switch (x->primOpCode) {
 
-    case PRIM_Type : {
-        ensureArity(args, 1);
-        PValuePtr y = analyzeValue(args[0], env);
-        evalStaticObject(y->type.ptr(), out);
-        break;
-    }
-
     case PRIM_TypeP : {
         ensureArity(args, 1);
         ObjectPtr y = evaluateOneStatic(args[0], env);
@@ -2346,12 +2335,12 @@ void evalInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        vector<ObjectPtr> argsKey;
+        vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
             TypePtr t = evaluateType(args[i], env);
-            argsKey.push_back(t.ptr());
+            argsKey.push_back(t);
             argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }
@@ -2418,12 +2407,12 @@ void evalInvokePrimOp(PrimOpPtr x,
         default :
             error(args[0], "invalid callable");
         }
-        vector<ObjectPtr> argsKey;
+        vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         vector<LocationPtr> argLocations;
         for (unsigned i = 1; i < args.size(); ++i) {
             TypePtr t = evaluateType(args[i], env);
-            argsKey.push_back(t.ptr());
+            argsKey.push_back(t);
             argsTempness.push_back(LVALUE);
             argLocations.push_back(args[i]->location);
         }

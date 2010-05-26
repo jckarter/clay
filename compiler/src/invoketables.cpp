@@ -60,7 +60,7 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
 
 bool computeArgsKey(const vector<ExprPtr> &args,
                     EnvPtr env,
-                    vector<ObjectPtr> &argsKey,
+                    vector<TypePtr> &argsKey,
                     vector<ValueTempness> &argsTempness,
                     vector<LocationPtr> &argLocations)
 {
@@ -68,7 +68,7 @@ bool computeArgsKey(const vector<ExprPtr> &args,
         PValuePtr pv = analyzeValue(args[i], env);
         if (!pv)
             return false;
-        argsKey.push_back(pv->type.ptr());
+        argsKey.push_back(pv->type);
         argsTempness.push_back(pv->isTemp ? RVALUE : LVALUE);
         argLocations.push_back(args[i]->location);
     }
@@ -99,7 +99,7 @@ static void initInvokeTables() {
 //
 
 InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
-                             const vector<ObjectPtr> &argsKey)
+                             const vector<TypePtr> &argsKey)
 {
     if (!invokeTablesInitialized)
         initInvokeTables();

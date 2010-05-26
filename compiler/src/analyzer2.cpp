@@ -16,12 +16,41 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
 MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
                                    IdentifierPtr name,
                                    EnvPtr env);
+void computeArgsKey(MultiPValuePtr args,
+                    vector<TypePtr> &argsKey,
+                    vector<ValueTempness> &argsTempness);
+MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
+                             const vector<TypePtr> &returnTypes);
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                const vector<ExprPtr> &args,
                                EnvPtr env);
-
 MultiPValuePtr analyzeCallValue(PValuePtr callable,
                                 MultiPValuePtr args);
+MultiPValuePtr analyzeCallPointer(PValuePtr x,
+                                  MultiPValuePtr args);
+InvokeEntryPtr analyzeCallable(ObjectPtr x,
+                               const vector<TypePtr> &argsKey,
+                               const vector<ValueTempness> &argsTempness);
+
+MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
+                                  const vector<ExprPtr> &args,
+                                  EnvPtr env);
+
+void analyzeCodeBody(InvokeEntryPtr entry);
+
+struct AnalysisContext : public Object {
+    bool returnInitialized;
+    vector<bool> returnIsRef;
+    vector<TypePtr> returnTypes;
+    AnalysisContext()
+        : Object(DONT_CARE), returnInitialized(false) {}
+};
+typedef Pointer<AnalysisContext> AnalysisContextPtr;
+
+bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
+EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
+
+MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
 }
 
@@ -238,8 +267,14 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
-        if (y->objKind == EXPRESSION)
-            return analyzeExpr((Expr *)y.ptr(), env);
+        if (y->objKind == EXPRESSION) {
+            ExprPtr z = (Expr *)y.ptr();
+            return analyzeExpr(z, env);
+        }
+        else if (y->objKind == MULTI_EXPR) {
+            MultiExprPtr z = (MultiExpr *)y.ptr();
+            return analyzeMulti(z->values, env);
+        }
         return two::analyzeStaticObject(y);
     }
 
@@ -338,11 +373,11 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
     }
 
     case VAR_ARGS_REF : {
-        ObjectPtr y = lookupEnv(env, new Identifier("%varArgs"));
-        VarArgsInfo *vaInfo = (VarArgsInfo *)y.ptr();
-        if (!vaInfo->hasVarArgs)
-            error("varargs unavailable");
-        return analyzeMulti(vaInfo->varArgs, env);
+        IdentifierPtr ident = new Identifier("%varArgs");
+        ident->location = expr->location;
+        ExprPtr nameRef = new NameRef(ident);
+        nameRef->location = expr->location;
+        return analyzeExpr(nameRef, env);
     }
 
     case NEW : {
@@ -720,6 +755,8 @@ MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
                                    EnvPtr env)
 {
     PValuePtr pv = two::analyzeOne(base, env);
+    if (!pv)
+        return NULL;
     ObjectPtr obj = unwrapStaticType(pv->type);
     if (obj.ptr()) {
         if (obj->objKind == MODULE_HOLDER) {
@@ -738,6 +775,35 @@ MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
 
 
 //
+// computeArgsKey, analyzeReturn
+//
+
+void computeArgsKey(MultiPValuePtr args,
+                    vector<TypePtr> &argsKey,
+                    vector<ValueTempness> &argsTempness)
+{
+    for (unsigned i = 0; i < args->size(); ++i) {
+        PValuePtr pv = args->values[i];
+        argsKey.push_back(pv->type);
+        argsTempness.push_back(pv->isTemp ? RVALUE : LVALUE);
+    }
+}
+
+MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
+                             const vector<TypePtr> &returnTypes)
+                             
+{
+    MultiPValuePtr x = new MultiPValue();
+    for (unsigned i = 0; i < returnTypes.size(); ++i) {
+        PValuePtr pv = new PValue(returnTypes[i], !returnIsRef[i]);
+        x->values.push_back(pv);
+    }
+    return x.ptr();
+}
+
+
+
+//
 // analyzeCallExpr
 //
 
@@ -745,7 +811,53 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                const vector<ExprPtr> &args,
                                EnvPtr env)
 {
-    return NULL;
+    PValuePtr pv = two::analyzeOne(callable, env);
+    if (!pv)
+        return NULL;
+    MultiPValuePtr mpv = analyzeMulti(args, env);
+    if (!mpv)
+        return NULL;
+    switch (pv->type->typeKind) {
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+        return analyzeCallPointer(pv, mpv);
+    }
+    ObjectPtr obj = unwrapStaticType(pv->type);
+    if (!obj) {
+        vector<ExprPtr> args2;
+        args2.push_back(callable);
+        args2.insert(args2.end(), args.begin(), args.end());
+        return analyzeCallExpr(kernelNameRef("call"), args2, env);
+    }
+
+    switch (obj->objKind) {
+
+    case TYPE :
+    case RECORD :
+    case PROCEDURE : {
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        computeArgsKey(mpv, argsKey, argsTempness);
+        InvokeStackContext invokeStackContext(obj, argsKey);
+        InvokeEntryPtr entry =
+            analyzeCallable(obj, argsKey, argsTempness);
+        if (entry->inlined)
+            return analyzeCallInlined(entry, args, env);
+        if (!entry->analyzed)
+            return NULL;
+        return two::analyzeReturn(entry->returnIsRef, entry->returnTypes);
+    }
+
+    case PRIM_OP : {
+        PrimOpPtr x = (PrimOp *)obj.ptr();
+        return analyzePrimOp(x, mpv);
+    }
+
+    default :
+        error("invalid call expression");
+        return NULL;
+
+    }
 }
 
 
@@ -757,7 +869,435 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
 MultiPValuePtr analyzeCallValue(PValuePtr callable,
                                 MultiPValuePtr args)
 {
+    switch (callable->type->typeKind) {
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+        return analyzeCallPointer(callable, args);
+    }
+    ObjectPtr obj = unwrapStaticType(callable->type);
+    if (!obj) {
+        MultiPValuePtr args2 = new MultiPValue(callable);
+        args2->add(args);
+        return analyzeCallValue(kernelPValue("call"), args2);
+    }
+
+    switch (obj->objKind) {
+
+    case TYPE :
+    case RECORD :
+    case PROCEDURE : {
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        computeArgsKey(args, argsKey, argsTempness);
+        InvokeStackContext invokeStackContext(obj, argsKey);
+        InvokeEntryPtr entry =
+            analyzeCallable(obj, argsKey, argsTempness);
+        if (entry->inlined)
+            error("call to inlined code is not allowed in this context");
+        if (!entry->analyzed)
+            return NULL;
+        return two::analyzeReturn(entry->returnIsRef, entry->returnTypes);
+    }
+
+    case PRIM_OP : {
+        PrimOpPtr x = (PrimOp *)obj.ptr();
+        return analyzePrimOp(x, args);
+    }
+
+    default :
+        error("invalid call expression");
+        return NULL;
+
+    }
+}
+
+
+
+//
+// analyzeCallPointer
+//
+
+MultiPValuePtr analyzeCallPointer(PValuePtr x,
+                                  MultiPValuePtr args)
+{
+    switch (x->type->typeKind) {
+
+    case CODE_POINTER_TYPE : {
+        CodePointerType *y = (CodePointerType *)x->type.ptr();
+        return two::analyzeReturn(y->returnIsRef, y->returnTypes);
+    }
+
+    case CCODE_POINTER_TYPE : {
+        CCodePointerType *y = (CCodePointerType *)x->type.ptr();
+        if (!y->returnType)
+            return new MultiPValue();
+        return new MultiPValue(new PValue(y->returnType, true));
+    }
+
+    default :
+        assert(false);
+        return NULL;
+
+    }
+}
+
+
+
+//
+// analyzeCallable
+//
+
+static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
+                                            unsigned entryIndex,
+                                            const vector<OverloadPtr> &overloads)
+{
+    if (entryIndex < invokeSet->entries.size())
+        return invokeSet->entries[entryIndex];
+
+    assert(entryIndex == invokeSet->entries.size());
+
+    unsigned overloadIndex;
+    if (invokeSet->overloadIndices.empty())
+        overloadIndex = 0;
+    else
+        overloadIndex = invokeSet->overloadIndices.back() + 1;
+
+    for (; overloadIndex < overloads.size(); ++overloadIndex) {
+        OverloadPtr y = overloads[overloadIndex];
+        MatchResultPtr result = matchInvoke(y->code, y->env,
+                                            invokeSet->argsKey,
+                                            y->target, invokeSet->callable);
+        if (result->matchCode == MATCH_SUCCESS) {
+            InvokeEntryPtr entry =
+                new InvokeEntry(invokeSet->callable,
+                                invokeSet->argsKey);
+            invokeSet->entries.push_back(entry);
+            invokeSet->overloadIndices.push_back(overloadIndex);
+            entry->code = clone(y->code);
+            MatchSuccess *z = (MatchSuccess *)result.ptr();
+            entry->env = z->env;
+            entry->fixedArgTypes = z->fixedArgTypes;
+            entry->fixedArgNames = z->fixedArgNames;
+            entry->hasVarArgs = z->hasVarArgs;
+            entry->varArgTypes = z->varArgTypes;
+            entry->inlined = y->inlined;
+            return entry;
+        }
+    }
     return NULL;
 }
+
+static bool tempnessMatches(CodePtr code,
+                            const vector<ValueTempness> &tempness)
+{
+    if (code->hasVarArgs)
+        assert(code->formalArgs.size() <= tempness.size());
+    else
+        assert(code->formalArgs.size() == tempness.size());
+
+    for (unsigned i = 0; i < code->formalArgs.size(); ++i) {
+        FormalArgPtr arg = code->formalArgs[i];
+        if ((tempness[i] & arg->tempness) == 0)
+            return false;
+    }
+    return true;
+}
+
+InvokeEntryPtr analyzeCallable(ObjectPtr x,
+                               const vector<TypePtr> &argsKey,
+                               const vector<ValueTempness> &argsTempness)
+{
+    InvokeSetPtr invokeSet = lookupInvokeSet(x, argsKey);
+    const vector<OverloadPtr> &overloads = callableOverloads(x);
+
+    unsigned i = 0;
+    InvokeEntryPtr entry;
+    while ((entry = findNextMatchingEntry(invokeSet, i, overloads)).ptr()) {
+        if (tempnessMatches(entry->code, argsTempness))
+            break;
+        ++i;
+    }
+    if (!entry)
+        error("no matching operation");
+    if (entry->analyzed || entry->analyzing)
+        return entry;
+    if (entry->inlined)
+        return entry;
+
+    entry->analyzing = true;
+    two::analyzeCodeBody(entry);
+    entry->analyzing = false;
+
+    return entry;
+}
+
+
+
+//
+// analyzeCallInlined
+//
+
+MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
+                                  const vector<ExprPtr> &args,
+                                  EnvPtr env)
+{
+    assert(entry->inlined);
+
+    CodePtr code = entry->code;
+
+    if (!code->returnSpecs.empty()) {
+        vector<bool> returnIsRef;
+        vector<TypePtr> returnTypes;
+        evaluateReturnSpecs(code->returnSpecs, entry->env,
+                            returnIsRef, returnTypes);
+        return two::analyzeReturn(returnIsRef, returnTypes);
+    }
+
+    if (entry->hasVarArgs)
+        assert(args.size() >= entry->fixedArgNames.size());
+    else
+        assert(args.size() == entry->fixedArgNames.size());
+
+    EnvPtr bodyEnv = new Env(entry->env);
+
+    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+        ExprPtr expr = new ForeignExpr(env, args[i]);
+        addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+    }
+
+    if (entry->hasVarArgs) {
+        MultiExprPtr varArgs = new MultiExpr();
+        for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
+            ExprPtr expr = new ForeignExpr(env, args[i]);
+            varArgs->values.push_back(expr);
+        }
+        addLocal(bodyEnv, new Identifier("%varArgs"), varArgs.ptr());
+    }
+
+    AnalysisContextPtr ctx = new AnalysisContext();
+    bool ok = analyzeStatement(code->body, bodyEnv, ctx);
+    if (!ok && !ctx->returnInitialized)
+        return NULL;
+    if (ctx->returnInitialized)
+        return two::analyzeReturn(ctx->returnIsRef, ctx->returnTypes);
+    else
+        return new MultiPValue();
+}
+
+
+
+//
+// analyzeCodeBody
+//
+
+void analyzeCodeBody(InvokeEntryPtr entry)
+{
+    assert(!entry->analyzed);
+
+    CodePtr code = entry->code;
+
+    if (!code->returnSpecs.empty()) {
+        evaluateReturnSpecs(code->returnSpecs, entry->env,
+                            entry->returnIsRef, entry->returnTypes);
+        entry->analyzed = true;
+        return;
+    }
+
+    EnvPtr bodyEnv = new Env(entry->env);
+
+    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+        PValuePtr parg = new PValue(entry->fixedArgTypes[i], false);
+        addLocal(bodyEnv, entry->fixedArgNames[i], parg.ptr());
+    }
+
+    if (entry->hasVarArgs) {
+        MultiPValuePtr varArgs = new MultiPValue();
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
+            PValuePtr parg = new PValue(entry->varArgTypes[i], false);
+            varArgs->values.push_back(parg);
+        }
+        addLocal(bodyEnv, new Identifier("%varArgs"), varArgs.ptr());
+    }
+
+    AnalysisContextPtr ctx = new AnalysisContext();
+    bool ok = analyzeStatement(code->body, bodyEnv, ctx);
+    if (!ok && !ctx->returnInitialized)
+        return;
+    if (ctx->returnInitialized) {
+        entry->returnIsRef = ctx->returnIsRef;
+        entry->returnTypes = ctx->returnTypes;
+    }
+    entry->analyzed = true;
+}
+
+
+
+//
+// analyzeStatement
+//
+
+bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
+{
+    LocationContext loc(stmt->location);
+
+    switch (stmt->stmtKind) {
+
+    case BLOCK : {
+        Block *x = (Block *)stmt.ptr();
+        for (unsigned i = 0; i < x->statements.size(); ++i) {
+            StatementPtr y = x->statements[i];
+            if (y->stmtKind == BINDING) {
+                env = two::analyzeBinding((Binding *)y.ptr(), env);
+                if (!env)
+                    return false;
+            }
+            else if (!analyzeStatement(y, env, ctx)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    case LABEL :
+    case BINDING :
+    case ASSIGNMENT :
+    case INIT_ASSIGNMENT :
+    case UPDATE_ASSIGNMENT :
+    case GOTO :
+        return true;
+
+    case RETURN : {
+        Return *x = (Return *)stmt.ptr();
+        assert(x->isRef.size() == x->exprs.size());
+        if (ctx->returnInitialized) {
+            if (x->exprs.size() != ctx->returnTypes.size())
+                error("mismatching number of return values");
+            for (unsigned i = 0; i < x->exprs.size(); ++i) {
+                if (x->isRef[i] != ctx->returnIsRef[i]) {
+                    error(x->exprs[i],
+                          "mismatching by-ref and by-value returns");
+                }
+                PValuePtr pv = two::analyzeOne(x->exprs[i], env);
+                if (!pv)
+                    return false;
+                if (pv->type != ctx->returnTypes[i])
+                    error(x->exprs[i], "type mismatch");
+                if (pv->isTemp && x->isRef[i]) {
+                    error(x->exprs[i],
+                          "cannot return a temporary by reference");
+                }
+            }
+        }
+        else {
+            ctx->returnIsRef.clear();
+            ctx->returnTypes.clear();
+            for (unsigned i = 0; i < x->exprs.size(); ++i) {
+                ctx->returnIsRef.push_back(x->isRef[i]);
+                PValuePtr pv = two::analyzeOne(x->exprs[i], env);
+                if (!pv)
+                    return false;
+                if (pv->isTemp && x->isRef[i]) {
+                    error(x->exprs[i],
+                          "cannot return a temporary by reference");
+                }
+                ctx->returnTypes.push_back(pv->type);
+            }
+            ctx->returnInitialized = true;
+        }
+        return true;
+    }
+
+    case IF : {
+        If *x = (If *)stmt.ptr();
+        bool thenResult = analyzeStatement(x->thenPart, env, ctx);
+        bool elseResult = true;
+        if (x->elsePart.ptr())
+            elseResult = analyzeStatement(x->elsePart, env, ctx);
+        return thenResult || elseResult;
+    }
+
+    case EXPR_STATEMENT :
+        return true;
+
+    case WHILE : {
+        While *x = (While *)stmt.ptr();
+        analyzeStatement(x->body, env, ctx);
+        return true;
+    }
+
+    case BREAK :
+    case CONTINUE :
+        return true;
+
+    case FOR : {
+        For *x = (For *)stmt.ptr();
+        if (!x->desugared)
+            x->desugared = desugarForStatement(x);
+        return analyzeStatement(x->desugared, env, ctx);
+    }
+
+    case FOREIGN_STATEMENT : {
+        ForeignStatement *x = (ForeignStatement *)stmt.ptr();
+        return analyzeStatement(x->statement, x->getEnv(), ctx);
+    }
+
+    case TRY : {
+        Try *x = (Try *)stmt.ptr();
+        bool tryResult = analyzeStatement(x->tryBlock, env, ctx);
+        bool catchResult = analyzeStatement(x->catchBlock, env, ctx);
+        return tryResult || catchResult; // FIXME
+    }
+
+    default :
+        assert(false);
+        return false;
+    }
+}
+
+EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
+{
+    switch (x->bindingKind) {
+
+    case VAR :
+    case REF : {
+        MultiPValuePtr right = analyzeExpr(x->expr, env);
+        if (!right)
+            return NULL;
+        if (right->size() != x->names.size())
+            arityError(x->expr, x->names.size(), right->size());
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < right->size(); ++i)
+            addLocal(env2, x->names[i], right->values[i].ptr());
+        return env2;
+    }
+
+    case STATIC : {
+        MultiStaticPtr right = evaluateExprStatic(x->expr, env);
+        if (right->size() != x->names.size())
+            arityError(x->expr, x->names.size(), right->size());
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < right->size(); ++i)
+            addLocal(env2, x->names[i], right->values[i]);
+        return env2;
+    }
+
+    default :
+        assert(false);
+        return NULL;
+
+    }
+}
+
+
+
+//
+// analyzePrimOp
+//
+
+MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
+{
+    return NULL;
+}
+
 
 }

@@ -588,6 +588,12 @@ static void print(ostream &out, const Object *x) {
         break;
     }
 
+    case MULTI_EXPR : {
+        const MultiExpr *y = (const MultiExpr *)x;
+        out << "MultiExpr(" << y->values << ")";
+        break;
+    }
+
     case PVALUE : {
         const PValue *y = (const PValue *)x;
         out << "PValue(" << y->type << ")";
@@ -642,6 +648,15 @@ void printNameList(ostream &out, const vector<ObjectPtr> &x)
         if (i != 0)
             out << ", ";
         printName(out, x[i]);
+    }
+}
+
+void printNameList(ostream &out, const vector<TypePtr> &x)
+{
+    for (unsigned i = 0; i < x.size(); ++i) {
+        if (i != 0)
+            out << ", ";
+        printName(out, x[i].ptr());
     }
 }
 
