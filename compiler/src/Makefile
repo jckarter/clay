@@ -34,10 +34,9 @@ OBJS = \
 	constructors.o \
 	literals.o \
 	analyzer.o \
-	analyzer2.o \
-	evaluator.o \
-	codegen.o \
-	main.o
+	evaluator.o
+# 	codegen.o \
+# 	main.o
 
 $(BINDIR)clay : $(OBJS)
 	if [ ! -e $(BINDIR) ]; then mkdir $(BINDIR); fi;
