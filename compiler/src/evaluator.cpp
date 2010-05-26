@@ -1,6 +1,7 @@
 #include "clay.hpp"
 
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
+void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out);
 
 void evalMulti(const vector<ExprPtr> &exprs, EnvPtr env, MultiEValuePtr out);
 void evalOne(ExprPtr expr, EnvPtr env, EValuePtr out);
@@ -156,6 +157,14 @@ static EValuePtr kernelEValue(const string &name)
     return staticEValue(kernelName(name));
 }
 
+static EValuePtr derefValue(EValuePtr evPtr)
+{
+    assert(evPtr->type->typeKind == POINTER_TYPE);
+    PointerType *pt = (PointerType *)evPtr->type.ptr();
+    char *addr = *((char **)evPtr->addr);
+    return new EValue(pt->pointeeType, addr);
+}
+
 
 
 //
@@ -264,8 +273,26 @@ EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env)
     else {
         EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
         evalOne(expr, env, evPtr);
-        char *addr = *((char **)evPtr->addr);
-        return new EValue(pv->type, addr);
+        return derefValue(evPtr);
+    }
+}
+
+
+
+//
+// evalOneInto
+//
+
+void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out)
+{
+    PValuePtr pv = analyzeOne(expr, env);
+    if (pv->isTemp) {
+        evalOne(expr, env, out);
+    }
+    else {
+        EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
+        evalOne(expr, env, evPtr);
+        evalValueCopy(out, derefValue(evPtr));
     }
 }
 
@@ -437,6 +464,107 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         if (!x->desugared)
             x->desugared = desugarBinaryOp(x);
         evalExpr(x->desugared, env, out);
+        break;
+    }
+
+    case AND : {
+        And *x = (And *)expr.ptr();
+        PValuePtr pv = analyzeOne(expr, env);
+        assert(out->size() == 1);
+        if (pv->isTemp) {
+            EValuePtr ev = out->values[0];
+            evalOneInto(x->expr1, env, ev);
+            if (evalToBoolFlag(ev)) {
+                evalValueDestroy(ev);
+                PValuePtr pv2 = analyzeOne(x->expr2, env);
+                if (pv2->type != pv->type)
+                    error("type mismatch in 'and' expression");
+                evalOneInto(x->expr2, env, ev);
+            }
+        }
+        else {
+            EValuePtr evPtr = out->values[0];
+            evalOne(x->expr1, env, evPtr);
+            if (evalToBoolFlag(derefValue(evPtr))) {
+                PValuePtr pv2 = analyzeOne(x->expr2, env);
+                if (pv2->type != pv->type)
+                    error("type mismatch in 'and' expression");
+                evalOne(x->expr1, env, evPtr);
+            }
+        }
+        break;
+    }
+
+    case OR : {
+        Or *x = (Or *)expr.ptr();
+        PValuePtr pv = analyzeOne(expr, env);
+        assert(out->size() == 1);
+        if (pv->isTemp) {
+            EValuePtr ev = out->values[0];
+            evalOneInto(x->expr1, env, ev);
+            if (!evalToBoolFlag(ev)) {
+                evalValueDestroy(ev);
+                PValuePtr pv2 = analyzeOne(x->expr2, env);
+                if (pv2->type != pv->type)
+                    error("type mismatch in 'or' expression");
+                evalOneInto(x->expr2, env, ev);
+            }
+        }
+        else {
+            EValuePtr evPtr = out->values[0];
+            evalOne(x->expr2, env, evPtr);
+            if (evalToBoolFlag(derefValue(evPtr))) {
+                PValuePtr pv2 = analyzeOne(x->expr2, env);
+                if (pv2->type != pv->type)
+                    error("type mismatch in 'or' expression");
+                evalOne(x->expr2, env, evPtr);
+            }
+        }
+        break;
+    }
+
+    case LAMBDA : {
+        Lambda *x = (Lambda *)expr.ptr();
+        if (!x->initialized)
+            initializeLambda(x, env);
+        evalExpr(x->converted, env, out);
+        break;
+    }
+
+    case VAR_ARGS_REF : {
+        IdentifierPtr ident = new Identifier("%varArgs");
+        ident->location = expr->location;
+        ExprPtr nameRef = new NameRef(ident);
+        nameRef->location = expr->location;
+        evalExpr(nameRef, env, out);
+        break;
+    }
+
+    case NEW : {
+        New *x = (New *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarNew(x);
+        evalExpr(x->desugared, env, out);
+        break;
+    }
+
+    case STATIC_EXPR : {
+        StaticExpr *x = (StaticExpr *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarStaticExpr(x);
+        evalExpr(x->desugared, env, out);
+        break;
+    }
+
+    case FOREIGN_EXPR : {
+        ForeignExpr *x = (ForeignExpr *)expr.ptr();
+        evalExpr(x->expr, x->getEnv(), out);
+        break;
+    }
+
+    case OBJECT_EXPR : {
+        ObjectExpr *x = (ObjectExpr *)expr.ptr();
+        evalStaticObject(x->obj, out);
         break;
     }
 
