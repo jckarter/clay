@@ -2591,13 +2591,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
             codegenCallable(callable, argsKey, argsTempness, argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
-        vector<TypePtr> argTypes = entry->fixedArgTypes;
-        if (entry->hasVarArgs) {
-            argTypes.insert(argTypes.end(),
-                            entry->varArgTypes.begin(),
-                            entry->varArgTypes.end());
-        }
-        TypePtr cpType = codePointerType(argTypes,
+        TypePtr cpType = codePointerType(argsKey,
                                          entry->returnIsRef,
                                          entry->returnTypes);
         assert(out->size() == 1);
@@ -2659,12 +2653,6 @@ void codegenInvokePrimOp(PrimOpPtr x,
             codegenCallable(callable, argsKey, argsTempness, argLocations);
         if (entry->inlined)
             error(args[0], "cannot create pointer to inlined code");
-        vector<TypePtr> argTypes = entry->fixedArgTypes;
-        if (entry->hasVarArgs) {
-            argTypes.insert(argTypes.end(),
-                            entry->varArgTypes.begin(),
-                            entry->varArgTypes.end());
-        }
         TypePtr returnType;
         if (entry->returnTypes.size() == 0) {
             returnType = NULL;
@@ -2680,7 +2668,7 @@ void codegenInvokePrimOp(PrimOpPtr x,
                   "to multi-return code");
         }
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
-                                           argTypes,
+                                           argsKey,
                                            false,
                                            returnType);
         string callableName = getCodeName(callable);

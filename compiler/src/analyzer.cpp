@@ -1342,13 +1342,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             error(args[0], "cannot create pointer to inlined code");
         if (!entry->analyzed)
             return NULL;
-        vector<TypePtr> argTypes = entry->fixedArgTypes;
-        if (entry->hasVarArgs) {
-            argTypes.insert(argTypes.end(),
-                            entry->varArgTypes.begin(),
-                            entry->varArgTypes.end());
-        }
-        TypePtr cpType = codePointerType(argTypes,
+        TypePtr cpType = codePointerType(argsKey,
                                          entry->returnIsRef,
                                          entry->returnTypes);
         return new PValue(cpType, true);
@@ -1398,12 +1392,6 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
             error(args[0], "cannot create pointer to inlined code");
         if (!entry->analyzed)
             return NULL;
-        vector<TypePtr> argTypes = entry->fixedArgTypes;
-        if (entry->hasVarArgs) {
-            argTypes.insert(argTypes.end(),
-                            entry->varArgTypes.begin(),
-                            entry->varArgTypes.end());
-        }
         TypePtr returnType;
         if (entry->returnTypes.empty()) {
             returnType = NULL;
@@ -1419,7 +1407,7 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
                   "cannot create c-code pointer to multi-return code");
         }
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
-                                           argTypes,
+                                           argsKey,
                                            false,
                                            returnType);
         return new PValue(ccpType, true);
