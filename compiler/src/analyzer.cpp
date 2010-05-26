@@ -479,7 +479,8 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
     }
 
     case OBJECT_EXPR : {
-        error("ObjectExpr deprecated");
+        ObjectExpr *x = (ObjectExpr *)expr.ptr();
+        return analyzeStaticObject(x->obj);
     }
 
     default :
