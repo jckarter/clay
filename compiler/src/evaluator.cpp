@@ -1359,7 +1359,196 @@ TerminationPtr evalStatement(StatementPtr stmt,
                              EnvPtr env,
                              EvalContextPtr ctx)
 {
-    return NULL;
+    LocationContext loc(stmt->location);
+
+    switch (stmt->stmtKind) {
+
+    case BLOCK : {
+        Block *x = (Block *)stmt.ptr();
+        int blockMarker = evalMarkStack();
+        map<string,LabelInfo> labels;
+        evalCollectLabels(x->statements, 0, env, labels);
+        TerminationPtr termination;
+        unsigned pos = 0;
+        while (pos < x->statements.size()) {
+            StatementPtr y = x->statements[pos];
+            if (y->stmtKind == LABEL) {
+            }
+            else if (y->stmtKind == BINDING) {
+                env = evalBinding((Binding *)y.ptr(), env);
+                evalCollectLabels(x->statements, pos+1, env, labels);
+            }
+            else {
+                termination = evalStatement(y, env, ctx);
+                if (termination.ptr()) {
+                    if (termination->terminationKind == TERMINATE_GOTO) {
+                        TerminateGoto *z = (TerminateGoto *)termination.ptr();
+                        if (labels.count(z->targetLabel->str)) {
+                            LabelInfo &info = labels[z->targetLabel->str];
+                            env = info.env;
+                            evalDestroyAndPopStack(info.stackMarker);
+                            pos = info.blockPosition;
+                            termination = NULL;
+                            continue;
+                        }
+                    }
+                    break;
+                }
+            }
+            ++pos;
+        }
+        evalDestroyAndPopStack(blockMarker);
+        return termination;
+    }
+
+    case LABEL :
+    case BINDING :
+        error("invalid statement");
+        return NULL;
+
+    case ASSIGNMENT : {
+        Assignment *x = (Assignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeOne(x->left, env);
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        int marker = evalMarkStack();
+        EValuePtr evLeft = evalOneAsRef(x->left, env);
+        EValuePtr evRight = evalOneAsRef(x->right, env);
+        evalValueAssign(evLeft, evRight);
+        evalDestroyAndPopStack(marker);
+        return NULL;
+    }
+
+    case INIT_ASSIGNMENT : {
+        InitAssignment *x = (InitAssignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeOne(x->left, env);
+        PValuePtr pvRight = analyzeOne(x->right, env);
+        if (pvLeft->type != pvRight->type)
+            error("type mismatch");
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        int marker = evalMarkStack();
+        EValuePtr evLeft = evalOneAsRef(x->left, env);
+        evalOneInto(x->right, env, evLeft);
+        evalDestroyAndPopStack(marker);
+        return NULL;
+    }
+
+    case UPDATE_ASSIGNMENT : {
+        UpdateAssignment *x = (UpdateAssignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeOne(x->left, env);
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        CallPtr call = new Call(kernelNameRef(updateOperatorName(x->op)));
+        call->args.push_back(x->left);
+        call->args.push_back(x->right);
+        return evalStatement(new ExprStatement(call.ptr()), env, ctx);
+    }
+
+    case GOTO : {
+        Goto *x = (Goto *)stmt.ptr();
+        return new TerminateGoto(x->labelName, x->location);
+    }
+
+    case RETURN : {
+        Return *x = (Return *)stmt.ptr();
+        if (x->exprs.size() != ctx->returns.size())
+            arityError(ctx->returns.size(), x->exprs.size());
+        int marker = evalMarkStack();
+        for (unsigned i = 0; i < x->exprs.size(); ++i) {
+            EReturn &y = ctx->returns[i];
+            PValuePtr pret = analyzeOne(x->exprs[i], env);
+            if (pret->type != y.type)
+                error(x->exprs[i], "type mismatch");
+            if (y.byRef) {
+                if (!x->isRef[i])
+                    error(x->exprs[i], "return by reference expected");
+                if (pret->isTemp)
+                    error(x->exprs[i], "cannot return a "
+                          "temporary by reference");
+                evalOne(x->exprs[i], env, y.value);
+            }
+            else {
+                if (x->isRef[i])
+                    error(x->exprs[i], "return by value expected");
+                evalOneInto(x->exprs[i], env, y.value);
+            }
+        }
+        evalDestroyAndPopStack(marker);
+        return new TerminateReturn(x->location);
+    }
+
+    case IF : {
+        If *x = (If *)stmt.ptr();
+        int marker = evalMarkStack();
+        EValuePtr ev = evalOneAsRef(x->condition, env);
+        bool flag = evalToBoolFlag(ev);
+        evalDestroyAndPopStack(marker);
+        if (flag)
+            return evalStatement(x->thenPart, env, ctx);
+        if (x->elsePart.ptr())
+            return evalStatement(x->elsePart, env, ctx);
+        return NULL;
+    }
+
+    case EXPR_STATEMENT : {
+        ExprStatement *x = (ExprStatement *)stmt.ptr();
+        int marker = evalMarkStack();
+        evalExprAsRef(x->expr, env);
+        evalDestroyAndPopStack(marker);
+        return NULL;
+    }
+
+    case WHILE : {
+        While *x = (While *)stmt.ptr();
+        while (true) {
+            int marker = evalMarkStack();
+            EValuePtr ev = evalOneAsRef(x->condition, env);
+            bool flag = evalToBoolFlag(ev);
+            evalDestroyAndPopStack(marker);
+            if (!flag) break;
+            TerminationPtr term = evalStatement(x->body, env, ctx);
+            if (term.ptr()) {
+                if (term->terminationKind == TERMINATE_BREAK)
+                    break;
+                if (term->terminationKind == TERMINATE_CONTINUE)
+                    continue;
+                return term;
+            }
+        }
+        return NULL;
+    }
+
+    case BREAK : {
+        return new TerminateBreak(stmt->location);
+    }
+
+    case CONTINUE : {
+        return new TerminateContinue(stmt->location);
+    }
+
+    case FOR : {
+        For *x = (For *)stmt.ptr();
+        if (!x->desugared)
+            x->desugared = desugarForStatement(x);
+        return evalStatement(x->desugared, env, ctx);
+    }
+
+    case FOREIGN_STATEMENT : {
+        ForeignStatement *x = (ForeignStatement *)stmt.ptr();
+        return evalStatement(x->statement, x->getEnv(), ctx);
+    }
+
+    case TRY : {
+        error("try statement not yet supported in the evaluator");
+        return NULL;
+    }
+
+    default :
+        assert(false);
+        return NULL;
+
+    }
 }
 
 
@@ -1373,6 +1562,22 @@ void evalCollectLabels(const vector<StatementPtr> &statements,
                        EnvPtr env,
                        map<string, LabelInfo> &labels)
 {
+    for (unsigned i = startIndex; i < statements.size(); ++i) {
+        StatementPtr x = statements[i];
+        switch (x->stmtKind) {
+        case LABEL : {
+            Label *y = (Label *)x.ptr();
+            if (labels.count(y->name->str))
+                error(x, "label redefined");
+            labels[y->name->str] = LabelInfo(env, evalMarkStack(), i+1);
+            break;
+        }
+        case BINDING :
+            return;
+        default :
+            break;
+        }
+    }
 }
 
 
@@ -1383,7 +1588,78 @@ void evalCollectLabels(const vector<StatementPtr> &statements,
 
 EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 {
-    return NULL;
+    LocationContext loc(x->location);
+
+    switch (x->bindingKind) {
+
+    case VAR : {
+        MultiPValuePtr mpv = analyzeExpr(x->expr, env);
+        if (mpv->size() != x->names.size())
+            arityError(x->expr, x->names.size(), mpv->size());
+        MultiEValuePtr mev = new MultiEValue();
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            EValuePtr ev = evalAllocValue(mpv->values[i]->type);
+            mev->add(ev);
+        }
+        int marker = evalMarkStack();
+        evalExprInto(x->expr, env, mev);
+        evalDestroyAndPopStack(marker);
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->names.size(); ++i)
+            addLocal(env2, x->names[i], mev->values[i].ptr());
+        return env2;
+    }
+
+    case REF : {
+        MultiPValuePtr mpv = analyzeExpr(x->expr, env);
+        if (mpv->size() != x->names.size())
+            arityError(x->expr, x->names.size(), mpv->size());
+        MultiEValuePtr mev = new MultiEValue();
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            PValuePtr pv = mpv->values[i];
+            if (pv->isTemp) {
+                EValuePtr ev = evalAllocValue(pv->type);
+                mev->add(ev);
+            }
+            else {
+                EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
+                mev->add(evPtr);
+            }
+        }
+        int marker = evalMarkStack();
+        evalExpr(x->expr, env, mev);
+        evalDestroyAndPopStack(marker);
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            if (mpv->values[i]->isTemp) {
+                EValuePtr ev = mev->values[i];
+                addLocal(env2, x->names[i], ev.ptr());
+            }
+            else {
+                EValuePtr evPtr = mev->values[i];
+                addLocal(env2, x->names[i], derefValue(evPtr).ptr());
+            }
+        }
+        return env2;
+    }
+
+    case STATIC : {
+        MultiStaticPtr right = evaluateExprStatic(x->expr, env);
+        if (right->size() != x->names.size())
+            arityError(x->expr, x->names.size(), right->size());
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < right->size(); ++i)
+            addLocal(env2, x->names[i], right->values[i]);
+        return env2;
+    }
+
+    default : {
+        assert(false);
+        return NULL;
+    }
+
+    }
+
 }
 
 
