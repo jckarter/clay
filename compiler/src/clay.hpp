@@ -2219,7 +2219,6 @@ int objectVectorHash(const vector<Pointer<T> > &a) {
     return h;
 }
 
-vector<TypePtr> evaluateTypeTuple(ExprPtr expr, EnvPtr env);
 void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
                          EnvPtr env,
                          vector<bool> &isRef,
@@ -2230,18 +2229,18 @@ ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env);
 MultiStaticPtr evaluateMultiStatic(const vector<ExprPtr> &exprs, EnvPtr env);
 
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
-TypePtr evaluatePointerLikeType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateTupleType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateEnumerationType(ExprPtr expr, EnvPtr env);
+// TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
+// TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
+// TypePtr evaluatePointerLikeType(ExprPtr expr, EnvPtr env);
+// TypePtr evaluateTupleType(ExprPtr expr, EnvPtr env);
+// TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env);
+// TypePtr evaluateEnumerationType(ExprPtr expr, EnvPtr env);
 
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
 
-int evaluateInt(ExprPtr expr, EnvPtr env);
-size_t evaluateSizeT(ExprPtr expr, EnvPtr env);
-ptrdiff_t evaluatePtrDiffT(ExprPtr expr, EnvPtr env);
+// int evaluateInt(ExprPtr expr, EnvPtr env);
+// size_t evaluateSizeT(ExprPtr expr, EnvPtr env);
+// ptrdiff_t evaluatePtrDiffT(ExprPtr expr, EnvPtr env);
 bool evaluateBool(ExprPtr expr, EnvPtr env);
 
 ValueHolderPtr intToValueHolder(int x);
