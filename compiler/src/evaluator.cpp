@@ -1,7 +1,11 @@
 #include "clay.hpp"
 
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
+MultiEValuePtr evalMultiAsRef(const vector<ExprPtr> &exprs, EnvPtr env);
+MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env);
 void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out);
+void evalMultiInto(const vector<ExprPtr> &exprs, EnvPtr env, MultiEValuePtr out);
+void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
 
 void evalMulti(const vector<ExprPtr> &exprs, EnvPtr env, MultiEValuePtr out);
 void evalOne(ExprPtr expr, EnvPtr env, EValuePtr out);
@@ -135,6 +139,127 @@ int objectHash(ObjectPtr a)
 
 
 //
+// evaluator wrappers
+//
+
+void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
+                         EnvPtr env,
+                         vector<bool> &returnIsRef,
+                         vector<TypePtr> &returnTypes)
+{
+    returnIsRef.clear();
+    returnTypes.clear();
+    for (unsigned i = 0; i < returnSpecs.size(); ++i) {
+        ReturnSpecPtr x = returnSpecs[i];
+        returnIsRef.push_back(x->byRef);
+        returnTypes.push_back(evaluateType(x->type, env));
+    }
+}
+
+MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
+{
+    MultiPValuePtr mpv = analyzeExpr(expr, env);
+    vector<ValueHolderPtr> valueHolders;
+    MultiEValuePtr mev = new MultiEValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        TypePtr t = mpv->values[i]->type;
+        ValueHolderPtr vh = new ValueHolder(t);
+        valueHolders.push_back(vh);
+        EValuePtr ev = new EValue(t, vh->buf);
+        mev->add(ev);
+    }
+    int marker = evalMarkStack();
+    evalExprInto(expr, env, mev);
+    evalDestroyAndPopStack(marker);
+    MultiStaticPtr ms = new MultiStatic();
+    for (unsigned i = 0; i < valueHolders.size(); ++i) {
+        Type *t = (Type *)valueHolders[i]->type.ptr();
+        if (t->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)t;
+            ms->add(st->obj);
+        }
+        else {
+            ms->add(valueHolders[i].ptr());
+        }
+    }
+    return ms;
+}
+
+ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env)
+{
+    MultiStaticPtr ms = evaluateExprStatic(expr, env);
+    if (ms->size() != 1)
+        arityError(expr, 1, ms->size());
+    return ms->values[0];
+}
+
+MultiStaticPtr evaluateMultiStatic(const vector<ExprPtr> &exprs, EnvPtr env)
+{
+    MultiStaticPtr out = new MultiStatic();
+    for (unsigned i = 0; i < exprs.size(); ++i) {
+        ExprPtr x = exprs[i];
+        if (x->exprKind == VAR_ARGS_REF) {
+            MultiStaticPtr y = evaluateExprStatic(x, env);
+            out->add(y);
+        }
+        else {
+            ObjectPtr y = evaluateOneStatic(x, env);
+            out->add(y);
+        }
+    }
+    return out;
+}
+
+TypePtr evaluateType(ExprPtr expr, EnvPtr env)
+{
+    ObjectPtr v = evaluateOneStatic(expr, env);
+    if (v->objKind != TYPE)
+        error(expr, "expecting a type");
+    return (Type *)v.ptr();
+}
+
+bool evaluateBool(ExprPtr expr, EnvPtr env)
+{
+    ObjectPtr v = evaluateOneStatic(expr, env);
+    if (v->objKind != VALUE_HOLDER)
+        error(expr, "expecting a bool value");
+    ValueHolderPtr vh = (ValueHolder *)v.ptr();
+    if (vh->type != boolType)
+        error(expr, "expecting a bool value");
+    return (*(char *)vh->buf) != 0;
+}
+
+ValueHolderPtr intToValueHolder(int x)
+{
+    ValueHolderPtr v = new ValueHolder(cIntType);
+    *(int *)v->buf = x;
+    return v;
+}
+
+ValueHolderPtr sizeTToValueHolder(size_t x)
+{
+    ValueHolderPtr v = new ValueHolder(cSizeTType);
+    *(size_t *)v->buf = x;
+    return v;
+}
+
+ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x)
+{
+    ValueHolderPtr v = new ValueHolder(cPtrDiffTType);
+    *(ptrdiff_t *)v->buf = x;
+    return v;
+}
+
+ValueHolderPtr boolToValueHolder(bool x)
+{
+    ValueHolderPtr v = new ValueHolder(boolType);
+    *(char *)v->buf = x ? 1 : 0;
+    return v;
+}
+
+
+
+//
 // evaluator
 //
 
@@ -259,28 +384,56 @@ EValuePtr evalAllocValue(TypePtr t)
 
 
 //
-// evalOneAsRef
+// evalOneAsRef, evalMultiAsRef, evalExprAsRef
 //
 
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env)
 {
-    PValuePtr pv = analyzeOne(expr, env);
-    if (pv->isTemp) {
-        EValuePtr ev = evalAllocValue(pv->type);
-        evalOne(expr, env, ev);
-        return ev;
+    MultiEValuePtr mev = evalExprAsRef(expr, env);
+    ensureArity(mev, 1);
+    return mev->values[0];
+}
+
+MultiEValuePtr evalMultiAsRef(const vector<ExprPtr> &exprs, EnvPtr env)
+{
+    MultiEValuePtr out = new MultiEValue();
+    for (unsigned i = 0; i < exprs.size(); ++i) {
+        MultiEValuePtr mev = evalExprAsRef(exprs[i], env);
+        out->add(mev);
     }
-    else {
-        EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
-        evalOne(expr, env, evPtr);
-        return derefValue(evPtr);
+    return out;
+}
+
+MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env)
+{
+    MultiPValuePtr mpv = analyzeExpr(expr, env);
+    MultiEValuePtr mev = new MultiEValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        PValuePtr pv = mpv->values[i];
+        if (pv->isTemp) {
+            EValuePtr ev = evalAllocValue(pv->type);
+            mev->add(ev);
+        }
+        else {
+            EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
+            mev->add(evPtr);
+        }
     }
+    evalExpr(expr, env, mev);
+    MultiEValuePtr out = new MultiEValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        if (mpv->values[i]->isTemp)
+            out->add(mev->values[i]);
+        else
+            out->add(derefValue(mev->values[i]));
+    }
+    return out;
 }
 
 
 
 //
-// evalOneInto
+// evalOneInto, evalMultiInto, evalExprInto
 //
 
 void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out)
@@ -293,6 +446,54 @@ void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out)
         EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
         evalOne(expr, env, evPtr);
         evalValueCopy(out, derefValue(evPtr));
+    }
+}
+
+
+void evalMultiInto(const vector<ExprPtr> &exprs, EnvPtr env, MultiEValuePtr out)
+{
+    unsigned j = 0;
+    for (unsigned i = 0; i < exprs.size(); ++i) {
+        ExprPtr x = exprs[i];
+        MultiPValuePtr mpv = analyzeExpr(x, env);
+        if (x->exprKind == VAR_ARGS_REF) {
+            assert(j + mpv->size() <= out->size());
+            MultiEValuePtr out2 = new MultiEValue();
+            for (unsigned k = 0; k < mpv->size(); ++k)
+                out2->add(out->values[j + k]);
+            evalExprInto(x, env, out2);
+            j += mpv->size();
+        }
+        else {
+            if (mpv->size() != 1)
+                arityError(x, 1, mpv->size());
+            assert(j < out->size());
+            evalOneInto(x, env, out->values[j]);
+            ++j;
+        }
+    }
+    assert(j == out->size());
+}
+
+void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
+{
+    MultiPValuePtr mpv = analyzeExpr(expr, env);
+    MultiEValuePtr mev = new MultiEValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        PValuePtr pv = mpv->values[i];
+        if (pv->isTemp) {
+            mev->add(out->values[i]);
+        }
+        else {
+            EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
+            mev->add(evPtr);
+        }
+    }
+    evalExpr(expr, env, mev);
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        if (!mpv->values[i]->isTemp) {
+            evalValueCopy(out->values[i], derefValue(mev->values[i]));
+        }
     }
 }
 
@@ -576,10 +777,137 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
 void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
 {
+    switch (x->objKind) {
+
+    case ENUM_MEMBER : {
+        EnumMember *y = (EnumMember *)x.ptr();
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == y->type);
+        *((int *)out0->addr) = y->index;
+        break;
+    }
+
+    case GLOBAL_VARIABLE : {
+        GlobalVariable *y = (GlobalVariable *)x.ptr();
+        if (!y->llGlobal)
+            codegenGlobalVariable(y);
+        void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(y->type));
+        *((void **)out0->addr) = ptr;
+        break;
+    }
+
+    case EXTERNAL_VARIABLE : {
+        ExternalVariable *y = (ExternalVariable *)x.ptr();
+        if (!y->llGlobal)
+            codegenExternalVariable(y);
+        void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(y->type2));
+        *((void **)out0->addr) = ptr;
+        break;
+    }
+
+    case EXTERNAL_PROCEDURE : {
+        ExternalProcedure *y = (ExternalProcedure *)x.ptr();
+        if (!y->llvmFunc)
+            codegenExternal(y);
+        void *funcPtr = llvmEngine->getPointerToGlobal(y->llvmFunc);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == y->ptrType);
+        *((void **)out0->addr) = funcPtr;
+        break;
+    }
+
+    case STATIC_GLOBAL : {
+        StaticGlobal *y = (StaticGlobal *)x.ptr();
+        evalExpr(y->expr, y->env, out);
+        break;
+    }
+
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        evalValueHolder(y, out);
+        break;
+    }
+
+    case MULTI_STATIC : {
+        MultiStatic *y = (MultiStatic *)x.ptr();
+        assert(y->size() == out->size());
+        for (unsigned i = 0; i < y->size(); ++i)
+            evalStaticObject(y->values[i], new MultiEValue(out->values[i]));
+        break;
+    }
+
+    case TYPE :
+    case PRIM_OP :
+    case PROCEDURE :
+    case RECORD :
+    case MODULE_HOLDER :
+    case IDENTIFIER : {
+        assert(out->size() == 1);
+        assert(out->values[0]->type == staticType(x));
+        break;
+    }
+
+    case EVALUE : {
+        EValue *y = (EValue *)x.ptr();
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(y->type));
+        *((void **)out0->addr) = (void *)y->addr;
+        break;
+    }
+
+    case MULTI_EVALUE : {
+        MultiEValue *y = (MultiEValue *)x.ptr();
+        assert(out->size() == y->size());
+        for (unsigned i = 0; i < y->size(); ++i) {
+            EValuePtr ev = y->values[i];
+            EValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(ev->type));
+            *((void **)outi->addr) = (void *)ev->addr;
+        }
+        break;
+    }
+
+    case PATTERN :
+        error("pattern variable cannot be used as value");
+        break;
+
+    default :
+        error("invalid static object");
+        break;
+    }
 }
 
 void evalValueHolder(ValueHolderPtr x, MultiEValuePtr out)
 {
+    assert(out->size() == 1);
+    EValuePtr out0 = out->values[0];
+    assert(out0->type == x->type);
+
+    switch (x->type->typeKind) {
+
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+        memcpy(out0->addr, x->buf, typeSize(x->type));
+        break;
+
+    case STATIC_TYPE :
+        break;
+
+    default :
+        evalValueCopy(out0, new EValue(x->type, x->buf));
+        break;
+
+    }
 }
 
 void evalIndexingExpr(ExprPtr indexable,
