@@ -1665,9 +1665,794 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
 
 //
+// valueToType
+//
+
+static TypePtr valueToType(MultiEValuePtr args, unsigned index)
+{
+    EValuePtr ev = args->values[index];
+    if (ev->type->typeKind != STATIC_TYPE)
+        argumentError(index, "expecting a type");
+    StaticType *st = (StaticType *)ev->type.ptr();
+    if (st->obj->objKind != TYPE)
+        argumentError(index, "expecting a type");
+    return (Type *)st->obj.ptr();
+}
+
+
+
+//
+// numericValue, integerValue, pointerValue, pointerLikeValue
+//
+
+static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
+                              TypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != type)
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        switch (ev->type->typeKind) {
+        case INTEGER_TYPE :
+        case FLOAT_TYPE :
+            break;
+        default :
+            argumentError(index, "expecting value of numeric type");
+        }
+        type = ev->type;
+    }
+    return ev;
+}
+
+static EValuePtr integerValue(MultiEValuePtr args, unsigned index,
+                              TypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != type)
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (ev->type->typeKind != INTEGER_TYPE)
+            argumentError(index, "expecting value of integer type");
+        type = ev->type;
+    }
+    return ev;
+}
+
+static EValuePtr pointerValue(MultiEValuePtr args, unsigned index,
+                              PointerTypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (ev->type->typeKind != POINTER_TYPE)
+            argumentError(index, "expecting value of pointer type");
+        type = (PointerType *)ev->type.ptr();
+    }
+    return ev;
+}
+
+static EValuePtr pointerLikeValue(MultiEValuePtr args, unsigned index,
+                                  TypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != type)
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        switch (ev->type->typeKind) {
+        case POINTER_TYPE :
+        case CODE_POINTER_TYPE :
+        case CCODE_POINTER_TYPE :
+            break;
+        default :
+            argumentError(index, "expecting a value of "
+                          "pointer or code-pointer type");
+        }
+        type = ev->type;
+    }
+    return ev;
+}
+
+
+
+//
+// binaryNumericOp
+//
+
+template <template<typename> class T>
+static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
+{
+    assert(a->type == b->type);
+    switch (a->type->typeKind) {
+
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)a->type.ptr();
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 :  T<char>().eval(a, b, out); break;
+            case 16 : T<short>().eval(a, b, out); break;
+            case 32 : T<int>().eval(a, b, out); break;
+            case 64 : T<long long>().eval(a, b, out); break;
+            default : assert(false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 :  T<unsigned char>().eval(a, b, out); break;
+            case 16 : T<unsigned short>().eval(a, b, out); break;
+            case 32 : T<unsigned int>().eval(a, b, out); break;
+            case 64 : T<unsigned long long>().eval(a, b, out); break;
+            default : assert(false);
+            }
+        }
+        break;
+    }
+
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)a->type.ptr();
+        switch (t->bits) {
+        case 32 : T<float>().eval(a, b, out); break;
+        case 64 : T<double>().eval(a, b, out); break;
+        default : assert(false);
+        }
+        break;
+    }
+
+    default :
+        assert(false);
+    }
+}
+
+template <typename T>
+class BinaryOpHelper {
+public :
+    void eval(EValuePtr a, EValuePtr b, EValuePtr out) {
+        perform(*((T *)a->addr), *((T *)b->addr), out->addr);
+    }
+    virtual void perform(T &a, T &b, void *out) = 0;
+};
+
+template <typename T>
+class Op_numericEqualsP : public BinaryOpHelper<T> {
+public :
+    virtual void perform(T &a, T &b, void *out) {
+        *((char *)out) = (a == b) ? 1 : 0;
+    }
+};
+
+template <typename T>
+class Op_numericLesserP : public BinaryOpHelper<T> {
+public :
+    virtual void perform(T &a, T &b, void *out) {
+        *((char *)out) = (a < b) ? 1 : 0;
+    }
+};
+
+template <typename T>
+class Op_numericAdd : public BinaryOpHelper<T> {
+public :
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a + b;
+    }
+};
+
+template <typename T>
+class Op_numericSubtract : public BinaryOpHelper<T> {
+public :
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a - b;
+    }
+};
+
+template <typename T>
+class Op_numericMultiply : public BinaryOpHelper<T> {
+public :
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a * b;
+    }
+};
+
+template <typename T>
+class Op_numericDivide : public BinaryOpHelper<T> {
+public :
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a / b;
+    }
+};
+
+
+
+//
+// unaryNumericOp
+//
+
+template <template<typename> class T>
+static void unaryNumericOp(EValuePtr a, EValuePtr out)
+{
+    switch (a->type->typeKind) {
+
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)a->type.ptr();
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 :  T<char>().eval(a, out); break;
+            case 16 : T<short>().eval(a, out); break;
+            case 32 : T<int>().eval(a, out); break;
+            case 64 : T<long long>().eval(a, out); break;
+            default : assert(false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 :  T<unsigned char>().eval(a, out); break;
+            case 16 : T<unsigned short>().eval(a, out); break;
+            case 32 : T<unsigned int>().eval(a, out); break;
+            case 64 : T<unsigned long long>().eval(a, out); break;
+            default : assert(false);
+            }
+        }
+        break;
+    }
+
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)a->type.ptr();
+        switch (t->bits) {
+        case 32 : T<float>().eval(a, out); break;
+        case 64 : T<double>().eval(a, out); break;
+        default : assert(false);
+        }
+        break;
+    }
+
+    default :
+        assert(false);
+    }
+}
+
+template <typename T>
+class UnaryOpHelper {
+public :
+    void eval(EValuePtr a, EValuePtr out) {
+        perform(*((T *)a->addr), out->addr);
+    }
+    virtual void perform(T &a, void *out) = 0;
+};
+
+template <typename T>
+class Op_numericNegate : public UnaryOpHelper<T> {
+public :
+    virtual void perform(T &a, void *out) {
+        *((T *)out) = -a;
+    }
+};
+
+
+
+//
+// binaryIntegerOp
+//
+
+template <template<typename> class T>
+static void binaryIntegerOp(EValuePtr a, EValuePtr b, EValuePtr out)
+{
+    assert(a->type == b->type);
+    assert(a->type->typeKind == INTEGER_TYPE);
+    IntegerType *t = (IntegerType *)a->type.ptr();
+    if (t->isSigned) {
+        switch (t->bits) {
+        case 8 :  T<char>().eval(a, b, out); break;
+        case 16 : T<short>().eval(a, b, out); break;
+        case 32 : T<int>().eval(a, b, out); break;
+        case 64 : T<long long>().eval(a, b, out); break;
+        default : assert(false);
+        }
+    }
+    else {
+        switch (t->bits) {
+        case 8 :  T<unsigned char>().eval(a, b, out); break;
+        case 16 : T<unsigned short>().eval(a, b, out); break;
+        case 32 : T<unsigned int>().eval(a, b, out); break;
+        case 64 : T<unsigned long long>().eval(a, b, out); break;
+        default : assert(false);
+        }
+    }
+}
+
+template <typename T>
+class Op_integerRemainder : public BinaryOpHelper<T> {
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a % b;
+    }
+};
+
+template <typename T>
+class Op_integerShiftLeft : public BinaryOpHelper<T> {
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a << b;
+    }
+};
+
+template <typename T>
+class Op_integerShiftRight : public BinaryOpHelper<T> {
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a >> b;
+    }
+};
+
+template <typename T>
+class Op_integerBitwiseAnd : public BinaryOpHelper<T> {
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a & b;
+    }
+};
+
+template <typename T>
+class Op_integerBitwiseOr : public BinaryOpHelper<T> {
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a | b;
+    }
+};
+
+template <typename T>
+class Op_integerBitwiseXor : public BinaryOpHelper<T> {
+    virtual void perform(T &a, T &b, void *out) {
+        *((T *)out) = a ^ b;
+    }
+};
+
+
+
+//
+// unaryIntegerOp
+//
+
+template <template<typename> class T>
+static void unaryIntegerOp(EValuePtr a, EValuePtr out)
+{
+    assert(a->type->typeKind == INTEGER_TYPE);
+    IntegerType *t = (IntegerType *)a->type.ptr();
+    if (t->isSigned) {
+        switch (t->bits) {
+        case 8 :  T<char>().eval(a, out); break;
+        case 16 : T<short>().eval(a, out); break;
+        case 32 : T<int>().eval(a, out); break;
+        case 64 : T<long long>().eval(a, out); break;
+        default : assert(false);
+        }
+    }
+    else {
+        switch (t->bits) {
+        case 8 :  T<unsigned char>().eval(a, out); break;
+        case 16 : T<unsigned short>().eval(a, out); break;
+        case 32 : T<unsigned int>().eval(a, out); break;
+        case 64 : T<unsigned long long>().eval(a, out); break;
+        default : assert(false);
+        }
+    }
+}
+
+
+template <typename T>
+class Op_integerBitwiseNot : public UnaryOpHelper<T> {
+public :
+    virtual void perform(T &a, void *out) {
+        *((T *)out) = ~a;
+    }
+};
+
+
+
+//
+// op_numericConvert
+//
+
+template <typename DEST, typename SRC>
+static void op_numericConvert3(EValuePtr dest, EValuePtr src)
+{
+    *((DEST *)dest->addr) = DEST(*((SRC *)src->addr));
+}
+
+template <typename D>
+static void op_numericConvert2(EValuePtr dest, EValuePtr src)
+{
+    switch (src->type->typeKind) {
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)src->type.ptr();
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 : op_numericConvert3<D,char>(dest, src); break;
+            case 16 : op_numericConvert3<D,short>(dest, src); break;
+            case 32 : op_numericConvert3<D,int>(dest, src); break;
+            case 64 : op_numericConvert3<D,long long>(dest, src); break;
+            default : assert(false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 : op_numericConvert3<D,unsigned char>(dest, src); break;
+            case 16 : op_numericConvert3<D,unsigned short>(dest, src); break;
+            case 32 : op_numericConvert3<D,unsigned int>(dest, src); break;
+            case 64 :
+                op_numericConvert3<D,unsigned long long>(dest, src); break;
+            default : assert(false);
+            }
+        }
+        break;
+    }
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)src->type.ptr();
+        switch (t->bits) {
+        case 32 : op_numericConvert3<D,float>(dest, src); break;
+        case 64 : op_numericConvert3<D,double>(dest, src); break;
+        default : assert(false);
+        }
+        break;
+    }
+    default :
+        assert(false);
+    }
+}
+
+static void op_numericConvert(EValuePtr dest, EValuePtr src)
+{
+    switch (dest->type->typeKind) {
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)dest->type.ptr();
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 : op_numericConvert2<char>(dest, src); break;
+            case 16 : op_numericConvert2<short>(dest, src); break;
+            case 32 : op_numericConvert2<int>(dest, src); break;
+            case 64 : op_numericConvert2<long long>(dest, src); break;
+            default : assert(false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 : op_numericConvert2<unsigned char>(dest, src); break;
+            case 16 : op_numericConvert2<unsigned short>(dest, src); break;
+            case 32 : op_numericConvert2<unsigned int>(dest, src); break;
+            case 64 : op_numericConvert2<unsigned long long>(dest, src); break;
+            default : assert(false);
+            }
+        }
+        break;
+    }
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)dest->type.ptr();
+        switch (t->bits) {
+        case 32 : op_numericConvert2<float>(dest, src); break;
+        case 64 : op_numericConvert2<double>(dest, src); break;
+        default : assert(false);
+        }
+        break;
+    }
+    default :
+        assert(false);
+    }
+}
+
+
+
+//
+// op_intToPtrInt
+//
+
+template <typename T>
+static ptrdiff_t op_intToPtrInt2(EValuePtr a)
+{
+    return ptrdiff_t(*((T *)a->addr));
+}
+
+static ptrdiff_t op_intToPtrInt(EValuePtr a)
+{
+    assert(a->type->typeKind == INTEGER_TYPE);
+    IntegerType *t = (IntegerType *)a->type.ptr();
+    if (t->isSigned) {
+        switch (t->bits) {
+        case 8 : return op_intToPtrInt2<char>(a);
+        case 16 : return op_intToPtrInt2<short>(a);
+        case 32 : return op_intToPtrInt2<int>(a);
+        case 64 : return op_intToPtrInt2<long long>(a);
+        default : assert(false);
+        }
+    }
+    else {
+        switch (t->bits) {
+        case 8 : return op_intToPtrInt2<unsigned char>(a);
+        case 16 : return op_intToPtrInt2<unsigned short>(a);
+        case 32 : return op_intToPtrInt2<unsigned int>(a);
+        case 64 : return op_intToPtrInt2<unsigned long long>(a);
+        default : assert(false);
+        }
+    }
+    return 0;
+}
+
+
+
+//
+// op_pointerToInt
+//
+
+template <typename T>
+static void op_pointerToInt2(EValuePtr dest, void *ptr)
+{
+    *((T *)dest->addr) = T(size_t(ptr));
+}
+
+static void op_pointerToInt(EValuePtr dest, void *ptr)
+{
+    assert(dest->type->typeKind == INTEGER_TYPE);
+    IntegerType *t = (IntegerType *)dest->type.ptr();
+    if (t->isSigned) {
+        switch (t->bits) {
+        case 8 : op_pointerToInt2<char>(dest, ptr); break;
+        case 16 : op_pointerToInt2<short>(dest, ptr); break;
+        case 32 : op_pointerToInt2<int>(dest, ptr); break;
+        case 64 : op_pointerToInt2<long long>(dest, ptr); break;
+        default : assert(false);
+        }
+    }
+    else {
+        switch (t->bits) {
+        case 8 : op_pointerToInt2<unsigned char>(dest, ptr); break;
+        case 16 : op_pointerToInt2<unsigned short>(dest, ptr); break;
+        case 32 : op_pointerToInt2<unsigned int>(dest, ptr); break;
+        case 64 : op_pointerToInt2<unsigned long long>(dest, ptr); break;
+        default : assert(false);
+        }
+    }
+}
+
+
+
+//
 // evalPrimOp
 //
 
 void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 {
+    switch (x->primOpCode) {
+
+    case PRIM_TypeP : {
+        ensureArity(args, 1);
+        EValuePtr ev = args->values[0];
+        bool isType = false;
+        if (ev->type->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)ev->type.ptr();
+            if (st->obj->objKind == TYPE)
+                isType = true;
+        }
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isType ? 1 : 0;
+        break;
+    }
+
+    case PRIM_TypeSize : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(typeSize(t));
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
+    case PRIM_primitiveCopy : {
+        ensureArity(args, 2);
+        EValuePtr ev0 = args->values[0];
+        EValuePtr ev1 = args->values[1];
+        if (!isPrimitiveType(ev0->type))
+            argumentError(0, "expecting a value of primitive type");
+        if (ev0->type != ev1->type)
+            argumentError(1, "argument type mismatch");
+        memcpy(ev0->addr, ev1->addr, typeSize(ev0->type));
+        assert(out->size() == 0);
+        break;
+    }
+
+    case PRIM_boolNot : {
+        ensureArity(args, 1);
+        EValuePtr ev = args->values[0];
+        if (ev->type != boolType)
+            argumentError(0, "expecting a value of bool type");
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        char *p = (char *)ev->addr;
+        *((char *)out0->addr) = (*p == 0);
+        break;
+    }
+
+    case PRIM_numericEqualsP : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = numericValue(args, 0, t);
+        EValuePtr ev1 = numericValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        binaryNumericOp<Op_numericEqualsP>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_numericLesserP : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = numericValue(args, 0, t);
+        EValuePtr ev1 = numericValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        binaryNumericOp<Op_numericLesserP>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_numericAdd : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = numericValue(args, 0, t);
+        EValuePtr ev1 = numericValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryNumericOp<Op_numericAdd>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_numericSubtract : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = numericValue(args, 0, t);
+        EValuePtr ev1 = numericValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryNumericOp<Op_numericSubtract>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_numericMultiply : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = numericValue(args, 0, t);
+        EValuePtr ev1 = numericValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryNumericOp<Op_numericMultiply>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_numericDivide : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = numericValue(args, 0, t);
+        EValuePtr ev1 = numericValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryNumericOp<Op_numericDivide>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_numericNegate : {
+        ensureArity(args, 1);
+        TypePtr t;
+        EValuePtr ev = numericValue(args, 0, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        unaryNumericOp<Op_numericNegate>(ev, out0);
+        break;
+    }
+
+    case PRIM_integerRemainder : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerRemainder>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerShiftLeft : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerShiftLeft>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerShiftRight : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerShiftRight>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerBitwiseAnd : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerBitwiseAnd>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerBitwiseOr : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerBitwiseOr>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerBitwiseXor : {
+        ensureArity(args, 2);
+        TypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerBitwiseXor>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerBitwiseNot : {
+        ensureArity(args, 1);
+        TypePtr t;
+        EValuePtr ev = integerValue(args, 0, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        unaryIntegerOp<Op_integerBitwiseNot>(ev, out0);
+        break;
+    }
+
+    case PRIM_numericConvert : {
+        ensureArity(args, 2);
+        TypePtr dest = valueToType(args, 0);
+        TypePtr src;
+        EValuePtr ev = numericValue(args, 1, src);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == dest);
+        op_numericConvert(out0, ev);
+        break;
+    }
+
+    default :
+        assert(false);
+
+    }
 }
