@@ -801,12 +801,10 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
         if (obj->objKind != VALUE_HOLDER)
             error("invalid indexing operation");
     }
-    MultiPValuePtr mpv = analyzeMulti(args, env);
-    if (!mpv)
-        return NULL;
-    MultiPValuePtr args2 = new MultiPValue(pv);
-    args2->add(mpv);
-    return analyzeCallValue(kernelPValue("index"), args2);
+    vector<ExprPtr> args2;
+    args2.push_back(indexable);
+    args2.insert(args2.end(), args.begin(), args.end());
+    return analyzeCallExpr(kernelNameRef("index"), args2, env);
 }
 
 
@@ -927,9 +925,10 @@ MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
         if (obj->objKind != VALUE_HOLDER)
             error("invalid field access");
     }
-    MultiPValuePtr args = new MultiPValue(pv);
-    args->values.push_back(staticPValue(name.ptr()));
-    return analyzeCallValue(kernelPValue("fieldRef"), args);
+    vector<ExprPtr> args;
+    args.push_back(base);
+    args.push_back(new ObjectExpr(name.ptr()));
+    return analyzeCallExpr(kernelNameRef("fieldRef"), args, env);
 }
 
 
@@ -1229,7 +1228,7 @@ MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
         MultiExprPtr varArgs = new MultiExpr();
         for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
             ExprPtr expr = new ForeignExpr(env, args[i]);
-            varArgs->values.push_back(expr);
+            varArgs->add(expr);
         }
         addLocal(bodyEnv, new Identifier("%varArgs"), varArgs.ptr());
     }
