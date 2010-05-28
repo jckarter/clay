@@ -1585,7 +1585,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
         InvokeStackContext invokeStackContext(callable, argsKey);
 
-        InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
+        InvokeEntryPtr entry =
+            analyzeCallable(callable, argsKey, argsTempness);
         if (entry->inlined)
             argumentError(0, "cannot create pointer to inlined code");
         if (!entry->analyzed)
