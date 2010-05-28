@@ -973,13 +973,14 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
     PValuePtr pv = analyzeOne(callable, env);
     if (!pv)
         return NULL;
-    MultiPValuePtr mpv = analyzeMulti(args, env);
-    if (!mpv)
-        return NULL;
     switch (pv->type->typeKind) {
     case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE : {
+        MultiPValuePtr mpv = analyzeMulti(args, env);
+        if (!mpv)
+            return NULL;
         return analyzeCallPointer(pv, mpv);
+    }
     }
     ObjectPtr obj = unwrapStaticType(pv->type);
     if (!obj) {
@@ -994,6 +995,9 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
     case TYPE :
     case RECORD :
     case PROCEDURE : {
+        MultiPValuePtr mpv = analyzeMulti(args, env);
+        if (!mpv)
+            return NULL;
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
@@ -1009,7 +1013,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
 
     case PRIM_OP : {
         PrimOpPtr x = (PrimOp *)obj.ptr();
-        return analyzePrimOp(x, mpv);
+        return analyzePrimOpExpr(x, args, env);
     }
 
     default :
@@ -1450,8 +1454,18 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
 
 //
-// analyzePrimOp
+// analyzePrimOpExpr, analyzePrimOp
 //
+
+MultiPValuePtr analzyePrimOpExpr(PrimOpPtr x,
+                                 const vector<ExprPtr> &args,
+                                 EnvPtr env)
+{
+    MultiPValuePtr mpv = analyzeMulti(args, env);
+    if (!mpv)
+        return NULL;
+    return analyzePrimOp(x, mpv);
+}
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 {

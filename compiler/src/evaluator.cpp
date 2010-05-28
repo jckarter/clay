@@ -109,7 +109,10 @@ void evalCollectLabels(const vector<StatementPtr> &statements,
                        map<string, LabelInfo> &labels);
 EnvPtr evalBinding(BindingPtr x, EnvPtr env);
 
-
+void evalPrimOpExpr(PrimOpPtr x,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env,
+                    MultiEValuePtr out);
 void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out);
 
 
@@ -1146,8 +1149,7 @@ void evalCallExpr(ExprPtr callable,
 
     case PRIM_OP : {
         PrimOpPtr x = (PrimOp *)obj.ptr();
-        MultiEValuePtr mev = evalMultiAsRef(args, env);
-        evalPrimOp(x, mev, out);
+        evalPrimOpExpr(x, args, env, out);
         break;
     }
 
@@ -1665,7 +1667,41 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
 
 //
-// valueToType, valueToNumericType, valueToIntegerType
+// evalPrimOpExpr
+//
+
+void evalPrimOpExpr(PrimOpPtr x,
+                    const vector<ExprPtr> &args,
+                    EnvPtr env,
+                    MultiEValuePtr out)
+{
+    switch (x->primOpCode) {
+
+    case PRIM_array :
+    case PRIM_tuple : {
+        MultiPValuePtr mpv = analyzePrimOpExpr(x, args, env);
+        assert(mpv->size() == 1);
+        TypePtr t = mpv->values[0]->type;
+        ExprPtr callable = new ObjectExpr(t.ptr());
+        evalCallExpr(callable, args, env, out);
+        break;
+    }
+
+    default :
+        MultiEValuePtr mev = evalMultiAsRef(args, env);
+        evalPrimOp(x, mev, out);
+        break;
+
+    }
+}
+
+
+
+//
+// valueToStatic, valueToStaticSizeT
+// valueToType, valueToNumericType, valueToIntegerType,
+// valueToPointerLikeType, valueToTupleType, valueToRecordType,
+// valueToEnumType, valueToIdentifier
 //
 
 static ObjectPtr valueToStatic(EValuePtr ev)
@@ -1682,6 +1718,17 @@ static ObjectPtr valueToStatic(MultiEValuePtr args, unsigned index)
     if (!obj)
         argumentError(index, "expecting a static value");
     return obj;
+}
+
+static size_t valueToStaticSizeT(MultiEValuePtr args, unsigned index)
+{
+    ObjectPtr obj = valueToStatic(args->values[index]);
+    if (!obj || (obj->objKind != VALUE_HOLDER))
+        argumentError(index, "expecting a static SizeT value");
+    ValueHolder *vh = (ValueHolder *)obj.ptr();
+    if (vh->type != cSizeTType)
+        argumentError(index, "expecting a static SizeT value");
+    return *((size_t *)vh->buf);
 }
 
 static TypePtr valueToType(MultiEValuePtr args, unsigned index)
@@ -1727,10 +1774,43 @@ static TypePtr valueToPointerLikeType(MultiEValuePtr args, unsigned index)
     return t;
 }
 
+static TupleTypePtr valueToTupleType(MultiEValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != TUPLE_TYPE)
+        argumentError(index, "expecting a tuple type");
+    return (TupleType *)t.ptr();
+}
+
+static RecordTypePtr valueToRecordType(MultiEValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != RECORD_TYPE)
+        argumentError(index, "expecting a tuple type");
+    return (RecordType *)t.ptr();
+}
+
+static EnumTypePtr valueToEnumType(MultiEValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != ENUM_TYPE)
+        argumentError(index, "expecting a tuple type");
+    return (EnumType *)t.ptr();
+}
+
+static IdentifierPtr valueToIdentifier(MultiEValuePtr args, unsigned index)
+{
+    ObjectPtr obj = valueToStatic(args->values[index]);
+    if (!obj || (obj->objKind != IDENTIFIER))
+        argumentError(index, "expecting identifier value");
+    return (Identifier *)obj.ptr();
+}
+
 
 
 //
-// numericValue, integerValue, pointerValue, pointerLikeValue
+// numericValue, integerValue, pointerValue, pointerLikeValue,
+// arrayValue, tupleValue, recordValue, enumValue
 //
 
 static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
@@ -1805,6 +1885,70 @@ static EValuePtr pointerLikeValue(MultiEValuePtr args, unsigned index,
                           "pointer or code-pointer type");
         }
         type = ev->type;
+    }
+    return ev;
+}
+
+static EValuePtr arrayValue(MultiEValuePtr args, unsigned index,
+                            ArrayTypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (ev->type->typeKind != ARRAY_TYPE)
+            argumentError(index, "expecting a value of array type");
+        type = (ArrayType *)ev->type.ptr();
+    }
+    return ev;
+}
+
+static EValuePtr tupleValue(MultiEValuePtr args, unsigned index,
+                            TupleTypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (ev->type->typeKind != TUPLE_TYPE)
+            argumentError(index, "expecting a value of tuple type");
+        type = (TupleType *)ev->type.ptr();
+    }
+    return ev;
+}
+
+static EValuePtr recordValue(MultiEValuePtr args, unsigned index,
+                            RecordTypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (ev->type->typeKind != RECORD_TYPE)
+            argumentError(index, "expecting a value of record type");
+        type = (RecordType *)ev->type.ptr();
+    }
+    return ev;
+}
+
+static EValuePtr enumValue(MultiEValuePtr args, unsigned index,
+                           EnumTypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (ev->type->typeKind != ENUM_TYPE)
+            argumentError(index, "expecting a value of enum type");
+        type = (EnumType *)ev->type.ptr();
     }
     return ev;
 }
@@ -2589,8 +2733,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_CodePointerP : {
         ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args->values[0]);
         bool isCodePointerType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
         if (obj.ptr() && (obj->objKind == TYPE)) {
             Type *t = (Type *)obj.ptr();
             if (t->typeKind == CODE_POINTER_TYPE)
@@ -2652,8 +2796,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_CCodePointerP : {
         ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args->values[0]);
         bool isCCodePointerType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
         if (obj.ptr() && (obj->objKind == TYPE)) {
             Type *t = (Type *)obj.ptr();
             if (t->typeKind == CCODE_POINTER_TYPE)
@@ -2743,6 +2887,256 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == dest);
         *((void **)out0->addr) = *((void **)ev->addr);
+        break;
+    }
+
+    case PRIM_Array :
+        error("Array type constructor cannot be called");
+
+    case PRIM_array : {
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type->typeKind == ARRAY_TYPE);
+        ArrayType *t = (ArrayType *)out0->type.ptr();
+        assert((int)args->size() == t->size);
+        TypePtr etype = t->elementType;
+        for (unsigned i = 0; i < args->size(); ++i) {
+            EValuePtr earg = args->values[i];
+            if (earg->type != etype)
+                argumentError(i, "array element type mismatch");
+            char *ptr = out0->addr + typeSize(etype)*i;
+            evalValueCopy(new EValue(etype, ptr), earg);
+        }
+        break;
+    }
+
+    case PRIM_arrayRef : {
+        ensureArity(args, 2);
+        ArrayTypePtr at;
+        EValuePtr earray = arrayValue(args, 0, at);
+        TypePtr indexType;
+        EValuePtr iv = integerValue(args, 1, indexType);
+        ptrdiff_t i = op_intToPtrInt(iv);
+        char *ptr = earray->addr + i*typeSize(at->elementType);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(at->elementType));
+        *((void **)out0->addr) = (void *)ptr;
+        break;
+    }
+
+    case PRIM_TupleP : {
+        ensureArity(args, 1);
+        bool isTupleType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == TUPLE_TYPE)
+                isTupleType = true;
+        }
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isTupleType ? 1 : 0;
+        break;
+    }
+
+    case PRIM_Tuple :
+        error("Tuple type constructor cannot be called");
+
+    case PRIM_TupleElementCount : {
+        ensureArity(args, 1);
+        TupleTypePtr t = valueToTupleType(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(t->elementTypes.size());
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
+    case PRIM_TupleElementOffset : {
+        ensureArity(args, 2);
+        TupleTypePtr t = valueToTupleType(args, 0);
+        size_t i = valueToStaticSizeT(args, 1);
+        if (i >= t->elementTypes.size())
+            argumentError(1, "tuple element index out of range");
+        const llvm::StructLayout *layout = tupleTypeLayout(t.ptr());
+        ValueHolderPtr vh = sizeTToValueHolder(layout->getElementOffset(i));
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
+    case PRIM_tuple : {
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type->typeKind == TUPLE_TYPE);
+        TupleType *t = (TupleType *)out0->type.ptr();
+        assert(args->size() == t->elementTypes.size());
+        const llvm::StructLayout *layout = tupleTypeLayout(t);
+        for (unsigned i = 0; i < args->size(); ++i) {
+            EValuePtr earg = args->values[i];
+            if (earg->type != t->elementTypes[i])
+                argumentError(i, "argument type mismatch");
+            char *ptr = out0->addr + layout->getElementOffset(i);
+            EValuePtr eargDest = new EValue(t->elementTypes[i], ptr);
+            evalValueCopy(eargDest, earg);
+        }
+        break;
+    }
+
+    case PRIM_tupleRef : {
+        ensureArity(args, 2);
+        TupleTypePtr tt;
+        EValuePtr etuple = tupleValue(args, 0, tt);
+        size_t i = valueToStaticSizeT(args, 1);
+        if (i >= tt->elementTypes.size())
+            argumentError(1, "tuple element index out of range");
+        const llvm::StructLayout *layout = tupleTypeLayout(tt.ptr());
+        char *ptr = etuple->addr + layout->getElementOffset(i);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(tt->elementTypes[i]));
+        *((void **)out0->addr) = (void *)ptr;
+        break;
+    }
+
+    case PRIM_RecordP : {
+        ensureArity(args, 1);
+        bool isRecordType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == RECORD_TYPE)
+                isRecordType = true;
+        }
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isRecordType ? 1 : 0;
+        break;
+    }
+
+    case PRIM_RecordFieldCount : {
+        ensureArity(args, 1);
+        RecordTypePtr rt = valueToRecordType(args, 0);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        ValueHolderPtr vh = sizeTToValueHolder(fieldTypes.size());
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
+    case PRIM_RecordFieldOffset : {
+        ensureArity(args, 2);
+        RecordTypePtr rt = valueToRecordType(args, 0);
+        size_t i = valueToStaticSizeT(args, 1);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        if (i >= fieldTypes.size())
+            argumentError(1, "record field index out of range");
+        const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
+        ValueHolderPtr vh = sizeTToValueHolder(layout->getElementOffset(i));
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
+    case PRIM_RecordFieldIndex : {
+        ensureArity(args, 2);
+        RecordTypePtr rt = valueToRecordType(args, 0);
+        IdentifierPtr fname = valueToIdentifier(args, 1);
+        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
+        map<string, size_t>::const_iterator fi =
+            fieldIndexMap.find(fname->str);
+        if (fi == fieldIndexMap.end())
+            argumentError(1, "field not found in record");
+        ValueHolderPtr vh = sizeTToValueHolder(fi->second);
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
+    case PRIM_recordFieldRef : {
+        ensureArity(args, 2);
+        RecordTypePtr rt;
+        EValuePtr erec = recordValue(args, 0, rt);
+        size_t i = valueToStaticSizeT(args, 1);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        if (i >= fieldTypes.size())
+            argumentError(1, "record field index out of range");
+        const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
+        char *ptr = erec->addr + layout->getElementOffset(i);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(fieldTypes[i]));
+        *((void **)out0->addr) = (void *)ptr;
+        break;
+    }
+
+    case PRIM_recordFieldRefByName : {
+        ensureArity(args, 2);
+        RecordTypePtr rt;
+        EValuePtr erec = recordValue(args, 0, rt);
+        IdentifierPtr fname = valueToIdentifier(args, 1);
+        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
+        map<string,size_t>::const_iterator fi =
+            fieldIndexMap.find(fname->str);
+        if (fi == fieldIndexMap.end())
+            argumentError(1, "field not found in record");
+        size_t index = fi->second;
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
+        char *ptr = erec->addr + layout->getElementOffset(index);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(fieldTypes[index]));
+        *((void **)out0->addr) = (void *)ptr;
+        break;
+    }
+
+    case PRIM_Static :
+        error("Static type constructor cannot be called");
+
+    case PRIM_StaticName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        ostringstream sout;
+        printName(sout, obj);
+        ExprPtr z = new StringLiteral(sout.str());
+        evalExpr(z, new Env(), out);
+        break;
+    }
+
+    case PRIM_EnumP : {
+        ensureArity(args, 1);
+        bool isEnumType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == ENUM_TYPE)
+                isEnumType = true;
+        }
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isEnumType ? 1 : 0;
+        break;
+    }
+
+    case PRIM_enumToInt : {
+        ensureArity(args, 1);
+        EnumTypePtr et;
+        EValuePtr ev = enumValue(args, 0, et);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == cIntType);
+        *((int *)out0->addr) = *((int *)ev->addr);
+        break;
+    }
+
+    case PRIM_intToEnum : {
+        ensureArity(args, 2);
+        EnumTypePtr et = valueToEnumType(args, 0);
+        TypePtr it = cIntType;
+        EValuePtr ev = integerValue(args, 1, it);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == et.ptr());
+        *((int *)out0->addr) = *((int *)ev->addr);
         break;
     }
 

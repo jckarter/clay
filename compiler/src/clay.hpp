@@ -2189,6 +2189,9 @@ typedef Pointer<AnalysisContext> AnalysisContextPtr;
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 
+MultiPValuePtr analyzePrimOpExpr(PrimOpPtr x,
+                                 const vector<ExprPtr> &args,
+                                 EnvPtr env);
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
 
