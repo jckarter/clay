@@ -1665,7 +1665,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
 
 //
-// valueToType
+// valueToType, valueToNumericType
 //
 
 static TypePtr valueToType(MultiEValuePtr args, unsigned index)
@@ -1677,6 +1677,27 @@ static TypePtr valueToType(MultiEValuePtr args, unsigned index)
     if (st->obj->objKind != TYPE)
         argumentError(index, "expecting a type");
     return (Type *)st->obj.ptr();
+}
+
+static TypePtr valueToNumericType(MultiEValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    switch (t->typeKind) {
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+        return t;
+    default :
+        argumentError(index, "expecting a numeric type");
+        return NULL;
+    }
+}
+
+static IntegerTypePtr valueToIntegerType(MultiEValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != INTEGER_TYPE)
+        argumentError(index, "expecting an integer type");
+    return (IntegerType *)t.ptr();
 }
 
 
@@ -2441,13 +2462,106 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_numericConvert : {
         ensureArity(args, 2);
-        TypePtr dest = valueToType(args, 0);
+        TypePtr dest = valueToNumericType(args, 0);
         TypePtr src;
         EValuePtr ev = numericValue(args, 1, src);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == dest);
         op_numericConvert(out0, ev);
+        break;
+    }
+
+    case PRIM_Pointer :
+        error("Pointer type constructor cannot be called");
+
+    case PRIM_addressOf : {
+        ensureArity(args, 1);
+        EValuePtr ev = args->values[0];
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(ev->type));
+        *((void **)out0->addr) = (void *)ev->addr;
+        break;
+    }
+
+    case PRIM_pointerDereference : {
+        ensureArity(args, 1);
+        PointerTypePtr t;
+        EValuePtr ev = pointerValue(args, 0, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        *((void **)out0->addr) = *((void **)ev->addr);
+        break;
+    }
+
+    case PRIM_pointerEqualsP : {
+        ensureArity(args, 2);
+        PointerTypePtr t;
+        EValuePtr ev0 = pointerValue(args, 0, t);
+        EValuePtr ev1 = pointerValue(args, 1, t);
+        bool flag = *((void **)ev0->addr) == *((void **)ev1->addr);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = flag ? 1 : 0;
+        break;
+    }
+
+    case PRIM_pointerLesserP : {
+        ensureArity(args, 2);
+        PointerTypePtr t;
+        EValuePtr ev0 = pointerValue(args, 0, t);
+        EValuePtr ev1 = pointerValue(args, 1, t);
+        bool flag = *((void **)ev0->addr) < *((void **)ev1->addr);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = flag ? 1 : 0;
+        break;
+    }
+
+    case PRIM_pointerOffset : {
+        ensureArity(args, 2);
+        PointerTypePtr t;
+        EValuePtr v0 = pointerValue(args, 0, t);
+        TypePtr offsetT;
+        EValuePtr v1 = integerValue(args, 1, offsetT);
+        ptrdiff_t offset = op_intToPtrInt(v1);
+        char *ptr = *((char **)v0->addr);
+        ptr += offset*typeSize(t->pointeeType);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        *((void **)out0->addr) = (void *)ptr;
+        break;
+    }
+
+    case PRIM_pointerToInt : {
+        ensureArity(args, 2);
+        IntegerTypePtr dest = valueToIntegerType(args, 0);
+        PointerTypePtr pt;
+        EValuePtr ev = pointerValue(args, 1, pt);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == dest.ptr());
+        void *ptr = *((void **)ev->addr);
+        op_pointerToInt(out0, ptr);
+        break;
+    }
+
+    case PRIM_intToPointer : {
+        ensureArity(args, 2);
+        TypePtr pointeeType = valueToType(args, 0);
+        TypePtr dest = pointerType(pointeeType);
+        TypePtr t;
+        EValuePtr ev = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == dest);
+        ptrdiff_t ptrInt = op_intToPtrInt(ev);
+        *((void **)out0->addr) = (void *)ptrInt;
         break;
     }
 
