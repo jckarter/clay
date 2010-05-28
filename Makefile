@@ -5,17 +5,17 @@ default : clay
 all: clay clay-bindgen clay-dbg
 
 clay: 
-	cd compiler; make
+	cd compiler; $(MAKE)
 
 clay-bindgen: 
-	cd misc/bindgen; make
+	cd misc/bindgen; $(MAKE)
 
 clay-dbg: 
-	cd misc/dbg; make
+	cd misc/dbg; $(MAKE)
 
 .PHONY: clean
 
 clean:
-	cd compiler; make clean
-	cd misc/bindgen; make clean
-	cd misc/dbg; make clean
+	cd compiler; $(MAKE) clean
+	cd misc/bindgen; $(MAKE) clean
+	cd misc/dbg; $(MAKE) clean
