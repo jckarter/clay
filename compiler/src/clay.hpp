@@ -2339,7 +2339,7 @@ typedef Pointer<CodegenContext> CodegenContextPtr;
 
 void codegenGlobalVariable(GlobalVariablePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);
-void codegenExternal(ExternalProcedurePtr x);
+void codegenExternalProcedure(ExternalProcedurePtr x);
 
 void codegenCodeBody(InvokeEntryPtr entry, const string &callableName);
 void codegenCWrapper(InvokeEntryPtr entry, const string &callableName);

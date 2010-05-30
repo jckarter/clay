@@ -51,9 +51,15 @@ void codegenExpr(ExprPtr expr,
 void codegenStaticObject(ObjectPtr x,
                          CodegenContextPtr ctx,
                          MultiCValuePtr out);
+
+void codegenGlobalVariable(GlobalVariablePtr x);
+void codegenExternalVariable(ExternalVariablePtr x);
+void codegenExternalProcedure(ExternalProcedurePtr x);
+
 void codegenValueHolder(ValueHolderPtr x,
                         CodegenContextPtr ctx,
                         MultiCValuePtr out);
+llvm::Value *codegenSimpleConstant(ValueHolderPtr v);
 
 void codegenIndexingExpr(ExprPtr indexable,
                          const vector<ExprPtr> &args,
@@ -79,6 +85,9 @@ void codegenCallPointer(CValuePtr x,
                         CodegenContextPtr ctx,
                         MultiCValuePtr out);
 
+bool codegenStatement(StatementPtr stmt,
+                      EnvPtr env,
+                      CodegenContextPtr ctx);
 
 static vector<CValuePtr> stackCValues;
 
@@ -657,4 +666,411 @@ void codegenExpr(ExprPtr expr,
         assert(false);
 
     }
+}
+
+
+
+//
+// codegenStaticObject
+//
+
+void codegenStaticObject(ObjectPtr x,
+                         CodegenContextPtr ctx,
+                         MultiCValuePtr out)
+{
+    switch (x->objKind) {
+
+    case ENUM_MEMBER : {
+        EnumMember *y = (EnumMember *)x.ptr();
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == y->type);
+        llvm::Value *llv = llvm::ConstantInt::getSigned(
+            llvmType(y->type), y->index);
+        llvmBuilder->CreateStore(llv, out0->llValue);
+        break;
+    }
+
+    case GLOBAL_VARIABLE : {
+        GlobalVariable *y = (GlobalVariable *)x.ptr();
+        if (!y->llGlobal)
+            codegenGlobalVariable(y);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(y->type));
+        llvmBuilder->CreateStore(y->llGlobal, out0->llValue);
+        break;
+    }
+
+    case EXTERNAL_VARIABLE : {
+        ExternalVariable *y = (ExternalVariable *)x.ptr();
+        if (!y->llGlobal)
+            codegenExternalVariable(y);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(y->type2));
+        llvmBuilder->CreateStore(y->llGlobal, out0->llValue);
+        break;
+    }
+
+    case EXTERNAL_PROCEDURE : {
+        ExternalProcedure *y = (ExternalProcedure *)x.ptr();
+        if (!y->llvmFunc)
+            codegenExternalProcedure(y);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == y->ptrType);
+        llvmBuilder->CreateStore(y->llvmFunc, out0->llValue);
+        break;
+    }
+
+    case STATIC_GLOBAL : {
+        StaticGlobal *y = (StaticGlobal *)x.ptr();
+        codegenExpr(y->expr, y->env, ctx, out);
+        break;
+    }
+
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        codegenValueHolder(y, ctx, out);
+        break;
+    }
+
+    case MULTI_STATIC : {
+        MultiStatic *y = (MultiStatic *)x.ptr();
+        assert(y->size() == out->size());
+        for (unsigned i = 0; i < y->size(); ++i) {
+            MultiCValuePtr out2 = new MultiCValue(out->values[i]);
+            codegenStaticObject(y->values[i], ctx, out2);
+        }
+        break;
+    }
+
+    case TYPE :
+    case PRIM_OP :
+    case PROCEDURE :
+    case RECORD :
+    case MODULE_HOLDER :
+    case IDENTIFIER : {
+        assert(out->size() == 1);
+        assert(out->values[0]->type == staticType(x));
+        break;
+    }
+
+    case CVALUE : {
+        CValue *y = (CValue *)x.ptr();
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(y->type));
+        llvmBuilder->CreateStore(y->llValue, out0->llValue);
+        break;
+    }
+
+    case MULTI_CVALUE : {
+        MultiCValue *y = (MultiCValue *)x.ptr();
+        assert(out->size() == y->size());
+        for (unsigned i = 0; i < y->size(); ++i) {
+            CValuePtr vi = y->values[i];
+            CValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(vi->type));
+            llvmBuilder->CreateStore(vi->llValue, outi->llValue);
+        }
+        break;
+    }
+
+    case PATTERN : {
+        error("pattern variable cannot be used as value");
+        break;
+    }
+
+    default :
+        error("invalid static object");
+        break;
+
+    }
+}
+
+
+
+//
+// codegenGlobalVariable
+//
+
+void codegenGlobalVariable(GlobalVariablePtr x)
+{
+    assert(!x->llGlobal);
+    PValuePtr y = analyzeGlobalVariable(x);
+    llvm::Constant *initializer =
+        llvm::Constant::getNullValue(llvmType(y->type));
+    x->llGlobal =
+        new llvm::GlobalVariable(
+            *llvmModule, llvmType(y->type), false,
+            llvm::GlobalVariable::InternalLinkage,
+            initializer, "clay_" + x->name->str);
+}
+
+
+
+//
+// codegenExternalVariable
+//
+
+void codegenExternalVariable(ExternalVariablePtr x)
+{
+    assert(!x->llGlobal);
+    if (!x->attributesVerified)
+        verifyAttributes(x);
+    PValuePtr pv = analyzeExternalVariable(x);
+    llvm::GlobalVariable::LinkageTypes linkage;
+    if (x->attrDLLImport)
+        linkage = llvm::GlobalVariable::DLLImportLinkage;
+    else if (x->attrDLLExport)
+        linkage = llvm::GlobalVariable::DLLExportLinkage;
+    else
+        linkage = llvm::GlobalVariable::ExternalLinkage;
+    x->llGlobal =
+        new llvm::GlobalVariable(
+            *llvmModule, llvmType(pv->type), false,
+            linkage, NULL, x->name->str);
+}
+
+
+
+//
+// codegenExternalProcedure
+//
+
+void codegenExternalProcedure(ExternalProcedurePtr x)
+{
+    if (x->llvmFunc != NULL)
+        return;
+    if (!x->analyzed)
+        analyzeExternalProcedure(x);
+    assert(x->analyzed);
+    assert(!x->llvmFunc);
+    vector<const llvm::Type *> llArgTypes;
+    for (unsigned i = 0; i < x->args.size(); ++i)
+        llArgTypes.push_back(llvmType(x->args[i]->type2));
+    const llvm::Type *llRetType =
+        x->returnType2.ptr() ? llvmType(x->returnType2) : llvmVoidType();
+    llvm::FunctionType *llFuncType =
+        llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
+    llvm::GlobalVariable::LinkageTypes linkage;
+    if (x->attrDLLImport)
+        linkage = llvm::GlobalVariable::DLLImportLinkage;
+    else if (x->attrDLLExport)
+        linkage = llvm::GlobalVariable::DLLExportLinkage;
+    else
+        linkage = llvm::GlobalVariable::ExternalLinkage;
+
+    string llvmFuncName;
+    if (!x->attrAsmLabel.empty()) {
+        // '\01' is the llvm marker to specify asm label
+        llvmFuncName = "\01" + x->attrAsmLabel;
+    }
+    else {
+        llvmFuncName = x->name->str;
+    }
+
+    x->llvmFunc = llvm::Function::Create(llFuncType,
+                                         linkage,
+                                         llvmFuncName,
+                                         llvmModule);
+    if (x->attrStdCall)
+        x->llvmFunc->setCallingConv(llvm::CallingConv::X86_StdCall);
+    else if (x->attrFastCall)
+        x->llvmFunc->setCallingConv(llvm::CallingConv::X86_FastCall);
+
+    if (!x->body) return;
+
+    llvm::Function *savedLLVMFunction = llvmFunction;
+    llvm::IRBuilder<> *savedLLVMInitBuilder = llvmInitBuilder;
+    llvm::IRBuilder<> *savedLLVMBuilder = llvmBuilder;
+
+    llvmFunction = x->llvmFunc;
+
+    llvm::BasicBlock *initBlock = newBasicBlock("init");
+    llvm::BasicBlock *codeBlock = newBasicBlock("code");
+    llvm::BasicBlock *returnBlock = newBasicBlock("return");
+
+    llvmInitBuilder = new llvm::IRBuilder<>(initBlock);
+    llvmBuilder = new llvm::IRBuilder<>(codeBlock);
+
+    EnvPtr env = new Env(x->env);
+
+    llvm::Function::arg_iterator ai = llvmFunction->arg_begin();
+    for (unsigned i = 0; i < x->args.size(); ++i, ++ai) {
+        ExternalArgPtr arg = x->args[i];
+        llvm::Argument *llArg = &(*ai);
+        llArg->setName(arg->name->str);
+        llvm::Value *llArgVar =
+            llvmInitBuilder->CreateAlloca(llvmType(arg->type2));
+        llArgVar->setName(arg->name->str);
+        llvmBuilder->CreateStore(llArg, llArgVar);
+        CValuePtr cvalue = new CValue(arg->type2, llArgVar);
+        addLocal(env, arg->name, cvalue.ptr());
+    }
+
+    vector<CReturn> returns;
+    if (x->returnType2.ptr()) {
+        llvm::Value *llRetVal =
+            llvmInitBuilder->CreateAlloca(llvmType(x->returnType2));
+        CValuePtr cret = new CValue(x->returnType2, llRetVal);
+        returns.push_back(CReturn(false, x->returnType2, cret));
+    }
+
+    JumpTarget returnTarget(returnBlock, cgMarkStack());
+    CodegenContextPtr ctx = new CodegenContext(returns, returnTarget);
+
+    bool terminated = codegenStatement(x->body, env, ctx);
+    if (!terminated) {
+        cgDestroyStack(returnTarget.stackMarker, ctx);
+        llvmBuilder->CreateBr(returnBlock);
+    }
+    cgPopStack(returnTarget.stackMarker);
+
+    llvmInitBuilder->CreateBr(codeBlock);
+
+    llvmBuilder->SetInsertPoint(returnBlock);
+    if (!x->returnType2) {
+        llvmBuilder->CreateRetVoid();
+    }
+    else {
+        CValuePtr retVal = returns[0].value;
+        llvm::Value *v = llvmBuilder->CreateLoad(retVal->llValue);
+        llvmBuilder->CreateRet(v);
+    }
+
+    delete llvmInitBuilder;
+    delete llvmBuilder;
+
+    llvmInitBuilder = savedLLVMInitBuilder;
+    llvmBuilder = savedLLVMBuilder;
+    llvmFunction = savedLLVMFunction;
+}
+
+
+
+//
+// codegenValueHolder
+//
+
+void codegenValueHolder(ValueHolderPtr v,
+                        CodegenContextPtr ctx,
+                        MultiCValuePtr out)
+{
+    assert(out->size() == 1);
+    CValuePtr out0 = out->values[0];
+    assert(out0->type == v->type);
+
+    switch (v->type->typeKind) {
+
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE : {
+        llvm::Value *llv = codegenSimpleConstant(v);
+        llvmBuilder->CreateStore(llv, out0->llValue);
+        break;
+    }
+
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+        error("pointer constants are not supported");
+        break;
+
+    default :
+        // TODO: support complex constants
+        error("complex constants are not supported yet");
+        break;
+
+    }
+}
+
+
+
+//
+// codegenSimpleConstant
+//
+
+template <typename T>
+llvm::Value *
+_sintConstant(ValueHolderPtr v)
+{
+    return llvm::ConstantInt::getSigned(llvmType(v->type), *((T *)v->buf));
+}
+
+template <typename T>
+llvm::Value *
+_uintConstant(ValueHolderPtr v)
+{
+    return llvm::ConstantInt::get(llvmType(v->type), *((T *)v->buf));
+}
+
+llvm::Value *codegenSimpleConstant(ValueHolderPtr v)
+{
+    llvm::Value *val = NULL;
+    switch (v->type->typeKind) {
+    case BOOL_TYPE : {
+        int bv = (*(bool *)v->buf) ? 1 : 0;
+        return llvm::ConstantInt::get(llvmType(boolType), bv);
+    }
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)v->type.ptr();
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 :
+                val = _sintConstant<char>(v);
+                break;
+            case 16 :
+                val = _sintConstant<short>(v);
+                break;
+            case 32 :
+                val = _sintConstant<int>(v);
+                break;
+            case 64 :
+                val = _sintConstant<long long>(v);
+                break;
+            default :
+                assert(false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 :
+                val = _uintConstant<unsigned char>(v);
+                break;
+            case 16 :
+                val = _uintConstant<unsigned short>(v);
+                break;
+            case 32 :
+                val = _uintConstant<unsigned int>(v);
+                break;
+            case 64 :
+                val = _uintConstant<unsigned long long>(v);
+                break;
+            default :
+                assert(false);
+            }
+        }
+        break;
+    }
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)v->type.ptr();
+        switch (t->bits) {
+        case 32 :
+            val = llvm::ConstantFP::get(llvmType(t), *((float *)v->buf));
+            break;
+        case 64 :
+            val = llvm::ConstantFP::get(llvmType(t), *((double *)v->buf));
+            break;
+        default :
+            assert(false);
+        }
+        break;
+    }
+    default :
+        assert(false);
+    }
+    return val;
 }

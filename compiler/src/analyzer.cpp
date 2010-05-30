@@ -1457,7 +1457,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 // analyzePrimOpExpr, analyzePrimOp
 //
 
-MultiPValuePtr analzyePrimOpExpr(PrimOpPtr x,
+MultiPValuePtr analyzePrimOpExpr(PrimOpPtr x,
                                  const vector<ExprPtr> &args,
                                  EnvPtr env)
 {
