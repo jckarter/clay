@@ -34,8 +34,8 @@ OBJS = \
 	constructors.o \
 	literals.o \
 	analyzer.o \
-	evaluator.o
-# 	codegen.o \
+	evaluator.o \
+	codegen.o \
 # 	main.o
 
 $(BINDIR)clay : $(OBJS)
