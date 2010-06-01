@@ -94,9 +94,18 @@ void codegenCallInlined(InvokeEntryPtr entry,
                         CodegenContextPtr ctx,
                         MultiCValuePtr out);
 
+void codegenCodeBody(InvokeEntryPtr entry, const string &callableName);
+
+void codegenCWrapper(InvokeEntryPtr entry, const string &callableName);
+
 bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
                       CodegenContextPtr ctx);
+
+void codegenCollectLabels(const vector<StatementPtr> &statements,
+                          unsigned startIndex,
+                          CodegenContextPtr ctx);
+EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx);
 
 void codegenPrimOpExpr(PrimOpPtr x,
                        const vector<ExprPtr> &args,
@@ -551,7 +560,9 @@ void codegenExpr(ExprPtr expr,
     case AND : {
         And *x = (And *)expr.ptr();
         PValuePtr pv1 = analyzeOne(x->expr1, env);
+        assert(pv1.ptr());
         PValuePtr pv2 = analyzeOne(x->expr2, env);
+        assert(pv2.ptr());
         if (pv1->type != pv2->type)
             error("type mismatch in 'and' expression");
         assert(out->size() == 1);
@@ -596,7 +607,9 @@ void codegenExpr(ExprPtr expr,
     case OR : {
         Or *x = (Or *)expr.ptr();
         PValuePtr pv1 = analyzeOne(x->expr1, env);
+        assert(pv1.ptr());
         PValuePtr pv2 = analyzeOne(x->expr2, env);
+        assert(pv2.ptr());
         if (pv1->type != pv2->type)
             error("type mismatch in 'or' expression");
         assert(out->size() == 1);
@@ -1677,4 +1690,370 @@ void codegenCallInlined(InvokeEntryPtr entry,
     cgPopStack(returnTarget.stackMarker);
 
     llvmBuilder->SetInsertPoint(returnBlock);
+}
+
+
+
+//
+// codegenStatement
+//
+
+bool codegenStatement(StatementPtr stmt,
+                      EnvPtr env,
+                      CodegenContextPtr ctx)
+{
+    LocationContext loc(stmt->location);
+
+    switch (stmt->stmtKind) {
+
+    case BLOCK : {
+        Block *x = (Block *)stmt.ptr();
+        int blockMarker = cgMarkStack();
+        codegenCollectLabels(x->statements, 0, ctx);
+        bool terminated = false;
+        for (unsigned i = 0; i < x->statements.size(); ++i) {
+            StatementPtr y = x->statements[i];
+            if (y->stmtKind == LABEL) {
+                Label *z = (Label *)y.ptr();
+                map<string, JumpTarget>::iterator li =
+                    ctx->labels.find(z->name->str);
+                assert(li != ctx->labels.end());
+                const JumpTarget &jt = li->second;
+                if (!terminated)
+                    llvmBuilder->CreateBr(jt.block);
+                llvmBuilder->SetInsertPoint(jt.block);
+            }
+            else if (terminated) {
+                error(y, "unreachable code");
+            }
+            else if (y->stmtKind == BINDING) {
+                env = codegenBinding((Binding *)y.ptr(), env, ctx);
+                codegenCollectLabels(x->statements, i+1, ctx);
+            }
+            else {
+                terminated = codegenStatement(y, env, ctx);
+            }
+        }
+        if (!terminated)
+            cgDestroyStack(blockMarker, ctx);
+        cgPopStack(blockMarker);
+        return terminated;
+    }
+
+    case LABEL :
+    case BINDING :
+        error("invalid statement");
+
+    case ASSIGNMENT : {
+        Assignment *x = (Assignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeOne(x->left, env);
+        PValuePtr pvRight = analyzeOne(x->right, env);
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        int marker = cgMarkStack();
+        CValuePtr cvLeft = codegenOneAsRef(x->left, env, ctx);
+        CValuePtr cvRight = codegenOneAsRef(x->right, env, ctx);
+        codegenValueAssign(cvLeft, cvRight, ctx);
+        cgDestroyAndPopStack(marker, ctx);
+        return false;
+    }
+
+    case INIT_ASSIGNMENT : {
+        InitAssignment *x = (InitAssignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeOne(x->left, env);
+        PValuePtr pvRight = analyzeOne(x->right, env);
+        if (pvLeft->type != pvRight->type)
+            error("type mismatch");
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        int marker = cgMarkStack();
+        CValuePtr cvLeft = codegenOneAsRef(x->left, env, ctx);
+        codegenOneInto(x->right, env, ctx, cvLeft);
+        cgDestroyAndPopStack(marker, ctx);
+        return false;
+    }
+
+    case UPDATE_ASSIGNMENT : {
+        UpdateAssignment *x = (UpdateAssignment *)stmt.ptr();
+        PValuePtr pvLeft = analyzeOne(x->left, env);
+        if (pvLeft->isTemp)
+            error(x->left, "cannot assign to a temporary");
+        CallPtr call = new Call(kernelNameRef(updateOperatorName(x->op)));
+        call->args.push_back(x->left);
+        call->args.push_back(x->right);
+        return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
+    }
+
+    case GOTO : {
+        Goto *x = (Goto *)stmt.ptr();
+        map<string, JumpTarget>::iterator li =
+            ctx->labels.find(x->labelName->str);
+        if (li == ctx->labels.end())
+            error("goto label not found");
+        const JumpTarget &jt = li->second;
+        cgDestroyStack(jt.stackMarker, ctx);
+        llvmBuilder->CreateBr(jt.block);
+        return true;
+    }
+
+    case RETURN : {
+        Return *x = (Return *)stmt.ptr();
+        if (x->exprs.size() != ctx->returns.size())
+            arityError(ctx->returns.size(), x->exprs.size());
+
+        for (unsigned i = 0; i < x->exprs.size(); ++i) {
+            CReturn &y = ctx->returns[i];
+            if (y.byRef) {
+                if (!x->isRef[i])
+                    error(x->exprs[i], "return by reference expected");
+                CValuePtr cret = codegenOneAsRef(x->exprs[i], env, ctx);
+                if (cret->type != y.type)
+                    error(x->exprs[i], "type mismatch");
+                llvmBuilder->CreateStore(cret->llValue, y.value->llValue);
+            }
+            else {
+                if (x->isRef[i])
+                    error(x->exprs[i], "return by value expected");
+                PValuePtr pret = analyzeOne(x->exprs[i], env);
+                if (pret->type != y.type)
+                    error(x->exprs[i], "type mismatch");
+                codegenOneInto(x->exprs[i], env, ctx, y.value);
+            }
+        }
+        const JumpTarget &jt = ctx->returnTarget;
+        cgDestroyStack(jt.stackMarker, ctx);
+        llvmBuilder->CreateBr(jt.block);
+        return true;
+    }
+
+    case IF : {
+        If *x = (If *)stmt.ptr();
+        int marker = cgMarkStack();
+        CValuePtr cv = codegenOneAsRef(x->condition, env, ctx);
+        llvm::Value *cond = codegenToBoolFlag(cv, ctx);
+        cgDestroyAndPopStack(marker, ctx);
+
+        llvm::BasicBlock *trueBlock = newBasicBlock("ifTrue");
+        llvm::BasicBlock *falseBlock = newBasicBlock("ifFalse");
+        llvm::BasicBlock *mergeBlock = NULL;
+
+        llvmBuilder->CreateCondBr(cond, trueBlock, falseBlock);
+
+        bool terminated1 = false;
+        bool terminated2 = false;
+
+        llvmBuilder->SetInsertPoint(trueBlock);
+        terminated1 = codegenStatement(x->thenPart, env, ctx);
+        if (!terminated1) {
+            if (!mergeBlock)
+                mergeBlock = newBasicBlock("ifMerge");
+            llvmBuilder->CreateBr(mergeBlock);
+        }
+
+        llvmBuilder->SetInsertPoint(falseBlock);
+        if (x->elsePart.ptr())
+            terminated2 = codegenStatement(x->elsePart, env, ctx);
+        if (!terminated2) {
+            if (!mergeBlock)
+                mergeBlock = newBasicBlock("ifMerge");
+            llvmBuilder->CreateBr(mergeBlock);
+        }
+
+        if (!terminated1 || !terminated2)
+            llvmBuilder->SetInsertPoint(mergeBlock);
+
+        return terminated1 && terminated2;
+    }
+
+    case EXPR_STATEMENT : {
+        ExprStatement *x = (ExprStatement *)stmt.ptr();
+        int marker = cgMarkStack();
+        codegenExprAsRef(x->expr, env, ctx);
+        cgDestroyAndPopStack(marker, ctx);
+        return false;
+    }
+
+    case WHILE : {
+        While *x = (While *)stmt.ptr();
+
+        llvm::BasicBlock *whileBegin = newBasicBlock("whileBegin");
+        llvm::BasicBlock *whileBody = newBasicBlock("whileBody");
+        llvm::BasicBlock *whileEnd = newBasicBlock("whileEnd");
+
+        llvmBuilder->CreateBr(whileBegin);
+        llvmBuilder->SetInsertPoint(whileBegin);
+
+        int marker = cgMarkStack();
+        CValuePtr cv = codegenOneAsRef(x->condition, env, ctx);
+        llvm::Value *cond = codegenToBoolFlag(cv, ctx);
+        cgDestroyAndPopStack(marker, ctx);
+
+        llvmBuilder->CreateCondBr(cond, whileBody, whileEnd);
+
+        ctx->breaks.push_back(JumpTarget(whileEnd, cgMarkStack()));
+        ctx->continues.push_back(JumpTarget(whileBegin, cgMarkStack()));
+        llvmBuilder->SetInsertPoint(whileBody);
+        bool terminated = codegenStatement(x->body, env, ctx);
+        if (!terminated)
+            llvmBuilder->CreateBr(whileBegin);
+        ctx->breaks.pop_back();
+        ctx->continues.pop_back();
+
+        llvmBuilder->SetInsertPoint(whileEnd);
+        return false;
+    }
+
+    case BREAK : {
+        if (ctx->breaks.empty())
+            error("invalid break statement");
+        const JumpTarget &jt = ctx->breaks.back();
+        cgDestroyStack(jt.stackMarker, ctx);
+        llvmBuilder->CreateBr(jt.block);
+        return true;
+    }
+
+    case CONTINUE : {
+        if (ctx->continues.empty())
+            error("invalid continue statement");
+        const JumpTarget &jt = ctx->continues.back();
+        cgDestroyStack(jt.stackMarker, ctx);
+        llvmBuilder->CreateBr(jt.block);
+        return true;
+    }
+
+    case FOR : {
+        For *x = (For *)stmt.ptr();
+        if (!x->desugared)
+            x->desugared = desugarForStatement(x);
+        return codegenStatement(x->desugared, env, ctx);
+    }
+
+    case FOREIGN_STATEMENT : {
+        ForeignStatement *x = (ForeignStatement *)stmt.ptr();
+        return codegenStatement(x->statement, x->getEnv(), ctx);
+    }
+
+    case TRY : {
+        error("try statement not yet supported.");
+        return false;
+    }
+
+    default :
+        assert(false);
+        return false;
+
+    }
+}
+
+
+
+//
+// codegenCollectLabels
+//
+
+void codegenCollectLabels(const vector<StatementPtr> &statements,
+                          unsigned startIndex,
+                          CodegenContextPtr ctx)
+{
+    for (unsigned i = startIndex; i < statements.size(); ++i) {
+        StatementPtr x = statements[i];
+        switch (x->stmtKind) {
+        case LABEL : {
+            Label *y = (Label *)x.ptr();
+            map<string, JumpTarget>::iterator li =
+                ctx->labels.find(y->name->str);
+            if (li != ctx->labels.end())
+                error(x, "label redefined");
+            llvm::BasicBlock *bb = newBasicBlock(y->name->str.c_str());
+            ctx->labels[y->name->str] = JumpTarget(bb, cgMarkStack());
+            break;
+        }
+        case BINDING :
+            return;
+        default :
+            break;
+        }
+    }
+}
+
+
+
+//
+// codegenBinding
+//
+
+EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
+{
+    LocationContext loc(x->location);
+
+    switch (x->bindingKind) {
+
+    case VAR : {
+        MultiPValuePtr mpv = analyzeExpr(x->expr, env);
+        if (mpv->size() != x->names.size())
+            arityError(x->expr, x->names.size(), mpv->size());
+        MultiCValuePtr mcv = new MultiCValue();
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            CValuePtr cv = codegenAllocValue(mpv->values[i]->type);
+            mcv->add(cv);
+        }
+        int marker = cgMarkStack();
+        codegenExprInto(x->expr, env, ctx, mcv);
+        cgDestroyAndPopStack(marker, ctx);
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->names.size(); ++i)
+            addLocal(env2, x->names[i], mcv->values[i].ptr());
+        return env2;
+    }
+
+    case REF : {
+        MultiPValuePtr mpv = analyzeExpr(x->expr, env);
+        assert(mpv.ptr());
+        if (mpv->size() != x->names.size())
+            arityError(x->expr, x->names.size(), mpv->size());
+        MultiCValuePtr mcv = new MultiCValue();
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            PValuePtr pv = mpv->values[i];
+            if (pv->isTemp) {
+                CValuePtr cv = codegenAllocValue(pv->type);
+                mcv->add(cv);
+            }
+            else {
+                CValuePtr cvRef = codegenAllocValue(pointerType(pv->type));
+                mcv->add(cvRef);
+            }
+        }
+        int marker = cgMarkStack();
+        codegenExpr(x->expr, env, ctx, mcv);
+        cgDestroyAndPopStack(marker, ctx);
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            if (mpv->values[i]->isTemp) {
+                CValuePtr cv = mcv->values[i];
+                addLocal(env2, x->names[i], cv.ptr());
+            }
+            else {
+                CValuePtr cvPtr = mcv->values[i];
+                addLocal(env2, x->names[i], derefValue(cvPtr).ptr());
+            }
+        }
+        return env2;
+    }
+
+    case STATIC : {
+        MultiStaticPtr right = evaluateExprStatic(x->expr, env);
+        if (right->size() != x->names.size())
+            arityError(x->expr, x->names.size(), right->size());
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < right->size(); ++i)
+            addLocal(env2, x->names[i], right->values[i]);
+        return env2;
+    }
+
+    default : {
+        assert(false);
+        return NULL;
+    }
+
+    }
 }
