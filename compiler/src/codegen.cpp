@@ -84,10 +84,31 @@ void codegenCallPointer(CValuePtr x,
                         MultiCValuePtr args,
                         CodegenContextPtr ctx,
                         MultiCValuePtr out);
+void codegenCallCode(InvokeEntryPtr entry,
+                     MultiCValuePtr args,
+                     CodegenContextPtr ctx,
+                     MultiCValuePtr out);
+void codegenCallInlined(InvokeEntryPtr entry,
+                        const vector<ExprPtr> &args,
+                        EnvPtr env,
+                        CodegenContextPtr ctx,
+                        MultiCValuePtr out);
 
 bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
                       CodegenContextPtr ctx);
+
+void codegenPrimOpExpr(PrimOpPtr x,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env,
+                       CodegenContextPtr ctx,
+                       MultiCValuePtr out);
+
+void codegenPrimOp(PrimOpPtr x,
+                   MultiCValuePtr args,
+                   CodegenContextPtr ctx,
+                   MultiCValuePtr out);
+
 
 static vector<CValuePtr> stackCValues;
 
@@ -1073,4 +1094,587 @@ llvm::Value *codegenSimpleConstant(ValueHolderPtr v)
         assert(false);
     }
     return val;
+}
+
+
+
+//
+// codegenIndexingExpr
+//
+
+void codegenIndexingExpr(ExprPtr indexable,
+                         const vector<ExprPtr> &args,
+                         EnvPtr env,
+                         CodegenContextPtr ctx,
+                         MultiCValuePtr out)
+{
+    MultiPValuePtr mpv = analyzeIndexingExpr(indexable, args, env);
+    assert(mpv.ptr());
+    assert(mpv->size() == out->size());
+    bool allTempStatics = true;
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        PValuePtr pv = mpv->values[i];
+        if (pv->isTemp)
+            assert(out->values[i]->type == pv->type);
+        else
+            assert(out->values[i]->type == pointerType(pv->type));
+        if ((pv->type->typeKind != STATIC_TYPE) || !pv->isTemp) {
+            allTempStatics = false;
+        }
+    }
+    if (allTempStatics) {
+        // takes care of type constructors
+        return;
+    }
+    vector<ExprPtr> args2;
+    args2.push_back(indexable);
+    args2.insert(args2.end(), args.begin(), args.end());
+    codegenCallExpr(kernelNameRef("index"), args2, env, ctx, out);
+}
+
+
+
+//
+// codegenFieldRefExpr
+//
+
+void codegenFieldRefExpr(ExprPtr base,
+                         IdentifierPtr name,
+                         EnvPtr env,
+                         CodegenContextPtr ctx,
+                         MultiCValuePtr out)
+{
+    MultiPValuePtr mpv = analyzeFieldRefExpr(base, name, env);
+    assert(mpv.ptr());
+    assert(mpv->size() == out->size());
+    bool allTempStatics = true;
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        PValuePtr pv = mpv->values[i];
+        if (pv->isTemp)
+            assert(out->values[i]->type == pv->type);
+        else
+            assert(out->values[i]->type == pointerType(pv->type));
+        if ((pv->type->typeKind != STATIC_TYPE) || !pv->isTemp) {
+            allTempStatics = false;
+        }
+    }
+    if (allTempStatics) {
+        // takes care of module member access
+        return;
+    }
+    vector<ExprPtr> args2;
+    args2.push_back(base);
+    args2.push_back(new ObjectExpr(name.ptr()));
+    codegenCallExpr(kernelNameRef("fieldRef"), args2, env, ctx, out);
+}
+
+
+
+//
+// codegenCallExpr
+//
+
+void codegenCallExpr(ExprPtr callable,
+                     const vector<ExprPtr> &args,
+                     EnvPtr env,
+                     CodegenContextPtr ctx,
+                     MultiCValuePtr out)
+{
+    PValuePtr pv = analyzeOne(callable, env);
+    assert(pv.ptr());
+
+    switch (pv->type->typeKind) {
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE : {
+        CValuePtr cv = codegenOneAsRef(callable, env, ctx);
+        MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
+        codegenCallPointer(cv, mcv, ctx, out);
+        return;
+    }
+    }
+
+    if (pv->type->typeKind != STATIC_TYPE) {
+        vector<ExprPtr> args2;
+        args2.push_back(callable);
+        args2.insert(args2.end(), args.begin(), args.end());
+        codegenCallExpr(kernelNameRef("call"), args2, env, ctx, out);
+        return;
+    }
+
+    StaticType *st = (StaticType *)pv->type.ptr();
+    ObjectPtr obj = st->obj;
+
+    switch (obj->objKind) {
+
+    case TYPE :
+    case RECORD :
+    case PROCEDURE : {
+        MultiPValuePtr mpv = analyzeMulti(args, env);
+        assert(mpv.ptr());
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        computeArgsKey(mpv, argsKey, argsTempness);
+        InvokeStackContext invokeStackContext(obj, argsKey);
+        InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
+        if (entry->inlined) {
+            codegenCallInlined(entry, args, env, ctx, out);
+        }
+        else {
+            assert(entry->analyzed);
+            MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
+            codegenCallCode(entry, mcv, ctx, out);
+        }
+        break;
+    }
+
+    case PRIM_OP : {
+        PrimOpPtr x = (PrimOp *)obj.ptr();
+        codegenPrimOpExpr(x, args, env, ctx, out);
+        break;
+    }
+
+    default :
+        error("invalid call expression");
+        break;
+
+    }
+}
+
+
+
+//
+// codegenCallValue
+//
+
+void codegenCallValue(CValuePtr callable,
+                      MultiCValuePtr args,
+                      CodegenContextPtr ctx,
+                      MultiCValuePtr out)
+{
+    switch (callable->type->typeKind) {
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+        codegenCallPointer(callable, args, ctx, out);
+        return;
+    }
+
+    if (callable->type->typeKind != STATIC_TYPE) {
+        MultiCValuePtr args2 = new MultiCValue(callable);
+        args2->add(args2);
+        codegenCallValue(kernelCValue("call"), args2, ctx, out);
+        return;
+    }
+
+    StaticType *st = (StaticType *)callable->type.ptr();
+    ObjectPtr obj = st->obj;
+
+    switch (obj->objKind) {
+
+    case TYPE :
+    case RECORD :
+    case PROCEDURE : {
+        MultiPValuePtr mpv = new MultiPValue();
+        for (unsigned i = 0; i < args->size(); ++i)
+            mpv->add(new PValue(args->values[i]->type, false));
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        computeArgsKey(mpv, argsKey, argsTempness);
+        InvokeStackContext invokeStackContext(obj, argsKey);
+        InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
+        if (entry->inlined)
+            error("call to inlined code is not allowed in this context");
+        assert(entry->analyzed);
+        codegenCallCode(entry, args, ctx, out);
+        break;
+    }
+
+    case PRIM_OP : {
+        PrimOpPtr x = (PrimOp *)obj.ptr();
+        codegenPrimOp(x, args, ctx, out);
+        break;
+    }
+
+    default :
+        error("invalid call operation");
+        break;
+
+    }
+}
+
+
+
+//
+// codegenCallPointer
+//
+
+void codegenCallPointer(CValuePtr x,
+                        MultiCValuePtr args,
+                        CodegenContextPtr ctx,
+                        MultiCValuePtr out)
+{
+    switch (x->type->typeKind) {
+
+    case CODE_POINTER_TYPE : {
+        CodePointerType *t = (CodePointerType *)x->type.ptr();
+        ensureArity(args, t->argTypes.size());
+        llvm::Value *llCallable = llvmBuilder->CreateLoad(x->llValue);
+        vector<llvm::Value *> llArgs;
+        for (unsigned i = 0; i < args->size(); ++i) {
+            CValuePtr cv = args->values[i];
+            if (cv->type != t->argTypes[i])
+                argumentError(i, "type mismatch");
+            llArgs.push_back(cv->llValue);
+        }
+        assert(out->size() == t->returnTypes.size());
+        for (unsigned i = 0; i < out->size(); ++i) {
+            CValuePtr cv = out->values[i];
+            if (t->returnIsRef[i])
+                assert(cv->type == pointerType(t->returnTypes[i]));
+            else
+                assert(cv->type == t->returnTypes[i]);
+            llArgs.push_back(cv->llValue);
+        }
+        llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+        break;
+    }
+
+    case CCODE_POINTER_TYPE : {
+        CCodePointerType *t = (CCodePointerType *)x->type.ptr();
+        if (!t->hasVarArgs)
+            ensureArity(args, t->argTypes.size());
+        else if (args->size() < t->argTypes.size())
+            arityError2(t->argTypes.size(), args->size());
+        llvm::Value *llCallable = llvmBuilder->CreateLoad(x->llValue);
+        vector<llvm::Value *> llArgs;
+        for (unsigned i = 0; i < t->argTypes.size(); ++i) {
+            CValuePtr cv = args->values[i];
+            if (cv->type != t->argTypes[i])
+                argumentError(i, "type mismatch");
+            llvm::Value *llv = llvmBuilder->CreateLoad(cv->llValue);
+            llArgs.push_back(llv);
+        }
+        if (t->hasVarArgs) {
+            for (unsigned i = t->argTypes.size(); i < args->size(); ++i) {
+                CValuePtr cv = args->values[i];
+                llvm::Value *llv = llvmBuilder->CreateLoad(cv->llValue);
+                llArgs.push_back(llv);
+            }
+        }
+        llvm::Value *llRet = llvmBuilder->CreateCall(llCallable,
+                                                     llArgs.begin(),
+                                                     llArgs.end());
+        if (t->returnType.ptr()) {
+            assert(out->size() == 1);
+            CValuePtr out0 = out->values[0];
+            assert(out0->type == t->returnType);
+            llvmBuilder->CreateStore(llRet, out0->llValue);
+        }
+        else {
+            assert(out->size() == 0);
+        }
+        break;
+    }
+
+    default :
+        assert(false);
+
+    }
+}
+
+
+
+//
+// codegenCallCode
+//
+
+void codegenCallCode(InvokeEntryPtr entry,
+                     MultiCValuePtr args,
+                     CodegenContextPtr ctx,
+                     MultiCValuePtr out)
+{
+    if (!entry->llvmFunc)
+        codegenCodeBody(entry, getCodeName(entry->callable));
+    assert(entry->llvmFunc);
+    ensureArity(args, entry->argsKey.size());
+    vector<llvm::Value *> llArgs;
+    for (unsigned i = 0; i < args->size(); ++i) {
+        CValuePtr cv = args->values[i];
+        if (cv->type != entry->argsKey[i])
+            argumentError(i, "type mismatch");
+        llArgs.push_back(cv->llValue);
+    }
+    assert(out->size() == entry->returnTypes.size());
+    for (unsigned i = 0; i < out->size(); ++i) {
+        CValuePtr cv = out->values[i];
+        if (entry->returnIsRef[i])
+            assert(cv->type == pointerType(entry->returnTypes[i]));
+        else
+            assert(cv->type == entry->returnTypes[i]);
+        llArgs.push_back(cv->llValue);
+    }
+    llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(), llArgs.end());
+}
+
+
+
+//
+// codegenCodeBody
+//
+
+void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
+{
+    assert(entry->analyzed);
+    assert(!entry->llvmFunc);
+
+    vector<const llvm::Type *> llArgTypes;
+    for (unsigned i = 0; i < entry->argsKey.size(); ++i)
+        llArgTypes.push_back(llvmPointerType(entry->argsKey[i]));
+    for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
+        TypePtr rt = entry->returnTypes[i];
+        if (entry->returnIsRef[i])
+            llArgTypes.push_back(llvmPointerType(pointerType(rt)));
+        else
+            llArgTypes.push_back(llvmPointerType(rt));
+    }
+
+    llvm::FunctionType *llFuncType =
+        llvm::FunctionType::get(llvmVoidType(), llArgTypes, false);
+
+    llvm::Function *llFunc =
+        llvm::Function::Create(llFuncType,
+                               llvm::Function::InternalLinkage,
+                               "clay_" + callableName,
+                               llvmModule);
+
+    entry->llvmFunc = llFunc;
+
+    llvm::Function *savedLLVMFunction = llvmFunction;
+    llvm::IRBuilder<> *savedLLVMInitBuilder = llvmInitBuilder;
+    llvm::IRBuilder<> *savedLLVMBuilder = llvmBuilder;
+
+    llvmFunction = llFunc;
+
+    llvm::BasicBlock *initBlock = newBasicBlock("init");
+    llvm::BasicBlock *codeBlock = newBasicBlock("code");
+    llvm::BasicBlock *returnBlock = newBasicBlock("return");
+
+    llvmInitBuilder = new llvm::IRBuilder<>(initBlock);
+    llvmBuilder = new llvm::IRBuilder<>(codeBlock);
+
+    EnvPtr env = new Env(entry->env);
+
+    llvm::Function::arg_iterator ai = llFunc->arg_begin();
+    for (unsigned i = 0; i < entry->fixedArgTypes.size(); ++i, ++ai) {
+        llvm::Argument *llArgValue = &(*ai);
+        llArgValue->setName(entry->fixedArgNames[i]->str);
+        CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
+        addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
+    }
+
+    if (entry->hasVarArgs) {
+        MultiCValuePtr varArgs;
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai) {
+            llvm::Argument *llArgValue = &(*ai);
+            ostringstream sout;
+            sout << "varg" << i;
+            llArgValue->setName(sout.str());
+            CValuePtr cvalue = new CValue(entry->varArgTypes[i], llArgValue);
+            varArgs->add(cvalue);
+        }
+        addLocal(env, new Identifier("%varArgs"), varArgs.ptr());
+    }
+
+    const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+    if (!returnSpecs.empty()) {
+        assert(returnSpecs.size() == entry->returnTypes.size());
+    }
+
+    vector<CReturn> returns;
+    for (unsigned i = 0; i < entry->returnTypes.size(); ++i, ++ai) {
+        llvm::Argument *llArgValue = &(*ai);
+        TypePtr rt = entry->returnTypes[i];
+        ReturnSpecPtr rspec;
+        if (!returnSpecs.empty())
+            rspec = returnSpecs[i];
+        if (entry->returnIsRef[i]) {
+            CValuePtr cv = new CValue(pointerType(rt), llArgValue);
+            returns.push_back(CReturn(true, rt, cv));
+            if (rspec.ptr()) {
+                assert(!rspec->name);
+            }
+        }
+        else {
+            CValuePtr cv = new CValue(rt, llArgValue);
+            returns.push_back(CReturn(false, rt, cv));
+            if (rspec.ptr() && rspec->name.ptr()) {
+                addLocal(env, rspec->name, cv.ptr());
+                llArgValue->setName(rspec->name->str);
+            }
+        }
+    }
+
+    JumpTarget returnTarget(returnBlock, cgMarkStack());
+    CodegenContextPtr ctx = new CodegenContext(returns, returnTarget);
+
+    bool terminated = codegenStatement(entry->code->body, env, ctx);
+    if (!terminated) {
+        cgDestroyStack(returnTarget.stackMarker, ctx);
+        llvmBuilder->CreateBr(returnBlock);
+    }
+    cgPopStack(returnTarget.stackMarker);
+
+    llvmInitBuilder->CreateBr(codeBlock);
+
+    llvmBuilder->SetInsertPoint(returnBlock);
+    llvmBuilder->CreateRetVoid();
+
+    delete llvmInitBuilder;
+    delete llvmBuilder;
+
+    llvmInitBuilder = savedLLVMInitBuilder;
+    llvmBuilder = savedLLVMBuilder;
+    llvmFunction = savedLLVMFunction;
+}
+
+
+
+//
+// codegenCWrapper
+//
+
+void codegenCWrapper(InvokeEntryPtr entry, const string &callableName)
+{
+    assert(!entry->llvmCWrapper);
+
+    vector<const llvm::Type *> llArgTypes;
+    for (unsigned i = 0; i < entry->argsKey.size(); ++i)
+        llArgTypes.push_back(llvmType(entry->argsKey[i]));
+
+    TypePtr returnType;
+    const llvm::Type *llReturnType = NULL;
+    if (entry->returnTypes.empty()) {
+        returnType = NULL;
+        llReturnType = llvmVoidType();
+    }
+    else {
+        assert(entry->returnTypes.size() == 1);
+        assert(!entry->returnIsRef[0]);
+        returnType = entry->returnTypes[0];
+        llReturnType = llvmType(returnType);
+    }
+
+    llvm::FunctionType *llFuncType =
+        llvm::FunctionType::get(llReturnType, llArgTypes, false);
+
+    llvm::Function *llCWrapper =
+        llvm::Function::Create(llFuncType,
+                               llvm::Function::InternalLinkage,
+                               "clay_cwrapper_" + callableName,
+                               llvmModule);
+
+    entry->llvmCWrapper = llCWrapper;
+
+    llvm::BasicBlock *llBlock =
+        llvm::BasicBlock::Create(llvm::getGlobalContext(),
+                                 "body",
+                                 llCWrapper);
+    llvm::IRBuilder<> llBuilder(llBlock);
+
+    vector<llvm::Value *> innerArgs;
+    llvm::Function::arg_iterator ai = llCWrapper->arg_begin();
+    for (unsigned i = 0; i < llArgTypes.size(); ++i, ++ai) {
+        llvm::Argument *llArg = &(*ai);
+        llvm::Value *llv = llBuilder.CreateAlloca(llArgTypes[i]);
+        llBuilder.CreateStore(llArg, llv);
+        innerArgs.push_back(llv);
+    }
+
+    if (!returnType) {
+        llBuilder.CreateCall(entry->llvmFunc,
+                             innerArgs.begin(), innerArgs.end());
+        llBuilder.CreateRetVoid();
+    }
+    else {
+        llvm::Value *llRetVal = llBuilder.CreateAlloca(llvmType(returnType));
+        innerArgs.push_back(llRetVal);
+        llBuilder.CreateCall(entry->llvmFunc,
+                             innerArgs.begin(), innerArgs.end());
+        llvm::Value *llRet = llBuilder.CreateLoad(llRetVal);
+        llBuilder.CreateRet(llRet);
+    }
+}
+
+
+
+//
+// codegenCallInlined
+//
+
+void codegenCallInlined(InvokeEntryPtr entry,
+                        const vector<ExprPtr> &args,
+                        EnvPtr env,
+                        CodegenContextPtr ctx,
+                        MultiCValuePtr out)
+{
+    assert(entry->inlined);
+    if (entry->hasVarArgs)
+        assert(args.size() >= entry->fixedArgNames.size());
+    else
+        assert(args.size() == entry->fixedArgNames.size());
+
+    EnvPtr bodyEnv = new Env(entry->env);
+
+    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+        ExprPtr expr = new ForeignExpr(env, args[i]);
+        addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+    }
+
+    if (entry->hasVarArgs) {
+        MultiExprPtr varArgs = new MultiExpr();
+        for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
+            ExprPtr expr = new ForeignExpr(env, args[i]);
+            varArgs->add(expr);
+        }
+        addLocal(bodyEnv, new Identifier("varArgs"), varArgs.ptr());
+    }
+
+    MultiPValuePtr mpv = analyzeCallInlined(entry, args, env);
+    assert(mpv->size() == out->size());
+
+    const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+    if (!returnSpecs.empty()) {
+        assert(returnSpecs.size() == mpv->size());
+    }
+
+    vector<CReturn> returns;
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        PValuePtr pv = mpv->values[i];
+        if (pv->isTemp) {
+            CValuePtr cv = out->values[i];
+            assert(cv->type == pv->type);
+            returns.push_back(CReturn(false, pv->type, cv));
+            if (!returnSpecs.empty() && returnSpecs[i]->name.ptr()) {
+                addLocal(bodyEnv, returnSpecs[i]->name, cv.ptr());
+            }
+        }
+        else {
+            CValuePtr cvPtr = out->values[i];
+            assert(cvPtr->type == pointerType(pv->type));
+            returns.push_back(CReturn(true, pv->type, cvPtr));
+        }
+    }
+
+    llvm::BasicBlock *returnBlock = newBasicBlock("return");
+
+    JumpTarget returnTarget(returnBlock, cgMarkStack());
+    CodegenContextPtr bodyCtx = new CodegenContext(returns, returnTarget);
+
+    bool terminated = codegenStatement(entry->code->body, bodyEnv, bodyCtx);
+    if (!terminated) {
+        cgDestroyStack(returnTarget.stackMarker, bodyCtx);
+        llvmBuilder->CreateBr(returnBlock);
+    }
+    cgPopStack(returnTarget.stackMarker);
+
+    llvmBuilder->SetInsertPoint(returnBlock);
 }

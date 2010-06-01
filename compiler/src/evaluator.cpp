@@ -1080,7 +1080,7 @@ void evalFieldRefExpr(ExprPtr base,
         }
     }
     if (allTempStatics) {
-        // takes care of type constructors
+        // takes care of module member access
         return;
     }
     vector<ExprPtr> args2;
@@ -1102,8 +1102,6 @@ void evalCallExpr(ExprPtr callable,
 {
     PValuePtr pv = analyzeOne(callable, env);
     assert(pv.ptr());
-    MultiPValuePtr mpv = analyzeMulti(args, env);
-    assert(mpv.ptr());
 
     switch (pv->type->typeKind) {
     case CODE_POINTER_TYPE :
@@ -1131,6 +1129,8 @@ void evalCallExpr(ExprPtr callable,
     case TYPE :
     case RECORD :
     case PROCEDURE : {
+        MultiPValuePtr mpv = analyzeMulti(args, env);
+        assert(mpv.ptr());
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
@@ -1282,9 +1282,6 @@ void evalCallInlined(InvokeEntryPtr entry,
                      MultiEValuePtr out)
 {
     assert(entry->inlined);
-
-    CodePtr code = entry->code;
-
     if (entry->hasVarArgs)
         assert(args.size() >= entry->fixedArgNames.size());
     else
