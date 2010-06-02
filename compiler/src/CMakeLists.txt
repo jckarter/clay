@@ -7,8 +7,13 @@ set(SOURCES
     desugar.cpp             literals.cpp            printer.cpp
     env.cpp                 llvm.cpp                types.cpp
 )
-set_source_files_properties(${SOURCES} PROPERTIES COMPILE_FLAGS 
-    ${LLVM_CXXFLAGS})
+
 add_executable(clay ${SOURCES})
 set_target_properties(clay PROPERTIES LINK_FLAGS ${LLVM_LDFLAGS})
+set_target_properties(clay PROPERTIES COMPILE_FLAGS 
+    ${LLVM_CXXFLAGS})
 target_link_libraries(clay ${LLVM_LIBS})
+
+install(TARGETS clay
+    RUNTIME DESTINATION bin
+)
