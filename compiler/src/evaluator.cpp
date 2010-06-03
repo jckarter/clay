@@ -402,7 +402,8 @@ void evalValueDestroy(EValuePtr dest)
 void evalValueCopy(EValuePtr dest, EValuePtr src)
 {
     if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
-        memcpy(dest->addr, src->addr, typeSize(dest->type));
+        if (dest->type->typeKind != STATIC_TYPE)
+            memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
     }
     evalCallValue(staticEValue(dest->type.ptr()),
@@ -413,7 +414,8 @@ void evalValueCopy(EValuePtr dest, EValuePtr src)
 void evalValueAssign(EValuePtr dest, EValuePtr src)
 {
     if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
-        memcpy(dest->addr, src->addr, typeSize(dest->type));
+        if (dest->type->typeKind != STATIC_TYPE)
+            memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
     }
     MultiEValuePtr args = new MultiEValue(dest);

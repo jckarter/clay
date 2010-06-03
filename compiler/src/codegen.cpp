@@ -188,8 +188,10 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 {
     if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
-        llvm::Value *v = llvmBuilder->CreateLoad(src->llValue);
-        llvmBuilder->CreateStore(v, dest->llValue);
+        if (dest->type->typeKind != STATIC_TYPE) {
+            llvm::Value *v = llvmBuilder->CreateLoad(src->llValue);
+            llvmBuilder->CreateStore(v, dest->llValue);
+        }
         return;
     }
     codegenCallValue(staticCValue(dest->type.ptr()),
@@ -201,8 +203,10 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 {
     if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
-        llvm::Value *v = llvmBuilder->CreateLoad(src->llValue);
-        llvmBuilder->CreateStore(v, dest->llValue);
+        if (dest->type->typeKind != STATIC_TYPE) {
+            llvm::Value *v = llvmBuilder->CreateLoad(src->llValue);
+            llvmBuilder->CreateStore(v, dest->llValue);
+        }
         return;
     }
     MultiCValuePtr args = new MultiCValue(dest);
