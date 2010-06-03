@@ -2057,3 +2057,702 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
 
     }
 }
+
+
+
+//
+// codegenPrimOpExpr
+//
+
+void codegenPrimOpExpr(PrimOpPtr x,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env,
+                       CodegenContextPtr ctx,
+                       MultiCValuePtr out)
+{
+    switch (x->primOpCode) {
+
+    case PRIM_array :
+    case PRIM_tuple : {
+        MultiPValuePtr mpv = analyzePrimOpExpr(x, args, env);
+        assert(mpv->size() == 1);
+        TypePtr t = mpv->values[0]->type;
+        ExprPtr callable = new ObjectExpr(t.ptr());
+        codegenCallExpr(callable, args, env, ctx, out);
+        break;
+    }
+
+    default :
+        MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
+        codegenPrimOp(x, mcv, ctx, out);
+        break;
+
+    }
+}
+
+
+
+//
+// valueToStatic, valueToStaticSizeT
+// valueToType, valueToNumericType, valueToIntegerType,
+// valueToPointerLikeType, valueToTupleType, valueToRecordType,
+// valueToEnumType, valueToIdentifier
+//
+
+static ObjectPtr valueToStatic(CValuePtr cv)
+{
+    if (cv->type->typeKind != STATIC_TYPE)
+        return NULL;
+    StaticType *st = (StaticType *)cv->type.ptr();
+    return st->obj;
+}
+
+static ObjectPtr valueToStatic(MultiCValuePtr args, unsigned index)
+{
+    ObjectPtr obj = valueToStatic(args->values[index]);
+    if (!obj)
+        argumentError(index, "expecting a static value");
+    return obj;
+}
+
+static size_t valueToStaticSizeT(MultiCValuePtr args, unsigned index)
+{
+    ObjectPtr obj = valueToStatic(args->values[index]);
+    if (!obj || (obj->objKind != VALUE_HOLDER))
+        argumentError(index, "expecting a static SizeT value");
+    ValueHolder *vh = (ValueHolder *)obj.ptr();
+    if (vh->type != cSizeTType)
+        argumentError(index, "expecting a static SizeT value");
+    return *((size_t *)vh->buf);
+}
+
+static TypePtr valueToType(MultiCValuePtr args, unsigned index)
+{
+    ObjectPtr obj = valueToStatic(args->values[index]);
+    if (!obj || (obj->objKind != TYPE))
+        argumentError(index, "expecting a type");
+    return (Type *)obj.ptr();
+}
+
+static TypePtr valueToNumericType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    switch (t->typeKind) {
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+        return t;
+    default :
+        argumentError(index, "expecting a numeric type");
+        return NULL;
+    }
+}
+
+static IntegerTypePtr valueToIntegerType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != INTEGER_TYPE)
+        argumentError(index, "expecting an integer type");
+    return (IntegerType *)t.ptr();
+}
+
+static TypePtr valueToPointerLikeType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    switch (t->typeKind) {
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+        break;
+    default :
+        argumentError(index, "expecting a pointer or code-pointer type");
+    }
+    return t;
+}
+
+static TupleTypePtr valueToTupleType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != TUPLE_TYPE)
+        argumentError(index, "expecting a tuple type");
+    return (TupleType *)t.ptr();
+}
+
+static RecordTypePtr valueToRecordType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != RECORD_TYPE)
+        argumentError(index, "expecting a tuple type");
+    return (RecordType *)t.ptr();
+}
+
+static EnumTypePtr valueToEnumType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != ENUM_TYPE)
+        argumentError(index, "expecting a tuple type");
+    return (EnumType *)t.ptr();
+}
+
+static IdentifierPtr valueToIdentifier(MultiCValuePtr args, unsigned index)
+{
+    ObjectPtr obj = valueToStatic(args->values[index]);
+    if (!obj || (obj->objKind != IDENTIFIER))
+        argumentError(index, "expecting identifier value");
+    return (Identifier *)obj.ptr();
+}
+
+
+
+//
+// numericValue, integerValue, pointerValue, pointerLikeValue,
+// arrayValue, tupleValue, recordValue, enumValue
+//
+
+static llvm::Value *numericValue(MultiCValuePtr args, unsigned index,
+                                 TypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != type)
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        switch (cv->type->typeKind) {
+        case INTEGER_TYPE :
+        case FLOAT_TYPE :
+            break;
+        default :
+            argumentError(index, "expecting value of numeric type");
+        }
+        type = cv->type;
+    }
+    return llvmBuilder->CreateLoad(cv->llValue);
+}
+
+static llvm::Value *integerValue(MultiCValuePtr args, unsigned index,
+                                 IntegerTypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (cv->type->typeKind != INTEGER_TYPE)
+            argumentError(index, "expecting value of integer type");
+        type = (IntegerType *)cv->type.ptr();
+    }
+    return llvmBuilder->CreateLoad(cv->llValue);
+}
+
+static llvm::Value *pointerValue(MultiCValuePtr args, unsigned index,
+                                 PointerTypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (cv->type->typeKind != POINTER_TYPE)
+            argumentError(index, "expecting value of pointer type");
+        type = (PointerType *)cv->type.ptr();
+    }
+    return llvmBuilder->CreateLoad(cv->llValue);
+}
+
+static llvm::Value *pointerLikeValue(MultiCValuePtr args, unsigned index,
+                                     TypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != type)
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        switch (cv->type->typeKind) {
+        case POINTER_TYPE :
+        case CODE_POINTER_TYPE :
+        case CCODE_POINTER_TYPE :
+            break;
+        default :
+            argumentError(index, "expecting a value of "
+                          "pointer or code-pointer type");
+        }
+        type = cv->type;
+    }
+    return llvmBuilder->CreateLoad(cv->llValue);
+}
+
+static llvm::Value *arrayValue(MultiCValuePtr args, unsigned index,
+                               ArrayTypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (cv->type->typeKind != ARRAY_TYPE)
+            argumentError(index, "expecting a value of array type");
+        type = (ArrayType *)cv->type.ptr();
+    }
+    return cv->llValue;
+}
+
+static llvm::Value *tupleValue(MultiCValuePtr args, unsigned index,
+                               TupleTypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (cv->type->typeKind != TUPLE_TYPE)
+            argumentError(index, "expecting a value of tuple type");
+        type = (TupleType *)cv->type.ptr();
+    }
+    return cv->llValue;
+}
+
+static llvm::Value *recordValue(MultiCValuePtr args, unsigned index,
+                                RecordTypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (cv->type->typeKind != RECORD_TYPE)
+            argumentError(index, "expecting a value of record type");
+        type = (RecordType *)cv->type.ptr();
+    }
+    return cv->llValue;
+}
+
+static llvm::Value *enumValue(MultiCValuePtr args, unsigned index,
+                              EnumTypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (cv->type->typeKind != ENUM_TYPE)
+            argumentError(index, "expecting a value of enum type");
+        type = (EnumType *)cv->type.ptr();
+    }
+    return llvmBuilder->CreateLoad(cv->llValue);
+}
+
+
+
+//
+// codegenPrimOp
+//
+
+void codegenPrimOp(PrimOpPtr x,
+                   MultiCValuePtr args,
+                   CodegenContextPtr ctx,
+                   MultiCValuePtr out)
+{
+    switch (x->primOpCode) {
+
+    case PRIM_TypeP : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        bool isType = (obj.ptr() && (obj->objKind == TYPE));
+        ValueHolderPtr vh = boolToValueHolder(isType);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_TypeSize : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(typeSize(t));
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_primitiveCopy : {
+        ensureArity(args, 2);
+        CValuePtr cv0 = args->values[0];
+        CValuePtr cv1 = args->values[1];
+        if (!isPrimitiveType(cv0->type))
+            argumentError(0, "expecting a value of primitive type");
+        if (cv0->type != cv1->type)
+            argumentError(1, "argument type mismatch");
+        llvm::Value *v = llvmBuilder->CreateLoad(cv1->llValue);
+        llvmBuilder->CreateStore(v, cv0->llValue);
+        assert(out->size() == 0);
+        break;
+    }
+
+    case PRIM_boolNot : {
+        ensureArity(args, 1);
+        CValuePtr cv = args->values[0];
+        if (cv->type != boolType)
+            argumentError(0, "expecting a value of bool type");
+        assert(out->size() == 1);
+        llvm::Value *v = llvmBuilder->CreateLoad(cv->llValue);
+        llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
+        llvm::Value *flag = llvmBuilder->CreateICmpEQ(v, zero);
+        llvm::Value *v2 = llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        llvmBuilder->CreateStore(v2, out0->llValue);
+        break;
+    }
+
+    case PRIM_numericEqualsP : {
+        ensureArity(args, 2);
+        TypePtr t;
+        llvm::Value *v0 = numericValue(args, 0, t);
+        llvm::Value *v1 = numericValue(args, 1, t);
+        llvm::Value *flag;
+        switch (t->typeKind) {
+        case INTEGER_TYPE :
+            flag = llvmBuilder->CreateICmpEQ(v0, v1);
+            break;
+        case FLOAT_TYPE :
+            flag = llvmBuilder->CreateFCmpUEQ(v0, v1);
+            break;
+        default :
+            assert(false);
+        }
+        llvm::Value *result =
+            llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_numericLesserP : {
+        ensureArity(args, 2);
+        TypePtr t;
+        llvm::Value *v0 = numericValue(args, 0, t);
+        llvm::Value *v1 = numericValue(args, 1, t);
+        llvm::Value *flag;
+        switch (t->typeKind) {
+        case INTEGER_TYPE : {
+            IntegerType *it = (IntegerType *)t.ptr();
+            if (it->isSigned)
+                flag = llvmBuilder->CreateICmpSLT(v0, v1);
+            else
+                flag = llvmBuilder->CreateICmpULT(v0, v1);
+            break;
+        }
+        case FLOAT_TYPE :
+            flag = llvmBuilder->CreateFCmpULT(v0, v1);
+            break;
+        default :
+            assert(false);
+        }
+        llvm::Value *result =
+            llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_numericAdd : {
+        ensureArity(args, 2);
+        TypePtr t;
+        llvm::Value *v0 = numericValue(args, 0, t);
+        llvm::Value *v1 = numericValue(args, 1, t);
+        llvm::Value *result;
+        switch (t->typeKind) {
+        case INTEGER_TYPE :
+            result = llvmBuilder->CreateAdd(v0, v1);
+            break;
+        case FLOAT_TYPE :
+            result = llvmBuilder->CreateFAdd(v0, v1);
+            break;
+        default :
+            assert(false);
+        }
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_numericSubtract : {
+        ensureArity(args, 2);
+        TypePtr t;
+        llvm::Value *v0 = numericValue(args, 0, t);
+        llvm::Value *v1 = numericValue(args, 1, t);
+        llvm::Value *result;
+        switch (t->typeKind) {
+        case INTEGER_TYPE :
+            result = llvmBuilder->CreateSub(v0, v1);
+            break;
+        case FLOAT_TYPE :
+            result = llvmBuilder->CreateFSub(v0, v1);
+            break;
+        default :
+            assert(false);
+        }
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_numericMultiply : {
+        ensureArity(args, 2);
+        TypePtr t;
+        llvm::Value *v0 = numericValue(args, 0, t);
+        llvm::Value *v1 = numericValue(args, 1, t);
+        llvm::Value *result;
+        switch (t->typeKind) {
+        case INTEGER_TYPE :
+            result = llvmBuilder->CreateMul(v0, v1);
+            break;
+        case FLOAT_TYPE :
+            result = llvmBuilder->CreateFMul(v0, v1);
+            break;
+        default :
+            assert(false);
+        }
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_numericDivide : {
+        ensureArity(args, 2);
+        TypePtr t;
+        llvm::Value *v0 = numericValue(args, 0, t);
+        llvm::Value *v1 = numericValue(args, 1, t);
+        llvm::Value *result;
+        switch (t->typeKind) {
+        case INTEGER_TYPE : {
+            IntegerType *it = (IntegerType *)t.ptr();
+            if (it->isSigned)
+                result = llvmBuilder->CreateSDiv(v0, v1);
+            else
+                result = llvmBuilder->CreateUDiv(v0, v1);
+            break;
+        }
+        case FLOAT_TYPE :
+            result = llvmBuilder->CreateFDiv(v0, v1);
+            break;
+        default :
+            assert(false);
+        }
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_numericNegate : {
+        ensureArity(args, 1);
+        TypePtr t;
+        llvm::Value *v = numericValue(args, 0, t);
+        llvm::Value *result;
+        switch (t->typeKind) {
+        case INTEGER_TYPE :
+            result = llvmBuilder->CreateNeg(v);
+            break;
+        case FLOAT_TYPE :
+            result = llvmBuilder->CreateFNeg(v);
+            break;
+        default :
+            assert(false);
+        }
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_integerRemainder : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        llvm::Value *v0 = integerValue(args, 0, t);
+        llvm::Value *v1 = integerValue(args, 1, t);
+        llvm::Value *result;
+        IntegerType *it = (IntegerType *)t.ptr();
+        if (it->isSigned)
+            result = llvmBuilder->CreateSRem(v0, v1);
+        else
+            result = llvmBuilder->CreateURem(v0, v1);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_integerShiftLeft : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        llvm::Value *v0 = integerValue(args, 0, t);
+        llvm::Value *v1 = integerValue(args, 1, t);
+        llvm::Value *result = llvmBuilder->CreateShl(v0, v1);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_integerShiftRight : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        llvm::Value *v0 = integerValue(args, 0, t);
+        llvm::Value *v1 = integerValue(args, 1, t);
+        llvm::Value *result;
+        if (t->isSigned)
+            result = llvmBuilder->CreateAShr(v0, v1);
+        else
+            result = llvmBuilder->CreateLShr(v0, v1);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_integerBitwiseAnd : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        llvm::Value *v0 = integerValue(args, 0, t);
+        llvm::Value *v1 = integerValue(args, 1, t);
+        llvm::Value *result = llvmBuilder->CreateAnd(v0, v1);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_integerBitwiseOr : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        llvm::Value *v0 = integerValue(args, 0, t);
+        llvm::Value *v1 = integerValue(args, 1, t);
+        llvm::Value *result = llvmBuilder->CreateOr(v0, v1);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_integerBitwiseXor : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        llvm::Value *v0 = integerValue(args, 0, t);
+        llvm::Value *v1 = integerValue(args, 1, t);
+        llvm::Value *result = llvmBuilder->CreateXor(v0, v1);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_integerBitwiseNot : {
+        ensureArity(args, 1);
+        IntegerTypePtr t;
+        llvm::Value *v = integerValue(args, 0, t);
+        llvm::Value *result = llvmBuilder->CreateNot(v);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_numericConvert : {
+        ensureArity(args, 2);
+        TypePtr dest = valueToNumericType(args, 0);
+        TypePtr src;
+        llvm::Value *v = numericValue(args, 1, src);
+        llvm::Value *result;
+        if (src == dest) {
+            result = v;
+        }
+        else {
+            switch (dest->typeKind) {
+            case INTEGER_TYPE : {
+                IntegerType *dest2 = (IntegerType *)dest.ptr();
+                if (src->typeKind == INTEGER_TYPE) {
+                    IntegerType *src2 = (IntegerType *)src.ptr();
+                    if (dest2->bits < src2->bits)
+                        result = llvmBuilder->CreateTrunc(v, llvmType(dest));
+                    else if (src2->isSigned)
+                        result = llvmBuilder->CreateSExt(v, llvmType(dest));
+                    else
+                        result = llvmBuilder->CreateZExt(v, llvmType(dest));
+                }
+                else if (src->typeKind == FLOAT_TYPE) {
+                    if (dest2->isSigned)
+                        result = llvmBuilder->CreateFPToSI(v, llvmType(dest));
+                    else
+                        result = llvmBuilder->CreateFPToUI(v, llvmType(dest));
+                }
+                else {
+                    assert(false);
+                    result = NULL;
+                }
+                break;
+            }
+            case FLOAT_TYPE : {
+                FloatType *dest2 = (FloatType *)dest.ptr();
+                if (src->typeKind == INTEGER_TYPE) {
+                    IntegerType *src2 = (IntegerType *)src.ptr();
+                    if (src2->isSigned)
+                        result = llvmBuilder->CreateSIToFP(v, llvmType(dest));
+                    else
+                        result = llvmBuilder->CreateUIToFP(v, llvmType(dest));
+                }
+                else if (src->typeKind == FLOAT_TYPE) {
+                    FloatType *src2 = (FloatType *)src.ptr();
+                    if (dest2->bits < src2->bits)
+                        result = llvmBuilder->CreateFPTrunc(v, llvmType(dest));
+                    else
+                        result = llvmBuilder->CreateFPExt(v, llvmType(dest));
+                }
+                else {
+                    assert(false);
+                    result = NULL;
+                }
+                break;
+            }
+            default :
+                assert(false);
+                result = NULL;
+                break;
+            }
+        }
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == dest);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    default :
+        assert(false);
+        break;
+
+    }
+}

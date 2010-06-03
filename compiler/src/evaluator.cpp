@@ -1832,17 +1832,17 @@ static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
 }
 
 static EValuePtr integerValue(MultiEValuePtr args, unsigned index,
-                              TypePtr &type)
+                              IntegerTypePtr &type)
 {
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
-        if (ev->type != type)
+        if (ev->type != type.ptr())
             argumentError(index, "argument type mismatch");
     }
     else {
         if (ev->type->typeKind != INTEGER_TYPE)
             argumentError(index, "expecting value of integer type");
-        type = ev->type;
+        type = (IntegerType *)ev->type.ptr();
     }
     return ev;
 }
@@ -2542,83 +2542,83 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_integerRemainder : {
         ensureArity(args, 2);
-        TypePtr t;
+        IntegerTypePtr t;
         EValuePtr ev0 = integerValue(args, 0, t);
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         binaryIntegerOp<Op_integerRemainder>(ev0, ev1, out0);
         break;
     }
 
     case PRIM_integerShiftLeft : {
         ensureArity(args, 2);
-        TypePtr t;
+        IntegerTypePtr t;
         EValuePtr ev0 = integerValue(args, 0, t);
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         binaryIntegerOp<Op_integerShiftLeft>(ev0, ev1, out0);
         break;
     }
 
     case PRIM_integerShiftRight : {
         ensureArity(args, 2);
-        TypePtr t;
+        IntegerTypePtr t;
         EValuePtr ev0 = integerValue(args, 0, t);
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         binaryIntegerOp<Op_integerShiftRight>(ev0, ev1, out0);
         break;
     }
 
     case PRIM_integerBitwiseAnd : {
         ensureArity(args, 2);
-        TypePtr t;
+        IntegerTypePtr t;
         EValuePtr ev0 = integerValue(args, 0, t);
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         binaryIntegerOp<Op_integerBitwiseAnd>(ev0, ev1, out0);
         break;
     }
 
     case PRIM_integerBitwiseOr : {
         ensureArity(args, 2);
-        TypePtr t;
+        IntegerTypePtr t;
         EValuePtr ev0 = integerValue(args, 0, t);
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         binaryIntegerOp<Op_integerBitwiseOr>(ev0, ev1, out0);
         break;
     }
 
     case PRIM_integerBitwiseXor : {
         ensureArity(args, 2);
-        TypePtr t;
+        IntegerTypePtr t;
         EValuePtr ev0 = integerValue(args, 0, t);
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         binaryIntegerOp<Op_integerBitwiseXor>(ev0, ev1, out0);
         break;
     }
 
     case PRIM_integerBitwiseNot : {
         ensureArity(args, 1);
-        TypePtr t;
+        IntegerTypePtr t;
         EValuePtr ev = integerValue(args, 0, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         unaryIntegerOp<Op_integerBitwiseNot>(ev, out0);
         break;
     }
@@ -2689,7 +2689,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         PointerTypePtr t;
         EValuePtr v0 = pointerValue(args, 0, t);
-        TypePtr offsetT;
+        IntegerTypePtr offsetT;
         EValuePtr v1 = integerValue(args, 1, offsetT);
         ptrdiff_t offset = op_intToPtrInt(v1);
         char *ptr = *((char **)v0->addr);
@@ -2718,7 +2718,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         TypePtr pointeeType = valueToType(args, 0);
         TypePtr dest = pointerType(pointeeType);
-        TypePtr t;
+        IntegerTypePtr t;
         EValuePtr ev = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
@@ -2911,7 +2911,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         ArrayTypePtr at;
         EValuePtr earray = arrayValue(args, 0, at);
-        TypePtr indexType;
+        IntegerTypePtr indexType;
         EValuePtr iv = integerValue(args, 1, indexType);
         ptrdiff_t i = op_intToPtrInt(iv);
         char *ptr = earray->addr + i*typeSize(at->elementType);
@@ -3128,7 +3128,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_intToEnum : {
         ensureArity(args, 2);
         EnumTypePtr et = valueToEnumType(args, 0);
-        TypePtr it = cIntType;
+        IntegerTypePtr it = (IntegerType *)cIntType.ptr();
         EValuePtr ev = integerValue(args, 1, it);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
