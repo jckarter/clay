@@ -1,11 +1,24 @@
-set(SOURCES 
-    analyzer.cpp            error.cpp               loader.cpp
-    analyzer2.cpp           evaluator.cpp           main.cpp
-    clone.cpp               invoketables.cpp        matchinvoke.cpp
-    codegen.cpp             lambdas.cpp             parser.cpp
-    constructors.cpp        lexer.cpp               patterns.cpp
-    desugar.cpp             literals.cpp            printer.cpp
-    env.cpp                 llvm.cpp                types.cpp
+set(SOURCES
+    analyzer.cpp
+    clone.cpp
+    codegen.cpp
+    constructors.cpp
+    desugar.cpp
+    env.cpp
+    error.cpp
+    evaluator.cpp
+    invoketables.cpp
+    lambdas.cpp
+    lexer.cpp
+    literals.cpp
+    llvm.cpp
+    loader.cpp
+    main.cpp
+    matchinvoke.cpp
+    parser.cpp
+    patterns.cpp
+    printer.cpp
+    types.cpp
 )
 
 add_executable(clay ${SOURCES})
