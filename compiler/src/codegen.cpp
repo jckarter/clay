@@ -1690,7 +1690,7 @@ void codegenCallInlined(InvokeEntryPtr entry,
             ExprPtr expr = new ForeignExpr(env, args[i]);
             varArgs->add(expr);
         }
-        addLocal(bodyEnv, new Identifier("varArgs"), varArgs.ptr());
+        addLocal(bodyEnv, new Identifier("%varArgs"), varArgs.ptr());
     }
 
     MultiPValuePtr mpv = analyzeCallInlined(entry, args, env);
