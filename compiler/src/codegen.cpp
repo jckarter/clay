@@ -1184,23 +1184,19 @@ void codegenFieldRefExpr(ExprPtr base,
                          CodegenContextPtr ctx,
                          MultiCValuePtr out)
 {
-    MultiPValuePtr mpv = analyzeFieldRefExpr(base, name, env);
-    assert(mpv.ptr());
-    assert(mpv->size() == out->size());
-    bool allTempStatics = true;
-    for (unsigned i = 0; i < mpv->size(); ++i) {
-        PValuePtr pv = mpv->values[i];
-        if (pv->isTemp)
-            assert(out->values[i]->type == pv->type);
-        else
-            assert(out->values[i]->type == pointerType(pv->type));
-        if ((pv->type->typeKind != STATIC_TYPE) || !pv->isTemp) {
-            allTempStatics = false;
+    PValuePtr pv = analyzeOne(base, env);
+    assert(pv.ptr());
+    if (pv->type->typeKind == STATIC_TYPE) {
+        StaticType *st = (StaticType *)pv->type.ptr();
+        ObjectPtr obj = st->obj;
+        if (obj->objKind == MODULE_HOLDER) {
+            ModuleHolderPtr y = (ModuleHolder *)obj.ptr();
+            ObjectPtr z = lookupModuleMember(y, name);
+            codegenStaticObject(z, ctx, out);
+            return;
         }
-    }
-    if (allTempStatics) {
-        // takes care of module member access
-        return;
+        if (obj->objKind != VALUE_HOLDER)
+            error("invalid field access");
     }
     vector<ExprPtr> args2;
     args2.push_back(base);
