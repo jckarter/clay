@@ -2330,11 +2330,16 @@ struct CodegenContext : public Object {
     map<string, JumpTarget> labels;
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
+    llvm::BasicBlock *catchBlock;
+	llvm::BasicBlock *unwindBlock;
+    llvm::Value *exception;
+	int tryBlockStackMarker;
 
     CodegenContext(const vector<CReturn> &returns,
                    const JumpTarget &returnTarget)
         : Object(DONT_CARE),
-          returns(returns), returnTarget(returnTarget) {}
+          returns(returns), returnTarget(returnTarget),
+          catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}
 };
 
 typedef Pointer<CodegenContext> CodegenContextPtr;

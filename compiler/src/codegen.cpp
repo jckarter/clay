@@ -119,9 +119,6 @@ void codegenPrimOp(PrimOpPtr x,
                    MultiCValuePtr out);
 
 
-static vector<CValuePtr> stackCValues;
-
-
 
 //
 // utility procs
@@ -144,19 +141,6 @@ static CValuePtr derefValue(CValuePtr cvPtr)
     PointerType *pt = (PointerType *)cvPtr->type.ptr();
     llvm::Value *ptrValue = llvmBuilder->CreateLoad(cvPtr->llValue);
     return new CValue(pt->pointeeType, ptrValue);
-}
-
-
-
-//
-// exception support
-//
-
-static bool exceptionsEnabled = true;
-
-void setExceptionsEnabled(bool enabled)
-{
-    exceptionsEnabled = enabled;
 }
 
 
@@ -233,34 +217,44 @@ llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx)
 // codegen temps
 //
 
+struct StackEntry {
+    CValuePtr cv;
+    llvm::BasicBlock *landingPad;
+    llvm::BasicBlock *destructor;
+    StackEntry(CValuePtr cv)
+        : cv(cv), landingPad(NULL), destructor(NULL) {}
+};
+
+static vector<StackEntry> valueStack;
+
 int cgMarkStack()
 {
-    return stackCValues.size();
+    return valueStack.size();
 }
 
 void cgDestroyStack(int marker, CodegenContextPtr ctx)
 {
-    int i = (int)stackCValues.size();
+    int i = (int)valueStack.size();
     assert(marker <= i);
     while (marker < i) {
         --i;
-        codegenValueDestroy(stackCValues[i], ctx);
+        codegenValueDestroy(valueStack[i].cv, ctx);
     }
 }
 
 void cgPopStack(int marker)
 {
-    assert(marker <= (int)stackCValues.size());
-    while (marker < (int)stackCValues.size())
-        stackCValues.pop_back();
+    assert(marker <= (int)valueStack.size());
+    while (marker < (int)valueStack.size())
+        valueStack.pop_back();
 }
 
 void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx)
 {
-    assert(marker <= (int)stackCValues.size());
-    while (marker < (int)stackCValues.size()) {
-        codegenValueDestroy(stackCValues.back(), ctx);
-        stackCValues.pop_back();
+    assert(marker <= (int)valueStack.size());
+    while (marker < (int)valueStack.size()) {
+        codegenValueDestroy(valueStack.back().cv, ctx);
+        valueStack.pop_back();
     }
 }
 
@@ -269,8 +263,155 @@ CValuePtr codegenAllocValue(TypePtr t)
     const llvm::Type *llt = llvmType(t);
     llvm::Value *llval = llvmInitBuilder->CreateAlloca(llt);
     CValuePtr cv = new CValue(t, llval);
-    stackCValues.push_back(cv);
+    valueStack.push_back(StackEntry(cv));
     return cv;
+}
+
+
+
+//
+// exception support
+//
+
+static bool exceptionsEnabled = true;
+static bool llvmExceptionsInited = false;
+
+void setExceptionsEnabled(bool enabled)
+{
+    exceptionsEnabled = enabled;
+}
+
+static void initExceptions() 
+{
+    getDeclaration(llvmModule, llvm::Intrinsic::eh_selector);
+    getDeclaration(llvmModule, llvm::Intrinsic::eh_exception);
+    
+    llvm::FunctionType *llFunc1Type =
+        llvm::FunctionType::get(llvmIntType(32), true);
+    
+    llvm::Function::Create(llFunc1Type,
+                           llvm::Function::ExternalLinkage,
+                           "__gxx_personality_v0",
+                           llvmModule);
+                            
+    vector<const llvm::Type *> argTypes;
+    argTypes.push_back(llvmBuilder->getInt8Ty()->getPointerTo());
+
+    llvm::FunctionType *llFunc2Type = 
+        llvm::FunctionType::get(llvmVoidType(), argTypes, false);
+    llvm::Function::Create(llFunc2Type,
+                           llvm::Function::ExternalLinkage,
+                           "_Unwind_Resume_or_Rethrow",
+                           llvmModule);
+    
+    llvmExceptionsInited = true;    
+}
+
+static llvm::BasicBlock *createLandingPad(CodegenContextPtr ctx) 
+{
+    llvm::BasicBlock *lpad = newBasicBlock("lpad");
+    llvmBuilder->SetInsertPoint(lpad);
+    llvm::Function *ehException = llvmModule->getFunction("llvm.eh.exception");
+    llvm::Function *ehSelector = llvmModule->getFunction("llvm.eh.selector");
+    llvm::Function *personality = 
+        llvmModule->getFunction("__gxx_personality_v0");
+    llvm::Value *ehPtr = llvmBuilder->CreateCall(ehException);
+    llvmBuilder->CreateStore(ehPtr, ctx->exception);
+    llvm::Value* funcPtr = llvmBuilder->CreateBitCast(personality,
+                                    llvmBuilder->getInt8Ty()->getPointerTo());
+    std::vector<llvm::Value*> llArgs;
+    llArgs.push_back(ehPtr);
+    llArgs.push_back(funcPtr);
+    llArgs.push_back(
+        llvm::Constant::getNullValue(
+            llvm::PointerType::getUnqual(
+                llvm::IntegerType::getInt8Ty(llvm::getGlobalContext()))));
+    llvmBuilder->CreateCall(ehSelector, llArgs.begin(), llArgs.end());
+    return lpad;
+}
+
+static llvm::BasicBlock *createUnwindBlock(CodegenContextPtr ctx) {
+    llvm::BasicBlock *unwindBlock = newBasicBlock("Unwind");
+    llvm::IRBuilder<> llBuilder(unwindBlock);
+    llvm::Function *unwindResume = 
+        llvmModule->getFunction("_Unwind_Resume_or_Rethrow");
+    llvm::Value *arg = llBuilder.CreateLoad(ctx->exception);
+    llBuilder.CreateCall(unwindResume, arg);
+    llBuilder.CreateUnreachable();
+    return unwindBlock;
+}
+
+static llvm::Value *createCall(llvm::Value *llCallable, 
+                               vector<llvm::Value *>::iterator argBegin,
+                               vector<llvm::Value *>::iterator argEnd,
+                               CodegenContextPtr ctx) 
+{  
+    // We don't have a context
+    assert(ctx.ptr());
+    if (!exceptionsEnabled)
+        return llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
+
+    llvm::BasicBlock *landingPad;
+
+    int startMarker = ctx->returnTarget.stackMarker;
+    int endMarker = cgMarkStack();
+
+    // If we are inside a try block then adjust marker
+    if (ctx->catchBlock)
+        startMarker = ctx->tryBlockStackMarker;
+
+    if (endMarker <= startMarker && !ctx->catchBlock)
+        return llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
+
+    llvm::BasicBlock *savedInsertPoint = llvmBuilder->GetInsertBlock();
+   
+    if (!llvmExceptionsInited) 
+       initExceptions(); 
+    if (!ctx->exception)
+        ctx->exception = llvmInitBuilder->CreateAlloca(
+                llvmBuilder->getInt8Ty()->getPointerTo());
+    
+    for (int i = startMarker; i < endMarker; ++i) {
+        if (valueStack[i].destructor)
+            continue;
+        
+        valueStack[i].destructor = newBasicBlock("destructor");
+        llvmBuilder->SetInsertPoint(valueStack[i].destructor);
+        codegenValueDestroy(valueStack[i].cv, ctx);
+        
+        if (ctx->catchBlock && ctx->tryBlockStackMarker == i)
+            llvmBuilder->CreateBr(ctx->catchBlock);
+        else if (i == ctx->returnTarget.stackMarker) {
+            if (!ctx->unwindBlock)
+                ctx->unwindBlock = createUnwindBlock(ctx);
+            llvmBuilder->CreateBr(ctx->unwindBlock);
+        }
+        else {
+            assert(valueStack[i-1].destructor);
+            llvmBuilder->CreateBr(valueStack[i-1].destructor);
+        }
+    }
+
+    // No live vars, but we were inside a try block
+    if (endMarker <= startMarker) {
+        landingPad = createLandingPad(ctx);
+        llvmBuilder->CreateBr(ctx->catchBlock);
+    }
+    else {
+        if (!valueStack[endMarker-1].landingPad) {
+            valueStack[endMarker-1].landingPad = createLandingPad(ctx);
+            llvmBuilder->CreateBr(valueStack[endMarker-1].destructor);
+        }
+        landingPad = valueStack[endMarker-1].landingPad;
+    }
+
+    llvmBuilder->SetInsertPoint(savedInsertPoint);
+    
+    llvm::BasicBlock *normalBlock = newBasicBlock("normal");
+    llvm::Value *result = llvmBuilder->CreateInvoke(llCallable, normalBlock,
+            landingPad, argBegin, argEnd);
+    llvmBuilder->SetInsertPoint(normalBlock);
+    return result;
 }
 
 
@@ -1374,7 +1515,7 @@ void codegenCallPointer(CValuePtr x,
                 assert(cv->type == t->returnTypes[i]);
             llArgs.push_back(cv->llValue);
         }
-        llvmBuilder->CreateCall(llCallable, llArgs.begin(), llArgs.end());
+        createCall(llCallable, llArgs.begin(), llArgs.end(), ctx);
         break;
     }
 
@@ -1452,7 +1593,7 @@ void codegenCallCode(InvokeEntryPtr entry,
             assert(cv->type == entry->returnTypes[i]);
         llArgs.push_back(cv->llValue);
     }
-    llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(), llArgs.end());
+    createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), ctx);
 }
 
 
@@ -1980,7 +2121,25 @@ bool codegenStatement(StatementPtr stmt,
     }
 
     case TRY : {
-        error("try statement not yet supported.");
+        Try *x = (Try *)stmt.ptr();
+
+        llvm::BasicBlock *catchBegin = newBasicBlock("catchBegin");
+        llvm::BasicBlock *savedCatchBegin = ctx->catchBlock;
+        ctx->catchBlock = catchBegin;
+        ctx->tryBlockStackMarker = cgMarkStack();
+
+        codegenStatement(x->tryBlock, env, ctx);
+        ctx->catchBlock = savedCatchBegin;
+
+        llvm::BasicBlock *catchEnd = newBasicBlock("catchEnd");
+        llvmBuilder->CreateBr(catchEnd);
+
+        llvmBuilder->SetInsertPoint(catchBegin);
+        codegenStatement(x->catchBlock, env, ctx);
+        llvmBuilder->CreateBr(catchEnd);
+
+        llvmBuilder->SetInsertPoint(catchEnd);
+
         return false;
     }
 
