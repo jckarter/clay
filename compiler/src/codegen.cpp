@@ -3002,6 +3002,252 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_Array :
+        error("Array type constructor cannot be called");
+
+    case PRIM_array : {
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type->typeKind == ARRAY_TYPE);
+        ArrayType *t = (ArrayType *)out0->type.ptr();
+        assert((int)args->size() == t->size);
+        TypePtr etype = t->elementType;
+        for (unsigned i = 0; i < args->size(); ++i) {
+            CValuePtr carg = args->values[i];
+            if (carg->type != etype)
+                argumentError(i, "array element type mismatch");
+            llvm::Value *ptr =
+                llvmBuilder->CreateConstGEP2_32(out0->llValue, 0, i);
+            CValuePtr cdest = new CValue(etype, ptr);
+            codegenValueCopy(cdest, carg, ctx);
+        }
+        break;
+    }
+
+    case PRIM_arrayRef : {
+        ensureArity(args, 2);
+        ArrayTypePtr at;
+        llvm::Value *av = arrayValue(args, 0, at);
+        IntegerTypePtr indexType;
+        llvm::Value *iv = integerValue(args, 1, indexType);
+        vector<llvm::Value *> indices;
+        indices.push_back(llvm::ConstantInt::get(llvmIntType(32), 0));
+        indices.push_back(iv);
+        llvm::Value *ptr =
+            llvmBuilder->CreateGEP(av, indices.begin(), indices.end());
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(at->elementType));
+        llvmBuilder->CreateStore(ptr, out0->llValue);
+        break;
+    }
+
+    case PRIM_TupleP : {
+        ensureArity(args, 1);
+        bool isTupleType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == TUPLE_TYPE)
+                isTupleType = true;
+        }
+        ValueHolderPtr vh = boolToValueHolder(isTupleType);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_Tuple :
+        error("Tuple type constructor cannot be called");
+
+    case PRIM_TupleElementCount : {
+        ensureArity(args, 1);
+        TupleTypePtr t = valueToTupleType(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(t->elementTypes.size());
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_TupleElementOffset : {
+        ensureArity(args, 2);
+        TupleTypePtr t = valueToTupleType(args, 0);
+        size_t i = valueToStaticSizeT(args, 1);
+        if (i >= t->elementTypes.size())
+            argumentError(1, "tuple element index out of range");
+        const llvm::StructLayout *layout = tupleTypeLayout(t.ptr());
+        ValueHolderPtr vh = sizeTToValueHolder(layout->getElementOffset(i));
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_tuple : {
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type->typeKind == TUPLE_TYPE);
+        TupleType *t = (TupleType *)out0->type.ptr();
+        assert(args->size() == t->elementTypes.size());
+        for (unsigned i = 0; i < args->size(); ++i) {
+            CValuePtr carg = args->values[i];
+            if (carg->type != t->elementTypes[i])
+                argumentError(i, "argument type mismatch");
+            llvm::Value *ptr =
+                llvmBuilder->CreateConstGEP2_32(out0->llValue, 0, i);
+            CValuePtr cdest = new CValue(t->elementTypes[i], ptr);
+            codegenValueCopy(cdest, carg, ctx);
+        }
+        break;
+    }
+
+    case PRIM_tupleRef : {
+        ensureArity(args, 2);
+        TupleTypePtr tt;
+        llvm::Value *vtuple = tupleValue(args, 0, tt);
+        size_t i = valueToStaticSizeT(args, 1);
+        if (i >= tt->elementTypes.size())
+            argumentError(1, "tuple element index out of range");
+        llvm::Value *ptr = llvmBuilder->CreateConstGEP2_32(vtuple, 0, i);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(tt->elementTypes[i]));
+        llvmBuilder->CreateStore(ptr, out0->llValue);
+        break;
+    }
+
+    case PRIM_RecordP : {
+        ensureArity(args, 1);
+        bool isRecordType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == RECORD_TYPE)
+                isRecordType = true;
+        }
+        ValueHolderPtr vh = boolToValueHolder(isRecordType);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_RecordFieldCount : {
+        ensureArity(args, 1);
+        RecordTypePtr rt = valueToRecordType(args, 0);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        ValueHolderPtr vh = sizeTToValueHolder(fieldTypes.size());
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_RecordFieldOffset : {
+        ensureArity(args, 2);
+        RecordTypePtr rt = valueToRecordType(args, 0);
+        size_t i = valueToStaticSizeT(args, 1);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        if (i >= fieldTypes.size())
+            argumentError(1, "record field index out of range");
+        const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
+        ValueHolderPtr vh = sizeTToValueHolder(layout->getElementOffset(i));
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_RecordFieldIndex : {
+        ensureArity(args, 2);
+        RecordTypePtr rt = valueToRecordType(args, 0);
+        IdentifierPtr fname = valueToIdentifier(args, 1);
+        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
+        map<string, size_t>::const_iterator fi =
+            fieldIndexMap.find(fname->str);
+        if (fi == fieldIndexMap.end())
+            argumentError(1, "field not found in record");
+        ValueHolderPtr vh = sizeTToValueHolder(fi->second);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_recordFieldRef : {
+        ensureArity(args, 2);
+        RecordTypePtr rt;
+        llvm::Value *vrec = recordValue(args, 0, rt);
+        size_t i = valueToStaticSizeT(args, 1);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        if (i >= fieldTypes.size())
+            argumentError(1, "record field index out of range");
+        llvm::Value *ptr = llvmBuilder->CreateConstGEP2_32(vrec, 0, i);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(fieldTypes[i]));
+        llvmBuilder->CreateStore(ptr, out0->llValue);
+        break;
+    }
+
+    case PRIM_recordFieldRefByName : {
+        ensureArity(args, 2);
+        RecordTypePtr rt;
+        llvm::Value *vrec = recordValue(args, 0, rt);
+        IdentifierPtr fname = valueToIdentifier(args, 1);
+        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
+        map<string,size_t>::const_iterator fi =
+            fieldIndexMap.find(fname->str);
+        if (fi == fieldIndexMap.end())
+            argumentError(1, "field not found in record");
+        size_t index = fi->second;
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::Value *ptr = llvmBuilder->CreateConstGEP2_32(vrec, 0, index);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(fieldTypes[index]));
+        llvmBuilder->CreateStore(ptr, out0->llValue);
+        break;
+    }
+
+    case PRIM_Static :
+        error("Static type constructor cannot be called");
+
+    case PRIM_StaticName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        ostringstream sout;
+        printName(sout, obj);
+        ExprPtr z = new StringLiteral(sout.str());
+        codegenExpr(z, new Env(), ctx, out);
+        break;
+    }
+
+    case PRIM_EnumP : {
+        ensureArity(args, 1);
+        bool isEnumType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == ENUM_TYPE)
+                isEnumType = true;
+        }
+        ValueHolderPtr vh = boolToValueHolder(isEnumType);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_enumToInt : {
+        ensureArity(args, 1);
+        EnumTypePtr et;
+        llvm::Value *v = enumValue(args, 0, et);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == cIntType);
+        llvmBuilder->CreateStore(v, out0->llValue);
+        break;
+    }
+
+    case PRIM_intToEnum : {
+        ensureArity(args, 2);
+        EnumTypePtr et = valueToEnumType(args, 0);
+        IntegerTypePtr it = (IntegerType *)cIntType.ptr();
+        llvm::Value *v = integerValue(args, 1, it);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == et.ptr());
+        llvmBuilder->CreateStore(v, out0->llValue);
+        break;
+    }
+
     default :
         assert(false);
         break;
