@@ -258,7 +258,7 @@ MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
     evalDestroyAndPopStack(marker);
     MultiStaticPtr ms = new MultiStatic();
     for (unsigned i = 0; i < valueHolders.size(); ++i) {
-        Type *t = (Type *)valueHolders[i]->type.ptr();
+        Type *t = valueHolders[i]->type.ptr();
         if (t->typeKind == STATIC_TYPE) {
             StaticType *st = (StaticType *)t;
             ms->add(st->obj);
@@ -383,6 +383,8 @@ static EValuePtr derefValue(EValuePtr evPtr)
 
 void evalValueInit(EValuePtr dest)
 {
+    if (isPrimitiveType(dest->type))
+        return;
     evalCallValue(staticEValue(dest->type.ptr()),
                   new MultiEValue(),
                   new MultiEValue(dest));
@@ -390,6 +392,8 @@ void evalValueInit(EValuePtr dest)
 
 void evalValueDestroy(EValuePtr dest)
 {
+    if (isPrimitiveType(dest->type))
+        return;
     evalCallValue(kernelEValue("destroy"),
                   new MultiEValue(dest),
                   new MultiEValue());
@@ -397,6 +401,10 @@ void evalValueDestroy(EValuePtr dest)
 
 void evalValueCopy(EValuePtr dest, EValuePtr src)
 {
+    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+        memcpy(dest->addr, src->addr, typeSize(dest->type));
+        return;
+    }
     evalCallValue(staticEValue(dest->type.ptr()),
                   new MultiEValue(src),
                   new MultiEValue(dest));
@@ -404,6 +412,10 @@ void evalValueCopy(EValuePtr dest, EValuePtr src)
 
 void evalValueAssign(EValuePtr dest, EValuePtr src)
 {
+    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+        memcpy(dest->addr, src->addr, typeSize(dest->type));
+        return;
+    }
     MultiEValuePtr args = new MultiEValue(dest);
     args->add(src);
     evalCallValue(kernelEValue("assign"),

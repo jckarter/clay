@@ -36,7 +36,7 @@ OBJS = \
 	analyzer.o \
 	evaluator.o \
 	codegen.o \
-# 	main.o
+	main.o
 
 $(BINDIR)clay : $(OBJS)
 	if [ ! -e $(BINDIR) ]; then mkdir $(BINDIR); fi;

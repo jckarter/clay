@@ -818,7 +818,7 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
     if (obj->objKind == PRIM_OP) {
         PrimOpPtr x = (PrimOp *)obj.ptr();
 
-        switch (x->objKind) {
+        switch (x->primOpCode) {
 
         case PRIM_Pointer : {
             ensureArity(args, 1);
@@ -833,7 +833,7 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
             staticToTypeTuple(args, 0, argTypes);
             vector<TypePtr> returnTypes;
             staticToTypeTuple(args, 1, returnTypes);
-            bool byRef = (x->objKind == PRIM_RefCodePointer);
+            bool byRef = (x->primOpCode == PRIM_RefCodePointer);
             vector<bool> returnIsRef(returnTypes.size(), byRef);
             TypePtr t = codePointerType(argTypes, returnIsRef, returnTypes);
             return staticPValue(t.ptr());
@@ -853,7 +853,7 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
             if (returnTypes.size() == 1)
                 returnType = returnTypes[0];
             CallingConv cc;
-            switch (x->objKind) {
+            switch (x->primOpCode) {
             case PRIM_CCodePointer : cc = CC_DEFAULT; break;
             case PRIM_StdCallCodePointer : cc = CC_STDCALL; break;
             case PRIM_FastCallCodePointer : cc = CC_FASTCALL; break;
@@ -1469,7 +1469,6 @@ MultiPValuePtr analyzePrimOpExpr(PrimOpPtr x,
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 {
-
     switch (x->primOpCode) {
 
     case PRIM_TypeP :
