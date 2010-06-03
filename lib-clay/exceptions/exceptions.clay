@@ -1,0 +1,14 @@
+record _Unwind_Exception {
+    exception_class: Int64;
+    exception_cleanup: CodePointer[(Int32, Pointer[_Unwind_Exception]), ()];
+    private_1: CULong;
+    private_2: CULong;
+}
+
+external _Unwind_RaiseException(p:Pointer[_Unwind_Exception]) Int32;
+
+throw() {
+    var exception = allocateMemory(_Unwind_Exception, 1);
+    _Unwind_RaiseException(exception); 
+}
+
