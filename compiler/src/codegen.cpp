@@ -1531,7 +1531,7 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     }
 
     if (entry->hasVarArgs) {
-        MultiCValuePtr varArgs;
+        MultiCValuePtr varArgs = new MultiCValue();
         for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai) {
             llvm::Argument *llArgValue = &(*ai);
             ostringstream sout;
