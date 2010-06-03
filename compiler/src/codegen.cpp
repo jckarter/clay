@@ -149,6 +149,19 @@ static CValuePtr derefValue(CValuePtr cvPtr)
 
 
 //
+// exception support
+//
+
+static bool exceptionsEnabled = true;
+
+void setExceptionsEnabled(bool enabled)
+{
+    exceptionsEnabled = enabled;
+}
+
+
+
+//
 // codegen value ops
 //
 
@@ -1426,6 +1439,25 @@ void codegenCallCode(InvokeEntryPtr entry,
         llArgs.push_back(cv->llValue);
     }
     llvmBuilder->CreateCall(entry->llvmFunc, llArgs.begin(), llArgs.end());
+}
+
+
+
+//
+// codegenCallable
+//
+
+InvokeEntryPtr codegenCallable(ObjectPtr x,
+                               const vector<TypePtr> &argsKey,
+                               const vector<ValueTempness> &argsTempness)
+{
+    InvokeEntryPtr entry =
+        analyzeCallable(x, argsKey, argsTempness);
+    if (!entry->inlined) {
+        if (!entry->llvmFunc)
+            codegenCodeBody(entry, getCodeName(x));
+    }
+    return entry;
 }
 
 
@@ -3253,4 +3285,141 @@ void codegenPrimOp(PrimOpPtr x,
         break;
 
     }
+}
+
+
+
+//
+// codegenSharedLib, codegenExe
+//
+
+static ProcedurePtr makeInitializerProcedure() {
+    CodePtr code = new Code();
+    code->body = globalVarInitializers().ptr();
+    IdentifierPtr name = new Identifier("%initGlobals");
+    ExprPtr target = new NameRef(name);
+    OverloadPtr overload = new Overload(target, code, false);
+    EnvPtr env = new Env();
+    overload->env = env;
+    ProcedurePtr proc = new Procedure(name, PRIVATE);
+    proc->overloads.push_back(overload);
+    proc->env = env;
+    env->entries[name->str] = proc.ptr();
+    return proc;
+}
+
+static ProcedurePtr makeDestructorProcedure() {
+    CodePtr code = new Code();
+    code->body = globalVarDestructors().ptr();
+    IdentifierPtr name = new Identifier("%destroyGlobals");
+    ExprPtr target = new NameRef(name);
+    OverloadPtr overload = new Overload(target, code, false);
+    EnvPtr env = new Env();
+    overload->env = env;
+    ProcedurePtr proc = new Procedure(name, PRIVATE);
+    proc->overloads.push_back(overload);
+    proc->env = env;
+    env->entries[name->str] = proc.ptr();
+    return proc;
+}
+
+static void generateLLVMCtorsAndDtors() {
+    ObjectPtr initializer = makeInitializerProcedure().ptr();
+    InvokeEntryPtr entry1 = codegenCallable(initializer,
+                                            vector<TypePtr>(),
+                                            vector<ValueTempness>());
+    codegenCWrapper(entry1, getCodeName(initializer));
+    ObjectPtr destructor = makeDestructorProcedure().ptr();
+    InvokeEntryPtr entry2 = codegenCallable(destructor,
+                                            vector<TypePtr>(),
+                                            vector<ValueTempness>());
+    codegenCWrapper(entry2, getCodeName(destructor));
+
+    // make types for llvm.global_ctors, llvm.global_dtors
+    vector<const llvm::Type *> fieldTypes;
+    fieldTypes.push_back(llvmIntType(32));
+    const llvm::Type *funcType = entry1->llvmCWrapper->getFunctionType();
+    const llvm::Type *funcPtrType = llvm::PointerType::getUnqual(funcType);
+    fieldTypes.push_back(funcPtrType);
+    const llvm::StructType *structType =
+        llvm::StructType::get(llvm::getGlobalContext(), fieldTypes);
+    const llvm::ArrayType *arrayType = llvm::ArrayType::get(structType, 1);
+
+    // make constants for llvm.global_ctors
+    vector<llvm::Constant*> structElems1;
+    llvm::ConstantInt *prio1 =
+        llvm::ConstantInt::get(llvm::getGlobalContext(),
+                               llvm::APInt(32, llvm::StringRef("65535"), 10));
+    structElems1.push_back(prio1);
+    structElems1.push_back(entry1->llvmCWrapper);
+    llvm::Constant *structVal1 = llvm::ConstantStruct::get(structType,
+                                                           structElems1);
+    vector<llvm::Constant*> arrayElems1;
+    arrayElems1.push_back(structVal1);
+    llvm::Constant *arrayVal1 = llvm::ConstantArray::get(arrayType,
+                                                         arrayElems1);
+
+    // make constants for llvm.global_dtors
+    vector<llvm::Constant*> structElems2;
+    llvm::ConstantInt *prio2 =
+        llvm::ConstantInt::get(llvm::getGlobalContext(),
+                               llvm::APInt(32, llvm::StringRef("65535"), 10));
+    structElems2.push_back(prio2);
+    structElems2.push_back(entry2->llvmCWrapper);
+    llvm::Constant *structVal2 = llvm::ConstantStruct::get(structType,
+                                                           structElems2);
+    vector<llvm::Constant*> arrayElems2;
+    arrayElems2.push_back(structVal2);
+    llvm::Constant *arrayVal2 = llvm::ConstantArray::get(arrayType,
+                                                         arrayElems2);
+
+    // define llvm.global_ctors
+    new llvm::GlobalVariable(*llvmModule, arrayType, true,
+                             llvm::GlobalVariable::AppendingLinkage,
+                             arrayVal1, "llvm.global_ctors");
+
+    // define llvm.global_dtors
+    new llvm::GlobalVariable(*llvmModule, arrayType, true,
+                             llvm::GlobalVariable::AppendingLinkage,
+                             arrayVal2, "llvm.global_dtors");
+}
+
+
+void codegenSharedLib(ModulePtr module)
+{
+    generateLLVMCtorsAndDtors();
+
+    for (unsigned i = 0; i < module->topLevelItems.size(); ++i) {
+        TopLevelItemPtr x = module->topLevelItems[i];
+        if (x->objKind == EXTERNAL_PROCEDURE) {
+            ExternalProcedurePtr y = (ExternalProcedure *)x.ptr();
+            if (y->body.ptr())
+                codegenExternalProcedure(y);
+        }
+    }
+}
+
+void codegenExe(ModulePtr module)
+{
+    generateLLVMCtorsAndDtors();
+
+    BlockPtr mainBody = new Block();
+    ExprPtr mainCall = new Call(new NameRef(new Identifier("main")));
+    mainBody->statements.push_back(new ExprStatement(mainCall));
+    vector<bool> isRef; isRef.push_back(false);
+    vector<ExprPtr> exprs; exprs.push_back(new IntLiteral("0"));
+    mainBody->statements.push_back(new Return(isRef, exprs));
+
+    ExternalProcedurePtr entryProc =
+        new ExternalProcedure(new Identifier("main"),
+                              PUBLIC,
+                              vector<ExternalArgPtr>(),
+                              false,
+                              new ObjectExpr(cIntType.ptr()),
+                              mainBody.ptr(),
+                              vector<ExprPtr>());
+
+    entryProc->env = module->env;
+
+    codegenExternalProcedure(entryProc);
 }
