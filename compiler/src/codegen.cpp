@@ -2750,6 +2750,258 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_Pointer :
+        error("Pointer type constructor cannot be called");
+
+    case PRIM_addressOf : {
+        ensureArity(args, 1);
+        CValuePtr cv = args->values[0];
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(cv->type));
+        llvmBuilder->CreateStore(cv->llValue, out0->llValue);
+        break;
+    }
+
+    case PRIM_pointerDereference : {
+        ensureArity(args, 1);
+        PointerTypePtr t;
+        llvm::Value *v = pointerValue(args, 0, t);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        llvmBuilder->CreateStore(v, out0->llValue);
+        break;
+    }
+
+    case PRIM_pointerEqualsP : {
+        ensureArity(args, 2);
+        PointerTypePtr t;
+        llvm::Value *v0 = pointerValue(args, 0, t);
+        llvm::Value *v1 = pointerValue(args, 1, t);
+        llvm::Value *flag = llvmBuilder->CreateICmpEQ(v0, v1);
+        llvm::Value *result = llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_pointerLesserP : {
+        ensureArity(args, 2);
+        PointerTypePtr t;
+        llvm::Value *v0 = pointerValue(args, 0, t);
+        llvm::Value *v1 = pointerValue(args, 1, t);
+        llvm::Value *flag = llvmBuilder->CreateICmpULT(v0, v1);
+        llvm::Value *result = llvmBuilder->CreateZExt(flag, llvmType(boolType));
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_pointerOffset : {
+        ensureArity(args, 2);
+        PointerTypePtr t;
+        llvm::Value *v0 = pointerValue(args, 0, t);
+        IntegerTypePtr offsetT;
+        llvm::Value *v1 = integerValue(args, 1, offsetT);
+        vector<llvm::Value *> indices;
+        indices.push_back(v1);
+        llvm::Value *result = llvmBuilder->CreateGEP(v0,
+                                                     indices.begin(),
+                                                     indices.end());
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_pointerToInt : {
+        ensureArity(args, 2);
+        IntegerTypePtr dest = valueToIntegerType(args, 0);
+        const llvm::Type *llDest = llvmType(dest.ptr());
+        PointerTypePtr pt;
+        llvm::Value *v = pointerValue(args, 1, pt);
+        llvm::Value *result = llvmBuilder->CreatePtrToInt(v, llDest);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == dest.ptr());
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_intToPointer : {
+        ensureArity(args, 2);
+        TypePtr pointeeType = valueToType(args, 0);
+        TypePtr dest = pointerType(pointeeType);
+        IntegerTypePtr t;
+        llvm::Value *v = integerValue(args, 1, t);
+        llvm::Value *result = llvmBuilder->CreateIntToPtr(v, llvmType(dest));
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == dest);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_CodePointerP : {
+        ensureArity(args, 1);
+        bool isCodePointerType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == CODE_POINTER_TYPE)
+                isCodePointerType = true;
+        }
+        ValueHolderPtr vh = boolToValueHolder(isCodePointerType);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_CodePointer :
+        error("CodePointer type constructor cannot be called");
+
+    case PRIM_RefCodePointer :
+        error("RefCodePointer type constructor cannot be called");
+
+    case PRIM_makeCodePointer : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr callable = valueToStatic(args, 0);
+        switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
+        case PROCEDURE :
+            break;
+        default :
+            argumentError(0, "invalid callable");
+        }
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        for (unsigned i = 1; i < args->size(); ++i) {
+            TypePtr t = valueToType(args, i);
+            argsKey.push_back(t);
+            argsTempness.push_back(LVALUE);
+        }
+
+        InvokeStackContext invokeStackContext(callable, argsKey);
+
+        InvokeEntryPtr entry =
+            analyzeCallable(callable, argsKey, argsTempness);
+        if (entry->inlined)
+            argumentError(0, "cannot create pointer to inlined code");
+        assert(entry->analyzed);
+        if (!entry->llvmFunc)
+            codegenCodeBody(entry, getCodeName(entry->callable));
+        assert(entry->llvmFunc);
+        TypePtr cpType = codePointerType(argsKey,
+                                         entry->returnIsRef,
+                                         entry->returnTypes);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == cpType);
+        llvmBuilder->CreateStore(entry->llvmFunc, out0->llValue);
+        break;
+    }
+
+    case PRIM_CCodePointerP : {
+        ensureArity(args, 1);
+        bool isCCodePointerType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == CCODE_POINTER_TYPE)
+                isCCodePointerType = true;
+        }
+        ValueHolderPtr vh = boolToValueHolder(isCCodePointerType);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_CCodePointer :
+        error("CCodePointer type constructor cannot be called");
+
+    case PRIM_StdCallCodePointer :
+        error("StdCallCodePointer type constructor cannot be called");
+
+    case PRIM_FastCallCodePointer :
+        error("FastCallCodePointer type constructor cannot be called");
+
+    case PRIM_makeCCodePointer : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr callable = valueToStatic(args, 0);
+        switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
+        case PROCEDURE :
+            break;
+        default :
+            argumentError(0, "invalid callable");
+        }
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        for (unsigned i = 1; i < args->size(); ++i) {
+            TypePtr t = valueToType(args, i);
+            argsKey.push_back(t);
+            argsTempness.push_back(LVALUE);
+        }
+
+        InvokeStackContext invokeStackContext(callable, argsKey);
+
+        InvokeEntryPtr entry =
+            analyzeCallable(callable, argsKey, argsTempness);
+        if (entry->inlined)
+            argumentError(0, "cannot create pointer to inlined code");
+        assert(entry->analyzed);
+        if (!entry->llvmFunc)
+            codegenCodeBody(entry, getCodeName(entry->callable));
+        assert(entry->llvmFunc);
+        if (!entry->llvmCWrapper)
+            codegenCWrapper(entry, getCodeName(entry->callable));
+        assert(entry->llvmCWrapper);
+        TypePtr returnType;
+        if (entry->returnTypes.size() == 0) {
+            returnType = NULL;
+        }
+        else if (entry->returnTypes.size() == 1) {
+            if (entry->returnIsRef[0])
+                argumentError(0, "cannot create C compatible pointer "
+                              " to return-by-reference code");
+            returnType = entry->returnTypes[0];
+        }
+        else {
+            argumentError(0, "cannot create C compatible pointer "
+                          "to multi-return code");
+        }
+        TypePtr ccpType = cCodePointerType(CC_DEFAULT,
+                                           argsKey,
+                                           false,
+                                           returnType);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == ccpType);
+        llvmBuilder->CreateStore(entry->llvmCWrapper, out0->llValue);
+        break;
+    }
+
+    case PRIM_pointerCast : {
+        ensureArity(args, 2);
+        TypePtr dest = valueToPointerLikeType(args, 0);
+        TypePtr src;
+        llvm::Value *v = pointerLikeValue(args, 1, src);
+        llvm::Value *result = llvmBuilder->CreateBitCast(v, llvmType(dest));
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == dest);
+        llvmBuilder->CreateStore(result, out0->llValue);
+        break;
+    }
+
     default :
         assert(false);
         break;
