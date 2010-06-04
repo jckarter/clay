@@ -131,7 +131,8 @@ void initBuiltinConstructor(RecordTypePtr t)
         CallPtr left = new Call(primNameRef("recordFieldRef"));
         left->args.push_back(new NameRef(retName));
         ExprPtr indexExpr = new ObjectExpr(sizeTToValueHolder(i).ptr());
-        left->args.push_back(indexExpr);
+        ExprPtr indexExpr2 = new StaticExpr(indexExpr);
+        left->args.push_back(indexExpr2);
         ExprPtr right = new NameRef(argNames[i]);
         StatementPtr stmt = new InitAssignment(left.ptr(), right);
         body->statements.push_back(stmt);

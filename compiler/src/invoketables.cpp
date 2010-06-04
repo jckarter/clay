@@ -55,29 +55,6 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
 
 
 //
-// computeArgsKey
-//
-
-bool computeArgsKey(const vector<ExprPtr> &args,
-                    EnvPtr env,
-                    vector<TypePtr> &argsKey,
-                    vector<ValueTempness> &argsTempness,
-                    vector<LocationPtr> &argLocations)
-{
-    for (unsigned i = 0; i < args.size(); ++i) {
-        PValuePtr pv = analyzeValue(args[i], env);
-        if (!pv)
-            return false;
-        argsKey.push_back(pv->type);
-        argsTempness.push_back(pv->isTemp ? RVALUE : LVALUE);
-        argLocations.push_back(args[i]->location);
-    }
-    return true;
-}
-
-
-
-//
 // invoke tables
 //
 
