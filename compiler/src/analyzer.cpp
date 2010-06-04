@@ -1,22 +1,47 @@
 #include "clay.hpp"
 
+static TypePtr objectType(ObjectPtr x);
+static ObjectPtr unwrapStaticType(TypePtr t);
+
+static bool staticToType(ObjectPtr x, TypePtr &out);
+static TypePtr staticToType(MultiStaticPtr x, unsigned index);
+static TypePtr valueToType(MultiPValuePtr x, unsigned index);
+static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index);
+static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index);
+static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index);
+static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index);
+
+static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out);
+static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
+                             vector<TypePtr> &out);
+static bool staticToInt(ObjectPtr x, int &out);
+static int staticToInt(MultiStaticPtr x, unsigned index);
+static bool staticToSizeT(ObjectPtr x, size_t &out);
+
+static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index);
+static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index);
+static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index);
+static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index);
+static TupleTypePtr tupleTypeOfValue(MultiPValuePtr x, unsigned index);
+static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index);
+
+static PValuePtr staticPValue(ObjectPtr x);
+static PValuePtr kernelPValue(const string &name);
+
 
 
 //
-// analyze wrappers
+// utility procs
 //
 
-PValuePtr analysisToPValue(ObjectPtr x)
+static TypePtr objectType(ObjectPtr x)
 {
     switch (x->objKind) {
 
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
-        return new PValue(y->type, true);
+        return y->type;
     }
-
-    case PVALUE :
-        return (PValue *)x.ptr();
 
     case TYPE :
     case PRIM_OP :
@@ -24,280 +49,433 @@ PValuePtr analysisToPValue(ObjectPtr x)
     case RECORD :
     case MODULE_HOLDER :
     case IDENTIFIER :
-        return new PValue(staticType(x), true);
+        return staticType(x);
 
     default :
-        error("invalid value");
+        error("untypeable object");
+        return NULL;
+
+    }
+}
+
+static ObjectPtr unwrapStaticType(TypePtr t) {
+    if (t->typeKind != STATIC_TYPE)
+        return NULL;
+    StaticType *st = (StaticType *)t.ptr();
+    return st->obj;
+}
+
+static bool staticToType(ObjectPtr x, TypePtr &out)
+{
+    if (x->objKind != TYPE)
+        return false;
+    out = (Type *)x.ptr();
+    return true;
+}
+
+static TypePtr staticToType(MultiStaticPtr x, unsigned index)
+{
+    TypePtr out;
+    if (!staticToType(x->values[index], out))
+        argumentError(index, "expecting a type");
+    return out;
+}
+
+static TypePtr valueToType(MultiPValuePtr x, unsigned index)
+{
+    ObjectPtr obj = unwrapStaticType(x->values[index]->type);
+    if (!obj)
+        argumentError(index, "expecting a type");
+    TypePtr t;
+    if (!staticToType(obj, t))
+        argumentError(index, "expecting a type");
+    return t;
+}
+
+static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = valueToType(x, index);
+    switch (t->typeKind) {
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+        return t;
+    default :
+        argumentError(index, "expecting a numeric type");
         return NULL;
     }
 }
 
-MultiPValuePtr analysisToMultiPValue(ObjectPtr x)
+static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index)
 {
-    switch (x->objKind) {
-    case MULTI_PVALUE :
-        return (MultiPValue *)x.ptr();
+    TypePtr t = valueToType(x, index);
+    if (t->typeKind != INTEGER_TYPE)
+        argumentError(index, "expecting an integer type");
+    return (IntegerType *)t.ptr();
+}
+
+static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = valueToType(x, index);
+    switch (t->typeKind) {
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+        return t;
     default :
-        return new MultiPValue(analysisToPValue(x));
+        argumentError(index, "expecting a pointer type");
+        return NULL;
     }
 }
 
-MultiPValuePtr analyzeMultiValue(ExprPtr expr, EnvPtr env)
+static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index)
 {
-    ObjectPtr v = analyze(expr, env);
-    if (!v)
-        return NULL;
-    return analysisToMultiPValue(v);
+    TypePtr t = valueToType(x, index);
+    if (t->typeKind != ENUM_TYPE)
+        argumentError(index, "expecting an enumeration type");
+    return t;
 }
 
-ObjectPtr analyzeOne(ExprPtr expr, EnvPtr env)
+static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out)
 {
-    ObjectPtr v = analyze(expr, env);
-    if (!v)
-        return NULL;
-    if (v->objKind == MULTI_PVALUE)
-        error(expr, "multi-valued expression in single value context");
-    return v;
+    TypePtr t;
+    if (staticToType(x, t)) {
+        out.push_back(t);
+        return true;
+    }
+    if (x->objKind != VALUE_HOLDER)
+        return false;
+    ValueHolderPtr y = (ValueHolder *)x.ptr();
+    assert(y->type->typeKind != STATIC_TYPE);
+    if (y->type->typeKind != TUPLE_TYPE)
+        return false;
+    TupleTypePtr z = (TupleType *)y->type.ptr();
+    for (unsigned i = 0; i < z->elementTypes.size(); ++i) {
+        ObjectPtr obj = unwrapStaticType(z->elementTypes[i]);
+        if ((!obj) || (obj->objKind != TYPE))
+            return false;
+        out.push_back((Type *)obj.ptr());
+    }
+    return true;
 }
 
-PValuePtr analyzeValue(ExprPtr expr, EnvPtr env)
+static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
+                             vector<TypePtr> &out)
 {
-    ObjectPtr v = analyzeOne(expr, env);
-    if (!v)
-        return NULL;
-    return analysisToPValue(v);
+    if (!staticToTypeTuple(x->values[index], out))
+        argumentError(index, "expecting zero-or-more types");
 }
 
-PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env)
+static bool staticToInt(ObjectPtr x, int &out)
 {
-    PValuePtr pv = analyzeValue(expr, env);
-    if (!pv)
-        return NULL;
-    if (pv->type->typeKind != POINTER_TYPE)
-        error(expr, "expecting a pointer value");
-    return pv;
+    if (x->objKind != VALUE_HOLDER)
+        return false;
+    ValueHolderPtr vh = (ValueHolder *)x.ptr();
+    if (vh->type != cIntType)
+        return false;
+    out = *((int *)vh->buf);
+    return true;
 }
 
-PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env)
+static int staticToInt(MultiStaticPtr x, unsigned index)
 {
-    PValuePtr pv = analyzeValue(expr, env);
-    if (!pv)
-        return NULL;
-    if (pv->type->typeKind != ARRAY_TYPE)
-        error(expr, "expecting an array value");
-    return pv;
+    int out = -1;
+    if (!staticToInt(x->values[index], out))
+        argumentError(index, "expecting Int value");
+    return out;
 }
 
-PValuePtr analyzeTupleValue(ExprPtr expr, EnvPtr env)
+static bool staticToSizeT(ObjectPtr x, size_t &out)
 {
-    PValuePtr pv = analyzeValue(expr, env);
-    if (!pv)
-        return NULL;
-    if (pv->type->typeKind != TUPLE_TYPE)
-        error(expr, "expecting a tuple value");
-    return pv;
+    if (x->objKind != VALUE_HOLDER)
+        return false;
+    ValueHolderPtr vh = (ValueHolder *)x.ptr();
+    if (vh->type != cSizeTType)
+        return false;
+    out = *((size_t *)vh->buf);
+    return true;
 }
 
-PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env)
+static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
 {
-    PValuePtr pv = analyzeValue(expr, env);
-    if (!pv)
+    TypePtr t = x->values[index]->type;
+    switch (t->typeKind) {
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+        return t;
+    default :
+        argumentError(index, "expecting a numeric value");
         return NULL;
-    if (pv->type->typeKind != RECORD_TYPE)
-        error(expr, "expecting a record value");
-    return pv;
+    }
+}
+
+static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != INTEGER_TYPE)
+        argumentError(index, "expecting an integer value");
+    return (IntegerType *)t.ptr();
+}
+
+static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != POINTER_TYPE)
+        argumentError(index, "expecting a pointer value");
+    return (PointerType *)t.ptr();
+}
+
+static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != ARRAY_TYPE)
+        argumentError(index, "expecting an array");
+    return (ArrayType *)t.ptr();
+}
+
+static TupleTypePtr tupleTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != TUPLE_TYPE)
+        argumentError(index, "expecting a tuple");
+    return (TupleType *)t.ptr();
+}
+
+static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != RECORD_TYPE)
+        argumentError(index, "expecting a record");
+    return (RecordType *)t.ptr();
+}
+
+static PValuePtr staticPValue(ObjectPtr x)
+{
+    TypePtr t = staticType(x);
+    return new PValue(t, true);
+}
+
+static PValuePtr kernelPValue(const string &name)
+{
+    return staticPValue(kernelName(name));
 }
 
 
 
 //
-// analyze
+// analyzeMulti
 //
 
-ObjectPtr analyze(ExprPtr expr, EnvPtr env)
+MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env)
+{
+    MultiPValuePtr out = new MultiPValue();
+    for (unsigned i = 0; i < exprs.size(); ++i) {
+        ExprPtr x = exprs[i];
+        if (x->exprKind == VAR_ARGS_REF) {
+            MultiPValuePtr y = analyzeExpr(x, env);
+            if (!y)
+                return NULL;
+            out->add(y);
+        }
+        else {
+            PValuePtr y = analyzeOne(x, env);
+            if (!y)
+                return NULL;
+            out->values.push_back(y);
+        }
+    }
+    return out;
+}
+
+
+
+//
+// analyzeOne
+//
+
+PValuePtr analyzeOne(ExprPtr expr, EnvPtr env)
+{
+    MultiPValuePtr x = analyzeExpr(expr, env);
+    if (!x)
+        return NULL;
+    ensureArity(x, 1);
+    return x->values[0];
+}
+
+
+
+//
+// analyzeExpr
+//
+
+MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
 {
     LocationContext loc(expr->location);
 
     switch (expr->exprKind) {
 
     case BOOL_LITERAL : {
-        BoolLiteral *x = (BoolLiteral *)expr.ptr();
-        return boolToValueHolder(x->value).ptr();
+        return new MultiPValue(new PValue(boolType, true));
     }
 
     case INT_LITERAL : {
         IntLiteral *x = (IntLiteral *)expr.ptr();
-        return parseIntLiteral(x).ptr();
+        ValueHolderPtr v = parseIntLiteral(x);
+        return new MultiPValue(new PValue(v->type, true));
     }
-
+        
     case FLOAT_LITERAL : {
         FloatLiteral *x = (FloatLiteral *)expr.ptr();
-        return parseFloatLiteral(x).ptr();
+        ValueHolderPtr v = parseFloatLiteral(x);
+        return new MultiPValue(new PValue(v->type, true));
     }
 
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarCharLiteral(x->value);
-        return analyze(x->desugared, env);
+        return analyzeExpr(x->desugared, env);
     }
 
     case STRING_LITERAL : {
         StringLiteral *x = (StringLiteral *)expr.ptr();
         PValuePtr pv = new PValue(arrayType(int8Type, x->value.size()), true);
-        vector<ExprPtr> args;
-        args.push_back(new ObjectExpr(pv.ptr()));
-        return analyzeInvoke(kernelName("stringRef"), args, env);
+        MultiPValuePtr args = new MultiPValue(pv);
+        return analyzeCallValue(kernelPValue("stringRef"), args);
     }
 
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
-        if (y->objKind == EXPRESSION)
-            return analyze((Expr *)y.ptr(), env);
+        if (y->objKind == EXPRESSION) {
+            ExprPtr z = (Expr *)y.ptr();
+            return analyzeExpr(z, env);
+        }
+        else if (y->objKind == MULTI_EXPR) {
+            MultiExprPtr z = (MultiExpr *)y.ptr();
+            return analyzeMulti(z->values, env);
+        }
         return analyzeStaticObject(y);
     }
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        vector<ExprPtr> args2;
-        bool expanded = expandVarArgs(x->args, env, args2);
-        if (!expanded && (args2.size() == 1))
-            return analyze(args2[0], env);
-        return analyzeInvoke(primName("tuple"), args2, env);
+        if ((x->args.size() == 1) &&
+            (x->args[0]->exprKind != VAR_ARGS_REF))
+        {
+            return analyzeExpr(x->args[0], env);
+        }
+        return analyzeCallExpr(primNameRef("tuple"), x->args, env);
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        vector<ExprPtr> args2;
-        expandVarArgs(x->args, env, args2);
-        return analyzeInvoke(primName("array"), args2, env);
+        return analyzeCallExpr(primNameRef("array"), x->args, env);
     }
 
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
-        ObjectPtr indexable = analyze(x->expr, env);
-        if (!indexable)
-            return NULL;
-        vector<ExprPtr> args2;
-        expandVarArgs(x->args, env, args2);
-        return analyzeIndexing(indexable, args2, env);
+        return analyzeIndexingExpr(x->expr, x->args, env);
     }
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        ObjectPtr callable = analyze(x->expr, env);
-        if (!callable)
-            return NULL;
-        vector<ExprPtr> args2;
-        expandVarArgs(x->args, env, args2);
-        return analyzeInvoke(callable, args2, env);
+        return analyzeCallExpr(x->expr, x->args, env);
     }
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        ObjectPtr base = analyze(x->expr, env);
-        if (!base)
-            return NULL;
-        return analyzeFieldRef(base, x->name);
+        return analyzeFieldRefExpr(x->expr, x->name, env);
     }
 
     case TUPLE_REF : {
         TupleRef *x = (TupleRef *)expr.ptr();
-        vector<ExprPtr> args;
-        args.push_back(x->expr);
-        args.push_back(new ObjectExpr(sizeTToValueHolder(x->index).ptr()));
-        ObjectPtr prim = primName("tupleRef");
-        return analyzeInvoke(prim, args, env);
+        PValuePtr pv = analyzeOne(x->expr, env);
+        if (!pv)
+            return NULL;
+        MultiPValuePtr args = new MultiPValue(pv);
+        ValueHolderPtr vh = sizeTToValueHolder(x->index);
+        args->values.push_back(staticPValue(vh.ptr()));
+        return analyzeCallValue(kernelPValue("tupleRef"), args);
     }
 
     case UNARY_OP : {
         UnaryOp *x = (UnaryOp *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarUnaryOp(x);
-        return analyze(x->desugared, env);
+        return analyzeExpr(x->desugared, env);
     }
 
     case BINARY_OP : {
         BinaryOp *x = (BinaryOp *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarBinaryOp(x);
-        return analyze(x->desugared, env);
+        return analyzeExpr(x->desugared, env);
     }
 
     case AND : {
         And *x = (And *)expr.ptr();
-        ObjectPtr first = analyze(x->expr1, env);
-        if (!first)
+        PValuePtr a = analyzeOne(x->expr1, env);
+        if (!a)
             return NULL;
-        if (first->objKind == VALUE_HOLDER) {
-            ValueHolder *y = (ValueHolder *)first.ptr();
-            if (y->type == boolType) {
-                if (*((char *)y->buf) == 0)
-                    return first;
-            }
-        }
-        PValuePtr a = analysisToPValue(first);
         if (a->isTemp)
-            return new PValue(a->type, true);
-        PValuePtr b = analyzeValue(x->expr2, env);
-        if (!a || !b)
+            return new MultiPValue(new PValue(a->type, true));
+        PValuePtr b = analyzeOne(x->expr2, env);
+        if (!b)
             return NULL;
         if (a->type != b->type)
             error("type mismatch in 'and' expression");
-        return new PValue(a->type, a->isTemp || b->isTemp);
+        PValuePtr pv = new PValue(a->type, a->isTemp || b->isTemp);
+        return new MultiPValue(pv);
     }
 
     case OR : {
         Or *x = (Or *)expr.ptr();
-        ObjectPtr first = analyze(x->expr1, env);
-        if (!first)
+        PValuePtr a = analyzeOne(x->expr1, env);
+        if (!a)
             return NULL;
-        if (first->objKind == VALUE_HOLDER) {
-            ValueHolder *y = (ValueHolder *)first.ptr();
-            if (y->type == boolType) {
-                if (*((char *)y->buf) != 0)
-                    return first;
-            }
-        }
-        PValuePtr a = analysisToPValue(first);
         if (a->isTemp)
-            return new PValue(a->type, true);
-        PValuePtr b = analyzeValue(x->expr2, env);
-        if (!a || !b)
+            return new MultiPValue(new PValue(a->type, true));
+        PValuePtr b = analyzeOne(x->expr2, env);
+        if (!b)
             return NULL;
         if (a->type != b->type)
-            error("type mismatch in 'or' expression");
-        return new PValue(a->type, a->isTemp || b->isTemp);
+            error("type mismatch in 'and' expression");
+        PValuePtr pv = new PValue(a->type, a->isTemp || b->isTemp);
+        return new MultiPValue(pv);
     }
 
     case LAMBDA : {
         Lambda *x = (Lambda *)expr.ptr();
         if (!x->initialized)
             initializeLambda(x, env);
-        return analyze(x->converted, env);
+        return analyzeExpr(x->converted, env);
     }
 
-    case VAR_ARGS_REF :
-        error("invalid use of '...'");
+    case VAR_ARGS_REF : {
+        IdentifierPtr ident = new Identifier("%varArgs");
+        ident->location = expr->location;
+        ExprPtr nameRef = new NameRef(ident);
+        nameRef->location = expr->location;
+        return analyzeExpr(nameRef, env);
+    }
 
     case NEW : {
         New *x = (New *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarNew(x);
-        return analyze(x->desugared, env);
+        return analyzeExpr(x->desugared, env);
     }
 
     case STATIC_EXPR : {
         StaticExpr *x = (StaticExpr *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarStaticExpr(x);
-        return analyze(x->desugared, env);
+        return analyzeExpr(x->desugared, env);
     }
 
     case FOREIGN_EXPR : {
         ForeignExpr *x = (ForeignExpr *)expr.ptr();
-        return analyze(x->expr, x->getEnv());
+        return analyzeExpr(x->expr, x->getEnv());
     }
 
     case OBJECT_EXPR : {
@@ -315,129 +493,163 @@ ObjectPtr analyze(ExprPtr expr, EnvPtr env)
 
 
 //
-// expandVarArgs
-//
-
-bool expandVarArgs(const vector<ExprPtr> &args,
-                   EnvPtr env,
-                   vector<ExprPtr> &outArgs)
-{
-    bool expanded = false;
-    for (unsigned i = 0; i < args.size(); ++i) {
-        if (args[i]->exprKind == VAR_ARGS_REF) {
-            ObjectPtr z = lookupEnv(env, new Identifier("%varArgs"));
-            VarArgsInfo *vaInfo = (VarArgsInfo *)z.ptr();
-            if (!vaInfo->hasVarArgs)
-                error(args[i], "varargs unavailable");
-            expanded = true;
-            outArgs.insert(outArgs.end(),
-                           vaInfo->varArgs.begin(),
-                           vaInfo->varArgs.end());
-        }
-        else {
-            outArgs.push_back(args[i]);
-        }
-    }
-    return expanded;
-}
-
-
-
-//
 // analyzeStaticObject
 //
 
-ObjectPtr analyzeStaticObject(ObjectPtr x)
+MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 {
     switch (x->objKind) {
+
     case ENUM_MEMBER : {
         EnumMember *y = (EnumMember *)x.ptr();
-        return new PValue(y->type, true);
+        PValuePtr pv = new PValue(y->type, true);
+        return new MultiPValue(pv);
     }
+
     case GLOBAL_VARIABLE : {
         GlobalVariable *y = (GlobalVariable *)x.ptr();
-        if (!y->type) {
-            if (y->analyzing)
-                return NULL;
-            y->analyzing = true;
-            PValuePtr pv = analyzeValue(y->expr, y->env);
-            y->analyzing = false;
-            if (!pv)
-                return NULL;
-            y->type = pv->type;
-        }
-        return new PValue(y->type, false);
+        PValuePtr pv = analyzeGlobalVariable(y);
+        return new MultiPValue(pv);
     }
+
     case EXTERNAL_VARIABLE : {
         ExternalVariable *y = (ExternalVariable *)x.ptr();
-        if (!y->type2)
-            y->type2 = evaluateType(y->type, y->env);
-        return new PValue(y->type2, false);
+        PValuePtr pv = analyzeExternalVariable(y);
+        return new MultiPValue(pv);
     }
+
     case EXTERNAL_PROCEDURE : {
         ExternalProcedure *y = (ExternalProcedure *)x.ptr();
-        if (!y->analyzed)
-            analyzeExternal(y);
-        return new PValue(y->ptrType, true);
+        analyzeExternalProcedure(y);
+        PValuePtr pv = new PValue(y->ptrType, true);
+        return new MultiPValue(pv);
     }
+
     case STATIC_GLOBAL : {
         StaticGlobal *y = (StaticGlobal *)x.ptr();
-        return analyze(y->expr, y->env);
+        return analyzeExpr(y->expr, y->env);
     }
-    case EVALUE : {
-        EValue *y = (EValue *)x.ptr();
-        return new PValue(y->type, false);
+
+    case VALUE_HOLDER : {
+        ValueHolder *y = (ValueHolder *)x.ptr();
+        PValuePtr pv = new PValue(y->type, true);
+        return new MultiPValue(pv);
     }
-    case MULTI_EVALUE : {
-        MultiEValue *y = (MultiEValue *)x.ptr();
-        MultiPValuePtr z = new MultiPValue();
-        for (unsigned i = 0; i < y->values.size(); ++i)
-            z->values.push_back(new PValue(y->values[i]->type, false));
-        return z.ptr();
+
+    case MULTI_STATIC : {
+        MultiStatic *y = (MultiStatic *)x.ptr();
+        MultiPValuePtr mpv = new MultiPValue();
+        for (unsigned i = 0; i < y->size(); ++i) {
+            TypePtr t = objectType(y->values[i]);
+            mpv->values.push_back(new PValue(t, true));
+        }
+        return mpv;
     }
-    case CVALUE : {
-        CValue *y = (CValue *)x.ptr();
-        return new PValue(y->type, false);
-    }
-    case MULTI_CVALUE : {
-        MultiCValue *y = (MultiCValue *)x.ptr();
-        MultiPValuePtr z = new MultiPValue();
-        for (unsigned i = 0; i < y->values.size(); ++i)
-            z->values.push_back(new PValue(y->values[i]->type, false));
-        return z.ptr();
-    }
-    case VALUE_HOLDER :
-    case MULTI_STATIC :
-    case PVALUE :
-    case MULTI_PVALUE :
 
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :
     case RECORD :
     case MODULE_HOLDER :
-    case IDENTIFIER :
-        return x;
+    case IDENTIFIER : {
+        TypePtr t = staticType(x);
+        PValuePtr pv = new PValue(t, true);
+        return new MultiPValue(pv);
+    }
+
+    case EVALUE : {
+        EValue *y = (EValue *)x.ptr();
+        PValuePtr pv = new PValue(y->type, false);
+        return new MultiPValue(pv);
+    }
+
+    case MULTI_EVALUE : {
+        MultiEValue *y = (MultiEValue *)x.ptr();
+        MultiPValuePtr z = new MultiPValue();
+        for (unsigned i = 0; i < y->values.size(); ++i)
+            z->values.push_back(new PValue(y->values[i]->type, false));
+        return z;
+    }
+
+    case CVALUE : {
+        CValue *y = (CValue *)x.ptr();
+        PValuePtr pv = new PValue(y->type, false);
+        return new MultiPValue(pv);
+    }
+
+    case MULTI_CVALUE : {
+        MultiCValue *y = (MultiCValue *)x.ptr();
+        MultiPValuePtr z = new MultiPValue();
+        for (unsigned i = 0; i < y->values.size(); ++i)
+            z->values.push_back(new PValue(y->values[i]->type, false));
+        return z;
+    }
+
+    case PVALUE : {
+        PValue *y = (PValue *)x.ptr();
+        return new MultiPValue(y);
+    }
+
+    case MULTI_PVALUE : {
+        MultiPValue *y = (MultiPValue *)x.ptr();
+        return y;
+    }
 
     case PATTERN :
-        error("pattern cannot be used as value");
+        error("pattern variable cannot be used as value");
         return NULL;
 
     default :
         error("invalid static object");
         return NULL;
+
     }
 }
 
 
 
 //
-// analyzeExternal
+// analyzeGlobalVariable
 //
 
-void analyzeExternal(ExternalProcedurePtr x)
+PValuePtr analyzeGlobalVariable(GlobalVariablePtr x)
 {
-    assert(!x->analyzed);
+    if (!x->type) {
+        if (x->analyzing)
+            return NULL;
+        x->analyzing = true;
+        PValuePtr pv = analyzeOne(x->expr, x->env);
+        x->analyzing = false;
+        if (!pv)
+            return NULL;
+        x->type = pv->type;
+    }
+    return new PValue(x->type, false);
+}
+
+
+
+//
+// analyzeExternalVariable
+//
+
+PValuePtr analyzeExternalVariable(ExternalVariablePtr x)
+{
+    if (!x->type2)
+        x->type2 = evaluateType(x->type, x->env);
+    return new PValue(x->type2, false);
+}
+
+
+
+//
+// analyzeExternalProcedure
+//
+
+void analyzeExternalProcedure(ExternalProcedurePtr x)
+{
+    if (x->analyzed)
+        return;
     if (!x->attributesVerified)
         verifyAttributes(x);
     vector<TypePtr> argTypes;
@@ -543,234 +755,360 @@ void verifyAttributes(ExternalVariablePtr x)
 
 
 //
-// analyzeFieldRef
+// analyzeIndexingExpr
 //
 
-ObjectPtr analyzeFieldRef(ObjectPtr x, IdentifierPtr name)
-{
-    switch (x->objKind) {
-    case PVALUE : {
-        PValuePtr y = (PValue *)x.ptr();
-        if (y->type->typeKind == STATIC_TYPE) {
-            StaticType *t = (StaticType *)y->type.ptr();
-            return analyzeFieldRef(t->obj, name);
+static bool isTypeConstructor(ObjectPtr x) {
+    if (x->objKind == PRIM_OP) {
+        PrimOpPtr y = (PrimOp *)x.ptr();
+        switch (y->primOpCode) {
+        case PRIM_Pointer :
+        case PRIM_CodePointer :
+        case PRIM_RefCodePointer :
+        case PRIM_CCodePointer :
+        case PRIM_StdCallCodePointer :
+        case PRIM_FastCallCodePointer :
+        case PRIM_Array :
+        case PRIM_Tuple :
+        case PRIM_Static :
+            return true;
+        default :
+            return false;
         }
-        vector<ExprPtr> args;
-        args.push_back(new ObjectExpr(x));
-        args.push_back(new ObjectExpr(name.ptr()));
-        ObjectPtr prim = kernelName("fieldRef");
-        return analyzeInvoke(prim, args, new Env());
     }
-    case MODULE_HOLDER : {
-        ModuleHolderPtr y = (ModuleHolder *)x.ptr();
-        ObjectPtr z = lookupModuleMember(y, name);
-        return analyzeStaticObject(z);
+    else if (x->objKind == RECORD) {
+        return true;
     }
-    default :
-        error("invalid field access operation");
+    else {
+        return false;
+    }
+}
+
+MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
+                                   const vector<ExprPtr> &args,
+                                   EnvPtr env)
+{
+    PValuePtr pv = analyzeOne(indexable, env);
+    if (!pv)
         return NULL;
+    ObjectPtr obj = unwrapStaticType(pv->type);
+    if (obj.ptr()) {
+        if (isTypeConstructor(obj)) {
+            MultiStaticPtr params = evaluateMultiStatic(args, env);
+            PValuePtr out = analyzeTypeConstructor(obj, params);
+            return new MultiPValue(out);
+        }
+        if (obj->objKind != VALUE_HOLDER)
+            error("invalid indexing operation");
     }
+    vector<ExprPtr> args2;
+    args2.push_back(indexable);
+    args2.insert(args2.end(), args.begin(), args.end());
+    return analyzeCallExpr(kernelNameRef("index"), args2, env);
 }
 
 
 
 //
-// analyzeIndexing
+// analyzeTypeConstructor
 //
 
-ObjectPtr analyzeIndexing(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
+PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
 {
-    switch (x->objKind) {
+    if (obj->objKind == PRIM_OP) {
+        PrimOpPtr x = (PrimOp *)obj.ptr();
 
-    case PVALUE : {
-        vector<ExprPtr> args2;
-        args2.push_back(new ObjectExpr(x));
-        args2.insert(args2.end(), args.begin(), args.end());
-        ObjectPtr z = kernelName("index");
-        return analyzeInvoke(z, args2, env);
-    }
-
-    case PRIM_OP : {
-        PrimOpPtr y = (PrimOp *)x.ptr();
-
-        switch (y->primOpCode) {
+        switch (x->primOpCode) {
 
         case PRIM_Pointer : {
             ensureArity(args, 1);
-            TypePtr t = evaluateType(args[0], env);
-            return pointerType(t).ptr();
+            TypePtr pointeeType = staticToType(args, 0);
+            return staticPValue(pointerType(pointeeType).ptr());
         }
 
-        case PRIM_CodePointer : {
-            ensureArity(args, 2);
-            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
-            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
-            vector<bool> returnIsRef(returnTypes.size(), false);
-            return codePointerType(argTypes, returnIsRef, returnTypes).ptr();
-        }
-
+        case PRIM_CodePointer :
         case PRIM_RefCodePointer : {
             ensureArity(args, 2);
-            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
-            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
-            vector<bool> returnIsRef(returnTypes.size(), true);
-            return codePointerType(argTypes, returnIsRef, returnTypes).ptr();
+            vector<TypePtr> argTypes;
+            staticToTypeTuple(args, 0, argTypes);
+            vector<TypePtr> returnTypes;
+            staticToTypeTuple(args, 1, returnTypes);
+            bool byRef = (x->primOpCode == PRIM_RefCodePointer);
+            vector<bool> returnIsRef(returnTypes.size(), byRef);
+            TypePtr t = codePointerType(argTypes, returnIsRef, returnTypes);
+            return staticPValue(t.ptr());
         }
 
-        case PRIM_CCodePointer : {
-            ensureArity(args, 2);
-            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
-            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
-            if (returnTypes.size() > 1)
-                error(args[1], "C code cannot return more than one value");
-            TypePtr returnType;
-            if (returnTypes.size() == 1)
-                returnType = returnTypes[0];
-            return cCodePointerType(CC_DEFAULT, argTypes,
-                                    false, returnType).ptr();
-        }
-
-        case PRIM_StdCallCodePointer : {
-            ensureArity(args, 2);
-            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
-            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
-            if (returnTypes.size() > 1)
-                error(args[1], "C code cannot return more than one value");
-            TypePtr returnType;
-            if (returnTypes.size() == 1)
-                returnType = returnTypes[0];
-            return cCodePointerType(CC_STDCALL, argTypes,
-                                    false, returnType).ptr();
-        }
-
+        case PRIM_CCodePointer :
+        case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer : {
             ensureArity(args, 2);
-            vector<TypePtr> argTypes = evaluateTypeTuple(args[0], env);
-            vector<TypePtr> returnTypes = evaluateTypeTuple(args[1], env);
+            vector<TypePtr> argTypes;
+            staticToTypeTuple(args, 0, argTypes);
+            vector<TypePtr> returnTypes;
+            staticToTypeTuple(args, 1, returnTypes);
             if (returnTypes.size() > 1)
-                error(args[1], "C code cannot return more than one value");
+                argumentError(1, "C code cannot return more than one value");
             TypePtr returnType;
             if (returnTypes.size() == 1)
                 returnType = returnTypes[0];
-            return cCodePointerType(CC_FASTCALL, argTypes,
-                                    false, returnType).ptr();
+            CallingConv cc;
+            switch (x->primOpCode) {
+            case PRIM_CCodePointer : cc = CC_DEFAULT; break;
+            case PRIM_StdCallCodePointer : cc = CC_STDCALL; break;
+            case PRIM_FastCallCodePointer : cc = CC_FASTCALL; break;
+            default : assert(false);
+            }
+            TypePtr t = cCodePointerType(cc, argTypes, false, returnType);
+            return staticPValue(t.ptr());
         }
 
         case PRIM_Array : {
             ensureArity(args, 2);
-            TypePtr t = evaluateType(args[0], env);
-            int n = evaluateInt(args[1], env);
-            return arrayType(t, n).ptr();
+            TypePtr t = staticToType(args, 0);
+            int size = staticToInt(args, 1);
+            TypePtr at = arrayType(t, size);
+            return staticPValue(at.ptr());
         }
 
         case PRIM_Tuple : {
             vector<TypePtr> types;
-            for (unsigned i = 0; i < args.size(); ++i)
-                types.push_back(evaluateType(args[i], env));
-            return tupleType(types).ptr();
+            for (unsigned i = 0; i < args->size(); ++i)
+                types.push_back(staticToType(args, i));
+            TypePtr t = tupleType(types);
+            return staticPValue(t.ptr());
         }
 
         case PRIM_Static : {
             ensureArity(args, 1);
-            ObjectPtr obj = evaluateOneStatic(args[0], env);
-            return staticType(obj).ptr();
+            TypePtr t = staticType(args->values[0]);
+            return staticPValue(t.ptr());
         }
 
+        default :
+            assert(false);
+            return NULL;
         }
     }
-
-    case RECORD : {
-        RecordPtr y = (Record *)x.ptr();
-        ensureArity(args, y->patternVars.size());
-        vector<ObjectPtr> params;
-        for (unsigned i = 0; i < args.size(); ++i)
-            params.push_back(evaluateOneStatic(args[i], env));
-        return recordType(y, params).ptr();
+    else if (obj->objKind == RECORD) {
+        RecordPtr x = (Record *)obj.ptr();
+        if (args->size() != x->patternVars.size())
+            arityError(x->patternVars.size(), args->size());
+        return staticPValue(recordType(x, args->values).ptr());
     }
-
+    else {
+        assert(false);
+        return NULL;
     }
-    error("invalid indexing operation");
-    return NULL;
 }
 
 
 
 //
-// analyzeInvoke
+// analyzeFieldRefExpr
 //
 
-ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env)
+MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
+                                   IdentifierPtr name,
+                                   EnvPtr env)
 {
-    switch (x->objKind) {
+    PValuePtr pv = analyzeOne(base, env);
+    if (!pv)
+        return NULL;
+    ObjectPtr obj = unwrapStaticType(pv->type);
+    if (obj.ptr()) {
+        if (obj->objKind == MODULE_HOLDER) {
+            ModuleHolderPtr y = (ModuleHolder *)obj.ptr();
+            ObjectPtr z = lookupModuleMember(y, name);
+            return analyzeStaticObject(z);
+        }
+        if (obj->objKind != VALUE_HOLDER)
+            error("invalid field access");
+    }
+    vector<ExprPtr> args;
+    args.push_back(base);
+    args.push_back(new ObjectExpr(name.ptr()));
+    return analyzeCallExpr(kernelNameRef("fieldRef"), args, env);
+}
+
+
+
+//
+// computeArgsKey, analyzeReturn
+//
+
+void computeArgsKey(MultiPValuePtr args,
+                    vector<TypePtr> &argsKey,
+                    vector<ValueTempness> &argsTempness)
+{
+    for (unsigned i = 0; i < args->size(); ++i) {
+        PValuePtr pv = args->values[i];
+        argsKey.push_back(pv->type);
+        argsTempness.push_back(pv->isTemp ? RVALUE : LVALUE);
+    }
+}
+
+MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
+                             const vector<TypePtr> &returnTypes)
+                             
+{
+    MultiPValuePtr x = new MultiPValue();
+    for (unsigned i = 0; i < returnTypes.size(); ++i) {
+        PValuePtr pv = new PValue(returnTypes[i], !returnIsRef[i]);
+        x->values.push_back(pv);
+    }
+    return x.ptr();
+}
+
+
+
+//
+// analyzeCallExpr
+//
+
+MultiPValuePtr analyzeCallExpr(ExprPtr callable,
+                               const vector<ExprPtr> &args,
+                               EnvPtr env)
+{
+    PValuePtr pv = analyzeOne(callable, env);
+    if (!pv)
+        return NULL;
+    switch (pv->type->typeKind) {
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE : {
+        MultiPValuePtr mpv = analyzeMulti(args, env);
+        if (!mpv)
+            return NULL;
+        return analyzeCallPointer(pv, mpv);
+    }
+    }
+    ObjectPtr obj = unwrapStaticType(pv->type);
+    if (!obj) {
+        vector<ExprPtr> args2;
+        args2.push_back(callable);
+        args2.insert(args2.end(), args.begin(), args.end());
+        return analyzeCallExpr(kernelNameRef("call"), args2, env);
+    }
+
+    switch (obj->objKind) {
+
     case TYPE :
     case RECORD :
-    case PROCEDURE :
-        return analyzeInvokeCallable(x, args, env);
-    case PVALUE : {
-        PValue *y = (PValue *)x.ptr();
-        if (y->type->typeKind == STATIC_TYPE) {
-            StaticType *t = (StaticType *)y->type.ptr();
-            return analyzeInvoke(t->obj, args, env);
-        }
-        return analyzeInvokeValue(y, args, env);
+    case PROCEDURE : {
+        MultiPValuePtr mpv = analyzeMulti(args, env);
+        if (!mpv)
+            return NULL;
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        computeArgsKey(mpv, argsKey, argsTempness);
+        InvokeStackContext invokeStackContext(obj, argsKey);
+        InvokeEntryPtr entry =
+            analyzeCallable(obj, argsKey, argsTempness);
+        if (entry->inlined)
+            return analyzeCallInlined(entry, args, env);
+        if (!entry->analyzed)
+            return NULL;
+        return analyzeReturn(entry->returnIsRef, entry->returnTypes);
     }
-    case PRIM_OP :
-        return analyzeInvokePrimOp((PrimOp *)x.ptr(), args, env);
+
+    case PRIM_OP : {
+        PrimOpPtr x = (PrimOp *)obj.ptr();
+        return analyzePrimOpExpr(x, args, env);
     }
-    error("invalid call operation");
-    return NULL;
+
+    default :
+        error("invalid call expression");
+        return NULL;
+
+    }
 }
 
 
 
 //
-// analyzeInvokeCallable, analyzeInvokeSpecialCase, analyzeCallable
+// analyzeCallValue
 //
 
-ObjectPtr analyzeInvokeCallable(ObjectPtr x,
-                                const vector<ExprPtr> &args,
-                                EnvPtr env)
+MultiPValuePtr analyzeCallValue(PValuePtr callable,
+                                MultiPValuePtr args)
 {
-    vector<TypePtr> argsKey;
-    vector<ValueTempness> argsTempness;
-    vector<LocationPtr> argLocations;
-    if (!computeArgsKey(args, env, argsKey, argsTempness, argLocations))
+    switch (callable->type->typeKind) {
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+        return analyzeCallPointer(callable, args);
+    }
+    ObjectPtr obj = unwrapStaticType(callable->type);
+    if (!obj) {
+        MultiPValuePtr args2 = new MultiPValue(callable);
+        args2->add(args);
+        return analyzeCallValue(kernelPValue("call"), args2);
+    }
+
+    switch (obj->objKind) {
+
+    case TYPE :
+    case RECORD :
+    case PROCEDURE : {
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        computeArgsKey(args, argsKey, argsTempness);
+        InvokeStackContext invokeStackContext(obj, argsKey);
+        InvokeEntryPtr entry =
+            analyzeCallable(obj, argsKey, argsTempness);
+        if (entry->inlined)
+            error("call to inlined code is not allowed in this context");
+        if (!entry->analyzed)
+            return NULL;
+        return analyzeReturn(entry->returnIsRef, entry->returnTypes);
+    }
+
+    case PRIM_OP : {
+        PrimOpPtr x = (PrimOp *)obj.ptr();
+        return analyzePrimOp(x, args);
+    }
+
+    default :
+        error("invalid call expression");
         return NULL;
-    ObjectPtr result = analyzeInvokeSpecialCase(x, argsKey);
-    if (result.ptr())
-        return result;
-    InvokeStackContext invokeStackContext(x, argsKey);
-    InvokeEntryPtr entry =
-        analyzeCallable(x, argsKey, argsTempness, argLocations);
-    if (entry->inlined)
-        return analyzeInvokeInlined(entry, args, env);
-    if (!entry->analyzed)
-        return NULL;
-    return entry->analysis;
+
+    }
 }
 
-ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
-                                   const vector<TypePtr> &argsKey)
+
+
+//
+// analyzeCallPointer
+//
+
+MultiPValuePtr analyzeCallPointer(PValuePtr x,
+                                  MultiPValuePtr args)
 {
-    switch (x->objKind) {
-    case TYPE : {
-        Type *y = (Type *)x.ptr();
-        if (argsKey.empty())
-            return new PValue(y, true);
-        break;
+    switch (x->type->typeKind) {
+
+    case CODE_POINTER_TYPE : {
+        CodePointerType *y = (CodePointerType *)x->type.ptr();
+        return analyzeReturn(y->returnIsRef, y->returnTypes);
     }
-    case PROCEDURE : {
-        if ((x == kernelName("destroy")) &&
-            (argsKey.size() == 1) &&
-            isPrimitiveType(argsKey[0]))
-        {
+
+    case CCODE_POINTER_TYPE : {
+        CCodePointerType *y = (CCodePointerType *)x->type.ptr();
+        if (!y->returnType)
             return new MultiPValue();
-        }
-        break;
+        return new MultiPValue(new PValue(y->returnType, true));
     }
+
+    default :
+        assert(false);
+        return NULL;
+
     }
-    return NULL;
 }
+
+
+
+//
+// analyzeCallable
+//
 
 static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
                                             unsigned entryIndex,
@@ -830,8 +1168,7 @@ static bool tempnessMatches(CodePtr code,
 
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness,
-                               const vector<LocationPtr> &argLocations)
+                               const vector<ValueTempness> &argsTempness)
 {
     InvokeSetPtr invokeSet = lookupInvokeSet(x, argsKey);
     const vector<OverloadPtr> &overloads = callableOverloads(x);
@@ -860,31 +1197,12 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 
 
 //
-// analyzeReturn
+// analyzeCallInlined
 //
 
-ObjectPtr analyzeReturn(const vector<bool> &returnIsRef,
-                        const vector<TypePtr> &returnTypes)
-{
-    if (returnTypes.size() == 1)
-        return new PValue(returnTypes[0], !returnIsRef[0]);
-    MultiPValuePtr x = new MultiPValue();
-    for (unsigned i = 0; i < returnTypes.size(); ++i) {
-        PValuePtr pv = new PValue(returnTypes[i], !returnIsRef[i]);
-        x->values.push_back(pv);
-    }
-    return x.ptr();
-}
-
-
-
-//
-// analyzeInvokeInlined
-//
-
-ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
-                               const vector<ExprPtr> &args,
-                               EnvPtr env)
+MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
+                                  const vector<ExprPtr> &args,
+                                  EnvPtr env)
 {
     assert(entry->inlined);
 
@@ -910,24 +1228,23 @@ ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
 
-    VarArgsInfoPtr vaInfo = new VarArgsInfo(entry->hasVarArgs);
     if (entry->hasVarArgs) {
+        MultiExprPtr varArgs = new MultiExpr();
         for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
             ExprPtr expr = new ForeignExpr(env, args[i]);
-            vaInfo->varArgs.push_back(expr);
+            varArgs->add(expr);
         }
+        addLocal(bodyEnv, new Identifier("%varArgs"), varArgs.ptr());
     }
-    addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
 
     AnalysisContextPtr ctx = new AnalysisContext();
     bool ok = analyzeStatement(code->body, bodyEnv, ctx);
-
+    if (!ok && !ctx->returnInitialized)
+        return NULL;
     if (ctx->returnInitialized)
         return analyzeReturn(ctx->returnIsRef, ctx->returnTypes);
-    else if (ok)
-        return new MultiPValue();
     else
-        return NULL;
+        return new MultiPValue();
 }
 
 
@@ -936,53 +1253,44 @@ ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
 // analyzeCodeBody
 //
 
-void analyzeCodeBody(InvokeEntryPtr entry) {
+void analyzeCodeBody(InvokeEntryPtr entry)
+{
     assert(!entry->analyzed);
-    ObjectPtr result;
+
     CodePtr code = entry->code;
+
     if (!code->returnSpecs.empty()) {
         evaluateReturnSpecs(code->returnSpecs, entry->env,
                             entry->returnIsRef, entry->returnTypes);
-        result = analyzeReturn(entry->returnIsRef, entry->returnTypes);
-    }
-    else {
-        EnvPtr bodyEnv = new Env(entry->env);
-
-        for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
-            PValuePtr parg = new PValue(entry->fixedArgTypes[i], false);
-            addLocal(bodyEnv, entry->fixedArgNames[i], parg.ptr());
-        }
-
-        VarArgsInfoPtr vaInfo = new VarArgsInfo(entry->hasVarArgs);
-        if (entry->hasVarArgs) {
-            for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
-                PValuePtr parg = new PValue(entry->varArgTypes[i], false);
-                ExprPtr expr = new ObjectExpr(parg.ptr());
-                vaInfo->varArgs.push_back(expr);
-            }
-        }
-        addLocal(bodyEnv, new Identifier("%varArgs"), vaInfo.ptr());
-
-        AnalysisContextPtr ctx = new AnalysisContext();
-        bool ok = analyzeStatement(code->body, bodyEnv, ctx);
-        if (ctx->returnInitialized) {
-            result = analyzeReturn(ctx->returnIsRef, ctx->returnTypes);
-            entry->returnIsRef = ctx->returnIsRef;
-            entry->returnTypes = ctx->returnTypes;
-        }
-        else if (ok) {
-            result = new MultiPValue();
-            entry->returnIsRef.clear();
-            entry->returnTypes.clear();
-        }
-        else {
-            result = NULL;
-        }
-    }
-    if (result.ptr()) {
-        entry->analysis = result;
         entry->analyzed = true;
+        return;
     }
+
+    EnvPtr bodyEnv = new Env(entry->env);
+
+    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+        PValuePtr parg = new PValue(entry->fixedArgTypes[i], false);
+        addLocal(bodyEnv, entry->fixedArgNames[i], parg.ptr());
+    }
+
+    if (entry->hasVarArgs) {
+        MultiPValuePtr varArgs = new MultiPValue();
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
+            PValuePtr parg = new PValue(entry->varArgTypes[i], false);
+            varArgs->values.push_back(parg);
+        }
+        addLocal(bodyEnv, new Identifier("%varArgs"), varArgs.ptr());
+    }
+
+    AnalysisContextPtr ctx = new AnalysisContext();
+    bool ok = analyzeStatement(code->body, bodyEnv, ctx);
+    if (!ok && !ctx->returnInitialized)
+        return;
+    if (ctx->returnInitialized) {
+        entry->returnIsRef = ctx->returnIsRef;
+        entry->returnTypes = ctx->returnTypes;
+    }
+    entry->analyzed = true;
 }
 
 
@@ -1032,7 +1340,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
                     error(x->exprs[i],
                           "mismatching by-ref and by-value returns");
                 }
-                PValuePtr pv = analyzeValue(x->exprs[i], env);
+                PValuePtr pv = analyzeOne(x->exprs[i], env);
                 if (!pv)
                     return false;
                 if (pv->type != ctx->returnTypes[i])
@@ -1048,7 +1356,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
             ctx->returnTypes.clear();
             for (unsigned i = 0; i < x->exprs.size(); ++i) {
                 ctx->returnIsRef.push_back(x->isRef[i]);
-                PValuePtr pv = analyzeValue(x->exprs[i], env);
+                PValuePtr pv = analyzeOne(x->exprs[i], env);
                 if (!pv)
                     return false;
                 if (pv->isTemp && x->isRef[i]) {
@@ -1115,7 +1423,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
     case VAR :
     case REF : {
-        MultiPValuePtr right = analyzeMultiValue(x->expr, env);
+        MultiPValuePtr right = analyzeExpr(x->expr, env);
         if (!right)
             return NULL;
         if (right->size() != x->names.size())
@@ -1146,86 +1454,54 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
 
 //
-// analyzeInvokeValue
+// analyzePrimOpExpr, analyzePrimOp
 //
 
-ObjectPtr analyzeInvokeValue(PValuePtr x, 
-                             const vector<ExprPtr> &args,
-                             EnvPtr env)
+MultiPValuePtr analyzePrimOpExpr(PrimOpPtr x,
+                                 const vector<ExprPtr> &args,
+                                 EnvPtr env)
 {
-    switch (x->type->typeKind) {
-
-    case CODE_POINTER_TYPE : {
-        CodePointerType *y = (CodePointerType *)x->type.ptr();
-        return analyzeReturn(y->returnIsRef, y->returnTypes);
-    }
-
-    case CCODE_POINTER_TYPE : {
-        CCodePointerType *y = (CCodePointerType *)x->type.ptr();
-        if (!y->returnType)
-            return new MultiPValue();
-        return new PValue(y->returnType, true);
-    }
-
-    default : {
-        vector<ExprPtr> args2;
-        args2.push_back(new ObjectExpr(x.ptr()));
-        args2.insert(args2.end(), args.begin(), args.end());
-        return analyzeInvoke(kernelName("call"), args2, env);
-    }
-
-    }
+    MultiPValuePtr mpv = analyzeMulti(args, env);
+    if (!mpv)
+        return NULL;
+    return analyzePrimOp(x, mpv);
 }
 
-
-
-//
-// analyzeInvokePrimOp
-//
-
-ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env)
+MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 {
     switch (x->primOpCode) {
 
-    case PRIM_TypeP : {
-        return new PValue(boolType, true);
-    }
+    case PRIM_TypeP :
+        return new MultiPValue(new PValue(boolType, true));
 
-    case PRIM_TypeSize : {
-        return new PValue(cSizeTType, true);
-    }
+    case PRIM_TypeSize :
+        return new MultiPValue(new PValue(cSizeTType, true));
 
     case PRIM_primitiveCopy :
         return new MultiPValue();
 
     case PRIM_boolNot :
-        return new PValue(boolType, true);
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_numericEqualsP :
-        return new PValue(boolType, true);
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_numericLesserP :
-        return new PValue(boolType, true);
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_numericAdd :
     case PRIM_numericSubtract :
     case PRIM_numericMultiply :
     case PRIM_numericDivide : {
         ensureArity(args, 2);
-        PValuePtr y = analyzeValue(args[0], env);
-        if (!y)
-            return NULL;
-        return new PValue(y->type, true);
+        TypePtr t = numericTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t, true));
     }
 
     case PRIM_numericNegate : {
         ensureArity(args, 1);
-        PValuePtr y = analyzeValue(args[0], env);
-        if (!y)
-            return NULL;
-        return new PValue(y->type, true);
+        TypePtr t = numericTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t, true));
     }
 
     case PRIM_integerRemainder :
@@ -1235,24 +1511,20 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
     case PRIM_integerBitwiseOr :
     case PRIM_integerBitwiseXor : {
         ensureArity(args, 2);
-        PValuePtr y = analyzeValue(args[0], env);
-        if (!y)
-            return NULL;
-        return new PValue(y->type, true);
+        IntegerTypePtr t = integerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t.ptr(), true));
     }
 
     case PRIM_integerBitwiseNot : {
         ensureArity(args, 1);
-        PValuePtr y = analyzeValue(args[0], env);
-        if (!y)
-            return NULL;
-        return new PValue(y->type, true);
+        IntegerTypePtr t = integerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t.ptr(), true));
     }
 
     case PRIM_numericConvert : {
         ensureArity(args, 2);
-        TypePtr t = evaluateNumericType(args[0], env);
-        return new PValue(t, true);
+        TypePtr t = valueToNumericType(args, 0);
+        return new MultiPValue(new PValue(t, true));
     }
 
     case PRIM_Pointer :
@@ -1260,49 +1532,40 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
 
     case PRIM_addressOf : {
         ensureArity(args, 1);
-        PValuePtr y = analyzeValue(args[0], env);
-        if (!y)
-            return NULL;
-        return new PValue(pointerType(y->type), true);
+        TypePtr t = pointerType(args->values[0]->type);
+        return new MultiPValue(new PValue(t, true));
     }
 
     case PRIM_pointerDereference : {
         ensureArity(args, 1);
-        PValuePtr y = analyzePointerValue(args[0], env);
-        if (!y)
-            return NULL;
-        PointerType *t = (PointerType *)y->type.ptr();
-        return new PValue(t->pointeeType, false);
+        PointerTypePtr pt = pointerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(pt->pointeeType, false));
     }
 
-    case PRIM_pointerEqualsP : {
-        return new PValue(boolType, true);
-    }
-
-    case PRIM_pointerLesserP : {
-        return new PValue(boolType, true);
-    }
+    case PRIM_pointerEqualsP :
+    case PRIM_pointerLesserP :
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_pointerOffset : {
         ensureArity(args, 2);
-        PValuePtr y = analyzePointerValue(args[0], env);
-        return new PValue(y->type, true);
+        PointerTypePtr pt = pointerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(pt.ptr(), true));
     }
 
     case PRIM_pointerToInt : {
         ensureArity(args, 2);
-        TypePtr t = evaluateIntegerType(args[0], env);
-        return new PValue(t, true);
+        IntegerTypePtr t = valueToIntegerType(args, 0);
+        return new MultiPValue(new PValue(t.ptr(), true));
     }
 
     case PRIM_intToPointer : {
         ensureArity(args, 2);
-        TypePtr t = evaluateType(args[0], env);
-        return new PValue(pointerType(t), true);
+        TypePtr t = valueToType(args, 0);
+        return new MultiPValue(new PValue(pointerType(t), true));
     }
 
     case PRIM_CodePointerP : {
-        return new PValue(boolType, true);
+        return new MultiPValue(new PValue(boolType, true));
     }
 
     case PRIM_CodePointer :
@@ -1312,51 +1575,43 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         error("RefCodePointer type constructor cannot be called");
 
     case PRIM_makeCodePointer : {
-        if (args.size() < 1)
-            error("incorrect no. of parameters");
-        ObjectPtr callable = evaluateOneStatic(args[0], env);
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+        if (!callable)
+            argumentError(0, "static callable expected");
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
         case PROCEDURE :
             break;
         default :
-            error(args[0], "invalid callable");
+            argumentError(0, "invalid callable");
         }
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
-        vector<LocationPtr> argLocations;
-        for (unsigned i = 1; i < args.size(); ++i) {
-            TypePtr t = evaluateType(args[i], env);
+        for (unsigned i = 1; i < args->size(); ++i) {
+            TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
             argsTempness.push_back(LVALUE);
-            argLocations.push_back(args[i]->location);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
 
         InvokeEntryPtr entry =
-            analyzeCallable(callable, argsKey,
-                            argsTempness, argLocations);
+            analyzeCallable(callable, argsKey, argsTempness);
         if (entry->inlined)
-            error(args[0], "cannot create pointer to inlined code");
+            argumentError(0, "cannot create pointer to inlined code");
         if (!entry->analyzed)
             return NULL;
-        vector<TypePtr> argTypes = entry->fixedArgTypes;
-        if (entry->hasVarArgs) {
-            argTypes.insert(argTypes.end(),
-                            entry->varArgTypes.begin(),
-                            entry->varArgTypes.end());
-        }
-        TypePtr cpType = codePointerType(argTypes,
+        TypePtr cpType = codePointerType(argsKey,
                                          entry->returnIsRef,
                                          entry->returnTypes);
-        return new PValue(cpType, true);
+        return new MultiPValue(new PValue(cpType, true));
     }
 
-    case PRIM_CCodePointerP : {
-        return new PValue(boolType, true);
-    }
+    case PRIM_CCodePointerP :
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_CCodePointer :
         error("CCodePointer type constructor cannot be called");
@@ -1368,172 +1623,149 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
         error("FastCallCodePointer type constructor cannot be called");
 
     case PRIM_makeCCodePointer : {
-        if (args.size() < 1)
-            error("incorrect no. of parameters");
-        ObjectPtr callable = evaluateOneStatic(args[0], env);
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+        if (!callable)
+            argumentError(0, "static callable expected");
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
         case PROCEDURE :
             break;
         default :
-            error(args[0], "invalid callable");
+            argumentError(0, "invalid callable");
         }
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
-        vector<LocationPtr> argLocations;
-        for (unsigned i = 1; i < args.size(); ++i) {
-            TypePtr t = evaluateType(args[i], env);
+        for (unsigned i = 1; i < args->size(); ++i) {
+            TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
             argsTempness.push_back(LVALUE);
-            argLocations.push_back(args[i]->location);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
 
-        InvokeEntryPtr entry =
-            analyzeCallable(callable, argsKey,
-                            argsTempness, argLocations);
+        InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
         if (entry->inlined)
-            error(args[0], "cannot create pointer to inlined code");
+            argumentError(0, "cannot create pointer to inlined code");
         if (!entry->analyzed)
             return NULL;
-        vector<TypePtr> argTypes = entry->fixedArgTypes;
-        if (entry->hasVarArgs) {
-            argTypes.insert(argTypes.end(),
-                            entry->varArgTypes.begin(),
-                            entry->varArgTypes.end());
-        }
         TypePtr returnType;
         if (entry->returnTypes.empty()) {
             returnType = NULL;
         }
         else if (entry->returnTypes.size() == 1) {
-            if (entry->returnIsRef[0])
-                error(args[0],
-                      "cannot create c-code pointer to ref-return code");
+            if (entry->returnIsRef[0]) {
+                argumentError(0, "cannot create c-code pointer to "
+                              " return-by-reference code");
+            }
             returnType = entry->returnTypes[0];
         }
         else {
-            error(args[0],
-                  "cannot create c-code pointer to multi-return code");
+            argumentError(0, "cannot create c-code pointer to "
+                          "multi-return code");
         }
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
-                                           argTypes,
+                                           argsKey,
                                            false,
                                            returnType);
-        return new PValue(ccpType, true);
+        return new MultiPValue(new PValue(ccpType, true));
     }
 
     case PRIM_pointerCast : {
         ensureArity(args, 2);
-        TypePtr t = evaluatePointerLikeType(args[0], env);
-        return new PValue(t, true);
+        TypePtr t = valueToPointerLikeType(args, 0);
+        return new MultiPValue(new PValue(t, true));
     }
 
     case PRIM_Array :
         error("Array type constructor cannot be called");
 
     case PRIM_array : {
-        if (args.size() < 1)
+        if (args->size() < 1)
             error("atleast one element required for creating an array");
-        PValuePtr y = analyzeValue(args[0], env);
-        if (!y)
-            return NULL;
-        TypePtr z = arrayType(y->type, args.size());
-        return new PValue(z, true);
+        TypePtr t = arrayType(args->values[0]->type, args->size());
+        return new MultiPValue(new PValue(t, true));
     }
 
     case PRIM_arrayRef : {
         ensureArity(args, 2);
-        PValuePtr y = analyzeArrayValue(args[0], env);
-        if (!y)
-            return NULL;
-        ArrayType *z = (ArrayType *)y->type.ptr();
-        return new PValue(z->elementType, false);
+        ArrayTypePtr t = arrayTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t->elementType, false));
     }
 
-    case PRIM_TupleP : {
-        return new PValue(boolType, true);
-    }
+    case PRIM_TupleP :
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_Tuple :
         error("Tuple type constructor cannot be called");
 
-    case PRIM_TupleElementCount : {
-        return new PValue(cSizeTType, true);
-    }
+    case PRIM_TupleElementCount :
+        return new MultiPValue(new PValue(cSizeTType, true));
 
-    case PRIM_TupleElementOffset : {
-        return new PValue(cSizeTType, true);
-    }
+    case PRIM_TupleElementOffset :
+        return new MultiPValue(new PValue(cSizeTType, true));
 
     case PRIM_tuple : {
         vector<TypePtr> elementTypes;
-        for (unsigned i = 0; i < args.size(); ++i) {
-            PValuePtr y = analyzeValue(args[i], env);
-            if (!y)
-                return NULL;
-            elementTypes.push_back(y->type);
-        }
-        return new PValue(tupleType(elementTypes), true);
+        for (unsigned i = 0; i < args->size(); ++i)
+            elementTypes.push_back(args->values[i]->type);
+        TypePtr t = tupleType(elementTypes);
+        return new MultiPValue(new PValue(t, true));
     }
 
     case PRIM_tupleRef : {
         ensureArity(args, 2);
-        PValuePtr y = analyzeTupleValue(args[0], env);
-        if (!y)
-            return NULL;
-        size_t i = evaluateSizeT(args[1], env);
-        TupleType *z = (TupleType *)y->type.ptr();
-        if (i >= z->elementTypes.size())
-            error(args[1], "tuple index out of range");
-        return new PValue(z->elementTypes[i], false);
+        TupleTypePtr t = tupleTypeOfValue(args, 0);
+        ObjectPtr obj = unwrapStaticType(args->values[1]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeT(obj, i))
+            argumentError(1, "expecting SizeT value");
+        if (i >= t->elementTypes.size())
+            argumentError(1, "tuple index out of range");
+        return new MultiPValue(new PValue(t->elementTypes[i], false));
     }
 
-    case PRIM_RecordP : {
-        return new PValue(boolType, true);
-    }
+    case PRIM_RecordP :
+        return new MultiPValue(new PValue(boolType, true));
 
-    case PRIM_RecordFieldCount : {
-        return new PValue(cSizeTType, true);
-    }
+    case PRIM_RecordFieldCount :
+        return new MultiPValue(new PValue(cSizeTType, true));
 
-    case PRIM_RecordFieldOffset : {
-        return new PValue(cSizeTType, true);
-    }
+    case PRIM_RecordFieldOffset :
+        return new MultiPValue(new PValue(cSizeTType, true));
 
-    case PRIM_RecordFieldIndex : {
-        return new PValue(cSizeTType, true);
-    }
+    case PRIM_RecordFieldIndex :
+        return new MultiPValue(new PValue(cSizeTType, true));
 
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);
-        PValuePtr y = analyzeRecordValue(args[0], env);
-        if (!y)
-            return NULL;
-        RecordType *z = (RecordType *)y->type.ptr();
-        size_t i = evaluateSizeT(args[1], env);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
+        RecordTypePtr t = recordTypeOfValue(args, 0);
+        ObjectPtr obj = unwrapStaticType(args->values[1]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeT(obj, i))
+            argumentError(1, "expecting SizeT value");
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
         if (i >= fieldTypes.size())
-            error("field index out of range");
-        return new PValue(fieldTypes[i], false);
+            argumentError(1, "field index out of range");
+        return new MultiPValue(new PValue(fieldTypes[i], false));
     }
 
     case PRIM_recordFieldRefByName : {
         ensureArity(args, 2);
-        PValuePtr y = analyzeRecordValue(args[0], env);
-        if (!y)
-            return NULL;
-        RecordType *z = (RecordType *)y->type.ptr();
-        IdentifierPtr fname = evaluateIdentifier(args[1], env);
-        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(z);
+        RecordTypePtr t = recordTypeOfValue(args, 0);
+        ObjectPtr obj = unwrapStaticType(args->values[1]->type);
+        if (!obj || (obj->objKind != IDENTIFIER))
+            argumentError(1, "expecting field name identifier");
+        IdentifierPtr fname = (Identifier *)obj.ptr();
+        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(t);
         map<string, size_t>::const_iterator fi =
             fieldIndexMap.find(fname->str);
         if (fi == fieldIndexMap.end())
-            error(args[1], "field not in record");
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(z);
-        return new PValue(fieldTypes[fi->second], false);
+            argumentError(1, "field not in record");
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
+        return new MultiPValue(new PValue(fieldTypes[fi->second], false));
     }
 
     case PRIM_Static :
@@ -1541,29 +1773,30 @@ ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
 
     case PRIM_StaticName : {
         ensureArity(args, 1);
-        ObjectPtr y = evaluateOneStatic(args[0], env);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj)
+            argumentError(0, "expecting static object");
         ostringstream sout;
-        printName(sout, y);
+        printName(sout, obj);
         ExprPtr z = new StringLiteral(sout.str());
-        return analyze(z, env);
+        return analyzeExpr(z, new Env());
     }
 
-    case PRIM_EnumP : {
-        return new PValue(boolType, true);
-    }
+    case PRIM_EnumP :
+        return new MultiPValue(new PValue(boolType, true));
 
-    case PRIM_enumToInt : {
-        return new PValue(cIntType, true);
-    }
+    case PRIM_enumToInt :
+        return new MultiPValue(new PValue(cIntType, true));
 
     case PRIM_intToEnum : {
         ensureArity(args, 2);
-        TypePtr t = evaluateEnumerationType(args[0], env);
-        return new PValue(t, true);
+        TypePtr t = valueToEnumerationType(args, 0);
+        return new MultiPValue(new PValue(t, true));
     }
 
     default :
         assert(false);
         return NULL;
+
     }
 }

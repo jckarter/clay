@@ -1962,12 +1962,6 @@ void initializeLambda(LambdaPtr x, EnvPtr env);
 //
 
 const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
-bool computeArgsKey(const vector<ExprPtr> &args,
-                    EnvPtr env,
-                    vector<TypePtr> &argsKey,
-                    vector<ValueTempness> &argsTempness,
-                    vector<LocationPtr> &argLocations);
-
 
 struct InvokeEntry : public Object {
     ObjectPtr callable;
@@ -2145,55 +2139,42 @@ struct MultiPValue : public Object {
     }
 };
 
-TypePtr objectType(ObjectPtr x);
-ObjectPtr unwrapStaticType(TypePtr t);
-ObjectPtr lowerValueHolder(ValueHolderPtr vh);
-bool unwrapStaticToType(ObjectPtr x, TypePtr &out);
-TypePtr unwrapStaticToType(MultiStaticPtr x, unsigned index);
-bool unwrapStaticToTypeTuple(ObjectPtr x, vector<TypePtr> &out);
-void unwrapStaticToTypeTuple(MultiStaticPtr x, unsigned index,
-                             vector<TypePtr> &out);
-bool unwrapStaticToInt(ObjectPtr x, int &out);
-int unwrapStaticToInt(MultiStaticPtr x, unsigned index);
-
-PValuePtr analysisToPValue(ObjectPtr x);
-MultiPValuePtr analysisToMultiPValue(ObjectPtr x);
-MultiPValuePtr analyzeMultiValue(ExprPtr expr, EnvPtr env);
-ObjectPtr analyzeOne(ExprPtr expr, EnvPtr env);
-PValuePtr analyzeValue(ExprPtr expr, EnvPtr env);
-PValuePtr analyzePointerValue(ExprPtr expr, EnvPtr env);
-PValuePtr analyzeArrayValue(ExprPtr expr, EnvPtr env);
-PValuePtr analyzeTupleValue(ExprPtr expr, EnvPtr env);
-PValuePtr analyzeRecordValue(ExprPtr expr, EnvPtr env);
-
-ObjectPtr analyze(ExprPtr expr, EnvPtr env);
-bool expandVarArgs(const vector<ExprPtr> &args,
-                   EnvPtr env,
-                   vector<ExprPtr> &outArgs);
-ObjectPtr analyzeStaticObject(ObjectPtr x);
-void analyzeExternal(ExternalProcedurePtr x);
+MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env);
+PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
+MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env);
+MultiPValuePtr analyzeStaticObject(ObjectPtr x);
+PValuePtr analyzeGlobalVariable(GlobalVariablePtr x);
+PValuePtr analyzeExternalVariable(ExternalVariablePtr x);
+void analyzeExternalProcedure(ExternalProcedurePtr x);
 void verifyAttributes(ExternalProcedurePtr x);
 void verifyAttributes(ExternalVariablePtr x);
-ObjectPtr analyzeFieldRef(ObjectPtr x, IdentifierPtr name);
-ObjectPtr analyzeIndexing(ObjectPtr x,
-                          const vector<ExprPtr> &args,
-                          EnvPtr env);
-ObjectPtr analyzeInvoke(ObjectPtr x, const vector<ExprPtr> &args, EnvPtr env);
-
-ObjectPtr analyzeInvokeCallable(ObjectPtr x,
-                                const vector<ExprPtr> &args,
-                                EnvPtr env);
-ObjectPtr analyzeInvokeSpecialCase(ObjectPtr x,
-                                   const vector<TypePtr> &argsKey);
-InvokeEntryPtr analyzeCallable(ObjectPtr x,
-                               const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness,
-                               const vector<LocationPtr> &argLocations);
-ObjectPtr analyzeReturn(const vector<bool> &returnIsRef,
-                        const vector<TypePtr> &returnTypes);
-ObjectPtr analyzeInvokeInlined(InvokeEntryPtr entry,
+MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
+                                   const vector<ExprPtr> &args,
+                                   EnvPtr env);
+PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
+MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
+                                   IdentifierPtr name,
+                                   EnvPtr env);
+void computeArgsKey(MultiPValuePtr args,
+                    vector<TypePtr> &argsKey,
+                    vector<ValueTempness> &argsTempness);
+MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
+                             const vector<TypePtr> &returnTypes);
+MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                const vector<ExprPtr> &args,
                                EnvPtr env);
+MultiPValuePtr analyzeCallValue(PValuePtr callable,
+                                MultiPValuePtr args);
+MultiPValuePtr analyzeCallPointer(PValuePtr x,
+                                  MultiPValuePtr args);
+InvokeEntryPtr analyzeCallable(ObjectPtr x,
+                               const vector<TypePtr> &argsKey,
+                               const vector<ValueTempness> &argsTempness);
+
+MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
+                                  const vector<ExprPtr> &args,
+                                  EnvPtr env);
+
 void analyzeCodeBody(InvokeEntryPtr entry);
 
 struct AnalysisContext : public Object {
@@ -2208,12 +2189,10 @@ typedef Pointer<AnalysisContext> AnalysisContextPtr;
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 
-ObjectPtr analyzeInvokeValue(PValuePtr x,
-                             const vector<ExprPtr> &args,
-                             EnvPtr env);
-ObjectPtr analyzeInvokePrimOp(PrimOpPtr x,
-                              const vector<ExprPtr> &args,
-                              EnvPtr env);
+MultiPValuePtr analyzePrimOpExpr(PrimOpPtr x,
+                                 const vector<ExprPtr> &args,
+                                 EnvPtr env);
+MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
 
 
@@ -2243,7 +2222,6 @@ int objectVectorHash(const vector<Pointer<T> > &a) {
     return h;
 }
 
-vector<TypePtr> evaluateTypeTuple(ExprPtr expr, EnvPtr env);
 void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
                          EnvPtr env,
                          vector<bool> &isRef,
@@ -2254,18 +2232,7 @@ ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env);
 MultiStaticPtr evaluateMultiStatic(const vector<ExprPtr> &exprs, EnvPtr env);
 
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateNumericType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateIntegerType(ExprPtr expr, EnvPtr env);
-TypePtr evaluatePointerLikeType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateTupleType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateRecordType(ExprPtr expr, EnvPtr env);
-TypePtr evaluateEnumerationType(ExprPtr expr, EnvPtr env);
-
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
-
-int evaluateInt(ExprPtr expr, EnvPtr env);
-size_t evaluateSizeT(ExprPtr expr, EnvPtr env);
-ptrdiff_t evaluatePtrDiffT(ExprPtr expr, EnvPtr env);
 bool evaluateBool(ExprPtr expr, EnvPtr env);
 
 ValueHolderPtr intToValueHolder(int x);
@@ -2309,132 +2276,19 @@ void evalPopStack(int marker);
 void evalDestroyAndPopStack(int marker);
 EValuePtr evalAllocValue(TypePtr t);
 
-void evalIntoValues(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
-void evalIntoOne(ExprPtr expr, EnvPtr env, EValuePtr out);
-EValuePtr evalOne(ExprPtr expr, EnvPtr env, EValuePtr out);
-EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
-void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
-
-void evalStaticObject(ObjectPtr x, MultiEValuePtr out);
-void evalValueHolder(ValueHolderPtr v, MultiEValuePtr out);
-
-void evalInvokeValue(EValuePtr x,
-                     const vector<ExprPtr> &args,
-                     EnvPtr env,
-                     MultiEValuePtr out);
-
-void evalInvokeVoid(ObjectPtr x,
-                    const vector<ExprPtr> &args,
-                    EnvPtr env);
-void evalInvoke(ObjectPtr x,
-                const vector<ExprPtr> &args,
-                EnvPtr env,
-                MultiEValuePtr out);
-void evalInvokeCallable(ObjectPtr x,
-                        const vector<ExprPtr> &args,
-                        EnvPtr env,
-                        MultiEValuePtr out);
-bool evalInvokeSpecialCase(ObjectPtr x,
-                           const vector<TypePtr> &argsKey);
-void evalInvokeCode(InvokeEntryPtr entry,
-                    const vector<ExprPtr> &args,
-                    EnvPtr env,
-                    MultiEValuePtr out);
-void evalInvokeInlined(InvokeEntryPtr entry,
-                       const vector<ExprPtr> &args,
-                       EnvPtr env,
-                       MultiEValuePtr out);
-
-enum TerminationKind {
-    TERMINATE_RETURN,
-    TERMINATE_BREAK,
-    TERMINATE_CONTINUE,
-    TERMINATE_GOTO
-};
-
-struct Termination : public Object {
-    TerminationKind terminationKind;
-    LocationPtr location;
-    Termination(TerminationKind terminationKind, LocationPtr location)
-        : Object(DONT_CARE), terminationKind(terminationKind),
-          location(location) {}
-};
-typedef Pointer<Termination> TerminationPtr;
-
-struct TerminateReturn : Termination {
-    TerminateReturn(LocationPtr location)
-        : Termination(TERMINATE_RETURN, location) {}
-};
-
-struct TerminateBreak : Termination {
-    TerminateBreak(LocationPtr location)
-        : Termination(TERMINATE_BREAK, location) {}
-};
-
-struct TerminateContinue : Termination {
-    TerminateContinue(LocationPtr location)
-        : Termination(TERMINATE_CONTINUE, location) {}
-};
-
-struct TerminateGoto : Termination {
-    IdentifierPtr targetLabel;
-    TerminateGoto(IdentifierPtr targetLabel, LocationPtr location)
-        : Termination(TERMINATE_GOTO, location) {}
-};
-
-struct LabelInfo {
-    EnvPtr env;
-    int stackMarker;
-    int blockPosition;
-    LabelInfo() {}
-    LabelInfo(EnvPtr env, int stackMarker, int blockPosition)
-        : env(env), stackMarker(stackMarker), blockPosition(blockPosition) {}
-};
-
-struct EReturn {
-    bool byRef;
-    TypePtr type;
-    EValuePtr value;
-    EReturn(bool byRef, TypePtr type, EValuePtr value)
-        : byRef(byRef), type(type), value(value) {}
-};
-
-struct EvalContext : public Object {
-    vector<EReturn> returns;
-    EvalContext(const vector<EReturn> &returns)
-        : Object(DONT_CARE), returns(returns) {}
-};
-typedef Pointer<EvalContext> EvalContextPtr;
-
-TerminationPtr evalStatement(StatementPtr stmt,
-                             EnvPtr env,
-                             EvalContextPtr ctx);
-
-void evalCollectLabels(const vector<StatementPtr> &statements,
-                       unsigned startIndex,
-                       EnvPtr env,
-                       map<string, LabelInfo> &labels);
-EnvPtr evalBinding(BindingPtr x, EnvPtr env);
-
-void evalInvokePrimOp(PrimOpPtr x,
-                      const vector<ExprPtr> &args,
-                      EnvPtr env,
-                      MultiEValuePtr out);
-
 
 
 //
 // codegen
 //
 
+void setExceptionsEnabled(bool enabled);
+
 struct CValue : public Object {
     TypePtr type;
     llvm::Value *llValue;
-    llvm::BasicBlock *landingPad;
-    llvm::BasicBlock *destructor;
     CValue(TypePtr type, llvm::Value *llValue)
-        : Object(CVALUE), type(type), llValue(llValue),
-          landingPad(NULL), destructor(NULL) {}
+        : Object(CVALUE), type(type), llValue(llValue) {}
 };
 
 struct MultiCValue : public Object {
@@ -2490,100 +2344,18 @@ struct CodegenContext : public Object {
 
 typedef Pointer<CodegenContext> CodegenContextPtr;
 
-void setExceptionsEnabled(bool enabled);
-
-void codegenValueInit(CValuePtr dest, EnvPtr env, CodegenContextPtr ctx);
-void codegenValueDestroy(CValuePtr dest, EnvPtr env, CodegenContextPtr ctx);
-void codegenValueCopy(CValuePtr dest, CValuePtr src,
-                      EnvPtr env, CodegenContextPtr ctx);
-void codegenValueAssign(CValuePtr dest, CValuePtr src,
-                        EnvPtr env, CodegenContextPtr ctx);
-
-llvm::Value *codegenToBoolFlag(CValuePtr a, EnvPtr env,
-                               CodegenContextPtr ctx);
-
-int cgMarkStack();
-void cgDestroyStack(int marker, EnvPtr env, CodegenContextPtr ctx);
-void cgPopStack(int marker);
-void cgDestroyAndPopStack(int marker, EnvPtr env, CodegenContextPtr ctx);
-
-CValuePtr codegenAllocValue(TypePtr t);
-
-void codegenCodeBody(InvokeEntryPtr entry,
-                     const string &callableName);
-
-bool codegenStatement(StatementPtr stmt,
-                      EnvPtr env,
-                      CodegenContextPtr ctx);
-
-void codegenCollectLabels(const vector<StatementPtr> &statements,
-                          unsigned startIndex,
-                          CodegenContextPtr ctx);
-EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx);
-
-void codegenIntoValues(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                       MultiCValuePtr out);
-void codegenIntoOne(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                    CValuePtr out);
-CValuePtr codegenOne(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                     CValuePtr out);
-CValuePtr codegenOneAsRef(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx);
-
-void codegenExpr(ExprPtr expr, EnvPtr env, CodegenContextPtr ctx,
-                 MultiCValuePtr out);
-void codegenStaticObject(ObjectPtr x, EnvPtr env, CodegenContextPtr ctx,
-                         MultiCValuePtr out);
 void codegenGlobalVariable(GlobalVariablePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);
-void codegenExternal(ExternalProcedurePtr x);
-void codegenValueHolder(ValueHolderPtr v, MultiCValuePtr out);
-llvm::Value *codegenConstant(ValueHolderPtr v);
+void codegenExternalProcedure(ExternalProcedurePtr x);
 
-void codegenInvokeValue(CValuePtr x,
-                        const vector<ExprPtr> &args,
-                        EnvPtr env,
-                        CodegenContextPtr ctx,
-                        MultiCValuePtr out);
-void codegenInvokeVoid(ObjectPtr x,
-                       const vector<ExprPtr> &args,
-                       EnvPtr env,
-                       CodegenContextPtr ctx);
-void codegenInvoke(ObjectPtr x,
-                   const vector<ExprPtr> &args,
-                   EnvPtr env,
-                   CodegenContextPtr ctx,
-                   MultiCValuePtr out);
-void codegenInvokeCallable(ObjectPtr x,
-                           const vector<ExprPtr> &args,
-                           EnvPtr env,
-                           CodegenContextPtr ctx,
-                           MultiCValuePtr out);
-bool codegenInvokeSpecialCase(ObjectPtr x,
-                              const vector<TypePtr> &argsKey);
 InvokeEntryPtr codegenCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness,
-                               const vector<LocationPtr> &argLocations);
-void codegenInvokeCode(InvokeEntryPtr entry,
-                       const vector<ExprPtr> &args,
-                       EnvPtr env,
-                       CodegenContextPtr ctx,
-                       MultiCValuePtr out);
-void codegenInvokeInlined(InvokeEntryPtr entry,
-                          const vector<ExprPtr> &args,
-                          EnvPtr env,
-                          CodegenContextPtr ctx,
-                          MultiCValuePtr out);
-
+                               const vector<ValueTempness> &argsTempness);
+void codegenCodeBody(InvokeEntryPtr entry, const string &callableName);
 void codegenCWrapper(InvokeEntryPtr entry, const string &callableName);
-
-void codegenInvokePrimOp(PrimOpPtr x,
-                         const vector<ExprPtr> &args,
-                         EnvPtr env,
-                         CodegenContextPtr ctx,
-                         MultiCValuePtr out);
 
 void codegenSharedLib(ModulePtr module);
 void codegenExe(ModulePtr module);
+
 
 #endif
