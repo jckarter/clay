@@ -1,5 +1,10 @@
 import sys
 import os
+import tempfile
+import time
+import cStringIO
+from subprocess import Popen, PIPE
+from multiprocessing import Pool, cpu_count
 
 tests = ("factorial platform " +
          "test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 " +
@@ -15,19 +20,24 @@ perfTests = ("insertionsort1 insertionsort2 " +
 win32Tests = "beep".split()
 
 testDir = os.path.dirname(__file__)
-compiler = os.path.join(testDir, "..", "bin", "clay")
+compiler = os.path.join("compiler", "src", "clay")
 
-def runtest(input) :
-    print "TEST:", input
-    command = compiler + " " + input
-    print command
-    result = os.system(command)
-    if result != 0 :
-        print "Compilation failed"
-        return False
-    output = "a.exe" if sys.platform == "win32" else "a.out"
-    os.system(os.path.join(".", output))
-    return True
+def runtest(clayfile):
+    outstream = cStringIO.StringIO()
+    print >>outstream, "TEST:", clayfile
+    print >>outstream, compiler, clayfile
+    outfile = tempfile.NamedTemporaryFile(delete = False)
+    outfile.close()
+    process = Popen([compiler, "-o", outfile.name, clayfile], 
+            stdout=PIPE, stderr=PIPE)
+    if process.wait() != 0 :
+        print >>outstream, "Compilation failed"
+        return outstream.getvalue()
+    print >>outstream, process.stdout.read(),
+    process = Popen([outfile.name], stdout=PIPE).stdout
+    print >>outstream, process.read(),
+    os.unlink(outfile.name)
+    return outstream.getvalue()
 
 def runtests() :
     paths = []
@@ -41,8 +51,10 @@ def runtests() :
     for x in perfTests :
         p = os.path.join("perf", x) + ".clay"
         paths.append(p)
-    for p in paths :
-        if not runtest(os.path.join(testDir, p)) :
-            print "Test Failed"
+    pool = Pool(processes = cpu_count())
+    results = pool.imap(runtest, 
+            [os.path.join(testDir, path) for path in paths])
+    for i in range(len(paths)):
+        print results.next(),
 
 runtests()
