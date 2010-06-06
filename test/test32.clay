@@ -3,7 +3,7 @@
 // Opaque
 //
 
-static Opaque = Int;
+alias Opaque = Int;
 
 
 //

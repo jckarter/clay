@@ -27,7 +27,7 @@ external (stdcall) SetFilePointerEx(
 // errorMessage
 //
 
-static FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
+alias FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
 
 errorMessage(errorCode) {
     var buf = Array[Byte, 1024]();

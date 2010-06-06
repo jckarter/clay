@@ -12,7 +12,7 @@ public import sequences.filter.*;
 
 [F, A | Sequence?(A)]
 reduce(f:F, seq:A) {
-    static X = SequenceElementType(A);
+    alias X = SequenceElementType(A);
     return reduce(f, X(0), seq);
 }
 
@@ -32,7 +32,7 @@ overload reduce(f:F, initial:X, seq:A) {
 
 [A | Sequence?(A)]
 split(a:A, sep) {
-    static T = SequenceElementType(A);
+    alias T = SequenceElementType(A);
     var result = Vector[Vector[T]]();
     push(result, Vector[T]());
     for (x in a) {
@@ -52,7 +52,7 @@ split(a:A, sep) {
 
 [A | RandomAccessSequence?(A)]
 slice(a:A, begin, end) {
-    static T = SequenceElementType(A);
+    alias T = SequenceElementType(A);
     var v = Vector[T]();
     for (i in range(begin, end))
         push(v, a[i]);

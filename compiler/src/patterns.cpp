@@ -37,8 +37,8 @@ PatternPtr evaluateStaticObjectPattern(ObjectPtr x)
         assert(y->patternKind == PATTERN_CELL);
         return y;
     }
-    case STATIC_GLOBAL : {
-        StaticGlobal *y = (StaticGlobal *)x.ptr();
+    case GLOBAL_ALIAS : {
+        GlobalAlias *y = (GlobalAlias *)x.ptr();
         return evaluatePattern(y->expr, y->env);
     }
     default :

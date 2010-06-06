@@ -49,7 +49,7 @@ private record FilteredIterator_Val[F,ITER,X] {
 
 [F,A]
 overload iterator(a:Filtered[F,A]) {
-    static X = SequenceElementType(A);
+    alias X = SequenceElementType(A);
     return FilteredIterator_Val(a.predicate, iterator(a.innerSequence),
                                 false, X());
 }
@@ -87,7 +87,7 @@ private record FilteredIterator_Ref[F,ITER,X] {
 
 [F,A | LValueSequence?(A)]
 overload iterator(a:Filtered[F,A]) {
-    static X = SequenceElementType(A);
+    alias X = SequenceElementType(A);
     return FilteredIterator_Ref(a.predicate, iterator(a.innerSequence),
                                 false, null(X));
 }

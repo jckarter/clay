@@ -10,7 +10,7 @@ overload Foo(static Int64) = true;
 f(x) = x;
 
 main() {
-    static T = Int32;
+    alias T = Int32;
     var x = 0;
     if (IsInt64(T) and Foo(T))
         x += 1;

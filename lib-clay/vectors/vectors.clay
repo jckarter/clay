@@ -50,7 +50,7 @@ overload Vector[T](a:A) {
 
 [A | Sequence?(A)]
 overload Vector(a:A) {
-    static T = SequenceElementType(A);
+    alias T = SequenceElementType(A);
     return Vector[T](a);
 }
 

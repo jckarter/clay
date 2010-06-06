@@ -1,9 +1,9 @@
 
 var x = 10;
 
-static Y = x;
+alias Y = x;
 
-static P = println;
+alias P = println;
 
 main() {
     inc(Y);
