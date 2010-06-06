@@ -36,23 +36,9 @@ overload lesser?(a:Static[A], b:Static[A]) = false;
 
 
 //
-// wrapStatic, unwrapStatic
+// wrapStatic
 //
 
 inlined wrapStatic(x) {
     return Static[x]();
 }
-
-[A]
-inlined unwrapStatic(x:Static[A]) = A;
-
-
-
-//
-// index
-//
-
-// FIXME: use forwarding return here
-// FIXME: avoid recursion?
-[A]
-inlined overload index(a:Static[A], ...args) = A[...args];

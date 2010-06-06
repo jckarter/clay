@@ -18,7 +18,6 @@ pack(f, a) = (f, a);
 main() {
     var V = Vector;
     var VI = V[Int32];
-    alias T = unwrapStatic(VI);
     var a = VI([1, 2, 3, 4, 5, 6]);
 
     var pl = println;
