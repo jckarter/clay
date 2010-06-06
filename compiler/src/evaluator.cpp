@@ -574,10 +574,10 @@ void evalMultiInto(const vector<ExprPtr> &exprs, EnvPtr env, MultiEValuePtr out)
     unsigned j = 0;
     for (unsigned i = 0; i < exprs.size(); ++i) {
         ExprPtr x = exprs[i];
-        MultiPValuePtr mpv = analyzeExpr(x, env);
-        assert(mpv.ptr());
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
+            MultiPValuePtr mpv = analyzeExpr(y->expr, env);
+            assert(mpv.ptr());
             assert(j + mpv->size() <= out->size());
             MultiEValuePtr out2 = new MultiEValue();
             for (unsigned k = 0; k < mpv->size(); ++k)
@@ -586,6 +586,8 @@ void evalMultiInto(const vector<ExprPtr> &exprs, EnvPtr env, MultiEValuePtr out)
             j += mpv->size();
         }
         else {
+            MultiPValuePtr mpv = analyzeExpr(x, env);
+            assert(mpv.ptr());
             if (mpv->size() != 1)
                 arityError(x, 1, mpv->size());
             assert(j < out->size());
