@@ -1527,27 +1527,41 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        if (x->exprs.size() != ctx->returns.size())
-            arityError(ctx->returns.size(), x->exprs.size());
-        int marker = evalMarkStack();
-        for (unsigned i = 0; i < x->exprs.size(); ++i) {
+        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiEValuePtr mev = new MultiEValue();
+        ensureArity(mpv, ctx->returns.size());
+        for (unsigned i = 0; i < mpv->size(); ++i) {
+            PValuePtr pv = mpv->values[i];
+            bool byRef = returnKindToByRef(x->returnKind, pv);
             EReturn &y = ctx->returns[i];
-            PValuePtr pret = analyzeOne(x->exprs[i], env);
-            if (pret->type != y.type)
-                error(x->exprs[i], "type mismatch");
-            if (y.byRef) {
-                if (!x->isRef[i])
-                    error(x->exprs[i], "return by reference expected");
-                if (pret->isTemp)
-                    error(x->exprs[i], "cannot return a "
-                          "temporary by reference");
-                evalOne(x->exprs[i], env, y.value);
+            if (y.type != pv->type)
+                argumentError(i, "type mismatch");
+            if (byRef != y.byRef)
+                argumentError(i, "mismatching by-ref and by-value returns");
+            if (byRef && pv->isTemp)
+                argumentError(i, "cannot return a temporary by reference");
+            mev->add(y.value);
+        }
+        int marker = evalMarkStack();
+        switch (x->returnKind) {
+        case RETURN_VALUE :
+            evalMultiInto(x->exprs, env, mev);
+            break;
+        case RETURN_REF : {
+            MultiEValuePtr mevRef = evalMultiAsRef(x->exprs, env);
+            assert(mev->size() == mevRef->size());
+            for (unsigned i = 0; i < mev->size(); ++i) {
+                EValuePtr evPtr = mev->values[i];
+                EValuePtr evRef = mevRef->values[i];
+                *((void **)evPtr->addr) = (void *)evRef->addr;
             }
-            else {
-                if (x->isRef[i])
-                    error(x->exprs[i], "return by value expected");
-                evalOneInto(x->exprs[i], env, y.value);
-            }
+            break;
+        }
+        case RETURN_FORWARD :
+            evalMulti(x->exprs, env, mev);
+            break;
+        default :
+            assert(false);
         }
         evalDestroyAndPopStack(marker);
         return new TerminateReturn(x->location);

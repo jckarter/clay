@@ -178,9 +178,8 @@ void initBuiltinConstructor(RecordPtr x)
         returnExpr->args.push_back(callArg);
     }
 
-    vector<bool> isRef; isRef.push_back(false);
     vector<ExprPtr> exprs; exprs.push_back(returnExpr.ptr());
-    code->body = new Return(isRef, exprs);
+    code->body = new Return(RETURN_VALUE, exprs);
     code->body->location = returnExpr->location;
 
     OverloadPtr defaultOverload = new Overload(recName, code, true);

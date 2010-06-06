@@ -108,7 +108,7 @@ static void initKeywords() {
         {"public", "private", "import", "as", "record",
          "procedure", "overload", "external", "alias",
          "static", "inlined", "lvalue", "rvalue",
-         "enum", "var", "ref",
+         "enum", "var", "ref", "forward",
          "and", "or", "not", "new",
          "if", "else", "goto", "return", "while",
          "break", "continue", "for", "in",

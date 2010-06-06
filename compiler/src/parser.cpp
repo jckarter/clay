@@ -949,57 +949,35 @@ static bool gotoStatement(StatementPtr &x) {
     return true;
 }
 
-static bool returnExpr(bool &isRef, ExprPtr &x) {
+static bool returnKind(ReturnKind &x) {
     int p = save();
     if (keyword("ref")) {
-        isRef = true;
+        x = RETURN_REF;
+    }
+    else if (restore(p), keyword("forward")) {
+        x = RETURN_FORWARD;
     }
     else {
         restore(p);
-        isRef = false;
-    }
-    if (!expression(x)) return false;
-    return true;
-}
-
-static bool returnExprList(vector<bool> &isRef, vector<ExprPtr> &exprs) {
-    bool x;
-    ExprPtr y;
-    if (!returnExpr(x, y)) return false;
-    isRef.clear();
-    exprs.clear();
-    isRef.push_back(x);
-    exprs.push_back(y);
-    while (true) {
-        int p = save();
-        if (!symbol(",") || !returnExpr(x, y)) {
-            restore(p);
-            break;
-        }
-        isRef.push_back(x);
-        exprs.push_back(y);
+        x = RETURN_VALUE;
     }
     return true;
 }
 
-static bool optReturnExprList(vector<bool> &isRef, vector<ExprPtr> &exprs) {
-    int p = save();
-    if (!returnExprList(isRef, exprs)) {
-        restore(p);
-        isRef.clear();
-        exprs.clear();
-    }
+static bool returnExprList(ReturnKind &rkind, vector<ExprPtr> &exprs) {
+    if (!returnKind(rkind)) return false;
+    if (!optExpressionList(exprs)) return false;
     return true;
 }
 
 static bool returnStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
     if (!keyword("return")) return false;
-    vector<bool> isRef;
+    ReturnKind rkind;
     vector<ExprPtr> exprs;
-    if (!optReturnExprList(isRef, exprs)) return false;
+    if (!returnExprList(rkind, exprs)) return false;
     if (!symbol(";")) return false;
-    x = new Return(isRef, exprs);
+    x = new Return(rkind, exprs);
     x->location = location;
     return true;
 }
@@ -1398,11 +1376,11 @@ static bool optPatternVarsWithCond(vector<IdentifierPtr> &x, ExprPtr &y) {
 static bool exprBody(StatementPtr &x) {
     if (!symbol("=")) return false;
     LocationPtr location = currentLocation();
-    vector<bool> isRef;
+    ReturnKind rkind;
     vector<ExprPtr> exprs;
-    if (!returnExprList(isRef, exprs)) return false;
+    if (!returnExprList(rkind, exprs)) return false;
     if (!symbol(";")) return false;
-    x = new Return(isRef, exprs);
+    x = new Return(rkind, exprs);
     x->location = location;
     return true;
 }

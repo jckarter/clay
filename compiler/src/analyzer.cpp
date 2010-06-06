@@ -1370,38 +1370,30 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        assert(x->isRef.size() == x->exprs.size());
+        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
         if (ctx->returnInitialized) {
-            if (x->exprs.size() != ctx->returnTypes.size())
-                error("mismatching number of return values");
-            for (unsigned i = 0; i < x->exprs.size(); ++i) {
-                if (x->isRef[i] != ctx->returnIsRef[i]) {
-                    error(x->exprs[i],
-                          "mismatching by-ref and by-value returns");
-                }
-                PValuePtr pv = analyzeOne(x->exprs[i], env);
-                if (!pv)
-                    return false;
-                if (pv->type != ctx->returnTypes[i])
-                    error(x->exprs[i], "type mismatch");
-                if (pv->isTemp && x->isRef[i]) {
-                    error(x->exprs[i],
-                          "cannot return a temporary by reference");
-                }
+            ensureArity(mpv, ctx->returnTypes.size());
+            for (unsigned i = 0; i < mpv->size(); ++i) {
+                PValuePtr pv = mpv->values[i];
+                bool byRef = returnKindToByRef(x->returnKind, pv);
+                if (ctx->returnTypes[i] != pv->type)
+                    argumentError(i, "type mismatch");
+                if (byRef != ctx->returnIsRef[i])
+                    argumentError(i, "mismatching by-ref and "
+                                  "by-value returns");
+                if (byRef && pv->isTemp)
+                    argumentError(i, "cannot return a temporary by reference");
             }
         }
         else {
             ctx->returnIsRef.clear();
             ctx->returnTypes.clear();
-            for (unsigned i = 0; i < x->exprs.size(); ++i) {
-                ctx->returnIsRef.push_back(x->isRef[i]);
-                PValuePtr pv = analyzeOne(x->exprs[i], env);
-                if (!pv)
-                    return false;
-                if (pv->isTemp && x->isRef[i]) {
-                    error(x->exprs[i],
-                          "cannot return a temporary by reference");
-                }
+            for (unsigned i = 0; i < mpv->size(); ++i) {
+                PValuePtr pv = mpv->values[i];
+                bool byRef = returnKindToByRef(x->returnKind, pv);
+                ctx->returnIsRef.push_back(byRef);
+                if (byRef && pv->isTemp)
+                    argumentError(i, "cannot return a temporary by reference");
                 ctx->returnTypes.push_back(pv->type);
             }
             ctx->returnInitialized = true;
@@ -1487,6 +1479,16 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         assert(false);
         return NULL;
 
+    }
+}
+
+bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv)
+{
+    switch (returnKind) {
+    case RETURN_VALUE : return false;
+    case RETURN_REF : return true;
+    case RETURN_FORWARD : return !pv->isTemp;
+    default : assert(false); return false;
     }
 }
 

@@ -2047,27 +2047,40 @@ bool codegenStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        if (x->exprs.size() != ctx->returns.size())
-            arityError(ctx->returns.size(), x->exprs.size());
-
-        for (unsigned i = 0; i < x->exprs.size(); ++i) {
+        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiCValuePtr mcv = new MultiCValue();
+        ensureArity(mpv, ctx->returns.size());
+        for (unsigned i = 0; i < mpv->size(); ++i) {
+            PValuePtr pv = mpv->values[i];
+            bool byRef = returnKindToByRef(x->returnKind, pv);
             CReturn &y = ctx->returns[i];
-            if (y.byRef) {
-                if (!x->isRef[i])
-                    error(x->exprs[i], "return by reference expected");
-                CValuePtr cret = codegenOneAsRef(x->exprs[i], env, ctx);
-                if (cret->type != y.type)
-                    error(x->exprs[i], "type mismatch");
-                llvmBuilder->CreateStore(cret->llValue, y.value->llValue);
+            if (y.type != pv->type)
+                argumentError(i, "type mismatch");
+            if (byRef != y.byRef)
+                argumentError(i, "mismatching by-ref and by-value returns");
+            if (byRef && pv->isTemp)
+                argumentError(i, "cannot return a temporary by reference");
+            mcv->add(y.value);
+        }
+        switch (x->returnKind) {
+        case RETURN_VALUE :
+            codegenMultiInto(x->exprs, env, ctx, mcv);
+            break;
+        case RETURN_REF : {
+            MultiCValuePtr mcvRef = codegenMultiAsRef(x->exprs, env, ctx);
+            assert(mcv->size() == mcvRef->size());
+            for (unsigned i = 0; i < mcv->size(); ++i) {
+                CValuePtr cvPtr = mcv->values[i];
+                CValuePtr cvRef = mcvRef->values[i];
+                llvmBuilder->CreateStore(cvRef->llValue, cvPtr->llValue);
             }
-            else {
-                if (x->isRef[i])
-                    error(x->exprs[i], "return by value expected");
-                PValuePtr pret = analyzeOne(x->exprs[i], env);
-                if (pret->type != y.type)
-                    error(x->exprs[i], "type mismatch");
-                codegenOneInto(x->exprs[i], env, ctx, y.value);
-            }
+            break;
+        }
+        case RETURN_FORWARD :
+            codegenMulti(x->exprs, env, ctx, mcv);
+            break;
+        default :
+            assert(false);
         }
         const JumpTarget &jt = ctx->returnTarget;
         cgDestroyStack(jt.stackMarker, ctx);
@@ -3639,9 +3652,8 @@ void codegenExe(ModulePtr module)
     BlockPtr mainBody = new Block();
     ExprPtr mainCall = new Call(new NameRef(new Identifier("main")));
     mainBody->statements.push_back(new ExprStatement(mainCall));
-    vector<bool> isRef; isRef.push_back(false);
     vector<ExprPtr> exprs; exprs.push_back(new IntLiteral("0"));
-    mainBody->statements.push_back(new Return(isRef, exprs));
+    mainBody->statements.push_back(new Return(RETURN_VALUE, exprs));
 
     ExternalProcedurePtr entryProc =
         new ExternalProcedure(new Identifier("main"),

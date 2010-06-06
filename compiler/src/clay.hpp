@@ -939,13 +939,19 @@ struct Goto : public Statement {
         : Statement(GOTO), labelName(labelName) {}
 };
 
+enum ReturnKind {
+    RETURN_VALUE,
+    RETURN_REF,
+    RETURN_FORWARD,
+};
+
 struct Return : public Statement {
-    vector<bool> isRef;
+    ReturnKind returnKind;
     vector<ExprPtr> exprs;
     Return()
         : Statement(RETURN) {}
-    Return(const vector<bool> &isRef, const vector<ExprPtr> &exprs)
-        : Statement(RETURN), isRef(isRef), exprs(exprs) {}
+    Return(ReturnKind returnKind, const vector<ExprPtr> &exprs)
+        : Statement(RETURN), returnKind(returnKind), exprs(exprs) {}
 };
 
 struct If : public Statement {
@@ -2205,6 +2211,7 @@ typedef Pointer<AnalysisContext> AnalysisContextPtr;
 
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
+bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv);
 
 MultiPValuePtr analyzePrimOpExpr(PrimOpPtr x,
                                  const vector<ExprPtr> &args,
