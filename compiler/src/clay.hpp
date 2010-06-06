@@ -1243,10 +1243,20 @@ struct ExternalVariable : public TopLevelItem {
 //
 
 struct GlobalAlias : public TopLevelItem {
+    vector<IdentifierPtr> params;
+    IdentifierPtr varParam;
     ExprPtr expr;
 
-    GlobalAlias(IdentifierPtr name, Visibility visibility, ExprPtr expr)
-        : TopLevelItem(GLOBAL_ALIAS, name, visibility), expr(expr) {}
+    GlobalAlias(IdentifierPtr name,
+                Visibility visibility,
+                const vector<IdentifierPtr> &params,
+                IdentifierPtr varParam,
+                ExprPtr expr)
+        : TopLevelItem(GLOBAL_ALIAS, name, visibility),
+          params(params), varParam(varParam), expr(expr) {}
+    bool hasParams() const {
+        return !params.empty() || (varParam.ptr() != NULL);
+    }
 };
 
 
@@ -1941,6 +1951,9 @@ PatternPtr evaluateStaticObjectPattern(ObjectPtr x);
 PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
                                    const vector<ExprPtr> &args,
                                    EnvPtr env);
+PatternPtr evaluateAliasIndexingPattern(GlobalAliasPtr x,
+                                        const vector<ExprPtr> &args,
+                                        EnvPtr env);
 bool unify(PatternPtr pattern, ObjectPtr obj);
 ObjectPtr derefCell(PatternCellPtr cell);
 ObjectPtr reducePattern(PatternPtr pattern);
@@ -2157,6 +2170,9 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
                                    const vector<ExprPtr> &args,
                                    EnvPtr env);
 PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
+MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
+                                    const vector<ExprPtr> &args,
+                                    EnvPtr env);
 MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
                                    IdentifierPtr name,
                                    EnvPtr env);

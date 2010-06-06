@@ -562,6 +562,11 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 
     case GLOBAL_ALIAS : {
         GlobalAlias *y = (GlobalAlias *)x.ptr();
+        if (y->hasParams()) {
+            TypePtr t = staticType(x);
+            PValuePtr pv = new PValue(t, true);
+            return new MultiPValue(pv);
+        }
         return analyzeExpr(y->expr, y->env);
     }
 
@@ -833,6 +838,10 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
             PValuePtr out = analyzeTypeConstructor(obj, params);
             return new MultiPValue(out);
         }
+        if (obj->objKind == GLOBAL_ALIAS) {
+            GlobalAlias *x = (GlobalAlias *)obj.ptr();
+            return analyzeAliasIndexing(x, args, env);
+        }
         if (obj->objKind != VALUE_HOLDER)
             error("invalid indexing operation");
     }
@@ -935,6 +944,38 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
         assert(false);
         return NULL;
     }
+}
+
+
+
+//
+// analyzeAliasIndexing
+//
+
+MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
+                                    const vector<ExprPtr> &args,
+                                    EnvPtr env)
+{
+    assert(x->hasParams());
+    MultiStaticPtr params = evaluateMultiStatic(args, env);
+    if (x->varParam.ptr()) {
+        if (params->size() < x->params.size())
+            arityError2(x->params.size(), params->size());
+    }
+    else {
+        ensureArity(params, x->params.size());
+    }
+    EnvPtr bodyEnv = new Env(x->env);
+    for (unsigned i = 0; i < x->params.size(); ++i) {
+        addLocal(bodyEnv, x->params[i], params->values[i]);
+    }
+    if (x->varParam.ptr()) {
+        MultiStaticPtr varParams = new MultiStatic();
+        for (unsigned i = x->params.size(); i < params->size(); ++i)
+            varParams->add(params->values[i]);
+        addLocal(bodyEnv, x->varParam, varParams.ptr());
+    }
+    return analyzeExpr(x->expr, bodyEnv);
 }
 
 

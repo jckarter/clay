@@ -39,6 +39,9 @@ PatternPtr evaluateStaticObjectPattern(ObjectPtr x)
     }
     case GLOBAL_ALIAS : {
         GlobalAlias *y = (GlobalAlias *)x.ptr();
+        if (y->hasParams()) {
+            return new PatternCell(NULL, x);
+        }
         return evaluatePattern(y->expr, y->env);
     }
     default :
@@ -112,6 +115,34 @@ PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
 
     return NULL;
 }
+
+
+// PatternPtr evaluateAliasIndexingPattern(GlobalAliasPtr x,
+//                                         const vector<ExprPtr> &args,
+//                                         EnvPtr env)
+// {
+//     assert(x->hasParams());
+//     MultiPatternPtr params = evaluateMultiPattern(args, env);
+//     if (x->varParam.ptr()) {
+//         if (params->size() < x->params.size())
+//             arityError2(x->params.size(), params->size());
+//     }
+//     else {
+//         ensureArity(params->size(), x->params.size());
+//     }
+//     EnvPtr bodyEnv = new Env(x->env);
+//     for (unsigned i = 0; i < x->params.size(); ++i) {
+//         addLocal(bodyEnv, x->params[i], params->values[i]);
+//     }
+//     if (x->varParam.ptr()) {
+//         MultiPatternPtr varParams = new MultiPattern();
+//         for (unsigned i = x->params.size(); i < params->size(); ++i)
+//             varParams->add(params->values[i]);
+//         addLocal(bodyEnv, x->varParam, varParams.ptr());
+//     }
+//     evalExpr(x->expr, bodyEnv, out);
+// }
+
 
 bool unify(PatternPtr pattern, ObjectPtr obj) {
 
