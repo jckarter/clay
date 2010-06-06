@@ -61,17 +61,17 @@ overload Vector(a:A) {
 //
 
 [T]
-overload Vector[T](x:T, ...) {
+overload Vector[T](x:T, ...rest) {
     var v = Vector[T]();
-    reserve(v, countArgs(x, ...));
-    pushAll(v, x, ...);
+    reserve(v, countArgs(x, ...rest));
+    pushAll(v, x, ...rest);
     return move(v);
 }
 
-private countArgs(x, ...) = 1 + countArgs(...);
+private countArgs(x, ...rest) = 1 + countArgs(...rest);
 overload countArgs() = 0;
 
-private pushAll(a, x, ...) { push(a, x); pushAll(a, ...); }
+private pushAll(a, x, ...rest) { push(a, x); pushAll(a, ...rest); }
 overload pushAll(a) {}
 
 

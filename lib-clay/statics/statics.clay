@@ -55,4 +55,4 @@ inlined unwrapStatic(x:Static[A]) = A;
 // FIXME: use forwarding return here
 // FIXME: avoid recursion?
 [A]
-inlined overload index(a:Static[A], ...) = A[...];
+inlined overload index(a:Static[A], ...args) = A[...args];

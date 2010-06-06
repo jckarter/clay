@@ -201,7 +201,7 @@ struct BinaryOp;
 struct And;
 struct Or;
 struct Lambda;
-struct VarArgsRef;
+struct Unpack;
 struct New;
 struct StaticExpr;
 struct ForeignExpr;
@@ -323,7 +323,7 @@ typedef Pointer<BinaryOp> BinaryOpPtr;
 typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
 typedef Pointer<Lambda> LambdaPtr;
-typedef Pointer<VarArgsRef> VarArgsRefPtr;
+typedef Pointer<Unpack> UnpackPtr;
 typedef Pointer<New> NewPtr;
 typedef Pointer<StaticExpr> StaticExprPtr;;
 typedef Pointer<ForeignExpr> ForeignExprPtr;
@@ -624,7 +624,7 @@ enum ExprKind {
     OR,
 
     LAMBDA,
-    VAR_ARGS_REF,
+    UNPACK,
     NEW,
     STATIC_EXPR,
 
@@ -802,9 +802,10 @@ struct Lambda : public Expr {
           initialized(false) {}
 };
 
-struct VarArgsRef : public Expr {
-    VarArgsRef() :
-        Expr(VAR_ARGS_REF) {}
+struct Unpack : public Expr {
+    ExprPtr expr;
+    Unpack(ExprPtr expr) :
+        Expr(UNPACK), expr(expr) {}
 };
 
 struct New : public Expr {
@@ -1052,20 +1053,20 @@ struct Code : public ANode {
     vector<IdentifierPtr> patternVars;
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
-    bool hasVarArgs;
+    IdentifierPtr formalVarArg;
     vector<ReturnSpecPtr> returnSpecs;
     StatementPtr body;
 
     Code()
-        : ANode(CODE), hasVarArgs(false) {}
+        : ANode(CODE) {}
     Code(const vector<IdentifierPtr> &patternVars,
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
-         bool hasVarArgs,
+         IdentifierPtr formalVarArg,
          const vector<ReturnSpecPtr> &returnSpecs,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
-          formalArgs(formalArgs), hasVarArgs(hasVarArgs),
+          formalArgs(formalArgs), formalVarArg(formalVarArg),
           returnSpecs(returnSpecs), body(body) {}
 };
 
@@ -1987,7 +1988,7 @@ struct InvokeEntry : public Object {
     EnvPtr env;
     vector<TypePtr> fixedArgTypes;
     vector<IdentifierPtr> fixedArgNames;
-    bool hasVarArgs;
+    IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
 
     bool inlined; // if inlined the rest of InvokeEntry is not set
@@ -2003,7 +2004,7 @@ struct InvokeEntry : public Object {
                 const vector<TypePtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), argsKey(argsKey),
-          analyzed(false), analyzing(false), hasVarArgs(false), inlined(false),
+          analyzed(false), analyzing(false), inlined(false),
           llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -2048,10 +2049,10 @@ struct MatchSuccess : public MatchResult {
     EnvPtr env;
     vector<TypePtr> fixedArgTypes;
     vector<IdentifierPtr> fixedArgNames;
-    bool hasVarArgs;
+    IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
     MatchSuccess(EnvPtr env)
-        : MatchResult(MATCH_SUCCESS), env(env), hasVarArgs(false) {}
+        : MatchResult(MATCH_SUCCESS), env(env) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 
@@ -2151,11 +2152,6 @@ struct MultiPValue : public Object {
         values.insert(values.end(), x->values.begin(), x->values.end());
     }
 };
-
-void unpackMultiExpr(const vector<ExprPtr> &exprs,
-                     EnvPtr env,
-                     MultiExprPtr out);
-void unpackMultiExpr(ExprPtr expr, EnvPtr env, MultiExprPtr out);
 
 MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
