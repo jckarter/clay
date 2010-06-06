@@ -1,6 +1,6 @@
 
 map(f, a) {
-    static ResultType = Type(f(a[0]));
+    alias ResultType = Type(f(a[0]));
     var b = Vector[ResultType]();
     for (x in a)
         push(b, f(x));

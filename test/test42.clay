@@ -6,6 +6,6 @@ main() {
     var a, b = swap(10, 20);
     println(a, ", ", b);
 
-    static P, Q = foo(Int32);
+    alias P, Q = foo(Int32);
     println(P, ", ", Q);
 }

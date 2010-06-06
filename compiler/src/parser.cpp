@@ -834,8 +834,8 @@ static bool bindingKind(int &bindingKind) {
         bindingKind = VAR;
     else if (restore(p), keyword("ref"))
         bindingKind = REF;
-    else if (restore(p), keyword("static"))
-        bindingKind = STATIC;
+    else if (restore(p), keyword("alias"))
+        bindingKind = ALIAS;
     else
         return false;
     return true;
@@ -1756,21 +1756,21 @@ static bool externalVariable(TopLevelItemPtr &x) {
 
 
 //
-// static globals
+// global alias
 //
 
-static bool staticGlobal(TopLevelItemPtr &x) {
+static bool globalAlias(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
-    if (!keyword("static")) return false;
+    if (!keyword("alias")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
     if (!symbol("=")) return false;
     ExprPtr z;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    x = new StaticGlobal(y, vis, z);
+    x = new GlobalAlias(y, vis, z);
     x->location = location;
     return true;
 }
@@ -1905,7 +1905,7 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     if (restore(p), globalVariable(y)) goto success;
     if (restore(p), external(y)) goto success;
     if (restore(p), externalVariable(y)) goto success;
-    if (restore(p), staticGlobal(y)) goto success;
+    if (restore(p), globalAlias(y)) goto success;
     return false;
 success :
     assert(y.ptr());

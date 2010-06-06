@@ -262,6 +262,41 @@ static PValuePtr kernelPValue(const string &name)
 
 
 //
+// unpackMultiExpr
+//
+
+void unpackMultiExpr(const vector<ExprPtr> &exprs,
+                     EnvPtr env,
+                     MultiExprPtr out)
+{
+    for (unsigned i = 0; i < exprs.size(); ++i)
+        unpackMultiExpr(exprs[i], env, out);
+}
+
+void unpackMultiExpr(ExprPtr expr, EnvPtr env, MultiExprPtr out)
+{
+    if (expr->exprKind == VAR_ARGS_REF) {
+        ObjectPtr x = lookupEnv(env, new Identifier("%varArgs"));
+        if (x->objKind == EXPRESSION) {
+            ExprPtr y = (Expr *)x.ptr();
+            out->add(y);
+        }
+        else if (x->objKind == MULTI_EXPR) {
+            MultiExprPtr y = (MultiExpr *)x.ptr();
+            out->add(y);
+        }
+        else {
+            error(expr, "cannot unpack as expressions");
+        }
+    }
+    else {
+        out->add(expr);
+    }
+}
+
+
+
+//
 // analyzeMulti
 //
 
@@ -525,8 +560,8 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
         return new MultiPValue(pv);
     }
 
-    case STATIC_GLOBAL : {
-        StaticGlobal *y = (StaticGlobal *)x.ptr();
+    case GLOBAL_ALIAS : {
+        GlobalAlias *y = (GlobalAlias *)x.ptr();
         return analyzeExpr(y->expr, y->env);
     }
 
@@ -1434,13 +1469,16 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         return env2;
     }
 
-    case STATIC : {
-        MultiStaticPtr right = evaluateExprStatic(x->expr, env);
+    case ALIAS : {
+        MultiExprPtr right = new MultiExpr();
+        unpackMultiExpr(x->expr, env, right);
         if (right->size() != x->names.size())
             arityError(x->expr, x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < right->size(); ++i)
-            addLocal(env2, x->names[i], right->values[i]);
+        for (unsigned i = 0; i < right->size(); ++i) {
+            ForeignExprPtr y = new ForeignExpr(env, right->values[i]);
+            addLocal(env2, x->names[i], y.ptr());
+        }
         return env2;
     }
 

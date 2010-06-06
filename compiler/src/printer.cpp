@@ -269,8 +269,8 @@ static void printStatement(ostream &out, const Statement *x) {
         case REF :
             out << "REF";
             break;
-        case STATIC :
-            out << "STATIC";
+        case ALIAS :
+            out << "ALIAS";
             break;
         default :
             assert(false);
@@ -511,9 +511,9 @@ static void print(ostream &out, const Object *x) {
         break;
     }
 
-    case STATIC_GLOBAL : {
-        const StaticGlobal *y = (const StaticGlobal *)x;
-        out << "StaticGlobal(" << y->name << ", " << y->expr << ")";
+    case GLOBAL_ALIAS : {
+        const GlobalAlias *y = (const GlobalAlias *)x;
+        out << "GlobalAlias(" << y->name << ", " << y->expr << ")";
         break;
     }
 

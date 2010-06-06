@@ -930,8 +930,8 @@ void codegenStaticObject(ObjectPtr x,
         break;
     }
 
-    case STATIC_GLOBAL : {
-        StaticGlobal *y = (StaticGlobal *)x.ptr();
+    case GLOBAL_ALIAS : {
+        GlobalAlias *y = (GlobalAlias *)x.ptr();
         codegenExpr(y->expr, y->env, ctx, out);
         break;
     }
@@ -2245,13 +2245,16 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         return env2;
     }
 
-    case STATIC : {
-        MultiStaticPtr right = evaluateExprStatic(x->expr, env);
+    case ALIAS : {
+        MultiExprPtr right = new MultiExpr();
+        unpackMultiExpr(x->expr, env, right);
         if (right->size() != x->names.size())
             arityError(x->expr, x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < right->size(); ++i)
-            addLocal(env2, x->names[i], right->values[i]);
+        for (unsigned i = 0; i < right->size(); ++i) {
+            ForeignExprPtr y = new ForeignExpr(env, right->values[i]);
+            addLocal(env2, x->names[i], y.ptr());
+        }
         return env2;
     }
 

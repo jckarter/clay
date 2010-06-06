@@ -139,7 +139,7 @@ enum ObjectKind {
     EXTERNAL_ARG,
     EXTERNAL_VARIABLE,
 
-    STATIC_GLOBAL,
+    GLOBAL_ALIAS,
 
     IMPORT,
     MODULE_HOLDER,
@@ -241,7 +241,7 @@ struct ExternalProcedure;
 struct ExternalArg;
 struct ExternalVariable;
 
-struct StaticGlobal;
+struct GlobalAlias;
 
 struct Import;
 struct ImportModule;
@@ -363,7 +363,7 @@ typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
 typedef Pointer<ExternalVariable> ExternalVariablePtr;
 
-typedef Pointer<StaticGlobal> StaticGlobalPtr;
+typedef Pointer<GlobalAlias> GlobalAliasPtr;
 
 typedef Pointer<Import> ImportPtr;
 typedef Pointer<ImportModule> ImportModulePtr;
@@ -892,7 +892,7 @@ struct Label : public Statement {
 enum BindingKind {
     VAR,
     REF,
-    STATIC
+    ALIAS
 };
 
 struct Binding : public Statement {
@@ -1239,14 +1239,14 @@ struct ExternalVariable : public TopLevelItem {
 
 
 //
-// StaticGlobal
+// GlobalAlias
 //
 
-struct StaticGlobal : public TopLevelItem {
+struct GlobalAlias : public TopLevelItem {
     ExprPtr expr;
 
-    StaticGlobal(IdentifierPtr name, Visibility visibility, ExprPtr expr)
-        : TopLevelItem(STATIC_GLOBAL, name, visibility), expr(expr) {}
+    GlobalAlias(IdentifierPtr name, Visibility visibility, ExprPtr expr)
+        : TopLevelItem(GLOBAL_ALIAS, name, visibility), expr(expr) {}
 };
 
 
@@ -2138,6 +2138,11 @@ struct MultiPValue : public Object {
         values.insert(values.end(), x->values.begin(), x->values.end());
     }
 };
+
+void unpackMultiExpr(const vector<ExprPtr> &exprs,
+                     EnvPtr env,
+                     MultiExprPtr out);
+void unpackMultiExpr(ExprPtr expr, EnvPtr env, MultiExprPtr out);
 
 MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
