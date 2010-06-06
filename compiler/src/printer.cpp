@@ -513,7 +513,8 @@ static void print(ostream &out, const Object *x) {
 
     case GLOBAL_ALIAS : {
         const GlobalAlias *y = (const GlobalAlias *)x;
-        out << "GlobalAlias(" << y->name << ", " << y->expr << ")";
+        out << "GlobalAlias(" << y->name << ", " << y->params
+            << ", " << y->varParam << ", " << y->expr << ")";
         break;
     }
 
@@ -666,6 +667,11 @@ void printName(ostream &out, ObjectPtr x)
     case IDENTIFIER : {
         Identifier *y = (Identifier *)x.ptr();
         out << "#" << y->str;
+        break;
+    }
+    case GLOBAL_ALIAS : {
+        GlobalAlias *y = (GlobalAlias *)x.ptr();
+        out << y->name->str;
         break;
     }
     case RECORD : {

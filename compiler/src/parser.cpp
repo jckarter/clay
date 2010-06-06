@@ -1112,6 +1112,77 @@ static bool statement(StatementPtr &x) {
 
 
 //
+// staticParams
+//
+
+static bool staticVarParam(IdentifierPtr &varParam) {
+    if (!symbol("...")) return false;
+    if (!identifier(varParam)) return false;
+    return true;
+}
+
+static bool optStaticVarParam(IdentifierPtr &varParam) {
+    int p = save();
+    if (!staticVarParam(varParam)) {
+        restore(p);
+        varParam = NULL;
+    }
+    return true;
+}
+
+static bool trailingVarParam(IdentifierPtr &varParam) {
+    if (!symbol(",")) return false;
+    if (!staticVarParam(varParam)) return false;
+    return true;
+}
+
+static bool optTrailingVarParam(IdentifierPtr &varParam) {
+    int p = save();
+    if (!trailingVarParam(varParam)) {
+        restore(p);
+        varParam = NULL;
+    }
+    return true;
+}
+
+static bool paramsAndVarParam(vector<IdentifierPtr> &params,
+                              IdentifierPtr &varParam) {
+    if (!identifierList(params)) return false;
+    if (!optTrailingVarParam(varParam)) return false;
+    return true;
+}
+
+static bool staticParamsInner(vector<IdentifierPtr> &params,
+                              IdentifierPtr &varParam) {
+    int p = save();
+    if (paramsAndVarParam(params, varParam)) return true;
+    restore(p);
+    params.clear(); varParam = NULL;
+    return optStaticVarParam(varParam);
+}
+
+static bool staticParams(vector<IdentifierPtr> &params,
+                         IdentifierPtr &varParam) {
+    if (!symbol("[")) return false;
+    if (!staticParamsInner(params, varParam)) return false;
+    if (!symbol("]")) return false;
+    return true;
+}
+
+static bool optStaticParams(vector<IdentifierPtr> &params,
+                            IdentifierPtr &varParam) {
+    int p = save();
+    if (!staticParams(params, varParam)) {
+        restore(p);
+        params.clear();
+        varParam = NULL;
+    }
+    return true;
+}
+
+
+
+//
 // patternVars, typeSpec, optTypeSpec, exprTypeSpec
 //
 
@@ -1764,13 +1835,16 @@ static bool globalAlias(TopLevelItemPtr &x) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("alias")) return false;
-    IdentifierPtr y;
-    if (!identifier(y)) return false;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
+    vector<IdentifierPtr> params;
+    IdentifierPtr varParam;
+    if (!optStaticParams(params, varParam)) return false;
     if (!symbol("=")) return false;
-    ExprPtr z;
-    if (!expression(z)) return false;
+    ExprPtr expr;
+    if (!expression(expr)) return false;
     if (!symbol(";")) return false;
-    x = new GlobalAlias(y, vis, z);
+    x = new GlobalAlias(name, vis, params, varParam, expr);
     x->location = location;
     return true;
 }

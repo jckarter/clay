@@ -66,6 +66,11 @@ void codegenIndexingExpr(ExprPtr indexable,
                          EnvPtr env,
                          CodegenContextPtr ctx,
                          MultiCValuePtr out);
+void codegenAliasIndexing(GlobalAliasPtr x,
+                          const vector<ExprPtr> &args,
+                          EnvPtr env,
+                          CodegenContextPtr ctx,
+                          MultiCValuePtr out);
 void codegenFieldRefExpr(ExprPtr base,
                          IdentifierPtr name,
                          EnvPtr env,
@@ -932,7 +937,13 @@ void codegenStaticObject(ObjectPtr x,
 
     case GLOBAL_ALIAS : {
         GlobalAlias *y = (GlobalAlias *)x.ptr();
-        codegenExpr(y->expr, y->env, ctx, out);
+        if (y->hasParams()) {
+            assert(out->size() == 1);
+            assert(out->values[0]->type == staticType(x));
+        }
+        else {
+            codegenExpr(y->expr, y->env, ctx, out);
+        }
         break;
     }
 
@@ -1311,10 +1322,55 @@ void codegenIndexingExpr(ExprPtr indexable,
         // takes care of type constructors
         return;
     }
+    PValuePtr pv = analyzeOne(indexable, env);
+    assert(pv.ptr());
+    if (pv->type->typeKind == STATIC_TYPE) {
+        StaticType *st = (StaticType *)pv->type.ptr();
+        ObjectPtr obj = st->obj;
+        if (obj->objKind == GLOBAL_ALIAS) {
+            GlobalAlias *x = (GlobalAlias *)obj.ptr();
+            codegenAliasIndexing(x, args, env, ctx, out);
+            return;
+        }
+    }
     vector<ExprPtr> args2;
     args2.push_back(indexable);
     args2.insert(args2.end(), args.begin(), args.end());
     codegenCallExpr(kernelNameRef("index"), args2, env, ctx, out);
+}
+
+
+
+//
+// codegenAliasIndexing
+//
+
+void codegenAliasIndexing(GlobalAliasPtr x,
+                          const vector<ExprPtr> &args,
+                          EnvPtr env,
+                          CodegenContextPtr ctx,
+                          MultiCValuePtr out)
+{
+    assert(x->hasParams());
+    MultiStaticPtr params = evaluateMultiStatic(args, env);
+    if (x->varParam.ptr()) {
+        if (params->size() < x->params.size())
+            arityError2(x->params.size(), params->size());
+    }
+    else {
+        ensureArity(params, x->params.size());
+    }
+    EnvPtr bodyEnv = new Env(x->env);
+    for (unsigned i = 0; i < x->params.size(); ++i) {
+        addLocal(bodyEnv, x->params[i], params->values[i]);
+    }
+    if (x->varParam.ptr()) {
+        MultiStaticPtr varParams = new MultiStatic();
+        for (unsigned i = x->params.size(); i < params->size(); ++i)
+            varParams->add(params->values[i]);
+        addLocal(bodyEnv, x->varParam, varParams.ptr());
+    }
+    codegenExpr(x->expr, bodyEnv, ctx, out);
 }
 
 
