@@ -262,41 +262,6 @@ static PValuePtr kernelPValue(const string &name)
 
 
 //
-// unpackMultiExpr
-//
-
-void unpackMultiExpr(const vector<ExprPtr> &exprs,
-                     EnvPtr env,
-                     MultiExprPtr out)
-{
-    for (unsigned i = 0; i < exprs.size(); ++i)
-        unpackMultiExpr(exprs[i], env, out);
-}
-
-void unpackMultiExpr(ExprPtr expr, EnvPtr env, MultiExprPtr out)
-{
-    if (expr->exprKind == VAR_ARGS_REF) {
-        ObjectPtr x = lookupEnv(env, new Identifier("%varArgs"));
-        if (x->objKind == EXPRESSION) {
-            ExprPtr y = (Expr *)x.ptr();
-            out->add(y);
-        }
-        else if (x->objKind == MULTI_EXPR) {
-            MultiExprPtr y = (MultiExpr *)x.ptr();
-            out->add(y);
-        }
-        else {
-            error(expr, "cannot unpack as expressions");
-        }
-    }
-    else {
-        out->add(expr);
-    }
-}
-
-
-
-//
 // analyzeMulti
 //
 
@@ -305,11 +270,12 @@ MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env)
     MultiPValuePtr out = new MultiPValue();
     for (unsigned i = 0; i < exprs.size(); ++i) {
         ExprPtr x = exprs[i];
-        if (x->exprKind == VAR_ARGS_REF) {
-            MultiPValuePtr y = analyzeExpr(x, env);
-            if (!y)
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiPValuePtr z = analyzeExpr(y->expr, env);
+            if (!z)
                 return NULL;
-            out->add(y);
+            out->add(z);
         }
         else {
             PValuePtr y = analyzeOne(x, env);
@@ -395,7 +361,7 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
         if ((x->args.size() == 1) &&
-            (x->args[0]->exprKind != VAR_ARGS_REF))
+            (x->args[0]->exprKind != UNPACK))
         {
             return analyzeExpr(x->args[0], env);
         }
@@ -486,12 +452,9 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         return analyzeExpr(x->converted, env);
     }
 
-    case VAR_ARGS_REF : {
-        IdentifierPtr ident = new Identifier("%varArgs");
-        ident->location = expr->location;
-        ExprPtr nameRef = new NameRef(ident);
-        nameRef->location = expr->location;
-        return analyzeExpr(nameRef, env);
+    case UNPACK : {
+        error("incorrect usage of unpack operator");
+        return NULL;
     }
 
     case NEW : {
@@ -1217,7 +1180,7 @@ static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
             entry->env = z->env;
             entry->fixedArgTypes = z->fixedArgTypes;
             entry->fixedArgNames = z->fixedArgNames;
-            entry->hasVarArgs = z->hasVarArgs;
+            entry->varArgName = z->varArgName;
             entry->varArgTypes = z->varArgTypes;
             entry->inlined = y->inlined;
             return entry;
@@ -1229,7 +1192,7 @@ static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
 static bool tempnessMatches(CodePtr code,
                             const vector<ValueTempness> &tempness)
 {
-    if (code->hasVarArgs)
+    if (code->formalVarArg.ptr())
         assert(code->formalArgs.size() <= tempness.size());
     else
         assert(code->formalArgs.size() == tempness.size());
@@ -1292,7 +1255,7 @@ MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
         return analyzeReturn(returnIsRef, returnTypes);
     }
 
-    if (entry->hasVarArgs)
+    if (entry->varArgName.ptr())
         assert(args.size() >= entry->fixedArgNames.size());
     else
         assert(args.size() == entry->fixedArgNames.size());
@@ -1304,13 +1267,13 @@ MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
 
-    if (entry->hasVarArgs) {
+    if (entry->varArgName.ptr()) {
         MultiExprPtr varArgs = new MultiExpr();
         for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
             ExprPtr expr = new ForeignExpr(env, args[i]);
             varArgs->add(expr);
         }
-        addLocal(bodyEnv, new Identifier("%varArgs"), varArgs.ptr());
+        addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
     AnalysisContextPtr ctx = new AnalysisContext();
@@ -1349,13 +1312,13 @@ void analyzeCodeBody(InvokeEntryPtr entry)
         addLocal(bodyEnv, entry->fixedArgNames[i], parg.ptr());
     }
 
-    if (entry->hasVarArgs) {
+    if (entry->varArgName.ptr()) {
         MultiPValuePtr varArgs = new MultiPValue();
         for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
             PValuePtr parg = new PValue(entry->varArgTypes[i], false);
             varArgs->values.push_back(parg);
         }
-        addLocal(bodyEnv, new Identifier("%varArgs"), varArgs.ptr());
+        addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
     AnalysisContextPtr ctx = new AnalysisContext();
@@ -1495,6 +1458,8 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 {
+    LocationContext loc(x->location);
+
     switch (x->bindingKind) {
 
     case VAR :
@@ -1511,15 +1476,10 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
     }
 
     case ALIAS : {
-        MultiExprPtr right = new MultiExpr();
-        unpackMultiExpr(x->expr, env, right);
-        if (right->size() != x->names.size())
-            arityError(x->expr, x->names.size(), right->size());
+        ensureArity(x->names, 1);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < right->size(); ++i) {
-            ForeignExprPtr y = new ForeignExpr(env, right->values[i]);
-            addLocal(env2, x->names[i], y.ptr());
-        }
+        ForeignExprPtr y = new ForeignExpr(env, x->expr);
+        addLocal(env2, x->names[0], y.ptr());
         return env2;
     }
 

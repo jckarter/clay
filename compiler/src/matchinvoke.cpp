@@ -4,7 +4,7 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
                            const vector<TypePtr> &argsKey,
                            ExprPtr callableExpr, ObjectPtr callable)
 {
-    if (code->hasVarArgs) {
+    if (code->formalVarArg.ptr()) {
         if (argsKey.size() < code->formalArgs.size())
             return new MatchArityError();
     }
@@ -47,8 +47,8 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
         result->fixedArgTypes.push_back(argsKey[i]);
     }
 
-    if (code->hasVarArgs) {
-        result->hasVarArgs = true;
+    if (code->formalVarArg.ptr()) {
+        result->varArgName = code->formalVarArg;
         for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i) {
             result->varArgTypes.push_back(argsKey[i]);
         }

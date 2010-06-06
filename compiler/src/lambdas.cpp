@@ -101,7 +101,6 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         y->location = x->formalArgs[i]->location;
         code->formalArgs.push_back(y.ptr());
     }
-    code->hasVarArgs = false;
     code->body = x->body;
 
     OverloadPtr overload = new Overload(kernelNameRef("call"), code, false);
@@ -279,6 +278,9 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     x = c.ptr();
                 }
             }
+            else {
+                // FIXME: what about multiple values?
+            }
         }
         break;
     }
@@ -361,9 +363,11 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case VAR_ARGS_REF :
-        // FIXME: what should be done here?
+    case UNPACK : {
+        Unpack *y = (Unpack *)x.ptr();
+        convertFreeVars(y->expr, env, ctx);
         break;
+    }
 
     case NEW : {
         New *y = (New *)x.ptr();

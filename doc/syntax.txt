@@ -25,9 +25,10 @@ Procedure -> PatternVarsWithCond? "inlined"? Identifier Arguments
 PatternVarsWithCond -> "[" comma_list(Identifier) Predicate? "]"
 Predicate -> "|" Expression
 
-Arguments -> "(" comma_list(Argument) ("," "...")? ")"
-           | "(" "..." ")"
-           | "(" ")"
+Arguments -> "(" ArgumentList ")"
+
+ArgumentList -> comma_list(Argument), ("," "..." Identifier)?
+              | ("..." Identifier)?
 
 Argument -> ValueArgument
           | StaticArgument
@@ -135,7 +136,7 @@ PatternSuffix -> "[" comma_list(Pattern) "]"
 
 Expression -> OrExpr
             | Lambda
-            | VarArgsRef
+            | Unpack
             | New
             | StaticExpr
 
@@ -187,7 +188,7 @@ BoolLiteral -> "true" | "false"
 
 Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" Block
 
-VarArgsRef -> "..."
+Unpack -> "..." Expression
 
 New -> "new" Expression
 

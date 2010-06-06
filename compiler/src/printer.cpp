@@ -220,8 +220,9 @@ static void printExpr(ostream &out, const Expr *x) {
             << ", " << y->body << ")";
         break;
     }
-    case VAR_ARGS_REF : {
-        out << "VarArgsRef";
+    case UNPACK : {
+        const Unpack *y = (const Unpack *)x;
+        out << "Unpack(" << y->expr << ")";
         break;
     }
     case NEW : {
@@ -435,7 +436,7 @@ static void print(ostream &out, const Object *x) {
     case CODE : {
         const Code *y = (const Code *)x;
         out << "Code(" << y->patternVars << ", " << y->predicate;
-        out << ", " << y->formalArgs << ", " << y->hasVarArgs;
+        out << ", " << y->formalArgs << ", " << y->formalVarArg;
         out << ", " << y->returnSpecs << ", " << y->body << ")";
         break;
     }

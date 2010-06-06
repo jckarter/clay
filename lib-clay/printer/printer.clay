@@ -11,9 +11,9 @@ procedure printTo;
 overload printTo(stream) {
 }
 
-overload printTo(stream, a, b, ...) {
+overload printTo(stream, a, b, ...rest) {
     printTo(stream, a);
-    printTo(stream, b, ...);
+    printTo(stream, b, ...rest);
 }
 
 
@@ -120,14 +120,14 @@ overload printTo(stream, x:Static[A]) {
 // print, println, printlnTo
 //
 
-print(...) {
-    printTo(stdout, ...);
+print(...x) {
+    printTo(stdout, ...x);
 }
 
-println(...) {
-    printTo(stdout, ..., '\n');
+println(...x) {
+    printTo(stdout, ...x, '\n');
 }
 
-printlnTo(stream, ...) {
-    printTo(stream, ..., '\n');
+printlnTo(stream, ...x) {
+    printTo(stream, ...x, '\n');
 }

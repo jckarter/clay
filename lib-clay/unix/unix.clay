@@ -4,8 +4,8 @@ public import unix.generated.*;
 public import unix.constants.*;
 public import unix.errno.*;
 
-inlined syscall(callable, ...) {
-    var result = callable(...);
+inlined syscall(callable, ...args) {
+    var result = callable(...args);
     if (result == Type(result)(-1))
         error(errorMessage());
     return result;
