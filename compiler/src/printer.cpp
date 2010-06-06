@@ -302,7 +302,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
     case RETURN : {
         const Return *y = (const Return *)x;
-        out << "Return(" << y->isRef << ", " << y->exprs << ")";
+        out << "Return(" << y->returnKind << ", " << y->exprs << ")";
         break;
     }
     case IF : {

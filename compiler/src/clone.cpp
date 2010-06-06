@@ -270,7 +270,7 @@ StatementPtr clone(StatementPtr x)
     case RETURN : {
         Return *y = (Return *)x.ptr();
         ReturnPtr z = new Return();
-        z->isRef = y->isRef;
+        z->returnKind = y->returnKind;
         clone(y->exprs, z->exprs);
         out = z.ptr();
         break;
