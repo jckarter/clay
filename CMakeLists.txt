@@ -29,6 +29,7 @@ set(CMAKE_OSX_ARCHITECTURES x86_64)
 install(DIRECTORY lib-clay DESTINATION lib)
 
 add_subdirectory(compiler)
+add_subdirectory(misc)
 
 if(PYTHONINTERP_FOUND)
     add_custom_target(test ${PYTHON_EXECUTABLE} "../test/runtests.py")
