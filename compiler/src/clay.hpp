@@ -272,8 +272,6 @@ struct PatternCell;
 struct ArrayTypePattern;
 struct TupleTypePattern;
 struct PointerTypePattern;
-struct CodePointerTypePattern;
-struct CCodePointerTypePattern;
 struct RecordTypePattern;
 struct StaticTypePattern;
 
@@ -394,8 +392,6 @@ typedef Pointer<PatternCell> PatternCellPtr;
 typedef Pointer<ArrayTypePattern> ArrayTypePatternPtr;
 typedef Pointer<TupleTypePattern> TupleTypePatternPtr;
 typedef Pointer<PointerTypePattern> PointerTypePatternPtr;
-typedef Pointer<CodePointerTypePattern> CodePointerTypePatternPtr;
-typedef Pointer<CCodePointerTypePattern> CCodePointerTypePatternPtr;
 typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
 typedef Pointer<StaticTypePattern> StaticTypePatternPtr;
 
@@ -1795,8 +1791,6 @@ void typePrint(ostream &out, TypePtr t);
 enum PatternKind {
     PATTERN_CELL,
     POINTER_TYPE_PATTERN,
-    CODE_POINTER_TYPE_PATTERN,
-    CCODE_POINTER_TYPE_PATTERN,
     ARRAY_TYPE_PATTERN,
     TUPLE_TYPE_PATTERN,
     RECORD_TYPE_PATTERN,
@@ -1820,31 +1814,6 @@ struct PointerTypePattern : public Pattern {
     PatternPtr pointeeType;
     PointerTypePattern(PatternPtr pointeeType)
         : Pattern(POINTER_TYPE_PATTERN), pointeeType(pointeeType) {}
-};
-
-struct CodePointerTypePattern : public Pattern {
-    vector<PatternPtr> argTypes;
-    vector<bool> returnIsRef;
-    vector<PatternPtr> returnTypes;
-    CodePointerTypePattern(const vector<PatternPtr> &argTypes,
-                           const vector<bool> &returnIsRef,
-                           const vector<PatternPtr> &returnTypes)
-        : Pattern(CODE_POINTER_TYPE_PATTERN), argTypes(argTypes),
-          returnIsRef(returnIsRef), returnTypes(returnTypes) {}
-};
-
-struct CCodePointerTypePattern : public Pattern {
-    CallingConv callingConv;
-    vector<PatternPtr> argTypes;
-    bool hasVarArgs;
-    PatternPtr returnType;
-    CCodePointerTypePattern(CallingConv callingConv,
-                            const vector<PatternPtr> &argTypes,
-                            bool hasVarArgs,
-                            PatternPtr returnType)
-        : Pattern(CCODE_POINTER_TYPE_PATTERN), callingConv(callingConv),
-          argTypes(argTypes), hasVarArgs(hasVarArgs),
-          returnType(returnType) {}
 };
 
 struct ArrayTypePattern : public Pattern {
