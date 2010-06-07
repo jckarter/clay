@@ -1,6 +1,5 @@
-
 main() {
-    var name = "runtests.py";
+    var name = "test.txt";
     var f = File(name);
     println(name, " is ", fileSize(f), " bytes.");
 }

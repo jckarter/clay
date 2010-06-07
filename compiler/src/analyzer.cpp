@@ -1371,6 +1371,8 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
         MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        if (!mpv) 
+            return NULL;
         if (ctx->returnInitialized) {
             ensureArity(mpv, ctx->returnTypes.size());
             for (unsigned i = 0; i < mpv->size(); ++i) {
