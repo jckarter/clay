@@ -23,8 +23,8 @@ public:
 private:
     string allocateName(const string &base);
     string convertBuiltinType(const BuiltinType *type);
-    string convertFPType(FunctionNoProtoType *type);
-    string convertFPType(FunctionProtoType *type);
+    string convertFPType(const FunctionNoProtoType *type);
+    string convertFPType(const FunctionProtoType *type);
     string convertType(const Type *type);
 
 public :
