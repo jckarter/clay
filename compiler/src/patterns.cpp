@@ -1,5 +1,41 @@
 #include "clay.hpp"
 
+
+
+//
+// isPatternHead
+//
+
+static bool isPatternHead(ObjectPtr x)
+{
+    switch (x->objKind) {
+    case PRIM_OP : {
+        PrimOpPtr y = (PrimOp *)x.ptr();
+        switch (y->primOpCode) {
+        case PRIM_Pointer :
+        case PRIM_Array :
+        case PRIM_Tuple :
+        case PRIM_Static :
+            return true;
+        default :
+            return false;
+        }
+        assert(false);
+    }
+    case RECORD :
+        return true;
+    default :
+        return false;
+    }
+    assert(false);
+}
+
+
+
+//
+// evaluatePattern
+//
+
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env)
 {
     LocationContext loc(expr->location);
@@ -15,10 +51,13 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env)
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
         ObjectPtr indexable = evaluateOneStatic(x->expr, env);
-        PatternPtr y = evaluateIndexingPattern(indexable, x->args, env);
-        if (!y)
-            y = new PatternCell(NULL, evaluateOneStatic(expr, env));
-        return y;
+        if (isPatternHead(indexable)) {
+            vector<PatternPtr> params;
+            for (unsigned i = 0; i < x->args.size(); ++i)
+                params.push_back(evaluatePattern(x->args[i], env));
+            return new PatternTerm(indexable, params);
+        }
+        return new PatternCell(NULL, evaluateOneStatic(expr, env));
     }
 
     default : {
@@ -28,6 +67,12 @@ PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env)
 
     }
 }
+
+
+
+//
+// evaluateStaticObjectPattern
+//
 
 PatternPtr evaluateStaticObjectPattern(ObjectPtr x)
 {
@@ -49,92 +94,14 @@ PatternPtr evaluateStaticObjectPattern(ObjectPtr x)
     }
 }
 
-PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
-                                   const vector<ExprPtr> &args,
-                                   EnvPtr env)
+
+
+//
+// unify, unifyList
+//
+
+bool unify(PatternPtr pattern, ObjectPtr obj)
 {
-    switch (indexable->objKind) {
-
-    case PRIM_OP : {
-        PrimOpPtr x = (PrimOp *)indexable.ptr();
-
-        switch (x->primOpCode) {
-
-        case PRIM_Pointer : {
-            ensureArity(args, 1);
-            PatternPtr p = evaluatePattern(args[0], env);
-            return new PointerTypePattern(p);
-        }
-
-        case PRIM_Array : {
-            ensureArity(args, 2);
-            PatternPtr elementType = evaluatePattern(args[0], env);
-            PatternPtr size = evaluatePattern(args[1], env);
-            return new ArrayTypePattern(elementType, size);
-        }
-
-        case PRIM_Tuple : {
-            vector<PatternPtr> elementTypes;
-            for (unsigned i = 0; i < args.size(); ++i)
-                elementTypes.push_back(evaluatePattern(args[i], env));
-            return new TupleTypePattern(elementTypes);
-        }
-
-        case PRIM_Static : {
-            ensureArity(args, 1);
-            PatternPtr obj = evaluatePattern(args[0], env);
-            return new StaticTypePattern(obj);
-        }
-
-        }
-
-        break;
-    }
-
-    case RECORD : {
-        Record *x = (Record *)indexable.ptr();
-        ensureArity(args, x->patternVars.size());
-        vector<PatternPtr> params;
-        for (unsigned i = 0; i < args.size(); ++i)
-            params.push_back(evaluatePattern(args[i], env));
-        return new RecordTypePattern(x, params);
-    }
-
-    }
-
-    return NULL;
-}
-
-
-// PatternPtr evaluateAliasIndexingPattern(GlobalAliasPtr x,
-//                                         const vector<ExprPtr> &args,
-//                                         EnvPtr env)
-// {
-//     assert(x->hasParams());
-//     MultiPatternPtr params = evaluateMultiPattern(args, env);
-//     if (x->varParam.ptr()) {
-//         if (params->size() < x->params.size())
-//             arityError2(x->params.size(), params->size());
-//     }
-//     else {
-//         ensureArity(params->size(), x->params.size());
-//     }
-//     EnvPtr bodyEnv = new Env(x->env);
-//     for (unsigned i = 0; i < x->params.size(); ++i) {
-//         addLocal(bodyEnv, x->params[i], params->values[i]);
-//     }
-//     if (x->varParam.ptr()) {
-//         MultiPatternPtr varParams = new MultiPattern();
-//         for (unsigned i = x->params.size(); i < params->size(); ++i)
-//             varParams->add(params->values[i]);
-//         addLocal(bodyEnv, x->varParam, varParams.ptr());
-//     }
-//     evalExpr(x->expr, bodyEnv, out);
-// }
-
-
-bool unify(PatternPtr pattern, ObjectPtr obj) {
-
     switch (pattern->patternKind) {
 
     case PATTERN_CELL : {
@@ -146,77 +113,9 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
         return objectEquals(x->obj, obj);
     }
 
-    case POINTER_TYPE_PATTERN : {
-        PointerTypePattern *x = (PointerTypePattern *)pattern.ptr();
-        if (obj->objKind != TYPE)
-            return false;
-        TypePtr type = (Type *)obj.ptr();
-        if (type->typeKind != POINTER_TYPE)
-            return false;
-        PointerTypePtr t = (PointerType *)type.ptr();
-        return unify(x->pointeeType, t->pointeeType.ptr());
-    }
-
-    case ARRAY_TYPE_PATTERN : {
-        ArrayTypePattern *x = (ArrayTypePattern *)pattern.ptr();
-        if (obj->objKind != TYPE)
-            return false;
-        TypePtr type = (Type *)obj.ptr();
-        if (type->typeKind != ARRAY_TYPE)
-            return false;
-        ArrayTypePtr t = (ArrayType *)type.ptr();
-        if (!unify(x->elementType, t->elementType.ptr()))
-            return false;
-        if (!unify(x->size, intToValueHolder(t->size).ptr()))
-            return false;
-        return true;
-    }
-
-    case TUPLE_TYPE_PATTERN : {
-        TupleTypePattern *x = (TupleTypePattern *)pattern.ptr();
-        if (obj->objKind != TYPE)
-            return false;
-        TypePtr type = (Type *)obj.ptr();
-        if (type->typeKind != TUPLE_TYPE)
-            return false;
-        TupleTypePtr t = (TupleType *)type.ptr();
-        if (x->elementTypes.size() != t->elementTypes.size())
-            return false;
-        for (unsigned i = 0; i < x->elementTypes.size(); ++i) {
-            if (!unify(x->elementTypes[i], t->elementTypes[i].ptr()))
-                return false;
-        }
-        return true;
-    }
-
-    case RECORD_TYPE_PATTERN : {
-        RecordTypePattern *x = (RecordTypePattern *)pattern.ptr();
-        if (obj->objKind != TYPE)
-            return false;
-        TypePtr type = (Type *)obj.ptr();
-        if (type->typeKind != RECORD_TYPE)
-            return false;
-        RecordTypePtr t = (RecordType *)type.ptr();
-        if (x->record != t->record)
-            return false;
-        if (x->params.size() != t->params.size())
-            return false;
-        for (unsigned i = 0; i < x->params.size(); ++i) {
-            if (!unify(x->params[i], t->params[i]))
-                return false;
-        }
-        return true;
-    }
-
-    case STATIC_TYPE_PATTERN : {
-        StaticTypePattern *x = (StaticTypePattern *)pattern.ptr();
-        if (obj->objKind != TYPE)
-            return false;
-        TypePtr type = (Type *)obj.ptr();
-        if (type->typeKind != STATIC_TYPE)
-            return false;
-        StaticTypePtr t = (StaticType *)type.ptr();
-        return unify(x->obj, t->obj);
+    case PATTERN_TERM : {
+        PatternTerm *x = (PatternTerm *)pattern.ptr();
+        return unifyTerm(x, obj);
     }
 
     default :
@@ -226,7 +125,108 @@ bool unify(PatternPtr pattern, ObjectPtr obj) {
     }
 }
 
-ObjectPtr derefCell(PatternCellPtr cell) {
+bool unifyList(const vector<PatternPtr> patterns,
+               const vector<ObjectPtr> objs)
+{
+    if (patterns.size() != objs.size())
+        return false;
+    for (unsigned i = 0; i < patterns.size(); ++i) {
+        if (!unify(patterns[i], objs[i]))
+            return false;
+    }
+    return true;
+}
+
+
+
+//
+// unifyTerm
+//
+
+bool unifyTerm(PatternTermPtr term, ObjectPtr obj)
+{
+    switch (term->head->objKind) {
+
+    case PRIM_OP : {
+        PrimOpPtr x = (PrimOp *)term->head.ptr();
+        switch (x->primOpCode) {
+        case PRIM_Pointer : {
+            if (obj->objKind != TYPE)
+                return false;
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind != POINTER_TYPE)
+                return false;
+            PointerType *pt = (PointerType *)t;
+            vector<ObjectPtr> objs;
+            objs.push_back(pt->pointeeType.ptr());
+            return unifyList(term->params, objs);
+        }
+        case PRIM_Array : {
+            if (obj->objKind != TYPE)
+                return false;
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind != ARRAY_TYPE)
+                return false;
+            ArrayType *at = (ArrayType *)t;
+            vector<ObjectPtr> objs;
+            objs.push_back(at->elementType.ptr());
+            objs.push_back(intToValueHolder(at->size).ptr());
+            return unifyList(term->params, objs);
+        }
+        case PRIM_Tuple : {
+            if (obj->objKind != TYPE)
+                return false;
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind != TUPLE_TYPE)
+                return false;
+            TupleType *tt = (TupleType *)t;
+            vector<ObjectPtr> objs;
+            for (unsigned i = 0; i < tt->elementTypes.size(); ++i)
+                objs.push_back(tt->elementTypes[i].ptr());
+            return unifyList(term->params, objs);
+        }
+        case PRIM_Static : {
+            if (obj->objKind != TYPE)
+                return false;
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind != STATIC_TYPE)
+                return false;
+            StaticType *st = (StaticType *)t;
+            vector<ObjectPtr> objs;
+            objs.push_back(st->obj);
+            return unifyList(term->params, objs);
+        }
+        default :
+            return false;
+        }
+    }
+
+    case RECORD : {
+        if (obj->objKind != TYPE)
+            return false;
+        Type *t = (Type *)obj.ptr();
+        if (t->typeKind != RECORD_TYPE)
+            return false;
+        RecordType *rt = (RecordType *)t;
+        if (term->head != rt->record.ptr())
+            return false;
+        return unifyList(term->params, rt->params);
+    }
+
+    default :
+        return false;
+
+    }
+}
+
+
+
+//
+// derefCell, reducePattern
+//
+
+ObjectPtr derefCell(PatternCellPtr cell)
+{
     if (!cell->obj) {
         if (cell->name.ptr())
             error(cell->name, "unresolved pattern variable");
@@ -236,7 +236,8 @@ ObjectPtr derefCell(PatternCellPtr cell) {
     return cell->obj;
 }
 
-ObjectPtr reducePattern(PatternPtr pattern) {
+ObjectPtr reducePattern(PatternPtr pattern)
+{
     if (pattern->patternKind == PATTERN_CELL) {
         PatternCellPtr x = (PatternCell *)pattern.ptr();
         if (x->obj.ptr())
@@ -244,6 +245,12 @@ ObjectPtr reducePattern(PatternPtr pattern) {
     }
     return pattern.ptr();
 }
+
+
+
+//
+// patternPrint
+//
 
 void patternPrint(ostream &out, PatternPtr x)
 {
@@ -253,30 +260,9 @@ void patternPrint(ostream &out, PatternPtr x)
         out << "PatternCell(" << y->name << ", " << y->obj << ")";
         break;
     }
-    case POINTER_TYPE_PATTERN : {
-        PointerTypePattern *y = (PointerTypePattern *)x.ptr();
-        out << "PointerTypePattern(" << y->pointeeType << ")";
-        break;
-    }
-    case ARRAY_TYPE_PATTERN : {
-        ArrayTypePattern *y = (ArrayTypePattern *)x.ptr();
-        out << "ArrayTypePattern(" << y->elementType << ", " << y->size << ")";
-        break;
-    }
-    case TUPLE_TYPE_PATTERN : {
-        TupleTypePattern *y = (TupleTypePattern *)x.ptr();
-        out << "TupleTypePattern(" << y->elementTypes << ")";
-        break;
-    }
-    case RECORD_TYPE_PATTERN : {
-        RecordTypePattern *y = (RecordTypePattern *)x.ptr();
-        out << "RecordTypePattern(" << y->record->name->str << ", "
-            << y->params << ")";
-        break;
-    }
-    case STATIC_TYPE_PATTERN : {
-        StaticTypePattern *y = (StaticTypePattern *)x.ptr();
-        out << "StaticTypePattern(" << y->obj << ")";
+    case PATTERN_TERM : {
+        PatternTerm *y = (PatternTerm *)x.ptr();
+        out << "PatternTerm(" << y->head << ", " << y->params << ")";
         break;
     }
     default :

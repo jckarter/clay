@@ -269,11 +269,7 @@ struct EnumType;
 
 struct Pattern;
 struct PatternCell;
-struct ArrayTypePattern;
-struct TupleTypePattern;
-struct PointerTypePattern;
-struct RecordTypePattern;
-struct StaticTypePattern;
+struct PatternTerm;
 
 struct ValueHolder;
 struct MultiStatic;
@@ -389,11 +385,7 @@ typedef Pointer<EnumType> EnumTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
 typedef Pointer<PatternCell> PatternCellPtr;
-typedef Pointer<ArrayTypePattern> ArrayTypePatternPtr;
-typedef Pointer<TupleTypePattern> TupleTypePatternPtr;
-typedef Pointer<PointerTypePattern> PointerTypePatternPtr;
-typedef Pointer<RecordTypePattern> RecordTypePatternPtr;
-typedef Pointer<StaticTypePattern> StaticTypePatternPtr;
+typedef Pointer<PatternTerm> PatternTermPtr;
 
 typedef Pointer<ValueHolder> ValueHolderPtr;
 typedef Pointer<MultiStatic> MultiStaticPtr;
@@ -1790,11 +1782,7 @@ void typePrint(ostream &out, TypePtr t);
 
 enum PatternKind {
     PATTERN_CELL,
-    POINTER_TYPE_PATTERN,
-    ARRAY_TYPE_PATTERN,
-    TUPLE_TYPE_PATTERN,
-    RECORD_TYPE_PATTERN,
-    STATIC_TYPE_PATTERN,
+    PATTERN_TERM,
 };
 
 struct Pattern : public Object {
@@ -1810,37 +1798,11 @@ struct PatternCell : public Pattern {
         : Pattern(PATTERN_CELL), name(name), obj(obj) {}
 };
 
-struct PointerTypePattern : public Pattern {
-    PatternPtr pointeeType;
-    PointerTypePattern(PatternPtr pointeeType)
-        : Pattern(POINTER_TYPE_PATTERN), pointeeType(pointeeType) {}
-};
-
-struct ArrayTypePattern : public Pattern {
-    PatternPtr elementType;
-    PatternPtr size;
-    ArrayTypePattern(PatternPtr elementType, PatternPtr size)
-        : Pattern(ARRAY_TYPE_PATTERN), elementType(elementType),
-          size(size) {}
-};
-
-struct TupleTypePattern : public Pattern {
-    vector<PatternPtr> elementTypes;
-    TupleTypePattern(const vector<PatternPtr> &elementTypes)
-        : Pattern(TUPLE_TYPE_PATTERN), elementTypes(elementTypes) {}
-};
-
-struct RecordTypePattern : public Pattern {
-    RecordPtr record;
+struct PatternTerm : public Pattern {
+    ObjectPtr head;
     vector<PatternPtr> params;
-    RecordTypePattern(RecordPtr record, const vector<PatternPtr> &params)
-        : Pattern(RECORD_TYPE_PATTERN), record(record), params(params) {}
-};
-
-struct StaticTypePattern : public Pattern {
-    PatternPtr obj;
-    StaticTypePattern(PatternPtr obj)
-        : Pattern(STATIC_TYPE_PATTERN), obj(obj) {}
+    PatternTerm(ObjectPtr head, const vector<PatternPtr> &params)
+        : Pattern(PATTERN_TERM), head(head), params(params) {}
 };
 
 
@@ -1924,13 +1886,10 @@ StatementPtr desugarForStatement(ForPtr x);
 
 PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
 PatternPtr evaluateStaticObjectPattern(ObjectPtr x);
-PatternPtr evaluateIndexingPattern(ObjectPtr indexable,
-                                   const vector<ExprPtr> &args,
-                                   EnvPtr env);
-PatternPtr evaluateAliasIndexingPattern(GlobalAliasPtr x,
-                                        const vector<ExprPtr> &args,
-                                        EnvPtr env);
 bool unify(PatternPtr pattern, ObjectPtr obj);
+bool unifyList(const vector<PatternPtr> patterns,
+               const vector<ObjectPtr> objs);
+bool unifyTerm(PatternTermPtr term, ObjectPtr obj);
 ObjectPtr derefCell(PatternCellPtr cell);
 ObjectPtr reducePattern(PatternPtr pattern);
 
