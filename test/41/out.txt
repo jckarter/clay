@@ -1,0 +1,31 @@
+testing Int8
+min = -128
+max = 127
+testing UInt8
+min = 0
+max = 255
+testing Int16
+min = -32768
+max = 32767
+testing UInt16
+min = 0
+max = 65535
+testing Int32
+min = -2147483648
+max = 2147483647
+testing UInt32
+min = 0
+max = 4294967295
+testing Int64
+min = -9223372036854775808
+max = 9223372036854775807
+testing UInt64
+min = 0
+max = 18446744073709551615
+testing Float32
+a = 1.200000
+b = -3.400000
+testing Float64
+a = 1.200000
+b = -3.400000
+42
