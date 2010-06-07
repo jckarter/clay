@@ -1,8 +1,5 @@
-import sys
 import os
-import tempfile
-import time
-import cStringIO
+import sys
 from subprocess import Popen, PIPE
 from multiprocessing import Pool, cpu_count
 
@@ -10,21 +7,19 @@ testDir = os.path.dirname(os.path.abspath(__file__))
 compiler = os.path.join(testDir, "..", "build", "compiler", "src", "clay")
 
 def runtest(path):
-    clayfile = os.path.join(path, "main.clay")
-    outfile = tempfile.NamedTemporaryFile(delete = False)
-    outfile.close()
-    process = Popen([compiler, "-o", outfile.name, clayfile], 
-            stdout=PIPE, stderr=PIPE)
+    outfilename = "a.exe" if sys.platform == "win32" else "a.out"
+    outfilename = os.path.join(path, outfilename)
+    process = Popen([compiler, "main.clay"], 
+            stdout=PIPE, stderr=PIPE, cwd=path)
     if process.wait() != 0 :
-        return "TEST %s: %s" % (path, "fail")
-    process = Popen([outfile.name], stdout=PIPE)
+        return "fail"
+    process = Popen([outfilename], cwd=path, stdout=PIPE)
     process.wait()
     refresult = open(os.path.join(path, "out.txt")).read()
-    os.unlink(outfile.name)
-    result = "ok"
+    os.unlink(outfilename)
     if refresult != process.stdout.read():
-        result = "fail"
-    return "TEST %s: %s" % (path, result)
+        return "fail"
+    return "ok"
 
 def cantest(filenames):
     if "main.clay" not in filenames:
@@ -44,7 +39,20 @@ def runtests() :
     pool = Pool(processes = cpu_count())
     results = pool.imap(runtest, 
             [os.path.join(testDir, path) for path in paths])
-    for i in range(len(paths)):
-        print results.next()
+    okCount = 0
+    failed = []
+    for path in paths:
+        res = results.next()
+        p = os.path.relpath(path, testDir)
+        print "TEST %s: %s" % (p, res)
+        if res == "fail":
+            failed.append(p)
+    if len(failed) == 0:
+        print "\nALL TESTS PASSED"
+    else:
+        print "\nFailed tests:" 
+        print "\n".join(failed)
+        print "\nFAILED %d OF %d TESTS" % (len(failed), len(paths)) 
 
-runtests()
+if __name__ == "__main__":
+    runtests()
