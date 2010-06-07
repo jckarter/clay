@@ -1,0 +1,2 @@
+RValue?(foo1()) = 1
+RValue?(foo2()) = 0
