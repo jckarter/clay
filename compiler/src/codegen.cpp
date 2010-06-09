@@ -430,6 +430,7 @@ CValuePtr codegenOneAsRef(ExprPtr expr,
                           CodegenContextPtr ctx)
 {
     MultiCValuePtr mcv = codegenExprAsRef(expr, env, ctx);
+    LocationContext loc(expr->location);
     ensureArity(mcv, 1);
     return mcv->values[0];
 }

@@ -298,6 +298,7 @@ PValuePtr analyzeOne(ExprPtr expr, EnvPtr env)
     MultiPValuePtr x = analyzeExpr(expr, env);
     if (!x)
         return NULL;
+    LocationContext loc(expr->location);
     ensureArity(x, 1);
     return x->values[0];
 }
