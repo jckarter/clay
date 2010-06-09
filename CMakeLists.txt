@@ -6,6 +6,14 @@ include(FindPythonInterp)
 if(UNIX)
     find_program(LLVM_CONFIG llvm-config ${LLVM_INSTDIR}/bin 
         DOC "path to llvm-config")
+    find_program(CLANG clang ${LLVM_INSTDIR}/bin 
+        DOC "path to clang")
+
+    if(CLANG) 
+        set(BUILD_BINDGEN True)
+    else()
+        message("-- Clang not found. clay-bindgen will not be built")
+    endif()
 
     execute_process(
         COMMAND ${LLVM_CONFIG} --cxxflags
@@ -25,19 +33,45 @@ if(UNIX)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 elseif(MSVC)
-    include_directories("C:/Projects/llvm-build/include" 
-        "C:/Projects/llvm/include")
-    link_directories("C:/Projects/llvm-build/lib/Release")
+    set(LLVM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm)
+    set(LLVM_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm-build)
+    set(CLANG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/tools/clang)
+
+    if(IS_DIRECTORY ${LLVM_BUILD_DIR})
+        link_directories(${LLVM_BUILD_DIR}/lib/Release)
+    else()
+        message(FATAL_ERROR "Could not find LLVM build directory")
+    endif()
+
+    if(IS_DIRECTORY ${LLVM_DIR})
+        include_directories(${LLVM_BUILD_DIR}/include ${LLVM_DIR}/include)
+    else()
+        message(FATAL_ERROR "Could not find LLVM souce directory")
+    endif()
+
+    if(IS_DIRECTORY ${CLANG_DIR})
+        set(BUILD_BINDGEN True)
+        include_directories(${CLANG_DIR}/include)
+        include_directories(${LLVM_BUILD_DIR}/tools/clang/include)
+    else()
+        message("-- Clang not found. clay-bindgen will not be built")
+    endif()
+
+    set(IGNORE_WARNINGS 4146 4503 4996 4800 4244 4624 4355
+        4715 4180 4345 4224 4351)
+    set(LLVM_CXXFLAGS 
+        "/D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS 
+         /D_SCL_SECURE_NO_WARNINGS /DCRT_NONSTDC_NO_WARNINGS 
+         /D_SCL_SECURE_NO_DEPRECATE /wd${IGNORE_WARNINGS}")
+
     set(LLVM_LIBS 
-        "LLVMJIT.lib" "LLVMInterpreter.lib" "LLVMExecutionEngine.lib" 
-        "LLVMX86AsmPrinter.lib" "LLVMX86AsmParser.lib" 
-        "LLVMX86Disassembler.lib" "LLVMBitReader.lib" "LLVMBitWriter.lib" 
-        "LLVMipo.lib" "LLVMX86CodeGen.lib" "LLVMMCParser.lib" 
-        "LLVMSelectionDAG.lib" "LLVMX86Info.lib" "LLVMAsmPrinter.lib" 
-        "LLVMCodeGen.lib" "LLVMScalarOpts.lib" "LLVMInstCombine.lib" 
-        "LLVMTransformUtils.lib" "LLVMipa.lib" "LLVMAnalysis.lib" 
-        "LLVMTarget.lib" "LLVMCore.lib" "LLVMMC.lib" "LLVMSupport.lib"
-        "LLVMSystem.lib")
+        "LLVMJIT" "LLVMInterpreter" "LLVMExecutionEngine" "LLVMX86AsmPrinter" 
+        "LLVMX86AsmParser" "LLVMX86Disassembler" "LLVMBitReader" 
+        "LLVMBitWriter" "LLVMipo" "LLVMX86CodeGen" "LLVMMCParser" 
+        "LLVMSelectionDAG" "LLVMX86Info" "LLVMAsmPrinter" "LLVMCodeGen" 
+        "LLVMScalarOpts" "LLVMInstCombine" "LLVMTransformUtils" "LLVMipa" 
+        "LLVMAnalysis" "LLVMTarget" "LLVMCore" "LLVMMC" "LLVMSupport"
+        "LLVMSystem")
 endif(UNIX)
 
 set(CMAKE_OSX_ARCHITECTURES x86_64)
@@ -50,6 +84,6 @@ add_subdirectory(misc)
 if(PYTHONINTERP_FOUND)
     add_custom_target(test ${PYTHON_EXECUTABLE} "../test/runtests.py")
     add_dependencies(test clay)
-else(PYTHONINTERP_FOUND)
+else()
     message("-- Python not found. You will not be able to run tests")
-endif(PYTHONINTERP_FOUND)
+endif()
