@@ -499,6 +499,7 @@ EValuePtr evalAllocValue(TypePtr t)
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env)
 {
     MultiEValuePtr mev = evalExprAsRef(expr, env);
+    LocationContext loc(expr->location);
     ensureArity(mev, 1);
     return mev->values[0];
 }
