@@ -905,8 +905,10 @@ struct Binding : public Statement {
 };
 
 struct Assignment : public Statement {
-    ExprPtr left, right;
-    Assignment(ExprPtr left, ExprPtr right)
+    vector<ExprPtr> left;
+    vector<ExprPtr> right;
+    Assignment(const vector<ExprPtr> &left,
+               const vector<ExprPtr> &right)
         : Statement(ASSIGNMENT), left(left), right(right) {}
 };
 

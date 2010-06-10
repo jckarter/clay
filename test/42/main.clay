@@ -5,6 +5,8 @@ swap(a, b) { return b, a; }
 main() {
     var a, b = ...swap(10, 20);
     println(a, ", ", b);
+    a, b = b, a;
+    println(a, ", ", b);
 
     var P, Q = ...foo(Int32);
     println(P, ", ", Q);

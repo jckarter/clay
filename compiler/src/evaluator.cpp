@@ -1487,13 +1487,40 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.ptr();
-        PValuePtr pvLeft = analyzeOne(x->left, env);
-        if (pvLeft->isTemp)
-            error(x->left, "cannot assign to a temporary");
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
+        assert(mpvLeft.ptr());
+        assert(mpvRight.ptr());
+        if (mpvLeft->size() != mpvRight->size())
+            error("arity mismatch between left-side and right-side");
+        for (unsigned i = 0; i < mpvLeft->size(); ++i) {
+            if (mpvLeft->values[i]->isTemp)
+                argumentError(i, "cannot assign to a temporary");
+        }
         int marker = evalMarkStack();
-        EValuePtr evLeft = evalOneAsRef(x->left, env);
-        EValuePtr evRight = evalOneAsRef(x->right, env);
-        evalValueAssign(evLeft, evRight);
+        if (mpvLeft->size() == 1) {
+            MultiEValuePtr mevRight = evalMultiAsRef(x->right, env);
+            MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
+            assert(mevLeft->size() == 1);
+            assert(mevRight->size() == 1);
+            evalValueAssign(mevLeft->values[0], mevRight->values[0]);
+        }
+        else {
+            MultiEValuePtr mevRight = new MultiEValue();
+            for (unsigned i = 0; i < mpvRight->size(); ++i) {
+                PValuePtr pv = mpvRight->values[i];
+                EValuePtr ev = evalAllocValue(pv->type);
+                mevRight->add(ev);
+            }
+            evalMultiInto(x->right, env, mevRight);
+            MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
+            assert(mevLeft->size() == mevRight->size());
+            for (unsigned i = 0; i < mevLeft->size(); ++i) {
+                EValuePtr evLeft = mevLeft->values[i];
+                EValuePtr evRight = mevRight->values[i];
+                evalValueAssign(evLeft, evRight);
+            }
+        }
         evalDestroyAndPopStack(marker);
         return NULL;
     }
@@ -1502,6 +1529,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
         InitAssignment *x = (InitAssignment *)stmt.ptr();
         MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
         MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
+        assert(mpvLeft.ptr());
+        assert(mpvRight.ptr());
         if (mpvLeft->size() != mpvRight->size())
             error("arity mismatch between left-side and right-side");
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
