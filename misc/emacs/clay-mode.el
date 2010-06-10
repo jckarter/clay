@@ -63,7 +63,7 @@
    ;; (list "\\(^[ \t]*\\|[,{][ \t]*\\)\\(\\w+\\):" 2 font-lock-string-face)
    ;; --- End handling of quoted strings ---
 
-   '("^\\[.*?\\]$" . font-lock-warning-face)
+   '("^\\(\\[.*?\\]\\) *" 1 font-lock-doc-face)
 
    '("\\<\\(?:a\\(?:nd\\|s\\)\\|\\(?:b\\(?:loc\\|rea\\)k\\)\\|continue\\|e\\(?:num\\|lse\\|xternal\\)\\|for\\|goto\\|i\\(?:mport\\|nlined\\|[fn]\\)\\|l\\(?:ambda\\|value\\)\\|n\\(?:ew\\|ot\\)\\|o\\(?:r\\|verload\\(?:able\\)?\\)\\|p\\(?:rivate\\|ublic\\)\\|r\\(?:value\\|\\(e\\(?:cord\\|f\\|turn\\)\\)\\)\\|static\\|var\\|while\\)\\>" . font-lock-keyword-face)
 
@@ -74,13 +74,14 @@
 
 ;; Moar syntax highlighting to be done - comments, builtins, strings et cetera
 ;; builtins - print, println, printTo, printlnTo, assert, range, reserve
-(defconst clay-font-lock-keywords-2
-  (append clay-font-lock-keywords-1
-          (list
-           '("\\<\\(assert\\|\\(?:print\\(?:To\\|ln\\(?:To\\)?\\)?\\)\\|r\\(?:ang\\|eserv\\)e\\)\\((\\)" 1 font-lock-builtin-face)))
-  "Built-in functions")
+;; TODO: Disabled builtin functions, uncomment following fn to enable
+;; (defconst clay-font-lock-keywords-2
+;;   (append clay-font-lock-keywords-1
+;;           (list
+;;            '("\\<\\(assert\\|\\(?:print\\(?:To\\|ln\\(?:To\\)?\\)?\\)\\|r\\(?:ang\\|eserv\\)e\\)\\((\\)" 1 font-lock-builtin-face)))
+;;   "Built-in functions")
 
-(defvar clay-font-lock-keywords clay-font-lock-keywords-2
+(defvar clay-font-lock-keywords clay-font-lock-keywords-1
   "Default highlighting expressions for Clay mode.")
 
 
