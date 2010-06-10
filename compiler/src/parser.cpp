@@ -1352,9 +1352,36 @@ static bool optPredicate(ExprPtr &x) {
     return true;
 }
 
-static bool patternVarsWithCond(vector<IdentifierPtr> &x, ExprPtr &y) {
+static bool patternVar(PatternVar &x) {
+    int p = save();
+    x.isMulti = true;
+    if (!symbol("...")) {
+        restore(p);
+        x.isMulti = false;
+    }
+    if (!identifier(x.name)) return false;
+    return true;
+}
+
+static bool patternVarList(vector<PatternVar> &x) {
+    PatternVar y;
+    if (!patternVar(y)) return false;
+    x.clear();
+    x.push_back(y);
+    while (true) {
+        int p = save();
+        if (!symbol(",") || !patternVar(y)) {
+            restore(p);
+            break;
+        }
+        x.push_back(y);
+    }
+    return true;
+}
+
+static bool patternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
     if (!symbol("[")) return false;
-    if (!identifierList(x)) return false;
+    if (!patternVarList(x)) return false;
     if (!optPredicate(y) || !symbol("]")) {
         x.clear();
         y = NULL;
@@ -1363,7 +1390,7 @@ static bool patternVarsWithCond(vector<IdentifierPtr> &x, ExprPtr &y) {
     return true;
 }
 
-static bool optPatternVarsWithCond(vector<IdentifierPtr> &x, ExprPtr &y) {
+static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
     int p = save();
     if (!patternVarsWithCond(x, y)) {
         restore(p);

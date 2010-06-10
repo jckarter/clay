@@ -318,9 +318,16 @@ ModulePtr loadedModule(const string &module) {
 
 static void initOverload(OverloadPtr x) {
     EnvPtr env = new Env(x->env);
-    for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
-        PatternCellPtr cell = new PatternCell(NULL);
-        addLocal(env, x->code->patternVars[i], cell.ptr());
+    const vector<PatternVar> &pvars = x->code->patternVars;
+    for (unsigned i = 0; i < pvars.size(); ++i) {
+        if (pvars[i].isMulti) {
+            MultiPatternCellPtr cell = new MultiPatternCell(NULL);
+            addLocal(env, pvars[i].name, cell.ptr());
+        }
+        else {
+            PatternCellPtr cell = new PatternCell(NULL);
+            addLocal(env, pvars[i].name, cell.ptr());
+        }
     }
     PatternPtr pattern = evaluateOnePattern(x->target, env);
     ObjectPtr y = derefDeep(pattern);

@@ -13,6 +13,11 @@ CodePtr clone(CodePtr x)
     return y;
 }
 
+void clone(const vector<PatternVar> &x, vector<PatternVar> &out)
+{
+    out = x;
+}
+
 void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
