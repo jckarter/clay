@@ -155,8 +155,13 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case LABEL :
+    case LABEL : {
+        break;
+    }
+
     case BINDING : {
+        Binding *y = (Binding *)x.ptr();
+        convertFreeVars(y->expr, env, ctx);
         break;
     }
 
@@ -169,8 +174,10 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case INIT_ASSIGNMENT : {
         InitAssignment *y = (InitAssignment *)x.ptr();
-        convertFreeVars(y->left, env, ctx);
-        convertFreeVars(y->right, env, ctx);
+        for (unsigned i = 0; i < y->left.size(); ++i)
+            convertFreeVars(y->left[i], env, ctx);
+        for (unsigned i = 0; i < y->right.size(); ++i)
+            convertFreeVars(y->right[i], env, ctx);
         break;
     }
 

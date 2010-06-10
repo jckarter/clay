@@ -909,9 +909,16 @@ struct Assignment : public Statement {
 };
 
 struct InitAssignment : public Statement {
-    ExprPtr left, right;
-    InitAssignment(ExprPtr left, ExprPtr right)
+    vector<ExprPtr> left;
+    vector<ExprPtr> right;
+    InitAssignment(const vector<ExprPtr> &left,
+                   const vector<ExprPtr> &right)
         : Statement(INIT_ASSIGNMENT), left(left), right(right) {}
+    InitAssignment(ExprPtr leftExpr, ExprPtr rightExpr)
+        : Statement(INIT_ASSIGNMENT) {
+        left.push_back(leftExpr);
+        right.push_back(rightExpr);
+    }
 };
 
 enum UpdateOpKind {

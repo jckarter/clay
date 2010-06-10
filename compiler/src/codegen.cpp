@@ -2012,15 +2012,19 @@ bool codegenStatement(StatementPtr stmt,
 
     case INIT_ASSIGNMENT : {
         InitAssignment *x = (InitAssignment *)stmt.ptr();
-        PValuePtr pvLeft = analyzeOne(x->left, env);
-        PValuePtr pvRight = analyzeOne(x->right, env);
-        if (pvLeft->type != pvRight->type)
-            error("type mismatch");
-        if (pvLeft->isTemp)
-            error(x->left, "cannot assign to a temporary");
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
+        if (mpvLeft->size() != mpvRight->size())
+            error("arity mismatch between left-side and right-side");
+        for (unsigned i = 0; i < mpvLeft->size(); ++i) {
+            if (mpvLeft->values[i]->isTemp)
+                argumentError(i, "cannot assign to a temporary");
+            if (mpvLeft->values[i]->type != mpvRight->values[i]->type)
+                argumentError(i, "type mismatch");
+        }
         int marker = cgMarkStack();
-        CValuePtr cvLeft = codegenOneAsRef(x->left, env, ctx);
-        codegenOneInto(x->right, env, ctx, cvLeft);
+        MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
+        codegenMultiInto(x->right, env, ctx, mcvLeft);
         cgDestroyAndPopStack(marker, ctx);
         return false;
     }

@@ -257,7 +257,10 @@ StatementPtr clone(StatementPtr x)
 
     case INIT_ASSIGNMENT : {
         InitAssignment *y = (InitAssignment *)x.ptr();
-        out = new InitAssignment(clone(y->left), clone(y->right));
+        vector<ExprPtr> left, right;
+        clone(y->left, left);
+        clone(y->right, right);
+        out = new InitAssignment(left, right);
         break;
     }
 
