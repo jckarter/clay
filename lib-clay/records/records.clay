@@ -1,11 +1,21 @@
 
 
 //
-// RecordFieldType
+// RecordFieldType, RecordFieldTypes
 //
 
 [T,i | Record?(T)]
-RecordFieldType(static T, static i) = Type(recordFieldRef(T(), static SizeT(i)));
+RecordFieldType(static T, static i) = Type(recordFieldRef(null(T)^, static SizeT(i)));
+
+[T | Record?(T)]
+RecordFieldTypes(static T) = ...RecordFieldTypes2(T, static SizeT(0));
+
+[T,i]
+private RecordFieldTypes2(static T, static i) =
+    RecordFieldType(T, static i), ...RecordFieldTypes2(T, static i+1);
+
+[T,i | i == RecordFieldCount(T)]
+overload RecordFieldTypes2(static T, static i) = ;
 
 
 
@@ -34,6 +44,33 @@ overload SafeFields?(static T, static i) = true;
 
 [T] SafeType?(static T) = true;
 [T] overload SafeType?(static Pointer[T]) = false;
+
+
+
+//
+// recordFields
+//
+
+[T | Record?(T)]
+recordFields(a:T) = ref ...recordFields2(a, static SizeT(0));
+
+[i]
+private recordFields2(a, static i) =
+    ref recordFieldRef(a, static i), ...recordFields2(a, static i+1);
+
+[T,i | i == RecordFieldCount(T)]
+overload recordFields2(a:T, static i) = ;
+
+
+
+//
+// basic constructor
+//
+
+[T, ...A | Record?(T) and (Tuple[...RecordFieldTypes(T)] == Tuple[...A])]
+inlined T(...args:A) returned:T {
+    ...recordFields(returned) <-- ...args;
+}
 
 
 

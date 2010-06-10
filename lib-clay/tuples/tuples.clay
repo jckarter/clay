@@ -1,4 +1,32 @@
 
+
+
+//
+// tupleElements
+//
+
+[T | Tuple?(T)]
+tupleElements(a:T) = ref ...tupleElements2(a, static SizeT(0));
+
+[i]
+private tupleElements2(a, static i) =
+    ref tupleRef(a, static i), ...tupleElements2(a, static i+1);
+
+[T,i | i == TupleElementCount(T)]
+overload tupleElements2(a:T, static i) = ;
+
+
+
+//
+// basic constructor
+//
+
+[...T]
+inlined overload Tuple[...T](...args:T) returned:Tuple[...T] {
+    ...tupleElements(returned) <-- ...args;
+}
+
+
 
 //
 // default constructor
