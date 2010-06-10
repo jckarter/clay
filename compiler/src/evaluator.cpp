@@ -1499,15 +1499,19 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case INIT_ASSIGNMENT : {
         InitAssignment *x = (InitAssignment *)stmt.ptr();
-        PValuePtr pvLeft = analyzeOne(x->left, env);
-        PValuePtr pvRight = analyzeOne(x->right, env);
-        if (pvLeft->type != pvRight->type)
-            error("type mismatch");
-        if (pvLeft->isTemp)
-            error(x->left, "cannot assign to a temporary");
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
+        if (mpvLeft->size() != mpvRight->size())
+            error("arity mismatch between left-side and right-side");
+        for (unsigned i = 0; i < mpvLeft->size(); ++i) {
+            if (mpvLeft->values[i]->isTemp)
+                argumentError(i, "cannot assign to a temporary");
+            if (mpvLeft->values[i]->type != mpvRight->values[i]->type)
+                argumentError(i, "type mismatch");
+        }
         int marker = evalMarkStack();
-        EValuePtr evLeft = evalOneAsRef(x->left, env);
-        evalOneInto(x->right, env, evLeft);
+        MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
+        evalMultiInto(x->right, env, mevLeft);
         evalDestroyAndPopStack(marker);
         return NULL;
     }

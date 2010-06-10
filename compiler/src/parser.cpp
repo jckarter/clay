@@ -899,10 +899,11 @@ static bool assignment(StatementPtr &x) {
 
 static bool initAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    ExprPtr y, z;
-    if (!expression(y)) return false;
+    vector<ExprPtr> y;
+    vector<ExprPtr> z;
+    if (!expressionList(y)) return false;
     if (!symbol("<--")) return false;
-    if (!expression(z)) return false;
+    if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     x = new InitAssignment(y, z);
     x->location = location;
