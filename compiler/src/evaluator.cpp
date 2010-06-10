@@ -1337,12 +1337,13 @@ void evalCallCode(InvokeEntryPtr entry,
     assert(out->size() == entry->returnTypes.size());
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
         TypePtr t = entry->returnTypes[i];
+        EValuePtr ev = out->values[i];
         if (entry->returnIsRef[i]) {
-            assert(t == pointerType(out->values[i]->type));
+            assert(ev->type == pointerType(t));
             gvArgs.push_back(llvm::GenericValue(out->values[i]->addr));
         }
         else {
-            assert(t == out->values[i]->type);
+            assert(ev->type == t);
             gvArgs.push_back(llvm::GenericValue(out->values[i]->addr));
         }
     }
