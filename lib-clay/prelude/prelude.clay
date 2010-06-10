@@ -24,7 +24,6 @@ public import files.lines.*;
 public import printer.*;
 
 public import errors.*;
-public import exceptions.*;
 
 
 // include self so that even if any symbol is shadowed
