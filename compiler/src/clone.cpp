@@ -245,7 +245,9 @@ StatementPtr clone(StatementPtr x)
         Binding *y = (Binding *)x.ptr();
         vector<IdentifierPtr> names;
         clone(y->names, names);
-        out = new Binding(y->bindingKind, names, clone(y->expr));
+        vector<ExprPtr> exprs;
+        clone(y->exprs, exprs);
+        out = new Binding(y->bindingKind, names, exprs);
         break;
     }
 

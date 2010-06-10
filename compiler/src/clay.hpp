@@ -896,10 +896,12 @@ enum BindingKind {
 struct Binding : public Statement {
     int bindingKind;
     vector<IdentifierPtr> names;
-    ExprPtr expr;
-    Binding(int bindingKind, const vector<IdentifierPtr> &names, ExprPtr expr)
+    vector<ExprPtr> exprs;
+    Binding(int bindingKind,
+            const vector<IdentifierPtr> &names,
+            const vector<ExprPtr> &exprs)
         : Statement(BINDING), bindingKind(bindingKind),
-          names(names), expr(expr) {}
+          names(names), exprs(exprs) {}
 };
 
 struct Assignment : public Statement {

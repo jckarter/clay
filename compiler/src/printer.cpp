@@ -287,7 +287,7 @@ static void printStatement(ostream &out, const Statement *x) {
         default :
             assert(false);
         }
-        out << ", " << y->names << ", " << y->expr << ")";
+        out << ", " << y->names << ", " << y->exprs << ")";
         break;
     }
     case ASSIGNMENT : {
