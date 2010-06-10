@@ -1846,6 +1846,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(t, true));
     }
 
+    case PRIM_throw :
+        ensureArity(args, 0);
+        return new MultiPValue();
+
     default :
         assert(false);
         return NULL;
