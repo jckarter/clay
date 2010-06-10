@@ -1,0 +1,11 @@
+
+var x = 10;
+
+alias Y = x;
+
+alias P = println;
+
+main() {
+    inc(Y);
+    P("Hello World ", x);
+}

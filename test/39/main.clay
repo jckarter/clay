@@ -1,0 +1,15 @@
+
+main() {
+    {
+        var f = File("test.txt");
+        for (line in lines(f))
+            print(line);
+    }
+    {
+        var lines = Vector[String]();
+        for (line in prelude.lines(File("test.txt")))
+            push(lines, line);
+        for (x in lines)
+            print(x);
+    }
+}

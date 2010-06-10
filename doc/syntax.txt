@@ -12,7 +12,7 @@ ImportedItem -> Identifier ("as" Identifier)?
 TopLevelItem -> Record | Procedure | Overloadable | Overload
               | Enumeration | GlobalVariable
               | ExternalProcedure | ExternalVariable
-              | StaticGlobal
+              | GlobalAlias
 
 Record -> "record" Identifier PatternVars? "{" RecordField* "}"
 PatternVars -> "[" comma_list(Identifier) "]"
@@ -25,9 +25,10 @@ Procedure -> PatternVarsWithCond? "inlined"? Identifier Arguments
 PatternVarsWithCond -> "[" comma_list(Identifier) Predicate? "]"
 Predicate -> "|" Expression
 
-Arguments -> "(" comma_list(Argument) ("," "...")? ")"
-           | "(" "..." ")"
-           | "(" ")"
+Arguments -> "(" ArgumentList ")"
+
+ArgumentList -> comma_list(Argument), ("," "..." Identifier)?
+              | ("..." Identifier)?
 
 Argument -> ValueArgument
           | StaticArgument
@@ -63,7 +64,7 @@ ExternalBody -> "=" Expression ";"
 
 ExternalVariable -> "external" Identifier TypeSpec ";"
 
-StaticGlobal -> "static" Identifier "=" Expression ";"
+GlobalAlias -> "alias" Identifier "=" Expression ";"
 
 
 //
@@ -76,7 +77,7 @@ Statement -> Block
            | LabelDef
            | VarBinding
            | RefBinding
-           | StaticBinding
+           | AliasBinding
            | Assignment
            | InitAssignment
            | UpdateAssignment
@@ -93,7 +94,7 @@ LabelDef -> Identifier ":"
 
 VarBinding -> "var" comma_list(Identifier) "=" Expression ";"
 RefBinding -> "ref" comma_list(Identifier) "=" Expression ";"
-StaticBinding -> "static" Identifier "=" Expression ";"
+AliasBinding -> "alias" Identifier "=" Expression ";"
 
 Assignment -> Expression "=" Expression ";"
 
@@ -135,7 +136,7 @@ PatternSuffix -> "[" comma_list(Pattern) "]"
 
 Expression -> OrExpr
             | Lambda
-            | VarArgsRef
+            | Unpack
             | New
             | StaticExpr
 
@@ -187,7 +188,7 @@ BoolLiteral -> "true" | "false"
 
 Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" Block
 
-VarArgsRef -> "..."
+Unpack -> "..." Expression
 
 New -> "new" Expression
 

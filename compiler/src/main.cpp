@@ -322,10 +322,14 @@ int main(int argc, char **argv) {
     bool result;
     result = clayDir.appendComponent("..");
     assert(result);
-    llvm::sys::Path libDir(clayDir);
-    result = libDir.appendComponent("lib-clay");
+    llvm::sys::Path libDirDevelopment(clayDir);
+    llvm::sys::Path libDirProduction(clayDir);
+    result = libDirDevelopment.appendComponent("../../lib-clay");
     assert(result);
-    addSearchPath(libDir.str());
+    result = libDirProduction.appendComponent("lib/lib-clay");
+    assert(result);
+    addSearchPath(libDirDevelopment.str());
+    addSearchPath(libDirProduction.str());
 
     if (outputFile.empty()) {
         if (emitLLVM)

@@ -7,7 +7,7 @@ CodePtr clone(CodePtr x)
     clone(x->patternVars, y->patternVars);
     y->predicate = cloneOpt(x->predicate);
     clone(x->formalArgs, y->formalArgs);
-    y->hasVarArgs = x->hasVarArgs;
+    y->formalVarArg = x->formalVarArg;
     clone(x->returnSpecs, y->returnSpecs);
     y->body = clone(x->body);
     return y;
@@ -138,8 +138,9 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
-    case VAR_ARGS_REF : {
-        out = new VarArgsRef();
+    case UNPACK : {
+        Unpack *y = (Unpack *)x.ptr();
+        out = new Unpack(clone(y->expr));
         break;
     }
 
@@ -269,7 +270,7 @@ StatementPtr clone(StatementPtr x)
     case RETURN : {
         Return *y = (Return *)x.ptr();
         ReturnPtr z = new Return();
-        z->isRef = y->isRef;
+        z->returnKind = y->returnKind;
         clone(y->exprs, z->exprs);
         out = z.ptr();
         break;

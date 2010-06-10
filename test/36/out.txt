@@ -1,0 +1,3 @@
+Address(name=Foo, email=Bar, age=10)
+Address(name=Foo, email=Bar, age=20)
+Address(name=Foo, email=Bar, age=30)
