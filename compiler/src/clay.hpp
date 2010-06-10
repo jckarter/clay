@@ -1581,6 +1581,8 @@ enum PrimOpCode {
     PRIM_EnumP,
     PRIM_enumToInt,
     PRIM_intToEnum,
+
+    PRIM_throw,
 };
 
 struct PrimOp : public Object {
@@ -2362,15 +2364,14 @@ struct CodegenContext : public Object {
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
     llvm::BasicBlock *catchBlock;
-	llvm::BasicBlock *unwindBlock;
-    llvm::Value *exception;
-	int tryBlockStackMarker;
+    llvm::BasicBlock *unwindBlock;
+    int tryBlockStackMarker;
 
     CodegenContext(const vector<CReturn> &returns,
                    const JumpTarget &returnTarget)
         : Object(DONT_CARE),
           returns(returns), returnTarget(returnTarget),
-          catchBlock(NULL), unwindBlock(NULL), exception(NULL) {}
+          catchBlock(NULL), unwindBlock(NULL) {}
 };
 
 typedef Pointer<CodegenContext> CodegenContextPtr;

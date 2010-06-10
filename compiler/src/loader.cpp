@@ -523,6 +523,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(enumToInt);
     PRIMITIVE(intToEnum);
 
+    PRIMITIVE(throw);
+
 #undef PRIMITIVE
 
     return prims;

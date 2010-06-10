@@ -420,7 +420,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
                 llArgTypes.push_back(llvmPointerType(t));
         }
         llvm::FunctionType *llFuncType =
-            llvm::FunctionType::get(llvmVoidType(), llArgTypes, false);
+            llvm::FunctionType::get(llvmIntType(32), llArgTypes, false);
         return llvm::PointerType::getUnqual(llFuncType);
     }
     case CCODE_POINTER_TYPE : {
