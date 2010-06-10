@@ -262,3 +262,18 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
         return NULL;
     }
 }
+
+
+
+//
+// foreignExpr
+//
+
+ExprPtr foreignExpr(EnvPtr env, ExprPtr expr)
+{
+    if (expr->exprKind == UNPACK) {
+        Unpack *y = (Unpack *)expr.ptr();
+        return new Unpack(foreignExpr(env, y->expr));
+    }
+    return new ForeignExpr(env, expr);
+}

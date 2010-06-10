@@ -1479,6 +1479,8 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
                       EnvPtr nonLocalEnv, bool &isNonLocal,
                       bool &isGlobal);
 
+ExprPtr foreignExpr(EnvPtr env, ExprPtr expr);
+
 
 
 //

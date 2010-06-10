@@ -1866,14 +1866,14 @@ void codegenCallInlined(InvokeEntryPtr entry,
     EnvPtr bodyEnv = new Env(entry->env);
 
     for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
-        ExprPtr expr = new ForeignExpr(env, args[i]);
+        ExprPtr expr = foreignExpr(env, args[i]);
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
 
     if (entry->varArgName.ptr()) {
         MultiExprPtr varArgs = new MultiExpr();
         for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
-            ExprPtr expr = new ForeignExpr(env, args[i]);
+            ExprPtr expr = foreignExpr(env, args[i]);
             varArgs->add(expr);
         }
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
@@ -2335,7 +2335,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         ensureArity(x->names, 1);
         ensureArity(x->exprs, 1);
         EnvPtr env2 = new Env(env);
-        ForeignExprPtr y = new ForeignExpr(env, x->exprs[0]);
+        ExprPtr y = foreignExpr(env, x->exprs[0]);
         addLocal(env2, x->names[0], y.ptr());
         return env2;
     }
