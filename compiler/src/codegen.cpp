@@ -288,63 +288,37 @@ void setExceptionsEnabled(bool enabled)
 
 static void initExceptions() 
 {
-    getDeclaration(llvmModule, llvm::Intrinsic::eh_selector);
-    getDeclaration(llvmModule, llvm::Intrinsic::eh_exception);
-    
-    llvm::FunctionType *llFunc1Type =
-        llvm::FunctionType::get(llvmIntType(32), true);
-    
-    llvm::Function::Create(llFunc1Type,
-                           llvm::Function::ExternalLinkage,
-                           "__gxx_personality_v0",
+    llvm::FunctionType *throwType = 
+        llvm::FunctionType::get(llvmIntType(32), false);
+    llvm::Function *throw_ = llvm::Function::Create(throwType,
+                           llvm::Function::InternalLinkage,
+                           "clay_throw",
                            llvmModule);
-                            
-    vector<const llvm::Type *> argTypes;
-    argTypes.push_back(llvmBuilder->getInt8Ty()->getPointerTo());
-
-    llvm::FunctionType *llFunc2Type = 
-        llvm::FunctionType::get(llvmVoidType(), argTypes, false);
-    llvm::Function::Create(llFunc2Type,
-                           llvm::Function::ExternalLinkage,
-                           "_Unwind_Resume_or_Rethrow",
-                           llvmModule);
-    
-    llvmExceptionsInited = true;    
+    llvm::Function *savedLLVMFunction = llvmFunction;
+    llvmFunction = throw_;
+    llvm::BasicBlock *retBlock = newBasicBlock("ret");
+    llvm::IRBuilder<> llBuilder(retBlock);
+    llBuilder.CreateRet(llvm::ConstantInt::get(llvmIntType(32), 1));
+    llvmFunction = savedLLVMFunction;
+    llvmExceptionsInited = true;
 }
 
-static llvm::BasicBlock *createLandingPad(CodegenContextPtr ctx) 
+static llvm::BasicBlock *createLandingPad(CodegenContextPtr ctx)
 {
     llvm::BasicBlock *lpad = newBasicBlock("lpad");
     llvmBuilder->SetInsertPoint(lpad);
-    llvm::Function *ehException = llvmModule->getFunction("llvm.eh.exception");
-    llvm::Function *ehSelector = llvmModule->getFunction("llvm.eh.selector");
-    llvm::Function *personality = 
-        llvmModule->getFunction("__gxx_personality_v0");
-    llvm::Value *ehPtr = llvmBuilder->CreateCall(ehException);
-    llvmBuilder->CreateStore(ehPtr, ctx->exception);
-    llvm::Value* funcPtr = llvmBuilder->CreateBitCast(personality,
-                                    llvmBuilder->getInt8Ty()->getPointerTo());
-    std::vector<llvm::Value*> llArgs;
-    llArgs.push_back(ehPtr);
-    llArgs.push_back(funcPtr);
-    llArgs.push_back(
-        llvm::Constant::getNullValue(
-            llvm::PointerType::getUnqual(
-                llvm::IntegerType::getInt8Ty(llvm::getGlobalContext()))));
-    llvmBuilder->CreateCall(ehSelector, llArgs.begin(), llArgs.end());
     return lpad;
 }
 
-static llvm::BasicBlock *createUnwindBlock(CodegenContextPtr ctx) {
+static llvm::BasicBlock *createUnwindBlock(CodegenContextPtr ctx) 
+{
     llvm::BasicBlock *unwindBlock = newBasicBlock("Unwind");
     llvm::IRBuilder<> llBuilder(unwindBlock);
-    llvm::Function *unwindResume = 
-        llvmModule->getFunction("_Unwind_Resume_or_Rethrow");
-    llvm::Value *arg = llBuilder.CreateLoad(ctx->exception);
-    llBuilder.CreateCall(unwindResume, arg);
-    llBuilder.CreateUnreachable();
+    llvm::Value *one = llvm::ConstantInt::get(llvmIntType(32), 1);
+    llBuilder.CreateRet(one);
     return unwindBlock;
 }
+
 
 static llvm::Value *createCall(llvm::Value *llCallable, 
                                vector<llvm::Value *>::iterator argBegin,
@@ -365,17 +339,8 @@ static llvm::Value *createCall(llvm::Value *llCallable,
     if (ctx->catchBlock)
         startMarker = ctx->tryBlockStackMarker;
 
-    if (endMarker <= startMarker && !ctx->catchBlock)
-        return llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
-
     llvm::BasicBlock *savedInsertPoint = llvmBuilder->GetInsertBlock();
    
-    if (!llvmExceptionsInited) 
-       initExceptions(); 
-    if (!ctx->exception)
-        ctx->exception = llvmInitBuilder->CreateAlloca(
-                llvmBuilder->getInt8Ty()->getPointerTo());
-    
     for (int i = startMarker; i < endMarker; ++i) {
         if (valueStack[i].destructor)
             continue;
@@ -400,7 +365,13 @@ static llvm::Value *createCall(llvm::Value *llCallable,
     // No live vars, but we were inside a try block
     if (endMarker <= startMarker) {
         landingPad = createLandingPad(ctx);
-        llvmBuilder->CreateBr(ctx->catchBlock);
+        if (ctx->catchBlock)
+            llvmBuilder->CreateBr(ctx->catchBlock);
+        else {
+            if (!ctx->unwindBlock)
+                ctx->unwindBlock = createUnwindBlock(ctx);
+            llvmBuilder->CreateBr(ctx->unwindBlock);
+        }
     }
     else {
         if (!valueStack[endMarker-1].landingPad) {
@@ -413,12 +384,13 @@ static llvm::Value *createCall(llvm::Value *llCallable,
     llvmBuilder->SetInsertPoint(savedInsertPoint);
     
     llvm::BasicBlock *normalBlock = newBasicBlock("normal");
-    llvm::Value *result = llvmBuilder->CreateInvoke(llCallable, normalBlock,
-            landingPad, argBegin, argEnd);
+    llvm::Value *result = llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
+    llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
+    llvm::Value *llExcept = llvmBuilder->CreateICmpEQ(result, zero);
+    llvmBuilder->CreateCondBr(llExcept, normalBlock, landingPad);
     llvmBuilder->SetInsertPoint(normalBlock);
     return result;
 }
-
 
 
 //
@@ -1703,7 +1675,7 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     }
 
     llvm::FunctionType *llFuncType =
-        llvm::FunctionType::get(llvmVoidType(), llArgTypes, false);
+        llvm::FunctionType::get(llvmIntType(32), llArgTypes, false);
 
     llvm::Function *llFunc =
         llvm::Function::Create(llFuncType,
@@ -1790,8 +1762,10 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
 
     llvmInitBuilder->CreateBr(codeBlock);
 
+    llvm::Value *llRet = llvm::ConstantInt::get(llvmIntType(32), 0);
+
     llvmBuilder->SetInsertPoint(returnBlock);
-    llvmBuilder->CreateRetVoid();
+    llvmBuilder->CreateRet(llRet);
 
     delete llvmInitBuilder;
     delete llvmBuilder;
@@ -3526,6 +3500,18 @@ void codegenPrimOp(PrimOpPtr x,
         CValuePtr out0 = out->values[0];
         assert(out0->type == et.ptr());
         llvmBuilder->CreateStore(v, out0->llValue);
+        break;
+    }
+
+    case PRIM_throw : {
+        ensureArity(args, 0);
+        if (!exceptionsEnabled) 
+            break;
+        if (!llvmExceptionsInited) 
+           initExceptions(); 
+        std::vector<llvm::Value*> llArgs;
+        llvm::Function *throw_ = llvmModule->getFunction("clay_throw");
+        createCall(throw_, llArgs.begin(), llArgs.end(), ctx);
         break;
     }
 
