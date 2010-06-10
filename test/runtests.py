@@ -1,48 +1,58 @@
-import sys
 import os
+import sys
+from subprocess import Popen, PIPE
+from multiprocessing import Pool, cpu_count
 
-tests = ("factorial platform " +
-         "test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 " +
-         "test11 test12 test13 test14 test15 test16 test17 " +
-         "test18 test19 test20 test21 test22 test23 exception " +
-         "test24 test25 test26 test27 test28 test29 test30 " +
-         "test31 test32 test33 test34 test35 test36 test37 " +
-         "test38 test39 test40 test41 test42").split()
+testDir = os.path.dirname(os.path.abspath(__file__))
+compiler = os.path.join(testDir, "..", "build", "compiler", "src", "clay")
 
-perfTests = ("insertionsort1 insertionsort2 " +
-             "mean quicksort1 quicksort2").split()
+def runtest(path):
+    outfilename = "a.exe" if sys.platform == "win32" else "a.out"
+    outfilename = os.path.join(path, outfilename)
+    process = Popen([compiler, "main.clay"], 
+            stdout=PIPE, stderr=PIPE, cwd=path)
+    if process.wait() != 0 :
+        return "fail"
+    process = Popen([outfilename], cwd=path, stdout=PIPE)
+    process.wait()
+    refresult = open(os.path.join(path, "out.txt")).read()
+    os.unlink(outfilename)
+    if refresult != process.stdout.read():
+        return "fail"
+    return "ok"
 
-win32Tests = "beep".split()
-
-testDir = os.path.dirname(__file__)
-compiler = os.path.join(testDir, "..", "bin", "clay")
-
-def runtest(input) :
-    print "TEST:", input
-    command = compiler + " " + input
-    print command
-    result = os.system(command)
-    if result != 0 :
-        print "Compilation failed"
+def cantest(filenames):
+    if "main.clay" not in filenames:
         return False
-    output = "a.exe" if sys.platform == "win32" else "a.out"
-    os.system(os.path.join(".", output))
-    return True
+    if "out.txt" in filenames or "err.txt" in filenames:
+        return True
+    return False
 
 def runtests() :
+    if not os.path.exists(compiler):
+        print "Could not find the clay compiler"
+        return
     paths = []
-    for x in tests :
-        p = x + ".clay"
-        paths.append(p)
-    if sys.platform == "win32" :
-        for x in win32Tests :
-            p = os.path.join("win32", x) + ".clay"
-            paths.append(p)
-    for x in perfTests :
-        p = os.path.join("perf", x) + ".clay"
-        paths.append(p)
-    for p in paths :
-        if not runtest(os.path.join(testDir, p)) :
-            print "Test Failed"
+    for dirpath, dirnames, filenames in os.walk(testDir):
+        if cantest(filenames):
+            paths.append(dirpath)
+    pool = Pool(processes = cpu_count())
+    results = pool.imap(runtest, 
+            [os.path.join(testDir, path) for path in paths])
+    okCount = 0
+    failed = []
+    for path in paths:
+        res = results.next()
+        p = os.path.relpath(path, testDir)
+        print "TEST %s: %s" % (p, res)
+        if res == "fail":
+            failed.append(p)
+    if len(failed) == 0:
+        print "\nALL TESTS PASSED"
+    else:
+        print "\nFailed tests:" 
+        print "\n".join(failed)
+        print "\nFAILED %d OF %d TESTS" % (len(failed), len(paths)) 
 
-runtests()
+if __name__ == "__main__":
+    runtests()

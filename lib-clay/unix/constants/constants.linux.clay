@@ -4,19 +4,19 @@
 // flags for 'open'
 //
 
-static O_RDONLY   = 00;
-static O_WRONLY   = 01;
-static O_RDWR     = 02;
-static O_CREAT    = 0100;
-static O_EXCL     = 0200;
-static O_NOCTTY   = 0400;
-static O_TRUNC    = 01000;
-static O_APPEND   = 02000;
-static O_NONBLOCK = 04000;
-static O_NDELAY   = O_NONBLOCK;
-static O_SYNC     = 010000;
-static O_FSYNC    = O_SYNC;
-static O_ASYNC    = 020000;
+alias O_RDONLY   = 00;
+alias O_WRONLY   = 01;
+alias O_RDWR     = 02;
+alias O_CREAT    = 0100;
+alias O_EXCL     = 0200;
+alias O_NOCTTY   = 0400;
+alias O_TRUNC    = 01000;
+alias O_APPEND   = 02000;
+alias O_NONBLOCK = 04000;
+alias O_NDELAY   = O_NONBLOCK;
+alias O_SYNC     = 010000;
+alias O_FSYNC    = O_SYNC;
+alias O_ASYNC    = 020000;
 
 
 
@@ -24,24 +24,24 @@ static O_ASYNC    = 020000;
 // flags for 'chmod'
 //
 
-static S_IRWXU = 0700;
-static S_IRUSR = 0400;
-static S_IWUSR = 0200;
-static S_IXUSR = 0100;
+alias S_IRWXU = 0700;
+alias S_IRUSR = 0400;
+alias S_IWUSR = 0200;
+alias S_IXUSR = 0100;
 
-static S_IRWXG = 070;
-static S_IRGRP = 040;
-static S_IWGRP = 020;
-static S_IXGRP = 010;
+alias S_IRWXG = 070;
+alias S_IRGRP = 040;
+alias S_IWGRP = 020;
+alias S_IXGRP = 010;
 
-static S_IRWXO = 07;
-static S_IROTH = 04;
-static S_IWOTH = 02;
-static S_IXOTH = 01;
+alias S_IRWXO = 07;
+alias S_IROTH = 04;
+alias S_IWOTH = 02;
+alias S_IXOTH = 01;
 
-static S_ISUID = 04000;
-static S_ISGID = 02000;
-static S_ISVTX = 01000;
+alias S_ISUID = 04000;
+alias S_ISGID = 02000;
+alias S_ISVTX = 01000;
 
 
 
@@ -49,9 +49,9 @@ static S_ISVTX = 01000;
 // flags for lseek
 //
 
-static SEEK_SET = 0;
-static SEEK_CUR = 1;
-static SEEK_END = 2;
+alias SEEK_SET = 0;
+alias SEEK_CUR = 1;
+alias SEEK_END = 2;
 
 
 
@@ -59,25 +59,25 @@ static SEEK_END = 2;
 // flags for mmap
 //
 
-static PROT_NONE  = 0;
-static PROT_READ  = 1;
-static PROT_WRITE = 2;
-static PROT_EXEC  = 4;
+alias PROT_NONE  = 0;
+alias PROT_READ  = 1;
+alias PROT_WRITE = 2;
+alias PROT_EXEC  = 4;
 
-static MAP_SHARED    = 1;
-static MAP_PRIVATE   = 2;
-static MAP_32BIT     = 64;
-static MAP_ANONYMOUS = 32;
-static MAP_FILE      = 0;
-static MAP_FIXED     = 16;
-static MAP_GROWSDOWN = 256;
-static MAP_LOCKED    = 8192;
-static MAP_NONBLOCK  = 65536;
-static MAP_NORESERVE = 16384;
-static MAP_POPULATE  = 32768;
-static MAP_STACK     = 131072;
+alias MAP_SHARED    = 1;
+alias MAP_PRIVATE   = 2;
+alias MAP_32BIT     = 64;
+alias MAP_ANONYMOUS = 32;
+alias MAP_FILE      = 0;
+alias MAP_FIXED     = 16;
+alias MAP_GROWSDOWN = 256;
+alias MAP_LOCKED    = 8192;
+alias MAP_NONBLOCK  = 65536;
+alias MAP_NORESERVE = 16384;
+alias MAP_POPULATE  = 32768;
+alias MAP_STACK     = 131072;
 
-static MAP_FAILED = RawPointer(-1);
+alias MAP_FAILED = RawPointer(-1);
 
 
 
@@ -85,6 +85,6 @@ static MAP_FAILED = RawPointer(-1);
 // flags for msync
 //
 
-static MS_ASYNC      = 1;
-static MS_SYNC       = 4;
-static MS_INVALIDATE = 2;
+alias MS_ASYNC      = 1;
+alias MS_SYNC       = 4;
+alias MS_INVALIDATE = 2;

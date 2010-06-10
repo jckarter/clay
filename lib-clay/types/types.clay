@@ -5,29 +5,29 @@ public import types.platform.*;
 // types
 //
 
-static Byte = UInt8;
+alias Byte = UInt8;
 
-static CChar = Int8;
-static CUChar = UInt8;
+alias CChar = Int8;
+alias CUChar = UInt8;
 
-static CString = Pointer[CChar];
+alias CString = Pointer[CChar];
 
-static Short = Int16;
-static UShort = UInt16;
+alias Short = Int16;
+alias UShort = UInt16;
 
-static Int = Int32;
-static UInt = UInt32;
+alias Int = Int32;
+alias UInt = UInt32;
 
-static Long = Int64;
-static ULong = UInt64;
+alias Long = Int64;
+alias ULong = UInt64;
 
-static Float = Float32;
-static Double = Float64;
+alias Float = Float32;
+alias Double = Float64;
 
-static RawPointer = Pointer[Byte];
+alias RawPointer = Pointer[Byte];
 
-static SizeT = UPtrInt;
-static SSizeT = PtrInt;
+alias SizeT = UPtrInt;
+alias SSizeT = PtrInt;
 
 
 
@@ -35,21 +35,21 @@ static SSizeT = PtrInt;
 // limits
 //
 
-static INT8_MIN  = -127#i8 - 1#i8;
-static INT8_MAX  =  127#i8;
-static UINT8_MAX =  255#u8;
+alias INT8_MIN  = -127#i8 - 1#i8;
+alias INT8_MAX  =  127#i8;
+alias UINT8_MAX =  255#u8;
 
-static INT16_MIN  = -32767#i16 - 1#i16;
-static INT16_MAX  =  32767#i16;
-static UINT16_MAX =  65535#u16;
+alias INT16_MIN  = -32767#i16 - 1#i16;
+alias INT16_MAX  =  32767#i16;
+alias UINT16_MAX =  65535#u16;
 
-static INT32_MIN  = -2147483647#i32 - 1#i32;
-static INT32_MAX  =  2147483647#i32;
-static UINT32_MAX = 0xffffffff#u32;
+alias INT32_MIN  = -2147483647#i32 - 1#i32;
+alias INT32_MAX  =  2147483647#i32;
+alias UINT32_MAX = 0xffffffff#u32;
 
-static INT64_MIN  = -0x7fffffffffffffff#i64 - 1#i64;
-static INT64_MAX  =   0x7fffffffffffffff#i64;
-static UINT64_MAX =   0xffffffffffffffff#u64;
+alias INT64_MIN  = -0x7fffffffffffffff#i64 - 1#i64;
+alias INT64_MAX  =   0x7fffffffffffffff#i64;
+alias UINT64_MAX =   0xffffffffffffffff#u64;
 
 
 
@@ -57,14 +57,14 @@ static UINT64_MAX =   0xffffffffffffffff#u64;
 // limits for types aliases
 //
 
-static INT_MIN = INT32_MIN;
-static INT_MAX = INT32_MAX;
-static UINT_MAX = UINT32_MAX;
+alias INT_MIN = INT32_MIN;
+alias INT_MAX = INT32_MAX;
+alias UINT_MAX = UINT32_MAX;
 
-static LONG_MIN = INT64_MIN;
-static LONG_MAX = INT64_MAX;
-static ULONG_MAX = UINT64_MAX;
+alias LONG_MIN = INT64_MIN;
+alias LONG_MAX = INT64_MAX;
+alias ULONG_MAX = UINT64_MAX;
 
-static SIZET_MAX = UPTRINT_MAX;
-static SSIZET_MIN = PTRINT_MIN;
-static SSIZET_MAX = PTRINT_MAX;
+alias SIZET_MAX = UPTRINT_MAX;
+alias SSIZET_MIN = PTRINT_MIN;
+alias SSIZET_MAX = PTRINT_MAX;

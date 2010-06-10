@@ -1,0 +1,25 @@
+
+map(f, a) {
+    alias ResultType = Type(f(a[0]));
+    var b = Vector[ResultType]();
+    for (x in a)
+        push(b, f(x));
+    return b;
+}
+
+scale(factor, a) {
+    var f = lambda (x) { return x*factor; };
+    return map(f, a);
+}
+
+main() {
+    var a = Vector([1, 2, 3, 4, 5, 6]);
+
+    for (x in a)
+        println(x);
+
+    var b = scale(100, a);
+
+    for (x in b)
+        println(x);
+}

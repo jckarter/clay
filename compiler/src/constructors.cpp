@@ -53,7 +53,6 @@ void initBuiltinConstructor(ArrayTypePtr t)
         FormalArgPtr arg = new FormalArg(argName, type);
         code->formalArgs.push_back(arg.ptr());
     }
-    code->hasVarArgs = false;
     ExprPtr retType = new ObjectExpr(t.ptr());
     IdentifierPtr retName = new Identifier("%ret");
     code->returnSpecs.push_back(new ReturnSpec(false, retType, retName));
@@ -88,7 +87,6 @@ void initBuiltinConstructor(TupleTypePtr t)
         FormalArgPtr arg = new FormalArg(argName, type);
         code->formalArgs.push_back(arg.ptr());
     }
-    code->hasVarArgs = false;
     ExprPtr retType = new ObjectExpr(t.ptr());
     IdentifierPtr retName = new Identifier("%ret");
     code->returnSpecs.push_back(new ReturnSpec(false, retType, retName));
@@ -121,7 +119,6 @@ void initBuiltinConstructor(RecordTypePtr t)
         FormalArgPtr arg = new FormalArg(argName, type);
         code->formalArgs.push_back(arg.ptr());
     }
-    code->hasVarArgs = false;
     ExprPtr retType = new ObjectExpr(t.ptr());
     IdentifierPtr retName = new Identifier("%ret");
     code->returnSpecs.push_back(new ReturnSpec(false, retType, retName));
@@ -164,7 +161,6 @@ void initBuiltinConstructor(RecordPtr x)
         arg->location = f->location;
         code->formalArgs.push_back(arg.ptr());
     }
-    code->hasVarArgs = false;
 
     IndexingPtr retType = new Indexing(recName);
     retType->location = x->location;
@@ -182,9 +178,8 @@ void initBuiltinConstructor(RecordPtr x)
         returnExpr->args.push_back(callArg);
     }
 
-    vector<bool> isRef; isRef.push_back(false);
     vector<ExprPtr> exprs; exprs.push_back(returnExpr.ptr());
-    code->body = new Return(isRef, exprs);
+    code->body = new Return(RETURN_VALUE, exprs);
     code->body->location = returnExpr->location;
 
     OverloadPtr defaultOverload = new Overload(recName, code, true);

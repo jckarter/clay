@@ -1,0 +1,99 @@
+
+//
+// Opaque
+//
+
+alias Opaque = Int;
+
+
+//
+// display
+//
+
+procedure display;
+
+overload display(x) {
+    print(x);
+}
+
+[T]
+overload display(a:Vector[T]) {
+    print("[");
+    for (i in range(size(a))) {
+        if (i != 0)
+            print(", ");
+        display(a[i]);
+    }
+    print("]");
+}
+
+
+//
+// Displayable
+//
+
+record Displayable {
+    obj : Pointer[Opaque];
+    size : SizeT;
+    destructor : CodePointer[Opaque,()];
+    copyConstructor : CodePointer[Opaque,Opaque];
+    display : CodePointer[Opaque,()];
+}
+
+
+// primary constructor
+[T]
+overload Displayable(x:T) {
+    var obj = allocateMemory(T, 1);
+    obj^ <-- x;
+    var destructor = makeCodePointer(destroy, T);
+    var copyConstructor = makeCodePointer(T, T);
+    var displayPtr = makeCodePointer(display, T);
+
+    return Displayable(Pointer[Opaque](obj),
+                       TypeSize(T),
+                       CodePointer[Opaque,()](destructor),
+                       CodePointer[Opaque,Opaque](copyConstructor),
+                       CodePointer[Opaque,()](displayPtr));
+}
+
+// default constructor
+overload Displayable() {
+    return Displayable(null(Opaque), SizeT(0),
+                       CodePointer[Opaque,()](0),
+                       CodePointer[Opaque,Opaque](0),
+                       CodePointer[Opaque,()](0));
+}
+
+// copy constructor
+overload Displayable(x:Displayable) {
+    var p = allocateMemory(Int8, x.size);
+    var obj = Pointer[Opaque](p);
+    obj^ <-- x.copyConstructor(x.obj^);
+    return Displayable(obj, x.size, x.destructor, x.copyConstructor, x.display);
+}
+
+// destructor
+overload destroy(x:Displayable) {
+    if (not null?(x.obj)) {
+        x.destructor(x.obj^);
+        freeMemory(x.obj);
+    }
+}
+
+overload display(x:Displayable) {
+    x.display(x.obj^);
+}
+
+displayln(x) { display(x); println(); }
+
+main() {
+    var v = Vector[Displayable]();
+    push(v, Displayable(1));
+    push(v, Displayable(3.2));
+    push(v, Displayable("Hi!"));
+    for (i in range(3))
+        push(v, Displayable(v));
+    for (x in v)
+        displayln(x);
+}

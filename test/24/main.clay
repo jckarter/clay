@@ -1,0 +1,14 @@
+
+procedure printAll;
+
+overload printAll(a:Int, ...rest) {
+    println(a);
+    printAll(...rest);
+}
+
+overload printAll() {
+}
+
+main() {
+    printAll(1, 2, 3, 4, 5);
+}

@@ -2,162 +2,162 @@ import unix.*;
 
 errno() = __error()^;
 
-static EPERM           = 1;               /* Operation not permitted */
-static ENOENT          = 2;               /* No such file or directory */
-static ESRCH           = 3;               /* No such process */
-static EINTR           = 4;               /* Interrupted system call */
-static EIO             = 5;               /* Input/output error */
-static ENXIO           = 6;               /* Device not configured */
-static E2BIG           = 7;               /* Argument list too long */
-static ENOEXEC         = 8;               /* Exec format error */
-static EBADF           = 9;               /* Bad file descriptor */
-static ECHILD          = 10;              /* No child processes */
-static EDEADLK         = 11;              /* Resource deadlock avoided */
+alias EPERM           = 1;               /* Operation not permitted */
+alias ENOENT          = 2;               /* No such file or directory */
+alias ESRCH           = 3;               /* No such process */
+alias EINTR           = 4;               /* Interrupted system call */
+alias EIO             = 5;               /* Input/output error */
+alias ENXIO           = 6;               /* Device not configured */
+alias E2BIG           = 7;               /* Argument list too long */
+alias ENOEXEC         = 8;               /* Exec format error */
+alias EBADF           = 9;               /* Bad file descriptor */
+alias ECHILD          = 10;              /* No child processes */
+alias EDEADLK         = 11;              /* Resource deadlock avoided */
                                         /* 11 was EAGAIN */
-static ENOMEM          = 12;              /* Cannot allocate memory */
-static EACCES          = 13;              /* Permission denied */
-static EFAULT          = 14;              /* Bad address */
+alias ENOMEM          = 12;              /* Cannot allocate memory */
+alias EACCES          = 13;              /* Permission denied */
+alias EFAULT          = 14;              /* Bad address */
 
-static ENOTBLK         = 15;              /* Block device required */
+alias ENOTBLK         = 15;              /* Block device required */
 
-static EBUSY           = 16;              /* Device / Resource busy */
-static EEXIST          = 17;              /* File exists */
-static EXDEV           = 18;              /* Cross-device link */
-static ENODEV          = 19;              /* Operation not supported by device */
-static ENOTDIR         = 20;              /* Not a directory */
-static EISDIR          = 21;              /* Is a directory */
-static EINVAL          = 22;              /* Invalid argument */
-static ENFILE          = 23;              /* Too many open files in system */
-static EMFILE          = 24;              /* Too many open files */
-static ENOTTY          = 25;              /* Inappropriate ioctl for device */
-static ETXTBSY         = 26;              /* Text file busy */
-static EFBIG           = 27;              /* File too large */
-static ENOSPC          = 28;              /* No space left on device */
-static ESPIPE          = 29;              /* Illegal seek */
-static EROFS           = 30;              /* Read-only file system */
-static EMLINK          = 31;              /* Too many links */
-static EPIPE           = 32;              /* Broken pipe */
+alias EBUSY           = 16;              /* Device / Resource busy */
+alias EEXIST          = 17;              /* File exists */
+alias EXDEV           = 18;              /* Cross-device link */
+alias ENODEV          = 19;              /* Operation not supported by device */
+alias ENOTDIR         = 20;              /* Not a directory */
+alias EISDIR          = 21;              /* Is a directory */
+alias EINVAL          = 22;              /* Invalid argument */
+alias ENFILE          = 23;              /* Too many open files in system */
+alias EMFILE          = 24;              /* Too many open files */
+alias ENOTTY          = 25;              /* Inappropriate ioctl for device */
+alias ETXTBSY         = 26;              /* Text file busy */
+alias EFBIG           = 27;              /* File too large */
+alias ENOSPC          = 28;              /* No space left on device */
+alias ESPIPE          = 29;              /* Illegal seek */
+alias EROFS           = 30;              /* Read-only file system */
+alias EMLINK          = 31;              /* Too many links */
+alias EPIPE           = 32;              /* Broken pipe */
 
 /* math software */
-static EDOM            = 33;              /* Numerical argument out of domain */
-static ERANGE          = 34;              /* Result too large */
+alias EDOM            = 33;              /* Numerical argument out of domain */
+alias ERANGE          = 34;              /* Result too large */
 
 /* non-blocking and interrupt i/o */
-static EAGAIN          = 35;              /* Resource temporarily unavailable */
-static EWOULDBLOCK     = EAGAIN;          /* Operation would block */
-static EINPROGRESS     = 36;              /* Operation now in progress */
-static EALREADY        = 37;              /* Operation already in progress */
+alias EAGAIN          = 35;              /* Resource temporarily unavailable */
+alias EWOULDBLOCK     = EAGAIN;          /* Operation would block */
+alias EINPROGRESS     = 36;              /* Operation now in progress */
+alias EALREADY        = 37;              /* Operation already in progress */
 
 /* ipc/network software -- argument errors */
-static ENOTSOCK        = 38;              /* Socket operation on non-socket */
-static EDESTADDRREQ    = 39;              /* Destination address required */
-static EMSGSIZE        = 40;              /* Message too long */
-static EPROTOTYPE      = 41;              /* Protocol wrong type for socket */
-static ENOPROTOOPT     = 42;              /* Protocol not available */
-static EPROTONOSUPPORT = 43;              /* Protocol not supported */
+alias ENOTSOCK        = 38;              /* Socket operation on non-socket */
+alias EDESTADDRREQ    = 39;              /* Destination address required */
+alias EMSGSIZE        = 40;              /* Message too long */
+alias EPROTOTYPE      = 41;              /* Protocol wrong type for socket */
+alias ENOPROTOOPT     = 42;              /* Protocol not available */
+alias EPROTONOSUPPORT = 43;              /* Protocol not supported */
 
-static ESOCKTNOSUPPORT = 44;              /* Socket type not supported */
+alias ESOCKTNOSUPPORT = 44;              /* Socket type not supported */
 
-static ENOTSUP         = 45;              /* Operation not supported */
+alias ENOTSUP         = 45;              /* Operation not supported */
 
-static EPFNOSUPPORT    = 46;              /* Protocol family not supported */
+alias EPFNOSUPPORT    = 46;              /* Protocol family not supported */
 
-static EAFNOSUPPORT    = 47;              /* Address family not supported by protocol family */
-static EADDRINUSE      = 48;              /* Address already in use */
-static EADDRNOTAVAIL   = 49;              /* Can't assign requested address */
+alias EAFNOSUPPORT    = 47;              /* Address family not supported by protocol family */
+alias EADDRINUSE      = 48;              /* Address already in use */
+alias EADDRNOTAVAIL   = 49;              /* Can't assign requested address */
 
 /* ipc/network software -- operational errors */
-static ENETDOWN        = 50;              /* Network is down */
-static ENETUNREACH     = 51;              /* Network is unreachable */
-static ENETRESET       = 52;              /* Network dropped connection on reset */
-static ECONNABORTED    = 53;              /* Software caused connection abort */
-static ECONNRESET      = 54;              /* Connection reset by peer */
-static ENOBUFS         = 55;              /* No buffer space available */
-static EISCONN         = 56;              /* Socket is already connected */
-static ENOTCONN        = 57;              /* Socket is not connected */
+alias ENETDOWN        = 50;              /* Network is down */
+alias ENETUNREACH     = 51;              /* Network is unreachable */
+alias ENETRESET       = 52;              /* Network dropped connection on reset */
+alias ECONNABORTED    = 53;              /* Software caused connection abort */
+alias ECONNRESET      = 54;              /* Connection reset by peer */
+alias ENOBUFS         = 55;              /* No buffer space available */
+alias EISCONN         = 56;              /* Socket is already connected */
+alias ENOTCONN        = 57;              /* Socket is not connected */
 
-static ESHUTDOWN       = 58;              /* Can't send after socket shutdown */
-static ETOOMANYREFS    = 59;              /* Too many references: can't splice */
+alias ESHUTDOWN       = 58;              /* Can't send after socket shutdown */
+alias ETOOMANYREFS    = 59;              /* Too many references: can't splice */
 
-static ETIMEDOUT       = 60;              /* Operation timed out */
-static ECONNREFUSED    = 61;              /* Connection refused */
+alias ETIMEDOUT       = 60;              /* Operation timed out */
+alias ECONNREFUSED    = 61;              /* Connection refused */
 
-static ELOOP           = 62;              /* Too many levels of symbolic links */
-static ENAMETOOLONG    = 63;              /* File name too long */
+alias ELOOP           = 62;              /* Too many levels of symbolic links */
+alias ENAMETOOLONG    = 63;              /* File name too long */
 
 /* should be rearranged */
 
-static EHOSTDOWN       = 64;              /* Host is down */
+alias EHOSTDOWN       = 64;              /* Host is down */
 
-static EHOSTUNREACH    = 65;              /* No route to host */
-static ENOTEMPTY       = 66;              /* Directory not empty */
+alias EHOSTUNREACH    = 65;              /* No route to host */
+alias ENOTEMPTY       = 66;              /* Directory not empty */
 
 /* quotas & mush */
 
-static EPROCLIM        = 67;              /* Too many processes */
-static EUSERS          = 68;              /* Too many users */
+alias EPROCLIM        = 67;              /* Too many processes */
+alias EUSERS          = 68;              /* Too many users */
 
-static EDQUOT          = 69;              /* Disc quota exceeded */
+alias EDQUOT          = 69;              /* Disc quota exceeded */
 
 /* Network File System */
-static ESTALE          = 70;              /* Stale NFS file handle */
+alias ESTALE          = 70;              /* Stale NFS file handle */
 
-static EREMOTE         = 71;              /* Too many levels of remote in path */
-static EBADRPC         = 72;              /* RPC struct is bad */
-static ERPCMISMATCH    = 73;              /* RPC version wrong */
-static EPROGUNAVAIL    = 74;              /* RPC prog. not avail */
-static EPROGMISMATCH   = 75;              /* Program version wrong */
-static EPROCUNAVAIL    = 76;              /* Bad procedure for program */
-
-
-static ENOLCK          = 77;              /* No locks available */
-static ENOSYS          = 78;              /* Function not implemented */
+alias EREMOTE         = 71;              /* Too many levels of remote in path */
+alias EBADRPC         = 72;              /* RPC struct is bad */
+alias ERPCMISMATCH    = 73;              /* RPC version wrong */
+alias EPROGUNAVAIL    = 74;              /* RPC prog. not avail */
+alias EPROGMISMATCH   = 75;              /* Program version wrong */
+alias EPROCUNAVAIL    = 76;              /* Bad procedure for program */
 
 
-static EFTYPE          = 79;              /* Inappropriate file type or format */
-static EAUTH           = 80;              /* Authentication error */
-static ENEEDAUTH       = 81;              /* Need authenticator */
+alias ENOLCK          = 77;              /* No locks available */
+alias ENOSYS          = 78;              /* Function not implemented */
+
+
+alias EFTYPE          = 79;              /* Inappropriate file type or format */
+alias EAUTH           = 80;              /* Authentication error */
+alias ENEEDAUTH       = 81;              /* Need authenticator */
 
 /* Intelligent device errors */
-static EPWROFF         = 82;      /* Device power is off */
-static EDEVERR         = 83;      /* Device error, e.g. paper out */
+alias EPWROFF         = 82;      /* Device power is off */
+alias EDEVERR         = 83;      /* Device error, e.g. paper out */
 
 
-static EOVERFLOW       = 84;              /* Value too large to be stored in data type */
+alias EOVERFLOW       = 84;              /* Value too large to be stored in data type */
 
 /* Program loading errors */
 
-static EBADEXEC        = 85;      /* Bad executable */
-static EBADARCH        = 86;      /* Bad CPU type in executable */
-static ESHLIBVERS      = 87;      /* Shared library version mismatch */
-static EBADMACHO       = 88;      /* Malformed Macho file */
+alias EBADEXEC        = 85;      /* Bad executable */
+alias EBADARCH        = 86;      /* Bad CPU type in executable */
+alias ESHLIBVERS      = 87;      /* Shared library version mismatch */
+alias EBADMACHO       = 88;      /* Malformed Macho file */
 
 
-static ECANCELED       = 89;              /* Operation canceled */
+alias ECANCELED       = 89;              /* Operation canceled */
 
-static EIDRM           = 90;              /* Identifier removed */
-static ENOMSG          = 91;              /* No message of desired type */   
-static EILSEQ          = 92;              /* Illegal byte sequence */
+alias EIDRM           = 90;              /* Identifier removed */
+alias ENOMSG          = 91;              /* No message of desired type */   
+alias EILSEQ          = 92;              /* Illegal byte sequence */
 
-static ENOATTR         = 93;              /* Attribute not found */
+alias ENOATTR         = 93;              /* Attribute not found */
 
 
-static EBADMSG         = 94;              /* Bad message */
-static EMULTIHOP       = 95;              /* Reserved */
-static ENODATA         = 96;              /* No message available on STREAM */
-static ENOLINK         = 97;              /* Reserved */
-static ENOSR           = 98;              /* No STREAM resources */
-static ENOSTR          = 99;              /* Not a STREAM */
-static EPROTO          = 100;             /* Protocol error */
-static ETIME           = 101;             /* STREAM ioctl timeout */
+alias EBADMSG         = 94;              /* Bad message */
+alias EMULTIHOP       = 95;              /* Reserved */
+alias ENODATA         = 96;              /* No message available on STREAM */
+alias ENOLINK         = 97;              /* Reserved */
+alias ENOSR           = 98;              /* No STREAM resources */
+alias ENOSTR          = 99;              /* Not a STREAM */
+alias EPROTO          = 100;             /* Protocol error */
+alias ETIME           = 101;             /* STREAM ioctl timeout */
 
 
 /* This value is only discrete when compiling __DARWIN_UNIX03, or KERNEL */
-static EOPNOTSUPP      = 102;             /* Operation not supported on socket */
+alias EOPNOTSUPP      = 102;             /* Operation not supported on socket */
 
 
-static ENOPOLICY       = 103;             /* No such policy registered */
+alias ENOPOLICY       = 103;             /* No such policy registered */
 
 
-static ELAST           = 103;             /* Must be equal largest errno */
+alias ELAST           = 103;             /* Must be equal largest errno */
 

@@ -79,7 +79,7 @@ string BindingsConverter::convertBuiltinType(const BuiltinType *type) {
     }
 }
 
-static const char *getCodePointerConstructor(FunctionType *ft)
+static const char *getCodePointerConstructor(const FunctionType *ft)
 {
     switch (ft->getCallConv()) {
     case CC_X86StdCall : return "StdCallCodePointer";
@@ -88,7 +88,7 @@ static const char *getCodePointerConstructor(FunctionType *ft)
     }
 }
 
-string BindingsConverter::convertFPType(FunctionNoProtoType *type)
+string BindingsConverter::convertFPType(const FunctionNoProtoType *type)
 {
     const Type *rt = type->getResultType().getTypePtr();
     ostringstream sout;
@@ -101,7 +101,7 @@ string BindingsConverter::convertFPType(FunctionNoProtoType *type)
     return sout.str();
 }
 
-string BindingsConverter::convertFPType(FunctionProtoType *type)
+string BindingsConverter::convertFPType(const FunctionProtoType *type)
 {
     ostringstream sout;
     sout << getCodePointerConstructor(type);
@@ -133,7 +133,7 @@ string BindingsConverter::convertType(const Type *type)
 
     switch (type->getTypeClass()) {
     case Type::Typedef : {
-        TypedefType *t = (TypedefType *)type;
+        const TypedefType *t = (const TypedefType *)type;
         TypedefDecl *decl = t->getDecl();
         string name = decl->getName().str();
         const string &outName = typedefNames[name];
@@ -141,7 +141,7 @@ string BindingsConverter::convertType(const Type *type)
         return outName;
     }
     case Type::Record : {
-        RecordType *t = (RecordType *)type;
+        const RecordType *t = (const RecordType *)type;
         RecordDecl *decl = t->getDecl();
         if (decl->isUnion())
             return "AUnionType";
@@ -162,20 +162,20 @@ string BindingsConverter::convertType(const Type *type)
     case Type::Enum :
         return "Int";
     case Type::Pointer : {
-        PointerType *t = (PointerType *)type;
+        const PointerType *t = (const PointerType *)type;
         const Type *pt = t->getPointeeType().getTypePtr();
         const Type *pt2 = pt->getCanonicalTypeUnqualified().getTypePtr();
         switch (pt2->getTypeClass()) {
         case Type::FunctionNoProto :
-            return convertFPType((FunctionNoProtoType *)pt2);
+            return convertFPType((const FunctionNoProtoType *)pt2);
         case Type::FunctionProto :
-            return convertFPType((FunctionProtoType *)pt2);
+            return convertFPType((const FunctionProtoType *)pt2);
         default :
             break;
         }
         if (pt->getTypeClass() == Type::Record) {
-            RecordType *rt = (RecordType *)pt;
-            RecordDecl *decl = rt->getDecl();
+            const RecordType *rt = (const RecordType *)pt;
+            const RecordDecl *decl = rt->getDecl();
             string name = decl->getName().str();
             if (!name.empty() && !recordBodies.count(name))
                 return "OpaquePointer";
@@ -186,14 +186,14 @@ string BindingsConverter::convertType(const Type *type)
         return "Pointer[" + inner + "]";
     }
     case Type::ConstantArray : {
-        ConstantArrayType *t = (ConstantArrayType *)type;
+        const ConstantArrayType *t = (const ConstantArrayType *)type;
         ostringstream sout;
         sout << "Array[" << convertType(t->getElementType().getTypePtr());
         sout << "," << t->getSize().getZExtValue() << "]";
         return sout.str();
     }
     case Type::IncompleteArray : {
-        IncompleteArrayType *t = (IncompleteArrayType *)type;
+        const IncompleteArrayType *t = (const IncompleteArrayType *)type;
         const Type *et = t->getElementType().getTypePtr();
         return "Array[" + convertType(et) + ",0]";
     }
@@ -276,7 +276,7 @@ void BindingsConverter::generateDecl(Decl *decl)
         if (!t->isFunctionType()) {
             string type = convertType(t);
             out << '\n';
-            out << "static " << typedefNames[name] << " = "
+            out << "alias " << typedefNames[name] << " = "
                 << convertType(t) << ";" << '\n';
         }
         break;
@@ -288,7 +288,7 @@ void BindingsConverter::generateDecl(Decl *decl)
         out << '\n';
         for (; i != e; ++i) {
             EnumConstantDecl *y = *i;
-            out << "static " << y->getName().str() << " = "
+            out << "alias " << y->getName().str() << " = "
                 << y->getInitVal().getZExtValue() << ";\n";
         }
         break;
@@ -340,7 +340,7 @@ void BindingsConverter::generateDecl(Decl *decl)
                 attributes.push_back("dllexport");
             const Type *t = x->getType().getTypePtr();
             assert(t->isFunctionType());
-            FunctionType *ft = (FunctionType *)t;
+            const FunctionType *ft = (const FunctionType *)t;
             if (ft->getCallConv() == CC_X86StdCall)
                 attributes.push_back("stdcall");
             if (ft->getCallConv() == CC_X86FastCall)
@@ -377,7 +377,7 @@ void BindingsConverter::generateDecl(Decl *decl)
                 ++index;
             }
             if (ft->getTypeClass() == Type::FunctionProto) {
-                FunctionProtoType *fpt = (FunctionProtoType *)ft;
+                const FunctionProtoType *fpt = (const FunctionProtoType *)ft;
                 if (fpt->isVariadic()) {
                     if (index != 0)
                         out << ",";
@@ -432,8 +432,8 @@ void BindingsConverter::generateHeader()
 {
     out << "// Auto-Generated by BindingsGenerator\n";
     out << '\n';
-    out << "private static OpaquePointer = RawPointer;\n";
-    out << "private static UnknownType = Int;\n";
-    out << "private static AUnionType = Int;\n";
+    out << "private alias OpaquePointer = RawPointer;\n";
+    out << "private alias UnknownType = Int;\n";
+    out << "private alias AUnionType = Int;\n";
     out << '\n';
 }

@@ -16,6 +16,10 @@ void evalIndexingExpr(ExprPtr indexable,
                       const vector<ExprPtr> &args,
                       EnvPtr env,
                       MultiEValuePtr out);
+void evalAliasIndexing(GlobalAliasPtr x,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env,
+                       MultiEValuePtr out);
 void evalFieldRefExpr(ExprPtr base,
                       IdentifierPtr name,
                       EnvPtr env,
@@ -246,16 +250,21 @@ MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
     assert(mpv.ptr());
     vector<ValueHolderPtr> valueHolders;
     MultiEValuePtr mev = new MultiEValue();
+    bool allStatic = true;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         TypePtr t = mpv->values[i]->type;
+        if (t->typeKind != STATIC_TYPE)
+            allStatic = false;
         ValueHolderPtr vh = new ValueHolder(t);
         valueHolders.push_back(vh);
         EValuePtr ev = new EValue(t, vh->buf);
         mev->add(ev);
     }
-    int marker = evalMarkStack();
-    evalExprInto(expr, env, mev);
-    evalDestroyAndPopStack(marker);
+    if (!allStatic) {
+        int marker = evalMarkStack();
+        evalExprInto(expr, env, mev);
+        evalDestroyAndPopStack(marker);
+    }
     MultiStaticPtr ms = new MultiStatic();
     for (unsigned i = 0; i < valueHolders.size(); ++i) {
         Type *t = valueHolders[i]->type.ptr();
@@ -283,9 +292,10 @@ MultiStaticPtr evaluateMultiStatic(const vector<ExprPtr> &exprs, EnvPtr env)
     MultiStaticPtr out = new MultiStatic();
     for (unsigned i = 0; i < exprs.size(); ++i) {
         ExprPtr x = exprs[i];
-        if (x->exprKind == VAR_ARGS_REF) {
-            MultiStaticPtr y = evaluateExprStatic(x, env);
-            out->add(y);
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiStaticPtr z = evaluateExprStatic(y->expr, env);
+            out->add(z);
         }
         else {
             ObjectPtr y = evaluateOneStatic(x, env);
@@ -489,6 +499,7 @@ EValuePtr evalAllocValue(TypePtr t)
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env)
 {
     MultiEValuePtr mev = evalExprAsRef(expr, env);
+    LocationContext loc(expr->location);
     ensureArity(mev, 1);
     return mev->values[0];
 }
@@ -497,8 +508,16 @@ MultiEValuePtr evalMultiAsRef(const vector<ExprPtr> &exprs, EnvPtr env)
 {
     MultiEValuePtr out = new MultiEValue();
     for (unsigned i = 0; i < exprs.size(); ++i) {
-        MultiEValuePtr mev = evalExprAsRef(exprs[i], env);
-        out->add(mev);
+        ExprPtr x = exprs[i];
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiEValuePtr mev = evalExprAsRef(y->expr, env);
+            out->add(mev);
+        }
+        else {
+            MultiEValuePtr mev = evalExprAsRef(exprs[i], env);
+            out->add(mev);
+        }
     }
     return out;
 }
@@ -556,17 +575,20 @@ void evalMultiInto(const vector<ExprPtr> &exprs, EnvPtr env, MultiEValuePtr out)
     unsigned j = 0;
     for (unsigned i = 0; i < exprs.size(); ++i) {
         ExprPtr x = exprs[i];
-        MultiPValuePtr mpv = analyzeExpr(x, env);
-        assert(mpv.ptr());
-        if (x->exprKind == VAR_ARGS_REF) {
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiPValuePtr mpv = analyzeExpr(y->expr, env);
+            assert(mpv.ptr());
             assert(j + mpv->size() <= out->size());
             MultiEValuePtr out2 = new MultiEValue();
             for (unsigned k = 0; k < mpv->size(); ++k)
                 out2->add(out->values[j + k]);
-            evalExprInto(x, env, out2);
+            evalExprInto(y->expr, env, out2);
             j += mpv->size();
         }
         else {
+            MultiPValuePtr mpv = analyzeExpr(x, env);
+            assert(mpv.ptr());
             if (mpv->size() != 1)
                 arityError(x, 1, mpv->size());
             assert(j < out->size());
@@ -614,12 +636,13 @@ void evalMulti(const vector<ExprPtr> &exprs, EnvPtr env, MultiEValuePtr out)
         ExprPtr x = exprs[i];
         MultiPValuePtr mpv = analyzeExpr(x, env);
         assert(mpv.ptr());
-        if (x->exprKind == VAR_ARGS_REF) {
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
             assert(j + mpv->size() <= out->size());
             MultiEValuePtr out2 = new MultiEValue();
             for (unsigned k = 0; k < mpv->size(); ++k)
                 out2->add(out->values[j + k]);
-            evalExpr(x, env, out2);
+            evalExpr(y->expr, env, out2);
             j += mpv->size();
         }
         else {
@@ -713,7 +736,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
         if ((x->args.size() == 1) &&
-            (x->args[0]->exprKind != VAR_ARGS_REF))
+            (x->args[0]->exprKind != UNPACK))
         {
             evalExpr(x->args[0], env, out);
         }
@@ -843,12 +866,8 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
-    case VAR_ARGS_REF : {
-        IdentifierPtr ident = new Identifier("%varArgs");
-        ident->location = expr->location;
-        ExprPtr nameRef = new NameRef(ident);
-        nameRef->location = expr->location;
-        evalExpr(nameRef, env, out);
+    case UNPACK : {
+        error("incorrect usage of unpack operator");
         break;
     }
 
@@ -941,9 +960,15 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         break;
     }
 
-    case STATIC_GLOBAL : {
-        StaticGlobal *y = (StaticGlobal *)x.ptr();
-        evalExpr(y->expr, y->env, out);
+    case GLOBAL_ALIAS : {
+        GlobalAlias *y = (GlobalAlias *)x.ptr();
+        if (y->hasParams()) {
+            assert(out->size() == 1);
+            assert(out->values[0]->type == staticType(x));
+        }
+        else {
+            evalExpr(y->expr, y->env, out);
+        }
         break;
     }
 
@@ -1062,10 +1087,54 @@ void evalIndexingExpr(ExprPtr indexable,
         // takes care of type constructors
         return;
     }
+    PValuePtr pv = analyzeOne(indexable, env);
+    assert(pv.ptr());
+    if (pv->type->typeKind == STATIC_TYPE) {
+        StaticType *st = (StaticType *)pv->type.ptr();
+        ObjectPtr obj = st->obj;
+        if (obj->objKind == GLOBAL_ALIAS) {
+            GlobalAlias *x = (GlobalAlias *)obj.ptr();
+            evalAliasIndexing(x, args, env, out);
+            return;
+        }
+    }
     vector<ExprPtr> args2;
     args2.push_back(indexable);
     args2.insert(args2.end(), args.begin(), args.end());
     evalCallExpr(kernelNameRef("index"), args2, env, out);
+}
+
+
+
+//
+// evalAliasIndexing
+//
+
+void evalAliasIndexing(GlobalAliasPtr x,
+                       const vector<ExprPtr> &args,
+                       EnvPtr env,
+                       MultiEValuePtr out)
+{
+    assert(x->hasParams());
+    MultiStaticPtr params = evaluateMultiStatic(args, env);
+    if (x->varParam.ptr()) {
+        if (params->size() < x->params.size())
+            arityError2(x->params.size(), params->size());
+    }
+    else {
+        ensureArity(params, x->params.size());
+    }
+    EnvPtr bodyEnv = new Env(x->env);
+    for (unsigned i = 0; i < x->params.size(); ++i) {
+        addLocal(bodyEnv, x->params[i], params->values[i]);
+    }
+    if (x->varParam.ptr()) {
+        MultiStaticPtr varParams = new MultiStatic();
+        for (unsigned i = x->params.size(); i < params->size(); ++i)
+            varParams->add(params->values[i]);
+        addLocal(bodyEnv, x->varParam, varParams.ptr());
+    }
+    evalExpr(x->expr, bodyEnv, out);
 }
 
 
@@ -1292,7 +1361,7 @@ void evalCallInlined(InvokeEntryPtr entry,
                      MultiEValuePtr out)
 {
     assert(entry->inlined);
-    if (entry->hasVarArgs)
+    if (entry->varArgName.ptr())
         assert(args.size() >= entry->fixedArgNames.size());
     else
         assert(args.size() == entry->fixedArgNames.size());
@@ -1304,13 +1373,13 @@ void evalCallInlined(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
 
-    if (entry->hasVarArgs) {
+    if (entry->varArgName.ptr()) {
         MultiExprPtr varArgs = new MultiExpr();
         for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
             ExprPtr expr = new ForeignExpr(env, args[i]);
             varArgs->add(expr);
         }
-        addLocal(bodyEnv, new Identifier("%varArgs"), varArgs.ptr());
+        addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
     MultiPValuePtr mpv = analyzeCallInlined(entry, args, env);
@@ -1461,27 +1530,41 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        if (x->exprs.size() != ctx->returns.size())
-            arityError(ctx->returns.size(), x->exprs.size());
-        int marker = evalMarkStack();
-        for (unsigned i = 0; i < x->exprs.size(); ++i) {
+        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiEValuePtr mev = new MultiEValue();
+        ensureArity(mpv, ctx->returns.size());
+        for (unsigned i = 0; i < mpv->size(); ++i) {
+            PValuePtr pv = mpv->values[i];
+            bool byRef = returnKindToByRef(x->returnKind, pv);
             EReturn &y = ctx->returns[i];
-            PValuePtr pret = analyzeOne(x->exprs[i], env);
-            if (pret->type != y.type)
-                error(x->exprs[i], "type mismatch");
-            if (y.byRef) {
-                if (!x->isRef[i])
-                    error(x->exprs[i], "return by reference expected");
-                if (pret->isTemp)
-                    error(x->exprs[i], "cannot return a "
-                          "temporary by reference");
-                evalOne(x->exprs[i], env, y.value);
+            if (y.type != pv->type)
+                argumentError(i, "type mismatch");
+            if (byRef != y.byRef)
+                argumentError(i, "mismatching by-ref and by-value returns");
+            if (byRef && pv->isTemp)
+                argumentError(i, "cannot return a temporary by reference");
+            mev->add(y.value);
+        }
+        int marker = evalMarkStack();
+        switch (x->returnKind) {
+        case RETURN_VALUE :
+            evalMultiInto(x->exprs, env, mev);
+            break;
+        case RETURN_REF : {
+            MultiEValuePtr mevRef = evalMultiAsRef(x->exprs, env);
+            assert(mev->size() == mevRef->size());
+            for (unsigned i = 0; i < mev->size(); ++i) {
+                EValuePtr evPtr = mev->values[i];
+                EValuePtr evRef = mevRef->values[i];
+                *((void **)evPtr->addr) = (void *)evRef->addr;
             }
-            else {
-                if (x->isRef[i])
-                    error(x->exprs[i], "return by value expected");
-                evalOneInto(x->exprs[i], env, y.value);
-            }
+            break;
+        }
+        case RETURN_FORWARD :
+            evalMulti(x->exprs, env, mev);
+            break;
+        default :
+            assert(false);
         }
         evalDestroyAndPopStack(marker);
         return new TerminateReturn(x->location);
@@ -1652,13 +1735,11 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         return env2;
     }
 
-    case STATIC : {
-        MultiStaticPtr right = evaluateExprStatic(x->expr, env);
-        if (right->size() != x->names.size())
-            arityError(x->expr, x->names.size(), right->size());
+    case ALIAS : {
+        ensureArity(x->names, 1);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < right->size(); ++i)
-            addLocal(env2, x->names[i], right->values[i]);
+        ForeignExprPtr y = new ForeignExpr(env, x->expr);
+        addLocal(env2, x->names[0], y.ptr());
         return env2;
     }
 

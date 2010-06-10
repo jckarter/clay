@@ -1,0 +1,39 @@
+
+factorial(n) {
+    if (n == 0)
+        return 1;
+    return n*factorial(n-1);
+}
+
+isEven(n) {
+    if (n < 2)
+        return n == 0;
+    return isOdd(n-1);
+}
+
+isOdd(n) {
+    if (n < 2)
+        return n == 1;
+    return isEven(n-1);
+}
+
+foo() = Array[Int32, 10]();
+
+record NodeA[T] {
+    value:T;
+    next:Pointer[NodeB[T]];
+}
+
+record NodeB[T] {
+    ptr:Pointer[T];
+    next:Pointer[NodeA[T]];
+}
+
+main() {
+    var n = 7;
+    n -= 1;
+    var f = factorial(n);
+    println(f);
+    var p = NodeA[Tuple[Int32,Bool]]();
+    return (foo(), isEven(n), f, p, 'a');
+}

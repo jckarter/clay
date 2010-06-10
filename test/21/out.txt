@@ -1,0 +1,6 @@
+constructed value = 10
+constructed value = 0
+assigning
+destroyed value = 0
+assigned
+destroyed value = 10

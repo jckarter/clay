@@ -220,8 +220,9 @@ static void printExpr(ostream &out, const Expr *x) {
             << ", " << y->body << ")";
         break;
     }
-    case VAR_ARGS_REF : {
-        out << "VarArgsRef";
+    case UNPACK : {
+        const Unpack *y = (const Unpack *)x;
+        out << "Unpack(" << y->expr << ")";
         break;
     }
     case NEW : {
@@ -269,8 +270,8 @@ static void printStatement(ostream &out, const Statement *x) {
         case REF :
             out << "REF";
             break;
-        case STATIC :
-            out << "STATIC";
+        case ALIAS :
+            out << "ALIAS";
             break;
         default :
             assert(false);
@@ -301,7 +302,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
     case RETURN : {
         const Return *y = (const Return *)x;
-        out << "Return(" << y->isRef << ", " << y->exprs << ")";
+        out << "Return(" << y->returnKind << ", " << y->exprs << ")";
         break;
     }
     case IF : {
@@ -435,7 +436,7 @@ static void print(ostream &out, const Object *x) {
     case CODE : {
         const Code *y = (const Code *)x;
         out << "Code(" << y->patternVars << ", " << y->predicate;
-        out << ", " << y->formalArgs << ", " << y->hasVarArgs;
+        out << ", " << y->formalArgs << ", " << y->formalVarArg;
         out << ", " << y->returnSpecs << ", " << y->body << ")";
         break;
     }
@@ -511,9 +512,10 @@ static void print(ostream &out, const Object *x) {
         break;
     }
 
-    case STATIC_GLOBAL : {
-        const StaticGlobal *y = (const StaticGlobal *)x;
-        out << "StaticGlobal(" << y->name << ", " << y->expr << ")";
+    case GLOBAL_ALIAS : {
+        const GlobalAlias *y = (const GlobalAlias *)x;
+        out << "GlobalAlias(" << y->name << ", " << y->params
+            << ", " << y->varParam << ", " << y->expr << ")";
         break;
     }
 
@@ -666,6 +668,11 @@ void printName(ostream &out, ObjectPtr x)
     case IDENTIFIER : {
         Identifier *y = (Identifier *)x.ptr();
         out << "#" << y->str;
+        break;
+    }
+    case GLOBAL_ALIAS : {
+        GlobalAlias *y = (GlobalAlias *)x.ptr();
+        out << y->name->str;
         break;
     }
     case RECORD : {

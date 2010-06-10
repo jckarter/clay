@@ -110,9 +110,9 @@ overload multiplyAssign(a, b)  { a = a * b; }
 overload divideAssign(a, b)    { a = a / b; }
 overload remainderAssign(a, b) { a = a % b; }
 
-overload bitwiseAnd(a, b, c, ...) = bitwiseAnd(bitwiseAnd(a,b), c, ...);
-overload bitwiseOr(a, b, c, ...) = bitwiseOr(bitwiseOr(a,b), c, ...);
-overload bitwiseXor(a, b, c, ...) = bitwiseXor(bitwiseXor(a,b), c, ...);
+overload bitwiseAnd(a, b, c, ...rest) = bitwiseAnd(bitwiseAnd(a,b), c, ...rest);
+overload bitwiseOr(a, b, c, ...rest) = bitwiseOr(bitwiseOr(a,b), c, ...rest);
+overload bitwiseXor(a, b, c, ...rest) = bitwiseXor(bitwiseXor(a,b), c, ...rest);
 
 
 

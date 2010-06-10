@@ -1,0 +1,5 @@
+a[0], a[2] = 200, 196
+compare test = 1
+compare test = 0
+compare test = -1
+a[0], a[2] = 2, 6

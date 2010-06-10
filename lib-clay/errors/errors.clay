@@ -1,7 +1,7 @@
 import libc;
 
-error(...) {
-    printlnTo(stderr, "error: ", ...);
+error(...e) {
+    printlnTo(stderr, "error: ", ...e);
     libc.exit(-1);
 }
 

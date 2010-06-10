@@ -1,0 +1,18 @@
+
+procedure IsInt64;
+[T] overload IsInt64(static T) = false;
+overload IsInt64(static Int64) = true;
+
+procedure Foo;
+[T] overload Foo(static T) = false;
+overload Foo(static Int64) = true;
+
+f(x) = x;
+
+main() {
+    alias T = Int32;
+    var x = 0;
+    if (IsInt64(T) and Foo(T))
+        x += 1;
+    println("x = ", x);
+}
