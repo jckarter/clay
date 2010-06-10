@@ -448,6 +448,7 @@ static void print(ostream &out, const Object *x) {
         const Code *y = (const Code *)x;
         out << "Code(" << y->patternVars << ", " << y->predicate;
         out << ", " << y->formalArgs << ", " << y->formalVarArg;
+        out << ", " << y->formalVarArgType;
         out << ", " << y->returnSpecs << ", " << y->body << ")";
         break;
     }

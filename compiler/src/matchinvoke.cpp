@@ -44,6 +44,20 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
                 return new MatchArgumentError(i);
         }
     }
+    if (code->formalVarArgType.ptr()) {
+        ExprPtr nameRef = new NameRef(code->formalVarArgType);
+        nameRef->location = code->formalVarArgType->location;
+        ExprPtr unpack = new Unpack(nameRef);
+        unpack->location = nameRef->location;
+        vector<ExprPtr> exprs;
+        exprs.push_back(unpack);
+        MultiPatternPtr pattern = evaluateMultiPattern(exprs, patternEnv);
+        MultiStaticPtr types = new MultiStatic();
+        for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i)
+            types->add(argsKey[i].ptr());
+        if (!unifyMulti(pattern, types))
+            return new MatchArgumentError(formalArgs.size());
+    }
     EnvPtr staticEnv = new Env(codeEnv);
     for (unsigned i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {

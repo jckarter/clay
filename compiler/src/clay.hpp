@@ -1066,6 +1066,7 @@ struct Code : public ANode {
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
     IdentifierPtr formalVarArg;
+    IdentifierPtr formalVarArgType;
     vector<ReturnSpecPtr> returnSpecs;
     StatementPtr body;
 
@@ -1075,10 +1076,12 @@ struct Code : public ANode {
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
          IdentifierPtr formalVarArg,
+         IdentifierPtr formalVarArgType,
          const vector<ReturnSpecPtr> &returnSpecs,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
           formalArgs(formalArgs), formalVarArg(formalVarArg),
+          formalVarArgType(formalVarArgType),
           returnSpecs(returnSpecs), body(body) {}
 };
 
@@ -1945,6 +1948,7 @@ bool unifyObjObj(ObjectPtr a, ObjectPtr b);
 bool unifyObjPattern(ObjectPtr a, PatternPtr b);
 bool unifyPatternObj(PatternPtr a, ObjectPtr b);
 bool unify(PatternPtr a, PatternPtr b);
+bool unifyMulti(MultiPatternPtr a, MultiStaticPtr b);
 bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b);
 bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
                 MultiPatternPtr b);
