@@ -577,6 +577,11 @@ static void print(ostream &out, const Object *x) {
         patternPrint(out, const_cast<Pattern *>(y));
         break;
     }
+    case MULTI_PATTERN : {
+        const MultiPattern *y = (const MultiPattern *)x;
+        patternPrint(out, const_cast<MultiPattern *>(y));
+        break;
+    }
 
     case VALUE_HOLDER : {
         const ValueHolder *y = (const ValueHolder *)x;

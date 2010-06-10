@@ -319,30 +319,34 @@ ModulePtr loadedModule(const string &module) {
 static void initOverload(OverloadPtr x) {
     EnvPtr env = new Env(x->env);
     for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
-        PatternCellPtr cell = new PatternCell(x->code->patternVars[i], NULL);
+        PatternCellPtr cell = new PatternCell(NULL);
         addLocal(env, x->code->patternVars[i], cell.ptr());
     }
-    PatternPtr pattern = evaluatePattern(x->target, env);
-    ObjectPtr y = reducePattern(pattern);
-    switch (y->objKind) {
-    case PROCEDURE : {
-        Procedure *z = (Procedure *)y.ptr();
-        z->overloads.insert(z->overloads.begin(), x);
-        break;
-    }
-    case RECORD : {
-        Record *z = (Record *)y.ptr();
-        z->overloads.insert(z->overloads.begin(), x);
-        break;
-    }
-    case TYPE :
-    case PATTERN : {
+    PatternPtr pattern = evaluateOnePattern(x->target, env);
+    ObjectPtr y = derefDeep(pattern);
+    if (!y) {
         addTypeOverload(x);
-        break;
     }
-    default : {
-        error(x->target, "invalid overload target");
-    }
+    else {
+        switch (y->objKind) {
+        case PROCEDURE : {
+            Procedure *z = (Procedure *)y.ptr();
+            z->overloads.insert(z->overloads.begin(), x);
+            break;
+        }
+        case RECORD : {
+            Record *z = (Record *)y.ptr();
+            z->overloads.insert(z->overloads.begin(), x);
+            break;
+        }
+        case TYPE : {
+            addTypeOverload(x);
+            break;
+        }
+        default : {
+            error(x->target, "invalid overload target");
+        }
+        }
     }
 }
 
