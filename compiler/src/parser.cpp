@@ -834,8 +834,8 @@ static bool localBinding(StatementPtr &x) {
     vector<IdentifierPtr> y;
     if (!identifierList(y)) return false;
     if (!symbol("=")) return false;
-    ExprPtr z;
-    if (!expression(z)) return false;
+    vector<ExprPtr> z;
+    if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     x = new Binding(bk, y, z);
     x->location = location;

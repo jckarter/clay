@@ -2276,16 +2276,16 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = analyzeExpr(x->expr, env);
+        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
         if (mpv->size() != x->names.size())
-            arityError(x->expr, x->names.size(), mpv->size());
+            arityError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             CValuePtr cv = codegenAllocValue(mpv->values[i]->type);
             mcv->add(cv);
         }
         int marker = cgMarkStack();
-        codegenExprInto(x->expr, env, ctx, mcv);
+        codegenMultiInto(x->exprs, env, ctx, mcv);
         cgDestroyAndPopStack(marker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i)
@@ -2294,10 +2294,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     }
 
     case REF : {
-        MultiPValuePtr mpv = analyzeExpr(x->expr, env);
+        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
         assert(mpv.ptr());
         if (mpv->size() != x->names.size())
-            arityError(x->expr, x->names.size(), mpv->size());
+            arityError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
@@ -2311,7 +2311,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             }
         }
         int marker = cgMarkStack();
-        codegenExpr(x->expr, env, ctx, mcv);
+        codegenMulti(x->exprs, env, ctx, mcv);
         cgDestroyAndPopStack(marker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
@@ -2329,8 +2329,9 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
 
     case ALIAS : {
         ensureArity(x->names, 1);
+        ensureArity(x->exprs, 1);
         EnvPtr env2 = new Env(env);
-        ForeignExprPtr y = new ForeignExpr(env, x->expr);
+        ForeignExprPtr y = new ForeignExpr(env, x->exprs[0]);
         addLocal(env2, x->names[0], y.ptr());
         return env2;
     }

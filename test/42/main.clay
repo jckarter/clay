@@ -3,9 +3,9 @@ swap(a, b) { return b, a; }
 [T] foo(static T) = T, Pointer[T];
 
 main() {
-    var a, b = swap(10, 20);
+    var a, b = ...swap(10, 20);
     println(a, ", ", b);
 
-    var P, Q = foo(Int32);
+    var P, Q = ...foo(Int32);
     println(P, ", ", Q);
 }

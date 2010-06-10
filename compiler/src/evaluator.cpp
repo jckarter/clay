@@ -1690,16 +1690,16 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = analyzeExpr(x->expr, env);
+        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
         if (mpv->size() != x->names.size())
-            arityError(x->expr, x->names.size(), mpv->size());
+            arityError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             EValuePtr ev = evalAllocValue(mpv->values[i]->type);
             mev->add(ev);
         }
         int marker = evalMarkStack();
-        evalExprInto(x->expr, env, mev);
+        evalMultiInto(x->exprs, env, mev);
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i)
@@ -1708,9 +1708,9 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case REF : {
-        MultiPValuePtr mpv = analyzeExpr(x->expr, env);
+        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
         if (mpv->size() != x->names.size())
-            arityError(x->expr, x->names.size(), mpv->size());
+            arityError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
@@ -1724,7 +1724,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             }
         }
         int marker = evalMarkStack();
-        evalExpr(x->expr, env, mev);
+        evalMulti(x->exprs, env, mev);
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
@@ -1742,8 +1742,9 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
     case ALIAS : {
         ensureArity(x->names, 1);
+        ensureArity(x->exprs, 1);
         EnvPtr env2 = new Env(env);
-        ForeignExprPtr y = new ForeignExpr(env, x->expr);
+        ForeignExprPtr y = new ForeignExpr(env, x->exprs[0]);
         addLocal(env2, x->names[0], y.ptr());
         return env2;
     }

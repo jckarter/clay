@@ -142,7 +142,8 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
             StatementPtr z = y->statements[i];
             if (z->stmtKind == BINDING) {
                 Binding *a = (Binding *)z.ptr();
-                convertFreeVars(a->expr, env, ctx);
+                for (unsigned i = 0; i < a->exprs.size(); ++i)
+                    convertFreeVars(a->exprs[i], env, ctx);
                 EnvPtr env2 = new Env(env);
                 for (unsigned j = 0; j < a->names.size(); ++j)
                     addLocal(env2, a->names[j], a->names[j].ptr());
@@ -155,13 +156,8 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case LABEL : {
-        break;
-    }
-
+    case LABEL :
     case BINDING : {
-        Binding *y = (Binding *)x.ptr();
-        convertFreeVars(y->expr, env, ctx);
         break;
     }
 
