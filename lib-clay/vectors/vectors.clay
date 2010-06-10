@@ -60,8 +60,11 @@ overload Vector(a:A) {
 // varargs constructor
 //
 
-[T]
-overload Vector[T](x:T, ...rest) {
+private AllEqual?(x, first, ...rest) = (x == first) and AllEqual?(x, ...rest);
+overload AllEqual?(x) = true;
+
+[T, ...A | AllEqual?(T, ...A)]
+overload Vector[T](x:T, ...rest:A) {
     var v = Vector[T]();
     reserve(v, countArgs(x, ...rest));
     pushAll(v, x, ...rest);
@@ -73,17 +76,6 @@ overload countArgs() = 0;
 
 private pushAll(a, x, ...rest) { push(a, x); pushAll(a, ...rest); }
 overload pushAll(a) {}
-
-
-// re-implement builtin constructor to avoid clash with varargs constructor
-// in the case where the element type is SizeT
-
-[T]
-overload Vector[T](size:SizeT, capacity:SizeT, data:Pointer[T]) returned:Vector[T] {
-    returned.size = size;
-    returned.capacity = capacity;
-    returned.data = data;
-}
 
 
 
