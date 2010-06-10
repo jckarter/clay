@@ -273,6 +273,15 @@ bool unify(PatternPtr a, PatternPtr b)
     }
 }
 
+bool unifyMulti(MultiPatternPtr a, MultiStaticPtr b)
+{
+    assert(a.ptr() && b.ptr());
+    MultiPatternListPtr b2 = new MultiPatternList();
+    for (unsigned i = 0; i < b->size(); ++i)
+        b2->items.push_back(objectToPattern(b->values[i]));
+    return unifyMulti(a, b2.ptr());
+}
+
 bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b)
 {
     assert(a.ptr() && b.ptr());

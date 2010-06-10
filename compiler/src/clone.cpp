@@ -8,6 +8,7 @@ CodePtr clone(CodePtr x)
     y->predicate = cloneOpt(x->predicate);
     clone(x->formalArgs, y->formalArgs);
     y->formalVarArg = x->formalVarArg;
+    y->formalVarArgType = x->formalVarArgType;
     clone(x->returnSpecs, y->returnSpecs);
     y->body = clone(x->body);
     return y;

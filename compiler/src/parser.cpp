@@ -1285,55 +1285,83 @@ static bool formalArgs(vector<FormalArgPtr> &x) {
     return true;
 }
 
-static bool varArg(IdentifierPtr &x) {
-    if (!symbol("...")) return false;
-    if (!identifier(x)) return false;
+static bool varArgTypeSpec(IdentifierPtr &vargType) {
+    if (!symbol(":")) return false;
+    if (!identifier(vargType)) return false;
     return true;
 }
 
-static bool optVarArg(IdentifierPtr &x) {
+static bool optVarArgTypeSpec(IdentifierPtr &vargType) {
     int p = save();
-    if (!varArg(x)) {
+    if (!varArgTypeSpec(vargType)) {
         restore(p);
-        x = NULL;
+        vargType = NULL;
     }
     return true;
 }
 
-static bool trailingVarArg(IdentifierPtr &x) {
-    if (!symbol(",")) return false;
-    if (!varArg(x)) return false;
+static bool varArg(IdentifierPtr &varg,
+                   IdentifierPtr &vargType) {
+    if (!symbol("...")) return false;
+    if (!identifier(varg)) return false;
+    if (!optVarArgTypeSpec(vargType)) return false;
     return true;
 }
 
-static bool optTrailingVarArg(IdentifierPtr &x) {
+static bool optVarArg(IdentifierPtr &varg,
+                      IdentifierPtr &vargType) {
     int p = save();
-    if (!trailingVarArg(x)) {
+    if (!varArg(varg, vargType)) {
         restore(p);
-        x = NULL;
+        varg = NULL;
+        vargType = NULL;
+    }
+    return true;
+}
+
+static bool trailingVarArg(IdentifierPtr &varg,
+                           IdentifierPtr &vargType) {
+    if (!symbol(",")) return false;
+    if (!varArg(varg, vargType)) return false;
+    return true;
+}
+
+static bool optTrailingVarArg(IdentifierPtr &varg,
+                              IdentifierPtr &vargType) {
+    int p = save();
+    if (!trailingVarArg(varg, vargType)) {
+        restore(p);
+        varg = NULL;
+        vargType = NULL;
     }
     return true;
 }
 
 static bool formalArgsWithVArgs(vector<FormalArgPtr> &args,
-                                IdentifierPtr &varArg) {
+                                IdentifierPtr &varg,
+                                IdentifierPtr &vargType) {
     if (!formalArgs(args)) return false;
-    if (!optTrailingVarArg(varArg)) return false;
+    if (!optTrailingVarArg(varg, vargType)) return false;
     return true;
 }
 
-static bool argumentsBody(vector<FormalArgPtr> &args, IdentifierPtr &varArg) {
+static bool argumentsBody(vector<FormalArgPtr> &args,
+                          IdentifierPtr &varg,
+                          IdentifierPtr &vargType) {
     int p = save();
-    if (formalArgsWithVArgs(args, varArg)) return true;
+    if (formalArgsWithVArgs(args, varg, vargType)) return true;
     restore(p);
     args.clear();
-    varArg = NULL;
-    return optVarArg(varArg);
+    varg = NULL;
+    vargType = NULL;
+    return optVarArg(varg, vargType);
 }
 
-static bool arguments(vector<FormalArgPtr> &args, IdentifierPtr &varArg) {
+static bool arguments(vector<FormalArgPtr> &args,
+                      IdentifierPtr &varg,
+                      IdentifierPtr &vargType) {
     if (!symbol("(")) return false;
-    if (!argumentsBody(args, varArg)) return false;
+    if (!argumentsBody(args, varg, vargType)) return false;
     if (!symbol(")")) return false;
     return true;
 }
@@ -1611,7 +1639,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!optInlined(inlined)) return false;
     IdentifierPtr z;
     if (!identifier(z)) return false;
-    if (!arguments(y->formalArgs, y->formalVarArg)) return false;
+    if (!arguments(y->formalArgs, y->formalVarArg, y->formalVarArgType))
+        return false;
     if (!optReturnSpecList(y->returnSpecs)) return false;
     if (!body(y->body)) return false;
     y->location = location;
@@ -1651,7 +1680,7 @@ static bool overload(TopLevelItemPtr &x) {
     if (!keyword("overload")) return false;
     ExprPtr z;
     if (!pattern(z)) return false;
-    if (!arguments(y->formalArgs, y->formalVarArg)) return false;
+    if (!arguments(y->formalArgs, y->formalVarArg, y->formalVarArgType)) return false;
     if (!optReturnSpecList(y->returnSpecs)) return false;
     if (!body(y->body)) return false;
     y->location = location;
