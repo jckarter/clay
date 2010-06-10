@@ -63,9 +63,9 @@
    ;; (list "\\(^[ \t]*\\|[,{][ \t]*\\)\\(\\w+\\):" 2 font-lock-string-face)
    ;; --- End handling of quoted strings ---
 
-   '("^\\[.*?\\]$" . font-lock-warning-face)
+   '("^\\(\\[.*?\\]\\) *" 1 font-lock-doc-face)
 
-   '("\\<\\(?:a\\(?:nd\\|s\\)\\|\\(?:b\\(?:loc\\|rea\\)k\\)\\|continue\\|e\\(?:num\\|lse\\|xternal\\)\\|for\\|goto\\|i\\(?:mport\\|nlined\\|[fn]\\)\\|l\\(?:ambda\\|value\\)\\|n\\(?:ew\\|ot\\)\\|o\\(?:r\\|verload\\(?:able\\)?\\)\\|p\\(?:rivate\\|ublic\\)\\|r\\(?:value\\|\\(e\\(?:cord\\|f\\|turn\\)\\)\\)\\|static\\|alias\\|var\\|while\\)\\>" . font-lock-keyword-face)
+   '("\\<\\(?:a\\(?:lias\\|nd\\|s\\)\\|\\(?:b\\(?:loc\\|rea\\)k\\)\\|continue\\|e\\(?:num\\|lse\\|xternal\\)\\|for\\|goto\\|i\\(?:mport\\|nlined\\|[fn]\\)\\|l\\(?:ambda\\|value\\)\\|n\\(?:ew\\|ot\\)\\|o\\(?:r\\|verload\\(?:able\\)?\\)\\|p\\(?:rivate\\|ublic\\)\\|r\\(?:value\\|\\(e\\(?:cord\\|f\\|turn\\)\\)\\)\\|static\\|var\\|while\\)\\>" . font-lock-keyword-face)
 
    '("\\<\\(true\\|false\\)\\>" . font-lock-constant-face)
 
@@ -74,13 +74,14 @@
 
 ;; Moar syntax highlighting to be done - comments, builtins, strings et cetera
 ;; builtins - print, println, printTo, printlnTo, assert, range, reserve
-(defconst clay-font-lock-keywords-2
-  (append clay-font-lock-keywords-1
-          (list
-           '("\\<\\(assert\\|\\(?:print\\(?:To\\|ln\\(?:To\\)?\\)?\\)\\|r\\(?:ang\\|eserv\\)e\\)\\((\\)" 1 font-lock-builtin-face)))
-  "Built-in functions")
+;; TODO: Disabled builtin functions, uncomment following fn to enable
+;; (defconst clay-font-lock-keywords-2
+;;   (append clay-font-lock-keywords-1
+;;           (list
+;;            '("\\<\\(assert\\|\\(?:print\\(?:To\\|ln\\(?:To\\)?\\)?\\)\\|r\\(?:ang\\|eserv\\)e\\)\\((\\)" 1 font-lock-builtin-face)))
+;;   "Built-in functions")
 
-(defvar clay-font-lock-keywords clay-font-lock-keywords-2
+(defvar clay-font-lock-keywords clay-font-lock-keywords-1
   "Default highlighting expressions for Clay mode.")
 
 
@@ -95,8 +96,12 @@
       (if (looking-at "^[ \t]*}") ; If the line we are looking at is the end of a block, then decrease the indentation
           (progn
             (save-excursion
-              (forward-line -1)
-              (setq cur-indent (- (current-indentation) default-tab-width)))
+              (forward-line -2)
+              (if (and (looking-at "^[ \t]*\\(else\\|for\\|if\\|while\\)")
+                       (not (looking-at ".*?{[ ]*$")))
+                  (setq cur-indent (- (current-indentation) default-tab-width))
+                (forward-line 1)
+                (setq cur-indent (- (current-indentation) default-tab-width))))
             (if (< cur-indent 0) ; We can't indent past the left margin
                 (setq cur-indent 0)))
         (save-excursion
@@ -109,10 +114,10 @@
                   (setq cur-indent (current-indentation))
                   (setq not-indented nil))
               ;; TODO: Clean up repeated usage of same regexp
-              (if (looking-at ".*?{[ ]*$\\|^[ \t]*\\(else\\|for\\|if\\|while\\)") ; This hint indicates we need to indent an extra level
+              (if (looking-at ".*?{[ ]*$\\|.*?=[ ]*$\\|^[ \t]*\\(else\\|for\\|if\\|while\\)") ; This hint indicates we need to indent an extra level
                   (progn
                     (setq use-current-indentation (and (> loop-count 1)
-                                                       (not (looking-at ".*?{[ ]*$"))))
+                                                       (not (looking-at ".*?{[ ]*$\\|.*?=[ ]*$"))))
                     (setq cur-indent (if use-current-indentation
                           (current-indentation)
                           (+ (current-indentation) default-tab-width))) ; Do the actual indenting
