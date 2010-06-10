@@ -2105,9 +2105,6 @@ extern vector<OverloadPtr> typeOverloads;
 
 void addTypeOverload(OverloadPtr x);
 void initTypeOverloads(TypePtr t);
-void initBuiltinConstructor(ArrayTypePtr t);
-void initBuiltinConstructor(TupleTypePtr t);
-void initBuiltinConstructor(RecordTypePtr t);
 void initBuiltinConstructor(RecordPtr x);
 
 
