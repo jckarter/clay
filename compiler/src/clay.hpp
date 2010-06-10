@@ -150,7 +150,9 @@ enum ObjectKind {
     PRIM_OP,
 
     TYPE,
+
     PATTERN,
+    MULTI_PATTERN,
 
     VALUE_HOLDER,
     MULTI_STATIC,
@@ -269,7 +271,11 @@ struct EnumType;
 
 struct Pattern;
 struct PatternCell;
-struct PatternTerm;
+struct PatternStruct;
+
+struct MultiPattern;
+struct MultiPatternCell;
+struct MultiPatternList;
 
 struct ValueHolder;
 struct MultiStatic;
@@ -385,7 +391,10 @@ typedef Pointer<EnumType> EnumTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
 typedef Pointer<PatternCell> PatternCellPtr;
-typedef Pointer<PatternTerm> PatternTermPtr;
+typedef Pointer<PatternStruct> PatternStructPtr;
+typedef Pointer<MultiPattern> MultiPatternPtr;
+typedef Pointer<MultiPatternCell> MultiPatternCellPtr;
+typedef Pointer<MultiPatternList> MultiPatternListPtr;
 
 typedef Pointer<ValueHolder> ValueHolderPtr;
 typedef Pointer<MultiStatic> MultiStaticPtr;
@@ -1782,27 +1791,60 @@ void typePrint(ostream &out, TypePtr t);
 
 enum PatternKind {
     PATTERN_CELL,
-    PATTERN_TERM,
+    PATTERN_STRUCT,
 };
 
 struct Pattern : public Object {
-    int patternKind;
-    Pattern(int patternKind)
-        : Object(PATTERN), patternKind(patternKind) {}
+    PatternKind kind;
+    Pattern(PatternKind kind)
+        : Object(PATTERN), kind(kind) {}
 };
 
 struct PatternCell : public Pattern {
-    IdentifierPtr name;
     ObjectPtr obj;
-    PatternCell(IdentifierPtr name, ObjectPtr obj)
-        : Pattern(PATTERN_CELL), name(name), obj(obj) {}
+    PatternCell(ObjectPtr obj)
+        : Pattern(PATTERN_CELL), obj(obj) {}
 };
 
-struct PatternTerm : public Pattern {
+struct PatternStruct : public Pattern {
     ObjectPtr head;
-    vector<PatternPtr> params;
-    PatternTerm(ObjectPtr head, const vector<PatternPtr> &params)
-        : Pattern(PATTERN_TERM), head(head), params(params) {}
+    MultiPatternPtr params;
+    PatternStruct(ObjectPtr head, MultiPatternPtr params)
+        : Pattern(PATTERN_STRUCT), head(head), params(params) {}
+};
+
+
+enum MultiPatternKind {
+    MULTI_PATTERN_CELL,
+    MULTI_PATTERN_LIST,
+};
+
+struct MultiPattern : public Object {
+    MultiPatternKind kind;
+    MultiPattern(MultiPatternKind kind)
+        : Object(MULTI_PATTERN), kind(kind) {}
+};
+
+struct MultiPatternCell : public MultiPattern {
+    MultiPatternPtr data;
+    MultiPatternCell(MultiPatternPtr data)
+        : MultiPattern(MULTI_PATTERN_CELL), data(data) {}
+};
+
+struct MultiPatternList : public MultiPattern {
+    vector<PatternPtr> items;
+    MultiPatternPtr tail;
+    MultiPatternList(const vector<PatternPtr> &items,
+                     MultiPatternPtr tail)
+        : MultiPattern(MULTI_PATTERN_LIST), items(items), tail(tail) {}
+    MultiPatternList(MultiPatternPtr tail)
+        : MultiPattern(MULTI_PATTERN_LIST), tail(tail) {}
+    MultiPatternList(PatternPtr x)
+        : MultiPattern(MULTI_PATTERN_LIST) {
+        items.push_back(x);
+    }
+    MultiPatternList()
+        : MultiPattern(MULTI_PATTERN_LIST) {}
 };
 
 
@@ -1884,16 +1926,28 @@ StatementPtr desugarForStatement(ForPtr x);
 // patterns
 //
 
-PatternPtr evaluatePattern(ExprPtr expr, EnvPtr env);
-PatternPtr evaluateStaticObjectPattern(ObjectPtr x);
-bool unify(PatternPtr pattern, ObjectPtr obj);
-bool unifyList(const vector<PatternPtr> patterns,
-               const vector<ObjectPtr> objs);
-bool unifyTerm(PatternTermPtr term, ObjectPtr obj);
-ObjectPtr derefCell(PatternCellPtr cell);
-ObjectPtr reducePattern(PatternPtr pattern);
+ObjectPtr derefDeep(PatternPtr x);
+MultiStaticPtr derefDeep(MultiPatternPtr x);
 
+bool unifyObjObj(ObjectPtr a, ObjectPtr b);
+bool unifyObjPattern(ObjectPtr a, PatternPtr b);
+bool unifyPatternObj(PatternPtr a, ObjectPtr b);
+bool unify(PatternPtr a, PatternPtr b);
+bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b);
+bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
+                MultiPatternPtr b);
+bool unifyMulti(MultiPatternPtr a,
+                MultiPatternListPtr b, unsigned indexB);
+bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
+                MultiPatternListPtr b, unsigned indexB);
+bool unifyEmpty(MultiPatternListPtr x, unsigned index);
+bool unifyEmpty(MultiPatternPtr x);
+
+PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env);
+MultiPatternPtr evaluateMultiPattern(const vector<ExprPtr> &exprs,
+                                     EnvPtr env);
 void patternPrint(ostream &out, PatternPtr x);
+void patternPrint(ostream &out, MultiPatternPtr x);
 
 
 
@@ -2099,6 +2153,7 @@ void verifyAttributes(ExternalVariablePtr x);
 MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
                                    const vector<ExprPtr> &args,
                                    EnvPtr env);
+TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args);
 PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
 MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
                                     const vector<ExprPtr> &args,

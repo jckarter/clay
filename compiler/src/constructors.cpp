@@ -16,11 +16,11 @@ void initTypeOverloads(TypePtr t)
         EnvPtr env = new Env(x->env);
         const vector<IdentifierPtr> &pvars = x->code->patternVars;
         for (unsigned i = 0; i < pvars.size(); ++i) {
-            PatternCellPtr cell = new PatternCell(pvars[i], NULL);
+            PatternCellPtr cell = new PatternCell(NULL);
             addLocal(env, pvars[i], cell.ptr());
         }
-        PatternPtr pattern = evaluatePattern(x->target, env);
-        if (unify(pattern, t.ptr()))
+        PatternPtr pattern = evaluateOnePattern(x->target, env);
+        if (unifyPatternObj(pattern, t.ptr()))
             t->overloads.push_back(x);
     }
 

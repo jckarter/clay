@@ -818,20 +818,20 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
 
 
 //
-// analyzeTypeConstructor
+// constructType
 //
 
-PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
+TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
 {
-    if (obj->objKind == PRIM_OP) {
-        PrimOpPtr x = (PrimOp *)obj.ptr();
+    if (constructor->objKind == PRIM_OP) {
+        PrimOpPtr x = (PrimOp *)constructor.ptr();
 
         switch (x->primOpCode) {
 
         case PRIM_Pointer : {
             ensureArity(args, 1);
             TypePtr pointeeType = staticToType(args, 0);
-            return staticPValue(pointerType(pointeeType).ptr());
+            return pointerType(pointeeType);
         }
 
         case PRIM_CodePointer :
@@ -843,8 +843,7 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
             staticToTypeTuple(args, 1, returnTypes);
             bool byRef = (x->primOpCode == PRIM_RefCodePointer);
             vector<bool> returnIsRef(returnTypes.size(), byRef);
-            TypePtr t = codePointerType(argTypes, returnIsRef, returnTypes);
-            return staticPValue(t.ptr());
+            return codePointerType(argTypes, returnIsRef, returnTypes);
         }
 
         case PRIM_CCodePointer :
@@ -867,30 +866,26 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
             case PRIM_FastCallCodePointer : cc = CC_FASTCALL; break;
             default : assert(false);
             }
-            TypePtr t = cCodePointerType(cc, argTypes, false, returnType);
-            return staticPValue(t.ptr());
+            return cCodePointerType(cc, argTypes, false, returnType);
         }
 
         case PRIM_Array : {
             ensureArity(args, 2);
             TypePtr t = staticToType(args, 0);
             int size = staticToInt(args, 1);
-            TypePtr at = arrayType(t, size);
-            return staticPValue(at.ptr());
+            return arrayType(t, size);
         }
 
         case PRIM_Tuple : {
             vector<TypePtr> types;
             for (unsigned i = 0; i < args->size(); ++i)
                 types.push_back(staticToType(args, i));
-            TypePtr t = tupleType(types);
-            return staticPValue(t.ptr());
+            return tupleType(types);
         }
 
         case PRIM_Static : {
             ensureArity(args, 1);
-            TypePtr t = staticType(args->values[0]);
-            return staticPValue(t.ptr());
+            return staticType(args->values[0]);
         }
 
         default :
@@ -898,16 +893,28 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
             return NULL;
         }
     }
-    else if (obj->objKind == RECORD) {
-        RecordPtr x = (Record *)obj.ptr();
+    else if (constructor->objKind == RECORD) {
+        RecordPtr x = (Record *)constructor.ptr();
         if (args->size() != x->patternVars.size())
             arityError(x->patternVars.size(), args->size());
-        return staticPValue(recordType(x, args->values).ptr());
+        return recordType(x, args->values);
     }
     else {
         assert(false);
         return NULL;
     }
+}
+
+
+
+//
+// analyzeTypeConstructor
+//
+
+PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
+{
+    TypePtr t = constructType(obj, args);
+    return staticPValue(t.ptr());
 }
 
 
