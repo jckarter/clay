@@ -13,11 +13,22 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
             return new MatchArityError();
     }
     vector<PatternCellPtr> cells;
+    vector<MultiPatternCellPtr> multiCells;
+    const vector<PatternVar> &pvars = code->patternVars;
     EnvPtr patternEnv = new Env(codeEnv);
-    for (unsigned i = 0; i < code->patternVars.size(); ++i) {
-        PatternCellPtr cell = new PatternCell(NULL);
-        addLocal(patternEnv, code->patternVars[i], cell.ptr());
-        cells.push_back(cell);
+    for (unsigned i = 0; i < pvars.size(); ++i) {
+        if (pvars[i].isMulti) {
+            MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
+            multiCells.push_back(multiCell);
+            cells.push_back(NULL);
+            addLocal(patternEnv, pvars[i].name, multiCell.ptr());
+        }
+        else {
+            PatternCellPtr cell = new PatternCell(NULL);
+            cells.push_back(cell);
+            multiCells.push_back(NULL);
+            addLocal(patternEnv, pvars[i].name, cell.ptr());
+        }
     }
     if (callableExpr.ptr()) {
         PatternPtr pattern = evaluateOnePattern(callableExpr, patternEnv);
@@ -34,11 +45,19 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
         }
     }
     EnvPtr staticEnv = new Env(codeEnv);
-    for (unsigned i = 0; i < cells.size(); ++i) {
-        ObjectPtr v = derefDeep(cells[i].ptr());
-        if (!v)
-            error(code->patternVars[i], "unbound pattern variable");
-        addLocal(staticEnv, code->patternVars[i], v);
+    for (unsigned i = 0; i < pvars.size(); ++i) {
+        if (pvars[i].isMulti) {
+            MultiStaticPtr ms = derefDeep(multiCells[i].ptr());
+            if (!ms)
+                error(pvars[i].name, "unbound pattern variable");
+            addLocal(staticEnv, pvars[i].name, ms.ptr());
+        }
+        else {
+            ObjectPtr v = derefDeep(cells[i].ptr());
+            if (!v)
+                error(pvars[i].name, "unbound pattern variable");
+            addLocal(staticEnv, pvars[i].name, v.ptr());
+        }
     }
     if (code->predicate.ptr()) {
         if (!evaluateBool(code->predicate, staticEnv))

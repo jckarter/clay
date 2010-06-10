@@ -14,10 +14,16 @@ void initTypeOverloads(TypePtr t)
     for (unsigned i = 0; i < typeOverloads.size(); ++i) {
         OverloadPtr x = typeOverloads[i];
         EnvPtr env = new Env(x->env);
-        const vector<IdentifierPtr> &pvars = x->code->patternVars;
+        const vector<PatternVar> &pvars = x->code->patternVars;
         for (unsigned i = 0; i < pvars.size(); ++i) {
-            PatternCellPtr cell = new PatternCell(NULL);
-            addLocal(env, pvars[i], cell.ptr());
+            if (pvars[i].isMulti) {
+                MultiPatternCellPtr cell = new MultiPatternCell(NULL);
+                addLocal(env, pvars[i].name, cell.ptr());
+            }
+            else {
+                PatternCellPtr cell = new PatternCell(NULL);
+                addLocal(env, pvars[i].name, cell.ptr());
+            }
         }
         PatternPtr pattern = evaluateOnePattern(x->target, env);
         if (unifyPatternObj(pattern, t.ptr()))
@@ -153,7 +159,10 @@ void initBuiltinConstructor(RecordPtr x)
 
     CodePtr code = new Code();
     code->location = x->location;
-    code->patternVars = x->patternVars;
+    for (unsigned i = 0; i < x->patternVars.size(); ++i) {
+        PatternVar pvar(false, x->patternVars[i]);
+        code->patternVars.push_back(pvar);
+    }
 
     for (unsigned i = 0; i < x->fields.size(); ++i) {
         RecordFieldPtr f = x->fields[i];

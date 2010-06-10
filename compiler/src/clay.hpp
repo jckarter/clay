@@ -1052,8 +1052,17 @@ struct ReturnSpec : public ANode {
         : ANode(RETURN_SPEC), byRef(byRef), type(type), name(name) {}
 };
 
+struct PatternVar {
+    bool isMulti;
+    IdentifierPtr name;
+    PatternVar(bool isMulti, IdentifierPtr name)
+        : isMulti(isMulti), name(name) {}
+    PatternVar()
+        : isMulti(false) {}
+};
+
 struct Code : public ANode {
-    vector<IdentifierPtr> patternVars;
+    vector<PatternVar> patternVars;
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
     IdentifierPtr formalVarArg;
@@ -1062,7 +1071,7 @@ struct Code : public ANode {
 
     Code()
         : ANode(CODE) {}
-    Code(const vector<IdentifierPtr> &patternVars,
+    Code(const vector<PatternVar> &patternVars,
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
          IdentifierPtr formalVarArg,
@@ -1390,6 +1399,8 @@ ostream &operator<<(ostream &out, const vector<T> &v)
     return out;
 }
 
+ostream &operator<<(ostream &out, const PatternVar &pvar);
+
 void printNameList(ostream &out, const vector<ObjectPtr> &x);
 void printNameList(ostream &out, const vector<TypePtr> &x);
 void printName(ostream &out, ObjectPtr x);
@@ -1402,6 +1413,7 @@ string getCodeName(ObjectPtr x);
 //
 
 CodePtr clone(CodePtr x);
+void clone(const vector<PatternVar> &x, vector<PatternVar> &out);
 void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out);
 ExprPtr clone(ExprPtr x);
 ExprPtr cloneOpt(ExprPtr x);
