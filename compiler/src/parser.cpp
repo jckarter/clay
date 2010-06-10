@@ -750,22 +750,6 @@ static bool expression(ExprPtr &x) {
 
 static bool pattern(ExprPtr &x);
 
-static bool patternList(vector<ExprPtr> &x) {
-    ExprPtr a;
-    if (!pattern(a)) return false;
-    x.clear();
-    x.push_back(a);
-    while (true) {
-        int p = save();
-        if (!symbol(",") || !pattern(a)) {
-            restore(p);
-            break;
-        }
-        x.push_back(a);
-    }
-    return true;
-}
-
 static bool dottedNameRef(ExprPtr &x) {
     if (!nameRef(x)) return false;
     while (true) {
@@ -792,7 +776,7 @@ static bool patternSuffix(IndexingPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
     IndexingPtr y = new Indexing(NULL);
-    if (!patternList(y->args)) return false;
+    if (!expressionList(y->args)) return false;
     if (!symbol("]")) return false;
     x = y;
     x->location = location;
