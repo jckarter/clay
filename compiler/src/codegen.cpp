@@ -1998,14 +1998,40 @@ bool codegenStatement(StatementPtr stmt,
 
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.ptr();
-        PValuePtr pvLeft = analyzeOne(x->left, env);
-        PValuePtr pvRight = analyzeOne(x->right, env);
-        if (pvLeft->isTemp)
-            error(x->left, "cannot assign to a temporary");
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
+        assert(mpvLeft.ptr());
+        assert(mpvRight.ptr());
+        if (mpvLeft->size() != mpvRight->size())
+            error("arity mismatch between left-side and right-side");
+        for (unsigned i = 0; i < mpvLeft->size(); ++i) {
+            if (mpvLeft->values[i]->isTemp)
+                argumentError(i, "cannot assign to a temporary");
+        }
         int marker = cgMarkStack();
-        CValuePtr cvLeft = codegenOneAsRef(x->left, env, ctx);
-        CValuePtr cvRight = codegenOneAsRef(x->right, env, ctx);
-        codegenValueAssign(cvLeft, cvRight, ctx);
+        if (mpvLeft->size() == 1) {
+            MultiCValuePtr mcvRight = codegenMultiAsRef(x->right, env, ctx);
+            MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
+            assert(mcvLeft->size() == 1);
+            assert(mcvRight->size() == 1);
+            codegenValueAssign(mcvLeft->values[0], mcvRight->values[0], ctx);
+        }
+        else {
+            MultiCValuePtr mcvRight = new MultiCValue();
+            for (unsigned i = 0; i < mpvRight->size(); ++i) {
+                PValuePtr pv = mpvRight->values[i];
+                CValuePtr cv = codegenAllocValue(pv->type);
+                mcvRight->add(cv);
+            }
+            codegenMultiInto(x->right, env, ctx, mcvRight);
+            MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
+            assert(mcvLeft->size() == mcvRight->size());
+            for (unsigned i = 0; i < mcvLeft->size(); ++i) {
+                CValuePtr cvLeft = mcvLeft->values[i];
+                CValuePtr cvRight = mcvRight->values[i];
+                codegenValueAssign(cvLeft, cvRight, ctx);
+            }
+        }
         cgDestroyAndPopStack(marker, ctx);
         return false;
     }
@@ -2014,6 +2040,8 @@ bool codegenStatement(StatementPtr stmt,
         InitAssignment *x = (InitAssignment *)stmt.ptr();
         MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
         MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
+        assert(mpvLeft.ptr());
+        assert(mpvRight.ptr());
         if (mpvLeft->size() != mpvRight->size())
             error("arity mismatch between left-side and right-side");
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {

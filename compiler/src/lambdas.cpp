@@ -163,8 +163,10 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case ASSIGNMENT : {
         Assignment *y = (Assignment *)x.ptr();
-        convertFreeVars(y->left, env, ctx);
-        convertFreeVars(y->right, env, ctx);
+        for (unsigned i = 0; i < y->left.size(); ++i)
+            convertFreeVars(y->left[i], env, ctx);
+        for (unsigned i = 0; i < y->right.size(); ++i)
+            convertFreeVars(y->right[i], env, ctx);
         break;
     }
 

@@ -871,10 +871,10 @@ static bool block(StatementPtr &x) {
 
 static bool assignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    ExprPtr y, z;
-    if (!expression(y)) return false;
+    vector<ExprPtr> y, z;
+    if (!expressionList(y)) return false;
     if (!symbol("=")) return false;
-    if (!expression(z)) return false;
+    if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     x = new Assignment(y, z);
     x->location = location;
@@ -883,8 +883,7 @@ static bool assignment(StatementPtr &x) {
 
 static bool initAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    vector<ExprPtr> y;
-    vector<ExprPtr> z;
+    vector<ExprPtr> y, z;
     if (!expressionList(y)) return false;
     if (!symbol("<--")) return false;
     if (!expressionList(z)) return false;
