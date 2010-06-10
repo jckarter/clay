@@ -96,8 +96,12 @@
       (if (looking-at "^[ \t]*}") ; If the line we are looking at is the end of a block, then decrease the indentation
           (progn
             (save-excursion
-              (forward-line -1)
-              (setq cur-indent (- (current-indentation) default-tab-width)))
+              (forward-line -2)
+              (if (and (looking-at "^[ \t]*\\(else\\|for\\|if\\|while\\)")
+                       (not (looking-at ".*?{[ ]*$")))
+                  (setq cur-indent (- (current-indentation) default-tab-width))
+                (forward-line 1)
+                (setq cur-indent (- (current-indentation) default-tab-width))))
             (if (< cur-indent 0) ; We can't indent past the left margin
                 (setq cur-indent 0)))
         (save-excursion
@@ -110,10 +114,10 @@
                   (setq cur-indent (current-indentation))
                   (setq not-indented nil))
               ;; TODO: Clean up repeated usage of same regexp
-              (if (looking-at ".*?{[ ]*$\\|^[ \t]*\\(else\\|for\\|if\\|while\\)") ; This hint indicates we need to indent an extra level
+              (if (looking-at ".*?{[ ]*$\\|.*?=[ ]*$\\|^[ \t]*\\(else\\|for\\|if\\|while\\)") ; This hint indicates we need to indent an extra level
                   (progn
                     (setq use-current-indentation (and (> loop-count 1)
-                                                       (not (looking-at ".*?{[ ]*$"))))
+                                                       (not (looking-at ".*?{[ ]*$\\|.*?=[ ]*$"))))
                     (setq cur-indent (if use-current-indentation
                           (current-indentation)
                           (+ (current-indentation) default-tab-width))) ; Do the actual indenting
