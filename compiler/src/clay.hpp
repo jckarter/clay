@@ -1560,14 +1560,12 @@ enum PrimOpCode {
     PRIM_pointerCast,
 
     PRIM_Array,
-    PRIM_array,
     PRIM_arrayRef,
 
     PRIM_TupleP,
     PRIM_Tuple,
     PRIM_TupleElementCount,
     PRIM_TupleElementOffset,
-    PRIM_tuple,
     PRIM_tupleRef,
 
     PRIM_RecordP,

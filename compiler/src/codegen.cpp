@@ -112,12 +112,6 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
                           CodegenContextPtr ctx);
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx);
 
-void codegenPrimOpExpr(PrimOpPtr x,
-                       const vector<ExprPtr> &args,
-                       EnvPtr env,
-                       CodegenContextPtr ctx,
-                       MultiCValuePtr out);
-
 void codegenPrimOp(PrimOpPtr x,
                    MultiCValuePtr args,
                    CodegenContextPtr ctx,
@@ -666,14 +660,15 @@ void codegenExpr(ExprPtr expr,
             codegenExpr(x->args[0], env, ctx, out);
         }
         else {
-            codegenCallExpr(primNameRef("tuple"), x->args, env, ctx, out);
+            ExprPtr makeTuple = kernelNameRef("makeTuple");
+            codegenCallExpr(makeTuple, x->args, env, ctx, out);
         }
         break;
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        codegenCallExpr(primNameRef("array"), x->args, env, ctx, out);
+        codegenCallExpr(kernelNameRef("makeArray"), x->args, env, ctx, out);
         break;
     }
 
@@ -1449,7 +1444,8 @@ void codegenCallExpr(ExprPtr callable,
 
     case PRIM_OP : {
         PrimOpPtr x = (PrimOp *)obj.ptr();
-        codegenPrimOpExpr(x, args, env, ctx, out);
+        MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
+        codegenPrimOp(x, mcv, ctx, out);
         break;
     }
 
@@ -2344,38 +2340,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         assert(false);
         return NULL;
     }
-
-    }
-}
-
-
-
-//
-// codegenPrimOpExpr
-//
-
-void codegenPrimOpExpr(PrimOpPtr x,
-                       const vector<ExprPtr> &args,
-                       EnvPtr env,
-                       CodegenContextPtr ctx,
-                       MultiCValuePtr out)
-{
-    switch (x->primOpCode) {
-
-    case PRIM_array :
-    case PRIM_tuple : {
-        MultiPValuePtr mpv = analyzePrimOpExpr(x, args, env);
-        assert(mpv->size() == 1);
-        TypePtr t = mpv->values[0]->type;
-        ExprPtr callable = new ObjectExpr(t.ptr());
-        codegenCallExpr(callable, args, env, ctx, out);
-        break;
-    }
-
-    default :
-        MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
-        codegenPrimOp(x, mcv, ctx, out);
-        break;
 
     }
 }
@@ -3295,25 +3259,6 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_Array :
         error("Array type constructor cannot be called");
 
-    case PRIM_array : {
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
-        assert(out0->type->typeKind == ARRAY_TYPE);
-        ArrayType *t = (ArrayType *)out0->type.ptr();
-        assert((int)args->size() == t->size);
-        TypePtr etype = t->elementType;
-        for (unsigned i = 0; i < args->size(); ++i) {
-            CValuePtr carg = args->values[i];
-            if (carg->type != etype)
-                argumentError(i, "array element type mismatch");
-            llvm::Value *ptr =
-                llvmBuilder->CreateConstGEP2_32(out0->llValue, 0, i);
-            CValuePtr cdest = new CValue(etype, ptr);
-            codegenValueCopy(cdest, carg, ctx);
-        }
-        break;
-    }
-
     case PRIM_arrayRef : {
         ensureArity(args, 2);
         ArrayTypePtr at;
@@ -3366,24 +3311,6 @@ void codegenPrimOp(PrimOpPtr x,
         const llvm::StructLayout *layout = tupleTypeLayout(t.ptr());
         ValueHolderPtr vh = sizeTToValueHolder(layout->getElementOffset(i));
         codegenStaticObject(vh.ptr(), ctx, out);
-        break;
-    }
-
-    case PRIM_tuple : {
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
-        assert(out0->type->typeKind == TUPLE_TYPE);
-        TupleType *t = (TupleType *)out0->type.ptr();
-        assert(args->size() == t->elementTypes.size());
-        for (unsigned i = 0; i < args->size(); ++i) {
-            CValuePtr carg = args->values[i];
-            if (carg->type != t->elementTypes[i])
-                argumentError(i, "argument type mismatch");
-            llvm::Value *ptr =
-                llvmBuilder->CreateConstGEP2_32(out0->llValue, 0, i);
-            CValuePtr cdest = new CValue(t->elementTypes[i], ptr);
-            codegenValueCopy(cdest, carg, ctx);
-        }
         break;
     }
 

@@ -18,6 +18,15 @@ overload tupleElements2(a:T, static i) = ;
 
 
 //
+// makeTuple
+//
+
+[...T]
+inlined makeTuple(...args:T) = Tuple[...T](...args);
+
+
+
+//
 // basic constructor
 //
 

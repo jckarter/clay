@@ -113,10 +113,6 @@ void evalCollectLabels(const vector<StatementPtr> &statements,
                        map<string, LabelInfo> &labels);
 EnvPtr evalBinding(BindingPtr x, EnvPtr env);
 
-void evalPrimOpExpr(PrimOpPtr x,
-                    const vector<ExprPtr> &args,
-                    EnvPtr env,
-                    MultiEValuePtr out);
 void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out);
 
 
@@ -743,14 +739,14 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
             evalExpr(x->args[0], env, out);
         }
         else {
-            evalCallExpr(primNameRef("tuple"), x->args, env, out);
+            evalCallExpr(kernelNameRef("makeTuple"), x->args, env, out);
         }
         break;
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        evalCallExpr(primNameRef("array"), x->args, env, out);
+        evalCallExpr(kernelNameRef("makeArray"), x->args, env, out);
         break;
     }
 
@@ -1230,7 +1226,8 @@ void evalCallExpr(ExprPtr callable,
 
     case PRIM_OP : {
         PrimOpPtr x = (PrimOp *)obj.ptr();
-        evalPrimOpExpr(x, args, env, out);
+        MultiEValuePtr mev = evalMultiAsRef(args, env);
+        evalPrimOp(x, mev, out);
         break;
     }
 
@@ -1787,37 +1784,6 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
     }
 
-}
-
-
-
-//
-// evalPrimOpExpr
-//
-
-void evalPrimOpExpr(PrimOpPtr x,
-                    const vector<ExprPtr> &args,
-                    EnvPtr env,
-                    MultiEValuePtr out)
-{
-    switch (x->primOpCode) {
-
-    case PRIM_array :
-    case PRIM_tuple : {
-        MultiPValuePtr mpv = analyzePrimOpExpr(x, args, env);
-        assert(mpv->size() == 1);
-        TypePtr t = mpv->values[0]->type;
-        ExprPtr callable = new ObjectExpr(t.ptr());
-        evalCallExpr(callable, args, env, out);
-        break;
-    }
-
-    default :
-        MultiEValuePtr mev = evalMultiAsRef(args, env);
-        evalPrimOp(x, mev, out);
-        break;
-
-    }
 }
 
 
@@ -3018,23 +2984,6 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_Array :
         error("Array type constructor cannot be called");
 
-    case PRIM_array : {
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type->typeKind == ARRAY_TYPE);
-        ArrayType *t = (ArrayType *)out0->type.ptr();
-        assert((int)args->size() == t->size);
-        TypePtr etype = t->elementType;
-        for (unsigned i = 0; i < args->size(); ++i) {
-            EValuePtr earg = args->values[i];
-            if (earg->type != etype)
-                argumentError(i, "array element type mismatch");
-            char *ptr = out0->addr + typeSize(etype)*i;
-            evalValueCopy(new EValue(etype, ptr), earg);
-        }
-        break;
-    }
-
     case PRIM_arrayRef : {
         ensureArity(args, 2);
         ArrayTypePtr at;
@@ -3086,24 +3035,6 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         const llvm::StructLayout *layout = tupleTypeLayout(t.ptr());
         ValueHolderPtr vh = sizeTToValueHolder(layout->getElementOffset(i));
         evalStaticObject(vh.ptr(), out);
-        break;
-    }
-
-    case PRIM_tuple : {
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type->typeKind == TUPLE_TYPE);
-        TupleType *t = (TupleType *)out0->type.ptr();
-        assert(args->size() == t->elementTypes.size());
-        const llvm::StructLayout *layout = tupleTypeLayout(t);
-        for (unsigned i = 0; i < args->size(); ++i) {
-            EValuePtr earg = args->values[i];
-            if (earg->type != t->elementTypes[i])
-                argumentError(i, "argument type mismatch");
-            char *ptr = out0->addr + layout->getElementOffset(i);
-            EValuePtr eargDest = new EValue(t->elementTypes[i], ptr);
-            evalValueCopy(eargDest, earg);
-        }
         break;
     }
 
