@@ -456,7 +456,6 @@ static PatternPtr namedToPattern(ObjectPtr x)
     }
 }
 
-
 PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
 {
     LocationContext loc(expr->location);
@@ -476,6 +475,11 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
             MultiPatternPtr params = evaluateMultiPattern(x->args, env);
             return new PatternStruct(indexable, params);
         }
+        if (indexable->objKind == GLOBAL_ALIAS) {
+            GlobalAlias *y = (GlobalAlias *)indexable.ptr();
+            MultiPatternPtr params = evaluateMultiPattern(x->args, env);
+            return evaluateAliasPattern(y, params);
+        }
         return new PatternCell(evaluateOneStatic(expr, env));
     }
 
@@ -485,6 +489,32 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
     }
 
     }
+}
+
+
+
+//
+// evaluateAliasPattern
+//
+
+PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params)
+{
+    MultiPatternListPtr args = new MultiPatternList();
+    EnvPtr env = new Env(x->env);
+    for (unsigned i = 0; i < x->params.size(); ++i) {
+        PatternCellPtr cell = new PatternCell(NULL);
+        args->items.push_back(cell.ptr());
+        addLocal(env, x->params[i], cell.ptr());
+    }
+    if (x->varParam.ptr()) {
+        MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
+        args->tail = multiCell.ptr();
+        addLocal(env, x->varParam, multiCell.ptr());
+    }
+    PatternPtr out = evaluateOnePattern(x->expr, env);
+    if (!unifyMulti(args.ptr(), params))
+        error("non-matching alias");
+    return out;
 }
 
 
