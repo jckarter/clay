@@ -1,0 +1,9 @@
+Hello World
+Destroyed 2
+Destroyed 1
+Destroyed 3
+Destroyed 1
+Caught. Throwing again.
+Destroyed 20
+Caught
+Finally
