@@ -1975,6 +1975,7 @@ bool unifyEmpty(MultiPatternListPtr x, unsigned index);
 bool unifyEmpty(MultiPatternPtr x);
 
 PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env);
+PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params);
 MultiPatternPtr evaluateMultiPattern(const vector<ExprPtr> &exprs,
                                      EnvPtr env);
 void patternPrint(ostream &out, PatternPtr x);
