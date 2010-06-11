@@ -1048,11 +1048,15 @@ static bool tryStatement(StatementPtr &x) {
     if (!keyword("try")) return false;
     if (!statement(a)) return false;
     int p = save();
-    if (!keyword("catch") || !statement(b))
+    if (!keyword("catch") || !statement(b)) {
         restore(p);
+        b = NULL;
+    }
     p = save();
-    if (!keyword("finally") || !statement(c))
+    if (!keyword("finally") || !statement(c)) {
         restore(p);
+        c = NULL;
+    }
     if (!b.ptr() && !c.ptr()) return false;
     x = new Try(a, b, c);
     x->location = location;

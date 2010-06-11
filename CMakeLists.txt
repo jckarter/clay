@@ -21,6 +21,7 @@ if(UNIX)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     string(REPLACE "-fno-exc" "-fexc" LLVM_CXXFLAGS ${LLVM_CXXFLAGS})
+    set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS} -Wall")
 
     execute_process(
         COMMAND ${LLVM_CONFIG} --ldflags

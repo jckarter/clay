@@ -70,6 +70,7 @@ ostream &operator<<(ostream &out, const BigVec<T> &v) {
 ostream &operator<<(ostream &out, const PatternVar &pvar)
 {
     out << "PatternVar(" << pvar.isMulti << ", " << pvar.name << ")";
+    return out;
 }
 
 

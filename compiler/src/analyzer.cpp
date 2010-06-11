@@ -1454,7 +1454,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
             catchResult = analyzeStatement(x->catchBlock, env, ctx);
         if (x->finallyBlock.ptr())
             finallyResult = analyzeStatement(x->finallyBlock, env, ctx);
-        return tryResult || catchResult; // FIXME
+        return (tryResult || catchResult) && finallyResult;
     }
 
     default :

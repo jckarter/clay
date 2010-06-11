@@ -2213,23 +2213,25 @@ bool codegenStatement(StatementPtr stmt,
         ctx->catchBlock = catchBegin;
         ctx->tryBlockStackMarker = cgMarkStack();
 
-        codegenStatement(x->tryBlock, env, ctx);
+        bool tryTerminated = codegenStatement(x->tryBlock, env, ctx);
         ctx->catchBlock = savedCatchBegin;
         llvmBuilder->CreateBr(catchEnd);
 
+        bool catchTerminated = false, finallyTerminated = false;
+
         llvmBuilder->SetInsertPoint(catchBegin);
         if (x->catchBlock.ptr())
-            codegenStatement(x->catchBlock, env, ctx);
+            catchTerminated = codegenStatement(x->catchBlock, env, ctx);
         llvmBuilder->CreateBr(catchEnd);
 
         llvmBuilder->SetInsertPoint(catchEnd);
         if (x->finallyBlock.ptr())
-            codegenStatement(x->finallyBlock, env, ctx);
+            finallyTerminated = codegenStatement(x->finallyBlock, env, ctx);
         llvmBuilder->CreateBr(finallyEnd);
         
         llvmBuilder->SetInsertPoint(finallyEnd);
 
-        return false;
+        return (tryTerminated && catchTerminated) || finallyTerminated;
     }
 
     default :
