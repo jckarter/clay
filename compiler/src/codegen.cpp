@@ -2206,21 +2206,28 @@ bool codegenStatement(StatementPtr stmt,
         Try *x = (Try *)stmt.ptr();
 
         llvm::BasicBlock *catchBegin = newBasicBlock("catchBegin");
+        llvm::BasicBlock *catchEnd = newBasicBlock("catchEnd");
+        llvm::BasicBlock *finallyEnd = newBasicBlock("finallyEnd");
+        
         llvm::BasicBlock *savedCatchBegin = ctx->catchBlock;
         ctx->catchBlock = catchBegin;
         ctx->tryBlockStackMarker = cgMarkStack();
 
         codegenStatement(x->tryBlock, env, ctx);
         ctx->catchBlock = savedCatchBegin;
-
-        llvm::BasicBlock *catchEnd = newBasicBlock("catchEnd");
         llvmBuilder->CreateBr(catchEnd);
 
         llvmBuilder->SetInsertPoint(catchBegin);
-        codegenStatement(x->catchBlock, env, ctx);
+        if (x->catchBlock.ptr())
+            codegenStatement(x->catchBlock, env, ctx);
         llvmBuilder->CreateBr(catchEnd);
 
         llvmBuilder->SetInsertPoint(catchEnd);
+        if (x->finallyBlock.ptr())
+            codegenStatement(x->finallyBlock, env, ctx);
+        llvmBuilder->CreateBr(finallyEnd);
+        
+        llvmBuilder->SetInsertPoint(finallyEnd);
 
         return false;
     }

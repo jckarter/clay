@@ -1044,12 +1044,17 @@ static bool forStatement(StatementPtr &x) {
 
 static bool tryStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    StatementPtr a, b;
+    StatementPtr a, b, c;
     if (!keyword("try")) return false;
     if (!statement(a)) return false;
-    if (!keyword("catch")) return false;
-    if (!statement(b)) return false;
-    x = new Try(a, b);
+    int p = save();
+    if (!keyword("catch") || !statement(b))
+        restore(p);
+    p = save();
+    if (!keyword("finally") || !statement(c))
+        restore(p);
+    if (!b.ptr() && !c.ptr()) return false;
+    x = new Try(a, b, c);
     x->location = location;
     return true;
 }
