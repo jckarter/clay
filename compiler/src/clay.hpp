@@ -1027,8 +1027,11 @@ struct ForeignStatement : public Statement {
 struct Try : public Statement {
     StatementPtr tryBlock;
     StatementPtr catchBlock;
-    Try(StatementPtr tryBlock, StatementPtr catchBlock) 
-        : Statement(TRY), tryBlock(tryBlock), catchBlock(catchBlock) {}
+    StatementPtr finallyBlock;
+    Try(StatementPtr tryBlock, StatementPtr catchBlock, 
+        StatementPtr finallyBlock) 
+        : Statement(TRY), tryBlock(tryBlock), catchBlock(catchBlock),
+          finallyBlock(finallyBlock) {}
 };
 
 

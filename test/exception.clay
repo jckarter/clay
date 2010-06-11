@@ -28,6 +28,8 @@ main() {
         var r = Test(30);
     } catch {
         println("Caught");
+    } finally {
+        println("Finally");
     }
     return 0;
 }
