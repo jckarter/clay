@@ -1,4 +1,19 @@
 
+
+//
+// main
+//
+
+main() {
+    var a = [10, 20, 40, 80, 160];
+    for (i, x in enumerate(a))
+        println(i, ") ", x);
+}
+
+
+
+//
+// enumerate
 
 record Enumerate[SEQ] {
     seq:SEQ;
@@ -6,28 +21,26 @@ record Enumerate[SEQ] {
 
 enumerate(seq) = Enumerate(seq);
 
+[SEQ]
+overload iterator(x:Enumerate[SEQ]) = EnumerateIterator(iterator(x.seq), SizeT(0));
 
-record EnumIterator[ITER] {
+
+
+//
+// EnumerateIterator
+//
+
+record EnumerateIterator[ITER] {
     iter:ITER;
     index:SizeT;
 }
 
-[SEQ]
-overload iterator(x:Enumerate[SEQ]) = EnumIterator(iterator(x.seq), SizeT(0));
+[ITER]
+overload hasNext?(x:EnumerateIterator[ITER]) = hasNext?(x.iter);
 
 [ITER]
-overload hasNext?(x:EnumIterator[ITER]) = hasNext?(x.iter);
-
-[ITER]
-overload next(x:EnumIterator[ITER]) {
+overload next(x:EnumerateIterator[ITER]) {
     var index = x.index;
     x.index += 1;
     return forward copy(index), next(x.iter);
-}
-
-
-main() {
-    var a = [10, 20, 40, 80, 160];
-    for (i, x in enumerate(a))
-        println(i, ") ", x);
 }
