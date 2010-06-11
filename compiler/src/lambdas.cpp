@@ -228,7 +228,8 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         For *y = (For *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
         EnvPtr env2 = new Env(env);
-        addLocal(env2, y->variable, y->variable.ptr());
+        for (unsigned j = 0; j < y->variables.size(); ++j)
+            addLocal(env2, y->variables[j], y->variables[j].ptr());
         convertFreeVars(y->body, env2, ctx);
         break;
     }

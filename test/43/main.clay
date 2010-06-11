@@ -1,0 +1,33 @@
+
+
+record Enumerate[SEQ] {
+    seq:SEQ;
+}
+
+enumerate(seq) = Enumerate(seq);
+
+
+record EnumIterator[ITER] {
+    iter:ITER;
+    index:SizeT;
+}
+
+[SEQ]
+overload iterator(x:Enumerate[SEQ]) = EnumIterator(iterator(x.seq), SizeT(0));
+
+[ITER]
+overload hasNext?(x:EnumIterator[ITER]) = hasNext?(x.iter);
+
+[ITER]
+overload next(x:EnumIterator[ITER]) {
+    var index = x.index;
+    x.index += 1;
+    return forward copy(index), next(x.iter);
+}
+
+
+main() {
+    var a = [10, 20, 40, 80, 160];
+    for (i, x in enumerate(a))
+        println(i, ") ", x);
+}

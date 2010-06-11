@@ -996,12 +996,14 @@ struct Continue : public Statement {
 };
 
 struct For : public Statement {
-    IdentifierPtr variable;
+    vector<IdentifierPtr> variables;
     ExprPtr expr;
     StatementPtr body;
     StatementPtr desugared;
-    For(IdentifierPtr variable, ExprPtr expr, StatementPtr body)
-        : Statement(FOR), variable(variable), expr(expr), body(body) {}
+    For(const vector<IdentifierPtr> &variables,
+        ExprPtr expr,
+        StatementPtr body)
+        : Statement(FOR), variables(variables), expr(expr), body(body) {}
 };
 
 struct ForeignStatement : public Statement {

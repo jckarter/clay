@@ -342,7 +342,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
     case FOR : {
         const For *y = (const For *)x;
-        out << "For(" << y->variable << ", " << y->expr;
+        out << "For(" << y->variables << ", " << y->expr;
         out << ", " << y->body << ")";
         break;
     }
