@@ -125,23 +125,23 @@ StatementPtr desugarForStatement(ForPtr x) {
     IdentifierPtr iterVar = new Identifier("%iter");
 
     BlockPtr block = new Block();
-    block->statements.push_back(new Binding(REF, identV(exprVar),
-                                            exprV(x->expr)));
+    vector<StatementPtr> &bs = block->statements;
+    bs.push_back(new Binding(REF, identV(exprVar), exprV(x->expr)));
 
     CallPtr iteratorCall = new Call(kernelNameRef("iterator"));
     iteratorCall->args.push_back(new NameRef(exprVar));
-    block->statements.push_back(new Binding(VAR, identV(iterVar),
-                                            exprV(iteratorCall.ptr())));
+    bs.push_back(new Binding(VAR, identV(iterVar), exprV(iteratorCall.ptr())));
 
     CallPtr hasNextCall = new Call(kernelNameRef("hasNext?"));
     hasNextCall->args.push_back(new NameRef(iterVar));
     CallPtr nextCall = new Call(kernelNameRef("next"));
     nextCall->args.push_back(new NameRef(iterVar));
+    ExprPtr unpackNext = new Unpack(nextCall.ptr());
     BlockPtr whileBody = new Block();
-    whileBody->statements.push_back(new Binding(REF, identV(x->variable),
-                                                exprV(nextCall.ptr())));
-    whileBody->statements.push_back(x->body);
+    vector<StatementPtr> &ws = whileBody->statements;
+    ws.push_back(new Binding(REF, x->variables, exprV(unpackNext)));
+    ws.push_back(x->body);
 
-    block->statements.push_back(new While(hasNextCall.ptr(), whileBody.ptr()));
+    bs.push_back(new While(hasNextCall.ptr(), whileBody.ptr()));
     return block.ptr();
 }

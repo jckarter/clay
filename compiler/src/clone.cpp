@@ -321,7 +321,9 @@ StatementPtr clone(StatementPtr x)
 
     case FOR : {
         For *y = (For *)x.ptr();
-        out = new For(y->variable, clone(y->expr), clone(y->body));
+        vector<IdentifierPtr> variables;
+        clone(y->variables, variables);
+        out = new For(variables, clone(y->expr), clone(y->body));
         break;
     }
 

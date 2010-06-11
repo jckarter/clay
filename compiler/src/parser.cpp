@@ -1027,12 +1027,12 @@ static bool continueStatement(StatementPtr &x) {
 
 static bool forStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    IdentifierPtr a;
+    vector<IdentifierPtr> a;
     ExprPtr b;
     StatementPtr c;
     if (!keyword("for")) return false;
     if (!symbol("(")) return false;
-    if (!identifier(a)) return false;
+    if (!identifierList(a)) return false;
     if (!keyword("in")) return false;
     if (!expression(b)) return false;
     if (!symbol(")")) return false;
