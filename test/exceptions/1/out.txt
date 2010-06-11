@@ -1,4 +1,3 @@
 Created 1
-Created 2
-Destroyed 2
 Destroyed 1
+Caught!

@@ -6,6 +6,7 @@ syntax: regexp
 cscope.out
 tags
 .*\.o$
+.*\.pyc$
 .*\.out$
 .*bin/*$
 ^build/*$
