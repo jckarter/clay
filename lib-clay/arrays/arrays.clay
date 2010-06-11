@@ -59,6 +59,27 @@ overload arrayElements2(a:Array[T,n], static i) = ;
 
 
 //
+// makeArray
+//
+
+[...A | (countArgs(...A) > 0) and AllEqual?(...A)]
+inlined makeArray(...args:A) {
+    alias n = static countArgs(...A);
+    alias T = firstArg(...A);
+    return Array[T, n](...args);
+}
+
+private AllEqual?(a, b, ...rest) = (a == b) and AllEqual?(b, ...rest);
+overload AllEqual?(a) = true;
+
+private countArgs(x, ...rest) = 1 + countArgs(...rest);
+overload countArgs() = 0;
+
+private firstArg(a, ...b) = a;
+
+
+
+//
 // basic constructor
 //
 

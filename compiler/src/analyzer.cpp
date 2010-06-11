@@ -366,12 +366,12 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         {
             return analyzeExpr(x->args[0], env);
         }
-        return analyzeCallExpr(primNameRef("tuple"), x->args, env);
+        return analyzeCallExpr(kernelNameRef("makeTuple"), x->args, env);
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        return analyzeCallExpr(primNameRef("array"), x->args, env);
+        return analyzeCallExpr(kernelNameRef("makeArray"), x->args, env);
     }
 
     case INDEXING : {
@@ -1734,13 +1734,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_Array :
         error("Array type constructor cannot be called");
 
-    case PRIM_array : {
-        if (args->size() < 1)
-            error("atleast one element required for creating an array");
-        TypePtr t = arrayType(args->values[0]->type, args->size());
-        return new MultiPValue(new PValue(t, true));
-    }
-
     case PRIM_arrayRef : {
         ensureArity(args, 2);
         ArrayTypePtr t = arrayTypeOfValue(args, 0);
@@ -1758,14 +1751,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_TupleElementOffset :
         return new MultiPValue(new PValue(cSizeTType, true));
-
-    case PRIM_tuple : {
-        vector<TypePtr> elementTypes;
-        for (unsigned i = 0; i < args->size(); ++i)
-            elementTypes.push_back(args->values[i]->type);
-        TypePtr t = tupleType(elementTypes);
-        return new MultiPValue(new PValue(t, true));
-    }
 
     case PRIM_tupleRef : {
         ensureArity(args, 2);

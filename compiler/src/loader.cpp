@@ -499,14 +499,12 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(pointerCast);
 
     PRIMITIVE(Array);
-    PRIMITIVE(array);
     PRIMITIVE(arrayRef);
 
     PRIMITIVE(TupleP);
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
     PRIMITIVE(TupleElementOffset);
-    PRIMITIVE(tuple);
     PRIMITIVE(tupleRef);
 
     PRIMITIVE(RecordP);
