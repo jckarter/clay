@@ -1,0 +1,24 @@
+// When the constructor throws the destructor should not be called
+
+record Test {
+    x: Int;
+}
+
+overload Test(v, x) returned:Test{
+    if (v)
+        throw();
+    returned.x = x;
+} 
+
+overload destroy(t:Test) {
+    println("Destroyed ", t.x);
+}
+
+main() {
+    try {
+        var t = Test(false, 1);
+        var t = Test(true, 0);
+    } catch {
+        println("Caught");
+    }
+}
