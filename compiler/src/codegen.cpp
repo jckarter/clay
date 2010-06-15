@@ -3534,11 +3534,13 @@ static void generateLLVMCtorsAndDtors() {
     InvokeEntryPtr entry1 = codegenCallable(initializer,
                                             vector<TypePtr>(),
                                             vector<ValueTempness>());
+    entry1->llvmFunc->setLinkage(llvm::GlobalVariable::ExternalLinkage);
     codegenCWrapper(entry1, getCodeName(initializer));
     ObjectPtr destructor = makeDestructorProcedure().ptr();
     InvokeEntryPtr entry2 = codegenCallable(destructor,
                                             vector<TypePtr>(),
                                             vector<ValueTempness>());
+    entry2->llvmFunc->setLinkage(llvm::GlobalVariable::ExternalLinkage);
     codegenCWrapper(entry2, getCodeName(destructor));
 
     // make types for llvm.global_ctors, llvm.global_dtors
