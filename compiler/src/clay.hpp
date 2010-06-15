@@ -1518,6 +1518,7 @@ ExprPtr primNameRef(const string &name);
 enum PrimOpCode {
     PRIM_TypeP,
     PRIM_TypeSize,
+    PRIM_CallDefinedP,
 
     PRIM_primitiveCopy,
 
@@ -2205,6 +2206,9 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
                                 MultiPValuePtr args);
 MultiPValuePtr analyzeCallPointer(PValuePtr x,
                                   MultiPValuePtr args);
+bool analyzeIsDefined(ObjectPtr x,
+                      const vector<TypePtr> &argsKey,
+                      const vector<ValueTempness> &argsTempness);
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness);

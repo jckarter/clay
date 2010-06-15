@@ -1213,6 +1213,25 @@ static bool tempnessMatches(CodePtr code,
     return true;
 }
 
+bool analyzeIsDefined(ObjectPtr x,
+                      const vector<TypePtr> &argsKey,
+                      const vector<ValueTempness> &argsTempness)
+{
+    InvokeSetPtr invokeSet = lookupInvokeSet(x, argsKey);
+    const vector<OverloadPtr> &overloads = callableOverloads(x);
+
+    unsigned i = 0;
+    InvokeEntryPtr entry;
+    while ((entry = findNextMatchingEntry(invokeSet, i, overloads)).ptr()) {
+        if (tempnessMatches(entry->code, argsTempness))
+            break;
+        ++i;
+    }
+    if (!entry)
+        return false;
+    return true;
+}
+
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness)
@@ -1533,6 +1552,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_TypeSize :
         return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_CallDefinedP :
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_primitiveCopy :
         return new MultiPValue();

@@ -7,10 +7,9 @@ true, false : Bool
 
 Primitive Operations
 
-static Type(a) = Type or VoidType
-
 [T] Type?(static T):Bool
 [T] TypeSize(static T):SizeT
+[F, A1, ..., An] CallDefined?(static F, static A1, ..., static An) Bool;
 
 [T] primitiveCopy(dest:T, src:T):Void
 
