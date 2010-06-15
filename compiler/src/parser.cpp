@@ -1440,6 +1440,15 @@ static bool body(StatementPtr &x) {
     return false;
 }
 
+static bool optBody(StatementPtr &x) {
+    int p = save();
+    if (body(x)) return true;
+    restore(p);
+    x = NULL;
+    if (symbol(";")) return true;
+    return false;
+}
+
 
 
 //
@@ -1675,7 +1684,7 @@ static bool overload(TopLevelItemPtr &x) {
     if (!pattern(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg, y->formalVarArgType)) return false;
     if (!optReturnSpecList(y->returnSpecs)) return false;
-    if (!body(y->body)) return false;
+    if (!optBody(y->body)) return false;
     y->location = location;
     x = new Overload(z, y, inlined);
     x->location = location;

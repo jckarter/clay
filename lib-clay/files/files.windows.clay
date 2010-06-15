@@ -94,9 +94,9 @@ overload destroy(f:File) {
 }
 
 // disable default constructor, copy constructor, assignment
-overload File() = unsupported();
-overload File(f:File) = unsupported();
-overload assign(dest:File, src:File) = unsupported();
+overload File();
+overload File(f:File);
+overload assign(dest:File, src:File);
 
 
 

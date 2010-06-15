@@ -10,7 +10,7 @@ CodePtr clone(CodePtr x)
     y->formalVarArg = x->formalVarArg;
     y->formalVarArgType = x->formalVarArgType;
     clone(x->returnSpecs, y->returnSpecs);
-    y->body = clone(x->body);
+    y->body = cloneOpt(x->body);
     return y;
 }
 

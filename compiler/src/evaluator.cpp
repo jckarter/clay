@@ -1410,6 +1410,7 @@ void evalCallInlined(InvokeEntryPtr entry,
 
     EvalContextPtr ctx = new EvalContext(returns);
 
+    assert(entry->code->body.ptr());
     TerminationPtr term = evalStatement(entry->code->body, bodyEnv, ctx);
     if (term.ptr()) {
         switch (term->terminationKind) {
@@ -2521,6 +2522,38 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 1);
         TypePtr t = valueToType(args, 0);
         ValueHolderPtr vh = sizeTToValueHolder(typeSize(t));
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
+    case PRIM_CallDefinedP : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (!callable) {
+            MultiEValuePtr args2 = new MultiEValue(kernelEValue("call"));
+            args2->add(args);
+            evalPrimOp(x, args2, out);
+            break;
+        }
+        switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
+        case PROCEDURE :
+            break;
+        default :
+            argumentError(0, "invalid callable");
+        }
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        for (unsigned i = 1; i < args->size(); ++i) {
+            TypePtr t = valueToType(args, i);
+            argsKey.push_back(t);
+            argsTempness.push_back(LVALUE);
+        }
+        InvokeStackContext invokeStackContext(callable, argsKey);
+        bool isDefined = analyzeIsDefined(callable, argsKey, argsTempness);
+        ValueHolderPtr vh = boolToValueHolder(isDefined);
         evalStaticObject(vh.ptr(), out);
         break;
     }
