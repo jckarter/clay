@@ -1751,6 +1751,7 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     JumpTarget returnTarget(returnBlock, cgMarkStack());
     CodegenContextPtr ctx = new CodegenContext(returns, returnTarget);
 
+    assert(entry->code->body.ptr());
     bool terminated = codegenStatement(entry->code->body, env, ctx);
     if (!terminated) {
         cgDestroyStack(returnTarget.stackMarker, ctx);
@@ -1906,6 +1907,7 @@ void codegenCallInlined(InvokeEntryPtr entry,
     JumpTarget returnTarget(returnBlock, cgMarkStack());
     CodegenContextPtr bodyCtx = new CodegenContext(returns, returnTarget);
 
+    assert(entry->code->body.ptr());
     bool terminated = codegenStatement(entry->code->body, bodyEnv, bodyCtx);
     if (!terminated) {
         cgDestroyStack(returnTarget.stackMarker, bodyCtx);
@@ -2637,6 +2639,38 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 1);
         TypePtr t = valueToType(args, 0);
         ValueHolderPtr vh = sizeTToValueHolder(typeSize(t));
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_CallDefinedP : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (!callable) {
+            MultiCValuePtr args2 = new MultiCValue(kernelCValue("call"));
+            args2->add(args);
+            codegenPrimOp(x, args2, ctx, out);
+            break;
+        }
+        switch (callable->objKind) {
+        case TYPE :
+        case RECORD :
+        case PROCEDURE :
+            break;
+        default :
+            argumentError(0, "invalid callable");
+        }
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        for (unsigned i = 1; i < args->size(); ++i) {
+            TypePtr t = valueToType(args, i);
+            argsKey.push_back(t);
+            argsTempness.push_back(LVALUE);
+        }
+        InvokeStackContext invokeStackContext(callable, argsKey);
+        bool isDefined = analyzeIsDefined(callable, argsKey, argsTempness);
+        ValueHolderPtr vh = boolToValueHolder(isDefined);
         codegenStaticObject(vh.ptr(), ctx, out);
         break;
     }

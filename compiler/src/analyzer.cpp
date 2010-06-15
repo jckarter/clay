@@ -1213,6 +1213,25 @@ static bool tempnessMatches(CodePtr code,
     return true;
 }
 
+bool analyzeIsDefined(ObjectPtr x,
+                      const vector<TypePtr> &argsKey,
+                      const vector<ValueTempness> &argsTempness)
+{
+    InvokeSetPtr invokeSet = lookupInvokeSet(x, argsKey);
+    const vector<OverloadPtr> &overloads = callableOverloads(x);
+
+    unsigned i = 0;
+    InvokeEntryPtr entry;
+    while ((entry = findNextMatchingEntry(invokeSet, i, overloads)).ptr()) {
+        if (tempnessMatches(entry->code, argsTempness))
+            break;
+        ++i;
+    }
+    if (!entry || !entry->code->body)
+        return false;
+    return true;
+}
+
 InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness)
@@ -1227,7 +1246,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
             break;
         ++i;
     }
-    if (!entry)
+    if (!entry || !entry->code->body)
         error("no matching operation");
     if (entry->analyzed || entry->analyzing)
         return entry;
@@ -1254,6 +1273,7 @@ MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
     assert(entry->inlined);
 
     CodePtr code = entry->code;
+    assert(code->body.ptr());
 
     if (!code->returnSpecs.empty()) {
         vector<bool> returnIsRef;
@@ -1305,6 +1325,7 @@ void analyzeCodeBody(InvokeEntryPtr entry)
     assert(!entry->analyzed);
 
     CodePtr code = entry->code;
+    assert(code->body.ptr());
 
     if (!code->returnSpecs.empty()) {
         evaluateReturnSpecs(code->returnSpecs, entry->env,
@@ -1533,6 +1554,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_TypeSize :
         return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_CallDefinedP :
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_primitiveCopy :
         return new MultiPValue();

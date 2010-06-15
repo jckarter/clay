@@ -43,8 +43,6 @@ procedure dereference;
 procedure call;
 procedure fieldRef;
 
-procedure unsupported; // used for triggering compile time errors
-
 
 
 //
@@ -128,3 +126,29 @@ swap(a, b) {
     a = move(b);
     b = move(temp);
 }
+
+
+
+//
+// ReturnType
+//
+// return the return type given the callable and arg types.
+// return 'BadReturnType' if the call is not defined.
+//
+
+private typesToValues(a, ...b) = ref null(a)^, ...typesToValues(...b);
+overload typesToValues() = ;
+
+record BadReturnType {}
+
+[T]
+ReturnType(callable:T, ...argTypes) =
+    ReturnType(call, T, ...argTypes);
+
+[F, ...A]
+overload ReturnType(static F, ...argTypes:A) =
+    BadReturnType;
+
+[F, ...A | CallDefined?(F, ...typesToValues(...A))]
+overload ReturnType(static F, ...argTypes:A) =
+    Type(F(...typesToValues(...argTypes)));
