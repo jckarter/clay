@@ -1410,6 +1410,7 @@ void evalCallInlined(InvokeEntryPtr entry,
 
     EvalContextPtr ctx = new EvalContext(returns);
 
+    assert(entry->code->body.ptr());
     TerminationPtr term = evalStatement(entry->code->body, bodyEnv, ctx);
     if (term.ptr()) {
         switch (term->terminationKind) {
