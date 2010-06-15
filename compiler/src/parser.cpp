@@ -1630,6 +1630,41 @@ static bool optInlined(bool &inlined) {
     inlined = true;
     return true;
 }
+    
+static bool llvmBody(string &b) {
+    TokenPtr t;
+    if (!next(t) || (t->tokenKind != T_LLVM))
+        return false;
+    b = t->str;
+    return true;
+}
+
+static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
+    LocationPtr location = currentLocation();
+    CodePtr y = new Code();
+    if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
+    IdentifierPtr z;
+    if (!identifier(z)) return false;
+    if (!arguments(y->formalArgs, y->formalVarArg, y->formalVarArgType))
+        return false;
+    if (!optReturnSpecList(y->returnSpecs)) return false;
+    if (!llvmBody(y->llvmBody)) return false;
+    y->location = location;
+
+    ProcedurePtr u = new Procedure(z, vis);
+    u->location = location;
+    x.push_back(u.ptr());
+
+    ExprPtr target = new NameRef(z);
+    target->location = location;
+    OverloadPtr v = new Overload(target, y, false);
+    v->location = location;
+    x.push_back(v.ptr());
+
+    return true;
+}
 
 static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     LocationPtr location = currentLocation();
@@ -2051,6 +2086,7 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     if (record(y)) goto success;
     if (restore(p), procedure(y)) goto success;
     if (restore(p), procedureWithBody(x)) goto success2;
+    if (restore(p), llvmProcedure(x)) goto success2;
     if (restore(p), overload(y)) goto success;
     if (restore(p), enumeration(y)) goto success;
     if (restore(p), globalVariable(y)) goto success;

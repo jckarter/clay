@@ -471,6 +471,27 @@ static bool blockComment(TokenPtr &x) {
 
 
 //
+// llvmToken
+//
+static bool llvmToken(TokenPtr &x) {
+    char c;
+    string s;
+    if (!identStr(s)) return false;
+    if (s.compare("__llvm__")) return false;
+    char *begin = save();
+    while (true) {
+        if (!next(c)) return false;
+        if (c == '}')
+            break;
+    }
+    char *end = save();
+    x = new Token(T_LLVM, string(begin, end));
+    return true;
+}
+
+
+
+//
 // nextToken
 //
 
@@ -480,6 +501,7 @@ static bool nextToken(TokenPtr &x) {
     restore(p); if (lineComment(x)) goto success;
     restore(p); if (blockComment(x)) goto success;
     restore(p); if (symbol(x)) goto success;
+    restore(p); if (llvmToken(x)) goto success;
     restore(p); if (keywordIdentifier(x)) goto success;
     restore(p); if (charToken(x)) goto success;
     restore(p); if (stringToken(x)) goto success;

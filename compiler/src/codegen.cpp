@@ -1,4 +1,8 @@
 #include "clay.hpp"
+#include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Assembly/Writer.h>
+#include <llvm/Assembly/Parser.h>
 
 void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx);
 void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx);
@@ -1651,6 +1655,54 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
 }
 
 
+void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName) {
+    string llFunc;
+    llvm::raw_string_ostream out(llFunc);
+    int argCount = 0;
+
+    out << string("define internal i32 @clay_") << callableName 
+        << string("(");
+
+    vector<const llvm::Type *> llArgTypes;
+    for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
+        const llvm::Type *argType = llvmPointerType(entry->argsKey[i]);
+        if (argCount > 0) out << string(", ");
+        WriteTypeSymbolic(out, argType, llvmModule);
+        out << string(" %") << entry->fixedArgNames[i]->str;
+        argCount ++;
+    }
+    for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
+        const llvm::Type *argType;
+        TypePtr rt = entry->returnTypes[i];
+        if (entry->returnIsRef[i])
+            argType = llvmPointerType(pointerType(rt));
+        else
+            argType = llvmPointerType(rt);
+        if (argCount > 0) out << string(", ");
+        WriteTypeSymbolic(out, argType, llvmModule);
+        const ReturnSpecPtr spec = entry->code->returnSpecs[i];
+        out << string(" %") << spec->name->str;
+        argCount ++;
+    }
+
+    out << string(") ") << entry->code->llvmBody;
+
+    llvm::SMDiagnostic err;
+    llvm::MemoryBuffer *buf = 
+        llvm::MemoryBuffer::getMemBuffer(llvm::StringRef(out.str()));
+
+    if(!llvm::ParseAssembly(buf, llvmModule, err, 
+                llvm::getGlobalContext())) {
+        err.Print("\n", out);
+        std::cerr << out.str() << std::endl;
+        error("llvm assembly parse error");
+    }
+
+    entry->llvmFunc = llvmModule->getFunction(string("clay_") + callableName);
+    assert(entry->llvmFunc);
+}
+
+
 
 //
 // codegenCodeBody
@@ -1660,6 +1712,11 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
 {
     assert(entry->analyzed);
     assert(!entry->llvmFunc);
+
+    if (entry->code->isInlineLLVM()) {
+        codegenLLVMBody(entry, callableName);
+        return;
+    }
 
     vector<const llvm::Type *> llArgTypes;
     for (unsigned i = 0; i < entry->argsKey.size(); ++i)
