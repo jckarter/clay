@@ -83,9 +83,9 @@ overload destroy(fm:FileMapping) {
 
 
 // disable default constructor, copy constructor, assignment
-overload FileMapping() = unsupported();
-overload FileMapping(x:FileMapping) = unsupported();
-overload assign(dest:FileMapping, src:FileMapping) = unsupported();
+overload FileMapping();
+overload FileMapping(x:FileMapping);
+overload assign(dest:FileMapping, src:FileMapping);
 
 
 

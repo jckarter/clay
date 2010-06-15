@@ -1227,7 +1227,7 @@ bool analyzeIsDefined(ObjectPtr x,
             break;
         ++i;
     }
-    if (!entry)
+    if (!entry || !entry->code->body)
         return false;
     return true;
 }
@@ -1246,7 +1246,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
             break;
         ++i;
     }
-    if (!entry)
+    if (!entry || !entry->code->body)
         error("no matching operation");
     if (entry->analyzed || entry->analyzing)
         return entry;
@@ -1273,6 +1273,7 @@ MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
     assert(entry->inlined);
 
     CodePtr code = entry->code;
+    assert(code->body.ptr());
 
     if (!code->returnSpecs.empty()) {
         vector<bool> returnIsRef;
@@ -1324,6 +1325,7 @@ void analyzeCodeBody(InvokeEntryPtr entry)
     assert(!entry->analyzed);
 
     CodePtr code = entry->code;
+    assert(code->body.ptr());
 
     if (!code->returnSpecs.empty()) {
         evaluateReturnSpecs(code->returnSpecs, entry->env,

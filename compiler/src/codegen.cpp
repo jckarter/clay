@@ -1751,6 +1751,7 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     JumpTarget returnTarget(returnBlock, cgMarkStack());
     CodegenContextPtr ctx = new CodegenContext(returns, returnTarget);
 
+    assert(entry->code->body.ptr());
     bool terminated = codegenStatement(entry->code->body, env, ctx);
     if (!terminated) {
         cgDestroyStack(returnTarget.stackMarker, ctx);
@@ -1906,6 +1907,7 @@ void codegenCallInlined(InvokeEntryPtr entry,
     JumpTarget returnTarget(returnBlock, cgMarkStack());
     CodegenContextPtr bodyCtx = new CodegenContext(returns, returnTarget);
 
+    assert(entry->code->body.ptr());
     bool terminated = codegenStatement(entry->code->body, bodyEnv, bodyCtx);
     if (!terminated) {
         cgDestroyStack(returnTarget.stackMarker, bodyCtx);
