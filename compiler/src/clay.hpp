@@ -1593,8 +1593,6 @@ enum PrimOpCode {
     PRIM_EnumP,
     PRIM_enumToInt,
     PRIM_intToEnum,
-
-    PRIM_throw,
 };
 
 struct PrimOp : public Object {

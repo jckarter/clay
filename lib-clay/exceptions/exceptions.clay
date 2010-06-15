@@ -1,0 +1,4 @@
+
+throw() __llvm__{
+    ret i32 1
+}

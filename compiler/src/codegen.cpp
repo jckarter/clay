@@ -277,28 +277,10 @@ CValuePtr codegenAllocValue(TypePtr t)
 //
 
 static bool exceptionsEnabled = true;
-static bool llvmExceptionsInited = false;
 
 void setExceptionsEnabled(bool enabled)
 {
     exceptionsEnabled = enabled;
-}
-
-static void initExceptions() 
-{
-    llvm::FunctionType *throwType = 
-        llvm::FunctionType::get(llvmIntType(32), false);
-    llvm::Function *throw_ = llvm::Function::Create(throwType,
-                           llvm::Function::InternalLinkage,
-                           "clay_throw",
-                           llvmModule);
-    llvm::Function *savedLLVMFunction = llvmFunction;
-    llvmFunction = throw_;
-    llvm::BasicBlock *retBlock = newBasicBlock("ret");
-    llvm::IRBuilder<> llBuilder(retBlock);
-    llBuilder.CreateRet(llvm::ConstantInt::get(llvmIntType(32), 1));
-    llvmFunction = savedLLVMFunction;
-    llvmExceptionsInited = true;
 }
 
 static llvm::BasicBlock *createLandingPad(CodegenContextPtr ctx)
@@ -3562,18 +3544,6 @@ void codegenPrimOp(PrimOpPtr x,
         CValuePtr out0 = out->values[0];
         assert(out0->type == et.ptr());
         llvmBuilder->CreateStore(v, out0->llValue);
-        break;
-    }
-
-    case PRIM_throw : {
-        ensureArity(args, 0);
-        if (!exceptionsEnabled) 
-            break;
-        if (!llvmExceptionsInited) 
-           initExceptions(); 
-        std::vector<llvm::Value*> llArgs;
-        llvm::Function *throw_ = llvmModule->getFunction("clay_throw");
-        createCall(throw_, llArgs.begin(), llArgs.end(), ctx);
         break;
     }
 
