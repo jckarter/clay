@@ -1246,7 +1246,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
             break;
         ++i;
     }
-    if (!entry || !entry->code->body)
+    if (!entry || (!entry->code->body && !entry->code->isInlineLLVM()))
         error("no matching operation");
     if (entry->analyzed || entry->analyzing)
         return entry;
@@ -1325,9 +1325,9 @@ void analyzeCodeBody(InvokeEntryPtr entry)
     assert(!entry->analyzed);
 
     CodePtr code = entry->code;
-    assert(code->body.ptr());
+    assert(code->isInlineLLVM() || code->body.ptr());
 
-    if (!code->returnSpecs.empty()) {
+    if (code->isInlineLLVM() || !code->returnSpecs.empty()) {
         evaluateReturnSpecs(code->returnSpecs, entry->env,
                             entry->returnIsRef, entry->returnTypes);
         entry->analyzed = true;

@@ -11,6 +11,7 @@ CodePtr clone(CodePtr x)
     y->formalVarArgType = x->formalVarArgType;
     clone(x->returnSpecs, y->returnSpecs);
     y->body = cloneOpt(x->body);
+    y->llvmBody = x->llvmBody;
     return y;
 }
 

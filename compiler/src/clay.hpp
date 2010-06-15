@@ -548,6 +548,7 @@ enum TokenKind {
     T_SPACE,
     T_LINE_COMMENT,
     T_BLOCK_COMMENT,
+    T_LLVM,
 };
 
 struct Token : public Object {
@@ -1085,6 +1086,7 @@ struct Code : public ANode {
     IdentifierPtr formalVarArgType;
     vector<ReturnSpecPtr> returnSpecs;
     StatementPtr body;
+    string llvmBody;
 
     Code()
         : ANode(CODE) {}
@@ -1099,6 +1101,10 @@ struct Code : public ANode {
           formalArgs(formalArgs), formalVarArg(formalVarArg),
           formalVarArgType(formalVarArgType),
           returnSpecs(returnSpecs), body(body) {}
+
+    bool isInlineLLVM() {
+        return llvmBody.size() > 0;
+    }
 };
 
 

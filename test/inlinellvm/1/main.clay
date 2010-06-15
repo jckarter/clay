@@ -1,0 +1,14 @@
+myadd(x:Int32, y:Int32) returned:Int32 __llvm__{
+    %1 = load i32* %x
+    %2 = load i32* %y
+    %3 = add i32 %1, %2
+    store i32 %3, i32* %returned
+    ret i32 0
+}
+
+main() {
+    var x = 10;
+    var y = 20;
+    var z = myadd(x, y);
+    println(z);
+}
