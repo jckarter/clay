@@ -38,7 +38,7 @@ using namespace std;
 static void addOptimizationPasses(llvm::PassManager &passes,
                                   llvm::FunctionPassManager &fpasses,
                                   unsigned optLevel,
-                                  bool sharedLib)
+                                  bool internalize)
 {
     llvm::createStandardFunctionPasses(&fpasses, optLevel);
 
@@ -60,12 +60,29 @@ static void addOptimizationPasses(llvm::PassManager &passes,
                                      /*HaveExceptions=*/ true,
                                      inliningPass);
     llvm::createStandardLTOPasses(&passes,
-                                  /*Internalize=*/ !sharedLib,
+                                  /*Internalize=*/ internalize,
                                   /*RunInliner=*/ true,
                                   /*VerifyEach=*/ false);
 }
 
-static void optimizeLLVM(llvm::Module *module, bool sharedLib)
+static void runModule(llvm::Module *module)
+{
+    llvm::EngineBuilder eb(llvmModule);
+    llvm::ExecutionEngine *engine = eb.create();
+    llvm::Function *mainFunc = module->getFunction("main");
+    assert(mainFunc);
+    llvm::Function *globalCtors = 
+        module->getFunction("clay_%initGlobals");
+    llvm::Function *globalDtors = 
+        module->getFunction("clay_%destroyGlobals");
+    vector<llvm::GenericValue> gvArgs;
+    engine->runFunction(globalCtors, gvArgs);
+    engine->runFunction(mainFunc, gvArgs);
+    engine->runFunction(globalDtors, gvArgs);
+    delete engine;
+}
+
+static void optimizeLLVM(llvm::Module *module, bool internalize)
 {
     llvm::PassManager passes;
 
@@ -77,7 +94,7 @@ static void optimizeLLVM(llvm::Module *module, bool sharedLib)
 
     fpasses.add(new llvm::TargetData(*td));
 
-    addOptimizationPasses(passes, fpasses, 3, sharedLib);
+    addOptimizationPasses(passes, fpasses, 3, internalize);
 
     fpasses.doInitialization();
     for (llvm::Module::iterator i = module->begin(), e = module->end();
@@ -179,8 +196,6 @@ static bool generateBinary(llvm::Module *module,
 
     if (sharedLib)
         gccArgs.push_back("-shared");
-    if (exceptions)
-        gccArgs.push_back("-lstdc++");
     gccArgs.push_back("-o");
     gccArgs.push_back(outputFile.c_str());
     gccArgs.push_back("-x");
@@ -209,6 +224,7 @@ static void usage()
     cerr << "  -exceptions     - enable exception handling\n";
     cerr << "  -no-exceptions  - disable exception handling\n";
     cerr << "  -abort          - abort on error (to get stacktrace in gdb)\n";
+    cerr << "  -run            - execute the program without writing to disk\n";
 }
 
 int main(int argc, char **argv) {
@@ -223,6 +239,7 @@ int main(int argc, char **argv) {
     bool sharedLib = false;
     bool exceptions = false;
     bool abortOnError = false;
+    bool run = false;
 
     string clayFile;
     string outputFile;
@@ -250,6 +267,9 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-abort") == 0) {
             abortOnError = true;
+        }
+        else if (strcmp(argv[i], "-run") == 0) {
+            run = true;
         }
         else if (strcmp(argv[i], "-o") == 0) {
             if (i+1 == argc) {
@@ -352,9 +372,11 @@ int main(int argc, char **argv) {
         codegenExe(m);
 
     if (optimize)
-        optimizeLLVM(llvmModule, sharedLib);
+        optimizeLLVM(llvmModule, !(sharedLib || run));
 
-    if (emitLLVM || emitAsm) {
+    if (run)
+        runModule(llvmModule);
+    else if (emitLLVM || emitAsm) {
         string errorInfo;
         llvm::raw_fd_ostream out(outputFile.c_str(),
                                  errorInfo,
