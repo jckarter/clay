@@ -8,7 +8,7 @@ if exists("b:current_syntax")
     finish
 endif
 
-syn keyword clayKeyword public private import as record overloadable overload external static inlined lvalue rvalue enum var ref and or not if else goto return returnref while break continue for in returned lambda block try catch alias finally
+syn keyword clayKeyword public private import as record overloadable overload external static inlined lvalue rvalue enum var ref and or not if else goto return returnref while break continue for in returned lambda block try catch alias finally procedure
 
 syn keyword clayType Bool Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 Float32 Float64 Pointer CodePointer RefCodePointer CCodePointer Array Tuple Void Byte CChar CUChar CString Short UShort Int UInt Long ULong Float Double RawPointer SizeT PtrInt UPtrInt CLong CULong Vector String
 

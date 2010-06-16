@@ -1719,7 +1719,12 @@ static bool overload(TopLevelItemPtr &x) {
     if (!pattern(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg, y->formalVarArgType)) return false;
     if (!optReturnSpecList(y->returnSpecs)) return false;
-    if (!optBody(y->body)) return false;
+    int p = save();
+    if (!optBody(y->body)) {
+        restore(p);
+        if (inlined) return false;
+        if (!llvmBody(y->llvmBody)) return false;
+    }
     y->location = location;
     x = new Overload(z, y, inlined);
     x->location = location;
