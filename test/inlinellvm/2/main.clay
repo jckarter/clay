@@ -1,0 +1,17 @@
+[T]
+myadd(x:T, y:T) returned:T __llvm__{
+    %1 = load $T* %x
+    %2 = load $T* %y
+    %3 = add $T %1, %2
+    store $T %3, $T* %returned
+    ret i32 0
+}
+
+main() {
+    var a1 = myadd(10, 20);
+    var a2 = myadd(20#u64, 30#u64);
+    var a3 = myadd(30#i64, 40#i64);
+    println(a1, " ", Type(a1));
+    println(a2, " ", Type(a2));
+    println(a3, " ", Type(a3));
+}

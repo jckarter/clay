@@ -1636,14 +1636,54 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
     return entry;
 }
 
+static bool terminator(char c) {
+    return (c == ' ' || c == '\n' || c == '\r' || c == '*' || c == '\t');
+}
 
-void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName) {
+static bool renderTemplate(const string &body, string &out, 
+        const map<string, Type> &params, EnvPtr env)
+{
+    llvm::raw_string_ostream outstream(out);
+    for(string::const_iterator i = body.begin(); i != body.end(); ++i) {
+        if (*i != '$') {
+            outstream << *i;
+            continue;
+        }
+
+        string arg;
+        for(i++; i != body.end(); i++) {
+            if (terminator(*i)) break;
+            arg += *i;
+        }
+
+        if (arg.size() == 0) return false;
+        ObjectPtr x = lookupEnv(env, new Identifier(arg));
+
+        if(x.ptr() && x->objKind == TYPE) {
+            const llvm::Type *argType = llvmType((Type *)x.ptr());
+            WriteTypeSymbolic(outstream, argType, llvmModule);
+        } else {
+            return false;
+        }
+        outstream << *i;
+    }
+    out = outstream.str();
+    return true;
+}
+
+void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName) 
+{
     string llFunc;
     llvm::raw_string_ostream out(llFunc);
     int argCount = 0;
+    static int id = 1;
+    ostringstream functionName;
 
-    out << string("define internal i32 @clay_") << callableName 
-        << string("(");
+    functionName << "clay_" << callableName << id;
+    id++;
+
+    out << string("define internal i32 @") 
+        << functionName.str() << string("(");
 
     vector<const llvm::Type *> llArgTypes;
     for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
@@ -1667,7 +1707,12 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName) {
         argCount ++;
     }
 
-    out << string(") ") << entry->code->llvmBody;
+    string body;
+    if (!renderTemplate(entry->code->llvmBody, 
+                body, map<string, Type>(), entry->env))
+        error("failed to apply template");
+
+    out << string(") ") << body;
 
     llvm::SMDiagnostic err;
     llvm::MemoryBuffer *buf = 
@@ -1680,7 +1725,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName) {
         error("llvm assembly parse error");
     }
 
-    entry->llvmFunc = llvmModule->getFunction(string("clay_") + callableName);
+    entry->llvmFunc = llvmModule->getFunction(functionName.str());
     assert(entry->llvmFunc);
 }
 
