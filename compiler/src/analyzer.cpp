@@ -1163,38 +1163,17 @@ static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
 {
     if (entryIndex < invokeSet->entries.size())
         return invokeSet->entries[entryIndex];
-
     assert(entryIndex == invokeSet->entries.size());
-
-    unsigned overloadIndex;
-    if (invokeSet->overloadIndices.empty())
-        overloadIndex = 0;
-    else
-        overloadIndex = invokeSet->overloadIndices.back() + 1;
-
-    for (; overloadIndex < overloads.size(); ++overloadIndex) {
-        OverloadPtr y = overloads[overloadIndex];
-        MatchResultPtr result = matchInvoke(y->code, y->env,
-                                            invokeSet->argsKey,
-                                            y->target, invokeSet->callable);
-        if (result->matchCode == MATCH_SUCCESS) {
-            InvokeEntryPtr entry =
-                new InvokeEntry(invokeSet->callable,
-                                invokeSet->argsKey);
-            invokeSet->entries.push_back(entry);
-            invokeSet->overloadIndices.push_back(overloadIndex);
-            entry->code = clone(y->code);
-            MatchSuccess *z = (MatchSuccess *)result.ptr();
-            entry->env = z->env;
-            entry->fixedArgTypes = z->fixedArgTypes;
-            entry->fixedArgNames = z->fixedArgNames;
-            entry->varArgName = z->varArgName;
-            entry->varArgTypes = z->varArgTypes;
-            entry->inlined = y->inlined;
-            return entry;
-        }
-    }
-    return NULL;
+    unsigned nextOverloadIndex = invokeSet->nextOverloadIndex;
+    InvokeEntryPtr entry = findMatchingInvoke(overloads,
+                                              nextOverloadIndex,
+                                              invokeSet->callable,
+                                              invokeSet->argsKey);
+    if (!entry)
+        return NULL;
+    invokeSet->entries.push_back(entry);
+    invokeSet->nextOverloadIndex = nextOverloadIndex;
+    return entry;
 }
 
 static bool tempnessMatches(ValueTempness a, ValueTempness b)
