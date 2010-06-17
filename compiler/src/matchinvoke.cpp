@@ -44,11 +44,9 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
                 return new MatchArgumentError(i);
         }
     }
-    if (code->formalVarArgType.ptr()) {
-        ExprPtr nameRef = new NameRef(code->formalVarArgType);
-        nameRef->location = code->formalVarArgType->location;
-        ExprPtr unpack = new Unpack(nameRef);
-        unpack->location = nameRef->location;
+    if (code->formalVarArg.ptr() && code->formalVarArg->type.ptr()) {
+        ExprPtr unpack = new Unpack(code->formalVarArg->type.ptr());
+        unpack->location = code->formalVarArg->type->location;
         vector<ExprPtr> exprs;
         exprs.push_back(unpack);
         MultiPatternPtr pattern = evaluateMultiPattern(exprs, patternEnv);
@@ -85,7 +83,7 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
     }
 
     if (code->formalVarArg.ptr()) {
-        result->varArgName = code->formalVarArg;
+        result->varArgName = code->formalVarArg->name;
         for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i) {
             result->varArgTypes.push_back(argsKey[i]);
         }

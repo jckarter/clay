@@ -33,7 +33,7 @@ ArgumentList -> comma_list(Argument), ("," "..." Identifier)?
 Argument -> ValueArgument
           | StaticArgument
 
-ValueArgument -> ("rvalue" | "lvalue")? Identifier TypeSpec?
+ValueArgument -> ("rvalue" | "lvalue" | "forward")? Identifier TypeSpec?
 StaticArgument -> "static" Expression
 
 ReturnSpec -> comma_list(ReturnSpecOne)

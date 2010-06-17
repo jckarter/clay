@@ -7,8 +7,7 @@ CodePtr clone(CodePtr x)
     clone(x->patternVars, y->patternVars);
     y->predicate = cloneOpt(x->predicate);
     clone(x->formalArgs, y->formalArgs);
-    y->formalVarArg = x->formalVarArg;
-    y->formalVarArgType = x->formalVarArgType;
+    y->formalVarArg = cloneOpt(x->formalVarArg);
     clone(x->returnSpecs, y->returnSpecs);
     y->body = cloneOpt(x->body);
     y->llvmBody = x->llvmBody;
@@ -209,6 +208,13 @@ FormalArgPtr clone(FormalArgPtr x)
     FormalArgPtr out = new FormalArg(x->name, cloneOpt(x->type), x->tempness);
     out->location = x->location;
     return out;
+}
+
+FormalArgPtr cloneOpt(FormalArgPtr x)
+{
+    if (!x)
+        return NULL;
+    return clone(x);
 }
 
 void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out)
