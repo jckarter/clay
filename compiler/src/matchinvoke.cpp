@@ -1,9 +1,34 @@
 #include "clay.hpp"
 
-MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
-                           const vector<TypePtr> &argsKey,
-                           ExprPtr callableExpr, ObjectPtr callable)
+InvokeEntryPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
+                                  unsigned &overloadIndex,
+                                  ObjectPtr callable,
+                                  const vector<TypePtr> &argsKey)
 {
+    while (overloadIndex < overloads.size()) {
+        OverloadPtr x = overloads[overloadIndex++];
+        MatchResultPtr result = matchInvoke(x, callable, argsKey);
+        if (result->matchCode == MATCH_SUCCESS) {
+            InvokeEntryPtr entry = new InvokeEntry(callable, argsKey);
+            entry->code = clone(x->code);
+            MatchSuccess *y = (MatchSuccess *)result.ptr();
+            entry->env = y->env;
+            entry->fixedArgTypes = y->fixedArgTypes;
+            entry->fixedArgNames = y->fixedArgNames;
+            entry->varArgName = y->varArgName;
+            entry->varArgTypes = y->varArgTypes;
+            entry->inlined = x->inlined;
+            return entry;
+        }
+    }
+    return NULL;
+}
+
+MatchResultPtr matchInvoke(OverloadPtr overload,
+                           ObjectPtr callable,
+                           const vector<TypePtr> &argsKey)
+{
+    CodePtr code = overload->code;
     if (code->formalVarArg.ptr()) {
         if (argsKey.size() < code->formalArgs.size())
             return new MatchArityError();
@@ -15,7 +40,7 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
     vector<PatternCellPtr> cells;
     vector<MultiPatternCellPtr> multiCells;
     const vector<PatternVar> &pvars = code->patternVars;
-    EnvPtr patternEnv = new Env(codeEnv);
+    EnvPtr patternEnv = new Env(overload->env);
     for (unsigned i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
@@ -30,11 +55,13 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
             addLocal(patternEnv, pvars[i].name, cell.ptr());
         }
     }
-    if (callableExpr.ptr()) {
-        PatternPtr pattern = evaluateOnePattern(callableExpr, patternEnv);
-        if (!unifyPatternObj(pattern, callable))
-            return new MatchCallableError();
-    }
+
+    assert(overload->target.ptr());
+    PatternPtr callablePattern =
+        evaluateOnePattern(overload->target, patternEnv);
+    if (!unifyPatternObj(callablePattern, callable))
+        return new MatchCallableError();
+
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
@@ -56,7 +83,7 @@ MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
         if (!unifyMulti(pattern, types))
             return new MatchArgumentError(formalArgs.size());
     }
-    EnvPtr staticEnv = new Env(codeEnv);
+    EnvPtr staticEnv = new Env(overload->env);
     for (unsigned i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiStaticPtr ms = derefDeep(multiCells[i].ptr());

@@ -2040,10 +2040,11 @@ struct InvokeSet : public Object {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
     vector<InvokeEntryPtr> entries;
-    vector<unsigned> overloadIndices;
+    unsigned nextOverloadIndex;
     InvokeSet(ObjectPtr callable,
               const vector<TypePtr> &argsKey)
-        : Object(DONT_CARE), callable(callable), argsKey(argsKey) {}
+        : Object(DONT_CARE), callable(callable), argsKey(argsKey),
+          nextOverloadIndex(0) {}
 };
 typedef Pointer<InvokeSet> InvokeSetPtr;
 
@@ -2104,9 +2105,13 @@ struct MatchPredicateError : public MatchResult {
         : MatchResult(MATCH_PREDICATE_ERROR) {}
 };
 
-MatchResultPtr matchInvoke(CodePtr code, EnvPtr codeEnv,
-                           const vector<TypePtr> &argsKey,
-                           ExprPtr callableExpr, ObjectPtr callable);
+InvokeEntryPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
+                                  unsigned &overloadIndex,
+                                  ObjectPtr callable,
+                                  const vector<TypePtr> &argsKey);
+MatchResultPtr matchInvoke(OverloadPtr overload,
+                           ObjectPtr callable,
+                           const vector<TypePtr> &argsKey);
 
 void signalMatchError(MatchResultPtr result,
                       const vector<LocationPtr> &argLocations);
