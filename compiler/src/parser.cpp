@@ -1206,16 +1206,16 @@ static bool exprTypeSpec(ExprPtr &x) {
 static bool optArgTempness(ValueTempness &tempness) {
     int p = save();
     if (keyword("rvalue")) {
-        tempness = RVALUE;
+        tempness = TEMPNESS_RVALUE;
         return true;
     }
     restore(p);
     if (keyword("lvalue")) {
-        tempness = LVALUE;
+        tempness = TEMPNESS_LVALUE;
         return true;
     }
     restore(p);
-    tempness = LVALUE_OR_RVALUE;
+    tempness = TEMPNESS_DONTCARE;
     return true;
 }
 

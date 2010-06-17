@@ -1042,9 +1042,9 @@ struct Try : public Statement {
 //
 
 enum ValueTempness {
-    LVALUE = 1,
-    RVALUE = 2,
-    LVALUE_OR_RVALUE = 3,
+    TEMPNESS_DONTCARE,
+    TEMPNESS_LVALUE,
+    TEMPNESS_RVALUE,
 };
 
 struct FormalArg : public ANode {
@@ -1053,7 +1053,7 @@ struct FormalArg : public ANode {
     ValueTempness tempness;
     FormalArg(IdentifierPtr name, ExprPtr type)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(LVALUE_OR_RVALUE) {}
+          tempness(TEMPNESS_DONTCARE) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
         : ANode(FORMAL_ARG), name(name), type(type),
           tempness(tempness) {}

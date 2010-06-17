@@ -2549,7 +2549,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         for (unsigned i = 1; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
-            argsTempness.push_back(LVALUE);
+            argsTempness.push_back(TEMPNESS_LVALUE);
         }
         InvokeStackContext invokeStackContext(callable, argsKey);
         bool isDefined = analyzeIsDefined(callable, argsKey, argsTempness);
@@ -2894,7 +2894,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         for (unsigned i = 1; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
-            argsTempness.push_back(LVALUE);
+            argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
@@ -2960,7 +2960,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         for (unsigned i = 1; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
-            argsTempness.push_back(LVALUE);
+            argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
