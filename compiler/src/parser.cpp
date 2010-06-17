@@ -1215,6 +1215,11 @@ static bool optArgTempness(ValueTempness &tempness) {
         return true;
     }
     restore(p);
+    if (keyword("forward")) {
+        tempness = TEMPNESS_FORWARD;
+        return true;
+    }
+    restore(p);
     tempness = TEMPNESS_DONTCARE;
     return true;
 }
@@ -1278,13 +1283,13 @@ static bool formalArgs(vector<FormalArgPtr> &x) {
     return true;
 }
 
-static bool varArgTypeSpec(IdentifierPtr &vargType) {
+static bool varArgTypeSpec(ExprPtr &vargType) {
     if (!symbol(":")) return false;
-    if (!identifier(vargType)) return false;
+    if (!nameRef(vargType)) return false;
     return true;
 }
 
-static bool optVarArgTypeSpec(IdentifierPtr &vargType) {
+static bool optVarArgTypeSpec(ExprPtr &vargType) {
     int p = save();
     if (!varArgTypeSpec(vargType)) {
         restore(p);
@@ -1293,68 +1298,65 @@ static bool optVarArgTypeSpec(IdentifierPtr &vargType) {
     return true;
 }
 
-static bool varArg(IdentifierPtr &varg,
-                   IdentifierPtr &vargType) {
+static bool varArg(FormalArgPtr &x) {
+    LocationPtr location = currentLocation();
+    ValueTempness tempness;
+    if (!optArgTempness(tempness)) return false;
     if (!symbol("...")) return false;
-    if (!identifier(varg)) return false;
-    if (!optVarArgTypeSpec(vargType)) return false;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
+    ExprPtr type;
+    if (!optVarArgTypeSpec(type)) return false;
+    x = new FormalArg(name, type, tempness);
+    x->location = location;
     return true;
 }
 
-static bool optVarArg(IdentifierPtr &varg,
-                      IdentifierPtr &vargType) {
+static bool optVarArg(FormalArgPtr &x) {
     int p = save();
-    if (!varArg(varg, vargType)) {
+    if (!varArg(x)) {
         restore(p);
-        varg = NULL;
-        vargType = NULL;
+        x = NULL;
     }
     return true;
 }
 
-static bool trailingVarArg(IdentifierPtr &varg,
-                           IdentifierPtr &vargType) {
+static bool trailingVarArg(FormalArgPtr &x) {
     if (!symbol(",")) return false;
-    if (!varArg(varg, vargType)) return false;
+    if (!varArg(x)) return false;
     return true;
 }
 
-static bool optTrailingVarArg(IdentifierPtr &varg,
-                              IdentifierPtr &vargType) {
+static bool optTrailingVarArg(FormalArgPtr &x) {
     int p = save();
-    if (!trailingVarArg(varg, vargType)) {
+    if (!trailingVarArg(x)) {
         restore(p);
-        varg = NULL;
-        vargType = NULL;
+        x = NULL;
     }
     return true;
 }
 
 static bool formalArgsWithVArgs(vector<FormalArgPtr> &args,
-                                IdentifierPtr &varg,
-                                IdentifierPtr &vargType) {
+                                FormalArgPtr &varg) {
     if (!formalArgs(args)) return false;
-    if (!optTrailingVarArg(varg, vargType)) return false;
+    if (!optTrailingVarArg(varg)) return false;
     return true;
 }
 
 static bool argumentsBody(vector<FormalArgPtr> &args,
-                          IdentifierPtr &varg,
-                          IdentifierPtr &vargType) {
+                          FormalArgPtr &varg) {
     int p = save();
-    if (formalArgsWithVArgs(args, varg, vargType)) return true;
+    if (formalArgsWithVArgs(args, varg)) return true;
     restore(p);
     args.clear();
     varg = NULL;
-    vargType = NULL;
-    return optVarArg(varg, vargType);
+    return optVarArg(varg);
 }
 
 static bool arguments(vector<FormalArgPtr> &args,
-                      IdentifierPtr &varg,
-                      IdentifierPtr &vargType) {
+                      FormalArgPtr &varg) {
     if (!symbol("(")) return false;
-    if (!argumentsBody(args, varg, vargType)) return false;
+    if (!argumentsBody(args, varg)) return false;
     if (!symbol(")")) return false;
     return true;
 }
@@ -1647,8 +1649,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     if (!topLevelVisibility(vis)) return false;
     IdentifierPtr z;
     if (!identifier(z)) return false;
-    if (!arguments(y->formalArgs, y->formalVarArg, y->formalVarArgType))
-        return false;
+    if (!arguments(y->formalArgs, y->formalVarArg)) return false;
     if (!optReturnSpecList(y->returnSpecs)) return false;
     if (!llvmBody(y->llvmBody)) return false;
     y->location = location;
@@ -1676,8 +1677,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!optInlined(inlined)) return false;
     IdentifierPtr z;
     if (!identifier(z)) return false;
-    if (!arguments(y->formalArgs, y->formalVarArg, y->formalVarArgType))
-        return false;
+    if (!arguments(y->formalArgs, y->formalVarArg)) return false;
     if (!optReturnSpecList(y->returnSpecs)) return false;
     if (!body(y->body)) return false;
     y->location = location;
@@ -1717,7 +1717,7 @@ static bool overload(TopLevelItemPtr &x) {
     if (!keyword("overload")) return false;
     ExprPtr z;
     if (!pattern(z)) return false;
-    if (!arguments(y->formalArgs, y->formalVarArg, y->formalVarArgType)) return false;
+    if (!arguments(y->formalArgs, y->formalVarArg)) return false;
     if (!optReturnSpecList(y->returnSpecs)) return false;
     int p = save();
     if (!optBody(y->body)) {

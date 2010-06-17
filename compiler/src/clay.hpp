@@ -1045,6 +1045,7 @@ enum ValueTempness {
     TEMPNESS_DONTCARE,
     TEMPNESS_LVALUE,
     TEMPNESS_RVALUE,
+    TEMPNESS_FORWARD,
 };
 
 struct FormalArg : public ANode {
@@ -1082,8 +1083,7 @@ struct Code : public ANode {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
-    IdentifierPtr formalVarArg;
-    IdentifierPtr formalVarArgType;
+    FormalArgPtr formalVarArg;
     vector<ReturnSpecPtr> returnSpecs;
     StatementPtr body;
     string llvmBody;
@@ -1093,13 +1093,11 @@ struct Code : public ANode {
     Code(const vector<PatternVar> &patternVars,
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
-         IdentifierPtr formalVarArg,
-         IdentifierPtr formalVarArgType,
+         FormalArgPtr formalVarArg,
          const vector<ReturnSpecPtr> &returnSpecs,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
           formalArgs(formalArgs), formalVarArg(formalVarArg),
-          formalVarArgType(formalVarArgType),
           returnSpecs(returnSpecs), body(body) {}
 
     bool isInlineLLVM() {
@@ -1445,6 +1443,7 @@ ExprPtr cloneOpt(ExprPtr x);
 void clone(const vector<ExprPtr> &x, vector<ExprPtr> &out);
 void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out);
 FormalArgPtr clone(FormalArgPtr x);
+FormalArgPtr cloneOpt(FormalArgPtr x);
 void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out);
 ReturnSpecPtr clone(ReturnSpecPtr x);
 StatementPtr clone(StatementPtr x);
