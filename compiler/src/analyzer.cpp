@@ -991,7 +991,7 @@ void computeArgsKey(MultiPValuePtr args,
     for (unsigned i = 0; i < args->size(); ++i) {
         PValuePtr pv = args->values[i];
         argsKey.push_back(pv->type);
-        argsTempness.push_back(pv->isTemp ? RVALUE : LVALUE);
+        argsTempness.push_back(pv->isTemp ? TEMPNESS_RVALUE : TEMPNESS_LVALUE);
     }
 }
 
@@ -1197,6 +1197,24 @@ static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
     return NULL;
 }
 
+static bool tempnessMatches(ValueTempness a, ValueTempness b)
+{
+    switch (a) {
+
+    case TEMPNESS_LVALUE :
+        return ((b == TEMPNESS_DONTCARE) ||
+                (b == TEMPNESS_LVALUE));
+
+    case TEMPNESS_RVALUE :
+        return ((b == TEMPNESS_DONTCARE) ||
+                (b == TEMPNESS_RVALUE));
+
+    default :
+        assert(false);
+        return false;
+    }
+}
+
 static bool tempnessMatches(CodePtr code,
                             const vector<ValueTempness> &tempness)
 {
@@ -1207,7 +1225,7 @@ static bool tempnessMatches(CodePtr code,
 
     for (unsigned i = 0; i < code->formalArgs.size(); ++i) {
         FormalArgPtr arg = code->formalArgs[i];
-        if ((tempness[i] & arg->tempness) == 0)
+        if (!tempnessMatches(tempness[i], arg->tempness))
             return false;
     }
     return true;
@@ -1674,7 +1692,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         for (unsigned i = 1; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
-            argsTempness.push_back(LVALUE);
+            argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
@@ -1722,7 +1740,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         for (unsigned i = 1; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
-            argsTempness.push_back(LVALUE);
+            argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
         InvokeStackContext invokeStackContext(callable, argsKey);
