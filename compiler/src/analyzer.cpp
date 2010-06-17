@@ -1163,7 +1163,7 @@ bool analyzeIsDefined(ObjectPtr x,
 {
     InvokeEntryPtr entry = lookupInvokeEntry(x, argsKey, argsTempness);
 
-    if (!entry || !entry->code->body)
+    if (!entry || !entry->code->hasBody())
         return false;
     return true;
 }
@@ -1174,7 +1174,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 {
     InvokeEntryPtr entry = lookupInvokeEntry(x, argsKey, argsTempness);
 
-    if (!entry || (!entry->code->body && !entry->code->isInlineLLVM()))
+    if (!entry || !entry->code->hasBody())
         error("no matching operation");
     if (entry->analyzed || entry->analyzing)
         return entry;
@@ -1253,7 +1253,7 @@ void analyzeCodeBody(InvokeEntryPtr entry)
     assert(!entry->analyzed);
 
     CodePtr code = entry->code;
-    assert(code->isInlineLLVM() || code->body.ptr());
+    assert(code->hasBody());
 
     if (code->isInlineLLVM() || !code->returnSpecs.empty()) {
         evaluateReturnSpecs(code->returnSpecs, entry->env,
