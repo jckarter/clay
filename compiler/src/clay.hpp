@@ -1103,6 +1103,9 @@ struct Code : public ANode {
     bool isInlineLLVM() {
         return llvmBody.size() > 0;
     }
+    bool hasBody() {
+        return body.ptr() || isInlineLLVM();
+    }
 };
 
 
