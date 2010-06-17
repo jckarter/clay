@@ -2039,18 +2039,23 @@ typedef Pointer<InvokeEntry> InvokeEntryPtr;
 struct InvokeSet : public Object {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
+    const vector<OverloadPtr> &overloads;
     vector<InvokeEntryPtr> entries;
     unsigned nextOverloadIndex;
     InvokeSet(ObjectPtr callable,
-              const vector<TypePtr> &argsKey)
+              const vector<TypePtr> &argsKey,
+              const vector<OverloadPtr> &overloads)
         : Object(DONT_CARE), callable(callable), argsKey(argsKey),
-          nextOverloadIndex(0) {}
+          overloads(overloads), nextOverloadIndex(0) {}
 };
 typedef Pointer<InvokeSet> InvokeSetPtr;
 
 
 InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
                              const vector<TypePtr> &argsKey);
+InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
+                                 const vector<TypePtr> &argsKey,
+                                 const vector<ValueTempness> &argsTempness);
 
 
 
