@@ -394,21 +394,6 @@ static bool floatToken(TokenPtr &x) {
 
 
 //
-// suffix tokens
-//
-
-static bool suffixToken(TokenPtr &x) {
-    char c;
-    if (!next(c) || (c != '#')) return false;
-    string s;
-    if (!identStr(s)) return false;
-    x = new Token(T_LITERAL_SUFFIX, s);
-    return true;
-}
-
-
-
-//
 // space
 //
 
@@ -507,7 +492,6 @@ static bool nextToken(TokenPtr &x) {
     restore(p); if (stringToken(x)) goto success;
     restore(p); if (floatToken(x)) goto success;
     restore(p); if (intToken(x)) goto success;
-    restore(p); if (suffixToken(x)) goto success;
     if (p != end) {
         pushLocation(new Location(lexerSource, maxPtr-begin));
         error("invalid token");

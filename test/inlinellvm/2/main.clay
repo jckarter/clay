@@ -21,8 +21,8 @@ overload myadd(x:T, y:T) returned:T __llvm__{
 
 main() {
     var a1 = myadd(10, 20);
-    var a2 = myadd(20#u64, 30#u64);
-    var a3 = myadd(30#i64, 40#i64);
+    var a2 = myadd(20u64, 30u64);
+    var a3 = myadd(30i64, 40i64);
     var a4 = myadd(1.2, 2.4);
     println(a1, " ", Type(a1));
     println(a2, " ", Type(a2));
