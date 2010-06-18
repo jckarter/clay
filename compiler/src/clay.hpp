@@ -2078,6 +2078,7 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
 struct InvokeEntry : public Object {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
+    vector<bool> forwardedRValueFlags;
 
     bool analyzed;
     bool analyzing;
@@ -2311,8 +2312,10 @@ ValueHolderPtr boolToValueHolder(bool x);
 struct EValue : public Object {
     TypePtr type;
     char *addr;
+    bool forwardedRValue;
     EValue(TypePtr type, char *addr)
-        : Object(EVALUE), type(type), addr(addr) {}
+        : Object(EVALUE), type(type), addr(addr),
+          forwardedRValue(false) {}
 };
 
 struct MultiEValue : public Object {
@@ -2335,6 +2338,7 @@ struct MultiEValue : public Object {
 void evalValueInit(EValuePtr dest);
 void evalValueDestroy(EValuePtr dest);
 void evalValueCopy(EValuePtr dest, EValuePtr src);
+void evalValueMove(EValuePtr dest, EValuePtr src);
 void evalValueAssign(EValuePtr dest, EValuePtr src);
 bool evalToBoolFlag(EValuePtr a);
 
@@ -2355,8 +2359,10 @@ void setExceptionsEnabled(bool enabled);
 struct CValue : public Object {
     TypePtr type;
     llvm::Value *llValue;
+    bool forwardedRValue;
     CValue(TypePtr type, llvm::Value *llValue)
-        : Object(CVALUE), type(type), llValue(llValue) {}
+        : Object(CVALUE), type(type), llValue(llValue),
+          forwardedRValue(false) {}
 };
 
 struct MultiCValue : public Object {
