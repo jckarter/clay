@@ -417,6 +417,18 @@ void evalValueCopy(EValuePtr dest, EValuePtr src)
                   new MultiEValue(dest));
 }
 
+void evalValueMove(EValuePtr dest, EValuePtr src)
+{
+    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+        if (dest->type->typeKind != STATIC_TYPE)
+            memcpy(dest->addr, src->addr, typeSize(dest->type));
+        return;
+    }
+    evalCallValue(kernelEValue("move"),
+                  new MultiEValue(src),
+                  new MultiEValue(dest));
+}
+
 void evalValueAssign(EValuePtr dest, EValuePtr src)
 {
     if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
@@ -999,8 +1011,14 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         EValue *y = (EValue *)x.ptr();
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(y->type));
-        *((void **)out0->addr) = (void *)y->addr;
+        if (y->forwardedRValue) {
+            assert(out0->type == y->type);
+            evalValueMove(out0, y);
+        }
+        else {
+            assert(out0->type == pointerType(y->type));
+            *((void **)out0->addr) = (void *)y->addr;
+        }
         break;
     }
 
@@ -1010,8 +1028,14 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         for (unsigned i = 0; i < y->size(); ++i) {
             EValuePtr ev = y->values[i];
             EValuePtr outi = out->values[i];
-            assert(outi->type == pointerType(ev->type));
-            *((void **)outi->addr) = (void *)ev->addr;
+            if (ev->forwardedRValue) {
+                assert(outi->type == ev->type);
+                evalValueMove(outi, ev);
+            }
+            else {
+                assert(outi->type == pointerType(ev->type));
+                *((void **)outi->addr) = (void *)ev->addr;
+            }
         }
         break;
     }

@@ -177,7 +177,9 @@ static ValueTempness tempnessKeyItem(ValueTempness formalTempness,
 
 static bool matchTempness(CodePtr code,
                           const vector<ValueTempness> &argsTempness,
-                          vector<ValueTempness> &tempnessKey)
+                          bool inlined,
+                          vector<ValueTempness> &tempnessKey,
+                          vector<bool> &forwardedRValueFlags)
 {
     const vector<FormalArgPtr> &fargs = code->formalArgs;
     FormalArgPtr fvarArg = code->formalVarArg;
@@ -187,28 +189,38 @@ static bool matchTempness(CodePtr code,
     else
         assert(fargs.size() == argsTempness.size());
 
+    tempnessKey.clear();
+    forwardedRValueFlags.clear();
     for (unsigned i = 0; i < fargs.size(); ++i) {
+        if (inlined && (fargs[i]->tempness == TEMPNESS_FORWARD)) {
+            error(fargs[i], "forwarded arguments are not allowed "
+                  "in inlined procedures");
+        }
         if (!tempnessMatches(argsTempness[i], fargs[i]->tempness))
             return false;
-    }
-    if (fvarArg.ptr()) {
-        for (unsigned i = fargs.size(); i < argsTempness.size(); ++i) {
-            if (!tempnessMatches(argsTempness[i], fvarArg->tempness))
-                return false;
-        }
-    }
-
-    tempnessKey.clear();
-    for (unsigned i = 0; i < fargs.size(); ++i) {
         tempnessKey.push_back(
             tempnessKeyItem(fargs[i]->tempness,
                             argsTempness[i]));
+        bool forwardedRValue = 
+            (fargs[i]->tempness == TEMPNESS_FORWARD) &&
+            (argsTempness[i] == TEMPNESS_RVALUE);
+        forwardedRValueFlags.push_back(forwardedRValue);
     }
     if (fvarArg.ptr()) {
+        if (inlined && (fvarArg->tempness == TEMPNESS_FORWARD)) {
+            error(fvarArg, "forwarded arguments are not allowed "
+                  "in inlined procedures");
+        }
         for (unsigned i = fargs.size(); i < argsTempness.size(); ++i) {
+            if (!tempnessMatches(argsTempness[i], fvarArg->tempness))
+                return false;
             tempnessKey.push_back(
                 tempnessKeyItem(fvarArg->tempness,
                                 argsTempness[i]));
+            bool forwardedRValue =
+                (fvarArg->tempness == TEMPNESS_FORWARD) &&
+                (argsTempness[i] == TEMPNESS_RVALUE);
+            forwardedRValueFlags.push_back(forwardedRValue);
         }
     }
     return true;
@@ -240,10 +252,17 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
 
     MatchSuccessPtr match;
     vector<ValueTempness> tempnessKey;
+    vector<bool> forwardedRValueFlags;
     unsigned i = 0;
     while ((match = getMatch(invokeSet,i)).ptr() != NULL) {
-        if (matchTempness(match->code, argsTempness, tempnessKey))
+        if (matchTempness(match->code,
+                          argsTempness,
+                          match->inlined,
+                          tempnessKey,
+                          forwardedRValueFlags))
+        {
             break;
+        }
         ++i;
     }
     if (!match)
@@ -256,6 +275,7 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
     }
 
     InvokeEntryPtr entry = newInvokeEntry(match);
+    entry->forwardedRValueFlags = forwardedRValueFlags;
 
     invokeSet->tempnessMap2[tempnessKey] = entry;
     invokeSet->tempnessMap[argsTempness] = entry;

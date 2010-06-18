@@ -563,29 +563,33 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 
     case EVALUE : {
         EValue *y = (EValue *)x.ptr();
-        PValuePtr pv = new PValue(y->type, false);
+        PValuePtr pv = new PValue(y->type, y->forwardedRValue);
         return new MultiPValue(pv);
     }
 
     case MULTI_EVALUE : {
         MultiEValue *y = (MultiEValue *)x.ptr();
         MultiPValuePtr z = new MultiPValue();
-        for (unsigned i = 0; i < y->values.size(); ++i)
-            z->values.push_back(new PValue(y->values[i]->type, false));
+        for (unsigned i = 0; i < y->values.size(); ++i) {
+            EValue *ev = y->values[i].ptr();
+            z->values.push_back(new PValue(ev->type, ev->forwardedRValue));
+        }
         return z;
     }
 
     case CVALUE : {
         CValue *y = (CValue *)x.ptr();
-        PValuePtr pv = new PValue(y->type, false);
+        PValuePtr pv = new PValue(y->type, y->forwardedRValue);
         return new MultiPValue(pv);
     }
 
     case MULTI_CVALUE : {
         MultiCValue *y = (MultiCValue *)x.ptr();
         MultiPValuePtr z = new MultiPValue();
-        for (unsigned i = 0; i < y->values.size(); ++i)
-            z->values.push_back(new PValue(y->values[i]->type, false));
+        for (unsigned i = 0; i < y->values.size(); ++i) {
+            CValue *cv = y->values[i].ptr();
+            z->values.push_back(new PValue(cv->type, cv->forwardedRValue));
+        }
         return z;
     }
 
@@ -1265,14 +1269,17 @@ void analyzeCodeBody(InvokeEntryPtr entry)
     EnvPtr bodyEnv = new Env(entry->env);
 
     for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
-        PValuePtr parg = new PValue(entry->fixedArgTypes[i], false);
+        bool flag = entry->forwardedRValueFlags[i];
+        PValuePtr parg = new PValue(entry->fixedArgTypes[i], flag);
         addLocal(bodyEnv, entry->fixedArgNames[i], parg.ptr());
     }
 
     if (entry->varArgName.ptr()) {
+        unsigned nFixed = entry->fixedArgNames.size();
         MultiPValuePtr varArgs = new MultiPValue();
         for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
-            PValuePtr parg = new PValue(entry->varArgTypes[i], false);
+            bool flag = entry->forwardedRValueFlags[i + nFixed];
+            PValuePtr parg = new PValue(entry->varArgTypes[i], flag);
             varArgs->values.push_back(parg);
         }
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());

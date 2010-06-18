@@ -7,6 +7,7 @@
 void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx);
 void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx);
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
+void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
 void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
 llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx);
 
@@ -182,6 +183,21 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
         return;
     }
     codegenCallValue(staticCValue(dest->type.ptr()),
+                     new MultiCValue(src),
+                     ctx,
+                     new MultiCValue(dest));
+}
+
+void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
+{
+    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+        if (dest->type->typeKind != STATIC_TYPE) {
+            llvm::Value *v = llvmBuilder->CreateLoad(src->llValue);
+            llvmBuilder->CreateStore(v, dest->llValue);
+        }
+        return;
+    }
+    codegenCallValue(kernelCValue("move"),
                      new MultiCValue(src),
                      ctx,
                      new MultiCValue(dest));
@@ -942,8 +958,14 @@ void codegenStaticObject(ObjectPtr x,
         CValue *y = (CValue *)x.ptr();
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(y->type));
-        llvmBuilder->CreateStore(y->llValue, out0->llValue);
+        if (y->forwardedRValue) {
+            assert(out0->type == y->type);
+            codegenValueMove(out0, y, ctx);
+        }
+        else {
+            assert(out0->type == pointerType(y->type));
+            llvmBuilder->CreateStore(y->llValue, out0->llValue);
+        }
         break;
     }
 
@@ -953,8 +975,14 @@ void codegenStaticObject(ObjectPtr x,
         for (unsigned i = 0; i < y->size(); ++i) {
             CValuePtr vi = y->values[i];
             CValuePtr outi = out->values[i];
-            assert(outi->type == pointerType(vi->type));
-            llvmBuilder->CreateStore(vi->llValue, outi->llValue);
+            if (vi->forwardedRValue) {
+                assert(outi->type == vi->type);
+                codegenValueMove(outi, vi, ctx);
+            }
+            else {
+                assert(outi->type == pointerType(vi->type));
+                llvmBuilder->CreateStore(vi->llValue, outi->llValue);
+            }
         }
         break;
     }
@@ -1787,10 +1815,12 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
         llvm::Argument *llArgValue = &(*ai);
         llArgValue->setName(entry->fixedArgNames[i]->str);
         CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
+        cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
         addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
     }
 
     if (entry->varArgName.ptr()) {
+        unsigned nFixed = entry->fixedArgTypes.size();
         MultiCValuePtr varArgs = new MultiCValue();
         for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai) {
             llvm::Argument *llArgValue = &(*ai);
@@ -1798,6 +1828,7 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
             sout << "varg" << i;
             llArgValue->setName(sout.str());
             CValuePtr cvalue = new CValue(entry->varArgTypes[i], llArgValue);
+            cvalue->forwardedRValue = entry->forwardedRValueFlags[i+nFixed];
             varArgs->add(cvalue);
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
