@@ -1,0 +1,11 @@
+
+procedure wrap;
+overload wrap(rvalue first, forward ...rest) = first, ...wrap(...rest);
+overload wrap(lvalue first, forward ...rest) = &first, ...wrap(...rest);
+overload wrap() = ;
+
+main() {
+    var x = 10;
+    var a = (...wrap(10, x, 10, x));
+    println(Type(a));
+}
