@@ -183,8 +183,11 @@ Literal -> BoolLiteral
          | IntLiteral
          | CharLiteral
          | StringLiteral
+         | IdentifierLiteral
 
 BoolLiteral -> "true" | "false"
+
+IdentifierLiteral -> "#" Identifier
 
 Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" Block
 

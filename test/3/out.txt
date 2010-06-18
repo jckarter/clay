@@ -1,0 +1,1 @@
+Tuple[Tuple[Int32, Int8, Int16, Int32, Int64], Tuple[Int32, UInt8, UInt16, UInt32, UInt64], Tuple[Int32, Float64, Float32, Float64, Float32, Float64], Tuple[], Tuple[Bool], Static[#foo], Static[#bar]]

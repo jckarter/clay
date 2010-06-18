@@ -9,6 +9,9 @@ test0Tuple() = ();
 test1Tuple() = makeTuple(true);
 
 testConst() = (testSignedInt(), testUnsignedInt(), testFloat(),
-               test0Tuple(), test1Tuple());
+               test0Tuple(), test1Tuple(),
+               #foo, #bar);
 
-main() = testConst();
+main() {
+    println(Type(testConst()));
+}

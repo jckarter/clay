@@ -191,6 +191,7 @@ struct IntLiteral;
 struct FloatLiteral;
 struct CharLiteral;
 struct StringLiteral;
+struct IdentifierLiteral;
 struct NameRef;
 struct Tuple;
 struct Array;
@@ -311,6 +312,7 @@ typedef Pointer<IntLiteral> IntLiteralPtr;
 typedef Pointer<FloatLiteral> FloatLiteralPtr;
 typedef Pointer<CharLiteral> CharLiteralPtr;
 typedef Pointer<StringLiteral> StringLiteralPtr;
+typedef Pointer<IdentifierLiteral> IdentifierLiteralPtr;
 typedef Pointer<NameRef> NameRefPtr;
 typedef Pointer<Tuple> TuplePtr;
 typedef Pointer<Array> ArrayPtr;
@@ -607,6 +609,7 @@ enum ExprKind {
     FLOAT_LITERAL,
     CHAR_LITERAL,
     STRING_LITERAL,
+    IDENTIFIER_LITERAL,
 
     NAME_REF,
     TUPLE,
@@ -670,6 +673,12 @@ struct StringLiteral : public Expr {
     string value;
     StringLiteral(const string &value)
         : Expr(STRING_LITERAL), value(value) {}
+};
+
+struct IdentifierLiteral : public Expr {
+    IdentifierPtr value;
+    IdentifierLiteral(IdentifierPtr value)
+        : Expr(IDENTIFIER_LITERAL), value(value) {}
 };
 
 struct NameRef : public Expr {
