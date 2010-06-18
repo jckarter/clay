@@ -2002,6 +2002,74 @@ void initializeLambda(LambdaPtr x, EnvPtr env);
 
 
 //
+// match invoke
+//
+
+enum MatchCode {
+    MATCH_SUCCESS,
+    MATCH_CALLABLE_ERROR,
+    MATCH_ARITY_ERROR,
+    MATCH_ARGUMENT_ERROR,
+    MATCH_PREDICATE_ERROR,
+};
+
+struct MatchResult : public Object {
+    int matchCode;
+    MatchResult(int matchCode)
+        : Object(DONT_CARE), matchCode(matchCode) {}
+};
+typedef Pointer<MatchResult> MatchResultPtr;
+
+struct MatchSuccess : public MatchResult {
+    bool inlined;
+    CodePtr code;
+    EnvPtr env;
+
+    ObjectPtr callable;
+    vector<TypePtr> argsKey;
+
+    vector<TypePtr> fixedArgTypes;
+    vector<IdentifierPtr> fixedArgNames;
+    IdentifierPtr varArgName;
+    vector<TypePtr> varArgTypes;
+    MatchSuccess(bool inlined, CodePtr code, EnvPtr env,
+                 ObjectPtr callable, const vector<TypePtr> &argsKey)
+        : MatchResult(MATCH_SUCCESS), inlined(inlined),
+          code(code), env(env), callable(callable), argsKey(argsKey) {}
+};
+typedef Pointer<MatchSuccess> MatchSuccessPtr;
+
+struct MatchCallableError : public MatchResult {
+    MatchCallableError()
+        : MatchResult(MATCH_CALLABLE_ERROR) {}
+};
+
+struct MatchArityError : public MatchResult {
+    MatchArityError()
+        : MatchResult(MATCH_ARITY_ERROR) {}
+};
+
+struct MatchArgumentError : public MatchResult {
+    unsigned argIndex;
+    MatchArgumentError(unsigned argIndex)
+        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex) {}
+};
+
+struct MatchPredicateError : public MatchResult {
+    MatchPredicateError()
+        : MatchResult(MATCH_PREDICATE_ERROR) {}
+};
+
+MatchResultPtr matchInvoke(OverloadPtr overload,
+                           ObjectPtr callable,
+                           const vector<TypePtr> &argsKey);
+
+void signalMatchError(MatchResultPtr result,
+                      const vector<LocationPtr> &argLocations);
+
+
+
+//
 // invoke tables
 //
 
@@ -2043,8 +2111,13 @@ struct InvokeSet : public Object {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
     const vector<OverloadPtr> &overloads;
-    vector<InvokeEntryPtr> entries;
+
+    vector<MatchSuccessPtr> matches;
     unsigned nextOverloadIndex;
+
+    map<vector<ValueTempness>, InvokeEntryPtr> tempnessMap;
+    map<vector<ValueTempness>, InvokeEntryPtr> tempnessMap2;
+
     InvokeSet(ObjectPtr callable,
               const vector<TypePtr> &argsKey,
               const vector<OverloadPtr> &overloads)
@@ -2059,70 +2132,6 @@ InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
 InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
                                  const vector<TypePtr> &argsKey,
                                  const vector<ValueTempness> &argsTempness);
-
-
-
-//
-// match invoke
-//
-
-enum MatchCode {
-    MATCH_SUCCESS,
-    MATCH_CALLABLE_ERROR,
-    MATCH_ARITY_ERROR,
-    MATCH_ARGUMENT_ERROR,
-    MATCH_PREDICATE_ERROR,
-};
-
-struct MatchResult : public Object {
-    int matchCode;
-    MatchResult(int matchCode)
-        : Object(DONT_CARE), matchCode(matchCode) {}
-};
-typedef Pointer<MatchResult> MatchResultPtr;
-
-struct MatchSuccess : public MatchResult {
-    EnvPtr env;
-    vector<TypePtr> fixedArgTypes;
-    vector<IdentifierPtr> fixedArgNames;
-    IdentifierPtr varArgName;
-    vector<TypePtr> varArgTypes;
-    MatchSuccess(EnvPtr env)
-        : MatchResult(MATCH_SUCCESS), env(env) {}
-};
-typedef Pointer<MatchSuccess> MatchSuccessPtr;
-
-struct MatchCallableError : public MatchResult {
-    MatchCallableError()
-        : MatchResult(MATCH_CALLABLE_ERROR) {}
-};
-
-struct MatchArityError : public MatchResult {
-    MatchArityError()
-        : MatchResult(MATCH_ARITY_ERROR) {}
-};
-
-struct MatchArgumentError : public MatchResult {
-    unsigned argIndex;
-    MatchArgumentError(unsigned argIndex)
-        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex) {}
-};
-
-struct MatchPredicateError : public MatchResult {
-    MatchPredicateError()
-        : MatchResult(MATCH_PREDICATE_ERROR) {}
-};
-
-InvokeEntryPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
-                                  unsigned &overloadIndex,
-                                  ObjectPtr callable,
-                                  const vector<TypePtr> &argsKey);
-MatchResultPtr matchInvoke(OverloadPtr overload,
-                           ObjectPtr callable,
-                           const vector<TypePtr> &argsKey);
-
-void signalMatchError(MatchResultPtr result,
-                      const vector<LocationPtr> &argLocations);
 
 
 
