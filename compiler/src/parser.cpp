@@ -186,6 +186,16 @@ static bool stringLiteral(ExprPtr &x) {
     return true;
 }
 
+static bool identifierLiteral(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("#")) return false;
+    IdentifierPtr y;
+    if (!identifier(y)) return false;
+    x = new IdentifierLiteral(y);
+    x->location = location;
+    return true;
+}
+
 static bool literal(ExprPtr &x) {
     int p = save();
     if (boolLiteral(x)) return true;
@@ -193,6 +203,7 @@ static bool literal(ExprPtr &x) {
     if (restore(p), floatLiteral(x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
+    if (restore(p), identifierLiteral(x)) return true;
     return false;
 }
 

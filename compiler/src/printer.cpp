@@ -112,6 +112,11 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "StringLiteral(" << y->value << ")";
         break;
     }
+    case IDENTIFIER_LITERAL : {
+        const IdentifierLiteral *y = (const IdentifierLiteral *)x;
+        out << "IdentifierLiteral(" << y->value << ")";
+        break;
+    }
 
     case NAME_REF : {
         const NameRef *y = (const NameRef *)x;

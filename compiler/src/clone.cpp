@@ -61,6 +61,12 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case IDENTIFIER_LITERAL : {
+        IdentifierLiteral *y = (IdentifierLiteral *)x.ptr();
+        out = new IdentifierLiteral(y->value);
+        break;
+    }
+
     case NAME_REF : {
         NameRef *y = (NameRef *)x.ptr();
         out = new NameRef(y->name);

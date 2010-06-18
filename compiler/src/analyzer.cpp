@@ -345,6 +345,11 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         return analyzeCallValue(kernelPValue("stringRef"), args);
     }
 
+    case IDENTIFIER_LITERAL : {
+        IdentifierLiteral *x = (IdentifierLiteral *)expr.ptr();
+        return new MultiPValue(staticPValue(x->value.ptr()));
+    }
+
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);

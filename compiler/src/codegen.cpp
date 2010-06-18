@@ -637,6 +637,9 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
+    case IDENTIFIER_LITERAL :
+        break;
+
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = lookupEnv(env, x->name);
