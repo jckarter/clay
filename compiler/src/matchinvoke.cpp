@@ -1,29 +1,5 @@
 #include "clay.hpp"
 
-InvokeEntryPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
-                                  unsigned &overloadIndex,
-                                  ObjectPtr callable,
-                                  const vector<TypePtr> &argsKey)
-{
-    while (overloadIndex < overloads.size()) {
-        OverloadPtr x = overloads[overloadIndex++];
-        MatchResultPtr result = matchInvoke(x, callable, argsKey);
-        if (result->matchCode == MATCH_SUCCESS) {
-            InvokeEntryPtr entry = new InvokeEntry(callable, argsKey);
-            entry->code = clone(x->code);
-            MatchSuccess *y = (MatchSuccess *)result.ptr();
-            entry->env = y->env;
-            entry->fixedArgTypes = y->fixedArgTypes;
-            entry->fixedArgNames = y->fixedArgNames;
-            entry->varArgName = y->varArgName;
-            entry->varArgTypes = y->varArgTypes;
-            entry->inlined = x->inlined;
-            return entry;
-        }
-    }
-    return NULL;
-}
-
 MatchResultPtr matchInvoke(OverloadPtr overload,
                            ObjectPtr callable,
                            const vector<TypePtr> &argsKey)
@@ -102,13 +78,15 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         if (!evaluateBool(code->predicate, staticEnv))
             return new MatchPredicateError();
     }
-    MatchSuccessPtr result = new MatchSuccess(staticEnv);
+
+    MatchSuccessPtr result = new MatchSuccess(overload->inlined,
+                                              code, staticEnv,
+                                              callable, argsKey);
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         result->fixedArgNames.push_back(x->name);
         result->fixedArgTypes.push_back(argsKey[i]);
     }
-
     if (code->formalVarArg.ptr()) {
         result->varArgName = code->formalVarArg->name;
         for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i) {

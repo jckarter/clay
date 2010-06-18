@@ -103,35 +103,55 @@ InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
 // lookupInvokeEntry
 //
 
-static InvokeEntryPtr findNextMatchingEntry(InvokeSetPtr invokeSet,
-                                            unsigned entryIndex)
+static
+MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
+                                   unsigned &overloadIndex,
+                                   ObjectPtr callable,
+                                   const vector<TypePtr> &argsKey)
 {
-    if (entryIndex < invokeSet->entries.size())
-        return invokeSet->entries[entryIndex];
-    assert(entryIndex == invokeSet->entries.size());
-    unsigned nextOverloadIndex = invokeSet->nextOverloadIndex;
-    InvokeEntryPtr entry = findMatchingInvoke(invokeSet->overloads,
-                                              nextOverloadIndex,
-                                              invokeSet->callable,
-                                              invokeSet->argsKey);
-    if (!entry)
-        return NULL;
-    invokeSet->entries.push_back(entry);
-    invokeSet->nextOverloadIndex = nextOverloadIndex;
-    return entry;
+    while (overloadIndex < overloads.size()) {
+        OverloadPtr x = overloads[overloadIndex++];
+        MatchResultPtr result = matchInvoke(x, callable, argsKey);
+        if (result->matchCode == MATCH_SUCCESS) {
+            MatchSuccess *y = (MatchSuccess *)result.ptr();
+            return y;
+        }
+    }
+    return NULL;
 }
 
-static bool tempnessMatches(ValueTempness a, ValueTempness b)
+static MatchSuccessPtr getMatch(InvokeSetPtr invokeSet,
+                                unsigned entryIndex)
 {
-    switch (a) {
+    if (entryIndex < invokeSet->matches.size())
+        return invokeSet->matches[entryIndex];
+    assert(entryIndex == invokeSet->matches.size());
+    unsigned nextOverloadIndex = invokeSet->nextOverloadIndex;
+    MatchSuccessPtr match = findMatchingInvoke(invokeSet->overloads,
+                                               nextOverloadIndex,
+                                               invokeSet->callable,
+                                               invokeSet->argsKey);
+    if (!match)
+        return NULL;
+    invokeSet->matches.push_back(match);
+    invokeSet->nextOverloadIndex = nextOverloadIndex;
+    return match;
+}
+
+static bool tempnessMatches(ValueTempness tempness,
+                            ValueTempness formalTempness)
+{
+    switch (tempness) {
 
     case TEMPNESS_LVALUE :
-        return ((b == TEMPNESS_DONTCARE) ||
-                (b == TEMPNESS_LVALUE));
+        return ((formalTempness == TEMPNESS_DONTCARE) ||
+                (formalTempness == TEMPNESS_LVALUE) ||
+                (formalTempness == TEMPNESS_FORWARD));
 
     case TEMPNESS_RVALUE :
-        return ((b == TEMPNESS_DONTCARE) ||
-                (b == TEMPNESS_RVALUE));
+        return ((formalTempness == TEMPNESS_DONTCARE) ||
+                (formalTempness == TEMPNESS_RVALUE) ||
+                (formalTempness == TEMPNESS_FORWARD));
 
     default :
         assert(false);
@@ -139,26 +159,72 @@ static bool tempnessMatches(ValueTempness a, ValueTempness b)
     }
 }
 
-static bool tempnessMatches(CodePtr code,
-                            const vector<ValueTempness> &tempness)
+static ValueTempness tempnessKeyItem(ValueTempness formalTempness,
+                                     ValueTempness tempness)
 {
-    if (code->formalVarArg.ptr())
-        assert(code->formalArgs.size() <= tempness.size());
-    else
-        assert(code->formalArgs.size() == tempness.size());
+    switch (formalTempness) {
+    case TEMPNESS_LVALUE :
+    case TEMPNESS_RVALUE :
+    case TEMPNESS_DONTCARE : 
+        return formalTempness;
+    case TEMPNESS_FORWARD :
+        return tempness;
+    default :
+        assert(false);
+        return formalTempness;
+    }
+}
 
-    for (unsigned i = 0; i < code->formalArgs.size(); ++i) {
-        FormalArgPtr arg = code->formalArgs[i];
-        if (!tempnessMatches(tempness[i], arg->tempness))
+static bool matchTempness(CodePtr code,
+                          const vector<ValueTempness> &argsTempness,
+                          vector<ValueTempness> &tempnessKey)
+{
+    const vector<FormalArgPtr> &fargs = code->formalArgs;
+    FormalArgPtr fvarArg = code->formalVarArg;
+
+    if (fvarArg.ptr())
+        assert(fargs.size() <= argsTempness.size());
+    else
+        assert(fargs.size() == argsTempness.size());
+
+    for (unsigned i = 0; i < fargs.size(); ++i) {
+        if (!tempnessMatches(argsTempness[i], fargs[i]->tempness))
             return false;
     }
-    if (code->formalVarArg.ptr()) {
-        for (unsigned i = code->formalArgs.size(); i < tempness.size(); ++i) {
-            if (!tempnessMatches(tempness[i], code->formalVarArg->tempness))
+    if (fvarArg.ptr()) {
+        for (unsigned i = fargs.size(); i < argsTempness.size(); ++i) {
+            if (!tempnessMatches(argsTempness[i], fvarArg->tempness))
                 return false;
         }
     }
+
+    tempnessKey.clear();
+    for (unsigned i = 0; i < fargs.size(); ++i) {
+        tempnessKey.push_back(
+            tempnessKeyItem(fargs[i]->tempness,
+                            argsTempness[i]));
+    }
+    if (fvarArg.ptr()) {
+        for (unsigned i = fargs.size(); i < argsTempness.size(); ++i) {
+            tempnessKey.push_back(
+                tempnessKeyItem(fvarArg->tempness,
+                                argsTempness[i]));
+        }
+    }
     return true;
+}
+
+static InvokeEntryPtr newInvokeEntry(MatchSuccessPtr x)
+{
+    InvokeEntryPtr entry = new InvokeEntry(x->callable, x->argsKey);
+    entry->code = clone(x->code);
+    entry->env = x->env;
+    entry->fixedArgNames = x->fixedArgNames;
+    entry->fixedArgTypes = x->fixedArgTypes;
+    entry->varArgName = x->varArgName;
+    entry->varArgTypes = x->varArgTypes;
+    entry->inlined = x->inlined;
+    return entry;
 }
 
 InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
@@ -166,12 +232,33 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
                                  const vector<ValueTempness> &argsTempness)
 {
     InvokeSetPtr invokeSet = lookupInvokeSet(callable, argsKey);
+
+    map<vector<ValueTempness>,InvokeEntryPtr>::iterator iter =
+        invokeSet->tempnessMap.find(argsTempness);
+    if (iter != invokeSet->tempnessMap.end())
+        return iter->second;
+
+    MatchSuccessPtr match;
+    vector<ValueTempness> tempnessKey;
     unsigned i = 0;
-    InvokeEntryPtr entry;
-    while ((entry = findNextMatchingEntry(invokeSet, i)).ptr()) {
-        if (tempnessMatches(entry->code, argsTempness))
+    while ((match = getMatch(invokeSet,i)).ptr() != NULL) {
+        if (matchTempness(match->code, argsTempness, tempnessKey))
             break;
         ++i;
     }
+    if (!match)
+        return NULL;
+
+    iter = invokeSet->tempnessMap2.find(tempnessKey);
+    if (iter != invokeSet->tempnessMap2.end()) {
+        invokeSet->tempnessMap[argsTempness] = iter->second;
+        return iter->second;
+    }
+
+    InvokeEntryPtr entry = newInvokeEntry(match);
+
+    invokeSet->tempnessMap2[tempnessKey] = entry;
+    invokeSet->tempnessMap[argsTempness] = entry;
+
     return entry;
 }
