@@ -35,21 +35,21 @@ alias SSizeT = PtrInt;
 // limits
 //
 
-alias INT8_MIN  = -127#i8 - 1#i8;
-alias INT8_MAX  =  127#i8;
-alias UINT8_MAX =  255#u8;
+alias INT8_MIN  = -127i8 - 1i8;
+alias INT8_MAX  =  127i8;
+alias UINT8_MAX =  255u8;
 
-alias INT16_MIN  = -32767#i16 - 1#i16;
-alias INT16_MAX  =  32767#i16;
-alias UINT16_MAX =  65535#u16;
+alias INT16_MIN  = -32767i16 - 1i16;
+alias INT16_MAX  =  32767i16;
+alias UINT16_MAX =  65535u16;
 
-alias INT32_MIN  = -2147483647#i32 - 1#i32;
-alias INT32_MAX  =  2147483647#i32;
-alias UINT32_MAX = 0xffffffff#u32;
+alias INT32_MIN  = -2147483647i32 - 1i32;
+alias INT32_MAX  =  2147483647i32;
+alias UINT32_MAX = 0xffffffffu32;
 
-alias INT64_MIN  = -0x7fffffffffffffff#i64 - 1#i64;
-alias INT64_MAX  =   0x7fffffffffffffff#i64;
-alias UINT64_MAX =   0xffffffffffffffff#u64;
+alias INT64_MIN  = -0x7fffffffffffffffi64 - 1i64;
+alias INT64_MAX  =   0x7fffffffffffffffi64;
+alias UINT64_MAX =   0xffffffffffffffffu64;
 
 
 

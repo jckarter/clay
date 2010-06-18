@@ -47,11 +47,11 @@ private sharingFlags(mode) {
     if (mode == READ)
         return win32.FILE_SHARE_READ;
     if (mode == READ_WRITE)
-        return 0#u32;
+        return 0u32;
     if (mode == CREATE)
-        return 0#u32;
+        return 0u32;
     if (mode == APPEND)
-        return 0#u32;
+        return 0u32;
     assert(false);
 }
 

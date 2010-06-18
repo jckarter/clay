@@ -404,9 +404,6 @@ static void print(ostream &out, const Object *x) {
         case T_FLOAT_LITERAL :
             out << "T_FLOAT_LITERAL";
             break;
-        case T_LITERAL_SUFFIX :
-            out << "T_LITERAL_SUFFIX";
-            break;
         case T_SPACE :
             out << "T_SPACE";
             break;

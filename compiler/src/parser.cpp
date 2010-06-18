@@ -137,7 +137,7 @@ static bool intLiteral(ExprPtr &x) {
         return false;
     TokenPtr t2;
     int p = save();
-    if (next(t2) && (t2->tokenKind == T_LITERAL_SUFFIX)) {
+    if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
         x = new IntLiteral(t->str, t2->str);
     }
     else {
@@ -155,7 +155,7 @@ static bool floatLiteral(ExprPtr &x) {
         return false;
     TokenPtr t2;
     int p = save();
-    if (next(t2) && (t2->tokenKind == T_LITERAL_SUFFIX)) {
+    if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
         x = new FloatLiteral(t->str, t2->str);
     }
     else {

@@ -14,7 +14,7 @@ overload printValue(x:Float64) {
 }
 
 main() {
-    var a = 1 + 2#u32;
+    var a = 1 + 2u32;
     printValue(a);
     return 0;
 }
