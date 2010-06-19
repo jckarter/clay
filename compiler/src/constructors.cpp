@@ -38,6 +38,10 @@ void initBuiltinConstructor(RecordPtr x)
     assert(!(x->builtinOverloadInitialized));
     x->builtinOverloadInitialized = true;
 
+    RecordBodyPtr y =  x->body;
+    if (y->isComputed)
+        return;
+
     assert((x->params.size() > 0) || x->varParam.ptr());
 
     ExprPtr recName = new NameRef(x->name);
@@ -54,8 +58,8 @@ void initBuiltinConstructor(RecordPtr x)
         code->patternVars.push_back(pvar);
     }
 
-    for (unsigned i = 0; i < x->fields.size(); ++i) {
-        RecordFieldPtr f = x->fields[i];
+    for (unsigned i = 0; i < y->fields.size(); ++i) {
+        RecordFieldPtr f = y->fields[i];
         FormalArgPtr arg = new FormalArg(f->name, f->type);
         arg->location = f->location;
         code->formalArgs.push_back(arg.ptr());
@@ -78,9 +82,9 @@ void initBuiltinConstructor(RecordPtr x)
 
     CallPtr returnExpr = new Call(retType.ptr());
     returnExpr->location = x->location;
-    for (unsigned i = 0; i < x->fields.size(); ++i) {
-        ExprPtr callArg = new NameRef(x->fields[i]->name);
-        callArg->location = x->fields[i]->location;
+    for (unsigned i = 0; i < y->fields.size(); ++i) {
+        ExprPtr callArg = new NameRef(y->fields[i]->name);
+        callArg->location = y->fields[i]->location;
         returnExpr->args.push_back(callArg);
     }
 

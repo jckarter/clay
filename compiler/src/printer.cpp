@@ -471,7 +471,13 @@ static void print(ostream &out, const Object *x) {
     case RECORD : {
         const Record *y = (const Record *)x;
         out << "Record(" << y->name << ", " << y->params;
-        out << ", " << y->varParam << ", " << y->fields << ")";
+        out << ", " << y->varParam << ", " << y->body << ")";
+        break;
+    }
+    case RECORD_BODY : {
+        const RecordBody *y = (const RecordBody *)x;
+        out << "RecordBody(" << y->isComputed << ", " << y->computed;
+        out << ", " << y->fields << ")";
         break;
     }
     case RECORD_FIELD : {

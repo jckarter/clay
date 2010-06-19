@@ -129,6 +129,7 @@ enum ObjectKind {
     CODE,
 
     RECORD,
+    RECORD_BODY,
     RECORD_FIELD,
     OVERLOAD,
     PROCEDURE,
@@ -234,6 +235,7 @@ struct Code;
 
 struct TopLevelItem;
 struct Record;
+struct RecordBody;
 struct RecordField;
 struct Overload;
 struct Procedure;
@@ -355,6 +357,7 @@ typedef Pointer<Code> CodePtr;
 
 typedef Pointer<TopLevelItem> TopLevelItemPtr;
 typedef Pointer<Record> RecordPtr;
+typedef Pointer<RecordBody> RecordBodyPtr;
 typedef Pointer<RecordField> RecordFieldPtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Procedure> ProcedurePtr;
@@ -1149,7 +1152,7 @@ struct Record : public TopLevelItem {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
 
-    vector<RecordFieldPtr> fields;
+    RecordBodyPtr body;
 
     vector<OverloadPtr> overloads;
     bool builtinOverloadInitialized;
@@ -1161,10 +1164,20 @@ struct Record : public TopLevelItem {
            Visibility visibility,
            const vector<IdentifierPtr> &params,
            IdentifierPtr varParam,
-           const vector<RecordFieldPtr> &fields)
+           RecordBodyPtr body)
         : TopLevelItem(RECORD, name, visibility),
-          params(params), varParam(varParam), fields(fields),
+          params(params), varParam(varParam), body(body),
           builtinOverloadInitialized(false) {}
+};
+
+struct RecordBody : public ANode {
+    bool isComputed;
+    vector<ExprPtr> computed; // valid if isComputed == true
+    vector<RecordFieldPtr> fields; // valid if isComputed == false
+    RecordBody(const vector<ExprPtr> &computed)
+        : ANode(RECORD_BODY), isComputed(true), computed(computed) {}
+    RecordBody(const vector<RecordFieldPtr> &fields)
+        : ANode(RECORD_BODY), isComputed(false), fields(fields) {}
 };
 
 struct RecordField : public ANode {

@@ -281,6 +281,27 @@ bool isPrimitiveType(TypePtr t)
 // recordFieldTypes
 //
 
+static bool unpackField(TypePtr x, IdentifierPtr &name, TypePtr &type) {
+    if (x->typeKind != TUPLE_TYPE)
+        return false;
+    TupleType *tt = (TupleType *)x.ptr();
+    if (tt->elementTypes.size() != 2)
+        return false;
+    if (tt->elementTypes[0]->typeKind != STATIC_TYPE)
+        return false;
+    StaticType *st0 = (StaticType *)tt->elementTypes[0].ptr();
+    if (st0->obj->objKind != IDENTIFIER)
+        return false;
+    name = (Identifier *)st0->obj.ptr();
+    if (tt->elementTypes[1]->typeKind != STATIC_TYPE)
+        return false;
+    StaticType *st1 = (StaticType *)tt->elementTypes[1].ptr();
+    if (st1->obj->objKind != TYPE)
+        return false;
+    type = (Type *)st1->obj.ptr();
+    return true;
+}
+
 static void initializeRecordFields(RecordTypePtr t) {
     assert(!t->fieldsInitialized);
     t->fieldsInitialized = true;
@@ -298,11 +319,28 @@ static void initializeRecordFields(RecordTypePtr t) {
             rest->add(t->params[i]);
         addLocal(env, r->varParam, rest.ptr());
     }
-    for (unsigned i = 0; i < r->fields.size(); ++i) {
-        RecordField *x = r->fields[i].ptr();
-        t->fieldIndexMap[x->name->str] = i;
-        TypePtr ftype = evaluateType(x->type, env);
-        t->fieldTypes.push_back(ftype);
+    RecordBodyPtr body = r->body;
+    if (body->isComputed) {
+        LocationContext loc(body->location);
+        MultiPValuePtr mpv = analyzeMulti(body->computed, env);
+        for (unsigned i = 0; i < mpv->size(); ++i) {
+            TypePtr x = mpv->values[i]->type;
+            IdentifierPtr name;
+            TypePtr type;
+            if (!unpackField(mpv->values[i]->type, name, type))
+                argumentError(i, "each value should be a "
+                              "tuple of (name,type)");
+            t->fieldIndexMap[name->str] = i;
+            t->fieldTypes.push_back(type);
+        }
+    }
+    else {
+        for (unsigned i = 0; i < body->fields.size(); ++i) {
+            RecordField *x = body->fields[i].ptr();
+            t->fieldIndexMap[x->name->str] = i;
+            TypePtr ftype = evaluateType(x->type, env);
+            t->fieldTypes.push_back(ftype);
+        }
     }
 }
 
