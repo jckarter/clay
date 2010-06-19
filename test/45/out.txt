@@ -1,0 +1,1 @@
+PtrTuple[String, Static[#bar], Int32]

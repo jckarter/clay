@@ -1,0 +1,21 @@
+
+procedure PointerTypes;
+overload PointerTypes(a, ...b) = Pointer[a], ...PointerTypes(...b);
+overload PointerTypes() = ;
+
+procedure pointerValues;
+overload pointerValues(a, ...b) = &a, ...pointerValues(...b);
+overload pointerValues() = ;
+
+record PtrTuple[...T] {
+    ptrs : Tuple[...PointerTypes(...T)];
+}
+
+[...T]
+overload PtrTuple(...args:T) =
+    PtrTuple[...T]( (...pointerValues(...args)) );
+
+main() {
+    var a = PtrTuple("foo", #bar, 10);
+    println(Type(a));
+}

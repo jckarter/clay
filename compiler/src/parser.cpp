@@ -1167,27 +1167,8 @@ static bool optStaticParams(vector<IdentifierPtr> &params,
 
 
 //
-// patternVars, typeSpec, optTypeSpec, exprTypeSpec
+// typeSpec, optTypeSpec, exprTypeSpec
 //
-
-static bool patternVars(vector<IdentifierPtr> &x) {
-    if (!symbol("[")) return false;
-    if (!identifierList(x)) return false;
-    if (!symbol("]")) {
-        x.clear();
-        return false;
-    }
-    return true;
-}
-
-static bool optPatternVars(vector<IdentifierPtr> &x) {
-    int p = save();
-    if (!patternVars(x)) {
-        restore(p);
-        x.clear();
-    }
-    return true;
-}
 
 static bool typeSpec(ExprPtr &x) {
     if (!symbol(":")) return false;
@@ -1542,7 +1523,7 @@ static bool record(TopLevelItemPtr &x) {
     if (!keyword("record")) return false;
     RecordPtr y = new Record(vis);
     if (!identifier(y->name)) return false;
-    if (!optPatternVars(y->patternVars)) return false;
+    if (!optStaticParams(y->params, y->varParam)) return false;
     if (!symbol("{")) return false;
     if (!optRecordFields(y->fields)) return false;
     if (!symbol("}")) return false;
