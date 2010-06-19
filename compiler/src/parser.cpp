@@ -1516,6 +1516,35 @@ static bool optRecordFields(vector<RecordFieldPtr> &x) {
     return true;
 }
 
+static bool recordBodyFields(RecordBodyPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("{")) return false;
+    vector<RecordFieldPtr> y;
+    if (!optRecordFields(y)) return false;
+    if (!symbol("}")) return false;
+    x = new RecordBody(y);
+    x->location = location;
+    return true;
+}
+
+static bool recordBodyComputed(RecordBodyPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("=")) return false;
+    vector<ExprPtr> y;
+    if (!optExpressionList(y)) return false;
+    if (!symbol(";")) return false;
+    x = new RecordBody(y);
+    x->location = location;
+    return true;
+}
+
+static bool recordBody(RecordBodyPtr &x) {
+    int p = save();
+    if (recordBodyFields(x)) return true;
+    if (restore(p), recordBodyComputed(x)) return true;
+    return false;
+}
+
 static bool record(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     Visibility vis;
@@ -1524,9 +1553,7 @@ static bool record(TopLevelItemPtr &x) {
     RecordPtr y = new Record(vis);
     if (!identifier(y->name)) return false;
     if (!optStaticParams(y->params, y->varParam)) return false;
-    if (!symbol("{")) return false;
-    if (!optRecordFields(y->fields)) return false;
-    if (!symbol("}")) return false;
+    if (!recordBody(y->body)) return false;
     x = y.ptr();
     x->location = location;
     return true;

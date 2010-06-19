@@ -39,6 +39,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     r->location = x->location;
     r->name = new Identifier("LambdaFreeVars");
     x->lambdaRecord = r;
+    vector<RecordFieldPtr> fields;
 
     TypePtr t = recordType(r, vector<ObjectPtr>());
     x->lambdaType = t;
@@ -86,8 +87,9 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
 
         ExprPtr fieldType = new ObjectExpr(type.ptr());
         RecordFieldPtr field = new RecordField(ident, fieldType);
-        r->fields.push_back(field);
+        fields.push_back(field);
     }
+    r->body = new RecordBody(fields);
 
     x->converted = converted.ptr();
 
