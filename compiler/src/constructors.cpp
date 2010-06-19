@@ -38,15 +38,19 @@ void initBuiltinConstructor(RecordPtr x)
     assert(!(x->builtinOverloadInitialized));
     x->builtinOverloadInitialized = true;
 
-    assert(x->patternVars.size() > 0);
+    assert((x->params.size() > 0) || x->varParam.ptr());
 
     ExprPtr recName = new NameRef(x->name);
     recName->location = x->name->location;
 
     CodePtr code = new Code();
     code->location = x->location;
-    for (unsigned i = 0; i < x->patternVars.size(); ++i) {
-        PatternVar pvar(false, x->patternVars[i]);
+    for (unsigned i = 0; i < x->params.size(); ++i) {
+        PatternVar pvar(false, x->params[i]);
+        code->patternVars.push_back(pvar);
+    }
+    if (x->varParam.ptr()) {
+        PatternVar pvar(true, x->varParam);
         code->patternVars.push_back(pvar);
     }
 
@@ -59,9 +63,16 @@ void initBuiltinConstructor(RecordPtr x)
 
     IndexingPtr retType = new Indexing(recName);
     retType->location = x->location;
-    for (unsigned i = 0; i < x->patternVars.size(); ++i) {
-        ExprPtr typeArg = new NameRef(x->patternVars[i]);
-        typeArg->location = x->patternVars[i]->location;
+    for (unsigned i = 0; i < x->params.size(); ++i) {
+        ExprPtr typeArg = new NameRef(x->params[i]);
+        typeArg->location = x->params[i]->location;
+        retType->args.push_back(typeArg);
+    }
+    if (x->varParam.ptr()) {
+        ExprPtr nameRef = new NameRef(x->varParam);
+        nameRef->location = x->varParam->location;
+        ExprPtr typeArg = new Unpack(nameRef);
+        typeArg->location = nameRef->location;
         retType->args.push_back(typeArg);
     }
 

@@ -904,8 +904,13 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
     }
     else if (constructor->objKind == RECORD) {
         RecordPtr x = (Record *)constructor.ptr();
-        if (args->size() != x->patternVars.size())
-            arityError(x->patternVars.size(), args->size());
+        if (x->varParam.ptr()) {
+            if (args->size() < x->params.size())
+                arityError2(x->params.size(), args->size());
+        }
+        else {
+            ensureArity(args, x->params.size());
+        }
         return recordType(x, args->values);
     }
     else {

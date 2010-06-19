@@ -1146,7 +1146,9 @@ struct TopLevelItem : public ANode {
 };
 
 struct Record : public TopLevelItem {
-    vector<IdentifierPtr> patternVars;
+    vector<IdentifierPtr> params;
+    IdentifierPtr varParam;
+
     vector<RecordFieldPtr> fields;
 
     vector<OverloadPtr> overloads;
@@ -1157,10 +1159,12 @@ struct Record : public TopLevelItem {
           builtinOverloadInitialized(false) {}
     Record(IdentifierPtr name,
            Visibility visibility,
-           const vector<IdentifierPtr> &patternVars,
+           const vector<IdentifierPtr> &params,
+           IdentifierPtr varParam,
            const vector<RecordFieldPtr> &fields)
-        : TopLevelItem(RECORD, name, visibility), patternVars(patternVars),
-          fields(fields), builtinOverloadInitialized(false) {}
+        : TopLevelItem(RECORD, name, visibility),
+          params(params), varParam(varParam), fields(fields),
+          builtinOverloadInitialized(false) {}
 };
 
 struct RecordField : public ANode {

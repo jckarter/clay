@@ -285,10 +285,19 @@ static void initializeRecordFields(RecordTypePtr t) {
     assert(!t->fieldsInitialized);
     t->fieldsInitialized = true;
     RecordPtr r = t->record;
-    assert(t->params.size() == r->patternVars.size());
+    if (r->varParam.ptr())
+        assert(t->params.size() >= r->params.size());
+    else
+        assert(t->params.size() == r->params.size());
     EnvPtr env = new Env(r->env);
-    for (unsigned i = 0; i < t->params.size(); ++i)
-        addLocal(env, r->patternVars[i], t->params[i].ptr());
+    for (unsigned i = 0; i < r->params.size(); ++i)
+        addLocal(env, r->params[i], t->params[i].ptr());
+    if (r->varParam.ptr()) {
+        MultiStaticPtr rest = new MultiStatic();
+        for (unsigned i = r->params.size(); i < t->params.size(); ++i)
+            rest->add(t->params[i]);
+        addLocal(env, r->varParam, rest.ptr());
+    }
     for (unsigned i = 0; i < r->fields.size(); ++i) {
         RecordField *x = r->fields[i].ptr();
         t->fieldIndexMap[x->name->str] = i;
