@@ -1420,18 +1420,14 @@ void evalCallInlined(InvokeEntryPtr entry,
     vector<EReturn> returns;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
-        if (pv->isTemp) {
-            EValuePtr ev = out->values[i];
+        EValuePtr ev = out->values[i];
+        if (pv->isTemp)
             assert(ev->type == pv->type);
-            returns.push_back(EReturn(false, pv->type, ev));
-            if (!returnSpecs.empty() && returnSpecs[i]->name.ptr()) {
-                addLocal(bodyEnv, returnSpecs[i]->name, ev.ptr());
-            }
-        }
-        else {
-            EValuePtr evPtr = out->values[i];
-            assert(evPtr->type == pointerType(pv->type));
-            returns.push_back(EReturn(true, pv->type, evPtr));
+        else
+            assert(ev->type == pointerType(pv->type));
+        returns.push_back(EReturn(!pv->isTemp, pv->type, ev));
+        if (!returnSpecs.empty() && returnSpecs[i]->name.ptr()) {
+            addLocal(bodyEnv, returnSpecs[i]->name, ev.ptr());
         }
     }
 
