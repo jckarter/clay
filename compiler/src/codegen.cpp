@@ -1733,7 +1733,9 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
             argType = llvmPointerType(rt);
         if (argCount > 0) out << string(", ");
         WriteTypeSymbolic(out, argType, llvmModule);
+        assert(i < entry->code->returnSpecs.size());
         const ReturnSpecPtr spec = entry->code->returnSpecs[i];
+        assert(spec->name.ptr());
         out << string(" %") << spec->name->str;
         argCount ++;
     }
@@ -1849,20 +1851,15 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
         ReturnSpecPtr rspec;
         if (!returnSpecs.empty())
             rspec = returnSpecs[i];
-        if (entry->returnIsRef[i]) {
-            CValuePtr cv = new CValue(pointerType(rt), llArgValue);
-            returns.push_back(CReturn(true, rt, cv));
-            if (rspec.ptr()) {
-                assert(!rspec->name);
-            }
-        }
-        else {
-            CValuePtr cv = new CValue(rt, llArgValue);
-            returns.push_back(CReturn(false, rt, cv));
-            if (rspec.ptr() && rspec->name.ptr()) {
-                addLocal(env, rspec->name, cv.ptr());
-                llArgValue->setName(rspec->name->str);
-            }
+        CValuePtr cv;
+        if (entry->returnIsRef[i])
+            cv = new CValue(pointerType(rt), llArgValue);
+        else
+            cv = new CValue(rt, llArgValue);
+        returns.push_back(CReturn(entry->returnIsRef[i], rt, cv));
+        if (rspec.ptr() && rspec->name.ptr()) {
+            addLocal(env, rspec->name, cv.ptr());
+            llArgValue->setName(rspec->name->str);
         }
     }
 
@@ -2005,18 +2002,14 @@ void codegenCallInlined(InvokeEntryPtr entry,
     vector<CReturn> returns;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
-        if (pv->isTemp) {
-            CValuePtr cv = out->values[i];
+        CValuePtr cv = out->values[i];
+        if (pv->isTemp)
             assert(cv->type == pv->type);
-            returns.push_back(CReturn(false, pv->type, cv));
-            if (!returnSpecs.empty() && returnSpecs[i]->name.ptr()) {
-                addLocal(bodyEnv, returnSpecs[i]->name, cv.ptr());
-            }
-        }
-        else {
-            CValuePtr cvPtr = out->values[i];
-            assert(cvPtr->type == pointerType(pv->type));
-            returns.push_back(CReturn(true, pv->type, cvPtr));
+        else
+            assert(cv->type == pointerType(pv->type));
+        returns.push_back(CReturn(!pv->isTemp, pv->type, cv));
+        if (!returnSpecs.empty() && returnSpecs[i]->name.ptr()) {
+            addLocal(bodyEnv, returnSpecs[i]->name, cv.ptr());
         }
     }
 

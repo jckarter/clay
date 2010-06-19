@@ -1071,7 +1071,7 @@ struct FormalArg : public ANode {
 struct ReturnSpec : public ANode {
     bool byRef;
     ExprPtr type;
-    IdentifierPtr name; // can be valid only if byRef==false
+    IdentifierPtr name;
     ReturnSpec(bool byRef, ExprPtr type)
         : ANode(RETURN_SPEC), byRef(byRef), type(type) {}
     ReturnSpec(bool byRef, ExprPtr type, IdentifierPtr name)

@@ -1554,18 +1554,8 @@ static bool record(TopLevelItemPtr &x) {
 
 
 //
-// refReturnSpec, valReturnSpec, returnSpecs
+// returnSpec
 //
-
-static bool refReturnSpec(ReturnSpecPtr &x) {
-    if (!keyword("ref")) return false;
-    LocationPtr location = currentLocation();
-    ExprPtr y;
-    if (!expression(y)) return false;
-    x = new ReturnSpec(true, y);
-    x->location = location;
-    return true;
-}
 
 static bool namedReturn(IdentifierPtr &x) {
     IdentifierPtr y;
@@ -1584,22 +1574,21 @@ static bool optNamedReturn(IdentifierPtr &x) {
     return true;
 }
 
-static bool valReturnSpec(ReturnSpecPtr &x) {
+static bool returnSpec(ReturnSpecPtr &x) {
     LocationPtr location = currentLocation();
+    int p = save();
+    bool byRef = true;
+    if (!keyword("ref")) {
+        restore(p);
+        byRef = false;
+    }
     IdentifierPtr y;
     if (!optNamedReturn(y)) return false;
     ExprPtr z;
     if (!expression(z)) return false;
-    x = new ReturnSpec(false, z, y);
+    x = new ReturnSpec(byRef, z, y);
     x->location = location;
     return true;
-}
-
-static bool returnSpec(ReturnSpecPtr &x) {
-    int p = save();
-    if (refReturnSpec(x)) return true;
-    if (restore(p), valReturnSpec(x)) return true;
-    return false;
 }
 
 static bool returnSpecList(vector<ReturnSpecPtr> &x) {
