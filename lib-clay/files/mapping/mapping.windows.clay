@@ -5,11 +5,15 @@ import win32;
 // FileMapping
 //
 
-record FileMapping {
+private record InnerFileMapping {
     fileHandle : win32.HANDLE;
     mappingObject : win32.HANDLE;
     address : Pointer[Byte];
     length : SizeT;
+}
+
+record FileMapping {
+    inner : SharedPointer[InnerFileMapping];
 }
 
 
@@ -64,28 +68,41 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
         win32.DWORD(offsetHigh),
         win32.DWORD(offsetLow),
         win32.DWORD(length));
-    if (address == win32.LPVOID(0))
+    if (address == win32.LPVOID(0)) {
+        win32.CloseHandle(mappingObject);
         error(win32.errorMessage());
-    return FileMapping(fileHandle(f), mappingObject, address, SizeT(length));
+    }
+    var p = new InnerFileMapping(fileHandle(f), mappingObject,
+                                 address, SizeT(length));
+    return FileMapping(p);
 }
 
 overload FileMapping(f:File, mode:MappingMode) =
     FileMapping(f, mode, 0, fileSize(f));
 
-overload destroy(fm:FileMapping) {
-    var result = win32.UnmapViewOfFile(fm.address);
+overload destroy(x:InnerFileMapping) {
+    var result = win32.UnmapViewOfFile(x.address);
     if (result == 0)
-        error(win32.errorMessage());
-    result = win32.CloseHandle(fm.mappingObject);
+        errorNoThrow(win32.errorMessage());
+    result = win32.CloseHandle(x.mappingObject);
     if (result == 0)
-        error(win32.errorMessage());
+        errorNoThrow(win32.errorMessage());
 }
 
 
 // disable default constructor, copy constructor, assignment
-overload FileMapping();
-overload FileMapping(x:FileMapping);
-overload assign(dest:FileMapping, src:FileMapping);
+overload InnerFileMapping();
+overload InnerFileMapping(x:InnerFileMapping);
+overload assign(dest:InnerFileMapping, src:InnerFileMapping);
+
+
+
+//
+// mappingAddress, mappingLength
+//
+
+mappingAddress(fm:FileMapping) = fm.inner^.address;
+mappingLength(fm:FileMapping) = fm.inner^.length;
 
 
 
@@ -94,10 +111,10 @@ overload assign(dest:FileMapping, src:FileMapping);
 //
 
 flushMapping(fm:FileMapping) {
-    var result = win32.FlushViewOfFile(fm.address, fm.length);
+    var result = win32.FlushViewOfFile(fm.inner^.address, fm.inner^.length);
     if (result == 0)
         error(win32.errorMessage());
-    result = win32.FlushFileBuffers(fm.fileHandle);
+    result = win32.FlushFileBuffers(fm.inner^.fileHandle);
     if (result == 0)
         error(win32.errorMessage());
 }

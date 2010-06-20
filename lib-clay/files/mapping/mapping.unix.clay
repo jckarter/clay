@@ -5,9 +5,13 @@ import unix;
 // FileMapping
 //
 
-record FileMapping {
+private record InnerFileMapping {
     address : Pointer[Byte];
     length : SizeT;
+}
+
+record FileMapping {
+    inner : SharedPointer[InnerFileMapping];
 }
 
 
@@ -53,21 +57,30 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
                                Int(flags),
                                fileHandle(f),
                                Int64(offset));
-    return FileMapping(address, SizeT(length));
+    return FileMapping(new InnerFileMapping(address, SizeT(length)));
 }
 
 overload FileMapping(f:File, mode:MappingMode) =
     FileMapping(f, mode, 0, fileSize(f));
 
-overload destroy(fm:FileMapping) {
-    unix.syscall(unix.munmap, fm.address, fm.length);
+overload destroy(x:InnerFileMapping) {
+    unix.syscallNoThrow(unix.munmap, x.address, x.length);
 }
 
 
 // disable default constructor, copy constructor, assignment
-overload FileMapping();
-overload FileMapping(x:FileMapping);
-overload assign(dest:FileMapping, src:FileMapping);
+overload InnerFileMapping();
+overload InnerFileMapping(x:InnerFileMapping);
+overload assign(dest:InnerFileMapping, src:InnerFileMapping);
+
+
+
+//
+// mappingAddress, mappingLength
+//
+
+mappingAddress(fm:FileMapping) = fm.inner^.address;
+mappingLength(fm:FileMapping) = fm.inner^.length;
 
 
 
@@ -76,5 +89,6 @@ overload assign(dest:FileMapping, src:FileMapping);
 //
 
 flushMapping(fm:FileMapping) {
-    unix.syscall(unix.msync, fm.address, fm.length, unix.MS_SYNC);
+    unix.syscall(unix.msync, fm.inner^.address,
+                 fm.inner^.length, unix.MS_SYNC);
 }

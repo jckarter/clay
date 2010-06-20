@@ -9,6 +9,6 @@ main() {
 
     var mapping = FileMapping(file, MAP_READ_WRITE);
     for (i in range(N))
-        (mapping.address + i)^ = Byte((i % 26) + 65);
+        (mappingAddress(mapping) + i)^ = Byte((i % 26) + 65);
     flushMapping(mapping);
 }

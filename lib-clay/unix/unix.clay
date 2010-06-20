@@ -11,5 +11,12 @@ inlined syscall(callable, ...args) {
     return result;
 }
 
+inlined syscallNoThrow(callable, ...args) {
+    var result = callable(...args);
+    if (result == Type(result)(-1))
+        errorNoThrow(errorMessage());
+    return result;
+}
+
 errorMessage(err) = stringRef(libc.strerror(err));
 overload errorMessage() = errorMessage(errno());

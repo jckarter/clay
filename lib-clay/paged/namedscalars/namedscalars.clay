@@ -45,4 +45,5 @@ overload NamedScalar[T](fileName : strings.String, initial:T) returned:NamedScal
 //
 
 [T]
-overload dereference(x:NamedScalar[T]) = ref Pointer[T](x.mapping.address)^;
+overload dereference(x:NamedScalar[T]) =
+    ref Pointer[T](mappingAddress(x.mapping))^;
