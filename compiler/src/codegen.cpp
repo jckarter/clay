@@ -277,13 +277,16 @@ void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx)
     }
 }
 
+void cgPushStack(CValuePtr cv)
+{
+    valueStack.push_back(StackEntry(cv));
+}
+
 CValuePtr codegenAllocValue(TypePtr t)
 {
     const llvm::Type *llt = llvmType(t);
-    llvm::Value *llval = llvmInitBuilder->CreateAlloca(llt);
-    CValuePtr cv = new CValue(t, llval);
-    valueStack.push_back(StackEntry(cv));
-    return cv;
+    llvm::Value *llv = llvmInitBuilder->CreateAlloca(llt);
+    return new CValue(t, llv);
 }
 
 
@@ -444,10 +447,13 @@ MultiCValuePtr codegenExprAsRef(ExprPtr expr,
     codegenExpr(expr, env, ctx, mcv);
     MultiCValuePtr out = new MultiCValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        if (mpv->values[i]->isTemp)
+        if (mpv->values[i]->isTemp) {
             out->add(mcv->values[i]);
-        else
+            cgPushStack(mcv->values[i]);
+        }
+        else {
             out->add(derefValue(mcv->values[i]));
+        }
     }
     return out;
 }
@@ -465,6 +471,7 @@ void codegenOneInto(ExprPtr expr,
 {
     PValuePtr pv = analyzeOne(expr, env);
     assert(pv.ptr());
+    int marker = cgMarkStack();
     if (pv->isTemp) {
         codegenOne(expr, env, ctx, out);
     }
@@ -473,6 +480,7 @@ void codegenOneInto(ExprPtr expr,
         codegenOne(expr, env, ctx, cvPtr);
         codegenValueCopy(out, derefValue(cvPtr), ctx);
     }
+    cgDestroyAndPopStack(marker, ctx);
 }
 
 void codegenMultiInto(const vector<ExprPtr> &exprs,
@@ -480,8 +488,11 @@ void codegenMultiInto(const vector<ExprPtr> &exprs,
                       CodegenContextPtr ctx,
                       MultiCValuePtr out)
 {
+    int marker = cgMarkStack();
+    int marker2 = marker;
     unsigned j = 0;
     for (unsigned i = 0; i < exprs.size(); ++i) {
+        unsigned prevJ = j;
         ExprPtr x = exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
@@ -503,8 +514,13 @@ void codegenMultiInto(const vector<ExprPtr> &exprs,
             codegenOneInto(x, env, ctx, out->values[j]);
             ++j;
         }
+        cgDestroyAndPopStack(marker2, ctx);
+        for (unsigned k = prevJ; k < j; ++k)
+            cgPushStack(out->values[k]);
+        marker2 = cgMarkStack();
     }
     assert(j == out->size());
+    cgPopStack(marker);
 }
 
 void codegenExprInto(ExprPtr expr,
@@ -515,6 +531,7 @@ void codegenExprInto(ExprPtr expr,
     MultiPValuePtr mpv = analyzeExpr(expr, env);
     assert(mpv.ptr());
     assert(out->size() == mpv->size());
+    int marker = cgMarkStack();
     MultiCValuePtr mcv = new MultiCValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
@@ -527,11 +544,15 @@ void codegenExprInto(ExprPtr expr,
         }
     }
     codegenExpr(expr, env, ctx, mcv);
+    int marker2 = cgMarkStack();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         if (!mpv->values[i]->isTemp) {
             codegenValueCopy(out->values[i], derefValue(mcv->values[i]), ctx);
         }
+        cgPushStack(out->values[i]);
     }
+    cgPopStack(marker2);
+    cgDestroyAndPopStack(marker, ctx);
 }
 
 
@@ -545,8 +566,11 @@ void codegenMulti(const vector<ExprPtr> &exprs,
                   CodegenContextPtr ctx,
                   MultiCValuePtr out)
 {
+    int marker = cgMarkStack();
+    int marker2 = marker;
     unsigned j = 0;
     for (unsigned i = 0; i < exprs.size(); ++i) {
+        unsigned prevJ = j;
         ExprPtr x = exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
@@ -568,8 +592,13 @@ void codegenMulti(const vector<ExprPtr> &exprs,
             codegenOne(x, env, ctx, out->values[j]);
             ++j;
         }
+        cgDestroyAndPopStack(marker2, ctx);
+        for (unsigned k = prevJ; k < j; ++k)
+            cgPushStack(out->values[k]);
+        marker2 = cgMarkStack();
     }
     assert(j == out->size());
+    cgPopStack(marker);
 }
 
 void codegenOne(ExprPtr expr,
@@ -2109,6 +2138,8 @@ bool codegenStatement(StatementPtr stmt,
                 mcvRight->add(cv);
             }
             codegenMultiInto(x->right, env, ctx, mcvRight);
+            for (unsigned i = 0; i < mcvRight->size(); ++i)
+                cgPushStack(mcvRight->values[i]);
             MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
             assert(mcvLeft->size() == mcvRight->size());
             for (unsigned i = 0; i < mcvLeft->size(); ++i) {
@@ -2410,8 +2441,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         codegenMultiInto(x->exprs, env, ctx, mcv);
         cgDestroyAndPopStack(marker, ctx);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->names.size(); ++i)
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            cgPushStack(mcv->values[i]);
             addLocal(env2, x->names[i], mcv->values[i].ptr());
+        }
         return env2;
     }
 
@@ -2439,6 +2472,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         for (unsigned i = 0; i < x->names.size(); ++i) {
             if (mpv->values[i]->isTemp) {
                 CValuePtr cv = mcv->values[i];
+                cgPushStack(cv);
                 addLocal(env2, x->names[i], cv.ptr());
             }
             else {
