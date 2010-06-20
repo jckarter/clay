@@ -47,7 +47,7 @@ private modeAccess(mode) {
 [A,B | Integer?(A,B)]
 overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     var mappingObject = win32.CreateFileMappingA(
-        f.handle,
+        fileHandle(f),
         win32.LPSECURITY_ATTRIBUTES(0),
         win32.DWORD(modeProtection(mode)),
         win32.DWORD(0),
@@ -66,7 +66,7 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
         win32.DWORD(length));
     if (address == win32.LPVOID(0))
         error(win32.errorMessage());
-    return FileMapping(f.handle, mappingObject, address, SizeT(length));
+    return FileMapping(fileHandle(f), mappingObject, address, SizeT(length));
 }
 
 overload FileMapping(f:File, mode:MappingMode) =

@@ -5,18 +5,22 @@ import win32;
 // File
 //
 
-record File {
+private record InnerFile {
     handle : win32.HANDLE;
     owned : Bool;
 }
 
 overload SafeRecord?(static File) = false;
 
+record File {
+    inner : SharedPointer[InnerFile];
+}
+
 private stdHandle(x) = win32.GetStdHandle(win32.DWORD(x));
 
-var stdin  = File(stdHandle(win32.STD_INPUT_HANDLE), false);
-var stdout = File(stdHandle(win32.STD_OUTPUT_HANDLE), false);
-var stderr = File(stdHandle(win32.STD_ERROR_HANDLE), false);
+var stdin  = File(new InnerFile(stdHandle(win32.STD_INPUT_HANDLE), false));
+var stdout = File(new InnerFile(stdHandle(win32.STD_OUTPUT_HANDLE), false));
+var stderr = File(new InnerFile(stdHandle(win32.STD_ERROR_HANDLE), false));
 
 
 
@@ -67,7 +71,7 @@ private creationFlags(mode) {
     assert(false);
 }
 
-overload File(path:String, mode:OpenMode) returned:File {
+overload File(path:String, mode:OpenMode) {
     var handle = win32.CreateFileA(
         cstring(path),
         win32.DWORD(accessFlags(mode)),
@@ -78,25 +82,34 @@ overload File(path:String, mode:OpenMode) returned:File {
         win32.HANDLE(0));
     if (handle == win32.INVALID_HANDLE_VALUE)
         error(win32.errorMessage(), ": ", path);
-    returned <-- File(handle, true);
+    var f = File(new InnerFile(handle, true));
     if (mode == APPEND)
-        seek(returned, 0, SEEK_END);
+        seek(f, 0, SEEK_END);
+    return move(f);
 }
 
 overload File(path:String) = File(path, READ);
 
-overload destroy(f:File) {
-    if (f.owned) {
-        var result = win32.CloseHandle(f.handle);
+overload destroy(x:InnerFile) {
+    if (x.owned) {
+        var result = win32.CloseHandle(x.handle);
         if (result == 0)
-            error(win32.errorMessage());
+            errorNoThrow(win32.errorMessage());
     }
 }
 
 // disable default constructor, copy constructor, assignment
-overload File();
-overload File(f:File);
-overload assign(dest:File, src:File);
+overload InnerFile();
+overload InnerFile(x:InnerFile);
+overload assign(dest:InnerFile, src:InnerFile);
+
+
+
+//
+// fileHandle
+//
+
+fileHandle(f:File) = f.inner^.handle;
 
 
 
@@ -108,7 +121,7 @@ overload assign(dest:File, src:File);
 overload read(f:File, buffer:Pointer[Byte], n:I) SizeT {
     var nRead = win32.DWORD();
     var result = win32.ReadFile(
-        f.handle,
+        f.inner^.handle,
         win32.LPVOID(buffer),
         win32.DWORD(n),
         &nRead,
@@ -122,7 +135,7 @@ overload read(f:File, buffer:Pointer[Byte], n:I) SizeT {
 overload write(f:File, buffer:Pointer[Byte], n:I) {
     var nWritten = win32.DWORD();
     var result = win32.WriteFile(
-        f.handle,
+        f.inner^.handle,
         win32.LPVOID(buffer),
         win32.DWORD(n),
         &nWritten,
@@ -133,7 +146,7 @@ overload write(f:File, buffer:Pointer[Byte], n:I) {
 }
 
 overload flush(f:File) {
-    var result = win32.FlushFileBuffers(f.handle);
+    var result = win32.FlushFileBuffers(f.inner^.handle);
     if (result == 0)
         error(win32.errorMessage());
 }
@@ -151,7 +164,7 @@ fileExists?(p) {
 
 fileSize(f:File) {
     var size = Int64();
-    var result = win32.GetFileSizeEx(f.handle, &size);
+    var result = win32.GetFileSizeEx(f.inner^.handle, &size);
     if (result == 0)
         error(win32.errorMessage());
     return size;
@@ -173,7 +186,7 @@ private seekMethod(x) {
 seek(f:File, offset, whence) {
     var newPos = Int64();
     var result = win32.SetFilePointerEx(
-        f.handle,
+        f.inner^.handle,
         Int64(offset),
         &newPos,
         seekMethod(whence));

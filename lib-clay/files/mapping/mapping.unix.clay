@@ -51,7 +51,7 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
                                SizeT(length),
                                Int(protection),
                                Int(flags),
-                               f.handle,
+                               fileHandle(f),
                                Int64(offset));
     return FileMapping(address, SizeT(length));
 }

@@ -6,12 +6,16 @@ import unix;
 // File
 //
 
-record File {
+private record InnerFile {
     handle : Int;
     owned : Bool;
 }
 
-overload SafeRecord?(static File) = false;
+overload SafeRecord?(static InnerFile) = false;
+
+record File {
+    inner : SharedPointer[InnerFile];
+}
 
 
 
@@ -19,9 +23,9 @@ overload SafeRecord?(static File) = false;
 // stdin, stdout, stderr
 //
 
-var stdin = File(0, false);
-var stdout = File(1, false);
-var stderr = File(2, false);
+var stdin  = File(new InnerFile(0, false));
+var stdout = File(new InnerFile(1, false));
+var stderr = File(new InnerFile(2, false));
 
 
 
@@ -57,20 +61,28 @@ overload File(path:String, mode:OpenMode) {
         handle = unix.open(cstring(path), flags);
     if (handle == -1)
         error(unix.errorMessage(), ": ", path);
-    return File(handle, true);
+    return File(new InnerFile(handle, true));
 }
 
 overload File(path:String) = File(path, READ);
 
-overload destroy(f:File) {
-    if (f.owned)
-        unix.syscall(unix.close, f.handle);
+overload destroy(x:InnerFile) {
+    if (x.owned)
+        unix.syscall(unix.close, x.handle);
 }
 
 // disable default constructor, copy constructor, assignment
-overload File();
-overload File(f:File);
-overload assign(dest:File, src:File);
+overload InnerFile();
+overload InnerFile(x:InnerFile);
+overload assign(dest:InnerFile, src:InnerFile);
+
+
+
+//
+// fileHandle
+//
+
+fileHandle(f:File) = f.inner^.handle;
 
 
 
@@ -80,13 +92,13 @@ overload assign(dest:File, src:File);
 
 [I | Integer?(I)]
 overload read(f:File, buffer:Pointer[Byte], n:I) SizeT {
-    var result = unix.syscall(unix.read, f.handle, buffer, SizeT(n));
+    var result = unix.syscall(unix.read, f.inner^.handle, buffer, SizeT(n));
     return SizeT(result);
 }
 
 [I | Integer?(I)]
 overload write(f:File, buffer:Pointer[Byte], n:I) {
-    unix.syscall(unix.write, f.handle, buffer, SizeT(n));
+    unix.syscall(unix.write, f.inner^.handle, buffer, SizeT(n));
 }
 
 overload flush(f:File) {
@@ -106,7 +118,7 @@ fileExists?(p) {
 
 fileSize(f:File) {
     var statBuf = unix.Struct_stat();
-    unix.syscall(unix.fstat, f.handle, &statBuf);
+    unix.syscall(unix.fstat, f.inner^.handle, &statBuf);
     return Int64(statBuf.st_size);
 }
 
@@ -125,7 +137,7 @@ private seekWhence(x) {
 
 seek(f:File, offset, whence) {
     return unix.syscall(unix.lseek,
-                        f.handle,
+                        f.inner^.handle,
                         Int64(offset),
                         seekWhence(whence));
 }
