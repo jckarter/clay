@@ -23,18 +23,20 @@ record NamedScalar[T] {
 //
 
 [T]
-overload NamedScalar[T](fileName : strings.String, initial:T) returned:NamedScalar[T] {
-    ref x = returned;
-    x.fileName <-- fileName;
+overload NamedScalar[T](fileName : strings.String, initial:T) {
     if (fileExists?(fileName)) {
-        x.file <-- File(fileName, READ_WRITE);
-        x.mapping <-- FileMapping(x.file, MAP_READ_WRITE);
+        var f = File(fileName, READ_WRITE);
+        var mapping = FileMapping(f, MAP_READ_WRITE);
+        return NamedScalar[T](fileName, f, mapping);
     }
     else {
-        x.file <-- File(fileName, CREATE);
-        resizeFile(x.file, TypeSize(T));
-        x.mapping <-- FileMapping(x.file, MAP_READ_WRITE);
-        x^ <-- initial;
+        var f = File(fileName, CREATE);
+        // FIXME: not exception safe
+        resizeFile(f, TypeSize(T));
+        var mapping = FileMapping(f, MAP_READ_WRITE);
+        var ptr = Pointer[T](mappingAddress(mapping));
+        ptr^ <-- initial;
+        return NamedScalar[T](fileName, f, mapping);
     }
 }
 

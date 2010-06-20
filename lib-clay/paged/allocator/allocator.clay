@@ -15,8 +15,8 @@ alias BucketArray = Array[SizeT, BucketCount];
 
 record State {
     fileName : String;
-    file : SharedPointer[File];
-    mapping : SharedPointer[FileMapping];
+    file : File;
+    mapping : FileMapping;
     freeListBuckets : Pointer[BucketArray];
     dataBegin : Pointer[Byte];
     dataEnd : Pointer[Byte];
@@ -178,13 +178,13 @@ initializePaging(fileName:String, fileSize) {
 
     ref x = state;
     x.fileName = fileName;
-    x.file = new File(fileName, fileMode);
+    x.file = File(fileName, fileMode);
     if (newFile?)
-        resizeFile(x.file^, SizeT(fileSize));
-    x.mapping = new FileMapping(x.file^, MAP_READ_WRITE);
-    x.dataBegin = mappingAddress(x.mapping^) + TypeSize(BucketArray);
-    x.dataEnd = mappingAddress(x.mapping^) + mappingLength(x.mapping^);
-    x.freeListBuckets = Pointer[BucketArray](mappingAddress(x.mapping^));
+        resizeFile(x.file, SizeT(fileSize));
+    x.mapping = FileMapping(x.file, MAP_READ_WRITE);
+    x.dataBegin = mappingAddress(x.mapping) + TypeSize(BucketArray);
+    x.dataEnd = mappingAddress(x.mapping) + mappingLength(x.mapping);
+    x.freeListBuckets = Pointer[BucketArray](mappingAddress(x.mapping));
 
     if (newFile?)
         initNewFile();

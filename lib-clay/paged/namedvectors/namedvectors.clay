@@ -48,25 +48,26 @@ private requiredFileSize(static T, capacity) =
     capacity*TypeSize(T) + headerSpace();
 
 [T]
-overload NamedVector[T](fileName : strings.String) returned:NamedVector[T] {
-    ref x = returned;
-    x.fileName <-- fileName;
+overload NamedVector[T](fileName : strings.String) {
     if (fileExists?(fileName)) {
-        x.file <-- File(fileName, READ_WRITE);
-        x.mapping <-- FileMapping(x.file, MAP_READ_WRITE);
-        x.header = Pointer[Header](mappingAddress(x.mapping));
-        x.data = Pointer[T](mappingAddress(x.mapping) + headerSpace());
+        var f = File(fileName, READ_WRITE);
+        var mapping = FileMapping(f, MAP_READ_WRITE);
+        var header = Pointer[Header](mappingAddress(mapping));
+        var data = Pointer[T](mappingAddress(mapping) + headerSpace());
+        return NamedVector[T](fileName, f, mapping, header, data);
     }
     else {
-        x.file <-- File(fileName, CREATE);
+        var f = File(fileName, CREATE);
         var capacity = 16;
         var size = 0;
-        resizeFile(x.file, requiredFileSize(T, capacity));
-        x.mapping <-- FileMapping(x.file, MAP_READ_WRITE);
-        x.header = Pointer[Header](mappingAddress(x.mapping));
-        x.data = Pointer[T](mappingAddress(x.mapping) + headerSpace());
-        x.header^.size = size;
-        x.header^.capacity = capacity;
+        // FIXME: not exception safe
+        resizeFile(f, requiredFileSize(T, capacity));
+        var mapping = FileMapping(f, MAP_READ_WRITE);
+        var header = Pointer[Header](mappingAddress(mapping));
+        var data = Pointer[T](mappingAddress(mapping) + headerSpace());
+        header^.size = size;
+        header^.capacity = capacity;
+        return NamedVector[T](fileName, f, mapping, header, data);
     }
 }
 
