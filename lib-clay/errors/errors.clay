@@ -5,6 +5,9 @@ error(...e) {
     libc.exit(-1);
 }
 
+errorNoThrow(...e) {
+    printlnTo(stderr, "error: ", ...e);
+}
 
 inlined assert(cond:Bool) {
     if (not cond)
