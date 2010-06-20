@@ -68,7 +68,7 @@ overload File(path:String) = File(path, READ);
 
 overload destroy(x:InnerFile) {
     if (x.owned)
-        unix.syscall(unix.close, x.handle);
+        unix.syscallNoThrow(unix.close, x.handle);
 }
 
 // disable default constructor, copy constructor, assignment
