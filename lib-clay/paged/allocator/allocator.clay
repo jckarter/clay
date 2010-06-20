@@ -182,9 +182,9 @@ initializePaging(fileName:String, fileSize) {
     if (newFile?)
         resizeFile(x.file^, SizeT(fileSize));
     x.mapping = new FileMapping(x.file^, MAP_READ_WRITE);
-    x.dataBegin = x.mapping^.address + TypeSize(BucketArray);
-    x.dataEnd = x.mapping^.address + x.mapping^.length;
-    x.freeListBuckets = Pointer[BucketArray](x.mapping^.address);
+    x.dataBegin = mappingAddress(x.mapping^) + TypeSize(BucketArray);
+    x.dataEnd = mappingAddress(x.mapping^) + mappingLength(x.mapping^);
+    x.freeListBuckets = Pointer[BucketArray](mappingAddress(x.mapping^));
 
     if (newFile?)
         initNewFile();

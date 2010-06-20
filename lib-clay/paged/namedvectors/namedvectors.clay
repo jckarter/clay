@@ -54,8 +54,8 @@ overload NamedVector[T](fileName : strings.String) returned:NamedVector[T] {
     if (fileExists?(fileName)) {
         x.file <-- File(fileName, READ_WRITE);
         x.mapping <-- FileMapping(x.file, MAP_READ_WRITE);
-        x.header = Pointer[Header](x.mapping.address);
-        x.data = Pointer[T](x.mapping.address + headerSpace());
+        x.header = Pointer[Header](mappingAddress(x.mapping));
+        x.data = Pointer[T](mappingAddress(x.mapping) + headerSpace());
     }
     else {
         x.file <-- File(fileName, CREATE);
@@ -63,8 +63,8 @@ overload NamedVector[T](fileName : strings.String) returned:NamedVector[T] {
         var size = 0;
         resizeFile(x.file, requiredFileSize(T, capacity));
         x.mapping <-- FileMapping(x.file, MAP_READ_WRITE);
-        x.header = Pointer[Header](x.mapping.address);
-        x.data = Pointer[T](x.mapping.address + headerSpace());
+        x.header = Pointer[Header](mappingAddress(x.mapping));
+        x.data = Pointer[T](mappingAddress(x.mapping) + headerSpace());
         x.header^.size = size;
         x.header^.capacity = capacity;
     }
@@ -207,8 +207,8 @@ private setCapacity(a:NamedVector[T], capacity:SizeT) {
     destroy(a.mapping);
     resizeFile(a.file, requiredFileSize(T, capacity));
     a.mapping <-- FileMapping(a.file, MAP_READ_WRITE);
-    a.header = Pointer[Header](a.mapping.address);
-    a.data = Pointer[T](a.mapping.address + headerSpace());
+    a.header = Pointer[Header](mappingAddress(a.mapping));
+    a.data = Pointer[T](mappingAddress(a.mapping) + headerSpace());
     a.header^.capacity = capacity;
 }
 
