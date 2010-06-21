@@ -339,17 +339,19 @@ int main(int argc, char **argv) {
     llvm::sys::Path clayExe =
         llvm::sys::Path::GetMainExecutable(argv[0], (void *)&main);
     llvm::sys::Path clayDir(clayExe.getDirname());
-    bool result;
-    result = clayDir.appendComponent("..");
-    assert(result);
     llvm::sys::Path libDirDevelopment(clayDir);
-    llvm::sys::Path libDirProduction(clayDir);
-    result = libDirDevelopment.appendComponent("../../lib-clay");
+    llvm::sys::Path libDirProduction1(clayDir);
+    llvm::sys::Path libDirProduction2(clayDir);
+    bool result;
+    result = libDirDevelopment.appendComponent("../../../lib-clay");
     assert(result);
-    result = libDirProduction.appendComponent("lib/lib-clay");
+    result = libDirProduction1.appendComponent("../lib/lib-clay");
+    assert(result);
+    result = libDirProduction2.appendComponent("lib-clay");
     assert(result);
     addSearchPath(libDirDevelopment.str());
-    addSearchPath(libDirProduction.str());
+    addSearchPath(libDirProduction1.str());
+    addSearchPath(libDirProduction2.str());
 
     if (outputFile.empty()) {
         if (emitLLVM)
