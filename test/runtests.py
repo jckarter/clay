@@ -75,9 +75,12 @@ def runtest(t):
     return t.run()
 
 def runtests() :
+    global compiler
     if not os.path.exists(compiler):
-        print "Could not find the clay compiler"
-        return
+        compiler = os.path.join(testDir, "..", "clay");
+        if not os.path.exists(compiler):
+            print "Could not find the clay compiler"
+            return
     testcases = findTestCases()
     pool = Pool(processes = cpu_count())
     results = pool.imap(runtest, testcases)
