@@ -10,7 +10,7 @@ private record InnerFile {
     owned : Bool;
 }
 
-overload SafeRecord?(static File) = false;
+overload SafeRecord?(static InnerFile) = false;
 
 record File {
     inner : SharedPointer[InnerFile];
