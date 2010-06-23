@@ -37,6 +37,9 @@ void evalCallPointer(EValuePtr x,
 void evalCallCode(InvokeEntryPtr entry,
                   MultiEValuePtr args,
                   MultiEValuePtr out);
+void evalCallCompiledCode(InvokeEntryPtr entry,
+                          MultiEValuePtr args,
+                          MultiEValuePtr out);
 void evalCallInlined(InvokeEntryPtr entry,
                      const vector<ExprPtr> &args,
                      EnvPtr env,
@@ -1347,6 +1350,83 @@ void evalCallPointer(EValuePtr x,
 void evalCallCode(InvokeEntryPtr entry,
                   MultiEValuePtr args,
                   MultiEValuePtr out)
+{
+    assert(!entry->inlined);
+    assert(entry->analyzed);
+    if (entry->code->isInlineLLVM()) {
+        evalCallCompiledCode(entry, args, out);
+        return;
+    }
+
+    ensureArity(args, entry->argsKey.size());
+
+    EnvPtr env = new Env(entry->env);
+
+    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+        EValuePtr ev = args->values[i];
+        addLocal(env, entry->fixedArgNames[i], ev.ptr());
+    }
+
+    if (entry->varArgName.ptr()) {
+        unsigned nFixed = entry->fixedArgNames.size();
+        MultiEValuePtr varArgs = new MultiEValue();
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
+            EValuePtr ev = args->values[i + nFixed];
+            EValuePtr earg = new EValue(ev->type, ev->addr);
+            earg->forwardedRValue = entry->forwardedRValueFlags[i + nFixed];
+            varArgs->add(ev);
+        }
+        addLocal(env, entry->varArgName, varArgs.ptr());
+    }
+
+    const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+    if (!returnSpecs.empty()) {
+        assert(returnSpecs.size() == entry->returnTypes.size());
+    }
+
+    assert(out->size() == entry->returnTypes.size());
+    vector<EReturn> returns;
+    for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
+        bool isRef = entry->returnIsRef[i];
+        TypePtr rt = entry->returnTypes[i];
+        EValuePtr ev = out->values[i];
+        returns.push_back(EReturn(isRef, rt, ev));
+        ReturnSpecPtr rspec;
+        if (!returnSpecs.empty())
+            rspec = returnSpecs[i];
+        if (rspec.ptr() && rspec->name.ptr())
+            addLocal(env, rspec->name, ev.ptr());
+    }
+
+    EvalContextPtr ctx = new EvalContext(returns);
+
+    assert(entry->code->body.ptr());
+    TerminationPtr term = evalStatement(entry->code->body, env, ctx);
+    if (term.ptr()) {
+        switch (term->terminationKind) {
+        case TERMINATE_RETURN :
+            break;
+        case TERMINATE_BREAK :
+            error(term, "invalid 'break' statement");
+        case TERMINATE_CONTINUE:
+            error(term, "invalid 'continue' statement");
+        case TERMINATE_GOTO :
+            error(term, "invalid 'goto' statement");
+        default :
+            assert(false);
+        }
+    }
+}
+
+
+
+//
+// evalCallCompiledCode
+//
+
+void evalCallCompiledCode(InvokeEntryPtr entry,
+                          MultiEValuePtr args,
+                          MultiEValuePtr out)
 {
     if (!entry->llvmFunc)
         codegenCodeBody(entry, getCodeName(entry->callable));
