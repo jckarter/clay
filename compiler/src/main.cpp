@@ -343,10 +343,16 @@ int main(int argc, char **argv) {
     llvm::sys::Path libDirProduction1(clayDir);
     llvm::sys::Path libDirProduction2(clayDir);
     bool result;
+#ifdef WIN32
+    result = libDirDevelopment.appendComponent("../../../../lib-clay");
+#else
     result = libDirDevelopment.appendComponent("../../../lib-clay");
+#endif
     assert(result);
+#ifndef WIN32
     result = libDirProduction1.appendComponent("../lib/lib-clay");
     assert(result);
+#endif
     result = libDirProduction2.appendComponent("lib-clay");
     assert(result);
     addSearchPath(libDirDevelopment.str());
