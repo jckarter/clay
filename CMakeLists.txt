@@ -69,10 +69,10 @@ elseif(MSVC)
         "LLVMJIT" "LLVMInterpreter" "LLVMExecutionEngine" "LLVMX86AsmPrinter" 
         "LLVMX86AsmParser" "LLVMX86Disassembler" "LLVMBitReader" 
         "LLVMBitWriter" "LLVMipo" "LLVMX86CodeGen" "LLVMMCParser" 
-        "LLVMSelectionDAG" "LLVMX86Info" "LLVMAsmPrinter" "LLVMCodeGen" 
-        "LLVMScalarOpts" "LLVMInstCombine" "LLVMTransformUtils" "LLVMipa" 
-        "LLVMAnalysis" "LLVMTarget" "LLVMCore" "LLVMMC" "LLVMSupport"
-        "LLVMSystem")
+        "LLVMSelectionDAG" "LLVMX86Info" "LLVMAsmParser" "LLVMAsmPrinter"
+        "LLVMCodeGen" "LLVMScalarOpts" "LLVMInstCombine" "LLVMTransformUtils"
+        "LLVMipa" "LLVMAnalysis" "LLVMTarget" "LLVMCore" "LLVMMC"
+        "LLVMSupport" "LLVMSystem")
 endif(UNIX)
 
 set(CMAKE_OSX_ARCHITECTURES x86_64)
