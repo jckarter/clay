@@ -1622,9 +1622,24 @@ void codegenCallPointer(CValuePtr x,
                 llArgs.push_back(llv);
             }
         }
-        llvm::Value *llRet = llvmBuilder->CreateCall(llCallable,
-                                                     llArgs.begin(),
-                                                     llArgs.end());
+        llvm::CallInst *callInst =
+            llvmBuilder->CreateCall(llCallable,
+                                    llArgs.begin(),
+                                    llArgs.end());
+        switch (t->callingConv) {
+        case CC_DEFAULT :
+            break;
+        case CC_STDCALL :
+            callInst->setCallingConv(llvm::CallingConv::X86_StdCall);
+            break;
+        case CC_FASTCALL :
+            callInst->setCallingConv(llvm::CallingConv::X86_FastCall);
+            break;
+        default :
+            assert(false);
+        }
+
+        llvm::Value *llRet = callInst;
         if (t->returnType.ptr()) {
             assert(out->size() == 1);
             CValuePtr out0 = out->values[0];
