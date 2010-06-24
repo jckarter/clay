@@ -8,7 +8,19 @@ from subprocess import Popen, PIPE
 from multiprocessing import Pool, cpu_count
 
 testDir = os.path.dirname(os.path.abspath(__file__))
-compiler = os.path.join(testDir, "..", "build", "compiler", "src", "clay")
+
+if sys.platform == "win32" :
+    compiler = os.path.join(testDir, "..", "build", "compiler", "src", "Release", "clay.exe")
+    compiler2 = os.path.join(testDir, "..", "clay.exe") # for binary distributions
+else :
+    compiler = os.path.join(testDir, "..", "build", "compiler", "src", "clay")
+    compiler2 = os.path.join(testDir, "..", "clay") # for binary distributions
+
+if not os.path.exists(compiler) :
+    compiler = compiler2
+    if not os.path.exists(compiler) :
+        print "could not find the clay compiler"
+        sys.exit(-1)
 
 CONFIG_FUNCTIONS = ["match", "pre_build", "post_build", "post_run", "cmdline"]
 
@@ -75,15 +87,15 @@ def runtest(t):
     return t.run()
 
 def runtests() :
-    global compiler
-    if not os.path.exists(compiler):
-        compiler = os.path.join(testDir, "..", "clay");
-        if not os.path.exists(compiler):
-            print "Could not find the clay compiler"
-            return
     testcases = findTestCases()
     pool = Pool(processes = cpu_count())
-    results = pool.imap(runtest, testcases)
+    if sys.platform != "win32" :
+        # run tests using a pool of processes
+        results = pool.imap(runtest, testcases)
+    else :
+        # fallback on sequential processing,
+        # as multiprocessing + custom-imports don't work on win32
+        results = itertools.imap(runtest, testcases)
     failed = []
     for test in testcases:
         res = results.next()
