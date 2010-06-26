@@ -40,7 +40,7 @@ overload next(iter:ZippedIterator[ITERS]) =
 
 private AllSized?(A) {
     var sizeDefined? = block (T) { return CallDefined?(size, T); };
-    return multiValueAll?(sizeDefined?, ...Types(unpackSequences(null(A)^)));
+    return multiValueAll?(sizeDefined?, ...Types(...unpackSequences(null(A)^)));
 }
 
 [A | AllSized?(A)]

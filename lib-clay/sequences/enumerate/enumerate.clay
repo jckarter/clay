@@ -1,0 +1,9 @@
+
+procedure enumerate;
+
+overload enumerate(lvalue a) = zip(range(size(a)), a);
+
+overload enumerate(rvalue a) {
+    var n = size(a);
+    return zip(range(n), move(a));
+}
