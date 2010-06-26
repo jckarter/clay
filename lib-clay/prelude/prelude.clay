@@ -11,7 +11,6 @@ public import pointers.*;
 public import sharedpointers.*;
 
 public import sequences.*;
-public import ranges.*;
 
 public import arrays.*;
 public import vectors.*;
