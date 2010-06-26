@@ -1,0 +1,6 @@
+
+main() {
+    var a = Vector([10, 20, 40, 80, 160]);
+    for (i, x in enumerate(a))
+        println(i, ") ", x);
+}

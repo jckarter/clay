@@ -165,7 +165,7 @@ swap(a, b) {
 procedure multiValueMap;
 
 overload multiValueMap(f, forward first, forward ...rest) =
-    forward f(first), ...multiValueMap(f, ...rest);
+    forward ...f(first), ...multiValueMap(f, ...rest);
 
 overload multiValueMap(f) = ;
 
