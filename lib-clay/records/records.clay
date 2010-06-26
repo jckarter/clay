@@ -68,7 +68,7 @@ overload recordFields2(a:T, static i) = ;
 //
 
 [T, ...A | Record?(T) and (Tuple[...RecordFieldTypes(T)] == Tuple[...A])]
-inlined T(...args:A) returned:T {
+inlined overload T(...args:A) returned:T {
     ...recordFields(returned) <-- ...args;
 }
 
