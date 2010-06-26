@@ -46,11 +46,14 @@ procedure fieldRef;
 
 
 //
-// Type
+// Type, Types
 //
 
 [T]
 inlined Type(x:T) = T;
+
+[...T]
+inlined Types(...x:T) = ...T;
 
 
 
@@ -118,6 +121,32 @@ overload bitwiseXor(a, b, c, ...rest) = bitwiseXor(bitwiseXor(a,b), c, ...rest);
 
 
 //
+// min, max
+//
+
+min(first) = ref first;
+
+[T]
+overload min(first:T, second:T, ...rest) {
+    if (first < second)
+        return ref min(first, ...rest);
+    else
+        return ref min(second, ...rest);
+}
+
+max(first) = ref first;
+
+[T]
+overload max(first:T, second:T, ...rest) {
+    if (first > second)
+        return ref max(first, ...rest);
+    else
+        return ref max(second, ...rest);
+}
+
+
+
+//
 // swap
 //
 
@@ -130,14 +159,27 @@ swap(a, b) {
 
 
 //
+// multiValueMap
+//
+
+procedure multiValueMap;
+
+overload multiValueMap(f, forward first, forward ...rest) =
+    forward f(first), ...multiValueMap(f, ...rest);
+
+overload multiValueMap(f) = ;
+
+
+
+//
 // ReturnType
 //
 // return the return type given the callable and arg types.
 // return 'BadReturnType' if the call is not defined.
 //
 
-private typesToValues(a, ...b) = ref null(a)^, ...typesToValues(...b);
-overload typesToValues() = ;
+private typeToValue(a) = ref null(a)^;
+private typesToValues(...a) = forward ...multiValueMap(typeToValue, ...a);
 
 record BadReturnType {}
 
@@ -152,3 +194,41 @@ overload ReturnType(static F, ...argTypes:A) =
 [F, ...A | CallDefined?(F, ...typesToValues(...A))]
 overload ReturnType(static F, ...argTypes:A) =
     Type(F(...typesToValues(...argTypes)));
+
+
+
+//
+// captureValue, forwardValue, capturedRef
+//
+
+private record CapturedLValue[T] {
+    ptr : Pointer[T];
+}
+
+procedure captureValue;
+overload captureValue(rvalue x) = move(x);
+overload captureValue(lvalue x) = CapturedLValue(&x);
+
+procedure forwardValue;
+overload forwardValue(x) = move(x);
+[T] overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
+
+procedure capturedRef;
+overload capturedRef(x) = ref x;
+[T] overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
+
+
+
+//
+// captureValues, forwardValues, capturedRefs
+//
+
+captureValues(forward ...args) = (...multiValueMap(captureValue, ...args));
+
+[...T]
+forwardValues(x:Tuple[...T]) =
+    forward ...multiValueMap(forwardValue, ...tupleElements(x));
+
+[...T]
+capturedRefs(x:Tuple[...T]) =
+    forward ...multiValueMap(capturedRef, ...tupleElements(x));

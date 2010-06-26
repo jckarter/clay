@@ -1,0 +1,77 @@
+
+import sequences.handle.*;
+
+
+
+//
+// packSequence
+//
+
+procedure packSequence;
+overload packSequence(rvalue x) = move(x);
+overload packSequence(lvalue x) = sequenceHandle(x);
+
+
+
+//
+// packSequences, unpackSequences
+//
+
+packSequences(forward ...args) = (...multiValueMap(packSequence, ...args));
+
+[...T]
+unpackSequences(x:Tuple[...T]) = ref ...tupleElements(x);
+
+
+
+//
+// CapturedElementsType
+//
+
+inlined CapturedElementsType(packedSeq) =
+    Type(captureValues(...dummyElements(...tupleElements(packedSeq))));
+
+
+private dummyElement(seq) = forward next(iterator(seq));
+
+dummyElements(...seqs) = forward ...multiValueMap(dummyElement, ...seqs);
+
+
+
+//
+// multiIterators
+//
+
+multiIterators(packedSeq) =
+    (...multiValueMap(iterator, ...tupleElements(packedSeq)));
+
+
+
+//
+// multiValueAll?
+//
+
+procedure multiValueAll?;
+
+overload multiValueAll?(predicate, forward first, forward ...rest) =
+    predicate(first) and multiValueAll?(predicate, ...rest);
+
+overload multiValueAll?(predicate) = true;
+
+
+
+//
+// multiHasNext?
+//
+
+multiHasNext?(multiIter) =
+    multiValueAll?(hasNext?, ...tupleElements(multiIter));
+
+
+
+//
+// multiNext
+//
+
+multiNext(multiIter) =
+    captureValues(...multiValueMap(next, ...tupleElements(multiIter)));

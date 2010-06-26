@@ -1,101 +1,56 @@
 
+import sequences.multi.*;
+
 
 
 //
 // filter
 //
 
-[F,A | Sequence?(A)]
-filter(predicate:F, rvalue seq:A) =
-    Filtered[F,A](predicate, move(seq));
+filter(predicate, forward ...seqs) =
+    Filtered(predicate, packSequences(...seqs));
 
-[F,A | Sequence?(A)]
-overload filter(predicate:F, lvalue seq:A)
-    = filter(predicate, sequenceHandle(seq));
-
-
-
-//
-// Filtered
-//
-
-private record Filtered[F,A] {
+private record Filtered[F, A] {
     predicate : F;
-    innerSequence : A;
+    seqs : A;
+}
+
+[F, A]
+overload iterator(a:Filtered[F, A]) {
+    alias T = CapturedElementsType(a.seqs);
+    return FilteredIterator(a.predicate,
+                            multiIterators(a.seqs),
+                            false,
+                            T());
 }
 
 
 
 //
-// FilteredIterator_Val - iterator when not LValueSequence?(innerSequence)
+// FilteredIterator
 //
 
-private record FilteredIterator_Val[F,ITER,X] {
+private record FilteredIterator[F, ITERS, VALS] {
     predicate : F;
-    innerIterator : ITER;
+    iters : ITERS;
     hasQueued? : Bool;
-    queued : X;
+    queued : VALS;
 }
 
-[F,A | not LValueSequence?(A)]
-overload iterator(a:Filtered[F,A]) {
-    alias X = SequenceElementType(A);
-    return FilteredIterator_Val(a.predicate, iterator(a.innerSequence),
-                                false, X());
-}
-
-[F,ITER,X]
-overload hasNext?(iter:FilteredIterator_Val[F,ITER,X]) {
+[F, ITERS, VALS]
+overload hasNext?(iter:FilteredIterator[F, ITERS, VALS]) {
     while (not iter.hasQueued?) {
-        if (not hasNext?(iter.innerIterator))
+        if (not multiHasNext?(iter.iters))
             return false;
-        iter.queued = next(iter.innerIterator);
-        iter.hasQueued? = iter.predicate(iter.queued);
+        iter.queued = multiNext(iter.iters);
+        iter.hasQueued? = iter.predicate(...capturedRefs(iter.queued));
     }
     return true;
 }
 
-[F,ITER,X]
-overload next(iter:FilteredIterator_Val[F,ITER,X]) {
+[F, ITERS, VALS]
+overload next(iter:FilteredIterator[F, ITERS, VALS]) {
     assert(iter.hasQueued?, "hasNext? not called");
     iter.hasQueued? = false;
-    return move(iter.queued);
-}
-
-
-
-//
-// FilteredIterator_Ref - iterator when LValueSequence?(innerSequence)
-//
-
-private record FilteredIterator_Ref[F,ITER,X] {
-    predicate : F;
-    innerIterator : ITER;
-    hasQueued? : Bool;
-    queued : Pointer[X];
-}
-
-[F,A | LValueSequence?(A)]
-overload iterator(a:Filtered[F,A]) {
-    alias X = SequenceElementType(A);
-    return FilteredIterator_Ref(a.predicate, iterator(a.innerSequence),
-                                false, null(X));
-}
-
-[F,ITER,X]
-overload hasNext?(iter:FilteredIterator_Ref[F,ITER,X]) {
-    while (not iter.hasQueued?) {
-        if (not hasNext?(iter.innerIterator))
-            return false;
-        iter.queued = &next(iter.innerIterator);
-        iter.hasQueued? = iter.predicate(iter.queued^);
-    }
-    return true;
-}
-
-[F,ITER,X]
-overload next(iter:FilteredIterator_Ref[F,ITER,X]) {
-    assert(iter.hasQueued?, "hasNext? not called");
-    iter.hasQueued? = false;
-    return ref iter.queued^;
+    return forward ...forwardValues(iter.queued);
 }

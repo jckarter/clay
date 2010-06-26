@@ -1,59 +1,51 @@
 
+import sequences.zip.*;
+
 
 //
 // map
 //
 
-[F,A | Sequence?(A)]
-map(mapper:F, rvalue seq:A) = Mapped(mapper, move(seq));
-
-[F,A | Sequence?(A)]
-overload map(mapper:F, lvalue seq:A)
-    = Mapped(mapper, sequenceHandle(seq));
+map(mapper, forward ...seqs) = Mapped(mapper, zip(...seqs));
 
 
-
-//
-// Mapped
-//
-
-private record Mapped[F,A] {
+private record Mapped[F, A] {
     mapper : F;
-    innerSequence : A;
+    seq : A;
 }
 
-
-
-//
-// sequence operations
-//
-
-[F,A]
-overload iterator(a:Mapped[F,A]) =
-    MappedIterator(a.mapper, iterator(a.innerSequence));
-
-[F, A, ...ARGS | CallDefined?(size, A, ...ARGS)]
-overload size(a:Mapped[F,A], forward ...args:ARGS)
-    = forward ...size(a.innerSequence, ...args);
-
-[F,A | RandomAccessSequence?(A)]
-overload index(a:Mapped[F,A], i) =
-    forward a.mapper(index(a.innerSequence, i));
 
 
 //
 // MappedIterator
 //
 
-private record MappedIterator[F,ITER] {
-    mapper:F;
-    innerIterator : ITER;
+[F,A]
+overload iterator(a:Mapped[F,A]) =
+    MappedIterator(a.mapper, iterator(a.seq));
+
+
+private record MappedIterator[F, ITER] {
+    mapper : F;
+    iter : ITER;
 }
 
-[F,ITER]
-overload hasNext?(iter:MappedIterator[F,ITER]) =
-    hasNext?(iter.innerIterator);
+[F, ITER]
+overload hasNext?(iter:MappedIterator[F, ITER]) = hasNext?(iter.iter);
 
-[F,ITER]
-overload next(iter:MappedIterator[F,ITER]) =
-    forward ...iter.mapper(next(iter.innerIterator));
+[F, ITER]
+overload next(iter:MappedIterator[F, ITER]) =
+    forward ...iter.mapper(...next(iter.iter));
+
+
+
+//
+// size, index
+//
+
+[F, A | CallDefined?(size, A)]
+overload size(a:Mapped[F, A]) = size(a.seq);
+
+[F, A, I | CallDefined?(index, A, I)]
+overload index(a:Mapped[F, A], i:I) =
+    forward ...a.mapper(...index(a.seq, i));
