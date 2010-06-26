@@ -1,5 +1,6 @@
 
 public import sequences.operators.*;
+public import sequences.range.*;
 public import sequences.zip.*;
 public import sequences.map.*;
 public import sequences.filter.*;
