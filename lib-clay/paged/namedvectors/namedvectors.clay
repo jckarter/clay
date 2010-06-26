@@ -27,17 +27,6 @@ record Header {
 
 
 //
-// predicates
-//
-
-[T] overload SizedSequence?(static NamedVector[T]) = true;
-[T] overload RandomAccessSequence?(static NamedVector[T]) = true;
-[T] overload LValueSequence?(static NamedVector[T]) = true;
-[T] overload SequenceElementType(static NamedVector[T]) = T;
-
-
-
-//
 // constructor
 //
 

@@ -17,11 +17,7 @@ record String {
 // predicates
 //
 
-overload SizedSequence?(static String) = true;
-overload RandomAccessSequence?(static String) = true;
-overload LValueSequence?(static String) = true;
 overload ContiguousSequence?(static String) = true;
-overload SequenceElementType(static String) = Char;
 
 
 
