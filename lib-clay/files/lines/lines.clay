@@ -16,9 +16,6 @@ private record LineSequence {
     f : File;
 }
 
-overload Sequence?(static LineSequence) = true;
-overload SequenceElementType(static LineSequence) = String;
-
 overload iterator(x:LineSequence) = LineIterator(&x.f, false, String());
 
 

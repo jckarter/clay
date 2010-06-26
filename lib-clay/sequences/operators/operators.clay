@@ -4,22 +4,23 @@
 // predicates
 //
 
-procedure Sequence?;
-procedure SequenceElementType;
-
-procedure SizedSequence?;
-procedure RandomAccessSequence?;
-procedure LValueSequence?;
+Sequence?(T) = CallDefined?(iterator, T);
+SequenceElementType(T) = Type(next(iterator(null(T)^)));
+SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
+RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
+LValueSequence?(T) = Sequence?(T) and LValue?(next(iterator(null(T)^)));
 
 // true if sequence elements are stored contiguously in memory
-procedure ContiguousSequence?;
+ContiguousSequence?(T) = false;
 
 
 
 //
 // iteration protocol
 //
+
 procedure iterator; // create iterator
+
 procedure hasNext?; // iterator operation
 procedure next;     // iterator operation
 
@@ -29,8 +30,8 @@ procedure next;     // iterator operation
 // sequence protocol
 //
 
-procedure size; // requires SizedSequence?
-procedure index; // requires RandomAccessSequence?
+procedure size;
+procedure index;
 
 procedure begin; 
 procedure end;
@@ -44,30 +45,6 @@ procedure clear;
 procedure insert;
 procedure remove;
 procedure reserve;
-
-
-
-//
-// defaults
-//
-
-[T] overload Sequence?(static T) = false;
-
-[T] overload SizedSequence?(static T) = false;
-[T] overload RandomAccessSequence?(static T) = false;
-[T] overload LValueSequence?(static T) = false;
-
-[T] overload ContiguousSequence?(static T) = false;
-
-
-[T | SizedSequence?(T)]
-overload Sequence?(static T) = true;
-
-[T | RandomAccessSequence?(T)]
-overload Sequence?(static T) = true;
-
-[T | LValueSequence?(T)]
-overload Sequence?(static T) = true;
 
 
 

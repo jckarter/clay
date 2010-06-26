@@ -25,43 +25,20 @@ private record Mapped[F,A] {
 
 
 //
-// predicates
+// sequence operations
 //
-
-[F,A | SizedSequence?(A)]
-overload SizedSequence?(static Mapped[F,A]) = true;
-
-[F,A | RandomAccessSequence?(A)]
-overload RandomAccessSequence?(static Mapped[F,A]) = true;
 
 [F,A]
-private LValueMapping?(static F, static A) =
-    LValue?(F()(next(iterator(A()))));
+overload iterator(a:Mapped[F,A]) =
+    MappedIterator(a.mapper, iterator(a.innerSequence));
 
-[F,A | Sequence?(A) and LValueMapping?(F, A)]
-overload LValueSequence?(static Mapped[F,A]) = true;
-
-[F,A]
-overload SequenceElementType(static Mapped[F,A]) =
-    Type( F()(SequenceElementType(A)()) );
-
-
-
-//
-// size, index
-//
-
-[F,A | SizedSequence?(A)]
-overload size(a:Mapped[F,A]) = size(a.innerSequence);
+[F, A, ...ARGS | CallDefined?(size, A, ...ARGS)]
+overload size(a:Mapped[F,A], forward ...args:ARGS)
+    = forward ...size(a.innerSequence, ...args);
 
 [F,A | RandomAccessSequence?(A)]
 overload index(a:Mapped[F,A], i) =
-    a.mapper(index(a.innerSequence, i));
-
-[F,A | LValueSequence?(Mapped[F,A]) and RandomAccessSequence?(A)]
-overload index(a:Mapped[F,A], i) =
-    ref a.mapper(index(a.innerSequence, i));
-
+    forward a.mapper(index(a.innerSequence, i));
 
 
 //
@@ -73,18 +50,10 @@ private record MappedIterator[F,ITER] {
     innerIterator : ITER;
 }
 
-[F,A]
-overload iterator(a:Mapped[F,A]) =
-    MappedIterator(a.mapper, iterator(a.innerSequence));
-
 [F,ITER]
 overload hasNext?(iter:MappedIterator[F,ITER]) =
     hasNext?(iter.innerIterator);
 
 [F,ITER]
 overload next(iter:MappedIterator[F,ITER]) =
-    iter.mapper(next(iter.innerIterator));
-
-[F,ITER | LValue?(F()(next(ITER())))]
-overload next(iter:MappedIterator[F,ITER]) =
-    ref iter.mapper(next(iter.innerIterator));
+    forward ...iter.mapper(next(iter.innerIterator));

@@ -9,11 +9,6 @@ record Range[T] {
     last:T;
 }
 
-[T] overload Sequence?(static Range[T]) = true;
-[T] overload SizedSequence?(static Range[T]) = true;
-[T] overload RandomAccessSequence?(static Range[T]) = true;
-[T] overload SequenceElementType(static Range[T]) = T;
-
 
 
 //
@@ -76,13 +71,6 @@ record CoordinateRange[T] {
     last:T;
 }
 
-[T] overload Sequence?(static CoordinateRange[T]) = true;
-[T] overload SizedSequence?(static CoordinateRange[T]) = true;
-[T] overload RandomAccessSequence?(static CoordinateRange[T]) = true;
-
-[T]
-overload SequenceElementType(static CoordinateRange[T]) = Type(T()^);
-
 
 
 //
@@ -118,6 +106,7 @@ overload iterator(r:CoordinateRange[T]) = r;
 
 [T]
 overload hasNext?(r:CoordinateRange[T]) = r.first < r.last;
+
 
 [T]
 overload next(r:CoordinateRange[T]) {

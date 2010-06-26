@@ -24,16 +24,6 @@ private record Filtered[F,A] {
     innerSequence : A;
 }
 
-[F,A]
-overload Sequence?(static Filtered[F,A]) = true;
-
-[F,A | LValueSequence?(A)]
-overload LValueSequence?(static Filtered[F,A]) = true;
-
-[F,A]
-overload SequenceElementType(static Filtered[F,A]) =
-    SequenceElementType(A);
-
 
 
 //
@@ -47,7 +37,7 @@ private record FilteredIterator_Val[F,ITER,X] {
     queued : X;
 }
 
-[F,A]
+[F,A | not LValueSequence?(A)]
 overload iterator(a:Filtered[F,A]) {
     alias X = SequenceElementType(A);
     return FilteredIterator_Val(a.predicate, iterator(a.innerSequence),

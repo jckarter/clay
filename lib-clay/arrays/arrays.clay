@@ -5,19 +5,7 @@
 //
 
 [T,n]
-overload SizedSequence?(static Array[T,n]) = true;
-
-[T,n]
-overload RandomAccessSequence?(static Array[T,n]) = true;
-
-[T,n]
-overload LValueSequence?(static Array[T,n]) = true;
-
-[T,n]
 overload ContiguousSequence?(static Array[T,n]) = true;
-
-[T,n]
-overload SequenceElementType(static Array[T,n]) = T;
 
 
 
