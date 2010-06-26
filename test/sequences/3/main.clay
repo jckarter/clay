@@ -1,0 +1,23 @@
+main() {
+    var a = Vector([1, 4, 9, 16, 25, 36]);
+    var b = Vector([6, 5, 4, 3, 2, 1]);
+    println("zip");
+    for (x, y in zip(a, b))
+        println(x, ", ", y);
+    println("filter by greater?");
+    for (x, y in filter(greater?, a, b))
+        println(x, ", ", y);
+    println("map min");
+    for (x in map(min, a, b))
+        println(x);
+    println("map max");
+    for (x in map(max, a, b))
+        println(x);
+    println("map multiply");
+    for (x in map(multiply, a, b))
+        println(x);
+    println("map swap");
+    var swap = lambda (a, b) { return b, a; };
+    for (x, y in map(swap, a, b))
+        println(x, ", ", y);
+}
