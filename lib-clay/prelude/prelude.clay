@@ -16,6 +16,7 @@ public import arrays.*;
 public import vectors.*;
 public import characters.*;
 public import strings.*;
+public import strings.algorithms.*;
 
 public import streams.*;
 public import files.*;
