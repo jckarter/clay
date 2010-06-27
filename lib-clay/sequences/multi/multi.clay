@@ -4,12 +4,12 @@ import sequences.handle.*;
 
 
 //
-// packSequence
+// wrapSequence
 //
 
-procedure packSequence;
-overload packSequence(rvalue x) = move(x);
-overload packSequence(lvalue x) = sequenceHandle(x);
+procedure wrapSequence;
+overload wrapSequence(rvalue x) = move(x);
+overload wrapSequence(lvalue x) = sequenceHandle(x);
 
 
 
@@ -17,7 +17,7 @@ overload packSequence(lvalue x) = sequenceHandle(x);
 // packSequences, unpackSequences
 //
 
-packSequences(forward ...args) = (...multiValueMap(packSequence, ...args));
+packSequences(forward ...args) = (...multiValueMap(wrapSequence, ...args));
 
 [...T]
 unpackSequences(x:Tuple[...T]) = ref ...tupleElements(x);
