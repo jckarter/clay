@@ -1,0 +1,27 @@
+printList(a) {
+    for (i, x in enumerate(a)) {
+        if (i != 0)
+            print(", ");
+        print(x);
+    }
+    println();
+}
+
+
+main() {
+    {
+        var a = range(10);
+        var b = sliceUpto(a, 5);
+        printList(b);
+        var c = sliceFrom(a, 5);
+        printList(c);
+
+        var d = map(max, a, reverse(a));
+        printList(d);
+    }
+    {
+        var a = Vector(range(20));
+        var b = map(add, a, slice(a, 1));
+        printList(b);
+    }
+}

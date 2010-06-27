@@ -5,3 +5,4 @@ public import sequences.lazy.map.*;
 public import sequences.lazy.filter.*;
 public import sequences.lazy.enumerate.*;
 public import sequences.lazy.reverse.*;
+public import sequences.lazy.slice.*;

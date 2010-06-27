@@ -107,20 +107,3 @@ split(a:A, sep) {
     }
     return move(result);
 }
-
-
-
-//
-// slice
-//
-
-[A | RandomAccessSequence?(A)]
-slice(a:A, begin, end) {
-    alias T = SequenceElementType(A);
-    var v = Vector[T]();
-    for (i in range(begin, end))
-        push(v, a[i]);
-    return move(v);
-}
-
-overload slice(a:A, begin) = slice(a, begin, size(a));

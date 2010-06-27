@@ -1,0 +1,76 @@
+
+import sequences.util.*;
+import sequences.handle.*;
+
+
+//
+// slice, sliceFrom, sliceUpto
+//
+
+[A, I, J | Sequence?(A) and Integer?(I) and Integer?(J)]
+slice(forward a:A, begin:I, end:J) =
+    slice(a,
+          toBiggerNumericType(I, J, begin),
+          toBiggerNumericType(I, J, end));
+
+
+[A, I | Sequence?(A) and Integer?(I)]
+overload slice(forward a:A, begin:I, end:I) =
+    Slice(wrapSequence(a), SizeT(begin), SizeT(end));
+
+
+[A, I | Sequence?(A) and Integer?(I)]
+overload slice(forward a:A, begin:I) = slice(a, begin, size(a));
+
+[A, I | Sequence?(A) and Integer?(I)]
+sliceFrom(forward a:A, begin:I) = slice(a, begin);
+
+[A, I | Sequence?(A) and Integer?(I)]
+sliceUpto(forward a:A, end:I) = slice(a, I(0), end);
+
+
+private record Slice[A] {
+    seq : A;
+    begin : SizeT;
+    end : SizeT;
+}
+
+
+
+//
+// iteration
+//
+
+[A]
+overload iterator(a:Slice[A]) =
+    Slice(sequenceHandle(a.seq), a.begin, a.end);
+
+[A]
+overload iterator(a:Slice[SequenceHandle[A]]) = a;
+
+[A]
+overload reverseIterator(a:Slice[A]) {
+    var n = size(a.seq);
+    return Slice(reverse(a.seq), n-a.end, n-a.begin);
+}
+
+[A]
+overload hasNext?(a:Slice[A]) = (a.begin != a.end);
+
+[A]
+overload next(a:Slice[A]) {
+    inc(a.begin);
+    return forward ...a.seq[a.begin-1];
+}
+
+
+
+//
+// size, index
+//
+
+[A]
+overload size(a:Slice[A]) = a.end - a.begin;
+
+[A,I | Integer?(I)]
+overload index(a:Slice[A], i:I) = forward ...index(a.seq, a.begin + i);
