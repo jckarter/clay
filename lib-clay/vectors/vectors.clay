@@ -200,14 +200,14 @@ overload front(a:Vector[T]) = ref a[0];
 [T]
 overload back(a:Vector[T]) = ref a[size(a)-1];
 
-[T]
-overload push(a:Vector[T], x:T) {
-    insert(a, size(a), x);
+[T, S | Sequence?(S) and (SequenceElementType(S) == T)]
+overload push(a:Vector[T], seq:S) {
+    insert(a, size(a), seq);
 }
 
 [T]
-overload push(a:Vector[T], rvalue x:T) {
-    insert(a, size(a), move(x));
+overload push(a:Vector[T], forward x:T) {
+    insert(a, size(a), x);
 }
 
 [T]
@@ -272,19 +272,28 @@ private insertLocation(a:Vector[T], pos:I) {
     return ref i^;
 }
 
+[T, I, S | Integer?(I) and Sequence?(S) and (SequenceElementType(S) == T)]
+overload insert(a:Vector[T], i:I, seq:S) {
+    var pos = i;
+    for (x in seq) {
+        insert(a, pos, x);
+        pos += 1;
+    }
+}
+
 [T,I|Integer?(I)]
-overload insert(a:Vector[T], i:I, x) {
+overload insert(a:Vector[T], i:I, forward x:T) {
     insertLocation(a, i) <-- x;
 }
 
-[T]
-overload insert(a:Vector[T], i:VectorCoordinate[T], x:T) {
-    insertLocation(a, i-begin(a)) <-- x;
+[T, S | Sequence?(S) and (SequenceElementType(S) == T)]
+overload insert(a:Vector[T], i:VectorCoordinate[T], seq:S) {
+    insert(a, i-begin(a), seq);
 }
 
 [T]
-overload insert(a:Vector[T], i:VectorCoordinate[T], rvalue x:T) {
-    insertLocation(a, i-begin(a)) <-- move(x);
+overload insert(a:Vector[T], i:VectorCoordinate[T], forward x:T) {
+    insertLocation(a, i-begin(a)) <-- x;
 }
 
 [T]
