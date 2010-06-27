@@ -5,6 +5,7 @@ public import sequences.zip.*;
 public import sequences.map.*;
 public import sequences.filter.*;
 public import sequences.enumerate.*;
+public import sequences.reverse.*;
 
 
 

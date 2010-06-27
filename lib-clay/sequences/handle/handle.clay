@@ -27,6 +27,10 @@ sequenceHandle(seq:A) = SequenceHandle(&seq);
 overload iterator(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...iterator(seq.inner^, ...args);
 
+[A, ...ARGS | CallDefined?(reverseIterator, A, ...ARGS)]
+overload reverseIterator(seq:SequenceHandle[A], forward ...args:ARGS)
+    = forward ...reverseIterator(seq.inner^, ...args);
+
 [A, ...ARGS | CallDefined?(size, A, ...ARGS)]
 overload size(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...size(seq.inner^, ...args);

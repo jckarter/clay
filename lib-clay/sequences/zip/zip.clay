@@ -35,6 +35,21 @@ overload next(iter:ZippedIterator[ITERS]) =
 
 
 //
+// reverse iteration
+//
+
+private AllReversible?(A) {
+    var reversible? = block (T) { return CallDefined?(reverseIterator, T); };
+    return multiValueAll?(reversible?, ...Types(...unpackSequences(null(A)^)));
+}
+
+[A | AllReversible?(A)]
+overload reverseIterator(a:Zipped[A]) =
+    ZippedIterator(multiReverseIterators(a.seqs));
+
+
+
+//
 // size, index
 //
 

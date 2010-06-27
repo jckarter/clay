@@ -27,6 +27,14 @@ procedure next;     // iterator operation
 
 
 //
+// reverse iteration
+//
+
+procedure reverseIterator;
+
+
+
+//
 // sequence protocol
 //
 
