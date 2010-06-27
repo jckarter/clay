@@ -87,23 +87,3 @@ overload min(a:A) = forward select(lesser?, a);
 
 [A | Sequence?(A)]
 overload max(a:A) = forward select(greaterEquals?, a);
-
-
-
-//
-// split
-//
-
-[A | Sequence?(A)]
-split(a:A, sep) {
-    alias T = SequenceElementType(A);
-    var result = Vector[Vector[T]]();
-    push(result, Vector[T]());
-    for (x in a) {
-        if (x == sep)
-            push(result, Vector[T]());
-        else
-            push(back(result), x);
-    }
-    return move(result);
-}

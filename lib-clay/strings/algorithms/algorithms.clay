@@ -1,0 +1,19 @@
+
+
+//
+// split
+//
+
+[A | Sequence?(A)]
+split(a:A, sep) {
+    alias T = SequenceElementType(A);
+    var result = Vector[Vector[T]]();
+    push(result, Vector[T]());
+    for (x in a) {
+        if (x == sep)
+            push(result, Vector[T]());
+        else
+            push(back(result), x);
+    }
+    return move(result);
+}
