@@ -19,7 +19,7 @@ reduce(f:F, seq:A) {
     return reduce(f, X(0), seq);
 }
 
-[F, A, X | Sequence?(A) and Equal?(X, SequenceElementType(A))]
+[F, A, X | Sequence?(A) and (X == SequenceElementType(A))]
 overload reduce(f:F, initial:X, seq:A) {
     var result = initial;
     for (x in seq)
