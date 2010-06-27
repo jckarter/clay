@@ -138,12 +138,26 @@ swap(a, b) {
 
 min(a, b) {
     if (a <= b)
+        return a;
+    else
+        return b;
+}
+
+overload min(lvalue a, lvalue b) {
+    if (a <= b)
         return ref a;
     else
         return ref b;
 }
 
 max(a, b) {
+    if (a > b)
+        return a;
+    else
+        return b;
+}
+
+overload max(lvalue a, lvalue b) {
     if (a > b)
         return ref a;
     else
