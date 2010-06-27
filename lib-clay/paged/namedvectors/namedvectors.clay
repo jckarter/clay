@@ -27,6 +27,14 @@ record Header {
 
 
 //
+// predicates
+//
+
+[T] overload ContiguousSequence?(static NamedVector[T]) = true;
+
+
+
+//
 // constructor
 //
 
@@ -59,6 +67,14 @@ overload NamedVector[T](fileName : strings.String) {
         return NamedVector[T](fileName, f, mapping, header, data);
     }
 }
+
+// disable copy-constructor, assignment
+
+[T]
+overload NamedVector[T](src:NamedVector[T]);
+
+[T]
+overload assign(dest:NamedVector[T], src:NamedVector[T]);
 
 
 
@@ -174,14 +190,14 @@ overload front(a:NamedVector[T]) = ref a[0];
 [T]
 overload back(a:NamedVector[T]) = ref a[size(a)-1];
 
-[T]
-overload push(a:NamedVector[T], x:T) {
-    insert(a, size(a), x);
+[T, S | Sequence?(S) and (SequenceElementType(S) == T)]
+overload push(a:NamedVector[T], seq:S) {
+    insert(a, size(a), seq);
 }
 
 [T]
-overload push(a:NamedVector[T], rvalue x:T) {
-    insert(a, size(a), move(x));
+overload push(a:NamedVector[T], forward x:T) {
+    insert(a, size(a), x);
 }
 
 [T]
@@ -244,19 +260,28 @@ private insertLocation(a:NamedVector[T], pos:I) {
     return ref i^;
 }
 
+[T, I, S | Integer?(I) and Sequence?(S) and (SequenceElementType(S) == T)]
+overload insert(a:NamedVector[T], i:I, seq:S) {
+    var pos = i;
+    for (x in seq) {
+        insert(a, pos, x);
+        pos += 1;
+    }
+}
+
 [T,I|Integer?(I)]
-overload insert(a:NamedVector[T], i:I, x) {
+overload insert(a:NamedVector[T], i:I, forward x) {
     insertLocation(a, i) <-- x;
 }
 
-[T]
-overload insert(a:NamedVector[T], i:NamedVectorCoordinate[T], x:T) {
-    insertLocation(a, i-begin(a)) <-- x;
+[T, S | Sequence?(S) and (SequenceElementType(S) == T)]
+overload insert(a:NamedVector[T], i:VectorCoordinate[T], seq:S) {
+    insert(a, i-begin(a), seq);
 }
 
 [T]
-overload insert(a:NamedVector[T], i:NamedVectorCoordinate[T], rvalue x:T) {
-    insertLocation(a, i-begin(a)) <-- move(x);
+overload insert(a:NamedVector[T], i:NamedVectorCoordinate[T], forward x:T) {
+    insertLocation(a, i-begin(a)) <-- x;
 }
 
 [T]
