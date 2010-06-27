@@ -61,7 +61,7 @@ private AllSized?(A) {
 [A | AllSized?(A)]
 overload size(a:Zipped[A]) {
     var f = block (x) { return SizeT(size(x)); };
-    return min(...multiValueMap(f, ...unpackSequences(a.seqs)));
+    return min([...multiValueMap(f, ...unpackSequences(a.seqs))]);
 }
 
 private AllIndexable?(A, I) {

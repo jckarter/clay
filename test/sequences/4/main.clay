@@ -14,4 +14,18 @@ main() {
         var s = reduce(add, 0, a);
         println(s);
     }
+
+    {
+        // test sum, product, min, max
+        var a = Vector(range(1, 11));
+        println(sum(a));
+        println(product(a));
+        swap(min(a), max(a));
+        for (i, x in enumerate(a)) {
+            if (i != 0)
+                print(", ");
+            print(x);
+        }
+        println();
+    }
 }
