@@ -15,11 +15,31 @@ private record Filtered[F, A] {
     seqs : A;
 }
 
+
+
+//
+// iterator, reverseIterator
+//
+
 [F, A]
 overload iterator(a:Filtered[F, A]) {
     alias T = CapturedElementsType(a.seqs);
     return FilteredIterator(a.predicate,
                             multiIterators(a.seqs),
+                            false,
+                            T());
+}
+
+private AllReversible?(A) {
+    var reversible? = block (T) { return CallDefined?(reverseIterator, T); };
+    return multiValueAll?(reversible?, ...Types(...unpackSequences(null(A)^)));
+}
+
+[F, A | AllReversible?(A)]
+overload reverseIterator(a:Filtered[F, A]) {
+    alias T = CapturedElementsType(a.seqs);
+    return FilteredIterator(a.predicate,
+                            multiReverseIterators(a.seqs),
                             false,
                             T());
 }

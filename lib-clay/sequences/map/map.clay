@@ -24,6 +24,9 @@ private record Mapped[F, A] {
 overload iterator(a:Mapped[F,A]) =
     MappedIterator(a.mapper, iterator(a.seq));
 
+[F,A | CallDefined?(reverseIterator, A)]
+overload reverseIterator(a:Mapped[F,A]) =
+    MappedIterator(a.mapper, reverseIterator(a.seq));
 
 private record MappedIterator[F, ITER] {
     mapper : F;

@@ -1,0 +1,29 @@
+printList(a) {
+    print(Type(a), ": ");
+    for (i, x in enumerate(a)) {
+        if (i != 0)
+            print(", ");
+        print(x);
+    }
+    println();
+}
+
+main() {
+    printList(range(5));
+    var a = reverse(range(10));
+    printList(a);
+    printList(reverse(a));
+
+    var b = [1, 2, 3, 4, 5];
+    printList(reverse(b));
+
+    var c = reverse(Vector(b));
+    printList(c);
+
+    var d = Vector(b);
+    var e = reverse(d);
+    printList(e);
+
+    var f = reverse(e);
+    printList(f);
+}

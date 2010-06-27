@@ -152,6 +152,10 @@ overload dec(c:VectorCoordinate[T]) {
 [T]
 overload iterator(a:Vector[T]) = CoordinateRange(begin(a), end(a));
 
+[T]
+overload reverseIterator(a:Vector[T]) =
+    ReverseCoordinateRange(end(a), begin(a));
+
 
 
 //

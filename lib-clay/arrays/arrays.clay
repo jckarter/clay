@@ -23,6 +23,10 @@ overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
 overload iterator(a:Array[T,n]) = CoordinateRange(begin(a), end(a));
 
 [T,n]
+overload reverseIterator(a:Array[T,n]) =
+    ReverseCoordinateRange(end(a), begin(a));
+
+[T,n]
 overload begin(a:Array[T,n]) = &a[0];
 
 [T,n]

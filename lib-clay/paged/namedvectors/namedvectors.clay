@@ -126,6 +126,10 @@ overload lesser?(a:NamedVectorCoordinate[T], b:NamedVectorCoordinate[T])
 [T]
 overload iterator(a:NamedVector[T]) = CoordinateRange(begin(a), end(a));
 
+[T]
+overload reverseIterator(a:NamedVector[T]) =
+    ReverseCoordinateRange(end(a), begin(a));
+
 
 
 //

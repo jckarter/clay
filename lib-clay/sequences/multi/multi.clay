@@ -39,11 +39,14 @@ dummyElements(...seqs) = forward ...multiValueMap(dummyElement, ...seqs);
 
 
 //
-// multiIterators
+// multiIterators, multiReverseIterators
 //
 
 multiIterators(packedSeq) =
     (...multiValueMap(iterator, ...tupleElements(packedSeq)));
+
+multiReverseIterators(packedSeq) =
+    (...multiValueMap(reverseIterator, ...tupleElements(packedSeq)));
 
 
 
