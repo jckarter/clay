@@ -14,18 +14,88 @@ public import sequences.reverse.*;
 //
 
 [F, A | Sequence?(A)]
-reduce(f:F, seq:A) {
-    alias X = SequenceElementType(A);
-    return reduce(f, X(0), seq);
+reduce(f:F, a:A) {
+    var iter = iterator(a);
+    assert(hasNext?(iter));
+    var result = next(iter);
+    while (hasNext?(iter)) {
+        ref v = next(iter);
+        result = f(result, v);
+    }
+    return result;
 }
 
 [F, A, X | Sequence?(A) and (X == SequenceElementType(A))]
-overload reduce(f:F, initial:X, seq:A) {
+overload reduce(f:F, initial:X, a:A) {
     var result = initial;
-    for (x in seq)
+    for (x in a)
         result = f(result, x);
     return result;
 }
+
+
+
+//
+// sum, product
+//
+
+[A | Sequence?(A)]
+sum(a:A) {
+    alias T = SequenceElementType(A);
+    return reduce(add, T(0), a);
+}
+
+[A | Sequence?(A)]
+product(a:A) {
+    alias T = SequenceElementType(A);
+    return reduce(multiply, T(1), a);
+}
+
+
+
+//
+// select
+//
+
+private procedure select;
+
+[A | Sequence?(A)]
+overload select(f, a:A) {
+    var iter = iterator(a);
+    assert(hasNext?(iter));
+    var result = next(iter);
+    while (hasNext?(iter)) {
+        ref v = next(iter);
+        if (f(v, result))
+            result = v;
+    }
+    return result;
+}
+
+[A | LValueSequence?(A)]
+overload select(f, a:A) {
+    var iter = iterator(a);
+    assert(hasNext?(iter));
+    var result = &next(iter);
+    while (hasNext?(iter)) {
+        ref v = next(iter);
+        if (f(v, result^))
+            result = &v;
+    }
+    return ref result^;
+}
+
+
+
+//
+// min, max for sequences
+//
+
+[A | Sequence?(A)]
+overload min(a:A) = forward select(lesser?, a);
+
+[A | Sequence?(A)]
+overload max(a:A) = forward select(greaterEquals?, a);
 
 
 

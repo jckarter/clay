@@ -121,32 +121,6 @@ overload bitwiseXor(a, b, c, ...rest) = bitwiseXor(bitwiseXor(a,b), c, ...rest);
 
 
 //
-// min, max
-//
-
-min(first) = ref first;
-
-[T]
-overload min(first:T, second:T, ...rest) {
-    if (first < second)
-        return ref min(first, ...rest);
-    else
-        return ref min(second, ...rest);
-}
-
-max(first) = ref first;
-
-[T]
-overload max(first:T, second:T, ...rest) {
-    if (first > second)
-        return ref max(first, ...rest);
-    else
-        return ref max(second, ...rest);
-}
-
-
-
-//
 // swap
 //
 
@@ -154,6 +128,26 @@ swap(a, b) {
     var temp = move(a);
     a = move(b);
     b = move(temp);
+}
+
+
+
+//
+// min, max
+//
+
+min(a, b) {
+    if (a <= b)
+        return ref a;
+    else
+        return ref b;
+}
+
+max(a, b) {
+    if (a > b)
+        return ref a;
+    else
+        return ref b;
 }
 
 
