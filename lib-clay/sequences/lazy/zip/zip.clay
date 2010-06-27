@@ -1,5 +1,5 @@
 
-import sequences.multi.*;
+import sequences.util.*;
 
 
 //
