@@ -6,9 +6,7 @@ import sequences.handle.*;
 // reverse
 //
 
-procedure reverse;
-overload reverse(lvalue seq) = Reversed(sequenceHandle(seq));
-overload reverse(rvalue seq) = Reversed(move(seq));
+reverse(forward seq) = Reversed(wrapSequence(seq));
 
 private record Reversed[A] {
     seq : A;
