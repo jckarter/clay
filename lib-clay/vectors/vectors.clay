@@ -1,4 +1,6 @@
 
+import abstractvectors.*;
+
 
 //
 // Vector[T]
@@ -95,226 +97,31 @@ overload move(a:Vector[T]) returned:Vector[T] {
 
 
 //
-// size, index
+// abstract vector requirements
 //
 
 [T]
-overload size(a:Vector[T]) = a.size;
-
-[T,I | Integer?(I)]
-overload index(a:Vector[T], i:I) = ref (a.data + SizeT(i))^;
-
-
-
-//
-// vector coordinates
-//
+overload Vector?(static Vector[T]) = true;
 
 [T]
-overload begin(a:Vector[T]) = VectorCoordinate[T](a.data);
+overload vectorData(a:Vector[T]) = a.data;
 
 [T]
-overload end(a:Vector[T]) = VectorCoordinate[T](a.data + a.size);
-
-record VectorCoordinate[T] {
-    ptr : Pointer[T];
-}
+overload vectorSize(a:Vector[T]) = ref a.size;
 
 [T]
-overload dereference(x:VectorCoordinate[T]) = ref x.ptr^;
-
-[T,I|Integer?(I)]
-overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
-
-[T,I|Integer?(I)]
-overload subtract(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr - i);
+overload vectorCapacity(a:Vector[T]) = a.capacity;
 
 [T]
-overload subtract(c1:VectorCoordinate[T], c2:VectorCoordinate[T])
-    = c1.ptr - c2.ptr;
-
-[T]
-overload inc(c:VectorCoordinate[T]) {
-    inc(c.ptr);
-}
-
-[T]
-overload dec(c:VectorCoordinate[T]) {
-    dec(c.ptr);
-}
-
-
-
-//
-// vector iteration
-//
-
-[T]
-overload iterator(a:Vector[T]) = CoordinateRange(begin(a), end(a));
-
-[T]
-overload reverseIterator(a:Vector[T]) =
-    ReverseCoordinateRange(end(a), begin(a));
-
-
-
-//
-// equals?, lesser?
-//
-
-[T]
-overload equals?(a:Vector[T], b:Vector[T]) {
-    if (size(a) != size(b))
-        return false;
-    var i = iterator(a);
-    var j = iterator(b);
-    while (hasNext?(i)) {
-        if (next(i) != next(j))
-            return false;
-    }
-    return true;
-}
-
-[T]
-overload lesser?(a:Vector[T], b:Vector[T]) {
-    var i = iterator(a);
-    var j = iterator(b);
-    while (hasNext?(i) and hasNext?(j)) {
-        ref x = next(i);
-        ref y = next(j);
-        if (x != y)
-            return x < y;
-    }
-    return hasNext?(j);
-}
-
-
-
-//
-// front, back, push, pop
-//
-
-[T]
-overload front(a:Vector[T]) = ref a[0];
-
-[T]
-overload back(a:Vector[T]) = ref a[size(a)-1];
-
-[T, S | Sequence?(S) and (SequenceElementType(S) == T)]
-overload push(a:Vector[T], seq:S) {
-    insert(a, size(a), seq);
-}
-
-[T]
-overload push(a:Vector[T], forward x:T) {
-    insert(a, size(a), x);
-}
-
-[T]
-overload pop(a:Vector[T]) returned:T {
-    returned <-- move(back(a));
-    removeLocation(a, end(a)-1);
-}
-
-
-
-//
-// reserve
-//
-
-[T]
-private setCapacity(a:Vector[T], capacity:SizeT) {
+overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
+    assert(capacity >= a.size);
     var data = allocateMemory(T, capacity);
     var ptr = data;
     for (x in a) {
-        ptr^ <-- move(x);
+        ptr^ <-- dirtyMove(x);
         inc(ptr);
     }
     freeMemory(a.data);
     a.data = data;
     a.capacity = capacity;
-}
-
-[T, I | Integer?(I)]
-overload reserve(a:Vector[T], n:I) {
-    if (a.capacity < SizeT(n))
-        setCapacity(a, SizeT(n));
-}
-
-
-
-//
-// clear, insert, remove
-//
-
-[T]
-overload clear(a:Vector[T]) {
-    destroy(a);
-    initialize(a);
-}
-
-[T]
-private ensureSpace(a:Vector[T], space:SizeT) {
-    if (a.size + space > a.capacity)
-        setCapacity(a, 2*(a.size + space));
-}
-
-[T,I | Integer?(I)]
-private insertLocation(a:Vector[T], pos:I) {
-    ensureSpace(a, SizeT(1));
-    var i = begin(a) + pos;
-    var j = end(a);
-    while (i < j) {
-        j^ <-- move((j-1)^);
-        dec(j);
-    }
-    inc(a.size);
-    return ref i^;
-}
-
-[T, I, S | Integer?(I) and Sequence?(S) and (SequenceElementType(S) == T)]
-overload insert(a:Vector[T], i:I, seq:S) {
-    var pos = i;
-    for (x in seq) {
-        insert(a, pos, x);
-        pos += 1;
-    }
-}
-
-[T,I|Integer?(I)]
-overload insert(a:Vector[T], i:I, forward x:T) {
-    insertLocation(a, i) <-- x;
-}
-
-[T, S | Sequence?(S) and (SequenceElementType(S) == T)]
-overload insert(a:Vector[T], i:VectorCoordinate[T], seq:S) {
-    insert(a, i-begin(a), seq);
-}
-
-[T]
-overload insert(a:Vector[T], i:VectorCoordinate[T], forward x:T) {
-    insertLocation(a, i-begin(a)) <-- x;
-}
-
-[T]
-private removeLocation(a:Vector[T], i:VectorCoordinate[T]) {
-    var j = end(a);
-    while (i+1 != j) {
-        i^ <-- move((i+1)^);
-        inc(i);
-    }
-    dec(a.size);
-    if (a.capacity > 3*(a.size+1))
-        setCapacity(a, 2*(a.size + 1));
-}
-
-[T]
-overload remove(a:Vector[T], i:VectorCoordinate[T]) {
-    destroy(i^);
-    removeLocation(a, i);
-}
-
-[T,I|Integer?(I)]
-overload remove(a:Vector[T], i:I) {
-    remove(a, begin(a)+i);
 }

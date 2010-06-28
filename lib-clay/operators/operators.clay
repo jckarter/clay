@@ -6,6 +6,7 @@
 
 procedure destroy;
 procedure move;
+procedure dirtyMove;
 procedure assign;
 
 procedure equals?;
@@ -85,6 +86,12 @@ overload move(a:T) returned:T {
     returned <-- a;
     destroy(a);
     a <-- T();
+}
+
+[T]
+overload dirtyMove(src:T) returned:T {
+    returned <-- move(src);
+    destroy(src);
 }
 
 [T]
