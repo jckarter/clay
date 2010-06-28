@@ -1,0 +1,254 @@
+
+
+
+//
+// abstract vector requirements
+//
+
+procedure Vector?;
+overload Vector?(x) = false;
+
+procedure vectorData;
+procedure vectorSize;
+procedure vectorCapacity;
+procedure vectorSetCapacity;
+
+
+
+//
+// predicates
+//
+
+[V | Vector?(V)]
+overload ContiguousSequence?(static V) = true;
+
+
+
+//
+// size, index
+//
+
+[V | Vector?(V)]
+overload size(a:V) = vectorSize(a);
+
+[V,I | Vector?(V) and Integer?(I)]
+overload index(a:V, i:I) = ref (vectorData(a) + SizeT(i))^;
+
+
+
+//
+// vector coordinates
+//
+
+record VectorCoordinate[T] {
+    ptr : Pointer[T];
+}
+
+[V | Vector?(V)]
+overload begin(a:V) = VectorCoordinate(&a[0]);
+
+[V | Vector?(V)]
+overload end(a:V) = VectorCoordinate(&a[0] + size(a));
+
+[T]
+overload dereference(x:VectorCoordinate[T]) = ref x.ptr^;
+
+[T,I|Integer?(I)]
+overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
+
+[T,I|Integer?(I)]
+overload subtract(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr - i);
+
+[T]
+overload subtract(c1:VectorCoordinate[T], c2:VectorCoordinate[T])
+    = c1.ptr - c2.ptr;
+
+[T]
+overload inc(c:VectorCoordinate[T]) {
+    inc(c.ptr);
+}
+
+[T]
+overload dec(c:VectorCoordinate[T]) {
+    dec(c.ptr);
+}
+
+
+
+//
+// vector iteration
+//
+
+[V | Vector?(V)]
+overload iterator(a:V) = CoordinateRange(begin(a), end(a));
+
+[V | Vector?(V)]
+overload reverseIterator(a:V) =
+    ReverseCoordinateRange(end(a), begin(a));
+
+
+
+//
+// equals?, lesser?
+//
+
+[V | Vector?(V)]
+overload equals?(a:V, b:V) {
+    if (size(a) != size(b))
+        return false;
+    for (x, y in zip(a, b)) {
+        if (x != y)
+            return false;
+    }
+    return true;
+}
+
+[V | Vector?(V)]
+overload lesser?(a:V, b:V) {
+    var i = iterator(a);
+    var j = iterator(b);
+    while (hasNext?(i) and hasNext?(j)) {
+        ref x = next(i);
+        ref y = next(j);
+        if (x != y)
+            return x < y;
+    }
+    return hasNext?(j);
+}
+
+
+
+//
+// front, back, push, pop
+//
+
+[V | Vector?(V)]
+overload front(a:V) = ref a[0];
+
+[V | Vector?(V)]
+overload back(a:V) = ref a[size(a) - 1];
+
+[V, S | Vector?(V) and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(V))]
+overload push(a:V, seq:S) {
+    insert(a, size(a), seq);
+}
+
+[V, T | Vector?(V) and (SequenceElementType(V) == T)]
+overload push(a:V, forward x:T) {
+    insert(a, size(a), x);
+}
+
+[V | Vector?(V)]
+overload pop(a:V) {
+    var temp = dirtyMove(back(a));
+    removeLocations(a, end(a)-1, end(a));
+    return move(temp);
+}
+
+
+
+//
+// reserve
+//
+
+[V, I | Vector?(V) and Integer?(I)]
+overload reserve(a:V, n:I) {
+    if (vectorCapacity(a) < SizeT(n))
+        vectorSetCapacity(a, SizeT(n));
+}
+
+
+
+//
+// clear
+//
+
+[V | Vector?(V)]
+overload clear(a:V) {
+    remove(a, begin(a), end(a));
+}
+
+private ensureSpace(a, space:SizeT) {
+    if (size(a) + space > vectorCapacity(a))
+        vectorSetCapacity(a, 2*(size(a) + space));
+}
+
+[I | Integer?(I)]
+private insertLocation(a, pos:I) {
+    ensureSpace(a, SizeT(1));
+    var i = begin(a) + pos;
+    var j = end(a);
+    // FIXME: something more cache friendly perhaps?
+    while (i < j) {
+        dec(j);
+        (j+1)^ <-- dirtyMove(j^);
+    }
+    vectorSize(a) += 1;
+    return ref i^;
+}
+
+[V,I,S | Vector?(V) and Integer?(I) and Sequence?(S) and
+         (SequenceElementType(S) == SequenceElementType(V))]
+private insert(a:V, i:I, seq:S) {
+    var pos = SizeT(i);
+    for (x in seq) {
+        insert(a, pos, x);
+        pos += 1;
+    }
+}
+
+[V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
+overload insert(a:V, i:I, forward x:T) {
+    insertLocation(a, i) <-- x;
+}
+
+[V,T,S | Vector?(V) and (SequenceElementType(V) == T) and
+         Sequence?(S) and (SequenceElementType(S) == T)]
+overload insert(a:V, i:VectorCoordinate[T], seq:S) {
+    insert(a, i-begin(a), seq);
+}
+
+[V,T | Vector?(V) and (SequenceElementType(V) == T)]
+overload insert(a:V, i:VectorCoordinate[T], forward x:T) {
+    insertLocation(a, i-begin(a)) <-- x;
+}
+
+[V,T | Vector?(V) and (SequenceElementType(V) == T)]
+private removeLocations(a:V, i_:VectorCoordinate[T], j_:VectorCoordinate[T]) {
+    var i, j = i_, j_;
+    var n = j - i;
+    var e = end(a);
+    while (j < e) {
+        i^ <-- dirtyMove(j^);
+        inc(i);
+        inc(j);
+    }
+    vectorSize(a) -= n;
+    if (vectorCapacity(a) > 3*(size(a)+1))
+        vectorSetCapacity(a, 2*(a.size + 1));
+}
+
+[V,T | Vector?(V) and (SequenceElementType(V) == T)]
+overload remove(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
+    var i2, j2 = i, j;
+    while (i2 < j2) {
+        destroy(i2^);
+        inc(i2);
+    }
+    removeLocations(a, i, j);
+}
+
+[V,T | Vector?(V) and (SequenceElementType(V) == T)]
+overload remove(a:V, i:VectorCoordinate[T]) {
+    remove(a, i, i+1);
+}
+
+[V,I | Vector?(V) and Integer?(I)]
+overload remove(a:V, i:I) {
+    remove(a, begin(a)+i);
+}
+
+[V,I,J | Vector?(V) and Integer?(I) and Integer?(J)]
+overload remove(a:V, i:I, j:J) {
+    remove(a, begin(a)+i, begin(a)+j);
+}
