@@ -105,15 +105,11 @@ overload equals?(a:V, b:V) {
 
 [V | Vector?(V)]
 overload lesser?(a:V, b:V) {
-    var i = iterator(a);
-    var j = iterator(b);
-    while (hasNext?(i) and hasNext?(j)) {
-        ref x = next(i);
-        ref y = next(j);
+    for (x, y in zip(a, b)) {
         if (x != y)
             return x < y;
     }
-    return hasNext?(j);
+    return size(a) < size(b);
 }
 
 

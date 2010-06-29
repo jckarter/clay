@@ -198,8 +198,7 @@ overload reverseIterator(a:String) =
 
 [A,B | String?(A) and String?(B)]
 overload equals?(a:A, b:B) {
-    var i = iterator(a);
-    var j = iterator(b);
+    var i, j = iterator(a), iterator(b);
     while (hasNext?(i)) {
         if (not hasNext?(j))
             return false;
@@ -213,8 +212,7 @@ overload equals?(a:A, b:B) {
 overload equals?(a:A, b:B) {
     if (size(a) != size(b))
         return false;
-    var i = iterator(a);
-    var j = iterator(b);
+    var i, j = iterator(a), iterator(b);
     while (hasNext?(i)) {
         if (next(i) != next(j))
             return false;
@@ -225,13 +223,11 @@ overload equals?(a:A, b:B) {
 
 [A,B | String?(A) and String?(B)]
 overload lesser?(a:A, b:B) {
-    var i = iterator(a);
-    var j = iterator(b);
+    var i, j = iterator(a), iterator(b);
     while (hasNext?(i)) {
         if (not hasNext?(j))
             return false;
-        ref x = next(i);
-        ref y = next(j);
+        ref x, y = next(i), next(j);
         if (x != y)
             return x < y;
     }
