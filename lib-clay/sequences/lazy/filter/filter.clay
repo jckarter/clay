@@ -70,7 +70,10 @@ overload hasNext?(iter:FilteredIterator[F, ITERS, VALS]) {
 
 [F, ITERS, VALS]
 overload next(iter:FilteredIterator[F, ITERS, VALS]) {
-    assert(iter.hasQueued?, "hasNext? not called");
+    if (not iter.hasQueued?) {
+        var result = hasNext?(iter);
+        assert(result);
+    }
     iter.hasQueued? = false;
     return forward ...forwardValues(iter.queued);
 }
