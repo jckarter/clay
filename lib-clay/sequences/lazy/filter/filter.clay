@@ -1,18 +1,14 @@
 
-import sequences.util.*;
-
-
 
 //
 // filter
 //
 
-filter(predicate, forward ...seqs) =
-    Filtered(predicate, packSequences(...seqs));
+filter(predicate, forward ...seqs) = Filtered(predicate, zip(...seqs));
 
 private record Filtered[F, A] {
     predicate : F;
-    seqs : A;
+    seq : A;
 }
 
 
@@ -23,23 +19,18 @@ private record Filtered[F, A] {
 
 [F, A]
 overload iterator(a:Filtered[F, A]) {
-    alias T = CapturedElementsType(a.seqs);
+    alias T = Type(captureValues(...next(iterator(null(A)^))));
     return FilteredIterator(a.predicate,
-                            multiIterators(a.seqs),
+                            iterator(a.seq),
                             false,
                             T());
 }
 
-private AllReversible?(A) {
-    var reversible? = block (T) { return CallDefined?(reverseIterator, T); };
-    return multiValueAll?(reversible?, ...Types(...unpackSequences(null(A)^)));
-}
-
-[F, A | AllReversible?(A)]
+[F, A | CallDefined?(reverseIterator, A)]
 overload reverseIterator(a:Filtered[F, A]) {
-    alias T = CapturedElementsType(a.seqs);
+    alias T = Type(captureValues(...next(reverseIterator(null(A)^))));
     return FilteredIterator(a.predicate,
-                            multiReverseIterators(a.seqs),
+                            reverseIterator(a.seq),
                             false,
                             T());
 }
@@ -50,26 +41,26 @@ overload reverseIterator(a:Filtered[F, A]) {
 // FilteredIterator
 //
 
-private record FilteredIterator[F, ITERS, VALS] {
+private record FilteredIterator[F, ITER, VALS] {
     predicate : F;
-    iters : ITERS;
+    iter : ITER;
     hasQueued? : Bool;
     queued : VALS;
 }
 
-[F, ITERS, VALS]
-overload hasNext?(iter:FilteredIterator[F, ITERS, VALS]) {
+[F, ITER, VALS]
+overload hasNext?(iter:FilteredIterator[F, ITER, VALS]) {
     while (not iter.hasQueued?) {
-        if (not multiHasNext?(iter.iters))
+        if (not hasNext?(iter.iter))
             return false;
-        iter.queued = multiNext(iter.iters);
+        iter.queued = captureValues(...next(iter.iter));
         iter.hasQueued? = iter.predicate(...capturedRefs(iter.queued));
     }
     return true;
 }
 
-[F, ITERS, VALS]
-overload next(iter:FilteredIterator[F, ITERS, VALS]) {
+[F, ITER, VALS]
+overload next(iter:FilteredIterator[F, ITER, VALS]) {
     if (not iter.hasQueued?) {
         var result = hasNext?(iter);
         assert(result);
