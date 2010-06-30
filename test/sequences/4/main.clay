@@ -1,4 +1,31 @@
 
+printList(a) {
+    var first = true;
+    for (x in a) {
+        if (not first)
+            print(", ");
+        first = false;
+        print(x);
+    }
+    println();
+}
+
+testFind(x, a) {
+    var i = find(x, a);
+    if (i == end(a))
+        println("not found ", x);
+    else
+        println("found ", x, " at ", (i - begin(a)));
+}
+
+testBinarySearch(x, a) {
+    var lower, upper = ...binarySearch(x, a);
+    if (lower == upper)
+        print("not ");
+    println("found ", x, ", range = [",
+            lower-begin(a), ", ", upper-begin(a), "]");
+}
+
 main() {
     {
         // test enumerate
@@ -21,11 +48,18 @@ main() {
         println(sum(a));
         println(product(a));
         swap(min(a), max(a));
-        for (i, x in enumerate(a)) {
-            if (i != 0)
-                print(", ");
-            print(x);
-        }
-        println();
+        printList(a);
+    }
+
+    {
+        // test find, binarySearch
+        var a = Vector([1, 1, 2, 4, 7, 7, 7, 9, 15, 15, 19]);
+        printList(a);
+        testFind(10, a);
+        testFind(1, a);
+        testFind(19, a);
+        testBinarySearch(10, a);
+        testBinarySearch(1, a);
+        testBinarySearch(19, a);
     }
 }
