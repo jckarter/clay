@@ -20,11 +20,11 @@ overload size(a:Array[T,n]) = SizeT(n);
 overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
 
 [T,n]
-overload iterator(a:Array[T,n]) = CoordinateRange(begin(a), end(a));
+overload iterator(a:Array[T,n]) = coordinateRange(begin(a), end(a));
 
 [T,n]
 overload reverseIterator(a:Array[T,n]) =
-    ReverseCoordinateRange(end(a), begin(a));
+    reverseCoordinateRange(end(a), begin(a));
 
 [T,n]
 overload begin(a:Array[T,n]) = &a[0];

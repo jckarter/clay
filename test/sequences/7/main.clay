@@ -20,4 +20,14 @@ main() {
         inc(pi);
     }
     printList(a);
+
+    var b = reverseCoordinateRange(end(a), begin(a));
+    var i = 1;
+    var bi, bend = begin(b), end(b);
+    while (bi != bend) {
+        bi^ += i;
+        i += 1;
+        inc(bi);
+    }
+    printList(a);
 }

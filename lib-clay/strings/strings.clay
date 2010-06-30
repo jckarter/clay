@@ -185,10 +185,10 @@ overload index(a:String, i:I) = ref (a.data + SizeT(i))^;
 overload begin(a:String) = a.data;
 overload end(a:String) = a.data + a.size;
 
-overload iterator(a:String) = CoordinateRange(begin(a), end(a));
+overload iterator(a:String) = coordinateRange(begin(a), end(a));
 
 overload reverseIterator(a:String) =
-    ReverseCoordinateRange(end(a), begin(a));
+    reverseCoordinateRange(end(a), begin(a));
 
 
 
