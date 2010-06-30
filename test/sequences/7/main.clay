@@ -1,0 +1,23 @@
+
+printList(a) {
+    var first = true;
+    for (x in a) {
+        if (not first)
+            print(", ");
+        first = false;
+        print(x);
+    }
+    println();
+}
+
+main() {
+    var a = Vector(range(10));
+    var indices = [1, 3, 5, 7];
+    var ptrs = map(block (x) { return ref a[x]; }, indices);
+    var pi, pend = begin(ptrs), end(ptrs);
+    while (pi != pend) {
+        pi^ *= 10;
+        inc(pi);
+    }
+    printList(a);
+}
