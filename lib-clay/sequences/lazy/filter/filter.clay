@@ -1,10 +1,16 @@
 
+import sequences.util.*;
+
 
 //
 // filter
 //
 
 filter(predicate, forward ...seqs) = Filtered(predicate, zip(...seqs));
+
+overload filter(predicate, forward seq) =
+    Filtered(predicate, wrapSequence(seq));
+
 
 private record Filtered[F, A] {
     predicate : F;
