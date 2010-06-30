@@ -80,11 +80,11 @@ overload dec(c:VectorCoordinate[T]) {
 //
 
 [V | Vector?(V)]
-overload iterator(a:V) = CoordinateRange(begin(a), end(a));
+overload iterator(a:V) = coordinateRange(begin(a), end(a));
 
 [V | Vector?(V)]
 overload reverseIterator(a:V) =
-    ReverseCoordinateRange(end(a), begin(a));
+    reverseCoordinateRange(end(a), begin(a));
 
 
 

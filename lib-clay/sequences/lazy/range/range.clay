@@ -1,40 +1,145 @@
 
 
 //
+// ValueCoordinate
+//
+
+private record ValueCoordinate[T] {
+    value : T;
+}
+
+[T]
+overload dereference(c:ValueCoordinate[T]) = c.value;
+
+[T,I | CallDefined?(add, T, I)]
+overload add(c:ValueCoordinate[T], i:I) =
+    ValueCoordinate(T(c.value + i));
+
+[T,I | CallDefined?(subtract, T, I)]
+overload subtract(c:ValueCoordinate[T], i:I) =
+    ValueCoordinate(T(c.value - i));
+
+[T | CallDefined?(subtract, T, T)]
+overload subtract(c1:ValueCoordinate[T], c2:ValueCoordinate[T]) =
+    c1.value - c2.value;
+
+[T]
+overload inc(c:ValueCoordinate[T]) {
+    inc(c.value);
+}
+
+[T]
+overload dec(c:ValueCoordinate[T]) {
+    dec(c.value);
+}
+
+
+
+//
+// ValueReverseCoordinate
+//
+
+private record ValueReverseCoordinate[T] {
+    value : T;
+}
+
+[T]
+overload dereference(c:ValueReverseCoordinate[T]) = (c.value - 1);
+
+[T,I | CallDefined?(subtract, T, I)]
+overload add(c:ValueReverseCoordinate[T], i:I) =
+    ValueReverseCoordinate(T(c.value - i));
+
+[T,I | CallDefined?(add, T, I)]
+overload subtract(c:ValueReverseCoordinate[T], i:I) =
+    ValueReverseCoordinate(T(c.value + i));
+
+[T | CallDefined?(subtract, T, T)]
+overload subtract(c1:ValueReverseCoordinate[T], c2:ValueReverseCoordinate[T]) =
+    c2.value - c1.value;
+
+[T]
+overload inc(c:ValueReverseCoordinate[T]) {
+    dec(c.value);
+}
+
+[T]
+overload dec(c:ValueReverseCoordinate[T]) {
+    inc(c.value);
+}
+
+
+
+//
+// ReverseCoordinate
+//
+
+private record ReverseCoordinate[T] {
+    coord : T;
+}
+
+[T]
+overload dereference(c:ReverseCoordinate[T]) = forward ...(c.coord - 1)^;
+
+[T,I | CallDefined?(subtract, T, I)]
+overload add(c:ReverseCoordinate[T], i:I) =
+    ReverseCoordinate(T(c.coord - i));
+
+[T,I | CallDefined?(add, T, I)]
+overload subtract(c:ReverseCoordinate[T], i:I) =
+    ReverseCoordinate(T(c.coord + i));
+
+[T | CallDefined?(subtract, T, T)]
+overload subtract(c1:ReverseCoordinate[T], c2:ReverseCoordinate[T]) =
+    c2.coord - c1.coord;
+
+[T]
+overload inc(c:ReverseCoordinate[T]) {
+    dec(c.coord);
+}
+
+[T]
+overload dec(c:ReverseCoordinate[T]) {
+    inc(c.coord);
+}
+
+
+
+//
 // Range
 //
 
 record Range[T] {
-    first:T;
-    last:T;
+    begin:T;
+    end:T;
 }
 
-
-// Range - size, index
-
 [T]
-overload size(a:Range[T]) = SizeT(a.last - a.first);
+overload size(a:Range[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-overload index(a:Range[T], i:I) = T(a.first + i);
-
-
-// Range - iteration
+overload index(a:Range[T], i:I) = T(a.begin + i);
 
 [T]
-overload iterator(r:Range[T]) = r;
+overload iterator(a:Range[T]) = a;
 
 [T]
-overload reverseIterator(r:Range[T]) = ReverseRange(r.last, r.first);
+overload reverseIterator(a:Range[T]) = ReverseRange(a.end, a.begin);
 
 [T]
-overload hasNext?(r:Range[T]) = r.first != r.last;
+overload hasNext?(a:Range[T]) = a.begin != a.end;
 
 [T]
-overload next(r:Range[T]) returned:T {
-    returned <-- r.first;
-    inc(r.first);
+overload next(a:Range[T]) returned:T {
+    returned <-- a.begin;
+    inc(a.begin);
 }
+
+[T]
+overload begin(a:Range[T]) = ValueCoordinate(a.begin);
+
+[T]
+overload end(a:Range[T]) = ValueCoordinate(a.end);
 
 
 
@@ -47,17 +152,11 @@ record ReverseRange[T] {
     begin : T;
 }
 
-
-// ReverseRange - size, index
-
 [T]
 overload size(a:ReverseRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
 overload index(a:ReverseRange[T], i:I) = T(a.end - i - 1);
-
-
-// ReverseRange - iteration
 
 [T]
 overload iterator(a:ReverseRange[T]) = a;
@@ -74,26 +173,50 @@ overload next(a:ReverseRange[T]) {
     return a.end;
 }
 
+[T]
+overload begin(a:ReverseRange[T]) = ValueReverseCoordinate(a.end);
+
+[T]
+overload end(a:ReverseRange[T]) = ValueReverseCoordinate(a.begin);
+
 
 
 //
-// range procedure
+// range, reverseRange
 //
 
 procedure range;
 
-overload range(first, last) = Range(first, last);
+overload range(begin, end) = Range(begin, end);
 
 [A,B | Integer?(A) and Integer?(B)]
-overload range(first:A, last:B) =
-    Range(toBiggerNumericType(A, B, first),
-          toBiggerNumericType(A, B, last));
+overload range(begin:A, end:B) =
+    Range(toBiggerNumericType(A, B, begin),
+          toBiggerNumericType(A, B, end));
 
 [I | Integer?(I)]
-overload range(first:I, last:I) = Range(first, last);
+overload range(begin:I, end:I) = Range(begin, end);
 
 [I | Integer?(I)]
-overload range(last:I) = Range(I(0), last);
+overload range(end:I) = Range(I(0), end);
+
+
+procedure reverseRange;
+
+overload reverseRange(end, begin) = ReverseRange(end, begin);
+
+[A,B | Integer?(A) and Integer?(B)]
+overload reverseRange(end:A, begin:B) =
+    ReverseRange(toBiggerNumericType(A, B, end),
+                 toBiggerNumericType(A, B, begin));
+
+[I | Integer?(I)]
+overload reverseRange(end:I, begin:I) =
+    ReverseRange(end, begin);
+
+[I | Integer?(I)]
+overload reverseRange(end:I) =
+    ReverseRange(end, I(0));
 
 
 
@@ -102,48 +225,38 @@ overload range(last:I) = Range(I(0), last);
 //
 
 record CoordinateRange[T] {
-    first:T;
-    last:T;
+    begin : T;
+    end : T;
 }
 
-
-// CoordinateRange - size, index
-
 [T]
-overload size(a:CoordinateRange[T]) = SizeT(a.last - a.first);
+overload size(a:CoordinateRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-overload index(a:CoordinateRange[T], i:I) = ref (a.first + i)^;
-
-
-// CoordinateRange - coordinates
+overload index(a:CoordinateRange[T], i:I) = ref (a.begin + i)^;
 
 [T]
-overload begin(a:CoordinateRange[T]) = a.first;
+overload iterator(a:CoordinateRange[T]) = a;
 
 [T]
-overload end(a:CoordinateRange[T]) = a.last;
-
-
-// CoordinateRange - iteration
+overload reverseIterator(a:CoordinateRange[T]) =
+    ReverseCoordinateRange(a.end, a.begin);
 
 [T]
-overload iterator(r:CoordinateRange[T]) = r;
+overload hasNext?(a:CoordinateRange[T]) = a.begin != a.end;
 
 [T]
-overload reverseIterator(r:CoordinateRange[T]) =
-    ReverseCoordinateRange(r.last, r.first);
-
-[T]
-overload hasNext?(r:CoordinateRange[T]) = r.first != r.last;
-
-
-[T]
-overload next(r:CoordinateRange[T]) {
-    ref obj = r.first^;
-    inc(r.first);
-    return ref obj;
+overload next(a:CoordinateRange[T]) {
+    ref x = a.begin^;
+    inc(a.begin);
+    return ref x;
 }
+
+[T]
+overload begin(a:CoordinateRange[T]) = a.begin;
+
+[T]
+overload end(a:CoordinateRange[T]) = a.end;
 
 
 
@@ -162,9 +275,6 @@ overload size(a:ReverseCoordinateRange[T]) = SizeT(a.end - a.begin);
 [T,I | Integer?(I)]
 overload index(a:ReverseCoordinateRange[T], i:I) = ref (a.end - i - 1)^;
 
-
-// ReverseCoordinateRange - iteration
-
 [T]
 overload iterator(a:ReverseCoordinateRange[T]) = a;
 
@@ -173,10 +283,26 @@ overload reverseIterator(a:ReverseCoordinateRange[T]) =
     CoordinateRange(a.begin, a.end);
 
 [T]
-overload hasNext?(a:ReverseCoordinateRange[T]) = a.end != a.begin;
+overload hasNext?(a:ReverseCoordinateRange[T]) = a.begin != a.end;
 
 [T]
 overload next(a:ReverseCoordinateRange[T]) {
     dec(a.end);
     return ref a.end^;
 }
+
+[T]
+overload begin(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.end);
+
+[T]
+overload end(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.begin);
+
+
+
+//
+// coordinateRange, reverseCoordinateRange
+//
+
+coordinateRange(begin, end) = CoordinateRange(begin, end);
+
+reverseCoordinateRange(end, begin) = ReverseCoordinateRange(end, begin);
