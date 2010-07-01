@@ -1,0 +1,19 @@
+
+private var commandLineArgs = Vector[String]();
+
+commandLine() = ref commandLineArgs;
+
+initializeCommandLine(argc, argv) {
+    for (i in range(argc)) {
+        var cstr = (argv + i)^;
+        push(commandLineArgs, String(cstr));
+    }
+}
+
+callMain(mainProc) {
+    return getExitCode(...mainProc());
+}
+
+private procedure getExitCode;
+overload getExitCode() = 0;
+overload getExitCode(x) = Int(x);

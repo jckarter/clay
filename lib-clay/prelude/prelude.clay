@@ -26,6 +26,8 @@ public import printer.*;
 public import errors.*;
 public import exceptions.*;
 
+public import system.*;
+
 
 // include self so that even if any symbol is shadowed
 // it can still be accessed as 'prelude.XXX'.

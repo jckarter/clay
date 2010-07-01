@@ -1,1 +1,2 @@
 720
+Array[Int32, 10]BoolInt32NodeA[Tuple[Int32, Bool]]Char

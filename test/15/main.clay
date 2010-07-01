@@ -32,5 +32,5 @@ main() {
     for (x in c)
         pl(x);
     
-    return pack(Vector[Int32], double);
+    println(Type(pack(Vector[Int32], double)));
 }

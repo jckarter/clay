@@ -3793,16 +3793,36 @@ void codegenExe(ModulePtr module)
 {
     generateLLVMCtorsAndDtors();
 
+    IdentifierPtr main = new Identifier("main");
+    IdentifierPtr argc = new Identifier("argc");
+    IdentifierPtr argv = new Identifier("argv");
+
     BlockPtr mainBody = new Block();
-    ExprPtr mainCall = new Call(new NameRef(new Identifier("main")));
-    mainBody->statements.push_back(new ExprStatement(mainCall));
-    vector<ExprPtr> exprs; exprs.push_back(new IntLiteral("0"));
-    mainBody->statements.push_back(new Return(RETURN_VALUE, exprs));
+
+    CallPtr initCmdLine = new Call(kernelNameRef("initializeCommandLine"));
+    initCmdLine->args.push_back(new NameRef(argc));
+    initCmdLine->args.push_back(new NameRef(argv));
+    mainBody->statements.push_back(new ExprStatement(initCmdLine.ptr()));
+
+    CallPtr mainCall = new Call(kernelNameRef("callMain"));
+    mainCall->args.push_back(new NameRef(main));
+
+    vector<ExprPtr> exprs;
+    exprs.push_back(mainCall.ptr());
+    ReturnPtr ret = new Return(RETURN_VALUE, exprs);
+    mainBody->statements.push_back(ret.ptr());
+
+    vector<ExternalArgPtr> mainArgs;
+    ExprPtr argcType = new ObjectExpr(cIntType.ptr());
+    mainArgs.push_back(new ExternalArg(argc, argcType));
+    TypePtr charPtrPtr = pointerType(pointerType(int8Type));
+    ExprPtr argvType = new ObjectExpr(charPtrPtr.ptr());
+    mainArgs.push_back(new ExternalArg(argv, argvType));
 
     ExternalProcedurePtr entryProc =
         new ExternalProcedure(new Identifier("main"),
                               PUBLIC,
-                              vector<ExternalArgPtr>(),
+                              mainArgs,
                               false,
                               new ObjectExpr(cIntType.ptr()),
                               mainBody.ptr(),
