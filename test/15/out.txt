@@ -10,3 +10,4 @@
 64
 125
 216
+Tuple[Static[Vector[Int32]], Static[double]]

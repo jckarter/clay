@@ -1,0 +1,6 @@
+
+main() {
+    for (i, x in enumerate(commandLine()))
+        println(i, ") ", x);
+    return 10 * size(commandLine());
+}

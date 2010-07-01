@@ -35,5 +35,5 @@ main() {
     var f = factorial(n);
     println(f);
     var p = NodeA[Tuple[Int32,Bool]]();
-    return (foo(), isEven(n), f, p, 'a');
+    println(...Types(foo(), isEven(n), f, p, 'a'));
 }
