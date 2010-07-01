@@ -1,0 +1,8 @@
+external sayHello();
+
+external factorial(n:Int) Int;
+
+main() {
+    sayHello();
+    println("factorial(5) = ", factorial(5));
+}
