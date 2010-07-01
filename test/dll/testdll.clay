@@ -1,5 +1,5 @@
 
-external sayHello() Void {
+external sayHello() {
     println("Hello World");
 }
 

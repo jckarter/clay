@@ -159,7 +159,9 @@ static bool generateBinary(llvm::Module *module,
                            const string &outputFile,
                            const llvm::sys::Path &gccPath,
                            bool exceptions,
-                           bool sharedLib)
+                           bool sharedLib,
+                           const vector<string> &libSearchPath,
+                           const vector<string> &libraries)
 {
     llvm::sys::Path tempAsm("clayasm");
     string errMsg;
@@ -201,6 +203,10 @@ static bool generateBinary(llvm::Module *module,
     gccArgs.push_back("-x");
     gccArgs.push_back("assembler");
     gccArgs.push_back(tempAsm.c_str());
+    for (unsigned i = 0; i < libSearchPath.size(); ++i)
+        gccArgs.push_back(libSearchPath[i].c_str());
+    for (unsigned i = 0; i < libraries.size(); ++i)
+        gccArgs.push_back(libraries[i].c_str());
     gccArgs.push_back(NULL);
     llvm::sys::Program::ExecuteAndWait(gccPath, &gccArgs[0]);
 
@@ -225,6 +231,8 @@ static void usage()
     cerr << "  -no-exceptions  - disable exception handling\n";
     cerr << "  -abort          - abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run            - execute the program without writing to disk\n";
+    cerr << "  -L<dir>         - add <dir> to library search path\n";
+    cerr << "  -l<lib>         - link with library <lib>\n";
 }
 
 int main(int argc, char **argv) {
@@ -243,6 +251,9 @@ int main(int argc, char **argv) {
 
     string clayFile;
     string outputFile;
+
+    vector<string> libSearchPath;
+    vector<string> libraries;
 
     for (int i = 1; i < argc; ++i) {
         if ((strcmp(argv[i], "-shared") == 0) ||
@@ -284,6 +295,38 @@ int main(int argc, char **argv) {
             }
             ++i;
             outputFile = argv[i];
+        }
+        else if (strstr(argv[i], "-L") == argv[i]) {
+            string libDir = argv[i] + strlen("-L");
+            if (libDir.empty()) {
+                if (i+1 == argc) {
+                    cerr << "error: directory missing after -L\n";
+                    return -1;
+                }
+                ++i;
+                libDir = argv[i];
+                if (libDir.empty() || (libDir[0] == '-')) {
+                    cerr << "error: directory missing after -L\n";
+                    return -1;
+                }
+            }
+            libSearchPath.push_back("-L" + libDir);
+        }
+        else if (strstr(argv[i], "-l") == argv[i]) {
+            string lib = argv[i] + strlen("-l");
+            if (lib.empty()) {
+                if (i+1 == argc) {
+                    cerr << "error: library missing after -l\n";
+                    return -1;
+                }
+                ++i;
+                lib = argv[i];
+                if (lib.empty() || (lib[0] == '-')) {
+                    cerr << "error: library missing after -l\n";
+                    return -1;
+                }
+            }
+            libraries.push_back("-l" + lib);
         }
         else if (strstr(argv[i], "-") != argv[i]) {
             if (!clayFile.empty()) {
@@ -421,7 +464,8 @@ int main(int argc, char **argv) {
         }
 
         result = generateBinary(llvmModule, outputFile, gccPath,
-                                exceptions, sharedLib);
+                                exceptions, sharedLib,
+                                libSearchPath, libraries);
         if (!result)
             return -1;
     }
