@@ -112,7 +112,7 @@ overload find(x, begin, end) {
 
 
 //
-// binarySearch
+// binarySearch, binarySearchLowerBound, binarySearchUpperBound
 //
 
 [A | Sequence?(A)]
