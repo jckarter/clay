@@ -35,18 +35,21 @@ overload end(a:Array[T,n]) = &a[n];
 
 
 //
-// arrayElements
+// unpack, unpackRef
 //
 
 [T,n]
-arrayElements(a:Array[T,n]) = ref ...arrayElements2(a, static 0);
+overload unpack(a:Array[T,n]) = ...unpackRef(a);
+
+[T,n]
+overload unpackRef(a:Array[T,n]) = ref ...unpackArray(a, static 0);
 
 [T,n,i]
-private arrayElements2(a:Array[T,n], static i) =
-    ref a[i], ...arrayElements2(a, static i+1);
+private unpackArray(a:Array[T,n], static i) =
+    ref a[i], ...unpackArray(a, static i+1);
 
 [T,n,i | i == n]
-overload arrayElements2(a:Array[T,n], static i) = ;
+overload unpackArray(a:Array[T,n], static i) = ;
 
 
 
@@ -77,7 +80,7 @@ private firstArg(a, ...b) = a;
 
 [T,n,...A | Tuple[...Times(T,static n)] == Tuple[...A]]
 inlined overload Array[T,n](...args:A) returned:Array[T,n] {
-    ...arrayElements(returned) <-- ...args;
+    ...unpackRef(returned) <-- ...args;
 }
 
 [n]

@@ -30,7 +30,7 @@ overload hasNext?(iter:ZippedIterator[ITERS]) = multiHasNext?(iter.iters);
 
 [ITERS]
 overload next(iter:ZippedIterator[ITERS]) =
-    forward ...multiValueMap(next, ...tupleElements(iter.iters));
+    forward ...multiValueMap(next, ...unpackRef(iter.iters));
 
 
 
