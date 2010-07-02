@@ -47,14 +47,11 @@ procedure fieldRef;
 
 
 //
-// Type, Types
+// Type
 //
 
-[T]
-inlined Type(x:T) = T;
-
 [...T]
-inlined Types(...x:T) = ...T;
+inlined Type(...x:T) = ...T;
 
 
 
@@ -208,7 +205,7 @@ overload ReturnType(static F, ...argTypes:A) =
 
 [F, ...A | CallDefined?(F, ...typesToValues(...A))]
 overload ReturnType(static F, ...argTypes:A) =
-    Type(F(...typesToValues(...argTypes)));
+    ...Type(F(...typesToValues(...argTypes)));
 
 
 
