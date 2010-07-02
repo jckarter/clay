@@ -757,14 +757,14 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
             evalExpr(x->args[0], env, out);
         }
         else {
-            evalCallExpr(kernelNameRef("makeTuple"), x->args, env, out);
+            evalCallExpr(kernelNameRef("Tuple"), x->args, env, out);
         }
         break;
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        evalCallExpr(kernelNameRef("makeArray"), x->args, env, out);
+        evalCallExpr(kernelNameRef("Array"), x->args, env, out);
         break;
     }
 
@@ -1235,7 +1235,14 @@ void evalCallExpr(ExprPtr callable,
 
     case TYPE :
     case RECORD :
-    case PROCEDURE : {
+    case PROCEDURE :
+    case PRIM_OP : {
+        if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
+            PrimOpPtr x = (PrimOp *)obj.ptr();
+            MultiEValuePtr mev = evalMultiAsRef(args, env);
+            evalPrimOp(x, mev, out);
+            break;
+        }
         MultiPValuePtr mpv = analyzeMulti(args, env);
         assert(mpv.ptr());
         vector<TypePtr> argsKey;
@@ -1251,13 +1258,6 @@ void evalCallExpr(ExprPtr callable,
             MultiEValuePtr mev = evalMultiAsRef(args, env);
             evalCallCode(entry, mev, out);
         }
-        break;
-    }
-
-    case PRIM_OP : {
-        PrimOpPtr x = (PrimOp *)obj.ptr();
-        MultiEValuePtr mev = evalMultiAsRef(args, env);
-        evalPrimOp(x, mev, out);
         break;
     }
 
@@ -1299,7 +1299,13 @@ void evalCallValue(EValuePtr callable,
 
     case TYPE :
     case RECORD :
-    case PROCEDURE : {
+    case PROCEDURE :
+    case PRIM_OP : {
+        if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
+            PrimOpPtr x = (PrimOp *)obj.ptr();
+            evalPrimOp(x, args, out);
+            break;
+        }
         MultiPValuePtr mpv = new MultiPValue();
         for (unsigned i = 0; i < args->size(); ++i)
             mpv->add(new PValue(args->values[i]->type, false));
@@ -1312,12 +1318,6 @@ void evalCallValue(EValuePtr callable,
             error("call to inlined code is not allowed in this context");
         assert(entry->analyzed);
         evalCallCode(entry, args, out);
-        break;
-    }
-
-    case PRIM_OP : {
-        PrimOpPtr x = (PrimOp *)obj.ptr();
-        evalPrimOp(x, args, out);
         break;
     }
 
@@ -2989,6 +2989,10 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         case RECORD :
         case PROCEDURE :
             break;
+        case PRIM_OP :
+            if (!isOverloadablePrimOp(callable))
+                argumentError(0, "invalid callable");
+            break;
         default :
             argumentError(0, "invalid callable");
         }
@@ -3054,6 +3058,10 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         case TYPE :
         case RECORD :
         case PROCEDURE :
+            break;
+        case PRIM_OP :
+            if (!isOverloadablePrimOp(callable))
+                argumentError(0, "invalid callable");
             break;
         default :
             argumentError(0, "invalid callable");

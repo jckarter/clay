@@ -694,15 +694,15 @@ void codegenExpr(ExprPtr expr,
             codegenExpr(x->args[0], env, ctx, out);
         }
         else {
-            ExprPtr makeTuple = kernelNameRef("makeTuple");
-            codegenCallExpr(makeTuple, x->args, env, ctx, out);
+            ExprPtr Tuple = kernelNameRef("Tuple");
+            codegenCallExpr(Tuple, x->args, env, ctx, out);
         }
         break;
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        codegenCallExpr(kernelNameRef("makeArray"), x->args, env, ctx, out);
+        codegenCallExpr(kernelNameRef("Array"), x->args, env, ctx, out);
         break;
     }
 
@@ -1469,7 +1469,14 @@ void codegenCallExpr(ExprPtr callable,
 
     case TYPE :
     case RECORD :
-    case PROCEDURE : {
+    case PROCEDURE :
+    case PRIM_OP : {
+        if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
+            PrimOpPtr x = (PrimOp *)obj.ptr();
+            MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
+            codegenPrimOp(x, mcv, ctx, out);
+            break;
+        }
         MultiPValuePtr mpv = analyzeMulti(args, env);
         assert(mpv.ptr());
         vector<TypePtr> argsKey;
@@ -1485,13 +1492,6 @@ void codegenCallExpr(ExprPtr callable,
             MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
             codegenCallCode(entry, mcv, ctx, out);
         }
-        break;
-    }
-
-    case PRIM_OP : {
-        PrimOpPtr x = (PrimOp *)obj.ptr();
-        MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
-        codegenPrimOp(x, mcv, ctx, out);
         break;
     }
 
@@ -1534,7 +1534,13 @@ void codegenCallValue(CValuePtr callable,
 
     case TYPE :
     case RECORD :
-    case PROCEDURE : {
+    case PROCEDURE :
+    case PRIM_OP : {
+        if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
+            PrimOpPtr x = (PrimOp *)obj.ptr();
+            codegenPrimOp(x, args, ctx, out);
+            break;
+        }
         MultiPValuePtr mpv = new MultiPValue();
         for (unsigned i = 0; i < args->size(); ++i)
             mpv->add(new PValue(args->values[i]->type, false));
@@ -1547,12 +1553,6 @@ void codegenCallValue(CValuePtr callable,
             error("call to inlined code is not allowed in this context");
         assert(entry->analyzed);
         codegenCallCode(entry, args, ctx, out);
-        break;
-    }
-
-    case PRIM_OP : {
-        PrimOpPtr x = (PrimOp *)obj.ptr();
-        codegenPrimOp(x, args, ctx, out);
         break;
     }
 
@@ -3342,6 +3342,10 @@ void codegenPrimOp(PrimOpPtr x,
         case RECORD :
         case PROCEDURE :
             break;
+        case PRIM_OP :
+            if (!isOverloadablePrimOp(callable))
+                argumentError(0, "invalid callable");
+            break;
         default :
             argumentError(0, "invalid callable");
         }
@@ -3404,6 +3408,10 @@ void codegenPrimOp(PrimOpPtr x,
         case TYPE :
         case RECORD :
         case PROCEDURE :
+            break;
+        case PRIM_OP :
+            if (!isOverloadablePrimOp(callable))
+                argumentError(0, "invalid callable");
             break;
         default :
             argumentError(0, "invalid callable");

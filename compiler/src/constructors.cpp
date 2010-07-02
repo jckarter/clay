@@ -1,6 +1,70 @@
 #include "clay.hpp"
 
+vector<OverloadPtr> pointerOverloads;
+vector<OverloadPtr> codePointerOverloads;
+vector<OverloadPtr> cCodePointerOverloads;
+vector<OverloadPtr> arrayOverloads;
+vector<OverloadPtr> valArrayOverloads;
+vector<OverloadPtr> tupleOverloads;
+vector<OverloadPtr> staticOverloads;
+
 vector<OverloadPtr> typeOverloads;
+
+bool isOverloadablePrimOp(ObjectPtr x)
+{
+    if (x->objKind != PRIM_OP)
+        return false;
+    PrimOpPtr y = (PrimOp *)x.ptr();
+    switch (y->primOpCode) {
+    case PRIM_Pointer :
+    case PRIM_CodePointer :
+    case PRIM_CCodePointer :
+    case PRIM_Array :
+    case PRIM_ValArray :
+    case PRIM_Tuple :
+    case PRIM_Static :
+        return true;
+    default :
+        return false;
+    }
+}
+
+vector<OverloadPtr> &primOpOverloads(PrimOpPtr x)
+{
+    vector<OverloadPtr> *ptr = NULL;
+    switch (x->primOpCode) {
+    case PRIM_Pointer :
+        ptr = &pointerOverloads;
+        break;
+    case PRIM_CodePointer :
+        ptr = &codePointerOverloads;
+        break;
+    case PRIM_CCodePointer :
+        ptr = &cCodePointerOverloads;
+        break;
+    case PRIM_Array :
+        ptr = &arrayOverloads;
+        break;
+    case PRIM_ValArray :
+        ptr = &valArrayOverloads;
+        break;
+    case PRIM_Tuple :
+        ptr = &tupleOverloads;
+        break;
+    case PRIM_Static :
+        ptr = &staticOverloads;
+        break;
+    default :
+        assert(false);
+    }
+    return *ptr;
+}
+
+void addPrimOpOverload(PrimOpPtr x, OverloadPtr overload)
+{
+    vector<OverloadPtr> &v = primOpOverloads(x);
+    v.insert(v.begin(), overload);
+}
 
 void addTypeOverload(OverloadPtr x)
 {

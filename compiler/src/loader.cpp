@@ -350,6 +350,13 @@ static void initOverload(OverloadPtr x) {
             addTypeOverload(x);
             break;
         }
+        case PRIM_OP : {
+            if (isOverloadablePrimOp(y))
+                addPrimOpOverload((PrimOp *)y.ptr(), x);
+            else
+                error(x->target, "invalid overload target");
+            break;
+        }
         default : {
             error(x->target, "invalid overload target");
         }

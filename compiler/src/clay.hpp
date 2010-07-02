@@ -2195,6 +2195,9 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
 
 extern vector<OverloadPtr> typeOverloads;
 
+bool isOverloadablePrimOp(ObjectPtr x);
+vector<OverloadPtr> &primOpOverloads(PrimOpPtr x);
+void addPrimOpOverload(PrimOpPtr x, OverloadPtr overload);
 void addTypeOverload(OverloadPtr x);
 void initTypeOverloads(TypePtr t);
 void initBuiltinConstructor(RecordPtr x);

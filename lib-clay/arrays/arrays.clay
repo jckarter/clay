@@ -54,11 +54,11 @@ overload unpackArray(a:Array[T,n], static i) = ;
 
 
 //
-// makeArray
+// Array - type inferring constructor
 //
 
 [...A | (countArgs(...A) > 0) and AllEqual?(...A)]
-inlined makeArray(...args:A) {
+inlined overload Array(...args:A) {
     alias n = static countArgs(...A);
     alias T = firstArg(...A);
     return Array[T, n](...args);
