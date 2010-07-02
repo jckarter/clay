@@ -502,7 +502,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(Array);
     PRIMITIVE(arrayRef);
 
-    PRIMITIVE(Pack);
+    PRIMITIVE(ValArray);
 
     PRIMITIVE(TupleP);
     PRIMITIVE(Tuple);
