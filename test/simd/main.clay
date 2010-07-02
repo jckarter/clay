@@ -4,53 +4,34 @@ main() {
 
     var v2 = Vec(2, 3); // type will be inferred as Vec[Int,2]
 
-    display("v1",  ...unpack(v1));
-    display("v2",  ...unpack(v2));
-    display("add", ...unpack(v1 + v2));
-    display("sub", ...unpack(v1 - v2));
-    display("mul", ...unpack(v1 * v2));
-    display("div", ...unpack(v1 / v2));
-    display("rem", ...unpack(v1 % v2));
-    display("shl", ...unpack(shiftLeft(v1, v2)));
-    display("shr", ...unpack(shiftRight(v1, v2)));
-    display("and", ...unpack(bitwiseAnd(v1, v2)));
-    display("or",  ...unpack(bitwiseOr(v1, v2)));
-    display("xor", ...unpack(bitwiseXor(v1, v2)));
-
-    display("v1",  ...unpack(v1));
-    display("v2",  ...unpack(v2));
-    display("add", ...unpack(v1 + v2 + 3));
-    display("sub", ...unpack(v1 - v2 - 3));
-    display("mul", ...unpack(v1 * v2 * 3));
-    display("div", ...unpack(v1 / v2 / 3));
-    display("rem", ...unpack(v1 % v2 % 3));
-    display("shl", ...unpack(shiftLeft(shiftLeft(v1, v2), 3)));
-    display("shr", ...unpack(shiftRight(shiftRight(v1, v2), 3)));
-    display("and", ...unpack(bitwiseAnd(bitwiseAnd(v1, v2), 3)));
-    display("or",  ...unpack(bitwiseOr(bitwiseOr(v1, v2), 3)));
-    display("xor", ...unpack(bitwiseXor(bitwiseXor(v1, v2), 3)));
-}
-
-
-display(label, ...v) {
-    print(label, ": ");
-    printList(...v);
-}
-
-
-printList(...args) {
-    printList2(true, ...args);
+    display("v1",  v1);
+    display("v2",  v2);
+    display("add", v1 + v2);
+    display("sub", v1 - v2);
+    display("mul", v1 * v2);
+    display("div", v1 / v2);
+    display("rem", v1 % v2);
+    display("shl", shiftLeft(v1, v2));
+    display("shr", shiftRight(v1, v2));
+    display("and", bitwiseAnd(v1, v2));
+    display("or",  bitwiseOr(v1, v2));
+    display("xor", bitwiseXor(v1, v2));
     println();
+    display("v1",  v1);
+    display("v2",  v2);
+    display("add", v1 + v2 + 3);
+    display("sub", v1 - v2 - 3);
+    display("mul", v1 * v2 * 3);
+    display("div", v1 / v2 / 3);
+    display("rem", v1 % v2 % 3);
+    display("shl", shiftLeft(shiftLeft(v1, v2), 3));
+    display("shr", shiftRight(shiftRight(v1, v2), 3));
+    display("and", bitwiseAnd(bitwiseAnd(v1, v2), 3));
+    display("or",  bitwiseOr(bitwiseOr(v1, v2), 3));
+    display("xor", bitwiseXor(bitwiseXor(v1, v2), 3));
 }
 
-private procedure printList2;
 
-overload printList2(first?, head, ...tail) {
-    if (not first?)
-        print(", ");
-    print(head);
-    printList2(false, ...tail);
-}
-
-overload printList2(first?) {
+display(label, v) {
+    println(label, ": ", simd.get(v, 0), ", ", simd.get(v, 1));
 }

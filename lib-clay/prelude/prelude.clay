@@ -13,7 +13,6 @@ public import sharedpointers.*;
 public import sequences.*;
 
 public import arrays.*;
-public import simd.*;
 public import vectors.*;
 public import characters.*;
 public import strings.*;
@@ -29,6 +28,7 @@ public import exceptions.*;
 
 public import system.*;
 
+public import simd;
 
 // include self so that even if any symbol is shadowed
 // it can still be accessed as 'prelude.XXX'.
