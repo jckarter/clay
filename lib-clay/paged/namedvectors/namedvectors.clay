@@ -2,7 +2,7 @@
 import paged.*;
 import paged.misc.*;
 
-import abstractvectors.*;
+import vectors.generic.*;
 import strings;
 import files.mapping.*;
 
@@ -80,7 +80,7 @@ overload assign(dest:NamedVector[T], src:NamedVector[T]);
 
 
 //
-// abstract vector requirements
+// generic vector requirements
 //
 
 [T]

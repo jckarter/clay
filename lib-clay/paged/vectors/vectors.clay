@@ -1,5 +1,5 @@
 import paged.*;
-import abstractvectors.*;
+import vectors.generic.*;
 
 
 //
@@ -97,7 +97,7 @@ overload move(a:Vector[T]) returned:Vector[T] {
 
 
 //
-// abstract vector requirements
+// generic vector requirements
 //
 
 [T]
