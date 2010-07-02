@@ -2,7 +2,7 @@
 
 
 //
-// abstract vector requirements
+// generic vector requirements
 //
 
 procedure Vector?;
