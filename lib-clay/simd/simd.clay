@@ -113,6 +113,18 @@ overload unpackVec(a:Vec[T,n], static n) = ;
 
 
 //
+// get, set individual elements
+//
+
+[T,n,I | Integer?(I)]
+get(a:Vec[T,n], i:I) = prims.extractElement(a, Int(i));
+
+[T,n,I | Integer?(I)]
+set(a:Vec[T,n], i:I, x:T) = prims.insertElement(a, Int(i), x);
+
+
+
+//
 // numeric ops
 //
 
