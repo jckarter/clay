@@ -1,0 +1,249 @@
+
+
+
+//
+// insertElement, extractElement
+//
+
+[T,n]
+insertElement(a:ValArray[T,n], i:Int, x:T) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $Int * %i
+    %3 = load $T * %x
+    %4 = insertelement $ValArray[T,n] %1, $T %3, $Int %2
+    store $ValArray[T,n] %4, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n]
+extractElement(a:ValArray[T,n], i:Int) returned:T __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $Int * %i
+    %3 = extractelement $ValArray[T,n] %1, $Int %2
+    store $T %3, $T * %returned
+    ret i32 0
+}
+
+
+
+//
+// add
+//
+
+procedure add;
+
+[T,n | Integer?(T)]
+overload add(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = add $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload add(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = fadd $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// subtract
+//
+
+procedure subtract;
+
+[T,n | Integer?(T)]
+overload subtract(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = sub $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload subtract(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = fsub $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// multiply
+//
+
+procedure multiply;
+
+[T,n | Integer?(T)]
+overload multiply(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = mul $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload multiply(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = fmul $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// divide
+//
+
+procedure divide;
+
+[T,n | SignedInteger?(T)]
+overload divide(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = sdiv $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | UnsignedInteger?(T)]
+overload divide(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = udiv $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload divide(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = fdiv $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// remainder
+//
+
+procedure remainder;
+
+[T,n | SignedInteger?(T)]
+overload remainder(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = srem $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | UnsignedInteger?(T)]
+overload remainder(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = urem $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload remainder(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = frem $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// shiftLeft
+//
+
+procedure shiftLeft;
+
+[T,n | Integer?(T)]
+overload shiftLeft(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = shl $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// shiftRight
+//
+
+procedure shiftRight;
+
+[T,n | SignedInteger?(T)]
+overload shiftRight(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = ashr $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | UnsignedInteger?(T)]
+overload shiftRight(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = lshr $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// bitwiseAnd, bitwiseOr, bitwiseXor
+//
+
+[T,n | Integer?(T)]
+bitwiseAnd(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = and $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Integer?(T)]
+bitwiseOr(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = or $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Integer?(T)]
+bitwiseXor(a:ValArray[T,n], b:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %a
+    %2 = load $ValArray[T,n] * %b
+    %3 = xor $ValArray[T,n] %1, %2
+    store $ValArray[T,n] %3, $ValArray[T,n] * %returned
+    ret i32 0
+}
