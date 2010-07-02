@@ -1,0 +1,40 @@
+import valarrays.*;
+
+printList(...args) {
+    printList2(true, ...args);
+    println();
+}
+
+private procedure printList2;
+
+overload printList2(first?, head, ...tail) {
+    if (not first?)
+        print(", ");
+    print(head);
+    printList2(false, ...tail);
+}
+
+overload printList2(first?) {
+}
+
+display(label, ...v) {
+    print(label, ": ");
+    printList(...v);
+}
+
+main() {
+    var v1 = ValArray(11, 21);
+    var v2 = ValArray(2, 3);
+    display("v1", ...unpack(v1));
+    display("v2", ...unpack(v2));
+    display("add", ...unpack(v1 + v2));
+    display("sub", ...unpack(v1 - v2));
+    display("mul", ...unpack(v1 * v2));
+    display("div", ...unpack(v1 / v2));
+    display("rem", ...unpack(v1 % v2));
+    display("shl", ...unpack(shiftLeft(v1, v2)));
+    display("shr", ...unpack(shiftRight(v1, v2)));
+    display("and", ...unpack(bitwiseAnd(v1, v2)));
+    display("or", ...unpack(bitwiseOr(v1, v2)));
+    display("xor", ...unpack(bitwiseXor(v1, v2)));
+}

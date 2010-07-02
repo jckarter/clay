@@ -1,0 +1,131 @@
+
+import valarrays.primitives as prims;
+
+
+//
+// ValArray type inferring constructor
+//
+
+[...A | (countArgs(...A) > 0) and AllEqual?(...A)]
+overload ValArray(...args:A) {
+    alias n = static countArgs(...A);
+    alias T = firstArg(...A);
+    return ValArray[T, n](...args);
+}
+
+private AllEqual?(a, b, ...rest) = (a == b) and AllEqual?(b, ...rest);
+overload AllEqual?(a) = true;
+
+private countArgs(x, ...rest) = 1 + countArgs(...rest);
+overload countArgs() = 0;
+
+private firstArg(a, ...b) = a;
+
+
+
+//
+// ValArray basic constructor
+//
+
+[T,n,...A | Tuple[...Times(T,static n)] == Tuple[...A]]
+overload ValArray[T,n](...args:A) {
+    return insertElements(ValArray[T,n](), static 0, ...args);
+}
+
+[n]
+private Times(a, static n) = a, ...Times(a, static n-1);
+overload Times(a, static 0) = ;
+
+private procedure insertElements;
+
+[T,n,i]
+overload insertElements(a:ValArray[T,n], static i, first, ...rest) {
+    var b = prims.insertElement(a, i, first);
+    return insertElements(b, static i+1, ...rest);
+}
+
+[T,n]
+overload insertElements(a:ValArray[T,n], static n) {
+    return a;
+}
+
+
+
+//
+// ValArray other constructors, destructor
+//
+
+[T,n]
+overload ValArray[T,n]() returned:ValArray[T,n] {
+}
+
+[T,n]
+overload ValArray[T,n](src:ValArray[T,n]) returned:ValArray[T,n] __llvm__{
+    %1 = load $ValArray[T,n] * %src
+    store $ValArray[T,n] %1, $ValArray[T,n] * %returned
+    ret i32 0
+}
+
+[T,n]
+overload destroy(a:ValArray[T,n]) {
+}
+
+
+
+//
+// unpack
+//
+
+[T,n]
+overload unpack(a:ValArray[T,n]) = ...unpackValArray(a, static 0);
+
+private procedure unpackValArray;
+
+[T,n,i]
+overload unpackValArray(a:ValArray[T,n], static i) =
+    prims.extractElement(a, i), ...unpackValArray(a, static i+1);
+
+[T,n]
+overload unpackValArray(a:ValArray[T,n], static n) = ;
+
+
+
+//
+// numeric ops
+//
+
+[T,n]
+overload add(a:ValArray[T,n], b:ValArray[T,n]) = prims.add(a, b);
+
+[T,n]
+overload subtract(a:ValArray[T,n], b:ValArray[T,n]) = prims.subtract(a, b);
+
+[T,n]
+overload multiply(a:ValArray[T,n], b:ValArray[T,n]) = prims.multiply(a, b);
+
+[T,n]
+overload divide(a:ValArray[T,n], b:ValArray[T,n]) = prims.divide(a, b);
+
+[T,n]
+overload remainder(a:ValArray[T,n], b:ValArray[T,n]) = prims.remainder(a, b);
+
+
+
+//
+// bitwise ops
+//
+
+[T,n]
+overload shiftLeft(a:ValArray[T,n], b:ValArray[T,n]) = prims.shiftLeft(a, b);
+
+[T,n]
+overload shiftRight(a:ValArray[T,n], b:ValArray[T,n]) = prims.shiftRight(a, b);
+
+[T,n]
+overload bitwiseAnd(a:ValArray[T,n], b:ValArray[T,n]) = prims.bitwiseAnd(a, b);
+
+[T,n]
+overload bitwiseOr(a:ValArray[T,n], b:ValArray[T,n]) = prims.bitwiseOr(a, b);
+
+[T,n]
+overload bitwiseXor(a:ValArray[T,n], b:ValArray[T,n]) = prims.bitwiseXor(a, b);
