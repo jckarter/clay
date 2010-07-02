@@ -126,6 +126,7 @@ enum ObjectKind {
 
     FORMAL_ARG,
     RETURN_SPEC,
+    LLVM_BODY,
     CODE,
 
     RECORD,
@@ -231,6 +232,7 @@ struct Try;
 
 struct FormalArg;
 struct ReturnSpec;
+struct LLVMBody;
 struct Code;
 
 struct TopLevelItem;
@@ -354,6 +356,7 @@ typedef Pointer<Try> TryPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
+typedef Pointer<LLVMBody> LLVMBodyPtr;
 typedef Pointer<Code> CodePtr;
 
 typedef Pointer<TopLevelItem> TopLevelItemPtr;
@@ -573,7 +576,12 @@ struct Token : public Object {
 // lexer module
 //
 
+#define LLVM_TOKEN_PREFIX "__llvm__"
+
 void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
+
+void tokenize(SourcePtr source, int offset, int length,
+              vector<TokenPtr> &tokens);
 
 
 
@@ -1092,6 +1100,12 @@ struct PatternVar {
         : isMulti(false) {}
 };
 
+struct LLVMBody : ANode {
+    string body;
+    LLVMBody(const string &body)
+        : ANode(LLVM_BODY), body(body) {}
+};
+
 struct Code : public ANode {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
@@ -1099,7 +1113,7 @@ struct Code : public ANode {
     FormalArgPtr formalVarArg;
     vector<ReturnSpecPtr> returnSpecs;
     StatementPtr body;
-    string llvmBody;
+    LLVMBodyPtr llvmBody;
 
     Code()
         : ANode(CODE) {}
@@ -1114,7 +1128,7 @@ struct Code : public ANode {
           returnSpecs(returnSpecs), body(body) {}
 
     bool isInlineLLVM() {
-        return llvmBody.size() > 0;
+        return llvmBody.ptr() != NULL;
     }
     bool hasBody() {
         return body.ptr() || isInlineLLVM();
@@ -1418,6 +1432,7 @@ struct Module : public ANode {
 //
 
 ModulePtr parse(SourcePtr source);
+ExprPtr parseExpr(SourcePtr source, int offset, int length);
 
 
 

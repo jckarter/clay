@@ -3,12 +3,17 @@
 #include <cstdio>
 #include <cassert>
 
-static void initLexer(SourcePtr s);
+static void initLexer(SourcePtr s, int offset, int length);
 static void cleanupLexer();
 static bool nextToken(TokenPtr &x);
 
 void tokenize(SourcePtr source, vector<TokenPtr> &tokens) {
-    initLexer(source);
+    tokenize(source, 0, source->size, tokens);
+}
+
+void tokenize(SourcePtr source, int offset, int length,
+              vector<TokenPtr> &tokens) {
+    initLexer(source, offset, length);
     TokenPtr token;
     while (nextToken(token)) {
         switch (token->tokenKind) {
@@ -24,16 +29,19 @@ void tokenize(SourcePtr source, vector<TokenPtr> &tokens) {
 }
 
 static Source *lexerSource;
+static int beginOffset;
 static char *begin;
 static char *ptr;
 static char *end;
 static char *maxPtr;
 
-static void initLexer(SourcePtr source) {
+static void initLexer(SourcePtr source, int offset, int length) {
     lexerSource = source.ptr();
-    begin = source->data;
-    end = begin + source->size;
+    begin = source->data + offset;
+    end = begin + length;
     ptr = begin;
+    maxPtr = begin;
+    beginOffset = offset;
 }
 
 static void cleanupLexer() {
@@ -462,7 +470,7 @@ static bool llvmToken(TokenPtr &x) {
     char c;
     string s;
     if (!identStr(s)) return false;
-    if (s.compare("__llvm__")) return false;
+    if (s.compare(LLVM_TOKEN_PREFIX)) return false;
     char *begin = save();
     while (true) {
         if (!next(c)) return false;
@@ -493,12 +501,14 @@ static bool nextToken(TokenPtr &x) {
     restore(p); if (floatToken(x)) goto success;
     restore(p); if (intToken(x)) goto success;
     if (p != end) {
-        pushLocation(new Location(lexerSource, maxPtr-begin));
+        ptrdiff_t offset = (maxPtr - begin) + beginOffset;
+        pushLocation(new Location(lexerSource, offset));
         error("invalid token");
     }
     return false;
 success :
     assert(x.ptr());
-    x->location = new Location(lexerSource, p-begin);
+    ptrdiff_t offset = (p - begin) + beginOffset;
+    x->location = new Location(lexerSource, offset);
     return true;
 }
