@@ -20,6 +20,7 @@ static vector<vector<PointerTypePtr> > pointerTypes;
 static vector<vector<CodePointerTypePtr> > codePointerTypes;
 static vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
 static vector<vector<ArrayTypePtr> > arrayTypes;
+static vector<vector<PackTypePtr> > packTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
 static vector<vector<StaticTypePtr> > staticTypes;
@@ -56,6 +57,7 @@ void initTypes() {
     codePointerTypes.resize(N);
     cCodePointerTypes.resize(N);
     arrayTypes.resize(N);
+    packTypes.resize(N);
     tupleTypes.resize(N);
     recordTypes.resize(N);
     staticTypes.resize(N);
@@ -194,6 +196,21 @@ TypePtr arrayType(TypePtr elementType, int size) {
     }
     ArrayTypePtr t = new ArrayType(elementType, size);
     arrayTypes[h].push_back(t);
+    return t.ptr();
+}
+
+TypePtr packType(TypePtr elementType, int size) {
+    int h = pointerHash(elementType.ptr()) + size;
+    h &= packTypes.size() - 1;
+    vector<PackTypePtr>::iterator i, end;
+    for (i = packTypes[h].begin(), end = packTypes[h].end();
+         i != end; ++i) {
+        PackType *t = i->ptr();
+        if ((t->elementType == elementType) && (t->size == size))
+            return t;
+    }
+    PackTypePtr t = new PackType(elementType, size);
+    packTypes[h].push_back(t);
     return t.ptr();
 }
 
@@ -485,6 +502,10 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         ArrayType *x = (ArrayType *)t.ptr();
         return llvmArrayType(x->elementType, x->size);
     }
+    case PACK_TYPE : {
+        PackType *x = (PackType *)t.ptr();
+        return llvm::VectorType::get(llvmType(x->elementType), x->size);
+    }
     case TUPLE_TYPE : {
         TupleType *x = (TupleType *)t.ptr();
         vector<const llvm::Type *> llTypes;
@@ -614,6 +635,11 @@ void typePrint(ostream &out, TypePtr t) {
     case ARRAY_TYPE : {
         ArrayType *x = (ArrayType *)t.ptr();
         out << "Array[" << x->elementType << ", " << x->size << "]";
+        break;
+    }
+    case PACK_TYPE : {
+        PackType *x = (PackType *)t.ptr();
+        out << "Pack[" << x->elementType << ", " << x->size << "]";
         break;
     }
     case TUPLE_TYPE : {

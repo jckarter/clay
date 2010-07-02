@@ -782,6 +782,7 @@ static bool isTypeConstructor(ObjectPtr x) {
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
         case PRIM_Array :
+        case PRIM_Pack :
         case PRIM_Tuple :
         case PRIM_Static :
             return true;
@@ -883,6 +884,13 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             TypePtr t = staticToType(args, 0);
             int size = staticToInt(args, 1);
             return arrayType(t, size);
+        }
+
+        case PRIM_Pack : {
+            ensureArity(args, 2);
+            TypePtr t = staticToType(args, 0);
+            int size = staticToInt(args, 1);
+            return packType(t, size);
         }
 
         case PRIM_Tuple : {
@@ -1713,6 +1721,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ArrayTypePtr t = arrayTypeOfValue(args, 0);
         return new MultiPValue(new PValue(t->elementType, false));
     }
+
+    case PRIM_Pack :
+        error("Pack type constructor cannot be called");
 
     case PRIM_TupleP :
         return new MultiPValue(new PValue(boolType, true));

@@ -502,6 +502,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(Array);
     PRIMITIVE(arrayRef);
 
+    PRIMITIVE(Pack);
+
     PRIMITIVE(TupleP);
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);

@@ -88,6 +88,13 @@ static ObjectPtr primOpArray() {
     return obj;
 }
 
+static ObjectPtr primOpPack() {
+    static ObjectPtr obj;
+    if (!obj)
+        obj = primName("Pack");
+    return obj;
+}
+
 static ObjectPtr primOpTuple() {
     static ObjectPtr obj;
     if (!obj)
@@ -130,6 +137,15 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             MultiPatternListPtr params = new MultiPatternList();
             params->items.push_back(objectToPattern(at->elementType.ptr()));
             ValueHolderPtr vh = intToValueHolder(at->size);
+            params->items.push_back(objectToPattern(vh.ptr()));
+            return new PatternStruct(head, params.ptr());
+        }
+        case PACK_TYPE : {
+            PackType *pt = (PackType *)t;
+            ObjectPtr head = primOpPack();
+            MultiPatternListPtr params = new MultiPatternList();
+            params->items.push_back(objectToPattern(pt->elementType.ptr()));
+            ValueHolderPtr vh = intToValueHolder(pt->size);
             params->items.push_back(objectToPattern(vh.ptr()));
             return new PatternStruct(head, params.ptr());
         }
@@ -409,6 +425,7 @@ static bool isPatternHead(ObjectPtr x)
         switch (y->primOpCode) {
         case PRIM_Pointer :
         case PRIM_Array :
+        case PRIM_Pack :
         case PRIM_Tuple :
         case PRIM_Static :
             return true;
