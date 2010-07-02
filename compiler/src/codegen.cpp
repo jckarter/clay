@@ -3488,8 +3488,8 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_Pack :
-        error("Pack type constructor cannot be called");
+    case PRIM_ValArray :
+        error("ValArray type constructor cannot be called");
 
     case PRIM_TupleP : {
         ensureArity(args, 1);

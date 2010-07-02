@@ -60,6 +60,8 @@ FastCallCodePointer[(A1, ..., An), (RT?)]
 Array[T,n]
 [T,n] arrayRef(a:Array[T,n], i:SizeT) ref : T
 
+ValArray[T,n]
+
 [T] Tuple?(static T):Bool
 Tuple[T1, ..., Tn]
 [T] TupleElementCount(static T): SizeT
