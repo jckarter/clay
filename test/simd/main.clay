@@ -16,6 +16,19 @@ main() {
     display("and", ...unpack(bitwiseAnd(v1, v2)));
     display("or",  ...unpack(bitwiseOr(v1, v2)));
     display("xor", ...unpack(bitwiseXor(v1, v2)));
+
+    display("v1",  ...unpack(v1));
+    display("v2",  ...unpack(v2));
+    display("add", ...unpack(v1 + v2 + 3));
+    display("sub", ...unpack(v1 - v2 - 3));
+    display("mul", ...unpack(v1 * v2 * 3));
+    display("div", ...unpack(v1 / v2 / 3));
+    display("rem", ...unpack(v1 % v2 % 3));
+    display("shl", ...unpack(shiftLeft(shiftLeft(v1, v2), 3)));
+    display("shr", ...unpack(shiftRight(shiftRight(v1, v2), 3)));
+    display("and", ...unpack(bitwiseAnd(bitwiseAnd(v1, v2), 3)));
+    display("or",  ...unpack(bitwiseOr(bitwiseOr(v1, v2), 3)));
+    display("xor", ...unpack(bitwiseXor(bitwiseXor(v1, v2), 3)));
 }
 
 
