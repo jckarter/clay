@@ -757,6 +757,10 @@ string getCodeName(ObjectPtr x)
         Procedure *y = (Procedure *)x.ptr();
         return y->name->str;
     }
+    case PRIM_OP : {
+        assert(isOverloadablePrimOp(x));
+        return primOpName((PrimOp *)x.ptr());
+    }
     default :
         assert(false);
         return "";
