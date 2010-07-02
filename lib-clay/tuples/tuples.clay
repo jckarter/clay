@@ -21,11 +21,11 @@ overload unpackTuple(a:T, static i) = ;
 
 
 //
-// makeTuple
+// Tuple type inferring constructor
 //
 
 [...T]
-inlined makeTuple(...args:T) = Tuple[...T](...args);
+inlined overload Tuple(...args:T) = Tuple[...T](...args);
 
 
 

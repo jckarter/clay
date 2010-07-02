@@ -23,6 +23,10 @@ static void initCallable(ObjectPtr x)
     }
     case PROCEDURE :
         break;
+    case PRIM_OP : {
+        assert(isOverloadablePrimOp(x));
+        break;
+    }
     default :
         assert(false);
     }
@@ -43,6 +47,11 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
     case PROCEDURE : {
         Procedure *y = (Procedure *)x.ptr();
         return y->overloads;
+    }
+    case PRIM_OP : {
+        assert(isOverloadablePrimOp(x));
+        PrimOp *y = (PrimOp *)x.ptr();
+        return primOpOverloads(y);
     }
     default : {
         assert(false);

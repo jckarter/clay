@@ -6,7 +6,7 @@ testUnsignedInt() = (1, 1u8, 1u16, 1u32, 1u64);
 testFloat() = (1, 1.0, 1f32, 1f64, 1.0f32, 1.0f64);
 
 test0Tuple() = ();
-test1Tuple() = makeTuple(true);
+test1Tuple() = Tuple(true);
 
 testConst() = (testSignedInt(), testUnsignedInt(), testFloat(),
                test0Tuple(), test1Tuple(),

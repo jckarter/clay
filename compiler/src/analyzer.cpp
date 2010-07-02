@@ -371,12 +371,12 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         {
             return analyzeExpr(x->args[0], env);
         }
-        return analyzeCallExpr(kernelNameRef("makeTuple"), x->args, env);
+        return analyzeCallExpr(kernelNameRef("Tuple"), x->args, env);
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        return analyzeCallExpr(kernelNameRef("makeArray"), x->args, env);
+        return analyzeCallExpr(kernelNameRef("Array"), x->args, env);
     }
 
     case INDEXING : {
@@ -1063,7 +1063,12 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
 
     case TYPE :
     case RECORD :
-    case PROCEDURE : {
+    case PROCEDURE :
+    case PRIM_OP : {
+        if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
+            PrimOpPtr x = (PrimOp *)obj.ptr();
+            return analyzePrimOpExpr(x, args, env);
+        }
         MultiPValuePtr mpv = analyzeMulti(args, env);
         if (!mpv)
             return NULL;
@@ -1078,11 +1083,6 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
-    }
-
-    case PRIM_OP : {
-        PrimOpPtr x = (PrimOp *)obj.ptr();
-        return analyzePrimOpExpr(x, args, env);
     }
 
     default :
@@ -1117,7 +1117,12 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
 
     case TYPE :
     case RECORD :
-    case PROCEDURE : {
+    case PROCEDURE :
+    case PRIM_OP : {
+        if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
+            PrimOpPtr x = (PrimOp *)obj.ptr();
+            return analyzePrimOp(x, args);
+        }
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(args, argsKey, argsTempness);
@@ -1129,11 +1134,6 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
-    }
-
-    case PRIM_OP : {
-        PrimOpPtr x = (PrimOp *)obj.ptr();
-        return analyzePrimOp(x, args);
     }
 
     default :
@@ -1619,6 +1619,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         case RECORD :
         case PROCEDURE :
             break;
+        case PRIM_OP :
+            if (!isOverloadablePrimOp(callable))
+                argumentError(0, "invalid callable");
+            break;
         default :
             argumentError(0, "invalid callable");
         }
@@ -1666,6 +1670,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         case TYPE :
         case RECORD :
         case PROCEDURE :
+            break;
+        case PRIM_OP :
+            if (!isOverloadablePrimOp(callable))
+                argumentError(0, "invalid callable");
             break;
         default :
             argumentError(0, "invalid callable");
