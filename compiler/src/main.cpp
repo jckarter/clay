@@ -75,10 +75,18 @@ static void runModule(llvm::Module *module)
         module->getFunction("clay_%initGlobals");
     llvm::Function *globalDtors = 
         module->getFunction("clay_%destroyGlobals");
+
+    engine->runFunction(globalCtors, vector<llvm::GenericValue>());
+
     vector<llvm::GenericValue> gvArgs;
-    engine->runFunction(globalCtors, gvArgs);
+    llvm::GenericValue gv;
+    gv.IntVal = llvm::APInt(32, 0, true);
+    gvArgs.push_back(gv);
+    gvArgs.push_back(llvm::GenericValue((char *)NULL));
     engine->runFunction(mainFunc, gvArgs);
-    engine->runFunction(globalDtors, gvArgs);
+
+    engine->runFunction(globalDtors, vector<llvm::GenericValue>());
+
     delete engine;
 }
 
