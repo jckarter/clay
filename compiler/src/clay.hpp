@@ -264,6 +264,7 @@ struct BoolType;
 struct IntegerType;
 struct FloatType;
 struct ArrayType;
+struct PackType;
 struct TupleType;
 struct PointerType;
 struct CodePointerType;
@@ -386,6 +387,7 @@ typedef Pointer<BoolType> BoolTypePtr;
 typedef Pointer<IntegerType> IntegerTypePtr;
 typedef Pointer<FloatType> FloatTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
+typedef Pointer<PackType> PackTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
 typedef Pointer<PointerType> PointerTypePtr;
 typedef Pointer<CodePointerType> CodePointerTypePtr;
@@ -1601,6 +1603,8 @@ enum PrimOpCode {
     PRIM_Array,
     PRIM_arrayRef,
 
+    PRIM_Pack,
+
     PRIM_TupleP,
     PRIM_Tuple,
     PRIM_TupleElementCount,
@@ -1679,6 +1683,7 @@ enum TypeKind {
     CODE_POINTER_TYPE,
     CCODE_POINTER_TYPE,
     ARRAY_TYPE,
+    PACK_TYPE,
     TUPLE_TYPE,
     RECORD_TYPE,
     STATIC_TYPE,
@@ -1747,6 +1752,13 @@ struct ArrayType : public Type {
     int size;
     ArrayType(TypePtr elementType, int size)
         : Type(ARRAY_TYPE), elementType(elementType), size(size) {}
+};
+
+struct PackType : public Type {
+    TypePtr elementType;
+    int size;
+    PackType(TypePtr elementType, int size)
+        : Type(PACK_TYPE), elementType(elementType), size(size) {}
 };
 
 struct TupleType : public Type {
@@ -1822,6 +1834,7 @@ TypePtr cCodePointerType(CallingConv callingConv,
                          bool hasVarArgs,
                          TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
+TypePtr packType(TypePtr elementType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
 TypePtr staticType(ObjectPtr obj);
