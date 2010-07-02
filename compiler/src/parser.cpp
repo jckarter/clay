@@ -1641,11 +1641,12 @@ static bool optInlined(bool &inlined) {
     return true;
 }
     
-static bool llvmBody(string &b) {
+static bool llvmBody(LLVMBodyPtr &b) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_LLVM))
         return false;
-    b = t->str;
+    b = new LLVMBody(t->str);
+    b->location = t->location;
     return true;
 }
 
@@ -2164,4 +2165,34 @@ ModulePtr parse(SourcePtr source) {
     position = maxPosition = 0;
 
     return m;
+}
+
+
+
+//
+// parseExpr
+//
+
+ExprPtr parseExpr(SourcePtr source, int offset, int length) {
+    vector<TokenPtr> t;
+    tokenize(source, offset, length, t);
+
+    tokens = &t;
+    position = maxPosition = 0;
+
+    ExprPtr expr;
+    if (!expression(expr) || (position < (int)t.size())) {
+        LocationPtr location;
+        if (maxPosition == (int)t.size())
+            location = new Location(source, offset + length);
+        else
+            location = t[maxPosition]->location;
+        pushLocation(location);
+        error("parse error");
+    }
+
+    tokens = NULL;
+    position = maxPosition = 0;
+
+    return expr;
 }

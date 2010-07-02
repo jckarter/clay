@@ -1711,13 +1711,23 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
     return entry;
 }
 
+
+
+//
+// codegenLLVMBody
+//
+
 static bool terminator(char c) {
     return (c == ' ' || c == '\n' || c == '\r' || c == '*' || c == '\t');
 }
 
-static bool renderTemplate(const string &body, string &out, 
-        const map<string, Type> &params, EnvPtr env)
+static bool renderTemplate(LLVMBodyPtr llvmBody, string &out, EnvPtr env)
 {
+    SourcePtr source = llvmBody->location->source;
+    int startingOffset = llvmBody->location->offset;
+    startingOffset += strlen(LLVM_TOKEN_PREFIX);
+
+    const string &body = llvmBody->body;
     llvm::raw_string_ostream outstream(out);
     for(string::const_iterator i = body.begin(); i != body.end(); ++i) {
         if (*i != '$') {
@@ -1725,21 +1735,20 @@ static bool renderTemplate(const string &body, string &out,
             continue;
         }
 
-        string arg;
-        for(i++; i != body.end(); i++) {
-            if (terminator(*i)) break;
-            arg += *i;
-        }
+        ++i;
 
-        if (arg.size() == 0) return false;
-        ObjectPtr x = lookupEnv(env, new Identifier(arg));
+        string::const_iterator typeExprBegin = i;
+        while ((i != body.end()) && !terminator(*i))
+            ++i;
+        string::const_iterator typeExprEnd = i;
 
-        if(x.ptr() && x->objKind == TYPE) {
-            const llvm::Type *argType = llvmType((Type *)x.ptr());
-            WriteTypeSymbolic(outstream, argType, llvmModule);
-        } else {
-            return false;
-        }
+        int offset = (typeExprBegin - body.begin()) + startingOffset;
+        int length = typeExprEnd - typeExprBegin;
+
+        ExprPtr typeExpr = parseExpr(source, offset, length);
+        TypePtr type = evaluateType(typeExpr, env);
+        WriteTypeSymbolic(outstream, llvmType(type), llvmModule);
+
         outstream << *i;
     }
     out = outstream.str();
@@ -1757,8 +1766,8 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     functionName << "clay_" << callableName << id;
     id++;
 
-    out << string("define internal i32 @") 
-        << functionName.str() << string("(");
+    out << string("define internal i32 @\"") 
+        << functionName.str() << string("\"(");
 
     vector<const llvm::Type *> llArgTypes;
     for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
@@ -1785,8 +1794,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     }
 
     string body;
-    if (!renderTemplate(entry->code->llvmBody, 
-                body, map<string, Type>(), entry->env))
+    if (!renderTemplate(entry->code->llvmBody, body, entry->env))
         error("failed to apply template");
 
     out << string(") ") << body;
