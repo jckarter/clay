@@ -1,0 +1,249 @@
+
+
+
+//
+// insertElement, extractElement
+//
+
+[T,n]
+insertElement(a:Vec[T,n], i:Int, x:T) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Int * %i
+    %3 = load $T * %x
+    %4 = insertelement $Vec[T,n] %1, $T %3, $Int %2
+    store $Vec[T,n] %4, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n]
+extractElement(a:Vec[T,n], i:Int) returned:T __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Int * %i
+    %3 = extractelement $Vec[T,n] %1, $Int %2
+    store $T %3, $T * %returned
+    ret i32 0
+}
+
+
+
+//
+// add
+//
+
+procedure add;
+
+[T,n | Integer?(T)]
+overload add(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = add $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload add(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = fadd $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// subtract
+//
+
+procedure subtract;
+
+[T,n | Integer?(T)]
+overload subtract(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = sub $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload subtract(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = fsub $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// multiply
+//
+
+procedure multiply;
+
+[T,n | Integer?(T)]
+overload multiply(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = mul $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload multiply(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = fmul $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// divide
+//
+
+procedure divide;
+
+[T,n | SignedInteger?(T)]
+overload divide(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = sdiv $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | UnsignedInteger?(T)]
+overload divide(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = udiv $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload divide(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = fdiv $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// remainder
+//
+
+procedure remainder;
+
+[T,n | SignedInteger?(T)]
+overload remainder(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = srem $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | UnsignedInteger?(T)]
+overload remainder(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = urem $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Float?(T)]
+overload remainder(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = frem $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// shiftLeft
+//
+
+procedure shiftLeft;
+
+[T,n | Integer?(T)]
+overload shiftLeft(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = shl $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// shiftRight
+//
+
+procedure shiftRight;
+
+[T,n | SignedInteger?(T)]
+overload shiftRight(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = ashr $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | UnsignedInteger?(T)]
+overload shiftRight(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = lshr $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+
+
+//
+// bitwiseAnd, bitwiseOr, bitwiseXor
+//
+
+[T,n | Integer?(T)]
+bitwiseAnd(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = and $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Integer?(T)]
+bitwiseOr(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = or $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}
+
+[T,n | Integer?(T)]
+bitwiseXor(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    %1 = load $Vec[T,n] * %a
+    %2 = load $Vec[T,n] * %b
+    %3 = xor $Vec[T,n] %1, %2
+    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    ret i32 0
+}

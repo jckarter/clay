@@ -266,7 +266,7 @@ struct BoolType;
 struct IntegerType;
 struct FloatType;
 struct ArrayType;
-struct ValArrayType;
+struct VecType;
 struct TupleType;
 struct PointerType;
 struct CodePointerType;
@@ -390,7 +390,7 @@ typedef Pointer<BoolType> BoolTypePtr;
 typedef Pointer<IntegerType> IntegerTypePtr;
 typedef Pointer<FloatType> FloatTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
-typedef Pointer<ValArrayType> ValArrayTypePtr;
+typedef Pointer<VecType> VecTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
 typedef Pointer<PointerType> PointerTypePtr;
 typedef Pointer<CodePointerType> CodePointerTypePtr;
@@ -1618,7 +1618,7 @@ enum PrimOpCode {
     PRIM_Array,
     PRIM_arrayRef,
 
-    PRIM_ValArray,
+    PRIM_Vec,
 
     PRIM_TupleP,
     PRIM_Tuple,
@@ -1698,7 +1698,7 @@ enum TypeKind {
     CODE_POINTER_TYPE,
     CCODE_POINTER_TYPE,
     ARRAY_TYPE,
-    VAL_ARRAY_TYPE,
+    VEC_TYPE,
     TUPLE_TYPE,
     RECORD_TYPE,
     STATIC_TYPE,
@@ -1769,11 +1769,11 @@ struct ArrayType : public Type {
         : Type(ARRAY_TYPE), elementType(elementType), size(size) {}
 };
 
-struct ValArrayType : public Type {
+struct VecType : public Type {
     TypePtr elementType;
     int size;
-    ValArrayType(TypePtr elementType, int size)
-        : Type(VAL_ARRAY_TYPE), elementType(elementType), size(size) {}
+    VecType(TypePtr elementType, int size)
+        : Type(VEC_TYPE), elementType(elementType), size(size) {}
 };
 
 struct TupleType : public Type {
@@ -1849,7 +1849,7 @@ TypePtr cCodePointerType(CallingConv callingConv,
                          bool hasVarArgs,
                          TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
-TypePtr valArrayType(TypePtr elementType, int size);
+TypePtr vecType(TypePtr elementType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
 TypePtr staticType(ObjectPtr obj);

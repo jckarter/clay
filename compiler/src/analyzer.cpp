@@ -782,7 +782,7 @@ static bool isTypeConstructor(ObjectPtr x) {
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
         case PRIM_Array :
-        case PRIM_ValArray :
+        case PRIM_Vec :
         case PRIM_Tuple :
         case PRIM_Static :
             return true;
@@ -886,11 +886,11 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             return arrayType(t, size);
         }
 
-        case PRIM_ValArray : {
+        case PRIM_Vec : {
             ensureArity(args, 2);
             TypePtr t = staticToType(args, 0);
             int size = staticToInt(args, 1);
-            return valArrayType(t, size);
+            return vecType(t, size);
         }
 
         case PRIM_Tuple : {
@@ -1730,8 +1730,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(t->elementType, false));
     }
 
-    case PRIM_ValArray :
-        error("ValArray type constructor cannot be called");
+    case PRIM_Vec :
+        error("Vec type constructor cannot be called");
 
     case PRIM_TupleP :
         return new MultiPValue(new PValue(boolType, true));

@@ -3496,8 +3496,8 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_ValArray :
-        error("ValArray type constructor cannot be called");
+    case PRIM_Vec :
+        error("Vec type constructor cannot be called");
 
     case PRIM_TupleP : {
         ensureArity(args, 1);

@@ -13,6 +13,7 @@ public import sharedpointers.*;
 public import sequences.*;
 
 public import arrays.*;
+public import simd.*;
 public import vectors.*;
 public import characters.*;
 public import strings.*;
