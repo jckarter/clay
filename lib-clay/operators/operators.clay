@@ -44,6 +44,9 @@ procedure dereference;
 procedure call;
 procedure fieldRef;
 
+procedure unpack;
+procedure unpackRef;
+
 
 
 //
@@ -239,8 +242,8 @@ captureValues(forward ...args) = (...multiValueMap(captureValue, ...args));
 
 [...T]
 forwardValues(x:Tuple[...T]) =
-    forward ...multiValueMap(forwardValue, ...tupleElements(x));
+    forward ...multiValueMap(forwardValue, ...unpackRef(x));
 
 [...T]
 capturedRefs(x:Tuple[...T]) =
-    forward ...multiValueMap(capturedRef, ...tupleElements(x));
+    forward ...multiValueMap(capturedRef, ...unpackRef(x));
