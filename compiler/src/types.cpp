@@ -20,7 +20,7 @@ static vector<vector<PointerTypePtr> > pointerTypes;
 static vector<vector<CodePointerTypePtr> > codePointerTypes;
 static vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
 static vector<vector<ArrayTypePtr> > arrayTypes;
-static vector<vector<ValArrayTypePtr> > valArrayTypes;
+static vector<vector<VecTypePtr> > vecTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
 static vector<vector<StaticTypePtr> > staticTypes;
@@ -57,7 +57,7 @@ void initTypes() {
     codePointerTypes.resize(N);
     cCodePointerTypes.resize(N);
     arrayTypes.resize(N);
-    valArrayTypes.resize(N);
+    vecTypes.resize(N);
     tupleTypes.resize(N);
     recordTypes.resize(N);
     staticTypes.resize(N);
@@ -199,18 +199,18 @@ TypePtr arrayType(TypePtr elementType, int size) {
     return t.ptr();
 }
 
-TypePtr valArrayType(TypePtr elementType, int size) {
+TypePtr vecType(TypePtr elementType, int size) {
     int h = pointerHash(elementType.ptr()) + size;
-    h &= valArrayTypes.size() - 1;
-    vector<ValArrayTypePtr>::iterator i, end;
-    for (i = valArrayTypes[h].begin(), end = valArrayTypes[h].end();
+    h &= vecTypes.size() - 1;
+    vector<VecTypePtr>::iterator i, end;
+    for (i = vecTypes[h].begin(), end = vecTypes[h].end();
          i != end; ++i) {
-        ValArrayType *t = i->ptr();
+        VecType *t = i->ptr();
         if ((t->elementType == elementType) && (t->size == size))
             return t;
     }
-    ValArrayTypePtr t = new ValArrayType(elementType, size);
-    valArrayTypes[h].push_back(t);
+    VecTypePtr t = new VecType(elementType, size);
+    vecTypes[h].push_back(t);
     return t.ptr();
 }
 
@@ -502,8 +502,8 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         ArrayType *x = (ArrayType *)t.ptr();
         return llvmArrayType(x->elementType, x->size);
     }
-    case VAL_ARRAY_TYPE : {
-        ValArrayType *x = (ValArrayType *)t.ptr();
+    case VEC_TYPE : {
+        VecType *x = (VecType *)t.ptr();
         return llvm::VectorType::get(llvmType(x->elementType), x->size);
     }
     case TUPLE_TYPE : {
@@ -637,9 +637,9 @@ void typePrint(ostream &out, TypePtr t) {
         out << "Array[" << x->elementType << ", " << x->size << "]";
         break;
     }
-    case VAL_ARRAY_TYPE : {
-        ValArrayType *x = (ValArrayType *)t.ptr();
-        out << "ValArray[" << x->elementType << ", " << x->size << "]";
+    case VEC_TYPE : {
+        VecType *x = (VecType *)t.ptr();
+        out << "Vec[" << x->elementType << ", " << x->size << "]";
         break;
     }
     case TUPLE_TYPE : {

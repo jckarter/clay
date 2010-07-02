@@ -3128,8 +3128,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_Array :
         error("Array type constructor cannot be called");
 
-    case PRIM_ValArray :
-        error("ValArray type constructor cannot be called");
+    case PRIM_Vec :
+        error("Vec type constructor cannot be called");
 
     case PRIM_arrayRef : {
         ensureArity(args, 2);

@@ -1,10 +1,11 @@
-import valarrays.*;
 
 main() {
-    var v1 = ValArray(11, 21);
-    var v2 = ValArray(2, 3);
-    display("v1", ...unpack(v1));
-    display("v2", ...unpack(v2));
+    var v1 = Vec[Int,2](11, 21);
+
+    var v2 = Vec(2, 3); // type will be inferred as Vec[Int,2]
+
+    display("v1",  ...unpack(v1));
+    display("v2",  ...unpack(v2));
     display("add", ...unpack(v1 + v2));
     display("sub", ...unpack(v1 - v2));
     display("mul", ...unpack(v1 * v2));
@@ -13,7 +14,7 @@ main() {
     display("shl", ...unpack(shiftLeft(v1, v2)));
     display("shr", ...unpack(shiftRight(v1, v2)));
     display("and", ...unpack(bitwiseAnd(v1, v2)));
-    display("or", ...unpack(bitwiseOr(v1, v2)));
+    display("or",  ...unpack(bitwiseOr(v1, v2)));
     display("xor", ...unpack(bitwiseXor(v1, v2)));
 }
 
