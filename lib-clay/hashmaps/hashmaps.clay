@@ -1,0 +1,214 @@
+
+
+record HashMap[K,V] {
+    buckets : Vector[NodePtr[K,V]];
+    size : SizeT;
+}
+
+
+[K,V]
+overload SafeRecord?(static HashMap[K,V]) = false;
+
+alias NodePtr[K,V] = SharedPointer[Node[K,V]];
+
+private record Node[K,V] {
+    key : K;
+    value : V;
+    next : NodePtr[K,V];
+}
+
+
+
+//
+// default constructor
+//
+
+[K,V]
+overload HashMap[K,V]() {
+    var buckets = Vector[NodePtr[K,V]]();
+    reserve(buckets, 32);
+    for (i in range(1024))
+        push(buckets, nullShared(Node[K,V]));
+    return HashMap[K,V](move(buckets), SizeT(0));
+}
+
+
+
+//
+// copy constructor
+//
+
+[K,V]
+overload HashMap[K,V](src:HashMap[K,V]) {
+    var buckets = Vector[NodePtr[K,V]]();
+    reserve(buckets, size(src.buckets));
+    for (b in src.buckets)
+        push(buckets, cloneList(b));
+    return HashMap[K,V](move(buckets), src.size);
+}
+
+[K,V]
+private cloneList(b:NodePtr[K,V]) {
+    var list = nullShared(Node[K,V]);
+    while (not null?(b)) {
+        list = new Node[K,V](b^.key, b^.value, list);
+        b = b^.next;
+    }
+    var result = nullShared(Node[K,V]);
+    while (not null?(list)) {
+        var temp = list^.next;
+        list^.next = result;
+        result = list;
+        list = temp;
+    }
+    return result;
+}
+
+
+
+//
+// move constructor
+//
+
+[K,V]
+overload move(a:HashMap[K,V]) = HashMap[K,V](move(a.buckets), a.size);
+
+
+
+//
+// size
+//
+
+[K,V]
+overload size(a:HashMap[K,V]) = a.size;
+
+
+
+//
+// lookup
+//
+
+[K,V]
+overload lookup(a:HashMap[K,V], key:K) {
+    var i = bucketId(a, key);
+    return findInBucket(a.buckets[i], key);
+}
+
+
+
+//
+// put
+//
+
+[K,V]
+overload put(a:HashMap[K,V], key:K, forward value:V) {
+    var i = bucketId(a, key);
+    var ptr = findInBucket(a.buckets[i], key);
+    if (not null?(ptr)) {
+        ptr^ = value;
+        return;
+    }
+    var node = new Node(key, value, a.buckets[i]);
+    a.buckets[i] = node;
+    a.size += 1;
+}
+
+
+
+//
+// index
+//
+
+[K,V]
+overload index(a:HashMap[K,V], key:K) {
+    var i = bucketId(a, key);
+    var ptr = findInBucket(a.buckets[i], key);
+    if (not null?(ptr))
+        return ref ptr^;
+    var node = new Node(key, V(), a.buckets[i]);
+    a.buckets[i] = node;
+    a.size += 1;
+    return ref node^.value;
+}
+
+
+
+//
+// remove
+//
+
+[K,V]
+overload remove(a:HashMap[K,V], key:K) {
+    var i = bucketId(a, key);
+    var prevNode = nullShared(Node[K,V]);
+    var node = a.buckets[i];
+    while (not null?(node)) {
+        if (node^.key == key)
+            break;
+        prevNode = node;
+        node = node^.next;
+    }
+    if (null?(node))
+        return false;
+    if (null?(prevNode))
+        a.buckets[i] = node^.next;
+    else
+        prevNode^.next = node^.next;
+    return true;
+}
+
+
+
+//
+// items
+//
+
+[K,V]
+overload items(a:HashMap[K,V]) {
+    var x = HashMapItems[K,V](iterator(a.buckets), nullShared(Node[K,V]));
+    while (null?(x.node) and hasNext?(x.bucketsIter))
+        x.node = next(x.bucketsIter);
+    return move(x);
+}
+
+private record HashMapItems[K,V] {
+    bucketsIter : Type(iterator(typeToValue(Vector[NodePtr[K,V]])));
+    node : NodePtr[K,V];
+}
+
+[K,V]
+overload iterator(x:HashMapItems[K,V]) = x;
+
+[K,V]
+overload hasNext?(x:HashMapItems[K,V]) =
+    not null?(x.node);
+
+[K,V]
+overload next(x:HashMapItems[K,V]) {
+    assert(not null?(x.node));
+    ref key, value = x.node^.key, x.node^.value;
+    x.node = x.node^.next;
+    while (null?(x.node) and hasNext?(x.bucketsIter))
+        x.node = next(x.bucketsIter);
+    return ref key, value;
+}
+
+
+
+//
+// helper procs
+//
+
+[K,V]
+private bucketId(a:HashMap[K,V], key:K) =
+    hash(key) % size(a.buckets);
+
+[K,V]
+private findInBucket(node:NodePtr[K,V], key:K) {
+    while (not null?(node)) {
+        if (node^.key == key)
+            return &node^.value;
+        node = node^.next;
+    }
+    return null(V);
+}

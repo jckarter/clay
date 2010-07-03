@@ -1,0 +1,121 @@
+
+import vectors.generic.*;
+
+
+
+//
+// booleans, integers, floats, pointers, characters
+//
+
+overload hash(x:Bool) = SizeT(x);
+
+[T | Integer?(T)]
+overload hash(x:T) = SizeT(x);
+
+[T | Float?(T)]
+overload hash(x:T) = SizeT(PtrInt(x*10000));
+
+[T]
+overload hash(x:Pointer[T]) = SizeT(x);
+
+overload hash(x:Char) = SizeT(x);
+
+
+
+//
+// arrays
+//
+
+[T,n]
+overload hash(a:Array[T,n]) {
+    var h = SizeT(0);
+    var f = SizeT(11);
+    for (x in a) {
+        h += f * hash(x);
+        f = 2*f - 1;
+    }
+    return h;
+}
+
+
+
+//
+// tuples
+//
+
+[T | Tuple?(T)]
+overload hash(x:T) = hashTuple(x, static 0);
+
+[T,i]
+private hashTuple(x:T, static i) =
+    13*hash(tupleRef(x, static i)) + 7*hashTuple(x, static i+1);
+
+[T,i | i == TupleElementCount(T)]
+overload hashTuple(x:T, static i) = 0;
+
+
+
+//
+// records
+//
+
+[T | Record?(T)]
+overload hash(x:T) = hashRecord(x, static 0);
+
+[T,i]
+private hashRecord(x:T, static i) =
+    13*hash(recordFieldRef(x, static i)) + 7*hashRecord(x, static i+1);
+
+[T,i | i == RecordFieldCount(T)]
+overload hashRecord(x:T, static i) = 0;
+
+
+
+//
+// enumerations
+//
+
+[T | Enum?(T)]
+overload hash(x:T) = SizeT(x);
+
+
+
+//
+// shared pointers
+//
+
+[T]
+overload hash(x:SharedPointer[T]) = hash(x.ptr);
+
+
+
+//
+// strings
+//
+
+overload hash(a:String) {
+    var h = SizeT(0);
+    var f = SizeT(11);
+    for (x in a) {
+        h += f * hash(x);
+        f = 2*f - 1;
+    }
+    return h;
+}
+
+
+
+//
+// vectors
+//
+
+[T]
+overload hash(a:Vector[T]) {
+    var h = SizeT(0);
+    var f = SizeT(11);
+    for (x in a) {
+        h += f * hash(x);
+        f = 2*f - 1;
+    }
+    return h;
+}

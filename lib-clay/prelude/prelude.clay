@@ -18,6 +18,9 @@ public import characters.*;
 public import strings.*;
 public import strings.algorithms.*;
 
+public import hash.*;
+public import hashmaps.*;
+
 public import streams.*;
 public import files.*;
 public import files.lines.*;
