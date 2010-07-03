@@ -1,4 +1,6 @@
 
+even?(x) = (x % 2 == 0);
+
 main() {
     var h = HashMap[Int,Int]();
 
@@ -6,8 +8,11 @@ main() {
         h[i*i] = i;
 
     for (x in range(100)) {
-        if (contains?(h, x))
-            println(h[x], ", ", x);
+        var flag = contains?(h, x);
+        if (even?(x)) {
+            var result = remove(h, x);
+            assert(flag == result);
+        }
     }
 
     for (k,v in items(h))

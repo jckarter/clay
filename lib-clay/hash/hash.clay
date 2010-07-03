@@ -27,15 +27,7 @@ overload hash(x:Char) = SizeT(x);
 //
 
 [T,n]
-overload hash(a:Array[T,n]) {
-    var h = SizeT(0);
-    var f = SizeT(11);
-    for (x in a) {
-        h += f * hash(x);
-        f = 2*f - 1;
-    }
-    return h;
-}
+overload hash(a:Array[T,n]) = hashSequence(a);
 
 
 
@@ -93,15 +85,7 @@ overload hash(x:SharedPointer[T]) = hash(x.ptr);
 // strings
 //
 
-overload hash(a:String) {
-    var h = SizeT(0);
-    var f = SizeT(11);
-    for (x in a) {
-        h += f * hash(x);
-        f = 2*f - 1;
-    }
-    return h;
-}
+overload hash(a:String) = hashSequence(a);
 
 
 
@@ -110,7 +94,15 @@ overload hash(a:String) {
 //
 
 [T]
-overload hash(a:Vector[T]) {
+overload hash(a:Vector[T]) = hashSequence(a);
+
+
+
+//
+// hashSequence
+//
+
+private hashSequence(a) {
     var h = SizeT(0);
     var f = SizeT(11);
     for (x in a) {
