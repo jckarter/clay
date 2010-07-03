@@ -91,6 +91,29 @@ procedure reserve;
 
 
 //
+// hashing
+//
+
+procedure hash;
+
+
+
+//
+// mapping protocol
+//
+
+// 'index' and 'size' are available for mappings
+// 'remove' is available
+
+procedure lookup; // get pointer to element, null if not available
+procedure put;
+procedure items; // iterate over all items
+
+contains?(map, key) = not null?(lookup(map, key));
+
+
+
+//
 // Type
 //
 
@@ -228,14 +251,20 @@ overload multiValueMap(f) = ;
 
 
 //
+// typeToValue, typesToValues
+//
+
+typeToValue(a) = ref null(a)^;
+typesToValues(...a) = forward ...multiValueMap(typeToValue, ...a);
+
+
+
+//
 // ReturnType
 //
 // return the return type given the callable and arg types.
 // return 'BadReturnType' if the call is not defined.
 //
-
-private typeToValue(a) = ref null(a)^;
-private typesToValues(...a) = forward ...multiValueMap(typeToValue, ...a);
 
 record BadReturnType {}
 
