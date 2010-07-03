@@ -1,0 +1,16 @@
+
+import win32;
+import libc;
+
+random() {
+    return UInt(libc.rand());
+}
+
+seedRandom(x:UInt) {
+    libc.srand(x);
+}
+
+seedRandomWithTime() {
+    var t = win32.GetTickCount();
+    seedRandom(UInt(t));
+}
