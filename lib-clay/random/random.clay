@@ -1,0 +1,33 @@
+
+import random.platform as p;
+
+
+//
+// random, randomInt
+//
+
+random() {
+    var a, b = UInt(0), UInt(0);
+    while (a == b) {
+        a = p.random();
+        b = p.random();
+    }
+    if (a < b)
+        return Double(a) / b;
+    else
+        return Double(b) / a;
+}
+
+[I | Integer?(I)]
+randomInt(max:I) = I(random() * max);
+
+
+
+//
+// seedRandom
+//
+
+[I | Integer?(I)]
+seedRandom(x:I) { p.seedRandom(UInt(x)); }
+
+overload seedRandom() { p.seedRandomWithTime(); }

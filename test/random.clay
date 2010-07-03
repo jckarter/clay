@@ -1,0 +1,12 @@
+
+import random;
+
+main() {
+    random.seedRandom();
+    while (true) {
+        var x = random.randomInt(20);
+        println(x);
+        if (x == 0)
+            break;
+    }
+}
