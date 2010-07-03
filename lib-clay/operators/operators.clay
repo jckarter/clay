@@ -50,6 +50,47 @@ procedure unpackRef;
 
 
 //
+// iteration protocol
+//
+
+procedure iterator; // create iterator
+
+procedure hasNext?; // iterator operation
+procedure next;     // iterator operation
+
+
+
+//
+// reverse iteration
+//
+
+procedure reverseIterator;
+
+
+
+//
+// sequence protocol
+//
+
+procedure size;
+procedure index;
+
+procedure begin; 
+procedure end;
+
+procedure front;
+procedure back;
+
+procedure push;
+procedure pop;
+procedure clear;
+procedure insert;
+procedure remove;
+procedure reserve;
+
+
+
+//
 // Type
 //
 
@@ -247,3 +288,27 @@ forwardValues(x:Tuple[...T]) =
 [...T]
 capturedRefs(x:Tuple[...T]) =
     forward ...multiValueMap(capturedRef, ...unpackRef(x));
+
+
+
+//
+// sequence type predicates
+//
+
+Sequence?(T) = CallDefined?(iterator, T);
+SequenceElementType(T) = Type(next(iterator(null(T)^)));
+SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
+RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
+LValueSequence?(T) = Sequence?(T) and LValue?(next(iterator(null(T)^)));
+
+// true if sequence elements are stored contiguously in memory
+ContiguousSequence?(T) = false;
+
+
+
+//
+// empty?
+//
+
+[T | SizedSequence?(T)]
+empty?(a:T) = (size(a) == 0);
