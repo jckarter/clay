@@ -7,7 +7,17 @@ import io.files.raw.*;
 //
 
 record File {
-    ptr : SharedPointer[RawFile];
+    ptr : SharedPointer[FileData];
+}
+
+private alias BUFFER_SIZE = 4096;
+
+private record FileData {
+    file : RawFile;
+
+    readBuffer : Array[Byte, BUFFER_SIZE];
+    readBegin : Pointer[Byte];
+    readEnd : Pointer[Byte];
 }
 
 
@@ -17,12 +27,15 @@ record File {
 //
 
 overload File(path:String, mode:OpenMode) =
-    File(new RawFile(path, mode));
+    File(new FileData(RawFile(path, mode)));
 
-overload File(path:String) = File(new RawFile(path));
+overload File(path:String) = File(new FileData(RawFile(path)));
 
 overload File(rvalue f:RawFile) =
-    File(new move(f));
+    File(new FileData(move(f)));
+
+overload FileData(forward file:RawFile) =
+    FileData(file, Array[Byte,BUFFER_SIZE](), null(Byte), null(Byte));
 
 
 
@@ -30,9 +43,9 @@ overload File(rvalue f:RawFile) =
 // stdinFile, stdoutFile, stderrFile
 //
 
-stdinFile()  = File(new stdinRawFile());
-stdoutFile() = File(new stdoutRawFile());
-stderrFile() = File(new stderrRawFile());
+stdinFile()  = File(new FileData(stdinRawFile()));
+stdoutFile() = File(new FileData(stdoutRawFile()));
+stderrFile() = File(new FileData(stderrRawFile()));
 
 
 
@@ -40,7 +53,7 @@ stderrFile() = File(new stderrRawFile());
 // fileHandle
 //
 
-overload fileHandle(f:File) = fileHandle(f.ptr^);
+overload fileHandle(f:File) = fileHandle(f.ptr^.file);
 
 
 
@@ -49,16 +62,58 @@ overload fileHandle(f:File) = fileHandle(f.ptr^);
 //
 
 [I | Integer?(I)]
-overload read(f:File, buffer:Pointer[Byte], n:I) =
-    read(f.ptr^, buffer, n);
+overload read(f:File, buffer:Pointer[Byte], n_:I) {
+    ref fd = f.ptr^;
+
+    var count = SizeT(0);
+    var pending = SizeT(n_);
+    var dest = buffer;
+    var src = fd.readBegin;
+    var end = fd.readEnd;
+
+    while (pending > 0) {
+        if (pending <= end - src) {
+            count += pending;
+            while (pending > 0) {
+                dest^ = src^;
+                inc(dest);
+                inc(src);
+                dec(pending);
+            }
+            fd.readBegin = src;
+            return count;
+        }
+
+        count += (end - src);
+        pending -= (end - src);
+        while (src != end) {
+            dest^ = src^;
+            inc(dest);
+            inc(src);
+        }
+
+        src = &fd.readBuffer[0];
+        end = src;
+        fd.readBegin = src;
+        fd.readEnd = src;
+
+        var nRead = read(fd.file, fd.readBegin, BUFFER_SIZE);
+        if (nRead == 0)
+            break;
+        end += nRead;
+        fd.readEnd = end;
+    }
+
+    return count;
+}
 
 [I | Integer?(I)]
 overload write(f:File, buffer:Pointer[Byte], n:I) {
-    write(f.ptr^, buffer, n);
+    write(f.ptr^.file, buffer, n);
 }
 
 overload flush(f:File) {
-    flush(f.ptr^);
+    flush(f.ptr^.file);
 }
 
 
@@ -67,6 +122,11 @@ overload flush(f:File) {
 // fileSize, seek
 //
 
-overload fileSize(f:File) = fileSize(f.ptr^);
+overload fileSize(f:File) = fileSize(f.ptr^.file);
 
-overload seek(f:File, offset, whence) = seek(f.ptr^, offset, whence);
+overload seek(f:File, offset, whence) {
+    ref fd = f.ptr^;
+    fd.readBegin = &fd.readBuffer[0];
+    fd.readEnd = fd.readBegin;
+    return seek(fd.file, offset, whence);
+}
