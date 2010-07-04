@@ -1,0 +1,22 @@
+
+enum OpenMode {
+    READ,
+    READ_WRITE,
+    CREATE,
+    APPEND
+}
+
+procedure fileHandle;
+
+procedure fileSize;
+
+enum SeekOrigin {
+    SEEK_SET,
+    SEEK_CUR,
+    SEEK_END
+}
+
+procedure seek;    // seek(file, offset, whence)
+                   // seek(file, offset)
+
+overload seek(file, offset) = seek(file, offset, SEEK_SET);

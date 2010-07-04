@@ -23,7 +23,6 @@ public import hashmaps.*;
 
 public import io.streams.*;
 public import io.files.*;
-public import io.files.lines.*;
 
 public import printer.*;
 

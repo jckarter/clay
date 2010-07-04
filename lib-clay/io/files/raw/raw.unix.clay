@@ -3,42 +3,31 @@ import unix;
 
 
 //
-// File
+// RawFile
 //
 
-private record InnerFile {
+record RawFile {
     handle : Int;
     owned : Bool;
 }
 
-overload SafeRecord?(static InnerFile) = false;
-
-record File {
-    inner : SharedPointer[InnerFile];
-}
+overload SafeRecord?(static RawFile) = false;
 
 
 
 //
-// stdin, stdout, stderr
+// stdinRawFile, stdoutRawFile, stderrRawFile
 //
 
-var stdin  = File(new InnerFile(0, false));
-var stdout = File(new InnerFile(1, false));
-var stderr = File(new InnerFile(2, false));
+stdinRawFile()  = RawFile(0, false);
+stdoutRawFile() = RawFile(1, false);
+stderrRawFile() = RawFile(2, false);
 
 
 
 //
 // constructors, destroy
 //
-
-enum OpenMode {
-    READ,
-    READ_WRITE,
-    CREATE,
-    APPEND
-}
 
 private openFlags(mode) {
     if (mode == READ)
@@ -52,7 +41,7 @@ private openFlags(mode) {
     assert(false);
 }
 
-overload File(path:String, mode:OpenMode) {
+overload RawFile(path:String, mode:OpenMode) {
     var flags = openFlags(mode);
     var handle = Int();
     if (bitwiseAnd(flags, unix.O_CREAT) != 0)
@@ -61,20 +50,28 @@ overload File(path:String, mode:OpenMode) {
         handle = unix.open(cstring(path), flags);
     if (handle == -1)
         error(unix.errorMessage(), ": ", path);
-    return File(new InnerFile(handle, true));
+    return RawFile(handle, true);
 }
 
-overload File(path:String) = File(path, READ);
+overload RawFile(path:String) = RawFile(path, READ);
 
-overload destroy(x:InnerFile) {
+overload destroy(x:RawFile) {
     if (x.owned)
         unix.syscallNoThrow(unix.close, x.handle);
 }
 
 // disable default constructor, copy constructor, assignment
-overload InnerFile();
-overload InnerFile(x:InnerFile);
-overload assign(dest:InnerFile, src:InnerFile);
+overload RawFile();
+overload RawFile(x:RawFile);
+overload assign(dest:RawFile, src:RawFile);
+
+
+// move constructor
+
+overload move(src:RawFile) returned:RawFile {
+    returned <-- RawFile(src.handle, src.owned);
+    src <-- RawFile(-1, false);
+}
 
 
 
@@ -82,7 +79,7 @@ overload assign(dest:InnerFile, src:InnerFile);
 // fileHandle
 //
 
-fileHandle(f:File) = f.inner^.handle;
+overload fileHandle(f:RawFile) = f.handle;
 
 
 
@@ -91,41 +88,29 @@ fileHandle(f:File) = f.inner^.handle;
 //
 
 [I | Integer?(I)]
-overload read(f:File, buffer:Pointer[Byte], n:I) SizeT {
-    var result = unix.syscall(unix.read, f.inner^.handle, buffer, SizeT(n));
+overload read(f:RawFile, buffer:Pointer[Byte], n:I) SizeT {
+    var result = unix.syscall(unix.read, f.handle, buffer, SizeT(n));
     return SizeT(result);
 }
 
 [I | Integer?(I)]
-overload write(f:File, buffer:Pointer[Byte], n:I) {
-    unix.syscall(unix.write, f.inner^.handle, buffer, SizeT(n));
+overload write(f:RawFile, buffer:Pointer[Byte], n:I) {
+    unix.syscall(unix.write, f.handle, buffer, SizeT(n));
 }
 
-overload flush(f:File) {
+overload flush(f:RawFile) {
 }
 
 
 
 //
-// fileExists?, fileSize, seek
+// fileSize, seek
 //
 
-fileExists?(p) {
+overload fileSize(f:RawFile) {
     var statBuf = unix.Struct_stat();
-    var result = unix.lstat(cstring(p), &statBuf);
-    return result == 0;
-}
-
-fileSize(f:File) {
-    var statBuf = unix.Struct_stat();
-    unix.syscall(unix.fstat, f.inner^.handle, &statBuf);
+    unix.syscall(unix.fstat, f.handle, &statBuf);
     return Int64(statBuf.st_size);
-}
-
-enum SeekOrigin {
-    SEEK_SET,
-    SEEK_CUR,
-    SEEK_END
 }
 
 private seekWhence(x) {
@@ -135,11 +120,9 @@ private seekWhence(x) {
     assert(false);
 }
 
-seek(f:File, offset, whence) {
+overload seek(f:RawFile, offset, whence) {
     return unix.syscall(unix.lseek,
-                        f.inner^.handle,
+                        f.handle,
                         Int64(offset),
                         seekWhence(whence));
 }
-
-overload seek(f:File, offset) = seek(f, offset, SEEK_SET);

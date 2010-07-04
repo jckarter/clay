@@ -2,38 +2,27 @@ import win32;
 
 
 //
-// File
+// RawFile
 //
 
-private record InnerFile {
+record RawFile {
     handle : win32.HANDLE;
     owned : Bool;
 }
 
-overload SafeRecord?(static InnerFile) = false;
-
-record File {
-    inner : SharedPointer[InnerFile];
-}
+overload SafeRecord?(static RawFile) = false;
 
 private stdHandle(x) = win32.GetStdHandle(win32.DWORD(x));
 
-var stdin  = File(new InnerFile(stdHandle(win32.STD_INPUT_HANDLE), false));
-var stdout = File(new InnerFile(stdHandle(win32.STD_OUTPUT_HANDLE), false));
-var stderr = File(new InnerFile(stdHandle(win32.STD_ERROR_HANDLE), false));
+stdinRawFile()  = RawFile(stdHandle(win32.STD_INPUT_HANDLE), false)
+stdoutRawFile() = RawFile(stdHandle(win32.STD_OUTPUT_HANDLE), false)
+stderrRawFile() = RawFile(stdHandle(win32.STD_ERROR_HANDLE), false)
 
 
 
 //
 // constructors, destroy
 //
-
-enum OpenMode {
-    READ,
-    READ_WRITE,
-    CREATE,
-    APPEND
-}
 
 private accessFlags(mode) {
     if (mode == READ)
@@ -71,7 +60,7 @@ private creationFlags(mode) {
     assert(false);
 }
 
-overload File(path:String, mode:OpenMode) {
+overload RawFile(path:String, mode:OpenMode) {
     var handle = win32.CreateFileA(
         cstring(path),
         win32.DWORD(accessFlags(mode)),
@@ -82,15 +71,15 @@ overload File(path:String, mode:OpenMode) {
         win32.HANDLE(0));
     if (handle == win32.INVALID_HANDLE_VALUE)
         error(win32.errorMessage(), ": ", path);
-    var f = File(new InnerFile(handle, true));
+    var f = RawFile(handle, true);
     if (mode == APPEND)
         seek(f, 0, SEEK_END);
     return move(f);
 }
 
-overload File(path:String) = File(path, READ);
+overload RawFile(path:String) = RawFile(path, READ);
 
-overload destroy(x:InnerFile) {
+overload destroy(x:RawFile) {
     if (x.owned) {
         var result = win32.CloseHandle(x.handle);
         if (result == 0)
@@ -99,9 +88,18 @@ overload destroy(x:InnerFile) {
 }
 
 // disable default constructor, copy constructor, assignment
-overload InnerFile();
-overload InnerFile(x:InnerFile);
-overload assign(dest:InnerFile, src:InnerFile);
+overload RawFile();
+overload RawFile(x:RawFile);
+overload assign(dest:RawFile, src:RawFile);
+
+
+// move constructor
+
+overload move(src:RawFile) returned:RawFile {
+    returned <-- RawFile(src.handle, src.owned);
+    src <-- RawFile(win32.HANDLE(0), false);
+}
+
 
 
 
@@ -109,7 +107,7 @@ overload assign(dest:InnerFile, src:InnerFile);
 // fileHandle
 //
 
-fileHandle(f:File) = f.inner^.handle;
+overload fileHandle(f:RawFile) = f.handle;
 
 
 
@@ -118,10 +116,10 @@ fileHandle(f:File) = f.inner^.handle;
 //
 
 [I | Integer?(I)]
-overload read(f:File, buffer:Pointer[Byte], n:I) SizeT {
+overload read(f:RawFile, buffer:Pointer[Byte], n:I) SizeT {
     var nRead = win32.DWORD();
     var result = win32.ReadFile(
-        f.inner^.handle,
+        f.handle,
         win32.LPVOID(buffer),
         win32.DWORD(n),
         &nRead,
@@ -132,10 +130,10 @@ overload read(f:File, buffer:Pointer[Byte], n:I) SizeT {
 }
 
 [I | Integer?(I)]
-overload write(f:File, buffer:Pointer[Byte], n:I) {
+overload write(f:RawFile, buffer:Pointer[Byte], n:I) {
     var nWritten = win32.DWORD();
     var result = win32.WriteFile(
-        f.inner^.handle,
+        f.handle,
         win32.LPVOID(buffer),
         win32.DWORD(n),
         &nWritten,
@@ -145,8 +143,8 @@ overload write(f:File, buffer:Pointer[Byte], n:I) {
     assert(nWritten == n);
 }
 
-overload flush(f:File) {
-    var result = win32.FlushFileBuffers(f.inner^.handle);
+overload flush(f:RawFile) {
+    var result = win32.FlushFileBuffers(f.handle);
     if (result == 0)
         error(win32.errorMessage());
 }
@@ -154,26 +152,15 @@ overload flush(f:File) {
 
 
 //
-// fileExists?, fileSize, seek
+// fileSize, seek
 //
 
-fileExists?(p) {
-    var result = win32.GetFileAttributesA(cstring(p));
-    return result != win32.INVALID_FILE_ATTRIBUTES;
-}
-
-fileSize(f:File) {
+overload fileSize(f:RawFile) {
     var size = Int64();
-    var result = win32.GetFileSizeEx(f.inner^.handle, &size);
+    var result = win32.GetFileSizeEx(f.handle, &size);
     if (result == 0)
         error(win32.errorMessage());
     return size;
-}
-
-enum SeekOrigin {
-    SEEK_SET,
-    SEEK_CUR,
-    SEEK_END
 }
 
 private seekMethod(x) {
@@ -183,10 +170,10 @@ private seekMethod(x) {
     assert(false);
 }
 
-seek(f:File, offset, whence) {
+overload seek(f:RawFile, offset, whence) {
     var newPos = Int64();
     var result = win32.SetFilePointerEx(
-        f.inner^.handle,
+        f.handle,
         Int64(offset),
         &newPos,
         seekMethod(whence));
@@ -194,5 +181,3 @@ seek(f:File, offset, whence) {
         error(win32.errorMessage());
     return newPos;
 }
-
-overload seek(f:File, offset) = seek(f, offset, SEEK_SET);
