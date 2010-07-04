@@ -1,0 +1,9 @@
+
+public import io.files.api.*;
+public import io.files.easy.*;
+public import io.files.lines.*;
+public import io.files.util.*;
+
+var stdin  = stdinFile();
+var stdout = stdoutFile();
+var stderr = stderrFile();

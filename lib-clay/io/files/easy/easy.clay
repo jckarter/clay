@@ -1,0 +1,72 @@
+
+import io.files.raw.*;
+
+
+//
+// File
+//
+
+record File {
+    ptr : SharedPointer[RawFile];
+}
+
+
+
+//
+// constructors
+//
+
+overload File(path:String, mode:OpenMode) =
+    File(new RawFile(path, mode));
+
+overload File(path:String) = File(new RawFile(path));
+
+overload File(rvalue f:RawFile) =
+    File(new move(f));
+
+
+
+//
+// stdinFile, stdoutFile, stderrFile
+//
+
+stdinFile()  = File(new stdinRawFile());
+stdoutFile() = File(new stdoutRawFile());
+stderrFile() = File(new stderrRawFile());
+
+
+
+//
+// fileHandle
+//
+
+overload fileHandle(f:File) = fileHandle(f.ptr^);
+
+
+
+//
+// read, write, flush
+//
+
+[I | Integer?(I)]
+overload read(f:File, buffer:Pointer[Byte], n:I) =
+    read(f.ptr^, buffer, n);
+
+[I | Integer?(I)]
+overload write(f:File, buffer:Pointer[Byte], n:I) {
+    write(f.ptr^, buffer, n);
+}
+
+overload flush(f:File) {
+    flush(f.ptr^);
+}
+
+
+
+//
+// fileSize, seek
+//
+
+overload fileSize(f:File) = fileSize(f.ptr^);
+
+overload seek(f:File, offset, whence) = seek(f.ptr^, offset, whence);
