@@ -1,4 +1,4 @@
-import streams.buffered.*;
+import io.streams.buffered.*;
 import libc;
 
 
