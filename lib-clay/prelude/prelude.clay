@@ -21,9 +21,10 @@ public import strings.algorithms.*;
 public import hash.*;
 public import hashmaps.*;
 
-public import streams.*;
-public import files.*;
-public import files.lines.*;
+public import io.streams.*;
+public import io.files.*;
+public import io.files.lines.*;
+
 public import printer.*;
 
 public import errors.*;

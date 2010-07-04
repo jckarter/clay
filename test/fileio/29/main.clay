@@ -1,4 +1,4 @@
-import files.mapping.*;
+import io.mapping.*;
 
 main() {
     alias N = 500*1000;
