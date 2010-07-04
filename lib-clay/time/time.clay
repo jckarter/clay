@@ -1,0 +1,4 @@
+
+import time.platform as p;
+
+time() = p.time();
