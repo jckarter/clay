@@ -144,6 +144,7 @@ overload write(f:File, buffer:Pointer[Byte], n:I) {
 
     while (src != srcEnd) {
         if (dest == destEnd) {
+            fd.writeCount = dest - &fd.writeBuffer[0];
             flushData(fd);
             dest = &fd.writeBuffer[0];
             pendingNewlines = 0;
