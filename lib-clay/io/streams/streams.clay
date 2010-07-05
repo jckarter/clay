@@ -40,7 +40,7 @@ readLine(stream) String {
         if (c == '\n')
             break;
     }
-    return String(v);
+    return String(move(v));
 }
 
 
