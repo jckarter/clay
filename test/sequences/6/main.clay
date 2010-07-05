@@ -24,4 +24,10 @@ main() {
         var b = map(add, a, slice(a, 1));
         printList(b);
     }
+    {
+        var a = Vector(range(100));
+        var b = Vector(reverse(a));
+        sort(b);
+        println(a == b);
+    }
 }
