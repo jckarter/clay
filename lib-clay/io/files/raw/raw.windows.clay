@@ -181,3 +181,11 @@ overload seek(f:RawFile, offset, whence) {
         error(win32.errorMessage());
     return newPos;
 }
+
+
+
+//
+// terminal?
+//
+
+overload terminal?(f:RawFile) = true; // FIXME: implement it

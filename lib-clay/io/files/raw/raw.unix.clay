@@ -126,3 +126,13 @@ overload seek(f:RawFile, offset, whence) {
                         Int64(offset),
                         seekWhence(whence));
 }
+
+
+
+//
+// terminal?
+//
+
+overload terminal?(f:RawFile) {
+    return Bool(unix.isatty(f.handle));
+}

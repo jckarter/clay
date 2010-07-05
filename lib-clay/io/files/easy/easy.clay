@@ -1,6 +1,7 @@
 
 import io.files.raw.*;
 
+
 
 //
 // File
@@ -18,6 +19,10 @@ private record FileData {
     readBuffer : Array[Byte, BUFFER_SIZE];
     readBegin : Pointer[Byte];
     readEnd : Pointer[Byte];
+
+    lineBuffered? : Bool;
+    writeBuffer : Array[Byte, BUFFER_SIZE];
+    writeCount : SizeT;
 }
 
 
@@ -34,8 +39,27 @@ overload File(path:String) = File(new FileData(RawFile(path)));
 overload File(rvalue f:RawFile) =
     File(new FileData(move(f)));
 
-overload FileData(forward file:RawFile) =
-    FileData(file, Array[Byte,BUFFER_SIZE](), null(Byte), null(Byte));
+overload FileData(rvalue file:RawFile) {
+    var lineBuffered? = terminal?(file);
+    var buf = Array[Byte,BUFFER_SIZE]();
+    return FileData(move(file),
+                    buf, null(Byte), null(Byte),
+                    lineBuffered?, buf, SizeT(0));
+}
+
+
+
+//
+// destroy
+//
+
+overload destroy(fd:FileData) {
+    if (fd.writeCount > 0) {
+        write(fd.file, &fd.writeBuffer[0], fd.writeCount);
+        fd.writeCount = 0;
+    }
+    destroy(fd.file);
+}
 
 
 
@@ -109,11 +133,45 @@ overload read(f:File, buffer:Pointer[Byte], n_:I) {
 
 [I | Integer?(I)]
 overload write(f:File, buffer:Pointer[Byte], n:I) {
-    write(f.ptr^.file, buffer, n);
+    ref fd = f.ptr^;
+
+    var src = buffer;
+    var srcEnd = src + n;
+    var dest = &fd.writeBuffer[0] + fd.writeCount;
+    var destEnd = &fd.writeBuffer[0] + BUFFER_SIZE;
+
+    var pendingNewlines = SizeT(0);
+
+    while (src != srcEnd) {
+        if (dest == destEnd) {
+            flushData(fd);
+            dest = &fd.writeBuffer[0];
+            pendingNewlines = 0;
+        }
+
+        pendingNewlines += SizeT(src^ == Byte('\n'));
+
+        dest^ = src^;
+        inc(dest);
+        inc(src);
+    }
+
+    fd.writeCount = dest - &fd.writeBuffer[0];
+
+    if (fd.lineBuffered? and (pendingNewlines > 0))
+        flushData(fd);
 }
 
 overload flush(f:File) {
+    flushData(f.ptr^);
     flush(f.ptr^.file);
+}
+
+private flushData(fd:FileData) {
+    if (fd.writeCount > 0) {
+        write(fd.file, &fd.writeBuffer[0], fd.writeCount);
+        fd.writeCount = 0;
+    }
 }
 
 
@@ -122,11 +180,23 @@ overload flush(f:File) {
 // fileSize, seek
 //
 
-overload fileSize(f:File) = fileSize(f.ptr^.file);
+overload fileSize(f:File) {
+    flushData(f.ptr^);
+    return fileSize(f.ptr^.file);
+}
 
 overload seek(f:File, offset, whence) {
     ref fd = f.ptr^;
     fd.readBegin = &fd.readBuffer[0];
     fd.readEnd = fd.readBegin;
+    flushData(fd);
     return seek(fd.file, offset, whence);
 }
+
+
+
+//
+// terminal?
+//
+
+overload terminal?(f:File) = terminal?(f.ptr^.file);
