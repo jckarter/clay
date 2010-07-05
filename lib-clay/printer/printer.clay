@@ -1,4 +1,4 @@
-import io.streams.buffered.*;
+
 import libc;
 
 
@@ -28,10 +28,8 @@ overload printTo(stream, x:Char) {
 
 [S | String?(S)]
 overload printTo(stream, x:S) {
-    var b = BufferedOutputStream(stream);
     for (c in x)
-        writeByte(b, c);
-    flush(b);
+        writeByte(stream, c);
 }
 
 [S | ContiguousString?(S)]
