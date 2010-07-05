@@ -20,3 +20,6 @@ procedure seek;    // seek(file, offset, whence)
                    // seek(file, offset)
 
 overload seek(file, offset) = seek(file, offset, SEEK_SET);
+
+
+procedure terminal?;
