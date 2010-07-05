@@ -39,7 +39,8 @@ overload hasNext?(x:LineIterator) {
 }
 
 overload next(x:LineIterator) {
-    assert(x.queued?, "next(LineIterator)");
+    if (not x.queued?)
+        return readLine(x.file^);
     x.queued? = false;
     return move(x.string);
 }
