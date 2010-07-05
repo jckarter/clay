@@ -112,6 +112,18 @@ overload String(a:A) = String(map(Char, a));
 
 
 //
+// constructor from rvalue vector
+//
+
+overload String(rvalue v:Vector[Char]) returned:String {
+    push(v, Char(0));
+    returned <-- String(v.data, size(v)-1, true);
+    v <-- Vector[Char]();
+}
+
+
+
+//
 // construct from c-string
 //
 
