@@ -752,81 +752,61 @@ void codegenExpr(ExprPtr expr,
 
     case AND : {
         And *x = (And *)expr.ptr();
-        PValuePtr pv1 = analyzeOne(x->expr1, env);
-        assert(pv1.ptr());
-        PValuePtr pv2 = analyzeOne(x->expr2, env);
-        assert(pv2.ptr());
-        if (pv1->type != pv2->type)
-            error("type mismatch in 'and' expression");
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
+        CValuePtr cv1 = codegenOneAsRef(x->expr1, env, ctx);
+        llvm::Value *flag1 = codegenToBoolFlag(cv1, ctx);
         llvm::BasicBlock *trueBlock = newBasicBlock("andTrue1");
+        llvm::BasicBlock *falseBlock = newBasicBlock("andFalse1");
         llvm::BasicBlock *mergeBlock = newBasicBlock("andMerge");
-        if (pv1->isTemp || pv2->isTemp) {
-            assert(out0->type == pv1->type);
-            codegenOneInto(x->expr1, env, ctx, out0);
-            llvm::Value *flag1 = codegenToBoolFlag(out0, ctx);
-            llvmBuilder->CreateCondBr(flag1, trueBlock, mergeBlock);
+        llvmBuilder->CreateCondBr(flag1, trueBlock, falseBlock);
 
-            llvmBuilder->SetInsertPoint(trueBlock);
-            codegenValueDestroy(out0, ctx);
-            codegenOneInto(x->expr2, env, ctx, out0);
-            llvmBuilder->CreateBr(mergeBlock);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
 
-            llvmBuilder->SetInsertPoint(mergeBlock);
-        }
-        else {
-            assert(out0->type == pointerType(pv1->type));
-            codegenOne(x->expr1, env, ctx, out0);
-            llvm::Value *flag1 = codegenToBoolFlag(derefValue(out0), ctx);
-            llvmBuilder->CreateCondBr(flag1, trueBlock, mergeBlock);
+        llvmBuilder->SetInsertPoint(trueBlock);
+        int marker = cgMarkStack();
+        CValuePtr cv2 = codegenOneAsRef(x->expr2, env, ctx);
+        llvm::Value *flag2 = codegenToBoolFlag(cv2, ctx);
+        llvm::Value *v2 = llvmBuilder->CreateZExt(flag2, llvmType(boolType));
+        llvmBuilder->CreateStore(v2, out0->llValue);
+        cgDestroyAndPopStack(marker, ctx);
+        llvmBuilder->CreateBr(mergeBlock);
 
-            llvmBuilder->SetInsertPoint(trueBlock);
-            codegenOne(x->expr2, env, ctx, out0);
-            llvmBuilder->CreateBr(mergeBlock);
+        llvmBuilder->SetInsertPoint(falseBlock);
+        llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
+        llvmBuilder->CreateStore(zero, out0->llValue);
+        llvmBuilder->CreateBr(mergeBlock);
 
-            llvmBuilder->SetInsertPoint(mergeBlock);
-        }
+        llvmBuilder->SetInsertPoint(mergeBlock);
         break;
     }
 
     case OR : {
         Or *x = (Or *)expr.ptr();
-        PValuePtr pv1 = analyzeOne(x->expr1, env);
-        assert(pv1.ptr());
-        PValuePtr pv2 = analyzeOne(x->expr2, env);
-        assert(pv2.ptr());
-        if (pv1->type != pv2->type)
-            error("type mismatch in 'or' expression");
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
+        CValuePtr cv1 = codegenOneAsRef(x->expr1, env, ctx);
+        llvm::Value *flag1 = codegenToBoolFlag(cv1, ctx);
         llvm::BasicBlock *falseBlock = newBasicBlock("orFalse1");
+        llvm::BasicBlock *trueBlock = newBasicBlock("orTrue1");
         llvm::BasicBlock *mergeBlock = newBasicBlock("orMerge");
-        if (pv1->isTemp || pv2->isTemp) {
-            assert(out0->type == pv1->type);
-            codegenOneInto(x->expr1, env, ctx, out0);
-            llvm::Value *flag1 = codegenToBoolFlag(out0, ctx);
-            llvmBuilder->CreateCondBr(flag1, mergeBlock, falseBlock);
+        llvmBuilder->CreateCondBr(flag1, trueBlock, falseBlock);
 
-            llvmBuilder->SetInsertPoint(falseBlock);
-            codegenValueDestroy(out0, ctx);
-            codegenOneInto(x->expr2, env, ctx, out0);
-            llvmBuilder->CreateBr(mergeBlock);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
 
-            llvmBuilder->SetInsertPoint(mergeBlock);
-        }
-        else {
-            assert(out0->type == pointerType(pv1->type));
-            codegenOne(x->expr1, env, ctx, out0);
-            llvm::Value *flag1 = codegenToBoolFlag(derefValue(out0), ctx);
-            llvmBuilder->CreateCondBr(flag1, mergeBlock, falseBlock);
+        llvmBuilder->SetInsertPoint(falseBlock);
+        int marker = cgMarkStack();
+        CValuePtr cv2 = codegenOneAsRef(x->expr2, env, ctx);
+        llvm::Value *flag2 = codegenToBoolFlag(cv2, ctx);
+        llvm::Value *v2 = llvmBuilder->CreateZExt(flag2, llvmType(boolType));
+        llvmBuilder->CreateStore(v2, out0->llValue);
+        cgDestroyAndPopStack(marker, ctx);
+        llvmBuilder->CreateBr(mergeBlock);
 
-            llvmBuilder->SetInsertPoint(falseBlock);
-            codegenOne(x->expr2, env, ctx, out0);
-            llvmBuilder->CreateBr(mergeBlock);
+        llvmBuilder->SetInsertPoint(trueBlock);
+        llvm::Value *one = llvm::ConstantInt::get(llvmType(boolType), 1);
+        llvmBuilder->CreateStore(one, out0->llValue);
+        llvmBuilder->CreateBr(mergeBlock);
 
-            llvmBuilder->SetInsertPoint(mergeBlock);
-        }
+        llvmBuilder->SetInsertPoint(mergeBlock);
         break;
     }
 
