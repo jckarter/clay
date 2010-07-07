@@ -24,3 +24,7 @@ overload equals?(a:Bool, b:Bool) {
 }
 
 overload lesser?(a:Bool, b:Bool) = ((not a) and b);
+
+overload assign(dest:Bool, src:Bool) {
+    primitiveCopy(dest, src);
+}
