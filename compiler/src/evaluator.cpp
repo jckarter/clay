@@ -814,63 +814,31 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case AND : {
         And *x = (And *)expr.ptr();
-        PValuePtr pv = analyzeOne(expr, env);
-        assert(pv.ptr());
+        EValuePtr ev1 = evalOneAsRef(x->expr1, env);
+        bool result = false;
+        if (evalToBoolFlag(ev1)) {
+            EValuePtr ev2 = evalOneAsRef(x->expr2, env);
+            result = evalToBoolFlag(ev2);
+        }
         assert(out->size() == 1);
-        if (pv->isTemp) {
-            EValuePtr ev = out->values[0];
-            evalOneInto(x->expr1, env, ev);
-            if (evalToBoolFlag(ev)) {
-                evalValueDestroy(ev);
-                PValuePtr pv2 = analyzeOne(x->expr2, env);
-                assert(pv2.ptr());
-                if (pv2->type != pv->type)
-                    error("type mismatch in 'and' expression");
-                evalOneInto(x->expr2, env, ev);
-            }
-        }
-        else {
-            EValuePtr evPtr = out->values[0];
-            evalOne(x->expr1, env, evPtr);
-            if (evalToBoolFlag(derefValue(evPtr))) {
-                PValuePtr pv2 = analyzeOne(x->expr2, env);
-                assert(pv2.ptr());
-                if (pv2->type != pv->type)
-                    error("type mismatch in 'and' expression");
-                evalOne(x->expr1, env, evPtr);
-            }
-        }
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = result ? 1 : 0;
         break;
     }
 
     case OR : {
         Or *x = (Or *)expr.ptr();
-        PValuePtr pv = analyzeOne(expr, env);
-        assert(pv.ptr());
+        EValuePtr ev1 = evalOneAsRef(x->expr1, env);
+        bool result = true;
+        if (!evalToBoolFlag(ev1)) {
+            EValuePtr ev2 = evalOneAsRef(x->expr2, env);
+            result = evalToBoolFlag(ev2);
+        }
         assert(out->size() == 1);
-        if (pv->isTemp) {
-            EValuePtr ev = out->values[0];
-            evalOneInto(x->expr1, env, ev);
-            if (!evalToBoolFlag(ev)) {
-                evalValueDestroy(ev);
-                PValuePtr pv2 = analyzeOne(x->expr2, env);
-                assert(pv2.ptr());
-                if (pv2->type != pv->type)
-                    error("type mismatch in 'or' expression");
-                evalOneInto(x->expr2, env, ev);
-            }
-        }
-        else {
-            EValuePtr evPtr = out->values[0];
-            evalOne(x->expr2, env, evPtr);
-            if (evalToBoolFlag(derefValue(evPtr))) {
-                PValuePtr pv2 = analyzeOne(x->expr2, env);
-                assert(pv2.ptr());
-                if (pv2->type != pv->type)
-                    error("type mismatch in 'or' expression");
-                evalOne(x->expr2, env, evPtr);
-            }
-        }
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = result ? 1 : 0;
         break;
     }
 

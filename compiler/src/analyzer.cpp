@@ -420,34 +420,12 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
     }
 
     case AND : {
-        And *x = (And *)expr.ptr();
-        PValuePtr a = analyzeOne(x->expr1, env);
-        if (!a)
-            return NULL;
-        if (a->isTemp)
-            return new MultiPValue(new PValue(a->type, true));
-        PValuePtr b = analyzeOne(x->expr2, env);
-        if (!b)
-            return NULL;
-        if (a->type != b->type)
-            error("type mismatch in 'and' expression");
-        PValuePtr pv = new PValue(a->type, a->isTemp || b->isTemp);
+        PValuePtr pv = new PValue(boolType, true);
         return new MultiPValue(pv);
     }
 
     case OR : {
-        Or *x = (Or *)expr.ptr();
-        PValuePtr a = analyzeOne(x->expr1, env);
-        if (!a)
-            return NULL;
-        if (a->isTemp)
-            return new MultiPValue(new PValue(a->type, true));
-        PValuePtr b = analyzeOne(x->expr2, env);
-        if (!b)
-            return NULL;
-        if (a->type != b->type)
-            error("type mismatch in 'and' expression");
-        PValuePtr pv = new PValue(a->type, a->isTemp || b->isTemp);
+        PValuePtr pv = new PValue(boolType, true);
         return new MultiPValue(pv);
     }
 
