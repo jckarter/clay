@@ -1,0 +1,229 @@
+introSort(a) {
+    introSort(begin(a), end(a));
+}
+
+overload introSort(first, last) {
+    if (first != last) {
+        introSortLoop(first, last, log2(last-first)*2);
+        finalInsertionSort(first, last);
+    }
+}
+
+log2(x) {
+    var y = SizeT(x);
+    var k = 0;
+    while (y != 0) {
+        k += 1;
+        y = shiftRight(y, 1);
+    }
+    return k - 1;
+}
+
+alias threshold = 32;
+
+introSortLoop(first_, last_, depthLimit_) {
+    var first, last, depthLimit = first_, last_, depthLimit_;
+    while (last - first > threshold) {
+        if (depthLimit == 0) {
+            partialSort(first, last, last);
+            return;
+        }
+        depthLimit -= 1;
+        var cut = unguardedPartitionPivot(first, last);
+        introSortLoop(cut+1, last, depthLimit);
+        last = cut;
+    }
+}
+
+unguardedPartitionPivot(first_, last_) {
+    var first, last = first_, last_;
+    var mid = first + (last - first)/2;
+    moveMedianFirst(first, mid, last-1);
+    var cut = unguardedPartition(first + 1, last, first^);
+    cut -= 1;
+    swap(first^, cut^);
+    return cut;
+}
+
+moveMedianFirst(a_, b_, c_) {
+    var a, b, c = a_, b_, c_;
+    if (a^ < b^) {
+        if (b^ < c^)
+            swap(a^, b^);
+        else if (a^ < c^)
+            swap(a^, c^);
+    }
+    else if (a^ < c^)
+        return;
+    else if (b^ < c^)
+        swap(a^, c^);
+    else
+        swap(a^, b^);
+}
+
+unguardedPartition(first_, last_, pivot) {
+    var first, last = first_, last_;
+    while (true) {
+        while (first^ < pivot)
+            first += 1;
+        last -= 1;
+        while (pivot < last^)
+            last -= 1;
+        if (not (first < last))
+            return first;
+        swap(first^, last^);
+        first += 1;
+    }
+}
+
+finalInsertionSort(first_, last_) {
+    var first, last = first_, last_;
+    if (last - first > threshold) {
+        insertionSort(first, first + threshold);
+        unguardedInsertionSort(first + threshold, last);
+    }
+    else {
+        insertionSort(first, last);
+    }
+}
+
+insertionSort(a) {
+    insertionSort(begin(a), end(a));
+}
+
+overload insertionSort(first_, last_) {
+    var first, last = first_, last_;
+    if (first == last)
+        return;
+    var i = first + 1;
+    while (i != last) {
+        if (i^ < first^) {
+            var value = move(i^);
+            moveBackward(first, i, i+1);
+            first^ = move(value);
+        }
+        else {
+            unguardedLinearInsert(i);
+        }
+        i += 1;
+    }
+}
+
+unguardedInsertionSort(first_, last_) {
+    var first, last = first_, last_;
+    var i = first;
+    while (i != last) {
+        unguardedLinearInsert(i);
+        i += 1;
+    }
+}
+
+unguardedLinearInsert(last_) {
+    var last = last_;
+    var value = move(last^);
+    var next = last;
+    next -= 1;
+    while (value < next^) {
+        last^ = move(next^);
+        last = next;
+        next -= 1;
+    }
+    last^ = move(value);
+}
+
+moveBackward(first_, last_, newLast_) {
+    var first, last, newLast = first_, last_, newLast_;
+    var n = last - first;
+    while (last != first) {
+        last -= 1;
+        newLast -= 1;
+        newLast^ = move(last^);
+    }
+}
+
+heapSort(a) {
+    heapSort(begin(a), end(a));
+}
+
+overload heapSort(first, last) {
+    partialSort(first, last, last);
+}
+
+partialSort(first_, middle_, last_) {
+    var first, middle, last = first_, middle_, last_;
+    heapSelect(first, middle, last);
+    sortHeap(first, middle);
+}
+
+heapSelect(first_, middle_, last_) {
+    var first, middle, last = first_, middle_, last_;
+    makeHeap(first, middle);
+    var i = middle;
+    while (i < last) {
+        if (i^ < first^)
+            popHeap(first, middle, i);
+        i += 1;
+    }
+}
+
+makeHeap(first_, last_) {
+    var first, last = first_, last_;
+    if (last - first < 2)
+        return;
+    var len = last - first;
+    var parent = (len - 2) / 2;
+    while (true) {
+        var value = move((first + parent)^);
+        adjustHeap(first, parent, len, move(value));
+        if (parent == 0)
+            return;
+        parent -= 1;
+    }
+}
+
+sortHeap(first_, last_) {
+    var first, last = first_, last_;
+    while (last - first > 1) {
+        last -= 1;
+        popHeap(first, last, last);
+    }
+}
+
+popHeap(first_, last_, result_) {
+    var first, last, result = first_, last_, result_;
+    var value = move(result^);
+    result^ = move(first^);
+    alias DistanceType = Type(last - first);
+    adjustHeap(first, DistanceType(0), last-first, move(value));
+}
+
+pushHeap(first_, holeIndex_, topIndex_, rvalue value_) {
+    var first, holeIndex, topIndex, value =
+        first_, holeIndex_, topIndex_, move(value_);
+    var parent = (holeIndex - 1) / 2;
+    while ((holeIndex > topIndex) and ((first + parent)^ < value)) {
+        (first + holeIndex)^ = move((first + parent)^);
+        holeIndex = parent;
+        parent = (holeIndex - 1) / 2;
+    }
+    (first + holeIndex)^ = move(value);
+}
+
+adjustHeap(first_, holeIndex_, len_, rvalue value_) {
+    var first, holeIndex, len, value = first_, holeIndex_, len_, move(value_);
+    var topIndex = holeIndex;
+    var secondChild = holeIndex;
+    while (secondChild < (len - 1)/2) {
+        secondChild = 2 * (secondChild + 1);
+        if ((first + secondChild)^ < (first + secondChild - 1)^)
+            secondChild -= 1;
+        (first + holeIndex)^ = move((first + secondChild)^);
+        holeIndex = secondChild;
+    }
+    if ((bitwiseAnd(len, 1) == 0) and (secondChild == (len - 2) / 2)) {
+        secondChild = 2*(secondChild + 1);
+        (first + holeIndex)^ = move((first + (secondChild - 1))^);
+        holeIndex = secondChild - 1;
+    }
+    pushHeap(first, holeIndex, topIndex, move(value));
+}
