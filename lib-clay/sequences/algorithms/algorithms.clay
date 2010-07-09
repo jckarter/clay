@@ -1,4 +1,7 @@
 
+import sequences.algorithms.introsort as introsort;
+
+
 
 //
 // reduce
@@ -165,45 +168,7 @@ overload binarySearchUpperBound(x, begin_, end_) {
 // sort - use quicksort with median-of-3 partitioning
 //
 
-private medianOf3(a, i, j, k) {
-    if (a[i] <= a[j]) {
-        if (a[j] <= a[k])
-            return j;
-        if (a[i] <= a[k])
-            return k;
-        return i;
-    }
-    else {
-        if (a[i] <= a[k])
-            return i;
-        if (a[j] <= a[k])
-            return k;
-        return j;
-    }
-}
-
 [A | RandomAccessSequence?(A)]
 sort(a:A) {
-    var v = Vector[Tuple[SizeT,SizeT]]();
-    reserve(v, 50);
-    push(v, (SizeT(0), size(a)));
-
-    while (not empty?(v)) {
-        var start, end = ...unpack(pop(v));
-        while (start+1 < end) {
-            var median = medianOf3(a, start, (start+end)/2, end-1);
-            if (median != start)
-                swap(a[start], a[median]);
-            var m = start;
-            for (i in range(start+1, end)) {
-                if (a[i] < a[start]) {
-                    m += 1;
-                    swap(a[i], a[m]);
-                }
-            }
-            swap(a[start], a[m]);
-            push(v, (m+1, end));
-            end = m;
-        }
-    }
+    introsort.introSort(a);
 }
