@@ -10,8 +10,6 @@ alias Byte = UInt8;
 alias CChar = Int8;
 alias CUChar = UInt8;
 
-alias CString = Pointer[CChar];
-
 alias Short = Int16;
 alias UShort = UInt16;
 

@@ -18,5 +18,5 @@ inlined syscallNoThrow(callable, ...args) {
     return result;
 }
 
-errorMessage(err) = stringRef(libc.strerror(err));
+errorMessage(err) = CStringRef(libc.strerror(err));
 overload errorMessage() = errorMessage(errno());
