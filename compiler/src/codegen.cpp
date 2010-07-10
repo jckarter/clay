@@ -652,17 +652,25 @@ void codegenExpr(ExprPtr expr,
         llvm::Constant *initializer =
             llvm::ConstantArray::get(llvm::getGlobalContext(),
                                      x->value,
-                                     false);
-        TypePtr type = arrayType(int8Type, x->value.size());
+                                     true);
+        TypePtr type = arrayType(int8Type, x->value.size() + 1);
         llvm::GlobalVariable *gvar = new llvm::GlobalVariable(
             *llvmModule, llvmType(type), true,
             llvm::GlobalVariable::PrivateLinkage,
             initializer, "clayliteral_str");
-        CValuePtr cv = new CValue(type, gvar);
-        codegenCallValue(kernelCValue("stringRef"),
-                         new MultiCValue(cv),
-                         ctx,
-                         out);
+        llvm::Value *str =
+            llvmBuilder->CreateConstGEP2_32(gvar, 0, 0);
+        llvm::Value *strEnd =
+            llvmBuilder->CreateConstGEP2_32(gvar, 0, x->value.size());
+        TypePtr ptrInt8Type = pointerType(int8Type);
+        CValuePtr cvFirst = codegenAllocValue(ptrInt8Type);
+        CValuePtr cvLast = codegenAllocValue(ptrInt8Type);
+        llvmBuilder->CreateStore(str, cvFirst->llValue);
+        llvmBuilder->CreateStore(strEnd, cvLast->llValue);
+        MultiCValuePtr args = new MultiCValue();
+        args->add(cvFirst);
+        args->add(cvLast);
+        codegenCallValue(kernelCValue("StringConstant"), args, ctx, out);
         break;
     }
 

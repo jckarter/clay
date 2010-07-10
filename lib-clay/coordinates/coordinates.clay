@@ -103,3 +103,38 @@ overload inc(c:ReverseCoordinate[T]) {
 overload dec(c:ReverseCoordinate[T]) {
     inc(c.coord);
 }
+
+
+
+//
+// ByValueCoordinate
+//
+
+record ByValueCoordinate[T] {
+    coord : T;
+}
+
+[T]
+overload dereference(c:ByValueCoordinate[T]) = ...c.coord^;
+
+[T,I | CallDefined?(add, T, I)]
+overload add(c:ByValueCoordinate[T], i:I) =
+    ByValueCoordinate(T(c.coord + i));
+
+[T,I | CallDefined?(subtract, T, I)]
+overload subtract(c:ByValueCoordinate[T], i:I) =
+    ByValueCoordinate(T(c.coord - i));
+
+[T | CallDefined?(subtract, T, T)]
+overload subtract(c1:ByValueCoordinate[T], c2:ByValueCoordinate[T]) =
+    c1.coord - c2.coord;
+
+[T]
+overload inc(c:ByValueCoordinate[T]) {
+    inc(c.coord);
+}
+
+[T]
+overload dec(c:ByValueCoordinate[T]) {
+    dec(c.coord);
+}
