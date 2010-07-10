@@ -744,6 +744,12 @@ void codegenExpr(ExprPtr expr,
 
     case UNARY_OP : {
         UnaryOp *x = (UnaryOp *)expr.ptr();
+        if (x->op == ADDRESS_OF) {
+            PValuePtr pv = analyzeOne(x->expr, env);
+            assert(pv.ptr());
+            if (pv->isTemp)
+                error("can't take address of a temporary");
+        }
         if (!x->desugared)
             x->desugared = desugarUnaryOp(x);
         codegenExpr(x->desugared, env, ctx, out);
