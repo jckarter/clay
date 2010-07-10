@@ -1,111 +1,6 @@
 
 
 //
-// ValueCoordinate
-//
-
-private record ValueCoordinate[T] {
-    value : T;
-}
-
-[T]
-overload dereference(c:ValueCoordinate[T]) = c.value;
-
-[T,I | CallDefined?(add, T, I)]
-overload add(c:ValueCoordinate[T], i:I) =
-    ValueCoordinate(T(c.value + i));
-
-[T,I | CallDefined?(subtract, T, I)]
-overload subtract(c:ValueCoordinate[T], i:I) =
-    ValueCoordinate(T(c.value - i));
-
-[T | CallDefined?(subtract, T, T)]
-overload subtract(c1:ValueCoordinate[T], c2:ValueCoordinate[T]) =
-    c1.value - c2.value;
-
-[T]
-overload inc(c:ValueCoordinate[T]) {
-    inc(c.value);
-}
-
-[T]
-overload dec(c:ValueCoordinate[T]) {
-    dec(c.value);
-}
-
-
-
-//
-// ValueReverseCoordinate
-//
-
-private record ValueReverseCoordinate[T] {
-    value : T;
-}
-
-[T]
-overload dereference(c:ValueReverseCoordinate[T]) = (c.value - 1);
-
-[T,I | CallDefined?(subtract, T, I)]
-overload add(c:ValueReverseCoordinate[T], i:I) =
-    ValueReverseCoordinate(T(c.value - i));
-
-[T,I | CallDefined?(add, T, I)]
-overload subtract(c:ValueReverseCoordinate[T], i:I) =
-    ValueReverseCoordinate(T(c.value + i));
-
-[T | CallDefined?(subtract, T, T)]
-overload subtract(c1:ValueReverseCoordinate[T], c2:ValueReverseCoordinate[T]) =
-    c2.value - c1.value;
-
-[T]
-overload inc(c:ValueReverseCoordinate[T]) {
-    dec(c.value);
-}
-
-[T]
-overload dec(c:ValueReverseCoordinate[T]) {
-    inc(c.value);
-}
-
-
-
-//
-// ReverseCoordinate
-//
-
-private record ReverseCoordinate[T] {
-    coord : T;
-}
-
-[T]
-overload dereference(c:ReverseCoordinate[T]) = forward ...(c.coord - 1)^;
-
-[T,I | CallDefined?(subtract, T, I)]
-overload add(c:ReverseCoordinate[T], i:I) =
-    ReverseCoordinate(T(c.coord - i));
-
-[T,I | CallDefined?(add, T, I)]
-overload subtract(c:ReverseCoordinate[T], i:I) =
-    ReverseCoordinate(T(c.coord + i));
-
-[T | CallDefined?(subtract, T, T)]
-overload subtract(c1:ReverseCoordinate[T], c2:ReverseCoordinate[T]) =
-    c2.coord - c1.coord;
-
-[T]
-overload inc(c:ReverseCoordinate[T]) {
-    dec(c.coord);
-}
-
-[T]
-overload dec(c:ReverseCoordinate[T]) {
-    inc(c.coord);
-}
-
-
-
-//
 // Range
 //
 
@@ -233,7 +128,7 @@ record CoordinateRange[T] {
 overload size(a:CoordinateRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-overload index(a:CoordinateRange[T], i:I) = ref (a.begin + i)^;
+overload index(a:CoordinateRange[T], i:I) = forward ...(a.begin + i)^;
 
 [T]
 overload iterator(a:CoordinateRange[T]) = a;
@@ -247,9 +142,9 @@ overload hasNext?(a:CoordinateRange[T]) = a.begin != a.end;
 
 [T]
 overload next(a:CoordinateRange[T]) {
-    ref x = a.begin^;
+    var x = captureValues(...a.begin^);
     inc(a.begin);
-    return ref x;
+    return forward ...forwardValues(x);
 }
 
 [T]
@@ -273,7 +168,7 @@ record ReverseCoordinateRange[T] {
 overload size(a:ReverseCoordinateRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-overload index(a:ReverseCoordinateRange[T], i:I) = ref (a.end - i - 1)^;
+overload index(a:ReverseCoordinateRange[T], i:I) = forward ...(a.end - i - 1)^;
 
 [T]
 overload iterator(a:ReverseCoordinateRange[T]) = a;
@@ -288,7 +183,7 @@ overload hasNext?(a:ReverseCoordinateRange[T]) = a.begin != a.end;
 [T]
 overload next(a:ReverseCoordinateRange[T]) {
     dec(a.end);
-    return ref a.end^;
+    return forward ...a.end^;
 }
 
 [T]
