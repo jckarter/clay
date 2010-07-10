@@ -1439,8 +1439,10 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         if (right->size() != x->names.size())
             arityError(x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < right->size(); ++i)
-            addLocal(env2, x->names[i], right->values[i].ptr());
+        for (unsigned i = 0; i < right->size(); ++i) {
+            PValuePtr pv = right->values[i];
+            addLocal(env2, x->names[i], new PValue(pv->type, false));
+        }
         return env2;
     }
 
