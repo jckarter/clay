@@ -723,9 +723,17 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case STRING_LITERAL : {
         StringLiteral *x = (StringLiteral *)expr.ptr();
-        TypePtr type = arrayType(int8Type, x->value.size());
-        EValuePtr ev = new EValue(type, const_cast<char *>(x->value.data()));
-        evalCallValue(kernelEValue("String"), new MultiEValue(ev), out);
+        char *str = const_cast<char*>(x->value.c_str());
+        char *strEnd = str + x->value.size();
+        TypePtr ptrInt8Type = pointerType(int8Type);
+        EValuePtr evFirst = evalAllocValue(ptrInt8Type);
+        *((char **)evFirst->addr) = str;
+        EValuePtr evLast = evalAllocValue(ptrInt8Type);
+        *((char **)evLast->addr) = strEnd;
+        MultiEValuePtr args = new MultiEValue();
+        args->add(evFirst);
+        args->add(evLast);
+        evalCallValue(kernelEValue("StringConstant"), args, out);
         break;
     }
 

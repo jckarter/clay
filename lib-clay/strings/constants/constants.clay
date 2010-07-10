@@ -1,0 +1,76 @@
+
+
+
+//
+// StringConstant
+//
+// 'last' is assumed to be dereferenceable and should point to a null-char
+//
+
+record StringConstant {
+    first : Pointer[Char];
+    last : Pointer[Char];
+}
+
+
+
+//
+// predicates
+//
+
+overload ContiguousSequence?(static StringConstant) = true;
+
+
+
+//
+// constructors
+//
+
+overload StringConstant() = "";
+
+[I | Integer?(I)]
+overload StringConstant(first : Pointer[Char], size:I) =
+    StringConstant(first, first+size);
+
+[T,I | ByteSizedInteger?(T) and Integer?(I)]
+overload StringConstant(first : Pointer[T], size:I) {
+    var firstChar = Pointer[Char](first);
+    StringConstant(firstChar, firstChar+size);
+}
+
+[T | ByteSizedInteger?(T)]
+overload StringConstant(first : Pointer[T], last : Pointer[T]) =
+    StringConstant(Pointer[Char](first), Pointer[Char](last));
+
+
+
+//
+// size, index
+//
+
+overload size(a:StringConstant) = SizeT(a.last - a.first);
+
+[I | Integer?(I)]
+overload index(a:StringConstant, i:I) = (a.first + i)^;
+
+
+
+//
+// coordinates and iteration
+//
+
+overload begin(a:StringConstant) = ByValueCoordinate(a.first);
+overload end(a:StringConstant) = ByValueCoordinate(a.last);
+
+overload iterator(a:StringConstant) = coordinateRange(begin(a), end(a));
+
+overload reverseIterator(a:StringConstant) =
+    reverseCoordinateRange(end(a), begin(a));
+
+
+
+//
+// cstring
+//
+
+overload cstring(a:StringConstant) = Pointer[Int8](a.first);

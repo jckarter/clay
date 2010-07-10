@@ -340,9 +340,12 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
 
     case STRING_LITERAL : {
         StringLiteral *x = (StringLiteral *)expr.ptr();
+        TypePtr ptrInt8Type = pointerType(int8Type);
         PValuePtr pv = new PValue(arrayType(int8Type, x->value.size()), true);
-        MultiPValuePtr args = new MultiPValue(pv);
-        return analyzeCallValue(kernelPValue("stringRef"), args);
+        MultiPValuePtr args = new MultiPValue();
+        args->add(new PValue(ptrInt8Type, true));
+        args->add(new PValue(ptrInt8Type, true));
+        return analyzeCallValue(kernelPValue("StringConstant"), args);
     }
 
     case IDENTIFIER_LITERAL : {
