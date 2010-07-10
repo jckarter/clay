@@ -12,6 +12,8 @@ private record InnerFileMapping {
     length : SizeT;
 }
 
+overload RegularRecord?(static InnerFileMapping) = false;
+
 record FileMapping {
     inner : SharedPointer[InnerFileMapping];
 }
