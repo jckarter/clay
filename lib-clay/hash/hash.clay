@@ -86,6 +86,7 @@ overload hash(x:SharedPointer[T]) = hash(x.ptr);
 //
 
 overload hash(a:String) = hashSequence(a);
+overload hash(a:StringConstant) = hashSequence(a);
 
 
 

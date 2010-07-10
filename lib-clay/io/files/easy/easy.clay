@@ -31,10 +31,12 @@ private record FileData {
 // constructors
 //
 
-overload File(path:String, mode:OpenMode) =
+[S | CCompatibleString?(S)]
+overload File(path:S, mode:OpenMode) =
     File(new FileData(RawFile(path, mode)));
 
-overload File(path:String) = File(new FileData(RawFile(path)));
+[S | CCompatibleString?(S)]
+overload File(path:S) = File(new FileData(RawFile(path)));
 
 overload File(rvalue f:RawFile) =
     File(new FileData(move(f)));

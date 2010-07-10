@@ -38,6 +38,18 @@ overload ContiguousString?(static A) = true;
 
 
 //
+// CCompatibleString?
+//
+
+[A]
+CCompatibleString?(static A) = false;
+
+[A | String?(A) and CallDefined?(cstring, A)]
+overload CCompatibleString?(static A) = true;
+
+
+
+//
 // String
 //
 

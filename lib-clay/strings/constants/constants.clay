@@ -51,7 +51,7 @@ overload StringConstant(first : Pointer[T], last : Pointer[T]) =
 overload size(a:StringConstant) = SizeT(a.last - a.first);
 
 [I | Integer?(I)]
-overload index(a:StringConstant, i:I) = (a.first + i)^;
+overload index(a:StringConstant, i:I) = ref (a.first + i)^;
 
 
 
@@ -59,8 +59,8 @@ overload index(a:StringConstant, i:I) = (a.first + i)^;
 // coordinates and iteration
 //
 
-overload begin(a:StringConstant) = ByValueCoordinate(a.first);
-overload end(a:StringConstant) = ByValueCoordinate(a.last);
+overload begin(a:StringConstant) = a.first;
+overload end(a:StringConstant) = a.last;
 
 overload iterator(a:StringConstant) = coordinateRange(begin(a), end(a));
 

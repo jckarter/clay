@@ -22,12 +22,12 @@ record NamedScalar[T] {
 // constructor
 //
 
-[T]
-overload NamedScalar[T](fileName : strings.String, initial:T) {
+[S,T | String?(S)]
+overload NamedScalar[T](fileName:S, initial:T) {
     if (fileExists?(fileName)) {
         var f = File(fileName, READ_WRITE);
         var mapping = FileMapping(f, MAP_READ_WRITE);
-        return NamedScalar[T](fileName, f, mapping);
+        return NamedScalar[T](strings.String(fileName), f, mapping);
     }
     else {
         var f = File(fileName, CREATE);
@@ -36,7 +36,7 @@ overload NamedScalar[T](fileName : strings.String, initial:T) {
         var mapping = FileMapping(f, MAP_READ_WRITE);
         var ptr = Pointer[T](mappingAddress(mapping));
         ptr^ <-- initial;
-        return NamedScalar[T](fileName, f, mapping);
+        return NamedScalar[T](strings.String(fileName), f, mapping);
     }
 }
 

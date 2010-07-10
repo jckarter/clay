@@ -169,7 +169,7 @@ initNewFile() {
     pushFreeList(b);
 }
 
-initializePaging(fileName:String, fileSize) {
+initializePaging(fileName, fileSize) {
     resetState();
     var newFile? = not fileExists?(fileName);
     var fileMode = READ_WRITE;
@@ -177,7 +177,7 @@ initializePaging(fileName:String, fileSize) {
         fileMode = CREATE;
 
     ref x = state;
-    x.fileName = fileName;
+    x.fileName = String(fileName);
     x.file = File(fileName, fileMode);
     if (newFile?)
         resizeFile(x.file, SizeT(fileSize));

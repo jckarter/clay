@@ -9,7 +9,8 @@ import numbers.parser.errno.*;
 [S | String?(S)]
 parseInt8(s:S) = parseInt8(String(s));
 
-overload parseInt8(s:String) {
+[S | CCompatibleString?(S)]
+overload parseInt8(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtol(p, &end, 0);
@@ -23,7 +24,8 @@ overload parseInt8(s:String) {
 [S | String?(S)]
 parseUInt8(s:S) = parseUInt8(String(s));
 
-overload parseUInt8(s:String) {
+[S | CCompatibleString?(S)]
+overload parseUInt8(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtoul(p, &end, 0);
@@ -43,7 +45,8 @@ overload parseUInt8(s:String) {
 [S | String?(S)]
 parseInt16(s:S) = parseInt16(String(s));
 
-overload parseInt16(s:String) {
+[S | CCompatibleString?(S)]
+overload parseInt16(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtol(p, &end, 0);
@@ -57,7 +60,8 @@ overload parseInt16(s:String) {
 [S | String?(S)]
 parseUInt16(s:S) = parseUInt16(String(s));
 
-overload parseUInt16(s:String) {
+[S | CCompatibleString?(S)]
+overload parseUInt16(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtoul(p, &end, 0);
@@ -77,7 +81,8 @@ overload parseUInt16(s:String) {
 [S | String?(S)]
 parseInt32(s:S) = parseInt32(String(s));
 
-overload parseInt32(s:String) {
+[S | CCompatibleString?(S)]
+overload parseInt32(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtoll(p, &end, 0);
@@ -91,7 +96,8 @@ overload parseInt32(s:String) {
 [S | String?(S)]
 parseUInt32(s:S) = parseUInt32(String(s));
 
-overload parseUInt32(s:String) {
+[S | CCompatibleString?(S)]
+overload parseUInt32(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtoull(p, &end, 0);
@@ -111,7 +117,8 @@ overload parseUInt32(s:String) {
 [S | String?(S)]
 parseInt64(s:S) = parseInt64(String(s));
 
-overload parseInt64(s:String) {
+[S | CCompatibleString?(S)]
+overload parseInt64(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtoll(p, &end, 0);
@@ -125,7 +132,8 @@ overload parseInt64(s:String) {
 [S | String?(S)]
 parseUInt64(s:S) = parseUInt64(String(s));
 
-overload parseUInt64(s:String) {
+[S | CCompatibleString?(S)]
+overload parseUInt64(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtoull(p, &end, 0);
@@ -145,7 +153,8 @@ overload parseUInt64(s:String) {
 [S | String?(S)]
 parseFloat32(s:S) = parseFloat32(String(s));
 
-overload parseFloat32(s:String) {
+[S | CCompatibleString?(S)]
+overload parseFloat32(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtof(p, &end);
@@ -165,7 +174,8 @@ overload parseFloat32(s:String) {
 [S | String?(S)]
 parseFloat64(s:S) = parseFloat64(String(s));
 
-overload parseFloat64(s:String) {
+[S | CCompatibleString?(S)]
+overload parseFloat64(s:S) {
     var p = cstring(s);
     var end = null(CChar);
     var value = libc.strtod(p, &end);

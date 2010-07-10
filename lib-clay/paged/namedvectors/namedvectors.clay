@@ -45,14 +45,14 @@ private headerSpace() = alignUp(TypeSize(Header), 16);
 private requiredFileSize(static T, capacity) =
     capacity*TypeSize(T) + headerSpace();
 
-[T]
-overload NamedVector[T](fileName : strings.String) {
+[S,T | String?(S)]
+overload NamedVector[T](fileName:S) {
     if (fileExists?(fileName)) {
         var f = File(fileName, READ_WRITE);
         var mapping = FileMapping(f, MAP_READ_WRITE);
         var header = Pointer[Header](mappingAddress(mapping));
         var data = Pointer[T](mappingAddress(mapping) + headerSpace());
-        return NamedVector[T](fileName, f, mapping, header, data);
+        return NamedVector[T](strings.String(fileName), f, mapping, header, data);
     }
     else {
         var f = File(fileName, CREATE);
@@ -65,7 +65,7 @@ overload NamedVector[T](fileName : strings.String) {
         var data = Pointer[T](mappingAddress(mapping) + headerSpace());
         header^.size = size;
         header^.capacity = capacity;
-        return NamedVector[T](fileName, f, mapping, header, data);
+        return NamedVector[T](strings.String(fileName), f, mapping, header, data);
     }
 }
 
