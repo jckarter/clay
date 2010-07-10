@@ -20,30 +20,16 @@ overload RecordFieldTypes2(static T, static i) = ;
 
 
 //
-// SafeRecord? - true if record doesn't contains unsafe types such as pointers
+// RegularRecord?
+//
+// true if record's value semantics is defined in terms of it's fields
 //
 
 [T]
-SafeRecord?(static T) = false;
+RegularRecord?(static T) = false;
 
 [T | Record?(T)]
-overload SafeRecord?(static T) = SafeFields?(T, static 0);
-
-[T,i]
-private SafeFields?(static T, static i) =
-    SafeType?(RecordFieldType(T, static i)) and SafeFields?(T, static i+1);
-
-[T,i | i == RecordFieldCount(T)]
-overload SafeFields?(static T, static i) = true;
-
-
-
-//
-// SafeType?
-//
-
-[T] SafeType?(static T) = true;
-[T] overload SafeType?(static Pointer[T]) = false;
+overload RegularRecord?(static T) = true;
 
 
 
@@ -78,7 +64,7 @@ inlined overload T(...args:A) returned:T {
 // default constructor
 //
 
-[T | Record?(T)]
+[T | RegularRecord?(T)]
 overload T() returned:T {
     initRecordFields(returned, static SizeT(0));
 }
@@ -99,7 +85,7 @@ overload initRecordFields(a:T, static i) {
 // copy constructor
 //
 
-[T | Record?(T)]
+[T | RegularRecord?(T)]
 overload T(src:T) returned:T {
     copyRecordFields(returned, src, static SizeT(0));
 }
@@ -120,7 +106,7 @@ overload copyRecordFields(dest:T, src:T, static i) {
 // move constructor
 //
 
-[T | SafeRecord?(T)]
+[T | RegularRecord?(T)]
 overload move(src:T) returned:T {
     moveRecordFields(returned, src, static SizeT(0));
 }
@@ -141,7 +127,7 @@ overload moveRecordFields(dest:T, src:T, static i) {
 // destroy
 //
 
-[T | Record?(T)]
+[T | RegularRecord?(T)]
 overload destroy(a:T) {
     destroyRecordFields(a, static SizeT(0));
 }
@@ -162,7 +148,7 @@ overload destroyRecordFields (a:T, static i) {
 // assign
 //
 
-[T | SafeRecord?(T)]
+[T | RegularRecord?(T)]
 overload assign(dest:T, src:T) {
     assignRecordFields(dest, src, static SizeT(0));
 }
@@ -183,7 +169,7 @@ overload assignRecordFields(dest:T, src:T, static i) {
 // equals?
 //
 
-[T|Record?(T)]
+[T | RegularRecord?(T)]
 overload equals?(a:T, b:T) {
     return equalRecordFields?(a, b, static SizeT(0));
 }
@@ -206,7 +192,7 @@ overload equalRecordFields?(a:T, b:T, static i) {
 // lesser?
 //
 
-[T|Record?(T)]
+[T | RegularRecord?(T)]
 overload lesser?(a:T, b:T) {
     return lesserRecordFields?(a, b, static SizeT(0));
 }

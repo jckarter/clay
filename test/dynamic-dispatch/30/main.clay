@@ -29,6 +29,8 @@ record Displayable {
     display : CodePointer[Opaque,()];
 }
 
+overload RegularRecord?(static Displayable) = false;
+
 
 // primary constructor
 [T]

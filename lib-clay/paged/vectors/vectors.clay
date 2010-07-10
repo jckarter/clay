@@ -1,3 +1,4 @@
+
 import paged.*;
 import vectors.generic.*;
 
@@ -17,6 +18,8 @@ record Vector[T] {
 //
 // predicates
 //
+
+[T] overload RegularRecord?(static Vector[T]) = false;
 
 [T] overload ContiguousSequence?(static Vector[T]) = true; 
 

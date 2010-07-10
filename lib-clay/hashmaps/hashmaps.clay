@@ -7,7 +7,7 @@ record HashMap[K,V] {
 
 
 [K,V]
-overload SafeRecord?(static HashMap[K,V]) = false;
+overload RegularRecord?(static HashMap[K,V]) = false;
 
 alias NodePtr[K,V] = SharedPointer[Node[K,V]];
 
@@ -72,6 +72,17 @@ private cloneList(b:NodePtr[K,V]) {
 
 [K,V]
 overload move(a:HashMap[K,V]) = HashMap[K,V](move(a.buckets), a.size);
+
+
+
+//
+// destroy
+//
+
+[K,V]
+overload destroy(a:HashMap[K,V]) {
+    destroy(a.buckets);
+}
 
 
 

@@ -17,6 +17,8 @@ record String {
 // predicates
 //
 
+overload RegularRecord?(static String) = false;
+
 overload ContiguousSequence?(static String) = true;
 
 

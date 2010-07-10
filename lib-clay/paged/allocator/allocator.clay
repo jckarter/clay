@@ -200,8 +200,6 @@ record PagedPointer[T] {
     offset : SizeT;
 }
 
-[T] overload SafeType?(static PagedPointer[T]) = false;
-
 [T]
 overload PagedPointer[T]() = PagedPointer[T](SizeT(0));
 
