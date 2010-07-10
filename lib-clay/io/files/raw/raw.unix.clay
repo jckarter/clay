@@ -42,7 +42,8 @@ private openFlags(mode) {
     assert(false);
 }
 
-overload RawFile(path:String, mode:OpenMode) {
+[S | CCompatibleString?(S)]
+overload RawFile(path:S, mode:OpenMode) {
     var flags = openFlags(mode);
     var handle = Int();
     if (bitwiseAnd(flags, unix.O_CREAT) != 0)
@@ -54,7 +55,8 @@ overload RawFile(path:String, mode:OpenMode) {
     return RawFile(handle, true);
 }
 
-overload RawFile(path:String) = RawFile(path, READ);
+[S | CCompatibleString?(S)]
+overload RawFile(path:S) = RawFile(path, READ);
 
 overload destroy(x:RawFile) {
     if (x.owned)

@@ -252,22 +252,32 @@ overload bitwiseNot(a:A) = integerBitwiseNot(a);
 // parse numbers from strings
 //
 
-[I,S | Integer?(I) and String?(S)]
-overload I(s:S) = I(String(s));
+[S | String?(S)]
+overload Int8(s:S)  = parseInt8(s);
 
-overload Int8(s:String)  = parseInt8(s);
-overload Int16(s:String) = parseInt16(s);
-overload Int32(s:String) = parseInt32(s);
-overload Int64(s:String) = parseInt64(s);
+[S | String?(S)]
+overload Int16(s:S) = parseInt16(s);
 
-overload UInt8(s:String)  = parseUInt8(s);
-overload UInt16(s:String) = parseUInt16(s);
-overload UInt32(s:String) = parseUInt32(s);
-overload UInt64(s:String) = parseUInt64(s);
+[S | String?(S)]
+overload Int32(s:S) = parseInt32(s);
 
+[S | String?(S)]
+overload Int64(s:S) = parseInt64(s);
 
-[F,S | Float?(F) and String?(S)]
-overload F(s:S) = F(String(s));
+[S | String?(S)]
+overload UInt8(s:S)  = parseUInt8(s);
 
-overload Float32(s:String) = parseFloat32(s);
-overload Float64(s:String) = parseFloat64(s);
+[S | String?(S)]
+overload UInt16(s:S) = parseUInt16(s);
+
+[S | String?(S)]
+overload UInt32(s:S) = parseUInt32(s);
+
+[S | String?(S)]
+overload UInt64(s:S) = parseUInt64(s);
+
+[S | String?(S)]
+overload Float32(s:S) = parseFloat32(s);
+
+[S | String?(S)]
+overload Float64(s:S) = parseFloat64(s);

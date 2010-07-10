@@ -14,7 +14,7 @@ inlined assert(cond:Bool) {
         error("assertion failed");
 }
 
-inlined overload assert(cond:Bool, message:String) {
+inlined overload assert(cond:Bool, message) {
     if (not cond)
         error("assertion failed: ", message);
 }
