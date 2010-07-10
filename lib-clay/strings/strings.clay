@@ -1,4 +1,4 @@
-import libc;
+
 
 
 //
@@ -53,87 +53,16 @@ overload CCompatibleString?(static A) = true;
 // String
 //
 
-record String {
-    data : Pointer[Char];
-    size : SizeT;
-    owned : Bool;
-}
+alias String = Vector[Char];
 
 
 
 //
-// predicates
+// construct from sequences of bytes
 //
-
-overload RegularRecord?(static String) = false;
-
-overload ContiguousSequence?(static String) = true;
-
-
-
-//
-// default constructor
-//
-
-overload String() = String(null(Char), SizeT(0), false);
-
-
-
-//
-// construct from unsized sequence
-//
-
-[A | Sequence?(A) and (Char == SequenceElementType(A))]
-overload String(a:A) returned:String {
-    var v = Vector[Char]();
-    for (x in a)
-        push(v, x);
-    push(v, Char(0));
-    returned <-- String(v.data, size(v), true);
-    v <-- Vector[Char]();
-}
 
 [A | Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
 overload String(a:A) = String(map(Char, a));
-
-
-
-//
-// construct from sized sequence
-//
-
-private allocateStringData(a) {
-    var n = size(a);
-    var data = allocateMemory(Char, n+1);
-    var p = data;
-    for (x in a) {
-        p^ = x;
-        p += 1;
-    }
-    p^ = Char(0);
-    return data;
-}
-
-[A | SizedSequence?(A) and (Char == SequenceElementType(A))]
-overload String(a:A) {
-    var data = allocateStringData(a);
-    return String(data, size(a), true);
-}
-
-[A | SizedSequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
-overload String(a:A) = String(map(Char, a));
-
-
-
-//
-// constructor from rvalue vector
-//
-
-overload String(rvalue v:Vector[Char]) returned:String {
-    push(v, Char(0));
-    returned <-- String(v.data, size(v)-1, true);
-    v <-- Vector[Char]();
-}
 
 
 
@@ -142,84 +71,12 @@ overload String(rvalue v:Vector[Char]) returned:String {
 //
 
 [T | ByteSizedInteger?(T)]
-overload String(cstr : Pointer[T]) = String(stringRef(cstr));
+overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
 
 
 //
-// stringRef constructors
-//
-
-procedure stringRef;
-
-[A | ContiguousSequence?(A) and (Char == SequenceElementType(A))]
-overload stringRef(a:A) = String(&a[0], size(a), false);
-
-[A | ContiguousSequence?(A) and (ByteSizedInteger?(SequenceElementType(A)))]
-overload stringRef(a:A) = String(Pointer[Char](&a[0]), size(a), false);
-
-[T | ByteSizedInteger?(T)]
-overload stringRef(cstr : Pointer[T]) {
-    var n = libc.strlen(Pointer[CChar](cstr));
-    return String(Pointer[Char](cstr), n, false);
-}
-
-
-
-//
-// destroy
-//
-
-overload destroy(a:String) {
-    if (a.owned)
-        freeMemory(a.data);
-}
-
-
-
-//
-// move
-//
-
-overload move(a:String) returned:String {
-    if (a.owned) {
-        returned <-- String(a.data, a.size, true);
-        a <-- String();
-    }
-    else {
-        returned <-- a;
-    }
-}
-
-
-
-//
-// size, index
-//
-
-overload size(a:String) = a.size;
-
-[I | Integer?(I)]
-overload index(a:String, i:I) = ref (a.data + SizeT(i))^;
-
-
-
-//
-// coordinates and iteration
-//
-
-overload begin(a:String) = a.data;
-overload end(a:String) = a.data + a.size;
-
-overload iterator(a:String) = coordinateRange(begin(a), end(a));
-
-overload reverseIterator(a:String) =
-    reverseCoordinateRange(end(a), begin(a));
-
-
-
-//
-// equals?, lesser?
+// generic equals?, lesser?
 //
 
 [A,B | String?(A) and String?(B)]
@@ -267,9 +124,7 @@ overload lesser?(a:A, b:B) {
 //
 
 cstring(s:String) {
-    if (not s.owned) {
-        s.data = allocateStringData(s);
-        s.owned = true;
-    }
+    reserve(s, size(s)+1);
+    s[size(s)] = Char(0);
     return Pointer[Int8](s.data);
 }

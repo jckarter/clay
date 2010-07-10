@@ -1,78 +1,20 @@
 import paged.*;
 import strings;
 
+
 
 //
 // String
 //
 
-record String {
-    data : PagedPointer[Char];
-    size : SizeT;
-}
-
+alias String = Vector[Char];
 
 
 //
-// predicates
+// construct from sequences of bytes
 //
-
-overload RegularRecord?(static String) = false;
-
-overload ContiguousSequence?(static String) = true;
-
-
-
-//
-// default constructor
-//
-
-overload String() = String(nullPaged(Char), SizeT(0));
-
-
-
-//
-// construct from unsized sequence
-//
-
-[A | Sequence?(A) and (Char == SequenceElementType(A))]
-overload String(a:A) returned:String {
-    var v = Vector[Char]();
-    for (x in a)
-        push(v, x);
-    push(v, Char(0));
-    returned <-- String(v.data, size(v));
-    v <-- Vector[Char]();
-}
 
 [A | Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
-overload String(a:A) = String(map(Char, a));
-
-
-
-//
-// construct from sized sequence
-//
-
-private allocateStringData(a) {
-    var n = size(a);
-    var data = allocatePaged(Char, n+1);
-    var p = data;
-    for (x in a) {
-        p^ = x;
-        p += 1;
-    }
-    p^ = Char(0);
-    return data;
-}
-
-[A | SizedSequence?(A) and (Char == SequenceElementType(A))]
-overload String(a:A) {
-    var data = allocateStringData(a);
-    return String(data, size(a));
-}
-
-[A | SizedSequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
 overload String(a:A) = String(map(Char, a));
 
 
@@ -82,44 +24,16 @@ overload String(a:A) = String(map(Char, a));
 //
 
 [T | ByteSizedInteger?(T)]
-overload String(cstr : Pointer[T]) = String(strings.stringRef(cstr));
+overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
 
 
 //
-// destroy, move
+// cstring
 //
 
-overload destroy(a:String) {
-    freePaged(a.data);
+overload cstring(s:String) {
+    reserve(s, size(s) + 1);
+    s[size(s)] = Char(0);
+    return Pointer[Int8](&(begin(s)^));
 }
-
-overload move(a:String) returned:String {
-    returned <-- String(a.data, a.size);
-    a <-- String();
-}
-
-
-
-//
-// size, index
-//
-
-overload size(a:String) = a.size;
-
-[I | Integer?(I)]
-overload index(a:String, i:I) = ref (a.data + SizeT(i))^;
-
-
-
-//
-// coordinates and iteration
-//
-
-overload begin(a:String) = &a[0];
-overload end(a:String) = &a[0] + a.size;
-
-overload iterator(a:String) = coordinateRange(begin(a), end(a));
-
-overload reverseIterator(a:String) =
-    reverseCoordinateRange(end(a), begin(a));
