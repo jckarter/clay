@@ -410,6 +410,13 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
 
     case UNARY_OP : {
         UnaryOp *x = (UnaryOp *)expr.ptr();
+        if (x->op == ADDRESS_OF) {
+            PValuePtr pv = analyzeOne(x->expr, env);
+            if (!pv)
+                return NULL;
+            if (pv->isTemp)
+                error("can't take address of a temporary");
+        }
         if (!x->desugared)
             x->desugared = desugarUnaryOp(x);
         return analyzeExpr(x->desugared, env);
