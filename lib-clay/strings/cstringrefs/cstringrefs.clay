@@ -1,0 +1,65 @@
+
+import libc;
+
+
+//
+// CStringRef - null terminated string
+//
+
+record CStringRef {
+    ptr : Pointer[Int8];
+}
+
+
+
+//
+// predicates
+//
+
+overload ContiguousSequence?(static CStringRef) = true;
+
+
+
+//
+// constructors
+//
+
+[T | ByteSizedInteger?(T)]
+overload CStringRef(ptr : Pointer[T]) returned:CStringRef {
+    returned.ptr = Pointer[Int8](ptr);
+}
+
+overload CStringRef(ptr : Pointer[Char]) = CStringRef(Pointer[Int8](ptr));
+
+
+
+//
+// size, index
+//
+
+overload size(a:CStringRef) = SizeT(libc.strlen(a.ptr));
+
+[I | Integer?(I)]
+overload index(a:CStringRef, i:I) = ref (a.ptr + i)^;
+
+
+
+//
+// coordinates and iteration
+//
+
+overload begin(a:CStringRef) = Pointer[Char](a.ptr);
+overload end(a:CStringRef) = Pointer[Char](a.ptr + size(a));
+
+overload iterator(a:CStringRef) = coordinateRange(begin(a), end(a));
+
+overload reverseIterator(a:CStringRef) =
+    reverseCoordinateRange(end(a), begin(a));
+
+
+
+//
+// cstring
+//
+
+overload cstring(a:CStringRef) = a.ptr;
