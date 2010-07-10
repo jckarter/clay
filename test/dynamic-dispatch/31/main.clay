@@ -49,6 +49,8 @@ record Displayable {
     vtable : Pointer[DisplayableVTable];
 }
 
+overload RegularRecord?(static Displayable) = false;
+
 
 // constructor
 [T]

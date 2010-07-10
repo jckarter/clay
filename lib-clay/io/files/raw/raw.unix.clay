@@ -11,7 +11,8 @@ record RawFile {
     owned : Bool;
 }
 
-overload SafeRecord?(static RawFile) = false;
+
+overload RegularRecord?(static RawFile) = false;
 
 
 

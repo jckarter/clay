@@ -40,6 +40,14 @@ overload NamedScalar[T](fileName : strings.String, initial:T) {
     }
 }
 
+// disable copy-constructor, assignment
+
+[T]
+overload NamedScalar[T](src:NamedScalar[T]);
+
+[T]
+overload assign(dest:NamedScalar[T], src:NamedScalar[T]);
+
 
 
 //
