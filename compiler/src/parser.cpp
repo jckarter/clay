@@ -1684,6 +1684,9 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!topLevelVisibility(vis)) return false;
     bool inlined;
     if (!optInlined(inlined)) return false;
+    int p = save();
+    if (!keyword("procedure"))
+        restore(p);
     IdentifierPtr z;
     if (!identifier(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;

@@ -9,7 +9,7 @@ DottedName -> Identifier ("." Identifier)*
 ImportedItem -> Identifier ("as" Identifier)?
 
 
-TopLevelItem -> Record | Procedure | Overloadable | Overload
+TopLevelItem -> Record | Procedure | Overload
               | Enumeration | GlobalVariable
               | ExternalProcedure | ExternalVariable
               | GlobalAlias
@@ -19,8 +19,9 @@ PatternVars -> "[" comma_list(Identifier) "]"
 RecordField -> Identifier TypeSpec ";"
 TypeSpec -> ":" Pattern
 
-Procedure -> PatternVarsWithCond? "inlined"? Identifier Arguments
+Procedure -> PatternVarsWithCond? "inlined"? "procedure"? Identifier Arguments
              ReturnSpec? Body
+           | "procedure" Identifier ";"
 
 PatternVarsWithCond -> "[" comma_list(Identifier) Predicate? "]"
 Predicate -> "|" Expression
@@ -45,8 +46,6 @@ Type -> Expression
 Body -> "=" ReturnExpression ";"
       | Block
 
-Overloadable -> "overloadable" Identifier ";"
-
 Overload -> PatternVarsWithCond? "inlined"? "overload" Pattern Arguments
             ReturnSpec? Body
 
@@ -64,7 +63,7 @@ ExternalBody -> "=" Expression ";"
 
 ExternalVariable -> "external" Identifier TypeSpec ";"
 
-GlobalAlias -> "alias" Identifier "=" Expression ";"
+GlobalAlias -> "alias" Identifier PatternVars? "=" Expression ";"
 
 
 //
