@@ -272,6 +272,7 @@ struct FloatType;
 struct ArrayType;
 struct VecType;
 struct TupleType;
+struct UnionType;
 struct PointerType;
 struct CodePointerType;
 struct CCodePointerType;
@@ -398,6 +399,7 @@ typedef Pointer<FloatType> FloatTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<VecType> VecTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
+typedef Pointer<UnionType> UnionTypePtr;
 typedef Pointer<PointerType> PointerTypePtr;
 typedef Pointer<CodePointerType> CodePointerTypePtr;
 typedef Pointer<CCodePointerType> CCodePointerTypePtr;
@@ -1661,6 +1663,10 @@ enum PrimOpCode {
     PRIM_TupleElementOffset,
     PRIM_tupleRef,
 
+    PRIM_UnionP,
+    PRIM_Union,
+    PRIM_UnionMemberCount,
+
     PRIM_RecordP,
     PRIM_RecordFieldCount,
     PRIM_RecordFieldOffset,
@@ -1735,6 +1741,7 @@ enum TypeKind {
     ARRAY_TYPE,
     VEC_TYPE,
     TUPLE_TYPE,
+    UNION_TYPE,
     RECORD_TYPE,
     STATIC_TYPE,
     ENUM_TYPE,
@@ -1821,6 +1828,15 @@ struct TupleType : public Type {
           layout(NULL) {}
 };
 
+struct UnionType : public Type {
+    vector<TypePtr> memberTypes;
+    UnionType()
+        : Type(UNION_TYPE) {}
+    UnionType(const vector<TypePtr> &memberTypes)
+        : Type(UNION_TYPE), memberTypes(memberTypes)
+        {}
+};
+
 struct RecordType : public Type {
     RecordPtr record;
     vector<ObjectPtr> params;
@@ -1886,6 +1902,7 @@ TypePtr cCodePointerType(CallingConv callingConv,
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr vecType(TypePtr elementType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
+TypePtr unionType(const vector<TypePtr> &memberTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
 TypePtr staticType(ObjectPtr obj);
 TypePtr enumType(EnumerationPtr enumeration);

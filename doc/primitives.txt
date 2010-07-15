@@ -68,6 +68,10 @@ Tuple[T1, ..., Tn]
 [T,i] TupleElementOffset(static T, static i): SizeT
 [T|Tuple?(T)] tupleRef(a:T, static i)
 
+[T] Union?(static T):Bool
+Union[T1, ..., Tn]
+[T] UnionMemberCount(static T) : SizeT
+
 [R] Record?(static R):Bool
 [R] RecordFieldCount(static R):SizeT
 [R,i] RecordFieldOffset(static R, static i): SizeT

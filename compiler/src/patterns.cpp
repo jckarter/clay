@@ -102,6 +102,13 @@ static ObjectPtr primOpTuple() {
     return obj;
 }
 
+static ObjectPtr primOpUnion() {
+    static ObjectPtr obj;
+    if (!obj)
+        obj = primName("Union");
+    return obj;
+}
+
 static ObjectPtr primOpStatic() {
     static ObjectPtr obj;
     if (!obj)
@@ -155,6 +162,16 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             MultiPatternListPtr params = new MultiPatternList();
             for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
                 PatternPtr x = objectToPattern(tt->elementTypes[i].ptr());
+                params->items.push_back(x);
+            }
+            return new PatternStruct(head, params.ptr());
+        }
+        case UNION_TYPE : {
+            UnionType *ut = (UnionType *)t;
+            ObjectPtr head = primOpUnion();
+            MultiPatternListPtr params = new MultiPatternList();
+            for (unsigned i = 0; i < ut->memberTypes.size(); ++i) {
+                PatternPtr x = objectToPattern(ut->memberTypes[i].ptr());
                 params->items.push_back(x);
             }
             return new PatternStruct(head, params.ptr());

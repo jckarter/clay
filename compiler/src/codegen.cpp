@@ -2590,6 +2590,14 @@ static TupleTypePtr valueToTupleType(MultiCValuePtr args, unsigned index)
     return (TupleType *)t.ptr();
 }
 
+static UnionTypePtr valueToUnionType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != UNION_TYPE)
+        argumentError(index, "expecting an union type");
+    return (UnionType *)t.ptr();
+}
+
 static RecordTypePtr valueToRecordType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
@@ -2602,7 +2610,7 @@ static EnumTypePtr valueToEnumType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != ENUM_TYPE)
-        argumentError(index, "expecting a tuple type");
+        argumentError(index, "expecting an enum type");
     return (EnumType *)t.ptr();
 }
 
@@ -3528,6 +3536,31 @@ void codegenPrimOp(PrimOpPtr x,
         CValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(tt->elementTypes[i]));
         llvmBuilder->CreateStore(ptr, out0->llValue);
+        break;
+    }
+
+    case PRIM_UnionP : {
+        ensureArity(args, 1);
+        bool isUnionType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == UNION_TYPE)
+                isUnionType = true;
+        }
+        ValueHolderPtr vh = boolToValueHolder(isUnionType);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_Union :
+        error("Union type constructor cannot be called");
+
+    case PRIM_UnionMemberCount : {
+        ensureArity(args, 1);
+        UnionTypePtr t = valueToUnionType(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(t->memberTypes.size());
+        codegenStaticObject(vh.ptr(), ctx, out);
         break;
     }
 

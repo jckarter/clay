@@ -6,6 +6,7 @@ vector<OverloadPtr> cCodePointerOverloads;
 vector<OverloadPtr> arrayOverloads;
 vector<OverloadPtr> vecOverloads;
 vector<OverloadPtr> tupleOverloads;
+vector<OverloadPtr> unionOverloads;
 vector<OverloadPtr> staticOverloads;
 
 vector<OverloadPtr> typeOverloads;
@@ -22,6 +23,7 @@ bool isOverloadablePrimOp(ObjectPtr x)
     case PRIM_Array :
     case PRIM_Vec :
     case PRIM_Tuple :
+    case PRIM_Union :
     case PRIM_Static :
         return true;
     default :
@@ -50,6 +52,9 @@ vector<OverloadPtr> &primOpOverloads(PrimOpPtr x)
         break;
     case PRIM_Tuple :
         ptr = &tupleOverloads;
+        break;
+    case PRIM_Union :
+        ptr = &unionOverloads;
         break;
     case PRIM_Static :
         ptr = &staticOverloads;

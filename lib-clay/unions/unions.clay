@@ -1,0 +1,13 @@
+
+
+//
+// constructors, destroy
+//
+
+[U | Union?(U)]
+overload U() U {
+}
+
+[U | Union?(U)]
+overload destroy(x:U) {
+}
