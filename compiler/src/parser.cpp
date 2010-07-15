@@ -1562,6 +1562,45 @@ static bool record(TopLevelItemPtr &x) {
 
 
 //
+// variant, instance
+//
+
+static bool variant(TopLevelItemPtr &x) {
+    LocationPtr location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
+    if (!keyword("variant")) return false;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
+    vector<IdentifierPtr> params;
+    IdentifierPtr varParam;
+    if (!optStaticParams(params, varParam)) return false;
+    if (!symbol(";")) return false;
+    x = new Variant(name, vis, params, varParam);
+    x->location = location;
+    return true;
+}
+
+static bool instance(TopLevelItemPtr &x) {
+    LocationPtr location = currentLocation();
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
+    if (!keyword("instance")) return false;
+    ExprPtr target;
+    if (!pattern(target)) return false;
+    if (!symbol("=")) return false;
+    ExprPtr member;
+    if (!expression(member)) return false;
+    if (!symbol(";")) return false;
+    x = new Instance(patternVars, predicate, target, member);
+    x->location = location;
+    return true;
+}
+
+
+
+//
 // returnSpec
 //
 
@@ -2101,6 +2140,8 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     int p = save();
     TopLevelItemPtr y;
     if (record(y)) goto success;
+    if (restore(p), variant(y)) goto success;
+    if (restore(p), instance(y)) goto success;
     if (restore(p), procedure(y)) goto success;
     if (restore(p), procedureWithBody(x)) goto success2;
     if (restore(p), llvmProcedure(x)) goto success2;

@@ -132,6 +132,8 @@ enum ObjectKind {
     RECORD,
     RECORD_BODY,
     RECORD_FIELD,
+    VARIANT,
+    INSTANCE,
     OVERLOAD,
     PROCEDURE,
     ENUMERATION,
@@ -239,6 +241,8 @@ struct TopLevelItem;
 struct Record;
 struct RecordBody;
 struct RecordField;
+struct Variant;
+struct Instance;
 struct Overload;
 struct Procedure;
 struct Enumeration;
@@ -363,6 +367,8 @@ typedef Pointer<TopLevelItem> TopLevelItemPtr;
 typedef Pointer<Record> RecordPtr;
 typedef Pointer<RecordBody> RecordBodyPtr;
 typedef Pointer<RecordField> RecordFieldPtr;
+typedef Pointer<Variant> VariantPtr;
+typedef Pointer<Instance> InstancePtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Procedure> ProcedurePtr;
 typedef Pointer<Enumeration> EnumerationPtr;
@@ -1201,6 +1207,35 @@ struct RecordField : public ANode {
     ExprPtr type;
     RecordField(IdentifierPtr name, ExprPtr type)
         : ANode(RECORD_FIELD), name(name), type(type) {}
+};
+
+struct Variant : public TopLevelItem {
+    vector<IdentifierPtr> params;
+    IdentifierPtr varParam;
+
+    Variant(Visibility visibility)
+        : TopLevelItem(VARIANT, visibility) {}
+    Variant(IdentifierPtr name,
+            Visibility visibility,
+            const vector<IdentifierPtr> &params,
+            IdentifierPtr varParam)
+        : TopLevelItem(VARIANT, name, visibility),
+          params(params), varParam(varParam) {}
+};
+
+struct Instance : public TopLevelItem {
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+    ExprPtr target;
+    ExprPtr member;
+
+    Instance(const vector<PatternVar> &patternVars,
+             ExprPtr predicate,
+             ExprPtr target,
+             ExprPtr member)
+        : TopLevelItem(INSTANCE), patternVars(patternVars),
+          predicate(predicate), target(target), member(member)
+        {}
 };
 
 struct Overload : public TopLevelItem {
