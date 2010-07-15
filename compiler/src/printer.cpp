@@ -485,6 +485,20 @@ static void print(ostream &out, const Object *x) {
         out << "RecordField(" << y->name << ", " << y->type << ")";
         break;
     }
+
+    case VARIANT : {
+        const Variant *y = (const Variant *)x;
+        out << "Variant(" << y->name << ", " << y->params;
+        out << ", " << y->varParam << ")";
+        break;
+    }
+    case INSTANCE : {
+        const Instance *y = (const Instance *)x;
+        out << "Instance(" << y->patternVars << ", " << y->predicate;
+        out << ", " << y->target << ", " << y->member << ")";
+        break;
+    }
+
     case OVERLOAD : {
         const Overload *y = (const Overload *)x;
         out << "Overload(" << y->target << ", " << y->code << ", "

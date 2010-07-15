@@ -113,7 +113,8 @@ static std::set<string> *keywords = NULL;
 
 static void initKeywords() {
     const char *s[] =
-        {"public", "private", "import", "as", "record",
+        {"public", "private", "import", "as",
+         "record", "variant", "instance",
          "procedure", "overload", "external", "alias",
          "static", "inlined", "lvalue", "rvalue",
          "enum", "var", "ref", "forward",

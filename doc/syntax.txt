@@ -9,7 +9,8 @@ DottedName -> Identifier ("." Identifier)*
 ImportedItem -> Identifier ("as" Identifier)?
 
 
-TopLevelItem -> Record | Procedure | Overload
+TopLevelItem -> Record | Variant | Instance
+              | Procedure | Overload
               | Enumeration | GlobalVariable
               | ExternalProcedure | ExternalVariable
               | GlobalAlias
@@ -18,6 +19,10 @@ Record -> "record" Identifier PatternVars? "{" RecordField* "}"
 PatternVars -> "[" comma_list(Identifier) "]"
 RecordField -> Identifier TypeSpec ";"
 TypeSpec -> ":" Pattern
+
+Variant -> "variant" Identifier PatternVars? ";"
+
+Instance -> PatternVarsWithCond? "instance" Pattern "=" Type ";"
 
 Procedure -> PatternVarsWithCond? "inlined"? "procedure"? Identifier Arguments
              ReturnSpec? Body
