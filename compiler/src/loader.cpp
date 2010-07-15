@@ -517,6 +517,10 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TupleElementOffset);
     PRIMITIVE(tupleRef);
 
+    PRIMITIVE(UnionP);
+    PRIMITIVE(Union);
+    PRIMITIVE(UnionMemberCount);
+
     PRIMITIVE(RecordP);
     PRIMITIVE(RecordFieldCount);
     PRIMITIVE(RecordFieldOffset);

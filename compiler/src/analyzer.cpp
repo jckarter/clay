@@ -772,6 +772,7 @@ static bool isTypeConstructor(ObjectPtr x) {
         case PRIM_Array :
         case PRIM_Vec :
         case PRIM_Tuple :
+        case PRIM_Union :
         case PRIM_Static :
             return true;
         default :
@@ -886,6 +887,13 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             for (unsigned i = 0; i < args->size(); ++i)
                 types.push_back(staticToType(args, i));
             return tupleType(types);
+        }
+
+        case PRIM_Union : {
+            vector<TypePtr> types;
+            for (unsigned i = 0; i < args->size(); ++i)
+                types.push_back(staticToType(args, i));
+            return unionType(types);
         }
 
         case PRIM_Static : {
@@ -1746,6 +1754,15 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(1, "tuple index out of range");
         return new MultiPValue(new PValue(t->elementTypes[i], false));
     }
+
+    case PRIM_UnionP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_Union :
+        error("Union type constructor cannot be called");
+
+    case PRIM_UnionMemberCount :
+        return new MultiPValue(new PValue(cSizeTType, true));
 
     case PRIM_RecordP :
         return new MultiPValue(new PValue(boolType, true));

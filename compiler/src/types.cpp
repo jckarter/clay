@@ -22,6 +22,7 @@ static vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
 static vector<vector<ArrayTypePtr> > arrayTypes;
 static vector<vector<VecTypePtr> > vecTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
+static vector<vector<UnionTypePtr> > unionTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
 static vector<vector<StaticTypePtr> > staticTypes;
 
@@ -59,6 +60,7 @@ void initTypes() {
     arrayTypes.resize(N);
     vecTypes.resize(N);
     tupleTypes.resize(N);
+    unionTypes.resize(N);
     recordTypes.resize(N);
     staticTypes.resize(N);
 }
@@ -231,6 +233,26 @@ TypePtr tupleType(const vector<TypePtr> &elementTypes) {
     }
     TupleTypePtr t = new TupleType(elementTypes);
     tupleTypes[h].push_back(t);
+    return t.ptr();
+}
+
+TypePtr unionType(const vector<TypePtr> &memberTypes) {
+    int h = 0;
+    vector<TypePtr>::const_iterator mi, mend;
+    for (mi = memberTypes.begin(), mend = memberTypes.end();
+         mi != mend; ++mi) {
+        h += pointerHash(mi->ptr());
+    }
+    h &= memberTypes.size() - 1;
+    vector<UnionTypePtr>::iterator i, end;
+    for (i = unionTypes[h].begin(), end = unionTypes[h].end();
+         i != end; ++i) {
+        UnionType *t = i->ptr();
+        if (t->memberTypes == memberTypes)
+            return t;
+    }
+    UnionTypePtr t = new UnionType(memberTypes);
+    unionTypes[h].push_back(t);
     return t.ptr();
 }
 
@@ -522,6 +544,20 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         llvmModule->addTypeName(out.str(), llType);
         return llType;
     }
+    case UNION_TYPE : {
+        UnionType *x = (UnionType *)t.ptr();
+        vector<const llvm::Type *> llTypes;
+        for (unsigned i = 0; i < x->memberTypes.size(); ++i)
+            llTypes.push_back(llvmType(x->memberTypes[i]));
+        if (x->memberTypes.empty())
+            llTypes.push_back(llvmIntType(8));
+        const llvm::Type *llType =
+            llvm::UnionType::get(&llTypes[0], llTypes.size());
+        ostringstream out;
+        out << t;
+        llvmModule->addTypeName(out.str(), llType);
+        return llType;
+    }
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
         llvm::OpaqueType *opaque =
@@ -645,6 +681,11 @@ void typePrint(ostream &out, TypePtr t) {
     case TUPLE_TYPE : {
         TupleType *x = (TupleType *)t.ptr();
         out << "Tuple" << x->elementTypes;
+        break;
+    }
+    case UNION_TYPE : {
+        UnionType *x = (UnionType *)t.ptr();
+        out << "Union" << x->memberTypes;
         break;
     }
     case RECORD_TYPE : {

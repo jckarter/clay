@@ -1959,6 +1959,14 @@ static TupleTypePtr valueToTupleType(MultiEValuePtr args, unsigned index)
     return (TupleType *)t.ptr();
 }
 
+static UnionTypePtr valueToUnionType(MultiEValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != UNION_TYPE)
+        argumentError(index, "expecting an union type");
+    return (UnionType *)t.ptr();
+}
+
 static RecordTypePtr valueToRecordType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
@@ -3180,6 +3188,33 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(tt->elementTypes[i]));
         *((void **)out0->addr) = (void *)ptr;
+        break;
+    }
+
+    case PRIM_UnionP : {
+        ensureArity(args, 1);
+        bool isUnionType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == UNION_TYPE)
+                isUnionType = true;
+        }
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isUnionType ? 1 : 0;
+        break;
+    }
+
+    case PRIM_Union :
+        error("Union type constructor cannot be called");
+
+    case PRIM_UnionMemberCount : {
+        ensureArity(args, 1);
+        UnionTypePtr t = valueToUnionType(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(t->memberTypes.size());
+        evalStaticObject(vh.ptr(), out);
         break;
     }
 

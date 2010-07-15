@@ -1,0 +1,19 @@
+
+[T]
+castRef(static T, x) = ref Pointer[T](&x)^;
+
+main() {
+    alias T = Union[Double, UInt64, Array[UInt8,8]];
+    println("sizeof union = ", TypeSize(T));
+
+    var x = T();
+    castRef(Double, x) = 1.0;
+
+    println("as Double = ", castRef(Double, x));
+    println("as UInt64 = ", castRef(UInt64, x));
+
+    print("as Array[UInt8,8] = ");
+    for (y in castRef(Array[UInt8,8], x))
+        print(y, " ");
+    println();
+}
