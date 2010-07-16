@@ -194,3 +194,13 @@ private lesserTupleElements?(a:T, b:T, static i) {
 overload lesserTupleElements?(a:T, b:T, static i) {
     return false;
 }
+
+
+
+//
+// staticIndex
+//
+
+[T,i | Tuple?(T)]
+overload staticIndex(a:T, static i) =
+    ref tupleRef(a, static i);

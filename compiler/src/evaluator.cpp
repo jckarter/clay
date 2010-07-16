@@ -794,13 +794,13 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
-    case TUPLE_REF : {
-        TupleRef *x = (TupleRef *)expr.ptr();
+    case STATIC_INDEXING : {
+        StaticIndexing *x = (StaticIndexing *)expr.ptr();
         EValuePtr ev = evalOneAsRef(x->expr, env);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
         MultiEValuePtr args = new MultiEValue(ev);
         args->add(staticEValue(vh.ptr()));
-        evalCallValue(kernelEValue("tupleRef"), args, out);
+        evalCallValue(kernelEValue("staticIndex"), args, out);
         break;
     }
 

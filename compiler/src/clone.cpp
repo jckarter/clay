@@ -111,9 +111,9 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
-    case TUPLE_REF : {
-        TupleRef *y = (TupleRef *)x.ptr();
-        out = new TupleRef(clone(y->expr), y->index);
+    case STATIC_INDEXING : {
+        StaticIndexing *y = (StaticIndexing *)x.ptr();
+        out = new StaticIndexing(clone(y->expr), y->index);
         break;
     }
 

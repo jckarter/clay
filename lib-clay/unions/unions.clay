@@ -11,3 +11,28 @@ overload U() U {
 [U | Union?(U)]
 overload destroy(x:U) {
 }
+
+
+
+//
+// staticIndex
+//
+
+[U,i | Union?(U)]
+overload staticIndex(x:U, static i) {
+    alias T = nthValue(static i, ...UnionMemberTypes(U));
+    return ref Pointer[T](&x)^;
+}
+
+[...T]
+private UnionMemberTypes(static Union[...T]) = ...T;
+
+
+private procedure nthValue;
+
+[i]
+overload nthValue(static i, first, ...rest) =
+    nthValue(static i-1, ...rest);
+
+[i | i == 0]
+overload nthValue(static i, first, ...rest) = first;

@@ -324,7 +324,6 @@ static llvm::Value *createCall(llvm::Value *llCallable,
                                vector<llvm::Value *>::iterator argEnd,
                                CodegenContextPtr ctx) 
 {  
-    // We don't have a context
     assert(ctx.ptr());
     if (!exceptionsEnabled)
         return llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
@@ -732,13 +731,13 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
-    case TUPLE_REF : {
-        TupleRef *x = (TupleRef *)expr.ptr();
+    case STATIC_INDEXING : {
+        StaticIndexing *x = (StaticIndexing *)expr.ptr();
         CValuePtr cv = codegenOneAsRef(x->expr, env, ctx);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
         MultiCValuePtr args = new MultiCValue(cv);
         args->add(staticCValue(vh.ptr()));
-        codegenCallValue(kernelCValue("tupleRef"), args, ctx, out);
+        codegenCallValue(kernelCValue("staticIndex"), args, ctx, out);
         break;
     }
 
