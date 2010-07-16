@@ -330,8 +330,8 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case TUPLE_REF : {
-        TupleRef *y = (TupleRef *)x.ptr();
+    case STATIC_INDEXING : {
+        StaticIndexing *y = (StaticIndexing *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
         break;
     }

@@ -202,7 +202,7 @@ struct Array;
 struct Indexing;
 struct Call;
 struct FieldRef;
-struct TupleRef;
+struct StaticIndexing;
 struct UnaryOp;
 struct BinaryOp;
 struct And;
@@ -329,7 +329,7 @@ typedef Pointer<Array> ArrayPtr;
 typedef Pointer<Indexing> IndexingPtr;
 typedef Pointer<Call> CallPtr;
 typedef Pointer<FieldRef> FieldRefPtr;
-typedef Pointer<TupleRef> TupleRefPtr;
+typedef Pointer<StaticIndexing> StaticIndexingPtr;
 typedef Pointer<UnaryOp> UnaryOpPtr;
 typedef Pointer<BinaryOp> BinaryOpPtr;
 typedef Pointer<And> AndPtr;
@@ -638,7 +638,7 @@ enum ExprKind {
     INDEXING,
     CALL,
     FIELD_REF,
-    TUPLE_REF,
+    STATIC_INDEXING,
     UNARY_OP,
     BINARY_OP,
     AND,
@@ -749,11 +749,11 @@ struct FieldRef : public Expr {
         : Expr(FIELD_REF), expr(expr), name(name) {}
 };
 
-struct TupleRef : public Expr {
+struct StaticIndexing : public Expr {
     ExprPtr expr;
     size_t index;
-    TupleRef(ExprPtr expr, size_t index)
-        : Expr(TUPLE_REF), expr(expr), index(index) {}
+    StaticIndexing(ExprPtr expr, size_t index)
+        : Expr(STATIC_INDEXING), expr(expr), index(index) {}
 };
 
 enum UnaryOpKind {

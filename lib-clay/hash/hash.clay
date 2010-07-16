@@ -40,7 +40,7 @@ overload hash(x:T) = hashTuple(x, static 0);
 
 [T,i]
 private hashTuple(x:T, static i) =
-    13*hash(tupleRef(x, static i)) + 7*hashTuple(x, static i+1);
+    13*hash(staticIndex(x, static i)) + 7*hashTuple(x, static i+1);
 
 [T,i | i == TupleElementCount(T)]
 overload hashTuple(x:T, static i) = 0;
@@ -56,7 +56,7 @@ overload hash(x:T) = hashRecord(x, static 0);
 
 [T,i]
 private hashRecord(x:T, static i) =
-    13*hash(recordFieldRef(x, static i)) + 7*hashRecord(x, static i+1);
+    13*hash(staticIndex(x, static i)) + 7*hashRecord(x, static i+1);
 
 [T,i | i == RecordFieldCount(T)]
 overload hashRecord(x:T, static i) = 0;

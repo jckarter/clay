@@ -333,7 +333,7 @@ static bool fieldRefSuffix(ExprPtr &x) {
     return true;
 }
 
-static bool tupleRefSuffix(ExprPtr &x) {
+static bool staticIndexingSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol(".")) return false;
     TokenPtr t;
@@ -343,7 +343,7 @@ static bool tupleRefSuffix(ExprPtr &x) {
     char *end = b;
     unsigned long c = strtoul(b, &end, 0);
     assert(*end == 0);
-    x = new TupleRef(NULL, (size_t)c);
+    x = new StaticIndexing(NULL, (size_t)c);
     x->location = location;
     return true;
 }
@@ -361,7 +361,7 @@ static bool suffix(ExprPtr &x) {
     if (indexingSuffix(x)) return true;
     if (restore(p), callSuffix(x)) return true;
     if (restore(p), fieldRefSuffix(x)) return true;
-    if (restore(p), tupleRefSuffix(x)) return true;
+    if (restore(p), staticIndexingSuffix(x)) return true;
     if (restore(p), dereferenceSuffix(x)) return true;
     return false;
 }
@@ -383,8 +383,8 @@ static void setSuffixBase(Expr *a, ExprPtr base) {
         b->expr = base;
         break;
     }
-    case TUPLE_REF : {
-        TupleRef *b = (TupleRef *)a;
+    case STATIC_INDEXING : {
+        StaticIndexing *b = (StaticIndexing *)a;
         b->expr = base;
         break;
     }

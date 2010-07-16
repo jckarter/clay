@@ -444,6 +444,7 @@ static bool isPatternHead(ObjectPtr x)
         case PRIM_Array :
         case PRIM_Vec :
         case PRIM_Tuple :
+        case PRIM_Union :
         case PRIM_Static :
             return true;
         default :

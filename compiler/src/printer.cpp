@@ -148,9 +148,9 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "FieldRef(" << y->expr << ", " << y->name << ")";
         break;
     }
-    case TUPLE_REF : {
-        const TupleRef *y = (const TupleRef *)x;
-        out << "TupleRef(" << y->expr << ", " << y->index << ")";
+    case STATIC_INDEXING : {
+        const StaticIndexing *y = (const StaticIndexing *)x;
+        out << "StaticIndexing(" << y->expr << ", " << y->index << ")";
         break;
     }
     case UNARY_OP : {

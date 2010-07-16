@@ -216,10 +216,14 @@ overload lesserRecordFields?(a:T, b:T, static i) {
 
 
 //
-// fieldRef
+// fieldRef, staticIndex
 //
 
 [T, FIELD | Record?(T)]
 overload fieldRef(x:T, static FIELD) {
     return ref recordFieldRefByName(x, static FIELD);
 }
+
+[T, i | Record?(T)]
+overload staticIndex(x:T, static i) =
+    ref recordFieldRef(x, static i);

@@ -43,6 +43,7 @@ procedure bitwiseNot;
 procedure dereference;
 procedure call;
 procedure fieldRef;
+procedure staticIndex;
 
 procedure unpack;
 procedure unpackRef;

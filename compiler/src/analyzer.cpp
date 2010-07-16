@@ -397,15 +397,15 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         return analyzeFieldRefExpr(x->expr, x->name, env);
     }
 
-    case TUPLE_REF : {
-        TupleRef *x = (TupleRef *)expr.ptr();
+    case STATIC_INDEXING : {
+        StaticIndexing *x = (StaticIndexing *)expr.ptr();
         PValuePtr pv = analyzeOne(x->expr, env);
         if (!pv)
             return NULL;
         MultiPValuePtr args = new MultiPValue(pv);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
         args->values.push_back(staticPValue(vh.ptr()));
-        return analyzeCallValue(kernelPValue("tupleRef"), args);
+        return analyzeCallValue(kernelPValue("staticIndex"), args);
     }
 
     case UNARY_OP : {
