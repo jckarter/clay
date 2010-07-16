@@ -1,16 +1,32 @@
 
+record Point {
+    x : Int;
+    y : Int;
+}
+
+alias T = Union[Double,
+                UInt64,
+                Array[UInt8,8],
+                Point];
+
 main() {
-    alias T = Union[Double, UInt64, Array[UInt8,8]];
     println("sizeof union = ", TypeSize(T));
 
-    var x = T();
-    x.0 = 1.0;
+    var u = T();
+    u.0 = 1.0;
 
-    println("as Double = ", x.0);
-    println("as UInt64 = ", x.1);
+    println("as Double = ", u.0);
+    println("as UInt64 = ", u.1);
 
     print("as Array[UInt8,8] = ");
-    for (y in x.2)
-        print(y, " ");
+    for (x in u.2)
+        print(x, " ");
     println();
+
+    println("as Point = ", u.3);
+}
+
+
+overload printTo(stream, p:Point) {
+    printTo(stream, "Point(", p.x, ", ", p.y, ")");
 }
