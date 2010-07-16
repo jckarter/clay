@@ -131,7 +131,7 @@ void codegenPrimOp(PrimOpPtr x,
 static CValuePtr staticCValue(ObjectPtr obj)
 {
     TypePtr t = staticType(obj);
-    return new CValue(t, NULL);
+    return codegenAllocValue(t);
 }
 
 static CValuePtr kernelCValue(const string &name)
@@ -1501,7 +1501,7 @@ void codegenCallValue(CValuePtr callable,
 
     if (callable->type->typeKind != STATIC_TYPE) {
         MultiCValuePtr args2 = new MultiCValue(callable);
-        args2->add(args2);
+        args2->add(args);
         codegenCallValue(kernelCValue("call"), args2, ctx, out);
         return;
     }
