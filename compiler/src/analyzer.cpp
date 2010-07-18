@@ -47,6 +47,7 @@ static TypePtr objectType(ObjectPtr x)
     case PRIM_OP :
     case PROCEDURE :
     case RECORD :
+    case VARIANT :
     case MODULE_HOLDER :
     case IDENTIFIER :
         return staticType(x);
@@ -246,6 +247,14 @@ static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index)
     if (t->typeKind != RECORD_TYPE)
         argumentError(index, "expecting a record");
     return (RecordType *)t.ptr();
+}
+
+static VariantTypePtr variantTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != VARIANT_TYPE)
+        argumentError(index, "expecting a variant");
+    return (VariantType *)t.ptr();
 }
 
 static PValuePtr staticPValue(ObjectPtr x)
@@ -547,6 +556,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
     case PRIM_OP :
     case PROCEDURE :
     case RECORD :
+    case VARIANT :
     case MODULE_HOLDER :
     case IDENTIFIER : {
         TypePtr t = staticType(x);
@@ -782,6 +792,9 @@ static bool isTypeConstructor(ObjectPtr x) {
     else if (x->objKind == RECORD) {
         return true;
     }
+    else if (x->objKind == VARIANT) {
+        return true;
+    }
     else {
         return false;
     }
@@ -916,6 +929,17 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             ensureArity(args, x->params.size());
         }
         return recordType(x, args->values);
+    }
+    else if (constructor->objKind == VARIANT) {
+        VariantPtr x = (Variant *)constructor.ptr();
+        if (x->varParam.ptr()) {
+            if (args->size() < x->params.size())
+                arityError2(x->params.size(), args->size());
+        }
+        else {
+            ensureArity(args, x->params.size());
+        }
+        return variantType(x, args->values);
     }
     else {
         assert(false);
@@ -1059,6 +1083,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
 
     case TYPE :
     case RECORD :
+    case VARIANT :
     case PROCEDURE :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
@@ -1113,6 +1138,7 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
 
     case TYPE :
     case RECORD :
+    case VARIANT :
     case PROCEDURE :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
@@ -1615,6 +1641,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
+        case VARIANT :
         case PROCEDURE :
             break;
         case PRIM_OP :
@@ -1667,6 +1694,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
+        case VARIANT :
         case PROCEDURE :
             break;
         case PRIM_OP :
@@ -1803,6 +1831,19 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(1, "field not in record");
         const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
         return new MultiPValue(new PValue(fieldTypes[fi->second], false));
+    }
+
+    case PRIM_VariantP :
+        return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_VariantMemberIndex :
+        return new MultiPValue(new PValue(cIntType, true));
+
+    case PRIM_variantRepr : {
+        ensureArity(args, 1);
+        VariantTypePtr t = variantTypeOfValue(args, 0);
+        TypePtr reprType = variantReprType(t);
+        return new MultiPValue(new PValue(reprType, false));
     }
 
     case PRIM_Static :

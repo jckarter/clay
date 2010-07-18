@@ -141,12 +141,22 @@ static void installGlobals(ModulePtr m) {
         switch (x->objKind) {
         case RECORD : {
             Record *y = (Record *)x;
-            Object *z = y;
+            ObjectPtr z = y;
             if (y->params.empty() && !y->varParam) {
                 TypePtr t = recordType(y, vector<ObjectPtr>());
                 z = t.ptr();
             }
-            addGlobal(m, y->name, y->visibility, z);
+            addGlobal(m, y->name, y->visibility, z.ptr());
+            break;
+        }
+        case VARIANT : {
+            Variant *y = (Variant *)x;
+            ObjectPtr z = y;
+            if (y->params.empty() && !y->varParam) {
+                TypePtr t = variantType(y, vector<ObjectPtr>());
+                z = t.ptr();
+            }
+            addGlobal(m, y->name, y->visibility, z.ptr());
             break;
         }
         case ENUMERATION : {
@@ -313,7 +323,7 @@ ModulePtr loadedModule(const string &module) {
 
 
 //
-// initOverload, initStaticOverload, initModule
+// initOverload, initVariantInstance, initModule
 //
 
 static void initOverload(OverloadPtr x) {
@@ -346,6 +356,11 @@ static void initOverload(OverloadPtr x) {
             z->overloads.insert(z->overloads.begin(), x);
             break;
         }
+        case VARIANT : {
+            Variant *z = (Variant *)y.ptr();
+            z->overloads.insert(z->overloads.begin(), x);
+            break;
+        }
         case TYPE : {
             addTypeOverload(x);
             break;
@@ -364,6 +379,41 @@ static void initOverload(OverloadPtr x) {
     }
 }
 
+static void initVariantInstance(InstancePtr x) {
+    EnvPtr env = new Env(x->env);
+    const vector<PatternVar> &pvars = x->patternVars;
+    for (unsigned i = 0; i < pvars.size(); ++i) {
+        if (pvars[i].isMulti) {
+            MultiPatternCellPtr cell = new MultiPatternCell(NULL);
+            addLocal(env, pvars[i].name, cell.ptr());
+        }
+        else {
+            PatternCellPtr cell = new PatternCell(NULL);
+            addLocal(env, pvars[i].name, cell.ptr());
+        }
+    }
+    PatternPtr pattern = evaluateOnePattern(x->target, env);
+    ObjectPtr y = derefDeep(pattern);
+    if (y.ptr()) {
+        if (y->objKind != TYPE)
+            error(x->target, "not a variant type");
+        Type *z = (Type *)y.ptr();
+        if (z->typeKind != VARIANT_TYPE)
+            error(x->target, "not a variant type");
+        VariantType *vt = (VariantType *)z;
+        vt->variant->instances.push_back(x);
+    }
+    else {
+        if (pattern->kind != PATTERN_STRUCT)
+            error(x->target, "not a variant type");
+        PatternStruct *ps = (PatternStruct *)pattern.ptr();
+        if (ps->head->objKind != VARIANT)
+            error(x->target, "not a variant type");
+        Variant *v = (Variant *)ps->head.ptr();
+        v->instances.push_back(x);
+    }
+}
+
 static void initModule(ModulePtr m) {
     if (m->initialized) return;
     m->initialized = true;
@@ -378,6 +428,9 @@ static void initModule(ModulePtr m) {
         switch (obj->objKind) {
         case OVERLOAD :
             initOverload((Overload *)obj);
+            break;
+        case INSTANCE :
+            initVariantInstance((Instance *)obj);
             break;
         case GLOBAL_VARIABLE : {
             GlobalVariable *x = (GlobalVariable *)obj;
@@ -527,6 +580,10 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(RecordFieldIndex);
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
+
+    PRIMITIVE(VariantP);
+    PRIMITIVE(VariantMemberIndex);
+    PRIMITIVE(variantRepr);
 
     PRIMITIVE(Static);
     PRIMITIVE(StaticName);

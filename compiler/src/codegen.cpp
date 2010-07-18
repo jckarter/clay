@@ -958,6 +958,7 @@ void codegenStaticObject(ObjectPtr x,
     case PRIM_OP :
     case PROCEDURE :
     case RECORD :
+    case VARIANT :
     case MODULE_HOLDER :
     case IDENTIFIER : {
         assert(out->size() == 1);
@@ -1448,6 +1449,7 @@ void codegenCallExpr(ExprPtr callable,
 
     case TYPE :
     case RECORD :
+    case VARIANT :
     case PROCEDURE :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
@@ -1513,6 +1515,7 @@ void codegenCallValue(CValuePtr callable,
 
     case TYPE :
     case RECORD :
+    case VARIANT :
     case PROCEDURE :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
@@ -2508,7 +2511,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
 // valueToStatic, valueToStaticSizeT
 // valueToType, valueToNumericType, valueToIntegerType,
 // valueToPointerLikeType, valueToTupleType, valueToRecordType,
-// valueToEnumType, valueToIdentifier
+// valueToVariantType, valueToEnumType, valueToIdentifier
 //
 
 static ObjectPtr valueToStatic(CValuePtr cv)
@@ -2601,8 +2604,16 @@ static RecordTypePtr valueToRecordType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != RECORD_TYPE)
-        argumentError(index, "expecting a tuple type");
+        argumentError(index, "expecting a record type");
     return (RecordType *)t.ptr();
+}
+
+static VariantTypePtr valueToVariantType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != VARIANT_TYPE)
+        argumentError(index, "expecting a variant type");
+    return (VariantType *)t.ptr();
 }
 
 static EnumTypePtr valueToEnumType(MultiCValuePtr args, unsigned index)
@@ -2625,7 +2636,7 @@ static IdentifierPtr valueToIdentifier(MultiCValuePtr args, unsigned index)
 
 //
 // numericValue, integerValue, pointerValue, pointerLikeValue,
-// arrayValue, tupleValue, recordValue, enumValue
+// arrayValue, tupleValue, recordValue, variantValue, enumValue
 //
 
 static llvm::Value *numericValue(MultiCValuePtr args, unsigned index,
@@ -2752,6 +2763,22 @@ static llvm::Value *recordValue(MultiCValuePtr args, unsigned index,
     return cv->llValue;
 }
 
+static llvm::Value *variantValue(MultiCValuePtr args, unsigned index,
+                                 VariantTypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (cv->type->typeKind != VARIANT_TYPE)
+            argumentError(index, "expecting a value of variant type");
+        type = (VariantType *)cv->type.ptr();
+    }
+    return cv->llValue;
+}
+
 static llvm::Value *enumValue(MultiCValuePtr args, unsigned index,
                               EnumTypePtr &type)
 {
@@ -2811,6 +2838,7 @@ void codegenPrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
+        case VARIANT :
         case PROCEDURE :
             break;
         default :
@@ -3327,6 +3355,7 @@ void codegenPrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
+        case VARIANT :
         case PROCEDURE :
             break;
         case PRIM_OP :
@@ -3394,6 +3423,7 @@ void codegenPrimOp(PrimOpPtr x,
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
+        case VARIANT :
         case PROCEDURE :
             break;
         case PRIM_OP :
@@ -3646,6 +3676,49 @@ void codegenPrimOp(PrimOpPtr x,
         CValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(fieldTypes[index]));
         llvmBuilder->CreateStore(ptr, out0->llValue);
+        break;
+    }
+
+    case PRIM_VariantP : {
+        ensureArity(args, 1);
+        bool isVariantType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == VARIANT_TYPE)
+                isVariantType = true;
+        }
+        ValueHolderPtr vh = boolToValueHolder(isVariantType);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_VariantMemberIndex : {
+        ensureArity(args, 2);
+        VariantTypePtr vt = valueToVariantType(args, 0);
+        TypePtr mt = valueToType(args, 1);
+        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        int index = -1;
+        for (unsigned i = 0; i < memberTypes.size(); ++i) {
+            if (memberTypes[i] == mt) {
+                index = (int)i;
+                break;
+            }
+        }
+        ValueHolderPtr vh = intToValueHolder(index);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_variantRepr : {
+        ensureArity(args, 1);
+        VariantTypePtr vt;
+        llvm::Value *vvar = variantValue(args, 0, vt);
+        TypePtr reprType = variantReprType(vt);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(reprType));
+        llvmBuilder->CreateStore(vvar, out0->llValue);
         break;
     }
 

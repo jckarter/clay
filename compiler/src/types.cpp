@@ -24,6 +24,7 @@ static vector<vector<VecTypePtr> > vecTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<UnionTypePtr> > unionTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
+static vector<vector<VariantTypePtr> > variantTypes;
 static vector<vector<StaticTypePtr> > staticTypes;
 
 void initTypes() {
@@ -62,6 +63,7 @@ void initTypes() {
     tupleTypes.resize(N);
     unionTypes.resize(N);
     recordTypes.resize(N);
+    variantTypes.resize(N);
     staticTypes.resize(N);
 }
 
@@ -276,6 +278,24 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
     return t.ptr();
 }
 
+TypePtr variantType(VariantPtr variant, const vector<ObjectPtr> &params) {
+    int h = pointerHash(variant.ptr());
+    for (unsigned i = 0; i < params.size(); ++i)
+        h += objectHash(params[i]);
+    h &= variantTypes.size() - 1;
+    vector<VariantTypePtr> &bucket = variantTypes[h];
+    for (unsigned i = 0; i < bucket.size(); ++i) {
+        VariantType *t = bucket[i].ptr();
+        if ((t->variant == variant) && objectVectorEquals(t->params, params))
+            return t;
+    }
+    VariantTypePtr t = new VariantType(variant);
+    for (unsigned i = 0; i < params.size(); ++i)
+        t->params.push_back(params[i]);
+    bucket.push_back(t);
+    return t.ptr();
+}
+
 TypePtr staticType(ObjectPtr obj)
 {
     int h = objectHash(obj);
@@ -393,6 +413,93 @@ const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t) {
     if (!t->fieldsInitialized)
         initializeRecordFields(t);
     return t->fieldIndexMap;
+}
+
+
+
+//
+// variantMemberTypes, variantReprType
+//
+
+static RecordPtr getVariantReprRecord() {
+    static RecordPtr rec;
+    if (!rec) {
+        ObjectPtr obj = kernelName("VariantRepr");
+        if (obj->objKind != RECORD)
+            error("lib-clay error: VariantRepr is not a record");
+        rec = (Record *)obj.ptr();
+    }
+    return rec;
+}
+
+static void initializeVariantType(VariantTypePtr t) {
+    assert(!t->initialized);
+
+    const vector<InstancePtr> &instances = t->variant->instances;
+    for (unsigned i = 0; i < instances.size(); ++i) {
+        InstancePtr x = instances[i];
+        vector<PatternCellPtr> cells;
+        vector<MultiPatternCellPtr> multiCells;
+        const vector<PatternVar> &pvars = x->patternVars;
+        EnvPtr patternEnv = new Env(x->env);
+        for (unsigned i = 0; i < pvars.size(); ++i) {
+            if (pvars[i].isMulti) {
+                MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
+                multiCells.push_back(multiCell);
+                cells.push_back(NULL);
+                addLocal(patternEnv, pvars[i].name, multiCell.ptr());
+            }
+            else {
+                PatternCellPtr cell = new PatternCell(NULL);
+                cells.push_back(cell);
+                multiCells.push_back(NULL);
+                addLocal(patternEnv, pvars[i].name, cell.ptr());
+            }
+        }
+        PatternPtr pattern = evaluateOnePattern(x->target, patternEnv);
+        if (!unifyPatternObj(pattern, t.ptr()))
+            continue;
+        EnvPtr staticEnv = new Env(x->env);
+        for (unsigned i = 0; i < pvars.size(); ++i) {
+            if (pvars[i].isMulti) {
+                MultiStaticPtr ms = derefDeep(multiCells[i].ptr());
+                if (!ms)
+                    error(pvars[i].name, "unbound pattern variable");
+                addLocal(staticEnv, pvars[i].name, ms.ptr());
+            }
+            else {
+                ObjectPtr v = derefDeep(cells[i].ptr());
+                if (!v)
+                    error(pvars[i].name, "unbound pattern variable");
+                addLocal(staticEnv, pvars[i].name, v.ptr());
+            }
+        }
+        if (x->predicate.ptr())
+            if (!evaluateBool(x->predicate, staticEnv))
+                continue;
+        TypePtr memberType = evaluateType(x->member, staticEnv);
+        t->memberTypes.push_back(memberType);
+    }
+
+    RecordPtr reprRecord = getVariantReprRecord();
+    vector<ObjectPtr> params;
+    for (unsigned i = 0; i < t->memberTypes.size(); ++i)
+        params.push_back(t->memberTypes[i].ptr());
+    t->reprType = recordType(reprRecord, params);
+
+    t->initialized = true;
+}
+
+const vector<TypePtr> &variantMemberTypes(VariantTypePtr t) {
+    if (!t->initialized)
+        initializeVariantType(t);
+    return t->memberTypes;
+}
+
+TypePtr variantReprType(VariantTypePtr t) {
+    if (!t->initialized)
+        initializeVariantType(t);
+    return t->reprType;
 }
 
 
@@ -579,6 +686,10 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         llvmModule->addTypeName(out.str(), llType);
         return llType;
     }
+    case VARIANT_TYPE : {
+        VariantType *x = (VariantType *)t.ptr();
+        return llvmType(variantReprType(x));
+    }
     case STATIC_TYPE : {
         vector<const llvm::Type *> llTypes;
         llTypes.push_back(llvmIntType(8));
@@ -691,6 +802,16 @@ void typePrint(ostream &out, TypePtr t) {
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
         out << x->record->name->str;
+        if (!x->params.empty()) {
+            out << "[";
+            printNameList(out, x->params);
+            out << "]";
+        }
+        break;
+    }
+    case VARIANT_TYPE : {
+        VariantType *x = (VariantType *)t.ptr();
+        out << x->variant->name->str;
         if (!x->params.empty()) {
             out << "[";
             printNameList(out, x->params);

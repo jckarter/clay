@@ -1,0 +1,78 @@
+
+record Square {
+    side : Double;
+}
+
+record Circle {
+    radius : Double;
+}
+
+variant Shape;
+instance Shape = Square;
+instance Shape = Circle;
+
+
+overload Shape(src:Shape) returned:Shape {
+    ref destRepr = variantRepr(returned);
+    ref srcRepr = variantRepr(src);
+    var tag = srcRepr.tag;
+    destRepr.tag = tag;
+    if (tag == 0)
+        destRepr.data.0 <-- srcRepr.data.0;
+    else if (tag == 1)
+        destRepr.data.1 <-- srcRepr.data.1;
+    else
+        assert(false, "invalid shape");
+}
+
+overload destroy(x:Shape) {
+    ref repr = variantRepr(x);
+    var tag = repr.tag;
+    if (tag == 0)
+        destroy(repr.data.0);
+    else if (tag == 1)
+        destroy(repr.data.1);
+    else
+        assert(false, "invalid shape");
+}
+
+overload move(src:Shape) returned:Shape {
+    ref destRepr = variantRepr(returned);
+    ref srcRepr = variantRepr(src);
+    var tag = srcRepr.tag;
+    destRepr.tag <-- tag;
+    if (tag == 0)
+        destRepr.data.0 <-- move(srcRepr.data.0);
+    else if (tag == 1)
+        destRepr.data.1 <-- move(srcRepr.data.1);
+    else
+        assert(false, "invalid shape");
+}
+
+
+procedure show;
+
+overload show(x:Square) {
+    println("Square(", x.side, ")");
+}
+
+overload show(x:Circle) {
+    println("Circle(", x.radius, ")");
+}
+
+overload show(x:Shape) {
+    if (variantIs?(x, Square))
+        show(variantRef(x, Square));
+    else if (variantIs?(x, Circle))
+        show(variantRef(x, Circle));
+    else
+        assert(false, "invalid shape");
+}
+
+main() {
+    var v = Vector[Shape]();
+    push(v, Shape(Circle(10.1)));
+    push(v, Shape(Square(20.2)));
+    for (x in v)
+        show(x);
+}

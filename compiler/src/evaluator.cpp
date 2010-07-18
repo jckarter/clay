@@ -988,6 +988,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
     case PRIM_OP :
     case PROCEDURE :
     case RECORD :
+    case VARIANT :
     case MODULE_HOLDER :
     case IDENTIFIER : {
         assert(out->size() == 1);
@@ -1217,6 +1218,7 @@ void evalCallExpr(ExprPtr callable,
 
     case TYPE :
     case RECORD :
+    case VARIANT :
     case PROCEDURE :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
@@ -1281,6 +1283,7 @@ void evalCallValue(EValuePtr callable,
 
     case TYPE :
     case RECORD :
+    case VARIANT :
     case PROCEDURE :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
@@ -1878,7 +1881,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 // valueToStatic, valueToStaticSizeT
 // valueToType, valueToNumericType, valueToIntegerType,
 // valueToPointerLikeType, valueToTupleType, valueToRecordType,
-// valueToEnumType, valueToIdentifier
+// valueToVariantType, valueToEnumType, valueToIdentifier
 //
 
 static ObjectPtr valueToStatic(EValuePtr ev)
@@ -1971,15 +1974,23 @@ static RecordTypePtr valueToRecordType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != RECORD_TYPE)
-        argumentError(index, "expecting a tuple type");
+        argumentError(index, "expecting a record type");
     return (RecordType *)t.ptr();
+}
+
+static VariantTypePtr valueToVariantType(MultiEValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != VARIANT_TYPE)
+        argumentError(index, "expecting a variant type");
+    return (VariantType *)t.ptr();
 }
 
 static EnumTypePtr valueToEnumType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != ENUM_TYPE)
-        argumentError(index, "expecting a tuple type");
+        argumentError(index, "expecting an enum type");
     return (EnumType *)t.ptr();
 }
 
@@ -1995,7 +2006,7 @@ static IdentifierPtr valueToIdentifier(MultiEValuePtr args, unsigned index)
 
 //
 // numericValue, integerValue, pointerValue, pointerLikeValue,
-// arrayValue, tupleValue, recordValue, enumValue
+// arrayValue, tupleValue, recordValue, variantValue, enumValue
 //
 
 static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
@@ -2118,6 +2129,22 @@ static EValuePtr recordValue(MultiEValuePtr args, unsigned index,
         if (ev->type->typeKind != RECORD_TYPE)
             argumentError(index, "expecting a value of record type");
         type = (RecordType *)ev->type.ptr();
+    }
+    return ev;
+}
+
+static EValuePtr variantValue(MultiEValuePtr args, unsigned index,
+                              VariantTypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != (Type *)type.ptr())
+            argumentError(index, "argument type mismatch");
+    }
+    else {
+        if (ev->type->typeKind != VARIANT_TYPE)
+            argumentError(index, "expecting a value of variant type");
+        type = (VariantType *)ev->type.ptr();
     }
     return ev;
 }
@@ -2632,6 +2659,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
+        case VARIANT :
         case PROCEDURE :
             break;
         default :
@@ -2977,6 +3005,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
+        case VARIANT :
         case PROCEDURE :
             break;
         case PRIM_OP :
@@ -3047,6 +3076,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
+        case VARIANT :
         case PROCEDURE :
             break;
         case PRIM_OP :
@@ -3305,6 +3335,53 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(fieldTypes[index]));
         *((void **)out0->addr) = (void *)ptr;
+        break;
+    }
+
+    case PRIM_VariantP : {
+        ensureArity(args, 1);
+        bool isVariantType = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == VARIANT_TYPE)
+                isVariantType = true;
+        }
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        *((char *)out0->addr) = isVariantType ? 1 : 0;
+        break;
+    }
+
+    case PRIM_VariantMemberIndex : {
+        ensureArity(args, 2);
+        VariantTypePtr vt = valueToVariantType(args, 0);
+        TypePtr mt = valueToType(args, 1);
+        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        int index = -1;
+        for (unsigned i = 0; i < memberTypes.size(); ++i) {
+            if (memberTypes[i] == mt) {
+                index = (int)i;
+                break;
+            }
+        }
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == cIntType);
+        *((int *)out0->addr) = index;
+        break;
+    }
+
+    case PRIM_variantRepr : {
+        ensureArity(args, 1);
+        VariantTypePtr vt;
+        EValuePtr evar = variantValue(args, 0, vt);
+        TypePtr reprType = variantReprType(vt);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(reprType));
+        *((void **)out0->addr) = (void *)evar->addr;
         break;
     }
 

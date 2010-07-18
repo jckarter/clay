@@ -21,6 +21,8 @@ static void initCallable(ObjectPtr x)
             initBuiltinConstructor(y);
         break;
     }
+    case VARIANT :
+        break;
     case PROCEDURE :
         break;
     case PRIM_OP : {
@@ -42,6 +44,10 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
     }
     case RECORD : {
         Record *y = (Record *)x.ptr();
+        return y->overloads;
+    }
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
         return y->overloads;
     }
     case PROCEDURE : {

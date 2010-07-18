@@ -79,6 +79,10 @@ Union[T1, ..., Tn]
 [R,i] recordFieldRef(a:R, static i)
 [R,name] recordFieldRefByName(a:R, static name)
 
+[T] Variant?(static T) Bool
+[T,M] VariantMemberIndex(static T, static M) Int
+[T] variantRepr(x:T) ref VariantRepr[Int, Union[...]]
+
 Static[A]
 StaticName
 
