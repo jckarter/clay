@@ -277,6 +277,7 @@ struct PointerType;
 struct CodePointerType;
 struct CCodePointerType;
 struct RecordType;
+struct VariantType;
 struct StaticType;
 struct EnumType;
 
@@ -404,6 +405,7 @@ typedef Pointer<PointerType> PointerTypePtr;
 typedef Pointer<CodePointerType> CodePointerTypePtr;
 typedef Pointer<CCodePointerType> CCodePointerTypePtr;
 typedef Pointer<RecordType> RecordTypePtr;
+typedef Pointer<VariantType> VariantTypePtr;
 typedef Pointer<StaticType> StaticTypePtr;
 typedef Pointer<EnumType> EnumTypePtr;
 
@@ -1215,6 +1217,10 @@ struct Variant : public TopLevelItem {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
 
+    vector<InstancePtr> instances;
+
+    vector<OverloadPtr> overloads;
+
     Variant(Visibility visibility)
         : TopLevelItem(VARIANT, visibility) {}
     Variant(IdentifierPtr name,
@@ -1674,6 +1680,10 @@ enum PrimOpCode {
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
 
+    PRIM_VariantP,
+    PRIM_VariantMemberIndex,
+    PRIM_variantRepr,
+
     PRIM_Static,
     PRIM_StaticName,
 
@@ -1743,6 +1753,7 @@ enum TypeKind {
     TUPLE_TYPE,
     UNION_TYPE,
     RECORD_TYPE,
+    VARIANT_TYPE,
     STATIC_TYPE,
     ENUM_TYPE,
 };
@@ -1855,6 +1866,22 @@ struct RecordType : public Type {
           fieldsInitialized(false), layout(NULL) {}
 };
 
+struct VariantType : public Type {
+    VariantPtr variant;
+    vector<ObjectPtr> params;
+
+    bool initialized;
+    vector<TypePtr> memberTypes;
+    TypePtr reprType;
+
+    VariantType(VariantPtr variant)
+        : Type(VARIANT_TYPE), variant(variant),
+          initialized(false) {}
+    VariantType(VariantPtr variant, const vector<ObjectPtr> &params)
+        : Type(VARIANT_TYPE), variant(variant), params(params),
+          initialized(false) {}
+};
+
 struct StaticType : public Type {
     ObjectPtr obj;
     StaticType(ObjectPtr obj)
@@ -1904,6 +1931,7 @@ TypePtr vecType(TypePtr elementType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr unionType(const vector<TypePtr> &memberTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
+TypePtr variantType(VariantPtr variant, const vector<ObjectPtr> &params);
 TypePtr staticType(ObjectPtr obj);
 TypePtr enumType(EnumerationPtr enumeration);
 
@@ -1911,6 +1939,9 @@ bool isPrimitiveType(TypePtr t);
 
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
 const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t);
+
+const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
+TypePtr variantReprType(VariantTypePtr t);
 
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
 const llvm::StructLayout *recordTypeLayout(RecordType *t);

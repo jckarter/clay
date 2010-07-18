@@ -1,0 +1,54 @@
+
+record VariantRepr[...T] {
+    tag : Int;
+    data : Union[...T];
+}
+
+VariantMember?(V, M) = (VariantMemberIndex(V, M) >= 0);
+
+[V,T | Variant?(V) and VariantMember?(V, T)]
+inlined overload V(lvalue x:T) returned:V {
+    ref repr = variantRepr(returned);
+    alias index = VariantMemberIndex(V, T);
+    repr.tag <-- index;
+    staticIndex(repr.data, static index) <-- x;
+}
+
+[V,T | Variant?(V) and VariantMember?(V, T)]
+inlined overload V(rvalue x:T) returned:V {
+    ref repr = variantRepr(returned);
+    alias index = VariantMemberIndex(V, T);
+    repr.tag <-- index;
+    staticIndex(repr.data, static index) <-- move(x);
+}
+
+[V,T | Variant?(V) and VariantMember?(V, T)]
+inlined overload T(lvalue x:V) returned:T {
+    ref repr = variantRepr(x);
+    alias index = VariantMemberIndex(V, T);
+    assert(repr.tag == index, "invalid cast");
+    returned <-- staticIndex(repr.data, static index);
+}
+
+[V,T | Variant?(V) and VariantMember?(V, T)]
+inlined overload T(rvalue x:V) returned:T {
+    ref repr = variantRepr(x);
+    alias index = VariantMemberIndex(V, T);
+    assert(repr.tag == index, "invalid cast");
+    returned <-- move(staticIndex(repr.data, static index));
+}
+
+[V,T | Variant?(V) and VariantMember?(V, T)]
+variantRef(x:V, static T) {
+    ref repr = variantRepr(x);
+    alias index = VariantMemberIndex(V, T);
+    assert(repr.tag == index, "invalid cast");
+    return ref staticIndex(repr.data, static index);
+}
+
+[V,T | Variant?(V) and VariantMember?(V, T)]
+variantIs?(x:V, static T) {
+    ref repr = variantRepr(x);
+    alias index = VariantMemberIndex(V, T);
+    return repr.tag == index;
+}

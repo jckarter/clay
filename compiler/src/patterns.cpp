@@ -193,6 +193,16 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             }
             return new PatternStruct(head, params.ptr());
         }
+        case VARIANT_TYPE : {
+            VariantType *vt = (VariantType *)t;
+            ObjectPtr head = vt->variant.ptr();
+            MultiPatternListPtr params = new MultiPatternList();
+            for (unsigned i = 0; i < vt->params.size(); ++i) {
+                PatternPtr x = objectToPattern(vt->params[i]);
+                params->items.push_back(x);
+            }
+            return new PatternStruct(head, params.ptr());
+        }
         default :
             return new PatternCell(obj);
         }
@@ -453,6 +463,7 @@ static bool isPatternHead(ObjectPtr x)
         assert(false);
     }
     case RECORD :
+    case VARIANT :
         return true;
     default :
         return false;
