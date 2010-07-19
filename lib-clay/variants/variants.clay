@@ -1,15 +1,35 @@
 
+
+
+//
+// VariantRepr
+//
+
 record VariantRepr[...T] {
     tag : Int;
     data : Union[...T];
 }
 
-VariantMember?(V, M) = (VariantMemberIndex(V, M) >= 0);
+
+
+//
+// VariantMember?
+//
+
+[V,M | Variant?(V)]
+VariantMember?(static V, static M) =
+    VariantMemberIndex(V, M) < VariantMemberCount(V);
+
+
+
+//
+// construct from value of member type
+//
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
 inlined overload V(lvalue x:T) returned:V {
     ref repr = variantRepr(returned);
-    alias index = VariantMemberIndex(V, T);
+    alias index = Int(VariantMemberIndex(V, T));
     repr.tag <-- index;
     staticIndex(repr.data, static index) <-- x;
 }
@@ -17,31 +37,121 @@ inlined overload V(lvalue x:T) returned:V {
 [V,T | Variant?(V) and VariantMember?(V, T)]
 inlined overload V(rvalue x:T) returned:V {
     ref repr = variantRepr(returned);
-    alias index = VariantMemberIndex(V, T);
+    alias index = Int(VariantMemberIndex(V, T));
     repr.tag <-- index;
     staticIndex(repr.data, static index) <-- move(x);
 }
 
-[V,T | Variant?(V) and VariantMember?(V, T)]
-inlined overload T(lvalue x:V) returned:T {
-    ref repr = variantRepr(x);
-    alias index = VariantMemberIndex(V, T);
-    assert(repr.tag == index, "invalid cast");
-    returned <-- staticIndex(repr.data, static index);
+
+
+//
+//
+// copy constructor
+//
+
+[V | Variant?(V)]
+overload V(src:V) returned:V {
+    ref destRepr = variantRepr(returned);
+    ref srcRepr = variantRepr(src);
+    var tag = srcRepr.tag;
+    destRepr.tag = tag;
+    alias n = Int(VariantMemberCount(V));
+    taggedCopy(tag, destRepr.data, srcRepr.data, static 0, static n);
 }
 
-[V,T | Variant?(V) and VariantMember?(V, T)]
-inlined overload T(rvalue x:V) returned:T {
-    ref repr = variantRepr(x);
-    alias index = VariantMemberIndex(V, T);
-    assert(repr.tag == index, "invalid cast");
-    returned <-- move(staticIndex(repr.data, static index));
+[V | Variant?(V)]
+overload V(rvalue src:V) = move(src);
+
+[i,n]
+private taggedCopy(tag, destData, srcData, static i, static n) {
+    if (tag == i) {
+        ref dest = staticIndex(destData, static i);
+        ref src = staticIndex(srcData, static i);
+        dest <-- src;
+    }
+    else {
+        taggedMove(tag, destData, srcData, static i+1, static n);
+    }
 }
 
-[V,T | Variant?(V) and VariantMember?(V, T)]
-variantRef(x:V, static T) {
+[i,n | i == n]
+overload taggedCopy(tag, destData, srcData, static i, static n) {
+    error("invalid variant, tag = ", tag);
+}
+
+
+
+//
+// move
+//
+
+[V | Variant?(V)]
+overload move(src:V) returned:V {
+    ref destRepr = variantRepr(returned);
+    ref srcRepr = variantRepr(src);
+    var tag = srcRepr.tag;
+    destRepr.tag = tag;
+    alias n = Int(VariantMemberCount(V));
+    taggedMove(tag, destRepr.data, srcRepr.data, static 0, static n);
+}
+
+[i,n]
+private taggedMove(tag, destData, srcData, static i, static n) {
+    if (tag == i) {
+        ref dest = staticIndex(destData, static i);
+        ref src = staticIndex(srcData, static i);
+        dest <-- move(src);
+    }
+    else {
+        taggedMove(tag, destData, srcData, static i+1, static n);
+    }
+}
+
+[i,n | i == n]
+overload taggedMove(tag, destData, srcData, static i, static n) {
+    error("invalid variant, tag = ", tag);
+}
+
+
+
+//
+// destroy
+//
+
+[V | Variant?(V)]
+overload destroy(x:V) {
     ref repr = variantRepr(x);
-    alias index = VariantMemberIndex(V, T);
+    var tag = repr.tag;
+    alias n = Int(VariantMemberCount(V));
+    taggedDestroy(tag, repr.data, static 0, static n);
+}
+
+[i,n]
+private taggedDestroy(tag, data, static i, static n) {
+    if (tag == i) {
+        ref dest = staticIndex(data, static i);
+        destroy(dest);
+    }
+    else {
+        taggedDestroy(tag, data, static i+1, static n);
+    }
+}
+
+[i,n | i == n]
+overload taggedDestroy(tag, data, static i, static n) {
+    error("invalid variant, tag = ", tag);
+}
+
+
+
+//
+// variantAs, variantIs?
+//
+
+[V,T | Variant?(V) and VariantMember?(V, T)]
+variantAs(x:V, static T) {
+    ref repr = variantRepr(x);
+    alias index = Int(VariantMemberIndex(V, T));
     assert(repr.tag == index, "invalid cast");
     return ref staticIndex(repr.data, static index);
 }
@@ -49,6 +159,6 @@ variantRef(x:V, static T) {
 [V,T | Variant?(V) and VariantMember?(V, T)]
 variantIs?(x:V, static T) {
     ref repr = variantRepr(x);
-    alias index = VariantMemberIndex(V, T);
+    alias index = Int(VariantMemberIndex(V, T));
     return repr.tag == index;
 }
