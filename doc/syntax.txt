@@ -20,7 +20,9 @@ PatternVars -> "[" comma_list(Identifier) "]"
 RecordField -> Identifier TypeSpec ";"
 TypeSpec -> ":" Pattern
 
-Variant -> "variant" Identifier PatternVars? ";"
+Variant -> "variant" Identifier PatternVars? ("=" DefaultInstances)? ";"
+
+DefaultInstances -> Type ("|" Type)*
 
 Instance -> PatternVarsWithCond? "instance" Pattern "=" Type ";"
 

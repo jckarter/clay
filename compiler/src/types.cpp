@@ -435,6 +435,30 @@ static RecordPtr getVariantReprRecord() {
 static void initializeVariantType(VariantTypePtr t) {
     assert(!t->initialized);
 
+    EnvPtr variantEnv = new Env(t->variant->env);
+    {
+        const vector<IdentifierPtr> &params = t->variant->params;
+        IdentifierPtr varParam = t->variant->varParam;
+        assert(params.size() <= t->params.size());
+        for (unsigned j = 0; j < params.size(); ++j)
+            addLocal(variantEnv, params[j], t->params[j]);
+        if (varParam.ptr()) {
+            MultiStaticPtr ms = new MultiStatic();
+            for (unsigned j = params.size(); j < t->params.size(); ++j)
+                ms->add(t->params[j]);
+            addLocal(variantEnv, varParam, ms.ptr());
+        }
+        else {
+            assert(params.size() == t->params.size());
+        }
+    }
+    const vector<ExprPtr> &defaultInstances = t->variant->defaultInstances;
+    for (unsigned i = 0; i < defaultInstances.size(); ++i) {
+        ExprPtr x = defaultInstances[i];
+        TypePtr memberType = evaluateType(x, variantEnv);
+        t->memberTypes.push_back(memberType);
+    }
+
     const vector<InstancePtr> &instances = t->variant->instances;
     for (unsigned i = 0; i < instances.size(); ++i) {
         InstancePtr x = instances[i];
@@ -442,36 +466,36 @@ static void initializeVariantType(VariantTypePtr t) {
         vector<MultiPatternCellPtr> multiCells;
         const vector<PatternVar> &pvars = x->patternVars;
         EnvPtr patternEnv = new Env(x->env);
-        for (unsigned i = 0; i < pvars.size(); ++i) {
-            if (pvars[i].isMulti) {
+        for (unsigned j = 0; j < pvars.size(); ++j) {
+            if (pvars[j].isMulti) {
                 MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
                 multiCells.push_back(multiCell);
                 cells.push_back(NULL);
-                addLocal(patternEnv, pvars[i].name, multiCell.ptr());
+                addLocal(patternEnv, pvars[j].name, multiCell.ptr());
             }
             else {
                 PatternCellPtr cell = new PatternCell(NULL);
                 cells.push_back(cell);
                 multiCells.push_back(NULL);
-                addLocal(patternEnv, pvars[i].name, cell.ptr());
+                addLocal(patternEnv, pvars[j].name, cell.ptr());
             }
         }
         PatternPtr pattern = evaluateOnePattern(x->target, patternEnv);
         if (!unifyPatternObj(pattern, t.ptr()))
             continue;
         EnvPtr staticEnv = new Env(x->env);
-        for (unsigned i = 0; i < pvars.size(); ++i) {
-            if (pvars[i].isMulti) {
-                MultiStaticPtr ms = derefDeep(multiCells[i].ptr());
+        for (unsigned j = 0; j < pvars.size(); ++j) {
+            if (pvars[j].isMulti) {
+                MultiStaticPtr ms = derefDeep(multiCells[j].ptr());
                 if (!ms)
-                    error(pvars[i].name, "unbound pattern variable");
-                addLocal(staticEnv, pvars[i].name, ms.ptr());
+                    error(pvars[j].name, "unbound pattern variable");
+                addLocal(staticEnv, pvars[j].name, ms.ptr());
             }
             else {
-                ObjectPtr v = derefDeep(cells[i].ptr());
+                ObjectPtr v = derefDeep(cells[j].ptr());
                 if (!v)
-                    error(pvars[i].name, "unbound pattern variable");
-                addLocal(staticEnv, pvars[i].name, v.ptr());
+                    error(pvars[j].name, "unbound pattern variable");
+                addLocal(staticEnv, pvars[j].name, v.ptr());
             }
         }
         if (x->predicate.ptr())
