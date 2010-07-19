@@ -203,4 +203,4 @@ overload lesserTupleElements?(a:T, b:T, static i) {
 
 [T,i | Tuple?(T)]
 overload staticIndex(a:T, static i) =
-    ref tupleRef(a, static i);
+    ref tupleRef(a, static SizeT(i));
