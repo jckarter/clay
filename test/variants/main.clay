@@ -7,9 +7,7 @@ record Circle {
     radius : Double;
 }
 
-variant Shape;
-instance Shape = Square;
-instance Shape = Circle;
+variant Shape = Square | Circle;
 
 procedure show;
 overload show(x:Square) { println("Square(", x.side, ")"); }

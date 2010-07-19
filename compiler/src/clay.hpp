@@ -1216,6 +1216,7 @@ struct RecordField : public ANode {
 struct Variant : public TopLevelItem {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
+    vector<ExprPtr> defaultInstances;
 
     vector<InstancePtr> instances;
 
@@ -1226,9 +1227,11 @@ struct Variant : public TopLevelItem {
     Variant(IdentifierPtr name,
             Visibility visibility,
             const vector<IdentifierPtr> &params,
-            IdentifierPtr varParam)
+            IdentifierPtr varParam,
+            const vector<ExprPtr> &defaultInstances)
         : TopLevelItem(VARIANT, name, visibility),
-          params(params), varParam(varParam) {}
+          params(params), varParam(varParam),
+          defaultInstances(defaultInstances) {}
 };
 
 struct Instance : public TopLevelItem {
