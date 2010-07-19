@@ -3359,17 +3359,29 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         VariantTypePtr vt = valueToVariantType(args, 0);
         TypePtr mt = valueToType(args, 1);
         const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
-        int index = -1;
+        size_t index = (size_t)-1;
         for (unsigned i = 0; i < memberTypes.size(); ++i) {
             if (memberTypes[i] == mt) {
-                index = (int)i;
+                index = i;
                 break;
             }
         }
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == cIntType);
-        *((int *)out0->addr) = index;
+        assert(out0->type == cSizeTType);
+        *((size_t *)out0->addr) = index;
+        break;
+    }
+
+    case PRIM_VariantMemberCount : {
+        ensureArity(args, 1);
+        VariantTypePtr vt = valueToVariantType(args, 0);
+        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        size_t size = memberTypes.size();
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == cSizeTType);
+        *((size_t *)out0->addr) = size;
         break;
     }
 

@@ -1837,7 +1837,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_VariantMemberIndex :
-        return new MultiPValue(new PValue(cIntType, true));
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_VariantMemberCount :
+        return new MultiPValue(new PValue(cSizeTType, true));
 
     case PRIM_variantRepr : {
         ensureArity(args, 1);

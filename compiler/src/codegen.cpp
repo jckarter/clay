@@ -3698,14 +3698,24 @@ void codegenPrimOp(PrimOpPtr x,
         VariantTypePtr vt = valueToVariantType(args, 0);
         TypePtr mt = valueToType(args, 1);
         const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
-        int index = -1;
+        size_t index = (size_t)-1;
         for (unsigned i = 0; i < memberTypes.size(); ++i) {
             if (memberTypes[i] == mt) {
-                index = (int)i;
+                index = i;
                 break;
             }
         }
-        ValueHolderPtr vh = intToValueHolder(index);
+        ValueHolderPtr vh = sizeTToValueHolder(index);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_VariantMemberCount : {
+        ensureArity(args, 1);
+        VariantTypePtr vt = valueToVariantType(args, 0);
+        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        size_t size = memberTypes.size();
+        ValueHolderPtr vh = sizeTToValueHolder(size);
         codegenStaticObject(vh.ptr(), ctx, out);
         break;
     }
