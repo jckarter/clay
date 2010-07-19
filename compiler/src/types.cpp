@@ -653,13 +653,33 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
     }
     case UNION_TYPE : {
         UnionType *x = (UnionType *)t.ptr();
+        const llvm::Type *maxAlignType = NULL;
+        size_t maxAlign = 0;
+        size_t maxSize = 0;
+        for (unsigned i = 0; i < x->memberTypes.size(); ++i) {
+            const llvm::Type *llt = llvmType(x->memberTypes[i]);
+            size_t align = llvmTargetData->getABITypeAlignment(llt);
+            if (align > maxAlign) {
+                maxAlign = align;
+                maxAlignType = llt;
+            }
+            size_t size = llvmTargetData->getTypeAllocSize(llt);
+            if (size > maxSize)
+                maxSize = size;
+        }
+        if (!maxAlignType) {
+            maxAlignType = llvmIntType(8);
+            maxAlign = 1;
+        }
         vector<const llvm::Type *> llTypes;
-        for (unsigned i = 0; i < x->memberTypes.size(); ++i)
-            llTypes.push_back(llvmType(x->memberTypes[i]));
-        if (x->memberTypes.empty())
-            llTypes.push_back(llvmIntType(8));
+        llTypes.push_back(maxAlignType);
+        if (maxSize > maxAlign) {
+            const llvm::Type *padding =
+                llvm::ArrayType::get(llvmIntType(8), maxSize-maxAlign);
+            llTypes.push_back(padding);
+        }
         const llvm::Type *llType =
-            llvm::UnionType::get(&llTypes[0], llTypes.size());
+            llvm::StructType::get(llvm::getGlobalContext(), llTypes);
         ostringstream out;
         out << t;
         llvmModule->addTypeName(out.str(), llType);
