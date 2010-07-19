@@ -226,4 +226,4 @@ overload fieldRef(x:T, static FIELD) {
 
 [T, i | Record?(T)]
 overload staticIndex(x:T, static i) =
-    ref recordFieldRef(x, static i);
+    ref recordFieldRef(x, static SizeT(i));

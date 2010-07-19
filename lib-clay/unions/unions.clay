@@ -20,7 +20,7 @@ overload destroy(x:U) {
 
 [U,i | Union?(U)]
 overload staticIndex(x:U, static i) {
-    alias T = nthValue(static i, ...UnionMemberTypes(U));
+    alias T = nthValue(static SizeT(i), ...UnionMemberTypes(U));
     return ref Pointer[T](&x)^;
 }
 
