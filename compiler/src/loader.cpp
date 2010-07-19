@@ -583,6 +583,7 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(VariantP);
     PRIMITIVE(VariantMemberIndex);
+    PRIMITIVE(VariantMemberCount);
     PRIMITIVE(variantRepr);
 
     PRIMITIVE(Static);

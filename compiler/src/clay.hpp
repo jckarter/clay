@@ -1682,6 +1682,7 @@ enum PrimOpCode {
 
     PRIM_VariantP,
     PRIM_VariantMemberIndex,
+    PRIM_VariantMemberCount,
     PRIM_variantRepr,
 
     PRIM_Static,
