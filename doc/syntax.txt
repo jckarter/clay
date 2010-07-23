@@ -158,10 +158,12 @@ MulDivExpr -> PrefixExpr (("*" | "/" | "%") PrefixExpr)*
 
 PrefixExpr -> SignExpr
             | AddressOfExpr
+            | DispatchExpr
             | SuffixExpr
 
 SignExpr -> ("+" | "-") SuffixExpr
 AddressOfExpr -> "&" SuffixExpr
+DispatchExpr -> "*" SuffixExpr
 SuffixExpr -> AtomicExpr Suffix*
 Suffix -> IndexSuffix
         | CallSuffix

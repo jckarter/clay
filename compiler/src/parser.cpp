@@ -452,10 +452,21 @@ static bool signExpr(ExprPtr &x) {
     return true;
 }
 
+static bool dispatchExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("*")) return false;
+    ExprPtr a;
+    if (!suffixExpr(a)) return false;
+    x = new DispatchExpr(a);
+    x->location = location;
+    return true;
+}
+
 static bool prefixExpr(ExprPtr &x) {
     int p = save();
     if (signExpr(x)) return true;
     if (restore(p), addressOfExpr(x)) return true;
+    if (restore(p), dispatchExpr(x)) return true;
     if (restore(p), suffixExpr(x)) return true;
     return false;
 }

@@ -211,6 +211,7 @@ struct Lambda;
 struct Unpack;
 struct New;
 struct StaticExpr;
+struct DispatchExpr;
 struct ForeignExpr;
 struct ObjectExpr;
 
@@ -338,7 +339,8 @@ typedef Pointer<Or> OrPtr;
 typedef Pointer<Lambda> LambdaPtr;
 typedef Pointer<Unpack> UnpackPtr;
 typedef Pointer<New> NewPtr;
-typedef Pointer<StaticExpr> StaticExprPtr;;
+typedef Pointer<StaticExpr> StaticExprPtr;
+typedef Pointer<DispatchExpr> DispatchExprPtr;
 typedef Pointer<ForeignExpr> ForeignExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
 
@@ -650,6 +652,7 @@ enum ExprKind {
     UNPACK,
     NEW,
     STATIC_EXPR,
+    DISPATCH_EXPR,
 
     FOREIGN_EXPR,
     OBJECT_EXPR,
@@ -849,6 +852,12 @@ struct StaticExpr : public Expr {
     ExprPtr desugared;
     StaticExpr(ExprPtr expr) :
         Expr(STATIC_EXPR), expr(expr) {}
+};
+
+struct DispatchExpr : public Expr {
+    ExprPtr expr;
+    DispatchExpr(ExprPtr expr) :
+        Expr(DISPATCH_EXPR), expr(expr) {}
 };
 
 struct ForeignExpr : public Expr {

@@ -252,6 +252,11 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "StaticExpr(" << y->expr << ")";
         break;
     }
+    case DISPATCH_EXPR : {
+        const DispatchExpr *y = (const DispatchExpr *)x;
+        out << "DispatchExpr(" << y->expr << ")";
+        break;
+    }
     case FOREIGN_EXPR : {
         const ForeignExpr *y = (const ForeignExpr *)x;
         out << "ForeignExpr(" << y->expr << ")";

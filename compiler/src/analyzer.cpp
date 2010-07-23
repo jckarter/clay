@@ -474,6 +474,11 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         return analyzeExpr(x->desugared, env);
     }
 
+    case DISPATCH_EXPR : {
+        error("incorrect usage of dispatch operator");
+        return NULL;
+    }
+
     case FOREIGN_EXPR : {
         ForeignExpr *x = (ForeignExpr *)expr.ptr();
         return analyzeExpr(x->expr, x->getEnv());
