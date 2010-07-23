@@ -408,13 +408,11 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
 
     case STATIC_INDEXING : {
         StaticIndexing *x = (StaticIndexing *)expr.ptr();
-        PValuePtr pv = analyzeOne(x->expr, env);
-        if (!pv)
-            return NULL;
-        MultiPValuePtr args = new MultiPValue(pv);
+        vector<ExprPtr> args;
+        args.push_back(x->expr);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
-        args->values.push_back(staticPValue(vh.ptr()));
-        return analyzeCallValue(kernelPValue("staticIndex"), args);
+        args.push_back(new StaticExpr(new ObjectExpr(vh.ptr())));
+        return analyzeCallExpr(kernelNameRef("staticIndex"), args, env);
     }
 
     case UNARY_OP : {

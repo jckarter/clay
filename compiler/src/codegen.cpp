@@ -733,11 +733,11 @@ void codegenExpr(ExprPtr expr,
 
     case STATIC_INDEXING : {
         StaticIndexing *x = (StaticIndexing *)expr.ptr();
-        CValuePtr cv = codegenOneAsRef(x->expr, env, ctx);
+        vector<ExprPtr> args;
+        args.push_back(x->expr);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
-        MultiCValuePtr args = new MultiCValue(cv);
-        args->add(staticCValue(vh.ptr()));
-        codegenCallValue(kernelCValue("staticIndex"), args, ctx, out);
+        args.push_back(new StaticExpr(new ObjectExpr(vh.ptr())));
+        codegenCallExpr(kernelNameRef("staticIndex"), args, env, ctx, out);
         break;
     }
 
