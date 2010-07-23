@@ -390,6 +390,12 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case DISPATCH_EXPR : {
+        DispatchExpr *y = (DispatchExpr *)x.ptr();
+        convertFreeVars(y->expr, env, ctx);
+        break;
+    }
+
     case FOREIGN_EXPR :
     case OBJECT_EXPR :
         break;

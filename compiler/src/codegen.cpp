@@ -852,6 +852,11 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
+    case DISPATCH_EXPR : {
+        error("incorrect usage of dispatch operator");
+        break;
+    }
+
     case FOREIGN_EXPR : {
         ForeignExpr *x = (ForeignExpr *)expr.ptr();
         codegenExpr(x->expr, x->getEnv(), ctx, out);

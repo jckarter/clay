@@ -885,6 +885,11 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
+    case DISPATCH_EXPR : {
+        error("incorrect usage of dispatch operator");
+        break;
+    }
+
     case FOREIGN_EXPR : {
         ForeignExpr *x = (ForeignExpr *)expr.ptr();
         evalExpr(x->expr, x->getEnv(), out);

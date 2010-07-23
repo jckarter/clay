@@ -168,6 +168,12 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case DISPATCH_EXPR : {
+        DispatchExpr *y = (DispatchExpr *)x.ptr();
+        out = new DispatchExpr(clone(y->expr));
+        break;
+    }
+
     case FOREIGN_EXPR : {
         ForeignExpr *y = (ForeignExpr *)x.ptr();
         out = new ForeignExpr(y->moduleName, y->foreignEnv, clone(y->expr));
