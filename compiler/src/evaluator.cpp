@@ -796,11 +796,11 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case STATIC_INDEXING : {
         StaticIndexing *x = (StaticIndexing *)expr.ptr();
-        EValuePtr ev = evalOneAsRef(x->expr, env);
+        vector<ExprPtr> args;
+        args.push_back(x->expr);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
-        MultiEValuePtr args = new MultiEValue(ev);
-        args->add(staticEValue(vh.ptr()));
-        evalCallValue(kernelEValue("staticIndex"), args, out);
+        args.push_back(new StaticExpr(new ObjectExpr(vh.ptr())));
+        evalCallExpr(kernelNameRef("staticIndex"), args, env, out);
         break;
     }
 
