@@ -145,11 +145,26 @@ overload taggedDestroy(tag, data, static i, static n) {
 
 
 //
-// variantAs, variantIs?
+// variantIs?
 //
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-variantAs(x:V, static T) {
+variantIs?(x:V, static T) {
+    ref repr = variantRepr(x);
+    alias index = Int(VariantMemberIndex(V, T));
+    return repr.tag == index;
+}
+
+
+
+//
+// variantAs
+//
+
+procedure variantAs;
+
+[V,T | Variant?(V) and VariantMember?(V, T)]
+overload variantAs(lvalue x:V, static T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     assert(repr.tag == index, "invalid cast");
@@ -157,8 +172,6 @@ variantAs(x:V, static T) {
 }
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-variantIs?(x:V, static T) {
-    ref repr = variantRepr(x);
-    alias index = Int(VariantMemberIndex(V, T));
-    return repr.tag == index;
+overload variantAs(rvalue x:V, static T) {
+    return move(variantAs(x, T));
 }
