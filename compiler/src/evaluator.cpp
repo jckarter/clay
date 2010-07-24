@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+MultiEValuePtr evalMultiArgsAsRef(const vector<ExprPtr> &exprs, EnvPtr env);
+MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env);
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
 MultiEValuePtr evalMultiAsRef(const vector<ExprPtr> &exprs, EnvPtr env);
 MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env);
@@ -28,8 +30,17 @@ void evalCallExpr(ExprPtr callable,
                   const vector<ExprPtr> &args,
                   EnvPtr env,
                   MultiEValuePtr out);
+void evalDispatch(ObjectPtr obj,
+                  MultiEValuePtr args,
+                  MultiPValuePtr pvArgs,
+                  const vector<unsigned> &dispatchIndices,
+                  MultiEValuePtr out);
 void evalCallValue(EValuePtr callable,
                    MultiEValuePtr args,
+                   MultiEValuePtr out);
+void evalCallValue(EValuePtr callable,
+                   MultiEValuePtr args,
+                   MultiPValuePtr pvArgs,
                    MultiEValuePtr out);
 void evalCallPointer(EValuePtr x,
                      MultiEValuePtr args,
@@ -499,6 +510,39 @@ EValuePtr evalAllocValue(TypePtr t)
     EValuePtr ev = new EValue(t, buf);
     stackEValues.push_back(ev);
     return ev;
+}
+
+
+
+//
+// evalMultiArgsAsRef, evalArgExprAsRef
+//
+
+MultiEValuePtr evalMultiArgsAsRef(const vector<ExprPtr> &exprs, EnvPtr env)
+{
+    MultiEValuePtr out = new MultiEValue();
+    for (unsigned i = 0; i < exprs.size(); ++i) {
+        ExprPtr x = exprs[i];
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiEValuePtr mev = evalArgExprAsRef(y->expr, env);
+            out->add(mev);
+        }
+        else {
+            MultiEValuePtr mev = evalArgExprAsRef(exprs[i], env);
+            out->add(mev);
+        }
+    }
+    return out;
+}
+
+MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env)
+{
+    if (x->exprKind == DISPATCH_EXPR) {
+        DispatchExpr *y = (DispatchExpr *)x.ptr();
+        return evalExprAsRef(y->expr, env);
+    }
+    return evalExprAsRef(x, env);
 }
 
 
@@ -1232,8 +1276,18 @@ void evalCallExpr(ExprPtr callable,
             evalPrimOp(x, mev, out);
             break;
         }
-        MultiPValuePtr mpv = analyzeMulti(args, env);
+        vector<bool> dispatchFlags;
+        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchFlags);
         assert(mpv.ptr());
+        vector<unsigned> dispatchIndices;
+        for (unsigned i = 0; i < dispatchFlags.size(); ++i) {
+            if (dispatchFlags[i])
+                dispatchIndices.push_back(i);
+        }
+        if (dispatchIndices.size() > 0) {
+            MultiEValuePtr mev = evalMultiArgsAsRef(args, env);
+            return evalDispatch(obj, mev, mpv, dispatchIndices, out);
+        }
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
@@ -1260,11 +1314,114 @@ void evalCallExpr(ExprPtr callable,
 
 
 //
+// evalDispatch
+//
+
+int evalVariantTag(EValuePtr ev) {
+    int tag = -1;
+    EValuePtr etag = new EValue(cIntType, (char *)&tag);
+    evalCallValue(kernelEValue("variantTag"), 
+                  new MultiEValue(ev),
+                  new MultiEValue(etag));
+    return tag;
+}
+
+EValuePtr evalVariantIndex(EValuePtr ev, int tag) {
+    assert(ev->type->typeKind == VARIANT_TYPE);
+    VariantType *vt = (VariantType *)ev->type.ptr();
+    const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+    assert((tag >= 0) && (unsigned(tag) < memberTypes.size()));
+
+    MultiEValuePtr args = new MultiEValue();
+    args->add(ev);
+    ValueHolderPtr vh = intToValueHolder(tag);
+    args->add(staticEValue(vh.ptr()));
+
+    EValuePtr evPtr = evalAllocValue(pointerType(memberTypes[tag]));
+    MultiEValuePtr out = new MultiEValue(evPtr);
+
+    evalCallValue(kernelEValue("unsafeVariantIndex"), args, out);
+    return new EValue(memberTypes[tag], *((char **)ev->addr));
+}
+
+void evalDispatch(ObjectPtr obj,
+                  MultiEValuePtr args,
+                  MultiPValuePtr pvArgs,
+                  const vector<unsigned> &dispatchIndices,
+                  MultiEValuePtr out)
+{
+    if (dispatchIndices.empty()) {
+        evalCallValue(staticEValue(obj), args, pvArgs, out);
+        return;
+    }
+
+    vector<TypePtr> argsKey;
+    vector<ValueTempness> argsTempness;
+    computeArgsKey(pvArgs, argsKey, argsTempness);
+    InvokeStackContext invokeStackContext(obj, argsKey);
+
+    unsigned index = dispatchIndices[0];
+    vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,
+                                      dispatchIndices.end());
+
+    MultiEValuePtr prefix = new MultiEValue();
+    MultiPValuePtr pvPrefix = new MultiPValue();
+    for (unsigned i = 0; i < index; ++i) {
+        prefix->add(args->values[i]);
+        pvPrefix->add(pvArgs->values[i]);
+    }
+    MultiEValuePtr suffix = new MultiEValue();
+    MultiPValuePtr pvSuffix = new MultiPValue();
+    for (unsigned i = index+1; i < args->size(); ++i) {
+        suffix->add(args->values[i]);
+        pvSuffix->add(pvArgs->values[i]);
+    }
+    EValuePtr evDispatch = args->values[index];
+    PValuePtr pvDispatch = pvArgs->values[index];
+    if (pvDispatch->type->typeKind != VARIANT_TYPE) {
+        argumentError(index, "dispatch operator can "
+                      "only be used with variants");
+    }
+    VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
+    const vector<TypePtr> &memberTypes = variantMemberTypes(t);
+    if (memberTypes.empty())
+        argumentError(index, "variant has no member types");
+
+    int tag = evalVariantTag(evDispatch);
+    if ((tag < 0) || (tag >= (int)memberTypes.size()))
+        argumentError(index, "invalid variant value");
+
+    MultiEValuePtr args2 = new MultiEValue();
+    args2->add(prefix);
+    args2->add(evalVariantIndex(evDispatch, tag));
+    args2->add(suffix);
+    MultiPValuePtr pvArgs2 = new MultiPValue();
+    pvArgs2->add(pvPrefix);
+    pvArgs2->add(new PValue(memberTypes[tag], pvDispatch->isTemp));
+    pvArgs2->add(pvSuffix);
+
+    evalDispatch(obj, args2, pvArgs2, dispatchIndices2, out);
+}
+
+
+
+//
 // evalCallValue
 //
 
 void evalCallValue(EValuePtr callable,
                    MultiEValuePtr args,
+                   MultiEValuePtr out)
+{
+    MultiPValuePtr pvArgs = new MultiPValue();
+    for (unsigned i = 0; i < args->size(); ++i)
+        pvArgs->add(new PValue(args->values[i]->type, false));
+    evalCallValue(callable, args, pvArgs, out);
+}
+
+void evalCallValue(EValuePtr callable,
+                   MultiEValuePtr args,
+                   MultiPValuePtr pvArgs,
                    MultiEValuePtr out)
 {
     switch (callable->type->typeKind) {
@@ -1277,7 +1434,10 @@ void evalCallValue(EValuePtr callable,
     if (callable->type->typeKind != STATIC_TYPE) {
         MultiEValuePtr args2 = new MultiEValue(callable);
         args2->add(args);
-        evalCallValue(kernelEValue("call"), args2, out);
+        MultiPValuePtr pvArg2 =
+            new MultiPValue(new PValue(callable->type, false));
+        pvArg2->add(pvArgs);
+        evalCallValue(kernelEValue("call"), args2, pvArg2, out);
         return;
     }
 
@@ -1296,12 +1456,9 @@ void evalCallValue(EValuePtr callable,
             evalPrimOp(x, args, out);
             break;
         }
-        MultiPValuePtr mpv = new MultiPValue();
-        for (unsigned i = 0; i < args->size(); ++i)
-            mpv->add(new PValue(args->values[i]->type, false));
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
-        computeArgsKey(mpv, argsKey, argsTempness);
+        computeArgsKey(pvArgs, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
         if (entry->inlined)
@@ -1354,7 +1511,9 @@ void evalCallCode(InvokeEntryPtr entry,
 
     for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
         EValuePtr ev = args->values[i];
-        addLocal(env, entry->fixedArgNames[i], ev.ptr());
+        EValuePtr earg = new EValue(ev->type, ev->addr);
+        earg->forwardedRValue = entry->forwardedRValueFlags[i];
+        addLocal(env, entry->fixedArgNames[i], earg.ptr());
     }
 
     if (entry->varArgName.ptr()) {

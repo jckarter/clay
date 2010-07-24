@@ -1120,6 +1120,82 @@ MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
 
 
 //
+// analyzeCallExpr
+//
+
+MultiPValuePtr analyzeCallExpr(ExprPtr callable,
+                               const vector<ExprPtr> &args,
+                               EnvPtr env)
+{
+    PValuePtr pv = analyzeOne(callable, env);
+    if (!pv)
+        return NULL;
+    switch (pv->type->typeKind) {
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE : {
+        MultiPValuePtr mpv = analyzeMulti(args, env);
+        if (!mpv)
+            return NULL;
+        return analyzeCallPointer(pv, mpv);
+    }
+    }
+    ObjectPtr obj = unwrapStaticType(pv->type);
+    if (!obj) {
+        vector<ExprPtr> args2;
+        args2.push_back(callable);
+        args2.insert(args2.end(), args.begin(), args.end());
+        return analyzeCallExpr(kernelNameRef("call"), args2, env);
+    }
+
+    switch (obj->objKind) {
+
+    case TYPE :
+    case RECORD :
+    case VARIANT :
+    case PROCEDURE :
+    case PRIM_OP : {
+        if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
+            PrimOpPtr x = (PrimOp *)obj.ptr();
+            MultiPValuePtr mpv = analyzeMulti(args, env);
+            if (!mpv)
+                return NULL;
+            return analyzePrimOp(x, mpv);
+        }
+        vector<bool> dispatchFlags;
+        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchFlags);
+        if (!mpv)
+            return NULL;
+        vector<unsigned> dispatchIndices;
+        for (unsigned i = 0; i < dispatchFlags.size(); ++i) {
+            if (dispatchFlags[i])
+                dispatchIndices.push_back(i);
+        }
+        if (dispatchIndices.size() > 0) {
+            return analyzeDispatch(obj, mpv, dispatchIndices);
+        }
+        vector<TypePtr> argsKey;
+        vector<ValueTempness> argsTempness;
+        computeArgsKey(mpv, argsKey, argsTempness);
+        InvokeStackContext invokeStackContext(obj, argsKey);
+        InvokeEntryPtr entry =
+            analyzeCallable(obj, argsKey, argsTempness);
+        if (entry->inlined)
+            return analyzeCallInlined(entry, args, env);
+        if (!entry->analyzed)
+            return NULL;
+        return analyzeReturn(entry->returnIsRef, entry->returnTypes);
+    }
+
+    default :
+        error("invalid call expression");
+        return NULL;
+
+    }
+}
+
+
+
+//
 // analyzeDispatch
 //
 
@@ -1194,82 +1270,6 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     }
     assert(result.ptr());
     return result;
-}
-
-
-
-//
-// analyzeCallExpr
-//
-
-MultiPValuePtr analyzeCallExpr(ExprPtr callable,
-                               const vector<ExprPtr> &args,
-                               EnvPtr env)
-{
-    PValuePtr pv = analyzeOne(callable, env);
-    if (!pv)
-        return NULL;
-    switch (pv->type->typeKind) {
-    case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE : {
-        MultiPValuePtr mpv = analyzeMulti(args, env);
-        if (!mpv)
-            return NULL;
-        return analyzeCallPointer(pv, mpv);
-    }
-    }
-    ObjectPtr obj = unwrapStaticType(pv->type);
-    if (!obj) {
-        vector<ExprPtr> args2;
-        args2.push_back(callable);
-        args2.insert(args2.end(), args.begin(), args.end());
-        return analyzeCallExpr(kernelNameRef("call"), args2, env);
-    }
-
-    switch (obj->objKind) {
-
-    case TYPE :
-    case RECORD :
-    case VARIANT :
-    case PROCEDURE :
-    case PRIM_OP : {
-        if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
-            PrimOpPtr x = (PrimOp *)obj.ptr();
-            MultiPValuePtr mpv = analyzeMulti(args, env);
-            if (!mpv)
-                return NULL;
-            return analyzePrimOp(x, mpv);
-        }
-        vector<bool> dispatchFlags;
-        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchFlags);
-        if (!mpv)
-            return NULL;
-        vector<unsigned> dispatchIndices;
-        for (unsigned i = 0; i < dispatchFlags.size(); ++i) {
-            if (dispatchFlags[i])
-                dispatchIndices.push_back(i);
-        }
-        if (dispatchIndices.size() > 0) {
-            return analyzeDispatch(obj, mpv, dispatchIndices);
-        }
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        computeArgsKey(mpv, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
-        InvokeEntryPtr entry =
-            analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined)
-            return analyzeCallInlined(entry, args, env);
-        if (!entry->analyzed)
-            return NULL;
-        return analyzeReturn(entry->returnIsRef, entry->returnTypes);
-    }
-
-    default :
-        error("invalid call expression");
-        return NULL;
-
-    }
 }
 
 
