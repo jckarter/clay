@@ -290,7 +290,7 @@ MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env)
             PValuePtr y = analyzeOne(x, env);
             if (!y)
                 return NULL;
-            out->values.push_back(y);
+            out->add(y);
         }
     }
     return out;
@@ -310,6 +310,71 @@ PValuePtr analyzeOne(ExprPtr expr, EnvPtr env)
     LocationContext loc(expr->location);
     ensureArity(x, 1);
     return x->values[0];
+}
+
+
+
+//
+// analyzeMultiArgs, analyzeOneArg, analyzeArgExpr
+//
+
+MultiPValuePtr analyzeMultiArgs(const vector<ExprPtr> &exprs,
+                                EnvPtr env,
+                                vector<bool> &dispatchFlags)
+{
+    MultiPValuePtr out = new MultiPValue();
+    for (unsigned i = 0; i < exprs.size(); ++i) {
+        ExprPtr x = exprs[i];
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiPValuePtr z = analyzeArgExpr(y->expr, env, dispatchFlags);
+            if (!z)
+                return NULL;
+            out->add(z);
+        }
+        else {
+            bool dispatchFlag = false;
+            PValuePtr y = analyzeOneArg(x, env, dispatchFlag);
+            if (!y)
+                return NULL;
+            out->add(y);
+            dispatchFlags.push_back(dispatchFlag);
+        }
+    }
+    assert(dispatchFlags.size() == out->size());
+    return out;
+}
+
+PValuePtr analyzeOneArg(ExprPtr x, EnvPtr env, bool &dispatchFlag)
+{
+    vector<bool> dispatchFlags;
+    MultiPValuePtr mpv = analyzeArgExpr(x, env, dispatchFlags);
+    if (!mpv)
+        return NULL;
+    LocationContext loc(x->location);
+    ensureArity(mpv, 1);
+    assert(dispatchFlags.size() == 1);
+    dispatchFlag = dispatchFlags[0];
+    return mpv->values[0];
+}
+
+MultiPValuePtr analyzeArgExpr(ExprPtr x,
+                              EnvPtr env,
+                              vector<bool> &dispatchFlags)
+{
+    if (x->exprKind == DISPATCH_EXPR) {
+        DispatchExpr *y = (DispatchExpr *)x.ptr();
+        MultiPValuePtr mpv = analyzeExpr(y->expr, env);
+        if (!mpv)
+            return NULL;
+        dispatchFlags.insert(dispatchFlags.end(), mpv->size(), true);
+        return mpv;
+    }
+    MultiPValuePtr mpv = analyzeExpr(x, env);
+    if (!mpv)
+        return NULL;
+    dispatchFlags.insert(dispatchFlags.end(), mpv->size(), false);
+    return mpv;
 }
 
 
@@ -1055,6 +1120,85 @@ MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
 
 
 //
+// analyzeDispatch
+//
+
+MultiPValuePtr analyzeDispatch(ObjectPtr obj,
+                               MultiPValuePtr args,
+                               const vector<unsigned> &dispatchIndices)
+{
+    if (dispatchIndices.empty())
+        return analyzeCallValue(staticPValue(obj), args);
+
+    vector<TypePtr> argsKey;
+    vector<ValueTempness> argsTempness;
+    computeArgsKey(args, argsKey, argsTempness);
+    InvokeStackContext invokeStackContext(obj, argsKey);
+
+    unsigned index = dispatchIndices[0];
+    vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,
+                                      dispatchIndices.end());
+    MultiPValuePtr prefix = new MultiPValue();
+    for (unsigned i = 0; i < index; ++i)
+        prefix->add(args->values[i]);
+    MultiPValuePtr suffix = new MultiPValue();
+    for (unsigned i = index+1; i < args->size(); ++i)
+        suffix->add(args->values[i]);
+    PValuePtr pvDispatch = args->values[index];
+    if (pvDispatch->type->typeKind != VARIANT_TYPE) {
+        argumentError(index, "dispatch operator can "
+                      "only be used with variants");
+    }
+    VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
+    const vector<TypePtr> &memberTypes = variantMemberTypes(t);
+    if (memberTypes.empty())
+        argumentError(index, "variant has no member types");
+    MultiPValuePtr result;
+    for (unsigned i = 0; i < memberTypes.size(); ++i) {
+        MultiPValuePtr args2 = new MultiPValue();
+        args2->add(prefix);
+        args2->add(new PValue(memberTypes[i], pvDispatch->isTemp));
+        args2->add(suffix);
+        MultiPValuePtr result2 = analyzeDispatch(obj, args2, dispatchIndices2);
+        if (!result2)
+            return NULL;
+        if (!result) {
+            result = result2;
+        }
+        else {
+            bool ok = true;
+            if (result->size() != result2->size()) {
+                ok = false;
+            }
+            else {
+                for (unsigned j = 0; j < result2->size(); ++j) {
+                    PValuePtr pv = result->values[j];
+                    PValuePtr pv2 = result2->values[j];
+                    if (pv->type != pv2->type) {
+                        ok = false;
+                        break;
+                    }
+                    if (pv->isTemp != pv2->isTemp) {
+                        ok = false;
+                        break;
+                    }
+                }
+            }
+            if (!ok) {
+                ostringstream ostr;
+                ostr << "mismatching result with variant member: ";
+                ostr << memberTypes[i];
+                argumentError(index, ostr.str());
+            }
+        }
+    }
+    assert(result.ptr());
+    return result;
+}
+
+
+
+//
 // analyzeCallExpr
 //
 
@@ -1091,11 +1235,23 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
-            return analyzePrimOpExpr(x, args, env);
+            MultiPValuePtr mpv = analyzeMulti(args, env);
+            if (!mpv)
+                return NULL;
+            return analyzePrimOp(x, mpv);
         }
-        MultiPValuePtr mpv = analyzeMulti(args, env);
+        vector<bool> dispatchFlags;
+        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchFlags);
         if (!mpv)
             return NULL;
+        vector<unsigned> dispatchIndices;
+        for (unsigned i = 0; i < dispatchFlags.size(); ++i) {
+            if (dispatchFlags[i])
+                dispatchIndices.push_back(i);
+        }
+        if (dispatchIndices.size() > 0) {
+            return analyzeDispatch(obj, mpv, dispatchIndices);
+        }
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
@@ -1512,18 +1668,8 @@ bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv)
 
 
 //
-// analyzePrimOpExpr, analyzePrimOp
+// analyzePrimOp
 //
-
-MultiPValuePtr analyzePrimOpExpr(PrimOpPtr x,
-                                 const vector<ExprPtr> &args,
-                                 EnvPtr env)
-{
-    MultiPValuePtr mpv = analyzeMulti(args, env);
-    if (!mpv)
-        return NULL;
-    return analyzePrimOp(x, mpv);
-}
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 {
