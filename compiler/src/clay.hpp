@@ -2354,6 +2354,13 @@ struct MultiPValue : public Object {
 
 MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
+MultiPValuePtr analyzeMultiArgs(const vector<ExprPtr> &exprs,
+                                EnvPtr env,
+                                vector<bool> &dispatchFlags);
+PValuePtr analyzeOneArg(ExprPtr x, EnvPtr env, bool &dispatchFlag);
+MultiPValuePtr analyzeArgExpr(ExprPtr x,
+                              EnvPtr env,
+                              vector<bool> &dispatchFlags);
 MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env);
 MultiPValuePtr analyzeStaticObject(ObjectPtr x);
 PValuePtr analyzeGlobalVariable(GlobalVariablePtr x);
@@ -2410,9 +2417,6 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv);
 
-MultiPValuePtr analyzePrimOpExpr(PrimOpPtr x,
-                                 const vector<ExprPtr> &args,
-                                 EnvPtr env);
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
 
