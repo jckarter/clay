@@ -175,3 +175,16 @@ overload variantAs(lvalue x:V, static T) {
 overload variantAs(rvalue x:V, static T) {
     return move(variantAs(x, T));
 }
+
+
+
+//
+// variantTag, unsafeVariantIndex
+//
+
+[V | Variant?(V)]
+variantTag(x:V) = variantRepr(x).tag;
+
+[V,i | Variant?(V)]
+unsafeVariantIndex(x:V, static i) =
+    ref staticIndex(variantRepr(x), static i);

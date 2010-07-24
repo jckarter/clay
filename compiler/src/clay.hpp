@@ -2387,6 +2387,9 @@ MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                const vector<ExprPtr> &args,
                                EnvPtr env);
+MultiPValuePtr analyzeDispatch(ObjectPtr obj,
+                               MultiPValuePtr args,
+                               const vector<unsigned> &dispatchIndices);
 MultiPValuePtr analyzeCallValue(PValuePtr callable,
                                 MultiPValuePtr args);
 MultiPValuePtr analyzeCallPointer(PValuePtr x,
