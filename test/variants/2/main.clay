@@ -1,0 +1,22 @@
+
+record Square {
+    side : Double;
+}
+
+record Circle {
+    radius : Double;
+}
+
+variant Shape = Square | Circle;
+
+procedure show;
+overload show(x:Square) { println("Square(", x.side, ")"); }
+overload show(x:Circle) { println("Circle(", x.radius, ")"); }
+
+main() {
+    var v = Vector[Shape]();
+    push(v, Shape(Circle(10.1)));
+    push(v, Shape(Square(20.2)));
+    for (x in v)
+        show(*x);
+}

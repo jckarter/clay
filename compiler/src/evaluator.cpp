@@ -1286,7 +1286,8 @@ void evalCallExpr(ExprPtr callable,
         }
         if (dispatchIndices.size() > 0) {
             MultiEValuePtr mev = evalMultiArgsAsRef(args, env);
-            return evalDispatch(obj, mev, mpv, dispatchIndices, out);
+            evalDispatch(obj, mev, mpv, dispatchIndices, out);
+            break;
         }
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
@@ -1317,7 +1318,8 @@ void evalCallExpr(ExprPtr callable,
 // evalDispatch
 //
 
-int evalVariantTag(EValuePtr ev) {
+int evalVariantTag(EValuePtr ev)
+{
     int tag = -1;
     EValuePtr etag = new EValue(cIntType, (char *)&tag);
     evalCallValue(kernelEValue("variantTag"), 
@@ -1326,7 +1328,8 @@ int evalVariantTag(EValuePtr ev) {
     return tag;
 }
 
-EValuePtr evalVariantIndex(EValuePtr ev, int tag) {
+EValuePtr evalVariantIndex(EValuePtr ev, int tag)
+{
     assert(ev->type->typeKind == VARIANT_TYPE);
     VariantType *vt = (VariantType *)ev->type.ptr();
     const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
@@ -1434,10 +1437,10 @@ void evalCallValue(EValuePtr callable,
     if (callable->type->typeKind != STATIC_TYPE) {
         MultiEValuePtr args2 = new MultiEValue(callable);
         args2->add(args);
-        MultiPValuePtr pvArg2 =
+        MultiPValuePtr pvArgs2 =
             new MultiPValue(new PValue(callable->type, false));
-        pvArg2->add(pvArgs);
-        evalCallValue(kernelEValue("call"), args2, pvArg2, out);
+        pvArgs2->add(pvArgs);
+        evalCallValue(kernelEValue("call"), args2, pvArgs2, out);
         return;
     }
 

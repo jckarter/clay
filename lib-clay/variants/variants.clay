@@ -179,7 +179,7 @@ overload variantAs(rvalue x:V, static T) {
 
 
 //
-// variantTag, unsafeVariantIndex
+// variantTag, unsafeVariantIndex, invalidVariant
 //
 
 [V | Variant?(V)]
@@ -187,4 +187,9 @@ variantTag(x:V) = variantRepr(x).tag;
 
 [V,i | Variant?(V)]
 unsafeVariantIndex(x:V, static i) =
-    ref staticIndex(variantRepr(x), static i);
+    ref staticIndex(variantRepr(x).data, static i);
+
+[V | Variant?(V)]
+invalidVariant(x:V) {
+    error("invalid variant, tag = ", variantTag(x));
+}
