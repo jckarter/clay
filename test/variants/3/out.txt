@@ -1,0 +1,4 @@
+Human, Human
+Human, Dog
+Dog, Human
+Dog, Dog

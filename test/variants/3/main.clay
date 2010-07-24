@@ -1,0 +1,26 @@
+
+record Human {
+}
+
+record Dog {
+}
+
+variant Mammal = Human | Dog;
+
+procedure what;
+overload what(x:Human) = "Human";
+overload what(x:Dog) = "Dog";
+
+printPair(a, b) {
+    println(what(a), ", ", what(b));
+}
+
+main() {
+    var v = Vector[Mammal]();
+    push(v, Mammal(Human()));
+    push(v, Mammal(Dog()));
+ 
+    for (a in v)
+        for (b in v)
+            printPair(*a, *b);
+}
