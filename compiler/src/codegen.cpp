@@ -653,7 +653,7 @@ void codegenExpr(ExprPtr expr,
 
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
-        ObjectPtr y = lookupEnv(env, x->name);
+        ObjectPtr y = safeLookupEnv(env, x->name);
         if (y->objKind == EXPRESSION) {
             ExprPtr z = (Expr *)y.ptr();
             codegenExpr(z, env, ctx, out);
@@ -1386,7 +1386,7 @@ void codegenFieldRefExpr(ExprPtr base,
         ObjectPtr obj = st->obj;
         if (obj->objKind == MODULE_HOLDER) {
             ModuleHolderPtr y = (ModuleHolder *)obj.ptr();
-            ObjectPtr z = lookupModuleMember(y, name);
+            ObjectPtr z = safeLookupModuleHolder(y, name);
             codegenStaticObject(z, ctx, out);
             return;
         }

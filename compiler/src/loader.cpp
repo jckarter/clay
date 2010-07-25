@@ -605,11 +605,13 @@ static ModulePtr makePrimitivesModule() {
 //
 
 ObjectPtr kernelName(const string &name) {
-    return lookupPublic(loadedModule("prelude"), new Identifier(name));
+    return safeLookupPublic(loadedModule("prelude"),
+                            new Identifier(name));
 }
 
 ObjectPtr primName(const string &name) {
-    return lookupPublic(loadedModule("__primitives__"), new Identifier(name));
+    return safeLookupPublic(loadedModule("__primitives__"),
+                            new Identifier(name));
 }
 
 ExprPtr moduleNameRef(const string &module, const string &name) {

@@ -66,7 +66,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         }
 
         TypePtr type;
-        ObjectPtr obj = lookupEnv(env, ident);
+        ObjectPtr obj = safeLookupEnv(env, ident);
         switch (obj->objKind) {
         case PVALUE : {
             PValue *y = (PValue *)obj.ptr();
