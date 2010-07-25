@@ -786,7 +786,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
-        ObjectPtr y = lookupEnv(env, x->name);
+        ObjectPtr y = safeLookupEnv(env, x->name);
         if (y->objKind == EXPRESSION) {
             ExprPtr z = (Expr *)y.ptr();
             evalExpr(z, env, out);
@@ -1215,7 +1215,7 @@ void evalFieldRefExpr(ExprPtr base,
         ObjectPtr obj = st->obj;
         if (obj->objKind== MODULE_HOLDER) {
             ModuleHolderPtr y = (ModuleHolder *)obj.ptr();
-            ObjectPtr z = lookupModuleMember(y, name);
+            ObjectPtr z = safeLookupModuleHolder(y, name);
             evalStaticObject(z, out);
             return;
         }

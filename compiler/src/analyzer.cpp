@@ -429,7 +429,7 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
 
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
-        ObjectPtr y = lookupEnv(env, x->name);
+        ObjectPtr y = safeLookupEnv(env, x->name);
         if (y->objKind == EXPRESSION) {
             ExprPtr z = (Expr *)y.ptr();
             return analyzeExpr(z, env);
@@ -1076,7 +1076,7 @@ MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
     if (obj.ptr()) {
         if (obj->objKind == MODULE_HOLDER) {
             ModuleHolderPtr y = (ModuleHolder *)obj.ptr();
-            ObjectPtr z = lookupModuleMember(y, name);
+            ObjectPtr z = safeLookupModuleHolder(y, name);
             return analyzeStaticObject(z);
         }
         if (obj->objKind != VALUE_HOLDER)

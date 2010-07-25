@@ -510,7 +510,7 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
 
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
-        ObjectPtr y = lookupEnv(env, x->name);
+        ObjectPtr y = safeLookupEnv(env, x->name);
         return namedToPattern(y);
     }
 
@@ -574,7 +574,7 @@ static MultiPatternPtr checkMultiPatternNameRef(ExprPtr expr, EnvPtr env)
     if (expr->exprKind != NAME_REF)
         return NULL;
     NameRef *x = (NameRef *)expr.ptr();
-    ObjectPtr obj = lookupEnv(env, x->name);
+    ObjectPtr obj = safeLookupEnv(env, x->name);
     if (obj->objKind != MULTI_PATTERN)
         return NULL;
     MultiPattern *mp = (MultiPattern *)obj.ptr();

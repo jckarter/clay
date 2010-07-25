@@ -1576,12 +1576,13 @@ void addGlobal(ModulePtr module,
                Visibility visibility,
                ObjectPtr value);
 ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name);
-ObjectPtr lookupModuleMember(ModuleHolderPtr mh, IdentifierPtr name);
+ObjectPtr safeLookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name);
 ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name);
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
+ObjectPtr safeLookupPublic(ModulePtr module, IdentifierPtr name);
 
 void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);
-ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
+ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name);
 
 ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
                       EnvPtr nonLocalEnv, bool &isNonLocal,

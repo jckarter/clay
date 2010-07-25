@@ -88,7 +88,7 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     }
 }
 
-ObjectPtr lookupModuleMember(ModuleHolderPtr mh, IdentifierPtr name) {
+ObjectPtr safeLookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     ObjectPtr x = lookupModuleHolder(mh, name);
     if (!x)
         error(name, "undefined name: " + name->str);
@@ -147,7 +147,7 @@ ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
 
 
 //
-// lookupPublic
+// lookupPublic, safeLookupPublic
 //
 
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
@@ -175,10 +175,17 @@ ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
     }
 }
 
+ObjectPtr safeLookupPublic(ModulePtr module, IdentifierPtr name) {
+    ObjectPtr x = lookupPublic(module, name);
+    if (!x)
+        error(name, "undefined name: " + name->str);
+    return x;
+}
+
 
 
 //
-// addLocal, lookupEnv
+// addLocal, safeLookupEnv
 //
 
 void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value) {
@@ -188,7 +195,7 @@ void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value) {
     env->entries[name->str] = value;
 }
 
-ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
+ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
     MapIter i = env->entries.find(name->str);
     if (i != env->entries.end())
         return i->second;
@@ -196,7 +203,7 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
         switch (env->parent->objKind) {
         case ENV : {
             Env *y = (Env *)env->parent.ptr();
-            return lookupEnv(y, name);
+            return safeLookupEnv(y, name);
         }
         case MODULE : {
             Module *y = (Module *)env->parent.ptr();
