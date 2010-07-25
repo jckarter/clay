@@ -1,0 +1,9 @@
+Human, Human
+Human, Dog
+Human, Cat
+Dog, Human
+Dog, Dog
+Dog, Cat
+Cat, Human
+Cat, Dog
+Cat, Cat
