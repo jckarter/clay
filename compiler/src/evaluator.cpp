@@ -1921,7 +1921,13 @@ TerminationPtr evalStatement(StatementPtr stmt,
     }
 
     case TRY : {
-        error("try statement not yet supported in the evaluator");
+        Try *x = (Try *)stmt.ptr();
+        // exception handling not supported in the evaluator.
+        return evalStatement(x->tryBlock, env, ctx);
+    }
+
+    case THROW : {
+        error("throw statement not supported in the evaluator");
         return NULL;
     }
 

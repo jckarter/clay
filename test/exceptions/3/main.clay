@@ -6,7 +6,7 @@ record Test {
 
 overload Test(v, x) returned:Test{
     if (v)
-        throw();
+        throw 1;
     returned.x = x;
 } 
 

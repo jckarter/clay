@@ -95,6 +95,8 @@ Statement -> Block
            | BreakStatement
            | ContinueStatement
            | ForStatement
+           | TryStatement
+           | ThrowStatement
 
 LabelDef -> Identifier ":"
 
@@ -124,6 +126,9 @@ BreakStatement -> "break" ";"
 ContinueStatement -> "continue" ";"
 
 ForStatement -> "for" "(" Identifier "in" Expression ")" Statement
+
+TryStatement -> "try" Block "catch" Block
+ThrowStatement -> "throw" Expression? ";"
 
 
 //

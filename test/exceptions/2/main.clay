@@ -10,12 +10,12 @@ m(x) {
     try {
         var r = Test(1);
         if (x == 1)
-            throw();
+            throw 1;
         var r2 = Test(2);
     }
     catch {
         println("Caught. Throwing again.");
-        throw();
+        throw 2;
     }
     var r2 = Test(3);
 }
