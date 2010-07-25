@@ -18,7 +18,8 @@ main() {
     try {
         var t = Test(false, 1);
         var t = Test(true, 0);
-    } catch {
+    }
+    catch {
         println("Caught");
     }
 }

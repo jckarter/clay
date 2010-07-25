@@ -116,6 +116,10 @@ void codegenCallCode(InvokeEntryPtr entry,
                      MultiCValuePtr args,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out);
+void codegenLowlevelCall(llvm::Value *llCallable,
+                         vector<llvm::Value *>::iterator argBegin,
+                         vector<llvm::Value *>::iterator argEnd,
+                         CodegenContextPtr ctx);
 void codegenCallInlined(InvokeEntryPtr entry,
                         const vector<ExprPtr> &args,
                         EnvPtr env,
@@ -139,6 +143,19 @@ void codegenPrimOp(PrimOpPtr x,
                    MultiCValuePtr args,
                    CodegenContextPtr ctx,
                    MultiCValuePtr out);
+
+
+
+//
+// exception support
+//
+
+static bool exceptionsEnabled = true;
+
+void setExceptionsEnabled(bool enabled)
+{
+    exceptionsEnabled = enabled;
+}
 
 
 
@@ -185,10 +202,13 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
 {
     if (isPrimitiveType(dest->type))
         return;
+    bool savedExceptionsEnabled = exceptionsEnabled;
+    exceptionsEnabled = false;
     codegenCallValue(kernelCValue("destroy"),
                      new MultiCValue(dest),
                      ctx,
                      new MultiCValue());
+    exceptionsEnabled = savedExceptionsEnabled;
 }
 
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
@@ -305,107 +325,6 @@ CValuePtr codegenAllocValue(TypePtr t)
     const llvm::Type *llt = llvmType(t);
     llvm::Value *llv = llvmInitBuilder->CreateAlloca(llt);
     return new CValue(t, llv);
-}
-
-
-
-//
-// exception support
-//
-
-static bool exceptionsEnabled = true;
-
-void setExceptionsEnabled(bool enabled)
-{
-    exceptionsEnabled = enabled;
-}
-
-static llvm::BasicBlock *createLandingPad(CodegenContextPtr ctx)
-{
-    llvm::BasicBlock *lpad = newBasicBlock("lpad");
-    llvmBuilder->SetInsertPoint(lpad);
-    return lpad;
-}
-
-static llvm::BasicBlock *createUnwindBlock(CodegenContextPtr ctx) 
-{
-    llvm::BasicBlock *unwindBlock = newBasicBlock("Unwind");
-    llvm::IRBuilder<> llBuilder(unwindBlock);
-    llvm::Value *one = llvm::ConstantInt::get(llvmIntType(32), 1);
-    llBuilder.CreateRet(one);
-    return unwindBlock;
-}
-
-
-static llvm::Value *createCall(llvm::Value *llCallable, 
-                               vector<llvm::Value *>::iterator argBegin,
-                               vector<llvm::Value *>::iterator argEnd,
-                               CodegenContextPtr ctx) 
-{  
-    assert(ctx.ptr());
-    if (!exceptionsEnabled)
-        return llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
-
-    llvm::BasicBlock *landingPad;
-
-    int startMarker = ctx->returnTarget.stackMarker;
-    int endMarker = cgMarkStack();
-
-    // If we are inside a try block then adjust marker
-    if (ctx->catchBlock)
-        startMarker = ctx->tryBlockStackMarker;
-
-    llvm::BasicBlock *savedInsertPoint = llvmBuilder->GetInsertBlock();
-   
-    for (int i = startMarker; i < endMarker; ++i) {
-        if (valueStack[i].destructor)
-            continue;
-        
-        valueStack[i].destructor = newBasicBlock("destructor");
-        llvmBuilder->SetInsertPoint(valueStack[i].destructor);
-        codegenValueDestroy(valueStack[i].cv, ctx);
-        
-        if (ctx->catchBlock && ctx->tryBlockStackMarker == i)
-            llvmBuilder->CreateBr(ctx->catchBlock);
-        else if (i == ctx->returnTarget.stackMarker) {
-            if (!ctx->unwindBlock)
-                ctx->unwindBlock = createUnwindBlock(ctx);
-            llvmBuilder->CreateBr(ctx->unwindBlock);
-        }
-        else {
-            assert(valueStack[i-1].destructor);
-            llvmBuilder->CreateBr(valueStack[i-1].destructor);
-        }
-    }
-
-    // No live vars, but we were inside a try block
-    if (endMarker <= startMarker) {
-        landingPad = createLandingPad(ctx);
-        if (ctx->catchBlock)
-            llvmBuilder->CreateBr(ctx->catchBlock);
-        else {
-            if (!ctx->unwindBlock)
-                ctx->unwindBlock = createUnwindBlock(ctx);
-            llvmBuilder->CreateBr(ctx->unwindBlock);
-        }
-    }
-    else {
-        if (!valueStack[endMarker-1].landingPad) {
-            valueStack[endMarker-1].landingPad = createLandingPad(ctx);
-            llvmBuilder->CreateBr(valueStack[endMarker-1].destructor);
-        }
-        landingPad = valueStack[endMarker-1].landingPad;
-    }
-
-    llvmBuilder->SetInsertPoint(savedInsertPoint);
-    
-    llvm::BasicBlock *normalBlock = newBasicBlock("normal");
-    llvm::Value *result = llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
-    llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
-    llvm::Value *llExcept = llvmBuilder->CreateICmpEQ(result, zero);
-    llvmBuilder->CreateCondBr(llExcept, normalBlock, landingPad);
-    llvmBuilder->SetInsertPoint(normalBlock);
-    return result;
 }
 
 
@@ -1174,6 +1093,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
     llvm::BasicBlock *initBlock = newBasicBlock("init");
     llvm::BasicBlock *codeBlock = newBasicBlock("code");
     llvm::BasicBlock *returnBlock = newBasicBlock("return");
+    llvm::BasicBlock *exceptionBlock = newBasicBlock("exception");
 
     llvmInitBuilder = new llvm::IRBuilder<>(initBlock);
     llvmBuilder = new llvm::IRBuilder<>(codeBlock);
@@ -1202,7 +1122,9 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
     }
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
-    CodegenContextPtr ctx = new CodegenContext(returns, returnTarget);
+    JumpTarget exceptionTarget(exceptionBlock, cgMarkStack());
+    CodegenContextPtr ctx =
+        new CodegenContext(returns, returnTarget, exceptionTarget);
 
     bool terminated = codegenStatement(x->body, env, ctx);
     if (!terminated) {
@@ -1210,8 +1132,6 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
         llvmBuilder->CreateBr(returnBlock);
     }
     cgPopStack(returnTarget.stackMarker);
-
-    llvmInitBuilder->CreateBr(codeBlock);
 
     llvmBuilder->SetInsertPoint(returnBlock);
     if (!x->returnType2) {
@@ -1222,6 +1142,15 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
         llvm::Value *v = llvmBuilder->CreateLoad(retVal->llValue);
         llvmBuilder->CreateRet(v);
     }
+
+    llvmBuilder->SetInsertPoint(exceptionBlock);
+    codegenCallValue(kernelCValue("unhandledExceptionInExternal"),
+                     new MultiCValue(),
+                     ctx,
+                     new MultiCValue());
+    llvmBuilder->CreateUnreachable();
+
+    llvmInitBuilder->CreateBr(codeBlock);
 
     delete llvmInitBuilder;
     delete llvmBuilder;
@@ -1785,7 +1714,7 @@ void codegenCallPointer(CValuePtr x,
                 assert(cv->type == t->returnTypes[i]);
             llArgs.push_back(cv->llValue);
         }
-        createCall(llCallable, llArgs.begin(), llArgs.end(), ctx);
+        codegenLowlevelCall(llCallable, llArgs.begin(), llArgs.end(), ctx);
         break;
     }
 
@@ -1878,7 +1807,36 @@ void codegenCallCode(InvokeEntryPtr entry,
             assert(cv->type == entry->returnTypes[i]);
         llArgs.push_back(cv->llValue);
     }
-    createCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), ctx);
+    codegenLowlevelCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), ctx);
+}
+
+
+
+//
+// codegenLowlevelCall - generate exception checked call
+//
+
+void codegenLowlevelCall(llvm::Value *llCallable,
+                         vector<llvm::Value *>::iterator argBegin,
+                         vector<llvm::Value *>::iterator argEnd,
+                         CodegenContextPtr ctx)
+{
+    llvm::Value *result =
+        llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
+    if (!exceptionsEnabled)
+        return;
+    llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
+    llvm::Value *cond = llvmBuilder->CreateICmpEQ(result, zero);
+    llvm::BasicBlock *landing = newBasicBlock("landing");
+    llvm::BasicBlock *normal = newBasicBlock("normal");
+    llvmBuilder->CreateCondBr(cond, normal, landing);
+
+    llvmBuilder->SetInsertPoint(landing);
+    const JumpTarget &jt = ctx->exceptionTargets.back();
+    cgDestroyStack(jt.stackMarker, ctx);
+    llvmBuilder->CreateBr(jt.block);
+
+    llvmBuilder->SetInsertPoint(normal);
 }
 
 
@@ -2050,6 +2008,7 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     llvm::BasicBlock *initBlock = newBasicBlock("init");
     llvm::BasicBlock *codeBlock = newBasicBlock("code");
     llvm::BasicBlock *returnBlock = newBasicBlock("return");
+    llvm::BasicBlock *exceptionBlock = newBasicBlock("exception");
 
     llvmInitBuilder = new llvm::IRBuilder<>(initBlock);
     llvmBuilder = new llvm::IRBuilder<>(codeBlock);
@@ -2105,7 +2064,9 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     }
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
-    CodegenContextPtr ctx = new CodegenContext(returns, returnTarget);
+    JumpTarget exceptionTarget(exceptionBlock, cgMarkStack());
+    CodegenContextPtr ctx =
+        new CodegenContext(returns, returnTarget, exceptionTarget);
 
     assert(entry->code->body.ptr());
     bool terminated = codegenStatement(entry->code->body, env, ctx);
@@ -2117,10 +2078,13 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
 
     llvmInitBuilder->CreateBr(codeBlock);
 
-    llvm::Value *llRet = llvm::ConstantInt::get(llvmIntType(32), 0);
-
     llvmBuilder->SetInsertPoint(returnBlock);
+    llvm::Value *llRet = llvm::ConstantInt::get(llvmIntType(32), 0);
     llvmBuilder->CreateRet(llRet);
+
+    llvmBuilder->SetInsertPoint(exceptionBlock);
+    llvm::Value *llExcept = llvm::ConstantInt::get(llvmIntType(32), 1);
+    llvmBuilder->CreateRet(llExcept);
 
     delete llvmInitBuilder;
     delete llvmBuilder;
@@ -2257,7 +2221,9 @@ void codegenCallInlined(InvokeEntryPtr entry,
     llvm::BasicBlock *returnBlock = newBasicBlock("return");
 
     JumpTarget returnTarget(returnBlock, cgMarkStack());
-    CodegenContextPtr bodyCtx = new CodegenContext(returns, returnTarget);
+    JumpTarget exceptionTarget = ctx->exceptionTargets.back();
+    CodegenContextPtr bodyCtx =
+        new CodegenContext(returns, returnTarget, exceptionTarget);
 
     assert(entry->code->body.ptr());
     bool terminated = codegenStatement(entry->code->body, bodyEnv, bodyCtx);
@@ -2563,31 +2529,22 @@ bool codegenStatement(StatementPtr stmt,
 
         llvm::BasicBlock *catchBegin = newBasicBlock("catchBegin");
         llvm::BasicBlock *catchEnd = newBasicBlock("catchEnd");
-        llvm::BasicBlock *finallyEnd = newBasicBlock("finallyEnd");
-        
-        llvm::BasicBlock *savedCatchBegin = ctx->catchBlock;
-        ctx->catchBlock = catchBegin;
-        ctx->tryBlockStackMarker = cgMarkStack();
 
+        JumpTarget exceptionTarget(catchBegin, cgMarkStack());
+        ctx->exceptionTargets.push_back(exceptionTarget);
         bool tryTerminated = codegenStatement(x->tryBlock, env, ctx);
-        ctx->catchBlock = savedCatchBegin;
-        llvmBuilder->CreateBr(catchEnd);
-
-        bool catchTerminated = false, finallyTerminated = false;
+        if (!tryTerminated)
+            llvmBuilder->CreateBr(catchEnd);
+        ctx->exceptionTargets.pop_back();
 
         llvmBuilder->SetInsertPoint(catchBegin);
-        if (x->catchBlock.ptr())
-            catchTerminated = codegenStatement(x->catchBlock, env, ctx);
-        llvmBuilder->CreateBr(catchEnd);
+        bool catchTerminated = codegenStatement(x->catchBlock, env, ctx);
+        if (!catchTerminated)
+            llvmBuilder->CreateBr(catchEnd);
 
         llvmBuilder->SetInsertPoint(catchEnd);
-        if (x->finallyBlock.ptr())
-            finallyTerminated = codegenStatement(x->finallyBlock, env, ctx);
-        llvmBuilder->CreateBr(finallyEnd);
-        
-        llvmBuilder->SetInsertPoint(finallyEnd);
 
-        return (tryTerminated && catchTerminated) || finallyTerminated;
+        return tryTerminated && catchTerminated;
     }
 
     default :

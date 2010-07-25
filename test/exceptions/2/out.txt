@@ -6,4 +6,3 @@ Destroyed 1
 Caught. Throwing again.
 Destroyed 20
 Caught
-Finally

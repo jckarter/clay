@@ -1603,13 +1603,8 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
     case TRY : {
         Try *x = (Try *)stmt.ptr();
         bool tryResult = analyzeStatement(x->tryBlock, env, ctx);
-        bool catchResult = true;
-        bool finallyResult = true;
-        if (x->catchBlock.ptr())
-            catchResult = analyzeStatement(x->catchBlock, env, ctx);
-        if (x->finallyBlock.ptr())
-            finallyResult = analyzeStatement(x->finallyBlock, env, ctx);
-        return (tryResult || catchResult) && finallyResult;
+        bool catchResult = analyzeStatement(x->catchBlock, env, ctx);
+        return tryResult || catchResult;
     }
 
     default :

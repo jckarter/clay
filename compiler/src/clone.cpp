@@ -356,8 +356,7 @@ StatementPtr clone(StatementPtr x)
 
     case TRY : {
         Try *y = (Try *)x.ptr();
-        out = new Try(clone(y->tryBlock), cloneOpt(y->catchBlock),
-                      cloneOpt(y->finallyBlock));
+        out = new Try(clone(y->tryBlock), clone(y->catchBlock));
         break;
     }
 

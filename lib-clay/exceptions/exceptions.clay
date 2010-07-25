@@ -1,4 +1,15 @@
 
+import libc;
+
+unhandledExceptionInExternal() {
+    try {
+        println("unhandled exception in external procedure");
+        libc.abort();
+    }
+    catch {
+    }
+}
+
 throw() __llvm__{
     ret i32 1
 }
