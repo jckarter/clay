@@ -1068,11 +1068,9 @@ struct ForeignStatement : public Statement {
 struct Try : public Statement {
     StatementPtr tryBlock;
     StatementPtr catchBlock;
-    StatementPtr finallyBlock;
-    Try(StatementPtr tryBlock, StatementPtr catchBlock, 
-        StatementPtr finallyBlock) 
-        : Statement(TRY), tryBlock(tryBlock), catchBlock(catchBlock),
-          finallyBlock(finallyBlock) {}
+    Try(StatementPtr tryBlock, StatementPtr catchBlock)
+        : Statement(TRY), tryBlock(tryBlock),
+          catchBlock(catchBlock) {}
 };
 
 
@@ -2563,15 +2561,14 @@ struct CodegenContext : public Object {
     map<string, JumpTarget> labels;
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
-    llvm::BasicBlock *catchBlock;
-    llvm::BasicBlock *unwindBlock;
-    int tryBlockStackMarker;
+    vector<JumpTarget> exceptionTargets;
 
     CodegenContext(const vector<CReturn> &returns,
-                   const JumpTarget &returnTarget)
+                   const JumpTarget &returnTarget,
+                   const JumpTarget &exceptionTarget)
         : Object(DONT_CARE),
           returns(returns), returnTarget(returnTarget),
-          catchBlock(NULL), unwindBlock(NULL) {}
+          exceptionTargets(1, exceptionTarget) {}
 };
 
 typedef Pointer<CodegenContext> CodegenContextPtr;

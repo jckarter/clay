@@ -364,8 +364,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
     case TRY : {
         const Try *y = (const Try *)x;
-        out << "Try(" << y->tryBlock << ", " << y->catchBlock;
-        out << ", " << y->finallyBlock << ")";
+        out << "Try(" << y->tryBlock << ", " << y->catchBlock << ")";
         break;
     }
     }

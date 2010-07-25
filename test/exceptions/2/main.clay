@@ -12,7 +12,8 @@ m(x) {
         if (x == 1)
             throw();
         var r2 = Test(2);
-    } catch {
+    }
+    catch {
         println("Caught. Throwing again.");
         throw();
     }
@@ -26,10 +27,9 @@ main() {
         var r = Test(20);
         m(1);
         var r = Test(30);
-    } catch {
+    }
+    catch {
         println("Caught");
-    } finally {
-        println("Finally");
     }
     return 0;
 }
