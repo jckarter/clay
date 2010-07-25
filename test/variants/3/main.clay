@@ -5,7 +5,7 @@ record Human {
 record Dog {
 }
 
-variant Mammal = Human | Dog;
+variant Animal = Human | Dog;
 
 procedure what;
 overload what(x:Human) = "Human";
@@ -16,9 +16,9 @@ printPair(a, b) {
 }
 
 main() {
-    var v = Vector[Mammal]();
-    push(v, Mammal(Human()));
-    push(v, Mammal(Dog()));
+    var v = Vector[Animal]();
+    push(v, Animal(Human()));
+    push(v, Animal(Dog()));
  
     for (a in v)
         for (b in v)
