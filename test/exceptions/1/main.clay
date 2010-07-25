@@ -21,7 +21,7 @@ overload destroy(t:Test) {
 main () {
     try {
         var a = Test(1);
-        throw();
+        throw 1;
         var b = Test(2);
     }
     catch {

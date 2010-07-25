@@ -360,6 +360,12 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case THROW : {
+        Throw *y = (Throw *)x.ptr();
+        out = new Throw(cloneOpt(y->expr));
+        break;
+    }
+
     default :
         assert(false);
 

@@ -2547,6 +2547,16 @@ bool codegenStatement(StatementPtr stmt,
         return tryTerminated && catchTerminated;
     }
 
+    case THROW : {
+        Throw *x = (Throw *)stmt.ptr();
+        if (!x->expr)
+            error("blank throw statement not yet supported");
+        ExprPtr callable = kernelNameRef("throwValue");
+        vector<ExprPtr> args(1, x->expr);
+        codegenCallExpr(callable, args, env, ctx, new MultiCValue());
+        return false;
+    }
+
     default :
         assert(false);
         return false;

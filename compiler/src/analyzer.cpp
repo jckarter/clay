@@ -1607,6 +1607,9 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
         return tryResult || catchResult;
     }
 
+    case THROW :
+        return true;
+
     default :
         assert(false);
         return false;

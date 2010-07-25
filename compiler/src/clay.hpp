@@ -232,6 +232,7 @@ struct Continue;
 struct For;
 struct ForeignStatement;
 struct Try;
+struct Throw;
 
 struct FormalArg;
 struct ReturnSpec;
@@ -361,6 +362,7 @@ typedef Pointer<Continue> ContinuePtr;
 typedef Pointer<For> ForPtr;
 typedef Pointer<ForeignStatement> ForeignStatementPtr;
 typedef Pointer<Try> TryPtr;
+typedef Pointer<Throw> ThrowPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
@@ -906,6 +908,7 @@ enum StatementKind {
     FOR,
     FOREIGN_STATEMENT,
     TRY,
+    THROW,
 };
 
 struct Statement : public ANode {
@@ -1071,6 +1074,12 @@ struct Try : public Statement {
     Try(StatementPtr tryBlock, StatementPtr catchBlock)
         : Statement(TRY), tryBlock(tryBlock),
           catchBlock(catchBlock) {}
+};
+
+struct Throw : public Statement {
+    ExprPtr expr;
+    Throw(ExprPtr expr)
+        : Statement(THROW), expr(expr) {}
 };
 
 

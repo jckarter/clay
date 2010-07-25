@@ -367,6 +367,11 @@ static void printStatement(ostream &out, const Statement *x) {
         out << "Try(" << y->tryBlock << ", " << y->catchBlock << ")";
         break;
     }
+    case THROW : {
+        const Throw *y = (const Throw *)x;
+        out << "Throw(" << y->expr << ")";
+        break;
+    }
     }
 }
 

@@ -1,6 +1,44 @@
 
 import libc;
 
+
+
+//
+// Exception, NoException, currentException
+//
+
+variant Exception = NoException | Int;
+
+record NoException {
+}
+
+overload printTo(stream, x:NoException) {
+    printTo(stream, "NoException()");
+}
+
+var currentException = Exception(NoException());
+
+
+
+//
+// throwValue, signalException
+//
+
+throwValue(forward x) {
+    currentException = Exception(x);
+    signalException();
+}
+
+signalException() __llvm__{
+    ret i32 1
+}
+
+
+
+//
+// unhandledExceptionInExternal
+//
+
 unhandledExceptionInExternal() {
     try {
         println("unhandled exception in external procedure");
@@ -8,8 +46,4 @@ unhandledExceptionInExternal() {
     }
     catch {
     }
-}
-
-throw() __llvm__{
-    ret i32 1
 }
