@@ -54,7 +54,7 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     llvm::createStandardModulePasses(&passes,
                                      optLevel,
                                      /*OptimizeSize=*/ false,
-                                     /*UnitAtATime=*/ false,
+                                     /*UnitAtATime=*/ true,
                                      /*UnrollLoops=*/ optLevel > 1,
                                      /*SimplifyLibCalls=*/ true,
                                      /*HaveExceptions=*/ true,
@@ -253,7 +253,7 @@ int main(int argc, char **argv) {
     bool emitLLVM = false;
     bool emitAsm = false;
     bool sharedLib = false;
-    bool exceptions = false;
+    bool exceptions = true;
     bool abortOnError = false;
     bool run = false;
 
