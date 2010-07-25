@@ -24,6 +24,16 @@ if not os.path.exists(compiler) :
 
 CONFIG_FUNCTIONS = ["match", "pre_build", "post_build", "post_run", "cmdline"]
 
+
+impCount = 0
+
+def loadConfigModule(path) :
+    global impCount
+    module = imp.load_source("config" + str(impCount),
+                             path)
+    impCount += 1
+    return module
+
 class TestCase(object):
     allCases = []
     def __init__(self, folder, base = None):
@@ -36,8 +46,7 @@ class TestCase(object):
         if os.path.isfile(mainPath):
             self.loadTest(mainPath)
         if os.path.isfile(configPath):
-            module = imp.load_source("config" + str(len(TestCase.allCases)), 
-                    configPath)
+            module = loadConfigModule(configPath)
             self.loadConfig(module)
         for entry in entries:
             fullpath = os.path.join(folder, entry)
