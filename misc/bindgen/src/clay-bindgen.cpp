@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
     Builtin::Context builtins(*context.target);
 
     ASTContext astContext(context.opts, context.sm, *context.target, identifierTable,
-            selectorTable, builtins);
+                          selectorTable, builtins, 0);
 
     // Parse it
     ParseAST(context.pp, &converter, astContext);  // calls pp.EnterMainSourceFile() for us
