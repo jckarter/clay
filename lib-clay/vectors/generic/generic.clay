@@ -185,7 +185,7 @@ private insertLocation(a, pos:I) {
 
 [V,I,S | Vector?(V) and Integer?(I) and Sequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
-private insert(a:V, i:I, seq:S) {
+overload insert(a:V, i:I, seq:S) {
     var pos = SizeT(i);
     for (x in seq) {
         insert(a, pos, x);
