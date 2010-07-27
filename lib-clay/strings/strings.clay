@@ -128,3 +128,16 @@ cstring(s:String) {
     s[size(s)] = Char(0);
     return Pointer[Int8](s.data);
 }
+
+
+
+//
+// concatenation of strings
+//
+
+[A, B | String?(A) and String?(B)]
+overload add(a:A, b:B) {
+    var result = String(a);
+    insert(result, size(result), b);
+    return move(result);
+}
