@@ -1073,10 +1073,14 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
         llvmFuncName = x->name->str;
     }
 
-    x->llvmFunc = llvm::Function::Create(llFuncType,
-                                         linkage,
-                                         llvmFuncName,
-                                         llvmModule);
+    llvm::Function *func = llvmModule->getFunction(llvmFuncName);
+    if (!func) {
+        func = llvm::Function::Create(llFuncType,
+                                      linkage,
+                                      llvmFuncName,
+                                      llvmModule);
+    }
+    x->llvmFunc = func;
     if (x->attrStdCall)
         x->llvmFunc->setCallingConv(llvm::CallingConv::X86_StdCall);
     else if (x->attrFastCall)
