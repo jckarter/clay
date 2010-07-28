@@ -821,6 +821,40 @@ static bool pattern(ExprPtr &x) {
 
 
 //
+// typeSpec, optTypeSpec, exprTypeSpec, optExprTypeSpec
+//
+
+static bool typeSpec(ExprPtr &x) {
+    if (!symbol(":")) return false;
+    return pattern(x);
+}
+
+static bool optTypeSpec(ExprPtr &x) {
+    int p = save();
+    if (!typeSpec(x)) {
+        restore(p);
+        x = NULL;
+    }
+    return true;
+}
+
+static bool exprTypeSpec(ExprPtr &x) {
+    if (!symbol(":")) return false;
+    return expression(x);
+}
+
+static bool optExprTypeSpec(ExprPtr &x) {
+    int p = save();
+    if (!exprTypeSpec(x)) {
+        restore(p);
+        x = NULL;
+    }
+    return true;
+}
+
+
+
+//
 // statements
 //
 
@@ -1064,13 +1098,45 @@ static bool forStatement(StatementPtr &x) {
     return true;
 }
 
+static bool catchBlock(CatchPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("catch")) return false;
+    if (!symbol("(")) return false;
+    IdentifierPtr evar;
+    if (!identifier(evar)) return false;
+    ExprPtr etype;
+    if (!optExprTypeSpec(etype)) return false;
+    if (!symbol(")")) return false;
+    StatementPtr body;
+    if (!block(body)) return false;
+    x = new Catch(evar, etype, body);
+    x->location = location;
+    return true;
+}
+
+static bool catchBlockList(vector<CatchPtr> &x) {
+    CatchPtr a;
+    if (!catchBlock(a)) return false;
+    x.clear();
+    x.push_back(a);
+    while (true) {
+        int p = save();
+        if (!catchBlock(a)) {
+            restore(p);
+            break;
+        }
+        x.push_back(a);
+    }
+    return true;
+}
+
 static bool tryStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    StatementPtr a, b;
+    StatementPtr a;
     if (!keyword("try")) return false;
     if (!block(a)) return false;
-    if (!keyword("catch")) return false;
-    if (!block(b)) return false;
+    vector<CatchPtr> b;
+    if (!catchBlockList(b)) return false;
     x = new Try(a, b);
     x->location = location;
     return true;
@@ -1176,31 +1242,6 @@ static bool optStaticParams(vector<IdentifierPtr> &params,
         varParam = NULL;
     }
     return true;
-}
-
-
-
-//
-// typeSpec, optTypeSpec, exprTypeSpec
-//
-
-static bool typeSpec(ExprPtr &x) {
-    if (!symbol(":")) return false;
-    return pattern(x);
-}
-
-static bool optTypeSpec(ExprPtr &x) {
-    int p = save();
-    if (!typeSpec(x)) {
-        restore(p);
-        x = NULL;
-    }
-    return true;
-}
-
-static bool exprTypeSpec(ExprPtr &x) {
-    if (!symbol(":")) return false;
-    return expression(x);
 }
 
 

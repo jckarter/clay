@@ -2526,6 +2526,8 @@ bool codegenStatement(StatementPtr stmt,
 
     case TRY : {
         Try *x = (Try *)stmt.ptr();
+        if (!x->desugaredCatchBlock)
+            x->desugaredCatchBlock = desugarCatchBlocks(x->catchBlocks);
 
         llvm::BasicBlock *catchBegin = newBasicBlock("catchBegin");
         llvm::BasicBlock *catchEnd = newBasicBlock("catchEnd");
@@ -2538,7 +2540,8 @@ bool codegenStatement(StatementPtr stmt,
         ctx->exceptionTargets.pop_back();
 
         llvmBuilder->SetInsertPoint(catchBegin);
-        bool catchTerminated = codegenStatement(x->catchBlock, env, ctx);
+        bool catchTerminated =
+            codegenStatement(x->desugaredCatchBlock, env, ctx);
         if (!catchTerminated)
             llvmBuilder->CreateBr(catchEnd);
 
@@ -2550,7 +2553,7 @@ bool codegenStatement(StatementPtr stmt,
     case THROW : {
         Throw *x = (Throw *)stmt.ptr();
         if (!x->expr)
-            error("blank throw statement not yet supported");
+            error("throw statements need an argument");
         ExprPtr callable = kernelNameRef("throwValue");
         vector<ExprPtr> args(1, x->expr);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());

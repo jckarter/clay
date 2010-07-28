@@ -356,7 +356,9 @@ StatementPtr clone(StatementPtr x)
 
     case TRY : {
         Try *y = (Try *)x.ptr();
-        out = new Try(clone(y->tryBlock), clone(y->catchBlock));
+        vector<CatchPtr> catchBlocks;
+        clone(y->catchBlocks, catchBlocks);
+        out = new Try(clone(y->tryBlock), catchBlocks);
         break;
     }
 
@@ -383,6 +385,19 @@ StatementPtr cloneOpt(StatementPtr x)
 }
 
 void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out)
+{
+    for (unsigned i = 0; i < x.size(); ++i)
+        out.push_back(clone(x[i]));
+}
+
+CatchPtr clone(CatchPtr x)
+{
+    return new Catch(x->exceptionVar,
+                     cloneOpt(x->exceptionType),
+                     clone(x->body));
+}
+
+void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(clone(x[i]));

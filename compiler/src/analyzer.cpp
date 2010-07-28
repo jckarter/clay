@@ -1602,9 +1602,11 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 
     case TRY : {
         Try *x = (Try *)stmt.ptr();
-        bool tryResult = analyzeStatement(x->tryBlock, env, ctx);
-        bool catchResult = analyzeStatement(x->catchBlock, env, ctx);
-        return tryResult || catchResult;
+        if (!x->desugaredCatchBlock)
+            x->desugaredCatchBlock = desugarCatchBlocks(x->catchBlocks);
+        bool result1 = analyzeStatement(x->tryBlock, env, ctx);
+        bool result2 = analyzeStatement(x->desugaredCatchBlock, env, ctx);
+        return result1 || result2;
     }
 
     case THROW :

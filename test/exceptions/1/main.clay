@@ -24,7 +24,7 @@ main () {
         throw 1;
         var b = Test(2);
     }
-    catch {
+    catch (e) {
         println("Caught!");
     }
 }
