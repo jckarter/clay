@@ -16,12 +16,12 @@ overload printTo(stream, x:NoException) {
     printTo(stream, "NoException()");
 }
 
-var currentException = Exception(NoException());
+private var currentException = Exception(NoException());
 
 
 
 //
-// throwValue, signalException
+// throwValue, continueException
 //
 
 throwValue(forward x) {
@@ -29,9 +29,27 @@ throwValue(forward x) {
     signalException();
 }
 
-signalException() __llvm__{
+continueException() {
+    signalException();
+}
+
+private signalException() __llvm__{
     ret i32 1
 }
+
+
+
+//
+// exceptionIs?, exceptionAs, exceptionAsAny
+//
+
+[T]
+exceptionIs?(static T) = variantIs?(currentException, T);
+
+[T]
+exceptionAs(static T) = move(variantAs(currentException, T));
+
+exceptionAsAny() = currentException;
 
 
 
@@ -44,6 +62,6 @@ unhandledExceptionInExternal() {
         println("unhandled exception in external procedure");
         libc.abort();
     }
-    catch {
+    catch (e) {
     }
 }

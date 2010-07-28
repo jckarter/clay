@@ -364,7 +364,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
     case TRY : {
         const Try *y = (const Try *)x;
-        out << "Try(" << y->tryBlock << ", " << y->catchBlock << ")";
+        out << "Try(" << y->tryBlock << ", " << y->catchBlocks << ")";
         break;
     }
     case THROW : {
@@ -454,6 +454,13 @@ static void print(ostream &out, const Object *x) {
     case STATEMENT : {
         const Statement *y = (const Statement *)x;
         printStatement(out, y);
+        break;
+    }
+
+    case CATCH : {
+        const Catch *y = (const Catch *)x;
+        out << "Catch(" << y->exceptionVar << ", "
+            << y->exceptionType << ", " << y->body << ")";
         break;
     }
 

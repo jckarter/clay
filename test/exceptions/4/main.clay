@@ -1,0 +1,79 @@
+
+//
+// define custom exception type Error1
+//
+
+record Error1 {
+    msg : StringConstant;
+}
+
+// include Error1 as a member of the Exception variant
+instance Exception = Error1;
+
+overload printTo(stream, x:Error1) {
+    printTo(stream, "Error1: ", x.msg);
+}
+
+
+//
+// define custom exception type Error2
+//
+
+record Error2 {
+    msg : StringConstant;
+}
+
+// include Error2 as a member of the Exception variant
+instance Exception = Error2;
+
+overload printTo(stream, x:Error2) {
+    printTo(stream, "Error2: ", x.msg);
+}
+
+
+//
+// test exceptions
+//
+
+doSomething(x) {
+    if (x < 0)
+        throw Error1("negative");
+    else if (x > 0)
+        throw Error2("positive");
+    else
+        throw 0;
+}
+
+testException1(x) {
+    try {
+        doSomething(x);
+    }
+    catch (e:Error1) {
+        println(e);
+    }
+    catch (e:Error2) {
+        println(e);
+    }
+    catch (e:Int) {
+        println("error code = ", e);
+    }
+}
+
+testException2(x) {
+    try {
+        doSomething(x);
+    }
+    catch (e) {
+        println("exception: ", *e);
+    }
+}
+
+main() {
+    testException1(-1);
+    testException1(0);
+    testException1(1);
+
+    testException2(-1);
+    testException2(0);
+    testException2(1);
+}

@@ -123,6 +123,7 @@ enum ObjectKind {
 
     EXPRESSION,
     STATEMENT,
+    CATCH,
 
     FORMAL_ARG,
     RETURN_SPEC,
@@ -232,6 +233,7 @@ struct Continue;
 struct For;
 struct ForeignStatement;
 struct Try;
+struct Catch;
 struct Throw;
 
 struct FormalArg;
@@ -362,6 +364,7 @@ typedef Pointer<Continue> ContinuePtr;
 typedef Pointer<For> ForPtr;
 typedef Pointer<ForeignStatement> ForeignStatementPtr;
 typedef Pointer<Try> TryPtr;
+typedef Pointer<Catch> CatchPtr;
 typedef Pointer<Throw> ThrowPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
@@ -1070,10 +1073,25 @@ struct ForeignStatement : public Statement {
 
 struct Try : public Statement {
     StatementPtr tryBlock;
-    StatementPtr catchBlock;
-    Try(StatementPtr tryBlock, StatementPtr catchBlock)
+    vector<CatchPtr> catchBlocks;
+    StatementPtr desugaredCatchBlock;
+
+    Try(StatementPtr tryBlock,
+        vector<CatchPtr> catchBlocks)
         : Statement(TRY), tryBlock(tryBlock),
-          catchBlock(catchBlock) {}
+          catchBlocks(catchBlocks) {}
+};
+
+struct Catch : public ANode {
+    IdentifierPtr exceptionVar;
+    ExprPtr exceptionType; // optional
+    StatementPtr body;
+
+    Catch(IdentifierPtr exceptionVar,
+          ExprPtr exceptionType,
+          StatementPtr body)
+        : ANode(CATCH), exceptionVar(exceptionVar),
+          exceptionType(exceptionType), body(body) {}
 };
 
 struct Throw : public Statement {
@@ -1556,6 +1574,8 @@ ReturnSpecPtr clone(ReturnSpecPtr x);
 StatementPtr clone(StatementPtr x);
 StatementPtr cloneOpt(StatementPtr x);
 void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out);
+CatchPtr clone(CatchPtr x);
+void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out);
 
 
 
@@ -2116,6 +2136,7 @@ ExprPtr desugarNew(NewPtr x);
 ExprPtr desugarStaticExpr(StaticExprPtr x);
 const char *updateOperatorName(int op);
 StatementPtr desugarForStatement(ForPtr x);
+StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
 
 
 

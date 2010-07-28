@@ -13,7 +13,7 @@ m(x) {
             throw 1;
         var r2 = Test(2);
     }
-    catch {
+    catch (e) {
         println("Caught. Throwing again.");
         throw 2;
     }
@@ -28,7 +28,7 @@ main() {
         m(1);
         var r = Test(30);
     }
-    catch {
+    catch (e) {
         println("Caught");
     }
     return 0;

@@ -145,3 +145,67 @@ StatementPtr desugarForStatement(ForPtr x) {
     bs.push_back(new While(hasNextCall.ptr(), whileBody.ptr()));
     return block.ptr();
 }
+
+StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
+    bool lastWasAny = false;
+    IfPtr lastIf;
+    StatementPtr result;
+    for (unsigned i = 0; i < catchBlocks.size(); ++i) {
+        CatchPtr x = catchBlocks[i];
+        if (lastWasAny)
+            error(x, "unreachable catch block");
+        if (x->exceptionType.ptr()) {
+            vector<ExprPtr> typeArg(1, x->exceptionType);
+            CallPtr cond = new Call(kernelNameRef("exceptionIs?"), typeArg);
+            cond->location = x->exceptionType->location;
+
+            BlockPtr block = new Block();
+            CallPtr getter = new Call(kernelNameRef("exceptionAs"), typeArg);
+            getter->location = x->exceptionVar->location;
+            BindingPtr binding =
+                new Binding(VAR,
+                            vector<IdentifierPtr>(1, x->exceptionVar),
+                            vector<ExprPtr>(1, getter.ptr()));
+            binding->location = x->exceptionVar->location;
+
+            block->statements.push_back(binding.ptr());
+            block->statements.push_back(x->body);
+
+            IfPtr ifStatement = new If(cond.ptr(), block.ptr());
+            ifStatement->location = x->location;
+            if (!result)
+                result = ifStatement.ptr();
+            if (lastIf.ptr())
+                lastIf->elsePart = ifStatement.ptr();
+            lastIf = ifStatement;
+        }
+        else {
+            BlockPtr block = new Block();
+            block->location = x->location;
+            CallPtr getter = new Call(kernelNameRef("exceptionAsAny"));
+            getter->location = x->exceptionVar->location;
+            BindingPtr binding =
+                new Binding(VAR,
+                            vector<IdentifierPtr>(1, x->exceptionVar),
+                            vector<ExprPtr>(1, getter.ptr()));
+            binding->location = x->exceptionVar->location;
+            block->statements.push_back(binding.ptr());
+            block->statements.push_back(x->body);
+
+            if (!result)
+                result = block.ptr();
+            if (lastIf.ptr())
+                lastIf->elsePart = block.ptr();
+
+            lastWasAny = true;
+            lastIf = NULL;
+        }
+    }
+    assert(result.ptr());
+    if (!lastWasAny) {
+        assert(lastIf.ptr());
+        CallPtr continueException = new Call(kernelNameRef("continueException"));
+        lastIf->elsePart = new ExprStatement(continueException.ptr());
+    }
+    return result;
+}
