@@ -40,7 +40,7 @@ errorMessage(errorCode) {
         CULong(size(buf)),
         null(Int));
     if (result == 0)
-        return "Unknown error";
+        return String("Unknown error");
     return String(&buf[0]);
 }
 
