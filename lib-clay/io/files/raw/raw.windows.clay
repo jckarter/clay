@@ -14,9 +14,9 @@ overload RegularRecord?(static RawFile) = false;
 
 private stdHandle(x) = win32.GetStdHandle(win32.DWORD(x));
 
-stdinRawFile()  = RawFile(stdHandle(win32.STD_INPUT_HANDLE), false)
-stdoutRawFile() = RawFile(stdHandle(win32.STD_OUTPUT_HANDLE), false)
-stderrRawFile() = RawFile(stdHandle(win32.STD_ERROR_HANDLE), false)
+stdinRawFile()  = RawFile(stdHandle(win32.STD_INPUT_HANDLE), false);
+stdoutRawFile() = RawFile(stdHandle(win32.STD_OUTPUT_HANDLE), false);
+stderrRawFile() = RawFile(stdHandle(win32.STD_ERROR_HANDLE), false);
 
 
 
