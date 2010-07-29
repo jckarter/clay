@@ -1,0 +1,65 @@
+
+record Person {
+    name : StringConstant;
+    age : Int;
+    address : Address;
+}
+
+record Address {
+    email : StringConstant;
+}
+
+main() {
+    var p = Person("Foo", 100, Address("foo@bar.com"));
+    prettyPrint(p);
+    println();
+}
+
+
+
+//
+// prettyPrint
+//
+
+procedure prettyPrint;
+
+[T | Record?(T)]
+overload prettyPrint(x:T) { printRecord(x); }
+
+[T | CallDefined?(printTo, File, T)]
+overload prettyPrint(x:T) { print(x); }
+
+
+
+//
+// printRecord, printFields
+//
+
+[T]
+printRecord(x:T) {
+    print(T, "(");
+    printFields(x, static 0);
+    print(")");
+}
+
+identifierString(ident) {
+    var s = String();
+    printTo(s, ident);
+    return String(slice(s, 1));
+}
+
+[T,i]
+private printFields(x:T, static i) {
+    if (i > 0)
+        print(", ");
+    var fieldName = RecordFieldName(T, static SizeT(i));
+    ref value = recordFieldRef(x, static SizeT(i));
+    print(identifierString(fieldName), "=");
+    prettyPrint(value);
+
+    printFields(x, static i+1);
+}
+
+[T,i | i == RecordFieldCount(T)]
+overload printFields(x:T, static i) {
+}

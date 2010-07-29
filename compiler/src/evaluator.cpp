@@ -3459,6 +3459,17 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_RecordFieldName : {
+        ensureArity(args, 2);
+        RecordTypePtr rt = valueToRecordType(args, 0);
+        size_t i = valueToStaticSizeT(args, 1);
+        const vector<IdentifierPtr> &fieldNames = recordFieldNames(rt);
+        if (i >= fieldNames.size())
+            argumentError(1, "record field index out of range");
+        evalStaticObject(fieldNames[i].ptr(), out);
+        break;
+    }
+
     case PRIM_RecordFieldIndex : {
         ensureArity(args, 2);
         RecordTypePtr rt = valueToRecordType(args, 0);

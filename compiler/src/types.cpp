@@ -391,6 +391,7 @@ static void initializeRecordFields(RecordTypePtr t) {
                               "tuple of (name,type)");
             t->fieldIndexMap[name->str] = i;
             t->fieldTypes.push_back(type);
+            t->fieldNames.push_back(name);
         }
     }
     else {
@@ -399,8 +400,15 @@ static void initializeRecordFields(RecordTypePtr t) {
             t->fieldIndexMap[x->name->str] = i;
             TypePtr ftype = evaluateType(x->type, env);
             t->fieldTypes.push_back(ftype);
+            t->fieldNames.push_back(x->name);
         }
     }
+}
+
+const vector<IdentifierPtr> &recordFieldNames(RecordTypePtr t) {
+    if (!t->fieldsInitialized)
+        initializeRecordFields(t);
+    return t->fieldNames;
 }
 
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {
