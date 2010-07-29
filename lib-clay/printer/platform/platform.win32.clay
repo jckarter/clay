@@ -1,0 +1,3 @@
+
+var formatForInt64 = "%I64d";
+var formatForUInt64 = "%I64u";
