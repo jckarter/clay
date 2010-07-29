@@ -48,60 +48,39 @@ overload printTo(stream, x:Bool) {
 
 
 //
-// printTo - integers
+// printTo - integers, floats
 //
 
 [I | SignedInteger?(I)]
 overload printTo(stream, x:I) {
-    var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring("%d"), Int(x));
-    var n = libc.strlen(&buf[0]);
-    var ptr = Pointer[Byte](&buf[0]);
-    write(stream, ptr, SizeT(n));
+    printWithSprintf(stream, "%d", Int(x));
 }
 
 [I | UnsignedInteger?(I)]
 overload printTo(stream, x:I) {
-    var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring("%u"), UInt(x));
-    var n = libc.strlen(&buf[0]);
-    var ptr = Pointer[Byte](&buf[0]);
-    write(stream, ptr, SizeT(n));
+    printWithSprintf(stream, "%u", UInt(x));
 }
 
-[I | SignedInteger?(I) and TypeSize(I) == 8]
-overload printTo(stream, x:I) {
-    var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring(formatForInt64), Int64(x));
-    var n = libc.strlen(&buf[0]);
-    var ptr = Pointer[Byte](&buf[0]);
-    write(stream, ptr, SizeT(n));
+overload printTo(stream, x:Int64) {
+    printWithSprintf(stream, formatForInt64, x);
 }
 
-[I | UnsignedInteger?(I) and TypeSize(I) == 8]
-overload printTo(stream, x:I) {
-    var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring(formatForUInt64), UInt64(x));
-    var n = libc.strlen(&buf[0]);
-    var ptr = Pointer[Byte](&buf[0]);
-    write(stream, ptr, SizeT(n));
+overload printTo(stream, x:UInt64) {
+    printWithSprintf(stream, formatForUInt64, x);
 }
-
-
-
-//
-// printTo - floating point
-//
 
 [F | Float?(F)]
 overload printTo(stream, x:F) {
+    printWithSprintf(stream, "%f", Double(x));
+}
+
+private printWithSprintf(stream, formatString, value) {
     var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring("%f"), Double(x));
+    libc.sprintf(&buf[0], cstring(formatString), value);
     var n = libc.strlen(&buf[0]);
     var ptr = Pointer[Byte](&buf[0]);
     write(stream, ptr, SizeT(n));
 }
-
 
 
 //
