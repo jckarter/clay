@@ -26,8 +26,11 @@ procedure prettyPrint;
 [T | Record?(T)]
 overload prettyPrint(x:T) { printRecord(x); }
 
-[T | CallDefined?(printTo, File, T)]
+[T | PrintDefined?(T)]
 overload prettyPrint(x:T) { print(x); }
+
+
+PrintDefined?(T) = CallDefined?(printTo, File, T);
 
 
 
@@ -42,19 +45,13 @@ printRecord(x:T) {
     print(")");
 }
 
-identifierString(ident) {
-    var s = String();
-    printTo(s, ident);
-    return String(slice(s, 1));
-}
-
 [T,i]
 private printFields(x:T, static i) {
     if (i > 0)
         print(", ");
     var fieldName = RecordFieldName(T, static SizeT(i));
     ref value = recordFieldRef(x, static SizeT(i));
-    print(identifierString(fieldName), "=");
+    print(fieldName, "=");
     prettyPrint(value);
 
     printFields(x, static i+1);
