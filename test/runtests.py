@@ -1,11 +1,11 @@
 import os
 import itertools
-#import multiprocessing.util
 import pickle
 import sys
 import imp
 from subprocess import Popen, PIPE
 from multiprocessing import Pool, cpu_count
+import time
 
 testDir = os.path.dirname(os.path.abspath(__file__))
 
@@ -85,8 +85,22 @@ class TestCase(object):
             return "fail"
         process = Popen([outfilename], stdout=PIPE)
         process.wait()
-        os.unlink(outfilename)
-        return process.stdout.read()
+        result = process.stdout.read()
+        self.removefile(outfilename)
+        return result
+
+    def removefile(self, filename) :
+        # on windows, sometimes deleting a file
+        # deleting a file immediately after executing it 
+        # results in a 'access denied' error.
+        # so we wait and try again a few times.
+        attempts = 1
+        while (attempts <= 3) and os.path.exists(filename) :
+            try :
+                os.unlink(filename)
+            except OSError :
+                time.sleep(1)
+            attempts += 1
 
 def findTestCases():
     TestCase(testDir)
