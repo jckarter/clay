@@ -1,5 +1,6 @@
 
 import libc;
+import printer.platform.(formatForInt64, formatForUInt64);
 
 
 //
@@ -71,7 +72,7 @@ overload printTo(stream, x:I) {
 [I | SignedInteger?(I) and TypeSize(I) == 8]
 overload printTo(stream, x:I) {
     var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring("%lld"), Int64(x));
+    libc.sprintf(&buf[0], cstring(formatForInt64), Int64(x));
     var n = libc.strlen(&buf[0]);
     var ptr = Pointer[Byte](&buf[0]);
     write(stream, ptr, SizeT(n));
@@ -80,7 +81,7 @@ overload printTo(stream, x:I) {
 [I | UnsignedInteger?(I) and TypeSize(I) == 8]
 overload printTo(stream, x:I) {
     var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring("%llu"), UInt64(x));
+    libc.sprintf(&buf[0], cstring(formatForUInt64), UInt64(x));
     var n = libc.strlen(&buf[0]);
     var ptr = Pointer[Byte](&buf[0]);
     write(stream, ptr, SizeT(n));
