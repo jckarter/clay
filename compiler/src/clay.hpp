@@ -1716,6 +1716,7 @@ enum PrimOpCode {
     PRIM_RecordP,
     PRIM_RecordFieldCount,
     PRIM_RecordFieldOffset,
+    PRIM_RecordFieldName,
     PRIM_RecordFieldIndex,
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
@@ -1894,6 +1895,7 @@ struct RecordType : public Type {
     vector<ObjectPtr> params;
 
     bool fieldsInitialized;
+    vector<IdentifierPtr> fieldNames;
     vector<TypePtr> fieldTypes;
     map<string, size_t> fieldIndexMap;
 
@@ -1978,6 +1980,7 @@ TypePtr enumType(EnumerationPtr enumeration);
 
 bool isPrimitiveType(TypePtr t);
 
+const vector<IdentifierPtr> &recordFieldNames(RecordTypePtr t);
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
 const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t);
 

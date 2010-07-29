@@ -1950,6 +1950,27 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_RecordFieldOffset :
         return new MultiPValue(new PValue(cSizeTType, true));
 
+    case PRIM_RecordFieldName : {
+        ensureArity(args, 2);
+        ObjectPtr first = unwrapStaticType(args->values[0]->type);
+        if (!first)
+            argumentError(0, "expecting a record type");
+        TypePtr t;
+        if (!staticToType(first, t))
+            argumentError(0, "expecting a record type");
+        if (t->typeKind != RECORD_TYPE)
+            argumentError(0, "expecting a record type");
+        RecordType *rt = (RecordType *)t.ptr();
+        ObjectPtr second = unwrapStaticType(args->values[1]->type);
+        size_t i = 0;
+        if (!second || !staticToSizeT(second, i))
+            argumentError(1, "expecting SizeT value");
+        const vector<IdentifierPtr> fieldNames = recordFieldNames(rt);
+        if (i >= fieldNames.size())
+            argumentError(1, "field index out of range");
+        return new MultiPValue(staticPValue(fieldNames[i].ptr()));
+    }
+
     case PRIM_RecordFieldIndex :
         return new MultiPValue(new PValue(cSizeTType, true));
 
