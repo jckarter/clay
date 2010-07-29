@@ -679,15 +679,17 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         UnionType *x = (UnionType *)t.ptr();
         const llvm::Type *maxAlignType = NULL;
         size_t maxAlign = 0;
+        size_t maxAlignSize = 0;
         size_t maxSize = 0;
         for (unsigned i = 0; i < x->memberTypes.size(); ++i) {
             const llvm::Type *llt = llvmType(x->memberTypes[i]);
             size_t align = llvmTargetData->getABITypeAlignment(llt);
+            size_t size = llvmTargetData->getTypeAllocSize(llt);
             if (align > maxAlign) {
                 maxAlign = align;
                 maxAlignType = llt;
+                maxAlignSize = size;
             }
-            size_t size = llvmTargetData->getTypeAllocSize(llt);
             if (size > maxSize)
                 maxSize = size;
         }
@@ -697,9 +699,9 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         }
         vector<const llvm::Type *> llTypes;
         llTypes.push_back(maxAlignType);
-        if (maxSize > maxAlign) {
+        if (maxSize > maxAlignSize) {
             const llvm::Type *padding =
-                llvm::ArrayType::get(llvmIntType(8), maxSize-maxAlign);
+                llvm::ArrayType::get(llvmIntType(8), maxSize-maxAlignSize);
             llTypes.push_back(padding);
         }
         const llvm::Type *llType =
