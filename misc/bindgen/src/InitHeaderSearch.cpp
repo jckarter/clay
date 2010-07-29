@@ -263,10 +263,12 @@ static bool getVisualStudioDir(std::string &path) {
     else if (vs80comntools)
       vscomntools = vs80comntools;
     if (vscomntools && *vscomntools) {
-      char *p = (char*)strstr(vscomntools, "\\Common7\\Tools");
+      char *temp = strdup(vscomntools);
+      char *p = (char*)strstr(temp, "\\Common7\\Tools");
       if (p)
         *p = '\0';
-      path = vscomntools;
+      path = temp;
+      free(temp);
       return(true);
     }
     else
