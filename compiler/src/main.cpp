@@ -125,6 +125,7 @@ static void generateLLVM(llvm::Module *module, llvm::raw_ostream *out)
 
 static void generateAssembly(llvm::Module *module,
                              llvm::raw_ostream *out,
+                             bool emitObject,
                              bool sharedLib)
 {
     llvm::Triple theTriple(module->getTargetTriple());
@@ -147,10 +148,14 @@ static void generateAssembly(llvm::Module *module,
     target->setAsmVerbosityDefault(true);
 
     llvm::formatted_raw_ostream fout(*out);
+    llvm::TargetMachine::CodeGenFileType fileType = emitObject
+        ? llvm::TargetMachine::CGFT_ObjectFile
+        : llvm::TargetMachine::CGFT_AssemblyFile;
+
     bool result =
         target->addPassesToEmitFile(fpasses,
                                     fout,
-                                    llvm::TargetMachine::CGFT_AssemblyFile,
+                                    fileType,
                                     llvm::CodeGenOpt::Aggressive);
     assert(!result);
 
@@ -168,8 +173,7 @@ static bool generateBinary(llvm::Module *module,
                            const llvm::sys::Path &gccPath,
                            bool exceptions,
                            bool sharedLib,
-                           const vector<string> &libSearchPath,
-                           const vector<string> &libraries)
+                           const vector<string> &arguments)
 {
     llvm::sys::Path tempAsm("clayasm");
     string errMsg;
@@ -188,7 +192,7 @@ static bool generateBinary(llvm::Module *module,
         return false;
     }
 
-    generateAssembly(module, &asmOut, sharedLib);
+    generateAssembly(module, &asmOut, false, sharedLib);
     asmOut.close();
 
     vector<const char *> gccArgs;
@@ -211,10 +215,8 @@ static bool generateBinary(llvm::Module *module,
     gccArgs.push_back("-x");
     gccArgs.push_back("assembler");
     gccArgs.push_back(tempAsm.c_str());
-    for (unsigned i = 0; i < libSearchPath.size(); ++i)
-        gccArgs.push_back(libSearchPath[i].c_str());
-    for (unsigned i = 0; i < libraries.size(); ++i)
-        gccArgs.push_back(libraries[i].c_str());
+    for (unsigned i = 0; i < arguments.size(); ++i)
+        gccArgs.push_back(arguments[i].c_str());
     gccArgs.push_back(NULL);
     llvm::sys::Program::ExecuteAndWait(gccPath, &gccArgs[0]);
 
@@ -229,18 +231,23 @@ static void usage()
 {
     cerr << "usage: clay <options> <clayfile>\n";
     cerr << "options:\n";
-    cerr << "  -o <file>       - specify output file\n";
-    cerr << "  -shared         - create a dynamically linkable library\n";
-    cerr << "  -dll            - create a dynamically linkable library\n";
-    cerr << "  -llvm           - emit llvm code\n";
-    cerr << "  -asm            - emit assember code\n";
-    cerr << "  -unoptimized    - generate unoptimized code\n";
-    cerr << "  -exceptions     - enable exception handling\n";
-    cerr << "  -no-exceptions  - disable exception handling\n";
-    cerr << "  -abort          - abort on error (to get stacktrace in gdb)\n";
-    cerr << "  -run            - execute the program without writing to disk\n";
-    cerr << "  -L<dir>         - add <dir> to library search path\n";
-    cerr << "  -l<lib>         - link with library <lib>\n";
+    cerr << "  -o <file>         - specify output file\n";
+    cerr << "  -shared           - create a dynamically linkable library\n";
+    cerr << "  -dll              - create a dynamically linkable library\n";
+    cerr << "  -llvm             - emit llvm code\n";
+    cerr << "  -asm              - emit assember code\n";
+    cerr << "  -c                - emit object code\n";
+    cerr << "  -unoptimized      - generate unoptimized code\n";
+    cerr << "  -exceptions       - enable exception handling\n";
+    cerr << "  -no-exceptions    - disable exception handling\n";
+    cerr << "  -abort            - abort on error (to get stacktrace in gdb)\n";
+    cerr << "  -run              - execute the program without writing to disk\n";
+#ifdef __APPLE__
+    cerr << "  -F<dir>           - add <dir> to framework search path\n";
+    cerr << "  -framework <name> - link with framework <name>\n";
+#endif
+    cerr << "  -L<dir>           - add <dir> to library search path\n";
+    cerr << "  -l<lib>           - link with library <lib>\n";
 }
 
 int main(int argc, char **argv) {
@@ -252,6 +259,7 @@ int main(int argc, char **argv) {
     bool optimize = true;
     bool emitLLVM = false;
     bool emitAsm = false;
+    bool emitObject = false;
     bool sharedLib = false;
     bool exceptions = true;
     bool abortOnError = false;
@@ -262,6 +270,10 @@ int main(int argc, char **argv) {
 
     vector<string> libSearchPath;
     vector<string> libraries;
+#ifdef __APPLE__
+    vector<string> frameworkSearchPath;
+    vector<string> frameworks;
+#endif
 
     for (int i = 1; i < argc; ++i) {
         if ((strcmp(argv[i], "-shared") == 0) ||
@@ -274,6 +286,9 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-asm") == 0) {
             emitAsm = true;
+        }
+        else if (strcmp(argv[i], "-c") == 0) {
+            emitObject = true;
         }
         else if (strcmp(argv[i], "-unoptimized") == 0) {
             optimize = false;
@@ -304,6 +319,38 @@ int main(int argc, char **argv) {
             ++i;
             outputFile = argv[i];
         }
+#ifdef __APPLE__
+        else if (strstr(argv[i], "-F") == argv[i]) {
+            string frameworkDir = argv[i] + strlen("-F");
+            if (frameworkDir.empty()) {
+                if (i+1 == argc) {
+                    cerr << "error: directory missing after -F\n";
+                    return -1;
+                }
+                ++i;
+                frameworkDir = argv[i];
+                if (frameworkDir.empty() || (frameworkDir[0] == '-')) {
+                    cerr << "error: directory missing after -F\n";
+                    return -1;
+                }
+            }
+            frameworkSearchPath.push_back("-F" + frameworkDir);
+        }
+        else if (strcmp(argv[i], "-framework") == 0) {
+            if (i+1 == argc) {
+                cerr << "error: framework name missing after -framework\n";
+                return -1;
+            }
+            ++i;
+            string framework = argv[i];
+            if (framework.empty() || (framework[0] == '-')) {
+                cerr << "error: framework name missing after -framework\n";
+                return -1;
+            }
+            frameworks.push_back("-framework");
+            frameworks.push_back(framework);
+        }
+#endif
         else if (strstr(argv[i], "-L") == argv[i]) {
             string libDir = argv[i] + strlen("-L");
             if (libDir.empty()) {
@@ -355,8 +402,8 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    if (emitLLVM && emitAsm) {
-        cerr << "error: use either -llvm or -asm, not both\n";
+    if (emitLLVM + emitAsm + emitObject > 1) {
+        cerr << "error: use only one of -llvm, -asm, or -c\n";
         return -1;
     }
 
@@ -411,10 +458,15 @@ int main(int argc, char **argv) {
     addSearchPath(libDirProduction2.str());
 
     if (outputFile.empty()) {
+        string::size_type dot = clayFile.rfind('.');
+        string clayFileBasename(clayFile, 0, dot);
+
         if (emitLLVM)
-            outputFile = "a.ll";
+            outputFile = clayFileBasename + ".ll";
         else if (emitAsm)
-            outputFile = "a.s";
+            outputFile = clayFileBasename + ".s";
+        else if (emitObject)
+            outputFile = clayFileBasename + ".o";
         else if (sharedLib)
             outputFile = DEFAULT_DLL;
         else
@@ -435,7 +487,7 @@ int main(int argc, char **argv) {
 
     if (run)
         runModule(llvmModule);
-    else if (emitLLVM || emitAsm) {
+    else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
         llvm::raw_fd_ostream out(outputFile.c_str(),
                                  errorInfo,
@@ -446,8 +498,8 @@ int main(int argc, char **argv) {
         }
         if (emitLLVM)
             generateLLVM(llvmModule, &out);
-        else if (emitAsm)
-            generateAssembly(llvmModule, &out, sharedLib);
+        else if (emitAsm || emitObject)
+            generateAssembly(llvmModule, &out, emitObject, sharedLib);
     }
     else {
         bool result;
@@ -471,9 +523,25 @@ int main(int argc, char **argv) {
             return false;
         }
 
+        vector<string> arguments;
+        copy(
+            libSearchPath.begin(),
+            libSearchPath.end(),
+            back_inserter(arguments)
+        );
+        copy(libraries.begin(), libraries.end(), back_inserter(arguments));
+#ifdef __APPLE__
+        copy(
+            frameworkSearchPath.begin(),
+            frameworkSearchPath.end(),
+            back_inserter(arguments)
+        );
+        copy(frameworks.begin(), frameworks.end(), back_inserter(arguments));
+#endif
+
         result = generateBinary(llvmModule, outputFile, gccPath,
                                 exceptions, sharedLib,
-                                libSearchPath, libraries);
+                                arguments);
         if (!result)
             return -1;
     }
