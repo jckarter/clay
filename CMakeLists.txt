@@ -1,6 +1,10 @@
 project(clay)
 cmake_minimum_required(VERSION 2.6)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+find_package(Subversion)
+find_package(Mercurial)
+
 include(FindPythonInterp)
 
 if(UNIX)
@@ -33,10 +37,15 @@ if(UNIX)
         OUTPUT_VARIABLE LLVM_LIBS
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+    execute_process(
+        COMMAND ${LLVM_CONFIG} --src-root
+        OUTPUT_VARIABLE LLVM_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
 elseif(MSVC)
-    set(LLVM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm)
-    set(LLVM_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm-build)
-    set(CLANG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/tools/clang)
+    set(LLVM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm CACHE PATH "llvm source path")
+    set(LLVM_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm-build CACHE PATH "llvm build path")
+    set(CLANG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/tools/clang CACHE PATH "clang source path")
 
     if(IS_DIRECTORY ${LLVM_BUILD_DIR})
         link_directories(${LLVM_BUILD_DIR}/lib/Release)
@@ -77,7 +86,11 @@ endif(UNIX)
 
 set(CMAKE_OSX_ARCHITECTURES x86_64)
 
-install(DIRECTORY lib-clay DESTINATION lib)
+if(UNIX)
+    install(DIRECTORY lib-clay DESTINATION lib)
+else(UNIX)
+    install(DIRECTORY lib-clay DESTINATION .)
+endif(UNIX)
 
 add_subdirectory(compiler)
 add_subdirectory(misc)

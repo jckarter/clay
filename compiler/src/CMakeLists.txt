@@ -21,14 +21,28 @@ set(SOURCES
     types.cpp
 )
 
+# version info is only updated when cmake is run
+if(Subversion_FOUND AND EXISTS "${LLVM_DIR}/.svn")
+    Subversion_WC_INFO(${LLVM_DIR} SVN)
+    set_property(SOURCE main.cpp APPEND PROPERTY
+        COMPILE_DEFINITIONS "SVN_REVISION=\"${SVN_WC_REVISION}\"")
+endif()
+
+if(Mercurial_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.hg")
+    Mercurial_WC_INFO(${PROJECT_SOURCE_DIR} HG)
+    set_property(SOURCE main.cpp APPEND PROPERTY
+        COMPILE_DEFINITIONS "HG_CHANGESET=\"${HG_WC_CHANGESET}\";HG_DATE=\"${HG_WC_DATE}\"")
+endif()
+
 add_executable(clay ${SOURCES})
 
 set_target_properties(clay PROPERTIES COMPILE_FLAGS "${LLVM_CXXFLAGS}")
 
 if (UNIX)
     set_target_properties(clay PROPERTIES LINK_FLAGS ${LLVM_LDFLAGS})
+    install(TARGETS clay RUNTIME DESTINATION bin)
+else(UNIX)
+    install(TARGETS clay RUNTIME DESTINATION .)
 endif(UNIX)
 
 target_link_libraries(clay ${LLVM_LIBS})
-
-install(TARGETS clay RUNTIME DESTINATION bin)
