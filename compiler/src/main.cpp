@@ -405,7 +405,7 @@ int main(int argc, char **argv) {
             clayFile = argv[i];
         }
         else if (strstr(argv[i], "-v") == argv[i]) {
-            cerr << "cal compiler ("
+            cerr << "clay compiler ("
 #ifdef HG_CHANGESET
                  << "hg r" << HG_CHANGESET << ", "
 #endif
