@@ -250,6 +250,7 @@ static void usage()
 #endif
     cerr << "  -L<dir>           - add <dir> to library search path\n";
     cerr << "  -l<lib>           - link with library <lib>\n";
+    cerr << "  -v                - display version info\n";
 }
 
 static string basename(const string &fullname)
@@ -402,6 +403,17 @@ int main(int argc, char **argv) {
                 return -1;
             }
             clayFile = argv[i];
+        }
+        else if (strstr(argv[i], "-v") == argv[i]) {
+            cerr << "cal compiler ("
+#ifdef HG_CHANGESET
+                 << "hg r" << HG_CHANGESET << ", "
+#endif
+#ifdef SVN_REVISION
+                 << "llvm r" << SVN_REVISION << ", "
+#endif
+                 << __DATE__ << ")\n";
+            return 0;
         }
         else {
             cerr << "error: unrecognized option " << argv[i] << '\n';
