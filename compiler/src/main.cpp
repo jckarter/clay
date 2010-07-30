@@ -125,6 +125,7 @@ static void generateLLVM(llvm::Module *module, llvm::raw_ostream *out)
 
 static void generateAssembly(llvm::Module *module,
                              llvm::raw_ostream *out,
+                             bool emitObject,
                              bool sharedLib)
 {
     llvm::Triple theTriple(module->getTargetTriple());
@@ -147,10 +148,14 @@ static void generateAssembly(llvm::Module *module,
     target->setAsmVerbosityDefault(true);
 
     llvm::formatted_raw_ostream fout(*out);
+    llvm::TargetMachine::CodeGenFileType fileType = emitObject
+        ? llvm::TargetMachine::CGFT_ObjectFile
+        : llvm::TargetMachine::CGFT_AssemblyFile;
+
     bool result =
         target->addPassesToEmitFile(fpasses,
                                     fout,
-                                    llvm::TargetMachine::CGFT_AssemblyFile,
+                                    fileType,
                                     llvm::CodeGenOpt::Aggressive);
     assert(!result);
 
@@ -188,7 +193,7 @@ static bool generateBinary(llvm::Module *module,
         return false;
     }
 
-    generateAssembly(module, &asmOut, sharedLib);
+    generateAssembly(module, &asmOut, false, sharedLib);
     asmOut.close();
 
     vector<const char *> gccArgs;
@@ -234,6 +239,7 @@ static void usage()
     cerr << "  -dll            - create a dynamically linkable library\n";
     cerr << "  -llvm           - emit llvm code\n";
     cerr << "  -asm            - emit assember code\n";
+    cerr << "  -c              - emit object code\n";
     cerr << "  -unoptimized    - generate unoptimized code\n";
     cerr << "  -exceptions     - enable exception handling\n";
     cerr << "  -no-exceptions  - disable exception handling\n";
@@ -252,6 +258,7 @@ int main(int argc, char **argv) {
     bool optimize = true;
     bool emitLLVM = false;
     bool emitAsm = false;
+    bool emitObject = false;
     bool sharedLib = false;
     bool exceptions = true;
     bool abortOnError = false;
@@ -274,6 +281,9 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-asm") == 0) {
             emitAsm = true;
+        }
+        else if (strcmp(argv[i], "-c") == 0) {
+            emitObject = true;
         }
         else if (strcmp(argv[i], "-unoptimized") == 0) {
             optimize = false;
@@ -355,8 +365,8 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    if (emitLLVM && emitAsm) {
-        cerr << "error: use either -llvm or -asm, not both\n";
+    if (emitLLVM + emitAsm + emitObject > 1) {
+        cerr << "error: use only one of -llvm, -asm, or -c\n";
         return -1;
     }
 
@@ -415,6 +425,8 @@ int main(int argc, char **argv) {
             outputFile = "a.ll";
         else if (emitAsm)
             outputFile = "a.s";
+        else if (emitObject)
+            outputFile = "a.o";
         else if (sharedLib)
             outputFile = DEFAULT_DLL;
         else
@@ -435,7 +447,7 @@ int main(int argc, char **argv) {
 
     if (run)
         runModule(llvmModule);
-    else if (emitLLVM || emitAsm) {
+    else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
         llvm::raw_fd_ostream out(outputFile.c_str(),
                                  errorInfo,
@@ -446,8 +458,8 @@ int main(int argc, char **argv) {
         }
         if (emitLLVM)
             generateLLVM(llvmModule, &out);
-        else if (emitAsm)
-            generateAssembly(llvmModule, &out, sharedLib);
+        else if (emitAsm || emitObject)
+            generateAssembly(llvmModule, &out, emitObject, sharedLib);
     }
     else {
         bool result;
