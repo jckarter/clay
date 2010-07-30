@@ -421,12 +421,15 @@ int main(int argc, char **argv) {
     addSearchPath(libDirProduction2.str());
 
     if (outputFile.empty()) {
+        string::size_type dot = clayFile.rfind('.');
+        string clayFileBasename(clayFile, 0, dot);
+
         if (emitLLVM)
-            outputFile = "a.ll";
+            outputFile = clayFileBasename + ".ll";
         else if (emitAsm)
-            outputFile = "a.s";
+            outputFile = clayFileBasename + ".s";
         else if (emitObject)
-            outputFile = "a.o";
+            outputFile = clayFileBasename + ".o";
         else if (sharedLib)
             outputFile = DEFAULT_DLL;
         else
