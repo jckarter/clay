@@ -22,9 +22,11 @@
 #ifdef WIN32
 #define DEFAULT_EXE "a.exe"
 #define DEFAULT_DLL "a.dll"
+#define PATH_SEPARATORS "/\\"
 #else
 #define DEFAULT_EXE "a.out"
 #define DEFAULT_DLL "a.out"
+#define PATH_SEPARATORS "/"
 #endif
 
 #ifdef WIN32
@@ -250,6 +252,16 @@ static void usage()
     cerr << "  -l<lib>           - link with library <lib>\n";
 }
 
+static string basename(const string &fullname)
+{
+    string::size_type to = fullname.rfind('.');
+    string::size_type slash = fullname.find_last_of(PATH_SEPARATORS);
+    string::size_type from = slash == string::npos ? 0 : slash+1;
+    string::size_type length = to == string::npos ? string::npos : to - from;
+
+    return fullname.substr(from, length);
+}
+
 int main(int argc, char **argv) {
     if (argc == 1) {
         usage();
@@ -458,8 +470,7 @@ int main(int argc, char **argv) {
     addSearchPath(libDirProduction2.str());
 
     if (outputFile.empty()) {
-        string::size_type dot = clayFile.rfind('.');
-        string clayFileBasename(clayFile, 0, dot);
+        string clayFileBasename = basename(clayFile);
 
         if (emitLLVM)
             outputFile = clayFileBasename + ".ll";
