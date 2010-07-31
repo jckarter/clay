@@ -309,7 +309,7 @@ overload capturedRef(x) = ref x;
 // captureValues, forwardValues, capturedRefs
 //
 
-captureValues(forward ...args) = (...multiValueMap(captureValue, ...args));
+captureValues(forward ...args) = Tuple(...multiValueMap(captureValue, ...args));
 
 [...T]
 forwardValues(x:Tuple[...T]) =

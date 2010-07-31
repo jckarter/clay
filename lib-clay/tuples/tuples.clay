@@ -204,3 +204,17 @@ overload lesserTupleElements?(a:T, b:T, static i) {
 [T,i | Tuple?(T)]
 overload staticIndex(a:T, static i) =
     ref tupleRef(a, static SizeT(i));
+
+
+
+//
+// tupleLiteral
+//
+
+procedure tupleLiteral;
+
+// by default create a tuple
+inlined overload tupleLiteral(...args) = Tuple(...args);
+
+// in the case of single argument, return the argument itself.
+overload tupleLiteral(forward x) = forward x;

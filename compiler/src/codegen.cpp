@@ -676,7 +676,7 @@ void codegenExpr(ExprPtr expr,
             codegenExpr(x->args[0], env, ctx, out);
         }
         else {
-            ExprPtr Tuple = kernelNameRef("Tuple");
+            ExprPtr Tuple = kernelNameRef("tupleLiteral");
             codegenCallExpr(Tuple, x->args, env, ctx, out);
         }
         break;

@@ -809,7 +809,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
             evalExpr(x->args[0], env, out);
         }
         else {
-            evalCallExpr(kernelNameRef("Tuple"), x->args, env, out);
+            evalCallExpr(kernelNameRef("tupleLiteral"), x->args, env, out);
         }
         break;
     }
