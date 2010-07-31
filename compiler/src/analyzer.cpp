@@ -448,7 +448,7 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         {
             return analyzeExpr(x->args[0], env);
         }
-        return analyzeCallExpr(kernelNameRef("Tuple"), x->args, env);
+        return analyzeCallExpr(kernelNameRef("tupleLiteral"), x->args, env);
     }
 
     case ARRAY : {
