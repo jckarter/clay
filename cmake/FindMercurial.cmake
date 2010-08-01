@@ -14,6 +14,9 @@ IF(Mercurial_EXECUTABLE)
         "\\1" Mercurial_VERSION "${Mercurial_VERSION}")
 
     MACRO(Mercurial_WC_INFO dir prefix)
+        SET(Mercurial_TMP_LC_ALL "$ENV{LC_ALL}")
+        SET(ENV{LC_ALL} C)
+
         EXECUTE_PROCESS(COMMAND ${Mercurial_EXECUTABLE} log -l1 ${dir}
             OUTPUT_VARIABLE ${prefix}_WC_INFO
             ERROR_VARIABLE Mercurial_info_error
@@ -31,6 +34,20 @@ IF(Mercurial_EXECUTABLE)
                 "\\2" ${prefix}_WC_DATE "${${prefix}_WC_INFO}")
         ELSE()
             MESSAGE(SEND_ERROR "\"${Mercurial_EXECUTABLE} log -l1 ${dir}\" failed with output:\n${Mercurial_info_error}")
+        ENDIF()
+
+        SET(ENV{LC_ALL} ${Mercurial_TMP_LC_ALL})
+    ENDMACRO()
+
+    MACRO(Mercurial_WC_ID dir prefix)
+        EXECUTE_PROCESS(COMMAND ${Mercurial_EXECUTABLE} id ${dir}
+            OUTPUT_VARIABLE ${prefix}_WC_ID
+            ERROR_VARIABLE Mercurial_id_error
+            RESULT_VARIABLE Mercurial_id_result
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+        IF(NOT Mercurial_id_result EQUAL 0)
+            MESSAGE(SEND_ERROR "\"${Mercurial_EXECUTABLE} id ${dir}\" failed with output:\n${Mercurial_id_error}")
         ENDIF()
     ENDMACRO()
 ENDIF()
