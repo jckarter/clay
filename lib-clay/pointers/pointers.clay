@@ -129,6 +129,15 @@ freeMemory(ptr) {
 
 
 //
+// CodePointer return type helper
+//
+
+record ByRef[T] {
+}
+
+
+
+//
 // CodePointer - constructors, destroy
 //
 

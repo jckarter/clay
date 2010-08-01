@@ -811,7 +811,10 @@ void typePrint(ostream &out, TypePtr t) {
         }
         out << ", ";
         if (x->returnTypes.size() == 1) {
-            out << x->returnTypes[0];
+            if (x->returnIsRef[0])
+                out << "ByRef[" << x->returnTypes[0] << "]";
+            else
+                out << x->returnTypes[0];
         }
         else {
             out << "(";
@@ -819,8 +822,9 @@ void typePrint(ostream &out, TypePtr t) {
                 if (i != 0)
                     out << ", ";
                 if (x->returnIsRef[i])
-                    out << "ref ";
-                out << x->returnTypes[i];
+                    out << "ByRef[" << x->returnTypes[i] << "]";
+                else
+                    out << x->returnTypes[i];
             }
             out << ")";
         }

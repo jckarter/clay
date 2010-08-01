@@ -3526,9 +3526,6 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_CodePointer :
         error("CodePointer type constructor cannot be called");
 
-    case PRIM_RefCodePointer :
-        error("RefCodePointer type constructor cannot be called");
-
     case PRIM_makeCodePointer : {
         if (args->size() < 1)
             arityError2(1, args->size());

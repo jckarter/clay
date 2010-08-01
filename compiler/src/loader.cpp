@@ -548,7 +548,6 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(CodePointerP);
     PRIMITIVE(CodePointer);
-    PRIMITIVE(RefCodePointer);
     PRIMITIVE(makeCodePointer);
 
     PRIMITIVE(CCodePointerP);

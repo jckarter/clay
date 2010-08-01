@@ -46,7 +46,6 @@ Pointer[T]
 
 [T] CodePointer?(static T):Bool
 CodePointer[(A1, ..., An), (R1, ...,Rn)]
-RefCodePointer[(A1, ..., An), (R1, ...,Rn)]
 [F, A1, ..., An] makeCodePointer(static F, static A1, ..., static An)
 
 [T] CCodePointer?(static T):Bool

@@ -843,7 +843,6 @@ static bool isTypeConstructor(ObjectPtr x) {
         switch (y->primOpCode) {
         case PRIM_Pointer :
         case PRIM_CodePointer :
-        case PRIM_RefCodePointer :
         case PRIM_CCodePointer :
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
@@ -914,15 +913,30 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             return pointerType(pointeeType);
         }
 
-        case PRIM_CodePointer :
-        case PRIM_RefCodePointer : {
+        case PRIM_CodePointer : {
             ensureArity(args, 2);
             vector<TypePtr> argTypes;
             staticToTypeTuple(args, 0, argTypes);
             vector<TypePtr> returnTypes;
             staticToTypeTuple(args, 1, returnTypes);
-            bool byRef = (x->primOpCode == PRIM_RefCodePointer);
-            vector<bool> returnIsRef(returnTypes.size(), byRef);
+            vector<bool> returnIsRef(returnTypes.size(), false);
+            for (unsigned i = 0; i < returnTypes.size(); ++i) {
+                if (returnTypes[i]->typeKind == RECORD_TYPE) {
+                    RecordType *rt = (RecordType *)returnTypes[i].ptr();
+                    if (rt->record.ptr() == kernelName("ByRef").ptr()) {
+                        assert(rt->params.size() == 1);
+                        ObjectPtr obj = rt->params[0];
+                        if (obj->objKind != TYPE) {
+                            ostringstream ostr;
+                            ostr << "invalid return type: "
+                                 << returnTypes[i];
+                            error(ostr.str());
+                        }
+                        returnTypes[i] = (Type *)obj.ptr();
+                        returnIsRef[i] = true;
+                    }
+                }
+            }
             return codePointerType(argTypes, returnIsRef, returnTypes);
         }
 
@@ -1777,9 +1791,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_CodePointer :
         error("CodePointer type constructor cannot be called");
-
-    case PRIM_RefCodePointer :
-        error("RefCodePointer type constructor cannot be called");
 
     case PRIM_makeCodePointer : {
         if (args->size() < 1)
