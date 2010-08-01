@@ -1,0 +1,22 @@
+
+import libc;
+
+
+main() {
+    println(Type(libc.printf));
+    info(libc.printf);
+    info(libc.fopen);
+}
+
+
+procedure info;
+
+[In,Out]
+overload info(x:VarArgsCCodePointer[In,Out]) {
+    println("variable arity");
+}
+
+[In,Out]
+overload info(x:CCodePointer[In,Out]) {
+    println("fixed arity");
+}

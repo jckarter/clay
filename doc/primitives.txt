@@ -50,6 +50,7 @@ CodePointer[(A1, ..., An), (R1, ...,Rn)]
 
 [T] CCodePointer?(static T):Bool
 CCodePointer[(A1, ..., An), (RT?)]
+VarArgsCCodePointer[(A1, ..., An), (RT?)]
 StdCallCodePointer[(A1, ..., An), (RT?)]
 FastCallCodePointer[(A1, ..., An), (RT?)]
 [F, A1, ..., An] makeCCodePointer(static F, static A1, ..., static An)

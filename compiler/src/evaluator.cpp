@@ -3312,6 +3312,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_CCodePointer :
         error("CCodePointer type constructor cannot be called");
 
+    case PRIM_VarArgsCCodePointer :
+        error("VarArgsCCodePointer type constructor cannot be called");
+
     case PRIM_StdCallCodePointer :
         error("StdCallCodePointer type constructor cannot be called");
 
