@@ -199,7 +199,7 @@ void fmtError(const char *fmt, ...) {
 
 void argumentError(unsigned int index, const string &msg) {
     ostringstream sout;
-    sout << "argument " << index << ": " << msg;
+    sout << "argument " << (index+1) << ": " << msg;
     error(sout.str());
 }
 
