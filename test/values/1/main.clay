@@ -1,0 +1,10 @@
+main() {
+    eachValue(println, 1, 2.0, "three");
+
+    println(...weaveValues(
+        ", ",
+        ...mapValues(lambda(x) { return x + x; }, 1, 2.0, "three")
+    ));
+
+    println(foldValues(add, 1, 2, 3));
+}
