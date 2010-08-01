@@ -71,7 +71,10 @@ void codegenExternalProcedure(ExternalProcedurePtr x);
 void codegenValueHolder(ValueHolderPtr x,
                         CodegenContextPtr ctx,
                         MultiCValuePtr out);
-llvm::Value *codegenSimpleConstant(ValueHolderPtr v);
+void codegenCompileTimeValue(EValuePtr ev,
+                             CodegenContextPtr ctx,
+                             MultiCValuePtr out);
+llvm::Value *codegenSimpleConstant(EValuePtr ev);
 
 void codegenIndexingExpr(ExprPtr indexable,
                          const vector<ExprPtr> &args,
@@ -1174,16 +1177,30 @@ void codegenValueHolder(ValueHolderPtr v,
                         CodegenContextPtr ctx,
                         MultiCValuePtr out)
 {
+    EValuePtr ev = new EValue(v->type, v->buf);
+    codegenCompileTimeValue(ev, ctx, out);
+}
+
+
+
+//
+// codegenCompileTimeValue
+//
+
+void codegenCompileTimeValue(EValuePtr ev,
+                             CodegenContextPtr ctx,
+                             MultiCValuePtr out)
+{
     assert(out->size() == 1);
     CValuePtr out0 = out->values[0];
-    assert(out0->type == v->type);
+    assert(out0->type == ev->type);
 
-    switch (v->type->typeKind) {
+    switch (ev->type->typeKind) {
 
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE : {
-        llvm::Value *llv = codegenSimpleConstant(v);
+        llvm::Value *llv = codegenSimpleConstant(ev);
         llvmBuilder->CreateStore(llv, out0->llValue);
         break;
     }
@@ -1194,7 +1211,26 @@ void codegenValueHolder(ValueHolderPtr v,
         error("pointer constants are not supported");
         break;
 
+    case STATIC_TYPE : {
+        break;
+    }
+
+    case TUPLE_TYPE : {
+        TupleType *tt = (TupleType *)ev->type.ptr();
+        const llvm::StructLayout *layout = tupleTypeLayout(tt);
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+            char *srcPtr = ev->addr + layout->getElementOffset(i);
+            EValuePtr evSrc = new EValue(tt->elementTypes[i], srcPtr);
+            llvm::Value *destPtr =
+                llvmBuilder->CreateConstGEP2_32(out0->llValue, 0, i);
+            CValuePtr cgDest = new CValue(tt->elementTypes[i], destPtr);
+            codegenCompileTimeValue(evSrc, ctx, new MultiCValue(cgDest));
+        }
+        break;
+    }
+
     default :
+        std::cout << "type = " << ev->type << '\n';
         // TODO: support complex constants
         error("complex constants are not supported yet");
         break;
@@ -1210,41 +1246,43 @@ void codegenValueHolder(ValueHolderPtr v,
 
 template <typename T>
 llvm::Value *
-_sintConstant(ValueHolderPtr v)
+_sintConstant(EValuePtr ev)
 {
-    return llvm::ConstantInt::getSigned(llvmType(v->type), *((T *)v->buf));
+    return llvm::ConstantInt::getSigned(llvmType(ev->type),
+                                        *((T *)ev->addr));
 }
 
 template <typename T>
 llvm::Value *
-_uintConstant(ValueHolderPtr v)
+_uintConstant(EValuePtr ev)
 {
-    return llvm::ConstantInt::get(llvmType(v->type), *((T *)v->buf));
+    return llvm::ConstantInt::get(llvmType(ev->type),
+                                  *((T *)ev->addr));
 }
 
-llvm::Value *codegenSimpleConstant(ValueHolderPtr v)
+llvm::Value *codegenSimpleConstant(EValuePtr ev)
 {
     llvm::Value *val = NULL;
-    switch (v->type->typeKind) {
+    switch (ev->type->typeKind) {
     case BOOL_TYPE : {
-        int bv = (*(bool *)v->buf) ? 1 : 0;
+        int bv = (*(bool *)ev->addr) ? 1 : 0;
         return llvm::ConstantInt::get(llvmType(boolType), bv);
     }
     case INTEGER_TYPE : {
-        IntegerType *t = (IntegerType *)v->type.ptr();
+        IntegerType *t = (IntegerType *)ev->type.ptr();
         if (t->isSigned) {
             switch (t->bits) {
             case 8 :
-                val = _sintConstant<char>(v);
+                val = _sintConstant<char>(ev);
                 break;
             case 16 :
-                val = _sintConstant<short>(v);
+                val = _sintConstant<short>(ev);
                 break;
             case 32 :
-                val = _sintConstant<int>(v);
+                val = _sintConstant<int>(ev);
                 break;
             case 64 :
-                val = _sintConstant<long long>(v);
+                val = _sintConstant<long long>(ev);
                 break;
             default :
                 assert(false);
@@ -1253,16 +1291,16 @@ llvm::Value *codegenSimpleConstant(ValueHolderPtr v)
         else {
             switch (t->bits) {
             case 8 :
-                val = _uintConstant<unsigned char>(v);
+                val = _uintConstant<unsigned char>(ev);
                 break;
             case 16 :
-                val = _uintConstant<unsigned short>(v);
+                val = _uintConstant<unsigned short>(ev);
                 break;
             case 32 :
-                val = _uintConstant<unsigned int>(v);
+                val = _uintConstant<unsigned int>(ev);
                 break;
             case 64 :
-                val = _uintConstant<unsigned long long>(v);
+                val = _uintConstant<unsigned long long>(ev);
                 break;
             default :
                 assert(false);
@@ -1271,13 +1309,13 @@ llvm::Value *codegenSimpleConstant(ValueHolderPtr v)
         break;
     }
     case FLOAT_TYPE : {
-        FloatType *t = (FloatType *)v->type.ptr();
+        FloatType *t = (FloatType *)ev->type.ptr();
         switch (t->bits) {
         case 32 :
-            val = llvm::ConstantFP::get(llvmType(t), *((float *)v->buf));
+            val = llvm::ConstantFP::get(llvmType(t), *((float *)ev->addr));
             break;
         case 64 :
-            val = llvm::ConstantFP::get(llvmType(t), *((double *)v->buf));
+            val = llvm::ConstantFP::get(llvmType(t), *((double *)ev->addr));
             break;
         default :
             assert(false);

@@ -1,3 +1,9 @@
 VarArgsCCodePointer[Pointer[Int8], Int32]
-variable arity
-fixed arity
+
+VarArgsCCodePointer
+In = Pointer[Int8]
+Out = Int32
+
+CCodePointer
+In = Pointer[Int8]Pointer[Int8]
+Out = Pointer[Int8]

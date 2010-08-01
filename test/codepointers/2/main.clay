@@ -1,11 +1,10 @@
 
 import libc;
 
-
 main() {
     println(Type(libc.printf));
     info(libc.printf);
-    info(libc.fopen);
+    info(libc.strcpy);
 }
 
 
@@ -13,10 +12,19 @@ procedure info;
 
 [In,Out]
 overload info(x:VarArgsCCodePointer[In,Out]) {
-    println("variable arity");
+    println();
+    println("VarArgsCCodePointer");
+    println("In = ", ...values(In));
+    println("Out = ", ...values(Out));
 }
 
 [In,Out]
 overload info(x:CCodePointer[In,Out]) {
-    println("fixed arity");
+    println();
+    println("CCodePointer");
+    println("In = ", ...values(In));
+    println("Out = ", ...values(Out));
 }
+
+procedure values(x) = x;
+[...T] overload values(x:Tuple[...T]) = ...unpack(x);
