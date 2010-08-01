@@ -3588,6 +3588,9 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_CCodePointer :
         error("CCodePointer type constructor cannot be called");
 
+    case PRIM_VarArgsCCodePointer :
+        error("VarArgsCCodePointer type constructor cannot be called");
+
     case PRIM_StdCallCodePointer :
         error("StdCallCodePointer type constructor cannot be called");
 

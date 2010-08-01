@@ -103,6 +103,13 @@ static ObjectPtr primOpCCodePointer() {
     return obj;
 }
 
+static ObjectPtr primOpVarArgsCCodePointer() {
+    static ObjectPtr obj;
+    if (!obj)
+        obj = primName("VarArgsCCodePointer");
+    return obj;
+}
+
 static ObjectPtr primOpStdCallCodePointer() {
     static ObjectPtr obj;
     if (!obj)
@@ -220,9 +227,18 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             CCodePointerType *cpt = (CCodePointerType *)t;
             ObjectPtr head;
             switch (cpt->callingConv) {
-            case CC_DEFAULT : head = primOpCCodePointer(); break;
-            case CC_STDCALL : head = primOpStdCallCodePointer(); break;
-            case CC_FASTCALL : head = primOpFastCallCodePointer(); break;
+            case CC_DEFAULT :
+                if (cpt->hasVarArgs)
+                    head = primOpVarArgsCCodePointer();
+                else
+                    head = primOpCCodePointer();
+                break;
+            case CC_STDCALL :
+                head = primOpStdCallCodePointer();
+                break;
+            case CC_FASTCALL :
+                head = primOpFastCallCodePointer();
+                break;
             }
             MultiPatternListPtr argTypes = new MultiPatternList();
             for (unsigned i = 0; i < cpt->argTypes.size(); ++i) {
@@ -565,6 +581,7 @@ static bool isPatternHead(ObjectPtr x)
 
         case PRIM_CodePointer :
         case PRIM_CCodePointer :
+        case PRIM_VarArgsCCodePointer :
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
 

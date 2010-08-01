@@ -844,6 +844,7 @@ static bool isTypeConstructor(ObjectPtr x) {
         case PRIM_Pointer :
         case PRIM_CodePointer :
         case PRIM_CCodePointer :
+        case PRIM_VarArgsCCodePointer :
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
         case PRIM_Array :
@@ -941,6 +942,7 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
         }
 
         case PRIM_CCodePointer :
+        case PRIM_VarArgsCCodePointer :
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer : {
             ensureArity(args, 2);
@@ -955,12 +957,21 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
                 returnType = returnTypes[0];
             CallingConv cc;
             switch (x->primOpCode) {
-            case PRIM_CCodePointer : cc = CC_DEFAULT; break;
-            case PRIM_StdCallCodePointer : cc = CC_STDCALL; break;
-            case PRIM_FastCallCodePointer : cc = CC_FASTCALL; break;
-            default : assert(false);
+            case PRIM_CCodePointer :
+            case PRIM_VarArgsCCodePointer :
+                cc = CC_DEFAULT;
+                break;
+            case PRIM_StdCallCodePointer :
+                cc = CC_STDCALL;
+                break;
+            case PRIM_FastCallCodePointer :
+                cc = CC_FASTCALL;
+                break;
+            default :
+                assert(false);
             }
-            return cCodePointerType(cc, argTypes, false, returnType);
+            bool hasVarArgs = (x->primOpCode == PRIM_VarArgsCCodePointer);
+            return cCodePointerType(cc, argTypes, hasVarArgs, returnType);
         }
 
         case PRIM_Array : {
@@ -1838,6 +1849,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_CCodePointer :
         error("CCodePointer type constructor cannot be called");
+
+    case PRIM_VarArgsCCodePointer :
+        error("VarArgsCCodePointer type constructor cannot be called");
 
     case PRIM_StdCallCodePointer :
         error("StdCallCodePointer type constructor cannot be called");

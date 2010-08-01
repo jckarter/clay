@@ -1,0 +1,3 @@
+VarArgsCCodePointer[Pointer[Int8], Int32]
+variable arity
+fixed arity

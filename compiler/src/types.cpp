@@ -833,7 +833,23 @@ void typePrint(ostream &out, TypePtr t) {
     }
     case CCODE_POINTER_TYPE : {
         CCodePointerType *x = (CCodePointerType *)t.ptr();
-        out << "CCodePointer[";
+        switch (x->callingConv) {
+        case CC_DEFAULT :
+            if (x->hasVarArgs)
+                out << "VarArgsCCodePointer";
+            else
+                out << "CCodePointer";
+            break;
+        case CC_STDCALL :
+            out << "StdCallCodePointer";
+            break;
+        case CC_FASTCALL :
+            out << "FastCallCodePointer";
+            break;
+        default :
+            assert(false);
+        }
+        out << "[";
         if (x->argTypes.size() == 1) {
             out << x->argTypes[0];
         }
