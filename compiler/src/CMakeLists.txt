@@ -29,9 +29,9 @@ if(Subversion_FOUND AND EXISTS "${LLVM_DIR}/.svn")
 endif()
 
 if(Mercurial_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.hg")
-    Mercurial_WC_INFO(${PROJECT_SOURCE_DIR} HG)
+    Mercurial_WC_ID(${PROJECT_SOURCE_DIR} HG)
     set_property(SOURCE main.cpp APPEND PROPERTY
-        COMPILE_DEFINITIONS "HG_CHANGESET=\"${HG_WC_CHANGESET}\";HG_DATE=\"${HG_WC_DATE}\"")
+        COMPILE_DEFINITIONS "HG_ID=\"${HG_WC_ID}\"")
 endif()
 
 add_executable(clay ${SOURCES})

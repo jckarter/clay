@@ -406,8 +406,8 @@ int main(int argc, char **argv) {
         }
         else if (strstr(argv[i], "-v") == argv[i]) {
             cerr << "clay compiler ("
-#ifdef HG_CHANGESET
-                 << "hg r" << HG_CHANGESET << ", "
+#ifdef HG_ID
+                 << "hg id " << HG_ID << ", "
 #endif
 #ifdef SVN_REVISION
                  << "llvm r" << SVN_REVISION << ", "
