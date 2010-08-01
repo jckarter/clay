@@ -1,0 +1,20 @@
+procedure eachValue;
+overload eachValue(fn, forward x, forward ...xs) { fn(x); eachValue(fn, ...xs); }
+overload eachValue(fn) { }
+
+procedure mapValues;
+overload mapValues(fn, forward x, forward ...xs)
+    = forward ...fn(x), ...mapValues(fn, ...xs);
+overload mapValues(fn) = ;
+
+procedure foldValues;
+overload foldValues(fn, forward x, forward ...xs)
+    = fn(x, foldValues(fn, ...xs));
+overload foldValues(fn, forward x) = forward x;
+
+procedure weaveValues;
+overload weaveValues(between, forward x, forward ...xs)
+    = forward x, between, ...weaveValues(between, ...xs);
+overload weaveValues(between, forward x, forward y)
+    = forward x, between, y;
+overload weaveValues(between, forward x) = forward x;
