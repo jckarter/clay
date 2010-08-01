@@ -1,1 +1,2 @@
 Hello, Dhruva!
+size = 3, str = Foo

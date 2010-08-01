@@ -156,6 +156,33 @@ overload reserve(a:V, n:I) {
 
 
 //
+// resize
+//
+
+[V, I | Vector?(V) and Integer?(I)]
+overload resize(a:V, n:I) {
+    resize(a, SizeT(n));
+}
+
+[V | Vector?(V)]
+overload resize(a:V, n:SizeT) {
+    reserve(a, n);
+    var last = end(a);
+    var newLast = begin(a) + n;
+    while (last < newLast) {
+        initialize(last^);
+        last += 1;
+    }
+    while (last > newLast) {
+        last -= 1;
+        destroy(last^);
+    }
+    vectorSize(a) = n;
+}
+
+
+
+//
 // clear
 //
 
