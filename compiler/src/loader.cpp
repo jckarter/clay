@@ -407,7 +407,7 @@ static void initVariantInstance(InstancePtr x) {
         if (pattern->kind != PATTERN_STRUCT)
             error(x->target, "not a variant type");
         PatternStruct *ps = (PatternStruct *)pattern.ptr();
-        if (ps->head->objKind != VARIANT)
+        if ((!ps->head) || (ps->head->objKind != VARIANT))
             error(x->target, "not a variant type");
         Variant *v = (Variant *)ps->head.ptr();
         v->instances.push_back(x);

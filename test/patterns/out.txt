@@ -1,0 +1,16 @@
+In = Int32
+Out = Int32
+In = 
+Out = Int32
+In = Int32
+Out = 
+In = 
+Out = 
+In = Int32Bool
+Out = Int32
+In = Int32
+Out = Int32Bool
+In = Int32Bool
+Out = Bool
+In = Int32
+Out = Bool

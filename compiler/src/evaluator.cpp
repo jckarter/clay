@@ -365,6 +365,85 @@ ValueHolderPtr boolToValueHolder(bool x)
 
 
 //
+// makeTupleValue
+//
+
+ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements)
+{
+    bool allStatics = true;
+    for (unsigned i = 0; i < elements.size(); ++i) {
+        switch (elements[i]->objKind) {
+        case TYPE :
+        case PRIM_OP :
+        case PROCEDURE :
+        case RECORD :
+        case VARIANT :
+        case MODULE_HOLDER :
+        case IDENTIFIER :
+            break;
+        default :
+            allStatics = false;
+            break;
+        }
+        if (!allStatics)
+            break;
+    }
+    if (allStatics) {
+        vector<TypePtr> elementTypes;
+        for (unsigned i = 0; i < elements.size(); ++i)
+            elementTypes.push_back(staticType(elements[i]));
+        TypePtr t = tupleType(elementTypes);
+        return new ValueHolder(t);
+    }
+    vector<ExprPtr> elementExprs;
+    for (unsigned i = 0; i < elements.size(); ++i)
+        elementExprs.push_back(new ObjectExpr(elements[i]));
+    ExprPtr tupleExpr = new Tuple(elementExprs);
+    return evaluateOneStatic(tupleExpr, new Env());
+}
+
+
+
+//
+// extractTupleElements
+//
+
+void extractTupleElements(EValuePtr ev,
+                          vector<ObjectPtr> &elements)
+{
+    assert(ev->type->typeKind == TUPLE_TYPE);
+    TupleType *tt = (TupleType *)ev->type.ptr();
+    const llvm::StructLayout *layout = tupleTypeLayout(tt);
+    for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+        char *addr = ev->addr + layout->getElementOffset(i);
+        EValuePtr evElement = new EValue(tt->elementTypes[i], addr);
+        elements.push_back(evalueToStatic(evElement));
+    }
+}
+
+
+
+//
+// evalueToStatic
+//
+
+ObjectPtr evalueToStatic(EValuePtr ev)
+{
+    if (ev->type->typeKind == STATIC_TYPE) {
+        StaticType *st = (StaticType *)ev->type.ptr();
+        return st->obj;
+    }
+    else {
+        ValueHolderPtr vh = new ValueHolder(ev->type);
+        EValuePtr dest = new EValue(vh->type, vh->buf);
+        evalValueCopy(dest, ev);
+        return vh.ptr();
+    }
+}
+
+
+
+//
 // evaluator
 //
 

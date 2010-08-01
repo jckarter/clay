@@ -1,0 +1,18 @@
+
+[...In, ...Out]
+showType(static CodePointer[(...In), (...Out)]) {
+    println("In = ", ...In);
+    println("Out = ", ...Out);
+}
+
+main() {
+    showType( CodePointer[Int, Int] );
+    showType( CodePointer[(), Int] );
+    showType( CodePointer[Int, ()] );
+    showType( CodePointer[(), ()] );
+
+    showType( CodePointer[(Int, Bool), Int] );
+    showType( CodePointer[(Int), (Int, Bool)] );
+    showType( CodePointer[(Int, Bool), (Bool)] );
+    showType( CodePointer[(Int), (Bool)] );
+}
