@@ -2500,6 +2500,11 @@ ValueHolderPtr sizeTToValueHolder(size_t x);
 ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x);
 ValueHolderPtr boolToValueHolder(bool x);
 
+ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements);
+void extractTupleElements(EValuePtr ev,
+                          vector<ObjectPtr> &elements);
+ObjectPtr evalueToStatic(EValuePtr ev);
+
 struct EValue : public Object {
     TypePtr type;
     char *addr;

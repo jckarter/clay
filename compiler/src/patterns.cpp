@@ -8,8 +8,16 @@
 
 static ObjectPtr computeStruct(ObjectPtr head, MultiStaticPtr params)
 {
-    TypePtr t = constructType(head, params);
-    return t.ptr();
+    if (!head) {
+        const vector<ObjectPtr> &elements = params->values;
+        if (elements.size() == 1)
+            return elements[0];
+        return makeTupleValue(params->values);
+    }
+    else {
+        TypePtr t = constructType(head, params);
+        return t.ptr();
+    }
 }
 
 ObjectPtr derefDeep(PatternPtr x)
@@ -81,6 +89,34 @@ static ObjectPtr primOpPointer() {
     return obj;
 }
 
+static ObjectPtr primOpCodePointer() {
+    static ObjectPtr obj;
+    if (!obj)
+        obj = primName("CodePointer");
+    return obj;
+}
+
+static ObjectPtr primOpCCodePointer() {
+    static ObjectPtr obj;
+    if (!obj)
+        obj = primName("CCodePointer");
+    return obj;
+}
+
+static ObjectPtr primOpStdCallCodePointer() {
+    static ObjectPtr obj;
+    if (!obj)
+        obj = primName("StdCallCodePointer");
+    return obj;
+}
+
+static ObjectPtr primOpFastCallCodePointer() {
+    static ObjectPtr obj;
+    if (!obj)
+        obj = primName("FastCallCodePointer");
+    return obj;
+}
+
 static ObjectPtr primOpArray() {
     static ObjectPtr obj;
     if (!obj)
@@ -128,6 +164,21 @@ static PatternPtr objectToPattern(ObjectPtr obj)
               "in single valued context");
         return NULL;
     }
+    case VALUE_HOLDER : {
+        ValueHolder *x = (ValueHolder *)obj.ptr();
+        if (x->type->typeKind == TUPLE_TYPE) {
+            vector<ObjectPtr> elements;
+            EValuePtr y = new EValue(x->type, x->buf);
+            extractTupleElements(y, elements);
+            MultiPatternListPtr params = new MultiPatternList();
+            for (unsigned i = 0; i < elements.size(); ++i) {
+                PatternPtr y = objectToPattern(elements[i]);
+                params->items.push_back(y);
+            }
+            return new PatternStruct(NULL, params.ptr());
+        }
+        return new PatternCell(obj);
+    }
     case TYPE : {
         Type *t = (Type *)obj.ptr();
         switch (t->typeKind) {
@@ -136,6 +187,51 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             ObjectPtr head = primOpPointer();
             MultiPatternListPtr params = new MultiPatternList();
             params->items.push_back(objectToPattern(pt->pointeeType.ptr()));
+            return new PatternStruct(head, params.ptr());
+        }
+        case CODE_POINTER_TYPE : {
+            CodePointerType *cpt = (CodePointerType *)t;
+            ObjectPtr head = primOpCodePointer();
+            MultiPatternListPtr argTypes = new MultiPatternList();
+            for (unsigned i = 0; i < cpt->argTypes.size(); ++i) {
+                PatternPtr x = objectToPattern(cpt->argTypes[i].ptr());
+                argTypes->items.push_back(x);
+            }
+            MultiPatternListPtr returnTypes = new MultiPatternList();
+            for (unsigned i = 0; i < cpt->returnTypes.size(); ++i) {
+                PatternPtr x = objectToPattern(cpt->returnTypes[i].ptr());
+                returnTypes->items.push_back(x);
+            }
+            MultiPatternListPtr params = new MultiPatternList();
+            PatternPtr a = new PatternStruct(NULL, argTypes.ptr());
+            PatternPtr b = new PatternStruct(NULL, returnTypes.ptr());
+            params->items.push_back(a);
+            params->items.push_back(b);
+            return new PatternStruct(head, params.ptr());
+        }
+        case CCODE_POINTER_TYPE : {
+            CCodePointerType *cpt = (CCodePointerType *)t;
+            ObjectPtr head;
+            switch (cpt->callingConv) {
+            case CC_DEFAULT : head = primOpCCodePointer(); break;
+            case CC_STDCALL : head = primOpStdCallCodePointer(); break;
+            case CC_FASTCALL : head = primOpFastCallCodePointer(); break;
+            }
+            MultiPatternListPtr argTypes = new MultiPatternList();
+            for (unsigned i = 0; i < cpt->argTypes.size(); ++i) {
+                PatternPtr x = objectToPattern(cpt->argTypes[i].ptr());
+                argTypes->items.push_back(x);
+            }
+            MultiPatternListPtr returnTypes = new MultiPatternList();
+            if (cpt->returnType.ptr()) {
+                PatternPtr x = objectToPattern(cpt->returnType.ptr());
+                returnTypes->items.push_back(x);
+            }
+            MultiPatternListPtr params = new MultiPatternList();
+            PatternPtr a = new PatternStruct(NULL, argTypes.ptr());
+            PatternPtr b = new PatternStruct(NULL, returnTypes.ptr());
+            params->items.push_back(a);
+            params->items.push_back(b);
             return new PatternStruct(head, params.ptr());
         }
         case ARRAY_TYPE : {
@@ -212,14 +308,6 @@ static PatternPtr objectToPattern(ObjectPtr obj)
     }
 }
 
-static PatternStructPtr objectToPatternStruct(ObjectPtr obj)
-{
-    PatternPtr x = objectToPattern(obj);
-    if (x->kind != PATTERN_STRUCT)
-        return NULL;
-    return (PatternStruct *)x.ptr();
-}
-
 
 
 //
@@ -234,7 +322,7 @@ bool unifyObjObj(ObjectPtr a, ObjectPtr b)
     }
     else if (a->objKind == MULTI_PATTERN) {
         error("incorrect usage of multi-valued pattern "
-              "in single valued context");
+              "in single-valued context");
         return false;
     }
     else if (b->objKind == PATTERN) {
@@ -243,7 +331,7 @@ bool unifyObjObj(ObjectPtr a, ObjectPtr b)
     }
     else if (b->objKind == MULTI_PATTERN) {
         error("incorrect usage of multi-valued pattern "
-              "in single valued context");
+              "in single-valued context");
         return false;
     }
     return objectEquals(a, b);
@@ -258,7 +346,7 @@ bool unifyObjPattern(ObjectPtr a, PatternPtr b)
     }
     else if (a->objKind == MULTI_PATTERN) {
         error("incorrect usage of multi-valued pattern "
-              "in single valued context");
+              "in single-valued context");
         return false;
     }
     else if (b->kind == PATTERN_CELL) {
@@ -271,13 +359,18 @@ bool unifyObjPattern(ObjectPtr a, PatternPtr b)
     }
     else {
         assert(b->kind == PATTERN_STRUCT);
+        PatternPtr a2 = objectToPattern(a);
         PatternStruct *b2 = (PatternStruct *)b.ptr();
-        PatternStructPtr a2 = objectToPatternStruct(a);
-        if (!a2)
-            return false;
-        if (a2->head != b2->head)
-            return false;
-        return unifyMulti(a2->params, b2->params);
+        if (a2->kind == PATTERN_STRUCT) {
+            PatternStruct *a3 = (PatternStruct *)a2.ptr();
+            if (a3->head == b2->head)
+                return unifyMulti(a3->params, b2->params);
+        }
+        if (!b2->head) {
+            return unifyMulti(new MultiPatternList(a2),
+                              b2->params);
+        }
+        return false;
     }
 }
 
@@ -310,9 +403,20 @@ bool unify(PatternPtr a, PatternPtr b)
         assert(b->kind == PATTERN_STRUCT);
         PatternStruct *a2 = (PatternStruct *)a.ptr();
         PatternStruct *b2 = (PatternStruct *)b.ptr();
-        if (a2->head != b2->head)
+        if (a2->head == b2->head) {
+            return unifyMulti(a2->params, b2->params);
+        }
+        else if (!a2->head) {
+            return unifyMulti(a2->params,
+                              new MultiPatternList(b));
+        }
+        else if (!b2->head) {
+            return unifyMulti(new MultiPatternList(a),
+                              b2->params);
+        }
+        else {
             return false;
-        return unifyMulti(a2->params, b2->params);
+        }
     }
 }
 
@@ -451,6 +555,13 @@ static bool isPatternHead(ObjectPtr x)
         PrimOpPtr y = (PrimOp *)x.ptr();
         switch (y->primOpCode) {
         case PRIM_Pointer :
+
+        case PRIM_CodePointer :
+        case PRIM_RefCodePointer :
+        case PRIM_CCodePointer :
+        case PRIM_StdCallCodePointer :
+        case PRIM_FastCallCodePointer :
+
         case PRIM_Array :
         case PRIM_Vec :
         case PRIM_Tuple :
@@ -529,6 +640,17 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
         return new PatternCell(evaluateOneStatic(expr, env));
     }
 
+    case TUPLE : {
+        Tuple *x = (Tuple *)expr.ptr();
+        if ((x->args.size() == 1) &&
+            (x->args[0]->exprKind != UNPACK))
+        {
+            return evaluateOnePattern(x->args[0], env);
+        }
+        MultiPatternPtr params = evaluateMultiPattern(x->args, env);
+        return new PatternStruct(NULL, params);
+    }
+
     default : {
         ObjectPtr y = evaluateOneStatic(expr, env);
         return new PatternCell(y);
@@ -575,6 +697,10 @@ static MultiPatternPtr checkMultiPatternNameRef(ExprPtr expr, EnvPtr env)
         return NULL;
     NameRef *x = (NameRef *)expr.ptr();
     ObjectPtr obj = safeLookupEnv(env, x->name);
+    if (obj->objKind == PATTERN) {
+        error(expr, "single-valued pattern incorrectly "
+              "used in mulit-valued context");
+    }
     if (obj->objKind != MULTI_PATTERN)
         return NULL;
     MultiPattern *mp = (MultiPattern *)obj.ptr();
