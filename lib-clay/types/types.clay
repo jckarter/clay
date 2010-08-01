@@ -27,6 +27,8 @@ alias RawPointer = Pointer[Byte];
 alias SizeT = UPtrInt;
 alias SSizeT = PtrInt;
 
+alias Opaque = Byte;
+
 
 
 //
