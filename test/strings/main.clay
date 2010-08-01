@@ -1,4 +1,6 @@
 
+import libc;
+
 sayHello(s) {
     var msg = "Hello, " + s;
     println(msg);
@@ -6,4 +8,12 @@ sayHello(s) {
 
 main() {
     sayHello("Dhruva!");
+
+    var cstr = cstring("Foo");
+    var str = String();
+    var n = libc.strlen(cstr);
+    resize(str, n+1);
+    libc.strcpy(Pointer[Int8](&str[0]), cstr);
+    resize(str, n);
+    println("size = ", n, ", str = ", str);
 }
