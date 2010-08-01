@@ -1687,7 +1687,6 @@ enum PrimOpCode {
 
     PRIM_CodePointerP,
     PRIM_CodePointer,
-    PRIM_RefCodePointer,
     PRIM_makeCodePointer,
 
     PRIM_CCodePointerP,

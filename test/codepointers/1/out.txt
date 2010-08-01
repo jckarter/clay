@@ -1,0 +1,3 @@
+CodePointer[(Vector[Int32], Int32), ByRef[Int32]]
+CodePointer[Vector[Int32], UInt64]
+CodePointer[Vector[Int32], ()]

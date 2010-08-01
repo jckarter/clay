@@ -199,7 +199,14 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             }
             MultiPatternListPtr returnTypes = new MultiPatternList();
             for (unsigned i = 0; i < cpt->returnTypes.size(); ++i) {
-                PatternPtr x = objectToPattern(cpt->returnTypes[i].ptr());
+                TypePtr t = cpt->returnTypes[i];
+                if (cpt->returnIsRef[i]) {
+                    ObjectPtr obj = kernelName("ByRef");
+                    assert(obj->objKind == RECORD);
+                    t = recordType((Record *)obj.ptr(),
+                                   vector<ObjectPtr>(1, t.ptr()));
+                }
+                PatternPtr x = objectToPattern(t.ptr());
                 returnTypes->items.push_back(x);
             }
             MultiPatternListPtr params = new MultiPatternList();
@@ -557,7 +564,6 @@ static bool isPatternHead(ObjectPtr x)
         case PRIM_Pointer :
 
         case PRIM_CodePointer :
-        case PRIM_RefCodePointer :
         case PRIM_CCodePointer :
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :

@@ -1,0 +1,14 @@
+
+
+showCPType(callable, ...argTypes) {
+    var cp = makeCodePointer(callable, ...argTypes);
+    println(Type(cp));
+}
+
+main() {
+    var a = Vector([1, 2, 3, 4, 5]);
+
+    showCPType( index, Type(a), Int );
+    showCPType( size, Type(a) );
+    showCPType( clear, Type(a) );
+}
