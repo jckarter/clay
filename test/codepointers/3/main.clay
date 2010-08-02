@@ -1,0 +1,52 @@
+import libc;
+
+
+//
+// doCall
+//
+
+[...ArgTypes,
+ ...ReturnTypes,
+ ...VarArgTypes
+ | Tuple[...ArgTypes] ==
+   Tuple[...takeNValues(static countValues(...ArgTypes), ...VarArgTypes)]]
+doCall(f:VarArgsCCodePointer[(...ArgTypes), (...ReturnTypes)], ...args:VarArgTypes) {
+    f(...args);
+}
+
+
+
+//
+// countValues
+//
+
+procedure countValues() = 0;
+overload countValues(first, ...rest) = 1 + countValues(...rest);
+
+
+
+//
+// takeNValues
+//
+
+procedure takeNValues;
+
+[i]
+overload takeNValues(static i, first, ...rest) =
+    first, ...takeNValues(static i-1, ...rest);
+
+[i | i == 0]
+overload takeNValues(static i, ...args) = ;
+
+[i]
+overload takeNValues(static i) = ;
+
+
+
+//
+// testing code
+
+main() {
+    var x = 10;
+    doCall(libc.printf, cstring("hello, %s! x = %d\n"), cstring("world"), x);
+}
