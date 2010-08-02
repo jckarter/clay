@@ -38,6 +38,7 @@ private modeProtection(mode) {
     if (mode == MAP_COPY_ON_WRITE)
         return win32.PAGE_WRITECOPY;
     assert(false);
+    return 0u32;
 }
 
 private modeAccess(mode) {
@@ -48,6 +49,7 @@ private modeAccess(mode) {
     if (mode == MAP_COPY_ON_WRITE)
         return win32.FILE_MAP_COPY;
     assert(false);
+    return 0u32;
 }
 
 [A,B | Integer?(A,B)]

@@ -1,5 +1,5 @@
 
-overload Bool() Bool {
+overload Bool() returned:Bool {
 }
 
 overload Bool(src:Bool) returned:Bool {

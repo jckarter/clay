@@ -1135,6 +1135,9 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
 
     bool terminated = codegenStatement(x->body, env, ctx);
     if (!terminated) {
+        if (x->returnType2.ptr()) {
+            error(x, "not all paths have a return statement");
+        }
         cgDestroyStack(returnTarget.stackMarker, ctx);
         llvmBuilder->CreateBr(returnBlock);
     }
@@ -2087,6 +2090,7 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     }
 
     vector<CReturn> returns;
+    bool hasNamedReturn = false;
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i, ++ai) {
         llvm::Argument *llArgValue = &(*ai);
         TypePtr rt = entry->returnTypes[i];
@@ -2100,6 +2104,7 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
             cv = new CValue(rt, llArgValue);
         returns.push_back(CReturn(entry->returnIsRef[i], rt, cv));
         if (rspec.ptr() && rspec->name.ptr()) {
+            hasNamedReturn = true;
             addLocal(env, rspec->name, cv.ptr());
             llArgValue->setName(rspec->name->str);
         }
@@ -2113,6 +2118,9 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
     assert(entry->code->body.ptr());
     bool terminated = codegenStatement(entry->code->body, env, ctx);
     if (!terminated) {
+        if ((returns.size() > 0) && !hasNamedReturn) {
+            error(entry->code, "not all paths have a return statement");
+        }
         cgDestroyStack(returnTarget.stackMarker, ctx);
         llvmBuilder->CreateBr(returnBlock);
     }
@@ -2247,6 +2255,7 @@ void codegenCallInlined(InvokeEntryPtr entry,
     }
 
     vector<CReturn> returns;
+    bool hasNamedReturn = false;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
         CValuePtr cv = out->values[i];
@@ -2256,6 +2265,7 @@ void codegenCallInlined(InvokeEntryPtr entry,
             assert(cv->type == pointerType(pv->type));
         returns.push_back(CReturn(!pv->isTemp, pv->type, cv));
         if (!returnSpecs.empty() && returnSpecs[i]->name.ptr()) {
+            hasNamedReturn = true;
             addLocal(bodyEnv, returnSpecs[i]->name, cv.ptr());
         }
     }
@@ -2270,6 +2280,9 @@ void codegenCallInlined(InvokeEntryPtr entry,
     assert(entry->code->body.ptr());
     bool terminated = codegenStatement(entry->code->body, bodyEnv, bodyCtx);
     if (!terminated) {
+        if ((returns.size() > 0) && !hasNamedReturn) {
+            error(entry->code, "not all paths have a return statement");
+        }
         cgDestroyStack(returnTarget.stackMarker, bodyCtx);
         llvmBuilder->CreateBr(returnBlock);
     }

@@ -70,10 +70,11 @@ unguardedPartition(first_, last_, pivot) {
         while (pivot < last^)
             last -= 1;
         if (not (first < last))
-            return first;
+            break;
         swap(first^, last^);
         first += 1;
     }
+    return first;
 }
 
 finalInsertionSort(first_, last_) {

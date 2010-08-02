@@ -5,7 +5,7 @@
 //
 
 [U | Union?(U)]
-overload U() U {
+overload U() returned:U {
 }
 
 [U | Union?(U)]

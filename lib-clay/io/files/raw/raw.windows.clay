@@ -34,6 +34,7 @@ private accessFlags(mode) {
     if (mode == APPEND)
         return win32.GENERIC_WRITE;
     assert(false);
+    return 0u32;
 }
 
 private sharingFlags(mode) {
@@ -46,6 +47,7 @@ private sharingFlags(mode) {
     if (mode == APPEND)
         return 0u32;
     assert(false);
+    return 0u32;
 }
 
 private creationFlags(mode) {
@@ -58,6 +60,7 @@ private creationFlags(mode) {
     if (mode == APPEND)
         return win32.OPEN_ALWAYS;
     assert(false);
+    return 0u32;
 }
 
 [S | CCompatibleString?(S)]
@@ -170,6 +173,7 @@ private seekMethod(x) {
     if (x == SEEK_CUR) return win32.FILE_CURRENT;
     if (x == SEEK_END) return win32.FILE_END;
     assert(false);
+    return 0u32;
 }
 
 overload seek(f:RawFile, offset, whence) {
