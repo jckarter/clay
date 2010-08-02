@@ -736,6 +736,11 @@ void printName(ostream &out, ObjectPtr x)
         out << y->name->str;
         break;
     }
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
+        out << y->name->str;
+        break;
+    }
     case PROCEDURE : {
         Procedure *y = (Procedure *)x.ptr();
         out << y->name->str;
@@ -781,6 +786,10 @@ string getCodeName(ObjectPtr x)
     }
     case RECORD : {
         Record *y = (Record *)x.ptr();
+        return y->name->str;
+    }
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
         return y->name->str;
     }
     case PROCEDURE : {
