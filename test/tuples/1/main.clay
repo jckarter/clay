@@ -1,0 +1,7 @@
+main() {
+    println(() == ());
+    println(Tuple(1) == Tuple(1));
+    println(Tuple(1) != Tuple(2));
+    println(Tuple(1, 2) == Tuple(1, 2));
+    println(Tuple(1, 2) != Tuple(1, 3));
+}

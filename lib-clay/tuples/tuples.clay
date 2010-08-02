@@ -160,7 +160,7 @@ overload equals?(a:T, b:T) {
 private  equalTupleElements?(a:T, b:T, static i) {
     if (not equals?(tupleRef(a, static i), tupleRef(b, static i)))
         return false;
-    return equalTupleElements(a, b, static i+1);
+    return equalTupleElements?(a, b, static i+1);
 }
 
 [T,i |(i == TupleElementCount(T))]
