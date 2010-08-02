@@ -30,3 +30,7 @@ procedure dropValues;
     = forward ...dropValues(static i-1, ...xs);
 [i | i == 0] overload dropValues(static i, forward ...xs) = forward ...xs;
 [i] overload dropValues(static i) = ;
+
+procedure countValues;
+overload countValues() = 0;
+overload countValues(x, ...xs) = 1 + countValues(...xs);
