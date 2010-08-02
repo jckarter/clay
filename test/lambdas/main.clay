@@ -1,0 +1,14 @@
+
+record Foo[F] { fn : F; }
+var z = Foo(lambda (x) { println(x); });
+
+foo(...args) {
+    var f = lambda (msg) { println(msg, ": ", ...args); };
+    f("first");
+    f("second");
+}
+
+main() {
+    z.fn(10);
+    foo(10, ", ", 20);
+}

@@ -57,13 +57,6 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     for (unsigned i = 0; i < freeVars.size(); ++i) {
         IdentifierPtr ident = new Identifier(freeVars[i]);
         NameRefPtr nameRef = new NameRef(ident);
-        if (x->isBlockLambda) {
-            ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
-            converted->args.push_back(addr);
-        }
-        else {
-            converted->args.push_back(nameRef.ptr());
-        }
 
         TypePtr type;
         ObjectPtr obj = safeLookupEnv(env, ident);
@@ -71,19 +64,80 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         case PVALUE : {
             PValue *y = (PValue *)obj.ptr();
             type = y->type;
+            if (x->isBlockLambda) {
+                type = pointerType(type);
+                ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
+                converted->args.push_back(addr);
+            }
+            else {
+                converted->args.push_back(nameRef.ptr());
+            }
             break;
         }
         case CVALUE : {
             CValue *y = (CValue *)obj.ptr();
             type = y->type;
+            if (x->isBlockLambda) {
+                type = pointerType(type);
+                ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
+                converted->args.push_back(addr);
+            }
+            else {
+                converted->args.push_back(nameRef.ptr());
+            }
+            break;
+        }
+        case MULTI_PVALUE : {
+            MultiPValue *y = (MultiPValue *)obj.ptr();
+            vector<TypePtr> elementTypes;
+            for (unsigned j = 0; j < y->size(); ++j) {
+                TypePtr t = y->values[j]->type;
+                if (x->isBlockLambda)
+                    t = pointerType(t);
+                elementTypes.push_back(t);
+            }
+            type = tupleType(elementTypes);
+            if (x->isBlockLambda) {
+                const char *fname = "packMultiValuedFreeVarByRef";
+                CallPtr call = new Call(kernelNameRef(fname));
+                call->args.push_back(new Unpack(nameRef.ptr()));
+                converted->args.push_back(call.ptr());
+            }
+            else {
+                const char *fname = "packMultiValuedFreeVar";
+                CallPtr call = new Call(kernelNameRef(fname));
+                call->args.push_back(new Unpack(nameRef.ptr()));
+                converted->args.push_back(call.ptr());
+            }
+            break;
+        }
+        case MULTI_CVALUE : {
+            MultiCValue *y = (MultiCValue *)obj.ptr();
+            vector<TypePtr> elementTypes;
+            for (unsigned j = 0; j < y->size(); ++j) {
+                TypePtr t = y->values[j]->type;
+                if (x->isBlockLambda)
+                    t = pointerType(t);
+                elementTypes.push_back(t);
+            }
+            type = tupleType(elementTypes);
+            if (x->isBlockLambda) {
+                const char *fname = "packMultiValuedFreeVarByRef";
+                CallPtr call = new Call(kernelNameRef(fname));
+                call->args.push_back(new Unpack(nameRef.ptr()));
+                converted->args.push_back(call.ptr());
+            }
+            else {
+                const char *fname = "packMultiValuedFreeVar";
+                CallPtr call = new Call(kernelNameRef(fname));
+                call->args.push_back(new Unpack(nameRef.ptr()));
+                converted->args.push_back(call.ptr());
+            }
             break;
         }
         default :
             assert(false);
         }
-
-        if (x->isBlockLambda)
-            type = pointerType(type);
 
         ExprPtr fieldType = new ObjectExpr(type.ptr());
         RecordFieldPtr field = new RecordField(ident, fieldType);
@@ -287,8 +341,32 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     x = c.ptr();
                 }
             }
-            else {
-                // FIXME: what about multiple values?
+            else if ((z->objKind == MULTI_PVALUE) || (z->objKind == MULTI_CVALUE)) {
+                vector<string>::iterator i =
+                    std::find(ctx.freeVars.begin(), ctx.freeVars.end(),
+                              y->name->str);
+                if (i == ctx.freeVars.end()) {
+                    ctx.freeVars.push_back(y->name->str);
+                }
+                IdentifierPtr a = new Identifier(ctx.closureDataName);
+                a->location = y->location;
+                NameRefPtr b = new NameRef(a);
+                b->location = y->location;
+                FieldRefPtr c = new FieldRef(b.ptr(), y->name);
+                c->location = y->location;
+                if (ctx.isBlockLambda) {
+                    ExprPtr f =
+                        kernelNameRef("unpackMultiValuedFreeVarAndDereference");
+                    CallPtr d = new Call(f);
+                    d->args.push_back(c.ptr());
+                    x = d.ptr();
+                }
+                else {
+                    ExprPtr f = kernelNameRef("unpackMultiValuedFreeVar");
+                    CallPtr d = new Call(f);
+                    d->args.push_back(c.ptr());
+                    x = d.ptr();
+                }
             }
         }
         break;
