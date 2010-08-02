@@ -91,7 +91,7 @@ overload toBiggerNumericType(static A, static B, v) = B(v);
 //
 
 [T | Numeric?(T)]
-overload T() T {
+overload T() returned:T {
 }
 
 [T1,T2 | Numeric?(T1,T2)]

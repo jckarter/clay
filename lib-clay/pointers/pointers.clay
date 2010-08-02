@@ -10,7 +10,7 @@ procedure null?;
 //
 
 [T]
-overload Pointer[T]() Pointer[T] {
+overload Pointer[T]() returned:Pointer[T] {
 }
 
 [T]

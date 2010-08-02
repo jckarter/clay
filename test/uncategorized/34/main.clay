@@ -1,6 +1,6 @@
 record Foo {}
 
-overload Foo() Foo { println("constructing Foo"); }
+overload Foo() returned:Foo { println("constructing Foo"); }
 overload destroy(x:Foo) { println("destroying Foo"); }
 
 var foo = Foo();

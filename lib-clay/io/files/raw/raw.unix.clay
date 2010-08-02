@@ -40,6 +40,7 @@ private openFlags(mode) {
     if (mode == APPEND)
         return bitwiseOr(unix.O_WRONLY, unix.O_CREAT, unix.O_APPEND);
     assert(false);
+    return -1;
 }
 
 [S | CCompatibleString?(S)]
@@ -121,6 +122,7 @@ private seekWhence(x) {
     if (x == SEEK_CUR) return unix.SEEK_CUR;
     if (x == SEEK_END) return unix.SEEK_END;
     assert(false);
+    return -1;
 }
 
 overload seek(f:RawFile, offset, whence) {

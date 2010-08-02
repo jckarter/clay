@@ -36,6 +36,7 @@ private modeProtection(mode) {
     if (mode == MAP_COPY_ON_WRITE)
         return bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
     assert(false);
+    return -1;
 }
 
 private modeFlags(mode) {
@@ -46,6 +47,7 @@ private modeFlags(mode) {
     if (mode == MAP_COPY_ON_WRITE)
         return unix.MAP_PRIVATE;
     assert(false);
+    return -1;
 }
 
 [A,B | Integer?(A,B)]
