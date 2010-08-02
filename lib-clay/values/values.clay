@@ -18,3 +18,19 @@ overload weaveValues(between, forward x, forward ...xs)
 overload weaveValues(between, forward x, forward y)
     = forward x, between, y;
 overload weaveValues(between, forward x) = forward x;
+
+procedure takeValues;
+[i] overload takeValues(static i, forward x, forward ...xs)
+    = forward x, ...takeValues(static i-1, ...xs);
+[i | i == 0] overload takeValues(static i, forward ...xs) = ;
+[i] overload takeValues(static i) = ;
+
+procedure dropValues;
+[i] overload dropValues(static i, forward x, forward ...xs)
+    = forward ...dropValues(static i-1, ...xs);
+[i | i == 0] overload dropValues(static i, forward ...xs) = forward ...xs;
+[i] overload dropValues(static i) = ;
+
+procedure countValues;
+overload countValues() = 0;
+overload countValues(x, ...xs) = 1 + countValues(...xs);
