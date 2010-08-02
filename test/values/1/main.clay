@@ -7,4 +7,18 @@ main() {
     ));
 
     println(foldValues(add, 1, 2, 3));
+
+    println(...takeValues(static 3));
+    println(...takeValues(static 3, "one", "two"));
+    println(...takeValues(static 3, "one", "two", "three"));
+    println(...takeValues(static 3, "one", "two", "three", "four"));
+
+    println(...dropValues(static 3));
+    println(...dropValues(static 3, "one", "two"));
+    println(...dropValues(static 3, "one", "two", "three"));
+    println(...dropValues(static 3, "one", "two", "three", "four"));
+
+    println(countValues());
+    println(countValues("one"));
+    println(countValues("one", "two", "three", "four"));
 }
