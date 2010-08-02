@@ -175,8 +175,7 @@ ExprPtr clone(ExprPtr x)
     }
 
     case FOREIGN_EXPR : {
-        ForeignExpr *y = (ForeignExpr *)x.ptr();
-        out = new ForeignExpr(y->moduleName, y->foreignEnv, clone(y->expr));
+        out = x;
         break;
     }
 
@@ -347,10 +346,7 @@ StatementPtr clone(StatementPtr x)
     }
 
     case FOREIGN_STATEMENT : {
-        ForeignStatement *y = (ForeignStatement *)x.ptr();
-        out = new ForeignStatement(y->moduleName,
-                                   y->foreignEnv,
-                                   clone(y->statement));
+        out = x;
         break;
     }
 
