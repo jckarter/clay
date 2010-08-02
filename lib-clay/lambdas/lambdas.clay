@@ -1,0 +1,15 @@
+
+
+//
+// helper procs for closure conversion
+//
+
+packMultiValuedFreeVar(...x) = Tuple(...x);
+
+packMultiValuedFreeVarByRef(...x) =
+    Tuple(...mapValues(addressOf, ...x));
+
+unpackMultiValuedFreeVar(x) = forward ...unpackRef(x);
+
+unpackMultiValuedFreeVarAndDereference(x) =
+    forward mapValues(dereference, ...unpack(x));
