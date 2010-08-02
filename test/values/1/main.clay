@@ -17,4 +17,8 @@ main() {
     println(...dropValues(static 3, "one", "two"));
     println(...dropValues(static 3, "one", "two", "three"));
     println(...dropValues(static 3, "one", "two", "three", "four"));
+
+    println(countValues());
+    println(countValues("one"));
+    println(countValues("one", "two", "three", "four"));
 }
