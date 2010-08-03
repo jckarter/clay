@@ -1,0 +1,3 @@
+caught Int32 exception 0
+caught unexpected exception <OtherException blast core frogblasted>
+caught OtherException exception <OtherException splines reticulated>

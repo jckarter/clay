@@ -304,7 +304,8 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
                 y->catchBlocks[i]->exceptionVar,
                 y->catchBlocks[i]->exceptionVar.ptr()
             );
-            convertFreeVars(y->catchBlocks[i]->exceptionType, env, ctx);
+            if (y->catchBlocks[i]->exceptionType.ptr())
+                convertFreeVars(y->catchBlocks[i]->exceptionType, env, ctx);
             convertFreeVars(y->catchBlocks[i]->body, env2, ctx);
         }
         
