@@ -1,3 +1,6 @@
 CodePointer[(Vector[Int32], Int32), ByRef[Int32]]
 CodePointer[Vector[Int32], UInt64]
 CodePointer[Vector[Int32], ()]
+CodePointer[(Int32, Bool), Int32]
+CodePointer[(), ()]
+CodePointer[(Int32, Bool), (Bool, Int32)]
