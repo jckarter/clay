@@ -254,6 +254,23 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
     }
 }
 
+static bool isStaticallyComputable(TypePtr t) {
+    switch (t->typeKind) {
+    case STATIC_TYPE :
+        return true;
+    case TUPLE_TYPE : {
+        TupleType *tt = (TupleType *)t.ptr();
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+            if (!isStaticallyComputable(tt->elementTypes[i]))
+                return false;
+        }
+        return true;
+    }
+    default :
+        return false;
+    }
+}
+
 MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
 {
     MultiPValuePtr mpv = analyzeExpr(expr, env);
@@ -263,7 +280,7 @@ MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
     bool allStatic = true;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         TypePtr t = mpv->values[i]->type;
-        if (t->typeKind != STATIC_TYPE)
+        if (!isStaticallyComputable(t))
             allStatic = false;
         ValueHolderPtr vh = new ValueHolder(t);
         valueHolders.push_back(vh);
