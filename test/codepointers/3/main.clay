@@ -48,5 +48,5 @@ overload takeNValues(static i) = ;
 
 main() {
     var x = 10;
-    doCall(libc.printf, cstring("hello, %s! x = %d\n"), cstring("world"), x);
+    doCall(libc.printf, cstring("hello, %s! x = %d"), cstring("world"), x);
 }
