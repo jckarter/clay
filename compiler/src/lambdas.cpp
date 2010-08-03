@@ -295,6 +295,28 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case TRY : {
+        Try *y = (Try *)x.ptr();
+        convertFreeVars(y->tryBlock, env, ctx);
+        for (unsigned i = 0; i < y->catchBlocks.size(); ++i) {
+            EnvPtr env2 = new Env(env);
+            addLocal(env2,
+                y->catchBlocks[i]->exceptionVar,
+                y->catchBlocks[i]->exceptionVar.ptr()
+            );
+            convertFreeVars(y->catchBlocks[i]->exceptionType, env, ctx);
+            convertFreeVars(y->catchBlocks[i]->body, env2, ctx);
+        }
+        
+        break;
+    }
+
+    case THROW : {
+        Throw *y = (Throw *)x.ptr();
+        convertFreeVars(y->expr, env, ctx);
+        break;
+    }
+
     default :
         assert(false);
 
