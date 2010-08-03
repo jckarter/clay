@@ -1,0 +1,60 @@
+
+
+//
+// Maybe[T]
+//
+
+variant Maybe[T] = T | Nothing;
+
+record Nothing {
+}
+
+
+
+//
+// constructors
+//
+
+[T]
+overload Maybe(x:T) = Maybe[T](x);
+
+[T]
+overload Maybe[T]() = Maybe[T](Nothing());
+
+
+
+//
+// nothing?
+//
+
+nothing?(x) = variantIs?(x, Nothing);
+
+
+
+//
+// testing
+//
+
+doIt(x) {
+    println("done! x = ", x);
+}
+
+overload doIt(x:Nothing) {
+    println("nothing doing"); 
+}
+
+main() {
+    var a = Maybe(35);
+    var b = Maybe[Int]();
+
+    println(Type(a));
+    println(Type(b));
+
+    println(nothing?(a));
+    println(nothing?(b));
+
+    println(variantAs(a, Int));
+
+    doIt(*a);
+    doIt(*b);
+}

@@ -1,0 +1,7 @@
+Maybe[Int32]
+Maybe[Int32]
+false
+true
+35
+done! x = 35
+nothing doing
