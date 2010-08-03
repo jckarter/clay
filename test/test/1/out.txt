@@ -1,0 +1,32 @@
+Testing test test suite:
+  should pass: passed
+  should fail:
+    truth isn't true
+
+    falsehood isn't false
+
+    unity is expected to equal 1 but is 3
+
+    unity and trinity are expected to equal:
+      1, 3
+    but are:
+      1, 2
+
+    unity and trinity are expected to equal:
+      1, 3
+    but are:
+      1, 2, 3
+
+    add isn't callable with the expected argument types:
+      Int32, Vector[Char]
+
+    add shouldn't be callable with the expected argument types:
+      Vector[Char], Vector[Char]
+    -- FAILED
+  (pending) should pass:
+    -- FIXED (should clear pending flag)
+  (pending) should fail:
+    truth isn't true
+-- test test suite: 7 expectations passed; 8 failed (1 pending)
+Overall: 7 expectations passed; 8 failed (1 pending)
+TESTS FAILED

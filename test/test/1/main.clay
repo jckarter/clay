@@ -1,0 +1,31 @@
+import test.*;
+
+main() = testMain(
+    TestSuite(
+        "test test suite", Tuple(
+            TestCase("should pass", lambda(test) {
+                expectTrue(test, "truth", true);
+                expectFalse(test, "falsehood", false);
+                expectEqual(test, "unity", 1, 1);
+                expectEqualValues(test, "unity and trinity", Tuple(1, 3), 1, 3);
+                expectCallDefined(test, add, Int, Int);
+                expectCallUndefined(test, add, String, Int);
+            }),
+            TestCase("should fail", lambda(test) {
+                expectTrue(test, "truth", false);
+                expectFalse(test, "falsehood", true);
+                expectEqual(test, "unity", 1, 3);
+                expectEqualValues(test, "unity and trinity", Tuple(1, 3), 1, 2);
+                expectEqualValues(test, "unity and trinity", Tuple(1, 3), 1, 2, 3);
+                expectCallDefined(test, add, Int, String);
+                expectCallUndefined(test, add, String, String);
+            }),
+            PendingTestCase("should pass", lambda(test) {
+                expectTrue(test, "truth", true);
+            }),
+            PendingTestCase("should fail", lambda(test) {
+                expectTrue(test, "truth", false);
+            })
+        )
+    )
+);
