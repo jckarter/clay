@@ -1,5 +1,7 @@
 import test.*;
 
+throwing_function() { throw 0; }
+
 main() = testMain(
     TestSuite(
         "test test suite", Tuple(
@@ -19,6 +21,11 @@ main() = testMain(
                 expectEqualValues(test, "unity and trinity", Tuple(1, 3), 1, 2, 3);
                 expectCallDefined(test, add, Int, String);
                 expectCallUndefined(test, add, String, String);
+            }),
+            TestCase("should fail by throwing exception", block(test) {
+                expectTrue(test, "truth", false);
+                throwing_function();
+                expectFalse(test, "unreachable falsehood", true);
             }),
             PendingTestCase("should pass", lambda(test) {
                 expectTrue(test, "truth", true);
