@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "claynames.hpp"
 
 
 struct LambdaContext {
@@ -98,14 +99,14 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             }
             type = tupleType(elementTypes);
             if (x->isBlockLambda) {
-                const char *fname = "packMultiValuedFreeVarByRef";
-                CallPtr call = new Call(kernelNameRef(fname));
+                ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
+                CallPtr call = new Call(e);
                 call->args.push_back(new Unpack(nameRef.ptr()));
                 converted->args.push_back(call.ptr());
             }
             else {
-                const char *fname = "packMultiValuedFreeVar";
-                CallPtr call = new Call(kernelNameRef(fname));
+                ExprPtr e = prelude_expr_packMultiValuedFreeVar();
+                CallPtr call = new Call(e);
                 call->args.push_back(new Unpack(nameRef.ptr()));
                 converted->args.push_back(call.ptr());
             }
@@ -122,14 +123,14 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             }
             type = tupleType(elementTypes);
             if (x->isBlockLambda) {
-                const char *fname = "packMultiValuedFreeVarByRef";
-                CallPtr call = new Call(kernelNameRef(fname));
+                ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
+                CallPtr call = new Call(e);
                 call->args.push_back(new Unpack(nameRef.ptr()));
                 converted->args.push_back(call.ptr());
             }
             else {
-                const char *fname = "packMultiValuedFreeVar";
-                CallPtr call = new Call(kernelNameRef(fname));
+                ExprPtr e = prelude_expr_packMultiValuedFreeVar();
+                CallPtr call = new Call(e);
                 call->args.push_back(new Unpack(nameRef.ptr()));
                 converted->args.push_back(call.ptr());
             }
@@ -159,10 +160,10 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     }
     code->body = x->body;
 
-    OverloadPtr overload = new Overload(kernelNameRef("call"), code, false);
+    OverloadPtr overload = new Overload(prelude_expr_call(), code, false);
     overload->env = env;
     overload->location = x->location;
-    ObjectPtr obj = kernelName("call");
+    ObjectPtr obj = prelude_call();
     if (obj->objKind != PROCEDURE)
         error("'call' operator not found!");
     Procedure *callObj = (Procedure *)obj.ptr();
@@ -356,13 +357,13 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 c->location = y->location;
                 if (ctx.isBlockLambda) {
                     ExprPtr f =
-                        kernelNameRef("unpackMultiValuedFreeVarAndDereference");
+                        prelude_expr_unpackMultiValuedFreeVarAndDereference();
                     CallPtr d = new Call(f);
                     d->args.push_back(c.ptr());
                     x = d.ptr();
                 }
                 else {
-                    ExprPtr f = kernelNameRef("unpackMultiValuedFreeVar");
+                    ExprPtr f = prelude_expr_unpackMultiValuedFreeVar();
                     CallPtr d = new Call(f);
                     d->args.push_back(c.ptr());
                     x = d.ptr();

@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "claynames.hpp"
 #include <cstdio>
 #include <cassert>
 
@@ -443,7 +444,7 @@ static void initModule(ModulePtr m) {
             z->location = y->location;
             gvarInitializers->statements.push_back(z);
 
-            ExprPtr destructor = kernelNameRef("destroy");
+            ExprPtr destructor = prelude_expr_destroy();
             CallPtr destroyCall = new Call(destructor);
             destroyCall->location = lhs->location;
             destroyCall->args.push_back(new ForeignExpr(x->env, lhs));
@@ -454,6 +455,28 @@ static void initModule(ModulePtr m) {
         }
         }
     }
+}
+
+
+
+//
+// ForeignExpr::getEnv, ForeignStatement::getEnv
+//
+
+EnvPtr ForeignExpr::getEnv() {
+    if (!foreignEnv) {
+        assert(moduleName.size() > 0);
+        foreignEnv = loadedModule(moduleName)->env;
+    }
+    return foreignEnv;
+}
+
+EnvPtr ForeignStatement::getEnv() {
+    if (!foreignEnv) {
+        assert(moduleName.size() > 0);
+        foreignEnv = loadedModule(moduleName)->env;
+    }
+    return foreignEnv;
 }
 
 
@@ -605,47 +628,121 @@ static ModulePtr makePrimitivesModule() {
 // access names from other modules
 //
 
-ObjectPtr kernelName(const string &name) {
-    return safeLookupPublic(loadedModule("prelude"),
-                            new Identifier(name));
+ModulePtr primitivesModule() {
+    static ModulePtr cached;
+    if (!cached)
+        cached = loadedModule("__primitives__");
+    return cached;
 }
 
-ObjectPtr primName(const string &name) {
-    return safeLookupPublic(loadedModule("__primitives__"),
-                            new Identifier(name));
-}
-
-ExprPtr moduleNameRef(const string &module, const string &name) {
-    ExprPtr nameRef = new NameRef(new Identifier(name));
-    return new ForeignExpr(loadedModule(module)->env, nameRef);
-}
-
-ExprPtr kernelNameRef(const string &name) {
-    return moduleNameRef("prelude", name);
-}
-
-ExprPtr primNameRef(const string &name) {
-    return moduleNameRef("__primitives__", name);
+ModulePtr preludeModule() {
+    static ModulePtr cached;
+    if (!cached)
+        cached = loadedModule("prelude");
+    return cached;
 }
 
 
-
-//
-// ForeignExpr::getEnv, ForeignStatement::getEnv
-//
+static IdentifierPtr fnameToIdent(const string &str) {
+    string s = str;
+    if ((s.size() > 0) && (s[s.size()-1] == 'P'))
+        s[s.size()-1] = '?';
+    return new Identifier(s);
+}
 
-EnvPtr ForeignExpr::getEnv() {
-    if (!foreignEnv) {
-        assert(moduleName.size() > 0);
-        foreignEnv = loadedModule(moduleName)->env;
+#define DEFINE_PRIMITIVE_ACCESSOR(name) \
+    ObjectPtr primitive_##name() { \
+        static ObjectPtr cached; \
+        if (!cached) \
+            cached = safeLookupPublic(primitivesModule(), fnameToIdent(#name)); \
+        return cached; \
+    } \
+    \
+    ExprPtr primitive_expr_##name() { \
+        static ExprPtr cached; \
+        if (!cached) \
+            cached = new ObjectExpr(primitive_##name()); \
+        return cached; \
     }
-    return foreignEnv;
-}
 
-EnvPtr ForeignStatement::getEnv() {
-    if (!foreignEnv) {
-        assert(moduleName.size() > 0);
-        foreignEnv = loadedModule(moduleName)->env;
+DEFINE_PRIMITIVE_ACCESSOR(addressOf);
+DEFINE_PRIMITIVE_ACCESSOR(boolNot);
+DEFINE_PRIMITIVE_ACCESSOR(Pointer);
+DEFINE_PRIMITIVE_ACCESSOR(CodePointer);
+DEFINE_PRIMITIVE_ACCESSOR(CCodePointer);
+DEFINE_PRIMITIVE_ACCESSOR(VarArgsCCodePointer);
+DEFINE_PRIMITIVE_ACCESSOR(StdCallCodePointer);
+DEFINE_PRIMITIVE_ACCESSOR(FastCallCodePointer);
+DEFINE_PRIMITIVE_ACCESSOR(Array);
+DEFINE_PRIMITIVE_ACCESSOR(Vec);
+DEFINE_PRIMITIVE_ACCESSOR(Tuple);
+DEFINE_PRIMITIVE_ACCESSOR(Union);
+DEFINE_PRIMITIVE_ACCESSOR(Static);
+
+#define DEFINE_PRELUDE_ACCESSOR(name) \
+    ObjectPtr prelude_##name() { \
+        static ObjectPtr cached; \
+        if (!cached) \
+            cached = safeLookupPublic(preludeModule(), fnameToIdent(#name)); \
+        return cached; \
+    } \
+    \
+    ExprPtr prelude_expr_##name() { \
+        static ExprPtr cached; \
+        if (!cached) \
+            cached = new ObjectExpr(prelude_##name()); \
+        return cached; \
     }
-    return foreignEnv;
-}
+
+DEFINE_PRELUDE_ACCESSOR(dereference);
+DEFINE_PRELUDE_ACCESSOR(plus);
+DEFINE_PRELUDE_ACCESSOR(minus);
+DEFINE_PRELUDE_ACCESSOR(add);
+DEFINE_PRELUDE_ACCESSOR(subtract);
+DEFINE_PRELUDE_ACCESSOR(multiply);
+DEFINE_PRELUDE_ACCESSOR(divide);
+DEFINE_PRELUDE_ACCESSOR(remainder);
+DEFINE_PRELUDE_ACCESSOR(equalsP);
+DEFINE_PRELUDE_ACCESSOR(notEqualsP);
+DEFINE_PRELUDE_ACCESSOR(lesserP);
+DEFINE_PRELUDE_ACCESSOR(lesserEqualsP);
+DEFINE_PRELUDE_ACCESSOR(greaterP);
+DEFINE_PRELUDE_ACCESSOR(greaterEqualsP);
+DEFINE_PRELUDE_ACCESSOR(tupleLiteral);
+DEFINE_PRELUDE_ACCESSOR(Array);
+DEFINE_PRELUDE_ACCESSOR(staticIndex);
+DEFINE_PRELUDE_ACCESSOR(index);
+DEFINE_PRELUDE_ACCESSOR(fieldRef);
+DEFINE_PRELUDE_ACCESSOR(call);
+DEFINE_PRELUDE_ACCESSOR(destroy);
+DEFINE_PRELUDE_ACCESSOR(move);
+DEFINE_PRELUDE_ACCESSOR(assign);
+DEFINE_PRELUDE_ACCESSOR(addAssign);
+DEFINE_PRELUDE_ACCESSOR(subtractAssign);
+DEFINE_PRELUDE_ACCESSOR(multiplyAssign);
+DEFINE_PRELUDE_ACCESSOR(divideAssign);
+DEFINE_PRELUDE_ACCESSOR(remainderAssign);
+DEFINE_PRELUDE_ACCESSOR(ByRef);
+DEFINE_PRELUDE_ACCESSOR(initializeCommandLine);
+DEFINE_PRELUDE_ACCESSOR(callMain);
+DEFINE_PRELUDE_ACCESSOR(Char);
+DEFINE_PRELUDE_ACCESSOR(allocateShared);
+DEFINE_PRELUDE_ACCESSOR(wrapStatic);
+DEFINE_PRELUDE_ACCESSOR(iterator);
+DEFINE_PRELUDE_ACCESSOR(hasNextP);
+DEFINE_PRELUDE_ACCESSOR(next);
+DEFINE_PRELUDE_ACCESSOR(throwValue);
+DEFINE_PRELUDE_ACCESSOR(exceptionIsP);
+DEFINE_PRELUDE_ACCESSOR(exceptionAs);
+DEFINE_PRELUDE_ACCESSOR(exceptionAsAny);
+DEFINE_PRELUDE_ACCESSOR(continueException);
+DEFINE_PRELUDE_ACCESSOR(unhandledExceptionInExternal);
+DEFINE_PRELUDE_ACCESSOR(packMultiValuedFreeVarByRef);
+DEFINE_PRELUDE_ACCESSOR(packMultiValuedFreeVar);
+DEFINE_PRELUDE_ACCESSOR(unpackMultiValuedFreeVarAndDereference);
+DEFINE_PRELUDE_ACCESSOR(unpackMultiValuedFreeVar);
+DEFINE_PRELUDE_ACCESSOR(VariantRepr);
+DEFINE_PRELUDE_ACCESSOR(variantTag);
+DEFINE_PRELUDE_ACCESSOR(unsafeVariantIndex);
+DEFINE_PRELUDE_ACCESSOR(invalidVariant);
+DEFINE_PRELUDE_ACCESSOR(StringConstant);

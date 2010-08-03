@@ -1635,13 +1635,6 @@ ModulePtr loadedModule(const string &module);
 
 const string &primOpName(PrimOpPtr x);
 
-ObjectPtr kernelName(const string &name);
-ObjectPtr primName(const string &name);
-
-ExprPtr moduleNameRef(const string &module, const string &name);
-ExprPtr kernelNameRef(const string &name);
-ExprPtr primNameRef(const string &name);
-
 
 
 //
@@ -2137,7 +2130,7 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
 ExprPtr desugarNew(NewPtr x);
 ExprPtr desugarStaticExpr(StaticExprPtr x);
-const char *updateOperatorName(int op);
+ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
 
