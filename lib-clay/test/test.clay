@@ -1,0 +1,185 @@
+record TestStatus {
+    passed: UInt;
+    failed: UInt;
+    pending: UInt;
+}
+
+overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
+
+record TestCase[F] {
+    name: StringConstant;
+    case: F;
+    pending?: Bool;
+}
+
+[F] overload TestCase(name, fn:F) = TestCase[F](name, fn, false);
+
+[F] PendingTestCase(name, fn:F) = TestCase[F](name, fn, true);
+
+record TestSuite[TestCases] {
+    name: StringConstant;
+    testCases: TestCases;
+}
+
+alias TEST_CASE_INDENT = "  ";
+alias TEST_FAILURE_INDENT = TEST_CASE_INDENT + TEST_CASE_INDENT;
+
+accumulateTestStatus(test: TestStatus, newTest: TestStatus) {
+    test.passed  += newTest.passed;
+    test.failed  += newTest.failed;
+    test.pending += newTest.pending;
+}
+
+reportTest(test: TestStatus, ...prefix) {
+    println(
+        ...prefix,
+        test.passed, " expectations passed; ",
+        test.failed, " failed (",
+        test.pending, " pending",
+        ")"
+    );
+}
+
+[TestCases] runTestSuite(suite: TestSuite[TestCases]) TestStatus {
+    var test = TestStatus();
+    println("Testing ", suite.name, ":");
+    eachValue(
+        block(case) { accumulateTestStatus(test, runTestCase(case)); },
+        ...unpack(suite.testCases)
+    );
+    reportTest(test, "-- ", suite.name, ": ");
+    return test;
+}
+
+pendingMessage(pending?) {
+    if (pending?) {
+        return "(pending) ";
+    } else {
+        return "";
+    }
+}
+
+printFailure(...xs) { println(TEST_FAILURE_INDENT, ...xs); }
+
+[F] runTestCase(case: TestCase[F]) TestStatus {
+    print(TEST_CASE_INDENT, pendingMessage(case.pending?), case.name, ":");
+    flush(stdout);
+    
+    var test = TestStatus();
+    case.case(test);
+
+    if (test.failed > 0) {
+        if (case.pending?) {
+            test.pending = test.failed;
+            test.failed = 0;
+        } else {
+            printFailure("-- FAILED");
+        }
+    } else {
+        if (case.pending?) {
+            println();
+            printFailure("-- FIXED (should clear pending flag)");
+            test.failed = 1;
+        } else {
+            println(" passed");
+        }
+    }
+
+    return test;
+}
+
+passed(test) { test.passed += 1; }
+failed(test) { test.failed += 1; }
+
+// primitive assertion function
+expect(test: TestStatus, passed?: Bool, failReportFn) {
+    if (passed?) {
+        passed(test);
+    } else {
+        failed(test);
+        println();
+        failReportFn();
+    }
+}
+
+expectTrue(test: TestStatus, name, value) {
+    expect(test, value, lambda() {
+        printFailure(name, " isn't true");
+    });
+}
+
+expectFalse(test: TestStatus, name, value) {
+    expect(test, not value, lambda() {
+        printFailure(name, " isn't false");
+    });
+}
+
+expectEqual(test: TestStatus, name, expected, result) {
+    expect(
+        test,
+        expected == result,
+        lambda() {
+            printFailure(name, " is expected to equal ", expected, " but is ", result);
+        }
+    );
+}
+
+procedure expectedResults?;
+overload expectedResults?(expected, result) = false;
+[T | Tuple?(T)]
+overload expectedResults?(expected: T, result: T) = expected == result;
+
+expectEqualValues(test: TestStatus, name, expectedTuple, ...results) {
+    var resultsTuple = Tuple(...results);
+    expect(
+        test,
+        expectedResults?(expectedTuple, resultsTuple),
+        lambda() {
+            printFailure(name, " are expected to equal:");
+            printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(expectedTuple)));
+            printFailure("but are:");
+            printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(resultsTuple)));
+        }
+    );
+}
+
+expectCallDefined(test: TestStatus, Proc, ...Types) {
+    var typesTuple = Tuple(...Types);
+    expect(
+        test,
+        CallDefined?(Proc, ...Types),
+        lambda() {
+            printFailure(Proc, " isn't callable with the expected argument types:");
+            printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(typesTuple)));
+        }
+    );
+}
+
+expectCallUndefined(test: TestStatus, Proc, ...Types) {
+    var typesTuple = Tuple(...Types);
+    expect(
+        test,
+        not CallDefined?(Proc, ...Types),
+        lambda() {
+            printFailure(Proc, " shouldn't be callable with the expected argument types:");
+            printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(typesTuple)));
+        }
+    );
+}
+
+testMain(...suites) {
+    var test = TestStatus();
+    eachValue(
+        block(suite) { accumulateTestStatus(test, runTestSuite(suite)); },
+        ...suites
+    );
+
+    reportTest(test, "Overall: ");
+
+    if (test.failed > 0) {
+        println("TESTS FAILED");
+        return 1;
+    } else {
+        return 0;
+    }
+}
