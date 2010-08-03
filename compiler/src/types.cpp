@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "claynames.hpp"
 
 TypePtr boolType;
 TypePtr int8Type;
@@ -432,7 +433,7 @@ const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t) {
 static RecordPtr getVariantReprRecord() {
     static RecordPtr rec;
     if (!rec) {
-        ObjectPtr obj = kernelName("VariantRepr");
+        ObjectPtr obj = prelude_VariantRepr();
         if (obj->objKind != RECORD)
             error("lib-clay error: VariantRepr is not a record");
         rec = (Record *)obj.ptr();

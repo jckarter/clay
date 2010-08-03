@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "claynames.hpp"
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Assembly/Writer.h>
@@ -172,11 +173,6 @@ static CValuePtr staticCValue(ObjectPtr obj)
     return codegenAllocValue(t);
 }
 
-static CValuePtr kernelCValue(const string &name)
-{
-    return staticCValue(kernelName(name));
-}
-
 static CValuePtr derefValue(CValuePtr cvPtr)
 {
     assert(cvPtr->type->typeKind == POINTER_TYPE);
@@ -207,7 +203,7 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
         return;
     bool savedExceptionsEnabled = exceptionsEnabled;
     exceptionsEnabled = false;
-    codegenCallValue(kernelCValue("destroy"),
+    codegenCallValue(staticCValue(prelude_destroy()),
                      new MultiCValue(dest),
                      ctx,
                      new MultiCValue());
@@ -238,7 +234,7 @@ void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
         }
         return;
     }
-    codegenCallValue(kernelCValue("move"),
+    codegenCallValue(staticCValue(prelude_move()),
                      new MultiCValue(src),
                      ctx,
                      new MultiCValue(dest));
@@ -255,7 +251,7 @@ void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
     }
     MultiCValuePtr args = new MultiCValue(dest);
     args->add(src);
-    codegenCallValue(kernelCValue("assign"),
+    codegenCallValue(staticCValue(prelude_assign()),
                      args,
                      ctx,
                      new MultiCValue());
@@ -647,7 +643,10 @@ void codegenExpr(ExprPtr expr,
         MultiCValuePtr args = new MultiCValue();
         args->add(cvFirst);
         args->add(cvLast);
-        codegenCallValue(kernelCValue("StringConstant"), args, ctx, out);
+        codegenCallValue(staticCValue(prelude_StringConstant()),
+                         args,
+                         ctx,
+                         out);
         break;
     }
 
@@ -679,15 +678,15 @@ void codegenExpr(ExprPtr expr,
             codegenExpr(x->args[0], env, ctx, out);
         }
         else {
-            ExprPtr Tuple = kernelNameRef("tupleLiteral");
-            codegenCallExpr(Tuple, x->args, env, ctx, out);
+            ExprPtr tupleLiteral = prelude_expr_tupleLiteral();
+            codegenCallExpr(tupleLiteral, x->args, env, ctx, out);
         }
         break;
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        codegenCallExpr(kernelNameRef("Array"), x->args, env, ctx, out);
+        codegenCallExpr(prelude_expr_Array(), x->args, env, ctx, out);
         break;
     }
 
@@ -715,7 +714,7 @@ void codegenExpr(ExprPtr expr,
         args.push_back(x->expr);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
         args.push_back(new StaticExpr(new ObjectExpr(vh.ptr())));
-        codegenCallExpr(kernelNameRef("staticIndex"), args, env, ctx, out);
+        codegenCallExpr(prelude_expr_staticIndex(), args, env, ctx, out);
         break;
     }
 
@@ -1154,7 +1153,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
     }
 
     llvmBuilder->SetInsertPoint(exceptionBlock);
-    codegenCallValue(kernelCValue("unhandledExceptionInExternal"),
+    codegenCallValue(staticCValue(prelude_unhandledExceptionInExternal()),
                      new MultiCValue(),
                      ctx,
                      new MultiCValue());
@@ -1375,7 +1374,7 @@ void codegenIndexingExpr(ExprPtr indexable,
     vector<ExprPtr> args2;
     args2.push_back(indexable);
     args2.insert(args2.end(), args.begin(), args.end());
-    codegenCallExpr(kernelNameRef("index"), args2, env, ctx, out);
+    codegenCallExpr(prelude_expr_index(), args2, env, ctx, out);
 }
 
 
@@ -1441,7 +1440,7 @@ void codegenFieldRefExpr(ExprPtr base,
     vector<ExprPtr> args2;
     args2.push_back(base);
     args2.push_back(new ObjectExpr(name.ptr()));
-    codegenCallExpr(kernelNameRef("fieldRef"), args2, env, ctx, out);
+    codegenCallExpr(prelude_expr_fieldRef(), args2, env, ctx, out);
 }
 
 
@@ -1473,7 +1472,7 @@ void codegenCallExpr(ExprPtr callable,
         vector<ExprPtr> args2;
         args2.push_back(callable);
         args2.insert(args2.end(), args.begin(), args.end());
-        codegenCallExpr(kernelNameRef("call"), args2, env, ctx, out);
+        codegenCallExpr(prelude_expr_call(), args2, env, ctx, out);
         return;
     }
 
@@ -1538,7 +1537,7 @@ void codegenCallExpr(ExprPtr callable,
 llvm::Value *codegenVariantTag(CValuePtr cv, CodegenContextPtr ctx)
 {
     CValuePtr ctag = codegenAllocValue(cIntType);
-    codegenCallValue(kernelCValue("variantTag"),
+    codegenCallValue(staticCValue(prelude_variantTag()),
                      new MultiCValue(cv),
                      ctx,
                      new MultiCValue(ctag));
@@ -1560,7 +1559,10 @@ CValuePtr codegenVariantIndex(CValuePtr cv, int tag, CodegenContextPtr ctx)
     CValuePtr cvPtr = codegenAllocValue(pointerType(memberTypes[tag]));
     MultiCValuePtr out = new MultiCValue(cvPtr);
 
-    codegenCallValue(kernelCValue("unsafeVariantIndex"), args, ctx, out);
+    codegenCallValue(staticCValue(prelude_unsafeVariantIndex()),
+                     args,
+                     ctx,
+                     out);
     llvm::Value *llv = llvmBuilder->CreateLoad(cvPtr->llValue);
     return new CValue(memberTypes[tag], llv);
 }
@@ -1642,7 +1644,7 @@ void codegenDispatch(ObjectPtr obj,
         llvmBuilder->SetInsertPoint(elseBlocks[i]);
     }
 
-    codegenCallValue(kernelCValue("invalidVariant"),
+    codegenCallValue(staticCValue(prelude_invalidVariant()),
                      new MultiCValue(cvDispatch),
                      ctx,
                      new MultiCValue());
@@ -1688,7 +1690,11 @@ void codegenCallValue(CValuePtr callable,
         MultiPValuePtr pvArgs2 =
             new MultiPValue(new PValue(callable->type, false));
         pvArgs2->add(pvArgs);
-        codegenCallValue(kernelCValue("call"), args2, pvArgs2, ctx, out);
+        codegenCallValue(staticCValue(prelude_call()),
+                         args2,
+                         pvArgs2,
+                         ctx,
+                         out);
         return;
     }
 
@@ -2411,7 +2417,7 @@ bool codegenStatement(StatementPtr stmt,
         PValuePtr pvLeft = analyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(kernelNameRef(updateOperatorName(x->op)));
+        CallPtr call = new Call(updateOperatorExpr(x->op));
         call->args.push_back(x->left);
         call->args.push_back(x->right);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
@@ -2609,7 +2615,7 @@ bool codegenStatement(StatementPtr stmt,
         Throw *x = (Throw *)stmt.ptr();
         if (!x->expr)
             error("throw statements need an argument");
-        ExprPtr callable = kernelNameRef("throwValue");
+        ExprPtr callable = prelude_expr_throwValue();
         vector<ExprPtr> args(1, x->expr);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
         return false;
@@ -3062,7 +3068,8 @@ void codegenPrimOp(PrimOpPtr x,
             arityError2(1, args->size());
         ObjectPtr callable = valueToStatic(args->values[0]);
         if (!callable) {
-            MultiCValuePtr args2 = new MultiCValue(kernelCValue("call"));
+            CValuePtr cvCall = staticCValue(prelude_call());
+            MultiCValuePtr args2 = new MultiCValue(cvCall);
             args2->add(args);
             codegenPrimOp(x, args2, ctx, out);
             break;
@@ -4156,12 +4163,12 @@ void codegenExe(ModulePtr module)
 
     BlockPtr mainBody = new Block();
 
-    CallPtr initCmdLine = new Call(kernelNameRef("initializeCommandLine"));
+    CallPtr initCmdLine = new Call(prelude_expr_initializeCommandLine());
     initCmdLine->args.push_back(new NameRef(argc));
     initCmdLine->args.push_back(new NameRef(argv));
     mainBody->statements.push_back(new ExprStatement(initCmdLine.ptr()));
 
-    CallPtr mainCall = new Call(kernelNameRef("callMain"));
+    CallPtr mainCall = new Call(prelude_expr_callMain());
     mainCall->args.push_back(new NameRef(main));
 
     vector<ExprPtr> exprs;

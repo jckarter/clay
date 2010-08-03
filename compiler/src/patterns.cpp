@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "claynames.hpp"
 
 
 
@@ -82,83 +83,6 @@ MultiStaticPtr derefDeep(MultiPatternPtr x)
 // objectToPattern, objectToPatternStruct
 //
 
-static ObjectPtr primOpPointer() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("Pointer");
-    return obj;
-}
-
-static ObjectPtr primOpCodePointer() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("CodePointer");
-    return obj;
-}
-
-static ObjectPtr primOpCCodePointer() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("CCodePointer");
-    return obj;
-}
-
-static ObjectPtr primOpVarArgsCCodePointer() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("VarArgsCCodePointer");
-    return obj;
-}
-
-static ObjectPtr primOpStdCallCodePointer() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("StdCallCodePointer");
-    return obj;
-}
-
-static ObjectPtr primOpFastCallCodePointer() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("FastCallCodePointer");
-    return obj;
-}
-
-static ObjectPtr primOpArray() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("Array");
-    return obj;
-}
-
-static ObjectPtr primOpVec() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("Vec");
-    return obj;
-}
-
-static ObjectPtr primOpTuple() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("Tuple");
-    return obj;
-}
-
-static ObjectPtr primOpUnion() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("Union");
-    return obj;
-}
-
-static ObjectPtr primOpStatic() {
-    static ObjectPtr obj;
-    if (!obj)
-        obj = primName("Static");
-    return obj;
-}
-
 static PatternPtr objectToPattern(ObjectPtr obj)
 {
     switch (obj->objKind) {
@@ -191,14 +115,14 @@ static PatternPtr objectToPattern(ObjectPtr obj)
         switch (t->typeKind) {
         case POINTER_TYPE : {
             PointerType *pt = (PointerType *)t;
-            ObjectPtr head = primOpPointer();
+            ObjectPtr head = primitive_Pointer();
             MultiPatternListPtr params = new MultiPatternList();
             params->items.push_back(objectToPattern(pt->pointeeType.ptr()));
             return new PatternStruct(head, params.ptr());
         }
         case CODE_POINTER_TYPE : {
             CodePointerType *cpt = (CodePointerType *)t;
-            ObjectPtr head = primOpCodePointer();
+            ObjectPtr head = primitive_CodePointer();
             MultiPatternListPtr argTypes = new MultiPatternList();
             for (unsigned i = 0; i < cpt->argTypes.size(); ++i) {
                 PatternPtr x = objectToPattern(cpt->argTypes[i].ptr());
@@ -208,7 +132,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             for (unsigned i = 0; i < cpt->returnTypes.size(); ++i) {
                 TypePtr t = cpt->returnTypes[i];
                 if (cpt->returnIsRef[i]) {
-                    ObjectPtr obj = kernelName("ByRef");
+                    ObjectPtr obj = prelude_ByRef();
                     assert(obj->objKind == RECORD);
                     t = recordType((Record *)obj.ptr(),
                                    vector<ObjectPtr>(1, t.ptr()));
@@ -229,15 +153,15 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             switch (cpt->callingConv) {
             case CC_DEFAULT :
                 if (cpt->hasVarArgs)
-                    head = primOpVarArgsCCodePointer();
+                    head = primitive_VarArgsCCodePointer();
                 else
-                    head = primOpCCodePointer();
+                    head = primitive_CCodePointer();
                 break;
             case CC_STDCALL :
-                head = primOpStdCallCodePointer();
+                head = primitive_StdCallCodePointer();
                 break;
             case CC_FASTCALL :
-                head = primOpFastCallCodePointer();
+                head = primitive_FastCallCodePointer();
                 break;
             }
             MultiPatternListPtr argTypes = new MultiPatternList();
@@ -259,7 +183,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
         }
         case ARRAY_TYPE : {
             ArrayType *at = (ArrayType *)t;
-            ObjectPtr head = primOpArray();
+            ObjectPtr head = primitive_Array();
             MultiPatternListPtr params = new MultiPatternList();
             params->items.push_back(objectToPattern(at->elementType.ptr()));
             ValueHolderPtr vh = intToValueHolder(at->size);
@@ -268,7 +192,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
         }
         case VEC_TYPE : {
             VecType *vt = (VecType *)t;
-            ObjectPtr head = primOpVec();
+            ObjectPtr head = primitive_Vec();
             MultiPatternListPtr params = new MultiPatternList();
             params->items.push_back(objectToPattern(vt->elementType.ptr()));
             ValueHolderPtr vh = intToValueHolder(vt->size);
@@ -277,7 +201,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
         }
         case TUPLE_TYPE : {
             TupleType *tt = (TupleType *)t;
-            ObjectPtr head = primOpTuple();
+            ObjectPtr head = primitive_Tuple();
             MultiPatternListPtr params = new MultiPatternList();
             for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
                 PatternPtr x = objectToPattern(tt->elementTypes[i].ptr());
@@ -287,7 +211,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
         }
         case UNION_TYPE : {
             UnionType *ut = (UnionType *)t;
-            ObjectPtr head = primOpUnion();
+            ObjectPtr head = primitive_Union();
             MultiPatternListPtr params = new MultiPatternList();
             for (unsigned i = 0; i < ut->memberTypes.size(); ++i) {
                 PatternPtr x = objectToPattern(ut->memberTypes[i].ptr());
@@ -297,7 +221,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
         }
         case STATIC_TYPE : {
             StaticType *st = (StaticType *)t;
-            ObjectPtr head = primOpStatic();
+            ObjectPtr head = primitive_Static();
             MultiPatternListPtr params = new MultiPatternList();
             params->items.push_back(objectToPattern(st->obj));
             return new PatternStruct(head, params.ptr());

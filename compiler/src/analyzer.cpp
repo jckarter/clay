@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "claynames.hpp"
 
 static TypePtr objectType(ObjectPtr x);
 static ObjectPtr unwrapStaticType(TypePtr t);
@@ -26,7 +27,6 @@ static TupleTypePtr tupleTypeOfValue(MultiPValuePtr x, unsigned index);
 static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index);
 
 static PValuePtr staticPValue(ObjectPtr x);
-static PValuePtr kernelPValue(const string &name);
 
 
 
@@ -263,11 +263,6 @@ static PValuePtr staticPValue(ObjectPtr x)
     return new PValue(t, true);
 }
 
-static PValuePtr kernelPValue(const string &name)
-{
-    return staticPValue(kernelName(name));
-}
-
 
 
 //
@@ -419,7 +414,7 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         MultiPValuePtr args = new MultiPValue();
         args->add(new PValue(ptrInt8Type, true));
         args->add(new PValue(ptrInt8Type, true));
-        return analyzeCallValue(kernelPValue("StringConstant"), args);
+        return analyzeCallValue(staticPValue(prelude_StringConstant()), args);
     }
 
     case IDENTIFIER_LITERAL : {
@@ -448,12 +443,12 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         {
             return analyzeExpr(x->args[0], env);
         }
-        return analyzeCallExpr(kernelNameRef("tupleLiteral"), x->args, env);
+        return analyzeCallExpr(prelude_expr_tupleLiteral(), x->args, env);
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        return analyzeCallExpr(kernelNameRef("Array"), x->args, env);
+        return analyzeCallExpr(prelude_expr_Array(), x->args, env);
     }
 
     case INDEXING : {
@@ -477,7 +472,7 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
         args.push_back(x->expr);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
         args.push_back(new StaticExpr(new ObjectExpr(vh.ptr())));
-        return analyzeCallExpr(kernelNameRef("staticIndex"), args, env);
+        return analyzeCallExpr(prelude_expr_staticIndex(), args, env);
     }
 
     case UNARY_OP : {
@@ -892,7 +887,7 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
     vector<ExprPtr> args2;
     args2.push_back(indexable);
     args2.insert(args2.end(), args.begin(), args.end());
-    return analyzeCallExpr(kernelNameRef("index"), args2, env);
+    return analyzeCallExpr(prelude_expr_index(), args2, env);
 }
 
 
@@ -924,7 +919,7 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             for (unsigned i = 0; i < returnTypes.size(); ++i) {
                 if (returnTypes[i]->typeKind == RECORD_TYPE) {
                     RecordType *rt = (RecordType *)returnTypes[i].ptr();
-                    if (rt->record.ptr() == kernelName("ByRef").ptr()) {
+                    if (rt->record.ptr() == prelude_ByRef().ptr()) {
                         assert(rt->params.size() == 1);
                         ObjectPtr obj = rt->params[0];
                         if (obj->objKind != TYPE) {
@@ -1110,7 +1105,7 @@ MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
     vector<ExprPtr> args;
     args.push_back(base);
     args.push_back(new ObjectExpr(name.ptr()));
-    return analyzeCallExpr(kernelNameRef("fieldRef"), args, env);
+    return analyzeCallExpr(prelude_expr_fieldRef(), args, env);
 }
 
 
@@ -1169,7 +1164,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         vector<ExprPtr> args2;
         args2.push_back(callable);
         args2.insert(args2.end(), args.begin(), args.end());
-        return analyzeCallExpr(kernelNameRef("call"), args2, env);
+        return analyzeCallExpr(prelude_expr_call(), args2, env);
     }
 
     switch (obj->objKind) {
@@ -1315,7 +1310,7 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
     if (!obj) {
         MultiPValuePtr args2 = new MultiPValue(callable);
         args2->add(args);
-        return analyzeCallValue(kernelPValue("call"), args2);
+        return analyzeCallValue(staticPValue(prelude_call()), args2);
     }
 
     switch (obj->objKind) {

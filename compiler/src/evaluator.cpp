@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "claynames.hpp"
 
 MultiEValuePtr evalMultiArgsAsRef(const vector<ExprPtr> &exprs, EnvPtr env);
 MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env);
@@ -478,11 +479,6 @@ static EValuePtr staticEValue(ObjectPtr obj)
     return new EValue(t, NULL);
 }
 
-static EValuePtr kernelEValue(const string &name)
-{
-    return staticEValue(kernelName(name));
-}
-
 static EValuePtr derefValue(EValuePtr evPtr)
 {
     assert(evPtr->type->typeKind == POINTER_TYPE);
@@ -510,7 +506,7 @@ void evalValueDestroy(EValuePtr dest)
 {
     if (isPrimitiveType(dest->type))
         return;
-    evalCallValue(kernelEValue("destroy"),
+    evalCallValue(staticEValue(prelude_destroy()),
                   new MultiEValue(dest),
                   new MultiEValue());
 }
@@ -534,7 +530,7 @@ void evalValueMove(EValuePtr dest, EValuePtr src)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
     }
-    evalCallValue(kernelEValue("move"),
+    evalCallValue(staticEValue(prelude_move()),
                   new MultiEValue(src),
                   new MultiEValue(dest));
 }
@@ -548,7 +544,7 @@ void evalValueAssign(EValuePtr dest, EValuePtr src)
     }
     MultiEValuePtr args = new MultiEValue(dest);
     args->add(src);
-    evalCallValue(kernelEValue("assign"),
+    evalCallValue(staticEValue(prelude_assign()),
                   args,
                   new MultiEValue());
 }
@@ -873,7 +869,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         MultiEValuePtr args = new MultiEValue();
         args->add(evFirst);
         args->add(evLast);
-        evalCallValue(kernelEValue("StringConstant"), args, out);
+        evalCallValue(staticEValue(prelude_StringConstant()), args, out);
         break;
     }
 
@@ -905,14 +901,14 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
             evalExpr(x->args[0], env, out);
         }
         else {
-            evalCallExpr(kernelNameRef("tupleLiteral"), x->args, env, out);
+            evalCallExpr(prelude_expr_tupleLiteral(), x->args, env, out);
         }
         break;
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        evalCallExpr(kernelNameRef("Array"), x->args, env, out);
+        evalCallExpr(prelude_expr_Array(), x->args, env, out);
         break;
     }
 
@@ -940,7 +936,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         args.push_back(x->expr);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
         args.push_back(new StaticExpr(new ObjectExpr(vh.ptr())));
-        evalCallExpr(kernelNameRef("staticIndex"), args, env, out);
+        evalCallExpr(prelude_expr_staticIndex(), args, env, out);
         break;
     }
 
@@ -1257,7 +1253,7 @@ void evalIndexingExpr(ExprPtr indexable,
     vector<ExprPtr> args2;
     args2.push_back(indexable);
     args2.insert(args2.end(), args.begin(), args.end());
-    evalCallExpr(kernelNameRef("index"), args2, env, out);
+    evalCallExpr(prelude_expr_index(), args2, env, out);
 }
 
 
@@ -1321,7 +1317,7 @@ void evalFieldRefExpr(ExprPtr base,
     vector<ExprPtr> args2;
     args2.push_back(base);
     args2.push_back(new ObjectExpr(name.ptr()));
-    evalCallExpr(kernelNameRef("fieldRef"), args2, env, out);
+    evalCallExpr(prelude_expr_fieldRef(), args2, env, out);
 }
 
 
@@ -1352,7 +1348,7 @@ void evalCallExpr(ExprPtr callable,
         vector<ExprPtr> args2;
         args2.push_back(callable);
         args2.insert(args2.end(), args.begin(), args.end());
-        evalCallExpr(kernelNameRef("call"), args2, env, out);
+        evalCallExpr(prelude_expr_call(), args2, env, out);
         return;
     }
 
@@ -1418,7 +1414,7 @@ int evalVariantTag(EValuePtr ev)
 {
     int tag = -1;
     EValuePtr etag = new EValue(cIntType, (char *)&tag);
-    evalCallValue(kernelEValue("variantTag"), 
+    evalCallValue(staticEValue(prelude_variantTag()),
                   new MultiEValue(ev),
                   new MultiEValue(etag));
     return tag;
@@ -1439,7 +1435,7 @@ EValuePtr evalVariantIndex(EValuePtr ev, int tag)
     EValuePtr evPtr = evalAllocValue(pointerType(memberTypes[tag]));
     MultiEValuePtr out = new MultiEValue(evPtr);
 
-    evalCallValue(kernelEValue("unsafeVariantIndex"), args, out);
+    evalCallValue(staticEValue(prelude_unsafeVariantIndex()), args, out);
     return new EValue(memberTypes[tag], *((char **)ev->addr));
 }
 
@@ -1536,7 +1532,7 @@ void evalCallValue(EValuePtr callable,
         MultiPValuePtr pvArgs2 =
             new MultiPValue(new PValue(callable->type, false));
         pvArgs2->add(pvArgs);
-        evalCallValue(kernelEValue("call"), args2, pvArgs2, out);
+        evalCallValue(staticEValue(prelude_call()), args2, pvArgs2, out);
         return;
     }
 
@@ -1902,7 +1898,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         PValuePtr pvLeft = analyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(kernelNameRef(updateOperatorName(x->op)));
+        CallPtr call = new Call(updateOperatorExpr(x->op));
         call->args.push_back(x->left);
         call->args.push_back(x->right);
         return evalStatement(new ExprStatement(call.ptr()), env, ctx);
@@ -2920,7 +2916,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             arityError2(1, args->size());
         ObjectPtr callable = valueToStatic(args->values[0]);
         if (!callable) {
-            MultiEValuePtr args2 = new MultiEValue(kernelEValue("call"));
+            EValuePtr evCall = staticEValue(prelude_call());
+            MultiEValuePtr args2 = new MultiEValue(evCall);
             args2->add(args);
             evalPrimOp(x, args2, out);
             break;

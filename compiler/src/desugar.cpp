@@ -1,7 +1,8 @@
 #include "clay.hpp"
+#include "claynames.hpp"
 
 ExprPtr desugarCharLiteral(char c) {
-    ExprPtr nameRef = kernelNameRef("Char");
+    ExprPtr nameRef = prelude_expr_Char();
     CallPtr call = new Call(nameRef);
     ostringstream out;
     out << (int)c;
@@ -13,19 +14,19 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
     case DEREFERENCE :
-        callable = kernelNameRef("dereference");
+        callable = prelude_expr_dereference();
         break;
     case ADDRESS_OF :
-        callable = primNameRef("addressOf");
+        callable = primitive_expr_addressOf();
         break;
     case PLUS :
-        callable = kernelNameRef("plus");
+        callable = prelude_expr_plus();
         break;
     case MINUS :
-        callable = kernelNameRef("minus");
+        callable = prelude_expr_minus();
         break;
     case NOT :
-        callable = primNameRef("boolNot");
+        callable = primitive_expr_boolNot();
         break;
     default :
         assert(false);
@@ -39,37 +40,37 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
     case ADD :
-        callable = kernelNameRef("add");
+        callable = prelude_expr_add();
         break;
     case SUBTRACT :
-        callable = kernelNameRef("subtract");
+        callable = prelude_expr_subtract();
         break;
     case MULTIPLY :
-        callable = kernelNameRef("multiply");
+        callable = prelude_expr_multiply();
         break;
     case DIVIDE :
-        callable = kernelNameRef("divide");
+        callable = prelude_expr_divide();
         break;
     case REMAINDER :
-        callable = kernelNameRef("remainder");
+        callable = prelude_expr_remainder();
         break;
     case EQUALS :
-        callable = kernelNameRef("equals?");
+        callable = prelude_expr_equalsP();
         break;
     case NOT_EQUALS :
-        callable = kernelNameRef("notEquals?");
+        callable = prelude_expr_notEqualsP();
         break;
     case LESSER :
-        callable = kernelNameRef("lesser?");
+        callable = prelude_expr_lesserP();
         break;
     case LESSER_EQUALS :
-        callable = kernelNameRef("lesserEquals?");
+        callable = prelude_expr_lesserEqualsP();
         break;
     case GREATER :
-        callable = kernelNameRef("greater?");
+        callable = prelude_expr_greaterP();
         break;
     case GREATER_EQUALS :
-        callable = kernelNameRef("greaterEquals?");
+        callable = prelude_expr_greaterEqualsP();
         break;
     default :
         assert(false);
@@ -81,26 +82,26 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
 }
 
 ExprPtr desugarNew(NewPtr x) {
-    ExprPtr callable = kernelNameRef("allocateShared");
+    ExprPtr callable = prelude_expr_allocateShared();
     CallPtr call = new Call(callable);
     call->args.push_back(x->expr);
     return call.ptr();
 }
 
 ExprPtr desugarStaticExpr(StaticExprPtr x) {
-    ExprPtr callable = kernelNameRef("wrapStatic");
+    ExprPtr callable = prelude_expr_wrapStatic();
     CallPtr call = new Call(callable);
     call->args.push_back(x->expr);
     return call.ptr();
 }
 
-const char *updateOperatorName(int op) {
+ExprPtr updateOperatorExpr(int op) {
     switch (op) {
-    case UPDATE_ADD : return "addAssign";
-    case UPDATE_SUBTRACT : return "subtractAssign";
-    case UPDATE_MULTIPLY : return "multiplyAssign";
-    case UPDATE_DIVIDE : return "divideAssign";
-    case UPDATE_REMAINDER : return "remainderAssign";
+    case UPDATE_ADD : return prelude_expr_addAssign();
+    case UPDATE_SUBTRACT : return prelude_expr_subtractAssign();
+    case UPDATE_MULTIPLY : return prelude_expr_multiplyAssign();
+    case UPDATE_DIVIDE : return prelude_expr_divideAssign();
+    case UPDATE_REMAINDER : return prelude_expr_remainderAssign();
     default :
         assert(false);
         return NULL;
@@ -128,13 +129,13 @@ StatementPtr desugarForStatement(ForPtr x) {
     vector<StatementPtr> &bs = block->statements;
     bs.push_back(new Binding(REF, identV(exprVar), exprV(x->expr)));
 
-    CallPtr iteratorCall = new Call(kernelNameRef("iterator"));
+    CallPtr iteratorCall = new Call(prelude_expr_iterator());
     iteratorCall->args.push_back(new NameRef(exprVar));
     bs.push_back(new Binding(VAR, identV(iterVar), exprV(iteratorCall.ptr())));
 
-    CallPtr hasNextCall = new Call(kernelNameRef("hasNext?"));
+    CallPtr hasNextCall = new Call(prelude_expr_hasNextP());
     hasNextCall->args.push_back(new NameRef(iterVar));
-    CallPtr nextCall = new Call(kernelNameRef("next"));
+    CallPtr nextCall = new Call(prelude_expr_next());
     nextCall->args.push_back(new NameRef(iterVar));
     ExprPtr unpackNext = new Unpack(nextCall.ptr());
     BlockPtr whileBody = new Block();
@@ -156,11 +157,11 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
             error(x, "unreachable catch block");
         if (x->exceptionType.ptr()) {
             vector<ExprPtr> typeArg(1, x->exceptionType);
-            CallPtr cond = new Call(kernelNameRef("exceptionIs?"), typeArg);
+            CallPtr cond = new Call(prelude_expr_exceptionIsP(), typeArg);
             cond->location = x->exceptionType->location;
 
             BlockPtr block = new Block();
-            CallPtr getter = new Call(kernelNameRef("exceptionAs"), typeArg);
+            CallPtr getter = new Call(prelude_expr_exceptionAs(), typeArg);
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
@@ -182,7 +183,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
         else {
             BlockPtr block = new Block();
             block->location = x->location;
-            CallPtr getter = new Call(kernelNameRef("exceptionAsAny"));
+            CallPtr getter = new Call(prelude_expr_exceptionAsAny());
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
@@ -204,7 +205,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
     assert(result.ptr());
     if (!lastWasAny) {
         assert(lastIf.ptr());
-        CallPtr continueException = new Call(kernelNameRef("continueException"));
+        CallPtr continueException = new Call(prelude_expr_continueException());
         lastIf->elsePart = new ExprStatement(continueException.ptr());
     }
     return result;
