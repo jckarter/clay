@@ -1747,7 +1747,7 @@ extern llvm::Function *llvmFunction;
 extern llvm::IRBuilder<> *llvmInitBuilder;
 extern llvm::IRBuilder<> *llvmBuilder;
 
-void initLLVM();
+bool initLLVM(std::string const &targetTriple);
 
 llvm::BasicBlock *newBasicBlock(const char *name);
 
