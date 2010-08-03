@@ -1,0 +1,18 @@
+main() {
+    var x = 451;
+    var tryCount = 0;
+    var catchCount = 0;
+    var e = 666;
+
+    var throwing_lambda = lambda() { throw x; };
+    var catching_block = block(fn) {
+        try {
+            tryCount += 1; fn();
+        } catch(e:Int) {
+            catchCount += 1; println("caught ", e);
+        }
+    };
+
+    catching_block(throwing_lambda);
+    println("tried ", tryCount, " times; caught ", catchCount, " exceptions");
+}
