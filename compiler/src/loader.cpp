@@ -1,5 +1,6 @@
 #include "clay.hpp"
 #include "claynames.hpp"
+#include "llvm/ADT/Triple.h"
 #include <cstdio>
 #include <cassert>
 
@@ -25,37 +26,79 @@ static BlockPtr gvarDestructors;
 // initModuleSuffixes
 //
 
-static const char *getOS() {
-#if defined(__APPLE__)
-    return "macosx";
-#elif defined(linux)
-    return "linux";
-#elif defined(_WIN32)
-    return "windows";
-#else
-    #error "Unsupported operating system"
-#endif
+static std::string getOS(llvm::Triple const &triple) {
+    switch (triple.getOS()) {
+    case llvm::Triple::Darwin : return "macosx";
+    case llvm::Triple::DragonFly : return "dragonfly";
+    case llvm::Triple::FreeBSD : return "freebsd";
+    case llvm::Triple::Linux : return "linux";
+    case llvm::Triple::Cygwin :
+    case llvm::Triple::MinGW32 :
+    case llvm::Triple::MinGW64 :
+    case llvm::Triple::Win32 : return "windows";
+    case llvm::Triple::NetBSD : return "netbsd";
+    case llvm::Triple::OpenBSD : return "openbsd";
+    case llvm::Triple::Solaris : return "solaris";
+    case llvm::Triple::Haiku : return "haiku";
+    case llvm::Triple::Minix : return "minix";
+    default : return triple.getOSName().str();
+    }
 }
 
-static const char *getPtrSize() {
-    switch (sizeof(void*)) {
-    case 4 : return "32";
-    case 8 : return "64";
-    default :
-        assert(false);
-        return NULL;
+static std::string getOSGroup(llvm::Triple const &triple) {
+    switch (triple.getOS()) {
+    case llvm::Triple::Darwin :
+    case llvm::Triple::DragonFly :
+    case llvm::Triple::FreeBSD :
+    case llvm::Triple::Linux :
+    case llvm::Triple::NetBSD :
+    case llvm::Triple::OpenBSD :
+    case llvm::Triple::Solaris :
+    case llvm::Triple::Haiku :
+    case llvm::Triple::Minix : return "unix";
+    default : return "";
+    }
+}
+
+static std::string getCPU(llvm::Triple const &triple) {
+    switch (triple.getArch()) {
+    case llvm::Triple::alpha : return "alpha";
+    case llvm::Triple::arm :
+    case llvm::Triple::thumb : return "arm";
+    case llvm::Triple::ppc :
+    case llvm::Triple::ppc64 : return "ppc";
+    case llvm::Triple::sparc :
+    case llvm::Triple::sparcv9 : return "sparc";
+    case llvm::Triple::x86 :
+    case llvm::Triple::x86_64 : return "x86";
+    default : return triple.getArchName().str();
+    }
+}
+
+static std::string getPtrSize(const llvm::TargetData *targetData) {
+    switch (targetData->getPointerSizeInBits()) {
+    case 32 : return "32";
+    case 64 : return "64";
+    default : assert(false);
     }
 }
 
 static void initModuleSuffixes() {
-    string os = getOS();
-    string bits = getPtrSize();
+    llvm::Triple triple(llvmModule->getTargetTriple());
+
+    string os = getOS(triple);
+    string osgroup = getOSGroup(triple);
+    string cpu = getCPU(triple);
+    string bits = getPtrSize(llvmTargetData);
+    moduleSuffixes.push_back("." + os + "." + cpu + "." + bits + ".clay");
+    moduleSuffixes.push_back("." + os + "." + cpu + ".clay");
     moduleSuffixes.push_back("." + os + "." + bits + ".clay");
+    moduleSuffixes.push_back("." + cpu + "." + bits + ".clay");
     moduleSuffixes.push_back("." + os + ".clay");
+    moduleSuffixes.push_back("." + cpu + ".clay");
     moduleSuffixes.push_back("." + bits + ".clay");
-#ifndef _WIN32
-    moduleSuffixes.push_back(".unix.clay");
-#endif    
+    if (!osgroup.empty())
+        moduleSuffixes.push_back("." + osgroup + ".clay");
     moduleSuffixes.push_back(".clay");
 }
 

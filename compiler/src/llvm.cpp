@@ -8,20 +8,24 @@ llvm::Function *llvmFunction;
 llvm::IRBuilder<> *llvmInitBuilder;
 llvm::IRBuilder<> *llvmBuilder;
 
-void initLLVM() {
+bool initLLVM(std::string const &targetTriple) {
     llvm::InitializeAllTargets();
     llvm::InitializeAllAsmPrinters();
     llvmModule = new llvm::Module("clay", llvm::getGlobalContext());
+    llvmModule->setTargetTriple(targetTriple);
     llvm::EngineBuilder eb(llvmModule);
     llvmEngine = eb.create();
-    assert(llvmEngine);
-    llvmTargetData = llvmEngine->getTargetData();
-    llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
-    llvmModule->setTargetTriple(llvm::sys::getHostTriple());
+    if (llvmEngine) {
+        llvmTargetData = llvmEngine->getTargetData();
+        llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
 
-    llvmFunction = NULL;
-    llvmInitBuilder = NULL;
-    llvmBuilder = NULL;
+        llvmFunction = NULL;
+        llvmInitBuilder = NULL;
+        llvmBuilder = NULL;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 llvm::BasicBlock *newBasicBlock(const char *name)

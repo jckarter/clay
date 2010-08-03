@@ -234,6 +234,7 @@ static void usage()
     cerr << "usage: clay <options> <clayfile>\n";
     cerr << "options:\n";
     cerr << "  -o <file>         - specify output file\n";
+    cerr << "  -target <target>  - set target platform for code generation\n";
     cerr << "  -shared           - create a dynamically linkable library\n";
     cerr << "  -dll              - create a dynamically linkable library\n";
     cerr << "  -llvm             - emit llvm code\n";
@@ -280,6 +281,7 @@ int main(int argc, char **argv) {
 
     string clayFile;
     string outputFile;
+    string targetTriple = llvm::sys::getHostTriple();
 
     vector<string> libSearchPath;
     vector<string> libraries;
@@ -349,6 +351,18 @@ int main(int argc, char **argv) {
             }
             frameworkSearchPath.push_back("-F" + frameworkDir);
         }
+        else if (strcmp(argv[i], "-target") == 0) {
+            if (i+1 == argc) {
+                cerr << "error: target name missing after -target\n";
+                return -1;
+            }
+            ++i;
+            targetTriple = argv[i];
+            if (targetTriple.empty() || (targetTriple[0] == '-')) {
+                cerr << "error: target name missing after -target\n";
+                return -1;
+            }
+        }
         else if (strcmp(argv[i], "-framework") == 0) {
             if (i+1 == argc) {
                 cerr << "error: framework name missing after -framework\n";
@@ -415,6 +429,12 @@ int main(int argc, char **argv) {
                  << __DATE__ << ")\n";
             return 0;
         }
+        else if (strcmp(argv[i], "-help") == 0
+                 || strcmp(argv[i], "--help") == 0
+                 || strcmp(argv[i], "/?") == 0) {
+            usage();
+            return -1;
+        }
         else {
             cerr << "error: unrecognized option " << argv[i] << '\n';
             return -1;
@@ -431,7 +451,10 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    initLLVM();
+    if (!initLLVM(targetTriple)) {
+        cerr << "error: unable to initialize LLVM for target " << targetTriple << "\n";
+        return -1;
+    };
     initTypes();
 
     setExceptionsEnabled(exceptions);
