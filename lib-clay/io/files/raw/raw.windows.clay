@@ -149,9 +149,10 @@ overload write(f:RawFile, buffer:Pointer[Byte], n:I) {
 }
 
 overload flush(f:RawFile) {
-    var result = win32.FlushFileBuffers(f.handle);
-    if (result == 0)
-        error(win32.errorMessage());
+    win32.FlushFileBuffers(f.handle);
+    // Don't check for errors because
+    // FlushFileBuffers can legitimately fail for unbuffered
+    // hanldes such as console handles.
 }
 
 
