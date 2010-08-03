@@ -1,0 +1,21 @@
+captured_catch_type(T, v) = lambda() {
+    try {
+        throw v;
+    } catch(e:T) {
+        println("caught ", T, " exception ", e);
+    } catch(e) {
+        println("caught unexpected exception ", *e);
+    }
+};
+
+record OtherException { what: StringConstant; }
+instance Exception = OtherException;
+overload printTo(stream, x:OtherException) {
+    printTo(stream, "<OtherException ", x.what, ">");
+}
+
+main() {
+    captured_catch_type(Int, 0)();
+    captured_catch_type(Int, OtherException("blast core frogblasted"))();
+    captured_catch_type(OtherException, OtherException("splines reticulated"))();
+}
