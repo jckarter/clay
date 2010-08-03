@@ -23,10 +23,16 @@ Testing test test suite:
     add shouldn't be callable with the expected argument types:
       Vector[Char], Vector[Char]
     -- FAILED
+  should fail by throwing exception:
+    truth isn't true
+
+    uncaught exception:
+      0
+    -- FAILED
   (pending) should pass:
     -- FIXED (should clear pending flag)
   (pending) should fail:
     truth isn't true
--- test test suite: 7 expectations passed; 8 failed (1 pending)
-Overall: 7 expectations passed; 8 failed (1 pending)
+-- test test suite: 7 expectations passed; 10 failed (1 pending)
+Overall: 7 expectations passed; 10 failed (1 pending)
 TESTS FAILED
