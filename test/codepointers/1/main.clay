@@ -13,7 +13,6 @@ main() {
     var a = Vector([1, 2, 3, 4, 5]);
 
     showCPType( index, Type(a), Int );
-    showCPType( size, Type(a) );
     showCPType( clear, Type(a) );
 
     println( makeCPType((Int, Bool), (Int)) );
