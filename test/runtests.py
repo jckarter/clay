@@ -1,53 +1,57 @@
 import os
-import itertools
+import glob
 import pickle
 import sys
-import imp
 from subprocess import Popen, PIPE
 from multiprocessing import Pool, cpu_count
 import time
 
-testDir = os.path.dirname(os.path.abspath(__file__))
 
-if sys.platform == "win32" :
-    compiler = os.path.join(testDir, "..", "build", "compiler", "src", "Release", "clay.exe")
-    compiler2 = os.path.join(testDir, "..", "clay.exe") # for binary distributions
-else :
-    compiler = os.path.join(testDir, "..", "build", "compiler", "src", "clay")
-    compiler2 = os.path.join(testDir, "..", "clay") # for binary distributions
+
+#
+# testRoot
+#
 
-if not os.path.exists(compiler) :
-    compiler = compiler2
+testRoot = os.path.dirname(os.path.abspath(__file__))
+
+
+
+#
+# getCompilerPath
+#
+
+def getCompilerPath() :
+    buildPath = ["..", "build", "compiler", "src"]
+    if sys.platform == "win32" :
+        compiler = os.path.join(testRoot, *(buildPath + ["Release", "clay.exe"]))
+        compiler2 = os.path.join(testRoot, "..", "clay.exe") # for binary distributions
+    else :
+        compiler = os.path.join(testRoot, *(buildPath + ["clay"]))
+        compiler2 = os.path.join(testRoot, "..", "clay") # for binary distributions
+
     if not os.path.exists(compiler) :
-        print "could not find the clay compiler"
-        sys.exit(-1)
+        compiler = compiler2
+        if not os.path.exists(compiler) :
+            print "could not find the clay compiler"
+            sys.exit(-1)
+    return compiler
 
-CONFIG_FUNCTIONS = ["match", "pre_build", "post_build", "post_run", "cmdline"]
+compiler = getCompilerPath()
 
 
-impCount = 0
-
-def loadConfigModule(path) :
-    global impCount
-    module = imp.load_source("config" + str(impCount),
-                             path)
-    impCount += 1
-    return module
+
+#
+# TestCase
+#
 
 class TestCase(object):
     allCases = []
     def __init__(self, folder, base = None):
         entries = os.listdir(folder)
         mainPath = os.path.join(folder, "main.clay")
-        configPath = os.path.join(folder, "config.py")
         self.path = folder
-        if base:
-            self.loadConfig(base)
         if os.path.isfile(mainPath):
             self.loadTest(mainPath)
-        if os.path.isfile(configPath):
-            module = loadConfigModule(configPath)
-            self.loadConfig(module)
         for entry in entries:
             fullpath = os.path.join(folder, entry)
             if not os.path.isdir(fullpath):
@@ -58,11 +62,24 @@ class TestCase(object):
         TestCase.allCases.append(self)
         self.testfile = testfile
 
-    def loadConfig(self, obj):
-        for func in CONFIG_FUNCTIONS:
-            if not hasattr(obj, func):
-                continue
-            setattr(self, func, getattr(obj, func))
+    def cmdline(self, clay) :
+        return [clay, "main.clay"]
+
+    def pre_build(self) :
+        pass
+
+    def post_build(self) :
+        pass
+
+    def post_run(self) :
+        [os.unlink(f) for f in glob.glob("temp*")]
+        [os.unlink(f) for f in glob.glob("*.data")]
+
+    def match(self, output) :
+        refoutput = open("out.txt").read()
+        output = output.replace('\r', '')
+        refoutput = refoutput.replace('\r', '')
+        return output == refoutput
 
     def run(self):
         os.chdir(self.path)
@@ -75,23 +92,23 @@ class TestCase(object):
         return "fail"
 
     def name(self):
-        return os.path.relpath(self.path, testDir)
+        return os.path.relpath(self.path, testRoot)
 
     def runtest(self):
         outfilename = "a.exe" if sys.platform == "win32" else "a.out"
         outfilename = os.path.join(".", outfilename)
-        process = Popen(self.cmdline(compiler), stdout=PIPE, stderr=PIPE)
+        process = Popen(self.cmdline(compiler))
         if process.wait() != 0 :
             return "fail"
         process = Popen([outfilename], stdout=PIPE)
-        process.wait()
         result = process.stdout.read()
+        process.wait()
         self.removefile(outfilename)
         return result
 
     def removefile(self, filename) :
-        # on windows, sometimes deleting a file
-        # deleting a file immediately after executing it 
+        # on windows, sometimes, deleting a file
+        # immediately after executing it 
         # results in a 'access denied' error.
         # so we wait and try again a few times.
         attempts = 1
@@ -102,8 +119,14 @@ class TestCase(object):
                 time.sleep(1)
             attempts += 1
 
+
+
+#
+# runtests
+#
+
 def findTestCases():
-    TestCase(testDir)
+    TestCase(testRoot)
     return TestCase.allCases
 
 def runtest(t):
@@ -112,13 +135,7 @@ def runtest(t):
 def runtests() :
     testcases = findTestCases()
     pool = Pool(processes = cpu_count())
-    if sys.platform != "win32" :
-        # run tests using a pool of processes
-        results = pool.imap(runtest, testcases)
-    else :
-        # fallback on sequential processing,
-        # as multiprocessing + custom-imports don't work on win32
-        results = itertools.imap(runtest, testcases)
+    results = pool.imap(runtest, testcases)
     failed = []
     for test in testcases:
         res = results.next()
@@ -133,4 +150,8 @@ def runtests() :
         print "\nFAILED %d OF %d TESTS" % (len(failed), len(testcases)) 
 
 if __name__ == "__main__":
+    startTime = time.time()
     runtests()
+    endTime = time.time()
+    print ""
+    print "time taken = %f seconds" % (endTime - startTime)
