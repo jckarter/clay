@@ -135,7 +135,7 @@ static void generateAssembly(llvm::Module *module,
     const llvm::Target *theTarget =
         llvm::TargetRegistry::lookupTarget(theTriple.getTriple(), err);
     assert(theTarget != NULL);
-    if (sharedLib)
+    //if (sharedLib)
         llvm::TargetMachine::setRelocationModel(llvm::Reloc::PIC_);
     llvm::TargetMachine::setCodeModel(llvm::CodeModel::Default);
     llvm::TargetMachine *target =
@@ -352,18 +352,6 @@ int main(int argc, char **argv) {
             }
             frameworkSearchPath.push_back("-F" + frameworkDir);
         }
-        else if (strcmp(argv[i], "-target") == 0) {
-            if (i+1 == argc) {
-                cerr << "error: target name missing after -target\n";
-                return -1;
-            }
-            ++i;
-            targetTriple = argv[i];
-            if (targetTriple.empty() || (targetTriple[0] == '-')) {
-                cerr << "error: target name missing after -target\n";
-                return -1;
-            }
-        }
         else if (strcmp(argv[i], "-framework") == 0) {
             if (i+1 == argc) {
                 cerr << "error: framework name missing after -framework\n";
@@ -379,6 +367,18 @@ int main(int argc, char **argv) {
             frameworks.push_back(framework);
         }
 #endif
+        else if (strcmp(argv[i], "-target") == 0) {
+            if (i+1 == argc) {
+                cerr << "error: target name missing after -target\n";
+                return -1;
+            }
+            ++i;
+            targetTriple = argv[i];
+            if (targetTriple.empty() || (targetTriple[0] == '-')) {
+                cerr << "error: target name missing after -target\n";
+                return -1;
+            }
+        }
         else if (strstr(argv[i], "-L") == argv[i]) {
             string libDir = argv[i] + strlen("-L");
             if (libDir.empty()) {
@@ -411,14 +411,6 @@ int main(int argc, char **argv) {
             }
             libraries.push_back("-l" + lib);
         }
-        else if (strstr(argv[i], "-") != argv[i]) {
-            if (!clayFile.empty()) {
-                cerr << "error: clay file already specified: " << clayFile
-                     << ", unrecognized parameter: " << argv[i] << '\n';
-                return -1;
-            }
-            clayFile = argv[i];
-        }
         else if (strstr(argv[i], "-v") == argv[i]) {
             cerr << "clay compiler ("
 #ifdef HG_ID
@@ -435,6 +427,14 @@ int main(int argc, char **argv) {
                  || strcmp(argv[i], "/?") == 0) {
             usage();
             return -1;
+        }
+        else if (strstr(argv[i], "-") != argv[i]) {
+            if (!clayFile.empty()) {
+                cerr << "error: clay file already specified: " << clayFile
+                     << ", unrecognized parameter: " << argv[i] << '\n';
+                return -1;
+            }
+            clayFile = argv[i];
         }
         else {
             cerr << "error: unrecognized option " << argv[i] << '\n';
