@@ -1051,6 +1051,10 @@ external mktemp(
 external ("mkstemp64") mkstemp(
     __template : Pointer[CChar]) Int;
 
+external ("mkstemps64") mkstemps(
+    __template : Pointer[CChar],
+    __suffixlen : Int) Int;
+
 external mkdtemp(
     __template : Pointer[CChar]) Pointer[CChar];
 
@@ -2891,3 +2895,69 @@ record Struct_exception {
 
 external matherr(
     __exc : Pointer[Struct_exception]) Int;
+
+record Struct_dirent {
+    d_ino : UInt64;
+    d_off : Int64;
+    d_reclen : UShort;
+    d_type : CUChar;
+    d_name : Array[CChar,256];
+}
+
+alias DT_UNKNOWN = 0;
+alias DT_FIFO = 1;
+alias DT_CHR = 2;
+alias DT_DIR = 4;
+alias DT_BLK = 6;
+alias DT_REG = 8;
+alias DT_LNK = 10;
+alias DT_SOCK = 12;
+alias DT_WHT = 14;
+
+alias DIR = Opaque;
+
+external opendir(
+    __name : Pointer[CChar]) Pointer[DIR];
+
+external fdopendir(
+    __fd : Int) Pointer[DIR];
+
+external closedir(
+    __dirp : Pointer[DIR]) Int;
+
+external ("readdir64") readdir(
+    __dirp : Pointer[DIR]) Pointer[Struct_dirent];
+
+external ("readdir64_r") readdir_r(
+    __dirp : Pointer[DIR],
+    __entry : Pointer[Struct_dirent],
+    __result : Pointer[Pointer[Struct_dirent]]) Int;
+
+external rewinddir(
+    __dirp : Pointer[DIR]);
+
+external seekdir(
+    __dirp : Pointer[DIR],
+    __pos : CLong);
+
+external telldir(
+    __dirp : Pointer[DIR]) CLong;
+
+external dirfd(
+    __dirp : Pointer[DIR]) Int;
+
+external ("scandir64") scandir(
+    __dir : Pointer[CChar],
+    __namelist : Pointer[Pointer[Pointer[Struct_dirent]]],
+    __selector : CCodePointer[(Pointer[Struct_dirent]),(Int)],
+    __cmp : CCodePointer[(Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]),(Int)]) Int;
+
+external ("alphasort64") alphasort(
+    __e1 : Pointer[Pointer[Struct_dirent]],
+    __e2 : Pointer[Pointer[Struct_dirent]]) Int;
+
+external ("getdirentries64") getdirentries(
+    __fd : Int,
+    __buf : Pointer[CChar],
+    __nbytes : UInt,
+    __basep : Pointer[Int64]) Int;

@@ -1,10 +1,10 @@
 # Clay Makefile
 
 ROOTDIR	=	../../../
-BINDIR	=	$(ROOTDIR)bin/
+BINDIR	=	$(ROOTDIR)build/misc/bindgen/src/
 
 WIN32_ROOTDIR	=	..\..\..\
-WIN32_BINDIR	=	$(WIN32_ROOTDIR)bin\
+WIN32_BINDIR	=	$(WIN32_ROOTDIR)build\misc\bindgen\src\
 
 
 default :

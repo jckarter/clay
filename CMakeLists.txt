@@ -84,8 +84,6 @@ elseif(MSVC)
         "LLVMSupport" "LLVMSystem")
 endif(UNIX)
 
-set(CMAKE_OSX_ARCHITECTURES x86_64)
-
 if(UNIX)
     install(DIRECTORY lib-clay DESTINATION lib)
 else(UNIX)
