@@ -11,3 +11,4 @@
 #include <sys/select.h>
 #include <sys/event.h>
 #include <dirent.h>
+#include <dlfcn.h>
