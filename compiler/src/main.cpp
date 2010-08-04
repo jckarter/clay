@@ -200,11 +200,12 @@ static bool generateBinary(llvm::Module *module,
     vector<const char *> gccArgs;
     gccArgs.push_back(gccPath.c_str());
 
-    switch (sizeof(void*)) {
-    case 4 :
+    switch (llvmTargetData->getPointerSizeInBits()) {
+    case 32 :
         gccArgs.push_back("-m32");
         break;
-    case 8 :
+    case 64 :
+        gccArgs.push_back("-m64");
         break;
     default :
         assert(false);

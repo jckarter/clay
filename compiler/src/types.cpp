@@ -42,12 +42,12 @@ void initTypes() {
     float64Type = new FloatType(64);
 
     cIntType = int32Type;
-    switch (sizeof(void*)) {
-    case 4 :
+    switch (llvmTargetData->getPointerSizeInBits()) {
+    case 32 :
         cSizeTType = uint32Type;
         cPtrDiffTType = int32Type;
         break;
-    case 8 :
+    case 64 :
         cSizeTType = uint64Type;
         cPtrDiffTType = int64Type;
         break;

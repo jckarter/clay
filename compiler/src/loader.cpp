@@ -62,7 +62,6 @@ static std::string getOSGroup(llvm::Triple const &triple) {
 
 static std::string getCPU(llvm::Triple const &triple) {
     switch (triple.getArch()) {
-    case llvm::Triple::alpha : return "alpha";
     case llvm::Triple::arm :
     case llvm::Triple::thumb : return "arm";
     case llvm::Triple::ppc :
