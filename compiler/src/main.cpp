@@ -128,14 +128,15 @@ static void generateLLVM(llvm::Module *module, llvm::raw_ostream *out)
 static void generateAssembly(llvm::Module *module,
                              llvm::raw_ostream *out,
                              bool emitObject,
-                             bool sharedLib)
+                             bool sharedLib,
+                             bool genPIC)
 {
     llvm::Triple theTriple(module->getTargetTriple());
     string err;
     const llvm::Target *theTarget =
         llvm::TargetRegistry::lookupTarget(theTriple.getTriple(), err);
     assert(theTarget != NULL);
-    if (sharedLib)
+    if (sharedLib || genPIC)
         llvm::TargetMachine::setRelocationModel(llvm::Reloc::PIC_);
     llvm::TargetMachine::setCodeModel(llvm::CodeModel::Default);
     llvm::TargetMachine *target =
@@ -175,6 +176,7 @@ static bool generateBinary(llvm::Module *module,
                            const llvm::sys::Path &gccPath,
                            bool exceptions,
                            bool sharedLib,
+                           bool genPIC,
                            const vector<string> &arguments)
 {
     llvm::sys::Path tempAsm("clayasm");
@@ -194,7 +196,7 @@ static bool generateBinary(llvm::Module *module,
         return false;
     }
 
-    generateAssembly(module, &asmOut, false, sharedLib);
+    generateAssembly(module, &asmOut, false, sharedLib, genPIC);
     asmOut.close();
 
     vector<const char *> gccArgs;
@@ -244,6 +246,7 @@ static void usage()
     cerr << "  -unoptimized      - generate unoptimized code\n";
     cerr << "  -exceptions       - enable exception handling\n";
     cerr << "  -no-exceptions    - disable exception handling\n";
+    cerr << "  -pic              - generate position independent code\n";
     cerr << "  -abort            - abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run              - execute the program without writing to disk\n";
 #ifdef __APPLE__
@@ -276,9 +279,14 @@ int main(int argc, char **argv) {
     bool emitAsm = false;
     bool emitObject = false;
     bool sharedLib = false;
+    bool genPIC = false;
     bool exceptions = true;
     bool abortOnError = false;
     bool run = false;
+
+#ifdef __APPLE__
+    genPIC = true;
+#endif
 
     string clayFile;
     string outputFile;
@@ -314,6 +322,9 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-no-exceptions") == 0) {
             exceptions = false;
+        }
+        else if (strcmp(argv[i], "-pic") == 0) {
+            genPIC = true;
         }
         else if (strcmp(argv[i], "-abort") == 0) {
             abortOnError = true;
@@ -546,7 +557,7 @@ int main(int argc, char **argv) {
         if (emitLLVM)
             generateLLVM(llvmModule, &out);
         else if (emitAsm || emitObject)
-            generateAssembly(llvmModule, &out, emitObject, sharedLib);
+            generateAssembly(llvmModule, &out, emitObject, sharedLib, genPIC);
     }
     else {
         bool result;
@@ -587,7 +598,7 @@ int main(int argc, char **argv) {
 #endif
 
         result = generateBinary(llvmModule, outputFile, gccPath,
-                                exceptions, sharedLib,
+                                exceptions, sharedLib, genPIC,
                                 arguments);
         if (!result)
             return -1;
