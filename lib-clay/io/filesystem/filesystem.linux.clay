@@ -1,0 +1,31 @@
+import unix.*;
+
+
+
+//
+// readLink
+//
+
+readLink(x) {
+    var path_max = pathconf(cstring(x), _PC_PATH_MAX);
+    if (path_max < 0)
+        path_max = 4096;
+
+    var buf = String();
+    resize(buf, path_max);
+
+    var size = readlink(cstring(x), Pointer[CChar](&buf[0]), size_t(path_max));
+    if (size < 0)
+        error("failed to read link '", x, "': ", errorMessage());
+
+    resize(buf, size);
+    return move(buf);
+}
+
+
+
+//
+// pathToExecutable
+//
+
+pathToExecutable() = readLink("/proc/self/exe");
