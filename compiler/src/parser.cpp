@@ -2253,9 +2253,9 @@ static bool topLevelItems(vector<TopLevelItemPtr> &x) {
     return true;
 }
 
-static bool module(ModulePtr &x) {
+static bool module(const string &moduleName, ModulePtr &x) {
     LocationPtr location = currentLocation();
-    ModulePtr y = new Module();
+    ModulePtr y = new Module(moduleName);
     if (!imports(y->imports)) return false;
     if (!topLevelItems(y->topLevelItems)) return false;
     x = y.ptr();
@@ -2269,7 +2269,7 @@ static bool module(ModulePtr &x) {
 // parse
 //
 
-ModulePtr parse(SourcePtr source) {
+ModulePtr parse(const string &moduleName, SourcePtr source) {
     vector<TokenPtr> t;
     tokenize(source, t);
 
@@ -2277,7 +2277,7 @@ ModulePtr parse(SourcePtr source) {
     position = maxPosition = 0;
 
     ModulePtr m;
-    if (!module(m) || (position < (int)t.size())) {
+    if (!module(moduleName, m) || (position < (int)t.size())) {
         LocationPtr location;
         if (maxPosition == (int)t.size())
             location = new Location(source, source->size);
