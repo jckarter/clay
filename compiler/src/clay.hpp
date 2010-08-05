@@ -1566,6 +1566,7 @@ void printNameList(ostream &out, const vector<ObjectPtr> &x);
 void printNameList(ostream &out, const vector<TypePtr> &x);
 void printName(ostream &out, ObjectPtr x);
 string getCodeName(ObjectPtr x);
+void printValue(ostream &out, EValuePtr ev);
 
 
 
