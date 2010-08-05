@@ -1483,6 +1483,7 @@ struct ModuleHolder : public Object {
 };
 
 struct Module : public ANode {
+    string moduleName;
     vector<ImportPtr> imports;
     vector<TopLevelItemPtr> topLevelItems;
 
@@ -1495,14 +1496,26 @@ struct Module : public ANode {
     EnvPtr env;
     bool initialized;
 
-    bool lookupBusy;
+    map<string, set<ObjectPtr> > publicSymbols;
+    bool publicSymbolsLoaded;
+    int publicSymbolsLoading;
 
-    Module()
-        : ANode(MODULE), initialized(false), lookupBusy(false) {}
-    Module(const vector<ImportPtr> &imports,
+    map<string, set<ObjectPtr> > allSymbols;
+    bool allSymbolsLoaded;
+    int allSymbolsLoading;
+
+    Module(const string &moduleName)
+        : ANode(MODULE), moduleName(moduleName),
+          initialized(false),
+          publicSymbolsLoaded(false), publicSymbolsLoading(0),
+          allSymbolsLoaded(false), allSymbolsLoading(0) {}
+    Module(const string &moduleName,
+           const vector<ImportPtr> &imports,
            const vector<TopLevelItemPtr> &topLevelItems)
-        : ANode(MODULE), imports(imports),
-          initialized(false), lookupBusy(false) {}
+        : ANode(MODULE), moduleName(moduleName), imports(imports),
+          initialized(false),
+          publicSymbolsLoaded(false), publicSymbolsLoading(0),
+          allSymbolsLoaded(false), allSymbolsLoading(0) {}
 };
 
 
@@ -1511,7 +1524,7 @@ struct Module : public ANode {
 // parser module
 //
 
-ModulePtr parse(SourcePtr source);
+ModulePtr parse(const string &moduleName, SourcePtr source);
 ExprPtr parseExpr(SourcePtr source, int offset, int length);
 
 
