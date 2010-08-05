@@ -1897,13 +1897,13 @@ external ("preadv64") preadv(
     __fd : Int,
     __iovec : Pointer[Struct_iovec],
     __count : Int,
-    __offset : CLong) Int;
+    __offset : Int64) Int;
 
 external ("pwritev64") pwritev(
     __fd : Int,
     __iovec : Pointer[Struct_iovec],
     __count : Int,
-    __offset : CLong) Int;
+    __offset : Int64) Int;
 
 alias SOCK_STREAM = 1;
 alias SOCK_DGRAM = 2;
@@ -2180,3 +2180,151 @@ external epoll_pwait(
     __maxevents : Int,
     __timeout : Int,
     __ss : Pointer[__sigset_t]) Int;
+
+record Struct_dirent {
+    d_ino : UInt64;
+    d_off : Int64;
+    d_reclen : UShort;
+    d_type : CUChar;
+    d_name : Array[CChar,256];
+}
+
+alias DT_UNKNOWN = 0;
+alias DT_FIFO = 1;
+alias DT_CHR = 2;
+alias DT_DIR = 4;
+alias DT_BLK = 6;
+alias DT_REG = 8;
+alias DT_LNK = 10;
+alias DT_SOCK = 12;
+alias DT_WHT = 14;
+
+alias DIR = Opaque;
+
+external opendir(
+    __name : Pointer[CChar]) Pointer[DIR];
+
+external fdopendir(
+    __fd : Int) Pointer[DIR];
+
+external closedir(
+    __dirp : Pointer[DIR]) Int;
+
+external ("readdir64") readdir(
+    __dirp : Pointer[DIR]) Pointer[Struct_dirent];
+
+external ("readdir64_r") readdir_r(
+    __dirp : Pointer[DIR],
+    __entry : Pointer[Struct_dirent],
+    __result : Pointer[Pointer[Struct_dirent]]) Int;
+
+external rewinddir(
+    __dirp : Pointer[DIR]);
+
+external seekdir(
+    __dirp : Pointer[DIR],
+    __pos : CLong);
+
+external telldir(
+    __dirp : Pointer[DIR]) CLong;
+
+external dirfd(
+    __dirp : Pointer[DIR]) Int;
+
+external ("scandir64") scandir(
+    __dir : Pointer[CChar],
+    __namelist : Pointer[Pointer[Pointer[Struct_dirent]]],
+    __selector : CCodePointer[(Pointer[Struct_dirent]),(Int)],
+    __cmp : CCodePointer[(Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]),(Int)]) Int;
+
+external ("alphasort64") alphasort(
+    __e1 : Pointer[Pointer[Struct_dirent]],
+    __e2 : Pointer[Pointer[Struct_dirent]]) Int;
+
+external ("getdirentries64") getdirentries(
+    __fd : Int,
+    __buf : Pointer[CChar],
+    __nbytes : UInt,
+    __basep : Pointer[Int64]) Int;
+
+external _dl_mcount_wrapper_check(
+    __selfpc : RawPointer);
+
+alias Lmid_t = CLong;
+
+external dlopen(
+    __file : Pointer[CChar],
+    __mode : Int) RawPointer;
+
+external dlclose(
+    __handle : RawPointer) Int;
+
+external dlsym(
+    __handle : RawPointer,
+    __name : Pointer[CChar]) RawPointer;
+
+external dlmopen(
+    __nsid : CLong,
+    __file : Pointer[CChar],
+    __mode : Int) RawPointer;
+
+external dlvsym(
+    __handle : RawPointer,
+    __name : Pointer[CChar],
+    __version : Pointer[CChar]) RawPointer;
+
+external dlerror() Pointer[CChar];
+
+record UnnamedStruct6 {
+    dli_fname : Pointer[CChar];
+    dli_fbase : RawPointer;
+    dli_sname : Pointer[CChar];
+    dli_saddr : RawPointer;
+}
+
+alias Dl_info = UnnamedStruct6;
+
+external dladdr(
+    __address : RawPointer,
+    __info : Pointer[Dl_info]) Int;
+
+external dladdr1(
+    __address : RawPointer,
+    __info : Pointer[Dl_info],
+    __extra_info : Pointer[RawPointer],
+    __flags : Int) Int;
+
+alias RTLD_DL_SYMENT = 1;
+alias RTLD_DL_LINKMAP = 2;
+
+external dlinfo(
+    __handle : RawPointer,
+    __request : Int,
+    __arg : RawPointer) Int;
+
+alias RTLD_DI_LMID = 1;
+alias RTLD_DI_LINKMAP = 2;
+alias RTLD_DI_CONFIGADDR = 3;
+alias RTLD_DI_SERINFO = 4;
+alias RTLD_DI_SERINFOSIZE = 5;
+alias RTLD_DI_ORIGIN = 6;
+alias RTLD_DI_PROFILENAME = 7;
+alias RTLD_DI_PROFILEOUT = 8;
+alias RTLD_DI_TLS_MODID = 9;
+alias RTLD_DI_TLS_DATA = 10;
+alias RTLD_DI_MAX = 10;
+
+record UnnamedStruct7 {
+    dls_name : Pointer[CChar];
+    dls_flags : UInt;
+}
+
+alias Dl_serpath = UnnamedStruct7;
+
+record UnnamedStruct8 {
+    dls_size : UInt;
+    dls_cnt : UInt;
+    dls_serpath : Array[Dl_serpath,1];
+}
+
+alias Dl_serinfo = UnnamedStruct8;

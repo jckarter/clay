@@ -1,0 +1,97 @@
+import unix.*;
+import libc;
+
+
+//
+// directoryListing
+//
+
+directoryListing(x) = map(direntPointerToString, direntSequence(x));
+
+private direntPointerToString(x) = CStringRef(Pointer[Int8](&x^.d_name));
+
+
+
+//
+// DirentSequence
+//
+
+private record DirentSequence[S] {
+    path : S;
+}
+
+[T | String?(T)]
+direntSequence(x:T) = DirentSequence[T](x);
+
+[T | String?(T)]
+overload iterator(x:DirentSequence[T]) = DirentIterator(x.path);
+
+
+
+//
+// DirentIterator
+//
+
+private record DirentIterator {
+    dirp : Pointer[DIR];
+    queued? : Bool;
+    entry : Pointer[Struct_dirent];
+}
+
+[T | String?(T)]
+overload DirentIterator(x:T) {
+    var dirp = opendir(cstring(x));
+    if (null?(dirp))
+        error("failed to open directory '", x, "': ", errorMessage());
+    return DirentIterator(dirp, false, null(Struct_dirent));
+}
+
+overload destroy(x:DirentIterator) {
+    if (closedir(x.dirp) > 0)
+        errorNoThrow("failed to close directory: ", errorMessage());
+}
+
+overload hasNext?(x:DirentIterator) {
+    if (not x.queued?) {
+        x.queued? = true;
+
+        if (not null?(x.entry))
+            destroy(x.entry);
+
+        var returnCode = readdir_r(x.dirp, allocateMemory(Struct_dirent, 1), &x.entry);
+
+        if (returnCode != 0)
+            error("failed to read directory: ", errorMessage());
+    }
+    return not null?(x.entry);
+}
+
+overload next(x:DirentIterator) {
+    if (not x.queued?)
+        hasNext?(x);
+    x.queued? = false;
+    return x.entry;
+}
+
+
+
+//
+// currentDirectory
+//
+
+currentDirectory() {
+    var buf = String();
+    resize(buf, 1024);
+
+    while (true) {
+        var result = getcwd(Pointer[CChar](&buf[0]), size(buf));
+        if (not null?(result))
+            break;
+        if (errno() != ERANGE)
+            error("failed to get current directory: ", errorMessage());
+        resize(buf, 2*size(buf));
+    }
+ 
+    resize(buf, libc.strlen(Pointer[CChar](&buf[0])));
+    return move(buf);
+}
