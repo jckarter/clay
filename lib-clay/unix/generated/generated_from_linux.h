@@ -10,3 +10,8 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/epoll.h>
+#include <dirent.h>
+
+#define __USE_GNU /* Enable GNU extensions for dladdr, dlinfo */
+#include <dlfcn.h>
+#undef __USE_GNU

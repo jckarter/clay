@@ -249,7 +249,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name) {
         string path;
         if (!locateFile(relativePath, path))
             error(name, "module not found: " + key);
-        module = parse(loadFile(path));
+        module = parse(key, loadFile(path));
     }
 
     modules[key] = module;
@@ -338,7 +338,7 @@ static ModulePtr loadPrelude() {
 }
 
 ModulePtr loadProgram(const string &fileName) {
-    ModulePtr m = parse(loadFile(fileName));
+    ModulePtr m = parse("__main__", loadFile(fileName));
     ModulePtr prelude = loadPrelude();
     loadDependents(m);
     installGlobals(m);
@@ -550,7 +550,9 @@ static string toPrimStr(const string &s) {
 
 static void addPrim(ModulePtr m, const string &name, ObjectPtr x) {
     m->globals[name] = x;
+    m->allSymbols[name].insert(x);
     m->publicGlobals[name] = x;
+    m->publicSymbols[name].insert(x);
 }
 
 static void addPrimOp(ModulePtr m, const string &name, PrimOpPtr x) {
@@ -559,7 +561,7 @@ static void addPrimOp(ModulePtr m, const string &name, PrimOpPtr x) {
 }
 
 static ModulePtr makePrimitivesModule() {
-    ModulePtr prims = new Module();
+    ModulePtr prims = new Module("__primitives__");
 
     addPrim(prims, "Bool", boolType.ptr());
     addPrim(prims, "Int8", int8Type.ptr());
