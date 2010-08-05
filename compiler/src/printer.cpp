@@ -636,7 +636,10 @@ static void print(ostream &out, const Object *x) {
 
     case VALUE_HOLDER : {
         const ValueHolder *y = (const ValueHolder *)x;
-        out << "ValueHolder(" << y->type << ")";
+        EValuePtr ev = new EValue(y->type, y->buf);
+        out << "ValueHolder(";
+        printValue(out, ev);
+        out << ")";
         break;
     }
 
@@ -760,7 +763,10 @@ void printName(ostream &out, ObjectPtr x)
     }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
-        out << "ValueHolder(" << y->type << ")";
+        EValuePtr ev = new EValue(y->type, y->buf);
+        out << "ValueHolder(";
+        printValue(out, ev);
+        out << ")";
         break;
     }
     default : {
@@ -803,5 +809,84 @@ string getCodeName(ObjectPtr x)
     default :
         assert(false);
         return "";
+    }
+}
+
+
+
+//
+// printValue
+//
+
+void printValue(ostream &out, EValuePtr ev)
+{
+    printName(out, ev->type.ptr());
+    switch (ev->type->typeKind) {
+    case BOOL_TYPE : {
+        out << "(";
+        char v = *((char *)ev->addr);
+        out << (v ? "true" : "false");
+        out << ")";
+        break;
+    }
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)ev->type.ptr();
+        out << "(";
+        if (t->isSigned) {
+            switch (t->bits) {
+            case 8 :
+                out << int(*((char *)ev->addr));
+                break;
+            case 16 :
+                out << *((short *)ev->addr);
+                break;
+            case 32 :
+                out << *((int *)ev->addr);
+                break;
+            case 64 :
+                out << *((long long *)ev->addr);
+                break;
+            default :
+                assert(false);
+            }
+        }
+        else {
+            switch (t->bits) {
+            case 8 :
+                out << int(*((unsigned char *)ev->addr));
+                break;
+            case 16 :
+                out << *((unsigned short *)ev->addr);
+                break;
+            case 32 :
+                out << *((unsigned int *)ev->addr);
+                break;
+            case 64 :
+                out << *((unsigned long long *)ev->addr);
+                break;
+            default :
+                assert(false);
+            }
+        }
+        out << ")";
+        break;
+    }
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)ev->type.ptr();
+        out << "(";
+        switch (t->bits) {
+        case 32 :
+            out << *((float *)ev->addr);
+            break;
+        case 64 :
+            out << *((double *)ev->addr);
+            break;
+        default :
+            assert(false);
+        }
+        out << ")";
+    }
+    default :
+        break;
     }
 }
