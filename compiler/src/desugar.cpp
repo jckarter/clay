@@ -1,5 +1,5 @@
 #include "clay.hpp"
-#include "claynames.hpp"
+#include "libclaynames.hpp"
 
 ExprPtr desugarCharLiteral(char c) {
     ExprPtr nameRef = prelude_expr_Char();
