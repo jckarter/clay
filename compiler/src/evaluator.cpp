@@ -238,10 +238,33 @@ int objectHash(ObjectPtr a)
 
 
 //
+// staticToType
+//
+
+bool staticToType(ObjectPtr x, TypePtr &out)
+{
+    if (x->objKind != TYPE)
+        return false;
+    out = (Type *)x.ptr();
+    return true;
+}
+
+TypePtr staticToType(MultiStaticPtr x, unsigned index)
+{
+    TypePtr out;
+    if (!staticToType(x->values[index], out))
+        argumentError(index, "expecting a type");
+    return out;
+}
+
+
+
+//
 // evaluator wrappers
 //
 
 void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
+                         ReturnSpecPtr varReturnSpec,
                          EnvPtr env,
                          vector<bool> &returnIsRef,
                          vector<TypePtr> &returnTypes)
@@ -250,24 +273,20 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
     returnTypes.clear();
     for (unsigned i = 0; i < returnSpecs.size(); ++i) {
         ReturnSpecPtr x = returnSpecs[i];
-        bool isRef = false;
         TypePtr t = evaluateType(x->type, env);
-        if (t->typeKind == RECORD_TYPE) {
-            RecordType *rt = (RecordType *)t.ptr();
-            if (rt->record.ptr() == prelude_ByRef().ptr()) {
-                assert(rt->params.size() == 1);
-                ObjectPtr obj = rt->params[0];
-                if (obj->objKind != TYPE) {
-                    ostringstream ostr;
-                    ostr << "invalid return type: " << t;
-                    error(ostr.str());
-                }
-                t = (Type *)obj.ptr();
-                isRef = true;
-            }
-        }
+        bool isRef = unwrapByRef(t);
         returnIsRef.push_back(isRef);
         returnTypes.push_back(t);
+    }
+    if (varReturnSpec.ptr()) {
+        LocationContext loc(varReturnSpec->type->location);
+        MultiStaticPtr ms = evaluateExprStatic(varReturnSpec->type, env);
+        for (unsigned i = 0; i < ms->size(); ++i) {
+            TypePtr t = staticToType(ms, i);
+            bool isRef = unwrapByRef(t);
+            returnIsRef.push_back(isRef);
+            returnTypes.push_back(t);
+        }
     }
 }
 
@@ -1674,11 +1693,6 @@ void evalCallCode(InvokeEntryPtr entry,
         addLocal(env, entry->varArgName, varArgs.ptr());
     }
 
-    const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
-    if (!returnSpecs.empty()) {
-        assert(returnSpecs.size() == entry->returnTypes.size());
-    }
-
     assert(out->size() == entry->returnTypes.size());
     vector<EReturn> returns;
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
@@ -1686,11 +1700,25 @@ void evalCallCode(InvokeEntryPtr entry,
         TypePtr rt = entry->returnTypes[i];
         EValuePtr ev = out->values[i];
         returns.push_back(EReturn(isRef, rt, ev));
-        ReturnSpecPtr rspec;
-        if (!returnSpecs.empty())
-            rspec = returnSpecs[i];
-        if (rspec.ptr() && rspec->name.ptr())
-            addLocal(env, rspec->name, ev.ptr());
+    }
+
+    if (entry->code->hasReturnSpecs()) {
+        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        unsigned i = 0;
+        for (; i < returnSpecs.size(); ++i) {
+            ReturnSpecPtr rspec = returnSpecs[i];
+            if (rspec->name.ptr())
+                addLocal(env, rspec->name, returns[i].value.ptr());
+        }
+        ReturnSpecPtr varReturnSpec = entry->code->varReturnSpec;
+        if (!varReturnSpec)
+            assert(i == entry->returnTypes.size());
+        if (varReturnSpec.ptr() && varReturnSpec->name.ptr()) {
+            MultiEValuePtr mev = new MultiEValue();
+            for (; i < entry->returnTypes.size(); ++i)
+                mev->add(returns[i].value);
+            addLocal(env, varReturnSpec->name, mev.ptr());
+        }
     }
 
     EvalContextPtr ctx = new EvalContext(returns);
@@ -1787,11 +1815,6 @@ void evalCallInlined(InvokeEntryPtr entry,
     MultiPValuePtr mpv = analyzeCallInlined(entry, args, env);
     assert(mpv->size() == out->size());
 
-    const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
-    if (!returnSpecs.empty()) {
-        assert(returnSpecs.size() == mpv->size());
-    }
-
     vector<EReturn> returns;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
@@ -1801,8 +1824,24 @@ void evalCallInlined(InvokeEntryPtr entry,
         else
             assert(ev->type == pointerType(pv->type));
         returns.push_back(EReturn(!pv->isTemp, pv->type, ev));
-        if (!returnSpecs.empty() && returnSpecs[i]->name.ptr()) {
-            addLocal(bodyEnv, returnSpecs[i]->name, ev.ptr());
+    }
+
+    if (entry->code->hasReturnSpecs()) {
+        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        unsigned i = 0;
+        for (; i < returnSpecs.size(); ++i) {
+            ReturnSpecPtr rspec = returnSpecs[i];
+            if (rspec->name.ptr())
+                addLocal(bodyEnv, rspec->name, returns[i].value.ptr());
+        }
+        ReturnSpecPtr varReturnSpec = entry->code->varReturnSpec;
+        if (!varReturnSpec)
+            assert(i == mpv->size());
+        if (varReturnSpec.ptr() && varReturnSpec->name.ptr()) {
+            MultiEValuePtr mev = new MultiEValue();
+            for (; i < mpv->size(); ++i)
+                mev->add(returns[i].value);
+            addLocal(bodyEnv, varReturnSpec->name, mev.ptr());
         }
     }
 

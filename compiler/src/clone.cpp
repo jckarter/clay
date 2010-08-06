@@ -9,6 +9,7 @@ CodePtr clone(CodePtr x)
     clone(x->formalArgs, y->formalArgs);
     y->formalVarArg = cloneOpt(x->formalVarArg);
     clone(x->returnSpecs, y->returnSpecs);
+    y->varReturnSpec = cloneOpt(x->varReturnSpec);
     y->body = cloneOpt(x->body);
     y->llvmBody = x->llvmBody;
     return y;
@@ -236,7 +237,14 @@ void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out)
 
 ReturnSpecPtr clone(ReturnSpecPtr x)
 {
-    return new ReturnSpec(x->type, x->name);
+    return new ReturnSpec(clone(x->type), x->name);
+}
+
+ReturnSpecPtr cloneOpt(ReturnSpecPtr x)
+{
+    if (!x)
+        return NULL;
+    return clone(x);
 }
 
 StatementPtr clone(StatementPtr x)
