@@ -1,0 +1,41 @@
+[x] _staticTest(static x, y) = x == y, x, y;
+
+inlined staticTest(n, expr) {
+    var passed?, staticResult, result = ..._staticTest(static expr, expr);
+    if (not passed?) {
+        println(n, " FAILED! static ", staticResult, " != runtime ", result);
+    }
+}
+
+main() {
+    staticTest( 1, SizeT(-1) + SizeT(-1));
+    staticTest( 2, SizeT(128) + SizeT(128));
+    staticTest( 3, SizeT(128) * SizeT(128));
+    staticTest( 4, tupleRef((1, 2.0, 3u32), static SizeT(0)));
+    staticTest( 5, tupleRef((1, 2.0, 3u32), static SizeT(1)));
+    staticTest( 6, tupleRef((1, 2.0, 3u32), static SizeT(2)));
+    staticTest( 7, TypeSize(Int8));
+    staticTest( 8, TypeSize(Int16));
+    staticTest( 9, TypeSize(Int32));
+    staticTest(10, TypeSize(Int64));
+    staticTest(11, TypeSize(UInt8));
+    staticTest(12, TypeSize(UInt16));
+    staticTest(13, TypeSize(UInt32));
+    staticTest(14, TypeSize(UInt64));
+    staticTest(15, TypeSize(Float32));
+    staticTest(16, TypeSize(Float64));
+    staticTest(17, TypeSize(PtrInt));
+    staticTest(18, TypeSize(SizeT));
+    staticTest(19, TypeSize(UInt8)  < TypeSize(Int32));
+    staticTest(20, TypeSize(UInt16) < TypeSize(Int32));
+    staticTest(21, TypeSize(UInt32) < TypeSize(Int32));
+    staticTest(22, TypeSize(UInt64) < TypeSize(Int32));
+    staticTest(23, TypeSize(UInt8)  > TypeSize(Int32));
+    staticTest(24, TypeSize(UInt16) > TypeSize(Int32));
+    staticTest(25, TypeSize(UInt32) > TypeSize(Int32));
+    staticTest(26, TypeSize(UInt64) > TypeSize(Int32));
+    staticTest(27, TypeSize(UInt8)  == TypeSize(Int32));
+    staticTest(28, TypeSize(UInt16) == TypeSize(Int32));
+    staticTest(29, TypeSize(UInt32) == TypeSize(Int32));
+    staticTest(30, TypeSize(UInt64) == TypeSize(Int32));
+}

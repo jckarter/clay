@@ -250,6 +250,7 @@ static void usage()
     cerr << "  -abort            - abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run              - execute the program without writing to disk\n";
 #ifdef __APPLE__
+    cerr << "  -arch <arch>      - build for architecture <arch>\n";
     cerr << "  -F<dir>           - add <dir> to framework search path\n";
     cerr << "  -framework <name> - link with framework <name>\n";
 #endif
@@ -283,9 +284,12 @@ int main(int argc, char **argv) {
     bool exceptions = true;
     bool abortOnError = false;
     bool run = false;
+    bool crossCompiling = false;
 
 #ifdef __APPLE__
     genPIC = true;
+
+    string arch;
 #endif
 
     string clayFile;
@@ -377,6 +381,35 @@ int main(int argc, char **argv) {
             frameworks.push_back("-framework");
             frameworks.push_back(framework);
         }
+        else if (strcmp(argv[i], "-arch") == 0) {
+            if (i+1 == argc) {
+                cerr << "error: architecture name missing after -arch\n";
+                return -1;
+            }
+            ++i;
+            if (!arch.empty()) {
+                cerr << "error: multiple -arch flags currently unsupported\n";
+                return -1;
+            }
+            arch = argv[i];
+            if (arch.empty() || (arch[0] == '-')) {
+                cerr << "error: architecture name missing after -arch\n";
+                return -1;
+            }
+
+            if (arch == "i386") {
+                targetTriple = "i386-apple-darwin10";
+            } else if (arch == "x86_64") {
+                targetTriple = "x86_64-apple-darwin10";
+            } else if (arch == "ppc") {
+                targetTriple = "powerpc-apple-darwin10";
+            } else if (arch == "ppc64") {
+                targetTriple = "powerpc64-apple-darwin10";
+            } else {
+                cerr << "error: unrecognized -arch value " << arch << "\n";
+                return -1;
+            }
+        }
 #endif
         else if (strcmp(argv[i], "-target") == 0) {
             if (i+1 == argc) {
@@ -389,6 +422,7 @@ int main(int argc, char **argv) {
                 cerr << "error: target name missing after -target\n";
                 return -1;
             }
+            crossCompiling = targetTriple != llvm::sys::getHostTriple();
         }
         else if (strstr(argv[i], "-L") == argv[i]) {
             string libDir = argv[i] + strlen("-L");
@@ -460,6 +494,20 @@ int main(int argc, char **argv) {
 
     if (emitLLVM + emitAsm + emitObject > 1) {
         cerr << "error: use only one of -llvm, -asm, or -c\n";
+        return -1;
+    }
+
+    if (crossCompiling && run) {
+        cerr << "error: cannot use -run when cross compiling\n";
+        return -1;
+    }
+
+    if (crossCompiling && !(emitLLVM || emitAsm || emitObject)
+#ifdef __APPLE__
+        && arch.empty()
+#endif
+    ) {
+        cerr << "error: must use -llvm, -asm, or -c when cross compiling\n";
         return -1;
     }
 
@@ -582,13 +630,11 @@ int main(int argc, char **argv) {
         }
 
         vector<string> arguments;
-        copy(
-            libSearchPath.begin(),
-            libSearchPath.end(),
-            back_inserter(arguments)
-        );
-        copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 #ifdef __APPLE__
+        if (!arch.empty()) {
+            arguments.push_back("-arch");
+            arguments.push_back(arch);
+        }
         copy(
             frameworkSearchPath.begin(),
             frameworkSearchPath.end(),
@@ -596,6 +642,12 @@ int main(int argc, char **argv) {
         );
         copy(frameworks.begin(), frameworks.end(), back_inserter(arguments));
 #endif
+        copy(
+            libSearchPath.begin(),
+            libSearchPath.end(),
+            back_inserter(arguments)
+        );
+        copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
         result = generateBinary(llvmModule, outputFile, gccPath,
                                 exceptions, sharedLib, genPIC,

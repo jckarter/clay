@@ -36,6 +36,15 @@ using std::set;
 using std::ostream;
 using std::ostringstream;
 
+
+//
+// Target-specific types
+//
+typedef int ptrdiff32_t;
+typedef long long ptrdiff64_t;
+
+typedef unsigned size32_t;
+typedef unsigned long long size64_t;
 
 
 //
