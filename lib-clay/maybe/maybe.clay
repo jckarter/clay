@@ -1,0 +1,54 @@
+
+//
+// Maybe[T]
+//
+
+variant Maybe[T] = T | Nothing;
+
+record Nothing {}
+
+
+
+//
+// constructors
+//
+
+[T]
+overload Maybe(x:T) = Maybe[T](x);
+
+[T]
+overload Maybe[T]() = Maybe[T](Nothing());
+
+nothing(T) = Maybe[T]();
+
+
+//
+// nothing?
+//
+
+nothing?(x) = variantIs?(x, Nothing);
+
+
+//
+// maybe function
+//
+
+private procedure maybeValue;
+overload maybeValue(forward x, fn, forward ...defaults) = forward ...fn(x);
+overload maybeValue(forward n: Nothing, fn, forward ...defaults) = forward ...defaults;
+
+maybe(forward m, fn, forward ...defaults) = forward ...maybeValue(*m, fn, ...defaults);
+
+record ValueMissing {}
+instance Exception = ValueMissing;
+
+//
+// require function
+//
+
+private procedure requireValue;
+overload requireValue(forward x, fn) = forward ...fn(x);
+overload requireValue(forward n: Nothing, fn) { throw ValueMissing(); }
+
+require(forward m, fn) = forward ...requireValue(*m, fn);
+
