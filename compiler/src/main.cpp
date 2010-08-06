@@ -671,9 +671,9 @@ int main(int argc, char **argv) {
     llvmTimer.stop();
 
     if (showTiming) {
-        cerr << "load time = " << loadTimer.elapsedMillis() << '\n';
-        cerr << "compile time = " << compileTimer.elapsedMillis() << '\n';
-        cerr << "llvm time = " << llvmTimer.elapsedMillis() << '\n';
+        cerr << "load time = " << loadTimer.elapsedMillis() << " ms\n";
+        cerr << "compile time = " << compileTimer.elapsedMillis() << " ms\n";
+        cerr << "llvm time = " << llvmTimer.elapsedMillis() << " ms\n";
     }
 
     return 0;
