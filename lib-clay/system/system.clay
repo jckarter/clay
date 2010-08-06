@@ -1,13 +1,25 @@
 
+private var argc = 0;
+private var argv = Pointer[Pointer[Int8]]();
+private var commandLineInitialized? = false;
 private var commandLineArgs = Vector[String]();
 
-commandLine() = ref commandLineArgs;
-
-initializeCommandLine(argc, argv) {
-    for (i in range(argc)) {
-        var cstr = (argv + i)^;
-        push(commandLineArgs, String(cstr));
+commandLine() {
+    if (not commandLineInitialized?) {
+        clear(commandLineArgs);
+        for (i in range(argc)) {
+            var cstr = (argv + i)^;
+            push(commandLineArgs, String(cstr));
+        }
+        commandLineInitialized? = true;
     }
+    return ref commandLineArgs;
+}
+
+setArgcArgv(argc_, argv_) {
+    argc = argc_;
+    argv = argv_;
+    commandLineInitialized? = false;
 }
 
 callMain(mainProc) {

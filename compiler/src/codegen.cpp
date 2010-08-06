@@ -4163,7 +4163,7 @@ void codegenExe(ModulePtr module)
 
     BlockPtr mainBody = new Block();
 
-    CallPtr initCmdLine = new Call(prelude_expr_initializeCommandLine());
+    CallPtr initCmdLine = new Call(prelude_expr_setArgcArgv());
     initCmdLine->args.push_back(new NameRef(argc));
     initCmdLine->args.push_back(new NameRef(argv));
     mainBody->statements.push_back(new ExprStatement(initCmdLine.ptr()));
