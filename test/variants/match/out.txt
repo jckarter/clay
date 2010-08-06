@@ -1,0 +1,3 @@
+I saw an Int 2
+I saw a Double 3.000000
+I saw a String four

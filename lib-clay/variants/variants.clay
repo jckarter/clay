@@ -193,3 +193,16 @@ unsafeVariantIndex(x:V, static i) =
 invalidVariant(x:V) {
     error("invalid variant, tag = ", variantTag(x));
 }
+
+
+//
+// variant matching
+//
+
+private procedure matchValue;
+[T] overload matchValue(forward x:T, static T, fn, ...cases) = forward ...fn(x);
+[T, U | T != U] overload matchValue(forward x:T, static U, fn, ...cases)
+    = forward ...matchValue(x, ...cases);
+
+match(forward v, ...cases) = forward ...matchValue(*v, ...cases);
+
