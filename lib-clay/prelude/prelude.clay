@@ -25,7 +25,7 @@ public import strings.constants.*;
 public import strings.cstringrefs.*;
 
 public import algorithms.*;
-public import strings.algorithms.*;
+public import algorithms.strings.*;
 
 public import hash.*;
 public import hashmaps.*;
