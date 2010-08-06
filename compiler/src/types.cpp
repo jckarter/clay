@@ -110,8 +110,7 @@ TypePtr floatType(int bits) {
 }
 
 static int pointerHash(void *p) {
-    unsigned long long v = (unsigned long long)p;
-    return (int)v;
+    return int(size_t(p));
 }
 
 TypePtr pointerType(TypePtr pointeeType) {
