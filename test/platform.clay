@@ -1,11 +1,20 @@
 
 main() {
-    println("sizeof(Byte) = ", TypeSize(Byte));
-    println("sizeof(Short) = ", TypeSize(Short));
-    println("sizeof(Int) = ", TypeSize(Int));
-    println("sizeof(Long) = ", TypeSize(Long));
+    println("TypeSize(Byte) = ", TypeSize(Byte));
+    println("TypeSize(Short) = ", TypeSize(Short));
+    println("TypeSize(Int) = ", TypeSize(Int));
+    println("TypeSize(Long) = ", TypeSize(Long));
 
-    println("sizeof(RawPointer) = ", TypeSize(RawPointer));
-    println("sizeof(SizeT) = ", TypeSize(SizeT));
-    println("sizeof(PtrInt) = ", TypeSize(PtrInt));
+    println("TypeSize(RawPointer) = ", TypeSize(RawPointer));
+    println("TypeSize(SizeT) = ", TypeSize(SizeT));
+    println("TypeSize(PtrInt) = ", TypeSize(PtrInt));
+
+    println("TypeAlignment(Byte) = ", TypeAlignment(Byte));
+    println("TypeAlignment(Short) = ", TypeAlignment(Short));
+    println("TypeAlignment(Int) = ", TypeAlignment(Int));
+    println("TypeAlignment(Long) = ", TypeAlignment(Long));
+
+    println("TypeAlignment(RawPointer) = ", TypeAlignment(RawPointer));
+    println("TypeAlignment(SizeT) = ", TypeAlignment(SizeT));
+    println("TypeAlignment(PtrInt) = ", TypeAlignment(PtrInt));
 }

@@ -2946,6 +2946,14 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_TypeAlignment : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(typeAlignment(t));
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
     case PRIM_CallDefinedP : {
         if (args->size() < 1)
             arityError2(1, args->size());

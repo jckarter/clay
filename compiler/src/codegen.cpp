@@ -3063,6 +3063,14 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_TypeAlignment : {
+        ensureArity(args, 1);
+        TypePtr t = valueToType(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(typeAlignment(t));
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
     case PRIM_CallDefinedP : {
         if (args->size() < 1)
             arityError2(1, args->size());

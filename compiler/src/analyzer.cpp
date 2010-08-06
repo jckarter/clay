@@ -1718,6 +1718,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_TypeSize :
         return new MultiPValue(new PValue(cSizeTType, true));
 
+    case PRIM_TypeAlignment :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
     case PRIM_CallDefinedP :
         return new MultiPValue(new PValue(boolType, true));
 

@@ -579,6 +579,7 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(TypeP);
     PRIMITIVE(TypeSize);
+    PRIMITIVE(TypeAlignment);
     PRIMITIVE(CallDefinedP);
 
     PRIMITIVE(primitiveCopy);

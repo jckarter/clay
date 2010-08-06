@@ -9,6 +9,7 @@ Primitive Operations
 
 [T] Type?(static T):Bool
 [T] TypeSize(static T):SizeT
+[T] TypeAlignment(static T):SizeT
 [F, A1, ..., An] CallDefined?(static F, static A1, ..., static An) Bool;
 
 [T] primitiveCopy(dest:T, src:T):Void
