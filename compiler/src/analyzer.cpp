@@ -1,6 +1,10 @@
 #include "clay.hpp"
 #include "claynames.hpp"
 
+static int analysisCachingDisabled = 0;
+void disableAnalysisCaching() { analysisCachingDisabled += 1; }
+void enableAnalysisCaching() { analysisCachingDisabled -= 1; }
+
 static TypePtr objectType(ObjectPtr x);
 static ObjectPtr unwrapStaticType(TypePtr t);
 
@@ -378,7 +382,18 @@ MultiPValuePtr analyzeArgExpr(ExprPtr x,
 // analyzeExpr
 //
 
+static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env);
+
 MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
+{
+    if (analysisCachingDisabled > 0)
+        return analyzeExpr2(expr, env);
+    if (!expr->cachedAnalysis)
+        expr->cachedAnalysis = analyzeExpr2(expr, env);
+    return expr->cachedAnalysis;
+}
+
+static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 {
     LocationContext loc(expr->location);
 
@@ -1401,8 +1416,10 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
         error("no matching operation");
     if (entry->analyzed || entry->analyzing)
         return entry;
-    if (entry->inlined)
+    if (entry->inlined) {
+        entry->code = clone(entry->origCode);
         return entry;
+    }
 
     entry->analyzing = true;
     analyzeCodeBody(entry);

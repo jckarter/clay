@@ -665,6 +665,9 @@ enum ExprKind {
 
 struct Expr : public ANode {
     ExprKind exprKind;
+
+    MultiPValuePtr cachedAnalysis;
+
     Expr(ExprKind exprKind)
         : ANode(EXPRESSION), exprKind(exprKind) {}
 };
@@ -2271,6 +2274,7 @@ struct InvokeEntry : public Object {
     bool analyzed;
     bool analyzing;
 
+    CodePtr origCode;
     CodePtr code;
     EnvPtr env;
     vector<TypePtr> fixedArgTypes;
@@ -2389,6 +2393,14 @@ struct MultiPValue : public Object {
     void add(MultiPValuePtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());
     }
+};
+
+void disableAnalysisCaching();
+void enableAnalysisCaching();
+
+struct AnalysisCachingDisabler {
+    AnalysisCachingDisabler() { disableAnalysisCaching(); }
+    ~AnalysisCachingDisabler() { enableAnalysisCaching(); }
 };
 
 MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env);
