@@ -1,5 +1,5 @@
 #include "clay.hpp"
-#include "claynames.hpp"
+#include "libclaynames.hpp"
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Assembly/Writer.h>

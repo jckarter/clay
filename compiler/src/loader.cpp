@@ -1,5 +1,5 @@
 #include "clay.hpp"
-#include "claynames.hpp"
+#include "libclaynames.hpp"
 #include "llvm/ADT/Triple.h"
 #include <cstdio>
 #include <cassert>

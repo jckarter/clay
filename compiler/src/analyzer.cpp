@@ -1,5 +1,5 @@
 #include "clay.hpp"
-#include "claynames.hpp"
+#include "libclaynames.hpp"
 
 static int analysisCachingDisabled = 0;
 void disableAnalysisCaching() { analysisCachingDisabled += 1; }
