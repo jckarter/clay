@@ -2,16 +2,19 @@ import unix.*;
 import libc;
 
 
+
 //
 // directoryListing
 //
 
-directoryListing(x) = map(direntPointerToString, direntSequence(x));
+directoryListing(x) =
+    filter(notCurrentOrPrevious?, map(direntPointerToString, direntSequence(x)));
 
+private notCurrentOrPrevious?(x) = not (x == "." or x == "..");
 private direntPointerToString(x) = CStringRef(Pointer[Int8](&x^.d_name));
 
 
-
+
 //
 // DirentSequence
 //
@@ -27,7 +30,7 @@ direntSequence(x:T) = DirentSequence[T](x);
 overload iterator(x:DirentSequence[T]) = DirentIterator(x.path);
 
 
-
+
 //
 // DirentIterator
 //
@@ -74,7 +77,7 @@ overload next(x:DirentIterator) {
 }
 
 
-
+
 //
 // currentDirectory
 //
