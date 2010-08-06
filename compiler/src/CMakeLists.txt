@@ -19,6 +19,7 @@ set(SOURCES
     patterns.cpp
     printer.cpp
     types.cpp
+    hirestimer.cpp
 )
 
 # version info is only updated when cmake is run

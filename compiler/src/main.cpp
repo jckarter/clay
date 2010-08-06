@@ -1,5 +1,6 @@
 
 #include "clay.hpp"
+#include "hirestimer.hpp"
 
 #include "llvm/PassManager.h"
 #include "llvm/ADT/Triple.h"
@@ -250,6 +251,7 @@ static void usage()
     cerr << "  -abort            - abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run              - execute the program without writing to disk\n";
 #ifdef __APPLE__
+    cerr << "  -timing           - show timing information\n";
     cerr << "  -arch <arch>      - build for architecture <arch>\n";
     cerr << "  -F<dir>           - add <dir> to framework search path\n";
     cerr << "  -framework <name> - link with framework <name>\n";
@@ -285,6 +287,7 @@ int main(int argc, char **argv) {
     bool abortOnError = false;
     bool run = false;
     bool crossCompiling = false;
+    bool showTiming = false;
 
 #ifdef __APPLE__
     genPIC = true;
@@ -335,6 +338,9 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-run") == 0) {
             run = true;
+        }
+        else if (strcmp(argv[i], "-timing") == 0) {
+            showTiming = true;
         }
         else if (strcmp(argv[i], "-o") == 0) {
             if (i+1 == argc) {
@@ -582,12 +588,19 @@ int main(int argc, char **argv) {
     outputFilePath.eraseFromDisk();
     llvm::sys::RemoveFileOnSignal(outputFilePath);
 
+    HiResTimer loadTimer, compileTimer, llvmTimer;
+
+    loadTimer.start();
     ModulePtr m = loadProgram(clayFile);
+    loadTimer.stop();
+    compileTimer.start();
     if (sharedLib)
         codegenSharedLib(m);
     else
         codegenExe(m);
+    compileTimer.stop();
 
+    llvmTimer.start();
     if (optimize)
         optimizeLLVM(llvmModule, !(sharedLib || run));
 
@@ -654,6 +667,13 @@ int main(int argc, char **argv) {
                                 arguments);
         if (!result)
             return -1;
+    }
+    llvmTimer.stop();
+
+    if (showTiming) {
+        cerr << "load time = " << loadTimer.elapsedMillis() << '\n';
+        cerr << "compile time = " << compileTimer.elapsedMillis() << '\n';
+        cerr << "llvm time = " << llvmTimer.elapsedMillis() << '\n';
     }
 
     return 0;
