@@ -272,6 +272,32 @@ static bool isStaticallyComputable(TypePtr t) {
     }
 }
 
+static void setSizeTEValue(EValuePtr v, size_t x) {
+    switch (typeSize(cSizeTType)) {
+    case 4 : *(size32_t *)v->addr = size32_t(x); break;
+    case 8 : *(size64_t *)v->addr = size64_t(x); break;
+    default : assert(false);
+    }
+}
+
+/* not used yet
+static void setPtrDiffTEValue(EValuePtr v, ptrdiff_t x) {
+    switch (typeSize(cPtrDiffTType)) {
+    case 4 : *(ptrdiff32_t *)v->addr = ptrdiff32_t(x); break;
+    case 8 : *(ptrdiff64_t *)v->addr = ptrdiff64_t(x); break;
+    default : assert(false);
+    }
+}
+*/
+
+static void setPtrEValue(EValuePtr v, void* x) {
+    switch (typeSize(cPtrDiffTType)) {
+    case 4 : *(size32_t *)v->addr = size32_t(x); break;
+    case 8 : *(size64_t *)v->addr = size64_t(x); break;
+    default : assert(false);
+    }
+}
+
 MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
 {
     AnalysisCachingDisabler disabler;
@@ -363,14 +389,22 @@ ValueHolderPtr intToValueHolder(int x)
 ValueHolderPtr sizeTToValueHolder(size_t x)
 {
     ValueHolderPtr v = new ValueHolder(cSizeTType);
-    *(size_t *)v->buf = x;
+    switch (typeSize(cSizeTType)) {
+    case 4 : *(size32_t *)v->buf = size32_t(x); break;
+    case 8 : *(size64_t *)v->buf = size64_t(x); break;
+    default : assert(false);
+    }
     return v;
 }
 
 ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x)
 {
     ValueHolderPtr v = new ValueHolder(cPtrDiffTType);
-    *(ptrdiff_t *)v->buf = x;
+    switch (typeSize(cPtrDiffTType)) {
+    case 4 : *(ptrdiff32_t *)v->buf = ptrdiff32_t(x); break;
+    case 8 : *(ptrdiff64_t *)v->buf = ptrdiff64_t(x); break;
+    default : assert(false);
+    }
     return v;
 }
 
@@ -3647,7 +3681,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == cSizeTType);
-        *((size_t *)out0->addr) = index;
+        setSizeTEValue(out0, index);
         break;
     }
 
@@ -3659,7 +3693,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == cSizeTType);
-        *((size_t *)out0->addr) = size;
+        setSizeTEValue(out0, size);
         break;
     }
 
@@ -3671,7 +3705,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(reprType));
-        *((void **)out0->addr) = (void *)evar->addr;
+        setPtrEValue(out0, (void *)evar->addr);
         break;
     }
 
