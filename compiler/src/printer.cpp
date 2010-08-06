@@ -468,7 +468,8 @@ static void print(ostream &out, const Object *x) {
         const Code *y = (const Code *)x;
         out << "Code(" << y->patternVars << ", " << y->predicate;
         out << ", " << y->formalArgs << ", " << y->formalVarArg;
-        out << ", " << y->returnSpecs << ", " << y->body << ")";
+        out << ", " << y->returnSpecs << ", " << y->varReturnSpec;
+        out << ", " << y->body << ")";
         break;
     }
     case FORMAL_ARG : {

@@ -1167,6 +1167,7 @@ struct Code : public ANode {
     vector<FormalArgPtr> formalArgs;
     FormalArgPtr formalVarArg;
     vector<ReturnSpecPtr> returnSpecs;
+    ReturnSpecPtr varReturnSpec;
     StatementPtr body;
     LLVMBodyPtr llvmBody;
 
@@ -1177,10 +1178,16 @@ struct Code : public ANode {
          const vector<FormalArgPtr> &formalArgs,
          FormalArgPtr formalVarArg,
          const vector<ReturnSpecPtr> &returnSpecs,
+         ReturnSpecPtr varReturnSpec,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
           formalArgs(formalArgs), formalVarArg(formalVarArg),
-          returnSpecs(returnSpecs), body(body) {}
+          returnSpecs(returnSpecs), varReturnSpec(varReturnSpec),
+          body(body) {}
+
+    bool hasReturnSpecs() {
+        return (returnSpecs.size() > 0) || varReturnSpec.ptr();
+    }
 
     bool isInlineLLVM() {
         return llvmBody.ptr() != NULL;
@@ -1606,6 +1613,7 @@ FormalArgPtr clone(FormalArgPtr x);
 FormalArgPtr cloneOpt(FormalArgPtr x);
 void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out);
 ReturnSpecPtr clone(ReturnSpecPtr x);
+ReturnSpecPtr cloneOpt(ReturnSpecPtr x);
 StatementPtr clone(StatementPtr x);
 StatementPtr cloneOpt(StatementPtr x);
 void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out);
@@ -2443,6 +2451,7 @@ void verifyAttributes(ExternalVariablePtr x);
 MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
                                    const vector<ExprPtr> &args,
                                    EnvPtr env);
+bool unwrapByRef(TypePtr &t);
 TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args);
 PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
 MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
@@ -2522,7 +2531,11 @@ int objectVectorHash(const vector<Pointer<T> > &a) {
     return h;
 }
 
+bool staticToType(ObjectPtr x, TypePtr &out);
+TypePtr staticToType(MultiStaticPtr x, unsigned index);
+
 void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
+                         ReturnSpecPtr varReturnSpec,
                          EnvPtr env,
                          vector<bool> &isRef,
                          vector<TypePtr> &types);

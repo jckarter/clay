@@ -1,0 +1,27 @@
+
+var x = 10;
+
+foo1() = ref x;             // inferred return type
+foo2() ByRef[Int] = ref x;  // explicit return type
+
+
+// examples of variable-arity return type specification
+[...T]
+incAll(...args:T) ...T =
+    ...mapValues(lambda (x) { return x + 1; }, ...args);
+
+[...T]
+incAll2(...args:T) ...returned:T {
+    ...returned <-- ...mapValues(lambda (x) { return x + 1; }, ...args);
+}
+
+main() {
+    foo1() += 1;
+    foo2() += 1;
+    println(x);
+
+    var a, b = 1, 2;
+    a, b = ...incAll(a, b);
+    a, b = ...incAll2(a, b);
+    println("a = ", a, ", b = ", b);
+}

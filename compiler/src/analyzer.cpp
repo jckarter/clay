@@ -8,8 +8,6 @@ void enableAnalysisCaching() { analysisCachingDisabled -= 1; }
 static TypePtr objectType(ObjectPtr x);
 static ObjectPtr unwrapStaticType(TypePtr t);
 
-static bool staticToType(ObjectPtr x, TypePtr &out);
-static TypePtr staticToType(MultiStaticPtr x, unsigned index);
 static TypePtr valueToType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index);
 static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index);
@@ -68,22 +66,6 @@ static ObjectPtr unwrapStaticType(TypePtr t) {
         return NULL;
     StaticType *st = (StaticType *)t.ptr();
     return st->obj;
-}
-
-static bool staticToType(ObjectPtr x, TypePtr &out)
-{
-    if (x->objKind != TYPE)
-        return false;
-    out = (Type *)x.ptr();
-    return true;
-}
-
-static TypePtr staticToType(MultiStaticPtr x, unsigned index)
-{
-    TypePtr out;
-    if (!staticToType(x->values[index], out))
-        argumentError(index, "expecting a type");
-    return out;
 }
 
 static TypePtr valueToType(MultiPValuePtr x, unsigned index)
@@ -908,6 +890,31 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
 
 
 //
+// unwrapByRef
+//
+
+bool unwrapByRef(TypePtr &t)
+{
+    if (t->typeKind == RECORD_TYPE) {
+        RecordType *rt = (RecordType *)t.ptr();
+        if (rt->record.ptr() == prelude_ByRef().ptr()) {
+            assert(rt->params.size() == 1);
+            ObjectPtr obj = rt->params[0];
+            if (obj->objKind != TYPE) {
+                ostringstream ostr;
+                ostr << "invalid return type: " << t;
+                error(ostr.str());
+            }
+            t = (Type *)obj.ptr();
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
+//
 // constructType
 //
 
@@ -931,23 +938,8 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             vector<TypePtr> returnTypes;
             staticToTypeTuple(args, 1, returnTypes);
             vector<bool> returnIsRef(returnTypes.size(), false);
-            for (unsigned i = 0; i < returnTypes.size(); ++i) {
-                if (returnTypes[i]->typeKind == RECORD_TYPE) {
-                    RecordType *rt = (RecordType *)returnTypes[i].ptr();
-                    if (rt->record.ptr() == prelude_ByRef().ptr()) {
-                        assert(rt->params.size() == 1);
-                        ObjectPtr obj = rt->params[0];
-                        if (obj->objKind != TYPE) {
-                            ostringstream ostr;
-                            ostr << "invalid return type: "
-                                 << returnTypes[i];
-                            error(ostr.str());
-                        }
-                        returnTypes[i] = (Type *)obj.ptr();
-                        returnIsRef[i] = true;
-                    }
-                }
-            }
+            for (unsigned i = 0; i < returnTypes.size(); ++i)
+                returnIsRef[i] = unwrapByRef(returnTypes[i]);
             return codePointerType(argTypes, returnIsRef, returnTypes);
         }
 
@@ -1443,11 +1435,11 @@ MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
     CodePtr code = entry->code;
     assert(code->body.ptr());
 
-    if (!code->returnSpecs.empty()) {
+    if (code->hasReturnSpecs()) {
         vector<bool> returnIsRef;
         vector<TypePtr> returnTypes;
-        evaluateReturnSpecs(code->returnSpecs, entry->env,
-                            returnIsRef, returnTypes);
+        evaluateReturnSpecs(code->returnSpecs, code->varReturnSpec,
+                            entry->env, returnIsRef, returnTypes);
         return analyzeReturn(returnIsRef, returnTypes);
     }
 
@@ -1495,8 +1487,9 @@ void analyzeCodeBody(InvokeEntryPtr entry)
     CodePtr code = entry->code;
     assert(code->hasBody());
 
-    if (code->isInlineLLVM() || !code->returnSpecs.empty()) {
-        evaluateReturnSpecs(code->returnSpecs, entry->env,
+    if (code->isInlineLLVM() || code->hasReturnSpecs()) {
+        evaluateReturnSpecs(code->returnSpecs, code->varReturnSpec,
+                            entry->env,
                             entry->returnIsRef, entry->returnTypes);
         entry->analyzed = true;
         return;

@@ -27,7 +27,7 @@ DefaultInstances -> Type ("|" Type)*
 Instance -> PatternVarsWithCond? "instance" Pattern "=" Type ";"
 
 Procedure -> PatternVarsWithCond? "inlined"? "procedure"? Identifier Arguments
-             ReturnSpec? Body
+             ReturnSpec? VarReturnSpec? Body
            | "procedure" Identifier ";"
 
 PatternVarsWithCond -> "[" comma_list(Identifier) Predicate? "]"
@@ -46,6 +46,7 @@ StaticArgument -> "static" Expression
 
 ReturnSpec -> comma_list(ReturnSpecOne)
 ReturnSpecOne -> (Identifier ":")? Type
+VarReturnSpec -> "..." (Identifier ":")? Expr
 
 Type -> Expression
 
@@ -53,7 +54,7 @@ Body -> "=" ReturnExpression ";"
       | Block
 
 Overload -> PatternVarsWithCond? "inlined"? "overload" Pattern Arguments
-            ReturnSpec? Body
+            ReturnSpec? VarReturnSpec? Body
 
 Enumeration -> "enum" Identifier "{" comma_list(Identifier) "}"
 

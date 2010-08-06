@@ -2090,29 +2090,39 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
         addLocal(env, entry->varArgName, varArgs.ptr());
     }
 
-    const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
-    if (!returnSpecs.empty()) {
-        assert(returnSpecs.size() == entry->returnTypes.size());
-    }
-
     vector<CReturn> returns;
-    bool hasNamedReturn = false;
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i, ++ai) {
         llvm::Argument *llArgValue = &(*ai);
         TypePtr rt = entry->returnTypes[i];
-        ReturnSpecPtr rspec;
-        if (!returnSpecs.empty())
-            rspec = returnSpecs[i];
         CValuePtr cv;
         if (entry->returnIsRef[i])
             cv = new CValue(pointerType(rt), llArgValue);
         else
             cv = new CValue(rt, llArgValue);
         returns.push_back(CReturn(entry->returnIsRef[i], rt, cv));
-        if (rspec.ptr() && rspec->name.ptr()) {
+    }
+
+    bool hasNamedReturn = false;
+    if (entry->code->hasReturnSpecs()) {
+        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        unsigned i = 0;
+        for (; i < returnSpecs.size(); ++i) {
+            ReturnSpecPtr rspec = returnSpecs[i];
+            if (rspec->name.ptr()) {
+                hasNamedReturn = true;
+                addLocal(env, rspec->name, returns[i].value.ptr());
+                returns[i].value->llValue->setName(rspec->name->str);
+            }
+        }
+        ReturnSpecPtr varReturnSpec = entry->code->varReturnSpec;
+        if (!varReturnSpec)
+            assert(i == entry->returnTypes.size());
+        if (varReturnSpec.ptr() && varReturnSpec->name.ptr()) {
             hasNamedReturn = true;
-            addLocal(env, rspec->name, cv.ptr());
-            llArgValue->setName(rspec->name->str);
+            MultiCValuePtr mcv = new MultiCValue();
+            for (; i < entry->returnTypes.size(); ++i)
+                mcv->add(returns[i].value);
+            addLocal(env, varReturnSpec->name, mcv.ptr());
         }
     }
 
@@ -2255,13 +2265,7 @@ void codegenCallInlined(InvokeEntryPtr entry,
     MultiPValuePtr mpv = analyzeCallInlined(entry, args, env);
     assert(mpv->size() == out->size());
 
-    const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
-    if (!returnSpecs.empty()) {
-        assert(returnSpecs.size() == mpv->size());
-    }
-
     vector<CReturn> returns;
-    bool hasNamedReturn = false;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
         CValuePtr cv = out->values[i];
@@ -2270,9 +2274,28 @@ void codegenCallInlined(InvokeEntryPtr entry,
         else
             assert(cv->type == pointerType(pv->type));
         returns.push_back(CReturn(!pv->isTemp, pv->type, cv));
-        if (!returnSpecs.empty() && returnSpecs[i]->name.ptr()) {
+    }
+
+    bool hasNamedReturn = false;
+    if (entry->code->hasReturnSpecs()) {
+        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        unsigned i = 0;
+        for (; i < returnSpecs.size(); ++i) {
+            ReturnSpecPtr rspec = returnSpecs[i];
+            if (rspec->name.ptr()) {
+                hasNamedReturn = true;
+                addLocal(bodyEnv, rspec->name, returns[i].value.ptr());
+            }
+        }
+        ReturnSpecPtr varReturnSpec = entry->code->varReturnSpec;
+        if (!varReturnSpec)
+            assert(i == mpv->size());
+        if (varReturnSpec.ptr() && varReturnSpec->name.ptr()) {
             hasNamedReturn = true;
-            addLocal(bodyEnv, returnSpecs[i]->name, cv.ptr());
+            MultiCValuePtr mcv = new MultiCValue();
+            for (; i < mpv->size(); ++i)
+                mcv->add(returns[i].value);
+            addLocal(bodyEnv, varReturnSpec->name, mcv.ptr());
         }
     }
 

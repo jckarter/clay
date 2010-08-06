@@ -1703,12 +1703,16 @@ static bool optNamedReturn(IdentifierPtr &x) {
     return true;
 }
 
+static bool returnTypeExpression(ExprPtr &x) {
+    return orExpr(x);
+}
+
 static bool returnSpec(ReturnSpecPtr &x) {
     LocationPtr location = currentLocation();
     IdentifierPtr y;
     if (!optNamedReturn(y)) return false;
     ExprPtr z;
-    if (!expression(z)) return false;
+    if (!returnTypeExpression(z)) return false;
     x = new ReturnSpec(z, y);
     x->location = location;
     return true;
@@ -1736,6 +1740,36 @@ static bool optReturnSpecList(vector<ReturnSpecPtr> &x) {
         restore(p);
         x.clear();
     }
+    return true;
+}
+
+static bool varReturnSpec(ReturnSpecPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("...")) return false;
+    IdentifierPtr y;
+    if (!optNamedReturn(y)) return false;
+    ExprPtr z;
+    if (!returnTypeExpression(z)) return false;
+    x = new ReturnSpec(z, y);
+    x->location = location;
+    return true;
+}
+
+static bool optVarReturnSpec(ReturnSpecPtr &x) {
+    int p = save();
+    if (!varReturnSpec(x)) {
+        restore(p);
+        x = NULL;
+    }
+    return true;
+}
+
+static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
+                           ReturnSpecPtr &varReturnSpec) {
+    returnSpecs.clear();
+    varReturnSpec = NULL;
+    if (!optReturnSpecList(returnSpecs)) return false;
+    if (!optVarReturnSpec(varReturnSpec)) return false;
     return true;
 }
 
@@ -1805,7 +1839,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     IdentifierPtr z;
     if (!identifier(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;
-    if (!optReturnSpecList(y->returnSpecs)) return false;
+    if (!allReturnSpecs(y->returnSpecs, y->varReturnSpec)) return false;
     if (!body(y->body)) return false;
     y->location = location;
 
@@ -1845,7 +1879,7 @@ static bool overload(TopLevelItemPtr &x) {
     ExprPtr z;
     if (!pattern(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;
-    if (!optReturnSpecList(y->returnSpecs)) return false;
+    if (!allReturnSpecs(y->returnSpecs, y->varReturnSpec)) return false;
     int p = save();
     if (!optBody(y->body)) {
         restore(p);
