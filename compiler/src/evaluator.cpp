@@ -250,8 +250,24 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
     returnTypes.clear();
     for (unsigned i = 0; i < returnSpecs.size(); ++i) {
         ReturnSpecPtr x = returnSpecs[i];
-        returnIsRef.push_back(x->byRef);
-        returnTypes.push_back(evaluateType(x->type, env));
+        bool isRef = false;
+        TypePtr t = evaluateType(x->type, env);
+        if (t->typeKind == RECORD_TYPE) {
+            RecordType *rt = (RecordType *)t.ptr();
+            if (rt->record.ptr() == prelude_ByRef().ptr()) {
+                assert(rt->params.size() == 1);
+                ObjectPtr obj = rt->params[0];
+                if (obj->objKind != TYPE) {
+                    ostringstream ostr;
+                    ostr << "invalid return type: " << t;
+                    error(ostr.str());
+                }
+                t = (Type *)obj.ptr();
+                isRef = true;
+            }
+        }
+        returnIsRef.push_back(isRef);
+        returnTypes.push_back(t);
     }
 }
 

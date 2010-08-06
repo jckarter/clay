@@ -1,0 +1,11 @@
+
+var x = 10;
+
+foo1() = ref x;             // inferred return type
+foo2() ByRef[Int] = ref x;  // explicit return type
+
+main() {
+    foo1() += 1;
+    foo2() += 1;
+    println(x);
+}

@@ -236,7 +236,7 @@ void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out)
 
 ReturnSpecPtr clone(ReturnSpecPtr x)
 {
-    return new ReturnSpec(x->byRef, x->type, x->name);
+    return new ReturnSpec(x->type, x->name);
 }
 
 StatementPtr clone(StatementPtr x)

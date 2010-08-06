@@ -1138,13 +1138,12 @@ struct FormalArg : public ANode {
 };
 
 struct ReturnSpec : public ANode {
-    bool byRef;
     ExprPtr type;
     IdentifierPtr name;
-    ReturnSpec(bool byRef, ExprPtr type)
-        : ANode(RETURN_SPEC), byRef(byRef), type(type) {}
-    ReturnSpec(bool byRef, ExprPtr type, IdentifierPtr name)
-        : ANode(RETURN_SPEC), byRef(byRef), type(type), name(name) {}
+    ReturnSpec(ExprPtr type)
+        : ANode(RETURN_SPEC), type(type) {}
+    ReturnSpec(ExprPtr type, IdentifierPtr name)
+        : ANode(RETURN_SPEC), type(type), name(name) {}
 };
 
 struct PatternVar {

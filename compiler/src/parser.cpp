@@ -1705,17 +1705,11 @@ static bool optNamedReturn(IdentifierPtr &x) {
 
 static bool returnSpec(ReturnSpecPtr &x) {
     LocationPtr location = currentLocation();
-    int p = save();
-    bool byRef = true;
-    if (!keyword("ref")) {
-        restore(p);
-        byRef = false;
-    }
     IdentifierPtr y;
     if (!optNamedReturn(y)) return false;
     ExprPtr z;
     if (!expression(z)) return false;
-    x = new ReturnSpec(byRef, z, y);
+    x = new ReturnSpec(z, y);
     x->location = location;
     return true;
 }
