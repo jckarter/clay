@@ -115,6 +115,13 @@ overload find(x, begin, end) {
 
 
 //
+// in?
+//
+in?(elem, seq) = find(elem, seq) != end(seq);
+
+
+
+//
 // binarySearch, binarySearchLowerBound, binarySearchUpperBound
 //
 
