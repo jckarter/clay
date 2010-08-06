@@ -764,12 +764,23 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
 // typeSize, typePrint
 //
 
-size_t typeSize(TypePtr t) {
-    if (!t->typeSizeInitialized) {
-        t->typeSizeInitialized = true;
-        t->typeSize = llvmTargetData->getTypeAllocSize(llvmType(t));
+static void initTypeInfo(Type *t) {
+    if (!t->typeInfoInitialized) {
+        t->typeInfoInitialized = true;
+        const llvm::Type *llt = llvmType(t);
+        t->typeSize = llvmTargetData->getTypeAllocSize(llt);
+        t->typeAlignment = llvmTargetData->getABITypeAlignment(llt);
     }
+}
+
+size_t typeSize(TypePtr t) {
+    initTypeInfo(t.ptr());
     return t->typeSize;
+}
+
+size_t typeAlignment(TypePtr t) {
+    initTypeInfo(t.ptr());
+    return t->typeAlignment;
 }
 
 void typePrint(ostream &out, TypePtr t) {

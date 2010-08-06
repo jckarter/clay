@@ -1680,6 +1680,7 @@ const string &primOpName(PrimOpPtr x);
 enum PrimOpCode {
     PRIM_TypeP,
     PRIM_TypeSize,
+    PRIM_TypeAlignment,
     PRIM_CallDefinedP,
 
     PRIM_primitiveCopy,
@@ -1797,15 +1798,16 @@ struct Type : public Object {
     int typeKind;
     llvm::PATypeHolder *llTypeHolder;
 
-    bool typeSizeInitialized;
+    bool typeInfoInitialized;
     size_t typeSize;
+    size_t typeAlignment;
 
     bool overloadsInitialized;
     vector<OverloadPtr> overloads;
 
     Type(int typeKind)
         : Object(TYPE), typeKind(typeKind), llTypeHolder(NULL),
-          typeSizeInitialized(false), overloadsInitialized(false) {}
+          typeInfoInitialized(false), overloadsInitialized(false) {}
     ~Type() {
         if (llTypeHolder)
             delete llTypeHolder;
@@ -2030,6 +2032,7 @@ const llvm::Type *llvmVoidType();
 const llvm::Type *llvmType(TypePtr t);
 
 size_t typeSize(TypePtr t);
+size_t typeAlignment(TypePtr t);
 void typePrint(ostream &out, TypePtr t);
 
 
