@@ -32,6 +32,16 @@ alias Opaque = Byte;
 
 
 //
+// return type helper
+//
+
+record ByRef[T] {}
+
+[T] overload RegularRecord?(static ByRef[T]) = false;
+
+
+
+//
 // limits
 //
 
