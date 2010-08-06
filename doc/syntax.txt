@@ -45,8 +45,7 @@ ValueArgument -> ("rvalue" | "lvalue" | "forward")? Identifier TypeSpec?
 StaticArgument -> "static" Expression
 
 ReturnSpec -> comma_list(ReturnSpecOne)
-ReturnSpecOne -> "ref" Type
-               | (Identifier ":")? Type
+ReturnSpecOne -> (Identifier ":")? Type
 
 Type -> Expression
 

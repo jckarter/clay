@@ -479,8 +479,7 @@ static void print(ostream &out, const Object *x) {
     }
     case RETURN_SPEC : {
         const ReturnSpec *y = (const ReturnSpec *)x;
-        out << "ReturnSpec(" << y->byRef << ", " << y->type;
-        out << ", " << y->name << ")";
+        out << "ReturnSpec(" << y->type << ", " << y->name << ")";
         break;
     }
 
