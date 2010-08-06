@@ -1,0 +1,19 @@
+variant Foo = Int | Double | StringConstant;
+
+foo(x) {
+    match(x,
+        Int, lambda(i) { println("I saw an Int ", i); },
+        Double, lambda(f) { println("I saw a Double ", f); },
+        StringConstant, lambda(s) { println("I saw a String ", s); }
+    );
+}
+
+main() {
+    var x = Foo(2);
+    var y = Foo(3.0);
+    var z = Foo("four");
+
+    foo(x);
+    foo(y);
+    foo(z);
+}
