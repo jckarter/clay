@@ -1,0 +1,27 @@
+import test.*;
+
+main() = testMain(
+    TestSuite(
+        "algorithms.strings", Tuple(
+            TestCase("beginsWith?", lambda(test) {
+                expectTrue(test, "string",
+                    beginsWith?("beginning", "beginningmiddleend"));
+                expectFalse(test, "match longer than sequence",
+                    beginsWith?("beginningmiddleendlong", "beginningmiddleend"));
+            }),
+            TestCase("endsWith?", lambda(test) {
+                expectTrue(test, "string",
+                    endsWith?("end", "beginningmiddleend"));
+                expectFalse(test, "match longer than sequence",
+                    endsWith?("longbeginningmiddleend", "beginningmiddleend"));
+            }),
+            TestCase("split", lambda(test) {
+                expectEqual(test, "test", split("a test string", " "[0])[1], "test");
+            }),
+            TestCase("trim", lambda(test) {
+                expectEqual(test, "trim, string", trim(" \t\n", "   \t A string,\nthat\tneeds trimming. \n  \n "), "A string,\nthat\tneeds trimming.");
+                expectEqual(test, "trim, lambda", trim(lambda(x) { return x == "*"[0] or x == " "[0]; }, "*** message ***"), "message");
+            })
+        )
+    )
+);
