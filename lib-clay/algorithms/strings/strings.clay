@@ -1,4 +1,19 @@
 
+
+
+//
+// beginsWith?, endsWith?
+//
+
+beginsWith?(x, seq) = sliceUpto(seq, size(x)) == x;
+
+endsWith?(x, seq) {
+    if (size(seq) < size(x))
+        return false;
+    return sliceFrom(seq, size(seq) - size(x)) == x;
+}
+
+
 
 //
 // split
@@ -17,3 +32,66 @@ split(a:A, sep) {
     }
     return move(result);
 }
+
+
+
+//
+// trim, trimBegin, trimEnd
+//
+
+[T | Sequence?(T)]
+trim(x, seq:T) = T(trimSlice(x, seq));
+
+[T | Sequence?(T)]
+trimBegin(x, seq:T) = T(trimBeginSlice(x, seq));
+
+[T | Sequence?(T)]
+trimEnd(x, seq:T) = T(trimEndSlice(x, seq));
+
+
+
+overload trim(x, seq:StringConstant) =
+    String(trimSlice(x, seq));
+
+overload trimBegin(x, seq:StringConstant) =
+    String(trimBeginSlice(x, seq));
+
+overload trimEnd(x, seq:StringConstant) =
+    String(trimEndSlice(x, seq));
+
+
+
+//
+// trimSlice, trimBeginSlice, trimEndSlice
+//
+
+trimSlice(pred, seq) = trimBeginSlice(pred, trimEndSlice(pred, seq));
+
+trimBeginSlice(pred, seq) {
+    var i = 0;
+    for (x in seq) {
+        if (pred(x)) inc(i);
+        else break;
+    }
+    return sliceFrom(seq, i);
+}
+
+trimEndSlice(pred, seq) {
+    var i = 0;
+    for (x in reverse(seq)) {
+        if (pred(x)) inc(i);
+        else break;
+    }
+    return sliceUpto(seq, size(seq) - i);
+}
+
+
+
+[T | Sequence?(T)]
+overload trimSlice(s:T, seq) = trimSlice(lambda(x) { return in?(x,s); }, seq);
+
+[T | Sequence?(T)]
+overload trimBeginSlice(s:T, seq) = trimBeginSlice(lambda(x) { return in?(x,s); }, seq);
+
+[T | Sequence?(T)]
+overload trimEndSlice(s:T, seq) = trimEndSlice(lambda(x) { return in?(x,s); }, seq);
