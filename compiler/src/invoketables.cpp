@@ -244,6 +244,7 @@ static bool matchTempness(CodePtr code,
 static InvokeEntryPtr newInvokeEntry(MatchSuccessPtr x)
 {
     InvokeEntryPtr entry = new InvokeEntry(x->callable, x->argsKey);
+    entry->origCode = x->code;
     entry->code = clone(x->code);
     entry->env = x->env;
     entry->fixedArgNames = x->fixedArgNames;

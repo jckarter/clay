@@ -274,6 +274,7 @@ static bool isStaticallyComputable(TypePtr t) {
 
 MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
 {
+    AnalysisCachingDisabler disabler;
     MultiPValuePtr mpv = analyzeExpr(expr, env);
     assert(mpv.ptr());
     vector<ValueHolderPtr> valueHolders;
