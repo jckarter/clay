@@ -292,7 +292,7 @@ static void setPtrDiffTEValue(EValuePtr v, ptrdiff_t x) {
 
 static void setPtrEValue(EValuePtr v, void* x) {
     switch (typeSize(cPtrDiffTType)) {
-    case 4 : *(size32_t *)v->addr = size32_t(x); break;
+    case 4 : *(size32_t *)v->addr = size32_t((long long)x); break;
     case 8 : *(size64_t *)v->addr = size64_t(x); break;
     default : assert(false);
     }
