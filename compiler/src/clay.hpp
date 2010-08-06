@@ -1299,9 +1299,19 @@ struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
     bool inlined;
+
+    // pre-computed patterns for matchInvoke
+    bool patternsInitialized;
+    vector<PatternCellPtr> cells;
+    vector<MultiPatternCellPtr> multiCells;
+    EnvPtr patternEnv;
+    PatternPtr callablePattern;
+    vector<PatternPtr> argPatterns;
+    MultiPatternPtr varArgPattern;
+
     Overload(ExprPtr target, CodePtr code, bool inlined)
         : TopLevelItem(OVERLOAD), target(target), code(code),
-          inlined(inlined) {}
+          inlined(inlined), patternsInitialized(false) {}
 };
 
 struct Procedure : public TopLevelItem {
