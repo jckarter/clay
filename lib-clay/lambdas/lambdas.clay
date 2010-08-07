@@ -9,8 +9,8 @@ record Lambda[In,Out] {
     body : SharedPointer[LambdaBody[In,Out]];
 }
 
-[In, Out]
-inlined overload Lambda[In, Out](x) {
+[In, Out, T | CallableWithSignature?(T, In, Out)]
+inlined overload Lambda[In, Out](x:T) {
     return Lambda[In,Out](new LambdaBody[In,Out](x));
 }
 
@@ -41,7 +41,7 @@ private record LambdaBody[In, Out] {
     destructor : CodePointer[Opaque,()];
 }
 
-[...I, ...O, T | CallableWithSignature?(T, (...I), (...O))]
+[...I, ...O, T]
 inlined overload LambdaBody[(...I),(...O)](x:T) returned:LambdaBody[(...I),(...O)] {
     var codePtr = makeCodePointer(call, T, ...I);
     var destructor = makeCodePointer(destroy, T);
