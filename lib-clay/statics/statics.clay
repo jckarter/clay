@@ -42,3 +42,13 @@ overload lesser?(a:Static[A], b:Static[A]) = false;
 inlined wrapStatic(x) {
     return Static[x]();
 }
+
+
+
+//
+// call
+//
+
+[F]
+overload call(static F, forward ...args) =
+    forward ...F(...args);
