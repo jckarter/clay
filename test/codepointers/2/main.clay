@@ -14,17 +14,14 @@ procedure info;
 overload info(x:VarArgsCCodePointer[In,Out]) {
     println();
     println("VarArgsCCodePointer");
-    println("In = ", ...values(In));
-    println("Out = ", ...values(Out));
+    println("In = ", ...unpack(In));
+    println("Out = ", ...unpack(Out));
 }
 
 [In,Out]
 overload info(x:CCodePointer[In,Out]) {
     println();
     println("CCodePointer");
-    println("In = ", ...values(In));
-    println("Out = ", ...values(Out));
+    println("In = ", ...unpack(In));
+    println("Out = ", ...unpack(Out));
 }
-
-procedure values(x) = x;
-[...T] overload values(x:Tuple[...T]) = ...unpack(x);

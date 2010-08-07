@@ -20,7 +20,7 @@ overload wrapSequence(lvalue x) = sequenceHandle(x);
 packSequences(forward ...args) = (...multiValueMap(wrapSequence, ...args));
 
 [...T]
-unpackSequences(x:Tuple[...T]) = ref ...unpackRef(x);
+unpackSequences(x:Tuple[...T]) = ref ...unpackTupleRef(x);
 
 
 
@@ -29,7 +29,7 @@ unpackSequences(x:Tuple[...T]) = ref ...unpackRef(x);
 //
 
 inlined CapturedElementsType(packedSeq) =
-    Type(captureValues(...dummyElements(...unpackRef(packedSeq))));
+    Type(captureValues(...dummyElements(...unpackTupleRef(packedSeq))));
 
 
 private dummyElement(seq) = forward next(iterator(seq));
@@ -43,10 +43,10 @@ dummyElements(...seqs) = forward ...multiValueMap(dummyElement, ...seqs);
 //
 
 multiIterators(packedSeq) =
-    (...multiValueMap(iterator, ...unpackRef(packedSeq)));
+    (...multiValueMap(iterator, ...unpackTupleRef(packedSeq)));
 
 multiReverseIterators(packedSeq) =
-    (...multiValueMap(reverseIterator, ...unpackRef(packedSeq)));
+    (...multiValueMap(reverseIterator, ...unpackTupleRef(packedSeq)));
 
 
 
@@ -68,7 +68,7 @@ overload multiValueAll?(predicate) = true;
 //
 
 multiHasNext?(multiIter) =
-    multiValueAll?(hasNext?, ...unpackRef(multiIter));
+    multiValueAll?(hasNext?, ...unpackTupleRef(multiIter));
 
 
 
@@ -77,4 +77,4 @@ multiHasNext?(multiIter) =
 //
 
 multiNext(multiIter) =
-    captureValues(...multiValueMap(next, ...unpackRef(multiIter)));
+    captureValues(...multiValueMap(next, ...unpackTupleRef(multiIter)));
