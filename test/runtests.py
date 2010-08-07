@@ -143,7 +143,7 @@ def runtests() :
         if res == "fail":
             failed.append(test.name())
     if len(failed) == 0:
-        print "\nALL TESTS PASSED"
+        print "\nPASSED ALL %d TESTS" % len(testcases)
     else:
         print "\nFailed tests:" 
         print "\n".join(failed)
