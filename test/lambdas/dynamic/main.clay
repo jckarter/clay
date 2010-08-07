@@ -1,0 +1,21 @@
+
+
+multiplier(f) = lambda (x) { return x*f; };
+
+plus2(x) = x + 2;
+plus3(x) = x + 3;
+
+makeFuncs() {
+    var double = multiplier(2);
+    var triple = multiplier(3);
+
+    alias F = Lambda[Int, Int];
+
+    return Vector[F](F(double), F(triple), F(plus2), F(plus3));
+}
+
+main() {
+    var funcs = makeFuncs();
+    for (f in funcs)
+        println(f(10));
+}
