@@ -1,3 +1,4 @@
+import simd;
 
 main() {
     var v1 = Vec[Int,2](11, 21);
@@ -34,4 +35,5 @@ main() {
 
 display(label, v) {
     println(label, ": ", simd.get(v, 0), ", ", simd.get(v, 1));
+    println(label, ": ", ...weaveValues(", ", ...simd.unpackVec(v)));
 }

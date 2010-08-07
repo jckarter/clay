@@ -40,9 +40,6 @@ public import exceptions.*;
 
 public import system.*;
 
-public import simd;
-
 // include self so that even if any symbol is shadowed
 // it can still be accessed as 'prelude.XXX'.
-
 public import prelude;
