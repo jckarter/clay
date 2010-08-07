@@ -30,7 +30,7 @@ overload hasNext?(iter:ZippedIterator[ITERS]) = multiHasNext?(iter.iters);
 
 [ITERS]
 overload next(iter:ZippedIterator[ITERS]) =
-    forward ...multiValueMap(next, ...unpackTupleRef(iter.iters));
+    forward ...mapValues(next, ...unpackTupleRef(iter.iters));
 
 
 
@@ -61,7 +61,7 @@ private AllSized?(A) {
 [A | AllSized?(A)]
 overload size(a:Zipped[A]) {
     var f = block (x) { return SizeT(size(x)); };
-    return min([...multiValueMap(f, ...unpackSequences(a.seqs))]);
+    return min([...mapValues(f, ...unpackSequences(a.seqs))]);
 }
 
 private AllIndexable?(A, I) {
@@ -72,5 +72,5 @@ private AllIndexable?(A, I) {
 [A, I | AllIndexable?(A, I)]
 overload index(a:Zipped[A], i:I) {
     var f = block (x) { return forward ...index(x, i); };
-    return forward ...multiValueMap(f, ...unpackSequences(a.seqs));
+    return forward ...mapValues(f, ...unpackSequences(a.seqs));
 }

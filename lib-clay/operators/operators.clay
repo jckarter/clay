@@ -228,62 +228,11 @@ overload max(lvalue a, lvalue b) {
 
 
 //
-// multiValueMap
-//
-
-procedure multiValueMap;
-
-overload multiValueMap(f, forward first, forward ...rest) =
-    forward ...f(first), ...multiValueMap(f, ...rest);
-
-overload multiValueMap(f) = ;
-
-
-
-//
 // typeToValue, typesToValues
 //
 
 typeToValue(a) = ref null(a)^;
-typesToValues(...a) = forward ...multiValueMap(typeToValue, ...a);
-
-
-
-//
-// captureValue, forwardValue, capturedRef
-//
-
-private record CapturedLValue[T] {
-    ptr : Pointer[T];
-}
-
-procedure captureValue;
-overload captureValue(rvalue x) = move(x);
-overload captureValue(lvalue x) = CapturedLValue(&x);
-
-procedure forwardValue;
-overload forwardValue(x) = move(x);
-[T] overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
-
-procedure capturedRef;
-overload capturedRef(x) = ref x;
-[T] overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
-
-
-
-//
-// captureValues, forwardValues, capturedRefs
-//
-
-captureValues(forward ...args) = Tuple(...multiValueMap(captureValue, ...args));
-
-[...T]
-forwardValues(x:Tuple[...T]) =
-    forward ...multiValueMap(forwardValue, ...unpackTupleRef(x));
-
-[...T]
-capturedRefs(x:Tuple[...T]) =
-    forward ...multiValueMap(capturedRef, ...unpackTupleRef(x));
+typesToValues(...a) = forward ...mapValues(typeToValue, ...a);
 
 
 
