@@ -1,3 +1,11 @@
+
+
+
+//
+// eachValue, mapValues, foldValues, weaveValues,
+// takeValues, dropValues, countValues
+//
+
 procedure eachValue;
 overload eachValue(fn, forward x, forward ...xs) { fn(x); eachValue(fn, ...xs); }
 overload eachValue(fn) { }
@@ -35,3 +43,39 @@ procedure dropValues;
 procedure countValues;
 overload countValues() = 0;
 overload countValues(x, ...xs) = 1 + countValues(...xs);
+
+
+
+//
+// capture/forward values
+// 
+
+// captureValue, forwardValue, capturedRef
+
+private record CapturedLValue[T] {
+    ptr : Pointer[T];
+}
+
+procedure captureValue;
+overload captureValue(rvalue x) = move(x);
+overload captureValue(lvalue x) = CapturedLValue(&x);
+
+procedure forwardValue;
+overload forwardValue(x) = move(x);
+[T] overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
+
+procedure capturedRef;
+overload capturedRef(x) = ref x;
+[T] overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
+
+// captureValues, forwardValues, capturedRefs
+
+captureValues(forward ...args) = Tuple(...mapValues(captureValue, ...args));
+
+[...T]
+forwardValues(x:Tuple[...T]) =
+    forward ...mapValues(forwardValue, ...unpackTupleRef(x));
+
+[...T]
+capturedRefs(x:Tuple[...T]) =
+    forward ...mapValues(capturedRef, ...unpackTupleRef(x));
