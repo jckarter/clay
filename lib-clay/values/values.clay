@@ -18,6 +18,7 @@ overload weaveValues(between, forward x, forward ...xs)
 overload weaveValues(between, forward x, forward y)
     = forward x, between, y;
 overload weaveValues(between, forward x) = forward x;
+overload weaveValues(between) = ;
 
 procedure takeValues;
 [i] overload takeValues(static i, forward x, forward ...xs)
