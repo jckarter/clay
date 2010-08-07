@@ -2,21 +2,32 @@
 
 
 //
+// unpackTuple, unpackTupleRef
+//
+
+unpackTuple(x) = ...unpackTupleRef(x);
+
+[...T]
+unpackTupleRef(x:Tuple[...T]) = ref ...unpackElements(x, static SizeT(0));
+
+[i]
+private unpackElements(a, static i) =
+    ref tupleRef(a, static i), ...unpackElements(a, static i+1);
+
+[T,i | i == TupleElementCount(T)]
+overload unpackElements(a:T, static i) = ;
+
+
+
+//
 // unpack, unpackRef
 //
 
-[T | Tuple?(T)]
-overload unpack(a:T) = ...unpackRef(a);
+unpackRef(x) = ref x;
+[...T]
+overload unpackRef(x:Tuple[...T]) = ref ...unpackTupleRef(x);
 
-[T | Tuple?(T)]
-overload unpackRef(a:T) = ref  ...unpackTuple(a, static SizeT(0));
-
-[i]
-private unpackTuple(a, static i) =
-    ref tupleRef(a, static i), ...unpackTuple(a, static i+1);
-
-[T,i | i == TupleElementCount(T)]
-overload unpackTuple(a:T, static i) = ;
+unpack(x) = ...unpackRef(x);
 
 
 
@@ -35,7 +46,7 @@ inlined overload Tuple(...args:T) = Tuple[...T](...args);
 
 [...T]
 inlined overload Tuple[...T](...args:T) returned:Tuple[...T] {
-    ...unpackRef(returned) <-- ...args;
+    ...unpackTupleRef(returned) <-- ...args;
 }
 
 

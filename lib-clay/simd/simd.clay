@@ -95,20 +95,20 @@ overload destroy(a:Vec[T,n]) {
 
 
 //
-// unpack
+// unpackVec
 //
 
 [T,n]
-overload unpack(a:Vec[T,n]) = ...unpackVec(a, static 0);
+unpackVec(a:Vec[T,n]) = ...unpackElements(a, static 0);
 
-private procedure unpackVec;
+private procedure unpackElements;
 
 [T,n,i]
-overload unpackVec(a:Vec[T,n], static i) =
-    prims.extractElement(a, i), ...unpackVec(a, static i+1);
+overload unpackElements(a:Vec[T,n], static i) =
+    prims.extractElement(a, i), ...unpackElements(a, static i+1);
 
 [T,n]
-overload unpackVec(a:Vec[T,n], static n) = ;
+overload unpackElements(a:Vec[T,n], static n) = ;
 
 
 

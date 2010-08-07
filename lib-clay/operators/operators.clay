@@ -45,9 +45,6 @@ procedure call;
 procedure fieldRef;
 procedure staticIndex;
 
-procedure unpack;
-procedure unpackRef;
-
 
 
 //
@@ -282,11 +279,11 @@ captureValues(forward ...args) = Tuple(...multiValueMap(captureValue, ...args));
 
 [...T]
 forwardValues(x:Tuple[...T]) =
-    forward ...multiValueMap(forwardValue, ...unpackRef(x));
+    forward ...multiValueMap(forwardValue, ...unpackTupleRef(x));
 
 [...T]
 capturedRefs(x:Tuple[...T]) =
-    forward ...multiValueMap(capturedRef, ...unpackRef(x));
+    forward ...multiValueMap(capturedRef, ...unpackTupleRef(x));
 
 
 
