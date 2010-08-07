@@ -9,10 +9,24 @@ record Lambda[In,Out] {
     body : SharedPointer[LambdaBody[In,Out]];
 }
 
+
+// main constructor
+
 [In, Out, T | CallableWithSignature?(T, In, Out)]
 inlined overload Lambda[In, Out](x:T) {
     return Lambda[In,Out](new LambdaBody[In,Out](x));
 }
+
+private CallableWithSignature?(T, In, Out) {
+    var CodePtr = Type(makeCodePointer(call, T, ...unpack(In)));
+    return Out == CodePointerReturnTypes(CodePtr);
+}
+
+[In,Out]
+private CodePointerReturnTypes(static CodePointer[In,Out]) = Out;
+
+
+// redefine constructors shadowed by the primary constructor
 
 [In,Out]
 inlined overload Lambda[In,Out](body : SharedPointer[LambdaBody[In,Out]]) returned:Lambda[In,Out] {
@@ -23,6 +37,9 @@ inlined overload Lambda[In,Out](body : SharedPointer[LambdaBody[In,Out]]) return
 overload Lambda[In,Out](x : Lambda[In,Out]) returned:Lambda[In,Out] {
     returned.body <-- x.body;
 }
+
+
+// call operator
 
 [...I, ...O]
 overload call(x:Lambda[(...I), (...O)], forward ...args:I) ...O {
@@ -52,14 +69,6 @@ inlined overload LambdaBody[(...I),(...O)](x:T) returned:LambdaBody[(...I),(...O
     ptr^ <-- x;
     returned.obj = Pointer[Opaque](ptr);
 }
-
-private CallableWithSignature?(T, In, Out) {
-    var CodePtr = Type(makeCodePointer(call, T, ...unpack(In)));
-    return Out == CodePointerReturnTypes(CodePtr);
-}
-
-[In,Out]
-private CodePointerReturnTypes(static CodePointer[In,Out]) = Out;
 
 [In, Out]
 overload destroy(x:LambdaBody[In, Out]) {
