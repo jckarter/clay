@@ -116,15 +116,6 @@ contains?(map, key) = not null?(lookup(map, key));
 
 
 //
-// Type
-//
-
-[...T]
-inlined Type(...x:T) = ...T;
-
-
-
-//
 // LValue?, RValue?
 //
 
@@ -258,29 +249,6 @@ overload multiValueMap(f) = ;
 
 typeToValue(a) = ref null(a)^;
 typesToValues(...a) = forward ...multiValueMap(typeToValue, ...a);
-
-
-
-//
-// ReturnType
-//
-// return the return type given the callable and arg types.
-// return 'BadReturnType' if the call is not defined.
-//
-
-record BadReturnType {}
-
-[T]
-ReturnType(callable:T, ...argTypes) =
-    ReturnType(call, T, ...argTypes);
-
-[F, ...A]
-overload ReturnType(static F, ...argTypes:A) =
-    BadReturnType;
-
-[F, ...A | CallDefined?(F, ...typesToValues(...A))]
-overload ReturnType(static F, ...argTypes:A) =
-    ...Type(F(...typesToValues(...argTypes)));
 
 
 

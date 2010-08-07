@@ -42,6 +42,15 @@ record ByRef[T] {}
 
 
 //
+// Type
+//
+
+[...T]
+inlined Type(...x:T) = ...T;
+
+
+
+//
 // limits
 //
 
