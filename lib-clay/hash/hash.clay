@@ -35,8 +35,8 @@ overload hash(a:Array[T,n]) = hashSequence(a);
 // tuples
 //
 
-[T | Tuple?(T)]
-overload hash(x:T) = hashTuple(x, static 0);
+[...T]
+overload hash(x:Tuple[...T]) = hashTuple(x, static 0);
 
 [T,i]
 private hashTuple(x:T, static i) =

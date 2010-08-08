@@ -614,7 +614,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(pointerToInt);
     PRIMITIVE(intToPointer);
 
-    PRIMITIVE(CodePointerP);
     PRIMITIVE(CodePointer);
     PRIMITIVE(makeCodePointer);
 
@@ -632,13 +631,11 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(Vec);
 
-    PRIMITIVE(TupleP);
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
     PRIMITIVE(TupleElementOffset);
     PRIMITIVE(tupleRef);
 
-    PRIMITIVE(UnionP);
     PRIMITIVE(Union);
     PRIMITIVE(UnionMemberCount);
 

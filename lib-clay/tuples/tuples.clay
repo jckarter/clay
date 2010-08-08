@@ -2,6 +2,15 @@
 
 
 //
+// Tuple?
+//
+
+Tuple?(x) = false;
+[...T] overload Tuple?(static Tuple[...T]) = true;
+
+
+
+//
 // TupleElements
 //
 
@@ -63,8 +72,8 @@ inlined overload Tuple[...T](...args:T) returned:Tuple[...T] {
 // default constructor
 //
 
-[T|Tuple?(T)]
-overload T() returned:T {
+[...T]
+overload Tuple[...T]() returned:Tuple[...T] {
     initTupleElements(returned, static SizeT(0));
 }
 
@@ -84,14 +93,13 @@ overload initTupleElements(a:T, static i) {
 // copy constructor
 //
 
-[T|Tuple?(T)]
-overload T(src:T) returned:T {
+[...T]
+overload Tuple[...T](src:Tuple[...T]) returned:Tuple[...T] {
     copyTupleElements(returned, src, static SizeT(0));
 }
 
 [T,i]
-private copyTupleElements(dest:T, src:T, static i)
-{
+private copyTupleElements(dest:T, src:T, static i) {
     tupleRef(dest, static i) <-- tupleRef(src, static i);
     copyTupleElements(dest, src, static i+1);
 }
@@ -106,8 +114,8 @@ overload copyTupleElements(dest:T, src:T, static i) {
 // move constructor
 //
 
-[T|Tuple?(T)]
-overload move(src:T) returned:T {
+[...T]
+overload move(src:Tuple[...T]) returned:Tuple[...T] {
     moveTupleElements(returned, src, static SizeT(0));
 }
 
@@ -128,8 +136,8 @@ overload moveTupleElements(dest:T, src:T, static i) {
 // destroy
 //
 
-[T|Tuple?(T)]
-overload destroy(a:T) {
+[...T]
+overload destroy(a:Tuple[...T]) {
     destroyTupleElements(a, static SizeT(0));
 }
 
@@ -149,8 +157,8 @@ overload destroyTupleElements(a:T, static i) {
 // assign
 //
 
-[T|Tuple?(T)]
-overload assign(dest:T, src:T) {
+[...T]
+overload assign(dest:Tuple[...T], src:Tuple[...T]) {
     assignTupleElements(dest, src, static SizeT(0));
 }
 
@@ -170,8 +178,8 @@ overload assignTupleElements(dest:T, src:T, static i) {
 // equals?
 //
 
-[T|Tuple?(T)]
-overload equals?(a:T, b:T) {
+[...T]
+overload equals?(a:Tuple[...T], b:Tuple[...T]) {
     return equalTupleElements?(a, b, static SizeT(0));
 }
 
@@ -193,8 +201,8 @@ overload equalTupleElements?(a:T, b:T, static i) {
 // lesser?
 //
 
-[T|Tuple?(T)]
-overload lesser?(a:T, b:T) {
+[...T]
+overload lesser?(a:Tuple[...T], b:Tuple[...T]) {
     return lesserTupleElements?(a, b, static SizeT(0));
 }
 
@@ -220,8 +228,8 @@ overload lesserTupleElements?(a:T, b:T, static i) {
 // staticIndex
 //
 
-[T,i | Tuple?(T)]
-overload staticIndex(a:T, static i) =
+[...T, i]
+overload staticIndex(a:Tuple[...T], static i) =
     ref tupleRef(a, static SizeT(i));
 
 

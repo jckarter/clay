@@ -1804,10 +1804,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(pointerType(t), true));
     }
 
-    case PRIM_CodePointerP : {
-        return new MultiPValue(new PValue(boolType, true));
-    }
-
     case PRIM_CodePointer :
         error("CodePointer type constructor cannot be called");
 
@@ -1941,9 +1937,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_Vec :
         error("Vec type constructor cannot be called");
 
-    case PRIM_TupleP :
-        return new MultiPValue(new PValue(boolType, true));
-
     case PRIM_Tuple :
         error("Tuple type constructor cannot be called");
 
@@ -1964,9 +1957,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(1, "tuple index out of range");
         return new MultiPValue(new PValue(t->elementTypes[i], false));
     }
-
-    case PRIM_UnionP :
-        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_Union :
         error("Union type constructor cannot be called");

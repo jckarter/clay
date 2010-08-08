@@ -129,20 +129,29 @@ freeMemory(ptr) {
 
 
 //
+// CodePointer?
+//
+
+CodePointer?(x) = false;
+[In,Out] overload CodePointer?(static CodePointer[In,Out]) = true;
+
+
+
+//
 // CodePointer - constructors, destroy
 //
 
-[CP | CodePointer?(CP)]
-overload CP() CP {
+[In, Out]
+overload CodePointer[In,Out]() CodePointer[In,Out] {
 }
 
-[CP | CodePointer?(CP)]
-overload CP(src:CP) returned:CP {
+[In, Out]
+overload CodePointer[In,Out](src:CodePointer[In,Out]) returned:CodePointer[In,Out] {
     primitiveCopy(returned, src);
 }
 
-[CP | CodePointer?(CP)]
-overload destroy(x:CP) {
+[In, Out]
+overload destroy(x:CodePointer[In,Out]) {
 }
 
 
@@ -151,38 +160,40 @@ overload destroy(x:CP) {
 // CodePointer - convert to/from other pointers/integers
 //
 
-[T, CP | CodePointer?(CP)]
-overload Pointer[T](a:CP) = pointerCast(Pointer[T], a);
+[T, In, Out]
+overload Pointer[T](a:CodePointer[In,Out]) = pointerCast(Pointer[T], a);
 
-[T, CP | CodePointer?(CP)]
-overload CP(a:Pointer[T]) = pointerCast(CP, a);
+[T, In, Out]
+overload CodePointer[In,Out](a:Pointer[T]) =
+    pointerCast(CodePointer[In,Out], a);
 
-[CP1, CP2 | CodePointer?(CP1) and CodePointer?(CP2)]
-overload CP1(a:CP2) = pointerCast(CP1, a);
+[In1, Out1, In2, Out2]
+overload CodePointer[In1,Out1](a:CodePointer[In2,Out2]) =
+    pointerCast(CodePointer[In1,Out1], a);
 
-[CP,I | CodePointer?(CP) and Integer?(I)]
-overload CP(i:I) = CP(Pointer[Int8](i));
+[In, Out, I | Integer?(I)]
+overload CodePointer[In,Out](i:I) = CodePointer[In,Out](Pointer[Int8](i));
 
-[CP,I | CodePointer?(CP) and Integer?(I)]
-overload I(a:CP) = I(Pointer[Int8](a));
+[In, Out, I | Integer?(I)]
+overload I(a:CodePointer[In,Out]) = I(Pointer[Int8](a));
 
 
 
 //
 // CodePointer - equals?, lesser?, null?
 
-[CP | CodePointer?(CP)]
-overload equals?(a:CP, b:CP) {
+[In, Out]
+overload equals?(a:CodePointer[In,Out], b:CodePointer[In,Out]) {
     return equals?(RawPointer(a), RawPointer(b));
 }
 
-[CP | CodePointer?(CP)]
-overload lesser?(a:CP, b:CP) {
+[In, Out]
+overload lesser?(a:CodePointer[In,Out], b:CodePointer[In,Out]) {
     return lesser?(RawPointer(a), RawPointer(b));
 }
 
-[CP | CodePointer?(CP)]
-overload null?(p:CP) = null?(RawPointer(p));
+[In, Out]
+overload null?(p:CodePointer[In,Out]) = null?(RawPointer(p));
 
 
 

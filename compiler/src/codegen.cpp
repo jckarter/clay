@@ -3598,20 +3598,6 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_CodePointerP : {
-        ensureArity(args, 1);
-        bool isCodePointerType = false;
-        ObjectPtr obj = valueToStatic(args->values[0]);
-        if (obj.ptr() && (obj->objKind == TYPE)) {
-            Type *t = (Type *)obj.ptr();
-            if (t->typeKind == CODE_POINTER_TYPE)
-                isCodePointerType = true;
-        }
-        ValueHolderPtr vh = boolToValueHolder(isCodePointerType);
-        codegenStaticObject(vh.ptr(), ctx, out);
-        break;
-    }
-
     case PRIM_CodePointer :
         error("CodePointer type constructor cannot be called");
 
@@ -3786,20 +3772,6 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_Vec :
         error("Vec type constructor cannot be called");
 
-    case PRIM_TupleP : {
-        ensureArity(args, 1);
-        bool isTupleType = false;
-        ObjectPtr obj = valueToStatic(args->values[0]);
-        if (obj.ptr() && (obj->objKind == TYPE)) {
-            Type *t = (Type *)obj.ptr();
-            if (t->typeKind == TUPLE_TYPE)
-                isTupleType = true;
-        }
-        ValueHolderPtr vh = boolToValueHolder(isTupleType);
-        codegenStaticObject(vh.ptr(), ctx, out);
-        break;
-    }
-
     case PRIM_Tuple :
         error("Tuple type constructor cannot be called");
 
@@ -3835,20 +3807,6 @@ void codegenPrimOp(PrimOpPtr x,
         CValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(tt->elementTypes[i]));
         llvmBuilder->CreateStore(ptr, out0->llValue);
-        break;
-    }
-
-    case PRIM_UnionP : {
-        ensureArity(args, 1);
-        bool isUnionType = false;
-        ObjectPtr obj = valueToStatic(args->values[0]);
-        if (obj.ptr() && (obj->objKind == TYPE)) {
-            Type *t = (Type *)obj.ptr();
-            if (t->typeKind == UNION_TYPE)
-                isUnionType = true;
-        }
-        ValueHolderPtr vh = boolToValueHolder(isUnionType);
-        codegenStaticObject(vh.ptr(), ctx, out);
         break;
     }
 

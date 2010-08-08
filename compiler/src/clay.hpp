@@ -1722,7 +1722,6 @@ enum PrimOpCode {
     PRIM_pointerToInt,
     PRIM_intToPointer,
 
-    PRIM_CodePointerP,
     PRIM_CodePointer,
     PRIM_makeCodePointer,
 
@@ -1740,13 +1739,11 @@ enum PrimOpCode {
 
     PRIM_Vec,
 
-    PRIM_TupleP,
     PRIM_Tuple,
     PRIM_TupleElementCount,
     PRIM_TupleElementOffset,
     PRIM_tupleRef,
 
-    PRIM_UnionP,
     PRIM_Union,
     PRIM_UnionMemberCount,
 
