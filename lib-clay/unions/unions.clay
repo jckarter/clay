@@ -1,6 +1,14 @@
 
 
 //
+// UnionMembers
+//
+
+[...T] UnionMembers(static Union[...T]) = ...T;
+
+
+
+//
 // constructors, destroy
 //
 

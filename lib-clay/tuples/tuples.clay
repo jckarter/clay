@@ -2,6 +2,14 @@
 
 
 //
+// TupleElements
+//
+
+[...T] TupleElements(static Tuple[...T]) = ...T;
+
+
+
+//
 // unpackTuple, unpackTupleRef
 //
 

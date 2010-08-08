@@ -13,12 +13,17 @@ record VariantRepr[...T] {
 
 
 //
-// VariantMember?
+// VariantMember?, VariantMembers
 //
 
 [V,M | Variant?(V)]
 VariantMember?(static V, static M) =
     VariantMemberIndex(V, M) < VariantMemberCount(V);
+
+VariantMembers(V) {
+    var unionType = Type(variantRepr(typeToValue(V)).data);
+    return ...UnionMembers(unionType);
+}
 
 
 
