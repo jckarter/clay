@@ -38,6 +38,6 @@ unsigned long long HiResTimer::elapsedNanos()
 HiResTimer::HiResTimer() {}
 void HiResTimer::start() {}
 void HiResTimer::stop() {}
-unsigned long long HiResTimer::elapsedNanos() {}
+unsigned long long HiResTimer::elapsedNanos() { return 0; }
 
 #endif // __APPLE__
