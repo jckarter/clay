@@ -10,10 +10,6 @@ record Error1 {
 // include Error1 as a member of the Exception variant
 instance Exception = Error1;
 
-overload printTo(stream, x:Error1) {
-    printTo(stream, "Error1: ", x.msg);
-}
-
 
 //
 // define custom exception type Error2
@@ -25,10 +21,6 @@ record Error2 {
 
 // include Error2 as a member of the Exception variant
 instance Exception = Error2;
-
-overload printTo(stream, x:Error2) {
-    printTo(stream, "Error2: ", x.msg);
-}
 
 
 //
