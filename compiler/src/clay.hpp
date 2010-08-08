@@ -36,6 +36,11 @@ using std::set;
 using std::ostream;
 using std::ostringstream;
 
+#ifdef _MSC_VER
+#define strtoll _strtoi64
+#define strtoull _strtoui64
+#endif
+
 
 //
 // Target-specific types
