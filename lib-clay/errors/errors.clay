@@ -1,8 +1,14 @@
-import libc;
+
+record Error {
+    msg : String;
+}
+
+instance Exception = Error;
 
 error(...e) {
-    printlnTo(stderr, "error: ", ...e);
-    libc.exit(-1);
+    var buf = String();
+    printlnTo(buf, ...e);
+    throw Error(move(buf));
 }
 
 errorNoThrow(...e) {
