@@ -45,7 +45,6 @@ Pointer[T]
 [T,I|Integer?(I)] pointerToInt(static I, a:Pointer[T]) : I
 [I,T|Integer?(I)] intToPointer(static T, a:I) : Pointer[T]
 
-[T] CodePointer?(static T):Bool
 CodePointer[(A1, ..., An), (R1, ...,Rn)]
 [F, A1, ..., An] makeCodePointer(static F, static A1, ..., static An)
 
@@ -63,13 +62,11 @@ Array[T,n]
 
 Vec[T,n]
 
-[T] Tuple?(static T):Bool
 Tuple[T1, ..., Tn]
 [T] TupleElementCount(static T): SizeT
 [T,i] TupleElementOffset(static T, static i): SizeT
 [T|Tuple?(T)] tupleRef(a:T, static i)
 
-[T] Union?(static T):Bool
 Union[T1, ..., Tn]
 [T] UnionMemberCount(static T) : SizeT
 

@@ -1,6 +1,15 @@
 
 
 //
+// Union?
+//
+
+Union?(x) = false;
+[...T] overload Union?(static Union[...T]) = true;
+
+
+
+//
 // UnionMembers
 //
 
@@ -12,12 +21,12 @@
 // constructors, destroy
 //
 
-[U | Union?(U)]
-overload U() returned:U {
+[...T]
+overload Union[...T]() returned:Union[...T] {
 }
 
-[U | Union?(U)]
-overload destroy(x:U) {
+[...T]
+overload destroy(x:Union[...T]) {
 }
 
 
@@ -26,14 +35,11 @@ overload destroy(x:U) {
 // staticIndex
 //
 
-[U,i | Union?(U)]
-overload staticIndex(x:U, static i) {
-    alias T = nthValue(static SizeT(i), ...UnionMemberTypes(U));
+[...T, i]
+overload staticIndex(x:Union[...T], static i) {
+    alias T = nthValue(static SizeT(i), ...UnionMembers(Union[...T]));
     return ref Pointer[T](&x)^;
 }
-
-[...T]
-private UnionMemberTypes(static Union[...T]) = ...T;
 
 
 private procedure nthValue;
