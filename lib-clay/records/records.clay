@@ -1,14 +1,30 @@
 
+
+
+//
+// fieldRef, staticIndex
+//
+
+[T, FIELD | Record?(T)]
+overload fieldRef(x:T, static FIELD) {
+    return ref recordFieldRefByName(x, static FIELD);
+}
+
+[T, i | Record?(T)]
+overload staticIndex(x:T, static i) =
+    ref recordFieldRef(x, static SizeT(i));
+
+
 
 //
 // RecordFieldType, RecordFieldTypes
 //
 
 [T,i | Record?(T)]
-RecordFieldType(static T, static i) = Type(recordFieldRef(null(T)^, static SizeT(i)));
+RecordFieldType(static T, static i) = Type(staticIndex(null(T)^, static i));
 
 [T | Record?(T)]
-RecordFieldTypes(static T) = ...RecordFieldTypes2(T, static SizeT(0));
+RecordFieldTypes(static T) = ...RecordFieldTypes2(T, static 0);
 
 [T,i]
 private RecordFieldTypes2(static T, static i) =
@@ -38,11 +54,11 @@ overload RegularRecord?(static T) = true;
 //
 
 [T | Record?(T)]
-recordFields(a:T) = ref ...recordFields2(a, static SizeT(0));
+recordFields(a:T) = ref ...recordFields2(a, static 0);
 
 [i]
 private recordFields2(a, static i) =
-    ref recordFieldRef(a, static i), ...recordFields2(a, static i+1);
+    ref staticIndex(a, static i), ...recordFields2(a, static i+1);
 
 [T,i | i == RecordFieldCount(T)]
 overload recordFields2(a:T, static i) = ;
@@ -66,12 +82,12 @@ inlined overload T(...args:A) returned:T {
 
 [T | RegularRecord?(T)]
 overload T() returned:T {
-    initRecordFields(returned, static SizeT(0));
+    initRecordFields(returned, static 0);
 }
 
 [i]
 private initRecordFields(a, static i) {
-    initialize(recordFieldRef(a, static i));
+    initialize(staticIndex(a, static i));
     initRecordFields(a, static i+1);
 }
 
@@ -87,12 +103,12 @@ overload initRecordFields(a:T, static i) {
 
 [T | RegularRecord?(T)]
 overload T(src:T) returned:T {
-    copyRecordFields(returned, src, static SizeT(0));
+    copyRecordFields(returned, src, static 0);
 }
 
 [T,i]
 private copyRecordFields(dest:T, src:T, static i) {
-    recordFieldRef(dest, static i) <-- recordFieldRef(src, static i);
+    staticIndex(dest, static i) <-- staticIndex(src, static i);
     copyRecordFields(dest, src, static i+1);
 }
 
@@ -108,12 +124,12 @@ overload copyRecordFields(dest:T, src:T, static i) {
 
 [T | RegularRecord?(T)]
 overload move(src:T) returned:T {
-    moveRecordFields(returned, src, static SizeT(0));
+    moveRecordFields(returned, src, static 0);
 }
 
 [T,i]
 private moveRecordFields(dest:T, src:T, static i) {
-    recordFieldRef(dest, static i) <-- move(recordFieldRef(src, static i));
+    staticIndex(dest, static i) <-- move(staticIndex(src, static i));
     moveRecordFields(dest, src, static i+1);
 }
 
@@ -129,13 +145,13 @@ overload moveRecordFields(dest:T, src:T, static i) {
 
 [T | RegularRecord?(T)]
 overload destroy(a:T) {
-    destroyRecordFields(a, static SizeT(0));
+    destroyRecordFields(a, static 0);
 }
 
 [i]
 private destroyRecordFields(a, static i) {
     destroyRecordFields(a, static i+1);
-    destroy(recordFieldRef(a, static i));
+    destroy(staticIndex(a, static i));
 }
 
 [T,i | (i == RecordFieldCount(T))]
@@ -150,12 +166,12 @@ overload destroyRecordFields (a:T, static i) {
 
 [T | RegularRecord?(T)]
 overload assign(dest:T, src:T) {
-    assignRecordFields(dest, src, static SizeT(0));
+    assignRecordFields(dest, src, static 0);
 }
 
 [T,i]
 private assignRecordFields(dest:T, src:T, static i) {
-    assign(recordFieldRef(dest, static i), recordFieldRef(src, static i));
+    assign(staticIndex(dest, static i), staticIndex(src, static i));
     assignRecordFields(dest, src, static i+1);
 }
 
@@ -171,12 +187,12 @@ overload assignRecordFields(dest:T, src:T, static i) {
 
 [T | RegularRecord?(T)]
 overload equals?(a:T, b:T) {
-    return equalRecordFields?(a, b, static SizeT(0));
+    return equalRecordFields?(a, b, static 0);
 }
 
 [T,i]
 private equalRecordFields?(a:T, b:T, static i) {
-    if (not equals?(recordFieldRef(a, static i), recordFieldRef(b, static i)))
+    if (not equals?(staticIndex(a, static i), staticIndex(b, static i)))
         return false;
     return equalRecordFields?(a, b, static i+1);
 }
@@ -194,13 +210,13 @@ overload equalRecordFields?(a:T, b:T, static i) {
 
 [T | RegularRecord?(T)]
 overload lesser?(a:T, b:T) {
-    return lesserRecordFields?(a, b, static SizeT(0));
+    return lesserRecordFields?(a, b, static 0);
 }
 
 [T,i]
 private lesserRecordFields?(a:T, b:T, static i) {
-    ref af = recordFieldRef(a, static i);
-    ref bf = recordFieldRef(b, static i);
+    ref af = staticIndex(a, static i);
+    ref bf = staticIndex(b, static i);
     if (lesser?(af, bf))
         return true;
     if (lesser?(bf, af))
@@ -212,18 +228,3 @@ private lesserRecordFields?(a:T, b:T, static i) {
 overload lesserRecordFields?(a:T, b:T, static i) {
     return false;
 }
-
-
-
-//
-// fieldRef, staticIndex
-//
-
-[T, FIELD | Record?(T)]
-overload fieldRef(x:T, static FIELD) {
-    return ref recordFieldRefByName(x, static FIELD);
-}
-
-[T, i | Record?(T)]
-overload staticIndex(x:T, static i) =
-    ref recordFieldRef(x, static SizeT(i));

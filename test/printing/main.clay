@@ -50,7 +50,7 @@ private printFields(x:T, static i) {
     if (i > 0)
         print(", ");
     var fieldName = RecordFieldName(T, static SizeT(i));
-    ref value = recordFieldRef(x, static SizeT(i));
+    ref value = staticIndex(x, static i);
     print(fieldName, "=");
     prettyPrint(value);
 
