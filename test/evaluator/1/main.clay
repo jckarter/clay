@@ -11,9 +11,9 @@ main() {
     staticTest( 1, SizeT(-1) + SizeT(-1));
     staticTest( 2, SizeT(128) + SizeT(128));
     staticTest( 3, SizeT(128) * SizeT(128));
-    staticTest( 4, tupleRef((1, 2.0, 3u32), static SizeT(0)));
-    staticTest( 5, tupleRef((1, 2.0, 3u32), static SizeT(1)));
-    staticTest( 6, tupleRef((1, 2.0, 3u32), static SizeT(2)));
+    staticTest( 4, staticIndex((1, 2.0, 3u32), static 0));
+    staticTest( 5, staticIndex((1, 2.0, 3u32), static 1));
+    staticTest( 6, staticIndex((1, 2.0, 3u32), static 2));
     staticTest( 7, TypeSize(Int8));
     staticTest( 8, TypeSize(Int16));
     staticTest( 9, TypeSize(Int32));
