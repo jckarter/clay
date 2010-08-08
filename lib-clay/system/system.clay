@@ -23,7 +23,13 @@ setArgcArgv(argc_, argv_) {
 }
 
 callMain(mainProc) {
-    return getExitCode(...mainProc());
+    try {
+        return getExitCode(...mainProc());
+    }
+    catch (e) {
+        printlnTo(stderr, "unhandled exception: ", e);
+        return -1;
+    }
 }
 
 private procedure getExitCode;
