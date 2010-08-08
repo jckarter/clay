@@ -20,34 +20,6 @@ overload printTo(stream, a, b, ...rest) {
 
 
 //
-// printTo - Char, String?, ContiguousString?, Bool
-//
-
-overload printTo(stream, x:Char) {
-    write(stream, Pointer[Byte](&x), SizeT(1));
-}
-
-[S | String?(S)]
-overload printTo(stream, x:S) {
-    for (c in x)
-        writeByte(stream, c);
-}
-
-[S | ContiguousString?(S)]
-overload printTo(stream, x:S) {
-    write(stream, Pointer[Byte](&x[0]), size(x));
-}
-
-overload printTo(stream, x:Bool) {
-    if (x)
-        printTo(stream, "true");
-    else
-        printTo(stream, "false");
-}
-
-
-
-//
 // printTo - integers, floats
 //
 
@@ -82,6 +54,7 @@ private printWithSprintf(stream, formatString, value) {
     write(stream, ptr, SizeT(n));
 }
 
+
 
 //
 // printTo - statics
@@ -90,6 +63,90 @@ private printWithSprintf(stream, formatString, value) {
 [A]
 overload printTo(stream, x:Static[A]) {
     printTo(stream, StaticName(A));
+}
+
+
+
+//
+// printTo - tuples
+//
+
+[...T]
+overload printTo(stream, x:Tuple[...T]) {
+    printTo(stream, '(');
+    printTupleTo(stream, x, static 0);
+    printTo(stream, ')');
+}
+
+[i | i == 0]
+private printTupleTo(stream, x, static i) {
+    printTo(stream, staticIndex(x, static i));
+    printTupleTo(stream, x, static i+1);
+}
+
+[i | i > 0]
+overload printTupleTo(stream, x, static i) {
+    printTo(stream, ", ");
+    printTo(stream, staticIndex(x, static i));
+    printTupleTo(stream, x, static i+1);
+}
+
+[T,i | i == TupleElementCount(T)]
+overload printTupleTo(stream, x:T, static i) {
+}
+
+
+
+//
+// printTo - arrays, vectors
+//
+
+[T,n]
+overload printTo(stream, a:Array[T,n]) {
+    printSequenceTo(stream, a);
+}
+
+[T]
+overload printTo(stream, a:Vector[T]) {
+    printSequenceTo(stream, a);
+}
+
+private printSequenceTo(stream, a) {
+    printTo(stream, '[');
+    for (i, x in enumerate(a)) {
+        if (i != 0)
+            printTo(stream, ", ");
+        printTo(stream, x);
+    }
+    printTo(stream, ']');
+}
+
+
+
+//
+// printTo - Char, String?, ContiguousString?, Bool
+//
+
+overload printTo(stream, x:Char) {
+    write(stream, Pointer[Byte](&x), SizeT(1));
+}
+
+[S | String?(S)]
+overload printTo(stream, x:S) {
+    for (c in x)
+        writeByte(stream, c);
+}
+
+[S | ContiguousString?(S)]
+overload printTo(stream, x:S) {
+    write(stream, Pointer[Byte](&x[0]), size(x));
+}
+
+overload printTo(stream, x:Bool) {
+    if (x)
+        printTo(stream, "true");
+    else
+        printTo(stream, "false");
 }
 
 
