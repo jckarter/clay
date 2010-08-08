@@ -1,0 +1,113 @@
+
+
+//
+// SubVariants
+//
+
+private SubVariants(V) =
+    ...filterStatics(Variant?, ...VariantMembers(V));
+
+private procedure filterStatics;
+[F, T] overload filterStatics(static F, static T, ...rest) =
+    ...filterStatics(F, ...rest);
+[F, T | F(T)] overload filterStatics(static F, static T, ...rest) =
+    T, ...filterStatics(F, ...rest);
+[F] overload filterStatics(static F) = ;
+
+
+
+//
+// VariantNestingPaths
+//
+
+[V,M | Variant?(V)]
+VariantNestingPaths(static V, static M) =
+    ...VariantNestingPaths2(V, M, ());
+
+[V,M]
+private VariantNestingPaths2(static V, static M, Prefix) {
+    alias SubV = Tuple(...SubVariants(V));
+    return ...VariantNestingPaths3(SubV, M, Prefix, static 0);
+}
+
+[V,M | VariantMember?(V,M)]
+overload VariantNestingPaths2(static V, static M, Prefix) {
+    alias SubV = Tuple(...SubVariants(V));
+    return Tuple(...unpack(Prefix), M),
+           ...VariantNestingPaths3(SubV, M, Prefix, static 0);
+}
+
+[i]
+private VariantNestingPaths3(Vs, M, Prefix, static i) {
+    alias V = staticIndex(Vs, static i);
+    alias NewPrefix = Tuple(...unpack(Prefix), V);
+    return ...VariantNestingPaths2(V, M, NewPrefix),
+           ...VariantNestingPaths3(Vs, M, Prefix, static i+1);
+}
+
+[T,i | i == TupleElementCount(T)]
+overload VariantNestingPaths3(Vs:T, M, Prefix, static i) = ;
+
+
+
+//
+// nestedVariantIs?
+//
+
+[V, T | Variant?(V)]
+nestedVariantIs?(x:V, static T) {
+    var ptr = nestedVariantAsPtr(x, T);
+    return not null?(ptr);
+}
+
+
+
+//
+// nestedVariantAs
+//
+
+[V, T | Variant?(V)]
+nestedVariantAs(lvalue x:V, static T) {
+    var ptr = nestedVariantAsPtr(x, T);
+    assert(not null?(ptr));
+    return ref ptr^;
+}
+
+[V, T | Variant?(V)]
+overload nestedVariantAs(rvalue x:V, static T) {
+    var ptr = nestedVariantAsPtr(x, T);
+    assert(not null?(ptr));
+    return move(ptr^);
+}
+
+
+
+//
+// nestedVariantAsPtr
+//
+
+[V, Target | Variant?(V)]
+nestedVariantAsPtr(x:V, static Target) {
+    return unboxAlongPaths(x, Target, ...VariantNestingPaths(V, Target));
+}
+
+private unboxAlongPaths(x, Target, firstPath, ...rest) {
+    var ptr = unboxAlong(x, Target, ...unpack(firstPath));
+    if (not null?(ptr))
+        return ptr;
+    return unboxAlongPaths(x, Target, ...rest);
+}
+
+overload unboxAlongPaths(x, Target) = null(Target);
+
+private unboxAlong(x, Target, first, ...rest) {
+    var ptr = variantAsPtr(x, first);
+    if (null?(ptr))
+        return null(Target);
+    return unboxAlong(ptr^, Target, ...rest);
+}
+
+[Target]
+overload unboxAlong(x:Target, static Target) {
+    return &x;
+}

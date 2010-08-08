@@ -1,0 +1,39 @@
+
+variant Expr = BinaryOp | UnaryOp | Variable | Literal;
+
+variant BinaryOp = Add | Subtract | Multiply;
+record Add {}
+record Subtract {}
+record Multiply {}
+
+variant UnaryOp = Plus | Minus;
+record Plus {}
+record Minus {}
+
+record Variable {}
+
+variant Literal = IntLiteral | FloatLiteral;
+record IntLiteral {}
+record FloatLiteral {}
+
+nestingPath(Type) = Tuple(...VariantNestingPaths(Expr, Type));
+
+main() {
+    println(nestingPath(IntLiteral));
+    println(nestingPath(Bool));
+    println(nestingPath(UnaryOp));
+    println(nestingPath(Plus));
+
+    var a = Expr(BinaryOp(Add()));
+    var b = Expr(Literal(IntLiteral()));
+
+    println(nestedVariantIs?(a, Minus));
+    println(nestedVariantIs?(a, BinaryOp));
+    println(nestedVariantIs?(a, Add));
+
+    println(nestedVariantIs?(b, UnaryOp));
+    println(nestedVariantIs?(b, Variable));
+    println(nestedVariantIs?(b, Literal));
+    println(nestedVariantIs?(b, FloatLiteral));
+    println(nestedVariantIs?(b, IntLiteral));
+}
