@@ -12,6 +12,7 @@ public import pointers.*;
 public import sharedpointers.*;
 public import values.*;
 public import variants.*;
+public import variants.nested.*;
 public import lambdas.*;
 
 public import coordinates.*;

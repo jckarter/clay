@@ -184,6 +184,22 @@ overload variantAs(rvalue x:V, static T) {
 
 
 //
+// variantAsPtr - test and unbox in one operation
+//
+
+[V,T | Variant?(V) and VariantMember?(V,T)]
+variantAsPtr(x:V, static T) {
+    ref repr = variantRepr(x);
+    alias index = Int(VariantMemberIndex(V, T));
+    if (repr.tag == index)
+        return &staticIndex(repr.data, static index);
+    else
+        return null(T);
+}
+
+
+
+//
 // variantTag, unsafeVariantIndex, invalidVariant
 //
 

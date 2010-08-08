@@ -1,0 +1,12 @@
+((Literal, IntLiteral))
+()
+((UnaryOp))
+((UnaryOp, Plus))
+false
+true
+true
+false
+false
+true
+false
+true
