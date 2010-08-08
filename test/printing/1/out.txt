@@ -1,1 +1,1 @@
-Person(#name=Foo, #age=100, #address=Address(#email=foo@bar.com))
+Person("Foo", 100, Address("foo@bar.com"))

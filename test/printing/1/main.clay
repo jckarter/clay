@@ -11,52 +11,5 @@ record Address {
 
 main() {
     var p = Person("Foo", 100, Address("foo@bar.com"));
-    prettyPrint(p);
-    println();
-}
-
-
-
-//
-// prettyPrint
-//
-
-procedure prettyPrint;
-
-[T | Record?(T)]
-overload prettyPrint(x:T) { printRecord(x); }
-
-[T | PrintDefined?(T)]
-overload prettyPrint(x:T) { print(x); }
-
-
-PrintDefined?(T) = CallDefined?(printTo, File, T);
-
-
-
-//
-// printRecord, printFields
-//
-
-[T]
-printRecord(x:T) {
-    print(T, "(");
-    printFields(x, static 0);
-    print(")");
-}
-
-[T,i]
-private printFields(x:T, static i) {
-    if (i > 0)
-        print(", ");
-    var fieldName = RecordFieldName(T, static SizeT(i));
-    ref value = staticIndex(x, static i);
-    print(fieldName, "=");
-    prettyPrint(value);
-
-    printFields(x, static i+1);
-}
-
-[T,i | i == RecordFieldCount(T)]
-overload printFields(x:T, static i) {
+    println(p);
 }

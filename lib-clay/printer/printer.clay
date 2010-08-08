@@ -20,6 +20,19 @@ overload printTo(stream, a, b, ...rest) {
 
 
 //
+// printTo - Bool
+//
+
+overload printTo(stream, x:Bool) {
+    if (x)
+        printTo(stream, "true");
+    else
+        printTo(stream, "false");
+}
+
+
+
+//
 // printTo - integers, floats
 //
 
@@ -68,63 +81,44 @@ overload printTo(stream, x:Static[A]) {
 
 
 //
-// printTo - tuples
+// printTo - tuples, records, arrays, vectors
 //
 
 [...T]
 overload printTo(stream, x:Tuple[...T]) {
-    printTo(stream, '(');
-    printTupleTo(stream, x, static 0);
-    printTo(stream, ')');
+    printReprTo(stream, x);
 }
 
-[i | i == 0]
-private printTupleTo(stream, x, static i) {
-    printTo(stream, staticIndex(x, static i));
-    printTupleTo(stream, x, static i+1);
+[T | Record?(T)]
+overload printTo(stream, x:T) {
+    printReprTo(stream, x);
 }
-
-[i | i > 0]
-overload printTupleTo(stream, x, static i) {
-    printTo(stream, ", ");
-    printTo(stream, staticIndex(x, static i));
-    printTupleTo(stream, x, static i+1);
-}
-
-[T,i | i == TupleElementCount(T)]
-overload printTupleTo(stream, x:T, static i) {
-}
-
-
-
-//
-// printTo - arrays, vectors
-//
 
 [T,n]
-overload printTo(stream, a:Array[T,n]) {
-    printSequenceTo(stream, a);
+overload printTo(stream, x:Array[T,n]) {
+    printReprTo(stream, x);
 }
 
 [T]
-overload printTo(stream, a:Vector[T]) {
-    printSequenceTo(stream, a);
-}
-
-private printSequenceTo(stream, a) {
-    printTo(stream, '[');
-    for (i, x in enumerate(a)) {
-        if (i != 0)
-            printTo(stream, ", ");
-        printTo(stream, x);
-    }
-    printTo(stream, ']');
+overload printTo(stream, x:Vector[T]) {
+    printReprTo(stream, x);
 }
 
 
 
 //
-// printTo - Char, String?, ContiguousString?, Bool
+// printTo - variants
+//
+
+[T | Variant?(T)]
+overload printTo(stream, x:T) {
+    printTo(stream, *x);
+}
+
+
+
+//
+// printTo - Char, String?, ContiguousString?
 //
 
 overload printTo(stream, x:Char) {
@@ -142,11 +136,141 @@ overload printTo(stream, x:S) {
     write(stream, Pointer[Byte](&x[0]), size(x));
 }
 
-overload printTo(stream, x:Bool) {
-    if (x)
-        printTo(stream, "true");
-    else
-        printTo(stream, "false");
+
+
+//
+// printReprTo
+//
+
+procedure printReprTo;
+
+
+
+//
+// printReprTo - Bool, Numeric?, Static
+
+overload printReprTo(stream, x:Bool) {
+    printTo(stream, x);
+}
+
+[T | Numeric?(T)]
+overload printReprTo(stream, x:T) {
+    printTo(stream, x);
+}
+
+[A]
+overload printReprTo(stream, x:Static[A]) {
+    printTo(stream, x);
+}
+
+
+//
+// printReprTo - tuples
+//
+
+[...T]
+overload printReprTo(stream, x:Tuple[...T]) {
+    printTo(stream, '(');
+    printTupleTo(stream, x, static 0);
+    printTo(stream, ')');
+}
+
+[i | i == 0]
+private printTupleTo(stream, x, static i) {
+    printReprTo(stream, staticIndex(x, static i));
+    printTupleTo(stream, x, static i+1);
+}
+
+[i | i > 0]
+overload printTupleTo(stream, x, static i) {
+    printTo(stream, ", ");
+    printReprTo(stream, staticIndex(x, static i));
+    printTupleTo(stream, x, static i+1);
+}
+
+[T,i | i == TupleElementCount(T)]
+overload printTupleTo(stream, x:T, static i) {
+}
+
+
+
+//
+// printReprTo - records
+//
+
+[T | Record?(T)]
+overload printReprTo(stream, x:T) {
+    printTo(stream, T, '(');
+    printRecordFieldsTo(stream, x, static 0);
+    printTo(stream, ')');
+}
+
+[i]
+private printRecordFieldsTo(stream, x, static i) {
+    if (i > 0)
+        printTo(stream, ", ");
+    printReprTo(stream, staticIndex(x, static i));
+    printRecordFieldsTo(stream, x, static i+1);
+}
+
+[T, i | i == RecordFieldCount(T)]
+overload printRecordFieldsTo(stream, x:T, static i) {
+}
+
+
+
+//
+// printReprTo - arrays, vectors
+//
+
+[T,n]
+overload printReprTo(stream, a:Array[T,n]) {
+    printSequenceTo(stream, a);
+}
+
+[T]
+overload printReprTo(stream, a:Vector[T]) {
+    printSequenceTo(stream, a);
+}
+
+private printSequenceTo(stream, a) {
+    printTo(stream, '[');
+    for (i, x in enumerate(a)) {
+        if (i != 0)
+            printTo(stream, ", ");
+        printReprTo(stream, x);
+    }
+    printTo(stream, ']');
+}
+
+
+
+//
+// printReprTo - variants
+//
+
+[T | Variant?(T)]
+overload printReprTo(stream, x:T) {
+    printReprTo(stream, *x);
+}
+
+
+
+//
+// printReprTo - Char, String?
+//
+
+overload printReprTo(stream, x:Char) {
+    printTo(stream, '\'');
+    printTo(stream, x);
+    printTo(stream, '\'');
+}
+
+[S | String?(S)]
+overload printReprTo(stream, x:S) {
+    printTo(stream, '"');
+    printTo(stream, x);
+    printTo(stream, '"');
 }
 
 

@@ -1,6 +1,6 @@
-Error1: negative
+Error1("negative")
 error code = 0
-Error2: positive
-exception: Error1: negative
+Error2("positive")
+exception: Error1("negative")
 exception: 0
-exception: Error2: positive
+exception: Error2("positive")
