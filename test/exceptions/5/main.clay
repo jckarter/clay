@@ -1,3 +1,6 @@
+
+instance Exception = Int;
+
 main() {
     var x = 451;
     var tryCount = 0;
