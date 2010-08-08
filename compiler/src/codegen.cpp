@@ -2614,22 +2614,29 @@ bool codegenStatement(StatementPtr stmt,
             x->desugaredCatchBlock = desugarCatchBlocks(x->catchBlocks);
 
         llvm::BasicBlock *catchBegin = newBasicBlock("catchBegin");
-        llvm::BasicBlock *catchEnd = newBasicBlock("catchEnd");
+        llvm::BasicBlock *catchEnd = NULL;
 
         JumpTarget exceptionTarget(catchBegin, cgMarkStack());
         ctx->exceptionTargets.push_back(exceptionTarget);
         bool tryTerminated = codegenStatement(x->tryBlock, env, ctx);
-        if (!tryTerminated)
+        if (!tryTerminated) {
+            if (!catchEnd)
+                catchEnd = newBasicBlock("catchEnd");
             llvmBuilder->CreateBr(catchEnd);
+        }
         ctx->exceptionTargets.pop_back();
 
         llvmBuilder->SetInsertPoint(catchBegin);
         bool catchTerminated =
             codegenStatement(x->desugaredCatchBlock, env, ctx);
-        if (!catchTerminated)
+        if (!catchTerminated) {
+            if (!catchEnd)
+                catchEnd = newBasicBlock("catchEnd");
             llvmBuilder->CreateBr(catchEnd);
+        }
 
-        llvmBuilder->SetInsertPoint(catchEnd);
+        if (catchEnd)
+            llvmBuilder->SetInsertPoint(catchEnd);
 
         return tryTerminated && catchTerminated;
     }
