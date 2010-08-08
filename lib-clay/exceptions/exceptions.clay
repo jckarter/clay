@@ -7,16 +7,14 @@ import libc;
 // Exception, NoException, currentException
 //
 
-variant Exception = NoException | Int;
+variant Exception = NoException;
 
 record NoException {
 }
 
-overload printTo(stream, x:NoException) {
-    printTo(stream, "NoException()");
-}
+overload Exception() = Exception(NoException());
 
-private var currentException = Exception(NoException());
+private var currentException = Exception();
 
 
 
@@ -44,12 +42,20 @@ private signalException() __llvm__{
 //
 
 [T]
-exceptionIs?(static T) = variantIs?(currentException, T);
+exceptionIs?(static T) = nestedVariantIs?(currentException, T);
 
 [T]
-exceptionAs(static T) = move(variantAs(currentException, T));
+exceptionAs(static T) {
+    var result = move(nestedVariantAs(currentException, T));
+    currentException = Exception();
+    return move(result);
+}
 
-exceptionAsAny() = currentException;
+exceptionAsAny() {
+    var result = move(currentException);
+    currentException = Exception();
+    return move(result);
+}
 
 
 

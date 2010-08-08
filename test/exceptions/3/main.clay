@@ -1,3 +1,7 @@
+
+
+instance Exception = Int;
+
 // When the constructor throws the destructor should not be called
 
 record Test {

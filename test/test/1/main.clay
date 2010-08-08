@@ -1,5 +1,7 @@
 import test.*;
 
+instance Exception = Int;
+
 throwing_function() { throw 0; }
 
 main() = testMain(

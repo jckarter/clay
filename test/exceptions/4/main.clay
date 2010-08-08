@@ -1,4 +1,7 @@
 
+
+instance Exception = Int;
+
 //
 // define custom exception type Error1
 //

@@ -1,3 +1,6 @@
+
+instance Exception = Int;
+
 captured_catch_type(T, v) = lambda() {
     try {
         throw v;
