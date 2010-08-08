@@ -40,13 +40,3 @@ overload staticIndex(x:Union[...T], static i) {
     alias T = nthValue(static SizeT(i), ...UnionMembers(Union[...T]));
     return ref Pointer[T](&x)^;
 }
-
-
-private procedure nthValue;
-
-[i]
-overload nthValue(static i, first, ...rest) =
-    nthValue(static i-1, ...rest);
-
-[i | i == 0]
-overload nthValue(static i, first, ...rest) = first;
