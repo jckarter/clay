@@ -1083,10 +1083,18 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
                                       llvmModule);
     }
     x->llvmFunc = func;
-    if (x->attrStdCall)
+    switch (x->callingConv) {
+    case CC_DEFAULT :
+        break;
+    case CC_STDCALL :
         x->llvmFunc->setCallingConv(llvm::CallingConv::X86_StdCall);
-    else if (x->attrFastCall)
+        break;
+    case CC_FASTCALL :
         x->llvmFunc->setCallingConv(llvm::CallingConv::X86_FastCall);
+        break;
+    default :
+        assert(false);
+    }
 
     if (!x->body) return;
 
