@@ -1362,6 +1362,12 @@ struct GlobalVariable : public TopLevelItem {
           analyzing(false), llGlobal(NULL) {}
 };
 
+enum CallingConv {
+    CC_DEFAULT,
+    CC_STDCALL,
+    CC_FASTCALL
+};
+
 struct ExternalProcedure : public TopLevelItem {
     vector<ExternalArgPtr> args;
     bool hasVarArgs;
@@ -1372,8 +1378,7 @@ struct ExternalProcedure : public TopLevelItem {
     bool attributesVerified;
     bool attrDLLImport;
     bool attrDLLExport;
-    bool attrStdCall;
-    bool attrFastCall;
+    CallingConv callingConv;
     string attrAsmLabel;
 
     bool analyzed;
@@ -1730,6 +1735,12 @@ enum PrimOpCode {
     PRIM_CodePointer,
     PRIM_makeCodePointer,
 
+    PRIM_AttributeStdCall,
+    PRIM_AttributeFastCall,
+    PRIM_AttributeCCall,
+    PRIM_AttributeDLLImport,
+    PRIM_AttributeDLLExport,
+
     PRIM_CCodePointerP,
     PRIM_CCodePointer,
     PRIM_VarArgsCCodePointer,
@@ -1875,12 +1886,6 @@ struct CodePointerType : public Type {
                     const vector<TypePtr> &returnTypes)
         : Type(CODE_POINTER_TYPE), argTypes(argTypes),
           returnIsRef(returnIsRef), returnTypes(returnTypes) {}
-};
-
-enum CallingConv {
-    CC_DEFAULT,
-    CC_STDCALL,
-    CC_FASTCALL
 };
 
 struct CCodePointerType : public Type {

@@ -733,12 +733,7 @@ void analyzeExternalProcedure(ExternalProcedurePtr x)
         x->returnType2 = NULL;
     else
         x->returnType2 = evaluateType(x->returnType, x->env);
-    CallingConv callingConv = CC_DEFAULT;
-    if (x->attrStdCall)
-        callingConv = CC_STDCALL;
-    else if (x->attrFastCall)
-        callingConv = CC_FASTCALL;
-    x->ptrType = cCodePointerType(callingConv, argTypes,
+    x->ptrType = cCodePointerType(x->callingConv, argTypes,
                                   x->hasVarArgs, x->returnType2);
     x->analyzed = true;
 }
@@ -755,45 +750,58 @@ void verifyAttributes(ExternalProcedurePtr x)
     x->attributesVerified = true;
     x->attrDLLImport = false;
     x->attrDLLExport = false;
-    x->attrStdCall = false;
-    x->attrFastCall = false;
+    int callingConv = -1;
     x->attrAsmLabel = "";
     for (unsigned i = 0; i < x->attributes.size(); ++i) {
         ExprPtr expr = x->attributes[i];
-        if (expr->exprKind == NAME_REF) {
-            const string &s = ((NameRef *)expr.ptr())->name->str;
-            if (s == "dllimport") {
-                if (x->attrDLLExport)
-                    error(expr, "dllimport specified after dllexport");
-                x->attrDLLImport = true;
-            }
-            else if (s == "dllexport") {
-                if (x->attrDLLImport)
-                    error(expr, "dllexport specified after dllimport");
-                x->attrDLLExport = true;
-            }
-            else if (s == "stdcall") {
-                if (x->attrFastCall)
-                    error(expr, "stdcall specified after fastcall");
-                x->attrStdCall = true;
-            }
-            else if (s == "fastcall") {
-                if (x->attrStdCall)
-                    error(expr, "fastcall specified after stdcall");
-                x->attrFastCall = true;
-            }
-            else {
-                error(expr, "invalid attribute");
-            }
-        }
-        else if (expr->exprKind == STRING_LITERAL) {
+        if (expr->exprKind == STRING_LITERAL) {
             StringLiteral *y = (StringLiteral *)expr.ptr();
             x->attrAsmLabel = y->value;
         }
         else {
-            error(expr, "invalid attribute");
+            ObjectPtr obj = evaluateOneStatic(expr, x->env);
+            if (obj->objKind != PRIM_OP)
+                error(expr, "invalid external attribute");
+            PrimOp *y = (PrimOp *)obj.ptr();
+            switch (y->primOpCode) {
+            case PRIM_AttributeStdCall : {
+                if (callingConv != -1)
+                    error(expr, "cannot specify more than one calling conv");
+                callingConv = CC_STDCALL;
+                break;
+            }
+            case PRIM_AttributeFastCall : {
+                if (callingConv != -1)
+                    error(expr, "cannot specify more than one calling conv");
+                callingConv = CC_FASTCALL;
+                break;
+            }
+            case PRIM_AttributeCCall : {
+                if (callingConv != -1)
+                    error(expr, "cannot specify more than one calling conv");
+                callingConv = CC_DEFAULT;
+                break;
+            }
+            case PRIM_AttributeDLLImport : {
+                if (x->attrDLLExport)
+                    error(expr, "dllimport specified after dllexport");
+                x->attrDLLImport = true;
+                break;
+            }
+            case PRIM_AttributeDLLExport : {
+                if (x->attrDLLImport)
+                    error(expr, "dllexport specified after dllimport");
+                x->attrDLLExport = true;
+                break;
+            }
+            default :
+                error(expr, "invalid attribute");
+            }
         }
     }
+    if (callingConv == -1)
+        callingConv = CC_DEFAULT;
+    x->callingConv = (CallingConv)callingConv;
 }
 
 void verifyAttributes(ExternalVariablePtr x)
@@ -804,20 +812,24 @@ void verifyAttributes(ExternalVariablePtr x)
     x->attrDLLExport = false;
     for (unsigned i = 0; i < x->attributes.size(); ++i) {
         ExprPtr expr = x->attributes[i];
-        if (expr->exprKind != NAME_REF)
-            error(expr, "invalid attribute");
-        const string &s = ((NameRef *)expr.ptr())->name->str;
-        if (s == "dllimport") {
+        ObjectPtr obj = evaluateOneStatic(expr, x->env);
+        if (obj->objKind != PRIM_OP)
+            error(expr, "invalid external attribute");
+        PrimOp *y = (PrimOp *)obj.ptr();
+        switch (y->primOpCode) {
+        case PRIM_AttributeDLLImport : {
             if (x->attrDLLExport)
                 error(expr, "dllimport specified after dllexport");
             x->attrDLLImport = true;
+            break;
         }
-        else if (s == "dllexport") {
+        case PRIM_AttributeDLLExport : {
             if (x->attrDLLImport)
                 error(expr, "dllexport specified after dllimport");
             x->attrDLLExport = true;
+            break;
         }
-        else {
+        default :
             error(expr, "invalid attribute");
         }
     }

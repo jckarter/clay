@@ -44,3 +44,7 @@ public import system.*;
 // include self so that even if any symbol is shadowed
 // it can still be accessed as 'prelude.XXX'.
 public import prelude;
+
+alias stdcall = AttributeStdCall;
+alias fastcall = AttributeStdCall;
+alias cdecl = AttributeCCall;
