@@ -1,0 +1,55 @@
+
+
+
+//
+// Vectorized[R] is a type that is derived from the record type R.
+//
+// for each field (name,type) in R, there is a
+// corresponding field (name, Vector[type]) in Vectorized[R]
+//
+
+record Vectorized[R] = ...vectorizeRecord(R);
+
+
+// vectorizeRecord
+
+[R | Record?(R)]
+vectorizeRecord(static R) = ...vectorizeTail(R, static 0);
+
+
+// vectorizeTail
+
+[R,i]
+vectorizeTail(static R, static i) =
+    vectorizeField(R, static i), ...vectorizeTail(R, static i+1);
+
+[R,i | i == RecordFieldCount(R)]
+overload vectorizeTail(static R, static i) = ;
+
+
+// vectorizeField
+
+[R, i]
+vectorizeField(static R, static i) {
+    var name = RecordFieldName(R, static i);
+    var type = RecordFieldType(R, static i);
+    return (name, Vector[type]);
+}
+
+
+
+//
+// testing code
+//
+
+record Point {
+    x : Int;
+    y : Int;
+}
+
+main() {
+    var a = Vectorized[Point]();
+    push(a.x, [1, 2, 3]);
+    push(a.y, [4, 5, 6]);
+    println(a);
+}
