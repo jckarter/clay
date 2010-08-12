@@ -136,13 +136,6 @@ initialize(a) {
 copy(a:T) = T(a);
 
 [T]
-overload move(a:T) returned:T {
-    returned <-- a;
-    destroy(a);
-    a <-- T();
-}
-
-[T]
 overload dirtyMove(src:T) returned:T {
     returned <-- move(src);
     destroy(src);

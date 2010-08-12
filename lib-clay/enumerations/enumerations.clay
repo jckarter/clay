@@ -1,7 +1,7 @@
 
 
 //
-// constructors, destory
+// constructors, move, destory
 //
 
 [E | Enum?(E)]
@@ -10,6 +10,11 @@ overload E() returned:E {
 
 [E | Enum?(E)]
 overload E(src:E) returned:E {
+    primitiveCopy(returned, src);
+}
+
+[E | Enum?(E)]
+overload move(src:E) returned:E {
     primitiveCopy(returned, src);
 }
 
