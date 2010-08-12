@@ -1095,6 +1095,7 @@ MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
             varParams->add(params->values[i]);
         addLocal(bodyEnv, x->varParam, varParams.ptr());
     }
+    AnalysisCachingDisabler disabler;
     return analyzeExpr(x->expr, bodyEnv);
 }
 
