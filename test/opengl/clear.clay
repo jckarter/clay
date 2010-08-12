@@ -3,7 +3,7 @@ import opengl.*;
 
 var gl = GLFunctions();
 
-external render() {
+render() {
     gl.ClearColor(1.0f32, 1.0f32, 1.0f32, 1.0f32);
     gl.Clear(GL_COLOR_BUFFER_BIT);
     glutSwapBuffers();
@@ -16,7 +16,7 @@ main() {
     glutInitDisplayMode(GLUT_RGB + GLUT_DOUBLE);
     glutInitWindowSize(400, 300);
     glutCreateWindow(cstring("Hello World"));
-    glutDisplayFunc(render);
+    glutDisplayFunc(makeCCodePointer(render));
 
     initGLFunctions(gl);
 
