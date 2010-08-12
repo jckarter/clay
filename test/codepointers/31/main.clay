@@ -76,6 +76,13 @@ overload Displayable(x:Displayable) {
     return Displayable(obj, vtable);
 }
 
+// move
+overload move(src:Displayable) returned:Displayable {
+    returned.obj = src.obj;
+    returned.vtable = src.vtable;
+    src <-- Displayable();
+}
+
 // destructor
 overload destroy(x:Displayable) {
     if (not null?(x.obj)) {

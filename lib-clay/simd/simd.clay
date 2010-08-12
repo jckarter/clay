@@ -74,7 +74,7 @@ overload replicateElement(a:Vec[T,n], static n, x:T) {
 
 
 //
-// other constructors, destructor
+// other constructors, move, destructor
 //
 
 [T,n]
@@ -86,6 +86,11 @@ overload Vec[T,n](src:Vec[T,n]) returned:Vec[T,n] __llvm__{
     %1 = load $Vec[T,n] * %src
     store $Vec[T,n] %1, $Vec[T,n] * %returned
     ret i32 0
+}
+
+[T,n]
+overload move(src:Vec[T,n]) returned:Vec[T,n] __llvm__{
+    returned <-- src;
 }
 
 [T,n]

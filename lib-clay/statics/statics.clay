@@ -3,7 +3,7 @@ public import __primitives__.(Static);
 
 
 //
-// constructors, destroy
+// constructors, move, destroy
 //
 
 [A]
@@ -12,6 +12,10 @@ overload Static[A]() returned:Static[A] {
 
 [A]
 overload Static[A](src:Static[A]) returned:Static[A] {
+}
+
+[A]
+overload move(src:Static[A]) returned:Static[A] {
 }
 
 [A]

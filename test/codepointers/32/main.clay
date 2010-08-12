@@ -75,6 +75,16 @@ overload Displayable(x:Displayable) {
     return Displayable(obj, x.size, x.destructor, x.copyConstructor, x.display);
 }
 
+// move
+overload move(src:Displayable) returned:Displayable {
+    returned.obj = src.obj;
+    returned.size = src.size;
+    returned.destructor = src.destructor;
+    returned.copyConstructor = src.copyConstructor;
+    returned.display = src.display;
+    src <-- Displayable();
+}
+
 // destructor
 overload destroy(x:Displayable) {
     if (not null?(x.obj)) {
