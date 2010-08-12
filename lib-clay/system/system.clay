@@ -22,6 +22,8 @@ setArgcArgv(argc_, argv_) {
     commandLineInitialized? = false;
 }
 
+getArgcArgv() = argc, argv;
+
 callMain(mainProc) {
     try {
         return getExitCode(...mainProc());
