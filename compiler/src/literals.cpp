@@ -59,7 +59,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(uint16Type);
         *((unsigned short *)vh->buf) = (unsigned short)y;
     }
-    else if (x->suffix == "u32") {
+    else if ((x->suffix == "u") || (x->suffix == "u32")) {
         unsigned long y = strtoul(ptr, &end, 0);
         if (*end != 0)
             error("invalid uint32 literal");
@@ -77,7 +77,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(uint64Type);
         *((unsigned long long *)vh->buf) = y;
     }
-    else if (x->suffix == "f32") {
+    else if ((x->suffix == "f") || (x->suffix == "f32")) {
         float y = (float)strtod(ptr, &end);
         if (*end != 0)
             error("invalid float32 literal");
@@ -106,7 +106,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
     char *ptr = const_cast<char *>(x->value.c_str());
     char *end = ptr;
     ValueHolderPtr vh;
-    if (x->suffix == "f32") {
+    if ((x->suffix == "f") || (x->suffix == "f32")) {
         float y = (float)strtod(ptr, &end);
         if (*end != 0)
             error("invalid float32 literal");
