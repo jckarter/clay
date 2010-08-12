@@ -48,3 +48,5 @@ public import prelude;
 alias stdcall = AttributeStdCall;
 alias fastcall = AttributeStdCall;
 alias cdecl = AttributeCCall;
+alias dllimport = AttributeDLLImport;
+alias dllexport = AttributeDLLExport;
