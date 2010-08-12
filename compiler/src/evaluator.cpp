@@ -2233,7 +2233,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
 
 //
-// valueToStatic, valueToStaticSizeT
+// valueToStatic, valueToStaticSizeTOrInt
 // valueToType, valueToNumericType, valueToIntegerType,
 // valueToPointerLikeType, valueToTupleType, valueToRecordType,
 // valueToVariantType, valueToEnumType, valueToIdentifier
@@ -2255,15 +2255,23 @@ static ObjectPtr valueToStatic(MultiEValuePtr args, unsigned index)
     return obj;
 }
 
-static size_t valueToStaticSizeT(MultiEValuePtr args, unsigned index)
+static size_t valueToStaticSizeTOrInt(MultiEValuePtr args, unsigned index)
 {
     ObjectPtr obj = valueToStatic(args->values[index]);
     if (!obj || (obj->objKind != VALUE_HOLDER))
-        argumentError(index, "expecting a static SizeT value");
+        argumentError(index, "expecting a static SizeT or Int value");
     ValueHolder *vh = (ValueHolder *)obj.ptr();
-    if (vh->type != cSizeTType)
-        argumentError(index, "expecting a static SizeT value");
-    return *((size_t *)vh->buf);
+    if (vh->type == cSizeTType) {
+        return *((size_t *)vh->buf);
+    }
+    else if (vh->type == cIntType) {
+        int i = *((int *)vh->buf);
+        return size_t(i);
+    }
+    else {
+        argumentError(index, "expecting a static SizeT or Int value");
+        return 0;
+    }
 }
 
 static TypePtr valueToType(MultiEValuePtr args, unsigned index)
@@ -3528,7 +3536,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_TupleElementOffset : {
         ensureArity(args, 2);
         TupleTypePtr t = valueToTupleType(args, 0);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         if (i >= t->elementTypes.size())
             argumentError(1, "tuple element index out of range");
         const llvm::StructLayout *layout = tupleTypeLayout(t.ptr());
@@ -3541,7 +3549,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         TupleTypePtr tt;
         EValuePtr etuple = tupleValue(args, 0, tt);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         if (i >= tt->elementTypes.size())
             argumentError(1, "tuple element index out of range");
         const llvm::StructLayout *layout = tupleTypeLayout(tt.ptr());
@@ -3592,7 +3600,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_RecordFieldOffset : {
         ensureArity(args, 2);
         RecordTypePtr rt = valueToRecordType(args, 0);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if (i >= fieldTypes.size())
             argumentError(1, "record field index out of range");
@@ -3605,7 +3613,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_RecordFieldName : {
         ensureArity(args, 2);
         RecordTypePtr rt = valueToRecordType(args, 0);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<IdentifierPtr> &fieldNames = recordFieldNames(rt);
         if (i >= fieldNames.size())
             argumentError(1, "record field index out of range");
@@ -3631,7 +3639,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         RecordTypePtr rt;
         EValuePtr erec = recordValue(args, 0, rt);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if (i >= fieldTypes.size())
             argumentError(1, "record field index out of range");
