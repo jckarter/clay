@@ -2038,3 +2038,106 @@ external kevent64(
     nevents : Int,
     flags : UInt,
     timeout : Pointer[Struct_timespec]) Int;
+
+record Struct_dirent {
+    d_ino : UInt64;
+    d_seekoff : UInt64;
+    d_reclen : UShort;
+    d_namlen : UShort;
+    d_type : CUChar;
+    d_name : Array[CChar,1024];
+}
+
+record UnnamedStruct {
+    __dd_fd : Int;
+    __dd_loc : CLong;
+    __dd_size : CLong;
+    __dd_buf : Pointer[CChar];
+    __dd_len : Int;
+    __dd_seek : CLong;
+    __dd_rewind : CLong;
+    __dd_flags : Int;
+    __dd_lock : __darwin_pthread_mutex_t;
+    __dd_td : OpaquePointer;
+}
+
+alias DIR = UnnamedStruct;
+
+external ("_alphasort$INODE64") alphasort(
+    argument0 : RawPointer,
+    argument1 : RawPointer) Int;
+
+external ("_closedir") closedir(
+    argument0 : Pointer[DIR]) Int;
+
+external ("_getdirentries_is_not_available_when_64_bit_inodes_are_in_effect") getdirentries(
+    argument0 : Int,
+    argument1 : Pointer[CChar],
+    argument2 : Int,
+    argument3 : Pointer[CLong]) Int;
+
+external ("_opendir$INODE64") opendir(
+    argument0 : Pointer[CChar]) Pointer[DIR];
+
+external ("___opendir2$INODE64") __opendir2(
+    argument0 : Pointer[CChar],
+    argument1 : Int) Pointer[DIR];
+
+external ("_readdir$INODE64") readdir(
+    argument0 : Pointer[DIR]) Pointer[Struct_dirent];
+
+external ("_readdir_r$INODE64") readdir_r(
+    argument0 : Pointer[DIR],
+    argument1 : Pointer[Struct_dirent],
+    argument2 : Pointer[Pointer[Struct_dirent]]) Int;
+
+external ("_rewinddir$INODE64") rewinddir(
+    argument0 : Pointer[DIR]);
+
+external ("_scandir$INODE64") scandir(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[Pointer[Struct_dirent]]],
+    argument2 : CCodePointer[(Pointer[Struct_dirent]),(Int)],
+    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]) Int;
+
+external ("_scandir_b$INODE64") scandir_b(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[Pointer[Pointer[Struct_dirent]]],
+    argument2 : UnknownType,
+    argument3 : UnknownType) Int;
+
+external ("_seekdir$INODE64") seekdir(
+    argument0 : Pointer[DIR],
+    argument1 : CLong);
+
+external ("_telldir$INODE64") telldir(
+    argument0 : Pointer[DIR]) CLong;
+
+record Struct_dl_info {
+    dli_fname : Pointer[CChar];
+    dli_fbase : RawPointer;
+    dli_sname : Pointer[CChar];
+    dli_saddr : RawPointer;
+}
+
+alias Dl_info = Struct_dl_info;
+
+external dladdr(
+    argument0 : RawPointer,
+    argument1 : Pointer[Dl_info]) Int;
+
+external dlclose(
+    __handle : RawPointer) Int;
+
+external dlerror() Pointer[CChar];
+
+external dlopen(
+    __path : Pointer[CChar],
+    __mode : Int) RawPointer;
+
+external dlsym(
+    __handle : RawPointer,
+    __symbol : Pointer[CChar]) RawPointer;
+
+external dlopen_preflight(
+    __path : Pointer[CChar]) Bool;
