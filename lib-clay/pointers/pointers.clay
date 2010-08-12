@@ -202,7 +202,7 @@ overload null?(p:CodePointer[In,Out]) = null?(RawPointer(p));
 //
 
 [CP | CCodePointer?(CP)]
-overload CP() CP {
+overload CP() returned:CP {
 }
 
 [CP | CCodePointer?(CP)]
