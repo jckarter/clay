@@ -1,0 +1,8 @@
+alias GLAPI = cdecl;
+
+alias GLCodePointer[Args, Return] = CCodePointer[Args, Return];
+
+external dlsym(module : RawPointer, name : Pointer[CChar]) RawPointer;
+alias RTLD_DEFAULT = RawPointer(-2);
+
+lookupGLFunction(name) = GLCodePointer[(), ()](dlsym(RTLD_DEFAULT, cstring(name)));

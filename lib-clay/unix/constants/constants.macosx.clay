@@ -83,3 +83,21 @@ alias MAP_FAILED = RawPointer(-1);
 alias MS_ASYNC      = 1;
 alias MS_SYNC       = 16;
 alias MS_INVALIDATE = 2;
+
+
+
+//
+// flags for dlsym
+//
+
+alias RTLD_LAZY = 0x1;
+alias RTLD_NOW = 0x2;
+alias RTLD_LOCAL = 0x4;
+alias RTLD_GLOBAL = 0x8;
+alias RTLD_NOLOAD = 0x10;
+alias RTLD_NODELETE = 0x80;
+alias RTLD_FIRST = 0x100;
+alias RTLD_NEXT = RawPointer(-1);
+alias RTLD_DEFAULT = RawPointer(-2);
+alias RTLD_SELF = RawPointer(-3);
+alias RTLD_MAIN_ONLY = RawPointer(-5);

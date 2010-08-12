@@ -1,0 +1,6 @@
+alias GLCodePointer[Args, Return] = StdCallCodePointer[Args, Return];
+alias GLAPI = stdcall;
+
+external (stdcall) wglGetProcAddress(name: LPCSTR) GLCodePointer[(), ()];
+
+lookupGLFunction(name) = wglGetProcAddress(cstring(name));
