@@ -2784,7 +2784,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
 
 
 //
-// valueToStatic, valueToStaticSizeT
+// valueToStatic, valueToStaticSizeTOrInt
 // valueToType, valueToNumericType, valueToIntegerType,
 // valueToPointerLikeType, valueToTupleType, valueToRecordType,
 // valueToVariantType, valueToEnumType, valueToIdentifier
@@ -2806,15 +2806,23 @@ static ObjectPtr valueToStatic(MultiCValuePtr args, unsigned index)
     return obj;
 }
 
-static size_t valueToStaticSizeT(MultiCValuePtr args, unsigned index)
+static size_t valueToStaticSizeTOrInt(MultiCValuePtr args, unsigned index)
 {
     ObjectPtr obj = valueToStatic(args->values[index]);
     if (!obj || (obj->objKind != VALUE_HOLDER))
-        argumentError(index, "expecting a static SizeT value");
+        argumentError(index, "expecting a static SizeT or Int value");
     ValueHolder *vh = (ValueHolder *)obj.ptr();
-    if (vh->type != cSizeTType)
-        argumentError(index, "expecting a static SizeT value");
-    return *((size_t *)vh->buf);
+    if (vh->type == cSizeTType) {
+        return *((size_t *)vh->buf);
+    }
+    else if (vh->type == cIntType) {
+        int i = *((int *)vh->buf);
+        return size_t(i);
+    }
+    else {
+        argumentError(index, "expecting a static SizeT or Int value");
+        return 0;
+    }
 }
 
 static TypePtr valueToType(MultiCValuePtr args, unsigned index)
@@ -3801,7 +3809,7 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_TupleElementOffset : {
         ensureArity(args, 2);
         TupleTypePtr t = valueToTupleType(args, 0);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         if (i >= t->elementTypes.size())
             argumentError(1, "tuple element index out of range");
         const llvm::StructLayout *layout = tupleTypeLayout(t.ptr());
@@ -3814,7 +3822,7 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         TupleTypePtr tt;
         llvm::Value *vtuple = tupleValue(args, 0, tt);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         if (i >= tt->elementTypes.size())
             argumentError(1, "tuple element index out of range");
         llvm::Value *ptr = llvmBuilder->CreateConstGEP2_32(vtuple, 0, i);
@@ -3862,7 +3870,7 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_RecordFieldOffset : {
         ensureArity(args, 2);
         RecordTypePtr rt = valueToRecordType(args, 0);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if (i >= fieldTypes.size())
             argumentError(1, "record field index out of range");
@@ -3875,7 +3883,7 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_RecordFieldName : {
         ensureArity(args, 2);
         RecordTypePtr rt = valueToRecordType(args, 0);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<IdentifierPtr> &fieldNames = recordFieldNames(rt);
         if (i >= fieldNames.size())
             argumentError(1, "record field index out of range");
@@ -3901,7 +3909,7 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         RecordTypePtr rt;
         llvm::Value *vrec = recordValue(args, 0, rt);
-        size_t i = valueToStaticSizeT(args, 1);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if (i >= fieldTypes.size())
             argumentError(1, "record field index out of range");

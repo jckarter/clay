@@ -19,7 +19,7 @@ static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
                              vector<TypePtr> &out);
 static bool staticToInt(ObjectPtr x, int &out);
 static int staticToInt(MultiStaticPtr x, unsigned index);
-static bool staticToSizeT(ObjectPtr x, size_t &out);
+static bool staticToSizeTOrInt(ObjectPtr x, size_t &out);
 
 static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index);
 static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index);
@@ -171,15 +171,23 @@ static int staticToInt(MultiStaticPtr x, unsigned index)
     return out;
 }
 
-static bool staticToSizeT(ObjectPtr x, size_t &out)
+static bool staticToSizeTOrInt(ObjectPtr x, size_t &out)
 {
     if (x->objKind != VALUE_HOLDER)
         return false;
     ValueHolderPtr vh = (ValueHolder *)x.ptr();
-    if (vh->type != cSizeTType)
+    if (vh->type == cSizeTType) {
+        out = *((size_t *)vh->buf);
+        return true;
+    }
+    else if (vh->type == cIntType) {
+        int i = *((int *)vh->buf);
+        out = size_t(i);
+        return true;
+    }
+    else {
         return false;
-    out = *((size_t *)vh->buf);
-    return true;
+    }
 }
 
 static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
@@ -1964,8 +1972,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         TupleTypePtr t = tupleTypeOfValue(args, 0);
         ObjectPtr obj = unwrapStaticType(args->values[1]->type);
         size_t i = 0;
-        if (!obj || !staticToSizeT(obj, i))
-            argumentError(1, "expecting SizeT value");
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(1, "expecting SizeT or Int value");
         if (i >= t->elementTypes.size())
             argumentError(1, "tuple index out of range");
         return new MultiPValue(new PValue(t->elementTypes[i], false));
@@ -1999,8 +2007,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         RecordType *rt = (RecordType *)t.ptr();
         ObjectPtr second = unwrapStaticType(args->values[1]->type);
         size_t i = 0;
-        if (!second || !staticToSizeT(second, i))
-            argumentError(1, "expecting SizeT value");
+        if (!second || !staticToSizeTOrInt(second, i))
+            argumentError(1, "expecting SizeT or Int value");
         const vector<IdentifierPtr> fieldNames = recordFieldNames(rt);
         if (i >= fieldNames.size())
             argumentError(1, "field index out of range");
@@ -2015,8 +2023,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         RecordTypePtr t = recordTypeOfValue(args, 0);
         ObjectPtr obj = unwrapStaticType(args->values[1]->type);
         size_t i = 0;
-        if (!obj || !staticToSizeT(obj, i))
-            argumentError(1, "expecting SizeT value");
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(1, "expecting SizeT or Int value");
         const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
         if (i >= fieldTypes.size())
             argumentError(1, "field index out of range");
