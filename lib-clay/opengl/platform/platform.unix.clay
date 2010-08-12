@@ -1,0 +1,6 @@
+alias GLCodePointer[Args, Return] = CCodePointer[Args, Return];
+alias GLAPI = cdecl;
+
+external glXGetProcAddress(name: Pointer[CChar]) GLCodePointer[(), ()];
+
+lookupGLFunction(name) = glXGetProcAddress(cstring(name));
