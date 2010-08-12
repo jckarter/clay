@@ -3613,6 +3613,8 @@ void codegenPrimOp(PrimOpPtr x,
         TypePtr dest = pointerType(pointeeType);
         IntegerTypePtr t;
         llvm::Value *v = integerValue(args, 1, t);
+        if (t->isSigned && (typeSize(t.ptr()) < typeSize(cPtrDiffTType)))
+            v = llvmBuilder->CreateSExt(v, llvmType(cPtrDiffTType));
         llvm::Value *result = llvmBuilder->CreateIntToPtr(v, llvmType(dest));
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
