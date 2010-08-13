@@ -1240,6 +1240,68 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         break;
     }
 
+    case CVALUE : {
+        // allow values of static type
+        CValue *y = (CValue *)x.ptr();
+        if (y->type->typeKind != STATIC_TYPE)
+            error("invalid static object");
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        if (y->forwardedRValue)
+            assert(out0->type == y->type);
+        else
+            assert(out0->type == pointerType(y->type));
+        break;
+    }
+
+    case MULTI_CVALUE : {
+        // allow values of static type
+        MultiCValue *y = (MultiCValue *)x.ptr();
+        assert(out->size() == y->size());
+        for (unsigned i = 0; i < y->size(); ++i) {
+            CValuePtr cv = y->values[i];
+            if (cv->type->typeKind != STATIC_TYPE)
+                argumentError(i, "invalid static object");
+            EValuePtr outi = out->values[i];
+            if (cv->forwardedRValue)
+                assert(outi->type == cv->type);
+            else
+                assert(outi->type == pointerType(cv->type));
+        }
+        break;
+    }
+
+    case PVALUE : {
+        // allow values of static type
+        PValue *y = (PValue *)x.ptr();
+        if (y->type->typeKind != STATIC_TYPE)
+            error("invalid static object");
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        if (y->isTemp)
+            assert(out0->type == y->type);
+        else
+            assert(out0->type == pointerType(y->type));
+        break;
+    }
+
+    case MULTI_PVALUE : {
+        // allow values of static type
+        MultiPValue *y = (MultiPValue *)x.ptr();
+        assert(out->size() == y->size());
+        for (unsigned i = 0; i < y->size(); ++i) {
+            PValuePtr pv = y->values[i];
+            if (pv->type->typeKind != STATIC_TYPE)
+                argumentError(i, "invalid static object");
+            EValuePtr outi = out->values[i];
+            if (pv->isTemp)
+                assert(outi->type == pv->type);
+            else
+                assert(outi->type == pointerType(pv->type));
+        }
+        break;
+    }
+
     case PATTERN :
         error("pattern variable cannot be used as value");
         break;
@@ -3742,6 +3804,38 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == et.ptr());
         *((int *)out0->addr) = *((int *)ev->addr);
+        break;
+    }
+
+    case PRIM_IdentifierSize : {
+        ensureArity(args, 1);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(ident->str.size());
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
+    case PRIM_IdentifierConcat : {
+        string result;
+        for (unsigned i = 0; i < args->size(); ++i) {
+            IdentifierPtr ident = valueToIdentifier(args, i);
+            result.append(ident->str);
+        }
+        evalStaticObject(new Identifier(result), out);
+        break;
+    }
+
+    case PRIM_IdentifierSlice : {
+        ensureArity(args, 3);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        size_t begin = valueToStaticSizeTOrInt(args, 1);
+        size_t end = valueToStaticSizeTOrInt(args, 2);
+        if (begin > ident->str.size())
+            argumentError(1, "starting index out of range");
+        if ((end < begin) || (end > ident->str.size()))
+            argumentError(2, "ending index out of range");
+        string result = ident->str.substr(begin, end-begin);
+        evalStaticObject(new Identifier(result), out);
         break;
     }
 
