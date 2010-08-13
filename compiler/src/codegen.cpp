@@ -130,9 +130,9 @@ void codegenCallInlined(InvokeEntryPtr entry,
                         CodegenContextPtr ctx,
                         MultiCValuePtr out);
 
-void codegenCodeBody(InvokeEntryPtr entry, const string &callableName);
+void codegenCodeBody(InvokeEntryPtr entry);
 
-void codegenCWrapper(InvokeEntryPtr entry, const string &callableName);
+void codegenCWrapper(InvokeEntryPtr entry);
 
 bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
@@ -1878,7 +1878,7 @@ void codegenCallCode(InvokeEntryPtr entry,
                      MultiCValuePtr out)
 {
     if (!entry->llvmFunc)
-        codegenCodeBody(entry, getCodeName(entry->callable));
+        codegenCodeBody(entry);
     assert(entry->llvmFunc);
     ensureArity(args, entry->argsKey.size());
     vector<llvm::Value *> llArgs;
@@ -1943,7 +1943,7 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
         analyzeCallable(x, argsKey, argsTempness);
     if (!entry->inlined) {
         if (!entry->llvmFunc)
-            codegenCodeBody(entry, getCodeName(x));
+            codegenCodeBody(entry);
     }
     return entry;
 }
@@ -2054,13 +2054,63 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
 
 
 //
+// getCodeName
+//
+
+static string getCodeName(InvokeEntryPtr entry)
+{
+    ObjectPtr x = entry->callable;
+    ostringstream sout;
+    switch (x->objKind) {
+    case TYPE : {
+        sout << x;
+        break;
+    }
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        sout << y->name->str;
+        break;
+    }
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
+        sout << y->name->str;
+        break;
+    }
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
+        sout << y->name->str;
+        break;
+    }
+    case PRIM_OP : {
+        assert(isOverloadablePrimOp(x));
+        sout << primOpName((PrimOp *)x.ptr());
+        break;
+    }
+    default :
+        assert(false);
+    }
+    sout << '(';
+    for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
+        if (i != 0)
+            sout << ", ";
+        sout << entry->argsKey[i];
+    }
+    sout << ')';
+    return sout.str();
+}
+
+
+
+//
 // codegenCodeBody
 //
 
-void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
+void codegenCodeBody(InvokeEntryPtr entry)
 {
     assert(entry->analyzed);
     assert(!entry->llvmFunc);
+
+    string callableName = getCodeName(entry);
 
     if (entry->code->isInlineLLVM()) {
         codegenLLVMBody(entry, callableName);
@@ -2205,9 +2255,11 @@ void codegenCodeBody(InvokeEntryPtr entry, const string &callableName)
 // codegenCWrapper
 //
 
-void codegenCWrapper(InvokeEntryPtr entry, const string &callableName)
+void codegenCWrapper(InvokeEntryPtr entry)
 {
     assert(!entry->llvmCWrapper);
+
+    string callableName = getCodeName(entry);
 
     vector<const llvm::Type *> llArgTypes;
     for (unsigned i = 0; i < entry->argsKey.size(); ++i)
@@ -3690,7 +3742,7 @@ void codegenPrimOp(PrimOpPtr x,
             argumentError(0, "cannot create pointer to inlined code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
-            codegenCodeBody(entry, getCodeName(entry->callable));
+            codegenCodeBody(entry);
         assert(entry->llvmFunc);
         TypePtr cpType = codePointerType(argsKey,
                                          entry->returnIsRef,
@@ -3761,10 +3813,10 @@ void codegenPrimOp(PrimOpPtr x,
             argumentError(0, "cannot create pointer to inlined code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
-            codegenCodeBody(entry, getCodeName(entry->callable));
+            codegenCodeBody(entry);
         assert(entry->llvmFunc);
         if (!entry->llvmCWrapper)
-            codegenCWrapper(entry, getCodeName(entry->callable));
+            codegenCWrapper(entry);
         assert(entry->llvmCWrapper);
         TypePtr returnType;
         if (entry->returnTypes.size() == 0) {
@@ -4119,13 +4171,13 @@ static void generateLLVMCtorsAndDtors() {
                                             vector<TypePtr>(),
                                             vector<ValueTempness>());
     entry1->llvmFunc->setLinkage(llvm::GlobalVariable::ExternalLinkage);
-    codegenCWrapper(entry1, getCodeName(initializer));
+    codegenCWrapper(entry1);
     ObjectPtr destructor = makeDestructorProcedure().ptr();
     InvokeEntryPtr entry2 = codegenCallable(destructor,
                                             vector<TypePtr>(),
                                             vector<ValueTempness>());
     entry2->llvmFunc->setLinkage(llvm::GlobalVariable::ExternalLinkage);
-    codegenCWrapper(entry2, getCodeName(destructor));
+    codegenCWrapper(entry2);
 
     // make types for llvm.global_ctors, llvm.global_dtors
     vector<const llvm::Type *> fieldTypes;

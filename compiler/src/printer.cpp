@@ -779,42 +779,6 @@ void printName(ostream &out, ObjectPtr x)
 
 
 //
-// getCodeName
-//
-
-string getCodeName(ObjectPtr x)
-{
-    switch (x->objKind) {
-    case TYPE : {
-        ostringstream sout;
-        sout << x;
-        return sout.str();
-    }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
-        return y->name->str;
-    }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
-        return y->name->str;
-    }
-    case PROCEDURE : {
-        Procedure *y = (Procedure *)x.ptr();
-        return y->name->str;
-    }
-    case PRIM_OP : {
-        assert(isOverloadablePrimOp(x));
-        return primOpName((PrimOp *)x.ptr());
-    }
-    default :
-        assert(false);
-        return "";
-    }
-}
-
-
-
-//
 // printValue
 //
 
