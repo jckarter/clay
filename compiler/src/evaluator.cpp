@@ -3533,18 +3533,6 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_TupleElementOffset : {
-        ensureArity(args, 2);
-        TupleTypePtr t = valueToTupleType(args, 0);
-        size_t i = valueToStaticSizeTOrInt(args, 1);
-        if (i >= t->elementTypes.size())
-            argumentError(1, "tuple element index out of range");
-        const llvm::StructLayout *layout = tupleTypeLayout(t.ptr());
-        ValueHolderPtr vh = sizeTToValueHolder(layout->getElementOffset(i));
-        evalStaticObject(vh.ptr(), out);
-        break;
-    }
-
     case PRIM_tupleRef : {
         ensureArity(args, 2);
         TupleTypePtr tt;
@@ -3597,19 +3585,6 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_RecordFieldOffset : {
-        ensureArity(args, 2);
-        RecordTypePtr rt = valueToRecordType(args, 0);
-        size_t i = valueToStaticSizeTOrInt(args, 1);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
-        if (i >= fieldTypes.size())
-            argumentError(1, "record field index out of range");
-        const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
-        ValueHolderPtr vh = sizeTToValueHolder(layout->getElementOffset(i));
-        evalStaticObject(vh.ptr(), out);
-        break;
-    }
-
     case PRIM_RecordFieldName : {
         ensureArity(args, 2);
         RecordTypePtr rt = valueToRecordType(args, 0);
@@ -3618,20 +3593,6 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         if (i >= fieldNames.size())
             argumentError(1, "record field index out of range");
         evalStaticObject(fieldNames[i].ptr(), out);
-        break;
-    }
-
-    case PRIM_RecordFieldIndex : {
-        ensureArity(args, 2);
-        RecordTypePtr rt = valueToRecordType(args, 0);
-        IdentifierPtr fname = valueToIdentifier(args, 1);
-        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
-        map<string, size_t>::const_iterator fi =
-            fieldIndexMap.find(fname->str);
-        if (fi == fieldIndexMap.end())
-            argumentError(1, "field not found in record");
-        ValueHolderPtr vh = sizeTToValueHolder(fi->second);
-        evalStaticObject(vh.ptr(), out);
         break;
     }
 
