@@ -2,6 +2,7 @@ public import opengl.types.*;
 import opengl.lookup.*;
 import opengl.platform.*;
 
+
 alias GL_2D = 0x600u32;
 alias GL_2_BYTES = 0x1407u32;
 alias GL_3D = 0x601u32;
@@ -1684,8 +1685,8 @@ record GLFunctions {
     LoadMatrixd: GLCodePointer[(Pointer[GLdouble]), ()];
     LoadMatrixf: GLCodePointer[(Pointer[GLfloat]), ()];
     LoadName: GLCodePointer[(GLuint), ()];
-    LoadTransposeMatrixd: GLCodePointer[(GLdouble), ()];
-    LoadTransposeMatrixf: GLCodePointer[(GLfloat), ()];
+    LoadTransposeMatrixd: GLCodePointer[(Pointer[GLdouble]), ()];
+    LoadTransposeMatrixf: GLCodePointer[(Pointer[GLfloat]), ()];
     LogicOp: GLCodePointer[(GLenum), ()];
     Map1d: GLCodePointer[(GLenum, GLdouble, GLdouble, GLint, GLint, Pointer[GLdouble]), ()];
     Map1f: GLCodePointer[(GLenum, GLfloat, GLfloat, GLint, GLint, Pointer[GLfloat]), ()];
@@ -1704,8 +1705,8 @@ record GLFunctions {
     MatrixMode: GLCodePointer[(GLenum), ()];
     MultMatrixd: GLCodePointer[(Pointer[GLdouble]), ()];
     MultMatrixf: GLCodePointer[(Pointer[GLfloat]), ()];
-    MultTransposeMatrixd: GLCodePointer[(GLdouble), ()];
-    MultTransposeMatrixf: GLCodePointer[(GLfloat), ()];
+    MultTransposeMatrixd: GLCodePointer[(Pointer[GLdouble]), ()];
+    MultTransposeMatrixf: GLCodePointer[(Pointer[GLfloat]), ()];
     MultiDrawArrays: GLCodePointer[(GLenum, Pointer[GLint], Pointer[GLsizei], GLsizei), ()];
     MultiDrawElements: GLCodePointer[(GLenum, Pointer[GLsizei], GLenum, Pointer[Pointer[GLvoid]], GLsizei), ()];
     MultiTexCoord1d: GLCodePointer[(GLenum, GLdouble), ()];
@@ -2116,6 +2117,8 @@ record GLFunctions {
 overload GLFunctions() gl: GLFunctions { }
 overload destroy(gl: GLFunctions) { }
 
+private var globalGL = GLFunctions();
+
 initGLFunctions(gl: GLFunctions) {
     gl.Accum = findGLFunction((GLenum, GLfloat), (), "glAccum");
     gl.ActiveTexture = findGLFunction((GLenum), (), "glActiveTexture", "glActiveTextureARB");
@@ -2450,8 +2453,8 @@ initGLFunctions(gl: GLFunctions) {
     gl.LoadMatrixd = findGLFunction((Pointer[GLdouble]), (), "glLoadMatrixd");
     gl.LoadMatrixf = findGLFunction((Pointer[GLfloat]), (), "glLoadMatrixf");
     gl.LoadName = findGLFunction((GLuint), (), "glLoadName");
-    gl.LoadTransposeMatrixd = findGLFunction((GLdouble), (), "glLoadTransposeMatrixd", "glLoadTransposeMatrixdARB");
-    gl.LoadTransposeMatrixf = findGLFunction((GLfloat), (), "glLoadTransposeMatrixf", "glLoadTransposeMatrixfARB");
+    gl.LoadTransposeMatrixd = findGLFunction((Pointer[GLdouble]), (), "glLoadTransposeMatrixd", "glLoadTransposeMatrixdARB");
+    gl.LoadTransposeMatrixf = findGLFunction((Pointer[GLfloat]), (), "glLoadTransposeMatrixf", "glLoadTransposeMatrixfARB");
     gl.LogicOp = findGLFunction((GLenum), (), "glLogicOp");
     gl.Map1d = findGLFunction((GLenum, GLdouble, GLdouble, GLint, GLint, Pointer[GLdouble]), (), "glMap1d");
     gl.Map1f = findGLFunction((GLenum, GLfloat, GLfloat, GLint, GLint, Pointer[GLfloat]), (), "glMap1f");
@@ -2470,8 +2473,8 @@ initGLFunctions(gl: GLFunctions) {
     gl.MatrixMode = findGLFunction((GLenum), (), "glMatrixMode");
     gl.MultMatrixd = findGLFunction((Pointer[GLdouble]), (), "glMultMatrixd");
     gl.MultMatrixf = findGLFunction((Pointer[GLfloat]), (), "glMultMatrixf");
-    gl.MultTransposeMatrixd = findGLFunction((GLdouble), (), "glMultTransposeMatrixd", "glMultTransposeMatrixdARB");
-    gl.MultTransposeMatrixf = findGLFunction((GLfloat), (), "glMultTransposeMatrixf", "glMultTransposeMatrixfARB");
+    gl.MultTransposeMatrixd = findGLFunction((Pointer[GLdouble]), (), "glMultTransposeMatrixd", "glMultTransposeMatrixdARB");
+    gl.MultTransposeMatrixf = findGLFunction((Pointer[GLfloat]), (), "glMultTransposeMatrixf", "glMultTransposeMatrixfARB");
     gl.MultiDrawArrays = findGLFunction((GLenum, Pointer[GLint], Pointer[GLsizei], GLsizei), (), "glMultiDrawArrays", "glMultiDrawArraysEXT");
     gl.MultiDrawElements = findGLFunction((GLenum, Pointer[GLsizei], GLenum, Pointer[Pointer[GLvoid]], GLsizei), (), "glMultiDrawElements", "glMultiDrawElementsEXT");
     gl.MultiTexCoord1d = findGLFunction((GLenum, GLdouble), (), "glMultiTexCoord1d", "glMultiTexCoord1dARB");
@@ -2878,4 +2881,766 @@ initGLFunctions(gl: GLFunctions) {
     gl.WindowPos3s = findGLFunction((GLshort, GLshort, GLshort), (), "glWindowPos3s", "glWindowPos3sARB");
     gl.WindowPos3sv = findGLFunction((Pointer[GLshort]), (), "glWindowPos3sv", "glWindowPos3svARB");
 }
+overload initGLFunctions() { initGLFunctions(globalGL); }
+
+glAccum(_op: GLenum, _value: GLfloat) { globalGL.Accum(_op, _value); }
+glActiveTexture(_texture: GLenum) { globalGL.ActiveTexture(_texture); }
+glAlphaFunc(_func: GLenum, _ref: GLclampf) { globalGL.AlphaFunc(_func, _ref); }
+glAreTexturesResident(_n: GLsizei, _textures: Pointer[GLuint], _residences: Pointer[GLboolean]) = globalGL.AreTexturesResident(_n, _textures, _residences);
+glArrayElement(_i: GLint) { globalGL.ArrayElement(_i); }
+glAttachShader(_program: GLuint, _shader: GLuint) { globalGL.AttachShader(_program, _shader); }
+glBegin(_mode: GLenum) { globalGL.Begin(_mode); }
+glBeginConditionalRender(_id: GLuint, _mode: GLenum) { globalGL.BeginConditionalRender(_id, _mode); }
+glBeginQuery(_target: GLenum, _id: GLuint) { globalGL.BeginQuery(_target, _id); }
+glBeginQueryIndexed(_target: GLenum, _index: GLuint, _id: GLuint) { globalGL.BeginQueryIndexed(_target, _index, _id); }
+glBeginTransformFeedback(_primitiveMode: GLenum) { globalGL.BeginTransformFeedback(_primitiveMode); }
+glBindAttribLocation(_program: GLuint, _index: GLuint, _name: GLstring) { globalGL.BindAttribLocation(_program, _index, _name); }
+glBindBuffer(_target: GLenum, _buffer: GLuint) { globalGL.BindBuffer(_target, _buffer); }
+glBindBufferBase(_target: GLenum, _index: GLuint, _buffer: GLuint) { globalGL.BindBufferBase(_target, _index, _buffer); }
+glBindBufferRange(_target: GLenum, _index: GLuint, _buffer: GLuint, _offset: GLintptr, _size: GLsizeiptr) { globalGL.BindBufferRange(_target, _index, _buffer, _offset, _size); }
+glBindFragDataLocation(_program: GLuint, _colorNumber: GLuint, _name: GLstring) { globalGL.BindFragDataLocation(_program, _colorNumber, _name); }
+glBindFragDataLocationIndexed(_program: GLuint, _colorNumber: GLuint, _index: GLuint, _name: GLstring) { globalGL.BindFragDataLocationIndexed(_program, _colorNumber, _index, _name); }
+glBindFramebuffer(_target: GLenum, _framebuffer: GLuint) { globalGL.BindFramebuffer(_target, _framebuffer); }
+glBindRenderbuffer(_target: GLenum, _renderbuffer: GLuint) { globalGL.BindRenderbuffer(_target, _renderbuffer); }
+glBindSampler(_unit: GLenum, _sampler: GLuint) { globalGL.BindSampler(_unit, _sampler); }
+glBindTexture(_target: GLenum, _texture: GLuint) { globalGL.BindTexture(_target, _texture); }
+glBindTransformFeedback(_target: GLenum, _id: GLuint) { globalGL.BindTransformFeedback(_target, _id); }
+glBindVertexArray(_array: GLuint) { globalGL.BindVertexArray(_array); }
+glBitmap(_width: GLsizei, _height: GLsizei, _xorig: GLfloat, _yorig: GLfloat, _xmove: GLfloat, _ymove: GLfloat, _bitmap: Pointer[GLubyte]) { globalGL.Bitmap(_width, _height, _xorig, _yorig, _xmove, _ymove, _bitmap); }
+glBlendColor(_red: GLclampf, _green: GLclampf, _blue: GLclampf, _alpha: GLclampf) { globalGL.BlendColor(_red, _green, _blue, _alpha); }
+glBlendEquation(_mode: GLenum) { globalGL.BlendEquation(_mode); }
+glBlendEquationSeparate(_modeRGB: GLenum, _modeAlpha: GLenum) { globalGL.BlendEquationSeparate(_modeRGB, _modeAlpha); }
+glBlendFunc(_sfactor: GLenum, _dfactor: GLenum) { globalGL.BlendFunc(_sfactor, _dfactor); }
+glBlendFuncSeparate(_sfactorRGB: GLenum, _dfactorRGB: GLenum, _sfactorAlpha: GLenum, _dfactorAlpha: GLenum) { globalGL.BlendFuncSeparate(_sfactorRGB, _dfactorRGB, _sfactorAlpha, _dfactorAlpha); }
+glBlitFramebuffer(_srcX0: GLint, _srcY0: GLint, _srcX1: GLint, _srcY1: GLint, _dstX0: GLint, _dstY0: GLint, _dstX1: GLint, _dstY1: GLint, _mask: GLbitfield, _filter: GLenum) { globalGL.BlitFramebuffer(_srcX0, _srcY0, _srcX1, _srcY1, _dstX0, _dstY0, _dstX1, _dstY1, _mask, _filter); }
+glBufferData(_target: GLenum, _size: GLsizeiptr, _data: Pointer[GLvoid], _usage: GLenum) { globalGL.BufferData(_target, _size, _data, _usage); }
+glBufferSubData(_target: GLenum, _offset: GLintptr, _size: GLsizeiptr, _data: Pointer[GLvoid]) { globalGL.BufferSubData(_target, _offset, _size, _data); }
+glCallList(_list: GLuint) { globalGL.CallList(_list); }
+glCallLists(_n: GLsizei, _type: GLenum, _lists: Pointer[GLvoid]) { globalGL.CallLists(_n, _type, _lists); }
+glCheckFramebufferStatus(_target: GLenum) = globalGL.CheckFramebufferStatus(_target);
+glClampColor(_target: GLenum, _clamp: GLenum) { globalGL.ClampColor(_target, _clamp); }
+glClear(_mask: GLbitfield) { globalGL.Clear(_mask); }
+glClearAccum(_red: GLfloat, _green: GLfloat, _blue: GLfloat, _alpha: GLfloat) { globalGL.ClearAccum(_red, _green, _blue, _alpha); }
+glClearBufferfi(_buffer: GLenum, _drawbuffer: GLint, _depth: GLfloat, _stencil: GLint) { globalGL.ClearBufferfi(_buffer, _drawbuffer, _depth, _stencil); }
+glClearBufferfv(_buffer: GLenum, _drawbuffer: GLint, _value: Pointer[GLfloat]) { globalGL.ClearBufferfv(_buffer, _drawbuffer, _value); }
+glClearBufferiv(_buffer: GLenum, _drawbuffer: GLint, _value: Pointer[GLint]) { globalGL.ClearBufferiv(_buffer, _drawbuffer, _value); }
+glClearBufferuiv(_buffer: GLenum, _drawbuffer: GLint, _value: Pointer[GLuint]) { globalGL.ClearBufferuiv(_buffer, _drawbuffer, _value); }
+glClearColor(_red: GLclampf, _green: GLclampf, _blue: GLclampf, _alpha: GLclampf) { globalGL.ClearColor(_red, _green, _blue, _alpha); }
+glClearColorIiEXT(_r: GLint, _g: GLint, _b: GLint, _a: GLint) { globalGL.ClearColorIiEXT(_r, _g, _b, _a); }
+glClearColorIuiEXT(_r: GLuint, _g: GLuint, _b: GLuint, _a: GLuint) { globalGL.ClearColorIuiEXT(_r, _g, _b, _a); }
+glClearDepth(_depth: GLclampd) { globalGL.ClearDepth(_depth); }
+glClearIndex(_c: GLfloat) { globalGL.ClearIndex(_c); }
+glClearStencil(_s: GLint) { globalGL.ClearStencil(_s); }
+glClientActiveTexture(_texture: GLenum) { globalGL.ClientActiveTexture(_texture); }
+glClientWaitSync(_sync: GLsync, _flags: GLbitfield, _timeout: GLuint64) = globalGL.ClientWaitSync(_sync, _flags, _timeout);
+glClipPlane(_plane: GLenum, _equation: Pointer[GLdouble]) { globalGL.ClipPlane(_plane, _equation); }
+glColor3b(_red: GLbyte, _green: GLbyte, _blue: GLbyte) { globalGL.Color3b(_red, _green, _blue); }
+glColor3bv(_v: Pointer[GLbyte]) { globalGL.Color3bv(_v); }
+glColor3d(_red: GLdouble, _green: GLdouble, _blue: GLdouble) { globalGL.Color3d(_red, _green, _blue); }
+glColor3dv(_v: Pointer[GLdouble]) { globalGL.Color3dv(_v); }
+glColor3f(_red: GLfloat, _green: GLfloat, _blue: GLfloat) { globalGL.Color3f(_red, _green, _blue); }
+glColor3fv(_v: Pointer[GLfloat]) { globalGL.Color3fv(_v); }
+glColor3i(_red: GLint, _green: GLint, _blue: GLint) { globalGL.Color3i(_red, _green, _blue); }
+glColor3iv(_v: Pointer[GLint]) { globalGL.Color3iv(_v); }
+glColor3s(_red: GLshort, _green: GLshort, _blue: GLshort) { globalGL.Color3s(_red, _green, _blue); }
+glColor3sv(_v: Pointer[GLshort]) { globalGL.Color3sv(_v); }
+glColor3ub(_red: GLubyte, _green: GLubyte, _blue: GLubyte) { globalGL.Color3ub(_red, _green, _blue); }
+glColor3ubv(_v: Pointer[GLubyte]) { globalGL.Color3ubv(_v); }
+glColor3ui(_red: GLuint, _green: GLuint, _blue: GLuint) { globalGL.Color3ui(_red, _green, _blue); }
+glColor3uiv(_v: Pointer[GLuint]) { globalGL.Color3uiv(_v); }
+glColor3us(_red: GLushort, _green: GLushort, _blue: GLushort) { globalGL.Color3us(_red, _green, _blue); }
+glColor3usv(_v: Pointer[GLushort]) { globalGL.Color3usv(_v); }
+glColor4b(_red: GLbyte, _green: GLbyte, _blue: GLbyte, _alpha: GLbyte) { globalGL.Color4b(_red, _green, _blue, _alpha); }
+glColor4bv(_v: Pointer[GLbyte]) { globalGL.Color4bv(_v); }
+glColor4d(_red: GLdouble, _green: GLdouble, _blue: GLdouble, _alpha: GLdouble) { globalGL.Color4d(_red, _green, _blue, _alpha); }
+glColor4dv(_v: Pointer[GLdouble]) { globalGL.Color4dv(_v); }
+glColor4f(_red: GLfloat, _green: GLfloat, _blue: GLfloat, _alpha: GLfloat) { globalGL.Color4f(_red, _green, _blue, _alpha); }
+glColor4fv(_v: Pointer[GLfloat]) { globalGL.Color4fv(_v); }
+glColor4i(_red: GLint, _green: GLint, _blue: GLint, _alpha: GLint) { globalGL.Color4i(_red, _green, _blue, _alpha); }
+glColor4iv(_v: Pointer[GLint]) { globalGL.Color4iv(_v); }
+glColor4s(_red: GLshort, _green: GLshort, _blue: GLshort, _alpha: GLshort) { globalGL.Color4s(_red, _green, _blue, _alpha); }
+glColor4sv(_v: Pointer[GLshort]) { globalGL.Color4sv(_v); }
+glColor4ub(_red: GLubyte, _green: GLubyte, _blue: GLubyte, _alpha: GLubyte) { globalGL.Color4ub(_red, _green, _blue, _alpha); }
+glColor4ubv(_v: Pointer[GLubyte]) { globalGL.Color4ubv(_v); }
+glColor4ui(_red: GLuint, _green: GLuint, _blue: GLuint, _alpha: GLuint) { globalGL.Color4ui(_red, _green, _blue, _alpha); }
+glColor4uiv(_v: Pointer[GLuint]) { globalGL.Color4uiv(_v); }
+glColor4us(_red: GLushort, _green: GLushort, _blue: GLushort, _alpha: GLushort) { globalGL.Color4us(_red, _green, _blue, _alpha); }
+glColor4usv(_v: Pointer[GLushort]) { globalGL.Color4usv(_v); }
+glColorMask(_red: GLboolean, _green: GLboolean, _blue: GLboolean, _alpha: GLboolean) { globalGL.ColorMask(_red, _green, _blue, _alpha); }
+glColorMaski(_buf: GLuint, _r: GLboolean, _g: GLboolean, _b: GLboolean, _a: GLboolean) { globalGL.ColorMaski(_buf, _r, _g, _b, _a); }
+glColorMaterial(_face: GLenum, _mode: GLenum) { globalGL.ColorMaterial(_face, _mode); }
+glColorP3ui(_type: GLenum, _color: GLuint) { globalGL.ColorP3ui(_type, _color); }
+glColorP3uiv(_type: GLenum, _color: Pointer[GLuint]) { globalGL.ColorP3uiv(_type, _color); }
+glColorP4ui(_type: GLenum, _color: GLuint) { globalGL.ColorP4ui(_type, _color); }
+glColorP4uiv(_type: GLenum, _color: Pointer[GLuint]) { globalGL.ColorP4uiv(_type, _color); }
+glColorPointer(_size: GLint, _type: GLenum, _stride: GLsizei, _ptr: Pointer[GLvoid]) { globalGL.ColorPointer(_size, _type, _stride, _ptr); }
+glCompileShader(_shader: GLuint) { globalGL.CompileShader(_shader); }
+glCompressedTexImage1D(_target: GLenum, _level: GLint, _internalformat: GLenum, _width: GLsizei, _border: GLint, _imageSize: GLsizei, _data: Pointer[GLvoid]) { globalGL.CompressedTexImage1D(_target, _level, _internalformat, _width, _border, _imageSize, _data); }
+glCompressedTexImage2D(_target: GLenum, _level: GLint, _internalformat: GLenum, _width: GLsizei, _height: GLsizei, _border: GLint, _imageSize: GLsizei, _data: Pointer[GLvoid]) { globalGL.CompressedTexImage2D(_target, _level, _internalformat, _width, _height, _border, _imageSize, _data); }
+glCompressedTexImage3D(_target: GLenum, _level: GLint, _internalformat: GLenum, _width: GLsizei, _height: GLsizei, _depth: GLsizei, _border: GLint, _imageSize: GLsizei, _data: Pointer[GLvoid]) { globalGL.CompressedTexImage3D(_target, _level, _internalformat, _width, _height, _depth, _border, _imageSize, _data); }
+glCompressedTexSubImage1D(_target: GLenum, _level: GLint, _xoffset: GLint, _width: GLsizei, _format: GLenum, _imageSize: GLsizei, _data: Pointer[GLvoid]) { globalGL.CompressedTexSubImage1D(_target, _level, _xoffset, _width, _format, _imageSize, _data); }
+glCompressedTexSubImage2D(_target: GLenum, _level: GLint, _xoffset: GLint, _yoffset: GLint, _width: GLsizei, _height: GLsizei, _format: GLenum, _imageSize: GLsizei, _data: Pointer[GLvoid]) { globalGL.CompressedTexSubImage2D(_target, _level, _xoffset, _yoffset, _width, _height, _format, _imageSize, _data); }
+glCompressedTexSubImage3D(_target: GLenum, _level: GLint, _xoffset: GLint, _yoffset: GLint, _zoffset: GLint, _width: GLsizei, _height: GLsizei, _depth: GLsizei, _format: GLenum, _imageSize: GLsizei, _data: Pointer[GLvoid]) { globalGL.CompressedTexSubImage3D(_target, _level, _xoffset, _yoffset, _zoffset, _width, _height, _depth, _format, _imageSize, _data); }
+glCopyBufferSubData(_readtarget: GLenum, _writetarget: GLenum, _readoffset: GLintptr, _writeoffset: GLintptr, _size: GLsizeiptr) { globalGL.CopyBufferSubData(_readtarget, _writetarget, _readoffset, _writeoffset, _size); }
+glCopyPixels(_x: GLint, _y: GLint, _width: GLsizei, _height: GLsizei, _type: GLenum) { globalGL.CopyPixels(_x, _y, _width, _height, _type); }
+glCopyTexImage1D(_target: GLenum, _level: GLint, _internalformat: GLenum, _x: GLint, _y: GLint, _width: GLsizei, _border: GLint) { globalGL.CopyTexImage1D(_target, _level, _internalformat, _x, _y, _width, _border); }
+glCopyTexImage2D(_target: GLenum, _level: GLint, _internalformat: GLenum, _x: GLint, _y: GLint, _width: GLsizei, _height: GLsizei, _border: GLint) { globalGL.CopyTexImage2D(_target, _level, _internalformat, _x, _y, _width, _height, _border); }
+glCopyTexSubImage1D(_target: GLenum, _level: GLint, _xoffset: GLint, _x: GLint, _y: GLint, _width: GLsizei) { globalGL.CopyTexSubImage1D(_target, _level, _xoffset, _x, _y, _width); }
+glCopyTexSubImage2D(_target: GLenum, _level: GLint, _xoffset: GLint, _yoffset: GLint, _x: GLint, _y: GLint, _width: GLsizei, _height: GLsizei) { globalGL.CopyTexSubImage2D(_target, _level, _xoffset, _yoffset, _x, _y, _width, _height); }
+glCopyTexSubImage3D(_target: GLenum, _level: GLint, _xoffset: GLint, _yoffset: GLint, _zoffset: GLint, _x: GLint, _y: GLint, _width: GLsizei, _height: GLsizei) { globalGL.CopyTexSubImage3D(_target, _level, _xoffset, _yoffset, _zoffset, _x, _y, _width, _height); }
+glCreateProgram() = globalGL.CreateProgram();
+glCreateShader(_type: GLenum) = globalGL.CreateShader(_type);
+glCullFace(_mode: GLenum) { globalGL.CullFace(_mode); }
+glDeleteBuffers(_n: GLsizei, _buffers: Pointer[GLuint]) { globalGL.DeleteBuffers(_n, _buffers); }
+glDeleteFramebuffers(_n: GLsizei, _framebuffers: Pointer[GLuint]) { globalGL.DeleteFramebuffers(_n, _framebuffers); }
+glDeleteLists(_list: GLuint, _range: GLsizei) { globalGL.DeleteLists(_list, _range); }
+glDeleteProgram(_program: GLuint) { globalGL.DeleteProgram(_program); }
+glDeleteQueries(_n: GLsizei, _ids: Pointer[GLuint]) { globalGL.DeleteQueries(_n, _ids); }
+glDeleteRenderbuffers(_n: GLsizei, _renderbuffers: Pointer[GLuint]) { globalGL.DeleteRenderbuffers(_n, _renderbuffers); }
+glDeleteSamplers(_count: GLsizei, _samplers: Pointer[GLuint]) { globalGL.DeleteSamplers(_count, _samplers); }
+glDeleteShader(_shader: GLuint) { globalGL.DeleteShader(_shader); }
+glDeleteSync(_sync: GLsync) { globalGL.DeleteSync(_sync); }
+glDeleteTextures(_n: GLsizei, _textures: Pointer[GLuint]) { globalGL.DeleteTextures(_n, _textures); }
+glDeleteTransformFeedbacks(_n: GLsizei, _ids: Pointer[GLuint]) { globalGL.DeleteTransformFeedbacks(_n, _ids); }
+glDeleteVertexArrays(_n: GLsizei, _arrays: Pointer[GLuint]) { globalGL.DeleteVertexArrays(_n, _arrays); }
+glDepthFunc(_func: GLenum) { globalGL.DepthFunc(_func); }
+glDepthMask(_flag: GLboolean) { globalGL.DepthMask(_flag); }
+glDepthRange(_near_val: GLclampd, _far_val: GLclampd) { globalGL.DepthRange(_near_val, _far_val); }
+glDetachShader(_program: GLuint, _shader: GLuint) { globalGL.DetachShader(_program, _shader); }
+glDisable(_cap: GLenum) { globalGL.Disable(_cap); }
+glDisableClientState(_cap: GLenum) { globalGL.DisableClientState(_cap); }
+glDisableVertexAttribArray(_index: GLuint) { globalGL.DisableVertexAttribArray(_index); }
+glDisablei(_target: GLenum, _index: GLuint) { globalGL.Disablei(_target, _index); }
+glDrawArrays(_mode: GLenum, _first: GLint, _count: GLsizei) { globalGL.DrawArrays(_mode, _first, _count); }
+glDrawArraysInstanced(_mode: GLenum, _first: GLint, _count: GLsizei, _primcount: GLsizei) { globalGL.DrawArraysInstanced(_mode, _first, _count, _primcount); }
+glDrawBuffer(_mode: GLenum) { globalGL.DrawBuffer(_mode); }
+glDrawBuffers(_n: GLsizei, _bufs: Pointer[GLenum]) { globalGL.DrawBuffers(_n, _bufs); }
+glDrawElements(_mode: GLenum, _count: GLsizei, _type: GLenum, _indices: Pointer[GLvoid]) { globalGL.DrawElements(_mode, _count, _type, _indices); }
+glDrawElementsInstanced(_mode: GLenum, _count: GLsizei, _type: GLenum, _indices: Pointer[GLvoid], _primcount: GLsizei) { globalGL.DrawElementsInstanced(_mode, _count, _type, _indices, _primcount); }
+glDrawPixels(_width: GLsizei, _height: GLsizei, _format: GLenum, _type: GLenum, _pixels: Pointer[GLvoid]) { globalGL.DrawPixels(_width, _height, _format, _type, _pixels); }
+glDrawRangeElements(_mode: GLenum, _start: GLuint, _end: GLuint, _count: GLsizei, _type: GLenum, _indices: Pointer[GLvoid]) { globalGL.DrawRangeElements(_mode, _start, _end, _count, _type, _indices); }
+glDrawTransformFeedback(_mode: GLenum, _id: GLuint) { globalGL.DrawTransformFeedback(_mode, _id); }
+glDrawTransformFeedbackStream(_mode: GLenum, _id: GLuint, _stream: GLuint) { globalGL.DrawTransformFeedbackStream(_mode, _id, _stream); }
+glEdgeFlag(_flag: GLboolean) { globalGL.EdgeFlag(_flag); }
+glEdgeFlagPointer(_stride: GLsizei, _ptr: Pointer[GLvoid]) { globalGL.EdgeFlagPointer(_stride, _ptr); }
+glEdgeFlagv(_flag: Pointer[GLboolean]) { globalGL.EdgeFlagv(_flag); }
+glEnable(_cap: GLenum) { globalGL.Enable(_cap); }
+glEnableClientState(_cap: GLenum) { globalGL.EnableClientState(_cap); }
+glEnableVertexAttribArray(_index: GLuint) { globalGL.EnableVertexAttribArray(_index); }
+glEnablei(_target: GLenum, _index: GLuint) { globalGL.Enablei(_target, _index); }
+glEnd() { globalGL.End(); }
+glEndConditionalRender() { globalGL.EndConditionalRender(); }
+glEndList() { globalGL.EndList(); }
+glEndQuery(_target: GLenum) { globalGL.EndQuery(_target); }
+glEndQueryIndexed(_target: GLenum, _index: GLuint) { globalGL.EndQueryIndexed(_target, _index); }
+glEndTransformFeedback() { globalGL.EndTransformFeedback(); }
+glEvalCoord1d(_u: GLdouble) { globalGL.EvalCoord1d(_u); }
+glEvalCoord1dv(_u: Pointer[GLdouble]) { globalGL.EvalCoord1dv(_u); }
+glEvalCoord1f(_u: GLfloat) { globalGL.EvalCoord1f(_u); }
+glEvalCoord1fv(_u: Pointer[GLfloat]) { globalGL.EvalCoord1fv(_u); }
+glEvalCoord2d(_u: GLdouble, _v: GLdouble) { globalGL.EvalCoord2d(_u, _v); }
+glEvalCoord2dv(_u: Pointer[GLdouble]) { globalGL.EvalCoord2dv(_u); }
+glEvalCoord2f(_u: GLfloat, _v: GLfloat) { globalGL.EvalCoord2f(_u, _v); }
+glEvalCoord2fv(_u: Pointer[GLfloat]) { globalGL.EvalCoord2fv(_u); }
+glEvalMesh1(_mode: GLenum, _i1: GLint, _i2: GLint) { globalGL.EvalMesh1(_mode, _i1, _i2); }
+glEvalMesh2(_mode: GLenum, _i1: GLint, _i2: GLint, _j1: GLint, _j2: GLint) { globalGL.EvalMesh2(_mode, _i1, _i2, _j1, _j2); }
+glEvalPoint1(_i: GLint) { globalGL.EvalPoint1(_i); }
+glEvalPoint2(_i: GLint, _j: GLint) { globalGL.EvalPoint2(_i, _j); }
+glFeedbackBuffer(_size: GLsizei, _type: GLenum, _buffer: Pointer[GLfloat]) { globalGL.FeedbackBuffer(_size, _type, _buffer); }
+glFenceSync(_condition: GLenum, _flags: GLbitfield) = globalGL.FenceSync(_condition, _flags);
+glFinish() { globalGL.Finish(); }
+glFlush() { globalGL.Flush(); }
+glFlushMappedBufferRange(_target: GLenum, _offset: GLintptr, _size: GLsizeiptr) { globalGL.FlushMappedBufferRange(_target, _offset, _size); }
+glFogCoordPointer(_type: GLenum, _stride: GLsizei, _pointer: Pointer[GLvoid]) { globalGL.FogCoordPointer(_type, _stride, _pointer); }
+glFogCoordd(_coord: GLdouble) { globalGL.FogCoordd(_coord); }
+glFogCoorddv(_coord: Pointer[GLdouble]) { globalGL.FogCoorddv(_coord); }
+glFogCoordf(_coord: GLfloat) { globalGL.FogCoordf(_coord); }
+glFogCoordfv(_coord: Pointer[GLfloat]) { globalGL.FogCoordfv(_coord); }
+glFogf(_pname: GLenum, _param: GLfloat) { globalGL.Fogf(_pname, _param); }
+glFogfv(_pname: GLenum, _params: Pointer[GLfloat]) { globalGL.Fogfv(_pname, _params); }
+glFogi(_pname: GLenum, _param: GLint) { globalGL.Fogi(_pname, _param); }
+glFogiv(_pname: GLenum, _params: Pointer[GLint]) { globalGL.Fogiv(_pname, _params); }
+glFramebufferRenderbuffer(_target: GLenum, _attachment: GLenum, _renderbuffertarget: GLenum, _renderbuffer: GLuint) { globalGL.FramebufferRenderbuffer(_target, _attachment, _renderbuffertarget, _renderbuffer); }
+glFramebufferTexture(_target: GLenum, _attachment: GLenum, _texture: GLuint, _level: GLint) { globalGL.FramebufferTexture(_target, _attachment, _texture, _level); }
+glFramebufferTexture1D(_target: GLenum, _attachment: GLenum, _textarget: GLenum, _texture: GLuint, _level: GLint) { globalGL.FramebufferTexture1D(_target, _attachment, _textarget, _texture, _level); }
+glFramebufferTexture2D(_target: GLenum, _attachment: GLenum, _textarget: GLenum, _texture: GLuint, _level: GLint) { globalGL.FramebufferTexture2D(_target, _attachment, _textarget, _texture, _level); }
+glFramebufferTexture3D(_target: GLenum, _attachment: GLenum, _textarget: GLenum, _texture: GLuint, _level: GLint, _zoffset: GLint) { globalGL.FramebufferTexture3D(_target, _attachment, _textarget, _texture, _level, _zoffset); }
+glFramebufferTextureFaceARB(_target: GLenum, _attachment: GLenum, _texture: GLuint, _level: GLint, _face: GLenum) { globalGL.FramebufferTextureFaceARB(_target, _attachment, _texture, _level, _face); }
+glFramebufferTextureLayer(_target: GLenum, _attachment: GLenum, _texture: GLuint, _level: GLint, _layer: GLint) { globalGL.FramebufferTextureLayer(_target, _attachment, _texture, _level, _layer); }
+glFramebufferTextureLayerARB(_target: GLenum, _attachment: GLenum, _texture: GLuint, _level: GLint, _layer: GLint) { globalGL.FramebufferTextureLayerARB(_target, _attachment, _texture, _level, _layer); }
+glFrontFace(_mode: GLenum) { globalGL.FrontFace(_mode); }
+glFrustum(_left: GLdouble, _right: GLdouble, _bottom: GLdouble, _top: GLdouble, _near_val: GLdouble, _far_val: GLdouble) { globalGL.Frustum(_left, _right, _bottom, _top, _near_val, _far_val); }
+glGenBuffers(_n: GLsizei, _buffers: Pointer[GLuint]) { globalGL.GenBuffers(_n, _buffers); }
+glGenFramebuffers(_n: GLsizei, _framebuffers: Pointer[GLuint]) { globalGL.GenFramebuffers(_n, _framebuffers); }
+glGenLists(_range: GLsizei) = globalGL.GenLists(_range);
+glGenQueries(_n: GLsizei, _ids: Pointer[GLuint]) { globalGL.GenQueries(_n, _ids); }
+glGenRenderbuffers(_n: GLsizei, _renderbuffers: Pointer[GLuint]) { globalGL.GenRenderbuffers(_n, _renderbuffers); }
+glGenSamplers(_count: GLsizei, _samplers: Pointer[GLuint]) { globalGL.GenSamplers(_count, _samplers); }
+glGenTextures(_n: GLsizei, _textures: Pointer[GLuint]) { globalGL.GenTextures(_n, _textures); }
+glGenTransformFeedbacks(_n: GLsizei, _ids: Pointer[GLuint]) { globalGL.GenTransformFeedbacks(_n, _ids); }
+glGenVertexArrays(_n: GLsizei, _arrays: Pointer[GLuint]) { globalGL.GenVertexArrays(_n, _arrays); }
+glGenerateMipmap(_target: GLenum) { globalGL.GenerateMipmap(_target); }
+glGetActiveAttrib(_program: GLuint, _index: GLuint, _maxLength: GLsizei, _length: Pointer[GLsizei], _size: Pointer[GLint], _type: Pointer[GLenum], _name: GLstring) { globalGL.GetActiveAttrib(_program, _index, _maxLength, _length, _size, _type, _name); }
+glGetActiveSubroutineName(_program: GLuint, _shadertype: GLenum, _index: GLuint, _bufsize: GLsizei, _length: Pointer[GLsizei], _name: GLstring) { globalGL.GetActiveSubroutineName(_program, _shadertype, _index, _bufsize, _length, _name); }
+glGetActiveSubroutineUniformName(_program: GLuint, _shadertype: GLenum, _index: GLuint, _bufsize: GLsizei, _length: Pointer[GLsizei], _name: GLstring) { globalGL.GetActiveSubroutineUniformName(_program, _shadertype, _index, _bufsize, _length, _name); }
+glGetActiveSubroutineUniformiv(_program: GLuint, _shadertype: GLenum, _index: GLuint, _pname: GLenum, _values: Pointer[GLint]) { globalGL.GetActiveSubroutineUniformiv(_program, _shadertype, _index, _pname, _values); }
+glGetActiveUniform(_program: GLuint, _index: GLuint, _maxLength: GLsizei, _length: Pointer[GLsizei], _size: Pointer[GLint], _type: Pointer[GLenum], _name: GLstring) { globalGL.GetActiveUniform(_program, _index, _maxLength, _length, _size, _type, _name); }
+glGetActiveUniformBlockName(_program: GLuint, _uniformBlockIndex: GLuint, _bufSize: GLsizei, _length: Pointer[GLsizei], _uniformName: GLstring) { globalGL.GetActiveUniformBlockName(_program, _uniformBlockIndex, _bufSize, _length, _uniformName); }
+glGetActiveUniformBlockiv(_program: GLuint, _uniformBlockIndex: GLuint, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetActiveUniformBlockiv(_program, _uniformBlockIndex, _pname, _params); }
+glGetActiveUniformName(_program: GLuint, _uniformIndex: GLuint, _bufSize: GLsizei, _length: Pointer[GLsizei], _uniformName: GLstring) { globalGL.GetActiveUniformName(_program, _uniformIndex, _bufSize, _length, _uniformName); }
+glGetActiveUniformsiv(_program: GLuint, _uniformCount: GLsizei, _uniformIndices: Pointer[GLuint], _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetActiveUniformsiv(_program, _uniformCount, _uniformIndices, _pname, _params); }
+glGetAttachedShaders(_program: GLuint, _maxCount: GLsizei, _count: Pointer[GLsizei], _shaders: Pointer[GLuint]) { globalGL.GetAttachedShaders(_program, _maxCount, _count, _shaders); }
+glGetAttribLocation(_program: GLuint, _name: GLstring) = globalGL.GetAttribLocation(_program, _name);
+glGetBooleani_v(_value: GLenum, _index: GLuint, _data: Pointer[GLboolean]) { globalGL.GetBooleani_v(_value, _index, _data); }
+glGetBooleanv(_pname: GLenum, _params: Pointer[GLboolean]) { globalGL.GetBooleanv(_pname, _params); }
+glGetBufferParameteri64v(_target: GLenum, _pname: GLenum, _params: Pointer[GLint64]) { globalGL.GetBufferParameteri64v(_target, _pname, _params); }
+glGetBufferParameteriv(_target: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetBufferParameteriv(_target, _pname, _params); }
+glGetBufferPointerv(_target: GLenum, _pname: GLenum, _params: Pointer[Pointer[GLvoid]]) { globalGL.GetBufferPointerv(_target, _pname, _params); }
+glGetBufferSubData(_target: GLenum, _offset: GLintptr, _size: GLsizeiptr, _data: Pointer[GLvoid]) { globalGL.GetBufferSubData(_target, _offset, _size, _data); }
+glGetClipPlane(_plane: GLenum, _equation: Pointer[GLdouble]) { globalGL.GetClipPlane(_plane, _equation); }
+glGetCompressedTexImage(_target: GLenum, _lod: GLint, _img: Pointer[GLvoid]) { globalGL.GetCompressedTexImage(_target, _lod, _img); }
+glGetDoublev(_pname: GLenum, _params: Pointer[GLdouble]) { globalGL.GetDoublev(_pname, _params); }
+glGetError() = globalGL.GetError();
+glGetFloatv(_pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetFloatv(_pname, _params); }
+glGetFragDataIndex(_program: GLuint, _name: GLstring) = globalGL.GetFragDataIndex(_program, _name);
+glGetFragDataLocation(_program: GLuint, _name: GLstring) = globalGL.GetFragDataLocation(_program, _name);
+glGetFramebufferAttachmentParameteriv(_target: GLenum, _attachment: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetFramebufferAttachmentParameteriv(_target, _attachment, _pname, _params); }
+glGetInteger64i_v(_target: GLenum, _index: GLuint, _data: Pointer[GLint64]) { globalGL.GetInteger64i_v(_target, _index, _data); }
+glGetInteger64v(_pname: GLenum, _params: Pointer[GLint64]) { globalGL.GetInteger64v(_pname, _params); }
+glGetIntegeri_v(_value: GLenum, _index: GLuint, _data: Pointer[GLint]) { globalGL.GetIntegeri_v(_value, _index, _data); }
+glGetIntegerv(_pname: GLenum, _params: Pointer[GLint]) { globalGL.GetIntegerv(_pname, _params); }
+glGetLightfv(_light: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetLightfv(_light, _pname, _params); }
+glGetLightiv(_light: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetLightiv(_light, _pname, _params); }
+glGetMapdv(_target: GLenum, _query: GLenum, _v: Pointer[GLdouble]) { globalGL.GetMapdv(_target, _query, _v); }
+glGetMapfv(_target: GLenum, _query: GLenum, _v: Pointer[GLfloat]) { globalGL.GetMapfv(_target, _query, _v); }
+glGetMapiv(_target: GLenum, _query: GLenum, _v: Pointer[GLint]) { globalGL.GetMapiv(_target, _query, _v); }
+glGetMaterialfv(_face: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetMaterialfv(_face, _pname, _params); }
+glGetMaterialiv(_face: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetMaterialiv(_face, _pname, _params); }
+glGetMultisamplefv(_pname: GLenum, _index: GLuint, _val: Pointer[GLfloat]) { globalGL.GetMultisamplefv(_pname, _index, _val); }
+glGetPixelMapfv(_map: GLenum, _values: Pointer[GLfloat]) { globalGL.GetPixelMapfv(_map, _values); }
+glGetPixelMapuiv(_map: GLenum, _values: Pointer[GLuint]) { globalGL.GetPixelMapuiv(_map, _values); }
+glGetPixelMapusv(_map: GLenum, _values: Pointer[GLushort]) { globalGL.GetPixelMapusv(_map, _values); }
+glGetPointerv(_pname: GLenum, _params: Pointer[Pointer[GLvoid]]) { globalGL.GetPointerv(_pname, _params); }
+glGetPolygonStipple(_mask: Pointer[GLubyte]) { globalGL.GetPolygonStipple(_mask); }
+glGetProgramInfoLog(_program: GLuint, _bufSize: GLsizei, _length: Pointer[GLsizei], _infoLog: GLstring) { globalGL.GetProgramInfoLog(_program, _bufSize, _length, _infoLog); }
+glGetProgramStageiv(_program: GLuint, _shadertype: GLenum, _pname: GLenum, _values: Pointer[GLint]) { globalGL.GetProgramStageiv(_program, _shadertype, _pname, _values); }
+glGetProgramiv(_program: GLuint, _pname: GLenum, _param: Pointer[GLint]) { globalGL.GetProgramiv(_program, _pname, _param); }
+glGetQueryIndexediv(_target: GLenum, _index: GLuint, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetQueryIndexediv(_target, _index, _pname, _params); }
+glGetQueryObjecti64v(_id: GLuint, _pname: GLenum, _params: Pointer[GLint64]) { globalGL.GetQueryObjecti64v(_id, _pname, _params); }
+glGetQueryObjectiv(_id: GLuint, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetQueryObjectiv(_id, _pname, _params); }
+glGetQueryObjectui64v(_id: GLuint, _pname: GLenum, _params: Pointer[GLuint64]) { globalGL.GetQueryObjectui64v(_id, _pname, _params); }
+glGetQueryObjectuiv(_id: GLuint, _pname: GLenum, _params: Pointer[GLuint]) { globalGL.GetQueryObjectuiv(_id, _pname, _params); }
+glGetQueryiv(_target: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetQueryiv(_target, _pname, _params); }
+glGetRenderbufferParameteriv(_target: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetRenderbufferParameteriv(_target, _pname, _params); }
+glGetSamplerParameterIfv(_sampler: GLuint, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetSamplerParameterIfv(_sampler, _pname, _params); }
+glGetSamplerParameterIiv(_sampler: GLuint, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetSamplerParameterIiv(_sampler, _pname, _params); }
+glGetSamplerParameterfv(_sampler: GLuint, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetSamplerParameterfv(_sampler, _pname, _params); }
+glGetSamplerParameteriv(_sampler: GLuint, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetSamplerParameteriv(_sampler, _pname, _params); }
+glGetShaderInfoLog(_shader: GLuint, _bufSize: GLsizei, _length: Pointer[GLsizei], _infoLog: GLstring) { globalGL.GetShaderInfoLog(_shader, _bufSize, _length, _infoLog); }
+glGetShaderSource(_obj: GLint, _maxLength: GLsizei, _length: Pointer[GLsizei], _source: GLstring) { globalGL.GetShaderSource(_obj, _maxLength, _length, _source); }
+glGetShaderiv(_shader: GLuint, _pname: GLenum, _param: Pointer[GLint]) { globalGL.GetShaderiv(_shader, _pname, _param); }
+glGetString(_name: GLenum) = globalGL.GetString(_name);
+glGetStringi(_value: GLenum, _index: GLuint) = globalGL.GetStringi(_value, _index);
+glGetSubroutineIndex(_program: GLuint, _shadertype: GLenum, _name: GLstring) = globalGL.GetSubroutineIndex(_program, _shadertype, _name);
+glGetSubroutineUniformLocation(_program: GLuint, _shadertype: GLenum, _name: GLstring) = globalGL.GetSubroutineUniformLocation(_program, _shadertype, _name);
+glGetSynciv(_sync: GLsync, _pname: GLenum, _bufSize: GLsizei, _length: Pointer[GLsizei], _values: Pointer[GLint]) { globalGL.GetSynciv(_sync, _pname, _bufSize, _length, _values); }
+glGetTexEnvfv(_target: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetTexEnvfv(_target, _pname, _params); }
+glGetTexEnviv(_target: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetTexEnviv(_target, _pname, _params); }
+glGetTexGendv(_coord: GLenum, _pname: GLenum, _params: Pointer[GLdouble]) { globalGL.GetTexGendv(_coord, _pname, _params); }
+glGetTexGenfv(_coord: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetTexGenfv(_coord, _pname, _params); }
+glGetTexGeniv(_coord: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetTexGeniv(_coord, _pname, _params); }
+glGetTexImage(_target: GLenum, _level: GLint, _format: GLenum, _type: GLenum, _pixels: Pointer[GLvoid]) { globalGL.GetTexImage(_target, _level, _format, _type, _pixels); }
+glGetTexLevelParameterfv(_target: GLenum, _level: GLint, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetTexLevelParameterfv(_target, _level, _pname, _params); }
+glGetTexLevelParameteriv(_target: GLenum, _level: GLint, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetTexLevelParameteriv(_target, _level, _pname, _params); }
+glGetTexParameterIiv(_target: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetTexParameterIiv(_target, _pname, _params); }
+glGetTexParameterIuiv(_target: GLenum, _pname: GLenum, _params: Pointer[GLuint]) { globalGL.GetTexParameterIuiv(_target, _pname, _params); }
+glGetTexParameterfv(_target: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetTexParameterfv(_target, _pname, _params); }
+glGetTexParameteriv(_target: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetTexParameteriv(_target, _pname, _params); }
+glGetTransformFeedbackVarying(_program: GLuint, _index: GLuint, _bufSize: GLsizei, _length: Pointer[GLsizei], _size: Pointer[GLsizei], _type: Pointer[GLenum], _name: GLstring) { globalGL.GetTransformFeedbackVarying(_program, _index, _bufSize, _length, _size, _type, _name); }
+glGetUniformBlockIndex(_program: GLuint, _uniformBlockName: GLstring) = globalGL.GetUniformBlockIndex(_program, _uniformBlockName);
+glGetUniformIndices(_program: GLuint, _uniformCount: GLsizei, _uniformNames: Pointer[GLstring], _uniformIndices: Pointer[GLuint]) { globalGL.GetUniformIndices(_program, _uniformCount, _uniformNames, _uniformIndices); }
+glGetUniformLocation(_programObj: GLint, _name: GLstring) = globalGL.GetUniformLocation(_programObj, _name);
+glGetUniformSubroutineuiv(_shadertype: GLenum, _location: GLint, _params: Pointer[GLuint]) { globalGL.GetUniformSubroutineuiv(_shadertype, _location, _params); }
+glGetUniformdv(_program: GLuint, _location: GLint, _params: Pointer[GLdouble]) { globalGL.GetUniformdv(_program, _location, _params); }
+glGetUniformfv(_program: GLuint, _location: GLint, _params: Pointer[GLfloat]) { globalGL.GetUniformfv(_program, _location, _params); }
+glGetUniformiv(_program: GLuint, _location: GLint, _params: Pointer[GLint]) { globalGL.GetUniformiv(_program, _location, _params); }
+glGetUniformuiv(_program: GLuint, _location: GLint, _params: Pointer[GLuint]) { globalGL.GetUniformuiv(_program, _location, _params); }
+glGetVertexAttribIiv(_index: GLuint, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetVertexAttribIiv(_index, _pname, _params); }
+glGetVertexAttribIuiv(_index: GLuint, _pname: GLenum, _params: Pointer[GLuint]) { globalGL.GetVertexAttribIuiv(_index, _pname, _params); }
+glGetVertexAttribPointerv(_index: GLuint, _pname: GLenum, _pointer: Pointer[Pointer[GLvoid]]) { globalGL.GetVertexAttribPointerv(_index, _pname, _pointer); }
+glGetVertexAttribdv(_index: GLuint, _pname: GLenum, _params: Pointer[GLdouble]) { globalGL.GetVertexAttribdv(_index, _pname, _params); }
+glGetVertexAttribfv(_index: GLuint, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.GetVertexAttribfv(_index, _pname, _params); }
+glGetVertexAttribiv(_index: GLuint, _pname: GLenum, _params: Pointer[GLint]) { globalGL.GetVertexAttribiv(_index, _pname, _params); }
+glHint(_target: GLenum, _mode: GLenum) { globalGL.Hint(_target, _mode); }
+glIndexMask(_mask: GLuint) { globalGL.IndexMask(_mask); }
+glIndexPointer(_type: GLenum, _stride: GLsizei, _ptr: Pointer[GLvoid]) { globalGL.IndexPointer(_type, _stride, _ptr); }
+glIndexd(_c: GLdouble) { globalGL.Indexd(_c); }
+glIndexdv(_c: Pointer[GLdouble]) { globalGL.Indexdv(_c); }
+glIndexf(_c: GLfloat) { globalGL.Indexf(_c); }
+glIndexfv(_c: Pointer[GLfloat]) { globalGL.Indexfv(_c); }
+glIndexi(_c: GLint) { globalGL.Indexi(_c); }
+glIndexiv(_c: Pointer[GLint]) { globalGL.Indexiv(_c); }
+glIndexs(_c: GLshort) { globalGL.Indexs(_c); }
+glIndexsv(_c: Pointer[GLshort]) { globalGL.Indexsv(_c); }
+glIndexub(_c: GLubyte) { globalGL.Indexub(_c); }
+glIndexubv(_c: Pointer[GLubyte]) { globalGL.Indexubv(_c); }
+glInitNames() { globalGL.InitNames(); }
+glInterleavedArrays(_format: GLenum, _stride: GLsizei, _pointer: Pointer[GLvoid]) { globalGL.InterleavedArrays(_format, _stride, _pointer); }
+glIsBuffer(_buffer: GLuint) = globalGL.IsBuffer(_buffer);
+glIsEnabled(_cap: GLenum) = globalGL.IsEnabled(_cap);
+glIsEnabledi(_target: GLenum, _index: GLuint) = globalGL.IsEnabledi(_target, _index);
+glIsFramebuffer(_framebuffer: GLuint) = globalGL.IsFramebuffer(_framebuffer);
+glIsList(_list: GLuint) = globalGL.IsList(_list);
+glIsProgram(_program: GLuint) = globalGL.IsProgram(_program);
+glIsQuery(_id: GLuint) = globalGL.IsQuery(_id);
+glIsRenderbuffer(_renderbuffer: GLuint) = globalGL.IsRenderbuffer(_renderbuffer);
+glIsSampler(_sampler: GLuint) = globalGL.IsSampler(_sampler);
+glIsShader(_shader: GLuint) = globalGL.IsShader(_shader);
+glIsSync(_sync: GLsync) = globalGL.IsSync(_sync);
+glIsTexture(_texture: GLuint) = globalGL.IsTexture(_texture);
+glIsTransformFeedback(_id: GLuint) = globalGL.IsTransformFeedback(_id);
+glIsVertexArray(_array: GLuint) = globalGL.IsVertexArray(_array);
+glLightModelf(_pname: GLenum, _param: GLfloat) { globalGL.LightModelf(_pname, _param); }
+glLightModelfv(_pname: GLenum, _params: Pointer[GLfloat]) { globalGL.LightModelfv(_pname, _params); }
+glLightModeli(_pname: GLenum, _param: GLint) { globalGL.LightModeli(_pname, _param); }
+glLightModeliv(_pname: GLenum, _params: Pointer[GLint]) { globalGL.LightModeliv(_pname, _params); }
+glLightf(_light: GLenum, _pname: GLenum, _param: GLfloat) { globalGL.Lightf(_light, _pname, _param); }
+glLightfv(_light: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.Lightfv(_light, _pname, _params); }
+glLighti(_light: GLenum, _pname: GLenum, _param: GLint) { globalGL.Lighti(_light, _pname, _param); }
+glLightiv(_light: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.Lightiv(_light, _pname, _params); }
+glLineStipple(_factor: GLint, _pattern: GLushort) { globalGL.LineStipple(_factor, _pattern); }
+glLineWidth(_width: GLfloat) { globalGL.LineWidth(_width); }
+glLinkProgram(_program: GLuint) { globalGL.LinkProgram(_program); }
+glListBase(_base: GLuint) { globalGL.ListBase(_base); }
+glLoadIdentity() { globalGL.LoadIdentity(); }
+glLoadMatrixd(_m: Pointer[GLdouble]) { globalGL.LoadMatrixd(_m); }
+glLoadMatrixf(_m: Pointer[GLfloat]) { globalGL.LoadMatrixf(_m); }
+glLoadName(_name: GLuint) { globalGL.LoadName(_name); }
+glLoadTransposeMatrixd(_m: Pointer[GLdouble]) { globalGL.LoadTransposeMatrixd(_m); }
+glLoadTransposeMatrixf(_m: Pointer[GLfloat]) { globalGL.LoadTransposeMatrixf(_m); }
+glLogicOp(_opcode: GLenum) { globalGL.LogicOp(_opcode); }
+glMap1d(_target: GLenum, _u1: GLdouble, _u2: GLdouble, _stride: GLint, _order: GLint, _points: Pointer[GLdouble]) { globalGL.Map1d(_target, _u1, _u2, _stride, _order, _points); }
+glMap1f(_target: GLenum, _u1: GLfloat, _u2: GLfloat, _stride: GLint, _order: GLint, _points: Pointer[GLfloat]) { globalGL.Map1f(_target, _u1, _u2, _stride, _order, _points); }
+glMap2d(_target: GLenum, _u1: GLdouble, _u2: GLdouble, _ustride: GLint, _uorder: GLint, _v1: GLdouble, _v2: GLdouble, _vstride: GLint, _vorder: GLint, _points: Pointer[GLdouble]) { globalGL.Map2d(_target, _u1, _u2, _ustride, _uorder, _v1, _v2, _vstride, _vorder, _points); }
+glMap2f(_target: GLenum, _u1: GLfloat, _u2: GLfloat, _ustride: GLint, _uorder: GLint, _v1: GLfloat, _v2: GLfloat, _vstride: GLint, _vorder: GLint, _points: Pointer[GLfloat]) { globalGL.Map2f(_target, _u1, _u2, _ustride, _uorder, _v1, _v2, _vstride, _vorder, _points); }
+glMapBuffer(_target: GLenum, _access: GLenum) = globalGL.MapBuffer(_target, _access);
+glMapBufferRange(_target: GLenum, _offset: GLintptr, _length: GLsizeiptr, _access: GLbitfield) = globalGL.MapBufferRange(_target, _offset, _length, _access);
+glMapGrid1d(_un: GLint, _u1: GLdouble, _u2: GLdouble) { globalGL.MapGrid1d(_un, _u1, _u2); }
+glMapGrid1f(_un: GLint, _u1: GLfloat, _u2: GLfloat) { globalGL.MapGrid1f(_un, _u1, _u2); }
+glMapGrid2d(_un: GLint, _u1: GLdouble, _u2: GLdouble, _vn: GLint, _v1: GLdouble, _v2: GLdouble) { globalGL.MapGrid2d(_un, _u1, _u2, _vn, _v1, _v2); }
+glMapGrid2f(_un: GLint, _u1: GLfloat, _u2: GLfloat, _vn: GLint, _v1: GLfloat, _v2: GLfloat) { globalGL.MapGrid2f(_un, _u1, _u2, _vn, _v1, _v2); }
+glMaterialf(_face: GLenum, _pname: GLenum, _param: GLfloat) { globalGL.Materialf(_face, _pname, _param); }
+glMaterialfv(_face: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.Materialfv(_face, _pname, _params); }
+glMateriali(_face: GLenum, _pname: GLenum, _param: GLint) { globalGL.Materiali(_face, _pname, _param); }
+glMaterialiv(_face: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.Materialiv(_face, _pname, _params); }
+glMatrixMode(_mode: GLenum) { globalGL.MatrixMode(_mode); }
+glMultMatrixd(_m: Pointer[GLdouble]) { globalGL.MultMatrixd(_m); }
+glMultMatrixf(_m: Pointer[GLfloat]) { globalGL.MultMatrixf(_m); }
+glMultTransposeMatrixd(_m: Pointer[GLdouble]) { globalGL.MultTransposeMatrixd(_m); }
+glMultTransposeMatrixf(_m: Pointer[GLfloat]) { globalGL.MultTransposeMatrixf(_m); }
+glMultiDrawArrays(_mode: GLenum, _first: Pointer[GLint], _count: Pointer[GLsizei], _primcount: GLsizei) { globalGL.MultiDrawArrays(_mode, _first, _count, _primcount); }
+glMultiDrawElements(_mode: GLenum, _count: Pointer[GLsizei], _type: GLenum, _indices: Pointer[Pointer[GLvoid]], _primcount: GLsizei) { globalGL.MultiDrawElements(_mode, _count, _type, _indices, _primcount); }
+glMultiTexCoord1d(_target: GLenum, _s: GLdouble) { globalGL.MultiTexCoord1d(_target, _s); }
+glMultiTexCoord1dv(_target: GLenum, _v: Pointer[GLdouble]) { globalGL.MultiTexCoord1dv(_target, _v); }
+glMultiTexCoord1f(_target: GLenum, _s: GLfloat) { globalGL.MultiTexCoord1f(_target, _s); }
+glMultiTexCoord1fv(_target: GLenum, _v: Pointer[GLfloat]) { globalGL.MultiTexCoord1fv(_target, _v); }
+glMultiTexCoord1i(_target: GLenum, _s: GLint) { globalGL.MultiTexCoord1i(_target, _s); }
+glMultiTexCoord1iv(_target: GLenum, _v: Pointer[GLint]) { globalGL.MultiTexCoord1iv(_target, _v); }
+glMultiTexCoord1s(_target: GLenum, _s: GLshort) { globalGL.MultiTexCoord1s(_target, _s); }
+glMultiTexCoord1sv(_target: GLenum, _v: Pointer[GLshort]) { globalGL.MultiTexCoord1sv(_target, _v); }
+glMultiTexCoord2d(_target: GLenum, _s: GLdouble, _t: GLdouble) { globalGL.MultiTexCoord2d(_target, _s, _t); }
+glMultiTexCoord2dv(_target: GLenum, _v: Pointer[GLdouble]) { globalGL.MultiTexCoord2dv(_target, _v); }
+glMultiTexCoord2f(_target: GLenum, _s: GLfloat, _t: GLfloat) { globalGL.MultiTexCoord2f(_target, _s, _t); }
+glMultiTexCoord2fv(_target: GLenum, _v: Pointer[GLfloat]) { globalGL.MultiTexCoord2fv(_target, _v); }
+glMultiTexCoord2i(_target: GLenum, _s: GLint, _t: GLint) { globalGL.MultiTexCoord2i(_target, _s, _t); }
+glMultiTexCoord2iv(_target: GLenum, _v: Pointer[GLint]) { globalGL.MultiTexCoord2iv(_target, _v); }
+glMultiTexCoord2s(_target: GLenum, _s: GLshort, _t: GLshort) { globalGL.MultiTexCoord2s(_target, _s, _t); }
+glMultiTexCoord2sv(_target: GLenum, _v: Pointer[GLshort]) { globalGL.MultiTexCoord2sv(_target, _v); }
+glMultiTexCoord3d(_target: GLenum, _s: GLdouble, _t: GLdouble, _r: GLdouble) { globalGL.MultiTexCoord3d(_target, _s, _t, _r); }
+glMultiTexCoord3dv(_target: GLenum, _v: Pointer[GLdouble]) { globalGL.MultiTexCoord3dv(_target, _v); }
+glMultiTexCoord3f(_target: GLenum, _s: GLfloat, _t: GLfloat, _r: GLfloat) { globalGL.MultiTexCoord3f(_target, _s, _t, _r); }
+glMultiTexCoord3fv(_target: GLenum, _v: Pointer[GLfloat]) { globalGL.MultiTexCoord3fv(_target, _v); }
+glMultiTexCoord3i(_target: GLenum, _s: GLint, _t: GLint, _r: GLint) { globalGL.MultiTexCoord3i(_target, _s, _t, _r); }
+glMultiTexCoord3iv(_target: GLenum, _v: Pointer[GLint]) { globalGL.MultiTexCoord3iv(_target, _v); }
+glMultiTexCoord3s(_target: GLenum, _s: GLshort, _t: GLshort, _r: GLshort) { globalGL.MultiTexCoord3s(_target, _s, _t, _r); }
+glMultiTexCoord3sv(_target: GLenum, _v: Pointer[GLshort]) { globalGL.MultiTexCoord3sv(_target, _v); }
+glMultiTexCoord4d(_target: GLenum, _s: GLdouble, _t: GLdouble, _r: GLdouble, _q: GLdouble) { globalGL.MultiTexCoord4d(_target, _s, _t, _r, _q); }
+glMultiTexCoord4dv(_target: GLenum, _v: Pointer[GLdouble]) { globalGL.MultiTexCoord4dv(_target, _v); }
+glMultiTexCoord4f(_target: GLenum, _s: GLfloat, _t: GLfloat, _r: GLfloat, _q: GLfloat) { globalGL.MultiTexCoord4f(_target, _s, _t, _r, _q); }
+glMultiTexCoord4fv(_target: GLenum, _v: Pointer[GLfloat]) { globalGL.MultiTexCoord4fv(_target, _v); }
+glMultiTexCoord4i(_target: GLenum, _s: GLint, _t: GLint, _r: GLint, _q: GLint) { globalGL.MultiTexCoord4i(_target, _s, _t, _r, _q); }
+glMultiTexCoord4iv(_target: GLenum, _v: Pointer[GLint]) { globalGL.MultiTexCoord4iv(_target, _v); }
+glMultiTexCoord4s(_target: GLenum, _s: GLshort, _t: GLshort, _r: GLshort, _q: GLshort) { globalGL.MultiTexCoord4s(_target, _s, _t, _r, _q); }
+glMultiTexCoord4sv(_target: GLenum, _v: Pointer[GLshort]) { globalGL.MultiTexCoord4sv(_target, _v); }
+glMultiTexCoordP1ui(_texture: GLenum, _type: GLenum, _coords: GLuint) { globalGL.MultiTexCoordP1ui(_texture, _type, _coords); }
+glMultiTexCoordP1uiv(_texture: GLenum, _type: GLenum, _coords: Pointer[GLuint]) { globalGL.MultiTexCoordP1uiv(_texture, _type, _coords); }
+glMultiTexCoordP2ui(_texture: GLenum, _type: GLenum, _coords: GLuint) { globalGL.MultiTexCoordP2ui(_texture, _type, _coords); }
+glMultiTexCoordP2uiv(_texture: GLenum, _type: GLenum, _coords: Pointer[GLuint]) { globalGL.MultiTexCoordP2uiv(_texture, _type, _coords); }
+glMultiTexCoordP3ui(_texture: GLenum, _type: GLenum, _coords: GLuint) { globalGL.MultiTexCoordP3ui(_texture, _type, _coords); }
+glMultiTexCoordP3uiv(_texture: GLenum, _type: GLenum, _coords: Pointer[GLuint]) { globalGL.MultiTexCoordP3uiv(_texture, _type, _coords); }
+glMultiTexCoordP4ui(_texture: GLenum, _type: GLenum, _coords: GLuint) { globalGL.MultiTexCoordP4ui(_texture, _type, _coords); }
+glMultiTexCoordP4uiv(_texture: GLenum, _type: GLenum, _coords: Pointer[GLuint]) { globalGL.MultiTexCoordP4uiv(_texture, _type, _coords); }
+glNewList(_list: GLuint, _mode: GLenum) { globalGL.NewList(_list, _mode); }
+glNormal3b(_nx: GLbyte, _ny: GLbyte, _nz: GLbyte) { globalGL.Normal3b(_nx, _ny, _nz); }
+glNormal3bv(_v: Pointer[GLbyte]) { globalGL.Normal3bv(_v); }
+glNormal3d(_nx: GLdouble, _ny: GLdouble, _nz: GLdouble) { globalGL.Normal3d(_nx, _ny, _nz); }
+glNormal3dv(_v: Pointer[GLdouble]) { globalGL.Normal3dv(_v); }
+glNormal3f(_nx: GLfloat, _ny: GLfloat, _nz: GLfloat) { globalGL.Normal3f(_nx, _ny, _nz); }
+glNormal3fv(_v: Pointer[GLfloat]) { globalGL.Normal3fv(_v); }
+glNormal3i(_nx: GLint, _ny: GLint, _nz: GLint) { globalGL.Normal3i(_nx, _ny, _nz); }
+glNormal3iv(_v: Pointer[GLint]) { globalGL.Normal3iv(_v); }
+glNormal3s(_nx: GLshort, _ny: GLshort, _nz: GLshort) { globalGL.Normal3s(_nx, _ny, _nz); }
+glNormal3sv(_v: Pointer[GLshort]) { globalGL.Normal3sv(_v); }
+glNormalP3ui(_type: GLenum, _coords: GLuint) { globalGL.NormalP3ui(_type, _coords); }
+glNormalP3uiv(_type: GLenum, _coords: Pointer[GLuint]) { globalGL.NormalP3uiv(_type, _coords); }
+glNormalPointer(_type: GLenum, _stride: GLsizei, _ptr: Pointer[GLvoid]) { globalGL.NormalPointer(_type, _stride, _ptr); }
+glOrtho(_left: GLdouble, _right: GLdouble, _bottom: GLdouble, _top: GLdouble, _near_val: GLdouble, _far_val: GLdouble) { globalGL.Ortho(_left, _right, _bottom, _top, _near_val, _far_val); }
+glPassThrough(_token: GLfloat) { globalGL.PassThrough(_token); }
+glPatchParameterfv(_pname: GLenum, _values: Pointer[GLfloat]) { globalGL.PatchParameterfv(_pname, _values); }
+glPatchParameteri(_pname: GLenum, _value: GLint) { globalGL.PatchParameteri(_pname, _value); }
+glPauseTransformFeedback() { globalGL.PauseTransformFeedback(); }
+glPixelMapfv(_map: GLenum, _mapsize: GLsizei, _values: Pointer[GLfloat]) { globalGL.PixelMapfv(_map, _mapsize, _values); }
+glPixelMapuiv(_map: GLenum, _mapsize: GLsizei, _values: Pointer[GLuint]) { globalGL.PixelMapuiv(_map, _mapsize, _values); }
+glPixelMapusv(_map: GLenum, _mapsize: GLsizei, _values: Pointer[GLushort]) { globalGL.PixelMapusv(_map, _mapsize, _values); }
+glPixelStoref(_pname: GLenum, _param: GLfloat) { globalGL.PixelStoref(_pname, _param); }
+glPixelStorei(_pname: GLenum, _param: GLint) { globalGL.PixelStorei(_pname, _param); }
+glPixelTransferf(_pname: GLenum, _param: GLfloat) { globalGL.PixelTransferf(_pname, _param); }
+glPixelTransferi(_pname: GLenum, _param: GLint) { globalGL.PixelTransferi(_pname, _param); }
+glPixelZoom(_xfactor: GLfloat, _yfactor: GLfloat) { globalGL.PixelZoom(_xfactor, _yfactor); }
+glPointParameterf(_pname: GLenum, _param: GLfloat) { globalGL.PointParameterf(_pname, _param); }
+glPointParameterfv(_pname: GLenum, _params: Pointer[GLfloat]) { globalGL.PointParameterfv(_pname, _params); }
+glPointParameteri(_pname: GLenum, _param: GLint) { globalGL.PointParameteri(_pname, _param); }
+glPointParameteriv(_pname: GLenum, _params: Pointer[GLint]) { globalGL.PointParameteriv(_pname, _params); }
+glPointSize(_size: GLfloat) { globalGL.PointSize(_size); }
+glPolygonMode(_face: GLenum, _mode: GLenum) { globalGL.PolygonMode(_face, _mode); }
+glPolygonOffset(_factor: GLfloat, _units: GLfloat) { globalGL.PolygonOffset(_factor, _units); }
+glPolygonStipple(_mask: Pointer[GLubyte]) { globalGL.PolygonStipple(_mask); }
+glPopAttrib() { globalGL.PopAttrib(); }
+glPopClientAttrib() { globalGL.PopClientAttrib(); }
+glPopMatrix() { globalGL.PopMatrix(); }
+glPopName() { globalGL.PopName(); }
+glPrimitiveRestartIndex(_index: GLuint) { globalGL.PrimitiveRestartIndex(_index); }
+glPrioritizeTextures(_n: GLsizei, _textures: Pointer[GLuint], _priorities: Pointer[GLclampf]) { globalGL.PrioritizeTextures(_n, _textures, _priorities); }
+glProgramParameteriARB(_program: GLuint, _pname: GLenum, _value: GLint) { globalGL.ProgramParameteriARB(_program, _pname, _value); }
+glProgramUniform1d(_program: GLuint, _location: GLint, _x: GLdouble) { globalGL.ProgramUniform1d(_program, _location, _x); }
+glProgramUniform1dv(_program: GLuint, _location: GLint, _count: GLsizei, _value: Pointer[GLdouble]) { globalGL.ProgramUniform1dv(_program, _location, _count, _value); }
+glProgramUniform2d(_program: GLuint, _location: GLint, _x: GLdouble, _y: GLdouble) { globalGL.ProgramUniform2d(_program, _location, _x, _y); }
+glProgramUniform2dv(_program: GLuint, _location: GLint, _count: GLsizei, _value: Pointer[GLdouble]) { globalGL.ProgramUniform2dv(_program, _location, _count, _value); }
+glProgramUniform3d(_program: GLuint, _location: GLint, _x: GLdouble, _y: GLdouble, _z: GLdouble) { globalGL.ProgramUniform3d(_program, _location, _x, _y, _z); }
+glProgramUniform3dv(_program: GLuint, _location: GLint, _count: GLsizei, _value: Pointer[GLdouble]) { globalGL.ProgramUniform3dv(_program, _location, _count, _value); }
+glProgramUniform4d(_program: GLuint, _location: GLint, _x: GLdouble, _y: GLdouble, _z: GLdouble, _w: GLdouble) { globalGL.ProgramUniform4d(_program, _location, _x, _y, _z, _w); }
+glProgramUniform4dv(_program: GLuint, _location: GLint, _count: GLsizei, _value: Pointer[GLdouble]) { globalGL.ProgramUniform4dv(_program, _location, _count, _value); }
+glProgramUniformMatrix2dv(_program: GLuint, _location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.ProgramUniformMatrix2dv(_program, _location, _count, _transpose, _value); }
+glProgramUniformMatrix2x3dv(_program: GLuint, _location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.ProgramUniformMatrix2x3dv(_program, _location, _count, _transpose, _value); }
+glProgramUniformMatrix2x4dv(_program: GLuint, _location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.ProgramUniformMatrix2x4dv(_program, _location, _count, _transpose, _value); }
+glProgramUniformMatrix3dv(_program: GLuint, _location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.ProgramUniformMatrix3dv(_program, _location, _count, _transpose, _value); }
+glProgramUniformMatrix3x2dv(_program: GLuint, _location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.ProgramUniformMatrix3x2dv(_program, _location, _count, _transpose, _value); }
+glProgramUniformMatrix3x4dv(_program: GLuint, _location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.ProgramUniformMatrix3x4dv(_program, _location, _count, _transpose, _value); }
+glProgramUniformMatrix4dv(_program: GLuint, _location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.ProgramUniformMatrix4dv(_program, _location, _count, _transpose, _value); }
+glProgramUniformMatrix4x2dv(_program: GLuint, _location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.ProgramUniformMatrix4x2dv(_program, _location, _count, _transpose, _value); }
+glProgramUniformMatrix4x3dv(_program: GLuint, _location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.ProgramUniformMatrix4x3dv(_program, _location, _count, _transpose, _value); }
+glProvokingVertex(_mode: GLenum) { globalGL.ProvokingVertex(_mode); }
+glPushAttrib(_mask: GLbitfield) { globalGL.PushAttrib(_mask); }
+glPushClientAttrib(_mask: GLbitfield) { globalGL.PushClientAttrib(_mask); }
+glPushMatrix() { globalGL.PushMatrix(); }
+glPushName(_name: GLuint) { globalGL.PushName(_name); }
+glQueryCounter(_id: GLuint, _target: GLenum) { globalGL.QueryCounter(_id, _target); }
+glRasterPos2d(_x: GLdouble, _y: GLdouble) { globalGL.RasterPos2d(_x, _y); }
+glRasterPos2dv(_v: Pointer[GLdouble]) { globalGL.RasterPos2dv(_v); }
+glRasterPos2f(_x: GLfloat, _y: GLfloat) { globalGL.RasterPos2f(_x, _y); }
+glRasterPos2fv(_v: Pointer[GLfloat]) { globalGL.RasterPos2fv(_v); }
+glRasterPos2i(_x: GLint, _y: GLint) { globalGL.RasterPos2i(_x, _y); }
+glRasterPos2iv(_v: Pointer[GLint]) { globalGL.RasterPos2iv(_v); }
+glRasterPos2s(_x: GLshort, _y: GLshort) { globalGL.RasterPos2s(_x, _y); }
+glRasterPos2sv(_v: Pointer[GLshort]) { globalGL.RasterPos2sv(_v); }
+glRasterPos3d(_x: GLdouble, _y: GLdouble, _z: GLdouble) { globalGL.RasterPos3d(_x, _y, _z); }
+glRasterPos3dv(_v: Pointer[GLdouble]) { globalGL.RasterPos3dv(_v); }
+glRasterPos3f(_x: GLfloat, _y: GLfloat, _z: GLfloat) { globalGL.RasterPos3f(_x, _y, _z); }
+glRasterPos3fv(_v: Pointer[GLfloat]) { globalGL.RasterPos3fv(_v); }
+glRasterPos3i(_x: GLint, _y: GLint, _z: GLint) { globalGL.RasterPos3i(_x, _y, _z); }
+glRasterPos3iv(_v: Pointer[GLint]) { globalGL.RasterPos3iv(_v); }
+glRasterPos3s(_x: GLshort, _y: GLshort, _z: GLshort) { globalGL.RasterPos3s(_x, _y, _z); }
+glRasterPos3sv(_v: Pointer[GLshort]) { globalGL.RasterPos3sv(_v); }
+glRasterPos4d(_x: GLdouble, _y: GLdouble, _z: GLdouble, _w: GLdouble) { globalGL.RasterPos4d(_x, _y, _z, _w); }
+glRasterPos4dv(_v: Pointer[GLdouble]) { globalGL.RasterPos4dv(_v); }
+glRasterPos4f(_x: GLfloat, _y: GLfloat, _z: GLfloat, _w: GLfloat) { globalGL.RasterPos4f(_x, _y, _z, _w); }
+glRasterPos4fv(_v: Pointer[GLfloat]) { globalGL.RasterPos4fv(_v); }
+glRasterPos4i(_x: GLint, _y: GLint, _z: GLint, _w: GLint) { globalGL.RasterPos4i(_x, _y, _z, _w); }
+glRasterPos4iv(_v: Pointer[GLint]) { globalGL.RasterPos4iv(_v); }
+glRasterPos4s(_x: GLshort, _y: GLshort, _z: GLshort, _w: GLshort) { globalGL.RasterPos4s(_x, _y, _z, _w); }
+glRasterPos4sv(_v: Pointer[GLshort]) { globalGL.RasterPos4sv(_v); }
+glReadBuffer(_mode: GLenum) { globalGL.ReadBuffer(_mode); }
+glReadPixels(_x: GLint, _y: GLint, _width: GLsizei, _height: GLsizei, _format: GLenum, _type: GLenum, _pixels: Pointer[GLvoid]) { globalGL.ReadPixels(_x, _y, _width, _height, _format, _type, _pixels); }
+glRectd(_x1: GLdouble, _y1: GLdouble, _x2: GLdouble, _y2: GLdouble) { globalGL.Rectd(_x1, _y1, _x2, _y2); }
+glRectdv(_v1: Pointer[GLdouble], _v2: Pointer[GLdouble]) { globalGL.Rectdv(_v1, _v2); }
+glRectf(_x1: GLfloat, _y1: GLfloat, _x2: GLfloat, _y2: GLfloat) { globalGL.Rectf(_x1, _y1, _x2, _y2); }
+glRectfv(_v1: Pointer[GLfloat], _v2: Pointer[GLfloat]) { globalGL.Rectfv(_v1, _v2); }
+glRecti(_x1: GLint, _y1: GLint, _x2: GLint, _y2: GLint) { globalGL.Recti(_x1, _y1, _x2, _y2); }
+glRectiv(_v1: Pointer[GLint], _v2: Pointer[GLint]) { globalGL.Rectiv(_v1, _v2); }
+glRects(_x1: GLshort, _y1: GLshort, _x2: GLshort, _y2: GLshort) { globalGL.Rects(_x1, _y1, _x2, _y2); }
+glRectsv(_v1: Pointer[GLshort], _v2: Pointer[GLshort]) { globalGL.Rectsv(_v1, _v2); }
+glRenderMode(_mode: GLenum) = globalGL.RenderMode(_mode);
+glRenderbufferStorage(_target: GLenum, _internalformat: GLenum, _width: GLsizei, _height: GLsizei) { globalGL.RenderbufferStorage(_target, _internalformat, _width, _height); }
+glRenderbufferStorageMultisample(_target: GLenum, _samples: GLsizei, _internalformat: GLenum, _width: GLsizei, _height: GLsizei) { globalGL.RenderbufferStorageMultisample(_target, _samples, _internalformat, _width, _height); }
+glResumeTransformFeedback() { globalGL.ResumeTransformFeedback(); }
+glRotated(_angle: GLdouble, _x: GLdouble, _y: GLdouble, _z: GLdouble) { globalGL.Rotated(_angle, _x, _y, _z); }
+glRotatef(_angle: GLfloat, _x: GLfloat, _y: GLfloat, _z: GLfloat) { globalGL.Rotatef(_angle, _x, _y, _z); }
+glSampleCoverage(_value: GLclampf, _invert: GLboolean) { globalGL.SampleCoverage(_value, _invert); }
+glSampleMaski(_index: GLuint, _mask: GLbitfield) { globalGL.SampleMaski(_index, _mask); }
+glSamplerParameterIiv(_sampler: GLuint, _pname: GLenum, _param: Pointer[GLint]) { globalGL.SamplerParameterIiv(_sampler, _pname, _param); }
+glSamplerParameterIuiv(_sampler: GLuint, _pname: GLenum, _param: Pointer[GLuint]) { globalGL.SamplerParameterIuiv(_sampler, _pname, _param); }
+glSamplerParameterf(_sampler: GLuint, _pname: GLenum, _param: GLfloat) { globalGL.SamplerParameterf(_sampler, _pname, _param); }
+glSamplerParameterfv(_sampler: GLuint, _pname: GLenum, _param: Pointer[GLfloat]) { globalGL.SamplerParameterfv(_sampler, _pname, _param); }
+glSamplerParameteri(_sampler: GLuint, _pname: GLenum, _param: GLint) { globalGL.SamplerParameteri(_sampler, _pname, _param); }
+glSamplerParameteriv(_sampler: GLuint, _pname: GLenum, _param: Pointer[GLint]) { globalGL.SamplerParameteriv(_sampler, _pname, _param); }
+glScaled(_x: GLdouble, _y: GLdouble, _z: GLdouble) { globalGL.Scaled(_x, _y, _z); }
+glScalef(_x: GLfloat, _y: GLfloat, _z: GLfloat) { globalGL.Scalef(_x, _y, _z); }
+glScissor(_x: GLint, _y: GLint, _width: GLsizei, _height: GLsizei) { globalGL.Scissor(_x, _y, _width, _height); }
+glSecondaryColor3b(_red: GLbyte, _green: GLbyte, _blue: GLbyte) { globalGL.SecondaryColor3b(_red, _green, _blue); }
+glSecondaryColor3bv(_v: Pointer[GLbyte]) { globalGL.SecondaryColor3bv(_v); }
+glSecondaryColor3d(_red: GLdouble, _green: GLdouble, _blue: GLdouble) { globalGL.SecondaryColor3d(_red, _green, _blue); }
+glSecondaryColor3dv(_v: Pointer[GLdouble]) { globalGL.SecondaryColor3dv(_v); }
+glSecondaryColor3f(_red: GLfloat, _green: GLfloat, _blue: GLfloat) { globalGL.SecondaryColor3f(_red, _green, _blue); }
+glSecondaryColor3fv(_v: Pointer[GLfloat]) { globalGL.SecondaryColor3fv(_v); }
+glSecondaryColor3i(_red: GLint, _green: GLint, _blue: GLint) { globalGL.SecondaryColor3i(_red, _green, _blue); }
+glSecondaryColor3iv(_v: Pointer[GLint]) { globalGL.SecondaryColor3iv(_v); }
+glSecondaryColor3s(_red: GLshort, _green: GLshort, _blue: GLshort) { globalGL.SecondaryColor3s(_red, _green, _blue); }
+glSecondaryColor3sv(_v: Pointer[GLshort]) { globalGL.SecondaryColor3sv(_v); }
+glSecondaryColor3ub(_red: GLubyte, _green: GLubyte, _blue: GLubyte) { globalGL.SecondaryColor3ub(_red, _green, _blue); }
+glSecondaryColor3ubv(_v: Pointer[GLubyte]) { globalGL.SecondaryColor3ubv(_v); }
+glSecondaryColor3ui(_red: GLuint, _green: GLuint, _blue: GLuint) { globalGL.SecondaryColor3ui(_red, _green, _blue); }
+glSecondaryColor3uiv(_v: Pointer[GLuint]) { globalGL.SecondaryColor3uiv(_v); }
+glSecondaryColor3us(_red: GLushort, _green: GLushort, _blue: GLushort) { globalGL.SecondaryColor3us(_red, _green, _blue); }
+glSecondaryColor3usv(_v: Pointer[GLushort]) { globalGL.SecondaryColor3usv(_v); }
+glSecondaryColorP3ui(_type: GLenum, _color: GLuint) { globalGL.SecondaryColorP3ui(_type, _color); }
+glSecondaryColorP3uiv(_type: GLenum, _color: Pointer[GLuint]) { globalGL.SecondaryColorP3uiv(_type, _color); }
+glSecondaryColorPointer(_size: GLint, _type: GLenum, _stride: GLsizei, _pointer: Pointer[GLvoid]) { globalGL.SecondaryColorPointer(_size, _type, _stride, _pointer); }
+glSelectBuffer(_size: GLsizei, _buffer: Pointer[GLuint]) { globalGL.SelectBuffer(_size, _buffer); }
+glShadeModel(_mode: GLenum) { globalGL.ShadeModel(_mode); }
+glShaderSource(_shader: GLuint, _count: GLsizei, _strings: Pointer[GLstring], _lengths: Pointer[GLint]) { globalGL.ShaderSource(_shader, _count, _strings, _lengths); }
+glStencilFunc(_func: GLenum, _ref: GLint, _mask: GLuint) { globalGL.StencilFunc(_func, _ref, _mask); }
+glStencilFuncSeparate(_frontfunc: GLenum, _backfunc: GLenum, _ref: GLint, _mask: GLuint) { globalGL.StencilFuncSeparate(_frontfunc, _backfunc, _ref, _mask); }
+glStencilMask(_mask: GLuint) { globalGL.StencilMask(_mask); }
+glStencilMaskSeparate(_face: GLenum, _mask: GLuint) { globalGL.StencilMaskSeparate(_face, _mask); }
+glStencilOp(_fail: GLenum, _zfail: GLenum, _zpass: GLenum) { globalGL.StencilOp(_fail, _zfail, _zpass); }
+glStencilOpSeparate(_face: GLenum, _sfail: GLenum, _dpfail: GLenum, _dppass: GLenum) { globalGL.StencilOpSeparate(_face, _sfail, _dpfail, _dppass); }
+glTexBuffer(_target: GLenum, _internalformat: GLenum, _buffer: GLuint) { globalGL.TexBuffer(_target, _internalformat, _buffer); }
+glTexCoord1d(_s: GLdouble) { globalGL.TexCoord1d(_s); }
+glTexCoord1dv(_v: Pointer[GLdouble]) { globalGL.TexCoord1dv(_v); }
+glTexCoord1f(_s: GLfloat) { globalGL.TexCoord1f(_s); }
+glTexCoord1fv(_v: Pointer[GLfloat]) { globalGL.TexCoord1fv(_v); }
+glTexCoord1i(_s: GLint) { globalGL.TexCoord1i(_s); }
+glTexCoord1iv(_v: Pointer[GLint]) { globalGL.TexCoord1iv(_v); }
+glTexCoord1s(_s: GLshort) { globalGL.TexCoord1s(_s); }
+glTexCoord1sv(_v: Pointer[GLshort]) { globalGL.TexCoord1sv(_v); }
+glTexCoord2d(_s: GLdouble, _t: GLdouble) { globalGL.TexCoord2d(_s, _t); }
+glTexCoord2dv(_v: Pointer[GLdouble]) { globalGL.TexCoord2dv(_v); }
+glTexCoord2f(_s: GLfloat, _t: GLfloat) { globalGL.TexCoord2f(_s, _t); }
+glTexCoord2fv(_v: Pointer[GLfloat]) { globalGL.TexCoord2fv(_v); }
+glTexCoord2i(_s: GLint, _t: GLint) { globalGL.TexCoord2i(_s, _t); }
+glTexCoord2iv(_v: Pointer[GLint]) { globalGL.TexCoord2iv(_v); }
+glTexCoord2s(_s: GLshort, _t: GLshort) { globalGL.TexCoord2s(_s, _t); }
+glTexCoord2sv(_v: Pointer[GLshort]) { globalGL.TexCoord2sv(_v); }
+glTexCoord3d(_s: GLdouble, _t: GLdouble, _r: GLdouble) { globalGL.TexCoord3d(_s, _t, _r); }
+glTexCoord3dv(_v: Pointer[GLdouble]) { globalGL.TexCoord3dv(_v); }
+glTexCoord3f(_s: GLfloat, _t: GLfloat, _r: GLfloat) { globalGL.TexCoord3f(_s, _t, _r); }
+glTexCoord3fv(_v: Pointer[GLfloat]) { globalGL.TexCoord3fv(_v); }
+glTexCoord3i(_s: GLint, _t: GLint, _r: GLint) { globalGL.TexCoord3i(_s, _t, _r); }
+glTexCoord3iv(_v: Pointer[GLint]) { globalGL.TexCoord3iv(_v); }
+glTexCoord3s(_s: GLshort, _t: GLshort, _r: GLshort) { globalGL.TexCoord3s(_s, _t, _r); }
+glTexCoord3sv(_v: Pointer[GLshort]) { globalGL.TexCoord3sv(_v); }
+glTexCoord4d(_s: GLdouble, _t: GLdouble, _r: GLdouble, _q: GLdouble) { globalGL.TexCoord4d(_s, _t, _r, _q); }
+glTexCoord4dv(_v: Pointer[GLdouble]) { globalGL.TexCoord4dv(_v); }
+glTexCoord4f(_s: GLfloat, _t: GLfloat, _r: GLfloat, _q: GLfloat) { globalGL.TexCoord4f(_s, _t, _r, _q); }
+glTexCoord4fv(_v: Pointer[GLfloat]) { globalGL.TexCoord4fv(_v); }
+glTexCoord4i(_s: GLint, _t: GLint, _r: GLint, _q: GLint) { globalGL.TexCoord4i(_s, _t, _r, _q); }
+glTexCoord4iv(_v: Pointer[GLint]) { globalGL.TexCoord4iv(_v); }
+glTexCoord4s(_s: GLshort, _t: GLshort, _r: GLshort, _q: GLshort) { globalGL.TexCoord4s(_s, _t, _r, _q); }
+glTexCoord4sv(_v: Pointer[GLshort]) { globalGL.TexCoord4sv(_v); }
+glTexCoordP1ui(_type: GLenum, _coords: GLuint) { globalGL.TexCoordP1ui(_type, _coords); }
+glTexCoordP1uiv(_type: GLenum, _coords: Pointer[GLuint]) { globalGL.TexCoordP1uiv(_type, _coords); }
+glTexCoordP2ui(_type: GLenum, _coords: GLuint) { globalGL.TexCoordP2ui(_type, _coords); }
+glTexCoordP2uiv(_type: GLenum, _coords: Pointer[GLuint]) { globalGL.TexCoordP2uiv(_type, _coords); }
+glTexCoordP3ui(_type: GLenum, _coords: GLuint) { globalGL.TexCoordP3ui(_type, _coords); }
+glTexCoordP3uiv(_type: GLenum, _coords: Pointer[GLuint]) { globalGL.TexCoordP3uiv(_type, _coords); }
+glTexCoordP4ui(_type: GLenum, _coords: GLuint) { globalGL.TexCoordP4ui(_type, _coords); }
+glTexCoordP4uiv(_type: GLenum, _coords: Pointer[GLuint]) { globalGL.TexCoordP4uiv(_type, _coords); }
+glTexCoordPointer(_size: GLint, _type: GLenum, _stride: GLsizei, _ptr: Pointer[GLvoid]) { globalGL.TexCoordPointer(_size, _type, _stride, _ptr); }
+glTexEnvf(_target: GLenum, _pname: GLenum, _param: GLfloat) { globalGL.TexEnvf(_target, _pname, _param); }
+glTexEnvfv(_target: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.TexEnvfv(_target, _pname, _params); }
+glTexEnvi(_target: GLenum, _pname: GLenum, _param: GLint) { globalGL.TexEnvi(_target, _pname, _param); }
+glTexEnviv(_target: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.TexEnviv(_target, _pname, _params); }
+glTexGend(_coord: GLenum, _pname: GLenum, _param: GLdouble) { globalGL.TexGend(_coord, _pname, _param); }
+glTexGendv(_coord: GLenum, _pname: GLenum, _params: Pointer[GLdouble]) { globalGL.TexGendv(_coord, _pname, _params); }
+glTexGenf(_coord: GLenum, _pname: GLenum, _param: GLfloat) { globalGL.TexGenf(_coord, _pname, _param); }
+glTexGenfv(_coord: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.TexGenfv(_coord, _pname, _params); }
+glTexGeni(_coord: GLenum, _pname: GLenum, _param: GLint) { globalGL.TexGeni(_coord, _pname, _param); }
+glTexGeniv(_coord: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.TexGeniv(_coord, _pname, _params); }
+glTexImage1D(_target: GLenum, _level: GLint, _internalFormat: GLint, _width: GLsizei, _border: GLint, _format: GLenum, _type: GLenum, _pixels: Pointer[GLvoid]) { globalGL.TexImage1D(_target, _level, _internalFormat, _width, _border, _format, _type, _pixels); }
+glTexImage2D(_target: GLenum, _level: GLint, _internalFormat: GLint, _width: GLsizei, _height: GLsizei, _border: GLint, _format: GLenum, _type: GLenum, _pixels: Pointer[GLvoid]) { globalGL.TexImage2D(_target, _level, _internalFormat, _width, _height, _border, _format, _type, _pixels); }
+glTexImage2DMultisample(_target: GLenum, _samples: GLsizei, _internalformat: GLint, _width: GLsizei, _height: GLsizei, _fixedsamplelocations: GLboolean) { globalGL.TexImage2DMultisample(_target, _samples, _internalformat, _width, _height, _fixedsamplelocations); }
+glTexImage3D(_target: GLenum, _level: GLint, _internalFormat: GLint, _width: GLsizei, _height: GLsizei, _depth: GLsizei, _border: GLint, _format: GLenum, _type: GLenum, _pixels: Pointer[GLvoid]) { globalGL.TexImage3D(_target, _level, _internalFormat, _width, _height, _depth, _border, _format, _type, _pixels); }
+glTexImage3DMultisample(_target: GLenum, _samples: GLsizei, _internalformat: GLint, _width: GLsizei, _height: GLsizei, _depth: GLsizei, _fixedsamplelocations: GLboolean) { globalGL.TexImage3DMultisample(_target, _samples, _internalformat, _width, _height, _depth, _fixedsamplelocations); }
+glTexParameterIiv(_target: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.TexParameterIiv(_target, _pname, _params); }
+glTexParameterIuiv(_target: GLenum, _pname: GLenum, _params: Pointer[GLuint]) { globalGL.TexParameterIuiv(_target, _pname, _params); }
+glTexParameterf(_target: GLenum, _pname: GLenum, _param: GLfloat) { globalGL.TexParameterf(_target, _pname, _param); }
+glTexParameterfv(_target: GLenum, _pname: GLenum, _params: Pointer[GLfloat]) { globalGL.TexParameterfv(_target, _pname, _params); }
+glTexParameteri(_target: GLenum, _pname: GLenum, _param: GLint) { globalGL.TexParameteri(_target, _pname, _param); }
+glTexParameteriv(_target: GLenum, _pname: GLenum, _params: Pointer[GLint]) { globalGL.TexParameteriv(_target, _pname, _params); }
+glTexSubImage1D(_target: GLenum, _level: GLint, _xoffset: GLint, _width: GLsizei, _format: GLenum, _type: GLenum, _pixels: Pointer[GLvoid]) { globalGL.TexSubImage1D(_target, _level, _xoffset, _width, _format, _type, _pixels); }
+glTexSubImage2D(_target: GLenum, _level: GLint, _xoffset: GLint, _yoffset: GLint, _width: GLsizei, _height: GLsizei, _format: GLenum, _type: GLenum, _pixels: Pointer[GLvoid]) { globalGL.TexSubImage2D(_target, _level, _xoffset, _yoffset, _width, _height, _format, _type, _pixels); }
+glTexSubImage3D(_target: GLenum, _level: GLint, _xoffset: GLint, _yoffset: GLint, _zoffset: GLint, _width: GLsizei, _height: GLsizei, _depth: GLsizei, _format: GLenum, _type: GLenum, _pixels: Pointer[GLvoid]) { globalGL.TexSubImage3D(_target, _level, _xoffset, _yoffset, _zoffset, _width, _height, _depth, _format, _type, _pixels); }
+glTransformFeedbackVaryings(_program: GLuint, _count: GLsizei, _varyings: Pointer[GLstring], _bufferMode: GLenum) { globalGL.TransformFeedbackVaryings(_program, _count, _varyings, _bufferMode); }
+glTranslated(_x: GLdouble, _y: GLdouble, _z: GLdouble) { globalGL.Translated(_x, _y, _z); }
+glTranslatef(_x: GLfloat, _y: GLfloat, _z: GLfloat) { globalGL.Translatef(_x, _y, _z); }
+glUniform1d(_location: GLint, _x: GLdouble) { globalGL.Uniform1d(_location, _x); }
+glUniform1dv(_location: GLint, _count: GLsizei, _value: Pointer[GLdouble]) { globalGL.Uniform1dv(_location, _count, _value); }
+glUniform1f(_location: GLint, _v0: GLfloat) { globalGL.Uniform1f(_location, _v0); }
+glUniform1fv(_location: GLint, _count: GLsizei, _value: Pointer[GLfloat]) { globalGL.Uniform1fv(_location, _count, _value); }
+glUniform1i(_location: GLint, _v0: GLint) { globalGL.Uniform1i(_location, _v0); }
+glUniform1iv(_location: GLint, _count: GLsizei, _value: Pointer[GLint]) { globalGL.Uniform1iv(_location, _count, _value); }
+glUniform1ui(_location: GLint, _v0: GLuint) { globalGL.Uniform1ui(_location, _v0); }
+glUniform1uiv(_location: GLint, _count: GLsizei, _value: Pointer[GLuint]) { globalGL.Uniform1uiv(_location, _count, _value); }
+glUniform2d(_location: GLint, _x: GLdouble, _y: GLdouble) { globalGL.Uniform2d(_location, _x, _y); }
+glUniform2dv(_location: GLint, _count: GLsizei, _value: Pointer[GLdouble]) { globalGL.Uniform2dv(_location, _count, _value); }
+glUniform2f(_location: GLint, _v0: GLfloat, _v1: GLfloat) { globalGL.Uniform2f(_location, _v0, _v1); }
+glUniform2fv(_location: GLint, _count: GLsizei, _value: Pointer[GLfloat]) { globalGL.Uniform2fv(_location, _count, _value); }
+glUniform2i(_location: GLint, _v0: GLint, _v1: GLint) { globalGL.Uniform2i(_location, _v0, _v1); }
+glUniform2iv(_location: GLint, _count: GLsizei, _value: Pointer[GLint]) { globalGL.Uniform2iv(_location, _count, _value); }
+glUniform2ui(_location: GLint, _v0: GLuint, _v1: GLuint) { globalGL.Uniform2ui(_location, _v0, _v1); }
+glUniform2uiv(_location: GLint, _count: GLsizei, _value: Pointer[GLuint]) { globalGL.Uniform2uiv(_location, _count, _value); }
+glUniform3d(_location: GLint, _x: GLdouble, _y: GLdouble, _z: GLdouble) { globalGL.Uniform3d(_location, _x, _y, _z); }
+glUniform3dv(_location: GLint, _count: GLsizei, _value: Pointer[GLdouble]) { globalGL.Uniform3dv(_location, _count, _value); }
+glUniform3f(_location: GLint, _v0: GLfloat, _v1: GLfloat, _v2: GLfloat) { globalGL.Uniform3f(_location, _v0, _v1, _v2); }
+glUniform3fv(_location: GLint, _count: GLsizei, _value: Pointer[GLfloat]) { globalGL.Uniform3fv(_location, _count, _value); }
+glUniform3i(_location: GLint, _v0: GLint, _v1: GLint, _v2: GLint) { globalGL.Uniform3i(_location, _v0, _v1, _v2); }
+glUniform3iv(_location: GLint, _count: GLsizei, _value: Pointer[GLint]) { globalGL.Uniform3iv(_location, _count, _value); }
+glUniform3ui(_location: GLint, _v0: GLuint, _v1: GLuint, _v2: GLuint) { globalGL.Uniform3ui(_location, _v0, _v1, _v2); }
+glUniform3uiv(_location: GLint, _count: GLsizei, _value: Pointer[GLuint]) { globalGL.Uniform3uiv(_location, _count, _value); }
+glUniform4d(_location: GLint, _x: GLdouble, _y: GLdouble, _z: GLdouble, _w: GLdouble) { globalGL.Uniform4d(_location, _x, _y, _z, _w); }
+glUniform4dv(_location: GLint, _count: GLsizei, _value: Pointer[GLdouble]) { globalGL.Uniform4dv(_location, _count, _value); }
+glUniform4f(_location: GLint, _v0: GLfloat, _v1: GLfloat, _v2: GLfloat, _v3: GLfloat) { globalGL.Uniform4f(_location, _v0, _v1, _v2, _v3); }
+glUniform4fv(_location: GLint, _count: GLsizei, _value: Pointer[GLfloat]) { globalGL.Uniform4fv(_location, _count, _value); }
+glUniform4i(_location: GLint, _v0: GLint, _v1: GLint, _v2: GLint, _v3: GLint) { globalGL.Uniform4i(_location, _v0, _v1, _v2, _v3); }
+glUniform4iv(_location: GLint, _count: GLsizei, _value: Pointer[GLint]) { globalGL.Uniform4iv(_location, _count, _value); }
+glUniform4ui(_location: GLint, _v0: GLuint, _v1: GLuint, _v2: GLuint, _v3: GLuint) { globalGL.Uniform4ui(_location, _v0, _v1, _v2, _v3); }
+glUniform4uiv(_location: GLint, _count: GLsizei, _value: Pointer[GLuint]) { globalGL.Uniform4uiv(_location, _count, _value); }
+glUniformBlockBinding(_buffer: GLuint, _uniformBlockIndex: GLuint, _uniformBlockBinding: GLuint) { globalGL.UniformBlockBinding(_buffer, _uniformBlockIndex, _uniformBlockBinding); }
+glUniformMatrix2dv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.UniformMatrix2dv(_location, _count, _transpose, _value); }
+glUniformMatrix2fv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLfloat]) { globalGL.UniformMatrix2fv(_location, _count, _transpose, _value); }
+glUniformMatrix2x3dv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.UniformMatrix2x3dv(_location, _count, _transpose, _value); }
+glUniformMatrix2x3fv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLfloat]) { globalGL.UniformMatrix2x3fv(_location, _count, _transpose, _value); }
+glUniformMatrix2x4dv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.UniformMatrix2x4dv(_location, _count, _transpose, _value); }
+glUniformMatrix2x4fv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLfloat]) { globalGL.UniformMatrix2x4fv(_location, _count, _transpose, _value); }
+glUniformMatrix3dv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.UniformMatrix3dv(_location, _count, _transpose, _value); }
+glUniformMatrix3fv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLfloat]) { globalGL.UniformMatrix3fv(_location, _count, _transpose, _value); }
+glUniformMatrix3x2dv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.UniformMatrix3x2dv(_location, _count, _transpose, _value); }
+glUniformMatrix3x2fv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLfloat]) { globalGL.UniformMatrix3x2fv(_location, _count, _transpose, _value); }
+glUniformMatrix3x4dv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.UniformMatrix3x4dv(_location, _count, _transpose, _value); }
+glUniformMatrix3x4fv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLfloat]) { globalGL.UniformMatrix3x4fv(_location, _count, _transpose, _value); }
+glUniformMatrix4dv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.UniformMatrix4dv(_location, _count, _transpose, _value); }
+glUniformMatrix4fv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLfloat]) { globalGL.UniformMatrix4fv(_location, _count, _transpose, _value); }
+glUniformMatrix4x2dv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.UniformMatrix4x2dv(_location, _count, _transpose, _value); }
+glUniformMatrix4x2fv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLfloat]) { globalGL.UniformMatrix4x2fv(_location, _count, _transpose, _value); }
+glUniformMatrix4x3dv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLdouble]) { globalGL.UniformMatrix4x3dv(_location, _count, _transpose, _value); }
+glUniformMatrix4x3fv(_location: GLint, _count: GLsizei, _transpose: GLboolean, _value: Pointer[GLfloat]) { globalGL.UniformMatrix4x3fv(_location, _count, _transpose, _value); }
+glUniformSubroutinesuiv(_shadertype: GLenum, _count: GLsizei, _indices: Pointer[GLuint]) { globalGL.UniformSubroutinesuiv(_shadertype, _count, _indices); }
+glUnmapBuffer(_target: GLenum) = globalGL.UnmapBuffer(_target);
+glUseProgram(_program: GLuint) { globalGL.UseProgram(_program); }
+glValidateProgram(_program: GLuint) { globalGL.ValidateProgram(_program); }
+glVertex2d(_x: GLdouble, _y: GLdouble) { globalGL.Vertex2d(_x, _y); }
+glVertex2dv(_v: Pointer[GLdouble]) { globalGL.Vertex2dv(_v); }
+glVertex2f(_x: GLfloat, _y: GLfloat) { globalGL.Vertex2f(_x, _y); }
+glVertex2fv(_v: Pointer[GLfloat]) { globalGL.Vertex2fv(_v); }
+glVertex2i(_x: GLint, _y: GLint) { globalGL.Vertex2i(_x, _y); }
+glVertex2iv(_v: Pointer[GLint]) { globalGL.Vertex2iv(_v); }
+glVertex2s(_x: GLshort, _y: GLshort) { globalGL.Vertex2s(_x, _y); }
+glVertex2sv(_v: Pointer[GLshort]) { globalGL.Vertex2sv(_v); }
+glVertex3d(_x: GLdouble, _y: GLdouble, _z: GLdouble) { globalGL.Vertex3d(_x, _y, _z); }
+glVertex3dv(_v: Pointer[GLdouble]) { globalGL.Vertex3dv(_v); }
+glVertex3f(_x: GLfloat, _y: GLfloat, _z: GLfloat) { globalGL.Vertex3f(_x, _y, _z); }
+glVertex3fv(_v: Pointer[GLfloat]) { globalGL.Vertex3fv(_v); }
+glVertex3i(_x: GLint, _y: GLint, _z: GLint) { globalGL.Vertex3i(_x, _y, _z); }
+glVertex3iv(_v: Pointer[GLint]) { globalGL.Vertex3iv(_v); }
+glVertex3s(_x: GLshort, _y: GLshort, _z: GLshort) { globalGL.Vertex3s(_x, _y, _z); }
+glVertex3sv(_v: Pointer[GLshort]) { globalGL.Vertex3sv(_v); }
+glVertex4d(_x: GLdouble, _y: GLdouble, _z: GLdouble, _w: GLdouble) { globalGL.Vertex4d(_x, _y, _z, _w); }
+glVertex4dv(_v: Pointer[GLdouble]) { globalGL.Vertex4dv(_v); }
+glVertex4f(_x: GLfloat, _y: GLfloat, _z: GLfloat, _w: GLfloat) { globalGL.Vertex4f(_x, _y, _z, _w); }
+glVertex4fv(_v: Pointer[GLfloat]) { globalGL.Vertex4fv(_v); }
+glVertex4i(_x: GLint, _y: GLint, _z: GLint, _w: GLint) { globalGL.Vertex4i(_x, _y, _z, _w); }
+glVertex4iv(_v: Pointer[GLint]) { globalGL.Vertex4iv(_v); }
+glVertex4s(_x: GLshort, _y: GLshort, _z: GLshort, _w: GLshort) { globalGL.Vertex4s(_x, _y, _z, _w); }
+glVertex4sv(_v: Pointer[GLshort]) { globalGL.Vertex4sv(_v); }
+glVertexAttrib1d(_index: GLuint, _x: GLdouble) { globalGL.VertexAttrib1d(_index, _x); }
+glVertexAttrib1dv(_index: GLuint, _v: Pointer[GLdouble]) { globalGL.VertexAttrib1dv(_index, _v); }
+glVertexAttrib1f(_index: GLuint, _x: GLfloat) { globalGL.VertexAttrib1f(_index, _x); }
+glVertexAttrib1fv(_index: GLuint, _v: Pointer[GLfloat]) { globalGL.VertexAttrib1fv(_index, _v); }
+glVertexAttrib1s(_index: GLuint, _x: GLshort) { globalGL.VertexAttrib1s(_index, _x); }
+glVertexAttrib1sv(_index: GLuint, _v: Pointer[GLshort]) { globalGL.VertexAttrib1sv(_index, _v); }
+glVertexAttrib2d(_index: GLuint, _x: GLdouble, _y: GLdouble) { globalGL.VertexAttrib2d(_index, _x, _y); }
+glVertexAttrib2dv(_index: GLuint, _v: Pointer[GLdouble]) { globalGL.VertexAttrib2dv(_index, _v); }
+glVertexAttrib2f(_index: GLuint, _x: GLfloat, _y: GLfloat) { globalGL.VertexAttrib2f(_index, _x, _y); }
+glVertexAttrib2fv(_index: GLuint, _v: Pointer[GLfloat]) { globalGL.VertexAttrib2fv(_index, _v); }
+glVertexAttrib2s(_index: GLuint, _x: GLshort, _y: GLshort) { globalGL.VertexAttrib2s(_index, _x, _y); }
+glVertexAttrib2sv(_index: GLuint, _v: Pointer[GLshort]) { globalGL.VertexAttrib2sv(_index, _v); }
+glVertexAttrib3d(_index: GLuint, _x: GLdouble, _y: GLdouble, _z: GLdouble) { globalGL.VertexAttrib3d(_index, _x, _y, _z); }
+glVertexAttrib3dv(_index: GLuint, _v: Pointer[GLdouble]) { globalGL.VertexAttrib3dv(_index, _v); }
+glVertexAttrib3f(_index: GLuint, _x: GLfloat, _y: GLfloat, _z: GLfloat) { globalGL.VertexAttrib3f(_index, _x, _y, _z); }
+glVertexAttrib3fv(_index: GLuint, _v: Pointer[GLfloat]) { globalGL.VertexAttrib3fv(_index, _v); }
+glVertexAttrib3s(_index: GLuint, _x: GLshort, _y: GLshort, _z: GLshort) { globalGL.VertexAttrib3s(_index, _x, _y, _z); }
+glVertexAttrib3sv(_index: GLuint, _v: Pointer[GLshort]) { globalGL.VertexAttrib3sv(_index, _v); }
+glVertexAttrib4Nbv(_index: GLuint, _v: Pointer[GLbyte]) { globalGL.VertexAttrib4Nbv(_index, _v); }
+glVertexAttrib4Niv(_index: GLuint, _v: Pointer[GLint]) { globalGL.VertexAttrib4Niv(_index, _v); }
+glVertexAttrib4Nsv(_index: GLuint, _v: Pointer[GLshort]) { globalGL.VertexAttrib4Nsv(_index, _v); }
+glVertexAttrib4Nub(_index: GLuint, _x: GLubyte, _y: GLubyte, _z: GLubyte, _w: GLubyte) { globalGL.VertexAttrib4Nub(_index, _x, _y, _z, _w); }
+glVertexAttrib4Nubv(_index: GLuint, _v: Pointer[GLubyte]) { globalGL.VertexAttrib4Nubv(_index, _v); }
+glVertexAttrib4Nuiv(_index: GLuint, _v: Pointer[GLuint]) { globalGL.VertexAttrib4Nuiv(_index, _v); }
+glVertexAttrib4Nusv(_index: GLuint, _v: Pointer[GLushort]) { globalGL.VertexAttrib4Nusv(_index, _v); }
+glVertexAttrib4bv(_index: GLuint, _v: Pointer[GLbyte]) { globalGL.VertexAttrib4bv(_index, _v); }
+glVertexAttrib4d(_index: GLuint, _x: GLdouble, _y: GLdouble, _z: GLdouble, _w: GLdouble) { globalGL.VertexAttrib4d(_index, _x, _y, _z, _w); }
+glVertexAttrib4dv(_index: GLuint, _v: Pointer[GLdouble]) { globalGL.VertexAttrib4dv(_index, _v); }
+glVertexAttrib4f(_index: GLuint, _x: GLfloat, _y: GLfloat, _z: GLfloat, _w: GLfloat) { globalGL.VertexAttrib4f(_index, _x, _y, _z, _w); }
+glVertexAttrib4fv(_index: GLuint, _v: Pointer[GLfloat]) { globalGL.VertexAttrib4fv(_index, _v); }
+glVertexAttrib4iv(_index: GLuint, _v: Pointer[GLint]) { globalGL.VertexAttrib4iv(_index, _v); }
+glVertexAttrib4s(_index: GLuint, _x: GLshort, _y: GLshort, _z: GLshort, _w: GLshort) { globalGL.VertexAttrib4s(_index, _x, _y, _z, _w); }
+glVertexAttrib4sv(_index: GLuint, _v: Pointer[GLshort]) { globalGL.VertexAttrib4sv(_index, _v); }
+glVertexAttrib4ubv(_index: GLuint, _v: Pointer[GLubyte]) { globalGL.VertexAttrib4ubv(_index, _v); }
+glVertexAttrib4uiv(_index: GLuint, _v: Pointer[GLuint]) { globalGL.VertexAttrib4uiv(_index, _v); }
+glVertexAttrib4usv(_index: GLuint, _v: Pointer[GLushort]) { globalGL.VertexAttrib4usv(_index, _v); }
+glVertexAttribIPointer(_index: GLuint, _size: GLint, _type: GLenum, _stride: GLsizei, _pointer: Pointer[GLvoid]) { globalGL.VertexAttribIPointer(_index, _size, _type, _stride, _pointer); }
+glVertexAttribP1ui(_index: GLuint, _type: GLenum, _normalized: GLboolean, _value: GLuint) { globalGL.VertexAttribP1ui(_index, _type, _normalized, _value); }
+glVertexAttribP1uiv(_index: GLuint, _type: GLenum, _normalized: GLboolean, _value: Pointer[GLuint]) { globalGL.VertexAttribP1uiv(_index, _type, _normalized, _value); }
+glVertexAttribP2ui(_index: GLuint, _type: GLenum, _normalized: GLboolean, _value: GLuint) { globalGL.VertexAttribP2ui(_index, _type, _normalized, _value); }
+glVertexAttribP2uiv(_index: GLuint, _type: GLenum, _normalized: GLboolean, _value: Pointer[GLuint]) { globalGL.VertexAttribP2uiv(_index, _type, _normalized, _value); }
+glVertexAttribP3ui(_index: GLuint, _type: GLenum, _normalized: GLboolean, _value: GLuint) { globalGL.VertexAttribP3ui(_index, _type, _normalized, _value); }
+glVertexAttribP3uiv(_index: GLuint, _type: GLenum, _normalized: GLboolean, _value: Pointer[GLuint]) { globalGL.VertexAttribP3uiv(_index, _type, _normalized, _value); }
+glVertexAttribP4ui(_index: GLuint, _type: GLenum, _normalized: GLboolean, _value: GLuint) { globalGL.VertexAttribP4ui(_index, _type, _normalized, _value); }
+glVertexAttribP4uiv(_index: GLuint, _type: GLenum, _normalized: GLboolean, _value: Pointer[GLuint]) { globalGL.VertexAttribP4uiv(_index, _type, _normalized, _value); }
+glVertexAttribPointer(_index: GLuint, _size: GLint, _type: GLenum, _normalized: GLboolean, _stride: GLsizei, _pointer: Pointer[GLvoid]) { globalGL.VertexAttribPointer(_index, _size, _type, _normalized, _stride, _pointer); }
+glVertexP2ui(_type: GLenum, _value: GLuint) { globalGL.VertexP2ui(_type, _value); }
+glVertexP2uiv(_type: GLenum, _value: Pointer[GLuint]) { globalGL.VertexP2uiv(_type, _value); }
+glVertexP3ui(_type: GLenum, _value: GLuint) { globalGL.VertexP3ui(_type, _value); }
+glVertexP3uiv(_type: GLenum, _value: Pointer[GLuint]) { globalGL.VertexP3uiv(_type, _value); }
+glVertexP4ui(_type: GLenum, _value: GLuint) { globalGL.VertexP4ui(_type, _value); }
+glVertexP4uiv(_type: GLenum, _value: Pointer[GLuint]) { globalGL.VertexP4uiv(_type, _value); }
+glVertexPointer(_size: GLint, _type: GLenum, _stride: GLsizei, _ptr: Pointer[GLvoid]) { globalGL.VertexPointer(_size, _type, _stride, _ptr); }
+glViewport(_x: GLint, _y: GLint, _width: GLsizei, _height: GLsizei) { globalGL.Viewport(_x, _y, _width, _height); }
+glWaitSync(_sync: GLsync, _flags: GLbitfield, _timeout: GLuint64) { globalGL.WaitSync(_sync, _flags, _timeout); }
+glWindowPos2d(_x: GLdouble, _y: GLdouble) { globalGL.WindowPos2d(_x, _y); }
+glWindowPos2dv(_p: Pointer[GLdouble]) { globalGL.WindowPos2dv(_p); }
+glWindowPos2f(_x: GLfloat, _y: GLfloat) { globalGL.WindowPos2f(_x, _y); }
+glWindowPos2fv(_p: Pointer[GLfloat]) { globalGL.WindowPos2fv(_p); }
+glWindowPos2i(_x: GLint, _y: GLint) { globalGL.WindowPos2i(_x, _y); }
+glWindowPos2iv(_p: Pointer[GLint]) { globalGL.WindowPos2iv(_p); }
+glWindowPos2s(_x: GLshort, _y: GLshort) { globalGL.WindowPos2s(_x, _y); }
+glWindowPos2sv(_p: Pointer[GLshort]) { globalGL.WindowPos2sv(_p); }
+glWindowPos3d(_x: GLdouble, _y: GLdouble, _z: GLdouble) { globalGL.WindowPos3d(_x, _y, _z); }
+glWindowPos3dv(_p: Pointer[GLdouble]) { globalGL.WindowPos3dv(_p); }
+glWindowPos3f(_x: GLfloat, _y: GLfloat, _z: GLfloat) { globalGL.WindowPos3f(_x, _y, _z); }
+glWindowPos3fv(_p: Pointer[GLfloat]) { globalGL.WindowPos3fv(_p); }
+glWindowPos3i(_x: GLint, _y: GLint, _z: GLint) { globalGL.WindowPos3i(_x, _y, _z); }
+glWindowPos3iv(_p: Pointer[GLint]) { globalGL.WindowPos3iv(_p); }
+glWindowPos3s(_x: GLshort, _y: GLshort, _z: GLshort) { globalGL.WindowPos3s(_x, _y, _z); }
+glWindowPos3sv(_p: Pointer[GLshort]) { globalGL.WindowPos3sv(_p); }
 
