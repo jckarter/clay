@@ -46,7 +46,7 @@ public import system.*;
 public import prelude;
 
 alias stdcall = AttributeStdCall;
-alias fastcall = AttributeStdCall;
+alias fastcall = AttributeFastCall;
 alias cdecl = AttributeCCall;
 alias dllimport = AttributeDLLImport;
 alias dllexport = AttributeDLLExport;
