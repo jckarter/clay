@@ -1603,7 +1603,6 @@ ostream &operator<<(ostream &out, const PatternVar &pvar);
 void printNameList(ostream &out, const vector<ObjectPtr> &x);
 void printNameList(ostream &out, const vector<TypePtr> &x);
 void printName(ostream &out, ObjectPtr x);
-string getCodeName(ObjectPtr x);
 void printValue(ostream &out, EValuePtr ev);
 
 
@@ -2680,8 +2679,8 @@ void codegenExternalProcedure(ExternalProcedurePtr x);
 InvokeEntryPtr codegenCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness);
-void codegenCodeBody(InvokeEntryPtr entry, const string &callableName);
-void codegenCWrapper(InvokeEntryPtr entry, const string &callableName);
+void codegenCodeBody(InvokeEntryPtr entry);
+void codegenCWrapper(InvokeEntryPtr entry);
 
 void codegenSharedLib(ModulePtr module);
 void codegenExe(ModulePtr module);

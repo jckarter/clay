@@ -1814,7 +1814,7 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
                           MultiEValuePtr out)
 {
     if (!entry->llvmFunc)
-        codegenCodeBody(entry, getCodeName(entry->callable));
+        codegenCodeBody(entry);
     assert(entry->llvmFunc);
 
     vector<llvm::GenericValue> gvArgs;
@@ -3446,7 +3446,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argumentError(0, "cannot create pointer to inlined code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
-            codegenCodeBody(entry, getCodeName(entry->callable));
+            codegenCodeBody(entry);
         assert(entry->llvmFunc);
         void *funcPtr = llvmEngine->getPointerToGlobal(entry->llvmFunc);
         TypePtr cpType = codePointerType(argsKey,
@@ -3520,10 +3520,10 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argumentError(0, "cannot create pointer to inlined code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
-            codegenCodeBody(entry, getCodeName(entry->callable));
+            codegenCodeBody(entry);
         assert(entry->llvmFunc);
         if (!entry->llvmCWrapper)
-            codegenCWrapper(entry, getCodeName(entry->callable));
+            codegenCWrapper(entry);
         assert(entry->llvmCWrapper);
         TypePtr returnType;
         if (entry->returnTypes.size() == 0) {
