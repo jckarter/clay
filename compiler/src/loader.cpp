@@ -662,6 +662,10 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(enumToInt);
     PRIMITIVE(intToEnum);
 
+    PRIMITIVE(IdentifierSize);
+    PRIMITIVE(IdentifierConcat);
+    PRIMITIVE(IdentifierSlice);
+
 #undef PRIMITIVE
 
     return prims;

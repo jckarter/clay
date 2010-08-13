@@ -1779,6 +1779,10 @@ enum PrimOpCode {
     PRIM_EnumP,
     PRIM_enumToInt,
     PRIM_intToEnum,
+
+    PRIM_IdentifierSize,
+    PRIM_IdentifierConcat,
+    PRIM_IdentifierSlice,
 };
 
 struct PrimOp : public Object {

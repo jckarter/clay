@@ -2080,6 +2080,42 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(t, true));
     }
 
+    case PRIM_IdentifierSize :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_IdentifierConcat : {
+        std::string result;
+        for (unsigned i = 0; i < args->size(); ++i) {
+            ObjectPtr obj = unwrapStaticType(args->values[i]->type);
+            if (!obj || (obj->objKind != IDENTIFIER))
+                argumentError(i, "expecting an identifier value");
+            Identifier *ident = (Identifier *)obj.ptr();
+            result.append(ident->str);
+        }
+        return analyzeStaticObject(new Identifier(result));
+    }
+
+    case PRIM_IdentifierSlice : {
+        ensureArity(args, 3);
+        ObjectPtr identObj = unwrapStaticType(args->values[0]->type);
+        if (!identObj || (identObj->objKind != IDENTIFIER))
+            argumentError(0, "expecting an identifier value");
+        Identifier *ident = (Identifier *)identObj.ptr();
+        ObjectPtr beginObj = unwrapStaticType(args->values[1]->type);
+        ObjectPtr endObj = unwrapStaticType(args->values[2]->type);
+        size_t begin = 0, end = 0;
+        if (!beginObj || !staticToSizeTOrInt(beginObj, begin))
+            argumentError(1, "expecting a static SizeT or Int value");
+        if (!endObj || !staticToSizeTOrInt(endObj, end))
+            argumentError(2, "expecting a static SizeT or Int value");
+        if (begin > ident->str.size())
+            argumentError(1, "starting index out of range");
+        if ((end < begin) || (end > ident->str.size()))
+            argumentError(2, "ending index out of range");
+        string result = ident->str.substr(begin, end-begin);
+        return analyzeStaticObject(new Identifier(result));
+    }
+
     default :
         assert(false);
         return NULL;

@@ -1,0 +1,12 @@
+
+main() {
+    var a = #foobar;
+    println(a);
+    var b = IdentifierSlice(a, static 0, static 3);
+    println(b);
+    var c = IdentifierSlice(a, static 3, static IdentifierSize(a));
+    println(c);
+    var d = IdentifierConcat(b, c);
+    println(d);
+    println(a == d);
+}
