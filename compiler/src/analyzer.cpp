@@ -1964,9 +1964,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_TupleElementCount :
         return new MultiPValue(new PValue(cSizeTType, true));
 
-    case PRIM_TupleElementOffset :
-        return new MultiPValue(new PValue(cSizeTType, true));
-
     case PRIM_tupleRef : {
         ensureArity(args, 2);
         TupleTypePtr t = tupleTypeOfValue(args, 0);
@@ -1991,9 +1988,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_RecordFieldCount :
         return new MultiPValue(new PValue(cSizeTType, true));
 
-    case PRIM_RecordFieldOffset :
-        return new MultiPValue(new PValue(cSizeTType, true));
-
     case PRIM_RecordFieldName : {
         ensureArity(args, 2);
         ObjectPtr first = unwrapStaticType(args->values[0]->type);
@@ -2014,9 +2008,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(1, "field index out of range");
         return new MultiPValue(staticPValue(fieldNames[i].ptr()));
     }
-
-    case PRIM_RecordFieldIndex :
-        return new MultiPValue(new PValue(cSizeTType, true));
 
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);

@@ -1757,7 +1757,6 @@ enum PrimOpCode {
 
     PRIM_Tuple,
     PRIM_TupleElementCount,
-    PRIM_TupleElementOffset,
     PRIM_tupleRef,
 
     PRIM_Union,
@@ -1765,9 +1764,7 @@ enum PrimOpCode {
 
     PRIM_RecordP,
     PRIM_RecordFieldCount,
-    PRIM_RecordFieldOffset,
     PRIM_RecordFieldName,
-    PRIM_RecordFieldIndex,
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
 
