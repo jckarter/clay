@@ -75,7 +75,7 @@ private printWithSprintf(stream, formatString, value) {
 
 [A]
 overload printTo(stream, x:Static[A]) {
-    printTo(stream, StaticName(A));
+    printTo(stream, StaticName(x));
 }
 
 
