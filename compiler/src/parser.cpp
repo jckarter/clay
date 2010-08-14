@@ -1639,26 +1639,28 @@ static bool record(TopLevelItemPtr &x) {
 // variant, instance
 //
 
-static bool defaultInstances(vector<ExprPtr> &x) {
+static bool defaultInstances(ExprListPtr &x) {
+    ExprListPtr a;
     ExprPtr y;
     if (!expression(y)) return false;
-    x.clear();
-    x.push_back(y);
+    a = new ExprList(y);
     while (true) {
         int p = save();
         if (!symbol("|") || !expression(y)) {
             restore(p);
             break;
         }
-        x.push_back(y);
+        a->add(y);
     }
+    x = a;
     return true;
 }
 
-static bool optDefaultInstances(vector<ExprPtr> &x) {
+static bool optDefaultInstances(ExprListPtr &x) {
     int p = save();
     if (!symbol("=")) {
         restore(p);
+        x = new ExprList();
         return true;
     }
     return defaultInstances(x);
@@ -1674,7 +1676,7 @@ static bool variant(TopLevelItemPtr &x) {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
     if (!optStaticParams(params, varParam)) return false;
-    vector<ExprPtr> defaultInstances;
+    ExprListPtr defaultInstances;
     if (!optDefaultInstances(defaultInstances)) return false;
     if (!symbol(";")) return false;
     x = new Variant(name, vis, params, varParam, defaultInstances);
