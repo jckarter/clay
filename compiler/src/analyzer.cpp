@@ -443,27 +443,29 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args.size() == 1) &&
-            (x->args[0]->exprKind != UNPACK))
+        if ((x->args->size() == 1) &&
+            (x->args->exprs[0]->exprKind != UNPACK))
         {
-            return analyzeExpr(x->args[0], env);
+            return analyzeExpr(x->args->exprs[0], env);
         }
-        return analyzeCallExpr(prelude_expr_tupleLiteral(), x->args, env);
+        return analyzeCallExpr(prelude_expr_tupleLiteral(),
+                               x->args->exprs,
+                               env);
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        return analyzeCallExpr(prelude_expr_Array(), x->args, env);
+        return analyzeCallExpr(prelude_expr_Array(), x->args->exprs, env);
     }
 
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
-        return analyzeIndexingExpr(x->expr, x->args, env);
+        return analyzeIndexingExpr(x->expr, x->args->exprs, env);
     }
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        return analyzeCallExpr(x->expr, x->args, env);
+        return analyzeCallExpr(x->expr, x->args->exprs, env);
     }
 
     case FIELD_REF : {

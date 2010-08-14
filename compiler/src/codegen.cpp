@@ -753,33 +753,33 @@ void codegenExpr(ExprPtr expr,
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args.size() == 1) &&
-            (x->args[0]->exprKind != UNPACK))
+        if ((x->args->size() == 1) &&
+            (x->args->exprs[0]->exprKind != UNPACK))
         {
-            codegenExpr(x->args[0], env, ctx, out);
+            codegenExpr(x->args->exprs[0], env, ctx, out);
         }
         else {
             ExprPtr tupleLiteral = prelude_expr_tupleLiteral();
-            codegenCallExpr(tupleLiteral, x->args, env, ctx, out);
+            codegenCallExpr(tupleLiteral, x->args->exprs, env, ctx, out);
         }
         break;
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        codegenCallExpr(prelude_expr_Array(), x->args, env, ctx, out);
+        codegenCallExpr(prelude_expr_Array(), x->args->exprs, env, ctx, out);
         break;
     }
 
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
-        codegenIndexingExpr(x->expr, x->args, env, ctx, out);
+        codegenIndexingExpr(x->expr, x->args->exprs, env, ctx, out);
         break;
     }
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        codegenCallExpr(x->expr, x->args, env, ctx, out);
+        codegenCallExpr(x->expr, x->args->exprs, env, ctx, out);
         break;
     }
 
@@ -2612,9 +2612,9 @@ bool codegenStatement(StatementPtr stmt,
         PValuePtr pvLeft = analyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(updateOperatorExpr(x->op));
-        call->args.push_back(x->left);
-        call->args.push_back(x->right);
+        CallPtr call = new Call(updateOperatorExpr(x->op), new ExprList());
+        call->args->add(x->left);
+        call->args->add(x->right);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 
@@ -4413,13 +4413,16 @@ void codegenExe(ModulePtr module)
 
     BlockPtr mainBody = new Block();
 
-    CallPtr initCmdLine = new Call(prelude_expr_setArgcArgv());
-    initCmdLine->args.push_back(new NameRef(argc));
-    initCmdLine->args.push_back(new NameRef(argv));
+    ExprListPtr args;
+
+    args = new ExprList();
+    args->add(new NameRef(argc));
+    args->add(new NameRef(argv));
+    CallPtr initCmdLine = new Call(prelude_expr_setArgcArgv(), args);
     mainBody->statements.push_back(new ExprStatement(initCmdLine.ptr()));
 
-    CallPtr mainCall = new Call(prelude_expr_callMain());
-    mainCall->args.push_back(new NameRef(main));
+    args = new ExprList(new NameRef(main));
+    CallPtr mainCall = new Call(prelude_expr_callMain(), args);
 
     vector<ExprPtr> exprs;
     exprs.push_back(mainCall.ptr());

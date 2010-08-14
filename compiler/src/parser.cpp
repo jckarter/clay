@@ -249,6 +249,32 @@ static bool optExpressionList(vector<ExprPtr> &x) {
     return true;
 }
 
+static bool expressionList2(ExprListPtr &x) {
+    ExprListPtr a;
+    ExprPtr b;
+    if (!expression(b)) return false;
+    a = new ExprList(b);
+    while (true) {
+        int p = save();
+        if (!symbol(",") || !expression(b)) {
+            restore(p);
+            break;
+        }
+        a->add(b);
+    }
+    x = a;
+    return true;
+}
+
+static bool optExpressionList2(ExprListPtr &x) {
+    int p = save();
+    if (!expressionList2(x)) {
+        restore(p);
+        x = new ExprList();
+    }
+    return true;
+}
+
 
 
 //
@@ -258,10 +284,10 @@ static bool optExpressionList(vector<ExprPtr> &x) {
 static bool arrayExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
-    ArrayPtr y = new Array();
-    if (!expressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!expressionList2(args)) return false;
     if (!symbol("]")) return false;
-    x = y.ptr();
+    x = new Array(args);
     x->location = location;
     return true;
 }
@@ -269,10 +295,10 @@ static bool arrayExpr(ExprPtr &x) {
 static bool tupleExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("(")) return false;
-    TuplePtr y = new Tuple();
-    if (!optExpressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!optExpressionList2(args)) return false;
     if (!symbol(")")) return false;
-    x = y.ptr();
+    x = new Tuple(args);
     x->location = location;
     return true;
 }
@@ -304,10 +330,10 @@ static bool atomicExpr(ExprPtr &x) {
 static bool indexingSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
-    IndexingPtr y = new Indexing(NULL);
-    if (!expressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!expressionList2(args)) return false;
     if (!symbol("]")) return false;
-    x = y.ptr();
+    x = new Indexing(NULL, args);
     x->location = location;
     return true;
 }
@@ -315,10 +341,10 @@ static bool indexingSuffix(ExprPtr &x) {
 static bool callSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("(")) return false;
-    CallPtr y = new Call(NULL);
-    if (!optExpressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!optExpressionList2(args)) return false;
     if (!symbol(")")) return false;
-    x = y.ptr();
+    x = new Call(NULL, args);
     x->location = location;
     return true;
 }
@@ -797,10 +823,10 @@ static bool atomicPattern(ExprPtr &x) {
 static bool patternSuffix(IndexingPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
-    IndexingPtr y = new Indexing(NULL);
-    if (!expressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!expressionList2(args)) return false;
     if (!symbol("]")) return false;
-    x = y;
+    x = new Indexing(NULL, args);
     x->location = location;
     return true;
 }
@@ -1318,8 +1344,7 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
         new ForeignExpr("prelude",
                         new NameRef(new Identifier("Static")));
 
-    IndexingPtr indexing = new Indexing(staticName);
-    indexing->args.push_back(y);
+    IndexingPtr indexing = new Indexing(staticName, new ExprList(y));
     
     x = new FormalArg(argName, indexing.ptr());
     x->location = location;

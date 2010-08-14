@@ -489,9 +489,9 @@ ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements)
         TypePtr t = tupleType(elementTypes);
         return new ValueHolder(t);
     }
-    vector<ExprPtr> elementExprs;
+    ExprListPtr elementExprs = new ExprList();
     for (unsigned i = 0; i < elements.size(); ++i)
-        elementExprs.push_back(new ObjectExpr(elements[i]));
+        elementExprs->add(new ObjectExpr(elements[i]));
     ExprPtr tupleExpr = new Tuple(elementExprs);
     return evaluateOneStatic(tupleExpr, new Env());
 }
@@ -1035,32 +1035,35 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args.size() == 1) &&
-            (x->args[0]->exprKind != UNPACK))
+        if ((x->args->size() == 1) &&
+            (x->args->exprs[0]->exprKind != UNPACK))
         {
-            evalExpr(x->args[0], env, out);
+            evalExpr(x->args->exprs[0], env, out);
         }
         else {
-            evalCallExpr(prelude_expr_tupleLiteral(), x->args, env, out);
+            evalCallExpr(prelude_expr_tupleLiteral(),
+                         x->args->exprs,
+                         env,
+                         out);
         }
         break;
     }
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        evalCallExpr(prelude_expr_Array(), x->args, env, out);
+        evalCallExpr(prelude_expr_Array(), x->args->exprs, env, out);
         break;
     }
 
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
-        evalIndexingExpr(x->expr, x->args, env, out);
+        evalIndexingExpr(x->expr, x->args->exprs, env, out);
         break;
     }
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        evalCallExpr(x->expr, x->args, env, out);
+        evalCallExpr(x->expr, x->args->exprs, env, out);
         break;
     }
 
@@ -2120,9 +2123,9 @@ TerminationPtr evalStatement(StatementPtr stmt,
         PValuePtr pvLeft = analyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(updateOperatorExpr(x->op));
-        call->args.push_back(x->left);
-        call->args.push_back(x->right);
+        CallPtr call = new Call(updateOperatorExpr(x->op), new ExprList());
+        call->args->add(x->left);
+        call->args->add(x->right);
         return evalStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 

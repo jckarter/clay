@@ -134,27 +134,27 @@ void initBuiltinConstructor(RecordPtr x)
         code->formalArgs.push_back(arg.ptr());
     }
 
-    IndexingPtr retType = new Indexing(recName);
+    IndexingPtr retType = new Indexing(recName, new ExprList());
     retType->location = x->location;
     for (unsigned i = 0; i < x->params.size(); ++i) {
         ExprPtr typeArg = new NameRef(x->params[i]);
         typeArg->location = x->params[i]->location;
-        retType->args.push_back(typeArg);
+        retType->args->add(typeArg);
     }
     if (x->varParam.ptr()) {
         ExprPtr nameRef = new NameRef(x->varParam);
         nameRef->location = x->varParam->location;
         ExprPtr typeArg = new Unpack(nameRef);
         typeArg->location = nameRef->location;
-        retType->args.push_back(typeArg);
+        retType->args->add(typeArg);
     }
 
-    CallPtr returnExpr = new Call(retType.ptr());
+    CallPtr returnExpr = new Call(retType.ptr(), new ExprList());
     returnExpr->location = x->location;
     for (unsigned i = 0; i < y->fields.size(); ++i) {
         ExprPtr callArg = new NameRef(y->fields[i]->name);
         callArg->location = y->fields[i]->location;
-        returnExpr->args.push_back(callArg);
+        returnExpr->args->add(callArg);
     }
 
     vector<ExprPtr> exprs; exprs.push_back(returnExpr.ptr());
