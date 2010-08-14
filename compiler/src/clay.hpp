@@ -249,6 +249,7 @@ struct ForeignStatement;
 struct Try;
 struct Catch;
 struct Throw;
+struct StaticFor;
 
 struct FormalArg;
 struct ReturnSpec;
@@ -380,6 +381,7 @@ typedef Pointer<ForeignStatement> ForeignStatementPtr;
 typedef Pointer<Try> TryPtr;
 typedef Pointer<Catch> CatchPtr;
 typedef Pointer<Throw> ThrowPtr;
+typedef Pointer<StaticFor> StaticForPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
@@ -929,6 +931,7 @@ enum StatementKind {
     FOREIGN_STATEMENT,
     TRY,
     THROW,
+    STATIC_FOR,
 };
 
 struct Statement : public ANode {
@@ -1115,6 +1118,17 @@ struct Throw : public Statement {
     ExprPtr expr;
     Throw(ExprPtr expr)
         : Statement(THROW), expr(expr) {}
+};
+
+struct StaticFor : public Statement {
+    IdentifierPtr variable;
+    vector<ExprPtr> exprs;
+    StatementPtr body;
+    StaticFor(IdentifierPtr variable,
+              const vector<ExprPtr> &exprs,
+              StatementPtr body)
+        : Statement(STATIC_FOR), variable(variable), exprs(exprs),
+          body(body) {}
 };
 
 

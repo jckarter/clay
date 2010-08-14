@@ -1153,6 +1153,24 @@ static bool throwStatement(StatementPtr &x) {
     return true;
 }
 
+static bool staticFor(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("static")) return false;
+    if (!keyword("for")) return false;
+    if (!symbol("(")) return false;
+    IdentifierPtr a;
+    if (!identifier(a)) return false;
+    if (!keyword("in")) return false;
+    vector<ExprPtr> b;
+    if (!expressionList(b)) return false;
+    if (!symbol(")")) return false;
+    StatementPtr c;
+    if (!statement(c)) return false;
+    x = new StaticFor(a, b, c);
+    x->location = location;
+    return true;
+}
+
 static bool statement(StatementPtr &x) {
     int p = save();
     if (block(x)) return true;
@@ -1169,6 +1187,7 @@ static bool statement(StatementPtr &x) {
     if (restore(p), forStatement(x)) return true;
     if (restore(p), tryStatement(x)) return true;
     if (restore(p), throwStatement(x)) return true;
+    if (restore(p), staticFor(x)) return true;
 
     return false;
 }

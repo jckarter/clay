@@ -372,6 +372,12 @@ static void printStatement(ostream &out, const Statement *x) {
         out << "Throw(" << y->expr << ")";
         break;
     }
+    case STATIC_FOR : {
+        const StaticFor *y = (const StaticFor *)x;
+        out << "StaticFor(" << y->variable << ", " << y->exprs
+            << ", " << y->body << ")";
+        break;
+    }
     }
 }
 
