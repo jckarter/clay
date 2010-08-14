@@ -115,23 +115,19 @@ static vector<IdentifierPtr> identV(IdentifierPtr x) {
     return v;
 }
 
-static vector<ExprPtr> exprV(ExprPtr x) {
-    vector<ExprPtr> v;
-    v.push_back(x);
-    return v;
-}
-
 StatementPtr desugarForStatement(ForPtr x) {
     IdentifierPtr exprVar = new Identifier("%expr");
     IdentifierPtr iterVar = new Identifier("%iter");
 
     BlockPtr block = new Block();
     vector<StatementPtr> &bs = block->statements;
-    bs.push_back(new Binding(REF, identV(exprVar), exprV(x->expr)));
+    bs.push_back(new Binding(REF, identV(exprVar), new ExprList(x->expr)));
 
     CallPtr iteratorCall = new Call(prelude_expr_iterator(), new ExprList());
     iteratorCall->args->add(new NameRef(exprVar));
-    bs.push_back(new Binding(VAR, identV(iterVar), exprV(iteratorCall.ptr())));
+    bs.push_back(new Binding(VAR,
+                             identV(iterVar),
+                             new ExprList(iteratorCall.ptr())));
 
     CallPtr hasNextCall = new Call(prelude_expr_hasNextP(), new ExprList());
     hasNextCall->args->add(new NameRef(iterVar));
@@ -140,7 +136,7 @@ StatementPtr desugarForStatement(ForPtr x) {
     ExprPtr unpackNext = new Unpack(nextCall.ptr());
     BlockPtr whileBody = new Block();
     vector<StatementPtr> &ws = whileBody->statements;
-    ws.push_back(new Binding(REF, x->variables, exprV(unpackNext)));
+    ws.push_back(new Binding(REF, x->variables, new ExprList(unpackNext)));
     ws.push_back(x->body);
 
     bs.push_back(new While(hasNextCall.ptr(), whileBody.ptr()));
@@ -166,7 +162,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
             BindingPtr binding =
                 new Binding(VAR,
                             vector<IdentifierPtr>(1, x->exceptionVar),
-                            vector<ExprPtr>(1, getter.ptr()));
+                            new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
 
             block->statements.push_back(binding.ptr());
@@ -189,7 +185,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
             BindingPtr binding =
                 new Binding(VAR,
                             vector<IdentifierPtr>(1, x->exceptionVar),
-                            vector<ExprPtr>(1, getter.ptr()));
+                            new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
             block->statements.push_back(binding.ptr());
             block->statements.push_back(x->body);

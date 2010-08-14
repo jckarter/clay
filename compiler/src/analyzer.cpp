@@ -762,8 +762,8 @@ void verifyAttributes(ExternalProcedurePtr x)
     x->attrDLLExport = false;
     int callingConv = -1;
     x->attrAsmLabel = "";
-    for (unsigned i = 0; i < x->attributes.size(); ++i) {
-        ExprPtr expr = x->attributes[i];
+    for (unsigned i = 0; i < x->attributes->size(); ++i) {
+        ExprPtr expr = x->attributes->exprs[i];
         if (expr->exprKind == STRING_LITERAL) {
             StringLiteral *y = (StringLiteral *)expr.ptr();
             x->attrAsmLabel = y->value;
@@ -820,8 +820,8 @@ void verifyAttributes(ExternalVariablePtr x)
     x->attributesVerified = true;
     x->attrDLLImport = false;
     x->attrDLLExport = false;
-    for (unsigned i = 0; i < x->attributes.size(); ++i) {
-        ExprPtr expr = x->attributes[i];
+    for (unsigned i = 0; i < x->attributes->size(); ++i) {
+        ExprPtr expr = x->attributes->exprs[i];
         ObjectPtr obj = evaluateOneStatic(expr, x->env);
         if (obj->objKind != PRIM_OP)
             error(expr, "invalid external attribute");
@@ -1586,7 +1586,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
         if (!mpv) 
             return false;
         if (ctx->returnInitialized) {
@@ -1667,7 +1667,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 
     case STATIC_FOR : {
         StaticFor *x = (StaticFor *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
         if (!mpv)
             return false;
         initializeStaticForClones(x, mpv->size());
@@ -1709,7 +1709,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
     case VAR :
     case REF : {
-        MultiPValuePtr right = analyzeMulti(x->exprs, env);
+        MultiPValuePtr right = analyzeMulti(x->values->exprs, env);
         if (!right)
             return NULL;
         if (right->size() != x->names.size())
@@ -1724,9 +1724,9 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
     case ALIAS : {
         ensureArity(x->names, 1);
-        ensureArity(x->exprs, 1);
+        ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);
-        ExprPtr y = foreignExpr(env, x->exprs[0]);
+        ExprPtr y = foreignExpr(env, x->values->exprs[0]);
         addLocal(env2, x->names[0], y.ptr());
         return env2;
     }

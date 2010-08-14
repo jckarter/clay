@@ -270,27 +270,19 @@ StatementPtr clone(StatementPtr x)
         Binding *y = (Binding *)x.ptr();
         vector<IdentifierPtr> names;
         clone(y->names, names);
-        vector<ExprPtr> exprs;
-        clone(y->exprs, exprs);
-        out = new Binding(y->bindingKind, names, exprs);
+        out = new Binding(y->bindingKind, names, clone(y->values));
         break;
     }
 
     case ASSIGNMENT : {
         Assignment *y = (Assignment *)x.ptr();
-        vector<ExprPtr> left, right;
-        clone(y->left, left);
-        clone(y->right, right);
-        out = new Assignment(left, right);
+        out = new Assignment(clone(y->left), clone(y->right));
         break;
     }
 
     case INIT_ASSIGNMENT : {
         InitAssignment *y = (InitAssignment *)x.ptr();
-        vector<ExprPtr> left, right;
-        clone(y->left, left);
-        clone(y->right, right);
-        out = new InitAssignment(left, right);
+        out = new InitAssignment(clone(y->left), clone(y->right));
         break;
     }
 
@@ -308,10 +300,7 @@ StatementPtr clone(StatementPtr x)
 
     case RETURN : {
         Return *y = (Return *)x.ptr();
-        ReturnPtr z = new Return();
-        z->returnKind = y->returnKind;
-        clone(y->exprs, z->exprs);
-        out = z.ptr();
+        out = new Return(y->returnKind, clone(y->values));
         break;
     }
 
@@ -373,9 +362,7 @@ StatementPtr clone(StatementPtr x)
 
     case STATIC_FOR : {
         StaticFor *y = (StaticFor *)x.ptr();
-        vector<ExprPtr> exprs;
-        clone(y->exprs, exprs);
-        out = new StaticFor(y->variable, exprs, clone(y->body));
+        out = new StaticFor(y->variable, clone(y->values), clone(y->body));
         break;
     }
 

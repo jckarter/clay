@@ -2059,8 +2059,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
-        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left->exprs, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right->exprs, env);
         assert(mpvLeft.ptr());
         assert(mpvRight.ptr());
         if (mpvLeft->size() != mpvRight->size())
@@ -2071,8 +2071,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
         }
         int marker = evalMarkStack();
         if (mpvLeft->size() == 1) {
-            MultiEValuePtr mevRight = evalMultiAsRef(x->right, env);
-            MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
+            MultiEValuePtr mevRight = evalMultiAsRef(x->right->exprs, env);
+            MultiEValuePtr mevLeft = evalMultiAsRef(x->left->exprs, env);
             assert(mevLeft->size() == 1);
             assert(mevRight->size() == 1);
             evalValueAssign(mevLeft->values[0], mevRight->values[0]);
@@ -2084,8 +2084,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
                 EValuePtr ev = evalAllocValue(pv->type);
                 mevRight->add(ev);
             }
-            evalMultiInto(x->right, env, mevRight);
-            MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
+            evalMultiInto(x->right->exprs, env, mevRight);
+            MultiEValuePtr mevLeft = evalMultiAsRef(x->left->exprs, env);
             assert(mevLeft->size() == mevRight->size());
             for (unsigned i = 0; i < mevLeft->size(); ++i) {
                 EValuePtr evLeft = mevLeft->values[i];
@@ -2099,8 +2099,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case INIT_ASSIGNMENT : {
         InitAssignment *x = (InitAssignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
-        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left->exprs, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right->exprs, env);
         assert(mpvLeft.ptr());
         assert(mpvRight.ptr());
         if (mpvLeft->size() != mpvRight->size())
@@ -2112,8 +2112,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
                 argumentError(i, "type mismatch");
         }
         int marker = evalMarkStack();
-        MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
-        evalMultiInto(x->right, env, mevLeft);
+        MultiEValuePtr mevLeft = evalMultiAsRef(x->left->exprs, env);
+        evalMultiInto(x->right->exprs, env, mevLeft);
         evalDestroyAndPopStack(marker);
         return NULL;
     }
@@ -2136,7 +2136,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
         MultiEValuePtr mev = new MultiEValue();
         ensureArity(mpv, ctx->returns.size());
         for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -2154,10 +2154,10 @@ TerminationPtr evalStatement(StatementPtr stmt,
         int marker = evalMarkStack();
         switch (x->returnKind) {
         case RETURN_VALUE :
-            evalMultiInto(x->exprs, env, mev);
+            evalMultiInto(x->values->exprs, env, mev);
             break;
         case RETURN_REF : {
-            MultiEValuePtr mevRef = evalMultiAsRef(x->exprs, env);
+            MultiEValuePtr mevRef = evalMultiAsRef(x->values->exprs, env);
             assert(mev->size() == mevRef->size());
             for (unsigned i = 0; i < mev->size(); ++i) {
                 EValuePtr evPtr = mev->values[i];
@@ -2167,7 +2167,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             break;
         }
         case RETURN_FORWARD :
-            evalMulti(x->exprs, env, mev);
+            evalMulti(x->values->exprs, env, mev);
             break;
         default :
             assert(false);
@@ -2250,7 +2250,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case STATIC_FOR : {
         StaticFor *x = (StaticFor *)stmt.ptr();
-        MultiEValuePtr mev = evalForwardMultiAsRef(x->exprs, env);
+        MultiEValuePtr mev = evalForwardMultiAsRef(x->values->exprs, env);
         initializeStaticForClones(x, mev->size());
         for (unsigned i = 0; i < mev->size(); ++i) {
             EnvPtr env2 = new Env(env);
@@ -2312,7 +2312,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
@@ -2321,7 +2321,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             mev->add(ev);
         }
         int marker = evalMarkStack();
-        evalMultiInto(x->exprs, env, mev);
+        evalMultiInto(x->values->exprs, env, mev);
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i)
@@ -2330,7 +2330,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case REF : {
-        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
@@ -2346,7 +2346,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             }
         }
         int marker = evalMarkStack();
-        evalMulti(x->exprs, env, mev);
+        evalMulti(x->values->exprs, env, mev);
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
@@ -2364,9 +2364,9 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
     case ALIAS : {
         ensureArity(x->names, 1);
-        ensureArity(x->exprs, 1);
+        ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);
-        ExprPtr y = foreignExpr(env, x->exprs[0]);
+        ExprPtr y = foreignExpr(env, x->values->exprs[0]);
         addLocal(env2, x->names[0], y.ptr());
         return env2;
     }
