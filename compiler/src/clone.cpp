@@ -372,6 +372,14 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case STATIC_FOR : {
+        StaticFor *y = (StaticFor *)x.ptr();
+        vector<ExprPtr> exprs;
+        clone(y->exprs, exprs);
+        out = new StaticFor(y->variable, exprs, clone(y->body));
+        break;
+    }
+
     default :
         assert(false);
 

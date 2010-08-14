@@ -97,6 +97,7 @@ Statement -> Block
            | ForStatement
            | TryStatement
            | ThrowStatement
+           | StaticForStatement
 
 LabelDef -> Identifier ":"
 
@@ -129,6 +130,9 @@ ForStatement -> "for" "(" Identifier "in" Expression ")" Statement
 
 TryStatement -> "try" Block "catch" Block
 ThrowStatement -> "throw" Expression? ";"
+
+StaticForStatement -> "static" "for" "(" Identifier "in" Expression ")"
+                      Statement
 
 
 //
