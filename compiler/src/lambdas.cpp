@@ -200,8 +200,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
             StatementPtr z = y->statements[i];
             if (z->stmtKind == BINDING) {
                 Binding *a = (Binding *)z.ptr();
-                for (unsigned i = 0; i < a->exprs.size(); ++i)
-                    convertFreeVars(a->exprs[i], env, ctx);
+                convertFreeVars(a->values, env, ctx);
                 EnvPtr env2 = new Env(env);
                 for (unsigned j = 0; j < a->names.size(); ++j)
                     addLocal(env2, a->names[j], a->names[j].ptr());
@@ -221,19 +220,15 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case ASSIGNMENT : {
         Assignment *y = (Assignment *)x.ptr();
-        for (unsigned i = 0; i < y->left.size(); ++i)
-            convertFreeVars(y->left[i], env, ctx);
-        for (unsigned i = 0; i < y->right.size(); ++i)
-            convertFreeVars(y->right[i], env, ctx);
+        convertFreeVars(y->left, env, ctx);
+        convertFreeVars(y->right, env, ctx);
         break;
     }
 
     case INIT_ASSIGNMENT : {
         InitAssignment *y = (InitAssignment *)x.ptr();
-        for (unsigned i = 0; i < y->left.size(); ++i)
-            convertFreeVars(y->left[i], env, ctx);
-        for (unsigned i = 0; i < y->right.size(); ++i)
-            convertFreeVars(y->right[i], env, ctx);
+        convertFreeVars(y->left, env, ctx);
+        convertFreeVars(y->right, env, ctx);
         break;
     }
 
@@ -250,8 +245,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case RETURN : {
         Return *y = (Return *)x.ptr();
-        for (unsigned i = 0; i < y->exprs.size(); ++i)
-            convertFreeVars(y->exprs[i], env, ctx);
+        convertFreeVars(y->values, env, ctx);
         break;
     }
 
@@ -321,8 +315,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case STATIC_FOR : {
         StaticFor *y = (StaticFor *)x.ptr();
-        for (unsigned i = 0; i < y->exprs.size(); ++i)
-            convertFreeVars(y->exprs[i], env, ctx);
+        convertFreeVars(y->values, env, ctx);
         EnvPtr env2 = new Env(env);
         addLocal(env2, y->variable, y->variable.ptr());
         convertFreeVars(y->body, env2, ctx);

@@ -298,7 +298,7 @@ static void printStatement(ostream &out, const Statement *x) {
         default :
             assert(false);
         }
-        out << ", " << y->names << ", " << y->exprs << ")";
+        out << ", " << y->names << ", " << y->values << ")";
         break;
     }
     case ASSIGNMENT : {
@@ -324,7 +324,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
     case RETURN : {
         const Return *y = (const Return *)x;
-        out << "Return(" << y->returnKind << ", " << y->exprs << ")";
+        out << "Return(" << y->returnKind << ", " << y->values << ")";
         break;
     }
     case IF : {
@@ -374,7 +374,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
     case STATIC_FOR : {
         const StaticFor *y = (const StaticFor *)x;
-        out << "StaticFor(" << y->variable << ", " << y->exprs
+        out << "StaticFor(" << y->variable << ", " << y->values
             << ", " << y->body << ")";
         break;
     }

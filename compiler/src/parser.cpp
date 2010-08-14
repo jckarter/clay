@@ -224,32 +224,7 @@ static bool optExpression(ExprPtr &x) {
     return true;
 }
 
-static bool expressionList(vector<ExprPtr> &x) {
-    ExprPtr a;
-    if (!expression(a)) return false;
-    x.clear();
-    x.push_back(a);
-    while (true) {
-        int p = save();
-        if (!symbol(",") || !expression(a)) {
-            restore(p);
-            break;
-        }
-        x.push_back(a);
-    }
-    return true;
-}
-
-static bool optExpressionList(vector<ExprPtr> &x) {
-    int p = save();
-    if (!expressionList(x)) {
-        restore(p);
-        x.clear();
-    }
-    return true;
-}
-
-static bool expressionList2(ExprListPtr &x) {
+static bool expressionList(ExprListPtr &x) {
     ExprListPtr a;
     ExprPtr b;
     if (!expression(b)) return false;
@@ -266,9 +241,9 @@ static bool expressionList2(ExprListPtr &x) {
     return true;
 }
 
-static bool optExpressionList2(ExprListPtr &x) {
+static bool optExpressionList(ExprListPtr &x) {
     int p = save();
-    if (!expressionList2(x)) {
+    if (!expressionList(x)) {
         restore(p);
         x = new ExprList();
     }
@@ -285,7 +260,7 @@ static bool arrayExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
     ExprListPtr args;
-    if (!expressionList2(args)) return false;
+    if (!expressionList(args)) return false;
     if (!symbol("]")) return false;
     x = new Array(args);
     x->location = location;
@@ -296,7 +271,7 @@ static bool tupleExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("(")) return false;
     ExprListPtr args;
-    if (!optExpressionList2(args)) return false;
+    if (!optExpressionList(args)) return false;
     if (!symbol(")")) return false;
     x = new Tuple(args);
     x->location = location;
@@ -331,7 +306,7 @@ static bool indexingSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
     ExprListPtr args;
-    if (!expressionList2(args)) return false;
+    if (!expressionList(args)) return false;
     if (!symbol("]")) return false;
     x = new Indexing(NULL, args);
     x->location = location;
@@ -342,7 +317,7 @@ static bool callSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("(")) return false;
     ExprListPtr args;
-    if (!optExpressionList2(args)) return false;
+    if (!optExpressionList(args)) return false;
     if (!symbol(")")) return false;
     x = new Call(NULL, args);
     x->location = location;
@@ -824,7 +799,7 @@ static bool patternSuffix(IndexingPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
     ExprListPtr args;
-    if (!expressionList2(args)) return false;
+    if (!expressionList(args)) return false;
     if (!symbol("]")) return false;
     x = new Indexing(NULL, args);
     x->location = location;
@@ -916,7 +891,7 @@ static bool localBinding(StatementPtr &x) {
     vector<IdentifierPtr> y;
     if (!identifierList(y)) return false;
     if (!symbol("=")) return false;
-    vector<ExprPtr> z;
+    ExprListPtr z;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     x = new Binding(bk, y, z);
@@ -953,7 +928,7 @@ static bool block(StatementPtr &x) {
 
 static bool assignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    vector<ExprPtr> y, z;
+    ExprListPtr y, z;
     if (!expressionList(y)) return false;
     if (!symbol("=")) return false;
     if (!expressionList(z)) return false;
@@ -965,7 +940,7 @@ static bool assignment(StatementPtr &x) {
 
 static bool initAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    vector<ExprPtr> y, z;
+    ExprListPtr y, z;
     if (!expressionList(y)) return false;
     if (!symbol("<--")) return false;
     if (!expressionList(z)) return false;
@@ -1030,7 +1005,7 @@ static bool returnKind(ReturnKind &x) {
     return true;
 }
 
-static bool returnExprList(ReturnKind &rkind, vector<ExprPtr> &exprs) {
+static bool returnExprList(ReturnKind &rkind, ExprListPtr &exprs) {
     if (!returnKind(rkind)) return false;
     if (!optExpressionList(exprs)) return false;
     return true;
@@ -1040,7 +1015,7 @@ static bool returnStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
     if (!keyword("return")) return false;
     ReturnKind rkind;
-    vector<ExprPtr> exprs;
+    ExprListPtr exprs;
     if (!returnExprList(rkind, exprs)) return false;
     if (!symbol(";")) return false;
     x = new Return(rkind, exprs);
@@ -1187,7 +1162,7 @@ static bool staticFor(StatementPtr &x) {
     IdentifierPtr a;
     if (!identifier(a)) return false;
     if (!keyword("in")) return false;
-    vector<ExprPtr> b;
+    ExprListPtr b;
     if (!expressionList(b)) return false;
     if (!symbol(")")) return false;
     StatementPtr c;
@@ -1518,7 +1493,7 @@ static bool exprBody(StatementPtr &x) {
     if (!symbol("=")) return false;
     LocationPtr location = currentLocation();
     ReturnKind rkind;
-    vector<ExprPtr> exprs;
+    ExprListPtr exprs;
     if (!returnExprList(rkind, exprs)) return false;
     if (!symbol(";")) return false;
     x = new Return(rkind, exprs);
@@ -1629,7 +1604,7 @@ static bool recordBodyFields(RecordBodyPtr &x) {
 static bool recordBodyComputed(RecordBodyPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("=")) return false;
-    vector<ExprPtr> y;
+    ExprListPtr y;
     if (!optExpressionList(y)) return false;
     if (!symbol(";")) return false;
     x = new RecordBody(y);
@@ -2011,18 +1986,18 @@ static bool globalVariable(TopLevelItemPtr &x) {
 // external procedure, external variable
 //
 
-static bool externalAttributes(vector<ExprPtr> &x) {
+static bool externalAttributes(ExprListPtr &x) {
     if (!symbol("(")) return false;
     if (!expressionList(x)) return false;
     if (!symbol(")")) return false;
     return true;
 }
 
-static bool optExternalAttributes(vector<ExprPtr> &x) {
+static bool optExternalAttributes(ExprListPtr &x) {
     int p = save();
     if (!externalAttributes(x)) {
         restore(p);
-        x.clear();
+        x = new ExprList();
     }
     return true;
 }

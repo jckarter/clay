@@ -381,7 +381,7 @@ static void initializeRecordFields(RecordTypePtr t) {
     RecordBodyPtr body = r->body;
     if (body->isComputed) {
         LocationContext loc(body->location);
-        MultiPValuePtr mpv = analyzeMulti(body->computed, env);
+        MultiPValuePtr mpv = analyzeMulti(body->computed->exprs, env);
         for (unsigned i = 0; i < mpv->size(); ++i) {
             TypePtr x = mpv->values[i]->type;
             IdentifierPtr name;

@@ -980,33 +980,30 @@ enum BindingKind {
 struct Binding : public Statement {
     int bindingKind;
     vector<IdentifierPtr> names;
-    vector<ExprPtr> exprs;
+    ExprListPtr values;
     Binding(int bindingKind,
             const vector<IdentifierPtr> &names,
-            const vector<ExprPtr> &exprs)
+            ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
-          names(names), exprs(exprs) {}
+          names(names), values(values) {}
 };
 
 struct Assignment : public Statement {
-    vector<ExprPtr> left;
-    vector<ExprPtr> right;
-    Assignment(const vector<ExprPtr> &left,
-               const vector<ExprPtr> &right)
+    ExprListPtr left, right;
+    Assignment(ExprListPtr left,
+               ExprListPtr right)
         : Statement(ASSIGNMENT), left(left), right(right) {}
 };
 
 struct InitAssignment : public Statement {
-    vector<ExprPtr> left;
-    vector<ExprPtr> right;
-    InitAssignment(const vector<ExprPtr> &left,
-                   const vector<ExprPtr> &right)
+    ExprListPtr left, right;
+    InitAssignment(ExprListPtr left,
+                   ExprListPtr right)
         : Statement(INIT_ASSIGNMENT), left(left), right(right) {}
     InitAssignment(ExprPtr leftExpr, ExprPtr rightExpr)
-        : Statement(INIT_ASSIGNMENT) {
-        left.push_back(leftExpr);
-        right.push_back(rightExpr);
-    }
+        : Statement(INIT_ASSIGNMENT),
+          left(new ExprList(leftExpr)),
+          right(new ExprList(rightExpr)) {}
 };
 
 enum UpdateOpKind {
@@ -1039,11 +1036,9 @@ enum ReturnKind {
 
 struct Return : public Statement {
     ReturnKind returnKind;
-    vector<ExprPtr> exprs;
-    Return()
-        : Statement(RETURN) {}
-    Return(ReturnKind returnKind, const vector<ExprPtr> &exprs)
-        : Statement(RETURN), returnKind(returnKind), exprs(exprs) {}
+    ExprListPtr values;
+    Return(ReturnKind returnKind, ExprListPtr values)
+        : Statement(RETURN), returnKind(returnKind), values(values) {}
 };
 
 struct If : public Statement {
@@ -1139,16 +1134,16 @@ struct Throw : public Statement {
 
 struct StaticFor : public Statement {
     IdentifierPtr variable;
-    vector<ExprPtr> exprs;
+    ExprListPtr values;
     StatementPtr body;
 
     bool clonesInitialized;
     vector<StatementPtr> clonedBodies;
 
     StaticFor(IdentifierPtr variable,
-              const vector<ExprPtr> &exprs,
+              ExprListPtr values,
               StatementPtr body)
-        : Statement(STATIC_FOR), variable(variable), exprs(exprs),
+        : Statement(STATIC_FOR), variable(variable), values(values),
           body(body), clonesInitialized(false) {}
 };
 
@@ -1290,9 +1285,9 @@ struct Record : public TopLevelItem {
 
 struct RecordBody : public ANode {
     bool isComputed;
-    vector<ExprPtr> computed; // valid if isComputed == true
+    ExprListPtr computed; // valid if isComputed == true
     vector<RecordFieldPtr> fields; // valid if isComputed == false
-    RecordBody(const vector<ExprPtr> &computed)
+    RecordBody(ExprListPtr computed)
         : ANode(RECORD_BODY), isComputed(true), computed(computed) {}
     RecordBody(const vector<RecordFieldPtr> &fields)
         : ANode(RECORD_BODY), isComputed(false), fields(fields) {}
@@ -1408,7 +1403,7 @@ struct ExternalProcedure : public TopLevelItem {
     bool hasVarArgs;
     ExprPtr returnType;
     StatementPtr body;
-    vector<ExprPtr> attributes;
+    ExprListPtr attributes;
 
     bool attributesVerified;
     bool attrDLLImport;
@@ -1424,14 +1419,15 @@ struct ExternalProcedure : public TopLevelItem {
 
     ExternalProcedure(Visibility visibility)
         : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
-          attributesVerified(false), analyzed(false), llvmFunc(NULL) {}
+          attributes(new ExprList()), attributesVerified(false),
+          analyzed(false), llvmFunc(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       Visibility visibility,
                       const vector<ExternalArgPtr> &args,
                       bool hasVarArgs,
                       ExprPtr returnType,
                       StatementPtr body,
-                      const vector<ExprPtr> &attributes)
+                      ExprListPtr attributes)
         : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           attributes(attributes), attributesVerified(false),
@@ -1448,7 +1444,7 @@ struct ExternalArg : public ANode {
 
 struct ExternalVariable : public TopLevelItem {
     ExprPtr type;
-    vector<ExprPtr> attributes;
+    ExprListPtr attributes;
 
     bool attributesVerified;
     bool attrDLLImport;
@@ -1459,11 +1455,12 @@ struct ExternalVariable : public TopLevelItem {
 
     ExternalVariable(Visibility visibility)
         : TopLevelItem(EXTERNAL_VARIABLE, visibility),
-          attributesVerified(false), llGlobal(NULL) {}
+          attributes(new ExprList()), attributesVerified(false),
+          llGlobal(NULL) {}
     ExternalVariable(IdentifierPtr name,
                      Visibility visibility,
                      ExprPtr type,
-                     const vector<ExprPtr> &attributes)
+                     ExprListPtr attributes)
         : TopLevelItem(EXTERNAL_VARIABLE, name, visibility),
           type(type), attributes(attributes),
           attributesVerified(false), llGlobal(NULL) {}
