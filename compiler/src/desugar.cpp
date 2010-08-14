@@ -10,6 +10,19 @@ ExprPtr desugarCharLiteral(char c) {
     return call.ptr();
 }
 
+ExprPtr desugarFieldRef(FieldRefPtr x) {
+    ExprListPtr args = new ExprList(x->expr);
+    args->add(new ObjectExpr(x->name.ptr()));
+    return new Call(prelude_expr_fieldRef(), args);
+}
+
+ExprPtr desugarStaticIndexing(StaticIndexingPtr x) {
+    ExprListPtr args = new ExprList(x->expr);
+    ValueHolderPtr vh = sizeTToValueHolder(x->index);
+    args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
+    return new Call(prelude_expr_staticIndex(), args);
+}
+
 ExprPtr desugarUnaryOp(UnaryOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
