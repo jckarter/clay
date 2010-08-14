@@ -60,29 +60,23 @@ overload V(src:V) returned:V {
     ref srcRepr = variantRepr(src);
     var tag = srcRepr.tag;
     destRepr.tag = tag;
+    ref destData = destRepr.data;
+    ref srcData = srcRepr.data;
     alias n = Int(VariantMemberCount(V));
-    taggedCopy(tag, destRepr.data, srcRepr.data, static 0, static n);
+    static for (i in ...staticIntegers(static n)) {
+        if (tag == unwrapStatic(i)) {
+            ref dest = staticIndex(destData, i);
+            ref src = staticIndex(srcData, i);
+            dest <-- src;
+            goto end;
+        }
+    }
+    error("invalid variant, tag = ", tag);
+    end :
 }
 
 [V | Variant?(V)]
 overload V(rvalue src:V) = move(src);
-
-[i,n]
-private taggedCopy(tag, destData, srcData, static i, static n) {
-    if (tag == i) {
-        ref dest = staticIndex(destData, static i);
-        ref src = staticIndex(srcData, static i);
-        dest <-- src;
-    }
-    else {
-        taggedMove(tag, destData, srcData, static i+1, static n);
-    }
-}
-
-[i,n | i == n]
-overload taggedCopy(tag, destData, srcData, static i, static n) {
-    error("invalid variant, tag = ", tag);
-}
 
 
 
@@ -96,25 +90,19 @@ overload move(src:V) returned:V {
     ref srcRepr = variantRepr(src);
     var tag = srcRepr.tag;
     destRepr.tag = tag;
+    ref destData = destRepr.data;
+    ref srcData = srcRepr.data;
     alias n = Int(VariantMemberCount(V));
-    taggedMove(tag, destRepr.data, srcRepr.data, static 0, static n);
-}
-
-[i,n]
-private taggedMove(tag, destData, srcData, static i, static n) {
-    if (tag == i) {
-        ref dest = staticIndex(destData, static i);
-        ref src = staticIndex(srcData, static i);
-        dest <-- move(src);
+    static for (i in ...staticIntegers(static n)) {
+        if (tag == unwrapStatic(i)) {
+            ref dest = staticIndex(destData, i);
+            ref src = staticIndex(srcData, i);
+            dest <-- move(src);
+            goto end;
+        }
     }
-    else {
-        taggedMove(tag, destData, srcData, static i+1, static n);
-    }
-}
-
-[i,n | i == n]
-overload taggedMove(tag, destData, srcData, static i, static n) {
     error("invalid variant, tag = ", tag);
+    end :
 }
 
 
@@ -127,23 +115,15 @@ overload taggedMove(tag, destData, srcData, static i, static n) {
 overload destroy(x:V) {
     ref repr = variantRepr(x);
     var tag = repr.tag;
+    ref data = repr.data;
     alias n = Int(VariantMemberCount(V));
-    taggedDestroy(tag, repr.data, static 0, static n);
-}
-
-[i,n]
-private taggedDestroy(tag, data, static i, static n) {
-    if (tag == i) {
-        ref dest = staticIndex(data, static i);
-        destroy(dest);
+    static for (i in ...staticIntegers(static n)) {
+        if (tag == unwrapStatic(i)) {
+            ref dest = staticIndex(data, i);
+            destroy(dest);
+            return;
+        }
     }
-    else {
-        taggedDestroy(tag, data, static i+1, static n);
-    }
-}
-
-[i,n | i == n]
-overload taggedDestroy(tag, data, static i, static n) {
     error("invalid variant, tag = ", tag);
 }
 
