@@ -54,7 +54,7 @@ overload RegularRecord?(static T) = true;
 //
 
 [T, ...A | Record?(T) and (Tuple[...RecordFieldTypes(T)] == Tuple[...A])]
-inlined overload T(...args:A) returned:T {
+macro overload T(...args:A) returned:T {
     ...recordFields(returned) <-- ...args;
 }
 

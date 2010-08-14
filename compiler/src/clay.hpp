@@ -1327,7 +1327,7 @@ struct Instance : public TopLevelItem {
 struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
-    bool inlined;
+    bool macro;
 
     // pre-computed patterns for matchInvoke
     bool patternsInitialized;
@@ -1338,9 +1338,9 @@ struct Overload : public TopLevelItem {
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
 
-    Overload(ExprPtr target, CodePtr code, bool inlined)
+    Overload(ExprPtr target, CodePtr code, bool macro)
         : TopLevelItem(OVERLOAD), target(target), code(code),
-          inlined(inlined), patternsInitialized(false) {}
+          macro(macro), patternsInitialized(false) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -2269,7 +2269,7 @@ struct MatchResult : public Object {
 typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
-    bool inlined;
+    bool macro;
     CodePtr code;
     EnvPtr env;
 
@@ -2280,9 +2280,9 @@ struct MatchSuccess : public MatchResult {
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
-    MatchSuccess(bool inlined, CodePtr code, EnvPtr env,
+    MatchSuccess(bool macro, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
-        : MatchResult(MATCH_SUCCESS), inlined(inlined),
+        : MatchResult(MATCH_SUCCESS), macro(macro),
           code(code), env(env), callable(callable), argsKey(argsKey) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
@@ -2339,7 +2339,7 @@ struct InvokeEntry : public Object {
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
 
-    bool inlined; // if inlined the rest of InvokeEntry is not set
+    bool macro; // if macro the rest of InvokeEntry is not set
 
     ObjectPtr analysis;
     vector<bool> returnIsRef;
@@ -2352,7 +2352,7 @@ struct InvokeEntry : public Object {
                 const vector<TypePtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), argsKey(argsKey),
-          analyzed(false), analyzing(false), inlined(false),
+          analyzed(false), analyzing(false), macro(false),
           llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -2510,9 +2510,9 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness);
 
-MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
-                                  const vector<ExprPtr> &args,
-                                  EnvPtr env);
+MultiPValuePtr analyzeCallMacro(InvokeEntryPtr entry,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env);
 
 void analyzeCodeBody(InvokeEntryPtr entry);
 

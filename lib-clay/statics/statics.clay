@@ -43,7 +43,7 @@ overload lesser?(a:Static[A], b:Static[A]) = false;
 // wrapStatic, unwrapStatic
 //
 
-inlined wrapStatic(x) {
+macro wrapStatic(x) {
     return Static[x]();
 }
 

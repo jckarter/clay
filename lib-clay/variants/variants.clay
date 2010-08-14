@@ -32,7 +32,7 @@ VariantMembers(V) {
 //
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-inlined overload V(lvalue x:T) returned:V {
+macro overload V(lvalue x:T) returned:V {
     ref repr = variantRepr(returned);
     alias index = Int(VariantMemberIndex(V, T));
     repr.tag <-- index;
@@ -40,7 +40,7 @@ inlined overload V(lvalue x:T) returned:V {
 }
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-inlined overload V(rvalue x:T) returned:V {
+macro overload V(rvalue x:T) returned:V {
     ref repr = variantRepr(returned);
     alias index = Int(VariantMemberIndex(V, T));
     repr.tag <-- index;

@@ -1798,14 +1798,14 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
 // procedure, overload
 //
 
-static bool optInlined(bool &inlined) {
+static bool optMacro(bool &macro) {
     int p = save();
-    if (!keyword("inlined")) {
+    if (!keyword("macro")) {
         restore(p);
-        inlined = false;
+        macro = false;
         return true;
     }
-    inlined = true;
+    macro = true;
     return true;
 }
     
@@ -1850,8 +1850,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
-    bool inlined;
-    if (!optInlined(inlined)) return false;
+    bool macro;
+    if (!optMacro(macro)) return false;
     int p = save();
     if (!keyword("procedure"))
         restore(p);
@@ -1868,7 +1868,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(z);
     target->location = location;
-    OverloadPtr v = new Overload(target, y, inlined);
+    OverloadPtr v = new Overload(target, y, macro);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -1892,8 +1892,8 @@ static bool overload(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
-    bool inlined;
-    if (!optInlined(inlined)) return false;
+    bool macro;
+    if (!optMacro(macro)) return false;
     if (!keyword("overload")) return false;
     ExprPtr z;
     if (!pattern(z)) return false;
@@ -1902,11 +1902,11 @@ static bool overload(TopLevelItemPtr &x) {
     int p = save();
     if (!optBody(y->body)) {
         restore(p);
-        if (inlined) return false;
+        if (macro) return false;
         if (!llvmBody(y->llvmBody)) return false;
     }
     y->location = location;
-    x = new Overload(z, y, inlined);
+    x = new Overload(z, y, macro);
     x->location = location;
     return true;
 }

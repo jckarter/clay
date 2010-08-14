@@ -58,10 +58,10 @@ void evalCallCode(InvokeEntryPtr entry,
 void evalCallCompiledCode(InvokeEntryPtr entry,
                           MultiEValuePtr args,
                           MultiEValuePtr out);
-void evalCallInlined(InvokeEntryPtr entry,
-                     const vector<ExprPtr> &args,
-                     EnvPtr env,
-                     MultiEValuePtr out);
+void evalCallMacro(InvokeEntryPtr entry,
+                   const vector<ExprPtr> &args,
+                   EnvPtr env,
+                   MultiEValuePtr out);
 
 enum TerminationKind {
     TERMINATE_RETURN,
@@ -1588,8 +1588,8 @@ void evalCallExpr(ExprPtr callable,
         computeArgsKey(mpv, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined) {
-            evalCallInlined(entry, args, env, out);
+        if (entry->macro) {
+            evalCallMacro(entry, args, env, out);
         }
         else {
             assert(entry->analyzed);
@@ -1758,8 +1758,8 @@ void evalCallValue(EValuePtr callable,
         computeArgsKey(pvArgs, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined)
-            error("call to inlined code is not allowed in this context");
+        if (entry->macro)
+            error("call to macro not allowed in this context");
         assert(entry->analyzed);
         evalCallCode(entry, args, out);
         break;
@@ -1795,7 +1795,7 @@ void evalCallCode(InvokeEntryPtr entry,
                   MultiEValuePtr args,
                   MultiEValuePtr out)
 {
-    assert(!entry->inlined);
+    assert(!entry->macro);
     assert(entry->analyzed);
     if (entry->code->isInlineLLVM()) {
         evalCallCompiledCode(entry, args, out);
@@ -1914,15 +1914,15 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
 
 
 //
-// evalCallInlined
+// evalCallMacro
 //
 
-void evalCallInlined(InvokeEntryPtr entry,
-                     const vector<ExprPtr> &args,
-                     EnvPtr env,
-                     MultiEValuePtr out)
+void evalCallMacro(InvokeEntryPtr entry,
+                   const vector<ExprPtr> &args,
+                   EnvPtr env,
+                   MultiEValuePtr out)
 {
-    assert(entry->inlined);
+    assert(entry->macro);
     if (entry->varArgName.ptr())
         assert(args.size() >= entry->fixedArgNames.size());
     else
@@ -1944,7 +1944,7 @@ void evalCallInlined(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = analyzeCallInlined(entry, args, env);
+    MultiPValuePtr mpv = analyzeCallMacro(entry, args, env);
     assert(mpv->size() == out->size());
 
     vector<EReturn> returns;
@@ -3527,8 +3527,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
@@ -3601,8 +3601,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
