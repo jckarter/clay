@@ -2545,7 +2545,7 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
 
 MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env);
 ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env);
-MultiStaticPtr evaluateMultiStatic(const vector<ExprPtr> &exprs, EnvPtr env);
+MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env);
 
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);

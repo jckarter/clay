@@ -1508,7 +1508,7 @@ void codegenAliasIndexing(GlobalAliasPtr x,
                           MultiCValuePtr out)
 {
     assert(x->hasParams());
-    MultiStaticPtr params = evaluateMultiStatic(args->exprs, env);
+    MultiStaticPtr params = evaluateMultiStatic(args, env);
     if (x->varParam.ptr()) {
         if (params->size() < x->params.size())
             arityError2(x->params.size(), params->size());

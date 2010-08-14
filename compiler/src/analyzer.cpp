@@ -892,7 +892,8 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
     ObjectPtr obj = unwrapStaticType(pv->type);
     if (obj.ptr()) {
         if (isTypeConstructor(obj)) {
-            MultiStaticPtr params = evaluateMultiStatic(args, env);
+            MultiStaticPtr params =
+                evaluateMultiStatic(new ExprList(args), env);
             PValuePtr out = analyzeTypeConstructor(obj, params);
             return new MultiPValue(out);
         }
@@ -1087,7 +1088,7 @@ MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
                                     EnvPtr env)
 {
     assert(x->hasParams());
-    MultiStaticPtr params = evaluateMultiStatic(args, env);
+    MultiStaticPtr params = evaluateMultiStatic(new ExprList(args), env);
     if (x->varParam.ptr()) {
         if (params->size() < x->params.size())
             arityError2(x->params.size(), params->size());
