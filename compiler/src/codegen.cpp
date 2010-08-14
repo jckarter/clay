@@ -122,6 +122,12 @@ void codegenCallValue(CValuePtr callable,
                       MultiPValuePtr pvArgs,
                       CodegenContextPtr ctx,
                       MultiCValuePtr out);
+bool codegenShortcut(ObjectPtr callable,
+                     MultiPValuePtr pvArgs,
+                     ExprListPtr args,
+                     EnvPtr env,
+                     CodegenContextPtr ctx,
+                     MultiCValuePtr out);
 void codegenCallPointer(CValuePtr x,
                         MultiCValuePtr args,
                         CodegenContextPtr ctx,
@@ -199,7 +205,7 @@ static CValuePtr derefValue(CValuePtr cvPtr)
 
 void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx)
 {
-    if (isPrimitiveType(dest->type))
+    if (isPrimitiveAggregateType(dest->type))
         return;
     codegenCallValue(staticCValue(dest->type.ptr()),
                      new MultiCValue(),
@@ -209,7 +215,7 @@ void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx)
 
 void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
 {
-    if (isPrimitiveType(dest->type))
+    if (isPrimitiveAggregateType(dest->type))
         return;
     bool savedExceptionsEnabled = exceptionsEnabled;
     exceptionsEnabled = false;
@@ -222,7 +228,7 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
 
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 {
-    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
         if (dest->type->typeKind != STATIC_TYPE) {
             llvm::Value *v = llvmBuilder->CreateLoad(src->llValue);
             llvmBuilder->CreateStore(v, dest->llValue);
@@ -237,7 +243,7 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 
 void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 {
-    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
         if (dest->type->typeKind != STATIC_TYPE) {
             llvm::Value *v = llvmBuilder->CreateLoad(src->llValue);
             llvmBuilder->CreateStore(v, dest->llValue);
@@ -252,7 +258,7 @@ void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 
 void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 {
-    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
         if (dest->type->typeKind != STATIC_TYPE) {
             llvm::Value *v = llvmBuilder->CreateLoad(src->llValue);
             llvmBuilder->CreateStore(v, dest->llValue);
@@ -1616,6 +1622,8 @@ void codegenCallExpr(ExprPtr callable,
             codegenDispatch(obj, mcv, mpv, dispatchIndices, ctx, out);
             break;
         }
+        if (codegenShortcut(obj, mpv, args, env, ctx, out))
+            break;
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
@@ -1840,6 +1848,58 @@ void codegenCallValue(CValuePtr callable,
         error("invalid call operation");
         break;
 
+    }
+}
+
+
+
+//
+// codegenShortcut
+//
+
+bool codegenShortcut(ObjectPtr callable,
+                     MultiPValuePtr pvArgs,
+                     ExprListPtr args,
+                     EnvPtr env,
+                     CodegenContextPtr ctx,
+                     MultiCValuePtr out)
+{
+    switch (callable->objKind) {
+    case TYPE : {
+        TypePtr t = (Type *)callable.ptr();
+        if (!isPrimitiveAggregateType(t))
+            return false;
+        if (pvArgs->size() > 1)
+            return false;
+        if (pvArgs->size() == 0)
+            return true;
+        PValuePtr pv = pvArgs->values[0];
+        if (pv->type == t) {
+            MultiCValuePtr cvArgs = codegenMultiAsRef(args, env, ctx);
+            assert(cvArgs->size() == 1);
+            CValuePtr cv = cvArgs->values[0];
+            assert(cv->type == t);
+            assert(out->size() == 1);
+            CValuePtr out0 = out->values[0];
+            assert(out0->type == t);
+            llvm::Value *v = llvmBuilder->CreateLoad(cv->llValue);
+            llvmBuilder->CreateStore(v, out0->llValue);
+            return true;
+        }
+        return false;
+    }
+    case PROCEDURE : {
+        if (callable == prelude_destroy()) {
+            if (pvArgs->size() != 1)
+                return false;
+            if (!isPrimitiveAggregateType(pvArgs->values[0]->type))
+                return false;
+            return true;
+        }
+        return false;
+    }
+    default :
+        return false;
     }
 }
 
@@ -3030,14 +3090,8 @@ static IntegerTypePtr valueToIntegerType(MultiCValuePtr args, unsigned index)
 static TypePtr valueToPointerLikeType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
-    switch (t->typeKind) {
-    case POINTER_TYPE :
-    case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE :
-        break;
-    default :
+    if (!isPointerOrCodePointerType(t))
         argumentError(index, "expecting a pointer or code-pointer type");
-    }
     return t;
 }
 
@@ -3158,15 +3212,9 @@ static llvm::Value *pointerLikeValue(MultiCValuePtr args, unsigned index,
             argumentError(index, "argument type mismatch");
     }
     else {
-        switch (cv->type->typeKind) {
-        case POINTER_TYPE :
-        case CODE_POINTER_TYPE :
-        case CCODE_POINTER_TYPE :
-            break;
-        default :
+        if (!isPointerOrCodePointerType(cv->type))
             argumentError(index, "expecting a value of "
                           "pointer or code-pointer type");
-        }
         type = cv->type;
     }
     return llvmBuilder->CreateLoad(cv->llValue);
