@@ -2826,6 +2826,7 @@ bool codegenStatement(StatementPtr stmt,
     case STATIC_FOR : {
         StaticFor *x = (StaticFor *)stmt.ptr();
         MultiCValuePtr mcv = codegenForwardMultiAsRef(x->exprs, env, ctx);
+        initializeStaticForClones(x, mcv->size());
         bool terminated = false;
         for (unsigned i = 0; i < mcv->size(); ++i) {
             if (terminated) {
@@ -2835,8 +2836,7 @@ bool codegenStatement(StatementPtr stmt,
             }
             EnvPtr env2 = new Env(env);
             addLocal(env2, x->variable, mcv->values[i].ptr());
-            StatementPtr body2 = clone(x->body);
-            terminated = codegenStatement(body2, env2, ctx);
+            terminated = codegenStatement(x->clonedBodies[i], env2, ctx);
         }
         return terminated;
     }
