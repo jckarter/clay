@@ -1023,9 +1023,9 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
             ExprPtr z = (Expr *)y.ptr();
             evalExpr(z, env, out);
         }
-        else if (y->objKind == MULTI_EXPR) {
-            MultiExprPtr z = (MultiExpr *)y.ptr();
-            evalMulti(z->values, env, out);
+        else if (y->objKind == EXPR_LIST) {
+            ExprListPtr z = (ExprList *)y.ptr();
+            evalMulti(z->exprs, env, out);
         }
         else {
             evalStaticObject(y, out);
@@ -1936,7 +1936,7 @@ void evalCallMacro(InvokeEntryPtr entry,
     }
 
     if (entry->varArgName.ptr()) {
-        MultiExprPtr varArgs = new MultiExpr();
+        ExprListPtr varArgs = new ExprList();
         for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
             ExprPtr expr = foreignExpr(env, args[i]);
             varArgs->add(expr);

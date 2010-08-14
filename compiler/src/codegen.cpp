@@ -741,9 +741,9 @@ void codegenExpr(ExprPtr expr,
             ExprPtr z = (Expr *)y.ptr();
             codegenExpr(z, env, ctx, out);
         }
-        else if (y->objKind == MULTI_EXPR) {
-            MultiExprPtr z = (MultiExpr *)y.ptr();
-            codegenMulti(z->values, env, ctx, out);
+        else if (y->objKind == EXPR_LIST) {
+            ExprListPtr z = (ExprList *)y.ptr();
+            codegenMulti(z->exprs, env, ctx, out);
         }
         else {
             codegenStaticObject(y, ctx, out);
@@ -2426,7 +2426,7 @@ void codegenCallMacro(InvokeEntryPtr entry,
     }
 
     if (entry->varArgName.ptr()) {
-        MultiExprPtr varArgs = new MultiExpr();
+        ExprListPtr varArgs = new ExprList();
         for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
             ExprPtr expr = foreignExpr(env, args[i]);
             varArgs->add(expr);
