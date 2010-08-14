@@ -1,14 +1,13 @@
 import opengl.platform.*;
 
-private _findGLFunction(name, ...names) {
-    var ptr = lookupGLFunction(name);
-    if (null?(ptr)) {
-        return _findGLFunction(...names);
-    } else {
-        return ptr;
+private _findGLFunction(...names) {
+    static for (name in ...names) {
+        var ptr = lookupGLFunction(name);
+        if (not null?(ptr))
+            return ptr;
     }
+    return GLCodePointer[(), ()](0);
 }
-overload _findGLFunction() { return GLCodePointer[(), ()](0); }
 
 findGLFunction(Args, Return, ...names) {
     return GLCodePointer[Args, Return](_findGLFunction(...names));
