@@ -1461,7 +1461,7 @@ void codegenIndexingExpr(ExprPtr indexable,
                          CodegenContextPtr ctx,
                          MultiCValuePtr out)
 {
-    MultiPValuePtr mpv = analyzeIndexingExpr(indexable, args->exprs, env);
+    MultiPValuePtr mpv = analyzeIndexingExpr(indexable, args, env);
     assert(mpv.ptr());
     assert(mpv->size() == out->size());
     bool allTempStatics = true;
@@ -1609,7 +1609,7 @@ void codegenCallExpr(ExprPtr callable,
             break;
         }
         vector<bool> dispatchFlags;
-        MultiPValuePtr mpv = analyzeMultiArgs(args->exprs, env, dispatchFlags);
+        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchFlags);
         assert(mpv.ptr());
         vector<unsigned> dispatchIndices;
         for (unsigned i = 0; i < dispatchFlags.size(); ++i) {
@@ -2430,7 +2430,7 @@ void codegenCallMacro(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = analyzeCallMacro(entry, args->exprs, env);
+    MultiPValuePtr mpv = analyzeCallMacro(entry, args, env);
     assert(mpv->size() == out->size());
 
     vector<CReturn> returns;
@@ -2542,8 +2542,8 @@ bool codegenStatement(StatementPtr stmt,
 
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = analyzeMulti(x->left->exprs, env);
-        MultiPValuePtr mpvRight = analyzeMulti(x->right->exprs, env);
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
         assert(mpvLeft.ptr());
         assert(mpvRight.ptr());
         if (mpvLeft->size() != mpvRight->size())
@@ -2584,8 +2584,8 @@ bool codegenStatement(StatementPtr stmt,
 
     case INIT_ASSIGNMENT : {
         InitAssignment *x = (InitAssignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = analyzeMulti(x->left->exprs, env);
-        MultiPValuePtr mpvRight = analyzeMulti(x->right->exprs, env);
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
         assert(mpvLeft.ptr());
         assert(mpvRight.ptr());
         if (mpvLeft->size() != mpvRight->size())
@@ -2628,7 +2628,7 @@ bool codegenStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         MultiCValuePtr mcv = new MultiCValue();
         ensureArity(mpv, ctx->returns.size());
         for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -2888,7 +2888,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
@@ -2908,7 +2908,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     }
 
     case REF : {
-        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         assert(mpv.ptr());
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
