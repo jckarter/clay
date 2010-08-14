@@ -171,25 +171,15 @@ overload printReprTo(stream, x:Static[A]) {
 [...T]
 overload printReprTo(stream, x:Tuple[...T]) {
     printTo(stream, '(');
-    printTupleTo(stream, x, static 0);
+    var first = true;
+    static for (y in ...tupleElements(x)) {
+        if (first)
+            first = false;
+        else
+            printTo(stream, ", ");
+        printReprTo(stream, y);
+    }
     printTo(stream, ')');
-}
-
-[i | i == 0]
-private printTupleTo(stream, x, static i) {
-    printReprTo(stream, staticIndex(x, static i));
-    printTupleTo(stream, x, static i+1);
-}
-
-[i | i > 0]
-overload printTupleTo(stream, x, static i) {
-    printTo(stream, ", ");
-    printReprTo(stream, staticIndex(x, static i));
-    printTupleTo(stream, x, static i+1);
-}
-
-[T,i | i == TupleElementCount(T)]
-overload printTupleTo(stream, x:T, static i) {
 }
 
 
@@ -201,20 +191,15 @@ overload printTupleTo(stream, x:T, static i) {
 [T | Record?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T, '(');
-    printRecordFieldsTo(stream, x, static 0);
+    var first = true;
+    static for (y in ...recordFields(x)) {
+        if (first)
+            first = false;
+        else
+            printTo(stream, ", ");
+        printReprTo(stream, y);
+    }
     printTo(stream, ')');
-}
-
-[i]
-private printRecordFieldsTo(stream, x, static i) {
-    if (i > 0)
-        printTo(stream, ", ");
-    printReprTo(stream, staticIndex(x, static i));
-    printRecordFieldsTo(stream, x, static i+1);
-}
-
-[T, i | i == RecordFieldCount(T)]
-overload printRecordFieldsTo(stream, x:T, static i) {
 }
 
 
