@@ -90,6 +90,7 @@ Union[T1, ..., Tn]
 
 Static[A]
 StaticName
+[n] staticIntegers(static n) ...
 
 [E] Enum?(static E):Bool
 [E|Enum?(E)] enumToInt(x:E):Int
@@ -98,5 +99,3 @@ StaticName
 IdentifierSize(ident) : SizeT
 IdentifierConcat(ident1, ident2) : ident
 IdentifierSlice(ident1, start, end) : ident
-
-[n] integerValues(static n) ...
