@@ -209,6 +209,13 @@ void clone(const vector<ExprPtr> &x, vector<ExprPtr> &out)
         out.push_back(clone(x[i]));
 }
 
+ExprListPtr clone(ExprListPtr x)
+{
+    ExprListPtr out = new ExprList();
+    clone(x->exprs, out->exprs);
+    return out;
+}
+
 void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)

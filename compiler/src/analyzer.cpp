@@ -434,9 +434,9 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
             ExprPtr z = (Expr *)y.ptr();
             return analyzeExpr(z, env);
         }
-        else if (y->objKind == MULTI_EXPR) {
-            MultiExprPtr z = (MultiExpr *)y.ptr();
-            return analyzeMulti(z->values, env);
+        else if (y->objKind == EXPR_LIST) {
+            ExprListPtr z = (ExprList *)y.ptr();
+            return analyzeMulti(z->exprs, env);
         }
         return analyzeStaticObject(y);
     }
@@ -1477,7 +1477,7 @@ MultiPValuePtr analyzeCallMacro(InvokeEntryPtr entry,
     }
 
     if (entry->varArgName.ptr()) {
-        MultiExprPtr varArgs = new MultiExpr();
+        ExprListPtr varArgs = new ExprList();
         for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
             ExprPtr expr = foreignExpr(env, args[i]);
             varArgs->add(expr);

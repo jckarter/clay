@@ -457,6 +457,12 @@ static void print(ostream &out, const Object *x) {
         break;
     }
 
+    case EXPR_LIST : {
+        const ExprList *y = (const ExprList *)x;
+        out << "ExprList(" << y->exprs << ")";
+        break;
+    }
+
     case STATEMENT : {
         const Statement *y = (const Statement *)x;
         printStatement(out, y);
@@ -652,12 +658,6 @@ static void print(ostream &out, const Object *x) {
     case MULTI_STATIC : {
         const MultiStatic *y = (const MultiStatic *)x;
         out << "MultiStatic(" << y->values << ")";
-        break;
-    }
-
-    case MULTI_EXPR : {
-        const MultiExpr *y = (const MultiExpr *)x;
-        out << "MultiExpr(" << y->values << ")";
         break;
     }
 

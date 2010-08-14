@@ -136,6 +136,7 @@ enum ObjectKind {
     DOTTED_NAME,
 
     EXPRESSION,
+    EXPR_LIST,
     STATEMENT,
     CATCH,
 
@@ -175,7 +176,6 @@ enum ObjectKind {
 
     VALUE_HOLDER,
     MULTI_STATIC,
-    MULTI_EXPR,
 
     PVALUE,
     MULTI_PVALUE,
@@ -229,6 +229,8 @@ struct StaticExpr;
 struct DispatchExpr;
 struct ForeignExpr;
 struct ObjectExpr;
+
+struct ExprList;
 
 struct Statement;
 struct Block;
@@ -310,7 +312,6 @@ struct MultiPatternList;
 
 struct ValueHolder;
 struct MultiStatic;
-struct MultiExpr;
 
 struct PValue;
 struct MultiPValue;
@@ -361,6 +362,8 @@ typedef Pointer<StaticExpr> StaticExprPtr;
 typedef Pointer<DispatchExpr> DispatchExprPtr;
 typedef Pointer<ForeignExpr> ForeignExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
+
+typedef Pointer<ExprList> ExprListPtr;
 
 typedef Pointer<Statement> StatementPtr;
 typedef Pointer<Block> BlockPtr;
@@ -441,7 +444,6 @@ typedef Pointer<MultiPatternList> MultiPatternListPtr;
 
 typedef Pointer<ValueHolder> ValueHolderPtr;
 typedef Pointer<MultiStatic> MultiStaticPtr;
-typedef Pointer<MultiExpr> MultiExprPtr;
 
 typedef Pointer<PValue> PValuePtr;
 typedef Pointer<MultiPValue> MultiPValuePtr;
@@ -905,6 +907,29 @@ struct ObjectExpr : public Expr {
     ObjectPtr obj;
     ObjectExpr(ObjectPtr obj)
         : Expr(OBJECT_EXPR), obj(obj) {}
+};
+
+
+
+//
+// ExprList
+//
+
+struct ExprList : public Object {
+    vector<ExprPtr> exprs;
+    ExprList()
+        : Object(EXPR_LIST) {}
+    ExprList(ExprPtr x)
+        : Object(EXPR_LIST) {
+        exprs.push_back(x);
+    }
+    ExprList(const vector<ExprPtr> &exprs)
+        : Object(EXPR_LIST), exprs(exprs) {}
+    unsigned size() { return exprs.size(); }
+    void add(ExprPtr x) { exprs.push_back(x); }
+    void add(ExprListPtr x) {
+        exprs.insert(exprs.end(), x->exprs.begin(), x->exprs.end());
+    }
 };
 
 
@@ -1635,6 +1660,7 @@ void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out);
 ExprPtr clone(ExprPtr x);
 ExprPtr cloneOpt(ExprPtr x);
 void clone(const vector<ExprPtr> &x, vector<ExprPtr> &out);
+ExprListPtr clone(ExprListPtr x);
 void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out);
 FormalArgPtr clone(FormalArgPtr x);
 FormalArgPtr cloneOpt(FormalArgPtr x);
@@ -2166,29 +2192,6 @@ struct MultiStatic : public Object {
     unsigned size() { return values.size(); }
     void add(ObjectPtr x) { values.push_back(x); }
     void add(MultiStaticPtr x) {
-        values.insert(values.end(), x->values.begin(), x->values.end());
-    }
-};
-
-
-
-//
-// MultiExpr
-//
-
-struct MultiExpr : public Object {
-    vector<ExprPtr> values;
-    MultiExpr()
-        : Object(MULTI_EXPR) {}
-    MultiExpr(ExprPtr x)
-        : Object(MULTI_EXPR) {
-        values.push_back(x);
-    }
-    MultiExpr(const vector<ExprPtr> &values)
-        : Object(MULTI_EXPR), values(values) {}
-    unsigned size() { return values.size(); }
-    void add(ExprPtr x) { values.push_back(x); }
-    void add(MultiExprPtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());
     }
 };
