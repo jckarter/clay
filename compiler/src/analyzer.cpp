@@ -2170,6 +2170,20 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return mpv;
     }
 
+    case PRIM_staticFieldRef : {
+        ensureArity(args, 2);
+        ObjectPtr moduleObj = unwrapStaticType(args->values[0]->type);
+        if (!moduleObj || (moduleObj->objKind != MODULE_HOLDER))
+            argumentError(0, "expecting a module");
+        ObjectPtr identObj = unwrapStaticType(args->values[1]->type);
+        if (!identObj || (identObj->objKind != IDENTIFIER))
+            argumentError(1, "expecting an identifier");
+        ModuleHolder *module = (ModuleHolder *)moduleObj.ptr();
+        Identifier *ident = (Identifier *)identObj.ptr();
+        ObjectPtr obj = safeLookupModuleHolder(module, ident);
+        return analyzeStaticObject(obj);
+    }
+
     case PRIM_EnumP :
         return new MultiPValue(new PValue(boolType, true));
 

@@ -4204,6 +4204,18 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_staticFieldRef : {
+        ensureArity(args, 2);
+        ObjectPtr moduleObj = valueToStatic(args, 0);
+        if (moduleObj->objKind != MODULE_HOLDER)
+            argumentError(0, "expecting a module");
+        ModuleHolder *module = (ModuleHolder *)moduleObj.ptr();
+        IdentifierPtr ident = valueToIdentifier(args, 1);
+        ObjectPtr obj = safeLookupModuleHolder(module, ident);
+        codegenStaticObject(obj, ctx, out);
+        break;
+    }
+
     case PRIM_EnumP : {
         ensureArity(args, 1);
         bool isEnumType = false;
