@@ -25,6 +25,16 @@ MultiCValuePtr codegenArgExprAsRef(ExprPtr x,
                                    EnvPtr env,
                                    CodegenContextPtr ctx);
 
+CValuePtr codegenForwardOneAsRef(ExprPtr expr,
+                                 EnvPtr env,
+                                 CodegenContextPtr ctx);
+MultiCValuePtr codegenForwardMultiAsRef(const vector<ExprPtr> &exprs,
+                                        EnvPtr env,
+                                        CodegenContextPtr ctx);
+MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
+                                       EnvPtr env,
+                                       CodegenContextPtr ctx);
+
 CValuePtr codegenOneAsRef(ExprPtr expr,
                           EnvPtr env,
                           CodegenContextPtr ctx);
@@ -366,6 +376,77 @@ MultiCValuePtr codegenArgExprAsRef(ExprPtr x,
 
 
 //
+// codegenForwardOneAsRef, codegenForwardMultiAsRef, codegenForwardExprAsRef
+//
+
+CValuePtr codegenForwardOneAsRef(ExprPtr expr,
+                                 EnvPtr env,
+                                 CodegenContextPtr ctx)
+{
+    MultiCValuePtr mcv = codegenForwardExprAsRef(expr, env, ctx);
+    LocationContext loc(expr->location);
+    ensureArity(mcv, 1);
+    return mcv->values[0];
+}
+
+MultiCValuePtr codegenForwardMultiAsRef(const vector<ExprPtr> &exprs,
+                                        EnvPtr env,
+                                        CodegenContextPtr ctx)
+{
+    MultiCValuePtr out = new MultiCValue();
+    for (unsigned i = 0; i < exprs.size(); ++i) {
+        ExprPtr x = exprs[i];
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiCValuePtr mcv = codegenForwardExprAsRef(y->expr, env, ctx);
+            out->add(mcv);
+        }
+        else {
+            CValuePtr cv = codegenForwardOneAsRef(x, env, ctx);
+            out->add(cv);
+        }
+    }
+    return out;
+}
+
+MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
+                                       EnvPtr env,
+                                       CodegenContextPtr ctx)
+{
+    MultiPValuePtr mpv = analyzeExpr(expr, env);
+    assert(mpv.ptr());
+    MultiCValuePtr mcv = new MultiCValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        PValuePtr pv = mpv->values[i];
+        if (pv->isTemp) {
+            CValuePtr cv = codegenAllocValue(pv->type);
+            mcv->add(cv);
+        }
+        else {
+            CValuePtr cvPtr = codegenAllocValue(pointerType(pv->type));
+            mcv->add(cvPtr);
+        }
+    }
+    codegenExpr(expr, env, ctx, mcv);
+    MultiCValuePtr out = new MultiCValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        if (mpv->values[i]->isTemp) {
+            CValuePtr cv = mcv->values[i];
+            cgPushStack(cv);
+            CValuePtr cv2 = new CValue(cv->type, cv->llValue);
+            cv2->forwardedRValue = true;
+            out->add(cv2);
+        }
+        else {
+            out->add(derefValue(mcv->values[i]));
+        }
+    }
+    return out;
+}
+
+
+
+//
 // codegenOneAsRef, codegenMultiAsRef, codegenExprAsRef
 //
 
@@ -392,8 +473,8 @@ MultiCValuePtr codegenMultiAsRef(const vector<ExprPtr> &exprs,
             out->add(mcv);
         }
         else {
-            MultiCValuePtr mcv = codegenExprAsRef(x, env, ctx);
-            out->add(mcv);
+            CValuePtr cv = codegenOneAsRef(x, env, ctx);
+            out->add(cv);
         }
     }
     return out;
@@ -2740,6 +2821,24 @@ bool codegenStatement(StatementPtr stmt,
         vector<ExprPtr> args(1, x->expr);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
         return false;
+    }
+
+    case STATIC_FOR : {
+        StaticFor *x = (StaticFor *)stmt.ptr();
+        MultiCValuePtr mcv = codegenForwardMultiAsRef(x->exprs, env, ctx);
+        bool terminated = false;
+        for (unsigned i = 0; i < mcv->size(); ++i) {
+            if (terminated) {
+                ostringstream ostr;
+                ostr << "unreachable code in iteration " << (i+1);
+                error(ostr.str());
+            }
+            EnvPtr env2 = new Env(env);
+            addLocal(env2, x->variable, mcv->values[i].ptr());
+            StatementPtr body2 = clone(x->body);
+            terminated = codegenStatement(body2, env2, ctx);
+        }
+        return terminated;
     }
 
     default :

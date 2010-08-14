@@ -77,17 +77,8 @@ inlined overload Tuple[...T](...args:T) returned:Tuple[...T] {
 
 [...T]
 overload Tuple[...T]() returned:Tuple[...T] {
-    initTupleElements(returned, static 0);
-}
-
-[i]
-private initTupleElements(a, static i) {
-    initialize(staticIndex(a, static i));
-    initTupleElements(a, static i+1);
-}
-
-[T, i | (i == TupleElementCount(T))]
-overload initTupleElements(a:T, static i) {
+    static for (x in ...tupleElements(returned))
+        initialize(x);
 }
 
 
@@ -98,17 +89,9 @@ overload initTupleElements(a:T, static i) {
 
 [...T]
 overload Tuple[...T](src:Tuple[...T]) returned:Tuple[...T] {
-    copyTupleElements(returned, src, static 0);
-}
-
-[T,i]
-private copyTupleElements(dest:T, src:T, static i) {
-    staticIndex(dest, static i) <-- staticIndex(src, static i);
-    copyTupleElements(dest, src, static i+1);
-}
-
-[T,i | (i == TupleElementCount(T))]
-overload copyTupleElements(dest:T, src:T, static i) {
+    alias n = TupleElementCount(Tuple[...T]);
+    static for (i in ...staticIntegers(static n))
+        staticIndex(returned, i) <-- staticIndex(src, i);
 }
 
 
@@ -119,18 +102,9 @@ overload copyTupleElements(dest:T, src:T, static i) {
 
 [...T]
 overload move(src:Tuple[...T]) returned:Tuple[...T] {
-    moveTupleElements(returned, src, static 0);
-}
-
-[T,i]
-private moveTupleElements(dest:T, src:T, static i)
-{
-    staticIndex(dest, static i) <-- move(staticIndex(src, static i));
-    moveTupleElements(dest, src, static i+1);
-}
-
-[T,i | (i == TupleElementCount(T))]
-overload moveTupleElements(dest:T, src:T, static i) {
+    alias n = TupleElementCount(Tuple[...T]);
+    static for (i in ...staticIntegers(static n))
+        staticIndex(returned, i) <-- move(staticIndex(src, i));
 }
 
 
@@ -141,17 +115,8 @@ overload moveTupleElements(dest:T, src:T, static i) {
 
 [...T]
 overload destroy(a:Tuple[...T]) {
-    destroyTupleElements(a, static 0);
-}
-
-[i]
-private destroyTupleElements(a, static i) {
-    destroy(staticIndex(a, static i));
-    destroyTupleElements(a, static i+1);
-}
-
-[T, i |(i == TupleElementCount(T))]
-overload destroyTupleElements(a:T, static i) {
+    static for (x in ...tupleElements(a))
+        destroy(x);
 }
 
 
@@ -162,17 +127,9 @@ overload destroyTupleElements(a:T, static i) {
 
 [...T]
 overload assign(dest:Tuple[...T], src:Tuple[...T]) {
-    assignTupleElements(dest, src, static 0);
-}
-
-[T,i]
-private assignTupleElements(dest:T, src:T, static i) {
-    assign(staticIndex(dest, static i), staticIndex(src, static i));
-    assignTupleElements(dest, src, static i+1);
-}
-
-[T,i | (i == TupleElementCount(T))]
-overload assignTupleElements(dest:T, src:T, static i) {
+    alias n = TupleElementCount(Tuple[...T]);
+    static for (i in ...staticIntegers(static n))
+        assign(staticIndex(dest, i), staticIndex(src, i));
 }
 
 
@@ -183,18 +140,11 @@ overload assignTupleElements(dest:T, src:T, static i) {
 
 [...T]
 overload equals?(a:Tuple[...T], b:Tuple[...T]) {
-    return equalTupleElements?(a, b, static 0);
-}
-
-[T,i]
-private  equalTupleElements?(a:T, b:T, static i) {
-    if (not equals?(staticIndex(a, static i), staticIndex(b, static i)))
-        return false;
-    return equalTupleElements?(a, b, static i+1);
-}
-
-[T,i |(i == TupleElementCount(T))]
-overload equalTupleElements?(a:T, b:T, static i) {
+    alias n = TupleElementCount(Tuple[...T]);
+    static for (i in ...staticIntegers(static n)) {
+        if (not equals?(staticIndex(a, i), staticIndex(b, i)))
+            return false;
+    }
     return true;
 }
 
@@ -206,22 +156,15 @@ overload equalTupleElements?(a:T, b:T, static i) {
 
 [...T]
 overload lesser?(a:Tuple[...T], b:Tuple[...T]) {
-    return lesserTupleElements?(a, b, static 0);
-}
-
-[T,i]
-private lesserTupleElements?(a:T, b:T, static i) {
-    ref av = staticIndex(a, static i);
-    ref bv = staticIndex(b, static i);
-    if (lesser?(av, bv))
-        return true;
-    if (lesser?(bv, av))
-        return false;
-    return lesserTupleElements(a, b, static i+1);
-}
-
-[T,i |(i == TupleElementCount(T))]
-overload lesserTupleElements?(a:T, b:T, static i) {
+    alias n = TupleElementCount(Tuple[...T]);
+    static for (i in ...staticIntegers(static n)) {
+        ref av = staticIndex(a, i);
+        ref bv = staticIndex(b, i);
+        if (lesser?(av, bv))
+            return true;
+        if (lesser?(bv, av))
+            return false;
+    }
     return false;
 }
 
