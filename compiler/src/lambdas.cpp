@@ -318,6 +318,16 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case STATIC_FOR : {
+        StaticFor *y = (StaticFor *)x.ptr();
+        for (unsigned i = 0; i < y->exprs.size(); ++i)
+            convertFreeVars(y->exprs[i], env, ctx);
+        EnvPtr env2 = new Env(env);
+        addLocal(env2, y->variable, y->variable.ptr());
+        convertFreeVars(y->body, env2, ctx);
+        break;
+    }
+
     default :
         assert(false);
 

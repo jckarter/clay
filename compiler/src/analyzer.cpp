@@ -1586,7 +1586,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
         Return *x = (Return *)stmt.ptr();
         MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
         if (!mpv) 
-            return NULL;
+            return false;
         if (ctx->returnInitialized) {
             ensureArity(mpv, ctx->returnTypes.size());
             for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -1662,6 +1662,22 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 
     case THROW :
         return true;
+
+    case STATIC_FOR : {
+        StaticFor *x = (StaticFor *)stmt.ptr();
+        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        if (!mpv)
+            return false;
+        bool result = true;
+        for (unsigned i = 0; i < mpv->size(); ++i) {
+            EnvPtr env2 = new Env(env);
+            addLocal(env2, x->variable, mpv->values[i].ptr());
+            StatementPtr body2 = clone(x->body);
+            bool result2 = analyzeStatement(body2, env2, ctx);
+            result = result || result2;
+        }
+        return result;
+    }
 
     default :
         assert(false);

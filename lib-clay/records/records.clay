@@ -66,17 +66,8 @@ inlined overload T(...args:A) returned:T {
 
 [T | RegularRecord?(T)]
 overload T() returned:T {
-    initRecordFields(returned, static 0);
-}
-
-[i]
-private initRecordFields(a, static i) {
-    initialize(staticIndex(a, static i));
-    initRecordFields(a, static i+1);
-}
-
-[T,i | (i == RecordFieldCount(T))]
-overload initRecordFields(a:T, static i) {
+    static for (x in ...recordFields(returned))
+        initialize(x);
 }
 
 
@@ -87,17 +78,9 @@ overload initRecordFields(a:T, static i) {
 
 [T | RegularRecord?(T)]
 overload T(src:T) returned:T {
-    copyRecordFields(returned, src, static 0);
-}
-
-[T,i]
-private copyRecordFields(dest:T, src:T, static i) {
-    staticIndex(dest, static i) <-- staticIndex(src, static i);
-    copyRecordFields(dest, src, static i+1);
-}
-
-[T,i | (i == RecordFieldCount(T))]
-overload copyRecordFields(dest:T, src:T, static i) {
+    alias n = RecordFieldCount(T);
+    static for (i in ...staticIntegers(static n))
+        staticIndex(returned, i) <-- staticIndex(src, i);
 }
 
 
@@ -108,17 +91,9 @@ overload copyRecordFields(dest:T, src:T, static i) {
 
 [T | RegularRecord?(T)]
 overload move(src:T) returned:T {
-    moveRecordFields(returned, src, static 0);
-}
-
-[T,i]
-private moveRecordFields(dest:T, src:T, static i) {
-    staticIndex(dest, static i) <-- move(staticIndex(src, static i));
-    moveRecordFields(dest, src, static i+1);
-}
-
-[T,i | (i == RecordFieldCount(T))]
-overload moveRecordFields(dest:T, src:T, static i) {
+    alias n = RecordFieldCount(T);
+    static for (i in ...staticIntegers(static n))
+        staticIndex(returned, i) <-- move(staticIndex(src, i));
 }
 
 
@@ -129,17 +104,8 @@ overload moveRecordFields(dest:T, src:T, static i) {
 
 [T | RegularRecord?(T)]
 overload destroy(a:T) {
-    destroyRecordFields(a, static 0);
-}
-
-[i]
-private destroyRecordFields(a, static i) {
-    destroyRecordFields(a, static i+1);
-    destroy(staticIndex(a, static i));
-}
-
-[T,i | (i == RecordFieldCount(T))]
-overload destroyRecordFields (a:T, static i) {
+    static for (x in ...recordFields(a))
+        destroy(x);
 }
 
 
@@ -150,17 +116,9 @@ overload destroyRecordFields (a:T, static i) {
 
 [T | RegularRecord?(T)]
 overload assign(dest:T, src:T) {
-    assignRecordFields(dest, src, static 0);
-}
-
-[T,i]
-private assignRecordFields(dest:T, src:T, static i) {
-    assign(staticIndex(dest, static i), staticIndex(src, static i));
-    assignRecordFields(dest, src, static i+1);
-}
-
-[T,i | (i == RecordFieldCount(T))]
-overload assignRecordFields(dest:T, src:T, static i) {
+    alias n = RecordFieldCount(T);
+    static for (i in ...staticIntegers(static n))
+        assign(staticIndex(dest, i), staticIndex(src, i));
 }
 
 
@@ -171,18 +129,11 @@ overload assignRecordFields(dest:T, src:T, static i) {
 
 [T | RegularRecord?(T)]
 overload equals?(a:T, b:T) {
-    return equalRecordFields?(a, b, static 0);
-}
-
-[T,i]
-private equalRecordFields?(a:T, b:T, static i) {
-    if (not equals?(staticIndex(a, static i), staticIndex(b, static i)))
-        return false;
-    return equalRecordFields?(a, b, static i+1);
-}
-
-[T,i |(i == RecordFieldCount(T))]
-overload equalRecordFields?(a:T, b:T, static i) {
+    alias n = RecordFieldCount(T);
+    static for (i in ...staticIntegers(static n)) {
+        if (not equals?(staticIndex(a, i), staticIndex(b, i)))
+            return false;
+    }
     return true;
 }
 
@@ -194,21 +145,14 @@ overload equalRecordFields?(a:T, b:T, static i) {
 
 [T | RegularRecord?(T)]
 overload lesser?(a:T, b:T) {
-    return lesserRecordFields?(a, b, static 0);
-}
-
-[T,i]
-private lesserRecordFields?(a:T, b:T, static i) {
-    ref af = staticIndex(a, static i);
-    ref bf = staticIndex(b, static i);
-    if (lesser?(af, bf))
-        return true;
-    if (lesser?(bf, af))
-        return false;
-    return lesserRecordFields?(a, b, static i+1);
-}
-
-[T,i |(i == RecordFieldCount(T))]
-overload lesserRecordFields?(a:T, b:T, static i) {
+    alias n = RecordFieldCount(T);
+    static for (i in ...staticIntegers(static n)) {
+        ref av = staticIndex(a, i);
+        ref bv = staticIndex(b, i);
+        if (lesser?(av, bv))
+            return true;
+        if (lesser?(bv, av))
+            return false;
+    }
     return false;
 }

@@ -3,9 +3,15 @@
 
 MultiEValuePtr evalMultiArgsAsRef(const vector<ExprPtr> &exprs, EnvPtr env);
 MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env);
+
+EValuePtr evalForwardOneAsRef(ExprPtr expr, EnvPtr env);
+MultiEValuePtr evalForwardMultiAsRef(const vector<ExprPtr> &exprs, EnvPtr env);
+MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env);
+
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
 MultiEValuePtr evalMultiAsRef(const vector<ExprPtr> &exprs, EnvPtr env);
 MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env);
+
 void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out);
 void evalMultiInto(const vector<ExprPtr> &exprs, EnvPtr env, MultiEValuePtr out);
 void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
@@ -710,6 +716,70 @@ MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env)
 
 
 //
+// evalForwardOneAsRef, evalForwardMultiAsRef, evalForwardExprAsRef
+//
+
+EValuePtr evalForwardOneAsRef(ExprPtr expr, EnvPtr env)
+{
+    MultiEValuePtr mev = evalForwardExprAsRef(expr, env);
+    LocationContext loc(expr->location);
+    ensureArity(mev, 1);
+    return mev->values[0];
+}
+
+MultiEValuePtr evalForwardMultiAsRef(const vector<ExprPtr> &exprs, EnvPtr env)
+{
+    MultiEValuePtr out = new MultiEValue();
+    for (unsigned i = 0; i < exprs.size(); ++i) {
+        ExprPtr x = exprs[i];
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiEValuePtr mev = evalForwardExprAsRef(y->expr, env);
+            out->add(mev);
+        }
+        else {
+            EValuePtr ev = evalForwardOneAsRef(exprs[i], env);
+            out->add(ev);
+        }
+    }
+    return out;
+}
+
+MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env)
+{
+    MultiPValuePtr mpv = analyzeExpr(expr, env);
+    assert(mpv.ptr());
+    MultiEValuePtr mev = new MultiEValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        PValuePtr pv = mpv->values[i];
+        if (pv->isTemp) {
+            EValuePtr ev = evalAllocValue(pv->type);
+            mev->add(ev);
+        }
+        else {
+            EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
+            mev->add(evPtr);
+        }
+    }
+    evalExpr(expr, env, mev);
+    MultiEValuePtr out = new MultiEValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        if (mpv->values[i]->isTemp) {
+            EValuePtr ev = mev->values[i];
+            EValuePtr ev2 = new EValue(ev->type, ev->addr);
+            ev2->forwardedRValue = true;
+            out->add(ev2);
+        }
+        else {
+            out->add(derefValue(mev->values[i]));
+        }
+    }
+    return out;
+}
+
+
+
+//
 // evalOneAsRef, evalMultiAsRef, evalExprAsRef
 //
 
@@ -732,8 +802,8 @@ MultiEValuePtr evalMultiAsRef(const vector<ExprPtr> &exprs, EnvPtr env)
             out->add(mev);
         }
         else {
-            MultiEValuePtr mev = evalExprAsRef(exprs[i], env);
-            out->add(mev);
+            EValuePtr ev = evalOneAsRef(exprs[i], env);
+            out->add(ev);
         }
     }
     return out;
@@ -2172,6 +2242,21 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case THROW : {
         error("throw statement not supported in the evaluator");
+        return NULL;
+    }
+
+    case STATIC_FOR : {
+        StaticFor *x = (StaticFor *)stmt.ptr();
+        MultiEValuePtr mev = evalForwardMultiAsRef(x->exprs, env);
+        for (unsigned i = 0; i < mev->size(); ++i) {
+            EnvPtr env2 = new Env(env);
+            addLocal(env2, x->variable, mev->values[i].ptr());
+            StatementPtr body2 = clone(x->body);
+            TerminationPtr termination =
+                evalStatement(body2, env2, ctx);
+            if (termination.ptr())
+                return termination;
+        }
         return NULL;
     }
 

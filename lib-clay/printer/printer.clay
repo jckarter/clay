@@ -13,8 +13,8 @@ overload printTo(stream) {
 }
 
 overload printTo(stream, a, b, ...rest) {
-    printTo(stream, a);
-    printTo(stream, b, ...rest);
+    static for (x in a, b, ...rest)
+        printTo(stream, x);
 }
 
 
