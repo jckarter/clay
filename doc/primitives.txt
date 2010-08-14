@@ -91,6 +91,7 @@ Union[T1, ..., Tn]
 Static[A]
 StaticName
 [n] staticIntegers(static n) ...
+staticFieldRef(module, ident)
 
 [E] Enum?(static E):Bool
 [E|Enum?(E)] enumToInt(x:E):Int

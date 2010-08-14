@@ -1810,6 +1810,7 @@ enum PrimOpCode {
     PRIM_Static,
     PRIM_StaticName,
     PRIM_staticIntegers,
+    PRIM_staticFieldRef,
 
     PRIM_EnumP,
     PRIM_enumToInt,
