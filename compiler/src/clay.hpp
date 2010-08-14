@@ -2223,8 +2223,8 @@ bool unifyEmpty(MultiPatternPtr x);
 
 PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env);
 PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params);
-MultiPatternPtr evaluateMultiPattern(const vector<ExprPtr> &exprs,
-                                     EnvPtr env);
+MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env);
+
 void patternPrint(ostream &out, PatternPtr x);
 void patternPrint(ostream &out, MultiPatternPtr x);
 

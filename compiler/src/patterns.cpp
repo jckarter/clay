@@ -576,14 +576,12 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
         Indexing *x = (Indexing *)expr.ptr();
         ObjectPtr indexable = evaluateOneStatic(x->expr, env);
         if (isPatternHead(indexable)) {
-            MultiPatternPtr params =
-                evaluateMultiPattern(x->args->exprs, env);
+            MultiPatternPtr params = evaluateMultiPattern(x->args, env);
             return new PatternStruct(indexable, params);
         }
         if (indexable->objKind == GLOBAL_ALIAS) {
             GlobalAlias *y = (GlobalAlias *)indexable.ptr();
-            MultiPatternPtr params =
-                evaluateMultiPattern(x->args->exprs, env);
+            MultiPatternPtr params = evaluateMultiPattern(x->args, env);
             return evaluateAliasPattern(y, params);
         }
         return new PatternCell(evaluateOneStatic(expr, env));
@@ -596,7 +594,7 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
         {
             return evaluateOnePattern(x->args->exprs[0], env);
         }
-        MultiPatternPtr params = evaluateMultiPattern(x->args->exprs, env);
+        MultiPatternPtr params = evaluateMultiPattern(x->args, env);
         return new PatternStruct(NULL, params);
     }
 
@@ -689,14 +687,13 @@ static bool appendPattern(MultiPatternListPtr &cur, MultiPatternPtr x)
     }
 }
 
-MultiPatternPtr evaluateMultiPattern(const vector<ExprPtr> &exprs,
-                                     EnvPtr env)
+MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
 {
     MultiPatternListPtr out = new MultiPatternList();
     MultiPatternListPtr cur = out;
-    for (unsigned i = 0; i < exprs.size(); ++i) {
+    for (unsigned i = 0; i < exprs->size(); ++i) {
         assert(!cur || !cur->tail);
-        ExprPtr x = exprs[i];
+        ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiPatternPtr mp = checkMultiPatternNameRef(y->expr, env);
