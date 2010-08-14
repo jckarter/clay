@@ -50,22 +50,6 @@ overload RegularRecord?(static T) = true;
 
 
 //
-// recordFields
-//
-
-[T | Record?(T)]
-recordFields(a:T) = ref ...recordFields2(a, static 0);
-
-[i]
-private recordFields2(a, static i) =
-    ref staticIndex(a, static i), ...recordFields2(a, static i+1);
-
-[T,i | i == RecordFieldCount(T)]
-overload recordFields2(a:T, static i) = ;
-
-
-
-//
 // basic constructor
 //
 

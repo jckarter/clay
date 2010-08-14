@@ -640,6 +640,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
     PRIMITIVE(tupleRef);
+    PRIMITIVE(tupleElements);
 
     PRIMITIVE(Union);
     PRIMITIVE(UnionMemberCount);
@@ -649,6 +650,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(RecordFieldName);
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
+    PRIMITIVE(recordFields);
 
     PRIMITIVE(VariantP);
     PRIMITIVE(VariantMemberIndex);
@@ -665,6 +667,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(IdentifierSize);
     PRIMITIVE(IdentifierConcat);
     PRIMITIVE(IdentifierSlice);
+
+    PRIMITIVE(integerValues);
 
 #undef PRIMITIVE
 
