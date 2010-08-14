@@ -576,12 +576,14 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
         Indexing *x = (Indexing *)expr.ptr();
         ObjectPtr indexable = evaluateOneStatic(x->expr, env);
         if (isPatternHead(indexable)) {
-            MultiPatternPtr params = evaluateMultiPattern(x->args, env);
+            MultiPatternPtr params =
+                evaluateMultiPattern(x->args->exprs, env);
             return new PatternStruct(indexable, params);
         }
         if (indexable->objKind == GLOBAL_ALIAS) {
             GlobalAlias *y = (GlobalAlias *)indexable.ptr();
-            MultiPatternPtr params = evaluateMultiPattern(x->args, env);
+            MultiPatternPtr params =
+                evaluateMultiPattern(x->args->exprs, env);
             return evaluateAliasPattern(y, params);
         }
         return new PatternCell(evaluateOneStatic(expr, env));
@@ -589,12 +591,12 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args.size() == 1) &&
-            (x->args[0]->exprKind != UNPACK))
+        if ((x->args->size() == 1) &&
+            (x->args->exprs[0]->exprKind != UNPACK))
         {
-            return evaluateOnePattern(x->args[0], env);
+            return evaluateOnePattern(x->args->exprs[0], env);
         }
-        MultiPatternPtr params = evaluateMultiPattern(x->args, env);
+        MultiPatternPtr params = evaluateMultiPattern(x->args->exprs, env);
         return new PatternStruct(NULL, params);
     }
 

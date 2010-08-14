@@ -487,9 +487,9 @@ static void initModule(ModulePtr m) {
             gvarInitializers->statements.push_back(z);
 
             ExprPtr destructor = prelude_expr_destroy();
-            CallPtr destroyCall = new Call(destructor);
+            CallPtr destroyCall = new Call(destructor, new ExprList());
             destroyCall->location = lhs->location;
-            destroyCall->args.push_back(new ForeignExpr(x->env, lhs));
+            destroyCall->args->add(new ForeignExpr(x->env, lhs));
             StatementPtr a = new ExprStatement(destroyCall.ptr());
             gvarDestructors->statements.insert(
                 gvarDestructors->statements.begin(), a);

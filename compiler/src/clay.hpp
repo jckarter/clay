@@ -740,36 +740,28 @@ struct NameRef : public Expr {
 };
 
 struct Tuple : public Expr {
-    vector<ExprPtr> args;
-    Tuple()
-        : Expr(TUPLE) {}
-    Tuple(const vector<ExprPtr> &args)
+    ExprListPtr args;
+    Tuple(ExprListPtr args)
         : Expr(TUPLE), args(args) {}
 };
 
 struct Array : public Expr {
-    vector<ExprPtr> args;
-    Array()
-        : Expr(ARRAY) {}
-    Array(const vector<ExprPtr> &args)
+    ExprListPtr args;
+    Array(ExprListPtr args)
         : Expr(ARRAY), args(args) {}
 };
 
 struct Indexing : public Expr {
     ExprPtr expr;
-    vector<ExprPtr> args;
-    Indexing(ExprPtr expr)
-        : Expr(INDEXING), expr(expr) {}
-    Indexing(ExprPtr expr, const vector<ExprPtr> &args)
+    ExprListPtr args;
+    Indexing(ExprPtr expr, ExprListPtr args)
         : Expr(INDEXING), expr(expr), args(args) {}
 };
 
 struct Call : public Expr {
     ExprPtr expr;
-    vector<ExprPtr> args;
-    Call(ExprPtr expr)
-        : Expr(CALL), expr(expr) {}
-    Call(ExprPtr expr, const vector<ExprPtr> &args)
+    ExprListPtr args;
+    Call(ExprPtr expr, ExprListPtr args)
         : Expr(CALL), expr(expr), args(args) {}
 };
 

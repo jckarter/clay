@@ -76,33 +76,25 @@ ExprPtr clone(ExprPtr x)
 
     case TUPLE : {
         Tuple *y = (Tuple *)x.ptr();
-        TuplePtr z = new Tuple();
-        clone(y->args, z->args);
-        out = z.ptr();
+        out = new Tuple(clone(y->args));
         break;
     }
 
     case ARRAY : {
         Array *y = (Array *)x.ptr();
-        ArrayPtr z = new Array();
-        clone(y->args, z->args);
-        out = z.ptr();
+        out = new Array(clone(y->args));
         break;
     }
 
     case INDEXING : {
         Indexing *y = (Indexing *)x.ptr();
-        IndexingPtr z = new Indexing(clone(y->expr));
-        clone(y->args, z->args);
-        out = z.ptr();
+        out = new Indexing(clone(y->expr), clone(y->args));
         break;
     }
 
     case CALL : {
         Call *y = (Call *)x.ptr();
-        CallPtr z = new Call(clone(y->expr));
-        clone(y->args, z->args);
-        out = z.ptr();
+        out = new Call(clone(y->expr), clone(y->args));
         break;
     }
 
