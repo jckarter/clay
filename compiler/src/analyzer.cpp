@@ -495,7 +495,9 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        return analyzeFieldRefExpr(x->expr, x->name, env);
+        ExprListPtr args = new ExprList(x->expr);
+        args->add(new ObjectExpr(x->name.ptr()));
+        return analyzeCallExpr(prelude_expr_fieldRef(), args, env);
     }
 
     case STATIC_INDEXING : {
@@ -1130,34 +1132,6 @@ MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
     }
     AnalysisCachingDisabler disabler;
     return analyzeExpr(x->expr, bodyEnv);
-}
-
-
-
-//
-// analyzeFieldRefExpr
-//
-
-MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
-                                   IdentifierPtr name,
-                                   EnvPtr env)
-{
-    PValuePtr pv = analyzeOne(base, env);
-    if (!pv)
-        return NULL;
-    ObjectPtr obj = unwrapStaticType(pv->type);
-    if (obj.ptr()) {
-        if (obj->objKind == MODULE_HOLDER) {
-            ModuleHolderPtr y = (ModuleHolder *)obj.ptr();
-            ObjectPtr z = safeLookupModuleHolder(y, name);
-            return analyzeStaticObject(z);
-        }
-        if (obj->objKind != VALUE_HOLDER)
-            error("invalid field access");
-    }
-    ExprListPtr args = new ExprList(base);
-    args->add(new ObjectExpr(name.ptr()));
-    return analyzeCallExpr(prelude_expr_fieldRef(), args, env);
 }
 
 

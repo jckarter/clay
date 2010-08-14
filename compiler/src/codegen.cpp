@@ -97,11 +97,6 @@ void codegenAliasIndexing(GlobalAliasPtr x,
                           EnvPtr env,
                           CodegenContextPtr ctx,
                           MultiCValuePtr out);
-void codegenFieldRefExpr(ExprPtr base,
-                         IdentifierPtr name,
-                         EnvPtr env,
-                         CodegenContextPtr ctx,
-                         MultiCValuePtr out);
 void codegenCallExpr(ExprPtr callable,
                      ExprListPtr args,
                      EnvPtr env,
@@ -791,7 +786,9 @@ void codegenExpr(ExprPtr expr,
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        codegenFieldRefExpr(x->expr, x->name, env, ctx, out);
+        ExprListPtr args = new ExprList(x->expr);
+        args->add(new ObjectExpr(x->name.ptr()));
+        codegenCallExpr(prelude_expr_fieldRef(), args, env, ctx, out);
         break;
     }
 
@@ -1533,37 +1530,6 @@ void codegenAliasIndexing(GlobalAliasPtr x,
         addLocal(bodyEnv, x->varParam, varParams.ptr());
     }
     codegenExpr(x->expr, bodyEnv, ctx, out);
-}
-
-
-
-//
-// codegenFieldRefExpr
-//
-
-void codegenFieldRefExpr(ExprPtr base,
-                         IdentifierPtr name,
-                         EnvPtr env,
-                         CodegenContextPtr ctx,
-                         MultiCValuePtr out)
-{
-    PValuePtr pv = analyzeOne(base, env);
-    assert(pv.ptr());
-    if (pv->type->typeKind == STATIC_TYPE) {
-        StaticType *st = (StaticType *)pv->type.ptr();
-        ObjectPtr obj = st->obj;
-        if (obj->objKind == MODULE_HOLDER) {
-            ModuleHolderPtr y = (ModuleHolder *)obj.ptr();
-            ObjectPtr z = safeLookupModuleHolder(y, name);
-            codegenStaticObject(z, ctx, out);
-            return;
-        }
-        if (obj->objKind != VALUE_HOLDER)
-            error("invalid field access");
-    }
-    ExprListPtr args2 = new ExprList(base);
-    args2->add(new ObjectExpr(name.ptr()));
-    codegenCallExpr(prelude_expr_fieldRef(), args2, env, ctx, out);
 }
 
 

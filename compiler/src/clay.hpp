@@ -2471,9 +2471,6 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
 MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
                                     ExprListPtr args,
                                     EnvPtr env);
-MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
-                                   IdentifierPtr name,
-                                   EnvPtr env);
 void computeArgsKey(MultiPValuePtr args,
                     vector<TypePtr> &argsKey,
                     vector<ValueTempness> &argsTempness);

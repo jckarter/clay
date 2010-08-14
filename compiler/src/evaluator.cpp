@@ -29,10 +29,6 @@ void evalAliasIndexing(GlobalAliasPtr x,
                        ExprListPtr args,
                        EnvPtr env,
                        MultiEValuePtr out);
-void evalFieldRefExpr(ExprPtr base,
-                      IdentifierPtr name,
-                      EnvPtr env,
-                      MultiEValuePtr out);
 void evalCallExpr(ExprPtr callable,
                   ExprListPtr args,
                   EnvPtr env,
@@ -1069,7 +1065,9 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        evalFieldRefExpr(x->expr, x->name, env, out);
+        ExprListPtr args = new ExprList(x->expr);
+        args->add(new ObjectExpr(x->name.ptr()));
+        evalCallExpr(prelude_expr_fieldRef(), args, env, out);
         break;
     }
 
@@ -1490,36 +1488,6 @@ void evalAliasIndexing(GlobalAliasPtr x,
         addLocal(bodyEnv, x->varParam, varParams.ptr());
     }
     evalExpr(x->expr, bodyEnv, out);
-}
-
-
-
-//
-// evalFieldRefExpr
-//
-
-void evalFieldRefExpr(ExprPtr base,
-                      IdentifierPtr name,
-                      EnvPtr env,
-                      MultiEValuePtr out)
-{
-    PValuePtr pv = analyzeOne(base, env);
-    assert(pv.ptr());
-    if (pv->type->typeKind == STATIC_TYPE) {
-        StaticType *st = (StaticType *)pv->type.ptr();
-        ObjectPtr obj = st->obj;
-        if (obj->objKind== MODULE_HOLDER) {
-            ModuleHolderPtr y = (ModuleHolder *)obj.ptr();
-            ObjectPtr z = safeLookupModuleHolder(y, name);
-            evalStaticObject(z, out);
-            return;
-        }
-        if (obj->objKind != VALUE_HOLDER)
-            error("invalid field access");
-    }
-    ExprListPtr args2 = new ExprList(base);
-    args2->add(new ObjectExpr(name.ptr()));
-    evalCallExpr(prelude_expr_fieldRef(), args2, env, out);
 }
 
 
