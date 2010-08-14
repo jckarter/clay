@@ -1303,19 +1303,17 @@ struct RecordField : public ANode {
 struct Variant : public TopLevelItem {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
-    vector<ExprPtr> defaultInstances;
+    ExprListPtr defaultInstances;
 
     vector<InstancePtr> instances;
 
     vector<OverloadPtr> overloads;
 
-    Variant(Visibility visibility)
-        : TopLevelItem(VARIANT, visibility) {}
     Variant(IdentifierPtr name,
             Visibility visibility,
             const vector<IdentifierPtr> &params,
             IdentifierPtr varParam,
-            const vector<ExprPtr> &defaultInstances)
+            ExprListPtr defaultInstances)
         : TopLevelItem(VARIANT, name, visibility),
           params(params), varParam(varParam),
           defaultInstances(defaultInstances) {}
@@ -2398,21 +2396,6 @@ void initBuiltinConstructor(RecordPtr x);
 
 ValueHolderPtr parseIntLiteral(IntLiteral *x);
 ValueHolderPtr parseFloatLiteral(FloatLiteral *x);
-
-
-
-//
-// VarArgsInfo
-//
-
-struct VarArgsInfo : public Object {
-    bool hasVarArgs;
-    vector<ExprPtr> varArgs;
-    VarArgsInfo(bool hasVarArgs)
-        : Object(DONT_CARE), hasVarArgs(hasVarArgs) {}
-};
-
-typedef Pointer<VarArgsInfo> VarArgsInfoPtr;
 
 
 
