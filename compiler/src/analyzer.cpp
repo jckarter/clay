@@ -263,7 +263,18 @@ static PValuePtr staticPValue(ObjectPtr x)
 // analyzeMulti
 //
 
+static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env);
+
 MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env)
+{
+    if (analysisCachingDisabled > 0)
+        return analyzeMulti2(exprs, env);
+    if (!exprs->cachedAnalysis)
+        exprs->cachedAnalysis = analyzeMulti2(exprs, env);
+    return exprs->cachedAnalysis;
+}
+
+static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env)
 {
     MultiPValuePtr out = new MultiPValue();
     for (unsigned i = 0; i < exprs->size(); ++i) {
@@ -307,63 +318,83 @@ PValuePtr analyzeOne(ExprPtr expr, EnvPtr env)
 // analyzeMultiArgs, analyzeOneArg, analyzeArgExpr
 //
 
+static MultiPValuePtr analyzeMultiArgs2(ExprListPtr exprs,
+                                        EnvPtr env,
+                                        vector<unsigned> &dispatchIndices);
+
 MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
                                 EnvPtr env,
-                                vector<bool> &dispatchFlags)
+                                vector<unsigned> &dispatchIndices)
+{
+    if (analysisCachingDisabled > 0)
+        return analyzeMultiArgs2(exprs, env, dispatchIndices);
+    if (!exprs->cachedAnalysis) {
+        MultiPValuePtr mpv = analyzeMultiArgs2(exprs, env, dispatchIndices);
+        if (mpv.ptr() && dispatchIndices.empty())
+            exprs->cachedAnalysis = mpv;
+        return mpv;
+    }
+    return exprs->cachedAnalysis;
+}
+
+static MultiPValuePtr analyzeMultiArgs2(ExprListPtr exprs,
+                                        EnvPtr env,
+                                        vector<unsigned> &dispatchIndices)
 {
     MultiPValuePtr out = new MultiPValue();
+    unsigned index = 0;
     for (unsigned i = 0; i < exprs->size(); ++i) {
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiPValuePtr z = analyzeArgExpr(y->expr, env, dispatchFlags);
+            MultiPValuePtr z = analyzeArgExpr(y->expr,
+                                              env,
+                                              index,
+                                              dispatchIndices);
             if (!z)
                 return NULL;
+            index += z->size();
             out->add(z);
         }
         else {
-            bool dispatchFlag = false;
-            PValuePtr y = analyzeOneArg(x, env, dispatchFlag);
+            PValuePtr y = analyzeOneArg(x, env, index, dispatchIndices);
             if (!y)
                 return NULL;
             out->add(y);
-            dispatchFlags.push_back(dispatchFlag);
+            index += 1;
         }
     }
-    assert(dispatchFlags.size() == out->size());
     return out;
 }
 
-PValuePtr analyzeOneArg(ExprPtr x, EnvPtr env, bool &dispatchFlag)
+PValuePtr analyzeOneArg(ExprPtr x,
+                        EnvPtr env,
+                        unsigned startIndex,
+                        vector<unsigned> &dispatchIndices)
 {
-    vector<bool> dispatchFlags;
-    MultiPValuePtr mpv = analyzeArgExpr(x, env, dispatchFlags);
+    MultiPValuePtr mpv = analyzeArgExpr(x, env, startIndex, dispatchIndices);
     if (!mpv)
         return NULL;
     LocationContext loc(x->location);
     ensureArity(mpv, 1);
-    assert(dispatchFlags.size() == 1);
-    dispatchFlag = dispatchFlags[0];
     return mpv->values[0];
 }
 
 MultiPValuePtr analyzeArgExpr(ExprPtr x,
                               EnvPtr env,
-                              vector<bool> &dispatchFlags)
+                              unsigned startIndex,
+                              vector<unsigned> &dispatchIndices)
 {
     if (x->exprKind == DISPATCH_EXPR) {
         DispatchExpr *y = (DispatchExpr *)x.ptr();
         MultiPValuePtr mpv = analyzeExpr(y->expr, env);
         if (!mpv)
             return NULL;
-        dispatchFlags.insert(dispatchFlags.end(), mpv->size(), true);
+        for (unsigned i = 0; i < mpv->size(); ++i)
+            dispatchIndices.push_back(i + startIndex);
         return mpv;
     }
-    MultiPValuePtr mpv = analyzeExpr(x, env);
-    if (!mpv)
-        return NULL;
-    dispatchFlags.insert(dispatchFlags.end(), mpv->size(), false);
-    return mpv;
+    return analyzeExpr(x, env);
 }
 
 
@@ -1207,15 +1238,10 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                 return NULL;
             return analyzePrimOp(x, mpv);
         }
-        vector<bool> dispatchFlags;
-        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchFlags);
+        vector<unsigned> dispatchIndices;
+        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchIndices);
         if (!mpv)
             return NULL;
-        vector<unsigned> dispatchIndices;
-        for (unsigned i = 0; i < dispatchFlags.size(); ++i) {
-            if (dispatchFlags[i])
-                dispatchIndices.push_back(i);
-        }
         if (dispatchIndices.size() > 0) {
             return analyzeDispatch(obj, mpv, dispatchIndices);
         }

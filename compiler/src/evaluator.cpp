@@ -1569,14 +1569,9 @@ void evalCallExpr(ExprPtr callable,
             evalPrimOp(x, mev, out);
             break;
         }
-        vector<bool> dispatchFlags;
-        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchFlags);
-        assert(mpv.ptr());
         vector<unsigned> dispatchIndices;
-        for (unsigned i = 0; i < dispatchFlags.size(); ++i) {
-            if (dispatchFlags[i])
-                dispatchIndices.push_back(i);
-        }
+        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchIndices);
+        assert(mpv.ptr());
         if (dispatchIndices.size() > 0) {
             MultiEValuePtr mev = evalMultiArgsAsRef(args, env);
             evalDispatch(obj, mev, mpv, dispatchIndices, out);
