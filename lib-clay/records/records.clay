@@ -24,14 +24,7 @@ overload staticIndex(x:T, static i) =
 RecordFieldType(static T, static i) = Type(staticIndex(null(T)^, static i));
 
 [T | Record?(T)]
-RecordFieldTypes(static T) = ...RecordFieldTypes2(T, static 0);
-
-[T,i]
-private RecordFieldTypes2(static T, static i) =
-    RecordFieldType(T, static i), ...RecordFieldTypes2(T, static i+1);
-
-[T,i | i == RecordFieldCount(T)]
-overload RecordFieldTypes2(static T, static i) = ;
+RecordFieldTypes(static T) = ...Type(...recordFields(null(T)^));
 
 
 
