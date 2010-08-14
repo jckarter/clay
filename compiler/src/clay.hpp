@@ -2434,9 +2434,9 @@ struct AnalysisCachingDisabler {
     ~AnalysisCachingDisabler() { enableAnalysisCaching(); }
 };
 
-MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env);
+MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
-MultiPValuePtr analyzeMultiArgs(const vector<ExprPtr> &exprs,
+MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
                                 EnvPtr env,
                                 vector<bool> &dispatchFlags);
 PValuePtr analyzeOneArg(ExprPtr x, EnvPtr env, bool &dispatchFlag);
@@ -2451,13 +2451,13 @@ void analyzeExternalProcedure(ExternalProcedurePtr x);
 void verifyAttributes(ExternalProcedurePtr x);
 void verifyAttributes(ExternalVariablePtr x);
 MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
-                                   const vector<ExprPtr> &args,
+                                   ExprListPtr args,
                                    EnvPtr env);
 bool unwrapByRef(TypePtr &t);
 TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args);
 PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
 MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
-                                    const vector<ExprPtr> &args,
+                                    ExprListPtr args,
                                     EnvPtr env);
 MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
                                    IdentifierPtr name,
@@ -2468,7 +2468,7 @@ void computeArgsKey(MultiPValuePtr args,
 MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
                              const vector<TypePtr> &returnTypes);
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
-                               const vector<ExprPtr> &args,
+                               ExprListPtr args,
                                EnvPtr env);
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
@@ -2485,7 +2485,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<ValueTempness> &argsTempness);
 
 MultiPValuePtr analyzeCallMacro(InvokeEntryPtr entry,
-                                const vector<ExprPtr> &args,
+                                ExprListPtr args,
                                 EnvPtr env);
 
 void analyzeCodeBody(InvokeEntryPtr entry);

@@ -1425,7 +1425,7 @@ void evalIndexingExpr(ExprPtr indexable,
                       EnvPtr env,
                       MultiEValuePtr out)
 {
-    MultiPValuePtr mpv = analyzeIndexingExpr(indexable, args->exprs, env);
+    MultiPValuePtr mpv = analyzeIndexingExpr(indexable, args, env);
     assert(mpv.ptr());
     assert(mpv->size() == out->size());
     bool allTempStatics = true;
@@ -1570,7 +1570,7 @@ void evalCallExpr(ExprPtr callable,
             break;
         }
         vector<bool> dispatchFlags;
-        MultiPValuePtr mpv = analyzeMultiArgs(args->exprs, env, dispatchFlags);
+        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchFlags);
         assert(mpv.ptr());
         vector<unsigned> dispatchIndices;
         for (unsigned i = 0; i < dispatchFlags.size(); ++i) {
@@ -1943,7 +1943,7 @@ void evalCallMacro(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = analyzeCallMacro(entry, args->exprs, env);
+    MultiPValuePtr mpv = analyzeCallMacro(entry, args, env);
     assert(mpv->size() == out->size());
 
     vector<EReturn> returns;
@@ -2055,8 +2055,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = analyzeMulti(x->left->exprs, env);
-        MultiPValuePtr mpvRight = analyzeMulti(x->right->exprs, env);
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
         assert(mpvLeft.ptr());
         assert(mpvRight.ptr());
         if (mpvLeft->size() != mpvRight->size())
@@ -2095,8 +2095,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case INIT_ASSIGNMENT : {
         InitAssignment *x = (InitAssignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = analyzeMulti(x->left->exprs, env);
-        MultiPValuePtr mpvRight = analyzeMulti(x->right->exprs, env);
+        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
         assert(mpvLeft.ptr());
         assert(mpvRight.ptr());
         if (mpvLeft->size() != mpvRight->size())
@@ -2132,7 +2132,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         MultiEValuePtr mev = new MultiEValue();
         ensureArity(mpv, ctx->returns.size());
         for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -2308,7 +2308,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
@@ -2326,7 +2326,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case REF : {
-        MultiPValuePtr mpv = analyzeMulti(x->values->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
