@@ -15,4 +15,4 @@ four
 0
 1
 4
-0, 1, 2, 3, 4, 5, 6, 7
+ValueHolder(Int32(0)), ValueHolder(Int32(1)), ValueHolder(Int32(2)), ValueHolder(Int32(3)), ValueHolder(Int32(4)), ValueHolder(Int32(5)), ValueHolder(Int32(6)), ValueHolder(Int32(7))

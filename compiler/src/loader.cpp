@@ -659,6 +659,7 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(Static);
     PRIMITIVE(StaticName);
+    PRIMITIVE(staticIntegers);
 
     PRIMITIVE(EnumP);
     PRIMITIVE(enumToInt);
@@ -667,8 +668,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(IdentifierSize);
     PRIMITIVE(IdentifierConcat);
     PRIMITIVE(IdentifierSlice);
-
-    PRIMITIVE(integerValues);
 
 #undef PRIMITIVE
 

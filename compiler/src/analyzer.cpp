@@ -2087,6 +2087,35 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return analyzeExpr(z, new Env());
     }
 
+    case PRIM_staticIntegers : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj || (obj->objKind != VALUE_HOLDER))
+            argumentError(0, "expecting a static SizeT or Int value");
+        MultiPValuePtr mpv = new MultiPValue();
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = *((int *)vh->buf);
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            for (int i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = intToValueHolder(i);
+                mpv->add(new PValue(staticType(vhi.ptr()), true));
+            }
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = *((size_t *)vh->buf);
+            for (size_t i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = sizeTToValueHolder(i);
+                mpv->add(new PValue(staticType(vhi.ptr()), true));
+            }
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
+        return mpv;
+    }
+
     case PRIM_EnumP :
         return new MultiPValue(new PValue(boolType, true));
 
@@ -2133,31 +2162,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(2, "ending index out of range");
         string result = ident->str.substr(begin, end-begin);
         return analyzeStaticObject(new Identifier(result));
-    }
-
-    case PRIM_integerValues : {
-        ensureArity(args, 1);
-        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
-        if (!obj || (obj->objKind != VALUE_HOLDER))
-            argumentError(0, "expecting a static SizeT or Int value");
-        ValueHolder *vh = (ValueHolder *)obj.ptr();
-        size_t count = 0;
-        if (vh->type == cIntType) {
-            int value = *((int *)vh->buf);
-            if (value < 0)
-                argumentError(0, "negative values are not allowed");
-            count = value;
-        }
-        else if (vh->type == cSizeTType) {
-            count = *((size_t *)vh->buf);
-        }
-        else {
-            argumentError(0, "expecting a static SizeT or Int value");
-        }
-        MultiPValuePtr mpv = new MultiPValue();
-        for (unsigned i = 0; i < count; ++i)
-            mpv->add(new PValue(vh->type, true));
-        return mpv;
     }
 
     default :

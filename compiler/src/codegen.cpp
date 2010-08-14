@@ -4082,6 +4082,38 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_staticIntegers : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        if (obj->objKind != VALUE_HOLDER)
+            argumentError(0, "expecting a static SizeT or Int value");
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = *((int *)vh->buf);
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            assert(out->size() == (size_t)count);
+            for (int i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = intToValueHolder(i);
+                CValuePtr outi = out->values[i];
+                assert(outi->type == staticType(vhi.ptr()));
+            }
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = *((size_t *)vh->buf);
+            assert(out->size() == count);
+            for (size_t i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = sizeTToValueHolder(i);
+                CValuePtr outi = out->values[i];
+                assert(outi->type == staticType(vhi.ptr()));
+            }
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
+        break;
+    }
+
     case PRIM_EnumP : {
         ensureArity(args, 1);
         bool isEnumType = false;
@@ -4148,42 +4180,6 @@ void codegenPrimOp(PrimOpPtr x,
             argumentError(2, "ending index out of range");
         string result = ident->str.substr(begin, end-begin);
         codegenStaticObject(new Identifier(result), ctx, out);
-        break;
-    }
-
-    case PRIM_integerValues : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        if (obj->objKind != VALUE_HOLDER)
-            argumentError(0, "expecting a static SizeT or Int value");
-        ValueHolder *vh = (ValueHolder *)obj.ptr();
-        if (vh->type == cIntType) {
-            int count = *((int *)vh->buf);
-            if (count < 0)
-                argumentError(0, "negative values are not allowed");
-            assert(out->size() == (size_t)count);
-            for (int i = 0; i < count; ++i) {
-                CValuePtr outi = out->values[i];
-                assert(outi->type == cIntType);
-                llvm::Value *vi =
-                    llvm::ConstantInt::get(llvmType(cIntType), i);
-                llvmBuilder->CreateStore(vi, outi->llValue);
-            }
-        }
-        else if (vh->type == cSizeTType) {
-            size_t count = *((size_t *)vh->buf);
-            assert(out->size() == count);
-            for (size_t i = 0; i < count; ++i) {
-                CValuePtr outi = out->values[i];
-                assert(outi->type == cSizeTType);
-                llvm::Value *vi =
-                    llvm::ConstantInt::get(llvmType(cSizeTType), i);
-                llvmBuilder->CreateStore(vi, outi->llValue);
-            }
-        }
-        else {
-            argumentError(0, "expecting a static SizeT or Int value");
-        }
         break;
     }
 
