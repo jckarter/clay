@@ -195,16 +195,11 @@ ExprPtr cloneOpt(ExprPtr x)
     return clone(x);
 }
 
-void clone(const vector<ExprPtr> &x, vector<ExprPtr> &out)
-{
-    for (unsigned i = 0; i < x.size(); ++i)
-        out.push_back(clone(x[i]));
-}
-
 ExprListPtr clone(ExprListPtr x)
 {
     ExprListPtr out = new ExprList();
-    clone(x->exprs, out->exprs);
+    for (unsigned i = 0; i < x->size(); ++i)
+        out->add(clone(x->exprs[i]));
     return out;
 }
 
