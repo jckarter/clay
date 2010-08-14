@@ -460,9 +460,9 @@ static void initializeVariantType(VariantTypePtr t) {
             assert(params.size() == t->params.size());
         }
     }
-    const vector<ExprPtr> &defaultInstances = t->variant->defaultInstances;
-    for (unsigned i = 0; i < defaultInstances.size(); ++i) {
-        ExprPtr x = defaultInstances[i];
+    ExprListPtr defaultInstances = t->variant->defaultInstances;
+    for (unsigned i = 0; i < defaultInstances->size(); ++i) {
+        ExprPtr x = defaultInstances->exprs[i];
         TypePtr memberType = evaluateType(x, variantEnv);
         t->memberTypes.push_back(memberType);
     }

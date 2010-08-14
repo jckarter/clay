@@ -26,7 +26,7 @@ DefaultInstances -> Type ("|" Type)*
 
 Instance -> PatternVarsWithCond? "instance" Pattern "=" Type ";"
 
-Procedure -> PatternVarsWithCond? "inlined"? "procedure"? Identifier Arguments
+Procedure -> PatternVarsWithCond? "macro"? "procedure"? Identifier Arguments
              ReturnSpec? VarReturnSpec? Body
            | "procedure" Identifier ";"
 
@@ -53,7 +53,7 @@ Type -> Expression
 Body -> "=" ReturnExpression ";"
       | Block
 
-Overload -> PatternVarsWithCond? "inlined"? "overload" Pattern Arguments
+Overload -> PatternVarsWithCond? "macro"? "overload" Pattern Arguments
             ReturnSpec? VarReturnSpec? Body
 
 Enumeration -> "enum" Identifier "{" comma_list(Identifier) "}"
@@ -97,6 +97,7 @@ Statement -> Block
            | ForStatement
            | TryStatement
            | ThrowStatement
+           | StaticForStatement
 
 LabelDef -> Identifier ":"
 
@@ -129,6 +130,9 @@ ForStatement -> "for" "(" Identifier "in" Expression ")" Statement
 
 TryStatement -> "try" Block "catch" Block
 ThrowStatement -> "throw" Expression? ";"
+
+StaticForStatement -> "static" "for" "(" Identifier "in" Expression ")"
+                      Statement
 
 
 //

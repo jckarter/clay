@@ -76,33 +76,25 @@ ExprPtr clone(ExprPtr x)
 
     case TUPLE : {
         Tuple *y = (Tuple *)x.ptr();
-        TuplePtr z = new Tuple();
-        clone(y->args, z->args);
-        out = z.ptr();
+        out = new Tuple(clone(y->args));
         break;
     }
 
     case ARRAY : {
         Array *y = (Array *)x.ptr();
-        ArrayPtr z = new Array();
-        clone(y->args, z->args);
-        out = z.ptr();
+        out = new Array(clone(y->args));
         break;
     }
 
     case INDEXING : {
         Indexing *y = (Indexing *)x.ptr();
-        IndexingPtr z = new Indexing(clone(y->expr));
-        clone(y->args, z->args);
-        out = z.ptr();
+        out = new Indexing(clone(y->expr), clone(y->args));
         break;
     }
 
     case CALL : {
         Call *y = (Call *)x.ptr();
-        CallPtr z = new Call(clone(y->expr));
-        clone(y->args, z->args);
-        out = z.ptr();
+        out = new Call(clone(y->expr), clone(y->args));
         break;
     }
 
@@ -203,10 +195,12 @@ ExprPtr cloneOpt(ExprPtr x)
     return clone(x);
 }
 
-void clone(const vector<ExprPtr> &x, vector<ExprPtr> &out)
+ExprListPtr clone(ExprListPtr x)
 {
-    for (unsigned i = 0; i < x.size(); ++i)
-        out.push_back(clone(x[i]));
+    ExprListPtr out = new ExprList();
+    for (unsigned i = 0; i < x->size(); ++i)
+        out->add(clone(x->exprs[i]));
+    return out;
 }
 
 void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out)
@@ -271,27 +265,19 @@ StatementPtr clone(StatementPtr x)
         Binding *y = (Binding *)x.ptr();
         vector<IdentifierPtr> names;
         clone(y->names, names);
-        vector<ExprPtr> exprs;
-        clone(y->exprs, exprs);
-        out = new Binding(y->bindingKind, names, exprs);
+        out = new Binding(y->bindingKind, names, clone(y->values));
         break;
     }
 
     case ASSIGNMENT : {
         Assignment *y = (Assignment *)x.ptr();
-        vector<ExprPtr> left, right;
-        clone(y->left, left);
-        clone(y->right, right);
-        out = new Assignment(left, right);
+        out = new Assignment(clone(y->left), clone(y->right));
         break;
     }
 
     case INIT_ASSIGNMENT : {
         InitAssignment *y = (InitAssignment *)x.ptr();
-        vector<ExprPtr> left, right;
-        clone(y->left, left);
-        clone(y->right, right);
-        out = new InitAssignment(left, right);
+        out = new InitAssignment(clone(y->left), clone(y->right));
         break;
     }
 
@@ -309,10 +295,7 @@ StatementPtr clone(StatementPtr x)
 
     case RETURN : {
         Return *y = (Return *)x.ptr();
-        ReturnPtr z = new Return();
-        z->returnKind = y->returnKind;
-        clone(y->exprs, z->exprs);
-        out = z.ptr();
+        out = new Return(y->returnKind, clone(y->values));
         break;
     }
 
@@ -369,6 +352,12 @@ StatementPtr clone(StatementPtr x)
     case THROW : {
         Throw *y = (Throw *)x.ptr();
         out = new Throw(cloneOpt(y->expr));
+        break;
+    }
+
+    case STATIC_FOR : {
+        StaticFor *y = (StaticFor *)x.ptr();
+        out = new StaticFor(y->variable, clone(y->values), clone(y->body));
         break;
     }
 

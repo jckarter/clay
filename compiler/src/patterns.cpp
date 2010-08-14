@@ -589,10 +589,10 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args.size() == 1) &&
-            (x->args[0]->exprKind != UNPACK))
+        if ((x->args->size() == 1) &&
+            (x->args->exprs[0]->exprKind != UNPACK))
         {
-            return evaluateOnePattern(x->args[0], env);
+            return evaluateOnePattern(x->args->exprs[0], env);
         }
         MultiPatternPtr params = evaluateMultiPattern(x->args, env);
         return new PatternStruct(NULL, params);
@@ -687,14 +687,13 @@ static bool appendPattern(MultiPatternListPtr &cur, MultiPatternPtr x)
     }
 }
 
-MultiPatternPtr evaluateMultiPattern(const vector<ExprPtr> &exprs,
-                                     EnvPtr env)
+MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
 {
     MultiPatternListPtr out = new MultiPatternList();
     MultiPatternListPtr cur = out;
-    for (unsigned i = 0; i < exprs.size(); ++i) {
+    for (unsigned i = 0; i < exprs->size(); ++i) {
         assert(!cur || !cur->tail);
-        ExprPtr x = exprs[i];
+        ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiPatternPtr mp = checkMultiPatternNameRef(y->expr, env);

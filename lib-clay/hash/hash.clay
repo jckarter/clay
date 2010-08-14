@@ -36,14 +36,12 @@ overload hash(a:Array[T,n]) = hashSequence(a);
 //
 
 [...T]
-overload hash(x:Tuple[...T]) = hashTuple(x, static 0);
-
-[T,i]
-private hashTuple(x:T, static i) =
-    13*hash(staticIndex(x, static i)) + 7*hashTuple(x, static i+1);
-
-[T,i | i == TupleElementCount(T)]
-overload hashTuple(x:T, static i) = 0;
+overload hash(x:Tuple[...T]) {
+    var h = SizeT(0);
+    static for (x in ...tupleElements(x))
+        h = 7*h + 13*hash(x);
+    return h;
+}
 
 
 
@@ -52,14 +50,12 @@ overload hashTuple(x:T, static i) = 0;
 //
 
 [T | Record?(T)]
-overload hash(x:T) = hashRecord(x, static 0);
-
-[T,i]
-private hashRecord(x:T, static i) =
-    13*hash(staticIndex(x, static i)) + 7*hashRecord(x, static i+1);
-
-[T,i | i == RecordFieldCount(T)]
-overload hashRecord(x:T, static i) = 0;
+overload hash(x:T) {
+    var h = SizeT(0);
+    static for (x in ...recordFields(x))
+        h = 7*h + 13*hash(x);
+    return h;
+}
 
 
 

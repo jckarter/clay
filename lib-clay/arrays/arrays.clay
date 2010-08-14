@@ -58,7 +58,7 @@ overload unpackElements(a:Array[T,n], static i) = ;
 //
 
 [...A | (countArgs(...A) > 0) and AllEqual?(...A)]
-inlined overload Array(...args:A) {
+macro overload Array(...args:A) {
     alias n = static countArgs(...A);
     alias T = firstArg(...A);
     return Array[T, n](...args);
@@ -79,7 +79,7 @@ private firstArg(a, ...b) = a;
 //
 
 [T,n,...A | Tuple[...Times(T,static n)] == Tuple[...A]]
-inlined overload Array[T,n](...args:A) returned:Array[T,n] {
+macro overload Array[T,n](...args:A) returned:Array[T,n] {
     ...unpackArrayRef(returned) <-- ...args;
 }
 
