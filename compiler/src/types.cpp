@@ -317,6 +317,12 @@ TypePtr enumType(EnumerationPtr enumeration)
     return enumeration->type;
 }
 
+
+
+//
+// isPrimitiveType, isPrimitiveAggregateType, isPointerOrCodePointerType
+//
+
 bool isPrimitiveType(TypePtr t)
 {
     switch (t->typeKind) {
@@ -328,6 +334,47 @@ bool isPrimitiveType(TypePtr t)
     case CCODE_POINTER_TYPE :
     case STATIC_TYPE :
     case ENUM_TYPE :
+        return true;
+    default :
+        return false;
+    }
+}
+
+bool isPrimitiveAggregateType(TypePtr t)
+{
+    switch (t->typeKind) {
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+    case STATIC_TYPE :
+    case ENUM_TYPE :
+        return true;
+    case TUPLE_TYPE : {
+        TupleType *tt = (TupleType *)t.ptr();
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+            if (!isPrimitiveAggregateType(tt->elementTypes[i]))
+                return false;
+        }
+        return true;
+    }
+    case ARRAY_TYPE : {
+        ArrayType *at = (ArrayType *)t.ptr();
+        return isPrimitiveAggregateType(at->elementType);
+    }
+    default :
+        return false;
+    }
+}
+
+bool isPointerOrCodePointerType(TypePtr t)
+{
+    switch (t->typeKind) {
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
         return true;
     default :
         return false;

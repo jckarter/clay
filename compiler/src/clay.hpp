@@ -2061,6 +2061,8 @@ TypePtr staticType(ObjectPtr obj);
 TypePtr enumType(EnumerationPtr enumeration);
 
 bool isPrimitiveType(TypePtr t);
+bool isPrimitiveAggregateType(TypePtr t);
+bool isPointerOrCodePointerType(TypePtr t);
 
 const vector<IdentifierPtr> &recordFieldNames(RecordTypePtr t);
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);

@@ -571,7 +571,7 @@ static EValuePtr derefValue(EValuePtr evPtr)
 
 void evalValueInit(EValuePtr dest)
 {
-    if (isPrimitiveType(dest->type))
+    if (isPrimitiveAggregateType(dest->type))
         return;
     evalCallValue(staticEValue(dest->type.ptr()),
                   new MultiEValue(),
@@ -580,7 +580,7 @@ void evalValueInit(EValuePtr dest)
 
 void evalValueDestroy(EValuePtr dest)
 {
-    if (isPrimitiveType(dest->type))
+    if (isPrimitiveAggregateType(dest->type))
         return;
     evalCallValue(staticEValue(prelude_destroy()),
                   new MultiEValue(dest),
@@ -589,7 +589,7 @@ void evalValueDestroy(EValuePtr dest)
 
 void evalValueCopy(EValuePtr dest, EValuePtr src)
 {
-    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
         if (dest->type->typeKind != STATIC_TYPE)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
@@ -601,7 +601,7 @@ void evalValueCopy(EValuePtr dest, EValuePtr src)
 
 void evalValueMove(EValuePtr dest, EValuePtr src)
 {
-    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
         if (dest->type->typeKind != STATIC_TYPE)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
@@ -613,7 +613,7 @@ void evalValueMove(EValuePtr dest, EValuePtr src)
 
 void evalValueAssign(EValuePtr dest, EValuePtr src)
 {
-    if (isPrimitiveType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
         if (dest->type->typeKind != STATIC_TYPE)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
@@ -2447,14 +2447,8 @@ static IntegerTypePtr valueToIntegerType(MultiEValuePtr args, unsigned index)
 static TypePtr valueToPointerLikeType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
-    switch (t->typeKind) {
-    case POINTER_TYPE :
-    case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE :
-        break;
-    default :
+    if (!isPointerOrCodePointerType(t))
         argumentError(index, "expecting a pointer or code-pointer type");
-    }
     return t;
 }
 
@@ -2575,15 +2569,9 @@ static EValuePtr pointerLikeValue(MultiEValuePtr args, unsigned index,
             argumentError(index, "argument type mismatch");
     }
     else {
-        switch (ev->type->typeKind) {
-        case POINTER_TYPE :
-        case CODE_POINTER_TYPE :
-        case CCODE_POINTER_TYPE :
-            break;
-        default :
+        if (!isPointerOrCodePointerType(ev->type))
             argumentError(index, "expecting a value of "
                           "pointer or code-pointer type");
-        }
         type = ev->type;
     }
     return ev;

@@ -103,15 +103,9 @@ static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index)
 static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = valueToType(x, index);
-    switch (t->typeKind) {
-    case POINTER_TYPE :
-    case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE :
-        return t;
-    default :
+    if (!isPointerOrCodePointerType(t))
         argumentError(index, "expecting a pointer type");
-        return NULL;
-    }
+    return t;
 }
 
 static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index)
