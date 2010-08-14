@@ -59,3 +59,13 @@ unwrapStatic(static A) = A;
 [F]
 overload call(static F, forward ...args) =
     forward ...F(...args);
+
+
+
+//
+// fieldRef
+//
+
+[Module, Ident]
+overload fieldRef(static Module, static Ident) =
+    forward staticFieldRef(Module, Ident);

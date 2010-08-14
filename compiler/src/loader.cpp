@@ -660,6 +660,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(Static);
     PRIMITIVE(StaticName);
     PRIMITIVE(staticIntegers);
+    PRIMITIVE(staticFieldRef);
 
     PRIMITIVE(EnumP);
     PRIMITIVE(enumToInt);
