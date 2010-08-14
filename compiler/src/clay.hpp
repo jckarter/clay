@@ -909,6 +909,9 @@ struct ObjectExpr : public Expr {
 
 struct ExprList : public Object {
     vector<ExprPtr> exprs;
+
+    MultiPValuePtr cachedAnalysis;
+
     ExprList()
         : Object(EXPR_LIST) {}
     ExprList(ExprPtr x)
@@ -2436,13 +2439,19 @@ struct AnalysisCachingDisabler {
 
 MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
+
 MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
                                 EnvPtr env,
-                                vector<bool> &dispatchFlags);
-PValuePtr analyzeOneArg(ExprPtr x, EnvPtr env, bool &dispatchFlag);
+                                vector<unsigned> &dispatchIndices);
+PValuePtr analyzeOneArg(ExprPtr x,
+                        EnvPtr env,
+                        unsigned startIndex,
+                        vector<unsigned> &dispatchIndices);
 MultiPValuePtr analyzeArgExpr(ExprPtr x,
                               EnvPtr env,
-                              vector<bool> &dispatchFlags);
+                              unsigned startIndex,
+                              vector<unsigned> &dispatchIndices);
+
 MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env);
 MultiPValuePtr analyzeStaticObject(ObjectPtr x);
 PValuePtr analyzeGlobalVariable(GlobalVariablePtr x);

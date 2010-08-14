@@ -1608,14 +1608,9 @@ void codegenCallExpr(ExprPtr callable,
             codegenPrimOp(x, mcv, ctx, out);
             break;
         }
-        vector<bool> dispatchFlags;
-        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchFlags);
-        assert(mpv.ptr());
         vector<unsigned> dispatchIndices;
-        for (unsigned i = 0; i < dispatchFlags.size(); ++i) {
-            if (dispatchFlags[i])
-                dispatchIndices.push_back(i);
-        }
+        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchIndices);
+        assert(mpv.ptr());
         if (dispatchIndices.size() > 0) {
             MultiCValuePtr mcv = codegenMultiArgsAsRef(args, env, ctx);
             codegenDispatch(obj, mcv, mpv, dispatchIndices, ctx, out);
