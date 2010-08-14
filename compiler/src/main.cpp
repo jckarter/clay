@@ -250,8 +250,10 @@ static void usage()
     cerr << "  -pic              - generate position independent code\n";
     cerr << "  -abort            - abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run              - execute the program without writing to disk\n";
-#ifdef __APPLE__
+#if !(defined(_WIN32) || defined(_WIN64))
     cerr << "  -timing           - show timing information\n";
+#endif
+#ifdef __APPLE__
     cerr << "  -arch <arch>      - build for architecture <arch>\n";
     cerr << "  -F<dir>           - add <dir> to framework search path\n";
     cerr << "  -framework <name> - link with framework <name>\n";

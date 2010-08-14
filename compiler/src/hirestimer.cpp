@@ -33,11 +33,43 @@ unsigned long long HiResTimer::elapsedNanos()
     return elapsedTicks * timeBaseInfo.numer / timeBaseInfo.denom;
 }
 
-#else // __APPLE__
+#elif defined(_WIN32) || defined(_WIN64)
 
 HiResTimer::HiResTimer() {}
 void HiResTimer::start() {}
 void HiResTimer::stop() {}
 unsigned long long HiResTimer::elapsedNanos() { return 0; }
+
+#else // Unices
+
+#include <time.h>
+
+HiResTimer::HiResTimer()
+    : elapsedTicks(0), running(0), startTicks(0)
+{
+}
+
+void HiResTimer::start()
+{
+    if (++running == 1) {
+        struct timespec t;
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+        startTicks = (unsigned long long)t.tv_sec * 1000000000 + t.tv_nsec;
+    }
+}
+
+void HiResTimer::stop()
+{
+    if (--running == 0) {
+        struct timespec t;
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+        elapsedTicks = (unsigned long long)t.tv_sec * 1000000000 + t.tv_nsec - startTicks;
+    }
+}
+
+unsigned long long HiResTimer::elapsedNanos()
+{
+    return elapsedTicks;
+}
 
 #endif // __APPLE__
