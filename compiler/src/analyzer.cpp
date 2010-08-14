@@ -1227,8 +1227,8 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined)
-            return analyzeCallInlined(entry, args, env);
+        if (entry->macro)
+            return analyzeCallMacro(entry, args, env);
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
@@ -1358,8 +1358,8 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined)
-            error("call to inlined code is not allowed in this context");
+        if (entry->macro)
+            error("call to macro not allowed in this context");
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
@@ -1429,7 +1429,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
         error("no matching operation");
     if (entry->analyzed || entry->analyzing)
         return entry;
-    if (entry->inlined) {
+    if (entry->macro) {
         entry->code = clone(entry->origCode);
         return entry;
     }
@@ -1444,14 +1444,14 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 
 
 //
-// analyzeCallInlined
+// analyzeCallMacro
 //
 
-MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
-                                  const vector<ExprPtr> &args,
-                                  EnvPtr env)
+MultiPValuePtr analyzeCallMacro(InvokeEntryPtr entry,
+                                const vector<ExprPtr> &args,
+                                EnvPtr env)
 {
-    assert(entry->inlined);
+    assert(entry->macro);
 
     CodePtr code = entry->code;
     assert(code->body.ptr());
@@ -1889,8 +1889,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         if (!entry->analyzed)
             return NULL;
         TypePtr cpType = codePointerType(argsKey,
@@ -1944,8 +1944,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         InvokeStackContext invokeStackContext(callable, argsKey);
 
         InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         if (!entry->analyzed)
             return NULL;
         TypePtr returnType;

@@ -13,7 +13,7 @@ record Lambda[In,Out] {
 // main constructor
 
 [In, Out, T | CallableWithSignature?(T, In, Out)]
-inlined overload Lambda[In, Out](x:T) {
+macro overload Lambda[In, Out](x:T) {
     return Lambda[In,Out](new LambdaBody[In,Out](x));
 }
 
@@ -29,7 +29,7 @@ private CodePointerReturnTypes(static CodePointer[In,Out]) = Out;
 // redefine constructors shadowed by the primary constructor
 
 [In,Out]
-inlined overload Lambda[In,Out](body : SharedPointer[LambdaBody[In,Out]]) returned:Lambda[In,Out] {
+macro overload Lambda[In,Out](body : SharedPointer[LambdaBody[In,Out]]) returned:Lambda[In,Out] {
     returned.body <-- body;
 }
 
@@ -59,7 +59,7 @@ private record LambdaBody[In, Out] {
 }
 
 [...I, ...O, T]
-inlined overload LambdaBody[(...I),(...O)](x:T) returned:LambdaBody[(...I),(...O)] {
+macro overload LambdaBody[(...I),(...O)](x:T) returned:LambdaBody[(...I),(...O)] {
     var codePtr = makeCodePointer(call, T, ...I);
     var destructor = makeCodePointer(destroy, T);
     returned.code = CodePointer[(Opaque, ...I), (...O)](codePtr);

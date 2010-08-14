@@ -134,11 +134,11 @@ void codegenLowlevelCall(llvm::Value *llCallable,
                          vector<llvm::Value *>::iterator argBegin,
                          vector<llvm::Value *>::iterator argEnd,
                          CodegenContextPtr ctx);
-void codegenCallInlined(InvokeEntryPtr entry,
-                        const vector<ExprPtr> &args,
-                        EnvPtr env,
-                        CodegenContextPtr ctx,
-                        MultiCValuePtr out);
+void codegenCallMacro(InvokeEntryPtr entry,
+                      const vector<ExprPtr> &args,
+                      EnvPtr env,
+                      CodegenContextPtr ctx,
+                      MultiCValuePtr out);
 
 void codegenCodeBody(InvokeEntryPtr entry);
 
@@ -1630,8 +1630,8 @@ void codegenCallExpr(ExprPtr callable,
         computeArgsKey(mpv, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined) {
-            codegenCallInlined(entry, args, env, ctx, out);
+        if (entry->macro) {
+            codegenCallMacro(entry, args, env, ctx, out);
         }
         else {
             assert(entry->analyzed);
@@ -1838,8 +1838,8 @@ void codegenCallValue(CValuePtr callable,
         computeArgsKey(pvArgs, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined)
-            error("call to inlined code is not allowed in this context");
+        if (entry->macro)
+            error("call to macro not allowed in this context");
         assert(entry->analyzed);
         codegenCallCode(entry, args, ctx, out);
         break;
@@ -2022,7 +2022,7 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
 {
     InvokeEntryPtr entry =
         analyzeCallable(x, argsKey, argsTempness);
-    if (!entry->inlined) {
+    if (!entry->macro) {
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
     }
@@ -2403,16 +2403,16 @@ void codegenCWrapper(InvokeEntryPtr entry)
 
 
 //
-// codegenCallInlined
+// codegenCallMacro
 //
 
-void codegenCallInlined(InvokeEntryPtr entry,
-                        const vector<ExprPtr> &args,
-                        EnvPtr env,
-                        CodegenContextPtr ctx,
-                        MultiCValuePtr out)
+void codegenCallMacro(InvokeEntryPtr entry,
+                      const vector<ExprPtr> &args,
+                      EnvPtr env,
+                      CodegenContextPtr ctx,
+                      MultiCValuePtr out)
 {
-    assert(entry->inlined);
+    assert(entry->macro);
     if (entry->varArgName.ptr())
         assert(args.size() >= entry->fixedArgNames.size());
     else
@@ -2434,7 +2434,7 @@ void codegenCallInlined(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = analyzeCallInlined(entry, args, env);
+    MultiPValuePtr mpv = analyzeCallMacro(entry, args, env);
     assert(mpv->size() == out->size());
 
     vector<CReturn> returns;
@@ -3837,8 +3837,8 @@ void codegenPrimOp(PrimOpPtr x,
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
@@ -3908,8 +3908,8 @@ void codegenPrimOp(PrimOpPtr x,
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);

@@ -46,7 +46,7 @@ record ByRef[T] {}
 //
 
 [...T]
-inlined Type(...x:T) = ...T;
+macro Type(...x:T) = ...T;
 
 
 

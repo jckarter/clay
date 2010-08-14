@@ -28,7 +28,7 @@ unpackSequences(x:Tuple[...T]) = ref ...unpackTupleRef(x);
 // CapturedElementsType
 //
 
-inlined CapturedElementsType(packedSeq) =
+macro CapturedElementsType(packedSeq) =
     Type(captureValues(...dummyElements(...unpackTupleRef(packedSeq))));
 
 
