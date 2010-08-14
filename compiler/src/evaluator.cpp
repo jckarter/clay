@@ -2248,12 +2248,12 @@ TerminationPtr evalStatement(StatementPtr stmt,
     case STATIC_FOR : {
         StaticFor *x = (StaticFor *)stmt.ptr();
         MultiEValuePtr mev = evalForwardMultiAsRef(x->exprs, env);
+        initializeStaticForClones(x, mev->size());
         for (unsigned i = 0; i < mev->size(); ++i) {
             EnvPtr env2 = new Env(env);
             addLocal(env2, x->variable, mev->values[i].ptr());
-            StatementPtr body2 = clone(x->body);
             TerminationPtr termination =
-                evalStatement(body2, env2, ctx);
+                evalStatement(x->clonedBodies[i], env2, ctx);
             if (termination.ptr())
                 return termination;
         }

@@ -1124,11 +1124,15 @@ struct StaticFor : public Statement {
     IdentifierPtr variable;
     vector<ExprPtr> exprs;
     StatementPtr body;
+
+    bool clonesInitialized;
+    vector<StatementPtr> clonedBodies;
+
     StaticFor(IdentifierPtr variable,
               const vector<ExprPtr> &exprs,
               StatementPtr body)
         : Statement(STATIC_FOR), variable(variable), exprs(exprs),
-          body(body) {}
+          body(body), clonesInitialized(false) {}
 };
 
 
@@ -2522,6 +2526,7 @@ struct AnalysisContext : public Object {
 typedef Pointer<AnalysisContext> AnalysisContextPtr;
 
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
+void initializeStaticForClones(StaticForPtr x, unsigned count);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv);
 

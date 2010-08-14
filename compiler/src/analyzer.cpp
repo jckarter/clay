@@ -1668,12 +1668,12 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
         MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
         if (!mpv)
             return false;
+        initializeStaticForClones(x, mpv->size());
         bool result = true;
         for (unsigned i = 0; i < mpv->size(); ++i) {
             EnvPtr env2 = new Env(env);
             addLocal(env2, x->variable, mpv->values[i].ptr());
-            StatementPtr body2 = clone(x->body);
-            bool result2 = analyzeStatement(body2, env2, ctx);
+            bool result2 = analyzeStatement(x->clonedBodies[i], env2, ctx);
             result = result || result2;
         }
         return result;
@@ -1682,6 +1682,20 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
     default :
         assert(false);
         return false;
+    }
+}
+
+void initializeStaticForClones(StaticForPtr x, unsigned count)
+{
+    if (x->clonesInitialized) {
+        assert(count == x->clonedBodies.size());
+    }
+    else {
+        if (analysisCachingDisabled == 0)
+            x->clonesInitialized = true;
+        x->clonedBodies.clear();
+        for (unsigned i = 0; i < count; ++i)
+            x->clonedBodies.push_back(clone(x->body));
     }
 }
 
