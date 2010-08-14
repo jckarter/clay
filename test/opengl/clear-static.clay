@@ -1,5 +1,5 @@
 import glut.*;
-import opengl.*;
+import opengl.nolookup.*;
 
 render() {
     glClearColor(1.0f32, 1.0f32, 1.0f32, 1.0f32);

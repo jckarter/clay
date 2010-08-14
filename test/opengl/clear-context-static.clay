@@ -1,9 +1,11 @@
 import glut.*;
-import opengl.*;
+import opengl.nolookup.*;
+
+var gl = GLFunctions();
 
 render() {
-    glClearColor(1.0f32, 1.0f32, 1.0f32, 1.0f32);
-    glClear(GL_COLOR_BUFFER_BIT);
+    gl.ClearColor(1.0f32, 1.0f32, 1.0f32, 1.0f32);
+    gl.Clear(GL_COLOR_BUFFER_BIT);
     glutSwapBuffers();
 }
 
@@ -16,7 +18,7 @@ main() {
     glutCreateWindow(cstring("Hello World"));
     glutDisplayFunc(makeCCodePointer(render));
 
-    initGLFunctions();
+    initGLFunctions(gl);
 
     glutMainLoop();
 }
