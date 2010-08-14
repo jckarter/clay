@@ -35,14 +35,7 @@ overload staticIndex(a:Tuple[...T], static i) =
 unpackTuple(x) = ...unpackTupleRef(x);
 
 [...T]
-unpackTupleRef(x:Tuple[...T]) = ref ...unpackElements(x, static 0);
-
-[i]
-private unpackElements(a, static i) =
-    ref staticIndex(a, static i), ...unpackElements(a, static i+1);
-
-[T,i | i == TupleElementCount(T)]
-overload unpackElements(a:T, static i) = ;
+unpackTupleRef(x:Tuple[...T]) = ref ...tupleElements(x);
 
 
 

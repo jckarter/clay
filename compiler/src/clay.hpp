@@ -1757,6 +1757,7 @@ enum PrimOpCode {
     PRIM_Tuple,
     PRIM_TupleElementCount,
     PRIM_tupleRef,
+    PRIM_tupleElements,
 
     PRIM_Union,
     PRIM_UnionMemberCount,
@@ -1766,6 +1767,7 @@ enum PrimOpCode {
     PRIM_RecordFieldName,
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
+    PRIM_recordFields,
 
     PRIM_VariantP,
     PRIM_VariantMemberIndex,
@@ -1782,6 +1784,8 @@ enum PrimOpCode {
     PRIM_IdentifierSize,
     PRIM_IdentifierConcat,
     PRIM_IdentifierSlice,
+
+    PRIM_integerValues,
 };
 
 struct PrimOp : public Object {

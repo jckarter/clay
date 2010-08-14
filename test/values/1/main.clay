@@ -26,4 +26,6 @@ main() {
     println(countValues());
     println(countValues("one"));
     println(countValues("one", "two", "three", "four"));
+
+    println(...weaveValues(", ", ...integerValues(static 8)));
 }

@@ -3611,6 +3611,21 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_tupleElements : {
+        ensureArity(args, 1);
+        TupleTypePtr tt;
+        EValuePtr etuple = tupleValue(args, 0, tt);
+        assert(out->size() == tt->elementTypes.size());
+        const llvm::StructLayout *layout = tupleTypeLayout(tt.ptr());
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+            EValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(tt->elementTypes[i]));
+            char *ptr = etuple->addr + layout->getElementOffset(i);
+            *((void **)outi->addr) = (void *)ptr;
+        }
+        break;
+    }
+
     case PRIM_Union :
         error("Union type constructor cannot be called");
 
@@ -3693,6 +3708,22 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(fieldTypes[index]));
         *((void **)out0->addr) = (void *)ptr;
+        break;
+    }
+
+    case PRIM_recordFields : {
+        ensureArity(args, 1);
+        RecordTypePtr rt;
+        EValuePtr erec = recordValue(args, 0, rt);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        assert(out->size() == fieldTypes.size());
+        const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            EValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(fieldTypes[i]));
+            char *ptr = erec->addr + layout->getElementOffset(i);
+            *((void **)outi->addr) = (void *)ptr;
+        }
         break;
     }
 
@@ -3836,6 +3867,38 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argumentError(2, "ending index out of range");
         string result = ident->str.substr(begin, end-begin);
         evalStaticObject(new Identifier(result), out);
+        break;
+    }
+
+    case PRIM_integerValues : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        if (obj->objKind != VALUE_HOLDER)
+            argumentError(0, "expecting a static SizeT or Int value");
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = *((int *)vh->buf);
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            assert(out->size() == (size_t)count);
+            for (int i = 0; i < count; ++i) {
+                EValuePtr outi = out->values[i];
+                assert(outi->type == cIntType);
+                *((int *)outi->addr) = i;
+            }
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = *((size_t *)vh->buf);
+            assert(out->size() == count);
+            for (size_t i = 0; i < count; ++i) {
+                EValuePtr outi = out->values[i];
+                assert(outi->type == cSizeTType);
+                *((size_t *)outi->addr) = i;
+            }
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
         break;
     }
 
