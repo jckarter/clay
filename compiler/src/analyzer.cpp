@@ -495,17 +495,16 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        ExprListPtr args = new ExprList(x->expr);
-        args->add(new ObjectExpr(x->name.ptr()));
-        return analyzeCallExpr(prelude_expr_fieldRef(), args, env);
+        if (!x->desugared)
+            x->desugared = desugarFieldRef(x);
+        return analyzeExpr(x->desugared, env);
     }
 
     case STATIC_INDEXING : {
         StaticIndexing *x = (StaticIndexing *)expr.ptr();
-        ExprListPtr args = new ExprList(x->expr);
-        ValueHolderPtr vh = sizeTToValueHolder(x->index);
-        args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
-        return analyzeCallExpr(prelude_expr_staticIndex(), args, env);
+        if (!x->desugared)
+            x->desugared = desugarStaticIndexing(x);
+        return analyzeExpr(x->desugared, env);
     }
 
     case UNARY_OP : {

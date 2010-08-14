@@ -786,18 +786,17 @@ void codegenExpr(ExprPtr expr,
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        ExprListPtr args = new ExprList(x->expr);
-        args->add(new ObjectExpr(x->name.ptr()));
-        codegenCallExpr(prelude_expr_fieldRef(), args, env, ctx, out);
+        if (!x->desugared)
+            x->desugared = desugarFieldRef(x);
+        codegenExpr(x->desugared, env, ctx, out);
         break;
     }
 
     case STATIC_INDEXING : {
         StaticIndexing *x = (StaticIndexing *)expr.ptr();
-        ExprListPtr args = new ExprList(x->expr);
-        ValueHolderPtr vh = sizeTToValueHolder(x->index);
-        args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
-        codegenCallExpr(prelude_expr_staticIndex(), args, env, ctx, out);
+        if (!x->desugared)
+            x->desugared = desugarStaticIndexing(x);
+        codegenExpr(x->desugared, env, ctx, out);
         break;
     }
 

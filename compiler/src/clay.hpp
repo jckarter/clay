@@ -768,6 +768,7 @@ struct Call : public Expr {
 struct FieldRef : public Expr {
     ExprPtr expr;
     IdentifierPtr name;
+    ExprPtr desugared;
     FieldRef(ExprPtr expr, IdentifierPtr name)
         : Expr(FIELD_REF), expr(expr), name(name) {}
 };
@@ -775,6 +776,7 @@ struct FieldRef : public Expr {
 struct StaticIndexing : public Expr {
     ExprPtr expr;
     size_t index;
+    ExprPtr desugared;
     StaticIndexing(ExprPtr expr, size_t index)
         : Expr(STATIC_INDEXING), expr(expr), index(index) {}
 };
@@ -2195,6 +2197,8 @@ struct MultiStatic : public Object {
 //
 
 ExprPtr desugarCharLiteral(char c);
+ExprPtr desugarFieldRef(FieldRefPtr x);
+ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
 ExprPtr desugarNew(NewPtr x);
