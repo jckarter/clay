@@ -1646,7 +1646,6 @@ void clone(const vector<PatternVar> &x, vector<PatternVar> &out);
 void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out);
 ExprPtr clone(ExprPtr x);
 ExprPtr cloneOpt(ExprPtr x);
-void clone(const vector<ExprPtr> &x, vector<ExprPtr> &out);
 ExprListPtr clone(ExprListPtr x);
 void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out);
 FormalArgPtr clone(FormalArgPtr x);
