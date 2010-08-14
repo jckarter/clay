@@ -38,9 +38,8 @@ static void initializePatterns(OverloadPtr x)
     if (code->formalVarArg.ptr() && code->formalVarArg->type.ptr()) {
         ExprPtr unpack = new Unpack(code->formalVarArg->type.ptr());
         unpack->location = code->formalVarArg->type->location;
-        vector<ExprPtr> exprs;
-        exprs.push_back(unpack);
-        x->varArgPattern = evaluateMultiPattern(exprs, x->patternEnv);
+        x->varArgPattern = evaluateMultiPattern(new ExprList(unpack),
+                                                x->patternEnv);
     }
 }
 
@@ -136,7 +135,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             return new MatchPredicateError();
     }
 
-    MatchSuccessPtr result = new MatchSuccess(overload->inlined,
+    MatchSuccessPtr result = new MatchSuccess(overload->macro,
                                               code, staticEnv,
                                               callable, argsKey);
     for (unsigned i = 0; i < formalArgs.size(); ++i) {

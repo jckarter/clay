@@ -18,17 +18,27 @@ void cgPopStack(int marker);
 void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx);
 CValuePtr codegenAllocValue(TypePtr t);
 
-MultiCValuePtr codegenMultiArgsAsRef(const vector<ExprPtr> &exprs,
+MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
                                      EnvPtr env,
                                      CodegenContextPtr ctx);
 MultiCValuePtr codegenArgExprAsRef(ExprPtr x,
                                    EnvPtr env,
                                    CodegenContextPtr ctx);
 
+CValuePtr codegenForwardOneAsRef(ExprPtr expr,
+                                 EnvPtr env,
+                                 CodegenContextPtr ctx);
+MultiCValuePtr codegenForwardMultiAsRef(ExprListPtr exprs,
+                                        EnvPtr env,
+                                        CodegenContextPtr ctx);
+MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
+                                       EnvPtr env,
+                                       CodegenContextPtr ctx);
+
 CValuePtr codegenOneAsRef(ExprPtr expr,
                           EnvPtr env,
                           CodegenContextPtr ctx);
-MultiCValuePtr codegenMultiAsRef(const vector<ExprPtr> &exprs,
+MultiCValuePtr codegenMultiAsRef(ExprListPtr exprs,
                                  EnvPtr env,
                                  CodegenContextPtr ctx);
 MultiCValuePtr codegenExprAsRef(ExprPtr expr,
@@ -39,7 +49,7 @@ void codegenOneInto(ExprPtr expr,
                     EnvPtr env,
                     CodegenContextPtr ctx,
                     CValuePtr out);
-void codegenMultiInto(const vector<ExprPtr> &exprs,
+void codegenMultiInto(ExprListPtr exprs,
                       EnvPtr env,
                       CodegenContextPtr ctx,
                       MultiCValuePtr out);
@@ -48,7 +58,7 @@ void codegenExprInto(ExprPtr expr,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out);
 
-void codegenMulti(const vector<ExprPtr> &exprs,
+void codegenMulti(ExprListPtr exprs,
                   EnvPtr env,
                   CodegenContextPtr ctx,
                   MultiCValuePtr out);
@@ -78,12 +88,12 @@ void codegenCompileTimeValue(EValuePtr ev,
 llvm::Value *codegenSimpleConstant(EValuePtr ev);
 
 void codegenIndexingExpr(ExprPtr indexable,
-                         const vector<ExprPtr> &args,
+                         ExprListPtr args,
                          EnvPtr env,
                          CodegenContextPtr ctx,
                          MultiCValuePtr out);
 void codegenAliasIndexing(GlobalAliasPtr x,
-                          const vector<ExprPtr> &args,
+                          ExprListPtr args,
                           EnvPtr env,
                           CodegenContextPtr ctx,
                           MultiCValuePtr out);
@@ -93,7 +103,7 @@ void codegenFieldRefExpr(ExprPtr base,
                          CodegenContextPtr ctx,
                          MultiCValuePtr out);
 void codegenCallExpr(ExprPtr callable,
-                     const vector<ExprPtr> &args,
+                     ExprListPtr args,
                      EnvPtr env,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out);
@@ -124,11 +134,11 @@ void codegenLowlevelCall(llvm::Value *llCallable,
                          vector<llvm::Value *>::iterator argBegin,
                          vector<llvm::Value *>::iterator argEnd,
                          CodegenContextPtr ctx);
-void codegenCallInlined(InvokeEntryPtr entry,
-                        const vector<ExprPtr> &args,
-                        EnvPtr env,
-                        CodegenContextPtr ctx,
-                        MultiCValuePtr out);
+void codegenCallMacro(InvokeEntryPtr entry,
+                      ExprListPtr args,
+                      EnvPtr env,
+                      CodegenContextPtr ctx,
+                      MultiCValuePtr out);
 
 void codegenCodeBody(InvokeEntryPtr entry);
 
@@ -332,13 +342,13 @@ CValuePtr codegenAllocValue(TypePtr t)
 // codegenMultiArgsAsRef, codegenArgExprAsRef
 //
 
-MultiCValuePtr codegenMultiArgsAsRef(const vector<ExprPtr> &exprs,
+MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
                                      EnvPtr env,
                                      CodegenContextPtr ctx)
 {
     MultiCValuePtr out = new MultiCValue();
-    for (unsigned i = 0; i < exprs.size(); ++i) {
-        ExprPtr x = exprs[i];
+    for (unsigned i = 0; i < exprs->size(); ++i) {
+        ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiCValuePtr mcv = codegenArgExprAsRef(y->expr, env, ctx);
@@ -366,6 +376,77 @@ MultiCValuePtr codegenArgExprAsRef(ExprPtr x,
 
 
 //
+// codegenForwardOneAsRef, codegenForwardMultiAsRef, codegenForwardExprAsRef
+//
+
+CValuePtr codegenForwardOneAsRef(ExprPtr expr,
+                                 EnvPtr env,
+                                 CodegenContextPtr ctx)
+{
+    MultiCValuePtr mcv = codegenForwardExprAsRef(expr, env, ctx);
+    LocationContext loc(expr->location);
+    ensureArity(mcv, 1);
+    return mcv->values[0];
+}
+
+MultiCValuePtr codegenForwardMultiAsRef(ExprListPtr exprs,
+                                        EnvPtr env,
+                                        CodegenContextPtr ctx)
+{
+    MultiCValuePtr out = new MultiCValue();
+    for (unsigned i = 0; i < exprs->size(); ++i) {
+        ExprPtr x = exprs->exprs[i];
+        if (x->exprKind == UNPACK) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiCValuePtr mcv = codegenForwardExprAsRef(y->expr, env, ctx);
+            out->add(mcv);
+        }
+        else {
+            CValuePtr cv = codegenForwardOneAsRef(x, env, ctx);
+            out->add(cv);
+        }
+    }
+    return out;
+}
+
+MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
+                                       EnvPtr env,
+                                       CodegenContextPtr ctx)
+{
+    MultiPValuePtr mpv = analyzeExpr(expr, env);
+    assert(mpv.ptr());
+    MultiCValuePtr mcv = new MultiCValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        PValuePtr pv = mpv->values[i];
+        if (pv->isTemp) {
+            CValuePtr cv = codegenAllocValue(pv->type);
+            mcv->add(cv);
+        }
+        else {
+            CValuePtr cvPtr = codegenAllocValue(pointerType(pv->type));
+            mcv->add(cvPtr);
+        }
+    }
+    codegenExpr(expr, env, ctx, mcv);
+    MultiCValuePtr out = new MultiCValue();
+    for (unsigned i = 0; i < mpv->size(); ++i) {
+        if (mpv->values[i]->isTemp) {
+            CValuePtr cv = mcv->values[i];
+            cgPushStack(cv);
+            CValuePtr cv2 = new CValue(cv->type, cv->llValue);
+            cv2->forwardedRValue = true;
+            out->add(cv2);
+        }
+        else {
+            out->add(derefValue(mcv->values[i]));
+        }
+    }
+    return out;
+}
+
+
+
+//
 // codegenOneAsRef, codegenMultiAsRef, codegenExprAsRef
 //
 
@@ -379,21 +460,21 @@ CValuePtr codegenOneAsRef(ExprPtr expr,
     return mcv->values[0];
 }
 
-MultiCValuePtr codegenMultiAsRef(const vector<ExprPtr> &exprs,
+MultiCValuePtr codegenMultiAsRef(ExprListPtr exprs,
                                  EnvPtr env,
                                  CodegenContextPtr ctx)
 {
     MultiCValuePtr out = new MultiCValue();
-    for (unsigned i = 0; i < exprs.size(); ++i) {
-        ExprPtr x = exprs[i];
+    for (unsigned i = 0; i < exprs->size(); ++i) {
+        ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiCValuePtr mcv = codegenExprAsRef(y->expr, env, ctx);
             out->add(mcv);
         }
         else {
-            MultiCValuePtr mcv = codegenExprAsRef(x, env, ctx);
-            out->add(mcv);
+            CValuePtr cv = codegenOneAsRef(x, env, ctx);
+            out->add(cv);
         }
     }
     return out;
@@ -456,7 +537,7 @@ void codegenOneInto(ExprPtr expr,
     cgDestroyAndPopStack(marker, ctx);
 }
 
-void codegenMultiInto(const vector<ExprPtr> &exprs,
+void codegenMultiInto(ExprListPtr exprs,
                       EnvPtr env,
                       CodegenContextPtr ctx,
                       MultiCValuePtr out)
@@ -464,9 +545,9 @@ void codegenMultiInto(const vector<ExprPtr> &exprs,
     int marker = cgMarkStack();
     int marker2 = marker;
     unsigned j = 0;
-    for (unsigned i = 0; i < exprs.size(); ++i) {
+    for (unsigned i = 0; i < exprs->size(); ++i) {
         unsigned prevJ = j;
-        ExprPtr x = exprs[i];
+        ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiPValuePtr mpv = analyzeExpr(y->expr, env);
@@ -534,7 +615,7 @@ void codegenExprInto(ExprPtr expr,
 // codegenMulti, codegenOne, codegenExpr
 //
 
-void codegenMulti(const vector<ExprPtr> &exprs,
+void codegenMulti(ExprListPtr exprs,
                   EnvPtr env,
                   CodegenContextPtr ctx,
                   MultiCValuePtr out)
@@ -542,9 +623,9 @@ void codegenMulti(const vector<ExprPtr> &exprs,
     int marker = cgMarkStack();
     int marker2 = marker;
     unsigned j = 0;
-    for (unsigned i = 0; i < exprs.size(); ++i) {
+    for (unsigned i = 0; i < exprs->size(); ++i) {
         unsigned prevJ = j;
-        ExprPtr x = exprs[i];
+        ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiPValuePtr mpv = analyzeExpr(y->expr, env);
@@ -660,9 +741,9 @@ void codegenExpr(ExprPtr expr,
             ExprPtr z = (Expr *)y.ptr();
             codegenExpr(z, env, ctx, out);
         }
-        else if (y->objKind == MULTI_EXPR) {
-            MultiExprPtr z = (MultiExpr *)y.ptr();
-            codegenMulti(z->values, env, ctx, out);
+        else if (y->objKind == EXPR_LIST) {
+            ExprListPtr z = (ExprList *)y.ptr();
+            codegenMulti(z, env, ctx, out);
         }
         else {
             codegenStaticObject(y, ctx, out);
@@ -672,10 +753,10 @@ void codegenExpr(ExprPtr expr,
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args.size() == 1) &&
-            (x->args[0]->exprKind != UNPACK))
+        if ((x->args->size() == 1) &&
+            (x->args->exprs[0]->exprKind != UNPACK))
         {
-            codegenExpr(x->args[0], env, ctx, out);
+            codegenExpr(x->args->exprs[0], env, ctx, out);
         }
         else {
             ExprPtr tupleLiteral = prelude_expr_tupleLiteral();
@@ -710,10 +791,9 @@ void codegenExpr(ExprPtr expr,
 
     case STATIC_INDEXING : {
         StaticIndexing *x = (StaticIndexing *)expr.ptr();
-        vector<ExprPtr> args;
-        args.push_back(x->expr);
+        ExprListPtr args = new ExprList(x->expr);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
-        args.push_back(new StaticExpr(new ObjectExpr(vh.ptr())));
+        args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
         codegenCallExpr(prelude_expr_staticIndex(), args, env, ctx, out);
         break;
     }
@@ -1376,7 +1456,7 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
 //
 
 void codegenIndexingExpr(ExprPtr indexable,
-                         const vector<ExprPtr> &args,
+                         ExprListPtr args,
                          EnvPtr env,
                          CodegenContextPtr ctx,
                          MultiCValuePtr out)
@@ -1410,9 +1490,8 @@ void codegenIndexingExpr(ExprPtr indexable,
             return;
         }
     }
-    vector<ExprPtr> args2;
-    args2.push_back(indexable);
-    args2.insert(args2.end(), args.begin(), args.end());
+    ExprListPtr args2 = new ExprList(indexable);
+    args2->add(args);
     codegenCallExpr(prelude_expr_index(), args2, env, ctx, out);
 }
 
@@ -1423,7 +1502,7 @@ void codegenIndexingExpr(ExprPtr indexable,
 //
 
 void codegenAliasIndexing(GlobalAliasPtr x,
-                          const vector<ExprPtr> &args,
+                          ExprListPtr args,
                           EnvPtr env,
                           CodegenContextPtr ctx,
                           MultiCValuePtr out)
@@ -1476,9 +1555,8 @@ void codegenFieldRefExpr(ExprPtr base,
         if (obj->objKind != VALUE_HOLDER)
             error("invalid field access");
     }
-    vector<ExprPtr> args2;
-    args2.push_back(base);
-    args2.push_back(new ObjectExpr(name.ptr()));
+    ExprListPtr args2 = new ExprList(base);
+    args2->add(new ObjectExpr(name.ptr()));
     codegenCallExpr(prelude_expr_fieldRef(), args2, env, ctx, out);
 }
 
@@ -1489,7 +1567,7 @@ void codegenFieldRefExpr(ExprPtr base,
 //
 
 void codegenCallExpr(ExprPtr callable,
-                     const vector<ExprPtr> &args,
+                     ExprListPtr args,
                      EnvPtr env,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out)
@@ -1508,9 +1586,8 @@ void codegenCallExpr(ExprPtr callable,
     }
 
     if (pv->type->typeKind != STATIC_TYPE) {
-        vector<ExprPtr> args2;
-        args2.push_back(callable);
-        args2.insert(args2.end(), args.begin(), args.end());
+        ExprListPtr args2 = new ExprList(callable);
+        args2->add(args);
         codegenCallExpr(prelude_expr_call(), args2, env, ctx, out);
         return;
     }
@@ -1549,8 +1626,8 @@ void codegenCallExpr(ExprPtr callable,
         computeArgsKey(mpv, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined) {
-            codegenCallInlined(entry, args, env, ctx, out);
+        if (entry->macro) {
+            codegenCallMacro(entry, args, env, ctx, out);
         }
         else {
             assert(entry->analyzed);
@@ -1757,8 +1834,8 @@ void codegenCallValue(CValuePtr callable,
         computeArgsKey(pvArgs, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined)
-            error("call to inlined code is not allowed in this context");
+        if (entry->macro)
+            error("call to macro not allowed in this context");
         assert(entry->analyzed);
         codegenCallCode(entry, args, ctx, out);
         break;
@@ -1941,7 +2018,7 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
 {
     InvokeEntryPtr entry =
         analyzeCallable(x, argsKey, argsTempness);
-    if (!entry->inlined) {
+    if (!entry->macro) {
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
     }
@@ -2322,38 +2399,38 @@ void codegenCWrapper(InvokeEntryPtr entry)
 
 
 //
-// codegenCallInlined
+// codegenCallMacro
 //
 
-void codegenCallInlined(InvokeEntryPtr entry,
-                        const vector<ExprPtr> &args,
-                        EnvPtr env,
-                        CodegenContextPtr ctx,
-                        MultiCValuePtr out)
+void codegenCallMacro(InvokeEntryPtr entry,
+                      ExprListPtr args,
+                      EnvPtr env,
+                      CodegenContextPtr ctx,
+                      MultiCValuePtr out)
 {
-    assert(entry->inlined);
+    assert(entry->macro);
     if (entry->varArgName.ptr())
-        assert(args.size() >= entry->fixedArgNames.size());
+        assert(args->size() >= entry->fixedArgNames.size());
     else
-        assert(args.size() == entry->fixedArgNames.size());
+        assert(args->size() == entry->fixedArgNames.size());
 
     EnvPtr bodyEnv = new Env(entry->env);
 
     for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
-        ExprPtr expr = foreignExpr(env, args[i]);
+        ExprPtr expr = foreignExpr(env, args->exprs[i]);
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
 
     if (entry->varArgName.ptr()) {
-        MultiExprPtr varArgs = new MultiExpr();
-        for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
-            ExprPtr expr = foreignExpr(env, args[i]);
+        ExprListPtr varArgs = new ExprList();
+        for (unsigned i = entry->fixedArgNames.size(); i < args->size(); ++i) {
+            ExprPtr expr = foreignExpr(env, args->exprs[i]);
             varArgs->add(expr);
         }
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = analyzeCallInlined(entry, args, env);
+    MultiPValuePtr mpv = analyzeCallMacro(entry, args, env);
     assert(mpv->size() == out->size());
 
     vector<CReturn> returns;
@@ -2531,9 +2608,9 @@ bool codegenStatement(StatementPtr stmt,
         PValuePtr pvLeft = analyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(updateOperatorExpr(x->op));
-        call->args.push_back(x->left);
-        call->args.push_back(x->right);
+        CallPtr call = new Call(updateOperatorExpr(x->op), new ExprList());
+        call->args->add(x->left);
+        call->args->add(x->right);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 
@@ -2551,7 +2628,7 @@ bool codegenStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         MultiCValuePtr mcv = new MultiCValue();
         ensureArity(mpv, ctx->returns.size());
         for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -2568,10 +2645,10 @@ bool codegenStatement(StatementPtr stmt,
         }
         switch (x->returnKind) {
         case RETURN_VALUE :
-            codegenMultiInto(x->exprs, env, ctx, mcv);
+            codegenMultiInto(x->values, env, ctx, mcv);
             break;
         case RETURN_REF : {
-            MultiCValuePtr mcvRef = codegenMultiAsRef(x->exprs, env, ctx);
+            MultiCValuePtr mcvRef = codegenMultiAsRef(x->values, env, ctx);
             assert(mcv->size() == mcvRef->size());
             for (unsigned i = 0; i < mcv->size(); ++i) {
                 CValuePtr cvPtr = mcv->values[i];
@@ -2581,7 +2658,7 @@ bool codegenStatement(StatementPtr stmt,
             break;
         }
         case RETURN_FORWARD :
-            codegenMulti(x->exprs, env, ctx, mcv);
+            codegenMulti(x->values, env, ctx, mcv);
             break;
         default :
             assert(false);
@@ -2737,9 +2814,27 @@ bool codegenStatement(StatementPtr stmt,
         if (!x->expr)
             error("throw statements need an argument");
         ExprPtr callable = prelude_expr_throwValue();
-        vector<ExprPtr> args(1, x->expr);
+        ExprListPtr args = new ExprList(x->expr);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
         return false;
+    }
+
+    case STATIC_FOR : {
+        StaticFor *x = (StaticFor *)stmt.ptr();
+        MultiCValuePtr mcv = codegenForwardMultiAsRef(x->values, env, ctx);
+        initializeStaticForClones(x, mcv->size());
+        bool terminated = false;
+        for (unsigned i = 0; i < mcv->size(); ++i) {
+            if (terminated) {
+                ostringstream ostr;
+                ostr << "unreachable code in iteration " << (i+1);
+                error(ostr.str());
+            }
+            EnvPtr env2 = new Env(env);
+            addLocal(env2, x->variable, mcv->values[i].ptr());
+            terminated = codegenStatement(x->clonedBodies[i], env2, ctx);
+        }
+        return terminated;
     }
 
     default :
@@ -2793,7 +2888,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
@@ -2802,7 +2897,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             mcv->add(cv);
         }
         int marker = cgMarkStack();
-        codegenMultiInto(x->exprs, env, ctx, mcv);
+        codegenMultiInto(x->values, env, ctx, mcv);
         cgDestroyAndPopStack(marker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
@@ -2813,7 +2908,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     }
 
     case REF : {
-        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         assert(mpv.ptr());
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
@@ -2830,7 +2925,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             }
         }
         int marker = cgMarkStack();
-        codegenMulti(x->exprs, env, ctx, mcv);
+        codegenMulti(x->values, env, ctx, mcv);
         cgDestroyAndPopStack(marker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
@@ -2849,9 +2944,9 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
 
     case ALIAS : {
         ensureArity(x->names, 1);
-        ensureArity(x->exprs, 1);
+        ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);
-        ExprPtr y = foreignExpr(env, x->exprs[0]);
+        ExprPtr y = foreignExpr(env, x->values->exprs[0]);
         addLocal(env2, x->names[0], y.ptr());
         return env2;
     }
@@ -3738,8 +3833,8 @@ void codegenPrimOp(PrimOpPtr x,
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
@@ -3809,8 +3904,8 @@ void codegenPrimOp(PrimOpPtr x,
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
@@ -3906,6 +4001,20 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_tupleElements : {
+        ensureArity(args, 1);
+        TupleTypePtr tt;
+        llvm::Value *vtuple = tupleValue(args, 0, tt);
+        assert(out->size() == tt->elementTypes.size());
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+            CValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(tt->elementTypes[i]));
+            llvm::Value *ptr = llvmBuilder->CreateConstGEP2_32(vtuple, 0, i);
+            llvmBuilder->CreateStore(ptr, outi->llValue);
+        }
+        break;
+    }
+
     case PRIM_Union :
         error("Union type constructor cannot be called");
 
@@ -3987,6 +4096,21 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_recordFields : {
+        ensureArity(args, 1);
+        RecordTypePtr rt;
+        llvm::Value *vrec = recordValue(args, 0, rt);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        assert(out->size() == fieldTypes.size());
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
+            CValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(fieldTypes[i]));
+            llvm::Value *ptr = llvmBuilder->CreateConstGEP2_32(vrec, 0, i);
+            llvmBuilder->CreateStore(ptr, outi->llValue);
+        }
+        break;
+    }
+
     case PRIM_VariantP : {
         ensureArity(args, 1);
         bool isVariantType = false;
@@ -4050,6 +4174,38 @@ void codegenPrimOp(PrimOpPtr x,
         printName(sout, obj);
         ExprPtr z = new StringLiteral(sout.str());
         codegenExpr(z, new Env(), ctx, out);
+        break;
+    }
+
+    case PRIM_staticIntegers : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        if (obj->objKind != VALUE_HOLDER)
+            argumentError(0, "expecting a static SizeT or Int value");
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = *((int *)vh->buf);
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            assert(out->size() == (size_t)count);
+            for (int i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = intToValueHolder(i);
+                CValuePtr outi = out->values[i];
+                assert(outi->type == staticType(vhi.ptr()));
+            }
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = *((size_t *)vh->buf);
+            assert(out->size() == count);
+            for (size_t i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = sizeTToValueHolder(i);
+                CValuePtr outi = out->values[i];
+                assert(outi->type == staticType(vhi.ptr()));
+            }
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
         break;
     }
 
@@ -4253,17 +4409,18 @@ void codegenExe(ModulePtr module)
 
     BlockPtr mainBody = new Block();
 
-    CallPtr initCmdLine = new Call(prelude_expr_setArgcArgv());
-    initCmdLine->args.push_back(new NameRef(argc));
-    initCmdLine->args.push_back(new NameRef(argv));
+    ExprListPtr args;
+
+    args = new ExprList();
+    args->add(new NameRef(argc));
+    args->add(new NameRef(argv));
+    CallPtr initCmdLine = new Call(prelude_expr_setArgcArgv(), args);
     mainBody->statements.push_back(new ExprStatement(initCmdLine.ptr()));
 
-    CallPtr mainCall = new Call(prelude_expr_callMain());
-    mainCall->args.push_back(new NameRef(main));
+    args = new ExprList(new NameRef(main));
+    CallPtr mainCall = new Call(prelude_expr_callMain(), args);
 
-    vector<ExprPtr> exprs;
-    exprs.push_back(mainCall.ptr());
-    ReturnPtr ret = new Return(RETURN_VALUE, exprs);
+    ReturnPtr ret = new Return(RETURN_VALUE, new ExprList(mainCall.ptr()));
     mainBody->statements.push_back(ret.ptr());
 
     vector<ExternalArgPtr> mainArgs;
@@ -4280,7 +4437,7 @@ void codegenExe(ModulePtr module)
                               false,
                               new ObjectExpr(cIntType.ptr()),
                               mainBody.ptr(),
-                              vector<ExprPtr>());
+                              new ExprList());
 
     entryProc->env = module->env;
 

@@ -263,11 +263,11 @@ static PValuePtr staticPValue(ObjectPtr x)
 // analyzeMulti
 //
 
-MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env)
+MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env)
 {
     MultiPValuePtr out = new MultiPValue();
-    for (unsigned i = 0; i < exprs.size(); ++i) {
-        ExprPtr x = exprs[i];
+    for (unsigned i = 0; i < exprs->size(); ++i) {
+        ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiPValuePtr z = analyzeExpr(y->expr, env);
@@ -307,13 +307,13 @@ PValuePtr analyzeOne(ExprPtr expr, EnvPtr env)
 // analyzeMultiArgs, analyzeOneArg, analyzeArgExpr
 //
 
-MultiPValuePtr analyzeMultiArgs(const vector<ExprPtr> &exprs,
+MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
                                 EnvPtr env,
                                 vector<bool> &dispatchFlags)
 {
     MultiPValuePtr out = new MultiPValue();
-    for (unsigned i = 0; i < exprs.size(); ++i) {
-        ExprPtr x = exprs[i];
+    for (unsigned i = 0; i < exprs->size(); ++i) {
+        ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiPValuePtr z = analyzeArgExpr(y->expr, env, dispatchFlags);
@@ -434,21 +434,23 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
             ExprPtr z = (Expr *)y.ptr();
             return analyzeExpr(z, env);
         }
-        else if (y->objKind == MULTI_EXPR) {
-            MultiExprPtr z = (MultiExpr *)y.ptr();
-            return analyzeMulti(z->values, env);
+        else if (y->objKind == EXPR_LIST) {
+            ExprListPtr z = (ExprList *)y.ptr();
+            return analyzeMulti(z, env);
         }
         return analyzeStaticObject(y);
     }
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args.size() == 1) &&
-            (x->args[0]->exprKind != UNPACK))
+        if ((x->args->size() == 1) &&
+            (x->args->exprs[0]->exprKind != UNPACK))
         {
-            return analyzeExpr(x->args[0], env);
+            return analyzeExpr(x->args->exprs[0], env);
         }
-        return analyzeCallExpr(prelude_expr_tupleLiteral(), x->args, env);
+        return analyzeCallExpr(prelude_expr_tupleLiteral(),
+                               x->args,
+                               env);
     }
 
     case ARRAY : {
@@ -473,10 +475,9 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case STATIC_INDEXING : {
         StaticIndexing *x = (StaticIndexing *)expr.ptr();
-        vector<ExprPtr> args;
-        args.push_back(x->expr);
+        ExprListPtr args = new ExprList(x->expr);
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
-        args.push_back(new StaticExpr(new ObjectExpr(vh.ptr())));
+        args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
         return analyzeCallExpr(prelude_expr_staticIndex(), args, env);
     }
 
@@ -760,8 +761,8 @@ void verifyAttributes(ExternalProcedurePtr x)
     x->attrDLLExport = false;
     int callingConv = -1;
     x->attrAsmLabel = "";
-    for (unsigned i = 0; i < x->attributes.size(); ++i) {
-        ExprPtr expr = x->attributes[i];
+    for (unsigned i = 0; i < x->attributes->size(); ++i) {
+        ExprPtr expr = x->attributes->exprs[i];
         if (expr->exprKind == STRING_LITERAL) {
             StringLiteral *y = (StringLiteral *)expr.ptr();
             x->attrAsmLabel = y->value;
@@ -818,8 +819,8 @@ void verifyAttributes(ExternalVariablePtr x)
     x->attributesVerified = true;
     x->attrDLLImport = false;
     x->attrDLLExport = false;
-    for (unsigned i = 0; i < x->attributes.size(); ++i) {
-        ExprPtr expr = x->attributes[i];
+    for (unsigned i = 0; i < x->attributes->size(); ++i) {
+        ExprPtr expr = x->attributes->exprs[i];
         ObjectPtr obj = evaluateOneStatic(expr, x->env);
         if (obj->objKind != PRIM_OP)
             error(expr, "invalid external attribute");
@@ -881,7 +882,7 @@ static bool isTypeConstructor(ObjectPtr x) {
 }
 
 MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
-                                   const vector<ExprPtr> &args,
+                                   ExprListPtr args,
                                    EnvPtr env)
 {
     PValuePtr pv = analyzeOne(indexable, env);
@@ -901,9 +902,8 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
         if (obj->objKind != VALUE_HOLDER)
             error("invalid indexing operation");
     }
-    vector<ExprPtr> args2;
-    args2.push_back(indexable);
-    args2.insert(args2.end(), args.begin(), args.end());
+    ExprListPtr args2 = new ExprList(indexable);
+    args2->add(args);
     return analyzeCallExpr(prelude_expr_index(), args2, env);
 }
 
@@ -1081,7 +1081,7 @@ PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args)
 //
 
 MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
-                                    const vector<ExprPtr> &args,
+                                    ExprListPtr args,
                                     EnvPtr env)
 {
     assert(x->hasParams());
@@ -1130,9 +1130,8 @@ MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
         if (obj->objKind != VALUE_HOLDER)
             error("invalid field access");
     }
-    vector<ExprPtr> args;
-    args.push_back(base);
-    args.push_back(new ObjectExpr(name.ptr()));
+    ExprListPtr args = new ExprList(base);
+    args->add(new ObjectExpr(name.ptr()));
     return analyzeCallExpr(prelude_expr_fieldRef(), args, env);
 }
 
@@ -1172,7 +1171,7 @@ MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
 //
 
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
-                               const vector<ExprPtr> &args,
+                               ExprListPtr args,
                                EnvPtr env)
 {
     PValuePtr pv = analyzeOne(callable, env);
@@ -1189,9 +1188,8 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
     }
     ObjectPtr obj = unwrapStaticType(pv->type);
     if (!obj) {
-        vector<ExprPtr> args2;
-        args2.push_back(callable);
-        args2.insert(args2.end(), args.begin(), args.end());
+        ExprListPtr args2 = new ExprList(callable);
+        args2->add(args);
         return analyzeCallExpr(prelude_expr_call(), args2, env);
     }
 
@@ -1227,8 +1225,8 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined)
-            return analyzeCallInlined(entry, args, env);
+        if (entry->macro)
+            return analyzeCallMacro(entry, args, env);
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
@@ -1358,8 +1356,8 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->inlined)
-            error("call to inlined code is not allowed in this context");
+        if (entry->macro)
+            error("call to macro not allowed in this context");
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
@@ -1429,7 +1427,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
         error("no matching operation");
     if (entry->analyzed || entry->analyzing)
         return entry;
-    if (entry->inlined) {
+    if (entry->macro) {
         entry->code = clone(entry->origCode);
         return entry;
     }
@@ -1444,14 +1442,14 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 
 
 //
-// analyzeCallInlined
+// analyzeCallMacro
 //
 
-MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
-                                  const vector<ExprPtr> &args,
-                                  EnvPtr env)
+MultiPValuePtr analyzeCallMacro(InvokeEntryPtr entry,
+                                ExprListPtr args,
+                                EnvPtr env)
 {
-    assert(entry->inlined);
+    assert(entry->macro);
 
     CodePtr code = entry->code;
     assert(code->body.ptr());
@@ -1465,21 +1463,21 @@ MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
     }
 
     if (entry->varArgName.ptr())
-        assert(args.size() >= entry->fixedArgNames.size());
+        assert(args->size() >= entry->fixedArgNames.size());
     else
-        assert(args.size() == entry->fixedArgNames.size());
+        assert(args->size() == entry->fixedArgNames.size());
 
     EnvPtr bodyEnv = new Env(entry->env);
 
     for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
-        ExprPtr expr = foreignExpr(env, args[i]);
+        ExprPtr expr = foreignExpr(env, args->exprs[i]);
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
 
     if (entry->varArgName.ptr()) {
-        MultiExprPtr varArgs = new MultiExpr();
-        for (unsigned i = entry->fixedArgNames.size(); i < args.size(); ++i) {
-            ExprPtr expr = foreignExpr(env, args[i]);
+        ExprListPtr varArgs = new ExprList();
+        for (unsigned i = entry->fixedArgNames.size(); i < args->size(); ++i) {
+            ExprPtr expr = foreignExpr(env, args->exprs[i]);
             varArgs->add(expr);
         }
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
@@ -1584,9 +1582,9 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->exprs, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
         if (!mpv) 
-            return NULL;
+            return false;
         if (ctx->returnInitialized) {
             ensureArity(mpv, ctx->returnTypes.size());
             for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -1663,9 +1661,39 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
     case THROW :
         return true;
 
+    case STATIC_FOR : {
+        StaticFor *x = (StaticFor *)stmt.ptr();
+        MultiPValuePtr mpv = analyzeMulti(x->values, env);
+        if (!mpv)
+            return false;
+        initializeStaticForClones(x, mpv->size());
+        bool result = true;
+        for (unsigned i = 0; i < mpv->size(); ++i) {
+            EnvPtr env2 = new Env(env);
+            addLocal(env2, x->variable, mpv->values[i].ptr());
+            bool result2 = analyzeStatement(x->clonedBodies[i], env2, ctx);
+            result = result || result2;
+        }
+        return result;
+    }
+
     default :
         assert(false);
         return false;
+    }
+}
+
+void initializeStaticForClones(StaticForPtr x, unsigned count)
+{
+    if (x->clonesInitialized) {
+        assert(count == x->clonedBodies.size());
+    }
+    else {
+        if (analysisCachingDisabled == 0)
+            x->clonesInitialized = true;
+        x->clonedBodies.clear();
+        for (unsigned i = 0; i < count; ++i)
+            x->clonedBodies.push_back(clone(x->body));
     }
 }
 
@@ -1677,7 +1705,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
     case VAR :
     case REF : {
-        MultiPValuePtr right = analyzeMulti(x->exprs, env);
+        MultiPValuePtr right = analyzeMulti(x->values, env);
         if (!right)
             return NULL;
         if (right->size() != x->names.size())
@@ -1692,9 +1720,9 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
     case ALIAS : {
         ensureArity(x->names, 1);
-        ensureArity(x->exprs, 1);
+        ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);
-        ExprPtr y = foreignExpr(env, x->exprs[0]);
+        ExprPtr y = foreignExpr(env, x->values->exprs[0]);
         addLocal(env2, x->names[0], y.ptr());
         return env2;
     }
@@ -1859,8 +1887,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         if (!entry->analyzed)
             return NULL;
         TypePtr cpType = codePointerType(argsKey,
@@ -1914,8 +1942,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         InvokeStackContext invokeStackContext(callable, argsKey);
 
         InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->inlined)
-            argumentError(0, "cannot create pointer to inlined code");
+        if (entry->macro)
+            argumentError(0, "cannot create pointer to macro");
         if (!entry->analyzed)
             return NULL;
         TypePtr returnType;
@@ -1974,6 +2002,15 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (i >= t->elementTypes.size())
             argumentError(1, "tuple index out of range");
         return new MultiPValue(new PValue(t->elementTypes[i], false));
+    }
+
+    case PRIM_tupleElements : {
+        ensureArity(args, 1);
+        TupleTypePtr t = tupleTypeOfValue(args, 0);
+        MultiPValuePtr mpv = new MultiPValue();
+        for (unsigned i = 0; i < t->elementTypes.size(); ++i)
+            mpv->add(new PValue(t->elementTypes[i], false));
+        return mpv;
     }
 
     case PRIM_Union :
@@ -2038,6 +2075,16 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(fieldTypes[fi->second], false));
     }
 
+    case PRIM_recordFields : {
+        ensureArity(args, 1);
+        RecordTypePtr t = recordTypeOfValue(args, 0);
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
+        MultiPValuePtr mpv = new MultiPValue();
+        for (unsigned i = 0; i < fieldTypes.size(); ++i)
+            mpv->add(new PValue(fieldTypes[i], false));
+        return mpv;
+    }
+
     case PRIM_VariantP :
         return new MultiPValue(new PValue(boolType, true));
 
@@ -2066,6 +2113,35 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         printName(sout, obj);
         ExprPtr z = new StringLiteral(sout.str());
         return analyzeExpr(z, new Env());
+    }
+
+    case PRIM_staticIntegers : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj || (obj->objKind != VALUE_HOLDER))
+            argumentError(0, "expecting a static SizeT or Int value");
+        MultiPValuePtr mpv = new MultiPValue();
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = *((int *)vh->buf);
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            for (int i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = intToValueHolder(i);
+                mpv->add(new PValue(staticType(vhi.ptr()), true));
+            }
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = *((size_t *)vh->buf);
+            for (size_t i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = sizeTToValueHolder(i);
+                mpv->add(new PValue(staticType(vhi.ptr()), true));
+            }
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
+        return mpv;
     }
 
     case PRIM_EnumP :

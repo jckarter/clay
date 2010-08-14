@@ -224,27 +224,28 @@ static bool optExpression(ExprPtr &x) {
     return true;
 }
 
-static bool expressionList(vector<ExprPtr> &x) {
-    ExprPtr a;
-    if (!expression(a)) return false;
-    x.clear();
-    x.push_back(a);
+static bool expressionList(ExprListPtr &x) {
+    ExprListPtr a;
+    ExprPtr b;
+    if (!expression(b)) return false;
+    a = new ExprList(b);
     while (true) {
         int p = save();
-        if (!symbol(",") || !expression(a)) {
+        if (!symbol(",") || !expression(b)) {
             restore(p);
             break;
         }
-        x.push_back(a);
+        a->add(b);
     }
+    x = a;
     return true;
 }
 
-static bool optExpressionList(vector<ExprPtr> &x) {
+static bool optExpressionList(ExprListPtr &x) {
     int p = save();
     if (!expressionList(x)) {
         restore(p);
-        x.clear();
+        x = new ExprList();
     }
     return true;
 }
@@ -258,10 +259,10 @@ static bool optExpressionList(vector<ExprPtr> &x) {
 static bool arrayExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
-    ArrayPtr y = new Array();
-    if (!expressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!expressionList(args)) return false;
     if (!symbol("]")) return false;
-    x = y.ptr();
+    x = new Array(args);
     x->location = location;
     return true;
 }
@@ -269,10 +270,10 @@ static bool arrayExpr(ExprPtr &x) {
 static bool tupleExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("(")) return false;
-    TuplePtr y = new Tuple();
-    if (!optExpressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!optExpressionList(args)) return false;
     if (!symbol(")")) return false;
-    x = y.ptr();
+    x = new Tuple(args);
     x->location = location;
     return true;
 }
@@ -304,10 +305,10 @@ static bool atomicExpr(ExprPtr &x) {
 static bool indexingSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
-    IndexingPtr y = new Indexing(NULL);
-    if (!expressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!expressionList(args)) return false;
     if (!symbol("]")) return false;
-    x = y.ptr();
+    x = new Indexing(NULL, args);
     x->location = location;
     return true;
 }
@@ -315,10 +316,10 @@ static bool indexingSuffix(ExprPtr &x) {
 static bool callSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("(")) return false;
-    CallPtr y = new Call(NULL);
-    if (!optExpressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!optExpressionList(args)) return false;
     if (!symbol(")")) return false;
-    x = y.ptr();
+    x = new Call(NULL, args);
     x->location = location;
     return true;
 }
@@ -797,10 +798,10 @@ static bool atomicPattern(ExprPtr &x) {
 static bool patternSuffix(IndexingPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
-    IndexingPtr y = new Indexing(NULL);
-    if (!expressionList(y->args)) return false;
+    ExprListPtr args;
+    if (!expressionList(args)) return false;
     if (!symbol("]")) return false;
-    x = y;
+    x = new Indexing(NULL, args);
     x->location = location;
     return true;
 }
@@ -890,7 +891,7 @@ static bool localBinding(StatementPtr &x) {
     vector<IdentifierPtr> y;
     if (!identifierList(y)) return false;
     if (!symbol("=")) return false;
-    vector<ExprPtr> z;
+    ExprListPtr z;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     x = new Binding(bk, y, z);
@@ -927,7 +928,7 @@ static bool block(StatementPtr &x) {
 
 static bool assignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    vector<ExprPtr> y, z;
+    ExprListPtr y, z;
     if (!expressionList(y)) return false;
     if (!symbol("=")) return false;
     if (!expressionList(z)) return false;
@@ -939,7 +940,7 @@ static bool assignment(StatementPtr &x) {
 
 static bool initAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    vector<ExprPtr> y, z;
+    ExprListPtr y, z;
     if (!expressionList(y)) return false;
     if (!symbol("<--")) return false;
     if (!expressionList(z)) return false;
@@ -1004,7 +1005,7 @@ static bool returnKind(ReturnKind &x) {
     return true;
 }
 
-static bool returnExprList(ReturnKind &rkind, vector<ExprPtr> &exprs) {
+static bool returnExprList(ReturnKind &rkind, ExprListPtr &exprs) {
     if (!returnKind(rkind)) return false;
     if (!optExpressionList(exprs)) return false;
     return true;
@@ -1014,7 +1015,7 @@ static bool returnStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
     if (!keyword("return")) return false;
     ReturnKind rkind;
-    vector<ExprPtr> exprs;
+    ExprListPtr exprs;
     if (!returnExprList(rkind, exprs)) return false;
     if (!symbol(";")) return false;
     x = new Return(rkind, exprs);
@@ -1153,6 +1154,24 @@ static bool throwStatement(StatementPtr &x) {
     return true;
 }
 
+static bool staticFor(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("static")) return false;
+    if (!keyword("for")) return false;
+    if (!symbol("(")) return false;
+    IdentifierPtr a;
+    if (!identifier(a)) return false;
+    if (!keyword("in")) return false;
+    ExprListPtr b;
+    if (!expressionList(b)) return false;
+    if (!symbol(")")) return false;
+    StatementPtr c;
+    if (!statement(c)) return false;
+    x = new StaticFor(a, b, c);
+    x->location = location;
+    return true;
+}
+
 static bool statement(StatementPtr &x) {
     int p = save();
     if (block(x)) return true;
@@ -1169,6 +1188,7 @@ static bool statement(StatementPtr &x) {
     if (restore(p), forStatement(x)) return true;
     if (restore(p), tryStatement(x)) return true;
     if (restore(p), throwStatement(x)) return true;
+    if (restore(p), staticFor(x)) return true;
 
     return false;
 }
@@ -1299,8 +1319,7 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
         new ForeignExpr("prelude",
                         new NameRef(new Identifier("Static")));
 
-    IndexingPtr indexing = new Indexing(staticName);
-    indexing->args.push_back(y);
+    IndexingPtr indexing = new Indexing(staticName, new ExprList(y));
     
     x = new FormalArg(argName, indexing.ptr());
     x->location = location;
@@ -1474,7 +1493,7 @@ static bool exprBody(StatementPtr &x) {
     if (!symbol("=")) return false;
     LocationPtr location = currentLocation();
     ReturnKind rkind;
-    vector<ExprPtr> exprs;
+    ExprListPtr exprs;
     if (!returnExprList(rkind, exprs)) return false;
     if (!symbol(";")) return false;
     x = new Return(rkind, exprs);
@@ -1585,7 +1604,7 @@ static bool recordBodyFields(RecordBodyPtr &x) {
 static bool recordBodyComputed(RecordBodyPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("=")) return false;
-    vector<ExprPtr> y;
+    ExprListPtr y;
     if (!optExpressionList(y)) return false;
     if (!symbol(";")) return false;
     x = new RecordBody(y);
@@ -1620,26 +1639,28 @@ static bool record(TopLevelItemPtr &x) {
 // variant, instance
 //
 
-static bool defaultInstances(vector<ExprPtr> &x) {
+static bool defaultInstances(ExprListPtr &x) {
+    ExprListPtr a;
     ExprPtr y;
     if (!expression(y)) return false;
-    x.clear();
-    x.push_back(y);
+    a = new ExprList(y);
     while (true) {
         int p = save();
         if (!symbol("|") || !expression(y)) {
             restore(p);
             break;
         }
-        x.push_back(y);
+        a->add(y);
     }
+    x = a;
     return true;
 }
 
-static bool optDefaultInstances(vector<ExprPtr> &x) {
+static bool optDefaultInstances(ExprListPtr &x) {
     int p = save();
     if (!symbol("=")) {
         restore(p);
+        x = new ExprList();
         return true;
     }
     return defaultInstances(x);
@@ -1655,7 +1676,7 @@ static bool variant(TopLevelItemPtr &x) {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
     if (!optStaticParams(params, varParam)) return false;
-    vector<ExprPtr> defaultInstances;
+    ExprListPtr defaultInstances;
     if (!optDefaultInstances(defaultInstances)) return false;
     if (!symbol(";")) return false;
     x = new Variant(name, vis, params, varParam, defaultInstances);
@@ -1779,14 +1800,14 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
 // procedure, overload
 //
 
-static bool optInlined(bool &inlined) {
+static bool optMacro(bool &macro) {
     int p = save();
-    if (!keyword("inlined")) {
+    if (!keyword("macro")) {
         restore(p);
-        inlined = false;
+        macro = false;
         return true;
     }
-    inlined = true;
+    macro = true;
     return true;
 }
     
@@ -1831,8 +1852,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
-    bool inlined;
-    if (!optInlined(inlined)) return false;
+    bool macro;
+    if (!optMacro(macro)) return false;
     int p = save();
     if (!keyword("procedure"))
         restore(p);
@@ -1849,7 +1870,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(z);
     target->location = location;
-    OverloadPtr v = new Overload(target, y, inlined);
+    OverloadPtr v = new Overload(target, y, macro);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -1873,8 +1894,8 @@ static bool overload(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
-    bool inlined;
-    if (!optInlined(inlined)) return false;
+    bool macro;
+    if (!optMacro(macro)) return false;
     if (!keyword("overload")) return false;
     ExprPtr z;
     if (!pattern(z)) return false;
@@ -1883,11 +1904,11 @@ static bool overload(TopLevelItemPtr &x) {
     int p = save();
     if (!optBody(y->body)) {
         restore(p);
-        if (inlined) return false;
+        if (macro) return false;
         if (!llvmBody(y->llvmBody)) return false;
     }
     y->location = location;
-    x = new Overload(z, y, inlined);
+    x = new Overload(z, y, macro);
     x->location = location;
     return true;
 }
@@ -1967,18 +1988,18 @@ static bool globalVariable(TopLevelItemPtr &x) {
 // external procedure, external variable
 //
 
-static bool externalAttributes(vector<ExprPtr> &x) {
+static bool externalAttributes(ExprListPtr &x) {
     if (!symbol("(")) return false;
     if (!expressionList(x)) return false;
     if (!symbol(")")) return false;
     return true;
 }
 
-static bool optExternalAttributes(vector<ExprPtr> &x) {
+static bool optExternalAttributes(ExprListPtr &x) {
     int p = save();
     if (!externalAttributes(x)) {
         restore(p);
-        x.clear();
+        x = new ExprList();
     }
     return true;
 }

@@ -487,9 +487,9 @@ static void initModule(ModulePtr m) {
             gvarInitializers->statements.push_back(z);
 
             ExprPtr destructor = prelude_expr_destroy();
-            CallPtr destroyCall = new Call(destructor);
+            CallPtr destroyCall = new Call(destructor, new ExprList());
             destroyCall->location = lhs->location;
-            destroyCall->args.push_back(new ForeignExpr(x->env, lhs));
+            destroyCall->args->add(new ForeignExpr(x->env, lhs));
             StatementPtr a = new ExprStatement(destroyCall.ptr());
             gvarDestructors->statements.insert(
                 gvarDestructors->statements.begin(), a);
@@ -640,6 +640,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
     PRIMITIVE(tupleRef);
+    PRIMITIVE(tupleElements);
 
     PRIMITIVE(Union);
     PRIMITIVE(UnionMemberCount);
@@ -649,6 +650,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(RecordFieldName);
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
+    PRIMITIVE(recordFields);
 
     PRIMITIVE(VariantP);
     PRIMITIVE(VariantMemberIndex);
@@ -657,6 +659,7 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(Static);
     PRIMITIVE(StaticName);
+    PRIMITIVE(staticIntegers);
 
     PRIMITIVE(EnumP);
     PRIMITIVE(enumToInt);

@@ -15,12 +15,12 @@ errorNoThrow(...e) {
     printlnTo(stderr, "error: ", ...e);
 }
 
-inlined assert(cond:Bool) {
+macro assert(cond:Bool) {
     if (not cond)
         error("assertion failed");
 }
 
-inlined overload assert(cond:Bool, message) {
+macro overload assert(cond:Bool, message) {
     if (not cond)
         error("assertion failed: ", message);
 }

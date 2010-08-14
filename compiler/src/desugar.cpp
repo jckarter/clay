@@ -3,10 +3,10 @@
 
 ExprPtr desugarCharLiteral(char c) {
     ExprPtr nameRef = prelude_expr_Char();
-    CallPtr call = new Call(nameRef);
+    CallPtr call = new Call(nameRef, new ExprList());
     ostringstream out;
     out << (int)c;
-    call->args.push_back(new IntLiteral(out.str(), "i8"));
+    call->args->add(new IntLiteral(out.str(), "i8"));
     return call.ptr();
 }
 
@@ -31,8 +31,8 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x) {
     default :
         assert(false);
     }
-    CallPtr call = new Call(callable);
-    call->args.push_back(x->expr);
+    CallPtr call = new Call(callable, new ExprList());
+    call->args->add(x->expr);
     return call.ptr();
 }
 
@@ -75,23 +75,23 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
     default :
         assert(false);
     }
-    CallPtr call = new Call(callable);
-    call->args.push_back(x->expr1);
-    call->args.push_back(x->expr2);
+    CallPtr call = new Call(callable, new ExprList());
+    call->args->add(x->expr1);
+    call->args->add(x->expr2);
     return call.ptr();
 }
 
 ExprPtr desugarNew(NewPtr x) {
     ExprPtr callable = prelude_expr_allocateShared();
-    CallPtr call = new Call(callable);
-    call->args.push_back(x->expr);
+    CallPtr call = new Call(callable, new ExprList());
+    call->args->add(x->expr);
     return call.ptr();
 }
 
 ExprPtr desugarStaticExpr(StaticExprPtr x) {
     ExprPtr callable = prelude_expr_wrapStatic();
-    CallPtr call = new Call(callable);
-    call->args.push_back(x->expr);
+    CallPtr call = new Call(callable, new ExprList());
+    call->args->add(x->expr);
     return call.ptr();
 }
 
@@ -115,32 +115,28 @@ static vector<IdentifierPtr> identV(IdentifierPtr x) {
     return v;
 }
 
-static vector<ExprPtr> exprV(ExprPtr x) {
-    vector<ExprPtr> v;
-    v.push_back(x);
-    return v;
-}
-
 StatementPtr desugarForStatement(ForPtr x) {
     IdentifierPtr exprVar = new Identifier("%expr");
     IdentifierPtr iterVar = new Identifier("%iter");
 
     BlockPtr block = new Block();
     vector<StatementPtr> &bs = block->statements;
-    bs.push_back(new Binding(REF, identV(exprVar), exprV(x->expr)));
+    bs.push_back(new Binding(REF, identV(exprVar), new ExprList(x->expr)));
 
-    CallPtr iteratorCall = new Call(prelude_expr_iterator());
-    iteratorCall->args.push_back(new NameRef(exprVar));
-    bs.push_back(new Binding(VAR, identV(iterVar), exprV(iteratorCall.ptr())));
+    CallPtr iteratorCall = new Call(prelude_expr_iterator(), new ExprList());
+    iteratorCall->args->add(new NameRef(exprVar));
+    bs.push_back(new Binding(VAR,
+                             identV(iterVar),
+                             new ExprList(iteratorCall.ptr())));
 
-    CallPtr hasNextCall = new Call(prelude_expr_hasNextP());
-    hasNextCall->args.push_back(new NameRef(iterVar));
-    CallPtr nextCall = new Call(prelude_expr_next());
-    nextCall->args.push_back(new NameRef(iterVar));
+    CallPtr hasNextCall = new Call(prelude_expr_hasNextP(), new ExprList());
+    hasNextCall->args->add(new NameRef(iterVar));
+    CallPtr nextCall = new Call(prelude_expr_next(), new ExprList());
+    nextCall->args->add(new NameRef(iterVar));
     ExprPtr unpackNext = new Unpack(nextCall.ptr());
     BlockPtr whileBody = new Block();
     vector<StatementPtr> &ws = whileBody->statements;
-    ws.push_back(new Binding(REF, x->variables, exprV(unpackNext)));
+    ws.push_back(new Binding(REF, x->variables, new ExprList(unpackNext)));
     ws.push_back(x->body);
 
     bs.push_back(new While(hasNextCall.ptr(), whileBody.ptr()));
@@ -156,7 +152,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
         if (lastWasAny)
             error(x, "unreachable catch block");
         if (x->exceptionType.ptr()) {
-            vector<ExprPtr> typeArg(1, x->exceptionType);
+            ExprListPtr typeArg = new ExprList(x->exceptionType);
             CallPtr cond = new Call(prelude_expr_exceptionIsP(), typeArg);
             cond->location = x->exceptionType->location;
 
@@ -166,7 +162,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
             BindingPtr binding =
                 new Binding(VAR,
                             vector<IdentifierPtr>(1, x->exceptionVar),
-                            vector<ExprPtr>(1, getter.ptr()));
+                            new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
 
             block->statements.push_back(binding.ptr());
@@ -183,12 +179,13 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
         else {
             BlockPtr block = new Block();
             block->location = x->location;
-            CallPtr getter = new Call(prelude_expr_exceptionAsAny());
+            CallPtr getter = new Call(prelude_expr_exceptionAsAny(),
+                                      new ExprList());
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
                             vector<IdentifierPtr>(1, x->exceptionVar),
-                            vector<ExprPtr>(1, getter.ptr()));
+                            new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
             block->statements.push_back(binding.ptr());
             block->statements.push_back(x->body);
@@ -205,7 +202,8 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
     assert(result.ptr());
     if (!lastWasAny) {
         assert(lastIf.ptr());
-        CallPtr continueException = new Call(prelude_expr_continueException());
+        CallPtr continueException = new Call(prelude_expr_continueException(),
+                                             new ExprList());
         lastIf->elsePart = new ExprStatement(continueException.ptr());
     }
     return result;

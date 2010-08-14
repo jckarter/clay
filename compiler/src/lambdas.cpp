@@ -21,7 +21,8 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
 
 void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx);
 
-void  convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx);
+void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx);
+void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx);
 
 
 
@@ -54,7 +55,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     vector<string> freeVars;
     convertFreeVars(x, env, closureDataName, freeVars);
 
-    CallPtr converted = new Call(typeExpr);
+    CallPtr converted = new Call(typeExpr, new ExprList());
     for (unsigned i = 0; i < freeVars.size(); ++i) {
         IdentifierPtr ident = new Identifier(freeVars[i]);
         NameRefPtr nameRef = new NameRef(ident);
@@ -68,10 +69,10 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             if (x->isBlockLambda) {
                 type = pointerType(type);
                 ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
-                converted->args.push_back(addr);
+                converted->args->add(addr);
             }
             else {
-                converted->args.push_back(nameRef.ptr());
+                converted->args->add(nameRef.ptr());
             }
             break;
         }
@@ -81,10 +82,10 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             if (x->isBlockLambda) {
                 type = pointerType(type);
                 ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
-                converted->args.push_back(addr);
+                converted->args->add(addr);
             }
             else {
-                converted->args.push_back(nameRef.ptr());
+                converted->args->add(nameRef.ptr());
             }
             break;
         }
@@ -100,15 +101,15 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             type = tupleType(elementTypes);
             if (x->isBlockLambda) {
                 ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
-                CallPtr call = new Call(e);
-                call->args.push_back(new Unpack(nameRef.ptr()));
-                converted->args.push_back(call.ptr());
+                CallPtr call = new Call(e, new ExprList());
+                call->args->add(new Unpack(nameRef.ptr()));
+                converted->args->add(call.ptr());
             }
             else {
                 ExprPtr e = prelude_expr_packMultiValuedFreeVar();
-                CallPtr call = new Call(e);
-                call->args.push_back(new Unpack(nameRef.ptr()));
-                converted->args.push_back(call.ptr());
+                CallPtr call = new Call(e, new ExprList());
+                call->args->add(new Unpack(nameRef.ptr()));
+                converted->args->add(call.ptr());
             }
             break;
         }
@@ -124,15 +125,15 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             type = tupleType(elementTypes);
             if (x->isBlockLambda) {
                 ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
-                CallPtr call = new Call(e);
-                call->args.push_back(new Unpack(nameRef.ptr()));
-                converted->args.push_back(call.ptr());
+                CallPtr call = new Call(e, new ExprList());
+                call->args->add(new Unpack(nameRef.ptr()));
+                converted->args->add(call.ptr());
             }
             else {
                 ExprPtr e = prelude_expr_packMultiValuedFreeVar();
-                CallPtr call = new Call(e);
-                call->args.push_back(new Unpack(nameRef.ptr()));
-                converted->args.push_back(call.ptr());
+                CallPtr call = new Call(e, new ExprList());
+                call->args->add(new Unpack(nameRef.ptr()));
+                converted->args->add(call.ptr());
             }
             break;
         }
@@ -199,8 +200,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
             StatementPtr z = y->statements[i];
             if (z->stmtKind == BINDING) {
                 Binding *a = (Binding *)z.ptr();
-                for (unsigned i = 0; i < a->exprs.size(); ++i)
-                    convertFreeVars(a->exprs[i], env, ctx);
+                convertFreeVars(a->values, env, ctx);
                 EnvPtr env2 = new Env(env);
                 for (unsigned j = 0; j < a->names.size(); ++j)
                     addLocal(env2, a->names[j], a->names[j].ptr());
@@ -220,19 +220,15 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case ASSIGNMENT : {
         Assignment *y = (Assignment *)x.ptr();
-        for (unsigned i = 0; i < y->left.size(); ++i)
-            convertFreeVars(y->left[i], env, ctx);
-        for (unsigned i = 0; i < y->right.size(); ++i)
-            convertFreeVars(y->right[i], env, ctx);
+        convertFreeVars(y->left, env, ctx);
+        convertFreeVars(y->right, env, ctx);
         break;
     }
 
     case INIT_ASSIGNMENT : {
         InitAssignment *y = (InitAssignment *)x.ptr();
-        for (unsigned i = 0; i < y->left.size(); ++i)
-            convertFreeVars(y->left[i], env, ctx);
-        for (unsigned i = 0; i < y->right.size(); ++i)
-            convertFreeVars(y->right[i], env, ctx);
+        convertFreeVars(y->left, env, ctx);
+        convertFreeVars(y->right, env, ctx);
         break;
     }
 
@@ -249,8 +245,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case RETURN : {
         Return *y = (Return *)x.ptr();
-        for (unsigned i = 0; i < y->exprs.size(); ++i)
-            convertFreeVars(y->exprs[i], env, ctx);
+        convertFreeVars(y->values, env, ctx);
         break;
     }
 
@@ -318,6 +313,15 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case STATIC_FOR : {
+        StaticFor *y = (StaticFor *)x.ptr();
+        convertFreeVars(y->values, env, ctx);
+        EnvPtr env2 = new Env(env);
+        addLocal(env2, y->variable, y->variable.ptr());
+        convertFreeVars(y->body, env2, ctx);
+        break;
+    }
+
     default :
         assert(false);
 
@@ -381,14 +385,14 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 if (ctx.isBlockLambda) {
                     ExprPtr f =
                         prelude_expr_unpackMultiValuedFreeVarAndDereference();
-                    CallPtr d = new Call(f);
-                    d->args.push_back(c.ptr());
+                    CallPtr d = new Call(f, new ExprList());
+                    d->args->add(c.ptr());
                     x = d.ptr();
                 }
                 else {
                     ExprPtr f = prelude_expr_unpackMultiValuedFreeVar();
-                    CallPtr d = new Call(f);
-                    d->args.push_back(c.ptr());
+                    CallPtr d = new Call(f, new ExprList());
+                    d->args->add(c.ptr());
                     x = d.ptr();
                 }
             }
@@ -398,31 +402,27 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
 
     case TUPLE : {
         Tuple *y = (Tuple *)x.ptr();
-        for (unsigned i = 0; i < y->args.size(); ++i)
-            convertFreeVars(y->args[i], env, ctx);
+        convertFreeVars(y->args, env, ctx);
         break;
     }
 
     case ARRAY : {
         Array *y = (Array *)x.ptr();
-        for (unsigned i = 0; i < y->args.size(); ++i)
-            convertFreeVars(y->args[i], env, ctx);
+        convertFreeVars(y->args, env, ctx);
         break;
     }
 
     case INDEXING : {
         Indexing *y = (Indexing *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
-        for (unsigned i = 0; i < y->args.size(); ++i)
-            convertFreeVars(y->args[i], env, ctx);
+        convertFreeVars(y->args, env, ctx);
         break;
     }
 
     case CALL : {
         Call *y = (Call *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
-        for (unsigned i = 0; i < y->args.size(); ++i)
-            convertFreeVars(y->args[i], env, ctx);
+        convertFreeVars(y->args, env, ctx);
         break;
     }
 
@@ -502,4 +502,10 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
     case OBJECT_EXPR :
         break;
     }
+}
+
+void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx)
+{
+    for (unsigned i = 0; i < x->size(); ++i)
+        convertFreeVars(x->exprs[i], env, ctx);
 }

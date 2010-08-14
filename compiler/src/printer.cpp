@@ -298,7 +298,7 @@ static void printStatement(ostream &out, const Statement *x) {
         default :
             assert(false);
         }
-        out << ", " << y->names << ", " << y->exprs << ")";
+        out << ", " << y->names << ", " << y->values << ")";
         break;
     }
     case ASSIGNMENT : {
@@ -324,7 +324,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
     case RETURN : {
         const Return *y = (const Return *)x;
-        out << "Return(" << y->returnKind << ", " << y->exprs << ")";
+        out << "Return(" << y->returnKind << ", " << y->values << ")";
         break;
     }
     case IF : {
@@ -370,6 +370,12 @@ static void printStatement(ostream &out, const Statement *x) {
     case THROW : {
         const Throw *y = (const Throw *)x;
         out << "Throw(" << y->expr << ")";
+        break;
+    }
+    case STATIC_FOR : {
+        const StaticFor *y = (const StaticFor *)x;
+        out << "StaticFor(" << y->variable << ", " << y->values
+            << ", " << y->body << ")";
         break;
     }
     }
@@ -451,6 +457,12 @@ static void print(ostream &out, const Object *x) {
         break;
     }
 
+    case EXPR_LIST : {
+        const ExprList *y = (const ExprList *)x;
+        out << "ExprList(" << y->exprs << ")";
+        break;
+    }
+
     case STATEMENT : {
         const Statement *y = (const Statement *)x;
         printStatement(out, y);
@@ -518,7 +530,7 @@ static void print(ostream &out, const Object *x) {
     case OVERLOAD : {
         const Overload *y = (const Overload *)x;
         out << "Overload(" << y->target << ", " << y->code << ", "
-            << y->inlined << ")";
+            << y->macro << ")";
         break;
     }
     case PROCEDURE : {
@@ -646,12 +658,6 @@ static void print(ostream &out, const Object *x) {
     case MULTI_STATIC : {
         const MultiStatic *y = (const MultiStatic *)x;
         out << "MultiStatic(" << y->values << ")";
-        break;
-    }
-
-    case MULTI_EXPR : {
-        const MultiExpr *y = (const MultiExpr *)x;
-        out << "MultiExpr(" << y->values << ")";
         break;
     }
 

@@ -136,6 +136,7 @@ enum ObjectKind {
     DOTTED_NAME,
 
     EXPRESSION,
+    EXPR_LIST,
     STATEMENT,
     CATCH,
 
@@ -175,7 +176,6 @@ enum ObjectKind {
 
     VALUE_HOLDER,
     MULTI_STATIC,
-    MULTI_EXPR,
 
     PVALUE,
     MULTI_PVALUE,
@@ -230,6 +230,8 @@ struct DispatchExpr;
 struct ForeignExpr;
 struct ObjectExpr;
 
+struct ExprList;
+
 struct Statement;
 struct Block;
 struct Label;
@@ -249,6 +251,7 @@ struct ForeignStatement;
 struct Try;
 struct Catch;
 struct Throw;
+struct StaticFor;
 
 struct FormalArg;
 struct ReturnSpec;
@@ -309,7 +312,6 @@ struct MultiPatternList;
 
 struct ValueHolder;
 struct MultiStatic;
-struct MultiExpr;
 
 struct PValue;
 struct MultiPValue;
@@ -361,6 +363,8 @@ typedef Pointer<DispatchExpr> DispatchExprPtr;
 typedef Pointer<ForeignExpr> ForeignExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
 
+typedef Pointer<ExprList> ExprListPtr;
+
 typedef Pointer<Statement> StatementPtr;
 typedef Pointer<Block> BlockPtr;
 typedef Pointer<Label> LabelPtr;
@@ -380,6 +384,7 @@ typedef Pointer<ForeignStatement> ForeignStatementPtr;
 typedef Pointer<Try> TryPtr;
 typedef Pointer<Catch> CatchPtr;
 typedef Pointer<Throw> ThrowPtr;
+typedef Pointer<StaticFor> StaticForPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
@@ -439,7 +444,6 @@ typedef Pointer<MultiPatternList> MultiPatternListPtr;
 
 typedef Pointer<ValueHolder> ValueHolderPtr;
 typedef Pointer<MultiStatic> MultiStaticPtr;
-typedef Pointer<MultiExpr> MultiExprPtr;
 
 typedef Pointer<PValue> PValuePtr;
 typedef Pointer<MultiPValue> MultiPValuePtr;
@@ -736,36 +740,28 @@ struct NameRef : public Expr {
 };
 
 struct Tuple : public Expr {
-    vector<ExprPtr> args;
-    Tuple()
-        : Expr(TUPLE) {}
-    Tuple(const vector<ExprPtr> &args)
+    ExprListPtr args;
+    Tuple(ExprListPtr args)
         : Expr(TUPLE), args(args) {}
 };
 
 struct Array : public Expr {
-    vector<ExprPtr> args;
-    Array()
-        : Expr(ARRAY) {}
-    Array(const vector<ExprPtr> &args)
+    ExprListPtr args;
+    Array(ExprListPtr args)
         : Expr(ARRAY), args(args) {}
 };
 
 struct Indexing : public Expr {
     ExprPtr expr;
-    vector<ExprPtr> args;
-    Indexing(ExprPtr expr)
-        : Expr(INDEXING), expr(expr) {}
-    Indexing(ExprPtr expr, const vector<ExprPtr> &args)
+    ExprListPtr args;
+    Indexing(ExprPtr expr, ExprListPtr args)
         : Expr(INDEXING), expr(expr), args(args) {}
 };
 
 struct Call : public Expr {
     ExprPtr expr;
-    vector<ExprPtr> args;
-    Call(ExprPtr expr)
-        : Expr(CALL), expr(expr) {}
-    Call(ExprPtr expr, const vector<ExprPtr> &args)
+    ExprListPtr args;
+    Call(ExprPtr expr, ExprListPtr args)
         : Expr(CALL), expr(expr), args(args) {}
 };
 
@@ -908,6 +904,29 @@ struct ObjectExpr : public Expr {
 
 
 //
+// ExprList
+//
+
+struct ExprList : public Object {
+    vector<ExprPtr> exprs;
+    ExprList()
+        : Object(EXPR_LIST) {}
+    ExprList(ExprPtr x)
+        : Object(EXPR_LIST) {
+        exprs.push_back(x);
+    }
+    ExprList(const vector<ExprPtr> &exprs)
+        : Object(EXPR_LIST), exprs(exprs) {}
+    unsigned size() { return exprs.size(); }
+    void add(ExprPtr x) { exprs.push_back(x); }
+    void add(ExprListPtr x) {
+        exprs.insert(exprs.end(), x->exprs.begin(), x->exprs.end());
+    }
+};
+
+
+
+//
 // Stmt
 //
 
@@ -929,6 +948,7 @@ enum StatementKind {
     FOREIGN_STATEMENT,
     TRY,
     THROW,
+    STATIC_FOR,
 };
 
 struct Statement : public ANode {
@@ -960,33 +980,30 @@ enum BindingKind {
 struct Binding : public Statement {
     int bindingKind;
     vector<IdentifierPtr> names;
-    vector<ExprPtr> exprs;
+    ExprListPtr values;
     Binding(int bindingKind,
             const vector<IdentifierPtr> &names,
-            const vector<ExprPtr> &exprs)
+            ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
-          names(names), exprs(exprs) {}
+          names(names), values(values) {}
 };
 
 struct Assignment : public Statement {
-    vector<ExprPtr> left;
-    vector<ExprPtr> right;
-    Assignment(const vector<ExprPtr> &left,
-               const vector<ExprPtr> &right)
+    ExprListPtr left, right;
+    Assignment(ExprListPtr left,
+               ExprListPtr right)
         : Statement(ASSIGNMENT), left(left), right(right) {}
 };
 
 struct InitAssignment : public Statement {
-    vector<ExprPtr> left;
-    vector<ExprPtr> right;
-    InitAssignment(const vector<ExprPtr> &left,
-                   const vector<ExprPtr> &right)
+    ExprListPtr left, right;
+    InitAssignment(ExprListPtr left,
+                   ExprListPtr right)
         : Statement(INIT_ASSIGNMENT), left(left), right(right) {}
     InitAssignment(ExprPtr leftExpr, ExprPtr rightExpr)
-        : Statement(INIT_ASSIGNMENT) {
-        left.push_back(leftExpr);
-        right.push_back(rightExpr);
-    }
+        : Statement(INIT_ASSIGNMENT),
+          left(new ExprList(leftExpr)),
+          right(new ExprList(rightExpr)) {}
 };
 
 enum UpdateOpKind {
@@ -1019,11 +1036,9 @@ enum ReturnKind {
 
 struct Return : public Statement {
     ReturnKind returnKind;
-    vector<ExprPtr> exprs;
-    Return()
-        : Statement(RETURN) {}
-    Return(ReturnKind returnKind, const vector<ExprPtr> &exprs)
-        : Statement(RETURN), returnKind(returnKind), exprs(exprs) {}
+    ExprListPtr values;
+    Return(ReturnKind returnKind, ExprListPtr values)
+        : Statement(RETURN), returnKind(returnKind), values(values) {}
 };
 
 struct If : public Statement {
@@ -1115,6 +1130,21 @@ struct Throw : public Statement {
     ExprPtr expr;
     Throw(ExprPtr expr)
         : Statement(THROW), expr(expr) {}
+};
+
+struct StaticFor : public Statement {
+    IdentifierPtr variable;
+    ExprListPtr values;
+    StatementPtr body;
+
+    bool clonesInitialized;
+    vector<StatementPtr> clonedBodies;
+
+    StaticFor(IdentifierPtr variable,
+              ExprListPtr values,
+              StatementPtr body)
+        : Statement(STATIC_FOR), variable(variable), values(values),
+          body(body), clonesInitialized(false) {}
 };
 
 
@@ -1255,9 +1285,9 @@ struct Record : public TopLevelItem {
 
 struct RecordBody : public ANode {
     bool isComputed;
-    vector<ExprPtr> computed; // valid if isComputed == true
+    ExprListPtr computed; // valid if isComputed == true
     vector<RecordFieldPtr> fields; // valid if isComputed == false
-    RecordBody(const vector<ExprPtr> &computed)
+    RecordBody(ExprListPtr computed)
         : ANode(RECORD_BODY), isComputed(true), computed(computed) {}
     RecordBody(const vector<RecordFieldPtr> &fields)
         : ANode(RECORD_BODY), isComputed(false), fields(fields) {}
@@ -1273,19 +1303,17 @@ struct RecordField : public ANode {
 struct Variant : public TopLevelItem {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
-    vector<ExprPtr> defaultInstances;
+    ExprListPtr defaultInstances;
 
     vector<InstancePtr> instances;
 
     vector<OverloadPtr> overloads;
 
-    Variant(Visibility visibility)
-        : TopLevelItem(VARIANT, visibility) {}
     Variant(IdentifierPtr name,
             Visibility visibility,
             const vector<IdentifierPtr> &params,
             IdentifierPtr varParam,
-            const vector<ExprPtr> &defaultInstances)
+            ExprListPtr defaultInstances)
         : TopLevelItem(VARIANT, name, visibility),
           params(params), varParam(varParam),
           defaultInstances(defaultInstances) {}
@@ -1309,7 +1337,7 @@ struct Instance : public TopLevelItem {
 struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
-    bool inlined;
+    bool macro;
 
     // pre-computed patterns for matchInvoke
     bool patternsInitialized;
@@ -1320,9 +1348,9 @@ struct Overload : public TopLevelItem {
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
 
-    Overload(ExprPtr target, CodePtr code, bool inlined)
+    Overload(ExprPtr target, CodePtr code, bool macro)
         : TopLevelItem(OVERLOAD), target(target), code(code),
-          inlined(inlined), patternsInitialized(false) {}
+          macro(macro), patternsInitialized(false) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -1373,7 +1401,7 @@ struct ExternalProcedure : public TopLevelItem {
     bool hasVarArgs;
     ExprPtr returnType;
     StatementPtr body;
-    vector<ExprPtr> attributes;
+    ExprListPtr attributes;
 
     bool attributesVerified;
     bool attrDLLImport;
@@ -1389,14 +1417,15 @@ struct ExternalProcedure : public TopLevelItem {
 
     ExternalProcedure(Visibility visibility)
         : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
-          attributesVerified(false), analyzed(false), llvmFunc(NULL) {}
+          attributes(new ExprList()), attributesVerified(false),
+          analyzed(false), llvmFunc(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       Visibility visibility,
                       const vector<ExternalArgPtr> &args,
                       bool hasVarArgs,
                       ExprPtr returnType,
                       StatementPtr body,
-                      const vector<ExprPtr> &attributes)
+                      ExprListPtr attributes)
         : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           attributes(attributes), attributesVerified(false),
@@ -1413,7 +1442,7 @@ struct ExternalArg : public ANode {
 
 struct ExternalVariable : public TopLevelItem {
     ExprPtr type;
-    vector<ExprPtr> attributes;
+    ExprListPtr attributes;
 
     bool attributesVerified;
     bool attrDLLImport;
@@ -1424,11 +1453,12 @@ struct ExternalVariable : public TopLevelItem {
 
     ExternalVariable(Visibility visibility)
         : TopLevelItem(EXTERNAL_VARIABLE, visibility),
-          attributesVerified(false), llGlobal(NULL) {}
+          attributes(new ExprList()), attributesVerified(false),
+          llGlobal(NULL) {}
     ExternalVariable(IdentifierPtr name,
                      Visibility visibility,
                      ExprPtr type,
-                     const vector<ExprPtr> &attributes)
+                     ExprListPtr attributes)
         : TopLevelItem(EXTERNAL_VARIABLE, name, visibility),
           type(type), attributes(attributes),
           attributesVerified(false), llGlobal(NULL) {}
@@ -1616,7 +1646,7 @@ void clone(const vector<PatternVar> &x, vector<PatternVar> &out);
 void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out);
 ExprPtr clone(ExprPtr x);
 ExprPtr cloneOpt(ExprPtr x);
-void clone(const vector<ExprPtr> &x, vector<ExprPtr> &out);
+ExprListPtr clone(ExprListPtr x);
 void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out);
 FormalArgPtr clone(FormalArgPtr x);
 FormalArgPtr cloneOpt(FormalArgPtr x);
@@ -1757,6 +1787,7 @@ enum PrimOpCode {
     PRIM_Tuple,
     PRIM_TupleElementCount,
     PRIM_tupleRef,
+    PRIM_tupleElements,
 
     PRIM_Union,
     PRIM_UnionMemberCount,
@@ -1766,6 +1797,7 @@ enum PrimOpCode {
     PRIM_RecordFieldName,
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
+    PRIM_recordFields,
 
     PRIM_VariantP,
     PRIM_VariantMemberIndex,
@@ -1774,6 +1806,7 @@ enum PrimOpCode {
 
     PRIM_Static,
     PRIM_StaticName,
+    PRIM_staticIntegers,
 
     PRIM_EnumP,
     PRIM_enumToInt,
@@ -2152,29 +2185,6 @@ struct MultiStatic : public Object {
 
 
 //
-// MultiExpr
-//
-
-struct MultiExpr : public Object {
-    vector<ExprPtr> values;
-    MultiExpr()
-        : Object(MULTI_EXPR) {}
-    MultiExpr(ExprPtr x)
-        : Object(MULTI_EXPR) {
-        values.push_back(x);
-    }
-    MultiExpr(const vector<ExprPtr> &values)
-        : Object(MULTI_EXPR), values(values) {}
-    unsigned size() { return values.size(); }
-    void add(ExprPtr x) { values.push_back(x); }
-    void add(MultiExprPtr x) {
-        values.insert(values.end(), x->values.begin(), x->values.end());
-    }
-};
-
-
-
-//
 // desugar
 //
 
@@ -2213,8 +2223,8 @@ bool unifyEmpty(MultiPatternPtr x);
 
 PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env);
 PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params);
-MultiPatternPtr evaluateMultiPattern(const vector<ExprPtr> &exprs,
-                                     EnvPtr env);
+MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env);
+
 void patternPrint(ostream &out, PatternPtr x);
 void patternPrint(ostream &out, MultiPatternPtr x);
 
@@ -2248,7 +2258,7 @@ struct MatchResult : public Object {
 typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
-    bool inlined;
+    bool macro;
     CodePtr code;
     EnvPtr env;
 
@@ -2259,9 +2269,9 @@ struct MatchSuccess : public MatchResult {
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
-    MatchSuccess(bool inlined, CodePtr code, EnvPtr env,
+    MatchSuccess(bool macro, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
-        : MatchResult(MATCH_SUCCESS), inlined(inlined),
+        : MatchResult(MATCH_SUCCESS), macro(macro),
           code(code), env(env), callable(callable), argsKey(argsKey) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
@@ -2318,7 +2328,7 @@ struct InvokeEntry : public Object {
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
 
-    bool inlined; // if inlined the rest of InvokeEntry is not set
+    bool macro; // if macro the rest of InvokeEntry is not set
 
     ObjectPtr analysis;
     vector<bool> returnIsRef;
@@ -2331,7 +2341,7 @@ struct InvokeEntry : public Object {
                 const vector<TypePtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), argsKey(argsKey),
-          analyzed(false), analyzing(false), inlined(false),
+          analyzed(false), analyzing(false), macro(false),
           llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -2389,21 +2399,6 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x);
 
 
 //
-// VarArgsInfo
-//
-
-struct VarArgsInfo : public Object {
-    bool hasVarArgs;
-    vector<ExprPtr> varArgs;
-    VarArgsInfo(bool hasVarArgs)
-        : Object(DONT_CARE), hasVarArgs(hasVarArgs) {}
-};
-
-typedef Pointer<VarArgsInfo> VarArgsInfoPtr;
-
-
-
-//
 // analyzer
 //
 
@@ -2439,9 +2434,9 @@ struct AnalysisCachingDisabler {
     ~AnalysisCachingDisabler() { enableAnalysisCaching(); }
 };
 
-MultiPValuePtr analyzeMulti(const vector<ExprPtr> &exprs, EnvPtr env);
+MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
-MultiPValuePtr analyzeMultiArgs(const vector<ExprPtr> &exprs,
+MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
                                 EnvPtr env,
                                 vector<bool> &dispatchFlags);
 PValuePtr analyzeOneArg(ExprPtr x, EnvPtr env, bool &dispatchFlag);
@@ -2456,13 +2451,13 @@ void analyzeExternalProcedure(ExternalProcedurePtr x);
 void verifyAttributes(ExternalProcedurePtr x);
 void verifyAttributes(ExternalVariablePtr x);
 MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
-                                   const vector<ExprPtr> &args,
+                                   ExprListPtr args,
                                    EnvPtr env);
 bool unwrapByRef(TypePtr &t);
 TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args);
 PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
 MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
-                                    const vector<ExprPtr> &args,
+                                    ExprListPtr args,
                                     EnvPtr env);
 MultiPValuePtr analyzeFieldRefExpr(ExprPtr base,
                                    IdentifierPtr name,
@@ -2473,7 +2468,7 @@ void computeArgsKey(MultiPValuePtr args,
 MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
                              const vector<TypePtr> &returnTypes);
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
-                               const vector<ExprPtr> &args,
+                               ExprListPtr args,
                                EnvPtr env);
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
@@ -2489,9 +2484,9 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness);
 
-MultiPValuePtr analyzeCallInlined(InvokeEntryPtr entry,
-                                  const vector<ExprPtr> &args,
-                                  EnvPtr env);
+MultiPValuePtr analyzeCallMacro(InvokeEntryPtr entry,
+                                ExprListPtr args,
+                                EnvPtr env);
 
 void analyzeCodeBody(InvokeEntryPtr entry);
 
@@ -2505,6 +2500,7 @@ struct AnalysisContext : public Object {
 typedef Pointer<AnalysisContext> AnalysisContextPtr;
 
 bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
+void initializeStaticForClones(StaticForPtr x, unsigned count);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv);
 
@@ -2549,7 +2545,7 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
 
 MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env);
 ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env);
-MultiStaticPtr evaluateMultiStatic(const vector<ExprPtr> &exprs, EnvPtr env);
+MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env);
 
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);

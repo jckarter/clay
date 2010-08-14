@@ -117,10 +117,10 @@ contains?(map, key) = not null?(lookup(map, key));
 //
 
 procedure LValue?;
-inlined overload LValue?(lvalue a) = true;
-inlined overload LValue?(rvalue a) = false;
+macro overload LValue?(lvalue a) = true;
+macro overload LValue?(rvalue a) = false;
 
-inlined RValue?(x) = not LValue?(x);
+macro RValue?(x) = not LValue?(x);
 
 
 
