@@ -48,6 +48,28 @@ procedure staticIndex;
 
 
 //
+// coordinate type predicates
+//
+
+Coordinate?(T) = CallDefined?(dereference, T);
+CoordinateTargetType(T) = Type(dereference(typeToValue(T)));
+
+RandomAccessCoordinate?(T) =
+    Coordinate?(T) and
+    CallDefined?(add, T, Int) and
+    CallDefined?(subtract, T, Int) and
+    CallDefined?(subtract, T, T);
+
+LValueCoordinate?(T) =
+    Coordinate?(T) and
+    LValue?(dereference(typeToValue(T)));
+
+// true if adjacent coordinates point to adjacent locations in memory
+ContiguousCoordinate?(T) = false;
+
+
+
+//
 // iteration protocol
 //
 
@@ -86,6 +108,21 @@ procedure insert;
 procedure remove;
 procedure reserve;
 procedure resize;
+
+
+
+//
+// sequence type predicates
+//
+
+Sequence?(T) = CallDefined?(iterator, T);
+SequenceElementType(T) = Type(next(iterator(null(T)^)));
+SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
+RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
+LValueSequence?(T) = Sequence?(T) and LValue?(next(iterator(null(T)^)));
+
+// true if sequence elements are stored contiguously in memory
+ContiguousSequence?(T) = false;
 
 
 
@@ -226,21 +263,6 @@ overload max(lvalue a, lvalue b) {
 
 typeToValue(a) = ref null(a)^;
 typesToValues(...a) = forward ...mapValues(typeToValue, ...a);
-
-
-
-//
-// sequence type predicates
-//
-
-Sequence?(T) = CallDefined?(iterator, T);
-SequenceElementType(T) = Type(next(iterator(null(T)^)));
-SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
-RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
-LValueSequence?(T) = Sequence?(T) and LValue?(next(iterator(null(T)^)));
-
-// true if sequence elements are stored contiguously in memory
-ContiguousSequence?(T) = false;
 
 
 

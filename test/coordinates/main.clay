@@ -1,0 +1,27 @@
+
+[T]
+coordinateInfo(x:T) {
+    println("T = ", T);
+    println("Coordinate?(T) = ", Coordinate?(T));
+    println("CoordinateTargetType(T) = ", CoordinateTargetType(T));
+    println("RandomAccessCoordinate?(T) = ", RandomAccessCoordinate?(T));
+    println("LValueCoordinate?(T) = ", LValueCoordinate?(T));
+    println("ContiguousCoordinate?(T) = ", ContiguousCoordinate?(T));
+    println();
+}
+
+main() {
+    alias f = coordinateInfo;
+
+    var a = [1, 2, 3];
+    f( begin(a) );
+
+    var b = map(addressOf, a);
+    f( begin(b) );
+
+    var c = map(dereference, b);
+    f( begin(c) );
+
+    var d = map(copy, c);
+    f( begin(d) );
+}

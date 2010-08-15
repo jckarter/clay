@@ -1,4 +1,18 @@
 
+
+//
+// type predicates
+//
+
+[T]
+overload ContiguousCoordinate?(static Pointer[T]) = true;
+
+
+
+//
+// null?
+//
+
 procedure null?;
 
 

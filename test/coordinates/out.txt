@@ -1,0 +1,28 @@
+T = Pointer[Int32]
+Coordinate?(T) = true
+CoordinateTargetType(T) = Int32
+RandomAccessCoordinate?(T) = true
+LValueCoordinate?(T) = true
+ContiguousCoordinate?(T) = true
+
+T = MappedCoordinate[Static[addressOf], Pointer[Int32]]
+Coordinate?(T) = true
+CoordinateTargetType(T) = Pointer[Int32]
+RandomAccessCoordinate?(T) = true
+LValueCoordinate?(T) = false
+ContiguousCoordinate?(T) = false
+
+T = MappedCoordinate[Static[dereference], MappedCoordinate[Static[addressOf], Pointer[Int32]]]
+Coordinate?(T) = true
+CoordinateTargetType(T) = Int32
+RandomAccessCoordinate?(T) = true
+LValueCoordinate?(T) = true
+ContiguousCoordinate?(T) = false
+
+T = MappedCoordinate[Static[copy], MappedCoordinate[Static[dereference], MappedCoordinate[Static[addressOf], Pointer[Int32]]]]
+Coordinate?(T) = true
+CoordinateTargetType(T) = Int32
+RandomAccessCoordinate?(T) = true
+LValueCoordinate?(T) = false
+ContiguousCoordinate?(T) = false
+
