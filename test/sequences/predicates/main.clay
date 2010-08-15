@@ -1,12 +1,9 @@
 
-import io.files.raw.*;
-
-[T]
+[T | Sequence?(T)]
 sequenceInfo(x:T) {
     println("T = ", T);
     println("Sequence?(T) = ", Sequence?(T));
-    if (Sequence?(T))
-        println("SequenceElementType(T) = ", SequenceElementType(T));
+    println("SequenceElementType(T) = ", SequenceElementType(T));
     println("SizedSequence?(T) = ", SizedSequence?(T));
     println("RandomAccessSequence?(T) = ", RandomAccessSequence?(T));
     println("LValueSequence?(T) = ", LValueSequence?(T));
