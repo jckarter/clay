@@ -55,9 +55,9 @@ overload RegularRecord?(static Displayable) = false;
 // constructor
 [T]
 overload Displayable(x:T) {
-    var obj = allocateMemory(T, 1);
+    var obj = allocateRawMemory(T, 1);
     obj^ <-- x;
-    var vtable = allocateMemory(DisplayableVTable, 1);
+    var vtable = allocateRawMemory(DisplayableVTable, 1);
     vtable^ <-- makeDisplayableVTable(T);
     return Displayable(Pointer[Opaque](obj), vtable);
 }
@@ -68,10 +68,10 @@ overload Displayable() = Displayable(null(Opaque), null(DisplayableVTable));
 // copy constructor
 overload Displayable(x:Displayable) {
     if (null?(x.obj)) return Displayable();
-    var p = allocateMemory(Int8, x.vtable^.size);
+    var p = allocateRawMemory(Int8, x.vtable^.size);
     var obj = Pointer[Opaque](p);
     obj^ <-- x.vtable^.copyConstructor(x.obj^);
-    var vtable = allocateMemory(DisplayableVTable, 1);
+    var vtable = allocateRawMemory(DisplayableVTable, 1);
     vtable^ <-- x.vtable^;
     return Displayable(obj, vtable);
 }
@@ -87,8 +87,8 @@ overload move(src:Displayable) returned:Displayable {
 overload destroy(x:Displayable) {
     if (not null?(x.obj)) {
         x.vtable^.destructor(x.obj^);
-        freeMemory(x.obj);
-        freeMemory(x.vtable);
+        freeRawMemory(x.obj);
+        freeRawMemory(x.vtable);
     }
 }
 

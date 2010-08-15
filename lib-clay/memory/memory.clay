@@ -1,0 +1,18 @@
+
+import libc.(malloc, free);
+
+
+
+//
+// allocateRawMemory, freeRawMemory
+//
+
+[T,I | Integer?(I)]
+allocateRawMemory(static T, count:I) {
+    var ptr = malloc(TypeSize(T) * SizeT(count));
+    return Pointer[T](ptr);
+}
+
+freeRawMemory(ptr) {
+    free(RawPointer(ptr));
+}
