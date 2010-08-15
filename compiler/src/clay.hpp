@@ -2670,13 +2670,15 @@ struct CodegenContext : public Object {
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
     vector<JumpTarget> exceptionTargets;
+    bool checkExceptions;
 
     CodegenContext(const vector<CReturn> &returns,
                    const JumpTarget &returnTarget,
                    const JumpTarget &exceptionTarget)
         : Object(DONT_CARE),
           returns(returns), returnTarget(returnTarget),
-          exceptionTargets(1, exceptionTarget) {}
+          exceptionTargets(1, exceptionTarget),
+          checkExceptions(true) {}
 };
 
 typedef Pointer<CodegenContext> CodegenContextPtr;
