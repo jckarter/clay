@@ -1,0 +1,33 @@
+
+import io.files.raw.*;
+
+[T]
+sequenceInfo(x:T) {
+    println("T = ", T);
+    println("Sequence?(T) = ", Sequence?(T));
+    if (Sequence?(T))
+        println("SequenceElementType(T) = ", SequenceElementType(T));
+    println("SizedSequence?(T) = ", SizedSequence?(T));
+    println("RandomAccessSequence?(T) = ", RandomAccessSequence?(T));
+    println("LValueSequence?(T) = ", LValueSequence?(T));
+    println("ContiguousSequence?(T) = ", ContiguousSequence?(T));
+    println();
+}
+
+main() {
+    alias f = sequenceInfo;
+
+    var a = [1, 2, 3];
+    f( a );
+
+    var b = map(addressOf, a);
+    f( b );
+
+    var c = map(dereference, b);
+    f( c );
+
+    var d = map(copy, c);
+    f( d );
+
+    f( lines(File("main.clay")) );
+}

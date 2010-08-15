@@ -1,0 +1,40 @@
+T = Array[Int32, 3]
+Sequence?(T) = true
+SequenceElementType(T) = Int32
+SizedSequence?(T) = true
+RandomAccessSequence?(T) = true
+LValueSequence?(T) = true
+ContiguousSequence?(T) = true
+
+T = Mapped[Static[addressOf], SequenceHandle[Array[Int32, 3]]]
+Sequence?(T) = true
+SequenceElementType(T) = Pointer[Int32]
+SizedSequence?(T) = true
+RandomAccessSequence?(T) = true
+LValueSequence?(T) = false
+ContiguousSequence?(T) = false
+
+T = Mapped[Static[dereference], SequenceHandle[Mapped[Static[addressOf], SequenceHandle[Array[Int32, 3]]]]]
+Sequence?(T) = true
+SequenceElementType(T) = Int32
+SizedSequence?(T) = true
+RandomAccessSequence?(T) = true
+LValueSequence?(T) = true
+ContiguousSequence?(T) = false
+
+T = Mapped[Static[copy], SequenceHandle[Mapped[Static[dereference], SequenceHandle[Mapped[Static[addressOf], SequenceHandle[Array[Int32, 3]]]]]]]
+Sequence?(T) = true
+SequenceElementType(T) = Int32
+SizedSequence?(T) = true
+RandomAccessSequence?(T) = true
+LValueSequence?(T) = false
+ContiguousSequence?(T) = false
+
+T = LineSequence
+Sequence?(T) = true
+SequenceElementType(T) = Vector[Char]
+SizedSequence?(T) = false
+RandomAccessSequence?(T) = false
+LValueSequence?(T) = false
+ContiguousSequence?(T) = false
+
