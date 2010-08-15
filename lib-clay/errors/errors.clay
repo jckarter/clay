@@ -7,7 +7,7 @@ instance Exception = Error;
 
 error(...e) {
     var buf = String();
-    printlnTo(buf, ...e);
+    printTo(buf, ...e);
     throw Error(move(buf));
 }
 
