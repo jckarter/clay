@@ -47,3 +47,7 @@ else(UNIX)
 endif(UNIX)
 
 target_link_libraries(clay ${LLVM_LIBS})
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_libraries(clay "rt")
+endif()
