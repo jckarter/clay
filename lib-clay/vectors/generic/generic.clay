@@ -44,6 +44,10 @@ record VectorCoordinate[T] {
     ptr : Pointer[T];
 }
 
+[T]
+overload ContiguousCoordinate?(static VectorCoordinate[T]) = true;
+
+
 [V | Vector?(V)]
 overload begin(a:V) = VectorCoordinate(&a[0]);
 

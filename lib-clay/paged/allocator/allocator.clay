@@ -201,6 +201,9 @@ record PagedPointer[T] {
 }
 
 [T]
+overload ContiguousCoordinate?(static PagedPointer[T]) = true;
+
+[T]
 overload PagedPointer[T]() = PagedPointer[T](SizeT(0));
 
 [T,I | Integer?(I)]
