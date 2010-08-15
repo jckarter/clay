@@ -35,7 +35,7 @@ overload RegularRecord?(static Displayable) = false;
 // primary constructor
 [T]
 overload Displayable(x:T) {
-    var obj = allocateMemory(T, 1);
+    var obj = allocateRawMemory(T, 1);
     obj^ <-- x;
     var destructor = makeCodePointer(destroy, T);
     var copyConstructor = makeCodePointer(T, T);
@@ -58,7 +58,7 @@ overload Displayable() {
 
 // copy constructor
 overload Displayable(x:Displayable) {
-    var p = allocateMemory(Int8, x.size);
+    var p = allocateRawMemory(Int8, x.size);
     var obj = Pointer[Opaque](p);
     obj^ <-- x.copyConstructor(x.obj^);
     return Displayable(obj, x.size, x.destructor, x.copyConstructor, x.display);
@@ -78,7 +78,7 @@ overload move(src:Displayable) returned:Displayable {
 overload destroy(x:Displayable) {
     if (not null?(x.obj)) {
         x.destructor(x.obj^);
-        freeMemory(x.obj);
+        freeRawMemory(x.obj);
     }
 }
 

@@ -25,7 +25,7 @@ overload RegularRecord?(static SharedPointer[T]) = false;
 
 [T]
 macro allocateShared(x:T) {
-    var ptr = allocateMemory(RefCounted[T], SizeT(1));
+    var ptr = allocateRawMemory(RefCounted[T], SizeT(1));
     ptr^.refCount = 1;
     ptr^.value <-- x;
     return SharedPointer(ptr);
@@ -69,7 +69,7 @@ overload destroy(p : SharedPointer[T]) {
         p.ptr^.refCount -= 1;
         if (p.ptr^.refCount == 0) {
             destroy(p.ptr^.value);
-            freeMemory(p.ptr);
+            freeRawMemory(p.ptr);
         }
     }
 }

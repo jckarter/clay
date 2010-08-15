@@ -1,5 +1,3 @@
-import libc.(malloc, free);
-
 
 procedure null?;
 
@@ -114,22 +112,6 @@ overload null?(x:Pointer[T]) = (x == null(T));
 
 [T]
 overload dereference(p:Pointer[T]) = ref pointerDereference(p);
-
-
-
-//
-// allocateMemory, freeMemory
-//
-
-[T,I | Integer?(I)]
-allocateMemory(static T, count:I) {
-    var ptr = malloc(TypeSize(T) * SizeT(count));
-    return Pointer[T](ptr);
-}
-
-freeMemory(ptr) {
-    free(RawPointer(ptr));
-}
 
 
 

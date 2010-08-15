@@ -88,7 +88,7 @@ overload pushAll(a) {}
 overload destroy(a:Vector[T]) {
     for (x in a)
         destroy(x);
-    freeMemory(a.data);
+    freeRawMemory(a.data);
 }
 
 [T]
@@ -118,13 +118,13 @@ overload vectorCapacity(a:Vector[T]) = a.capacity;
 [T]
 overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
     assert(capacity >= a.size);
-    var data = allocateMemory(T, capacity);
+    var data = allocateRawMemory(T, capacity);
     var ptr = data;
     for (x in a) {
         ptr^ <-- dirtyMove(x);
         inc(ptr);
     }
-    freeMemory(a.data);
+    freeRawMemory(a.data);
     a.data = data;
     a.capacity = capacity;
 }

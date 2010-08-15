@@ -61,7 +61,7 @@ overload hasNext?(x:DirentIterator) {
         if (not null?(x.entry))
             destroy(x.entry);
 
-        var returnCode = readdir_r(x.dirp, allocateMemory(Struct_dirent, 1), &x.entry);
+        var returnCode = readdir_r(x.dirp, allocateRawMemory(Struct_dirent, 1), &x.entry);
 
         if (returnCode != 0)
             error("failed to read directory: ", errorMessage());
