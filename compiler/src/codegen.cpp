@@ -212,13 +212,13 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
 {
     if (isPrimitiveAggregateType(dest->type))
         return;
-    bool savedExceptionsEnabled = exceptionsEnabled;
-    exceptionsEnabled = false;
+    bool savedCheckExceptions = ctx->checkExceptions;
+    ctx->checkExceptions = false;
     codegenCallValue(staticCValue(prelude_destroy()),
                      new MultiCValue(dest),
                      ctx,
                      new MultiCValue());
-    exceptionsEnabled = savedExceptionsEnabled;
+    ctx->checkExceptions = savedCheckExceptions;
 }
 
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
@@ -2011,6 +2011,8 @@ void codegenLowlevelCall(llvm::Value *llCallable,
     llvm::Value *result =
         llvmBuilder->CreateCall(llCallable, argBegin, argEnd);
     if (!exceptionsEnabled)
+        return;
+    if (!ctx->checkExceptions)
         return;
     llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
     llvm::Value *cond = llvmBuilder->CreateICmpEQ(result, zero);
