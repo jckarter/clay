@@ -260,6 +260,7 @@ static void usage()
 #endif
     cerr << "  -L<dir>           - add <dir> to library search path\n";
     cerr << "  -l<lib>           - link with library <lib>\n";
+    cerr << "  -I<path>          - add <path> to clay module search path\n";
     cerr << "  -v                - display version info\n";
 }
 
@@ -463,6 +464,22 @@ int main(int argc, char **argv) {
                 }
             }
             libraries.push_back("-l" + lib);
+        }
+        else if (strstr(argv[i], "-I") == argv[i]) {
+            string path = argv[i] + strlen("-I");
+            if (path.empty()) {
+                if (i+1 == argc) {
+                    cerr << "error: path missing after -l\n";
+                    return -1;
+                }
+                ++i;
+                path = argv[i];
+                if (path.empty() || (path[0] == '-')) {
+                    cerr << "error: path missing after -l\n";
+                    return -1;
+                }
+            }
+            addSearchPath(path);
         }
         else if (strstr(argv[i], "-v") == argv[i]) {
             cerr << "clay compiler ("
