@@ -1109,11 +1109,13 @@ void codegenGlobalVariable(GlobalVariablePtr x)
     PValuePtr y = safeAnalyzeGlobalVariable(x);
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
+    ostringstream ostr;
+    ostr << "clay_" << x->name->str << "_" << y->type;
     x->llGlobal =
         new llvm::GlobalVariable(
             *llvmModule, llvmType(y->type), false,
             llvm::GlobalVariable::InternalLinkage,
-            initializer, "clay_" + x->name->str);
+            initializer, ostr.str());
 }
 
 
@@ -2908,8 +2910,13 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         cgDestroyAndPopStack(marker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            cgPushStack(mcv->values[i]);
-            addLocal(env2, x->names[i], mcv->values[i].ptr());
+            CValuePtr cv = mcv->values[i];
+            cgPushStack(cv);
+            addLocal(env2, x->names[i], cv.ptr());
+
+            ostringstream ostr;
+            ostr << x->names[i]->str << "_" << cv->type;
+            cv->llValue->setName(ostr.str());
         }
         return env2;
     }
@@ -2935,15 +2942,19 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         cgDestroyAndPopStack(marker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
+            CValuePtr cv;
             if (mpv->values[i]->isTemp) {
-                CValuePtr cv = mcv->values[i];
+                cv = mcv->values[i];
                 cgPushStack(cv);
-                addLocal(env2, x->names[i], cv.ptr());
             }
             else {
-                CValuePtr cvPtr = mcv->values[i];
-                addLocal(env2, x->names[i], derefValue(cvPtr).ptr());
+                cv = derefValue(mcv->values[i]);
             }
+            addLocal(env2, x->names[i], cv.ptr());
+
+            ostringstream ostr;
+            ostr << x->names[i]->str << "_" << cv->type;
+            cv->llValue->setName(ostr.str());
         }
         return env2;
     }

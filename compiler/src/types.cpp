@@ -723,12 +723,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
             llTypes.push_back(llvmType(*i));
         if (x->elementTypes.empty())
             llTypes.push_back(llvmIntType(8));
-        const llvm::Type *llType =
-            llvm::StructType::get(llvm::getGlobalContext(), llTypes);
-        ostringstream out;
-        out << t;
-        llvmModule->addTypeName(out.str(), llType);
-        return llType;
+        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
     case UNION_TYPE : {
         UnionType *x = (UnionType *)t.ptr();
@@ -759,12 +754,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
                 llvm::ArrayType::get(llvmIntType(8), maxSize-maxAlignSize);
             llTypes.push_back(padding);
         }
-        const llvm::Type *llType =
-            llvm::StructType::get(llvm::getGlobalContext(), llTypes);
-        ostringstream out;
-        out << t;
-        llvmModule->addTypeName(out.str(), llType);
-        return llType;
+        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
@@ -781,11 +771,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         llvm::StructType *st =
             llvm::StructType::get(llvm::getGlobalContext(), llTypes);
         opaque->refineAbstractTypeTo(st);
-        const llvm::Type *llType = x->llTypeHolder->get();
-        ostringstream out;
-        out << t;
-        llvmModule->addTypeName(out.str(), llType);
-        return llType;
+        return x->llTypeHolder->get();
     }
     case VARIANT_TYPE : {
         VariantType *x = (VariantType *)t.ptr();
