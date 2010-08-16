@@ -9,16 +9,22 @@
 // invoke stack - a compilation call stack
 //
 
-typedef pair<ObjectPtr, const vector<TypePtr> *> InvokeStackEntry;
-
 static vector<InvokeStackEntry> invokeStack;
 
 void pushInvokeStack(ObjectPtr callable, const vector<TypePtr> &argsKey) {
-    invokeStack.push_back(make_pair(callable, &argsKey));
+    invokeStack.push_back(make_pair(callable, argsKey));
 }
 
 void popInvokeStack() {
     invokeStack.pop_back();
+}
+
+vector<InvokeStackEntry> getInvokeStack() {
+    return invokeStack;
+}
+
+void setInvokeStack(const vector<InvokeStackEntry> &x) {
+    invokeStack = x;
 }
 
 
@@ -37,7 +43,7 @@ void popLocation() {
     errorLocations.pop_back();
 }
 
-static LocationPtr topLocation() {
+LocationPtr topLocation() {
     vector<LocationPtr>::iterator i, begin;
     i = errorLocations.end();
     begin = errorLocations.begin();
@@ -139,7 +145,7 @@ static void displayInvokeStack() {
     fprintf(stderr, "compilation context: \n");
     for (unsigned i = invokeStack.size(); i > 0; --i) {
         ObjectPtr callable = invokeStack[i-1].first;
-        const vector<TypePtr> &argsKey = *invokeStack[i-1].second;
+        const vector<TypePtr> &argsKey = invokeStack[i-1].second;
 
         ostringstream sout;
         printName(sout, callable);

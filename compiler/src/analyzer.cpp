@@ -257,41 +257,63 @@ static PValuePtr staticPValue(ObjectPtr x)
 // safe analysis
 //
 
-static void analysisError(LocationPtr location)
+static LocationPtr analysisErrorLocation;
+static vector<InvokeStackEntry> analysisErrorInvokeStack;
+
+struct ClearAnalysisError {
+    ClearAnalysisError() {}
+    ~ClearAnalysisError() {
+        analysisErrorLocation = NULL;
+        analysisErrorInvokeStack.clear();
+    }
+};
+
+static void updateAnalysisErrorLocation()
 {
-    LocationContext loc(location);
+    analysisErrorLocation = topLocation();
+    analysisErrorInvokeStack = getInvokeStack();
+}
+
+static void analysisError()
+{
+    setInvokeStack(analysisErrorInvokeStack);
+    LocationContext loc(analysisErrorLocation);
     error("type propagation failed due to recursion without base case");
 }
 
 PValuePtr safeAnalyzeOne(ExprPtr expr, EnvPtr env)
 {
+    ClearAnalysisError clear;
     PValuePtr result = analyzeOne(expr, env);
     if (!result)
-        analysisError(expr->location);
+        analysisError();
     return result;
 }
 
 MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env)
 {
+    ClearAnalysisError clear;
     MultiPValuePtr result = analyzeMulti(exprs, env);
     if (!result)
-        analysisError(NULL);
+        analysisError();
     return result;
 }
 
 MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env)
 {
+    ClearAnalysisError clear;
     MultiPValuePtr result = analyzeExpr(expr, env);
     if (!result)
-        analysisError(expr->location);
+        analysisError();
     return result;
 }
 
 PValuePtr safeAnalyzeGlobalVariable(GlobalVariablePtr x)
 {
+    ClearAnalysisError clear;
     PValuePtr result = analyzeGlobalVariable(x);
     if (!result)
-        analysisError(x->location);
+        analysisError();
     return result;
 }
 
@@ -299,9 +321,10 @@ MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
                                        ExprListPtr args,
                                        EnvPtr env)
 {
+    ClearAnalysisError clear;
     MultiPValuePtr result = analyzeIndexingExpr(indexable, args, env);
     if (!result)
-        analysisError(NULL);
+        analysisError();
     return result;
 }
 
@@ -309,9 +332,10 @@ MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
                                     EnvPtr env,
                                     vector<unsigned> &dispatchIndices)
 {
+    ClearAnalysisError clear;
     MultiPValuePtr result = analyzeMultiArgs(exprs, env, dispatchIndices);
     if (!result)
-        analysisError(NULL);
+        analysisError();
     return result;
 }
 
@@ -319,9 +343,10 @@ InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
                                    const vector<TypePtr> &argsKey,
                                    const vector<ValueTempness> &argsTempness)
 {
+    ClearAnalysisError clear;
     InvokeEntryPtr entry = analyzeCallable(x, argsKey, argsTempness);
     if (!entry->macro && !entry->analyzed)
-        analysisError(NULL);
+        analysisError();
     return entry;
 }
 
@@ -329,9 +354,10 @@ MultiPValuePtr safeAnalyzeCallMacro(InvokeEntryPtr entry,
                                     ExprListPtr args,
                                     EnvPtr env)
 {
+    ClearAnalysisError clear;
     MultiPValuePtr result = analyzeCallMacro(entry, args, env);
     if (!entry)
-        analysisError(NULL);
+        analysisError();
     return result;
 }
 
@@ -805,8 +831,10 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 PValuePtr analyzeGlobalVariable(GlobalVariablePtr x)
 {
     if (!x->type) {
-        if (x->analyzing)
+        if (x->analyzing) {
+            updateAnalysisErrorLocation();
             return NULL;
+        }
         x->analyzing = true;
         PValuePtr pv = analyzeOne(x->expr, x->env);
         x->analyzing = false;
@@ -1502,8 +1530,12 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 
     if (!entry || !entry->code->hasBody())
         error("no matching operation");
-    if (entry->analyzed || entry->analyzing)
+    if (entry->analyzed)
         return entry;
+    if (entry->analyzing) {
+        updateAnalysisErrorLocation();
+        return entry;
+    }
     if (entry->macro) {
         entry->code = clone(entry->origCode);
         return entry;
