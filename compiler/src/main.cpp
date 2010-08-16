@@ -469,13 +469,13 @@ int main(int argc, char **argv) {
             string path = argv[i] + strlen("-I");
             if (path.empty()) {
                 if (i+1 == argc) {
-                    cerr << "error: path missing after -l\n";
+                    cerr << "error: path missing after -I\n";
                     return -1;
                 }
                 ++i;
                 path = argv[i];
                 if (path.empty() || (path[0] == '-')) {
-                    cerr << "error: path missing after -l\n";
+                    cerr << "error: path missing after -I\n";
                     return -1;
                 }
             }
