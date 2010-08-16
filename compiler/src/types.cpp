@@ -608,6 +608,74 @@ const llvm::StructLayout *recordTypeLayout(RecordType *t) {
 
 
 //
+// verifyRecursionCorrectness
+//
+
+static void verifyRecursionCorrectness(TypePtr t,
+                                       set<TypePtr> &visited);
+
+static void verifyRecursionCorrectness(TypePtr t) {
+    set<TypePtr> visited;
+    verifyRecursionCorrectness(t, visited);
+}
+
+static void verifyRecursionCorrectness(TypePtr t,
+                                       set<TypePtr> &visited) {
+    pair<set<TypePtr>::iterator, bool>
+        result = visited.insert(t);
+    if (!result.second) {
+        ostringstream sout;
+        sout << "invalid recursion in type: " << t;
+        error(sout.str());
+    }
+
+    switch (t->typeKind) {
+    case ARRAY_TYPE : {
+        ArrayType *at = (ArrayType *)t.ptr();
+        verifyRecursionCorrectness(at->elementType, visited);
+        break;
+    }
+    case VEC_TYPE : {
+        VecType *vt = (VecType *)t.ptr();
+        verifyRecursionCorrectness(vt->elementType, visited);
+        break;
+    }
+    case TUPLE_TYPE : {
+        TupleType *tt = (TupleType *)t.ptr();
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i)
+            verifyRecursionCorrectness(tt->elementTypes[i], visited);
+        break;
+    }
+    case UNION_TYPE : {
+        UnionType *ut = (UnionType *)t.ptr();
+        for (unsigned i = 0; i < ut->memberTypes.size(); ++i)
+            verifyRecursionCorrectness(ut->memberTypes[i], visited);
+        break;
+    }
+    case RECORD_TYPE : {
+        RecordType *rt = (RecordType *)t.ptr();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        for (unsigned i = 0; i < fieldTypes.size(); ++i)
+            verifyRecursionCorrectness(fieldTypes[i], visited);
+        break;
+    }
+    case VARIANT_TYPE : {
+        VariantType *vt = (VariantType *)t.ptr();
+        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        for (unsigned i = 0; i < memberTypes.size(); ++i)
+            verifyRecursionCorrectness(memberTypes[i], visited);
+        break;
+    }
+    default :
+        break;
+    }
+
+    visited.erase(result.first);
+}
+
+
+
+//
 // llvmIntType, llvmFloatType, llvmPointerType, llvmArrayType, llvmVoidType
 //
 
@@ -657,6 +725,7 @@ static const llvm::Type *makeLLVMType(TypePtr t);
 
 const llvm::Type *llvmType(TypePtr t) {
     if (t->llTypeHolder == NULL) {
+        verifyRecursionCorrectness(t);
         llvm::OpaqueType *opaque =
             llvm::OpaqueType::get(llvm::getGlobalContext());
         t->llTypeHolder = new llvm::PATypeHolder(opaque);
