@@ -2821,7 +2821,9 @@ bool codegenStatement(StatementPtr stmt,
         ExprPtr callable = prelude_expr_throwValue();
         ExprListPtr args = new ExprList(x->expr);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
-        return false;
+        const JumpTarget &jt = ctx->exceptionTargets.back();
+        llvmBuilder->CreateBr(jt.block);
+        return true;
     }
 
     case STATIC_FOR : {
