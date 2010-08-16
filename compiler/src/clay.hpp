@@ -484,8 +484,12 @@ struct Location : public Object {
 // error module
 //
 
+typedef pair<ObjectPtr, vector<TypePtr> > InvokeStackEntry;
+
 void pushInvokeStack(ObjectPtr callable, const vector<TypePtr> &argsKey);
 void popInvokeStack();
+vector<InvokeStackEntry> getInvokeStack();
+void setInvokeStack(const vector<InvokeStackEntry> &x);
 
 struct InvokeStackContext {
     InvokeStackContext(ObjectPtr callable, const vector<TypePtr> &argsKey) {
@@ -498,6 +502,7 @@ struct InvokeStackContext {
 
 void pushLocation(LocationPtr location);
 void popLocation();
+LocationPtr topLocation();
 
 struct LocationContext {
     LocationPtr loc;
