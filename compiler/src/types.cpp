@@ -656,12 +656,79 @@ const llvm::Type *llvmVoidType() {
 static const llvm::Type *makeLLVMType(TypePtr t);
 
 const llvm::Type *llvmType(TypePtr t) {
-    if (t->llTypeHolder != NULL)
+    if (t->llTypeHolder == NULL) {
+        llvm::OpaqueType *opaque =
+            llvm::OpaqueType::get(llvm::getGlobalContext());
+        t->llTypeHolder = new llvm::PATypeHolder(opaque);
+        const llvm::Type *llt = makeLLVMType(t);
+        opaque->refineAbstractTypeTo(llt);
+        t->refined = true;
+    }
+    return t->llTypeHolder->get();
+}
+
+// return opaque llvm pointers for all clay pointer types
+// otherwise behaves like llvmType
+static const llvm::Type *makeLLVMApproximateType(TypePtr t) {
+    if (t->refined)
         return t->llTypeHolder->get();
-    const llvm::Type *llt = makeLLVMType(t);
-    if (t->llTypeHolder == NULL)
-        t->llTypeHolder = new llvm::PATypeHolder(llt);
-    return llt;
+
+    switch (t->typeKind) {
+
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+    case UNION_TYPE :
+    case STATIC_TYPE :
+    case ENUM_TYPE :
+        return makeLLVMType(t);
+
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+        return llvmPointerType(llvmIntType(8));
+
+    case ARRAY_TYPE : {
+        ArrayType *x = (ArrayType *)t.ptr();
+        const llvm::Type *et = makeLLVMApproximateType(x->elementType);
+        return llvmArrayType(et, x->size);
+    }
+    case VEC_TYPE : {
+        VecType *x = (VecType *)t.ptr();
+        const llvm::Type *et = makeLLVMApproximateType(x->elementType);
+        return llvm::VectorType::get(et, x->size);
+    }
+    case TUPLE_TYPE : {
+        TupleType *x = (TupleType *)t.ptr();
+        vector<const llvm::Type *> llTypes;
+        vector<TypePtr>::iterator i, end;
+        for (i = x->elementTypes.begin(), end = x->elementTypes.end();
+             i != end; ++i)
+            llTypes.push_back(makeLLVMApproximateType(*i));
+        if (x->elementTypes.empty())
+            llTypes.push_back(llvmIntType(8));
+        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+    }
+    case RECORD_TYPE : {
+        RecordType *x = (RecordType *)t.ptr();
+        const vector<TypePtr> &fieldTypes = recordFieldTypes(x);
+        vector<const llvm::Type *> llTypes;
+        vector<TypePtr>::const_iterator i, end;
+        for (i = fieldTypes.begin(), end = fieldTypes.end(); i != end; ++i)
+            llTypes.push_back(makeLLVMApproximateType(*i));
+        if (fieldTypes.empty())
+            llTypes.push_back(llvmIntType(8));
+        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+    }
+    case VARIANT_TYPE : {
+        VariantType *x = (VariantType *)t.ptr();
+        return makeLLVMApproximateType(variantReprType(x));
+    }
+
+    default :
+        assert(false);
+        return NULL;
+    }
 }
 
 static const llvm::Type *makeLLVMType(TypePtr t) {
@@ -732,7 +799,8 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         size_t maxAlignSize = 0;
         size_t maxSize = 0;
         for (unsigned i = 0; i < x->memberTypes.size(); ++i) {
-            const llvm::Type *llt = llvmType(x->memberTypes[i]);
+            const llvm::Type *llt =
+                makeLLVMApproximateType(x->memberTypes[i]);
             size_t align = llvmTargetData->getABITypeAlignment(llt);
             size_t size = llvmTargetData->getTypeAllocSize(llt);
             if (align > maxAlign) {
@@ -758,9 +826,6 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
     }
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
-        llvm::OpaqueType *opaque =
-            llvm::OpaqueType::get(llvm::getGlobalContext());
-        x->llTypeHolder = new llvm::PATypeHolder(opaque);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(x);
         vector<const llvm::Type *> llTypes;
         vector<TypePtr>::const_iterator i, end;
@@ -768,10 +833,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
             llTypes.push_back(llvmType(*i));
         if (fieldTypes.empty())
             llTypes.push_back(llvmIntType(8));
-        llvm::StructType *st =
-            llvm::StructType::get(llvm::getGlobalContext(), llTypes);
-        opaque->refineAbstractTypeTo(st);
-        return x->llTypeHolder->get();
+        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
     case VARIANT_TYPE : {
         VariantType *x = (VariantType *)t.ptr();
