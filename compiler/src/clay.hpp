@@ -2444,6 +2444,24 @@ struct AnalysisCachingDisabler {
     ~AnalysisCachingDisabler() { enableAnalysisCaching(); }
 };
 
+
+PValuePtr safeAnalyzeOne(ExprPtr expr, EnvPtr env);
+MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env);
+MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env);
+PValuePtr safeAnalyzeGlobalVariable(GlobalVariablePtr x);
+MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
+                                       ExprListPtr args,
+                                       EnvPtr env);
+MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
+                                    EnvPtr env,
+                                    vector<unsigned> &dispatchIndices);
+InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
+                                   const vector<TypePtr> &argsKey,
+                                   const vector<ValueTempness> &argsTempness);
+MultiPValuePtr safeAnalyzeCallMacro(InvokeEntryPtr entry,
+                                    ExprListPtr args,
+                                    EnvPtr env);
+
 MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
 

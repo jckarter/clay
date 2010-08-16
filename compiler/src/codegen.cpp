@@ -414,8 +414,7 @@ MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
                                        EnvPtr env,
                                        CodegenContextPtr ctx)
 {
-    MultiPValuePtr mpv = analyzeExpr(expr, env);
-    assert(mpv.ptr());
+    MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     MultiCValuePtr mcv = new MultiCValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
@@ -485,8 +484,7 @@ MultiCValuePtr codegenExprAsRef(ExprPtr expr,
                                 EnvPtr env,
                                 CodegenContextPtr ctx)
 {
-    MultiPValuePtr mpv = analyzeExpr(expr, env);
-    assert(mpv.ptr());
+    MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     MultiCValuePtr mcv = new MultiCValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
@@ -524,8 +522,7 @@ void codegenOneInto(ExprPtr expr,
                     CodegenContextPtr ctx,
                     CValuePtr out)
 {
-    PValuePtr pv = analyzeOne(expr, env);
-    assert(pv.ptr());
+    PValuePtr pv = safeAnalyzeOne(expr, env);
     int marker = cgMarkStack();
     if (pv->isTemp) {
         codegenOne(expr, env, ctx, out);
@@ -551,8 +548,7 @@ void codegenMultiInto(ExprListPtr exprs,
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiPValuePtr mpv = analyzeExpr(y->expr, env);
-            assert(mpv.ptr());
+            MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
             assert(j + mpv->size() <= out->size());
             MultiCValuePtr out2 = new MultiCValue();
             for (unsigned k = 0; k < mpv->size(); ++k)
@@ -561,8 +557,7 @@ void codegenMultiInto(ExprListPtr exprs,
             j += mpv->size();
         }
         else {
-            MultiPValuePtr mpv = analyzeExpr(x, env);
-            assert(mpv.ptr());
+            MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
             if (mpv->size() != 1)
                 arityError(x, 1, mpv->size());
             assert(j < out->size());
@@ -583,8 +578,7 @@ void codegenExprInto(ExprPtr expr,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out)
 {
-    MultiPValuePtr mpv = analyzeExpr(expr, env);
-    assert(mpv.ptr());
+    MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     assert(out->size() == mpv->size());
     int marker = cgMarkStack();
     MultiCValuePtr mcv = new MultiCValue();
@@ -629,8 +623,7 @@ void codegenMulti(ExprListPtr exprs,
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiPValuePtr mpv = analyzeExpr(y->expr, env);
-            assert(mpv.ptr());
+            MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
             assert(j + mpv->size() <= out->size());
             MultiCValuePtr out2 = new MultiCValue();
             for (unsigned k = 0; k < mpv->size(); ++k)
@@ -639,8 +632,7 @@ void codegenMulti(ExprListPtr exprs,
             j += mpv->size();
         }
         else {
-            MultiPValuePtr mpv = analyzeExpr(x, env);
-            assert(mpv.ptr());
+            MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
             if (mpv->size() != 1)
                 arityError(x, 1, mpv->size());
             assert(j < out->size());
@@ -803,8 +795,7 @@ void codegenExpr(ExprPtr expr,
     case UNARY_OP : {
         UnaryOp *x = (UnaryOp *)expr.ptr();
         if (x->op == ADDRESS_OF) {
-            PValuePtr pv = analyzeOne(x->expr, env);
-            assert(pv.ptr());
+            PValuePtr pv = safeAnalyzeOne(x->expr, env);
             if (pv->isTemp)
                 error("can't take address of a temporary");
         }
@@ -1115,7 +1106,7 @@ void codegenStaticObject(ObjectPtr x,
 void codegenGlobalVariable(GlobalVariablePtr x)
 {
     assert(!x->llGlobal);
-    PValuePtr y = analyzeGlobalVariable(x);
+    PValuePtr y = safeAnalyzeGlobalVariable(x);
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
     x->llGlobal =
@@ -1463,8 +1454,7 @@ void codegenIndexingExpr(ExprPtr indexable,
                          CodegenContextPtr ctx,
                          MultiCValuePtr out)
 {
-    MultiPValuePtr mpv = analyzeIndexingExpr(indexable, args, env);
-    assert(mpv.ptr());
+    MultiPValuePtr mpv = safeAnalyzeIndexingExpr(indexable, args, env);
     assert(mpv->size() == out->size());
     bool allTempStatics = true;
     for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -1481,8 +1471,7 @@ void codegenIndexingExpr(ExprPtr indexable,
         // takes care of type constructors
         return;
     }
-    PValuePtr pv = analyzeOne(indexable, env);
-    assert(pv.ptr());
+    PValuePtr pv = safeAnalyzeOne(indexable, env);
     if (pv->type->typeKind == STATIC_TYPE) {
         StaticType *st = (StaticType *)pv->type.ptr();
         ObjectPtr obj = st->obj;
@@ -1543,8 +1532,7 @@ void codegenCallExpr(ExprPtr callable,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out)
 {
-    PValuePtr pv = analyzeOne(callable, env);
-    assert(pv.ptr());
+    PValuePtr pv = safeAnalyzeOne(callable, env);
 
     switch (pv->type->typeKind) {
     case CODE_POINTER_TYPE :
@@ -1580,8 +1568,7 @@ void codegenCallExpr(ExprPtr callable,
             break;
         }
         vector<unsigned> dispatchIndices;
-        MultiPValuePtr mpv = analyzeMultiArgs(args, env, dispatchIndices);
-        assert(mpv.ptr());
+        MultiPValuePtr mpv = safeAnalyzeMultiArgs(args, env, dispatchIndices);
         if (dispatchIndices.size() > 0) {
             MultiCValuePtr mcv = codegenMultiArgsAsRef(args, env, ctx);
             codegenDispatch(obj, mcv, mpv, dispatchIndices, ctx, out);
@@ -1593,7 +1580,7 @@ void codegenCallExpr(ExprPtr callable,
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
-        InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->macro) {
             codegenCallMacro(entry, args, env, ctx, out);
         }
@@ -1801,7 +1788,7 @@ void codegenCallValue(CValuePtr callable,
         vector<ValueTempness> argsTempness;
         computeArgsKey(pvArgs, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
-        InvokeEntryPtr entry = analyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->macro)
             error("call to macro not allowed in this context");
         assert(entry->analyzed);
@@ -2039,7 +2026,7 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
                                const vector<ValueTempness> &argsTempness)
 {
     InvokeEntryPtr entry =
-        analyzeCallable(x, argsKey, argsTempness);
+        safeAnalyzeCallable(x, argsKey, argsTempness);
     if (!entry->macro) {
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
@@ -2452,7 +2439,7 @@ void codegenCallMacro(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = analyzeCallMacro(entry, args, env);
+    MultiPValuePtr mpv = safeAnalyzeCallMacro(entry, args, env);
     assert(mpv->size() == out->size());
 
     vector<CReturn> returns;
@@ -2564,10 +2551,8 @@ bool codegenStatement(StatementPtr stmt,
 
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
-        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
-        assert(mpvLeft.ptr());
-        assert(mpvRight.ptr());
+        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
         if (mpvLeft->size() != mpvRight->size())
             error("arity mismatch between left-side and right-side");
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
@@ -2606,10 +2591,8 @@ bool codegenStatement(StatementPtr stmt,
 
     case INIT_ASSIGNMENT : {
         InitAssignment *x = (InitAssignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = analyzeMulti(x->left, env);
-        MultiPValuePtr mpvRight = analyzeMulti(x->right, env);
-        assert(mpvLeft.ptr());
-        assert(mpvRight.ptr());
+        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
+        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
         if (mpvLeft->size() != mpvRight->size())
             error("arity mismatch between left-side and right-side");
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
@@ -2627,7 +2610,7 @@ bool codegenStatement(StatementPtr stmt,
 
     case UPDATE_ASSIGNMENT : {
         UpdateAssignment *x = (UpdateAssignment *)stmt.ptr();
-        PValuePtr pvLeft = analyzeOne(x->left, env);
+        PValuePtr pvLeft = safeAnalyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
         CallPtr call = new Call(updateOperatorExpr(x->op), new ExprList());
@@ -2650,7 +2633,7 @@ bool codegenStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->values, env);
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env);
         MultiCValuePtr mcv = new MultiCValue();
         ensureArity(mpv, ctx->returns.size());
         for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -2910,7 +2893,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = analyzeMulti(x->values, env);
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env);
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
@@ -2930,8 +2913,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     }
 
     case REF : {
-        MultiPValuePtr mpv = analyzeMulti(x->values, env);
-        assert(mpv.ptr());
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env);
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
@@ -3842,7 +3824,7 @@ void codegenPrimOp(PrimOpPtr x,
         InvokeStackContext invokeStackContext(callable, argsKey);
 
         InvokeEntryPtr entry =
-            analyzeCallable(callable, argsKey, argsTempness);
+            safeAnalyzeCallable(callable, argsKey, argsTempness);
         if (entry->macro)
             argumentError(0, "cannot create pointer to macro");
         assert(entry->analyzed);
@@ -3913,7 +3895,7 @@ void codegenPrimOp(PrimOpPtr x,
         InvokeStackContext invokeStackContext(callable, argsKey);
 
         InvokeEntryPtr entry =
-            analyzeCallable(callable, argsKey, argsTempness);
+            safeAnalyzeCallable(callable, argsKey, argsTempness);
         if (entry->macro)
             argumentError(0, "cannot create pointer to macro");
         assert(entry->analyzed);

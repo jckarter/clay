@@ -254,6 +254,90 @@ static PValuePtr staticPValue(ObjectPtr x)
 
 
 //
+// safe analysis
+//
+
+static void analysisError(LocationPtr location)
+{
+    LocationContext loc(location);
+    error("type propagation failed due to recursion without base case");
+}
+
+PValuePtr safeAnalyzeOne(ExprPtr expr, EnvPtr env)
+{
+    PValuePtr result = analyzeOne(expr, env);
+    if (!result)
+        analysisError(expr->location);
+    return result;
+}
+
+MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env)
+{
+    MultiPValuePtr result = analyzeMulti(exprs, env);
+    if (!result)
+        analysisError(NULL);
+    return result;
+}
+
+MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env)
+{
+    MultiPValuePtr result = analyzeExpr(expr, env);
+    if (!result)
+        analysisError(expr->location);
+    return result;
+}
+
+PValuePtr safeAnalyzeGlobalVariable(GlobalVariablePtr x)
+{
+    PValuePtr result = analyzeGlobalVariable(x);
+    if (!result)
+        analysisError(x->location);
+    return result;
+}
+
+MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
+                                       ExprListPtr args,
+                                       EnvPtr env)
+{
+    MultiPValuePtr result = analyzeIndexingExpr(indexable, args, env);
+    if (!result)
+        analysisError(NULL);
+    return result;
+}
+
+MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
+                                    EnvPtr env,
+                                    vector<unsigned> &dispatchIndices)
+{
+    MultiPValuePtr result = analyzeMultiArgs(exprs, env, dispatchIndices);
+    if (!result)
+        analysisError(NULL);
+    return result;
+}
+
+InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
+                                   const vector<TypePtr> &argsKey,
+                                   const vector<ValueTempness> &argsTempness)
+{
+    InvokeEntryPtr entry = analyzeCallable(x, argsKey, argsTempness);
+    if (!entry->macro && !entry->analyzed)
+        analysisError(NULL);
+    return entry;
+}
+
+MultiPValuePtr safeAnalyzeCallMacro(InvokeEntryPtr entry,
+                                    ExprListPtr args,
+                                    EnvPtr env)
+{
+    MultiPValuePtr result = analyzeCallMacro(entry, args, env);
+    if (!entry)
+        analysisError(NULL);
+    return result;
+}
+
+
+
+//
 // analyzeMulti
 //
 
@@ -604,7 +688,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 
     case GLOBAL_VARIABLE : {
         GlobalVariable *y = (GlobalVariable *)x.ptr();
-        PValuePtr pv = analyzeGlobalVariable(y);
+        PValuePtr pv = safeAnalyzeGlobalVariable(y);
         return new MultiPValue(pv);
     }
 
