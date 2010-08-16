@@ -1861,6 +1861,7 @@ llvm::BasicBlock *newBasicBlock(const char *name);
 struct Type : public Object {
     int typeKind;
     llvm::PATypeHolder *llTypeHolder;
+    bool refined;
 
     bool typeInfoInitialized;
     size_t typeSize;
@@ -1870,7 +1871,8 @@ struct Type : public Object {
     vector<OverloadPtr> overloads;
 
     Type(int typeKind)
-        : Object(TYPE), typeKind(typeKind), llTypeHolder(NULL),
+        : Object(TYPE), typeKind(typeKind),
+          llTypeHolder(NULL), refined(false),
           typeInfoInitialized(false), overloadsInitialized(false) {}
     ~Type() {
         if (llTypeHolder)
