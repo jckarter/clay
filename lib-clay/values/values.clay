@@ -6,9 +6,11 @@
 // takeValues, dropValues, countValues, nthValue
 //
 
-procedure eachValue;
-overload eachValue(fn, forward x, forward ...xs) { fn(x); eachValue(fn, ...xs); }
-overload eachValue(fn) { }
+eachValue(fn, ...xs) {
+    static for (x in ...xs) {
+        fn(x);
+    }
+}
 
 procedure mapValues;
 overload mapValues(fn, forward x, forward ...xs)
