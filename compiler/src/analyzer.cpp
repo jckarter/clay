@@ -1760,6 +1760,8 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 
     case TRY : {
         Try *x = (Try *)stmt.ptr();
+        if (!exceptionsEnabled())
+            return analyzeStatement(x->tryBlock, env, ctx);
         if (!x->desugaredCatchBlock)
             x->desugaredCatchBlock = desugarCatchBlocks(x->catchBlocks);
         bool result1 = analyzeStatement(x->tryBlock, env, ctx);

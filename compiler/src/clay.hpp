@@ -2627,6 +2627,7 @@ extern const llvm::TargetData *llvmTargetData;
 
 bool initLLVM(std::string const &targetTriple);
 
+bool exceptionsEnabled();
 void setExceptionsEnabled(bool enabled);
 
 struct CValue : public Object {

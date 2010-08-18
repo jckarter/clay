@@ -542,6 +542,14 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "Float32", float32Type.ptr());
     addPrim(prims, "Float64", float64Type.ptr());
 
+    GlobalAliasPtr v =
+        new GlobalAlias(new Identifier("ExceptionsEnabled?"),
+                        PUBLIC,
+                        vector<IdentifierPtr>(),
+                        NULL,
+                        new BoolLiteral(exceptionsEnabled()));
+    addPrim(prims, "ExceptionsEnabled?", v.ptr());
+
 #define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
 
     PRIMITIVE(TypeP);
