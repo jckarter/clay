@@ -1719,12 +1719,7 @@ ExprPtr foreignExpr(EnvPtr env, ExprPtr expr);
 
 void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
-
-BlockPtr globalVarInitializers();
-BlockPtr globalVarDestructors();
-
 ModulePtr loadedModule(const string &module);
-
 const string &primOpName(PrimOpPtr x);
 
 

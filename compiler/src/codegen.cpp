@@ -9,6 +9,10 @@ llvm::Module *llvmModule;
 llvm::ExecutionEngine *llvmEngine;
 const llvm::TargetData *llvmTargetData;
 
+static vector<CValuePtr> initializedGlobals;
+static CodegenContextPtr constructorsCtx;
+static CodegenContextPtr destructorsCtx;
+
 void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx);
 void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx);
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
@@ -1120,6 +1124,22 @@ void codegenGlobalVariable(GlobalVariablePtr x)
             *llvmModule, llvmType(y->type), false,
             llvm::GlobalVariable::InternalLinkage,
             initializer, ostr.str());
+
+    // generate initializer
+    ExprPtr lhs = new NameRef(x->name);
+    lhs->location = x->name->location;
+    StatementPtr init = new InitAssignment(lhs, x->expr);
+    init->location = x->location;
+    bool result = codegenStatement(init, x->env, constructorsCtx);
+    assert(!result);
+
+    // generate destructor procedure body
+    InvokeEntryPtr entry =
+        codegenCallable(prelude_destroy(),
+                        vector<TypePtr>(1, y->type),
+                        vector<ValueTempness>(1, TEMPNESS_LVALUE));
+
+    initializedGlobals.push_back(new CValue(y->type, x->llGlobal));
 }
 
 
@@ -4313,54 +4333,87 @@ void codegenPrimOp(PrimOpPtr x,
 // codegenSharedLib, codegenExe
 //
 
-static ProcedurePtr makeInitializerProcedure() {
-    CodePtr code = new Code();
-    code->body = globalVarInitializers().ptr();
-    IdentifierPtr name = new Identifier("%initGlobals");
-    ExprPtr target = new NameRef(name);
-    OverloadPtr overload = new Overload(target, code, false);
-    EnvPtr env = new Env();
-    overload->env = env;
-    ProcedurePtr proc = new Procedure(name, PRIVATE);
-    proc->overloads.push_back(overload);
-    proc->env = env;
-    env->entries[name->str] = proc.ptr();
-    return proc;
+static CodegenContextPtr makeSimpleContext(const char *name)
+{
+    llvm::FunctionType *llFuncType =
+        llvm::FunctionType::get(llvmVoidType(),
+                                vector<const llvm::Type *>(),
+                                false);
+    llvm::Function *initGlobals =
+        llvm::Function::Create(llFuncType,
+                               llvm::Function::InternalLinkage,
+                               name,
+                               llvmModule);
+
+    CodegenContextPtr ctx = new CodegenContext(initGlobals);
+
+    llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
+    llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
+    llvm::BasicBlock *returnBlock = newBasicBlock("return", ctx);
+    llvm::BasicBlock *exceptionBlock = newBasicBlock("exception", ctx);
+
+    ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
+    ctx->builder = new llvm::IRBuilder<>(codeBlock);
+
+    ctx->returnLists.push_back(vector<CReturn>());
+    JumpTarget returnTarget(returnBlock, cgMarkStack(ctx));
+    ctx->returnTargets.push_back(returnTarget);
+    JumpTarget exceptionTarget(exceptionBlock, cgMarkStack(ctx));
+    ctx->exceptionTargets.push_back(exceptionTarget);
+
+    return ctx;
 }
 
-static ProcedurePtr makeDestructorProcedure() {
-    CodePtr code = new Code();
-    code->body = globalVarDestructors().ptr();
-    IdentifierPtr name = new Identifier("%destroyGlobals");
-    ExprPtr target = new NameRef(name);
-    OverloadPtr overload = new Overload(target, code, false);
-    EnvPtr env = new Env();
-    overload->env = env;
-    ProcedurePtr proc = new Procedure(name, PRIVATE);
-    proc->overloads.push_back(overload);
-    proc->env = env;
-    env->entries[name->str] = proc.ptr();
-    return proc;
+static void finalizeSimpleContext(CodegenContextPtr ctx,
+                                  ObjectPtr errorProc)
+{
+    ctx->builder->CreateBr(ctx->returnTargets.back().block);
+
+    ctx->builder->SetInsertPoint(ctx->returnTargets.back().block);
+    ctx->builder->CreateRetVoid();
+
+    ctx->builder->SetInsertPoint(ctx->exceptionTargets.back().block);
+    codegenCallValue(staticCValue(errorProc, ctx),
+                     new MultiCValue(),
+                     ctx,
+                     new MultiCValue());
+    ctx->builder->CreateUnreachable();
+
+    llvm::Function::iterator bbi = ctx->llvmFunc->begin();
+    ++bbi;
+    ctx->initBuilder->CreateBr(&(*bbi));
+}
+
+static void initializeCtorsDtors()
+{
+    constructorsCtx = makeSimpleContext("clay_%initGlobals");
+    destructorsCtx = makeSimpleContext("clay_%destroyGlobals");
+}
+
+static void finalizeCtorsDtors()
+{
+    codegenCallable(prelude_exceptionInInitializer(),
+                    vector<TypePtr>(),
+                    vector<ValueTempness>());
+    codegenCallable(prelude_exceptionInFinalizer(),
+                    vector<TypePtr>(),
+                    vector<ValueTempness>());
+
+    finalizeSimpleContext(constructorsCtx, prelude_exceptionInInitializer());
+
+    for (unsigned i = initializedGlobals.size(); i > 0; --i) {
+        CValuePtr cv = initializedGlobals[i-1];
+        codegenValueDestroy(cv, destructorsCtx);
+    }
+    finalizeSimpleContext(destructorsCtx, prelude_exceptionInFinalizer());
 }
 
 static void generateLLVMCtorsAndDtors() {
-    ObjectPtr initializer = makeInitializerProcedure().ptr();
-    InvokeEntryPtr entry1 = codegenCallable(initializer,
-                                            vector<TypePtr>(),
-                                            vector<ValueTempness>());
-    entry1->llvmFunc->setLinkage(llvm::GlobalVariable::ExternalLinkage);
-    codegenCWrapper(entry1);
-    ObjectPtr destructor = makeDestructorProcedure().ptr();
-    InvokeEntryPtr entry2 = codegenCallable(destructor,
-                                            vector<TypePtr>(),
-                                            vector<ValueTempness>());
-    entry2->llvmFunc->setLinkage(llvm::GlobalVariable::ExternalLinkage);
-    codegenCWrapper(entry2);
 
     // make types for llvm.global_ctors, llvm.global_dtors
     vector<const llvm::Type *> fieldTypes;
     fieldTypes.push_back(llvmIntType(32));
-    const llvm::Type *funcType = entry1->llvmCWrapper->getFunctionType();
+    const llvm::Type *funcType = constructorsCtx->llvmFunc->getFunctionType();
     const llvm::Type *funcPtrType = llvm::PointerType::getUnqual(funcType);
     fieldTypes.push_back(funcPtrType);
     const llvm::StructType *structType =
@@ -4373,7 +4426,7 @@ static void generateLLVMCtorsAndDtors() {
         llvm::ConstantInt::get(llvm::getGlobalContext(),
                                llvm::APInt(32, llvm::StringRef("65535"), 10));
     structElems1.push_back(prio1);
-    structElems1.push_back(entry1->llvmCWrapper);
+    structElems1.push_back(constructorsCtx->llvmFunc);
     llvm::Constant *structVal1 = llvm::ConstantStruct::get(structType,
                                                            structElems1);
     vector<llvm::Constant*> arrayElems1;
@@ -4387,7 +4440,7 @@ static void generateLLVMCtorsAndDtors() {
         llvm::ConstantInt::get(llvm::getGlobalContext(),
                                llvm::APInt(32, llvm::StringRef("65535"), 10));
     structElems2.push_back(prio2);
-    structElems2.push_back(entry2->llvmCWrapper);
+    structElems2.push_back(destructorsCtx->llvmFunc);
     llvm::Constant *structVal2 = llvm::ConstantStruct::get(structType,
                                                            structElems2);
     vector<llvm::Constant*> arrayElems2;
@@ -4409,6 +4462,7 @@ static void generateLLVMCtorsAndDtors() {
 
 void codegenSharedLib(ModulePtr module)
 {
+    initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
 
     for (unsigned i = 0; i < module->topLevelItems.size(); ++i) {
@@ -4419,10 +4473,12 @@ void codegenSharedLib(ModulePtr module)
                 codegenExternalProcedure(y);
         }
     }
+    finalizeCtorsDtors();
 }
 
 void codegenExe(ModulePtr module)
 {
+    initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
 
     IdentifierPtr main = new Identifier("main");
@@ -4464,13 +4520,17 @@ void codegenExe(ModulePtr module)
     entryProc->env = module->env;
 
     codegenExternalProcedure(entryProc);
+    finalizeCtorsDtors();
 }
+
 
 
 //
 // initLLVM
 //
-bool initLLVM(std::string const &targetTriple) {
+
+bool initLLVM(std::string const &targetTriple)
+{
     llvm::InitializeAllTargets();
     llvm::InitializeAllAsmPrinters();
     llvmModule = new llvm::Module("clay", llvm::getGlobalContext());
