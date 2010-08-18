@@ -11,7 +11,6 @@ set(SOURCES
     lambdas.cpp
     lexer.cpp
     literals.cpp
-    llvm.cpp
     loader.cpp
     main.cpp
     matchinvoke.cpp
