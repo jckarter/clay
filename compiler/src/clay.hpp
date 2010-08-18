@@ -1837,24 +1837,6 @@ struct PrimOp : public Object {
 
 
 //
-// llvm module
-//
-
-extern llvm::Module *llvmModule;
-extern llvm::ExecutionEngine *llvmEngine;
-extern const llvm::TargetData *llvmTargetData;
-
-extern llvm::Function *llvmFunction;
-extern llvm::IRBuilder<> *llvmInitBuilder;
-extern llvm::IRBuilder<> *llvmBuilder;
-
-bool initLLVM(std::string const &targetTriple);
-
-llvm::BasicBlock *newBasicBlock(const char *name);
-
-
-
-//
 // types module
 //
 
@@ -2644,6 +2626,12 @@ EValuePtr evalAllocValue(TypePtr t);
 // codegen
 //
 
+extern llvm::Module *llvmModule;
+extern llvm::ExecutionEngine *llvmEngine;
+extern const llvm::TargetData *llvmTargetData;
+
+bool initLLVM(std::string const &targetTriple);
+
 void setExceptionsEnabled(bool enabled);
 
 struct CValue : public Object {
@@ -2689,21 +2677,28 @@ struct CReturn {
 };
 
 struct CodegenContext : public Object {
-    vector<CReturn> returns;
-    JumpTarget returnTarget;
+    llvm::Function *llvmFunc;
+    llvm::IRBuilder<> *initBuilder;
+    llvm::IRBuilder<> *builder;
+    vector< vector<CReturn> > returnLists;
+    vector<JumpTarget> returnTargets;
     map<string, JumpTarget> labels;
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
     vector<JumpTarget> exceptionTargets;
     bool checkExceptions;
 
-    CodegenContext(const vector<CReturn> &returns,
-                   const JumpTarget &returnTarget,
-                   const JumpTarget &exceptionTarget)
+    CodegenContext(llvm::Function *llvmFunc)
         : Object(DONT_CARE),
-          returns(returns), returnTarget(returnTarget),
-          exceptionTargets(1, exceptionTarget),
+          llvmFunc(llvmFunc),
+          initBuilder(NULL),
+          builder(NULL),
           checkExceptions(true) {}
+
+    ~CodegenContext() {
+        delete builder;
+        delete initBuilder;
+    }
 };
 
 typedef Pointer<CodegenContext> CodegenContextPtr;
