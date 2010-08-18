@@ -2676,10 +2676,21 @@ struct CReturn {
         : byRef(byRef), type(type), value(value) {}
 };
 
+struct CStackValue {
+    CValuePtr cv;
+    llvm::BasicBlock *landingPad;
+    llvm::BasicBlock *destructor;
+    CStackValue(CValuePtr cv)
+        : cv(cv), landingPad(NULL), destructor(NULL) {}
+};
+
 struct CodegenContext : public Object {
     llvm::Function *llvmFunc;
     llvm::IRBuilder<> *initBuilder;
     llvm::IRBuilder<> *builder;
+
+    vector<CStackValue> valueStack;
+
     vector< vector<CReturn> > returnLists;
     vector<JumpTarget> returnTargets;
     map<string, JumpTarget> labels;
