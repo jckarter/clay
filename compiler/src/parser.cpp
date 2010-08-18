@@ -1468,9 +1468,18 @@ static bool patternVarList(vector<PatternVar> &x) {
     return true;
 }
 
+static bool optPatternVarList(vector<PatternVar> &x) {
+    int p = save();
+    if (!patternVarList(x)) {
+        restore(p);
+        x.clear();
+    }
+    return true;
+}
+
 static bool patternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
     if (!symbol("[")) return false;
-    if (!patternVarList(x)) return false;
+    if (!optPatternVarList(x)) return false;
     if (!optPredicate(y) || !symbol("]")) {
         x.clear();
         y = NULL;

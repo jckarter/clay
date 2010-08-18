@@ -1,0 +1,5 @@
+import libc;
+
+main() {
+    libc.printf(cstring("Hello!\n"));
+}

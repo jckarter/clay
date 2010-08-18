@@ -174,11 +174,16 @@ void codegenPrimOp(PrimOpPtr x,
 // exception support
 //
 
-static bool exceptionsEnabled = true;
+static bool _exceptionsEnabled = true;
+
+bool exceptionsEnabled()
+{
+    return _exceptionsEnabled;
+}
 
 void setExceptionsEnabled(bool enabled)
 {
-    exceptionsEnabled = enabled;
+    _exceptionsEnabled = enabled;
 }
 
 
@@ -1288,10 +1293,13 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
     }
 
     ctx->builder->SetInsertPoint(exceptionBlock);
-    codegenCallValue(staticCValue(prelude_unhandledExceptionInExternal(), ctx),
-                     new MultiCValue(),
-                     ctx,
-                     new MultiCValue());
+    if (exceptionsEnabled()) {
+        ObjectPtr callable = prelude_unhandledExceptionInExternal();
+        codegenCallValue(staticCValue(callable, ctx),
+                         new MultiCValue(),
+                         ctx,
+                         new MultiCValue());
+    }
     ctx->builder->CreateUnreachable();
 
     ctx->initBuilder->CreateBr(codeBlock);
@@ -2013,7 +2021,7 @@ void codegenLowlevelCall(llvm::Value *llCallable,
 {
     llvm::Value *result =
         ctx->builder->CreateCall(llCallable, argBegin, argEnd);
-    if (!exceptionsEnabled)
+    if (!exceptionsEnabled())
         return;
     if (!ctx->checkExceptions)
         return;
@@ -2795,6 +2803,9 @@ bool codegenStatement(StatementPtr stmt,
 
     case TRY : {
         Try *x = (Try *)stmt.ptr();
+        if (!exceptionsEnabled())
+            return codegenStatement(x->tryBlock, env, ctx);
+
         if (!x->desugaredCatchBlock)
             x->desugaredCatchBlock = desugarCatchBlocks(x->catchBlocks);
 
@@ -4373,10 +4384,12 @@ static void finalizeSimpleContext(CodegenContextPtr ctx,
     ctx->builder->CreateRetVoid();
 
     ctx->builder->SetInsertPoint(ctx->exceptionTargets.back().block);
-    codegenCallValue(staticCValue(errorProc, ctx),
-                     new MultiCValue(),
-                     ctx,
-                     new MultiCValue());
+    if (exceptionsEnabled()) {
+        codegenCallValue(staticCValue(errorProc, ctx),
+                         new MultiCValue(),
+                         ctx,
+                         new MultiCValue());
+    }
     ctx->builder->CreateUnreachable();
 
     llvm::Function::iterator bbi = ctx->llvmFunc->begin();
@@ -4392,12 +4405,14 @@ static void initializeCtorsDtors()
 
 static void finalizeCtorsDtors()
 {
-    codegenCallable(prelude_exceptionInInitializer(),
-                    vector<TypePtr>(),
-                    vector<ValueTempness>());
-    codegenCallable(prelude_exceptionInFinalizer(),
-                    vector<TypePtr>(),
-                    vector<ValueTempness>());
+    if (exceptionsEnabled()) {
+        codegenCallable(prelude_exceptionInInitializer(),
+                        vector<TypePtr>(),
+                        vector<ValueTempness>());
+        codegenCallable(prelude_exceptionInFinalizer(),
+                        vector<TypePtr>(),
+                        vector<ValueTempness>());
+    }
 
     finalizeSimpleContext(constructorsCtx, prelude_exceptionInInitializer());
 
