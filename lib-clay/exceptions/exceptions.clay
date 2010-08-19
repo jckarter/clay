@@ -22,7 +22,12 @@ private var currentException = Exception();
 // throwValue, continueException
 //
 
-throwValue(forward x) {
+throwValue(x) {
+    errorNoThrow(x);
+}
+
+[ | ExceptionsEnabled?]
+overload throwValue(forward x) {
     currentException = Exception(x);
     signalException();
 }
@@ -61,13 +66,24 @@ exceptionAsAny() {
 
 //
 // unhandledExceptionInExternal
+// exceptionInInitializer, exceptionInFinalizer
 //
 
+private errorMsg(msg) {
+    libc.fprintf(libc.stderr, cstring(msg));
+}
+
 unhandledExceptionInExternal() {
-    try {
-        println("unhandled exception in external procedure");
-        libc.abort();
-    }
-    catch (e) {
-    }
+    errorMsg("unhandled exception in external procedure\n");
+    libc.abort();
+}
+
+exceptionInInitializer() {
+    errorMsg("exception when initializing globals\n");
+    libc.abort();
+}
+
+exceptionInFinalizer() {
+    errorMsg("exception when destroying globals\n");
+    libc.abort();
 }

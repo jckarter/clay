@@ -1,19 +1,44 @@
 
+
+
+
+//
+// error (exceptions disabled)
+//
+
+errorNoThrow(...e) {
+    printlnTo(stderr, "error: ", ...e);
+}
+
+[ | not ExceptionsEnabled?]
+error(...e) {
+    errorNoThrow(...e);
+}
+
+
+
+//
+// error (exceptions enabled)
+//
+
 record Error {
     msg : String;
 }
 
 instance Exception = Error;
 
-error(...e) {
+[ | ExceptionsEnabled?]
+overload error(...e) {
     var buf = String();
     printTo(buf, ...e);
     throw Error(move(buf));
 }
 
-errorNoThrow(...e) {
-    printlnTo(stderr, "error: ", ...e);
-}
+
+
+//
+// assert
+//
 
 macro assert(cond:Bool) {
     if (not cond)

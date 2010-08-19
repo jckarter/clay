@@ -536,13 +536,14 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    setExceptionsEnabled(exceptions);
+
     if (!initLLVM(targetTriple)) {
         cerr << "error: unable to initialize LLVM for target " << targetTriple << "\n";
         return -1;
     };
-    initTypes();
 
-    setExceptionsEnabled(exceptions);
+    initTypes();
 
     setAbortOnError(abortOnError);
 
