@@ -17,9 +17,6 @@ static vector<string> searchPath;
 static vector<string> moduleSuffixes;
 static map<string, ModulePtr> modules;
 
-static BlockPtr gvarInitializers;
-static BlockPtr gvarDestructors;
-
 
 
 //
@@ -342,19 +339,9 @@ ModulePtr loadProgram(const string &fileName) {
     ModulePtr prelude = loadPrelude();
     loadDependents(m);
     installGlobals(m);
-    gvarInitializers = new Block();
-    gvarDestructors = new Block();
     initModule(prelude);
     initModule(m);
     return m;
-}
-
-BlockPtr globalVarInitializers() {
-    return gvarInitializers;
-}
-
-BlockPtr globalVarDestructors() {
-    return gvarDestructors;
 }
 
 ModulePtr loadedModule(const string &module) {
@@ -475,26 +462,6 @@ static void initModule(ModulePtr m) {
         case INSTANCE :
             initVariantInstance((Instance *)obj);
             break;
-        case GLOBAL_VARIABLE : {
-            GlobalVariable *x = (GlobalVariable *)obj;
-            ExprPtr lhs = new NameRef(x->name);
-            lhs->location = x->name->location;
-
-            StatementPtr y = new InitAssignment(lhs, x->expr);
-            y->location = x->location;
-            StatementPtr z = new ForeignStatement(x->env, y);
-            z->location = y->location;
-            gvarInitializers->statements.push_back(z);
-
-            ExprPtr destructor = prelude_expr_destroy();
-            CallPtr destroyCall = new Call(destructor, new ExprList());
-            destroyCall->location = lhs->location;
-            destroyCall->args->add(new ForeignExpr(x->env, lhs));
-            StatementPtr a = new ExprStatement(destroyCall.ptr());
-            gvarDestructors->statements.insert(
-                gvarDestructors->statements.begin(), a);
-            break;
-        }
         }
     }
 }
@@ -574,6 +541,14 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "UInt64", uint64Type.ptr());
     addPrim(prims, "Float32", float32Type.ptr());
     addPrim(prims, "Float64", float64Type.ptr());
+
+    GlobalAliasPtr v =
+        new GlobalAlias(new Identifier("ExceptionsEnabled?"),
+                        PUBLIC,
+                        vector<IdentifierPtr>(),
+                        NULL,
+                        new BoolLiteral(exceptionsEnabled()));
+    addPrim(prims, "ExceptionsEnabled?", v.ptr());
 
 #define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
 
@@ -790,6 +765,8 @@ DEFINE_PRELUDE_ACCESSOR(exceptionAs);
 DEFINE_PRELUDE_ACCESSOR(exceptionAsAny);
 DEFINE_PRELUDE_ACCESSOR(continueException);
 DEFINE_PRELUDE_ACCESSOR(unhandledExceptionInExternal);
+DEFINE_PRELUDE_ACCESSOR(exceptionInInitializer);
+DEFINE_PRELUDE_ACCESSOR(exceptionInFinalizer);
 DEFINE_PRELUDE_ACCESSOR(packMultiValuedFreeVarByRef);
 DEFINE_PRELUDE_ACCESSOR(packMultiValuedFreeVar);
 DEFINE_PRELUDE_ACCESSOR(unpackMultiValuedFreeVarAndDereference);

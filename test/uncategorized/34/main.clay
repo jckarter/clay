@@ -6,4 +6,5 @@ overload destroy(x:Foo) { println("destroying Foo"); }
 var foo = Foo();
 
 main() {
+    foo;
 }

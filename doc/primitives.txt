@@ -12,6 +12,8 @@ Primitive Operations
 [T] TypeAlignment(static T):SizeT
 [F, A1, ..., An] CallDefined?(static F, static A1, ..., static An) Bool;
 
+ExceptionsEnabled? : Bool
+
 [T] primitiveCopy(dest:T, src:T):Void
 
 boolNot(a:Bool):Bool
