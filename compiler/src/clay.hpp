@@ -269,6 +269,7 @@ struct Procedure;
 struct Enumeration;
 struct EnumMember;
 struct GlobalVariable;
+struct GVarInstance;
 struct ExternalProcedure;
 struct ExternalArg;
 struct ExternalVariable;
@@ -321,6 +322,8 @@ struct MultiEValue;
 
 struct CValue;
 struct MultiCValue;
+
+struct ObjectTable;
 
 
 
@@ -402,6 +405,7 @@ typedef Pointer<Procedure> ProcedurePtr;
 typedef Pointer<Enumeration> EnumerationPtr;
 typedef Pointer<EnumMember> EnumMemberPtr;
 typedef Pointer<GlobalVariable> GlobalVariablePtr;
+typedef Pointer<GVarInstance> GVarInstancePtr;
 typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
 typedef Pointer<ExternalVariable> ExternalVariablePtr;
@@ -453,6 +457,8 @@ typedef Pointer<MultiEValue> MultiEValuePtr;
 
 typedef Pointer<CValue> CValuePtr;
 typedef Pointer<MultiCValue> MultiCValuePtr;
+
+typedef Pointer<ObjectTable> ObjectTablePtr;
 
 
 
@@ -1388,15 +1394,38 @@ struct EnumMember : public ANode {
 };
 
 struct GlobalVariable : public TopLevelItem {
+    vector<IdentifierPtr> params;
+    IdentifierPtr varParam;
     ExprPtr expr;
 
-    bool analyzing;
-    TypePtr type;
+    ObjectTablePtr instances;
 
+    GlobalVariable(IdentifierPtr name,
+                   Visibility visibility,
+                   const vector<IdentifierPtr> &params,
+                   IdentifierPtr varParam,
+                   ExprPtr expr)
+        : TopLevelItem(GLOBAL_VARIABLE, name, visibility),
+          params(params), varParam(varParam), expr(expr) {}
+    bool hasParams() const {
+        return !params.empty() || (varParam.ptr() != NULL);
+    }
+};
+
+struct GVarInstance : public Object {
+    GlobalVariablePtr gvar;
+    vector<ObjectPtr> params;
+
+    bool analyzing;
+    ExprPtr expr;
+    EnvPtr env;
+    MultiPValuePtr analysis;
+    TypePtr type;
     llvm::GlobalVariable *llGlobal;
 
-    GlobalVariable(IdentifierPtr name, Visibility visibility, ExprPtr expr)
-        : TopLevelItem(GLOBAL_VARIABLE, name, visibility), expr(expr),
+    GVarInstance(GlobalVariablePtr gvar,
+                 const vector<ObjectPtr> &params)
+        : Object(DONT_CARE), gvar(gvar), params(params),
           analyzing(false), llGlobal(NULL) {}
 };
 
@@ -1832,6 +1861,60 @@ struct PrimOp : public Object {
 
 
 //
+// objects
+//
+
+struct ValueHolder : public Object {
+    TypePtr type;
+    char *buf;
+    ValueHolder(TypePtr type);
+    ~ValueHolder();
+};
+
+
+bool objectEquals(ObjectPtr a, ObjectPtr b);
+int objectHash(ObjectPtr a);
+
+template <typename T>
+bool objectVectorEquals(const vector<Pointer<T> > &a,
+                        const vector<Pointer<T> > &b) {
+    if (a.size() != b.size()) return false;
+    for (unsigned i = 0; i < a.size(); ++i) {
+        if (!objectEquals(a[i].ptr(), b[i].ptr()))
+            return false;
+    }
+    return true;
+}
+
+template <typename T>
+int objectVectorHash(const vector<Pointer<T> > &a) {
+    int h = 0;
+    for (unsigned i = 0; i < a.size(); ++i)
+        h += objectHash(a[i].ptr());
+    return h;
+}
+
+struct ObjectTableNode {
+    vector<ObjectPtr> key;
+    ObjectPtr value;
+    ObjectTableNode(const vector<ObjectPtr> &key,
+                    ObjectPtr value)
+        : key(key), value(value) {}
+};
+
+struct ObjectTable : public Object {
+    vector< vector<ObjectTableNode> > buckets;
+    unsigned size;
+public :
+    ObjectTable() : Object(DONT_CARE), size(0) {}
+    ObjectPtr &lookup(const vector<ObjectPtr> &key);
+private :
+    void rehash();
+};
+
+
+
+//
 // types module
 //
 
@@ -2141,19 +2224,6 @@ struct MultiPatternList : public MultiPattern {
 
 
 //
-// ValueHolder
-//
-
-struct ValueHolder : public Object {
-    TypePtr type;
-    char *buf;
-    ValueHolder(TypePtr type);
-    ~ValueHolder();
-};
-
-
-
-//
 // MultiStatic
 //
 
@@ -2432,7 +2502,6 @@ struct AnalysisCachingDisabler {
 PValuePtr safeAnalyzeOne(ExprPtr expr, EnvPtr env);
 MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env);
 MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env);
-PValuePtr safeAnalyzeGlobalVariable(GlobalVariablePtr x);
 MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
                                        ExprListPtr args,
                                        EnvPtr env);
@@ -2445,6 +2514,7 @@ InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
 MultiPValuePtr safeAnalyzeCallMacro(InvokeEntryPtr entry,
                                     ExprListPtr args,
                                     EnvPtr env);
+MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x);
 
 MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
@@ -2463,7 +2533,15 @@ MultiPValuePtr analyzeArgExpr(ExprPtr x,
 
 MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env);
 MultiPValuePtr analyzeStaticObject(ObjectPtr x);
-PValuePtr analyzeGlobalVariable(GlobalVariablePtr x);
+
+GVarInstancePtr lookupGVarInstance(GlobalVariablePtr x,
+                                   const vector<ObjectPtr> &params);
+GVarInstancePtr defaultGVarInstance(GlobalVariablePtr x);
+GVarInstancePtr analyzeGVarIndexing(GlobalVariablePtr x,
+                                    ExprListPtr args,
+                                    EnvPtr env);
+MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x);
+
 PValuePtr analyzeExternalVariable(ExternalVariablePtr x);
 void analyzeExternalProcedure(ExternalProcedurePtr x);
 void verifyAttributes(ExternalProcedurePtr x);
@@ -2526,28 +2604,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 //
 // evaluator
 //
-
-bool objectEquals(ObjectPtr a, ObjectPtr b);
-int objectHash(ObjectPtr a);
-
-template <typename T>
-bool objectVectorEquals(const vector<Pointer<T> > &a,
-                        const vector<Pointer<T> > &b) {
-    if (a.size() != b.size()) return false;
-    for (unsigned i = 0; i < a.size(); ++i) {
-        if (!objectEquals(a[i].ptr(), b[i].ptr()))
-            return false;
-    }
-    return true;
-}
-
-template <typename T>
-int objectVectorHash(const vector<Pointer<T> > &a) {
-    int h = 0;
-    for (unsigned i = 0; i < a.size(); ++i)
-        h += objectHash(a[i].ptr());
-    return h;
-}
 
 bool staticToType(ObjectPtr x, TypePtr &out);
 TypePtr staticToType(MultiStaticPtr x, unsigned index);
@@ -2710,7 +2766,7 @@ struct CodegenContext : public Object {
 
 typedef Pointer<CodegenContext> CodegenContextPtr;
 
-void codegenGlobalVariable(GlobalVariablePtr x);
+void codegenGVarInstance(GVarInstancePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);
 void codegenExternalProcedure(ExternalProcedurePtr x);
 

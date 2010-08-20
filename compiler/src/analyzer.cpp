@@ -308,15 +308,6 @@ MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env)
     return result;
 }
 
-PValuePtr safeAnalyzeGlobalVariable(GlobalVariablePtr x)
-{
-    ClearAnalysisError clear;
-    PValuePtr result = analyzeGlobalVariable(x);
-    if (!result)
-        analysisError();
-    return result;
-}
-
 MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
                                        ExprListPtr args,
                                        EnvPtr env)
@@ -357,6 +348,15 @@ MultiPValuePtr safeAnalyzeCallMacro(InvokeEntryPtr entry,
     ClearAnalysisError clear;
     MultiPValuePtr result = analyzeCallMacro(entry, args, env);
     if (!entry)
+        analysisError();
+    return result;
+}
+
+MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x)
+{
+    ClearAnalysisError clear;
+    MultiPValuePtr result = analyzeGVarInstance(x);
+    if (!result)
         analysisError();
     return result;
 }
@@ -714,8 +714,13 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 
     case GLOBAL_VARIABLE : {
         GlobalVariable *y = (GlobalVariable *)x.ptr();
-        PValuePtr pv = safeAnalyzeGlobalVariable(y);
-        return new MultiPValue(pv);
+        if (y->hasParams()) {
+            TypePtr t = staticType(x);
+            PValuePtr pv = new PValue(t, true);
+            return new MultiPValue(pv);
+        }
+        GVarInstancePtr inst = defaultGVarInstance(y);
+        return analyzeGVarInstance(inst);
     }
 
     case EXTERNAL_VARIABLE : {
@@ -825,24 +830,74 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 
 
 //
-// analyzeGlobalVariable
+// lookupGVarInstance, defaultGVarInstance
+// analyzeGVarIndexing, analyzeGVarInstance
 //
 
-PValuePtr analyzeGlobalVariable(GlobalVariablePtr x)
+GVarInstancePtr lookupGVarInstance(GlobalVariablePtr x,
+                                   const vector<ObjectPtr> &params)
 {
-    if (!x->type) {
-        if (x->analyzing) {
-            updateAnalysisErrorLocation();
-            return NULL;
-        }
-        x->analyzing = true;
-        PValuePtr pv = analyzeOne(x->expr, x->env);
-        x->analyzing = false;
-        if (!pv)
-            return NULL;
-        x->type = pv->type;
+    if (!x->instances)
+        x->instances = new ObjectTable();
+    ObjectPtr &y = x->instances->lookup(params);
+    if (!y) {
+        y = new GVarInstance(x, params);
     }
-    return new PValue(x->type, false);
+    return (GVarInstance *)y.ptr();
+}
+
+GVarInstancePtr defaultGVarInstance(GlobalVariablePtr x)
+{
+    return lookupGVarInstance(x, vector<ObjectPtr>());
+}
+
+GVarInstancePtr analyzeGVarIndexing(GlobalVariablePtr x,
+                                    ExprListPtr args,
+                                    EnvPtr env)
+{
+    assert(x->hasParams());
+    MultiStaticPtr params = evaluateMultiStatic(args, env);
+    if (x->varParam.ptr()) {
+        if (params->size() < x->params.size())
+            arityError2(x->params.size(), params->size());
+    }
+    else {
+        ensureArity(params, x->params.size());
+    }
+    return lookupGVarInstance(x, params->values);
+}
+
+MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x)
+{
+    if (x->analysis.ptr())
+        return x->analysis;
+    if (x->analyzing) {
+        updateAnalysisErrorLocation();
+        return NULL;
+    }
+    GlobalVariablePtr gvar = x->gvar;
+    if (!x->expr)
+        x->expr = clone(gvar->expr);
+    if (!x->env) {
+        x->env = new Env(gvar->env);
+        for (unsigned i = 0; i < gvar->params.size(); ++i) {
+            addLocal(x->env, gvar->params[i], x->params[i]);
+        }
+        if (gvar->varParam.ptr()) {
+            MultiStaticPtr varParams = new MultiStatic();
+            for (unsigned i = gvar->params.size(); i < x->params.size(); ++i)
+                varParams->add(x->params[i]);
+            addLocal(x->env, gvar->varParam, varParams.ptr());
+        }
+    }
+    x->analyzing = true;
+    PValuePtr pv = analyzeOne(x->expr, x->env);
+    x->analyzing = false;
+    if (!pv)
+        return NULL;
+    x->analysis = new MultiPValue(new PValue(pv->type, false));
+    x->type = pv->type;
+    return x->analysis;
 }
 
 
@@ -1036,6 +1091,11 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
         if (obj->objKind == GLOBAL_ALIAS) {
             GlobalAlias *x = (GlobalAlias *)obj.ptr();
             return analyzeAliasIndexing(x, args, env);
+        }
+        if (obj->objKind == GLOBAL_VARIABLE) {
+            GlobalVariable *x = (GlobalVariable *)obj.ptr();
+            GVarInstancePtr y = analyzeGVarIndexing(x, args, env);
+            return analyzeGVarInstance(y);
         }
         if (obj->objKind != VALUE_HOLDER)
             error("invalid indexing operation");

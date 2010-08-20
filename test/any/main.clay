@@ -1,0 +1,123 @@
+
+
+
+//
+// typeId[T]
+//
+
+private var _nextTypeId = 0;
+
+nextTypeId() {
+    var x = _nextTypeId;
+    _nextTypeId += 1;
+    return x;
+}
+
+var typeId[T] = nextTypeId();
+
+
+
+//
+// Any
+//
+
+record Any {
+    id : Int;
+    ptr : Pointer[Byte];
+    size : SizeT;
+    copyConstructor : CodePointer[Opaque, Opaque];
+    destructor : CodePointer[Opaque, ()];
+}
+
+// disable default value semantics
+overload RegularRecord?(static Any) = false;
+
+overload Any() {
+    return Any(
+        -1,
+        null(Byte),
+        SizeT(0),
+        CodePointer[Opaque,Opaque](0),
+        CodePointer[Opaque,()](0)
+    );
+}
+
+overload Any(x:Any) {
+    var ptr = allocateRawMemory(Byte, x.size);
+    ptr^ <-- x.copyConstructor(x.ptr^);
+    return Any(
+        x.id,
+        ptr,
+        x.size,
+        x.copyConstructor,
+        x.destructor
+    );
+}
+
+overload move(src:Any) returned:Any {
+    returned.id = src.id;
+    returned.ptr = src.ptr;
+    returned.size = src.size;
+    returned.copyConstructor = src.copyConstructor;
+    returned.destructor = src.destructor;
+    src <-- Any();
+}
+
+overload destroy(x:Any) {
+    if (not null?(x.ptr)) {
+        x.destructor(x.ptr^);
+        freeRawMemory(x.ptr);
+    }
+}
+
+[T]
+box(x:T) {
+    var ptr = allocateRawMemory(Byte, TypeSize(T));
+    Pointer[T](ptr)^ <-- x;
+    var copyConstructor = makeCodePointer(T, T);
+    var destructor = makeCodePointer(destroy, T);
+    return Any(
+        typeId[T],
+        Pointer[Byte](ptr),
+        TypeSize(T),
+        CodePointer[Opaque,Opaque](copyConstructor),
+        CodePointer[Opaque,()](destructor)
+    );
+}
+
+[T]
+anyIs?(x:Any, static T) = (x.id == typeId[T]);
+
+[T]
+unbox(x:Any, static T) {
+    assert(x.id == typeId[T]);
+    return ref Pointer[T](x.ptr)^;
+}
+
+
+
+//
+// testing code
+//
+
+main() {
+    var a = Vector[Any]();
+
+    push(a, box(true));
+    push(a, box(10));
+    push(a, box(a));
+
+    for (x in a) {
+        if (anyIs?(x, Bool)) {
+            var boolValue = unbox(x, Bool);
+            println("Bool ", boolValue);
+        }
+        else if (anyIs?(x, Int)) {
+            var intValue = unbox(x, Int);
+            println("Int ", intValue);
+        }
+        else {
+            println("Other");
+        }
+    }
+}

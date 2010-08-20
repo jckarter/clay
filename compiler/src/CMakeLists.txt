@@ -14,6 +14,7 @@ set(SOURCES
     loader.cpp
     main.cpp
     matchinvoke.cpp
+    objects.cpp
     parser.cpp
     patterns.cpp
     printer.cpp

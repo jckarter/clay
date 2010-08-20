@@ -58,7 +58,7 @@ Overload -> PatternVarsWithCond? "macro"? "overload" Pattern Arguments
 
 Enumeration -> "enum" Identifier "{" comma_list(Identifier) "}"
 
-GlobalVariable -> "var" Identifier "=" Expression ";"
+GlobalVariable -> "var" Identifier PatternVars? "=" Expression ";"
 
 ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
                      Type? (ExternalBody | ";")
