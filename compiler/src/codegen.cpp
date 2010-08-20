@@ -2084,6 +2084,11 @@ static bool renderTemplate(LLVMBodyPtr llvmBody, string &out, EnvPtr env)
 
         ++i;
 
+        if ((i != body.end()) && (*i == '$')) {
+            outstream << *i;
+            continue;
+        }
+
         string::const_iterator typeExprBegin = i;
         while ((i != body.end()) && !terminator(*i))
             ++i;
