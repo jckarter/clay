@@ -75,9 +75,9 @@ static void runModule(llvm::Module *module)
     llvm::Function *mainFunc = module->getFunction("main");
     assert(mainFunc);
     llvm::Function *globalCtors = 
-        module->getFunction("clay_%initGlobals()");
+        module->getFunction("clayglobals_init()");
     llvm::Function *globalDtors = 
-        module->getFunction("clay_%destroyGlobals()");
+        module->getFunction("clayglobals_destroy()");
 
     engine->runFunction(globalCtors, vector<llvm::GenericValue>());
 

@@ -4404,8 +4404,8 @@ static void finalizeSimpleContext(CodegenContextPtr ctx,
 
 static void initializeCtorsDtors()
 {
-    constructorsCtx = makeSimpleContext("clay_%initGlobals");
-    destructorsCtx = makeSimpleContext("clay_%destroyGlobals");
+    constructorsCtx = makeSimpleContext("clayglobals_init");
+    destructorsCtx = makeSimpleContext("clayglobals_destroy");
 }
 
 static void finalizeCtorsDtors()
