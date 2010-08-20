@@ -552,7 +552,8 @@ static void print(ostream &out, const Object *x) {
 
     case GLOBAL_VARIABLE : {
         const GlobalVariable *y = (const GlobalVariable *)x;
-        out << "GlobalVariable(" << y->name << ", " << y->expr << ")";
+        out << "GlobalVariable(" << y->name << ", " << y->params
+            << ", " << y->varParam << ", " << y->expr << ")";
         break;
     }
 
@@ -733,6 +734,11 @@ void printName(ostream &out, ObjectPtr x)
     case IDENTIFIER : {
         Identifier *y = (Identifier *)x.ptr();
         out << "#" << y->str;
+        break;
+    }
+    case GLOBAL_VARIABLE : {
+        GlobalVariable *y = (GlobalVariable *)x.ptr();
+        out << y->name->str;
         break;
     }
     case GLOBAL_ALIAS : {

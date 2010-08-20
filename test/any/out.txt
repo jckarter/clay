@@ -1,0 +1,3 @@
+Bool true
+Int 10
+Other

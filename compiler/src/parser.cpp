@@ -1980,13 +1980,16 @@ static bool globalVariable(TopLevelItemPtr &x) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("var")) return false;
-    IdentifierPtr y;
-    if (!identifier(y)) return false;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
+    vector<IdentifierPtr> params;
+    IdentifierPtr varParam;
+    if (!optStaticParams(params, varParam)) return false;
     if (!symbol("=")) return false;
-    ExprPtr z;
-    if (!expression(z)) return false;
+    ExprPtr expr;
+    if (!expression(expr)) return false;
     if (!symbol(";")) return false;
-    x = new GlobalVariable(y, vis, z);
+    x = new GlobalVariable(name, vis, params, varParam, expr);
     x->location = location;
     return true;
 }

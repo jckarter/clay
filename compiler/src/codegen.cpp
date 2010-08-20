@@ -84,7 +84,7 @@ void codegenStaticObject(ObjectPtr x,
                          CodegenContextPtr ctx,
                          MultiCValuePtr out);
 
-void codegenGlobalVariable(GlobalVariablePtr x);
+void codegenGVarInstance(GVarInstancePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);
 void codegenExternalProcedure(ExternalProcedurePtr x);
 
@@ -963,12 +963,19 @@ void codegenStaticObject(ObjectPtr x,
 
     case GLOBAL_VARIABLE : {
         GlobalVariable *y = (GlobalVariable *)x.ptr();
-        if (!y->llGlobal)
-            codegenGlobalVariable(y);
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(y->type));
-        ctx->builder->CreateStore(y->llGlobal, out0->llValue);
+        if (y->hasParams()) {
+            assert(out->size() == 1);
+            assert(out->values[0]->type == staticType(x));
+        }
+        else {
+            GVarInstancePtr z = defaultGVarInstance(y);
+            if (!z->llGlobal)
+                codegenGVarInstance(z);
+            assert(out->size() == 1);
+            CValuePtr out0 = out->values[0];
+            assert(out0->type == pointerType(z->type));
+            ctx->builder->CreateStore(z->llGlobal, out0->llValue);
+        }
         break;
     }
 
@@ -1113,17 +1120,19 @@ void codegenStaticObject(ObjectPtr x,
 
 
 //
-// codegenGlobalVariable
+// codegenGVarInstance
 //
 
-void codegenGlobalVariable(GlobalVariablePtr x)
+void codegenGVarInstance(GVarInstancePtr x)
 {
     assert(!x->llGlobal);
-    PValuePtr y = safeAnalyzeGlobalVariable(x);
+    MultiPValuePtr mpv = safeAnalyzeGVarInstance(x);
+    assert(mpv->size() == 1);
+    PValuePtr y = mpv->values[0];
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
     ostringstream ostr;
-    ostr << "clay_" << x->name->str << "_" << y->type;
+    ostr << "clay_" << x->gvar->name->str << "_" << y->type;
     x->llGlobal =
         new llvm::GlobalVariable(
             *llvmModule, llvmType(y->type), false,
@@ -1131,10 +1140,19 @@ void codegenGlobalVariable(GlobalVariablePtr x)
             initializer, ostr.str());
 
     // generate initializer
-    ExprPtr lhs = new NameRef(x->name);
-    lhs->location = x->name->location;
+    ExprPtr lhs;
+    if (x->gvar->hasParams()) {
+        ExprListPtr indexingArgs = new ExprList();
+        for (unsigned i = 0; i < x->params.size(); ++i)
+            indexingArgs->add(new ObjectExpr(x->params[i]));
+        lhs = new Indexing(new NameRef(x->gvar->name), indexingArgs);
+    }
+    else {
+        lhs = new NameRef(x->gvar->name);
+    }
+    lhs->location = x->gvar->name->location;
     StatementPtr init = new InitAssignment(lhs, x->expr);
-    init->location = x->location;
+    init->location = x->gvar->location;
     bool result = codegenStatement(init, x->env, constructorsCtx);
     assert(!result);
 
@@ -1502,6 +1520,17 @@ void codegenIndexingExpr(ExprPtr indexable,
         if (obj->objKind == GLOBAL_ALIAS) {
             GlobalAlias *x = (GlobalAlias *)obj.ptr();
             codegenAliasIndexing(x, args, env, ctx, out);
+            return;
+        }
+        if (obj->objKind == GLOBAL_VARIABLE) {
+            GlobalVariable *x = (GlobalVariable *)obj.ptr();
+            GVarInstancePtr y = analyzeGVarIndexing(x, args, env);
+            if (!y->llGlobal)
+                codegenGVarInstance(y);
+            assert(out->size() == 1);
+            CValuePtr out0 = out->values[0];
+            assert(out0->type == pointerType(y->type));
+            ctx->builder->CreateStore(y->llGlobal, out0->llValue);
             return;
         }
     }
