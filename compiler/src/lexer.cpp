@@ -467,20 +467,112 @@ static bool blockComment(TokenPtr &x) {
 //
 // llvmToken
 //
+//  InlineLLVM -> '__llvm__' ZeroPlus(Space) Braces
+//
+//  Braces -> '{' Body '}'
+// 
+//  Body -> ZeroPlus(BodyItem)
+// 
+//  BodyItem -> Comment
+//            | Braces
+//            | StringLiteral
+//            | Not('}')
+// 
+//  Comment -> ';' ZeroPlus(Not('\n')) '\n'
+// 
+//  StringLiteral -> '"' ZeroPlus(StringChar) '"'
+// 
+//  StringChar -> '\' AnyChar
+//              | Not('"')
+//
+
+static bool llvmBraces();
+static bool llvmBody();
+static bool llvmBodyItem();
+static bool llvmComment();
+static bool llvmStringLiteral();
+static bool llvmStringChar();
+
 static bool llvmToken(TokenPtr &x) {
-    char c;
-    string s;
-    if (!identStr(s)) return false;
-    if (s.compare(LLVM_TOKEN_PREFIX)) return false;
-    char *begin = save();
-    while (true) {
+    const char *prefix = LLVM_TOKEN_PREFIX;
+    while (*prefix) {
+        char c;
         if (!next(c)) return false;
-        if (c == '}')
-            break;
+        if (c != *prefix) return false;
+        ++prefix;
     }
+    char *p = save();
+    while (true) {
+        char c;
+        if (!next(c)) return false;
+        if (!isSpace(c))
+            break;
+        p = save();
+    }
+    restore(p);
+    char *begin = save();
+    if (!llvmBraces()) return false;
     char *end = save();
     x = new Token(T_LLVM, string(begin, end));
     return true;
+}
+
+static bool llvmBraces() {
+    char c;
+    if (!next(c) || (c != '{')) return false;
+    if (!llvmBody()) return false;
+    if (!next(c) || (c != '}')) return false;
+    return true;
+}
+
+static bool llvmBody() {
+    while (true) {
+        char *p = save();
+        if (!llvmBodyItem()) {
+            restore(p);
+            break;
+        }
+    }
+    return true;
+}
+
+static bool llvmBodyItem() {
+    char *p = save();
+    if (llvmComment()) return true;
+    if (restore(p), llvmBraces()) return true;
+    if (restore(p), llvmStringLiteral()) return true;
+    char c;
+    if (restore(p), (next(c) && (c != '}'))) return true;
+    return false;
+}
+
+static bool llvmComment() {
+    char c;
+    if (!next(c) || (c != ';')) return false;
+    while (next(c) && (c != '\n'));
+    return true;
+}
+
+static bool llvmStringLiteral() {
+    char c;
+    if (!next(c) || (c != '"')) return false;
+    while (true) {
+        char *p = save();
+        if (!llvmStringChar()) {
+            restore(p);
+            break;
+        }
+    }
+    if (!next(c) || (c != '"')) return false;
+    return true;
+}
+
+static bool llvmStringChar() {
+    char c;
+    if (!next(c)) return false;
+    if (c == '\\')
+        return next(c);
+    return c != '"';
 }
 
 

@@ -1,4 +1,4 @@
-myadd(x:Int32, y:Int32) returned:Int32 __llvm__{
+myadd(x:Int32, y:Int32) returned:Int32 __llvm__ {
     %1 = load i32* %x
     %2 = load i32* %y
     %3 = add i32 %1, %2
