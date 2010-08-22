@@ -1,0 +1,29 @@
+main() {
+    println('a' == 'a');
+    println('a' == 'b');
+    println();
+    println('a' < 'b');
+    println('a' < 'a');
+    println('b' < 'a');
+    println();
+    println('a' == UniChar('a'));
+    println('a' == UniChar('b'));
+    println();
+    println('a' < UniChar('b'));
+    println('a' < UniChar('a'));
+    println('b' < UniChar('a'));
+    println();
+    println(UniChar('a') == 'a');
+    println(UniChar('a') == 'b');
+    println();
+    println(UniChar('a') < 'b');
+    println(UniChar('a') < 'a');
+    println(UniChar('b') < 'a');
+    println();
+    println(UniChar('a') == UniChar('a'));
+    println(UniChar('a') == UniChar('b'));
+    println();
+    println(UniChar('a') < UniChar('b'));
+    println(UniChar('a') < UniChar('a'));
+    println(UniChar('b') < UniChar('a'));
+}

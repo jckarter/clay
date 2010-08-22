@@ -6,6 +6,11 @@ main() {
         println(codePoint);
     }
 
+    println("Code point > 0x10FFFF:");
+    for (codePoint in utf8("\xF4\xBF\xBF\xBF ")) {
+        println(codePoint);
+    }
+
     println("Invalid start characters:");
     for (codePoint in utf8("\x80\xBF\xF5\xFF")) {
         println(codePoint);
@@ -32,7 +37,7 @@ main() {
     }
 
     println("Invalid characters in sequences:");
-    for (codePoint in utf8("\xC3\x29 \xC3\xE9 \xE2\x02\xAC \xE2\x82\x2C \xF0\x1D\x8D\xA4 \xF0\x9D\x0D\xA4 \xF0\x9D\x8D\x24")) {
+    for (codePoint in utf8("\xC3\x29 \xC3\xE9 \xE2\x02\xAC \xE2\x82\x2C \xF0\x1D\x8D\xA4 \xF0\x9D\x0D\xA4 \xF0\x9D\x8D\x24 ")) {
         println(codePoint);
     }
 }

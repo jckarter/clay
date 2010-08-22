@@ -3,10 +3,35 @@ record Char {
     code:Int8;
 }
 
+record UniChar {
+    code:UInt32;
+}
+
+Character?(x) = false;
+overload Character?(static Char) = true;
+overload Character?(static UniChar) = true;
+
 [I | Integer?(I)]
 overload Char(c:I) returned:Char {
     returned.code = Int8(c);
 }
 
 [I | Integer?(I)]
+overload UniChar(c:I) returned:UniChar {
+    returned.code = UInt32(c);
+}
+
+overload UniChar(c:Char) = UniChar(c.code);
+
+[I | Integer?(I)]
 overload I(c:Char) = I(c.code);
+
+[I | Integer?(I)]
+overload I(c:UniChar) = I(c.code);
+
+[C, D | Character?(C) and Character?(D)]
+overload equals?(x:C, y:D) = equals?(x.code, y.code);
+
+[C, D | Character?(C) and Character?(D)]
+overload lesser?(x:C, y:D) = lesser?(x.code, y.code);
+
