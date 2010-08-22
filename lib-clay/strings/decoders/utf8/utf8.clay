@@ -5,39 +5,44 @@ record UTF8Decoder[Iterator] {
 utf8(x) = UTF8Decoder(iterator(x));
 [T] overload iterator(x: UTF8Decoder[T]) = x;
 
-alias REPLACEMENT_CHAR = 65533u;
+alias REPLACEMENT_CHAR = UniChar(0xFFFDu);
+alias MAX_CODE_POINT = UniChar(0x10FFFFu);
 
 private validSequenceChar?(d) = bitwiseAnd(UInt32(d), 0xC0u) == 0x80u;
 
 decodeTwo(c, d) {
     if (validSequenceChar?(d)) {
-        return bitwiseOr(
+        return UniChar(bitwiseOr(
             shiftLeft(bitwiseAnd(UInt32(c), 0x1Fu), 6),
             bitwiseAnd(UInt32(d), 0x3Fu)
-        );
+        ));
     } else {
         return REPLACEMENT_CHAR;
     }
 }
 decodeThree(c, d, e) {
     if (validSequenceChar?(d) and validSequenceChar?(e)) {
-        return bitwiseOr(
+        return UniChar(bitwiseOr(
             shiftLeft(bitwiseAnd(UInt32(c), 0x0Fu), 12),
             shiftLeft(bitwiseAnd(UInt32(d), 0x3Fu),  6),
             bitwiseAnd(UInt32(e), 0x3Fu)
-        );
+        ));
     } else {
         return REPLACEMENT_CHAR;
     }
 }
 decodeFour(c, d, e, f) {
     if (validSequenceChar?(d) and validSequenceChar?(e) and validSequenceChar?(f)) {
-        return bitwiseOr(
+        var r = UniChar(bitwiseOr(
             shiftLeft(bitwiseAnd(UInt32(c), 0x07u), 18),
             shiftLeft(bitwiseAnd(UInt32(d), 0x3Fu), 12),
             shiftLeft(bitwiseAnd(UInt32(e), 0x3Fu),  6),
             bitwiseAnd(UInt32(f), 0x3Fu)
-        );
+        ));
+        if (r > MAX_CODE_POINT)
+            return REPLACEMENT_CHAR;
+        else
+            return r;
     } else {
         return REPLACEMENT_CHAR;
     }
@@ -48,7 +53,7 @@ decodeFour(c, d, e, f) {
 [T] overload next(decoder: UTF8Decoder[T]) {
     var c = UInt8(next(decoder.iter));
     if (c < 0x80) {
-        return UInt32(c);
+        return UniChar(c);
     } else if (c < 0xC0) {
         return REPLACEMENT_CHAR;
     } else if (c >= 0xC0) {
