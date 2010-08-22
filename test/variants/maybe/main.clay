@@ -21,4 +21,6 @@ main() {
 
     try { require(a, doIt); } catch(ex: ValueMissing) { println("a missing!"); }
     try { require(b, doIt); } catch(ex: ValueMissing) { println("b missing!"); }
+
+    println(variantTag(b));
 }

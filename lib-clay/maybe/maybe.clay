@@ -3,7 +3,7 @@
 // Maybe[T]
 //
 
-variant Maybe[T] = T | Nothing;
+variant Maybe[T] = Nothing | T;
 
 record Nothing {}
 
