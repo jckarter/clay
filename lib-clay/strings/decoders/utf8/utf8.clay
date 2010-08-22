@@ -1,0 +1,75 @@
+record UTF8Decoder[Iterator] {
+    iter: Iterator;
+}
+
+utf8(x) = UTF8Decoder(iterator(x));
+[T] overload iterator(x: UTF8Decoder[T]) = x;
+
+alias REPLACEMENT_CHAR = 65533u;
+
+private validSequenceChar?(d) = bitwiseAnd(UInt32(d), 0xC0u) == 0x80u;
+
+decodeTwo(c, d) {
+    if (validSequenceChar?(d)) {
+        return bitwiseOr(
+            shiftLeft(bitwiseAnd(UInt32(c), 0x1Fu), 6),
+            bitwiseAnd(UInt32(d), 0x3Fu)
+        );
+    } else {
+        return REPLACEMENT_CHAR;
+    }
+}
+decodeThree(c, d, e) {
+    if (validSequenceChar?(d) and validSequenceChar?(e)) {
+        return bitwiseOr(
+            shiftLeft(bitwiseAnd(UInt32(c), 0x0Fu), 12),
+            shiftLeft(bitwiseAnd(UInt32(d), 0x3Fu),  6),
+            bitwiseAnd(UInt32(e), 0x3Fu)
+        );
+    } else {
+        return REPLACEMENT_CHAR;
+    }
+}
+decodeFour(c, d, e, f) {
+    if (validSequenceChar?(d) and validSequenceChar?(e) and validSequenceChar?(f)) {
+        return bitwiseOr(
+            shiftLeft(bitwiseAnd(UInt32(c), 0x07u), 18),
+            shiftLeft(bitwiseAnd(UInt32(d), 0x3Fu), 12),
+            shiftLeft(bitwiseAnd(UInt32(e), 0x3Fu),  6),
+            bitwiseAnd(UInt32(f), 0x3Fu)
+        );
+    } else {
+        return REPLACEMENT_CHAR;
+    }
+}
+
+[T] overload hasNext?(decoder: UTF8Decoder[T]) = hasNext?(decoder.iter);
+
+[T] overload next(decoder: UTF8Decoder[T]) {
+    var c = UInt8(next(decoder.iter));
+    if (c < 0x80) {
+        return UInt32(c);
+    } else if (c < 0xC0) {
+        return REPLACEMENT_CHAR;
+    } else if (c >= 0xC0) {
+        if (c < 0xE0) {
+            if (not hasNext?(decoder.iter)) goto eof;
+            return decodeTwo(c, next(decoder.iter));
+        } else if (c < 0xF0) {
+            if (not hasNext?(decoder.iter)) goto eof;
+            var d = next(decoder.iter);
+            if (not hasNext?(decoder.iter)) goto eof;
+            return decodeThree(c, d, next(decoder.iter));
+        } else if (c < 0xF5) {
+            if (not hasNext?(decoder.iter)) goto eof;
+            var d = next(decoder.iter);
+            if (not hasNext?(decoder.iter)) goto eof;
+            var e = next(decoder.iter);
+            if (not hasNext?(decoder.iter)) goto eof;
+            return decodeFour(c, d, e, next(decoder.iter));
+        }
+    }
+
+eof:
+    return REPLACEMENT_CHAR;
+}
