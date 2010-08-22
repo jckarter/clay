@@ -67,11 +67,17 @@ private cloneList(b:NodePtr[K,V]) {
 
 
 //
-// move constructor
+// moveUnsafe, resetUnsafe
 //
 
 [K,V]
-overload move(a:HashMap[K,V]) = HashMap[K,V](move(a.buckets), a.size);
+overload moveUnsafe(a:HashMap[K,V]) =
+    HashMap[K,V](moveUnsafe(a.buckets), a.size);
+
+[K,V]
+overload resetUnsafe(a:HashMap[K,V]) {
+    resetUnsafe(a.buckets);
+}
 
 
 

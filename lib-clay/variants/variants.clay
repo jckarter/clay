@@ -81,11 +81,11 @@ overload V(rvalue src:V) = move(src);
 
 
 //
-// move
+// moveUnsafe, resetUnsafe
 //
 
 [V | Variant?(V)]
-overload move(src:V) returned:V {
+overload moveUnsafe(src:V) returned:V {
     ref destRepr = variantRepr(returned);
     ref srcRepr = variantRepr(src);
     var tag = srcRepr.tag;
@@ -97,7 +97,48 @@ overload move(src:V) returned:V {
         if (tag == unwrapStatic(i)) {
             ref dest = staticIndex(destData, i);
             ref src = staticIndex(srcData, i);
-            dest <-- move(src);
+            dest <-- moveUnsafe(src);
+            goto end;
+        }
+    }
+    error("invalid variant, tag = ", tag);
+    end :
+}
+
+[V | Variant?(V)]
+overload resetUnsafe(x:V) {
+    ref repr = variantRepr(x);
+    repr.tag = 0;
+    resetUnsafe(staticIndex(repr.data, static 0));
+}
+
+
+
+//
+// assign
+//
+
+[V | Variant?(V)]
+overload assign(dest:V, lvalue src:V) {
+    ref destRepr = variantRepr(dest);
+    ref srcRepr = variantRepr(src);
+    var tag = destRepr.tag;
+    if (tag != srcRepr.tag) {
+        if (&dest == &src)
+            return;
+        destroy(dest);
+        resetUnsafe(dest);
+        dest <-- src;
+        return;
+    }
+    ref destData = destRepr.data;
+    ref srcData = srcRepr.data;
+    alias n = Int(VariantMemberCount(V));
+    static for (i in ...staticIntegers(static n)) {
+        if (tag == unwrapStatic(i)) {
+            ref dest2 = staticIndex(destData, i);
+            ref src2 = staticIndex(srcData, i);
+            assign(dest2, src2);
             goto end;
         }
     }

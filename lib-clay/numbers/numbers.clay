@@ -87,7 +87,7 @@ overload toBiggerNumericType(static A, static B, v) = B(v);
 
 
 //
-// constructors, move, destroy
+// constructors, moveUnsafe, resetUnsafe, destroy
 //
 
 [T | Numeric?(T)]
@@ -103,8 +103,12 @@ overload T(src:T) returned:T {
 }
 
 [T | Numeric?(T)]
-overload move(src:T) returned:T {
+overload moveUnsafe(src:T) returned:T {
     primitiveCopy(returned, src);
+}
+
+[T | Numeric?(T)]
+overload resetUnsafe(x:T) {
 }
 
 [T | Numeric?(T)]

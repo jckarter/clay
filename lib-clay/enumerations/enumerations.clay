@@ -1,7 +1,7 @@
 
 
 //
-// constructors, move, destory
+// constructors, moveUnsafe, resetUnsafe, destory
 //
 
 [E | Enum?(E)]
@@ -14,8 +14,12 @@ overload E(src:E) returned:E {
 }
 
 [E | Enum?(E)]
-overload move(src:E) returned:E {
+overload moveUnsafe(src:E) returned:E {
     primitiveCopy(returned, src);
+}
+
+[E | Enum?(E)]
+overload resetUnsafe(x:E) {
 }
 
 [E | Enum?(E)]

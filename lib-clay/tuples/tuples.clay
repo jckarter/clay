@@ -97,14 +97,20 @@ overload Tuple[...T](src:Tuple[...T]) returned:Tuple[...T] {
 
 
 //
-// move constructor
+// moveUnsafe, resetUnsafe
 //
 
 [...T]
-overload move(src:Tuple[...T]) returned:Tuple[...T] {
+overload moveUnsafe(src:Tuple[...T]) returned:Tuple[...T] {
     alias n = TupleElementCount(Tuple[...T]);
     static for (i in ...staticIntegers(static n))
-        staticIndex(returned, i) <-- move(staticIndex(src, i));
+        staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
+}
+
+[...T]
+overload resetUnsafe(a:Tuple[...T]) {
+    static for (x in ...tupleElements(a))
+        resetUnsafe(x);
 }
 
 
@@ -126,7 +132,7 @@ overload destroy(a:Tuple[...T]) {
 //
 
 [...T]
-overload assign(dest:Tuple[...T], src:Tuple[...T]) {
+overload assign(dest:Tuple[...T], lvalue src:Tuple[...T]) {
     alias n = TupleElementCount(Tuple[...T]);
     static for (i in ...staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));

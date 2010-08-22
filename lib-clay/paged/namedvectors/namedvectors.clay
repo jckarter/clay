@@ -31,6 +31,8 @@ record Header {
 // predicates
 //
 
+[T] overload RegularRecord?(static NamedVector[T]) = false;
+
 [T] overload ContiguousSequence?(static NamedVector[T]) = true;
 
 
@@ -69,13 +71,18 @@ overload NamedVector[T](fileName:S) {
     }
 }
 
-// disable copy-constructor, assignment
+
+
+//
+// destroy
+//
 
 [T]
-overload NamedVector[T](src:NamedVector[T]);
-
-[T]
-overload assign(dest:NamedVector[T], src:NamedVector[T]);
+overload destroy(x:NamedVector[T]) {
+    destroy(x.mapping);
+    destroy(x.file);
+    destroy(x.fileName);
+}
 
 
 

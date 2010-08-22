@@ -79,14 +79,20 @@ overload T(src:T) returned:T {
 
 
 //
-// move constructor
+// moveUnsafe, resetUnsafe
 //
 
 [T | RegularRecord?(T)]
-overload move(src:T) returned:T {
+overload moveUnsafe(src:T) returned:T {
     alias n = RecordFieldCount(T);
     static for (i in ...staticIntegers(static n))
-        staticIndex(returned, i) <-- move(staticIndex(src, i));
+        staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
+}
+
+[T | RegularRecord?(T)]
+overload resetUnsafe(a:T) {
+    static for (x in ...recordFields(a))
+        resetUnsafe(x);
 }
 
 
@@ -108,7 +114,7 @@ overload destroy(a:T) {
 //
 
 [T | RegularRecord?(T)]
-overload assign(dest:T, src:T) {
+overload assign(dest:T, lvalue src:T) {
     alias n = RecordFieldCount(T);
     static for (i in ...staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));
