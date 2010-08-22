@@ -1,0 +1,34 @@
+All well-formed:
+72
+32
+233
+32
+8364
+32
+119652
+Invalid start characters:
+65533
+65533
+65533
+65533
+Truncated sequences:
+65533
+65533
+65533
+65533
+65533
+65533
+Invalid characters in sequences:
+65533
+32
+65533
+32
+65533
+32
+65533
+32
+65533
+32
+65533
+32
+65533
