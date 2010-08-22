@@ -18,11 +18,15 @@ Union?(x) = false;
 
 
 //
-// constructors, move, destroy
+// constructors, resetUnsafe, destroy
 //
 
 [...T]
 overload Union[...T]() returned:Union[...T] {
+}
+
+[...T]
+overload resetUnsafe(x:Union[...T]) {
 }
 
 [...T]

@@ -90,13 +90,14 @@ overload Times(a, static 0) = ;
 
 
 //
-// other constructors, destroy, equals?, lesser?
+// other constructors, moveUnsafe, resetUnsafe,
+// destroy, equals?, lesser?
 //
 
 [T,n]
 overload Array[T,n]() returned:Array[T,n] {
     for (x in returned)
-        x <-- T();
+        initialize(x);
 }
 
 [T,n]
@@ -106,15 +107,21 @@ overload Array[T,n](src:Array[T,n]) returned:Array[T,n] {
 }
 
 [T,n]
-overload destroy(a:Array[T,n]) {
-    for (x in a)
-        destroy(x);
+overload moveUnsafe(src:Array[T,n]) returned:Array[T,n] {
+    for (d, s in zip(returned, src))
+        d <-- moveUnsafe(s);
 }
 
 [T,n]
-overload move(src:Array[T,n]) returned:Array[T,n] {
-    for (d, s in zip(returned, src))
-        d <-- move(s);
+overload resetUnsafe(a:Array[T,n]) {
+    for (x in a)
+        resetUnsafe(x);
+}
+
+[T,n]
+overload destroy(a:Array[T,n]) {
+    for (x in a)
+        destroy(x);
 }
 
 [T,n]

@@ -6,8 +6,11 @@ overload Bool(src:Bool) returned:Bool {
     primitiveCopy(returned, src);
 }
 
-overload move(src:Bool) returned:Bool {
+overload moveUnsafe(src:Bool) returned:Bool {
     primitiveCopy(returned, src);
+}
+
+overload resetUnsafe(x:Bool) {
 }
 
 overload destroy(x:Bool) {

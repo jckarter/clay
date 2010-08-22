@@ -5,8 +5,8 @@
 //
 
 procedure destroy;
-procedure move;
-procedure dirtyMove;
+procedure moveUnsafe;
+procedure resetUnsafe;
 procedure assign;
 
 procedure equals?;
@@ -173,16 +173,9 @@ initialize(a) {
 copy(a:T) = T(a);
 
 [T]
-overload dirtyMove(src:T) returned:T {
-    returned <-- move(src);
-    destroy(src);
-}
-
-[T]
-overload assign(dest:T, src:T) {
-    if (&dest == &src) return;
-    destroy(dest);
-    dest <-- src;
+move(src:T) returned:T {
+    returned <-- moveUnsafe(src);
+    resetUnsafe(src);
 }
 
 [T]

@@ -20,7 +20,9 @@ overload RegularRecord?(static SharedPointer[T]) = false;
 
 
 //
-// allocateShared, constructors, assign, destroy
+// allocateShared, constructors
+// moveUnsafe, resetUnsafe,
+// assign, destroy
 //
 
 [T]
@@ -44,13 +46,17 @@ overload SharedPointer[T](src:SharedPointer[T]) {
 }
 
 [T]
-overload move(src:SharedPointer[T]) returned:SharedPointer[T] {
+overload moveUnsafe(src:SharedPointer[T]) returned:SharedPointer[T] {
     returned.ptr = src.ptr;
-    src.ptr = nullPaged(RefCounted[T]);
 }
 
 [T]
-overload assign(dest:SharedPointer[T], src:SharedPointer[T]) {
+overload resetUnsafe(p : SharedPointer[T]) {
+    p <-- SharedPointer[T]();
+}
+
+[T]
+overload assign(dest:SharedPointer[T], lvalue src:SharedPointer[T]) {
     if (dest.ptr == src.ptr)
         return;
     destroy(dest);

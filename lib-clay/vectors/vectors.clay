@@ -81,20 +81,31 @@ overload pushAll(a) {}
 
 
 //
-// destroy, move
+// moveUnsafe, resetUnsafe, assign, destroy
 //
+
+[T]
+overload moveUnsafe(a:Vector[T]) returned:Vector[T] {
+    returned <-- Vector[T](a.size, a.capacity, a.data);
+}
+
+[T]
+overload resetUnsafe(a:Vector[T]) {
+    a <-- Vector[T]();
+}
+
+[T]
+overload assign(dest:Vector[T], lvalue src:Vector[T]) {
+    resize(dest, size(src));
+    for (x, y in zip(dest, src))
+        assign(x, y);
+}
 
 [T]
 overload destroy(a:Vector[T]) {
     for (x in a)
         destroy(x);
     freeRawMemory(a.data);
-}
-
-[T]
-overload move(a:Vector[T]) returned:Vector[T] {
-    returned <-- Vector[T](a.size, a.capacity, a.data);
-    a <-- Vector[T]();
 }
 
 
@@ -121,7 +132,7 @@ overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
     var data = allocateRawMemory(T, capacity);
     var ptr = data;
     for (x in a) {
-        ptr^ <-- dirtyMove(x);
+        ptr^ <-- moveUnsafe(x);
         inc(ptr);
     }
     freeRawMemory(a.data);

@@ -54,13 +54,18 @@ overload Any(x:Any) {
     );
 }
 
-overload move(src:Any) returned:Any {
-    returned.id = src.id;
-    returned.ptr = src.ptr;
-    returned.size = src.size;
-    returned.copyConstructor = src.copyConstructor;
-    returned.destructor = src.destructor;
-    src <-- Any();
+overload moveUnsafe(src:Any) returned:Any {
+    returned <-- Any(
+        src.id,
+        src.ptr,
+        src.size,
+        src.copyConstructor,
+        src.destructor
+    );
+}
+
+overload resetUnsafe(x:Any) {
+    x <-- Any();
 }
 
 overload destroy(x:Any) {

@@ -64,14 +64,20 @@ overload Displayable(x:Displayable) {
     return Displayable(obj, x.size, x.destructor, x.copyConstructor, x.display);
 }
 
-// move
-overload move(src:Displayable) returned:Displayable {
-    returned.obj = src.obj;
-    returned.size = src.size;
-    returned.destructor = src.destructor;
-    returned.copyConstructor = src.copyConstructor;
-    returned.display = src.display;
-    src <-- Displayable();
+// moveUnsafe
+overload moveUnsafe(src:Displayable) returned:Displayable {
+    returned <-- Displayable(
+        src.obj,
+        src.size,
+        src.destructor,
+        src.copyConstructor,
+        src.display
+    );
+}
+
+// resetUnsafe
+overload resetUnsafe(x:Displayable) {
+    x <-- Displayable();
 }
 
 // destructor

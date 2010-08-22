@@ -76,11 +76,14 @@ overload Displayable(x:Displayable) {
     return Displayable(obj, vtable);
 }
 
-// move
-overload move(src:Displayable) returned:Displayable {
-    returned.obj = src.obj;
-    returned.vtable = src.vtable;
-    src <-- Displayable();
+// moveUnsafe
+overload moveUnsafe(src:Displayable) returned:Displayable {
+    returned <-- Displayable(src.obj, src.vtable);
+}
+
+// resetUnsafe
+overload resetUnsafe(x:Displayable) {
+    x <-- Displayable();
 }
 
 // destructor

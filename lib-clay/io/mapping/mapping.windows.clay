@@ -94,12 +94,6 @@ overload destroy(x:InnerFileMapping) {
 }
 
 
-// disable default constructor, copy constructor, assignment
-overload InnerFileMapping();
-overload InnerFileMapping(x:InnerFileMapping);
-overload assign(dest:InnerFileMapping, src:InnerFileMapping);
-
-
 
 //
 // mappingAddress, mappingLength

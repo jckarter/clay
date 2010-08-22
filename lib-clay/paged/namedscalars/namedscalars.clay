@@ -16,6 +16,9 @@ record NamedScalar[T] {
     mapping : FileMapping;
 }
 
+[T]
+overload RegularRecord?(static NamedScalar[T]) = false;
+
 
 
 //
@@ -40,13 +43,18 @@ overload NamedScalar[T](fileName:S, initial:T) {
     }
 }
 
-// disable copy-constructor, assignment
+
+
+//
+// destroy
+//
 
 [T]
-overload NamedScalar[T](src:NamedScalar[T]);
-
-[T]
-overload assign(dest:NamedScalar[T], src:NamedScalar[T]);
+overload destroy(x:NamedScalar[T]) {
+    destroy(x.mapping);
+    destroy(x.file);
+    destroy(x.fileName);
+}
 
 
 

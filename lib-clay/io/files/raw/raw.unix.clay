@@ -64,17 +64,15 @@ overload destroy(x:RawFile) {
         unix.syscallNoThrow(unix.close, x.handle);
 }
 
-// disable default constructor, copy constructor, assignment
-overload RawFile();
-overload RawFile(x:RawFile);
-overload assign(dest:RawFile, src:RawFile);
 
+// moveUnsafe, resetUnsafe
 
-// move constructor
-
-overload move(src:RawFile) returned:RawFile {
+overload moveUnsafe(src:RawFile) returned:RawFile {
     returned <-- RawFile(src.handle, src.owned);
-    src <-- RawFile(-1, false);
+}
+
+overload resetUnsafe(x:RawFile) {
+    x <-- RawFile(-1, false);
 }
 
 

@@ -34,7 +34,7 @@ macro allocateShared(x:T) {
 
 
 //
-// constructors, move, assign, destroy
+// constructors, moveUnsafe, resetUnsafe, assign, destroy
 //
 
 [T]
@@ -50,13 +50,17 @@ overload SharedPointer[T](src:SharedPointer[T]) {
 }
 
 [T]
-overload move(src:SharedPointer[T]) returned:SharedPointer[T] {
+overload moveUnsafe(src:SharedPointer[T]) returned:SharedPointer[T] {
     returned.ptr = src.ptr;
-    src.ptr = null(RefCounted[T]);
 }
 
 [T]
-overload assign(dest:SharedPointer[T], src:SharedPointer[T]) {
+overload resetUnsafe(p : SharedPointer[T]) {
+    p <-- SharedPointer[T]();
+}
+
+[T]
+overload assign(dest:SharedPointer[T], lvalue src:SharedPointer[T]) {
     if (dest.ptr == src.ptr)
         return;
     destroy(dest);
