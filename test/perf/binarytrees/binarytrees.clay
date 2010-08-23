@@ -1,0 +1,106 @@
+
+
+//
+// Pool
+//
+
+record Pool[T] {
+    data : Vector[T];
+    next : SizeT;
+}
+
+[T]
+overload Pool[T]() = Pool[T](0);
+
+[T]
+overload Pool[T](n) {
+    var v = Vector[T]();
+    resize(v, n);
+    return Pool[T](move(v), SizeT(0));
+}
+
+[T]
+macro poolAlloc(p:Pool[T], x:T) {
+    assert(p.next < size(p.data));
+    var ptr = &p.data[p.next];
+    p.next += 1;
+    ptr^ = x;
+    return ptr;
+}
+
+[T]
+poolClear(p:Pool[T]) {
+    p.next = 0;
+}
+
+
+
+//
+// binary trees
+//
+
+record Node {
+    left : Pointer[Node];
+    right : Pointer[Node];
+    item : Int; 
+}
+
+newNode(pool, item) {
+    return poolAlloc(pool, Node(null(Node), null(Node), item));
+}
+
+makeTree(_item, _depth, pool){
+    var item, depth = _item, _depth;
+    var node = newNode(pool, item);
+    if (depth > 0) {
+        node^.left  = makeTree(2*item-1, depth-1, pool);
+        node^.right = makeTree(2*item,   depth-1, pool);       
+    } 
+    return node;
+}
+
+checksumTree(_node) {
+    var node = _node;
+    var result = node^.item;
+    if (not null?(node^.left))
+        result += checksumTree(node^.left) - checksumTree(node^.right);
+    return result;
+}
+
+main() {
+    var minDepth = 4;
+
+    var poolSize = 1000000;
+
+    var longLivedPool = Pool[Node](poolSize);
+    var shortTermPool = Pool[Node](poolSize);
+
+    assert(size(commandLine()) == 2);
+    var maxDepth = Int(commandLine()[1]);
+    maxDepth = max(maxDepth, minDepth+2);
+
+    var stretchDepth = maxDepth + 1;
+    println("depth = ", stretchDepth);
+    var node = makeTree(0, stretchDepth, shortTermPool);
+    var check = checksumTree(node);
+    poolClear(shortTermPool);
+    println("stretch tree of depth ", stretchDepth, "\t check: ", check);
+
+    var longLivedTree = makeTree(0, maxDepth, longLivedPool);
+
+    var depth = minDepth; 
+    while (depth <= maxDepth) {
+        var iterations = shiftLeft(1, (maxDepth - depth + minDepth));
+        var total = 0;
+        for (i in range(1, iterations+1)) {
+            var node1 = makeTree( i, depth, shortTermPool);
+            var node2 = makeTree(-i, depth, shortTermPool); 
+            total += checksumTree(node1) + checksumTree(node2);
+            poolClear(shortTermPool);
+        }
+        println(iterations*2, "\t trees of depth ", depth, "\t check: ", total);
+        depth += 2;
+    }
+
+    println("long lived tree of depth ", maxDepth, "\t check: ", checksumTree(longLivedTree));
+}
