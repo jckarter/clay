@@ -32,5 +32,9 @@ overload destroy(x:Test) {
 }
 
 main() {
-    var a = Vector[Test](Test(), Test(), Test(), Test(), Test());
+    var a = Vector[Test](Test(), Test());
+    reserve(a, 100);
+    push(a, [Test(), Test(), Test(), Test(), Test()]);
+    var x = Test();
+    push(a, move(x));
 }

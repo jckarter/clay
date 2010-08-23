@@ -492,9 +492,9 @@ MultiCValuePtr codegenMultiAsRef(ExprListPtr exprs,
     return out;
 }
 
-MultiCValuePtr codegenExprAsRef(ExprPtr expr,
-                                EnvPtr env,
-                                CodegenContextPtr ctx)
+static MultiCValuePtr codegenExprAsRef2(ExprPtr expr,
+                                        EnvPtr env,
+                                        CodegenContextPtr ctx)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     MultiCValuePtr mcv = new MultiCValue();
@@ -521,6 +521,63 @@ MultiCValuePtr codegenExprAsRef(ExprPtr expr,
         }
     }
     return out;
+}
+
+static MultiCValuePtr codegenStaticObjectAsRef(ObjectPtr x,
+                                               ExprPtr expr,
+                                               EnvPtr env,
+                                               CodegenContextPtr ctx)
+{
+    switch (x->objKind) {
+    case CVALUE : {
+        CValuePtr y = (CValue *)x.ptr();
+        if (y->forwardedRValue)
+            y = new CValue(y->type, y->llValue);
+        return new MultiCValue(y);
+    }
+    case MULTI_CVALUE : {
+        MultiCValue *y = (MultiCValue *)x.ptr();
+        MultiCValuePtr out = new MultiCValue();
+        for (unsigned i = 0; i < y->size(); ++i) {
+            CValue *cv = y->values[i].ptr();
+            if (cv->forwardedRValue)
+                out->add(new CValue(cv->type, cv->llValue));
+            else
+                out->add(cv);
+        }
+        return out;
+    }
+    default :
+        return codegenExprAsRef2(expr, env, ctx);
+    }
+}
+
+MultiCValuePtr codegenExprAsRef(ExprPtr expr,
+                                EnvPtr env,
+                                CodegenContextPtr ctx)
+{
+    switch (expr->exprKind) {
+    case NAME_REF : {
+        NameRef *x = (NameRef *)expr.ptr();
+        ObjectPtr y = safeLookupEnv(env, x->name);
+        if (y->objKind == EXPRESSION) {
+            ExprPtr z = (Expr *)y.ptr();
+            return codegenExprAsRef(z, env, ctx);
+        }
+        else if (y->objKind == EXPR_LIST) {
+            ExprListPtr z = (ExprList *)y.ptr();
+            return codegenMultiAsRef(z, env, ctx);
+        }
+        return codegenStaticObjectAsRef(y, expr, env, ctx);
+    }
+    case OBJECT_EXPR : {
+        ObjectExpr *x = (ObjectExpr *)expr.ptr();
+        return codegenStaticObjectAsRef(x->obj, expr, env, ctx);
+    }
+    default :
+        break;
+    }
+    return codegenExprAsRef2(expr, env, ctx);
 }
 
 
