@@ -74,7 +74,7 @@ overload replicateElement(a:Vec[T,n], static n, x:T) {
 
 
 //
-// other constructors, moveUnsafe, resetUnsafe, destructor
+// other constructors, moveUnsafe, resetUnsafe, assign, destroy
 //
 
 [T,n]
@@ -89,12 +89,17 @@ overload Vec[T,n](src:Vec[T,n]) returned:Vec[T,n] __llvm__{
 }
 
 [T,n]
-overload moveUnsafe(src:Vec[T,n]) returned:Vec[T,n] __llvm__{
+overload moveUnsafe(src:Vec[T,n]) returned:Vec[T,n] {
     returned <-- src;
 }
 
 [T,n]
 overload resetUnsafe(src:Vec[T,n]) {
+}
+
+[T,n]
+overload assign(dest:Vec[T,n], src:Vec[T,n]) {
+    dest <-- src;
 }
 
 [T,n]
