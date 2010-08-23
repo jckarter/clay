@@ -1,0 +1,83 @@
+
+
+reverse(_first, _last) {
+    var first, last = _first, _last;
+    if (first == last)
+        return;
+    last -= 1;
+    while (first < last) {
+        swap(first^, last^);
+        first += 1;
+        last -= 1;
+    }
+}
+
+nextPermutation(_first, _last) {
+    var first, last = _first, _last;
+    if (first == last)
+        return false;
+    if (first+1 == last)
+        return false;
+    var ptr = last-1;
+    while (ptr > first) {
+        var prev = ptr-1;
+        if (prev^ < ptr^) {
+            reverse(ptr, last);
+            while (prev^ >= ptr^)
+                ptr += 1;
+            swap(prev^, ptr^);
+            return true;
+        }
+        ptr -= 1;
+    }
+    reverse(first, last);
+    return false;
+}
+
+flip(a) {
+    var k = a[0];
+    reverse(begin(a), begin(a)+k);
+}
+
+countFlips(a) {
+    var n = 0;
+    while (a[0] != 1) {
+        flip(a);
+        n += 1;
+    }
+    return n;
+}
+
+printList(a) {
+    for (x in a)
+        print(x);
+    println();
+}
+
+main() {
+    ref args = commandLine();
+    if (size(args) != 2) {
+        println("usage: ", args[0], ", <n>");
+        return -1;
+    }
+    var n = Int(args[1]);
+    var a = Vector(range(1, n+1));
+    var maxFlips = 0;
+    var b = Vector[Int]();
+    var showCount = 30;
+    while (true) {
+        if (showCount > 0) {
+            printList(a);
+            showCount -= 1;
+        }
+        if ((front(a) != 1) and (back(a) != n)) {
+            b = a;
+            var flips = countFlips(b);
+            maxFlips = max(maxFlips, flips);
+        }
+        if (not nextPermutation(begin(a), end(a)))
+            break;
+    }
+	println("Pfannkuchen(",n,") = ", maxFlips);
+    return 0;
+}
