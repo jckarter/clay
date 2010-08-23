@@ -1,0 +1,36 @@
+
+var _nextId = 0;
+
+nextId() {
+    var id = _nextId;
+    _nextId += 1;
+    return id;
+}
+
+record Test {
+    id : Int;
+}
+
+overload Test() {
+    var id = nextId();
+    println("construct Test ", id);
+    return Test(id);
+}
+
+overload Test(src:Test) {
+    println("copy Test ", src.id);
+    return Test(src.id);
+}
+
+overload moveUnsafe(src:Test) {
+    println("move Test ", src.id);
+    return Test(src.id);
+}
+
+overload destroy(x:Test) {
+    println("destroy Test ", x.id);
+}
+
+main() {
+    var a = Vector[Test](Test(), Test(), Test(), Test(), Test());
+}
