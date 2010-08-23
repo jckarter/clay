@@ -23,8 +23,6 @@ destroy Test 5
 destroy Test 6
 construct Test 7
 move Test 7
-move Test 7
-destroy Test 7
 destroy Test 7
 destroy Test 0
 destroy Test 1
