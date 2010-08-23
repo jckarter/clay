@@ -64,18 +64,15 @@ overload Vector(a:A) {
 private AllEqual?(x, first, ...rest) = (x == first) and AllEqual?(x, ...rest);
 overload AllEqual?(x) = true;
 
-[T, ...A | AllEqual?(T, ...A)]
-overload Vector[T](x:T, ...rest:A) {
+[T, ...A | (countValues(...A) > 0) and AllEqual?(T, ...A)]
+macro overload Vector[T](...args:A) {
     var v = Vector[T]();
-    reserve(v, countArgs(x, ...rest));
-    pushAll(v, x, ...rest);
+    reserve(v, countValues(...A));
+    pushAll(v, ...args);
     return move(v);
 }
 
-private countArgs(x, ...rest) = 1 + countArgs(...rest);
-overload countArgs() = 0;
-
-private pushAll(a, x, ...rest) { push(a, x); pushAll(a, ...rest); }
+private pushAll(a, forward x, forward ...rest) { push(a, x); pushAll(a, ...rest); }
 overload pushAll(a) {}
 
 
