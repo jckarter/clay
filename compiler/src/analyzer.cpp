@@ -2217,6 +2217,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(staticPValue(fieldNames[i].ptr()));
     }
 
+    case PRIM_RecordWithFieldP :
+        return new MultiPValue(new PValue(boolType, true));
+
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);
         RecordTypePtr t = recordTypeOfValue(args, 0);

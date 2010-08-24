@@ -81,6 +81,7 @@ Union[T1, ..., Tn]
 [R] Record?(static R):Bool
 [R] RecordFieldCount(static R):SizeT
 [R,i] RecordFieldName(static R, static i): name
+[R,name] RecordWithField?(static R, static name) Bool
 [R,i] recordFieldRef(a:R, static i)
 [R,name] recordFieldRefByName(a:R, static name)
 [R] recordFields(a:R) ...

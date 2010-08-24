@@ -1829,6 +1829,7 @@ enum PrimOpCode {
     PRIM_RecordP,
     PRIM_RecordFieldCount,
     PRIM_RecordFieldName,
+    PRIM_RecordWithFieldP,
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
     PRIM_recordFields,

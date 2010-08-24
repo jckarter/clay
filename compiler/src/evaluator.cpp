@@ -3603,6 +3603,26 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_RecordWithFieldP : {
+        ensureArity(args, 2);
+        bool result = false;
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        IdentifierPtr fname = valueToIdentifier(args, 1);
+        if (obj.ptr() && (obj->objKind == TYPE)) {
+            Type *t = (Type *)obj.ptr();
+            if (t->typeKind == RECORD_TYPE) {
+                RecordType *rt = (RecordType *)t;
+                const map<string, size_t> &fieldIndexMap =
+                    recordFieldIndexMap(rt);
+                result = (fieldIndexMap.find(fname->str)
+                          != fieldIndexMap.end());
+            }
+        }
+        ValueHolderPtr vh = boolToValueHolder(result);
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);
         RecordTypePtr rt;
