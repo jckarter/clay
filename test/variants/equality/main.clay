@@ -1,0 +1,25 @@
+
+record Square {
+    side : Double;
+}
+
+record Circle {
+    radius : Double;
+}
+
+variant Shape = Square | Circle;
+
+main() {
+    var v = Vector[Shape]();
+    push(v, Shape(Circle(10.1)));
+    push(v, Shape(Square(20.2)));
+    push(v, Shape(Circle(20.2)));
+    push(v, Shape(Circle(10.1)));
+
+    for (x in v) {
+        for (y in v) {
+            print(x == y, " ");
+        }
+        println();
+    }
+}
