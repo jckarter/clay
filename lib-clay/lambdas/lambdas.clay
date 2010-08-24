@@ -66,7 +66,13 @@ macro overload LambdaBody[(...I),(...O)](x:T) returned:LambdaBody[(...I),(...O)]
     returned.destructor = CodePointer[Opaque,()](destructor);
 
     var ptr = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
-    ptr^ <-- x;
+    try {
+        ptr^ <-- x;
+    }
+    catch (e) {
+        freeRawMemoryAligned(ptr);
+        throw e;
+    }
     returned.obj = Pointer[Opaque](ptr);
 }
 
