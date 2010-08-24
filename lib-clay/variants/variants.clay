@@ -171,6 +171,28 @@ overload destroy(x:V) {
 
 
 //
+// equals?
+//
+
+[V | Variant?(V)]
+overload equals?(a:V, b:V) {
+    ref aRepr, bRepr = variantRepr(a), variantRepr(b);
+    var tag = aRepr.tag;
+    if (tag != bRepr.tag)
+        return false;
+    ref aData, bData = aRepr.data, bRepr.data;
+    alias n = Int(VariantMemberCount(V));
+    static for (i in ...staticIntegers(static n)) {
+        if (tag == unwrapStatic(i))
+            return staticIndex(aData, i) == staticIndex(bData, i);
+    }
+    error("invalid variant, tag = ", tag);
+    return false;
+}
+
+
+
+//
 // variantIs?
 //
 
