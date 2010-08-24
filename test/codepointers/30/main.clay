@@ -24,6 +24,7 @@ overload display(x) {
 record Displayable {
     obj : Pointer[Opaque];
     size : SizeT;
+    alignment : SizeT;
     destructor : CodePointer[Opaque,()];
     copyConstructor : CodePointer[Opaque,Opaque];
     display : CodePointer[Opaque,()];
@@ -35,7 +36,7 @@ overload RegularRecord?(static Displayable) = false;
 // primary constructor
 [T]
 overload Displayable(x:T) {
-    var obj = allocateRawMemory(T, 1);
+    var obj = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
     obj^ <-- x;
     var destructor = makeCodePointer(destroy, T);
     var copyConstructor = makeCodePointer(T, T);
@@ -43,6 +44,7 @@ overload Displayable(x:T) {
 
     return Displayable(Pointer[Opaque](obj),
                        TypeSize(T),
+                       TypeAlignment(T),
                        CodePointer[Opaque,()](destructor),
                        CodePointer[Opaque,Opaque](copyConstructor),
                        CodePointer[Opaque,()](displayPtr));
@@ -50,7 +52,7 @@ overload Displayable(x:T) {
 
 // default constructor
 overload Displayable() {
-    return Displayable(null(Opaque), SizeT(0),
+    return Displayable(null(Opaque), SizeT(0), SizeT(0),
                        CodePointer[Opaque,()](0),
                        CodePointer[Opaque,Opaque](0),
                        CodePointer[Opaque,()](0));
@@ -58,10 +60,11 @@ overload Displayable() {
 
 // copy constructor
 overload Displayable(x:Displayable) {
-    var p = allocateRawMemory(Int8, x.size);
+    var p = allocateRawMemoryAligned(Int8, x.size, x.alignment);
     var obj = Pointer[Opaque](p);
     obj^ <-- x.copyConstructor(x.obj^);
-    return Displayable(obj, x.size, x.destructor, x.copyConstructor, x.display);
+    return Displayable(obj, x.size, x.alignment,
+                       x.destructor, x.copyConstructor, x.display);
 }
 
 // moveUnsafe
@@ -69,6 +72,7 @@ overload moveUnsafe(src:Displayable) returned:Displayable {
     returned <-- Displayable(
         src.obj,
         src.size,
+        src.alignment,
         src.destructor,
         src.copyConstructor,
         src.display
@@ -84,7 +88,7 @@ overload resetUnsafe(x:Displayable) {
 overload destroy(x:Displayable) {
     if (not null?(x.obj)) {
         x.destructor(x.obj^);
-        freeRawMemory(x.obj);
+        freeRawMemoryAligned(x.obj);
     }
 }
 
