@@ -22,17 +22,77 @@ Testing test test suite:
 
     add shouldn't be callable with the expected argument types:
       Vector[Char], Vector[Char]
+
+    primes iterator is expected to contain:
+      1
+      3
+      5
+      7
+      11
+    but contains:
+      2
+      3
+      5
+      7
+      11
+
+    primes iterator is expected to contain:
+      2
+      3
+      5
+      7
+      9
+    but contains:
+      2
+      3
+      5
+      7
+      11
+
+    primes iterator is expected to contain:
+      2
+      3
+      5
+      7
+    but contains:
+      2
+      3
+      5
+      7
+      11
+
+    primes iterator is expected to contain:
+      2
+      3
+      5
+      7
+      11
+      13
+    but contains:
+      2
+      3
+      5
+      7
+      11
+
+    throws int is expected to throw exception of type Int32 but throws 7.000000
+
+    throws int is expected to throw exception of type Int32 but doesn't throw
+
+    throws 6 is expected to throw 6 but throws 7
+
+    throws 6 is expected to throw 6 but doesn't throw
     -- FAILED
-  should fail by throwing exception:
+  should fail by throwing uncaught exception:
     truth isn't true
 
     uncaught exception:
-      0
+      7
     -- FAILED
   (pending) should pass:
     -- FIXED (should clear pending flag)
   (pending) should fail:
     truth isn't true
--- test test suite: 7 expectations passed; 10 failed (1 pending)
-Overall: 7 expectations passed; 10 failed (1 pending)
+-- test test suite: 10 expectations passed; 18 failed (1 pending)
+Overall: 10 expectations passed; 18 failed (1 pending)
 TESTS FAILED
