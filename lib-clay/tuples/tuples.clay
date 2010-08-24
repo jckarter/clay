@@ -77,9 +77,17 @@ macro overload Tuple[...T](...args:T) returned:Tuple[...T] {
 
 [...T]
 overload Tuple[...T]() returned:Tuple[...T] {
-    static for (x in ...tupleElements(returned))
-        initialize(x);
+    initializeMulti(...tupleElements(returned));
 }
+
+[...A]
+private initializeMulti(...args:A) {
+    ...args <-- ...initializeTypes(...A);
+}
+
+private procedure initializeTypes;
+overload initializeTypes(A, ...B) = A(), ...initializeTypes(...B);
+overload initializeTypes() = ;
 
 
 
@@ -89,9 +97,7 @@ overload Tuple[...T]() returned:Tuple[...T] {
 
 [...T]
 overload Tuple[...T](src:Tuple[...T]) returned:Tuple[...T] {
-    alias n = TupleElementCount(Tuple[...T]);
-    static for (i in ...staticIntegers(static n))
-        staticIndex(returned, i) <-- staticIndex(src, i);
+    ...tupleElements(returned) <-- ...tupleElements(src);
 }
 
 
