@@ -1,0 +1,50 @@
+//
+// The following techniques are used to completely
+// by-pass libc in order to produce a teeny executable.
+//
+//   1) Define custom entry point "_start"
+//   2) Use inline-asm to access syscalls directly
+//
+// Build instructions:
+//
+//   clay -no-exceptions -shared -asm tinyhello.clay
+//   as -o tinyhello.o tinyhello.s
+//   ld -o tinyhello tinyhello.o
+//   strip tinyhello
+//
+// This program only works on linux x86-32.
+//
+
+
+external ("_start") _start() {
+    print("Hello world!\n");
+    exit();
+}
+
+print(s) {
+    write(cstring(s), size(s));
+}
+
+// 'exit' syscall
+exit() __llvm__{
+    call void asm sideeffect "
+        movl    $$$$1,%eax
+        xor     %ebx,%ebx
+        int     $$$$0x80
+    ", ""()
+    ret i32 0
+}
+
+// 'write' syscall
+write(s : Pointer[Int8], len : SizeT) __llvm__{
+    %1 = load i32* %len
+    %2 = load i8** %s
+
+    call void asm sideeffect "
+        pushl   %eax            /* the int call seems to corrupt this? */
+        int     $$$$0x80
+        popl    %eax
+    ", "{edx},{ecx},{ebx},{eax}" (i32 %1, i8* %2, i32 1, i32 4)
+
+    ret i32 0
+}
