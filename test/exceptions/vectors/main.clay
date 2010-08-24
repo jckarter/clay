@@ -1,0 +1,53 @@
+
+var _countdown = 7;
+
+testAndThrow() {
+    if (_countdown <= 0)
+        error("foo");
+    _countdown -= 1;
+}
+
+var _nextId = 0;
+
+nextId() {
+    var id = _nextId;
+    _nextId += 1;
+    return id;
+}
+
+record Test {
+    id : Int;
+}
+
+overload Test() {
+    var id = nextId();
+    testAndThrow();
+    println("construct Test ", id);
+    return Test(id);
+}
+
+overload Test(src:Test) {
+    testAndThrow();
+    println("copy Test ", src.id);
+    return Test(src.id);
+}
+
+overload moveUnsafe(src:Test) {
+    println("move Test ", src.id);
+    return Test(src.id);
+}
+
+overload destroy(x:Test) {
+    println("destroy Test ", x.id);
+}
+
+main() {
+    try {
+        var a = Vector[Test](Test(), Test(), Test(), Test());
+        var b = Vector[Test]();
+        b = move(a);
+    }
+    catch (e) {
+        println("exception: ", e);
+    }
+}
