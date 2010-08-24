@@ -54,17 +54,17 @@ mul2(n, v, Atv) {
 }
 
 mul(n, v, AtAv) {
-    var u = allocateRawMemory(Float64, n);
+    var u = allocateRawMemoryAligned(Float64, n, TypeAlignment(Float64)*2);
     mul1(n, v, u);
     mul2(n, u, AtAv);
-    freeRawMemory(u);
+    freeRawMemoryAligned(u);
 }
 
 approximate(k) {
-    var h = allocateRawMemory(Float64, k);
+    var h = allocateRawMemoryAligned(Float64, k, TypeAlignment(Float64)*2);
     for (i in range(k))
         h[i] = 1.0;
-    var g = allocateRawMemory(Float64, k);
+    var g = allocateRawMemoryAligned(Float64, k, TypeAlignment(Float64)*2);
 
     for (i in range(10)) {
         mul(k, h, g);
@@ -77,8 +77,8 @@ approximate(k) {
         vbv += h[i] * g[i];
         vv += g[i] * g[i];
     }
-    freeRawMemory(h);
-    freeRawMemory(g);
+    freeRawMemoryAligned(h);
+    freeRawMemoryAligned(g);
     return libc.sqrt(vbv / vv);
 }
 
