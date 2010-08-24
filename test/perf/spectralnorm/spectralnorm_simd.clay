@@ -1,0 +1,105 @@
+
+import simd;
+import libc;
+
+A(i, j) = 1.0 / (((i+j) * (i+j+1)/2) + i + 1);
+
+
+A_v1(i, j) {
+    var denom1 = (((i+j) * (i+j+1)/2) + i + 1);
+    var denom2 = (((i+1+j) * (i+1+j+1)/2) + i+1 + 1);
+    var v = Vec(Float64(denom1), Float64(denom2));
+    return 1.0 / v;
+}
+
+A_v2(i, j) {
+    var denom1 = (((i+j) * (i+j+1)/2) + i + 1);
+    var denom2 = (((i+j+1) * (i+j+1+1)/2) + i + 1);
+    var v = Vec(Float64(denom1), Float64(denom2));
+    return 1.0 / v;
+}
+
+mul1(n, v, Av) {
+    for (i in range(n)) {
+        var sum = Vec(0.0, 0.0);
+        var ptr = &v[0];
+        var ptr2 = Pointer[Vec[Float64,2]](ptr);
+        for (j in range(n/2)) {
+            sum += A_v2(i, 2*j) * ptr2^;
+            ptr2 += 1;
+        }
+        var final = simd.get(sum, 0) + simd.get(sum, 1);
+        ptr += (n/2)*2;
+        if (n % 2 == 1)
+            final += A(i, n-1) * ptr^;
+        Av[i] = final;
+    }
+}
+
+mul2(n, v, Atv) {
+    for (i in range(n)) {
+        var sum = Vec(0.0, 0.0);
+        var ptr = &v[0];
+        var ptr2 = Pointer[Vec[Float64,2]](ptr);
+        for (j in range(n/2)) {
+            sum += A_v1(2*j, i) * ptr2^;
+            ptr2 += 1;
+        }
+        var final = simd.get(sum, 0) + simd.get(sum, 1);
+        ptr += (n/2)*2;
+        if (n % 2 == 1)
+            final += A(n-1, i) * ptr^;
+        Atv[i] = final;
+    }
+}
+
+mul(n, v, AtAv) {
+    var u = allocateRawMemory(Float64, n);
+    mul1(n, v, u);
+    mul2(n, u, AtAv);
+    freeRawMemory(u);
+}
+
+approximate(k) {
+    var h = allocateRawMemory(Float64, k);
+    for (i in range(k))
+        h[i] = 1.0;
+    var g = allocateRawMemory(Float64, k);
+
+    for (i in range(10)) {
+        mul(k, h, g);
+        mul(k, g, h);   
+    }   
+
+    var vbv = 0.0;
+    var vv = 0.0;
+    for (i in range(k)) {
+        vbv += h[i] * g[i];
+        vv += g[i] * g[i];
+    }
+    freeRawMemory(h);
+    freeRawMemory(g);
+    return libc.sqrt(vbv / vv);
+}
+
+printFloat(stream, fmt, value) {
+    var buf = Array[CChar, 100]();
+    libc.sprintf(&buf[0], cstring(fmt), Double(value));
+    var n = libc.strlen(&buf[0]);
+    var ptr = Pointer[Byte](&buf[0]);
+    write(stream, ptr, SizeT(n));
+}
+
+main() {
+    ref cmd = commandLine();
+    if (size(cmd) != 2) {
+        println("usage: ", cmd[0], " <n>");
+        return -1;
+    }
+    var np = cmd[1];
+    var n = Int(np);
+    var res = approximate(n);
+    printFloat(stdout, "%0.9f", res);
+    println();
+    return 0;
+}

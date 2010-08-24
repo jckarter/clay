@@ -1,0 +1,73 @@
+
+import libc;
+
+A(i, j) = 1.0 / (((i+j) * (i+j+1)/2) + i + 1);
+
+
+mul1(n, v, Av) {
+    for (i in range(n)) {
+        var sum = 0.0;
+        for (j in range(n))
+            sum += A(i,j) * v[j];
+        Av[i] = sum;
+    }
+}
+
+mul2(n, v, Atv) {
+    for (i in range(n)){
+        var sum = 0.0;
+        for (j in range(n)) 
+            sum += A(j,i) * v[j];
+        Atv[i] = sum;
+    }
+}
+
+mul(n, v, AtAv) {
+    var u = Vector[Float64]();
+    resize(u, n);
+    mul1(n, v, u);
+    mul2(n, u, AtAv);
+}
+
+approximate(k) {
+    var h = Vector[Float64]();
+    for (i in range(k))
+        push(h, 1.0);
+    var g = Vector[Float64]();
+    resize(g, k);
+
+    for (i in range(10)) {
+        mul(k, h, g);
+        mul(k, g, h);   
+    }   
+
+    var vbv = 0.0;
+    var vv = 0.0;
+    for (i in range(k)) {
+        vbv += h[i] * g[i];
+        vv += g[i] * g[i];
+    } 
+    return libc.sqrt(vbv / vv);
+}
+
+printFloat(stream, fmt, value) {
+    var buf = Array[CChar, 100]();
+    libc.sprintf(&buf[0], cstring(fmt), Double(value));
+    var n = libc.strlen(&buf[0]);
+    var ptr = Pointer[Byte](&buf[0]);
+    write(stream, ptr, SizeT(n));
+}
+
+main() {
+    ref cmd = commandLine();
+    if (size(cmd) != 2) {
+        println("usage: ", cmd[0], " <n>");
+        return -1;
+    }
+    var np = cmd[1];
+    var n = Int(np);
+    var res = approximate(n);
+    printFloat(stdout, "%0.9f", res);
+    println();
+    return 0;
+}
