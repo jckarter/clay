@@ -22,6 +22,7 @@ overload UniChar(c:I) returned:UniChar {
 }
 
 overload UniChar(c:Char) = UniChar(c.code);
+overload Char(c:UniChar) = Char(c.code);
 
 [I | Integer?(I)]
 overload I(c:Char) = I(c.code);
