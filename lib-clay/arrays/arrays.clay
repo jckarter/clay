@@ -96,32 +96,27 @@ overload Times(a, static 0) = ;
 
 [T,n]
 overload Array[T,n]() returned:Array[T,n] {
-    for (x in returned)
-        initialize(x);
+    initializeMemory(begin(returned), end(returned));
 }
 
 [T,n]
 overload Array[T,n](src:Array[T,n]) returned:Array[T,n] {
-    for (d, s in zip(returned, src))
-        d <-- s;
+    copyMemory(begin(returned), end(returned), begin(src));
 }
 
 [T,n]
 overload moveUnsafe(src:Array[T,n]) returned:Array[T,n] {
-    for (d, s in zip(returned, src))
-        d <-- moveUnsafe(s);
+    moveMemoryUnsafe(begin(returned), end(returned), begin(src));
 }
 
 [T,n]
 overload resetUnsafe(a:Array[T,n]) {
-    for (x in a)
-        resetUnsafe(x);
+    resetMemoryUnsafe(begin(a), end(a));
 }
 
 [T,n]
 overload destroy(a:Array[T,n]) {
-    for (x in a)
-        destroy(x);
+    destroyMemory(begin(a), end(a));
 }
 
 [T,n]
