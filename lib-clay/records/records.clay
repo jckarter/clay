@@ -5,7 +5,7 @@
 // fieldRef, staticIndex
 //
 
-[T, FIELD | Record?(T)]
+[T, FIELD | RecordWithField?(T, FIELD)]
 overload fieldRef(x:T, static FIELD) {
     return ref recordFieldRefByName(x, static FIELD);
 }

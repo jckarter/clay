@@ -623,6 +623,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(RecordP);
     PRIMITIVE(RecordFieldCount);
     PRIMITIVE(RecordFieldName);
+    PRIMITIVE(RecordWithFieldP);
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
     PRIMITIVE(recordFields);
