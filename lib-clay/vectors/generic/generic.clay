@@ -40,42 +40,13 @@ overload index(a:V, i:I) = ref (vectorData(a) + SizeT(i))^;
 // vector coordinates
 //
 
-record VectorCoordinate[T] {
-    ptr : Pointer[T];
-}
-
-[T]
-overload ContiguousCoordinate?(static VectorCoordinate[T]) = true;
-
+alias VectorCoordinate[T] = Pointer[T];
 
 [V | Vector?(V)]
-overload begin(a:V) = VectorCoordinate(&a[0]);
+overload begin(a:V) = &a[0];
 
 [V | Vector?(V)]
-overload end(a:V) = VectorCoordinate(&a[0] + size(a));
-
-[T]
-overload dereference(x:VectorCoordinate[T]) = ref x.ptr^;
-
-[T,I|Integer?(I)]
-overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
-
-[T,I|Integer?(I)]
-overload subtract(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr - i);
-
-[T]
-overload subtract(c1:VectorCoordinate[T], c2:VectorCoordinate[T])
-    = c1.ptr - c2.ptr;
-
-[T]
-overload inc(c:VectorCoordinate[T]) {
-    inc(c.ptr);
-}
-
-[T]
-overload dec(c:VectorCoordinate[T]) {
-    dec(c.ptr);
-}
+overload end(a:V) = &a[0] + size(a);
 
 
 
