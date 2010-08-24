@@ -1,21 +1,36 @@
 import test.*;
 
 instance Exception = Int;
+instance Exception = Double;
 
-throwing_function() { throw 0; }
+throwInt() { throw 7; }
+throwDouble() { throw 7.0; }
+throwNothing() { }
 
 main() = testMain(
     TestSuite(
         "test test suite", Tuple(
             TestCase("should pass", lambda(test) {
+                var seq = [2, 3, 5, 7, 11];
+
                 expectTrue(test, "truth", true);
                 expectFalse(test, "falsehood", false);
                 expectEqual(test, "unity", 1, 1);
                 expectEqualValues(test, "unity and trinity", Tuple(1, 3), 1, 3);
                 expectCallDefined(test, add, Int, Int);
                 expectCallUndefined(test, add, String, Int);
+                expectSequence(test, "primes sequence", seq, 2, 3, 5, 7, 11);
+
+                var iter = iterator(seq);
+                expectIterator(test, "primes iterator", iter, 2, 3, 5, 7, 11);
+
+                expectExceptionType(test, "throws int", Int, throwInt);
+                expectException(test, "throws 7", 7, throwInt);
             }),
             TestCase("should fail", lambda(test) {
+                var seq = [2, 3, 5, 7, 11];
+                var iter = iterator(seq);
+
                 expectTrue(test, "truth", false);
                 expectFalse(test, "falsehood", true);
                 expectEqual(test, "unity", 1, 3);
@@ -23,10 +38,24 @@ main() = testMain(
                 expectEqualValues(test, "unity and trinity", Tuple(1, 3), 1, 2, 3);
                 expectCallDefined(test, add, Int, String);
                 expectCallUndefined(test, add, String, String);
+
+                var iter = iterator(seq);
+                expectIterator(test, "primes iterator", iter, 1, 3, 5, 7, 11);
+                iter = iterator(seq);
+                expectIterator(test, "primes iterator", iter, 2, 3, 5, 7, 9);
+                iter = iterator(seq);
+                expectIterator(test, "primes iterator", iter, 2, 3, 5, 7);
+                iter = iterator(seq);
+                expectIterator(test, "primes iterator", iter, 2, 3, 5, 7, 11, 13);
+
+                expectExceptionType(test, "throws int", Int, throwDouble);
+                expectExceptionType(test, "throws int", Int, throwNothing);
+                expectException(test, "throws 6", 6, throwInt);
+                expectException(test, "throws 6", 6, throwNothing);
             }),
-            TestCase("should fail by throwing exception", block(test) {
+            TestCase("should fail by throwing uncaught exception", block(test) {
                 expectTrue(test, "truth", false);
-                throwing_function();
+                throwInt();
                 expectFalse(test, "unreachable falsehood", true);
             }),
             PendingTestCase("should pass", lambda(test) {
