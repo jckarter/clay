@@ -16,3 +16,173 @@ allocateRawMemory(static T, count:I) {
 freeRawMemory(ptr) {
     free(RawPointer(ptr));
 }
+
+
+
+//
+// initializeMemory
+//
+
+[T]
+initializeMemory(first:Pointer[T], last:Pointer[T]) {
+    eachLocationWithCleanup(first, last, initialize);
+}
+
+
+
+//
+// destroyMemory
+//
+
+[T]
+destroyMemory(first:Pointer[T], last:Pointer[T]) {
+    eachLocation(first, last, destroy);
+}
+
+
+
+//
+// copyMemory
+//
+
+[T]
+copyMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    var srcPtr = srcFirst;
+    eachLocationWithCleanup(destFirst, destLast, lambda (x) {
+            x <-- srcPtr^;
+            srcPtr += 1;
+        }
+    );
+}
+
+
+
+//
+// moveMemory, moveMemoryUnsafe
+//
+
+[T]
+moveMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    var srcPtr = srcFirst;
+    eachLocation(destFirst, destLast, lambda (x) {
+        x <-- move(srcPtr^);
+        srcPtr += 1;
+    });
+}
+
+[T]
+moveMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    var srcPtr = srcFirst;
+    eachLocation(destFirst, destLast, lambda (x) {
+        x <-- moveUnsafe(srcPtr^);
+        srcPtr += 1;
+    });
+}
+
+
+
+//
+// moveMemoryBackwardsUnsafe
+//
+
+[T]
+moveMemoryBackwardsUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    var srcPtr = srcFirst + (destLast - destFirst);
+    eachLocationBackwards(destFirst, destLast, lambda (x) {
+        srcPtr -= 1;
+        x <-- moveUnsafe(srcPtr^);
+    });
+}
+
+
+
+//
+// resetMemoryUnsafe
+//
+
+[T]
+resetMemoryUnsafe(first:Pointer[T], last:Pointer[T]) {
+    eachLocation(first, last, resetUnsafe);
+}
+
+
+
+//
+// fillMemory
+//
+
+[T]
+fillMemory(first:Pointer[T], last:Pointer[T], value:T) {
+    eachLocationWithCleanup(first, last, block (x) { x <-- value; });
+}
+
+
+
+//
+// assignMemory, moveAssignMemory
+//
+
+[T]
+assignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    var srcPtr = srcFirst;
+    eachLocation(destFirst, destLast, lambda (x) {
+        x = srcPtr^;
+        srcPtr += 1;
+    });
+}
+
+[T]
+overload assignMemory(first:Pointer[T], last:Pointer[T], value:T) {
+    eachLocation(first, last, lambda (x) { x = value; });
+}
+
+[T]
+moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    var srcPtr = srcFirst;
+    eachLocation(destFirst, destLast, lambda (x) {
+        x = move(srcPtr^);
+        srcPtr += 1;
+    });
+}
+
+
+
+//
+// eachLocation, eachLocationBackwards, eachLocationWithCleanup
+//
+
+[T]
+private eachLocation(_first:Pointer[T], _last:Pointer[T], f) {
+    var first, last = _first, _last;
+    var ptr = first;
+    while (ptr != last) {
+        f(ptr^);
+        ptr += 1;
+    }
+}
+
+[T]
+private eachLocationBackwards(_first:Pointer[T], _last:Pointer[T], f) {
+    var first, last = _first, _last;
+    var ptr = last;
+    while (ptr != first) {
+        ptr -= 1;
+        f(ptr^);
+    }
+}
+
+[T]
+private eachLocationWithCleanup(_first:Pointer[T], _last:Pointer[T], f) {
+    var first, last = _first, _last;
+    var ptr = first;
+    try {
+        while (ptr != last) {
+            f(ptr^);
+            ptr += 1;
+        }
+    }
+    catch (e) {
+        destroyMemory(first, ptr);
+        throw e;
+    }
+}
