@@ -119,7 +119,7 @@ overload dec(a:Pointer[T]) {
 
 
 //
-// Pointer - null, null?, dereference
+// Pointer - null, null?, dereference, index
 //
 
 [T]
@@ -130,6 +130,9 @@ overload null?(x:Pointer[T]) = (x == null(T));
 
 [T]
 overload dereference(p:Pointer[T]) = ref pointerDereference(p);
+
+[T, I | Integer?(I)]
+overload index(p:Pointer[T], i:I) = ref (p + i)^;
 
 
 
