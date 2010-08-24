@@ -2,13 +2,13 @@
 all : clay_binarytrees.exe c_binarytrees.exe cpp_binarytrees.exe
 
 clay_binarytrees.exe : binarytrees.clay
-	clay -o clay_binarytrees.exe binarytrees.clay
+	clay -no-exceptions -o clay_binarytrees.exe binarytrees.clay
 
 c_binarytrees.exe : binarytrees.c
-	gcc -O3 -I/opt/local/include/apr-1 -o c_binarytrees.exe binarytrees.c -L/opt/local/include -lapr-1
+	clang -O3 -I/opt/local/include/apr-1 -o c_binarytrees.exe binarytrees.c -L/opt/local/include -lapr-1
 
 cpp_binarytrees.exe : binarytrees.cpp
-	g++ -O3 -I/opt/local/include -o cpp_binarytrees.exe binarytrees.cpp
+	clang++ -O3 -I/opt/local/include -o cpp_binarytrees.exe binarytrees.cpp
 
 
 clean :
