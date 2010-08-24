@@ -1,5 +1,47 @@
 
 import libc.(malloc, free);
+import memory.platform.(SystemMallocAlignment);
+
+
+
+//
+// alignedMalloc, alignedFree,
+//
+
+alignedMalloc(numBytes:SizeT, alignment:SizeT) {
+    var ptr = malloc(numBytes + alignment + TypeSize(UInt8));
+    if (null?(ptr))
+        return null(UInt8);
+    var mask = bitwiseNot(SizeT(alignment) - 1);
+    var roundedDown = bitwiseAnd(SizeT(ptr), mask);
+    var alignedPtr = Pointer[UInt8](alignment + roundedDown);
+    (alignedPtr - 1)^ = Byte(alignedPtr - ptr);
+    return alignedPtr;
+}
+
+alignedFree(ptr:Pointer[UInt8]) {
+    if (null?(ptr))
+        return;
+    var offset = SizeT((ptr-1)^);
+    var originalPtr = ptr - offset;
+    free(originalPtr);
+}
+
+
+//
+// allocateRawMemoryAligned, freeRawMemoryAligned
+//
+
+[T, I, J | Integer?(I) and Integer?(J)]
+allocateRawMemoryAligned(static T, count:I, alignment:J) {
+    var ptr = alignedMalloc(TypeSize(T) * SizeT(count), SizeT(alignment));
+    return Pointer[T](ptr);
+}
+
+[T]
+freeRawMemoryAligned(ptr:Pointer[T]) {
+    alignedFree(Pointer[UInt8](ptr));
+}
 
 
 
@@ -13,8 +55,19 @@ allocateRawMemory(static T, count:I) {
     return Pointer[T](ptr);
 }
 
-freeRawMemory(ptr) {
+[T]
+freeRawMemory(ptr:Pointer[T]) {
     free(RawPointer(ptr));
+}
+
+[T,I | Integer?(I) and (TypeAlignment(T) > SystemMallocAlignment)]
+overload allocateRawMemory(static T, count:I) {
+    return allocateRawMemoryAligned(T, count, TypeAlignment(T));
+}
+
+[T | TypeAlignment(T) > SystemMallocAlignment]
+overload freeRawMemory(ptr:Pointer[T]) {
+    freeRawMemoryAligned(ptr);
 }
 
 

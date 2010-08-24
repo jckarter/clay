@@ -65,7 +65,7 @@ macro overload LambdaBody[(...I),(...O)](x:T) returned:LambdaBody[(...I),(...O)]
     returned.code = CodePointer[(Opaque, ...I), (...O)](codePtr);
     returned.destructor = CodePointer[Opaque,()](destructor);
 
-    var ptr = allocateRawMemory(T, 1);
+    var ptr = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
     ptr^ <-- x;
     returned.obj = Pointer[Opaque](ptr);
 }
@@ -73,7 +73,7 @@ macro overload LambdaBody[(...I),(...O)](x:T) returned:LambdaBody[(...I),(...O)]
 [In, Out]
 overload destroy(x:LambdaBody[In, Out]) {
     x.destructor(x.obj^);
-    freeRawMemory(x.obj);
+    freeRawMemoryAligned(x.obj);
 }
 
 
