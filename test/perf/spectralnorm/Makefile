@@ -2,10 +2,10 @@
 all : clay_spectralnorm.exe clay_spectralnorm_simd.exe c_spectralnorm.exe cpp_spectralnorm.exe
 
 clay_spectralnorm.exe : spectralnorm.clay
-	clay -no-exceptions -o clay_spectralnorm.exe spectralnorm.clay
+	clay -no-exceptions -o clay_spectralnorm.exe spectralnorm.clay -lm
 
 clay_spectralnorm_simd.exe : spectralnorm_simd.clay
-	clay -no-exceptions -o clay_spectralnorm_simd.exe spectralnorm_simd.clay
+	clay -no-exceptions -o clay_spectralnorm_simd.exe spectralnorm_simd.clay -lm
 
 c_spectralnorm.exe : spectralnorm.c
 	clang -O3 -o c_spectralnorm.exe spectralnorm.c
