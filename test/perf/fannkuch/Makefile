@@ -1,11 +1,11 @@
 
-all : clay_fannkuch.exe clay_fannkuch2.exe c_fannkuch.exe cpp_fannkuch.exe
+all : clay_fannkuch.exe clay_fannkuch_old.exe c_fannkuch.exe cpp_fannkuch.exe
 
 clay_fannkuch.exe : fannkuch.clay
 	clay -no-exceptions -o clay_fannkuch.exe fannkuch.clay
 
-clay_fannkuch2.exe : fannkuch2.clay
-	clay -no-exceptions -o clay_fannkuch2.exe fannkuch2.clay
+clay_fannkuch_old.exe : fannkuch_old.clay
+	clay -no-exceptions -o clay_fannkuch_old.exe fannkuch_old.clay
 
 c_fannkuch.exe : fannkuch.c
 	clang -O3 -o c_fannkuch.exe fannkuch.c
@@ -16,6 +16,6 @@ cpp_fannkuch.exe : fannkuch.cpp
 
 clean :
 	rm -f clay_fannkuch.exe
-	rm -f clay_fannkuch2.exe
+	rm -f clay_fannkuch_old.exe
 	rm -f c_fannkuch.exe
 	rm -f cpp_fannkuch.exe
