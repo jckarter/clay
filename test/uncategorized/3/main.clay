@@ -3,7 +3,7 @@ testSignedInt() = (1, 1i8, 1i16, 1i32, 1i64);
 
 testUnsignedInt() = (1, 1u8, 1u16, 1u32, 2u, 1u64);
 
-testFloat() = (1, 1.0, 1f32, 1f64, 1.0f, 1.0f64);
+testFloat() = (1, 1.0, 1f32, 1f64, 1.0f, 1.0f64, 1e2, 1e-2, -2e3f, -2e-3f);
 
 test0Tuple() = ();
 test1Tuple() = Tuple(true);
@@ -13,5 +13,6 @@ testConst() = (testSignedInt(), testUnsignedInt(), testFloat(),
                #foo, #bar);
 
 main() {
+    println(testConst());
     println(Type(testConst()));
 }
