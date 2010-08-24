@@ -23,6 +23,7 @@ overload display(x) {
 
 record DisplayableVTable {
     size : SizeT;
+    alignment : SizeT;
     destructor : CodePointer[Opaque,()];
     copyConstructor : CodePointer[Opaque,Opaque];
     display : CodePointer[Opaque,()];
@@ -34,6 +35,7 @@ makeDisplayableVTable(static T) {
     var copyConstructor = makeCodePointer(T, T);
     var display = makeCodePointer(display, T);
     return DisplayableVTable(TypeSize(T),
+                             TypeAlignment(T),
                              CodePointer[Opaque,()](destructor),
                              CodePointer[Opaque,Opaque](copyConstructor),
                              CodePointer[Opaque,()](display));
@@ -55,7 +57,7 @@ overload RegularRecord?(static Displayable) = false;
 // constructor
 [T]
 overload Displayable(x:T) {
-    var obj = allocateRawMemory(T, 1);
+    var obj = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
     obj^ <-- x;
     var vtable = allocateRawMemory(DisplayableVTable, 1);
     vtable^ <-- makeDisplayableVTable(T);
@@ -67,12 +69,14 @@ overload Displayable() = Displayable(null(Opaque), null(DisplayableVTable));
 
 // copy constructor
 overload Displayable(x:Displayable) {
-    if (null?(x.obj)) return Displayable();
-    var p = allocateRawMemory(Int8, x.vtable^.size);
+    if (null?(x.obj))
+        return Displayable();
+    var vt = x.vtable;
+    var p = allocateRawMemoryAligned(Int8, vt^.size, vt^.alignment);
     var obj = Pointer[Opaque](p);
-    obj^ <-- x.vtable^.copyConstructor(x.obj^);
+    obj^ <-- vt^.copyConstructor(x.obj^);
     var vtable = allocateRawMemory(DisplayableVTable, 1);
-    vtable^ <-- x.vtable^;
+    vtable^ <-- vt^;
     return Displayable(obj, vtable);
 }
 
@@ -90,7 +94,7 @@ overload resetUnsafe(x:Displayable) {
 overload destroy(x:Displayable) {
     if (not null?(x.obj)) {
         x.vtable^.destructor(x.obj^);
-        freeRawMemory(x.obj);
+        freeRawMemoryAligned(x.obj);
         freeRawMemory(x.vtable);
     }
 }
