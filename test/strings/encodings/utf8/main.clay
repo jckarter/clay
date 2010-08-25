@@ -1,43 +1,75 @@
-import strings.encodings.utf8.(utf8);
+import strings.encodings.utf8.*;
 
 main() {
     println("All well-formed:");
-    for (codePoint in utf8("H \xC3\xA9 \xE2\x82\xAC \xF0\x9D\x8D\xA4")) {
+    for (codePoint in UTF8("H \xC3\xA9 \xE2\x82\xAC \xF0\x9D\x8D\xA4")) {
         println(codePoint);
     }
 
     println("Code point > 0x10FFFF:");
-    for (codePoint in utf8("\xF4\xBF\xBF\xBF ")) {
+    for (codePoint in UTF8("\xF4\xBF\xBF\xBF ")) {
         println(codePoint);
     }
 
     println("Invalid start characters:");
-    for (codePoint in utf8("\x80\xBF\xF5\xFF")) {
+    for (codePoint in UTF8("\x80\xBF\xF5\xFF")) {
         println(codePoint);
     }
 
     println("Truncated sequences:");
-    for (codePoint in utf8("\xC3")) {
+    for (codePoint in UTF8("\xC3")) {
         println(codePoint);
     }
-    for (codePoint in utf8("\xE2")) {
+    for (codePoint in UTF8("\xE2")) {
         println(codePoint);
     }
-    for (codePoint in utf8("\xE2\x82")) {
+    for (codePoint in UTF8("\xE2\x82")) {
         println(codePoint);
     }
-    for (codePoint in utf8("\xF0")) {
+    for (codePoint in UTF8("\xF0")) {
         println(codePoint);
     }
-    for (codePoint in utf8("\xF0\x9D")) {
+    for (codePoint in UTF8("\xF0\x9D")) {
         println(codePoint);
     }
-    for (codePoint in utf8("\xF0\x9D\x8D")) {
+    for (codePoint in UTF8("\xF0\x9D\x8D")) {
         println(codePoint);
     }
 
     println("Invalid characters in sequences:");
-    for (codePoint in utf8("\xC3\x29 \xC3\xE9 \xE2\x02\xAC \xE2\x82\x2C \xF0\x1D\x8D\xA4 \xF0\x9D\x0D\xA4 \xF0\x9D\x8D\x24 ")) {
+    for (codePoint in UTF8("\xC3\x29 \xC3\xE9 \xE2\x02\xAC \xE2\x82\x2C \xF0\x1D\x8D\xA4 \xF0\x9D\x0D\xA4 \xF0\x9D\x8D\x24 ")) {
         println(codePoint);
+    }
+
+    println("Invalid overlong encodings:");
+    for (codePoint in UTF8("\xC0\x80 \xC1\xBF \xC2\x80 ")) {
+        println(codePoint);
+    }
+    for (codePoint in UTF8("\xE0\x80\x80 \xE0\x9F\xBF \xE0\xA0\x80 ")) {
+        println(codePoint);
+    }
+    for (codePoint in UTF8("\xF0\x80\x80\x80 \xF0\x8F\xBF\xBF \xF0\x90\x80\x80 ")) {
+        println(codePoint);
+    }
+
+    var ustr = UTF8(String());
+
+    push(ustr, UniChar(0x000000u));
+    push(ustr, UniChar(0x00007Fu));
+    push(ustr, UniChar(0x000080u));
+    push(ustr, UniChar(0x0007FFu));
+    push(ustr, UniChar(0x000800u));
+    push(ustr, UniChar(0x00FFFFu));
+    push(ustr, UniChar(0x010000u));
+    push(ustr, UniChar(0x10FFFFu));
+    push(ustr, UniChar(0x110000u));
+
+    println("Encoded string:");
+    for (c in ustr.encoded) {
+        println(UInt8(c));
+    }
+    println("Unencoded string:");
+    for (c in ustr) {
+        println(c);
     }
 }
