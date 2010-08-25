@@ -1,4 +1,4 @@
-import strings.decoders.utf8.(utf8);
+import strings.encodings.utf8.(utf8);
 
 main() {
     println("All well-formed:");
