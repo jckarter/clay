@@ -1,0 +1,23 @@
+construct Test 0
+construct Test 1
+construct Test 2
+construct Test 3
+move Test 0
+move Test 1
+move Test 2
+move Test 3
+destroy Test 3
+destroy Test 2
+destroy Test 1
+destroy Test 0
+construct Test 4
+construct Test 5
+construct Test 6
+destroy Test 4
+destroy Test 5
+destroy Test 6
+destroy Test 0
+destroy Test 1
+destroy Test 2
+destroy Test 3
+exception: Error("foo")

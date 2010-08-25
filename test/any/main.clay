@@ -25,6 +25,7 @@ record Any {
     id : Int;
     ptr : Pointer[Byte];
     size : SizeT;
+    alignment : SizeT;
     copyConstructor : CodePointer[Opaque, Opaque];
     destructor : CodePointer[Opaque, ()];
 }
@@ -37,18 +38,20 @@ overload Any() {
         -1,
         null(Byte),
         SizeT(0),
+        SizeT(0),
         CodePointer[Opaque,Opaque](0),
         CodePointer[Opaque,()](0)
     );
 }
 
 overload Any(x:Any) {
-    var ptr = allocateRawMemory(Byte, x.size);
+    var ptr = allocateRawMemoryAligned(Byte, x.size, x.alignment);
     ptr^ <-- x.copyConstructor(x.ptr^);
     return Any(
         x.id,
         ptr,
         x.size,
+        x.alignment,
         x.copyConstructor,
         x.destructor
     );
@@ -59,6 +62,7 @@ overload moveUnsafe(src:Any) returned:Any {
         src.id,
         src.ptr,
         src.size,
+        src.alignment,
         src.copyConstructor,
         src.destructor
     );
@@ -71,13 +75,13 @@ overload resetUnsafe(x:Any) {
 overload destroy(x:Any) {
     if (not null?(x.ptr)) {
         x.destructor(x.ptr^);
-        freeRawMemory(x.ptr);
+        freeRawMemoryAligned(x.ptr);
     }
 }
 
 [T]
 box(x:T) {
-    var ptr = allocateRawMemory(Byte, TypeSize(T));
+    var ptr = allocateRawMemoryAligned(Byte, TypeSize(T), TypeAlignment(T));
     Pointer[T](ptr)^ <-- x;
     var copyConstructor = makeCodePointer(T, T);
     var destructor = makeCodePointer(destroy, T);
@@ -85,6 +89,7 @@ box(x:T) {
         typeId[T],
         Pointer[Byte](ptr),
         TypeSize(T),
+        TypeAlignment(T),
         CodePointer[Opaque,Opaque](copyConstructor),
         CodePointer[Opaque,()](destructor)
     );

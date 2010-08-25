@@ -59,9 +59,17 @@ macro overload T(...args:A) returned:T {
 
 [T | RegularRecord?(T)]
 overload T() returned:T {
-    static for (x in ...recordFields(returned))
-        initialize(x);
+    initializeMulti(...recordFields(returned));
 }
+
+[...A]
+private initializeMulti(...args:A) {
+    ...args <-- ...initializeTypes(...A);
+}
+
+private procedure initializeTypes;
+overload initializeTypes(A, ...B) = A(), ...initializeTypes(...B);
+overload initializeTypes() = ;
 
 
 
@@ -71,9 +79,7 @@ overload T() returned:T {
 
 [T | RegularRecord?(T)]
 overload T(src:T) returned:T {
-    alias n = RecordFieldCount(T);
-    static for (i in ...staticIntegers(static n))
-        staticIndex(returned, i) <-- staticIndex(src, i);
+    ...recordFields(returned) <-- ...recordFields(src);
 }
 
 

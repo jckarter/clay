@@ -40,42 +40,13 @@ overload index(a:V, i:I) = ref (vectorData(a) + SizeT(i))^;
 // vector coordinates
 //
 
-record VectorCoordinate[T] {
-    ptr : Pointer[T];
-}
-
-[T]
-overload ContiguousCoordinate?(static VectorCoordinate[T]) = true;
-
+alias VectorCoordinate[T] = Pointer[T];
 
 [V | Vector?(V)]
-overload begin(a:V) = VectorCoordinate(&a[0]);
+overload begin(a:V) = &a[0];
 
 [V | Vector?(V)]
-overload end(a:V) = VectorCoordinate(&a[0] + size(a));
-
-[T]
-overload dereference(x:VectorCoordinate[T]) = ref x.ptr^;
-
-[T,I|Integer?(I)]
-overload add(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr + i);
-
-[T,I|Integer?(I)]
-overload subtract(c:VectorCoordinate[T], i:I) = VectorCoordinate(c.ptr - i);
-
-[T]
-overload subtract(c1:VectorCoordinate[T], c2:VectorCoordinate[T])
-    = c1.ptr - c2.ptr;
-
-[T]
-overload inc(c:VectorCoordinate[T]) {
-    inc(c.ptr);
-}
-
-[T]
-overload dec(c:VectorCoordinate[T]) {
-    dec(c.ptr);
-}
+overload end(a:V) = &a[0] + size(a);
 
 
 
@@ -170,16 +141,13 @@ overload resize(a:V, n:I) {
 
 [V | Vector?(V)]
 overload resize(a:V, n:SizeT) {
-    reserve(a, n);
-    var last = end(a);
-    var newLast = begin(a) + n;
-    while (last < newLast) {
-        initialize(last^);
-        last += 1;
+    var currentSize = vectorSize(a);
+    if (currentSize < n) {
+        reserve(a, n);
+        initializeMemory(end(a), begin(a)+n);
     }
-    while (last > newLast) {
-        last -= 1;
-        destroy(last^);
+    else if (currentSize > n) {
+        destroyMemory(begin(a)+n, end(a));
     }
     vectorSize(a) = n;
 }
@@ -203,15 +171,11 @@ private ensureSpace(a, space:SizeT) {
 [I | Integer?(I)]
 private insertLocation(a, pos:I) {
     ensureSpace(a, SizeT(1));
-    var i = begin(a) + pos;
-    var j = end(a);
-    // FIXME: something more cache friendly perhaps?
-    while (i < j) {
-        dec(j);
-        (j+1)^ <-- moveUnsafe(j^);
-    }
+    moveMemoryBackwardsUnsafe(begin(a)+pos+1, end(a)+1, begin(a)+pos);
     vectorSize(a) += 1;
-    return ref i^;
+    ref obj = (begin(a) + pos)^;
+    resetUnsafe(obj);
+    return ref obj;
 }
 
 [V,I,S | Vector?(V) and Integer?(I) and Sequence?(S) and
@@ -241,27 +205,17 @@ overload insert(a:V, i:VectorCoordinate[T], forward x:T) {
 }
 
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]
-private removeLocations(a:V, i_:VectorCoordinate[T], j_:VectorCoordinate[T]) {
-    var i, j = i_, j_;
-    var n = j - i;
-    var e = end(a);
-    while (j < e) {
-        i^ <-- moveUnsafe(j^);
-        inc(i);
-        inc(j);
-    }
-    vectorSize(a) -= n;
+private removeLocations(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
+    var n = end(a) - j;
+    moveMemoryUnsafe(i, i+n, j);
+    vectorSize(a) -= (j - i);
     if (vectorCapacity(a) > 3*(size(a)+1))
         vectorSetCapacity(a, 2*(a.size + 1));
 }
 
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]
 overload remove(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
-    var i2, j2 = i, j;
-    while (i2 < j2) {
-        destroy(i2^);
-        inc(i2);
-    }
+    destroyMemory(i, j);
     removeLocations(a, i, j);
 }
 
