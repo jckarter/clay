@@ -371,6 +371,8 @@ static bool exponentPart() {
     char c;
     if (!next(c)) return false;
     if ((c != 'e') && (c != 'E')) return false;
+    char *begin = save();
+    if (!sign()) restore(begin);
     return decimalInt();
 }
 

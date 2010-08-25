@@ -94,14 +94,12 @@ overload resetUnsafe(a:Vector[T]) {
 [T]
 overload assign(dest:Vector[T], lvalue src:Vector[T]) {
     resize(dest, size(src));
-    for (x, y in zip(dest, src))
-        assign(x, y);
+    assignMemory(begin(dest), end(dest), begin(src));
 }
 
 [T]
 overload destroy(a:Vector[T]) {
-    for (x in a)
-        destroy(x);
+    destroyMemory(begin(a), end(a));
     freeRawMemory(a.data);
 }
 

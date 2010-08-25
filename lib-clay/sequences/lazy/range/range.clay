@@ -25,9 +25,10 @@ overload reverseIterator(a:Range[T]) = ReverseRange(a.end, a.begin);
 overload hasNext?(a:Range[T]) = a.begin != a.end;
 
 [T]
-overload next(a:Range[T]) returned:T {
-    returned <-- a.begin;
+overload next(a:Range[T]) {
+    var temp = a.begin;
     inc(a.begin);
+    return move(temp);
 }
 
 [T]
