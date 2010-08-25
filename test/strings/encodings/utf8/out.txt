@@ -13,7 +13,6 @@ Invalid start characters:
 UniChar(65533)
 UniChar(65533)
 UniChar(65533)
-UniChar(65533)
 Truncated sequences:
 UniChar(65533)
 UniChar(65533)
@@ -36,3 +35,56 @@ UniChar(65533)
 UniChar(32)
 UniChar(65533)
 UniChar(32)
+Invalid overlong encodings:
+UniChar(65533)
+UniChar(32)
+UniChar(65533)
+UniChar(32)
+UniChar(128)
+UniChar(32)
+UniChar(65533)
+UniChar(32)
+UniChar(65533)
+UniChar(32)
+UniChar(2048)
+UniChar(32)
+UniChar(65533)
+UniChar(32)
+UniChar(65533)
+UniChar(32)
+UniChar(65536)
+UniChar(32)
+Encoded string:
+0
+127
+194
+128
+223
+191
+224
+160
+128
+239
+191
+191
+240
+144
+128
+128
+244
+143
+191
+191
+239
+191
+189
+Unencoded string:
+UniChar(0)
+UniChar(127)
+UniChar(128)
+UniChar(2047)
+UniChar(2048)
+UniChar(65535)
+UniChar(65536)
+UniChar(1114111)
+UniChar(65533)
