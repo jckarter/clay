@@ -622,8 +622,6 @@ struct Token : public Object {
 // lexer module
 //
 
-#define LLVM_TOKEN_PREFIX "__llvm__"
-
 void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
 
 void tokenize(SourcePtr source, int offset, int length,

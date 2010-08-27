@@ -2173,7 +2173,6 @@ static bool renderTemplate(LLVMBodyPtr llvmBody, string &out, EnvPtr env)
 {
     SourcePtr source = llvmBody->location->source;
     int startingOffset = llvmBody->location->offset;
-    startingOffset += strlen(LLVM_TOKEN_PREFIX);
 
     const string &body = llvmBody->body;
     llvm::raw_string_ostream outstream(out);
