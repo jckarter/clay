@@ -1,0 +1,167 @@
+import libc;
+import simd;
+
+record Body {
+    xy   : Vec[Float64, 2];
+    z0   : Vec[Float64, 2];
+    vxvy : Vec[Float64, 2];
+    vz00 : Vec[Float64, 2];
+    mass : Vec[Float64, 2];  
+}
+
+var pi    = 3.141592653589793;
+var smass = 4 * pi * pi;
+var days  = 365.24;
+
+var bodies = Array[Body, 5]();
+
+energy() {
+	var sq   = Vec(0.0, 0.0);
+    var dxdy = Vec(0.0, 0.0);
+    var dz00 = Vec(0.0, 0.0);
+    var distance = Vec(0.0, 0.0);
+    var e = 0.0;  
+  
+    for (i in range(size(bodies))) {
+ 	  	var b = bodies[i];
+    	sq = b.mass * ((b.vxvy * b.vxvy) + (b.vz00 * b.vz00));
+    	e += 0.5 * (simd.get(sq, 0) + simd.get(sq, 1));
+ 
+    	for (j in range(i+1, size(bodies))) {
+  
+	      	var b2 = bodies[j];
+        	dxdy = b.xy - b2.xy;
+        	dz00 = b.z0 - b2.z0;
+        
+			distance = (dxdy * dxdy) + (dz00 * dz00);
+        	var d = libc.sqrt(simd.get(distance,0) + simd.get(distance, 1));
+
+      		e -= (simd.get(b.mass, 0) * simd.get(b2.mass, 0)) / d;
+        }
+    }
+    return e;
+}
+
+advance(q) {
+	var dxdy = Vec(0.0, 0.0);
+	var dz00 = Vec(0.0, 0.0);
+	var tsquare = Vec(0.0, 0.0);
+	var distance = 0.0;
+    var distance2 = Vec(0.0, 0.0);
+    var magmag = Vec(0.0, 0.0);
+    var dtdt = Vec(0.01, 0.01);
+ 
+    for (k in range(q)) {
+    	for (i in range(size(bodies))) {
+			var b = &bodies[i];
+        	for (j in range(i+1, size(bodies))) {
+	    		var b2 = &bodies[j];
+
+          		dxdy = b^.xy - b2^.xy;
+          		dz00 = b^.z0 - b2^.z0;
+
+ 		        tsquare = (dxdy * dxdy) + (dz00 * dz00);     
+          		distance = simd.get(tsquare, 0) + simd.get(tsquare, 1);
+          		var d = libc.sqrt(distance);
+         		distance *= d;
+				distance2 = Vec(distance, distance);
+
+		        magmag = dtdt / distance2;
+				dxdy *= magmag;
+				dz00 *= magmag;
+
+			    b^.vxvy -= dxdy * b2^.mass;
+				b^.vz00 -= dz00 * b2^.mass;
+				b2^.vxvy += dxdy * b^.mass;
+				b2^.vz00 += dz00 * b^.mass;
+            }
+        }
+    	for (i in range(size(bodies))) {
+        	bodies[i].xy += dtdt * bodies[i].vxvy;
+        	bodies[i].z0 += dtdt * bodies[i].vz00;
+        }
+    }
+}
+
+ 
+init(){
+	bodies[0] = Body(
+        Vec(0.0, 0.0),
+        Vec(0.0, 0.0),
+        Vec(0.0, 0.0),
+        Vec(0.0, 0.0),
+        Vec(smass, smass)
+    );
+    bodies[1] = Body(
+        Vec( 4.84143144246472090,          -1.16032004402742839),
+        Vec(-0.103622044471123109,          0.0),
+        Vec( 0.00166007664274403694*days,   0.00769901118419740425*days),
+        Vec(-0.0000690460016972063023*days, 0.0),
+        Vec( 0.000954791938424326609*smass, 0.000954791938424326609*smass)
+    );
+    bodies[2] = Body(
+        Vec( 8.34336671824457987,           4.12479856412430479),
+        Vec(-0.403523417114321381,          0.0),
+        Vec(-0.00276742510726862411*days,   0.00499852801234917238*days),
+        Vec( 0.0000230417297573763929*days, 0.0),
+        Vec( 0.000285885980666130812*smass, 0.000285885980666130812*smass)
+    );
+    bodies[3] = Body(
+        Vec(12.8943695621391310,           -15.1111514016986312),
+        Vec(-0.223307578892655734,           0.0),
+        Vec( 0.00296460137564761618*days,    0.00237847173959480950*days),
+        Vec(-0.0000296589568540237556*days,  0.0),
+        Vec( 0.0000436624404335156298*smass, 0.0000436624404335156298*smass)
+    );
+    bodies[4] = Body(
+        Vec(15.3796971148509165,           -25.9193146099879641),
+        Vec( 0.179258772950371181,           0.0),
+        Vec( 0.00268067772490389322*days,    0.00162824170038242295*days),
+        Vec(-0.0000951592254519715870*days,  0.0),
+        Vec( 0.0000515138902046611451*smass, 0.0000515138902046611451*smass)
+    ); 
+   
+    //offset momentum calculation
+
+	var pxpy = Vec(0.0, 0.0);
+   	var pz00 = Vec(0.0, 0.0);
+  	var solar_mass_inv = Vec(1.0/smass, 1.0/smass);
+
+    for (i in range(size(bodies))) {
+    	pxpy += bodies[i].vxvy * bodies[i].mass;
+   	    pz00 += bodies[i].vz00 * bodies[i].mass;
+    }
+
+    bodies[0].vxvy =  Vec(-1.0, -1.0) * pxpy * solar_mass_inv;
+    bodies[0].vz00 =  Vec(-1.0, -1.0) * pz00 * solar_mass_inv;
+}
+
+printFloat(stream, fmt, value){
+	var buf = Array[CChar, 100]();
+ 	libc.sprintf(&buf[0], cstring(fmt), Double(value));
+ 	var n   = libc.strlen(&buf[0]);
+ 	var ptr = Pointer[Byte](&buf[0]);
+ 	write(stream, ptr, SizeT(n));
+}
+
+main(){
+	ref cmd = commandLine();
+    if (size(cmd) != 2) {
+        println("usage: ", cmd[0], " <n>");
+        return -1;
+    }
+    var np = cmd[1];
+    var n = Int(np);
+
+	init();
+    var e = energy();    
+	printFloat( stdout, "%.9f", e);   
+    println();
+    
+	advance(n);
+    e = energy();  
+    printFloat( stdout, "%.9f", e);   
+    println();
+
+	return 0;
+}
