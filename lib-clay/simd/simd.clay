@@ -6,20 +6,12 @@ import simd.primitives as prims;
 // type inferring constructor
 //
 
-[...A | (countArgs(...A) > 0) and AllEqual?(...A)]
+[...A | (countValues(...A) > 0) and equalValues?(...A)]
 overload Vec(...args:A) {
-    alias n = static countArgs(...A);
-    alias T = firstArg(...A);
+    alias n = static countValues(...A);
+    alias T = firstValue(...A);
     return Vec[T, n](...args);
 }
-
-private AllEqual?(a, b, ...rest) = (a == b) and AllEqual?(b, ...rest);
-overload AllEqual?(a) = true;
-
-private countArgs(x, ...rest) = 1 + countArgs(...rest);
-overload countArgs() = 0;
-
-private firstArg(a, ...b) = a;
 
 
 
@@ -27,14 +19,10 @@ private firstArg(a, ...b) = a;
 // basic constructor
 //
 
-[T,n,...A | Tuple[...Times(T,static n)] == Tuple[...A]]
+[T,n,...A | Tuple[...replicateValue(T,static n)] == Tuple[...A]]
 overload Vec[T,n](...args:A) {
     return insertElements(Vec[T,n](), static 0, ...args);
 }
-
-[n]
-private Times(a, static n) = a, ...Times(a, static n-1);
-overload Times(a, static 0) = ;
 
 private procedure insertElements;
 

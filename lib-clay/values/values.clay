@@ -3,7 +3,7 @@
 
 //
 // eachValue, mapValues, foldValues, weaveValues,
-// takeValues, dropValues, countValues, nthValue
+// takeValues, dropValues
 //
 
 eachValue(fn, ...xs) {
@@ -42,6 +42,12 @@ procedure dropValues;
 [i | i == 0] overload dropValues(static i, forward ...xs) = forward ...xs;
 [i] overload dropValues(static i) = ;
 
+
+
+//
+// countValues, nthValue, firstValue
+//
+
 procedure countValues;
 overload countValues() = 0;
 overload countValues(x, ...xs) = 1 + countValues(...xs);
@@ -50,6 +56,26 @@ procedure nthValue;
 [i] overload nthValue(static i, forward a, forward ...b)
     = nthValue(static i-1, ...b);
 [i | i == 0] overload nthValue(static i, forward a, ...b) = a;
+
+firstValue(forward a, ...rest) = forward a;
+
+
+
+//
+// replicateValue, equalValues?
+//
+
+[n]
+replicateValue(a, static n) = a, ...replicateValue(a, static n-1);
+overload replicateValue(a, static 0) = ;
+
+equalValues?(a, ...rest) {
+    static for (x in ...rest) {
+        if (a != x)
+            return false;
+    }
+    return true;
+}
 
 
 
