@@ -1293,8 +1293,15 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
 
     string llvmFuncName;
     if (!x->attrAsmLabel.empty()) {
-        // '\01' is the llvm marker to specify asm label
-        llvmFuncName = "\01" + x->attrAsmLabel;
+        string llvmIntrinsicsPrefix = "llvm.";
+        string prefix = x->attrAsmLabel.substr(0, llvmIntrinsicsPrefix.size());
+        if (prefix != llvmIntrinsicsPrefix) {
+            // '\01' is the llvm marker to specify asm label
+            llvmFuncName = "\01" + x->attrAsmLabel;
+        }
+        else {
+            llvmFuncName = x->attrAsmLabel;
+        }
     }
     else {
         llvmFuncName = x->name->str;
