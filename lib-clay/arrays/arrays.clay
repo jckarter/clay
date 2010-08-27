@@ -57,20 +57,12 @@ overload unpackElements(a:Array[T,n], static i) = ;
 // Array - type inferring constructor
 //
 
-[...A | (countArgs(...A) > 0) and AllEqual?(...A)]
+[...A | (countValues(...A) > 0) and equalValues?(...A)]
 macro overload Array(...args:A) {
-    alias n = static countArgs(...A);
-    alias T = firstArg(...A);
+    alias n = static countValues(...A);
+    alias T = firstValue(...A);
     return Array[T, n](...args);
 }
-
-private AllEqual?(a, b, ...rest) = (a == b) and AllEqual?(b, ...rest);
-overload AllEqual?(a) = true;
-
-private countArgs(x, ...rest) = 1 + countArgs(...rest);
-overload countArgs() = 0;
-
-private firstArg(a, ...b) = a;
 
 
 
@@ -78,14 +70,10 @@ private firstArg(a, ...b) = a;
 // basic constructor
 //
 
-[T,n,...A | Tuple[...Times(T,static n)] == Tuple[...A]]
+[T,n,...A | Tuple[...replicateValue(T,static n)] == Tuple[...A]]
 macro overload Array[T,n](...args:A) returned:Array[T,n] {
     ...unpackArrayRef(returned) <-- ...args;
 }
-
-[n]
-private Times(a, static n) = a, ...Times(a, static n-1);
-overload Times(a, static 0) = ;
 
 
 
