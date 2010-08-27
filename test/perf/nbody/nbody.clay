@@ -16,24 +16,24 @@ var days  = 365.24;
 var bodies = Array[Body, 5]();
 
 energy() {
-	var sq   = Vec(0.0, 0.0);
+    var sq   = Vec(0.0, 0.0);
     var dxdy = Vec(0.0, 0.0);
     var dz00 = Vec(0.0, 0.0);
     var distance = Vec(0.0, 0.0);
     var e = 0.0;  
   
     for (i in range(size(bodies))) {
- 	  	var b = bodies[i];
-    	sq = b.mass * ((b.vxvy * b.vxvy) + (b.vz00 * b.vz00));
+        var b = bodies[i];
+        sq = b.mass * ((b.vxvy * b.vxvy) + (b.vz00 * b.vz00));
         e += 0.5 * (sq[0] + sq[1]);
  
-    	for (j in range(i+1, size(bodies))) {
+        for (j in range(i+1, size(bodies))) {
   
-	      	var b2 = bodies[j];
-        	dxdy = b.xy - b2.xy;
-        	dz00 = b.z0 - b2.z0;
+            var b2 = bodies[j];
+            dxdy = b.xy - b2.xy;
+            dz00 = b.z0 - b2.z0;
         
-			distance = (dxdy * dxdy) + (dz00 * dz00);
+            distance = (dxdy * dxdy) + (dz00 * dz00);
             var d = libc.sqrt(distance[0] + distance[1]);
 
             e -= (b.mass[0] * b2.mass[0]) / d;
@@ -42,50 +42,44 @@ energy() {
     return e;
 }
 
+private external ("llvm.x86.sse3.hadd.pd") x86_haddpd(a:Vec[Float64,2], b:Vec[Float64,2]) Vec[Float64,2];
+private external ("llvm.x86.sse2.sqrt.pd") x86_sqrtpd(a:Vec[Float64,2]) Vec[Float64,2];
+
 advance(q) {
-	var dxdy = Vec(0.0, 0.0);
-	var dz00 = Vec(0.0, 0.0);
-	var tsquare = Vec(0.0, 0.0);
-	var distance = 0.0;
-    var distance2 = Vec(0.0, 0.0);
-    var magmag = Vec(0.0, 0.0);
     var dtdt = Vec(0.01, 0.01);
  
     for (k in range(q)) {
-    	for (i in range(size(bodies))) {
-			var b = &bodies[i];
-        	for (j in range(i+1, size(bodies))) {
-	    		var b2 = &bodies[j];
+        for (i in range(size(bodies))) {
+            var b = &bodies[i];
+            for (j in range(i+1, size(bodies))) {
+                var b2 = &bodies[j];
 
-          		dxdy = b^.xy - b2^.xy;
-          		dz00 = b^.z0 - b2^.z0;
+                var dxdy = b^.xy - b2^.xy;
+                var dz00 = b^.z0 - b2^.z0;
+                var tsquare = x86_haddpd(dxdy*dxdy, dz00*dz00);
+                var distance2 = x86_haddpd(tsquare, tsquare);
+                var distance = x86_sqrtpd(distance2) * distance2;
+                var magmag = dtdt / distance;
 
- 		        tsquare = (dxdy * dxdy) + (dz00 * dz00);     
-                distance = tsquare[0] + tsquare[1];
-          		var d = libc.sqrt(distance);
-         		distance *= d;
-				distance2 = Vec(distance, distance);
+                dxdy *= magmag;
+                dz00 *= magmag;
 
-		        magmag = dtdt / distance2;
-				dxdy *= magmag;
-				dz00 *= magmag;
-
-			    b^.vxvy -= dxdy * b2^.mass;
-				b^.vz00 -= dz00 * b2^.mass;
-				b2^.vxvy += dxdy * b^.mass;
-				b2^.vz00 += dz00 * b^.mass;
+                b^.vxvy -= dxdy * b2^.mass;
+                b^.vz00 -= dz00 * b2^.mass;
+                b2^.vxvy += dxdy * b^.mass;
+                b2^.vz00 += dz00 * b^.mass;
             }
         }
-    	for (i in range(size(bodies))) {
-        	bodies[i].xy += dtdt * bodies[i].vxvy;
-        	bodies[i].z0 += dtdt * bodies[i].vz00;
+        for (i in range(size(bodies))) {
+            bodies[i].xy += dtdt * bodies[i].vxvy;
+            bodies[i].z0 += dtdt * bodies[i].vz00;
         }
     }
 }
 
  
 init(){
-	bodies[0] = Body(
+    bodies[0] = Body(
         Vec(0.0, 0.0),
         Vec(0.0, 0.0),
         Vec(0.0, 0.0),
@@ -123,13 +117,13 @@ init(){
    
     //offset momentum calculation
 
-	var pxpy = Vec(0.0, 0.0);
-   	var pz00 = Vec(0.0, 0.0);
-  	var solar_mass_inv = Vec(1.0/smass, 1.0/smass);
+    var pxpy = Vec(0.0, 0.0);
+    var pz00 = Vec(0.0, 0.0);
+    var solar_mass_inv = Vec(1.0/smass, 1.0/smass);
 
     for (i in range(size(bodies))) {
-    	pxpy += bodies[i].vxvy * bodies[i].mass;
-   	    pz00 += bodies[i].vz00 * bodies[i].mass;
+        pxpy += bodies[i].vxvy * bodies[i].mass;
+        pz00 += bodies[i].vz00 * bodies[i].mass;
     }
 
     bodies[0].vxvy =  Vec(-1.0, -1.0) * pxpy * solar_mass_inv;
@@ -137,15 +131,15 @@ init(){
 }
 
 printFloat(stream, fmt, value){
-	var buf = Array[CChar, 100]();
- 	libc.sprintf(&buf[0], cstring(fmt), Double(value));
- 	var n   = libc.strlen(&buf[0]);
- 	var ptr = Pointer[Byte](&buf[0]);
- 	write(stream, ptr, SizeT(n));
+    var buf = Array[CChar, 100]();
+    libc.sprintf(&buf[0], cstring(fmt), Double(value));
+    var n   = libc.strlen(&buf[0]);
+    var ptr = Pointer[Byte](&buf[0]);
+    write(stream, ptr, SizeT(n));
 }
 
 main(){
-	ref cmd = commandLine();
+    ref cmd = commandLine();
     if (size(cmd) != 2) {
         println("usage: ", cmd[0], " <n>");
         return -1;
@@ -153,15 +147,15 @@ main(){
     var np = cmd[1];
     var n = Int(np);
 
-	init();
+    init();
     var e = energy();    
-	printFloat( stdout, "%.9f", e);   
+    printFloat( stdout, "%.9f", e);   
     println();
     
-	advance(n);
+    advance(n);
     e = energy();  
     printFloat( stdout, "%.9f", e);   
     println();
 
-	return 0;
+    return 0;
 }
