@@ -25,7 +25,7 @@ energy() {
     for (i in range(size(bodies))) {
  	  	var b = bodies[i];
     	sq = b.mass * ((b.vxvy * b.vxvy) + (b.vz00 * b.vz00));
-    	e += 0.5 * (simd.get(sq, 0) + simd.get(sq, 1));
+        e += 0.5 * (sq[0] + sq[1]);
  
     	for (j in range(i+1, size(bodies))) {
   
@@ -34,9 +34,9 @@ energy() {
         	dz00 = b.z0 - b2.z0;
         
 			distance = (dxdy * dxdy) + (dz00 * dz00);
-        	var d = libc.sqrt(simd.get(distance,0) + simd.get(distance, 1));
+            var d = libc.sqrt(distance[0] + distance[1]);
 
-      		e -= (simd.get(b.mass, 0) * simd.get(b2.mass, 0)) / d;
+            e -= (b.mass[0] * b2.mass[0]) / d;
         }
     }
     return e;
@@ -61,7 +61,7 @@ advance(q) {
           		dz00 = b^.z0 - b2^.z0;
 
  		        tsquare = (dxdy * dxdy) + (dz00 * dz00);     
-          		distance = simd.get(tsquare, 0) + simd.get(tsquare, 1);
+                distance = tsquare[0] + tsquare[1];
           		var d = libc.sqrt(distance);
          		distance *= d;
 				distance2 = Vec(distance, distance);

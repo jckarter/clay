@@ -28,7 +28,7 @@ mul1(n, v, Av) {
             sum += A_v2(i, 2*j) * ptr2^;
             ptr2 += 1;
         }
-        var final = simd.get(sum, 0) + simd.get(sum, 1);
+        var final = sum[0] + sum[1];
         ptr += (n/2)*2;
         if (n % 2 == 1)
             final += A(i, n-1) * ptr^;
@@ -45,7 +45,7 @@ mul2(n, v, Atv) {
             sum += A_v1(2*j, i) * ptr2^;
             ptr2 += 1;
         }
-        var final = simd.get(sum, 0) + simd.get(sum, 1);
+        var final = sum[0] + sum[1];
         ptr += (n/2)*2;
         if (n % 2 == 1)
             final += A(n-1, i) * ptr^;

@@ -34,6 +34,6 @@ main() {
 
 
 display(label, v) {
-    println(label, ": ", simd.get(v, 0), ", ", simd.get(v, 1));
+    println(label, ": ", v[0], ", ", v[1]);
     println(label, ": ", ...weaveValues(", ", ...simd.unpackVec(v)));
 }
