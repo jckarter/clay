@@ -49,6 +49,11 @@ static void cleanupLexer() {
     begin = ptr = end = maxPtr = NULL;
 }
 
+static LocationPtr locationFor(char *ptr) {
+    ptrdiff_t offset = (ptr - begin) + beginOffset;
+    return new Location(lexerSource, offset);
+}
+
 static char *save() { return ptr; }
 static void restore(char *p) { ptr = p; }
 
@@ -496,7 +501,7 @@ static bool llvmStringLiteral();
 static bool llvmStringChar();
 
 static bool llvmToken(TokenPtr &x) {
-    const char *prefix = LLVM_TOKEN_PREFIX;
+    const char *prefix = "__llvm__";
     while (*prefix) {
         char c;
         if (!next(c)) return false;
@@ -516,6 +521,7 @@ static bool llvmToken(TokenPtr &x) {
     if (!llvmBraces()) return false;
     char *end = save();
     x = new Token(T_LLVM, string(begin, end));
+    x->location = locationFor(begin);
     return true;
 }
 
@@ -596,14 +602,13 @@ static bool nextToken(TokenPtr &x) {
     restore(p); if (floatToken(x)) goto success;
     restore(p); if (intToken(x)) goto success;
     if (p != end) {
-        ptrdiff_t offset = (maxPtr - begin) + beginOffset;
-        pushLocation(new Location(lexerSource, offset));
+        pushLocation(locationFor(maxPtr));
         error("invalid token");
     }
     return false;
 success :
     assert(x.ptr());
-    ptrdiff_t offset = (p - begin) + beginOffset;
-    x->location = new Location(lexerSource, offset);
+    if (!x->location)
+        x->location = locationFor(p);
     return true;
 }
