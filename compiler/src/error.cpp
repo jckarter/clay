@@ -89,15 +89,23 @@ DebugPrinter::~DebugPrinter()
 // report error
 //
 
-static void computeLineCol(LocationPtr location, int &line, int &column) {
+static void computeLineCol(LocationPtr location,
+                           int &line,
+                           int &column,
+                           int &tabColumn) {
     char *p = location->source->data;
     char *end = p + location->offset;
-    line = column = 0;
+    line = column = tabColumn = 0;
     for (; p != end; ++p) {
         ++column;
+        ++tabColumn;
         if (*p == '\n') {
             ++line;
             column = 0;
+            tabColumn = 0;
+        }
+        else if (*p == '\t') {
+            tabColumn += 7;
         }
     }
 }
@@ -119,7 +127,8 @@ static bool endsWithNewline(const string& s) {
 }
 
 static void displayLocation(LocationPtr location, int &line, int &column) {
-    computeLineCol(location, line, column);
+    int tabColumn;
+    computeLineCol(location, line, column, tabColumn);
     vector<string> lines;
     splitLines(location->source, lines);
     fprintf(stderr, "###############################\n");
@@ -130,7 +139,7 @@ static void displayLocation(LocationPtr location, int &line, int &column) {
         if (!endsWithNewline(lines[i]))
             fprintf(stderr, "\n");
         if (i == line) {
-            for (int j = 0; j < column; ++j)
+            for (int j = 0; j < tabColumn; ++j)
                 fprintf(stderr, "-");
             fprintf(stderr, "^\n");
         }
