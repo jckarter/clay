@@ -215,3 +215,18 @@ overload bitwiseXor(a:Vec[T,n], x:X) = bitwiseXor(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
 overload bitwiseXor(x:X, a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(x)),  a);
+
+
+
+//
+// unary ops
+//
+
+[T,n]
+overload plus(a:Vec[T,n]) = a;
+
+[T,n]
+overload minus(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
+
+[T,n]
+overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(-1)), a);
