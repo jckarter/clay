@@ -61,10 +61,7 @@ overload Vector(a:A) {
 // varargs constructor
 //
 
-private AllEqual?(x, first, ...rest) = (x == first) and AllEqual?(x, ...rest);
-overload AllEqual?(x) = true;
-
-[T, ...A | (countValues(...A) > 0) and AllEqual?(T, ...A)]
+[T, ...A | (countValues(...A) > 0) and equalValues?(T, ...A)]
 macro overload Vector[T](...args:A) {
     var v = Vector[T]();
     reserve(v, countValues(...A));
