@@ -1,0 +1,85 @@
+
+import simd;
+
+alias Double2 = Vec[Double, 2];
+
+private external ("llvm.x86.sse2.cmp.pd")
+x86_cmppd(a:Double2, b:Double2, c:Int8) Double2;
+
+private external ("llvm.x86.sse2.movmsk.pd")
+x86_movmskpd(a:Double2) Int32;
+
+render(w:Int, h:Int) {
+    var wholeData = Vector[UInt8]();
+    resize(wholeData, ((w+7)/8) * h);
+    var inverseW, inverseH = 2.0/w, 2.0/h;
+
+    var zero = Vec(0.0, 0.0);
+    var four = Vec(4.0, 4.0);
+
+    for (y in range(h)) {
+        var data = &wholeData[((w+7)/8) * y];
+
+        var bitNum = 0;
+        var byteAcc = UInt8(0);
+        var x = 0;
+        while (x < w) {
+            var Crv = Vec((x+1.0)*inverseW-1.5, (x)*inverseW-1.5);
+            var Civ = Vec(y*inverseH-1.0, y*inverseH-1.0);
+            var Zrv = zero;
+            var Ziv = zero;
+            var Trv = zero;
+            var Tiv = zero;
+
+            var mask = Int();
+            for (i in range(50)) {
+                Ziv = (Zrv*Ziv) + (Zrv*Ziv) + Civ;
+                Zrv = Trv - Tiv + Crv;
+                Trv = Zrv * Zrv;
+                Tiv = Ziv * Ziv;
+
+                var delta = x86_cmppd(Trv+Tiv, four, Int8(2));
+                mask = x86_movmskpd(delta);
+                if (mask == 0)
+                    break;
+            }
+
+            byteAcc = shiftLeft(byteAcc, 2);
+            byteAcc = bitwiseOr(byteAcc, UInt8(mask));
+            bitNum += 2;
+
+            if (bitNum % 8 == 0) {
+                (data + (bitNum/8) - 1)^ = byteAcc;
+                byteAcc = UInt8(0);
+            }
+
+            x += 2;
+        }
+
+        if (bitNum % 8 != 0) {
+            byteAcc = shiftLeft(byteAcc, 8 - w%8);
+            bitNum += 8;
+            (data + bitNum/8)^ = byteAcc;
+        }
+    }
+
+    return move(wholeData);
+}
+
+main() {
+    ref args = commandLine();
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <size>");
+        return -1;
+    }
+    var w = Int(args[1]);
+    var h = w;
+
+    var data = render(w, h);
+
+    println("P4");
+    println(w, " ", h);
+    write(stdout, &data[0], size(data));
+
+    return 0;
+}
