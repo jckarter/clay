@@ -101,7 +101,24 @@ static void initModuleSuffixes() {
 
 
 //
-// addSearchPath, locateFile, toRelativePath
+// toKey
+//
+
+static string toKey(DottedNamePtr name) {
+    string key;
+    for (unsigned i = 0; i < name->parts.size(); ++i) {
+        if (i != 0)
+            key.push_back('.');
+        key.append(name->parts[i]->str);
+    }
+    return key;
+}
+
+
+
+//
+// addSearchPath, locateFile, toRelativePath1, toRelativePath2,
+// locateModule
 //
 
 void addSearchPath(const string &path) {
@@ -128,7 +145,7 @@ static bool locateFile(const string &relativePath, string &path) {
     return false;
 }
 
-static string toRelativePath(DottedNamePtr name) {
+static string toRelativePath1(DottedNamePtr name) {
     string relativePath;
     for (unsigned i = 0; i < name->parts.size(); ++i) {
         relativePath.append(name->parts[i]->str);
@@ -137,6 +154,32 @@ static string toRelativePath(DottedNamePtr name) {
     relativePath.append(name->parts.back()->str);
     // relative path has no suffix
     return relativePath;
+}
+
+static string toRelativePath2(DottedNamePtr name) {
+    string relativePath;
+    for (unsigned i = 0; i+1 < name->parts.size(); ++i) {
+        relativePath.append(name->parts[i]->str);
+        relativePath.push_back(PATH_SEPARATOR);
+    }
+    relativePath.append(name->parts.back()->str);
+    // relative path has no suffix
+    return relativePath;
+}
+
+static string locateModule(DottedNamePtr name) {
+    string path, relativePath;
+
+    relativePath = toRelativePath1(name);
+    if (locateFile(relativePath, path))
+        return path;
+
+    relativePath = toRelativePath2(name);
+    if (locateFile(relativePath, path))
+        return path;
+
+    error(name, "module not found: " + toKey(name));
+    return "";
 }
 
 
@@ -219,16 +262,6 @@ static void installGlobals(ModulePtr m) {
     }
 }
 
-static string toKey(DottedNamePtr name) {
-    string key;
-    for (unsigned i = 0; i < name->parts.size(); ++i) {
-        if (i != 0)
-            key.push_back('.');
-        key.append(name->parts[i]->str);
-    }
-    return key;
-}
-
 static ModulePtr loadModuleByName(DottedNamePtr name) {
     string key = toKey(name);
 
@@ -242,10 +275,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name) {
         module = makePrimitivesModule();
     }
     else {
-        string relativePath = toRelativePath(name);
-        string path;
-        if (!locateFile(relativePath, path))
-            error(name, "module not found: " + key);
+        string path = locateModule(name);
         module = parse(key, loadFile(path));
     }
 
