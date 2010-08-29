@@ -1,0 +1,64 @@
+
+
+
+//
+// permissiveAssign
+//
+
+procedure permissiveAssign;
+
+[DEST, SRC]
+overload permissiveAssign(dest:DEST, src:SRC) {
+    dest = DEST(src);         // convert to DEST type
+}
+
+[S | CCompatibleString?(S)]
+overload permissiveAssign(dest:Pointer[Int8], src:S) {
+    dest = cstring(src);      // convert String to Pointer[Int8]
+}
+
+[T]
+overload permissiveAssign(dest:T, src:T) {
+    dest = src;               // default behaviour, use normal assignment
+}
+
+
+
+//
+// permissive record constructor
+//
+
+PermissiveRecordConstructor?(x) = false;
+
+[T, ...A | Record?(T)
+           and PermissiveRecordConstructor?(T)
+           and (countValues(...A) == countValues(...RecordFieldTypes(T)))]
+T(...args:A) returned:T {
+    returned <-- T();
+    alias n = RecordFieldCount(T);
+    static for (i in ...staticIntegers(static n)) {
+        ref field = staticIndex(returned, i);
+        ref value = nthValue(i, ...args);
+        permissiveAssign(field, value);
+    }
+}
+
+
+
+//
+// test permissive record constructor
+//
+
+record Foo {
+    a : Int8;
+    b : UInt32;
+    c : Pointer[Int];
+    d : Pointer[Int8];
+}
+
+overload PermissiveRecordConstructor?(static Foo) = true;
+
+main() {
+    var f = Foo(1, 2, 0, "hello");
+    println(f.a, ", ", f.b, ", ", f.c);
+}
