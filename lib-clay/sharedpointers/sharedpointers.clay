@@ -24,7 +24,7 @@ overload RegularRecord?(static SharedPointer[T]) = false;
 //
 
 [T]
-macro allocateShared(x:T) {
+callbyname allocateShared(x:T) {
     var ptr = allocateRawMemory(RefCounted[T], SizeT(1));
     ptr^.refCount = 1;
     try {

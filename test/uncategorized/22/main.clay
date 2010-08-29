@@ -1,7 +1,7 @@
 
 procedure RValue?;
-macro overload RValue?(rvalue x) = 1;
-macro overload RValue?(lvalue x) = 0;
+callbyname overload RValue?(rvalue x) = 1;
+callbyname overload RValue?(lvalue x) = 0;
 
 foo1() {
     println("returning a rvalue");

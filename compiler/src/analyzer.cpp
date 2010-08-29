@@ -336,17 +336,17 @@ InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
 {
     ClearAnalysisError clear;
     InvokeEntryPtr entry = analyzeCallable(x, argsKey, argsTempness);
-    if (!entry->macro && !entry->analyzed)
+    if (!entry->callByName && !entry->analyzed)
         analysisError();
     return entry;
 }
 
-MultiPValuePtr safeAnalyzeCallMacro(InvokeEntryPtr entry,
-                                    ExprListPtr args,
-                                    EnvPtr env)
+MultiPValuePtr safeAnalyzeCallByName(InvokeEntryPtr entry,
+                                     ExprListPtr args,
+                                     EnvPtr env)
 {
     ClearAnalysisError clear;
-    MultiPValuePtr result = analyzeCallMacro(entry, args, env);
+    MultiPValuePtr result = analyzeCallByName(entry, args, env);
     if (!entry)
         analysisError();
     return result;
@@ -1390,8 +1390,8 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->macro)
-            return analyzeCallMacro(entry, args, env);
+        if (entry->callByName)
+            return analyzeCallByName(entry, args, env);
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
@@ -1521,8 +1521,8 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->macro)
-            error("call to macro not allowed in this context");
+        if (entry->callByName)
+            error("call to call-by-name code not allowed in this context");
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
@@ -1596,7 +1596,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
         updateAnalysisErrorLocation();
         return entry;
     }
-    if (entry->macro) {
+    if (entry->callByName) {
         entry->code = clone(entry->origCode);
         return entry;
     }
@@ -1611,14 +1611,14 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 
 
 //
-// analyzeCallMacro
+// analyzeCallByName
 //
 
-MultiPValuePtr analyzeCallMacro(InvokeEntryPtr entry,
-                                ExprListPtr args,
-                                EnvPtr env)
+MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
+                                 ExprListPtr args,
+                                 EnvPtr env)
 {
-    assert(entry->macro);
+    assert(entry->callByName);
 
     CodePtr code = entry->code;
     assert(code->body.ptr());
@@ -2058,8 +2058,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->macro)
-            argumentError(0, "cannot create pointer to macro");
+        if (entry->callByName)
+            argumentError(0, "cannot create pointer to call-by-name code");
         if (!entry->analyzed)
             return NULL;
         TypePtr cpType = codePointerType(argsKey,
@@ -2113,8 +2113,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         InvokeStackContext invokeStackContext(callable, argsKey);
 
         InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->macro)
-            argumentError(0, "cannot create pointer to macro");
+        if (entry->callByName)
+            argumentError(0, "cannot create pointer to call-by-name code");
         if (!entry->analyzed)
             return NULL;
         TypePtr returnType;

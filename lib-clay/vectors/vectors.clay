@@ -62,7 +62,7 @@ overload Vector(a:A) {
 //
 
 [T, ...A | (countValues(...A) > 0) and equalValues?(T, ...A)]
-macro overload Vector[T](...args:A) {
+callbyname overload Vector[T](...args:A) {
     var v = Vector[T]();
     reserve(v, countValues(...A));
     pushAll(v, ...args);

@@ -58,7 +58,7 @@ overload unpackElements(a:Array[T,n], static i) = ;
 //
 
 [...A | (countValues(...A) > 0) and equalValues?(...A)]
-macro overload Array(...args:A) {
+callbyname overload Array(...args:A) {
     alias n = static countValues(...A);
     alias T = firstValue(...A);
     return Array[T, n](...args);
@@ -71,7 +71,7 @@ macro overload Array(...args:A) {
 //
 
 [T,n,...A | Tuple[...replicateValue(T,static n)] == Tuple[...A]]
-macro overload Array[T,n](...args:A) returned:Array[T,n] {
+callbyname overload Array[T,n](...args:A) returned:Array[T,n] {
     ...unpackArrayRef(returned) <-- ...args;
 }
 

@@ -135,7 +135,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             return new MatchPredicateError();
     }
 
-    MatchSuccessPtr result = new MatchSuccess(overload->macro,
+    MatchSuccessPtr result = new MatchSuccess(overload->callByName,
                                               code, staticEnv,
                                               callable, argsKey);
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
