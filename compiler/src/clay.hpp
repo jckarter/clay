@@ -1351,7 +1351,7 @@ struct Instance : public TopLevelItem {
 struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
-    bool macro;
+    bool callByName;
 
     // pre-computed patterns for matchInvoke
     bool patternsInitialized;
@@ -1362,9 +1362,9 @@ struct Overload : public TopLevelItem {
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
 
-    Overload(ExprPtr target, CodePtr code, bool macro)
+    Overload(ExprPtr target, CodePtr code, bool callByName)
         : TopLevelItem(OVERLOAD), target(target), code(code),
-          macro(macro), patternsInitialized(false) {}
+          callByName(callByName), patternsInitialized(false) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -2321,7 +2321,7 @@ struct MatchResult : public Object {
 typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
-    bool macro;
+    bool callByName;
     CodePtr code;
     EnvPtr env;
 
@@ -2332,9 +2332,9 @@ struct MatchSuccess : public MatchResult {
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
-    MatchSuccess(bool macro, CodePtr code, EnvPtr env,
+    MatchSuccess(bool callByName, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
-        : MatchResult(MATCH_SUCCESS), macro(macro),
+        : MatchResult(MATCH_SUCCESS), callByName(callByName),
           code(code), env(env), callable(callable), argsKey(argsKey) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
@@ -2391,7 +2391,7 @@ struct InvokeEntry : public Object {
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
 
-    bool macro; // if macro the rest of InvokeEntry is not set
+    bool callByName; // if callByName the rest of InvokeEntry is not set
 
     ObjectPtr analysis;
     vector<bool> returnIsRef;
@@ -2404,7 +2404,7 @@ struct InvokeEntry : public Object {
                 const vector<TypePtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), argsKey(argsKey),
-          analyzed(false), analyzing(false), macro(false),
+          analyzed(false), analyzing(false), callByName(false),
           llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -2510,9 +2510,9 @@ MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
 InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
                                    const vector<TypePtr> &argsKey,
                                    const vector<ValueTempness> &argsTempness);
-MultiPValuePtr safeAnalyzeCallMacro(InvokeEntryPtr entry,
-                                    ExprListPtr args,
-                                    EnvPtr env);
+MultiPValuePtr safeAnalyzeCallByName(InvokeEntryPtr entry,
+                                     ExprListPtr args,
+                                     EnvPtr env);
 MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x);
 
 MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env);
@@ -2576,9 +2576,9 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness);
 
-MultiPValuePtr analyzeCallMacro(InvokeEntryPtr entry,
-                                ExprListPtr args,
-                                EnvPtr env);
+MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
+                                 ExprListPtr args,
+                                 EnvPtr env);
 
 void analyzeCodeBody(InvokeEntryPtr entry);
 

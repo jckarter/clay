@@ -192,7 +192,7 @@ static ValueTempness tempnessKeyItem(ValueTempness formalTempness,
 
 static bool matchTempness(CodePtr code,
                           const vector<ValueTempness> &argsTempness,
-                          bool macro,
+                          bool callByName,
                           vector<ValueTempness> &tempnessKey,
                           vector<bool> &forwardedRValueFlags)
 {
@@ -207,9 +207,9 @@ static bool matchTempness(CodePtr code,
     tempnessKey.clear();
     forwardedRValueFlags.clear();
     for (unsigned i = 0; i < fargs.size(); ++i) {
-        if (macro && (fargs[i]->tempness == TEMPNESS_FORWARD)) {
+        if (callByName && (fargs[i]->tempness == TEMPNESS_FORWARD)) {
             error(fargs[i], "forwarded arguments are not allowed "
-                  "in macro procedures");
+                  "in call-by-name procedures");
         }
         if (!tempnessMatches(argsTempness[i], fargs[i]->tempness))
             return false;
@@ -222,9 +222,9 @@ static bool matchTempness(CodePtr code,
         forwardedRValueFlags.push_back(forwardedRValue);
     }
     if (fvarArg.ptr()) {
-        if (macro && (fvarArg->tempness == TEMPNESS_FORWARD)) {
+        if (callByName && (fvarArg->tempness == TEMPNESS_FORWARD)) {
             error(fvarArg, "forwarded arguments are not allowed "
-                  "in macro procedures");
+                  "in call-by-name procedures");
         }
         for (unsigned i = fargs.size(); i < argsTempness.size(); ++i) {
             if (!tempnessMatches(argsTempness[i], fvarArg->tempness))
@@ -251,7 +251,7 @@ static InvokeEntryPtr newInvokeEntry(MatchSuccessPtr x)
     entry->fixedArgTypes = x->fixedArgTypes;
     entry->varArgName = x->varArgName;
     entry->varArgTypes = x->varArgTypes;
-    entry->macro = x->macro;
+    entry->callByName = x->callByName;
     return entry;
 }
 
@@ -273,7 +273,7 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
     while ((match = getMatch(invokeSet,i)).ptr() != NULL) {
         if (matchTempness(match->code,
                           argsTempness,
-                          match->macro,
+                          match->callByName,
                           tempnessKey,
                           forwardedRValueFlags))
         {

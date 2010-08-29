@@ -40,12 +40,12 @@ overload error(...e) {
 // assert
 //
 
-macro assert(cond:Bool) {
+callbyname assert(cond:Bool) {
     if (not cond)
         error("assertion failed");
 }
 
-macro overload assert(cond:Bool, message) {
+callbyname overload assert(cond:Bool, message) {
     if (not cond)
         error("assertion failed: ", message);
 }

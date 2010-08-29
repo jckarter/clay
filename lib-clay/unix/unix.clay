@@ -4,14 +4,14 @@ public import unix.generated.*;
 public import unix.constants.*;
 public import unix.errno.*;
 
-macro syscall(callable, ...args) {
+callbyname syscall(callable, ...args) {
     var result = callable(...args);
     if (result == Type(result)(-1))
         error(errorMessage());
     return result;
 }
 
-macro syscallNoThrow(callable, ...args) {
+callbyname syscallNoThrow(callable, ...args) {
     var result = callable(...args);
     if (result == Type(result)(-1))
         errorNoThrow(errorMessage());

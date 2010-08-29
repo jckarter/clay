@@ -54,10 +54,10 @@ void evalCallCode(InvokeEntryPtr entry,
 void evalCallCompiledCode(InvokeEntryPtr entry,
                           MultiEValuePtr args,
                           MultiEValuePtr out);
-void evalCallMacro(InvokeEntryPtr entry,
-                   ExprListPtr args,
-                   EnvPtr env,
-                   MultiEValuePtr out);
+void evalCallByName(InvokeEntryPtr entry,
+                    ExprListPtr args,
+                    EnvPtr env,
+                    MultiEValuePtr out);
 
 enum TerminationKind {
     TERMINATE_RETURN,
@@ -1449,8 +1449,8 @@ void evalCallExpr(ExprPtr callable,
         computeArgsKey(mpv, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
-        if (entry->macro) {
-            evalCallMacro(entry, args, env, out);
+        if (entry->callByName) {
+            evalCallByName(entry, args, env, out);
         }
         else {
             assert(entry->analyzed);
@@ -1619,8 +1619,8 @@ void evalCallValue(EValuePtr callable,
         computeArgsKey(pvArgs, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
-        if (entry->macro)
-            error("call to macro not allowed in this context");
+        if (entry->callByName)
+            error("call to call-by-name code not allowed in this context");
         assert(entry->analyzed);
         evalCallCode(entry, args, out);
         break;
@@ -1656,7 +1656,7 @@ void evalCallCode(InvokeEntryPtr entry,
                   MultiEValuePtr args,
                   MultiEValuePtr out)
 {
-    assert(!entry->macro);
+    assert(!entry->callByName);
     assert(entry->analyzed);
     if (entry->code->isInlineLLVM()) {
         evalCallCompiledCode(entry, args, out);
@@ -1775,15 +1775,15 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
 
 
 //
-// evalCallMacro
+// evalCallByName
 //
 
-void evalCallMacro(InvokeEntryPtr entry,
-                   ExprListPtr args,
-                   EnvPtr env,
-                   MultiEValuePtr out)
+void evalCallByName(InvokeEntryPtr entry,
+                    ExprListPtr args,
+                    EnvPtr env,
+                    MultiEValuePtr out)
 {
-    assert(entry->macro);
+    assert(entry->callByName);
     if (entry->varArgName.ptr())
         assert(args->size() >= entry->fixedArgNames.size());
     else
@@ -1805,7 +1805,7 @@ void evalCallMacro(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = safeAnalyzeCallMacro(entry, args, env);
+    MultiPValuePtr mpv = safeAnalyzeCallByName(entry, args, env);
     assert(mpv->size() == out->size());
 
     vector<EReturn> returns;
@@ -3372,8 +3372,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->macro)
-            argumentError(0, "cannot create pointer to macro");
+        if (entry->callByName)
+            argumentError(0, "cannot create pointer to call-by-name code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
@@ -3446,8 +3446,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->macro)
-            argumentError(0, "cannot create pointer to macro");
+        if (entry->callByName)
+            argumentError(0, "cannot create pointer to call-by-name code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);

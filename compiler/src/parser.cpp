@@ -1809,14 +1809,14 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
 // procedure, overload
 //
 
-static bool optMacro(bool &macro) {
+static bool optCallByName(bool &callByName) {
     int p = save();
-    if (!keyword("macro")) {
+    if (!keyword("callbyname")) {
         restore(p);
-        macro = false;
+        callByName = false;
         return true;
     }
-    macro = true;
+    callByName = true;
     return true;
 }
     
@@ -1861,8 +1861,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
-    bool macro;
-    if (!optMacro(macro)) return false;
+    bool callByName;
+    if (!optCallByName(callByName)) return false;
     int p = save();
     if (!keyword("procedure"))
         restore(p);
@@ -1879,7 +1879,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(z);
     target->location = location;
-    OverloadPtr v = new Overload(target, y, macro);
+    OverloadPtr v = new Overload(target, y, callByName);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -1903,8 +1903,8 @@ static bool overload(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
-    bool macro;
-    if (!optMacro(macro)) return false;
+    bool callByName;
+    if (!optCallByName(callByName)) return false;
     if (!keyword("overload")) return false;
     ExprPtr z;
     if (!pattern(z)) return false;
@@ -1913,11 +1913,11 @@ static bool overload(TopLevelItemPtr &x) {
     int p = save();
     if (!optBody(y->body)) {
         restore(p);
-        if (macro) return false;
+        if (callByName) return false;
         if (!llvmBody(y->llvmBody)) return false;
     }
     y->location = location;
-    x = new Overload(z, y, macro);
+    x = new Overload(z, y, callByName);
     x->location = location;
     return true;
 }

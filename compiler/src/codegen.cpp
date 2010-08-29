@@ -144,11 +144,11 @@ void codegenLowlevelCall(llvm::Value *llCallable,
                          vector<llvm::Value *>::iterator argBegin,
                          vector<llvm::Value *>::iterator argEnd,
                          CodegenContextPtr ctx);
-void codegenCallMacro(InvokeEntryPtr entry,
-                      ExprListPtr args,
-                      EnvPtr env,
-                      CodegenContextPtr ctx,
-                      MultiCValuePtr out);
+void codegenCallByName(InvokeEntryPtr entry,
+                       ExprListPtr args,
+                       EnvPtr env,
+                       CodegenContextPtr ctx,
+                       MultiCValuePtr out);
 
 void codegenCodeBody(InvokeEntryPtr entry);
 
@@ -1713,8 +1713,8 @@ void codegenCallExpr(ExprPtr callable,
         computeArgsKey(mpv, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
-        if (entry->macro) {
-            codegenCallMacro(entry, args, env, ctx, out);
+        if (entry->callByName) {
+            codegenCallByName(entry, args, env, ctx, out);
         }
         else {
             assert(entry->analyzed);
@@ -1921,8 +1921,8 @@ void codegenCallValue(CValuePtr callable,
         computeArgsKey(pvArgs, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
-        if (entry->macro)
-            error("call to macro not allowed in this context");
+        if (entry->callByName)
+            error("call to call-by-name code not allowed in this context");
         assert(entry->analyzed);
         codegenCallCode(entry, args, ctx, out);
         break;
@@ -2159,7 +2159,7 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
 {
     InvokeEntryPtr entry =
         safeAnalyzeCallable(x, argsKey, argsTempness);
-    if (!entry->macro) {
+    if (!entry->callByName) {
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
     }
@@ -2534,16 +2534,16 @@ void codegenCWrapper(InvokeEntryPtr entry)
 
 
 //
-// codegenCallMacro
+// codegenCallByName
 //
 
-void codegenCallMacro(InvokeEntryPtr entry,
-                      ExprListPtr args,
-                      EnvPtr env,
-                      CodegenContextPtr ctx,
-                      MultiCValuePtr out)
+void codegenCallByName(InvokeEntryPtr entry,
+                       ExprListPtr args,
+                       EnvPtr env,
+                       CodegenContextPtr ctx,
+                       MultiCValuePtr out)
 {
-    assert(entry->macro);
+    assert(entry->callByName);
     if (entry->varArgName.ptr())
         assert(args->size() >= entry->fixedArgNames.size());
     else
@@ -2565,7 +2565,7 @@ void codegenCallMacro(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = safeAnalyzeCallMacro(entry, args, env);
+    MultiPValuePtr mpv = safeAnalyzeCallByName(entry, args, env);
     assert(mpv->size() == out->size());
 
     vector<CReturn> returns;
@@ -3986,8 +3986,8 @@ void codegenPrimOp(PrimOpPtr x,
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->macro)
-            argumentError(0, "cannot create pointer to macro");
+        if (entry->callByName)
+            argumentError(0, "cannot create pointer to call-by-name code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
@@ -4057,8 +4057,8 @@ void codegenPrimOp(PrimOpPtr x,
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->macro)
-            argumentError(0, "cannot create pointer to macro");
+        if (entry->callByName)
+            argumentError(0, "cannot create pointer to call-by-name code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
