@@ -589,6 +589,7 @@ int main(int argc, char **argv) {
     addSearchPath(libDirDevelopment.str());
     addSearchPath(libDirProduction1.str());
     addSearchPath(libDirProduction2.str());
+    addSearchPath(".");
 
     if (outputFile.empty()) {
         string clayFileBasename = basename(clayFile);
