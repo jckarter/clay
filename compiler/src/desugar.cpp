@@ -94,6 +94,15 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
     return call.ptr();
 }
 
+ExprPtr desugarIfExpr(IfExprPtr x) {
+    ExprPtr callable = prelude_expr_ifExpression();
+    CallPtr call = new Call(callable, new ExprList());
+    call->args->add(x->condition);
+    call->args->add(x->thenPart);
+    call->args->add(x->elsePart);
+    return call.ptr();
+}
+
 ExprPtr desugarNew(NewPtr x) {
     ExprPtr callable = prelude_expr_allocateShared();
     CallPtr call = new Call(callable, new ExprList());
