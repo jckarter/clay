@@ -3,15 +3,15 @@
 
 
 struct LambdaContext {
-    bool isBlockLambda;
+    bool captureByRef;
     EnvPtr nonLocalEnv;
     const string &closureDataName;
     vector<string> &freeVars;
-    LambdaContext(bool isBlockLambda,
+    LambdaContext(bool captureByRef,
                   EnvPtr nonLocalEnv,
                   const string &closureDataName,
                   vector<string> &freeVars)
-        : isBlockLambda(isBlockLambda), nonLocalEnv(nonLocalEnv),
+        : captureByRef(captureByRef), nonLocalEnv(nonLocalEnv),
           closureDataName(closureDataName), freeVars(freeVars) {}
 };
 
@@ -66,7 +66,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         case PVALUE : {
             PValue *y = (PValue *)obj.ptr();
             type = y->type;
-            if (x->isBlockLambda) {
+            if (x->captureByRef) {
                 type = pointerType(type);
                 ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
                 converted->args->add(addr);
@@ -79,7 +79,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         case CVALUE : {
             CValue *y = (CValue *)obj.ptr();
             type = y->type;
-            if (x->isBlockLambda) {
+            if (x->captureByRef) {
                 type = pointerType(type);
                 ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
                 converted->args->add(addr);
@@ -94,12 +94,12 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             vector<TypePtr> elementTypes;
             for (unsigned j = 0; j < y->size(); ++j) {
                 TypePtr t = y->values[j]->type;
-                if (x->isBlockLambda)
+                if (x->captureByRef)
                     t = pointerType(t);
                 elementTypes.push_back(t);
             }
             type = tupleType(elementTypes);
-            if (x->isBlockLambda) {
+            if (x->captureByRef) {
                 ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
                 CallPtr call = new Call(e, new ExprList());
                 call->args->add(new Unpack(nameRef.ptr()));
@@ -118,12 +118,12 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             vector<TypePtr> elementTypes;
             for (unsigned j = 0; j < y->size(); ++j) {
                 TypePtr t = y->values[j]->type;
-                if (x->isBlockLambda)
+                if (x->captureByRef)
                     t = pointerType(t);
                 elementTypes.push_back(t);
             }
             type = tupleType(elementTypes);
-            if (x->isBlockLambda) {
+            if (x->captureByRef) {
                 ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
                 CallPtr call = new Call(e, new ExprList());
                 call->args->add(new Unpack(nameRef.ptr()));
@@ -186,7 +186,7 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
         IdentifierPtr name = x->formalArgs[i];
         addLocal(env2, name, name.ptr());
     }
-    LambdaContext ctx(x->isBlockLambda, env, closureDataName, freeVars);
+    LambdaContext ctx(x->captureByRef, env, closureDataName, freeVars);
     convertFreeVars(x->body, env2, ctx);
 }
 
@@ -360,7 +360,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 b->location = y->location;
                 FieldRefPtr c = new FieldRef(b.ptr(), y->name);
                 c->location = y->location;
-                if (ctx.isBlockLambda) {
+                if (ctx.captureByRef) {
                     ExprPtr d = new UnaryOp(DEREFERENCE, c.ptr());
                     d->location = y->location;
                     x = d.ptr();
@@ -382,7 +382,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 b->location = y->location;
                 FieldRefPtr c = new FieldRef(b.ptr(), y->name);
                 c->location = y->location;
-                if (ctx.isBlockLambda) {
+                if (ctx.captureByRef) {
                     ExprPtr f =
                         prelude_expr_unpackMultiValuedFreeVarAndDereference();
                     CallPtr d = new Call(f, new ExprList());

@@ -854,7 +854,7 @@ struct IfExpr : public Expr {
 };
 
 struct Lambda : public Expr {
-    bool isBlockLambda;
+    bool captureByRef;
     vector<IdentifierPtr> formalArgs;
     StatementPtr body;
 
@@ -864,13 +864,13 @@ struct Lambda : public Expr {
     RecordPtr lambdaRecord;
     TypePtr lambdaType;
 
-    Lambda(bool isBlockLambda) :
-        Expr(LAMBDA), isBlockLambda(isBlockLambda),
+    Lambda(bool captureByRef) :
+        Expr(LAMBDA), captureByRef(captureByRef),
         initialized(false) {}
-    Lambda(bool isBlockLambda,
+    Lambda(bool captureByRef,
            const vector<IdentifierPtr> &formalArgs,
            StatementPtr body)
-        : Expr(LAMBDA), isBlockLambda(isBlockLambda),
+        : Expr(LAMBDA), captureByRef(captureByRef),
           formalArgs(formalArgs), body(body),
           initialized(false) {}
 };
