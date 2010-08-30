@@ -648,6 +648,13 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         return new MultiPValue(pv);
     }
 
+    case IF_EXPR : {
+        IfExpr *x = (IfExpr *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarIfExpr(x);
+        return analyzeExpr(x->desugared, env);
+    }
+
     case LAMBDA : {
         Lambda *x = (Lambda *)expr.ptr();
         if (!x->initialized)

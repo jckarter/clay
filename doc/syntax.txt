@@ -150,6 +150,7 @@ PatternSuffix -> "[" comma_list(Pattern) "]"
 //
 
 Expression -> OrExpr
+            | IfExpr
             | Lambda
             | Unpack
             | New
@@ -205,6 +206,9 @@ Literal -> BoolLiteral
 BoolLiteral -> "true" | "false"
 
 IdentifierLiteral -> "#" Identifier
+
+IfExpr -> "if" "(" Expression ")" Expression
+          "else" Expression
 
 Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" Block
 

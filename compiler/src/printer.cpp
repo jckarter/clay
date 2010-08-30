@@ -231,6 +231,12 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "Or(" << y->expr1 << ", " << y->expr2 << ")";
         break;
     }
+    case IF_EXPR : {
+        const IfExpr *y = (const IfExpr *)x;
+        out << "IfExpr(" << y->condition << ", " << y->thenPart
+            << ", " << y->elsePart << ")";
+        break;
+    }
     case LAMBDA : {
         const Lambda *y = (const Lambda *)x;
         out << "Lambda(" << y->isBlockLambda << ", " << y->formalArgs

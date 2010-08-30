@@ -465,6 +465,14 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case IF_EXPR : {
+        IfExpr *y = (IfExpr *)x.ptr();
+        convertFreeVars(y->condition, env, ctx);
+        convertFreeVars(y->thenPart, env, ctx);
+        convertFreeVars(y->elsePart, env, ctx);
+        break;
+    }
+
     case LAMBDA : {
         Lambda *y = (Lambda *)x.ptr();
         EnvPtr env2 = new Env(env);

@@ -958,6 +958,14 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
+    case IF_EXPR : {
+        IfExpr *x = (IfExpr *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarIfExpr(x);
+        codegenExpr(x->desugared, env, ctx, out);
+        break;
+    }
+
     case LAMBDA : {
         Lambda *x = (Lambda *)expr.ptr();
         if (!x->initialized)

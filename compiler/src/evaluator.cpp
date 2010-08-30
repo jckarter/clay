@@ -1016,6 +1016,14 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
+    case IF_EXPR : {
+        IfExpr *x = (IfExpr *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarIfExpr(x);
+        evalExpr(x->desugared, env, out);
+        break;
+    }
+
     case LAMBDA : {
         Lambda *x = (Lambda *)expr.ptr();
         if (!x->initialized)

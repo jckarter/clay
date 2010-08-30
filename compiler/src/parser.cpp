@@ -675,6 +675,28 @@ static bool orExpr(ExprPtr &x) {
 
 
 //
+// ifExpr
+//
+
+static bool ifExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr condition;
+    ExprPtr thenPart, elsePart;
+    if (!keyword("if")) return false;
+    if (!symbol("(")) return false;
+    if (!expression(condition)) return false;
+    if (!symbol(")")) return false;
+    if (!expression(thenPart)) return false;
+    if (!keyword("else")) return false;
+    if (!expression(elsePart)) return false;
+    x = new IfExpr(condition, thenPart, elsePart);
+    x->location = location;
+    return true;
+}
+
+
+
+//
 // lambda
 //
 
@@ -757,6 +779,7 @@ static bool staticExpr(ExprPtr &x) {
 static bool expression(ExprPtr &x) {
     int p = save();
     if (orExpr(x)) return true;
+    if (restore(p), ifExpr(x)) return true;
     if (restore(p), lambda(x)) return true;
     if (restore(p), blockLambda(x)) return true;
     if (restore(p), unpack(x)) return true;

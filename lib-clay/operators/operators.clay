@@ -265,3 +265,27 @@ typesToValues(...a) = forward ...mapValues(typeToValue, ...a);
 
 [T | SizedSequence?(T)]
 empty?(a:T) = (size(a) == 0);
+
+
+
+//
+// ifExpression
+//
+
+procedure ifExpression;
+
+[T]
+callbyname overload ifExpression(condition, consequent:T, alternate:T) {
+    if (condition)
+        return consequent;
+    else
+        return alternate;
+}
+
+[T]
+callbyname overload ifExpression(condition, lvalue consequent:T, lvalue alternate:T) {
+    if (condition)
+        return ref consequent;
+    else
+        return ref alternate;
+}
