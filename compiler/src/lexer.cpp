@@ -126,8 +126,7 @@ static void initKeywords() {
          "and", "or", "not", "new",
          "if", "else", "goto", "return", "while",
          "break", "continue", "for", "in",
-         "lambda", "block", "true", "false", 
-         "try", "catch", "throw", NULL};
+         "true", "false", "try", "catch", "throw", NULL};
     keywords = new std::set<string>();
     for (const char **p = s; *p; ++p)
         keywords->insert(*p);
@@ -151,7 +150,7 @@ static bool keywordIdentifier(TokenPtr &x) {
 //
 
 static const char *symbols[] = {
-    "<--", "...",
+    "<--", "...", "=>",
     "==", "!=", "<=", ">=",
     "<", ">",
     "+=", "-=", "*=", "/=", "%=",

@@ -44,7 +44,7 @@ reportTest(test: TestStatus, ...prefix) {
     var test = TestStatus();
     println("Testing ", suite.name, ":");
     eachValue(
-        block(case) { accumulateTestStatus(test, runTestCase(case)); },
+        case ref => { accumulateTestStatus(test, runTestCase(case)); },
         ...unpack(suite.testCases)
     );
     reportTest(test, "-- ", suite.name, ": ");
@@ -110,13 +110,13 @@ expect(test: TestStatus, passed?: Bool, failReportFn) {
 }
 
 expectTrue(test: TestStatus, name, value) {
-    expect(test, value, lambda() {
+    expect(test, value, () => {
         printFailure(name, " isn't true");
     });
 }
 
 expectFalse(test: TestStatus, name, value) {
-    expect(test, not value, lambda() {
+    expect(test, not value, () => {
         printFailure(name, " isn't false");
     });
 }
@@ -125,7 +125,7 @@ expectEqual(test: TestStatus, name, expected, result) {
     expect(
         test,
         expected == result,
-        lambda() {
+        () => {
             printFailure(name, " is expected to equal ", expected, " but is ", result);
         }
     );
@@ -141,7 +141,7 @@ expectEqualValues(test: TestStatus, name, expectedTuple, ...results) {
     expect(
         test,
         expectedResults?(expectedTuple, resultsTuple),
-        lambda() {
+        () => {
             printFailure(name, " are expected to equal:");
             printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(expectedTuple)));
             printFailure("but are:");
@@ -155,7 +155,7 @@ expectCallDefined(test: TestStatus, Proc, ...Types) {
     expect(
         test,
         CallDefined?(Proc, ...Types),
-        lambda() {
+        () => {
             printFailure(Proc, " isn't callable with the expected argument types:");
             printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(typesTuple)));
         }
@@ -167,7 +167,7 @@ expectCallUndefined(test: TestStatus, Proc, ...Types) {
     expect(
         test,
         not CallDefined?(Proc, ...Types),
-        lambda() {
+        () => {
             printFailure(Proc, " shouldn't be callable with the expected argument types:");
             printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(typesTuple)));
         }
@@ -182,7 +182,7 @@ expectIterator(test: TestStatus, name, iter, ...expected) {
     expect(
         test,
         expectedV == resultV,
-        lambda() {
+        () => {
             printFailure(name, " is expected to contain:");
             for (expectedX in expectedV)
                 printFailure(TEST_CASE_INDENT, expectedX);
@@ -203,13 +203,13 @@ expectExceptionType(test: TestStatus, name, T, fn) {
     } catch(x: T) {
         return;
     } catch(x) {
-        expect(test, false, lambda() {
+        expect(test, false, () => {
             printFailure(name, " is expected to throw exception of type ", T, " but throws ", x);
         });
         return;
     }
 
-    expect(test, false, lambda() {
+    expect(test, false, () => {
         printFailure(name, " is expected to throw exception of type ", T, " but doesn't throw");
     });
 }
@@ -218,18 +218,18 @@ expectException(test: TestStatus, name, expectedException, fn) {
     try {
         fn();
     } catch(x: Type(expectedException)) {
-        expect(test, x == expectedException, lambda() {
+        expect(test, x == expectedException, () => {
             printFailure(name, " is expected to throw ", expectedException, " but throws ", x);
         });
         return;
     } catch(x) {
-        expect(test, false, lambda() {
+        expect(test, false, () => {
             printFailure(name, " is expected to throw ", expectedException, " but throws ", x);
         });
         return;
     }
 
-    expect(test, false, lambda() {
+    expect(test, false, () => {
         printFailure(name, " is expected to throw ", expectedException, " but doesn't throw");
     });
 }
@@ -237,7 +237,7 @@ expectException(test: TestStatus, name, expectedException, fn) {
 testMain(...suites) {
     var test = TestStatus();
     eachValue(
-        block(suite) { accumulateTestStatus(test, runTestSuite(suite)); },
+        suite ref => { accumulateTestStatus(test, runTestSuite(suite)); },
         ...suites
     );
 

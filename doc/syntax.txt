@@ -210,7 +210,9 @@ IdentifierLiteral -> "#" Identifier
 IfExpr -> "if" "(" Expression ")" Expression
           "else" Expression
 
-Lambda -> ("lambda" | "block") "(" comma_list(Identifier) ")" Block
+Lambda -> LambdaArgs "ref"? "=>" (Expression | Block)
+LambdaArgs -> Identifier
+            | "(" comma_list(Identifier) ")"
 
 Unpack -> "..." Expression
 
