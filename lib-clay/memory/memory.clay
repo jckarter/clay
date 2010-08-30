@@ -101,7 +101,7 @@ destroyMemory(first:Pointer[T], last:Pointer[T]) {
 [T]
 copyMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst;
-    eachLocationWithCleanup(destFirst, destLast, lambda (x) {
+    eachLocationWithCleanup(destFirst, destLast, x => {
             x <-- srcPtr^;
             srcPtr += 1;
         }
@@ -117,7 +117,7 @@ copyMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
 [T]
 moveMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst;
-    eachLocation(destFirst, destLast, lambda (x) {
+    eachLocation(destFirst, destLast, x => {
         x <-- move(srcPtr^);
         srcPtr += 1;
     });
@@ -126,7 +126,7 @@ moveMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
 [T]
 moveMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst;
-    eachLocation(destFirst, destLast, lambda (x) {
+    eachLocation(destFirst, destLast, x => {
         x <-- moveUnsafe(srcPtr^);
         srcPtr += 1;
     });
@@ -141,7 +141,7 @@ moveMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T])
 [T]
 moveMemoryBackwardsUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst + (destLast - destFirst);
-    eachLocationBackwards(destFirst, destLast, lambda (x) {
+    eachLocationBackwards(destFirst, destLast, x => {
         srcPtr -= 1;
         x <-- moveUnsafe(srcPtr^);
     });
@@ -166,7 +166,8 @@ resetMemoryUnsafe(first:Pointer[T], last:Pointer[T]) {
 
 [T]
 fillMemory(first:Pointer[T], last:Pointer[T], value:T) {
-    eachLocationWithCleanup(first, last, block (x) { x <-- value; });
+    var ptr = &value;
+    eachLocationWithCleanup(first, last, x => { x <-- ptr^; });
 }
 
 
@@ -178,7 +179,7 @@ fillMemory(first:Pointer[T], last:Pointer[T], value:T) {
 [T]
 assignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst;
-    eachLocation(destFirst, destLast, lambda (x) {
+    eachLocation(destFirst, destLast, x => {
         x = srcPtr^;
         srcPtr += 1;
     });
@@ -186,13 +187,13 @@ assignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
 
 [T]
 overload assignMemory(first:Pointer[T], last:Pointer[T], value:T) {
-    eachLocation(first, last, lambda (x) { x = value; });
+    eachLocation(first, last, x ref => { x = value; });
 }
 
 [T]
 moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst;
-    eachLocation(destFirst, destLast, lambda (x) {
+    eachLocation(destFirst, destLast, x => {
         x = move(srcPtr^);
         srcPtr += 1;
     });

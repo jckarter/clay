@@ -7,8 +7,8 @@ main() {
     var catchCount = 0;
     var e = 666;
 
-    var throwing_lambda = lambda() { throw x; };
-    var catching_block = block(fn) {
+    var throwing_lambda = () => { throw x; };
+    var catching_block = (fn) ref => {
         try {
             tryCount += 1; fn();
         } catch(e:Int) {

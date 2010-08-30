@@ -1,7 +1,7 @@
 
 instance Exception = Int;
 
-captured_catch_type(T, v) = lambda() {
+captured_catch_type(T, v) = () => {
     try {
         throw v;
     } catch(e:T) {

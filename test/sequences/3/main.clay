@@ -17,7 +17,7 @@ main() {
     for (x in map(multiply, a, b))
         println(x);
     println("map swap");
-    var swap = lambda (a, b) { return b, a; };
+    var swap = (a, b) => { return b, a; };
     for (x, y in map(swap, a, b))
         println(x, ", ", y);
 }

@@ -697,33 +697,98 @@ static bool ifExpr(ExprPtr &x) {
 
 
 //
+// returnKind, returnExprList, returnExpr
+//
+
+static bool returnKind(ReturnKind &x) {
+    int p = save();
+    if (keyword("ref")) {
+        x = RETURN_REF;
+    }
+    else if (restore(p), keyword("forward")) {
+        x = RETURN_FORWARD;
+    }
+    else {
+        restore(p);
+        x = RETURN_VALUE;
+    }
+    return true;
+}
+
+static bool returnExprList(ReturnKind &rkind, ExprListPtr &exprs) {
+    if (!returnKind(rkind)) return false;
+    if (!optExpressionList(exprs)) return false;
+    return true;
+}
+
+static bool returnExpr(ReturnKind &rkind, ExprPtr &expr) {
+    if (!returnKind(rkind)) return false;
+    if (!expression(expr)) return false;
+    return true;
+}
+
+
+
+//
 // lambda
 //
 
 static bool block(StatementPtr &x);
 
-static bool lambda(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!keyword("lambda")) return false;
+static bool lambdaArgs(vector<IdentifierPtr> &formalArgs) {
+    int p = save();
+    IdentifierPtr name;
+    if (identifier(name)) {
+        formalArgs.clear();
+        formalArgs.push_back(name);
+        return true;
+    }
+    restore(p);
     if (!symbol("(")) return false;
-    LambdaPtr y = new Lambda(false);
-    if (!optIdentifierList(y->formalArgs)) return false;
+    if (!optIdentifierList(formalArgs)) return false;
     if (!symbol(")")) return false;
-    if (!block(y->body)) return false;
-    x = y.ptr();
+    return true;
+}
+
+static bool lambdaExprBody(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    ReturnKind rkind;
+    ExprPtr expr;
+    if (!returnExpr(rkind, expr)) return false;
+    x = new Return(rkind, new ExprList(expr));
     x->location = location;
     return true;
 }
 
-static bool blockLambda(ExprPtr &x) {
+static bool optCaptureByRef(bool &captureByRef) {
+    int p = save();
+    if (keyword("ref")) {
+        captureByRef = true;
+    }
+    else {
+        restore(p);
+        captureByRef = false;
+    }
+    return true;
+}
+
+static bool lambdaBody(StatementPtr &x) {
+    int p = save();
+    if (lambdaExprBody(x)) return true;
+    if (restore(p), block(x)) return true;
+    return false;
+}
+
+static bool lambda(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!keyword("block")) return false;
-    if (!symbol("(")) return false;
-    LambdaPtr y = new Lambda(true);
-    if (!optIdentifierList(y->formalArgs)) return false;
-    if (!symbol(")")) return false;
-    if (!block(y->body)) return false;
-    x = y.ptr();
+    vector<IdentifierPtr> formalArgs;
+    if (!lambdaArgs(formalArgs)) return false;
+    bool captureByRef;
+    if (!optCaptureByRef(captureByRef)) return false;
+    if (!symbol("=>")) return false;
+    StatementPtr body;
+    if (!lambdaBody(body)) return false;
+    x = new Lambda(captureByRef, formalArgs, body);
     x->location = location;
     return true;
 }
@@ -778,10 +843,9 @@ static bool staticExpr(ExprPtr &x) {
 
 static bool expression(ExprPtr &x) {
     int p = save();
-    if (orExpr(x)) return true;
+    if (lambda(x)) return true;
+    if (restore(p), orExpr(x)) return true;
     if (restore(p), ifExpr(x)) return true;
-    if (restore(p), lambda(x)) return true;
-    if (restore(p), blockLambda(x)) return true;
     if (restore(p), unpack(x)) return true;
     if (restore(p), newExpr(x)) return true;
     if (restore(p), staticExpr(x)) return true;
@@ -1010,27 +1074,6 @@ static bool gotoStatement(StatementPtr &x) {
     if (!symbol(";")) return false;
     x = new Goto(y);
     x->location = location;
-    return true;
-}
-
-static bool returnKind(ReturnKind &x) {
-    int p = save();
-    if (keyword("ref")) {
-        x = RETURN_REF;
-    }
-    else if (restore(p), keyword("forward")) {
-        x = RETURN_FORWARD;
-    }
-    else {
-        restore(p);
-        x = RETURN_VALUE;
-    }
-    return true;
-}
-
-static bool returnExprList(ReturnKind &rkind, ExprListPtr &exprs) {
-    if (!returnKind(rkind)) return false;
-    if (!optExpressionList(exprs)) return false;
     return true;
 }
 
