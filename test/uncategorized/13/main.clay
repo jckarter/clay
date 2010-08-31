@@ -8,7 +8,7 @@ map(f, a) {
 }
 
 scale(factor, a) {
-    var f = lambda (x) { return x*factor; };
+    var f = (x => x*factor);
     return map(f, a);
 }
 

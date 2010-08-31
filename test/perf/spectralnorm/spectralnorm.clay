@@ -1,40 +1,70 @@
 
+import simd;
 import libc;
 
 A(i, j) = 1.0 / (((i+j) * (i+j+1)/2) + i + 1);
 
 
+A_v1(i, j) {
+    var denom1 = (((i+j) * (i+j+1)/2) + i + 1);
+    var denom2 = (((i+1+j) * (i+1+j+1)/2) + i+1 + 1);
+    var v = Vec(Float64(denom1), Float64(denom2));
+    return 1.0 / v;
+}
+
+A_v2(i, j) {
+    var denom1 = (((i+j) * (i+j+1)/2) + i + 1);
+    var denom2 = (((i+j+1) * (i+j+1+1)/2) + i + 1);
+    var v = Vec(Float64(denom1), Float64(denom2));
+    return 1.0 / v;
+}
+
 mul1(n, v, Av) {
     for (i in range(n)) {
-        var sum = 0.0;
-        for (j in range(n))
-            sum += A(i,j) * v[j];
-        Av[i] = sum;
+        var sum = Vec(0.0, 0.0);
+        var ptr = &v[0];
+        var ptr2 = Pointer[Vec[Float64,2]](ptr);
+        for (j in range(n/2)) {
+            sum += A_v2(i, 2*j) * ptr2^;
+            ptr2 += 1;
+        }
+        var final = sum[0] + sum[1];
+        ptr += (n/2)*2;
+        if (n % 2 == 1)
+            final += A(i, n-1) * ptr^;
+        Av[i] = final;
     }
 }
 
 mul2(n, v, Atv) {
-    for (i in range(n)){
-        var sum = 0.0;
-        for (j in range(n)) 
-            sum += A(j,i) * v[j];
-        Atv[i] = sum;
+    for (i in range(n)) {
+        var sum = Vec(0.0, 0.0);
+        var ptr = &v[0];
+        var ptr2 = Pointer[Vec[Float64,2]](ptr);
+        for (j in range(n/2)) {
+            sum += A_v1(2*j, i) * ptr2^;
+            ptr2 += 1;
+        }
+        var final = sum[0] + sum[1];
+        ptr += (n/2)*2;
+        if (n % 2 == 1)
+            final += A(n-1, i) * ptr^;
+        Atv[i] = final;
     }
 }
 
 mul(n, v, AtAv) {
-    var u = Vector[Float64]();
-    resize(u, n);
+    var u = allocateRawMemoryAligned(Float64, n, TypeAlignment(Float64)*2);
     mul1(n, v, u);
     mul2(n, u, AtAv);
+    freeRawMemoryAligned(u);
 }
 
 approximate(k) {
-    var h = Vector[Float64]();
+    var h = allocateRawMemoryAligned(Float64, k, TypeAlignment(Float64)*2);
     for (i in range(k))
-        push(h, 1.0);
-    var g = Vector[Float64]();
-    resize(g, k);
+        h[i] = 1.0;
+    var g = allocateRawMemoryAligned(Float64, k, TypeAlignment(Float64)*2);
 
     for (i in range(10)) {
         mul(k, h, g);
@@ -46,7 +76,9 @@ approximate(k) {
     for (i in range(k)) {
         vbv += h[i] * g[i];
         vv += g[i] * g[i];
-    } 
+    }
+    freeRawMemoryAligned(h);
+    freeRawMemoryAligned(g);
     return libc.sqrt(vbv / vv);
 }
 

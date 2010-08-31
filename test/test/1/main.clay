@@ -10,7 +10,7 @@ throwNothing() { }
 main() = testMain(
     TestSuite(
         "test test suite", Tuple(
-            TestCase("should pass", lambda(test) {
+            TestCase("should pass", test => {
                 var seq = [2, 3, 5, 7, 11];
 
                 expectTrue(test, "truth", true);
@@ -27,7 +27,7 @@ main() = testMain(
                 expectExceptionType(test, "throws int", Int, throwInt);
                 expectException(test, "throws 7", 7, throwInt);
             }),
-            TestCase("should fail", lambda(test) {
+            TestCase("should fail", test => {
                 var seq = [2, 3, 5, 7, 11];
                 var iter = iterator(seq);
 
@@ -53,15 +53,15 @@ main() = testMain(
                 expectException(test, "throws 6", 6, throwInt);
                 expectException(test, "throws 6", 6, throwNothing);
             }),
-            TestCase("should fail by throwing uncaught exception", block(test) {
+            TestCase("should fail by throwing uncaught exception", test ref => {
                 expectTrue(test, "truth", false);
                 throwInt();
                 expectFalse(test, "unreachable falsehood", true);
             }),
-            PendingTestCase("should pass", lambda(test) {
+            PendingTestCase("should pass", test => {
                 expectTrue(test, "truth", true);
             }),
-            PendingTestCase("should fail", lambda(test) {
+            PendingTestCase("should fail", test => {
                 expectTrue(test, "truth", false);
             })
         )

@@ -23,8 +23,8 @@ using namespace llvm;
 struct PPContext {
     // Takes ownership of client.
     PPContext(clang::TargetOptions targetOpts,clang::DiagnosticClient* client = 0)
-        : diagClient(client == 0?new clang::TextDiagnosticPrinter(llvm::errs(),diagOptions):client),
-        diags(diagClient),
+        : 
+        diags(client == 0?new clang::TextDiagnosticPrinter(llvm::errs(),diagOptions):client),
         target(clang::TargetInfo::CreateTargetInfo(diags,targetOpts)),
         headers(fm),
         sm(diags),
@@ -41,13 +41,11 @@ struct PPContext {
 
     ~PPContext()
     {
-        delete diagClient;
         delete target;
     }
 
 
     clang::DiagnosticOptions diagOptions; 
-    clang::DiagnosticClient* diagClient;
     clang::Diagnostic diags;
     clang::LangOptions opts;
     clang::TargetInfo* target;

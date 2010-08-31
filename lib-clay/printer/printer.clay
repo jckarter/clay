@@ -33,7 +33,7 @@ overload printTo(stream, x:Bool) {
 
 
 //
-// printTo - integers, floats
+// printTo - integers, floats, pointers
 //
 
 [I | SignedInteger?(I)]
@@ -57,6 +57,11 @@ overload printTo(stream, x:UInt64) {
 [F | Float?(F)]
 overload printTo(stream, x:F) {
     printWithSprintf(stream, "%f", Double(x));
+}
+
+[T]
+overload printTo(stream, x:Pointer[T]) {
+    printWithSprintf(stream, "%p", x);
 }
 
 private printWithSprintf(stream, formatString, value) {
@@ -147,7 +152,7 @@ procedure printReprTo;
 
 
 //
-// printReprTo - Bool, Numeric?, Static
+// printReprTo - Bool, Numeric?, Pointer[T], Static
 
 overload printReprTo(stream, x:Bool) {
     printTo(stream, x);
@@ -155,6 +160,11 @@ overload printReprTo(stream, x:Bool) {
 
 [T | Numeric?(T)]
 overload printReprTo(stream, x:T) {
+    printTo(stream, x);
+}
+
+[T]
+overload printReprTo(stream, x:Pointer[T]) {
     printTo(stream, x);
 }
 

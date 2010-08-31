@@ -8,11 +8,11 @@ foo2() ByRef[Int] = ref x;  // explicit return type
 // examples of variable-arity return type specification
 [...T]
 incAll(...args:T) ...T =
-    ...mapValues(lambda (x) { return x + 1; }, ...args);
+    ...mapValues(x => x+1, ...args);
 
 [...T]
 incAll2(...args:T) ...returned:T {
-    ...returned <-- ...mapValues(lambda (x) { return x + 1; }, ...args);
+    ...returned <-- ...mapValues(x => x+1, ...args);
 }
 
 main() {

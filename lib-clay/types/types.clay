@@ -46,7 +46,7 @@ record ByRef[T] {}
 //
 
 [...T]
-macro Type(...x:T) = ...T;
+callbyname Type(...x:T) = ...T;
 
 
 

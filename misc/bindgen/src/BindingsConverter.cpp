@@ -326,8 +326,8 @@ void BindingsConverter::generateDecl(Decl *decl)
         string name = x->getName().str();
         if (!x->isThisDeclarationADefinition() &&
             !x->isInlineSpecified() &&
-            (x->getStorageClass() == FunctionDecl::Extern ||
-             x->getStorageClass() == FunctionDecl::None) &&
+            (x->getStorageClass() == SC_Extern ||
+             x->getStorageClass() == SC_None) &&
             !externsDeclared.count(name))
         {
             externsDeclared.insert(name);
@@ -397,7 +397,7 @@ void BindingsConverter::generateDecl(Decl *decl)
     case Decl::Var : {
         VarDecl *x = (VarDecl *)decl;
         string name = x->getName().str();
-        if ((x->getStorageClass() == VarDecl::Extern) &&
+        if ((x->getStorageClass() == SC_Extern) &&
             !x->hasInit() &&
             !externsDeclared.count(name))
         {

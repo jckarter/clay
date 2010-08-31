@@ -2,9 +2,9 @@ variant Foo = Int | Double | StringConstant;
 
 foo(x) {
     match(x,
-        Int, lambda(i) { println("I saw an Int ", i); },
-        Double, lambda(f) { println("I saw a Double ", f); },
-        StringConstant, lambda(s) { println("I saw a String ", s); }
+        Int, i => { println("I saw an Int ", i); },
+        Double, f => { println("I saw a Double ", f); },
+        StringConstant, s => { println("I saw a String ", s); }
     );
 }
 

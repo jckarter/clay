@@ -1,26 +1,14 @@
 
-
 
 //
-// insertElement, extractElement
+// vecElementRef
 //
 
 [T,n]
-insertElement(a:Vec[T,n], i:Int, x:T) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Int * %i
-    %3 = load $T * %x
-    %4 = insertelement $Vec[T,n] %1, $T %3, $Int %2
-    store $Vec[T,n] %4, $Vec[T,n] * %returned
-    ret i32 0
-}
-
-[T,n]
-extractElement(a:Vec[T,n], i:Int) returned:T __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Int * %i
-    %3 = extractelement $Vec[T,n] %1, $Int %2
-    store $T %3, $T * %returned
+vecElementRef(a:Vec[T,n], i:Int) returned:ByRef[T] __llvm__{
+    %iVal = load $Int * %i
+    %ptr = getelementptr $Vec[T,n] * %a, i32 0, $Int %iVal
+    store $T * %ptr, $T ** %returned
     ret i32 0
 }
 

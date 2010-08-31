@@ -222,6 +222,7 @@ struct UnaryOp;
 struct BinaryOp;
 struct And;
 struct Or;
+struct IfExpr;
 struct Lambda;
 struct Unpack;
 struct New;
@@ -358,6 +359,7 @@ typedef Pointer<UnaryOp> UnaryOpPtr;
 typedef Pointer<BinaryOp> BinaryOpPtr;
 typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
+typedef Pointer<IfExpr> IfExprPtr;
 typedef Pointer<Lambda> LambdaPtr;
 typedef Pointer<Unpack> UnpackPtr;
 typedef Pointer<New> NewPtr;
@@ -579,6 +581,11 @@ void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
         arityError2(size, args.size());
 }
 
+void typeError(TypePtr expectedType, TypePtr receivedType);
+void argumentTypeError(unsigned int index,
+                       TypePtr expectedType,
+                       TypePtr receivedType);
+
 struct DebugPrinter {
     static int indent;
     ObjectPtr obj;
@@ -621,8 +628,6 @@ struct Token : public Object {
 //
 // lexer module
 //
-
-#define LLVM_TOKEN_PREFIX "__llvm__"
 
 void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
 
@@ -682,6 +687,7 @@ enum ExprKind {
     AND,
     OR,
 
+    IF_EXPR,
     LAMBDA,
     UNPACK,
     NEW,
@@ -843,8 +849,17 @@ struct Or : public Expr {
         : Expr(OR), expr1(expr1), expr2(expr2) {}
 };
 
+struct IfExpr : public Expr {
+    ExprPtr condition;
+    ExprPtr thenPart, elsePart;
+    ExprPtr desugared;
+    IfExpr(ExprPtr condition, ExprPtr thenPart, ExprPtr elsePart)
+        : Expr(IF_EXPR), condition(condition), thenPart(thenPart),
+          elsePart(elsePart) {}
+};
+
 struct Lambda : public Expr {
-    bool isBlockLambda;
+    bool captureByRef;
     vector<IdentifierPtr> formalArgs;
     StatementPtr body;
 
@@ -854,13 +869,13 @@ struct Lambda : public Expr {
     RecordPtr lambdaRecord;
     TypePtr lambdaType;
 
-    Lambda(bool isBlockLambda) :
-        Expr(LAMBDA), isBlockLambda(isBlockLambda),
+    Lambda(bool captureByRef) :
+        Expr(LAMBDA), captureByRef(captureByRef),
         initialized(false) {}
-    Lambda(bool isBlockLambda,
+    Lambda(bool captureByRef,
            const vector<IdentifierPtr> &formalArgs,
            StatementPtr body)
-        : Expr(LAMBDA), isBlockLambda(isBlockLambda),
+        : Expr(LAMBDA), captureByRef(captureByRef),
           formalArgs(formalArgs), body(body),
           initialized(false) {}
 };
@@ -1353,7 +1368,7 @@ struct Instance : public TopLevelItem {
 struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
-    bool macro;
+    bool callByName;
 
     // pre-computed patterns for matchInvoke
     bool patternsInitialized;
@@ -1364,9 +1379,9 @@ struct Overload : public TopLevelItem {
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
 
-    Overload(ExprPtr target, CodePtr code, bool macro)
+    Overload(ExprPtr target, CodePtr code, bool callByName)
         : TopLevelItem(OVERLOAD), target(target), code(code),
-          macro(macro), patternsInitialized(false) {}
+          callByName(callByName), patternsInitialized(false) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -2256,6 +2271,7 @@ ExprPtr desugarFieldRef(FieldRefPtr x);
 ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
+ExprPtr desugarIfExpr(IfExprPtr x);
 ExprPtr desugarNew(NewPtr x);
 ExprPtr desugarStaticExpr(StaticExprPtr x);
 ExprPtr updateOperatorExpr(int op);
@@ -2323,7 +2339,7 @@ struct MatchResult : public Object {
 typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
-    bool macro;
+    bool callByName;
     CodePtr code;
     EnvPtr env;
 
@@ -2334,9 +2350,9 @@ struct MatchSuccess : public MatchResult {
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
-    MatchSuccess(bool macro, CodePtr code, EnvPtr env,
+    MatchSuccess(bool callByName, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
-        : MatchResult(MATCH_SUCCESS), macro(macro),
+        : MatchResult(MATCH_SUCCESS), callByName(callByName),
           code(code), env(env), callable(callable), argsKey(argsKey) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
@@ -2393,7 +2409,7 @@ struct InvokeEntry : public Object {
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
 
-    bool macro; // if macro the rest of InvokeEntry is not set
+    bool callByName; // if callByName the rest of InvokeEntry is not set
 
     ObjectPtr analysis;
     vector<bool> returnIsRef;
@@ -2406,7 +2422,7 @@ struct InvokeEntry : public Object {
                 const vector<TypePtr> &argsKey)
         : Object(DONT_CARE),
           callable(callable), argsKey(argsKey),
-          analyzed(false), analyzing(false), macro(false),
+          analyzed(false), analyzing(false), callByName(false),
           llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
@@ -2512,9 +2528,9 @@ MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
 InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
                                    const vector<TypePtr> &argsKey,
                                    const vector<ValueTempness> &argsTempness);
-MultiPValuePtr safeAnalyzeCallMacro(InvokeEntryPtr entry,
-                                    ExprListPtr args,
-                                    EnvPtr env);
+MultiPValuePtr safeAnalyzeCallByName(InvokeEntryPtr entry,
+                                     ExprListPtr args,
+                                     EnvPtr env);
 MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x);
 
 MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env);
@@ -2578,9 +2594,9 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness);
 
-MultiPValuePtr analyzeCallMacro(InvokeEntryPtr entry,
-                                ExprListPtr args,
-                                EnvPtr env);
+MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
+                                 ExprListPtr args,
+                                 EnvPtr env);
 
 void analyzeCodeBody(InvokeEntryPtr entry);
 
