@@ -136,7 +136,7 @@ copyMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
 [T]
 copyMemoryBackwards(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst + (destLast - destFirst);
-    eachLocationBackwardsWithCleanup(destFirst, destLast, lambda (x) {
+    eachLocationBackwardsWithCleanup(destFirst, destLast, x => {
             srcPtr -= 1;
             x <-- srcPtr^;
         }
