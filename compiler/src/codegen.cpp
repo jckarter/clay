@@ -2016,7 +2016,7 @@ void codegenCallPointer(CValuePtr x,
         for (unsigned i = 0; i < args->size(); ++i) {
             CValuePtr cv = args->values[i];
             if (cv->type != t->argTypes[i])
-                argumentError(i, "type mismatch");
+                argumentTypeError(i, t->argTypes[i], cv->type);
             llArgs.push_back(cv->llValue);
         }
         assert(out->size() == t->returnTypes.size());
@@ -2043,7 +2043,7 @@ void codegenCallPointer(CValuePtr x,
         for (unsigned i = 0; i < t->argTypes.size(); ++i) {
             CValuePtr cv = args->values[i];
             if (cv->type != t->argTypes[i])
-                argumentError(i, "type mismatch");
+                argumentTypeError(i, t->argTypes[i], cv->type);
             llvm::Value *llv = ctx->builder->CreateLoad(cv->llValue);
             llArgs.push_back(llv);
         }
@@ -2109,7 +2109,7 @@ void codegenCallCode(InvokeEntryPtr entry,
     for (unsigned i = 0; i < args->size(); ++i) {
         CValuePtr cv = args->values[i];
         if (cv->type != entry->argsKey[i])
-            argumentError(i, "type mismatch");
+            argumentTypeError(i, entry->argsKey[i], cv->type);
         llArgs.push_back(cv->llValue);
     }
     assert(out->size() == entry->returnTypes.size());
@@ -2734,8 +2734,11 @@ bool codegenStatement(StatementPtr stmt,
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i]->isTemp)
                 argumentError(i, "cannot assign to a temporary");
-            if (mpvLeft->values[i]->type != mpvRight->values[i]->type)
-                argumentError(i, "type mismatch");
+            if (mpvLeft->values[i]->type != mpvRight->values[i]->type) {
+                argumentTypeError(i,
+                                  mpvLeft->values[i]->type,
+                                  mpvRight->values[i]->type);
+            }
         }
         int marker = cgMarkStack(ctx);
         MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
@@ -2777,11 +2780,8 @@ bool codegenStatement(StatementPtr stmt,
             PValuePtr pv = mpv->values[i];
             bool byRef = returnKindToByRef(x->returnKind, pv);
             const CReturn &y = returns[i];
-            if (y.type != pv->type) {
-                std::cout << "y.type = " << y.type << '\n';
-                std::cout << "pv->type = " << pv->type << '\n';
-                argumentError(i, "type mismatch");
-            }
+            if (y.type != pv->type)
+                argumentTypeError(i, y.type, pv->type);
             if (byRef != y.byRef)
                 argumentError(i, "mismatching by-ref and by-value returns");
             if (byRef && pv->isTemp)
@@ -3262,7 +3262,7 @@ static llvm::Value *numericValue(MultiCValuePtr args,
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
         if (cv->type != type)
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type, cv->type);
     }
     else {
         switch (cv->type->typeKind) {
@@ -3285,7 +3285,7 @@ static llvm::Value *integerValue(MultiCValuePtr args,
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
         if (cv->type != type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), cv->type);
     }
     else {
         if (cv->type->typeKind != INTEGER_TYPE)
@@ -3303,7 +3303,7 @@ static llvm::Value *pointerValue(MultiCValuePtr args,
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
         if (cv->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), cv->type);
     }
     else {
         if (cv->type->typeKind != POINTER_TYPE)
@@ -3321,7 +3321,7 @@ static llvm::Value *pointerLikeValue(MultiCValuePtr args,
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
         if (cv->type != type)
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type, cv->type);
     }
     else {
         if (!isPointerOrCodePointerType(cv->type))
@@ -3339,7 +3339,7 @@ static llvm::Value *arrayValue(MultiCValuePtr args,
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
         if (cv->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), cv->type);
     }
     else {
         if (cv->type->typeKind != ARRAY_TYPE)
@@ -3356,7 +3356,7 @@ static llvm::Value *tupleValue(MultiCValuePtr args,
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
         if (cv->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), cv->type);
     }
     else {
         if (cv->type->typeKind != TUPLE_TYPE)
@@ -3373,7 +3373,7 @@ static llvm::Value *recordValue(MultiCValuePtr args,
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
         if (cv->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), cv->type);
     }
     else {
         if (cv->type->typeKind != RECORD_TYPE)
@@ -3390,7 +3390,7 @@ static llvm::Value *variantValue(MultiCValuePtr args,
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
         if (cv->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), cv->type);
     }
     else {
         if (cv->type->typeKind != VARIANT_TYPE)
@@ -3408,7 +3408,7 @@ static llvm::Value *enumValue(MultiCValuePtr args,
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
         if (cv->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), cv->type);
     }
     else {
         if (cv->type->typeKind != ENUM_TYPE)
@@ -3497,7 +3497,7 @@ void codegenPrimOp(PrimOpPtr x,
         if (!isPrimitiveType(cv0->type))
             argumentError(0, "expecting a value of primitive type");
         if (cv0->type != cv1->type)
-            argumentError(1, "argument type mismatch");
+            argumentTypeError(1, cv0->type, cv1->type);
         llvm::Value *v = ctx->builder->CreateLoad(cv1->llValue);
         ctx->builder->CreateStore(v, cv0->llValue);
         assert(out->size() == 0);

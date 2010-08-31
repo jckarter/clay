@@ -1767,7 +1767,7 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
                 PValuePtr pv = mpv->values[i];
                 bool byRef = returnKindToByRef(x->returnKind, pv);
                 if (ctx->returnTypes[i] != pv->type)
-                    argumentError(i, "type mismatch");
+                    argumentTypeError(i, ctx->returnTypes[i], pv->type);
                 if (byRef != ctx->returnIsRef[i])
                     argumentError(i, "mismatching by-ref and "
                                   "by-value returns");

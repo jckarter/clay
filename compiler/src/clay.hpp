@@ -581,6 +581,11 @@ void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
         arityError2(size, args.size());
 }
 
+void typeError(TypePtr expectedType, TypePtr receivedType);
+void argumentTypeError(unsigned int index,
+                       TypePtr expectedType,
+                       TypePtr receivedType);
+
 struct DebugPrinter {
     static int indent;
     ObjectPtr obj;
