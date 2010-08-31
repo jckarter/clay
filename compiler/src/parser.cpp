@@ -54,7 +54,8 @@ static bool keyword(const char *s) {
 
 
 //
-// identifier, identifierList, optIdentifierList, dottedName
+// identifier, identifierList, optIdentifierList,
+// identifierListNoTail, dottedName
 //
 
 static bool identifier(IdentifierPtr &x) {
@@ -74,7 +75,12 @@ static bool identifierList(vector<IdentifierPtr> &x) {
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",") || !identifier(y)) {
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!identifier(y)) {
             restore(p);
             break;
         }
@@ -88,6 +94,22 @@ static bool optIdentifierList(vector<IdentifierPtr> &x) {
     if (!identifierList(x)) {
         restore(p);
         x.clear();
+    }
+    return true;
+}
+
+static bool identifierListNoTail(vector<IdentifierPtr> &x) {
+    IdentifierPtr y;
+    if (!identifier(y)) return false;
+    x.clear();
+    x.push_back(y);
+    while (true) {
+        int p = save();
+        if (!symbol(",") || !identifier(y)) {
+            restore(p);
+            break;
+        }
+        x.push_back(y);
     }
     return true;
 }
@@ -130,6 +152,15 @@ static bool boolLiteral(ExprPtr &x) {
     return true;
 }
 
+static string cleanNumericSeparator(const string &s) {
+    string out;
+    for (unsigned i = 0; i < s.size(); ++i) {
+        if (s[i] != '_')
+            out.push_back(s[i]);
+    }
+    return out;
+}
+
 static bool intLiteral(ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
@@ -138,11 +169,11 @@ static bool intLiteral(ExprPtr &x) {
     TokenPtr t2;
     int p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
-        x = new IntLiteral(t->str, t2->str);
+        x = new IntLiteral(cleanNumericSeparator(t->str), t2->str);
     }
     else {
         restore(p);
-        x = new IntLiteral(t->str);
+        x = new IntLiteral(cleanNumericSeparator(t->str));
     }
     x->location = location;
     return true;
@@ -156,11 +187,11 @@ static bool floatLiteral(ExprPtr &x) {
     TokenPtr t2;
     int p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
-        x = new FloatLiteral(t->str, t2->str);
+        x = new FloatLiteral(cleanNumericSeparator(t->str), t2->str);
     }
     else {
         restore(p);
-        x = new FloatLiteral(t->str);
+        x = new FloatLiteral(cleanNumericSeparator(t->str));
     }
     x->location = location;
     return true;
@@ -231,7 +262,12 @@ static bool expressionList(ExprListPtr &x) {
     a = new ExprList(b);
     while (true) {
         int p = save();
-        if (!symbol(",") || !expression(b)) {
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!expression(b)) {
             restore(p);
             break;
         }
@@ -343,7 +379,8 @@ static bool staticIndexingSuffix(ExprPtr &x) {
     char *b = const_cast<char *>(t->str.c_str());
     char *end = b;
     unsigned long c = strtoul(b, &end, 0);
-    assert(*end == 0);
+    if (*end != 0)
+        error(t, "invalid static index value");
     x = new StaticIndexing(NULL, (size_t)c);
     x->location = location;
     return true;
@@ -675,33 +712,120 @@ static bool orExpr(ExprPtr &x) {
 
 
 //
+// ifExpr
+//
+
+static bool ifExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr condition;
+    ExprPtr thenPart, elsePart;
+    if (!keyword("if")) return false;
+    if (!symbol("(")) return false;
+    if (!expression(condition)) return false;
+    if (!symbol(")")) return false;
+    if (!expression(thenPart)) return false;
+    if (!keyword("else")) return false;
+    if (!expression(elsePart)) return false;
+    x = new IfExpr(condition, thenPart, elsePart);
+    x->location = location;
+    return true;
+}
+
+
+
+//
+// returnKind, returnExprList, returnExpr
+//
+
+static bool returnKind(ReturnKind &x) {
+    int p = save();
+    if (keyword("ref")) {
+        x = RETURN_REF;
+    }
+    else if (restore(p), keyword("forward")) {
+        x = RETURN_FORWARD;
+    }
+    else {
+        restore(p);
+        x = RETURN_VALUE;
+    }
+    return true;
+}
+
+static bool returnExprList(ReturnKind &rkind, ExprListPtr &exprs) {
+    if (!returnKind(rkind)) return false;
+    if (!optExpressionList(exprs)) return false;
+    return true;
+}
+
+static bool returnExpr(ReturnKind &rkind, ExprPtr &expr) {
+    if (!returnKind(rkind)) return false;
+    if (!expression(expr)) return false;
+    return true;
+}
+
+
+
+//
 // lambda
 //
 
 static bool block(StatementPtr &x);
 
-static bool lambda(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!keyword("lambda")) return false;
+static bool lambdaArgs(vector<IdentifierPtr> &formalArgs) {
+    int p = save();
+    IdentifierPtr name;
+    if (identifier(name)) {
+        formalArgs.clear();
+        formalArgs.push_back(name);
+        return true;
+    }
+    restore(p);
     if (!symbol("(")) return false;
-    LambdaPtr y = new Lambda(false);
-    if (!optIdentifierList(y->formalArgs)) return false;
+    if (!optIdentifierList(formalArgs)) return false;
     if (!symbol(")")) return false;
-    if (!block(y->body)) return false;
-    x = y.ptr();
+    return true;
+}
+
+static bool lambdaExprBody(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    ReturnKind rkind;
+    ExprPtr expr;
+    if (!returnExpr(rkind, expr)) return false;
+    x = new Return(rkind, new ExprList(expr));
     x->location = location;
     return true;
 }
 
-static bool blockLambda(ExprPtr &x) {
+static bool optCaptureByRef(bool &captureByRef) {
+    int p = save();
+    if (keyword("ref")) {
+        captureByRef = true;
+    }
+    else {
+        restore(p);
+        captureByRef = false;
+    }
+    return true;
+}
+
+static bool lambdaBody(StatementPtr &x) {
+    int p = save();
+    if (lambdaExprBody(x)) return true;
+    if (restore(p), block(x)) return true;
+    return false;
+}
+
+static bool lambda(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!keyword("block")) return false;
-    if (!symbol("(")) return false;
-    LambdaPtr y = new Lambda(true);
-    if (!optIdentifierList(y->formalArgs)) return false;
-    if (!symbol(")")) return false;
-    if (!block(y->body)) return false;
-    x = y.ptr();
+    vector<IdentifierPtr> formalArgs;
+    if (!lambdaArgs(formalArgs)) return false;
+    bool captureByRef;
+    if (!optCaptureByRef(captureByRef)) return false;
+    if (!symbol("=>")) return false;
+    StatementPtr body;
+    if (!lambdaBody(body)) return false;
+    x = new Lambda(captureByRef, formalArgs, body);
     x->location = location;
     return true;
 }
@@ -756,9 +880,9 @@ static bool staticExpr(ExprPtr &x) {
 
 static bool expression(ExprPtr &x) {
     int p = save();
-    if (orExpr(x)) return true;
-    if (restore(p), lambda(x)) return true;
-    if (restore(p), blockLambda(x)) return true;
+    if (lambda(x)) return true;
+    if (restore(p), orExpr(x)) return true;
+    if (restore(p), ifExpr(x)) return true;
     if (restore(p), unpack(x)) return true;
     if (restore(p), newExpr(x)) return true;
     if (restore(p), staticExpr(x)) return true;
@@ -990,27 +1114,6 @@ static bool gotoStatement(StatementPtr &x) {
     return true;
 }
 
-static bool returnKind(ReturnKind &x) {
-    int p = save();
-    if (keyword("ref")) {
-        x = RETURN_REF;
-    }
-    else if (restore(p), keyword("forward")) {
-        x = RETURN_FORWARD;
-    }
-    else {
-        restore(p);
-        x = RETURN_VALUE;
-    }
-    return true;
-}
-
-static bool returnExprList(ReturnKind &rkind, ExprListPtr &exprs) {
-    if (!returnKind(rkind)) return false;
-    if (!optExpressionList(exprs)) return false;
-    return true;
-}
-
 static bool returnStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
     if (!keyword("return")) return false;
@@ -1231,8 +1334,11 @@ static bool optTrailingVarParam(IdentifierPtr &varParam) {
 
 static bool paramsAndVarParam(vector<IdentifierPtr> &params,
                               IdentifierPtr &varParam) {
-    if (!identifierList(params)) return false;
+    if (!identifierListNoTail(params)) return false;
     if (!optTrailingVarParam(varParam)) return false;
+    int p = save();
+    if (!symbol(","))
+        restore(p);
     return true;
 }
 
@@ -1809,14 +1915,14 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
 // procedure, overload
 //
 
-static bool optMacro(bool &macro) {
+static bool optCallByName(bool &callByName) {
     int p = save();
-    if (!keyword("macro")) {
+    if (!keyword("callbyname")) {
         restore(p);
-        macro = false;
+        callByName = false;
         return true;
     }
-    macro = true;
+    callByName = true;
     return true;
 }
     
@@ -1861,8 +1967,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
-    bool macro;
-    if (!optMacro(macro)) return false;
+    bool callByName;
+    if (!optCallByName(callByName)) return false;
     int p = save();
     if (!keyword("procedure"))
         restore(p);
@@ -1879,7 +1985,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(z);
     target->location = location;
-    OverloadPtr v = new Overload(target, y, macro);
+    OverloadPtr v = new Overload(target, y, callByName);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -1903,8 +2009,8 @@ static bool overload(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
-    bool macro;
-    if (!optMacro(macro)) return false;
+    bool callByName;
+    if (!optCallByName(callByName)) return false;
     if (!keyword("overload")) return false;
     ExprPtr z;
     if (!pattern(z)) return false;
@@ -1913,11 +2019,11 @@ static bool overload(TopLevelItemPtr &x) {
     int p = save();
     if (!optBody(y->body)) {
         restore(p);
-        if (macro) return false;
+        if (callByName) return false;
         if (!llvmBody(y->llvmBody)) return false;
     }
     y->location = location;
-    x = new Overload(z, y, macro);
+    x = new Overload(z, y, callByName);
     x->location = location;
     return true;
 }
@@ -1944,7 +2050,12 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",") || !enumMember(y)) {
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!enumMember(y)) {
             restore(p);
             break;
         }

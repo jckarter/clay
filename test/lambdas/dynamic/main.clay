@@ -1,6 +1,6 @@
 
 
-multiplier(f) = lambda (x) { return x*f; };
+multiplier(f) = (x => x*f);
 
 plus2(x) = x + 2;
 plus3(x) = x + 3;

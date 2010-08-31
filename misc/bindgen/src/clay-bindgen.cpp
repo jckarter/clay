@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
         cerr << "Failed to open \'" << argv[1] << "\'";
         return EXIT_FAILURE;
     }
-    context.sm.createMainFileID(file, SourceLocation());
+    context.sm.createMainFileID(file);
 
     BindingsConverter converter(cout);
 

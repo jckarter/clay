@@ -30,10 +30,16 @@ main() {
     display("and", bitwiseAnd(bitwiseAnd(v1, v2), 3));
     display("or",  bitwiseOr(bitwiseOr(v1, v2), 3));
     display("xor", bitwiseXor(bitwiseXor(v1, v2), 3));
+
+    display("plus v1", plus(v1));
+    display("plus v2", plus(v2));
+    display("minus v1", minus(v1));
+    display("minus v2", minus(v2));
+    display("bitwiseNot v1", bitwiseNot(v1));
+    display("bitwiseNot v2", bitwiseNot(v2));
 }
 
 
 display(label, v) {
-    println(label, ": ", simd.get(v, 0), ", ", simd.get(v, 1));
-    println(label, ": ", ...weaveValues(", ", ...simd.unpackVec(v)));
+    println(label, ": ", v[0], ", ", v[1]);
 }

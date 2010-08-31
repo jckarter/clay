@@ -56,7 +56,7 @@ unpack(x) = ...unpackRef(x);
 //
 
 [...T]
-macro overload Tuple(...args:T) = Tuple[...T](...args);
+callbyname overload Tuple(...args:T) = Tuple[...T](...args);
 
 
 
@@ -65,7 +65,7 @@ macro overload Tuple(...args:T) = Tuple[...T](...args);
 //
 
 [...T]
-macro overload Tuple[...T](...args:T) returned:Tuple[...T] {
+callbyname overload Tuple[...T](...args:T) returned:Tuple[...T] {
     ...unpackTupleRef(returned) <-- ...args;
 }
 
@@ -189,7 +189,7 @@ overload lesser?(a:Tuple[...T], b:Tuple[...T]) {
 procedure tupleLiteral;
 
 // by default create a tuple
-macro overload tupleLiteral(...args) = Tuple(...args);
+callbyname overload tupleLiteral(...args) = Tuple(...args);
 
 // in the case of single argument, return the argument itself.
 overload tupleLiteral(forward x) = forward x;

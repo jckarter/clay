@@ -54,10 +54,10 @@ void evalCallCode(InvokeEntryPtr entry,
 void evalCallCompiledCode(InvokeEntryPtr entry,
                           MultiEValuePtr args,
                           MultiEValuePtr out);
-void evalCallMacro(InvokeEntryPtr entry,
-                   ExprListPtr args,
-                   EnvPtr env,
-                   MultiEValuePtr out);
+void evalCallByName(InvokeEntryPtr entry,
+                    ExprListPtr args,
+                    EnvPtr env,
+                    MultiEValuePtr out);
 
 enum TerminationKind {
     TERMINATE_RETURN,
@@ -93,7 +93,8 @@ struct TerminateContinue : Termination {
 struct TerminateGoto : Termination {
     IdentifierPtr targetLabel;
     TerminateGoto(IdentifierPtr targetLabel, LocationPtr location)
-        : Termination(TERMINATE_GOTO, location) {}
+        : Termination(TERMINATE_GOTO, location),
+          targetLabel(targetLabel) {}
 };
 
 struct LabelInfo {
@@ -1016,6 +1017,14 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
+    case IF_EXPR : {
+        IfExpr *x = (IfExpr *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarIfExpr(x);
+        evalExpr(x->desugared, env, out);
+        break;
+    }
+
     case LAMBDA : {
         Lambda *x = (Lambda *)expr.ptr();
         if (!x->initialized)
@@ -1449,8 +1458,8 @@ void evalCallExpr(ExprPtr callable,
         computeArgsKey(mpv, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
-        if (entry->macro) {
-            evalCallMacro(entry, args, env, out);
+        if (entry->callByName) {
+            evalCallByName(entry, args, env, out);
         }
         else {
             assert(entry->analyzed);
@@ -1619,8 +1628,8 @@ void evalCallValue(EValuePtr callable,
         computeArgsKey(pvArgs, argsKey, argsTempness);
         InvokeStackContext invokeStackContext(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
-        if (entry->macro)
-            error("call to macro not allowed in this context");
+        if (entry->callByName)
+            error("call to call-by-name code not allowed in this context");
         assert(entry->analyzed);
         evalCallCode(entry, args, out);
         break;
@@ -1656,7 +1665,7 @@ void evalCallCode(InvokeEntryPtr entry,
                   MultiEValuePtr args,
                   MultiEValuePtr out)
 {
-    assert(!entry->macro);
+    assert(!entry->callByName);
     assert(entry->analyzed);
     if (entry->code->isInlineLLVM()) {
         evalCallCompiledCode(entry, args, out);
@@ -1775,15 +1784,15 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
 
 
 //
-// evalCallMacro
+// evalCallByName
 //
 
-void evalCallMacro(InvokeEntryPtr entry,
-                   ExprListPtr args,
-                   EnvPtr env,
-                   MultiEValuePtr out)
+void evalCallByName(InvokeEntryPtr entry,
+                    ExprListPtr args,
+                    EnvPtr env,
+                    MultiEValuePtr out)
 {
-    assert(entry->macro);
+    assert(entry->callByName);
     if (entry->varArgName.ptr())
         assert(args->size() >= entry->fixedArgNames.size());
     else
@@ -1805,7 +1814,7 @@ void evalCallMacro(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = safeAnalyzeCallMacro(entry, args, env);
+    MultiPValuePtr mpv = safeAnalyzeCallByName(entry, args, env);
     assert(mpv->size() == out->size());
 
     vector<EReturn> returns;
@@ -1962,8 +1971,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i]->isTemp)
                 argumentError(i, "cannot assign to a temporary");
-            if (mpvLeft->values[i]->type != mpvRight->values[i]->type)
-                argumentError(i, "type mismatch");
+            if (mpvLeft->values[i]->type != mpvRight->values[i]->type) {
+                argumentTypeError(i,
+                                  mpvLeft->values[i]->type,
+                                  mpvRight->values[i]->type);
+            }
         }
         int marker = evalMarkStack();
         MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
@@ -1998,7 +2010,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             bool byRef = returnKindToByRef(x->returnKind, pv);
             EReturn &y = ctx->returns[i];
             if (y.type != pv->type)
-                argumentError(i, "type mismatch");
+                argumentTypeError(i, y.type, pv->type);
             if (byRef != y.byRef)
                 argumentError(i, "mismatching by-ref and by-value returns");
             if (byRef && pv->isTemp)
@@ -2376,7 +2388,7 @@ static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
         if (ev->type != type)
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type, ev->type);
     }
     else {
         switch (ev->type->typeKind) {
@@ -2397,7 +2409,7 @@ static EValuePtr integerValue(MultiEValuePtr args, unsigned index,
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
         if (ev->type != type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), ev->type);
     }
     else {
         if (ev->type->typeKind != INTEGER_TYPE)
@@ -2413,7 +2425,7 @@ static EValuePtr pointerValue(MultiEValuePtr args, unsigned index,
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
         if (ev->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), ev->type);
     }
     else {
         if (ev->type->typeKind != POINTER_TYPE)
@@ -2429,7 +2441,7 @@ static EValuePtr pointerLikeValue(MultiEValuePtr args, unsigned index,
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
         if (ev->type != type)
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type, ev->type);
     }
     else {
         if (!isPointerOrCodePointerType(ev->type))
@@ -2446,7 +2458,7 @@ static EValuePtr arrayValue(MultiEValuePtr args, unsigned index,
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
         if (ev->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), ev->type);
     }
     else {
         if (ev->type->typeKind != ARRAY_TYPE)
@@ -2462,7 +2474,7 @@ static EValuePtr tupleValue(MultiEValuePtr args, unsigned index,
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
         if (ev->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), ev->type);
     }
     else {
         if (ev->type->typeKind != TUPLE_TYPE)
@@ -2478,7 +2490,7 @@ static EValuePtr recordValue(MultiEValuePtr args, unsigned index,
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
         if (ev->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), ev->type);
     }
     else {
         if (ev->type->typeKind != RECORD_TYPE)
@@ -2494,7 +2506,7 @@ static EValuePtr variantValue(MultiEValuePtr args, unsigned index,
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
         if (ev->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), ev->type);
     }
     else {
         if (ev->type->typeKind != VARIANT_TYPE)
@@ -2510,7 +2522,7 @@ static EValuePtr enumValue(MultiEValuePtr args, unsigned index,
     EValuePtr ev = args->values[index];
     if (type.ptr()) {
         if (ev->type != (Type *)type.ptr())
-            argumentError(index, "argument type mismatch");
+            argumentTypeError(index, type.ptr(), ev->type);
     }
     else {
         if (ev->type->typeKind != ENUM_TYPE)
@@ -3050,7 +3062,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         if (!isPrimitiveType(ev0->type))
             argumentError(0, "expecting a value of primitive type");
         if (ev0->type != ev1->type)
-            argumentError(1, "argument type mismatch");
+            argumentTypeError(1, ev0->type, ev1->type);
         memcpy(ev0->addr, ev1->addr, typeSize(ev0->type));
         assert(out->size() == 0);
         break;
@@ -3372,8 +3384,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->macro)
-            argumentError(0, "cannot create pointer to macro");
+        if (entry->callByName)
+            argumentError(0, "cannot create pointer to call-by-name code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
@@ -3446,8 +3458,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->macro)
-            argumentError(0, "cannot create pointer to macro");
+        if (entry->callByName)
+            argumentError(0, "cannot create pointer to call-by-name code");
         assert(entry->analyzed);
         if (!entry->llvmFunc)
             codegenCodeBody(entry);

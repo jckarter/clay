@@ -1,9 +1,9 @@
 
 record Foo[F] { fn : F; }
-var z = Foo(lambda (x) { println(x); });
+var z = Foo(x => { println(x); });
 
 foo(...args) {
-    var f = lambda (msg) { println(msg, ": ", ...args); };
+    var f = msg => { println(msg, ": ", ...args); };
     f("first");
     f("second");
 }

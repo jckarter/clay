@@ -39,7 +39,7 @@
 (defconst clay-quoted-string-or-regex-re "\\(/.*?[^\\]/\\w*\\|\".*?[^\\]\"\\|'.*?[^\\]'\\)")
 
 (defconst clay-font-lock-keywords-1
-  ;; TODO: Add - "as" "..."? "rvalue" "lvalue" "<--"? "goto" "lambda" "block" "new"
+  ;; TODO: Add - "as" "..."? "rvalue" "lvalue" "<--"? "goto" "new"
   (list
    ;; --- Begin handling quoted strings (lifted-from javascript.el) ---
 
@@ -65,7 +65,7 @@
 
    '("^\\(\\[.*?\\]\\) *" 1 font-lock-doc-face)
 
-   '("\\<\\(?:a\\(?:lias\\|nd\\|s\\)\\|\\(?:b\\(?:loc\\|rea\\)k\\)\\|continue\\|e\\(?:num\\|lse\\|xternal\\)\\|forward\\|for\\|goto\\|i\\(?:mport\\|[fn]\\)\\|l\\(?:ambda\\|value\\)\\|n\\(?:ew\\|ot\\)\\|o\\(?:r\\|verload\\(?:able\\)?\\)\\|p\\(?:rivate\\|ublic\\|rocedure\\)\\|r\\(?:value\\|\\(e\\(?:cord\\|f\\|turn\\)\\)\\)\\|static\\|var\\|while\\|variant\\|instance\\|try\\|catch\\|throw\\|macro\\)\\>" . font-lock-keyword-face)
+   '("\\<\\(?:a\\(?:lias\\|nd\\|s\\)\\|break\\|continue\\|e\\(?:num\\|lse\\|xternal\\)\\|forward\\|for\\|goto\\|i\\(?:mport\\|[fn]\\)\\|lvalue\\|n\\(?:ew\\|ot\\)\\|o\\(?:r\\|verload\\(?:able\\)?\\)\\|p\\(?:rivate\\|ublic\\|rocedure\\)\\|r\\(?:value\\|\\(e\\(?:cord\\|f\\|turn\\)\\)\\)\\|static\\|var\\|while\\|variant\\|instance\\|try\\|catch\\|throw\\|callbyname\\)\\>" . font-lock-keyword-face)
 
    '("\\<\\(true\\|false\\)\\>" . font-lock-constant-face)
 

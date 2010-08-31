@@ -3,23 +3,24 @@ import simd.primitives as prims;
 
 
 //
+// index
+//
+
+[T,n,I | Integer?(I)]
+overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
+
+
+
+//
 // type inferring constructor
 //
 
-[...A | (countArgs(...A) > 0) and AllEqual?(...A)]
+[...A | (countValues(...A) > 0) and equalValues?(...A)]
 overload Vec(...args:A) {
-    alias n = static countArgs(...A);
-    alias T = firstArg(...A);
+    alias n = static countValues(...A);
+    alias T = firstValue(...A);
     return Vec[T, n](...args);
 }
-
-private AllEqual?(a, b, ...rest) = (a == b) and AllEqual?(b, ...rest);
-overload AllEqual?(a) = true;
-
-private countArgs(x, ...rest) = 1 + countArgs(...rest);
-overload countArgs() = 0;
-
-private firstArg(a, ...b) = a;
 
 
 
@@ -27,25 +28,14 @@ private firstArg(a, ...b) = a;
 // basic constructor
 //
 
-[T,n,...A | Tuple[...Times(T,static n)] == Tuple[...A]]
+[T,n,...A | Tuple[...replicateValue(T,static n)] == Tuple[...A]]
 overload Vec[T,n](...args:A) {
-    return insertElements(Vec[T,n](), static 0, ...args);
-}
-
-[n]
-private Times(a, static n) = a, ...Times(a, static n-1);
-overload Times(a, static 0) = ;
-
-private procedure insertElements;
-
-[T,n,i]
-overload insertElements(a:Vec[T,n], static i, first, ...rest) {
-    var b = prims.insertElement(a, i, first);
-    return insertElements(b, static i+1, ...rest);
-}
-
-[T,n]
-overload insertElements(a:Vec[T,n], static n) {
+    var a = Vec[T,n]();
+    var i = 0;
+    static for (x in ...args) {
+        a[i] = x;
+        i += 1;
+    }
     return a;
 }
 
@@ -57,17 +47,9 @@ overload insertElements(a:Vec[T,n], static n) {
 
 [T,n]
 overload Vec[T,n](x:T) {
-    return replicateElement(Vec[T,n](), static 0, x);
-}
-
-[T,n,i]
-private replicateElement(a:Vec[T,n], static i, x:T) {
-    var b = prims.insertElement(a, i, x);
-    return replicateElement(b, static i+1, x);
-}
-
-[T,n]
-overload replicateElement(a:Vec[T,n], static n, x:T) {
+    var a = Vec[T,n]();
+    for (i in range(n))
+        a[i] = x;
     return a;
 }
 
@@ -119,22 +101,10 @@ private procedure unpackElements;
 
 [T,n,i]
 overload unpackElements(a:Vec[T,n], static i) =
-    prims.extractElement(a, i), ...unpackElements(a, static i+1);
+    a[i], ...unpackElements(a, static i+1);
 
-[T,n]
-overload unpackElements(a:Vec[T,n], static n) = ;
-
-
-
-//
-// get, set individual elements
-//
-
-[T,n,I | Integer?(I)]
-get(a:Vec[T,n], i:I) = prims.extractElement(a, Int(i));
-
-[T,n,I | Integer?(I)]
-set(a:Vec[T,n], i:I, x:T) = prims.insertElement(a, Int(i), x);
+[T,n,i | i == n]
+overload unpackElements(a:Vec[T,n], static i) = ;
 
 
 
@@ -245,3 +215,18 @@ overload bitwiseXor(a:Vec[T,n], x:X) = bitwiseXor(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
 overload bitwiseXor(x:X, a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(x)),  a);
+
+
+
+//
+// unary ops
+//
+
+[T,n]
+overload plus(a:Vec[T,n]) = a;
+
+[T,n]
+overload minus(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
+
+[T,n]
+overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(-1)), a);

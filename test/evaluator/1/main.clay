@@ -1,6 +1,6 @@
 [x] _staticTest(static x, y) = x == y, x, y;
 
-macro staticTest(n, expr) {
+callbyname staticTest(n, expr) {
     var passed?, staticResult, result = ..._staticTest(static expr, expr);
     if (not passed?) {
         println(n, " FAILED! static ", staticResult, " != runtime ", result);

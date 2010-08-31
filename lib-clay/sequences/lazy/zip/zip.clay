@@ -39,7 +39,7 @@ overload next(iter:ZippedIterator[ITERS]) =
 //
 
 private AllReversible?(A) {
-    var reversible? = block (T) { return CallDefined?(reverseIterator, T); };
+    var reversible? = (T => CallDefined?(reverseIterator, T));
     return multiValueAll?(reversible?, ...Type(...unpackSequences(null(A)^)));
 }
 
@@ -54,23 +54,23 @@ overload reverseIterator(a:Zipped[A]) =
 //
 
 private AllSized?(A) {
-    var sizeDefined? = block (T) { return CallDefined?(size, T); };
+    var sizeDefined? = (T => CallDefined?(size, T));
     return multiValueAll?(sizeDefined?, ...Type(...unpackSequences(null(A)^)));
 }
 
 [A | AllSized?(A)]
 overload size(a:Zipped[A]) {
-    var f = block (x) { return SizeT(size(x)); };
+    var f = (x => SizeT(size(x)));
     return min([...mapValues(f, ...unpackSequences(a.seqs))]);
 }
 
 private AllIndexable?(A, I) {
-    var indexDefined? = block (T) { return CallDefined?(index, T, I); };
+    var indexDefined? = (T => CallDefined?(index, T, I));
     return multiValueAll?(indexDefined?, ...Type(unpackSequences(null(A)^)));
 }
 
 [A, I | AllIndexable?(A, I)]
 overload index(a:Zipped[A], i:I) {
-    var f = block (x) { return forward ...index(x, i); };
+    var f = (x ref => { return forward ...index(x, i); });
     return forward ...mapValues(f, ...unpackSequences(a.seqs));
 }

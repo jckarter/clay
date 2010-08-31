@@ -32,7 +32,7 @@ VariantMembers(V) {
 //
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-macro overload V(x:T) returned:V {
+callbyname overload V(x:T) returned:V {
     ref repr = variantRepr(returned);
     alias index = Int(VariantMemberIndex(V, T));
     repr.tag <-- index;

@@ -1,0 +1,9 @@
+
+oddOrEven(n) {
+    println(if (n % 2 == 0) "even" else "odd");
+}
+
+main() {
+    for (i in range(5))
+        oddOrEven(i);
+}

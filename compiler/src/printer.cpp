@@ -231,9 +231,15 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "Or(" << y->expr1 << ", " << y->expr2 << ")";
         break;
     }
+    case IF_EXPR : {
+        const IfExpr *y = (const IfExpr *)x;
+        out << "IfExpr(" << y->condition << ", " << y->thenPart
+            << ", " << y->elsePart << ")";
+        break;
+    }
     case LAMBDA : {
         const Lambda *y = (const Lambda *)x;
-        out << "Lambda(" << y->isBlockLambda << ", " << y->formalArgs
+        out << "Lambda(" << y->captureByRef << ", " << y->formalArgs
             << ", " << y->body << ")";
         break;
     }
@@ -530,7 +536,7 @@ static void print(ostream &out, const Object *x) {
     case OVERLOAD : {
         const Overload *y = (const Overload *)x;
         out << "Overload(" << y->target << ", " << y->code << ", "
-            << y->macro << ")";
+            << y->callByName << ")";
         break;
     }
     case PROCEDURE : {

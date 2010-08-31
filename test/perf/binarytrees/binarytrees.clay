@@ -20,7 +20,7 @@ overload Pool[T](n) {
 }
 
 [T]
-macro poolAlloc(p:Pool[T], x:T) {
+callbyname poolAlloc(p:Pool[T], x:T) {
     assert(p.next < size(p.data));
     var ptr = &p.data[p.next];
     p.next += 1;

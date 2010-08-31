@@ -1,0 +1,40 @@
+
+
+//
+// sample code for named unions
+//
+
+alias MyUnion = NamedUnion[(#foo, Int), (#bar, UInt8)];
+
+main() {
+    var a = MyUnion();
+    a.foo = -1;
+    println(a.bar);   // prints 255
+}
+
+
+
+//
+// NamedUnion
+//
+
+record NamedUnion[...fields] {
+    data : Union[...mapValues(x => x.1, ...fields)];
+}
+
+[...fields]
+overload fieldRef(x:NamedUnion[...fields], name) {
+    alias i = fieldIndex(name, ...fields);
+    return ref staticIndex(x.0, static i);
+}
+
+private fieldIndex(name, ...fields) {
+    var i = 0;
+    static for (field in ...fields) {
+        if (name == field.0)
+            goto end;
+        i += 1;
+    }
+    end :
+    return i;
+}

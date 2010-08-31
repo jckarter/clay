@@ -156,10 +156,10 @@ contains?(map, key) = not null?(lookup(map, key));
 //
 
 procedure LValue?;
-macro overload LValue?(lvalue a) = true;
-macro overload LValue?(rvalue a) = false;
+callbyname overload LValue?(lvalue a) = true;
+callbyname overload LValue?(rvalue a) = false;
 
-macro RValue?(x) = not LValue?(x);
+callbyname RValue?(x) = not LValue?(x);
 
 
 
@@ -267,3 +267,27 @@ typesToValues(...a) = forward ...mapValues(typeToValue, ...a);
 
 [T | SizedSequence?(T)]
 empty?(a:T) = (size(a) == 0);
+
+
+
+//
+// ifExpression
+//
+
+procedure ifExpression;
+
+[T]
+callbyname overload ifExpression(condition, consequent:T, alternate:T) {
+    if (condition)
+        return consequent;
+    else
+        return alternate;
+}
+
+[T]
+callbyname overload ifExpression(condition, lvalue consequent:T, lvalue alternate:T) {
+    if (condition)
+        return ref consequent;
+    else
+        return ref alternate;
+}

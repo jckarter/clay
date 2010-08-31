@@ -1,0 +1,68 @@
+var fac = 0.0;
+var n = 0;
+var shift = initShift(n);
+var buf = Vector[Int8]();
+
+initFac(g){
+	return (2.0 / g);
+}
+
+initShift(g){
+	if(g % 8 != 0)
+		return( 8 - g % 8);
+    else
+    	return 0;  
+}
+
+mandelbrot(n){
+	println("P4\n", n, " ", n);
+ 	for( i in range(n)) 
+  		compute(i);
+}
+
+compute(y){
+	var bits = 0i8;
+    var ycd = (y*fac - 1.0);//the resized coordinates
+
+    for (x in range(n)) { // for each column x in the yth row
+    	var a = 0.0;
+        var b = 0.0;
+        var xcd = (x*fac - 1.5); // resized coordinates
+        var i = 50;// the number of iterations
+        var xsq = 0.0; // the computed real value's square
+        var ysq = 0.0;// the computed imaginary value's square
+
+        while (not((ysq + xsq) > 4.0) and i>0){
+
+        	b = 2.0 * a * b + ycd;
+            a = xsq - ysq + xcd;
+            ysq = b * b;
+            xsq = a * a;
+	        i-=1; 
+        }
+ 
+        bits *= 2i8;
+        if (i == 0) 
+			bits += 1i8; // set the LSB to 1 if the pt is in the mandelbrot set
+
+        if (x % 8 == 7){ 
+        	print( Char( bits));        
+            bits = 0i8;
+        }
+    } 
+   if (shift != 0) { //if shift is not 0 ... i.e the size is not an exact multiple of 8
+       for( d in range(shift))
+           bits *= 2i8; 
+       print( Char( bits));
+   }
+}
+
+main(){
+	var cmd = commandLine();
+  	var np = cmd[1];
+  	n = Int(np);
+	
+	fac = initFac(n);
+ 	mandelbrot(n);
+	println();
+}

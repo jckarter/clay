@@ -134,9 +134,17 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case IF_EXPR : {
+        IfExpr *y = (IfExpr *)x.ptr();
+        out = new IfExpr(clone(y->condition),
+                         clone(y->thenPart),
+                         clone(y->elsePart));
+        break;
+    }
+
     case LAMBDA : {
         Lambda *y = (Lambda *)x.ptr();
-        LambdaPtr z = new Lambda(y->isBlockLambda);
+        LambdaPtr z = new Lambda(y->captureByRef);
         clone(y->formalArgs, z->formalArgs);
         z->body = clone(y->body);
         out = z.ptr();
