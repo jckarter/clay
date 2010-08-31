@@ -95,7 +95,7 @@ destroyMemory(first:Pointer[T], last:Pointer[T]) {
 
 
 //
-// copyMemory
+// copyMemory, copyMemoryBackwards
 //
 
 [T]
@@ -104,6 +104,16 @@ copyMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     eachLocationWithCleanup(destFirst, destLast, lambda (x) {
             x <-- srcPtr^;
             srcPtr += 1;
+        }
+    );
+}
+
+[T]
+copyMemoryBackwards(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    var srcPtr = srcFirst + (destLast - destFirst);
+    eachLocationBackwardsWithCleanup(destFirst, destLast, lambda (x) {
+            srcPtr -= 1;
+            x <-- srcPtr^;
         }
     );
 }
@@ -236,6 +246,22 @@ private eachLocationWithCleanup(_first:Pointer[T], _last:Pointer[T], f) {
     }
     catch (e) {
         destroyMemory(first, ptr);
+        throw e;
+    }
+}
+
+[T]
+private eachLocationBackwardsWithCleanup(_first:Pointer[T], _last:Pointer[T], f) {
+    var first, last = _first, _last;
+    var ptr = last;
+    try {
+        while (ptr != first) {
+            ptr -= 1;
+            f(ptr^);
+        }
+    }
+    catch (e) {
+        destroyMemory(ptr+1, last);
         throw e;
     }
 }
