@@ -54,7 +54,8 @@ static bool keyword(const char *s) {
 
 
 //
-// identifier, identifierList, optIdentifierList, dottedName
+// identifier, identifierList, optIdentifierList,
+// identifierListNoTail, dottedName
 //
 
 static bool identifier(IdentifierPtr &x) {
@@ -74,7 +75,12 @@ static bool identifierList(vector<IdentifierPtr> &x) {
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",") || !identifier(y)) {
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!identifier(y)) {
             restore(p);
             break;
         }
@@ -88,6 +94,22 @@ static bool optIdentifierList(vector<IdentifierPtr> &x) {
     if (!identifierList(x)) {
         restore(p);
         x.clear();
+    }
+    return true;
+}
+
+static bool identifierListNoTail(vector<IdentifierPtr> &x) {
+    IdentifierPtr y;
+    if (!identifier(y)) return false;
+    x.clear();
+    x.push_back(y);
+    while (true) {
+        int p = save();
+        if (!symbol(",") || !identifier(y)) {
+            restore(p);
+            break;
+        }
+        x.push_back(y);
     }
     return true;
 }
@@ -240,7 +262,12 @@ static bool expressionList(ExprListPtr &x) {
     a = new ExprList(b);
     while (true) {
         int p = save();
-        if (!symbol(",") || !expression(b)) {
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!expression(b)) {
             restore(p);
             break;
         }
@@ -1307,8 +1334,11 @@ static bool optTrailingVarParam(IdentifierPtr &varParam) {
 
 static bool paramsAndVarParam(vector<IdentifierPtr> &params,
                               IdentifierPtr &varParam) {
-    if (!identifierList(params)) return false;
+    if (!identifierListNoTail(params)) return false;
     if (!optTrailingVarParam(varParam)) return false;
+    int p = save();
+    if (!symbol(","))
+        restore(p);
     return true;
 }
 
@@ -2020,7 +2050,12 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",") || !enumMember(y)) {
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!enumMember(y)) {
             restore(p);
             break;
         }
