@@ -318,11 +318,19 @@ static bool stringToken(TokenPtr &x) {
 // integer tokens
 //
 
+static void optNumericSeparator() {
+    char *p = save();
+    char c;
+    if (!next(c) || (c != '_'))
+        restore(p);
+}
+
 static bool hexInt() {
     if (!str("0x")) return false;
     int x;
     if (!hexDigit(x)) return false;
     while (true) {
+        optNumericSeparator();
         char *p = save();
         if (!hexDigit(x)) {
             restore(p);
@@ -336,6 +344,7 @@ static bool decimalInt() {
     int x;
     if (!decimalDigit(x)) return false;
     while (true) {
+        optNumericSeparator();
         char *p = save();
         if (!decimalDigit(x)) {
             restore(p);
