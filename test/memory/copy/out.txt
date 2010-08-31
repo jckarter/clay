@@ -1,0 +1,36 @@
+after copyMemory up:
+1
+2
+3
+4
+5
+6
+7
+7
+after copyMemory down:
+0
+0
+0
+0
+0
+0
+0
+0
+after copyMemoryBackwards down:
+0
+0
+1
+2
+3
+4
+5
+6
+after copyMemoryBackwards up:
+7
+7
+7
+7
+7
+7
+7
+7
