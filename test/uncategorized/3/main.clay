@@ -1,9 +1,9 @@
 
-testSignedInt() = (1, 1i8, 1i16, 1i32, 1i64);
+testSignedInt() = (1, 1i8, 1i16, 1i32, 1i64, -100_000);
 
-testUnsignedInt() = (1, 1u8, 1u16, 1u32, 2u, 1u64);
+testUnsignedInt() = (1, 1u8, 1u16, 1u32, 2u, 1u64, 100_000u);
 
-testFloat() = (1, 1.0, 1f32, 1f64, 1.0f, 1.0f64, 1e2, 1e-2, -2e3f, -2e-3f);
+testFloat() = (1, 1.0, 1f32, 1f64, 1.0f, 1.0f64, 1e2, 1e-2, -2e3f, -2e-3f, 100_000.000_001);
 
 test0Tuple() = ();
 test1Tuple() = Tuple(true);

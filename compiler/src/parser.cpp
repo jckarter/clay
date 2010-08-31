@@ -130,6 +130,15 @@ static bool boolLiteral(ExprPtr &x) {
     return true;
 }
 
+static string cleanNumericSeparator(const string &s) {
+    string out;
+    for (unsigned i = 0; i < s.size(); ++i) {
+        if (s[i] != '_')
+            out.push_back(s[i]);
+    }
+    return out;
+}
+
 static bool intLiteral(ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
@@ -138,11 +147,11 @@ static bool intLiteral(ExprPtr &x) {
     TokenPtr t2;
     int p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
-        x = new IntLiteral(t->str, t2->str);
+        x = new IntLiteral(cleanNumericSeparator(t->str), t2->str);
     }
     else {
         restore(p);
-        x = new IntLiteral(t->str);
+        x = new IntLiteral(cleanNumericSeparator(t->str));
     }
     x->location = location;
     return true;
@@ -156,11 +165,11 @@ static bool floatLiteral(ExprPtr &x) {
     TokenPtr t2;
     int p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
-        x = new FloatLiteral(t->str, t2->str);
+        x = new FloatLiteral(cleanNumericSeparator(t->str), t2->str);
     }
     else {
         restore(p);
-        x = new FloatLiteral(t->str);
+        x = new FloatLiteral(cleanNumericSeparator(t->str));
     }
     x->location = location;
     return true;
@@ -343,7 +352,8 @@ static bool staticIndexingSuffix(ExprPtr &x) {
     char *b = const_cast<char *>(t->str.c_str());
     char *end = b;
     unsigned long c = strtoul(b, &end, 0);
-    assert(*end == 0);
+    if (*end != 0)
+        error(t, "invalid static index value");
     x = new StaticIndexing(NULL, (size_t)c);
     x->location = location;
     return true;
