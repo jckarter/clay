@@ -34,10 +34,12 @@ nothing?(x) = variantIs?(x, Nothing);
 //
 
 private procedure maybeValue;
-overload maybeValue(forward x, fn, forward ...defaults) = forward ...fn(x);
-overload maybeValue(forward n: Nothing, fn, forward ...defaults) = forward ...defaults;
+overload maybeValue(forward x, thenFn, ...elseFn) = forward ...thenFn(x);
+overload maybeValue(forward n: Nothing, thenFn, elseFn) = forward ...elseFn();
+overload maybeValue(forward n: Nothing, thenFn) { }
 
-maybe(forward m, fn, forward ...defaults) = forward ...maybeValue(*m, fn, ...defaults);
+maybe(forward m, thenFn, forward ...elseFn)
+    = forward ...maybeValue(*m, thenFn, ...elseFn);
 
 record ValueMissing {}
 instance Exception = ValueMissing;
@@ -46,9 +48,5 @@ instance Exception = ValueMissing;
 // require function
 //
 
-private procedure requireValue;
-overload requireValue(forward x, fn) = forward ...fn(x);
-overload requireValue(forward n: Nothing, fn) { throw ValueMissing(); }
-
-require(forward m, fn) = forward ...requireValue(*m, fn);
+require(forward m, fn) = forward ...maybe(*m, fn, lambda() { throw ValueMissing(); });
 
