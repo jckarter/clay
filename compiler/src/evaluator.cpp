@@ -93,7 +93,8 @@ struct TerminateContinue : Termination {
 struct TerminateGoto : Termination {
     IdentifierPtr targetLabel;
     TerminateGoto(IdentifierPtr targetLabel, LocationPtr location)
-        : Termination(TERMINATE_GOTO, location) {}
+        : Termination(TERMINATE_GOTO, location),
+          targetLabel(targetLabel) {}
 };
 
 struct LabelInfo {
