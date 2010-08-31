@@ -3,6 +3,4 @@ main() {
     println((1, true, 3.0));
     println([10, 20, 30]);
     println(Vector([true, false, true]));
-    var ptr = null(Float);
-    println(ptr);
 }

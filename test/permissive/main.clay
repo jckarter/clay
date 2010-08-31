@@ -60,5 +60,5 @@ overload PermissiveRecordConstructor?(static Foo) = true;
 
 main() {
     var f = Foo(1, 2, 0, "hello");
-    println(f.a, ", ", f.b, ", ", f.c);
+    println(f.a, ", ", f.b, ", ", null?(f.c));
 }
