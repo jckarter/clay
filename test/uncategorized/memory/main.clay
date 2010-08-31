@@ -1,0 +1,7 @@
+
+main() {
+    var f = allocateObject( Lambda[Int,Int](x => x + 10) );
+    for (x in range(10))
+        println(f^(x));
+    freeObject(f);
+}

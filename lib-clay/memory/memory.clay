@@ -5,7 +5,32 @@ import memory.platform.(SystemMallocAlignment);
 
 
 //
-// alignedMalloc, alignedFree,
+// allocateObject, freeObject
+//
+
+[T]
+callbyname allocateObject(x:T) {
+    var ptr = allocateRawMemory(T, 1);
+    try {
+        ptr^ <-- x;
+    }
+    catch (e) {
+        freeRawMemory(ptr);
+        throw e;
+    }
+    return ptr;
+}
+
+[T]
+freeObject(ptr:Pointer[T]) {
+    destroy(ptr^);
+    freeRawMemory(ptr);
+}
+
+
+
+//
+// alignedMalloc, alignedFree
 //
 
 alignedMalloc(numBytes:SizeT, alignment:SizeT) {
