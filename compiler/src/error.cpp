@@ -259,3 +259,22 @@ void ensureArity(MultiCValuePtr args, unsigned int size) {
     if (args->size() != size)
         arityError(size, args->size());
 }
+
+
+static string typeErrorMessage(TypePtr expectedType,
+                               TypePtr receivedType) {
+    ostringstream sout;
+    sout << "expected type " << expectedType
+         << ", but received " << receivedType;
+    return sout.str();
+}
+
+void typeError(TypePtr expectedType, TypePtr receivedType) {
+    error(typeErrorMessage(expectedType, receivedType));
+}
+
+void argumentTypeError(unsigned int index,
+                       TypePtr expectedType,
+                       TypePtr receivedType) {
+    argumentError(index, typeErrorMessage(expectedType, receivedType));
+}
