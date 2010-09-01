@@ -132,11 +132,14 @@ Size 7
 Contents: 17 19 23 29 31 37 41 
 Assigned from d2 size 6
 Contents: 2 3 5 7 11 13 
+Assigned from longer rvalue size 8
+Contents: 1 1 2 3 5 8 13 21 
 
 d4:
-Moved from d3 size 6
-Contents: 2 3 5 7 11 13 
+Moved from d3 size 8
+Contents: 1 1 2 3 5 8 13 21 
 
 d5:
 Size 5
 Contents: 23 29 31 37 41 
+Cleared size 0

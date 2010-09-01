@@ -227,7 +227,10 @@ overload Deque[T](...from: A) to: Deque[T] {
         return popDeque1(deque);
 }
 
-// XXX clear
+[T] overload clear(deque: Deque[T]) {
+    eraseDequeEnd(deque, deque.begin);
+}
+
 // XXX insert
 // XXX remove
 // XXX reserve
@@ -236,12 +239,11 @@ overload Deque[T](...from: A) to: Deque[T] {
 }
 
 [T] overload resize(deque: Deque[T], newSize: SizeT) {
-    // XXX more efficient implementation
     var oldSize = size(deque); 
     if (newSize < oldSize) {
-        for (i in range(oldSize - newSize))
-            pop(deque);
+        eraseDequeEnd(deque, deque.begin + newSize);
     } else {
+        // XXX more efficient implementation
         for (i in range(newSize - oldSize))
             push(deque, T());
     }
@@ -373,6 +375,12 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
         freeRawMemory(i^);
         inc(i);
     }
+}
+
+[T] private eraseDequeEnd(deque: Deque[T], newEnd: DequeCoordinate[T]) {
+    destroyDequeValues(newEnd, deque.end);
+    destroyDequeNodes(newEnd.node + 1, deque.end.node + 1);
+    deque.end = newEnd;
 }
 
 [T] private reserveDequeFrontElements(deque: Deque[T], count: SizeT) {
