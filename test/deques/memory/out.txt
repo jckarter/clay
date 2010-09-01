@@ -12,95 +12,108 @@ copying deque d2
 -- copied      6 from 3
 -- copied      7 from 4
 -- copied      8 from 5
+lengthening deque d2
+-- constructed 9
+-- copied      10 from 9
+-- destroyed   9
+-- constructed 11
+-- copied      12 from 11
+-- destroyed   11
+-- constructed 13
+-- copied      14 from 13
+-- destroyed   13
+shortening deque d2
+-- destroyed   10
+-- destroyed   12
+-- destroyed   14
 deque d2 leaving scope
 -- destroyed   6
 -- destroyed   7
 -- destroyed   8
 making deque d3 with exception
--- constructed 9
--- constructed 10 (throws on copy)
--- constructed 11
--- copied      12 from 9
--- throwing    10
--- destroyed   12
--- destroyed   11
--- destroyed   10
--- destroyed   9
-copying deque d4 with exception
--- copied      13 from 3
--- throwing    4
--- destroyed   13
-pushing onto deque d1
--- constructed 14
--- copied      15 from 14
--- destroyed   14
-pushing onto deque d1 with throw
+-- constructed 15
 -- constructed 16 (throws on copy)
+-- constructed 17
+-- copied      18 from 15
 -- throwing    16
--- destroyed   16
-popping from deque d1
--- moved       17 from 15
--- destroyed   17
-popping from deque d1 shouldn't throw
--- moved       18 from 5
 -- destroyed   18
-pushing onto front of deque d1
--- constructed 19
--- copied      20 from 19
+-- destroyed   17
+-- destroyed   16
+-- destroyed   15
+copying deque d4 with exception
+-- copied      19 from 3
+-- throwing    4
 -- destroyed   19
-pushing onto front of deque d1 with throw
--- constructed 21 (throws on copy)
--- throwing    21
--- destroyed   21
-popping from front of deque d1
--- moved       22 from 20
+pushing onto deque d1
+-- constructed 20
+-- copied      21 from 20
+-- destroyed   20
+pushing onto deque d1 with throw
+-- constructed 22 (throws on copy)
+-- throwing    22
 -- destroyed   22
-popping from front of deque d1 shouldn't throw
--- moved       23 from 3
+popping from deque d1
+-- moved       23 from 21
 -- destroyed   23
-making deque d5
--- constructed 24
--- constructed 25
--- constructed 26
--- constructed 27
--- copied      28 from 24
--- copied      29 from 25
--- copied      30 from 26
--- copied      31 from 27
--- destroyed   27
--- destroyed   26
--- destroyed   25
+popping from deque d1 shouldn't throw
+-- moved       24 from 5
 -- destroyed   24
-making deque d6
+pushing onto front of deque d1
+-- constructed 25
+-- copied      26 from 25
+-- destroyed   25
+pushing onto front of deque d1 with throw
+-- constructed 27 (throws on copy)
+-- throwing    27
+-- destroyed   27
+popping from front of deque d1
+-- moved       28 from 26
+-- destroyed   28
+popping from front of deque d1 shouldn't throw
+-- moved       29 from 3
+-- destroyed   29
+making deque d5
+-- constructed 30
+-- constructed 31
 -- constructed 32
 -- constructed 33
--- copied      34 from 32
--- copied      35 from 33
+-- copied      34 from 30
+-- copied      35 from 31
+-- copied      36 from 32
+-- copied      37 from 33
 -- destroyed   33
 -- destroyed   32
-d1 assign longer
--- constructed 36
--- copied      37 from 36
--- destroyed   36
+-- destroyed   31
+-- destroyed   30
+making deque d6
 -- constructed 38
--- copied      39 from 38
+-- constructed 39
+-- copied      40 from 38
+-- copied      41 from 39
+-- destroyed   39
 -- destroyed   38
--- constructed 40
--- copied      41 from 40
--- destroyed   40
-d1 assign shorter
--- moved       42 from 41
+d1 assign longer
+-- constructed 42
+-- copied      43 from 42
 -- destroyed   42
--- moved       43 from 39
--- destroyed   43
+-- constructed 44
+-- copied      45 from 44
+-- destroyed   44
+-- constructed 46
+-- copied      47 from 46
+-- destroyed   46
+d1 assign shorter
+-- destroyed   45
+-- destroyed   47
 d5, d6 leaving scope
+-- destroyed   40
+-- destroyed   41
 -- destroyed   34
 -- destroyed   35
--- destroyed   28
--- destroyed   29
--- destroyed   30
--- destroyed   31
-moving d1 to d7
-d1, d7 leaving scope
--- destroyed   4
+-- destroyed   36
 -- destroyed   37
+moving d1 to d7
+clearing d7
+-- destroyed   4
+-- destroyed   43
+d1, d7 leaving scope

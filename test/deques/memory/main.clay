@@ -76,6 +76,12 @@ test() {
     {
         println("copying deque d2");
         var d2 = d1;
+
+        println("lengthening deque d2");
+        resize(d2, SizeT(6));
+        println("shortening deque d2");
+        resize(d2, SizeT(3));
+
         println("deque d2 leaving scope");
     }
 
@@ -141,6 +147,9 @@ test() {
 
     println("moving d1 to d7");
     var d7 = move(d1);
+
+    println("clearing d7");
+    clear(d7);
 
     println("d1, d7 leaving scope");
 }

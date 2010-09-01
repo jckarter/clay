@@ -98,6 +98,12 @@ main() {
     for (x in d3) print(x, " ");
     println();
 
+    d3 = Deque[Int](1, 1, 2, 3, 5, 8, 13, 21);
+    println("Assigned from longer rvalue size ", size(d3));
+    print("Contents: ");
+    for (x in d3) print(x, " ");
+    println();
+
     println();
     println("d4:");
 
@@ -115,4 +121,6 @@ main() {
     print("Contents: ");
     for (x in d5) print(x, " ");
     println();
+    clear(d5);
+    println("Cleared size ", size(d5));
 }
