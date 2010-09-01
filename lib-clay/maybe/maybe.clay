@@ -48,5 +48,5 @@ instance Exception = ValueMissing;
 // require function
 //
 
-require(forward m, fn) = forward ...maybe(*m, fn, lambda() { throw ValueMissing(); });
+require(forward m, fn) = forward ...maybe(m, fn, () => { throw ValueMissing(); });
 
