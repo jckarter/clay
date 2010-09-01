@@ -1,15 +1,8 @@
 
-private alias DEQUE_TARGET_BUFFER_SIZE = SizeT(512);
-private alias DEQUE_INITIAL_MAP_SIZE = SizeT(8);
+//
+// Deque coordinates
+//
 
-private DequeBufferSize(T) {
-    if (TypeSize(T) < DEQUE_TARGET_BUFFER_SIZE)
-        return DEQUE_TARGET_BUFFER_SIZE/TypeSize(T);
-    else
-        return SizeT(1);
-}
-
-
 record DequeCoordinate[T] {
     current: Pointer[T];
     first: Pointer[T];
@@ -26,15 +19,14 @@ record DequeCoordinate[T] {
 
 [T] private nodeBegin(node: Pointer[Pointer[T]]) Pointer[T] = node^;
 [T] private nodeEnd(node: Pointer[Pointer[T]]) Pointer[T] = node^ + DequeBufferSize(T);
-
-[T] overload DequeCoordinate[T](current: Pointer[T], node: Pointer[Pointer[T]])
-    = DequeCoordinate[T](current, nodeBegin(node), nodeEnd(node), node);
-
 [T] private setNode(i: DequeCoordinate[T], node: Pointer[Pointer[T]]) {
     i.node = node;
     i.first = nodeBegin(node);
     i.last  = nodeEnd(node);
 }
+
+[T] overload DequeCoordinate[T](current: Pointer[T], node: Pointer[Pointer[T]])
+    = DequeCoordinate[T](current, nodeBegin(node), nodeEnd(node), node);
 
 [T] overload inc(i: DequeCoordinate[T]) {
     inc(i.current);
@@ -95,6 +87,9 @@ record DequeCoordinate[T] {
     or (x.node == y.node and x.current < y.current);
 
 
+//
+// Deque object interface
+//
 record Deque[T] {
     map: Pointer[Pointer[T]];
     mapSize: SizeT;
@@ -252,7 +247,23 @@ overload Deque[T](...from: A) to: Deque[T] {
     }
 }
 
+// XXX deque comparison
+
 
+//
+// Deque implementation details
+//
+
+private alias DEQUE_TARGET_BUFFER_SIZE = SizeT(512);
+private alias DEQUE_INITIAL_MAP_SIZE = SizeT(8);
+
+private DequeBufferSize(T) {
+    if (TypeSize(T) < DEQUE_TARGET_BUFFER_SIZE)
+        return DEQUE_TARGET_BUFFER_SIZE/TypeSize(T);
+    else
+        return SizeT(1);
+}
+
 private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
 
 [T] private initializeDequeMap(deque: Deque[T], size: SizeT) {
