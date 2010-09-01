@@ -2,17 +2,28 @@ record UTF8Decoder[Iterator] {
     iter: Iterator;
 }
 
-utf8(x) = UTF8Decoder(iterator(x));
-[T] overload iterator(x: UTF8Decoder[T]) = x;
-
 alias REPLACEMENT_CHAR = UniChar(0xFFFDu);
 alias MAX_CODE_POINT = UniChar(0x10FFFFu);
 
 private validSequenceChar?(d) = bitwiseAnd(UInt32(d), 0xC0u) == 0x80u;
 
+private minUniChar(minCode, code) {
+    if (code < minCode)
+        return REPLACEMENT_CHAR;
+    else
+        return UniChar(code);
+}
+
+private rangeUniChar(minCode, maxCode, code) {
+    if (code < minCode or code > maxCode)
+        return REPLACEMENT_CHAR;
+    else
+        return UniChar(code);
+}
+
 decodeTwo(c, d) {
     if (validSequenceChar?(d)) {
-        return UniChar(bitwiseOr(
+        return minUniChar(0x80u, bitwiseOr(
             shiftLeft(bitwiseAnd(UInt32(c), 0x1Fu), 6),
             bitwiseAnd(UInt32(d), 0x3Fu)
         ));
@@ -22,7 +33,7 @@ decodeTwo(c, d) {
 }
 decodeThree(c, d, e) {
     if (validSequenceChar?(d) and validSequenceChar?(e)) {
-        return UniChar(bitwiseOr(
+        return minUniChar(0x800u, bitwiseOr(
             shiftLeft(bitwiseAnd(UInt32(c), 0x0Fu), 12),
             shiftLeft(bitwiseAnd(UInt32(d), 0x3Fu),  6),
             bitwiseAnd(UInt32(e), 0x3Fu)
@@ -33,16 +44,12 @@ decodeThree(c, d, e) {
 }
 decodeFour(c, d, e, f) {
     if (validSequenceChar?(d) and validSequenceChar?(e) and validSequenceChar?(f)) {
-        var r = UniChar(bitwiseOr(
+        return rangeUniChar(0x10000u, UInt32(MAX_CODE_POINT), bitwiseOr(
             shiftLeft(bitwiseAnd(UInt32(c), 0x07u), 18),
             shiftLeft(bitwiseAnd(UInt32(d), 0x3Fu), 12),
             shiftLeft(bitwiseAnd(UInt32(e), 0x3Fu),  6),
             bitwiseAnd(UInt32(f), 0x3Fu)
         ));
-        if (r > MAX_CODE_POINT)
-            return REPLACEMENT_CHAR;
-        else
-            return r;
     } else {
         return REPLACEMENT_CHAR;
     }
@@ -52,20 +59,20 @@ decodeFour(c, d, e, f) {
 
 [T] overload next(decoder: UTF8Decoder[T]) {
     var c = UInt8(next(decoder.iter));
-    if (c < 0x80) {
+    if (c < 0x80u) {
         return UniChar(c);
-    } else if (c < 0xC0) {
+    } else if (c < 0xC0u) {
         return REPLACEMENT_CHAR;
-    } else if (c >= 0xC0) {
-        if (c < 0xE0) {
+    } else {
+        if (c < 0xE0u) {
             if (not hasNext?(decoder.iter)) goto eof;
             return decodeTwo(c, next(decoder.iter));
-        } else if (c < 0xF0) {
+        } else if (c < 0xF0u) {
             if (not hasNext?(decoder.iter)) goto eof;
             var d = next(decoder.iter);
             if (not hasNext?(decoder.iter)) goto eof;
             return decodeThree(c, d, next(decoder.iter));
-        } else if (c < 0xF5) {
+        } else if (c < 0xF8u) {
             if (not hasNext?(decoder.iter)) goto eof;
             var d = next(decoder.iter);
             if (not hasNext?(decoder.iter)) goto eof;
@@ -77,4 +84,50 @@ decodeFour(c, d, e, f) {
 
 eof:
     return REPLACEMENT_CHAR;
+}
+
+record UTF8[Sequence] {
+    encoded: Sequence;
+}
+
+[T] overload iterator(u: UTF8[T]) = UTF8Decoder(iterator(u.encoded));
+
+private encodeTwo(code)
+    = bitwiseOr(0xC0, shiftRight(bitwiseAnd(code, 0x7C0), 6)),
+      bitwiseOr(0x80, bitwiseAnd(code, 0x3F));
+
+private encodeThree(code)
+    = bitwiseOr(0xE0, shiftRight(bitwiseAnd(code, 0xF000), 12)),
+      bitwiseOr(0x80, shiftRight(bitwiseAnd(code, 0x0FC0),  6)),
+      bitwiseOr(0x80, bitwiseAnd(code, 0x3F));
+
+private encodeFour(code)
+    = bitwiseOr(0xF0, shiftRight(bitwiseAnd(code, 0x1C0000), 18)),
+      bitwiseOr(0x80, shiftRight(bitwiseAnd(code, 0x03F000), 12)),
+      bitwiseOr(0x80, shiftRight(bitwiseAnd(code, 0x000FC0),  6)),
+      bitwiseOr(0x80, bitwiseAnd(code, 0x3F));
+
+[T] overload push(u: UTF8[T], c) {
+    var code = UInt32(c);
+    if (code > UInt32(MAX_CODE_POINT))
+        code = UInt32(REPLACEMENT_CHAR);
+
+    if (code < 0x80u) {
+        push(u.encoded, Char(c));
+    } else if (code < 0x800u) {
+        var x, y = ...encodeTwo(code);
+        push(u.encoded, Char(x));
+        push(u.encoded, Char(y));
+    } else if (code < 0x10000u) {
+        var x, y, z = ...encodeThree(code);
+        push(u.encoded, Char(x));
+        push(u.encoded, Char(y));
+        push(u.encoded, Char(z));
+    } else {
+        var x, y, z, w = ...encodeFour(code);
+        push(u.encoded, Char(x));
+        push(u.encoded, Char(y));
+        push(u.encoded, Char(z));
+        push(u.encoded, Char(w));
+    }
 }

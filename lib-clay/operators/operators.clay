@@ -109,6 +109,8 @@ procedure remove;
 procedure reserve;
 procedure resize;
 
+procedure pushFront;
+procedure popFront;
 
 
 //
