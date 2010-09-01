@@ -101,16 +101,62 @@ record Deque[T] {
 }
 
 [T] overload RegularRecord?(static Deque[T]) = false;
-[T] overload ContiguousSequence?(static Deque[T]) = false;
 
 [T] overload Deque[T]() deque: Deque[T] {
     initializeDequeMap(deque, SizeT(0));
 }
 
+[T, A | Sequence?(A) and T == SequenceElementType(A)]
+overload Deque[T](from: A) to: Deque[T] {
+    initializeDequeMap(deque, SizeT(0));
+
+    try {
+        for (x in from) {
+            push(to, x);
+        }
+    } catch (ex) {
+        destroy(to);
+        throw ex;
+    }
+}
+
+[T, A | SizedSequence?(A) and T == SequenceElementType(A)]
+overload Deque[T](from: A) to: Deque[T] {
+    initializeDequeMap(to, size(from));
+
+    try {
+        copyMemory(to.begin, to.end, begin(from));
+    } catch (ex) {
+        destroyDequeMap(to);
+        throw ex;
+    }
+}
+
+[T, A | countValues(...A) > 0 and equalValues?(T, ...A)]
+overload Deque[T](...from: A) to: Deque[T] {
+    initializeDequeMap(to, SizeT(countValues(...A)));
+
+    var i = to.begin;
+    try {
+        static for (x in ...from) {
+            i^ <-- x;
+            inc(i);
+        }
+    } catch (ex) {
+        destroyMemory(to.begin, i);
+        destroyDequeMap(to);
+        throw ex;
+    }
+}
+
+[T] overload assign(to: Deque[T], from: Deque[T]) {
+    // XXX
+}
+
 [T] overload destroy(deque: Deque[T]) {
     if (not null?(deque.map)) {
-        destroyDequeNodes(deque.begin.node, deque.end.node + 1);
-        freeRawMemory(deque.map);
+        destroyMemory(deque.begin, deque.end);
+        destroyDequeMap(deque);
     }
 }
 
@@ -121,14 +167,17 @@ record Deque[T] {
     returned.end <-- deque.end;
 }
 
-[T] overload resetUnsafe(d: Deque[T]) { d <-- Deque[T](); }
-
-// XXX sized and per-element constructors
+[T] overload resetUnsafe(d: Deque[T]) {
+    d.map <-- Pointer[Pointer[T]](0);
+    d.mapSize <-- SizeT(0);
+    d.begin <-- DequeCoordinate[T]();
+    d.end <-- DequeCoordinate[T]();
+}
 
 [T] overload begin(d: Deque[T]) = d.begin;
 [T] overload end(d: Deque[T]) = d.end;
 [T] overload iterator(d: Deque[T]) = coordinateRange(d.begin, d.end);
-[T] overload reverseIterator(d: Deque[T]) = coordinateRange(d.end, d.begin);
+[T] overload reverseIterator(d: Deque[T]) = reverseCoordinateRange(d.end, d.begin);
 
 [T] overload size(d: Deque[T]) = SizeT(d.end - d.begin);
 [T, I | Integer?(I)] overload index(d: Deque[T], i: I) = ref (d.begin + i)^;
@@ -153,13 +202,12 @@ record Deque[T] {
         pushDeque1(deque, value);
 }
 
-[T] overload popFront(deque: Deque[T]) {
+[T] overload popFront(deque: Deque[T]) value: T {
     if (deque.begin.current != deque.begin.last - 1) {
-        var oldCurrent = deque.begin.current;
+        value <-- moveUnsafe(deque.begin.current^);
         deque.begin.current += 1;
-        return moveUnsafe(oldCurrent^);
     } else
-        return popFrontDeque1(deque);
+        value <-- popFrontDeque1(deque);
 }
 
 [T] overload pop(deque: Deque[T]) {
@@ -200,6 +248,11 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
     deque.begin.current = deque.begin.first;
     setNode(deque.end, nodeEnd - 1);
     deque.end.current = deque.end.first + size % DequeBufferSize(T);
+}
+
+[T] private destroyDequeMap(deque: Deque[T]) {
+    destroyDequeNodes(deque.begin.node, deque.end.node + 1);
+    freeRawMemory(deque.map);
 }
 
 [T] private reserveMapFrontNodes(deque: Deque[T], count: SizeT) {
