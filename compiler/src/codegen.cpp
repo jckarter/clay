@@ -293,7 +293,7 @@ void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx)
 {
     if (a->type != boolType)
-        error("expecting bool type");
+        typeError(boolType, a->type);
     llvm::Value *b1 = ctx->builder->CreateLoad(a->llValue);
     llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
     llvm::Value *flag1 = ctx->builder->CreateICmpNE(b1, zero);
@@ -1472,11 +1472,14 @@ void codegenCompileTimeValue(EValuePtr ev,
         break;
     }
 
-    default :
-        std::cout << "type = " << ev->type << '\n';
+    default : {
+        ostringstream sout;
+        sout << "constants of type " << ev->type
+             << " are not yet supported";
         // TODO: support complex constants
-        error("complex constants are not supported yet");
+        
         break;
+    }
 
     }
 }
@@ -1814,8 +1817,9 @@ void codegenDispatch(ObjectPtr obj,
     CValuePtr cvDispatch = args->values[index];
     PValuePtr pvDispatch = pvArgs->values[index];
     if (pvDispatch->type->typeKind != VARIANT_TYPE) {
-        argumentError(index, "dispatch operator can "
-                      "only be used with variants");
+        argumentTypeError(index,
+                          "variant for dispatch operator",
+                          pvDispatch->type);
     }
     VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
     const vector<TypePtr> &memberTypes = variantMemberTypes(t);
@@ -2690,7 +2694,7 @@ bool codegenStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
         if (mpvLeft->size() != mpvRight->size())
-            error("arity mismatch between left-side and right-side");
+            arityMismatchError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i]->isTemp)
                 argumentError(i, "cannot assign to a temporary");
@@ -2730,7 +2734,7 @@ bool codegenStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
         if (mpvLeft->size() != mpvRight->size())
-            error("arity mismatch between left-side and right-side");
+            arityMismatchError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i]->isTemp)
                 argumentError(i, "cannot assign to a temporary");
@@ -2762,8 +2766,11 @@ bool codegenStatement(StatementPtr stmt,
         Goto *x = (Goto *)stmt.ptr();
         map<string, JumpTarget>::iterator li =
             ctx->labels.find(x->labelName->str);
-        if (li == ctx->labels.end())
-            error("goto label not found");
+        if (li == ctx->labels.end()) {
+            ostringstream sout;
+            sout << "goto label not found: " << x->labelName->str;
+            error(sout.str());
+        }
         const JumpTarget &jt = li->second;
         cgDestroyStack(jt.stackMarker, ctx);
         ctx->builder->CreateBr(jt.block);
@@ -3178,7 +3185,7 @@ static TypePtr valueToNumericType(MultiCValuePtr args, unsigned index)
     case FLOAT_TYPE :
         return t;
     default :
-        argumentError(index, "expecting a numeric type");
+        argumentTypeError(index, "numeric type", t);
         return NULL;
     }
 }
@@ -3187,7 +3194,7 @@ static IntegerTypePtr valueToIntegerType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != INTEGER_TYPE)
-        argumentError(index, "expecting an integer type");
+        argumentTypeError(index, "integer type", t);
     return (IntegerType *)t.ptr();
 }
 
@@ -3195,7 +3202,7 @@ static TypePtr valueToPointerLikeType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (!isPointerOrCodePointerType(t))
-        argumentError(index, "expecting a pointer or code-pointer type");
+        argumentTypeError(index, "pointer or code-pointer type", t);
     return t;
 }
 
@@ -3203,7 +3210,7 @@ static TupleTypePtr valueToTupleType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != TUPLE_TYPE)
-        argumentError(index, "expecting a tuple type");
+        argumentTypeError(index, "tuple type", t);
     return (TupleType *)t.ptr();
 }
 
@@ -3211,7 +3218,7 @@ static UnionTypePtr valueToUnionType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != UNION_TYPE)
-        argumentError(index, "expecting an union type");
+        argumentTypeError(index, "union type", t);
     return (UnionType *)t.ptr();
 }
 
@@ -3219,7 +3226,7 @@ static RecordTypePtr valueToRecordType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != RECORD_TYPE)
-        argumentError(index, "expecting a record type");
+        argumentTypeError(index, "record type", t);
     return (RecordType *)t.ptr();
 }
 
@@ -3227,7 +3234,7 @@ static VariantTypePtr valueToVariantType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != VARIANT_TYPE)
-        argumentError(index, "expecting a variant type");
+        argumentTypeError(index, "variant type", t);
     return (VariantType *)t.ptr();
 }
 
@@ -3235,7 +3242,7 @@ static EnumTypePtr valueToEnumType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != ENUM_TYPE)
-        argumentError(index, "expecting an enum type");
+        argumentTypeError(index, "enum type", t);
     return (EnumType *)t.ptr();
 }
 
@@ -3270,7 +3277,7 @@ static llvm::Value *numericValue(MultiCValuePtr args,
         case FLOAT_TYPE :
             break;
         default :
-            argumentError(index, "expecting value of numeric type");
+            argumentTypeError(index, "numeric type", cv->type);
         }
         type = cv->type;
     }
@@ -3289,7 +3296,7 @@ static llvm::Value *integerValue(MultiCValuePtr args,
     }
     else {
         if (cv->type->typeKind != INTEGER_TYPE)
-            argumentError(index, "expecting value of integer type");
+            argumentTypeError(index, "integer type", cv->type);
         type = (IntegerType *)cv->type.ptr();
     }
     return ctx->builder->CreateLoad(cv->llValue);
@@ -3307,7 +3314,7 @@ static llvm::Value *pointerValue(MultiCValuePtr args,
     }
     else {
         if (cv->type->typeKind != POINTER_TYPE)
-            argumentError(index, "expecting value of pointer type");
+            argumentTypeError(index, "pointer type", cv->type);
         type = (PointerType *)cv->type.ptr();
     }
     return ctx->builder->CreateLoad(cv->llValue);
@@ -3325,8 +3332,9 @@ static llvm::Value *pointerLikeValue(MultiCValuePtr args,
     }
     else {
         if (!isPointerOrCodePointerType(cv->type))
-            argumentError(index, "expecting a value of "
-                          "pointer or code-pointer type");
+            argumentTypeError(index,
+                              "pointer or code-pointer type",
+                              cv->type);
         type = cv->type;
     }
     return ctx->builder->CreateLoad(cv->llValue);
@@ -3343,7 +3351,7 @@ static llvm::Value *arrayValue(MultiCValuePtr args,
     }
     else {
         if (cv->type->typeKind != ARRAY_TYPE)
-            argumentError(index, "expecting a value of array type");
+            argumentTypeError(index, "array type", cv->type);
         type = (ArrayType *)cv->type.ptr();
     }
     return cv->llValue;
@@ -3360,7 +3368,7 @@ static llvm::Value *tupleValue(MultiCValuePtr args,
     }
     else {
         if (cv->type->typeKind != TUPLE_TYPE)
-            argumentError(index, "expecting a value of tuple type");
+            argumentTypeError(index, "tuple type", cv->type);
         type = (TupleType *)cv->type.ptr();
     }
     return cv->llValue;
@@ -3377,7 +3385,7 @@ static llvm::Value *recordValue(MultiCValuePtr args,
     }
     else {
         if (cv->type->typeKind != RECORD_TYPE)
-            argumentError(index, "expecting a value of record type");
+            argumentTypeError(index, "record type", cv->type);
         type = (RecordType *)cv->type.ptr();
     }
     return cv->llValue;
@@ -3394,7 +3402,7 @@ static llvm::Value *variantValue(MultiCValuePtr args,
     }
     else {
         if (cv->type->typeKind != VARIANT_TYPE)
-            argumentError(index, "expecting a value of variant type");
+            argumentTypeError(index, "variant type", cv->type);
         type = (VariantType *)cv->type.ptr();
     }
     return cv->llValue;
@@ -3412,7 +3420,7 @@ static llvm::Value *enumValue(MultiCValuePtr args,
     }
     else {
         if (cv->type->typeKind != ENUM_TYPE)
-            argumentError(index, "expecting a value of enum type");
+            argumentTypeError(index, "enum type", cv->type);
         type = (EnumType *)cv->type.ptr();
     }
     return ctx->builder->CreateLoad(cv->llValue);
@@ -3495,7 +3503,7 @@ void codegenPrimOp(PrimOpPtr x,
         CValuePtr cv0 = args->values[0];
         CValuePtr cv1 = args->values[1];
         if (!isPrimitiveType(cv0->type))
-            argumentError(0, "expecting a value of primitive type");
+            argumentTypeError(0, "primitive type", cv0->type);
         if (cv0->type != cv1->type)
             argumentTypeError(1, cv0->type, cv1->type);
         llvm::Value *v = ctx->builder->CreateLoad(cv1->llValue);
@@ -3508,7 +3516,7 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 1);
         CValuePtr cv = args->values[0];
         if (cv->type != boolType)
-            argumentError(0, "expecting a value of bool type");
+            argumentTypeError(0, boolType, cv->type);
         assert(out->size() == 1);
         llvm::Value *v = ctx->builder->CreateLoad(cv->llValue);
         llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
@@ -4153,7 +4161,8 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *vtuple = tupleValue(args, 0, tt);
         size_t i = valueToStaticSizeTOrInt(args, 1);
         if (i >= tt->elementTypes.size())
-            argumentError(1, "tuple element index out of range");
+            argumentIndexRangeError(1, "tuple element index",
+                                    i, tt->elementTypes.size());
         llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vtuple, 0, i);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
@@ -4216,7 +4225,8 @@ void codegenPrimOp(PrimOpPtr x,
         size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<IdentifierPtr> &fieldNames = recordFieldNames(rt);
         if (i >= fieldNames.size())
-            argumentError(1, "record field index out of range");
+            argumentIndexRangeError(1, "record field index",
+                                    i, fieldNames.size());
         codegenStaticObject(fieldNames[i].ptr(), ctx, out);
         break;
     }
@@ -4248,7 +4258,8 @@ void codegenPrimOp(PrimOpPtr x,
         size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if (i >= fieldTypes.size())
-            argumentError(1, "record field index out of range");
+            argumentIndexRangeError(1, "record field index",
+                                    i, fieldTypes.size());
         llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, i);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
@@ -4265,8 +4276,11 @@ void codegenPrimOp(PrimOpPtr x,
         const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
         map<string,size_t>::const_iterator fi =
             fieldIndexMap.find(fname->str);
-        if (fi == fieldIndexMap.end())
-            argumentError(1, "field not found in record");
+        if (fi == fieldIndexMap.end()) {
+            ostringstream sout;
+            sout << "field not found: " << fname->str;
+            argumentError(1, sout.str());
+        }
         size_t index = fi->second;
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, index);
@@ -4462,10 +4476,13 @@ void codegenPrimOp(PrimOpPtr x,
         IdentifierPtr ident = valueToIdentifier(args, 0);
         size_t begin = valueToStaticSizeTOrInt(args, 1);
         size_t end = valueToStaticSizeTOrInt(args, 2);
-        if (begin > ident->str.size())
-            argumentError(1, "starting index out of range");
-        if ((end < begin) || (end > ident->str.size()))
-            argumentError(2, "ending index out of range");
+        if (end > ident->str.size()) {
+            argumentIndexRangeError(2, "ending index",
+                                    end, ident->str.size());
+        }
+        if (begin > end)
+            argumentIndexRangeError(1, "starting index",
+                                    begin, end);
         string result = ident->str.substr(begin, end-begin);
         codegenStaticObject(new Identifier(result), ctx, out);
         break;
