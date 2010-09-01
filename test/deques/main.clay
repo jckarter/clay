@@ -22,6 +22,14 @@ main() {
 
     println("Full size ", size(d1));
 
+    println("begin is ", if (begin(d1) < end(d1)) "" else "not ", "less than end");
+    println("begin is ", if (begin(d1) == end(d1)) "" else "not ", "equal to end");
+    println("begin is ", if (begin(d1) > end(d1)) "" else "not ", "greater than end");
+
+    println("end is ", if (end(d1) < begin(d1)) "" else "not ", "less than begin");
+    println("end is ", if (end(d1) == begin(d1)) "" else "not ", "equal to begin");
+    println("end is ", if (end(d1) > begin(d1)) "" else "not ", "greater than begin");
+
     println("Iterating:");
     
     var n = 0;
@@ -59,6 +67,14 @@ main() {
     }
 
     println("Empty size ", size(d1));
+
+    println("begin is ", if (begin(d1) < end(d1)) "" else "not ", "less than end");
+    println("begin is ", if (begin(d1) == end(d1)) "" else "not ", "equal to end");
+    println("begin is ", if (begin(d1) > end(d1)) "" else "not ", "greater than end");
+
+    println("end is ", if (end(d1) < begin(d1)) "" else "not ", "less than begin");
+    println("end is ", if (end(d1) == begin(d1)) "" else "not ", "equal to begin");
+    println("end is ", if (end(d1) > begin(d1)) "" else "not ", "greater than begin");
 
     println();
     println("d2:");

@@ -90,7 +90,9 @@ record DequeCoordinate[T] {
 [T] overload dereference(i: DequeCoordinate[T]) = ref i.current^;
 [T, I | Integer?(I)] overload index(i: DequeCoordinate[T], n: I) = ref (i + n)^;
 
-// XXX coordinate comparison
+[T] overload lesser?(x: DequeCoordinate[T], y: DequeCoordinate[T])
+    = x.node < y.node
+    or (x.node == y.node and x.current < y.current);
 
 
 record Deque[T] {
