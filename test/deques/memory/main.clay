@@ -1,0 +1,151 @@
+import deques.*;
+
+enum CanaryState { DESTROYED, ALIVE, MOVED, RESET, REDESTROYED }
+
+var canaryTracker = Vector[CanaryState]();
+record Canary { id: SizeT; throwOnCopy?: Bool; }
+
+record CanaryCopyError {}
+instance Exception = CanaryCopyError;
+
+_Canary(r: Canary, throwOnCopy?: Bool) {
+    r.id <-- size(canaryTracker);
+    r.throwOnCopy? <-- throwOnCopy?;
+    push(canaryTracker, ALIVE);
+}
+
+overload Canary() r:Canary {
+    _Canary(r, false);
+    println("-- constructed ", r.id);
+}
+
+overload Canary(throwOnCopy?: Bool) r:Canary {
+    _Canary(r, throwOnCopy?);
+    println("-- constructed ", r.id, if (throwOnCopy?) " (throws on copy)" else "");
+}
+
+overload Canary(x: Canary) r:Canary {
+    if (x.throwOnCopy?) {
+        println("-- throwing    ", x.id);
+        throw CanaryCopyError();
+    }
+
+    _Canary(r, false);
+    println("-- copied      ", r.id, " from ", x.id);
+}
+
+overload destroy(x: Canary) {
+    if (canaryTracker[x.id] == DESTROYED or canaryTracker[x.id] == REDESTROYED) {
+        println("!! redestroyed ", x.id);
+        canaryTracker[x.id] = REDESTROYED;
+    } else if (canaryTracker[x.id] == MOVED) {
+        println("!! destroyed   ", x.id, " without reset");
+        canaryTracker[x.id] = REDESTROYED;
+    }
+    println("-- destroyed   ", x.id);
+    canaryTracker[x.id] = DESTROYED;
+}
+
+overload moveUnsafe(x: Canary) r:Canary {
+    _Canary(r, x.throwOnCopy?);
+    println("-- moved       ", r.id, " from ", x.id);
+    canaryTracker[x.id] = MOVED;
+}
+
+overload resetUnsafe(x: Canary) {
+    println("-- reset       ", x.id);
+    canaryTracker[x.id] = RESET;
+}
+overload assign(x: Canary, y: Canary) { }
+
+checkCanaries() {
+    for (n in range(size(canaryTracker))) {
+        if (canaryTracker[n] == ALIVE)
+            println("!! still alive: ", n);
+        else if (canaryTracker[n] == RESET)
+            println("!! reset      : ", n);
+        else if (canaryTracker[n] == REDESTROYED)
+            println("!! redestroyed: ", n);
+    }
+}
+
+test() {
+    println("making deque d1");
+    var d1 = Deque[Canary](Canary(), Canary(), Canary());
+
+    {
+        println("copying deque d2");
+        var d2 = d1;
+        println("deque d2 leaving scope");
+    }
+
+    println("making deque d3 with exception");
+    try {
+        var d3 = Deque[Canary](Canary(), Canary(true), Canary());
+    } catch(x) {}
+
+    {
+        println("copying deque d4 with exception");
+        d1[1].throwOnCopy? = true;
+
+        try {
+            var d4 = Deque[Canary](d1);
+        } catch(x) {}
+
+        d1[1].throwOnCopy? = false;
+    }
+
+    println("pushing onto deque d1");
+    push(d1, Canary());
+
+    println("pushing onto deque d1 with throw");
+    try {
+        push(d1, Canary(true));
+    } catch(x) {}
+
+    println("popping from deque d1");
+    pop(d1);
+
+    println("popping from deque d1 shouldn't throw");
+    back(d1).throwOnCopy? = true;
+    pop(d1);
+
+    println("pushing onto front of deque d1");
+    pushFront(d1, Canary());
+
+    println("pushing onto front of deque d1 with throw");
+    try {
+        pushFront(d1, Canary(true));
+    } catch(x) {}
+
+    println("popping from front of deque d1");
+    popFront(d1);
+
+    println("popping from front of deque d1 shouldn't throw");
+    front(d1).throwOnCopy? = true;
+    popFront(d1);
+
+    {
+        println("making deque d5");
+        var d5 = Deque[Canary](Canary(), Canary(), Canary(), Canary());
+        println("making deque d6");
+        var d6 = Deque[Canary](Canary(), Canary());
+
+        println("d1 assign longer");
+        d1 = d5;
+        println("d1 assign shorter");
+        d1 = d6;
+
+        println("d5, d6 leaving scope");
+    }
+
+    println("moving d1 to d7");
+    var d7 = move(d1);
+
+    println("d1, d7 leaving scope");
+}
+
+main() {
+    test();
+    checkCanaries();
+}
