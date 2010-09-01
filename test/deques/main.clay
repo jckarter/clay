@@ -1,0 +1,111 @@
+import deques.*;
+
+var canaryCounter = 0u;
+record Canary { id: UInt; }
+_Canary(r: Canary) { r.id <-- canaryCounter; inc(canaryCounter); }
+overload Canary() r:Canary { _Canary(r); println("-- constructed ", r.id); }
+overload Canary(x: Canary) r:Canary { _Canary(r); println("-- copied ", x.id, " to ", r.id); }
+overload destroy(x: Canary) { println("-- deleted ", x.id); }
+overload moveUnsafe(x: Canary) r:Canary { _Canary(r); println("-- moved ", x.id, " to ", r.id); }
+overload assign(x: Canary, y: Canary) { }
+
+main() {
+    println("d1:");
+
+    var d1 = Deque[Int]();
+    alias TEST_RANGE = 500;
+
+    for (i in range(TEST_RANGE)) {
+        pushFront(d1, 2*i);
+        push(d1, 2*i + 1);
+    }
+
+    println("Full size ", size(d1));
+
+    println("Iterating:");
+    
+    var n = 0;
+    for (x in d1) {
+        print(x, " ");
+        n += 1;
+        if (n == 20) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    println("d1[0] = ", d1[0]);
+    println("d1[999] = ", d1[999]);
+    println("d1[500] = ", d1[500]);
+
+    d1[500] = 1111;
+
+    println("now d1[500] = ", d1[500]);
+
+    println("Popping:");
+
+    n = 0;
+    for (i in range(TEST_RANGE)) {
+        var x = popFront(d1);
+        var y = pop(d1);
+
+        print(y, " ", x, " ");
+        n += 2;
+        if (n == 20) {
+            println();
+            n = 0;
+        }
+    }
+
+    println("Empty size ", size(d1));
+
+    println();
+    println("d2:");
+
+    var d2 = Deque[Int](2, 3, 5, 7, 11, 13);
+    println("Size ", size(d2));
+    print("Contents: ");
+    for (x in d2) print(x, " ");
+    println();
+
+    var d2copy = d2;
+    println("Copy size ", size(d2copy));
+    print("Contents: ");
+    for (x in d2copy) print(x, " ");
+    println();
+
+    println();
+    println("d3:");
+
+    var v3 = Vector[Int](17, 19, 23, 29, 31, 37, 41);
+    var d3 = Deque[Int](v3);
+    println("Size ", size(d3));
+    print("Contents: ");
+    for (x in d3) print(x, " ");
+    println();
+
+    d3 = d2;
+    println("Assigned from d2 size ", size(d3));
+    print("Contents: ");
+    for (x in d3) print(x, " ");
+    println();
+
+    println();
+    println("d4:");
+
+    var d4 = move(d3);
+    println("Moved from d3 size ", size(d4));
+    print("Contents: ");
+    for (x in d4) print(x, " ");
+    println();
+
+    println();
+    println("d5:");
+    var v5 = Vector[Int](17, 19, 23, 29, 31, 37, 41);
+    var d5 = Deque[Int](filter(x => x > 20, v5));
+    println("Size ", size(d5));
+    print("Contents: ");
+    for (x in d5) print(x, " ");
+    println();
+}
