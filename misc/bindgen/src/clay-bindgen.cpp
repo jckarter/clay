@@ -12,7 +12,7 @@ using namespace std;
 
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/IdentifierTable.h"
-#include "clang/Sema/ParseAST.h"
+#include "clang/Parse/ParseAST.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
