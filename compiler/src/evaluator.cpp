@@ -303,11 +303,12 @@ TypePtr evaluateType(ExprPtr expr, EnvPtr env)
 bool evaluateBool(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = evaluateOneStatic(expr, env);
+    LocationContext loc(expr->location);
     if (v->objKind != VALUE_HOLDER)
         error(expr, "expecting a bool value");
     ValueHolderPtr vh = (ValueHolder *)v.ptr();
     if (vh->type != boolType)
-        error(expr, "expecting a bool value");
+        typeError(boolType, vh->type);
     return (*(char *)vh->buf) != 0;
 }
 
@@ -519,7 +520,7 @@ void evalValueAssign(EValuePtr dest, EValuePtr src)
 bool evalToBoolFlag(EValuePtr a)
 {
     if (a->type != boolType)
-        error("expecting bool type");
+        typeError(boolType, a->type);
     return *((char *)a->addr) != 0;
 }
 
@@ -1546,8 +1547,9 @@ void evalDispatch(ObjectPtr obj,
     EValuePtr evDispatch = args->values[index];
     PValuePtr pvDispatch = pvArgs->values[index];
     if (pvDispatch->type->typeKind != VARIANT_TYPE) {
-        argumentError(index, "dispatch operator can "
-                      "only be used with variants");
+        argumentTypeError(index,
+                          "variant for dispatch operator",
+                          pvDispatch->type);
     }
     VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
     const vector<TypePtr> &memberTypes = variantMemberTypes(t);
@@ -1929,7 +1931,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
         if (mpvLeft->size() != mpvRight->size())
-            error("arity mismatch between left-side and right-side");
+            arityMismatchError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i]->isTemp)
                 argumentError(i, "cannot assign to a temporary");
@@ -1967,7 +1969,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
         if (mpvLeft->size() != mpvRight->size())
-            error("arity mismatch between left-side and right-side");
+            arityMismatchError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i]->isTemp)
                 argumentError(i, "cannot assign to a temporary");
@@ -2306,7 +2308,7 @@ static TypePtr valueToNumericType(MultiEValuePtr args, unsigned index)
     case FLOAT_TYPE :
         return t;
     default :
-        argumentError(index, "expecting a numeric type");
+        argumentTypeError(index, "numeric type", t);
         return NULL;
     }
 }
@@ -2315,7 +2317,7 @@ static IntegerTypePtr valueToIntegerType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != INTEGER_TYPE)
-        argumentError(index, "expecting an integer type");
+        argumentTypeError(index, "integer type", t);
     return (IntegerType *)t.ptr();
 }
 
@@ -2323,7 +2325,7 @@ static TypePtr valueToPointerLikeType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (!isPointerOrCodePointerType(t))
-        argumentError(index, "expecting a pointer or code-pointer type");
+        argumentTypeError(index, "pointer or code-pointer type", t);
     return t;
 }
 
@@ -2331,7 +2333,7 @@ static TupleTypePtr valueToTupleType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != TUPLE_TYPE)
-        argumentError(index, "expecting a tuple type");
+        argumentTypeError(index, "tuple type", t);
     return (TupleType *)t.ptr();
 }
 
@@ -2339,7 +2341,7 @@ static UnionTypePtr valueToUnionType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != UNION_TYPE)
-        argumentError(index, "expecting an union type");
+        argumentTypeError(index, "union type", t);
     return (UnionType *)t.ptr();
 }
 
@@ -2347,7 +2349,7 @@ static RecordTypePtr valueToRecordType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != RECORD_TYPE)
-        argumentError(index, "expecting a record type");
+        argumentTypeError(index, "record type", t);
     return (RecordType *)t.ptr();
 }
 
@@ -2355,7 +2357,7 @@ static VariantTypePtr valueToVariantType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != VARIANT_TYPE)
-        argumentError(index, "expecting a variant type");
+        argumentTypeError(index, "variant type", t);
     return (VariantType *)t.ptr();
 }
 
@@ -2363,7 +2365,7 @@ static EnumTypePtr valueToEnumType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
     if (t->typeKind != ENUM_TYPE)
-        argumentError(index, "expecting an enum type");
+        argumentTypeError(index, "enum type", t);
     return (EnumType *)t.ptr();
 }
 
@@ -2396,7 +2398,7 @@ static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
         case FLOAT_TYPE :
             break;
         default :
-            argumentError(index, "expecting value of numeric type");
+            argumentTypeError(index, "numeric type", ev->type);
         }
         type = ev->type;
     }
@@ -2413,7 +2415,7 @@ static EValuePtr integerValue(MultiEValuePtr args, unsigned index,
     }
     else {
         if (ev->type->typeKind != INTEGER_TYPE)
-            argumentError(index, "expecting value of integer type");
+            argumentTypeError(index, "integer type", ev->type);
         type = (IntegerType *)ev->type.ptr();
     }
     return ev;
@@ -2429,7 +2431,7 @@ static EValuePtr pointerValue(MultiEValuePtr args, unsigned index,
     }
     else {
         if (ev->type->typeKind != POINTER_TYPE)
-            argumentError(index, "expecting value of pointer type");
+            argumentTypeError(index, "pointer type", ev->type);
         type = (PointerType *)ev->type.ptr();
     }
     return ev;
@@ -2445,8 +2447,9 @@ static EValuePtr pointerLikeValue(MultiEValuePtr args, unsigned index,
     }
     else {
         if (!isPointerOrCodePointerType(ev->type))
-            argumentError(index, "expecting a value of "
-                          "pointer or code-pointer type");
+            argumentTypeError(index,
+                              "pointer or code-pointer type",
+                              ev->type);
         type = ev->type;
     }
     return ev;
@@ -2462,7 +2465,7 @@ static EValuePtr arrayValue(MultiEValuePtr args, unsigned index,
     }
     else {
         if (ev->type->typeKind != ARRAY_TYPE)
-            argumentError(index, "expecting a value of array type");
+            argumentTypeError(index, "array type", ev->type);
         type = (ArrayType *)ev->type.ptr();
     }
     return ev;
@@ -2478,7 +2481,7 @@ static EValuePtr tupleValue(MultiEValuePtr args, unsigned index,
     }
     else {
         if (ev->type->typeKind != TUPLE_TYPE)
-            argumentError(index, "expecting a value of tuple type");
+            argumentTypeError(index, "tuple type", ev->type);
         type = (TupleType *)ev->type.ptr();
     }
     return ev;
@@ -2494,7 +2497,7 @@ static EValuePtr recordValue(MultiEValuePtr args, unsigned index,
     }
     else {
         if (ev->type->typeKind != RECORD_TYPE)
-            argumentError(index, "expecting a value of record type");
+            argumentTypeError(index, "record type", ev->type);
         type = (RecordType *)ev->type.ptr();
     }
     return ev;
@@ -2510,7 +2513,7 @@ static EValuePtr variantValue(MultiEValuePtr args, unsigned index,
     }
     else {
         if (ev->type->typeKind != VARIANT_TYPE)
-            argumentError(index, "expecting a value of variant type");
+            argumentTypeError(index, "variant type", ev->type);
         type = (VariantType *)ev->type.ptr();
     }
     return ev;
@@ -2526,7 +2529,7 @@ static EValuePtr enumValue(MultiEValuePtr args, unsigned index,
     }
     else {
         if (ev->type->typeKind != ENUM_TYPE)
-            argumentError(index, "expecting a value of enum type");
+            argumentTypeError(index, "enum type", ev->type);
         type = (EnumType *)ev->type.ptr();
     }
     return ev;
@@ -3060,7 +3063,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev0 = args->values[0];
         EValuePtr ev1 = args->values[1];
         if (!isPrimitiveType(ev0->type))
-            argumentError(0, "expecting a value of primitive type");
+            argumentTypeError(0, "primitive type", ev0->type);
         if (ev0->type != ev1->type)
             argumentTypeError(1, ev0->type, ev1->type);
         memcpy(ev0->addr, ev1->addr, typeSize(ev0->type));
@@ -3072,7 +3075,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 1);
         EValuePtr ev = args->values[0];
         if (ev->type != boolType)
-            argumentError(0, "expecting a value of bool type");
+            argumentTypeError(0, boolType, ev->type);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
@@ -3543,7 +3546,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr etuple = tupleValue(args, 0, tt);
         size_t i = valueToStaticSizeTOrInt(args, 1);
         if (i >= tt->elementTypes.size())
-            argumentError(1, "tuple element index out of range");
+            argumentIndexRangeError(1, "tuple element index",
+                                    i, tt->elementTypes.size());
         const llvm::StructLayout *layout = tupleTypeLayout(tt.ptr());
         char *ptr = etuple->addr + layout->getElementOffset(i);
         assert(out->size() == 1);
@@ -3610,7 +3614,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<IdentifierPtr> &fieldNames = recordFieldNames(rt);
         if (i >= fieldNames.size())
-            argumentError(1, "record field index out of range");
+            argumentIndexRangeError(1, "record field index",
+                                    i, fieldNames.size());
         evalStaticObject(fieldNames[i].ptr(), out);
         break;
     }
@@ -3642,7 +3647,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         size_t i = valueToStaticSizeTOrInt(args, 1);
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         if (i >= fieldTypes.size())
-            argumentError(1, "record field index out of range");
+            argumentIndexRangeError(1, "record field index",
+                                    i, fieldTypes.size());
         const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
         char *ptr = erec->addr + layout->getElementOffset(i);
         assert(out->size() == 1);
@@ -3660,8 +3666,11 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
         map<string,size_t>::const_iterator fi =
             fieldIndexMap.find(fname->str);
-        if (fi == fieldIndexMap.end())
-            argumentError(1, "field not found in record");
+        if (fi == fieldIndexMap.end()) {
+            ostringstream sout;
+            sout << "field not found: " << fname->str;
+            argumentError(1, sout.str());
+        }
         size_t index = fi->second;
         const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
@@ -3867,10 +3876,13 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         IdentifierPtr ident = valueToIdentifier(args, 0);
         size_t begin = valueToStaticSizeTOrInt(args, 1);
         size_t end = valueToStaticSizeTOrInt(args, 2);
-        if (begin > ident->str.size())
-            argumentError(1, "starting index out of range");
-        if ((end < begin) || (end > ident->str.size()))
-            argumentError(2, "ending index out of range");
+        if (end > ident->str.size()) {
+            argumentIndexRangeError(2, "ending index",
+                                    end, ident->str.size());
+        }
+        if (begin > end)
+            argumentIndexRangeError(1, "starting index",
+                                    begin, end);
         string result = ident->str.substr(begin, end-begin);
         evalStaticObject(new Identifier(result), out);
         break;

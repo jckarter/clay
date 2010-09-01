@@ -581,10 +581,26 @@ void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
         arityError2(size, args.size());
 }
 
+void arityMismatchError(int leftArity, int rightArity);
+
+void typeError(const string &expected, TypePtr receivedType);
 void typeError(TypePtr expectedType, TypePtr receivedType);
+
+void argumentTypeError(unsigned int index,
+                       const string &expected,
+                       TypePtr receivedType);
 void argumentTypeError(unsigned int index,
                        TypePtr expectedType,
                        TypePtr receivedType);
+
+void indexRangeError(const string &kind,
+                     size_t value,
+                     size_t maxValue);
+
+void argumentIndexRangeError(unsigned int index,
+                             const string &kind,
+                             size_t value,
+                             size_t maxValue);
 
 struct DebugPrinter {
     static int indent;
