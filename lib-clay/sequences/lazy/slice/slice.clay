@@ -29,11 +29,11 @@ sliceFrom(forward a:A, begin:I) = slice(a, begin);
 sliceUpto(forward a:A, end:I) = slice(a, I(0), end);
 
 
-private record Slice[A] {
-    seq : A;
-    begin : SizeT;
-    end : SizeT;
-}
+private record Slice[A] (
+    seq : A,
+    begin : SizeT,
+    end : SizeT,
+);
 
 
 

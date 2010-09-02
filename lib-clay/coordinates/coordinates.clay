@@ -5,9 +5,8 @@
 // ValueCoordinate
 //
 
-record ValueCoordinate[T] {
-    value : T;
-}
+record ValueCoordinate[T] (value : T);
+
 
 [T]
 overload dereference(c:ValueCoordinate[T]) = c.value;
@@ -40,9 +39,7 @@ overload dec(c:ValueCoordinate[T]) {
 // ValueReverseCoordinate
 //
 
-record ValueReverseCoordinate[T] {
-    value : T;
-}
+record ValueReverseCoordinate[T] (value : T);
 
 [T]
 overload dereference(c:ValueReverseCoordinate[T]) = (c.value - 1);
@@ -75,9 +72,7 @@ overload dec(c:ValueReverseCoordinate[T]) {
 // ReverseCoordinate
 //
 
-record ReverseCoordinate[T] {
-    coord : T;
-}
+record ReverseCoordinate[T] (coord : T);
 
 [T]
 overload dereference(c:ReverseCoordinate[T]) = forward ...(c.coord - 1)^;
@@ -110,9 +105,7 @@ overload dec(c:ReverseCoordinate[T]) {
 // ByValueCoordinate
 //
 
-record ByValueCoordinate[T] {
-    coord : T;
-}
+record ByValueCoordinate[T] (coord : T);
 
 [T]
 overload dereference(c:ByValueCoordinate[T]) = ...c.coord^;

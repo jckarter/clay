@@ -15,9 +15,16 @@ TopLevelItem -> Record | Variant | Instance
               | ExternalProcedure | ExternalVariable
               | GlobalAlias
 
-Record -> "record" Identifier PatternVars? "{" RecordField* "}"
+Record -> "record" Identifier PatternVars? RecordBody
+
+RecordBody -> NormalRecordBody
+            | ComputedRecordBody
+
+NormalRecordBody -> "(" comma_list(RecordField) ")" ";"
+ComputedRecordBody -> "=" comma_list(Expression) ";"
+
 PatternVars -> "[" comma_list(Identifier) "]"
-RecordField -> Identifier TypeSpec ";"
+RecordField -> Identifier TypeSpec
 TypeSpec -> ":" Pattern
 
 Variant -> "variant" Identifier PatternVars? ("=" DefaultInstances)? ";"

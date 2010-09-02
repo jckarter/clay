@@ -6,11 +6,11 @@ import vectors.generic.*;
 // Vector[T]
 //
 
-record Vector[T] {
-    size:SizeT;
-    capacity:SizeT;
-    data:Pointer[T];
-}
+record Vector[T] (
+    size:SizeT,
+    capacity:SizeT,
+    data:Pointer[T],
+);
 
 
 

@@ -7,11 +7,11 @@ import vectors.generic.*;
 // Vector[T]
 //
 
-record Vector[T] {
-    size:SizeT;
-    capacity:SizeT;
-    data:PagedPointer[T];
-}
+record Vector[T] (
+    size:SizeT,
+    capacity:SizeT,
+    data:PagedPointer[T],
+);
 
 
 

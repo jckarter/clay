@@ -7,9 +7,9 @@ procedure pointerValues;
 overload pointerValues(a, ...b) = &a, ...pointerValues(...b);
 overload pointerValues() = ;
 
-record PtrTuple[...T] {
-    ptrs : Tuple[...PointerTypes(...T)];
-}
+record PtrTuple[...T] (
+    ptrs : Tuple[...PointerTypes(...T)]
+);
 
 [...T]
 overload PtrTuple(...args:T) =

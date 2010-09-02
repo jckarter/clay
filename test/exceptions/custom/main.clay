@@ -6,9 +6,9 @@ instance Exception = Int;
 // define custom exception type Error1
 //
 
-record Error1 {
-    msg : StringConstant;
-}
+record Error1 (
+    msg : StringConstant
+);
 
 // include Error1 as a member of the Exception variant
 instance Exception = Error1;
@@ -18,9 +18,9 @@ instance Exception = Error1;
 // define custom exception type Error2
 //
 
-record Error2 {
-    msg : StringConstant;
-}
+record Error2 (
+    msg : StringConstant
+);
 
 // include Error2 as a member of the Exception variant
 instance Exception = Error2;

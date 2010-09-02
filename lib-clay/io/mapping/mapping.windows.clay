@@ -5,18 +5,18 @@ import win32;
 // FileMapping
 //
 
-private record InnerFileMapping {
-    fileHandle : win32.HANDLE;
-    mappingObject : win32.HANDLE;
-    address : Pointer[Byte];
-    length : SizeT;
-}
+private record InnerFileMapping (
+    fileHandle : win32.HANDLE,
+    mappingObject : win32.HANDLE,
+    address : Pointer[Byte],
+    length : SizeT,
+);
 
 overload RegularRecord?(static InnerFileMapping) = false;
 
-record FileMapping {
-    inner : SharedPointer[InnerFileMapping];
-}
+record FileMapping (
+    inner : SharedPointer[InnerFileMapping],
+);
 
 
 

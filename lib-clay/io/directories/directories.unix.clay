@@ -19,9 +19,9 @@ private direntPointerToString(x) = CStringRef(Pointer[Int8](&x^.d_name));
 // DirentSequence
 //
 
-private record DirentSequence[S] {
-    path : S;
-}
+private record DirentSequence[S] (
+    path : S
+);
 
 [T | String?(T)]
 direntSequence(x:T) = DirentSequence[T](x);
@@ -35,11 +35,11 @@ overload iterator(x:DirentSequence[T]) = DirentIterator(x.path);
 // DirentIterator
 //
 
-private record DirentIterator {
-    dirp : Pointer[DIR];
-    queued? : Bool;
-    entry : Pointer[Struct_dirent];
-}
+private record DirentIterator (
+    dirp : Pointer[DIR],
+    queued? : Bool,
+    entry : Pointer[Struct_dirent],
+);
 
 [T | String?(T)]
 overload DirentIterator(x:T) {

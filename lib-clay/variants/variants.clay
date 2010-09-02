@@ -5,10 +5,10 @@
 // VariantRepr
 //
 
-record VariantRepr[...T] {
-    tag : Int;
-    data : Union[...T];
-}
+record VariantRepr[...T] (
+    tag : Int,
+    data : Union[...T],
+);
 
 
 

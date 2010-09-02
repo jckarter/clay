@@ -15,9 +15,9 @@ nextId() {
     return id;
 }
 
-record Test {
-    id : Int;
-}
+record Test (
+    id : Int
+);
 
 overload Test() {
     var id = nextId();

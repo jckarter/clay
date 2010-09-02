@@ -1,7 +1,7 @@
 import deques.*;
 
 var canaryCounter = 0u;
-record Canary { id: UInt; }
+record Canary ( id: UInt );
 _Canary(r: Canary) { r.id <-- canaryCounter; inc(canaryCounter); }
 overload Canary() r:Canary { _Canary(r); println("-- constructed ", r.id); }
 overload Canary(x: Canary) r:Canary { _Canary(r); println("-- copied ", x.id, " to ", r.id); }

@@ -7,10 +7,10 @@
 // 'last' is assumed to be dereferenceable and should point to a null-char
 //
 
-record StringConstant {
-    first : Pointer[Char];
-    last : Pointer[Char];
-}
+record StringConstant (
+    first : Pointer[Char],
+    last : Pointer[Char],
+);
 
 
 

@@ -7,10 +7,10 @@ main() {
 
 partialApply(f, ...args) = CallableAndArgs(f, Tuple(...args));
 
-record CallableAndArgs[F, ...A] {
-    f:F;
-    args : Tuple[...A];
-}
+record CallableAndArgs[F, ...A] (
+    f:F,
+    args : Tuple[...A],
+);
 
 [F, ...A]
 overload call(x:CallableAndArgs[F, ...A], ...remainingArgs) =

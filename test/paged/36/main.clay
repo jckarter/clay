@@ -1,10 +1,10 @@
 import paged.*;
 
-record Address {
-    name : String;
-    email : String;
-    age : Int;
-}
+record Address (
+    name : String,
+    email : String,
+    age : Int,
+);
 
 overload printTo(stream, x:Address) {
     print("Address(",

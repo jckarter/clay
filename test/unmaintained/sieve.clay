@@ -10,10 +10,10 @@ external chan_send(chan:Pointer[Int8], ptr:Pointer[Int8]) Void;
 external chan_recv(chan:Pointer[Int8], ptr:Pointer[Int8]) Void;
 external chan_destroy(chan:Pointer[Int8]) Void;
 
-record Channels {
-    chanin: Pointer[Int8];
-    chanout: Pointer[Int8];
-}
+record Channels (
+    chanin: Pointer[Int8],
+    chanout: Pointer[Int8],
+);
 
 [T]
 send(c:Pointer[Int8], val:T) {
