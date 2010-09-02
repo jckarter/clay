@@ -1,25 +1,25 @@
-record TestStatus {
-    passed: UInt;
-    failed: UInt;
-    pending: UInt;
-}
+record TestStatus (
+    passed: UInt,
+    failed: UInt,
+    pending: UInt,
+);
 
 overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
 
-record TestCase[F] {
-    name: StringConstant;
-    _case: F;
-    pending?: Bool;
-}
+record TestCase[F] (
+    name: StringConstant,
+    _case: F,
+    pending?: Bool,
+);
 
 [F] overload TestCase(name, fn:F) = TestCase[F](name, fn, false);
 
 [F] PendingTestCase(name, fn:F) = TestCase[F](name, fn, true);
 
-record TestSuite[TestCases] {
-    name: StringConstant;
-    testCases: TestCases;
-}
+record TestSuite[TestCases] (
+    name: StringConstant,
+    testCases: TestCases,
+);
 
 alias TEST_CASE_INDENT = "  ";
 alias TEST_FAILURE_INDENT = TEST_CASE_INDENT + TEST_CASE_INDENT;

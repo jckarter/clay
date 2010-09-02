@@ -1778,7 +1778,6 @@ static bool recordField(RecordFieldPtr &x) {
     if (!identifier(y)) return false;
     ExprPtr z;
     if (!exprTypeSpec(z)) return false;
-    if (!symbol(";")) return false;
     x = new RecordField(y, z);
     x->location = location;
     return true;
@@ -1791,6 +1790,11 @@ static bool recordFields(vector<RecordFieldPtr> &x) {
     x.push_back(y);
     while (true) {
         int p = save();
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        p = save();
         if (!recordField(y)) {
             restore(p);
             break;
@@ -1811,10 +1815,11 @@ static bool optRecordFields(vector<RecordFieldPtr> &x) {
 
 static bool recordBodyFields(RecordBodyPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("{")) return false;
+    if (!symbol("(")) return false;
     vector<RecordFieldPtr> y;
     if (!optRecordFields(y)) return false;
-    if (!symbol("}")) return false;
+    if (!symbol(")")) return false;
+    if (!symbol(";")) return false;
     x = new RecordBody(y);
     x->location = location;
     return true;

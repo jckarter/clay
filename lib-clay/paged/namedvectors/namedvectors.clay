@@ -12,18 +12,18 @@ import io.mapping.*;
 // NamedVector[T]
 //
 
-record NamedVector[T] {
-    fileName : strings.String;
-    file : File;
-    mapping : FileMapping;
-    header : Pointer[Header];
-    data : Pointer[T];
-}
+record NamedVector[T] (
+    fileName : strings.String,
+    file : File,
+    mapping : FileMapping,
+    header : Pointer[Header],
+    data : Pointer[T],
+);
 
-record Header {
-    size : SizeT;
-    capacity : SizeT;
-}
+record Header (
+    size : SizeT,
+    capacity : SizeT,
+);
 
 
 

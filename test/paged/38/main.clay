@@ -1,9 +1,9 @@
 import paged.*;
 
-record Node {
-    value : Int;
-    next : SharedPointer[Node];
-}
+record Node (
+    value : Int,
+    next : SharedPointer[Node],
+);
 
 printList(node_) {
     var node = node_;

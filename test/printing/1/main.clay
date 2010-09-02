@@ -1,13 +1,13 @@
 
-record Person {
-    name : StringConstant;
-    age : Int;
-    address : Address;
-}
+record Person (
+    name : StringConstant,
+    age : Int,
+    address : Address,
+);
 
-record Address {
-    email : StringConstant;
-}
+record Address (
+    email : StringConstant,
+);
 
 main() {
     var p = Person("Foo", 100, Address("foo@bar.com"));

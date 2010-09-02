@@ -1,13 +1,13 @@
 import libc;
 import simd;
 
-record Body {
-    xy   : Vec[Float64, 2];
-    z0   : Vec[Float64, 2];
-    vxvy : Vec[Float64, 2];
-    vz00 : Vec[Float64, 2];
-    mass : Vec[Float64, 2];  
-}
+record Body (
+    xy   : Vec[Float64, 2],
+    z0   : Vec[Float64, 2],
+    vxvy : Vec[Float64, 2],
+    vz00 : Vec[Float64, 2],
+    mass : Vec[Float64, 2],
+);
 
 var pi    = 3.141592653589793;
 var smass = 4 * pi * pi;

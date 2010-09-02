@@ -1,7 +1,7 @@
 
-record Foo {
-    value:Int;
-}
+record Foo (
+    value:Int
+);
 
 overload Foo() = Foo(0);
 

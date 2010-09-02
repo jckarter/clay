@@ -767,7 +767,7 @@ external (GLAPI) glWindowPos3iv(_p: Pointer[GLint]);
 external (GLAPI) glWindowPos3s(_x: GLshort, _y: GLshort, _z: GLshort);
 external (GLAPI) glWindowPos3sv(_p: Pointer[GLshort]);
 
-record GLFunctions { }
+record GLFunctions ();
 
 overload fieldRef(gl:GLFunctions, ident) =
     forward fieldRef(self, IdentifierConcat(#gl, ident));

@@ -5,9 +5,9 @@
 // Lambda - dynamically dispatched lambdas
 //
 
-record Lambda[In,Out] {
-    body : SharedPointer[LambdaBody[In,Out]];
-}
+record Lambda[In,Out] (
+    body : SharedPointer[LambdaBody[In,Out]]
+);
 
 
 // main constructor
@@ -52,11 +52,11 @@ overload call(x:Lambda[(...I), (...O)], forward ...args:I) ...O {
 // LambdaBody
 //
 
-private record LambdaBody[In, Out] {
-    obj : Pointer[Opaque];
-    code : CodePointer[(Opaque, ...unpack(In)), Out];
-    destructor : CodePointer[Opaque,()];
-}
+private record LambdaBody[In, Out] (
+    obj : Pointer[Opaque],
+    code : CodePointer[(Opaque, ...unpack(In)), Out],
+    destructor : CodePointer[Opaque,()],
+);
 
 [...I, ...O, T]
 callbyname overload LambdaBody[(...I),(...O)](x:T) returned:LambdaBody[(...I),(...O)] {

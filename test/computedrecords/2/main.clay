@@ -42,10 +42,10 @@ vectorizeField(static R, static i) {
 // testing code
 //
 
-record Point {
-    x : Int;
-    y : Int;
-}
+record Point (
+    x : Int,
+    y : Int,
+);
 
 main() {
     var a = Vectorized[Point]();

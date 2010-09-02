@@ -21,14 +21,14 @@ var typeId[T] = nextTypeId();
 // Any
 //
 
-record Any {
-    id : Int;
-    ptr : Pointer[Byte];
-    size : SizeT;
-    alignment : SizeT;
-    copyConstructor : CodePointer[Opaque, Opaque];
-    destructor : CodePointer[Opaque, ()];
-}
+record Any (
+    id : Int,
+    ptr : Pointer[Byte],
+    size : SizeT,
+    alignment : SizeT,
+    copyConstructor : CodePointer[Opaque, Opaque],
+    destructor : CodePointer[Opaque, ()],
+);
 
 // disable default value semantics
 overload RegularRecord?(static Any) = false;

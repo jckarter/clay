@@ -18,9 +18,9 @@ main() {
 // NamedUnion
 //
 
-record NamedUnion[...fields] {
-    data : Union[...mapValues(x => x.1, ...fields)];
-}
+record NamedUnion[...fields] (
+    data : Union[...mapValues(x => x.1, ...fields)]
+);
 
 [...fields]
 overload fieldRef(x:NamedUnion[...fields], name) {

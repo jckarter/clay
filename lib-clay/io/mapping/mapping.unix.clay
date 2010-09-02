@@ -5,16 +5,16 @@ import unix;
 // FileMapping
 //
 
-private record InnerFileMapping {
-    address : Pointer[Byte];
-    length : SizeT;
-}
+private record InnerFileMapping (
+    address : Pointer[Byte],
+    length : SizeT,
+);
 
 overload RegularRecord?(static InnerFileMapping) = false;
 
-record FileMapping {
-    inner : SharedPointer[InnerFileMapping];
-}
+record FileMapping (
+    inner : SharedPointer[InnerFileMapping],
+);
 
 
 

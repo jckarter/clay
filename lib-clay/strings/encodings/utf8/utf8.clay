@@ -1,6 +1,6 @@
-record UTF8Decoder[Iterator] {
-    iter: Iterator;
-}
+record UTF8Decoder[Iterator] (
+    iter: Iterator
+);
 
 alias REPLACEMENT_CHAR = UniChar(0xFFFDu);
 alias MAX_CODE_POINT = UniChar(0x10FFFFu);
@@ -86,9 +86,9 @@ eof:
     return REPLACEMENT_CHAR;
 }
 
-record UTF8[Sequence] {
-    encoded: Sequence;
-}
+record UTF8[Sequence] (
+    encoded: Sequence
+);
 
 [T] overload iterator(u: UTF8[T]) = UTF8Decoder(iterator(u.encoded));
 

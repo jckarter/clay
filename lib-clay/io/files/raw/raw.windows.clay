@@ -5,10 +5,10 @@ import win32;
 // RawFile
 //
 
-record RawFile {
-    handle : win32.HANDLE;
-    owned : Bool;
-}
+record RawFile (
+    handle : win32.HANDLE,
+    owned : Bool,
+);
 
 overload RegularRecord?(static RawFile) = false;
 
