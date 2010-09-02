@@ -53,9 +53,9 @@ alias __off64_t = Int64;
 
 alias __pid_t = Int;
 
-record UnnamedStruct {
-    __val : Array[Int,2];
-}
+record UnnamedStruct (
+    __val : Array[Int,2],
+);
 
 alias __fsid_t = UnnamedStruct;
 
@@ -798,14 +798,14 @@ external fdatasync(
 
 external __errno_location() Pointer[Int];
 
-record Struct_timespec {
-    tv_sec : CLong;
-    tv_nsec : CLong;
-}
+record Struct_timespec (
+    tv_sec : CLong,
+    tv_nsec : CLong,
+);
 
-record Struct_sched_param {
-    __sched_priority : Int;
-}
+record Struct_sched_param (
+    __sched_priority : Int,
+);
 
 external clone(
     __fn : CCodePointer[(RawPointer),(Int)],
@@ -819,15 +819,15 @@ external unshare(
 
 external sched_getcpu() Int;
 
-record Struct___sched_param {
-    __sched_priority : Int;
-}
+record Struct___sched_param (
+    __sched_priority : Int,
+);
 
 alias __cpu_mask = CULong;
 
-record UnnamedStruct2 {
-    __bits : Array[CULong,32];
-}
+record UnnamedStruct2 (
+    __bits : Array[CULong,32],
+);
 
 alias cpu_set_t = UnnamedStruct2;
 
@@ -877,24 +877,24 @@ alias clockid_t = Int;
 
 alias timer_t = __timer_t;
 
-record Struct_tm {
-    tm_sec : Int;
-    tm_min : Int;
-    tm_hour : Int;
-    tm_mday : Int;
-    tm_mon : Int;
-    tm_year : Int;
-    tm_wday : Int;
-    tm_yday : Int;
-    tm_isdst : Int;
-    tm_gmtoff : CLong;
-    tm_zone : Pointer[CChar];
-}
+record Struct_tm (
+    tm_sec : Int,
+    tm_min : Int,
+    tm_hour : Int,
+    tm_mday : Int,
+    tm_mon : Int,
+    tm_year : Int,
+    tm_wday : Int,
+    tm_yday : Int,
+    tm_isdst : Int,
+    tm_gmtoff : CLong,
+    tm_zone : Pointer[CChar],
+);
 
-record Struct_itimerspec {
-    it_interval : Struct_timespec;
-    it_value : Struct_timespec;
-}
+record Struct_itimerspec (
+    it_interval : Struct_timespec,
+    it_value : Struct_timespec,
+);
 
 external clock() CLong;
 
@@ -914,13 +914,13 @@ external strftime(
     __format : Pointer[CChar],
     __tp : Pointer[Struct_tm]) UInt;
 
-record Struct___locale_struct {
-    __locales : Array[OpaquePointer,13];
-    __ctype_b : Pointer[UShort];
-    __ctype_tolower : Pointer[Int];
-    __ctype_toupper : Pointer[Int];
-    __names : Array[Pointer[CChar],13];
-}
+record Struct___locale_struct (
+    __locales : Array[OpaquePointer,13],
+    __ctype_b : Pointer[UShort],
+    __ctype_tolower : Pointer[Int],
+    __ctype_toupper : Pointer[Int],
+    __names : Array[Pointer[CChar],13],
+);
 
 alias __locale_t = Pointer[Struct___locale_struct];
 
@@ -1036,9 +1036,9 @@ external timer_getoverrun(
 
 alias __sig_atomic_t = Int;
 
-record UnnamedStruct3 {
-    __val : Array[CULong,32];
-}
+record UnnamedStruct3 (
+    __val : Array[CULong,32],
+);
 
 alias __sigset_t = UnnamedStruct3;
 
@@ -1048,9 +1048,9 @@ alias pthread_t = CULong;
 
 alias pthread_attr_t = AUnionType;
 
-record Struct___pthread_internal_slist {
-    __next : Pointer[Struct___pthread_internal_slist];
-}
+record Struct___pthread_internal_slist (
+    __next : Pointer[Struct___pthread_internal_slist],
+);
 
 alias __pthread_slist_t = Struct___pthread_internal_slist;
 
@@ -1105,12 +1105,12 @@ alias PTHREAD_SCOPE_PROCESS = 1;
 alias PTHREAD_PROCESS_PRIVATE = 0;
 alias PTHREAD_PROCESS_SHARED = 1;
 
-record Struct__pthread_cleanup_buffer {
-    __routine : CCodePointer[(RawPointer),()];
-    __arg : RawPointer;
-    __canceltype : Int;
-    __prev : Pointer[Struct__pthread_cleanup_buffer];
-}
+record Struct__pthread_cleanup_buffer (
+    __routine : CCodePointer[(RawPointer),()],
+    __arg : RawPointer,
+    __canceltype : Int,
+    __prev : Pointer[Struct__pthread_cleanup_buffer],
+);
 
 alias PTHREAD_CANCEL_ENABLE = 0;
 alias PTHREAD_CANCEL_DISABLE = 1;
@@ -1251,24 +1251,24 @@ external pthread_cancel(
 
 external pthread_testcancel();
 
-record UnnamedStruct4 {
-    __cancel_jmp_buf : Array[UnnamedRecord,1];
-    __pad : Array[RawPointer,4];
-}
+record UnnamedStruct4 (
+    __cancel_jmp_buf : Array[UnnamedRecord,1],
+    __pad : Array[RawPointer,4],
+);
 
-record UnnamedRecord {
-    __cancel_jmp_buf : __jmp_buf;
-    __mask_was_saved : Int;
-}
+record UnnamedRecord (
+    __cancel_jmp_buf : __jmp_buf,
+    __mask_was_saved : Int,
+);
 
 alias __pthread_unwind_buf_t = UnnamedStruct4;
 
-record Struct___pthread_cleanup_frame {
-    __cancel_routine : CCodePointer[(RawPointer),()];
-    __cancel_arg : RawPointer;
-    __do_it : Int;
-    __cancel_type : Int;
-}
+record Struct___pthread_cleanup_frame (
+    __cancel_routine : CCodePointer[(RawPointer),()],
+    __cancel_arg : RawPointer,
+    __do_it : Int,
+    __cancel_type : Int,
+);
 
 external __pthread_register_cancel(
     __buf : Pointer[__pthread_unwind_buf_t]);
@@ -1544,18 +1544,18 @@ alias u_int64_t = UInt64;
 
 alias register_t = Int;
 
-record Struct_timeval {
-    tv_sec : CLong;
-    tv_usec : CLong;
-}
+record Struct_timeval (
+    tv_sec : CLong,
+    tv_usec : CLong,
+);
 
 alias suseconds_t = CLong;
 
 alias __fd_mask = CLong;
 
-record UnnamedStruct5 {
-    __fds_bits : Array[CLong,32];
-}
+record UnnamedStruct5 (
+    __fds_bits : Array[CLong,32],
+);
 
 alias fd_set = UnnamedStruct5;
 
@@ -1592,13 +1592,13 @@ alias fsblkcnt_t = UInt64;
 
 alias fsfilcnt_t = UInt64;
 
-record Struct_flock {
-    l_type : Short;
-    l_whence : Short;
-    l_start : Int64;
-    l_len : Int64;
-    l_pid : Int;
-}
+record Struct_flock (
+    l_type : Short,
+    l_whence : Short,
+    l_start : Int64,
+    l_len : Int64,
+    l_pid : Int,
+);
 
 external fcntl(
     __fd : Int,
@@ -1637,10 +1637,10 @@ external ("posix_fallocate64") posix_fallocate(
     __offset : Int64,
     __len : Int64) Int;
 
-record Struct_timezone {
-    tz_minuteswest : Int;
-    tz_dsttime : Int;
-}
+record Struct_timezone (
+    tz_minuteswest : Int,
+    tz_dsttime : Int,
+);
 
 alias __timezone_ptr_t = Pointer[Struct_timezone];
 
@@ -1660,10 +1660,10 @@ alias ITIMER_REAL = 0;
 alias ITIMER_VIRTUAL = 1;
 alias ITIMER_PROF = 2;
 
-record Struct_itimerval {
-    it_interval : Struct_timeval;
-    it_value : Struct_timeval;
-}
+record Struct_itimerval (
+    it_interval : Struct_timeval,
+    it_value : Struct_timeval,
+);
 
 alias __itimer_which_t = Int;
 
@@ -1688,24 +1688,24 @@ external futimes(
     __fd : Int,
     __tvp : Pointer[Struct_timeval]) Int;
 
-record Struct_stat {
-    st_dev : UInt64;
-    __pad1 : UShort;
-    __st_ino : CULong;
-    st_mode : UInt;
-    st_nlink : UInt;
-    st_uid : UInt;
-    st_gid : UInt;
-    st_rdev : UInt64;
-    __pad2 : UShort;
-    st_size : Int64;
-    st_blksize : CLong;
-    st_blocks : Int64;
-    st_atim : Struct_timespec;
-    st_mtim : Struct_timespec;
-    st_ctim : Struct_timespec;
-    st_ino : UInt64;
-}
+record Struct_stat (
+    st_dev : UInt64,
+    __pad1 : UShort,
+    __st_ino : CULong,
+    st_mode : UInt,
+    st_nlink : UInt,
+    st_uid : UInt,
+    st_gid : UInt,
+    st_rdev : UInt64,
+    __pad2 : UShort,
+    st_size : Int64,
+    st_blksize : CLong,
+    st_blocks : Int64,
+    st_atim : Struct_timespec,
+    st_mtim : Struct_timespec,
+    st_ctim : Struct_timespec,
+    st_ino : UInt64,
+);
 
 external ("stat64") stat(
     __file : Pointer[CChar],
@@ -1878,10 +1878,10 @@ external shm_open(
 external shm_unlink(
     __name : Pointer[CChar]) Int;
 
-record Struct_iovec {
-    iov_base : RawPointer;
-    iov_len : UInt;
-}
+record Struct_iovec (
+    iov_base : RawPointer,
+    iov_len : UInt,
+);
 
 external readv(
     __fd : Int,
@@ -1917,16 +1917,16 @@ alias SOCK_NONBLOCK = 2048;
 
 alias sa_family_t = UShort;
 
-record Struct_sockaddr {
-    sa_family : UShort;
-    sa_data : Array[CChar,14];
-}
+record Struct_sockaddr (
+    sa_family : UShort,
+    sa_data : Array[CChar,14],
+);
 
-record Struct_sockaddr_storage {
-    ss_family : UShort;
-    __ss_align : CULong;
-    __ss_padding : Array[CChar,120];
-}
+record Struct_sockaddr_storage (
+    ss_family : UShort,
+    __ss_align : CULong,
+    __ss_padding : Array[CChar,120],
+);
 
 alias MSG_OOB = 1;
 alias MSG_PEEK = 2;
@@ -1946,22 +1946,22 @@ alias MSG_NOSIGNAL = 16384;
 alias MSG_MORE = 32768;
 alias MSG_CMSG_CLOEXEC = 1073741824;
 
-record Struct_msghdr {
-    msg_name : RawPointer;
-    msg_namelen : UInt;
-    msg_iov : Pointer[Struct_iovec];
-    msg_iovlen : UInt;
-    msg_control : RawPointer;
-    msg_controllen : UInt;
-    msg_flags : Int;
-}
+record Struct_msghdr (
+    msg_name : RawPointer,
+    msg_namelen : UInt,
+    msg_iov : Pointer[Struct_iovec],
+    msg_iovlen : UInt,
+    msg_control : RawPointer,
+    msg_controllen : UInt,
+    msg_flags : Int,
+);
 
-record Struct_cmsghdr {
-    cmsg_len : UInt;
-    cmsg_level : Int;
-    cmsg_type : Int;
-    __cmsg_data : Array[CUChar,0];
-}
+record Struct_cmsghdr (
+    cmsg_len : UInt,
+    cmsg_level : Int,
+    cmsg_type : Int,
+    __cmsg_data : Array[CUChar,0],
+);
 
 external __cmsg_nxthdr(
     __mhdr : Pointer[Struct_msghdr],
@@ -1969,15 +1969,15 @@ external __cmsg_nxthdr(
 
 alias SCM_RIGHTS = 1;
 
-record Struct_linger {
-    l_onoff : Int;
-    l_linger : Int;
-}
+record Struct_linger (
+    l_onoff : Int,
+    l_linger : Int,
+);
 
-record Struct_osockaddr {
-    sa_family : UShort;
-    sa_data : Array[CUChar,14];
-}
+record Struct_osockaddr (
+    sa_family : UShort,
+    sa_data : Array[CUChar,14],
+);
 
 alias SHUT_RD = 0;
 alias SHUT_WR = 1;
@@ -2151,10 +2151,10 @@ alias EPOLLET = 2147483648;
 
 alias epoll_data_t = AUnionType;
 
-record Struct_epoll_event {
-    events : UInt;
-    data : epoll_data_t;
-}
+record Struct_epoll_event (
+    events : UInt,
+    data : epoll_data_t,
+);
 
 external epoll_create(
     __size : Int) Int;
@@ -2181,13 +2181,13 @@ external epoll_pwait(
     __timeout : Int,
     __ss : Pointer[__sigset_t]) Int;
 
-record Struct_dirent {
-    d_ino : UInt64;
-    d_off : Int64;
-    d_reclen : UShort;
-    d_type : CUChar;
-    d_name : Array[CChar,256];
-}
+record Struct_dirent (
+    d_ino : UInt64,
+    d_off : Int64,
+    d_reclen : UShort,
+    d_type : CUChar,
+    d_name : Array[CChar,256],
+);
 
 alias DT_UNKNOWN = 0;
 alias DT_FIFO = 1;
@@ -2275,12 +2275,12 @@ external dlvsym(
 
 external dlerror() Pointer[CChar];
 
-record UnnamedStruct6 {
-    dli_fname : Pointer[CChar];
-    dli_fbase : RawPointer;
-    dli_sname : Pointer[CChar];
-    dli_saddr : RawPointer;
-}
+record UnnamedStruct6 (
+    dli_fname : Pointer[CChar],
+    dli_fbase : RawPointer,
+    dli_sname : Pointer[CChar],
+    dli_saddr : RawPointer,
+);
 
 alias Dl_info = UnnamedStruct6;
 
@@ -2314,17 +2314,17 @@ alias RTLD_DI_TLS_MODID = 9;
 alias RTLD_DI_TLS_DATA = 10;
 alias RTLD_DI_MAX = 10;
 
-record UnnamedStruct7 {
-    dls_name : Pointer[CChar];
-    dls_flags : UInt;
-}
+record UnnamedStruct7 (
+    dls_name : Pointer[CChar],
+    dls_flags : UInt,
+);
 
 alias Dl_serpath = UnnamedStruct7;
 
-record UnnamedStruct8 {
-    dls_size : UInt;
-    dls_cnt : UInt;
-    dls_serpath : Array[Dl_serpath,1];
-}
+record UnnamedStruct8 (
+    dls_size : UInt,
+    dls_cnt : UInt,
+    dls_serpath : Array[Dl_serpath,1],
+);
 
 alias Dl_serinfo = UnnamedStruct8;
