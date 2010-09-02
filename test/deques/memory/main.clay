@@ -41,9 +41,10 @@ overload destroy(x: Canary) {
     } else if (canaryTracker[x.id] == MOVED) {
         println("!! destroyed   ", x.id, " without reset");
         canaryTracker[x.id] = REDESTROYED;
+    } else {
+        println("-- destroyed   ", x.id);
+        canaryTracker[x.id] = DESTROYED;
     }
-    println("-- destroyed   ", x.id);
-    canaryTracker[x.id] = DESTROYED;
 }
 
 overload moveUnsafe(x: Canary) r:Canary {
@@ -58,7 +59,7 @@ overload resetUnsafe(x: Canary) {
 }
 overload assign(x: Canary, y: Canary) { }
 
-checkCanaries() {
+checkCanariesDestroyed() {
     for (n in range(size(canaryTracker))) {
         if (canaryTracker[n] == ALIVE)
             println("!! still alive: ", n);
@@ -66,6 +67,20 @@ checkCanaries() {
             println("!! reset      : ", n);
         else if (canaryTracker[n] == REDESTROYED)
             println("!! redestroyed: ", n);
+    }
+}
+
+[S | Sequence?(S) and SequenceElementType(S) == Canary]
+checkCanariesLiveInSequence(seq: S) {
+    for (x in seq) {
+        if (canaryTracker[x.id] == DESTROYED)
+            println("!! destroyed   in sequence: ", x.id);
+        else if (canaryTracker[x.id] == MOVED)
+            println("!! moved       in sequence: ", x.id);
+        else if (canaryTracker[x.id] == RESET)
+            println("!! reset       in sequence: ", x.id);
+        else if (canaryTracker[x.id] == REDESTROYED)
+            println("!! redestroyed in sequence: ", x.id);
     }
 }
 
@@ -151,10 +166,61 @@ test() {
     println("clearing d7");
     clear(d7);
 
-    println("d1, d7 leaving scope");
+    println("making deque d8");
+    var d8 = Deque[Canary](
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+    );
+
+    println("removing from d8 front");
+    remove(d8, begin(d8));
+    checkCanariesLiveInSequence(d8);
+
+    println("removing from d8 back");
+    remove(d8, end(d8) - 1);
+    checkCanariesLiveInSequence(d8);
+
+    println("removing from d8 front half");
+    remove(d8, begin(d8) + 1);
+    checkCanariesLiveInSequence(d8);
+
+    println("removing from d8 back half");
+    remove(d8, end(d8) - 2);
+    checkCanariesLiveInSequence(d8);
+
+    println("removing from d8 entire range");
+    remove(d8, begin(d8), end(d8));
+    checkCanariesLiveInSequence(d8);
+
+    println("making deque d9");
+    var d9 = Deque[Canary](
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+    );
+
+    println("removing from d9 front range");
+    remove(d9, begin(d9), begin(d9) + 2);
+    checkCanariesLiveInSequence(d9);
+
+    println("removing from d9 back range");
+    remove(d9, end(d9) - 2, end(d9));
+    checkCanariesLiveInSequence(d9);
+
+    println("removing from d9 front half range");
+    remove(d9, begin(d9) + 1, begin(d9) + 3);
+    checkCanariesLiveInSequence(d9);
+
+    println("removing from d9 back half range");
+    remove(d9, end(d9) - 3, end(d9) - 1);
+    checkCanariesLiveInSequence(d9);
+
+    println("d1, d7, d8, d9 leaving scope");
 }
 
 main() {
     test();
-    checkCanaries();
+    checkCanariesDestroyed();
 }

@@ -34,6 +34,19 @@ main() {
     }
     println();
 
+    println("Reverse Iterating:");
+    
+    var n = 0;
+    for (x in reverse(d1)) {
+        print(x, " ");
+        n += 1;
+        if (n == 20) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
     println("d1[0] = ", d1[0]);
     println("d1[999] = ", d1[999]);
     println("d1[500] = ", d1[500]);
@@ -82,6 +95,18 @@ main() {
     for (x in d2copy) print(x, " ");
     println();
 
+    remove(d2copy, end(d2copy) - 1);
+    println("Removed element from back size ", size(d2copy));
+    print("Contents: ");
+    for (x in d2copy) print(x, " ");
+    println();
+
+    remove(d2copy, begin(d2copy));
+    println("Removed element from front size ", size(d2copy));
+    print("Contents: ");
+    for (x in d2copy) print(x, " ");
+    println();
+
     println();
     println("d3:");
 
@@ -92,14 +117,26 @@ main() {
     for (x in d3) print(x, " ");
     println();
 
+    remove(d3, begin(d3) + 2);
+    println("Removed element from front half size ", size(d3));
+    print("Contents: ");
+    for (x in d3) print(x, " ");
+    println();
+
+    remove(d3, begin(d3) + 4);
+    println("Removed element from back half size ", size(d3));
+    print("Contents: ");
+    for (x in d3) print(x, " ");
+    println();
+
     d3 = d2;
     println("Assigned from d2 size ", size(d3));
     print("Contents: ");
     for (x in d3) print(x, " ");
     println();
 
-    d3 = Deque[Int](1, 1, 2, 3, 5, 8, 13, 21);
-    println("Assigned from longer rvalue size ", size(d3));
+    d3 = Deque[Int](1, 1, 2);
+    println("Assigned from shorter rvalue size ", size(d3));
     print("Contents: ");
     for (x in d3) print(x, " ");
     println();
@@ -123,4 +160,72 @@ main() {
     println();
     clear(d5);
     println("Cleared size ", size(d5));
+
+    println();
+    println("d6:");
+    var d6 = Deque[Int](range(1024));
+    println("Size ", size(d6));
+
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    remove(d6, begin(d6), begin(d6) + 128);
+    println("Removed chunk from front size ", size(d6));
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    remove(d6, end(d6) - 128, end(d6));
+    println("Removed chunk from back size ", size(d6));
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    remove(d6, begin(d6) + 128, begin(d6) + 256);
+    println("Removed chunk from front half size ", size(d6));
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    remove(d6, end(d6) - 256, end(d6) - 128);
+    println("Removed chunk from back half size ", size(d6));
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
 }
