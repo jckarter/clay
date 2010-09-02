@@ -1,0 +1,19 @@
+
+f(n) {
+    switch (n) {
+    case 0 : return "zero";
+    case 1 : return "one";
+    case 2 :
+    case 3 :
+        return "two or three";
+    default :
+        return "other";
+    }
+}
+
+main() {
+    var a = range(6);
+    var b = map(f, a);
+    var c = map(Tuple, a, b);
+    println(Vector(c));
+}

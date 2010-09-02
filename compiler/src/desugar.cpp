@@ -230,3 +230,57 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
     }
     return result;
 }
+
+StatementPtr desugarSwitchStatement(SwitchPtr x) {
+    BlockPtr block = new Block();
+    block->location = x->location;
+
+    // %thing is the value being switched on
+    IdentifierPtr thing = new Identifier("%thing");
+    thing->location = x->expr->location;
+    NameRefPtr thingRef = new NameRef(thing);
+    thingRef->location = x->expr->location;
+
+    // initialize %thing
+    {
+        BindingPtr b = new Binding(REF, identV(thing), new ExprList(x->expr));
+        block->statements.push_back(b.ptr());
+    }
+
+    StatementPtr root;
+    StatementPtr *nextPtr = &root;
+
+    // dispatch logic
+    for (unsigned i = 0; i < x->caseBlocks.size(); ++i) {
+        CaseBlockPtr y = x->caseBlocks[i];
+
+        ExprPtr condition;
+        for (unsigned j = 0; j < y->caseLabels->size(); ++j) {
+            ExprPtr caseValue = y->caseLabels->exprs[j];
+            ExprPtr compare = new BinaryOp(EQUALS, thingRef.ptr(), caseValue);
+            compare->location = caseValue->location;
+            if (!condition) {
+                condition = compare;
+            }
+            else {
+                condition = new Or(condition, compare);
+                condition->location = y->location;
+            }
+        }
+        assert(condition.ptr());
+
+        IfPtr ifStmt = new If(condition, y->body);
+        ifStmt->location = y->location;
+        *nextPtr = ifStmt.ptr();
+        nextPtr = &(ifStmt->elsePart);
+    }
+
+    if (x->defaultCase.ptr())
+        *nextPtr = x->defaultCase;
+    else
+        *nextPtr = new Break();
+
+    block->statements.push_back(root);
+
+    return block.ptr();
+}

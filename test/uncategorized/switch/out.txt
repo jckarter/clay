@@ -1,0 +1,1 @@
+[(0, "zero"), (1, "one"), (2, "two or three"), (3, "two or three"), (4, "other"), (5, "other")]

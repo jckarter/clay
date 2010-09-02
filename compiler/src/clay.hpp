@@ -138,6 +138,7 @@ enum ObjectKind {
     EXPRESSION,
     EXPR_LIST,
     STATEMENT,
+    CASE_BLOCK,
     CATCH,
 
     FORMAL_ARG,
@@ -241,6 +242,9 @@ struct Assignment;
 struct InitAssignment;
 struct UpdateAssignment;
 struct Goto;
+struct Switch;
+struct CaseBlock;
+struct CaseBody;
 struct Return;
 struct If;
 struct ExprStatement;
@@ -378,6 +382,9 @@ typedef Pointer<Assignment> AssignmentPtr;
 typedef Pointer<InitAssignment> InitAssignmentPtr;
 typedef Pointer<UpdateAssignment> UpdateAssignmentPtr;
 typedef Pointer<Goto> GotoPtr;
+typedef Pointer<Switch> SwitchPtr;
+typedef Pointer<CaseBlock> CaseBlockPtr;
+typedef Pointer<CaseBody> CaseBodyPtr;
 typedef Pointer<Return> ReturnPtr;
 typedef Pointer<If> IfPtr;
 typedef Pointer<ExprStatement> ExprStatementPtr;
@@ -987,6 +994,8 @@ enum StatementKind {
     GOTO,
     RETURN,
     IF,
+    SWITCH,
+    CASE_BODY,
     EXPR_STATEMENT,
     WHILE,
     BREAK,
@@ -1096,6 +1105,35 @@ struct If : public Statement {
     If(ExprPtr condition, StatementPtr thenPart, StatementPtr elsePart)
         : Statement(IF), condition(condition), thenPart(thenPart),
           elsePart(elsePart) {}
+};
+
+struct Switch : public Statement {
+    ExprPtr expr;
+    vector<CaseBlockPtr> caseBlocks;
+    StatementPtr defaultCase;
+
+    StatementPtr desugared;
+
+    Switch(ExprPtr expr,
+           const vector<CaseBlockPtr> &caseBlocks,
+           StatementPtr defaultCase)
+        : Statement(SWITCH), expr(expr), caseBlocks(caseBlocks),
+          defaultCase(defaultCase) {}
+};
+
+struct CaseBlock : public ANode {
+    ExprListPtr caseLabels;
+    StatementPtr body;
+    CaseBlock(ExprListPtr caseLabels, StatementPtr body)
+        : ANode(CASE_BLOCK), caseLabels(caseLabels), body(body) {}
+};
+
+struct CaseBody : public Statement {
+    vector<StatementPtr> statements;
+    CaseBody()
+        : Statement(CASE_BODY) {}
+    CaseBody(const vector<StatementPtr> &statements)
+        : Statement(CASE_BODY), statements(statements) {}
 };
 
 struct ExprStatement : public Statement {
@@ -1726,6 +1764,8 @@ ReturnSpecPtr cloneOpt(ReturnSpecPtr x);
 StatementPtr clone(StatementPtr x);
 StatementPtr cloneOpt(StatementPtr x);
 void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out);
+CaseBlockPtr clone(CaseBlockPtr x);
+void clone(const vector<CaseBlockPtr> &x, vector<CaseBlockPtr> &out);
 CatchPtr clone(CatchPtr x);
 void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out);
 
@@ -2293,6 +2333,7 @@ ExprPtr desugarStaticExpr(StaticExprPtr x);
 ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
+StatementPtr desugarSwitchStatement(SwitchPtr x);
 
 
 
@@ -2748,9 +2789,10 @@ struct MultiCValue : public Object {
 struct JumpTarget {
     llvm::BasicBlock *block;
     int stackMarker;
-    JumpTarget() : block(NULL), stackMarker(-1) {}
+    int useCount;
+    JumpTarget() : block(NULL), stackMarker(-1), useCount(0) {}
     JumpTarget(llvm::BasicBlock *block, int stackMarker)
-        : block(block), stackMarker(stackMarker) {}
+        : block(block), stackMarker(stackMarker), useCount(0) {}
 };
 
 struct CReturn {
