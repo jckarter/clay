@@ -1,0 +1,141 @@
+
+[T | Float?(T)]
+floatOrderedAndEquals?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp oeq $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatOrderedAndGreater?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp ogt $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatOrderedAndGreaterEquals?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp oge $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatOrderedAndLesser?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp olt $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatOrderedAndLesserEquals?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp ole $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatOrderedAndNotEquals?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp one $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatOrdered?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp ord $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+
+[T | Float?(T)]
+floatUnorderedOrEquals?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp ueq $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatUnorderedOrGreater?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp ugt $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatUnorderedOrGreaterEquals?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp uge $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatUnorderedOrLesser?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp ult $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatUnorderedOrLesserEquals?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp ule $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatUnorderedOrNotEquals?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp une $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
+
+[T | Float?(T)]
+floatUnordered?(a:T, b:T) returned:Bool __llvm__ {
+    %aval = load $T * %a
+    %bval = load $T * %b
+    %flag = fcmp uno $T %aval, %bval
+    %result = zext i1 %flag to $Bool
+    store $Bool %result, $Bool * %returned
+    ret i32 0
+}
