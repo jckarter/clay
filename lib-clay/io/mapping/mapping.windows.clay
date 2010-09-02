@@ -31,25 +31,31 @@ enum MappingMode {
 }
 
 private modeProtection(mode) {
-    if (mode == MAP_READ)
+    switch (mode) {
+    case MAP_READ :
         return win32.PAGE_READONLY;
-    if (mode == MAP_READ_WRITE)
+    case MAP_READ_WRITE :
         return win32.PAGE_READWRITE;
-    if (mode == MAP_COPY_ON_WRITE)
+    case MAP_COPY_ON_WRITE :
         return win32.PAGE_WRITECOPY;
-    assert(false);
-    return 0u;
+    default :
+        assert(false);
+        return 0u;
+    }
 }
 
 private modeAccess(mode) {
-    if (mode == MAP_READ)
+    switch (mode) {
+    case MAP_READ :
         return win32.FILE_MAP_READ;
-    if (mode == MAP_READ_WRITE)
+    case MAP_READ_WRITE :
         return win32.FILE_MAP_WRITE;
-    if (mode == MAP_COPY_ON_WRITE)
+    case MAP_COPY_ON_WRITE :
         return win32.FILE_MAP_COPY;
-    assert(false);
-    return 0u;
+    default :
+        assert(false);
+        return 0u;
+    }
 }
 
 [A,B | Integer?(A,B)]

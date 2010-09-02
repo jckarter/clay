@@ -25,42 +25,51 @@ stderrRawFile() = RawFile(stdHandle(win32.STD_ERROR_HANDLE), false);
 //
 
 private accessFlags(mode) {
-    if (mode == READ)
+    switch (mode) {
+    case READ :
         return win32.GENERIC_READ;
-    if (mode == READ_WRITE)
+    case READ_WRITE :
         return bitwiseOr(win32.GENERIC_READ, win32.GENERIC_WRITE);
-    if (mode == CREATE)
+    case CREATE :
         return bitwiseOr(win32.GENERIC_READ, win32.GENERIC_WRITE);
-    if (mode == APPEND)
+    case APPEND :
         return win32.GENERIC_WRITE;
-    assert(false);
-    return 0u;
+    default :
+        assert(false);
+        return 0u;
+    }
 }
 
 private sharingFlags(mode) {
-    if (mode == READ)
+    switch (mode) {
+    case READ :
         return win32.FILE_SHARE_READ;
-    if (mode == READ_WRITE)
+    case READ_WRITE :
         return 0u;
-    if (mode == CREATE)
+    case CREATE :
         return 0u;
-    if (mode == APPEND)
+    case APPEND :
         return 0u;
-    assert(false);
-    return 0u;
+    default :
+        assert(false);
+        return 0u;
+    }
 }
 
 private creationFlags(mode) {
-    if (mode == READ)
+    switch (mode) {
+    case READ :
         return win32.OPEN_EXISTING;
-    if (mode == READ_WRITE)
+    case READ_WRITE :
         return win32.OPEN_EXISTING;
-    if (mode == CREATE)
+    case CREATE :
         return win32.CREATE_ALWAYS;
-    if (mode == APPEND)
+    case APPEND :
         return win32.OPEN_ALWAYS;
-    assert(false);
-    return 0u;
+    default :
+        assert(false);
+        return 0u;
+    }
 }
 
 [S | CCompatibleString?(S)]
@@ -168,11 +177,14 @@ overload fileSize(f:RawFile) {
 }
 
 private seekMethod(x) {
-    if (x == SEEK_SET) return win32.FILE_BEGIN;
-    if (x == SEEK_CUR) return win32.FILE_CURRENT;
-    if (x == SEEK_END) return win32.FILE_END;
-    assert(false);
-    return 0u;
+    switch (x) {
+    case SEEK_SET : return win32.FILE_BEGIN;
+    case SEEK_CUR : return win32.FILE_CURRENT;
+    case SEEK_END : return win32.FILE_END;
+    default :
+        assert(false);
+        return 0u;
+    }
 }
 
 overload seek(f:RawFile, offset, whence) {

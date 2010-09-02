@@ -31,16 +31,19 @@ stderrRawFile() = RawFile(2, false);
 //
 
 private openFlags(mode) {
-    if (mode == READ)
+    switch (mode) {
+    case READ :
         return unix.O_RDONLY;
-    if (mode == READ_WRITE)
+    case READ_WRITE :
         return unix.O_RDWR;
-    if (mode == CREATE)
+    case CREATE :
         return bitwiseOr(unix.O_RDWR, unix.O_CREAT, unix.O_TRUNC);
-    if (mode == APPEND)
+    case APPEND :
         return bitwiseOr(unix.O_WRONLY, unix.O_CREAT, unix.O_APPEND);
-    assert(false);
-    return -1;
+    default :
+        assert(false);
+        return -1;
+    }
 }
 
 [S | CCompatibleString?(S)]
@@ -116,11 +119,14 @@ overload fileSize(f:RawFile) {
 }
 
 private seekWhence(x) {
-    if (x == SEEK_SET) return unix.SEEK_SET;
-    if (x == SEEK_CUR) return unix.SEEK_CUR;
-    if (x == SEEK_END) return unix.SEEK_END;
-    assert(false);
-    return -1;
+    switch (x) {
+    case SEEK_SET : return unix.SEEK_SET;
+    case SEEK_CUR : return unix.SEEK_CUR;
+    case SEEK_END : return unix.SEEK_END;
+    default :
+        assert(false);
+        return -1;
+    }
 }
 
 overload seek(f:RawFile, offset, whence) {
