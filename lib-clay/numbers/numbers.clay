@@ -1,4 +1,5 @@
 import numbers.parser.*;
+import numbers.floats.*;
 
 
 //
@@ -139,20 +140,67 @@ overload assign(dest:T, src:T) {
 
 
 //
-// equals?, lesser?
+// equals?, notEquals?, lesser?, lesserEquals?, greater?, greaterEquals?
 //
 
 [A,B | Numeric?(A,B)]
-overload equals?(a:A, b:B) = numericEquals?(toBiggerNumericType(A, B, a),
-                                            toBiggerNumericType(A, B, b));
+overload equals?(a:A, b:B) = equals?(toBiggerNumericType(A, B, a),
+                                     toBiggerNumericType(A, B, b));
 [A | Numeric?(A)]
 overload equals?(a:A, b:A) = numericEquals?(a, b);
 
+[A | Float?(A)]
+overload equals?(a:A, b:A) = floatOrderedAndEquals?(a, b);
+
+
+[A, B | Numeric?(A, B)]
+overload notEquals?(a:A, b:B) = notEquals?(toBiggerNumericType(A, B, a),
+                                           toBiggerNumericType(A, B, b));
+[A | Numeric?(A)]
+overload notEquals?(a:A, b:A) = not equals?(a, b);
+
+[A | Float?(A)]
+overload notEquals?(a:A, b:A) = floatUnorderedOrNotEquals?(a, b);
+
+
 [A,B | Numeric?(A,B)]
-overload lesser?(a:A, b:B) = numericLesser?(toBiggerNumericType(A, B, a),
-                                            toBiggerNumericType(A, B, b));
+overload lesser?(a:A, b:B) = lesser?(toBiggerNumericType(A, B, a),
+                                     toBiggerNumericType(A, B, b));
 [A | Numeric?(A)]
 overload lesser?(a:A, b:A) = numericLesser?(a, b);
+
+[A | Float?(A)]
+overload lesser?(a:A, b:A) = floatOrderedAndLesser?(a, b);
+
+
+[A, B | Numeric?(A, B)]
+overload lesserEquals?(a:A, b:B) = lesserEquals?(toBiggerNumericType(A, B, a),
+                                                 toBiggerNumericType(A, B, b));
+[A | Numeric?(A)]
+overload lesserEquals?(a:A, b:A) = not lesser?(b, a);
+
+[A | Float?(A)]
+overload lesserEquals?(a:A, b:A) = floatOrderedAndLesserEquals?(a, b);
+
+
+[A,B | Numeric?(A,B)]
+overload greater?(a:A, b:B) = greater?(toBiggerNumericType(A, B, a),
+                                       toBiggerNumericType(A, B, b));
+[A | Numeric?(A)]
+overload greater?(a:A, b:A) = lesser?(b, a);
+
+[A | Float?(A)]
+overload greater?(a:A, b:A) = floatOrderedAndGreater?(a, b);
+
+
+[A, B | Numeric?(A, B)]
+overload greaterEquals?(a:A, b:B) = greaterEquals?(toBiggerNumericType(A, B, a),
+                                                   toBiggerNumericType(A, B, b));
+[A | Numeric?(A)]
+overload greaterEquals?(a:A, b:A) = not lesser?(a, b);
+
+[A | Float?(A)]
+overload greaterEquals?(a:A, b:A) = floatOrderedAndGreaterEquals?(a, b);
 
 
 
