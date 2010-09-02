@@ -1,14 +1,28 @@
 import deques.*;
 
+alias UNINITIALIZED_CANARY = SizeT(-1);
+
 enum CanaryState { DESTROYED, ALIVE, MOVED, RESET, REDESTROYED }
 
-var canaryTracker = Vector[CanaryState]();
+private var canaryTracker = Vector[CanaryState]();
 record Canary { id: SizeT; throwOnCopy?: Bool; }
+private record CanaryLike { id: SizeT; throwOnCopy?: Bool; }
 
-record CanaryCopyError {}
-instance Exception = CanaryCopyError;
+overload allocateRawMemory(static Canary, n) r: Pointer[Canary] {
+    r <-- Pointer[Canary](allocateRawMemory(CanaryLike, n));
+    for (x in CoordinateRange(r, r+n)) {
+        x.id <-- UNINITIALIZED_CANARY;
+        x.throwOnCopy? <-- true;
+    }
+}
 
-_Canary(r: Canary, throwOnCopy?: Bool) {
+record CanaryCopyException {}
+instance Exception = CanaryCopyException;
+
+record UninitializedCanaryCopyException {}
+instance Exception = UninitializedCanaryCopyException;
+
+private _Canary(r: Canary, throwOnCopy?: Bool) {
     r.id <-- size(canaryTracker);
     r.throwOnCopy? <-- throwOnCopy?;
     push(canaryTracker, ALIVE);
@@ -25,9 +39,13 @@ overload Canary(throwOnCopy?: Bool) r:Canary {
 }
 
 overload Canary(x: Canary) r:Canary {
+    if (x.id >= size(canaryTracker)) {
+        println("!! tried to copy uninitialized canary!");
+        throw UninitializedCanaryCopyException();
+    }
     if (x.throwOnCopy?) {
         println("-- throwing    ", x.id);
-        throw CanaryCopyError();
+        throw CanaryCopyException();
     }
 
     _Canary(r, false);
@@ -35,6 +53,9 @@ overload Canary(x: Canary) r:Canary {
 }
 
 overload destroy(x: Canary) {
+    if (x.id >= size(canaryTracker)) {
+        println("!! tried to destroy uninitialized canary!");
+    }
     if (canaryTracker[x.id] == DESTROYED or canaryTracker[x.id] == REDESTROYED) {
         println("!! redestroyed ", x.id);
         canaryTracker[x.id] = REDESTROYED;
@@ -48,14 +69,23 @@ overload destroy(x: Canary) {
 }
 
 overload moveUnsafe(x: Canary) r:Canary {
-    _Canary(r, x.throwOnCopy?);
-    println("-- moved       ", r.id, " from ", x.id);
-    canaryTracker[x.id] = MOVED;
+    if (x.id >= size(canaryTracker)) {
+        _Canary(r, false);
+        println("!! moved       ", r.id, " from uninitialized canary!");
+    } else {
+        _Canary(r, x.throwOnCopy?);
+        println("-- moved       ", r.id, " from ", x.id);
+        canaryTracker[x.id] = MOVED;
+    }
 }
 
 overload resetUnsafe(x: Canary) {
-    println("-- reset       ", x.id);
-    canaryTracker[x.id] = RESET;
+    if (x.id >= size(canaryTracker)) {
+        println("!! tried to reset uninitialized canary!");
+    } else {
+        println("-- reset       ", x.id);
+        canaryTracker[x.id] = RESET;
+    }
 }
 overload assign(x: Canary, y: Canary) { }
 
@@ -73,7 +103,9 @@ checkCanariesDestroyed() {
 [S | Sequence?(S) and SequenceElementType(S) == Canary]
 checkCanariesLiveInSequence(seq: S) {
     for (x in seq) {
-        if (canaryTracker[x.id] == DESTROYED)
+        if (x.id >= size(canaryTracker))
+            println("!! uninitialized in sequence");
+        else if (canaryTracker[x.id] == DESTROYED)
             println("!! destroyed   in sequence: ", x.id);
         else if (canaryTracker[x.id] == MOVED)
             println("!! moved       in sequence: ", x.id);
