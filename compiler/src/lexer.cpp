@@ -125,7 +125,7 @@ static void initKeywords() {
          "enum", "var", "ref", "forward",
          "and", "or", "not", "new",
          "if", "else", "goto", "return", "while",
-         "break", "continue", "for", "in",
+         "switch", "case", "default", "break", "continue", "for", "in",
          "true", "false", "try", "catch", "throw", NULL};
     keywords = new std::set<string>();
     for (const char **p = s; *p; ++p)

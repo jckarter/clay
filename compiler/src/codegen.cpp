@@ -2152,9 +2152,10 @@ void codegenLowlevelCall(llvm::Value *llCallable,
     ctx->builder->CreateCondBr(cond, normal, landing);
 
     ctx->builder->SetInsertPoint(landing);
-    const JumpTarget &jt = ctx->exceptionTargets.back();
+    JumpTarget &jt = ctx->exceptionTargets.back();
     cgDestroyStack(jt.stackMarker, ctx);
     ctx->builder->CreateBr(jt.block);
+    ++jt.useCount;
 
     ctx->builder->SetInsertPoint(normal);
 }
@@ -2663,9 +2664,11 @@ bool codegenStatement(StatementPtr stmt,
                 map<string, JumpTarget>::iterator li =
                     ctx->labels.find(z->name->str);
                 assert(li != ctx->labels.end());
-                const JumpTarget &jt = li->second;
-                if (!terminated)
+                JumpTarget &jt = li->second;
+                if (!terminated) {
                     ctx->builder->CreateBr(jt.block);
+                    ++ jt.useCount;
+                }
                 ctx->builder->SetInsertPoint(jt.block);
             }
             else if (terminated) {
@@ -2686,8 +2689,10 @@ bool codegenStatement(StatementPtr stmt,
     }
 
     case LABEL :
+        error("invalid label. labels can only appear within blocks");
+
     case BINDING :
-        error("invalid statement");
+        error("invalid binding. bindings can only appear within blocks");
 
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.ptr();
@@ -2771,9 +2776,10 @@ bool codegenStatement(StatementPtr stmt,
             sout << "goto label not found: " << x->labelName->str;
             error(sout.str());
         }
-        const JumpTarget &jt = li->second;
+        JumpTarget &jt = li->second;
         cgDestroyStack(jt.stackMarker, ctx);
         ctx->builder->CreateBr(jt.block);
+        ++ jt.useCount;
         return true;
     }
 
@@ -2815,9 +2821,10 @@ bool codegenStatement(StatementPtr stmt,
         default :
             assert(false);
         }
-        const JumpTarget &jt = ctx->returnTargets.back();
+        JumpTarget &jt = ctx->returnTargets.back();
         cgDestroyStack(jt.stackMarker, ctx);
         ctx->builder->CreateBr(jt.block);
+        ++ jt.useCount;
         return true;
     }
 
@@ -2858,6 +2865,35 @@ bool codegenStatement(StatementPtr stmt,
             ctx->builder->SetInsertPoint(mergeBlock);
 
         return terminated1 && terminated2;
+    }
+
+    case SWITCH : {
+        Switch *x = (Switch *)stmt.ptr();
+        if (!x->desugared)
+            x->desugared = desugarSwitchStatement(x);
+        llvm::BasicBlock *switchEnd = newBasicBlock("switchEnd", ctx);
+        ctx->breaks.push_back(JumpTarget(switchEnd, cgMarkStack(ctx)));
+        codegenStatement(x->desugared, env, ctx);
+        int useCount = ctx->breaks.back().useCount;
+        ctx->breaks.pop_back();
+        if (useCount == 0)
+            switchEnd->eraseFromParent();
+        else
+            ctx->builder->SetInsertPoint(switchEnd);
+        return useCount == 0;
+    }
+
+    case CASE_BODY : {
+        CaseBody *x = (CaseBody *)stmt.ptr();
+        bool terminated = false;
+        for (unsigned i = 0; i < x->statements.size(); ++i) {
+            if (terminated)
+                error(x->statements[i], "unreachable code");
+            terminated = codegenStatement(x->statements[i], env, ctx);
+        }
+        if (!terminated)
+            error("unterminated case block");
+        return terminated;
     }
 
     case EXPR_STATEMENT : {
@@ -2901,18 +2937,20 @@ bool codegenStatement(StatementPtr stmt,
     case BREAK : {
         if (ctx->breaks.empty())
             error("invalid break statement");
-        const JumpTarget &jt = ctx->breaks.back();
+        JumpTarget &jt = ctx->breaks.back();
         cgDestroyStack(jt.stackMarker, ctx);
         ctx->builder->CreateBr(jt.block);
+        ++ jt.useCount;
         return true;
     }
 
     case CONTINUE : {
         if (ctx->continues.empty())
             error("invalid continue statement");
-        const JumpTarget &jt = ctx->continues.back();
+        JumpTarget &jt = ctx->continues.back();
         cgDestroyStack(jt.stackMarker, ctx);
         ctx->builder->CreateBr(jt.block);
+        ++ jt.useCount;
         return true;
     }
 
@@ -2971,8 +3009,9 @@ bool codegenStatement(StatementPtr stmt,
         ExprPtr callable = prelude_expr_throwValue();
         ExprListPtr args = new ExprList(x->expr);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
-        const JumpTarget &jt = ctx->exceptionTargets.back();
+        JumpTarget &jt = ctx->exceptionTargets.back();
         ctx->builder->CreateBr(jt.block);
+        ++ jt.useCount;
         return true;
     }
 

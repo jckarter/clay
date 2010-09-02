@@ -1922,8 +1922,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
     }
 
     case LABEL :
+        error("invalid label. labels can only appear within blocks");
+        return NULL;
+
     case BINDING :
-        error("invalid statement");
+        error("invalid binding. bindings can only appear within blocks");
         return NULL;
 
     case ASSIGNMENT : {
@@ -2054,6 +2057,28 @@ TerminationPtr evalStatement(StatementPtr stmt,
             return evalStatement(x->thenPart, env, ctx);
         if (x->elsePart.ptr())
             return evalStatement(x->elsePart, env, ctx);
+        return NULL;
+    }
+
+    case SWITCH : {
+        Switch *x = (Switch *)stmt.ptr();
+        if (!x->desugared)
+            x->desugared = desugarSwitchStatement(x);
+        TerminationPtr term = evalStatement(x->desugared, env, ctx);
+        if (term.ptr() && term->terminationKind == TERMINATE_BREAK)
+            term = NULL;
+        return term;
+    }
+
+    case CASE_BODY : {
+        CaseBody *x = (CaseBody *)stmt.ptr();
+        for (unsigned i = 0; i < x->statements.size(); ++i) {
+            StatementPtr y = x->statements[i];
+            TerminationPtr termination = evalStatement(y, env, ctx);
+            if (termination.ptr())
+                return termination;
+        }
+        error("unterminated case block");
         return NULL;
     }
 

@@ -258,6 +258,26 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case SWITCH : {
+        Switch *y = (Switch *)x.ptr();
+        convertFreeVars(y->expr, env, ctx);
+        for (unsigned i = 0; i < y->caseBlocks.size(); ++i) {
+            CaseBlockPtr z = y->caseBlocks[i];
+            convertFreeVars(z->caseLabels, env, ctx);
+            convertFreeVars(z->body, env, ctx);
+        }
+        if (y->defaultCase.ptr())
+            convertFreeVars(y->defaultCase, env, ctx);
+        break;
+    }
+
+    case CASE_BODY : {
+        CaseBody *y = (CaseBody *)x.ptr();
+        for (unsigned i = 0; i < y->statements.size(); ++i)
+            convertFreeVars(y->statements[i], env, ctx);
+        break;
+    }
+
     case EXPR_STATEMENT : {
         ExprStatement *y = (ExprStatement *)x.ptr();
         convertFreeVars(y->expr, env, ctx);

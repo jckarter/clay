@@ -1801,6 +1801,22 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
         return thenResult || elseResult;
     }
 
+    case SWITCH : {
+        Switch *x = (Switch *)stmt.ptr();
+        if (!x->desugared)
+            x->desugared = desugarSwitchStatement(x);
+        return analyzeStatement(x->desugared, env, ctx);
+    }
+
+    case CASE_BODY : {
+        CaseBody *x = (CaseBody *)stmt.ptr();
+        for (unsigned i = 0; i < x->statements.size(); ++i) {
+            if (!analyzeStatement(x->statements[i], env, ctx))
+                return false;
+        }
+        return true;
+    }
+
     case EXPR_STATEMENT :
         return true;
 

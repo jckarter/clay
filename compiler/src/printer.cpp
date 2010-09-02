@@ -339,6 +339,17 @@ static void printStatement(ostream &out, const Statement *x) {
         out << ", " << y->elsePart << ")";
         break;
     }
+    case SWITCH : {
+        const Switch *y = (const Switch *)x;
+        out << "Switch(" << y->expr << ", " << y->caseBlocks
+            << ", " << y->defaultCase << ")";
+        break;
+    }
+    case CASE_BODY : {
+        const CaseBody *y = (const CaseBody *)x;
+        out << "CaseBody(" << y->statements << ")";
+        break;
+    }
     case EXPR_STATEMENT : {
         const ExprStatement *y = (const ExprStatement *)x;
         out << "ExprStatement(" << y->expr << ")";
@@ -472,6 +483,12 @@ static void print(ostream &out, const Object *x) {
     case STATEMENT : {
         const Statement *y = (const Statement *)x;
         printStatement(out, y);
+        break;
+    }
+
+    case CASE_BLOCK : {
+        const CaseBlock *y = (const CaseBlock *)x;
+        out << "CaseBlock(" << y->caseLabels << ", " << y->body << ")";
         break;
     }
 
