@@ -455,3 +455,22 @@ Removed chunk from back half size 512
 864 865 866 867 868 869 870 871 872 873 874 875 876 877 878 879 
 880 881 882 883 884 885 886 887 888 889 890 891 892 893 894 895 
 
+d7:
+Size 3
+Contents: 10 20 30 
+Insert element front size 4
+Contents: 5 10 20 30 
+Insert element end size 5
+Contents: 5 10 20 30 35 
+Insert element front half size 6
+Contents: 5 10 15 20 30 35 
+Insert element back half size 7
+Contents: 5 10 15 20 25 30 35 
+Insert sequence front size 12
+Contents: 0 1 2 3 4 5 10 15 20 25 30 35 
+Insert sequence back size 17
+Contents: 0 1 2 3 4 5 10 15 20 25 30 35 36 37 38 39 40 
+Insert sequence front half size 21
+Contents: 0 1 2 3 4 5 6 7 8 9 10 15 20 25 30 35 36 37 38 39 40 
+Insert sequence back half size 25
+Contents: 0 1 2 3 4 5 6 7 8 9 10 15 20 25 30 31 32 33 34 35 36 37 38 39 40 
