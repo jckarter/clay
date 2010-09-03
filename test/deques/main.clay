@@ -228,4 +228,59 @@ main() {
         }
     }
     println();
+
+    println("d7:");
+    var d7 = Deque[Int](10, 20, 30);
+    println("Size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, begin(d7), 5);
+    println("Insert element front size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, end(d7), 35);
+    println("Insert element end size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, begin(d7) + 2, 15);
+    println("Insert element front half size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, end(d7) - 2, 25);
+    println("Insert element back half size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, begin(d7), range(5));
+    println("Insert sequence front size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, end(d7), range(36, 41));
+    println("Insert sequence back size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, begin(d7) + 6, range(6, 10));
+    println("Insert sequence front half size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, end(d7) - 6, range(31, 35));
+    println("Insert sequence back half size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
 }

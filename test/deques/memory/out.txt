@@ -2,191 +2,219 @@ making deque d1
 -- constructed 0
 -- constructed 1
 -- constructed 2
--- copied      3 from 0
--- copied      4 from 1
--- copied      5 from 2
+-- moved       3 from 0
+-- reset       0
+-- moved       4 from 1
+-- reset       1
+-- moved       5 from 2
+-- reset       2
+-- moved       6 from 3
+-- reset       3
+-- moved       7 from 4
+-- reset       4
+-- moved       8 from 5
+-- reset       5
+-- destroyed   5
+-- destroyed   4
+-- destroyed   3
 -- destroyed   2
 -- destroyed   1
 -- destroyed   0
 copying deque d2
--- copied      6 from 3
--- copied      7 from 4
--- copied      8 from 5
+-- copied      9 from 6
+-- copied      10 from 7
+-- copied      11 from 8
 lengthening deque d2
--- constructed 9
--- copied      10 from 9
--- destroyed   9
--- constructed 11
--- copied      12 from 11
--- destroyed   11
--- constructed 13
--- copied      14 from 13
--- destroyed   13
-shortening deque d2
--- destroyed   10
+-- constructed 12
+-- moved       13 from 12
+-- reset       12
 -- destroyed   12
+-- constructed 14
+-- moved       15 from 14
+-- reset       14
 -- destroyed   14
-deque d2 leaving scope
--- destroyed   6
--- destroyed   7
--- destroyed   8
-making deque d3 with exception
--- constructed 15
--- constructed 16 (throws on copy)
--- constructed 17
--- copied      18 from 15
--- throwing    16
--- destroyed   18
--- destroyed   17
+-- constructed 16
+-- moved       17 from 16
+-- reset       16
 -- destroyed   16
+shortening deque d2
+-- destroyed   13
 -- destroyed   15
-copying deque d4 with exception
--- copied      19 from 3
--- throwing    4
--- destroyed   19
-pushing onto deque d1
+-- destroyed   17
+deque d2 leaving scope
+-- destroyed   9
+-- destroyed   10
+-- destroyed   11
+making deque d3 with exception
+-- constructed 18
+-- constructed 19 (throws on copy)
 -- constructed 20
--- copied      21 from 20
--- destroyed   20
-pushing onto deque d1 with throw
--- constructed 22 (throws on copy)
--- throwing    22
--- destroyed   22
-popping from deque d1
--- moved       23 from 21
+-- moved       21 from 18
+-- reset       18
+-- moved       22 from 19
+-- reset       19
+-- moved       23 from 20
+-- reset       20
+-- moved       24 from 21
+-- reset       21
+-- moved       25 from 22
+-- reset       22
+-- moved       26 from 23
+-- reset       23
 -- destroyed   23
-popping from deque d1 shouldn't throw
--- moved       24 from 5
+-- destroyed   22
+-- destroyed   21
+-- destroyed   20
+-- destroyed   19
+-- destroyed   18
 -- destroyed   24
-pushing onto front of deque d1
--- constructed 25
--- copied      26 from 25
 -- destroyed   25
-pushing onto front of deque d1 with throw
--- constructed 27 (throws on copy)
--- throwing    27
+-- destroyed   26
+copying deque d4 with exception
+-- copied      27 from 6
+-- throwing    7
 -- destroyed   27
-popping from front of deque d1
--- moved       28 from 26
+pushing onto deque d1
+-- constructed 28
+-- moved       29 from 28
+-- reset       28
 -- destroyed   28
-popping from front of deque d1 shouldn't throw
--- moved       29 from 3
--- destroyed   29
-making deque d5
--- constructed 30
--- constructed 31
--- constructed 32
--- constructed 33
--- copied      34 from 30
--- copied      35 from 31
--- copied      36 from 32
--- copied      37 from 33
--- destroyed   33
--- destroyed   32
--- destroyed   31
+pushing onto deque d1 with throw
+-- constructed 30 (throws on copy)
+-- moved       31 from 30
+-- reset       30
 -- destroyed   30
-making deque d6
--- constructed 38
--- constructed 39
--- copied      40 from 38
--- copied      41 from 39
--- destroyed   39
--- destroyed   38
-d1 assign longer
--- constructed 42
--- copied      43 from 42
--- destroyed   42
--- constructed 44
--- copied      45 from 44
--- destroyed   44
--- constructed 46
--- copied      47 from 46
--- destroyed   46
-d1 assign shorter
--- destroyed   45
--- destroyed   47
-d5, d6 leaving scope
--- destroyed   40
--- destroyed   41
+popping from deque d1
+-- moved       32 from 31
+-- destroyed   32
+popping from deque d1 shouldn't throw
+-- moved       33 from 29
+-- destroyed   33
+pushing onto front of deque d1
+-- constructed 34
+-- moved       35 from 34
+-- reset       34
 -- destroyed   34
--- destroyed   35
+pushing onto front of deque d1 with throw
+-- constructed 36 (throws on copy)
+-- moved       37 from 36
+-- reset       36
 -- destroyed   36
--- destroyed   37
-moving d1 to d7
-clearing d7
--- destroyed   4
+popping from front of deque d1
+-- moved       38 from 37
+-- destroyed   38
+popping from front of deque d1 shouldn't throw
+-- moved       39 from 35
+-- destroyed   39
+making deque d5
+-- constructed 40
+-- constructed 41
+-- constructed 42
+-- constructed 43
+-- moved       44 from 40
+-- reset       40
+-- moved       45 from 41
+-- reset       41
+-- moved       46 from 42
+-- reset       42
+-- moved       47 from 43
+-- reset       43
+-- moved       48 from 44
+-- reset       44
+-- moved       49 from 45
+-- reset       45
+-- moved       50 from 46
+-- reset       46
+-- moved       51 from 47
+-- reset       47
+-- destroyed   47
+-- destroyed   46
+-- destroyed   45
+-- destroyed   44
 -- destroyed   43
-making deque d8
--- constructed 48
--- constructed 49
--- constructed 50
--- constructed 51
+-- destroyed   42
+-- destroyed   41
+-- destroyed   40
+making deque d6
 -- constructed 52
 -- constructed 53
--- constructed 54
--- constructed 55
--- constructed 56
--- copied      57 from 48
--- copied      58 from 49
--- copied      59 from 50
--- copied      60 from 51
--- copied      61 from 52
--- copied      62 from 53
--- copied      63 from 54
--- copied      64 from 55
--- copied      65 from 56
--- destroyed   56
+-- moved       54 from 52
+-- reset       52
+-- moved       55 from 53
+-- reset       53
+-- moved       56 from 54
+-- reset       54
+-- moved       57 from 55
+-- reset       55
 -- destroyed   55
 -- destroyed   54
 -- destroyed   53
 -- destroyed   52
--- destroyed   51
--- destroyed   50
--- destroyed   49
--- destroyed   48
-removing from d8 front
--- destroyed   57
-removing from d8 back
--- destroyed   65
-removing from d8 front half
+d1 assign longer
+-- constructed 58
+-- moved       59 from 58
+-- reset       58
+-- destroyed   58
+d1 assign shorter
+-- destroyed   8
 -- destroyed   59
--- moved       66 from 58
-removing from d8 back half
--- destroyed   63
--- moved       67 from 64
-removing from d8 entire range
--- destroyed   66
--- destroyed   60
--- destroyed   61
--- destroyed   62
--- destroyed   67
-making deque d9
+d5, d6 leaving scope
+-- destroyed   56
+-- destroyed   57
+-- destroyed   48
+-- destroyed   49
+-- destroyed   50
+-- destroyed   51
+moving d1 to d7
+clearing d7
+-- destroyed   6
+-- destroyed   7
+making deque d8
+-- constructed 60
+-- constructed 61
+-- constructed 62
+-- constructed 63
+-- constructed 64
+-- constructed 65
+-- constructed 66
+-- constructed 67
 -- constructed 68
--- constructed 69
--- constructed 70
--- constructed 71
--- constructed 72
--- constructed 73
--- constructed 74
--- constructed 75
--- constructed 76
--- constructed 77
--- constructed 78
--- constructed 79
--- copied      80 from 68
--- copied      81 from 69
--- copied      82 from 70
--- copied      83 from 71
--- copied      84 from 72
--- copied      85 from 73
--- copied      86 from 74
--- copied      87 from 75
--- copied      88 from 76
--- copied      89 from 77
--- copied      90 from 78
--- copied      91 from 79
--- destroyed   79
--- destroyed   78
+-- moved       69 from 60
+-- reset       60
+-- moved       70 from 61
+-- reset       61
+-- moved       71 from 62
+-- reset       62
+-- moved       72 from 63
+-- reset       63
+-- moved       73 from 64
+-- reset       64
+-- moved       74 from 65
+-- reset       65
+-- moved       75 from 66
+-- reset       66
+-- moved       76 from 67
+-- reset       67
+-- moved       77 from 68
+-- reset       68
+-- moved       78 from 69
+-- reset       69
+-- moved       79 from 70
+-- reset       70
+-- moved       80 from 71
+-- reset       71
+-- moved       81 from 72
+-- reset       72
+-- moved       82 from 73
+-- reset       73
+-- moved       83 from 74
+-- reset       74
+-- moved       84 from 75
+-- reset       75
+-- moved       85 from 76
+-- reset       76
+-- moved       86 from 77
+-- reset       77
 -- destroyed   77
 -- destroyed   76
 -- destroyed   75
@@ -197,22 +225,131 @@ making deque d9
 -- destroyed   70
 -- destroyed   69
 -- destroyed   68
-removing from d9 front range
--- destroyed   80
--- destroyed   81
-removing from d9 back range
--- destroyed   90
--- destroyed   91
-removing from d9 front half range
--- destroyed   83
--- destroyed   84
--- moved       92 from 82
-removing from d9 back half range
--- destroyed   87
--- destroyed   88
--- moved       93 from 89
-d1, d7, d8, d9 leaving scope
--- destroyed   92
--- destroyed   85
+-- destroyed   67
+-- destroyed   66
+-- destroyed   65
+-- destroyed   64
+-- destroyed   63
+-- destroyed   62
+-- destroyed   61
+-- destroyed   60
+removing from d8 front
+-- destroyed   78
+removing from d8 back
 -- destroyed   86
+removing from d8 front half
+-- destroyed   80
+-- moved       87 from 79
+removing from d8 back half
+-- destroyed   84
+-- moved       88 from 85
+removing from d8 entire range
+-- destroyed   87
+-- destroyed   81
+-- destroyed   82
+-- destroyed   83
+-- destroyed   88
+making deque d9
+-- constructed 89
+-- constructed 90
+-- constructed 91
+-- constructed 92
+-- constructed 93
+-- constructed 94
+-- constructed 95
+-- constructed 96
+-- constructed 97
+-- constructed 98
+-- constructed 99
+-- constructed 100
+-- moved       101 from 89
+-- reset       89
+-- moved       102 from 90
+-- reset       90
+-- moved       103 from 91
+-- reset       91
+-- moved       104 from 92
+-- reset       92
+-- moved       105 from 93
+-- reset       93
+-- moved       106 from 94
+-- reset       94
+-- moved       107 from 95
+-- reset       95
+-- moved       108 from 96
+-- reset       96
+-- moved       109 from 97
+-- reset       97
+-- moved       110 from 98
+-- reset       98
+-- moved       111 from 99
+-- reset       99
+-- moved       112 from 100
+-- reset       100
+-- moved       113 from 101
+-- reset       101
+-- moved       114 from 102
+-- reset       102
+-- moved       115 from 103
+-- reset       103
+-- moved       116 from 104
+-- reset       104
+-- moved       117 from 105
+-- reset       105
+-- moved       118 from 106
+-- reset       106
+-- moved       119 from 107
+-- reset       107
+-- moved       120 from 108
+-- reset       108
+-- moved       121 from 109
+-- reset       109
+-- moved       122 from 110
+-- reset       110
+-- moved       123 from 111
+-- reset       111
+-- moved       124 from 112
+-- reset       112
+-- destroyed   112
+-- destroyed   111
+-- destroyed   110
+-- destroyed   109
+-- destroyed   108
+-- destroyed   107
+-- destroyed   106
+-- destroyed   105
+-- destroyed   104
+-- destroyed   103
+-- destroyed   102
+-- destroyed   101
+-- destroyed   100
+-- destroyed   99
+-- destroyed   98
+-- destroyed   97
+-- destroyed   96
+-- destroyed   95
+-- destroyed   94
 -- destroyed   93
+-- destroyed   92
+-- destroyed   91
+-- destroyed   90
+-- destroyed   89
+removing from d9 front range
+-- destroyed   113
+-- destroyed   114
+removing from d9 back range
+-- destroyed   123
+-- destroyed   124
+removing from d9 front half range
+-- destroyed   116
+-- destroyed   117
+-- moved       125 from 115
+removing from d9 back half range
+-- destroyed   120
+-- destroyed   121
+-- moved       126 from 122
+d1, d7, d8, d9 leaving scope
+-- destroyed   125
+-- destroyed   118
+-- destroyed   119
+-- destroyed   126
