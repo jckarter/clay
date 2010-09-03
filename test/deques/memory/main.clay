@@ -14,7 +14,7 @@ private var canaryTracker = Vector[CanaryState]();
 record Canary { id: SizeT; throwOnCopy?: Bool; }
 
 // overload allocateRawMemory(Canary) to initialize memory to an invalid canary index
-private record CanaryLike { canary: Canary }
+private record CanaryLike { canary: Canary; }
 overload allocateRawMemory(static Canary, n) r: Pointer[Canary] {
     r <-- Pointer[Canary](allocateRawMemory(CanaryLike, n));
     for (x in CoordinateRange(r, r+n)) {
@@ -139,6 +139,14 @@ checkCanariesLiveInSequence(seq: S) {
     }
 }
 
+
+//
+// test
+//
+
+// artificially shrink the deque node size to stress-test overflow handling
+overload DequeBufferSize(static Canary) = SizeT(1);
+
 test() {
     println("making deque d1");
     var d1 = Deque[Canary](Canary(), Canary(), Canary());
@@ -157,7 +165,8 @@ test() {
 
     println("making deque d3 with exception");
     try {
-        var d3 = Deque[Canary](Canary(), Canary(true), Canary());
+        var thrower = Canary(true);
+        var d3 = Deque[Canary](Canary(), thrower, Canary());
     } catch(x) {}
 
     {
@@ -176,7 +185,8 @@ test() {
 
     println("pushing onto deque d1 with throw");
     try {
-        push(d1, Canary(true));
+        var thrower = Canary(true);
+        push(d1, thrower);
     } catch(x) {}
 
     println("popping from deque d1");
@@ -191,7 +201,8 @@ test() {
 
     println("pushing onto front of deque d1 with throw");
     try {
-        pushFront(d1, Canary(true));
+        var thrower = Canary(true);
+        pushFront(d1, thrower);
     } catch(x) {}
 
     println("popping from front of deque d1");
