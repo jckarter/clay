@@ -427,31 +427,16 @@ MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
                                        CodegenContextPtr ctx)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
-    MultiCValuePtr mcv = new MultiCValue();
-    for (unsigned i = 0; i < mpv->size(); ++i) {
-        PValuePtr pv = mpv->values[i];
-        if (pv->isTemp) {
-            CValuePtr cv = codegenAllocValue(pv->type, ctx);
-            mcv->add(cv);
-        }
-        else {
-            CValuePtr cvPtr = codegenAllocValue(pointerType(pv->type), ctx);
-            mcv->add(cvPtr);
-        }
-    }
-    codegenExpr(expr, env, ctx, mcv);
+    MultiCValuePtr mcv = codegenExprAsRef(expr, env, ctx);
+    assert(mpv->size() == mcv->size());
     MultiCValuePtr out = new MultiCValue();
-    for (unsigned i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mcv->size(); ++i) {
+        CValuePtr cv = mcv->values[i];
         if (mpv->values[i]->isTemp) {
-            CValuePtr cv = mcv->values[i];
-            cgPushStack(cv, ctx);
-            CValuePtr cv2 = new CValue(cv->type, cv->llValue);
-            cv2->forwardedRValue = true;
-            out->add(cv2);
+            cv = new CValue(cv->type, cv->llValue);
+            cv->forwardedRValue = true;
         }
-        else {
-            out->add(derefValue(mcv->values[i], ctx));
-        }
+        out->add(cv);
     }
     return out;
 }
