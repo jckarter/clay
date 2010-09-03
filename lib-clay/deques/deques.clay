@@ -361,7 +361,7 @@ overload remove(deque: Deque[T], i: DequeCoordinate[T]) {
         if (next != deque.end)
             moveDequeValues(i, newEnd, next);
         if (newEnd.node != deque.end.node)
-            freeRawMemory(deque.end.node);
+            freeRawMemory(deque.end.node^);
         deque.end = newEnd;
     }
 }
@@ -393,7 +393,7 @@ overload remove(deque: Deque[T], i: DequeCoordinate[T]) {
 private alias DEQUE_TARGET_BUFFER_SIZE = SizeT(512);
 private alias DEQUE_INITIAL_MAP_SIZE = SizeT(8);
 
-private DequeBufferSize(T) {
+DequeBufferSize(T) {
     if (TypeSize(T) < DEQUE_TARGET_BUFFER_SIZE)
         return DEQUE_TARGET_BUFFER_SIZE/TypeSize(T);
     else
@@ -651,7 +651,7 @@ overload insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq
         deque.begin.current^ <-- value;
     } catch(ex) {
         inc(deque.begin);
-        freeRawMemory(newBeginNode);
+        freeRawMemory(newBeginNode^);
         throw ex;
     }
 }
@@ -663,7 +663,7 @@ overload insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq
     try {
         deque.end.current^ <-- value;
     } catch(ex) {
-        freeRawMemory(newEndNode);
+        freeRawMemory(newEndNode^);
         throw ex;
     }
     setNode(deque.end, newEndNode);
