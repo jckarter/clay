@@ -95,16 +95,13 @@ overload moveUnsafe(x: Canary) r:Canary {
 
 overload resetUnsafe(x: Canary) {
     if (x.id >= size(canaryTracker)) {
-        println("!! tried to reset uninitialized canary!");
+        _Canary(x, false);
+        noisyPrintln("-- reset       ", x.id, " from uninitialized");
     } else if (canaryTracker[x.id] == ALIVE) {
         println("!! reset       ", x.id, " when still alive");
         canaryTracker[x.id] = INVALID;
-    } else if (canaryTracker[x.id] == DESTROYED) {
-        println("!! reset       ", x.id, " when destroyed");
-        canaryTracker[x.id] = INVALID;
     } else if (canaryTracker[x.id] == INVALID) {
         println("!! reset       ", x.id, " in invalid state");
-        canaryTracker[x.id] = INVALID;
     } else {
         noisyPrintln("-- reset       ", x.id);
         canaryTracker[x.id] = RESET;
@@ -132,8 +129,6 @@ checkCanariesLiveInSequence(seq: S) {
             println("!! destroyed   in sequence: ", x.id);
         else if (canaryTracker[x.id] == MOVED)
             println("!! moved       in sequence: ", x.id);
-        else if (canaryTracker[x.id] == RESET)
-            println("!! reset       in sequence: ", x.id);
         else if (canaryTracker[x.id] == INVALID)
             println("!! invalid     in sequence: ", x.id);
     }
@@ -282,6 +277,33 @@ test() {
     println("removing from d9 back half range");
     remove(d9, end(d9) - 3, end(d9) - 1);
     checkCanariesLiveInSequence(d9);
+
+    println("inserting into d9 front");
+    insert(d9, begin(d9), Canary());
+
+    println("inserting into d9 back");
+    insert(d9, end(d9), Canary());
+
+    println("inserting into d9 front half");
+    insert(d9, begin(d9) + 2, Canary());
+
+    println("inserting into d9 back half");
+    insert(d9, end(d9) - 2, Canary());
+
+    println("making deque d10");
+    var d10 = Deque[Canary](Canary(), Canary(), Canary());
+
+    println("inserting d10 into d9 front");
+    insert(d9, begin(d9), d10);
+
+    println("inserting d10 into d9 back");
+    insert(d9, end(d9), d10);
+
+    println("inserting d10 into d9 front half sequence");
+    insert(d9, begin(d9) + 2, d10);
+
+    println("inserting d10 into d9 back half sequence");
+    insert(d9, end(d9) - 2, d10);
 
     println("d1, d7, d8, d9 leaving scope");
 }
