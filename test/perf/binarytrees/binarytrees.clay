@@ -4,10 +4,10 @@
 // Pool
 //
 
-record Pool[T] {
-    data : Vector[T];
-    next : SizeT;
-}
+record Pool[T] (
+    data : Vector[T],
+    next : SizeT,
+);
 
 [T]
 overload Pool[T]() = Pool[T](0);
@@ -39,11 +39,11 @@ poolClear(p:Pool[T]) {
 // binary trees
 //
 
-record Node {
-    left : Pointer[Node];
-    right : Pointer[Node];
-    item : Int; 
-}
+record Node (
+    left : Pointer[Node],
+    right : Pointer[Node],
+    item : Int,
+);
 
 newNode(pool, item) {
     return poolAlloc(pool, Node(null(Node), null(Node), item));

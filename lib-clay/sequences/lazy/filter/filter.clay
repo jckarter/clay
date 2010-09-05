@@ -12,10 +12,10 @@ overload filter(predicate, forward seq) =
     Filtered(predicate, wrapSequence(seq));
 
 
-private record Filtered[F, A] {
-    predicate : F;
-    seq : A;
-}
+private record Filtered[F, A] (
+    predicate : F,
+    seq : A,
+);
 
 
 
@@ -47,12 +47,12 @@ overload reverseIterator(a:Filtered[F, A]) {
 // FilteredIterator
 //
 
-private record FilteredIterator[F, ITER, VALS] {
-    predicate : F;
-    iter : ITER;
-    hasQueued? : Bool;
-    queued : VALS;
-}
+private record FilteredIterator[F, ITER, VALS] (
+    predicate : F,
+    iter : ITER,
+    hasQueued? : Bool,
+    queued : VALS,
+);
 
 [F, ITER, VALS]
 overload hasNext?(iter:FilteredIterator[F, ITER, VALS]) {

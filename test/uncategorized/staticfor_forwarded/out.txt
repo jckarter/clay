@@ -1,0 +1,7 @@
+Foo(): Foo(1)
+Foo(): Foo(2)
+moveUnsafe(): Foo(1)
+moveUnsafe(): Foo(2)
+[Foo(1), Foo(2)]
+destroy(): Foo(1)
+destroy(): Foo(2)

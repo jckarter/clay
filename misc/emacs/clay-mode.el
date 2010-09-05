@@ -65,7 +65,7 @@
 
    '("^\\(\\[.*?\\]\\) *" 1 font-lock-doc-face)
 
-   '("\\<\\(?:a\\(?:lias\\|nd\\|s\\)\\|break\\|continue\\|e\\(?:num\\|lse\\|xternal\\)\\|forward\\|for\\|goto\\|i\\(?:mport\\|[fn]\\)\\|lvalue\\|n\\(?:ew\\|ot\\)\\|o\\(?:r\\|verload\\(?:able\\)?\\)\\|p\\(?:rivate\\|ublic\\|rocedure\\)\\|r\\(?:value\\|\\(e\\(?:cord\\|f\\|turn\\)\\)\\)\\|static\\|var\\|while\\|variant\\|instance\\|try\\|catch\\|throw\\|callbyname\\)\\>" . font-lock-keyword-face)
+   '("\\<\\(?:a\\(?:lias\\|nd\\|s\\)\\|break\\|continue\\|e\\(?:num\\|lse\\|xternal\\)\\|forward\\|for\\|goto\\|i\\(?:mport\\|[fn]\\)\\|lvalue\\|n\\(?:ew\\|ot\\)\\|o\\(?:r\\|verload\\(?:able\\)?\\)\\|p\\(?:rivate\\|ublic\\|rocedure\\)\\|r\\(?:value\\|\\(e\\(?:cord\\|f\\|turn\\)\\)\\)\\|static\\|var\\|while\\|switch\\|case\\|default\\|variant\\|instance\\|try\\|catch\\|throw\\|callbyname\\)\\>" . font-lock-keyword-face)
 
    '("\\<\\(true\\|false\\)\\>" . font-lock-constant-face)
 

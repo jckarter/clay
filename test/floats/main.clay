@@ -1,0 +1,77 @@
+
+import numbers.floats.*;
+
+main() {
+    var orderedComparisons = (
+        floatOrderedAndEquals?,
+        floatOrderedAndGreater?,
+        floatOrderedAndGreaterEquals?,
+        floatOrderedAndLesser?,
+        floatOrderedAndLesserEquals?,
+        floatOrderedAndNotEquals?,
+        floatOrdered?,
+    );
+
+    var unorderedComparisons = (
+        floatUnorderedOrEquals?,
+        floatUnorderedOrGreater?,
+        floatUnorderedOrGreaterEquals?,
+        floatUnorderedOrLesser?,
+        floatUnorderedOrLesserEquals?,
+        floatUnorderedOrNotEquals?,
+        floatUnordered?,
+    );
+
+    var operators = (
+        equals?,
+        notEquals?,
+        lesser?,
+        lesserEquals?,
+        greater?,
+        greaterEquals?,
+        ordered?,
+    );
+
+    var zero, one = 0.0, 1.0;
+    var inf, ninf, nan = one/zero, -one/zero, zero/zero;
+
+    var values = [zero, one, inf, ninf, nan];
+
+    testFuncs("ORDERED COMPARISONS", orderedComparisons, values);
+    testFuncs("UNORDERED COMPARISONS", unorderedComparisons, values);
+    testFuncs("DEFAULT OPERATORS", operators, values);
+}
+
+testFuncs(title, funcs, values) {
+    println();
+    println("#########################");
+    println("## ", title);
+    println("#########################");
+    println();
+    static for (f in ...unpack(funcs)) {
+        for (a in values)
+            for (b in values)
+                test(f, a, b);
+    }
+    println();
+}
+
+test(f, a, b) {
+    var astr, bstr = floatStr(a), floatStr(b);
+    println(f, "(", astr, ", ", bstr, ") = ", f(a,b));
+}
+
+floatStr(x) {
+    if (x == 0.0)
+        return "0.0";
+    if (x == 1.0)
+        return "1.0";
+    if (x == 1.0/0.0)
+        return "Inf";
+    if (x == -1.0/0.0)
+        return "-Inf";
+    if (x != x)
+        return "NaN";
+    error("unknown value: ", x);
+    return "";
+}

@@ -1,0 +1,41 @@
+
+record Foo(value:Int);
+
+overload RegularRecord?(static Foo) = false;
+
+var _nextId = 1;
+
+overload Foo() returned:Foo {
+    returned.value = _nextId;
+    _nextId += 1;
+    println("Foo(): ", returned);
+}
+
+overload moveUnsafe(src:Foo) returned:Foo {
+    returned.value = src.value;
+    println("moveUnsafe(): ", returned);
+}
+
+overload resetUnsafe(x:Foo) {
+    x.value = -1;
+}
+
+overload destroy(x:Foo) {
+    if (x.value != -1)
+        println("destroy(): ", x);
+}
+
+
+[T, ...A | equalValues?(T, ...A)]
+makeArray(forward first:T, forward ...rest:A) returned:Array[T,countValues(T,...A)] {
+    var i = 0;
+    static for (x in first, ...rest) {
+        returned[i] <-- x;
+        i += 1;
+    }
+}
+
+main() {
+    var a = makeArray(Foo(), Foo());
+    println(a);
+}

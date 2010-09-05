@@ -8,9 +8,9 @@ import sequences.util.*;
 
 zip(forward first, forward ...rest) = Zipped(packSequences(first, ...rest));
 
-private record Zipped[A] {
-    seqs : A;
-}
+private record Zipped[A] (
+    seqs : A
+);
 
 
 
@@ -21,9 +21,9 @@ private record Zipped[A] {
 [A]
 overload iterator(a:Zipped[A]) = ZippedIterator(multiIterators(a.seqs));
 
-private record ZippedIterator[ITERS] {
-    iters : ITERS;
-}
+private record ZippedIterator[ITERS] (
+    iters : ITERS
+);
 
 [ITERS]
 overload hasNext?(iter:ZippedIterator[ITERS]) = multiHasNext?(iter.iters);

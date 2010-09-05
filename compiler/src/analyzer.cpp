@@ -87,7 +87,7 @@ static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index)
     case FLOAT_TYPE :
         return t;
     default :
-        argumentError(index, "expecting a numeric type");
+        argumentTypeError(index, "numeric type", t);
         return NULL;
     }
 }
@@ -96,7 +96,7 @@ static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = valueToType(x, index);
     if (t->typeKind != INTEGER_TYPE)
-        argumentError(index, "expecting an integer type");
+        argumentTypeError(index, "integer type", t);
     return (IntegerType *)t.ptr();
 }
 
@@ -104,7 +104,7 @@ static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = valueToType(x, index);
     if (!isPointerOrCodePointerType(t))
-        argumentError(index, "expecting a pointer type");
+        argumentTypeError(index, "pointer or code-pointer type", t);
     return t;
 }
 
@@ -112,7 +112,7 @@ static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = valueToType(x, index);
     if (t->typeKind != ENUM_TYPE)
-        argumentError(index, "expecting an enumeration type");
+        argumentTypeError(index, "enum type", t);
     return t;
 }
 
@@ -192,7 +192,7 @@ static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
     case FLOAT_TYPE :
         return t;
     default :
-        argumentError(index, "expecting a numeric value");
+        argumentTypeError(index, "numeric type", t);
         return NULL;
     }
 }
@@ -201,7 +201,7 @@ static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
     if (t->typeKind != INTEGER_TYPE)
-        argumentError(index, "expecting an integer value");
+        argumentTypeError(index, "integer type", t);
     return (IntegerType *)t.ptr();
 }
 
@@ -209,7 +209,7 @@ static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
     if (t->typeKind != POINTER_TYPE)
-        argumentError(index, "expecting a pointer value");
+        argumentTypeError(index, "pointer type", t);
     return (PointerType *)t.ptr();
 }
 
@@ -217,7 +217,7 @@ static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
     if (t->typeKind != ARRAY_TYPE)
-        argumentError(index, "expecting an array");
+        argumentTypeError(index, "array type", t);
     return (ArrayType *)t.ptr();
 }
 
@@ -225,7 +225,7 @@ static TupleTypePtr tupleTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
     if (t->typeKind != TUPLE_TYPE)
-        argumentError(index, "expecting a tuple");
+        argumentTypeError(index, "tuple type", t);
     return (TupleType *)t.ptr();
 }
 
@@ -233,7 +233,7 @@ static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
     if (t->typeKind != RECORD_TYPE)
-        argumentError(index, "expecting a record");
+        argumentTypeError(index, "record type", t);
     return (RecordType *)t.ptr();
 }
 
@@ -241,7 +241,7 @@ static VariantTypePtr variantTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
     if (t->typeKind != VARIANT_TYPE)
-        argumentError(index, "expecting a variant");
+        argumentTypeError(index, "variant type", t);
     return (VariantType *)t.ptr();
 }
 
@@ -1440,8 +1440,9 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
         suffix->add(args->values[i]);
     PValuePtr pvDispatch = args->values[index];
     if (pvDispatch->type->typeKind != VARIANT_TYPE) {
-        argumentError(index, "dispatch operator can "
-                      "only be used with variants");
+        argumentTypeError(index,
+                          "variant for dispatch operator",
+                          pvDispatch->type);
     }
     VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
     const vector<TypePtr> &memberTypes = variantMemberTypes(t);
@@ -1798,6 +1799,22 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
         if (x->elsePart.ptr())
             elseResult = analyzeStatement(x->elsePart, env, ctx);
         return thenResult || elseResult;
+    }
+
+    case SWITCH : {
+        Switch *x = (Switch *)stmt.ptr();
+        if (!x->desugared)
+            x->desugared = desugarSwitchStatement(x);
+        return analyzeStatement(x->desugared, env, ctx);
+    }
+
+    case CASE_BODY : {
+        CaseBody *x = (CaseBody *)stmt.ptr();
+        for (unsigned i = 0; i < x->statements.size(); ++i) {
+            if (!analyzeStatement(x->statements[i], env, ctx))
+                return false;
+        }
+        return true;
     }
 
     case EXPR_STATEMENT :
@@ -2176,9 +2193,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ObjectPtr obj = unwrapStaticType(args->values[1]->type);
         size_t i = 0;
         if (!obj || !staticToSizeTOrInt(obj, i))
-            argumentError(1, "expecting SizeT or Int value");
+            argumentError(1, "expecting static SizeT or Int value");
         if (i >= t->elementTypes.size())
-            argumentError(1, "tuple index out of range");
+            argumentIndexRangeError(1, "tuple element index",
+                                    i, t->elementTypes.size());
         return new MultiPValue(new PValue(t->elementTypes[i], false));
     }
 
@@ -2217,10 +2235,11 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ObjectPtr second = unwrapStaticType(args->values[1]->type);
         size_t i = 0;
         if (!second || !staticToSizeTOrInt(second, i))
-            argumentError(1, "expecting SizeT or Int value");
+            argumentError(1, "expecting static SizeT or Int value");
         const vector<IdentifierPtr> fieldNames = recordFieldNames(rt);
         if (i >= fieldNames.size())
-            argumentError(1, "field index out of range");
+            argumentIndexRangeError(1, "record field index",
+                                    i, fieldNames.size());
         return new MultiPValue(staticPValue(fieldNames[i].ptr()));
     }
 
@@ -2233,10 +2252,11 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ObjectPtr obj = unwrapStaticType(args->values[1]->type);
         size_t i = 0;
         if (!obj || !staticToSizeTOrInt(obj, i))
-            argumentError(1, "expecting SizeT or Int value");
+            argumentError(1, "expecting static SizeT or Int value");
         const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
         if (i >= fieldTypes.size())
-            argumentError(1, "field index out of range");
+            argumentIndexRangeError(1, "record field index",
+                                    i, fieldTypes.size());
         return new MultiPValue(new PValue(fieldTypes[i], false));
     }
 
@@ -2250,8 +2270,11 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(t);
         map<string, size_t>::const_iterator fi =
             fieldIndexMap.find(fname->str);
-        if (fi == fieldIndexMap.end())
-            argumentError(1, "field not in record");
+        if (fi == fieldIndexMap.end()) {
+            ostringstream sout;
+            sout << "field not found: " << fname->str;
+            argumentError(1, sout.str());
+        }
         const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
         return new MultiPValue(new PValue(fieldTypes[fi->second], false));
     }
@@ -2379,10 +2402,13 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(1, "expecting a static SizeT or Int value");
         if (!endObj || !staticToSizeTOrInt(endObj, end))
             argumentError(2, "expecting a static SizeT or Int value");
-        if (begin > ident->str.size())
-            argumentError(1, "starting index out of range");
-        if ((end < begin) || (end > ident->str.size()))
-            argumentError(2, "ending index out of range");
+        if (end > ident->str.size()) {
+            argumentIndexRangeError(2, "ending index",
+                                    end, ident->str.size());
+        }
+        if (begin > end)
+            argumentIndexRangeError(1, "starting index",
+                                    begin, end);
         string result = ident->str.substr(begin, end-begin);
         return analyzeStaticObject(new Identifier(result));
     }

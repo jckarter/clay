@@ -1,7 +1,7 @@
 
-record Multiplier[N] {
-    factor:N;
-}
+record Multiplier[N] (
+    factor:N
+);
 
 [N]
 overload call(x:Multiplier[N], y) = x.factor * y;

@@ -302,7 +302,7 @@ void BindingsConverter::generateDecl(Decl *decl)
             string outName = name.empty() ?
                 anonRecordNames[x] : recordNames[name];
             out << '\n';
-            out << "record " << outName << " {\n";
+            out << "record " << outName << " (\n";
             RecordDecl::field_iterator i, e;
             int index = 0;
             for (i = x->field_begin(), e = x->field_end(); i != e; ++i) {
@@ -314,10 +314,10 @@ void BindingsConverter::generateDecl(Decl *decl)
                     out << "unnamed_field" << index;
                 else
                     out << fname;
-                out << " : " << convertType(t) << ";\n";
+                out << " : " << convertType(t) << ",\n";
                 ++index;
             }
-            out << "}\n";
+            out << ");\n";
         }
         break;
     }

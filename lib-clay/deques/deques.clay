@@ -3,12 +3,12 @@
 // Deque coordinates
 //
 
-record DequeCoordinate[T] {
-    current: Pointer[T];
-    first: Pointer[T];
-    last: Pointer[T];
-    node: Pointer[Pointer[T]];
-}
+record DequeCoordinate[T] (
+    current: Pointer[T],
+    first: Pointer[T],
+    last: Pointer[T],
+    node: Pointer[Pointer[T]],
+);
 
 [T] overload DequeCoordinate[T]() = DequeCoordinate[T](
     Pointer[T](0),
@@ -92,12 +92,12 @@ record DequeCoordinate[T] {
 //
 // Deque object interface
 //
-record Deque[T] {
-    map: Pointer[Pointer[T]];
-    mapSize: SizeT;
-    begin: DequeCoordinate[T];
-    end: DequeCoordinate[T];
-}
+record Deque[T] (
+    map: Pointer[Pointer[T]],
+    mapSize: SizeT,
+    begin: DequeCoordinate[T],
+    end: DequeCoordinate[T],
+);
 
 [T] overload RegularRecord?(static Deque[T]) = false;
 

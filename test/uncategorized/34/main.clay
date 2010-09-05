@@ -1,4 +1,4 @@
-record Foo {}
+record Foo ();
 
 overload Foo() returned:Foo { println("constructing Foo"); }
 overload destroy(x:Foo) { println("destroying Foo"); }

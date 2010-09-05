@@ -85,9 +85,9 @@ equalValues?(a, ...rest) {
 
 // captureValue, forwardValue, capturedRef
 
-private record CapturedLValue[T] {
-    ptr : Pointer[T];
-}
+private record CapturedLValue[T] (
+    ptr : Pointer[T]
+);
 
 procedure captureValue;
 overload captureValue(rvalue x) = move(x);

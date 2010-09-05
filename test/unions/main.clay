@@ -1,8 +1,8 @@
 
-record Point {
-    x : Int;
-    y : Int;
-}
+record Point (
+    x : Int,
+    y : Int,
+);
 
 alias T = Union[Double,
                 UInt64,

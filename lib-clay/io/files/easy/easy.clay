@@ -7,23 +7,23 @@ import io.files.raw.*;
 // File
 //
 
-record File {
-    ptr : SharedPointer[FileData];
-}
+record File (
+    ptr : SharedPointer[FileData],
+);
 
 private alias BUFFER_SIZE = 4096;
 
-private record FileData {
-    file : RawFile;
+private record FileData (
+    file : RawFile,
 
-    readBuffer : Array[Byte, BUFFER_SIZE];
-    readBegin : Pointer[Byte];
-    readEnd : Pointer[Byte];
+    readBuffer : Array[Byte, BUFFER_SIZE],
+    readBegin : Pointer[Byte],
+    readEnd : Pointer[Byte],
 
-    lineBuffered? : Bool;
-    writeBuffer : Array[Byte, BUFFER_SIZE];
-    writeCount : SizeT;
-}
+    lineBuffered? : Bool,
+    writeBuffer : Array[Byte, BUFFER_SIZE],
+    writeCount : SizeT,
+);
 
 
 

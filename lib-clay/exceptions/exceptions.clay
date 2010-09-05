@@ -9,8 +9,7 @@ import libc;
 
 variant Exception = NoException;
 
-record NoException {
-}
+record NoException ();
 
 overload Exception() = Exception(NoException());
 

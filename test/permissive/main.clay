@@ -49,12 +49,12 @@ T(...args:A) returned:T {
 // test permissive record constructor
 //
 
-record Foo {
-    a : Int8;
-    b : UInt32;
-    c : Pointer[Int];
-    d : Pointer[Int8];
-}
+record Foo (
+    a : Int8,
+    b : UInt32,
+    c : Pointer[Int],
+    d : Pointer[Int8],
+);
 
 overload PermissiveRecordConstructor?(static Foo) = true;
 

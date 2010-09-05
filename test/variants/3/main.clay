@@ -1,9 +1,7 @@
 
-record Human {
-}
+record Human ();
 
-record Dog {
-}
+record Dog ();
 
 variant Animal = Human | Dog;
 

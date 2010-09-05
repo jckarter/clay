@@ -12,9 +12,9 @@ lines(f:File) = LineSequence(f);
 // LineSequence
 //
 
-private record LineSequence {
-    f : File;
-}
+private record LineSequence (
+    f : File,
+);
 
 overload iterator(x:LineSequence) = LineIterator(&x.f, false, String());
 
@@ -24,11 +24,11 @@ overload iterator(x:LineSequence) = LineIterator(&x.f, false, String());
 // LineIterator
 //
 
-private record LineIterator {
-    file : Pointer[File];
-    queued? : Bool;
-    string : String;
-}
+private record LineIterator (
+    file : Pointer[File],
+    queued? : Bool,
+    string : String,
+);
 
 overload hasNext?(x:LineIterator) {
     if (not x.queued?) {

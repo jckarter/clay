@@ -1,25 +1,25 @@
-record TestStatus {
-    passed: UInt;
-    failed: UInt;
-    pending: UInt;
-}
+record TestStatus (
+    passed: UInt,
+    failed: UInt,
+    pending: UInt,
+);
 
 overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
 
-record TestCase[F] {
-    name: StringConstant;
-    case: F;
-    pending?: Bool;
-}
+record TestCase[F] (
+    name: StringConstant,
+    _case: F,
+    pending?: Bool,
+);
 
 [F] overload TestCase(name, fn:F) = TestCase[F](name, fn, false);
 
 [F] PendingTestCase(name, fn:F) = TestCase[F](name, fn, true);
 
-record TestSuite[TestCases] {
-    name: StringConstant;
-    testCases: TestCases;
-}
+record TestSuite[TestCases] (
+    name: StringConstant,
+    testCases: TestCases,
+);
 
 alias TEST_CASE_INDENT = "  ";
 alias TEST_FAILURE_INDENT = TEST_CASE_INDENT + TEST_CASE_INDENT;
@@ -44,7 +44,7 @@ reportTest(test: TestStatus, ...prefix) {
     var test = TestStatus();
     println("Testing ", suite.name, ":");
     eachValue(
-        case ref => { accumulateTestStatus(test, runTestCase(case)); },
+        _case ref => { accumulateTestStatus(test, runTestCase(_case)); },
         ...unpack(suite.testCases)
     );
     reportTest(test, "-- ", suite.name, ": ");
@@ -61,13 +61,13 @@ pendingMessage(pending?) {
 
 printFailure(...xs) { println(TEST_FAILURE_INDENT, ...xs); }
 
-[F] runTestCase(case: TestCase[F]) TestStatus {
-    print(TEST_CASE_INDENT, pendingMessage(case.pending?), case.name, ":");
+[F] runTestCase(_case: TestCase[F]) TestStatus {
+    print(TEST_CASE_INDENT, pendingMessage(_case.pending?), _case.name, ":");
     flush(stdout);
     
     var test = TestStatus();
     try {
-        case.case(test);
+        _case._case(test);
     } catch(e) {
         failed(test);
         println();
@@ -76,14 +76,14 @@ printFailure(...xs) { println(TEST_FAILURE_INDENT, ...xs); }
     }
 
     if (test.failed > 0) {
-        if (case.pending?) {
+        if (_case.pending?) {
             test.pending = test.failed;
             test.failed = 0;
         } else {
             printFailure("-- FAILED");
         }
     } else {
-        if (case.pending?) {
+        if (_case.pending?) {
             println();
             printFailure("-- FIXED (should clear pending flag)");
             test.failed = 1;

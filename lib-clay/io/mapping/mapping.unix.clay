@@ -5,16 +5,16 @@ import unix;
 // FileMapping
 //
 
-private record InnerFileMapping {
-    address : Pointer[Byte];
-    length : SizeT;
-}
+private record InnerFileMapping (
+    address : Pointer[Byte],
+    length : SizeT,
+);
 
 overload RegularRecord?(static InnerFileMapping) = false;
 
-record FileMapping {
-    inner : SharedPointer[InnerFileMapping];
-}
+record FileMapping (
+    inner : SharedPointer[InnerFileMapping],
+);
 
 
 
@@ -29,25 +29,28 @@ enum MappingMode {
 }
 
 private modeProtection(mode) {
-    if (mode == MAP_READ)
+    switch (mode) {
+    case MAP_READ :
         return unix.PROT_READ;
-    if (mode == MAP_READ_WRITE)
+    case MAP_READ_WRITE :
         return bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
-    if (mode == MAP_COPY_ON_WRITE)
+    case MAP_COPY_ON_WRITE :
         return bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
-    assert(false);
-    return -1;
+    default :
+        assert(false);
+        return -1;
+    }
 }
 
 private modeFlags(mode) {
-    if (mode == MAP_READ)
-        return unix.MAP_SHARED;
-    if (mode == MAP_READ_WRITE)
-        return unix.MAP_SHARED;
-    if (mode == MAP_COPY_ON_WRITE)
-        return unix.MAP_PRIVATE;
-    assert(false);
-    return -1;
+    switch (mode) {
+    case MAP_READ :          return unix.MAP_SHARED;
+    case MAP_READ_WRITE :    return unix.MAP_SHARED;
+    case MAP_COPY_ON_WRITE : return unix.MAP_PRIVATE;
+    default :
+        assert(false);
+        return -1;
+    }
 }
 
 [A,B | Integer?(A,B)]

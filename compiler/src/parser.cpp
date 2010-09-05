@@ -1143,6 +1143,109 @@ static bool ifStatement(StatementPtr &x) {
     return true;
 }
 
+static bool caseLabel(ExprPtr &x) {
+    if (!keyword("case")) return false;
+    ExprPtr expr;
+    if (!expression(expr)) return false;
+    if (!symbol(":")) return false;
+    x = expr;
+    return true;
+}
+
+static bool caseLabelList(ExprListPtr &x) {
+    ExprPtr a;
+    if (!caseLabel(a)) return false;
+    x = new ExprList(a);
+    while (true) {
+        int p = save();
+        if (!caseLabel(a)) {
+            restore(p);
+            break;
+        }
+        x->add(a);
+    }
+    return true;
+}
+
+static bool caseBody(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    StatementPtr a;
+    if (!blockItem(a)) return false;
+    vector<StatementPtr> statements;
+    statements.push_back(a);
+    while (true) {
+        int p = save();
+        if (!blockItem(a)) {
+            restore(p);
+            break;
+        }
+        statements.push_back(a);
+    }
+    x = new CaseBody(statements);
+    x->location = location;
+    return true;
+}
+
+static bool caseBlock(CaseBlockPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprListPtr caseLabels;
+    StatementPtr body;
+    if (!caseLabelList(caseLabels)) return false;
+    if (!caseBody(body)) return false;
+    x = new CaseBlock(caseLabels, body);
+    x->location = location;
+    return true;
+}
+
+static bool caseBlockList(vector<CaseBlockPtr> &x) {
+    CaseBlockPtr a;
+    if (!caseBlock(a)) return false;
+    x.clear();
+    x.push_back(a);
+    while (true) {
+        int p = save();
+        if (!caseBlock(a)) {
+            restore(p);
+            break;
+        }
+        x.push_back(a);
+    }
+    return true;
+}
+
+static bool defaultCase(StatementPtr &x) {
+    if (!keyword("default")) return false;
+    if (!symbol(":")) return false;
+    return caseBody(x);
+}
+
+static bool optDefaultCase(StatementPtr &x) {
+    int p = save();
+    if (!defaultCase(x)) {
+        restore(p);
+        x = NULL;
+    }
+    return true;
+}
+
+static bool switchStatement(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr expr;
+    if (!keyword("switch")) return false;
+    if (!symbol("(")) return false;
+    if (!expression(expr)) return false;
+    if (!symbol(")")) return false;
+    if (!symbol("{")) return false;
+    vector<CaseBlockPtr> caseBlocks;
+    if (!caseBlockList(caseBlocks)) return false;
+    StatementPtr defaultCase;
+    if (!optDefaultCase(defaultCase)) return false;
+    if (!symbol("}")) return false;
+    x = new Switch(expr, caseBlocks, defaultCase);
+    x->location = location;
+    return true;
+}
+
 static bool exprStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr y;
@@ -1283,6 +1386,7 @@ static bool statement(StatementPtr &x) {
     if (restore(p), updateAssignment(x)) return true;
     if (restore(p), ifStatement(x)) return true;
     if (restore(p), gotoStatement(x)) return true;
+    if (restore(p), switchStatement(x)) return true;
     if (restore(p), returnStatement(x)) return true;
     if (restore(p), exprStatement(x)) return true;
     if (restore(p), whileStatement(x)) return true;
@@ -1674,7 +1778,6 @@ static bool recordField(RecordFieldPtr &x) {
     if (!identifier(y)) return false;
     ExprPtr z;
     if (!exprTypeSpec(z)) return false;
-    if (!symbol(";")) return false;
     x = new RecordField(y, z);
     x->location = location;
     return true;
@@ -1687,6 +1790,11 @@ static bool recordFields(vector<RecordFieldPtr> &x) {
     x.push_back(y);
     while (true) {
         int p = save();
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        p = save();
         if (!recordField(y)) {
             restore(p);
             break;
@@ -1707,10 +1815,11 @@ static bool optRecordFields(vector<RecordFieldPtr> &x) {
 
 static bool recordBodyFields(RecordBodyPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("{")) return false;
+    if (!symbol("(")) return false;
     vector<RecordFieldPtr> y;
     if (!optRecordFields(y)) return false;
-    if (!symbol("}")) return false;
+    if (!symbol(")")) return false;
+    if (!symbol(";")) return false;
     x = new RecordBody(y);
     x->location = location;
     return true;

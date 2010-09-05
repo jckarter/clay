@@ -15,9 +15,16 @@ TopLevelItem -> Record | Variant | Instance
               | ExternalProcedure | ExternalVariable
               | GlobalAlias
 
-Record -> "record" Identifier PatternVars? "{" RecordField* "}"
+Record -> "record" Identifier PatternVars? RecordBody
+
+RecordBody -> NormalRecordBody
+            | ComputedRecordBody
+
+NormalRecordBody -> "(" comma_list(RecordField) ")" ";"
+ComputedRecordBody -> "=" comma_list(Expression) ";"
+
 PatternVars -> "[" comma_list(Identifier) "]"
-RecordField -> Identifier TypeSpec ";"
+RecordField -> Identifier TypeSpec
 TypeSpec -> ":" Pattern
 
 Variant -> "variant" Identifier PatternVars? ("=" DefaultInstances)? ";"
@@ -89,6 +96,7 @@ Statement -> Block
            | UpdateAssignment
            | IfStatement
            | GotoStatement
+           | SwitchStatement
            | ReturnStatement
            | ExpressionStatement
            | WhileStatement
@@ -116,6 +124,12 @@ IfStatement -> "if" "(" Expression ")" Statement
                ("else" Statement)?
 
 GotoStatement -> "goto" Identifier ";"
+
+SwitchStatement -> "switch" "(" Expression ")" "{" CaseBlock* DefaultBlock? "}"
+CaseBlock -> CaseLabel+ CaseBody
+CaseLabel -> "case" Expression ":"
+DefaultBlock -> "default" ":" CaseBody
+CaseBody -> Statement+
 
 ReturnStatement -> "return" ReturnExpression? ";"
 ReturnExpression -> comma_list("ref"? Expression)

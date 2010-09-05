@@ -188,6 +188,8 @@ overload assign(dest:T, rvalue src:T) {
 
 notEquals?(a, b) = not equals?(a, b);
 
+ordered?(a, b) = (a <= b) or (b <= a);
+
 overload lesserEquals?(a, b) = not lesser?(b, a);
 
 overload greater?(a, b) = lesser?(b, a);

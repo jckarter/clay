@@ -4,9 +4,9 @@
 // SequenceHandle
 //
 
-record SequenceHandle[A] {
-    inner : Pointer[A];
-}
+record SequenceHandle[A] (
+    inner : Pointer[A]
+);
 
 
 

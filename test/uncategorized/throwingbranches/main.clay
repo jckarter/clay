@@ -1,4 +1,4 @@
-record FooException {}
+record FooException ();
 instance Exception = FooException;
 
 foo(x: Int) Int { throw FooException(); }

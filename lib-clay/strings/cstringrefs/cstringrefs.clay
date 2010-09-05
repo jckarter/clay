@@ -6,9 +6,9 @@ import libc;
 // CStringRef - null terminated string
 //
 
-record CStringRef {
-    ptr : Pointer[Int8];
-}
+record CStringRef (
+    ptr : Pointer[Int8]
+);
 
 
 

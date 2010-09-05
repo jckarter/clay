@@ -260,13 +260,31 @@ void ensureArity(MultiCValuePtr args, unsigned int size) {
         arityError(size, args->size());
 }
 
+void arityMismatchError(int leftArity, int rightArity) {
+    ostringstream sout;
+    sout << "arity mismatch. ";
+    sout << "left-side has " << leftArity << " " << valuesStr(leftArity);
+    sout << ", whereas right-side has " << rightArity
+         << " " << valuesStr(rightArity);
+}
+
+static string typeErrorMessage(const string &expected,
+                               TypePtr receivedType) {
+    ostringstream sout;
+    sout << "expected " << expected << ", "
+         << "but received " << receivedType << " type";
+    return sout.str();
+}
 
 static string typeErrorMessage(TypePtr expectedType,
                                TypePtr receivedType) {
     ostringstream sout;
-    sout << "expected type " << expectedType
-         << ", but received " << receivedType;
-    return sout.str();
+    sout << expectedType << " type";
+    return typeErrorMessage(sout.str(), receivedType);
+}
+
+void typeError(const string &expected, TypePtr receivedType) {
+    error(typeErrorMessage(expected, receivedType));
 }
 
 void typeError(TypePtr expectedType, TypePtr receivedType) {
@@ -274,7 +292,34 @@ void typeError(TypePtr expectedType, TypePtr receivedType) {
 }
 
 void argumentTypeError(unsigned int index,
+                       const string &expected,
+                       TypePtr receivedType) {
+    argumentError(index, typeErrorMessage(expected, receivedType));
+}
+
+void argumentTypeError(unsigned int index,
                        TypePtr expectedType,
                        TypePtr receivedType) {
     argumentError(index, typeErrorMessage(expectedType, receivedType));
+}
+
+void indexRangeError(const string &kind,
+                     size_t value,
+                     size_t maxValue)
+{
+    ostringstream sout;
+    sout << kind << " " << value << " is out of range. ";
+    sout << "it should be less than " << maxValue;
+    error(sout.str());
+}
+
+void argumentIndexRangeError(unsigned int index,
+                             const string &kind,
+                             size_t value,
+                             size_t maxValue)
+{
+    ostringstream sout;
+    sout << kind << " " << value << " is out of range. ";
+    sout << "it should be less than " << maxValue;
+    argumentError(index, sout.str());
 }

@@ -1,9 +1,7 @@
 
-record Human {
-}
+record Human ();
 
-record Dog {
-}
+record Dog ();
 
 variant Animal = Human | Dog;
 
@@ -20,8 +18,7 @@ printPair(a, b) {
 // extend Animal to include Cat
 //
 
-record Cat {
-}
+record Cat ();
 
 instance Animal = Cat;
 

@@ -11,7 +11,7 @@ captured_catch_type(T, v) = () => {
     }
 };
 
-record OtherException { what: StringConstant; }
+record OtherException ( what: StringConstant );
 instance Exception = OtherException;
 overload printTo(stream, x:OtherException) {
     printTo(stream, "<OtherException ", x.what, ">");

@@ -11,10 +11,10 @@ noisyPrintln(forward ...values) {
 enum CanaryState { DESTROYED, ALIVE, MOVED, RESET, INVALID }
 
 private var canaryTracker = Vector[CanaryState]();
-record Canary { id: SizeT; throwOnCopy?: Bool; }
+record Canary ( id: SizeT, throwOnCopy?: Bool );
 
 // overload allocateRawMemory(Canary) to initialize memory to an invalid canary index
-private record CanaryLike { canary: Canary; }
+private record CanaryLike ( canary: Canary );
 overload allocateRawMemory(static Canary, n) r: Pointer[Canary] {
     r <-- Pointer[Canary](allocateRawMemory(CanaryLike, n));
     for (x in CoordinateRange(r, r+n)) {
@@ -23,10 +23,10 @@ overload allocateRawMemory(static Canary, n) r: Pointer[Canary] {
     }
 }
 
-record CanaryCopyException {}
+record CanaryCopyException ();
 instance Exception = CanaryCopyException;
 
-record UninitializedCanaryCopyException {}
+record UninitializedCanaryCopyException ();
 instance Exception = UninitializedCanaryCopyException;
 
 private _Canary(r: Canary, throwOnCopy?: Bool) {
