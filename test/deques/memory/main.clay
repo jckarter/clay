@@ -1,7 +1,7 @@
 import deques.*;
 
 alias UNINITIALIZED_CANARY = SizeT(-1);
-alias NOISY_CANARIES = true;
+alias NOISY_CANARIES = false;
 
 noisyPrintln(forward ...values) {
     if (NOISY_CANARIES)
