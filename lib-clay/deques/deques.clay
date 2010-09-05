@@ -214,9 +214,8 @@ overload pushFront(deque: Deque[T], forward seq: S) {
 [T, S | SizedSequence?(S) and SequenceElementType(S) == T]
 overload pushFront(deque: Deque[T], forward seq: S) {
     var seqSize = size(seq);
-    var oldBegin = deque.begin;
     deque.begin = reserveDequeFrontElements(deque, seqSize);
-    var i = oldBegin;
+    var i = deque.begin + seqSize;
     try {
         for (x in reverse(seq)) {
             dec(i);
@@ -246,9 +245,8 @@ overload push(deque: Deque[T], forward seq: S) {
 [T, S | SizedSequence?(S) and SequenceElementType(S) == T]
 overload push(deque: Deque[T], forward seq: S) {
     var seqSize = size(seq);
-    var oldEnd = deque.end;
     deque.end = reserveDequeBackElements(deque, seqSize);
-    var i = oldEnd;
+    var i = deque.end - seqSize;
     try {
         for (x in seq) {
             i^ <-- x;
@@ -491,13 +489,13 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
     if (deque.mapSize > SizeT(2)*newNodeCount) {
         newBeginNode = deque.map + (deque.mapSize - newNodeCount)/SizeT(2) + frontOffset;
         if (newBeginNode < deque.begin.node)
-            copyMemory(
+            moveMemoryUnsafe(
                 newBeginNode,
                 newBeginNode + oldNodeCount,
                 deque.begin.node
             );
         else
-            copyMemoryBackwards(
+            moveMemoryBackwardsUnsafe(
                 newBeginNode,
                 newBeginNode + oldNodeCount,
                 deque.begin.node
@@ -506,7 +504,7 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
         var newMapSize = deque.mapSize + max(deque.mapSize, addCount) + SizeT(2);
         var newMap = allocateRawMemory(Pointer[T], newMapSize);
         newBeginNode = newMap + (newMapSize - newNodeCount)/SizeT(2) + frontOffset;
-        copyMemory(
+        moveMemoryUnsafe(
             newBeginNode,
             newBeginNode + oldNodeCount,
             deque.begin.node
@@ -599,8 +597,12 @@ private printMap(deque) {
         var prev = i;
         dec(prev);
         moveDequeValues(deque.begin, prev, oldBegin);
-        resetUnsafe(prev^);
-        prev^ <-- value; 
+        try {
+            prev^ <-- value; 
+        } catch (ex) {
+            resetUnsafe(prev^);
+            throw ex;
+        }
     } else {
         deque.end = reserveDequeBackElements(deque, SizeT(1));
         var oldEnd = deque.end;
@@ -609,8 +611,12 @@ private printMap(deque) {
         var next = i;
         inc(next);
         moveDequeValuesBackwards(next, deque.end, i);
-        resetUnsafe(i^);
-        i^ <-- value;
+        try {
+            i^ <-- value;
+        } catch (ex) {
+            resetUnsafe(i^);
+            throw ex;
+        }
     }
 }
 
@@ -632,14 +638,17 @@ overload insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq
         moveDequeValues(deque.begin, prev, oldBegin);
 
         var ii = prev;
-        while (ii != i) {
-            resetUnsafe(ii^);
-            inc(ii);
-        }
-        ii = prev;
-        for (x in seq) {
-            ii^ <-- x;
-            inc(ii);
+        try {
+            for (x in seq) {
+                ii^ <-- x;
+                inc(ii);
+            }
+        } catch (ex) {
+            while (ii != i) {
+                resetUnsafe(ii^);
+                inc(ii);
+            }
+            throw ex;
         }
     } else {
         deque.end = reserveDequeBackElements(deque, seqSize);
@@ -649,14 +658,17 @@ overload insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq
         moveDequeValuesBackwards(next, deque.end, i);
 
         var ii = i;
-        while (ii != next) {
-            resetUnsafe(ii^);
-            inc(ii);
-        }
-        ii = i;
-        for (x in seq) {
-            ii^ <-- x;
-            inc(ii);
+        try {
+            for (x in seq) {
+                ii^ <-- x;
+                inc(ii);
+            }
+        } catch (ex) {
+            while (ii != next) {
+                resetUnsafe(ii^);
+                inc(ii);
+            }
+            throw ex;
         }
     }
 }
