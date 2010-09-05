@@ -1,14 +1,5 @@
 import deques.*;
 
-var canaryCounter = 0u;
-record Canary ( id: UInt );
-_Canary(r: Canary) { r.id <-- canaryCounter; inc(canaryCounter); }
-overload Canary() r:Canary { _Canary(r); println("-- constructed ", r.id); }
-overload Canary(x: Canary) r:Canary { _Canary(r); println("-- copied ", x.id, " to ", r.id); }
-overload destroy(x: Canary) { println("-- deleted ", x.id); }
-overload moveUnsafe(x: Canary) r:Canary { _Canary(r); println("-- moved ", x.id, " to ", r.id); }
-overload assign(x: Canary, y: Canary) { }
-
 main() {
     println("d1:");
 
@@ -22,10 +13,31 @@ main() {
 
     println("Full size ", size(d1));
 
+    println("begin is ", if (begin(d1) < end(d1)) "" else "not ", "less than end");
+    println("begin is ", if (begin(d1) == end(d1)) "" else "not ", "equal to end");
+    println("begin is ", if (begin(d1) > end(d1)) "" else "not ", "greater than end");
+
+    println("end is ", if (end(d1) < begin(d1)) "" else "not ", "less than begin");
+    println("end is ", if (end(d1) == begin(d1)) "" else "not ", "equal to begin");
+    println("end is ", if (end(d1) > begin(d1)) "" else "not ", "greater than begin");
+
     println("Iterating:");
     
     var n = 0;
     for (x in d1) {
+        print(x, " ");
+        n += 1;
+        if (n == 20) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    println("Reverse Iterating:");
+    
+    var n = 0;
+    for (x in reverse(d1)) {
         print(x, " ");
         n += 1;
         if (n == 20) {
@@ -60,6 +72,14 @@ main() {
 
     println("Empty size ", size(d1));
 
+    println("begin is ", if (begin(d1) < end(d1)) "" else "not ", "less than end");
+    println("begin is ", if (begin(d1) == end(d1)) "" else "not ", "equal to end");
+    println("begin is ", if (begin(d1) > end(d1)) "" else "not ", "greater than end");
+
+    println("end is ", if (end(d1) < begin(d1)) "" else "not ", "less than begin");
+    println("end is ", if (end(d1) == begin(d1)) "" else "not ", "equal to begin");
+    println("end is ", if (end(d1) > begin(d1)) "" else "not ", "greater than begin");
+
     println();
     println("d2:");
 
@@ -75,6 +95,18 @@ main() {
     for (x in d2copy) print(x, " ");
     println();
 
+    remove(d2copy, end(d2copy) - 1);
+    println("Removed element from back size ", size(d2copy));
+    print("Contents: ");
+    for (x in d2copy) print(x, " ");
+    println();
+
+    remove(d2copy, begin(d2copy));
+    println("Removed element from front size ", size(d2copy));
+    print("Contents: ");
+    for (x in d2copy) print(x, " ");
+    println();
+
     println();
     println("d3:");
 
@@ -85,8 +117,26 @@ main() {
     for (x in d3) print(x, " ");
     println();
 
+    remove(d3, begin(d3) + 2);
+    println("Removed element from front half size ", size(d3));
+    print("Contents: ");
+    for (x in d3) print(x, " ");
+    println();
+
+    remove(d3, begin(d3) + 4);
+    println("Removed element from back half size ", size(d3));
+    print("Contents: ");
+    for (x in d3) print(x, " ");
+    println();
+
     d3 = d2;
     println("Assigned from d2 size ", size(d3));
+    print("Contents: ");
+    for (x in d3) print(x, " ");
+    println();
+
+    d3 = Deque[Int](1, 1, 2);
+    println("Assigned from shorter rvalue size ", size(d3));
     print("Contents: ");
     for (x in d3) print(x, " ");
     println();
@@ -107,5 +157,130 @@ main() {
     println("Size ", size(d5));
     print("Contents: ");
     for (x in d5) print(x, " ");
+    println();
+    clear(d5);
+    println("Cleared size ", size(d5));
+
+    println();
+    println("d6:");
+    var d6 = Deque[Int](range(1024));
+    println("Size ", size(d6));
+
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    remove(d6, begin(d6), begin(d6) + 128);
+    println("Removed chunk from front size ", size(d6));
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    remove(d6, end(d6) - 128, end(d6));
+    println("Removed chunk from back size ", size(d6));
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    remove(d6, begin(d6) + 128, begin(d6) + 256);
+    println("Removed chunk from front half size ", size(d6));
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    remove(d6, end(d6) - 256, end(d6) - 128);
+    println("Removed chunk from back half size ", size(d6));
+    n = 0;
+    for (x in d6) {
+        print(x, " ");
+        n += 1;
+        if (n == 16) {
+            println();
+            n = 0;
+        }
+    }
+    println();
+
+    println("d7:");
+    var d7 = Deque[Int](10, 20, 30);
+    println("Size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, begin(d7), 5);
+    println("Insert element front size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, end(d7), 35);
+    println("Insert element end size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, begin(d7) + 2, 15);
+    println("Insert element front half size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, end(d7) - 2, 25);
+    println("Insert element back half size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, begin(d7), range(5));
+    println("Insert sequence front size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, end(d7), range(36, 41));
+    println("Insert sequence back size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, begin(d7) + 6, range(6, 10));
+    println("Insert sequence front half size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
+    println();
+
+    insert(d7, end(d7) - 6, range(31, 35));
+    println("Insert sequence back half size ", size(d7));
+    print("Contents: ");
+    for (x in d7) print(x, " ");
     println();
 }

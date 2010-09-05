@@ -1,0 +1,364 @@
+import deques.*;
+
+alias UNINITIALIZED_CANARY = SizeT(-1);
+alias NOISY_CANARIES = true;
+
+noisyPrintln(forward ...values) {
+    if (NOISY_CANARIES)
+        println(...values);
+}
+
+enum CanaryState { DESTROYED, ALIVE, MOVED, RESET, INVALID }
+
+private var canaryTracker = Vector[CanaryState]();
+record Canary ( id: SizeT, throwOnCopy?: Bool );
+
+// overload allocateRawMemory(Canary) to initialize memory to an invalid canary index
+private record CanaryLike ( canary: Canary );
+overload allocateRawMemory(static Canary, n) r: Pointer[Canary] {
+    r <-- Pointer[Canary](allocateRawMemory(CanaryLike, n));
+    for (x in CoordinateRange(r, r+n)) {
+        x.id <-- UNINITIALIZED_CANARY;
+        x.throwOnCopy? <-- true;
+    }
+}
+
+record CanaryCopyException ();
+instance Exception = CanaryCopyException;
+
+record UninitializedCanaryCopyException ();
+instance Exception = UninitializedCanaryCopyException;
+
+private _Canary(r: Canary, throwOnCopy?: Bool) {
+    r.id <-- size(canaryTracker);
+    r.throwOnCopy? <-- throwOnCopy?;
+    push(canaryTracker, ALIVE);
+}
+
+overload Canary() r:Canary {
+    _Canary(r, false);
+    noisyPrintln("-- constructed ", &r, " ", r.id);
+}
+
+overload Canary(throwOnCopy?: Bool) r:Canary {
+    _Canary(r, throwOnCopy?);
+    noisyPrintln("-- constructed ", &r, " ", r.id, if (throwOnCopy?) " (throws on copy)" else "");
+}
+
+overload Canary(x: Canary) r:Canary {
+    if (x.id >= size(canaryTracker)) {
+        println("!! tried copy  ", &r, " from ", &x, " uninitialized!");
+        r.id <-- UNINITIALIZED_CANARY;
+        r.throwOnCopy? <-- true;
+        throw UninitializedCanaryCopyException();
+    }
+    if (x.throwOnCopy?) {
+        noisyPrintln("-- throwing    ", &x, " ", x.id);
+        r.id <-- UNINITIALIZED_CANARY;
+        r.throwOnCopy? <-- true;
+        throw CanaryCopyException();
+    }
+
+    _Canary(r, false);
+    noisyPrintln("-- copied      ", &r, " ", r.id, " from ", &x, " ", x.id);
+}
+
+overload destroy(x: Canary) {
+    if (x.id >= size(canaryTracker)) {
+        println("!! destroyed   ", &x, " uninitialized!");
+    } else if (canaryTracker[x.id] == DESTROYED) {
+        println("!! destroyed   ", &x, " ", x.id, " when already destroyed");
+        canaryTracker[x.id] = INVALID;
+    } else if (canaryTracker[x.id] == INVALID) {
+        println("!! destroyed   ", &x, " ", x.id, " in invalid state");
+    } else if (canaryTracker[x.id] == MOVED) {
+        println("!! destroyed   ", &x, " ", x.id, " without reset");
+        canaryTracker[x.id] = INVALID;
+    } else {
+        noisyPrintln("-- destroyed   ", &x, " ", x.id);
+        canaryTracker[x.id] = DESTROYED;
+    }
+}
+
+overload moveUnsafe(x: Canary) r:Canary {
+    if (x.id >= size(canaryTracker)) {
+        r.id <-- UNINITIALIZED_CANARY;
+        r.throwOnCopy? <-- true;
+        println("!! tried move  ", &r, " from ", &x, " uninitialized!");
+    } else {
+        _Canary(r, x.throwOnCopy?);
+        noisyPrintln("-- moved       ", &r, " ", r.id, " from ", &x, " ", x.id);
+        canaryTracker[x.id] = MOVED;
+    }
+}
+
+overload resetUnsafe(x: Canary) {
+    if (x.id >= size(canaryTracker)) {
+        _Canary(x, false);
+        noisyPrintln("-- reset       ", &x, " ", x.id, " from uninitialized");
+        canaryTracker[x.id] = RESET;
+    } else if (canaryTracker[x.id] == ALIVE) {
+        println("!! reset       ", &x, " ", x.id, " when still alive");
+        canaryTracker[x.id] = INVALID;
+    } else if (canaryTracker[x.id] == INVALID) {
+        println("!! reset       ", &x, " ", x.id, " in invalid state");
+    } else {
+        noisyPrintln("-- reset       ", &x, " ", x.id);
+        canaryTracker[x.id] = RESET;
+    }
+}
+overload assign(x: Canary, y: Canary) { }
+
+checkCanariesDestroyed() {
+    for (n in range(size(canaryTracker))) {
+        if (canaryTracker[n] == ALIVE)
+            println("!! still alive: ", n);
+        else if (canaryTracker[n] == INVALID)
+            println("!! invalid    : ", n);
+    }
+}
+
+[S | Sequence?(S) and SequenceElementType(S) == Canary]
+checkCanariesLiveInSequence(seq: S) {
+    for (x in seq) {
+        if (x.id >= size(canaryTracker))
+            println("!! uninitialized in sequence");
+        else if (canaryTracker[x.id] == DESTROYED)
+            println("!! destroyed   in sequence: ", x.id);
+        else if (canaryTracker[x.id] == MOVED)
+            println("!! moved       in sequence: ", x.id);
+        else if (canaryTracker[x.id] == INVALID)
+            println("!! invalid     in sequence: ", x.id);
+    }
+}
+
+
+//
+// test
+//
+
+// artificially shrink the deque node size to stress-test overflow handling
+overload DequeBufferSize(static Canary) = SizeT(1);
+
+test() {
+    println("making deque d1");
+    var d1 = Deque[Canary](Canary(), Canary(), Canary());
+
+    {
+        println("copying deque d2");
+        var d2 = d1;
+
+        println("lengthening deque d2");
+        resize(d2, SizeT(6));
+        println("shortening deque d2");
+        resize(d2, SizeT(3));
+
+        println("deque d2 leaving scope");
+    }
+
+    println("making deque d3 with exception");
+    try {
+        var thrower = Canary(true);
+        var d3 = Deque[Canary](Canary(), thrower, Canary());
+    } catch(x) {}
+
+    {
+        println("copying deque d4 with exception");
+        d1[1].throwOnCopy? = true;
+
+        try {
+            var d4 = Deque[Canary](d1);
+        } catch(x) {}
+
+        d1[1].throwOnCopy? = false;
+    }
+
+    println("pushing onto deque d1");
+    push(d1, Canary());
+
+    println("pushing onto deque d1 with throw");
+    try {
+        var thrower = Canary(true);
+        push(d1, thrower);
+    } catch(x) {}
+
+    println("popping from deque d1");
+    pop(d1);
+
+    println("popping from deque d1 shouldn't throw");
+    back(d1).throwOnCopy? = true;
+    pop(d1);
+
+    println("pushing onto front of deque d1");
+    pushFront(d1, Canary());
+
+    println("pushing onto front of deque d1 with throw");
+    try {
+        var thrower = Canary(true);
+        pushFront(d1, thrower);
+    } catch(x) {}
+
+    println("popping from front of deque d1");
+    popFront(d1);
+
+    println("popping from front of deque d1 shouldn't throw");
+    front(d1).throwOnCopy? = true;
+    popFront(d1);
+
+    {
+        println("making deque d5");
+        var d5 = Deque[Canary](Canary(), Canary(), Canary(), Canary());
+        println("making deque d6");
+        var d6 = Deque[Canary](Canary(), Canary());
+
+        println("d1 assign longer");
+        d1 = d5;
+        println("d1 assign shorter");
+        d1 = d6;
+
+        println("d5, d6 leaving scope");
+    }
+
+    println("moving d1 to d7");
+    var d7 = move(d1);
+
+    println("clearing d7");
+    clear(d7);
+
+    println("making deque d8");
+    var d8 = Deque[Canary](
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+    );
+
+    println("removing from d8 front");
+    remove(d8, begin(d8));
+    checkCanariesLiveInSequence(d8);
+
+    println("removing from d8 back");
+    remove(d8, end(d8) - 1);
+    checkCanariesLiveInSequence(d8);
+
+    println("removing from d8 front half");
+    remove(d8, begin(d8) + 1);
+    checkCanariesLiveInSequence(d8);
+
+    println("removing from d8 back half");
+    remove(d8, end(d8) - 2);
+    checkCanariesLiveInSequence(d8);
+
+    println("removing from d8 entire range");
+    remove(d8, begin(d8), end(d8));
+    checkCanariesLiveInSequence(d8);
+
+    println("making deque d9");
+    var d9 = Deque[Canary](
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+        Canary(), Canary(), Canary(),
+    );
+
+    println("removing from d9 front range");
+    remove(d9, begin(d9), begin(d9) + 2);
+    checkCanariesLiveInSequence(d9);
+
+    println("removing from d9 back range");
+    remove(d9, end(d9) - 2, end(d9));
+    checkCanariesLiveInSequence(d9);
+
+    println("removing from d9 front half range");
+    remove(d9, begin(d9) + 1, begin(d9) + 3);
+    checkCanariesLiveInSequence(d9);
+
+    println("removing from d9 back half range");
+    remove(d9, end(d9) - 3, end(d9) - 1);
+    checkCanariesLiveInSequence(d9);
+
+    println("inserting into d9 front");
+    insert(d9, begin(d9), Canary());
+
+    println("inserting into d9 back");
+    insert(d9, end(d9), Canary());
+
+    println("inserting into d9 front half");
+    insert(d9, begin(d9) + 2, Canary());
+
+    println("inserting into d9 back half");
+    insert(d9, end(d9) - 2, Canary());
+
+    println("making deque d10");
+    var d10 = Deque[Canary](Canary(), Canary(), Canary());
+
+    println("inserting d10 into d9 front");
+    insert(d9, begin(d9), d10);
+
+    println("inserting d10 into d9 back");
+    insert(d9, end(d9), d10);
+
+    println("inserting d10 into d9 front half sequence");
+    insert(d9, begin(d9) + 2, d10);
+
+    println("inserting d10 into d9 back half sequence");
+    insert(d9, end(d9) - 2, d10);
+
+    println("making deque d11");
+    var d11 = Deque[Canary](Canary(), Canary(), Canary(), Canary());
+    var thrower = Canary(true);
+    var throwerDeque = Deque[Canary](Canary(), Canary(true), Canary());
+    try {
+        println("copying d12 from d11");
+        var d12 = d11;
+
+        println("inserting into d12 front half with throw");
+        insert(d12, begin(d12) + 1, thrower);
+    } catch(x) {}
+
+    try {
+        println("copying d13 from d11");
+        var d13 = d11;
+
+        println("inserting into d13 front half with throw");
+        insert(d13, end(d13) - 1, thrower);
+    } catch(x) {}
+
+    try {
+        println("copying d14 from d11");
+        var d14 = d11;
+
+        println("inserting into d14 front half sequence with throw");
+        insert(d14, begin(d14) + 1, throwerDeque);
+    } catch(x) {}
+
+    try {
+        println("copying d15 from d11");
+        var d15 = d11;
+
+        println("inserting into d15 back half sequence with throw");
+        insert(d15, end(d15) - 1, throwerDeque);
+    } catch(x) {}
+
+    try {
+        println("copying d16 from d11");
+        var d16 = d11;
+
+        println("pushing sequence onto deque d16 with throw");
+        push(d16, throwerDeque);
+    } catch(x) {}
+
+    try {
+        println("copying d17 from d11");
+        var d17 = d11;
+
+        println("pushing sequence onto front of deque d17 with throw");
+        pushFront(d17, throwerDeque);
+    } catch(x) {}
+
+    println("d1, d7, d8, d9, d10, d11 leaving scope");
+}
+
+main() {
+    test();
+    checkCanariesDestroyed();
+}
