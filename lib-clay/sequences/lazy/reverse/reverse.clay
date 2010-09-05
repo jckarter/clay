@@ -8,9 +8,9 @@ import sequences.util.*;
 
 reverse(forward seq) = Reversed(wrapSequence(seq));
 
-private record Reversed[A] {
-    seq : A;
-}
+private record Reversed[A] (
+    seq : A
+);
 
 
 [A]

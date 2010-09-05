@@ -2,19 +2,19 @@
 variant Expr = BinaryOp | UnaryOp | Variable | Literal;
 
 variant BinaryOp = Add | Subtract | Multiply;
-record Add {}
-record Subtract {}
-record Multiply {}
+record Add ();
+record Subtract ();
+record Multiply ();
 
 variant UnaryOp = Plus | Minus;
-record Plus {}
-record Minus {}
+record Plus ();
+record Minus ();
 
-record Variable {}
+record Variable ();
 
 variant Literal = IntLiteral | FloatLiteral;
-record IntLiteral {}
-record FloatLiteral {}
+record IntLiteral ();
+record FloatLiteral ();
 
 nestingPath(Type) = Tuple(...VariantNestingPaths(Expr, Type));
 

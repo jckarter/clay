@@ -1,9 +1,9 @@
 
 
-record HashMap[K,V] {
-    buckets : Vector[NodePtr[K,V]];
-    size : SizeT;
-}
+record HashMap[K,V] (
+    buckets : Vector[NodePtr[K,V]],
+    size : SizeT,
+);
 
 
 [K,V]
@@ -11,11 +11,11 @@ overload RegularRecord?(static HashMap[K,V]) = false;
 
 alias NodePtr[K,V] = SharedPointer[Node[K,V]];
 
-private record Node[K,V] {
-    key : K;
-    value : V;
-    next : NodePtr[K,V];
-}
+private record Node[K,V] (
+    key : K,
+    value : V,
+    next : NodePtr[K,V],
+);
 
 
 
@@ -188,10 +188,10 @@ overload items(a:HashMap[K,V]) {
     return move(x);
 }
 
-private record HashMapItems[K,V] {
-    bucketsIter : Type(iterator(typeToValue(Vector[NodePtr[K,V]])));
-    node : NodePtr[K,V];
-}
+private record HashMapItems[K,V] (
+    bucketsIter : Type(iterator(typeToValue(Vector[NodePtr[K,V]]))),
+    node : NodePtr[K,V],
+);
 
 [K,V]
 overload iterator(x:HashMapItems[K,V]) = x;

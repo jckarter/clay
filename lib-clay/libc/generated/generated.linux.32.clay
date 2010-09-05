@@ -55,9 +55,9 @@ alias __off64_t = Int64;
 
 alias __pid_t = Int;
 
-record UnnamedStruct {
-    __val : Array[Int,2];
-}
+record UnnamedStruct (
+    __val : Array[Int,2],
+);
 
 alias __fsid_t = UnnamedStruct;
 
@@ -115,24 +115,24 @@ alias FILE = Struct__IO_FILE;
 
 alias __FILE = Struct__IO_FILE;
 
-record UnnamedStruct2 {
-    __count : Int;
-    __value : AUnionType;
-}
+record UnnamedStruct2 (
+    __count : Int,
+    __value : AUnionType,
+);
 
 alias __mbstate_t = UnnamedStruct2;
 
-record UnnamedStruct3 {
-    __pos : CLong;
-    __state : __mbstate_t;
-}
+record UnnamedStruct3 (
+    __pos : CLong,
+    __state : __mbstate_t,
+);
 
 alias _G_fpos_t = UnnamedStruct3;
 
-record UnnamedStruct4 {
-    __pos : Int64;
-    __state : __mbstate_t;
-}
+record UnnamedStruct4 (
+    __pos : Int64,
+    __state : __mbstate_t,
+);
 
 alias _G_fpos64_t = UnnamedStruct4;
 
@@ -148,48 +148,48 @@ alias __gnuc_va_list = Int;
 
 alias _IO_lock_t = Void;
 
-record Struct__IO_marker {
-    _next : Pointer[Struct__IO_marker];
-    _sbuf : Pointer[Struct__IO_FILE];
-    _pos : Int;
-}
+record Struct__IO_marker (
+    _next : Pointer[Struct__IO_marker],
+    _sbuf : Pointer[Struct__IO_FILE],
+    _pos : Int,
+);
 
 alias __codecvt_ok = 0;
 alias __codecvt_partial = 1;
 alias __codecvt_error = 2;
 alias __codecvt_noconv = 3;
 
-record Struct__IO_FILE {
-    _flags : Int;
-    _IO_read_ptr : Pointer[CChar];
-    _IO_read_end : Pointer[CChar];
-    _IO_read_base : Pointer[CChar];
-    _IO_write_base : Pointer[CChar];
-    _IO_write_ptr : Pointer[CChar];
-    _IO_write_end : Pointer[CChar];
-    _IO_buf_base : Pointer[CChar];
-    _IO_buf_end : Pointer[CChar];
-    _IO_save_base : Pointer[CChar];
-    _IO_backup_base : Pointer[CChar];
-    _IO_save_end : Pointer[CChar];
-    _markers : Pointer[Struct__IO_marker];
-    _chain : Pointer[Struct__IO_FILE];
-    _fileno : Int;
-    _flags2 : Int;
-    _old_offset : CLong;
-    _cur_column : UShort;
-    _vtable_offset : CChar;
-    _shortbuf : Array[CChar,1];
-    _lock : RawPointer;
-    _offset : Int64;
-    __pad1 : RawPointer;
-    __pad2 : RawPointer;
-    __pad3 : RawPointer;
-    __pad4 : RawPointer;
-    __pad5 : UInt;
-    _mode : Int;
-    _unused2 : Array[CChar,40];
-}
+record Struct__IO_FILE (
+    _flags : Int,
+    _IO_read_ptr : Pointer[CChar],
+    _IO_read_end : Pointer[CChar],
+    _IO_read_base : Pointer[CChar],
+    _IO_write_base : Pointer[CChar],
+    _IO_write_ptr : Pointer[CChar],
+    _IO_write_end : Pointer[CChar],
+    _IO_buf_base : Pointer[CChar],
+    _IO_buf_end : Pointer[CChar],
+    _IO_save_base : Pointer[CChar],
+    _IO_backup_base : Pointer[CChar],
+    _IO_save_end : Pointer[CChar],
+    _markers : Pointer[Struct__IO_marker],
+    _chain : Pointer[Struct__IO_FILE],
+    _fileno : Int,
+    _flags2 : Int,
+    _old_offset : CLong,
+    _cur_column : UShort,
+    _vtable_offset : CChar,
+    _shortbuf : Array[CChar,1],
+    _lock : RawPointer,
+    _offset : Int64,
+    __pad1 : RawPointer,
+    __pad2 : RawPointer,
+    __pad3 : RawPointer,
+    __pad4 : RawPointer,
+    __pad5 : UInt,
+    _mode : Int,
+    _unused2 : Array[CChar,40],
+);
 
 alias _IO_FILE = Struct__IO_FILE;
 
@@ -613,24 +613,24 @@ external funlockfile(
 
 alias wchar_t = Int;
 
-record UnnamedStruct5 {
-    quot : Int;
-    rem : Int;
-}
+record UnnamedStruct5 (
+    quot : Int,
+    rem : Int,
+);
 
 alias div_t = UnnamedStruct5;
 
-record UnnamedStruct6 {
-    quot : CLong;
-    rem : CLong;
-}
+record UnnamedStruct6 (
+    quot : CLong,
+    rem : CLong,
+);
 
 alias ldiv_t = UnnamedStruct6;
 
-record UnnamedStruct7 {
-    quot : Int64;
-    rem : Int64;
-}
+record UnnamedStruct7 (
+    quot : Int64,
+    rem : Int64,
+);
 
 alias lldiv_t = UnnamedStruct7;
 
@@ -770,31 +770,31 @@ alias register_t = Int;
 
 alias __sig_atomic_t = Int;
 
-record UnnamedStruct8 {
-    __val : Array[CULong,32];
-}
+record UnnamedStruct8 (
+    __val : Array[CULong,32],
+);
 
 alias __sigset_t = UnnamedStruct8;
 
 alias sigset_t = __sigset_t;
 
-record Struct_timespec {
-    tv_sec : CLong;
-    tv_nsec : CLong;
-}
+record Struct_timespec (
+    tv_sec : CLong,
+    tv_nsec : CLong,
+);
 
-record Struct_timeval {
-    tv_sec : CLong;
-    tv_usec : CLong;
-}
+record Struct_timeval (
+    tv_sec : CLong,
+    tv_usec : CLong,
+);
 
 alias suseconds_t = CLong;
 
 alias __fd_mask = CLong;
 
-record UnnamedStruct9 {
-    __fds_bits : Array[CLong,32];
-}
+record UnnamedStruct9 (
+    __fds_bits : Array[CLong,32],
+);
 
 alias fd_set = UnnamedStruct9;
 
@@ -835,9 +835,9 @@ alias pthread_t = CULong;
 
 alias pthread_attr_t = AUnionType;
 
-record Struct___pthread_internal_slist {
-    __next : Pointer[Struct___pthread_internal_slist];
-}
+record Struct___pthread_internal_slist (
+    __next : Pointer[Struct___pthread_internal_slist],
+);
 
 alias __pthread_slist_t = Struct___pthread_internal_slist;
 
@@ -876,15 +876,15 @@ external initstate(
 external setstate(
     __statebuf : Pointer[CChar]) Pointer[CChar];
 
-record Struct_random_data {
-    fptr : Pointer[Int];
-    rptr : Pointer[Int];
-    state : Pointer[Int];
-    rand_type : Int;
-    rand_deg : Int;
-    rand_sep : Int;
-    end_ptr : Pointer[Int];
-}
+record Struct_random_data (
+    fptr : Pointer[Int],
+    rptr : Pointer[Int],
+    state : Pointer[Int],
+    rand_type : Int,
+    rand_deg : Int,
+    rand_sep : Int,
+    end_ptr : Pointer[Int],
+);
 
 external random_r(
     __buf : Pointer[Struct_random_data],
@@ -936,13 +936,13 @@ external seed48(
 external lcong48(
     __param : Pointer[UShort]);
 
-record Struct_drand48_data {
-    __x : Array[UShort,3];
-    __old_x : Array[UShort,3];
-    __c : UShort;
-    __init : UShort;
-    __a : UInt64;
-}
+record Struct_drand48_data (
+    __x : Array[UShort,3],
+    __old_x : Array[UShort,3],
+    __c : UShort,
+    __init : UShort,
+    __a : UInt64,
+);
 
 external drand48_r(
     __buffer : Pointer[Struct_drand48_data],
@@ -1267,13 +1267,13 @@ external strxfrm(
     __src : Pointer[CChar],
     __n : UInt) UInt;
 
-record Struct___locale_struct {
-    __locales : Array[OpaquePointer,13];
-    __ctype_b : Pointer[UShort];
-    __ctype_tolower : Pointer[Int];
-    __ctype_toupper : Pointer[Int];
-    __names : Array[Pointer[CChar],13];
-}
+record Struct___locale_struct (
+    __locales : Array[OpaquePointer,13],
+    __ctype_b : Pointer[UShort],
+    __ctype_tolower : Pointer[Int],
+    __ctype_toupper : Pointer[Int],
+    __names : Array[Pointer[CChar],13],
+);
 
 alias __locale_t = Pointer[Struct___locale_struct];
 
@@ -2885,13 +2885,13 @@ alias _LIB_VERSION_TYPE = Int;
 
 external _LIB_VERSION : _LIB_VERSION_TYPE;
 
-record Struct_exception {
-    type : Int;
-    name : Pointer[CChar];
-    arg1 : Double;
-    arg2 : Double;
-    retval : Double;
-}
+record Struct_exception (
+    type : Int,
+    name : Pointer[CChar],
+    arg1 : Double,
+    arg2 : Double,
+    retval : Double,
+);
 
 external matherr(
     __exc : Pointer[Struct_exception]) Int;

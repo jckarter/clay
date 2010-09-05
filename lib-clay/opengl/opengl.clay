@@ -4,768 +4,768 @@ import opengl.lookup.*;
 import opengl.platform.*;
 
 
-record GLFunctions {
-    Accum: GLCodePointer[(GLenum, GLfloat), ()];
-    ActiveTexture: GLCodePointer[(GLenum), ()];
-    AlphaFunc: GLCodePointer[(GLenum, GLclampf), ()];
-    AreTexturesResident: GLCodePointer[(GLsizei, Pointer[GLuint], Pointer[GLboolean]), GLboolean];
-    ArrayElement: GLCodePointer[(GLint), ()];
-    AttachShader: GLCodePointer[(GLuint, GLuint), ()];
-    Begin: GLCodePointer[(GLenum), ()];
-    BeginConditionalRender: GLCodePointer[(GLuint, GLenum), ()];
-    BeginQuery: GLCodePointer[(GLenum, GLuint), ()];
-    BeginQueryIndexed: GLCodePointer[(GLenum, GLuint, GLuint), ()];
-    BeginTransformFeedback: GLCodePointer[(GLenum), ()];
-    BindAttribLocation: GLCodePointer[(GLuint, GLuint, GLstring), ()];
-    BindBuffer: GLCodePointer[(GLenum, GLuint), ()];
-    BindBufferBase: GLCodePointer[(GLenum, GLuint, GLuint), ()];
-    BindBufferRange: GLCodePointer[(GLenum, GLuint, GLuint, GLintptr, GLsizeiptr), ()];
-    BindFragDataLocation: GLCodePointer[(GLuint, GLuint, GLstring), ()];
-    BindFragDataLocationIndexed: GLCodePointer[(GLuint, GLuint, GLuint, GLstring), ()];
-    BindFramebuffer: GLCodePointer[(GLenum, GLuint), ()];
-    BindRenderbuffer: GLCodePointer[(GLenum, GLuint), ()];
-    BindSampler: GLCodePointer[(GLenum, GLuint), ()];
-    BindTexture: GLCodePointer[(GLenum, GLuint), ()];
-    BindTransformFeedback: GLCodePointer[(GLenum, GLuint), ()];
-    BindVertexArray: GLCodePointer[(GLuint), ()];
-    Bitmap: GLCodePointer[(GLsizei, GLsizei, GLfloat, GLfloat, GLfloat, GLfloat, Pointer[GLubyte]), ()];
-    BlendColor: GLCodePointer[(GLclampf, GLclampf, GLclampf, GLclampf), ()];
-    BlendEquation: GLCodePointer[(GLenum), ()];
-    BlendEquationSeparate: GLCodePointer[(GLenum, GLenum), ()];
-    BlendFunc: GLCodePointer[(GLenum, GLenum), ()];
-    BlendFuncSeparate: GLCodePointer[(GLenum, GLenum, GLenum, GLenum), ()];
-    BlitFramebuffer: GLCodePointer[(GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum), ()];
-    BufferData: GLCodePointer[(GLenum, GLsizeiptr, Pointer[GLvoid], GLenum), ()];
-    BufferSubData: GLCodePointer[(GLenum, GLintptr, GLsizeiptr, Pointer[GLvoid]), ()];
-    CallList: GLCodePointer[(GLuint), ()];
-    CallLists: GLCodePointer[(GLsizei, GLenum, Pointer[GLvoid]), ()];
-    CheckFramebufferStatus: GLCodePointer[(GLenum), GLenum];
-    ClampColor: GLCodePointer[(GLenum, GLenum), ()];
-    Clear: GLCodePointer[(GLbitfield), ()];
-    ClearAccum: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    ClearBufferfi: GLCodePointer[(GLenum, GLint, GLfloat, GLint), ()];
-    ClearBufferfv: GLCodePointer[(GLenum, GLint, Pointer[GLfloat]), ()];
-    ClearBufferiv: GLCodePointer[(GLenum, GLint, Pointer[GLint]), ()];
-    ClearBufferuiv: GLCodePointer[(GLenum, GLint, Pointer[GLuint]), ()];
-    ClearColor: GLCodePointer[(GLclampf, GLclampf, GLclampf, GLclampf), ()];
-    ClearColorIiEXT: GLCodePointer[(GLint, GLint, GLint, GLint), ()];
-    ClearColorIuiEXT: GLCodePointer[(GLuint, GLuint, GLuint, GLuint), ()];
-    ClearDepth: GLCodePointer[(GLclampd), ()];
-    ClearIndex: GLCodePointer[(GLfloat), ()];
-    ClearStencil: GLCodePointer[(GLint), ()];
-    ClientActiveTexture: GLCodePointer[(GLenum), ()];
-    ClientWaitSync: GLCodePointer[(GLsync, GLbitfield, GLuint64), GLenum];
-    ClipPlane: GLCodePointer[(GLenum, Pointer[GLdouble]), ()];
-    Color3b: GLCodePointer[(GLbyte, GLbyte, GLbyte), ()];
-    Color3bv: GLCodePointer[(Pointer[GLbyte]), ()];
-    Color3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()];
-    Color3dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    Color3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()];
-    Color3fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    Color3i: GLCodePointer[(GLint, GLint, GLint), ()];
-    Color3iv: GLCodePointer[(Pointer[GLint]), ()];
-    Color3s: GLCodePointer[(GLshort, GLshort, GLshort), ()];
-    Color3sv: GLCodePointer[(Pointer[GLshort]), ()];
-    Color3ub: GLCodePointer[(GLubyte, GLubyte, GLubyte), ()];
-    Color3ubv: GLCodePointer[(Pointer[GLubyte]), ()];
-    Color3ui: GLCodePointer[(GLuint, GLuint, GLuint), ()];
-    Color3uiv: GLCodePointer[(Pointer[GLuint]), ()];
-    Color3us: GLCodePointer[(GLushort, GLushort, GLushort), ()];
-    Color3usv: GLCodePointer[(Pointer[GLushort]), ()];
-    Color4b: GLCodePointer[(GLbyte, GLbyte, GLbyte, GLbyte), ()];
-    Color4bv: GLCodePointer[(Pointer[GLbyte]), ()];
-    Color4d: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    Color4dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    Color4f: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    Color4fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    Color4i: GLCodePointer[(GLint, GLint, GLint, GLint), ()];
-    Color4iv: GLCodePointer[(Pointer[GLint]), ()];
-    Color4s: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()];
-    Color4sv: GLCodePointer[(Pointer[GLshort]), ()];
-    Color4ub: GLCodePointer[(GLubyte, GLubyte, GLubyte, GLubyte), ()];
-    Color4ubv: GLCodePointer[(Pointer[GLubyte]), ()];
-    Color4ui: GLCodePointer[(GLuint, GLuint, GLuint, GLuint), ()];
-    Color4uiv: GLCodePointer[(Pointer[GLuint]), ()];
-    Color4us: GLCodePointer[(GLushort, GLushort, GLushort, GLushort), ()];
-    Color4usv: GLCodePointer[(Pointer[GLushort]), ()];
-    ColorMask: GLCodePointer[(GLboolean, GLboolean, GLboolean, GLboolean), ()];
-    ColorMaski: GLCodePointer[(GLuint, GLboolean, GLboolean, GLboolean, GLboolean), ()];
-    ColorMaterial: GLCodePointer[(GLenum, GLenum), ()];
-    ColorP3ui: GLCodePointer[(GLenum, GLuint), ()];
-    ColorP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    ColorP4ui: GLCodePointer[(GLenum, GLuint), ()];
-    ColorP4uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    ColorPointer: GLCodePointer[(GLint, GLenum, GLsizei, Pointer[GLvoid]), ()];
-    CompileShader: GLCodePointer[(GLuint), ()];
-    CompressedTexImage1D: GLCodePointer[(GLenum, GLint, GLenum, GLsizei, GLint, GLsizei, Pointer[GLvoid]), ()];
-    CompressedTexImage2D: GLCodePointer[(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, Pointer[GLvoid]), ()];
-    CompressedTexImage3D: GLCodePointer[(GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLsizei, Pointer[GLvoid]), ()];
-    CompressedTexSubImage1D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLenum, GLsizei, Pointer[GLvoid]), ()];
-    CompressedTexSubImage2D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, Pointer[GLvoid]), ()];
-    CompressedTexSubImage3D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLsizei, Pointer[GLvoid]), ()];
-    CopyBufferSubData: GLCodePointer[(GLenum, GLenum, GLintptr, GLintptr, GLsizeiptr), ()];
-    CopyPixels: GLCodePointer[(GLint, GLint, GLsizei, GLsizei, GLenum), ()];
-    CopyTexImage1D: GLCodePointer[(GLenum, GLint, GLenum, GLint, GLint, GLsizei, GLint), ()];
-    CopyTexImage2D: GLCodePointer[(GLenum, GLint, GLenum, GLint, GLint, GLsizei, GLsizei, GLint), ()];
-    CopyTexSubImage1D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLsizei), ()];
-    CopyTexSubImage2D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei), ()];
-    CopyTexSubImage3D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei), ()];
-    CreateProgram: GLCodePointer[(), GLuint];
-    CreateShader: GLCodePointer[(GLenum), GLuint];
-    CullFace: GLCodePointer[(GLenum), ()];
-    DeleteBuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    DeleteFramebuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    DeleteLists: GLCodePointer[(GLuint, GLsizei), ()];
-    DeleteProgram: GLCodePointer[(GLuint), ()];
-    DeleteQueries: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    DeleteRenderbuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    DeleteSamplers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    DeleteShader: GLCodePointer[(GLuint), ()];
-    DeleteSync: GLCodePointer[(GLsync), ()];
-    DeleteTextures: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    DeleteTransformFeedbacks: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    DeleteVertexArrays: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    DepthFunc: GLCodePointer[(GLenum), ()];
-    DepthMask: GLCodePointer[(GLboolean), ()];
-    DepthRange: GLCodePointer[(GLclampd, GLclampd), ()];
-    DetachShader: GLCodePointer[(GLuint, GLuint), ()];
-    Disable: GLCodePointer[(GLenum), ()];
-    DisableClientState: GLCodePointer[(GLenum), ()];
-    DisableVertexAttribArray: GLCodePointer[(GLuint), ()];
-    Disablei: GLCodePointer[(GLenum, GLuint), ()];
-    DrawArrays: GLCodePointer[(GLenum, GLint, GLsizei), ()];
-    DrawArraysInstanced: GLCodePointer[(GLenum, GLint, GLsizei, GLsizei), ()];
-    DrawBuffer: GLCodePointer[(GLenum), ()];
-    DrawBuffers: GLCodePointer[(GLsizei, Pointer[GLenum]), ()];
-    DrawElements: GLCodePointer[(GLenum, GLsizei, GLenum, Pointer[GLvoid]), ()];
-    DrawElementsInstanced: GLCodePointer[(GLenum, GLsizei, GLenum, Pointer[GLvoid], GLsizei), ()];
-    DrawPixels: GLCodePointer[(GLsizei, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()];
-    DrawRangeElements: GLCodePointer[(GLenum, GLuint, GLuint, GLsizei, GLenum, Pointer[GLvoid]), ()];
-    DrawTransformFeedback: GLCodePointer[(GLenum, GLuint), ()];
-    DrawTransformFeedbackStream: GLCodePointer[(GLenum, GLuint, GLuint), ()];
-    EdgeFlag: GLCodePointer[(GLboolean), ()];
-    EdgeFlagPointer: GLCodePointer[(GLsizei, Pointer[GLvoid]), ()];
-    EdgeFlagv: GLCodePointer[(Pointer[GLboolean]), ()];
-    Enable: GLCodePointer[(GLenum), ()];
-    EnableClientState: GLCodePointer[(GLenum), ()];
-    EnableVertexAttribArray: GLCodePointer[(GLuint), ()];
-    Enablei: GLCodePointer[(GLenum, GLuint), ()];
-    End: GLCodePointer[(), ()];
-    EndConditionalRender: GLCodePointer[(), ()];
-    EndList: GLCodePointer[(), ()];
-    EndQuery: GLCodePointer[(GLenum), ()];
-    EndQueryIndexed: GLCodePointer[(GLenum, GLuint), ()];
-    EndTransformFeedback: GLCodePointer[(), ()];
-    EvalCoord1d: GLCodePointer[(GLdouble), ()];
-    EvalCoord1dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    EvalCoord1f: GLCodePointer[(GLfloat), ()];
-    EvalCoord1fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    EvalCoord2d: GLCodePointer[(GLdouble, GLdouble), ()];
-    EvalCoord2dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    EvalCoord2f: GLCodePointer[(GLfloat, GLfloat), ()];
-    EvalCoord2fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    EvalMesh1: GLCodePointer[(GLenum, GLint, GLint), ()];
-    EvalMesh2: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint), ()];
-    EvalPoint1: GLCodePointer[(GLint), ()];
-    EvalPoint2: GLCodePointer[(GLint, GLint), ()];
-    FeedbackBuffer: GLCodePointer[(GLsizei, GLenum, Pointer[GLfloat]), ()];
-    FenceSync: GLCodePointer[(GLenum, GLbitfield), GLsync];
-    Finish: GLCodePointer[(), ()];
-    Flush: GLCodePointer[(), ()];
-    FlushMappedBufferRange: GLCodePointer[(GLenum, GLintptr, GLsizeiptr), ()];
-    FogCoordPointer: GLCodePointer[(GLenum, GLsizei, Pointer[GLvoid]), ()];
-    FogCoordd: GLCodePointer[(GLdouble), ()];
-    FogCoorddv: GLCodePointer[(Pointer[GLdouble]), ()];
-    FogCoordf: GLCodePointer[(GLfloat), ()];
-    FogCoordfv: GLCodePointer[(Pointer[GLfloat]), ()];
-    Fogf: GLCodePointer[(GLenum, GLfloat), ()];
-    Fogfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    Fogi: GLCodePointer[(GLenum, GLint), ()];
-    Fogiv: GLCodePointer[(GLenum, Pointer[GLint]), ()];
-    FramebufferRenderbuffer: GLCodePointer[(GLenum, GLenum, GLenum, GLuint), ()];
-    FramebufferTexture: GLCodePointer[(GLenum, GLenum, GLuint, GLint), ()];
-    FramebufferTexture1D: GLCodePointer[(GLenum, GLenum, GLenum, GLuint, GLint), ()];
-    FramebufferTexture2D: GLCodePointer[(GLenum, GLenum, GLenum, GLuint, GLint), ()];
-    FramebufferTexture3D: GLCodePointer[(GLenum, GLenum, GLenum, GLuint, GLint, GLint), ()];
-    FramebufferTextureFaceARB: GLCodePointer[(GLenum, GLenum, GLuint, GLint, GLenum), ()];
-    FramebufferTextureLayer: GLCodePointer[(GLenum, GLenum, GLuint, GLint, GLint), ()];
-    FramebufferTextureLayerARB: GLCodePointer[(GLenum, GLenum, GLuint, GLint, GLint), ()];
-    FrontFace: GLCodePointer[(GLenum), ()];
-    Frustum: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    GenBuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    GenFramebuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    GenLists: GLCodePointer[(GLsizei), GLuint];
-    GenQueries: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    GenRenderbuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    GenSamplers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    GenTextures: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    GenTransformFeedbacks: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    GenVertexArrays: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    GenerateMipmap: GLCodePointer[(GLenum), ()];
-    GetActiveAttrib: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], Pointer[GLint], Pointer[GLenum], GLstring), ()];
-    GetActiveSubroutineName: GLCodePointer[(GLuint, GLenum, GLuint, GLsizei, Pointer[GLsizei], GLstring), ()];
-    GetActiveSubroutineUniformName: GLCodePointer[(GLuint, GLenum, GLuint, GLsizei, Pointer[GLsizei], GLstring), ()];
-    GetActiveSubroutineUniformiv: GLCodePointer[(GLuint, GLenum, GLuint, GLenum, Pointer[GLint]), ()];
-    GetActiveUniform: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], Pointer[GLint], Pointer[GLenum], GLstring), ()];
-    GetActiveUniformBlockName: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], GLstring), ()];
-    GetActiveUniformBlockiv: GLCodePointer[(GLuint, GLuint, GLenum, Pointer[GLint]), ()];
-    GetActiveUniformName: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], GLstring), ()];
-    GetActiveUniformsiv: GLCodePointer[(GLuint, GLsizei, Pointer[GLuint], GLenum, Pointer[GLint]), ()];
-    GetAttachedShaders: GLCodePointer[(GLuint, GLsizei, Pointer[GLsizei], Pointer[GLuint]), ()];
-    GetAttribLocation: GLCodePointer[(GLuint, GLstring), GLint];
-    GetBooleani_v: GLCodePointer[(GLenum, GLuint, Pointer[GLboolean]), ()];
-    GetBooleanv: GLCodePointer[(GLenum, Pointer[GLboolean]), ()];
-    GetBufferParameteri64v: GLCodePointer[(GLenum, GLenum, Pointer[GLint64]), ()];
-    GetBufferParameteriv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetBufferPointerv: GLCodePointer[(GLenum, GLenum, Pointer[Pointer[GLvoid]]), ()];
-    GetBufferSubData: GLCodePointer[(GLenum, GLintptr, GLsizeiptr, Pointer[GLvoid]), ()];
-    GetClipPlane: GLCodePointer[(GLenum, Pointer[GLdouble]), ()];
-    GetCompressedTexImage: GLCodePointer[(GLenum, GLint, Pointer[GLvoid]), ()];
-    GetDoublev: GLCodePointer[(GLenum, Pointer[GLdouble]), ()];
-    GetError: GLCodePointer[(), GLenum];
-    GetFloatv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    GetFragDataIndex: GLCodePointer[(GLuint, GLstring), GLint];
-    GetFragDataLocation: GLCodePointer[(GLuint, GLstring), GLint];
-    GetFramebufferAttachmentParameteriv: GLCodePointer[(GLenum, GLenum, GLenum, Pointer[GLint]), ()];
-    GetInteger64i_v: GLCodePointer[(GLenum, GLuint, Pointer[GLint64]), ()];
-    GetInteger64v: GLCodePointer[(GLenum, Pointer[GLint64]), ()];
-    GetIntegeri_v: GLCodePointer[(GLenum, GLuint, Pointer[GLint]), ()];
-    GetIntegerv: GLCodePointer[(GLenum, Pointer[GLint]), ()];
-    GetLightfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    GetLightiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetMapdv: GLCodePointer[(GLenum, GLenum, Pointer[GLdouble]), ()];
-    GetMapfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    GetMapiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetMaterialfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    GetMaterialiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetMultisamplefv: GLCodePointer[(GLenum, GLuint, Pointer[GLfloat]), ()];
-    GetPixelMapfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    GetPixelMapuiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    GetPixelMapusv: GLCodePointer[(GLenum, Pointer[GLushort]), ()];
-    GetPointerv: GLCodePointer[(GLenum, Pointer[Pointer[GLvoid]]), ()];
-    GetPolygonStipple: GLCodePointer[(Pointer[GLubyte]), ()];
-    GetProgramInfoLog: GLCodePointer[(GLuint, GLsizei, Pointer[GLsizei], GLstring), ()];
-    GetProgramStageiv: GLCodePointer[(GLuint, GLenum, GLenum, Pointer[GLint]), ()];
-    GetProgramiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()];
-    GetQueryIndexediv: GLCodePointer[(GLenum, GLuint, GLenum, Pointer[GLint]), ()];
-    GetQueryObjecti64v: GLCodePointer[(GLuint, GLenum, Pointer[GLint64]), ()];
-    GetQueryObjectiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()];
-    GetQueryObjectui64v: GLCodePointer[(GLuint, GLenum, Pointer[GLuint64]), ()];
-    GetQueryObjectuiv: GLCodePointer[(GLuint, GLenum, Pointer[GLuint]), ()];
-    GetQueryiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetRenderbufferParameteriv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetSamplerParameterIfv: GLCodePointer[(GLuint, GLenum, Pointer[GLfloat]), ()];
-    GetSamplerParameterIiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()];
-    GetSamplerParameterfv: GLCodePointer[(GLuint, GLenum, Pointer[GLfloat]), ()];
-    GetSamplerParameteriv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()];
-    GetShaderInfoLog: GLCodePointer[(GLuint, GLsizei, Pointer[GLsizei], GLstring), ()];
-    GetShaderSource: GLCodePointer[(GLint, GLsizei, Pointer[GLsizei], GLstring), ()];
-    GetShaderiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()];
-    GetString: GLCodePointer[(GLenum), GLstring];
-    GetStringi: GLCodePointer[(GLenum, GLuint), Pointer[GLubyte]];
-    GetSubroutineIndex: GLCodePointer[(GLuint, GLenum, GLstring), GLuint];
-    GetSubroutineUniformLocation: GLCodePointer[(GLuint, GLenum, GLstring), GLint];
-    GetSynciv: GLCodePointer[(GLsync, GLenum, GLsizei, Pointer[GLsizei], Pointer[GLint]), ()];
-    GetTexEnvfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    GetTexEnviv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetTexGendv: GLCodePointer[(GLenum, GLenum, Pointer[GLdouble]), ()];
-    GetTexGenfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    GetTexGeniv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetTexImage: GLCodePointer[(GLenum, GLint, GLenum, GLenum, Pointer[GLvoid]), ()];
-    GetTexLevelParameterfv: GLCodePointer[(GLenum, GLint, GLenum, Pointer[GLfloat]), ()];
-    GetTexLevelParameteriv: GLCodePointer[(GLenum, GLint, GLenum, Pointer[GLint]), ()];
-    GetTexParameterIiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetTexParameterIuiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()];
-    GetTexParameterfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    GetTexParameteriv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    GetTransformFeedbackVarying: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], Pointer[GLsizei], Pointer[GLenum], GLstring), ()];
-    GetUniformBlockIndex: GLCodePointer[(GLuint, GLstring), GLuint];
-    GetUniformIndices: GLCodePointer[(GLuint, GLsizei, Pointer[GLstring], Pointer[GLuint]), ()];
-    GetUniformLocation: GLCodePointer[(GLint, GLstring), GLint];
-    GetUniformSubroutineuiv: GLCodePointer[(GLenum, GLint, Pointer[GLuint]), ()];
-    GetUniformdv: GLCodePointer[(GLuint, GLint, Pointer[GLdouble]), ()];
-    GetUniformfv: GLCodePointer[(GLuint, GLint, Pointer[GLfloat]), ()];
-    GetUniformiv: GLCodePointer[(GLuint, GLint, Pointer[GLint]), ()];
-    GetUniformuiv: GLCodePointer[(GLuint, GLint, Pointer[GLuint]), ()];
-    GetVertexAttribIiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()];
-    GetVertexAttribIuiv: GLCodePointer[(GLuint, GLenum, Pointer[GLuint]), ()];
-    GetVertexAttribPointerv: GLCodePointer[(GLuint, GLenum, Pointer[Pointer[GLvoid]]), ()];
-    GetVertexAttribdv: GLCodePointer[(GLuint, GLenum, Pointer[GLdouble]), ()];
-    GetVertexAttribfv: GLCodePointer[(GLuint, GLenum, Pointer[GLfloat]), ()];
-    GetVertexAttribiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()];
-    Hint: GLCodePointer[(GLenum, GLenum), ()];
-    IndexMask: GLCodePointer[(GLuint), ()];
-    IndexPointer: GLCodePointer[(GLenum, GLsizei, Pointer[GLvoid]), ()];
-    Indexd: GLCodePointer[(GLdouble), ()];
-    Indexdv: GLCodePointer[(Pointer[GLdouble]), ()];
-    Indexf: GLCodePointer[(GLfloat), ()];
-    Indexfv: GLCodePointer[(Pointer[GLfloat]), ()];
-    Indexi: GLCodePointer[(GLint), ()];
-    Indexiv: GLCodePointer[(Pointer[GLint]), ()];
-    Indexs: GLCodePointer[(GLshort), ()];
-    Indexsv: GLCodePointer[(Pointer[GLshort]), ()];
-    Indexub: GLCodePointer[(GLubyte), ()];
-    Indexubv: GLCodePointer[(Pointer[GLubyte]), ()];
-    InitNames: GLCodePointer[(), ()];
-    InterleavedArrays: GLCodePointer[(GLenum, GLsizei, Pointer[GLvoid]), ()];
-    IsBuffer: GLCodePointer[(GLuint), GLboolean];
-    IsEnabled: GLCodePointer[(GLenum), GLboolean];
-    IsEnabledi: GLCodePointer[(GLenum, GLuint), GLboolean];
-    IsFramebuffer: GLCodePointer[(GLuint), GLboolean];
-    IsList: GLCodePointer[(GLuint), GLboolean];
-    IsProgram: GLCodePointer[(GLuint), GLboolean];
-    IsQuery: GLCodePointer[(GLuint), GLboolean];
-    IsRenderbuffer: GLCodePointer[(GLuint), GLboolean];
-    IsSampler: GLCodePointer[(GLuint), GLboolean];
-    IsShader: GLCodePointer[(GLuint), GLboolean];
-    IsSync: GLCodePointer[(GLsync), GLboolean];
-    IsTexture: GLCodePointer[(GLuint), GLboolean];
-    IsTransformFeedback: GLCodePointer[(GLuint), GLboolean];
-    IsVertexArray: GLCodePointer[(GLuint), GLboolean];
-    LightModelf: GLCodePointer[(GLenum, GLfloat), ()];
-    LightModelfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    LightModeli: GLCodePointer[(GLenum, GLint), ()];
-    LightModeliv: GLCodePointer[(GLenum, Pointer[GLint]), ()];
-    Lightf: GLCodePointer[(GLenum, GLenum, GLfloat), ()];
-    Lightfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    Lighti: GLCodePointer[(GLenum, GLenum, GLint), ()];
-    Lightiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    LineStipple: GLCodePointer[(GLint, GLushort), ()];
-    LineWidth: GLCodePointer[(GLfloat), ()];
-    LinkProgram: GLCodePointer[(GLuint), ()];
-    ListBase: GLCodePointer[(GLuint), ()];
-    LoadIdentity: GLCodePointer[(), ()];
-    LoadMatrixd: GLCodePointer[(Pointer[GLdouble]), ()];
-    LoadMatrixf: GLCodePointer[(Pointer[GLfloat]), ()];
-    LoadName: GLCodePointer[(GLuint), ()];
-    LoadTransposeMatrixd: GLCodePointer[(Pointer[GLdouble]), ()];
-    LoadTransposeMatrixf: GLCodePointer[(Pointer[GLfloat]), ()];
-    LogicOp: GLCodePointer[(GLenum), ()];
-    Map1d: GLCodePointer[(GLenum, GLdouble, GLdouble, GLint, GLint, Pointer[GLdouble]), ()];
-    Map1f: GLCodePointer[(GLenum, GLfloat, GLfloat, GLint, GLint, Pointer[GLfloat]), ()];
-    Map2d: GLCodePointer[(GLenum, GLdouble, GLdouble, GLint, GLint, GLdouble, GLdouble, GLint, GLint, Pointer[GLdouble]), ()];
-    Map2f: GLCodePointer[(GLenum, GLfloat, GLfloat, GLint, GLint, GLfloat, GLfloat, GLint, GLint, Pointer[GLfloat]), ()];
-    MapBuffer: GLCodePointer[(GLenum, GLenum), Pointer[GLvoid]];
-    MapBufferRange: GLCodePointer[(GLenum, GLintptr, GLsizeiptr, GLbitfield), Pointer[GLvoid]];
-    MapGrid1d: GLCodePointer[(GLint, GLdouble, GLdouble), ()];
-    MapGrid1f: GLCodePointer[(GLint, GLfloat, GLfloat), ()];
-    MapGrid2d: GLCodePointer[(GLint, GLdouble, GLdouble, GLint, GLdouble, GLdouble), ()];
-    MapGrid2f: GLCodePointer[(GLint, GLfloat, GLfloat, GLint, GLfloat, GLfloat), ()];
-    Materialf: GLCodePointer[(GLenum, GLenum, GLfloat), ()];
-    Materialfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    Materiali: GLCodePointer[(GLenum, GLenum, GLint), ()];
-    Materialiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    MatrixMode: GLCodePointer[(GLenum), ()];
-    MultMatrixd: GLCodePointer[(Pointer[GLdouble]), ()];
-    MultMatrixf: GLCodePointer[(Pointer[GLfloat]), ()];
-    MultTransposeMatrixd: GLCodePointer[(Pointer[GLdouble]), ()];
-    MultTransposeMatrixf: GLCodePointer[(Pointer[GLfloat]), ()];
-    MultiDrawArrays: GLCodePointer[(GLenum, Pointer[GLint], Pointer[GLsizei], GLsizei), ()];
-    MultiDrawElements: GLCodePointer[(GLenum, Pointer[GLsizei], GLenum, Pointer[Pointer[GLvoid]], GLsizei), ()];
-    MultiTexCoord1d: GLCodePointer[(GLenum, GLdouble), ()];
-    MultiTexCoord1dv: GLCodePointer[(GLenum, Pointer[GLdouble]), ()];
-    MultiTexCoord1f: GLCodePointer[(GLenum, GLfloat), ()];
-    MultiTexCoord1fv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    MultiTexCoord1i: GLCodePointer[(GLenum, GLint), ()];
-    MultiTexCoord1iv: GLCodePointer[(GLenum, Pointer[GLint]), ()];
-    MultiTexCoord1s: GLCodePointer[(GLenum, GLshort), ()];
-    MultiTexCoord1sv: GLCodePointer[(GLenum, Pointer[GLshort]), ()];
-    MultiTexCoord2d: GLCodePointer[(GLenum, GLdouble, GLdouble), ()];
-    MultiTexCoord2dv: GLCodePointer[(GLenum, Pointer[GLdouble]), ()];
-    MultiTexCoord2f: GLCodePointer[(GLenum, GLfloat, GLfloat), ()];
-    MultiTexCoord2fv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    MultiTexCoord2i: GLCodePointer[(GLenum, GLint, GLint), ()];
-    MultiTexCoord2iv: GLCodePointer[(GLenum, Pointer[GLint]), ()];
-    MultiTexCoord2s: GLCodePointer[(GLenum, GLshort, GLshort), ()];
-    MultiTexCoord2sv: GLCodePointer[(GLenum, Pointer[GLshort]), ()];
-    MultiTexCoord3d: GLCodePointer[(GLenum, GLdouble, GLdouble, GLdouble), ()];
-    MultiTexCoord3dv: GLCodePointer[(GLenum, Pointer[GLdouble]), ()];
-    MultiTexCoord3f: GLCodePointer[(GLenum, GLfloat, GLfloat, GLfloat), ()];
-    MultiTexCoord3fv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    MultiTexCoord3i: GLCodePointer[(GLenum, GLint, GLint, GLint), ()];
-    MultiTexCoord3iv: GLCodePointer[(GLenum, Pointer[GLint]), ()];
-    MultiTexCoord3s: GLCodePointer[(GLenum, GLshort, GLshort, GLshort), ()];
-    MultiTexCoord3sv: GLCodePointer[(GLenum, Pointer[GLshort]), ()];
-    MultiTexCoord4d: GLCodePointer[(GLenum, GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    MultiTexCoord4dv: GLCodePointer[(GLenum, Pointer[GLdouble]), ()];
-    MultiTexCoord4f: GLCodePointer[(GLenum, GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    MultiTexCoord4fv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    MultiTexCoord4i: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint), ()];
-    MultiTexCoord4iv: GLCodePointer[(GLenum, Pointer[GLint]), ()];
-    MultiTexCoord4s: GLCodePointer[(GLenum, GLshort, GLshort, GLshort, GLshort), ()];
-    MultiTexCoord4sv: GLCodePointer[(GLenum, Pointer[GLshort]), ()];
-    MultiTexCoordP1ui: GLCodePointer[(GLenum, GLenum, GLuint), ()];
-    MultiTexCoordP1uiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()];
-    MultiTexCoordP2ui: GLCodePointer[(GLenum, GLenum, GLuint), ()];
-    MultiTexCoordP2uiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()];
-    MultiTexCoordP3ui: GLCodePointer[(GLenum, GLenum, GLuint), ()];
-    MultiTexCoordP3uiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()];
-    MultiTexCoordP4ui: GLCodePointer[(GLenum, GLenum, GLuint), ()];
-    MultiTexCoordP4uiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()];
-    NewList: GLCodePointer[(GLuint, GLenum), ()];
-    Normal3b: GLCodePointer[(GLbyte, GLbyte, GLbyte), ()];
-    Normal3bv: GLCodePointer[(Pointer[GLbyte]), ()];
-    Normal3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()];
-    Normal3dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    Normal3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()];
-    Normal3fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    Normal3i: GLCodePointer[(GLint, GLint, GLint), ()];
-    Normal3iv: GLCodePointer[(Pointer[GLint]), ()];
-    Normal3s: GLCodePointer[(GLshort, GLshort, GLshort), ()];
-    Normal3sv: GLCodePointer[(Pointer[GLshort]), ()];
-    NormalP3ui: GLCodePointer[(GLenum, GLuint), ()];
-    NormalP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    NormalPointer: GLCodePointer[(GLenum, GLsizei, Pointer[GLvoid]), ()];
-    Ortho: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    PassThrough: GLCodePointer[(GLfloat), ()];
-    PatchParameterfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    PatchParameteri: GLCodePointer[(GLenum, GLint), ()];
-    PauseTransformFeedback: GLCodePointer[(), ()];
-    PixelMapfv: GLCodePointer[(GLenum, GLsizei, Pointer[GLfloat]), ()];
-    PixelMapuiv: GLCodePointer[(GLenum, GLsizei, Pointer[GLuint]), ()];
-    PixelMapusv: GLCodePointer[(GLenum, GLsizei, Pointer[GLushort]), ()];
-    PixelStoref: GLCodePointer[(GLenum, GLfloat), ()];
-    PixelStorei: GLCodePointer[(GLenum, GLint), ()];
-    PixelTransferf: GLCodePointer[(GLenum, GLfloat), ()];
-    PixelTransferi: GLCodePointer[(GLenum, GLint), ()];
-    PixelZoom: GLCodePointer[(GLfloat, GLfloat), ()];
-    PointParameterf: GLCodePointer[(GLenum, GLfloat), ()];
-    PointParameterfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()];
-    PointParameteri: GLCodePointer[(GLenum, GLint), ()];
-    PointParameteriv: GLCodePointer[(GLenum, Pointer[GLint]), ()];
-    PointSize: GLCodePointer[(GLfloat), ()];
-    PolygonMode: GLCodePointer[(GLenum, GLenum), ()];
-    PolygonOffset: GLCodePointer[(GLfloat, GLfloat), ()];
-    PolygonStipple: GLCodePointer[(Pointer[GLubyte]), ()];
-    PopAttrib: GLCodePointer[(), ()];
-    PopClientAttrib: GLCodePointer[(), ()];
-    PopMatrix: GLCodePointer[(), ()];
-    PopName: GLCodePointer[(), ()];
-    PrimitiveRestartIndex: GLCodePointer[(GLuint), ()];
-    PrioritizeTextures: GLCodePointer[(GLsizei, Pointer[GLuint], Pointer[GLclampf]), ()];
-    ProgramParameteriARB: GLCodePointer[(GLuint, GLenum, GLint), ()];
-    ProgramUniform1d: GLCodePointer[(GLuint, GLint, GLdouble), ()];
-    ProgramUniform1dv: GLCodePointer[(GLuint, GLint, GLsizei, Pointer[GLdouble]), ()];
-    ProgramUniform2d: GLCodePointer[(GLuint, GLint, GLdouble, GLdouble), ()];
-    ProgramUniform2dv: GLCodePointer[(GLuint, GLint, GLsizei, Pointer[GLdouble]), ()];
-    ProgramUniform3d: GLCodePointer[(GLuint, GLint, GLdouble, GLdouble, GLdouble), ()];
-    ProgramUniform3dv: GLCodePointer[(GLuint, GLint, GLsizei, Pointer[GLdouble]), ()];
-    ProgramUniform4d: GLCodePointer[(GLuint, GLint, GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    ProgramUniform4dv: GLCodePointer[(GLuint, GLint, GLsizei, Pointer[GLdouble]), ()];
-    ProgramUniformMatrix2dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    ProgramUniformMatrix2x3dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    ProgramUniformMatrix2x4dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    ProgramUniformMatrix3dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    ProgramUniformMatrix3x2dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    ProgramUniformMatrix3x4dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    ProgramUniformMatrix4dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    ProgramUniformMatrix4x2dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    ProgramUniformMatrix4x3dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    ProvokingVertex: GLCodePointer[(GLenum), ()];
-    PushAttrib: GLCodePointer[(GLbitfield), ()];
-    PushClientAttrib: GLCodePointer[(GLbitfield), ()];
-    PushMatrix: GLCodePointer[(), ()];
-    PushName: GLCodePointer[(GLuint), ()];
-    QueryCounter: GLCodePointer[(GLuint, GLenum), ()];
-    RasterPos2d: GLCodePointer[(GLdouble, GLdouble), ()];
-    RasterPos2dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    RasterPos2f: GLCodePointer[(GLfloat, GLfloat), ()];
-    RasterPos2fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    RasterPos2i: GLCodePointer[(GLint, GLint), ()];
-    RasterPos2iv: GLCodePointer[(Pointer[GLint]), ()];
-    RasterPos2s: GLCodePointer[(GLshort, GLshort), ()];
-    RasterPos2sv: GLCodePointer[(Pointer[GLshort]), ()];
-    RasterPos3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()];
-    RasterPos3dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    RasterPos3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()];
-    RasterPos3fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    RasterPos3i: GLCodePointer[(GLint, GLint, GLint), ()];
-    RasterPos3iv: GLCodePointer[(Pointer[GLint]), ()];
-    RasterPos3s: GLCodePointer[(GLshort, GLshort, GLshort), ()];
-    RasterPos3sv: GLCodePointer[(Pointer[GLshort]), ()];
-    RasterPos4d: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    RasterPos4dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    RasterPos4f: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    RasterPos4fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    RasterPos4i: GLCodePointer[(GLint, GLint, GLint, GLint), ()];
-    RasterPos4iv: GLCodePointer[(Pointer[GLint]), ()];
-    RasterPos4s: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()];
-    RasterPos4sv: GLCodePointer[(Pointer[GLshort]), ()];
-    ReadBuffer: GLCodePointer[(GLenum), ()];
-    ReadPixels: GLCodePointer[(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()];
-    Rectd: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    Rectdv: GLCodePointer[(Pointer[GLdouble], Pointer[GLdouble]), ()];
-    Rectf: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    Rectfv: GLCodePointer[(Pointer[GLfloat], Pointer[GLfloat]), ()];
-    Recti: GLCodePointer[(GLint, GLint, GLint, GLint), ()];
-    Rectiv: GLCodePointer[(Pointer[GLint], Pointer[GLint]), ()];
-    Rects: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()];
-    Rectsv: GLCodePointer[(Pointer[GLshort], Pointer[GLshort]), ()];
-    RenderMode: GLCodePointer[(GLenum), GLint];
-    RenderbufferStorage: GLCodePointer[(GLenum, GLenum, GLsizei, GLsizei), ()];
-    RenderbufferStorageMultisample: GLCodePointer[(GLenum, GLsizei, GLenum, GLsizei, GLsizei), ()];
-    ResumeTransformFeedback: GLCodePointer[(), ()];
-    Rotated: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    Rotatef: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    SampleCoverage: GLCodePointer[(GLclampf, GLboolean), ()];
-    SampleMaski: GLCodePointer[(GLuint, GLbitfield), ()];
-    SamplerParameterIiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()];
-    SamplerParameterIuiv: GLCodePointer[(GLuint, GLenum, Pointer[GLuint]), ()];
-    SamplerParameterf: GLCodePointer[(GLuint, GLenum, GLfloat), ()];
-    SamplerParameterfv: GLCodePointer[(GLuint, GLenum, Pointer[GLfloat]), ()];
-    SamplerParameteri: GLCodePointer[(GLuint, GLenum, GLint), ()];
-    SamplerParameteriv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()];
-    Scaled: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()];
-    Scalef: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()];
-    Scissor: GLCodePointer[(GLint, GLint, GLsizei, GLsizei), ()];
-    SecondaryColor3b: GLCodePointer[(GLbyte, GLbyte, GLbyte), ()];
-    SecondaryColor3bv: GLCodePointer[(Pointer[GLbyte]), ()];
-    SecondaryColor3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()];
-    SecondaryColor3dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    SecondaryColor3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()];
-    SecondaryColor3fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    SecondaryColor3i: GLCodePointer[(GLint, GLint, GLint), ()];
-    SecondaryColor3iv: GLCodePointer[(Pointer[GLint]), ()];
-    SecondaryColor3s: GLCodePointer[(GLshort, GLshort, GLshort), ()];
-    SecondaryColor3sv: GLCodePointer[(Pointer[GLshort]), ()];
-    SecondaryColor3ub: GLCodePointer[(GLubyte, GLubyte, GLubyte), ()];
-    SecondaryColor3ubv: GLCodePointer[(Pointer[GLubyte]), ()];
-    SecondaryColor3ui: GLCodePointer[(GLuint, GLuint, GLuint), ()];
-    SecondaryColor3uiv: GLCodePointer[(Pointer[GLuint]), ()];
-    SecondaryColor3us: GLCodePointer[(GLushort, GLushort, GLushort), ()];
-    SecondaryColor3usv: GLCodePointer[(Pointer[GLushort]), ()];
-    SecondaryColorP3ui: GLCodePointer[(GLenum, GLuint), ()];
-    SecondaryColorP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    SecondaryColorPointer: GLCodePointer[(GLint, GLenum, GLsizei, Pointer[GLvoid]), ()];
-    SelectBuffer: GLCodePointer[(GLsizei, Pointer[GLuint]), ()];
-    ShadeModel: GLCodePointer[(GLenum), ()];
-    ShaderSource: GLCodePointer[(GLuint, GLsizei, Pointer[GLstring], Pointer[GLint]), ()];
-    StencilFunc: GLCodePointer[(GLenum, GLint, GLuint), ()];
-    StencilFuncSeparate: GLCodePointer[(GLenum, GLenum, GLint, GLuint), ()];
-    StencilMask: GLCodePointer[(GLuint), ()];
-    StencilMaskSeparate: GLCodePointer[(GLenum, GLuint), ()];
-    StencilOp: GLCodePointer[(GLenum, GLenum, GLenum), ()];
-    StencilOpSeparate: GLCodePointer[(GLenum, GLenum, GLenum, GLenum), ()];
-    TexBuffer: GLCodePointer[(GLenum, GLenum, GLuint), ()];
-    TexCoord1d: GLCodePointer[(GLdouble), ()];
-    TexCoord1dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    TexCoord1f: GLCodePointer[(GLfloat), ()];
-    TexCoord1fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    TexCoord1i: GLCodePointer[(GLint), ()];
-    TexCoord1iv: GLCodePointer[(Pointer[GLint]), ()];
-    TexCoord1s: GLCodePointer[(GLshort), ()];
-    TexCoord1sv: GLCodePointer[(Pointer[GLshort]), ()];
-    TexCoord2d: GLCodePointer[(GLdouble, GLdouble), ()];
-    TexCoord2dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    TexCoord2f: GLCodePointer[(GLfloat, GLfloat), ()];
-    TexCoord2fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    TexCoord2i: GLCodePointer[(GLint, GLint), ()];
-    TexCoord2iv: GLCodePointer[(Pointer[GLint]), ()];
-    TexCoord2s: GLCodePointer[(GLshort, GLshort), ()];
-    TexCoord2sv: GLCodePointer[(Pointer[GLshort]), ()];
-    TexCoord3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()];
-    TexCoord3dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    TexCoord3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()];
-    TexCoord3fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    TexCoord3i: GLCodePointer[(GLint, GLint, GLint), ()];
-    TexCoord3iv: GLCodePointer[(Pointer[GLint]), ()];
-    TexCoord3s: GLCodePointer[(GLshort, GLshort, GLshort), ()];
-    TexCoord3sv: GLCodePointer[(Pointer[GLshort]), ()];
-    TexCoord4d: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    TexCoord4dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    TexCoord4f: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    TexCoord4fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    TexCoord4i: GLCodePointer[(GLint, GLint, GLint, GLint), ()];
-    TexCoord4iv: GLCodePointer[(Pointer[GLint]), ()];
-    TexCoord4s: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()];
-    TexCoord4sv: GLCodePointer[(Pointer[GLshort]), ()];
-    TexCoordP1ui: GLCodePointer[(GLenum, GLuint), ()];
-    TexCoordP1uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    TexCoordP2ui: GLCodePointer[(GLenum, GLuint), ()];
-    TexCoordP2uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    TexCoordP3ui: GLCodePointer[(GLenum, GLuint), ()];
-    TexCoordP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    TexCoordP4ui: GLCodePointer[(GLenum, GLuint), ()];
-    TexCoordP4uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    TexCoordPointer: GLCodePointer[(GLint, GLenum, GLsizei, Pointer[GLvoid]), ()];
-    TexEnvf: GLCodePointer[(GLenum, GLenum, GLfloat), ()];
-    TexEnvfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    TexEnvi: GLCodePointer[(GLenum, GLenum, GLint), ()];
-    TexEnviv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    TexGend: GLCodePointer[(GLenum, GLenum, GLdouble), ()];
-    TexGendv: GLCodePointer[(GLenum, GLenum, Pointer[GLdouble]), ()];
-    TexGenf: GLCodePointer[(GLenum, GLenum, GLfloat), ()];
-    TexGenfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    TexGeni: GLCodePointer[(GLenum, GLenum, GLint), ()];
-    TexGeniv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    TexImage1D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLint, GLenum, GLenum, Pointer[GLvoid]), ()];
-    TexImage2D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, Pointer[GLvoid]), ()];
-    TexImage2DMultisample: GLCodePointer[(GLenum, GLsizei, GLint, GLsizei, GLsizei, GLboolean), ()];
-    TexImage3D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, Pointer[GLvoid]), ()];
-    TexImage3DMultisample: GLCodePointer[(GLenum, GLsizei, GLint, GLsizei, GLsizei, GLsizei, GLboolean), ()];
-    TexParameterIiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    TexParameterIuiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()];
-    TexParameterf: GLCodePointer[(GLenum, GLenum, GLfloat), ()];
-    TexParameterfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()];
-    TexParameteri: GLCodePointer[(GLenum, GLenum, GLint), ()];
-    TexParameteriv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()];
-    TexSubImage1D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()];
-    TexSubImage2D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()];
-    TexSubImage3D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()];
-    TransformFeedbackVaryings: GLCodePointer[(GLuint, GLsizei, Pointer[GLstring], GLenum), ()];
-    Translated: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()];
-    Translatef: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()];
-    Uniform1d: GLCodePointer[(GLint, GLdouble), ()];
-    Uniform1dv: GLCodePointer[(GLint, GLsizei, Pointer[GLdouble]), ()];
-    Uniform1f: GLCodePointer[(GLint, GLfloat), ()];
-    Uniform1fv: GLCodePointer[(GLint, GLsizei, Pointer[GLfloat]), ()];
-    Uniform1i: GLCodePointer[(GLint, GLint), ()];
-    Uniform1iv: GLCodePointer[(GLint, GLsizei, Pointer[GLint]), ()];
-    Uniform1ui: GLCodePointer[(GLint, GLuint), ()];
-    Uniform1uiv: GLCodePointer[(GLint, GLsizei, Pointer[GLuint]), ()];
-    Uniform2d: GLCodePointer[(GLint, GLdouble, GLdouble), ()];
-    Uniform2dv: GLCodePointer[(GLint, GLsizei, Pointer[GLdouble]), ()];
-    Uniform2f: GLCodePointer[(GLint, GLfloat, GLfloat), ()];
-    Uniform2fv: GLCodePointer[(GLint, GLsizei, Pointer[GLfloat]), ()];
-    Uniform2i: GLCodePointer[(GLint, GLint, GLint), ()];
-    Uniform2iv: GLCodePointer[(GLint, GLsizei, Pointer[GLint]), ()];
-    Uniform2ui: GLCodePointer[(GLint, GLuint, GLuint), ()];
-    Uniform2uiv: GLCodePointer[(GLint, GLsizei, Pointer[GLuint]), ()];
-    Uniform3d: GLCodePointer[(GLint, GLdouble, GLdouble, GLdouble), ()];
-    Uniform3dv: GLCodePointer[(GLint, GLsizei, Pointer[GLdouble]), ()];
-    Uniform3f: GLCodePointer[(GLint, GLfloat, GLfloat, GLfloat), ()];
-    Uniform3fv: GLCodePointer[(GLint, GLsizei, Pointer[GLfloat]), ()];
-    Uniform3i: GLCodePointer[(GLint, GLint, GLint, GLint), ()];
-    Uniform3iv: GLCodePointer[(GLint, GLsizei, Pointer[GLint]), ()];
-    Uniform3ui: GLCodePointer[(GLint, GLuint, GLuint, GLuint), ()];
-    Uniform3uiv: GLCodePointer[(GLint, GLsizei, Pointer[GLuint]), ()];
-    Uniform4d: GLCodePointer[(GLint, GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    Uniform4dv: GLCodePointer[(GLint, GLsizei, Pointer[GLdouble]), ()];
-    Uniform4f: GLCodePointer[(GLint, GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    Uniform4fv: GLCodePointer[(GLint, GLsizei, Pointer[GLfloat]), ()];
-    Uniform4i: GLCodePointer[(GLint, GLint, GLint, GLint, GLint), ()];
-    Uniform4iv: GLCodePointer[(GLint, GLsizei, Pointer[GLint]), ()];
-    Uniform4ui: GLCodePointer[(GLint, GLuint, GLuint, GLuint, GLuint), ()];
-    Uniform4uiv: GLCodePointer[(GLint, GLsizei, Pointer[GLuint]), ()];
-    UniformBlockBinding: GLCodePointer[(GLuint, GLuint, GLuint), ()];
-    UniformMatrix2dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    UniformMatrix2fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()];
-    UniformMatrix2x3dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    UniformMatrix2x3fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()];
-    UniformMatrix2x4dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    UniformMatrix2x4fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()];
-    UniformMatrix3dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    UniformMatrix3fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()];
-    UniformMatrix3x2dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    UniformMatrix3x2fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()];
-    UniformMatrix3x4dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    UniformMatrix3x4fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()];
-    UniformMatrix4dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    UniformMatrix4fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()];
-    UniformMatrix4x2dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    UniformMatrix4x2fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()];
-    UniformMatrix4x3dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()];
-    UniformMatrix4x3fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()];
-    UniformSubroutinesuiv: GLCodePointer[(GLenum, GLsizei, Pointer[GLuint]), ()];
-    UnmapBuffer: GLCodePointer[(GLenum), GLboolean];
-    UseProgram: GLCodePointer[(GLuint), ()];
-    ValidateProgram: GLCodePointer[(GLuint), ()];
-    Vertex2d: GLCodePointer[(GLdouble, GLdouble), ()];
-    Vertex2dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    Vertex2f: GLCodePointer[(GLfloat, GLfloat), ()];
-    Vertex2fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    Vertex2i: GLCodePointer[(GLint, GLint), ()];
-    Vertex2iv: GLCodePointer[(Pointer[GLint]), ()];
-    Vertex2s: GLCodePointer[(GLshort, GLshort), ()];
-    Vertex2sv: GLCodePointer[(Pointer[GLshort]), ()];
-    Vertex3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()];
-    Vertex3dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    Vertex3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()];
-    Vertex3fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    Vertex3i: GLCodePointer[(GLint, GLint, GLint), ()];
-    Vertex3iv: GLCodePointer[(Pointer[GLint]), ()];
-    Vertex3s: GLCodePointer[(GLshort, GLshort, GLshort), ()];
-    Vertex3sv: GLCodePointer[(Pointer[GLshort]), ()];
-    Vertex4d: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    Vertex4dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    Vertex4f: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    Vertex4fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    Vertex4i: GLCodePointer[(GLint, GLint, GLint, GLint), ()];
-    Vertex4iv: GLCodePointer[(Pointer[GLint]), ()];
-    Vertex4s: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()];
-    Vertex4sv: GLCodePointer[(Pointer[GLshort]), ()];
-    VertexAttrib1d: GLCodePointer[(GLuint, GLdouble), ()];
-    VertexAttrib1dv: GLCodePointer[(GLuint, Pointer[GLdouble]), ()];
-    VertexAttrib1f: GLCodePointer[(GLuint, GLfloat), ()];
-    VertexAttrib1fv: GLCodePointer[(GLuint, Pointer[GLfloat]), ()];
-    VertexAttrib1s: GLCodePointer[(GLuint, GLshort), ()];
-    VertexAttrib1sv: GLCodePointer[(GLuint, Pointer[GLshort]), ()];
-    VertexAttrib2d: GLCodePointer[(GLuint, GLdouble, GLdouble), ()];
-    VertexAttrib2dv: GLCodePointer[(GLuint, Pointer[GLdouble]), ()];
-    VertexAttrib2f: GLCodePointer[(GLuint, GLfloat, GLfloat), ()];
-    VertexAttrib2fv: GLCodePointer[(GLuint, Pointer[GLfloat]), ()];
-    VertexAttrib2s: GLCodePointer[(GLuint, GLshort, GLshort), ()];
-    VertexAttrib2sv: GLCodePointer[(GLuint, Pointer[GLshort]), ()];
-    VertexAttrib3d: GLCodePointer[(GLuint, GLdouble, GLdouble, GLdouble), ()];
-    VertexAttrib3dv: GLCodePointer[(GLuint, Pointer[GLdouble]), ()];
-    VertexAttrib3f: GLCodePointer[(GLuint, GLfloat, GLfloat, GLfloat), ()];
-    VertexAttrib3fv: GLCodePointer[(GLuint, Pointer[GLfloat]), ()];
-    VertexAttrib3s: GLCodePointer[(GLuint, GLshort, GLshort, GLshort), ()];
-    VertexAttrib3sv: GLCodePointer[(GLuint, Pointer[GLshort]), ()];
-    VertexAttrib4Nbv: GLCodePointer[(GLuint, Pointer[GLbyte]), ()];
-    VertexAttrib4Niv: GLCodePointer[(GLuint, Pointer[GLint]), ()];
-    VertexAttrib4Nsv: GLCodePointer[(GLuint, Pointer[GLshort]), ()];
-    VertexAttrib4Nub: GLCodePointer[(GLuint, GLubyte, GLubyte, GLubyte, GLubyte), ()];
-    VertexAttrib4Nubv: GLCodePointer[(GLuint, Pointer[GLubyte]), ()];
-    VertexAttrib4Nuiv: GLCodePointer[(GLuint, Pointer[GLuint]), ()];
-    VertexAttrib4Nusv: GLCodePointer[(GLuint, Pointer[GLushort]), ()];
-    VertexAttrib4bv: GLCodePointer[(GLuint, Pointer[GLbyte]), ()];
-    VertexAttrib4d: GLCodePointer[(GLuint, GLdouble, GLdouble, GLdouble, GLdouble), ()];
-    VertexAttrib4dv: GLCodePointer[(GLuint, Pointer[GLdouble]), ()];
-    VertexAttrib4f: GLCodePointer[(GLuint, GLfloat, GLfloat, GLfloat, GLfloat), ()];
-    VertexAttrib4fv: GLCodePointer[(GLuint, Pointer[GLfloat]), ()];
-    VertexAttrib4iv: GLCodePointer[(GLuint, Pointer[GLint]), ()];
-    VertexAttrib4s: GLCodePointer[(GLuint, GLshort, GLshort, GLshort, GLshort), ()];
-    VertexAttrib4sv: GLCodePointer[(GLuint, Pointer[GLshort]), ()];
-    VertexAttrib4ubv: GLCodePointer[(GLuint, Pointer[GLubyte]), ()];
-    VertexAttrib4uiv: GLCodePointer[(GLuint, Pointer[GLuint]), ()];
-    VertexAttrib4usv: GLCodePointer[(GLuint, Pointer[GLushort]), ()];
-    VertexAttribIPointer: GLCodePointer[(GLuint, GLint, GLenum, GLsizei, Pointer[GLvoid]), ()];
-    VertexAttribP1ui: GLCodePointer[(GLuint, GLenum, GLboolean, GLuint), ()];
-    VertexAttribP1uiv: GLCodePointer[(GLuint, GLenum, GLboolean, Pointer[GLuint]), ()];
-    VertexAttribP2ui: GLCodePointer[(GLuint, GLenum, GLboolean, GLuint), ()];
-    VertexAttribP2uiv: GLCodePointer[(GLuint, GLenum, GLboolean, Pointer[GLuint]), ()];
-    VertexAttribP3ui: GLCodePointer[(GLuint, GLenum, GLboolean, GLuint), ()];
-    VertexAttribP3uiv: GLCodePointer[(GLuint, GLenum, GLboolean, Pointer[GLuint]), ()];
-    VertexAttribP4ui: GLCodePointer[(GLuint, GLenum, GLboolean, GLuint), ()];
-    VertexAttribP4uiv: GLCodePointer[(GLuint, GLenum, GLboolean, Pointer[GLuint]), ()];
-    VertexAttribPointer: GLCodePointer[(GLuint, GLint, GLenum, GLboolean, GLsizei, Pointer[GLvoid]), ()];
-    VertexP2ui: GLCodePointer[(GLenum, GLuint), ()];
-    VertexP2uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    VertexP3ui: GLCodePointer[(GLenum, GLuint), ()];
-    VertexP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    VertexP4ui: GLCodePointer[(GLenum, GLuint), ()];
-    VertexP4uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()];
-    VertexPointer: GLCodePointer[(GLint, GLenum, GLsizei, Pointer[GLvoid]), ()];
-    Viewport: GLCodePointer[(GLint, GLint, GLsizei, GLsizei), ()];
-    WaitSync: GLCodePointer[(GLsync, GLbitfield, GLuint64), ()];
-    WindowPos2d: GLCodePointer[(GLdouble, GLdouble), ()];
-    WindowPos2dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    WindowPos2f: GLCodePointer[(GLfloat, GLfloat), ()];
-    WindowPos2fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    WindowPos2i: GLCodePointer[(GLint, GLint), ()];
-    WindowPos2iv: GLCodePointer[(Pointer[GLint]), ()];
-    WindowPos2s: GLCodePointer[(GLshort, GLshort), ()];
-    WindowPos2sv: GLCodePointer[(Pointer[GLshort]), ()];
-    WindowPos3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()];
-    WindowPos3dv: GLCodePointer[(Pointer[GLdouble]), ()];
-    WindowPos3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()];
-    WindowPos3fv: GLCodePointer[(Pointer[GLfloat]), ()];
-    WindowPos3i: GLCodePointer[(GLint, GLint, GLint), ()];
-    WindowPos3iv: GLCodePointer[(Pointer[GLint]), ()];
-    WindowPos3s: GLCodePointer[(GLshort, GLshort, GLshort), ()];
-    WindowPos3sv: GLCodePointer[(Pointer[GLshort]), ()];
-}
+record GLFunctions (
+    Accum: GLCodePointer[(GLenum, GLfloat), ()],
+    ActiveTexture: GLCodePointer[(GLenum), ()],
+    AlphaFunc: GLCodePointer[(GLenum, GLclampf), ()],
+    AreTexturesResident: GLCodePointer[(GLsizei, Pointer[GLuint], Pointer[GLboolean]), GLboolean],
+    ArrayElement: GLCodePointer[(GLint), ()],
+    AttachShader: GLCodePointer[(GLuint, GLuint), ()],
+    Begin: GLCodePointer[(GLenum), ()],
+    BeginConditionalRender: GLCodePointer[(GLuint, GLenum), ()],
+    BeginQuery: GLCodePointer[(GLenum, GLuint), ()],
+    BeginQueryIndexed: GLCodePointer[(GLenum, GLuint, GLuint), ()],
+    BeginTransformFeedback: GLCodePointer[(GLenum), ()],
+    BindAttribLocation: GLCodePointer[(GLuint, GLuint, GLstring), ()],
+    BindBuffer: GLCodePointer[(GLenum, GLuint), ()],
+    BindBufferBase: GLCodePointer[(GLenum, GLuint, GLuint), ()],
+    BindBufferRange: GLCodePointer[(GLenum, GLuint, GLuint, GLintptr, GLsizeiptr), ()],
+    BindFragDataLocation: GLCodePointer[(GLuint, GLuint, GLstring), ()],
+    BindFragDataLocationIndexed: GLCodePointer[(GLuint, GLuint, GLuint, GLstring), ()],
+    BindFramebuffer: GLCodePointer[(GLenum, GLuint), ()],
+    BindRenderbuffer: GLCodePointer[(GLenum, GLuint), ()],
+    BindSampler: GLCodePointer[(GLenum, GLuint), ()],
+    BindTexture: GLCodePointer[(GLenum, GLuint), ()],
+    BindTransformFeedback: GLCodePointer[(GLenum, GLuint), ()],
+    BindVertexArray: GLCodePointer[(GLuint), ()],
+    Bitmap: GLCodePointer[(GLsizei, GLsizei, GLfloat, GLfloat, GLfloat, GLfloat, Pointer[GLubyte]), ()],
+    BlendColor: GLCodePointer[(GLclampf, GLclampf, GLclampf, GLclampf), ()],
+    BlendEquation: GLCodePointer[(GLenum), ()],
+    BlendEquationSeparate: GLCodePointer[(GLenum, GLenum), ()],
+    BlendFunc: GLCodePointer[(GLenum, GLenum), ()],
+    BlendFuncSeparate: GLCodePointer[(GLenum, GLenum, GLenum, GLenum), ()],
+    BlitFramebuffer: GLCodePointer[(GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum), ()],
+    BufferData: GLCodePointer[(GLenum, GLsizeiptr, Pointer[GLvoid], GLenum), ()],
+    BufferSubData: GLCodePointer[(GLenum, GLintptr, GLsizeiptr, Pointer[GLvoid]), ()],
+    CallList: GLCodePointer[(GLuint), ()],
+    CallLists: GLCodePointer[(GLsizei, GLenum, Pointer[GLvoid]), ()],
+    CheckFramebufferStatus: GLCodePointer[(GLenum), GLenum],
+    ClampColor: GLCodePointer[(GLenum, GLenum), ()],
+    Clear: GLCodePointer[(GLbitfield), ()],
+    ClearAccum: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    ClearBufferfi: GLCodePointer[(GLenum, GLint, GLfloat, GLint), ()],
+    ClearBufferfv: GLCodePointer[(GLenum, GLint, Pointer[GLfloat]), ()],
+    ClearBufferiv: GLCodePointer[(GLenum, GLint, Pointer[GLint]), ()],
+    ClearBufferuiv: GLCodePointer[(GLenum, GLint, Pointer[GLuint]), ()],
+    ClearColor: GLCodePointer[(GLclampf, GLclampf, GLclampf, GLclampf), ()],
+    ClearColorIiEXT: GLCodePointer[(GLint, GLint, GLint, GLint), ()],
+    ClearColorIuiEXT: GLCodePointer[(GLuint, GLuint, GLuint, GLuint), ()],
+    ClearDepth: GLCodePointer[(GLclampd), ()],
+    ClearIndex: GLCodePointer[(GLfloat), ()],
+    ClearStencil: GLCodePointer[(GLint), ()],
+    ClientActiveTexture: GLCodePointer[(GLenum), ()],
+    ClientWaitSync: GLCodePointer[(GLsync, GLbitfield, GLuint64), GLenum],
+    ClipPlane: GLCodePointer[(GLenum, Pointer[GLdouble]), ()],
+    Color3b: GLCodePointer[(GLbyte, GLbyte, GLbyte), ()],
+    Color3bv: GLCodePointer[(Pointer[GLbyte]), ()],
+    Color3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()],
+    Color3dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    Color3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()],
+    Color3fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    Color3i: GLCodePointer[(GLint, GLint, GLint), ()],
+    Color3iv: GLCodePointer[(Pointer[GLint]), ()],
+    Color3s: GLCodePointer[(GLshort, GLshort, GLshort), ()],
+    Color3sv: GLCodePointer[(Pointer[GLshort]), ()],
+    Color3ub: GLCodePointer[(GLubyte, GLubyte, GLubyte), ()],
+    Color3ubv: GLCodePointer[(Pointer[GLubyte]), ()],
+    Color3ui: GLCodePointer[(GLuint, GLuint, GLuint), ()],
+    Color3uiv: GLCodePointer[(Pointer[GLuint]), ()],
+    Color3us: GLCodePointer[(GLushort, GLushort, GLushort), ()],
+    Color3usv: GLCodePointer[(Pointer[GLushort]), ()],
+    Color4b: GLCodePointer[(GLbyte, GLbyte, GLbyte, GLbyte), ()],
+    Color4bv: GLCodePointer[(Pointer[GLbyte]), ()],
+    Color4d: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    Color4dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    Color4f: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    Color4fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    Color4i: GLCodePointer[(GLint, GLint, GLint, GLint), ()],
+    Color4iv: GLCodePointer[(Pointer[GLint]), ()],
+    Color4s: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()],
+    Color4sv: GLCodePointer[(Pointer[GLshort]), ()],
+    Color4ub: GLCodePointer[(GLubyte, GLubyte, GLubyte, GLubyte), ()],
+    Color4ubv: GLCodePointer[(Pointer[GLubyte]), ()],
+    Color4ui: GLCodePointer[(GLuint, GLuint, GLuint, GLuint), ()],
+    Color4uiv: GLCodePointer[(Pointer[GLuint]), ()],
+    Color4us: GLCodePointer[(GLushort, GLushort, GLushort, GLushort), ()],
+    Color4usv: GLCodePointer[(Pointer[GLushort]), ()],
+    ColorMask: GLCodePointer[(GLboolean, GLboolean, GLboolean, GLboolean), ()],
+    ColorMaski: GLCodePointer[(GLuint, GLboolean, GLboolean, GLboolean, GLboolean), ()],
+    ColorMaterial: GLCodePointer[(GLenum, GLenum), ()],
+    ColorP3ui: GLCodePointer[(GLenum, GLuint), ()],
+    ColorP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    ColorP4ui: GLCodePointer[(GLenum, GLuint), ()],
+    ColorP4uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    ColorPointer: GLCodePointer[(GLint, GLenum, GLsizei, Pointer[GLvoid]), ()],
+    CompileShader: GLCodePointer[(GLuint), ()],
+    CompressedTexImage1D: GLCodePointer[(GLenum, GLint, GLenum, GLsizei, GLint, GLsizei, Pointer[GLvoid]), ()],
+    CompressedTexImage2D: GLCodePointer[(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, Pointer[GLvoid]), ()],
+    CompressedTexImage3D: GLCodePointer[(GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLsizei, Pointer[GLvoid]), ()],
+    CompressedTexSubImage1D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLenum, GLsizei, Pointer[GLvoid]), ()],
+    CompressedTexSubImage2D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, Pointer[GLvoid]), ()],
+    CompressedTexSubImage3D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLsizei, Pointer[GLvoid]), ()],
+    CopyBufferSubData: GLCodePointer[(GLenum, GLenum, GLintptr, GLintptr, GLsizeiptr), ()],
+    CopyPixels: GLCodePointer[(GLint, GLint, GLsizei, GLsizei, GLenum), ()],
+    CopyTexImage1D: GLCodePointer[(GLenum, GLint, GLenum, GLint, GLint, GLsizei, GLint), ()],
+    CopyTexImage2D: GLCodePointer[(GLenum, GLint, GLenum, GLint, GLint, GLsizei, GLsizei, GLint), ()],
+    CopyTexSubImage1D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLsizei), ()],
+    CopyTexSubImage2D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei), ()],
+    CopyTexSubImage3D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei), ()],
+    CreateProgram: GLCodePointer[(), GLuint],
+    CreateShader: GLCodePointer[(GLenum), GLuint],
+    CullFace: GLCodePointer[(GLenum), ()],
+    DeleteBuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    DeleteFramebuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    DeleteLists: GLCodePointer[(GLuint, GLsizei), ()],
+    DeleteProgram: GLCodePointer[(GLuint), ()],
+    DeleteQueries: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    DeleteRenderbuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    DeleteSamplers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    DeleteShader: GLCodePointer[(GLuint), ()],
+    DeleteSync: GLCodePointer[(GLsync), ()],
+    DeleteTextures: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    DeleteTransformFeedbacks: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    DeleteVertexArrays: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    DepthFunc: GLCodePointer[(GLenum), ()],
+    DepthMask: GLCodePointer[(GLboolean), ()],
+    DepthRange: GLCodePointer[(GLclampd, GLclampd), ()],
+    DetachShader: GLCodePointer[(GLuint, GLuint), ()],
+    Disable: GLCodePointer[(GLenum), ()],
+    DisableClientState: GLCodePointer[(GLenum), ()],
+    DisableVertexAttribArray: GLCodePointer[(GLuint), ()],
+    Disablei: GLCodePointer[(GLenum, GLuint), ()],
+    DrawArrays: GLCodePointer[(GLenum, GLint, GLsizei), ()],
+    DrawArraysInstanced: GLCodePointer[(GLenum, GLint, GLsizei, GLsizei), ()],
+    DrawBuffer: GLCodePointer[(GLenum), ()],
+    DrawBuffers: GLCodePointer[(GLsizei, Pointer[GLenum]), ()],
+    DrawElements: GLCodePointer[(GLenum, GLsizei, GLenum, Pointer[GLvoid]), ()],
+    DrawElementsInstanced: GLCodePointer[(GLenum, GLsizei, GLenum, Pointer[GLvoid], GLsizei), ()],
+    DrawPixels: GLCodePointer[(GLsizei, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()],
+    DrawRangeElements: GLCodePointer[(GLenum, GLuint, GLuint, GLsizei, GLenum, Pointer[GLvoid]), ()],
+    DrawTransformFeedback: GLCodePointer[(GLenum, GLuint), ()],
+    DrawTransformFeedbackStream: GLCodePointer[(GLenum, GLuint, GLuint), ()],
+    EdgeFlag: GLCodePointer[(GLboolean), ()],
+    EdgeFlagPointer: GLCodePointer[(GLsizei, Pointer[GLvoid]), ()],
+    EdgeFlagv: GLCodePointer[(Pointer[GLboolean]), ()],
+    Enable: GLCodePointer[(GLenum), ()],
+    EnableClientState: GLCodePointer[(GLenum), ()],
+    EnableVertexAttribArray: GLCodePointer[(GLuint), ()],
+    Enablei: GLCodePointer[(GLenum, GLuint), ()],
+    End: GLCodePointer[(), ()],
+    EndConditionalRender: GLCodePointer[(), ()],
+    EndList: GLCodePointer[(), ()],
+    EndQuery: GLCodePointer[(GLenum), ()],
+    EndQueryIndexed: GLCodePointer[(GLenum, GLuint), ()],
+    EndTransformFeedback: GLCodePointer[(), ()],
+    EvalCoord1d: GLCodePointer[(GLdouble), ()],
+    EvalCoord1dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    EvalCoord1f: GLCodePointer[(GLfloat), ()],
+    EvalCoord1fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    EvalCoord2d: GLCodePointer[(GLdouble, GLdouble), ()],
+    EvalCoord2dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    EvalCoord2f: GLCodePointer[(GLfloat, GLfloat), ()],
+    EvalCoord2fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    EvalMesh1: GLCodePointer[(GLenum, GLint, GLint), ()],
+    EvalMesh2: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint), ()],
+    EvalPoint1: GLCodePointer[(GLint), ()],
+    EvalPoint2: GLCodePointer[(GLint, GLint), ()],
+    FeedbackBuffer: GLCodePointer[(GLsizei, GLenum, Pointer[GLfloat]), ()],
+    FenceSync: GLCodePointer[(GLenum, GLbitfield), GLsync],
+    Finish: GLCodePointer[(), ()],
+    Flush: GLCodePointer[(), ()],
+    FlushMappedBufferRange: GLCodePointer[(GLenum, GLintptr, GLsizeiptr), ()],
+    FogCoordPointer: GLCodePointer[(GLenum, GLsizei, Pointer[GLvoid]), ()],
+    FogCoordd: GLCodePointer[(GLdouble), ()],
+    FogCoorddv: GLCodePointer[(Pointer[GLdouble]), ()],
+    FogCoordf: GLCodePointer[(GLfloat), ()],
+    FogCoordfv: GLCodePointer[(Pointer[GLfloat]), ()],
+    Fogf: GLCodePointer[(GLenum, GLfloat), ()],
+    Fogfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    Fogi: GLCodePointer[(GLenum, GLint), ()],
+    Fogiv: GLCodePointer[(GLenum, Pointer[GLint]), ()],
+    FramebufferRenderbuffer: GLCodePointer[(GLenum, GLenum, GLenum, GLuint), ()],
+    FramebufferTexture: GLCodePointer[(GLenum, GLenum, GLuint, GLint), ()],
+    FramebufferTexture1D: GLCodePointer[(GLenum, GLenum, GLenum, GLuint, GLint), ()],
+    FramebufferTexture2D: GLCodePointer[(GLenum, GLenum, GLenum, GLuint, GLint), ()],
+    FramebufferTexture3D: GLCodePointer[(GLenum, GLenum, GLenum, GLuint, GLint, GLint), ()],
+    FramebufferTextureFaceARB: GLCodePointer[(GLenum, GLenum, GLuint, GLint, GLenum), ()],
+    FramebufferTextureLayer: GLCodePointer[(GLenum, GLenum, GLuint, GLint, GLint), ()],
+    FramebufferTextureLayerARB: GLCodePointer[(GLenum, GLenum, GLuint, GLint, GLint), ()],
+    FrontFace: GLCodePointer[(GLenum), ()],
+    Frustum: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    GenBuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    GenFramebuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    GenLists: GLCodePointer[(GLsizei), GLuint],
+    GenQueries: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    GenRenderbuffers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    GenSamplers: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    GenTextures: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    GenTransformFeedbacks: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    GenVertexArrays: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    GenerateMipmap: GLCodePointer[(GLenum), ()],
+    GetActiveAttrib: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], Pointer[GLint], Pointer[GLenum], GLstring), ()],
+    GetActiveSubroutineName: GLCodePointer[(GLuint, GLenum, GLuint, GLsizei, Pointer[GLsizei], GLstring), ()],
+    GetActiveSubroutineUniformName: GLCodePointer[(GLuint, GLenum, GLuint, GLsizei, Pointer[GLsizei], GLstring), ()],
+    GetActiveSubroutineUniformiv: GLCodePointer[(GLuint, GLenum, GLuint, GLenum, Pointer[GLint]), ()],
+    GetActiveUniform: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], Pointer[GLint], Pointer[GLenum], GLstring), ()],
+    GetActiveUniformBlockName: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], GLstring), ()],
+    GetActiveUniformBlockiv: GLCodePointer[(GLuint, GLuint, GLenum, Pointer[GLint]), ()],
+    GetActiveUniformName: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], GLstring), ()],
+    GetActiveUniformsiv: GLCodePointer[(GLuint, GLsizei, Pointer[GLuint], GLenum, Pointer[GLint]), ()],
+    GetAttachedShaders: GLCodePointer[(GLuint, GLsizei, Pointer[GLsizei], Pointer[GLuint]), ()],
+    GetAttribLocation: GLCodePointer[(GLuint, GLstring), GLint],
+    GetBooleani_v: GLCodePointer[(GLenum, GLuint, Pointer[GLboolean]), ()],
+    GetBooleanv: GLCodePointer[(GLenum, Pointer[GLboolean]), ()],
+    GetBufferParameteri64v: GLCodePointer[(GLenum, GLenum, Pointer[GLint64]), ()],
+    GetBufferParameteriv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetBufferPointerv: GLCodePointer[(GLenum, GLenum, Pointer[Pointer[GLvoid]]), ()],
+    GetBufferSubData: GLCodePointer[(GLenum, GLintptr, GLsizeiptr, Pointer[GLvoid]), ()],
+    GetClipPlane: GLCodePointer[(GLenum, Pointer[GLdouble]), ()],
+    GetCompressedTexImage: GLCodePointer[(GLenum, GLint, Pointer[GLvoid]), ()],
+    GetDoublev: GLCodePointer[(GLenum, Pointer[GLdouble]), ()],
+    GetError: GLCodePointer[(), GLenum],
+    GetFloatv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    GetFragDataIndex: GLCodePointer[(GLuint, GLstring), GLint],
+    GetFragDataLocation: GLCodePointer[(GLuint, GLstring), GLint],
+    GetFramebufferAttachmentParameteriv: GLCodePointer[(GLenum, GLenum, GLenum, Pointer[GLint]), ()],
+    GetInteger64i_v: GLCodePointer[(GLenum, GLuint, Pointer[GLint64]), ()],
+    GetInteger64v: GLCodePointer[(GLenum, Pointer[GLint64]), ()],
+    GetIntegeri_v: GLCodePointer[(GLenum, GLuint, Pointer[GLint]), ()],
+    GetIntegerv: GLCodePointer[(GLenum, Pointer[GLint]), ()],
+    GetLightfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    GetLightiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetMapdv: GLCodePointer[(GLenum, GLenum, Pointer[GLdouble]), ()],
+    GetMapfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    GetMapiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetMaterialfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    GetMaterialiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetMultisamplefv: GLCodePointer[(GLenum, GLuint, Pointer[GLfloat]), ()],
+    GetPixelMapfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    GetPixelMapuiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    GetPixelMapusv: GLCodePointer[(GLenum, Pointer[GLushort]), ()],
+    GetPointerv: GLCodePointer[(GLenum, Pointer[Pointer[GLvoid]]), ()],
+    GetPolygonStipple: GLCodePointer[(Pointer[GLubyte]), ()],
+    GetProgramInfoLog: GLCodePointer[(GLuint, GLsizei, Pointer[GLsizei], GLstring), ()],
+    GetProgramStageiv: GLCodePointer[(GLuint, GLenum, GLenum, Pointer[GLint]), ()],
+    GetProgramiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()],
+    GetQueryIndexediv: GLCodePointer[(GLenum, GLuint, GLenum, Pointer[GLint]), ()],
+    GetQueryObjecti64v: GLCodePointer[(GLuint, GLenum, Pointer[GLint64]), ()],
+    GetQueryObjectiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()],
+    GetQueryObjectui64v: GLCodePointer[(GLuint, GLenum, Pointer[GLuint64]), ()],
+    GetQueryObjectuiv: GLCodePointer[(GLuint, GLenum, Pointer[GLuint]), ()],
+    GetQueryiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetRenderbufferParameteriv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetSamplerParameterIfv: GLCodePointer[(GLuint, GLenum, Pointer[GLfloat]), ()],
+    GetSamplerParameterIiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()],
+    GetSamplerParameterfv: GLCodePointer[(GLuint, GLenum, Pointer[GLfloat]), ()],
+    GetSamplerParameteriv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()],
+    GetShaderInfoLog: GLCodePointer[(GLuint, GLsizei, Pointer[GLsizei], GLstring), ()],
+    GetShaderSource: GLCodePointer[(GLint, GLsizei, Pointer[GLsizei], GLstring), ()],
+    GetShaderiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()],
+    GetString: GLCodePointer[(GLenum), GLstring],
+    GetStringi: GLCodePointer[(GLenum, GLuint), Pointer[GLubyte]],
+    GetSubroutineIndex: GLCodePointer[(GLuint, GLenum, GLstring), GLuint],
+    GetSubroutineUniformLocation: GLCodePointer[(GLuint, GLenum, GLstring), GLint],
+    GetSynciv: GLCodePointer[(GLsync, GLenum, GLsizei, Pointer[GLsizei], Pointer[GLint]), ()],
+    GetTexEnvfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    GetTexEnviv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetTexGendv: GLCodePointer[(GLenum, GLenum, Pointer[GLdouble]), ()],
+    GetTexGenfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    GetTexGeniv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetTexImage: GLCodePointer[(GLenum, GLint, GLenum, GLenum, Pointer[GLvoid]), ()],
+    GetTexLevelParameterfv: GLCodePointer[(GLenum, GLint, GLenum, Pointer[GLfloat]), ()],
+    GetTexLevelParameteriv: GLCodePointer[(GLenum, GLint, GLenum, Pointer[GLint]), ()],
+    GetTexParameterIiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetTexParameterIuiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()],
+    GetTexParameterfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    GetTexParameteriv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    GetTransformFeedbackVarying: GLCodePointer[(GLuint, GLuint, GLsizei, Pointer[GLsizei], Pointer[GLsizei], Pointer[GLenum], GLstring), ()],
+    GetUniformBlockIndex: GLCodePointer[(GLuint, GLstring), GLuint],
+    GetUniformIndices: GLCodePointer[(GLuint, GLsizei, Pointer[GLstring], Pointer[GLuint]), ()],
+    GetUniformLocation: GLCodePointer[(GLint, GLstring), GLint],
+    GetUniformSubroutineuiv: GLCodePointer[(GLenum, GLint, Pointer[GLuint]), ()],
+    GetUniformdv: GLCodePointer[(GLuint, GLint, Pointer[GLdouble]), ()],
+    GetUniformfv: GLCodePointer[(GLuint, GLint, Pointer[GLfloat]), ()],
+    GetUniformiv: GLCodePointer[(GLuint, GLint, Pointer[GLint]), ()],
+    GetUniformuiv: GLCodePointer[(GLuint, GLint, Pointer[GLuint]), ()],
+    GetVertexAttribIiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()],
+    GetVertexAttribIuiv: GLCodePointer[(GLuint, GLenum, Pointer[GLuint]), ()],
+    GetVertexAttribPointerv: GLCodePointer[(GLuint, GLenum, Pointer[Pointer[GLvoid]]), ()],
+    GetVertexAttribdv: GLCodePointer[(GLuint, GLenum, Pointer[GLdouble]), ()],
+    GetVertexAttribfv: GLCodePointer[(GLuint, GLenum, Pointer[GLfloat]), ()],
+    GetVertexAttribiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()],
+    Hint: GLCodePointer[(GLenum, GLenum), ()],
+    IndexMask: GLCodePointer[(GLuint), ()],
+    IndexPointer: GLCodePointer[(GLenum, GLsizei, Pointer[GLvoid]), ()],
+    Indexd: GLCodePointer[(GLdouble), ()],
+    Indexdv: GLCodePointer[(Pointer[GLdouble]), ()],
+    Indexf: GLCodePointer[(GLfloat), ()],
+    Indexfv: GLCodePointer[(Pointer[GLfloat]), ()],
+    Indexi: GLCodePointer[(GLint), ()],
+    Indexiv: GLCodePointer[(Pointer[GLint]), ()],
+    Indexs: GLCodePointer[(GLshort), ()],
+    Indexsv: GLCodePointer[(Pointer[GLshort]), ()],
+    Indexub: GLCodePointer[(GLubyte), ()],
+    Indexubv: GLCodePointer[(Pointer[GLubyte]), ()],
+    InitNames: GLCodePointer[(), ()],
+    InterleavedArrays: GLCodePointer[(GLenum, GLsizei, Pointer[GLvoid]), ()],
+    IsBuffer: GLCodePointer[(GLuint), GLboolean],
+    IsEnabled: GLCodePointer[(GLenum), GLboolean],
+    IsEnabledi: GLCodePointer[(GLenum, GLuint), GLboolean],
+    IsFramebuffer: GLCodePointer[(GLuint), GLboolean],
+    IsList: GLCodePointer[(GLuint), GLboolean],
+    IsProgram: GLCodePointer[(GLuint), GLboolean],
+    IsQuery: GLCodePointer[(GLuint), GLboolean],
+    IsRenderbuffer: GLCodePointer[(GLuint), GLboolean],
+    IsSampler: GLCodePointer[(GLuint), GLboolean],
+    IsShader: GLCodePointer[(GLuint), GLboolean],
+    IsSync: GLCodePointer[(GLsync), GLboolean],
+    IsTexture: GLCodePointer[(GLuint), GLboolean],
+    IsTransformFeedback: GLCodePointer[(GLuint), GLboolean],
+    IsVertexArray: GLCodePointer[(GLuint), GLboolean],
+    LightModelf: GLCodePointer[(GLenum, GLfloat), ()],
+    LightModelfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    LightModeli: GLCodePointer[(GLenum, GLint), ()],
+    LightModeliv: GLCodePointer[(GLenum, Pointer[GLint]), ()],
+    Lightf: GLCodePointer[(GLenum, GLenum, GLfloat), ()],
+    Lightfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    Lighti: GLCodePointer[(GLenum, GLenum, GLint), ()],
+    Lightiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    LineStipple: GLCodePointer[(GLint, GLushort), ()],
+    LineWidth: GLCodePointer[(GLfloat), ()],
+    LinkProgram: GLCodePointer[(GLuint), ()],
+    ListBase: GLCodePointer[(GLuint), ()],
+    LoadIdentity: GLCodePointer[(), ()],
+    LoadMatrixd: GLCodePointer[(Pointer[GLdouble]), ()],
+    LoadMatrixf: GLCodePointer[(Pointer[GLfloat]), ()],
+    LoadName: GLCodePointer[(GLuint), ()],
+    LoadTransposeMatrixd: GLCodePointer[(Pointer[GLdouble]), ()],
+    LoadTransposeMatrixf: GLCodePointer[(Pointer[GLfloat]), ()],
+    LogicOp: GLCodePointer[(GLenum), ()],
+    Map1d: GLCodePointer[(GLenum, GLdouble, GLdouble, GLint, GLint, Pointer[GLdouble]), ()],
+    Map1f: GLCodePointer[(GLenum, GLfloat, GLfloat, GLint, GLint, Pointer[GLfloat]), ()],
+    Map2d: GLCodePointer[(GLenum, GLdouble, GLdouble, GLint, GLint, GLdouble, GLdouble, GLint, GLint, Pointer[GLdouble]), ()],
+    Map2f: GLCodePointer[(GLenum, GLfloat, GLfloat, GLint, GLint, GLfloat, GLfloat, GLint, GLint, Pointer[GLfloat]), ()],
+    MapBuffer: GLCodePointer[(GLenum, GLenum), Pointer[GLvoid]],
+    MapBufferRange: GLCodePointer[(GLenum, GLintptr, GLsizeiptr, GLbitfield), Pointer[GLvoid]],
+    MapGrid1d: GLCodePointer[(GLint, GLdouble, GLdouble), ()],
+    MapGrid1f: GLCodePointer[(GLint, GLfloat, GLfloat), ()],
+    MapGrid2d: GLCodePointer[(GLint, GLdouble, GLdouble, GLint, GLdouble, GLdouble), ()],
+    MapGrid2f: GLCodePointer[(GLint, GLfloat, GLfloat, GLint, GLfloat, GLfloat), ()],
+    Materialf: GLCodePointer[(GLenum, GLenum, GLfloat), ()],
+    Materialfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    Materiali: GLCodePointer[(GLenum, GLenum, GLint), ()],
+    Materialiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    MatrixMode: GLCodePointer[(GLenum), ()],
+    MultMatrixd: GLCodePointer[(Pointer[GLdouble]), ()],
+    MultMatrixf: GLCodePointer[(Pointer[GLfloat]), ()],
+    MultTransposeMatrixd: GLCodePointer[(Pointer[GLdouble]), ()],
+    MultTransposeMatrixf: GLCodePointer[(Pointer[GLfloat]), ()],
+    MultiDrawArrays: GLCodePointer[(GLenum, Pointer[GLint], Pointer[GLsizei], GLsizei), ()],
+    MultiDrawElements: GLCodePointer[(GLenum, Pointer[GLsizei], GLenum, Pointer[Pointer[GLvoid]], GLsizei), ()],
+    MultiTexCoord1d: GLCodePointer[(GLenum, GLdouble), ()],
+    MultiTexCoord1dv: GLCodePointer[(GLenum, Pointer[GLdouble]), ()],
+    MultiTexCoord1f: GLCodePointer[(GLenum, GLfloat), ()],
+    MultiTexCoord1fv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    MultiTexCoord1i: GLCodePointer[(GLenum, GLint), ()],
+    MultiTexCoord1iv: GLCodePointer[(GLenum, Pointer[GLint]), ()],
+    MultiTexCoord1s: GLCodePointer[(GLenum, GLshort), ()],
+    MultiTexCoord1sv: GLCodePointer[(GLenum, Pointer[GLshort]), ()],
+    MultiTexCoord2d: GLCodePointer[(GLenum, GLdouble, GLdouble), ()],
+    MultiTexCoord2dv: GLCodePointer[(GLenum, Pointer[GLdouble]), ()],
+    MultiTexCoord2f: GLCodePointer[(GLenum, GLfloat, GLfloat), ()],
+    MultiTexCoord2fv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    MultiTexCoord2i: GLCodePointer[(GLenum, GLint, GLint), ()],
+    MultiTexCoord2iv: GLCodePointer[(GLenum, Pointer[GLint]), ()],
+    MultiTexCoord2s: GLCodePointer[(GLenum, GLshort, GLshort), ()],
+    MultiTexCoord2sv: GLCodePointer[(GLenum, Pointer[GLshort]), ()],
+    MultiTexCoord3d: GLCodePointer[(GLenum, GLdouble, GLdouble, GLdouble), ()],
+    MultiTexCoord3dv: GLCodePointer[(GLenum, Pointer[GLdouble]), ()],
+    MultiTexCoord3f: GLCodePointer[(GLenum, GLfloat, GLfloat, GLfloat), ()],
+    MultiTexCoord3fv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    MultiTexCoord3i: GLCodePointer[(GLenum, GLint, GLint, GLint), ()],
+    MultiTexCoord3iv: GLCodePointer[(GLenum, Pointer[GLint]), ()],
+    MultiTexCoord3s: GLCodePointer[(GLenum, GLshort, GLshort, GLshort), ()],
+    MultiTexCoord3sv: GLCodePointer[(GLenum, Pointer[GLshort]), ()],
+    MultiTexCoord4d: GLCodePointer[(GLenum, GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    MultiTexCoord4dv: GLCodePointer[(GLenum, Pointer[GLdouble]), ()],
+    MultiTexCoord4f: GLCodePointer[(GLenum, GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    MultiTexCoord4fv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    MultiTexCoord4i: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint), ()],
+    MultiTexCoord4iv: GLCodePointer[(GLenum, Pointer[GLint]), ()],
+    MultiTexCoord4s: GLCodePointer[(GLenum, GLshort, GLshort, GLshort, GLshort), ()],
+    MultiTexCoord4sv: GLCodePointer[(GLenum, Pointer[GLshort]), ()],
+    MultiTexCoordP1ui: GLCodePointer[(GLenum, GLenum, GLuint), ()],
+    MultiTexCoordP1uiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()],
+    MultiTexCoordP2ui: GLCodePointer[(GLenum, GLenum, GLuint), ()],
+    MultiTexCoordP2uiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()],
+    MultiTexCoordP3ui: GLCodePointer[(GLenum, GLenum, GLuint), ()],
+    MultiTexCoordP3uiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()],
+    MultiTexCoordP4ui: GLCodePointer[(GLenum, GLenum, GLuint), ()],
+    MultiTexCoordP4uiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()],
+    NewList: GLCodePointer[(GLuint, GLenum), ()],
+    Normal3b: GLCodePointer[(GLbyte, GLbyte, GLbyte), ()],
+    Normal3bv: GLCodePointer[(Pointer[GLbyte]), ()],
+    Normal3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()],
+    Normal3dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    Normal3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()],
+    Normal3fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    Normal3i: GLCodePointer[(GLint, GLint, GLint), ()],
+    Normal3iv: GLCodePointer[(Pointer[GLint]), ()],
+    Normal3s: GLCodePointer[(GLshort, GLshort, GLshort), ()],
+    Normal3sv: GLCodePointer[(Pointer[GLshort]), ()],
+    NormalP3ui: GLCodePointer[(GLenum, GLuint), ()],
+    NormalP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    NormalPointer: GLCodePointer[(GLenum, GLsizei, Pointer[GLvoid]), ()],
+    Ortho: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    PassThrough: GLCodePointer[(GLfloat), ()],
+    PatchParameterfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    PatchParameteri: GLCodePointer[(GLenum, GLint), ()],
+    PauseTransformFeedback: GLCodePointer[(), ()],
+    PixelMapfv: GLCodePointer[(GLenum, GLsizei, Pointer[GLfloat]), ()],
+    PixelMapuiv: GLCodePointer[(GLenum, GLsizei, Pointer[GLuint]), ()],
+    PixelMapusv: GLCodePointer[(GLenum, GLsizei, Pointer[GLushort]), ()],
+    PixelStoref: GLCodePointer[(GLenum, GLfloat), ()],
+    PixelStorei: GLCodePointer[(GLenum, GLint), ()],
+    PixelTransferf: GLCodePointer[(GLenum, GLfloat), ()],
+    PixelTransferi: GLCodePointer[(GLenum, GLint), ()],
+    PixelZoom: GLCodePointer[(GLfloat, GLfloat), ()],
+    PointParameterf: GLCodePointer[(GLenum, GLfloat), ()],
+    PointParameterfv: GLCodePointer[(GLenum, Pointer[GLfloat]), ()],
+    PointParameteri: GLCodePointer[(GLenum, GLint), ()],
+    PointParameteriv: GLCodePointer[(GLenum, Pointer[GLint]), ()],
+    PointSize: GLCodePointer[(GLfloat), ()],
+    PolygonMode: GLCodePointer[(GLenum, GLenum), ()],
+    PolygonOffset: GLCodePointer[(GLfloat, GLfloat), ()],
+    PolygonStipple: GLCodePointer[(Pointer[GLubyte]), ()],
+    PopAttrib: GLCodePointer[(), ()],
+    PopClientAttrib: GLCodePointer[(), ()],
+    PopMatrix: GLCodePointer[(), ()],
+    PopName: GLCodePointer[(), ()],
+    PrimitiveRestartIndex: GLCodePointer[(GLuint), ()],
+    PrioritizeTextures: GLCodePointer[(GLsizei, Pointer[GLuint], Pointer[GLclampf]), ()],
+    ProgramParameteriARB: GLCodePointer[(GLuint, GLenum, GLint), ()],
+    ProgramUniform1d: GLCodePointer[(GLuint, GLint, GLdouble), ()],
+    ProgramUniform1dv: GLCodePointer[(GLuint, GLint, GLsizei, Pointer[GLdouble]), ()],
+    ProgramUniform2d: GLCodePointer[(GLuint, GLint, GLdouble, GLdouble), ()],
+    ProgramUniform2dv: GLCodePointer[(GLuint, GLint, GLsizei, Pointer[GLdouble]), ()],
+    ProgramUniform3d: GLCodePointer[(GLuint, GLint, GLdouble, GLdouble, GLdouble), ()],
+    ProgramUniform3dv: GLCodePointer[(GLuint, GLint, GLsizei, Pointer[GLdouble]), ()],
+    ProgramUniform4d: GLCodePointer[(GLuint, GLint, GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    ProgramUniform4dv: GLCodePointer[(GLuint, GLint, GLsizei, Pointer[GLdouble]), ()],
+    ProgramUniformMatrix2dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    ProgramUniformMatrix2x3dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    ProgramUniformMatrix2x4dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    ProgramUniformMatrix3dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    ProgramUniformMatrix3x2dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    ProgramUniformMatrix3x4dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    ProgramUniformMatrix4dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    ProgramUniformMatrix4x2dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    ProgramUniformMatrix4x3dv: GLCodePointer[(GLuint, GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    ProvokingVertex: GLCodePointer[(GLenum), ()],
+    PushAttrib: GLCodePointer[(GLbitfield), ()],
+    PushClientAttrib: GLCodePointer[(GLbitfield), ()],
+    PushMatrix: GLCodePointer[(), ()],
+    PushName: GLCodePointer[(GLuint), ()],
+    QueryCounter: GLCodePointer[(GLuint, GLenum), ()],
+    RasterPos2d: GLCodePointer[(GLdouble, GLdouble), ()],
+    RasterPos2dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    RasterPos2f: GLCodePointer[(GLfloat, GLfloat), ()],
+    RasterPos2fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    RasterPos2i: GLCodePointer[(GLint, GLint), ()],
+    RasterPos2iv: GLCodePointer[(Pointer[GLint]), ()],
+    RasterPos2s: GLCodePointer[(GLshort, GLshort), ()],
+    RasterPos2sv: GLCodePointer[(Pointer[GLshort]), ()],
+    RasterPos3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()],
+    RasterPos3dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    RasterPos3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()],
+    RasterPos3fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    RasterPos3i: GLCodePointer[(GLint, GLint, GLint), ()],
+    RasterPos3iv: GLCodePointer[(Pointer[GLint]), ()],
+    RasterPos3s: GLCodePointer[(GLshort, GLshort, GLshort), ()],
+    RasterPos3sv: GLCodePointer[(Pointer[GLshort]), ()],
+    RasterPos4d: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    RasterPos4dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    RasterPos4f: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    RasterPos4fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    RasterPos4i: GLCodePointer[(GLint, GLint, GLint, GLint), ()],
+    RasterPos4iv: GLCodePointer[(Pointer[GLint]), ()],
+    RasterPos4s: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()],
+    RasterPos4sv: GLCodePointer[(Pointer[GLshort]), ()],
+    ReadBuffer: GLCodePointer[(GLenum), ()],
+    ReadPixels: GLCodePointer[(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()],
+    Rectd: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    Rectdv: GLCodePointer[(Pointer[GLdouble], Pointer[GLdouble]), ()],
+    Rectf: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    Rectfv: GLCodePointer[(Pointer[GLfloat], Pointer[GLfloat]), ()],
+    Recti: GLCodePointer[(GLint, GLint, GLint, GLint), ()],
+    Rectiv: GLCodePointer[(Pointer[GLint], Pointer[GLint]), ()],
+    Rects: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()],
+    Rectsv: GLCodePointer[(Pointer[GLshort], Pointer[GLshort]), ()],
+    RenderMode: GLCodePointer[(GLenum), GLint],
+    RenderbufferStorage: GLCodePointer[(GLenum, GLenum, GLsizei, GLsizei), ()],
+    RenderbufferStorageMultisample: GLCodePointer[(GLenum, GLsizei, GLenum, GLsizei, GLsizei), ()],
+    ResumeTransformFeedback: GLCodePointer[(), ()],
+    Rotated: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    Rotatef: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    SampleCoverage: GLCodePointer[(GLclampf, GLboolean), ()],
+    SampleMaski: GLCodePointer[(GLuint, GLbitfield), ()],
+    SamplerParameterIiv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()],
+    SamplerParameterIuiv: GLCodePointer[(GLuint, GLenum, Pointer[GLuint]), ()],
+    SamplerParameterf: GLCodePointer[(GLuint, GLenum, GLfloat), ()],
+    SamplerParameterfv: GLCodePointer[(GLuint, GLenum, Pointer[GLfloat]), ()],
+    SamplerParameteri: GLCodePointer[(GLuint, GLenum, GLint), ()],
+    SamplerParameteriv: GLCodePointer[(GLuint, GLenum, Pointer[GLint]), ()],
+    Scaled: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()],
+    Scalef: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()],
+    Scissor: GLCodePointer[(GLint, GLint, GLsizei, GLsizei), ()],
+    SecondaryColor3b: GLCodePointer[(GLbyte, GLbyte, GLbyte), ()],
+    SecondaryColor3bv: GLCodePointer[(Pointer[GLbyte]), ()],
+    SecondaryColor3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()],
+    SecondaryColor3dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    SecondaryColor3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()],
+    SecondaryColor3fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    SecondaryColor3i: GLCodePointer[(GLint, GLint, GLint), ()],
+    SecondaryColor3iv: GLCodePointer[(Pointer[GLint]), ()],
+    SecondaryColor3s: GLCodePointer[(GLshort, GLshort, GLshort), ()],
+    SecondaryColor3sv: GLCodePointer[(Pointer[GLshort]), ()],
+    SecondaryColor3ub: GLCodePointer[(GLubyte, GLubyte, GLubyte), ()],
+    SecondaryColor3ubv: GLCodePointer[(Pointer[GLubyte]), ()],
+    SecondaryColor3ui: GLCodePointer[(GLuint, GLuint, GLuint), ()],
+    SecondaryColor3uiv: GLCodePointer[(Pointer[GLuint]), ()],
+    SecondaryColor3us: GLCodePointer[(GLushort, GLushort, GLushort), ()],
+    SecondaryColor3usv: GLCodePointer[(Pointer[GLushort]), ()],
+    SecondaryColorP3ui: GLCodePointer[(GLenum, GLuint), ()],
+    SecondaryColorP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    SecondaryColorPointer: GLCodePointer[(GLint, GLenum, GLsizei, Pointer[GLvoid]), ()],
+    SelectBuffer: GLCodePointer[(GLsizei, Pointer[GLuint]), ()],
+    ShadeModel: GLCodePointer[(GLenum), ()],
+    ShaderSource: GLCodePointer[(GLuint, GLsizei, Pointer[GLstring], Pointer[GLint]), ()],
+    StencilFunc: GLCodePointer[(GLenum, GLint, GLuint), ()],
+    StencilFuncSeparate: GLCodePointer[(GLenum, GLenum, GLint, GLuint), ()],
+    StencilMask: GLCodePointer[(GLuint), ()],
+    StencilMaskSeparate: GLCodePointer[(GLenum, GLuint), ()],
+    StencilOp: GLCodePointer[(GLenum, GLenum, GLenum), ()],
+    StencilOpSeparate: GLCodePointer[(GLenum, GLenum, GLenum, GLenum), ()],
+    TexBuffer: GLCodePointer[(GLenum, GLenum, GLuint), ()],
+    TexCoord1d: GLCodePointer[(GLdouble), ()],
+    TexCoord1dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    TexCoord1f: GLCodePointer[(GLfloat), ()],
+    TexCoord1fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    TexCoord1i: GLCodePointer[(GLint), ()],
+    TexCoord1iv: GLCodePointer[(Pointer[GLint]), ()],
+    TexCoord1s: GLCodePointer[(GLshort), ()],
+    TexCoord1sv: GLCodePointer[(Pointer[GLshort]), ()],
+    TexCoord2d: GLCodePointer[(GLdouble, GLdouble), ()],
+    TexCoord2dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    TexCoord2f: GLCodePointer[(GLfloat, GLfloat), ()],
+    TexCoord2fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    TexCoord2i: GLCodePointer[(GLint, GLint), ()],
+    TexCoord2iv: GLCodePointer[(Pointer[GLint]), ()],
+    TexCoord2s: GLCodePointer[(GLshort, GLshort), ()],
+    TexCoord2sv: GLCodePointer[(Pointer[GLshort]), ()],
+    TexCoord3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()],
+    TexCoord3dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    TexCoord3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()],
+    TexCoord3fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    TexCoord3i: GLCodePointer[(GLint, GLint, GLint), ()],
+    TexCoord3iv: GLCodePointer[(Pointer[GLint]), ()],
+    TexCoord3s: GLCodePointer[(GLshort, GLshort, GLshort), ()],
+    TexCoord3sv: GLCodePointer[(Pointer[GLshort]), ()],
+    TexCoord4d: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    TexCoord4dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    TexCoord4f: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    TexCoord4fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    TexCoord4i: GLCodePointer[(GLint, GLint, GLint, GLint), ()],
+    TexCoord4iv: GLCodePointer[(Pointer[GLint]), ()],
+    TexCoord4s: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()],
+    TexCoord4sv: GLCodePointer[(Pointer[GLshort]), ()],
+    TexCoordP1ui: GLCodePointer[(GLenum, GLuint), ()],
+    TexCoordP1uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    TexCoordP2ui: GLCodePointer[(GLenum, GLuint), ()],
+    TexCoordP2uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    TexCoordP3ui: GLCodePointer[(GLenum, GLuint), ()],
+    TexCoordP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    TexCoordP4ui: GLCodePointer[(GLenum, GLuint), ()],
+    TexCoordP4uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    TexCoordPointer: GLCodePointer[(GLint, GLenum, GLsizei, Pointer[GLvoid]), ()],
+    TexEnvf: GLCodePointer[(GLenum, GLenum, GLfloat), ()],
+    TexEnvfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    TexEnvi: GLCodePointer[(GLenum, GLenum, GLint), ()],
+    TexEnviv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    TexGend: GLCodePointer[(GLenum, GLenum, GLdouble), ()],
+    TexGendv: GLCodePointer[(GLenum, GLenum, Pointer[GLdouble]), ()],
+    TexGenf: GLCodePointer[(GLenum, GLenum, GLfloat), ()],
+    TexGenfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    TexGeni: GLCodePointer[(GLenum, GLenum, GLint), ()],
+    TexGeniv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    TexImage1D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLint, GLenum, GLenum, Pointer[GLvoid]), ()],
+    TexImage2D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, Pointer[GLvoid]), ()],
+    TexImage2DMultisample: GLCodePointer[(GLenum, GLsizei, GLint, GLsizei, GLsizei, GLboolean), ()],
+    TexImage3D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, Pointer[GLvoid]), ()],
+    TexImage3DMultisample: GLCodePointer[(GLenum, GLsizei, GLint, GLsizei, GLsizei, GLsizei, GLboolean), ()],
+    TexParameterIiv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    TexParameterIuiv: GLCodePointer[(GLenum, GLenum, Pointer[GLuint]), ()],
+    TexParameterf: GLCodePointer[(GLenum, GLenum, GLfloat), ()],
+    TexParameterfv: GLCodePointer[(GLenum, GLenum, Pointer[GLfloat]), ()],
+    TexParameteri: GLCodePointer[(GLenum, GLenum, GLint), ()],
+    TexParameteriv: GLCodePointer[(GLenum, GLenum, Pointer[GLint]), ()],
+    TexSubImage1D: GLCodePointer[(GLenum, GLint, GLint, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()],
+    TexSubImage2D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()],
+    TexSubImage3D: GLCodePointer[(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, Pointer[GLvoid]), ()],
+    TransformFeedbackVaryings: GLCodePointer[(GLuint, GLsizei, Pointer[GLstring], GLenum), ()],
+    Translated: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()],
+    Translatef: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()],
+    Uniform1d: GLCodePointer[(GLint, GLdouble), ()],
+    Uniform1dv: GLCodePointer[(GLint, GLsizei, Pointer[GLdouble]), ()],
+    Uniform1f: GLCodePointer[(GLint, GLfloat), ()],
+    Uniform1fv: GLCodePointer[(GLint, GLsizei, Pointer[GLfloat]), ()],
+    Uniform1i: GLCodePointer[(GLint, GLint), ()],
+    Uniform1iv: GLCodePointer[(GLint, GLsizei, Pointer[GLint]), ()],
+    Uniform1ui: GLCodePointer[(GLint, GLuint), ()],
+    Uniform1uiv: GLCodePointer[(GLint, GLsizei, Pointer[GLuint]), ()],
+    Uniform2d: GLCodePointer[(GLint, GLdouble, GLdouble), ()],
+    Uniform2dv: GLCodePointer[(GLint, GLsizei, Pointer[GLdouble]), ()],
+    Uniform2f: GLCodePointer[(GLint, GLfloat, GLfloat), ()],
+    Uniform2fv: GLCodePointer[(GLint, GLsizei, Pointer[GLfloat]), ()],
+    Uniform2i: GLCodePointer[(GLint, GLint, GLint), ()],
+    Uniform2iv: GLCodePointer[(GLint, GLsizei, Pointer[GLint]), ()],
+    Uniform2ui: GLCodePointer[(GLint, GLuint, GLuint), ()],
+    Uniform2uiv: GLCodePointer[(GLint, GLsizei, Pointer[GLuint]), ()],
+    Uniform3d: GLCodePointer[(GLint, GLdouble, GLdouble, GLdouble), ()],
+    Uniform3dv: GLCodePointer[(GLint, GLsizei, Pointer[GLdouble]), ()],
+    Uniform3f: GLCodePointer[(GLint, GLfloat, GLfloat, GLfloat), ()],
+    Uniform3fv: GLCodePointer[(GLint, GLsizei, Pointer[GLfloat]), ()],
+    Uniform3i: GLCodePointer[(GLint, GLint, GLint, GLint), ()],
+    Uniform3iv: GLCodePointer[(GLint, GLsizei, Pointer[GLint]), ()],
+    Uniform3ui: GLCodePointer[(GLint, GLuint, GLuint, GLuint), ()],
+    Uniform3uiv: GLCodePointer[(GLint, GLsizei, Pointer[GLuint]), ()],
+    Uniform4d: GLCodePointer[(GLint, GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    Uniform4dv: GLCodePointer[(GLint, GLsizei, Pointer[GLdouble]), ()],
+    Uniform4f: GLCodePointer[(GLint, GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    Uniform4fv: GLCodePointer[(GLint, GLsizei, Pointer[GLfloat]), ()],
+    Uniform4i: GLCodePointer[(GLint, GLint, GLint, GLint, GLint), ()],
+    Uniform4iv: GLCodePointer[(GLint, GLsizei, Pointer[GLint]), ()],
+    Uniform4ui: GLCodePointer[(GLint, GLuint, GLuint, GLuint, GLuint), ()],
+    Uniform4uiv: GLCodePointer[(GLint, GLsizei, Pointer[GLuint]), ()],
+    UniformBlockBinding: GLCodePointer[(GLuint, GLuint, GLuint), ()],
+    UniformMatrix2dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    UniformMatrix2fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()],
+    UniformMatrix2x3dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    UniformMatrix2x3fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()],
+    UniformMatrix2x4dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    UniformMatrix2x4fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()],
+    UniformMatrix3dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    UniformMatrix3fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()],
+    UniformMatrix3x2dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    UniformMatrix3x2fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()],
+    UniformMatrix3x4dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    UniformMatrix3x4fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()],
+    UniformMatrix4dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    UniformMatrix4fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()],
+    UniformMatrix4x2dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    UniformMatrix4x2fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()],
+    UniformMatrix4x3dv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLdouble]), ()],
+    UniformMatrix4x3fv: GLCodePointer[(GLint, GLsizei, GLboolean, Pointer[GLfloat]), ()],
+    UniformSubroutinesuiv: GLCodePointer[(GLenum, GLsizei, Pointer[GLuint]), ()],
+    UnmapBuffer: GLCodePointer[(GLenum), GLboolean],
+    UseProgram: GLCodePointer[(GLuint), ()],
+    ValidateProgram: GLCodePointer[(GLuint), ()],
+    Vertex2d: GLCodePointer[(GLdouble, GLdouble), ()],
+    Vertex2dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    Vertex2f: GLCodePointer[(GLfloat, GLfloat), ()],
+    Vertex2fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    Vertex2i: GLCodePointer[(GLint, GLint), ()],
+    Vertex2iv: GLCodePointer[(Pointer[GLint]), ()],
+    Vertex2s: GLCodePointer[(GLshort, GLshort), ()],
+    Vertex2sv: GLCodePointer[(Pointer[GLshort]), ()],
+    Vertex3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()],
+    Vertex3dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    Vertex3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()],
+    Vertex3fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    Vertex3i: GLCodePointer[(GLint, GLint, GLint), ()],
+    Vertex3iv: GLCodePointer[(Pointer[GLint]), ()],
+    Vertex3s: GLCodePointer[(GLshort, GLshort, GLshort), ()],
+    Vertex3sv: GLCodePointer[(Pointer[GLshort]), ()],
+    Vertex4d: GLCodePointer[(GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    Vertex4dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    Vertex4f: GLCodePointer[(GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    Vertex4fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    Vertex4i: GLCodePointer[(GLint, GLint, GLint, GLint), ()],
+    Vertex4iv: GLCodePointer[(Pointer[GLint]), ()],
+    Vertex4s: GLCodePointer[(GLshort, GLshort, GLshort, GLshort), ()],
+    Vertex4sv: GLCodePointer[(Pointer[GLshort]), ()],
+    VertexAttrib1d: GLCodePointer[(GLuint, GLdouble), ()],
+    VertexAttrib1dv: GLCodePointer[(GLuint, Pointer[GLdouble]), ()],
+    VertexAttrib1f: GLCodePointer[(GLuint, GLfloat), ()],
+    VertexAttrib1fv: GLCodePointer[(GLuint, Pointer[GLfloat]), ()],
+    VertexAttrib1s: GLCodePointer[(GLuint, GLshort), ()],
+    VertexAttrib1sv: GLCodePointer[(GLuint, Pointer[GLshort]), ()],
+    VertexAttrib2d: GLCodePointer[(GLuint, GLdouble, GLdouble), ()],
+    VertexAttrib2dv: GLCodePointer[(GLuint, Pointer[GLdouble]), ()],
+    VertexAttrib2f: GLCodePointer[(GLuint, GLfloat, GLfloat), ()],
+    VertexAttrib2fv: GLCodePointer[(GLuint, Pointer[GLfloat]), ()],
+    VertexAttrib2s: GLCodePointer[(GLuint, GLshort, GLshort), ()],
+    VertexAttrib2sv: GLCodePointer[(GLuint, Pointer[GLshort]), ()],
+    VertexAttrib3d: GLCodePointer[(GLuint, GLdouble, GLdouble, GLdouble), ()],
+    VertexAttrib3dv: GLCodePointer[(GLuint, Pointer[GLdouble]), ()],
+    VertexAttrib3f: GLCodePointer[(GLuint, GLfloat, GLfloat, GLfloat), ()],
+    VertexAttrib3fv: GLCodePointer[(GLuint, Pointer[GLfloat]), ()],
+    VertexAttrib3s: GLCodePointer[(GLuint, GLshort, GLshort, GLshort), ()],
+    VertexAttrib3sv: GLCodePointer[(GLuint, Pointer[GLshort]), ()],
+    VertexAttrib4Nbv: GLCodePointer[(GLuint, Pointer[GLbyte]), ()],
+    VertexAttrib4Niv: GLCodePointer[(GLuint, Pointer[GLint]), ()],
+    VertexAttrib4Nsv: GLCodePointer[(GLuint, Pointer[GLshort]), ()],
+    VertexAttrib4Nub: GLCodePointer[(GLuint, GLubyte, GLubyte, GLubyte, GLubyte), ()],
+    VertexAttrib4Nubv: GLCodePointer[(GLuint, Pointer[GLubyte]), ()],
+    VertexAttrib4Nuiv: GLCodePointer[(GLuint, Pointer[GLuint]), ()],
+    VertexAttrib4Nusv: GLCodePointer[(GLuint, Pointer[GLushort]), ()],
+    VertexAttrib4bv: GLCodePointer[(GLuint, Pointer[GLbyte]), ()],
+    VertexAttrib4d: GLCodePointer[(GLuint, GLdouble, GLdouble, GLdouble, GLdouble), ()],
+    VertexAttrib4dv: GLCodePointer[(GLuint, Pointer[GLdouble]), ()],
+    VertexAttrib4f: GLCodePointer[(GLuint, GLfloat, GLfloat, GLfloat, GLfloat), ()],
+    VertexAttrib4fv: GLCodePointer[(GLuint, Pointer[GLfloat]), ()],
+    VertexAttrib4iv: GLCodePointer[(GLuint, Pointer[GLint]), ()],
+    VertexAttrib4s: GLCodePointer[(GLuint, GLshort, GLshort, GLshort, GLshort), ()],
+    VertexAttrib4sv: GLCodePointer[(GLuint, Pointer[GLshort]), ()],
+    VertexAttrib4ubv: GLCodePointer[(GLuint, Pointer[GLubyte]), ()],
+    VertexAttrib4uiv: GLCodePointer[(GLuint, Pointer[GLuint]), ()],
+    VertexAttrib4usv: GLCodePointer[(GLuint, Pointer[GLushort]), ()],
+    VertexAttribIPointer: GLCodePointer[(GLuint, GLint, GLenum, GLsizei, Pointer[GLvoid]), ()],
+    VertexAttribP1ui: GLCodePointer[(GLuint, GLenum, GLboolean, GLuint), ()],
+    VertexAttribP1uiv: GLCodePointer[(GLuint, GLenum, GLboolean, Pointer[GLuint]), ()],
+    VertexAttribP2ui: GLCodePointer[(GLuint, GLenum, GLboolean, GLuint), ()],
+    VertexAttribP2uiv: GLCodePointer[(GLuint, GLenum, GLboolean, Pointer[GLuint]), ()],
+    VertexAttribP3ui: GLCodePointer[(GLuint, GLenum, GLboolean, GLuint), ()],
+    VertexAttribP3uiv: GLCodePointer[(GLuint, GLenum, GLboolean, Pointer[GLuint]), ()],
+    VertexAttribP4ui: GLCodePointer[(GLuint, GLenum, GLboolean, GLuint), ()],
+    VertexAttribP4uiv: GLCodePointer[(GLuint, GLenum, GLboolean, Pointer[GLuint]), ()],
+    VertexAttribPointer: GLCodePointer[(GLuint, GLint, GLenum, GLboolean, GLsizei, Pointer[GLvoid]), ()],
+    VertexP2ui: GLCodePointer[(GLenum, GLuint), ()],
+    VertexP2uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    VertexP3ui: GLCodePointer[(GLenum, GLuint), ()],
+    VertexP3uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    VertexP4ui: GLCodePointer[(GLenum, GLuint), ()],
+    VertexP4uiv: GLCodePointer[(GLenum, Pointer[GLuint]), ()],
+    VertexPointer: GLCodePointer[(GLint, GLenum, GLsizei, Pointer[GLvoid]), ()],
+    Viewport: GLCodePointer[(GLint, GLint, GLsizei, GLsizei), ()],
+    WaitSync: GLCodePointer[(GLsync, GLbitfield, GLuint64), ()],
+    WindowPos2d: GLCodePointer[(GLdouble, GLdouble), ()],
+    WindowPos2dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    WindowPos2f: GLCodePointer[(GLfloat, GLfloat), ()],
+    WindowPos2fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    WindowPos2i: GLCodePointer[(GLint, GLint), ()],
+    WindowPos2iv: GLCodePointer[(Pointer[GLint]), ()],
+    WindowPos2s: GLCodePointer[(GLshort, GLshort), ()],
+    WindowPos2sv: GLCodePointer[(Pointer[GLshort]), ()],
+    WindowPos3d: GLCodePointer[(GLdouble, GLdouble, GLdouble), ()],
+    WindowPos3dv: GLCodePointer[(Pointer[GLdouble]), ()],
+    WindowPos3f: GLCodePointer[(GLfloat, GLfloat, GLfloat), ()],
+    WindowPos3fv: GLCodePointer[(Pointer[GLfloat]), ()],
+    WindowPos3i: GLCodePointer[(GLint, GLint, GLint), ()],
+    WindowPos3iv: GLCodePointer[(Pointer[GLint]), ()],
+    WindowPos3s: GLCodePointer[(GLshort, GLshort, GLshort), ()],
+    WindowPos3sv: GLCodePointer[(Pointer[GLshort]), ()],
+);
 
 overload GLFunctions() gl: GLFunctions { }
 overload destroy(gl: GLFunctions) { }

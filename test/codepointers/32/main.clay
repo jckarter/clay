@@ -32,14 +32,14 @@ overload display(a:Vector[T]) {
 // Displayable
 //
 
-record Displayable {
-    obj : Pointer[Opaque];
-    size : SizeT;
-    alignment : SizeT;
-    destructor : CodePointer[Opaque,()];
-    copyConstructor : CodePointer[Opaque,Opaque];
-    display : CodePointer[Opaque,()];
-}
+record Displayable (
+    obj : Pointer[Opaque],
+    size : SizeT,
+    alignment : SizeT,
+    destructor : CodePointer[Opaque,()],
+    copyConstructor : CodePointer[Opaque,Opaque],
+    display : CodePointer[Opaque,()],
+);
 
 overload RegularRecord?(static Displayable) = false;
 

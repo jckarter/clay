@@ -10,11 +10,11 @@ import io.mapping.*;
 // NamedScalar[T]
 //
 
-record NamedScalar[T] {
-    fileName : strings.String;
-    file : File;
-    mapping : FileMapping;
-}
+record NamedScalar[T] (
+    fileName : strings.String,
+    file : File,
+    mapping : FileMapping,
+);
 
 [T]
 overload RegularRecord?(static NamedScalar[T]) = false;

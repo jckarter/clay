@@ -4,10 +4,10 @@
 // Range
 //
 
-record Range[T] {
-    begin:T;
-    end:T;
-}
+record Range[T] (
+    begin:T,
+    end:T,
+);
 
 [T]
 overload size(a:Range[T]) = SizeT(a.end - a.begin);
@@ -43,10 +43,10 @@ overload end(a:Range[T]) = ValueCoordinate(a.end);
 // ReverseRange
 //
 
-record ReverseRange[T] {
-    end : T;
-    begin : T;
-}
+record ReverseRange[T] (
+    end : T,
+    begin : T,
+);
 
 [T]
 overload size(a:ReverseRange[T]) = SizeT(a.end - a.begin);
@@ -120,10 +120,10 @@ overload reverseRange(end:I) =
 // CoordinateRange
 //
 
-record CoordinateRange[T] {
-    begin : T;
-    end : T;
-}
+record CoordinateRange[T] (
+    begin : T,
+    end : T,
+);
 
 [T]
 overload size(a:CoordinateRange[T]) = SizeT(a.end - a.begin);
@@ -160,10 +160,10 @@ overload end(a:CoordinateRange[T]) = a.end;
 // ReverseCoordinateRange
 //
 
-record ReverseCoordinateRange[T] {
-    end : T;
-    begin : T;
-}
+record ReverseCoordinateRange[T] (
+    end : T,
+    begin : T,
+);
 
 [T]
 overload size(a:ReverseCoordinateRange[T]) = SizeT(a.end - a.begin);

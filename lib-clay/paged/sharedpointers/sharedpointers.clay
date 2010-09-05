@@ -5,14 +5,14 @@ import paged.*;
 // SharedPointer
 //
 
-record RefCounted[T] {
-    refCount:Int;
-    value:T;
-}
+record RefCounted[T] (
+    refCount:Int,
+    value:T,
+);
 
-record SharedPointer[T] {
-    ptr: PagedPointer[RefCounted[T]];
-}
+record SharedPointer[T] (
+    ptr: PagedPointer[RefCounted[T]]
+);
 
 [T]
 overload RegularRecord?(static SharedPointer[T]) = false;

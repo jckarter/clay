@@ -7,10 +7,10 @@ computeFields(T) {
 record Point[T] = ...computeFields(T);
 
 // the above definition is equivalent to:
-// record Point[T] {
-//     x : T;
-//     y : T;
-// }
+// record Point[T] (
+//     x : T,
+//     y : T,
+// );
 
 main() {
     var p = Point[Int](10, 10);

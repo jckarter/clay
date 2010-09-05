@@ -5,14 +5,14 @@
 // SharedPointer
 //
 
-record RefCounted[T] {
-    refCount:Int;
-    value:T;
-}
+record RefCounted[T] (
+    refCount:Int,
+    value:T,
+);
 
-record SharedPointer[T] {
-    ptr: Pointer[RefCounted[T]];
-}
+record SharedPointer[T] (
+    ptr: Pointer[RefCounted[T]]
+);
 
 [T]
 overload RegularRecord?(static SharedPointer[T]) = false;

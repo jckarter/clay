@@ -5,7 +5,7 @@
 
 variant Maybe[T] = Nothing | T;
 
-record Nothing {}
+record Nothing ();
 
 
 
@@ -41,12 +41,12 @@ overload maybeValue(forward n: Nothing, thenFn) { }
 maybe(forward m, thenFn, forward ...elseFn)
     = forward ...maybeValue(*m, thenFn, ...elseFn);
 
-record ValueMissing {}
+record ValueMissing ();
 instance Exception = ValueMissing;
 
 //
 // require function
 //
 
-require(forward m, fn) = forward ...maybe(*m, fn, lambda() { throw ValueMissing(); });
+require(forward m, fn) = forward ...maybe(m, fn, () => { throw ValueMissing(); });
 

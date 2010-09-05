@@ -1,7 +1,7 @@
 
-record CustomCompare[T,F] {
-    x:T;
-}
+record CustomCompare[T,F] (
+    x:T
+);
 
 [T,F]
 newCustomCompare(x:T, static F) = CustomCompare[T,F](x);

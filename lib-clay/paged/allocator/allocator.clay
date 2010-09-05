@@ -13,14 +13,14 @@ nullBlock?(b) = (b == nullBlock);
 alias BucketCount = Int(TypeSize(SizeT) * 8);
 alias BucketArray = Array[SizeT, BucketCount];
 
-record State {
-    fileName : String;
-    file : File;
-    mapping : FileMapping;
-    freeListBuckets : Pointer[BucketArray];
-    dataBegin : Pointer[Byte];
-    dataEnd : Pointer[Byte];
-}
+record State (
+    fileName : String,
+    file : File,
+    mapping : FileMapping,
+    freeListBuckets : Pointer[BucketArray],
+    dataBegin : Pointer[Byte],
+    dataEnd : Pointer[Byte],
+);
 
 var state = State();
 
@@ -33,12 +33,12 @@ dataEnd() = state.dataEnd;
 // Header (block header)
 //
 
-record Header {
-    sizeAndFlag : SizeT;
-    previous : SizeT;
-    nextInBucket : SizeT;
-    previousInBucket : SizeT;
-}
+record Header (
+    sizeAndFlag : SizeT,
+    previous : SizeT,
+    nextInBucket : SizeT,
+    previousInBucket : SizeT,
+);
 
 private hptr(b:SizeT) = Pointer[Header](dataBegin() + b);
 
@@ -196,9 +196,9 @@ initializePaging(fileName, fileSize) {
 // PagedPointer
 //
 
-record PagedPointer[T] {
-    offset : SizeT;
-}
+record PagedPointer[T] (
+    offset : SizeT
+);
 
 [T]
 overload ContiguousCoordinate?(static PagedPointer[T]) = true;

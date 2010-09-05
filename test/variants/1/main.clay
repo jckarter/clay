@@ -1,11 +1,11 @@
 
-record Square {
-    side : Double;
-}
+record Square (
+    side : Double
+);
 
-record Circle {
-    radius : Double;
-}
+record Circle (
+    radius : Double
+);
 
 variant Shape = Square | Circle;
 

@@ -21,9 +21,7 @@ error(...e) {
 // error (exceptions enabled)
 //
 
-record Error {
-    msg : String;
-}
+record Error (msg : String);
 
 instance Exception = Error;
 

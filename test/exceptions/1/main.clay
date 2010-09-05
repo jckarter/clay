@@ -2,9 +2,9 @@
 
 instance Exception = Int;
 
-record Test {
-    x: Int32;
-}
+record Test (
+    x: Int32
+);
 
 overload Test() = Test(-1);
 

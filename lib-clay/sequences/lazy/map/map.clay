@@ -11,10 +11,10 @@ map(mapper, forward ...seqs) = Mapped(mapper, zip(...seqs));
 overload map(mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
 
 
-private record Mapped[F, A] {
-    mapper : F;
-    seq : A;
-}
+private record Mapped[F, A] (
+    mapper : F,
+    seq : A,
+);
 
 
 
@@ -30,10 +30,10 @@ overload iterator(a:Mapped[F,A]) =
 overload reverseIterator(a:Mapped[F,A]) =
     MappedIterator(a.mapper, reverseIterator(a.seq));
 
-private record MappedIterator[F, ITER] {
-    mapper : F;
-    iter : ITER;
-}
+private record MappedIterator[F, ITER] (
+    mapper : F,
+    iter : ITER,
+);
 
 [F, ITER]
 overload hasNext?(iter:MappedIterator[F, ITER]) = hasNext?(iter.iter);
@@ -48,10 +48,10 @@ overload next(iter:MappedIterator[F, ITER]) =
 // MappedCoordinate
 //
 
-private record MappedCoordinate[F, COORD] {
-    mapper : F;
-    coord : COORD;
-}
+private record MappedCoordinate[F, COORD] (
+    mapper : F,
+    coord : COORD,
+);
 
 [F, A | CallDefined?(begin, A)]
 overload begin(a:Mapped[F, A]) = MappedCoordinate(a.mapper, begin(a.seq));

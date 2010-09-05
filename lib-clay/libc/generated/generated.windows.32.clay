@@ -13,16 +13,16 @@ alias wint_t = UShort;
 
 alias __gnuc_va_list = Int;
 
-record Struct__iobuf {
-    _ptr : Pointer[CChar];
-    _cnt : Int;
-    _base : Pointer[CChar];
-    _flag : Int;
-    _file : Int;
-    _charbuf : Int;
-    _bufsiz : Int;
-    _tmpfname : Pointer[CChar];
-}
+record Struct__iobuf (
+    _ptr : Pointer[CChar],
+    _cnt : Int,
+    _base : Pointer[CChar],
+    _flag : Int,
+    _file : Int,
+    _charbuf : Int,
+    _bufsiz : Int,
+    _tmpfname : Pointer[CChar],
+);
 
 alias FILE = Struct__iobuf;
 
@@ -817,17 +817,17 @@ external abs(
 external labs(
     argument0 : CLong) CLong;
 
-record UnnamedStruct {
-    quot : Int;
-    rem : Int;
-}
+record UnnamedStruct (
+    quot : Int,
+    rem : Int,
+);
 
 alias div_t = UnnamedStruct;
 
-record UnnamedStruct2 {
-    quot : CLong;
-    rem : CLong;
-}
+record UnnamedStruct2 (
+    quot : CLong,
+    rem : CLong,
+);
 
 alias ldiv_t = UnnamedStruct2;
 
@@ -1014,10 +1014,10 @@ external gcvt(
 external _Exit(
     argument0 : Int);
 
-record UnnamedStruct3 {
-    quot : Int64;
-    rem : Int64;
-}
+record UnnamedStruct3 (
+    quot : Int64,
+    rem : Int64,
+);
 
 alias lldiv_t = UnnamedStruct3;
 
@@ -1438,13 +1438,13 @@ external wcsset(
 external wcsupr(
     argument0 : Pointer[UShort]) Pointer[UShort];
 
-record Struct__exception {
-    type : Int;
-    name : Pointer[CChar];
-    arg1 : Double;
-    arg2 : Double;
-    retval : Double;
-}
+record Struct__exception (
+    type : Int,
+    name : Pointer[CChar],
+    arg1 : Double,
+    arg2 : Double,
+    retval : Double,
+);
 
 external sin(
     argument0 : Double) Double;
@@ -1518,10 +1518,10 @@ external fmod(
     argument0 : Double,
     argument1 : Double) Double;
 
-record Struct__complex {
-    x : Double;
-    y : Double;
-}
+record Struct__complex (
+    x : Double,
+    y : Double,
+);
 
 external _cabs(
     argument0 : Struct__complex) Double;
@@ -2145,41 +2145,41 @@ alias intptr_t = Int;
 
 alias _fsize_t = CULong;
 
-record Struct__finddata_t {
-    attrib : UInt;
-    time_create : CLong;
-    time_access : CLong;
-    time_write : CLong;
-    size : CULong;
-    name : Array[CChar,260];
-}
+record Struct__finddata_t (
+    attrib : UInt,
+    time_create : CLong,
+    time_access : CLong,
+    time_write : CLong,
+    size : CULong,
+    name : Array[CChar,260],
+);
 
-record Struct__finddatai64_t {
-    attrib : UInt;
-    time_create : CLong;
-    time_access : CLong;
-    time_write : CLong;
-    size : Int64;
-    name : Array[CChar,260];
-}
+record Struct__finddatai64_t (
+    attrib : UInt,
+    time_create : CLong,
+    time_access : CLong,
+    time_write : CLong,
+    size : Int64,
+    name : Array[CChar,260],
+);
 
-record Struct__wfinddata_t {
-    attrib : UInt;
-    time_create : CLong;
-    time_access : CLong;
-    time_write : CLong;
-    size : CULong;
-    name : Array[UShort,260];
-}
+record Struct__wfinddata_t (
+    attrib : UInt,
+    time_create : CLong,
+    time_access : CLong,
+    time_write : CLong,
+    size : CULong,
+    name : Array[UShort,260],
+);
 
-record Struct__wfinddatai64_t {
-    attrib : UInt;
-    time_create : CLong;
-    time_access : CLong;
-    time_write : CLong;
-    size : Int64;
-    name : Array[UShort,260];
-}
+record Struct__wfinddatai64_t (
+    attrib : UInt,
+    time_create : CLong,
+    time_access : CLong,
+    time_write : CLong,
+    size : Int64,
+    name : Array[UShort,260],
+);
 
 external _findfirst(
     argument0 : Pointer[CChar],

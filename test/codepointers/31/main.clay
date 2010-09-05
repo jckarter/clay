@@ -21,13 +21,13 @@ overload display(x) {
 // DisplayableVTable
 //
 
-record DisplayableVTable {
-    size : SizeT;
-    alignment : SizeT;
-    destructor : CodePointer[Opaque,()];
-    copyConstructor : CodePointer[Opaque,Opaque];
-    display : CodePointer[Opaque,()];
-}
+record DisplayableVTable (
+    size : SizeT,
+    alignment : SizeT,
+    destructor : CodePointer[Opaque,()],
+    copyConstructor : CodePointer[Opaque,Opaque],
+    display : CodePointer[Opaque,()],
+);
 
 [T]
 makeDisplayableVTable(static T) {
@@ -46,10 +46,10 @@ makeDisplayableVTable(static T) {
 // Displayable
 //
 
-record Displayable {
-    obj : Pointer[Opaque];
-    vtable : Pointer[DisplayableVTable];
-}
+record Displayable (
+    obj : Pointer[Opaque],
+    vtable : Pointer[DisplayableVTable],
+);
 
 overload RegularRecord?(static Displayable) = false;
 

@@ -314,6 +314,24 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case SWITCH : {
+        Switch *y = (Switch *)x.ptr();
+        vector<CaseBlockPtr> caseBlocks;
+        clone(y->caseBlocks, caseBlocks);
+        out = new Switch(clone(y->expr),
+                         caseBlocks,
+                         cloneOpt(y->defaultCase));
+        break;
+    }
+
+    case CASE_BODY : {
+        CaseBody *y = (CaseBody *)x.ptr();
+        CaseBodyPtr z = new CaseBody();
+        clone(y->statements, z->statements);
+        out = z.ptr();
+        break;
+    }
+
     case EXPR_STATEMENT : {
         ExprStatement *y = (ExprStatement *)x.ptr();
         out = new ExprStatement(clone(y->expr));
@@ -391,11 +409,26 @@ void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out)
         out.push_back(clone(x[i]));
 }
 
+CaseBlockPtr clone(CaseBlockPtr x)
+{
+    CaseBlockPtr y = new CaseBlock(clone(x->caseLabels), clone(x->body));
+    y->location = x->location;
+    return y;
+}
+
+void clone(const vector<CaseBlockPtr> &x, vector<CaseBlockPtr> &out)
+{
+    for (unsigned i = 0; i < x.size(); ++i)
+        out.push_back(clone(x[i]));
+}
+
 CatchPtr clone(CatchPtr x)
 {
-    return new Catch(x->exceptionVar,
-                     cloneOpt(x->exceptionType),
-                     clone(x->body));
+    CatchPtr y = new Catch(x->exceptionVar,
+                           cloneOpt(x->exceptionType),
+                           clone(x->body));
+    y->location = x->location;
+    return y;
 }
 
 void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out)
