@@ -29,6 +29,18 @@ RecordFieldTypes(static T) = ...Type(...recordFields(null(T)^));
 
 
 //
+// RecordFields
+//
+
+RecordFields(R) {
+    alias n = RecordFieldCount(R);
+    var f = i => (RecordFieldName(R,i), RecordFieldType(R,i));
+    return ...mapValues(f, ...staticIntegers(static n));
+}
+
+
+
+//
 // RegularRecord?
 //
 // true if record's value semantics is defined in terms of it's fields
