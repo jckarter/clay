@@ -1,0 +1,189 @@
+//
+// group() function
+//
+private record Group[S] (
+    seq: S,
+    groupSize: SizeT,
+);
+
+[S, I | Sequence?(S) and Integer?(I)]
+group(forward seq: S, groupSize: I) = Group(seq, SizeT(groupSize));
+
+[S | SizedSequence?(S)]
+overload size(group: Group[S]) = size(group.seq)/group.groupSize;
+
+private indexEndpoints(n, groupSize) {
+    var b = n * groupSize;
+    var e = b + groupSize;
+    return b, e;
+}
+
+[S, I | RandomAccessSequence?(S) and Integer?(I)]
+overload index(group: Group[S], n: I) {
+    var b, e = ...indexEndpoints(n, group.groupSize);
+    return slice(group.seq, b, e);
+}
+
+[S, I | CoordinateSequence?(S) and RandomAccessSequence?(S) and Integer?(I)]
+overload index(group: Group[S], n: I) {
+    var b, e = ...indexEndpoints(n, group.groupSize);
+    return CoordinateRange(begin(group.seq) + b, begin(group.seq) + e);
+}
+
+[S | Sequence?(S)]
+overload iterator(group: Group[S])
+    = GroupIterator(iterator(group.seq), group.groupSize);
+
+[S | CoordinateSequence?(S)]
+overload iterator(group: Group[S])
+    = CoordinateRange(begin(group), end(group));
+
+
+
+//
+// group iterator
+//
+private record GroupIterator[I] (
+    iter: I,
+    groupSize: SizeT,
+);
+
+[I] overload hasNext?(giter: GroupIterator[I]) = hasNext?(giter.iter);
+[I] overload next(giter: GroupIterator[I]) {
+    var v = Vector[IteratorTargetType(I)]();
+    var i = 0;
+
+    while (hasNext?(giter.iter) and i < giter.groupSize) {
+        push(v, next(giter.iter));
+        i += 1;
+    }
+    return move(v);
+}
+
+
+
+//
+// forward group coordinate
+//
+private record FGroupCoordinate[Coordinate] (
+    beginCoord: Coordinate,
+    endCoord: Coordinate,
+    sequenceEndCoord: Coordinate,
+    groupSize: SizeT,
+);
+
+[C]
+overload equals?(i: FGroupCoordinate[C], j: FGroupCoordinate[C]) = equals?(i.beginCoord, j.beginCoord);
+
+[S | Sequence?(S)]
+overload begin(group: Group[S]) {
+    var b = begin(group.seq);
+    var e = b;
+    var sequenceEnd = end(group.seq);
+    for (i in range(group.groupSize))
+        inc(e);
+
+    return FGroupCoordinate(move(b), move(e), move(sequenceEnd), group.groupSize);
+}
+[S | Sequence?(S)]
+overload end(group: Group[S]) {
+    var e = end(group.seq);
+    return FGroupCoordinate(e, e, e, group.groupSize);
+}
+
+[C]
+overload inc(c: FGroupCoordinate[C]) {
+    if (c.endCoord == c.sequenceEndCoord)
+        c.beginCoord = c.endCoord;
+    else
+        for (i in range(group.groupSize)) {
+            inc(c.beginCoord);
+            inc(c.endCoord);
+        }
+}
+
+[C]
+overload dec(c: FGroupCoordinate[C]) {
+    if (c.beginCoord == c.sequenceEndCoord)
+        for (i in range(group.groupSize))
+            dec(c.beginCoord);
+    else
+        for (i in range(group.groupSize)) {
+            dec(c.beginCoord);
+            dec(c.endCoord);
+        }
+}
+
+[C]
+overload dereference(c: FGroupCoordinate[C]) {
+    return CoordinateRange(c.beginCoord, c.endCoord);
+}
+
+
+
+//
+// random access group coordinate
+//
+private record RAGroupCoordinate[Coordinate] (
+    coord: Coordinate,
+    groupSize: SizeT,
+);
+
+[C]
+overload lesser?(
+    i: RAGroupCoordinate[C],
+    j: RAGroupCoordinate[C]
+) = lesser?(i.coord, j.coord);
+
+[C]
+overload equals?(
+    i: RAGroupCoordinate[C],
+    j: RAGroupCoordinate[C]
+) = equals?(i.coord, j.coord);
+
+[S | RandomAccessSequence?(S)]
+overload begin(group: Group[S])
+    = RAGroupCoordinate(begin(group.seq), group.groupSize);
+[S | RandomAccessSequence?(S)]
+overload end(group: Group[S])
+    = RAGroupCoordinate(end(group.seq), group.groupSize);
+
+[C, I | Integer?(I)]
+overload add(i: RAGroupCoordinate[C], n: I)
+    = RAGroupCoordinate(i.coord + n * i.groupSize, i.groupSize);
+[C, I | Integer?(I)]
+overload subtract(i: RAGroupCoordinate[C], n: I)
+    = RAGroupCoordinate(i.coord - n * i.groupSize, i.groupSize);
+[C, I | Integer?(I)]
+overload addAssign(i: RAGroupCoordinate[C], n: I) {
+    i.coord += n * i.groupSize;
+}
+[C, I | Integer?(I)]
+overload subtractAssign(i: RAGroupCoordinate[C], n: I) {
+    i.coord += n * i.groupSize;
+}
+
+[C]
+overload subtract(i: RAGroupCoordinate[C], j: RAGroupCoordinate[C])
+    = PtrInt(i.coord - j.coord) / PtrInt(i.groupSize);
+
+[C]
+overload inc(i: RAGroupCoordinate[C]) {
+    i.coord += i.groupSize;
+}
+
+[C]
+overload dec(i: RAGroupCoordinate[C]) {
+    i.coord -= i.groupSize;
+}
+
+[C]
+overload dereference(i: RAGroupCoordinate[C])
+    = CoordinateRange(i.coord, i.coord + i.groupSize);
+
+[C, I | Integer?(I)]
+overload index(i: RAGroupCoordinate[C], n: I) {
+    var b, e = ...indexEndpoints(n, i.groupSize);
+    return CoordinateRange(i.coord + b, i.coord + e);
+}
+
