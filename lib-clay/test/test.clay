@@ -111,13 +111,19 @@ expect(test: TestStatus, passed?: Bool, failReportFn) {
 
 expectTrue(test: TestStatus, name, value) {
     expect(test, value, () => {
-        printFailure(name, " isn't true");
+        printFailure(name, " is expected to be true but isn't");
     });
 }
 
 expectFalse(test: TestStatus, name, value) {
     expect(test, not value, () => {
-        printFailure(name, " isn't false");
+        printFailure(name, " is expected to be false but isn't");
+    });
+}
+
+expectType(test: TestStatus, name, ExpectedType, result) {
+    expect(test, Type(result) == ExpectedType, () => {
+        printFailure(name, " is expected to be of type ", ExpectedType, " but is of type ", Type(result)); 
     });
 }
 
