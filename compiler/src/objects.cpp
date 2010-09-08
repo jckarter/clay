@@ -10,7 +10,7 @@
 ValueHolder::ValueHolder(TypePtr type)
     : Object(VALUE_HOLDER), type(type)
 {
-    this->buf = (char *)malloc(typeSize(type));
+    this->buf = (char *)calloc(1, typeSize(type));
 }
 
 ValueHolder::~ValueHolder()
