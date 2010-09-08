@@ -6,3 +6,4 @@ public import sequences.lazy.filter.*;
 public import sequences.lazy.enumerate.*;
 public import sequences.lazy.reverse.*;
 public import sequences.lazy.slice.*;
+public import sequences.lazy.group.*;

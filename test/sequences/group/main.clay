@@ -1,0 +1,87 @@
+import test.*;
+import sequences.lazy.group.*;
+import strings.encodings.utf8.*;
+
+main() = testMain(
+    TestSuite("lazy group sequences", Tuple(
+        TestCase("iterator-only sequences", test => {
+            var ustr = group(UTF8("abc123!!!"), 3);
+            var iter = iterator(ustr);
+            
+            expectTrue(test, "first hasNext?", hasNext?(iter));
+            expectSequence(test, "first group", next(iter),
+                UniChar('a'), UniChar('b'), UniChar('c')
+            );
+
+            expectTrue(test, "second hasNext?", hasNext?(iter));
+            expectSequence(test, "second group", next(iter),
+                UniChar('1'), UniChar('2'), UniChar('3')
+            );
+
+            expectTrue(test, "third hasNext?", hasNext?(iter));
+            expectSequence(test, "third group", next(iter),
+                UniChar('!'), UniChar('!'), UniChar('!')
+            );
+
+            expectFalse(test, "fourth hasNext?", hasNext?(iter));
+        }),
+        TestCase("random access coordinate sequences", test => {
+            var str = group(String("abc123!!!"), 3);
+            var iter = iterator(str);
+            
+            expectTrue(test, "first hasNext?", hasNext?(iter));
+            expectSequence(test, "first group", next(iter),
+                'a', 'b', 'c'
+            );
+
+            expectTrue(test, "second hasNext?", hasNext?(iter));
+            expectSequence(test, "second group", next(iter),
+                '1', '2', '3'
+            );
+
+            expectTrue(test, "third hasNext?", hasNext?(iter));
+            expectSequence(test, "third group", next(iter),
+                '!', '!', '!'
+            );
+
+            expectFalse(test, "fourth hasNext?", hasNext?(iter));
+
+            expectSequence(test, "str[0]", str[0],
+                'a', 'b', 'c'
+            );
+            expectSequence(test, "str[1]", str[1],
+                '1', '2', '3'
+            );
+            expectSequence(test, "str[2]", str[2],
+                '!', '!', '!'
+            );
+
+            str[2][1] = '?';
+
+            expectSequence(test, "str[2] after mutation", str[2],
+                '!', '?', '!'
+            );
+
+            expectTrue(test, "begin(str) + size(str) == end(str)",
+                begin(str) + size(str) == end(str)
+            );
+            expectTrue(test, "end(str) - begin(str) == size(str)",
+                end(str) - begin(str) == size(str)
+            );
+            expectTrue(test, "end(str) > begin(str)", end(str) > begin(str));
+            expectFalse(test, "end(str) < begin(str)", end(str) < begin(str));
+            expectFalse(test, "end(str) == begin(str)", end(str) == begin(str));
+            expectFalse(test, "begin(str) > begin(str)", begin(str) > begin(str));
+            expectFalse(test, "begin(str) < begin(str)", begin(str) < begin(str));
+            expectTrue(test, "begin(str) == begin(str)", begin(str) == begin(str));
+        }),
+        TestCase("static grouping", test => {
+            var str = String("abcABC123");
+            for (x, y, z in group(str, static 3))
+                expectTrue(test, "static group iteration",
+                    Int(x) + 1 == Int(y)
+                    and Int(y) + 1 == Int(z)
+                );
+        }),
+    )),
+);
