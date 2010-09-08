@@ -751,6 +751,30 @@ void printNameList(ostream &out, const vector<TypePtr> &x)
     }
 }
 
+static void printStaticOrTupleOfStatics(ostream &out, TypePtr t) {
+    switch (t->typeKind) {
+    case STATIC_TYPE : {
+        StaticType *st = (StaticType *)t.ptr();
+        printName(out, st->obj);
+        break;
+    }
+    case TUPLE_TYPE : {
+        TupleType *tt = (TupleType *)t.ptr();
+        out << "(";
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+            if (i != 0)
+                out << ", ";
+            printStaticOrTupleOfStatics(out, tt->elementTypes[i]);
+        }
+        out << ")";
+        break;
+    }
+    default :
+        std::cout << "unexpected type: " << t << '\n';
+        assert(false);
+    }
+}
+
 void printName(ostream &out, ObjectPtr x)
 {
     switch (x->objKind) {
@@ -798,10 +822,15 @@ void printName(ostream &out, ObjectPtr x)
     }
     case VALUE_HOLDER : {
         ValueHolder *y = (ValueHolder *)x.ptr();
-        EValuePtr ev = new EValue(y->type, y->buf);
-        out << "ValueHolder(";
-        printValue(out, ev);
-        out << ")";
+        if (isStaticOrTupleOfStatics(y->type)) {
+            printStaticOrTupleOfStatics(out, y->type);
+        }
+        else {
+            EValuePtr ev = new EValue(y->type, y->buf);
+            out << "ValueHolder(";
+            printValue(out, ev);
+            out << ")";
+        }
         break;
     }
     default : {

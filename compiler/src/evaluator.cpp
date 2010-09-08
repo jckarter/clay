@@ -188,23 +188,6 @@ void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
     }
 }
 
-static bool isStaticallyComputable(TypePtr t) {
-    switch (t->typeKind) {
-    case STATIC_TYPE :
-        return true;
-    case TUPLE_TYPE : {
-        TupleType *tt = (TupleType *)t.ptr();
-        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
-            if (!isStaticallyComputable(tt->elementTypes[i]))
-                return false;
-        }
-        return true;
-    }
-    default :
-        return false;
-    }
-}
-
 static void setSizeTEValue(EValuePtr v, size_t x) {
     switch (typeSize(cSizeTType)) {
     case 4 : *(size32_t *)v->addr = size32_t(x); break;
@@ -240,7 +223,7 @@ MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
     bool allStatic = true;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         TypePtr t = mpv->values[i]->type;
-        if (!isStaticallyComputable(t))
+        if (!isStaticOrTupleOfStatics(t))
             allStatic = false;
         ValueHolderPtr vh = new ValueHolder(t);
         valueHolders.push_back(vh);
