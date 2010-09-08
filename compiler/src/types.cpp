@@ -381,6 +381,23 @@ bool isPointerOrCodePointerType(TypePtr t)
     }
 }
 
+bool isStaticOrTupleOfStatics(TypePtr t) {
+    switch (t->typeKind) {
+    case STATIC_TYPE :
+        return true;
+    case TUPLE_TYPE : {
+        TupleType *tt = (TupleType *)t.ptr();
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+            if (!isStaticOrTupleOfStatics(tt->elementTypes[i]))
+                return false;
+        }
+        return true;
+    }
+    default :
+        return false;
+    }
+}
+
 
 
 //

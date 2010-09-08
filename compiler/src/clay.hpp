@@ -2204,6 +2204,7 @@ TypePtr enumType(EnumerationPtr enumeration);
 bool isPrimitiveType(TypePtr t);
 bool isPrimitiveAggregateType(TypePtr t);
 bool isPointerOrCodePointerType(TypePtr t);
+bool isStaticOrTupleOfStatics(TypePtr t);
 
 const vector<IdentifierPtr> &recordFieldNames(RecordTypePtr t);
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
