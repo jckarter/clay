@@ -195,7 +195,7 @@ Suffix -> IndexSuffix
         | TupleRefSuffix
         | DereferenceSuffix
 
-IndexSuffix -> "[" comma_list(Expression) "]"
+IndexSuffix -> "[" comma_list(Expression)? "]"
 CallSuffix -> "(" comma_list(Expression)? ")"
 FieldRefSuffix -> "." Identifier
 TupleRefSuffix -> "." IntLiteral
