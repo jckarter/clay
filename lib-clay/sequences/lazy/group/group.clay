@@ -187,3 +187,24 @@ overload index(i: RAGroupCoordinate[C], n: I) {
     return CoordinateRange(i.coord + b, i.coord + e);
 }
 
+
+//
+// static group function
+//
+private record StaticGroup[S, groupSize](seq: S);
+
+[S, n]
+overload group(forward seq: S, static n) = StaticGroup[S, n](seq);
+
+private record StaticGroupIterator[I, groupSize](iter: I);
+
+[S, n]
+overload iterator(group: StaticGroup[S, n]) = StaticGroupIterator[SequenceIteratorType(S), n](iterator(group.seq));
+[I, n]
+overload hasNext?(giter: StaticGroupIterator[I, n]) = hasNext?(giter.iter);
+[I, n]
+overload next(giter: StaticGroupIterator[I, n]) = ...nextStaticGroup(giter.iter, static n);
+
+[n | n > 0] private nextStaticGroup(iter, static n) = forward next(iter), ...nextStaticGroup(iter, static n-1);
+overload nextStaticGroup(iter, static 0) = ;
+
