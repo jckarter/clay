@@ -1,9 +1,9 @@
 Testing test test suite:
   should pass: passed
   should fail:
-    truth isn't true
+    truth is expected to be true but isn't
 
-    falsehood isn't false
+    falsehood is expected to be false but isn't
 
     unity is expected to equal 1 but is 3
 
@@ -84,7 +84,7 @@ Testing test test suite:
     throws 6 is expected to throw 6 but doesn't throw
     -- FAILED
   should fail by throwing uncaught exception:
-    truth isn't true
+    truth is expected to be true but isn't
 
     uncaught exception:
       7
@@ -92,7 +92,7 @@ Testing test test suite:
   (pending) should pass:
     -- FIXED (should clear pending flag)
   (pending) should fail:
-    truth isn't true
+    truth is expected to be true but isn't
 -- test test suite: 10 expectations passed; 18 failed (1 pending)
 Overall: 10 expectations passed; 18 failed (1 pending)
 TESTS FAILED
