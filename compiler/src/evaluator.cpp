@@ -566,7 +566,7 @@ void evalDestroyAndPopStack(int marker)
 
 EValuePtr evalAllocValue(TypePtr t)
 {
-    char *buf = (char *)malloc(typeSize(t));
+    char *buf = (char *)calloc(1, typeSize(t));
     EValuePtr ev = new EValue(t, buf);
     stackEValues.push_back(ev);
     return ev;
