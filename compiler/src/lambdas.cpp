@@ -32,6 +32,35 @@ void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx);
 
 static int closureDataIndex = 0;
 
+static TypePtr typeOfValue(ObjectPtr obj) {
+    switch (obj->objKind) {
+    case PVALUE : return ((PValue *)obj.ptr())->type;
+    case CVALUE : return ((CValue *)obj.ptr())->type;
+    default : assert(false); return NULL;
+    }
+}
+
+static vector<TypePtr> typesOfValues(ObjectPtr obj) {
+    vector<TypePtr> types;
+    switch (obj->objKind) {
+    case MULTI_PVALUE : {
+        MultiPValue *mpv = (MultiPValue *)obj.ptr();
+        for (unsigned i = 0; i < mpv->size(); ++i)
+            types.push_back(mpv->values[i]->type);
+        break;
+    }
+    case MULTI_CVALUE : {
+        MultiCValue *mcv = (MultiCValue *)obj.ptr();
+        for (unsigned i = 0; i < mcv->size(); ++i)
+            types.push_back(mcv->values[i]->type);
+        break;
+    }
+    default :
+        assert(false);
+    }
+    return types;
+}
+
 void initializeLambda(LambdaPtr x, EnvPtr env)
 {
     assert(!x->initialized);
@@ -63,22 +92,9 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         TypePtr type;
         ObjectPtr obj = safeLookupEnv(env, ident);
         switch (obj->objKind) {
-        case PVALUE : {
-            PValue *y = (PValue *)obj.ptr();
-            type = y->type;
-            if (x->captureByRef) {
-                type = pointerType(type);
-                ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
-                converted->args->add(addr);
-            }
-            else {
-                converted->args->add(nameRef.ptr());
-            }
-            break;
-        }
+        case PVALUE :
         case CVALUE : {
-            CValue *y = (CValue *)obj.ptr();
-            type = y->type;
+            type = typeOfValue(obj);
             if (x->captureByRef) {
                 type = pointerType(type);
                 ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
@@ -89,35 +105,12 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             }
             break;
         }
-        case MULTI_PVALUE : {
-            MultiPValue *y = (MultiPValue *)obj.ptr();
-            vector<TypePtr> elementTypes;
-            for (unsigned j = 0; j < y->size(); ++j) {
-                TypePtr t = y->values[j]->type;
-                if (x->captureByRef)
-                    t = pointerType(t);
-                elementTypes.push_back(t);
-            }
-            type = tupleType(elementTypes);
-            if (x->captureByRef) {
-                ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
-                CallPtr call = new Call(e, new ExprList());
-                call->args->add(new Unpack(nameRef.ptr()));
-                converted->args->add(call.ptr());
-            }
-            else {
-                ExprPtr e = prelude_expr_packMultiValuedFreeVar();
-                CallPtr call = new Call(e, new ExprList());
-                call->args->add(new Unpack(nameRef.ptr()));
-                converted->args->add(call.ptr());
-            }
-            break;
-        }
+        case MULTI_PVALUE :
         case MULTI_CVALUE : {
-            MultiCValue *y = (MultiCValue *)obj.ptr();
+            vector<TypePtr> types = typesOfValues(obj);
             vector<TypePtr> elementTypes;
-            for (unsigned j = 0; j < y->size(); ++j) {
-                TypePtr t = y->values[j]->type;
+            for (unsigned j = 0; j < types.size(); ++j) {
+                TypePtr t = types[j];
                 if (x->captureByRef)
                     t = pointerType(t);
                 elementTypes.push_back(t);
