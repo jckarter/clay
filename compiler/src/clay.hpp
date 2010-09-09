@@ -609,6 +609,10 @@ void argumentIndexRangeError(unsigned int index,
                              size_t value,
                              size_t maxValue);
 
+void invalidStaticObjectError(ObjectPtr obj);
+void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj);
+
+
 struct DebugPrinter {
     static int indent;
     ObjectPtr obj;

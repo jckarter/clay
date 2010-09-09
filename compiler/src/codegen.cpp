@@ -1143,7 +1143,7 @@ void codegenStaticObject(ObjectPtr x,
         // allow values of static type
         PValue *y = (PValue *)x.ptr();
         if (y->type->typeKind != STATIC_TYPE)
-            error("invalid static object");
+            invalidStaticObjectError(x);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         if (y->isTemp)
@@ -1160,7 +1160,7 @@ void codegenStaticObject(ObjectPtr x,
         for (unsigned i = 0; i < y->size(); ++i) {
             PValuePtr pv = y->values[i];
             if (pv->type->typeKind != STATIC_TYPE)
-                argumentError(i, "invalid static object");
+                argumentInvalidStaticObjectError(i, pv.ptr());
             CValuePtr outi = out->values[i];
             if (pv->isTemp)
                 assert(outi->type == pv->type);
@@ -1176,7 +1176,7 @@ void codegenStaticObject(ObjectPtr x,
     }
 
     default :
-        error("invalid static object");
+        invalidStaticObjectError(x);
         break;
 
     }

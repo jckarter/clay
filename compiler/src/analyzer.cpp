@@ -828,7 +828,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
         return NULL;
 
     default :
-        error("invalid static object");
+        invalidStaticObjectError(x);
         return NULL;
 
     }

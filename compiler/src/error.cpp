@@ -323,3 +323,17 @@ void argumentIndexRangeError(unsigned int index,
     sout << "it should be less than " << maxValue;
     argumentError(index, sout.str());
 }
+
+void invalidStaticObjectError(ObjectPtr obj)
+{
+    ostringstream sout;
+    sout << "invalid static object: " << obj;
+    error(sout.str());
+}
+
+void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
+{
+    ostringstream sout;
+    sout << "invalid static object: " << obj;
+    argumentError(index, sout.str());
+}
