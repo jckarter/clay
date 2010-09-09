@@ -61,11 +61,33 @@ static vector<TypePtr> typesOfValues(ObjectPtr obj) {
     return types;
 }
 
+static void initializeLambdaWithFreeVars(LambdaPtr x,
+                                         EnvPtr env,
+                                         const string &closureDataName);
+static void initializeLambdaWithoutFreeVars(LambdaPtr x,
+                                            EnvPtr env);
+
 void initializeLambda(LambdaPtr x, EnvPtr env)
 {
     assert(!x->initialized);
     x->initialized = true;
 
+    ostringstream ostr;
+    ostr << "%closureData" << closureDataIndex;
+    ++closureDataIndex;
+    string closureDataName = ostr.str();
+
+    convertFreeVars(x, env, closureDataName, x->freeVars);
+    if (x->freeVars.empty())
+        initializeLambdaWithoutFreeVars(x, env);
+    else
+        initializeLambdaWithFreeVars(x, env, closureDataName);
+}
+
+void initializeLambdaWithFreeVars(LambdaPtr x,
+                                  EnvPtr env,
+                                  const string &closureDataName)
+{
     RecordPtr r = new Record(PRIVATE);
     r->location = x->location;
     r->name = new Identifier("LambdaFreeVars");
@@ -76,17 +98,9 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     x->lambdaType = t;
     ExprPtr typeExpr = new ObjectExpr(t.ptr());
 
-    ostringstream ostr;
-    ostr << "%closureData" << closureDataIndex;
-    ++closureDataIndex;
-    string closureDataName = ostr.str();
-
-    vector<string> freeVars;
-    convertFreeVars(x, env, closureDataName, freeVars);
-
     CallPtr converted = new Call(typeExpr, new ExprList());
-    for (unsigned i = 0; i < freeVars.size(); ++i) {
-        IdentifierPtr ident = new Identifier(freeVars[i]);
+    for (unsigned i = 0; i < x->freeVars.size(); ++i) {
+        IdentifierPtr ident = new Identifier(x->freeVars[i]);
         NameRefPtr nameRef = new NameRef(ident);
 
         TypePtr type;
@@ -162,6 +176,31 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         error("'call' operator not found!");
     Procedure *callObj = (Procedure *)obj.ptr();
     callObj->overloads.insert(callObj->overloads.begin(), overload);
+}
+
+static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env)
+{
+    IdentifierPtr name = new Identifier("LambdaProcedure");
+    name->location = x->location;
+    x->lambdaProc = new Procedure(name, PRIVATE);
+
+    CodePtr code = new Code();
+    code->location = x->location;
+    for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
+        FormalArgPtr y = new FormalArg(x->formalArgs[i], NULL);
+        y->location = x->formalArgs[i]->location;
+        code->formalArgs.push_back(y.ptr());
+    }
+    code->body = x->body;
+
+    ExprPtr procRef = new ObjectExpr(x->lambdaProc.ptr());
+    procRef->location = x->location;
+    OverloadPtr overload = new Overload(procRef, code, false);
+    overload->env = env;
+    overload->location = x->location;
+    x->lambdaProc->overloads.push_back(overload);
+
+    x->converted = procRef;
 }
 
 

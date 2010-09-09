@@ -893,8 +893,14 @@ struct Lambda : public Expr {
     ExprPtr converted;
 
     bool initialized;
+    vector<string> freeVars;
+
+    // if freevars are present
     RecordPtr lambdaRecord;
     TypePtr lambdaType;
+
+    // if freevars are absent
+    ProcedurePtr lambdaProc;
 
     Lambda(bool captureByRef) :
         Expr(LAMBDA), captureByRef(captureByRef),

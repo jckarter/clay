@@ -1,0 +1,8 @@
+
+import libc;
+
+main() {
+    var statelessLambda = () => { println("bye!"); };
+    var ptr = makeCCodePointer(statelessLambda);
+    libc.atexit(ptr);
+}
