@@ -229,7 +229,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
                                              new ExprList());
         StatementPtr stmt = new ExprStatement(continueException.ptr());
         block->statements.push_back(stmt);
-//         block->statements.push_back(new Unreachable());
+        block->statements.push_back(new Unreachable());
         lastIf->elsePart = block.ptr();
     }
     return result;
