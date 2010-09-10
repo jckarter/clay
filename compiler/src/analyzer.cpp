@@ -1872,6 +1872,9 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
         return result;
     }
 
+    case UNREACHABLE :
+        return true;
+
     default :
         assert(false);
         return false;

@@ -1378,6 +1378,15 @@ static bool staticFor(StatementPtr &x) {
     return true;
 }
 
+static bool unreachable(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("unreachable")) return false;
+    if (!symbol(";")) return false;
+    x = new Unreachable();
+    x->location = location;
+    return true;
+}
+
 static bool statement(StatementPtr &x) {
     int p = save();
     if (block(x)) return true;
@@ -1396,6 +1405,7 @@ static bool statement(StatementPtr &x) {
     if (restore(p), tryStatement(x)) return true;
     if (restore(p), throwStatement(x)) return true;
     if (restore(p), staticFor(x)) return true;
+    if (restore(p), unreachable(x)) return true;
 
     return false;
 }
