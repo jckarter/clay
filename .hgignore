@@ -1,7 +1,6 @@
 syntax: regexp
 
 .*\.swp
-\.orig$
 
 cscope.out
 tags
