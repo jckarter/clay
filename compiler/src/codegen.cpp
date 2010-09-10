@@ -3018,6 +3018,11 @@ bool codegenStatement(StatementPtr stmt,
         return terminated;
     }
 
+    case UNREACHABLE : {
+        ctx->builder->CreateUnreachable();
+        return true;
+    }
+
     default :
         assert(false);
         return false;

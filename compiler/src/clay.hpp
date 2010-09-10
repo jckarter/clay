@@ -257,6 +257,7 @@ struct Try;
 struct Catch;
 struct Throw;
 struct StaticFor;
+struct Unreachable;
 
 struct FormalArg;
 struct ReturnSpec;
@@ -397,6 +398,7 @@ typedef Pointer<Try> TryPtr;
 typedef Pointer<Catch> CatchPtr;
 typedef Pointer<Throw> ThrowPtr;
 typedef Pointer<StaticFor> StaticForPtr;
+typedef Pointer<Unreachable> UnreachablePtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
@@ -1015,6 +1017,7 @@ enum StatementKind {
     TRY,
     THROW,
     STATIC_FOR,
+    UNREACHABLE,
 };
 
 struct Statement : public ANode {
@@ -1240,6 +1243,11 @@ struct StaticFor : public Statement {
               StatementPtr body)
         : Statement(STATIC_FOR), variable(variable), values(values),
           body(body), clonesInitialized(false) {}
+};
+
+struct Unreachable : public Statement {
+    Unreachable()
+        : Statement(UNREACHABLE) {}
 };
 
 

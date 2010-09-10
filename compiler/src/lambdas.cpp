@@ -374,6 +374,9 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case UNREACHABLE :
+        break;
+
     default :
         assert(false);
 

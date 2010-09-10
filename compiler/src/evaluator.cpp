@@ -2139,6 +2139,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
         return NULL;
     }
 
+    case UNREACHABLE : {
+        error("unreachable statement");
+        return NULL;
+    }
+
     default :
         assert(false);
         return NULL;
