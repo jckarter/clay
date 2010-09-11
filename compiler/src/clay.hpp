@@ -501,19 +501,19 @@ struct Location : public Object {
 // error module
 //
 
-typedef pair<ObjectPtr, vector<TypePtr> > InvokeStackEntry;
+typedef pair<ObjectPtr, vector<TypePtr> > CompileContextEntry;
 
-void pushInvokeStack(ObjectPtr callable, const vector<TypePtr> &argsKey);
-void popInvokeStack();
-vector<InvokeStackEntry> getInvokeStack();
-void setInvokeStack(const vector<InvokeStackEntry> &x);
+void pushCompileContext(ObjectPtr callable, const vector<TypePtr> &argsKey);
+void popCompileContext();
+vector<CompileContextEntry> getCompileContext();
+void setCompileContext(const vector<CompileContextEntry> &x);
 
-struct InvokeStackContext {
-    InvokeStackContext(ObjectPtr callable, const vector<TypePtr> &argsKey) {
-        pushInvokeStack(callable, argsKey);
+struct CompileContextPusher {
+    CompileContextPusher(ObjectPtr callable, const vector<TypePtr> &argsKey) {
+        pushCompileContext(callable, argsKey);
     }
-    ~InvokeStackContext() {
-        popInvokeStack();
+    ~CompileContextPusher() {
+        popCompileContext();
     }
 };
 

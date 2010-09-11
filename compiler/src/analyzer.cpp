@@ -258,25 +258,25 @@ static PValuePtr staticPValue(ObjectPtr x)
 //
 
 static LocationPtr analysisErrorLocation;
-static vector<InvokeStackEntry> analysisErrorInvokeStack;
+static vector<CompileContextEntry> analysisErrorCompileContext;
 
 struct ClearAnalysisError {
     ClearAnalysisError() {}
     ~ClearAnalysisError() {
         analysisErrorLocation = NULL;
-        analysisErrorInvokeStack.clear();
+        analysisErrorCompileContext.clear();
     }
 };
 
 static void updateAnalysisErrorLocation()
 {
     analysisErrorLocation = topLocation();
-    analysisErrorInvokeStack = getInvokeStack();
+    analysisErrorCompileContext = getCompileContext();
 }
 
 static void analysisError()
 {
-    setInvokeStack(analysisErrorInvokeStack);
+    setCompileContext(analysisErrorCompileContext);
     LocationContext loc(analysisErrorLocation);
     error("type propagation failed due to recursion without base case");
 }
@@ -1394,7 +1394,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName)
@@ -1427,7 +1427,7 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
     computeArgsKey(args, argsKey, argsTempness);
-    InvokeStackContext invokeStackContext(obj, argsKey);
+    CompileContextPusher pusher(obj, argsKey);
 
     unsigned index = dispatchIndices[0];
     vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,
@@ -1526,7 +1526,7 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(args, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName)
@@ -2121,7 +2121,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
@@ -2177,7 +2177,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
         if (entry->callByName)
