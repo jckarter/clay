@@ -1707,7 +1707,7 @@ void codegenCallExpr(ExprPtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
             codegenCallByName(entry, args, env, ctx, out);
@@ -1781,7 +1781,7 @@ void codegenDispatch(ObjectPtr obj,
     vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
     computeArgsKey(pvArgs, argsKey, argsTempness);
-    InvokeStackContext invokeStackContext(obj, argsKey);
+    CompileContextPusher pusher(obj, argsKey);
 
     unsigned index = dispatchIndices[0];
     vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,
@@ -1916,7 +1916,7 @@ void codegenCallValue(CValuePtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(pvArgs, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName)
             error("call to call-by-name code not allowed in this context");
@@ -3520,7 +3520,7 @@ void codegenPrimOp(PrimOpPtr x,
             argsKey.push_back(t);
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
         bool isDefined = analyzeIsDefined(callable, argsKey, argsTempness);
         ValueHolderPtr vh = boolToValueHolder(isDefined);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -4027,7 +4027,7 @@ void codegenPrimOp(PrimOpPtr x,
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
@@ -4098,7 +4098,7 @@ void codegenPrimOp(PrimOpPtr x,
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
