@@ -41,11 +41,13 @@ callbyname Type(...x:T) = ...T;
 
 
 //
-// typeToValue, typesToValues
+// typeToLValue, typeToRValue, typesToLValues, typesToRValues
 //
 
-typeToValue(a) = ref null(a)^;
-typesToValues(...a) = forward ...mapValues(typeToValue, ...a);
+typeToLValue(a) = ref null(a)^;
+typeToRValue(a) = null(a)^;
+typesToLValues(...a) = forward ...mapValues(typeToLValue, ...a);
+typesToRValues(...a) = ...mapValues(typeToRValue, ...a);
 
 
 
@@ -69,10 +71,10 @@ callbyname ReturnType(...x) = ...Type(...returnValues(...x));
 private procedure returnValues;
 
 [T] overload returnValues(lvalue first:T, forward ...rest) =
-    forward typeToValue(ByRef[T]), ...returnValues(...rest);
+    typeToLValue(ByRef[T]), ...returnValues(...rest);
 
 [T] overload returnValues(rvalue first:T, forward ...rest) =
-    forward typeToValue(T), ...returnValues(...rest);
+    typeToLValue(T), ...returnValues(...rest);
 
 overload returnValues() = ;
 
@@ -83,8 +85,8 @@ overload returnValues() = ;
 //
 
 procedure returnTypeToValue;
-[T] overload returnTypeToValue(static T) = typeToValue(T);
-[T] overload returnTypeToValue(static ByRef[T]) = ref typeToValue(T);
+[T] overload returnTypeToValue(static T) = typeToRValue(T);
+[T] overload returnTypeToValue(static ByRef[T]) = ref typeToLValue(T);
 
 returnTypesToValues(...a) = forward ...mapValues(returnTypeToValue, ...a);
 
