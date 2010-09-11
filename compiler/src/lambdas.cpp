@@ -90,7 +90,7 @@ void initializeLambdaWithFreeVars(LambdaPtr x,
 {
     RecordPtr r = new Record(PRIVATE);
     r->location = x->location;
-    r->name = new Identifier("LambdaFreeVars");
+    r->name = new Identifier("LambdaObject");
     x->lambdaRecord = r;
     vector<RecordFieldPtr> fields;
 
