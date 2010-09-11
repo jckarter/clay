@@ -23,4 +23,31 @@ main() {
     try { require(b, doIt); } catch(ex: ValueMissing) { println("b missing!"); }
 
     println(variantTag(b));
+
+    var v = Vector(range(100));
+
+    for (value in [a,b]) {
+        // test return-by-ref from 'maybe'
+        ref y = maybe(value, x ref=> ref v[x], () ref=> ref v[0]);
+        y += 1;
+        maybe(value, x ref=> {println(v[x]);}, () ref=> {println(v[0]);});
+    }
+
+    // return-by-value from 'require'
+    println( require(a, x => x*10) );
+
+    // return-by-ref from 'require'
+    ref y = require(a, x ref=> ref v[x]);
+    y += 1;
+    println( require(a, x ref=> v[x]) );
+
+    // require (reference)
+    ref y = require(a);
+    y *= 100;
+    println(a);
+
+    // require (value)
+    ref y = require(copy(a));
+    y *= 1000;
+    println(a);
 }

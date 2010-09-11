@@ -42,13 +42,36 @@ overload maybeValue(forward n: Nothing, thenFn) { }
 maybe(forward m:Maybe[T], thenFn, ...elseFn)
     = forward ...maybeValue(*m, thenFn, ...elseFn);
 
-record ValueMissing ();
-instance Exception = ValueMissing;
 
+
 //
 // require function
 //
 
-[T]
-require(forward m:Maybe[T], fn) = forward ...maybe(m, fn, () => { throw ValueMissing(); });
+record ValueMissing ();
+instance Exception = ValueMissing;
 
+procedure require;
+
+[T]
+overload require(lvalue m:Maybe[T], fn) {
+    alias Ts = ReturnType(...fn(typeToLValue(T)));
+    return forward ...maybe(m, fn, () => forward ...missing(...Ts));
+}
+
+[T]
+overload require(rvalue m:Maybe[T], fn) {
+    alias Ts = ReturnType(...fn(typeToRValue(T)));
+    return forward ...maybe(move(m), fn, () => forward ...missing(...Ts));
+}
+
+[T]
+overload require(forward m:Maybe[T]) = forward require(m, identity);
+
+private missing(...returnTypes) {
+    if (true) throw ValueMissing();
+    // allow the compiler to infer return types
+    return forward ...returnTypesToValues(...returnTypes);
+}
+
+private identity(forward ...args) = forward ...args;
