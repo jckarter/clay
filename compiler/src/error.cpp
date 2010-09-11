@@ -11,8 +11,8 @@
 
 static vector<CompileContextEntry> contextStack;
 
-void pushCompileContext(ObjectPtr callable, const vector<TypePtr> &argsKey) {
-    contextStack.push_back(make_pair(callable, argsKey));
+void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params) {
+    contextStack.push_back(make_pair(obj, params));
 }
 
 void popCompileContext() {
@@ -153,14 +153,25 @@ static void displayCompileContext() {
     fprintf(stderr, "\n");
     fprintf(stderr, "compilation context: \n");
     for (unsigned i = contextStack.size(); i > 0; --i) {
-        ObjectPtr callable = contextStack[i-1].first;
-        const vector<TypePtr> &argsKey = contextStack[i-1].second;
+        ObjectPtr obj = contextStack[i-1].first;
+        const vector<ObjectPtr> &params = contextStack[i-1].second;
 
         ostringstream sout;
-        printName(sout, callable);
-        sout << "(";
-        printNameList(sout, argsKey);
-        sout << ")";
+        if (obj->objKind == GLOBAL_VARIABLE) {
+            sout << "global ";
+            printName(sout, obj);
+            if (!params.empty()) {
+                sout << "[";
+                printNameList(sout, params);
+                sout << "]";
+            }
+        }
+        else {
+            printName(sout, obj);
+            sout << "(";
+            printNameList(sout, params);
+            sout << ")";
+        }
         fprintf(stderr, "  %s\n", sout.str().c_str());
     }
 }
