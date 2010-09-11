@@ -1,0 +1,60 @@
+
+import parsing.combinators.*;
+import maybe.*;
+
+//
+// bracketed -> '(' expr ')'
+// number -> digit+
+// factor -> number | bracketed
+//
+// term -> factor (('*' | '/') factor)*;
+//
+// expr -> term (('+' | '-') term)*
+//
+
+expr(input) Maybe[Int] = expr2(input);
+
+var bracketed = modify(x => x.1, sequence(literal('('), expr, literal(')')));
+var digit = condition(c => ((c >= '0') and (c <= '9')));
+var digits = oneOrMore(digit);
+var number = modify(Int, digits);
+var factor = choice(number, bracketed);
+
+var mulOrDiv = choice(literal('*'), literal('/'));
+var term = modify(foldTail, sequence(factor, zeroOrMore(sequence(mulOrDiv, factor))));
+
+var plusOrMinus = choice(literal('+'), literal('-'));
+var expr2 = modify(foldTail, sequence(term, zeroOrMore(sequence(plusOrMinus, term))));
+
+foldTail(x) {
+    var result = x.0;
+    for (y in x.1) {
+        switch (y.0) {
+            case '+' : result += y.1; break;
+            case '-' : result -= y.1; break;
+            case '*' : result *= y.1; break;
+            case '/' : result /= y.1; break;
+            default : assert(false); break;
+        }
+    }
+    return result;
+}
+
+calculate(s) {
+    var input = iterator(s);
+    var result = expr(input);
+    print(s, " = ", result);
+    var unparsed = String(input);
+    if (not empty?(unparsed))
+        print(" (unparsed: '", unparsed, "')");
+    println();
+}
+
+main() {
+    calculate("-1");
+    calculate("1");
+    calculate("1+");
+    calculate("1+2");
+    calculate("1+2*3");
+    calculate("(1+2)*3");
+}
