@@ -2677,15 +2677,24 @@ MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
 void analyzeCodeBody(InvokeEntryPtr entry);
 
 struct AnalysisContext : public Object {
+    bool hasRecursivePropagation;
     bool returnInitialized;
     vector<bool> returnIsRef;
     vector<TypePtr> returnTypes;
     AnalysisContext()
-        : Object(DONT_CARE), returnInitialized(false) {}
+        : Object(DONT_CARE),
+          hasRecursivePropagation(false),
+          returnInitialized(false) {}
 };
 typedef Pointer<AnalysisContext> AnalysisContextPtr;
 
-bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
+enum StatementAnalysis {
+    SA_FALLTHROUGH,
+    SA_RECURSIVE,
+    SA_TERMINATED,
+};
+
+StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
 void initializeStaticForClones(StaticForPtr x, unsigned count);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv);
