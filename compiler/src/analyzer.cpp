@@ -878,6 +878,7 @@ MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x)
 {
     if (x->analysis.ptr())
         return x->analysis;
+    CompileContextPusher pusher(x->gvar.ptr(), x->params);
     if (x->analyzing) {
         updateAnalysisErrorLocation();
         return NULL;

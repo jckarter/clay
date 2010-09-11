@@ -501,16 +501,22 @@ struct Location : public Object {
 // error module
 //
 
-typedef pair<ObjectPtr, vector<TypePtr> > CompileContextEntry;
+typedef pair<ObjectPtr, vector<ObjectPtr> > CompileContextEntry;
 
-void pushCompileContext(ObjectPtr callable, const vector<TypePtr> &argsKey);
+void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params);
 void popCompileContext();
 vector<CompileContextEntry> getCompileContext();
 void setCompileContext(const vector<CompileContextEntry> &x);
 
 struct CompileContextPusher {
-    CompileContextPusher(ObjectPtr callable, const vector<TypePtr> &argsKey) {
-        pushCompileContext(callable, argsKey);
+    CompileContextPusher(ObjectPtr obj, const vector<ObjectPtr> &params) {
+        pushCompileContext(obj, params);
+    }
+    CompileContextPusher(ObjectPtr obj, const vector<TypePtr> &params) {
+        vector<ObjectPtr> params2;
+        for (unsigned i = 0; i < params.size(); ++i)
+            params2.push_back((Object *)(params[i].ptr()));
+        pushCompileContext(obj, params2);
     }
     ~CompileContextPusher() {
         popCompileContext();
