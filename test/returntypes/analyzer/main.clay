@@ -1,0 +1,20 @@
+
+var x = 10;
+
+foo() = forward x, x+1;
+
+errorFoo() {
+    if (true)
+        error("errorFoo");
+    return forward ...returnTypesToValues(...ReturnType(...foo()));
+}
+
+main() {
+    println(Tuple(...Type(...foo())));
+    println(Tuple(...ReturnType(...foo())));
+
+    println(Tuple(...Type(...errorFoo())));
+    println(Tuple(...ReturnType(...errorFoo())));
+
+    println(Tuple(...foo()));
+}

@@ -32,7 +32,25 @@ alias Opaque = Byte;
 
 
 //
-// return type helper
+// Type
+//
+
+[...T]
+callbyname Type(...x:T) = ...T;
+
+
+
+//
+// typeToValue, typesToValues
+//
+
+typeToValue(a) = ref null(a)^;
+typesToValues(...a) = forward ...mapValues(typeToValue, ...a);
+
+
+
+//
+// ByRef[T] - return-by-reference type helper
 //
 
 record ByRef[T] ();
@@ -42,11 +60,33 @@ record ByRef[T] ();
 
 
 //
-// Type
+// ReturnType
 //
 
-[...T]
-callbyname Type(...x:T) = ...T;
+callbyname ReturnType(...x) = ...Type(...returnValues(...x));
+
+
+private procedure returnValues;
+
+[T] overload returnValues(lvalue first:T, forward ...rest) =
+    forward typeToValue(ByRef[T]), ...returnValues(...rest);
+
+[T] overload returnValues(rvalue first:T, forward ...rest) =
+    forward typeToValue(T), ...returnValues(...rest);
+
+overload returnValues() = ;
+
+
+
+//
+// returnTypeToValue, returnTypesToValues
+//
+
+procedure returnTypeToValue;
+[T] overload returnTypeToValue(static T) = typeToValue(T);
+[T] overload returnTypeToValue(static ByRef[T]) = ref typeToValue(T);
+
+returnTypesToValues(...a) = forward ...mapValues(returnTypeToValue, ...a);
 
 
 

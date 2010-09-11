@@ -269,15 +269,6 @@ overload max(lvalue a, lvalue b) {
 
 
 //
-// typeToValue, typesToValues
-//
-
-typeToValue(a) = ref null(a)^;
-typesToValues(...a) = forward ...mapValues(typeToValue, ...a);
-
-
-
-//
 // empty?
 //
 
