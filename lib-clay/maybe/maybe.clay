@@ -38,7 +38,8 @@ overload maybeValue(forward x, thenFn, ...elseFn) = forward ...thenFn(x);
 overload maybeValue(forward n: Nothing, thenFn, elseFn) = forward ...elseFn();
 overload maybeValue(forward n: Nothing, thenFn) { }
 
-maybe(forward m, thenFn, forward ...elseFn)
+[V | Variant?(V)]
+maybe(forward m:V, thenFn, forward ...elseFn)
     = forward ...maybeValue(*m, thenFn, ...elseFn);
 
 record ValueMissing ();
@@ -48,5 +49,6 @@ instance Exception = ValueMissing;
 // require function
 //
 
-require(forward m, fn) = forward ...maybe(m, fn, () => { throw ValueMissing(); });
+[V | Variant?(V)]
+require(forward m:V, fn) = forward ...maybe(m, fn, () => { throw ValueMissing(); });
 
