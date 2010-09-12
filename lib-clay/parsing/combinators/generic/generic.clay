@@ -183,6 +183,30 @@ literal(static Token, expected:Token) =
 
 
 //
+// literalString
+//
+
+[Token, A | Sequence?(A) and SequenceElementType(A) == Token]
+literalString(static Token, a:A) {
+    return stream => {
+        var saved = save(Token, stream);
+        for (item in a) {
+            var parsed? = maybe(nextToken(stream),
+                (x) ref=> (x == item),
+                () => false,
+            );
+            if (not parsed?) {
+                restore(Token, stream, saved);
+                return nothing(A);
+            }
+        }
+        return Maybe(a);
+    };
+}
+
+
+
+//
 // choice
 //
 
@@ -206,7 +230,7 @@ choice(static Token, first:First, ...rest:Rest) {
 
 
 //
-// sequence
+// sequence, sequenceAs
 //
 
 [Token, First, ...Rest | Parsers?(Token, First, ...Rest)]
@@ -223,6 +247,22 @@ sequence(static Token, first:First, ...rest:Rest) {
             restore(Token, stream, saved);
             return nothing(Type(result));
         }
+    };
+}
+
+[Token, Result, ...Parsers | Parsers?(Token, ...Parsers)]
+sequenceAs(static Token, result:Result, ..._parsers:Parsers) {
+    var parsers = Tuple(...convertParsers(Token, ..._parsers));
+    return stream => {
+        var saved = save(Token, stream);
+        static for (parser in ...unpack(parsers)) {
+            var result = parser(stream);
+            if (nothing?(result)) {
+                restore(Token, stream, saved);
+                return nothing(Result);
+            }
+        }
+        return Maybe(result);
     };
 }
 
@@ -252,11 +292,11 @@ modify(static Token, modifier:Modifier, _parser:Parser) {
 
 
 //
-// repeat
+// repeated, repeatedAs
 //
 
 [Token, Parser | Parser?(Token, Parser)]
-repeat(static Token, min:Int, max:Int, _parser:Parser) {
+repeated(static Token, min:Int, max:Int, _parser:Parser) {
     var parser = convertParser(Token, _parser);
     return stream => {
         alias T = ParseResult(Token, Parser);
@@ -278,14 +318,43 @@ repeat(static Token, min:Int, max:Int, _parser:Parser) {
     };
 }
 
+[Token, Result, Parser | Parser?(Token, Parser)]
+repeatedAs(static Token, result:Result, min:Int, max:Int, _parser:Parser) {
+    var parser = convertParser(Token, _parser);
+    return stream => {
+        var saved = save(Token, stream);
+        var count = 0;
+        while (count < max) {
+            var result = parser(stream);
+            if (nothing?(result))
+                break;
+            count += 1;
+        }
+        if (count < min) {
+            restore(Token, stream, saved);
+            return nothing(Result);
+        }
+        return Maybe(result);
+    };
+}
+
 
 
 //
 // zeroOrMore, oneOrMore
+// zeroOrMoreAs, oneOrMoreAs
 //
 
 [Token, Parser | Parser?(Token, Parser)]
-zeroOrMore(static Token, parser:Parser) = repeat(Token, 0, INT_MAX, parser);
+zeroOrMore(static Token, parser:Parser) = repeated(Token, 0, INT_MAX, parser);
 
 [Token, Parser | Parser?(Token, Parser)]
-oneOrMore(static Token, parser:Parser) = repeat(Token, 1, INT_MAX, parser);
+oneOrMore(static Token, parser:Parser) = repeated(Token, 1, INT_MAX, parser);
+
+[Token, Result, Parser | Parser?(Token, Parser)]
+zeroOrMoreAs(static Token, result:Result, parser:Parser) =
+    repeatedAs(Token, result, 0, INT_MAX, parser);
+
+[Token, Result, Parser | Parser?(Token, Parser)]
+oneOrMoreAs(static Token, result:Result, parser:Parser) =
+    repeatedAs(Token, result, 1, INT_MAX, parser);
