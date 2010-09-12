@@ -30,7 +30,13 @@ void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx);
 // initializeLambda
 //
 
-static int closureDataIndex = 0;
+static int _lambdaObjectIndex = 0;
+
+static int nextLambdaObjectIndex() {
+    int x = _lambdaObjectIndex;
+    ++ _lambdaObjectIndex;
+    return x;
+}
 
 static TypePtr typeOfValue(ObjectPtr obj) {
     switch (obj->objKind) {
@@ -63,7 +69,8 @@ static vector<TypePtr> typesOfValues(ObjectPtr obj) {
 
 static void initializeLambdaWithFreeVars(LambdaPtr x,
                                          EnvPtr env,
-                                         const string &closureDataName);
+                                         const string &closureDataName,
+                                         int lambdaObjectIndex);
 static void initializeLambdaWithoutFreeVars(LambdaPtr x,
                                             EnvPtr env);
 
@@ -72,25 +79,33 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     assert(!x->initialized);
     x->initialized = true;
 
+    int lambdaObjectIndex = nextLambdaObjectIndex();
+
     ostringstream ostr;
-    ostr << "%closureData" << closureDataIndex;
-    ++closureDataIndex;
+    ostr << "%closureData" << lambdaObjectIndex;
     string closureDataName = ostr.str();
 
     convertFreeVars(x, env, closureDataName, x->freeVars);
-    if (x->freeVars.empty())
+    if (x->freeVars.empty()) {
         initializeLambdaWithoutFreeVars(x, env);
-    else
-        initializeLambdaWithFreeVars(x, env, closureDataName);
+    }
+    else {
+        initializeLambdaWithFreeVars(
+            x, env, closureDataName, lambdaObjectIndex);
+    }
 }
 
-void initializeLambdaWithFreeVars(LambdaPtr x,
-                                  EnvPtr env,
-                                  const string &closureDataName)
+static void initializeLambdaWithFreeVars(LambdaPtr x,
+                                         EnvPtr env,
+                                         const string &closureDataName,
+                                         int lambdaObjectIndex)
 {
+    ostringstream sout;
+    sout << "LambdaObject" << lambdaObjectIndex;
+
     RecordPtr r = new Record(PRIVATE);
     r->location = x->location;
-    r->name = new Identifier("LambdaObject");
+    r->name = new Identifier(sout.str());
     x->lambdaRecord = r;
     vector<RecordFieldPtr> fields;
 
