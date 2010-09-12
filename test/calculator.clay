@@ -36,10 +36,10 @@ foldTail(x) {
 }
 
 calculate(s) {
-    var stream = iterator(s);
-    var result = expr(stream);
+    var input = iterator(s);
+    var result = expr(input);
     print(s, " = ", result);
-    var unparsed = String(stream);
+    var unparsed = String(input);
     if (not empty?(unparsed))
         print(" (unparsed: '", unparsed, "')");
     println();
