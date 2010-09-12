@@ -1,0 +1,291 @@
+
+import maybe.*;
+
+
+
+//
+// Parser?, Parsers?
+//
+
+[Token]
+Parser?(static Token, x) = 
+    SimpleParser?(Token, x) or ConvertibleParser?(Token, x);
+
+
+procedure Parsers?;
+
+[Token]
+overload Parsers?(static Token, first, ...rest) =
+    Parser?(Token, first) and Parsers?(Token, ...rest);
+
+[Token]
+overload Parsers?(static Token) = true;
+
+
+
+//
+// SimpleParser?
+//
+
+procedure SimpleParser?;
+
+[Token, Parser]
+overload SimpleParser?(static Token, static Parser) = false;
+
+[Token, Parser | CallDefined?(call, Parser, DefaultIterator(Token))]
+overload SimpleParser?(static Token, static Parser) {
+    alias parser = typeToLValue(Parser);
+    alias data = typeToLValue(Vector[Token]);
+    alias stream = iterator(data);
+    return MaybeType?(...ReturnType(...parser(stream)));
+}
+
+private DefaultIterator(Token) = Type(iterator(typeToLValue(Vector[Token])));
+
+private MaybeType?(...args) = false;
+[T] overload MaybeType?(static Maybe[T]) = true;
+
+
+
+//
+// ConvertibleParser?
+//
+
+procedure ConvertibleParser?;
+
+[Token]
+overload ConvertibleParser?(static Token, x) = false;
+
+[Token]
+overload ConvertibleParser?(static Token, static Token) = true;
+
+[Token, ...T | Parsers?(Token, ...T)]
+overload ConvertibleParser?(static Token, static Tuple[...T]) = true;
+
+
+
+//
+// convertParser
+//
+
+procedure convertParser;
+
+[Token]
+overload convertParser(static Token, token:Token) =
+    literal(Token, token);
+
+[Token, ...T | Parsers?(Token, ...T)]
+overload convertParser(static Token, parsers:Tuple[...T]) =
+    sequence(Token, ...convertParsers(Token, ...unpack(parsers)));
+
+[Token, Parser | SimpleParser?(Token, Parser)]
+overload convertParser(static Token, parser:Parser) = parser;
+
+
+
+//
+// convertParsers
+//
+
+[Token, ...T | Parsers?(Token, ...T)]
+convertParsers(static Token, ...parsers:T) =
+    ...mapValues(p => convertParser(Token, p), ...parsers);
+
+
+
+//
+// ParseResult
+//
+
+[Token, Parser | Parser?(Token, Parser)]
+ParseResult(static Token, static Parser) {
+    alias parser = convertParser(Token, typeToLValue(Parser));
+    alias data = typeToLValue(Vector[Token]);
+    alias stream = iterator(data);
+    return UnwrapMaybe(ReturnType(parser(stream)));
+}
+
+[T] private UnwrapMaybe(static Maybe[T]) = T;
+
+
+
+//
+// TokenStream?
+//
+
+[Token, TokenStream]
+TokenStream?(static Token, static TokenStream) =
+    Iterator?(TokenStream) and (IteratorTargetType(TokenStream) == Token);
+
+
+
+//
+// save, restore
+//
+
+[Token, TokenStream | TokenStream?(Token, TokenStream)]
+save(static Token, stream:TokenStream) = stream;
+
+[Token, TokenStream | TokenStream?(Token, TokenStream)]
+restore(static Token, stream:TokenStream, data) { stream = data; }
+
+
+
+//
+// nextToken
+//
+
+[Token, TokenStream | TokenStream?(Token, TokenStream)]
+nextToken(static Token, stream:TokenStream) {
+    if (not hasNext?(stream))
+        return nothing(Token);
+    return Maybe(next(stream));
+}
+
+
+
+//
+// condition
+//
+
+[Token, Predicate]
+TokenPredicate?(static Token, static Predicate) {
+    alias predicate = typeToLValue(Predicate);
+    alias token = typeToLValue(Token);
+    return Tuple[Bool] == Tuple[...Type(...predicate(token))];
+}
+
+[Token, Predicate | TokenPredicate?(Token, Predicate)]
+condition(static Token, predicate:Predicate) =
+    stream => {
+        var saved = save(Token, stream);
+        return maybe(nextToken(Token, stream),
+            x ref=> {
+                if (predicate(x))
+                    return Maybe(move(x));
+                restore(Token, stream, saved);
+                return nothing(Token);
+            },
+            () ref=> nothing(Token),
+        );
+    };
+
+
+
+//
+// literal
+//
+
+[Token]
+literal(static Token, expected:Token) =
+    condition(Token, x => (x == expected));
+
+
+
+//
+// choice
+//
+
+UniformParsers?(Token, ...Parsers) =
+    Parsers?(Token, ...Parsers) and
+    equalValues?(...mapValues(P => ParseResult(Token, P), ...Parsers));
+
+[Token, First, ...Rest | UniformParsers?(Token, First, ...Rest)]
+choice(static Token, first:First, ...rest:Rest) {
+    var parsers = Tuple(...convertParsers(Token, first, ...rest));
+    return stream => {
+        static for (parser in ...unpack(parsers)) {
+            var result = parser(stream);
+            if (not nothing?(result))
+                return move(result);
+        }
+        return nothing(ParseResult(Token, First));
+    };
+}
+
+
+
+//
+// sequence
+//
+
+[Token, First, ...Rest | Parsers?(Token, First, ...Rest)]
+sequence(static Token, first:First, ...rest:Rest) {
+    var parsers = Tuple(...convertParsers(Token, first, ...rest));
+    return stream => {
+        alias f = (parser ref=> require(parser(stream)));
+        alias result = Tuple(...mapValues(f, ...unpack(parsers)));
+        var saved = save(Token, stream);
+        try {
+            return Maybe(result);
+        }
+        catch (e:ValueMissing) {
+            restore(Token, stream, saved);
+            return nothing(Type(result));
+        }
+    };
+}
+
+
+
+//
+// modify
+//
+
+Modifier?(Token, Modifier, Parser) {
+    return (Parser?(Token, Parser) and
+            CallDefined?(typeToLValue(Modifier), ParseResult(Token, Parser)));
+}
+
+[Token, Modifier, Parser | Modifier?(Token, Modifier, Parser)]
+modify(static Token, modifier:Modifier, _parser:Parser) {
+    var parser = convertParser(Token, _parser);
+    return stream => {
+        alias T = Type(modifier(require(parser(stream))));
+        return maybe(parser(stream),
+            (x ref=> Maybe(modifier(move(x)))),
+            () ref=> nothing(T),
+        );
+    };
+}
+
+
+
+//
+// repeat
+//
+
+[Token, Parser | Parser?(Token, Parser)]
+repeat(static Token, min:Int, max:Int, _parser:Parser) {
+    var parser = convertParser(Token, _parser);
+    return stream => {
+        alias T = ParseResult(Token, Parser);
+        var saved = save(Token, stream);
+        var v = Vector[T]();
+        while (size(v) < max) {
+            var parsed? = maybe(parser(stream),
+                x ref=> { push(v, move(x)); return true; },
+                () => false,
+            );
+            if (not parsed?)
+                break;
+        }
+        if (size(v) < min) {
+            restore(Token, stream, saved);
+            return nothing(Vector[T]);
+        }
+        return Maybe(move(v));
+    };
+}
+
+
+
+//
+// zeroOrMore, oneOrMore
+//
+
+[Token, Parser | Parser?(Token, Parser)]
+zeroOrMore(static Token, parser:Parser) = repeat(Token, 0, INT_MAX, parser);
+
+[Token, Parser | Parser?(Token, Parser)]
+oneOrMore(static Token, parser:Parser) = repeat(Token, 1, INT_MAX, parser);
