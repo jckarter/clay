@@ -1,14 +1,14 @@
 
 import parsing.combinators.generic as generic;
 
-[TokenStream | generic.TokenStream?(Char, TokenStream)]
-save(stream:TokenStream) = generic.save(Char, iter);
+[TokenInput | generic.TokenInput?(Char, TokenInput)]
+save(input:TokenInput) = generic.save(Char, iter);
 
-[TokenStream | generic.TokenStream?(Char, TokenStream)]
-restore(stream:TokenStream, data) = generic.restore(Char, stream, data);
+[TokenInput | generic.TokenInput?(Char, TokenInput)]
+restore(input:TokenInput, data) = generic.restore(Char, input, data);
 
-[TokenStream | generic.TokenStream?(Char, TokenStream)]
-nextToken(stream:TokenStream) = generic.nextToken(Char, stream);
+[TokenInput | generic.TokenInput?(Char, TokenInput)]
+nextToken(input:TokenInput) = generic.nextToken(Char, input);
 
 [Predicate | generic.TokenPredicate?(Char, Predicate)]
 condition(predicate:Predicate) = generic.condition(Char, predicate);

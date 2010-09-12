@@ -36,8 +36,8 @@ overload SimpleParser?(static Token, static Parser) = false;
 overload SimpleParser?(static Token, static Parser) {
     alias parser = typeToLValue(Parser);
     alias data = typeToLValue(Vector[Token]);
-    alias stream = iterator(data);
-    return MaybeType?(...ReturnType(...parser(stream)));
+    alias input = iterator(data);
+    return MaybeType?(...ReturnType(...parser(input)));
 }
 
 private DefaultIterator(Token) = Type(iterator(typeToLValue(Vector[Token])));
@@ -101,8 +101,8 @@ convertParsers(static Token, ...parsers:T) =
 ParseResult(static Token, static Parser) {
     alias parser = convertParser(Token, typeToLValue(Parser));
     alias data = typeToLValue(Vector[Token]);
-    alias stream = iterator(data);
-    return UnwrapMaybe(ReturnType(parser(stream)));
+    alias input = iterator(data);
+    return UnwrapMaybe(ReturnType(parser(input)));
 }
 
 [T] private UnwrapMaybe(static Maybe[T]) = T;
@@ -110,12 +110,12 @@ ParseResult(static Token, static Parser) {
 
 
 //
-// TokenStream?
+// TokenInput?
 //
 
-[Token, TokenStream]
-TokenStream?(static Token, static TokenStream) =
-    Iterator?(TokenStream) and (IteratorTargetType(TokenStream) == Token);
+[Token, TokenInput]
+TokenInput?(static Token, static TokenInput) =
+    Iterator?(TokenInput) and (IteratorTargetType(TokenInput) == Token);
 
 
 
@@ -123,11 +123,11 @@ TokenStream?(static Token, static TokenStream) =
 // save, restore
 //
 
-[Token, TokenStream | TokenStream?(Token, TokenStream)]
-save(static Token, stream:TokenStream) = stream;
+[Token, TokenInput | TokenInput?(Token, TokenInput)]
+save(static Token, input:TokenInput) = input;
 
-[Token, TokenStream | TokenStream?(Token, TokenStream)]
-restore(static Token, stream:TokenStream, data) { stream = data; }
+[Token, TokenInput | TokenInput?(Token, TokenInput)]
+restore(static Token, input:TokenInput, data) { input = data; }
 
 
 
@@ -135,11 +135,11 @@ restore(static Token, stream:TokenStream, data) { stream = data; }
 // nextToken
 //
 
-[Token, TokenStream | TokenStream?(Token, TokenStream)]
-nextToken(static Token, stream:TokenStream) {
-    if (not hasNext?(stream))
+[Token, TokenInput | TokenInput?(Token, TokenInput)]
+nextToken(static Token, input:TokenInput) {
+    if (not hasNext?(input))
         return nothing(Token);
-    return Maybe(next(stream));
+    return Maybe(next(input));
 }
 
 
@@ -157,13 +157,13 @@ TokenPredicate?(static Token, static Predicate) {
 
 [Token, Predicate | TokenPredicate?(Token, Predicate)]
 condition(static Token, predicate:Predicate) =
-    stream => {
-        var saved = save(Token, stream);
-        return maybe(nextToken(Token, stream),
+    input => {
+        var saved = save(Token, input);
+        return maybe(nextToken(Token, input),
             x ref=> {
                 if (predicate(x))
                     return Maybe(move(x));
-                restore(Token, stream, saved);
+                restore(Token, input, saved);
                 return nothing(Token);
             },
             () ref=> nothing(Token),
@@ -188,15 +188,15 @@ literal(static Token, expected:Token) =
 
 [Token, A | Sequence?(A) and SequenceElementType(A) == Token]
 literalString(static Token, a:A) {
-    return stream => {
-        var saved = save(Token, stream);
+    return input => {
+        var saved = save(Token, input);
         for (item in a) {
-            var parsed? = maybe(nextToken(stream),
+            var parsed? = maybe(nextToken(input),
                 (x) ref=> (x == item),
                 () => false,
             );
             if (not parsed?) {
-                restore(Token, stream, saved);
+                restore(Token, input, saved);
                 return nothing(A);
             }
         }
@@ -217,9 +217,9 @@ UniformParsers?(Token, ...Parsers) =
 [Token, First, ...Rest | UniformParsers?(Token, First, ...Rest)]
 choice(static Token, first:First, ...rest:Rest) {
     var parsers = Tuple(...convertParsers(Token, first, ...rest));
-    return stream => {
+    return input => {
         static for (parser in ...unpack(parsers)) {
-            var result = parser(stream);
+            var result = parser(input);
             if (not nothing?(result))
                 return move(result);
         }
@@ -236,15 +236,15 @@ choice(static Token, first:First, ...rest:Rest) {
 [Token, First, ...Rest | Parsers?(Token, First, ...Rest)]
 sequence(static Token, first:First, ...rest:Rest) {
     var parsers = Tuple(...convertParsers(Token, first, ...rest));
-    return stream => {
-        alias f = (parser ref=> require(parser(stream)));
+    return input => {
+        alias f = (parser ref=> require(parser(input)));
         alias result = Tuple(...mapValues(f, ...unpack(parsers)));
-        var saved = save(Token, stream);
+        var saved = save(Token, input);
         try {
             return Maybe(result);
         }
         catch (e:ValueMissing) {
-            restore(Token, stream, saved);
+            restore(Token, input, saved);
             return nothing(Type(result));
         }
     };
@@ -253,12 +253,12 @@ sequence(static Token, first:First, ...rest:Rest) {
 [Token, Result, ...Parsers | Parsers?(Token, ...Parsers)]
 sequenceAs(static Token, result:Result, ..._parsers:Parsers) {
     var parsers = Tuple(...convertParsers(Token, ..._parsers));
-    return stream => {
-        var saved = save(Token, stream);
+    return input => {
+        var saved = save(Token, input);
         static for (parser in ...unpack(parsers)) {
-            var result = parser(stream);
+            var result = parser(input);
             if (nothing?(result)) {
-                restore(Token, stream, saved);
+                restore(Token, input, saved);
                 return nothing(Result);
             }
         }
@@ -280,9 +280,9 @@ Modifier?(Token, Modifier, Parser) {
 [Token, Modifier, Parser | Modifier?(Token, Modifier, Parser)]
 modify(static Token, modifier:Modifier, _parser:Parser) {
     var parser = convertParser(Token, _parser);
-    return stream => {
-        alias T = Type(modifier(require(parser(stream))));
-        return maybe(parser(stream),
+    return input => {
+        alias T = Type(modifier(require(parser(input))));
+        return maybe(parser(input),
             (x ref=> Maybe(modifier(move(x)))),
             () ref=> nothing(T),
         );
@@ -298,12 +298,12 @@ modify(static Token, modifier:Modifier, _parser:Parser) {
 [Token, Parser | Parser?(Token, Parser)]
 repeated(static Token, min:Int, max:Int, _parser:Parser) {
     var parser = convertParser(Token, _parser);
-    return stream => {
+    return input => {
         alias T = ParseResult(Token, Parser);
-        var saved = save(Token, stream);
+        var saved = save(Token, input);
         var v = Vector[T]();
         while (size(v) < max) {
-            var parsed? = maybe(parser(stream),
+            var parsed? = maybe(parser(input),
                 x ref=> { push(v, move(x)); return true; },
                 () => false,
             );
@@ -311,7 +311,7 @@ repeated(static Token, min:Int, max:Int, _parser:Parser) {
                 break;
         }
         if (size(v) < min) {
-            restore(Token, stream, saved);
+            restore(Token, input, saved);
             return nothing(Vector[T]);
         }
         return Maybe(move(v));
@@ -321,17 +321,17 @@ repeated(static Token, min:Int, max:Int, _parser:Parser) {
 [Token, Result, Parser | Parser?(Token, Parser)]
 repeatedAs(static Token, result:Result, min:Int, max:Int, _parser:Parser) {
     var parser = convertParser(Token, _parser);
-    return stream => {
-        var saved = save(Token, stream);
+    return input => {
+        var saved = save(Token, input);
         var count = 0;
         while (count < max) {
-            var result = parser(stream);
+            var result = parser(input);
             if (nothing?(result))
                 break;
             count += 1;
         }
         if (count < min) {
-            restore(Token, stream, saved);
+            restore(Token, input, saved);
             return nothing(Result);
         }
         return Maybe(result);
