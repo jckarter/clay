@@ -1,0 +1,36 @@
+
+import parsing.combinators.generic as generic;
+
+[TokenStream | generic.TokenStream?(Char, TokenStream)]
+save(stream:TokenStream) = generic.save(Char, iter);
+
+[TokenStream | generic.TokenStream?(Char, TokenStream)]
+restore(stream:TokenStream, data) = generic.restore(Char, stream, data);
+
+[TokenStream | generic.TokenStream?(Char, TokenStream)]
+nextToken(stream:TokenStream) = generic.nextToken(Char, stream);
+
+[Predicate | generic.TokenPredicate?(Char, Predicate)]
+condition(predicate:Predicate) = generic.condition(Char, predicate);
+
+literal(expected:Char) = generic.literal(Char, expected);
+
+[...T | generic.UniformParsers?(Char, ...T)]
+choice(...parsers:T) = generic.choice(Char, ...parsers);
+
+[...T | generic.Parsers?(Char, ...T)]
+sequence(...parsers:T) = generic.sequence(Char, ...parsers);
+
+[Modifier, Parser | generic.Modifier?(Char, Modifier, Parser)]
+modify(modifier:Modifier, parser:Parser) =
+    generic.modify(Char, modifier, parser);
+
+[Parser | generic.Parser?(Char, Parser)]
+repeat(min:Int, max:Int, parser:Parser) =
+    generic.repeat(Char, min, max, parser);
+
+[Parser | generic.Parser?(Char, Parser)]
+zeroOrMore(parser:Parser) = generic.zeroOrMore(Char, parser);
+
+[Parser | generic.Parser?(Char, Parser)]
+oneOrMore(parser:Parser)  = generic.oneOrMore(Char, parser);

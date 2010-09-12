@@ -14,17 +14,12 @@ import maybe.*;
 
 expr(input) Maybe[Int] = expr2(input);
 
-var bracketed = modify(x => x.1, sequence(literal('('), expr, literal(')')));
+var bracketed = modify(x => x.1, ('(', expr, ')'));
 var digit = condition(c => ((c >= '0') and (c <= '9')));
-var digits = oneOrMore(digit);
-var number = modify(Int, digits);
+var number = modify(Int, oneOrMore(digit));
 var factor = choice(number, bracketed);
-
-var mulOrDiv = choice(literal('*'), literal('/'));
-var term = modify(foldTail, sequence(factor, zeroOrMore(sequence(mulOrDiv, factor))));
-
-var plusOrMinus = choice(literal('+'), literal('-'));
-var expr2 = modify(foldTail, sequence(term, zeroOrMore(sequence(plusOrMinus, term))));
+var term = modify(foldTail, (factor, zeroOrMore((choice('*', '/'), factor))));
+var expr2 = modify(foldTail, (term, zeroOrMore((choice('+','-'), term))));
 
 foldTail(x) {
     var result = x.0;
