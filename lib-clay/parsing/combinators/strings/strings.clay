@@ -1,0 +1,24 @@
+
+import parsing.combinators.wrapper.*;
+
+private var combinators = Combinators[Type(iterator(String()))]();
+
+var Parser? = combinators.Parser?;
+var Parsers? = combinators.Parsers?;
+var ParseResult = combinators.ParseResult;
+
+var nextToken = combinators.nextToken;
+var condition = combinators.condition;
+var literal = combinators.literal;
+var literalString = combinators.literalString;
+var optional = combinators.optional;
+var choice = combinators.choice;
+var sequence = combinators.sequence;
+var sequenceAs = combinators.sequenceAs;
+var modify = combinators.modify;
+var repeated = combinators.repeated;
+var repeatedAs = combinators.repeatedAs;
+var zeroOrMore = combinators.zeroOrMore;
+var oneOrMore = combinators.oneOrMore;
+var zeroOrMoreAs = combinators.zeroOrMoreAs;
+var oneOrMoreAs = combinators.oneOrMoreAs;

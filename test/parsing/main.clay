@@ -1,5 +1,5 @@
 
-import parsing.combinators.*;
+import parsing.combinators.strings.*;
 import maybe.*;
 
 //
