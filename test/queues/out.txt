@@ -1,0 +1,4 @@
+Testing priority queues:
+  queue operations: passed
+-- priority queues: 19 expectations passed; 0 failed (0 pending)
+Overall: 19 expectations passed; 0 failed (0 pending)
