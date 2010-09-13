@@ -1,4 +1,5 @@
 import queues.*;
+import deques.*;
 import test.*;
 
 main() = testMain(
@@ -34,6 +35,31 @@ main() = testMain(
             expectEqual(test, "(6) queue pop", 42, queuePop(q));
             expectTrue (test, "(6) queue empty", queueEmpty?(q));
             expectEqual(test, "(6) queue size", 0, queueSize(q));
+        }),
+        TestCase("queue constructors", test => {
+            var q1 = VectorQueue[Int](52, 42, 47);
+
+            expectEqual(test, "(multi values) (0) queue size", 3, queueSize(q1));
+            expectEqual(test, "(multi values) (1) queue pop", 52,  queuePop(q1));
+            expectEqual(test, "(multi values) (2) queue pop", 47,  queuePop(q1));
+            expectEqual(test, "(multi values) (3) queue pop", 42,  queuePop(q1));
+            expectTrue (test, "(multi values) (3) queue empty", queueEmpty?(q1));
+
+            var q2 = VectorQueue[Int](Vector[Int](52, 42, 47));
+
+            expectEqual(test, "(matching sequence) (0) queue size", 3, queueSize(q2));
+            expectEqual(test, "(matching sequence) (1) queue pop", 52,  queuePop(q2));
+            expectEqual(test, "(matching sequence) (2) queue pop", 47,  queuePop(q2));
+            expectEqual(test, "(matching sequence) (3) queue pop", 42,  queuePop(q2));
+            expectTrue (test, "(matching sequence) (3) queue empty", queueEmpty?(q2));
+
+            var q3 = VectorQueue[Int](Deque[Int](52, 42, 47));
+
+            expectEqual(test, "(other sequence) (0) queue size", 3, queueSize(q3));
+            expectEqual(test, "(other sequence) (1) queue pop", 52,  queuePop(q3));
+            expectEqual(test, "(other sequence) (2) queue pop", 47,  queuePop(q3));
+            expectEqual(test, "(other sequence) (3) queue pop", 42,  queuePop(q3));
+            expectTrue (test, "(other sequence) (3) queue empty", queueEmpty?(q3));
         }),
     )),
 );
