@@ -1,0 +1,35 @@
+import algorithms.heaps.*;
+
+record Queue[S] (seq: S);
+
+alias VectorQueue[T] = Queue[Vector[T]];
+
+[S] overload Queue[S]() = Queue(S());
+
+[S] overload Queue(forward seq: S) returned: Queue[S] {
+    returned.seq <-- seq;
+    try {
+        makeHeap(begin(returned.seq), end(returned.seq));
+    } catch (ex) {
+        destroy(returned.seq);
+        throw ex;
+    }
+}
+
+[S] queueEmpty?(q: Queue[S]) = empty?(q.seq);
+[S] queueSize(q: Queue[S]) = size(q.seq);
+[S] queueTop(q: Queue[S]) = front(q.seq);
+
+[S, T | T == SequenceElementType(S)]
+queuePush(q: Queue[S], forward v_: T) {
+    var v = v_;
+    push(q.seq, v);
+    pushHeap(begin(q.seq), size(q.seq) - 1, 0, move(v));
+}
+
+[S]
+queuePop(q: Queue[S]) {
+    var backi = end(q.seq) - 1;
+    popHeap(begin(q.seq), backi, backi);
+    return pop(q.seq);
+}

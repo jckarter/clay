@@ -1,0 +1,39 @@
+import queues.*;
+import test.*;
+
+main() = testMain(
+    TestSuite("priority queues", Tuple(
+        TestCase("queue operations", test => {
+            var q = VectorQueue[Int]();
+
+            expectTrue(test, "(0) queue empty", queueEmpty?(q));
+
+            queuePush(q, 47);
+            expectFalse(test, "(1) queue empty", queueEmpty?(q));
+            expectEqual(test, "(1) queue size", 1, queueSize(q));
+            expectEqual(test, "(1) queue top", 47, queueTop(q));
+
+            queuePush(q, 42);
+            expectFalse(test, "(2) queue empty", queueEmpty?(q));
+            expectEqual(test, "(2) queue size", 2, queueSize(q));
+            expectEqual(test, "(2) queue top", 47, queueTop(q));
+
+            queuePush(q, 52);
+            expectFalse(test, "(3) queue empty", queueEmpty?(q));
+            expectEqual(test, "(3) queue size", 3, queueSize(q));
+            expectEqual(test, "(3) queue top", 52, queueTop(q));
+
+            expectEqual(test, "(4) queue pop", 52, queuePop(q));
+            expectFalse(test, "(4) queue empty", queueEmpty?(q));
+            expectEqual(test, "(4) queue size", 2, queueSize(q));
+
+            expectEqual(test, "(5) queue pop", 47, queuePop(q));
+            expectFalse(test, "(5) queue empty", queueEmpty?(q));
+            expectEqual(test, "(5) queue size", 1, queueSize(q));
+
+            expectEqual(test, "(6) queue pop", 42, queuePop(q));
+            expectTrue (test, "(6) queue empty", queueEmpty?(q));
+            expectEqual(test, "(6) queue size", 0, queueSize(q));
+        }),
+    )),
+);
