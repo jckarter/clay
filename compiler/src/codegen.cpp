@@ -1143,7 +1143,7 @@ void codegenStaticObject(ObjectPtr x,
         // allow values of static type
         PValue *y = (PValue *)x.ptr();
         if (y->type->typeKind != STATIC_TYPE)
-            error("invalid static object");
+            invalidStaticObjectError(x);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         if (y->isTemp)
@@ -1160,7 +1160,7 @@ void codegenStaticObject(ObjectPtr x,
         for (unsigned i = 0; i < y->size(); ++i) {
             PValuePtr pv = y->values[i];
             if (pv->type->typeKind != STATIC_TYPE)
-                argumentError(i, "invalid static object");
+                argumentInvalidStaticObjectError(i, pv.ptr());
             CValuePtr outi = out->values[i];
             if (pv->isTemp)
                 assert(outi->type == pv->type);
@@ -1176,7 +1176,7 @@ void codegenStaticObject(ObjectPtr x,
     }
 
     default :
-        error("invalid static object");
+        invalidStaticObjectError(x);
         break;
 
     }
@@ -1707,7 +1707,7 @@ void codegenCallExpr(ExprPtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
             codegenCallByName(entry, args, env, ctx, out);
@@ -1781,7 +1781,7 @@ void codegenDispatch(ObjectPtr obj,
     vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
     computeArgsKey(pvArgs, argsKey, argsTempness);
-    InvokeStackContext invokeStackContext(obj, argsKey);
+    CompileContextPusher pusher(obj, argsKey);
 
     unsigned index = dispatchIndices[0];
     vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,
@@ -1916,7 +1916,7 @@ void codegenCallValue(CValuePtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(pvArgs, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName)
             error("call to call-by-name code not allowed in this context");
@@ -3018,6 +3018,11 @@ bool codegenStatement(StatementPtr stmt,
         return terminated;
     }
 
+    case UNREACHABLE : {
+        ctx->builder->CreateUnreachable();
+        return true;
+    }
+
     default :
         assert(false);
         return false;
@@ -3515,7 +3520,7 @@ void codegenPrimOp(PrimOpPtr x,
             argsKey.push_back(t);
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
         bool isDefined = analyzeIsDefined(callable, argsKey, argsTempness);
         ValueHolderPtr vh = boolToValueHolder(isDefined);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -4022,7 +4027,7 @@ void codegenPrimOp(PrimOpPtr x,
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
@@ -4093,7 +4098,7 @@ void codegenPrimOp(PrimOpPtr x,
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);

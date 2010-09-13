@@ -257,6 +257,7 @@ struct Try;
 struct Catch;
 struct Throw;
 struct StaticFor;
+struct Unreachable;
 
 struct FormalArg;
 struct ReturnSpec;
@@ -397,6 +398,7 @@ typedef Pointer<Try> TryPtr;
 typedef Pointer<Catch> CatchPtr;
 typedef Pointer<Throw> ThrowPtr;
 typedef Pointer<StaticFor> StaticForPtr;
+typedef Pointer<Unreachable> UnreachablePtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
@@ -499,19 +501,25 @@ struct Location : public Object {
 // error module
 //
 
-typedef pair<ObjectPtr, vector<TypePtr> > InvokeStackEntry;
+typedef pair<ObjectPtr, vector<ObjectPtr> > CompileContextEntry;
 
-void pushInvokeStack(ObjectPtr callable, const vector<TypePtr> &argsKey);
-void popInvokeStack();
-vector<InvokeStackEntry> getInvokeStack();
-void setInvokeStack(const vector<InvokeStackEntry> &x);
+void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params);
+void popCompileContext();
+vector<CompileContextEntry> getCompileContext();
+void setCompileContext(const vector<CompileContextEntry> &x);
 
-struct InvokeStackContext {
-    InvokeStackContext(ObjectPtr callable, const vector<TypePtr> &argsKey) {
-        pushInvokeStack(callable, argsKey);
+struct CompileContextPusher {
+    CompileContextPusher(ObjectPtr obj, const vector<ObjectPtr> &params) {
+        pushCompileContext(obj, params);
     }
-    ~InvokeStackContext() {
-        popInvokeStack();
+    CompileContextPusher(ObjectPtr obj, const vector<TypePtr> &params) {
+        vector<ObjectPtr> params2;
+        for (unsigned i = 0; i < params.size(); ++i)
+            params2.push_back((Object *)(params[i].ptr()));
+        pushCompileContext(obj, params2);
+    }
+    ~CompileContextPusher() {
+        popCompileContext();
     }
 };
 
@@ -608,6 +616,10 @@ void argumentIndexRangeError(unsigned int index,
                              const string &kind,
                              size_t value,
                              size_t maxValue);
+
+void invalidStaticObjectError(ObjectPtr obj);
+void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj);
+
 
 struct DebugPrinter {
     static int indent;
@@ -889,8 +901,14 @@ struct Lambda : public Expr {
     ExprPtr converted;
 
     bool initialized;
+    vector<string> freeVars;
+
+    // if freevars are present
     RecordPtr lambdaRecord;
     TypePtr lambdaType;
+
+    // if freevars are absent
+    ProcedurePtr lambdaProc;
 
     Lambda(bool captureByRef) :
         Expr(LAMBDA), captureByRef(captureByRef),
@@ -1005,6 +1023,7 @@ enum StatementKind {
     TRY,
     THROW,
     STATIC_FOR,
+    UNREACHABLE,
 };
 
 struct Statement : public ANode {
@@ -1230,6 +1249,11 @@ struct StaticFor : public Statement {
               StatementPtr body)
         : Statement(STATIC_FOR), variable(variable), values(values),
           body(body), clonesInitialized(false) {}
+};
+
+struct Unreachable : public Statement {
+    Unreachable()
+        : Statement(UNREACHABLE) {}
 };
 
 
@@ -2659,15 +2683,24 @@ MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
 void analyzeCodeBody(InvokeEntryPtr entry);
 
 struct AnalysisContext : public Object {
+    bool hasRecursivePropagation;
     bool returnInitialized;
     vector<bool> returnIsRef;
     vector<TypePtr> returnTypes;
     AnalysisContext()
-        : Object(DONT_CARE), returnInitialized(false) {}
+        : Object(DONT_CARE),
+          hasRecursivePropagation(false),
+          returnInitialized(false) {}
 };
 typedef Pointer<AnalysisContext> AnalysisContextPtr;
 
-bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
+enum StatementAnalysis {
+    SA_FALLTHROUGH,
+    SA_RECURSIVE,
+    SA_TERMINATED,
+};
+
+StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
 void initializeStaticForClones(StaticForPtr x, unsigned count);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv);

@@ -52,7 +52,7 @@ procedure staticIndex;
 //
 
 Coordinate?(T) = CallDefined?(dereference, T);
-CoordinateTargetType(T) = Type(dereference(typeToValue(T)));
+CoordinateTargetType(T) = Type(dereference(typeToLValue(T)));
 
 RandomAccessCoordinate?(T) =
     Coordinate?(T) and
@@ -62,7 +62,7 @@ RandomAccessCoordinate?(T) =
 
 LValueCoordinate?(T) =
     Coordinate?(T) and
-    LValue?(dereference(typeToValue(T)));
+    LValue?(dereference(typeToLValue(T)));
 
 // true if adjacent coordinates point to adjacent locations in memory
 ContiguousCoordinate?(T) = false;
@@ -74,7 +74,7 @@ ContiguousCoordinate?(T) = false;
 //
 
 Iterator?(T) = CallDefined?(hasNext?, T) and CallDefined?(next, T);
-IteratorTargetType(T) = Type(next(typeToValue(T)));
+IteratorTargetType(T) = Type(next(typeToLValue(T)));
 
 
 
@@ -127,16 +127,16 @@ procedure popFront;
 //
 
 Sequence?(T) = CallDefined?(iterator, T);
-SequenceElementType(T) = Type(next(iterator(typeToValue(T))));
+SequenceElementType(T) = Type(next(iterator(typeToLValue(T))));
 SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
 RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
-LValueSequence?(T) = Sequence?(T) and LValue?(next(iterator(typeToValue(T))));
+LValueSequence?(T) = Sequence?(T) and LValue?(next(iterator(typeToLValue(T))));
 
 CoordinateSequence?(T) = CallDefined?(begin, T) and CallDefined?(end, T)
     and Coordinate?(SequenceElementType(T));
-SequenceCoordinateType(T) = Type(begin(typeToValue(T)));
+SequenceCoordinateType(T) = Type(begin(typeToLValue(T)));
 
-SequenceIteratorType(T) = Type(iterator(typeToValue(T)));
+SequenceIteratorType(T) = Type(iterator(typeToLValue(T)));
 
 // true if sequence elements are stored contiguously in memory
 ContiguousSequence?(T) = false;
@@ -265,15 +265,6 @@ overload max(lvalue a, lvalue b) {
     else
         return ref b;
 }
-
-
-
-//
-// typeToValue, typesToValues
-//
-
-typeToValue(a) = ref null(a)^;
-typesToValues(...a) = forward ...mapValues(typeToValue, ...a);
 
 
 

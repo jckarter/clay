@@ -395,6 +395,10 @@ static void printStatement(ostream &out, const Statement *x) {
             << ", " << y->body << ")";
         break;
     }
+    case UNREACHABLE : {
+        out << "Unreachable()";
+        break;
+    }
     }
 }
 

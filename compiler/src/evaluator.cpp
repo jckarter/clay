@@ -1198,7 +1198,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         // allow values of static type
         CValue *y = (CValue *)x.ptr();
         if (y->type->typeKind != STATIC_TYPE)
-            error("invalid static object");
+            invalidStaticObjectError(x);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         if (y->forwardedRValue)
@@ -1215,7 +1215,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         for (unsigned i = 0; i < y->size(); ++i) {
             CValuePtr cv = y->values[i];
             if (cv->type->typeKind != STATIC_TYPE)
-                argumentError(i, "invalid static object");
+                argumentInvalidStaticObjectError(i, cv.ptr());
             EValuePtr outi = out->values[i];
             if (cv->forwardedRValue)
                 assert(outi->type == cv->type);
@@ -1229,7 +1229,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         // allow values of static type
         PValue *y = (PValue *)x.ptr();
         if (y->type->typeKind != STATIC_TYPE)
-            error("invalid static object");
+            invalidStaticObjectError(y);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         if (y->isTemp)
@@ -1246,7 +1246,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         for (unsigned i = 0; i < y->size(); ++i) {
             PValuePtr pv = y->values[i];
             if (pv->type->typeKind != STATIC_TYPE)
-                argumentError(i, "invalid static object");
+                argumentInvalidStaticObjectError(i, pv.ptr());
             EValuePtr outi = out->values[i];
             if (pv->isTemp)
                 assert(outi->type == pv->type);
@@ -1261,7 +1261,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         break;
 
     default :
-        error("invalid static object");
+        invalidStaticObjectError(x);
         break;
     }
 }
@@ -1440,7 +1440,7 @@ void evalCallExpr(ExprPtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
             evalCallByName(entry, args, env, out);
@@ -1509,7 +1509,7 @@ void evalDispatch(ObjectPtr obj,
     vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
     computeArgsKey(pvArgs, argsKey, argsTempness);
-    InvokeStackContext invokeStackContext(obj, argsKey);
+    CompileContextPusher pusher(obj, argsKey);
 
     unsigned index = dispatchIndices[0];
     vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,
@@ -1611,7 +1611,7 @@ void evalCallValue(EValuePtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(pvArgs, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName)
             error("call to call-by-name code not allowed in this context");
@@ -2136,6 +2136,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
             if (termination.ptr())
                 return termination;
         }
+        return NULL;
+    }
+
+    case UNREACHABLE : {
+        error("unreachable statement");
         return NULL;
     }
 
@@ -3059,7 +3064,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argsKey.push_back(t);
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
         bool isDefined = analyzeIsDefined(callable, argsKey, argsTempness);
         ValueHolderPtr vh = boolToValueHolder(isDefined);
         evalStaticObject(vh.ptr(), out);
@@ -3391,7 +3396,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
@@ -3465,7 +3470,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);

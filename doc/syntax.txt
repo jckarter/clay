@@ -106,6 +106,7 @@ Statement -> Block
            | TryStatement
            | ThrowStatement
            | StaticForStatement
+           | UnreachableStatement
 
 LabelDef -> Identifier ":"
 
@@ -147,6 +148,8 @@ ThrowStatement -> "throw" Expression? ";"
 
 StaticForStatement -> "static" "for" "(" Identifier "in" Expression ")"
                       Statement
+
+UnreachableStatement -> "unreachable" ";"
 
 
 //
