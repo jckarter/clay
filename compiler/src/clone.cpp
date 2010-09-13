@@ -387,6 +387,11 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case UNREACHABLE : {
+        out = new Unreachable();
+        break;
+    }
+
     default :
         assert(false);
 

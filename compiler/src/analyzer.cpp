@@ -258,25 +258,25 @@ static PValuePtr staticPValue(ObjectPtr x)
 //
 
 static LocationPtr analysisErrorLocation;
-static vector<InvokeStackEntry> analysisErrorInvokeStack;
+static vector<CompileContextEntry> analysisErrorCompileContext;
 
 struct ClearAnalysisError {
     ClearAnalysisError() {}
     ~ClearAnalysisError() {
         analysisErrorLocation = NULL;
-        analysisErrorInvokeStack.clear();
+        analysisErrorCompileContext.clear();
     }
 };
 
 static void updateAnalysisErrorLocation()
 {
     analysisErrorLocation = topLocation();
-    analysisErrorInvokeStack = getInvokeStack();
+    analysisErrorCompileContext = getCompileContext();
 }
 
 static void analysisError()
 {
-    setInvokeStack(analysisErrorInvokeStack);
+    setCompileContext(analysisErrorCompileContext);
     LocationContext loc(analysisErrorLocation);
     error("type propagation failed due to recursion without base case");
 }
@@ -828,7 +828,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
         return NULL;
 
     default :
-        error("invalid static object");
+        invalidStaticObjectError(x);
         return NULL;
 
     }
@@ -878,6 +878,7 @@ MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x)
 {
     if (x->analysis.ptr())
         return x->analysis;
+    CompileContextPusher pusher(x->gvar.ptr(), x->params);
     if (x->analyzing) {
         updateAnalysisErrorLocation();
         return NULL;
@@ -1394,7 +1395,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName)
@@ -1427,7 +1428,7 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
     computeArgsKey(args, argsKey, argsTempness);
-    InvokeStackContext invokeStackContext(obj, argsKey);
+    CompileContextPusher pusher(obj, argsKey);
 
     unsigned index = dispatchIndices[0];
     vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,
@@ -1526,7 +1527,7 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
         computeArgsKey(args, argsKey, argsTempness);
-        InvokeStackContext invokeStackContext(obj, argsKey);
+        CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName)
@@ -1661,13 +1662,20 @@ MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
     }
 
     AnalysisContextPtr ctx = new AnalysisContext();
-    bool ok = analyzeStatement(code->body, bodyEnv, ctx);
-    if (!ok && !ctx->returnInitialized)
+    StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, ctx);
+    if ((sa == SA_RECURSIVE) && (!ctx->returnInitialized))
         return NULL;
-    if (ctx->returnInitialized)
+    if (ctx->returnInitialized) {
         return analyzeReturn(ctx->returnIsRef, ctx->returnTypes);
-    else
+    }
+    else if ((sa == SA_TERMINATED) && ctx->hasRecursivePropagation) {
+        analysisError();
+        return NULL;
+    }
+    else {
+        // assume void return (zero return values)
         return new MultiPValue();
+    }
 }
 
 
@@ -1711,12 +1719,15 @@ void analyzeCodeBody(InvokeEntryPtr entry)
     }
 
     AnalysisContextPtr ctx = new AnalysisContext();
-    bool ok = analyzeStatement(code->body, bodyEnv, ctx);
-    if (!ok && !ctx->returnInitialized)
+    StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, ctx);
+    if ((sa == SA_RECURSIVE) && (!ctx->returnInitialized))
         return;
     if (ctx->returnInitialized) {
         entry->returnIsRef = ctx->returnIsRef;
         entry->returnTypes = ctx->returnTypes;
+    }
+    else if ((sa == SA_TERMINATED) && ctx->hasRecursivePropagation) {
+        analysisError();
     }
     entry->analyzed = true;
 }
@@ -1727,7 +1738,22 @@ void analyzeCodeBody(InvokeEntryPtr entry)
 // analyzeStatement
 //
 
-bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
+static StatementAnalysis combineStatementAnalysis(StatementAnalysis a,
+                                                  StatementAnalysis b)
+{
+    if ((a == SA_FALLTHROUGH) || (b == SA_FALLTHROUGH))
+        return SA_FALLTHROUGH;
+    if ((a == SA_RECURSIVE) && (b == SA_RECURSIVE))
+        return SA_RECURSIVE;
+    if ((a == SA_TERMINATED) && (b == SA_TERMINATED))
+        return SA_TERMINATED;
+    if ((a == SA_RECURSIVE) && (b == SA_TERMINATED))
+        return SA_TERMINATED;
+    assert((a == SA_TERMINATED) && (b == SA_RECURSIVE));
+    return SA_TERMINATED;
+}
+
+StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 {
     LocationContext loc(stmt->location);
 
@@ -1739,14 +1765,18 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
             StatementPtr y = x->statements[i];
             if (y->stmtKind == BINDING) {
                 env = analyzeBinding((Binding *)y.ptr(), env);
-                if (!env)
-                    return false;
+                if (!env) {
+                    ctx->hasRecursivePropagation = true;
+                    return SA_RECURSIVE;
+                }
             }
-            else if (!analyzeStatement(y, env, ctx)) {
-                return false;
+            else {
+                StatementAnalysis sa = analyzeStatement(y, env, ctx);
+                if (sa != SA_FALLTHROUGH)
+                    return sa;
             }
         }
-        return true;
+        return SA_FALLTHROUGH;
     }
 
     case LABEL :
@@ -1754,14 +1784,18 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
     case ASSIGNMENT :
     case INIT_ASSIGNMENT :
     case UPDATE_ASSIGNMENT :
+        return SA_FALLTHROUGH;
+
     case GOTO :
-        return true;
+        return SA_TERMINATED;
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
         MultiPValuePtr mpv = analyzeMulti(x->values, env);
-        if (!mpv) 
-            return false;
+        if (!mpv) {
+            ctx->hasRecursivePropagation = true;
+            return SA_RECURSIVE;
+        }
         if (ctx->returnInitialized) {
             ensureArity(mpv, ctx->returnTypes.size());
             for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -1789,16 +1823,17 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
             }
             ctx->returnInitialized = true;
         }
-        return true;
+        return SA_TERMINATED;
     }
 
     case IF : {
         If *x = (If *)stmt.ptr();
-        bool thenResult = analyzeStatement(x->thenPart, env, ctx);
-        bool elseResult = true;
+        StatementAnalysis thenResult, elseResult;
+        thenResult = analyzeStatement(x->thenPart, env, ctx);
+        elseResult = SA_FALLTHROUGH;
         if (x->elsePart.ptr())
             elseResult = analyzeStatement(x->elsePart, env, ctx);
-        return thenResult || elseResult;
+        return combineStatementAnalysis(thenResult, elseResult);
     }
 
     case SWITCH : {
@@ -1811,24 +1846,26 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
     case CASE_BODY : {
         CaseBody *x = (CaseBody *)stmt.ptr();
         for (unsigned i = 0; i < x->statements.size(); ++i) {
-            if (!analyzeStatement(x->statements[i], env, ctx))
-                return false;
+            StatementPtr y = x->statements[i];
+            StatementAnalysis sa = analyzeStatement(y, env, ctx);
+            if (sa != SA_FALLTHROUGH)
+                return sa;
         }
-        return true;
+        return SA_FALLTHROUGH;
     }
 
     case EXPR_STATEMENT :
-        return true;
+        return SA_FALLTHROUGH;
 
     case WHILE : {
         While *x = (While *)stmt.ptr();
         analyzeStatement(x->body, env, ctx);
-        return true;
+        return SA_FALLTHROUGH;
     }
 
     case BREAK :
     case CONTINUE :
-        return true;
+        return SA_TERMINATED;
 
     case FOR : {
         For *x = (For *)stmt.ptr();
@@ -1848,33 +1885,40 @@ bool analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
             return analyzeStatement(x->tryBlock, env, ctx);
         if (!x->desugaredCatchBlock)
             x->desugaredCatchBlock = desugarCatchBlocks(x->catchBlocks);
-        bool result1 = analyzeStatement(x->tryBlock, env, ctx);
-        bool result2 = analyzeStatement(x->desugaredCatchBlock, env, ctx);
-        return result1 || result2;
+        StatementAnalysis result1, result2;
+        result1 = analyzeStatement(x->tryBlock, env, ctx);
+        result2 = analyzeStatement(x->desugaredCatchBlock, env, ctx);
+        return combineStatementAnalysis(result1, result2);
     }
 
     case THROW :
-        return true;
+        return SA_TERMINATED;
 
     case STATIC_FOR : {
         StaticFor *x = (StaticFor *)stmt.ptr();
         MultiPValuePtr mpv = analyzeMulti(x->values, env);
-        if (!mpv)
-            return false;
+        if (!mpv) {
+            ctx->hasRecursivePropagation = true;
+            return SA_RECURSIVE;
+        }
         initializeStaticForClones(x, mpv->size());
-        bool result = true;
         for (unsigned i = 0; i < mpv->size(); ++i) {
             EnvPtr env2 = new Env(env);
             addLocal(env2, x->variable, mpv->values[i].ptr());
-            bool result2 = analyzeStatement(x->clonedBodies[i], env2, ctx);
-            result = result || result2;
+            StatementAnalysis sa;
+            sa = analyzeStatement(x->clonedBodies[i], env2, ctx);
+            if (sa != SA_FALLTHROUGH)
+                return sa;
         }
-        return result;
+        return SA_FALLTHROUGH;
     }
+
+    case UNREACHABLE :
+        return SA_TERMINATED;
 
     default :
         assert(false);
-        return false;
+        return SA_FALLTHROUGH;
     }
 }
 
@@ -2078,7 +2122,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry =
             analyzeCallable(callable, argsKey, argsTempness);
@@ -2134,7 +2178,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argsTempness.push_back(TEMPNESS_LVALUE);
         }
 
-        InvokeStackContext invokeStackContext(callable, argsKey);
+        CompileContextPusher pusher(callable, argsKey);
 
         InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
         if (entry->callByName)

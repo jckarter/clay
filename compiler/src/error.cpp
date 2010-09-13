@@ -9,22 +9,22 @@
 // invoke stack - a compilation call stack
 //
 
-static vector<InvokeStackEntry> invokeStack;
+static vector<CompileContextEntry> contextStack;
 
-void pushInvokeStack(ObjectPtr callable, const vector<TypePtr> &argsKey) {
-    invokeStack.push_back(make_pair(callable, argsKey));
+void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params) {
+    contextStack.push_back(make_pair(obj, params));
 }
 
-void popInvokeStack() {
-    invokeStack.pop_back();
+void popCompileContext() {
+    contextStack.pop_back();
 }
 
-vector<InvokeStackEntry> getInvokeStack() {
-    return invokeStack;
+vector<CompileContextEntry> getCompileContext() {
+    return contextStack;
 }
 
-void setInvokeStack(const vector<InvokeStackEntry> &x) {
-    invokeStack = x;
+void setCompileContext(const vector<CompileContextEntry> &x) {
+    contextStack = x;
 }
 
 
@@ -147,20 +147,31 @@ static void displayLocation(LocationPtr location, int &line, int &column) {
     fprintf(stderr, "###############################\n");
 }
 
-static void displayInvokeStack() {
-    if (invokeStack.empty())
+static void displayCompileContext() {
+    if (contextStack.empty())
         return;
     fprintf(stderr, "\n");
     fprintf(stderr, "compilation context: \n");
-    for (unsigned i = invokeStack.size(); i > 0; --i) {
-        ObjectPtr callable = invokeStack[i-1].first;
-        const vector<TypePtr> &argsKey = invokeStack[i-1].second;
+    for (unsigned i = contextStack.size(); i > 0; --i) {
+        ObjectPtr obj = contextStack[i-1].first;
+        const vector<ObjectPtr> &params = contextStack[i-1].second;
 
         ostringstream sout;
-        printName(sout, callable);
-        sout << "(";
-        printNameList(sout, argsKey);
-        sout << ")";
+        if (obj->objKind == GLOBAL_VARIABLE) {
+            sout << "global ";
+            printName(sout, obj);
+            if (!params.empty()) {
+                sout << "[";
+                printNameList(sout, params);
+                sout << "]";
+            }
+        }
+        else {
+            printName(sout, obj);
+            sout << "(";
+            printNameList(sout, params);
+            sout << ")";
+        }
         fprintf(stderr, "  %s\n", sout.str().c_str());
     }
 }
@@ -191,7 +202,7 @@ void error(const string &msg) {
         fprintf(stderr, "%s(%d,%d): error: %s\n",
                 location->source->fileName.c_str(),
                 line+1, column, msg.c_str());
-        displayInvokeStack();
+        displayCompileContext();
         displayDebugStack();
     }
     else {
@@ -321,5 +332,19 @@ void argumentIndexRangeError(unsigned int index,
     ostringstream sout;
     sout << kind << " " << value << " is out of range. ";
     sout << "it should be less than " << maxValue;
+    argumentError(index, sout.str());
+}
+
+void invalidStaticObjectError(ObjectPtr obj)
+{
+    ostringstream sout;
+    sout << "invalid static object: " << obj;
+    error(sout.str());
+}
+
+void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
+{
+    ostringstream sout;
+    sout << "invalid static object: " << obj;
     argumentError(index, sout.str());
 }

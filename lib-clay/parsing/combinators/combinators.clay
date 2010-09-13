@@ -1,0 +1,55 @@
+
+import parsing.combinators.generic as generic;
+
+[TokenInput | generic.TokenInput?(Char, TokenInput)]
+save(input:TokenInput) = generic.save(Char, iter);
+
+[TokenInput | generic.TokenInput?(Char, TokenInput)]
+restore(input:TokenInput, data) = generic.restore(Char, input, data);
+
+[TokenInput | generic.TokenInput?(Char, TokenInput)]
+nextToken(input:TokenInput) = generic.nextToken(Char, input);
+
+[Predicate | generic.TokenPredicate?(Char, Predicate)]
+condition(predicate:Predicate) = generic.condition(Char, predicate);
+
+literal(expected:Char) = generic.literal(Char, expected);
+
+[S | String?(S)]
+literalString(expected:S) = generic.literalString(Char, expected);
+
+[...T | generic.UniformParsers?(Char, ...T)]
+choice(...parsers:T) = generic.choice(Char, ...parsers);
+
+[...T | generic.Parsers?(Char, ...T)]
+sequence(...parsers:T) = generic.sequence(Char, ...parsers);
+
+[...T | generic.Parsers?(Char, ...T)]
+sequenceAs(result, ...parsers:T) =
+    generic.sequenceAs(Char, result, ...parsers);
+
+[Modifier, Parser | generic.Modifier?(Char, Modifier, Parser)]
+modify(modifier:Modifier, parser:Parser) =
+    generic.modify(Char, modifier, parser);
+
+[Parser | generic.Parser?(Char, Parser)]
+repeated(min:Int, max:Int, parser:Parser) =
+    generic.repeated(Char, min, max, parser);
+
+[Parser | generic.Parser?(Char, Parser)]
+repeatedAs(result, min:Int, max:Int, parser:Parser) =
+    generic.repeatedAs(Char, result, min, max, parser);
+
+[Parser | generic.Parser?(Char, Parser)]
+zeroOrMore(parser:Parser) = generic.zeroOrMore(Char, parser);
+
+[Parser | generic.Parser?(Char, Parser)]
+oneOrMore(parser:Parser) = generic.oneOrMore(Char, parser);
+
+[Parser | generic.Parser?(Char, Parser)]
+zeroOrMoreAs(result, parser:Parser) =
+    generic.zeroOrMoreAs(Char, result, parser);
+
+[Parser | generic.Parser?(Char, Parser)]
+oneOrMoreAs(result, parser:Parser) =
+    generic.oneOrMoreAs(Char, result, parser);

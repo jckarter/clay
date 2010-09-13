@@ -224,9 +224,13 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
     assert(result.ptr());
     if (!lastWasAny) {
         assert(lastIf.ptr());
+        BlockPtr block = new Block();
         CallPtr continueException = new Call(prelude_expr_continueException(),
                                              new ExprList());
-        lastIf->elsePart = new ExprStatement(continueException.ptr());
+        StatementPtr stmt = new ExprStatement(continueException.ptr());
+        block->statements.push_back(stmt);
+        block->statements.push_back(new Unreachable());
+        lastIf->elsePart = block.ptr();
     }
     return result;
 }

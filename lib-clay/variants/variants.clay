@@ -21,7 +21,7 @@ VariantMember?(static V, static M) =
     VariantMemberIndex(V, M) < VariantMemberCount(V);
 
 VariantMembers(V) {
-    var unionType = Type(variantRepr(typeToValue(V)).data);
+    var unionType = Type(variantRepr(typeToLValue(V)).data);
     return ...UnionMembers(unionType);
 }
 

@@ -189,7 +189,7 @@ overload items(a:HashMap[K,V]) {
 }
 
 private record HashMapItems[K,V] (
-    bucketsIter : Type(iterator(typeToValue(Vector[NodePtr[K,V]]))),
+    bucketsIter : Type(iterator(typeToLValue(Vector[NodePtr[K,V]]))),
     node : NodePtr[K,V],
 );
 
