@@ -1,0 +1,33 @@
+
+import parsing.combinators.generic as generic;
+
+
+
+//
+// Combinators
+//
+
+record Combinators[TokenInput] ();
+
+[TokenInput, Name]
+overload fieldRef(x:Combinators[TokenInput], static Name) {
+    var f = fieldRef(generic, Name);
+    return partialApply(f, TokenInput);
+}
+
+
+
+//
+// partialApply
+//
+
+private partialApply(f, ...args) = CallableAndArgs(f, Tuple(...args));
+
+private record CallableAndArgs[F, Args] (
+    callable:F,
+    args:Args,
+);
+
+[F, Args]
+overload call(x:CallableAndArgs[F, Args], forward ...args) =
+    forward ...x.callable(...unpack(x.args), ...args);
