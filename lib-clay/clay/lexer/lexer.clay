@@ -1,0 +1,435 @@
+
+import maybe.*;
+import parsing.combinators.wrapper.*;
+
+
+
+//
+// data definitions
+//
+
+enum TokenCode {
+    SYMBOL,
+    KEYWORD,
+    IDENTIFIER,
+    STRING_LITERAL,
+    CHAR_LITERAL,
+    INT_LITERAL,
+    FLOAT_LITERAL,
+    SPACE,
+    COMMENT,
+    LLVM,
+}
+
+var symbols = [
+    "<--", "...", "=>",
+    "==", "!=", "<=", ">=",
+    "<", ">",
+    "+=", "-=", "*=", "/=", "%=",
+    "+", "-", "*", "/", "%", "=", "&", "^", "|",
+    "(", ")", "[", "]", "{", "}",
+    ":", ";", ",", ".", "#"
+];
+
+var keywords = [
+    "public", "private", "import", "as",
+    "record", "variant", "instance",
+    "procedure", "overload", "external", "alias",
+    "static", "callbyname", "lvalue", "rvalue",
+    "enum", "var", "ref", "forward",
+    "and", "or", "not", "new",
+    "if", "else", "goto", "return", "while",
+    "switch", "case", "default", "break", "continue", "for", "in",
+    "true", "false", "try", "catch", "throw"
+];
+
+record Location(start:UInt, end:UInt);
+record Token(code:TokenCode, subType:UInt8, location:Location);
+
+
+
+//
+// Token constructors
+//
+
+[I | Integer?(I)]
+overload Token(code:TokenCode, subType:I) =
+    Token(code, UInt8(subType), Location());
+
+overload Token(code:TokenCode) = Token(code, 0);
+
+
+
+//
+// lexer input
+//
+
+record LexerInput(
+    first:Pointer[Char],
+    last:Pointer[Char],
+    current:Pointer[Char],
+    maxCurrent:Pointer[Char],
+);
+
+[S | ContiguousString?(S)]
+overload LexerInput(data:S) {
+    var ptr = &data[0];
+    return LexerInput(ptr, ptr+size(data), ptr, ptr);
+}
+
+overload iterator(x:LexerInput) = x;
+
+overload hasNext?(x:LexerInput) = (x.current < x.last);
+
+overload next(x:LexerInput) {
+    var c = x.current^;
+    x.current += 1;
+    return c;
+}
+
+overload assign(dest:LexerInput, src:LexerInput) {
+    var destMax = max(dest.maxCurrent, dest.current);
+    var srcMax = max(src.maxCurrent, src.current);
+    dest.maxCurrent = max(destMax, srcMax);
+
+    dest.first = src.first;
+    dest.last = src.last;
+    dest.current = src.current;
+}
+
+
+
+//
+// combinator specialization
+//
+
+private var combinators = Combinators[LexerInput]();
+
+private var Parser? = combinators.Parser?;
+private var Parsers? = combinators.Parsers?;
+private var ParseResult = combinators.ParseResult;
+
+private var nextChar = combinators.nextToken;
+
+private var condition = combinators.condition;
+private var literal = combinators.literal;
+private var literalString = combinators.literalString;
+private var optional = combinators.optional;
+private var choice = combinators.choice;
+private var sequence = combinators.sequence;
+private var sequenceAs = combinators.sequenceAs;
+private var modify = combinators.modify;
+private var repeated = combinators.repeated;
+private var repeatedAs = combinators.repeatedAs;
+private var zeroOrMore = combinators.zeroOrMore;
+private var oneOrMore = combinators.oneOrMore;
+private var zeroOrMoreAs = combinators.zeroOrMoreAs;
+private var oneOrMoreAs = combinators.oneOrMoreAs;
+
+
+
+//
+// utility
+//
+
+private alias Dummy = Char;
+private alias dummy = 'T';
+
+private alias string = literalString;
+
+private seq(...parsers) = sequenceAs(dummy, ...parsers);
+
+private zeroPlus(...parsers) = zeroPlus(seq(...parsers));
+overload zeroPlus(parser) = zeroOrMoreAs(dummy, parser);
+
+private onePlus(...parsers) = onePlus(seq(...parsers));
+overload onePlus(parser) = oneOrMoreAs(dummy, parser);
+
+
+
+//
+// location combinator
+//
+
+[Parser]
+private locate(parser:Parser) {
+    return input => {
+        alias T = ParseResult(Parser);
+        var start = UInt(input.current - input.first);
+        return maybe(parser(input),
+            x ref=> {
+                var end = UInt(input.current - input.first);
+                x.location.start = start;
+                x.location.end = end;
+                return Maybe(x);
+            },
+            () => nothing(T),
+        );
+    };
+}
+
+
+
+//
+// char predicates
+//
+
+private decimalDigit?(c) = ((c >= '0') and (c <= '9'));
+private hexDigit?(c) = decimalDigit?(c) or
+                       ((c >= 'a') and (c <= 'f')) or
+                       ((c >= 'A') and (c <= 'F'));
+private octalDigit?(c) = ((c >= '0') and (c <= '7'));
+
+private alpha?(c) = ((c >= 'a') and (c <= 'z')) or
+                    ((c >= 'A') and (c <= 'Z'));
+
+
+
+//
+// identifiers and keywords
+//
+
+private identChar1?(c) = alpha?(c) or (c == '_');
+private identChar2?(c) = identChar1?(c) or decimalDigit?(c) or (c == '?');
+
+private var identChar1 = condition(identChar1?);
+private var identChar2 = condition(identChar2?);
+private var identStr = seq(identChar1, zeroPlus(identChar2));
+
+private lexIdentifierOrKeyword(input) Maybe[Token] {
+    var start = input.current;
+    if (not nothing?(identStr(input))) {
+        var data = CoordinateRange(start, input.current);
+        for (i, kw in enumerate(keywords)) {
+            if (kw == data)
+                return Maybe(Token(KEYWORD, i));
+        }
+        return Maybe(Token(IDENTIFIER));
+    }
+    return nothing(Token);
+}
+
+
+
+//
+// symbol
+//
+
+private lexSymbol(input) {
+    for (i, sym in enumerate(symbols)) {
+        var parser = string(sym);
+        var result = parser(input);
+        if (not nothing?(result))
+            return Maybe(Token(SYMBOL, i));
+    }
+    return nothing(Token);
+}
+
+
+
+//
+// hexDigit, octalDigit, decimalDigit
+//
+
+private var hexDigit = condition(hexDigit?);
+private var octalDigit = condition(octalDigit?);
+private var decimalDigit = condition(decimalDigit?);
+
+
+
+//
+// char literal, string literal
+//
+
+private var hexEscape = seq('x', hexDigit, hexDigit);
+private var octalEscape = seq(octalDigit, octalDigit, octalDigit);
+
+private var escapeSeq = choice(
+    'n', 'r', 't', 'a', 'b', 'f', 'v', '\\', '\'', '\"',
+     hexEscape, octalEscape,
+);
+
+private var escapeChar2 = seq('\\', escapeSeq);
+private escapeChar(input) = escapeChar2(input);
+
+private var charChar = choice(
+    condition(c => (c != '\\' and c != '\'')),
+    escapeChar,
+);
+
+private var strChar = choice(
+    condition(c => (c != '\\' and c != '\"')),
+    escapeChar,
+);
+
+private var lexCharLiteral = modify(
+    x => Token(CHAR_LITERAL),
+    seq('\'', charChar, '\''),
+);
+
+private var lexStringLiteral = modify(
+    x => Token(STRING_LITERAL),
+    seq('\"', zeroPlus(strChar), '\"'),
+);
+
+
+
+//
+// int literal
+//
+
+private var hexInt = seq(
+    string("0x"), hexDigit, zeroPlus(choice('_', hexDigit))
+);
+
+private var decimalInt = seq(
+    decimalDigit, zeroPlus(choice('_', decimalDigit))
+);
+
+private var sign = choice('+', '-');
+
+private var lexIntLiteral = modify(
+    x => Token(INT_LITERAL),
+    seq(optional(sign), choice(hexInt, decimalInt)),
+);
+
+
+
+//
+// float literal
+//
+
+private var exponent = seq(choice('e','E'), optional(sign), decimalInt);
+private var fractional = seq('.', decimalInt);
+
+private var floatTail = choice(
+    seq(fractional, optional(exponent)),
+    exponent,
+);
+
+private var lexFloatLiteral = modify(
+    x => Token(FLOAT_LITERAL),
+    seq(optional(sign), decimalInt, floatTail),
+);
+
+
+
+//
+// space
+//
+
+private space?(c) {
+    for (x in " \t\n\r\f\v") {
+        if (c == x)
+            return true;
+    }
+    return false;
+}
+
+private var lexSpace = modify(
+    x => Token(SPACE),
+    onePlus(condition(space?)),
+);
+
+
+
+//
+// comments
+//
+
+private var notNewline = condition(c => (c != '\n'));
+
+private var lexLineComment = modify(
+    x => Token(COMMENT),
+    seq(string("//"), zeroPlus(notNewline), optional('\n')),
+);
+
+private blockCommentTail(input) {
+    var saved = input;
+    var lastWasStar = false;
+    while (hasNext?(input)) {
+        var c = next(input);
+        if (lastWasStar and (c == '/'))
+            return Maybe(dummy);
+        lastWasStar = (c == '*');
+    }
+    input = saved;
+    return nothing(Dummy);
+}
+
+private var lexBlockComment = modify(
+    x => Token(COMMENT),
+    seq(string("/*"), blockCommentTail)
+);
+
+
+
+//
+// inline llvm
+//
+
+private llvmBodyItem(input) Maybe[Dummy] = llvmBodyItem2(input);
+
+private var llvmComment = seq(';', zeroPlus(notNewline), '\n');
+
+private var llvmStringChar = choice(
+    seq('\\', nextChar),
+    condition(c => (c != '\"')),
+);
+private var llvmString = seq('\"', zeroPlus(llvmStringChar), '\"');
+
+
+private var llvmBraces = seq('{', zeroPlus(llvmBodyItem), '}');
+
+private var llvmBodyItem2 = choice(
+    llvmComment,
+    llvmString,
+    llvmBraces,
+    condition(c => (c != '}')),
+);
+
+private var lexLLVM = modify(
+    x => Token(LLVM),
+    seq(string("__llvm__"), zeroPlus(condition(space?)), llvmBraces),
+);
+
+
+
+//
+// lex one token
+//
+
+private var lexToken1 = choice(
+    lexSpace,
+    lexLineComment,
+    lexBlockComment,
+    lexSymbol,
+    lexLLVM,
+    lexIdentifierOrKeyword,
+    lexCharLiteral,
+    lexStringLiteral,
+    lexFloatLiteral,
+    lexIntLiteral,
+);
+
+private var lexToken = locate(lexToken1);
+
+
+
+//
+// tokenize
+//
+
+record LexerError (offset:SizeT);
+instance Exception = LexerError;
+
+private var tokenize1 = zeroOrMore(lexToken);
+
+public tokenize(input) {
+    var tokens = require(tokenize1(input));
+    if (input.current != input.last) {
+        assert(input.maxCurrent > input.first);
+        throw LexerError(SizeT(input.maxCurrent - input.first - 1));
+    }
+    return move(tokens);
+}

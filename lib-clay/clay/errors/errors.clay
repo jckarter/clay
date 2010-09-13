@@ -1,0 +1,60 @@
+
+
+//
+// displayError
+//
+
+private computeLocation(data, offset) {
+    var line, column, tabs = 0, 0, 0;
+    for (c in sliceUpto(data, offset)) {
+        column += 1;
+        if (c == '\n') {
+            line += 1;
+            column, tabs = 0, 0;
+        }
+        else if (c == '\t') {
+            tabs += 1;
+        }
+    }
+    return line, column, tabs;
+}
+
+private space?(c) = ((c == '\n') or (c == '\r') or (c == ' ') or (c == '\t'));
+
+private trimEnd(line) {
+    while ((not empty?(line)) and space?(back(line)))
+        pop(line);
+}
+
+private splitLines(data) {
+    var lines = Vector[String]();
+    push(lines, String());
+    for (c in data) {
+        push(back(lines), c);
+        if (c == '\n') {
+            trimEnd(back(lines));
+            push(lines, String());
+        }
+    }
+    trimEnd(back(lines));
+    return move(lines);
+}
+
+displayError(fileName, data, offset, message) {
+    var line, column, tabs = ...computeLocation(data, offset);
+    column += 7*tabs;
+    var lines = splitLines(data);
+    println("#######################################");
+    for (i in range(line-2,line+3)) {
+        if ((i < 0) or (i >= size(lines)))
+            continue;
+        println(lines[i]);
+        if (i == line) {
+            for (j in range(column))
+                print('-');
+            println('^');
+        }
+    }
+    println("#######################################");
+    println(fileName, "(", line+1, ",", column, "): error: ", message);
+}
