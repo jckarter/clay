@@ -16,6 +16,29 @@ alias VectorQueue[T] = Queue[Vector[T]];
     }
 }
 
+[S, S2 | SequenceElementType(S) == SequenceElementType(S2)]
+overload Queue[S](forward seq: S2) returned: Queue[S] {
+    returned.seq <-- S(seq);
+    try {
+        makeHeap(begin(returned.seq), end(returned.seq));
+    } catch (ex) {
+        destroy(returned.seq);
+        throw ex;
+    }
+}
+
+[S, ...A | countValues(...A) > 0 and equalValues?(SequenceElementType(S), ...A)]
+overload Queue[S](forward ...values: A) returned: Queue[S] {
+    returned <-- Queue[S]();
+    try {
+        static for (v in ...values)
+            queuePush(returned, v);
+    } catch (ex) {
+        destroy(returned);
+        throw ex;
+    }
+}
+
 [S] queueEmpty?(q: Queue[S]) = empty?(q.seq);
 [S] queueSize(q: Queue[S]) = size(q.seq);
 [S] queueTop(q: Queue[S]) = front(q.seq);
@@ -33,3 +56,4 @@ queuePop(q: Queue[S]) {
     popHeap(begin(q.seq), backi, backi);
     return pop(q.seq);
 }
+
