@@ -43,6 +43,25 @@ readLine(stream) String {
     return String(move(v));
 }
 
+readAll(stream) String {
+    var buf = String();
+    var total, space = SizeT(0), SizeT(4096);
+    resize(buf, space);
+    while (true) {
+        while (space - total < 4096) {
+            space *= 2;
+            resize(buf, space);
+        }
+        var ptr = Pointer[Byte](&buf[0] + total);
+        var numRead = read(stream, ptr, 4096);
+        if (numRead == 0)
+            break;
+        total += numRead;
+    }
+    resize(buf, total);
+    return move(buf);
+}
+
 
 
 //
