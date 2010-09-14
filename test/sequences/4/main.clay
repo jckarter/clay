@@ -26,6 +26,20 @@ testBinarySearch(x, a) {
             lower-begin(a), ", ", upper-begin(a), "]");
 }
 
+record Cons[T] (car: T, cdr: SharedPointer[List[T]]);
+record Nil();
+variant List[T] = Cons[T] | Nil;
+
+[T]
+cons(l: SharedPointer[List[T]], forward value: T) = new List[T](Cons[T](value, l));
+
+[T]
+overload printTo(s, c: Cons[T]) {
+    printTo(s, c.car, "::", c.cdr^);
+}
+
+even?(x) = x % 2 == 0;
+
 main() {
     {
         // test enumerate
@@ -39,6 +53,19 @@ main() {
         var a = map(x => x+1, range(10));
         var s = reduce(add, 0, a);
         println(s);
+    }
+
+    {
+        // test fully general reduce
+        var l = reduce(cons, new List[Int](Nil()), range(5));
+        println(l^);
+    }
+
+    {
+        // test reduceBy
+        var s = reduceBy(even?, add, 0, range(20));
+        println("evens: ", s[true]);
+        println("odds:  ", s[false]);
     }
 
     {

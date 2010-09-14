@@ -1,4 +1,4 @@
-
+import algorithms.heaps as heaps;
 import algorithms.introsort as introsort;
 
 
@@ -19,12 +19,34 @@ reduce(f:F, a:A) {
     return result;
 }
 
-[F, A, X | Sequence?(A) and (X == SequenceElementType(A))]
+[F, A, X | Sequence?(A)]
 overload reduce(f:F, initial:X, a:A) {
     var result = initial;
     for (x in a)
         result = f(result, x);
     return result;
+}
+
+
+
+//
+// reduceBy
+//
+[KeyF, F, A, X | Sequence?(A)]
+reduceBy(keyF: KeyF, f: F, initial: X, a:A) {
+    alias KeyType = Type(keyF(typeToLValue(SequenceElementType(A))));
+    alias ValueType = X;
+    var results = HashMap[KeyType, ValueType]();
+
+    for (x in a) {
+        var key = keyF(x);
+        var resultPtr = lookup(results, key);
+        if (null?(resultPtr))
+            put(results, key, f(initial, x));
+        else
+            resultPtr^ = f(resultPtr^, x);
+    }
+    return results;
 }
 
 
