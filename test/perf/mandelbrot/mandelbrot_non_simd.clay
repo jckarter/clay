@@ -57,9 +57,8 @@ compute(y){
    }
 }
 
-main(){
-	var cmd = commandLine();
-  	var np = cmd[1];
+main(args){
+  	var np = args[1];
   	n = Int(np);
 	
 	fac = initFac(n);
