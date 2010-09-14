@@ -669,6 +669,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(staticFieldRef);
 
     PRIMITIVE(EnumP);
+    PRIMITIVE(EnumMemberCount);
+    PRIMITIVE(EnumMemberName);
     PRIMITIVE(enumToInt);
     PRIMITIVE(intToEnum);
 
