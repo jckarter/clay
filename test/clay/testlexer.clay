@@ -2,8 +2,7 @@
 import clay.lexer.*;
 import clay.errors.*;
 
-main() {
-    ref args = commandLine();
+main(args) {
     if (size(args) != 2) {
         println("usage: ", args[0], " <clayfile>");
         return -1;
