@@ -4459,6 +4459,28 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_EnumMemberCount : {
+        ensureArity(args, 1);
+        EnumTypePtr et = valueToEnumType(args, 0);
+        size_t n = et->enumeration->members.size();
+        ValueHolderPtr vh = sizeTToValueHolder(n);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_EnumMemberName : {
+        ensureArity(args, 2);
+        EnumTypePtr et = valueToEnumType(args, 0);
+        size_t i = valueToStaticSizeTOrInt(args, 1);
+        EnumerationPtr e = et->enumeration;
+        if (i >= e->members.size())
+            argumentIndexRangeError(1, "enum member index",
+                                    i, e->members.size());
+        ExprPtr str = new StringLiteral(e->members[i]->name->str);
+        codegenExpr(str, new Env(), ctx, out);
+        break;
+    }
+
     case PRIM_enumToInt : {
         ensureArity(args, 1);
         EnumTypePtr et;

@@ -2409,6 +2409,18 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_EnumP :
         return new MultiPValue(new PValue(boolType, true));
 
+    case PRIM_EnumMemberCount :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_EnumMemberName : {
+        TypePtr ptrInt8Type = pointerType(int8Type);
+        PValuePtr pv = new PValue(arrayType(int8Type, 1), true);
+        MultiPValuePtr args = new MultiPValue();
+        args->add(new PValue(ptrInt8Type, true));
+        args->add(new PValue(ptrInt8Type, true));
+        return analyzeCallValue(staticPValue(prelude_StringConstant()), args);
+    }
+
     case PRIM_enumToInt :
         return new MultiPValue(new PValue(cIntType, true));
 

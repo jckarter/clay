@@ -97,6 +97,8 @@ StaticName
 staticFieldRef(module, ident)
 
 [E] Enum?(static E):Bool
+[E] EnumMemberCount(static E):SizeT
+[E,i] EnumMemberName(static E, static i) : StringConstant
 [E|Enum?(E)] enumToInt(x:E):Int
 [E|Enum?(E)] intToEnum(static E, x:Int):E
 

@@ -1940,6 +1940,8 @@ enum PrimOpCode {
     PRIM_staticFieldRef,
 
     PRIM_EnumP,
+    PRIM_EnumMemberCount,
+    PRIM_EnumMemberName,
     PRIM_enumToInt,
     PRIM_intToEnum,
 
