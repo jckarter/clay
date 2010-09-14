@@ -1,3 +1,5 @@
+import algorithms.heaps.*;
+
 introSort(a) {
     introSort(begin(a), end(a));
 }
@@ -156,75 +158,3 @@ partialSort(first_, middle_, last_) {
     sortHeap(first, middle);
 }
 
-heapSelect(first_, middle_, last_) {
-    var first, middle, last = first_, middle_, last_;
-    makeHeap(first, middle);
-    var i = middle;
-    while (i < last) {
-        if (i^ < first^)
-            popHeap(first, middle, i);
-        i += 1;
-    }
-}
-
-makeHeap(first_, last_) {
-    var first, last = first_, last_;
-    if (last - first < 2)
-        return;
-    var len = last - first;
-    var parent = (len - 2) / 2;
-    while (true) {
-        var value = move((first + parent)^);
-        adjustHeap(first, parent, len, move(value));
-        if (parent == 0)
-            return;
-        parent -= 1;
-    }
-}
-
-sortHeap(first_, last_) {
-    var first, last = first_, last_;
-    while (last - first > 1) {
-        last -= 1;
-        popHeap(first, last, last);
-    }
-}
-
-popHeap(first_, last_, result_) {
-    var first, last, result = first_, last_, result_;
-    var value = move(result^);
-    result^ = move(first^);
-    alias DistanceType = Type(last - first);
-    adjustHeap(first, DistanceType(0), last-first, move(value));
-}
-
-pushHeap(first_, holeIndex_, topIndex_, rvalue value_) {
-    var first, holeIndex, topIndex, value =
-        first_, holeIndex_, topIndex_, move(value_);
-    var parent = (holeIndex - 1) / 2;
-    while ((holeIndex > topIndex) and ((first + parent)^ < value)) {
-        (first + holeIndex)^ = move((first + parent)^);
-        holeIndex = parent;
-        parent = (holeIndex - 1) / 2;
-    }
-    (first + holeIndex)^ = move(value);
-}
-
-adjustHeap(first_, holeIndex_, len_, rvalue value_) {
-    var first, holeIndex, len, value = first_, holeIndex_, len_, move(value_);
-    var topIndex = holeIndex;
-    var secondChild = holeIndex;
-    while (secondChild < (len - 1)/2) {
-        secondChild = 2 * (secondChild + 1);
-        if ((first + secondChild)^ < (first + secondChild - 1)^)
-            secondChild -= 1;
-        (first + holeIndex)^ = move((first + secondChild)^);
-        holeIndex = secondChild;
-    }
-    if ((bitwiseAnd(len, 1) == 0) and (secondChild == (len - 2) / 2)) {
-        secondChild = 2*(secondChild + 1);
-        (first + holeIndex)^ = move((first + (secondChild - 1))^);
-        holeIndex = secondChild - 1;
-    }
-    pushHeap(first, holeIndex, topIndex, move(value));
-}
