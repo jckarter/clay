@@ -2,44 +2,6 @@
 import clay.lexer.*;
 import clay.errors.*;
 
-
-
-//
-// print TokenCode
-//
-
-private tokenName(x:TokenCode) {
-    switch (x) {
-        case SYMBOL : return "SYMBOL";
-        case KEYWORD : return "KEYWORD";
-        case IDENTIFIER : return "IDENTIFIER";
-        case STRING_LITERAL : return "STRING_LITERAL";
-        case CHAR_LITERAL : return "CHAR_LITERAL";
-        case INT_LITERAL : return "INT_LITERAL";
-        case FLOAT_LITERAL : return "FLOAT_LITERAL";
-        case SPACE : return "SPACE";
-        case COMMENT : return "COMMENT";
-        case LLVM : return "LLVM";
-        default :
-            assert(false);
-            return "";
-    }
-}
-
-overload printTo(stream, x:TokenCode) {
-    printTo(stream, tokenName(x));
-}
-
-overload printReprTo(stream, x:TokenCode) {
-    printTo(stream, x);
-}
-
-
-
-//
-// testing
-//
-
 main() {
     ref args = commandLine();
     if (size(args) != 2) {
@@ -57,7 +19,7 @@ main() {
                 continue;
             ref loc = token.location;
             var str = slice(data, loc.start, loc.end);
-            println(token.code, ": ", str);
+            println(code, ": ", str);
         }
     }
     catch (e:LexerError) {

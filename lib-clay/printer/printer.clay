@@ -86,6 +86,17 @@ overload printTo(stream, x:Static[A]) {
 
 
 //
+// printTo - enums
+//
+
+[E | Enum?(E)]
+overload printTo(stream, x:E) {
+    printTo(stream, enumName(x));
+}
+
+
+
+//
 // printTo - tuples, records, arrays, vectors
 //
 
@@ -152,7 +163,7 @@ procedure printReprTo;
 
 
 //
-// printReprTo - Bool, Numeric?, Pointer[T], Static
+// printReprTo - Bool, Numeric?, Pointer[T], Static, Enum
 
 overload printReprTo(stream, x:Bool) {
     printTo(stream, x);
@@ -172,6 +183,12 @@ overload printReprTo(stream, x:Pointer[T]) {
 overload printReprTo(stream, x:Static[A]) {
     printTo(stream, x);
 }
+
+[E | Enum?(E)]
+overload printReprTo(stream, x:E) {
+    printTo(stream, x);
+}
+
 
 
 //

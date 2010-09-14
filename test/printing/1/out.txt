@@ -1,1 +1,1 @@
-Person("Foo", 100, Address("foo@bar.com"))
+Person("Foo", 100, FEMALE, Address("foo@bar.com"))
