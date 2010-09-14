@@ -1,0 +1,20 @@
+import test.memory.*;
+
+test() {
+    var p = allocateUnique(Canary(true));
+
+    var pv = Vector[UniquePointer[Canary]](
+        allocateUnique(Canary(true)),
+        allocateUnique(Canary(true)),
+        allocateUnique(Canary(true)),
+    );
+    push(pv, allocateUnique(Canary(true)));
+    var p2 = pop(pv);
+
+    var p3 = move(p2);
+}
+
+main() {
+    test();
+    checkCanariesDestroyed();
+}
