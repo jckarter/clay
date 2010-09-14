@@ -55,3 +55,19 @@ overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));
 
 [E | Enum?(E)]
 overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));
+
+
+
+//
+// enumName
+//
+
+[E | Enum?(E)]
+enumName(x:E) {
+    alias n = EnumMemberCount(E);
+    static for (i in ...staticIntegers(static n)) {
+        if (x == E(unwrapStatic(i)))
+            return EnumMemberName(E, i);
+    }
+    return "unknown enum value";
+}

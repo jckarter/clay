@@ -1,7 +1,13 @@
 
+enum Gender {
+    MALE,
+    FEMALE,
+}
+
 record Person (
     name : StringConstant,
     age : Int,
+    gender: Gender,
     address : Address,
 );
 
@@ -10,6 +16,6 @@ record Address (
 );
 
 main() {
-    var p = Person("Foo", 100, Address("foo@bar.com"));
+    var p = Person("Foo", 100, FEMALE, Address("foo@bar.com"));
     println(p);
 }
