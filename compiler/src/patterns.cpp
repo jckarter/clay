@@ -555,6 +555,25 @@ static PatternPtr namedToPattern(ObjectPtr x)
         }
         return evaluateOnePattern(y->expr, y->env);
     }
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        ObjectPtr z;
+        if (y->params.empty() && !y->varParam)
+            z = recordType(y, vector<ObjectPtr>()).ptr();
+        else
+            z = y;
+        return new PatternCell(z);
+    }
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
+        ObjectPtr z;
+        if (y->params.empty() && !y->varParam)
+            z = variantType(y, vector<ObjectPtr>()).ptr();
+        else
+            z = y;
+        return new PatternCell(z);
+    }
+
     default :
         return new PatternCell(x);
     }

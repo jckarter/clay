@@ -87,6 +87,7 @@ ObjectPtr prelude_unsafeVariantIndex();
 ObjectPtr prelude_invalidVariant();
 ObjectPtr prelude_StringConstant();
 ObjectPtr prelude_ifExpression();
+ObjectPtr prelude_RecordWithPredicate();
 
 ExprPtr prelude_expr_dereference();
 ExprPtr prelude_expr_plus();
@@ -143,5 +144,6 @@ ExprPtr prelude_expr_unsafeVariantIndex();
 ExprPtr prelude_expr_invalidVariant();
 ExprPtr prelude_expr_StringConstant();
 ExprPtr prelude_expr_ifExpression();
+ExprPtr prelude_expr_RecordWithPredicate();
 
 #endif

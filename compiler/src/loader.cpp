@@ -222,26 +222,6 @@ static void installGlobals(ModulePtr m) {
         TopLevelItem *x = i->ptr();
         x->env = m->env;
         switch (x->objKind) {
-        case RECORD : {
-            Record *y = (Record *)x;
-            ObjectPtr z = y;
-            if (y->params.empty() && !y->varParam) {
-                TypePtr t = recordType(y, vector<ObjectPtr>());
-                z = t.ptr();
-            }
-            addGlobal(m, y->name, y->visibility, z.ptr());
-            break;
-        }
-        case VARIANT : {
-            Variant *y = (Variant *)x;
-            ObjectPtr z = y;
-            if (y->params.empty() && !y->varParam) {
-                TypePtr t = variantType(y, vector<ObjectPtr>());
-                z = t.ptr();
-            }
-            addGlobal(m, y->name, y->visibility, z.ptr());
-            break;
-        }
         case ENUMERATION : {
             Enumeration *y = (Enumeration *)x;
             TypePtr t = enumType(y);
@@ -711,11 +691,32 @@ static IdentifierPtr fnameToIdent(const string &str) {
     return new Identifier(s);
 }
 
+static ObjectPtr convertObject(ObjectPtr x) {
+    switch (x->objKind) {
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        if (y->params.empty() && !y->varParam.ptr())
+            return recordType(y, vector<ObjectPtr>()).ptr();
+        return x;
+    }
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
+        if (y->params.empty() && !y->varParam.ptr())
+            return variantType(y, vector<ObjectPtr>()).ptr();
+        return x;
+    }
+    default :
+        return x;
+    }
+}
+
 #define DEFINE_PRIMITIVE_ACCESSOR(name) \
     ObjectPtr primitive_##name() { \
         static ObjectPtr cached; \
-        if (!cached) \
+        if (!cached) { \
             cached = safeLookupPublic(primitivesModule(), fnameToIdent(#name)); \
+            cached = convertObject(cached); \
+        } \
         return cached; \
     } \
     \
@@ -743,8 +744,10 @@ DEFINE_PRIMITIVE_ACCESSOR(Static);
 #define DEFINE_PRELUDE_ACCESSOR(name) \
     ObjectPtr prelude_##name() { \
         static ObjectPtr cached; \
-        if (!cached) \
+        if (!cached) { \
             cached = safeLookupPublic(preludeModule(), fnameToIdent(#name)); \
+            cached = convertObject(cached); \
+        } \
         return cached; \
     } \
     \
@@ -810,3 +813,4 @@ DEFINE_PRELUDE_ACCESSOR(unsafeVariantIndex);
 DEFINE_PRELUDE_ACCESSOR(invalidVariant);
 DEFINE_PRELUDE_ACCESSOR(StringConstant);
 DEFINE_PRELUDE_ACCESSOR(ifExpression);
+DEFINE_PRELUDE_ACCESSOR(RecordWithPredicate);

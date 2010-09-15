@@ -109,11 +109,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
     x->lambdaRecord = r;
     vector<RecordFieldPtr> fields;
 
-    TypePtr t = recordType(r, vector<ObjectPtr>());
-    x->lambdaType = t;
-    ExprPtr typeExpr = new ObjectExpr(t.ptr());
-
-    CallPtr converted = new Call(typeExpr, new ExprList());
+    CallPtr converted = new Call(NULL, new ExprList());
     for (unsigned i = 0; i < x->freeVars.size(); ++i) {
         IdentifierPtr ident = new Identifier(x->freeVars[i]);
         NameRefPtr nameRef = new NameRef(ident);
@@ -169,6 +165,10 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
     }
     r->body = new RecordBody(fields);
 
+    TypePtr t = recordType(r, vector<ObjectPtr>());
+    x->lambdaType = t;
+    ExprPtr typeExpr = new ObjectExpr(t.ptr());
+    converted->expr = typeExpr;
     x->converted = converted.ptr();
 
     CodePtr code = new Code();

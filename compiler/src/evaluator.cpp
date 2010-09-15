@@ -1149,11 +1149,33 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         break;
     }
 
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        ObjectPtr z;
+        if (y->params.empty() && !y->varParam)
+            z = recordType(y, vector<ObjectPtr>()).ptr();
+        else
+            z = y;
+        assert(out->size() == 1);
+        assert(out->values[0]->type == staticType(z));
+        break;
+    }
+
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
+        ObjectPtr z;
+        if (y->params.empty() && !y->varParam)
+            z = variantType(y, vector<ObjectPtr>()).ptr();
+        else
+            z = y;
+        assert(out->size() == 1);
+        assert(out->values[0]->type == staticType(z));
+        break;
+    }
+
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :
-    case RECORD :
-    case VARIANT :
     case MODULE_HOLDER :
     case IDENTIFIER : {
         assert(out->size() == 1);

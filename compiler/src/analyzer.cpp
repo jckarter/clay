@@ -769,11 +769,31 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
         return mpv;
     }
 
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        ObjectPtr z;
+        if (y->params.empty() && !y->varParam)
+            z = recordType(y, vector<ObjectPtr>()).ptr();
+        else
+            z = y;
+        PValuePtr pv = new PValue(staticType(z), true);
+        return new MultiPValue(pv);
+    }
+
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
+        ObjectPtr z;
+        if (y->params.empty() && !y->varParam)
+            z = variantType(y, vector<ObjectPtr>()).ptr();
+        else
+            z = y;
+        PValuePtr pv = new PValue(staticType(z), true);
+        return new MultiPValue(pv);
+    }
+
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :
-    case RECORD :
-    case VARIANT :
     case MODULE_HOLDER :
     case IDENTIFIER : {
         TypePtr t = staticType(x);
