@@ -173,3 +173,17 @@ overload lesser?(a:T, b:T) {
     }
     return false;
 }
+
+
+
+//
+// RecordWithPredicate
+//
+// special type known to the compiler.
+// can be used in computed records to set a custom predicate.
+//
+
+record RecordWithPredicate[Predicate, ...Fields](
+    predicate : Predicate,
+    fields : Tuple[...Fields],
+);

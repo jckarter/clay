@@ -1,0 +1,71 @@
+
+
+record Point[T] = flexi((#x, T), (#y, T));
+
+main() {
+    println(FlexiConstructor?(Point[Int]));
+    var a = Point[Int](10, 20);
+    var b = Point[Int](1.2, 3.4);
+    var c = Point[Int]('a', 'z');
+    for (x in [a, b, c])
+        println(x);
+}
+
+
+//
+// FlexiConstructor? predicate
+//
+
+procedure FlexiConstructor?;
+overload FlexiConstructor?(x) = false;
+
+
+
+//
+// flexi
+//
+
+flexi(...fields) = RecordWithPredicate(FlexiConstructor?, Tuple(...fields));
+
+
+
+//
+// argument converting constructor
+//
+
+[T, ...A | FlexiConstructor?(T) and (countValues(...A) == RecordFieldCount(T))]
+overload T(forward ...args:A) returned:T {
+    alias TargetTypes = Tuple(...RecordFieldTypes(T));
+    ...recordFields(returned) <-- ...convertToTypes(TargetTypes, static 0, ...args);
+}
+
+
+
+//
+// convertToTypes
+//
+
+procedure convertToTypes;
+
+[i]
+overload convertToTypes(types, static i, forward first, forward ...rest) {
+    alias T = staticIndex(types, static i);
+    return forward convertToType(T, first), ...convertToTypes(types, static i+1, ...rest);
+}
+
+[T, i | (i == TupleElementCount(T))]
+overload convertToTypes(types:T, static i) = ;
+
+
+
+//
+// convertToType
+//
+
+procedure convertToType;
+
+[Dest, Src]
+overload convertToType(static Dest, forward src:Src) = forward Dest(src);
+
+[T] 
+overload convertToType(static T, forward src:T) = forward src;

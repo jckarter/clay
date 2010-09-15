@@ -2232,6 +2232,7 @@ bool isPrimitiveAggregateType(TypePtr t);
 bool isPointerOrCodePointerType(TypePtr t);
 bool isStaticOrTupleOfStatics(TypePtr t);
 
+void initializeRecordFields(RecordTypePtr t);
 const vector<IdentifierPtr> &recordFieldNames(RecordTypePtr t);
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
 const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t);
