@@ -1,0 +1,96 @@
+import maybe.*;
+
+private dispatchCommand() {
+    var args = commandLine(); 
+    if (size(args) < 2)
+        return nothing(String), Vector[String]();
+    else
+        return Maybe(args[1]), Vector[String](sliceFrom(args, 2));
+}
+
+printlnUsage(forward ...x) { printlnTo(stderr, ...x); }
+
+private pad(actualSize, desiredSize) {
+    var r = String();
+    if (actualSize < desiredSize) {
+        for (i in range(desiredSize - actualSize))
+            push(r, ' ');
+    }
+    return move(r);
+}
+
+private usage(...commandTuples) {
+    var longestName = foldValues(max, ...mapValues(c => size(commandName(c)), ...commandTuples));
+
+    printlnUsage("Available commands:");
+    static for (commandTuple in ...commandTuples) {
+        var name = commandName(commandTuple);
+        printlnUsage("  ", name, pad(size(name), longestName), "    ", ...commandDescription(commandTuple));
+    }
+
+    return 2;
+}
+
+
+[fn, ...Description | CallDefined?(fn, Vector[String])]
+private commandName(commandTuple: Tuple[Static[fn], ...Description])
+    = StaticName(commandTuple.0);
+
+[
+    Name, Callable, ...Description
+    | String?(Name)
+      and CallDefined?(call, Callable, Vector[String])
+]
+overload commandName(commandTuple: Tuple[Name, Callable, ...Description])
+    = commandTuple.0;
+
+[fn, ...Description | CallDefined?(fn, Vector[String])]
+private commandFunction(commandTuple: Tuple[Static[fn], ...Description])
+    = commandTuple.0;
+
+[
+    Name, Callable, ...Description
+    | String?(Name)
+      and CallDefined?(call, Callable, Vector[String])
+]
+overload commandFunction(commandTuple: Tuple[Name, Callable, ...Description])
+    = commandTuple.1;
+
+[fn, ...Description | CallDefined?(fn, Vector[String])]
+private commandDescription(commandTuple: Tuple[Static[fn], ...Description])
+    = ...dropValues(static 1, ...unpack(commandTuple));
+
+[
+    Name, Callable, ...Description
+    | String?(Name)
+      and CallDefined?(call, Callable, Vector[String])
+]
+overload commandDescription(commandTuple: Tuple[Name, Callable, ...Description])
+    = ...dropValues(static 2, ...unpack(commandTuple));
+
+private commandTypeReturnCount(T)
+    = countValues(...Type(...commandFunction(typeToRValue(T))(Vector[String]())));
+
+[CommandTuple | commandTypeReturnCount(CommandTuple) == 1]
+private invokeCommand(commandTuple: CommandTuple, args)
+    = commandFunction(commandTuple)(args);
+
+[CommandTuple | commandTypeReturnCount(CommandTuple) == 0]
+overload invokeCommand(commandTuple: CommandTuple, args) {
+    commandFunction(commandTuple)(args);
+    return 0;
+}
+
+dispatchMain(...commandTuples) {
+    var maybeCmd, args = ...dispatchCommand();
+
+    return maybe(maybeCmd, cmd => {
+        static for (commandTuple in ...commandTuples) {
+            if (cmd == commandName(commandTuple))
+                return invokeCommand(commandTuple, args);
+        }
+        printlnUsage("Command \"", cmd, "\" not supported");
+        return usage(...commandTuples);
+    }, () => usage(...commandTuples));
+}
+
