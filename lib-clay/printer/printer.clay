@@ -197,16 +197,7 @@ overload printReprTo(stream, x:E) {
 
 [...T]
 overload printReprTo(stream, x:Tuple[...T]) {
-    printTo(stream, '(');
-    var first = true;
-    static for (y in ...tupleElements(x)) {
-        if (first)
-            first = false;
-        else
-            printTo(stream, ", ");
-        printReprTo(stream, y);
-    }
-    printTo(stream, ')');
+    printReprValuesTo(stream, ...tupleElements(x));
 }
 
 
@@ -217,9 +208,20 @@ overload printReprTo(stream, x:Tuple[...T]) {
 
 [T | Record?(T)]
 overload printReprTo(stream, x:T) {
-    printTo(stream, T, '(');
+    printTo(stream, T);
+    printReprValuesTo(stream, ...recordFields(x));
+}
+
+
+
+//
+// printReprValuesTo
+//
+
+printReprValuesTo(stream, ...values) {
+    printTo(stream, '(');
     var first = true;
-    static for (y in ...recordFields(x)) {
+    static for (y in ...values) {
         if (first)
             first = false;
         else
