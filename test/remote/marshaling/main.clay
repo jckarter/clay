@@ -1,0 +1,60 @@
+import test.*;
+import remote.marshaling.*;
+
+expectMarshalingInvariants(test, name, value) {
+    expectEqual(test, "unmarshal(marshal(" + name + ")",
+        value, unmarshal(marshal(value), Type(value))
+    );
+}
+
+record PODRecord (x: Int, y: Char, z: Double);
+record ComplexRecord (
+    x: Int,
+    y: Vector[Int],
+);
+
+variant TestVariant = Int | Char | Double | Vector[Int];
+
+main() = testMain(
+    TestSuite("marshaling", Tuple(
+        TestCase("POD types", test => {
+            expectMarshalingInvariants(test, "1", 1);
+            expectMarshalingInvariants(test, "'a'", 'a');
+            expectMarshalingInvariants(test, "0.0", 0.0);
+            expectMarshalingInvariants(test, "(1, 'a', 0.0)", (1, 'a', 0.0));
+            expectMarshalingInvariants(test,
+                "PODRecord(1, 'a', 0.0)", PODRecord(1, 'a', 0.0)
+            );
+            expectMarshalingInvariants(test, "[1, 2, 3]", [1, 2, 3]);
+        }),
+        TestCase("sequences", test => {
+            expectMarshalingInvariants(test,
+                "Vector[Int](1, 2, 3)", Vector[Int](1, 2, 3)
+            );
+        }),
+        TestCase("composites", test => {
+            expectMarshalingInvariants(test,
+                "(1, Vector[Int](1, 2, 3))",
+                (1, Vector[Int](1, 2, 3))
+            );
+            expectMarshalingInvariants(test,
+                "ComplexRecord(1, Vector[Int](1, 2, 3))",
+                ComplexRecord(1, Vector[Int](1, 2, 3))
+            );
+        }),
+        TestCase("variants", test => {
+            expectMarshalingInvariants(test,
+                "TestVariant(1)", TestVariant(1)
+            );
+            expectMarshalingInvariants(test,
+                "TestVariant('a')", TestVariant('a')
+            );
+            expectMarshalingInvariants(test,
+                "TestVariant(0.0)", TestVariant(0.0)
+            );
+            expectMarshalingInvariants(test,
+                "TestVariant(Vector[Int](1, 2, 3))", TestVariant(Vector[Int](1, 2, 3))
+            );
+        }),
+    )),
+);
