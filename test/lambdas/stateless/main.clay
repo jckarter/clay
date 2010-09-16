@@ -5,4 +5,13 @@ main() {
     var statelessLambda = () => { println("bye!"); };
     var ptr = makeCCodePointer(statelessLambda);
     libc.atexit(ptr);
+
+    var fs = Vector[CodePointer[(),()]]();
+    static for (i in ...staticIntegers(static 5)) {
+        var f = () => { println(unwrapStatic(i)); };
+        push(fs, makeCodePointer(f));
+    }
+
+    for (f in fs)
+        f();
 }

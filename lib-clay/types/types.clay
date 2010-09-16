@@ -45,7 +45,8 @@ callbyname Type(...x:T) = ...T;
 //
 
 typeToLValue(a) = ref null(a)^;
-typeToRValue(a) = null(a)^;
+[T] typeToRValue(static T) returned:T {}
+
 typesToLValues(...a) = forward ...mapValues(typeToLValue, ...a);
 typesToRValues(...a) = ...mapValues(typeToRValue, ...a);
 

@@ -58,13 +58,12 @@ printFloat(stream, fmt, value) {
     write(stream, ptr, SizeT(n));
 }
 
-main() {
-    ref cmd = commandLine();
-    if (size(cmd) != 2) {
-        println("usage: ", cmd[0], " <n>");
+main(args) {
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <n>");
         return -1;
     }
-    var np = cmd[1];
+    var np = args[1];
     var n = Int(np);
     var res = approximate(n);
     printFloat(stdout, "%0.9f", res);

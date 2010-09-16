@@ -54,8 +54,7 @@ printList(a) {
     println();
 }
 
-main() {
-    ref args = commandLine();
+main(args) {
     if (size(args) != 2) {
         println("usage: ", args[0], ", <n>");
         return -1;

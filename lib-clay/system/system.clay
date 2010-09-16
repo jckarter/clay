@@ -24,9 +24,23 @@ setArgcArgv(argc_, argv_) {
 
 getArgcArgv() = argc, argv;
 
-callMain(mainProc) {
+procedure callMain;
+
+[Main]
+overload callMain(static Main) {
     try {
-        return getExitCode(...mainProc());
+        return getExitCode(...Main());
+    }
+    catch (e) {
+        printlnTo(stderr, "unhandled exception: ", e);
+        return -1;
+    }
+}
+
+[Main | CallDefined?(Main, Type(commandLine()))]
+overload callMain(static Main) {
+    try {
+        return getExitCode(...Main(commandLine()));
     }
     catch (e) {
         printlnTo(stderr, "unhandled exception: ", e);
