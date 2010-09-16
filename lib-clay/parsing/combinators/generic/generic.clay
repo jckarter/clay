@@ -68,6 +68,9 @@ overload ConvertibleParser?(static TokenInput, x) = false;
 [TokenInput, Token | TokenType(TokenInput) == Token]
 overload ConvertibleParser?(static TokenInput, static Token) = true;
 
+[TokenInput, A | Sequence?(A) and (TokenType(TokenInput) == SequenceElementType(A))]
+overload ConvertibleParser?(static TokenInput, static A) = true;
+
 [TokenInput, ...T | Parsers?(TokenInput, ...T)]
 overload ConvertibleParser?(static TokenInput, static Tuple[...T]) = true;
 
@@ -82,6 +85,10 @@ procedure convertParser;
 [TokenInput, Token | TokenType(TokenInput) == Token]
 overload convertParser(static TokenInput, token:Token) =
     literal(TokenInput, token);
+
+[TokenInput, A | Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
+overload convertParser(static TokenInput, a:A) =
+    literalString(TokenInput, a);
 
 [TokenInput, ...T | Parsers?(TokenInput, ...T)]
 overload convertParser(static TokenInput, parsers:Tuple[...T]) =

@@ -67,7 +67,7 @@ checksumTree(_node) {
     return result;
 }
 
-main() {
+main(args) {
     var minDepth = 4;
 
     var poolSize = 1000000;
@@ -75,8 +75,8 @@ main() {
     var longLivedPool = Pool[Node](poolSize);
     var shortTermPool = Pool[Node](poolSize);
 
-    assert(size(commandLine()) == 2);
-    var maxDepth = Int(commandLine()[1]);
+    assert(size(args) == 2);
+    var maxDepth = Int(args[1]);
     maxDepth = max(maxDepth, minDepth+2);
 
     var stretchDepth = maxDepth + 1;

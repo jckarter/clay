@@ -109,11 +109,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
     x->lambdaRecord = r;
     vector<RecordFieldPtr> fields;
 
-    TypePtr t = recordType(r, vector<ObjectPtr>());
-    x->lambdaType = t;
-    ExprPtr typeExpr = new ObjectExpr(t.ptr());
-
-    CallPtr converted = new Call(typeExpr, new ExprList());
+    CallPtr converted = new Call(NULL, new ExprList());
     for (unsigned i = 0; i < x->freeVars.size(); ++i) {
         IdentifierPtr ident = new Identifier(x->freeVars[i]);
         NameRefPtr nameRef = new NameRef(ident);
@@ -169,6 +165,10 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
     }
     r->body = new RecordBody(fields);
 
+    TypePtr t = recordType(r, vector<ObjectPtr>());
+    x->lambdaType = t;
+    ExprPtr typeExpr = new ObjectExpr(t.ptr());
+    converted->expr = typeExpr;
     x->converted = converted.ptr();
 
     CodePtr code = new Code();
@@ -216,6 +216,21 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env)
     x->lambdaProc->overloads.push_back(overload);
 
     x->converted = procRef;
+}
+
+
+
+//
+// addFreeVar, typeOfValue, typesOfValues
+//
+
+static void addFreeVar(LambdaContext &ctx, const string &str)
+{
+    vector<string>::iterator i;
+    i = std::find(ctx.freeVars.begin(), ctx.freeVars.end(), str);
+    if (i == ctx.freeVars.end()) {
+        ctx.freeVars.push_back(str);
+    }
 }
 
 
@@ -418,52 +433,70 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                                   isNonLocal, isGlobal);
         if (isNonLocal && !isGlobal) {
             if ((z->objKind == PVALUE) || (z->objKind == CVALUE)) {
-                vector<string>::iterator i =
-                    std::find(ctx.freeVars.begin(), ctx.freeVars.end(),
-                              y->name->str);
-                if (i == ctx.freeVars.end()) {
-                    ctx.freeVars.push_back(y->name->str);
-                }
-                IdentifierPtr a = new Identifier(ctx.closureDataName);
-                a->location = y->location;
-                NameRefPtr b = new NameRef(a);
-                b->location = y->location;
-                FieldRefPtr c = new FieldRef(b.ptr(), y->name);
-                c->location = y->location;
-                if (ctx.captureByRef) {
-                    ExprPtr d = new UnaryOp(DEREFERENCE, c.ptr());
-                    d->location = y->location;
-                    x = d.ptr();
+                TypePtr t = typeOfValue(z);
+                if (isStaticOrTupleOfStatics(t)) {
+                    ExprListPtr args = new ExprList();
+                    args->add(new ObjectExpr(t.ptr()));
+                    CallPtr call = new Call(prelude_expr_typeToRValue(), args);
+                    call->location = y->location;
+                    x = call.ptr();
                 }
                 else {
-                    x = c.ptr();
+                    addFreeVar(ctx, y->name->str);
+                    IdentifierPtr a = new Identifier(ctx.closureDataName);
+                    a->location = y->location;
+                    NameRefPtr b = new NameRef(a);
+                    b->location = y->location;
+                    FieldRefPtr c = new FieldRef(b.ptr(), y->name);
+                    c->location = y->location;
+                    if (ctx.captureByRef) {
+                        ExprPtr d = new UnaryOp(DEREFERENCE, c.ptr());
+                        d->location = y->location;
+                        x = d.ptr();
+                    }
+                    else {
+                        x = c.ptr();
+                    }
                 }
             }
             else if ((z->objKind == MULTI_PVALUE) || (z->objKind == MULTI_CVALUE)) {
-                vector<string>::iterator i =
-                    std::find(ctx.freeVars.begin(), ctx.freeVars.end(),
-                              y->name->str);
-                if (i == ctx.freeVars.end()) {
-                    ctx.freeVars.push_back(y->name->str);
+                vector<TypePtr> types = typesOfValues(z);
+                bool allStatic = true;
+                for (unsigned i = 0; i < types.size(); ++i) {
+                    if (!isStaticOrTupleOfStatics(types[i])) {
+                        allStatic = false;
+                        break;
+                    }
                 }
-                IdentifierPtr a = new Identifier(ctx.closureDataName);
-                a->location = y->location;
-                NameRefPtr b = new NameRef(a);
-                b->location = y->location;
-                FieldRefPtr c = new FieldRef(b.ptr(), y->name);
-                c->location = y->location;
-                if (ctx.captureByRef) {
-                    ExprPtr f =
-                        prelude_expr_unpackMultiValuedFreeVarAndDereference();
-                    CallPtr d = new Call(f, new ExprList());
-                    d->args->add(c.ptr());
-                    x = d.ptr();
+                if (allStatic) {
+                    ExprListPtr args = new ExprList();
+                    for (unsigned i = 0; i < types.size(); ++i)
+                        args->add(new ObjectExpr(types[i].ptr()));
+                    CallPtr call = new Call(prelude_expr_typesToRValues(), args);
+                    call->location = y->location;
+                    x = call.ptr();
                 }
                 else {
-                    ExprPtr f = prelude_expr_unpackMultiValuedFreeVar();
-                    CallPtr d = new Call(f, new ExprList());
-                    d->args->add(c.ptr());
-                    x = d.ptr();
+                    addFreeVar(ctx, y->name->str);
+                    IdentifierPtr a = new Identifier(ctx.closureDataName);
+                    a->location = y->location;
+                    NameRefPtr b = new NameRef(a);
+                    b->location = y->location;
+                    FieldRefPtr c = new FieldRef(b.ptr(), y->name);
+                    c->location = y->location;
+                    if (ctx.captureByRef) {
+                        ExprPtr f =
+                            prelude_expr_unpackMultiValuedFreeVarAndDereference();
+                        CallPtr d = new Call(f, new ExprList());
+                        d->args->add(c.ptr());
+                        x = d.ptr();
+                    }
+                    else {
+                        ExprPtr f = prelude_expr_unpackMultiValuedFreeVar();
+                        CallPtr d = new Call(f, new ExprList());
+                        d->args->add(c.ptr());
+                        x = d.ptr();
+                    }
                 }
             }
         }

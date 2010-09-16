@@ -66,8 +66,7 @@ render(w:Int, h:Int) {
     return move(wholeData);
 }
 
-main() {
-    ref args = commandLine();
+main(args) {
     if (size(args) != 2) {
         println("usage: ", args[0], " <size>");
         return -1;

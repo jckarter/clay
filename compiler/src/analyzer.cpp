@@ -385,7 +385,14 @@ static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env)
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiPValuePtr z = analyzeExpr(y->expr, env);
+            MultiPValuePtr z;
+            if (y->expr->exprKind == TUPLE) {
+                Tuple *y2 = (Tuple *)y->expr.ptr();
+                z = analyzeMulti(y2->args, env);
+            }
+            else {
+                z = analyzeExpr(y->expr, env);
+            }
             if (!z)
                 return NULL;
             out->add(z);
@@ -424,6 +431,7 @@ PValuePtr analyzeOne(ExprPtr expr, EnvPtr env)
 
 static MultiPValuePtr analyzeMultiArgs2(ExprListPtr exprs,
                                         EnvPtr env,
+                                        unsigned startIndex,
                                         vector<unsigned> &dispatchIndices);
 
 MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
@@ -431,9 +439,9 @@ MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
                                 vector<unsigned> &dispatchIndices)
 {
     if (analysisCachingDisabled > 0)
-        return analyzeMultiArgs2(exprs, env, dispatchIndices);
+        return analyzeMultiArgs2(exprs, env, 0, dispatchIndices);
     if (!exprs->cachedAnalysis) {
-        MultiPValuePtr mpv = analyzeMultiArgs2(exprs, env, dispatchIndices);
+        MultiPValuePtr mpv = analyzeMultiArgs2(exprs, env, 0, dispatchIndices);
         if (mpv.ptr() && dispatchIndices.empty())
             exprs->cachedAnalysis = mpv;
         return mpv;
@@ -443,18 +451,23 @@ MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
 
 static MultiPValuePtr analyzeMultiArgs2(ExprListPtr exprs,
                                         EnvPtr env,
+                                        unsigned startIndex,
                                         vector<unsigned> &dispatchIndices)
 {
     MultiPValuePtr out = new MultiPValue();
-    unsigned index = 0;
+    unsigned index = startIndex;
     for (unsigned i = 0; i < exprs->size(); ++i) {
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiPValuePtr z = analyzeArgExpr(y->expr,
-                                              env,
-                                              index,
-                                              dispatchIndices);
+            MultiPValuePtr z;
+            if (y->expr->exprKind == TUPLE) {
+                Tuple *y2 = (Tuple *)y->expr.ptr();
+                z = analyzeMultiArgs2(y2->args, env, index, dispatchIndices);
+            }
+            else {
+                z = analyzeArgExpr(y->expr, env, index, dispatchIndices);
+            }
             if (!z)
                 return NULL;
             index += z->size();
@@ -769,11 +782,31 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
         return mpv;
     }
 
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        ObjectPtr z;
+        if (y->params.empty() && !y->varParam)
+            z = recordType(y, vector<ObjectPtr>()).ptr();
+        else
+            z = y;
+        PValuePtr pv = new PValue(staticType(z), true);
+        return new MultiPValue(pv);
+    }
+
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
+        ObjectPtr z;
+        if (y->params.empty() && !y->varParam)
+            z = variantType(y, vector<ObjectPtr>()).ptr();
+        else
+            z = y;
+        PValuePtr pv = new PValue(staticType(z), true);
+        return new MultiPValue(pv);
+    }
+
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :
-    case RECORD :
-    case VARIANT :
     case MODULE_HOLDER :
     case IDENTIFIER : {
         TypePtr t = staticType(x);

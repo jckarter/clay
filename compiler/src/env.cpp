@@ -349,7 +349,16 @@ ExprPtr foreignExpr(EnvPtr env, ExprPtr expr)
 {
     if (expr->exprKind == UNPACK) {
         Unpack *y = (Unpack *)expr.ptr();
-        return new Unpack(foreignExpr(env, y->expr));
+        if (y->expr->exprKind == TUPLE) {
+            Tuple *y2 = (Tuple *)y->expr.ptr();
+            ExprListPtr out = new ExprList();
+            for (unsigned i = 0; i < y2->args->size(); ++i)
+                out->add(foreignExpr(env, y2->args->exprs[i]));
+            return new Unpack(new Tuple(out));
+        }
+        else {
+            return new Unpack(foreignExpr(env, y->expr));
+        }
     }
     return new ForeignExpr(env, expr);
 }

@@ -275,6 +275,7 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
     for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
         t->params.push_back(*pi);
     recordTypes[h].push_back(t);
+    initializeRecordFields(t);
     return t.ptr();
 }
 
@@ -425,7 +426,22 @@ static bool unpackField(TypePtr x, IdentifierPtr &name, TypePtr &type) {
     return true;
 }
 
-static void initializeRecordFields(RecordTypePtr t) {
+static void setPredicate(ProcedurePtr pred, TypePtr type) {
+    CodePtr code = new Code();
+    TypePtr typeType = staticType(type.ptr());
+    ExprPtr argType = new ObjectExpr(typeType.ptr());
+    FormalArgPtr arg = new FormalArg(new Identifier("x"), argType);
+    code->formalArgs.push_back(arg.ptr());
+    ExprPtr returnExpr = new BoolLiteral(true);
+    code->body = new Return(RETURN_VALUE, new ExprList(returnExpr));
+
+    ExprPtr target = new ObjectExpr(pred.ptr());
+    OverloadPtr overload = new Overload(target, code, false);
+    overload->env = new Env();
+    pred->overloads.insert(pred->overloads.begin(), overload);
+}
+
+void initializeRecordFields(RecordTypePtr t) {
     assert(!t->fieldsInitialized);
     t->fieldsInitialized = true;
     RecordPtr r = t->record;
@@ -446,12 +462,41 @@ static void initializeRecordFields(RecordTypePtr t) {
     if (body->isComputed) {
         LocationContext loc(body->location);
         MultiPValuePtr mpv = analyzeMulti(body->computed, env);
-        for (unsigned i = 0; i < mpv->size(); ++i) {
-            TypePtr x = mpv->values[i]->type;
+        vector<TypePtr> fieldInfoTypes;
+        if ((mpv->size() == 1) &&
+            (mpv->values[0]->type->typeKind == RECORD_TYPE) &&
+            (((RecordType *)mpv->values[0]->type.ptr())->record.ptr() ==
+             prelude_RecordWithPredicate().ptr()))
+        {
+            const vector<ObjectPtr> &params =
+                ((RecordType *)mpv->values[0]->type.ptr())->params;
+            assert(params.size() >= 1);
+            for (unsigned i = 1; i < params.size(); ++i) {
+                assert(params[i]->objKind == TYPE);
+                Type *x = (Type *)params[i].ptr();
+                fieldInfoTypes.push_back(x);
+            }
+            if (params[0]->objKind != TYPE)
+                argumentError(0, "expecting a predicate");
+            Type *x = (Type *)params[0].ptr();
+            if (x->typeKind != STATIC_TYPE)
+                argumentError(0, "expecting a predicate");
+            StaticType *st = (StaticType *)x;
+            if (st->obj->objKind != PROCEDURE)
+                argumentError(0, "expecting a predicate");
+            Procedure *pred = (Procedure *)st->obj.ptr();
+            setPredicate(pred, t.ptr());
+        }
+        else {
+            for (unsigned i = 0; i < mpv->size(); ++i)
+                fieldInfoTypes.push_back(mpv->values[i]->type);
+        }
+        for (unsigned i = 0; i < fieldInfoTypes.size(); ++i) {
+            TypePtr x = fieldInfoTypes[i];
             IdentifierPtr name;
             TypePtr type;
-            if (!unpackField(mpv->values[i]->type, name, type))
-                argumentError(i, "each value should be a "
+            if (!unpackField(x, name, type))
+                argumentError(i, "each field should be a "
                               "tuple of (name,type)");
             t->fieldIndexMap[name->str] = i;
             t->fieldTypes.push_back(type);

@@ -135,8 +135,6 @@ private var oneOrMoreAs = combinators.oneOrMoreAs;
 private alias Dummy = Char;
 private alias dummy = 'T';
 
-private alias string = literalString;
-
 private seq(...parsers) = sequenceAs(dummy, ...parsers);
 
 private zeroPlus(...parsers) = zeroPlus(seq(...parsers));
@@ -217,7 +215,7 @@ private lexIdentifierOrKeyword(input) Maybe[Token] {
 
 private lexSymbol(input) {
     for (i, sym in enumerate(symbols)) {
-        var parser = string(sym);
+        var parser = literalString(sym);
         var result = parser(input);
         if (not nothing?(result))
             return Maybe(Token(SYMBOL, i));
@@ -279,7 +277,7 @@ private var lexStringLiteral = modify(
 //
 
 private var hexInt = seq(
-    string("0x"), hexDigit, zeroPlus(choice('_', hexDigit))
+    "0x", hexDigit, zeroPlus(choice('_', hexDigit))
 );
 
 private var decimalInt = seq(
@@ -341,7 +339,7 @@ private var notNewline = condition(c => (c != '\n'));
 
 private var lexLineComment = modify(
     x => Token(COMMENT),
-    seq(string("//"), zeroPlus(notNewline), optional('\n')),
+    seq("//", zeroPlus(notNewline), optional('\n')),
 );
 
 private blockCommentTail(input) {
@@ -359,7 +357,7 @@ private blockCommentTail(input) {
 
 private var lexBlockComment = modify(
     x => Token(COMMENT),
-    seq(string("/*"), blockCommentTail)
+    seq("/*", blockCommentTail)
 );
 
 
@@ -390,7 +388,7 @@ private var llvmBodyItem2 = choice(
 
 private var lexLLVM = modify(
     x => Token(LLVM),
-    seq(string("__llvm__"), zeroPlus(condition(space?)), llvmBraces),
+    seq("__llvm__", zeroPlus(condition(space?)), llvmBraces),
 );
 
 

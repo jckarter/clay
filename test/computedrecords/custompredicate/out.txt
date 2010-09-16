@@ -1,0 +1,4 @@
+true
+Point[Int32](10, 20)
+Point[Int32](1, 3)
+Point[Int32](97, 122)
