@@ -19,7 +19,7 @@ reduce(f:F, a:A) {
     return result;
 }
 
-[F, A, X | Sequence?(A)]
+[F, A, X | Sequence?(A) and CallDefined?(call, F, X, SequenceElementType(A))]
 overload reduce(f:F, initial:X, a:A) {
     var result = initial;
     for (x in a)
@@ -32,7 +32,7 @@ overload reduce(f:F, initial:X, a:A) {
 //
 // reduceBy
 //
-[KeyF, F, A, X | Sequence?(A)]
+[KeyF, F, A, X | Sequence?(A) and CallDefined?(call, F, X, SequenceElementType(A))]
 reduceBy(keyF: KeyF, f: F, initial: X, a:A) {
     alias KeyType = Type(keyF(typeToLValue(SequenceElementType(A))));
     alias ValueType = X;

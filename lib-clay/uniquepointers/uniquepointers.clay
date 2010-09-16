@@ -1,0 +1,80 @@
+
+//
+// UniquePointer
+//
+record UniquePointer[T] (ptr: Pointer[T]);
+
+[T]
+overload RegularRecord?(static UniquePointer[T]) = false;
+
+
+
+//
+// allocateUnique
+//
+[T]
+callbyname allocateUnique(x:T) {
+    var ptr = allocateRawMemory(T, SizeT(1));
+    try {
+        ptr^ <-- x;
+    } catch (ex) {
+        freeRawMemory(ptr);
+        throw ex;
+    }
+    return UniquePointer(ptr);
+}
+
+
+
+//
+// constructors, moveUnsafe, resetUnsafe, assign, destroy
+//
+[T]
+overload UniquePointer[T]() = UniquePointer(null(T));
+
+// no copying
+[T]
+overload UniquePointer[T](src: UniquePointer[T]);
+
+[T]
+overload moveUnsafe(src: UniquePointer[T]) returned: UniquePointer[T] {
+    returned.ptr = src.ptr;
+}
+
+[T]
+overload resetUnsafe(p: UniquePointer[T]) {
+    p.ptr = null(T);
+}
+
+[T]
+overload assign(dest: UniquePointer[T], rvalue src: UniquePointer[T]) {
+    destroy(dest);
+    dest.ptr = src.ptr;
+    src.ptr = null(T);
+}
+
+// no assign from lvalue
+[T]
+overload assign(dest: UniquePointer[T], lvalue src: UniquePointer[T]);
+
+[T]
+overload destroy(p: UniquePointer[T]) {
+    if (not null?(p.ptr)) {
+        destroy(p.ptr^);
+        freeRawMemory(p.ptr);
+    }
+}
+
+
+
+//
+// dereference, null?, nullUnique
+//
+[T]
+overload dereference(p: UniquePointer[T]) = ref p.ptr^;
+
+[T]
+overload null?(p: UniquePointer[T]) = null?(p.ptr);
+
+[T]
+nullUnique(static T) = UniquePointer[T]();
