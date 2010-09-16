@@ -177,8 +177,11 @@ private ItemwiseMarshalableSequence?(S)
     = Sequence?(S) and Marshalable?(SequenceElementType(S))
       and CallDefined?(push, S, SequenceElementType(S));
 
+private sequenceMarshaledSize(seq)
+    = TypeSize(SizeT) + reduce(add, map(marshaledSize, seq));
+
 [S | ItemwiseMarshalableSequence?(S)]
-overload marshaledSize(seq: S) = TypeSize(SizeT) + reduce(add, map(marshaledSize, seq));
+overload marshaledSize(seq: S) = sequenceMarshaledSize(seq);
 
 [S | ItemwiseMarshalableSequence?(S)]
 overload marshalTo(buffer_: Pointer[Byte], forward seq: S) buffer: Pointer[Byte] {
@@ -191,6 +194,13 @@ overload marshalTo(buffer_: Pointer[Byte], forward seq: S) buffer: Pointer[Byte]
         buffer = marshalTo(buffer, x);
     }
     marshalTo(sizeBuffer, n);
+}
+
+[S | ItemwiseMarshalableSequence?(S) and SizedSequence?(S)]
+overload marshalTo(buffer_: Pointer[Byte], forward seq: S) buffer: Pointer[Byte] {
+    buffer <-- marshalTo(buffer_, SizeT(size(seq)));
+    for (x in seq)
+        buffer = marshalTo(buffer, x);
 }
 
 [S | ItemwiseMarshalableSequence?(S)]
