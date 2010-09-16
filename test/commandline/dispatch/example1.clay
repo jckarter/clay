@@ -1,0 +1,46 @@
+import commandline.dispatch.*;
+
+add(args) {
+    println(
+        if (empty?(args)) PtrInt(0) else reduce((a, b) => a + b, map(PtrInt, args))
+    );
+}
+subtract(args) {
+    println(
+        if (empty?(args)) PtrInt(0) else reduce((a, b) => a - b, map(PtrInt, args))
+    );
+}
+multiply(args) {
+    println(
+        if (empty?(args)) PtrInt(1) else reduce((a, b) => a * b, map(PtrInt, args))
+    );
+}
+
+record DivideByZero();
+instance Exception = DivideByZero;
+
+divide(args) {
+    if (empty?(args)) {
+        println(1.0);
+        return 0;
+    }
+    try {
+        println(reduce((a, b) => {
+            if (b == 0.0)
+                throw DivideByZero();
+            else
+                return a / b;
+        }, map(Double, args)));
+        return 0;
+    } catch (ex: DivideByZero) {
+        printlnTo(stderr, "Division by zero!");
+        return 1;
+    }
+}
+
+main() = dispatchMain(
+    (add, "add integers"),
+    ("subtract", args => { subtract(args); }, "subtract", ' ', "integers"),
+    (multiply, "multiply integers"),
+    (divide, "divide integers"),
+);
