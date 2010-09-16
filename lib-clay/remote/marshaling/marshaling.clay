@@ -244,6 +244,16 @@ overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static S) {
 
 
 //
+// null marshaling of static values
+//
+[x] overload marshaledSize(static x) = SizeT(0);
+[x] overload marshalTo(buffer: Pointer[Byte], static x) = buffer;
+[x] overload unmarshalFrom(begin: Pointer[Byte], end: Pointer[Byte], static Static[x])
+    = static x, begin;
+
+
+
+//
 // high-level interface
 //
 marshal(forward ...values) returned: Vector[Byte] {
