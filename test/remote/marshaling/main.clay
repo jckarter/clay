@@ -2,8 +2,21 @@ import test.*;
 import remote.marshaling.*;
 
 expectMarshalingInvariants(test, name, value) {
+    var marshaled = marshal(value); 
+
     expectEqual(test, "unmarshal(marshal(" + name + ")",
-        value, unmarshal(marshal(value), Type(value))
+        value, unmarshal(marshaled, Type(value))
+    );
+
+    var truncated = marshaled;
+    pop(truncated);
+    expectExceptionType(test, name + " unmarshaled from truncated vector",
+        UnmarshalUnexpectedEOF,
+        () => { unmarshal(truncated, Type(value)); }
+    );
+    expectExceptionType(test, name + " unmarshaled from empty byte vector",
+        UnmarshalUnexpectedEOF,
+        () => { unmarshal(Vector[Byte](), Type(value)); }
     );
 }
 

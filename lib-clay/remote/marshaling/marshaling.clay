@@ -7,12 +7,19 @@
 procedure marshaledSize;
 // [T] marshalTo(buffer: Pointer[Byte], x: T) Pointer[Byte] -- should not throw
 procedure marshalTo;
-// [T] unmarshalFrom(buffer: Pointer[Byte], static T) T, Pointer[Byte] -- may throw
+// [T] unmarshalFrom(begin: Pointer[Byte], end: Pointer[Byte], static T)
+//     T, Pointer[Byte]
+// -- may throw
+// -- must throw UnmarshalUnexpectedEOF if unmarshal code would have to read past end
 procedure unmarshalFrom;
 
+record UnmarshalUnexpectedEOF ();
+instance Exception = UnmarshalUnexpectedEOF;
+
 Marshalable?(T)
-    =     CallDefined?(marshalTo, Pointer[Byte], T)
-      and CallDefined?(unmarshalFrom, Pointer[Byte], Static[T]);
+    =     CallDefined?(marshaledSize, T)
+      and CallDefined?(marshalTo, Pointer[Byte], T)
+      and CallDefined?(unmarshalFrom, Pointer[Byte], Pointer[Byte], Static[T]);
 
 
 
@@ -31,11 +38,14 @@ overload marshalTo(buffer: Pointer[Byte], x: T) {
 }
 
 [T | CopyMarshalable?(T)]
-overload unmarshalFrom(buffer: Pointer[Byte], static T)
-    returned: T, nextBuffer: Pointer[Byte]
+overload unmarshalFrom(begin: Pointer[Byte], end: Pointer[Byte], static T)
+    returned: T, newBegin: Pointer[Byte]
 {
-    returned <-- Pointer[T](buffer)^;
-    nextBuffer <-- buffer + TypeSize(T);
+    var newBegin_ = begin + TypeSize(T);
+    if (newBegin_ > end)
+        throw UnmarshalUnexpectedEOF();
+    returned <-- Pointer[T](begin)^;
+    newBegin <-- newBegin_;
 }
 
 [C | Character?(C)] overload CopyMarshalable?(static C) = true;
@@ -71,24 +81,29 @@ overload marshalTo(buffer_: Pointer[Byte], r: R) buffer: Pointer[Byte] {
 }
 
 [FieldT]
-private unmarshalMemberwise(buffer: Pointer[Byte], field: FieldT, ...fields) {
-    field, buffer <-- ...unmarshalFrom(buffer, FieldT);
+private unmarshalMemberwise(
+    begin: Pointer[Byte],
+    end: Pointer[Byte],
+    field: FieldT,
+    ...fields
+) {
+    field, begin <-- ...unmarshalFrom(begin, end, FieldT);
     try {
-        unmarshalMemberwise(buffer, ...fields);
+        unmarshalMemberwise(begin, end, ...fields);
     } catch (ex) {
         destroy(field);
         throw ex;
     }
 }
 
-overload unmarshalMemberwise(buffer: Pointer[Byte]) {}
+overload unmarshalMemberwise(begin: Pointer[Byte], end: Pointer[Byte]) {}
 
 [R | Record?(R) and RecordMemberwiseMarshalable?(R)]
-overload unmarshalFrom(buffer_: Pointer[Byte], static R)
-    returned: R, buffer: Pointer[Byte]
+overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static R)
+    returned: R, begin: Pointer[Byte]
 {
-    buffer <-- buffer_;
-    unmarshalMemberwise(buffer, ...recordFields(returned));
+    begin <-- begin_;
+    unmarshalMemberwise(begin, end, ...recordFields(returned));
 }
 
 
@@ -112,11 +127,11 @@ overload marshalTo(buffer_: Pointer[Byte], t: T) buffer: Pointer[Byte] {
 }
 
 [T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
-overload unmarshalFrom(buffer_: Pointer[Byte], static T)
-    returned: T, buffer: Pointer[Byte]
+overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static T)
+    returned: T, begin: Pointer[Byte]
 {
-    buffer <-- buffer_;
-    unmarshalMemberwise(buffer, ...unpackRef(returned));
+    begin <-- begin_;
+    unmarshalMemberwise(begin, end, ...unpackRef(returned));
 }
 
 
@@ -143,29 +158,39 @@ record UnmarshalInvalidVariantTag (tag: Int);
 instance Exception = UnmarshalInvalidVariantTag;
 
 [...T, n]
-private unmarshalVariantMember(buffer: Pointer[Byte], repr: VariantRepr[...T], static n) {
+private unmarshalVariantMember(
+    begin: Pointer[Byte],
+    end: Pointer[Byte],
+    repr: VariantRepr[...T],
+    static n
+) {
     throw UnmarshalInvalidVariantTag(repr.tag);
 }
 
 [...T, n | n < countValues(...T)]
-overload unmarshalVariantMember(buffer: Pointer[Byte], repr: VariantRepr[...T], static n) {
+overload unmarshalVariantMember(
+    begin: Pointer[Byte],
+    end: Pointer[Byte],
+    repr: VariantRepr[...T],
+    static n
+) {
     if (repr.tag == Int(n))
-        staticIndex(repr.data, static n), buffer
-            <-- ...unmarshalFrom(buffer, Type(staticIndex(repr.data, static n)));
+        staticIndex(repr.data, static n), begin
+            <-- ...unmarshalFrom(begin, end, Type(staticIndex(repr.data, static n)));
     else
-        unmarshalVariantMember(buffer, repr, static n+1);
+        unmarshalVariantMember(begin, end, repr, static n+1);
 }
 
 
 [V | Variant?(V) and VariantMemberwiseMarshalable?(V)]
-overload unmarshalFrom(buffer_: Pointer[Byte], static V)
-    returned: V, buffer: Pointer[Byte]
+overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static V)
+    returned: V, begin: Pointer[Byte]
 {
-    buffer <-- buffer_;
+    begin <-- begin_;
     ref repr = variantRepr(returned);
-    repr.tag, buffer <-- ...unmarshalFrom(buffer, Int);
+    repr.tag, begin <-- ...unmarshalFrom(begin, end, Int);
 
-    unmarshalVariantMember(buffer, repr, static SizeT(0));
+    unmarshalVariantMember(begin, end, repr, static SizeT(0));
 }
 
 
@@ -204,16 +229,16 @@ overload marshalTo(buffer_: Pointer[Byte], forward seq: S) buffer: Pointer[Byte]
 }
 
 [S | ItemwiseMarshalableSequence?(S)]
-overload unmarshalFrom(buffer_: Pointer[Byte], static S) {
-    var n, buffer = ...unmarshalFrom(buffer_, SizeT);
+overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static S) {
+    var n, begin = ...unmarshalFrom(begin_, end, SizeT);
     var s = S();
 
     for (x in range(n)) {
-        var n, buffer2 = ...unmarshalFrom(buffer, SequenceElementType(S));
+        var n, begin2 = ...unmarshalFrom(begin, end, SequenceElementType(S));
         push(s, move(n));
-        buffer = buffer2;
+        begin = begin2;
     }
-    return move(s), buffer;
+    return move(s), begin;
 }
 
 
@@ -234,11 +259,12 @@ marshal(forward ...values) returned: Vector[Byte] {
 }
 
 unmarshal(data: Vector[Byte], ...Types) {
-    var buffer = begin(data);
+    var b = begin(data);
+    var e = end(data);
 
     return ...mapValues(T => {
-        var n, buffer2 = ...unmarshalFrom(buffer, T);
-        buffer = buffer2;
+        var n, b2 = ...unmarshalFrom(b, e, T);
+        b = b2;
         return move(n);
     }, ...Types);
 }
