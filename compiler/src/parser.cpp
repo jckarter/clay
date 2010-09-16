@@ -1520,6 +1520,10 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
     if (!keyword("static")) return false;
     if (!expression(y)) return false;
 
+    if (y->exprKind == UNPACK) {
+        error(y, "static keyword cannot be used with variadic arguments");
+    }
+
     // desugar static args
     ostringstream sout;
     sout << "%arg" << index;
