@@ -3,5 +3,6 @@ Testing marshaling:
   sequences: passed
   composites: passed
   variants: passed
--- marshaling: 39 expectations passed; 0 failed (0 pending)
-Overall: 39 expectations passed; 0 failed (0 pending)
+  statics: passed
+-- marshaling: 45 expectations passed; 0 failed (0 pending)
+Overall: 45 expectations passed; 0 failed (0 pending)

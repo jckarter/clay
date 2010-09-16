@@ -20,6 +20,17 @@ expectMarshalingInvariants(test, name, value) {
     );
 }
 
+expectNullMarshaling(test, name, value) {
+    var marshaled = marshal(value); 
+
+    expectEqual(test, "size(marshal(" + name + "))",
+        SizeT(0), size(marshaled)
+    );
+    expectEqual(test, "unmarshal(marshal(" + name + "))",
+        value, unmarshal(marshaled, Type(value))
+    );
+}
+
 record PODRecord (x: Int, y: Char, z: Double);
 record ComplexRecord (
     x: Int,
@@ -69,6 +80,11 @@ main() = testMain(
             expectMarshalingInvariants(test,
                 "TestVariant(Vector[Int](1, 2, 3))", TestVariant(Vector[Int](1, 2, 3))
             );
+        }),
+        TestCase("statics", test => {
+            expectNullMarshaling(test, "static 0", static 0);
+            expectNullMarshaling(test, "add", add);
+            expectNullMarshaling(test, "Int", Int);
         }),
     )),
 );
