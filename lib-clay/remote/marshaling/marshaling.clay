@@ -74,7 +74,7 @@ overload marshaledSize(r: R)
     = ...foldValues(add, ...mapValues(marshaledSize, ...recordFields(r)));
 
 [R | Record?(R) and RecordMemberwiseMarshalable?(R)]
-overload marshalTo(buffer_: Pointer[Byte], r: R) buffer: Pointer[Byte] {
+overload marshalTo(buffer_: Pointer[Byte], forward r: R) buffer: Pointer[Byte] {
     buffer <-- buffer_;
     static for (x in ...recordFields(r))
         buffer = marshalTo(buffer, x);
@@ -120,7 +120,7 @@ overload marshaledSize(t: T)
     = ...foldValues(add, ...mapValues(marshaledSize, ...unpack(t)));
 
 [T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
-overload marshalTo(buffer_: Pointer[Byte], t: T) buffer: Pointer[Byte] {
+overload marshalTo(buffer_: Pointer[Byte], forward t: T) buffer: Pointer[Byte] {
     buffer <-- buffer_;
     static for (x in ...unpack(t))
         buffer = marshalTo(buffer, x);
