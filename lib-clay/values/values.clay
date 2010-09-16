@@ -62,20 +62,30 @@ firstValue(forward a, ...rest) = forward a;
 
 
 //
-// replicateValue, equalValues?
+// replicateValue, allValues?, anyValues?, equalValues?
 //
 
 [n]
 replicateValue(a, static n) = a, ...replicateValue(a, static n-1);
 overload replicateValue(a, static 0) = ;
 
-equalValues?(a, ...rest) {
+allValues?(pred, ...rest) {
     static for (x in ...rest) {
-        if (a != x)
+        if (not pred(x))
             return false;
     }
     return true;
 }
+
+anyValues?(pred, ...rest) {
+    static for (x in ...rest) {
+        if (pred(x))
+            return true;
+    }
+    return false;
+}
+
+equalValues?(a, ...rest) = allValues?(x => a == x, ...rest);
 
 
 
