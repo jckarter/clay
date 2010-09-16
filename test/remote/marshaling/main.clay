@@ -11,9 +11,10 @@ record PODRecord (x: Int, y: Char, z: Double);
 record ComplexRecord (
     x: Int,
     y: Vector[Int],
+    z: Char,
 );
 
-variant TestVariant = Int | Char | Double | Vector[Int];
+variant TestVariant = Int | Vector[Int] | Char | Double;
 
 main() = testMain(
     TestSuite("marshaling", Tuple(
@@ -34,12 +35,12 @@ main() = testMain(
         }),
         TestCase("composites", test => {
             expectMarshalingInvariants(test,
-                "(1, Vector[Int](1, 2, 3))",
-                (1, Vector[Int](1, 2, 3))
+                "(1, Vector[Int](1, 2, 3), 'a')",
+                (1, Vector[Int](1, 2, 3), 'a')
             );
             expectMarshalingInvariants(test,
-                "ComplexRecord(1, Vector[Int](1, 2, 3))",
-                ComplexRecord(1, Vector[Int](1, 2, 3))
+                "ComplexRecord(1, Vector[Int](1, 2, 3), 'a')",
+                ComplexRecord(1, Vector[Int](1, 2, 3), 'a')
             );
         }),
         TestCase("variants", test => {
