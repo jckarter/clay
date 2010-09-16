@@ -16,7 +16,7 @@ main(args) {
             var kind = token.kind;
             if ((kind == SPACE) or (kind == COMMENT))
                 continue;
-            println(kind, ": ", token.location);
+            println(kind, ": ", token.data);
         }
     }
     catch (e:LexerError) {

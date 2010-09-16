@@ -23,7 +23,7 @@ enum TokenKind {
 
 alias DataRange = CoordinateRange[Pointer[Char]];
 
-record Token(kind:TokenKind, subKind:UInt8, location:DataRange);
+record Token(kind:TokenKind, subKind:UInt8, data:DataRange);
 
 
 [I | Integer?(I)]
@@ -162,17 +162,17 @@ overload onePlus(parser) = oneOrMoreAs(dummy, parser);
 
 
 //
-// location combinator
+// bounds combinator
 //
 
 [Parser]
-private locate(parser:Parser) {
+private bounds(parser:Parser) {
     return input => {
         alias T = ParseResult(Parser);
         var start = input.current;
         return maybe(parser(input),
             x ref=> {
-                x.location = DataRange(start, input.current);
+                x.data = DataRange(start, input.current);
                 return Maybe(x);
             },
             () => nothing(T),
@@ -423,7 +423,7 @@ private var lexToken1 = choice(
     lexIntLiteral,
 );
 
-private var lexToken = locate(lexToken1);
+private var lexToken = bounds(lexToken1);
 
 
 
