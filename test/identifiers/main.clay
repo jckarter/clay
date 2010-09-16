@@ -1,6 +1,5 @@
 
-main() {
-    var a = #foobar;
+test(a) {
     println(a);
     var b = IdentifierSlice(a, static 0, static 3);
     println(b);
@@ -9,4 +8,9 @@ main() {
     var d = IdentifierConcat(b, c);
     println(d);
     println(a == d);
+}
+
+main() {
+    test(#foobar);
+    test(#"%#@% $#%\t*^*^");
 }
