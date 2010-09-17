@@ -8,7 +8,7 @@ import parsing.combinators.wrapper.*;
 // data definitions
 //
 
-enum TokenCode {
+enum TokenKind {
     SYMBOL,
     KEYWORD,
     IDENTIFIER,
@@ -20,6 +20,23 @@ enum TokenCode {
     COMMENT,
     LLVM,
 }
+
+alias DataRange = CoordinateRange[Pointer[Char]];
+
+record Token(kind:TokenKind, subKind:UInt8, data:DataRange);
+
+
+[I | Integer?(I)]
+overload Token(kind:TokenKind, subKind:I) =
+    Token(kind, UInt8(subKind), DataRange(null(Char), null(Char)));
+
+overload Token(kind:TokenKind) = Token(kind, 0);
+
+
+
+//
+// symbols and keywords
+//
 
 var symbols = [
     "<--", "...", "=>",
@@ -43,20 +60,21 @@ var keywords = [
     "true", "false", "try", "catch", "throw"
 ];
 
-record Location(start:UInt, end:UInt);
-record Token(code:TokenCode, subType:UInt8, location:Location);
+symbolIndex(s) Int {
+    for (i, x in enumerate(symbols)) {
+        if (x == s)
+            return Int(i);
+    }
+    return -1;
+}
 
-
-
-//
-// Token constructors
-//
-
-[I | Integer?(I)]
-overload Token(code:TokenCode, subType:I) =
-    Token(code, UInt8(subType), Location());
-
-overload Token(code:TokenCode) = Token(code, 0);
+keywordIndex(s) Int {
+    for (i, x in enumerate(keywords)) {
+        if (x == s)
+            return Int(i);
+    }
+    return -1;
+}
 
 
 
@@ -65,16 +83,15 @@ overload Token(code:TokenCode) = Token(code, 0);
 //
 
 record LexerInput(
-    first:Pointer[Char],
-    last:Pointer[Char],
     current:Pointer[Char],
+    last:Pointer[Char],
     maxCurrent:Pointer[Char],
 );
 
 [S | ContiguousString?(S)]
 overload LexerInput(data:S) {
     var ptr = &data[0];
-    return LexerInput(ptr, ptr+size(data), ptr, ptr);
+    return LexerInput(ptr, ptr+size(data), ptr);
 }
 
 overload iterator(x:LexerInput) = x;
@@ -92,9 +109,8 @@ overload assign(dest:LexerInput, src:LexerInput) {
     var srcMax = max(src.maxCurrent, src.current);
     dest.maxCurrent = max(destMax, srcMax);
 
-    dest.first = src.first;
-    dest.last = src.last;
     dest.current = src.current;
+    dest.last = src.last;
 }
 
 
@@ -146,19 +162,17 @@ overload onePlus(parser) = oneOrMoreAs(dummy, parser);
 
 
 //
-// location combinator
+// bounds combinator
 //
 
 [Parser]
-private locate(parser:Parser) {
+private bounds(parser:Parser) {
     return input => {
         alias T = ParseResult(Parser);
-        var start = UInt(input.current - input.first);
+        var start = input.current;
         return maybe(parser(input),
             x ref=> {
-                var end = UInt(input.current - input.first);
-                x.location.start = start;
-                x.location.end = end;
+                x.data = DataRange(start, input.current);
                 return Maybe(x);
             },
             () => nothing(T),
@@ -198,10 +212,9 @@ private lexIdentifierOrKeyword(input) Maybe[Token] {
     var start = input.current;
     if (not nothing?(identStr(input))) {
         var data = CoordinateRange(start, input.current);
-        for (i, kw in enumerate(keywords)) {
-            if (kw == data)
-                return Maybe(Token(KEYWORD, i));
-        }
+        var i = keywordIndex(data);
+        if (i >= 0)
+            return Maybe(Token(KEYWORD, i));
         return Maybe(Token(IDENTIFIER));
     }
     return nothing(Token);
@@ -410,7 +423,7 @@ private var lexToken1 = choice(
     lexIntLiteral,
 );
 
-private var lexToken = locate(lexToken1);
+private var lexToken = bounds(lexToken1);
 
 
 
@@ -418,16 +431,14 @@ private var lexToken = locate(lexToken1);
 // tokenize
 //
 
-record LexerError (offset:SizeT);
+record LexerError(where:Pointer[Char]);
 instance Exception = LexerError;
 
 private var tokenize1 = zeroOrMore(lexToken);
 
 public tokenize(input) {
     var tokens = require(tokenize1(input));
-    if (input.current != input.last) {
-        assert(input.maxCurrent > input.first);
-        throw LexerError(SizeT(input.maxCurrent - input.first - 1));
-    }
+    if (input.current != input.last)
+        throw LexerError(input.maxCurrent - 1);
     return move(tokens);
 }
