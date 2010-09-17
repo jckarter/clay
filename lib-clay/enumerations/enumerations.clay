@@ -1,7 +1,7 @@
 
 
 //
-// constructors, moveUnsafe, resetUnsafe, destory
+// constructors, moveUnsafe, resetUnsafe, destory, assign
 //
 
 [E | Enum?(E)]
@@ -24,6 +24,11 @@ overload resetUnsafe(x:E) {
 
 [E | Enum?(E)]
 overload destroy(x:E) {
+}
+
+[E | Enum?(E)]
+overload assign(dest:E, src:E) {
+    primitiveCopy(dest, src);
 }
 
 
