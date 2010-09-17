@@ -54,11 +54,11 @@ private var remoteCode[F, ...Args] = createRemoteCode(F, ...Args);
 
 
 //
-// port objects
+// channel objects
 //
-record Port[InputStream, OutputStream] (input: InputStream, output: OutputStream);
+record Channel[InputStream, OutputStream] (input: InputStream, output: OutputStream);
 
-var stdioPort = Port(stdin, stdout);
+var stdioChannel = Channel(stdin, stdout);
 
 
 
@@ -66,18 +66,18 @@ var stdioPort = Port(stdin, stdout);
 // client interface
 //
 [F, ...Args | CallDefined?(call, F, ...Args)]
-remoteCall(port, forward f: F, forward ...args: Args) {
+remoteCall(channel, forward f: F, forward ...args: Args) {
     var mArgs = marshal(f, ...args);
     var mArgsSize = size(mArgs);
-    writeSizeT(port.output, remoteCode[F, ...Args]);
-    writeSizeT(port.output, mArgsSize);
-    write(port.output, begin(mArgs), mArgsSize);
-    flush(port.output);
+    writeSizeT(channel.output, remoteCode[F, ...Args]);
+    writeSizeT(channel.output, mArgsSize);
+    write(channel.output, begin(mArgs), mArgsSize);
+    flush(channel.output);
 
-    var mRetSize = readSizeT(port.input);
+    var mRetSize = readSizeT(channel.input);
     var mRet = Vector[Byte]();
     resize(mRet, mRetSize);
-    fullRead(port.input, begin(mRet), mRetSize);
+    fullRead(channel.input, begin(mRet), mRetSize);
 
     return ...unmarshal(mRet, ...Type(...f(...args)));
 }
@@ -87,25 +87,25 @@ remoteCall(port, forward f: F, forward ...args: Args) {
 //
 // server interface
 //
-serveRemoteCall(port, code) {
-    var mArgsSize = readSizeT(port.input);
+serveRemoteCall(channel, code) {
+    var mArgsSize = readSizeT(channel.input);
 
     var mArgs = Vector[Byte]();
     resize(mArgs, mArgsSize);
-    fullRead(port.input, begin(mArgs), mArgsSize);
+    fullRead(channel.input, begin(mArgs), mArgsSize);
 
     var mRet = remoteEntryPoints[code](mArgs);
     var mRetSize = size(mRet);
-    writeSizeT(port.output, mRetSize);
-    write(port.output, begin(mRet), mRetSize);
-    flush(port.output);
+    writeSizeT(channel.output, mRetSize);
+    write(channel.output, begin(mRet), mRetSize);
+    flush(channel.output);
 }
 
-serverLoop(port) {
-    var code = maybeReadSizeT(port.input);
+serverLoop(channel) {
+    var code = maybeReadSizeT(channel.input);
 
     while (not nothing?(code)) {
-        serveRemoteCall(port, just(code));
-        code = maybeReadSizeT(port.input);
+        serveRemoteCall(channel, just(code));
+        code = maybeReadSizeT(channel.input);
     }
 }
