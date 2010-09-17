@@ -10,6 +10,7 @@ hello() {
 client(args) {
     printlnTo(stderr, "1 + 2 = ", remoteCall(stdioPort, add, 1, 2));
     remoteCall(stdioPort, hello);
+    remoteCall(stdioPort, () => { printlnTo(stderr, "Hello from Lambda!"); });
     remoteCall(stdioPort, bullet => {
         printlnTo(stderr, "arguments from client:");
         for (arg in args)
