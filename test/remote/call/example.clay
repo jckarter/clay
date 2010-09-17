@@ -18,7 +18,7 @@ client(args) {
         printlnTo(stderr, "arguments from client:");
         for (arg in args)
             printlnTo(stderr, bullet, " ", arg);
-    }, String("*"));
+    }, "*");
 
     try {
         remoteCall(stdioChannel, () => {

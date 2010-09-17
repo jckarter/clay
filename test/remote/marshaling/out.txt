@@ -1,9 +1,10 @@
 Testing marshaling:
   POD types: passed
   sequences: passed
+  special sequences: passed
   composites: passed
   variants: passed
   statics: passed
   lambdas: passed
--- marshaling: 87 expectations passed; 0 failed (0 pending)
-Overall: 87 expectations passed; 0 failed (0 pending)
+-- marshaling: 90 expectations passed; 0 failed (0 pending)
+Overall: 90 expectations passed; 0 failed (0 pending)

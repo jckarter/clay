@@ -3,15 +3,20 @@
 // marshaling object protocol
 //
 
-// [T] marshaledSize(x: T) SizeT -- should not throw
+// [T] marshaledSize(x: T) SizeT
+// -- should not throw
 procedure marshaledSize;
-// [T] marshalTo(buffer: Pointer[Byte], x: T) Pointer[Byte] -- should not throw
+// [T] marshalTo(buffer: Pointer[Byte], x: T) Pointer[Byte]
+// -- should not throw
 procedure marshalTo;
 // [T] unmarshalFrom(begin: Pointer[Byte], end: Pointer[Byte], static T)
-//     T, Pointer[Byte]
+//     UnmarshaledType(T), Pointer[Byte]
 // -- may throw
 // -- must throw UnmarshalUnexpectedEOF if unmarshal code would have to read past end
 procedure unmarshalFrom;
+// [T] UnmarshaledType(static T) T2
+// -- type that value of type T should be unmarshaled into
+UnmarshaledType(T) = T;
 
 record UnmarshalUnexpectedEOF ();
 instance Exception = UnmarshalUnexpectedEOF;
@@ -198,17 +203,19 @@ overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static V)
 //
 // general sequence marshaling
 //
-private ItemwiseMarshalableSequence?(S)
-    = Sequence?(S) and Marshalable?(SequenceElementType(S))
-      and CallDefined?(push, S, SequenceElementType(S));
+private MarshalableSequence?(S)
+    = Sequence?(S) and Marshalable?(SequenceElementType(S));
+
+private UnmarshalAsVectorSequence?(S)
+    = MarshalableSequence?(S) and not CallDefined?(push, S, SequenceElementType(S));
 
 private sequenceMarshaledSize(seq)
     = TypeSize(SizeT) + reduce(add, SizeT(0), map(marshaledSize, seq));
 
-[S | ItemwiseMarshalableSequence?(S)]
+[S | MarshalableSequence?(S)]
 overload marshaledSize(seq: S) = sequenceMarshaledSize(seq);
 
-[S | ItemwiseMarshalableSequence?(S)]
+[S | MarshalableSequence?(S)]
 overload marshalTo(buffer_: Pointer[Byte], forward seq: S) buffer: Pointer[Byte] {
     buffer <-- buffer_;
     var sizeBuffer = buffer;
@@ -221,17 +228,17 @@ overload marshalTo(buffer_: Pointer[Byte], forward seq: S) buffer: Pointer[Byte]
     marshalTo(sizeBuffer, n);
 }
 
-[S | ItemwiseMarshalableSequence?(S) and SizedSequence?(S)]
+[S | MarshalableSequence?(S) and SizedSequence?(S)]
 overload marshalTo(buffer_: Pointer[Byte], forward seq: S) buffer: Pointer[Byte] {
     buffer <-- marshalTo(buffer_, SizeT(size(seq)));
     for (x in seq)
         buffer = marshalTo(buffer, x);
 }
 
-[S | ItemwiseMarshalableSequence?(S)]
+[S | MarshalableSequence?(S)]
 overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static S) {
     var n, begin = ...unmarshalFrom(begin_, end, SizeT);
-    var s = S();
+    var s = UnmarshaledType(S)();
 
     for (x in range(n)) {
         var n, begin2 = ...unmarshalFrom(begin, end, SequenceElementType(S));
@@ -241,6 +248,8 @@ overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static S) {
     return move(s), begin;
 }
 
+[S | UnmarshalAsVectorSequence?(S)]
+overload UnmarshaledType(static S) = Vector[UnmarshaledType(SequenceElementType(S))];
 
 
 //

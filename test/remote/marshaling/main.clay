@@ -3,9 +3,10 @@ import remote.marshaling.*;
 
 expectMarshalingInvariants(test, name, value) {
     var marshaled = marshal(value); 
+    var expectedValue = UnmarshaledType(Type(value))(value);
 
     expectEqual(test, "unmarshal(marshal(" + name + ")",
-        value, unmarshal(marshaled, Type(value))
+        expectedValue, unmarshal(marshaled, Type(value))
     );
 
     if (not empty?(marshaled)) {
@@ -75,6 +76,9 @@ main() = testMain(
             expectMarshalingInvariants(test,
                 "Vector[String]()", Vector[String](),
             );
+        }),
+        TestCase("special sequences", test => {
+            expectMarshalingInvariants(test, "\"mathers\"", "mathers");
         }),
         TestCase("composites", test => {
             expectMarshalingInvariants(test,
