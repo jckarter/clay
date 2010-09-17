@@ -1,7 +1,0 @@
-Testing algorithms.strings:
-  beginsWith?: passed
-  endsWith?: passed
-  split: passed
-  trim: passed
--- algorithms.strings: 7 expectations passed; 0 failed (0 pending)
-Overall: 7 expectations passed; 0 failed (0 pending)
