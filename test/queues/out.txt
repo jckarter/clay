@@ -1,5 +1,0 @@
-Testing priority queues:
-  queue operations: passed
-  queue constructors: passed
--- priority queues: 34 expectations passed; 0 failed (0 pending)
-Overall: 34 expectations passed; 0 failed (0 pending)

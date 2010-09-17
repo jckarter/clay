@@ -21,7 +21,7 @@ main() = testMain(
             TestCase("trim", test => {
                 expectEqual(test, "trim, string", trim(" \t\n", "   \t A string,\nthat\tneeds trimming. \n  \n "), "A string,\nthat\tneeds trimming.");
                 expectEqual(test, "trim, lambda", trim(x => (x == "*"[0] or x == " "[0]), "*** message ***"), "message");
-            })
+            }),
         )
     )
 );
