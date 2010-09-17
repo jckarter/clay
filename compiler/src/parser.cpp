@@ -220,8 +220,19 @@ static bool stringLiteral(ExprPtr &x) {
 static bool identifierLiteral(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("#")) return false;
+    int p = save();
     IdentifierPtr y;
-    if (!identifier(y)) return false;
+    TokenPtr t;
+    if (identifier(y)) {
+        // ok
+    }
+    else if (restore(p), (next(t) && (t->tokenKind == T_STRING_LITERAL))) {
+        y = new Identifier(t->str);
+        y->location = t->location;
+    }
+    else {
+        return false;
+    }
     x = new IdentifierLiteral(y);
     x->location = location;
     return true;
@@ -1519,6 +1530,10 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
     ExprPtr y;
     if (!keyword("static")) return false;
     if (!expression(y)) return false;
+
+    if (y->exprKind == UNPACK) {
+        error(y, "static keyword cannot be used with variadic arguments");
+    }
 
     // desugar static args
     ostringstream sout;

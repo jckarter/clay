@@ -13,16 +13,15 @@ main(args) {
     try {
         var tokens = tokenize(input);
         for (token in tokens) {
-            var code = token.code;
-            if ((code == SPACE) or (code == COMMENT))
+            var kind = token.kind;
+            if ((kind == SPACE) or (kind == COMMENT))
                 continue;
-            ref loc = token.location;
-            var str = slice(data, loc.start, loc.end);
-            println(code, ": ", str);
+            println(kind, ": ", token.data);
         }
     }
     catch (e:LexerError) {
-        displayError(fileName, data, e.offset, "invalid token");
+        var offset = e.where - &data[0];
+        displayError(fileName, data, offset, "invalid token");
     }
     return 0;
 }

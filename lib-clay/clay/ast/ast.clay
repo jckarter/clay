@@ -1,0 +1,466 @@
+
+import maybe.*;
+import clay.lexer.*;
+
+
+
+//
+// TokenRange
+//
+
+record TokenRange(first:UInt, last:UInt);
+
+[I, J | Integer?(I) and Integer?(J)]
+overload TokenRange(first:I, last:J) returned:TokenRange {
+    returned.first = UInt(first);
+    returned.last = UInt(last);
+}
+
+overload TokenRange() = TokenRange(0, 0);
+
+
+
+//
+// AST nodes
+//
+
+private ast(...fields) = RecordWithPredicate(
+    ASTNode?,
+    Tuple((#location, TokenRange), ...fields)
+);
+
+procedure ASTNode?;
+overload ASTNode?(x) = false;
+
+[T, ...A | Record?(T)
+           and ASTNode?(T)
+           and (Tuple[...RecordFieldTypes(T)] == Tuple[TokenRange, ...A])]
+callbyname overload T(...args:A) returned:T {
+    ...recordFields(returned) <-- TokenRange(), ...args;
+}
+
+[T | Record?(T) and ASTNode?(T)]
+overload printReprTo(stream, x:T) {
+    printTo(stream, T);
+    printReprValuesTo(stream, ...dropValues(static 1, ...recordFields(x)));
+}
+
+
+
+//
+// Identifier, DottedName
+//
+
+record Identifier = ...ast((#str, String));
+record DottedName = ...ast((#parts, Vector[Identifier]));
+
+private OtherString?(x) = String?(x) and (x != String);
+
+[S | OtherString?(S)]
+overload Identifier(forward x:S) = Identifier(String(x));
+
+[...A | allValues?(OtherString?, ...A)]
+overload DottedName(forward ...a:A) =
+    DottedName(Vector[String](...mapValues(String, ...a)));
+
+
+
+//
+// Expr
+//
+
+alias ExprPtr = SharedPointer[Expr];
+
+variant Expr =
+    BoolLiteral |
+    IntLiteral |
+    FloatLiteral |
+    CharLiteral |
+    StringLiteral |
+    IdentifierLiteral |
+
+    NameRef |
+    TupleExpr |
+    ArrayExpr |
+    Indexing |
+    Call |
+    FieldRef |
+    StaticIndexing |
+    UnaryOp |
+    BinaryOp |
+    And |
+    Or |
+
+    IfExpr |
+    LambdaExpr |
+    Unpack |
+    New |
+    StaticExpr |
+    DispatchExpr
+    ;
+
+record BoolLiteral   = ...ast((#value, Bool));
+record IntLiteral    = ...ast((#value, String), (#suffix, String));
+record FloatLiteral  = ...ast((#value, String), (#suffix, String));
+record CharLiteral   = ...ast((#value, Char));
+record StringLiteral = ...ast((#value, String));
+
+record IdentifierLiteral = ...ast((#value, Identifier));
+
+record NameRef        = ...ast((#name, Identifier));
+record TupleExpr      = ...ast((#args, Vector[ExprPtr]));
+record ArrayExpr      = ...ast((#args, Vector[ExprPtr]));
+record Indexing       = ...ast((#expr, ExprPtr), (#args, Vector[ExprPtr]));
+record Call           = ...ast((#expr, ExprPtr), (#args, Vector[ExprPtr]));
+record FieldRef       = ...ast((#expr, ExprPtr), (#name, Identifier));
+record StaticIndexing = ...ast((#expr, ExprPtr), (#index, SizeT));
+
+enum UnaryOpKind {
+    DEREFERENCE, ADDRESS_OF, PLUS, MINUS, NOT,
+}
+
+record UnaryOp = ...ast((#kind, UnaryOpKind), (#expr, ExprPtr));
+
+enum BinaryOpKind {
+    ADD, SUBTRACT, MULTIPLY, DIVIDE, REMAINDER,
+    EQUALS, NOT_EQUALS, LESSER, LESSER_EQUALS, GREATER, GREATER_EQUALS,
+}
+
+record BinaryOp = ...ast(
+    (#kind,  BinaryOpKind),
+    (#expr1, ExprPtr),
+    (#expr2, ExprPtr)
+);
+
+record And = ...ast((#expr1, ExprPtr), (#expr2, ExprPtr));
+record Or  = ...ast((#expr1, ExprPtr), (#expr2, ExprPtr));
+
+record IfExpr = ...ast(
+    (#condition, ExprPtr), (#thenPart, ExprPtr), (#elsePart, ExprPtr)
+);
+
+record LambdaExpr = ...ast(
+    (#captureByRef, Bool),
+    (#formalArgs,   Vector[Identifier]),
+    (#body,         StatementPtr),
+);
+
+record Unpack       = ...ast((#expr, ExprPtr));
+record New          = ...ast((#expr, ExprPtr));
+record StaticExpr   = ...ast((#expr, ExprPtr));
+record DispatchExpr = ...ast((#expr, ExprPtr));
+
+
+
+//
+// Statement
+//
+
+alias StatementPtr = SharedPointer[Statement];
+
+variant Statement =
+    Block |
+    Label |
+    Binding |
+    Assignment |
+    InitAssignment |
+    UpdateAssignment |
+    Goto |
+    Return |
+    If |
+    Switch |
+    CaseBody |
+    ExprStatement |
+    While |
+    Break |
+    Continue |
+    For |
+    Try |
+    Throw |
+    StaticFor
+    ;
+
+record Block = ...ast((#statements, Vector[StatementPtr]));
+record Label = ...ast((#name, Identifier));
+
+enum BindingKind { VAR, REF, ALIAS, }
+
+record Binding = ...ast(
+    (#kind,   BindingKind),
+    (#names,  Vector[Identifier]),
+    (#values, Vector[ExprPtr]),
+);
+
+record Assignment = ...ast(
+    (#left,  Vector[ExprPtr]),
+    (#right, Vector[ExprPtr]),
+);
+
+record InitAssignment = ...ast(
+    (#left,  Vector[ExprPtr]),
+    (#right, Vector[ExprPtr]),
+);
+
+enum UpdateOpKind {
+    UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY, UPDATE_DIVIDE,
+    UPDATE_REMAINDER,
+}
+
+record UpdateAssignment = ...ast(
+    (#kind,  UpdateOpKind),
+    (#left,  ExprPtr),
+    (#right, ExprPtr),
+);
+
+record Goto = ...ast((#labelName, Identifier));
+
+enum ReturnKind {
+    RETURN_VALUE, RETURN_REF, RETURN_FORWARD,
+}
+
+record Return = ...ast((#kind, ReturnKind), (#exprs, Vector[ExprPtr]));
+
+record If = ...ast(
+    (#condition, ExprPtr),
+    (#thenPart,  StatementPtr),
+    (#elsePart,  Maybe[StatementPtr]),
+);
+
+record Switch = ...ast(
+    (#expr,        ExprPtr),
+    (#caseBlocks,  Vector[CaseBlock]),
+    (#defaultCase, Maybe[StatementPtr]),
+);
+
+record CaseBlock = ...ast(
+    (#caseLabels, Vector[ExprPtr]),
+    (#body,       StatementPtr),
+);
+
+record CaseBody = ...ast((#statements, Vector[StatementPtr]));
+
+record ExprStatement = ...ast((#expr, ExprPtr));
+
+record While = ...ast((#condition, ExprPtr), (#body, StatementPtr));
+
+record Break    = ...ast();
+record Continue = ...ast();
+
+record For = ...ast(
+    (#variables, Vector[Identifier]),
+    (#expr,      ExprPtr),
+    (#body,      StatementPtr),
+);
+
+record Try = ...ast(
+    (#tryBlock,    StatementPtr),
+    (#catchBlocks, Vector[Catch]),
+);
+
+record Catch = ...ast(
+    (#variable, Identifier),
+    (#type,     Maybe[ExprPtr]),
+    (#body,     StatementPtr),
+);
+
+record Throw = ...ast((#expr, ExprPtr));
+
+record StaticFor = ...ast(
+    (#variable, Identifier),
+    (#values,   Vector[ExprPtr]),
+    (#body,     StatementPtr),
+);
+
+
+
+//
+// VarList
+//
+
+record VarList[T] (
+    items : Vector[T],
+    varItem : Maybe[T],
+);
+
+
+
+//
+// Code
+//
+
+record PatternVar = ...ast(
+    (#multi?, Bool),
+    (#name,   Identifier),
+);
+
+enum ArgumentKind {
+    ARG_DEFAULT,
+    ARG_LVALUE,
+    ARG_RVALUE,
+    ARG_FORWARD,
+}
+
+record Argument = ...ast(
+    (#kind, ArgumentKind),
+    (#name, Identifier),
+    (#type, Maybe[ExprPtr]),
+);
+
+record ReturnSpec = ...ast(
+    (#multi?, Bool),
+    (#name,   Maybe[Identifier]),
+    (#type,   ExprPtr),
+);
+
+record LLVMBody = ...ast((#body, String));
+
+variant CodeBody = StatementPtr | LLVMBody;
+
+record Code = ...top(
+    (#callByName?, Bool),
+    (#patternVars, Vector[PatternVar]),
+    (#predicate,   Maybe[ExprPtr]),
+    (#args,        VarList[Argument]),
+    (#returns,     Vector[ReturnSpec]),
+    (#body,        CodeBody),
+);
+
+
+
+//
+// top level items
+//
+
+enum Visibility {
+    PUBLIC,
+    PRIVATE,
+}
+
+private top(...fields) = ...ast(...fields);
+
+private named(...fields) = ...top(
+    (#visibility, Maybe[Visibility]),
+    (#name,       Identifier),
+    ...fields,
+);
+
+record RecordDef = ...named(
+    (#params, VarList[Identifier]),
+    (#body,   RecordBody)
+);
+
+variant RecordBody = ComputedRecordBody | DeclaredRecordBody;
+record ComputedRecordBody = ...ast((#fields, Vector[ExprPtr]));
+record DeclaredRecordBody = ...ast((#fields, Vector[RecordField]));
+record RecordField = ...ast((#name, Identifier), (#type, ExprPtr));
+
+record VariantDef = ...named(
+    (#params,           VarList[Identifier]),
+    (#defaultInstances, Vector[ExprPtr]),
+);
+
+record InstanceDef = ...top(
+    (#patternVars, Vector[PatternVar]),
+    (#predicate,   Maybe[ExprPtr]),
+    (#target,      ExprPtr),
+    (#member,      ExprPtr),
+);
+
+record ProcedureDef = ...named(
+    (#code, Maybe[Code]),
+);
+
+record OverloadDef = ...top(
+    (#target, ExprPtr),
+    (#code,   Code),
+);
+
+record EnumDef = ...named(
+    (#members, Vector[Identifier]),
+);
+
+record GlobalVariable = ...named(
+    (#params, VarList[Identifier]),
+    (#expr,   ExprPtr),
+);
+
+record ExternalProcedure = ...named(
+    (#attributes,  Vector[ExprPtr]),
+    (#args,        Vector[ExternalArg]),
+    (#hasVarArgs?, Bool),
+    (#returnType,  Maybe[ExprPtr]),
+    (#body,        Maybe[StatementPtr]),
+);
+
+record ExternalArg = ...ast(
+    (#name, Identifier),
+    (#type, ExprPtr),
+);
+
+record ExternalVariable = ...named(
+    (#attributes, Vector[ExprPtr]),
+    (#type,       ExprPtr),
+);
+
+record GlobalAlias = ...named(
+    (#params, VarList[Identifier]),
+    (#expr,   ExprPtr),
+);
+
+variant TopLevelItem =
+    RecordDef |
+    VariantDef |
+    InstanceDef |
+    ProcedureDef |
+    EnumDef |
+    GlobalVariable |
+    ExternalProcedure |
+    ExternalVariable |
+    GlobalAlias |
+    OverloadDef
+    ;
+
+
+
+//
+// imports
+//
+
+record ImportModule = ...ast(
+    (#visibility, Maybe[Visibility]),
+    (#name,       DottedName),
+    (#aliasName,  Maybe[Identifier]),
+);
+
+record ImportStar = ...ast(
+    (#visibility, Maybe[Visibility]),
+    (#name,       DottedName),
+);
+
+record ImportMembers = ...ast(
+    (#visibility, Maybe[Visibility]),
+    (#name,       DottedName),
+    (#members,    Vector[ImportedMember]),
+);
+
+record ImportedMember = ...ast(
+    (#name,      Identifier),
+    (#aliasName, Maybe[Identifier]),
+);
+
+variant Import =
+    ImportModule |
+    ImportStar |
+    ImportMembers
+    ;
+
+
+
+//
+// module
+//
+
+record Module = ...ast(
+    (#imports, Vector[Import]),
+    (#topLevelItems, Vector[TopLevelItem]),
+);
