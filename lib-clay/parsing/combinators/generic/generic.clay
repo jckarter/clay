@@ -367,3 +367,56 @@ zeroOrMoreAs(static TokenInput, result:Result, parser:Parser) =
 [TokenInput, Result, Parser | Parser?(TokenInput, Parser)]
 oneOrMoreAs(static TokenInput, result:Result, parser:Parser) =
     repeatedAs(TokenInput, result, 1, INT_MAX, parser);
+
+
+
+//
+// separatedList, separatedListNoTail
+//
+
+[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+separatedList(static TokenInput, _separator:Separator, _element:Element) {
+    var separator = convertParser(TokenInput, _separator);
+    var element = convertParser(TokenInput, _element);
+    return input => {
+        alias T = ParseResult(TokenInput, Element);
+        var v = Vector[T]();
+        while (true) {
+            var parsed? = maybe(element(input),
+                x ref=> { push(v, move(x)); return true; },
+                () => false,
+            );
+            if (not parsed?)
+                break;
+            var sep = separator(input);
+            if (nothing?(sep))
+                break;
+        }
+        return Maybe(move(v));
+    };
+}
+
+[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+separatedListNoTail(static TokenInput, _separator:Separator, _element:Element) {
+    var separator = convertParser(TokenInput, _separator);
+    var element = convertParser(TokenInput, _element);
+    return input => {
+        alias T = ParseResult(TokenInput, Element);
+        var v = Vector[T]();
+        var saved = input;
+        while (true) {
+            var parsed? = maybe(element(input),
+                x ref=> { push(v, move(x)); return true; },
+                () => false,
+            );
+            if (not parsed?)
+                break;
+            saved = input;
+            var sep = separator(input);
+            if (nothing?(sep))
+                break;
+        }
+        input = saved;
+        return Maybe(move(v));
+    };
+}
