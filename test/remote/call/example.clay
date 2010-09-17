@@ -1,0 +1,22 @@
+import remote.call.*;
+import commandline.dispatch.*;
+
+main() = dispatchMain(client, server);
+
+hello() {
+    printlnTo(stderr, "Hello from Server!");
+}
+
+client(args) {
+    printlnTo(stderr, "1 + 2 = ", remoteCall(stdioPort, add, 1, 2));
+    remoteCall(stdioPort, hello);
+    remoteCall(stdioPort, bullet => {
+        printlnTo(stderr, "arguments from client:");
+        for (arg in args)
+            printlnTo(stderr, bullet, " ", arg);
+    }, String("*"));
+}
+
+server(args) {
+    serverLoop(stdioPort);
+}

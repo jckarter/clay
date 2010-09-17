@@ -1,0 +1,111 @@
+import remote.marshaling.*;
+import maybe.*;
+
+record TruncatedRead ();
+instance Exception = TruncatedRead;
+
+private fullRead(stream, dest, size) {
+    if (read(stream, dest, size) < size)
+        throw TruncatedRead();
+}
+
+private readSizeT(stream) returned: SizeT {
+    fullRead(stream, Pointer[Byte](&returned), TypeSize(SizeT));
+}
+
+private maybeReadSizeT(stream) {
+    var returned = SizeT();
+    var size = read(stream, Pointer[Byte](&returned), TypeSize(SizeT));
+    
+    if (size == TypeSize(SizeT))
+        return Maybe(returned);
+    else
+        return nothing(SizeT);
+}
+
+private writeSizeT(stream, n) {
+    write(stream, Pointer[Byte](&n), TypeSize(SizeT));
+}
+
+
+
+//
+// entry point generation
+//
+alias RemoteEntryPoint = CodePointer[(Vector[Byte]), (Vector[Byte])];
+
+private var remoteEntryPoints = Vector[RemoteEntryPoint]();
+
+private createRemoteEntryPoint(F, ...Args)
+    = makeCodePointer(
+        mArgs => marshal(...call(...unmarshal(mArgs, F, ...Args))),
+        Vector[Byte]
+    );
+
+private createRemoteCode(F, ...Args) {
+    var code = size(remoteEntryPoints);
+
+    push(remoteEntryPoints, createRemoteEntryPoint(F, ...Args));
+    return code;
+}
+
+private var remoteCode[F, ...Args] = createRemoteCode(F, ...Args);
+
+
+
+//
+// port objects
+//
+record Port[InputStream, OutputStream] (input: InputStream, output: OutputStream);
+
+var stdioPort = Port(stdin, stdout);
+
+
+
+//
+// client interface
+//
+[F, ...Args | CallDefined?(call, F, ...Args)]
+remoteCall(port, forward f: F, forward ...args: Args) {
+    var mArgs = marshal(f, ...args);
+    var mArgsSize = size(mArgs);
+    writeSizeT(port.output, remoteCode[F, ...Args]);
+    writeSizeT(port.output, mArgsSize);
+    write(port.output, begin(mArgs), mArgsSize);
+    flush(port.output);
+
+    var mRetSize = readSizeT(port.input);
+    var mRet = Vector[Byte]();
+    resize(mRet, mRetSize);
+    fullRead(port.input, begin(mRet), mRetSize);
+
+    return ...unmarshal(mRet, ...Type(...f(...args)));
+}
+
+
+
+//
+// server interface
+//
+serveRemoteCall(port, code) {
+    var mArgsSize = readSizeT(port.input);
+
+    var mArgs = Vector[Byte]();
+    resize(mArgs, mArgsSize);
+    fullRead(port.input, begin(mArgs), mArgsSize);
+
+    var mRet = remoteEntryPoints[code](mArgs);
+    var mRetSize = size(mRet);
+    writeSizeT(port.output, mRetSize);
+    write(port.output, begin(mRet), mRetSize);
+    flush(port.output);
+}
+
+serverLoop(port) {
+    var code = maybeReadSizeT(port.input);
+
+    while (not nothing?(code)) {
+        serveRemoteCall(port, just(code));
+        code = maybeReadSizeT(port.input);
+    }
+}
