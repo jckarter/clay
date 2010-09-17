@@ -203,7 +203,7 @@ private ItemwiseMarshalableSequence?(S)
       and CallDefined?(push, S, SequenceElementType(S));
 
 private sequenceMarshaledSize(seq)
-    = TypeSize(SizeT) + reduce(add, map(marshaledSize, seq));
+    = TypeSize(SizeT) + reduce(add, SizeT(0), map(marshaledSize, seq));
 
 [S | ItemwiseMarshalableSequence?(S)]
 overload marshaledSize(seq: S) = sequenceMarshaledSize(seq);
@@ -267,6 +267,8 @@ marshal(forward ...values) returned: Vector[Byte] {
     }
     assert(buffer == end(returned));
 }
+
+overload marshal() = Vector[Byte]();
 
 unmarshal(data: Vector[Byte], ...Types) {
     var b = begin(data);

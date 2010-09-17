@@ -56,6 +56,22 @@ main() = testMain(
             expectMarshalingInvariants(test,
                 "Vector[Int](1, 2, 3)", Vector[Int](1, 2, 3)
             );
+            expectMarshalingInvariants(test,
+                "String(\"crenshaw\")", String("crenshaw")
+            );
+            expectMarshalingInvariants(test,
+                "Vector[String](String(\"crenshaw\"), String(\"mathers\"))",
+                Vector[String](String("crenshaw"), String("mathers"))
+            );
+            expectMarshalingInvariants(test,
+                "String()", String(),
+            );
+            expectMarshalingInvariants(test,
+                "Vector[Int]()", Vector[Int](),
+            );
+            expectMarshalingInvariants(test,
+                "Vector[String]()", Vector[String](),
+            );
         }),
         TestCase("composites", test => {
             expectMarshalingInvariants(test,
