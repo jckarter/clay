@@ -254,6 +254,26 @@ overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static S) {
 
 
 //
+// null marshaling of empty records, tuples
+//
+[R | RegularRecord?(R) and countValues(...RecordFieldTypes(R)) == 0]
+overload marshaledSize(r: R) = SizeT(0);
+[R | RegularRecord?(R) and countValues(...RecordFieldTypes(R)) == 0]
+overload marshalTo(buffer: Pointer[Byte], r: R) = buffer;
+[R | RegularRecord?(R) and countValues(...RecordFieldTypes(R)) == 0]
+overload unmarshalFrom(begin: Pointer[Byte], end: Pointer[Byte], static R)
+    = R(), begin;
+
+[T | T == Type(())]
+overload marshaledSize(r: T) = SizeT(0);
+[T | T == Type(())]
+overload marshalTo(buffer: Pointer[Byte], r: T) = buffer;
+[T | T == Type(())]
+overload unmarshalFrom(begin: Pointer[Byte], end: Pointer[Byte], static T)
+    = (), begin;
+
+
+//
 // high-level interface
 //
 marshal(forward ...values) returned: Vector[Byte] {
