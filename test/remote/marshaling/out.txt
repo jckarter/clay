@@ -4,5 +4,6 @@ Testing marshaling:
   composites: passed
   variants: passed
   statics: passed
--- marshaling: 60 expectations passed; 0 failed (0 pending)
-Overall: 60 expectations passed; 0 failed (0 pending)
+  lambdas: passed
+-- marshaling: 87 expectations passed; 0 failed (0 pending)
+Overall: 87 expectations passed; 0 failed (0 pending)

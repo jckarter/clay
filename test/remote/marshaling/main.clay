@@ -8,16 +8,18 @@ expectMarshalingInvariants(test, name, value) {
         value, unmarshal(marshaled, Type(value))
     );
 
-    var truncated = marshaled;
-    pop(truncated);
-    expectExceptionType(test, name + " unmarshaled from truncated vector",
-        UnmarshalUnexpectedEOF,
-        () => { unmarshal(truncated, Type(value)); }
-    );
-    expectExceptionType(test, name + " unmarshaled from empty byte vector",
-        UnmarshalUnexpectedEOF,
-        () => { unmarshal(Vector[Byte](), Type(value)); }
-    );
+    if (not empty?(marshaled)) {
+        var truncated = marshaled;
+        pop(truncated);
+        expectExceptionType(test, name + " unmarshaled from truncated vector",
+            UnmarshalUnexpectedEOF,
+            () => { unmarshal(truncated, Type(value)); }
+        );
+        expectExceptionType(test, name + " unmarshaled from empty byte vector",
+            UnmarshalUnexpectedEOF,
+            () => { unmarshal(Vector[Byte](), Type(value)); }
+        );
+    }
 }
 
 expectNullMarshaling(test, name, value) {
@@ -32,6 +34,7 @@ expectNullMarshaling(test, name, value) {
 }
 
 record PODRecord (x: Int, y: Char, z: Double);
+record EmptyRecord ();
 record ComplexRecord (
     x: Int,
     y: Vector[Int],
@@ -82,6 +85,8 @@ main() = testMain(
                 "ComplexRecord(1, Vector[Int](1, 2, 3), 'a')",
                 ComplexRecord(1, Vector[Int](1, 2, 3), 'a')
             );
+            expectNullMarshaling(test, "()", ());
+            expectNullMarshaling(test, "EmptyRecord()", EmptyRecord());
         }),
         TestCase("variants", test => {
             expectMarshalingInvariants(test,
@@ -101,6 +106,25 @@ main() = testMain(
             expectNullMarshaling(test, "static 0", static 0);
             expectNullMarshaling(test, "add", add);
             expectNullMarshaling(test, "Int", Int);
+        }),
+        TestCase("lambdas", test => {
+            var int = 1;
+            var char = 'a';
+            var vectorInt = Vector[Int](1, 2, 3);
+            var vectorString = Vector[String](String("crenshaw"), String("mathers"));
+
+            expectMarshalingInvariants(test, "() => int", () => int);
+            expectMarshalingInvariants(test, "() => char", () => char);
+            expectMarshalingInvariants(test, "() => vectorInt", () => vectorInt);
+            expectMarshalingInvariants(test, "() => vectorString", () => vectorString);
+            expectMarshalingInvariants(test, "() => ...(int, char)", () => ...(int, char));
+            expectMarshalingInvariants(test, "() => ...(int, vectorInt)",
+                () => ...(int, vectorInt)
+            );
+            expectMarshalingInvariants(test, "() => ...(int, vectorString, char)",
+                () => ...(int, vectorString, char)
+            );
+            expectNullMarshaling(test, "() => {}", () => {});
         }),
     )),
 );
