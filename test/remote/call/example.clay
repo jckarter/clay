@@ -8,10 +8,10 @@ hello() {
 }
 
 client(args) {
-    printlnTo(stderr, "1 + 2 = ", remoteCall(stdioPort, add, 1, 2));
-    remoteCall(stdioPort, hello);
-    remoteCall(stdioPort, () => { printlnTo(stderr, "Hello from Lambda!"); });
-    remoteCall(stdioPort, bullet => {
+    printlnTo(stderr, "1 + 2 = ", remoteCall(stdioChannel, add, 1, 2));
+    remoteCall(stdioChannel, hello);
+    remoteCall(stdioChannel, () => { printlnTo(stderr, "Hello from Lambda!"); });
+    remoteCall(stdioChannel, bullet => {
         printlnTo(stderr, "arguments from client:");
         for (arg in args)
             printlnTo(stderr, bullet, " ", arg);
@@ -19,5 +19,5 @@ client(args) {
 }
 
 server(args) {
-    serverLoop(stdioPort);
+    serverLoop(stdioChannel);
 }
