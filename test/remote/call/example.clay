@@ -7,6 +7,9 @@ hello() {
     printlnTo(stderr, "Hello from Server!");
 }
 
+record ExistenceFailure();
+instance Exception = ExistenceFailure;
+
 client(args) {
     printlnTo(stderr, "1 + 2 = ", remoteCall(stdioChannel, add, 1, 2));
     remoteCall(stdioChannel, hello);
@@ -16,6 +19,15 @@ client(args) {
         for (arg in args)
             printlnTo(stderr, bullet, " ", arg);
     }, String("*"));
+
+    try {
+        remoteCall(stdioChannel, () => {
+            printlnTo(stderr, "about to fail existence...");
+            throw ExistenceFailure();
+        });
+    } catch (ex: ExistenceFailure) {
+        printlnTo(stderr, "existence failure!");
+    }
 }
 
 server(args) {
