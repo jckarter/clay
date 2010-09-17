@@ -26,39 +26,39 @@ Marshalable?(T)
 //
 // copy-marshalable implementation
 //
-CopyMarshalable?(T) = false;
+BitwiseMarshalable?(T) = false;
 
-[T | CopyMarshalable?(T)]
+[T | BitwiseMarshalable?(T)]
 overload marshaledSize(x: T) = TypeSize(T);
 
-[T | CopyMarshalable?(T)]
+[T | BitwiseMarshalable?(T)]
 overload marshalTo(buffer: Pointer[Byte], x: T) {
     Pointer[T](buffer)^ <-- x;
     return buffer + TypeSize(T);
 }
 
-[T | CopyMarshalable?(T)]
+[T | BitwiseMarshalable?(T)]
 overload unmarshalFrom(begin: Pointer[Byte], end: Pointer[Byte], static T)
     returned: T, newBegin: Pointer[Byte]
 {
     var newBegin_ = begin + TypeSize(T);
     if (newBegin_ > end)
         throw UnmarshalUnexpectedEOF();
-    returned <-- Pointer[T](begin)^;
+    copyMemory(Pointer[Byte](&returned), Pointer[Byte](&returned + 1), begin);
     newBegin <-- newBegin_;
 }
 
-[C | Character?(C)] overload CopyMarshalable?(static C) = true;
-[I | Integer?(I)] overload CopyMarshalable?(static I) = true;
-[F | Float?(F)] overload CopyMarshalable?(static F) = true;
-[R | RegularRecord?(R) and allValues?(CopyMarshalable?, ...RecordFieldTypes(R))]
-overload CopyMarshalable?(static R) = true;
-[...TupleMembers | allValues?(CopyMarshalable?, ...TupleMembers)]
-overload CopyMarshalable?(static Tuple[...TupleMembers]) = true;
-[...UnionMembers | allValues?(CopyMarshalable?, ...UnionMembers)]
-overload CopyMarshalable?(static Union[...UnionMembers]) = true;
+[C | Character?(C)] overload BitwiseMarshalable?(static C) = true;
+[I | Integer?(I)] overload BitwiseMarshalable?(static I) = true;
+[F | Float?(F)] overload BitwiseMarshalable?(static F) = true;
+[R | RegularRecord?(R) and allValues?(BitwiseMarshalable?, ...RecordFieldTypes(R))]
+overload BitwiseMarshalable?(static R) = true;
+[...TupleMembers | allValues?(BitwiseMarshalable?, ...TupleMembers)]
+overload BitwiseMarshalable?(static Tuple[...TupleMembers]) = true;
+[...UnionMembers | allValues?(BitwiseMarshalable?, ...UnionMembers)]
+overload BitwiseMarshalable?(static Union[...UnionMembers]) = true;
 
-[T, n | CopyMarshalable?(T)] overload CopyMarshalable?(static Array[T, n]) = true;
+[T, n | BitwiseMarshalable?(T)] overload BitwiseMarshalable?(static Array[T, n]) = true;
 
 
 
@@ -67,7 +67,7 @@ overload CopyMarshalable?(static Union[...UnionMembers]) = true;
 //
 private RecordMarshalable?(R) = allValues?(Marshalable?, ...RecordFieldTypes(R));
 private RecordMemberwiseMarshalable?(R)
-    = RecordMarshalable?(R) and not CopyMarshalable?(R);
+    = RecordMarshalable?(R) and not BitwiseMarshalable?(R);
 
 [R | Record?(R) and RecordMemberwiseMarshalable?(R)]
 overload marshaledSize(r: R)
@@ -113,7 +113,7 @@ overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static R)
 //
 [...T] private TupleMarshalable?(static Tuple[...T]) = allValues?(Marshalable?, ...T);
 [T] private TupleMemberwiseMarshalable?(static T)
-    = TupleMarshalable?(T) and not CopyMarshalable?(T);
+    = TupleMarshalable?(T) and not BitwiseMarshalable?(T);
 
 [T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
 overload marshaledSize(t: T)
@@ -141,7 +141,7 @@ overload unmarshalFrom(begin_: Pointer[Byte], end: Pointer[Byte], static T)
 //
 private VariantMarshalable?(V) = allValues?(Marshalable?, ...VariantMembers(V));
 private VariantMemberwiseMarshalable?(V)
-    = VariantMarshalable?(V) and not CopyMarshalable?(V);
+    = VariantMarshalable?(V) and not BitwiseMarshalable?(V);
 
 [V | Variant?(V) and VariantMemberwiseMarshalable?(V)]
 overload marshaledSize(v: V)
