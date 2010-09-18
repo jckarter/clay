@@ -186,6 +186,7 @@ private tokenData(tokenKind) = modify(x => x.data, token(tokenKind));
 //
 
 private var identifier = bounds(modify(Identifier, tokenData(IDENTIFIER)));
+private var identifierList = commaList(identifier);
 
 
 
@@ -518,6 +519,35 @@ private var exprList = commaList(expr);
 
 
 //
+// pattern
+//
+
+private var dottedNamedRef = modify(
+    foldTail,
+    sequence(nameRef, zeroOrMore(fieldRefSuffix)),
+);
+
+private var atomicPattern = choice(dottedNamedRef, intLiteral);
+
+private var pattern = modify(
+    foldTail,
+    sequence(atomicPattern, zeroOrMore(indexingSuffix)),
+);
+
+
+
+//
+// patternTypeSpec, optPatternTypeSpec, typeSpec, optTypeSpec
+//
+
+private var patternTypeSpec = modify(x => x.1, sequence(sym(#":"), pattern));
+private var optPatternTypeSpec = optional(patternTypeSpec);
+private var typeSpec = modify(x => x.1, sequence(sym(#":"), expr));
+private var optTypeSpec = optional(typeSpec);
+
+
+
+//
 // statementParser combinator
 //
 
@@ -529,17 +559,167 @@ private statementParser(forward modifier, forward parser) = modify(
 
 
 //
-// statement
+// statements
 //
 
-private block(input) = statement(input);
+private var labelDef = statementParser(
+    x => Label(x.0),
+    sequence(identifier, sym(#":")),
+);
 
-private statement(input) Maybe[StatementPtr] { return nothing(StatementPtr); }
+private var bindingKind = choice(
+    modify(x => VAR,   kw_var),
+    modify(x => REF,   kw_ref),
+    modify(x => ALIAS, kw_alias),
+);
+
+private var localBinding = statementParser(
+    x => Binding(x.0, move(x.1), move(x.3)),
+    sequence(bindingKind, identifierList, sym(#"="), exprList, sym(#";")),
+);
+
+private var blockItem = choice(labelDef, localBinding, statement);
+
+private var block = statementParser(
+    x => Block(move(x.1)),
+    sequence(sym(#"{"), zeroOrMore(blockItem), sym(#"}")),
+);
+
+private var assignment = statementParser(
+    x => Assignment(move(x.0), move(x.2)),
+    sequence(exprList, sym(#"="), exprList, sym(#";")),
+);
+
+private var initAssignment = statementParser(
+    x => InitAssignment(move(x.0), move(x.2)),
+    sequence(exprList, sym(#"<--"), exprList, sym(#";")),
+);
+
+private var updateOp = choice(
+    modify(x => UPDATE_ADD,       sym(#"+=")),
+    modify(x => UPDATE_SUBTRACT,  sym(#"-=")),
+    modify(x => UPDATE_MULTIPLY,  sym(#"*=")),
+    modify(x => UPDATE_DIVIDE,    sym(#"/=")),
+    modify(x => UPDATE_REMAINDER, sym(#"%=")),
+);
+
+private var updateAssignment = statementParser(
+    x => UpdateAssignment(x.1, x.0, x.2),
+    sequence(expr, updateOp, expr, sym(#";")),
+);
+
+private var gotoStatement = statementParser(
+    x => Goto(x.1),
+    sequence(kw_goto, identifier, sym(#";")),
+);
+
+private var returnStatement = statementParser(
+    x => Return(x.1, move(x.2)),
+    sequence(kw_return, returnKind, exprList, sym(#";")),
+);
+
+private var ifStatement = statementParser(
+    x => If(x.2, x.4, x.5),
+    sequence(
+        kw_if, sym(#"("), expr, sym(#")"), statement,
+        optional(modify(
+            x => x.1,
+            sequence(kw_else, statement),
+        )),
+    ),
+);
+
+private var caseLabel = modify(
+    x => x.1,
+    sequence(kw_case, expr, sym(#":")),
+);
+
+private var caseBody = statementParser(CaseBody, oneOrMore(statement));
+
+private var caseBlock = bounds(modify(
+    x => CaseBlock(move(x.0), move(x.1)),
+    sequence(oneOrMore(caseLabel), caseBody),
+));
+
+private var defaultCase = modify(
+    x => x.2,
+    sequence(kw_default, sym(#":"), caseBody),
+);
+
+private var switchStatement = statementParser(
+    x => Switch(x.2, move(x.5), x.6),
+    sequence(
+        kw_switch, sym(#"("), expr, sym(#")"), sym(#"{"),
+        zeroOrMore(caseBlock), optional(defaultCase), sym(#"}"),
+    ),
+);
+
+private var exprStatement = statementParser(
+    x => ExprStatement(x.0),
+    sequence(expr, sym(#";")),
+);
+
+private var whileStatement = statementParser(
+    x => While(x.2, x.4),
+    sequence(kw_while, sym(#"("), expr, sym(#")"), statement),
+);
+
+private var breakStatement = statementParser(
+    x => Break(),
+    sequence(kw_break, sym(#";")),
+);
+
+private var continueStatement = statementParser(
+    x => Continue(),
+    sequence(kw_continue, sym(#";")),
+);
+
+private var forStatement = statementParser(
+    x => For(move(x.2), x.4, x.6),
+    sequence(
+        kw_for, sym(#"("), identifierList, kw_in, expr, sym(#")"),
+        statement
+    ),
+);
+
+private var catchBlock = bounds(modify(
+    x => Catch(x.2, x.3, x.5),
+    sequence(
+        kw_catch, sym(#"("), identifier, optTypeSpec, sym(#")"), block,
+    ),
+));
+
+private var tryStatement = statementParser(
+    x => Try(x.1, move(x.2)),
+    sequence(kw_try, block, oneOrMore(catchBlock)),
+);
+
+private var throwStatement = statementParser(
+    x => Throw(x.1),
+    sequence(kw_throw, expr, sym(#";")),
+);
+
+private var staticForStatement = statementParser(
+    x => StaticFor(x.3, move(x.5), x.7),
+    sequence(
+        kw_static, kw_for, sym(#"("), identifier, kw_in,
+        exprList, sym(#")"), statement,
+    ),
+);
+
+private var statement2 = choice(
+    block, assignment, initAssignment, updateAssignment, ifStatement,
+    gotoStatement, switchStatement, returnStatement, exprStatement,
+    whileStatement, breakStatement, continueStatement, forStatement,
+    tryStatement, throwStatement, staticForStatement,
+);
+
+private statement(input) Maybe[StatementPtr] = statement2(input);
 
 
 
 //
-// parseExpr
+// parseExpr, parseStatement
 //
 
 record ParserError(where:Pointer[Token]);
@@ -552,6 +732,18 @@ private var parseExpr2 = modify(
 
 parseExpr(input) {
     var result = parseExpr2(input);
+    if (nothing?(result))
+        throw ParserError(input.maxCurrent - 1);
+    return require(move(result));
+}
+
+private var parseStatement2 = modify(
+    x => x.0,
+    sequence(statement, token(SENTINEL)),
+);
+
+parseStatement(input) {
+    var result = parseStatement2(input);
     if (nothing?(result))
         throw ParserError(input.maxCurrent - 1);
     return require(move(result));
