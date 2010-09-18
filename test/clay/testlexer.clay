@@ -9,9 +9,8 @@ main(args) {
     }
     var fileName = args[1];
     var data = readAll(File(fileName));
-    var input = LexerInput(data);
     try {
-        var tokens = tokenize(input);
+        var tokens = tokenize(LexerInput(data));
         for (token in tokens) {
             var kind = token.kind;
             if ((kind == SPACE) or (kind == COMMENT))
@@ -20,7 +19,7 @@ main(args) {
         }
     }
     catch (e:LexerError) {
-        var offset = e.where - &data[0];
+        var offset = e.where - begin(data[0]);
         displayError(fileName, data, offset, "invalid token");
     }
     return 0;
