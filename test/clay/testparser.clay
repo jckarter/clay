@@ -26,7 +26,7 @@ main(args) {
             x => (x.kind != SPACE) and (x.kind != COMMENT),
             tokenize(LexerInput(data)),
         ));
-        var result = parseExpr(ParserInput(tokens));
+        var result = parseStatement(ParserInput(tokens));
         println(result);
     }
     catch (e:LexerError) {
