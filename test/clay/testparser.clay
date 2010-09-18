@@ -1,0 +1,41 @@
+
+import clay.errors.*;
+import clay.lexer.*;
+import clay.ast.*;
+import clay.parser.*;
+
+main(args) {
+/*     if (size(args) != 2) { */
+/*         println("usage: ", args[0], " <clayfile>"); */
+/*         return -1; */
+/*     } */
+/*     var fileName = args[1]; */
+/*     var data = readAll(File(fileName)); */
+
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <input>");
+        return -1;
+    }
+    var fileName = "<stdin>";
+    var data = args[1];
+
+    var tokens = Vector[Token]();
+
+    try {
+        tokens = Vector(filter(
+            x => (x.kind != SPACE) and (x.kind != COMMENT),
+            tokenize(LexerInput(data)),
+        ));
+        var result = parseExpr(ParserInput(tokens));
+        println(result);
+    }
+    catch (e:LexerError) {
+        var offset = e.where - begin(data);
+        displayError(fileName, data, offset, "invalid token");
+    }
+    catch (e:ParserError) {
+        var offset = begin(e.where^.data) - begin(data);
+        displayError(fileName, data, offset, "parse error");
+    }
+    return 0;
+}
