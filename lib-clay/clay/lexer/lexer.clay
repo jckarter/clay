@@ -9,6 +9,7 @@ import parsing.combinators.wrapper.*;
 //
 
 enum TokenKind {
+    SENTINEL,
     SYMBOL,
     KEYWORD,
     IDENTIFIER,
@@ -141,6 +142,8 @@ private var zeroOrMore = combinators.zeroOrMore;
 private var oneOrMore = combinators.oneOrMore;
 private var zeroOrMoreAs = combinators.zeroOrMoreAs;
 private var oneOrMoreAs = combinators.oneOrMoreAs;
+private var separatedList = combinators.separatedList;
+private var separatedListNoTail = combinators.separatedListNoTail;
 
 
 
@@ -431,10 +434,19 @@ private var lexToken = bounds(lexToken1);
 // tokenize
 //
 
+private var lexSentinel = bounds(input => Maybe(Token(SENTINEL)));
+
 record LexerError(where:Pointer[Char]);
 instance Exception = LexerError;
 
-private var tokenize1 = zeroOrMore(lexToken);
+private var tokenize1 = modify(
+    x => {
+        var v = move(x.0);
+        push(v, move(x.1));
+        return move(v);
+    },
+    sequence(zeroOrMore(lexToken), lexSentinel),
+);
 
 public tokenize(input) {
     var tokens = require(tokenize1(input));
