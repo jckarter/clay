@@ -18,7 +18,11 @@ alias TokenRange = CoordinateRange[Pointer[Token]];
 
 private ast(...fields) = RecordWithPredicate(
     ASTNode?,
-    Tuple((#tokens, TokenRange), ...fields)
+    Tuple(
+        (#tokens, TokenRange),
+        (#mainToken, Pointer[Token]),
+        ...fields,
+    ),
 );
 
 procedure ASTNode?;
@@ -26,17 +30,36 @@ overload ASTNode?(x) = false;
 
 [T, ...A | Record?(T)
            and ASTNode?(T)
-           and (Tuple[...RecordFieldTypes(T)] == Tuple[TokenRange, ...A])]
+           and (Tuple[...RecordFieldTypes(T)] ==
+                Tuple[TokenRange, Pointer[Token], ...A])]
 callbyname overload T(...args:A) returned:T {
     alias tokens = TokenRange(null(Token), null(Token));
-    ...recordFields(returned) <-- tokens, ...args;
+    ...recordFields(returned) <-- tokens, null(Token), ...args;
 }
 
 [T | Record?(T) and ASTNode?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
-    printReprValuesTo(stream, ...dropValues(static 1, ...recordFields(x)));
+    printReprValuesTo(stream, ...dropValues(static 2, ...recordFields(x)));
 }
+
+private ASTVariant?(x) = false;
+overload ASTVariant?(static Expr) = true;
+overload ASTVariant?(static Statement) = true;
+
+[T | Variant?(T) and ASTVariant?(T)]
+overload printReprTo(stream, x:SharedPointer[T]) {
+    if (null?(x))
+        printTo(stream, "nullShared(", T, ")");
+    else
+        printReprTo(stream, x^);
+}
+
+[T | Variant?(T) and ASTVariant?(T)]
+overload fieldRef(x:T, static #tokens) = ref fieldRef(*x, #tokens);
+
+[T | Variant?(T) and ASTVariant?(T)]
+overload fieldRef(x:T, static #mainToken) = ref fieldRef(*x, #mainToken);
 
 
 
@@ -106,7 +129,7 @@ record ArrayExpr      = ...ast((#args, Vector[ExprPtr]));
 record Indexing       = ...ast((#expr, ExprPtr), (#args, Vector[ExprPtr]));
 record Call           = ...ast((#expr, ExprPtr), (#args, Vector[ExprPtr]));
 record FieldRef       = ...ast((#expr, ExprPtr), (#name, Identifier));
-record StaticIndexing = ...ast((#expr, ExprPtr), (#index, SizeT));
+record StaticIndexing = ...ast((#expr, ExprPtr), (#index, String));
 
 enum UnaryOpKind {
     DEREFERENCE, ADDRESS_OF, PLUS, MINUS, NOT,
