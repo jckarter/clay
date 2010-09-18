@@ -471,17 +471,82 @@ private var staticExpr = exprParser(
 
 
 //
+// return kind
+//
+
+private var returnKind = choice(
+    modify(x => RETURN_REF, kw_ref),
+    modify(x => RETURN_FORWARD, kw_forward),
+    input => Maybe(RETURN_VALUE),
+);
+
+
+
+//
+// lambda expr
+//
+
+private var lambdaArgs = choice(
+    modify(Vector[Identifier], identifier),
+    modify(
+        x => move(x.1),
+        sequence(sym(#"("), zeroOrMore(identifier), sym(#")")),
+    ),
+);
+
+private var optCaptureByRef = choice(
+    modify(x => true, kw_ref),
+    input => Maybe(false),
+);
+
+private var lambdaBody = choice(
+    block,
+    statementParser(
+        x => Return(x.0, Vector[ExprPtr](x.1)),
+        sequence(returnKind, expr),
+    ),
+);
+
+private var lambdaExpr = exprParser(
+    x => LambdaExpr(x.1, move(x.0), move(x.3)),
+    sequence(lambdaArgs, optCaptureByRef, sym(#"=>"), lambdaBody),
+);
+
+
+
+//
 // expr
 //
 
 private var expr2 = choice(
-    orExpr, ifExpr, unpackExpr, newExpr, staticExpr,
+    lambdaExpr, orExpr, ifExpr, unpackExpr, newExpr, staticExpr,
 );
 
 private expr(input) Maybe[ExprPtr] { return expr2(input); }
 
 private var exprList2 = commaList(expr);
 private exprList(input) = exprList2(input);
+
+
+
+//
+// statementParser combinator
+//
+
+private statementParser(modifier, parser) = modify(
+    x => new Statement(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+
+
+//
+// statement
+//
+
+private block(input) = statement(input);
+
+private statement(input) Maybe[StatementPtr] { return nothing(StatementPtr); }
 
 
 
