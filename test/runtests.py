@@ -115,9 +115,7 @@ class TestCase(object):
             commandline = [sys.executable, self.runscript, outfilename]
 
         process = Popen(commandline, stdout=PIPE, stderr=PIPE)
-        resultout = process.stdout.read()
-        resulterr = process.stderr.read()
-        process.wait()
+        resultout, resulterr = process.communicate()
         self.removefile(outfilename)
         return resultout, resulterr, process.returncode
 
