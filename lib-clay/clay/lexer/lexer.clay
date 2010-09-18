@@ -154,13 +154,13 @@ private var separatedListNoTail = combinators.separatedListNoTail;
 private alias Dummy = Char;
 private alias dummy = 'T';
 
-private seq(...parsers) = sequenceAs(dummy, ...parsers);
+private seq(forward ...parsers) = sequenceAs(dummy, ...parsers);
 
-private zeroPlus(...parsers) = zeroPlus(seq(...parsers));
-overload zeroPlus(parser) = zeroOrMoreAs(dummy, parser);
+private zeroPlus(forward ...parsers) = zeroPlus(seq(...parsers));
+overload zeroPlus(forward parser) = zeroOrMoreAs(dummy, parser);
 
-private onePlus(...parsers) = onePlus(seq(...parsers));
-overload onePlus(parser) = oneOrMoreAs(dummy, parser);
+private onePlus(forward ...parsers) = onePlus(seq(...parsers));
+overload onePlus(forward parser) = oneOrMoreAs(dummy, parser);
 
 
 
@@ -413,7 +413,7 @@ private var lexLLVM = modify(
 // lex one token
 //
 
-private var lexToken1 = choice(
+private var lexToken = bounds(choice(
     lexSpace,
     lexLineComment,
     lexBlockComment,
@@ -424,9 +424,7 @@ private var lexToken1 = choice(
     lexStringLiteral,
     lexFloatLiteral,
     lexIntLiteral,
-);
-
-private var lexToken = bounds(lexToken1);
+));
 
 
 
