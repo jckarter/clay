@@ -19,7 +19,7 @@ main(args) {
         }
     }
     catch (e:LexerError) {
-        var offset = e.where - begin(data[0]);
+        var offset = e.where - begin(data);
         displayError(fileName, data, offset, "invalid token");
     }
     return 0;
