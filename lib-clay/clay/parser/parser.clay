@@ -334,12 +334,10 @@ private var suffix = choice(
     staticIndexingSuffix, dereferenceSuffix,
 );
 
-private var suffixExpr2 = modify(
+private var suffixExpr = modify(
     foldTail,
     sequence(atomicExpr, zeroOrMore(suffix)),
 );
-
-private suffixExpr(input) = suffixExpr2(input);
 
 
 
@@ -367,11 +365,9 @@ private var dispatchExpr = exprParser(
     sequence(sym(#"*"), suffixExpr),
 );
 
-private var prefixExpr2 = choice(
+private var prefixExpr = choice(
     signExpr, addressOfExpr, dispatchExpr, suffixExpr
 );
-
-private prefixExpr(input) = prefixExpr2(input);
 
 
 
@@ -392,15 +388,13 @@ private var mulDivOp = choice(
     modify(x => DIVIDE,    sym(#"/")),
     modify(x => REMAINDER, sym(#"%")),
 );
-private var mulDivExpr2 = binaryOp(mulDivOp, prefixExpr);
-private mulDivExpr(input) = mulDivExpr2(input);
+private var mulDivExpr = binaryOp(mulDivOp, prefixExpr);
 
 private var addSubOp = choice(
     modify(x => ADD,      sym(#"+")),
     modify(x => SUBTRACT, sym(#"-")),
 );
-private var addSubExpr2 = binaryOp(addSubOp, mulDivExpr);
-private addSubExpr(input) = addSubExpr2(input);
+private var addSubExpr = binaryOp(addSubOp, mulDivExpr);
 
 private var compareOp = choice(
     modify(x => EQUALS,         sym(#"==")),
@@ -410,8 +404,7 @@ private var compareOp = choice(
     modify(x => GREATER,        sym(#">")),
     modify(x => GREATER_EQUALS, sym(#">=")),
 );
-private var compareExpr2 = binaryOp(compareOp, addSubExpr);
-private compareExpr(input) = compareExpr2(input);
+private var compareExpr = binaryOp(compareOp, addSubExpr);
 
 
 
@@ -419,14 +412,13 @@ private compareExpr(input) = compareExpr2(input);
 // not, and, or
 //
 
-private var notExpr2 = choice(
+private var notExpr = choice(
     exprParser(
         x => UnaryOp(NOT, x.1),
         sequence(kw_not, compareExpr),
     ),
     compareExpr,
 );
-private notExpr(input) = notExpr2(input);
 
 private andOrOp(node, op, term) = modify(
     foldTail,
@@ -436,11 +428,8 @@ private andOrOp(node, op, term) = modify(
     ))),
 );
 
-private var andExpr2 = andOrOp(And, kw_and, notExpr);
-private andExpr(input) = andExpr2(input);
-
-private var orExpr2 = andOrOp(Or, kw_or, andExpr);
-private orExpr(input) = orExpr2(input);
+private var andExpr = andOrOp(And, kw_and, notExpr);
+private var orExpr = andOrOp(Or, kw_or, andExpr);
 
 
 
@@ -524,8 +513,7 @@ private var expr2 = choice(
 
 private expr(input) Maybe[ExprPtr] { return expr2(input); }
 
-private var exprList2 = commaList(expr);
-private exprList(input) = exprList2(input);
+private var exprList = commaList(expr);
 
 
 
