@@ -72,7 +72,7 @@ private var oneOrMoreAs = combinators.oneOrMoreAs;
 private var separatedList = combinators.separatedList;
 private var separatedListNoTail = combinators.separatedListNoTail;
 
-private commaList(parser) = separatedList(sym(#","), parser);
+private commaList(forward parser) = separatedList(sym(#","), parser);
 
 
 
@@ -193,7 +193,7 @@ private var identifier = bounds(modify(Identifier, tokenData(IDENTIFIER)));
 // exprParser combinator
 //
 
-private exprParser(modifier, parser) = modify(
+private exprParser(forward modifier, forward parser) = modify(
     x => new Expr(move(x)),
     bounds(modify(modifier, parser)),
 );
@@ -533,7 +533,7 @@ private exprList(input) = exprList2(input);
 // statementParser combinator
 //
 
-private statementParser(modifier, parser) = modify(
+private statementParser(forward modifier, forward parser) = modify(
     x => new Statement(move(x)),
     bounds(modify(modifier, parser)),
 );
