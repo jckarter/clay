@@ -175,9 +175,9 @@ private sym(static Ident) = symbolParserTable[Ident];
 // token parser
 //
 
-token(tokenKind) = condition(x => (x.kind == tokenKind));
+private token(tokenKind) = condition(x => (x.kind == tokenKind));
 
-tokenData(tokenKind) = modify(x => x.data, token(tokenKind));
+private tokenData(tokenKind) = modify(x => x.data, token(tokenKind));
 
 
 
