@@ -1,0 +1,7 @@
+Available commands:
+  add         add integers
+  subtract    subtract integers
+  multiply    multiply integers
+  divide      divide integers
+  version     
+Division by zero!

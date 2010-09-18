@@ -51,6 +51,11 @@ class TestCase(object):
         self.path = folder
         if os.path.isfile(testfile):
             self.loadTest(testfile)
+        runscript = os.path.join(folder, "run.py")
+        if os.path.isfile(runscript):
+            self.runscript = runscript
+        else:
+            self.runscript = None
         for entry in entries:
             fullpath = os.path.join(folder, entry)
             if not os.path.isdir(fullpath):
@@ -74,19 +79,24 @@ class TestCase(object):
         [os.unlink(f) for f in glob.glob("temp*")]
         [os.unlink(f) for f in glob.glob("*.data")]
 
-    def match(self, output, returncode) :
-        refoutput = open("out.txt").read()
-        output = output.replace('\r', '')
-        refoutput = refoutput.replace('\r', '')
-        return output == refoutput
+    def match(self, resultout, resulterr, returncode) :
+        refout = open("out.txt").read()
+        referr = ""
+        if os.path.isfile("err.txt"):
+            referr = open("err.txt").read()
+        resultout = resultout.replace('\r', '')
+        refout    = refout.replace('\r', '')
+        resulterr = resulterr.replace('\r', '')
+        referr    = referr.replace('\r', '')
+        return resultout == refout and resulterr == referr
 
     def run(self):
         os.chdir(self.path)
         self.pre_build()
         self.post_build()
-        result, returncode = self.runtest()
+        resultout, resulterr, returncode = self.runtest()
         self.post_run()
-        if self.match(result, returncode):
+        if self.match(resultout, resulterr, returncode):
             return "ok"
         return "fail"
 
@@ -98,12 +108,18 @@ class TestCase(object):
         outfilename = os.path.join(".", outfilename)
         process = Popen(self.cmdline(compiler))
         if process.wait() != 0 :
-            return "fail", None
-        process = Popen([outfilename], stdout=PIPE)
-        result = process.stdout.read()
+            return "fail", "", None
+        if self.runscript is None:
+            commandline = [outfilename]
+        else:
+            commandline = [sys.executable, self.runscript, outfilename]
+
+        process = Popen(commandline, stdout=PIPE, stderr=PIPE)
+        resultout = process.stdout.read()
+        resulterr = process.stderr.read()
         process.wait()
         self.removefile(outfilename)
-        return result, process.returncode
+        return resultout, resulterr, process.returncode
 
     def removefile(self, filename) :
         # on windows, sometimes, deleting a file
@@ -122,7 +138,7 @@ class TestModuleCase(TestCase):
     def cmdline(self, clay) :
         return [clay, "test.clay"]
 
-    def match(self, output, returncode) :
+    def match(self, resultout, resulterr, returncode) :
         return returncode == 0
         
 
