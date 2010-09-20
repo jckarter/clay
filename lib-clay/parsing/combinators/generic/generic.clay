@@ -380,7 +380,8 @@ oneOrMoreAs(static TokenInput, result:Result, forward parser:Parser) =
 
 
 //
-// separatedList, separatedListNoTail
+// separatedList, optSeparatedList,
+// separatedListStrict, optSeparatedListStrict,
 //
 
 [TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
@@ -401,12 +402,24 @@ separatedList(static TokenInput, forward _separator:Separator, forward _element:
             if (nothing?(sep))
                 break;
         }
+        if (empty?(v))
+            return nothing(Vector[T]);
         return Maybe(move(v));
     };
 }
 
 [TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
-separatedListNoTail(static TokenInput, forward _separator:Separator, forward _element:Element) {
+optSeparatedList(static TokenInput, forward _separator:Separator, forward _element:Element) {
+    alias T = ParseResult(TokenInput, Element);
+    return modify(
+        TokenInput,
+        x => maybe(move(x), y => move(y), () => Vector[T]()),
+        optional(TokenInput, separatedList(TokenInput, _separator, _element)),
+    );
+}
+
+[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+separatedListStrict(static TokenInput, forward _separator:Separator, forward _element:Element) {
     var separator = convertParser(TokenInput, _separator);
     var element = convertParser(TokenInput, _element);
     return input => {
@@ -426,6 +439,17 @@ separatedListNoTail(static TokenInput, forward _separator:Separator, forward _el
                 break;
         }
         input = saved;
+        if (empty?(v))
+            return nothing(Vector[T]);
         return Maybe(move(v));
     };
+}
+
+[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+optSeparatedListStrict(static TokenInput, forward _separator:Separator, forward _element:Element) {
+    alias T = ParseResult(TokenInput, Element);
+    return modify(
+        x => maybe(move(x), y => move(y), () => Vector[T]()),
+        optional(separatedListStrict(_separator, _element)),
+    );
 }

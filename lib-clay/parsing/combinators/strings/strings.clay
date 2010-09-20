@@ -23,4 +23,4 @@ var oneOrMore = combinators.oneOrMore;
 var zeroOrMoreAs = combinators.zeroOrMoreAs;
 var oneOrMoreAs = combinators.oneOrMoreAs;
 var separatedList = combinators.separatedList;
-var separatedListNoTail = combinators.separatedListNoTail;
+var separatedListStrict = combinators.separatedListStrict;
