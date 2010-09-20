@@ -1,4 +1,4 @@
-import test.(expect);
+import test.(expect, printFailure);
 
 alias UNINITIALIZED_CANARY = SizeT(-1);
 alias NOISY_CANARIES = false;
@@ -109,6 +109,8 @@ overload resetUnsafe(x: Canary) {
 }
 overload assign(x: Canary, y: Canary) { }
 
+overload equals?(x: Canary, y: Canary) { return true; }
+
 checkCanariesDestroyed() r: Bool {
     r <-- true;
     for (n in range(size(canaryTracker))) {
@@ -140,4 +142,17 @@ checkCanariesLiveInSequence(seq: S) r: Bool {
             println("!! invalid     in sequence: ", x.id);
         }
     }
+}
+
+expectCanariesDestroyed(test, name, fn) {
+    fn();
+    expect(test, checkCanariesDestroyed(), () => {
+        printFailure(name, " left memory canaries undestroyed");
+    });
+}
+
+expectCanariesLiveInSequence(test, name, seq) {
+    expect(test, checkCanariesLiveInSequence(seq), () => {
+        printFailure(name, " contains invalid memory canaries");
+    });
 }

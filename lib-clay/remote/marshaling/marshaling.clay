@@ -4,13 +4,23 @@
 //
 
 private record MarshalPointerTracker (
-    index: SizeT,
+    id: SizeT,
     sized?: Bool,
     marshaled?: Bool,
 );
 
-record MarshalContext (pointers: HashMap[RawPointer, MarshalPointerTracker]);
-record UnmarshalContext (pointers: Vector[RawPointer]);
+record MarshalContext (
+    pointerCount: SizeT,
+    pointers: HashMap[RawPointer, MarshalPointerTracker],
+);
+
+overload MarshalContext() = MarshalContext(
+    SizeT(0), HashMap[RawPointer, MarshalPointerTracker]()
+);
+
+record UnmarshalContext (
+    pointers: HashMap[SizeT, RawPointer],
+);
 
 
 
@@ -103,7 +113,7 @@ private RecordMemberwiseMarshalable?(R)
 [R | Record?(R) and RecordMemberwiseMarshalable?(R)]
 overload marshaledSize(context, r: R)
     = ...foldValues(add,
-        ...mapValues(f => marshaledSize(context, f), ...recordFields(r))
+        ...mapValues(f ref=> marshaledSize(context, f), ...recordFields(r))
     );
 
 [R | Record?(R) and RecordMemberwiseMarshalable?(R)]
@@ -152,7 +162,7 @@ overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], stati
 [T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
 overload marshaledSize(context, t: T)
     = ...foldValues(add,
-        ...mapValues(f => marshaledSize(context, f), ...unpack(t))
+        ...mapValues(f ref=> marshaledSize(context, f), ...unpack(t))
     );
 
 [T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
@@ -245,7 +255,7 @@ private UnmarshalAsVectorSequence?(S)
     = MarshalableSequence?(S) and not CallDefined?(push, S, SequenceElementType(S));
 
 private sequenceMarshaledSize(context, seq)
-    = TypeSize(SizeT) + reduce(add, SizeT(0), map(f => marshaledSize(context, f), seq));
+    = TypeSize(SizeT) + reduce(add, SizeT(0), map(f ref=> marshaledSize(context, f), seq));
 
 [S | MarshalableSequence?(S)]
 overload marshaledSize(context, seq: S) = sequenceMarshaledSize(context, seq);
@@ -317,6 +327,182 @@ overload marshalTo(context, buffer: Pointer[Byte], r: T) = buffer;
 overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static T)
     = (), begin;
 
+
+
+//
+// unique pointers
+//
+[T]
+overload marshaledSize(context, p: UniquePointer[T]) {
+    if (null?(p))
+        return marshaledSize(context, false);
+    else
+        return marshaledSize(context, true) + marshaledSize(context, p^);
+}
+
+[T]
+overload marshalTo(context, buffer_: Pointer[Byte], p: UniquePointer[T]) {
+    if (null?(p))
+        return marshalTo(context, buffer_, false);
+    else {
+        var buffer = marshalTo(context, buffer_, true);
+        return marshalTo(context, buffer, p^);
+    }
+}
+
+[T]
+overload unmarshalFrom(
+    context,
+    begin_: Pointer[Byte], end: Pointer[Byte],
+    static UniquePointer[T]
+) p: UniquePointer[T], begin: Pointer[Byte] {
+    var isNotNull? = Bool();
+    isNotNull?, begin <-- ...unmarshalFrom(context, begin_, end, Bool);
+
+    if (isNotNull?) {
+        p <-- UniquePointer(allocateRawMemory(T, SizeT(1)));
+        try {
+            p^, begin <-- ...unmarshalFrom(context, begin, end, T);
+        } catch (ex) {
+            freeRawMemory(p.ptr);
+            throw ex;
+        }
+    } else
+        p <-- nullUnique(T);
+}
+
+[T]
+overload UnmarshaledType(static UniquePointer[T]) = UniquePointer[UnmarshaledType(T)];
+
+
+
+//
+// shared pointers
+//
+private alias SHARED_POINTER_NULL = 0u8;
+private alias SHARED_POINTER_REF = 1u8;
+private alias SHARED_POINTER_DATA = 2u8;
+
+[T]
+overload marshaledSize(context: MarshalContext, p: SharedPointer[T]) {
+    if (null?(p))
+        return marshaledSize(context, SHARED_POINTER_NULL);
+    else {
+        var rawPtr = RawPointer(p.ptr);
+        var pointerState = lookup(context.pointers, rawPtr);
+        if (null?(pointerState)) {
+            var id = context.pointerCount;
+            context.pointers[rawPtr]
+                = MarshalPointerTracker(id, true, false);
+            context.pointerCount += 1;
+            println("ptr ", id, " sized fresh");
+            return marshaledSize(context, SHARED_POINTER_DATA)
+                + marshaledSize(context, id)
+                + marshaledSize(context, p^);
+        } else if (not pointerState^.sized?) {
+            println("ptr ", pointerState^.id, " sized");
+            pointerState^.sized? = true;
+            return marshaledSize(context, SHARED_POINTER_DATA)
+                + marshaledSize(context, pointerState^.id)
+                + marshaledSize(context, p^);
+        } else {
+            println("ptr ", pointerState^.id, " resized");
+            return marshaledSize(context, SHARED_POINTER_REF)
+                + marshaledSize(context, pointerState^.id);
+        }
+    }
+}
+
+[T]
+overload marshalTo(context: MarshalContext, buffer_: Pointer[Byte], p: SharedPointer[T]) {
+    var rawPtr = RawPointer(p.ptr);
+    if (null?(p))
+        return marshalTo(context, buffer_, SHARED_POINTER_NULL);
+    else {
+        var pointerState = lookup(context.pointers, rawPtr);
+        if (null?(pointerState)) {
+            var id = context.pointerCount;
+            context.pointers[rawPtr]
+                = MarshalPointerTracker(id, false, true);
+            context.pointerCount += 1;
+            println("ptr ", id, " marshaled fresh");
+            var buffer = marshalTo(context, buffer_, SHARED_POINTER_DATA);
+            buffer = marshalTo(context, buffer, id);
+            buffer = marshalTo(context, buffer, p^);
+            return buffer;
+        } else if (not pointerState^.marshaled?) {
+            println("ptr ", pointerState^.id, " marshaled");
+            pointerState^.marshaled? = true;
+            var buffer = marshalTo(context, buffer_, SHARED_POINTER_DATA);
+            buffer = marshalTo(context, buffer, pointerState^.id);
+            buffer = marshalTo(context, buffer, p^);
+            return buffer;
+        } else {
+            println("ptr ", pointerState^.id, " remarshaled");
+            var buffer = marshalTo(context, buffer_, SHARED_POINTER_REF);
+            buffer = marshalTo(context, buffer, pointerState^.id);
+            return buffer;
+        }
+    }
+}
+
+record UnmarshalIncompleteObjectGraph ();
+instance Exception = UnmarshalIncompleteObjectGraph;
+
+record UnmarshalInconsistentObjectGraph ();
+instance Exception = UnmarshalInconsistentObjectGraph;
+
+record UnmarshalInvalidObjectGraphData ();
+instance Exception = UnmarshalInvalidObjectGraphData;
+
+[T]
+overload unmarshalFrom(context: UnmarshalContext,
+    begin_: Pointer[Byte], end: Pointer[Byte],
+    static SharedPointer[T]
+) {
+    var mode, begin = ...unmarshalFrom(context, begin_, end, UInt8); 
+    switch (mode) {
+    case SHARED_POINTER_NULL: {
+        return nullShared(T), begin;
+    }
+    case SHARED_POINTER_REF: {
+        var id = SizeT();
+        id, begin = ...unmarshalFrom(context, begin, end, SizeT);
+        var pointerState = lookup(context.pointers, id);
+
+        if (null?(pointerState))
+            throw UnmarshalIncompleteObjectGraph();
+
+        var ptr = Pointer[RefCounted[T]](pointerState^);
+        ptr^.refCount += 1;
+        return SharedPointer[T](ptr), begin;
+    }
+    case SHARED_POINTER_DATA: {
+        var id = SizeT();
+        id, begin = ...unmarshalFrom(context, begin, end, SizeT);
+        if (not null?(lookup(context.pointers, id)))
+            throw UnmarshalInconsistentObjectGraph();
+
+        var ptr = allocateRawMemory(RefCounted[T], SizeT(1));
+        try {
+            ptr^.refCount = 1;
+            ptr^.value, begin <-- ...unmarshalFrom(context, begin, end, T);
+            context.pointers[id] = RawPointer(ptr);
+            return SharedPointer[T](ptr), begin;
+        } catch (ex) {
+            freeRawMemory(ptr);
+            throw ex;
+        }
+    }
+    default:
+        throw UnmarshalInvalidObjectGraphData();
+    }
+}
+
+[T]
+overload UnmarshaledType(static SharedPointer[T]) = SharedPointer[UnmarshaledType(T)];
+
+
 
 //
 // high-level interface
@@ -326,7 +512,7 @@ overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static
 overload marshal() = Vector[Byte]();
 
 overload marshal(context: MarshalContext, forward ...values) returned: Vector[Byte] {
-    var sz = foldValues(add, ...mapValues(v => marshaledSize(context, v), ...values));
+    var sz = foldValues(add, ...mapValues(v ref=> marshaledSize(context, v), ...values));
     returned <-- Vector[Byte]();
     resize(returned, sz);
 
@@ -340,7 +526,7 @@ overload marshal(context: MarshalContext, forward ...values) returned: Vector[By
 overload marshal(context: MarshalContext) = Vector[Byte]();
 
 unmarshal(data: Vector[Byte], ...Types)
-    = unmarshal(UnmarshalContext(), data, ...Types);
+    = ...unmarshal(UnmarshalContext(), data, ...Types);
 overload unmarshal(context: UnmarshalContext, data: Vector[Byte], ...Types) {
     var b = begin(data);
     var e = end(data);
