@@ -5,19 +5,12 @@ import clay.ast.*;
 import clay.parser.*;
 
 main(args) {
-/*     if (size(args) != 2) { */
-/*         println("usage: ", args[0], " <clayfile>"); */
-/*         return -1; */
-/*     } */
-/*     var fileName = args[1]; */
-/*     var data = readAll(File(fileName)); */
-
     if (size(args) != 2) {
-        println("usage: ", args[0], " <input>");
+        println("usage: ", args[0], " <clayfile>");
         return -1;
     }
-    var fileName = "<stdin>";
-    var data = args[1];
+    var fileName = args[1];
+    var data = readAll(File(fileName));
 
     var tokens = Vector[Token]();
 
@@ -26,7 +19,7 @@ main(args) {
             x => (x.kind != SPACE) and (x.kind != COMMENT),
             tokenize(LexerInput(data)),
         ));
-        var result = parseStatement(ParserInput(tokens));
+        var result = parseModule(ParserInput(tokens));
         println(result);
     }
     catch (e:LexerError) {
