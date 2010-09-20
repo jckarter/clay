@@ -46,6 +46,11 @@ overload printReprTo(stream, x:T) {
 private ASTVariant?(x) = false;
 overload ASTVariant?(static Expr) = true;
 overload ASTVariant?(static Statement) = true;
+overload ASTVariant?(static Argument) = true;
+overload ASTVariant?(static CodeBody) = true;
+overload ASTVariant?(static TopLevelItem) = true;
+overload ASTVariant?(static RecordBody) = true;
+overload ASTVariant?(static Import) = true;
 
 [T | Variant?(T) and ASTVariant?(T)]
 overload printReprTo(stream, x:SharedPointer[T]) {
@@ -316,11 +321,17 @@ enum ArgumentKind {
     ARG_FORWARD,
 }
 
-record Argument = ...ast(
+record NormalArgument = ...ast(
     (#kind, ArgumentKind),
     (#name, Identifier),
     (#type, Maybe[ExprPtr]),
 );
+
+record StaticArgument = ...ast(
+    (#expr, ExprPtr),
+);
+
+variant Argument = NormalArgument | StaticArgument;
 
 record ReturnSpec = ...ast(
     (#multi?, Bool),
@@ -400,6 +411,11 @@ record GlobalVariable = ...named(
     (#expr,   ExprPtr),
 );
 
+record GlobalAlias = ...named(
+    (#params, VarList[Identifier]),
+    (#expr,   ExprPtr),
+);
+
 record ExternalProcedure = ...named(
     (#attributes,  Vector[ExprPtr]),
     (#args,        Vector[ExternalArg]),
@@ -416,11 +432,6 @@ record ExternalArg = ...ast(
 record ExternalVariable = ...named(
     (#attributes, Vector[ExprPtr]),
     (#type,       ExprPtr),
-);
-
-record GlobalAlias = ...named(
-    (#params, VarList[Identifier]),
-    (#expr,   ExprPtr),
 );
 
 variant TopLevelItem =
