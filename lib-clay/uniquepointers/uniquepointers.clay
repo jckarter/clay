@@ -78,3 +78,12 @@ overload null?(p: UniquePointer[T]) = null?(p.ptr);
 
 [T]
 nullUnique(static T) = UniquePointer[T]();
+
+
+
+//
+// equality
+//
+[T]
+overload equals?(p: UniquePointer[T], q: UniquePointer[T])
+    = p.ptr == q.ptr;
