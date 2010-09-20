@@ -70,9 +70,40 @@ private var oneOrMore = combinators.oneOrMore;
 private var zeroOrMoreAs = combinators.zeroOrMoreAs;
 private var oneOrMoreAs = combinators.oneOrMoreAs;
 private var separatedList = combinators.separatedList;
-private var separatedListNoTail = combinators.separatedListNoTail;
+private var optSeparatedList = combinators.optSeparatedList;
+private var separatedListStrict = combinators.separatedListStrict;
 
 private commaList(forward parser) = separatedList(sym(#","), parser);
+private optCommaList(forward parser) = optSeparatedList(sym(#","), parser);
+
+private commaListStrict(forward parser) =
+    separatedListStrict(sym(#","), parser);
+
+private optCommaListStrict(forward parser) =
+    optSeparatedListStrict(sym(#","), parser);
+
+
+
+//
+// varList combinator
+//
+
+private commaAndItem(item) = modify(x => move(x.1), sequence(sym(#","), item));
+
+[Item, VarItem | Parsers?(Item, VarItem)]
+private varList(item:Item, varItem:VarItem) {
+    alias T = ParseResult(Item);
+    return choice(
+        modify(
+            x => VarList(move(x.0), move(x.1)),
+            sequence(commaListStrict(item), optional(commaAndItem(varItem))),
+        ),
+        modify(
+            x => VarList(Vector[T](), move(x)),
+            optional(varItem),
+        ),
+    );
+}
 
 
 
@@ -89,7 +120,7 @@ private bounds(parser:Parser) {
             x ref=> {
                 x.tokens = TokenRange(start, input.current);
                 x.mainToken = start;
-                return Maybe(x);
+                return Maybe(move(x));
             },
             () => nothing(T),
         );
@@ -260,7 +291,7 @@ private var arrayExpr = exprParser(
 
 private var tupleExpr = exprParser(
     x => TupleExpr(move(x.1)),
-    sequence(sym(#"("), exprList, sym(#")")),
+    sequence(sym(#"("), optExprList, sym(#")")),
 );
 
 private var nameRef = exprParser(
@@ -307,12 +338,12 @@ private foldTail(x) {
 
 private var indexingSuffix = exprParser(
     x => Indexing(ExprPtr(), move(x.1)),
-    sequence(sym(#"["), exprList, sym(#"]")),
+    sequence(sym(#"["), optExprList, sym(#"]")),
 );
 
 private var callSuffix = exprParser(
     x => Call(ExprPtr(), move(x.1)),
-    sequence(sym(#"("), exprList, sym(#")")),
+    sequence(sym(#"("), optExprList, sym(#")")),
 );
 
 private var fieldRefSuffix = exprParser(
@@ -515,6 +546,7 @@ private var expr2 = choice(
 private expr(input) Maybe[ExprPtr] { return expr2(input); }
 
 private var exprList = commaList(expr);
+private var optExprList = optCommaList(expr);
 
 
 
@@ -537,13 +569,11 @@ private var pattern = modify(
 
 
 //
-// patternTypeSpec, optPatternTypeSpec, typeSpec, optTypeSpec
+// patternTypeSpec, typeSpec
 //
 
 private var patternTypeSpec = modify(x => x.1, sequence(sym(#":"), pattern));
-private var optPatternTypeSpec = optional(patternTypeSpec);
 private var typeSpec = modify(x => x.1, sequence(sym(#":"), expr));
-private var optTypeSpec = optional(typeSpec);
 
 
 
@@ -615,7 +645,7 @@ private var gotoStatement = statementParser(
 
 private var returnStatement = statementParser(
     x => Return(x.1, move(x.2)),
-    sequence(kw_return, returnKind, exprList, sym(#";")),
+    sequence(kw_return, returnKind, optExprList, sym(#";")),
 );
 
 private var ifStatement = statementParser(
@@ -685,7 +715,7 @@ private var forStatement = statementParser(
 private var catchBlock = bounds(modify(
     x => Catch(x.2, x.3, x.5),
     sequence(
-        kw_catch, sym(#"("), identifier, optTypeSpec, sym(#")"), block,
+        kw_catch, sym(#"("), identifier, optional(typeSpec), sym(#")"), block,
     ),
 ));
 
@@ -719,7 +749,344 @@ private statement(input) Maybe[StatementPtr] = statement2(input);
 
 
 //
-// parseExpr, parseStatement
+// parsing parts of code definitions
+//
+
+private var patternVar = bounds(modify(
+    x => PatternVar(not nothing?(x.0), x.1),
+    sequence(optional(sym(#"...")), identifier),
+));
+
+private var optPredicate = optional(modify(
+    x => x.1,
+    sequence(sym(#"|"), expr),
+));
+
+private var patternVarsWithPredicate2 = modify(
+    x => (move(x.1), x.2),
+    sequence(sym(#"["), optCommaList(patternVar), optPredicate, sym(#"]")),
+);
+
+private var patternVarsWithPredicate = modify(
+    x => maybe(move(x), move, () => (Vector[PatternVar](), nothing(ExprPtr))),
+    optional(patternVarsWithPredicate2),
+);
+
+private var argumentKind = choice(
+    modify(x => ARG_LVALUE,  kw_lvalue),
+    modify(x => ARG_RVALUE,  kw_rvalue),
+    modify(x => ARG_FORWARD, kw_forward),
+    input => Maybe(ARG_DEFAULT),
+);
+
+private var argument = choice(
+    modify(Argument, bounds(modify(
+        x => NormalArgument(x.0, x.1, x.2),
+        sequence(argumentKind, identifier, optional(patternTypeSpec)),
+    ))),
+    modify(Argument, bounds(modify(
+        x => StaticArgument(x.1),
+        sequence(kw_static, orExpr),
+    ))),
+);
+
+private var variadicArgument = modify(Argument, bounds(modify(
+    x => NormalArgument(x.0, x.2, x.3),
+    sequence(argumentKind, sym(#"..."), identifier, optional(patternTypeSpec)),
+)));
+
+private var arguments = varList(argument, variadicArgument);
+
+private var namedReturn = modify(
+    x => x.0,
+    sequence(identifier, sym(#":"))
+);
+
+private var returnSpec = bounds(modify(
+    x => ReturnSpec(not nothing?(x.0), x.1, x.2),
+    sequence(optional(sym(#"...")), optional(namedReturn), orExpr),
+));
+
+private var returnSpecs = optCommaList(returnSpec);
+
+private var clayBody = choice(
+    block,
+    statementParser(
+        x => Return(x.1, move(x.2)),
+        sequence(sym(#"="), returnKind, optExprList, sym(#";")),
+    ),
+);
+
+private var llvmBody = bounds(modify(
+    x => LLVMBody(String(x)),
+    tokenData(LLVM),
+));
+
+private var codeBody = choice(
+    modify(CodeBody, clayBody),
+    modify(CodeBody, llvmBody),
+);
+
+
+
+//
+// top level items
+//
+
+private topLevelItemParser(forward modifier, forward parser) = modify(
+    x => TopLevelItem(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+private var visibility = choice(
+    modify(x => PUBLIC,  kw_public),
+    modify(x => PRIVATE, kw_private),
+);
+
+private var recordField = bounds(modify(
+    x => RecordField(x.0, x.1),
+    sequence(identifier, typeSpec),
+));
+
+private var declaredRecordBody = bounds(modify(
+    x => DeclaredRecordBody(move(x.1)),
+    sequence(sym(#"("), optCommaList(recordField), sym(#")"), sym(#";")),
+));
+
+private var computedRecordBody = bounds(modify(
+    x => ComputedRecordBody(move(x.1)),
+    sequence(sym(#"="), optExprList, sym(#";")),
+));
+
+private var recordBody = choice(
+    modify(RecordBody, declaredRecordBody),
+    modify(RecordBody, computedRecordBody),
+);
+
+private var staticParams = modify(
+    x => move(x.1),
+    sequence(
+        sym(#"["),
+        varList(identifier, modify(x => x.1, sequence(sym(#"..."), identifier))),
+        sym(#"]"),
+    ),
+);
+
+private var optStaticParams = modify(
+    x => maybe(move(x), move, () => VarList[Identifier]()),
+    optional(staticParams),
+);
+
+private var recordDef = topLevelItemParser(
+    x => RecordDef(x.0, x.2, x.3, x.4),
+    sequence(
+        optional(visibility), kw_record, identifier, optStaticParams,
+        recordBody,
+    ),
+);
+
+
+private var defaultInstances = choice(
+    modify(
+        x => Vector[ExprPtr](),
+        sym(#";"),
+    ),
+    modify(
+        x => move(x.1),
+        sequence(sym(#"="), separatedList(sym(#"|"), expr), sym(#";")),
+    ),
+);
+
+private var variantDef = topLevelItemParser(
+    x => VariantDef(x.0, x.2, x.3, x.4),
+    sequence(
+        optional(visibility), kw_variant, identifier, optStaticParams,
+        defaultInstances
+    ),
+);
+
+private var instanceDef = topLevelItemParser(
+    x => InstanceDef((x.0).0, (x.0).1, x.2, x.4),
+    sequence(
+        patternVarsWithPredicate, kw_instance, pattern,
+        sym(#"="), expr, sym(#";"),
+    ),
+);
+
+private var optCallByName = modify(
+    x => not nothing?(x),
+    optional(kw_callbyname),
+);
+
+private var procedureWithBody = topLevelItemParser(
+    x => ProcedureDef(x.1, x.4, Maybe(
+        Code(x.2, (x.0).0, (x.0).1, x.6, x.8, x.9)
+    )),
+    sequence(
+        patternVarsWithPredicate, optional(visibility), optCallByName,
+        optional(kw_procedure), identifier, sym(#"("), arguments, sym(#")"),
+        returnSpecs, codeBody,
+    ),
+);
+
+private var procedureWithoutBody = topLevelItemParser(
+    x => ProcedureDef(x.0, x.2, nothing(Code)),
+    sequence(optional(visibility), kw_procedure, identifier, sym(#";")),
+);
+
+private var overloadDef = topLevelItemParser(
+    x => OverloadDef(x.3, Code(x.1, (x.0).0, (x.0).1, x.5, x.7, x.8)),
+    sequence(
+        patternVarsWithPredicate, optCallByName, kw_overload, pattern,
+        sym(#"("), arguments, sym(#")"), returnSpecs, codeBody,
+    ),
+);
+
+private var enumDef = topLevelItemParser(
+    x => EnumDef(x.0, x.2, x.4),
+    sequence(
+        optional(visibility), kw_enum, identifier,
+        sym(#"{"), identifierList, sym(#"}")
+    ),
+);
+
+private var globalVariableDef = topLevelItemParser(
+    x => GlobalVariable(x.0, x.2, x.3, x.5),
+    sequence(
+        optional(visibility), kw_var, identifier, optStaticParams,
+        sym(#"="), expr, sym(#";"),
+    ),
+);
+
+private var globalAliasDef = topLevelItemParser(
+    x => GlobalAlias(x.0, x.2, x.3, x.5),
+    sequence(
+        optional(visibility), kw_alias, identifier, optStaticParams,
+        sym(#"="), expr, sym(#";"),
+    ),
+);
+
+private var externalAttribtues2 = modify(
+    x => x.1,
+    sequence(sym(#"("), exprList, sym(#")")),
+);
+
+private var externalAttribtues = modify(
+    x => maybe(move(x), move, () => Vector[ExprPtr]()),
+    optional(externalAttribtues2),
+);
+
+private var externalArg = bounds(modify(
+    x => ExternalArg(x.0, x.2),
+    sequence(identifier, sym(#":"), expr),
+));
+
+private var variadicExternalArg = bounds(modify(
+    x => ExternalArg(),
+    sym(#"..."),
+));
+
+private var externalArgs = modify(
+    x => (move(x.items), not nothing?(x.varItem)),
+    varList(externalArg, variadicExternalArg),
+);
+
+private var externalBody = choice(
+    modify(x => Maybe(x), block),
+    modify(x => nothing(StatementPtr), sym(#";")),
+);
+
+private var externalProcedure = topLevelItemParser(
+    x => ExternalProcedure(x.0, x.3, x.2, (x.5).0, (x.5).1, x.7, x.8),
+    sequence(
+        optional(visibility), kw_external, externalAttribtues, identifier,
+        sym(#"("), externalArgs, sym(#")"), optional(expr), externalBody,
+    ),
+);
+
+private var externalVariable = topLevelItemParser(
+    x => ExternalVariable(x.0, x.3, x.2, x.4),
+    sequence(
+        optional(visibility), kw_external, externalAttribtues,
+        identifier, typeSpec, sym(#";"),
+    ),
+);
+
+private var topLevelItem = choice(
+    recordDef, variantDef, instanceDef, procedureWithBody,
+    procedureWithoutBody, overloadDef, enumDef,
+    globalVariableDef, globalAliasDef,
+    externalProcedure, externalVariable,
+);
+
+
+
+//
+// imports
+//
+
+private var moduleName = bounds(modify(
+    DottedName,
+    separatedListStrict(sym(#"."), identifier),
+));
+
+private var optAlias = optional(modify(
+    x => x.1,
+    sequence(kw_as, identifier),
+));
+
+private importParser(forward modifier, forward parser) = modify(
+    x => Import(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+private var importModule = importParser(
+    x => ImportModule(x.0, x.2, x.3),
+    sequence(
+        optional(visibility), kw_import, moduleName, optAlias, sym(#";")
+    ),
+);
+
+private var importStar = importParser(
+    x => ImportStar(x.0, x.2),
+    sequence(
+        optional(visibility), kw_import, moduleName,
+        sym(#"."), sym(#"*"), sym(#";"),
+    ),
+);
+
+private var importedMember = bounds(modify(
+    x => ImportedMember(x.0, x.1),
+    sequence(identifier, optAlias),
+));
+
+private var importMembers = importParser(
+    x => ImportMembers(x.0, x.2, x.5),
+    sequence(
+        optional(visibility), kw_import, moduleName, sym(#"."),
+        sym(#"("), commaList(importedMember), sym(#")"), sym(#";"),
+    ),
+);
+
+private var importDef = choice(
+    importModule, importStar, importMembers,
+);
+
+
+
+//
+// module
+//
+
+private var module = bounds(modify(
+    x => Module(x.0, x.1),
+    sequence(zeroOrMore(importDef), zeroOrMore(topLevelItem)),
+));
+
+
+
+//
+// parseExpr, parseStatement, parseTopLevelItem, parseModule
 //
 
 record ParserError(where:Pointer[Token]);
@@ -744,6 +1111,30 @@ private var parseStatement2 = modify(
 
 parseStatement(input) {
     var result = parseStatement2(input);
+    if (nothing?(result))
+        throw ParserError(input.maxCurrent - 1);
+    return require(move(result));
+}
+
+private var parseTopLevelItem2 = modify(
+    x => x.0,
+    sequence(topLevelItem, token(SENTINEL)),
+);
+
+parseTopLevelItem(input) {
+    var result = parseTopLevelItem2(input);
+    if (nothing?(result))
+        throw ParserError(input.maxCurrent - 1);
+    return require(move(result));
+}
+
+private var parseModule2 = modify(
+    x => x.0,
+    sequence(module, token(SENTINEL)),
+);
+
+parseModule(input) {
+    var result = parseModule2(input);
     if (nothing?(result))
         throw ParserError(input.maxCurrent - 1);
     return require(move(result));
