@@ -46,17 +46,21 @@ compiler = getCompilerPath()
 
 class TestCase(object):
     allCases = []
-    def __init__(self, folder, base = None):
+    def __init__(self, folder, testfile, base = None):
         entries = os.listdir(folder)
-        mainPath = os.path.join(folder, "main.clay")
         self.path = folder
-        if os.path.isfile(mainPath):
-            self.loadTest(mainPath)
+        if os.path.isfile(testfile):
+            self.loadTest(testfile)
+        runscript = os.path.join(folder, "run.py")
+        if os.path.isfile(runscript):
+            self.runscript = runscript
+        else:
+            self.runscript = None
         for entry in entries:
             fullpath = os.path.join(folder, entry)
             if not os.path.isdir(fullpath):
                 continue
-            TestCase(fullpath, self)
+            findTestCase(fullpath, self)
     
     def loadTest(self, testfile):
         TestCase.allCases.append(self)
@@ -75,19 +79,24 @@ class TestCase(object):
         [os.unlink(f) for f in glob.glob("temp*")]
         [os.unlink(f) for f in glob.glob("*.data")]
 
-    def match(self, output) :
-        refoutput = open("out.txt").read()
-        output = output.replace('\r', '')
-        refoutput = refoutput.replace('\r', '')
-        return output == refoutput
+    def match(self, resultout, resulterr, returncode) :
+        refout = open("out.txt").read()
+        referr = ""
+        if os.path.isfile("err.txt"):
+            referr = open("err.txt").read()
+        resultout = resultout.replace('\r', '')
+        refout    = refout.replace('\r', '')
+        resulterr = resulterr.replace('\r', '')
+        referr    = referr.replace('\r', '')
+        return resultout == refout and resulterr == referr
 
     def run(self):
         os.chdir(self.path)
         self.pre_build()
         self.post_build()
-        result = self.runtest()
+        resultout, resulterr, returncode = self.runtest()
         self.post_run()
-        if self.match(result):
+        if self.match(resultout, resulterr, returncode):
             return "ok"
         return "fail"
 
@@ -99,12 +108,16 @@ class TestCase(object):
         outfilename = os.path.join(".", outfilename)
         process = Popen(self.cmdline(compiler))
         if process.wait() != 0 :
-            return "fail"
-        process = Popen([outfilename], stdout=PIPE)
-        result = process.stdout.read()
-        process.wait()
+            return "fail", "", None
+        if self.runscript is None:
+            commandline = [outfilename]
+        else:
+            commandline = [sys.executable, self.runscript, outfilename]
+
+        process = Popen(commandline, stdout=PIPE, stderr=PIPE)
+        resultout, resulterr = process.communicate()
         self.removefile(outfilename)
-        return result
+        return resultout, resulterr, process.returncode
 
     def removefile(self, filename) :
         # on windows, sometimes, deleting a file
@@ -119,23 +132,37 @@ class TestCase(object):
                 time.sleep(1)
             attempts += 1
 
+class TestModuleCase(TestCase):
+    def cmdline(self, clay) :
+        return [clay, "test.clay"]
 
+    def match(self, resultout, resulterr, returncode) :
+        return returncode == 0
+        
 
 #
 # runtests
 #
 
+def findTestCase(folder, base = None):
+    testPath = os.path.join(folder, "test.clay")
+    mainPath = os.path.join(folder, "main.clay")
+    if os.path.isfile(testPath) :
+        TestModuleCase(folder, testPath, base)
+    else :
+        TestCase(folder, mainPath, base)
+
 def findTestCases():
-    TestCase(testRoot)
+    findTestCase(testRoot)
     return TestCase.allCases
 
-def runtest(t):
+def runTest(t):
     return t.run()
 
-def runtests() :
+def runTests() :
     testcases = findTestCases()
     pool = Pool(processes = cpu_count())
-    results = pool.imap(runtest, testcases)
+    results = pool.imap(runTest, testcases)
     failed = []
     for test in testcases:
         res = results.next()
@@ -151,7 +178,7 @@ def runtests() :
 
 if __name__ == "__main__":
     startTime = time.time()
-    runtests()
+    runTests()
     endTime = time.time()
     print ""
     print "time taken = %f seconds" % (endTime - startTime)

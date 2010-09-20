@@ -32,8 +32,11 @@ private usage(...commandTuples) {
 }
 
 
+[fn | CallDefined?(fn, Vector[String])]
+private commandName(static fn) = StaticName(fn);
+
 [fn, ...Description | CallDefined?(fn, Vector[String])]
-private commandName(commandTuple: Tuple[Static[fn], ...Description])
+overload commandName(commandTuple: Tuple[Static[fn], ...Description])
     = StaticName(commandTuple.0);
 
 [
@@ -44,8 +47,11 @@ private commandName(commandTuple: Tuple[Static[fn], ...Description])
 overload commandName(commandTuple: Tuple[Name, Callable, ...Description])
     = commandTuple.0;
 
+[fn | CallDefined?(fn, Vector[String])]
+private commandFunction(static fn) = fn;
+
 [fn, ...Description | CallDefined?(fn, Vector[String])]
-private commandFunction(commandTuple: Tuple[Static[fn], ...Description])
+overload commandFunction(commandTuple: Tuple[Static[fn], ...Description])
     = commandTuple.0;
 
 [
@@ -56,8 +62,12 @@ private commandFunction(commandTuple: Tuple[Static[fn], ...Description])
 overload commandFunction(commandTuple: Tuple[Name, Callable, ...Description])
     = commandTuple.1;
 
+[fn | CallDefined?(fn, Vector[String])]
+private commandDescription(static fn)
+    = ;
+
 [fn, ...Description | CallDefined?(fn, Vector[String])]
-private commandDescription(commandTuple: Tuple[Static[fn], ...Description])
+overload commandDescription(commandTuple: Tuple[Static[fn], ...Description])
     = ...dropValues(static 1, ...unpack(commandTuple));
 
 [
