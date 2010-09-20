@@ -142,8 +142,6 @@ private var zeroOrMore = combinators.zeroOrMore;
 private var oneOrMore = combinators.oneOrMore;
 private var zeroOrMoreAs = combinators.zeroOrMoreAs;
 private var oneOrMoreAs = combinators.oneOrMoreAs;
-private var separatedList = combinators.separatedList;
-private var separatedListNoTail = combinators.separatedListNoTail;
 
 
 
