@@ -1,4 +1,5 @@
 import test.*;
+import test.memory.*;
 import remote.marshaling.*;
 
 expectMarshalingInvariants(test, name, value) {
@@ -40,6 +41,26 @@ record ComplexRecord (
     x: Int,
     y: Vector[Int],
     z: Char,
+);
+
+record UniquePointerRecord (x: UniquePointer[Canary]);
+overload UniquePointerRecord(x: Canary) = UniquePointerRecord(allocateUnique(x));
+overload UniquePointerRecord(o: UniquePointerRecord)
+    = if (null?(o.x)) UniquePointerRecord()
+      else UniquePointerRecord(allocateUnique(o.x^));
+overload equals?(a: UniquePointerRecord, b: UniquePointerRecord)
+    = if (null?(a.x)) null?(b.x) else (if (null?(b.x)) false else a.x^ == b.x^);
+overload printTo(stream, o: UniquePointerRecord) {
+    printTo(stream, "UniquePointer(");
+    if (not null?(o.x))
+        printTo(stream, o.x^);
+    printTo(stream, ")");
+}
+
+record GraphNodeRecord (
+    value: Canary,
+    left: SharedPointer[GraphNodeRecord],
+    right: SharedPointer[GraphNodeRecord],
 );
 
 variant TestVariant = Int | Vector[Int] | Char | Double;
@@ -129,6 +150,44 @@ main() = testMain(
                 () => ...(int, vectorString, char)
             );
             expectNullMarshaling(test, "() => {}", () => {});
+        }),
+        TestCase("unique pointers", test => {
+            expectCanariesDestroyed(test, "fun with unique pointer marshaling", () => {
+                expectMarshalingInvariants(test, "UniquePointerRecord()",
+                    UniquePointerRecord()
+                );
+                expectMarshalingInvariants(test, "UniquePointerRecord(Canary())",
+                    UniquePointerRecord(Canary())
+                );
+            });
+        }),
+        TestCase("shared pointers", test => {
+            expectCanariesDestroyed(test, "fun with shared pointer marshaling", () => {
+                var a = new GraphNodeRecord();
+                var b = new GraphNodeRecord();
+                var c = new GraphNodeRecord();
+                var d = new GraphNodeRecord();
+
+                a^.left = b;
+                a^.right = d;
+                b^.left = c;
+                b^.right = c;
+                c^.left = d;
+
+                var aa = unmarshal(marshal(a), SharedPointer[GraphNodeRecord]);
+                var bb = aa^.left;
+                var cc = bb^.left;
+                var dd = aa^.right;
+
+                expectEqual(test, "aa^.left", bb, aa^.left);
+                expectEqual(test, "aa^.right", dd, aa^.right);
+                expectEqual(test, "bb^.left", cc, bb^.left);
+                expectEqual(test, "bb^.right", cc, bb^.right);
+                expectEqual(test, "cc^.left", dd, cc^.left);
+                expectEqual(test, "cc^.right", nullShared(GraphNodeRecord), cc^.right);
+                expectEqual(test, "dd^.left", nullShared(GraphNodeRecord), dd^.left);
+                expectEqual(test, "dd^.right", nullShared(GraphNodeRecord), dd^.right);
+            });
         }),
     )),
 );
