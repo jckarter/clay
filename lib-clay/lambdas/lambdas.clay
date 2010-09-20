@@ -39,6 +39,16 @@ overload Lambda[In,Out](x : Lambda[In,Out]) returned:Lambda[In,Out] {
 }
 
 
+// makeLambda
+
+[T]
+makeLambda(forward x:T, ...In) {
+    var CodePtr = Type(makeCodePointer(call, T, ...In));
+    var Out = CodePointerReturnTypes(CodePtr);
+    return Lambda[In,Out](x);
+}
+
+
 // call operator
 
 [...I, ...O]

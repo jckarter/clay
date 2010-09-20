@@ -934,7 +934,7 @@ static bool patternSuffix(IndexingPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
     ExprListPtr args;
-    if (!expressionList(args)) return false;
+    if (!optExpressionList(args)) return false;
     if (!symbol("]")) return false;
     x = new Indexing(NULL, args);
     x->location = location;
