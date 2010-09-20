@@ -87,15 +87,20 @@ overload convertParser(static TokenInput, token:Token) =
     literal(TokenInput, token);
 
 [TokenInput, A | Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
-overload convertParser(static TokenInput, a:A) =
+overload convertParser(static TokenInput, forward a:A) =
     literalString(TokenInput, a);
 
 [TokenInput, ...T | Parsers?(TokenInput, ...T)]
 overload convertParser(static TokenInput, parsers:Tuple[...T]) =
-    sequence(TokenInput, ...convertParsers(TokenInput, ...unpack(parsers)));
+    sequence(TokenInput, ...convertParsers(TokenInput, ...unpackRef(parsers)));
 
 [TokenInput, Parser | SimpleParser?(TokenInput, Parser)]
-overload convertParser(static TokenInput, parser:Parser) = parser;
+overload convertParser(static TokenInput, lvalue parser:Parser) =
+    parser;
+
+[TokenInput, Parser | SimpleParser?(TokenInput, Parser)]
+overload convertParser(static TokenInput, rvalue parser:Parser) =
+    move(parser);
 
 
 
@@ -103,9 +108,13 @@ overload convertParser(static TokenInput, parser:Parser) = parser;
 // convertParsers
 //
 
+private record Converter[TokenInput]();
+[TokenInput] overload call(x:Converter[TokenInput], forward p) =
+    forward convertParser(TokenInput, p);
+
 [TokenInput, ...T | Parsers?(TokenInput, ...T)]
-convertParsers(static TokenInput, ...parsers:T) =
-    ...mapValues(p => convertParser(TokenInput, p), ...parsers);
+convertParsers(static TokenInput, forward ...parsers:T) =
+    forward ...mapValues(Converter[TokenInput](), ...parsers);
 
 
 
@@ -181,7 +190,7 @@ literal(static TokenInput, expected:Token) =
 //
 
 [TokenInput, A | Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
-literalString(static TokenInput, a:A) {
+literalString(static TokenInput, forward a:A) {
     return input => {
         var saved = input;
         for (item in a) {
@@ -205,7 +214,7 @@ literalString(static TokenInput, a:A) {
 //
 
 [TokenInput, Parser | Parser?(TokenInput, Parser)]
-optional(static TokenInput, _parser:Parser) {
+optional(static TokenInput, forward _parser:Parser) {
     var parser = convertParser(TokenInput, _parser);
     return input => Maybe(parser(input));
 }
@@ -221,10 +230,10 @@ UniformParsers?(TokenInput, ...Parsers) =
     equalValues?(...mapValues(P => ParseResult(TokenInput, P), ...Parsers));
 
 [TokenInput, First, ...Rest | UniformParsers?(TokenInput, First, ...Rest)]
-choice(static TokenInput, first:First, ...rest:Rest) {
+choice(static TokenInput, forward first:First, forward ...rest:Rest) {
     var parsers = Tuple(...convertParsers(TokenInput, first, ...rest));
     return input => {
-        static for (parser in ...unpack(parsers)) {
+        static for (parser in ...unpackRef(parsers)) {
             var result = parser(input);
             if (not nothing?(result))
                 return move(result);
@@ -240,11 +249,11 @@ choice(static TokenInput, first:First, ...rest:Rest) {
 //
 
 [TokenInput, First, ...Rest | Parsers?(TokenInput, First, ...Rest)]
-sequence(static TokenInput, first:First, ...rest:Rest) {
+sequence(static TokenInput, forward first:First, forward ...rest:Rest) {
     var parsers = Tuple(...convertParsers(TokenInput, first, ...rest));
     return input => {
         alias f = (parser ref=> require(parser(input)));
-        alias result = Tuple(...mapValues(f, ...unpack(parsers)));
+        alias result = Tuple(...mapValues(f, ...unpackRef(parsers)));
         var saved = input;
         try {
             return Maybe(result);
@@ -257,11 +266,11 @@ sequence(static TokenInput, first:First, ...rest:Rest) {
 }
 
 [TokenInput, Result, ...Parsers | Parsers?(TokenInput, ...Parsers)]
-sequenceAs(static TokenInput, result:Result, ..._parsers:Parsers) {
+sequenceAs(static TokenInput, result:Result, forward ..._parsers:Parsers) {
     var parsers = Tuple(...convertParsers(TokenInput, ..._parsers));
     return input => {
         var saved = input;
-        static for (parser in ...unpack(parsers)) {
+        static for (parser in ...unpackRef(parsers)) {
             var result = parser(input);
             if (nothing?(result)) {
                 input = saved;
@@ -285,7 +294,7 @@ Modifier?(TokenInput, Modifier, Parser) {
 }
 
 [TokenInput, Modifier, Parser | Modifier?(TokenInput, Modifier, Parser)]
-modify(static TokenInput, modifier:Modifier, _parser:Parser) {
+modify(static TokenInput, modifier:Modifier, forward _parser:Parser) {
     var parser = convertParser(TokenInput, _parser);
     return input => {
         alias T = Type(modifier(require(parser(input))));
@@ -303,7 +312,7 @@ modify(static TokenInput, modifier:Modifier, _parser:Parser) {
 //
 
 [TokenInput, Parser | Parser?(TokenInput, Parser)]
-repeated(static TokenInput, min:Int, max:Int, _parser:Parser) {
+repeated(static TokenInput, min:Int, max:Int, forward _parser:Parser) {
     var parser = convertParser(TokenInput, _parser);
     return input => {
         alias T = ParseResult(TokenInput, Parser);
@@ -326,7 +335,7 @@ repeated(static TokenInput, min:Int, max:Int, _parser:Parser) {
 }
 
 [TokenInput, Result, Parser | Parser?(TokenInput, Parser)]
-repeatedAs(static TokenInput, result:Result, min:Int, max:Int, _parser:Parser) {
+repeatedAs(static TokenInput, result:Result, min:Int, max:Int, forward _parser:Parser) {
     var parser = convertParser(TokenInput, _parser);
     return input => {
         var saved = input;
@@ -353,17 +362,70 @@ repeatedAs(static TokenInput, result:Result, min:Int, max:Int, _parser:Parser) {
 //
 
 [TokenInput, Parser | Parser?(TokenInput, Parser)]
-zeroOrMore(static TokenInput, parser:Parser) =
+zeroOrMore(static TokenInput, forward parser:Parser) =
     repeated(TokenInput, 0, INT_MAX, parser);
 
 [TokenInput, Parser | Parser?(TokenInput, Parser)]
-oneOrMore(static TokenInput, parser:Parser) =
+oneOrMore(static TokenInput, forward parser:Parser) =
     repeated(TokenInput, 1, INT_MAX, parser);
 
 [TokenInput, Result, Parser | Parser?(TokenInput, Parser)]
-zeroOrMoreAs(static TokenInput, result:Result, parser:Parser) =
+zeroOrMoreAs(static TokenInput, result:Result, forward parser:Parser) =
     repeatedAs(TokenInput, result, 0, INT_MAX, parser);
 
 [TokenInput, Result, Parser | Parser?(TokenInput, Parser)]
-oneOrMoreAs(static TokenInput, result:Result, parser:Parser) =
+oneOrMoreAs(static TokenInput, result:Result, forward parser:Parser) =
     repeatedAs(TokenInput, result, 1, INT_MAX, parser);
+
+
+
+//
+// separatedList, separatedListNoTail
+//
+
+[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+separatedList(static TokenInput, forward _separator:Separator, forward _element:Element) {
+    var separator = convertParser(TokenInput, _separator);
+    var element = convertParser(TokenInput, _element);
+    return input => {
+        alias T = ParseResult(TokenInput, Element);
+        var v = Vector[T]();
+        while (true) {
+            var parsed? = maybe(element(input),
+                x ref=> { push(v, move(x)); return true; },
+                () => false,
+            );
+            if (not parsed?)
+                break;
+            var sep = separator(input);
+            if (nothing?(sep))
+                break;
+        }
+        return Maybe(move(v));
+    };
+}
+
+[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+separatedListNoTail(static TokenInput, forward _separator:Separator, forward _element:Element) {
+    var separator = convertParser(TokenInput, _separator);
+    var element = convertParser(TokenInput, _element);
+    return input => {
+        alias T = ParseResult(TokenInput, Element);
+        var v = Vector[T]();
+        var saved = input;
+        while (true) {
+            var parsed? = maybe(element(input),
+                x ref=> { push(v, move(x)); return true; },
+                () => false,
+            );
+            if (not parsed?)
+                break;
+            saved = input;
+            var sep = separator(input);
+            if (nothing?(sep))
+                break;
+        }
+        input = saved;
+        return Maybe(move(v));
+    };
+}

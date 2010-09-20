@@ -155,6 +155,17 @@ overload printTo(stream, x:S) {
 
 
 //
+// printTo - SharedPointer
+//
+
+[T]
+overload printTo(stream, x:SharedPointer[T]) {
+    printReprTo(stream, x);
+}
+
+
+
+//
 // printReprTo
 //
 
@@ -285,6 +296,21 @@ overload printReprTo(stream, x:S) {
     printTo(stream, '"');
     printTo(stream, x);
     printTo(stream, '"');
+}
+
+
+
+//
+// printReprTo - SharedPointer
+//
+
+[T]
+overload printReprTo(stream, x:SharedPointer[T]) {
+    // FIXME: handle cycles
+    printTo(stream, "SharedPointer(");
+    if (not null?(x))
+        printReprTo(stream, x^);
+    printTo(stream, ")");
 }
 
 
