@@ -1,6 +1,0 @@
-Testing lazy group sequences:
-  iterator-only sequences: passed
-  random access coordinate sequences: passed
-  static grouping: passed
--- lazy group sequences: 29 expectations passed; 0 failed (0 pending)
-Overall: 29 expectations passed; 0 failed (0 pending)

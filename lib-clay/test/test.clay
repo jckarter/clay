@@ -207,6 +207,7 @@ expectExceptionType(test: TestStatus, name, T, fn) {
     try {
         fn();
     } catch(x: T) {
+        expect(test, true, () => {});
         return;
     } catch(x) {
         expect(test, false, () => {

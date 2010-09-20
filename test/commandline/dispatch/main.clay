@@ -38,9 +38,14 @@ divide(args) {
     }
 }
 
+version(args) {
+    println("dispatchr 2.0 BETA");
+}
+
 main() = dispatchMain(
     (add, "add integers"),
     ("subtract", args => { subtract(args); }, "subtract", ' ', "integers"),
     (multiply, "multiply integers"),
     (divide, "divide integers"),
+    version
 );

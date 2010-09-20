@@ -1,0 +1,11 @@
+-- server stderr
+Hello from Server!
+Hello from Lambda!
+arguments from client:
+* zim
+* zang
+* zung
+about to fail existence...
+-- client stderr
+1 + 2 = 3
+existence failure!

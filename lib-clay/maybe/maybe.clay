@@ -27,6 +27,9 @@ nothing(T) = Maybe[T]();
 //
 
 nothing?(x) = variantIs?(x, Nothing);
+anything?(x) = variantIs?(x, Type(just(x)));
+
+[T] just(forward m: Maybe[T]) = forward variantAs(m, T);
 
 
 //

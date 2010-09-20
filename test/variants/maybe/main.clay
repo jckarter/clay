@@ -14,7 +14,10 @@ main() {
     println(nothing?(a));
     println(nothing?(b));
 
-    println(variantAs(a, Int));
+    println(just(a));
+    just(a) += 1;
+    println(just(a));
+    just(a) -= 1;
 
     maybe(a, doIt);
     maybe(b, doIt);

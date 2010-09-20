@@ -1,0 +1,167 @@
+import remote.marshaling.*;
+import maybe.*;
+
+record TruncatedRead ();
+instance Exception = TruncatedRead;
+
+private fullRead(stream, dest, size) {
+    if (read(stream, dest, size) < size)
+        throw TruncatedRead();
+}
+
+private readSizeT(stream) returned: SizeT {
+    fullRead(stream, Pointer[Byte](&returned), TypeSize(SizeT));
+}
+
+private maybeReadSizeT(stream) {
+    var returned = SizeT();
+    var size = read(stream, Pointer[Byte](&returned), TypeSize(SizeT));
+    
+    if (size == TypeSize(SizeT))
+        return Maybe(returned);
+    else
+        return nothing(SizeT);
+}
+
+private writeSizeT(stream, n) {
+    write(stream, Pointer[Byte](&n), TypeSize(SizeT));
+}
+
+
+
+//
+// entry point generation
+//
+alias RemoteEntryPoint = CodePointer[(Vector[Byte]), (Vector[Byte])];
+
+private var remoteEntryPoints = Vector[RemoteEntryPoint]();
+
+private createRemoteEntryPoint(F, ...Args)
+    = makeCodePointer(
+        mArgs => marshal(...call(...unmarshal(mArgs, F, ...Args))),
+        Vector[Byte]
+    );
+
+private createRemoteCode(F, ...Args) {
+    var code = size(remoteEntryPoints);
+
+    push(remoteEntryPoints, createRemoteEntryPoint(F, ...Args));
+    return code;
+}
+
+private var remoteCode[F, ...Args] = createRemoteCode(F, ...Args);
+
+
+
+//
+// channel objects
+//
+record Channel[InputStream, OutputStream] (input: InputStream, output: OutputStream);
+
+var stdioChannel = Channel(stdin, stdout);
+
+
+
+//
+// client interface
+//
+private alias SERVER_ERROR = SizeT(-1u64);
+
+[F, ...Args | CallDefined?(call, F, ...Args)]
+remoteCall(channel, forward f: F, forward ...args: Args) {
+    var mArgs = marshal(f, ...args);
+    var mArgsSize = size(mArgs);
+    writeSizeT(channel.output, remoteCode[F, ...Args]);
+    writeSizeT(channel.output, mArgsSize);
+    write(channel.output, begin(mArgs), mArgsSize);
+    flush(channel.output);
+
+    var mRetSize = readSizeT(channel.input);
+    if (mRetSize == SERVER_ERROR)
+        throw remoteError(channel);
+    else {
+        var mRet = Vector[Byte]();
+        resize(mRet, mRetSize);
+        fullRead(channel.input, begin(mRet), mRetSize);
+
+        return ...unmarshal(mRet, ...Type(...f(...args)));
+    }
+}
+
+private remoteError(channel) {
+    var mErrorSize = readSizeT(channel.input);
+    var mError = Vector[Byte]();
+    resize(mError, mErrorSize);
+    fullRead(channel.input, begin(mError), mErrorSize);
+    return unmarshal(mError, Exception);
+}
+
+
+//
+// server interface
+//
+record InvalidRemoteCall(code: SizeT);
+instance Exception = InvalidRemoteCall;
+
+private performRemoteCall(code, mArgs) {
+    if (code < size(remoteEntryPoints))
+        return remoteEntryPoints[code](mArgs);
+    else
+        throw InvalidRemoteCall(code);
+}
+
+private consume(stream, bytes_) {
+    var bytes = SizeT(bytes_);
+    var buf = Array[Byte, 4096]();
+
+    while(bytes > SizeT(0)) {
+        if (read(stream, begin(buf), min(SizeT(4096), bytes)) == SizeT(0))
+            return;
+        bytes -= 4096;
+    }
+}
+
+serveRemoteCall(channel, code) {
+    if (code < size(remoteEntryPoints)) {
+        var mArgsSize = readSizeT(channel.input);
+
+        var mArgs = Vector[Byte]();
+        resize(mArgs, mArgsSize);
+        fullRead(channel.input, begin(mArgs), mArgsSize);
+        
+        try {
+            var mRet = remoteEntryPoints[code](mArgs);
+            var mRetSize = size(mRet);
+
+            writeSizeT(channel.output, mRetSize);
+            write(channel.output, begin(mRet), mRetSize);
+            flush(channel.output);
+        } catch (ex) {
+            serveRemoteError(channel, ex);
+        }
+    } else {
+        var mArgsSize = maybeReadSizeT(channel.input);
+        maybe(mArgsSize, sz => { consume(channel.input, sz); });
+        serveRemoteError(channel, Exception(InvalidRemoteCall(code)));
+    }
+}
+
+private serveRemoteError(channel, ex: Exception) {
+    var mError = marshal(ex);
+    var mErrorSize = size(mError);
+
+    writeSizeT(channel.output, SERVER_ERROR);
+    writeSizeT(channel.output, mErrorSize);
+    write(channel.output, begin(mError), mErrorSize);
+    flush(channel.output);
+}
+
+serverLoop(channel) {
+    var code = maybeReadSizeT(channel.input);
+
+    while (not nothing?(code)) {
+        serveRemoteCall(channel, just(code));
+        code = maybeReadSizeT(channel.input);
+    }
+}
+

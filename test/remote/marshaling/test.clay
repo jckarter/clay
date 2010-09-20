@@ -1,0 +1,193 @@
+import test.*;
+import test.memory.*;
+import remote.marshaling.*;
+
+expectMarshalingInvariants(test, name, value) {
+    var marshaled = marshal(value); 
+    var expectedValue = UnmarshaledType(Type(value))(value);
+
+    expectEqual(test, "unmarshal(marshal(" + name + ")",
+        expectedValue, unmarshal(marshaled, Type(value))
+    );
+
+    if (not empty?(marshaled)) {
+        var truncated = marshaled;
+        pop(truncated);
+        expectExceptionType(test, name + " unmarshaled from truncated vector",
+            UnmarshalUnexpectedEOF,
+            () => { unmarshal(truncated, Type(value)); }
+        );
+        expectExceptionType(test, name + " unmarshaled from empty byte vector",
+            UnmarshalUnexpectedEOF,
+            () => { unmarshal(Vector[Byte](), Type(value)); }
+        );
+    }
+}
+
+expectNullMarshaling(test, name, value) {
+    var marshaled = marshal(value); 
+
+    expectEqual(test, "size(marshal(" + name + "))",
+        SizeT(0), size(marshaled)
+    );
+    expectEqual(test, "unmarshal(marshal(" + name + "))",
+        value, unmarshal(marshaled, Type(value))
+    );
+}
+
+record PODRecord (x: Int, y: Char, z: Double);
+record EmptyRecord ();
+record ComplexRecord (
+    x: Int,
+    y: Vector[Int],
+    z: Char,
+);
+
+record UniquePointerRecord (x: UniquePointer[Canary]);
+overload UniquePointerRecord(x: Canary) = UniquePointerRecord(allocateUnique(x));
+overload UniquePointerRecord(o: UniquePointerRecord)
+    = if (null?(o.x)) UniquePointerRecord()
+      else UniquePointerRecord(allocateUnique(o.x^));
+overload equals?(a: UniquePointerRecord, b: UniquePointerRecord)
+    = if (null?(a.x)) null?(b.x) else (if (null?(b.x)) false else a.x^ == b.x^);
+overload printTo(stream, o: UniquePointerRecord) {
+    printTo(stream, "UniquePointer(");
+    if (not null?(o.x))
+        printTo(stream, o.x^);
+    printTo(stream, ")");
+}
+
+record GraphNodeRecord (
+    value: Canary,
+    left: SharedPointer[GraphNodeRecord],
+    right: SharedPointer[GraphNodeRecord],
+);
+
+variant TestVariant = Int | Vector[Int] | Char | Double;
+
+main() = testMain(
+    TestSuite("marshaling", Tuple(
+        TestCase("POD types", test => {
+            expectMarshalingInvariants(test, "1", 1);
+            expectMarshalingInvariants(test, "'a'", 'a');
+            expectMarshalingInvariants(test, "0.0", 0.0);
+            expectMarshalingInvariants(test, "(1, 'a', 0.0)", (1, 'a', 0.0));
+            expectMarshalingInvariants(test,
+                "PODRecord(1, 'a', 0.0)", PODRecord(1, 'a', 0.0)
+            );
+            expectMarshalingInvariants(test, "[1, 2, 3]", [1, 2, 3]);
+        }),
+        TestCase("sequences", test => {
+            expectMarshalingInvariants(test,
+                "Vector[Int](1, 2, 3)", Vector[Int](1, 2, 3)
+            );
+            expectMarshalingInvariants(test,
+                "String(\"crenshaw\")", String("crenshaw")
+            );
+            expectMarshalingInvariants(test,
+                "Vector[String](String(\"crenshaw\"), String(\"mathers\"))",
+                Vector[String](String("crenshaw"), String("mathers"))
+            );
+            expectMarshalingInvariants(test,
+                "String()", String(),
+            );
+            expectMarshalingInvariants(test,
+                "Vector[Int]()", Vector[Int](),
+            );
+            expectMarshalingInvariants(test,
+                "Vector[String]()", Vector[String](),
+            );
+        }),
+        TestCase("special sequences", test => {
+            expectMarshalingInvariants(test, "\"mathers\"", "mathers");
+        }),
+        TestCase("composites", test => {
+            expectMarshalingInvariants(test,
+                "(1, Vector[Int](1, 2, 3), 'a')",
+                (1, Vector[Int](1, 2, 3), 'a')
+            );
+            expectMarshalingInvariants(test,
+                "ComplexRecord(1, Vector[Int](1, 2, 3), 'a')",
+                ComplexRecord(1, Vector[Int](1, 2, 3), 'a')
+            );
+            expectNullMarshaling(test, "()", ());
+            expectNullMarshaling(test, "EmptyRecord()", EmptyRecord());
+        }),
+        TestCase("variants", test => {
+            expectMarshalingInvariants(test,
+                "TestVariant(1)", TestVariant(1)
+            );
+            expectMarshalingInvariants(test,
+                "TestVariant('a')", TestVariant('a')
+            );
+            expectMarshalingInvariants(test,
+                "TestVariant(0.0)", TestVariant(0.0)
+            );
+            expectMarshalingInvariants(test,
+                "TestVariant(Vector[Int](1, 2, 3))", TestVariant(Vector[Int](1, 2, 3))
+            );
+        }),
+        TestCase("statics", test => {
+            expectNullMarshaling(test, "static 0", static 0);
+            expectNullMarshaling(test, "add", add);
+            expectNullMarshaling(test, "Int", Int);
+        }),
+        TestCase("lambdas", test => {
+            var int = 1;
+            var char = 'a';
+            var vectorInt = Vector[Int](1, 2, 3);
+            var vectorString = Vector[String](String("crenshaw"), String("mathers"));
+
+            expectMarshalingInvariants(test, "() => int", () => int);
+            expectMarshalingInvariants(test, "() => char", () => char);
+            expectMarshalingInvariants(test, "() => vectorInt", () => vectorInt);
+            expectMarshalingInvariants(test, "() => vectorString", () => vectorString);
+            expectMarshalingInvariants(test, "() => ...(int, char)", () => ...(int, char));
+            expectMarshalingInvariants(test, "() => ...(int, vectorInt)",
+                () => ...(int, vectorInt)
+            );
+            expectMarshalingInvariants(test, "() => ...(int, vectorString, char)",
+                () => ...(int, vectorString, char)
+            );
+            expectNullMarshaling(test, "() => {}", () => {});
+        }),
+        TestCase("unique pointers", test => {
+            expectCanariesDestroyed(test, "fun with unique pointer marshaling", () => {
+                expectMarshalingInvariants(test, "UniquePointerRecord()",
+                    UniquePointerRecord()
+                );
+                expectMarshalingInvariants(test, "UniquePointerRecord(Canary())",
+                    UniquePointerRecord(Canary())
+                );
+            });
+        }),
+        TestCase("shared pointers", test => {
+            expectCanariesDestroyed(test, "fun with shared pointer marshaling", () => {
+                var a = new GraphNodeRecord();
+                var b = new GraphNodeRecord();
+                var c = new GraphNodeRecord();
+                var d = new GraphNodeRecord();
+
+                a^.left = b;
+                a^.right = d;
+                b^.left = c;
+                b^.right = c;
+                c^.left = d;
+
+                var aa = unmarshal(marshal(a), SharedPointer[GraphNodeRecord]);
+                var bb = aa^.left;
+                var cc = bb^.left;
+                var dd = aa^.right;
+
+                expectEqual(test, "aa^.left", bb, aa^.left);
+                expectEqual(test, "aa^.right", dd, aa^.right);
+                expectEqual(test, "bb^.left", cc, bb^.left);
+                expectEqual(test, "bb^.right", cc, bb^.right);
+                expectEqual(test, "cc^.left", dd, cc^.left);
+                expectEqual(test, "cc^.right", nullShared(GraphNodeRecord), cc^.right);
+                expectEqual(test, "dd^.left", nullShared(GraphNodeRecord), dd^.left);
+                expectEqual(test, "dd^.right", nullShared(GraphNodeRecord), dd^.right);
+            });
+        }),
+    )),
+);
