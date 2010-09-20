@@ -98,3 +98,12 @@ overload null?(p : SharedPointer[T]) = null?(p.ptr);
 
 [T]
 nullShared(static T) = SharedPointer[T]();
+
+
+
+//
+// equality
+//
+[T]
+overload equals?(p: SharedPointer[T], q: SharedPointer[T])
+    = p.ptr == q.ptr;
