@@ -155,6 +155,30 @@ overload resize(a:V, n:SizeT) {
 
 
 //
+// resizeUnsafe
+//
+
+[V, I | Vector?(V) and Integer?(I)]
+overload resizeUnsafe(a:V, n:I) {
+    resize(a, SizeT(n));
+}
+
+[V | Vector?(V)]
+overload resizeUnsafe(a:V, n:SizeT) {
+    var currentSize = vectorSize(a);
+    if (currentSize < n) {
+        reserve(a, n);
+        resetMemoryUnsafe(end(a), begin(a)+n);
+    }
+    else if (currentSize > n) {
+        destroyMemory(begin(a)+n, end(a));
+    }
+    vectorSize(a) = n;
+}
+
+
+
+//
 // clear
 //
 
