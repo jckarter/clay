@@ -44,6 +44,7 @@ displayError(fileName, data, offset, message) {
     var line, column, tabs = ...computeLocation(data, offset);
     column += 7*tabs;
     var lines = splitLines(data);
+    println();
     println("#######################################");
     for (i in range(line-2,line+3)) {
         if ((i < 0) or (i >= size(lines)))
@@ -56,5 +57,8 @@ displayError(fileName, data, offset, message) {
         }
     }
     println("#######################################");
-    println(fileName, "(", line+1, ",", column, "): error: ", message);
+    println();
+    println(fileName, "(", line+1, ",", column, ")");
+    println("error: ", message);
+    println();
 }
