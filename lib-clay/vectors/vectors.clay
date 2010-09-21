@@ -90,7 +90,7 @@ overload resetUnsafe(a:Vector[T]) {
 
 [T]
 overload assign(dest:Vector[T], lvalue src:Vector[T]) {
-    resize(dest, size(src));
+    resizeUnsafe(dest, size(src));
     assignMemory(begin(dest), end(dest), begin(src));
 }
 
