@@ -122,7 +122,7 @@ static void initKeywords() {
          "record", "variant", "instance",
          "procedure", "overload", "external", "alias",
          "static", "callbyname", "lvalue", "rvalue",
-         "enum", "var", "ref", "forward",
+         "inline", "enum", "var", "ref", "forward",
          "and", "or", "not", "new",
          "if", "else", "goto", "return", "while",
          "switch", "case", "default", "break", "continue", "for", "in",

@@ -1447,6 +1447,7 @@ struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
     bool callByName;
+    bool isInline;
 
     // pre-computed patterns for matchInvoke
     bool patternsInitialized;
@@ -1457,9 +1458,13 @@ struct Overload : public TopLevelItem {
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
 
-    Overload(ExprPtr target, CodePtr code, bool callByName)
+    Overload(ExprPtr target,
+             CodePtr code,
+             bool callByName,
+             bool isInline)
         : TopLevelItem(OVERLOAD), target(target), code(code),
-          callByName(callByName), patternsInitialized(false) {}
+          callByName(callByName), isInline(isInline),
+          patternsInitialized(false) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -2425,6 +2430,7 @@ typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
     bool callByName;
+    bool isInline;
     CodePtr code;
     EnvPtr env;
 
@@ -2435,10 +2441,11 @@ struct MatchSuccess : public MatchResult {
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
-    MatchSuccess(bool callByName, CodePtr code, EnvPtr env,
+    MatchSuccess(bool callByName, bool isInline, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
         : MatchResult(MATCH_SUCCESS), callByName(callByName),
-          code(code), env(env), callable(callable), argsKey(argsKey) {}
+          isInline(isInline), code(code), env(env), callable(callable),
+          argsKey(argsKey) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 
@@ -2495,6 +2502,7 @@ struct InvokeEntry : public Object {
     vector<TypePtr> varArgTypes;
 
     bool callByName; // if callByName the rest of InvokeEntry is not set
+    bool isInline;
 
     ObjectPtr analysis;
     vector<bool> returnIsRef;
@@ -2508,7 +2516,7 @@ struct InvokeEntry : public Object {
         : Object(DONT_CARE),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
-          llvmFunc(NULL), llvmCWrapper(NULL) {}
+          isInline(false), llvmFunc(NULL), llvmCWrapper(NULL) {}
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
 

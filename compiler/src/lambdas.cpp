@@ -183,7 +183,9 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
     }
     code->body = x->body;
 
-    OverloadPtr overload = new Overload(prelude_expr_call(), code, false);
+    OverloadPtr overload = new Overload(
+        prelude_expr_call(), code, false, false
+    );
     overload->env = env;
     overload->location = x->location;
     ObjectPtr obj = prelude_call();
@@ -210,7 +212,7 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env)
 
     ExprPtr procRef = new ObjectExpr(x->lambdaProc.ptr());
     procRef->location = x->location;
-    OverloadPtr overload = new Overload(procRef, code, false);
+    OverloadPtr overload = new Overload(procRef, code, false, false);
     overload->env = env;
     overload->location = x->location;
     x->lambdaProc->overloads.push_back(overload);

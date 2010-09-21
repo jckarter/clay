@@ -2039,6 +2039,17 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
 // procedure, overload
 //
 
+static bool optInline(bool &isInline) {
+    int p = save();
+    if (!keyword("inline")) {
+        restore(p);
+        isInline = false;
+        return true;
+    }
+    isInline = true;
+    return true;
+}
+
 static bool optCallByName(bool &callByName) {
     int p = save();
     if (!keyword("callbyname")) {
@@ -2078,7 +2089,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(z);
     target->location = location;
-    OverloadPtr v = new Overload(target, y, false);
+    OverloadPtr v = new Overload(target, y, false, false);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -2091,6 +2102,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
+    bool isInline;
+    if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
     int p = save();
@@ -2109,7 +2122,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(z);
     target->location = location;
-    OverloadPtr v = new Overload(target, y, callByName);
+    OverloadPtr v = new Overload(target, y, callByName, isInline);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -2133,6 +2146,8 @@ static bool overload(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
+    bool isInline;
+    if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
     if (!keyword("overload")) return false;
@@ -2147,7 +2162,7 @@ static bool overload(TopLevelItemPtr &x) {
         if (!llvmBody(y->llvmBody)) return false;
     }
     y->location = location;
-    x = new Overload(z, y, callByName);
+    x = new Overload(z, y, callByName, isInline);
     x->location = location;
     return true;
 }
