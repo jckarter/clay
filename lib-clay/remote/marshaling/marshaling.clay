@@ -3,23 +3,25 @@
 // marshaling/unmarshaling context
 //
 
+alias MarshalSize = UInt32;
+
 private record MarshalPointerTracker (
-    id: SizeT,
+    id: MarshalSize,
     sized?: Bool,
     marshaled?: Bool,
 );
 
 record MarshalContext (
-    pointerCount: SizeT,
+    pointerCount: MarshalSize,
     pointers: HashMap[RawPointer, MarshalPointerTracker],
 );
 
 overload MarshalContext() = MarshalContext(
-    SizeT(0), HashMap[RawPointer, MarshalPointerTracker]()
+    MarshalSize(0), HashMap[RawPointer, MarshalPointerTracker]()
 );
 
 record UnmarshalContext (
-    pointers: HashMap[SizeT, RawPointer],
+    pointers: HashMap[MarshalSize, RawPointer],
 );
 
 
@@ -28,7 +30,7 @@ record UnmarshalContext (
 // marshaling object protocol
 //
 
-// [T] marshaledSize(context: MarshalContext, x: T) SizeT
+// [T] marshaledSize(context: MarshalContext, x: T) MarshalSize
 // -- should not throw
 procedure marshaledSize;
 // [T] marshalTo(context: MarshalContext, buffer: Pointer[Byte], x: T) Pointer[Byte]
@@ -69,7 +71,7 @@ overload Marshalable?(static UnmarshalContext) = false;
 BitwiseMarshalable?(T) = false;
 
 [T | BitwiseMarshalable?(T)]
-overload marshaledSize(context, x: T) = TypeSize(T);
+overload marshaledSize(context, x: T) = MarshalSize(TypeSize(T));
 
 [T | BitwiseMarshalable?(T)]
 overload marshalTo(context, buffer: Pointer[Byte], x: T) {
@@ -191,7 +193,7 @@ private VariantMemberwiseMarshalable?(V)
 
 [V | Variant?(V) and VariantMemberwiseMarshalable?(V)]
 overload marshaledSize(context, v: V)
-    = TypeSize(Int) + marshaledSize(context, *v);
+    = MarshalSize(TypeSize(Int)) + marshaledSize(context, *v);
 
 [V | Variant?(V) and VariantMemberwiseMarshalable?(V)]
 overload marshalTo(context, buffer_: Pointer[Byte], v: V) buffer: Pointer[Byte] {
@@ -240,7 +242,7 @@ overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], stati
     ref repr = variantRepr(returned);
     repr.tag, begin <-- ...unmarshalFrom(context, begin, end, Int);
 
-    unmarshalVariantMember(context, begin, end, repr, static SizeT(0));
+    unmarshalVariantMember(context, begin, end, repr, static MarshalSize(0));
 }
 
 
@@ -255,7 +257,8 @@ private UnmarshalAsVectorSequence?(S)
     = MarshalableSequence?(S) and not CallDefined?(push, S, SequenceElementType(S));
 
 private sequenceMarshaledSize(context, seq)
-    = TypeSize(SizeT) + reduce(add, SizeT(0), map(f ref=> marshaledSize(context, f), seq));
+    = MarshalSize(TypeSize(MarshalSize))
+    + reduce(add, MarshalSize(0), map(f ref=> marshaledSize(context, f), seq));
 
 [S | MarshalableSequence?(S)]
 overload marshaledSize(context, seq: S) = sequenceMarshaledSize(context, seq);
@@ -264,8 +267,8 @@ overload marshaledSize(context, seq: S) = sequenceMarshaledSize(context, seq);
 overload marshalTo(context, buffer_: Pointer[Byte], forward seq: S) buffer: Pointer[Byte] {
     buffer <-- buffer_;
     var sizeBuffer = buffer;
-    buffer += TypeSize(SizeT);
-    var n = SizeT(0);
+    buffer += TypeSize(MarshalSize);
+    var n = MarshalSize(0);
     for (x in seq) {
         inc(n);
         buffer = marshalTo(context, buffer, x);
@@ -275,14 +278,14 @@ overload marshalTo(context, buffer_: Pointer[Byte], forward seq: S) buffer: Poin
 
 [S | MarshalableSequence?(S) and SizedSequence?(S)]
 overload marshalTo(context, buffer_: Pointer[Byte], forward seq: S) buffer: Pointer[Byte] {
-    buffer <-- marshalTo(context, buffer_, SizeT(size(seq)));
+    buffer <-- marshalTo(context, buffer_, MarshalSize(size(seq)));
     for (x in seq)
         buffer = marshalTo(context, buffer, x);
 }
 
 [S | MarshalableSequence?(S)]
 overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], static S) {
-    var n, begin = ...unmarshalFrom(context, begin_, end, SizeT);
+    var n, begin = ...unmarshalFrom(context, begin_, end, MarshalSize);
     var s = UnmarshaledType(S)();
 
     for (x in range(n)) {
@@ -300,7 +303,7 @@ overload UnmarshaledType(static S) = Vector[UnmarshaledType(SequenceElementType(
 //
 // null marshaling of static values
 //
-[x] overload marshaledSize(context, static x) = SizeT(0);
+[x] overload marshaledSize(context, static x) = MarshalSize(0);
 [x] overload marshalTo(context, buffer: Pointer[Byte], static x) = buffer;
 [x] overload unmarshalFrom(context,
     begin: Pointer[Byte], end: Pointer[Byte], static Static[x]
@@ -312,7 +315,7 @@ overload UnmarshaledType(static S) = Vector[UnmarshaledType(SequenceElementType(
 // null marshaling of empty records, tuples
 //
 [R | RegularRecord?(R) and countValues(...RecordFieldTypes(R)) == 0]
-overload marshaledSize(context, r: R) = SizeT(0);
+overload marshaledSize(context, r: R) = MarshalSize(0);
 [R | RegularRecord?(R) and countValues(...RecordFieldTypes(R)) == 0]
 overload marshalTo(context, buffer: Pointer[Byte], r: R) = buffer;
 [R | RegularRecord?(R) and countValues(...RecordFieldTypes(R)) == 0]
@@ -320,7 +323,7 @@ overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static
     = R(), begin;
 
 [T | T == Type(())]
-overload marshaledSize(context, r: T) = SizeT(0);
+overload marshaledSize(context, r: T) = MarshalSize(0);
 [T | T == Type(())]
 overload marshalTo(context, buffer: Pointer[Byte], r: T) = buffer;
 [T | T == Type(())]
@@ -360,7 +363,7 @@ overload unmarshalFrom(
     isNotNull?, begin <-- ...unmarshalFrom(context, begin_, end, Bool);
 
     if (isNotNull?) {
-        p <-- UniquePointer(allocateRawMemory(UnmarshaledType(T), SizeT(1)));
+        p <-- UniquePointer(allocateRawMemory(UnmarshaledType(T), MarshalSize(1)));
         try {
             p^, begin <-- ...unmarshalFrom(context, begin, end, T);
         } catch (ex) {
@@ -460,8 +463,8 @@ overload unmarshalFrom(context: UnmarshalContext,
         return nullShared(UnmarshaledType(T)), begin;
     }
     case SHARED_POINTER_REF: {
-        var id = SizeT();
-        id, begin = ...unmarshalFrom(context, begin, end, SizeT);
+        var id = MarshalSize();
+        id, begin = ...unmarshalFrom(context, begin, end, MarshalSize);
         var pointerState = lookup(context.pointers, id);
 
         if (null?(pointerState))
@@ -472,12 +475,12 @@ overload unmarshalFrom(context: UnmarshalContext,
         return SharedPointer[UnmarshaledType(T)](ptr), begin;
     }
     case SHARED_POINTER_DATA: {
-        var id = SizeT();
-        id, begin = ...unmarshalFrom(context, begin, end, SizeT);
+        var id = MarshalSize();
+        id, begin = ...unmarshalFrom(context, begin, end, MarshalSize);
         if (not null?(lookup(context.pointers, id)))
             throw UnmarshalInconsistentObjectGraph();
 
-        var ptr = allocateRawMemory(RefCounted[UnmarshaledType(T)], SizeT(1));
+        var ptr = allocateRawMemory(RefCounted[UnmarshaledType(T)], MarshalSize(1));
         try {
             ptr^.refCount = 1;
             ptr^.value, begin <-- ...unmarshalFrom(context, begin, end, T);
