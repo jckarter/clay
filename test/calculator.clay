@@ -45,8 +45,6 @@ calculate(s) {
     println();
 }
 
-private DefaultIterator(Token) = Type(iterator(typeToLValue(Vector[Token])));
-
 main(args) {
     if (size(args) != 2) {
         println("usage: ", args[0], " <expr>");
