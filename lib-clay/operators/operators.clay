@@ -117,6 +117,7 @@ procedure insert;
 procedure remove;
 procedure reserve;
 procedure resize;
+procedure resizeUnsafe;
 
 procedure pushFront;
 procedure popFront;
