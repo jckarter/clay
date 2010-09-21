@@ -135,9 +135,10 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             return new MatchPredicateError();
     }
 
-    MatchSuccessPtr result = new MatchSuccess(overload->callByName,
-                                              code, staticEnv,
-                                              callable, argsKey);
+    MatchSuccessPtr result = new MatchSuccess(
+        overload->callByName, overload->isInline, code, staticEnv,
+        callable, argsKey
+    );
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         result->fixedArgNames.push_back(x->name);

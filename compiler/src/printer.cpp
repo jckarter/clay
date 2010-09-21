@@ -557,7 +557,7 @@ static void print(ostream &out, const Object *x) {
     case OVERLOAD : {
         const Overload *y = (const Overload *)x;
         out << "Overload(" << y->target << ", " << y->code << ", "
-            << y->callByName << ")";
+            << y->callByName << ", " << y->isInline << ")";
         break;
     }
     case PROCEDURE : {

@@ -252,6 +252,7 @@ static InvokeEntryPtr newInvokeEntry(MatchSuccessPtr x)
     entry->varArgName = x->varArgName;
     entry->varArgTypes = x->varArgTypes;
     entry->callByName = x->callByName;
+    entry->isInline = x->isInline;
     return entry;
 }
 

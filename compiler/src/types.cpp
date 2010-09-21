@@ -436,7 +436,7 @@ static void setPredicate(ProcedurePtr pred, TypePtr type) {
     code->body = new Return(RETURN_VALUE, new ExprList(returnExpr));
 
     ExprPtr target = new ObjectExpr(pred.ptr());
-    OverloadPtr overload = new Overload(target, code, false);
+    OverloadPtr overload = new Overload(target, code, false, false);
     overload->env = new Env();
     pred->overloads.insert(pred->overloads.begin(), overload);
 }
