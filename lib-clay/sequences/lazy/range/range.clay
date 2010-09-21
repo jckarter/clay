@@ -125,6 +125,9 @@ record CoordinateRange[T] (
     end : T,
 );
 
+[T | ContiguousCoordinate?(T)]
+overload ContiguousSequence?(static CoordinateRange[T]) = true;
+
 [T]
 overload size(a:CoordinateRange[T]) = SizeT(a.end - a.begin);
 
