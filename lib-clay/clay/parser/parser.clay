@@ -155,6 +155,7 @@ private var kw_static = keyword("static");
 private var kw_callbyname = keyword("callbyname");
 private var kw_lvalue = keyword("lvalue");
 private var kw_rvalue = keyword("rvalue");
+private var kw_inline = keyword("inline");
 private var kw_enum = keyword("enum");
 private var kw_var = keyword("var");
 private var kw_ref = keyword("ref");
@@ -918,14 +919,19 @@ private var optCallByName = modify(
     optional(kw_callbyname),
 );
 
+private var optInline = modify(
+    x => not nothing?(x),
+    optional(kw_inline),
+);
+
 private var procedureWithBody = topLevelItemParser(
-    x => ProcedureDef(x.1, x.4, Maybe(
-        Code(x.2, (x.0).0, (x.0).1, x.6, x.8, x.9)
+    x => ProcedureDef(x.1, x.5, Maybe(
+        Code(x.2, x.3, (x.0).0, (x.0).1, x.7, x.9, x.10)
     )),
     sequence(
         patternVarsWithPredicate, optional(visibility), optCallByName,
-        optional(kw_procedure), identifier, sym(#"("), arguments, sym(#")"),
-        returnSpecs, codeBody,
+        optInline, optional(kw_procedure), identifier,
+        sym(#"("), arguments, sym(#")"), returnSpecs, codeBody,
     ),
 );
 
@@ -935,10 +941,10 @@ private var procedureWithoutBody = topLevelItemParser(
 );
 
 private var overloadDef = topLevelItemParser(
-    x => OverloadDef(x.3, Code(x.1, (x.0).0, (x.0).1, x.5, x.7, x.8)),
+    x => OverloadDef(x.4, Code(x.1, x.2, (x.0).0, (x.0).1, x.6, x.8, x.9)),
     sequence(
-        patternVarsWithPredicate, optCallByName, kw_overload, pattern,
-        sym(#"("), arguments, sym(#")"), returnSpecs, codeBody,
+        patternVarsWithPredicate, optCallByName, optInline, kw_overload,
+        pattern, sym(#"("), arguments, sym(#")"), returnSpecs, codeBody,
     ),
 );
 

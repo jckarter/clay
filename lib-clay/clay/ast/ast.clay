@@ -345,6 +345,7 @@ variant CodeBody = StatementPtr | LLVMBody;
 
 record Code = ...top(
     (#callByName?, Bool),
+    (#inline?,     Bool),
     (#patternVars, Vector[PatternVar]),
     (#predicate,   Maybe[ExprPtr]),
     (#args,        VarList[Argument]),
