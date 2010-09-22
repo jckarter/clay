@@ -2802,6 +2802,8 @@ extern const llvm::TargetData *llvmTargetData;
 
 bool initLLVM(std::string const &targetTriple);
 
+bool inlineEnabled();
+void setInlineEnabled(bool enabled);
 bool exceptionsEnabled();
 void setExceptionsEnabled(bool enabled);
 
