@@ -1,8 +1,9 @@
 
 import maybe.*;
 import parsing.combinators.wrapper.*;
-import clay.ast.*;
+import clay.tokens.*;
 import clay.lexer.*;
+import clay.ast.*;
 
 
 

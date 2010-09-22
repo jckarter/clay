@@ -1,5 +1,6 @@
 
 import clay.errors.*;
+import clay.tokens.*;
 import clay.lexer.*;
 import clay.ast.*;
 import clay.parser.*;

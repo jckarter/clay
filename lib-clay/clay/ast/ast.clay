@@ -1,6 +1,6 @@
 
 import maybe.*;
-import clay.lexer.*;
+import clay.tokens.*;
 
 
 
