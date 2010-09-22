@@ -2623,8 +2623,10 @@ void codegenCallInline(InvokeEntryPtr entry,
     EnvPtr env = new Env(entry->env);
     for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
         CValuePtr cv = args->values[i];
-        assert(cv->type == entry->argsKey[i]);
-        addLocal(env, entry->fixedArgNames[i], cv.ptr());
+        CValuePtr carg = new CValue(cv->type, cv->llValue);
+        carg->forwardedRValue = entry->forwardedRValueFlags[i];
+        assert(carg->type == entry->argsKey[i]);
+        addLocal(env, entry->fixedArgNames[i], carg.ptr());
     }
 
     if (entry->varArgName.ptr()) {
@@ -2632,7 +2634,9 @@ void codegenCallInline(InvokeEntryPtr entry,
         MultiCValuePtr varArgs = new MultiCValue();
         for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
             CValuePtr cv = args->values[nFixed + i];
-            varArgs->add(cv);
+            CValuePtr carg = new CValue(cv->type, cv->llValue);
+            carg->forwardedRValue = entry->forwardedRValueFlags[nFixed + i];
+            varArgs->add(carg);
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
     }
@@ -2642,11 +2646,12 @@ void codegenCallInline(InvokeEntryPtr entry,
         TypePtr rt = entry->returnTypes[i];
         bool isRef = entry->returnIsRef[i];
         CValuePtr cv = out->values[i];
+        CValuePtr cret = new CValue(cv->type, cv->llValue);
         if (isRef)
-            assert(cv->type == pointerType(rt));
+            assert(cret->type == pointerType(rt));
         else
-            assert(cv->type == rt);
-        returns.push_back(CReturn(isRef, rt, cv));
+            assert(cret->type == rt);
+        returns.push_back(CReturn(isRef, rt, cret));
     }
 
     bool hasNamedReturn = false;
