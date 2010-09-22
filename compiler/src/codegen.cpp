@@ -2616,7 +2616,8 @@ void codegenCallInline(InvokeEntryPtr entry,
                        MultiCValuePtr out)
 {
     assert(entry->isInline);
-    assert(!entry->code->isInlineLLVM());
+    if (entry->code->isInlineLLVM())
+        error(entry->code, "llvm procedures cannot be inlined");
 
     ensureArity(args, entry->argsKey.size());
 
