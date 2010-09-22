@@ -7,18 +7,18 @@ import vectors.generic.*;
 // booleans, integers, floats, pointers, characters
 //
 
-overload hash(x:Bool) = SizeT(x);
+inline overload hash(x:Bool) = SizeT(x);
 
 [T | Integer?(T)]
-overload hash(x:T) = SizeT(x);
+inline overload hash(x:T) = SizeT(x);
 
 [T | Float?(T)]
-overload hash(x:T) = SizeT(PtrInt(x*10000));
+inline overload hash(x:T) = SizeT(PtrInt(x*10000));
 
 [T]
-overload hash(x:Pointer[T]) = SizeT(x);
+inline overload hash(x:Pointer[T]) = SizeT(x);
 
-overload hash(x:Char) = SizeT(x);
+inline overload hash(x:Char) = SizeT(x);
 
 
 
@@ -27,7 +27,7 @@ overload hash(x:Char) = SizeT(x);
 //
 
 [T,n]
-overload hash(a:Array[T,n]) = hashSequence(a);
+inline overload hash(a:Array[T,n]) = hashSequence(a);
 
 
 
@@ -36,7 +36,7 @@ overload hash(a:Array[T,n]) = hashSequence(a);
 //
 
 [...T]
-overload hash(x:Tuple[...T]) {
+inline overload hash(x:Tuple[...T]) {
     var h = SizeT(0);
     static for (x in ...tupleElements(x))
         h = 7*h + 13*hash(x);
@@ -50,7 +50,7 @@ overload hash(x:Tuple[...T]) {
 //
 
 [T | Record?(T)]
-overload hash(x:T) {
+inline overload hash(x:T) {
     var h = SizeT(0);
     static for (x in ...recordFields(x))
         h = 7*h + 13*hash(x);
@@ -64,7 +64,7 @@ overload hash(x:T) {
 //
 
 [T | Enum?(T)]
-overload hash(x:T) = SizeT(x);
+inline overload hash(x:T) = SizeT(x);
 
 
 
@@ -73,7 +73,7 @@ overload hash(x:T) = SizeT(x);
 //
 
 [T]
-overload hash(x:SharedPointer[T]) = hash(x.ptr);
+inline overload hash(x:SharedPointer[T]) = hash(x.ptr);
 
 
 
@@ -81,8 +81,8 @@ overload hash(x:SharedPointer[T]) = hash(x.ptr);
 // strings
 //
 
-overload hash(a:String) = hashSequence(a);
-overload hash(a:StringConstant) = hashSequence(a);
+inline overload hash(a:String) = hashSequence(a);
+inline overload hash(a:StringConstant) = hashSequence(a);
 
 
 
@@ -91,7 +91,7 @@ overload hash(a:StringConstant) = hashSequence(a);
 //
 
 [T]
-overload hash(a:Vector[T]) = hashSequence(a);
+inline overload hash(a:Vector[T]) = hashSequence(a);
 
 
 

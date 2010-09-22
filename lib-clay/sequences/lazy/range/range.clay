@@ -10,32 +10,32 @@ record Range[T] (
 );
 
 [T]
-overload size(a:Range[T]) = SizeT(a.end - a.begin);
+inline overload size(a:Range[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-overload index(a:Range[T], i:I) = T(a.begin + i);
+inline overload index(a:Range[T], i:I) = T(a.begin + i);
 
 [T]
-overload iterator(a:Range[T]) = a;
+inline overload iterator(a:Range[T]) = a;
 
 [T]
-overload reverseIterator(a:Range[T]) = ReverseRange(a.end, a.begin);
+inline overload reverseIterator(a:Range[T]) = ReverseRange(a.end, a.begin);
 
 [T]
-overload hasNext?(a:Range[T]) = a.begin != a.end;
+inline overload hasNext?(a:Range[T]) = a.begin != a.end;
 
 [T]
-overload next(a:Range[T]) {
+inline overload next(a:Range[T]) {
     var temp = a.begin;
     inc(a.begin);
     return move(temp);
 }
 
 [T]
-overload begin(a:Range[T]) = ValueCoordinate(a.begin);
+inline overload begin(a:Range[T]) = ValueCoordinate(a.begin);
 
 [T]
-overload end(a:Range[T]) = ValueCoordinate(a.end);
+inline overload end(a:Range[T]) = ValueCoordinate(a.end);
 
 
 
@@ -49,31 +49,31 @@ record ReverseRange[T] (
 );
 
 [T]
-overload size(a:ReverseRange[T]) = SizeT(a.end - a.begin);
+inline overload size(a:ReverseRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-overload index(a:ReverseRange[T], i:I) = T(a.end - i - 1);
+inline overload index(a:ReverseRange[T], i:I) = T(a.end - i - 1);
 
 [T]
-overload iterator(a:ReverseRange[T]) = a;
+inline overload iterator(a:ReverseRange[T]) = a;
 
 [T]
-overload reverseIterator(a:ReverseRange[T]) = Range(a.begin, a.end);
+inline overload reverseIterator(a:ReverseRange[T]) = Range(a.begin, a.end);
 
 [T]
-overload hasNext?(a:ReverseRange[T]) = a.end != a.begin;
+inline overload hasNext?(a:ReverseRange[T]) = a.end != a.begin;
 
 [T]
-overload next(a:ReverseRange[T]) {
+inline overload next(a:ReverseRange[T]) {
     dec(a.end);
     return a.end;
 }
 
 [T]
-overload begin(a:ReverseRange[T]) = ValueReverseCoordinate(a.end);
+inline overload begin(a:ReverseRange[T]) = ValueReverseCoordinate(a.end);
 
 [T]
-overload end(a:ReverseRange[T]) = ValueReverseCoordinate(a.begin);
+inline overload end(a:ReverseRange[T]) = ValueReverseCoordinate(a.begin);
 
 
 
@@ -83,35 +83,35 @@ overload end(a:ReverseRange[T]) = ValueReverseCoordinate(a.begin);
 
 procedure range;
 
-overload range(begin, end) = Range(begin, end);
+inline overload range(begin, end) = Range(begin, end);
 
 [A,B | Integer?(A) and Integer?(B)]
-overload range(begin:A, end:B) =
+inline overload range(begin:A, end:B) =
     Range(toBiggerNumericType(A, B, begin),
           toBiggerNumericType(A, B, end));
 
 [I | Integer?(I)]
-overload range(begin:I, end:I) = Range(begin, end);
+inline overload range(begin:I, end:I) = Range(begin, end);
 
 [I | Integer?(I)]
-overload range(end:I) = Range(I(0), end);
+inline overload range(end:I) = Range(I(0), end);
 
 
 procedure reverseRange;
 
-overload reverseRange(end, begin) = ReverseRange(end, begin);
+inline overload reverseRange(end, begin) = ReverseRange(end, begin);
 
 [A,B | Integer?(A) and Integer?(B)]
-overload reverseRange(end:A, begin:B) =
+inline overload reverseRange(end:A, begin:B) =
     ReverseRange(toBiggerNumericType(A, B, end),
                  toBiggerNumericType(A, B, begin));
 
 [I | Integer?(I)]
-overload reverseRange(end:I, begin:I) =
+inline overload reverseRange(end:I, begin:I) =
     ReverseRange(end, begin);
 
 [I | Integer?(I)]
-overload reverseRange(end:I) =
+inline overload reverseRange(end:I) =
     ReverseRange(end, I(0));
 
 
@@ -129,33 +129,33 @@ record CoordinateRange[T] (
 overload ContiguousSequence?(static CoordinateRange[T]) = true;
 
 [T]
-overload size(a:CoordinateRange[T]) = SizeT(a.end - a.begin);
+inline overload size(a:CoordinateRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-overload index(a:CoordinateRange[T], i:I) = forward ...(a.begin + i)^;
+inline overload index(a:CoordinateRange[T], i:I) = forward ...(a.begin + i)^;
 
 [T]
-overload iterator(a:CoordinateRange[T]) = a;
+inline overload iterator(a:CoordinateRange[T]) = a;
 
 [T]
-overload reverseIterator(a:CoordinateRange[T]) =
+inline overload reverseIterator(a:CoordinateRange[T]) =
     ReverseCoordinateRange(a.end, a.begin);
 
 [T]
-overload hasNext?(a:CoordinateRange[T]) = a.begin != a.end;
+inline overload hasNext?(a:CoordinateRange[T]) = a.begin != a.end;
 
 [T]
-overload next(a:CoordinateRange[T]) {
+inline overload next(a:CoordinateRange[T]) {
     var x = captureValues(...a.begin^);
     inc(a.begin);
     return forward ...forwardValues(x);
 }
 
 [T]
-overload begin(a:CoordinateRange[T]) = a.begin;
+inline overload begin(a:CoordinateRange[T]) = a.begin;
 
 [T]
-overload end(a:CoordinateRange[T]) = a.end;
+inline overload end(a:CoordinateRange[T]) = a.end;
 
 
 
@@ -169,32 +169,32 @@ record ReverseCoordinateRange[T] (
 );
 
 [T]
-overload size(a:ReverseCoordinateRange[T]) = SizeT(a.end - a.begin);
+inline overload size(a:ReverseCoordinateRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-overload index(a:ReverseCoordinateRange[T], i:I) = forward ...(a.end - i - 1)^;
+inline overload index(a:ReverseCoordinateRange[T], i:I) = forward ...(a.end - i - 1)^;
 
 [T]
-overload iterator(a:ReverseCoordinateRange[T]) = a;
+inline overload iterator(a:ReverseCoordinateRange[T]) = a;
 
 [T]
-overload reverseIterator(a:ReverseCoordinateRange[T]) =
+inline overload reverseIterator(a:ReverseCoordinateRange[T]) =
     CoordinateRange(a.begin, a.end);
 
 [T]
-overload hasNext?(a:ReverseCoordinateRange[T]) = a.begin != a.end;
+inline overload hasNext?(a:ReverseCoordinateRange[T]) = a.begin != a.end;
 
 [T]
-overload next(a:ReverseCoordinateRange[T]) {
+inline overload next(a:ReverseCoordinateRange[T]) {
     dec(a.end);
     return forward ...a.end^;
 }
 
 [T]
-overload begin(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.end);
+inline overload begin(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.end);
 
 [T]
-overload end(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.begin);
+inline overload end(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.begin);
 
 
 
@@ -202,6 +202,6 @@ overload end(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.begin);
 // coordinateRange, reverseCoordinateRange
 //
 
-coordinateRange(begin, end) = CoordinateRange(begin, end);
+inline coordinateRange(begin, end) = CoordinateRange(begin, end);
 
-reverseCoordinateRange(end, begin) = ReverseCoordinateRange(end, begin);
+inline reverseCoordinateRange(end, begin) = ReverseCoordinateRange(end, begin);

@@ -7,7 +7,7 @@ import simd.primitives as prims;
 //
 
 [T,n,I | Integer?(I)]
-overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
+inline overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
 
 
 
@@ -16,7 +16,7 @@ overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
 //
 
 [...A | (countValues(...A) > 0) and equalValues?(...A)]
-overload Vec(...args:A) {
+inline overload Vec(...args:A) {
     alias n = static countValues(...A);
     alias T = firstValue(...A);
     return Vec[T, n](...args);
@@ -28,8 +28,8 @@ overload Vec(...args:A) {
 // basic constructor
 //
 
-[T,n,...A | Tuple[...replicateValue(T,static n)] == Tuple[...A]]
-overload Vec[T,n](...args:A) {
+[T,n,...A | (countValues(...A) == n) and equalValues?(T, ...A)]
+inline overload Vec[T,n](...args:A) {
     var a = Vec[T,n]();
     var i = 0;
     static for (x in ...args) {
@@ -46,7 +46,7 @@ overload Vec[T,n](...args:A) {
 //
 
 [T,n]
-overload Vec[T,n](x:T) {
+inline overload Vec[T,n](x:T) {
     var a = Vec[T,n]();
     for (i in range(n))
         a[i] = x;
@@ -60,7 +60,7 @@ overload Vec[T,n](x:T) {
 //
 
 [T,n]
-overload Vec[T,n]() returned:Vec[T,n] {
+inline overload Vec[T,n]() returned:Vec[T,n] {
 }
 
 [T,n]
@@ -71,21 +71,21 @@ overload Vec[T,n](src:Vec[T,n]) returned:Vec[T,n] __llvm__{
 }
 
 [T,n]
-overload moveUnsafe(src:Vec[T,n]) returned:Vec[T,n] {
+inline overload moveUnsafe(src:Vec[T,n]) returned:Vec[T,n] {
     returned <-- src;
 }
 
 [T,n]
-overload resetUnsafe(src:Vec[T,n]) {
+inline overload resetUnsafe(src:Vec[T,n]) {
 }
 
 [T,n]
-overload assign(dest:Vec[T,n], src:Vec[T,n]) {
+inline overload assign(dest:Vec[T,n], src:Vec[T,n]) {
     dest <-- src;
 }
 
 [T,n]
-overload destroy(a:Vec[T,n]) {
+inline overload destroy(a:Vec[T,n]) {
 }
 
 
@@ -95,16 +95,16 @@ overload destroy(a:Vec[T,n]) {
 //
 
 [T,n]
-unpackVec(a:Vec[T,n]) = ...unpackElements(a, static 0);
+inline unpackVec(a:Vec[T,n]) = ...unpackElements(a, static 0);
 
 private procedure unpackElements;
 
 [T,n,i]
-overload unpackElements(a:Vec[T,n], static i) =
+inline overload unpackElements(a:Vec[T,n], static i) =
     a[i], ...unpackElements(a, static i+1);
 
 [T,n,i | i == n]
-overload unpackElements(a:Vec[T,n], static i) = ;
+inline overload unpackElements(a:Vec[T,n], static i) = ;
 
 
 
@@ -113,53 +113,53 @@ overload unpackElements(a:Vec[T,n], static i) = ;
 //
 
 [T,n]
-overload add(a:Vec[T,n], b:Vec[T,n]) = prims.add(a, b);
+inline overload add(a:Vec[T,n], b:Vec[T,n]) = prims.add(a, b);
 
 [T,n,X | Numeric?(X)]
-overload add(a:Vec[T,n], x:X) = a + Vec[T,n](T(x));
+inline overload add(a:Vec[T,n], x:X) = a + Vec[T,n](T(x));
 
 [T,n,X | Numeric?(X)]
-overload add(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) + a;
+inline overload add(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) + a;
 
 
 [T,n]
-overload subtract(a:Vec[T,n], b:Vec[T,n]) = prims.subtract(a, b);
+inline overload subtract(a:Vec[T,n], b:Vec[T,n]) = prims.subtract(a, b);
 
 [T,n,X | Numeric?(X)]
-overload subtract(a:Vec[T,n], x:X) = a - Vec[T,n](T(x));
+inline overload subtract(a:Vec[T,n], x:X) = a - Vec[T,n](T(x));
 
 [T,n,X | Numeric?(X)]
-overload subtract(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) - a;
+inline overload subtract(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) - a;
 
 
 [T,n]
-overload multiply(a:Vec[T,n], b:Vec[T,n]) = prims.multiply(a, b);
+inline overload multiply(a:Vec[T,n], b:Vec[T,n]) = prims.multiply(a, b);
 
 [T,n,X | Numeric?(X)]
-overload multiply(a:Vec[T,n], x:X) = a * Vec[T,n](T(x));
+inline overload multiply(a:Vec[T,n], x:X) = a * Vec[T,n](T(x));
 
 [T,n,X | Numeric?(X)]
-overload multiply(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) * a;
+inline overload multiply(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) * a;
 
 
 [T,n]
-overload divide(a:Vec[T,n], b:Vec[T,n]) = prims.divide(a, b);
+inline overload divide(a:Vec[T,n], b:Vec[T,n]) = prims.divide(a, b);
 
 [T,n,X | Numeric?(X)]
-overload divide(a:Vec[T,n], x:X) = a / Vec[T,n](T(x));
+inline overload divide(a:Vec[T,n], x:X) = a / Vec[T,n](T(x));
 
 [T,n,X | Numeric?(X)]
-overload divide(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) / a;
+inline overload divide(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) / a;
 
 
 [T,n]
-overload remainder(a:Vec[T,n], b:Vec[T,n]) = prims.remainder(a, b);
+inline overload remainder(a:Vec[T,n], b:Vec[T,n]) = prims.remainder(a, b);
 
 [T,n,X | Numeric?(X)]
-overload remainder(a:Vec[T,n], x:X) = a % Vec[T,n](T(x));
+inline overload remainder(a:Vec[T,n], x:X) = a % Vec[T,n](T(x));
 
 [T,n,X | Numeric?(X)]
-overload remainder(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) % a;
+inline overload remainder(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) % a;
 
 
 
@@ -168,53 +168,53 @@ overload remainder(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) % a;
 //
 
 [T,n]
-overload shiftLeft(a:Vec[T,n], b:Vec[T,n]) = prims.shiftLeft(a, b);
+inline overload shiftLeft(a:Vec[T,n], b:Vec[T,n]) = prims.shiftLeft(a, b);
 
 [T,n,X | Numeric?(X)]
-overload shiftLeft(a:Vec[T,n], x:X) = shiftLeft(a, Vec[T,n](T(x)));
+inline overload shiftLeft(a:Vec[T,n], x:X) = shiftLeft(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-overload shiftLeft(x:X, a:Vec[T,n]) = shiftLeft(Vec[T,n](T(x)),  a);
+inline overload shiftLeft(x:X, a:Vec[T,n]) = shiftLeft(Vec[T,n](T(x)),  a);
 
 
 [T,n]
-overload shiftRight(a:Vec[T,n], b:Vec[T,n]) = prims.shiftRight(a, b);
+inline overload shiftRight(a:Vec[T,n], b:Vec[T,n]) = prims.shiftRight(a, b);
 
 [T,n,X | Numeric?(X)]
-overload shiftRight(a:Vec[T,n], x:X) = shiftRight(a, Vec[T,n](T(x)));
+inline overload shiftRight(a:Vec[T,n], x:X) = shiftRight(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-overload shiftRight(x:X, a:Vec[T,n]) = shiftRight(Vec[T,n](T(x)),  a);
+inline overload shiftRight(x:X, a:Vec[T,n]) = shiftRight(Vec[T,n](T(x)),  a);
 
 
 [T,n]
-overload bitwiseAnd(a:Vec[T,n], b:Vec[T,n]) = prims.bitwiseAnd(a, b);
+inline overload bitwiseAnd(a:Vec[T,n], b:Vec[T,n]) = prims.bitwiseAnd(a, b);
 
 [T,n,X | Numeric?(X)]
-overload bitwiseAnd(a:Vec[T,n], x:X) = bitwiseAnd(a, Vec[T,n](T(x)));
+inline overload bitwiseAnd(a:Vec[T,n], x:X) = bitwiseAnd(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-overload bitwiseAnd(x:X, a:Vec[T,n]) = bitwiseAnd(Vec[T,n](T(x)),  a);
+inline overload bitwiseAnd(x:X, a:Vec[T,n]) = bitwiseAnd(Vec[T,n](T(x)),  a);
 
 
 [T,n]
-overload bitwiseOr(a:Vec[T,n], b:Vec[T,n]) = prims.bitwiseOr(a, b);
+inline overload bitwiseOr(a:Vec[T,n], b:Vec[T,n]) = prims.bitwiseOr(a, b);
 
 [T,n,X | Numeric?(X)]
-overload bitwiseOr(a:Vec[T,n], x:X) = bitwiseOr(a, Vec[T,n](T(x)));
+inline overload bitwiseOr(a:Vec[T,n], x:X) = bitwiseOr(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-overload bitwiseOr(x:X, a:Vec[T,n]) = bitwiseOr(Vec[T,n](T(x)),  a);
+inline overload bitwiseOr(x:X, a:Vec[T,n]) = bitwiseOr(Vec[T,n](T(x)),  a);
 
 
 [T,n]
-overload bitwiseXor(a:Vec[T,n], b:Vec[T,n]) = prims.bitwiseXor(a, b);
+inline overload bitwiseXor(a:Vec[T,n], b:Vec[T,n]) = prims.bitwiseXor(a, b);
 
 [T,n,X | Numeric?(X)]
-overload bitwiseXor(a:Vec[T,n], x:X) = bitwiseXor(a, Vec[T,n](T(x)));
+inline overload bitwiseXor(a:Vec[T,n], x:X) = bitwiseXor(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-overload bitwiseXor(x:X, a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(x)),  a);
+inline overload bitwiseXor(x:X, a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(x)),  a);
 
 
 
@@ -223,10 +223,10 @@ overload bitwiseXor(x:X, a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(x)),  a);
 //
 
 [T,n]
-overload plus(a:Vec[T,n]) = a;
+inline overload plus(a:Vec[T,n]) = a;
 
 [T,n]
-overload minus(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
+inline overload minus(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
 
 [T,n]
-overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(-1)), a);
+inline overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(-1)), a);

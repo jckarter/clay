@@ -6,41 +6,41 @@
 // takeValues, dropValues
 //
 
-eachValue(fn, ...xs) {
+inline eachValue(fn, ...xs) {
     static for (x in ...xs) {
         fn(x);
     }
 }
 
 procedure mapValues;
-overload mapValues(fn, forward x, forward ...xs)
+inline overload mapValues(fn, forward x, forward ...xs)
     = forward ...fn(x), ...mapValues(fn, ...xs);
-overload mapValues(fn) = ;
+inline overload mapValues(fn) = ;
 
 procedure foldValues;
-overload foldValues(fn, forward x, forward ...xs)
+inline overload foldValues(fn, forward x, forward ...xs)
     = fn(x, foldValues(fn, ...xs));
-overload foldValues(fn, forward x) = forward x;
+inline overload foldValues(fn, forward x) = forward x;
 
 procedure weaveValues;
-overload weaveValues(between, forward x, forward ...xs)
+inline overload weaveValues(between, forward x, forward ...xs)
     = forward x, between, ...weaveValues(between, ...xs);
-overload weaveValues(between, forward x, forward y)
+inline overload weaveValues(between, forward x, forward y)
     = forward x, between, y;
-overload weaveValues(between, forward x) = forward x;
-overload weaveValues(between) = ;
+inline overload weaveValues(between, forward x) = forward x;
+inline overload weaveValues(between) = ;
 
 procedure takeValues;
-[i] overload takeValues(static i, forward x, forward ...xs)
+[i] inline overload takeValues(static i, forward x, forward ...xs)
     = forward x, ...takeValues(static i-1, ...xs);
-[i | i == 0] overload takeValues(static i, forward ...xs) = ;
-[i] overload takeValues(static i) = ;
+[i | i == 0] inline overload takeValues(static i, forward ...xs) = ;
+[i] inline overload takeValues(static i) = ;
 
 procedure dropValues;
-[i] overload dropValues(static i, forward x, forward ...xs)
+[i] inline overload dropValues(static i, forward x, forward ...xs)
     = forward ...dropValues(static i-1, ...xs);
-[i | i == 0] overload dropValues(static i, forward ...xs) = forward ...xs;
-[i] overload dropValues(static i) = ;
+[i | i == 0] inline overload dropValues(static i, forward ...xs) = forward ...xs;
+[i] inline overload dropValues(static i) = ;
 
 
 
@@ -49,15 +49,15 @@ procedure dropValues;
 //
 
 procedure countValues;
-overload countValues() = 0;
-overload countValues(x, ...xs) = 1 + countValues(...xs);
+inline overload countValues() = 0;
+inline overload countValues(x, ...xs) = 1 + countValues(...xs);
 
 procedure nthValue;
-[i] overload nthValue(static i, forward a, forward ...b)
+[i] inline overload nthValue(static i, forward a, forward ...b)
     = nthValue(static i-1, ...b);
-[i | i == 0] overload nthValue(static i, forward a, ...b) = a;
+[i | i == 0] inline overload nthValue(static i, forward a, ...b) = a;
 
-firstValue(forward a, ...rest) = forward a;
+inline firstValue(forward a, ...rest) = forward a;
 
 
 
@@ -66,10 +66,10 @@ firstValue(forward a, ...rest) = forward a;
 //
 
 [n]
-replicateValue(a, static n) = a, ...replicateValue(a, static n-1);
-overload replicateValue(a, static 0) = ;
+inline replicateValue(a, static n) = a, ...replicateValue(a, static n-1);
+inline overload replicateValue(a, static 0) = ;
 
-allValues?(pred, ...rest) {
+inline allValues?(pred, ...rest) {
     static for (x in ...rest) {
         if (not pred(x))
             return false;
@@ -77,7 +77,7 @@ allValues?(pred, ...rest) {
     return true;
 }
 
-anyValues?(pred, ...rest) {
+inline anyValues?(pred, ...rest) {
     static for (x in ...rest) {
         if (pred(x))
             return true;
@@ -85,7 +85,7 @@ anyValues?(pred, ...rest) {
     return false;
 }
 
-equalValues?(a, ...rest) = allValues?(x => a == x, ...rest);
+inline equalValues?(a, ...rest) = allValues?(x => a == x, ...rest);
 
 
 
@@ -100,25 +100,25 @@ private record CapturedLValue[T] (
 );
 
 procedure captureValue;
-overload captureValue(rvalue x) = move(x);
-overload captureValue(lvalue x) = CapturedLValue(&x);
+inline overload captureValue(rvalue x) = move(x);
+inline overload captureValue(lvalue x) = CapturedLValue(&x);
 
 procedure forwardValue;
-overload forwardValue(x) = move(x);
-[T] overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
+inline overload forwardValue(x) = move(x);
+[T] inline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
 
 procedure capturedRef;
-overload capturedRef(x) = ref x;
-[T] overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
+inline overload capturedRef(x) = ref x;
+[T] inline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
 
 // captureValues, forwardValues, capturedRefs
 
-captureValues(forward ...args) = Tuple(...mapValues(captureValue, ...args));
+inline captureValues(forward ...args) = Tuple(...mapValues(captureValue, ...args));
 
 [...T]
-forwardValues(x:Tuple[...T]) =
+inline forwardValues(x:Tuple[...T]) =
     forward ...mapValues(forwardValue, ...unpackTupleRef(x));
 
 [...T]
-capturedRefs(x:Tuple[...T]) =
+inline capturedRefs(x:Tuple[...T]) =
     forward ...mapValues(capturedRef, ...unpackTupleRef(x));

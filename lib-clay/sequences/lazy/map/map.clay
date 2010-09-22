@@ -6,9 +6,9 @@ import sequences.util.*;
 // map
 //
 
-map(mapper, forward ...seqs) = Mapped(mapper, zip(...seqs));
+inline map(mapper, forward ...seqs) = Mapped(mapper, zip(...seqs));
 
-overload map(mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
+inline overload map(mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
 
 
 private record Mapped[F, A] (
@@ -23,11 +23,11 @@ private record Mapped[F, A] (
 //
 
 [F,A]
-overload iterator(a:Mapped[F,A]) =
+inline overload iterator(a:Mapped[F,A]) =
     MappedIterator(a.mapper, iterator(a.seq));
 
 [F,A | CallDefined?(reverseIterator, A)]
-overload reverseIterator(a:Mapped[F,A]) =
+inline overload reverseIterator(a:Mapped[F,A]) =
     MappedIterator(a.mapper, reverseIterator(a.seq));
 
 private record MappedIterator[F, ITER] (
@@ -36,10 +36,10 @@ private record MappedIterator[F, ITER] (
 );
 
 [F, ITER]
-overload hasNext?(iter:MappedIterator[F, ITER]) = hasNext?(iter.iter);
+inline overload hasNext?(iter:MappedIterator[F, ITER]) = hasNext?(iter.iter);
 
 [F, ITER]
-overload next(iter:MappedIterator[F, ITER]) =
+inline overload next(iter:MappedIterator[F, ITER]) =
     forward ...iter.mapper(...next(iter.iter));
 
 
@@ -54,35 +54,35 @@ private record MappedCoordinate[F, COORD] (
 );
 
 [F, A | CallDefined?(begin, A)]
-overload begin(a:Mapped[F, A]) = MappedCoordinate(a.mapper, begin(a.seq));
+inline overload begin(a:Mapped[F, A]) = MappedCoordinate(a.mapper, begin(a.seq));
 
 [F, A | CallDefined?(end, A)]
-overload end(a:Mapped[F, A]) = MappedCoordinate(a.mapper, end(a.seq));
+inline overload end(a:Mapped[F, A]) = MappedCoordinate(a.mapper, end(a.seq));
 
 [F, COORD]
-overload dereference(x:MappedCoordinate[F, COORD]) =
+inline overload dereference(x:MappedCoordinate[F, COORD]) =
     forward ...x.mapper(...dereference(x.coord));
 
 [F, COORD, I | CallDefined?(add, COORD, I)]
-overload add(x:MappedCoordinate[F, COORD], i:I) =
+inline overload add(x:MappedCoordinate[F, COORD], i:I) =
     MappedCoordinate(x.mapper, x.coord + i);
 
 [F, COORD, I | CallDefined?(subtract, COORD, I)]
-overload subtract(x:MappedCoordinate[F, COORD], i:I) =
+inline overload subtract(x:MappedCoordinate[F, COORD], i:I) =
     MappedCoordinate(x.mapper, x.coord - i);
 
 [F, COORD | CallDefined?(subtract, COORD, COORD)]
-overload subtract(x1:MappedCoordinate[F, COORD],
-                  x2:MappedCoordinate[F, COORD]) =
+inline overload subtract(x1:MappedCoordinate[F, COORD],
+                         x2:MappedCoordinate[F, COORD]) =
     x1.coord - x2.coord;
 
 [F, COORD | CallDefined?(inc, COORD)]
-overload inc(x:MappedCoordinate[F, COORD]) {
+inline overload inc(x:MappedCoordinate[F, COORD]) {
     inc(x.coord);
 }
 
 [F, COORD | CallDefined?(dec, COORD)]
-overload dec(x:MappedCoordinate[F, COORD]) {
+inline overload dec(x:MappedCoordinate[F, COORD]) {
     dec(x.coord);
 }
 
@@ -93,8 +93,8 @@ overload dec(x:MappedCoordinate[F, COORD]) {
 //
 
 [F, A | CallDefined?(size, A)]
-overload size(a:Mapped[F, A]) = size(a.seq);
+inline overload size(a:Mapped[F, A]) = size(a.seq);
 
 [F, A, I | CallDefined?(index, A, I)]
-overload index(a:Mapped[F, A], i:I) =
+inline overload index(a:Mapped[F, A], i:I) =
     forward ...a.mapper(...index(a.seq, i));

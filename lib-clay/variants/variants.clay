@@ -68,7 +68,7 @@ overload V(src:V) returned:V {
 }
 
 [V | Variant?(V)]
-overload V(rvalue src:V) = move(src);
+inline overload V(rvalue src:V) = move(src);
 
 
 
@@ -98,7 +98,7 @@ overload moveUnsafe(src:V) returned:V {
 }
 
 [V | Variant?(V)]
-overload resetUnsafe(x:V) {
+inline overload resetUnsafe(x:V) {
     ref repr = variantRepr(x);
     repr.tag = 0;
     resetUnsafe(staticIndex(repr.data, static 0));
@@ -189,7 +189,7 @@ overload equals?(a:V, b:V) {
 //
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-variantIs?(x:V, static T) {
+inline variantIs?(x:V, static T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     return repr.tag == index;
@@ -204,7 +204,7 @@ variantIs?(x:V, static T) {
 procedure variantAs;
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-overload variantAs(lvalue x:V, static T) {
+inline overload variantAs(lvalue x:V, static T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     assert(repr.tag == index, "invalid cast");
@@ -212,7 +212,7 @@ overload variantAs(lvalue x:V, static T) {
 }
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-overload variantAs(rvalue x:V, static T) {
+inline overload variantAs(rvalue x:V, static T) {
     return move(variantAs(x, T));
 }
 
@@ -223,7 +223,7 @@ overload variantAs(rvalue x:V, static T) {
 //
 
 [V,T | Variant?(V) and VariantMember?(V,T)]
-variantAsPtr(x:V, static T) {
+inline variantAsPtr(x:V, static T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     if (repr.tag == index)
@@ -239,14 +239,14 @@ variantAsPtr(x:V, static T) {
 //
 
 [V | Variant?(V)]
-variantTag(x:V) = variantRepr(x).tag;
+inline variantTag(x:V) = variantRepr(x).tag;
 
 [V,i | Variant?(V)]
-unsafeVariantIndex(x:V, static i) =
+inline unsafeVariantIndex(x:V, static i) =
     ref staticIndex(variantRepr(x).data, static i);
 
 [V | Variant?(V)]
-invalidVariant(x:V) {
+inline invalidVariant(x:V) {
     error("invalid variant, tag = ", variantTag(x));
 }
 
@@ -256,9 +256,9 @@ invalidVariant(x:V) {
 //
 
 private procedure matchValue;
-[T] overload matchValue(forward x:T, static T, fn, ...cases) = forward ...fn(x);
-[T, U | T != U] overload matchValue(forward x:T, static U, fn, ...cases)
+[T] inline overload matchValue(forward x:T, static T, fn, ...cases) = forward ...fn(x);
+[T, U | T != U] inline overload matchValue(forward x:T, static U, fn, ...cases)
     = forward ...matchValue(x, ...cases);
 
-match(forward v, ...cases) = forward ...matchValue(*v, ...cases);
+inline match(forward v, ...cases) = forward ...matchValue(*v, ...cases);
 

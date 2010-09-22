@@ -77,13 +77,13 @@ overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
 procedure toBiggerNumericType;
 
 [A | Numeric?(A)]
-overload toBiggerNumericType(static A, static A, v) = v;
+inline overload toBiggerNumericType(static A, static A, v) = v;
 
 [A,B | Numeric?(A,B) and BiggerNumeric?(A,B)]
-overload toBiggerNumericType(static A, static B, v) = A(v);
+inline overload toBiggerNumericType(static A, static B, v) = A(v);
 
 [A,B | Numeric?(A,B) and BiggerNumeric?(B,A)]
-overload toBiggerNumericType(static A, static B, v) = B(v);
+inline overload toBiggerNumericType(static A, static B, v) = B(v);
 
 
 
@@ -92,28 +92,28 @@ overload toBiggerNumericType(static A, static B, v) = B(v);
 //
 
 [T | Numeric?(T)]
-overload T() returned:T {
+inline overload T() returned:T {
 }
 
 [T1,T2 | Numeric?(T1,T2)]
-overload T1(src:T2) = numericConvert(T1, src);
+inline overload T1(src:T2) = numericConvert(T1, src);
 
 [T | Numeric?(T)]
-overload T(src:T) returned:T {
+inline overload T(src:T) returned:T {
     primitiveCopy(returned, src);
 }
 
 [T | Numeric?(T)]
-overload moveUnsafe(src:T) returned:T {
+inline overload moveUnsafe(src:T) returned:T {
     primitiveCopy(returned, src);
 }
 
 [T | Numeric?(T)]
-overload resetUnsafe(x:T) {
+inline overload resetUnsafe(x:T) {
 }
 
 [T | Numeric?(T)]
-overload destroy(x:T) {
+inline overload destroy(x:T) {
 }
 
 
@@ -123,17 +123,17 @@ overload destroy(x:T) {
 //
 
 [A, B | Numeric?(A,B) and BiggerNumeric?(A,B)]
-overload assign(dest:A, src:B) {
+inline overload assign(dest:A, src:B) {
     primitiveCopy(dest, A(src));
 }
 
 [A, B | Integer?(A,B) and (TypeSize(A) == TypeSize(B))]
-overload assign(dest:A, src:B) {
+inline overload assign(dest:A, src:B) {
     primitiveCopy(dest, A(src));
 }
 
 [T | Numeric?(T)]
-overload assign(dest:T, src:T) {
+inline overload assign(dest:T, src:T) {
     primitiveCopy(dest, src);
 }
 
@@ -144,63 +144,75 @@ overload assign(dest:T, src:T) {
 //
 
 [A,B | Numeric?(A,B)]
-overload equals?(a:A, b:B) = equals?(toBiggerNumericType(A, B, a),
-                                     toBiggerNumericType(A, B, b));
+inline overload equals?(a:A, b:B) =
+    equals?(toBiggerNumericType(A, B, a),
+            toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload equals?(a:A, b:A) = numericEquals?(a, b);
+inline overload equals?(a:A, b:A) = numericEquals?(a, b);
 
 [A | Float?(A)]
-overload equals?(a:A, b:A) = floatOrderedAndEquals?(a, b);
+inline overload equals?(a:A, b:A) = floatOrderedAndEquals?(a, b);
 
 
 [A, B | Numeric?(A, B)]
-overload notEquals?(a:A, b:B) = notEquals?(toBiggerNumericType(A, B, a),
-                                           toBiggerNumericType(A, B, b));
+inline overload notEquals?(a:A, b:B) =
+    notEquals?(toBiggerNumericType(A, B, a),
+               toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload notEquals?(a:A, b:A) = not equals?(a, b);
+inline overload notEquals?(a:A, b:A) = not equals?(a, b);
 
 [A | Float?(A)]
-overload notEquals?(a:A, b:A) = floatUnorderedOrNotEquals?(a, b);
+inline overload notEquals?(a:A, b:A) = floatUnorderedOrNotEquals?(a, b);
 
 
 [A,B | Numeric?(A,B)]
-overload lesser?(a:A, b:B) = lesser?(toBiggerNumericType(A, B, a),
-                                     toBiggerNumericType(A, B, b));
+inline overload lesser?(a:A, b:B) =
+    lesser?(toBiggerNumericType(A, B, a),
+            toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload lesser?(a:A, b:A) = numericLesser?(a, b);
+inline overload lesser?(a:A, b:A) = numericLesser?(a, b);
 
 [A | Float?(A)]
-overload lesser?(a:A, b:A) = floatOrderedAndLesser?(a, b);
+inline overload lesser?(a:A, b:A) = floatOrderedAndLesser?(a, b);
 
 
 [A, B | Numeric?(A, B)]
-overload lesserEquals?(a:A, b:B) = lesserEquals?(toBiggerNumericType(A, B, a),
-                                                 toBiggerNumericType(A, B, b));
+inline overload lesserEquals?(a:A, b:B) =
+    lesserEquals?(toBiggerNumericType(A, B, a),
+                  toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload lesserEquals?(a:A, b:A) = not lesser?(b, a);
+inline overload lesserEquals?(a:A, b:A) = not lesser?(b, a);
 
 [A | Float?(A)]
-overload lesserEquals?(a:A, b:A) = floatOrderedAndLesserEquals?(a, b);
+inline overload lesserEquals?(a:A, b:A) = floatOrderedAndLesserEquals?(a, b);
 
 
 [A,B | Numeric?(A,B)]
-overload greater?(a:A, b:B) = greater?(toBiggerNumericType(A, B, a),
-                                       toBiggerNumericType(A, B, b));
+inline overload greater?(a:A, b:B) =
+    greater?(toBiggerNumericType(A, B, a),
+             toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload greater?(a:A, b:A) = lesser?(b, a);
+inline overload greater?(a:A, b:A) = lesser?(b, a);
 
 [A | Float?(A)]
-overload greater?(a:A, b:A) = floatOrderedAndGreater?(a, b);
+inline overload greater?(a:A, b:A) = floatOrderedAndGreater?(a, b);
 
 
 [A, B | Numeric?(A, B)]
-overload greaterEquals?(a:A, b:B) = greaterEquals?(toBiggerNumericType(A, B, a),
-                                                   toBiggerNumericType(A, B, b));
+inline overload greaterEquals?(a:A, b:B) =
+    greaterEquals?(toBiggerNumericType(A, B, a),
+                   toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload greaterEquals?(a:A, b:A) = not lesser?(a, b);
+inline overload greaterEquals?(a:A, b:A) = not lesser?(a, b);
 
 [A | Float?(A)]
-overload greaterEquals?(a:A, b:A) = floatOrderedAndGreaterEquals?(a, b);
+inline overload greaterEquals?(a:A, b:A) = floatOrderedAndGreaterEquals?(a, b);
 
 
 
@@ -209,38 +221,48 @@ overload greaterEquals?(a:A, b:A) = floatOrderedAndGreaterEquals?(a, b);
 //
 
 [A,B | Numeric?(A,B)]
-overload add(a:A, b:B) = numericAdd(toBiggerNumericType(A, B, a),
-                                    toBiggerNumericType(A, B, b));
+inline overload add(a:A, b:B) =
+    numericAdd(toBiggerNumericType(A, B, a),
+               toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload add(a:A, b:A) = numericAdd(a, b);
+inline overload add(a:A, b:A) = numericAdd(a, b);
 
 
 [A,B | Numeric?(A,B)]
-overload subtract(a:A, b:B) = numericSubtract(toBiggerNumericType(A, B, a),
-                                              toBiggerNumericType(A, B, b));
+inline overload subtract(a:A, b:B) =
+    numericSubtract(toBiggerNumericType(A, B, a),
+                    toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload subtract(a:A, b:A) = numericSubtract(a, b);
+inline overload subtract(a:A, b:A) = numericSubtract(a, b);
 
 
 [A,B | Numeric?(A,B)]
-overload multiply(a:A, b:B) = numericMultiply(toBiggerNumericType(A, B, a),
-                                              toBiggerNumericType(A, B, b));
+inline overload multiply(a:A, b:B) =
+    numericMultiply(toBiggerNumericType(A, B, a),
+                    toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload multiply(a:A, b:A) = numericMultiply(a, b);
+inline overload multiply(a:A, b:A) = numericMultiply(a, b);
 
 
 [A,B | Numeric?(A,B)]
-overload divide(a:A, b:B) = numericDivide(toBiggerNumericType(A, B, a),
-                                          toBiggerNumericType(A, B, b));
+inline overload divide(a:A, b:B) =
+    numericDivide(toBiggerNumericType(A, B, a),
+                  toBiggerNumericType(A, B, b));
+
 [A | Numeric?(A)]
-overload divide(a:A, b:A) = numericDivide(a, b);
+inline overload divide(a:A, b:A) = numericDivide(a, b);
 
 
 [A,B | Integer?(A,B)]
-overload remainder(a:A, b:B) = integerRemainder(toBiggerNumericType(A, B, a),
-                                                toBiggerNumericType(A, B, b));
+inline overload remainder(a:A, b:B) =
+    integerRemainder(toBiggerNumericType(A, B, a),
+                     toBiggerNumericType(A, B, b));
+
 [A | Integer?(A)]
-overload remainder(a:A, b:A) = integerRemainder(a, b);
+inline overload remainder(a:A, b:A) = integerRemainder(a, b);
 
 
 
@@ -249,10 +271,10 @@ overload remainder(a:A, b:A) = integerRemainder(a, b);
 //
 
 [A | Numeric?(A)]
-overload plus(a:A) = a;
+inline overload plus(a:A) = a;
 
 [A | Numeric?(A)]
-overload minus(a:A) = numericNegate(a);
+inline overload minus(a:A) = numericNegate(a);
 
 
 
@@ -261,12 +283,12 @@ overload minus(a:A) = numericNegate(a);
 //
 
 [A | Numeric?(A)]
-overload inc(a:A) {
+inline overload inc(a:A) {
     a += A(1);
 }
 
 [A | Numeric?(A)]
-overload dec(a:A) {
+inline overload dec(a:A) {
     a -= A(1);
 }
 
@@ -277,31 +299,37 @@ overload dec(a:A) {
 //
 
 [A,B | Integer?(A,B)]
-overload shiftLeft(a:A, b:B) = integerShiftLeft(a, A(b));
+inline overload shiftLeft(a:A, b:B) = integerShiftLeft(a, A(b));
 
 [A,B | Integer?(A,B)]
-overload shiftRight(a:A, b:B) = integerShiftRight(a, A(b));
+inline overload shiftRight(a:A, b:B) = integerShiftRight(a, A(b));
 
 [A,B | Integer?(A,B)]
-overload bitwiseAnd(a:A, b:B) = integerBitwiseAnd(toBiggerNumericType(A, B, a),
-                                                  toBiggerNumericType(A, B, b));
+inline overload bitwiseAnd(a:A, b:B) =
+    integerBitwiseAnd(toBiggerNumericType(A, B, a),
+                      toBiggerNumericType(A, B, b));
+
 [A | Integer?(A)]
-overload bitwiseAnd(a:A, b:A) = integerBitwiseAnd(a, b);
+inline overload bitwiseAnd(a:A, b:A) = integerBitwiseAnd(a, b);
 
 [A,B | Integer?(A,B)]
-overload bitwiseOr(a:A, b:B) = integerBitwiseOr(toBiggerNumericType(A, B, a),
-                                                toBiggerNumericType(A, B, b));
+inline overload bitwiseOr(a:A, b:B) =
+    integerBitwiseOr(toBiggerNumericType(A, B, a),
+                     toBiggerNumericType(A, B, b));
+
 [A | Integer?(A)]
-overload bitwiseOr(a:A, b:A) = integerBitwiseOr(a, b);
+inline overload bitwiseOr(a:A, b:A) = integerBitwiseOr(a, b);
 
 [A,B | Integer?(A,B)]
-overload bitwiseXor(a:A, b:B) = integerBitwiseXor(toBiggerNumericType(A, B, a),
-                                                  toBiggerNumericType(A, B, b));
-[A | Integer?(A)]
-overload bitwiseXor(a:A, b:A) = integerBitwiseXor(a, b);
+inline overload bitwiseXor(a:A, b:B) =
+    integerBitwiseXor(toBiggerNumericType(A, B, a),
+                      toBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
-overload bitwiseNot(a:A) = integerBitwiseNot(a);
+inline overload bitwiseXor(a:A, b:A) = integerBitwiseXor(a, b);
+
+[A | Integer?(A)]
+inline overload bitwiseNot(a:A) = integerBitwiseNot(a);
 
 
 
@@ -310,31 +338,31 @@ overload bitwiseNot(a:A) = integerBitwiseNot(a);
 //
 
 [S | String?(S)]
-overload Int8(s:S)  = parseInt8(s);
+inline overload Int8(s:S)  = parseInt8(s);
 
 [S | String?(S)]
-overload Int16(s:S) = parseInt16(s);
+inline overload Int16(s:S) = parseInt16(s);
 
 [S | String?(S)]
-overload Int32(s:S) = parseInt32(s);
+inline overload Int32(s:S) = parseInt32(s);
 
 [S | String?(S)]
-overload Int64(s:S) = parseInt64(s);
+inline overload Int64(s:S) = parseInt64(s);
 
 [S | String?(S)]
-overload UInt8(s:S)  = parseUInt8(s);
+inline overload UInt8(s:S)  = parseUInt8(s);
 
 [S | String?(S)]
-overload UInt16(s:S) = parseUInt16(s);
+inline overload UInt16(s:S) = parseUInt16(s);
 
 [S | String?(S)]
-overload UInt32(s:S) = parseUInt32(s);
+inline overload UInt32(s:S) = parseUInt32(s);
 
 [S | String?(S)]
-overload UInt64(s:S) = parseUInt64(s);
+inline overload UInt64(s:S) = parseUInt64(s);
 
 [S | String?(S)]
-overload Float32(s:S) = parseFloat32(s);
+inline overload Float32(s:S) = parseFloat32(s);
 
 [S | String?(S)]
-overload Float64(s:S) = parseFloat64(s);
+inline overload Float64(s:S) = parseFloat64(s);

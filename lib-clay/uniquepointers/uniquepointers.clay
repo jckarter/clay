@@ -37,17 +37,17 @@ overload UniquePointer[T]() = UniquePointer(null(T));
 overload UniquePointer[T](src: UniquePointer[T]);
 
 [T]
-overload moveUnsafe(src: UniquePointer[T]) returned: UniquePointer[T] {
+inline overload moveUnsafe(src: UniquePointer[T]) returned: UniquePointer[T] {
     returned.ptr = src.ptr;
 }
 
 [T]
-overload resetUnsafe(p: UniquePointer[T]) {
+inline overload resetUnsafe(p: UniquePointer[T]) {
     p.ptr = null(T);
 }
 
 [T]
-overload assign(dest: UniquePointer[T], rvalue src: UniquePointer[T]) {
+inline overload assign(dest: UniquePointer[T], rvalue src: UniquePointer[T]) {
     destroy(dest);
     dest.ptr = src.ptr;
     src.ptr = null(T);
@@ -55,10 +55,10 @@ overload assign(dest: UniquePointer[T], rvalue src: UniquePointer[T]) {
 
 // no assign from lvalue
 [T]
-overload assign(dest: UniquePointer[T], lvalue src: UniquePointer[T]);
+inline overload assign(dest: UniquePointer[T], lvalue src: UniquePointer[T]);
 
 [T]
-overload destroy(p: UniquePointer[T]) {
+inline overload destroy(p: UniquePointer[T]) {
     if (not null?(p.ptr)) {
         destroy(p.ptr^);
         freeRawMemory(p.ptr);
@@ -71,13 +71,13 @@ overload destroy(p: UniquePointer[T]) {
 // dereference, null?, nullUnique
 //
 [T]
-overload dereference(p: UniquePointer[T]) = ref p.ptr^;
+inline overload dereference(p: UniquePointer[T]) = ref p.ptr^;
 
 [T]
-overload null?(p: UniquePointer[T]) = null?(p.ptr);
+inline overload null?(p: UniquePointer[T]) = null?(p.ptr);
 
 [T]
-nullUnique(static T) = UniquePointer[T]();
+inline nullUnique(static T) = UniquePointer[T]();
 
 
 
@@ -85,5 +85,5 @@ nullUnique(static T) = UniquePointer[T]();
 // equality
 //
 [T]
-overload equals?(p: UniquePointer[T], q: UniquePointer[T])
+inline overload equals?(p: UniquePointer[T], q: UniquePointer[T])
     = p.ptr == q.ptr;

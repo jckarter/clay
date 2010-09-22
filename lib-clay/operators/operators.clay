@@ -162,7 +162,7 @@ procedure lookup; // get pointer to element, null if not available
 procedure put;
 procedure items; // iterate over all items
 
-contains?(map, key) = not null?(lookup(map, key));
+inline contains?(map, key) = not null?(lookup(map, key));
 
 
 
@@ -182,44 +182,49 @@ callbyname RValue?(x) = not LValue?(x);
 // defaults
 //
 
-initialize(a) {
+inline initialize(a) {
     a <-- Type(a)();
 }
 
 [T]
-copy(a:T) = T(a);
+inline copy(a:T) = T(a);
 
 [T]
-move(src:T) returned:T {
+inline move(src:T) returned:T {
     returned <-- moveUnsafe(src);
     resetUnsafe(src);
 }
 
 [T]
-overload assign(dest:T, rvalue src:T) {
+inline overload assign(dest:T, rvalue src:T) {
     destroy(dest);
     dest <-- move(src);
 }
 
-notEquals?(a, b) = not equals?(a, b);
+inline notEquals?(a, b) = not equals?(a, b);
 
-ordered?(a, b) = (a <= b) or (b <= a);
+inline ordered?(a, b) = (a <= b) or (b <= a);
 
-overload lesserEquals?(a, b) = not lesser?(b, a);
+inline overload lesserEquals?(a, b) = not lesser?(b, a);
 
-overload greater?(a, b) = lesser?(b, a);
+inline overload greater?(a, b) = lesser?(b, a);
 
-overload greaterEquals?(a, b) = not lesser?(a, b);
+inline overload greaterEquals?(a, b) = not lesser?(a, b);
 
-overload addAssign(a, b)       { a = a + b; }
-overload subtractAssign(a, b)  { a = a - b; }
-overload multiplyAssign(a, b)  { a = a * b; }
-overload divideAssign(a, b)    { a = a / b; }
-overload remainderAssign(a, b) { a = a % b; }
+inline overload addAssign(a, b)       { a = a + b; }
+inline overload subtractAssign(a, b)  { a = a - b; }
+inline overload multiplyAssign(a, b)  { a = a * b; }
+inline overload divideAssign(a, b)    { a = a / b; }
+inline overload remainderAssign(a, b) { a = a % b; }
 
-overload bitwiseAnd(a, b, c, ...rest) = bitwiseAnd(bitwiseAnd(a,b), c, ...rest);
-overload bitwiseOr(a, b, c, ...rest) = bitwiseOr(bitwiseOr(a,b), c, ...rest);
-overload bitwiseXor(a, b, c, ...rest) = bitwiseXor(bitwiseXor(a,b), c, ...rest);
+inline overload bitwiseAnd(a, b, c, ...rest) =
+    bitwiseAnd(bitwiseAnd(a,b), c, ...rest);
+
+inline overload bitwiseOr(a, b, c, ...rest) =
+    bitwiseOr(bitwiseOr(a,b), c, ...rest);
+
+inline overload bitwiseXor(a, b, c, ...rest) =
+    bitwiseXor(bitwiseXor(a,b), c, ...rest);
 
 
 
@@ -227,7 +232,7 @@ overload bitwiseXor(a, b, c, ...rest) = bitwiseXor(bitwiseXor(a,b), c, ...rest);
 // swap
 //
 
-swap(a, b) {
+inline swap(a, b) {
     var temp = move(a);
     a = move(b);
     b = move(temp);
@@ -239,28 +244,28 @@ swap(a, b) {
 // min, max
 //
 
-min(a, b) {
+inline min(a, b) {
     if (a <= b)
         return a;
     else
         return b;
 }
 
-overload min(lvalue a, lvalue b) {
+inline overload min(lvalue a, lvalue b) {
     if (a <= b)
         return ref a;
     else
         return ref b;
 }
 
-max(a, b) {
+inline max(a, b) {
     if (a > b)
         return a;
     else
         return b;
 }
 
-overload max(lvalue a, lvalue b) {
+inline overload max(lvalue a, lvalue b) {
     if (a > b)
         return ref a;
     else
@@ -274,7 +279,7 @@ overload max(lvalue a, lvalue b) {
 //
 
 [T | SizedSequence?(T)]
-empty?(a:T) = (size(a) == 0);
+inline empty?(a:T) = (size(a) == 0);
 
 
 

@@ -15,7 +15,7 @@ record SequenceHandle[A] (
 //
 
 [A | Sequence?(A)]
-sequenceHandle(seq:A) = SequenceHandle(&seq);
+inline sequenceHandle(seq:A) = SequenceHandle(&seq);
 
 
 
@@ -24,57 +24,57 @@ sequenceHandle(seq:A) = SequenceHandle(&seq);
 //
 
 [A, ...ARGS | CallDefined?(iterator, A, ...ARGS)]
-overload iterator(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload iterator(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...iterator(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(reverseIterator, A, ...ARGS)]
-overload reverseIterator(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload reverseIterator(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...reverseIterator(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(size, A, ...ARGS)]
-overload size(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload size(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...size(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(index, A, ...ARGS)]
-overload index(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload index(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...index(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(begin, A, ...ARGS)]
-overload begin(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload begin(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...begin(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(end, A, ...ARGS)]
-overload end(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload end(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...end(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(front, A, ...ARGS)]
-overload front(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload front(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...front(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(back, A, ...ARGS)]
-overload back(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload back(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...back(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(push, A, ...ARGS)]
-overload push(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload push(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...push(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(pop, A, ...ARGS)]
-overload pop(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload pop(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...pop(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(clear, A, ...ARGS)]
-overload clear(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload clear(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...clear(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(insert, A, ...ARGS)]
-overload insert(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload insert(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...insert(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(remove, A, ...ARGS)]
-overload remove(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload remove(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...remove(seq.inner^, ...args);
 
 [A, ...ARGS | CallDefined?(reserve, A, ...ARGS)]
-overload reserve(seq:SequenceHandle[A], forward ...args:ARGS)
+inline overload reserve(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...reserve(seq.inner^, ...args);

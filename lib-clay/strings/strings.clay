@@ -62,7 +62,7 @@ alias String = Vector[Char];
 //
 
 [A | Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
-overload String(a:A) = String(map(Char, a));
+inline overload String(a:A) = String(map(Char, a));
 
 
 
@@ -71,7 +71,7 @@ overload String(a:A) = String(map(Char, a));
 //
 
 [T | ByteSizedInteger?(T)]
-overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
+inline overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
 
 

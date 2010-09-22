@@ -22,15 +22,15 @@ Union?(x) = false;
 //
 
 [...T]
-overload Union[...T]() returned:Union[...T] {
+inline overload Union[...T]() returned:Union[...T] {
 }
 
 [...T]
-overload resetUnsafe(x:Union[...T]) {
+inline overload resetUnsafe(x:Union[...T]) {
 }
 
 [...T]
-overload destroy(x:Union[...T]) {
+inline overload destroy(x:Union[...T]) {
 }
 
 
@@ -40,7 +40,7 @@ overload destroy(x:Union[...T]) {
 //
 
 [...T, i]
-overload staticIndex(x:Union[...T], static i) {
+inline overload staticIndex(x:Union[...T], static i) {
     alias T = nthValue(static SizeT(i), ...UnionMembers(Union[...T]));
     return ref Pointer[T](&x)^;
 }

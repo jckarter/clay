@@ -29,10 +29,10 @@ overload ContiguousSequence?(static V) = true;
 //
 
 [V | Vector?(V)]
-overload size(a:V) = vectorSize(a);
+inline overload size(a:V) = vectorSize(a);
 
 [V,I | Vector?(V) and Integer?(I)]
-overload index(a:V, i:I) = ref (vectorData(a) + SizeT(i))^;
+inline overload index(a:V, i:I) = ref (vectorData(a) + SizeT(i))^;
 
 
 
@@ -43,10 +43,10 @@ overload index(a:V, i:I) = ref (vectorData(a) + SizeT(i))^;
 alias VectorCoordinate[T] = Pointer[T];
 
 [V | Vector?(V)]
-overload begin(a:V) = &a[0];
+inline overload begin(a:V) = &a[0];
 
 [V | Vector?(V)]
-overload end(a:V) = &a[0] + size(a);
+inline overload end(a:V) = &a[0] + size(a);
 
 
 
@@ -55,10 +55,10 @@ overload end(a:V) = &a[0] + size(a);
 //
 
 [V | Vector?(V)]
-overload iterator(a:V) = coordinateRange(begin(a), end(a));
+inline overload iterator(a:V) = coordinateRange(begin(a), end(a));
 
 [V | Vector?(V)]
-overload reverseIterator(a:V) =
+inline overload reverseIterator(a:V) =
     reverseCoordinateRange(end(a), begin(a));
 
 
@@ -94,10 +94,10 @@ overload lesser?(a:V, b:V) {
 //
 
 [V | Vector?(V)]
-overload front(a:V) = ref a[0];
+inline overload front(a:V) = ref a[0];
 
 [V | Vector?(V)]
-overload back(a:V) = ref a[size(a) - 1];
+inline overload back(a:V) = ref a[size(a) - 1];
 
 [V, S | Vector?(V) and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(V))]
 overload push(a:V, seq:S) {
@@ -135,7 +135,7 @@ overload reserve(a:V, n:I) {
 //
 
 [V, I | Vector?(V) and Integer?(I)]
-overload resize(a:V, n:I) {
+inline overload resize(a:V, n:I) {
     resize(a, SizeT(n));
 }
 
@@ -159,7 +159,7 @@ overload resize(a:V, n:SizeT) {
 //
 
 [V, I | Vector?(V) and Integer?(I)]
-overload resizeUnsafe(a:V, n:I) {
+inline overload resizeUnsafe(a:V, n:I) {
     resize(a, SizeT(n));
 }
 
@@ -183,11 +183,11 @@ overload resizeUnsafe(a:V, n:SizeT) {
 //
 
 [V | Vector?(V)]
-overload clear(a:V) {
+inline overload clear(a:V) {
     remove(a, begin(a), end(a));
 }
 
-private ensureSpace(a, space:SizeT) {
+private inline ensureSpace(a, space:SizeT) {
     if (size(a) + space > vectorCapacity(a))
         vectorSetCapacity(a, 2*(size(a) + space));
 }

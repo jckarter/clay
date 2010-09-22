@@ -6,7 +6,8 @@ import sequences.util.*;
 // zip
 //
 
-zip(forward first, forward ...rest) = Zipped(packSequences(first, ...rest));
+inline zip(forward first, forward ...rest) =
+    Zipped(packSequences(first, ...rest));
 
 private record Zipped[A] (
     seqs : A
@@ -19,17 +20,17 @@ private record Zipped[A] (
 //
 
 [A]
-overload iterator(a:Zipped[A]) = ZippedIterator(multiIterators(a.seqs));
+inline overload iterator(a:Zipped[A]) = ZippedIterator(multiIterators(a.seqs));
 
 private record ZippedIterator[ITERS] (
     iters : ITERS
 );
 
 [ITERS]
-overload hasNext?(iter:ZippedIterator[ITERS]) = multiHasNext?(iter.iters);
+inline overload hasNext?(iter:ZippedIterator[ITERS]) = multiHasNext?(iter.iters);
 
 [ITERS]
-overload next(iter:ZippedIterator[ITERS]) =
+inline overload next(iter:ZippedIterator[ITERS]) =
     forward ...mapValues(next, ...unpackTupleRef(iter.iters));
 
 
@@ -44,7 +45,7 @@ private AllReversible?(A) {
 }
 
 [A | AllReversible?(A)]
-overload reverseIterator(a:Zipped[A]) =
+inline overload reverseIterator(a:Zipped[A]) =
     ZippedIterator(multiReverseIterators(a.seqs));
 
 
@@ -59,7 +60,7 @@ private AllSized?(A) {
 }
 
 [A | AllSized?(A)]
-overload size(a:Zipped[A]) {
+inline overload size(a:Zipped[A]) {
     var f = (x => SizeT(size(x)));
     return min([...mapValues(f, ...unpackSequences(a.seqs))]);
 }
@@ -70,7 +71,7 @@ private AllIndexable?(A, I) {
 }
 
 [A, I | AllIndexable?(A, I)]
-overload index(a:Zipped[A], i:I) {
+inline overload index(a:Zipped[A], i:I) {
     var f = (x ref => { return forward ...index(x, i); });
     return forward ...mapValues(f, ...unpackSequences(a.seqs));
 }
