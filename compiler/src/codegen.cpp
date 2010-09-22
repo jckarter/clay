@@ -175,10 +175,21 @@ void codegenPrimOp(PrimOpPtr x,
 
 
 //
-// exception support
+// flags for inline/exceptions
 //
 
+static bool _inlineEnabled = true;
 static bool _exceptionsEnabled = true;
+
+bool inlineEnabled()
+{
+    return _inlineEnabled;
+}
+
+void setInlineEnabled(bool enabled)
+{
+    _inlineEnabled = enabled;
+}
 
 bool exceptionsEnabled()
 {
@@ -2161,7 +2172,7 @@ void codegenCallCode(InvokeEntryPtr entry,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out)
 {
-    if (entry->isInline) {
+    if (inlineEnabled() && entry->isInline) {
         codegenCallInline(entry, args, ctx, out);
         return;
     }

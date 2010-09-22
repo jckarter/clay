@@ -247,6 +247,8 @@ static void usage()
     cerr << "  -unoptimized      - generate unoptimized code\n";
     cerr << "  -exceptions       - enable exception handling\n";
     cerr << "  -no-exceptions    - disable exception handling\n";
+    cerr << "  -inline           - inline procedures marked 'inline'\n";
+    cerr << "  -no-inline        - ignore 'inline' keyword\n";
     cerr << "  -pic              - generate position independent code\n";
     cerr << "  -abort            - abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run              - execute the program without writing to disk\n";
@@ -286,6 +288,7 @@ int main(int argc, char **argv) {
     bool emitObject = false;
     bool sharedLib = false;
     bool genPIC = false;
+    bool inlineEnabled = true;
     bool exceptions = true;
     bool abortOnError = false;
     bool run = false;
@@ -326,6 +329,12 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-unoptimized") == 0) {
             optimize = false;
+        }
+        else if (strcmp(argv[i], "-inline") == 0) {
+            inlineEnabled = true;
+        }
+        else if (strcmp(argv[i], "-no-inline") == 0) {
+            inlineEnabled = false;
         }
         else if (strcmp(argv[i], "-exceptions") == 0) {
             exceptions = true;
@@ -536,6 +545,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    setInlineEnabled(inlineEnabled);
     setExceptionsEnabled(exceptions);
 
     if (!initLLVM(targetTriple)) {
