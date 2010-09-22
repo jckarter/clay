@@ -70,7 +70,7 @@ callbyname overload Array(...args:A) {
 // basic constructor
 //
 
-[T,n,...A | Tuple[...replicateValue(T,static n)] == Tuple[...A]]
+[T,n,...A | (countValues(...A) == n) and equalValues?(T, ...A)]
 callbyname overload Array[T,n](...args:A) returned:Array[T,n] {
     ...unpackArrayRef(returned) <-- ...args;
 }
