@@ -144,6 +144,10 @@ void codegenLowlevelCall(llvm::Value *llCallable,
                          vector<llvm::Value *>::iterator argBegin,
                          vector<llvm::Value *>::iterator argEnd,
                          CodegenContextPtr ctx);
+void codegenCallInline(InvokeEntryPtr entry,
+                       MultiCValuePtr args,
+                       CodegenContextPtr ctx,
+                       MultiCValuePtr out);
 void codegenCallByName(InvokeEntryPtr entry,
                        ExprListPtr args,
                        EnvPtr env,
@@ -2157,6 +2161,10 @@ void codegenCallCode(InvokeEntryPtr entry,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out)
 {
+    if (entry->isInline) {
+        codegenCallInline(entry, args, ctx, out);
+        return;
+    }
     if (!entry->llvmFunc)
         codegenCodeBody(entry);
     assert(entry->llvmFunc);
@@ -2594,6 +2602,96 @@ void codegenCWrapper(InvokeEntryPtr entry)
         llvm::Value *llRet = llBuilder.CreateLoad(llRetVal);
         llBuilder.CreateRet(llRet);
     }
+}
+
+
+
+//
+// codegenCallInline
+//
+
+void codegenCallInline(InvokeEntryPtr entry,
+                       MultiCValuePtr args,
+                       CodegenContextPtr ctx,
+                       MultiCValuePtr out)
+{
+    assert(entry->isInline);
+    assert(!entry->code->isInlineLLVM());
+
+    ensureArity(args, entry->argsKey.size());
+
+    EnvPtr env = new Env(entry->env);
+    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+        CValuePtr cv = args->values[i];
+        assert(cv->type == entry->argsKey[i]);
+        addLocal(env, entry->fixedArgNames[i], cv.ptr());
+    }
+
+    if (entry->varArgName.ptr()) {
+        unsigned nFixed = entry->fixedArgTypes.size();
+        MultiCValuePtr varArgs = new MultiCValue();
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
+            CValuePtr cv = args->values[nFixed + i];
+            varArgs->add(cv);
+        }
+        addLocal(env, entry->varArgName, varArgs.ptr());
+    }
+
+    vector<CReturn> returns;
+    for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
+        TypePtr rt = entry->returnTypes[i];
+        bool isRef = entry->returnIsRef[i];
+        CValuePtr cv = out->values[i];
+        if (isRef)
+            assert(cv->type == pointerType(rt));
+        else
+            assert(cv->type == rt);
+        returns.push_back(CReturn(isRef, rt, cv));
+    }
+
+    bool hasNamedReturn = false;
+    if (entry->code->hasReturnSpecs()) {
+        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        unsigned i = 0;
+        for (; i < returnSpecs.size(); ++i) {
+            ReturnSpecPtr rspec = returnSpecs[i];
+            if (rspec->name.ptr()) {
+                hasNamedReturn = true;
+                addLocal(env, rspec->name, returns[i].value.ptr());
+            }
+        }
+        ReturnSpecPtr varReturnSpec = entry->code->varReturnSpec;
+        if (!varReturnSpec)
+            assert(i == entry->returnTypes.size());
+        if (varReturnSpec.ptr() && (varReturnSpec->name.ptr())) {
+            hasNamedReturn = true;
+            MultiCValuePtr mcv = new MultiCValue();
+            for (; i < entry->returnTypes.size(); ++i)
+                mcv->add(returns[i].value);
+            addLocal(env, varReturnSpec->name, mcv.ptr());
+        }
+    }
+
+    ctx->returnLists.push_back(returns);
+    llvm::BasicBlock *returnBlock = newBasicBlock("return", ctx);
+    JumpTarget returnTarget(returnBlock, cgMarkStack(ctx));
+    ctx->returnTargets.push_back(returnTarget);
+
+    assert(entry->code->body.ptr());
+    bool terminated = codegenStatement(entry->code->body, env, ctx);
+    if (!terminated) {
+        if ((returns.size() > 0) && !hasNamedReturn) {
+            error(entry->code, "not all paths have a return statement");
+        }
+        cgDestroyStack(returnTarget.stackMarker, ctx);
+        ctx->builder->CreateBr(returnBlock);
+    }
+    cgPopStack(returnTarget.stackMarker, ctx);
+
+    ctx->returnLists.pop_back();
+    ctx->returnTargets.pop_back();
+
+    ctx->builder->SetInsertPoint(returnBlock);
 }
 
 
