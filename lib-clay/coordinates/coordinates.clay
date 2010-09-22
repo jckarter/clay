@@ -9,27 +9,27 @@ record ValueCoordinate[T] (value : T);
 
 
 [T]
-overload dereference(c:ValueCoordinate[T]) = c.value;
+inline overload dereference(c:ValueCoordinate[T]) = c.value;
 
 [T,I | CallDefined?(add, T, I)]
-overload add(c:ValueCoordinate[T], i:I) =
+inline overload add(c:ValueCoordinate[T], i:I) =
     ValueCoordinate(T(c.value + i));
 
 [T,I | CallDefined?(subtract, T, I)]
-overload subtract(c:ValueCoordinate[T], i:I) =
+inline overload subtract(c:ValueCoordinate[T], i:I) =
     ValueCoordinate(T(c.value - i));
 
 [T | CallDefined?(subtract, T, T)]
-overload subtract(c1:ValueCoordinate[T], c2:ValueCoordinate[T]) =
+inline overload subtract(c1:ValueCoordinate[T], c2:ValueCoordinate[T]) =
     c1.value - c2.value;
 
 [T]
-overload inc(c:ValueCoordinate[T]) {
+inline overload inc(c:ValueCoordinate[T]) {
     inc(c.value);
 }
 
 [T]
-overload dec(c:ValueCoordinate[T]) {
+inline overload dec(c:ValueCoordinate[T]) {
     dec(c.value);
 }
 
@@ -42,27 +42,27 @@ overload dec(c:ValueCoordinate[T]) {
 record ValueReverseCoordinate[T] (value : T);
 
 [T]
-overload dereference(c:ValueReverseCoordinate[T]) = (c.value - 1);
+inline overload dereference(c:ValueReverseCoordinate[T]) = (c.value - 1);
 
 [T,I | CallDefined?(subtract, T, I)]
-overload add(c:ValueReverseCoordinate[T], i:I) =
+inline overload add(c:ValueReverseCoordinate[T], i:I) =
     ValueReverseCoordinate(T(c.value - i));
 
 [T,I | CallDefined?(add, T, I)]
-overload subtract(c:ValueReverseCoordinate[T], i:I) =
+inline overload subtract(c:ValueReverseCoordinate[T], i:I) =
     ValueReverseCoordinate(T(c.value + i));
 
 [T | CallDefined?(subtract, T, T)]
-overload subtract(c1:ValueReverseCoordinate[T], c2:ValueReverseCoordinate[T]) =
+inline overload subtract(c1:ValueReverseCoordinate[T], c2:ValueReverseCoordinate[T]) =
     c2.value - c1.value;
 
 [T]
-overload inc(c:ValueReverseCoordinate[T]) {
+inline overload inc(c:ValueReverseCoordinate[T]) {
     dec(c.value);
 }
 
 [T]
-overload dec(c:ValueReverseCoordinate[T]) {
+inline overload dec(c:ValueReverseCoordinate[T]) {
     inc(c.value);
 }
 
@@ -75,27 +75,27 @@ overload dec(c:ValueReverseCoordinate[T]) {
 record ReverseCoordinate[T] (coord : T);
 
 [T]
-overload dereference(c:ReverseCoordinate[T]) = forward ...(c.coord - 1)^;
+inline overload dereference(c:ReverseCoordinate[T]) = forward ...(c.coord - 1)^;
 
 [T,I | CallDefined?(subtract, T, I)]
-overload add(c:ReverseCoordinate[T], i:I) =
+inline overload add(c:ReverseCoordinate[T], i:I) =
     ReverseCoordinate(T(c.coord - i));
 
 [T,I | CallDefined?(add, T, I)]
-overload subtract(c:ReverseCoordinate[T], i:I) =
+inline overload subtract(c:ReverseCoordinate[T], i:I) =
     ReverseCoordinate(T(c.coord + i));
 
 [T | CallDefined?(subtract, T, T)]
-overload subtract(c1:ReverseCoordinate[T], c2:ReverseCoordinate[T]) =
+inline overload subtract(c1:ReverseCoordinate[T], c2:ReverseCoordinate[T]) =
     c2.coord - c1.coord;
 
 [T]
-overload inc(c:ReverseCoordinate[T]) {
+inline overload inc(c:ReverseCoordinate[T]) {
     dec(c.coord);
 }
 
 [T]
-overload dec(c:ReverseCoordinate[T]) {
+inline overload dec(c:ReverseCoordinate[T]) {
     inc(c.coord);
 }
 
@@ -108,26 +108,26 @@ overload dec(c:ReverseCoordinate[T]) {
 record ByValueCoordinate[T] (coord : T);
 
 [T]
-overload dereference(c:ByValueCoordinate[T]) = ...c.coord^;
+inline overload dereference(c:ByValueCoordinate[T]) = ...c.coord^;
 
 [T,I | CallDefined?(add, T, I)]
-overload add(c:ByValueCoordinate[T], i:I) =
+inline overload add(c:ByValueCoordinate[T], i:I) =
     ByValueCoordinate(T(c.coord + i));
 
 [T,I | CallDefined?(subtract, T, I)]
-overload subtract(c:ByValueCoordinate[T], i:I) =
+inline overload subtract(c:ByValueCoordinate[T], i:I) =
     ByValueCoordinate(T(c.coord - i));
 
 [T | CallDefined?(subtract, T, T)]
-overload subtract(c1:ByValueCoordinate[T], c2:ByValueCoordinate[T]) =
+inline overload subtract(c1:ByValueCoordinate[T], c2:ByValueCoordinate[T]) =
     c1.coord - c2.coord;
 
 [T]
-overload inc(c:ByValueCoordinate[T]) {
+inline overload inc(c:ByValueCoordinate[T]) {
     inc(c.coord);
 }
 
 [T]
-overload dec(c:ByValueCoordinate[T]) {
+inline overload dec(c:ByValueCoordinate[T]) {
     dec(c.coord);
 }

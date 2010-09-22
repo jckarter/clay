@@ -23,7 +23,7 @@ Tuple?(x) = false;
 //
 
 [...T, i]
-overload staticIndex(a:Tuple[...T], static i) =
+inline overload staticIndex(a:Tuple[...T], static i) =
     ref tupleRef(a, static SizeT(i));
 
 
@@ -32,10 +32,10 @@ overload staticIndex(a:Tuple[...T], static i) =
 // unpackTuple, unpackTupleRef
 //
 
-unpackTuple(x) = ...unpackTupleRef(x);
+inline unpackTuple(x) = ...unpackTupleRef(x);
 
 [...T]
-unpackTupleRef(x:Tuple[...T]) = ref ...tupleElements(x);
+inline unpackTupleRef(x:Tuple[...T]) = ref ...tupleElements(x);
 
 
 
@@ -43,11 +43,11 @@ unpackTupleRef(x:Tuple[...T]) = ref ...tupleElements(x);
 // unpack, unpackRef
 //
 
-unpackRef(x) = ref x;
+inline unpackRef(x) = ref x;
 [...T]
-overload unpackRef(x:Tuple[...T]) = ref ...unpackTupleRef(x);
+inline overload unpackRef(x:Tuple[...T]) = ref ...unpackTupleRef(x);
 
-unpack(x) = ...unpackRef(x);
+inline unpack(x) = ...unpackRef(x);
 
 
 
@@ -76,18 +76,18 @@ callbyname overload Tuple[...T](...args:T) returned:Tuple[...T] {
 //
 
 [...T]
-overload Tuple[...T]() returned:Tuple[...T] {
+inline overload Tuple[...T]() returned:Tuple[...T] {
     initializeMulti(...tupleElements(returned));
 }
 
 [...A]
-private initializeMulti(...args:A) {
+private inline initializeMulti(...args:A) {
     ...args <-- ...initializeTypes(...A);
 }
 
 private procedure initializeTypes;
-overload initializeTypes(A, ...B) = A(), ...initializeTypes(...B);
-overload initializeTypes() = ;
+inline overload initializeTypes(A, ...B) = A(), ...initializeTypes(...B);
+inline overload initializeTypes() = ;
 
 
 
@@ -96,7 +96,7 @@ overload initializeTypes() = ;
 //
 
 [...T]
-overload Tuple[...T](src:Tuple[...T]) returned:Tuple[...T] {
+inline overload Tuple[...T](src:Tuple[...T]) returned:Tuple[...T] {
     ...tupleElements(returned) <-- ...tupleElements(src);
 }
 
@@ -107,14 +107,14 @@ overload Tuple[...T](src:Tuple[...T]) returned:Tuple[...T] {
 //
 
 [...T]
-overload moveUnsafe(src:Tuple[...T]) returned:Tuple[...T] {
+inline overload moveUnsafe(src:Tuple[...T]) returned:Tuple[...T] {
     alias n = TupleElementCount(Tuple[...T]);
     static for (i in ...staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
 [...T]
-overload resetUnsafe(a:Tuple[...T]) {
+inline overload resetUnsafe(a:Tuple[...T]) {
     static for (x in ...tupleElements(a))
         resetUnsafe(x);
 }
@@ -126,7 +126,7 @@ overload resetUnsafe(a:Tuple[...T]) {
 //
 
 [...T]
-overload destroy(a:Tuple[...T]) {
+inline overload destroy(a:Tuple[...T]) {
     static for (x in ...tupleElements(a))
         destroy(x);
 }
@@ -138,7 +138,7 @@ overload destroy(a:Tuple[...T]) {
 //
 
 [...T]
-overload assign(dest:Tuple[...T], lvalue src:Tuple[...T]) {
+inline overload assign(dest:Tuple[...T], lvalue src:Tuple[...T]) {
     alias n = TupleElementCount(Tuple[...T]);
     static for (i in ...staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));
@@ -151,7 +151,7 @@ overload assign(dest:Tuple[...T], lvalue src:Tuple[...T]) {
 //
 
 [...T]
-overload equals?(a:Tuple[...T], b:Tuple[...T]) {
+inline overload equals?(a:Tuple[...T], b:Tuple[...T]) {
     alias n = TupleElementCount(Tuple[...T]);
     static for (i in ...staticIntegers(static n)) {
         if (not equals?(staticIndex(a, i), staticIndex(b, i)))
@@ -167,7 +167,7 @@ overload equals?(a:Tuple[...T], b:Tuple[...T]) {
 //
 
 [...T]
-overload lesser?(a:Tuple[...T], b:Tuple[...T]) {
+inline overload lesser?(a:Tuple[...T], b:Tuple[...T]) {
     alias n = TupleElementCount(Tuple[...T]);
     static for (i in ...staticIntegers(static n)) {
         ref av = staticIndex(a, i);

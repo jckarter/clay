@@ -69,8 +69,10 @@ callbyname overload Vector[T](...args:A) {
     return move(v);
 }
 
-private pushAll(a, forward x, forward ...rest) { push(a, x); pushAll(a, ...rest); }
-overload pushAll(a) {}
+private inline pushAll(a, forward x, forward ...rest) {
+    push(a, x); pushAll(a, ...rest);
+}
+inline overload pushAll(a) {}
 
 
 
@@ -79,12 +81,12 @@ overload pushAll(a) {}
 //
 
 [T]
-overload moveUnsafe(a:Vector[T]) returned:Vector[T] {
+inline overload moveUnsafe(a:Vector[T]) returned:Vector[T] {
     returned <-- Vector[T](a.size, a.capacity, a.data);
 }
 
 [T]
-overload resetUnsafe(a:Vector[T]) {
+inline overload resetUnsafe(a:Vector[T]) {
     a <-- Vector[T]();
 }
 
@@ -110,13 +112,13 @@ overload destroy(a:Vector[T]) {
 overload Vector?(static Vector[T]) = true;
 
 [T]
-overload vectorData(a:Vector[T]) = a.data;
+inline overload vectorData(a:Vector[T]) = a.data;
 
 [T]
-overload vectorSize(a:Vector[T]) = ref a.size;
+inline overload vectorSize(a:Vector[T]) = ref a.size;
 
 [T]
-overload vectorCapacity(a:Vector[T]) = a.capacity;
+inline overload vectorCapacity(a:Vector[T]) = a.capacity;
 
 [T]
 overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {

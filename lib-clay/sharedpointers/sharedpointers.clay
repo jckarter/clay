@@ -44,29 +44,29 @@ callbyname allocateShared(x:T) {
 //
 
 [T]
-overload SharedPointer[T]() {
+inline overload SharedPointer[T]() {
     return SharedPointer(null(RefCounted[T]));
 }
 
 [T]
-overload SharedPointer[T](src:SharedPointer[T]) {
+inline overload SharedPointer[T](src:SharedPointer[T]) {
     if (not null?(src))
         src.ptr^.refCount += 1;
     return SharedPointer(src.ptr);
 }
 
 [T]
-overload moveUnsafe(src:SharedPointer[T]) returned:SharedPointer[T] {
+inline overload moveUnsafe(src:SharedPointer[T]) returned:SharedPointer[T] {
     returned.ptr = src.ptr;
 }
 
 [T]
-overload resetUnsafe(p : SharedPointer[T]) {
+inline overload resetUnsafe(p : SharedPointer[T]) {
     p <-- SharedPointer[T]();
 }
 
 [T]
-overload assign(dest:SharedPointer[T], lvalue src:SharedPointer[T]) {
+inline overload assign(dest:SharedPointer[T], lvalue src:SharedPointer[T]) {
     if (dest.ptr == src.ptr)
         return;
     destroy(dest);
@@ -74,7 +74,7 @@ overload assign(dest:SharedPointer[T], lvalue src:SharedPointer[T]) {
 }
 
 [T]
-overload destroy(p : SharedPointer[T]) {
+inline overload destroy(p : SharedPointer[T]) {
     if (not null?(p)) {
         p.ptr^.refCount -= 1;
         if (p.ptr^.refCount == 0) {
@@ -91,13 +91,13 @@ overload destroy(p : SharedPointer[T]) {
 //
 
 [T]
-overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
+inline overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
 
 [T]
-overload null?(p : SharedPointer[T]) = null?(p.ptr);
+inline overload null?(p : SharedPointer[T]) = null?(p.ptr);
 
 [T]
-nullShared(static T) = SharedPointer[T]();
+inline nullShared(static T) = SharedPointer[T]();
 
 
 
@@ -105,5 +105,5 @@ nullShared(static T) = SharedPointer[T]();
 // equality
 //
 [T]
-overload equals?(p: SharedPointer[T], q: SharedPointer[T])
+inline overload equals?(p: SharedPointer[T], q: SharedPointer[T])
     = p.ptr == q.ptr;

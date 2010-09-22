@@ -5,29 +5,29 @@
 //
 
 [E | Enum?(E)]
-overload E() returned:E {
+inline overload E() returned:E {
 }
 
 [E | Enum?(E)]
-overload E(src:E) returned:E {
+inline overload E(src:E) returned:E {
     primitiveCopy(returned, src);
 }
 
 [E | Enum?(E)]
-overload moveUnsafe(src:E) returned:E {
+inline overload moveUnsafe(src:E) returned:E {
     primitiveCopy(returned, src);
 }
 
 [E | Enum?(E)]
-overload resetUnsafe(x:E) {
+inline overload resetUnsafe(x:E) {
 }
 
 [E | Enum?(E)]
-overload destroy(x:E) {
+inline overload destroy(x:E) {
 }
 
 [E | Enum?(E)]
-overload assign(dest:E, src:E) {
+inline overload assign(dest:E, src:E) {
     primitiveCopy(dest, src);
 }
 
@@ -38,16 +38,16 @@ overload assign(dest:E, src:E) {
 //
 
 [E,I | Enum?(E) and Integer?(I)]
-overload I(a:E) = I(enumToInt(a));
+inline overload I(a:E) = I(enumToInt(a));
 
 [E | Enum?(E)]
-overload Int(a:E) = enumToInt(a);
+inline overload Int(a:E) = enumToInt(a);
 
 [E,I | Enum?(E) and Integer?(I)]
-overload E(a:I) = intToEnum(E, Int(a));
+inline overload E(a:I) = intToEnum(E, Int(a));
 
 [E | Enum?(E)]
-overload E(a:Int) = intToEnum(E, a);
+inline overload E(a:Int) = intToEnum(E, a);
 
 
 
@@ -56,10 +56,10 @@ overload E(a:Int) = intToEnum(E, a);
 //
 
 [E | Enum?(E)]
-overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));
+inline overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));
 
 [E | Enum?(E)]
-overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));
+inline overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));
 
 
 

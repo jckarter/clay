@@ -1,37 +1,37 @@
 
-overload Bool() returned:Bool {
+inline overload Bool() returned:Bool {
 }
 
-overload Bool(src:Bool) returned:Bool {
+inline overload Bool(src:Bool) returned:Bool {
     primitiveCopy(returned, src);
 }
 
-overload moveUnsafe(src:Bool) returned:Bool {
+inline overload moveUnsafe(src:Bool) returned:Bool {
     primitiveCopy(returned, src);
 }
 
-overload resetUnsafe(x:Bool) {
+inline overload resetUnsafe(x:Bool) {
 }
 
-overload destroy(x:Bool) {
+inline overload destroy(x:Bool) {
 }
 
 [I | Integer?(I)]
-overload I(a:Bool) {
+inline overload I(a:Bool) {
     if (a) return I(1);
     else return I(0);
 }
 
 [I | Integer?(I)]
-overload Bool(a:I) = (a != I(0));
+inline overload Bool(a:I) = (a != I(0));
 
-overload equals?(a:Bool, b:Bool) {
+inline overload equals?(a:Bool, b:Bool) {
     if (a) return b;
     return not b;
 }
 
-overload lesser?(a:Bool, b:Bool) = ((not a) and b);
+inline overload lesser?(a:Bool, b:Bool) = ((not a) and b);
 
-overload assign(dest:Bool, src:Bool) {
+inline overload assign(dest:Bool, src:Bool) {
     primitiveCopy(dest, src);
 }

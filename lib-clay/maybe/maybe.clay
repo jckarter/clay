@@ -14,22 +14,23 @@ record Nothing ();
 //
 
 [T]
-overload Maybe(x:T) = Maybe[T](x);
+inline overload Maybe(x:T) = Maybe[T](x);
 
 [T]
-overload Maybe[T]() = Maybe[T](Nothing());
+inline overload Maybe[T]() = Maybe[T](Nothing());
 
-nothing(T) = Maybe[T]();
+inline nothing(T) = Maybe[T]();
 
 
 //
 // nothing?
 //
 
-nothing?(x) = variantIs?(x, Nothing);
-anything?(x) = variantIs?(x, Type(just(x)));
+inline nothing?(x) = variantIs?(x, Nothing);
+inline anything?(x) = variantIs?(x, Type(just(x)));
 
-[T] just(forward m: Maybe[T]) = forward variantAs(m, T);
+[T]
+inline just(forward m: Maybe[T]) = forward variantAs(m, T);
 
 
 //
@@ -37,12 +38,12 @@ anything?(x) = variantIs?(x, Type(just(x)));
 //
 
 private procedure maybeValue;
-overload maybeValue(forward x, thenFn, ...elseFn) = forward ...thenFn(x);
-overload maybeValue(forward n: Nothing, thenFn, elseFn) = forward ...elseFn();
-overload maybeValue(forward n: Nothing, thenFn) { }
+inline overload maybeValue(forward x, thenFn, ...elseFn) = forward ...thenFn(x);
+inline overload maybeValue(forward n: Nothing, thenFn, elseFn) = forward ...elseFn();
+inline overload maybeValue(forward n: Nothing, thenFn) { }
 
 [T]
-maybe(forward m:Maybe[T], thenFn, ...elseFn)
+inline maybe(forward m:Maybe[T], thenFn, ...elseFn)
     = forward ...maybeValue(*m, thenFn, ...elseFn);
 
 
@@ -57,24 +58,24 @@ instance Exception = ValueMissing;
 procedure require;
 
 [T]
-overload require(lvalue m:Maybe[T], fn) {
+inline overload require(lvalue m:Maybe[T], fn) {
     alias Ts = ReturnType(...fn(typeToLValue(T)));
     return forward ...maybe(m, fn, () => forward ...missing(...Ts));
 }
 
 [T]
-overload require(rvalue m:Maybe[T], fn) {
+inline overload require(rvalue m:Maybe[T], fn) {
     alias Ts = ReturnType(...fn(typeToRValue(T)));
     return forward ...maybe(move(m), fn, () => forward ...missing(...Ts));
 }
 
 [T]
-overload require(forward m:Maybe[T]) = forward require(m, identity);
+inline overload require(forward m:Maybe[T]) = forward require(m, identity);
 
-private missing(...returnTypes) {
+private inline missing(...returnTypes) {
     if (true) throw ValueMissing();
     // allow the compiler to infer return types
     return forward ...returnTypesToValues(...returnTypes);
 }
 
-private identity(forward ...args) = forward ...args;
+private inline identity(forward ...args) = forward ...args;

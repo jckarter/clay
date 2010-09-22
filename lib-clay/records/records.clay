@@ -6,12 +6,12 @@
 //
 
 [T, FIELD | RecordWithField?(T, FIELD)]
-overload fieldRef(x:T, static FIELD) {
+inline overload fieldRef(x:T, static FIELD) {
     return ref recordFieldRefByName(x, static FIELD);
 }
 
 [T, i | Record?(T)]
-overload staticIndex(x:T, static i) =
+inline overload staticIndex(x:T, static i) =
     ref recordFieldRef(x, static SizeT(i));
 
 
@@ -80,8 +80,8 @@ private initializeMulti(...args:A) {
 }
 
 private procedure initializeTypes;
-overload initializeTypes(A, ...B) = A(), ...initializeTypes(...B);
-overload initializeTypes() = ;
+inline overload initializeTypes(A, ...B) = A(), ...initializeTypes(...B);
+inline overload initializeTypes() = ;
 
 
 

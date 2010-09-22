@@ -6,9 +6,9 @@ import sequences.util.*;
 // filter
 //
 
-filter(predicate, forward ...seqs) = Filtered(predicate, zip(...seqs));
+inline filter(predicate, forward ...seqs) = Filtered(predicate, zip(...seqs));
 
-overload filter(predicate, forward seq) =
+inline overload filter(predicate, forward seq) =
     Filtered(predicate, wrapSequence(seq));
 
 
@@ -24,7 +24,7 @@ private record Filtered[F, A] (
 //
 
 [F, A]
-overload iterator(a:Filtered[F, A]) {
+inline overload iterator(a:Filtered[F, A]) {
     alias T = Type(captureValues(...next(iterator(null(A)^))));
     return FilteredIterator(a.predicate,
                             iterator(a.seq),
@@ -33,7 +33,7 @@ overload iterator(a:Filtered[F, A]) {
 }
 
 [F, A | CallDefined?(reverseIterator, A)]
-overload reverseIterator(a:Filtered[F, A]) {
+inline overload reverseIterator(a:Filtered[F, A]) {
     alias T = Type(captureValues(...next(reverseIterator(null(A)^))));
     return FilteredIterator(a.predicate,
                             reverseIterator(a.seq),
@@ -55,7 +55,7 @@ private record FilteredIterator[F, ITER, VALS] (
 );
 
 [F, ITER, VALS]
-overload hasNext?(iter:FilteredIterator[F, ITER, VALS]) {
+inline overload hasNext?(iter:FilteredIterator[F, ITER, VALS]) {
     while (not iter.hasQueued?) {
         if (not hasNext?(iter.iter))
             return false;
@@ -66,7 +66,7 @@ overload hasNext?(iter:FilteredIterator[F, ITER, VALS]) {
 }
 
 [F, ITER, VALS]
-overload next(iter:FilteredIterator[F, ITER, VALS]) {
+inline overload next(iter:FilteredIterator[F, ITER, VALS]) {
     if (not iter.hasQueued?) {
         var result = hasNext?(iter);
         assert(result);

@@ -14,23 +14,23 @@ overload ContiguousSequence?(static Array[T,n]) = true;
 //
 
 [T,n]
-overload size(a:Array[T,n]) = SizeT(n);
+inline overload size(a:Array[T,n]) = SizeT(n);
 
 [T,n,I | Integer?(I)]
-overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
+inline overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
 
 [T,n]
-overload iterator(a:Array[T,n]) = coordinateRange(begin(a), end(a));
+inline overload iterator(a:Array[T,n]) = coordinateRange(begin(a), end(a));
 
 [T,n]
-overload reverseIterator(a:Array[T,n]) =
+inline overload reverseIterator(a:Array[T,n]) =
     reverseCoordinateRange(end(a), begin(a));
 
 [T,n]
-overload begin(a:Array[T,n]) = &a[0];
+inline overload begin(a:Array[T,n]) = &a[0];
 
 [T,n]
-overload end(a:Array[T,n]) = &a[n];
+inline overload end(a:Array[T,n]) = &a[n];
 
 
 
@@ -39,17 +39,17 @@ overload end(a:Array[T,n]) = &a[n];
 //
 
 [T,n]
-unpackArray(a:Array[T,n]) = ...unpackArrayRef(a);
+inline unpackArray(a:Array[T,n]) = ...unpackArrayRef(a);
 
 [T,n]
-unpackArrayRef(a:Array[T,n]) = ref ...unpackElements(a, static 0);
+inline unpackArrayRef(a:Array[T,n]) = ref ...unpackElements(a, static 0);
 
 [T,n,i]
-private unpackElements(a:Array[T,n], static i) =
+private inline unpackElements(a:Array[T,n], static i) =
     ref a[i], ...unpackElements(a, static i+1);
 
 [T,n,i | i == n]
-overload unpackElements(a:Array[T,n], static i) = ;
+inline overload unpackElements(a:Array[T,n], static i) = ;
 
 
 

@@ -6,7 +6,7 @@ import sequences.util.*;
 // reverse
 //
 
-reverse(forward seq) = Reversed(wrapSequence(seq));
+inline reverse(forward seq) = Reversed(wrapSequence(seq));
 
 private record Reversed[A] (
     seq : A
@@ -14,10 +14,10 @@ private record Reversed[A] (
 
 
 [A]
-overload iterator(a:Reversed[A]) = reverseIterator(a.seq);
+inline overload iterator(a:Reversed[A]) = reverseIterator(a.seq);
 
 [A]
-overload reverseIterator(a:Reversed[A]) = iterator(a.seq);
+inline overload reverseIterator(a:Reversed[A]) = iterator(a.seq);
 
 
 
@@ -26,8 +26,8 @@ overload reverseIterator(a:Reversed[A]) = iterator(a.seq);
 //
 
 [A | CallDefined?(size, A)]
-overload size(a:Reversed[A]) = size(a.seq);
+inline overload size(a:Reversed[A]) = size(a.seq);
 
 [A, I | CallDefined?(index, A, I) and CallDefined?(size, A)]
-overload index(a:Reversed[A], i:I) =
+inline overload index(a:Reversed[A], i:I) =
     forward ...index(a.seq, size(a.seq) - i - 1);

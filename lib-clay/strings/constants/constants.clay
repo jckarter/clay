@@ -26,20 +26,20 @@ overload ContiguousSequence?(static StringConstant) = true;
 // constructors
 //
 
-overload StringConstant() = "";
+inline overload StringConstant() = "";
 
 [I | Integer?(I)]
-overload StringConstant(first : Pointer[Char], size:I) =
+inline overload StringConstant(first : Pointer[Char], size:I) =
     StringConstant(first, first+size);
 
 [T,I | ByteSizedInteger?(T) and Integer?(I)]
-overload StringConstant(first : Pointer[T], size:I) {
+inline overload StringConstant(first : Pointer[T], size:I) {
     var firstChar = Pointer[Char](first);
     StringConstant(firstChar, firstChar+size);
 }
 
 [T | ByteSizedInteger?(T)]
-overload StringConstant(first : Pointer[T], last : Pointer[T]) =
+inline overload StringConstant(first : Pointer[T], last : Pointer[T]) =
     StringConstant(Pointer[Char](first), Pointer[Char](last));
 
 
@@ -48,10 +48,10 @@ overload StringConstant(first : Pointer[T], last : Pointer[T]) =
 // size, index
 //
 
-overload size(a:StringConstant) = SizeT(a.last - a.first);
+inline overload size(a:StringConstant) = SizeT(a.last - a.first);
 
 [I | Integer?(I)]
-overload index(a:StringConstant, i:I) = ref (a.first + i)^;
+inline overload index(a:StringConstant, i:I) = ref (a.first + i)^;
 
 
 
@@ -59,12 +59,12 @@ overload index(a:StringConstant, i:I) = ref (a.first + i)^;
 // coordinates and iteration
 //
 
-overload begin(a:StringConstant) = a.first;
-overload end(a:StringConstant) = a.last;
+inline overload begin(a:StringConstant) = a.first;
+inline overload end(a:StringConstant) = a.last;
 
-overload iterator(a:StringConstant) = coordinateRange(begin(a), end(a));
+inline overload iterator(a:StringConstant) = coordinateRange(begin(a), end(a));
 
-overload reverseIterator(a:StringConstant) =
+inline overload reverseIterator(a:StringConstant) =
     reverseCoordinateRange(end(a), begin(a));
 
 
@@ -73,4 +73,4 @@ overload reverseIterator(a:StringConstant) =
 // cstring
 //
 
-overload cstring(a:StringConstant) = Pointer[Int8](a.first);
+inline overload cstring(a:StringConstant) = Pointer[Int8](a.first);
