@@ -1,81 +1,7 @@
 
+import clay.tokens.*;
 import maybe.*;
 import parsing.combinators.wrapper.*;
-
-
-
-//
-// data definitions
-//
-
-enum TokenKind {
-    SENTINEL,
-    SYMBOL,
-    KEYWORD,
-    IDENTIFIER,
-    STRING_LITERAL,
-    CHAR_LITERAL,
-    INT_LITERAL,
-    FLOAT_LITERAL,
-    SPACE,
-    COMMENT,
-    LLVM,
-}
-
-alias DataRange = CoordinateRange[Pointer[Char]];
-
-record Token(kind:TokenKind, subKind:UInt8, data:DataRange);
-
-
-[I | Integer?(I)]
-overload Token(kind:TokenKind, subKind:I) =
-    Token(kind, UInt8(subKind), DataRange(null(Char), null(Char)));
-
-overload Token(kind:TokenKind) = Token(kind, 0);
-
-
-
-//
-// symbols and keywords
-//
-
-var symbols = [
-    "<--", "...", "=>",
-    "==", "!=", "<=", ">=",
-    "<", ">",
-    "+=", "-=", "*=", "/=", "%=",
-    "+", "-", "*", "/", "%", "=", "&", "^", "|",
-    "(", ")", "[", "]", "{", "}",
-    ":", ";", ",", ".", "#"
-];
-
-var keywords = [
-    "public", "private", "import", "as",
-    "record", "variant", "instance",
-    "procedure", "overload", "external", "alias",
-    "static", "callbyname", "lvalue", "rvalue",
-    "inline", "enum", "var", "ref", "forward",
-    "and", "or", "not", "new",
-    "if", "else", "goto", "return", "while",
-    "switch", "case", "default", "break", "continue", "for", "in",
-    "true", "false", "try", "catch", "throw"
-];
-
-symbolIndex(s) Int {
-    for (i, x in enumerate(symbols)) {
-        if (x == s)
-            return Int(i);
-    }
-    return -1;
-}
-
-keywordIndex(s) Int {
-    for (i, x in enumerate(keywords)) {
-        if (x == s)
-            return Int(i);
-    }
-    return -1;
-}
 
 
 
