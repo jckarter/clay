@@ -1,15 +1,22 @@
 
 main() {
-    var a = ["", "foo", "afoobar"];
+    var a = ["", "foo", "foobar", "afoobarfoo"];
+
+    // (seq, seq) - find, beginsWith?, endsWith?, split
     for (x in a) {
         for (y in a) {
-            print("find(", x, ", ", y, ") = ");
-            println(find(x, y) - begin(x));
+            println("find(", x, ", ", y, ") = ", find(x, y) - begin(x));
+            println("beginsWith?(", x, ", ", y, ") = ", beginsWith?(x, y));
+            println("endsWith?(", x, ", ", y, ") = ", endsWith?(x, y));
+            if (not empty?(y))
+                println("split(", x, ", ", y, ") = ", split(x, y));
         }
     }
+
+    // (seq, element) - find, split
     ref s = back(a);
     for (x in s) {
-        print("find(", s, ", ", x, ") = ");
-        println(find(s, x) - begin(s));
+        println("find(", s, ", ", x, ") = ", find(s, x) - begin(s));
+        println("split(", s, ", ", x, ") = ", split(s, x));
     }
 }
