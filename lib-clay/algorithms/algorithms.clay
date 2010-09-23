@@ -120,17 +120,30 @@ overload max(a:A) = forward select(a, greaterEquals?);
 //
 
 findIf(seq, pred) {
-    var b, e = begin(seq), end(seq);
-    while ((b != e) and pred(b^))
-        inc(b);
-    return b;
+    return findIf(begin(seq), end(seq), pred);
+}
+
+overload findIf(_first, _last, pred) {
+    var cur, last = _first, _last;
+    while ((cur != last) and not pred(cur^))
+        inc(cur);
+    return cur;
 }
 
 reverseFindIf(seq, pred) {
-    var b, e = begin(seq), end(seq);
-    while ((e != b) and pred((e-1)^))
-        dec(e);
-    return e;
+    return reverseFindIf(begin(seq), end(seq), pred);
+}
+
+overload reverseFindIf(_first, _last, pred) {
+    var first, cur = _first, _last;
+    while (cur != first) {
+        var prev = cur;
+        dec(prev);
+        if (pred(prev^))
+            break;
+        cur = prev;
+    }
+    return cur;
 }
 
 
