@@ -1,3 +1,6 @@
+
+import sequences.util.*;
+
 //
 // group() function
 //
@@ -7,7 +10,7 @@ private record Group[S] (
 );
 
 [S, I | Sequence?(S) and Integer?(I)]
-group(forward seq: S, groupSize: I) = Group(seq, SizeT(groupSize));
+group(forward seq: S, groupSize: I) = Group(wrapSequence(seq), SizeT(groupSize));
 
 [S | SizedSequence?(S)]
 overload size(group: Group[S]) = size(group.seq)/group.groupSize;
@@ -194,7 +197,10 @@ overload index(i: RAGroupCoordinate[C], n: I) {
 private record StaticGroup[S, groupSize](seq: S);
 
 [S, n]
-overload group(forward seq: S, static n) = StaticGroup[S, n](seq);
+overload group(forward seq: S, static n) {
+    alias T = Type(wrapSequence(seq));
+    return StaticGroup[T, n](wrapSequence(seq));
+}
 
 private record StaticGroupIterator[I, groupSize](iter: I);
 
