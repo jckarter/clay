@@ -5,15 +5,15 @@ main() = testMain(
         "algorithms.strings", Tuple(
             TestCase("beginsWith?", test => {
                 expectTrue(test, "string",
-                    beginsWith?("beginning", "beginningmiddleend"));
+                    beginsWith?("beginningmiddleend", "beginning"));
                 expectFalse(test, "match longer than sequence",
-                    beginsWith?("beginningmiddleendlong", "beginningmiddleend"));
+                    beginsWith?("beginningmiddleend", "beginningmiddleendlong"));
             }),
             TestCase("endsWith?", test => {
                 expectTrue(test, "string",
-                    endsWith?("end", "beginningmiddleend"));
+                    endsWith?("beginningmiddleend", "end"));
                 expectFalse(test, "match longer than sequence",
-                    endsWith?("longbeginningmiddleend", "beginningmiddleend"));
+                    endsWith?("beginningmiddleend", "longbeginningmiddleend"));
             }),
             TestCase("split", test => {
                 expectEqual(test, "test", split("a test string", " "[0])[1], "test");
