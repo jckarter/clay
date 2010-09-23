@@ -5,13 +5,23 @@
 // beginsWith?, endsWith?
 //
 
-beginsWith?(x, seq) = sliceUpto(seq, size(x)) == x;
+[A, B | Sequence?(A) and Sequence?(B) and (SequenceElementType(A) == SequenceElementType(B))]
+beginsWith?(seq:A, prefix:B) =
+    (size(seq) >= size(prefix)) and (sliceUpto(seq, size(prefix)) == prefix);
 
-endsWith?(x, seq) {
-    if (size(seq) < size(x))
-        return false;
-    return sliceFrom(seq, size(seq) - size(x)) == x;
-}
+[A, T | Sequence?(A) and (T == SequenceElementType(A))]
+overload beginsWith?(seq:A, x:T) =
+    (size(seq) > 0) and (seq[0] == x);
+
+
+[A, B | Sequence?(A) and Sequence?(B) and (SequenceElementType(A) == SequenceElementType(B))]
+endsWith?(seq:A, suffix:B) =
+    (size(seq) >= size(suffix))
+    and (sliceFrom(seq, size(seq)-size(suffix)) == suffix);
+
+[A, T | Sequence?(A) and (T == SequenceElementType(A))]
+overload endsWith?(seq:A, x:T) =
+    (size(seq) > 0) and (seq[size(seq)-1] == x);
 
 
 
