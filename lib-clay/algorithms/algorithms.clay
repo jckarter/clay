@@ -119,12 +119,15 @@ overload max(a:A) = forward select(a, greaterEquals?);
 // find
 //
 
-[A | Sequence?(A)]
-find(a:A, x) {
+procedure find;
+
+[A, T | Sequence?(A) and CallDefined?(equals?, SequenceElementType(A), T)]
+overload find(a:A, x:T) {
     return find(begin(a), end(a), x);
 }
 
-overload find(begin, end, x) {
+[C, T | Coordinate?(C) and CallDefined?(equals?, CoordinateTargetType(C), T)]
+overload find(begin:C, end:C, x:T) {
     var i = begin;
     while (i != end) {
         if (i^ == x)
@@ -132,6 +135,30 @@ overload find(begin, end, x) {
         inc(i);
     }
     return i;
+}
+
+
+[A, B | SizedSequence?(A) and SizedSequence?(B)
+        and (SequenceElementType(A) == SequenceElementType(B))]
+overload find(a:A, b:B) {
+    return find(begin(a), end(a), b);
+}
+
+[C, B | Coordinate?(C) and SizedSequence?(B)
+        and (CoordinateTargetType(C) == SequenceElementType(B))]
+overload find(begin_:C, end_:C, b:B) {
+    // FIXME: use something like boyer-moore.
+    var begin, end = begin_, end_;
+    var bsize = size(b);
+    for (c in range(begin, end)) {
+        var n = end - c;
+        if (n < bsize)
+            break;
+        var range = coordinateRange(c, c+bsize);
+        if (range == b)
+            return c;
+    }
+    return end;
 }
 
 

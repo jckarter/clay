@@ -1,0 +1,15 @@
+
+main() {
+    var a = ["", "foo", "afoobar"];
+    for (x in a) {
+        for (y in a) {
+            print("find(", x, ", ", y, ") = ");
+            println(find(x, y) - begin(x));
+        }
+    }
+    ref s = back(a);
+    for (x in s) {
+        print("find(", s, ", ", x, ") = ");
+        println(find(s, x) - begin(s));
+    }
+}
