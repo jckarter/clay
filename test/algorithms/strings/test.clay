@@ -3,24 +3,15 @@ import test.*;
 main() = testMain(
     TestSuite(
         "algorithms.strings", Tuple(
-            TestCase("beginsWith?", test => {
-                expectTrue(test, "string",
-                    beginsWith?("beginningmiddleend", "beginning"));
-                expectFalse(test, "match longer than sequence",
-                    beginsWith?("beginningmiddleend", "beginningmiddleendlong"));
-            }),
-            TestCase("endsWith?", test => {
-                expectTrue(test, "string",
-                    endsWith?("beginningmiddleend", "end"));
-                expectFalse(test, "match longer than sequence",
-                    endsWith?("beginningmiddleend", "longbeginningmiddleend"));
-            }),
-            TestCase("split", test => {
-                expectEqual(test, "test", split("a test string", " "[0])[1], "test");
-            }),
             TestCase("trim", test => {
-                expectEqual(test, "trim, string", trim(" \t\n", "   \t A string,\nthat\tneeds trimming. \n  \n "), "A string,\nthat\tneeds trimming.");
-                expectEqual(test, "trim, lambda", trim(x => (x == "*"[0] or x == " "[0]), "*** message ***"), "message");
+                expectEqual(test, "trim, string",
+                    trim("   \t A string,\nthat\tneeds trimming. \n  \n "),
+                    "A string,\nthat\tneeds trimming.",
+                );
+                expectEqual(test, "trim, predicate",
+                    trim("*** message ***", x => (x == "*"[0] or x == " "[0])),
+                    "message"
+                );
             }),
         )
     )
