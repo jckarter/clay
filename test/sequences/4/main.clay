@@ -10,16 +10,16 @@ printList(a) {
     println();
 }
 
-testFind(x, a) {
-    var i = find(x, a);
+testFind(a, x) {
+    var i = find(a, x);
     if (i == end(a))
         println("not found ", x);
     else
         println("found ", x, " at ", (i - begin(a)));
 }
 
-testBinarySearch(x, a) {
-    var lower, upper = ...binarySearch(x, a);
+testBinarySearch(a, x) {
+    var lower, upper = ...binarySearch(a, x);
     if (lower == upper)
         print("not ");
     println("found ", x, ", range = [",
@@ -81,11 +81,11 @@ main() {
         // test find, binarySearch
         var a = Vector([1, 1, 2, 4, 7, 7, 7, 9, 15, 15, 19]);
         printList(a);
-        testFind(10, a);
-        testFind(1, a);
-        testFind(19, a);
-        testBinarySearch(10, a);
-        testBinarySearch(1, a);
-        testBinarySearch(19, a);
+        testFind(a, 10);
+        testFind(a, 1);
+        testFind(a, 19);
+        testBinarySearch(a, 10);
+        testBinarySearch(a, 1);
+        testBinarySearch(a, 19);
     }
 }
