@@ -76,50 +76,6 @@ inline overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
 
 //
-// generic equals?, lesser?
-//
-
-[A,B | String?(A) and String?(B)]
-overload equals?(a:A, b:B) {
-    var i, j = iterator(a), iterator(b);
-    while (hasNext?(i)) {
-        if (not hasNext?(j))
-            return false;
-        if (next(i) != next(j))
-            return false;
-    }
-    return not hasNext?(j);
-}
-
-[A,B | SizedString?(A) and SizedString?(B)]
-overload equals?(a:A, b:B) {
-    if (size(a) != size(b))
-        return false;
-    var i, j = iterator(a), iterator(b);
-    while (hasNext?(i)) {
-        if (next(i) != next(j))
-            return false;
-    }
-    return true;
-}
-
-
-[A,B | String?(A) and String?(B)]
-overload lesser?(a:A, b:B) {
-    var i, j = iterator(a), iterator(b);
-    while (hasNext?(i)) {
-        if (not hasNext?(j))
-            return false;
-        ref x, y = next(i), next(j);
-        if (x != y)
-            return x < y;
-    }
-    return hasNext?(j);
-}
-
-
-
-//
 // convert to c-compatible string
 //
 
