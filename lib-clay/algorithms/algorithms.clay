@@ -116,6 +116,26 @@ overload max(a:A) = forward select(a, greaterEquals?);
 
 
 //
+// findIf, reverseFindIf
+//
+
+findIf(seq, pred) {
+    var b, e = begin(seq), end(seq);
+    while ((b != e) and pred(b^))
+        inc(b);
+    return b;
+}
+
+reverseFindIf(seq, pred) {
+    var b, e = begin(seq), end(seq);
+    while ((e != b) and pred((e-1)^))
+        dec(e);
+    return e;
+}
+
+
+
+//
 // find
 //
 
@@ -159,6 +179,32 @@ overload find(begin_:C, end_:C, b:B) {
             return c;
     }
     return end;
+}
+
+
+
+//
+// reverseFind
+//
+
+procedure reverseFind;
+
+[A, T | Sequence?(A) and CallDefined?(equals?, SequenceElementType(A), T)]
+overload reverseFind(a:A, x:T) {
+    return reverseFind(begin(a), end(a), x);
+}
+
+[C, T | Coordinate?(C) and CallDefined?(equals?, CoordinateTargetType(C), T)]
+overload reverseFind(begin:C, end:C, x:T) {
+    var i = end;
+    while (i != begin) {
+        var j = i;
+        dec(j);
+        if (j^ == x)
+            break;
+        i = j;
+    }
+    return i;
 }
 
 
