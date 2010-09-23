@@ -76,7 +76,7 @@ product(a:A) {
 private procedure select;
 
 [A | Sequence?(A)]
-overload select(f, a:A) {
+overload select(a:A, f) {
     var iter = iterator(a);
     assert(hasNext?(iter));
     var result = next(iter);
@@ -89,7 +89,7 @@ overload select(f, a:A) {
 }
 
 [A | LValueSequence?(A)]
-overload select(f, a:A) {
+overload select(a:A, f) {
     var iter = iterator(a);
     assert(hasNext?(iter));
     var result = &next(iter);
@@ -108,10 +108,10 @@ overload select(f, a:A) {
 //
 
 [A | Sequence?(A)]
-overload min(a:A) = forward select(lesser?, a);
+overload min(a:A) = forward select(a, lesser?);
 
 [A | Sequence?(A)]
-overload max(a:A) = forward select(greaterEquals?, a);
+overload max(a:A) = forward select(a, greaterEquals?);
 
 
 
@@ -120,11 +120,11 @@ overload max(a:A) = forward select(greaterEquals?, a);
 //
 
 [A | Sequence?(A)]
-find(x, a:A) {
-    return find(x, begin(a), end(a));
+find(a:A, x) {
+    return find(begin(a), end(a), x);
 }
 
-overload find(x, begin, end) {
+overload find(begin, end, x) {
     var i = begin;
     while (i != end) {
         if (i^ == x)
@@ -139,7 +139,7 @@ overload find(x, begin, end) {
 //
 // in?
 //
-in?(elem, seq) = find(elem, seq) != end(seq);
+in?(seq, elem) = find(seq, elem) != end(seq);
 
 
 
@@ -148,26 +148,26 @@ in?(elem, seq) = find(elem, seq) != end(seq);
 //
 
 [A | Sequence?(A)]
-binarySearch(x, a:A) {
-    return ...binarySearch(x, begin(a), end(a));
+binarySearch(a:A, x) {
+    return ...binarySearch(begin(a), end(a), x);
 }
 
 [A | Sequence?(A)]
-binarySearchLowerBound(x, a:A) {
-    return binarySearchLowerBound(x, begin(a), end(a));
+binarySearchLowerBound(a:A, x) {
+    return binarySearchLowerBound(begin(a), end(a), x);
 }
 
 [A | Sequence?(A)]
-binarySearchUpperBound(x, a:A) {
-    return binarySearchUpperBound(x, begin(a), end(a));
+binarySearchUpperBound(a:A, x) {
+    return binarySearchUpperBound(begin(a), end(a), x);
 }
 
-overload binarySearch(x, begin, end) {
-    var i = binarySearchLowerBound(x, begin, end);
-    return i, binarySearchUpperBound(x, i, end);
+overload binarySearch(begin, end, x) {
+    var i = binarySearchLowerBound(begin, end, x);
+    return i, binarySearchUpperBound(i, end, x);
 }
 
-overload binarySearchLowerBound(x, begin_, end_) {
+overload binarySearchLowerBound(begin_, end_, x) {
     var begin, end = begin_, end_;
     while (begin < end) {
         var mid = begin + (end - begin)/2;
@@ -179,7 +179,7 @@ overload binarySearchLowerBound(x, begin_, end_) {
     return begin;
 }
 
-overload binarySearchUpperBound(x, begin_, end_) {
+overload binarySearchUpperBound(begin_, end_, x) {
     var begin, end = begin_, end_;
     while (begin < end) {
         var mid = begin + (end - begin)/2;

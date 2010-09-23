@@ -98,10 +98,10 @@ trimEndSlice(pred, seq) {
 
 
 [T | Sequence?(T)]
-overload trimSlice(s:T, seq) = trimSlice(x => in?(x,s), seq);
+overload trimSlice(s:T, seq) = trimSlice(x => in?(s,x), seq);
 
 [T | Sequence?(T)]
-overload trimBeginSlice(s:T, seq) = trimBeginSlice(x => in?(x,s), seq);
+overload trimBeginSlice(s:T, seq) = trimBeginSlice(x => in?(s,x), seq);
 
 [T | Sequence?(T)]
-overload trimEndSlice(s:T, seq) = trimEndSlice(x => in?(x,s), seq);
+overload trimEndSlice(s:T, seq) = trimEndSlice(x => in?(s,x), seq);
