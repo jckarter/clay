@@ -10,7 +10,7 @@ overload ContiguousSequence?(static Array[T,n]) = true;
 
 
 //
-// size, index, iterator, begin, end
+// size, index, iterator, begin, end, front, back
 //
 
 [T,n]
@@ -31,6 +31,12 @@ inline overload begin(a:Array[T,n]) = &a[0];
 
 [T,n]
 inline overload end(a:Array[T,n]) = &a[n];
+
+[T,n]
+inline overload front(a:Array[T,n]) = ref a[0];
+
+[T,n]
+inline overload back(a:Array[T,n]) = ref a[n-1];
 
 
 
