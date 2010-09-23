@@ -4,59 +4,69 @@
 // trim, trimBegin, trimEnd
 //
 
-[T | Sequence?(T)]
-trim(x, seq:T) = T(trimSlice(x, seq));
+trim(seq, pred) = Vector(trimmed(seq, pred));
 
-[T | Sequence?(T)]
-trimBegin(x, seq:T) = T(trimBeginSlice(x, seq));
-
-[T | Sequence?(T)]
-trimEnd(x, seq:T) = T(trimEndSlice(x, seq));
+trimBegin(seq, pred) = Vector(beginTrimmed(seq, pred));
+trimEnd(seq, pred) = Vector(endTrimmed(seq, pred));
 
 
+[S | String?(S)]
+overload trim(seq:S) = trim(seq, space?);
 
-overload trim(x, seq:StringConstant) =
-    String(trimSlice(x, seq));
+[S | String?(S)]
+overload trimBegin(seq:S) = trimBegin(seq, space?);
 
-overload trimBegin(x, seq:StringConstant) =
-    String(trimBeginSlice(x, seq));
-
-overload trimEnd(x, seq:StringConstant) =
-    String(trimEndSlice(x, seq));
+[S | String?(S)]
+overload trimEnd(seq:S) = trimEnd(seq, space?);
 
 
 
 //
-// trimSlice, trimBeginSlice, trimEndSlice
+// trimmed, beginTrimmed, endTrimmed
 //
 
-trimSlice(pred, seq) = trimBeginSlice(pred, trimEndSlice(pred, seq));
+trimmed(seq, pred) = beginTrimmed(endTrimmed(seq, pred), pred);
 
-trimBeginSlice(pred, seq) {
-    var i = 0;
-    for (x in seq) {
-        if (pred(x)) inc(i);
-        else break;
-    }
-    return sliceFrom(seq, i);
+beginTrimmed(seq, pred) {
+    var b, e = begin(seq), end(seq);
+    while ((b != e) and pred(b^))
+        inc(b);
+    return coordinateRange(b, e);
 }
 
-trimEndSlice(pred, seq) {
-    var i = 0;
-    for (x in reverse(seq)) {
-        if (pred(x)) inc(i);
-        else break;
-    }
-    return sliceUpto(seq, size(seq) - i);
+endTrimmed(seq, pred) {
+    var b, e = begin(seq), end(seq);
+    while ((b != e) and pred((e-1)^))
+        dec(e);
+    return coordinateRange(b, e);
 }
 
 
+[S | String?(S)]
+overload trimmed(seq:S) = trimmed(seq, space?);
 
-[T | Sequence?(T)]
-overload trimSlice(s:T, seq) = trimSlice(x => in?(s,x), seq);
+[S | String?(S)]
+overload beginTrimmed(seq:S) = beginTrimmed(seq, space?);
 
-[T | Sequence?(T)]
-overload trimBeginSlice(s:T, seq) = trimBeginSlice(x => in?(s,x), seq);
+[S | String?(S)]
+overload endTrimmed(seq:S) = endTrimmed(seq, space?);
 
-[T | Sequence?(T)]
-overload trimEndSlice(s:T, seq) = trimEndSlice(x => in?(s,x), seq);
+
+
+//
+// space?
+//
+
+private space?(c) {
+    switch (c) {
+    case ' ' :
+    case '\r' :
+    case '\n' :
+    case '\t' :
+    case '\f' :
+    case '\v' :
+        return true;
+    default :
+        return false;
+    }
+}
