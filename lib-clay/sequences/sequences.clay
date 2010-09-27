@@ -44,3 +44,27 @@ overload lesser?(a:A, b:B) {
     }
     return hasNext?(j);
 }
+
+
+
+//
+// concatenation
+//
+
+[A, B | Sequence?(A) and Sequence?(B)
+        and (SequenceElementType(A) == SequenceElementType(B))]
+overload add(forward a:A, forward b:B) {
+    var result = Vector(a);
+    push(result, b);
+    return move(result);
+}
+
+[A, T | Sequence?(A) and (SequenceElementType(A) == T)]
+overload add(forward a:A, forward x:T) {
+    var result = Vector(a);
+    push(result, x);
+    return move(result);
+}
+
+[A, T | Sequence?(A) and (SequenceElementType(A) == T)]
+overload add(forward x:T, forward a:A) = Vector[T](x) + a;
