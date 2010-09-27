@@ -8,6 +8,9 @@ record SequenceHandle[A] (
     inner : Pointer[A]
 );
 
+[A]
+overload LightweightSequence?(static SequenceHandle[A]) = true;
+
 
 
 //

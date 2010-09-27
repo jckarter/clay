@@ -17,6 +17,9 @@ private record Filtered[F, A] (
     seq : A,
 );
 
+[F, A | LightweightSequence?(A)]
+overload LightweightSequence?(static Filtered[F,A]) = true;
+
 
 
 //

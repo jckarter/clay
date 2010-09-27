@@ -14,7 +14,7 @@ RandomAccessSequence?(T) = true
 LValueSequence?(T) = false
 ContiguousSequence?(T) = false
 
-T = Mapped[Static[dereference], SequenceHandle[Mapped[Static[addressOf], SequenceHandle[Array[Int32, 3]]]]]
+T = Mapped[Static[dereference], Mapped[Static[addressOf], SequenceHandle[Array[Int32, 3]]]]
 Sequence?(T) = true
 SequenceElementType(T) = Int32
 SizedSequence?(T) = true
@@ -22,7 +22,7 @@ RandomAccessSequence?(T) = true
 LValueSequence?(T) = true
 ContiguousSequence?(T) = false
 
-T = Mapped[Static[copy], SequenceHandle[Mapped[Static[dereference], SequenceHandle[Mapped[Static[addressOf], SequenceHandle[Array[Int32, 3]]]]]]]
+T = Mapped[Static[copy], Mapped[Static[dereference], Mapped[Static[addressOf], SequenceHandle[Array[Int32, 3]]]]]
 Sequence?(T) = true
 SequenceElementType(T) = Int32
 SizedSequence?(T) = true

@@ -13,6 +13,9 @@ private record Zipped[A] (
     seqs : A
 );
 
+[...S | allValues?(LightweightSequence?, ...S)]
+overload LightweightSequence?(static Zipped[Tuple[...S]]) = true;
+
 
 
 //

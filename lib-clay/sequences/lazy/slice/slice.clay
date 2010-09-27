@@ -39,6 +39,9 @@ private record Slice[A] (
     end : SizeT,
 );
 
+[A | LightweightSequence?(A)]
+overload LightweightSequence?(static Slice[A]) = true;
+
 
 
 //

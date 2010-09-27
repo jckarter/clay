@@ -12,6 +12,9 @@ private record Group[S] (
 [S, I | Sequence?(S) and Integer?(I)]
 group(forward seq: S, groupSize: I) = Group(wrapSequence(seq), SizeT(groupSize));
 
+[S | LightweightSequence?(S)]
+overload LightweightSequence?(static Group[S]) = true;
+
 [S | SizedSequence?(S)]
 overload size(group: Group[S]) = size(group.seq)/group.groupSize;
 

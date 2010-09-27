@@ -1,7 +1,7 @@
 Range[Int32]: 0, 1, 2, 3, 4
 Reversed[Range[Int32]]: 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
-Reversed[SequenceHandle[Reversed[Range[Int32]]]]: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+Reversed[Reversed[Range[Int32]]]: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 Reversed[SequenceHandle[Array[Int32, 5]]]: 5, 4, 3, 2, 1
 Reversed[Vector[Int32]]: 5, 4, 3, 2, 1
 Reversed[SequenceHandle[Vector[Int32]]]: 5, 4, 3, 2, 1
-Reversed[SequenceHandle[Reversed[SequenceHandle[Vector[Int32]]]]]: 1, 2, 3, 4, 5
+Reversed[Reversed[SequenceHandle[Vector[Int32]]]]: 1, 2, 3, 4, 5

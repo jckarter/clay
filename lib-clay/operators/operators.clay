@@ -142,6 +142,10 @@ SequenceIteratorType(T) = Type(iterator(typeToLValue(T)));
 // true if sequence elements are stored contiguously in memory
 ContiguousSequence?(T) = false;
 
+// true if copying the sequence is efficient
+LightweightSequence?(T) = false;
+
+
 
 //
 // hashing
