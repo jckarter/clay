@@ -8,8 +8,12 @@ import sequences.handle.*;
 //
 
 procedure wrapSequence;
+
 inline overload wrapSequence(rvalue x) = move(x);
 inline overload wrapSequence(lvalue x) = sequenceHandle(x);
+
+[A | LightweightSequence?(A)]
+inline overload wrapSequence(lvalue x:A) = x;
 
 
 

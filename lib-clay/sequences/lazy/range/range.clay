@@ -10,6 +10,9 @@ record Range[T] (
 );
 
 [T]
+overload LightweightSequence?(static Range[T]) = true;
+
+[T]
 inline overload size(a:Range[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
@@ -47,6 +50,9 @@ record ReverseRange[T] (
     end : T,
     begin : T,
 );
+
+[T]
+overload LightweightSequence?(static ReverseRange[T]) = true;
 
 [T]
 inline overload size(a:ReverseRange[T]) = SizeT(a.end - a.begin);
@@ -129,6 +135,9 @@ record CoordinateRange[T] (
 overload ContiguousSequence?(static CoordinateRange[T]) = true;
 
 [T]
+overload LightweightSequence?(static CoordinateRange[T]) = true;
+
+[T]
 inline overload size(a:CoordinateRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
@@ -167,6 +176,9 @@ record ReverseCoordinateRange[T] (
     end : T,
     begin : T,
 );
+
+[T]
+overload LightweightSequence?(static ReverseCoordinateRange[T]) = true;
 
 [T]
 inline overload size(a:ReverseCoordinateRange[T]) = SizeT(a.end - a.begin);

@@ -12,6 +12,8 @@ private record Reversed[A] (
     seq : A
 );
 
+[A | LightweightSequence?(A)]
+overload LightweightSequence?(static Reversed[A]) = true;
 
 [A]
 inline overload iterator(a:Reversed[A]) = reverseIterator(a.seq);
