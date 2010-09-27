@@ -18,6 +18,10 @@ inline slice(forward a:A, begin:I, end:J) =
 inline overload slice(forward a:A, begin:I, end:I) =
     Slice(wrapSequence(a), SizeT(begin), SizeT(end));
 
+[T, I | RandomAccessCoordinate?(T) and Integer?(I)]
+inline overload slice(a:CoordinateRange[T], begin:I, end:I) =
+    CoordinateRange[T](a.begin + begin, a.begin + end);
+
 
 [A, I | Sequence?(A) and Integer?(I)]
 inline overload slice(forward a:A, begin:I) = slice(a, begin, size(a));
