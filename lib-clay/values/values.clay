@@ -62,7 +62,7 @@ firstValue(forward a, ...rest) = forward a;
 
 
 //
-// replicateValue, allValues?, anyValues?, equalValues?
+// replicateValue, allValues?, anyValues?, equalValues?, inValues?
 //
 
 [n]
@@ -86,6 +86,8 @@ anyValues?(pred, ...rest) {
 }
 
 equalValues?(a, ...rest) = allValues?(x => a == x, ...rest);
+
+inValues?(a, ...rest) = anyValues?(x => a == x, ...rest);
 
 
 
@@ -122,3 +124,17 @@ forwardValues(x:Tuple[...T]) =
 [...T]
 capturedRefs(x:Tuple[...T]) =
     forward ...mapValues(capturedRef, ...unpackTupleRef(x));
+
+
+
+//
+// expand values from sequence or iterator 
+//
+[S, n | Sequence?(S)]
+sequenceValues(seq: S, static n) = forward ...iteratorValues(iterator(seq), static n);
+
+[I | Iterator?(I)]
+iteratorValues(iter: I, static 0) = ;
+[I, n | Iterator?(I) and n > 0]
+overload iteratorValues(iter: I, static n)
+    = forward next(iter), ...iteratorValues(iter, static n-1);
