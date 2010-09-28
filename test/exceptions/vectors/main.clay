@@ -19,6 +19,8 @@ record Test (
     id : Int
 );
 
+overload RegularRecord?(static Test) = false;
+
 overload Test() {
     var id = nextId();
     testAndThrow();
@@ -37,8 +39,19 @@ overload moveUnsafe(src:Test) {
     return Test(src.id);
 }
 
+overload resetUnsafe(x:Test) {
+    var id = nextId();
+    println("resetting Test ", id);
+    x.id = id;
+}
+
 overload destroy(x:Test) {
     println("destroy Test ", x.id);
+}
+
+overload assign(dest:Test, src:Test) {
+    println("assign ", src.id, " to ", dest.id);
+    dest.id = src.id;
 }
 
 main() {
@@ -46,6 +59,7 @@ main() {
         var a = Vector[Test](Test(), Test(), Test(), Test());
         var b = Vector[Test]();
         b = move(a);
+        var c = b;
     }
     catch (e) {
         println("exception: ", e);

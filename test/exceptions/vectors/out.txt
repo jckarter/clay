@@ -3,21 +3,42 @@ construct Test 1
 construct Test 2
 construct Test 3
 move Test 0
+resetting Test 4
 move Test 1
+resetting Test 5
 move Test 2
+resetting Test 6
 move Test 3
-destroy Test 3
-destroy Test 2
-destroy Test 1
-destroy Test 0
-construct Test 4
-construct Test 5
-construct Test 6
-destroy Test 4
-destroy Test 5
+resetting Test 7
+destroy Test 7
 destroy Test 6
+destroy Test 5
+destroy Test 4
+resetting Test 8
+resetting Test 9
+resetting Test 10
+resetting Test 11
+assign 0 to 8
+assign 1 to 9
+assign 2 to 10
+assign 3 to 11
+resetting Test 12
+assign 0 to 12
+resetting Test 13
+assign 1 to 13
+resetting Test 14
+assign 2 to 14
+resetting Test 15
+assign 3 to 15
 destroy Test 0
 destroy Test 1
 destroy Test 2
 destroy Test 3
-exception: Error("foo")
+destroy Test 0
+destroy Test 1
+destroy Test 2
+destroy Test 3
+destroy Test 0
+destroy Test 1
+destroy Test 2
+destroy Test 3
