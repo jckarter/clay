@@ -2782,6 +2782,7 @@ void evalValueDestroy(EValuePtr dest);
 void evalValueCopy(EValuePtr dest, EValuePtr src);
 void evalValueMove(EValuePtr dest, EValuePtr src);
 void evalValueAssign(EValuePtr dest, EValuePtr src);
+void evalValueMoveAssign(EValuePtr dest, EValuePtr src);
 bool evalToBoolFlag(EValuePtr a);
 
 int evalMarkStack();
