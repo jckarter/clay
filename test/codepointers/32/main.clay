@@ -103,6 +103,10 @@ overload destroy(x:Displayable) {
     }
 }
 
+overload assign(dest:Displayable, lvalue src:Displayable) {
+    dest = copy(src);
+}
+
 overload display(x:Displayable) {
     x.display(x.obj^);
 }
