@@ -1,9 +1,8 @@
 from subprocess import Popen, PIPE
 from sys import argv
 
-server = Popen([argv[1], "server"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-client = Popen([argv[1], "client", "zim", "zang", "zung"],
-    stdin=server.stdout, stdout=server.stdin, stderr=PIPE)
+server = Popen([argv[1], "server"], stdin=PIPE, stderr=PIPE)
+client = Popen([argv[1], "client", "zim", "zang", "zung"], stdout=server.stdin, stderr=PIPE)
 
 servererr = server.communicate()[1]
 clienterr = client.communicate()[1]
