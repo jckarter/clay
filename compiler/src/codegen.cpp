@@ -18,6 +18,9 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx);
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
 void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
 void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
+void codegenValueMoveAssign(CValuePtr dest,
+                            CValuePtr src,
+                            CodegenContextPtr ctx);
 llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx);
 
 int cgMarkStack(CodegenContextPtr ctx);
@@ -301,6 +304,28 @@ void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
     args->add(src);
     codegenCallValue(staticCValue(prelude_assign(), ctx),
                      args,
+                     ctx,
+                     new MultiCValue());
+}
+
+void codegenValueMoveAssign(CValuePtr dest,
+                            CValuePtr src,
+                            CodegenContextPtr ctx)
+{
+    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+        if (dest->type->typeKind != STATIC_TYPE) {
+            llvm::Value *v = ctx->builder->CreateLoad(src->llValue);
+            ctx->builder->CreateStore(v, dest->llValue);
+        }
+        return;
+    }
+    MultiCValuePtr args = new MultiCValue(dest);
+    args->add(src);
+    MultiPValuePtr pvArgs = new MultiPValue(new PValue(dest->type, false));
+    pvArgs->add(new PValue(src->type, true));
+    codegenCallValue(staticCValue(prelude_assign(), ctx),
+                     args,
+                     pvArgs,
                      ctx,
                      new MultiCValue());
 }
@@ -2873,11 +2898,11 @@ bool codegenStatement(StatementPtr stmt,
         }
         int marker = cgMarkStack(ctx);
         if (mpvLeft->size() == 1) {
-            MultiCValuePtr mcvRight = codegenMultiAsRef(x->right, env, ctx);
-            MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
-            assert(mcvLeft->size() == 1);
-            assert(mcvRight->size() == 1);
-            codegenValueAssign(mcvLeft->values[0], mcvRight->values[0], ctx);
+            ExprListPtr args = new ExprList();
+            args->add(x->left);
+            args->add(x->right);
+            ExprPtr assignCall = new Call(prelude_expr_assign(), args);
+            codegenExprAsRef(assignCall, env, ctx);
         }
         else {
             MultiCValuePtr mcvRight = new MultiCValue();
@@ -2894,7 +2919,7 @@ bool codegenStatement(StatementPtr stmt,
             for (unsigned i = 0; i < mcvLeft->size(); ++i) {
                 CValuePtr cvLeft = mcvLeft->values[i];
                 CValuePtr cvRight = mcvRight->values[i];
-                codegenValueAssign(cvLeft, cvRight, ctx);
+                codegenValueMoveAssign(cvLeft, cvRight, ctx);
             }
         }
         cgDestroyAndPopStack(marker, ctx);

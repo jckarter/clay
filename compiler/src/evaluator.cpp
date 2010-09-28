@@ -507,6 +507,23 @@ void evalValueAssign(EValuePtr dest, EValuePtr src)
                   new MultiEValue());
 }
 
+void evalValueMoveAssign(EValuePtr dest, EValuePtr src)
+{
+    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+        if (dest->type->typeKind != STATIC_TYPE)
+            memcpy(dest->addr, src->addr, typeSize(dest->type));
+        return;
+    }
+    MultiEValuePtr args = new MultiEValue(dest);
+    args->add(src);
+    MultiPValuePtr pvArgs = new MultiPValue(new PValue(dest->type, false));
+    pvArgs->add(new PValue(src->type, true));
+    evalCallValue(staticEValue(prelude_assign()),
+                  args,
+                  pvArgs,
+                  new MultiEValue());
+}
+
 bool evalToBoolFlag(EValuePtr a)
 {
     if (a->type != boolType)
@@ -1998,11 +2015,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
         }
         int marker = evalMarkStack();
         if (mpvLeft->size() == 1) {
-            MultiEValuePtr mevRight = evalMultiAsRef(x->right, env);
-            MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
-            assert(mevLeft->size() == 1);
-            assert(mevRight->size() == 1);
-            evalValueAssign(mevLeft->values[0], mevRight->values[0]);
+            ExprListPtr args = new ExprList();
+            args->add(x->left);
+            args->add(x->right);
+            ExprPtr assignCall = new Call(prelude_expr_assign(), args);
+            evalExprAsRef(assignCall, env);
         }
         else {
             MultiEValuePtr mevRight = new MultiEValue();
@@ -2017,7 +2034,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             for (unsigned i = 0; i < mevLeft->size(); ++i) {
                 EValuePtr evLeft = mevLeft->values[i];
                 EValuePtr evRight = mevRight->values[i];
-                evalValueAssign(evLeft, evRight);
+                evalValueMoveAssign(evLeft, evRight);
             }
         }
         evalDestroyAndPopStack(marker);
