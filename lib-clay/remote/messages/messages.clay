@@ -1,0 +1,144 @@
+import remote.marshaling.*;
+import maybe.*;
+
+record TruncatedRead ();
+instance Exception = TruncatedRead;
+
+private fullRead(stream, dest, size) {
+    if (read(stream, dest, size) < size)
+        throw TruncatedRead();
+}
+
+private readMarshalSize(stream) returned: MarshalSize {
+    fullRead(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
+}
+
+private maybeReadMarshalSize(stream) {
+    var returned = MarshalSize();
+    var size = read(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
+    
+    if (size == TypeSize(MarshalSize))
+        return Maybe(returned);
+    else
+        return nothing(MarshalSize);
+}
+
+private writeMarshalSize(stream, n: MarshalSize) {
+    write(stream, Pointer[Byte](&n), TypeSize(MarshalSize));
+}
+
+
+
+//
+// remote message protocols
+//
+alias DefaultProtocol = call;
+
+
+
+//
+// entry point generation
+//
+alias RemoteEntryPoint = CodePointer[(Vector[Byte]), ()];
+
+private var remoteEntryPoints[Protocol] = Vector[RemoteEntryPoint]();
+
+[Protocol]
+private createRemoteEntryPoint(static Protocol, ...Args)
+    = makeCodePointer(
+        mArgs => { Protocol(...unmarshal(mArgs, ...Args)); },
+        Vector[Byte]
+    );
+
+[Protocol]
+private createRemoteCode(static Protocol, ...Args) {
+    var code = MarshalSize(size(remoteEntryPoints[Protocol]));
+
+    push(remoteEntryPoints[Protocol], createRemoteEntryPoint(Protocol, ...Args));
+    return code;
+}
+
+private var remoteCode[Protocol, ...Args] = createRemoteCode(Protocol, ...Args);
+
+
+
+//
+// client interface
+//
+[Protocol, ...Args | CallDefined?(Protocol, ...Args)]
+remoteMessage(static Protocol, outstream, forward ...args: Args) {
+    var mArgs = marshal(...args);
+    var mArgsSize = MarshalSize(size(mArgs));
+    writeMarshalSize(outstream, remoteCode[Protocol, ...Args]);
+    writeMarshalSize(outstream, mArgsSize);
+    write(outstream, begin(mArgs), SizeT(mArgsSize));
+    flush(outstream);
+}
+
+[...Args | CallDefined?(DefaultProtocol, ...Args)]
+overload remoteMessage(outstream, forward ...args: Args) {
+    remoteMessage(DefaultProtocol, outstream, ...args);
+}
+
+
+
+//
+// server interface
+//
+record InvalidRemoteMessage(code: MarshalSize);
+instance Exception = InvalidRemoteMessage;
+
+private consume(stream, bytes_) {
+    var bytes = SizeT(bytes_);
+    var buf = Array[Byte, 4096]();
+
+    while(bytes > SizeT(0)) {
+        if (read(stream, begin(buf), min(SizeT(4096), bytes)) == SizeT(0))
+            return;
+        bytes -= 4096;
+    }
+}
+
+[Protocol]
+answerRemoteMessage(static Protocol, instream, code: MarshalSize) {
+    if (code < size(remoteEntryPoints[Protocol])) {
+        var mArgsSize = readMarshalSize(instream);
+
+        var mArgs = Vector[Byte]();
+        resize(mArgs, mArgsSize);
+        fullRead(instream, begin(mArgs), SizeT(mArgsSize));
+        
+        remoteEntryPoints[Protocol][code](mArgs);
+    } else {
+        var mArgsSize = maybeReadMarshalSize(instream);
+        maybe(mArgsSize, sz => { consume(instream, sz); });
+        throw InvalidRemoteMessage(code);
+    }
+}
+
+overload answerRemoteMessage(instream, code: MarshalSize) {
+    answerRemoteMessage(DefaultProtocol, instream, code);
+}
+
+[Protocol]
+overload answerRemoteMessage(static Protocol, instream) {
+    var code = readMarshalSize(instream);
+    answerRemoteMessage(Protocol, instream, code);
+}
+
+overload answerRemoteMessage(instream) {
+    answerRemoteMessage(DefaultProtocol, instream);
+}
+
+[Protocol]
+answerLoop(static Protocol, instream) {
+    var code = maybeReadMarshalSize(instream);
+    while(anything?(code)) {
+        answerRemoteMessage(instream, just(code));
+        code = maybeReadMarshalSize(instream);
+    }
+}
+
+overload answerLoop(instream) {
+    answerLoop(DefaultProtocol, instream);
+}
