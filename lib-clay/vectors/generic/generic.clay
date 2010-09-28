@@ -193,11 +193,16 @@ private inline ensureSpace(a, space:SizeT) {
 }
 
 [I | Integer?(I)]
-private insertLocation(a, pos:I) {
+private insertLocationUnsafe(a, pos:I) {
     ensureSpace(a, SizeT(1));
     moveMemoryBackwardsUnsafe(begin(a)+pos+1, end(a)+1, begin(a)+pos);
     vectorSize(a) += 1;
-    ref obj = (begin(a) + pos)^;
+    return ref (begin(a) + pos)^;
+}
+
+[I | Integer?(I)]
+private insertLocation(a, pos:I) {
+    ref obj = insertLocationUnsafe(a, pos);
     resetUnsafe(obj);
     return ref obj;
 }
@@ -213,8 +218,13 @@ overload insert(a:V, i:I, seq:S) {
 }
 
 [V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
-overload insert(a:V, i:I, forward x:T) {
-    insertLocation(a, i) <-- x;
+overload insert(a:V, i:I, rvalue x:T) {
+    insertLocationUnsafe(a, i) <-- move(x);
+}
+
+[V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
+overload insert(a:V, i:I, lvalue x:T) {
+    insertLocation(a, i) = x;
 }
 
 [V,T,S | Vector?(V) and (SequenceElementType(V) == T) and
@@ -225,7 +235,7 @@ overload insert(a:V, i:VectorCoordinate[T], seq:S) {
 
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]
 overload insert(a:V, i:VectorCoordinate[T], forward x:T) {
-    insertLocation(a, i-begin(a)) <-- x;
+    insert(a, i-begin(a), x);
 }
 
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]
