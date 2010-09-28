@@ -46,7 +46,13 @@ overload Any() {
 
 overload Any(x:Any) {
     var ptr = allocateRawMemoryAligned(Byte, x.size, x.alignment);
-    ptr^ <-- x.copyConstructor(x.ptr^);
+    try {
+        ptr^ <-- x.copyConstructor(x.ptr^);
+    }
+    catch (e) {
+        freeRawMemoryAligned(ptr);
+        throw e;
+    }
     return Any(
         x.id,
         ptr,
@@ -79,10 +85,22 @@ overload destroy(x:Any) {
     }
 }
 
+overload assign(dest:Any, lvalue src:Any) {
+    if (&dest == &src)
+        return;
+    dest = Any(src);
+}
+
 [T]
-box(x:T) {
+callbyname box(x:T) {
     var ptr = allocateRawMemoryAligned(Byte, TypeSize(T), TypeAlignment(T));
-    Pointer[T](ptr)^ <-- x;
+    try {
+        Pointer[T](ptr)^ <-- x;
+    }
+    catch (e) {
+        freeRawMemoryAligned(ptr);
+        throw e;
+    }
     var copyConstructor = makeCodePointer(T, T);
     var destructor = makeCodePointer(destroy, T);
     return Any(
@@ -102,32 +120,4 @@ anyIs?(x:Any, static T) = (x.id == typeId[T]);
 unbox(x:Any, static T) {
     assert(x.id == typeId[T]);
     return ref Pointer[T](x.ptr)^;
-}
-
-
-
-//
-// testing code
-//
-
-main() {
-    var a = Vector[Any]();
-
-    push(a, box(true));
-    push(a, box(10));
-    push(a, box(a));
-
-    for (x in a) {
-        if (anyIs?(x, Bool)) {
-            var boolValue = unbox(x, Bool);
-            println("Bool ", boolValue);
-        }
-        else if (anyIs?(x, Int)) {
-            var intValue = unbox(x, Int);
-            println("Int ", intValue);
-        }
-        else {
-            println("Other");
-        }
-    }
 }
