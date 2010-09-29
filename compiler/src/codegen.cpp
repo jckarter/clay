@@ -3227,10 +3227,10 @@ bool codegenStatement(StatementPtr stmt,
             error("throw statements need an argument");
         ExprPtr callable = prelude_expr_throwValue();
         ExprListPtr args = new ExprList(x->expr);
+        int marker = cgMarkStack(ctx);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
-        JumpTarget &jt = ctx->exceptionTargets.back();
-        ctx->builder->CreateBr(jt.block);
-        ++ jt.useCount;
+        cgDestroyAndPopStack(marker, ctx);
+        ctx->builder->CreateUnreachable();
         return true;
     }
 
