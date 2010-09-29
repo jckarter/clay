@@ -11,6 +11,8 @@ record Test (
     id : Int
 );
 
+overload RegularRecord?(static Test) = false;
+
 overload Test() {
     var id = nextId();
     println("construct Test ", id);
@@ -27,8 +29,18 @@ overload moveUnsafe(src:Test) {
     return Test(src.id);
 }
 
+overload resetUnsafe(x:Test) {
+    var id = nextId();
+    println("reset Test ", id);
+    x.id = id;
+}
+
 overload destroy(x:Test) {
     println("destroy Test ", x.id);
+}
+
+overload assign(dest:Test, src:Test) {
+    dest.id = src.id;
 }
 
 main() {
