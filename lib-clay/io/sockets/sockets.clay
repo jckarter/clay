@@ -1,8 +1,8 @@
 import io.sockets.platform;
 public import io.sockets.platform.(
     Sockaddr, Sockaddr_in, In_addr, htons, htonl, ntohs, ntohl,
-    AF_UNSPEC, AF_LOCAL, AF_INET, AF_INET6,
-    PF_UNSPEC, PF_LOCAL, PF_INET, PF_INET6,
+    AF_UNSPEC, AF_INET, AF_INET6,
+    PF_UNSPEC, PF_INET, PF_INET6,
     INADDR_ANY, INADDR_BROADCAST, INADDR_LOOPBACK, INADDR_NONE,
     INADDR_UNSPEC_GROUP, INADDR_ALLHOSTS_GROUP, INADDR_ALLRTRS_GROUP,
     INADDR_MAX_LOCAL_GROUP,

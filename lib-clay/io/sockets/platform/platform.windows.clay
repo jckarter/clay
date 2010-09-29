@@ -1,0 +1,39 @@
+import win32;
+public import win32.(
+    SOCKET_ERROR,
+    socket, bind, listen, accept, connect, send, recv, sendto, recvfrom, close,
+    select, getsockopt, setsockopt, htons, ntohs, htonl, ntohl, gethostbyname,
+    gethostbyaddr,
+    AF_UNSPEC, AF_INET, AF_INET6,
+    PF_UNSPEC, PF_INET, PF_INET6,
+    INADDR_ANY, INADDR_BROADCAST, INADDR_LOOPBACK, INADDR_NONE,
+    INADDR_UNSPEC_GROUP, INADDR_ALLHOSTS_GROUP, INADDR_ALLRTRS_GROUP,
+    INADDR_MAX_LOCAL_GROUP
+);
+
+alias RawSocket = win32.SOCKET;
+alias errno = win32.WSAGetLastError;
+alias herrno = win32.WSAGetLastError;
+
+record WSAStartupError(code: Int);
+instance Exception = WSAStartupError;
+record WSAStartupVersionError()
+instance Exception = WSAStartupVersionError;
+
+startSockets() {
+    var wsaData = win32.WSADATA();
+    var err = win32.WSAStartup(WORD(0x0202), &wsaData);
+    if (err == -1)
+        throw WSAStartupError(win32.WSAGetLastError());
+    if (wsaData.wVersion != WORD(0x0202)) {
+        win32.WSACleanup();
+        throw WSAStartupVersionError();
+    }
+}
+finishSockets() {
+    win32.WSACleanup();
+}
+
+alias Sockaddr = win32.Struct_sockaddr;
+alias Sockaddr_in = win32.Struct_sockaddr_in;
+alias In_addr = win32.Struct_in_addr;
