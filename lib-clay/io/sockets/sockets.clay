@@ -1,0 +1,101 @@
+import io.sockets.platform;
+public import io.sockets.platform.(
+    Sockaddr, Sockaddr_in, In_addr, htons, htonl, ntohs, ntohl,
+    AF_UNSPEC, AF_LOCAL, AF_INET, AF_INET6,
+    PF_UNSPEC, PF_LOCAL, PF_INET, PF_INET6,
+    INADDR_ANY, INADDR_BROADCAST, INADDR_LOOPBACK, INADDR_NONE,
+    INADDR_UNSPEC_GROUP, INADDR_ALLHOSTS_GROUP, INADDR_ALLRTRS_GROUP,
+    INADDR_MAX_LOCAL_GROUP,
+    startSockets, finishSockets
+);
+import libc.(memset);
+
+private alias platform = io.sockets.platform;
+
+
+
+//
+// wrapper for socket API calls
+//
+record SocketCallError (code: platform.SocketErrorCode);
+instance Exception = SocketCallError;
+
+socketCall(callable, forward ...args) {
+    var ret = callable(...args);
+    if (ret == Type(ret)(platform.SOCKET_ERROR))
+        throw SocketCallError(platform.errno());
+    return ret;
+}
+
+
+
+//
+// high-level socket addresses
+//
+
+// makeSockaddr(addr) --> Sockaddr
+procedure makeSockaddr;
+SocketAddress?(T) = CallDefined?(makeSockaddr, T);
+
+makeSockaddrParams(addr)
+    sockaddr: Type(makeSockaddr(addr)),
+    psockaddr: Pointer[Sockaddr],
+    szsockaddr: SizeT
+{
+    sockaddr <-- makeSockaddr(addr);
+    psockaddr <-- Pointer[Sockaddr](sockaddr);
+    szsockaddr <-- TypeSize(Type(sockaddr));
+}
+
+// makeIn_addr(host) --> In_addr
+procedure makeIn_addr;
+InetHostname?(T) = CallDefined?(makeIn_addr, T);
+record Inet[T] (host: T, port: UInt16);
+[T, I | InetHostname?(T) and Integer?(I)]
+overload Inet(host: T, port: I)
+    = Inet[T](host, UInt16(port));
+
+[T | InetHostname?(T)]
+overload makeSockaddr(inet: Inet[T]) sin: Sockaddr_in {
+    memset(RawPointer(&sin), 0, TypeSize(Sockaddr_in));
+    sin.sin_family <-- AF_INET;
+    sin.sin_port <-- htons(inet.port);
+    sin.sin_addr <-- makeIn_addr(inet.host);
+}
+
+overload makeIn_addr(n: UInt32) s: In_addr {
+    s.s_addr = htonl(n);
+}
+
+// XXX String(...) in exception constructor is bugged
+//record HostnameLookupError(hostname: String);
+//[S | String?(S) and S != String]
+//overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
+record HostnameLookupError();
+overload HostnameLookupError(name) = HostnameLookupError();
+instance Exception = HostnameLookupError;
+
+[S | CCompatibleString?(S)]
+overload makeIn_addr(hostname: S) s: In_addr {
+    var hostent = platform.gethostbyname(cstring(hostname));
+    if (null?(hostent))
+        throw HostnameLookupError(hostname);
+    if (hostent^.h_addrtype != AF_INET
+        or hostent^.h_length < TypeSize(In_addr)
+        or null?(hostent^.h_addr_list[0]))
+        throw HostnameLookupError(hostname);
+
+    s <-- Pointer[In_addr](hostent^.h_addr_list[0])^;
+}
+
+
+
+//
+// socket objects
+//
+record ListenSocket (raw: platform.RawSocket);
+record StreamSocket (raw: platform.RawSocket);
+
+overload destroy(s: ListenSocket) { platform.close(s.raw); }
+overload destroy(s: StreamSocket) { platform.close(s.raw); }
+
