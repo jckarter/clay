@@ -2097,6 +2097,32 @@ bool codegenShortcut(ObjectPtr callable,
 // codegenCallPointer
 //
 
+static llvm::Value *promoteCVarArg(TypePtr t,
+                                   llvm::Value *llv,
+                                   CodegenContextPtr ctx)
+{
+    switch (t->typeKind) {
+    case INTEGER_TYPE : {
+        IntegerType *it = (IntegerType *)t.ptr();
+        if (it->bits < 32) {
+            if (it->isSigned)
+                return ctx->builder->CreateSExt(llv, llvmType(int32Type));
+            else
+                return ctx->builder->CreateZExt(llv, llvmType(uint32Type));
+        }
+        return llv;
+    }
+    case FLOAT_TYPE : {
+        FloatType *ft = (FloatType *)t.ptr();
+        if (ft->bits == 32)
+            return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
+        return llv;
+    }
+    default :
+        return llv;
+    }
+}
+
 void codegenCallPointer(CValuePtr x,
                         MultiCValuePtr args,
                         CodegenContextPtr ctx,
@@ -2147,7 +2173,8 @@ void codegenCallPointer(CValuePtr x,
             for (unsigned i = t->argTypes.size(); i < args->size(); ++i) {
                 CValuePtr cv = args->values[i];
                 llvm::Value *llv = ctx->builder->CreateLoad(cv->llValue);
-                llArgs.push_back(llv);
+                llvm::Value *llv2 = promoteCVarArg(cv->type, llv, ctx);
+                llArgs.push_back(llv2);
             }
         }
         llvm::CallInst *callInst =
