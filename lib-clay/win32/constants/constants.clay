@@ -97,3 +97,35 @@ alias FILE_MAP_ALL_ACCESS = 0xf001fu;
 alias FILE_MAP_READ       = 4u;
 alias FILE_MAP_WRITE      = 2u;
 alias FILE_MAP_COPY       = 1u;
+
+
+
+//
+// socket protocol families
+//
+alias AF_UNSPEC = 0u8;
+alias AF_INET = 2u8;
+alias AF_INET6 = 30u8;
+
+
+
+//
+// socket protocol families
+//
+alias PF_UNSPEC = AF_UNSPEC;
+alias PF_INET = AF_INET;
+alias PF_INET6 = AF_INET6;
+
+
+
+//
+// special IPv4 addresses
+//
+alias INADDR_ANY       = 0x00_00_00_00u32;
+alias INADDR_BROADCAST = 0xFF_FF_FF_FFu32;
+alias INADDR_LOOPBACK  = 0x7F_00_00_01u32;
+alias INADDR_NONE      = 0xFF_FF_FF_FFu32;
+alias INADDR_UNSPEC_GROUP    = 0xE0_00_00_00u32;
+alias INADDR_ALLHOSTS_GROUP  = 0xE0_00_00_01u32;
+alias INADDR_ALLRTRS_GROUP   = 0xE0_00_00_02u32;
+alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu32;
