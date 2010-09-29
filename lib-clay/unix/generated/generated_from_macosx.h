@@ -12,3 +12,5 @@
 #include <sys/event.h>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <netdb.h>
+#include <netinet/in.h>
