@@ -1,0 +1,22 @@
+import remote.messages.*;
+import commandline.dispatch.*;
+
+main() = dispatchMain(client, server);
+
+hello() {
+    printlnTo(stderr, "Hello from Server!");
+}
+
+client(args) {
+    remoteMessage(stdout, hello);
+    remoteMessage(stdout, () => { printlnTo(stderr, "Hello from Lambda!"); });
+    remoteMessage(stdout, bullet => {
+        printlnTo(stderr, "arguments from client:");
+        for (arg in args)
+            printlnTo(stderr, bullet, " ", arg);
+    }, "*");
+}
+
+server(args) {
+    answerLoop(stdin);
+}

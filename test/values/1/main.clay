@@ -38,4 +38,13 @@ main() {
     println("any of 2, 4, 6 ", if (anyValues?(even?, 2, 4, 6)) "" else "not ", "even");
     println("all of 1, 3, 5 ", if (allValues?(even?, 1, 2, 3)) "" else "not ", "even");
     println("any of 1, 3, 5 ", if (anyValues?(even?, 1, 2, 3)) "" else "not ", "even");
+
+    println("0 ", if (inValues?(0, 1, 2)) "" else "not ", "in 1, 2");
+    println("1 ", if (inValues?(1, 1, 2)) "" else "not ", "in 1, 2");
+    println("2 ", if (inValues?(2, 1, 2)) "" else "not ", "in 1, 2");
+    println("3 ", if (inValues?(3, 1, 2)) "" else "not ", "in 1, 2");
+
+    println("array: ", ...weaveValues(", ",
+        ...sequenceValues([3, 7, 15, 1, 292, 1, 1, 1], static 8)
+    ));
 }
