@@ -40,7 +40,7 @@ inline overload CStringRef(ptr : Pointer[Char]) = CStringRef(Pointer[Int8](ptr))
 inline overload size(a:CStringRef) = SizeT(libc.strlen(a.ptr));
 
 [I | Integer?(I)]
-inline overload index(a:CStringRef, i:I) = ref (a.ptr + i)^;
+inline overload index(a:CStringRef, i:I) = ref (begin(a) + i)^;
 
 
 
