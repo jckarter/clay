@@ -84,8 +84,7 @@ overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
     addr: Inet
 {
     if (sockaddr.ss_family != AF_INET
-        or szsockaddr < TypeSize(Sockaddr_in)
-        or sockaddr.ss_len < TypeSize(Sockaddr_in))
+        or szsockaddr < TypeSize(Sockaddr_in))
         throw InvalidInetAddress(sockaddr, szsockaddr);
     var psockaddr_in = Pointer[Sockaddr_in](&sockaddr);
     addr.host <-- psockaddr_in^.sin_addr;
@@ -94,7 +93,7 @@ overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
 
 overload makeSockaddr(inet: Inet) sin: Sockaddr_in {
     memset(RawPointer(&sin), 0, TypeSize(Sockaddr_in));
-    sin.sin_family <-- AF_INET;
+    sin.sin_family = AF_INET;
     sin.sin_port <-- htons(inet.port);
     sin.sin_addr <-- inet.host;
 }
