@@ -10,7 +10,8 @@ public import io.sockets.platform.(
     SOCK_STREAM, SOCK_DGRAM, SOCK_RAW,
     IPPROTO_ICMP, IPPROTO_IGMP, IPPROTO_TCP, IPPROTO_UDP, IPPROTO_ICMPV6,
     startSockets, finishSockets, SOCKET_ERROR,
-    SocklenT
+    SocklenT,
+    SOL_SOCKET, SO_REUSEADDR
 );
 import libc.(memset);
 
@@ -176,6 +177,10 @@ overload ListenSocket(addr: T, backlog: I)
     );
     try {
         var sockaddr, psockaddr, szsockaddr = ...makeSockaddrParams(addr);
+        var sockoptValue = 1;
+        socketCall(platform.setsockopt, socket.raw,
+            SOL_SOCKET, SO_REUSEADDR, RawPointer(&sockoptValue), SocklenT(TypeSize(Int))
+        );
         socketCall(platform.bind, socket.raw, psockaddr, szsockaddr);
         socketCall(platform.listen, socket.raw, Int(backlog));
     } catch (ex) {
