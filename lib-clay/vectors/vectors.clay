@@ -33,24 +33,14 @@ overload RegularRecord?(static Vector[T]) = false;
 overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
 
 [T,A | Sequence?(A) and (T == SequenceElementType(A))]
-overload Vector[T](a:A) {
+overload Vector[T](forward a:A) {
     var v = Vector[T]();
-    for (x in a)
-        push(v, x);
-    return move(v);
-}
-
-[T,A | SizedSequence?(A) and (T == SequenceElementType(A))]
-overload Vector[T](a:A) {
-    var v = Vector[T]();
-    reserve(v, size(a));
-    for (x in a)
-        push(v, x);
+    push(v, a);
     return move(v);
 }
 
 [A | Sequence?(A)]
-overload Vector(a:A) {
+overload Vector(forward a:A) {
     alias T = SequenceElementType(A);
     return Vector[T](a);
 }
@@ -62,17 +52,19 @@ overload Vector(a:A) {
 //
 
 [T, ...A | (countValues(...A) > 0) and equalValues?(T, ...A)]
-callbyname overload Vector[T](...args:A) {
+callbyname overload Vector[T](...elements:A) {
     var v = Vector[T]();
-    reserve(v, countValues(...A));
-    pushAll(v, ...args);
+    pushAll(v, ...elements);
     return move(v);
 }
 
-private inline pushAll(a, forward x, forward ...rest) {
-    push(a, x); pushAll(a, ...rest);
+[...A]
+private pushAll(v, forward ...elements:A) {
+    reserve(v, countValues(...A));
+    static for (x in ...elements) {
+        push(v, x);
+    }
 }
-inline overload pushAll(a) {}
 
 
 
