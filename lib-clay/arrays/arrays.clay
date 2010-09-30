@@ -7,6 +7,9 @@
 [T,n]
 overload ContiguousSequence?(static Array[T,n]) = true;
 
+[T,n]
+overload SequenceContainer?(static Array[T,n]) = true;
+
 
 
 //

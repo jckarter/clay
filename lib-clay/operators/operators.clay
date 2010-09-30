@@ -145,6 +145,9 @@ ContiguousSequence?(T) = false;
 // true if copying the sequence is efficient
 LightweightSequence?(T) = false;
 
+// true for sequences which have value semantics.
+SequenceContainer?(T) = false;
+
 
 
 //
