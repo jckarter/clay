@@ -1767,6 +1767,14 @@ ostream &operator<<(ostream &out, const vector<T> &v)
 
 ostream &operator<<(ostream &out, const PatternVar &pvar);
 
+void enableSafePrintName();
+void disableSafePrintName();
+
+struct SafePrintNameEnabler {
+    SafePrintNameEnabler() { enableSafePrintName(); }
+    ~SafePrintNameEnabler() { disableSafePrintName(); }
+};
+
 void printNameList(ostream &out, const vector<ObjectPtr> &x);
 void printNameList(ostream &out, const vector<TypePtr> &x);
 void printName(ostream &out, ObjectPtr x);

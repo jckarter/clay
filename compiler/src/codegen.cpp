@@ -2417,6 +2417,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
 
 static string getCodeName(InvokeEntryPtr entry)
 {
+    SafePrintNameEnabler enabler;
     ObjectPtr x = entry->callable;
     ostringstream sout;
     switch (x->objKind) {
