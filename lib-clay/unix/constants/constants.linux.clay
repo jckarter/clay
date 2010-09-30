@@ -133,24 +133,3 @@ alias INADDR_UNSPEC_GROUP    = 0xE0_00_00_00u32;
 alias INADDR_ALLHOSTS_GROUP  = 0xE0_00_00_01u32;
 alias INADDR_ALLRTRS_GROUP   = 0xE0_00_00_02u32;
 alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu32;
-
-
-
-//
-// byte order macros
-//
-htons(x: UInt16) y: UInt16 {
-    var yb = Pointer[UInt8](&y);
-    yb[0] = UInt8(shiftRight(x, 8));
-    yb[1] = UInt8(bitwiseAnd(x, 0xFFu16));
-}
-alias ntohs = htons;
-
-htonl(x: UInt32) y: UInt32 {
-    var yb = Pointer[UInt8](&y);
-    yb[0] = UInt8(           shiftRight(x, 24)          );
-    yb[1] = UInt8(bitwiseAnd(shiftRight(x, 16), 0xFFu32));
-    yb[2] = UInt8(bitwiseAnd(shiftRight(x,  8), 0xFFu32));
-    yb[3] = UInt8(bitwiseAnd(           x,      0xFFu32));
-}
-alias ntohl = htonl;
