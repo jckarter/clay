@@ -175,23 +175,13 @@ overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
     return first, first+n;
 }
 
-[I, J | Integer?(I) and Integer?(J)]
-private insertLocations(a, pos:I, n:J) {
-    return ...insertLocations(a, SizeT(pos), SizeT(n));
-}
-
-overload insertLocations(a, pos:SizeT, n:SizeT) {
-    var first, last = ...insertLocationsUnsafe(a, pos, n);
-    resetMemoryUnsafe(first, last);
-    return first, last;
-}
-
 [V,I,S | Vector?(V) and Integer?(I) and Sequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
     var pos = SizeT(i);
-    for (x in seq) {
-        insert(a, pos, x);
+    var iter = iterator(seq);
+    while (hasNext?(iter)) {
+        insert(a, pos, next(iter));
         pos += 1;
     }
 }
@@ -199,10 +189,17 @@ overload insert(a:V, i:I, seq:S) {
 [V,I,S | Vector?(V) and Integer?(I) and SizedSequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
-    var first, last = ...insertLocations(a, i, size(seq));
-    for (x in seq) {
-        first^ = x;
-        inc(first);
+    var first, last = ...insertLocationsUnsafe(a, i, size(seq));
+    try {
+        var iter = iterator(seq);
+        while (hasNext?(iter)) {
+            first^ <-- next(iter);
+            inc(first);
+        }
+    }
+    catch (e) {
+        resetMemoryUnsafe(first, last);
+        throw e;
     }
 }
 
@@ -241,8 +238,14 @@ overload insert(a:V, i:I, rvalue seq:S) {
 
 [V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
 overload insert(a:V, i:I, x:T) {
-    var first, last = ...insertLocations(a, i, 1);
-    first^ = x;
+    var first, last = ...insertLocationsUnsafe(a, i, 1);
+    try {
+        first^ <-- x;
+    }
+    catch (e) {
+        resetUnsafe(first^);
+        throw e;
+    }
 }
 
 [V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
