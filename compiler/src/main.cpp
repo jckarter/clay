@@ -224,13 +224,15 @@ static bool generateBinary(llvm::Module *module,
     for (unsigned i = 0; i < arguments.size(); ++i)
         gccArgs.push_back(arguments[i].c_str());
     gccArgs.push_back(NULL);
-    llvm::sys::Program::ExecuteAndWait(gccPath, &gccArgs[0]);
+
+    int result = llvm::sys::Program::ExecuteAndWait(gccPath, &gccArgs[0]);
 
     if (tempAsm.eraseFromDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
         return false;
     }
-    return true;
+
+    return (result == 0);
 }
 
 static void usage()
