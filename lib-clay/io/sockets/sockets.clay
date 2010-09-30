@@ -45,16 +45,14 @@ procedure sockaddrDomain;
 procedure sockaddrStreamProtocol;
 // sockaddrDgramProtocol(addr) --> *PROTO_*
 procedure sockaddrDgramProtocol;
-// AcceptedAddressType(T) --> T'
-procedure AcceptedAddressType;
 
 SocketAddress?(T)
     = CallDefined?(makeSockaddr, T)
-      and CallDefined?(sockaddrDomain, T)
-      and CallDefined?(AcceptedAddressType, Static[T]);
+      and CallDefined?(sockaddrDomain, T);
 StreamSocketAddress?(T)
     = SocketAddress?(T)
-      and CallDefined?(sockaddrStreamProtocol, T);
+      and CallDefined?(sockaddrStreamProtocol, T)
+      and CallDefined?(T, Sockaddr_storage, SocklenT);
 DgramSocketAddress?(T)
     = SocketAddress?(T)
       and CallDefined?(sockaddrDgramProtocol, T);
@@ -70,50 +68,46 @@ makeSockaddrParams(addr: T)
     szsockaddr <-- SocklenT(TypeSize(Type(sockaddr)));
 }
 
-// makeIn_addr(host) --> In_addr
-procedure makeIn_addr;
-InetHostname?(T) = CallDefined?(makeIn_addr, T);
-record Inet[T] (host: T, port: UInt16);
-[T, I | InetHostname?(T) and Integer?(I)]
+// lookupInetHostname(host) --> In_addr
+procedure lookupInetHostname;
+InetHostname?(T) = CallDefined?(lookupInetHostname, T);
+record Inet (host: In_addr, port: UInt16);
+
+[T, I | InetHostname?(T) and T != In_addr and Integer?(I)]
 overload Inet(host: T, port: I)
-    = Inet[T](host, UInt16(port));
+    = Inet(lookupInetHostname(host), UInt16(port));
 
 record InvalidInetAddress(sockaddr: Sockaddr_storage, szsockaddr: SocklenT);
 instance Exception = InvalidInetAddress;
 
-[T | InetHostname?(T)]
-overload AcceptedAddressType(static Inet[T]) = Inet[UInt32];
-
-overload Inet[UInt32](sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
-    addr: Inet[UInt32]
+overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
+    addr: Inet
 {
     if (sockaddr.ss_family != AF_INET
         or szsockaddr < TypeSize(Sockaddr_in)
         or sockaddr.ss_len < TypeSize(Sockaddr_in))
         throw InvalidInetAddress(sockaddr, szsockaddr);
     var psockaddr_in = Pointer[Sockaddr_in](&sockaddr);
-    addr.host <-- ntohl(psockaddr_in^.sin_addr.s_addr);
+    addr.host <-- psockaddr_in^.sin_addr;
     addr.port <-- ntohs(psockaddr_in^.sin_port);
 }
 
-[T | InetHostname?(T)]
-overload makeSockaddr(inet: Inet[T]) sin: Sockaddr_in {
+overload makeSockaddr(inet: Inet) sin: Sockaddr_in {
     memset(RawPointer(&sin), 0, TypeSize(Sockaddr_in));
     sin.sin_family <-- AF_INET;
     sin.sin_port <-- htons(inet.port);
-    sin.sin_addr <-- makeIn_addr(inet.host);
+    sin.sin_addr <-- inet.host;
 }
 
-[T | InetHostname?(T)]
-overload sockaddrDomain(inet: Inet[T]) = PF_INET;
-[T | InetHostname?(T)]
-overload sockaddrStreamProtocol(inet: Inet[T]) = IPPROTO_TCP;
-[T | InetHostname?(T)]
-overload sockaddrDgramProtocol(inet: Inet[T]) = IPPROTO_UDP;
+overload sockaddrDomain(inet: Inet) = PF_INET;
+overload sockaddrStreamProtocol(inet: Inet) = IPPROTO_TCP;
+overload sockaddrDgramProtocol(inet: Inet) = IPPROTO_UDP;
 
-overload makeIn_addr(n: UInt32) s: In_addr {
-    s.s_addr = htonl(n);
+overload lookupInetHostname(n: UInt32) s: In_addr {
+    s.s_addr <-- htonl(n);
 }
+
+overload lookupInetHostname(n: In_addr) = n;
 
 // XXX String(...) in exception constructor is bugged
 //record HostnameLookupError(hostname: String);
@@ -124,7 +118,7 @@ overload HostnameLookupError(name) = HostnameLookupError();
 instance Exception = HostnameLookupError;
 
 [S | CCompatibleString?(S)]
-overload makeIn_addr(hostname: S) s: In_addr {
+overload lookupInetHostname(hostname: S) {
     var hostent = platform.gethostbyname(cstring(hostname));
     if (null?(hostent))
         throw HostnameLookupError(hostname);
@@ -133,7 +127,7 @@ overload makeIn_addr(hostname: S) s: In_addr {
         or null?(hostent^.h_addr_list[0]))
         throw HostnameLookupError(hostname);
 
-    s <-- Pointer[In_addr](hostent^.h_addr_list[0])^;
+    return Pointer[In_addr](hostent^.h_addr_list[0])^;
 }
 
 
@@ -176,7 +170,7 @@ overload fileHandle(s: S) { return s.raw; }
 //
 [T, I | StreamSocketAddress?(T) and Integer?(I)]
 overload ListenSocket(addr: T, backlog: I)
-    socket: ListenSocket[AcceptedAddressType(T)]
+    socket: ListenSocket[T]
 {
     socket.raw <-- socketCall(platform.socket,
         Int(sockaddrDomain(addr)),
@@ -255,3 +249,18 @@ overload write(s: StreamSocket, buffer: Pointer[Byte], n: I) {
 }
 
 overload flush(s: StreamSocket) { }
+
+
+
+//
+// Print support for In_addr
+//
+overload printTo(stream, addr: In_addr) {
+    var host = ntohl(addr.s_addr);
+    printTo(stream,
+                   shiftRight(host, 24),         ".",
+        bitwiseAnd(shiftRight(host, 16), 0xFFu), ".",
+        bitwiseAnd(shiftRight(host,  8), 0xFFu), ".",
+        bitwiseAnd(           host,      0xFFu),
+    );
+}

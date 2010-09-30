@@ -1,5 +1,5 @@
 -- client 1: address
-you connected from IP 2130706433
+you connected from IP 127.0.0.1
 -- client 2: garbage
 unknown command garbage
 -- client 3: quit
