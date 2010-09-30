@@ -2247,6 +2247,520 @@ external getdirentries(
     __nbytes : CULong,
     __basep : Pointer[CLong]) CLong;
 
+alias IPPROTO_IP = 0;
+alias IPPROTO_HOPOPTS = 0;
+alias IPPROTO_ICMP = 1;
+alias IPPROTO_IGMP = 2;
+alias IPPROTO_IPIP = 4;
+alias IPPROTO_TCP = 6;
+alias IPPROTO_EGP = 8;
+alias IPPROTO_PUP = 12;
+alias IPPROTO_UDP = 17;
+alias IPPROTO_IDP = 22;
+alias IPPROTO_TP = 29;
+alias IPPROTO_DCCP = 33;
+alias IPPROTO_IPV6 = 41;
+alias IPPROTO_ROUTING = 43;
+alias IPPROTO_FRAGMENT = 44;
+alias IPPROTO_RSVP = 46;
+alias IPPROTO_GRE = 47;
+alias IPPROTO_ESP = 50;
+alias IPPROTO_AH = 51;
+alias IPPROTO_ICMPV6 = 58;
+alias IPPROTO_NONE = 59;
+alias IPPROTO_DSTOPTS = 60;
+alias IPPROTO_MTP = 92;
+alias IPPROTO_ENCAP = 98;
+alias IPPROTO_PIM = 103;
+alias IPPROTO_COMP = 108;
+alias IPPROTO_SCTP = 132;
+alias IPPROTO_UDPLITE = 136;
+alias IPPROTO_RAW = 255;
+alias IPPROTO_MAX = 256;
+
+alias in_port_t = UShort;
+
+alias IPPORT_ECHO = 7;
+alias IPPORT_DISCARD = 9;
+alias IPPORT_SYSTAT = 11;
+alias IPPORT_DAYTIME = 13;
+alias IPPORT_NETSTAT = 15;
+alias IPPORT_FTP = 21;
+alias IPPORT_TELNET = 23;
+alias IPPORT_SMTP = 25;
+alias IPPORT_TIMESERVER = 37;
+alias IPPORT_NAMESERVER = 42;
+alias IPPORT_WHOIS = 43;
+alias IPPORT_MTP = 57;
+alias IPPORT_TFTP = 69;
+alias IPPORT_RJE = 77;
+alias IPPORT_FINGER = 79;
+alias IPPORT_TTYLINK = 87;
+alias IPPORT_SUPDUP = 95;
+alias IPPORT_EXECSERVER = 512;
+alias IPPORT_LOGINSERVER = 513;
+alias IPPORT_CMDSERVER = 514;
+alias IPPORT_EFSSERVER = 520;
+alias IPPORT_BIFFUDP = 512;
+alias IPPORT_WHOSERVER = 513;
+alias IPPORT_ROUTESERVER = 520;
+alias IPPORT_RESERVED = 1024;
+alias IPPORT_USERRESERVED = 5000;
+
+alias in_addr_t = UInt;
+
+record Struct_in_addr (
+    s_addr : UInt,
+);
+
+record Struct_in6_addr (
+    __in6_u : AUnionType,
+);
+
+external in6addr_any : Struct_in6_addr;
+
+external in6addr_loopback : Struct_in6_addr;
+
+record Struct_sockaddr_in (
+    sin_family : UShort,
+    sin_port : UShort,
+    sin_addr : Struct_in_addr,
+    sin_zero : Array[CUChar,8],
+);
+
+record Struct_sockaddr_in6 (
+    sin6_family : UShort,
+    sin6_port : UShort,
+    sin6_flowinfo : UInt,
+    sin6_addr : Struct_in6_addr,
+    sin6_scope_id : UInt,
+);
+
+record Struct_ip_mreq (
+    imr_multiaddr : Struct_in_addr,
+    imr_interface : Struct_in_addr,
+);
+
+record Struct_ip_mreq_source (
+    imr_multiaddr : Struct_in_addr,
+    imr_interface : Struct_in_addr,
+    imr_sourceaddr : Struct_in_addr,
+);
+
+record Struct_ipv6_mreq (
+    ipv6mr_multiaddr : Struct_in6_addr,
+    ipv6mr_interface : UInt,
+);
+
+record Struct_group_req (
+    gr_interface : UInt,
+    gr_group : Struct_sockaddr_storage,
+);
+
+record Struct_group_source_req (
+    gsr_interface : UInt,
+    gsr_group : Struct_sockaddr_storage,
+    gsr_source : Struct_sockaddr_storage,
+);
+
+record Struct_ip_msfilter (
+    imsf_multiaddr : Struct_in_addr,
+    imsf_interface : Struct_in_addr,
+    imsf_fmode : UInt,
+    imsf_numsrc : UInt,
+    imsf_slist : Array[Struct_in_addr,1],
+);
+
+record Struct_group_filter (
+    gf_interface : UInt,
+    gf_group : Struct_sockaddr_storage,
+    gf_fmode : UInt,
+    gf_numsrc : UInt,
+    gf_slist : Array[Struct_sockaddr_storage,1],
+);
+
+record Struct_ip_opts (
+    ip_dst : Struct_in_addr,
+    ip_opts : Array[CChar,40],
+);
+
+record Struct_ip_mreqn (
+    imr_multiaddr : Struct_in_addr,
+    imr_address : Struct_in_addr,
+    imr_ifindex : Int,
+);
+
+record Struct_in_pktinfo (
+    ipi_ifindex : Int,
+    ipi_spec_dst : Struct_in_addr,
+    ipi_addr : Struct_in_addr,
+);
+
+external ntohl(
+    __netlong : UInt) UInt;
+
+external ntohs(
+    __netshort : UShort) UShort;
+
+external htonl(
+    __hostlong : UInt) UInt;
+
+external htons(
+    __hostshort : UShort) UShort;
+
+external bindresvport(
+    __sockfd : Int,
+    __sock_in : Pointer[Struct_sockaddr_in]) Int;
+
+external bindresvport6(
+    __sockfd : Int,
+    __sock_in : Pointer[Struct_sockaddr_in6]) Int;
+
+record Struct_rpcent (
+    r_name : Pointer[CChar],
+    r_aliases : Pointer[Pointer[CChar]],
+    r_number : Int,
+);
+
+external setrpcent(
+    __stayopen : Int);
+
+external endrpcent();
+
+external getrpcbyname(
+    __name : Pointer[CChar]) Pointer[Struct_rpcent];
+
+external getrpcbynumber(
+    __number : Int) Pointer[Struct_rpcent];
+
+external getrpcent() Pointer[Struct_rpcent];
+
+external getrpcbyname_r(
+    __name : Pointer[CChar],
+    __result_buf : Pointer[Struct_rpcent],
+    __buffer : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_rpcent]]) Int;
+
+external getrpcbynumber_r(
+    __number : Int,
+    __result_buf : Pointer[Struct_rpcent],
+    __buffer : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_rpcent]]) Int;
+
+external getrpcent_r(
+    __result_buf : Pointer[Struct_rpcent],
+    __buffer : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_rpcent]]) Int;
+
+record Struct_netent (
+    n_name : Pointer[CChar],
+    n_aliases : Pointer[Pointer[CChar]],
+    n_addrtype : Int,
+    n_net : UInt,
+);
+
+external __h_errno_location() Pointer[Int];
+
+external herror(
+    __str : Pointer[CChar]);
+
+external hstrerror(
+    __err_num : Int) Pointer[CChar];
+
+record Struct_hostent (
+    h_name : Pointer[CChar],
+    h_aliases : Pointer[Pointer[CChar]],
+    h_addrtype : Int,
+    h_length : Int,
+    h_addr_list : Pointer[Pointer[CChar]],
+);
+
+external sethostent(
+    __stay_open : Int);
+
+external endhostent();
+
+external gethostent() Pointer[Struct_hostent];
+
+external gethostbyaddr(
+    __addr : RawPointer,
+    __len : UInt,
+    __type : Int) Pointer[Struct_hostent];
+
+external gethostbyname(
+    __name : Pointer[CChar]) Pointer[Struct_hostent];
+
+external gethostbyname2(
+    __name : Pointer[CChar],
+    __af : Int) Pointer[Struct_hostent];
+
+external gethostent_r(
+    __result_buf : Pointer[Struct_hostent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_hostent]],
+    __h_errnop : Pointer[Int]) Int;
+
+external gethostbyaddr_r(
+    __addr : RawPointer,
+    __len : UInt,
+    __type : Int,
+    __result_buf : Pointer[Struct_hostent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_hostent]],
+    __h_errnop : Pointer[Int]) Int;
+
+external gethostbyname_r(
+    __name : Pointer[CChar],
+    __result_buf : Pointer[Struct_hostent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_hostent]],
+    __h_errnop : Pointer[Int]) Int;
+
+external gethostbyname2_r(
+    __name : Pointer[CChar],
+    __af : Int,
+    __result_buf : Pointer[Struct_hostent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_hostent]],
+    __h_errnop : Pointer[Int]) Int;
+
+external setnetent(
+    __stay_open : Int);
+
+external endnetent();
+
+external getnetent() Pointer[Struct_netent];
+
+external getnetbyaddr(
+    __net : UInt,
+    __type : Int) Pointer[Struct_netent];
+
+external getnetbyname(
+    __name : Pointer[CChar]) Pointer[Struct_netent];
+
+external getnetent_r(
+    __result_buf : Pointer[Struct_netent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_netent]],
+    __h_errnop : Pointer[Int]) Int;
+
+external getnetbyaddr_r(
+    __net : UInt,
+    __type : Int,
+    __result_buf : Pointer[Struct_netent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_netent]],
+    __h_errnop : Pointer[Int]) Int;
+
+external getnetbyname_r(
+    __name : Pointer[CChar],
+    __result_buf : Pointer[Struct_netent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_netent]],
+    __h_errnop : Pointer[Int]) Int;
+
+record Struct_servent (
+    s_name : Pointer[CChar],
+    s_aliases : Pointer[Pointer[CChar]],
+    s_port : Int,
+    s_proto : Pointer[CChar],
+);
+
+external setservent(
+    __stay_open : Int);
+
+external endservent();
+
+external getservent() Pointer[Struct_servent];
+
+external getservbyname(
+    __name : Pointer[CChar],
+    __proto : Pointer[CChar]) Pointer[Struct_servent];
+
+external getservbyport(
+    __port : Int,
+    __proto : Pointer[CChar]) Pointer[Struct_servent];
+
+external getservent_r(
+    __result_buf : Pointer[Struct_servent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_servent]]) Int;
+
+external getservbyname_r(
+    __name : Pointer[CChar],
+    __proto : Pointer[CChar],
+    __result_buf : Pointer[Struct_servent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_servent]]) Int;
+
+external getservbyport_r(
+    __port : Int,
+    __proto : Pointer[CChar],
+    __result_buf : Pointer[Struct_servent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_servent]]) Int;
+
+record Struct_protoent (
+    p_name : Pointer[CChar],
+    p_aliases : Pointer[Pointer[CChar]],
+    p_proto : Int,
+);
+
+external setprotoent(
+    __stay_open : Int);
+
+external endprotoent();
+
+external getprotoent() Pointer[Struct_protoent];
+
+external getprotobyname(
+    __name : Pointer[CChar]) Pointer[Struct_protoent];
+
+external getprotobynumber(
+    __proto : Int) Pointer[Struct_protoent];
+
+external getprotoent_r(
+    __result_buf : Pointer[Struct_protoent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_protoent]]) Int;
+
+external getprotobyname_r(
+    __name : Pointer[CChar],
+    __result_buf : Pointer[Struct_protoent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_protoent]]) Int;
+
+external getprotobynumber_r(
+    __proto : Int,
+    __result_buf : Pointer[Struct_protoent],
+    __buf : Pointer[CChar],
+    __buflen : CULong,
+    __result : Pointer[Pointer[Struct_protoent]]) Int;
+
+external setnetgrent(
+    __netgroup : Pointer[CChar]) Int;
+
+external endnetgrent();
+
+external getnetgrent(
+    __hostp : Pointer[Pointer[CChar]],
+    __userp : Pointer[Pointer[CChar]],
+    __domainp : Pointer[Pointer[CChar]]) Int;
+
+external innetgr(
+    __netgroup : Pointer[CChar],
+    __host : Pointer[CChar],
+    __user : Pointer[CChar],
+    __domain : Pointer[CChar]) Int;
+
+external getnetgrent_r(
+    __hostp : Pointer[Pointer[CChar]],
+    __userp : Pointer[Pointer[CChar]],
+    __domainp : Pointer[Pointer[CChar]],
+    __buffer : Pointer[CChar],
+    __buflen : CULong) Int;
+
+external rcmd(
+    __ahost : Pointer[Pointer[CChar]],
+    __rport : UShort,
+    __locuser : Pointer[CChar],
+    __remuser : Pointer[CChar],
+    __cmd : Pointer[CChar],
+    __fd2p : Pointer[Int]) Int;
+
+external rcmd_af(
+    __ahost : Pointer[Pointer[CChar]],
+    __rport : UShort,
+    __locuser : Pointer[CChar],
+    __remuser : Pointer[CChar],
+    __cmd : Pointer[CChar],
+    __fd2p : Pointer[Int],
+    __af : UShort) Int;
+
+external rexec(
+    __ahost : Pointer[Pointer[CChar]],
+    __rport : Int,
+    __name : Pointer[CChar],
+    __pass : Pointer[CChar],
+    __cmd : Pointer[CChar],
+    __fd2p : Pointer[Int]) Int;
+
+external rexec_af(
+    __ahost : Pointer[Pointer[CChar]],
+    __rport : Int,
+    __name : Pointer[CChar],
+    __pass : Pointer[CChar],
+    __cmd : Pointer[CChar],
+    __fd2p : Pointer[Int],
+    __af : UShort) Int;
+
+external ruserok(
+    __rhost : Pointer[CChar],
+    __suser : Int,
+    __remuser : Pointer[CChar],
+    __locuser : Pointer[CChar]) Int;
+
+external ruserok_af(
+    __rhost : Pointer[CChar],
+    __suser : Int,
+    __remuser : Pointer[CChar],
+    __locuser : Pointer[CChar],
+    __af : UShort) Int;
+
+external rresvport(
+    __alport : Pointer[Int]) Int;
+
+external rresvport_af(
+    __alport : Pointer[Int],
+    __af : UShort) Int;
+
+record Struct_addrinfo (
+    ai_flags : Int,
+    ai_family : Int,
+    ai_socktype : Int,
+    ai_protocol : Int,
+    ai_addrlen : UInt,
+    ai_addr : Pointer[Struct_sockaddr],
+    ai_canonname : Pointer[CChar],
+    ai_next : Pointer[Struct_addrinfo],
+);
+
+external getaddrinfo(
+    __name : Pointer[CChar],
+    __service : Pointer[CChar],
+    __req : Pointer[Struct_addrinfo],
+    __pai : Pointer[Pointer[Struct_addrinfo]]) Int;
+
+external freeaddrinfo(
+    __ai : Pointer[Struct_addrinfo]);
+
+external gai_strerror(
+    __ecode : Int) Pointer[CChar];
+
+external getnameinfo(
+    __sa : Pointer[Struct_sockaddr],
+    __salen : UInt,
+    __host : Pointer[CChar],
+    __hostlen : UInt,
+    __serv : Pointer[CChar],
+    __servlen : UInt,
+    __flags : UInt) Int;
+
 external _dl_mcount_wrapper_check(
     __selfpc : RawPointer);
 
