@@ -1,0 +1,28 @@
+import unix;
+public import unix.(
+    errno, socket, bind, listen, accept, connect, send, recv, sendto, recvfrom, close,
+    select, getsockopt, setsockopt, htons, ntohs, htonl, ntohl, gethostbyname,
+    gethostbyaddr,
+    AF_UNSPEC, AF_LOCAL, AF_INET, AF_INET6,
+    PF_UNSPEC, PF_LOCAL, PF_INET, PF_INET6,
+    INADDR_ANY, INADDR_BROADCAST, INADDR_LOOPBACK, INADDR_NONE,
+    INADDR_UNSPEC_GROUP, INADDR_ALLHOSTS_GROUP, INADDR_ALLRTRS_GROUP,
+    INADDR_MAX_LOCAL_GROUP,
+    SOCK_STREAM, SOCK_DGRAM, SOCK_RAW,
+    IPPROTO_ICMP, IPPROTO_IGMP, IPPROTO_TCP, IPPROTO_UDP, IPPROTO_ICMPV6
+);
+
+alias RawSocket = Int;
+alias SOCKET_ERROR = RawSocket(-1);
+herrno() { return unix.herrno; }
+alias SocketErrorCode = Type(errno());
+
+startSockets() {}
+finishSockets() {}
+
+alias Sockaddr = unix.Struct_sockaddr;
+alias Sockaddr_in = unix.Struct_sockaddr_in;
+alias Sockaddr_storage = unix.Struct_sockaddr_storage;
+alias In_addr = unix.Struct_in_addr;
+
+alias SocklenT = unix.socklen_t;

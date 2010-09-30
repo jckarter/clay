@@ -1,0 +1,52 @@
+import io.sockets.*;
+import test.*;
+
+_expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr) {}
+overload _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr: Sockaddr_in)
+{
+    expectEqual(test, "family of " + name, AF_INET, sockaddr.sin_family);
+    expectEqual(test, "host of " + name, expectedHost, ntohl(sockaddr.sin_addr.s_addr));
+    expectEqual(test, "port of " + name, expectedPort, ntohs(sockaddr.sin_port));
+}
+
+expectSockaddrIn(test, name, expectedHost, expectedPort, address) {
+    var sockaddr = makeSockaddr(address);
+    expectType(test, "address of " + name, Sockaddr_in, sockaddr);
+    _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr);
+}
+
+main() {
+    startSockets();
+    var r = testMain(
+        TestSuite("socket IPv4 addresses", Tuple(
+            TestCase("numeric addresses", test => {
+                expectSockaddrIn(test, "0x7F_00_00_01:1234",
+                    0x7F_00_00_01u,
+                    1234,
+                    Inet(0x7F_00_00_01u, 1234)
+                );
+                expectSockaddrIn(test, "INADDR_ANY:1234",
+                    INADDR_ANY,
+                    1234,
+                    Inet(INADDR_ANY, 1234)
+                );
+            }),
+            TestCase("dotted quads", test => {
+                expectSockaddrIn(test, "127.0.0.1:1234",
+                    0x7F_00_00_01u,
+                    1234,
+                    Inet("127.0.0.1", 1234)
+                );
+            }),
+            TestCase("hostnames", test => {
+                expectSockaddrIn(test, "localhost:1234",
+                    0x7F_00_00_01u,
+                    1234,
+                    Inet("localhost", 1234)
+                );
+            }),
+        )),
+    );
+    finishSockets();
+    return r;
+}
