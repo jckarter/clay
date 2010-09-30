@@ -176,9 +176,17 @@ def runTests() :
         print "\n".join(failed)
         print "\nFAILED %d OF %d TESTS" % (len(failed), len(testcases)) 
 
-if __name__ == "__main__":
+
+def main() :
+    global testRoot
+    if len(sys.argv) > 1 :
+        testRoot = os.path.join(testRoot, *sys.argv[1:])
     startTime = time.time()
     runTests()
     endTime = time.time()
     print ""
     print "time taken = %f seconds" % (endTime - startTime)
+
+
+if __name__ == "__main__":
+    main()
