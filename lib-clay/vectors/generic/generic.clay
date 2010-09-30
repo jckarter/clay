@@ -100,7 +100,7 @@ inline overload front(a:V) = ref a[0];
 inline overload back(a:V) = ref a[size(a) - 1];
 
 [V, S | Vector?(V) and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(V))]
-overload push(a:V, seq:S) {
+overload push(a:V, forward seq:S) {
     insert(a, size(a), seq);
 }
 
@@ -119,7 +119,7 @@ overload pop(a:V) {
 
 
 //
-// reserve
+// reserve, resize, resizeUnsafe, ensureSpace
 //
 
 [V, I | Vector?(V) and Integer?(I)]
@@ -128,63 +128,27 @@ overload reserve(a:V, n:I) {
         vectorSetCapacity(a, SizeT(n));
 }
 
-
-
-//
-// resize
-//
-
 [V, I | Vector?(V) and Integer?(I)]
 inline overload resize(a:V, n:I) {
-    resize(a, SizeT(n));
+    resizeInternal(a, SizeT(n), initializeMemory);
 }
-
-[V | Vector?(V)]
-overload resize(a:V, n:SizeT) {
-    var currentSize = vectorSize(a);
-    if (currentSize < n) {
-        reserve(a, n);
-        initializeMemory(end(a), begin(a)+n);
-    }
-    else if (currentSize > n) {
-        destroyMemory(begin(a)+n, end(a));
-    }
-    vectorSize(a) = n;
-}
-
-
-
-//
-// resizeUnsafe
-//
 
 [V, I | Vector?(V) and Integer?(I)]
 inline overload resizeUnsafe(a:V, n:I) {
-    resize(a, SizeT(n));
+    resizeInternal(a, SizeT(n), resetMemoryUnsafe);
 }
 
 [V | Vector?(V)]
-overload resizeUnsafe(a:V, n:SizeT) {
+private resizeInternal(a:V, n:SizeT, initializer) {
     var currentSize = vectorSize(a);
     if (currentSize < n) {
         reserve(a, n);
-        resetMemoryUnsafe(end(a), begin(a)+n);
+        initializer(end(a), begin(a)+n);
     }
     else if (currentSize > n) {
         destroyMemory(begin(a)+n, end(a));
     }
     vectorSize(a) = n;
-}
-
-
-
-//
-// clear
-//
-
-[V | Vector?(V)]
-inline overload clear(a:V) {
-    remove(a, begin(a), end(a));
 }
 
 private inline ensureSpace(a, space:SizeT) {
@@ -192,19 +156,34 @@ private inline ensureSpace(a, space:SizeT) {
         vectorSetCapacity(a, 2*(size(a) + space));
 }
 
-[I | Integer?(I)]
-private insertLocationUnsafe(a, pos:I) {
-    ensureSpace(a, SizeT(1));
-    moveMemoryBackwardsUnsafe(begin(a)+pos+1, end(a)+1, begin(a)+pos);
-    vectorSize(a) += 1;
-    return ref (begin(a) + pos)^;
+
+
+//
+// insert
+//
+
+[I, J | Integer?(I) and Integer?(J)]
+private insertLocationsUnsafe(a, pos:I, n:J) {
+    return ...insertLocationsUnsafe(a, SizeT(pos), SizeT(n));
 }
 
-[I | Integer?(I)]
-private insertLocation(a, pos:I) {
-    ref obj = insertLocationUnsafe(a, pos);
-    resetUnsafe(obj);
-    return ref obj;
+overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
+    ensureSpace(a, n);
+    var first = begin(a) + pos;
+    moveMemoryBackwardsUnsafe(first+n, end(a)+n, first);
+    vectorSize(a) += n;
+    return first, first+n;
+}
+
+[I, J | Integer?(I) and Integer?(J)]
+private insertLocations(a, pos:I, n:J) {
+    return ...insertLocations(a, SizeT(pos), SizeT(n));
+}
+
+overload insertLocations(a, pos:SizeT, n:SizeT) {
+    var first, last = ...insertLocationsUnsafe(a, pos, n);
+    resetMemoryUnsafe(first, last);
+    return first, last;
 }
 
 [V,I,S | Vector?(V) and Integer?(I) and Sequence?(S) and
@@ -217,25 +196,81 @@ overload insert(a:V, i:I, seq:S) {
     }
 }
 
-[V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
-overload insert(a:V, i:I, rvalue x:T) {
-    insertLocationUnsafe(a, i) <-- move(x);
+[V,I,S | Vector?(V) and Integer?(I) and SizedSequence?(S) and
+         (SequenceElementType(S) == SequenceElementType(V))]
+overload insert(a:V, i:I, seq:S) {
+    var first, last = ...insertLocations(a, i, size(seq));
+    for (x in seq) {
+        first^ = x;
+        inc(first);
+    }
+}
+
+[V,I,S | Vector?(V) and Integer?(I)
+         and SizedSequence?(S) and ContiguousSequence?(S)
+         and (SequenceElementType(S) == SequenceElementType(V))]
+overload insert(a:V, i:I, seq:S) {
+    var first, last = ...insertLocationsUnsafe(a, i, size(seq));
+    try {
+        copyMemory(first, last, &seq[0]);
+    }
+    catch (e) {
+        resetMemoryUnsafe(first, last);
+        throw e;
+    }
+}
+
+[V,I,S | Vector?(V) and Integer?(I)
+         and SequenceContainer?(S) and SizedSequence?(S)
+         and (SequenceElementType(S) == SequenceElementType(V))]
+overload insert(a:V, i:I, rvalue seq:S) {
+    var first, last = ...insertLocationsUnsafe(a, i, size(seq));
+    for (x in seq) {
+        first^ <-- move(x);
+        inc(first);
+    }
+}
+
+[V,I,S | Vector?(V) and Integer?(I)
+         and SequenceContainer?(S) and ContiguousSequence?(S)
+         and (SequenceElementType(S) == SequenceElementType(V))]
+overload insert(a:V, i:I, rvalue seq:S) {
+    var first, last = ...insertLocationsUnsafe(a, i, size(seq));
+    moveMemory(first, last, &seq[0]);
 }
 
 [V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
-overload insert(a:V, i:I, lvalue x:T) {
-    insertLocation(a, i) = x;
+overload insert(a:V, i:I, x:T) {
+    var first, last = ...insertLocations(a, i, 1);
+    first^ = x;
+}
+
+[V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
+overload insert(a:V, i:I, rvalue x:T) {
+    var first, last = ...insertLocationsUnsafe(a, i, 1);
+    first^ <-- move(x);
 }
 
 [V,T,S | Vector?(V) and (SequenceElementType(V) == T) and
          Sequence?(S) and (SequenceElementType(S) == T)]
-overload insert(a:V, i:VectorCoordinate[T], seq:S) {
+overload insert(a:V, i:VectorCoordinate[T], forward seq:S) {
     insert(a, i-begin(a), seq);
 }
 
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]
 overload insert(a:V, i:VectorCoordinate[T], forward x:T) {
     insert(a, i-begin(a), x);
+}
+
+
+
+//
+// clear, remove
+//
+
+[V | Vector?(V)]
+inline overload clear(a:V) {
+    remove(a, begin(a), end(a));
 }
 
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]
