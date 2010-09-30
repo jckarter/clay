@@ -109,13 +109,9 @@ overload lookupInetHostname(n: UInt32) s: In_addr {
 
 overload lookupInetHostname(n: In_addr) = n;
 
-// XXX String(...) in exception constructor is bugged
-//record HostnameLookupError(hostname: String);
-//[S | String?(S) and S != String]
-//overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
-record HostnameLookupError();
-overload HostnameLookupError(name) = HostnameLookupError();
-instance Exception = HostnameLookupError;
+record HostnameLookupError(hostname: String);
+[S | String?(S) and S != String]
+overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
 
 [S | CCompatibleString?(S)]
 overload lookupInetHostname(hostname: S) {
