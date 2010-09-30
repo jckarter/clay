@@ -149,3 +149,12 @@ alias INADDR_UNSPEC_GROUP    = 0xE0_00_00_00u32;
 alias INADDR_ALLHOSTS_GROUP  = 0xE0_00_00_01u32;
 alias INADDR_ALLRTRS_GROUP   = 0xE0_00_00_02u32;
 alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu32;
+
+
+
+//
+// getsockopt/setsockopt constants
+//
+alias SOL_SOCKET = 0xffff;
+
+alias SO_REUSEADDR = 4;
