@@ -112,17 +112,6 @@ alias PF_INET6 = AF_INET6;
 
 
 //
-// IP protocols
-//
-alias IPPROTO_ICMP   =  1;
-alias IPPROTO_IGMP   =  2;
-alias IPPROTO_TCP    =  6;
-alias IPPROTO_UDP    = 17;
-alias IPPROTO_ICMPV6 = 58;
-
-
-
-//
 // special IPv4 addresses
 //
 alias INADDR_ANY       = 0x00_00_00_00u32;
