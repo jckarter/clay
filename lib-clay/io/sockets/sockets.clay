@@ -1,0 +1,262 @@
+import io.sockets.platform;
+public import io.sockets.platform.(
+    Sockaddr, Sockaddr_in, Sockaddr_storage,
+    In_addr, htons, htonl, ntohs, ntohl,
+    AF_UNSPEC, AF_INET, AF_INET6,
+    PF_UNSPEC, PF_INET, PF_INET6,
+    INADDR_ANY, INADDR_BROADCAST, INADDR_LOOPBACK, INADDR_NONE,
+    INADDR_UNSPEC_GROUP, INADDR_ALLHOSTS_GROUP, INADDR_ALLRTRS_GROUP,
+    INADDR_MAX_LOCAL_GROUP,
+    SOCK_STREAM, SOCK_DGRAM, SOCK_RAW,
+    IPPROTO_ICMP, IPPROTO_IGMP, IPPROTO_TCP, IPPROTO_UDP, IPPROTO_ICMPV6,
+    startSockets, finishSockets, SOCKET_ERROR,
+    SocklenT
+);
+import libc.(memset);
+
+private alias platform = io.sockets.platform;
+
+
+
+//
+// wrapper for socket API calls
+//
+record SocketError (code: platform.SocketErrorCode);
+instance Exception = SocketError;
+
+socketCall(callable, forward ...args) {
+    var ret = callable(...args);
+    if (ret == Type(ret)(platform.SOCKET_ERROR))
+        throw SocketError(platform.errno());
+    return ret;
+}
+
+
+
+//
+// high-level socket addresses
+//
+
+// makeSockaddr(addr) --> Sockaddr
+procedure makeSockaddr;
+// sockaddrDomain(addr) --> PF_*
+procedure sockaddrDomain;
+// sockaddrStreamProtocol(addr) --> *PROTO_*
+procedure sockaddrStreamProtocol;
+// sockaddrDgramProtocol(addr) --> *PROTO_*
+procedure sockaddrDgramProtocol;
+
+SocketAddress?(T)
+    = CallDefined?(makeSockaddr, T)
+      and CallDefined?(sockaddrDomain, T);
+StreamSocketAddress?(T)
+    = SocketAddress?(T)
+      and CallDefined?(sockaddrStreamProtocol, T)
+      and CallDefined?(T, Sockaddr_storage, SocklenT);
+DgramSocketAddress?(T)
+    = SocketAddress?(T)
+      and CallDefined?(sockaddrDgramProtocol, T);
+
+[T | SocketAddress?(T)]
+makeSockaddrParams(addr: T)
+    sockaddr: Type(makeSockaddr(typeToRValue(T))),
+    psockaddr: Pointer[Sockaddr],
+    szsockaddr: SocklenT
+{
+    sockaddr <-- makeSockaddr(addr);
+    psockaddr <-- Pointer[Sockaddr](&sockaddr);
+    szsockaddr <-- SocklenT(TypeSize(Type(sockaddr)));
+}
+
+// lookupInetHostname(host) --> In_addr
+procedure lookupInetHostname;
+InetHostname?(T) = CallDefined?(lookupInetHostname, T);
+record Inet (host: In_addr, port: UInt16);
+
+[T, I | InetHostname?(T) and T != In_addr and Integer?(I)]
+overload Inet(host: T, port: I)
+    = Inet(lookupInetHostname(host), UInt16(port));
+
+record InvalidInetAddress(sockaddr: Sockaddr_storage, szsockaddr: SocklenT);
+instance Exception = InvalidInetAddress;
+
+overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
+    addr: Inet
+{
+    if (sockaddr.ss_family != AF_INET
+        or szsockaddr < TypeSize(Sockaddr_in)
+        or sockaddr.ss_len < TypeSize(Sockaddr_in))
+        throw InvalidInetAddress(sockaddr, szsockaddr);
+    var psockaddr_in = Pointer[Sockaddr_in](&sockaddr);
+    addr.host <-- psockaddr_in^.sin_addr;
+    addr.port <-- ntohs(psockaddr_in^.sin_port);
+}
+
+overload makeSockaddr(inet: Inet) sin: Sockaddr_in {
+    memset(RawPointer(&sin), 0, TypeSize(Sockaddr_in));
+    sin.sin_family <-- AF_INET;
+    sin.sin_port <-- htons(inet.port);
+    sin.sin_addr <-- inet.host;
+}
+
+overload sockaddrDomain(inet: Inet) = PF_INET;
+overload sockaddrStreamProtocol(inet: Inet) = IPPROTO_TCP;
+overload sockaddrDgramProtocol(inet: Inet) = IPPROTO_UDP;
+
+overload lookupInetHostname(n: UInt32) s: In_addr {
+    s.s_addr <-- htonl(n);
+}
+
+overload lookupInetHostname(n: In_addr) = n;
+
+record HostnameLookupError(hostname: String);
+[S | String?(S) and S != String]
+overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
+
+[S | CCompatibleString?(S)]
+overload lookupInetHostname(hostname: S) {
+    var hostent = platform.gethostbyname(cstring(hostname));
+    if (null?(hostent))
+        throw HostnameLookupError(hostname);
+    if (hostent^.h_addrtype != AF_INET
+        or hostent^.h_length < TypeSize(In_addr)
+        or null?(hostent^.h_addr_list[0]))
+        throw HostnameLookupError(hostname);
+
+    return Pointer[In_addr](hostent^.h_addr_list[0])^;
+}
+
+
+
+//
+// socket objects
+//
+Socket?(X) = false;
+
+record ListenSocket[Addr] (raw: platform.RawSocket);
+record StreamSocket (raw: platform.RawSocket);
+
+[Addr] overload Socket?(static ListenSocket[Addr]) = true;
+overload Socket?(static StreamSocket) = true;
+
+[S | Socket?(S)] overload RegularRecord?(static S) = false;
+
+[S | Socket?(S)]
+overload destroy(s: S) { if (s.raw != SOCKET_ERROR) platform.close(s.raw); }
+
+[S | Socket?(S)]
+overload moveUnsafe(s: S) s2: S { s2.raw <-- s.raw; }
+
+[S | Socket?(S)]
+overload resetUnsafe(s: S) { s.raw = SOCKET_ERROR; }
+
+[S | Socket?(S)]
+overload S(x: S);
+
+[S | Socket?(S)]
+overload assign(x: S, y: S);
+
+[S | Socket?(S)]
+overload fileHandle(s: S) { return s.raw; }
+
+
+
+//
+// ListenSocket()
+//
+[T, I | StreamSocketAddress?(T) and Integer?(I)]
+overload ListenSocket(addr: T, backlog: I)
+    socket: ListenSocket[T]
+{
+    socket.raw <-- socketCall(platform.socket,
+        Int(sockaddrDomain(addr)),
+        SOCK_STREAM,
+        Int(sockaddrStreamProtocol(addr))
+    );
+    try {
+        var sockaddr, psockaddr, szsockaddr = ...makeSockaddrParams(addr);
+        socketCall(platform.bind, socket.raw, psockaddr, szsockaddr);
+        socketCall(platform.listen, socket.raw, Int(backlog));
+    } catch (ex) {
+        platform.close(socket.raw);
+        throw ex;
+    }
+}
+
+[T | StreamSocketAddress?(T)]
+overload ListenSocket(addr: T) = ListenSocket(addr, 1);
+
+[T]
+accept(listener: ListenSocket[T])
+    socket: StreamSocket,
+    addr: T
+{
+    var sockaddr = Sockaddr_storage();
+    var psockaddr = Pointer[Sockaddr](&sockaddr);
+    var szsockaddr = SocklenT(TypeSize(Sockaddr_storage));
+
+    socket.raw <-- socketCall(platform.accept, listener.raw, psockaddr, &szsockaddr);
+    try {
+        addr <-- T(sockaddr, szsockaddr);
+    } catch (ex) {
+        platform.close(socket.raw);
+        throw ex;
+    }
+}
+
+
+
+//
+// StreamSocket()
+//
+[T]
+overload StreamSocket(listener: ListenSocket[T])
+    = takeValues(static 1, ...accept(listener));
+
+[T | StreamSocketAddress?(T)]
+overload StreamSocket(addr: T) socket: StreamSocket {
+    socket.raw <-- socketCall(platform.socket,
+        Int(sockaddrDomain(addr)),
+        SOCK_STREAM,
+        Int(sockaddrStreamProtocol(addr))
+    );
+    
+    try {
+        var sockaddr, psockaddr, szsockaddr = ...makeSockaddrParams(addr);
+        socketCall(platform.connect, socket.raw, psockaddr, szsockaddr);
+    } catch (ex) {
+        platform.close(socket.raw);
+        throw ex;
+    }
+}
+
+
+
+//
+// StreamSocket implementation of stream protocol
+//
+[I | Integer?(I)]
+overload read(s: StreamSocket, buffer: Pointer[Byte], n: I)
+    = SizeT(socketCall(platform.recv, s.raw, RawPointer(buffer), SizeT(n), 0));
+
+[I | Integer?(I)]
+overload write(s: StreamSocket, buffer: Pointer[Byte], n: I) {
+    socketCall(platform.send, s.raw, RawPointer(buffer), SizeT(n), 0);
+}
+
+overload flush(s: StreamSocket) { }
+
+
+
+//
+// Print support for In_addr
+//
+overload printTo(stream, addr: In_addr) {
+    var host = ntohl(addr.s_addr);
+    printTo(stream,
+                   shiftRight(host, 24),         ".",
+        bitwiseAnd(shiftRight(host, 16), 0xFFu), ".",
+        bitwiseAnd(shiftRight(host,  8), 0xFFu), ".",
+        bitwiseAnd(           host,      0xFFu),
+    );
+}

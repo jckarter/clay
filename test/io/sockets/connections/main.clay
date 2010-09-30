@@ -1,0 +1,42 @@
+import io.sockets.*;
+import commandline.dispatch.*;
+
+main() {
+    startSockets();
+    var r = dispatchMain(server, client);
+    finishSockets();
+    return r;
+}
+
+server(args) {
+    var listener = ListenSocket(Inet(INADDR_LOOPBACK, 27183));
+
+    while (true) {
+        var conn, address = ...accept(listener);
+
+        var cmd = readLine(conn);
+        if (cmd == "quit\n") {
+            printlnTo(conn, "quitting");
+            break;
+        }
+        else if (cmd == "address\n")
+            printlnTo(conn, "you connected from IP ", address.host);
+        else
+            printlnTo(conn, "unknown command ", cmd);
+    }
+}
+
+client(args) {
+    if (size(args) < 1) {
+        println("no command!");
+        return 2;
+    }
+    var command = args[0];
+
+    var conn = StreamSocket(Inet(INADDR_LOOPBACK, 27183));
+    printlnTo(conn, command);
+    var response = readLine(conn);
+    print(response);
+    
+    return 0;
+}

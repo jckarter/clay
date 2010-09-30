@@ -2141,3 +2141,373 @@ external dlsym(
 
 external dlopen_preflight(
     __path : Pointer[CChar]) Bool;
+
+record Struct_in_addr (
+    s_addr : UInt,
+);
+
+record Struct_sockaddr_in (
+    sin_len : CUChar,
+    sin_family : CUChar,
+    sin_port : UShort,
+    sin_addr : Struct_in_addr,
+    sin_zero : Array[CChar,8],
+);
+
+record Struct_ip_opts (
+    ip_dst : Struct_in_addr,
+    ip_opts : Array[CChar,40],
+);
+
+record Struct_ip_mreq (
+    imr_multiaddr : Struct_in_addr,
+    imr_interface : Struct_in_addr,
+);
+
+record Struct_in6_addr (
+    __u6_addr : AUnionType,
+);
+
+record Struct_sockaddr_in6 (
+    sin6_len : CUChar,
+    sin6_family : CUChar,
+    sin6_port : UShort,
+    sin6_flowinfo : UInt,
+    sin6_addr : Struct_in6_addr,
+    sin6_scope_id : UInt,
+);
+
+external in6addr_any : Struct_in6_addr;
+
+external in6addr_loopback : Struct_in6_addr;
+
+external in6addr_nodelocal_allnodes : Struct_in6_addr;
+
+external in6addr_linklocal_allnodes : Struct_in6_addr;
+
+external in6addr_linklocal_allrouters : Struct_in6_addr;
+
+record Struct_ipv6_mreq (
+    ipv6mr_multiaddr : Struct_in6_addr,
+    ipv6mr_interface : UInt,
+);
+
+record Struct_in6_pktinfo (
+    ipi6_addr : Struct_in6_addr,
+    ipi6_ifindex : UInt,
+);
+
+external inet6_option_space(
+    argument0 : Int) Int;
+
+external inet6_option_init(
+    argument0 : RawPointer,
+    argument1 : Pointer[Pointer[Struct_cmsghdr]],
+    argument2 : Int) Int;
+
+external inet6_option_append(
+    argument0 : Pointer[Struct_cmsghdr],
+    argument1 : Pointer[CUChar],
+    argument2 : Int,
+    argument3 : Int) Int;
+
+external inet6_option_alloc(
+    argument0 : Pointer[Struct_cmsghdr],
+    argument1 : Int,
+    argument2 : Int,
+    argument3 : Int) Pointer[CUChar];
+
+external inet6_option_next(
+    argument0 : Pointer[Struct_cmsghdr],
+    argument1 : Pointer[Pointer[CUChar]]) Int;
+
+external inet6_option_find(
+    argument0 : Pointer[Struct_cmsghdr],
+    argument1 : Pointer[Pointer[CUChar]],
+    argument2 : Int) Int;
+
+external inet6_rthdr_space(
+    argument0 : Int,
+    argument1 : Int) CULong;
+
+external inet6_rthdr_init(
+    argument0 : RawPointer,
+    argument1 : Int) Pointer[Struct_cmsghdr];
+
+external inet6_rthdr_add(
+    argument0 : Pointer[Struct_cmsghdr],
+    argument1 : Pointer[Struct_in6_addr],
+    argument2 : UInt) Int;
+
+external inet6_rthdr_lasthop(
+    argument0 : Pointer[Struct_cmsghdr],
+    argument1 : UInt) Int;
+
+external inet6_rthdr_segments(
+    argument0 : Pointer[Struct_cmsghdr]) Int;
+
+external inet6_rthdr_getaddr(
+    argument0 : Pointer[Struct_cmsghdr],
+    argument1 : Int) Pointer[Struct_in6_addr];
+
+external inet6_rthdr_getflags(
+    argument0 : Pointer[Struct_cmsghdr],
+    argument1 : Int) Int;
+
+external inet6_opt_init(
+    argument0 : RawPointer,
+    argument1 : CULong) Int;
+
+external inet6_opt_append(
+    argument0 : RawPointer,
+    argument1 : CULong,
+    argument2 : Int,
+    argument3 : CUChar,
+    argument4 : CULong,
+    argument5 : CUChar,
+    argument6 : Pointer[RawPointer]) Int;
+
+external inet6_opt_finish(
+    argument0 : RawPointer,
+    argument1 : CULong,
+    argument2 : Int) Int;
+
+external inet6_opt_set_val(
+    argument0 : RawPointer,
+    argument1 : CULong,
+    argument2 : RawPointer,
+    argument3 : Int) Int;
+
+external inet6_opt_next(
+    argument0 : RawPointer,
+    argument1 : CULong,
+    argument2 : Int,
+    argument3 : Pointer[CUChar],
+    argument4 : Pointer[CULong],
+    argument5 : Pointer[RawPointer]) Int;
+
+external inet6_opt_find(
+    argument0 : RawPointer,
+    argument1 : CULong,
+    argument2 : Int,
+    argument3 : CUChar,
+    argument4 : Pointer[CULong],
+    argument5 : Pointer[RawPointer]) Int;
+
+external inet6_opt_get_val(
+    argument0 : RawPointer,
+    argument1 : CULong,
+    argument2 : RawPointer,
+    argument3 : Int) Int;
+
+external inet6_rth_space(
+    argument0 : Int,
+    argument1 : Int) CULong;
+
+external inet6_rth_init(
+    argument0 : RawPointer,
+    argument1 : Int,
+    argument2 : Int,
+    argument3 : Int) RawPointer;
+
+external inet6_rth_add(
+    argument0 : RawPointer,
+    argument1 : Pointer[Struct_in6_addr]) Int;
+
+external inet6_rth_reverse(
+    argument0 : RawPointer,
+    argument1 : RawPointer) Int;
+
+external inet6_rth_segments(
+    argument0 : RawPointer) Int;
+
+external inet6_rth_getaddr(
+    argument0 : RawPointer,
+    argument1 : Int) Pointer[Struct_in6_addr];
+
+external bindresvport(
+    argument0 : Int,
+    argument1 : Pointer[Struct_sockaddr_in]) Int;
+
+external bindresvport_sa(
+    argument0 : Int,
+    argument1 : Pointer[Struct_sockaddr]) Int;
+
+external h_errno : Int;
+
+record Struct_hostent (
+    h_name : Pointer[CChar],
+    h_aliases : Pointer[Pointer[CChar]],
+    h_addrtype : Int,
+    h_length : Int,
+    h_addr_list : Pointer[Pointer[CChar]],
+);
+
+record Struct_netent (
+    n_name : Pointer[CChar],
+    n_aliases : Pointer[Pointer[CChar]],
+    n_addrtype : Int,
+    n_net : UInt,
+);
+
+record Struct_servent (
+    s_name : Pointer[CChar],
+    s_aliases : Pointer[Pointer[CChar]],
+    s_port : Int,
+    s_proto : Pointer[CChar],
+);
+
+record Struct_protoent (
+    p_name : Pointer[CChar],
+    p_aliases : Pointer[Pointer[CChar]],
+    p_proto : Int,
+);
+
+record Struct_addrinfo (
+    ai_flags : Int,
+    ai_family : Int,
+    ai_socktype : Int,
+    ai_protocol : Int,
+    ai_addrlen : UInt,
+    ai_canonname : Pointer[CChar],
+    ai_addr : Pointer[Struct_sockaddr],
+    ai_next : Pointer[Struct_addrinfo],
+);
+
+record Struct_rpcent (
+    r_name : Pointer[CChar],
+    r_aliases : Pointer[Pointer[CChar]],
+    r_number : Int,
+);
+
+external endhostent();
+
+external endnetent();
+
+external endprotoent();
+
+external endservent();
+
+external freeaddrinfo(
+    argument0 : Pointer[Struct_addrinfo]);
+
+external gai_strerror(
+    argument0 : Int) Pointer[CChar];
+
+external getaddrinfo(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : Pointer[Struct_addrinfo],
+    argument3 : Pointer[Pointer[Struct_addrinfo]]) Int;
+
+external gethostbyaddr(
+    argument0 : RawPointer,
+    argument1 : UInt,
+    argument2 : Int) Pointer[Struct_hostent];
+
+external gethostbyname(
+    argument0 : Pointer[CChar]) Pointer[Struct_hostent];
+
+external gethostent() Pointer[Struct_hostent];
+
+external getnameinfo(
+    argument0 : Pointer[Struct_sockaddr],
+    argument1 : UInt,
+    argument2 : Pointer[CChar],
+    argument3 : UInt,
+    argument4 : Pointer[CChar],
+    argument5 : UInt,
+    argument6 : Int) Int;
+
+external getnetbyaddr(
+    argument0 : UInt,
+    argument1 : Int) Pointer[Struct_netent];
+
+external getnetbyname(
+    argument0 : Pointer[CChar]) Pointer[Struct_netent];
+
+external getnetent() Pointer[Struct_netent];
+
+external getprotobyname(
+    argument0 : Pointer[CChar]) Pointer[Struct_protoent];
+
+external getprotobynumber(
+    argument0 : Int) Pointer[Struct_protoent];
+
+external getprotoent() Pointer[Struct_protoent];
+
+external getservbyname(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) Pointer[Struct_servent];
+
+external getservbyport(
+    argument0 : Int,
+    argument1 : Pointer[CChar]) Pointer[Struct_servent];
+
+external getservent() Pointer[Struct_servent];
+
+external sethostent(
+    argument0 : Int);
+
+external setnetent(
+    argument0 : Int);
+
+external setprotoent(
+    argument0 : Int);
+
+external setservent(
+    argument0 : Int);
+
+external freehostent(
+    argument0 : Pointer[Struct_hostent]);
+
+external gethostbyname2(
+    argument0 : Pointer[CChar],
+    argument1 : Int) Pointer[Struct_hostent];
+
+external getipnodebyaddr(
+    argument0 : RawPointer,
+    argument1 : CULong,
+    argument2 : Int,
+    argument3 : Pointer[Int]) Pointer[Struct_hostent];
+
+external getipnodebyname(
+    argument0 : Pointer[CChar],
+    argument1 : Int,
+    argument2 : Int,
+    argument3 : Pointer[Int]) Pointer[Struct_hostent];
+
+external getrpcbyname(
+    name : Pointer[CChar]) Pointer[Struct_rpcent];
+
+external getrpcbynumber(
+    number : CLong) Pointer[Struct_rpcent];
+
+external getrpcent() Pointer[Struct_rpcent];
+
+external setrpcent(
+    stayopen : Int);
+
+external endrpcent();
+
+external herror(
+    argument0 : Pointer[CChar]);
+
+external hstrerror(
+    argument0 : Int) Pointer[CChar];
+
+external innetgr(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : Pointer[CChar],
+    argument3 : Pointer[CChar]) Int;
+
+external getnetgrent(
+    argument0 : Pointer[Pointer[CChar]],
+    argument1 : Pointer[Pointer[CChar]],
+    argument2 : Pointer[Pointer[CChar]]) Int;
+
+external endnetgrent();
+
+external setnetgrent(
+    argument0 : Pointer[CChar]);

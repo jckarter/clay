@@ -101,3 +101,78 @@ alias RTLD_NEXT = RawPointer(-1);
 alias RTLD_DEFAULT = RawPointer(-2);
 alias RTLD_SELF = RawPointer(-3);
 alias RTLD_MAIN_ONLY = RawPointer(-5);
+
+
+
+//
+// socket protocol families
+//
+alias AF_UNSPEC = 0u8;
+alias AF_LOCAL = 1u8;
+alias AF_INET = 2u8;
+alias AF_INET6 = 30u8;
+
+
+
+//
+// socket protocol families
+//
+alias PF_UNSPEC = AF_UNSPEC;
+alias PF_LOCAL = AF_LOCAL;
+alias PF_INET = AF_INET;
+alias PF_INET6 = AF_INET6;
+
+
+
+//
+// socket types
+//
+alias SOCK_STREAM = 1;
+alias SOCK_DGRAM = 2;
+alias SOCK_RAW = 3;
+
+
+
+//
+// IP protocols
+//
+alias IPPROTO_ICMP   =  1;
+alias IPPROTO_IGMP   =  2;
+alias IPPROTO_TCP    =  6;
+alias IPPROTO_UDP    = 17;
+alias IPPROTO_ICMPV6 = 58;
+
+
+
+//
+// special IPv4 addresses
+//
+alias INADDR_ANY       = 0x00_00_00_00u32;
+alias INADDR_BROADCAST = 0xFF_FF_FF_FFu32;
+alias INADDR_LOOPBACK  = 0x7F_00_00_01u32;
+alias INADDR_NONE      = 0xFF_FF_FF_FFu32;
+alias INADDR_UNSPEC_GROUP    = 0xE0_00_00_00u32;
+alias INADDR_ALLHOSTS_GROUP  = 0xE0_00_00_01u32;
+alias INADDR_ALLRTRS_GROUP   = 0xE0_00_00_02u32;
+alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu32;
+
+
+
+//
+// byte order macros
+//
+htons(x: UInt16) y: UInt16 {
+    var yb = Pointer[UInt8](&y);
+    yb[0] = UInt8(shiftRight(x, 8));
+    yb[1] = UInt8(bitwiseAnd(x, 0xFFu16));
+}
+alias ntohs = htons;
+
+htonl(x: UInt32) y: UInt32 {
+    var yb = Pointer[UInt8](&y);
+    yb[0] = UInt8(           shiftRight(x, 24)          );
+    yb[1] = UInt8(bitwiseAnd(shiftRight(x, 16), 0xFFu32));
+    yb[2] = UInt8(bitwiseAnd(shiftRight(x,  8), 0xFFu32));
+    yb[3] = UInt8(bitwiseAnd(           x,      0xFFu32));
+}
+alias ntohl = htonl;
