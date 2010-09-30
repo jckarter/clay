@@ -101,6 +101,8 @@ record Deque[T] (
 
 [T] overload RegularRecord?(static Deque[T]) = false;
 
+[T] overload SequenceContainer?(static Deque[T]) = true;
+
 [T] overload Deque[T]() deque: Deque[T] {
     initializeDequeMap(deque, SizeT(0));
 }

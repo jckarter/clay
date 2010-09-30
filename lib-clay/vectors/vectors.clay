@@ -21,7 +21,11 @@ record Vector[T] (
 [T]
 overload RegularRecord?(static Vector[T]) = false;
 
-[T] overload ContiguousSequence?(static Vector[T]) = true;
+[T]
+overload ContiguousSequence?(static Vector[T]) = true;
+
+[T]
+overload SequenceContainer?(static Vector[T]) = true;
 
 
 
