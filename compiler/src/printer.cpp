@@ -737,6 +737,19 @@ static void print(ostream &out, const Object *x) {
 // printName
 //
 
+static int _safeNames = 0;
+
+void enableSafePrintName()
+{
+    ++_safeNames;
+}
+
+void disableSafePrintName()
+{
+    --_safeNames;
+    assert(_safeNames >= 0);
+}
+
 void printNameList(ostream &out, const vector<ObjectPtr> &x)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
@@ -779,12 +792,37 @@ static void printStaticOrTupleOfStatics(ostream &out, TypePtr t) {
     }
 }
 
+static bool isSafe(char ch)
+{
+    if ((ch >= '0') && (ch <= '9'))
+        return true;
+    if ((ch >= 'a') && (ch <= 'z'))
+        return true;
+    if ((ch >= 'A') && (ch <= 'Z'))
+        return true;
+    if (ch == '_')
+        return true;
+    return false;
+}
+
 void printName(ostream &out, ObjectPtr x)
 {
     switch (x->objKind) {
     case IDENTIFIER : {
         Identifier *y = (Identifier *)x.ptr();
-        out << "#" << y->str;
+        out << "#";
+        if (_safeNames > 0) {
+            for (unsigned i = 0; i < y->str.size(); ++i) {
+                char ch = y->str[i];
+                if (isSafe(ch))
+                    out << ch;
+                else
+                    out << 'c' << (unsigned int)ch;
+            }
+        }
+        else {
+            out << y->str;
+        }
         break;
     }
     case GLOBAL_VARIABLE : {
