@@ -159,6 +159,15 @@ alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu32;
 
 
 //
+// getsockopt/setsockopt constants
+//
+alias SOL_SOCKET = 0xffff;
+
+alias SO_REUSEADDR = 4;
+
+
+
+//
 // byte order macros
 //
 htons(x: UInt16) y: UInt16 {
