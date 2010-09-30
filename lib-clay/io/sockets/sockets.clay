@@ -110,6 +110,7 @@ overload lookupInetHostname(n: UInt32) s: In_addr {
 overload lookupInetHostname(n: In_addr) = n;
 
 record HostnameLookupError(hostname: String);
+instance Exception = HostnameLookupError;
 [S | String?(S) and S != String]
 overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
 
