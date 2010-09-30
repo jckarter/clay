@@ -14,31 +14,22 @@ destroy Test 7
 destroy Test 6
 destroy Test 5
 destroy Test 4
+copy Test 0
+copy Test 1
+copy Test 2
+destroy Test 0
+destroy Test 1
+destroy Test 2
 resetting Test 8
 resetting Test 9
 resetting Test 10
 resetting Test 11
-assign 0 to 8
-assign 1 to 9
-assign 2 to 10
-assign 3 to 11
-resetting Test 12
-assign 0 to 12
-resetting Test 13
-assign 1 to 13
-resetting Test 14
-assign 2 to 14
-resetting Test 15
-assign 3 to 15
+destroy Test 8
+destroy Test 9
+destroy Test 10
+destroy Test 11
 destroy Test 0
 destroy Test 1
 destroy Test 2
 destroy Test 3
-destroy Test 0
-destroy Test 1
-destroy Test 2
-destroy Test 3
-destroy Test 0
-destroy Test 1
-destroy Test 2
-destroy Test 3
+exception: Error("foo")
