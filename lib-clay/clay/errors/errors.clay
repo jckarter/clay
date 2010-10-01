@@ -6,7 +6,7 @@
 
 private computeLocation(data, offset) {
     var line, column, tabs = 0, 0, 0;
-    for (c in sliceUpto(data, offset)) {
+    for (c in slicedUpto(data, offset)) {
         column += 1;
         if (c == '\n') {
             line += 1;

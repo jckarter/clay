@@ -312,7 +312,7 @@ crackRun(args) {
 
     var plaintext = readPlaintext(args[0]);
     var cipher    = readCipher(args[1]);
-    var nodes     = Vector[StreamSocket](map(connectNode, slice(args, 2)));
+    var nodes     = Vector[StreamSocket](map(connectNode, sliced(args, 2)));
     var nodeCount = size(nodes);
     
     for (i, node in zipped(range(nodeCount), nodes)) {

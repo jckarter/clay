@@ -1,0 +1,87 @@
+
+import sequences.util.*;
+import sequences.handle.*;
+
+
+//
+// sliced, slicedFrom, slicedUpto
+//
+
+[A, I, J | Sequence?(A) and Integer?(I) and Integer?(J)]
+inline sliced(forward a:A, begin:I, end:J) =
+    sliced(a,
+          toBiggerNumericType(I, J, begin),
+          toBiggerNumericType(I, J, end));
+
+
+[A, I | Sequence?(A) and Integer?(I)]
+inline overload sliced(forward a:A, begin:I, end:I) =
+    Sliced(wrapSequence(a), SizeT(begin), SizeT(end));
+
+[T, I | RandomAccessCoordinate?(T) and Integer?(I)]
+inline overload sliced(a:CoordinateRange[T], begin:I, end:I) =
+    CoordinateRange[T](a.begin + begin, a.begin + end);
+
+
+[A, I | Sequence?(A) and Integer?(I)]
+inline overload sliced(forward a:A, begin:I) = sliced(a, begin, size(a));
+
+[A, I | Sequence?(A) and Integer?(I)]
+inline slicedFrom(forward a:A, begin:I) = sliced(a, begin);
+
+[A, I | Sequence?(A) and Integer?(I)]
+inline slicedUpto(forward a:A, end:I) = sliced(a, I(0), end);
+
+
+private record Sliced[A] (
+    seq : A,
+    begin : SizeT,
+    end : SizeT,
+);
+
+[A | LightweightSequence?(A)]
+overload LightweightSequence?(static Sliced[A]) = true;
+
+[A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
+overload UnderlyingContainerConstructor(static Sliced[A]) =
+    UnderlyingContainerConstructor(A);
+
+
+
+//
+// iteration
+//
+
+[A]
+inline overload iterator(a:Sliced[A]) =
+    Sliced(sequenceHandle(a.seq), a.begin, a.end);
+
+[A]
+inline overload iterator(a:Sliced[SequenceHandle[A]]) = a;
+
+[A]
+inline overload reverseIterator(a:Sliced[A]) {
+    var n = size(a.seq);
+    return Sliced(reversed(a.seq), n-a.end, n-a.begin);
+}
+
+[A]
+inline overload hasNext?(a:Sliced[A]) = (a.begin != a.end);
+
+[A]
+inline overload next(a:Sliced[A]) {
+    inc(a.begin);
+    return forward ...a.seq[a.begin-1];
+}
+
+
+
+//
+// size, index
+//
+
+[A]
+inline overload size(a:Sliced[A]) = a.end - a.begin;
+
+[A,I | Integer?(I)]
+inline overload index(a:Sliced[A], i:I) = forward ...index(a.seq, a.begin + i);

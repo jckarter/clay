@@ -188,7 +188,7 @@ private var kw_throw = keyword("throw");
 //
 
 private symbolParser(Ident) {
-    var s = sliceFrom(StaticName(Ident), 1);
+    var s = slicedFrom(StaticName(Ident), 1);
     var i = symbolIndex(s);
     assert(i >= 0, "invalid symbol");
     var pred = (x => ((x.kind == SYMBOL) and (x.subKind == i)));
