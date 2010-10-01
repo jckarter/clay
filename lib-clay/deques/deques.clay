@@ -103,6 +103,8 @@ record Deque[T] (
 
 [T] overload SequenceContainer?(static Deque[T]) = true;
 
+[T] overload UnderlyingContainerConstructor(static Deque[T]) = Deque;
+
 [T] overload Deque[T]() deque: Deque[T] {
     initializeDequeMap(deque, SizeT(0));
 }

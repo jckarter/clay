@@ -42,6 +42,10 @@ private record Slice[A] (
 [A | LightweightSequence?(A)]
 overload LightweightSequence?(static Slice[A]) = true;
 
+[A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
+overload UnderlyingContainerConstructor(static Slice[A]) =
+    UnderlyingContainerConstructor(A);
+
 
 
 //

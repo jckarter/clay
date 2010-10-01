@@ -19,6 +19,10 @@ private record Mapped[F, A] (
 [F,A | LightweightSequence?(A)]
 overload LightweightSequence?(static Mapped[F,A]) = true;
 
+[F,A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
+overload UnderlyingContainerConstructor(static Mapped[F,A]) =
+    UnderlyingContainerConstructor(A);
+
 
 
 //
