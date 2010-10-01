@@ -5,6 +5,22 @@ public import sequences.lazy.*;
 
 
 //
+// strict wrappers around lazy sequences
+//
+
+callbyname zip(...args) = force(zipped(...args));
+callbyname map(...args) = force(mapped(...args));
+callbyname filter(...args) = force(filtered(...args));
+callbyname enumerate(...args) = force(enumerated(...args));
+callbyname reverse(...args) = force(reversed(...args));
+callbyname slice(...args) = force(sliced(...args));
+callbyname sliceFrom(...args) = force(slicedFrom(...args));
+callbyname sliceUpto(...args) = force(slicedUpto(...args));
+callbyname group(...args) = force(grouped(...args));
+
+
+
+//
 // generic equals?, lesser?
 //
 
