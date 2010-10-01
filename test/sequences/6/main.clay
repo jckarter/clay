@@ -1,5 +1,5 @@
 printList(a) {
-    for (i, x in enumerate(a)) {
+    for (i, x in enumerated(a)) {
         if (i != 0)
             print(", ");
         print(x);

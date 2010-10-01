@@ -154,7 +154,7 @@ private lexIdentifierOrKeyword(input) Maybe[Token] {
 //
 
 private lexSymbol(input) {
-    for (i, sym in enumerate(symbols)) {
+    for (i, sym in enumerated(symbols)) {
         var parser = literalString(sym);
         var result = parser(input);
         if (not nothing?(result))
