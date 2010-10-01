@@ -16,7 +16,7 @@ main(args) {
     var tokens = Vector[Token]();
 
     try {
-        tokens = Vector(filter(
+        tokens = Vector(filtered(
             x => (x.kind != SPACE) and (x.kind != COMMENT),
             tokenize(LexerInput(data)),
         ));
