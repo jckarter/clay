@@ -6,6 +6,6 @@ main() {
     var b = Array(reversed(mapped(x => 2*x, a)));
     println(b);
 
-    var c = Array(mapped(add, zip(a, b)));
+    var c = Array(mapped(add, zipped(a, b)));
     println(c);
 }

@@ -92,7 +92,7 @@ overload resetUnsafe(a:Vector[T]) {
 [T]
 overload assign(dest:Vector[T], lvalue src:Vector[T]) {
     resize(dest, size(src));
-    for (x, y in zip(dest, src))
+    for (x, y in zipped(dest, src))
         assign(x, y);
 }
 

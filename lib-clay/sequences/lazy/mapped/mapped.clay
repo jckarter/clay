@@ -6,7 +6,7 @@ import sequences.util.*;
 // mapped
 //
 
-inline mapped(mapper, forward ...seqs) = Mapped(mapper, zip(...seqs));
+inline mapped(mapper, forward ...seqs) = Mapped(mapper, zipped(...seqs));
 
 inline overload mapped(mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
 

@@ -213,7 +213,7 @@ overload destroy(a:Array[T,n]) {
 
 [T,n]
 overload equals?(a:Array[T,n], b:Array[T,n]) {
-    for (x, y in zip(a, b)) {
+    for (x, y in zipped(a, b)) {
         if (x != y)
             return false;
     }
@@ -222,7 +222,7 @@ overload equals?(a:Array[T,n], b:Array[T,n]) {
 
 [T,n]
 overload lesser?(a:Array[T,n], b:Array[T,n]) {
-    for (x, y in zip(a, b)) {
+    for (x, y in zipped(a, b)) {
         if (x != y)
             return x < y;
     }

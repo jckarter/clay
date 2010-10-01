@@ -71,7 +71,7 @@ inline overload reverseIterator(a:V) =
 overload equals?(a:V, b:V) {
     if (size(a) != size(b))
         return false;
-    for (x, y in zip(a, b)) {
+    for (x, y in zipped(a, b)) {
         if (x != y)
             return false;
     }
@@ -80,7 +80,7 @@ overload equals?(a:V, b:V) {
 
 [V | Vector?(V)]
 overload lesser?(a:V, b:V) {
-    for (x, y in zip(a, b)) {
+    for (x, y in zipped(a, b)) {
         if (x != y)
             return x < y;
     }
