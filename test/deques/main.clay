@@ -283,4 +283,10 @@ main() {
     print("Contents: ");
     for (x in d7) print(x, " ");
     println();
+
+    println();
+    println("d8:");
+    var d8 = Deque(Vector(d7));
+    for (x in d8) print(x, " ");
+    println();
 }
