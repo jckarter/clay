@@ -155,6 +155,12 @@ overload Deque[T](forward ...from: A) to: Deque[T] {
     }
 }
 
+[A | Sequence?(A)]
+overload Deque(forward from:A) {
+    alias T = SequenceElementType(A);
+    return Deque[T](from);
+}
+
 [T] overload assign(to: Deque[T], from: Deque[T]) {
     resize(to, size(from));
     var toI = to.begin;
