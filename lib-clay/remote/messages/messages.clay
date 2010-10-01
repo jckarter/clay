@@ -111,7 +111,7 @@ answerRemoteMessage(static Protocol, instream, code: MarshalSize) {
         remoteEntryPoints[Protocol][code](mArgs);
     } else {
         var mArgsSize = maybeReadMarshalSize(instream);
-        maybe(mArgsSize, sz => { consume(instream, sz); });
+        maybe(mArgsSize, sz ref=> { consume(instream, sz); });
         throw InvalidRemoteMessage(code);
     }
 }
