@@ -16,12 +16,12 @@ main() {
         var c = sliceFrom(a, 5);
         printList(c);
 
-        var d = map(max, a, reverse(a));
+        var d = mapped(max, a, reverse(a));
         printList(d);
     }
     {
         var a = Vector(range(20));
-        var b = map(add, a, slice(a, 1));
+        var b = mapped(add, a, slice(a, 1));
         printList(b);
     }
     {

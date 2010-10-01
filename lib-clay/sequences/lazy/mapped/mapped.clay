@@ -3,12 +3,12 @@ import sequences.util.*;
 
 
 //
-// map
+// mapped
 //
 
-inline map(mapper, forward ...seqs) = Mapped(mapper, zip(...seqs));
+inline mapped(mapper, forward ...seqs) = Mapped(mapper, zip(...seqs));
 
-inline overload map(mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
+inline overload mapped(mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
 
 
 private record Mapped[F, A] (

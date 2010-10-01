@@ -50,7 +50,7 @@ overload Vector(forward a:A) {
 }
 
 [A | MultiValuedSequence?(A)]
-overload Vector(forward a:A) = Vector(map(Tuple, a));
+overload Vector(forward a:A) = Vector(mapped(Tuple, a));
 
 
 

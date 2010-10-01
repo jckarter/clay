@@ -137,7 +137,7 @@ readPlaintext(str) plaintext: Array[UInt8, 8] {
             plaintext[i] = UInt8(' ');
 }
 
-showPlaintext(plaintext) = String(map(Char, plaintext));
+showPlaintext(plaintext) = String(mapped(Char, plaintext));
 
 record BadHexDigit();
 instance Exception = BadHexDigit;
@@ -153,7 +153,7 @@ instance Exception = BadCipher;
 
 readCipher(str) cipher: Array[UInt8, 8] {
     if (size(str) != 16) throw BadCipher();
-    var hexBytes = map(hexByte, group(str, 2));
+    var hexBytes = mapped(hexByte, group(str, 2));
     for (i in range(size(hexBytes)))
         cipher[i] = hexBytes[i];
 }

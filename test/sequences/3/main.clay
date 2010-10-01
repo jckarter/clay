@@ -7,17 +7,17 @@ main() {
     println("filter by greater?");
     for (x, y in filter(greater?, a, b))
         println(x, ", ", y);
-    println("map min");
-    for (x in map(min, a, b))
+    println("mapped min");
+    for (x in mapped(min, a, b))
         println(x);
-    println("map max");
-    for (x in map(max, a, b))
+    println("mapped max");
+    for (x in mapped(max, a, b))
         println(x);
-    println("map multiply");
-    for (x in map(multiply, a, b))
+    println("mapped multiply");
+    for (x in mapped(multiply, a, b))
         println(x);
-    println("map swap");
+    println("mapped swap");
     var swap = (a, b) => { return b, a; };
-    for (x, y in map(swap, a, b))
+    for (x, y in mapped(swap, a, b))
         println(x, ", ", y);
 }
