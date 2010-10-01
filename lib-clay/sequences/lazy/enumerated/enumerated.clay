@@ -1,0 +1,9 @@
+
+procedure enumerated;
+
+overload enumerated(lvalue a) = zipped(range(size(a)), a);
+
+overload enumerated(rvalue a) {
+    var n = size(a);
+    return zipped(range(n), move(a));
+}
