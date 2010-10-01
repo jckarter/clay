@@ -5,7 +5,7 @@ private dispatchCommand() {
     if (size(args) < 2)
         return nothing(String), Vector[String]();
     else
-        return Maybe(args[1]), Vector[String](sliceFrom(args, 2));
+        return Maybe(args[1]), Vector[String](slicedFrom(args, 2));
 }
 
 printlnUsage(forward ...x) { printlnTo(stderr, ...x); }

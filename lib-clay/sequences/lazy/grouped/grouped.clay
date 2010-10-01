@@ -31,7 +31,7 @@ private indexEndpoints(n, groupSize) {
 [S, I | RandomAccessSequence?(S) and Integer?(I)]
 overload index(group: Group[S], n: I) {
     var b, e = ...indexEndpoints(n, group.groupSize);
-    return slice(group.seq, b, e);
+    return sliced(group.seq, b, e);
 }
 
 [S, I | CoordinateSequence?(S) and RandomAccessSequence?(S) and Integer?(I)]

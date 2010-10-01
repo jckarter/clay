@@ -11,9 +11,9 @@ printList(a) {
 main() {
     {
         var a = range(10);
-        var b = sliceUpto(a, 5);
+        var b = slicedUpto(a, 5);
         printList(b);
-        var c = sliceFrom(a, 5);
+        var c = slicedFrom(a, 5);
         printList(c);
 
         var d = mapped(max, a, reversed(a));
@@ -21,7 +21,7 @@ main() {
     }
     {
         var a = Vector(range(20));
-        var b = mapped(add, a, slice(a, 1));
+        var b = mapped(add, a, sliced(a, 1));
         printList(b);
     }
     {
