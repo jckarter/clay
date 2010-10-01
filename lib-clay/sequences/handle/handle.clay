@@ -38,6 +38,9 @@ inline overload reverseIterator(seq:SequenceHandle[A], forward ...args:ARGS)
 inline overload size(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...size(seq.inner^, ...args);
 
+[A | CallDefined?(StaticSize, Static[A])]
+inline overload StaticSize(static SequenceHandle[A]) = StaticSize(A);
+
 [A, ...ARGS | CallDefined?(index, A, ...ARGS)]
 inline overload index(seq:SequenceHandle[A], forward ...args:ARGS)
     = forward ...index(seq.inner^, ...args);

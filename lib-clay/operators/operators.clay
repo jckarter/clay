@@ -122,6 +122,10 @@ procedure resizeUnsafe;
 procedure pushFront;
 procedure popFront;
 
+// defined for statically sized sequences like Array[T,n]
+procedure StaticSize;
+
+
 
 //
 // sequence type predicates
@@ -130,6 +134,7 @@ procedure popFront;
 Sequence?(T) = CallDefined?(iterator, T);
 SequenceElementType(T) = Type(next(iterator(typeToLValue(T))));
 SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
+StaticSizedSequence?(T) = Sequence?(T) and CallDefined?(StaticSize, Static[T]);
 RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
 LValueSequence?(T) = Sequence?(T) and LValue?(next(iterator(typeToLValue(T))));
 

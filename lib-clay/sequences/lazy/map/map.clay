@@ -92,11 +92,14 @@ inline overload dec(x:MappedCoordinate[F, COORD]) {
 
 
 //
-// size, index
+// size, StaticSize, index
 //
 
 [F, A | CallDefined?(size, A)]
 inline overload size(a:Mapped[F, A]) = size(a.seq);
+
+[F, A | CallDefined?(StaticSize, Static[A])]
+overload StaticSize(static Mapped[F,A]) = StaticSize(A);
 
 [F, A, I | CallDefined?(index, A, I)]
 inline overload index(a:Mapped[F, A], i:I) =

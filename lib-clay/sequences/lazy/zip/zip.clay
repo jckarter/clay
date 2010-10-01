@@ -68,6 +68,15 @@ inline overload size(a:Zipped[A]) {
     return min([...mapValues(f, ...unpackSequences(a.seqs))]);
 }
 
+private AllStaticSized?(A) {
+    var staticSizeDefined? = (T => CallDefined?(StaticSize, Static[T]));
+    return allValues?(staticSizeDefined?, ...Type(...unpackSequences(null(A)^)));
+}
+
+[A | AllStaticSized?(A)]
+overload StaticSize(static Zipped[A]) =
+    min([...mapValues(StaticSize, ...Type(...unpackSequences(null(A)^)))]);
+
 private AllIndexable?(A, I) {
     var indexDefined? = (T => CallDefined?(index, T, I));
     return multiValueAll?(indexDefined?, ...Type(unpackSequences(null(A)^)));

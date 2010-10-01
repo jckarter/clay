@@ -19,6 +19,9 @@ overload SequenceContainer?(static Array[T,n]) = true;
 [T,n]
 inline overload size(a:Array[T,n]) = SizeT(n);
 
+[T,n]
+inline overload StaticSize(static Array[T,n]) = SizeT(n);
+
 [T,n,I | Integer?(I)]
 inline overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
 
@@ -69,6 +72,105 @@ inline overload unpackElements(a:Array[T,n], static i) = ;
 [T,n,...A | (countValues(...A) == n) and equalValues?(T, ...A)]
 callbyname overload Array[T,n](...args:A) returned:Array[T,n] {
     ...unpackArrayRef(returned) <-- ...args;
+}
+
+
+
+//
+// constructor from sequences
+//
+
+[T, n, S | Sequence?(S)
+           and (SequenceElementType(S) == T)]
+overload Array[T,n](s:S) returned:Array[T,n] {
+    var first, last = begin(returned), end(returned);
+    try {
+        var srcIter = iterator(s);
+        while (first != last) {
+            assert(hasNext?(srcIter), "insufficient elements for array");
+            first^ <-- next(srcIter);
+            inc(first);
+        }
+        assert(not hasNext?(srcIter), "too many elements for array");
+    }
+    catch (e) {
+        resetMemoryUnsafe(first, last);
+        throw e;
+    }
+}
+
+[T, n, S | SequenceContainer?(S)
+           and (SequenceElementType(S) == T)]
+overload Array[T,n](rvalue s:S) returned:Array[T,n] {
+    var first, last = begin(returned), end(returned);
+    try {
+        var srcIter = iterator(s);
+        while (first != last) {
+            assert(hasNext?(srcIter), "insufficient elements for array");
+            first^ <-- next(srcIter);
+            inc(first);
+        }
+        assert(not hasNext?(srcIter), "too many elements for array");
+    }
+    catch (e) {
+        resetMemoryUnsafe(first, last);
+        throw e;
+    }
+}
+
+[n, S | Sequence?(S)]
+overload Array(static n, forward s:S) {
+    alias T = SequenceElementType(S);
+    return Array[T,n](s);
+}
+
+
+
+//
+// constructor from StaticSizedSequence
+//
+
+[T,n,S | StaticSizedSequence?(S)
+         and (SequenceElementType(S) == T)
+         and (n == StaticSize(S))]
+overload Array[T,n](s:S) returned:Array[T,n] {
+    var first, last = begin(returned), end(returned);
+    try {
+        var srcIter = iterator(s);
+        while (hasNext?(srcIter)) {
+            first^ <-- next(srcIter);
+            inc(first);
+        }
+    }
+    catch (e) {
+        resetMemoryUnsafe(first, last);
+        throw e;
+    }
+}
+
+[T,n,S | StaticSizedSequence?(S)
+         and SequenceContainer?(S)
+         and (SequenceElementType(S) == T)
+         and (n == StaticSize(S))]
+overload Array[T,n](rvalue s:S) returned:Array[T,n] {
+    var first, last = begin(returned), end(returned);
+    try {
+        for (x in s) {
+            first^ <-- move(x);
+            inc(first);
+        }
+    }
+    catch (e) {
+        resetMemoryUnsafe(first, last);
+        throw e;
+    }
+}
+
+[S | StaticSizedSequence?(S)]
+callbyname overload Array(s:S) {
+    alias T = SequenceElementType(S);
+    alias n = static Int(StaticSize(S));
+    return Array[T,n](s);
 }
 
 
@@ -133,3 +235,12 @@ callbyname arrayLiteral(...args:A) {
     alias T = firstValue(...A);
     return Array[T, n](...args);
 }
+
+
+
+//
+// integerArray
+//
+
+[n]
+integerArray(static n) = Array(static n, range(n));
