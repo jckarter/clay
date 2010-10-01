@@ -5,7 +5,7 @@ zip
 16, 3
 25, 2
 36, 1
-filter by greater?
+filtered by greater?
 9, 4
 16, 3
 25, 2

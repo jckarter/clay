@@ -4,8 +4,8 @@ main() {
     println("zip");
     for (x, y in zip(a, b))
         println(x, ", ", y);
-    println("filter by greater?");
-    for (x, y in filter(greater?, a, b))
+    println("filtered by greater?");
+    for (x, y in filtered(greater?, a, b))
         println(x, ", ", y);
     println("mapped min");
     for (x in mapped(min, a, b))

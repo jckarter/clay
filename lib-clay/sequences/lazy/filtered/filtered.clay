@@ -3,12 +3,12 @@ import sequences.util.*;
 
 
 //
-// filter
+// filtered
 //
 
-inline filter(predicate, forward ...seqs) = Filtered(predicate, zip(...seqs));
+inline filtered(predicate, forward ...seqs) = Filtered(predicate, zip(...seqs));
 
-inline overload filter(predicate, forward seq) =
+inline overload filtered(predicate, forward seq) =
     Filtered(predicate, wrapSequence(seq));
 
 

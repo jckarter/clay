@@ -8,7 +8,7 @@ import libc;
 //
 
 directoryListing(x) =
-    filter(notCurrentOrPrevious?, mapped(direntPointerToString, direntSequence(x)));
+    filtered(notCurrentOrPrevious?, mapped(direntPointerToString, direntSequence(x)));
 
 private notCurrentOrPrevious?(x) = not (x == "." or x == "..");
 private direntPointerToString(x) = CStringRef(Pointer[Int8](&x^.d_name));

@@ -11,7 +11,7 @@ main() {
     var b = reverse(mapped(triple, a));
     displayForce(b);
 
-    var c = filter(even?, b);
+    var c = filtered(even?, b);
     displayForce(c);
 
     var d = mapped(triple, Deque(c));

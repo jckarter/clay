@@ -153,7 +153,7 @@ main() {
     println();
     println("d5:");
     var v5 = Vector[Int](17, 19, 23, 29, 31, 37, 41);
-    var d5 = Deque[Int](filter(x => x > 20, v5));
+    var d5 = Deque[Int](filtered(x => x > 20, v5));
     println("Size ", size(d5));
     print("Contents: ");
     for (x in d5) print(x, " ");
