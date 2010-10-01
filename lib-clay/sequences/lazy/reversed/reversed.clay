@@ -3,10 +3,10 @@ import sequences.util.*;
 
 
 //
-// reverse
+// reversed
 //
 
-inline reverse(forward seq) = Reversed(wrapSequence(seq));
+inline reversed(forward seq) = Reversed(wrapSequence(seq));
 
 private record Reversed[A] (
     seq : A
