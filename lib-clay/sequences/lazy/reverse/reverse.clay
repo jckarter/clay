@@ -30,6 +30,9 @@ inline overload reverseIterator(a:Reversed[A]) = iterator(a.seq);
 [A | CallDefined?(size, A)]
 inline overload size(a:Reversed[A]) = size(a.seq);
 
+[A | CallDefined?(StaticSize, Static[A])]
+overload StaticSize(static Reversed[A]) = StaticSize(A);
+
 [A, I | CallDefined?(index, A, I) and CallDefined?(size, A)]
 inline overload index(a:Reversed[A], i:I) =
     forward ...index(a.seq, size(a.seq) - i - 1);
