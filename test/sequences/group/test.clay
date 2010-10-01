@@ -1,11 +1,11 @@
 import test.*;
-import sequences.lazy.group.*;
+import sequences.lazy.grouped.*;
 import strings.encodings.utf8.*;
 
 main() = testMain(
-    TestSuite("lazy group sequences", Tuple(
+    TestSuite("lazy grouped sequences", Tuple(
         TestCase("iterator-only sequences", test => {
-            var ustr = group(UTF8("abc123!!!"), 3);
+            var ustr = grouped(UTF8("abc123!!!"), 3);
             var iter = iterator(ustr);
             
             expectTrue(test, "first hasNext?", hasNext?(iter));
@@ -26,7 +26,7 @@ main() = testMain(
             expectFalse(test, "fourth hasNext?", hasNext?(iter));
         }),
         TestCase("random access coordinate sequences", test => {
-            var str = group(String("abc123!!!"), 3);
+            var str = grouped(String("abc123!!!"), 3);
             var iter = iterator(str);
             
             expectTrue(test, "first hasNext?", hasNext?(iter));
@@ -77,8 +77,8 @@ main() = testMain(
         }),
         TestCase("static grouping", test => {
             var str = String("abcABC123");
-            for (x, y, z in group(str, static 3))
-                expectTrue(test, "static group iteration",
+            for (x, y, z in grouped(str, static 3))
+                expectTrue(test, "static grouped iteration",
                     Int(x) + 1 == Int(y)
                     and Int(y) + 1 == Int(z)
                 );
