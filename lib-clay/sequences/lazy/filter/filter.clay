@@ -20,6 +20,10 @@ private record Filtered[F, A] (
 [F, A | LightweightSequence?(A)]
 overload LightweightSequence?(static Filtered[F,A]) = true;
 
+[F,A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
+overload UnderlyingContainerConstructor(static Filtered[F,A]) =
+    UnderlyingContainerConstructor(A);
+
 
 
 //

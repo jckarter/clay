@@ -15,6 +15,10 @@ private record Reversed[A] (
 [A | LightweightSequence?(A)]
 overload LightweightSequence?(static Reversed[A]) = true;
 
+[A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
+overload UnderlyingContainerConstructor(static Reversed[A]) =
+    UnderlyingContainerConstructor(A);
+
 [A]
 inline overload iterator(a:Reversed[A]) = reverseIterator(a.seq);
 

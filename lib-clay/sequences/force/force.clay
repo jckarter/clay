@@ -1,0 +1,41 @@
+
+
+//
+// UnderlyingContainerConstructor
+//
+
+procedure UnderlyingContainerConstructor;
+
+[T,n]
+overload UnderlyingContainerConstructor(static Array[T,n]) = Array;
+
+[T]
+overload UnderlyingContainerConstructor(static Vector[T]) = Vector;
+
+
+
+//
+// ForcedContainerConstructor
+//
+
+procedure ForcedContainerConstructor;
+
+overload ForcedContainerConstructor(T) = Vector;
+
+[T | CallDefined?(UnderlyingContainerConstructor, Static[T])]
+overload ForcedContainerConstructor(static T) = UnderlyingContainerConstructor(T);
+
+
+[T | CallDefined?(UnderlyingContainerConstructor, Static[T])
+     and (UnderlyingContainerConstructor(T) == Array)
+     and not StaticSizedSequence?(T)]
+overload ForcedContainerConstructor(static T) = Vector;
+
+
+
+//
+// force
+//
+
+[A | Sequence?(A)]
+callbyname force(a:A) = ForcedContainerConstructor(A)(a);
