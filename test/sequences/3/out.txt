@@ -10,28 +10,28 @@ filter by greater?
 16, 3
 25, 2
 36, 1
-map min
+mapped min
 1
 4
 4
 3
 2
 1
-map max
+mapped max
 6
 5
 9
 16
 25
 36
-map multiply
+mapped multiply
 6
 20
 36
 48
 50
 36
-map swap
+mapped swap
 6, 1
 5, 4
 4, 9

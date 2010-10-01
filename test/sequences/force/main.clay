@@ -8,13 +8,13 @@ main() {
     var a = integerArray(static 5);
     displayForce(a);
 
-    var b = reverse(map(triple, a));
+    var b = reverse(mapped(triple, a));
     displayForce(b);
 
     var c = filter(even?, b);
     displayForce(c);
 
-    var d = map(triple, Deque(c));
+    var d = mapped(triple, Deque(c));
     displayForce(d);
 }
 

@@ -258,7 +258,7 @@ private UnmarshalAsVectorSequence?(S)
 
 private sequenceMarshaledSize(context, seq)
     = MarshalSize(TypeSize(MarshalSize))
-    + reduce(add, MarshalSize(0), map(f ref=> marshaledSize(context, f), seq));
+    + reduce(add, MarshalSize(0), mapped(f ref=> marshaledSize(context, f), seq));
 
 [S | MarshalableSequence?(S)]
 overload marshaledSize(context, seq: S) = sequenceMarshaledSize(context, seq);

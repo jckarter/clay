@@ -17,13 +17,13 @@ main() {
     var a = [1, 2, 3];
     f( a );
 
-    var b = map(addressOf, a);
+    var b = mapped(addressOf, a);
     f( b );
 
-    var c = map(dereference, b);
+    var c = mapped(dereference, b);
     f( c );
 
-    var d = map(copy, c);
+    var d = mapped(copy, c);
     f( d );
 
     f( lines(File("main.clay")) );

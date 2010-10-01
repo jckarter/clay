@@ -62,7 +62,7 @@ alias String = Vector[Char];
 //
 
 [A | Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
-inline overload String(a:A) = String(map(Char, a));
+inline overload String(a:A) = String(mapped(Char, a));
 
 
 

@@ -3,7 +3,7 @@ import deques.*;
 
 main() {
     var a = integerArray(static 5);
-    var b = zip(a, reverse(map(x => 2*x, a)));
+    var b = zip(a, reverse(mapped(x => 2*x, a)));
 
     var c = Array(b);
     println(c);

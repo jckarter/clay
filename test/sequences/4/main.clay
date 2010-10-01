@@ -49,8 +49,8 @@ main() {
     }
 
     {
-        // test map, range, reduce
-        var a = map(x => x+1, range(10));
+        // test mapped, range, reduce
+        var a = mapped(x => x+1, range(10));
         var s = reduce(add, 0, a);
         println(s);
     }

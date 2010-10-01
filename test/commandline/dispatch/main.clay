@@ -2,17 +2,17 @@ import commandline.dispatch.*;
 
 add(args) {
     println(
-        if (empty?(args)) PtrInt(0) else reduce((a, b) => a + b, map(PtrInt, args))
+        if (empty?(args)) PtrInt(0) else reduce((a, b) => a + b, mapped(PtrInt, args))
     );
 }
 subtract(args) {
     println(
-        if (empty?(args)) PtrInt(0) else reduce((a, b) => a - b, map(PtrInt, args))
+        if (empty?(args)) PtrInt(0) else reduce((a, b) => a - b, mapped(PtrInt, args))
     );
 }
 multiply(args) {
     println(
-        if (empty?(args)) PtrInt(1) else reduce((a, b) => a * b, map(PtrInt, args))
+        if (empty?(args)) PtrInt(1) else reduce((a, b) => a * b, mapped(PtrInt, args))
     );
 }
 
@@ -30,7 +30,7 @@ divide(args) {
                 throw DivideByZero();
             else
                 return a / b;
-        }, map(Double, args)));
+        }, mapped(Double, args)));
         return 0;
     } catch (ex: DivideByZero) {
         printlnTo(stderr, "Division by zero!");

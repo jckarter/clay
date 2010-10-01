@@ -125,7 +125,7 @@ overload Array(static n, forward s:S) {
 }
 
 [n, S | MultiValuedSequence?(S)]
-overload Array(static n, forward s:S) = Array(static n, map(Tuple, s));
+overload Array(static n, forward s:S) = Array(static n, mapped(Tuple, s));
 
 
 
@@ -177,7 +177,7 @@ callbyname overload Array(s:S) {
 }
 
 [S | StaticSizedSequence?(S) and MultiValuedSequence?(S)]
-callbyname overload Array(s:S) = Array(map(Tuple, s));
+callbyname overload Array(s:S) = Array(mapped(Tuple, s));
 
 
 

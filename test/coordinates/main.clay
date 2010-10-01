@@ -16,12 +16,12 @@ main() {
     var a = [1, 2, 3];
     f( begin(a) );
 
-    var b = map(addressOf, a);
+    var b = mapped(addressOf, a);
     f( begin(b) );
 
-    var c = map(dereference, b);
+    var c = mapped(dereference, b);
     f( begin(c) );
 
-    var d = map(copy, c);
+    var d = mapped(copy, c);
     f( begin(d) );
 }
