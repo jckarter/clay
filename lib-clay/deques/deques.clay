@@ -161,6 +161,9 @@ overload Deque(forward from:A) {
     return Deque[T](from);
 }
 
+[A | MultiValuedSequence?(A)]
+overload Deque(forward from:A) = Deque(map(Tuple, from));
+
 [T] overload assign(to: Deque[T], from: Deque[T]) {
     resize(to, size(from));
     var toI = to.begin;

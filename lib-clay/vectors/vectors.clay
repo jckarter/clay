@@ -49,6 +49,9 @@ overload Vector(forward a:A) {
     return Vector[T](a);
 }
 
+[A | MultiValuedSequence?(A)]
+overload Vector(forward a:A) = Vector(map(Tuple, a));
+
 
 
 //

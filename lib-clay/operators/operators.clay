@@ -139,7 +139,6 @@ RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
 LValueSequence?(T) = Sequence?(T) and LValue?(next(iterator(typeToLValue(T))));
 
 CoordinateSequence?(T) = Sequence?(T) and CallDefined?(begin, T) and CallDefined?(end, T);
-
 SequenceCoordinateType(T) = Type(begin(typeToLValue(T)));
 
 SequenceIteratorType(T) = Type(iterator(typeToLValue(T)));
@@ -152,6 +151,13 @@ LightweightSequence?(T) = false;
 
 // true for sequences which have value semantics.
 SequenceContainer?(T) = false;
+
+// true if sequence is not single-valued (0 valued sequences are included).
+MultiValuedSequence?(T) =
+    Sequence?(T) and multiValued?(...Type(...next(iterator(typeToLValue(T)))));
+
+private multiValued?(...x) = true;
+overload multiValued?(x) = false;
 
 
 
