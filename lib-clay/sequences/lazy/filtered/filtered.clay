@@ -6,7 +6,7 @@ import sequences.util.*;
 // filtered
 //
 
-inline filtered(predicate, forward ...seqs) = Filtered(predicate, zip(...seqs));
+inline filtered(predicate, forward ...seqs) = Filtered(predicate, zipped(...seqs));
 
 inline overload filtered(predicate, forward seq) =
     Filtered(predicate, wrapSequence(seq));

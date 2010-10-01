@@ -315,7 +315,7 @@ crackRun(args) {
     var nodes     = Vector[StreamSocket](map(connectNode, slice(args, 2)));
     var nodeCount = size(nodes);
     
-    for (i, node in zip(range(nodeCount), nodes)) {
+    for (i, node in zipped(range(nodeCount), nodes)) {
         remoteMessage(node, () => {
             crackKey(plaintext, cipher, addKey("0", i), nodeCount);
         });

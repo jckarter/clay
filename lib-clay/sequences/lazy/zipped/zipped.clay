@@ -3,10 +3,10 @@ import sequences.util.*;
 
 
 //
-// zip
+// zipped
 //
 
-inline zip(forward first, forward ...rest) =
+inline zipped(forward first, forward ...rest) =
     Zipped(packSequences(first, ...rest));
 
 private record Zipped[A] (

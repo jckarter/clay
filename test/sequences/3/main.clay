@@ -1,8 +1,8 @@
 main() {
     var a = Vector([1, 4, 9, 16, 25, 36]);
     var b = Vector([6, 5, 4, 3, 2, 1]);
-    println("zip");
-    for (x, y in zip(a, b))
+    println("zipped");
+    for (x, y in zipped(a, b))
         println(x, ", ", y);
     println("filtered by greater?");
     for (x, y in filtered(greater?, a, b))

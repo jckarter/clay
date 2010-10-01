@@ -1,6 +1,6 @@
 
 public import sequences.lazy.range.*;
-public import sequences.lazy.zip.*;
+public import sequences.lazy.zipped.*;
 public import sequences.lazy.mapped.*;
 public import sequences.lazy.filtered.*;
 public import sequences.lazy.enumerate.*;
