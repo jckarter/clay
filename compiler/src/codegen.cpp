@@ -915,7 +915,7 @@ void codegenExpr(ExprPtr expr,
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        codegenCallExpr(prelude_expr_Array(), x->args, env, ctx, out);
+        codegenCallExpr(prelude_expr_arrayLiteral(), x->args, env, ctx, out);
         break;
     }
 

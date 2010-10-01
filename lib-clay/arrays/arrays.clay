@@ -63,19 +63,6 @@ inline overload unpackElements(a:Array[T,n], static i) = ;
 
 
 //
-// Array - type inferring constructor
-//
-
-[...A | (countValues(...A) > 0) and equalValues?(...A)]
-callbyname overload Array(...args:A) {
-    alias n = static countValues(...A);
-    alias T = firstValue(...A);
-    return Array[T, n](...args);
-}
-
-
-
-//
 // basic constructor
 //
 
@@ -132,4 +119,17 @@ overload lesser?(a:Array[T,n], b:Array[T,n]) {
             return x < y;
     }
     return false;
+}
+
+
+
+//
+// arrayLiteral - type inferring constructor
+//
+
+[...A | (countValues(...A) > 0) and equalValues?(...A)]
+callbyname arrayLiteral(...args:A) {
+    alias n = static countValues(...A);
+    alias T = firstValue(...A);
+    return Array[T, n](...args);
 }
