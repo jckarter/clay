@@ -16,7 +16,7 @@ main() {
         var c = sliceFrom(a, 5);
         printList(c);
 
-        var d = mapped(max, a, reverse(a));
+        var d = mapped(max, a, reversed(a));
         printList(d);
     }
     {
@@ -26,7 +26,7 @@ main() {
     }
     {
         var a = Vector(range(100));
-        var b = Vector(reverse(a));
+        var b = Vector(reversed(a));
         sort(b);
         println(a == b);
     }

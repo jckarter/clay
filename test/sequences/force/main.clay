@@ -8,7 +8,7 @@ main() {
     var a = integerArray(static 5);
     displayForce(a);
 
-    var b = reverse(mapped(triple, a));
+    var b = reversed(mapped(triple, a));
     displayForce(b);
 
     var c = filtered(even?, b);

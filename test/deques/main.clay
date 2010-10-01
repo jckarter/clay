@@ -37,7 +37,7 @@ main() {
     println("Reverse Iterating:");
     
     var n = 0;
-    for (x in reverse(d1)) {
+    for (x in reversed(d1)) {
         print(x, " ");
         n += 1;
         if (n == 20) {

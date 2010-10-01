@@ -220,7 +220,7 @@ overload Deque(forward from:A) = Deque(mapped(Tuple, from));
 
 [T, S | Sequence?(S) and SequenceElementType(S) == T]
 overload pushFront(deque: Deque[T], forward seq: S) {
-    for (x in reverse(seq))
+    for (x in reversed(seq))
         pushFront(deque, x);
 }
 
@@ -230,7 +230,7 @@ overload pushFront(deque: Deque[T], forward seq: S) {
     deque.begin = reserveDequeFrontElements(deque, seqSize);
     var i = deque.begin + seqSize;
     try {
-        for (x in reverse(seq)) {
+        for (x in reversed(seq)) {
             dec(i);
             i^ <-- x;
         }
@@ -635,7 +635,7 @@ private printMap(deque) {
 
 [T, S | Sequence?(S)]
 private insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
-    for (x in reverse(seq))
+    for (x in reversed(seq))
         insertDequeValue(deque, i, seq);
 }
 

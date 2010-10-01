@@ -10,20 +10,20 @@ printList(a) {
 
 main() {
     printList(range(5));
-    var a = reverse(range(10));
+    var a = reversed(range(10));
     printList(a);
-    printList(reverse(a));
+    printList(reversed(a));
 
     var b = [1, 2, 3, 4, 5];
-    printList(reverse(b));
+    printList(reversed(b));
 
-    var c = reverse(Vector(b));
+    var c = reversed(Vector(b));
     printList(c);
 
     var d = Vector(b);
-    var e = reverse(d);
+    var e = reversed(d);
     printList(e);
 
-    var f = reverse(e);
+    var f = reversed(e);
     printList(f);
 }

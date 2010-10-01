@@ -3,7 +3,7 @@ main() {
     var a = integerArray(static 5);
     println(a);
 
-    var b = Array(reverse(mapped(x => 2*x, a)));
+    var b = Array(reversed(mapped(x => 2*x, a)));
     println(b);
 
     var c = Array(mapped(add, zip(a, b)));

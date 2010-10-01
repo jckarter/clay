@@ -62,7 +62,7 @@ inline overload iterator(a:Slice[SequenceHandle[A]]) = a;
 [A]
 inline overload reverseIterator(a:Slice[A]) {
     var n = size(a.seq);
-    return Slice(reverse(a.seq), n-a.end, n-a.begin);
+    return Slice(reversed(a.seq), n-a.end, n-a.begin);
 }
 
 [A]
