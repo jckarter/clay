@@ -987,7 +987,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        evalCallExpr(prelude_expr_Array(), x->args, env, out);
+        evalCallExpr(prelude_expr_arrayLiteral(), x->args, env, out);
         break;
     }
 

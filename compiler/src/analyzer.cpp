@@ -603,7 +603,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
-        return analyzeCallExpr(prelude_expr_Array(), x->args, env);
+        return analyzeCallExpr(prelude_expr_arrayLiteral(), x->args, env);
     }
 
     case INDEXING : {
