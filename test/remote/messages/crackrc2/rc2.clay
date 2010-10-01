@@ -1,4 +1,8 @@
 import libc.(sprintf);
+import commandline.dispatch.*;
+import maybe.*;
+import io.sockets.*;
+import remote.messages.*;
 
 var rc2Permute = [
         217u8,120u8,249u8,196u8, 25u8,221u8,181u8,237u8, 40u8,233u8,253u8,121u8, 74u8,160u8,216u8,157u8, 
@@ -160,7 +164,6 @@ readCipher(str) cipher: Array[UInt8, 8] {
 
 showCipher(cipher) {
     var s = String();
-    reserve(s, 17);
     resize(s, 16);
     sprintf(cstring(s), cstring("%02X%02X%02X%02X%02X%02X%02X%02X"),
         ...sequenceValues(cipher, static 8)
@@ -168,33 +171,153 @@ showCipher(cipher) {
     return s;
 }
 
-main() {
-    var argv = commandLine();
-    var argc = size(argv);
-    if (argc < 4) {
-        println("Usage: ", argv[0], " encrypt key plaintext");
-        println("       ", argv[0], " decrypt key cipher");
+main() = dispatchMain(
+    (encrypt,     "key plaintext => cipher"),
+    (decrypt,     "key cipher => plaintext"),
+    (crack,       "plaintext cipher => key (single process, assumes alphanumeric key)"),
+    (crackNode,   "port => listen for crack jobs from crackServer"),
+    (crackRun,    "plaintext cipher host:port... => distribute crack jobs to crackNodes"),
+);
+
+encrypt(args) {
+    if (size(args) < 2) {
+        println("Usage: ", commandLine()[0], " encrypt key plaintext");
         return 2;
     }
 
-    var xkey = rc2KeySchedule(argv[2]);
+    var xkey = rc2KeySchedule(args[0]);
+    var plaintext = readPlaintext(args[1]);
+    println(showCipher(rc2Encrypt(xkey, plaintext)));
+    return 0;
+}
 
-    switch (argv[1]) {
-    case "encrypt":
-        {
-            var plaintext = readPlaintext(argv[3]);
-            var cipher = rc2Encrypt(xkey, plaintext);
-            println(showCipher(cipher));
-            println(showCipher(cipher));
-        }
-        break;
-    case "decrypt":
-        {
-            var cipher = readCipher(argv[3]);
-            println(showPlaintext(rc2Decrypt(xkey, cipher)));
-        }
-        break;
+decrypt(args) {
+    if (size(args) < 2) {
+        println("Usage: ", commandLine()[0], " decrypt key cipher");
+        return 2;
     }
 
+    var xkey = rc2KeySchedule(args[0]);
+    var cipher = readCipher(args[1]);
+    println(showPlaintext(rc2Decrypt(xkey, cipher)));
     return 0;
+}
+
+record AlnumKeySpace (key: String, stride: Int);
+
+overload AlnumKeySpace(start, stride) ks: AlnumKeySpace {
+    ks.key <-- String(start);
+    ks.stride <-- Int(stride);
+}
+
+overload iterator(ks: AlnumKeySpace) = ks;
+overload hasNext?(ks: AlnumKeySpace) = size(ks.key) <= 128;
+overload next(ks: AlnumKeySpace) {
+    var ret = ks.key;
+    for (i in range(ks.stride))
+        incKey(ks.key, 0);
+    return ret;
+}
+
+record InvalidAlnumKey();
+instance Exception = InvalidAlnumKey;
+
+private incKeyChar(char) {
+    if (char >= '0' and char < '9'
+        or char >= 'A' and char < 'Z'
+        or char >= 'a' and char < 'z')
+        return Char(UInt8(char) + 1);
+    else if (char == '9')
+        return 'A';
+    else if (char == 'Z')
+        return 'a';
+    else
+        throw InvalidAlnumKey();
+}
+
+private incKey(str, n) {
+    if (n == size(str))
+        push(str, '0');
+    else if (str[n] == 'z') {
+        str[n] = '0';
+        return ...incKey(str, n+1);
+    } else
+        str[n] = incKeyChar(str[n]);
+}
+
+private addKey(s, count) {
+    var key = String(s);
+    for (i in range(count))
+        incKey(key, 0);
+    return move(key);
+}
+
+crackKey(plaintext, cipher, from, stride) {
+    var xkey = XKey();
+    for (key in AlnumKeySpace(from, stride)) {
+        println("trying key ", key); //XXX
+        xkey <-- rc2KeySchedule(key);
+        if (rc2Encrypt(xkey, plaintext) == cipher)
+            return Maybe(key);
+    }
+    
+    return nothing(String);
+}
+
+crack(args) {
+    if (size(args) < 2) {
+        println("Usage: ", commandLine()[0], " crack plaintext cipher");
+        return 2;
+    }
+    var plaintext = readPlaintext(args[0]);
+    var cipher = readCipher(args[1]);
+
+    var maybeKey = crackKey(plaintext, cipher, "0", 1);
+    return maybe(maybeKey,
+        key => { println("Key found! ", key); return 0; },
+        () => { println("Key not found"); return 1; }
+    );
+}
+
+crackNode(args) {
+    if (size(args) < 1) {
+        println("Usage: ", commandLine()[0], " crackNode port");
+    }
+
+    var port = Int(args[0]);
+
+    var listener = ListenSocket(Inet(INADDR_ANY, port), 0);
+    var conn, remoteAddress = ...accept(listener);
+
+    answerRemoteMessage(conn);
+}
+
+record InvalidNodeAddress (address: String);
+instance Exception = InvalidNodeAddress;
+
+connectNode(name) {
+    var hostport = split(name, ':');
+    if (size(hostport) != 2)
+        throw InvalidNodeAddress(name);
+    var host = hostport[0];
+    var port = Int(hostport[1]);
+
+    return StreamSocket(Inet(host, port));
+}
+
+crackRun(args) {
+    if (size(args) < 3) {
+        println("Usage: ", commandLine()[0], " crackRun plaintext cipher host:port...");
+    }
+
+    var plaintext = readPlaintext(args[0]);
+    var cipher    = readCipher(args[1]);
+    var nodes     = Vector[StreamSocket](map(connectNode, slice(args, 2)));
+    var nodeCount = size(nodes);
+    
+    for (i, node in zip(range(nodeCount), nodes)) {
+        remoteMessage(node, () => {
+            crackKey(plaintext, cipher, addKey("0", i), nodeCount);
+        });
+    }
 }
