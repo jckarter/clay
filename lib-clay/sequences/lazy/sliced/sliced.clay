@@ -2,41 +2,16 @@
 import sequences.util.*;
 import sequences.handle.*;
 
+
 
 //
-// sliced, slicedFrom, slicedUpto
+// Sliced
 //
 
-[A, I, J | Sequence?(A) and Integer?(I) and Integer?(J)]
-inline sliced(forward a:A, begin:I, end:J) =
-    sliced(a,
-          toBiggerNumericType(I, J, begin),
-          toBiggerNumericType(I, J, end));
-
-
-[A, I | Sequence?(A) and Integer?(I)]
-inline overload sliced(forward a:A, begin:I, end:I) =
-    Sliced(wrapSequence(a), SizeT(begin), SizeT(end));
-
-[T, I | RandomAccessCoordinate?(T) and Integer?(I)]
-inline overload sliced(a:CoordinateRange[T], begin:I, end:I) =
-    CoordinateRange[T](a.begin + begin, a.begin + end);
-
-
-[A, I | Sequence?(A) and Integer?(I)]
-inline overload sliced(forward a:A, begin:I) = sliced(a, begin, size(a));
-
-[A, I | Sequence?(A) and Integer?(I)]
-inline slicedFrom(forward a:A, begin:I) = sliced(a, begin);
-
-[A, I | Sequence?(A) and Integer?(I)]
-inline slicedUpto(forward a:A, end:I) = sliced(a, I(0), end);
-
-
-private record Sliced[A] (
+record Sliced[A](
     seq : A,
-    begin : SizeT,
-    end : SizeT,
+    first : SequenceCoordinateType(A),
+    last : SequenceCoordinateType(A),
 );
 
 [A | LightweightSequence?(A)]
@@ -49,39 +24,76 @@ overload UnderlyingContainerConstructor(static Sliced[A]) =
 
 
 //
-// iteration
+// sliced, slicedFrom, slicedUpto
 //
 
-[A]
-inline overload iterator(a:Sliced[A]) =
-    Sliced(sequenceHandle(a.seq), a.begin, a.end);
+procedure sliced;
 
-[A]
-inline overload iterator(a:Sliced[SequenceHandle[A]]) = a;
-
-[A]
-inline overload reverseIterator(a:Sliced[A]) {
-    var n = size(a.seq);
-    return Sliced(reversed(a.seq), n-a.end, n-a.begin);
+[A, C | CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
+inline overload sliced(forward a:A, first:C, last:C) {
+    alias T = Type(wrapSequence(a));
+    return Sliced[T](wrapSequence(a), first, last);
 }
 
-[A]
-inline overload hasNext?(a:Sliced[A]) = (a.begin != a.end);
-
-[A]
-inline overload next(a:Sliced[A]) {
-    inc(a.begin);
-    return forward ...a.seq[a.begin-1];
+[A, C | C == SequenceCoordinateType(A)]
+inline overload sliced(lvalue a:Sliced[A], first:C, last:C) {
+    alias T = Type(wrapSequence(a.seq));
+    return Sliced[T](wrapSequence(a.seq), first, last);
 }
+
+[A, C | C == SequenceCoordinateType(A)]
+inline overload sliced(rvalue a:Sliced[A], first:C, last:C) {
+    alias T = Type(move(a.seq));
+    Sliced[T](move(a.seq), first, last);
+}
+
+[A, I, J | RandomAccessSequence?(A) and Integer?(I) and Integer?(J)]
+inline overload sliced(forward a:A, first:I, last:J) {
+    var b = begin(a);
+    return sliced(a, b+first, b+last);
+}
+
+procedure slicedFrom;
+
+[A, C | CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
+inline overload slicedFrom(forward a:A, first:C) =
+    sliced(a, first, end(a));
+
+[A, I | RandomAccessSequence?(A) and Integer?(I)]
+inline overload slicedFrom(forward a:A, first:I) =
+    slicedFrom(a, begin(a)+first);
+
+procedure slicedUpto;
+
+[A, C | CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
+inline overload slicedUpto(forward a:A, last:C) =
+    sliced(a, begin(a), last);
+
+[A, I | RandomAccessSequence?(A) and Integer?(I)]
+inline overload slicedUpto(forward a:A, last:I) =
+    slicedUpto(a, begin(a)+last);
 
 
 
 //
-// size, index
+// sequence operations
 //
 
 [A]
-inline overload size(a:Sliced[A]) = a.end - a.begin;
+inline overload iterator(a:Sliced[A]) = coordinateRange(a.first, a.last);
 
-[A,I | Integer?(I)]
-inline overload index(a:Sliced[A], i:I) = forward ...index(a.seq, a.begin + i);
+[A | RandomAccessSequence?(A)]
+inline overload reverseIterator(a:Sliced[A]) =
+    reverseCoordinateRange(a.last, a.first);
+
+[A | RandomAccessSequence?(A)]
+inline overload size(a:Sliced[A]) = SizeT(a.last - a.first);
+
+[A, I | RandomAccessSequence?(A) and Integer?(I)]
+inline overload index(a:Sliced[A], i:I) = forward ...(a.first + i)^;
+
+[A]
+inline overload begin(a:Sliced[A]) = a.first;
+
+[A]
+inline overload end(a:Sliced[A]) = a.last;
