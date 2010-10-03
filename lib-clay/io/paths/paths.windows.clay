@@ -1,0 +1,7 @@
+
+import win32;
+
+pathExists?(p) {
+    var result = win32.GetFileAttributesA(cstring(p));
+    return result != win32.INVALID_FILE_ATTRIBUTES;
+}
