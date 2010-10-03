@@ -3,6 +3,7 @@ import paged.misc.*;
 
 import strings;
 import io.mapping.*;
+import io.paths.*;
 
 
 
@@ -27,7 +28,7 @@ overload RegularRecord?(static NamedScalar[T]) = false;
 
 [S,T | String?(S)]
 overload NamedScalar[T](fileName:S, initial:T) {
-    if (fileExists?(fileName)) {
+    if (pathExists?(fileName)) {
         var f = File(fileName, READ_WRITE);
         var mapping = FileMapping(f, MAP_READ_WRITE);
         return NamedScalar[T](strings.String(fileName), f, mapping);
