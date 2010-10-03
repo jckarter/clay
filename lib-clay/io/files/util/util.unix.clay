@@ -1,8 +1,0 @@
-
-import unix;
-
-fileExists?(p) {
-    var statBuf = unix.Struct_stat();
-    var result = unix.lstat(cstring(p), &statBuf);
-    return result == 0;
-}

@@ -5,6 +5,7 @@ import paged.misc.*;
 import vectors.generic.*;
 import strings;
 import io.mapping.*;
+import io.paths.*;
 
 
 
@@ -49,7 +50,7 @@ private requiredFileSize(static T, capacity) =
 
 [S,T | String?(S)]
 overload NamedVector[T](fileName:S) {
-    if (fileExists?(fileName)) {
+    if (pathExists?(fileName)) {
         var f = File(fileName, READ_WRITE);
         var mapping = FileMapping(f, MAP_READ_WRITE);
         var header = Pointer[Header](mappingAddress(mapping));
