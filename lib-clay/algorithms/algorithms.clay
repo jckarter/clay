@@ -254,6 +254,19 @@ overload endsWith?(seq:A, x:T) =
 
 
 //
+// reverseInPlace
+//
+
+[A | RandomAccessSequence?(A) and LValueSequence?(A)]
+reverseInPlace(a:A) {
+    var n = size(a);
+    for (i in range(n/2))
+        swap(a[i], a[n-i-1]);
+}
+
+
+
+//
 // split
 //
 
