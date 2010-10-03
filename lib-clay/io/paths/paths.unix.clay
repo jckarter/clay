@@ -5,11 +5,11 @@ import libc;
 
 
 //
-// PATH_SEPARATOR, DIRECTORY_SEPARATOR, rootDirectory?, absolutePath?
+// PATH_SEPARATOR, PATH_LIST_SEPARATOR, rootDirectory?, absolutePath?
 //
 
 alias PATH_SEPARATOR = '/';
-alias DIRECTORY_SEPARATOR = ':';
+alias PATH_LIST_SEPARATOR = ':';
 
 rootDirectory?(s) = (s == "/");
 absolutePath?(s) = beginsWith?(s, '/');
@@ -114,7 +114,7 @@ pathExists?(p) {
 
 systemPath() {
     var pathList = CStringRef(libc.getenv(cstring("PATH")));
-    return split(pathList, DIRECTORY_SEPARATOR);
+    return split(pathList, PATH_LIST_SEPARATOR);
 }
 
 currentDirectory() {
