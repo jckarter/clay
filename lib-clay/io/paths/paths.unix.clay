@@ -1,0 +1,157 @@
+
+import unix;
+import libc;
+
+
+
+//
+// PATH_SEPARATOR, DIRECTORY_SEPARATOR, rootDirectory?, absolutePath?
+//
+
+alias PATH_SEPARATOR = '/';
+alias DIRECTORY_SEPARATOR = ':';
+
+rootDirectory?(s) = (s == "/");
+absolutePath?(s) = beginsWith?(s, '/');
+
+
+
+//
+// splittedPath, splitPath, splitPathAll
+//
+
+splittedPath(path) {
+    var path2 = directoryTailTrimmed(path);
+    var p = reverseFind(path2, '/');
+    var parent, child = slicedUpto(path2, p), slicedFrom(path2, p);
+    return directoryTailTrimmed(parent), child;
+}
+
+splitPath(path) = ...mapValues(force, ...splittedPath(path));
+
+private directoryTailTrimmed(s) {
+    var p = slicedUpto(s, size(s));
+    while ((not empty?(p)) and (not rootDirectory?(p)) and endsWith?(p, '/'))
+        p = slicedUpto(p, size(p)-1);
+    return move(p);
+}
+
+splitPathAll(path) {
+    var parts = Vector[String]();
+    var parent, child = ...splittedPath(path);
+    while (not empty?(child)) {
+        push(parts, String(child));
+        parent, child = ...splittedPath(parent);
+    }
+    push(parts, String(parent));
+    reverseInPlace(parts);
+    return move(parts);
+}
+
+
+
+//
+// joinPath
+//
+
+procedure joinPath;
+
+[...S | allValues?(String?, ...S)]
+overload joinPath(...parts:S) {
+    var result = String();
+    static for (part in ...parts)
+        appendPath(result, part);
+    trimDirectoryTail(result);
+    return move(result);
+}
+
+[A | String?(SequenceElementType(A))]
+overload joinPath(parts:A) {
+    var result = String();
+    for (part in parts)
+        appendPath(result, part);
+    trimDirectoryTail(result);
+    return move(result);
+}
+
+private appendPath(path:String, part) {
+    if (absolutePath?(part)) {
+        path = String(part);
+    }
+    else {
+        if ((not empty?(path)) and (not endsWith?(path, '/')))
+            push(path, '/');
+        push(path, part);
+    }
+}
+
+private trimDirectoryTail(path:String) {
+    if ((not empty?(path))
+        and (not rootDirectory?(path))
+        and endsWith?(path, '/'))
+    {
+        pop(path);
+    }
+}
+
+
+
+//
+// pathExists?
+//
+
+pathExists?(p) {
+    var statBuf = unix.Struct_stat();
+    var result = unix.lstat(cstring(p), &statBuf);
+    return result == 0;
+}
+
+
+
+//
+// systemPath, currentDirectory
+//
+
+systemPath() {
+    var pathList = CStringRef(libc.getenv(cstring("PATH")));
+    return split(pathList, DIRECTORY_SEPARATOR);
+}
+
+currentDirectory() {
+    var buf = String();
+    resize(buf, 1024);
+
+    while (true) {
+        var result = unix.getcwd(Pointer[CChar](&buf[0]), size(buf));
+        if (not null?(result))
+            break;
+        if (unix.errno() != unix.ERANGE)
+            error("failed to get current directory: ", unix.errorMessage());
+        resize(buf, 2*size(buf));
+    }
+ 
+    resize(buf, libc.strlen(Pointer[CChar](&buf[0])));
+    return move(buf);
+}
+
+
+
+//
+// pathToExecutable
+//
+
+procedure pathToExecutable;
+
+overload pathToExecutable() = pathToExecutable(commandLine()[0]);
+
+overload pathToExecutable(arg0) {
+    var searchDirs = systemPath();
+    insert(searchDirs, 0, currentDirectory());
+    for (pathDir in searchDirs) {
+        var p = joinPath(pathDir, arg0);
+        if (pathExists?(p))
+            return move(p);
+    }
+    error("executable not found: ", arg0);
+    return String();
+}
