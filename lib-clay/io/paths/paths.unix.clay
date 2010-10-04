@@ -17,33 +17,34 @@ absolutePath?(s) = beginsWith?(s, '/');
 
 
 //
-// splittedPath, splitPath, splitPathAll
+// slicedPath, splitPath, pathComponents
 //
 
-splittedPath(path) {
+slicedPath(path) {
     var path2 = directoryTailTrimmed(path);
     var p = reverseFind(path2, '/');
     var parent, child = slicedUpto(path2, p), slicedFrom(path2, p);
     return directoryTailTrimmed(parent), child;
 }
 
-splitPath(path) = ...mapValues(force, ...splittedPath(path));
+splitPath(path) = ...mapValues(force, ...slicedPath(path));
 
-private directoryTailTrimmed(s) {
-    var p = slicedUpto(s, size(s));
-    while ((not empty?(p)) and (not rootDirectory?(p)) and endsWith?(p, '/'))
-        p = slicedUpto(p, size(p)-1);
-    return move(p);
+private directoryTailTrimmed(path) {
+    if (empty?(path))
+        return slicedUpto(path, 0);
+    var p = reverseFindIf(begin(path)+1, end(path), c => (c != '/'));
+    return slicedUpto(path, p);
 }
 
-splitPathAll(path) {
+pathComponents(path) {
     var parts = Vector[String]();
-    var parent, child = ...splittedPath(path);
+    var parent, child = ...slicedPath(path);
     while (not empty?(child)) {
         push(parts, String(child));
-        parent, child = ...splittedPath(parent);
+        parent, child = ...slicedPath(parent);
     }
-    push(parts, String(parent));
+    if (not empty?(parent))
+        push(parts, String(parent));
     reverseInPlace(parts);
     return move(parts);
 }
@@ -86,12 +87,8 @@ private appendPath(path:String, part) {
 }
 
 private trimDirectoryTail(path:String) {
-    if ((not empty?(path))
-        and (not rootDirectory?(path))
-        and endsWith?(path, '/'))
-    {
+    if (endsWith?(path, '/') and (not rootDirectory?(path)))
         pop(path);
-    }
 }
 
 
