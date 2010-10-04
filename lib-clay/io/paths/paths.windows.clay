@@ -1,5 +1,184 @@
 
 import win32;
+import libc;
+
+
+
+//
+// separators
+//
+
+alias PATH_SEPARATOR1 = '\\';
+alias PATH_SEPARATOR2 = '/';
+
+alias DRIVE_SEPARATOR = ':';
+
+alias PATH_LIST_SEPARATOR = ';';
+
+pathSeparator?(c) = (c == PATH_SEPARATOR1) or (c == PATH_SEPARATOR2);
+pathOrDriveSeparator?(c) = pathSeparator?(c) or (c == DRIVE_SEPARATOR);
+
+private beginsWithPathSeparator?(s) = (not empty?(s)) and pathSeparator?(front(s));
+private endsWithPathSeparator?(s) = (not empty?(s)) and pathSeparator?(back(s));
+
+private endsWithPathOrDriveSeparator?(s) =
+    (not empty?(s)) and pathOrDriveSeparator?(back(s));
+
+private findPathSeparator(path) = findIf(path, pathSeparator?);
+private reverseFindPathSeparator(path) = reverseFindIf(path, pathSeparator?);
+
+private absoluteDirectory?(s) = beginsWithPathSeparator?(s);
+
+
+
+//
+// path predicates
+//
+
+private uppercaseLetter?(c) = (c >= 'A') and (c <= 'Z');
+private lowercaseLetter?(c) = (c >= 'a') and (c <= 'z');
+private letter?(c) = lowercaseLetter?(c) or uppercaseLetter?(c);
+
+private hasDrive?(path) = (size(path) >= 2) and letter?(path[0]) and (path[1] == ':');
+
+private uncPath?(path) = beginsWith?(path, "//") or beginsWith?(path, "\\\\");
+
+
+
+//
+// slicedWindowsPath. returns (volume, directory, name)
+//
+
+slicedWindowsPath(path) {
+    if (uncPath?(path))
+        return ...slicedUNCPath(path);
+    if (hasDrive?(path)) {
+        var volume = slicedUpto(path, 2);
+        var rest = slicedFrom(path, 2);
+        return volume, ...slicedVolumeRelativePath(rest);
+    }
+    return slicedUpto(path,0), ...slicedVolumeRelativePath(path);
+}
+
+private slicedUNCPath(path) {
+    var pathEnd = end(path);
+    var machineEnd = findPathSeparator(slicedFrom(path, 2));
+    if ((machineEnd == pathEnd) or (machineEnd+1 == pathEnd))
+        badUNCPath(path);
+    var shareEnd = findPathSeparator(slicedFrom(path, machineEnd+1));
+    var volume, rest = slicedUpto(path, shareEnd), slicedFrom(path, shareEnd);
+    return volume, ...slicedVolumeRelativePath(rest);
+}
+
+private badUNCPath(path) {
+    error("malformed unc path: ", path);
+}
+
+private slicedVolumeRelativePath(path) {
+    var path2 = directoryTailTrimmed(path);
+    var p = reverseFindPathSeparator(path2);
+    var parent, child = slicedUpto(path2, p), slicedFrom(path2, p);
+    return directoryTailTrimmed(parent), child;
+}
+
+private directoryTailTrimmed(path) {
+    if (empty?(path))
+        return slicedUpto(path, 0);
+    var p = reverseFindIf(begin(path)+1, end(path), c => not pathSeparator?(c));
+    return slicedUpto(path, p);
+}
+
+
+
+//
+// splitWindowsPath, slicedPath, splitPath, pathComponents
+//
+
+splitWindowsPath(path) = ...mapValues(force, ...slicedWindowsPath(path));
+
+slicedPath(path) {
+    var volume, directory, name = ...slicedWindowsPath(path);
+    return sliced(path, begin(volume), end(directory)), name;
+}
+
+splitPath(path) = ...mapValues(force, ...slicedPath(path));
+
+pathComponents(path) {
+    var parts = Vector[String]();
+    var volume, directory, name = ...slicedWindowsPath(path);
+    var parent, child = directory, name;
+    while (not empty?(child)) {
+        push(parts, String(child));
+        parent, child = ...slicedPath(parent);
+    }
+    if (not empty?(parent))
+        push(parts, String(parent));
+    if (not empty?(volume))
+        push(parts, String(volume));
+    reverseInPlace(parts);
+    return move(parts);
+}
+
+
+
+//
+// joinPath
+//
+
+procedure joinPath;
+
+[...S | allValues?(String?, ...S)]
+overload joinPath(...parts:S) {
+    var volume, directory, name = String(), String(), String();
+    static for (part in ...parts)
+        appendPath(volume, directory, name, part);
+    ref result = volume;
+    appendComponent(result, directory);
+    appendComponent(result, name);
+    return move(result);
+}
+
+[A | String?(SequenceElementType(A))]
+overload joinPath(parts:A) {
+    var volume, directory, name = String(), String(), String();
+    for (part in parts)
+        appendPath(volume, directory, name, part);
+    ref result = volume;
+    appendComponent(result, directory);
+    appendComponent(result, name);
+    return move(result);
+}
+
+private appendPath(volume:String, directory:String, name:String, part) {
+    var volume2, directory2, name2 = ...slicedWindowsPath(part);
+    if (not empty?(volume2)) {
+        volume, directory, name = ...mapValues(String, volume2, directory2, name2);
+        return;
+    }
+    if (absoluteDirectory?(directory2)) {
+        directory, name = ...mapValues(String, directory2, name2);
+        return;
+    }
+    appendComponent(directory, name);
+    appendComponent(directory, directory2);
+    name = String(name2);
+}
+
+private appendComponent(base:String, suffix) {
+    if ((not empty?(base))
+        and (not endsWithPathOrDriveSeparator?(base))
+        and (not beginsWithPathSeparator?(suffix)))
+    {
+        push(base, '\\');
+    }
+    push(base, suffix);
+}
+
+
+
+//
+// pathExists?
+//
 
 pathExists?(p) {
     var result = win32.GetFileAttributesA(cstring(p));
