@@ -97,3 +97,9 @@ inline overload begin(a:Sliced[A]) = a.first;
 
 [A]
 inline overload end(a:Sliced[A]) = a.last;
+
+[A]
+inline overload front(a:Sliced[A]) = forward ...(a.first^);
+
+[A | RandomAccessSequence?(A)]
+inline overload back(a:Sliced[A]) = forward ...(a[size(a)-1]^);
