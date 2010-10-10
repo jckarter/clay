@@ -78,3 +78,7 @@ find(afoobarfoo, o) = 2
 split(afoobarfoo, o) = ["af", "", "barf", "", ""]
 find(afoobarfoo, o) = 2
 split(afoobarfoo, o) = ["af", "", "barf", "", ""]
+foofoobarafoobarfoo
+.foo.foobar.afoobarfoo
+/foo/foobar/afoobarfoo
+[1, 2, 0, 2, 3, 0, 3, 4]
