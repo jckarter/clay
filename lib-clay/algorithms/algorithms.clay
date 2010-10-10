@@ -301,6 +301,29 @@ overload advancePast(pos:C, x:T) {
 
 
 //
+// join
+//
+
+[S, A | Sequence?(A) and Sequence?(SequenceElementType(A))
+        and ((S == SequenceElementType(A))
+             or (S == SequenceElementType(SequenceElementType(A))))]
+join(sep:S, a:A) {
+    alias T = SequenceElementType(SequenceElementType(A));
+    var result = Vector[T]();
+    var first = true;
+    for (x in a) {
+        if (not first)
+            push(result, sep);
+        else
+            first = false;
+        push(result, x);
+    }
+    return move(result);
+}
+
+
+
+//
 // binarySearch, binarySearchLowerBound, binarySearchUpperBound
 //
 

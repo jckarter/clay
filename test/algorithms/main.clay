@@ -19,4 +19,9 @@ main() {
         println("find(", s, ", ", x, ") = ", find(s, x) - begin(s));
         println("split(", s, ", ", x, ") = ", split(s, x));
     }
+
+    println(join("", a));
+    println(join(".", a));
+    println(join('/', a));
+    println(join(0, [[1, 2], [2, 3], [3, 4]]));
 }
