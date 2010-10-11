@@ -1,0 +1,108 @@
+private record ObjcObject ();
+private record ObjcMethod ();
+private record ObjcIvar ();
+
+alias Id = Pointer[ObjcObject];
+alias SEL = Pointer[ObjcMethod];
+alias Class = Id;
+alias Ivar = Pointer[ObjcIvar];
+alias Method = RawPointer;
+alias Protocol = Id;
+alias BOOL = CChar;
+
+alias nil = Id(0);
+
+record ObjcSuper (
+    receiver: Id,
+    class: Class,
+);
+
+external objc_msgSend(self: Id, _cmd: SEL, ...) Id;
+external objc_msgSend_stret(r: RawPointer, self: Id, _cmd: SEL, ...);
+
+external objc_msgSendSuper(super: Pointer[ObjcSuper], _cmd: SEL, ...) Id;
+external objc_msgSendSuper_stret(r: RawPointer, super: Pointer[ObjcSuper], _cmd: SEL, ...);
+
+// x86-32/64 only
+external objc_msgSend_fpret(self: Id, _cmd: SEL, ...) Double;
+// x86-64 only
+// external objc_msgSend_fp2ret(self: Id, _cmd: SEL, ...) Complex[Float80];
+
+external objc_getClassList(buffer: RawPointer, bufferLen: Int) Int;
+external objc_getClass(class: Pointer[CChar]) Class;
+external objc_getMetaClass(class: Pointer[CChar]) Class;
+external objc_getProtocol(protocol: Pointer[CChar]) Protocol;
+external objc_allocateClassPair(
+        superclass: Class,
+        name: Pointer[CChar],
+        extraBytes: SizeT
+    ) Class;
+external objc_registerClassPair(class: Class);
+
+external sel_getName(selector: SEL) Pointer[CChar];
+external sel_registerName(name: Pointer[CChar]) SEL;
+external sel_isMapped(selector: SEL) BOOL;
+
+external class_createInstance(class: Class, additionalByteCount: UInt) Id;
+external class_createInstanceFromZone(
+        class: Class,
+        additionalByteCount: UInt,
+        zone: RawPointer
+    ) Id;
+external class_getInstanceMethod(class: Class, selector: SEL) Method;
+external class_getClassMethod(class: Class, selector: SEL) Method;
+external class_copyMethodList(class: Class, outCount: Pointer[UInt]) Pointer[Method];
+external class_getSuperclass(cls: Class) Class;
+external class_getName(cls: Class) Pointer[CChar];
+external class_addMethod(
+        class: Class,
+        name: SEL,
+        imp: RawPointer,
+        types: Pointer[CChar]
+    ) BOOL;
+external class_addProtocol(
+        class: Class,
+        protocol: Protocol
+    ) BOOL;
+external class_addIvar(
+        class: Class,
+        name: Pointer[CChar],
+        size: SizeT,
+        alignment: UInt8,
+        types: Pointer[CChar]
+    ) BOOL;
+external class_getInstanceVariable(
+        class: Class,
+        name: Pointer[CChar]
+    ) Ivar;
+
+external ivar_getName(ivar: Ivar) Pointer[CChar];
+external ivar_getOffset(ivar: Ivar) PtrInt;
+external ivar_getTypeEncoding(ivar: Ivar) Pointer[CChar];
+
+external method_getNumberOfArguments(method: Method) UInt;
+external method_getSizeOfArguments(method: Method) UInt;
+external method_getArgumentInfo(
+        method: Method,
+        argIndex: Int,
+        type: Pointer[Pointer[CChar]],
+        offset: Pointer[Int]
+    ) UInt;
+external method_copyReturnType(method: Method) RawPointer;
+external method_copyArgumentType(method: Method, index: UInt) RawPointer;
+external method_getTypeEncoding(method: Method) RawPointer;
+external method_getName(method: Method) SEL;
+external method_setImplementation(method: Method, imp: RawPointer) RawPointer; 
+external method_getImplementation(method: Method) RawPointer; 
+
+external object_getClass(object: Id) Class;
+external object_getInstanceVariable(
+        object: Id,
+        name: Pointer[CChar],
+        outValue: Pointer[RawPointer]
+    ) Ivar;
+external object_getIvar(
+        object: Id,
+        ivar: Ivar
+    ) Id;
+
