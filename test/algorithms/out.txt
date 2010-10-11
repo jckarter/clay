@@ -82,3 +82,4 @@ foofoobarafoobarfoo
 .foo.foobar.afoobarfoo
 /foo/foobar/afoobarfoo
 [1, 2, 0, 2, 3, 0, 3, 4]
+.foo.foobar.afoobarfoo

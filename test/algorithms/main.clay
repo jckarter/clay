@@ -24,4 +24,5 @@ main() {
     println(join(".", a));
     println(join('/', a));
     println(join(0, [[1, 2], [2, 3], [3, 4]]));
+    println(join(".", map(String, a)));
 }
