@@ -177,13 +177,26 @@ overload lesser?(a:T, b:T) {
 
 
 //
-// RecordWithPredicate
+// RecordWithProperties
 //
 // special type known to the compiler.
-// can be used in computed records to set a custom predicate.
+// can be used in computed records to set custom properties.
 //
 
-record RecordWithPredicate[Predicate, ...Fields](
-    predicate : Predicate,
-    fields : Tuple[...Fields],
-);
+record RecordWithProperties[Properties, Fields]();
+
+recordWithProperties(properties, ...fields) {
+    var fieldsTuple = Tuple(...fields);
+
+    // ensure they're all static
+    static properties;
+    static fieldsTuple;
+
+    return RecordWithProperties[Type(properties), Type(fieldsTuple)]();
+}
+
+recordWithProperty(property, ...fields) =
+    recordWithProperties(Tuple(property), ...fields);
+
+recordWithPredicate(predicate, ...fields) =
+    recordWithProperty((predicate, static true), ...fields);

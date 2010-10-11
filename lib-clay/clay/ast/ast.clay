@@ -16,13 +16,11 @@ alias TokenRange = CoordinateRange[Pointer[Token]];
 // AST nodes
 //
 
-private ast(...fields) = RecordWithPredicate(
+private ast(...fields) = recordWithPredicate(
     ASTNode?,
-    Tuple(
-        (#tokens, TokenRange),
-        (#mainToken, Pointer[Token]),
-        ...fields,
-    ),
+    (#tokens, TokenRange),
+    (#mainToken, Pointer[Token]),
+    ...fields,
 );
 
 procedure ASTNode?;
