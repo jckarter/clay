@@ -305,9 +305,9 @@ overload advancePast(pos:C, x:T) {
 //
 
 [S, A | Sequence?(A) and Sequence?(SequenceElementType(A))
-        and ((S == SequenceElementType(A))
-             or (S == SequenceElementType(SequenceElementType(A)))
-             or (SequenceElementType(S) == SequenceElementType(SequenceElementType(A))))]
+        and ((S == SequenceElementType(SequenceElementType(A)))
+             or (Sequence?(S)
+                 and (SequenceElementType(S) == SequenceElementType(SequenceElementType(A)))))]
 join(sep:S, a:A) {
     alias T = SequenceElementType(SequenceElementType(A));
     var result = Vector[T]();
