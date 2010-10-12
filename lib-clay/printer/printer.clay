@@ -260,7 +260,7 @@ overload printReprTo(stream, a:Vector[T]) {
 
 private printSequenceTo(stream, a) {
     printTo(stream, '[');
-    for (i, x in enumerate(a)) {
+    for (i, x in enumerated(a)) {
         if (i != 0)
             printTo(stream, ", ");
         printReprTo(stream, x);

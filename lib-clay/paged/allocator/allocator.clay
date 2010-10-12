@@ -1,4 +1,5 @@
 import io.mapping.*;
+import io.paths.*;
 import paged.misc.*;
 
 
@@ -171,7 +172,7 @@ initNewFile() {
 
 initializePaging(fileName, fileSize) {
     resetState();
-    var newFile? = not fileExists?(fileName);
+    var newFile? = not pathExists?(fileName);
     var fileMode = READ_WRITE;
     if (newFile?)
         fileMode = CREATE;

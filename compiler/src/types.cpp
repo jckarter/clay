@@ -426,19 +426,42 @@ static bool unpackField(TypePtr x, IdentifierPtr &name, TypePtr &type) {
     return true;
 }
 
-static void setPredicate(ProcedurePtr pred, TypePtr type) {
+static void setProperty(TypePtr type, ProcedurePtr proc, ObjectPtr value) {
     CodePtr code = new Code();
     TypePtr typeType = staticType(type.ptr());
     ExprPtr argType = new ObjectExpr(typeType.ptr());
     FormalArgPtr arg = new FormalArg(new Identifier("x"), argType);
     code->formalArgs.push_back(arg.ptr());
-    ExprPtr returnExpr = new BoolLiteral(true);
+    ExprPtr returnExpr = new ObjectExpr(value);
     code->body = new Return(RETURN_VALUE, new ExprList(returnExpr));
 
-    ExprPtr target = new ObjectExpr(pred.ptr());
+    ExprPtr target = new ObjectExpr(proc.ptr());
     OverloadPtr overload = new Overload(target, code, false, false);
     overload->env = new Env();
-    pred->overloads.insert(pred->overloads.begin(), overload);
+    proc->overloads.insert(proc->overloads.begin(), overload);
+}
+
+static void setProperties(TypePtr type, const vector<TypePtr> &props) {
+    for (unsigned i = 0; i < props.size(); ++i) {
+        TypePtr ptype = props[i];
+        if (ptype->typeKind != TUPLE_TYPE)
+            error("each property should be a tuple (procedure, static value)");
+        TupleTypePtr tt = (TupleType *)ptype.ptr();
+        if (tt->elementTypes.size() != 2)
+            error("each property should be a tuple (procedure, static value)");
+        TypePtr t0 = tt->elementTypes[0];
+        TypePtr t1 = tt->elementTypes[1];
+        if (t0->typeKind != STATIC_TYPE)
+            error("each property should be a tuple (procedure, static value)");
+        StaticTypePtr st0 = (StaticType *)t0.ptr();
+        if (st0->obj->objKind != PROCEDURE)
+            error("each property should be a tuple (procedure, static value)");
+        ProcedurePtr proc = (Procedure *)st0->obj.ptr();
+        if (t1->typeKind != STATIC_TYPE)
+            error("each property should be a tuple (procedure, static value)");
+        StaticTypePtr st1 = (StaticType *)t1.ptr();
+        setProperty(type, proc, st1->obj);
+    }
 }
 
 void initializeRecordFields(RecordTypePtr t) {
@@ -466,26 +489,25 @@ void initializeRecordFields(RecordTypePtr t) {
         if ((mpv->size() == 1) &&
             (mpv->values[0]->type->typeKind == RECORD_TYPE) &&
             (((RecordType *)mpv->values[0]->type.ptr())->record.ptr() ==
-             prelude_RecordWithPredicate().ptr()))
+             prelude_RecordWithProperties().ptr()))
         {
             const vector<ObjectPtr> &params =
                 ((RecordType *)mpv->values[0]->type.ptr())->params;
-            assert(params.size() >= 1);
-            for (unsigned i = 1; i < params.size(); ++i) {
-                assert(params[i]->objKind == TYPE);
-                Type *x = (Type *)params[i].ptr();
-                fieldInfoTypes.push_back(x);
-            }
+            assert(params.size() == 2);
             if (params[0]->objKind != TYPE)
-                argumentError(0, "expecting a predicate");
-            Type *x = (Type *)params[0].ptr();
-            if (x->typeKind != STATIC_TYPE)
-                argumentError(0, "expecting a predicate");
-            StaticType *st = (StaticType *)x;
-            if (st->obj->objKind != PROCEDURE)
-                argumentError(0, "expecting a predicate");
-            Procedure *pred = (Procedure *)st->obj.ptr();
-            setPredicate(pred, t.ptr());
+                argumentError(0, "expecting a tuple of properties");
+            TypePtr param0 = (Type *)params[0].ptr();
+            if (param0->typeKind != TUPLE_TYPE)
+                argumentError(0, "expecting a tuple of properties");
+            TupleTypePtr props = (TupleType *)param0.ptr();
+            if (params[1]->objKind != TYPE)
+                argumentError(1, "expecting a tuple of fields");
+            TypePtr param1 = (Type *)params[1].ptr();
+            if (param1->typeKind != TUPLE_TYPE)
+                argumentError(1, "expecting a tuple of fields");
+            TupleTypePtr fields = (TupleType *)param1.ptr();
+            fieldInfoTypes = fields->elementTypes;
+            setProperties(t.ptr(), props->elementTypes);
         }
         else {
             for (unsigned i = 0; i < mpv->size(); ++i)

@@ -1,0 +1,46 @@
+
+record Point1[T] = obj1((#x, T), (#y, T));
+record Point2[T] = obj2((#x, T), (#y, T));
+
+main() {
+    var P1 = Point1[Int];
+    println(Node?(P1));
+    println(NodeFieldCount(P1));
+
+    var P2 = Point2[Int];
+    println(Node?(P2));
+    println(NodeFieldCount(P2));
+}
+
+
+
+//
+// properties
+//
+
+procedure Node?;
+procedure NodeFieldCount;
+
+overload Node?(x) = false;
+overload NodeFieldCount(x) = -1;
+
+
+
+//
+// obj1, obj2
+//
+
+obj1(...fields) = recordWithProperty(
+    (Node?, static true),
+    ...fields,
+);
+
+[...F]
+obj2(...fields:F) = recordWithProperties(
+    (
+        (Node?, static true),
+        (NodeFieldCount, static countValues(...F)),
+    ),
+    (#extra, Double),
+    ...fields,
+);
