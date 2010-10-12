@@ -1,0 +1,5 @@
+
+alias os = "linux";
+alias osGroup = "unix";
+alias cpu = "x86";
+alias bits = 64;
