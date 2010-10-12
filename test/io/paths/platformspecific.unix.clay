@@ -1,0 +1,68 @@
+
+import test.*;
+import io.paths.*;
+
+expectSplitPath(test, path, expected) {
+    expectEqual(test,
+        "[...splitPath(\"" + path + "\")]",
+        expected,
+        [...splitPath(path)],
+    );
+}
+
+expectPathComponents(test, path, expected) {
+    expectEqual(test,
+        "pathComponents(\"" + path + "\")",
+        expected,
+        pathComponents(path),
+    );
+}
+
+expectJoinPath(test, parts, expected) {
+    var argumentsStr = String();
+    printTo(argumentsStr, Vector(parts));
+    expectEqual(test,
+        "joinPath(" + argumentsStr + ")",
+        expected,
+        joinPath(parts),
+    );
+}
+
+testSuite() =
+    TestSuite("path test suite", Tuple(
+        TestCase("splitPath test cases", test => {
+            expectSplitPath(test, "", ["", ""]);
+            expectSplitPath(test, "/", ["/", ""]);
+            expectSplitPath(test, "foo", ["", "foo"]);
+            expectSplitPath(test, "foo/", ["", "foo"]);
+            expectSplitPath(test, "/foo", ["/", "foo"]);
+            expectSplitPath(test, "/foo/", ["/", "foo"]);
+            expectSplitPath(test, "/foo/bar", ["/foo", "bar"]);
+            expectSplitPath(test, "/foo/bar/", ["/foo", "bar"]);
+        }),
+        TestCase("pathComponents test cases", test => {
+            expectPathComponents(test, "", Vector[String]());
+            expectPathComponents(test, "/", ["/"]);
+            expectPathComponents(test, "foo", ["foo"]);
+            expectPathComponents(test, "foo/", ["foo"]);
+            expectPathComponents(test, "/foo", ["/", "foo"]);
+            expectPathComponents(test, "/foo/", ["/", "foo"]);
+            expectPathComponents(test, "/foo/bar", ["/", "foo", "bar"]);
+            expectPathComponents(test, "/foo/bar/", ["/", "foo", "bar"]);
+            expectPathComponents(test, "/foo/bar/baz/", ["/", "foo", "bar", "baz"]);
+        }),
+        TestCase("joinPath test cases", test => {
+            expectJoinPath(test, Vector[String](), "");
+            expectJoinPath(test, [""], "");
+            expectJoinPath(test, ["", ""], "");
+            expectJoinPath(test, ["", "/"], "/");
+            expectJoinPath(test, ["foo", "/"], "/");
+            expectJoinPath(test, ["foo/bar", "baz/"], "foo/bar/baz");
+            expectJoinPath(test, ["foo/bar/", "baz"], "foo/bar/baz");
+            expectJoinPath(test, ["foo/bar/", "baz/"], "foo/bar/baz");
+            expectJoinPath(test, ["foo/bar/", "/baz/"], "/baz");
+            expectJoinPath(test, ["foo/bar/", "/baz"], "/baz");
+        }),
+    ));
+
+main() = testMain(testSuite());

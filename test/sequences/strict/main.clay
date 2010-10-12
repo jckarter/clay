@@ -1,0 +1,23 @@
+
+import deques.*;
+
+triple(x) = 3*x;
+even?(x) = (x % 2 == 0);
+
+main() {
+    var a = integerArray(static 5);
+    display(a);
+
+    var b = reverse(map(triple, a));
+    display(b);
+
+    var c = filter(even?, b);
+    display(c);
+
+    var d = map(triple, Deque(c));
+    display(d);
+}
+
+display(a) {
+    println(Type(a), ": ", Vector(a));
+}

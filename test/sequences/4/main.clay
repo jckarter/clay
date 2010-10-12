@@ -42,9 +42,9 @@ even?(x) = x % 2 == 0;
 
 main() {
     {
-        // test enumerate
+        // test enumerated
         var a = Vector([10, 20, 40, 80, 160]);
-        for (i, x in enumerate(a))
+        for (i, x in enumerated(a))
             println(i, ") ", x);
     }
 

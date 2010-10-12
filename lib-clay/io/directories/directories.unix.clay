@@ -75,26 +75,3 @@ overload next(x:DirentIterator) {
     x.queued? = false;
     return x.entry;
 }
-
-
-
-//
-// currentDirectory
-//
-
-currentDirectory() {
-    var buf = String();
-    resize(buf, 1024);
-
-    while (true) {
-        var result = getcwd(Pointer[CChar](&buf[0]), size(buf));
-        if (not null?(result))
-            break;
-        if (errno() != ERANGE)
-            error("failed to get current directory: ", errorMessage());
-        resize(buf, 2*size(buf));
-    }
- 
-    resize(buf, libc.strlen(Pointer[CChar](&buf[0])));
-    return move(buf);
-}
