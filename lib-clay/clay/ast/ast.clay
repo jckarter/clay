@@ -339,7 +339,9 @@ record ReturnSpec = ...ast(
 
 record LLVMBody = ...ast((#body, String));
 
-variant CodeBody = StatementPtr | LLVMBody;
+record NoBody = ...ast();
+
+variant CodeBody = StatementPtr | LLVMBody | NoBody;
 
 record Code = ...top(
     (#callByName?, Bool),

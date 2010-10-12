@@ -823,9 +823,15 @@ private var llvmBody = bounds(modify(
     tokenData(LLVM),
 ));
 
+private var noBody = bounds(modify(
+    x => NoBody(),
+    sym(#";"),
+));
+
 private var codeBody = choice(
     modify(CodeBody, clayBody),
     modify(CodeBody, llvmBody),
+    modify(CodeBody, noBody),
 );
 
 
