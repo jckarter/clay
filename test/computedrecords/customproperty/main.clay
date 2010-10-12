@@ -6,10 +6,12 @@ main() {
     var P1 = Point1[Int];
     println(Node?(P1));
     println(NodeFieldCount(P1));
+    println(...NodeFields(P1));
 
     var P2 = Point2[Int];
     println(Node?(P2));
     println(NodeFieldCount(P2));
+    println(Tuple(...NodeFields(P2)));
 }
 
 
@@ -20,9 +22,11 @@ main() {
 
 procedure Node?;
 procedure NodeFieldCount;
+procedure NodeFields;
 
 overload Node?(x) = false;
 overload NodeFieldCount(x) = -1;
+overload NodeFields(x) = false;
 
 
 
@@ -40,6 +44,7 @@ obj2(...fields:F) = recordWithProperties(
     (
         (Node?, static true),
         (NodeFieldCount, static countValues(...F)),
+        (NodeFields, ...fields),
     ),
     (#extra, Double),
     ...fields,
