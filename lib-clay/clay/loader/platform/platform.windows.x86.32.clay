@@ -1,0 +1,5 @@
+
+alias os = "windows";
+alias osGroup = "windows";
+alias cpu = "x86";
+alias bits = 32;
