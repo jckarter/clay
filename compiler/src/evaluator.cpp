@@ -3868,7 +3868,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args, 0);
         ostringstream sout;
-        printName(sout, obj);
+        printStaticName(sout, obj);
         ExprPtr z = new StringLiteral(sout.str());
         evalExpr(z, new Env(), out);
         break;
@@ -3976,6 +3976,19 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == et.ptr());
         *((int *)out0->addr) = *((int *)ev->addr);
+        break;
+    }
+
+    case PRIM_IdentifierP : {
+        ensureArity(args, 1);
+        bool result = false;
+        EValuePtr ev0 = args->values[0];
+        if (ev0->type->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)ev0->type.ptr();
+            result = (st->obj->objKind == IDENTIFIER);
+        }
+        ValueHolderPtr vh = boolToValueHolder(result);
+        evalStaticObject(vh.ptr(), out);
         break;
     }
 
