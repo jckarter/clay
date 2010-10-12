@@ -862,7 +862,18 @@ void printName(ostream &out, ObjectPtr x)
         break;
     }
     case MODULE_HOLDER : {
-        out << "ModuleHolder()";
+        ModuleHolder *y = (ModuleHolder *)x.ptr();
+        if (y->import.ptr()) {
+            DottedNamePtr dname = y->import->dottedName;
+            for (unsigned i = 0; i < dname->parts.size(); ++i) {
+                if (i != 0)
+                    out << ".";
+                out << dname->parts[i]->str;
+            }
+        }
+        else {
+            out << "ModuleHolder()";
+        }
         break;
     }
     case PRIM_OP : {
