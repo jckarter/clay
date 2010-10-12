@@ -82,6 +82,10 @@ overload Identifier(forward x:S) = Identifier(String(x));
 overload DottedName(forward ...a:A) =
     DottedName(Vector[Identifier](...mapValues(Identifier, ...a)));
 
+[A | Sequence?(A) and String?(SequenceElementType(A))]
+overload DottedName(a:A) =
+    DottedName(Vector[Identifier](mapped(Identifier, a)));
+
 
 
 //
