@@ -654,6 +654,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(enumToInt);
     PRIMITIVE(intToEnum);
 
+    PRIMITIVE(IdentifierP);
     PRIMITIVE(IdentifierSize);
     PRIMITIVE(IdentifierConcat);
     PRIMITIVE(IdentifierSlice);

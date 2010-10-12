@@ -4630,7 +4630,7 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args, 0);
         ostringstream sout;
-        printName(sout, obj);
+        printStaticName(sout, obj);
         ExprPtr z = new StringLiteral(sout.str());
         codegenExpr(z, new Env(), ctx, out);
         break;
@@ -4736,6 +4736,19 @@ void codegenPrimOp(PrimOpPtr x,
         CValuePtr out0 = out->values[0];
         assert(out0->type == et.ptr());
         ctx->builder->CreateStore(v, out0->llValue);
+        break;
+    }
+
+    case PRIM_IdentifierP : {
+        ensureArity(args, 1);
+        bool result = false;
+        CValuePtr cv0 = args->values[0];
+        if (cv0->type->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)cv0->type.ptr();
+            result = (st->obj->objKind == IDENTIFIER);
+        }
+        ValueHolderPtr vh = boolToValueHolder(result);
+        codegenStaticObject(vh.ptr(), ctx, out);
         break;
     }
 

@@ -805,6 +805,17 @@ static bool isSafe(char ch)
     return false;
 }
 
+void printStaticName(ostream &out, ObjectPtr x)
+{
+    if (x->objKind == IDENTIFIER) {
+        Identifier *y = (Identifier *)x.ptr();
+        out << y->str;
+    }
+    else {
+        printName(out, x);
+    }
+}
+
 void printName(ostream &out, ObjectPtr x)
 {
     switch (x->objKind) {

@@ -2391,7 +2391,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (!obj)
             argumentError(0, "expecting static object");
         ostringstream sout;
-        printName(sout, obj);
+        printStaticName(sout, obj);
         ExprPtr z = new StringLiteral(sout.str());
         return analyzeExpr(z, new Env());
     }
@@ -2462,6 +2462,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         TypePtr t = valueToEnumerationType(args, 0);
         return new MultiPValue(new PValue(t, true));
     }
+
+    case PRIM_IdentifierP :
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_IdentifierSize :
         return new MultiPValue(new PValue(cSizeTType, true));

@@ -83,6 +83,11 @@ overload printTo(stream, x:Static[A]) {
     printTo(stream, StaticName(x));
 }
 
+[A | Identifier?(A)]
+overload printTo(stream, x:Static[A]) {
+    printTo(stream, '#', StaticName(x));
+}
+
 
 
 //
