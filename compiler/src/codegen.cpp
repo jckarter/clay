@@ -4857,10 +4857,7 @@ static void initializeCtorsDtors()
 {
     constructorsCtx = makeSimpleContext("clayglobals_init");
     destructorsCtx = makeSimpleContext("clayglobals_destroy");
-}
 
-static void finalizeCtorsDtors()
-{
     if (exceptionsEnabled()) {
         codegenCallable(prelude_exceptionInInitializer(),
                         vector<TypePtr>(),
@@ -4869,7 +4866,10 @@ static void finalizeCtorsDtors()
                         vector<TypePtr>(),
                         vector<ValueTempness>());
     }
+}
 
+static void finalizeCtorsDtors()
+{
     finalizeSimpleContext(constructorsCtx, prelude_exceptionInInitializer());
 
     for (unsigned i = initializedGlobals.size(); i > 0; --i) {
