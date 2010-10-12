@@ -80,7 +80,7 @@ overload Identifier(forward x:S) = Identifier(String(x));
 
 [...A | allValues?(OtherString?, ...A)]
 overload DottedName(forward ...a:A) =
-    DottedName(Vector[String](...mapValues(String, ...a)));
+    DottedName(Vector[Identifier](...mapValues(Identifier, ...a)));
 
 
 
