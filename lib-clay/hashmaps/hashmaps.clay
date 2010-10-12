@@ -48,7 +48,8 @@ overload HashMap[K,V](src:HashMap[K,V]) {
 }
 
 [K,V]
-private cloneList(b:NodePtr[K,V]) {
+private cloneList(_b:NodePtr[K,V]) {
+    var b = _b;
     var list = nullShared(Node[K,V]);
     while (not null?(b)) {
         list = new Node[K,V](b^.key, b^.value, list);
@@ -221,7 +222,8 @@ private bucketId(a:HashMap[K,V], key:K) =
     hash(key) % size(a.buckets);
 
 [K,V]
-private findInBucket(node:NodePtr[K,V], key:K) {
+private findInBucket(_node:NodePtr[K,V], key:K) {
+    var node = _node;
     while (not null?(node)) {
         if (node^.key == key)
             return &node^.value;
