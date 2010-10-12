@@ -4626,6 +4626,17 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_Static :
         error("Static type constructor cannot be called");
 
+    case PRIM_ModuleName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        ModulePtr m = staticModule(obj);
+        if (!m)
+            argumentError(0, "value has no associated module");
+        ExprPtr z = new StringLiteral(m->moduleName);
+        codegenExpr(z, new Env(), ctx, out);
+        break;
+    }
+
     case PRIM_StaticName : {
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args, 0);

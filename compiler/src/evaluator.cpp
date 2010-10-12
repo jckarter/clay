@@ -3864,6 +3864,17 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_Static :
         error("Static type constructor cannot be called");
 
+    case PRIM_ModuleName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        ModulePtr m = staticModule(obj);
+        if (!m)
+            argumentError(0, "value has no associated module");
+        ExprPtr z = new StringLiteral(m->moduleName);
+        evalExpr(z, new Env(), out);
+        break;
+    }
+
     case PRIM_StaticName : {
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args, 0);

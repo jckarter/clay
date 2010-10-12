@@ -479,6 +479,89 @@ static void initModule(ModulePtr m) {
 
 
 //
+// staticModule
+//
+
+static ModulePtr envModule(EnvPtr env) {
+    if (!env->parent)
+        return NULL;
+    switch (env->parent->objKind) {
+    case ENV :
+        return envModule((Env *)env->parent.ptr());
+    case MODULE :
+        return (Module *)env->parent.ptr();
+    default :
+        assert(false);
+        return NULL;
+    }
+}
+
+static ModulePtr typeModule(TypePtr t) {
+    switch (t->typeKind) {
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+    case ARRAY_TYPE :
+    case VEC_TYPE :
+    case TUPLE_TYPE :
+    case UNION_TYPE :
+    case STATIC_TYPE :
+        return primitivesModule();
+    case RECORD_TYPE : {
+        RecordType *rt = (RecordType *)t.ptr();
+        return envModule(rt->record->env);
+    }
+    case VARIANT_TYPE : {
+        VariantType *vt = (VariantType *)t.ptr();
+        return envModule(vt->variant->env);
+    }
+    case ENUM_TYPE : {
+        EnumType *et = (EnumType *)t.ptr();
+        return envModule(et->enumeration->env);
+    }
+    default :
+        return NULL;
+    }
+}
+
+ModulePtr staticModule(ObjectPtr x) {
+    switch (x->objKind) {
+    case TYPE : {
+        Type *y = (Type *)x.ptr();
+        return typeModule(y);
+    }
+    case PRIM_OP : {
+        return primitivesModule();
+    }
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
+        return envModule(y->env);
+    }
+    case RECORD : {
+        Record *y = (Record *)x.ptr();
+        return envModule(y->env);
+    }
+    case VARIANT : {
+        Variant *y = (Variant *)x.ptr();
+        return envModule(y->env);
+    }
+    case MODULE_HOLDER : {
+        ModuleHolder *y = (ModuleHolder *)x.ptr();
+        if (y->import.ptr())
+            return y->import->module;
+        return NULL;
+    }
+    default :
+        return NULL;
+    }
+}
+
+
+
+//
 // ForeignExpr::getEnv, ForeignStatement::getEnv
 //
 
@@ -644,6 +727,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(variantRepr);
 
     PRIMITIVE(Static);
+    PRIMITIVE(ModuleName);
     PRIMITIVE(StaticName);
     PRIMITIVE(staticIntegers);
     PRIMITIVE(staticFieldRef);

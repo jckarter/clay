@@ -92,9 +92,11 @@ Union[T1, ..., Tn]
 [T] variantRepr(x:T) ref VariantRepr[Int, Union[...]]
 
 Static[A]
+ModuleName
 StaticName
 [n] staticIntegers(static n) ...
 staticFieldRef(module, ident)
+
 
 [E] Enum?(static E):Bool
 [E] EnumMemberCount(static E):SizeT

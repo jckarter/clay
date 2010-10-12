@@ -1859,6 +1859,8 @@ void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
 ModulePtr loadedModule(const string &module);
 const string &primOpName(PrimOpPtr x);
+ModulePtr primitivesModule();
+ModulePtr staticModule(ObjectPtr x);
 
 
 
@@ -1949,6 +1951,7 @@ enum PrimOpCode {
     PRIM_variantRepr,
 
     PRIM_Static,
+    PRIM_ModuleName,
     PRIM_StaticName,
     PRIM_staticIntegers,
     PRIM_staticFieldRef,
