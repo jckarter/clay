@@ -1766,7 +1766,7 @@ void evalCallCode(InvokeEntryPtr entry,
             EValuePtr ev = args->values[i + nFixed];
             EValuePtr earg = new EValue(ev->type, ev->addr);
             earg->forwardedRValue = entry->forwardedRValueFlags[i + nFixed];
-            varArgs->add(ev);
+            varArgs->add(earg);
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
     }
