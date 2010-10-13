@@ -335,3 +335,21 @@ println(...x) {
 printlnTo(stream, ...x) {
     printTo(stream, ...x, '\n');
 }
+
+
+
+//
+// printString, printlnString
+//
+
+printString(...x) {
+    var s = String();
+    printTo(s, ...x);
+    return move(s);
+}
+
+printlnString(...x) {
+    var s = String();
+    printlnTo(s, ...x);
+    return move(s);
+}

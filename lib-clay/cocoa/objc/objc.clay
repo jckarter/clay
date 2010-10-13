@@ -1,0 +1,458 @@
+import cocoa.objc.platform.*;
+import cocoa.objc.runtime.*;
+import cocoa.objc.runtime;
+
+alias ObjectHandle = cocoa.objc.runtime.Id;
+alias ClassHandle = cocoa.objc.runtime.Class;
+alias nilHandle = cocoa.objc.runtime.nil;
+alias SelectorHandle = cocoa.objc.runtime.SEL;
+
+
+
+//
+// class, selector, and ivar data
+//
+
+private procedure objcClassMake;
+private var objcClass[Class] = objcClassMake(Class);
+
+private var objcSelector[name] = sel_registerName(cstring(StaticName(name)));
+
+private var objcIvar[Class, ivarName]
+    = class_getInstanceVariable(objcClass[Class], StaticName(ivarName));
+
+private var objcIvarOffset[Class, ivarName]
+    = ivar_getOffset(objcIvar[Class, ivarName]);
+
+private var objcIvarType[Class, ivarName]
+    = ivar_getTypeEncoding(objcIvar[Class, ivarName]);
+
+
+
+//
+// encode
+//
+
+record Void ();
+overload RegularRecord?(static Void) = false;
+
+procedure encode;
+
+overload encode() = "";
+
+[X] overload encode(static X) = "?";
+[T] overload encode(static Pointer[T]) = "^" + encode(T);
+
+// XXX distinguish raw pointer from Pointer[UInt8]
+overload encode(static RawPointer) = "^v";
+
+[T | Record?(T)]
+overload encode(static Pointer[Pointer[T]]) = "^^{" + StaticName(T) + "}";
+[T | Tuple?(T)]
+overload encode(static Pointer[Pointer[T]]) = "^^{Tuple}";
+[T | Union?(T)]
+overload encode(static Pointer[Pointer[T]]) = "^^(Union)";
+
+[T | RegularRecord?(T)] overload encode(static T)
+    = "{" + StaticName(T) + "=" + encode(...RecordFieldTypes(T)) + "}";
+[...Members] overload encode(static Tuple[...Members])
+    = "{Tuple=" + encode(...RecordFieldTypes(T)) + "}";
+[...Members] overload encode(static Union[...Members])
+    = "(Union=" + encode(...Members) + ")";
+
+overload encode(static Pointer[CChar]) = "*";
+overload encode(static ObjectHandle) = "@";
+overload encode(static ClassHandle) = "#";
+overload encode(static SEL) = ":";
+
+overload encode(static Int8) = "c";
+overload encode(static Int16) = "s";
+overload encode(static Int32) = "i";
+overload encode(static Int64) = "q";
+overload encode(static UInt8) = "C";
+overload encode(static UInt16) = "S";
+overload encode(static UInt32) = "I";
+overload encode(static UInt64) = "Q";
+overload encode(static Float32) = "f";
+overload encode(static Float64) = "d";
+overload encode(static Bool) = "B";
+overload encode(static Void) = "v";
+overload encode(static ()) = "v";
+
+[...T | countValues(...T) > 1]
+overload encode(...types: T) = foldValues(add, ...mapValues(encode, ...types));
+
+
+
+//
+// object parameters
+//
+
+procedure objectHandle;
+procedure ObjectParameterType;
+
+ObjectHandleType(T) = Type(objectHandle(typeToRValue(T)));
+
+ObjectParameterType?(T)
+    = CallDefined?(objectHandle, T)
+      and CallDefined?(ObjectParameterType, Static[T])
+      and ObjectHandleType(T) == ObjectHandle;
+
+
+
+//
+// reference counting methods
+//
+
+release(x) = objc_msgSend(objectHandle(x), objcSelector[#release]);
+retain(x) = objc_msgSend(objectHandle(x), objcSelector[#retain]);
+
+
+
+//
+// object references
+//
+
+ObjectType?(T) = false;
+
+[O | ObjectType?(O)] overload objectHandle(x: O) = x.handle;
+[O | ObjectType?(O)] overload ObjectParameterType(static O) = O;
+
+[O | ObjectType?(O)] nil(static O) = O();
+[O | ObjectType?(O)] nil?(obj: O) = null?(obj.handle);
+
+[O | ObjectType?(O)] overload RegularRecord?(static O) = false;
+
+[O | ObjectType?(O)] overload O() = O(nilHandle);
+
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload O1(obj: O2) = O1(retain(obj.handle));
+
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload O1(rvalue obj: O2) returned: O1 {
+    returned <-- O1(obj.handle);
+    resetUnsafe(obj);
+}
+
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload assign(left: O1, right: O2) {
+    var oldHandle = left.handle;
+    left.handle = retain(right.handle);
+    release(oldHandle);
+}
+
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload assign(left: O1, rvalue right: O2) {
+    var oldHandle = left.handle;
+    left.handle = right.handle;
+    resetUnsafe(right);
+    release(oldHandle);
+}
+
+[O | ObjectType?(O)] 
+overload destroy(obj: O) { release(obj.handle); }
+
+[O | ObjectType?(O)] 
+overload moveUnsafe(obj: O) = O(obj.handle);
+
+[O | ObjectType?(O)] 
+overload resetUnsafe(obj: O) { obj.handle = nilHandle; }
+
+
+
+//
+// generic object reference
+//
+
+record Id (handle: ObjectHandle);
+
+overload ObjectType?(static Id) = true;
+
+overload nil() = nil(Id);
+
+
+
+//
+// weak object reference
+//
+
+record Weak[O] (handle: ObjectHandle);
+
+[O | ObjectType?(O)] overload objectHandle(obj: Weak[O]) = obj.handle;
+[O | ObjectType?(O)] overload ObjectParameterType(static Weak[O]) = O;
+
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload O1(obj: Weak[O2]) = O1(retain(obj.handle));
+[O | ObjectType?(O)]
+overload Weak(obj: O) = Weak[O](obj.handle);
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload Weak[O1](obj: O2) = Weak[O1](obj.handle);
+
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload assign(left: O1, right: Weak[O2]) {
+    var oldHandle = left.handle;
+    left.handle = retain(right.handle);
+    release(oldHandle);
+}
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload assign(left: Weak[O1], right: O2) {
+    left.handle = right.handle;
+}
+
+[O | ObjectType?(O)] 
+overload destroy(obj: Weak[O]) { }
+
+[O | ObjectType?(O)] 
+overload moveUnsafe(obj: Weak[O]) = Weak[O](obj.handle);
+
+[O | ObjectType?(O)] 
+overload resetUnsafe(obj: Weak[O]) { }
+
+
+
+//
+// raw object handles as parameters
+//
+
+overload objectHandle(x: ObjectHandle) = x;
+overload ObjectParameterType(static ObjectHandle) = Id;
+
+
+
+//
+// class hierarchy
+//
+
+procedure SuperclassType;
+procedure Subclass?;
+
+[Super, Sub]
+overload Subclass?(static Super, static Sub)
+    = Subclass?(Super, SuperclassType(Sub));
+
+[Super] overload Subclass?(static Super, static Super) = true;
+[Super] overload Subclass?(static Super, static Void) = false;
+
+
+
+//
+// bindings to external classes
+//
+
+Class?(T) = CallDefined?(SuperclassType, Static[T]);
+[T | Class?(T)] overload ObjectType?(static T) = true;
+ExternalClass?(T) = false;
+
+procedure classObjcName;
+
+ValidSuperclass?(T) = Class?(T) or T == Void;
+
+[Super | ValidSuperclass?(Super)]
+externalClass(static Super) = recordWithProperties(
+    (
+        (SuperclassType, Super),
+        (ExternalClass?, static true)
+    ), 
+    (#handle, ObjectHandle)
+);
+
+record ExternalClassNotFound (name: StringConstant);
+instance Exception = ExternalClassNotFound;
+
+[T | ExternalClass?(T)]
+overload objcClassMake(static T) {
+    var name = StaticName(T);
+    var handle = objc_getClass(cstring(name));
+    if (null?(handle))
+        throw ExternalClassNotFound(name);
+    return handle;
+}
+
+
+
+//
+// defining new classes in Clay
+//
+
+ClayClass?(T) = false;
+
+[Super | Class?(Super)] newClass(static Super) = recordWithProperties( // XXX ivars
+    (
+        (SuperclassType, Super),
+        (ClayClass?, static true),
+    ), 
+    (#handle, ObjectHandle)
+);
+
+record NewClassCouldNotBeCreated (name: StringConstant);
+instance Exception = NewClassCouldNotBeCreated;
+
+clayClassName(T) {
+    return "clay:" + ModuleName(T) + "." + StaticName(T);
+}
+
+[T | ClayClass?(T)]
+overload objcClassMake(static T) { // XXX ivars
+    var name = clayClassName(T);
+    var handle = objc_allocateClassPair(
+        objectHandle(SuperclassType(T)),
+        cstring(name),
+        SizeT(0)
+    );
+    if (null?(handle))
+        throw NewClassCouldNotBeCreated(name);
+
+    // XXX add ivars
+
+    objc_registerClassPair(handle);
+
+    return handle;
+}
+
+
+
+//
+// Class objects as objc params
+//
+
+[T | Class?(T)] overload objectHandle(static T) = ObjectHandle(objcClass[T]);
+[T | Class?(T)] overload ObjectParameterType(static Static[T]) = Id; // XXX Class
+
+[T | Class?(T)] overload encode(static T) = "@";
+overload encode(static Id) = "@";
+
+// XXX class container
+
+
+
+//
+// selector bindings
+//
+
+procedure selector;
+procedure varargSelector;
+FixedSelector?(sel) = CallDefined?(selector, Static[sel]);
+VarargSelector?(sel) = CallDefined?(varargSelector, Static[sel]);
+Selector?(sel) = FixedSelector?(sel) or VarargSelector?(sel);
+
+selectorHandle(sel) = objcSelector[sel];
+
+[sel | FixedSelector?(sel)]
+SelectorReturnType(static sel) = takeValues(static 1, ...selector(sel));
+[sel | VarargSelector?(sel)]
+overload SelectorReturnType(static sel) = takeValues(static 1, ...varargSelector(sel));
+[sel | FixedSelector?(sel)]
+SelectorArgumentTypes(static sel) = ...dropValues(static 1, ...selector(sel));
+[sel | VarargSelector?(sel)]
+overload SelectorArgumentTypes(static sel) = ...dropValues(static 1, ...varargSelector(sel));
+
+
+
+//
+// argument conversion
+//
+
+ObjectRef?(T) = false;
+[T | ObjectType?(T)]
+overload ObjectRef?(static T) = true;
+[T | ObjectType?(T)]
+overload ObjectRef?(static Weak[T]) = true;
+
+MsgSendCompatible?(ParamType, ValueType) = false;
+
+[T] overload MsgSendCompatible?(static T, static T) = true;
+
+[Param, Value |
+    ObjectRef?(Param)
+    and ObjectParameterType?(Value)
+    and (
+        ObjectParameterType(Value) == Id
+        or Subclass?(ObjectParameterType(Param), ObjectParameterType(Value))
+    )
+]
+overload MsgSendCompatible?(static Param, static Value) = true;
+
+[Value | ObjectParameterType?(Value)]
+overload MsgSendCompatible?(static Id, static Value) = true;
+
+[Value | ObjectParameterType?(Value)]
+overload MsgSendCompatible?(static Weak[Id], static Value) = true;
+
+
+// XXX selector container
+
+MsgSendParamType(Param) = Param;
+
+[Param | ObjectRef?(Param)]
+overload MsgSendParamType(static Param) = ObjectHandle;
+
+overload MsgSendParamType(static Void) = static ();
+
+[Param]
+msgSendParam(static Param, forward x: Param) = forward x;
+
+[Param, Value | ObjectRef?(Param) and MsgSendCompatible?(Param, Value)]
+overload msgSendParam(static Param, forward x: Value) = objectHandle(x);
+
+
+[S, Return | Selector?(S) and SelectorReturnType(S) == Return]
+msgSendReturn(static S, forward x: Return) = forward x;
+
+[S | ObjectRef?(SelectorReturnType(S))]
+overload msgSendReturn(static S, forward x: ObjectHandle) = SelectorReturnType(S)(x);
+
+SelectorReturnParamType(S) = MsgSendParamType(SelectorReturnType(S));
+SelectorArgumentParamTypes(S) = ...mapValues(MsgSendParamType, ...SelectorArgumentTypes(S));
+
+SelectorTypeEncoding(S)
+    = encode(SelectorReturnParamType(S), ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(S));
+
+
+
+//
+// message sending
+//
+
+[S | Selector?(S)]
+private objc_msgSend_for(static S) = objc_msgSend;
+[S | Selector?(S) and StRet?(SelectorReturnParamType(S))]
+overload objc_msgSend_for(static S) = objc_msgSend_stret;
+[S | Selector?(S) and FpRet?(SelectorReturnParamType(S))]
+overload objc_msgSend_for(static S) = objc_msgSend_fpret;
+//[Selector?(S) and Fp2Ret?(SelectorReturnParamType(S))]
+//overload objc_msgSend_for(static S) = objc_msgSend_fp2ret;
+
+SelectorCallableWith?(S, ...T) = false;
+
+[S, ...TT | FixedSelector?(S) and countValues(...TT) == countValues(...SelectorArgumentTypes(S))]
+overload SelectorCallableWith?(static S, ...T: TT) = _SelectorCallableWith?(S, ...T);
+
+[S, ...TT | VarargSelector?(S) and countValues(...TT) >= countValues(...SelectorArgumentTypes(S))]
+overload SelectorCallableWith?(static S, ...T: TT)
+    = _SelectorCallableWith?(S, ...takeValues(static countValues(...SelectorArgumentTypes(S)), ...T));
+
+private _SelectorCallableWith?(S, ...T) {
+    alias Params = Tuple(...SelectorArgumentTypes(S));
+    alias Values = Tuple(...T);
+    static for (n in ...staticIntegers(static countValues(...T))) {
+        if (not MsgSendCompatible?(staticIndex(Params, n), staticIndex(Value, n))) 
+            return false;
+    }
+    return true;
+}
+
+private _msgSend(S)
+    = CCodePointer[
+        (ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(S)),
+        SelectorReturnParamType(S)
+    ](objc_msgSend_for(S));
+
+[S, ...T | ObjectParameterType?(O) and Selector?(S) and SelectorCallableWith?(S, ...T)]
+msgSend(self: O, static S, ...args: T) {
+    var selfHandle = objectHandle(self);
+    var cmdHandle = selectorHandle(S);
+
+    return ...mapValues(ret => msgSendReturn(SelectorReturnType(S), ret),
+        ..._msgSend(S)(selfHandle, cmdHandle, ...msgSendParams(S, ...args))
+    );
+}

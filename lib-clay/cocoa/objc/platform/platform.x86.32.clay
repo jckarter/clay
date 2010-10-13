@@ -1,0 +1,15 @@
+FpRet?(type) = false;
+StRet?(type) = false;
+//Fp2Ret?(type) = false;
+
+overload FpRet?(static Float32) = true;
+overload FpRet?(static Float64) = true;
+//FpRet?(static Float80) = true;
+
+// note: structs never return in registers on linux, netbsd, solaris
+private ReturnInRegisters?(T)
+    = RegularRecord?(T)
+      and inValues?(TypeSize(T), 1, 2, 4, 8);
+
+[T | Record?(T) and not ReturnInRegisters?(T)]
+overload StRet?(static T) = true;
