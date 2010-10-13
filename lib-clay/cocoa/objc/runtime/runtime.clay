@@ -1,10 +1,11 @@
 private record ObjcObject ();
 private record ObjcMethod ();
+private record ObjcClass ();
 private record ObjcIvar ();
 
 alias Id = Pointer[ObjcObject];
 alias SEL = Pointer[ObjcMethod];
-alias Class = Id;
+alias Class = Pointer[ObjcClass];
 alias Ivar = Pointer[ObjcIvar];
 alias Method = RawPointer;
 alias Protocol = Id;

@@ -4,14 +4,14 @@ NSString(string) {
     var class = objc_getClass(cstring("NSString"));
     var sel_stringWithUTF8String_ = sel_registerName(cstring("stringWithUTF8String:"));
 
-    return objc_msgSend(class, sel_stringWithUTF8String_, cstring(string));
+    return objc_msgSend(Id(class), sel_stringWithUTF8String_, cstring(string));
 }
 
 NSStringWithFormat(format, ...args) {
     var class = objc_getClass(cstring("NSString"));
     var sel_stringWithFormat_ = sel_registerName(cstring("stringWithFormat:"));
 
-    return objc_msgSend(class, sel_stringWithFormat_, format, ...args);
+    return objc_msgSend(Id(class), sel_stringWithFormat_, format, ...args);
 }
 
 UTF8String(nsstring) {
@@ -24,7 +24,7 @@ NSNumber(n: Int) {
     var class = objc_getClass(cstring("NSNumber"));
     var sel_numberWithInt_ = sel_registerName(cstring("numberWithInt:"));
 
-    return objc_msgSend(class, sel_numberWithInt_, n);
+    return objc_msgSend(Id(class), sel_numberWithInt_, n);
 }
 
 record AutoreleasePool (pool: Id);
@@ -32,7 +32,7 @@ record AutoreleasePool (pool: Id);
 overload AutoreleasePool() pool: AutoreleasePool {
     var class = objc_getClass(cstring("NSAutoreleasePool"));
     var sel_new = sel_registerName(cstring("new"));
-    pool.pool <-- objc_msgSend(class, sel_new);
+    pool.pool <-- objc_msgSend(Id(class), sel_new);
 }
 
 overload destroy(pool: AutoreleasePool) {
