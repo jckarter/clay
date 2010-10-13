@@ -1,0 +1,20 @@
+
+import vectors.generic as vg;
+
+main() {
+    disp(add);
+    disp(String);
+    disp(Vec);
+    disp(hash);
+    disp(Array);
+    disp(Array[Bool,10]);
+    disp(HashMap);
+    disp(HashMap[Int,Int]);
+    disp(vg);
+    disp(Record?);
+    disp(disp);
+}
+
+disp(x) {
+    println(x, ": ", ModuleName(x));
+}

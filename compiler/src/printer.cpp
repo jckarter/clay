@@ -805,6 +805,17 @@ static bool isSafe(char ch)
     return false;
 }
 
+void printStaticName(ostream &out, ObjectPtr x)
+{
+    if (x->objKind == IDENTIFIER) {
+        Identifier *y = (Identifier *)x.ptr();
+        out << y->str;
+    }
+    else {
+        printName(out, x);
+    }
+}
+
 void printName(ostream &out, ObjectPtr x)
 {
     switch (x->objKind) {
@@ -851,7 +862,18 @@ void printName(ostream &out, ObjectPtr x)
         break;
     }
     case MODULE_HOLDER : {
-        out << "ModuleHolder()";
+        ModuleHolder *y = (ModuleHolder *)x.ptr();
+        if (y->import.ptr()) {
+            DottedNamePtr dname = y->import->dottedName;
+            for (unsigned i = 0; i < dname->parts.size(); ++i) {
+                if (i != 0)
+                    out << ".";
+                out << dname->parts[i]->str;
+            }
+        }
+        else {
+            out << "ModuleHolder()";
+        }
         break;
     }
     case PRIM_OP : {

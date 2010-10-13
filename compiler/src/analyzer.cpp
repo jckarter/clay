@@ -2385,13 +2385,25 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_Static :
         error("Static type constructor cannot be called");
 
+    case PRIM_ModuleName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj)
+            argumentError(0, "expecting static object");
+        ModulePtr m = staticModule(obj);
+        if (!m)
+            argumentError(0, "value has no associated module");
+        ExprPtr z = new StringLiteral(m->moduleName);
+        return analyzeExpr(z, new Env());
+    }
+
     case PRIM_StaticName : {
         ensureArity(args, 1);
         ObjectPtr obj = unwrapStaticType(args->values[0]->type);
         if (!obj)
             argumentError(0, "expecting static object");
         ostringstream sout;
-        printName(sout, obj);
+        printStaticName(sout, obj);
         ExprPtr z = new StringLiteral(sout.str());
         return analyzeExpr(z, new Env());
     }
@@ -2462,6 +2474,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         TypePtr t = valueToEnumerationType(args, 0);
         return new MultiPValue(new PValue(t, true));
     }
+
+    case PRIM_IdentifierP :
+        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_IdentifierSize :
         return new MultiPValue(new PValue(cSizeTType, true));

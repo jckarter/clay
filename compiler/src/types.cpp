@@ -426,14 +426,20 @@ static bool unpackField(TypePtr x, IdentifierPtr &name, TypePtr &type) {
     return true;
 }
 
-static void setProperty(TypePtr type, ProcedurePtr proc, ObjectPtr value) {
+static void setProperty(TypePtr type,
+                        ProcedurePtr proc,
+                        const vector<ExprPtr> &exprs) {
     CodePtr code = new Code();
+
     TypePtr typeType = staticType(type.ptr());
     ExprPtr argType = new ObjectExpr(typeType.ptr());
     FormalArgPtr arg = new FormalArg(new Identifier("x"), argType);
     code->formalArgs.push_back(arg.ptr());
-    ExprPtr returnExpr = new ObjectExpr(value);
-    code->body = new Return(RETURN_VALUE, new ExprList(returnExpr));
+
+    ExprListPtr returnExprs = new ExprList();
+    for (unsigned i = 0; i < exprs.size(); ++i)
+        returnExprs->add(exprs[i]);
+    code->body = new Return(RETURN_VALUE, returnExprs);
 
     ExprPtr target = new ObjectExpr(proc.ptr());
     OverloadPtr overload = new Overload(target, code, false, false);
@@ -441,27 +447,48 @@ static void setProperty(TypePtr type, ProcedurePtr proc, ObjectPtr value) {
     proc->overloads.insert(proc->overloads.begin(), overload);
 }
 
-static void setProperties(TypePtr type, const vector<TypePtr> &props) {
-    for (unsigned i = 0; i < props.size(); ++i) {
-        TypePtr ptype = props[i];
-        if (ptype->typeKind != TUPLE_TYPE)
-            error("each property should be a tuple (procedure, static value)");
-        TupleTypePtr tt = (TupleType *)ptype.ptr();
-        if (tt->elementTypes.size() != 2)
-            error("each property should be a tuple (procedure, static value)");
-        TypePtr t0 = tt->elementTypes[0];
-        TypePtr t1 = tt->elementTypes[1];
-        if (t0->typeKind != STATIC_TYPE)
-            error("each property should be a tuple (procedure, static value)");
-        StaticTypePtr st0 = (StaticType *)t0.ptr();
-        if (st0->obj->objKind != PROCEDURE)
-            error("each property should be a tuple (procedure, static value)");
-        ProcedurePtr proc = (Procedure *)st0->obj.ptr();
-        if (t1->typeKind != STATIC_TYPE)
-            error("each property should be a tuple (procedure, static value)");
-        StaticTypePtr st1 = (StaticType *)t1.ptr();
-        setProperty(type, proc, st1->obj);
+static ExprPtr convertStaticObjectToExpr(TypePtr t) {
+    if (t->typeKind == STATIC_TYPE) {
+        StaticType *st = (StaticType *)t.ptr();
+        return new ObjectExpr(st->obj);
     }
+    else if (t->typeKind == TUPLE_TYPE) {
+        TupleType *tt = (TupleType *)t.ptr();
+        ExprListPtr exprs = new ExprList();
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i)
+            exprs->add(convertStaticObjectToExpr(tt->elementTypes[i]));
+        return new Tuple(exprs);
+    }
+    else {
+        error("non-static value found in object property");
+        return NULL;
+    }
+}
+
+static void setProperty(TypePtr type, TypePtr propType) {
+    if (propType->typeKind != TUPLE_TYPE)
+        error("each property should be a tuple (procedure, ... static values)");
+    TupleTypePtr tt = (TupleType *)propType.ptr();
+    if (tt->elementTypes.size() < 1)
+        error("each property should be a tuple (procedure, ... static values)");
+    TypePtr t0 = tt->elementTypes[0];
+    if (t0->typeKind != STATIC_TYPE)
+        error("each property should be a tuple (procedure, ... static values)");
+    StaticTypePtr st0 = (StaticType *)t0.ptr();
+    if (st0->obj->objKind != PROCEDURE)
+        error("each property should be a tuple (procedure, ... static values)");
+    ProcedurePtr proc = (Procedure *)st0->obj.ptr();
+    vector<ExprPtr> exprs;
+    for (unsigned i = 1; i < tt->elementTypes.size(); ++i) {
+        TypePtr ti = tt->elementTypes[i];
+        exprs.push_back(convertStaticObjectToExpr(ti));
+    }
+    setProperty(type, proc, exprs);
+}
+
+static void setProperties(TypePtr type, const vector<TypePtr> &props) {
+    for (unsigned i = 0; i < props.size(); ++i)
+        setProperty(type, props[i]);
 }
 
 void initializeRecordFields(RecordTypePtr t) {

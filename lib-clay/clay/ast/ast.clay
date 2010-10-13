@@ -80,7 +80,11 @@ overload Identifier(forward x:S) = Identifier(String(x));
 
 [...A | allValues?(OtherString?, ...A)]
 overload DottedName(forward ...a:A) =
-    DottedName(Vector[String](...mapValues(String, ...a)));
+    DottedName(Vector[Identifier](...mapValues(Identifier, ...a)));
+
+[A | Sequence?(A) and String?(SequenceElementType(A))]
+overload DottedName(a:A) =
+    DottedName(Vector[Identifier](mapped(Identifier, a)));
 
 
 
@@ -339,7 +343,9 @@ record ReturnSpec = ...ast(
 
 record LLVMBody = ...ast((#body, String));
 
-variant CodeBody = StatementPtr | LLVMBody;
+record NoBody = ...ast();
+
+variant CodeBody = StatementPtr | LLVMBody | NoBody;
 
 record Code = ...top(
     (#callByName?, Bool),
