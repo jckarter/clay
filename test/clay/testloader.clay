@@ -1,0 +1,85 @@
+
+import clay.ast.*;
+import clay.loader.*;
+
+usage(args) {
+    println(
+        "usage: ", args[0],
+        " [-loadprelude]",
+        " [-module <module> | -program <clayfile>]"
+    );
+}
+
+parseOpts(args) {
+    var loadPrelude? = false;
+    var moduleToLoad = String();
+    var programToLoad = String();
+    var error? = false;
+    var i = 1;
+    while (i < size(args)) {
+        ref arg = args[i];
+        if (arg == "-loadprelude") {
+            loadPrelude? = true;
+        }
+        else if (arg == "-module") {
+            i += 1;
+            if (i == size(args)) {
+                error? = true;
+                break;
+            }
+            moduleToLoad = args[i];
+        }
+        else if (arg == "-program") {
+            i += 1;
+            if (i == size(args)) {
+                error? = true;
+                break;
+            }
+            programToLoad = args[i];
+        }
+        else {
+            println("unknown argument: ", arg);
+            error? = true;
+            break;
+        }
+        i += 1;
+    }
+    return loadPrelude?, moduleToLoad, programToLoad, error?;
+}
+
+main(args) {
+    var loadPrelude?, moduleToLoad, programToLoad, error? =
+        ...parseOpts(args);
+
+    if (error?
+        or (not loadPrelude?
+            and empty?(moduleToLoad)
+            and empty?(programToLoad))
+        or (not empty?(moduleToLoad)
+            and not empty?(programToLoad)))
+    {
+        usage(args);
+        return -1;
+    }
+
+    initSearchPath();
+    if (loadPrelude?)
+        loadPrelude();
+
+    if (not empty?(moduleToLoad)) {
+        var moduleInfo = loadModule(DottedName(split(moduleToLoad, ".")));
+        displayModule(moduleInfo);
+    }
+    else if (not empty?(programToLoad)) {
+        var moduleInfo = loadProgram(programToLoad);
+        displayModule(moduleInfo);
+    }
+    return 0;
+}
+
+displayModule(moduleInfo) {
+    println(moduleInfo.name);
+    println(moduleInfo.filePath);
+    println(moduleInfo.ast);
+    return 0;
+}

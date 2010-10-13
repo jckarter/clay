@@ -1,0 +1,11 @@
+add: operators
+Vector[Char]: vectors
+Vec: __primitives__
+hash: operators
+Array: __primitives__
+Array[Bool, 10]: __primitives__
+HashMap: hashmaps
+HashMap[Int32, Int32]: hashmaps
+vectors.generic: vectors.generic
+Record?: __primitives__
+disp: __main__
