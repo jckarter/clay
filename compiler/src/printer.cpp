@@ -691,7 +691,7 @@ static void print(ostream &out, const Object *x) {
 
     case PVALUE : {
         const PValue *y = (const PValue *)x;
-        out << "PValue(" << y->type << ")";
+        out << "PValue(" << y->type << ", " << y->isTemp << ")";
         break;
     }
 
