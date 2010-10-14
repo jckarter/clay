@@ -47,4 +47,18 @@ main() {
     println("array: ", ...weaveValues(", ",
         ...sequenceValues([3, 7, 15, 1, 292, 1, 1, 1], static 8)
     ));
+
+    eachValue2(
+        (x, y) => { println(x + y); }, static 3,
+        1, 2, 3,
+        7, 8, 9,
+    );
+
+    println(...weaveValues(
+        ", ",
+        ...mapValues2((x, y) => x+y, static 3,
+            1, 2, 3,
+            7, 8, 9,
+        )
+    ));
 }
