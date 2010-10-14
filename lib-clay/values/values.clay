@@ -50,7 +50,16 @@ procedure dropValues;
 
 procedure countValues;
 inline overload countValues() = 0;
-inline overload countValues(x, ...xs) = 1 + countValues(...xs);
+inline overload countValues(forward x, forward ...xs) = 1 + countValues(...xs);
+
+procedure countOccurrences;
+inline overload countOccurrences(value) = 0;
+[value1, value2]
+inline overload countOccurrences(static value1, static value2, forward ...xs)
+    = countOccurrences(value1, ...xs);
+[value]
+inline overload countOccurrences(static value, static value, forward ...xs)
+    = 1 + countOccurrences(value, ...xs);
 
 procedure nthValue;
 [i] inline overload nthValue(static i, forward a, forward ...b)
@@ -138,3 +147,24 @@ iteratorValues(iter: I, static 0) = ;
 [I, n | Iterator?(I) and n > 0]
 overload iteratorValues(iter: I, static n)
     = forward next(iter), ...iteratorValues(iter, static n-1);
+
+
+
+//
+// iterate over two sets of values in tandem
+//
+[n | n > 0] withoutNthValue(static n, forward value, forward ...values)
+    = forward value, ...withoutNthValue(static n-1, ...values);
+overload withoutNthValue(static 0, forward value, forward ...values)
+    = forward ...values;
+
+[n | n > 0] eachValue2(fn, static n, forward x, forward ...xs) {
+    fn(x, nthValue(static n-1, ...xs));
+    return ...eachValue2(fn, static n-1, ...withoutNthValue(static n-1, ...xs));
+}
+overload eachValue2(fn, static 0, forward ...xs) { }
+
+[n | n > 0] mapValues2(fn, static n, forward x, forward ...xs)
+    = forward fn(x, nthValue(static n-1, ...xs)),
+      ...mapValues2(fn, static n-1, ...withoutNthValue(static n-1, ...xs));
+overload mapValues2(fn, static 0, forward ...xs) = ;

@@ -121,7 +121,7 @@ expectFalse(test: TestStatus, name, value) {
     });
 }
 
-expectType(test: TestStatus, name, ExpectedType, result) {
+callbyname expectType(test: TestStatus, name, ExpectedType, result) {
     expect(test, Type(result) == ExpectedType, () => {
         printFailure(name, " is expected to be of type ", ExpectedType, " but is of type ", Type(result)); 
     });

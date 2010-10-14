@@ -3,33 +3,25 @@ import cocoa.objc.*;
 record NSObject = externalClass(Void);
 overload selector(static #"alloc") = Id;
 overload selector(static #"init") = Id;
+overload selector(static #"description") = NSString;
 
 record NSString = externalClass(NSObject);
-overload selector(static #"initWithUTF8String:") = Id, Pointer[CChar];
-overload varargSelector(static #"initWithFormat:") = Id, NSString; 
-overload selector(static #"UTF8String") = Id, Pointer[CChar];
+overload selector(static #"stringWithUTF8String:") = Id, Pointer[CChar];
+overload varargSelector(static #"stringWithFormat:") = Id, NSString; 
+overload selector(static #"UTF8String") = Pointer[CChar];
 
 record NSNumber = externalClass(NSObject);
-overload selector(static #"initWithInt:") = Id, Int;
+overload selector(static #"numberWithInt:") = Id, Int;
 
 record NSAutoreleasePool = externalClass(NSObject);
 
-[S | CCompatibleString?(S)]
-overload NSString(s: S) = NSString.alloc().initWithUTF8String(cstring(s));
-
-overload NSString(s: NSString, ...args)
-    = NSString.alloc().initWithFormat(s, ...args);
-
-overload NSNumber(n: Int) = NSNumber.alloc().initWithInt(n);
-
-overload NSAutoreleasePool() = NSAutoreleasePool.alloc().init();
-
-
 main() {
-    var pool = NSAutoreleasePool();
+    var pool = NSAutoreleasePool.alloc().init();
 
-    var format = NSString("%@ didn't start the fire");
-    var n = NSNumber(451);
+    var format = NSString.stringWithUTF8String(cstring("%@ didn't start the fire"));
+    var n = NSNumber.numberWithInt(451);
 
-    println(CStringRef(NSString(format, n).UTF8String()));
+    var formattedString = NSString.stringWithFormat(format, n);
+
+    println(CStringRef(formattedString.UTF8String()));
 }
