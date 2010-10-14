@@ -104,8 +104,18 @@ ObjectParameterType?(T)
 // reference counting methods
 //
 
-release(x) = objc_msgSend(objectHandle(x), objcSelector[#release]);
-retain(x) = objc_msgSend(objectHandle(x), objcSelector[#retain]);
+release(x) {
+    printlnTo(stderr, "releasing ", Type(x), " ", x);
+    return objc_msgSend(objectHandle(x), objcSelector[#release]);
+}
+retain(x) {
+    printlnTo(stderr, "retaining ", Type(x), " ", x);
+    return objc_msgSend(objectHandle(x), objcSelector[#retain]);
+}
+autorelease(x) {
+    printlnTo(stderr, "autoreleasing ", Type(x), " ", x);
+    return objc_msgSend(objectHandle(x), objcSelector[#autorelease]);
+}
 
 
 
@@ -115,48 +125,48 @@ retain(x) = objc_msgSend(objectHandle(x), objcSelector[#retain]);
 
 ObjectType?(T) = false;
 
-[O | ObjectType?(O)] overload objectHandle(x: O) = x.handle;
+[O | ObjectType?(O)] overload objectHandle(x: O) = x.__handle__;
 [O | ObjectType?(O)] overload ObjectParameterType(static O) = O;
 
 [O | ObjectType?(O)] nil(static O) = O();
-[O | ObjectType?(O)] nil?(obj: O) = null?(obj.handle);
+[O | ObjectType?(O)] nil?(obj: O) = null?(obj.__handle__);
 
 [O | ObjectType?(O)] overload RegularRecord?(static O) = false;
 
 [O | ObjectType?(O)] overload O() = O(nilHandle);
 
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload O1(obj: O2) = O1(retain(obj.handle));
+overload O1(obj: O2) = O1(retain(obj.__handle__));
 
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
 overload O1(rvalue obj: O2) returned: O1 {
-    returned <-- O1(obj.handle);
+    returned <-- O1(obj.__handle__);
     resetUnsafe(obj);
 }
 
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
 overload assign(left: O1, right: O2) {
-    var oldHandle = left.handle;
-    left.handle = retain(right.handle);
+    var oldHandle = left.__handle__;
+    left.__handle__ = retain(right.__handle__);
     release(oldHandle);
 }
 
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
 overload assign(left: O1, rvalue right: O2) {
-    var oldHandle = left.handle;
-    left.handle = right.handle;
+    var oldHandle = left.__handle__;
+    left.__handle__ = right.__handle__;
     resetUnsafe(right);
     release(oldHandle);
 }
 
 [O | ObjectType?(O)] 
-overload destroy(obj: O) { release(obj.handle); }
+overload destroy(obj: O) { release(obj.__handle__); }
 
 [O | ObjectType?(O)] 
-overload moveUnsafe(obj: O) = O(obj.handle);
+overload moveUnsafe(obj: O) = O(obj.__handle__);
 
 [O | ObjectType?(O)] 
-overload resetUnsafe(obj: O) { obj.handle = nilHandle; }
+overload resetUnsafe(obj: O) { obj.__handle__ = nilHandle; }
 
 
 
@@ -164,7 +174,7 @@ overload resetUnsafe(obj: O) { obj.handle = nilHandle; }
 // generic object reference
 //
 
-record Id (handle: ObjectHandle);
+record Id (__handle__: ObjectHandle);
 
 overload ObjectType?(static Id) = true;
 
@@ -176,34 +186,34 @@ overload nil() = nil(Id);
 // weak object reference
 //
 
-record Weak[O] (handle: ObjectHandle);
+record Weak[O] (__handle__: ObjectHandle);
 
-[O | ObjectType?(O)] overload objectHandle(obj: Weak[O]) = obj.handle;
+[O | ObjectType?(O)] overload objectHandle(obj: Weak[O]) = obj.__handle__;
 [O | ObjectType?(O)] overload ObjectParameterType(static Weak[O]) = O;
 
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload O1(obj: Weak[O2]) = O1(retain(obj.handle));
+overload O1(obj: Weak[O2]) = O1(retain(obj.__handle__));
 [O | ObjectType?(O)]
-overload Weak(obj: O) = Weak[O](obj.handle);
+overload Weak(obj: O) = Weak[O](obj.__handle__);
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload Weak[O1](obj: O2) = Weak[O1](obj.handle);
+overload Weak[O1](obj: O2) = Weak[O1](obj.__handle__);
 
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
 overload assign(left: O1, right: Weak[O2]) {
-    var oldHandle = left.handle;
-    left.handle = retain(right.handle);
+    var oldHandle = left.__handle__;
+    left.__handle__ = retain(right.__handle__);
     release(oldHandle);
 }
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
 overload assign(left: Weak[O1], right: O2) {
-    left.handle = right.handle;
+    left.__handle__ = right.__handle__;
 }
 
 [O | ObjectType?(O)] 
 overload destroy(obj: Weak[O]) { }
 
 [O | ObjectType?(O)] 
-overload moveUnsafe(obj: Weak[O]) = Weak[O](obj.handle);
+overload moveUnsafe(obj: Weak[O]) = Weak[O](obj.__handle__);
 
 [O | ObjectType?(O)] 
 overload resetUnsafe(obj: Weak[O]) { }
@@ -253,7 +263,7 @@ externalClass(static Super) = recordWithProperties(
         (SuperclassType, Super),
         (ExternalClass?, static true)
     ), 
-    (#handle, ObjectHandle)
+    (#__handle__, ObjectHandle)
 );
 
 record ExternalClassNotFound (name: StringConstant);
@@ -341,10 +351,16 @@ selectorHandle(sel) = objcSelector[sel];
 SelectorReturnType(static sel) = takeValues(static 1, ...selector(sel));
 [sel | VarargSelector?(sel)]
 overload SelectorReturnType(static sel) = takeValues(static 1, ...varargSelector(sel));
+
 [sel | FixedSelector?(sel)]
 SelectorArgumentTypes(static sel) = ...dropValues(static 1, ...selector(sel));
 [sel | VarargSelector?(sel)]
 overload SelectorArgumentTypes(static sel) = ...dropValues(static 1, ...varargSelector(sel));
+
+[sel | FixedSelector?(sel)]
+SelectorArgumentCount(static sel) = countValues(...selector(sel)) - 1;
+[sel | VarargSelector?(sel)]
+overload SelectorArgumentCount(static sel) = countValues(...varargSelector(sel)) - 1;
 
 
 
@@ -389,17 +405,37 @@ overload MsgSendParamType(static Param) = ObjectHandle;
 overload MsgSendParamType(static Void) = static ();
 
 [Param]
-msgSendParam(static Param, forward x: Param) = forward x;
-
-[Param, Value | ObjectRef?(Param) and MsgSendCompatible?(Param, Value)]
+private msgSendParam(static Param, forward x: Param) = forward x;
+[Param, Value | ObjectRef?(Param)]
 overload msgSendParam(static Param, forward x: Value) = objectHandle(x);
 
+private varArgParam(forward x) = forward x;
+[Param | ObjectRef?(Param)]
+overload varArgParam(forward x: Param) = objectHandle(x);
 
-[S, Return | Selector?(S) and SelectorReturnType(S) == Return]
-msgSendReturn(static S, forward x: Return) = forward x;
+[S | FixedSelector?(S)]
+/*XXX private*/ msgSendParams(static S, forward ...args)
+    = forward ...mapValues2(msgSendParam, static SelectorArgumentCount(S),
+        ...SelectorArgumentTypes(S),
+        ...args
+    );
+[S | VarargSelector?(S)]
+overload msgSendParams(static S, forward ...args) {
+    var argCount = static SelectorArgumentCount(S);
+    return forward
+        ...mapValues2(msgSendParam, argCount, ...SelectorArgumentTypes(S), ...args),
+        ...mapValues(varArgParam, ...dropValues(argCount, ...args));
+}
+
+
+[S, Return | SelectorReturnType(S) == Return]
+/*XXX private*/ msgSendReturn(static S, forward x: Return) = forward x;
+
+[S | SelectorReturnType(S) == Void]
+overload msgSendReturn(static S) = ;
 
 [S | ObjectRef?(SelectorReturnType(S))]
-overload msgSendReturn(static S, forward x: ObjectHandle) = SelectorReturnType(S)(x);
+overload msgSendReturn(static S, forward x: ObjectHandle) = Weak[SelectorReturnType(S)](x);
 
 SelectorReturnParamType(S) = MsgSendParamType(SelectorReturnType(S));
 SelectorArgumentParamTypes(S) = ...mapValues(MsgSendParamType, ...SelectorArgumentTypes(S));
@@ -424,24 +460,24 @@ overload objc_msgSend_for(static S) = objc_msgSend_fpret;
 
 SelectorCallableWith?(S, ...T) = false;
 
-[S, ...TT | FixedSelector?(S) and countValues(...TT) == countValues(...SelectorArgumentTypes(S))]
+[S, ...TT | FixedSelector?(S) and countValues(...TT) == SelectorArgumentCount(S)]
 overload SelectorCallableWith?(static S, ...T: TT) = _SelectorCallableWith?(S, ...T);
 
-[S, ...TT | VarargSelector?(S) and countValues(...TT) >= countValues(...SelectorArgumentTypes(S))]
+[S, ...TT | VarargSelector?(S) and countValues(...TT) >= SelectorArgumentCount(S)]
 overload SelectorCallableWith?(static S, ...T: TT)
-    = _SelectorCallableWith?(S, ...takeValues(static countValues(...SelectorArgumentTypes(S)), ...T));
+    = _SelectorCallableWith?(S, ...takeValues(static countValues(...varargSelector(S)) - 1, ...T));
 
 private _SelectorCallableWith?(S, ...T) {
     alias Params = Tuple(...SelectorArgumentTypes(S));
     alias Values = Tuple(...T);
     static for (n in ...staticIntegers(static countValues(...T))) {
-        if (not MsgSendCompatible?(staticIndex(Params, n), staticIndex(Value, n))) 
+        if (not MsgSendCompatible?(staticIndex(Params, n), staticIndex(Values, n))) 
             return false;
     }
     return true;
 }
 
-private _msgSend(S)
+private _msgSender(S)
     = CCodePointer[
         (ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(S)),
         SelectorReturnParamType(S)
@@ -453,6 +489,56 @@ msgSend(self: O, static S, ...args: T) {
     var cmdHandle = selectorHandle(S);
 
     return ...mapValues(ret => msgSendReturn(SelectorReturnType(S), ret),
-        ..._msgSend(S)(selfHandle, cmdHandle, ...msgSendParams(S, ...args))
+        ..._msgSender(S)(selfHandle, cmdHandle, ...msgSendParams(S, ...args))
     );
 }
+
+
+
+//
+// identifier-selector conversion
+//
+
+IdentifierChars(identifier)
+    = ...mapValues(
+        n => IdentifierSlice(identifier, n, static unwrapStatic(n)+1),
+        ...staticIntegers(static IdentifierSize(identifier))
+    );
+
+private _identifierSelectorChar(c) = c;
+overload _identifierSelectorChar(static #_) = #":";
+
+[argCount] private _identifierSelector(static argCount, ...chars) {
+    var underscoreCount = static countOccurrences(#_, ...chars);
+    return IdentifierConcat(
+        ...mapValues(_identifierSelectorChar, ...chars),
+        ...replicateValue(#":", static argCount - unwrapStatic(underscoreCount)),
+    );
+}
+
+[argCount] identifierSelector(identifier, static argCount)
+    = _identifierSelector(static argCount, ...IdentifierChars(identifier));
+
+
+
+//
+// method syntax
+//
+
+private record MethodReference[T, identifier] (capturedSelf: T);
+
+overload MethodReference(forward value, identifier)
+    = MethodReference[Type(captureValue(value)), identifier](captureValue(value));
+
+[T, cmd | ObjectRef?(T) and cmd != #__handle__]
+overload fieldRef(forward self: T, static cmd) = MethodReference(self, cmd);
+[T, cmd | Class?(T)]
+overload fieldRef(static T, static cmd) = MethodReference(T, cmd);
+
+[T, identifier]
+overload call(method: MethodReference[T, identifier], forward ...args)
+    = forward ...msgSend(
+        forwardValue(method.capturedSelf),
+        identifierSelector(identifier, static countValues(...args)),
+        ...args
+    );
