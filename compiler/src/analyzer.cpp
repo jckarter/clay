@@ -618,6 +618,17 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
+        PValuePtr pv = analyzeOne(x->expr, env);
+        if (!pv)
+            return NULL;
+        if (pv->type->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)pv->type.ptr();
+            if (st->obj->objKind == MODULE_HOLDER) {
+                ModuleHolder *mh = (ModuleHolder *)st->obj.ptr();
+                ObjectPtr obj = safeLookupModuleHolder(mh, x->name);
+                return analyzeStaticObject(obj);
+            }
+        }
         if (!x->desugared)
             x->desugared = desugarFieldRef(x);
         return analyzeExpr(x->desugared, env);

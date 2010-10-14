@@ -933,6 +933,16 @@ void codegenExpr(ExprPtr expr,
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
+        PValuePtr pv = safeAnalyzeOne(x->expr, env);
+        if (pv->type->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)pv->type.ptr();
+            if (st->obj->objKind == MODULE_HOLDER) {
+                ModuleHolder *mh = (ModuleHolder *)st->obj.ptr();
+                ObjectPtr obj = safeLookupModuleHolder(mh, x->name);
+                codegenStaticObject(obj, ctx, out);
+                break;
+            }
+        }
         if (!x->desugared)
             x->desugared = desugarFieldRef(x);
         codegenExpr(x->desugared, env, ctx, out);
