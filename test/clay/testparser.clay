@@ -1,35 +1,25 @@
 
-import clay.errors.*;
 import clay.tokens.*;
 import clay.lexer.*;
 import clay.ast.*;
 import clay.parser.*;
+import clay.errors.*;
 
 main(args) {
     if (size(args) != 2) {
         println("usage: ", args[0], " <clayfile>");
         return -1;
     }
-    var fileName = args[1];
-    var data = readAll(File(fileName));
-
-    var tokens = Vector[Token]();
-
     try {
-        tokens = Vector(filtered(
-            x => (x.kind != SPACE) and (x.kind != COMMENT),
-            tokenize(LexerInput(data)),
-        ));
-        var result = parseModule(ParserInput(tokens));
-        println(result);
+        var ast = parse(tokenize(readSource(args[1])));
+        println(ast^.imports);
+        println(ast^.topLevelItems);
     }
     catch (e:LexerError) {
-        var offset = e.where - begin(data);
-        displayError(fileName, data, offset, "invalid token");
+        displayError(e);
     }
     catch (e:ParserError) {
-        var offset = begin(e.where^.data) - begin(data);
-        displayError(fileName, data, offset, "parse error");
+        displayError(e);
     }
     return 0;
 }
