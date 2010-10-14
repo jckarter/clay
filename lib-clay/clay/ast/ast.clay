@@ -8,7 +8,7 @@ import clay.tokens.*;
 // TokenRange
 //
 
-alias TokenRange = CoordinateRange[Pointer[Token]];
+alias TokenRange = Range[SizeT];
 
 
 
@@ -19,7 +19,7 @@ alias TokenRange = CoordinateRange[Pointer[Token]];
 private ast(...fields) = recordWithPredicate(
     ASTNode?,
     (#tokens, TokenRange),
-    (#mainToken, Pointer[Token]),
+    (#mainToken, SizeT),
     ...fields,
 );
 
@@ -29,10 +29,10 @@ overload ASTNode?(x) = false;
 [T, ...A | Record?(T)
            and ASTNode?(T)
            and (Tuple[...RecordFieldTypes(T)] ==
-                Tuple[TokenRange, Pointer[Token], ...A])]
+                Tuple[TokenRange, SizeT, ...A])]
 callbyname overload T(...args:A) returned:T {
-    alias tokens = TokenRange(null(Token), null(Token));
-    ...recordFields(returned) <-- tokens, null(Token), ...args;
+    alias tokens = TokenRange(SizeT(0), SizeT(0));
+    ...recordFields(returned) <-- tokens, SizeT(0), ...args;
 }
 
 [T | Record?(T) and ASTNode?(T)]
@@ -489,10 +489,13 @@ variant Import =
 
 
 //
-// module
+// SourceAST
 //
 
-record Module = ...ast(
-    (#imports, Vector[Import]),
-    (#topLevelItems, Vector[TopLevelItem]),
+record SourceAST (
+    tokens : SourceTokensPtr,
+    imports : Vector[Import],
+    topLevelItems : Vector[TopLevelItem],
 );
+
+alias SourceASTPtr = SharedPointer[SourceAST];

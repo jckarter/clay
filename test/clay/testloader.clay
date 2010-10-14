@@ -79,7 +79,8 @@ main(args) {
 
 displayModule(moduleInfo) {
     println(moduleInfo.name);
-    println(moduleInfo.filePath);
-    println(moduleInfo.ast);
+    println(moduleInfo.ast^.tokens^.file^.path);
+    println(moduleInfo.ast^.imports);
+    println(moduleInfo.ast^.topLevelItems);
     return 0;
 }

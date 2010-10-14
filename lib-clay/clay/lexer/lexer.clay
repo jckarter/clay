@@ -10,34 +10,36 @@ import parsing.combinators.wrapper.*;
 //
 
 record LexerInput(
-    current:Pointer[Char],
-    last:Pointer[Char],
-    maxCurrent:Pointer[Char],
+    file : SourceFilePtr,
+    current : SizeT,
+    maxCurrent : SizeT,
 );
 
-[S | ContiguousString?(S)]
-overload LexerInput(data:S) {
-    var ptr = &data[0];
-    return LexerInput(ptr, ptr+size(data), ptr);
-}
+overload LexerInput(file : SourceFilePtr) =
+    LexerInput(file, SizeT(0), SizeT(0));
 
 overload iterator(x:LexerInput) = x;
 
-overload hasNext?(x:LexerInput) = (x.current < x.last);
+overload hasNext?(x:LexerInput) = (x.current < size(x.file^.data));
 
 overload next(x:LexerInput) {
-    var c = x.current^;
+    var c = x.file^.data[x.current];
     x.current += 1;
     return c;
 }
 
 overload assign(dest:LexerInput, src:LexerInput) {
-    var destMax = max(dest.maxCurrent, dest.current);
-    var srcMax = max(src.maxCurrent, src.current);
-    dest.maxCurrent = max(destMax, srcMax);
-
-    dest.current = src.current;
-    dest.last = src.last;
+    if (dest.file == src.file) {
+        dest.current = src.current;
+        var destMax = max(dest.maxCurrent, dest.current);
+        var srcMax = max(src.maxCurrent, src.current);
+        dest.maxCurrent = max(destMax, srcMax);
+    }
+    else {
+        dest.file = src.file;
+        dest.current = src.current;
+        dest.maxCurrent = src.maxCurrent;
+    }
 }
 
 
@@ -99,7 +101,7 @@ private bounds(parser:Parser) {
         var start = input.current;
         return maybe(parser(input),
             x ref=> {
-                x.data = DataRange(start, input.current);
+                x.range = DataRange(start, input.current);
                 return Maybe(x);
             },
             () => nothing(T),
@@ -138,7 +140,7 @@ private var identStr = seq(identChar1, zeroPlus(identChar2));
 private lexIdentifierOrKeyword(input) Maybe[Token] {
     var start = input.current;
     if (not nothing?(identStr(input))) {
-        var data = CoordinateRange(start, input.current);
+        var data = sliced(input.file^.data, start, input.current);
         var i = keywordIndex(data);
         if (i >= 0)
             return Maybe(Token(KEYWORD, i));
@@ -358,7 +360,11 @@ private var lexToken = bounds(choice(
 
 private var lexSentinel = bounds(input => Maybe(Token(SENTINEL)));
 
-record LexerError(where:Pointer[Char]);
+record LexerError(
+    file:SourceFilePtr,
+    where:SizeT
+);
+
 instance Exception = LexerError;
 
 private var tokenize1 = modify(
@@ -370,9 +376,19 @@ private var tokenize1 = modify(
     sequence(zeroOrMore(lexToken), lexSentinel),
 );
 
-public tokenize(input) {
-    var tokens = require(tokenize1(input));
-    if (input.current != input.last)
-        throw LexerError(input.maxCurrent - 1);
+tokenizeAll(file) {
+    var input = LexerInput(file);
+    var tokensData = require(tokenize1(input));
+    if (input.current != size(file^.data))
+        throw LexerError(file, input.maxCurrent);
+    return new SourceTokens(file, move(tokensData));
+}
+
+tokenize(file) {
+    var tokens = tokenizeAll(file);
+    tokens^.vector = Vector(filtered(
+        x => (x.kind != SPACE) and (x.kind != COMMENT),
+        tokens^.vector,
+    ));
     return move(tokens);
 }

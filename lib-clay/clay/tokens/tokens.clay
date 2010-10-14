@@ -18,16 +18,31 @@ enum TokenKind {
     LLVM,
 }
 
-alias DataRange = CoordinateRange[Pointer[Char]];
+alias DataRange = Range[SizeT];
 
-record Token(kind:TokenKind, subKind:UInt8, data:DataRange);
-
+record Token(kind:TokenKind, subKind:UInt8, range:DataRange);
 
 [I | Integer?(I)]
 overload Token(kind:TokenKind, subKind:I) =
-    Token(kind, UInt8(subKind), DataRange(null(Char), null(Char)));
+    Token(kind, UInt8(subKind), DataRange(SizeT(0), SizeT(0)));
 
 overload Token(kind:TokenKind) = Token(kind, 0);
+
+
+record SourceFile (
+    path : String,
+    data : String,
+);
+alias SourceFilePtr = SharedPointer[SourceFile];
+
+record SourceTokens (
+    file : SourceFilePtr,
+    vector : Vector[Token],
+);
+alias SourceTokensPtr = SharedPointer[SourceTokens];
+
+readSource(path) =
+    new SourceFile(path, readAll(File(path)));
 
 
 

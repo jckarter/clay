@@ -12,34 +12,37 @@ import clay.ast.*;
 //
 
 record ParserInput(
-    current:Pointer[Token],
-    last:Pointer[Token],
-    maxCurrent:Pointer[Token],
+    tokens : SourceTokensPtr,
+    current : SizeT,
+    maxCurrent : SizeT,
 );
 
-[A | ContiguousSequence?(A) and (SequenceElementType(A) == Token)]
-overload ParserInput(tokens:A) {
-    var ptr = &tokens[0];
-    return ParserInput(ptr, ptr+size(tokens), ptr);
-}
+overload ParserInput(tokens : SourceTokensPtr) =
+    ParserInput(tokens, SizeT(0), SizeT(0));
 
 overload iterator(x:ParserInput) = x;
 
-overload hasNext?(x:ParserInput) = (x.current < x.last);
+overload hasNext?(x:ParserInput) =
+    (x.current < size(x.tokens^.vector));
 
 overload next(x:ParserInput) {
-    ref token = x.current^;
+    ref token = x.tokens^.vector[x.current];
     x.current += 1;
     return ref token;
 }
 
 overload assign(dest:ParserInput, src:ParserInput) {
-    var destMax = max(dest.maxCurrent, dest.current);
-    var srcMax = max(src.maxCurrent, src.current);
-    dest.maxCurrent = max(destMax, srcMax);
-
-    dest.current = src.current;
-    dest.last = src.last;
+    if (dest.tokens == src.tokens) {
+        dest.current = src.current;
+        var destMax = max(dest.maxCurrent, dest.current);
+        var srcMax = max(src.maxCurrent, src.current);
+        dest.maxCurrent = max(destMax, srcMax);
+    }
+    else {
+        dest.tokens = src.tokens;
+        dest.current = src.current;
+        dest.maxCurrent = src.maxCurrent;
+    }
 }
 
 
@@ -209,7 +212,16 @@ private sym(static Ident) = symbolParserTable[Ident];
 
 private token(tokenKind) = condition(x => (x.kind == tokenKind));
 
-private tokenData(tokenKind) = modify(x => x.data, token(tokenKind));
+private tokenData(tokenKind) {
+    var parser = token(tokenKind);
+    return input => {
+        ref data = input.tokens^.file^.data;
+        return maybe(parser(input),
+            x ref=> Maybe(sliced(data, x.range.begin, x.range.end)),
+            () ref=> nothing(Type(sliced(data, SizeT(0), SizeT(0)))),
+        );
+    };
+}
 
 
 
@@ -1087,67 +1099,43 @@ private var importDef = choice(
 
 
 //
-// module
+// parseExpr, parse
 //
 
-private var module = bounds(modify(
-    x => Module(x.0, x.1),
-    sequence(zeroOrMore(importDef), zeroOrMore(topLevelItem)),
-));
+record ParserError(
+    tokens : SourceTokensPtr,
+    where:SizeT,
+);
 
-
-
-//
-// parseExpr, parseStatement, parseTopLevelItem, parseModule
-//
-
-record ParserError(where:Pointer[Token]);
 instance Exception = ParserError;
+
 
 private var parseExpr2 = modify(
     x => x.0,
     sequence(expr, token(SENTINEL)),
 );
 
-parseExpr(input) {
+parseExpr(tokens:SourceTokensPtr) {
+    var input = ParserInput(tokens);
     var result = parseExpr2(input);
     if (nothing?(result))
-        throw ParserError(input.maxCurrent - 1);
+        throw ParserError(tokens, input.maxCurrent);
     return require(move(result));
 }
 
-private var parseStatement2 = modify(
-    x => x.0,
-    sequence(statement, token(SENTINEL)),
+private var parse2 = modify(
+    x => SourceAST(SourceTokensPtr(), x.0, x.1),
+    sequence(
+        zeroOrMore(importDef), zeroOrMore(topLevelItem), token(SENTINEL)
+    ),
 );
 
-parseStatement(input) {
-    var result = parseStatement2(input);
-    if (nothing?(result))
-        throw ParserError(input.maxCurrent - 1);
-    return require(move(result));
-}
-
-private var parseTopLevelItem2 = modify(
-    x => x.0,
-    sequence(topLevelItem, token(SENTINEL)),
-);
-
-parseTopLevelItem(input) {
-    var result = parseTopLevelItem2(input);
-    if (nothing?(result))
-        throw ParserError(input.maxCurrent - 1);
-    return require(move(result));
-}
-
-private var parseModule2 = modify(
-    x => x.0,
-    sequence(module, token(SENTINEL)),
-);
-
-parseModule(input) {
-    var result = parseModule2(input);
-    if (nothing?(result))
-        throw ParserError(input.maxCurrent - 1);
-    return require(move(result));
+parse(tokens:SourceTokensPtr) {
+    var input = ParserInput(tokens);
+    var ast = parse2(input);
+    if (nothing?(ast))
+        throw ParserError(tokens, input.maxCurrent);
+    var ast2 = require(move(ast));
+    ast2.tokens = tokens;
+    return new move(ast2);
 }
