@@ -4,6 +4,9 @@ record NSObject = externalClass(Void);
 overload selector(static #"alloc") = Id;
 overload selector(static #"init") = Id;
 overload selector(static #"description") = NSString;
+overload selector(static #"retain") = Id;
+overload selector(static #"release") = Id;
+overload selector(static #"autorelease") = Id;
 
 record NSString = externalClass(NSObject);
 overload selector(static #"stringWithUTF8String:") = Id, Pointer[CChar];
@@ -24,4 +27,6 @@ main() {
     var formattedString = NSString.stringWithFormat(format, n);
 
     println(CStringRef(formattedString.UTF8String()));
+
+    pool.release();
 }

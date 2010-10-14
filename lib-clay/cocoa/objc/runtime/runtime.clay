@@ -97,6 +97,7 @@ external method_setImplementation(method: Method, imp: RawPointer) RawPointer;
 external method_getImplementation(method: Method) RawPointer; 
 
 external object_getClass(object: Id) Class;
+external object_getClassName(object: Id) Pointer[CChar];
 external object_getInstanceVariable(
         object: Id,
         name: Pointer[CChar],
