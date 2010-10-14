@@ -2,10 +2,12 @@ import cocoa.objc.platform.*;
 import cocoa.objc.runtime.*;
 import cocoa.objc.runtime;
 
-alias ObjectHandle = cocoa.objc.runtime.Id;
-alias ClassHandle = cocoa.objc.runtime.Class;
-alias nilHandle = cocoa.objc.runtime.nil;
-alias SelectorHandle = cocoa.objc.runtime.SEL;
+public import cocoa.objc.runtime.(
+    Id as ObjectHandle,
+    Class as ClassHandle,
+    nil as nilHandle,
+    SEL as SelectorHandle
+);
 
 
 
