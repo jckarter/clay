@@ -6,10 +6,11 @@ overload selector(static #"alloc") = Id;
 overload selector(static #"init") = Id;
 
 record NSString = externalClass(NSObject);
-overload selector(static #"stringWithUTF8String:") = Weak[Id], Pointer[CChar];
+overload selector(static #"stringWithUTF8String:") = Id, Pointer[CChar];
 overload selector(static #"initWithUTF8String:") = Id, Pointer[CChar];
 overload selector(static #"UTF8String") = Pointer[CChar];
-overload varargSelector(static #"stringWithFormat:") = Weak[Id], NSString;
+overload selector(static #"description") = NSString;
+overload varargSelector(static #"stringWithFormat:") = Id, NSString;
 overload varargSelector(static #"initWithFormat:") = Id, NSString;
 
 record NSMutableString = externalClass(NSString);
@@ -203,15 +204,7 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectSelectorTypeEncoding(test, #"stringWithUTF8String:", "@@:*");
         expectSelectorTypeEncoding(test, #"initWithUTF8String:", "@@:*");
         expectSelectorTypeEncoding(test, #"UTF8String", "*@:");
-        expectSelectorTypeEncoding(test, #"stringWithFormat:", "@@:@");
-        expectSelectorTypeEncoding(test, #"initWithFormat:", "@@:@");
-    }),
-    TestCase("selector type encoding", test => {
-        expectSelectorTypeEncoding(test, #"alloc", "@@:");
-        expectSelectorTypeEncoding(test, #"init", "@@:");
-        expectSelectorTypeEncoding(test, #"stringWithUTF8String:", "@@:*");
-        expectSelectorTypeEncoding(test, #"initWithUTF8String:", "@@:*");
-        expectSelectorTypeEncoding(test, #"UTF8String", "*@:");
+        expectSelectorTypeEncoding(test, #"description", "@@:");
         expectSelectorTypeEncoding(test, #"stringWithFormat:", "@@:@");
         expectSelectorTypeEncoding(test, #"initWithFormat:", "@@:@");
     }),
@@ -242,6 +235,69 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString, Id);
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString, Int);
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString, Foo, Char);
+    }),
+    TestCase("msgSendReturn type", test => {
+        expectType(test, "alloc", Id, msgSendReturn(#"alloc", nilHandle));
+        expectType(test, "stringWithUTF8String:", Weak[Id],
+            msgSendReturn(#"stringWithUTF8String:", nilHandle)
+        );
+        expectType(test, "initWithUTF8String:", Weak[Id],
+            msgSendReturn(#"initWithUTF8String:", nilHandle)
+        );
+        expectType(test, "UTF8String", Pointer[CChar],
+            msgSendReturn(#"UTF8String", null(CChar))
+        );
+        expectType(test, "description", Weak[NSString],
+            msgSendReturn(#"description", nilHandle)
+        );
+    }),
+    TestCase("msgSendParams types", test => {
+        expectEqualValues(test, "alloc", (),
+            ...Type(...msgSendParams(#"alloc"))
+        );
+        expectEqualValues(test, "stringWithUTF8String:", Tuple(Pointer[CChar]),
+            ...Type(...msgSendParams(#"stringWithUTF8String:", null(CChar)))
+        );
+        expectEqualValues(test, "stringWithFormat:", Tuple(ObjectHandle),
+            ...Type(...msgSendParams(#"stringWithFormat:", nil(Id)))
+        );
+        expectEqualValues(test, "stringWithFormat: varargs", Tuple(ObjectHandle, Pointer[CChar], Int, Foo, ObjectHandle),
+            ...Type(...msgSendParams(#"stringWithFormat:", nil(NSString), null(CChar), 0, Foo(), nil(NSObject)))
+        );
+    }),
+    TestCase("identifier-selector conversion", test => {
+        expectEqual(test, "foo()", #"foo", identifierSelector(#foo, static 0));
+
+        expectEqual(test, "foo(x)", #"foo:", identifierSelector(#foo, static 1));
+        expectEqual(test, "foo_(x)", #"foo:", identifierSelector(#foo_, static 1));
+
+        expectEqual(test, "foo(x, y)", #"foo::", identifierSelector(#foo, static 2));
+        expectEqual(test, "foo_(x, y)", #"foo::", identifierSelector(#foo_, static 2));
+        expectEqual(test, "foo__(x, y)", #"foo::", identifierSelector(#foo__, static 2));
+
+        expectEqual(test, "foo_bar(x, y)", #"foo:bar:",
+            identifierSelector(#foo_bar, static 2)
+        );
+        expectEqual(test, "foo_bar_(x, y)", #"foo:bar:",
+            identifierSelector(#foo_bar_, static 2)
+        );
+
+        expectEqual(test, "foo_bar(x, y, z)", #"foo:bar::",
+            identifierSelector(#foo_bar, static 3)
+        );
+        expectEqual(test, "foo_bar_(x, y, z)", #"foo:bar::",
+            identifierSelector(#foo_bar_, static 3)
+        );
+        expectEqual(test, "foo_bar__(x, y, z)", #"foo:bar::",
+            identifierSelector(#foo_bar__, static 3)
+        );
+
+        expectEqual(test, "foo_bar_bas(x, y, z)", #"foo:bar:bas:",
+            identifierSelector(#foo_bar_bas, static 3)
+        );
+        expectEqual(test, "foo_bar_bas_(x, y, z)", #"foo:bar:bas:",
+            identifierSelector(#foo_bar_bas_, static 3)
+        );
     }),
 )));
 
