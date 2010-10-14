@@ -1450,7 +1450,7 @@ struct Overload : public TopLevelItem {
     bool isInline;
 
     // pre-computed patterns for matchInvoke
-    bool patternsInitialized;
+    int patternsInitializedState; // 0:notinit, -1:initing, +1:inited
     vector<PatternCellPtr> cells;
     vector<MultiPatternCellPtr> multiCells;
     EnvPtr patternEnv;
@@ -1464,7 +1464,7 @@ struct Overload : public TopLevelItem {
              bool isInline)
         : TopLevelItem(OVERLOAD), target(target), code(code),
           callByName(callByName), isInline(isInline),
-          patternsInitialized(false) {}
+          patternsInitializedState(0) {}
 };
 
 struct Procedure : public TopLevelItem {
