@@ -1005,6 +1005,16 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
+        PValuePtr pv = safeAnalyzeOne(x->expr, env);
+        if (pv->type->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)pv->type.ptr();
+            if (st->obj->objKind == MODULE_HOLDER) {
+                ModuleHolder *mh = (ModuleHolder *)st->obj.ptr();
+                ObjectPtr obj = safeLookupModuleHolder(mh, x->name);
+                evalStaticObject(obj, out);
+                break;
+            }
+        }
         if (!x->desugared)
             x->desugared = desugarFieldRef(x);
         evalExpr(x->desugared, env, out);
