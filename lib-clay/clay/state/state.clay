@@ -1,0 +1,34 @@
+
+import maybe.*;
+import clay.ast.*;
+
+record Module (
+    name : String,
+    ast : SourceASTPtr,
+);
+
+alias ModulePtr = SharedPointer[Module];
+
+private var modulesMap = HashMap[String,ModulePtr]();
+
+
+
+//
+// lookupModule, installModule
+//
+
+procedure lookupModule;
+
+[S | String?(S)]
+overload lookupModule(name:S) = lookupModule(String(name));
+
+overload lookupModule(name:String) Maybe[ModulePtr] { 
+    var ptr = lookup(modulesMap, name);
+    if (null?(ptr))
+        return nothing(ModulePtr);
+    return Maybe(ptr^);
+}
+
+installModule(name:String, module:ModulePtr) {
+    modulesMap[name] = module;
+}
