@@ -1,17 +1,12 @@
 
+import maybe.*;
 import io.paths.*;
 import clay.tokens.*;
 import clay.lexer.*;
 import clay.ast.*;
 import clay.parser.*;
+import clay.state.*;
 import clay.loader.platform as platform;
-
-record Module (
-    name : String,
-    ast : SourceASTPtr,
-);
-
-private var modules = HashMap[String,Module]();
 
 private var searchPath = Vector[String]();
 
@@ -82,41 +77,41 @@ private locateModule(dottedName) {
 }
 
 private loadDependents(module) {
-    for (x in module.ast^.imports)
+    for (x in module^.ast^.imports)
         loadModule(fieldRef(*x, #name));
 }
 
 loadModule(dottedName) {
     var name = moduleString(dottedName);
-    var modulePtr = lookup(modules, name);
-    if (not null?(modulePtr))
-        return ref modulePtr^;
-    if (name == "__primitives__") {
-        ref module = modules[name];
-        module.name = name;
-        return ref module;
-    }
-    var path = locateModule(dottedName);
-    println("loading module: ", name, ", ", path);
-
-    ref module = modules[name];
-    module.name = name;
-    module.ast = parse(tokenize(readSource(path)));
-
-    loadDependents(module);
-
-    return ref module;
+    return maybe(lookupModule(name),
+        module ref=> module,
+        () ref=> {
+            if (name == "__primitives__") {
+                var module = new Module();
+                module^.name = name;
+                installModule(name, module);
+                return module;
+            }
+            var path = locateModule(dottedName);
+            println("loading module: ", name, ", ", path);
+            var module = new Module();
+            module^.name = name;
+            module^.ast = parse(tokenize(readSource(path)));
+            installModule(name, module);
+            loadDependents(module);
+            return module;
+        },
+    );
 }
 
-loadPrelude() {
+loadPrelude() =
     loadModule(DottedName("prelude"));
-}
 
 loadProgram(path) {
     println("loading program: ", path);
-    var module = Module();
-    module.name = String("__main__");
-    module.ast = parse(tokenize(readSource(path)));
+    var module = new Module();
+    module^.name = String("__main__");
+    module^.ast = parse(tokenize(readSource(path)));
     loadDependents(module);
-    return move(module);
+    return module;
 }
