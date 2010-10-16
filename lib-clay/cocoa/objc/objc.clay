@@ -496,16 +496,17 @@ IdentifierChars(identifier)
 private _identifierSelectorChar(c) = c;
 overload _identifierSelectorChar(static #_) = #":";
 
-[argCount, underscoreCount]
-private _extraColon(static argCount, static underscoreCount) = ;
-[argCount, underscoreCount | argCount > underscoreCount]
-overload _extraColon(static argCount, static underscoreCount) = #":";
+[argCount, underscoreCount, lastCharacter]
+private _extraColon(static argCount, static underscoreCount, static lastCharacter) = ;
+[argCount, underscoreCount, lastCharacter | argCount > underscoreCount and lastCharacter != #_]
+overload _extraColon(static argCount, static underscoreCount, static lastCharacter)
+    = #":";
 
 [argCount] private _identifierSelector(static argCount, ...chars) {
-    var underscoreCount = static countOccurrences(#_, ...chars);
+    var lastCharacter = lastValue(...chars);
     return IdentifierConcat(
         ...mapValues(_identifierSelectorChar, ...chars),
-        ..._extraColon(static argCount, static countOccurrences(#_, ...chars))
+        ..._extraColon(static argCount, static countOccurrences(#_, ...chars), lastCharacter)
     );
 }
 
