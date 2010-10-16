@@ -89,22 +89,24 @@ private optCommaListStrict(forward parser) =
 
 
 //
-// varList combinator
+// variadicList combinator
 //
 
 private commaAndItem(item) = modify(x => move(x.1), sequence(sym(#","), item));
 
-[Item, VarItem | Parsers?(Item, VarItem)]
-private varList(item:Item, varItem:VarItem) {
+[Item, VariadicItem | Parsers?(Item, VariadicItem)]
+private variadicList(item:Item, variadicItem:VariadicItem) {
     alias T = ParseResult(Item);
     return choice(
         modify(
-            x => VarList(move(x.0), move(x.1)),
-            sequence(commaListStrict(item), optional(commaAndItem(varItem))),
+            x => VariadicList(move(x.0), move(x.1)),
+            sequence(
+                commaListStrict(item), optional(commaAndItem(variadicItem))
+            ),
         ),
         modify(
-            x => VarList(Vector[T](), move(x)),
-            optional(varItem),
+            x => VariadicList(Vector[T](), move(x)),
+            optional(variadicItem),
         ),
     );
 }
@@ -810,7 +812,7 @@ private var variadicArgument = modify(Argument, bounds(modify(
     sequence(argumentKind, sym(#"..."), identifier, optional(patternTypeSpec)),
 )));
 
-private var arguments = varList(argument, variadicArgument);
+private var arguments = variadicList(argument, variadicArgument);
 
 private var namedReturn = modify(
     x => x.0,
@@ -888,13 +890,16 @@ private var staticParams = modify(
     x => move(x.1),
     sequence(
         sym(#"["),
-        varList(identifier, modify(x => x.1, sequence(sym(#"..."), identifier))),
+        variadicList(
+            identifier,
+            modify(x => x.1, sequence(sym(#"..."), identifier)),
+        ),
         sym(#"]"),
     ),
 );
 
 private var optStaticParams = modify(
-    x => maybe(move(x), move, () => VarList[Identifier]()),
+    x => maybe(move(x), move, () => VariadicList[Identifier]()),
     optional(staticParams),
 );
 
@@ -1013,8 +1018,8 @@ private var variadicExternalArg = bounds(modify(
 ));
 
 private var externalArgs = modify(
-    x => (move(x.items), not nothing?(x.varItem)),
-    varList(externalArg, variadicExternalArg),
+    x => (move(x.items), not nothing?(x.variadicItem)),
+    variadicList(externalArg, variadicExternalArg),
 );
 
 private var externalBody = choice(
