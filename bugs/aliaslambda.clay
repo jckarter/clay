@@ -1,0 +1,9 @@
+
+record R1(x:Int);
+
+main() {
+    var r = R1(10);
+    alias y = 20 + r.x;
+    var f = () => { println(y); };
+    f();
+}
