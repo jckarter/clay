@@ -13,10 +13,13 @@
 using namespace std;
 
 #include "clang/AST/ASTConsumer.h"
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Frontend/TextDiagnosticPrinter.h"
+#include "clang/Frontend/DiagnosticOptions.h"
 using namespace clang;
 
 
-class BindingsConverter : public ASTConsumer {
+class BindingsConverter : public ASTConsumer, public TextDiagnosticPrinter {
 public:
     BindingsConverter(ostream& out);
 
@@ -30,6 +33,8 @@ private:
 public :
     virtual void HandleTopLevelDecl(DeclGroupRef DG);
     void generate();
+
+    //virtual void HandleDiagnostic(clang::Diagnostic::Level level, const clang::DiagnosticInfo &info);
 
 private :
     void generateDecl(Decl *decl);
@@ -47,4 +52,6 @@ private :
     map<string, string> typedefNames;
 
     set<string> externsDeclared;
+
+    bool succeeded;
 };
