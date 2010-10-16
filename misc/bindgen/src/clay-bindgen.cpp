@@ -41,10 +41,12 @@ int main(int argc, char* argv[]) {
     clang::TargetOptions targetOpts;
     targetOpts.Triple = triple.str();
 
-    BindingsConverter *converter = new BindingsConverter(cout);
+    clang::DiagnosticOptions diagOpts;
+    BindingsConverter *converter = new BindingsConverter(cout, diagOpts);
 
     // Create a preprocessor context
     clang::LangOptions langOpts;
+    langOpts.Blocks = 1; // for recent OS X/iOS headers
     /* XXX
     langOpts.ObjC1 = 1;
     langOpts.ObjC2 = 1;

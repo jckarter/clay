@@ -24,8 +24,8 @@ using namespace std;
 using namespace clang;
 using namespace llvm;
 
-BindingsConverter::BindingsConverter(ostream& out)
-    :   TextDiagnosticPrinter(llvm::errs(), clang::DiagnosticOptions()), 
+BindingsConverter::BindingsConverter(ostream& out, clang::DiagnosticOptions const &diagOpts)
+    :   TextDiagnosticPrinter(llvm::errs(), diagOpts), 
         out(out), succeeded(true) {
 }
 
