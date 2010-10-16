@@ -899,7 +899,7 @@ private var optStaticParams = modify(
 );
 
 private var recordDef = topLevelItemParser(
-    x => RecordDef(x.0, x.2, x.3, x.4),
+    x => Record(x.0, x.2, x.3, x.4),
     sequence(
         optional(visibility), kw_record, identifier, optStaticParams,
         recordBody,
@@ -919,7 +919,7 @@ private var defaultInstances = choice(
 );
 
 private var variantDef = topLevelItemParser(
-    x => VariantDef(x.0, x.2, x.3, x.4),
+    x => Variant(x.0, x.2, x.3, x.4),
     sequence(
         optional(visibility), kw_variant, identifier, optStaticParams,
         defaultInstances
@@ -927,7 +927,7 @@ private var variantDef = topLevelItemParser(
 );
 
 private var instanceDef = topLevelItemParser(
-    x => InstanceDef((x.0).0, (x.0).1, x.2, x.4),
+    x => Instance((x.0).0, (x.0).1, x.2, x.4),
     sequence(
         patternVarsWithPredicate, kw_instance, pattern,
         sym(#"="), expr, sym(#";"),
@@ -945,7 +945,7 @@ private var optInline = modify(
 );
 
 private var procedureWithBody = topLevelItemParser(
-    x => ProcedureDef(x.1, x.5, Maybe(
+    x => Procedure(x.1, x.5, Maybe(
         Code(x.2, x.3, (x.0).0, (x.0).1, x.7, x.9, x.10)
     )),
     sequence(
@@ -956,12 +956,12 @@ private var procedureWithBody = topLevelItemParser(
 );
 
 private var procedureWithoutBody = topLevelItemParser(
-    x => ProcedureDef(x.0, x.2, nothing(Code)),
+    x => Procedure(x.0, x.2, nothing(Code)),
     sequence(optional(visibility), kw_procedure, identifier, sym(#";")),
 );
 
 private var overloadDef = topLevelItemParser(
-    x => OverloadDef(x.4, Code(x.1, x.2, (x.0).0, (x.0).1, x.6, x.8, x.9)),
+    x => Overload(x.4, Code(x.1, x.2, (x.0).0, (x.0).1, x.6, x.8, x.9)),
     sequence(
         patternVarsWithPredicate, optCallByName, optInline, kw_overload,
         pattern, sym(#"("), arguments, sym(#")"), returnSpecs, codeBody,
@@ -969,7 +969,7 @@ private var overloadDef = topLevelItemParser(
 );
 
 private var enumDef = topLevelItemParser(
-    x => EnumDef(x.0, x.2, x.4),
+    x => Enum(x.0, x.2, x.4),
     sequence(
         optional(visibility), kw_enum, identifier,
         sym(#"{"), identifierList, sym(#"}")
