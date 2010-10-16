@@ -68,6 +68,9 @@ procedure nthValue;
 
 inline firstValue(forward a, ...rest) = forward a;
 
+inline lastValue(a, forward ...rest) = forward lastValue(...rest);
+overload lastValue(forward a) = forward a;
+
 
 
 //
