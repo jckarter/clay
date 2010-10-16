@@ -21,7 +21,7 @@ using namespace clang;
 
 class BindingsConverter : public ASTConsumer, public TextDiagnosticPrinter {
 public:
-    BindingsConverter(ostream& out);
+    BindingsConverter(ostream& out, clang::DiagnosticOptions const &diagOpts);
 
 private:
     string allocateName(const string &base);
