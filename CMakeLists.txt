@@ -38,6 +38,11 @@ if(UNIX)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     execute_process(
+        COMMAND ${LLVM_CONFIG} --libdir
+        OUTPUT_VARIABLE LLVM_LIBDIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    execute_process(
         COMMAND ${LLVM_CONFIG} --src-root
         OUTPUT_VARIABLE LLVM_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -61,6 +66,7 @@ elseif(MSVC)
 
     if(IS_DIRECTORY ${CLANG_DIR})
         set(BUILD_BINDGEN True)
+        set(CLANG ${CLANG_DIR}/bin)
         include_directories(${CLANG_DIR}/include)
         include_directories(${LLVM_BUILD_DIR}/tools/clang/include)
     else()
