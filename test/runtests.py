@@ -17,6 +17,28 @@ testRoot = os.path.dirname(os.path.abspath(__file__))
 
 
 #
+# getClayPlatform, fileForPlatform
+#
+
+def getClayPlatform():
+    if sys.platform == "win32" or sys.platform == "cygwin":
+        return "windows"
+    if sys.platform == "darwin":
+        return "macosx"
+    if sys.platform.startswith("linux"):
+        return "linux"
+
+clayPlatform = getClayPlatform()
+
+def fileForPlatform(folder, name, ext):
+    platformName = os.path.join(folder, "%s.%s.%s" % (name, clayPlatform, ext))
+    if os.path.isfile(platformName):
+        return platformName
+    else:
+        return os.path.join(folder, "%s.%s" % (name, ext))
+
+
+#
 # getCompilerPath
 #
 
@@ -48,14 +70,23 @@ class TestCase(object):
     allCases = []
     def __init__(self, folder, testfile, base = None):
         entries = os.listdir(folder)
+        self.testfile = os.path.basename(testfile)
         self.path = folder
         if os.path.isfile(testfile):
             self.loadTest(testfile)
-        runscript = os.path.join(folder, "run.py")
+
+        runscript = fileForPlatform(folder, "run", "py")
         if os.path.isfile(runscript):
             self.runscript = runscript
         else:
             self.runscript = None
+
+        buildflags = fileForPlatform(folder, "buildflags", "txt")
+        if os.path.isfile(buildflags):
+            self.buildflags = open(buildflags).read().split()
+        else:
+            self.buildflags = []
+
         for entry in entries:
             fullpath = os.path.join(folder, entry)
             if not os.path.isdir(fullpath):
@@ -67,7 +98,7 @@ class TestCase(object):
         self.testfile = testfile
 
     def cmdline(self, clay) :
-        return [clay, "main.clay"]
+        return [clay] + self.buildflags + [self.testfile]
 
     def pre_build(self) :
         pass
@@ -80,12 +111,12 @@ class TestCase(object):
         [os.unlink(f) for f in glob.glob("*.data")]
 
     def match(self, resultout, resulterr, returncode) :
-        if not os.path.isfile("out.txt") :
-            return False
-        refout = open("out.txt").read()
+        outfile = fileForPlatform(".", "out", "txt")
+        errfile = fileForPlatform(".", "err", "txt")
+        refout = open(outfile).read()
         referr = ""
-        if os.path.isfile("err.txt"):
-            referr = open("err.txt").read()
+        if os.path.isfile(errfile):
+            referr = open(errfile).read()
         resultout = resultout.replace('\r', '')
         refout    = refout.replace('\r', '')
         resulterr = resulterr.replace('\r', '')
@@ -135,9 +166,6 @@ class TestCase(object):
             attempts += 1
 
 class TestModuleCase(TestCase):
-    def cmdline(self, clay) :
-        return [clay, "test.clay"]
-
     def match(self, resultout, resulterr, returncode) :
         return returncode == 0
         
@@ -147,8 +175,8 @@ class TestModuleCase(TestCase):
 #
 
 def findTestCase(folder, base = None):
-    testPath = os.path.join(folder, "test.clay")
-    mainPath = os.path.join(folder, "main.clay")
+    testPath = fileForPlatform(folder, "test", "clay")
+    mainPath = fileForPlatform(folder, "main", "clay")
     if os.path.isfile(testPath) :
         TestModuleCase(folder, testPath, base)
     else :
