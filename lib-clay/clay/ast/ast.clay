@@ -274,12 +274,12 @@ record StaticFor = ...ast(
 
 
 //
-// VarList
+// VariadicList
 //
 
-record VarList[T] (
+record VariadicList[T] (
     items : Vector[T],
-    varItem : Maybe[T],
+    variadicItem : Maybe[T],
 );
 
 
@@ -329,7 +329,7 @@ record Code = ...top(
     (#inline?,     Bool),
     (#patternVars, Vector[PatternVar]),
     (#predicate,   Maybe[ExprPtr]),
-    (#args,        VarList[Argument]),
+    (#args,        VariadicList[Argument]),
     (#returns,     Vector[ReturnSpec]),
     (#body,        CodeBody),
 );
@@ -354,7 +354,7 @@ private named(...fields) = ...top(
 );
 
 record Record = ...named(
-    (#params, VarList[Identifier]),
+    (#params, VariadicList[Identifier]),
     (#body,   RecordBody)
 );
 alias RecordPtr = SharedPointer[Record];
@@ -365,7 +365,7 @@ record DeclaredRecordBody = ...ast((#fields, Vector[RecordField]));
 record RecordField = ...ast((#name, Identifier), (#type, ExprPtr));
 
 record Variant = ...named(
-    (#params,           VarList[Identifier]),
+    (#params,           VariadicList[Identifier]),
     (#defaultInstances, Vector[ExprPtr]),
 );
 alias VariantPtr = SharedPointer[Variant];
@@ -395,13 +395,13 @@ record Enum = ...named(
 alias EnumPtr = SharedPointer[Enum];
 
 record GlobalVariable = ...named(
-    (#params, VarList[Identifier]),
+    (#params, VariadicList[Identifier]),
     (#expr,   ExprPtr),
 );
 alias GlobalVariablePtr = SharedPointer[GlobalVariable];
 
 record GlobalAlias = ...named(
-    (#params, VarList[Identifier]),
+    (#params, VariadicList[Identifier]),
     (#expr,   ExprPtr),
 );
 alias GlobalAliasPtr = SharedPointer[GlobalAlias];
