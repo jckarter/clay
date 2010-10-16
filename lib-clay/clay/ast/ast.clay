@@ -353,46 +353,46 @@ private named(...fields) = ...top(
     ...fields,
 );
 
-record RecordDef = ...named(
+record Record = ...named(
     (#params, VarList[Identifier]),
     (#body,   RecordBody)
 );
-alias RecordDefPtr = SharedPointer[RecordDef];
+alias RecordPtr = SharedPointer[Record];
 
 variant RecordBody = ComputedRecordBody | DeclaredRecordBody;
 record ComputedRecordBody = ...ast((#fields, Vector[ExprPtr]));
 record DeclaredRecordBody = ...ast((#fields, Vector[RecordField]));
 record RecordField = ...ast((#name, Identifier), (#type, ExprPtr));
 
-record VariantDef = ...named(
+record Variant = ...named(
     (#params,           VarList[Identifier]),
     (#defaultInstances, Vector[ExprPtr]),
 );
-alias VariantDefPtr = SharedPointer[VariantDef];
+alias VariantPtr = SharedPointer[Variant];
 
-record InstanceDef = ...top(
+record Instance = ...top(
     (#patternVars, Vector[PatternVar]),
     (#predicate,   Maybe[ExprPtr]),
     (#target,      ExprPtr),
     (#member,      ExprPtr),
 );
-alias InstanceDefPtr = SharedPointer[InstanceDef];
+alias InstancePtr = SharedPointer[Instance];
 
-record ProcedureDef = ...named(
+record Procedure = ...named(
     (#code, Maybe[Code]),
 );
-alias ProcedureDefPtr = SharedPointer[ProcedureDef];
+alias ProcedurePtr = SharedPointer[Procedure];
 
-record OverloadDef = ...top(
+record Overload = ...top(
     (#target, ExprPtr),
     (#code,   Code),
 );
-alias OverloadDefPtr = SharedPointer[OverloadDef];
+alias OverloadPtr = SharedPointer[Overload];
 
-record EnumDef = ...named(
+record Enum = ...named(
     (#members, Vector[Identifier]),
 );
-alias EnumDefPtr = SharedPointer[EnumDef];
+alias EnumPtr = SharedPointer[Enum];
 
 record GlobalVariable = ...named(
     (#params, VarList[Identifier]),
@@ -427,12 +427,12 @@ record ExternalVariable = ...named(
 alias ExternalVariablePtr = SharedPointer[ExternalVariable];
 
 variant TopLevelItem =
-    RecordDefPtr |
-    VariantDefPtr |
-    InstanceDefPtr |
-    ProcedureDefPtr |
-    OverloadDefPtr |
-    EnumDefPtr |
+    RecordPtr |
+    VariantPtr |
+    InstancePtr |
+    ProcedurePtr |
+    OverloadPtr |
+    EnumPtr |
     GlobalVariablePtr |
     ExternalProcedurePtr |
     ExternalVariablePtr |
