@@ -19,7 +19,6 @@ using namespace std;
 #include "clang/AST/DeclGroup.h"
 #include "llvm/ADT/Triple.h"
 
-#include "InitHeaderSearch.h"
 #include "PPContext.h"
 #include "BindingsConverter.h"
 using namespace clang;
@@ -36,18 +35,21 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    llvm::Triple triple(LLVM_HOSTTRIPLE);
+
     // Setup clang
     clang::TargetOptions targetOpts;
-    targetOpts.Triple = LLVM_HOSTTRIPLE;
+    targetOpts.Triple = triple.str();
+
+    BindingsConverter *converter = new BindingsConverter(cout);
 
     // Create a preprocessor context
-    PPContext context(targetOpts);  
-
-    // Add header search directories
-    InitHeaderSearch init(context.headers);
-    llvm::Triple triple;
-    init.AddDefaultSystemIncludePaths(context.opts,triple);
-    init.Realize();
+    clang::LangOptions langOpts;
+    /* XXX
+    langOpts.ObjC1 = 1;
+    langOpts.ObjC2 = 1;
+    */
+    PPContext context(targetOpts, converter, langOpts); 
 
     // Add input file
     const FileEntry* file = context.fm.getFile(filename);
@@ -57,9 +59,7 @@ int main(int argc, char* argv[]) {
     }
     context.sm.createMainFileID(file);
 
-    BindingsConverter converter(cout);
-
-    // Initialase ASTContext
+    // Initialize ASTContext
     IdentifierTable identifierTable(context.opts);
     SelectorTable selectorTable;
     Builtin::Context builtins(*context.target);
@@ -68,8 +68,11 @@ int main(int argc, char* argv[]) {
                           selectorTable, builtins, 0);
 
     // Parse it
-    ParseAST(context.pp, &converter, astContext);  // calls pp.EnterMainSourceFile() for us
-    converter.generate();
+    converter->BeginSourceFile(langOpts, &context.pp);
+    ParseAST(context.pp, converter, astContext);  // calls pp.EnterMainSourceFile() for us
+    converter->EndSourceFile();
+
+    converter->generate();
 
     return 0;
 }
