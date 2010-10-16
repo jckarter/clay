@@ -52,7 +52,6 @@ struct PPContext {
             resourceDir.appendComponent(CLANG_VERSION_STRING);
 
             hsOpts.ResourceDir = resourceDir.c_str();
-            std::cerr << hsOpts.ResourceDir << "\n";
             hsOpts.UseBuiltinIncludes = 1;
             hsOpts.UseStandardIncludes = 1;
             InitializePreprocessor(pp, PreprocessorOptions(), hsOpts, FrontendOptions());

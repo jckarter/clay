@@ -62,12 +62,13 @@ int main(int argc, char* argv[]) {
     context.sm.createMainFileID(file);
 
     // Initialize ASTContext
-    IdentifierTable identifierTable(context.opts);
-    SelectorTable selectorTable;
     Builtin::Context builtins(*context.target);
+    builtins.InitializeBuiltins(context.pp.getIdentifierTable());
 
-    ASTContext astContext(context.opts, context.sm, *context.target, identifierTable,
-                          selectorTable, builtins, 0);
+    ASTContext astContext(context.opts, context.sm, *context.target,
+                          context.pp.getIdentifierTable(),
+                          context.pp.getSelectorTable(),
+                          builtins, 0);
 
     // Parse it
     converter->BeginSourceFile(langOpts, &context.pp);
