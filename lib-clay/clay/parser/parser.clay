@@ -320,9 +320,11 @@ private var atomicExpr = choice(arrayExpr, tupleExpr, nameRef, literalExpr);
 // setBase, foldTail
 //
 
+private exprTokens(x) = ref fieldRef(*x, #tokens);
+
 private setBase2(root, field, base) {
     fieldRef(root, field) = base;
-    root.tokens.begin = base^.tokens.begin;
+    root.tokens.begin = exprTokens(base^).begin;
 }
 private setBase(x, y) { assert(false, "baseless expression!"); }
 overload setBase(x:Indexing,       y) { setBase2(x, #expr, y); }
@@ -853,7 +855,7 @@ private var codeBody = choice(
 //
 
 private topLevelItemParser(forward modifier, forward parser) = modify(
-    x => TopLevelItem(move(x)),
+    x => TopLevelItem(new move(x)),
     bounds(modify(modifier, parser)),
 );
 

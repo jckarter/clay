@@ -41,29 +41,6 @@ overload printReprTo(stream, x:T) {
     printReprValuesTo(stream, ...dropValues(static 2, ...recordFields(x)));
 }
 
-private ASTVariant?(x) = false;
-overload ASTVariant?(static Expr) = true;
-overload ASTVariant?(static Statement) = true;
-overload ASTVariant?(static Argument) = true;
-overload ASTVariant?(static CodeBody) = true;
-overload ASTVariant?(static TopLevelItem) = true;
-overload ASTVariant?(static RecordBody) = true;
-overload ASTVariant?(static Import) = true;
-
-[T | Variant?(T) and ASTVariant?(T)]
-overload printReprTo(stream, x:SharedPointer[T]) {
-    if (null?(x))
-        printTo(stream, "nullShared(", T, ")");
-    else
-        printReprTo(stream, x^);
-}
-
-[T | Variant?(T) and ASTVariant?(T)]
-overload fieldRef(x:T, static #tokens) = ref fieldRef(*x, #tokens);
-
-[T | Variant?(T) and ASTVariant?(T)]
-overload fieldRef(x:T, static #mainToken) = ref fieldRef(*x, #mainToken);
-
 
 
 //
@@ -380,6 +357,7 @@ record RecordDef = ...named(
     (#params, VarList[Identifier]),
     (#body,   RecordBody)
 );
+alias RecordDefPtr = SharedPointer[RecordDef];
 
 variant RecordBody = ComputedRecordBody | DeclaredRecordBody;
 record ComputedRecordBody = ...ast((#fields, Vector[ExprPtr]));
@@ -390,6 +368,7 @@ record VariantDef = ...named(
     (#params,           VarList[Identifier]),
     (#defaultInstances, Vector[ExprPtr]),
 );
+alias VariantDefPtr = SharedPointer[VariantDef];
 
 record InstanceDef = ...top(
     (#patternVars, Vector[PatternVar]),
@@ -397,29 +376,35 @@ record InstanceDef = ...top(
     (#target,      ExprPtr),
     (#member,      ExprPtr),
 );
+alias InstanceDefPtr = SharedPointer[InstanceDef];
 
 record ProcedureDef = ...named(
     (#code, Maybe[Code]),
 );
+alias ProcedureDefPtr = SharedPointer[ProcedureDef];
 
 record OverloadDef = ...top(
     (#target, ExprPtr),
     (#code,   Code),
 );
+alias OverloadDefPtr = SharedPointer[OverloadDef];
 
 record EnumDef = ...named(
     (#members, Vector[Identifier]),
 );
+alias EnumDefPtr = SharedPointer[EnumDef];
 
 record GlobalVariable = ...named(
     (#params, VarList[Identifier]),
     (#expr,   ExprPtr),
 );
+alias GlobalVariablePtr = SharedPointer[GlobalVariable];
 
 record GlobalAlias = ...named(
     (#params, VarList[Identifier]),
     (#expr,   ExprPtr),
 );
+alias GlobalAliasPtr = SharedPointer[GlobalAlias];
 
 record ExternalProcedure = ...named(
     (#attributes,  Vector[ExprPtr]),
@@ -428,6 +413,7 @@ record ExternalProcedure = ...named(
     (#returnType,  Maybe[ExprPtr]),
     (#body,        Maybe[StatementPtr]),
 );
+alias ExternalProcedurePtr = SharedPointer[ExternalProcedure];
 
 record ExternalArg = ...ast(
     (#name, Identifier),
@@ -438,18 +424,19 @@ record ExternalVariable = ...named(
     (#attributes, Vector[ExprPtr]),
     (#type,       ExprPtr),
 );
+alias ExternalVariablePtr = SharedPointer[ExternalVariable];
 
 variant TopLevelItem =
-    RecordDef |
-    VariantDef |
-    InstanceDef |
-    ProcedureDef |
-    EnumDef |
-    GlobalVariable |
-    ExternalProcedure |
-    ExternalVariable |
-    GlobalAlias |
-    OverloadDef
+    RecordDefPtr |
+    VariantDefPtr |
+    InstanceDefPtr |
+    ProcedureDefPtr |
+    OverloadDefPtr |
+    EnumDefPtr |
+    GlobalVariablePtr |
+    ExternalProcedurePtr |
+    ExternalVariablePtr |
+    GlobalAliasPtr
     ;
 
 
