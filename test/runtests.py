@@ -80,6 +80,8 @@ class TestCase(object):
         [os.unlink(f) for f in glob.glob("*.data")]
 
     def match(self, resultout, resulterr, returncode) :
+        if not os.path.isfile("out.txt") :
+            return False
         refout = open("out.txt").read()
         referr = ""
         if os.path.isfile("err.txt"):
