@@ -15,8 +15,15 @@ main() {
     test(#foobar);
     test(#"%#@% $#%\t*^*^");
 
+    println();
     println(IdentifierStartsWith?(#foobar, #foo));
     println(IdentifierStartsWith?(#foobar, #bar));
+    println(IdentifierStartsWith?(#foobar, #foobar));
+    println(IdentifierStartsWith?(#foo, #foobar));
+
+    println();
     println(IdentifierEndsWith?(#foobar, #foo));
     println(IdentifierEndsWith?(#foobar, #bar));
+    println(IdentifierEndsWith?(#foobar, #foobar));
+    println(IdentifierEndsWith?(#foo, #foobar));
 }
