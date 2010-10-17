@@ -44,6 +44,8 @@ struct PPContext {
         sm(diags),
         pp(diags, opts, *target, sm, headers)
         {
+            diags.setSuppressSystemWarnings(true);
+
             HeaderSearchOptions hsOpts;
             llvm::sys::Path resourceDir(LLVM_LIBDIR);
             resourceDir.appendComponent("clang");
