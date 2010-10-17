@@ -4,12 +4,16 @@ IdentifierChars(identifier)
         ...staticIntegers(static IdentifierSize(identifier))
     );
 
-IdentifierStartsWith?(identifier, startsWith)
-    = IdentifierSlice(identifier, static 0, static IdentifierSize(startsWith))
+IdentifierStartsWith?(identifier, startsWith) = false;
+[identifier, startsWith | IdentifierSize(identifier) >= IdentifierSize(startsWith)]
+overload IdentifierStartsWith?(static identifier, static startsWith)
+      = IdentifierSlice(identifier, static 0, static IdentifierSize(startsWith))
         == startsWith;
 
-IdentifierEndsWith?(identifier, endsWith)
+IdentifierEndsWith?(identifier, endsWith) = false;
+[identifier, endsWith | IdentifierSize(identifier) >= IdentifierSize(endsWith)]
+overload IdentifierEndsWith?(static identifier, static endsWith)
     = IdentifierSlice(identifier,
-        static IdentifierSize(identifier) - IdentifierSize(endsWith),
-        static IdentifierSize(identifier)
-    ) == endsWith;
+          static IdentifierSize(identifier) - IdentifierSize(endsWith),
+          static IdentifierSize(identifier)
+      ) == endsWith;
