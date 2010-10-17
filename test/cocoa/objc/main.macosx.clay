@@ -6,6 +6,7 @@ overload selector(static #"init") = Id;
 overload selector(static #"description") = NSString;
 overload selector(static #"retain") = Id;
 overload selector(static #"release") = Id;
+overload selector(static #"drain") = Void;
 overload selector(static #"autorelease") = Id;
 
 record NSString = externalClass(NSObject);
@@ -28,5 +29,5 @@ main() {
 
     println(CStringRef(formattedString.UTF8String()));
 
-    pool.release();
+    pool.drain();
 }
