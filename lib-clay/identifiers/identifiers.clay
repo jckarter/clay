@@ -1,0 +1,19 @@
+IdentifierChars(identifier)
+    = ...mapValues(
+        n => IdentifierSlice(identifier, n, static unwrapStatic(n)+1),
+        ...staticIntegers(static IdentifierSize(identifier))
+    );
+
+IdentifierStartsWith?(identifier, startsWith) = false;
+[identifier, startsWith | IdentifierSize(identifier) >= IdentifierSize(startsWith)]
+overload IdentifierStartsWith?(static identifier, static startsWith)
+      = IdentifierSlice(identifier, static 0, static IdentifierSize(startsWith))
+        == startsWith;
+
+IdentifierEndsWith?(identifier, endsWith) = false;
+[identifier, endsWith | IdentifierSize(identifier) >= IdentifierSize(endsWith)]
+overload IdentifierEndsWith?(static identifier, static endsWith)
+    = IdentifierSlice(identifier,
+          static IdentifierSize(identifier) - IdentifierSize(endsWith),
+          static IdentifierSize(identifier)
+      ) == endsWith;

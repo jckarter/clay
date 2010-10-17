@@ -3,7 +3,13 @@ import cocoa.objc.*;
 
 record NSObject = externalClass(Void);
 overload selector(static #"alloc") = Id;
+overload selector(static #"allocWithZone:") = Id, NSZone;
 overload selector(static #"init") = Id;
+overload selector(static #"new") = Id;
+overload selector(static #"copy") = Id;
+overload selector(static #"copyWithZone:") = Id, NSZone;
+overload selector(static #"mutableCopy") = Id;
+overload selector(static #"retain") = Id;
 
 record NSString = externalClass(NSObject);
 overload selector(static #"stringWithUTF8String:") = Id, Pointer[CChar];
@@ -235,6 +241,24 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString, Id);
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString, Int);
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString, Foo, Char);
+    }),
+    TestCase("retaining selectors", test => {
+        expectTrue(test, "alloc", RetainingSelector?(#"alloc"));
+        expectTrue(test, "allocWithZone:", RetainingSelector?(#"allocWithZone:"));
+        expectTrue(test, "copy", RetainingSelector?(#"copy"));
+        expectTrue(test, "copyWithZone:", RetainingSelector?(#"copyWithZone:"));
+        expectTrue(test, "mutableCopy", RetainingSelector?(#"mutableCopy"));
+        expectTrue(test, "retain", RetainingSelector?(#"retain"));
+        expectTrue(test, "new", RetainingSelector?(#"new"));
+
+        expectFalse(test, "description", RetainingSelector?(#"description"));
+        expectFalse(test, "initWithFormat:", RetainingSelector?(#"initWithFormat:"));
+        expectFalse(test, "stringWithFormat:", RetainingSelector?(#"stringWithFormat:"));
+    }),
+    TestCase("forwarding selectors", test => {
+        expectTrue(test, "init", ForwardingSelector?(#"init"));
+        expectTrue(test, "initWithFormat:", ForwardingSelector?(#"initWithFormat:"));
+        expectFalse(test, "stringWithFormat:", ForwardingSelector?(#"stringWithFormat:"));
     }),
     TestCase("msgSendReturn type", test => {
         expectType(test, "alloc", Id, msgSendReturn(#"alloc", nilHandle));

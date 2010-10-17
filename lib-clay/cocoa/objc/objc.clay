@@ -1,5 +1,6 @@
 import cocoa.objc.platform.*;
 import cocoa.objc.runtime.*;
+import identifiers.*;
 public import cocoa.objc.runtime.(
     Id as ObjectHandle,
     Class as ClassHandle,
@@ -345,6 +346,26 @@ overload SelectorArgumentCount(static sel) = countValues(...varargSelector(sel))
 
 
 //
+// retaining and forwarding selectors
+//
+
+RetainingSelector?(sel) = false;
+[sel |
+    IdentifierStartsWith?(sel, #"alloc")
+    or IdentifierStartsWith?(sel, #"new")
+    or IdentifierStartsWith?(sel, #"copy")
+    or IdentifierStartsWith?(sel, #"mutableCopy")
+    or sel == #"retain"
+]
+overload RetainingSelector?(static sel) = true;
+
+ForwardingSelector?(sel) = false;
+[sel | IdentifierStartsWith?(sel, #"init")]
+overload ForwardingSelector?(static sel) = true;
+
+
+
+//
 // argument conversion
 //
 
@@ -486,12 +507,6 @@ msgSend(self: O, static S, ...args: T) {
 //
 // identifier-selector conversion
 //
-
-IdentifierChars(identifier)
-    = ...mapValues(
-        n => IdentifierSlice(identifier, n, static unwrapStatic(n)+1),
-        ...staticIntegers(static IdentifierSize(identifier))
-    );
 
 private _identifierSelectorChar(c) = c;
 overload _identifierSelectorChar(static #_) = #":";
