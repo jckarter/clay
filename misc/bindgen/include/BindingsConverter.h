@@ -21,7 +21,12 @@ using namespace clang;
 
 class BindingsConverter : public ASTConsumer, public TextDiagnosticPrinter {
 public:
-    BindingsConverter(ostream& out, clang::DiagnosticOptions const &diagOpts);
+    BindingsConverter(
+        ostream& out,
+        clang::DiagnosticOptions const &diagOpts,
+        std::string const &lang,
+        std::vector<string> const &match
+    );
 
 private:
     string allocateName(const string &base);
@@ -54,4 +59,6 @@ private :
     set<string> externsDeclared;
 
     bool succeeded;
+    string language;
+    vector<string> matchNames;
 };
