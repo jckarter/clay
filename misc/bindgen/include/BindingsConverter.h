@@ -35,6 +35,9 @@ private:
     string convertFPType(const FunctionNoProtoType *type);
     string convertFPType(const FunctionProtoType *type);
     string convertType(const Type *type);
+    string convertIdent(const string &cIdent);
+
+    bool isClayKeyword(const string &cIdent);
 
 public :
     virtual void Initialize(ASTContext &astc);
