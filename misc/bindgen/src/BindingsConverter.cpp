@@ -17,6 +17,7 @@ using namespace std;
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclGroup.h"
+#include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/Triple.h"
 
 #include "BindingsConverter.h"
@@ -28,10 +29,12 @@ BindingsConverter::BindingsConverter(
     ostream& out,
     clang::DiagnosticOptions const &diagOpts,
     std::string const &lang,
-    std::vector<string> const &match
+    std::vector<string> const &match,
+    std::vector<string> const &import
 )   :   TextDiagnosticPrinter(llvm::errs(), diagOpts), 
         out(out), succeeded(true),
-        language(lang), matchNames(match)
+        language(lang), matchNames(match), importNames(import),
+        ast(NULL)
 { }
 
 string BindingsConverter::allocateName(const string &base)
@@ -211,12 +214,38 @@ string BindingsConverter::convertType(const Type *type)
     }
 }
 
+void BindingsConverter::Initialize(ASTContext &astc) {
+    ast = &astc;
+}
+
+bool BindingsConverter::declMatches(Decl *decl)
+{
+    if (matchNames.empty())
+        return true;
+
+    clang::SourceLocation sloc = decl->getLocation();
+    clang::PresumedLoc ploc = ast->getSourceManager().getPresumedLoc(sloc);
+    string filename = ploc.getFilename();
+
+    for (vector<string>::const_iterator i = matchNames.begin();
+         i != matchNames.end();
+         ++i) {
+        if (filename.find(*i) != string::npos)
+            return true;
+    }
+    return false;
+}
+
 // Handle top level declarations observed in the program
 void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG)
 {
     for (DeclGroupRef::iterator it = DG.begin(); it != DG.end(); ++it) {
         Decl *decl = *it;
-        decls.push_back(decl);
+
+        bool matches = declMatches(decl);
+
+        if (matches)
+            decls.push_back(decl);
 
         switch (decl->getKind()) {
         case Decl::Record : {
@@ -444,6 +473,14 @@ void BindingsConverter::generateHeader()
     out << '\n';
     if (language == "objective-c") {
         out << "import cocoa.objc.*;\n";
+        out << '\n';
+    }
+    if (!importNames.empty()) {
+        for (vector<string>::const_iterator i = importNames.begin();
+             i != importNames.end();
+             ++i) {
+            out << "import " << *i << ".*;\n";
+        }
         out << '\n';
     }
     out << "private alias OpaquePointer = RawPointer;\n";

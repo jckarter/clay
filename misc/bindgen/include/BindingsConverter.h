@@ -25,7 +25,8 @@ public:
         ostream& out,
         clang::DiagnosticOptions const &diagOpts,
         std::string const &lang,
-        std::vector<string> const &match
+        std::vector<string> const &match,
+        std::vector<string> const &import
     );
 
 private:
@@ -36,6 +37,7 @@ private:
     string convertType(const Type *type);
 
 public :
+    virtual void Initialize(ASTContext &astc);
     virtual void HandleTopLevelDecl(DeclGroupRef DG);
     void generate();
 
@@ -44,6 +46,8 @@ public :
 private :
     void generateDecl(Decl *decl);
     void generateHeader();
+
+    bool declMatches(Decl *decl);
 
 private :
     ostream& out;
@@ -61,4 +65,7 @@ private :
     bool succeeded;
     string language;
     vector<string> matchNames;
+    vector<string> importNames;
+
+    ASTContext *ast;
 };
