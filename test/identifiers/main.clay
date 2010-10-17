@@ -1,3 +1,4 @@
+import identifiers.*;
 
 test(a) {
     println(a);
@@ -13,4 +14,9 @@ test(a) {
 main() {
     test(#foobar);
     test(#"%#@% $#%\t*^*^");
+
+    println(IdentifierStartsWith?(#foobar, #foo));
+    println(IdentifierStartsWith?(#foobar, #bar));
+    println(IdentifierEndsWith?(#foobar, #foo));
+    println(IdentifierEndsWith?(#foobar, #bar));
 }
