@@ -29,8 +29,14 @@ using namespace clang;
 using namespace llvm;
 struct PPContext {
     // Takes ownership of client.
-    PPContext(clang::TargetOptions targetOpts,clang::DiagnosticClient* client, clang::LangOptions langOpts)
-        : 
+    PPContext(
+        clang::TargetOptions targetOpts,
+        clang::DiagnosticClient* client,
+        clang::LangOptions langOpts,
+        std::string const &isysroot,
+        std::vector<std::string> const &frameworkDirs,
+        std::vector<std::string> const &headerDirs
+    ) : 
         diags(client),
         opts(langOpts),
         target(clang::TargetInfo::CreateTargetInfo(diags,targetOpts)),
@@ -38,14 +44,6 @@ struct PPContext {
         sm(diags),
         pp(diags, opts, *target, sm, headers)
         {
-            // Configure warnings to be similar to what command-line `clang` outputs
-            // (see tut03).
-            // XXX: move warning initialization to libDriver
-            using namespace clang;
-            // diags.setDiagnosticMapping(diag::warn_pp_undef_identifier,diag::MAP_IGNORE);
-            // diags.setSuppressSystemWarnings(true);
-            //diags.setSuppressAllDiagnostics(true);	  
-
             HeaderSearchOptions hsOpts;
             llvm::sys::Path resourceDir(LLVM_LIBDIR);
             resourceDir.appendComponent("clang");
@@ -54,6 +52,19 @@ struct PPContext {
             hsOpts.ResourceDir = resourceDir.c_str();
             hsOpts.UseBuiltinIncludes = 1;
             hsOpts.UseStandardIncludes = 1;
+
+            for (std::vector<std::string>::const_iterator i = frameworkDirs.begin();
+                 i != frameworkDirs.end();
+                 ++i)
+                hsOpts.AddPath(*i, clang::frontend::Angled, true, true, false);
+
+            for (std::vector<std::string>::const_iterator i = headerDirs.begin();
+                 i != headerDirs.end();
+                 ++i)
+                hsOpts.AddPath(*i, clang::frontend::Angled, true, false, false);
+
+            hsOpts.Sysroot = isysroot;
+
             InitializePreprocessor(pp, PreprocessorOptions(), hsOpts, FrontendOptions());
         }
 
