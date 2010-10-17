@@ -30,24 +30,26 @@ void usage(char *argv0) {
     cerr << "clay-bindgen: Generates clay bindings for C libraries\n";
     cerr << "Usage: " << argv0 << " [options] inputfile\n";
     cerr << "Supported options:\n";
-    cerr << "  -o <file>       - write generated bindings to file (default stdout)\n";
-    cerr << "  -target <tgt>   - target platform for which to predefine macros\n";
-    cerr << "  -isysroot <dir> - use <dir> as system root for includes search\n";
+    cerr << "  -o <file>         - write generated bindings to file (default stdout)\n";
+    cerr << "  -target <tgt>     - target platform for which to predefine macros\n";
+    cerr << "  -isysroot <dir>   - use <dir> as system root for includes search\n";
 #ifdef __APPLE__
-    cerr << "  -arch <arch>    - predefine macros for Darwin architecture <arch>\n";
-    cerr << "                    (only one -arch allowed)\n";
-    cerr << "  -F<dir>         - add <dir> to framework search path\n";
+    cerr << "  -arch <arch>      - predefine macros for Darwin architecture <arch>\n";
+    cerr << "                      (only one -arch allowed)\n";
+    cerr << "  -F<dir>           - add <dir> to framework search path\n";
 #endif
-    cerr << "  -I<dir>         - add <dir> to header search path\n";
-    cerr << "  -x <lang>       - parse headers for language <lang> (default c).\n";
-    cerr << "                    Only \"c\" and \"objective-c\" supported.\n";
-    cerr << "  -match <name>   - only generate bindings for definitions from files\n";
-    cerr << "                    whose name contains <name>.\n";
-    cerr << "                    If multiple -match parameters are passed, then\n";
-    cerr << "                    bindings are generated from files containing any\n";
-    cerr << "                    of the specified <name>s.\n";
-    cerr << "                    By default bindings are generated for all parsed\n";
-    cerr << "                    definitions.\n";
+    cerr << "  -I<dir>           - add <dir> to header search path\n";
+    cerr << "  -x <lang>         - parse headers for language <lang> (default c).\n";
+    cerr << "                      Only \"c\" and \"objective-c\" supported.\n";
+    cerr << "  -match <name>     - only generate bindings for definitions from files\n";
+    cerr << "                      whose name contains <name>.\n";
+    cerr << "                      If multiple -match parameters are passed, then\n";
+    cerr << "                      bindings are generated from files containing any\n";
+    cerr << "                      of the specified <name>s.\n";
+    cerr << "                      By default bindings are generated for all parsed\n";
+    cerr << "                      definitions.\n";
+    cerr << "  -import <module>  - Add an \"import <module>.*;\" statement to the\n";
+    cerr << "                    - generated output\n";
     exit(EXIT_FAILURE);
 }
 
@@ -65,6 +67,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> headerDirs;
     std::string language = "c";
     std::vector<std::string> matchNames;
+    std::vector<std::string> importNames;
     
     int i = 1;
     for (; i < argc; ++i) {
@@ -153,6 +156,13 @@ int main(int argc, char* argv[]) {
                 usage(argv[0]);
             }
             matchNames.push_back(std::string(argv[i]));
+        } else if (!strcmp(argv[i], "-import")) {
+            ++i;
+            if (i >= argc) {
+                cerr << "No string given after -import\n";
+                usage(argv[0]);
+            }
+            importNames.push_back(std::string(argv[i]));
         } else if (!strcmp(argv[i], "--")) {
             ++i;
             if (!filename.empty()) {
@@ -205,7 +215,8 @@ int main(int argc, char* argv[]) {
         outstream,
         diagOpts,
         language,
-        matchNames
+        matchNames,
+        importNames
     );
 
     // Create a preprocessor context
