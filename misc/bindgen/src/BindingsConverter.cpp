@@ -208,7 +208,7 @@ string BindingsConverter::convertType(const Type *type)
     }
     default : {
         string str = type->getCanonicalTypeInternal().getAsString();
-        cerr << "unknown type: " << str << '\n';
+        cerr << "warning: unknown type: " << str << '\n';
         return "UnknownType";
     }
     }
