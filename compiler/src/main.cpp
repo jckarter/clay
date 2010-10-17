@@ -509,6 +509,23 @@ int main(int argc, char **argv) {
                  << __DATE__ << ")\n";
             return 0;
         }
+        else if (strcmp(argv[i], "--") == 0) {
+            ++i;
+            if (clayFile.empty()) {
+                if (i != argc - 1) {
+                    cerr << "error: clay file already specified: " << argv[i]
+                         << ", unrecognized parameter: " << argv[i+1] << '\n';
+                    return -1;
+                }
+                clayFile = argv[i];
+            } else {
+                if (i != argc) {
+                    cerr << "error: clay file already specified: " << clayFile
+                         << ", unrecognized parameter: " << argv[i] << '\n';
+                    return -1;
+                }
+            }
+        }
         else if (strcmp(argv[i], "-help") == 0
                  || strcmp(argv[i], "--help") == 0
                  || strcmp(argv[i], "/?") == 0) {
