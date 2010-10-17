@@ -304,6 +304,32 @@ void BindingsConverter::generate()
     }
 }
 
+bool BindingsConverter::isClayKeyword(const string &cIdent) {
+    // list from compiler/src/lexer.cpp:121
+    static char const * const keywords[] =
+        {"public", "private", "import", "as",
+         "record", "variant", "instance",
+         "procedure", "overload", "external", "alias",
+         "static", "callbyname", "lvalue", "rvalue",
+         "inline", "enum", "var", "ref", "forward",
+         "and", "or", "not", "new",
+         "if", "else", "goto", "return", "while",
+         "switch", "case", "default", "break", "continue", "for", "in",
+         "true", "false", "try", "catch", "throw", NULL};
+    
+    for (char const * const *k = keywords; *k; ++k)
+        if (cIdent == *k)
+            return true;
+    return false;
+}
+
+string BindingsConverter::convertIdent(const string &cIdent) {
+    if (isClayKeyword(cIdent))
+        return cIdent + "_";
+    else
+        return cIdent;
+}
+
 void BindingsConverter::generateDecl(Decl *decl)
 {
     switch (decl->getKind()) {
@@ -351,7 +377,7 @@ void BindingsConverter::generateDecl(Decl *decl)
                 if (fname.empty())
                     out << "unnamed_field" << index;
                 else
-                    out << fname;
+                    out << convertIdent(fname);
                 out << " : " << convertType(t) << ",\n";
                 ++index;
             }
@@ -409,7 +435,7 @@ void BindingsConverter::generateDecl(Decl *decl)
                 if (pname.empty())
                     out << "argument" << index;
                 else
-                    out << pname;
+                    out << convertIdent(pname);
                 const Type *t = y->getType().getTypePtr();
                 out << " : " << convertType(t);
                 ++index;
