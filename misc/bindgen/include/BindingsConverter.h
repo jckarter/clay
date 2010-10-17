@@ -21,7 +21,13 @@ using namespace clang;
 
 class BindingsConverter : public ASTConsumer, public TextDiagnosticPrinter {
 public:
-    BindingsConverter(ostream& out, clang::DiagnosticOptions const &diagOpts);
+    BindingsConverter(
+        ostream& out,
+        clang::DiagnosticOptions const &diagOpts,
+        std::string const &lang,
+        std::vector<string> const &match,
+        std::vector<string> const &import
+    );
 
 private:
     string allocateName(const string &base);
@@ -31,6 +37,7 @@ private:
     string convertType(const Type *type);
 
 public :
+    virtual void Initialize(ASTContext &astc);
     virtual void HandleTopLevelDecl(DeclGroupRef DG);
     void generate();
 
@@ -39,6 +46,8 @@ public :
 private :
     void generateDecl(Decl *decl);
     void generateHeader();
+
+    bool declMatches(Decl *decl);
 
 private :
     ostream& out;
@@ -54,4 +63,9 @@ private :
     set<string> externsDeclared;
 
     bool succeeded;
+    string language;
+    vector<string> matchNames;
+    vector<string> importNames;
+
+    ASTContext *ast;
 };
