@@ -8,6 +8,7 @@ overload selector(static #"retain") = Id;
 overload selector(static #"release") = Id;
 overload selector(static #"drain") = Void;
 overload selector(static #"autorelease") = Id;
+overload selector(static #"class") = Id; // XXX class
 
 record NSString = externalClass(NSObject);
 overload selector(static #"stringWithUTF8String:") = Id, Pointer[CChar];
@@ -19,6 +20,8 @@ overload selector(static #"numberWithInt:") = Id, Int;
 
 record NSAutoreleasePool = externalClass(NSObject);
 
+external NSLog(format: ObjectHandle, ...);
+
 main() {
     var pool = NSAutoreleasePool.alloc().init();
 
@@ -28,6 +31,10 @@ main() {
     var formattedString = NSString.stringWithFormat(format, n);
 
     println(CStringRef(formattedString.UTF8String()));
+
+    var formattedString2 = NSString.stringWithFormat(format, NSSTR(#"Wii"));
+
+    println(CStringRef(formattedString2.UTF8String()));
 
     pool.drain();
 }

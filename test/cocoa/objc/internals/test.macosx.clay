@@ -1,5 +1,6 @@
 import test.*;
 import cocoa.objc.*;
+import cocoa.objc.platform;
 
 record NSObject = externalClass(Void);
 overload selector(static #"alloc") = Id;
@@ -335,6 +336,27 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectEqual(test, "foo_bar_bas_(x, y, z)", #"foo:bar:bas:",
             identifierSelector(#foo_bar_bas_, static 3)
         );
+    }),
+    TestCase("constant NSStrings", test => {
+        expectType(test, "constant string", ObjectHandle, NSSTR(#"Hello"));
+        expectEqual(test, "constant string identity",
+            NSSTR(#"Hello"), NSSTR(#"Hello")
+        );
+        expectNotEqual(test, "constant string address", nilHandle, NSSTR(#"Hello"));
+
+        var stringFields = Pointer[cocoa.objc.platform.CFConstantString](NSSTR(#"Hello"));
+
+        expectNotEqual(test, "constant string isa", ClassHandle(0), stringFields^.isa);
+        expectEqual(test, "constant string isa", 
+            ClassHandle(&cocoa.objc.platform.__CFConstantStringClassReference),
+            stringFields^.isa
+        );
+        expectEqual(test, "constant string flags",
+            cocoa.objc.platform.CFConstantStringID,
+            stringFields^.flags
+        );
+        expectEqual(test, "string", "Hello", CStringRef(stringFields^.string));
+        expectEqual(test, "length", 5, stringFields^.length);
     }),
 )));
 

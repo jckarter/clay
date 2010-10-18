@@ -1,3 +1,5 @@
+import cocoa.objc.runtime.(Class);
+
 FpRet?(type) = false;
 StRet?(type) = false;
 //Fp2Ret?(type) = false;
@@ -9,3 +11,14 @@ private ReturnInRegisters?(T)
 
 [T | Record?(T) and not ReturnInRegisters?(T)]
 overload StRet?(static T) = true;
+
+external __CFConstantStringClassReference : Opaque;
+
+alias CFConstantStringID = SizeT(0x7C8);
+
+record CFConstantString (
+    isa: Class,
+    flags: SizeT,
+    string: Pointer[CChar],
+    length: SizeT,
+);
