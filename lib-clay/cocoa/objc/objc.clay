@@ -29,6 +29,23 @@ private var objcIvarOffset[Class, ivarName]
 private var objcIvarType[Class, ivarName]
     = ivar_getTypeEncoding(objcIvar[Class, ivarName]);
 
+private var objcConstantString[value]
+    = CFConstantString(
+        Class(&__CFConstantStringClassReference),
+        CFConstantStringID,
+        cstring(StaticName(value)),
+        IdentifierSize(value)
+    );
+
+
+
+//
+// constant NSStrings
+//
+
+[value | Identifier?(value)]
+NSSTR(static value) = ObjectHandle(&objcConstantString[value]);
+
 
 
 //
