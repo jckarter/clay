@@ -303,7 +303,6 @@ void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG)
                 string name = x->getName().str();
                 string outName = allocateName(name);
                 typedefNames[name] = outName;
-                cerr << "typedef " << name << " -> " << outName << "\n";
             }
             break;
         }
