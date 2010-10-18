@@ -19,6 +19,11 @@ overload selector(static #"description") = NSString;
 overload varargSelector(static #"stringWithFormat:") = Id, NSString;
 overload varargSelector(static #"initWithFormat:") = Id, NSString;
 
+overload selector(static #"drain") = Void;
+
+overload selector(static #"isEnabled") = Bool;
+overload selector(static #"setEnabled:") = Void, Bool;
+
 record NSMutableString = externalClass(NSString);
 record SubString = newClass(NSString);
 
@@ -128,7 +133,7 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectEncoding(test, "Q", UInt64);
         expectEncoding(test, "f", Float32);
         expectEncoding(test, "d", Float64);
-        expectEncoding(test, "B", Bool);
+        expectEncoding(test, "c", Bool);
         expectEncoding(test, "*", Pointer[CChar]);
         expectEncoding(test, "@", ObjectHandle);
         expectEncoding(test, "#", ClassHandle);
@@ -207,6 +212,7 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
     TestCase("selector type encoding", test => {
         expectSelectorTypeEncoding(test, #"alloc", "@@:");
         expectSelectorTypeEncoding(test, #"init", "@@:");
+        expectSelectorTypeEncoding(test, #"drain", "v@:");
         expectSelectorTypeEncoding(test, #"stringWithUTF8String:", "@@:*");
         expectSelectorTypeEncoding(test, #"initWithUTF8String:", "@@:*");
         expectSelectorTypeEncoding(test, #"UTF8String", "*@:");
@@ -219,6 +225,7 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectMsgSendParamType(test, NSObject, ObjectHandle);
         expectMsgSendParamType(test, Void, static ());
         expectMsgSendParamType(test, Int, Int);
+        expectMsgSendParamType(test, Bool, BOOL);
         expectMsgSendParamType(test, Foo, Foo);
         // expectMsgSendParamType(test, Selector, SelectorHandle);
         // expectMsgSendParamType(test, Class, ObjectHandle);
@@ -274,6 +281,9 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectType(test, "description", NSString,
             msgSendReturn(#"description", nilHandle)
         );
+        expectType(test, "isEnabled", Bool,
+            msgSendReturn(#"isEnabled", BOOL(0))
+        );
     }),
     TestCase("msgSendParams types", test => {
         expectEqualValues(test, "alloc", (),
@@ -287,6 +297,9 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         );
         expectEqualValues(test, "stringWithFormat: varargs", Tuple(ObjectHandle, Pointer[CChar], Int, Foo, ObjectHandle),
             ...Type(...msgSendParams(#"stringWithFormat:", nil(NSString), null(CChar), 0, Foo(), nil(NSObject)))
+        );
+        expectEqualValues(test, "setEnabled:", Tuple(BOOL),
+            ...Type(...msgSendParams(#"setEnabled:", false))
         );
     }),
     TestCase("identifier-selector conversion", test => {
