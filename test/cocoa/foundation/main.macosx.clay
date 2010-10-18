@@ -1,0 +1,19 @@
+import cocoa.objc.*;
+import cocoa.foundation.*;
+
+main() {
+    var pool = NSAutoreleasePool.alloc().init();
+
+    var format = NSString.stringWithUTF8String(cstring("%@ didn't start the fire"));
+    var n = NSNumber.numberWithInt(451);
+
+    var formattedString = NSString.stringWithFormat(format, n);
+
+    println(CStringRef(formattedString.UTF8String()));
+
+    var formattedString2 = NSString.stringWithFormat(format, NSSTR(#"Wii"));
+
+    println(CStringRef(formattedString2.UTF8String()));
+
+    pool.drain();
+}
