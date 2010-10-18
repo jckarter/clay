@@ -137,6 +137,16 @@ expectEqual(test: TestStatus, name, expected, result) {
     );
 }
 
+expectNotEqual(test: TestStatus, name, expected, result) {
+    expect(
+        test,
+        expected != result,
+        () => {
+            printFailure(name, " is expected not to equal ", expected, " but is ", result);
+        }
+    );
+}
+
 procedure expectedResults?;
 overload expectedResults?(expected, result) = false;
 [T | Tuple?(T)]
