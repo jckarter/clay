@@ -2,17 +2,18 @@ import test.*;
 import cocoa.objc.*;
 import cocoa.objc.platform;
 
-record NSObject = externalClass(Void);
+record NSZone ();
+
 overload selector(static #"alloc") = Id;
 overload selector(static #"allocWithZone:") = Id, NSZone;
-overload selector(static #"init") = Id;
 overload selector(static #"new") = Id;
+
+overload selector(static #"init") = Id;
 overload selector(static #"copy") = Id;
 overload selector(static #"copyWithZone:") = Id, NSZone;
 overload selector(static #"mutableCopy") = Id;
 overload selector(static #"retain") = Id;
 
-record NSString = externalClass(NSObject);
 overload selector(static #"stringWithUTF8String:") = Id, Pointer[CChar];
 overload selector(static #"initWithUTF8String:") = Id, Pointer[CChar];
 overload selector(static #"UTF8String") = Pointer[CChar];
@@ -25,8 +26,68 @@ overload selector(static #"drain") = Void;
 overload selector(static #"isEnabled") = Bool;
 overload selector(static #"setEnabled:") = Void, Bool;
 
-record NSMutableString = externalClass(NSString);
-record SubString = newClass(NSString);
+overload selector(static #"version") = Id;
+
+record NSObject = externalClass(Void,
+    ClassMethods(
+        (#"alloc", Id),
+        (#"allocWithZone:", NSZone),
+        (#"new", Id),
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"copy", Id),
+        (#"copyWithZone:", Id, NSZone),
+        (#"mutableCopy", Id),
+        (#"retain", Id),
+    ),
+);
+
+record NSString = externalClass(NSObject,
+    ClassMethods(
+        (#"stringWithUTF8String:", Id, Pointer[CChar]),
+        (#"stringWithFormat:", Id, NSString),
+    ),
+    InstanceMethods(
+        (#"initWithUTF8String:", Id, Pointer[CChar]),
+        (#"initWithFormat:", Id, NSString),
+        (#"UTF8String", Pointer[CChar]),
+        (#"description", NSString),
+    ),
+);
+
+record NSMutableString = externalClass(NSString,
+    ClassMethods(),
+    InstanceMethods(),
+);
+
+record SubString1 = newClass(NSString,
+    InstanceVars(
+        (#foo, Int),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"version", Int),
+    )
+);
+
+record SubString2 = newClass(NSString,
+    InstanceVars(
+        (#foo, Double),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"version", Double),
+    )
+);
+
+record SubSubString = newClass(SubString1,
+    InstanceVars(
+        (#bar, StringConstant),
+    ),
+    ClassMethods(),
+    InstanceMethods()
+);
 
 record Foo (
     x: NSObject,
@@ -164,13 +225,19 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectSubclass(test, NSObject, NSString);
         expectSubclass(test, NSObject, NSMutableString);
         expectSubclass(test, NSString, NSMutableString);
+        expectSubclass(test, NSString, SubString1);
+        expectSubclass(test, NSString, SubString2);
+        expectSubclass(test, NSString, SubSubString);
+        expectSubclass(test, SubString1, SubSubString);
 
         expectNotSubclass(test, NSMutableString, NSString);
         expectNotSubclass(test, NSMutableString, NSObject);
+        expectNotSubclass(test, SubString1, SubString2);
+        expectNotSubclass(test, SubString2, SubSubString);
     }),
     TestCase("clayClassName", test => {
-        expectEqual(test, "class name for SubString", "clay:__main__.SubString",    
-            clayClassName(SubString)
+        expectEqual(test, "class name for SubString1", "clay:__main__.SubString1",
+            clayClassName(SubString1)
         );
     }),
     TestCase("MsgSendCompatible?", test => {
@@ -246,9 +313,24 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectSelectorNotCallableWith(test, #"stringWithFormat:", NSObject);
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString);
         expectSelectorCallableWith(test, #"stringWithFormat:", NSMutableString);
+        expectSelectorCallableWith(test, #"stringWithFormat:", SubString1);
+        expectSelectorCallableWith(test, #"stringWithFormat:", SubSubString);
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString, Id);
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString, Int);
         expectSelectorCallableWith(test, #"stringWithFormat:", NSString, Foo, Char);
+    }),
+    TestCase("instance variable types", test => {
+        expectEqual(test, "SubString1 ivar #foo", Int, ClassIvarType(SubString1, #foo));
+        expectEqual(test, "SubString2 ivar #foo", Double, ClassIvarType(SubString2, #foo));
+        expectEqual(test, "SubSubString ivar #foo", Int, ClassIvarType(SubSubString, #foo));
+        expectEqual(test, "SubSubString ivar #bar", StringConstant,
+            ClassIvarType(SubSubString, #bar)
+        );
+
+        expectType(test, "SubString1^.foo", Int, nil(SubString1)^.foo);
+        expectType(test, "SubString2^.foo", Double, nil(SubString2)^.foo);
+        expectType(test, "SubSubString^.foo", Int, nil(SubSubString)^.foo);
+        expectType(test, "SubSubString^.bar", StringConstant, nil(SubSubString)^.bar);
     }),
     TestCase("retaining selectors", test => {
         expectTrue(test, "alloc", RetainingSelector?(#"alloc"));

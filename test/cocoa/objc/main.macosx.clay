@@ -1,26 +1,59 @@
 import cocoa.objc.*;
 
-record NSObject = externalClass(Void);
 overload selector(static #"alloc") = Id;
 overload selector(static #"init") = Id;
 overload selector(static #"description") = NSString;
 overload selector(static #"retain") = Id;
 overload selector(static #"release") = Id;
-overload selector(static #"drain") = Void;
 overload selector(static #"autorelease") = Id;
 overload selector(static #"class") = Id; // XXX class
 
-record NSString = externalClass(NSObject);
 overload selector(static #"stringWithUTF8String:") = Id, Pointer[CChar];
 overload varargSelector(static #"stringWithFormat:") = Id, NSString; 
 overload selector(static #"UTF8String") = Pointer[CChar];
 
-record NSNumber = externalClass(NSObject);
 overload selector(static #"numberWithInt:") = Id, Int;
 
-record NSAutoreleasePool = externalClass(NSObject);
+overload selector(static #"drain") = Void;
 
-external NSLog(format: ObjectHandle, ...);
+record NSObject = externalClass(Void,
+    ClassMethods(
+        (#"alloc", Id),
+        (#"class", Id), // XXX Class
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"description", NSString),
+        (#"retain", Id),
+        (#"release", Id),
+        (#"autorelease", Id),
+        (#"class", Id),
+    ),
+);
+
+record NSString = externalClass(NSObject,
+    ClassMethods(
+        (#"stringWithUTF8String:", Id, Pointer[CChar]),
+        (#"stringWithFormat:", Id, NSString),
+    ),
+    InstanceMethods(
+        (#"UTF8String", Pointer[CChar]),
+    ),
+);
+
+record NSNumber = externalClass(NSObject,
+    ClassMethods(
+        (#"numberWithInt:", Id, Int),
+    ),
+    InstanceMethods(),
+);
+
+record NSAutoreleasePool = externalClass(NSObject,
+    ClassMethods(),
+    InstanceMethods(
+        (#"drain", Void),
+    ),
+);
 
 main() {
     var pool = NSAutoreleasePool.alloc().init();

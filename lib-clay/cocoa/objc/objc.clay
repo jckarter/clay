@@ -21,13 +21,10 @@ private var objcClass[Class] = objcClassMake(Class);
 private var objcSelector[name] = sel_registerName(cstring(StaticName(name)));
 
 private var objcIvar[Class, ivarName]
-    = class_getInstanceVariable(objcClass[Class], StaticName(ivarName));
+    = class_getInstanceVariable(objcClass[Class], cstring(StaticName(ivarName)));
 
 private var objcIvarOffset[Class, ivarName]
     = ivar_getOffset(objcIvar[Class, ivarName]);
-
-private var objcIvarType[Class, ivarName]
-    = ivar_getTypeEncoding(objcIvar[Class, ivarName]);
 
 private var objcConstantString[value]
     = CFConstantString(
@@ -52,8 +49,7 @@ NSSTR(static value) = ObjectHandle(&objcConstantString[value]);
 // encode
 //
 
-record Void ();
-overload RegularRecord?(static Void) = false;
+procedure Void; // stand-in symbol for "no return value"
 
 procedure encode;
 
@@ -245,6 +241,35 @@ overload Subclass?(static Super, static Sub)
 
 
 //
+// literal types for passing class attributes to class type definers
+//
+
+record InstanceVars[T] (value: T);
+record ClassMethods[T] (value: T);
+record InstanceMethods[T] (value: T);
+
+overload InstanceVars(...values) = InstanceVars[Type(Tuple(...values))](Tuple(...values));
+overload ClassMethods(...values) = ClassMethods[Type(Tuple(...values))](Tuple(...values));
+overload InstanceMethods(...values) = InstanceMethods[Type(Tuple(...values))](Tuple(...values));
+
+
+
+//
+// class properties
+//
+
+procedure ClassInstanceVars;
+procedure ClassClassMethods;
+procedure ClassInstanceMethods;
+
+[T, name | Class?(T) and SuperclassType(T) != Void and Identifier?(name)]
+ClassIvarType(static T, static name) = ClassIvarType(SuperclassType(T), name);
+[T, name | Class?(T) and Identifier?(name) and assocValue?(name, ...ClassInstanceVars(T))]
+overload ClassIvarType(static T, static name) = assocValue(name, ...ClassInstanceVars(T));
+
+
+
+//
 // bindings to external classes
 //
 
@@ -256,11 +281,17 @@ procedure classObjcName;
 
 ValidSuperclass?(T) = Class?(T) or T == Void;
 
-[Super | ValidSuperclass?(Super)]
-externalClass(static Super) = recordWithProperties(
+[Super, CM, IM] // XXX | ValidSuperclass?(Super)]
+externalClass(static Super,
+    classmethods: ClassMethods[CM],
+    instancemethods: InstanceMethods[IM]
+) = recordWithProperties(
     (
         (SuperclassType, Super),
-        (ExternalClass?, static true)
+        (ExternalClass?, static true),
+        (ClassInstanceVars, static ()),
+        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
+        Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),
     ), 
     (#__handle__, ObjectHandle)
 );
@@ -285,12 +316,20 @@ overload objcClassMake(static T) {
 
 ClayClass?(T) = false;
 
-[Super | Class?(Super)] newClass(static Super) = recordWithProperties( // XXX ivars
+[Super, IV, CM, IM] // XXX | ValidSuperclass?(Super)]
+newClass(static Super,
+    instancevars: InstanceVars[IV],
+    classmethods: ClassMethods[CM],
+    instancemethods: InstanceMethods[IM]
+) = recordWithProperties(
     (
         (SuperclassType, Super),
         (ClayClass?, static true),
+        Tuple(ClassInstanceVars, ...unpack(instancevars.value)),
+        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
+        Tuple(ClassInstanceMethods, ...unpack(classmethods.value)),
     ), 
-    (#handle, ObjectHandle)
+    (#__handle__, ObjectHandle)
 );
 
 record NewClassCouldNotBeCreated (name: StringConstant);
@@ -301,7 +340,7 @@ clayClassName(T) {
 }
 
 [T | ClayClass?(T)]
-overload objcClassMake(static T) { // XXX ivars
+overload objcClassMake(static T) {
     var name = clayClassName(T);
     var handle = objc_allocateClassPair(
         objectHandle(SuperclassType(T)),
@@ -312,6 +351,7 @@ overload objcClassMake(static T) { // XXX ivars
         throw NewClassCouldNotBeCreated(name);
 
     // XXX add ivars
+    // XXX add methods
 
     objc_registerClassPair(handle);
 
@@ -483,6 +523,11 @@ overload objc_msgSend_for(static S) = objc_msgSend_fpret;
 //[Selector?(S) and Fp2Ret?(SelectorReturnParamType(S))]
 //overload objc_msgSend_for(static S) = objc_msgSend_fp2ret;
 
+[S | Selector?(S)]
+private objc_msgSendSuper_for(static S) = objc_msgSendSuper;
+[S | Selector?(S) and StRet?(SelectorReturnParamType(S))]
+overload objc_msgSendSuper_for(static S) = objc_msgSendSuper_stret;
+
 SelectorCallableWith?(S, ...T) = false;
 
 [S, ...TT | FixedSelector?(S) and countValues(...TT) == SelectorArgumentCount(S)]
@@ -503,26 +548,39 @@ private _SelectorCallableWith?(S, ...T) {
 }
 
 [S | FixedSelector?(S)]
-private _msgSender(static S)
+private msgSender(static S)
     = CCodePointer[
         (ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(S)),
         SelectorReturnParamType(S)
     ](objc_msgSend_for(S));
 
 [S | VarargSelector?(S)]
-overload _msgSender(static S)
+overload msgSender(static S)
     = VarArgsCCodePointer[
         (ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(S)),
         SelectorReturnParamType(S)
     ](objc_msgSend_for(S));
 
-[O, S, ...T | ObjectParameterType?(O) and Selector?(S) and SelectorCallableWith?(S, ...T)]
-msgSend(self: O, static S, ...args: T) {
-    var selfHandle = objectHandle(self);
+[S | FixedSelector?(S)]
+private msgSenderSuper(static S)
+    = CCodePointer[
+        (Pointer[ObjcSuper], SelectorHandle, ...SelectorArgumentParamTypes(S)),
+        SelectorReturnParamType(S)
+    ](objc_msgSendSuper_for(S));
+
+[S | VarargSelector?(S)]
+overload msgSenderSuper(static S)
+    = VarArgsCCodePointer[
+        (Pointer[ObjcSuper], SelectorHandle, ...SelectorArgumentParamTypes(S)),
+        SelectorReturnParamType(S)
+    ](objc_msgSendSuper_for(S));
+
+[SelfT, S, ...T | Selector?(S) and SelectorCallableWith?(S, ...T)]
+msgSend(static SelfT, imp, self, static S, ...args: T) {
     var cmdHandle = selectorHandle(S);
 
     return ...mapValues(ret => msgSendReturn(S, ret),
-        ..._msgSender(S)(selfHandle, cmdHandle, ...msgSendParams(S, ...args))
+        ...imp(self, cmdHandle, ...msgSendParams(S, ...args))
     );
 }
 
@@ -558,22 +616,76 @@ overload _extraColon(static argCount, static underscoreCount, static lastCharact
 // method syntax
 //
 
-private record MethodReference[T, identifier] (capturedSelf: T);
+private record MethodRef[T, identifier] (self: ObjectHandle);
 
-overload MethodReference(forward value, identifier)
-    = MethodReference[Type(captureValue(value)), identifier](captureValue(value));
+overload MethodRef(forward value, identifier)
+    = MethodRef[ObjectParameterType(Type(value)), identifier](objectHandle(value));
 
 [T, cmd | ObjectRef?(T) and cmd != #__handle__]
-overload fieldRef(forward self: T, static cmd) = MethodReference(self, cmd);
+overload fieldRef(forward self: T, static cmd) = MethodRef(self, cmd);
 [T, cmd | Class?(T)]
-overload fieldRef(static T, static cmd) = MethodReference(T, cmd);
+overload fieldRef(static T, static cmd) = MethodRef(T, cmd);
 
 [T, identifier, ...Args]
-overload call(method: MethodReference[T, identifier], forward ...args: Args)
-    = forward ...msgSend(
-        forwardValue(method.capturedSelf),
-        identifierSelector(identifier, static countValues(...Args)),
+overload call(method: MethodRef[T, identifier], forward ...args: Args) {
+    var selector = identifierSelector(identifier, static countValues(...Args));
+    return forward ...msgSend(
+        T,
+        msgSender(selector),
+        method.self,
+        selector, 
         ...args
     );
+}
 
+
+
+//
+// instance variable access
+//
+
+private record IvarsRef[T] (__handle__: ObjectHandle);
+
+[T | Class?(T)]
+overload dereference(obj: T) = IvarsRef[T](objectHandle(obj));
+[T | Class?(T)]
+overload dereference(obj: Weak[T]) = IvarsRef[T](objectHandle(obj));
+
+[T, ivar | Class?(T) and ivar != #__handle__]
+overload fieldRef(ivars: IvarsRef[T], static ivar)
+    = ref Pointer[ClassIvarType(T, ivar)](
+        Pointer[UInt8](ivars.__handle__) + objcIvarOffset[T, ivar]
+    )^;
+
+
+
+//
+// superclass method invocation
+//
+
+private record SuperRef[T] (__handle__: ObjectHandle);
+
+[T | Class?(T) and SuperclassType?(T) != Void]
+super(obj: T) = SuperRef[T](objectHandle(obj));
+
+[T | Class?(T) and SuperclassType?(T) != Void]
+overload super(obj: Weak[T]) = SuperRef[T](objectHandle(obj));
+
+private record SuperMethodRef[T, identifier] (super: ObjcSuper);
+
+[T]
+overload SuperMethodRef(super: SuperRef[T], identifier)
+    = SuperMethodRef[T, identifier](ObjcSuper(super.__handle__, objectHandle(SuperclassType(T))));
+
+[T, identifier, ...Args]
+overload call(method: SuperMethodRef[T, identifier], forward ...args: Args) {
+    var selector = identifierSelector(identifier, static countValues(...Args));
+    return forward ...msgSend(
+        SuperclassType(T),
+        msgSenderSuper(selector),
+        &method.super,
+        selector,
+        ...args
+    );
+}
 
