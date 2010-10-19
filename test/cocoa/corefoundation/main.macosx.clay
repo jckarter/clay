@@ -1,0 +1,39 @@
+import cocoa.corefoundation.*;
+
+main() {
+    var format = CFStringCreateWithCString(
+        kCFAllocatorDefault,
+        cstring("%@ didn't start the fire"),
+        UInt(kCFStringEncodingASCII)
+    );
+
+    var _n = Int(451);
+    var n = CFNumberCreate(
+        kCFAllocatorDefault,
+        Int64(kCFNumberIntType),
+        RawPointer(&_n)
+    );
+
+    var string = CFStringCreateWithFormat(
+        kCFAllocatorDefault,
+        CFDictionaryRef(),
+        format, n
+    );
+
+    var buffer = Array[CChar, 128]();
+    var succeeded = CFStringGetCString(
+        string,
+        begin(buffer),
+        Int64(size(buffer)),
+        UInt32(kCFStringEncodingASCII)
+    );
+
+    if (succeeded == 0)
+        println("failed to get back c string");
+    else
+        println(CStringRef(begin(buffer)));
+
+    CFRelease(string);
+    CFRelease(n);
+    CFRelease(format);
+}

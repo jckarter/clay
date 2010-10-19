@@ -134,11 +134,40 @@ string BindingsConverter::convertFPType(const FunctionProtoType *type)
     return sout.str();
 }
 
+string BindingsConverter::convertObjcType(const Type *type) {
+    if (type->isObjCIdType() || type->isObjCQualifiedIdType())
+        return "Id";
+    else if (type->isObjCClassType() || type->isObjCQualifiedClassType())
+        return "Id"; // XXX Class
+    else if (type->isObjCSelType())
+        return "SelectorHandle"; // XXX Selector
+    else if (type->isObjCObjectPointerType()) {
+        const ObjCObjectPointerType *ptype = (const ObjCObjectPointerType*)type;
+        const ObjCObjectType *otype = ptype->getObjectType();
+        string name = otype->getInterface()->getNameAsString();
+        if (name == "Protocol")
+            return "Id"; // XXX Protocols
+        else
+            return name;
+    } else {
+        cerr << "warning: unknown Objective-C type " << type->getCanonicalTypeInternal().getAsString() << "\n";
+        return "UnknownType";
+    }
+}
+
 string BindingsConverter::convertType(const Type *type)
 {
+    if (language == "objective-c" && QualType(type, 0).getAsString() == "BOOL")
+        return "Bool";
+
     const Type *ctype = type->getCanonicalTypeUnqualified().getTypePtr();
     if (ctype->getTypeClass() == Type::Builtin)
         return convertBuiltinType((const BuiltinType *)ctype);
+
+    if (ctype->isObjCObjectPointerType() || ctype->isObjCSelType()) {
+        string claytype = convertObjcType(ctype);
+        return claytype;
+    }
 
     switch (type->getTypeClass()) {
     case Type::Typedef : {
@@ -208,7 +237,7 @@ string BindingsConverter::convertType(const Type *type)
     }
     default : {
         string str = type->getCanonicalTypeInternal().getAsString();
-        cerr << "unknown type: " << str << '\n';
+        cerr << "warning: unknown type: " << str << '\n';
         return "UnknownType";
     }
     }
@@ -277,10 +306,106 @@ void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG)
             }
             break;
         }
+        case Decl::ObjCInterface : {
+            ObjCInterfaceDecl *x = (ObjCInterfaceDecl *)decl;
+
+            if (matches) {
+                objcClassNames[x->getNameAsString()] = x;
+
+                for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
+                     imeth != x->meth_end();
+                     ++imeth)
+                    allocateObjcMethodSelector(*imeth);
+                for (ObjCContainerDecl::prop_iterator iprop = x->prop_begin();
+                     iprop != x->prop_end();
+                     ++iprop)
+                    allocateObjcPropertySelector(*iprop);
+            }
+            break;
+        }
+        case Decl::ObjCCategory : {
+            ObjCCategoryDecl *x = (ObjCCategoryDecl *)decl;
+
+            if (matches) {
+                for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
+                     imeth != x->meth_end();
+                     ++imeth)
+                    allocateObjcMethodSelector(*imeth);
+                for (ObjCContainerDecl::prop_iterator iprop = x->prop_begin();
+                     iprop != x->prop_end();
+                     ++iprop)
+                    allocateObjcPropertySelector(*iprop);
+            }
+        }
         default :
             break;
         }
     }
+}
+
+bool BindingsConverter::combineObjcType(QualType *inout_a, QualType b) {
+    if (b.getTypePtr()->isVoidType()) {
+        return true;
+    } else if (inout_a->getTypePtr()->isVoidType()) {
+        *inout_a = b;
+        return true;
+    } else if (inout_a->getTypePtr()->isObjCObjectPointerType()
+             && b.getTypePtr()->isObjCObjectPointerType()) {
+        *inout_a = ast->getObjCIdType();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void BindingsConverter::allocateObjcMethodSelector(ObjCMethodDecl *method)
+{
+    string selector = method->getSelector().getAsString();
+
+    map<string, selector_info>::iterator existingSelector
+        = objcSelectors.find(selector);
+
+    if (existingSelector == objcSelectors.end())
+        objcSelectors[selector] = selector_info(method);
+    else {
+        selector_info &info = existingSelector->second;
+        QualType newResultType = method->getResultType();
+        if (info.resultType != newResultType) {
+            if (!combineObjcType(&info.resultType, newResultType))
+                cerr << "warning: conflicting return types for selector \""
+                     << selector << "\": "
+                     << info.resultType.getAsString() << " vs. "
+                     << newResultType.getAsString() << "\n";
+        }
+
+        if (!!info.isVariadic != !!method->isVariadic()) {
+            cerr << "warning: conflicting variadic-ness for selector \""
+                 << selector << "\n";
+            info.isVariadic = true;
+        }
+
+        unsigned idx = 0;
+        ObjCMethodDecl::param_iterator newI = method->param_begin();
+        vector<QualType>::iterator infoI = info.paramTypes.begin();
+        for (;
+             newI != method->param_end() && infoI != info.paramTypes.begin();
+             ++newI, ++infoI, ++idx) {
+
+            QualType newType = (*newI)->getType();
+            if (*infoI != newType) {
+                if (!combineObjcType(&*infoI, newType))
+                    cerr << "warning: conflicting types for argument " << idx
+                         << " of selector \"" << selector << "\": "
+                         << infoI->getAsString() << " vs. "
+                         << newType.getAsString() << "\n";
+            }
+        }
+    }
+}
+
+void BindingsConverter::allocateObjcPropertySelector(ObjCPropertyDecl *method)
+{
+    // XXX properties
 }
 
 void BindingsConverter::generate()
@@ -289,6 +414,7 @@ void BindingsConverter::generate()
         return;
 
     generateHeader();
+    generateObjC();
     unsigned i = 0;
     while ((pendingAnonRecords.size() > 0) || (i < decls.size())) {
         if (pendingAnonRecords.size() > 0) {
@@ -302,6 +428,65 @@ void BindingsConverter::generate()
             ++i;
         }
     }
+}
+
+void BindingsConverter::generateObjC()
+{
+    for (map<string, ObjCInterfaceDecl*>::const_iterator i = objcClassNames.begin();
+         i != objcClassNames.end();
+         ++i) {
+        out << "record " << i->first << " = externalClass(";
+        ObjCInterfaceDecl *superclass = i->second->getSuperClass();
+        if (superclass)
+            out << superclass->getNameAsString();
+        else
+            out << "Void";
+        out << ");\n";
+    }
+
+    for (map<string, selector_info>::const_iterator i = objcSelectors.begin();
+         i != objcSelectors.end();
+         ++i) {
+        
+        out << "overload "
+            << (i->second.isVariadic ? "varargSelector" : "selector")
+            << "(static #\"" << i->first << "\") = ";
+        out << convertType(i->second.resultType.getTypePtr());
+
+        for (vector<QualType>::const_iterator j = i->second.paramTypes.begin();
+             j != i->second.paramTypes.end();
+             ++j) {
+            out << ", " << convertType(j->getTypePtr());
+        }
+        out << ";\n";
+    }
+    out << "\n";
+}
+
+bool BindingsConverter::isClayKeyword(const string &cIdent) {
+    // list from compiler/src/lexer.cpp:121
+    static char const * const keywords[] =
+        {"public", "private", "import", "as",
+         "record", "variant", "instance",
+         "procedure", "overload", "external", "alias",
+         "static", "callbyname", "lvalue", "rvalue",
+         "inline", "enum", "var", "ref", "forward",
+         "and", "or", "not", "new",
+         "if", "else", "goto", "return", "while",
+         "switch", "case", "default", "break", "continue", "for", "in",
+         "true", "false", "try", "catch", "throw", NULL};
+    
+    for (char const * const *k = keywords; *k; ++k)
+        if (cIdent == *k)
+            return true;
+    return false;
+}
+
+string BindingsConverter::convertIdent(const string &cIdent) {
+    if (isClayKeyword(cIdent))
+        return cIdent + "_";
+    else
+        return cIdent;
 }
 
 void BindingsConverter::generateDecl(Decl *decl)
@@ -351,7 +536,7 @@ void BindingsConverter::generateDecl(Decl *decl)
                 if (fname.empty())
                     out << "unnamed_field" << index;
                 else
-                    out << fname;
+                    out << convertIdent(fname);
                 out << " : " << convertType(t) << ",\n";
                 ++index;
             }
@@ -409,7 +594,7 @@ void BindingsConverter::generateDecl(Decl *decl)
                 if (pname.empty())
                     out << "argument" << index;
                 else
-                    out << pname;
+                    out << convertIdent(pname);
                 const Type *t = y->getType().getTypePtr();
                 out << " : " << convertType(t);
                 ++index;
