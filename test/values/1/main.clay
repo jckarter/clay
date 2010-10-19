@@ -61,4 +61,11 @@ main() {
             7, 8, 9,
         )
     ));
+
+    println(assocValue?(#foo, (#foo, 1, 2, 3), (#bar, 4)));
+    println(assocValue?(#bar, (#foo, 1, 2, 3), (#bar, 4)));
+    println(assocValue?(#bas, (#foo, 1, 2, 3), (#bar, 4)));
+
+    println(...weaveValues(", ", ...assocValue(#foo, (#foo, 1, 2, 3), (#bar, 4))));
+    println(assocValue(#bar, (#foo, 1, 2, 3), (#bar, 4)));
 }
