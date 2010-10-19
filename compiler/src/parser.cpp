@@ -783,17 +783,50 @@ static bool returnExpr(ReturnKind &rkind, ExprPtr &expr) {
 
 static bool block(StatementPtr &x);
 
-static bool lambdaArgs(vector<IdentifierPtr> &formalArgs) {
+static bool lambdaArgs4(vector<IdentifierPtr> &formalArgs,
+                        IdentifierPtr &formalVarArg) {
+    if (!symbol("...")) return false;
+    if (!identifier(formalVarArg)) return false;
+    formalArgs.clear();
+    return true;
+}
+
+static bool lambdaArgs3(vector<IdentifierPtr> &formalArgs,
+                        IdentifierPtr &formalVarArg) {
+    if (!identifierList(formalArgs)) return false;
+    int p = save();
+    if (!symbol(",") || !symbol("...") || !identifier(formalVarArg)) {
+        restore(p);
+        formalVarArg = NULL;
+    }
+    return true;
+}
+
+static bool lambdaArgs2(vector<IdentifierPtr> &formalArgs,
+                        IdentifierPtr &formalVarArg) {
+    int p = save();
+    if (lambdaArgs3(formalArgs, formalVarArg)) return true;
+    restore(p);
+    if (lambdaArgs4(formalArgs, formalVarArg)) return true;
+    restore(p);
+    formalArgs.clear();
+    formalVarArg = NULL;
+    return true;
+}
+
+static bool lambdaArgs(vector<IdentifierPtr> &formalArgs,
+                       IdentifierPtr &formalVarArg) {
     int p = save();
     IdentifierPtr name;
     if (identifier(name)) {
         formalArgs.clear();
         formalArgs.push_back(name);
+        formalVarArg = NULL;
         return true;
     }
     restore(p);
     if (!symbol("(")) return false;
-    if (!optIdentifierList(formalArgs)) return false;
+    if (!lambdaArgs2(formalArgs, formalVarArg)) return false;
     if (!symbol(")")) return false;
     return true;
 }
@@ -830,13 +863,14 @@ static bool lambdaBody(StatementPtr &x) {
 static bool lambda(ExprPtr &x) {
     LocationPtr location = currentLocation();
     vector<IdentifierPtr> formalArgs;
-    if (!lambdaArgs(formalArgs)) return false;
+    IdentifierPtr formalVarArg;
+    if (!lambdaArgs(formalArgs, formalVarArg)) return false;
     bool captureByRef;
     if (!optCaptureByRef(captureByRef)) return false;
     if (!symbol("=>")) return false;
     StatementPtr body;
     if (!lambdaBody(body)) return false;
-    x = new Lambda(captureByRef, formalArgs, body);
+    x = new Lambda(captureByRef, formalArgs, formalVarArg, body);
     x->location = location;
     return true;
 }
