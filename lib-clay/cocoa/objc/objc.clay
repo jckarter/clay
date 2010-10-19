@@ -5,7 +5,8 @@ public import cocoa.objc.runtime.(
     Id as ObjectHandle,
     Class as ClassHandle,
     nil as nilHandle,
-    SEL as SelectorHandle
+    SEL as SelectorHandle,
+    BOOL
 );
 
 
@@ -27,6 +28,23 @@ private var objcIvarOffset[Class, ivarName]
 
 private var objcIvarType[Class, ivarName]
     = ivar_getTypeEncoding(objcIvar[Class, ivarName]);
+
+private var objcConstantString[value]
+    = CFConstantString(
+        Class(&__CFConstantStringClassReference),
+        CFConstantStringID,
+        cstring(StaticName(value)),
+        IdentifierSize(value)
+    );
+
+
+
+//
+// constant NSStrings
+//
+
+[value | Identifier?(value)]
+NSSTR(static value) = ObjectHandle(&objcConstantString[value]);
 
 
 
@@ -76,7 +94,7 @@ overload encode(static UInt32) = "I";
 overload encode(static UInt64) = "Q";
 overload encode(static Float32) = "f";
 overload encode(static Float64) = "d";
-overload encode(static Bool) = "B";
+overload encode(static Bool) = "c";
 overload encode(static Void) = "v";
 overload encode(static ()) = "v";
 
@@ -404,11 +422,14 @@ MsgSendParamType(Param) = Param;
 overload MsgSendParamType(static Param) = ObjectHandle;
 
 overload MsgSendParamType(static Void) = static ();
+overload MsgSendParamType(static Bool) = BOOL;
 
 [Param]
 private msgSendParam(static Param, forward x: Param) = forward x;
 [Param, Value | ObjectRef?(Param)]
 overload msgSendParam(static Param, forward x: Value) = objectHandle(x);
+
+overload msgSendParam(static Bool, forward x: Bool) = if (x) BOOL(1) else BOOL(0);
 
 private varArgParam(forward x) = forward x;
 [Param | ObjectRef?(Param)]
@@ -434,6 +455,9 @@ overload msgSendParams(static S, forward ...args) {
 
 [S | SelectorReturnType(S) == Void]
 overload msgSendReturn(static S) = ;
+
+[S | SelectorReturnType(S) == Bool]
+overload msgSendReturn(static S, forward x: BOOL) = x != 0;
 
 [S | ObjectRef?(SelectorReturnType(S))]
 overload msgSendReturn(static S, forward x: ObjectHandle) = SelectorReturnType(S)(x);
