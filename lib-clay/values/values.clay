@@ -68,6 +68,8 @@ procedure nthValue;
 
 inline firstValue(forward a, ...rest) = forward a;
 
+inline restValues(a, forward ...rest) = forward ...rest;
+
 inline lastValue(a, forward ...rest) = forward lastValue(...rest);
 overload lastValue(forward a) = forward a;
 
@@ -171,3 +173,23 @@ overload eachValue2(fn, static 0, forward ...xs) { }
     = forward fn(x, nthValue(static n-1, ...xs)),
       ...mapValues2(fn, static n-1, ...withoutNthValue(static n-1, ...xs));
 overload mapValues2(fn, static 0, forward ...xs) = ;
+
+
+
+//
+// treat multiple static tuple values as key-values pairs
+//
+
+[key]
+assocValue(static key, kv, forward ...kvs) = forward ...assocValue(static key, ...kvs);
+
+[key, ...T]
+overload assocValue(static key, forward kv: Tuple[Static[key], ...T], ...kvs)
+    = forward ...restValues(...unpack(kv));
+
+[key]
+assocValue?(static key) = false;
+[key]
+overload assocValue?(static key, kv, ...kvs) = assocValue?(key, ...kvs);
+[key, ...T]
+overload assocValue?(static key, kv: Tuple[Static[key], ...T], ...kvs) = true;
