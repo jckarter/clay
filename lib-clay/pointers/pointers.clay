@@ -279,3 +279,13 @@ inline overload lesser?(a:CP, b:CP) {
 
 [CP | CCodePointer?(CP)]
 inline overload null?(p:CP) = null?(RawPointer(p));
+
+
+
+//
+// CCodePointer - call
+//
+
+[CP | CCodePointer?(CP)]
+inline overload call(ptr:CP, ...args) =
+    ...callCCodePointer(ptr, ...args);

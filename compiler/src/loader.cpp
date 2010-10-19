@@ -697,6 +697,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(StdCallCodePointer);
     PRIMITIVE(FastCallCodePointer);
     PRIMITIVE(makeCCodePointer);
+    PRIMITIVE(callCCodePointer);
 
     PRIMITIVE(pointerCast);
 
