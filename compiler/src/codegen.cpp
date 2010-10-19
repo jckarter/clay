@@ -4405,7 +4405,7 @@ void codegenPrimOp(PrimOpPtr x,
         if (args->size() < 1)
             arityError2(1, args->size());
         CCodePointerTypePtr cpt;
-        llvm::Value *v = cCodePointerValue(args, 0, cpt);
+        cCodePointerValue(args, 0, cpt);
         MultiCValuePtr args2 = new MultiCValue();
         for (unsigned i = 1; i < args->size(); ++i)
             args2->add(args->values[i]);
