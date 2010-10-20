@@ -210,6 +210,10 @@ int main(int argc, char* argv[]) {
     clang::TargetOptions targetOpts;
     targetOpts.Triple = triple.str();
 
+    // MacOS X headers assume SSE is available
+    if (triple.getOS() == llvm::Triple::Darwin && triple.getArch() == llvm::Triple::x86)
+        targetOpts.Features.push_back("+sse2");
+
     clang::DiagnosticOptions diagOpts;
     BindingsConverter *converter = new BindingsConverter(
         outstream,
