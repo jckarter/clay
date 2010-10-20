@@ -6,7 +6,7 @@ public import cocoa.objc.runtime.(
     Class as ClassHandle,
     nil as nilHandle,
     SEL as SelectorHandle,
-    BOOL, YES, NO
+    BOOL, YES, NO, IMP
 );
 
 
