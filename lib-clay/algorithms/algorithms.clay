@@ -2,6 +2,8 @@ import algorithms.heaps as heaps;
 import algorithms.introsort as introsort;
 
 
+alias log2 = introsort.log2;
+
 
 //
 // reduce
