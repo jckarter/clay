@@ -12,34 +12,37 @@ import clay.ast.*;
 //
 
 record ParserInput(
-    current:Pointer[Token],
-    last:Pointer[Token],
-    maxCurrent:Pointer[Token],
+    tokens : SourceTokensPtr,
+    current : SizeT,
+    maxCurrent : SizeT,
 );
 
-[A | ContiguousSequence?(A) and (SequenceElementType(A) == Token)]
-overload ParserInput(tokens:A) {
-    var ptr = &tokens[0];
-    return ParserInput(ptr, ptr+size(tokens), ptr);
-}
+overload ParserInput(tokens : SourceTokensPtr) =
+    ParserInput(tokens, SizeT(0), SizeT(0));
 
 overload iterator(x:ParserInput) = x;
 
-overload hasNext?(x:ParserInput) = (x.current < x.last);
+overload hasNext?(x:ParserInput) =
+    (x.current < size(x.tokens^.vector));
 
 overload next(x:ParserInput) {
-    ref token = x.current^;
+    ref token = x.tokens^.vector[x.current];
     x.current += 1;
     return ref token;
 }
 
 overload assign(dest:ParserInput, src:ParserInput) {
-    var destMax = max(dest.maxCurrent, dest.current);
-    var srcMax = max(src.maxCurrent, src.current);
-    dest.maxCurrent = max(destMax, srcMax);
-
-    dest.current = src.current;
-    dest.last = src.last;
+    if (dest.tokens == src.tokens) {
+        dest.current = src.current;
+        var destMax = max(dest.maxCurrent, dest.current);
+        var srcMax = max(src.maxCurrent, src.current);
+        dest.maxCurrent = max(destMax, srcMax);
+    }
+    else {
+        dest.tokens = src.tokens;
+        dest.current = src.current;
+        dest.maxCurrent = src.maxCurrent;
+    }
 }
 
 
@@ -86,22 +89,24 @@ private optCommaListStrict(forward parser) =
 
 
 //
-// varList combinator
+// variadicList combinator
 //
 
 private commaAndItem(item) = modify(x => move(x.1), sequence(sym(#","), item));
 
-[Item, VarItem | Parsers?(Item, VarItem)]
-private varList(item:Item, varItem:VarItem) {
+[Item, VariadicItem | Parsers?(Item, VariadicItem)]
+private variadicList(item:Item, variadicItem:VariadicItem) {
     alias T = ParseResult(Item);
     return choice(
         modify(
-            x => VarList(move(x.0), move(x.1)),
-            sequence(commaListStrict(item), optional(commaAndItem(varItem))),
+            x => VariadicList(move(x.0), move(x.1)),
+            sequence(
+                commaListStrict(item), optional(commaAndItem(variadicItem))
+            ),
         ),
         modify(
-            x => VarList(Vector[T](), move(x)),
-            optional(varItem),
+            x => VariadicList(Vector[T](), move(x)),
+            optional(variadicItem),
         ),
     );
 }
@@ -209,7 +214,16 @@ private sym(static Ident) = symbolParserTable[Ident];
 
 private token(tokenKind) = condition(x => (x.kind == tokenKind));
 
-private tokenData(tokenKind) = modify(x => x.data, token(tokenKind));
+private tokenData(tokenKind) {
+    var parser = token(tokenKind);
+    return input => {
+        ref data = input.tokens^.file^.data;
+        return maybe(parser(input),
+            x ref=> Maybe(sliced(data, x.range.begin, x.range.end)),
+            () ref=> nothing(Type(sliced(data, SizeT(0), SizeT(0)))),
+        );
+    };
+}
 
 
 
@@ -308,9 +322,11 @@ private var atomicExpr = choice(arrayExpr, tupleExpr, nameRef, literalExpr);
 // setBase, foldTail
 //
 
+private exprTokens(x) = ref fieldRef(*x, #tokens);
+
 private setBase2(root, field, base) {
     fieldRef(root, field) = base;
-    root.tokens.begin = base^.tokens.begin;
+    root.tokens.begin = exprTokens(base^).begin;
 }
 private setBase(x, y) { assert(false, "baseless expression!"); }
 overload setBase(x:Indexing,       y) { setBase2(x, #expr, y); }
@@ -796,7 +812,7 @@ private var variadicArgument = modify(Argument, bounds(modify(
     sequence(argumentKind, sym(#"..."), identifier, optional(patternTypeSpec)),
 )));
 
-private var arguments = varList(argument, variadicArgument);
+private var arguments = variadicList(argument, variadicArgument);
 
 private var namedReturn = modify(
     x => x.0,
@@ -841,7 +857,7 @@ private var codeBody = choice(
 //
 
 private topLevelItemParser(forward modifier, forward parser) = modify(
-    x => TopLevelItem(move(x)),
+    x => TopLevelItem(new move(x)),
     bounds(modify(modifier, parser)),
 );
 
@@ -874,18 +890,21 @@ private var staticParams = modify(
     x => move(x.1),
     sequence(
         sym(#"["),
-        varList(identifier, modify(x => x.1, sequence(sym(#"..."), identifier))),
+        variadicList(
+            identifier,
+            modify(x => x.1, sequence(sym(#"..."), identifier)),
+        ),
         sym(#"]"),
     ),
 );
 
 private var optStaticParams = modify(
-    x => maybe(move(x), move, () => VarList[Identifier]()),
+    x => maybe(move(x), move, () => VariadicList[Identifier]()),
     optional(staticParams),
 );
 
 private var recordDef = topLevelItemParser(
-    x => RecordDef(x.0, x.2, x.3, x.4),
+    x => Record(x.0, x.2, x.3, x.4),
     sequence(
         optional(visibility), kw_record, identifier, optStaticParams,
         recordBody,
@@ -905,7 +924,7 @@ private var defaultInstances = choice(
 );
 
 private var variantDef = topLevelItemParser(
-    x => VariantDef(x.0, x.2, x.3, x.4),
+    x => Variant(x.0, x.2, x.3, x.4),
     sequence(
         optional(visibility), kw_variant, identifier, optStaticParams,
         defaultInstances
@@ -913,7 +932,7 @@ private var variantDef = topLevelItemParser(
 );
 
 private var instanceDef = topLevelItemParser(
-    x => InstanceDef((x.0).0, (x.0).1, x.2, x.4),
+    x => Instance((x.0).0, (x.0).1, x.2, x.4),
     sequence(
         patternVarsWithPredicate, kw_instance, pattern,
         sym(#"="), expr, sym(#";"),
@@ -931,7 +950,7 @@ private var optInline = modify(
 );
 
 private var procedureWithBody = topLevelItemParser(
-    x => ProcedureDef(x.1, x.5, Maybe(
+    x => Procedure(x.1, x.5, Maybe(
         Code(x.2, x.3, (x.0).0, (x.0).1, x.7, x.9, x.10)
     )),
     sequence(
@@ -942,12 +961,12 @@ private var procedureWithBody = topLevelItemParser(
 );
 
 private var procedureWithoutBody = topLevelItemParser(
-    x => ProcedureDef(x.0, x.2, nothing(Code)),
+    x => Procedure(x.0, x.2, nothing(Code)),
     sequence(optional(visibility), kw_procedure, identifier, sym(#";")),
 );
 
 private var overloadDef = topLevelItemParser(
-    x => OverloadDef(x.4, Code(x.1, x.2, (x.0).0, (x.0).1, x.6, x.8, x.9)),
+    x => Overload(x.4, Code(x.1, x.2, (x.0).0, (x.0).1, x.6, x.8, x.9)),
     sequence(
         patternVarsWithPredicate, optCallByName, optInline, kw_overload,
         pattern, sym(#"("), arguments, sym(#")"), returnSpecs, codeBody,
@@ -955,7 +974,7 @@ private var overloadDef = topLevelItemParser(
 );
 
 private var enumDef = topLevelItemParser(
-    x => EnumDef(x.0, x.2, x.4),
+    x => Enum(x.0, x.2, x.4),
     sequence(
         optional(visibility), kw_enum, identifier,
         sym(#"{"), identifierList, sym(#"}")
@@ -999,8 +1018,8 @@ private var variadicExternalArg = bounds(modify(
 ));
 
 private var externalArgs = modify(
-    x => (move(x.items), not nothing?(x.varItem)),
-    varList(externalArg, variadicExternalArg),
+    x => (move(x.items), not nothing?(x.variadicItem)),
+    variadicList(externalArg, variadicExternalArg),
 );
 
 private var externalBody = choice(
@@ -1087,67 +1106,43 @@ private var importDef = choice(
 
 
 //
-// module
+// parseExpr, parse
 //
 
-private var module = bounds(modify(
-    x => Module(x.0, x.1),
-    sequence(zeroOrMore(importDef), zeroOrMore(topLevelItem)),
-));
+record ParserError(
+    tokens : SourceTokensPtr,
+    where:SizeT,
+);
 
-
-
-//
-// parseExpr, parseStatement, parseTopLevelItem, parseModule
-//
-
-record ParserError(where:Pointer[Token]);
 instance Exception = ParserError;
+
 
 private var parseExpr2 = modify(
     x => x.0,
     sequence(expr, token(SENTINEL)),
 );
 
-parseExpr(input) {
+parseExpr(tokens:SourceTokensPtr) {
+    var input = ParserInput(tokens);
     var result = parseExpr2(input);
     if (nothing?(result))
-        throw ParserError(input.maxCurrent - 1);
+        throw ParserError(tokens, input.maxCurrent);
     return require(move(result));
 }
 
-private var parseStatement2 = modify(
-    x => x.0,
-    sequence(statement, token(SENTINEL)),
+private var parse2 = modify(
+    x => SourceAST(SourceTokensPtr(), x.0, x.1),
+    sequence(
+        zeroOrMore(importDef), zeroOrMore(topLevelItem), token(SENTINEL)
+    ),
 );
 
-parseStatement(input) {
-    var result = parseStatement2(input);
-    if (nothing?(result))
-        throw ParserError(input.maxCurrent - 1);
-    return require(move(result));
-}
-
-private var parseTopLevelItem2 = modify(
-    x => x.0,
-    sequence(topLevelItem, token(SENTINEL)),
-);
-
-parseTopLevelItem(input) {
-    var result = parseTopLevelItem2(input);
-    if (nothing?(result))
-        throw ParserError(input.maxCurrent - 1);
-    return require(move(result));
-}
-
-private var parseModule2 = modify(
-    x => x.0,
-    sequence(module, token(SENTINEL)),
-);
-
-parseModule(input) {
-    var result = parseModule2(input);
-    if (nothing?(result))
-        throw ParserError(input.maxCurrent - 1);
-    return require(move(result));
+parse(tokens:SourceTokensPtr) {
+    var input = ParserInput(tokens);
+    var ast = parse2(input);
+    if (nothing?(ast))
+        throw ParserError(tokens, input.maxCurrent);
+    var ast2 = require(move(ast));
+    ast2.tokens = tokens;
+    return new move(ast2);
 }

@@ -213,6 +213,15 @@ static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index)
     return (PointerType *)t.ptr();
 }
 
+static CCodePointerTypePtr cCodePointerTypeOfValue(MultiPValuePtr x,
+                                                   unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != CCODE_POINTER_TYPE)
+        argumentTypeError(index, "c code pointer type", t);
+    return (CCodePointerType *)t.ptr();
+}
+
 static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
@@ -618,6 +627,17 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
+        PValuePtr pv = analyzeOne(x->expr, env);
+        if (!pv)
+            return NULL;
+        if (pv->type->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)pv->type.ptr();
+            if (st->obj->objKind == MODULE_HOLDER) {
+                ModuleHolder *mh = (ModuleHolder *)st->obj.ptr();
+                ObjectPtr obj = safeLookupModuleHolder(mh, x->name);
+                return analyzeStaticObject(obj);
+            }
+        }
         if (!x->desugared)
             x->desugared = desugarFieldRef(x);
         return analyzeExpr(x->desugared, env);
@@ -1390,12 +1410,10 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         return NULL;
     switch (pv->type->typeKind) {
     case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE : {
         MultiPValuePtr mpv = analyzeMulti(args, env);
         if (!mpv)
             return NULL;
         return analyzeCallPointer(pv, mpv);
-    }
     }
     ObjectPtr obj = unwrapStaticType(pv->type);
     if (!obj) {
@@ -1536,7 +1554,6 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
 {
     switch (callable->type->typeKind) {
     case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE :
         return analyzeCallPointer(callable, args);
     }
     ObjectPtr obj = unwrapStaticType(callable->type);
@@ -1591,13 +1608,6 @@ MultiPValuePtr analyzeCallPointer(PValuePtr x,
     case CODE_POINTER_TYPE : {
         CodePointerType *y = (CodePointerType *)x->type.ptr();
         return analyzeReturn(y->returnIsRef, y->returnTypes);
-    }
-
-    case CCODE_POINTER_TYPE : {
-        CCodePointerType *y = (CCodePointerType *)x->type.ptr();
-        if (!y->returnType)
-            return new MultiPValue();
-        return new MultiPValue(new PValue(y->returnType, true));
     }
 
     default :
@@ -2238,6 +2248,15 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
                                            false,
                                            returnType);
         return new MultiPValue(new PValue(ccpType, true));
+    }
+
+    case PRIM_callCCodePointer : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        CCodePointerTypePtr y = cCodePointerTypeOfValue(args, 0);
+        if (!y->returnType)
+            return new MultiPValue();
+        return new MultiPValue(new PValue(y->returnType, true));
     }
 
     case PRIM_pointerCast : {

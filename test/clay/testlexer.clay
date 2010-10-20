@@ -8,20 +8,16 @@ main(args) {
         println("usage: ", args[0], " <clayfile>");
         return -1;
     }
-    var fileName = args[1];
-    var data = readAll(File(fileName));
     try {
-        var tokens = tokenize(LexerInput(data));
-        for (token in tokens) {
-            var kind = token.kind;
-            if ((kind == SPACE) or (kind == COMMENT))
-                continue;
-            println(kind, ": ", token.data);
+        var file = readSource(args[1]);
+        var tokens = tokenize(file);
+        for (x in tokens^.vector) {
+            ref r = x.range;
+            println(x.kind, ": ", sliced(file^.data, r.begin, r.end));
         }
     }
     catch (e:LexerError) {
-        var offset = e.where - begin(data);
-        displayError(fileName, data, offset, "invalid token");
+        displayError(e);
     }
     return 0;
 }

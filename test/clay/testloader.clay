@@ -67,19 +67,20 @@ main(args) {
         loadPrelude();
 
     if (not empty?(moduleToLoad)) {
-        var moduleInfo = loadModule(DottedName(split(moduleToLoad, ".")));
-        displayModule(moduleInfo);
+        var module = loadModule(DottedName(split(moduleToLoad, ".")));
+        displayModule(module);
     }
     else if (not empty?(programToLoad)) {
-        var moduleInfo = loadProgram(programToLoad);
-        displayModule(moduleInfo);
+        var module = loadProgram(programToLoad);
+        displayModule(module);
     }
     return 0;
 }
 
-displayModule(moduleInfo) {
-    println(moduleInfo.name);
-    println(moduleInfo.filePath);
-    println(moduleInfo.ast);
+displayModule(module) {
+    println(module^.name);
+    println(module^.ast^.tokens^.file^.path);
+    println(module^.ast^.imports);
+    println(module^.ast^.topLevelItems);
     return 0;
 }

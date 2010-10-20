@@ -1005,6 +1005,16 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
+        PValuePtr pv = safeAnalyzeOne(x->expr, env);
+        if (pv->type->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)pv->type.ptr();
+            if (st->obj->objKind == MODULE_HOLDER) {
+                ModuleHolder *mh = (ModuleHolder *)st->obj.ptr();
+                ObjectPtr obj = safeLookupModuleHolder(mh, x->name);
+                evalStaticObject(obj, out);
+                break;
+            }
+        }
         if (!x->desugared)
             x->desugared = desugarFieldRef(x);
         evalExpr(x->desugared, env, out);
@@ -1490,12 +1500,10 @@ void evalCallExpr(ExprPtr callable,
 
     switch (pv->type->typeKind) {
     case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE : {
         EValuePtr ev = evalOneAsRef(callable, env);
         MultiEValuePtr mev = evalMultiAsRef(args, env);
         evalCallPointer(ev, mev, out);
         return;
-    }
     }
 
     if (pv->type->typeKind != STATIC_TYPE) {
@@ -1669,7 +1677,6 @@ void evalCallValue(EValuePtr callable,
 {
     switch (callable->type->typeKind) {
     case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE :
         evalCallPointer(callable, args, out);
         return;
     }
@@ -3597,6 +3604,11 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == ccpType);
         *((void **)out0->addr) = funcPtr;
+        break;
+    }
+
+    case PRIM_callCCodePointer : {
+        error("invoking a code pointer not yet supported in evaluator");
         break;
     }
 

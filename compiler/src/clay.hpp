@@ -896,6 +896,7 @@ struct IfExpr : public Expr {
 struct Lambda : public Expr {
     bool captureByRef;
     vector<IdentifierPtr> formalArgs;
+    IdentifierPtr formalVarArg;
     StatementPtr body;
 
     ExprPtr converted;
@@ -915,10 +916,11 @@ struct Lambda : public Expr {
         initialized(false) {}
     Lambda(bool captureByRef,
            const vector<IdentifierPtr> &formalArgs,
+           IdentifierPtr formalVarArg,
            StatementPtr body)
         : Expr(LAMBDA), captureByRef(captureByRef),
-          formalArgs(formalArgs), body(body),
-          initialized(false) {}
+          formalArgs(formalArgs), formalVarArg(formalVarArg),
+          body(body), initialized(false) {}
 };
 
 struct Unpack : public Expr {
@@ -1450,7 +1452,7 @@ struct Overload : public TopLevelItem {
     bool isInline;
 
     // pre-computed patterns for matchInvoke
-    bool patternsInitialized;
+    int patternsInitializedState; // 0:notinit, -1:initing, +1:inited
     vector<PatternCellPtr> cells;
     vector<MultiPatternCellPtr> multiCells;
     EnvPtr patternEnv;
@@ -1464,7 +1466,7 @@ struct Overload : public TopLevelItem {
              bool isInline)
         : TopLevelItem(OVERLOAD), target(target), code(code),
           callByName(callByName), isInline(isInline),
-          patternsInitialized(false) {}
+          patternsInitializedState(0) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -1921,6 +1923,7 @@ enum PrimOpCode {
     PRIM_StdCallCodePointer,
     PRIM_FastCallCodePointer,
     PRIM_makeCCodePointer,
+    PRIM_callCCodePointer,
 
     PRIM_pointerCast,
 
