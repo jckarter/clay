@@ -1,1 +1,5 @@
 public import cocoa.foundation.generated.*;
+import cocoa.objc.*;
+
+// XXX monkey patch until i fix bindgen
+overload selector(static #"autorelease") = Id;

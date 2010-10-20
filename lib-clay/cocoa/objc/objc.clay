@@ -16,15 +16,17 @@ public import cocoa.objc.runtime.(
 //
 
 private procedure objcClassMake;
+private procedure objcInitIvar;
+private procedure objcInitIvarOffset;
 private var objcClass[Class] = objcClassMake(Class);
 
 private var objcSelector[name] = sel_registerName(cstring(StaticName(name)));
 
 private var objcIvar[Class, ivarName]
-    = class_getInstanceVariable(objcClass[Class], cstring(StaticName(ivarName)));
+    = objcInitIvar(Class, ivarName);
 
 private var objcIvarOffset[Class, ivarName]
-    = ivar_getOffset(objcIvar[Class, ivarName]);
+    = objcInitIvarOffset(Class, ivarName);
 
 private var objcConstantString[value]
     = CFConstantString(
@@ -305,8 +307,16 @@ overload objcClassMake(static T) {
     var handle = objc_getClass(cstring(name));
     if (null?(handle))
         throw ExternalClassNotFound(name);
-    return ObjectHandle(handle);
+    return handle;
 }
+
+[T | ExternalClass?(T)]
+overload objcInitIvar(static T, ivarName)
+    = class_getInstanceVariable(objcClass[Class], cstring(StaticName(ivarName)));
+
+[T | ExternalClass?(T)]
+overload objcInitIvarOffset(static T, ivarName)
+    = ivar_getOffset(objcIvar[Class, ivarName]);
 
 
 
@@ -353,18 +363,22 @@ instance Exception = NewClassCouldNotAddInstanceMethod;
 
 [T, sel, fn]
 private classMethodImp(static T, static sel, static fn) 
-    = SelectorImpType(Static[T], sel)((self, _cmd, ...args) =>
-        forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
-            fn(T, sel, ...msgSendBox(Static[T], sel, ...args))
-        )
+    = makeCCodePointer(
+        (self, _cmd, ...args) =>
+            forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
+                fn(T, sel, ...msgSendBox(Static[T], sel, ...args))
+            ),
+        ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(Static[T], sel)
     );
 
 [T, sel, fn]
 private instanceMethodImp(static T, static sel, static fn)
-    = SelectorImpType(T, sel)((self, _cmd, ...args) =>
-        forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(T, sel), r),
-            fn(T(self), sel, ...msgSendBox(T, sel, ...args))
-        )
+    = makeCCodePointer(
+        (self, _cmd, ...args) =>
+            forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(T, sel), r),
+                fn(T(self), sel, ...msgSendBox(T, sel, ...args))
+            ),
+        ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(T, sel)
     );
 
 [T | ClayClass?(T)]
@@ -412,13 +426,25 @@ overload objcClassMake(static T) {
             RawPointer(instanceMethodImp(T, selector, newInstanceMethod)),
             cstring(SelectorTypeEncoding(T, selector))
         ) == NO)
-            throw NewClassCouldNotAddInstanceMethod(name, StaticName(selector));
+            throw NewClassCouldNotAddInstanceMethod(ModuleName(T), StaticName(T), StaticName(selector));
     }
 
     objc_registerClassPair(handle);
 
+    static for (ivarPair in ...ClassInstanceVars(T)) {
+        var ivar = ivarPair.0;
+        objcIvar[T, ivar] = class_getInstanceVariable(handle, cstring(StaticName(ivar)));
+        objcIvarOffset[T, ivar] = ivar_getOffset(objcIvar[T, ivar]);
+    }
+
     return handle;
 }
+
+[T | ClayClass?(T)]
+overload objcInitIvar(static T, ivarName) = Ivar(0);
+
+[T | ClayClass?(T)]
+overload objcInitIvarOffset(static T, ivarName) = PtrInt(0);
 
 
 
@@ -426,7 +452,8 @@ overload objcClassMake(static T) {
 // Class objects as objc params
 //
 
-[T | Class?(T)] overload objectHandle(static T) = ObjectHandle(objcClass[T]);
+[T | Class?(T)] classHandle(static T) = objcClass[T];
+[T | Class?(T)] overload objectHandle(static T) = ObjectHandle(classHandle(T));
 [T | Class?(T)] overload ObjectParameterType(static Static[T]) = Id; // XXX Class
 
 [T | Class?(T)] overload encode(static T) = "@";
@@ -765,17 +792,21 @@ overload fieldRef(ivars: IvarsRef[T], static ivar)
 
 private record SuperRef[T] (__handle__: ObjectHandle);
 
-[T | Class?(T) and SuperclassType?(T) != Void]
+[T | Class?(T) and SuperclassType(T) != Void]
 super(obj: T) = SuperRef[T](objectHandle(obj));
 
-[T | Class?(T) and SuperclassType?(T) != Void]
+[T | Class?(T) and SuperclassType(T) != Void]
 overload super(obj: Weak[T]) = SuperRef[T](objectHandle(obj));
 
 private record SuperMethodRef[T, identifier] (super: ObjcSuper);
 
 [T]
 overload SuperMethodRef(super: SuperRef[T], identifier)
-    = SuperMethodRef[T, identifier](ObjcSuper(super.__handle__, objectHandle(SuperclassType(T))));
+    = SuperMethodRef[T, identifier](ObjcSuper(super.__handle__, classHandle(SuperclassType(T))));
+
+[T, cmd | Class?(T) and cmd != #__handle__]
+overload fieldRef(sup: SuperRef[T], static cmd)
+    = SuperMethodRef(sup, cmd);
 
 [T, identifier, ...Args]
 overload call(method: SuperMethodRef[T, identifier], forward ...args: Args) {
