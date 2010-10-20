@@ -359,7 +359,7 @@ private classMethodImp(static T, static sel, static fn)
     );
 
 private instanceMethodImp(static T, static sel, static fn)
-    = SelectorImpType(T, sel)((self, _cmd, ...args) => // XXX workaround parser bug
+    = SelectorImpType(T, sel)((self, _cmd, ...args) =>
         forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(T, sel), r),
             fn(T(self), sel, ...msgSendBox(T, sel, ...args))
         )
