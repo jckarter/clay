@@ -310,7 +310,7 @@ void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG)
             ObjCInterfaceDecl *x = (ObjCInterfaceDecl *)decl;
 
             if (matches) {
-                objcClassNames[x->getNameAsString()] = x;
+                objcClasses[x->getNameAsString()] = class_info(x);
 
                 for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
                      imeth != x->meth_end();
@@ -327,14 +327,25 @@ void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG)
             ObjCCategoryDecl *x = (ObjCCategoryDecl *)decl;
 
             if (matches) {
-                for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
-                     imeth != x->meth_end();
-                     ++imeth)
-                    allocateObjcMethodSelector(*imeth);
-                for (ObjCContainerDecl::prop_iterator iprop = x->prop_begin();
-                     iprop != x->prop_end();
-                     ++iprop)
-                    allocateObjcPropertySelector(*iprop);
+                map<string, class_info>::iterator objcClassI
+                    = objcClasses.find(x->getClassInterface()->getNameAsString());
+                if (objcClassI == objcClasses.end())
+                    cerr << "warning: category "
+                         << x->getClassInterface()->getNameAsString()
+                         << " (" << x->getNameAsString() << ")"
+                         << " found before original interface definition\n";
+                else {
+                    objcClassI->second.categoryDecls.push_back(x);
+
+                    for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
+                         imeth != x->meth_end();
+                         ++imeth)
+                        allocateObjcMethodSelector(*imeth);
+                    for (ObjCContainerDecl::prop_iterator iprop = x->prop_begin();
+                         iprop != x->prop_end();
+                         ++iprop)
+                        allocateObjcPropertySelector(*iprop);
+                }
             }
         }
         default :
@@ -430,20 +441,25 @@ void BindingsConverter::generate()
     }
 }
 
+template<typename MethodIterator>
+void BindingsConverter::generateObjCClassMethods(MethodIterator begin, MethodIterator end) {
+    for (MethodIterator imeth = begin; imeth != end; ++imeth) {
+        ObjCMethodDecl *method = *imeth;
+        out << "        (";
+        out << "#\"" << method->getSelector().getAsString() << "\", ";
+        out << convertType(method->getResultType().getTypePtr());
+        for (ObjCMethodDecl::param_iterator jparam = method->param_begin();
+             jparam != method->param_end();
+             ++jparam) {
+            out << ", " << convertType((*jparam)->getType().getTypePtr());
+        }
+        out << "),\n";
+    }
+}
+
 void BindingsConverter::generateObjC()
 {
-    for (map<string, ObjCInterfaceDecl*>::const_iterator i = objcClassNames.begin();
-         i != objcClassNames.end();
-         ++i) {
-        out << "record " << i->first << " = externalClass(";
-        ObjCInterfaceDecl *superclass = i->second->getSuperClass();
-        if (superclass)
-            out << superclass->getNameAsString();
-        else
-            out << "Void";
-        out << ");\n";
-    }
-
+    out << "\n";
     for (map<string, selector_info>::const_iterator i = objcSelectors.begin();
          i != objcSelectors.end();
          ++i) {
@@ -460,7 +476,47 @@ void BindingsConverter::generateObjC()
         }
         out << ";\n";
     }
+
     out << "\n";
+    for (map<string, class_info>::const_iterator i = objcClasses.begin();
+         i != objcClasses.end();
+         ++i) {
+        ObjCInterfaceDecl *classDecl = i->second.classDecl;
+        vector<ObjCCategoryDecl *> const &categoryDecls = i->second.categoryDecls;
+
+        out << "record " << i->first << " = externalClass(";
+
+        ObjCInterfaceDecl *superclass = classDecl->getSuperClass();
+        if (superclass)
+            out << superclass->getNameAsString();
+        else
+            out << "Void";
+
+        out << ",\n";
+        out << "    ClassMethods(\n";
+
+        generateObjCClassMethods(classDecl->classmeth_begin(), classDecl->classmeth_end());
+
+        for (vector<ObjCCategoryDecl *>::const_iterator jcat = categoryDecls.begin();
+             jcat != categoryDecls.end();
+             ++jcat) {
+            generateObjCClassMethods((*jcat)->classmeth_begin(), (*jcat)->classmeth_end());
+        }
+
+        out << "    ),\n";
+        out << "    InstanceMethods(\n";
+
+        generateObjCClassMethods(classDecl->instmeth_begin(), classDecl->instmeth_end());
+
+        for (vector<ObjCCategoryDecl *>::const_iterator jcat = categoryDecls.begin();
+             jcat != categoryDecls.end();
+             ++jcat) {
+            generateObjCClassMethods((*jcat)->instmeth_begin(), (*jcat)->instmeth_end());
+        }
+
+        out << "    )\n";
+        out << ");\n";
+    }
 }
 
 bool BindingsConverter::isClayKeyword(const string &cIdent) {

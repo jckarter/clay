@@ -44,6 +44,9 @@ private:
     void allocateObjcMethodSelector(ObjCMethodDecl *method);
     void allocateObjcPropertySelector(ObjCPropertyDecl *property);
 
+    template<typename MethodIterator>
+    void generateObjCClassMethods(MethodIterator begin, MethodIterator end);
+
 public :
     virtual void Initialize(ASTContext &astc);
     virtual void HandleTopLevelDecl(DeclGroupRef DG);
@@ -70,16 +73,26 @@ private :
     map<string, string> recordNames;
     map<string, string> typedefNames;
 
-    map<string, ObjCInterfaceDecl*> objcClassNames;
+    struct class_info {
+        ObjCInterfaceDecl *classDecl;
+        vector<ObjCCategoryDecl *> categoryDecls;
+
+        class_info() : classDecl(NULL) {}
+
+        explicit class_info(ObjCInterfaceDecl *decl)
+            : classDecl(decl) {}
+    };
+
+    map<string, class_info> objcClasses;
 
     struct selector_info {
         QualType resultType;
         bool isVariadic;
         vector<QualType> paramTypes;
 
-        selector_info() {}
+        selector_info() : isVariadic(false) {}
 
-        selector_info(ObjCMethodDecl *decl)
+        explicit selector_info(ObjCMethodDecl *decl)
             : resultType(decl->getResultType()),
               isVariadic(decl->isVariadic()) {
             for (ObjCMethodDecl::param_iterator i = decl->param_begin();
