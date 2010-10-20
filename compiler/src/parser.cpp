@@ -793,7 +793,7 @@ static bool lambdaArgs4(vector<IdentifierPtr> &formalArgs,
 
 static bool lambdaArgs3(vector<IdentifierPtr> &formalArgs,
                         IdentifierPtr &formalVarArg) {
-    if (!identifierList(formalArgs)) return false;
+    if (!identifierListNoTail(formalArgs)) return false;
     int p = save();
     if (!symbol(",") || !symbol("...") || !identifier(formalVarArg)) {
         restore(p);
