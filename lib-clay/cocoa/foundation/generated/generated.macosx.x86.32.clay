@@ -4,8 +4,8 @@
 import cocoa.objc.*;
 
 import libc.*;
-import unix.*;
 import cocoa.corefoundation.*;
+import cocoa.applicationservices.*;
 
 private alias OpaquePointer = RawPointer;
 private alias UnknownType = Int;
