@@ -11,6 +11,9 @@ alias Method = RawPointer;
 alias Protocol = Id;
 alias BOOL = CChar;
 
+alias YES = BOOL(1);
+alias NO = BOOL(0);
+
 alias nil = Id(0);
 
 record ObjcSuper (
