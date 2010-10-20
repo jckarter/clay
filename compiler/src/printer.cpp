@@ -240,7 +240,7 @@ static void printExpr(ostream &out, const Expr *x) {
     case LAMBDA : {
         const Lambda *y = (const Lambda *)x;
         out << "Lambda(" << y->captureByRef << ", " << y->formalArgs
-            << ", " << y->body << ")";
+            << ", " << y->formalVarArg << ", " << y->body << ")";
         break;
     }
     case UNPACK : {

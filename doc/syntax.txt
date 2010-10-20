@@ -229,7 +229,11 @@ IfExpr -> "if" "(" Expression ")" Expression
 
 Lambda -> LambdaArgs "ref"? "=>" (Expression | Block)
 LambdaArgs -> Identifier
-            | "(" comma_list(Identifier) ")"
+            | "(" LambdaArgs2 ")"
+            | "(" ")"
+
+LambdaArgs2 -> "..." Identifier
+             | comma_list(Identifier) ("," "..." Identifier)?
 
 Unpack -> "..." Expression
 

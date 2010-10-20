@@ -1,22 +1,12 @@
 
+import maybe.*;
 import io.paths.*;
-import clay.errors.*;
 import clay.tokens.*;
 import clay.lexer.*;
 import clay.ast.*;
 import clay.parser.*;
+import clay.state.*;
 import clay.loader.platform as platform;
-
-record ModuleInfo (
-    dottedName : DottedName,
-    name       : String,
-    filePath   : String,
-    data       : String,
-    tokens     : Vector[Token],
-    ast        : Module,
-);
-
-private var modules = HashMap[String,ModuleInfo]();
 
 private var searchPath = Vector[String]();
 
@@ -86,73 +76,42 @@ private locateModule(dottedName) {
     return String("");
 }
 
-private lexAndParse(path) {
-    var data = readAll(File(path));
-    var tokens = Vector[Token]();
-    try {
-        tokens = Vector(filtered(
-            x => (x.kind != SPACE) and (x.kind != COMMENT),
-            tokenize(LexerInput(data)),
-        ));
-        var ast = parseModule(ParserInput(tokens));
-        return move(data), move(tokens), move(ast);
-    }
-    catch (e:LexerError) {
-        var offset = e.where - begin(data);
-        displayError(path, data, offset, "invalid token");
-        throw e;
-    }
-    catch (e:ParserError) {
-        var offset = begin(e.where^.data) - begin(data);
-        displayError(path, data, offset, "parse error");
-        throw e;
-    }
-}
-
-private initModuleInfo(moduleInfo, filePath, forward data, forward tokens, forward ast) {
-    moduleInfo.filePath = filePath;
-    moduleInfo.data = data;
-    moduleInfo.tokens = tokens;
-    moduleInfo.ast = ast;
-}
-
-private loadDependents(moduleInfo) {
-    for (x in moduleInfo.ast.imports)
+private loadDependents(module) {
+    for (x in module^.ast^.imports)
         loadModule(fieldRef(*x, #name));
 }
 
 loadModule(dottedName) {
     var name = moduleString(dottedName);
-    var modulePtr = lookup(modules, name);
-    if (not null?(modulePtr))
-        return ref modulePtr^;
-    if (name == "__primitives__") {
-        ref moduleInfo = modules[name];
-        moduleInfo.dottedName = dottedName;
-        moduleInfo.name = name;
-        return ref moduleInfo;
-    }
-    var path = locateModule(dottedName);
-    println("loading module: ", name, ", ", path);
-    var data, tokens, ast = ...lexAndParse(path);
-
-    ref moduleInfo = modules[name];
-    moduleInfo.dottedName = dottedName;
-    moduleInfo.name = name;
-    initModuleInfo(moduleInfo, path, move(data), move(tokens), move(ast));
-    loadDependents(moduleInfo);
-    return ref moduleInfo;
+    return maybe(lookupModule(name),
+        module ref=> module,
+        () ref=> {
+            if (name == "__primitives__") {
+                var module = new Module();
+                module^.name = name;
+                installModule(name, module);
+                return module;
+            }
+            var path = locateModule(dottedName);
+            println("loading module: ", name, ", ", path);
+            var module = new Module();
+            module^.name = name;
+            module^.ast = parse(tokenize(readSource(path)));
+            installModule(name, module);
+            loadDependents(module);
+            return module;
+        },
+    );
 }
 
-loadPrelude() {
+loadPrelude() =
     loadModule(DottedName("prelude"));
-}
 
 loadProgram(path) {
     println("loading program: ", path);
-    var data, tokens, ast = ...lexAndParse(path);
-    var moduleInfo = ModuleInfo();
-    initModuleInfo(moduleInfo, path, move(data), move(tokens), move(ast));
-    loadDependents(moduleInfo);
-    return move(moduleInfo);
+    var module = new Module();
+    module^.name = String("__main__");
+    module^.ast = parse(tokenize(readSource(path)));
+    loadDependents(module);
+    return module;
 }

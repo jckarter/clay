@@ -62,6 +62,7 @@ VarArgsCCodePointer[(A1, ..., An), (RT?)]
 StdCallCodePointer[(A1, ..., An), (RT?)]
 FastCallCodePointer[(A1, ..., An), (RT?)]
 [F, A1, ..., An] makeCCodePointer(static F, static A1, ..., static An)
+callCCodePointer(ptr, ...args)
 
 [T1,T2] pointerCast(static T2, a:Pointer[T1]): T2
 

@@ -1,0 +1,15 @@
+
+scaledAdded(seqA, seqB, factor) {
+    return mapped(
+        (...x) => add(...mapValues(y => y*factor, ...x)),
+        seqA,
+        seqB,
+    );
+}
+
+main() {
+    var a = [1, 2, 3, 4];
+    var b = mapped(x => x*2, a);
+    var c = scaledAdded(a, b, 10);
+    println(Vector(c));
+}

@@ -2,9 +2,13 @@
 
 static void initializePatterns(OverloadPtr x)
 {
-    if (x->patternsInitialized)
+    if (x->patternsInitializedState == 1)
         return;
-    x->patternsInitialized = true;
+    if (x->patternsInitializedState == -1)
+        error("unholy recursion detected");
+    assert(x->patternsInitializedState == 0);
+    x->patternsInitializedState = -1;
+
     CodePtr code = x->code;
     const vector<PatternVar> &pvars = code->patternVars;
     x->patternEnv = new Env(x->env);
@@ -41,6 +45,8 @@ static void initializePatterns(OverloadPtr x)
         x->varArgPattern = evaluateMultiPattern(new ExprList(unpack),
                                                 x->patternEnv);
     }
+
+    x->patternsInitializedState = 1;
 }
 
 static void resetPatterns(OverloadPtr x)
