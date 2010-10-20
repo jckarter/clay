@@ -1,10 +1,11 @@
 all: generated.macosx.x86.32.clay generated.macosx.x86.64.clay
 
-CLAY_BINDGEN_FLAGS = -x objective-c \
+CLAY_BINDGEN_FLAGS = \
     -import libc \
+    -import unix \
     -import cocoa.corefoundation \
-    -import cocoa.applicationservices \
-    -match /Foundation
+    -import cocoa.coreservices \
+    -match /ApplicationServices
 
 generated.macosx.x86.32.clay: generated_from.h
 	clay-bindgen -arch i386 $(CLAY_BINDGEN_FLAGS) -o $@ $<

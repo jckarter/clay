@@ -1,1 +1,6 @@
 public import cocoa.corefoundation.generated.*;
+
+// XXX punt on typenames we don't want to pull in yet
+record SecTrustRef ();
+record SecIdentityRef ();
+record AEDesc ();
