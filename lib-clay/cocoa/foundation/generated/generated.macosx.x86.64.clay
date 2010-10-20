@@ -11,179 +11,7 @@ private alias OpaquePointer = RawPointer;
 private alias UnknownType = Int;
 private alias AUnionType = Int;
 
-record NSAffineTransform = externalClass(NSObject);
-record NSAppleEventDescriptor = externalClass(NSObject);
-record NSAppleEventManager = externalClass(NSObject);
-record NSAppleScript = externalClass(NSObject);
-record NSArchiver = externalClass(NSCoder);
-record NSArray = externalClass(NSObject);
-record NSAssertionHandler = externalClass(NSObject);
-record NSAttributedString = externalClass(NSObject);
-record NSAutoreleasePool = externalClass(NSObject);
-record NSBlockOperation = externalClass(NSOperation);
-record NSBundle = externalClass(NSObject);
-record NSCache = externalClass(NSObject);
-record NSCachedURLResponse = externalClass(NSObject);
-record NSCalendar = externalClass(NSObject);
-record NSCalendarDate = externalClass(NSDate);
-record NSCharacterSet = externalClass(NSObject);
-record NSClassDescription = externalClass(NSObject);
-record NSCloneCommand = externalClass(NSScriptCommand);
-record NSCloseCommand = externalClass(NSScriptCommand);
-record NSCoder = externalClass(NSObject);
-record NSComparisonPredicate = externalClass(NSPredicate);
-record NSCompoundPredicate = externalClass(NSPredicate);
-record NSCondition = externalClass(NSObject);
-record NSConditionLock = externalClass(NSObject);
-record NSConnection = externalClass(NSObject);
-record NSConstantString = externalClass(NSSimpleCString);
-record NSCountCommand = externalClass(NSScriptCommand);
-record NSCountedSet = externalClass(NSMutableSet);
-record NSCreateCommand = externalClass(NSScriptCommand);
-record NSData = externalClass(NSObject);
-record NSDate = externalClass(NSObject);
-record NSDateComponents = externalClass(NSObject);
-record NSDateFormatter = externalClass(NSFormatter);
-record NSDecimalNumber = externalClass(NSNumber);
-record NSDecimalNumberHandler = externalClass(NSObject);
-record NSDeleteCommand = externalClass(NSScriptCommand);
-record NSDictionary = externalClass(NSObject);
-record NSDirectoryEnumerator = externalClass(NSEnumerator);
-record NSDistantObject = externalClass(NSProxy);
-record NSDistantObjectRequest = externalClass(NSObject);
-record NSDistributedLock = externalClass(NSObject);
-record NSDistributedNotificationCenter = externalClass(NSNotificationCenter);
-record NSEnumerator = externalClass(NSObject);
-record NSError = externalClass(NSObject);
-record NSException = externalClass(NSObject);
-record NSExistsCommand = externalClass(NSScriptCommand);
-record NSExpression = externalClass(NSObject);
-record NSFileHandle = externalClass(NSObject);
-record NSFileManager = externalClass(NSObject);
-record NSFormatter = externalClass(NSObject);
-record NSGarbageCollector = externalClass(NSObject);
-record NSGetCommand = externalClass(NSScriptCommand);
-record NSHTTPCookie = externalClass(NSObject);
-record NSHTTPCookieStorage = externalClass(NSObject);
-record NSHTTPURLResponse = externalClass(NSURLResponse);
-record NSHashTable = externalClass(NSObject);
-record NSHost = externalClass(NSObject);
-record NSIndexPath = externalClass(NSObject);
-record NSIndexSet = externalClass(NSObject);
-record NSIndexSpecifier = externalClass(NSScriptObjectSpecifier);
-record NSInputStream = externalClass(NSStream);
-record NSInvocation = externalClass(NSObject);
-record NSInvocationOperation = externalClass(NSOperation);
-record NSKeyedArchiver = externalClass(NSCoder);
-record NSKeyedUnarchiver = externalClass(NSCoder);
-record NSLocale = externalClass(NSObject);
-record NSLock = externalClass(NSObject);
-record NSLogicalTest = externalClass(NSScriptWhoseTest);
-record NSMachBootstrapServer = externalClass(NSPortNameServer);
-record NSMachPort = externalClass(NSPort);
-record NSMapTable = externalClass(NSObject);
-record NSMessagePort = externalClass(NSPort);
-record NSMessagePortNameServer = externalClass(NSPortNameServer);
-record NSMetadataItem = externalClass(NSObject);
-record NSMetadataQuery = externalClass(NSObject);
-record NSMetadataQueryAttributeValueTuple = externalClass(NSObject);
-record NSMetadataQueryResultGroup = externalClass(NSObject);
-record NSMethodSignature = externalClass(NSObject);
-record NSMiddleSpecifier = externalClass(NSScriptObjectSpecifier);
-record NSMoveCommand = externalClass(NSScriptCommand);
-record NSMutableArray = externalClass(NSArray);
-record NSMutableAttributedString = externalClass(NSAttributedString);
-record NSMutableCharacterSet = externalClass(NSCharacterSet);
-record NSMutableData = externalClass(NSData);
-record NSMutableDictionary = externalClass(NSDictionary);
-record NSMutableIndexSet = externalClass(NSIndexSet);
-record NSMutableSet = externalClass(NSSet);
-record NSMutableString = externalClass(NSString);
-record NSMutableURLRequest = externalClass(NSURLRequest);
-record NSNameSpecifier = externalClass(NSScriptObjectSpecifier);
-record NSNetService = externalClass(NSObject);
-record NSNetServiceBrowser = externalClass(NSObject);
-record NSNotification = externalClass(NSObject);
-record NSNotificationCenter = externalClass(NSObject);
-record NSNotificationQueue = externalClass(NSObject);
-record NSNull = externalClass(NSObject);
-record NSNumber = externalClass(NSValue);
-record NSNumberFormatter = externalClass(NSFormatter);
-record NSObject = externalClass(Void);
-record NSOperation = externalClass(NSObject);
-record NSOperationQueue = externalClass(NSObject);
-record NSOrthography = externalClass(NSObject);
-record NSOutputStream = externalClass(NSStream);
-record NSPipe = externalClass(NSObject);
-record NSPointerArray = externalClass(NSObject);
-record NSPointerFunctions = externalClass(NSObject);
-record NSPort = externalClass(NSObject);
-record NSPortCoder = externalClass(NSCoder);
-record NSPortMessage = externalClass(NSObject);
-record NSPortNameServer = externalClass(NSObject);
-record NSPositionalSpecifier = externalClass(NSObject);
-record NSPredicate = externalClass(NSObject);
-record NSProcessInfo = externalClass(NSObject);
-record NSPropertyListSerialization = externalClass(NSObject);
-record NSPropertySpecifier = externalClass(NSScriptObjectSpecifier);
-record NSProtocolChecker = externalClass(NSProxy);
-record NSProxy = externalClass(Void);
-record NSPurgeableData = externalClass(NSMutableData);
-record NSQuitCommand = externalClass(NSScriptCommand);
-record NSRandomSpecifier = externalClass(NSScriptObjectSpecifier);
-record NSRangeSpecifier = externalClass(NSScriptObjectSpecifier);
-record NSRecursiveLock = externalClass(NSObject);
-record NSRelativeSpecifier = externalClass(NSScriptObjectSpecifier);
-record NSRunLoop = externalClass(NSObject);
-record NSScanner = externalClass(NSObject);
-record NSScriptClassDescription = externalClass(NSClassDescription);
-record NSScriptCoercionHandler = externalClass(NSObject);
-record NSScriptCommand = externalClass(NSObject);
-record NSScriptCommandDescription = externalClass(NSObject);
-record NSScriptExecutionContext = externalClass(NSObject);
-record NSScriptObjectSpecifier = externalClass(NSObject);
-record NSScriptSuiteRegistry = externalClass(NSObject);
-record NSScriptWhoseTest = externalClass(NSObject);
-record NSSet = externalClass(NSObject);
-record NSSetCommand = externalClass(NSScriptCommand);
-record NSSimpleCString = externalClass(NSString);
-record NSSocketPort = externalClass(NSPort);
-record NSSocketPortNameServer = externalClass(NSPortNameServer);
-record NSSortDescriptor = externalClass(NSObject);
-record NSSpecifierTest = externalClass(NSScriptWhoseTest);
-record NSSpellServer = externalClass(NSObject);
-record NSStream = externalClass(NSObject);
-record NSString = externalClass(NSObject);
-record NSTask = externalClass(NSObject);
-record NSTextCheckingResult = externalClass(NSObject);
-record NSThread = externalClass(NSObject);
-record NSTimeZone = externalClass(NSObject);
-record NSTimer = externalClass(NSObject);
-record NSURL = externalClass(NSObject);
-record NSURLAuthenticationChallenge = externalClass(NSObject);
-record NSURLCache = externalClass(NSObject);
-record NSURLConnection = externalClass(NSObject);
-record NSURLCredential = externalClass(NSObject);
-record NSURLCredentialStorage = externalClass(NSObject);
-record NSURLDownload = externalClass(NSObject);
-record NSURLHandle = externalClass(NSObject);
-record NSURLProtectionSpace = externalClass(NSObject);
-record NSURLProtocol = externalClass(NSObject);
-record NSURLRequest = externalClass(NSObject);
-record NSURLResponse = externalClass(NSObject);
-record NSUnarchiver = externalClass(NSCoder);
-record NSUndoManager = externalClass(NSObject);
-record NSUniqueIDSpecifier = externalClass(NSScriptObjectSpecifier);
-record NSUserDefaults = externalClass(NSObject);
-record NSValue = externalClass(NSObject);
-record NSValueTransformer = externalClass(NSObject);
-record NSWhoseSpecifier = externalClass(NSScriptObjectSpecifier);
-record NSXMLDTD = externalClass(NSXMLNode);
-record NSXMLDTDNode = externalClass(NSXMLNode);
-record NSXMLDocument = externalClass(NSXMLNode);
-record NSXMLElement = externalClass(NSXMLNode);
-record NSXMLNode = externalClass(NSObject);
-record NSXMLParser = externalClass(NSObject);
+
 overload selector(static #"AMSymbol") = NSString;
 overload selector(static #"DTD") = NSXMLDTD;
 overload selector(static #"DTDKind") = CULong;
@@ -2631,6 +2459,3907 @@ overload selector(static #"zero") = NSDecimalNumber;
 overload selector(static #"zeroSymbol") = NSString;
 overload selector(static #"zone") = Pointer[NSZone];
 
+record NSAffineTransform = externalClass(NSObject,
+    ClassMethods(
+        (#"transform", NSAffineTransform),
+    ),
+    InstanceMethods(
+        (#"initWithTransform:", Id, NSAffineTransform),
+        (#"translateXBy:yBy:", Void, Double, Double),
+        (#"rotateByDegrees:", Void, Double),
+        (#"rotateByRadians:", Void, Double),
+        (#"scaleBy:", Void, Double),
+        (#"scaleXBy:yBy:", Void, Double, Double),
+        (#"invert", Void),
+        (#"appendTransform:", Void, NSAffineTransform),
+        (#"prependTransform:", Void, NSAffineTransform),
+        (#"transformPoint:", NSPoint, NSPoint),
+        (#"transformSize:", NSSize, NSSize),
+        (#"transformStruct", NSAffineTransformStruct),
+        (#"setTransformStruct:", Void, NSAffineTransformStruct),
+    )
+);
+record NSAppleEventDescriptor = externalClass(NSObject,
+    ClassMethods(
+        (#"nullDescriptor", NSAppleEventDescriptor),
+        (#"descriptorWithDescriptorType:bytes:length:", NSAppleEventDescriptor, UInt, RawPointer, CULong),
+        (#"descriptorWithDescriptorType:data:", NSAppleEventDescriptor, UInt, NSData),
+        (#"descriptorWithBoolean:", NSAppleEventDescriptor, CUChar),
+        (#"descriptorWithEnumCode:", NSAppleEventDescriptor, UInt),
+        (#"descriptorWithInt32:", NSAppleEventDescriptor, Int),
+        (#"descriptorWithTypeCode:", NSAppleEventDescriptor, UInt),
+        (#"descriptorWithString:", NSAppleEventDescriptor, NSString),
+        (#"appleEventWithEventClass:eventID:targetDescriptor:returnID:transactionID:", NSAppleEventDescriptor, UInt, UInt, NSAppleEventDescriptor, Short, Int),
+        (#"listDescriptor", NSAppleEventDescriptor),
+        (#"recordDescriptor", NSAppleEventDescriptor),
+    ),
+    InstanceMethods(
+        (#"initWithAEDescNoCopy:", Id, Pointer[AEDesc]),
+        (#"initWithDescriptorType:bytes:length:", Id, UInt, RawPointer, CULong),
+        (#"initWithDescriptorType:data:", Id, UInt, NSData),
+        (#"initWithEventClass:eventID:targetDescriptor:returnID:transactionID:", Id, UInt, UInt, NSAppleEventDescriptor, Short, Int),
+        (#"initListDescriptor", Id),
+        (#"initRecordDescriptor", Id),
+        (#"aeDesc", Pointer[AEDesc]),
+        (#"descriptorType", UInt),
+        (#"data", NSData),
+        (#"booleanValue", CUChar),
+        (#"enumCodeValue", UInt),
+        (#"int32Value", Int),
+        (#"typeCodeValue", UInt),
+        (#"stringValue", NSString),
+        (#"eventClass", UInt),
+        (#"eventID", UInt),
+        (#"returnID", Short),
+        (#"transactionID", Int),
+        (#"setParamDescriptor:forKeyword:", Void, NSAppleEventDescriptor, UInt),
+        (#"paramDescriptorForKeyword:", NSAppleEventDescriptor, UInt),
+        (#"removeParamDescriptorWithKeyword:", Void, UInt),
+        (#"setAttributeDescriptor:forKeyword:", Void, NSAppleEventDescriptor, UInt),
+        (#"attributeDescriptorForKeyword:", NSAppleEventDescriptor, UInt),
+        (#"numberOfItems", CLong),
+        (#"insertDescriptor:atIndex:", Void, NSAppleEventDescriptor, CLong),
+        (#"descriptorAtIndex:", NSAppleEventDescriptor, CLong),
+        (#"removeDescriptorAtIndex:", Void, CLong),
+        (#"setDescriptor:forKeyword:", Void, NSAppleEventDescriptor, UInt),
+        (#"descriptorForKeyword:", NSAppleEventDescriptor, UInt),
+        (#"removeDescriptorWithKeyword:", Void, UInt),
+        (#"keywordForDescriptorAtIndex:", UInt, CLong),
+        (#"coerceToDescriptorType:", NSAppleEventDescriptor, UInt),
+    )
+);
+record NSAppleEventManager = externalClass(NSObject,
+    ClassMethods(
+        (#"sharedAppleEventManager", NSAppleEventManager),
+    ),
+    InstanceMethods(
+        (#"setEventHandler:andSelector:forEventClass:andEventID:", Void, Id, SelectorHandle, UInt, UInt),
+        (#"removeEventHandlerForEventClass:andEventID:", Void, UInt, UInt),
+        (#"dispatchRawAppleEvent:withRawReply:handlerRefCon:", Short, Pointer[AppleEvent], Pointer[AppleEvent], SRefCon),
+        (#"currentAppleEvent", NSAppleEventDescriptor),
+        (#"currentReplyAppleEvent", NSAppleEventDescriptor),
+        (#"suspendCurrentAppleEvent", NSAppleEventManagerSuspensionID),
+        (#"appleEventForSuspensionID:", NSAppleEventDescriptor, NSAppleEventManagerSuspensionID),
+        (#"replyAppleEventForSuspensionID:", NSAppleEventDescriptor, NSAppleEventManagerSuspensionID),
+        (#"setCurrentAppleEventAndReplyEventWithSuspensionID:", Void, NSAppleEventManagerSuspensionID),
+        (#"resumeWithSuspensionID:", Void, NSAppleEventManagerSuspensionID),
+    )
+);
+record NSAppleScript = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithContentsOfURL:error:", Id, NSURL, Pointer[NSDictionary]),
+        (#"initWithSource:", Id, NSString),
+        (#"source", NSString),
+        (#"isCompiled", Bool),
+        (#"compileAndReturnError:", Bool, Pointer[NSDictionary]),
+        (#"executeAndReturnError:", NSAppleEventDescriptor, Pointer[NSDictionary]),
+        (#"executeAppleEvent:error:", NSAppleEventDescriptor, NSAppleEventDescriptor, Pointer[NSDictionary]),
+    )
+);
+record NSArchiver = externalClass(NSCoder,
+    ClassMethods(
+        (#"archivedDataWithRootObject:", NSData, Id),
+        (#"archiveRootObject:toFile:", Bool, Id, NSString),
+    ),
+    InstanceMethods(
+        (#"initForWritingWithMutableData:", Id, NSMutableData),
+        (#"archiverData", NSMutableData),
+        (#"encodeRootObject:", Void, Id),
+        (#"encodeConditionalObject:", Void, Id),
+        (#"encodeClassName:intoClassName:", Void, NSString, NSString),
+        (#"classNameEncodedForTrueClassName:", NSString, NSString),
+        (#"replaceObject:withObject:", Void, Id, Id),
+    )
+);
+record NSArray = externalClass(NSObject,
+    ClassMethods(
+        (#"array", Id),
+        (#"arrayWithObject:", Id, Id),
+        (#"arrayWithObjects:count:", Id, Pointer[Id], CULong),
+        (#"arrayWithObjects:", Id, Id),
+        (#"arrayWithArray:", Id, NSArray),
+        (#"arrayWithContentsOfFile:", Id, NSString),
+        (#"arrayWithContentsOfURL:", Id, NSURL),
+    ),
+    InstanceMethods(
+        (#"count", CULong),
+        (#"objectAtIndex:", Id, CULong),
+        (#"arrayByAddingObject:", NSArray, Id),
+        (#"arrayByAddingObjectsFromArray:", NSArray, NSArray),
+        (#"componentsJoinedByString:", NSString, NSString),
+        (#"containsObject:", Bool, Id),
+        (#"description", NSString),
+        (#"descriptionWithLocale:", NSString, Id),
+        (#"descriptionWithLocale:indent:", NSString, Id, CULong),
+        (#"firstObjectCommonWithArray:", Id, NSArray),
+        (#"getObjects:range:", Void, Pointer[Id], NSRange),
+        (#"indexOfObject:", CULong, Id),
+        (#"indexOfObject:inRange:", CULong, Id, NSRange),
+        (#"indexOfObjectIdenticalTo:", CULong, Id),
+        (#"indexOfObjectIdenticalTo:inRange:", CULong, Id, NSRange),
+        (#"isEqualToArray:", Bool, NSArray),
+        (#"lastObject", Id),
+        (#"objectEnumerator", NSEnumerator),
+        (#"reverseObjectEnumerator", NSEnumerator),
+        (#"sortedArrayHint", NSData),
+        (#"sortedArrayUsingFunction:context:", NSArray, CCodePointer[(Id,Id,RawPointer),(CLong)], RawPointer),
+        (#"sortedArrayUsingFunction:context:hint:", NSArray, CCodePointer[(Id,Id,RawPointer),(CLong)], RawPointer, NSData),
+        (#"sortedArrayUsingSelector:", NSArray, SelectorHandle),
+        (#"subarrayWithRange:", NSArray, NSRange),
+        (#"writeToFile:atomically:", Bool, NSString, Bool),
+        (#"writeToURL:atomically:", Bool, NSURL, Bool),
+        (#"makeObjectsPerformSelector:", Void, SelectorHandle),
+        (#"makeObjectsPerformSelector:withObject:", Void, SelectorHandle, Id),
+        (#"objectsAtIndexes:", NSArray, NSIndexSet),
+        (#"enumerateObjectsUsingBlock:", Void, UnknownType),
+        (#"enumerateObjectsWithOptions:usingBlock:", Void, CULong, UnknownType),
+        (#"enumerateObjectsAtIndexes:options:usingBlock:", Void, NSIndexSet, CULong, UnknownType),
+        (#"indexOfObjectPassingTest:", CULong, UnknownType),
+        (#"indexOfObjectWithOptions:passingTest:", CULong, CULong, UnknownType),
+        (#"indexOfObjectAtIndexes:options:passingTest:", CULong, NSIndexSet, CULong, UnknownType),
+        (#"indexesOfObjectsPassingTest:", NSIndexSet, UnknownType),
+        (#"indexesOfObjectsWithOptions:passingTest:", NSIndexSet, CULong, UnknownType),
+        (#"indexesOfObjectsAtIndexes:options:passingTest:", NSIndexSet, NSIndexSet, CULong, UnknownType),
+        (#"sortedArrayUsingComparator:", NSArray, NSComparator),
+        (#"sortedArrayWithOptions:usingComparator:", NSArray, CULong, NSComparator),
+        (#"indexOfObject:inSortedRange:options:usingComparator:", CULong, Id, NSRange, CULong, NSComparator),
+        (#"initWithObjects:count:", Id, Pointer[Id], CULong),
+        (#"initWithObjects:", Id, Id),
+        (#"initWithArray:", Id, NSArray),
+        (#"initWithArray:copyItems:", Id, NSArray, Bool),
+        (#"initWithContentsOfFile:", Id, NSString),
+        (#"initWithContentsOfURL:", Id, NSURL),
+        (#"getObjects:", Void, Pointer[Id]),
+        (#"pathsMatchingExtensions:", NSArray, NSArray),
+        (#"valueForKey:", Id, NSString),
+        (#"setValue:forKey:", Void, Id, NSString),
+        (#"addObserver:toObjectsAtIndexes:forKeyPath:options:context:", Void, NSObject, NSIndexSet, NSString, CULong, RawPointer),
+        (#"removeObserver:fromObjectsAtIndexes:forKeyPath:", Void, NSObject, NSIndexSet, NSString),
+        (#"addObserver:forKeyPath:options:context:", Void, NSObject, NSString, CULong, RawPointer),
+        (#"removeObserver:forKeyPath:", Void, NSObject, NSString),
+        (#"sortedArrayUsingDescriptors:", NSArray, NSArray),
+        (#"filteredArrayUsingPredicate:", NSArray, NSPredicate),
+    )
+);
+record NSAssertionHandler = externalClass(NSObject,
+    ClassMethods(
+        (#"currentHandler", NSAssertionHandler),
+    ),
+    InstanceMethods(
+        (#"handleFailureInMethod:object:file:lineNumber:description:", Void, SelectorHandle, Id, NSString, CLong, NSString),
+        (#"handleFailureInFunction:file:lineNumber:description:", Void, NSString, NSString, CLong, NSString),
+    )
+);
+record NSAttributedString = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"string", NSString),
+        (#"attributesAtIndex:effectiveRange:", NSDictionary, CULong, NSRangePointer),
+        (#"length", CULong),
+        (#"attribute:atIndex:effectiveRange:", Id, NSString, CULong, NSRangePointer),
+        (#"attributedSubstringFromRange:", NSAttributedString, NSRange),
+        (#"attributesAtIndex:longestEffectiveRange:inRange:", NSDictionary, CULong, NSRangePointer, NSRange),
+        (#"attribute:atIndex:longestEffectiveRange:inRange:", Id, NSString, CULong, NSRangePointer, NSRange),
+        (#"isEqualToAttributedString:", Bool, NSAttributedString),
+        (#"initWithString:", Id, NSString),
+        (#"initWithString:attributes:", Id, NSString, NSDictionary),
+        (#"initWithAttributedString:", Id, NSAttributedString),
+        (#"enumerateAttributesInRange:options:usingBlock:", Void, NSRange, CULong, UnknownType),
+        (#"enumerateAttribute:inRange:options:usingBlock:", Void, NSString, NSRange, CULong, UnknownType),
+    )
+);
+record NSAutoreleasePool = externalClass(NSObject,
+    ClassMethods(
+        (#"addObject:", Void, Id),
+    ),
+    InstanceMethods(
+        (#"addObject:", Void, Id),
+        (#"drain", Void),
+    )
+);
+record NSBlockOperation = externalClass(NSOperation,
+    ClassMethods(
+        (#"blockOperationWithBlock:", Id, UnknownType),
+    ),
+    InstanceMethods(
+        (#"addExecutionBlock:", Void, UnknownType),
+        (#"executionBlocks", NSArray),
+    )
+);
+record NSBundle = externalClass(NSObject,
+    ClassMethods(
+        (#"mainBundle", NSBundle),
+        (#"bundleWithPath:", NSBundle, NSString),
+        (#"bundleWithURL:", NSBundle, NSURL),
+        (#"bundleForClass:", NSBundle, Id),
+        (#"bundleWithIdentifier:", NSBundle, NSString),
+        (#"allBundles", NSArray),
+        (#"allFrameworks", NSArray),
+        (#"URLForResource:withExtension:subdirectory:inBundleWithURL:", NSURL, NSString, NSString, NSString, NSURL),
+        (#"URLsForResourcesWithExtension:subdirectory:inBundleWithURL:", NSArray, NSString, NSString, NSURL),
+        (#"pathForResource:ofType:inDirectory:", NSString, NSString, NSString, NSString),
+        (#"pathsForResourcesOfType:inDirectory:", NSArray, NSString, NSString),
+        (#"preferredLocalizationsFromArray:", NSArray, NSArray),
+        (#"preferredLocalizationsFromArray:forPreferences:", NSArray, NSArray, NSArray),
+    ),
+    InstanceMethods(
+        (#"initWithPath:", Id, NSString),
+        (#"initWithURL:", Id, NSURL),
+        (#"load", Bool),
+        (#"isLoaded", Bool),
+        (#"unload", Bool),
+        (#"preflightAndReturnError:", Bool, Pointer[NSError]),
+        (#"loadAndReturnError:", Bool, Pointer[NSError]),
+        (#"bundleURL", NSURL),
+        (#"resourceURL", NSURL),
+        (#"executableURL", NSURL),
+        (#"URLForAuxiliaryExecutable:", NSURL, NSString),
+        (#"privateFrameworksURL", NSURL),
+        (#"sharedFrameworksURL", NSURL),
+        (#"sharedSupportURL", NSURL),
+        (#"builtInPlugInsURL", NSURL),
+        (#"bundlePath", NSString),
+        (#"resourcePath", NSString),
+        (#"executablePath", NSString),
+        (#"pathForAuxiliaryExecutable:", NSString, NSString),
+        (#"privateFrameworksPath", NSString),
+        (#"sharedFrameworksPath", NSString),
+        (#"sharedSupportPath", NSString),
+        (#"builtInPlugInsPath", NSString),
+        (#"URLForResource:withExtension:", NSURL, NSString, NSString),
+        (#"URLForResource:withExtension:subdirectory:", NSURL, NSString, NSString, NSString),
+        (#"URLForResource:withExtension:subdirectory:localization:", NSURL, NSString, NSString, NSString, NSString),
+        (#"URLsForResourcesWithExtension:subdirectory:", NSArray, NSString, NSString),
+        (#"URLsForResourcesWithExtension:subdirectory:localization:", NSArray, NSString, NSString, NSString),
+        (#"pathForResource:ofType:", NSString, NSString, NSString),
+        (#"pathForResource:ofType:inDirectory:", NSString, NSString, NSString, NSString),
+        (#"pathForResource:ofType:inDirectory:forLocalization:", NSString, NSString, NSString, NSString, NSString),
+        (#"pathsForResourcesOfType:inDirectory:", NSArray, NSString, NSString),
+        (#"pathsForResourcesOfType:inDirectory:forLocalization:", NSArray, NSString, NSString, NSString),
+        (#"localizedStringForKey:value:table:", NSString, NSString, NSString, NSString),
+        (#"bundleIdentifier", NSString),
+        (#"infoDictionary", NSDictionary),
+        (#"localizedInfoDictionary", NSDictionary),
+        (#"objectForInfoDictionaryKey:", Id, NSString),
+        (#"classNamed:", Id, NSString),
+        (#"principalClass", Id),
+        (#"localizations", NSArray),
+        (#"preferredLocalizations", NSArray),
+        (#"developmentLocalization", NSString),
+        (#"executableArchitectures", NSArray),
+    )
+);
+record NSCache = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"setName:", Void, NSString),
+        (#"name", NSString),
+        (#"setDelegate:", Void, Id),
+        (#"delegate", Id),
+        (#"objectForKey:", Id, Id),
+        (#"setObject:forKey:", Void, Id, Id),
+        (#"setObject:forKey:cost:", Void, Id, Id, CULong),
+        (#"removeObjectForKey:", Void, Id),
+        (#"removeAllObjects", Void),
+        (#"setTotalCostLimit:", Void, CULong),
+        (#"totalCostLimit", CULong),
+        (#"setCountLimit:", Void, CULong),
+        (#"countLimit", CULong),
+        (#"evictsObjectsWithDiscardedContent", Bool),
+        (#"setEvictsObjectsWithDiscardedContent:", Void, Bool),
+    )
+);
+record NSCachedURLResponse = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithResponse:data:", Id, NSURLResponse, NSData),
+        (#"initWithResponse:data:userInfo:storagePolicy:", Id, NSURLResponse, NSData, NSDictionary, CULong),
+        (#"response", NSURLResponse),
+        (#"data", NSData),
+        (#"userInfo", NSDictionary),
+        (#"storagePolicy", CULong),
+    )
+);
+record NSCalendar = externalClass(NSObject,
+    ClassMethods(
+        (#"currentCalendar", Id),
+        (#"autoupdatingCurrentCalendar", Id),
+    ),
+    InstanceMethods(
+        (#"initWithCalendarIdentifier:", Id, NSString),
+        (#"calendarIdentifier", NSString),
+        (#"setLocale:", Void, NSLocale),
+        (#"locale", NSLocale),
+        (#"setTimeZone:", Void, NSTimeZone),
+        (#"timeZone", NSTimeZone),
+        (#"setFirstWeekday:", Void, CULong),
+        (#"firstWeekday", CULong),
+        (#"setMinimumDaysInFirstWeek:", Void, CULong),
+        (#"minimumDaysInFirstWeek", CULong),
+        (#"minimumRangeOfUnit:", NSRange, CULong),
+        (#"maximumRangeOfUnit:", NSRange, CULong),
+        (#"rangeOfUnit:inUnit:forDate:", NSRange, CULong, CULong, NSDate),
+        (#"ordinalityOfUnit:inUnit:forDate:", CULong, CULong, CULong, NSDate),
+        (#"rangeOfUnit:startDate:interval:forDate:", Bool, CULong, Pointer[NSDate], Pointer[Double], NSDate),
+        (#"dateFromComponents:", NSDate, NSDateComponents),
+        (#"components:fromDate:", NSDateComponents, CULong, NSDate),
+        (#"dateByAddingComponents:toDate:options:", NSDate, NSDateComponents, NSDate, CULong),
+        (#"components:fromDate:toDate:options:", NSDateComponents, CULong, NSDate, NSDate, CULong),
+    )
+);
+record NSCalendarDate = externalClass(NSDate,
+    ClassMethods(
+        (#"calendarDate", Id),
+        (#"dateWithString:calendarFormat:locale:", Id, NSString, NSString, Id),
+        (#"dateWithString:calendarFormat:", Id, NSString, NSString),
+        (#"dateWithYear:month:day:hour:minute:second:timeZone:", Id, CLong, CULong, CULong, CULong, CULong, CULong, NSTimeZone),
+    ),
+    InstanceMethods(
+        (#"dateByAddingYears:months:days:hours:minutes:seconds:", NSCalendarDate, CLong, CLong, CLong, CLong, CLong, CLong),
+        (#"dayOfCommonEra", CLong),
+        (#"dayOfMonth", CLong),
+        (#"dayOfWeek", CLong),
+        (#"dayOfYear", CLong),
+        (#"hourOfDay", CLong),
+        (#"minuteOfHour", CLong),
+        (#"monthOfYear", CLong),
+        (#"secondOfMinute", CLong),
+        (#"yearOfCommonEra", CLong),
+        (#"calendarFormat", NSString),
+        (#"descriptionWithCalendarFormat:locale:", NSString, NSString, Id),
+        (#"descriptionWithCalendarFormat:", NSString, NSString),
+        (#"descriptionWithLocale:", NSString, Id),
+        (#"timeZone", NSTimeZone),
+        (#"initWithString:calendarFormat:locale:", Id, NSString, NSString, Id),
+        (#"initWithString:calendarFormat:", Id, NSString, NSString),
+        (#"initWithString:", Id, NSString),
+        (#"initWithYear:month:day:hour:minute:second:timeZone:", Id, CLong, CULong, CULong, CULong, CULong, CULong, NSTimeZone),
+        (#"setCalendarFormat:", Void, NSString),
+        (#"setTimeZone:", Void, NSTimeZone),
+        (#"years:months:days:hours:minutes:seconds:sinceDate:", Void, Pointer[CLong], Pointer[CLong], Pointer[CLong], Pointer[CLong], Pointer[CLong], Pointer[CLong], NSCalendarDate),
+    )
+);
+record NSCharacterSet = externalClass(NSObject,
+    ClassMethods(
+        (#"controlCharacterSet", Id),
+        (#"whitespaceCharacterSet", Id),
+        (#"whitespaceAndNewlineCharacterSet", Id),
+        (#"decimalDigitCharacterSet", Id),
+        (#"letterCharacterSet", Id),
+        (#"lowercaseLetterCharacterSet", Id),
+        (#"uppercaseLetterCharacterSet", Id),
+        (#"nonBaseCharacterSet", Id),
+        (#"alphanumericCharacterSet", Id),
+        (#"decomposableCharacterSet", Id),
+        (#"illegalCharacterSet", Id),
+        (#"punctuationCharacterSet", Id),
+        (#"capitalizedLetterCharacterSet", Id),
+        (#"symbolCharacterSet", Id),
+        (#"newlineCharacterSet", Id),
+        (#"characterSetWithRange:", Id, NSRange),
+        (#"characterSetWithCharactersInString:", Id, NSString),
+        (#"characterSetWithBitmapRepresentation:", Id, NSData),
+        (#"characterSetWithContentsOfFile:", Id, NSString),
+    ),
+    InstanceMethods(
+        (#"characterIsMember:", Bool, UShort),
+        (#"bitmapRepresentation", NSData),
+        (#"invertedSet", NSCharacterSet),
+        (#"longCharacterIsMember:", Bool, UInt),
+        (#"isSupersetOfSet:", Bool, NSCharacterSet),
+        (#"hasMemberInPlane:", Bool, CUChar),
+    )
+);
+record NSClassDescription = externalClass(NSObject,
+    ClassMethods(
+        (#"registerClassDescription:forClass:", Void, NSClassDescription, Id),
+        (#"invalidateClassDescriptionCache", Void),
+        (#"classDescriptionForClass:", NSClassDescription, Id),
+    ),
+    InstanceMethods(
+        (#"attributeKeys", NSArray),
+        (#"toOneRelationshipKeys", NSArray),
+        (#"toManyRelationshipKeys", NSArray),
+        (#"inverseForRelationshipKey:", NSString, NSString),
+    )
+);
+record NSCloneCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"setReceiversSpecifier:", Void, NSScriptObjectSpecifier),
+        (#"keySpecifier", NSScriptObjectSpecifier),
+    )
+);
+record NSCloseCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"saveOptions", CULong),
+    )
+);
+record NSCoder = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"encodeValueOfObjCType:at:", Void, Pointer[CChar], RawPointer),
+        (#"encodeDataObject:", Void, NSData),
+        (#"decodeValueOfObjCType:at:", Void, Pointer[CChar], RawPointer),
+        (#"decodeDataObject", NSData),
+        (#"versionForClassName:", CLong, NSString),
+        (#"encodeObject:", Void, Id),
+        (#"encodeRootObject:", Void, Id),
+        (#"encodeBycopyObject:", Void, Id),
+        (#"encodeByrefObject:", Void, Id),
+        (#"encodeConditionalObject:", Void, Id),
+        (#"encodeValuesOfObjCTypes:", Void, Pointer[CChar]),
+        (#"encodeArrayOfObjCType:count:at:", Void, Pointer[CChar], CULong, RawPointer),
+        (#"encodeBytes:length:", Void, RawPointer, CULong),
+        (#"decodeObject", Id),
+        (#"decodeValuesOfObjCTypes:", Void, Pointer[CChar]),
+        (#"decodeArrayOfObjCType:count:at:", Void, Pointer[CChar], CULong, RawPointer),
+        (#"decodeBytesWithReturnedLength:", RawPointer, Pointer[CULong]),
+        (#"encodePropertyList:", Void, Id),
+        (#"decodePropertyList", Id),
+        (#"setObjectZone:", Void, Pointer[NSZone]),
+        (#"objectZone", Pointer[NSZone]),
+        (#"systemVersion", UInt),
+        (#"allowsKeyedCoding", Bool),
+        (#"encodeObject:forKey:", Void, Id, NSString),
+        (#"encodeConditionalObject:forKey:", Void, Id, NSString),
+        (#"encodeBool:forKey:", Void, Bool, NSString),
+        (#"encodeInt:forKey:", Void, Int, NSString),
+        (#"encodeInt32:forKey:", Void, Int, NSString),
+        (#"encodeInt64:forKey:", Void, Int64, NSString),
+        (#"encodeFloat:forKey:", Void, Float, NSString),
+        (#"encodeDouble:forKey:", Void, Double, NSString),
+        (#"encodeBytes:length:forKey:", Void, Pointer[CUChar], CULong, NSString),
+        (#"containsValueForKey:", Bool, NSString),
+        (#"decodeObjectForKey:", Id, NSString),
+        (#"decodeBoolForKey:", Bool, NSString),
+        (#"decodeIntForKey:", Int, NSString),
+        (#"decodeInt32ForKey:", Int, NSString),
+        (#"decodeInt64ForKey:", Int64, NSString),
+        (#"decodeFloatForKey:", Float, NSString),
+        (#"decodeDoubleForKey:", Double, NSString),
+        (#"decodeBytesForKey:returnedLength:", Pointer[CUChar], NSString, Pointer[CULong]),
+        (#"encodeInteger:forKey:", Void, CLong, NSString),
+        (#"decodeIntegerForKey:", CLong, NSString),
+        (#"encodeNXObject:", Void, Id),
+        (#"decodeNXObject", Id),
+        (#"encodePoint:", Void, NSPoint),
+        (#"decodePoint", NSPoint),
+        (#"encodeSize:", Void, NSSize),
+        (#"decodeSize", NSSize),
+        (#"encodeRect:", Void, NSRect),
+        (#"decodeRect", NSRect),
+        (#"encodePoint:forKey:", Void, NSPoint, NSString),
+        (#"encodeSize:forKey:", Void, NSSize, NSString),
+        (#"encodeRect:forKey:", Void, NSRect, NSString),
+        (#"decodePointForKey:", NSPoint, NSString),
+        (#"decodeSizeForKey:", NSSize, NSString),
+        (#"decodeRectForKey:", NSRect, NSString),
+    )
+);
+record NSComparisonPredicate = externalClass(NSPredicate,
+    ClassMethods(
+        (#"predicateWithLeftExpression:rightExpression:modifier:type:options:", NSPredicate, NSExpression, NSExpression, CULong, CULong, CULong),
+        (#"predicateWithLeftExpression:rightExpression:customSelector:", NSPredicate, NSExpression, NSExpression, SelectorHandle),
+    ),
+    InstanceMethods(
+        (#"initWithLeftExpression:rightExpression:modifier:type:options:", Id, NSExpression, NSExpression, CULong, CULong, CULong),
+        (#"initWithLeftExpression:rightExpression:customSelector:", Id, NSExpression, NSExpression, SelectorHandle),
+        (#"predicateOperatorType", CULong),
+        (#"comparisonPredicateModifier", CULong),
+        (#"leftExpression", NSExpression),
+        (#"rightExpression", NSExpression),
+        (#"customSelector", SelectorHandle),
+        (#"options", CULong),
+    )
+);
+record NSCompoundPredicate = externalClass(NSPredicate,
+    ClassMethods(
+        (#"andPredicateWithSubpredicates:", NSPredicate, NSArray),
+        (#"orPredicateWithSubpredicates:", NSPredicate, NSArray),
+        (#"notPredicateWithSubpredicate:", NSPredicate, NSPredicate),
+    ),
+    InstanceMethods(
+        (#"initWithType:subpredicates:", Id, CULong, NSArray),
+        (#"compoundPredicateType", CULong),
+        (#"subpredicates", NSArray),
+    )
+);
+record NSCondition = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"wait", Void),
+        (#"waitUntilDate:", Bool, NSDate),
+        (#"signal", Void),
+        (#"broadcast", Void),
+        (#"setName:", Void, NSString),
+        (#"name", NSString),
+    )
+);
+record NSConditionLock = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithCondition:", Id, CLong),
+        (#"condition", CLong),
+        (#"lockWhenCondition:", Void, CLong),
+        (#"tryLock", Bool),
+        (#"tryLockWhenCondition:", Bool, CLong),
+        (#"unlockWithCondition:", Void, CLong),
+        (#"lockBeforeDate:", Bool, NSDate),
+        (#"lockWhenCondition:beforeDate:", Bool, CLong, NSDate),
+        (#"setName:", Void, NSString),
+        (#"name", NSString),
+    )
+);
+record NSConnection = externalClass(NSObject,
+    ClassMethods(
+        (#"allConnections", NSArray),
+        (#"defaultConnection", NSConnection),
+        (#"connectionWithRegisteredName:host:", Id, NSString, NSString),
+        (#"connectionWithRegisteredName:host:usingNameServer:", Id, NSString, NSString, NSPortNameServer),
+        (#"rootProxyForConnectionWithRegisteredName:host:", NSDistantObject, NSString, NSString),
+        (#"rootProxyForConnectionWithRegisteredName:host:usingNameServer:", NSDistantObject, NSString, NSString, NSPortNameServer),
+        (#"serviceConnectionWithName:rootObject:usingNameServer:", Id, NSString, Id, NSPortNameServer),
+        (#"serviceConnectionWithName:rootObject:", Id, NSString, Id),
+        (#"connectionWithReceivePort:sendPort:", Id, NSPort, NSPort),
+        (#"currentConversation", Id),
+    ),
+    InstanceMethods(
+        (#"statistics", NSDictionary),
+        (#"setRequestTimeout:", Void, Double),
+        (#"requestTimeout", Double),
+        (#"setReplyTimeout:", Void, Double),
+        (#"replyTimeout", Double),
+        (#"setRootObject:", Void, Id),
+        (#"rootObject", Id),
+        (#"rootProxy", NSDistantObject),
+        (#"setDelegate:", Void, Id),
+        (#"delegate", Id),
+        (#"setIndependentConversationQueueing:", Void, Bool),
+        (#"independentConversationQueueing", Bool),
+        (#"isValid", Bool),
+        (#"invalidate", Void),
+        (#"addRequestMode:", Void, NSString),
+        (#"removeRequestMode:", Void, NSString),
+        (#"requestModes", NSArray),
+        (#"registerName:", Bool, NSString),
+        (#"registerName:withNameServer:", Bool, NSString, NSPortNameServer),
+        (#"initWithReceivePort:sendPort:", Id, NSPort, NSPort),
+        (#"sendPort", NSPort),
+        (#"receivePort", NSPort),
+        (#"enableMultipleThreads", Void),
+        (#"multipleThreadsEnabled", Bool),
+        (#"addRunLoop:", Void, NSRunLoop),
+        (#"removeRunLoop:", Void, NSRunLoop),
+        (#"runInNewThread", Void),
+        (#"remoteObjects", NSArray),
+        (#"localObjects", NSArray),
+    )
+);
+record NSConstantString = externalClass(NSSimpleCString,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSCountCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSCountedSet = externalClass(NSMutableSet,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithCapacity:", Id, CULong),
+        (#"initWithArray:", Id, NSArray),
+        (#"initWithSet:", Id, NSSet),
+        (#"countForObject:", CULong, Id),
+        (#"objectEnumerator", NSEnumerator),
+        (#"addObject:", Void, Id),
+        (#"removeObject:", Void, Id),
+    )
+);
+record NSCreateCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"createClassDescription", NSScriptClassDescription),
+        (#"resolvedKeyDictionary", NSDictionary),
+    )
+);
+record NSData = externalClass(NSObject,
+    ClassMethods(
+        (#"data", Id),
+        (#"dataWithBytes:length:", Id, RawPointer, CULong),
+        (#"dataWithBytesNoCopy:length:", Id, RawPointer, CULong),
+        (#"dataWithBytesNoCopy:length:freeWhenDone:", Id, RawPointer, CULong, Bool),
+        (#"dataWithContentsOfFile:options:error:", Id, NSString, CULong, Pointer[NSError]),
+        (#"dataWithContentsOfURL:options:error:", Id, NSURL, CULong, Pointer[NSError]),
+        (#"dataWithContentsOfFile:", Id, NSString),
+        (#"dataWithContentsOfURL:", Id, NSURL),
+        (#"dataWithContentsOfMappedFile:", Id, NSString),
+        (#"dataWithData:", Id, NSData),
+    ),
+    InstanceMethods(
+        (#"length", CULong),
+        (#"bytes", RawPointer),
+        (#"description", NSString),
+        (#"getBytes:length:", Void, RawPointer, CULong),
+        (#"getBytes:range:", Void, RawPointer, NSRange),
+        (#"isEqualToData:", Bool, NSData),
+        (#"subdataWithRange:", NSData, NSRange),
+        (#"writeToFile:atomically:", Bool, NSString, Bool),
+        (#"writeToURL:atomically:", Bool, NSURL, Bool),
+        (#"writeToFile:options:error:", Bool, NSString, CULong, Pointer[NSError]),
+        (#"writeToURL:options:error:", Bool, NSURL, CULong, Pointer[NSError]),
+        (#"rangeOfData:options:range:", NSRange, NSData, CULong, NSRange),
+        (#"initWithBytes:length:", Id, RawPointer, CULong),
+        (#"initWithBytesNoCopy:length:", Id, RawPointer, CULong),
+        (#"initWithBytesNoCopy:length:freeWhenDone:", Id, RawPointer, CULong, Bool),
+        (#"initWithContentsOfFile:options:error:", Id, NSString, CULong, Pointer[NSError]),
+        (#"initWithContentsOfURL:options:error:", Id, NSURL, CULong, Pointer[NSError]),
+        (#"initWithContentsOfFile:", Id, NSString),
+        (#"initWithContentsOfURL:", Id, NSURL),
+        (#"initWithContentsOfMappedFile:", Id, NSString),
+        (#"initWithData:", Id, NSData),
+        (#"getBytes:", Void, RawPointer),
+    )
+);
+record NSDate = externalClass(NSObject,
+    ClassMethods(
+        (#"timeIntervalSinceReferenceDate", Double),
+        (#"date", Id),
+        (#"dateWithTimeIntervalSinceNow:", Id, Double),
+        (#"dateWithTimeIntervalSinceReferenceDate:", Id, Double),
+        (#"dateWithTimeIntervalSince1970:", Id, Double),
+        (#"dateWithTimeInterval:sinceDate:", Id, Double, NSDate),
+        (#"distantFuture", Id),
+        (#"distantPast", Id),
+        (#"dateWithNaturalLanguageString:locale:", Id, NSString, Id),
+        (#"dateWithNaturalLanguageString:", Id, NSString),
+        (#"dateWithString:", Id, NSString),
+    ),
+    InstanceMethods(
+        (#"timeIntervalSinceReferenceDate", Double),
+        (#"timeIntervalSinceDate:", Double, NSDate),
+        (#"timeIntervalSinceNow", Double),
+        (#"timeIntervalSince1970", Double),
+        (#"addTimeInterval:", Id, Double),
+        (#"dateByAddingTimeInterval:", Id, Double),
+        (#"earlierDate:", NSDate, NSDate),
+        (#"laterDate:", NSDate, NSDate),
+        (#"compare:", CLong, NSDate),
+        (#"isEqualToDate:", Bool, NSDate),
+        (#"description", NSString),
+        (#"descriptionWithLocale:", NSString, Id),
+        (#"init", Id),
+        (#"initWithTimeIntervalSinceNow:", Id, Double),
+        (#"initWithTimeIntervalSinceReferenceDate:", Id, Double),
+        (#"initWithTimeIntervalSince1970:", Id, Double),
+        (#"initWithTimeInterval:sinceDate:", Id, Double, NSDate),
+        (#"dateWithCalendarFormat:timeZone:", NSCalendarDate, NSString, NSTimeZone),
+        (#"descriptionWithCalendarFormat:timeZone:locale:", NSString, NSString, NSTimeZone, Id),
+        (#"initWithString:", Id, NSString),
+    )
+);
+record NSDateComponents = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"era", CLong),
+        (#"year", CLong),
+        (#"month", CLong),
+        (#"day", CLong),
+        (#"hour", CLong),
+        (#"minute", CLong),
+        (#"second", CLong),
+        (#"week", CLong),
+        (#"weekday", CLong),
+        (#"weekdayOrdinal", CLong),
+        (#"quarter", CLong),
+        (#"setEra:", Void, CLong),
+        (#"setYear:", Void, CLong),
+        (#"setMonth:", Void, CLong),
+        (#"setDay:", Void, CLong),
+        (#"setHour:", Void, CLong),
+        (#"setMinute:", Void, CLong),
+        (#"setSecond:", Void, CLong),
+        (#"setWeek:", Void, CLong),
+        (#"setWeekday:", Void, CLong),
+        (#"setWeekdayOrdinal:", Void, CLong),
+        (#"setQuarter:", Void, CLong),
+    )
+);
+record NSDateFormatter = externalClass(NSFormatter,
+    ClassMethods(
+        (#"localizedStringFromDate:dateStyle:timeStyle:", NSString, NSDate, CULong, CULong),
+        (#"dateFormatFromTemplate:options:locale:", NSString, NSString, CULong, NSLocale),
+        (#"defaultFormatterBehavior", CULong),
+        (#"setDefaultFormatterBehavior:", Void, CULong),
+    ),
+    InstanceMethods(
+        (#"getObjectValue:forString:range:error:", Bool, Pointer[Id], NSString, Pointer[NSRange], Pointer[NSError]),
+        (#"stringFromDate:", NSString, NSDate),
+        (#"dateFromString:", NSDate, NSString),
+        (#"dateFormat", NSString),
+        (#"dateStyle", CULong),
+        (#"setDateStyle:", Void, CULong),
+        (#"timeStyle", CULong),
+        (#"setTimeStyle:", Void, CULong),
+        (#"locale", NSLocale),
+        (#"setLocale:", Void, NSLocale),
+        (#"generatesCalendarDates", Bool),
+        (#"setGeneratesCalendarDates:", Void, Bool),
+        (#"formatterBehavior", CULong),
+        (#"setFormatterBehavior:", Void, CULong),
+        (#"setDateFormat:", Void, NSString),
+        (#"timeZone", NSTimeZone),
+        (#"setTimeZone:", Void, NSTimeZone),
+        (#"calendar", NSCalendar),
+        (#"setCalendar:", Void, NSCalendar),
+        (#"isLenient", Bool),
+        (#"setLenient:", Void, Bool),
+        (#"twoDigitStartDate", NSDate),
+        (#"setTwoDigitStartDate:", Void, NSDate),
+        (#"defaultDate", NSDate),
+        (#"setDefaultDate:", Void, NSDate),
+        (#"eraSymbols", NSArray),
+        (#"setEraSymbols:", Void, NSArray),
+        (#"monthSymbols", NSArray),
+        (#"setMonthSymbols:", Void, NSArray),
+        (#"shortMonthSymbols", NSArray),
+        (#"setShortMonthSymbols:", Void, NSArray),
+        (#"weekdaySymbols", NSArray),
+        (#"setWeekdaySymbols:", Void, NSArray),
+        (#"shortWeekdaySymbols", NSArray),
+        (#"setShortWeekdaySymbols:", Void, NSArray),
+        (#"AMSymbol", NSString),
+        (#"setAMSymbol:", Void, NSString),
+        (#"PMSymbol", NSString),
+        (#"setPMSymbol:", Void, NSString),
+        (#"longEraSymbols", NSArray),
+        (#"setLongEraSymbols:", Void, NSArray),
+        (#"veryShortMonthSymbols", NSArray),
+        (#"setVeryShortMonthSymbols:", Void, NSArray),
+        (#"standaloneMonthSymbols", NSArray),
+        (#"setStandaloneMonthSymbols:", Void, NSArray),
+        (#"shortStandaloneMonthSymbols", NSArray),
+        (#"setShortStandaloneMonthSymbols:", Void, NSArray),
+        (#"veryShortStandaloneMonthSymbols", NSArray),
+        (#"setVeryShortStandaloneMonthSymbols:", Void, NSArray),
+        (#"veryShortWeekdaySymbols", NSArray),
+        (#"setVeryShortWeekdaySymbols:", Void, NSArray),
+        (#"standaloneWeekdaySymbols", NSArray),
+        (#"setStandaloneWeekdaySymbols:", Void, NSArray),
+        (#"shortStandaloneWeekdaySymbols", NSArray),
+        (#"setShortStandaloneWeekdaySymbols:", Void, NSArray),
+        (#"veryShortStandaloneWeekdaySymbols", NSArray),
+        (#"setVeryShortStandaloneWeekdaySymbols:", Void, NSArray),
+        (#"quarterSymbols", NSArray),
+        (#"setQuarterSymbols:", Void, NSArray),
+        (#"shortQuarterSymbols", NSArray),
+        (#"setShortQuarterSymbols:", Void, NSArray),
+        (#"standaloneQuarterSymbols", NSArray),
+        (#"setStandaloneQuarterSymbols:", Void, NSArray),
+        (#"shortStandaloneQuarterSymbols", NSArray),
+        (#"setShortStandaloneQuarterSymbols:", Void, NSArray),
+        (#"gregorianStartDate", NSDate),
+        (#"setGregorianStartDate:", Void, NSDate),
+        (#"doesRelativeDateFormatting", Bool),
+        (#"setDoesRelativeDateFormatting:", Void, Bool),
+        (#"initWithDateFormat:allowNaturalLanguage:", Id, NSString, Bool),
+        (#"allowsNaturalLanguage", Bool),
+    )
+);
+record NSDecimalNumber = externalClass(NSNumber,
+    ClassMethods(
+        (#"decimalNumberWithMantissa:exponent:isNegative:", NSDecimalNumber, UInt64, Short, Bool),
+        (#"decimalNumberWithDecimal:", NSDecimalNumber, NSDecimal),
+        (#"decimalNumberWithString:", NSDecimalNumber, NSString),
+        (#"decimalNumberWithString:locale:", NSDecimalNumber, NSString, Id),
+        (#"zero", NSDecimalNumber),
+        (#"one", NSDecimalNumber),
+        (#"minimumDecimalNumber", NSDecimalNumber),
+        (#"maximumDecimalNumber", NSDecimalNumber),
+        (#"notANumber", NSDecimalNumber),
+        (#"setDefaultBehavior:", Void, Id),
+        (#"defaultBehavior", Id),
+    ),
+    InstanceMethods(
+        (#"initWithMantissa:exponent:isNegative:", Id, UInt64, Short, Bool),
+        (#"initWithDecimal:", Id, NSDecimal),
+        (#"initWithString:", Id, NSString),
+        (#"initWithString:locale:", Id, NSString, Id),
+        (#"descriptionWithLocale:", NSString, Id),
+        (#"decimalValue", NSDecimal),
+        (#"decimalNumberByAdding:", NSDecimalNumber, NSDecimalNumber),
+        (#"decimalNumberByAdding:withBehavior:", NSDecimalNumber, NSDecimalNumber, Id),
+        (#"decimalNumberBySubtracting:", NSDecimalNumber, NSDecimalNumber),
+        (#"decimalNumberBySubtracting:withBehavior:", NSDecimalNumber, NSDecimalNumber, Id),
+        (#"decimalNumberByMultiplyingBy:", NSDecimalNumber, NSDecimalNumber),
+        (#"decimalNumberByMultiplyingBy:withBehavior:", NSDecimalNumber, NSDecimalNumber, Id),
+        (#"decimalNumberByDividingBy:", NSDecimalNumber, NSDecimalNumber),
+        (#"decimalNumberByDividingBy:withBehavior:", NSDecimalNumber, NSDecimalNumber, Id),
+        (#"decimalNumberByRaisingToPower:", NSDecimalNumber, CULong),
+        (#"decimalNumberByRaisingToPower:withBehavior:", NSDecimalNumber, CULong, Id),
+        (#"decimalNumberByMultiplyingByPowerOf10:", NSDecimalNumber, Short),
+        (#"decimalNumberByMultiplyingByPowerOf10:withBehavior:", NSDecimalNumber, Short, Id),
+        (#"decimalNumberByRoundingAccordingToBehavior:", NSDecimalNumber, Id),
+        (#"compare:", CLong, NSNumber),
+        (#"objCType", Pointer[CChar]),
+        (#"doubleValue", Double),
+    )
+);
+record NSDecimalNumberHandler = externalClass(NSObject,
+    ClassMethods(
+        (#"defaultDecimalNumberHandler", Id),
+        (#"decimalNumberHandlerWithRoundingMode:scale:raiseOnExactness:raiseOnOverflow:raiseOnUnderflow:raiseOnDivideByZero:", Id, CULong, Short, Bool, Bool, Bool, Bool),
+    ),
+    InstanceMethods(
+        (#"initWithRoundingMode:scale:raiseOnExactness:raiseOnOverflow:raiseOnUnderflow:raiseOnDivideByZero:", Id, CULong, Short, Bool, Bool, Bool, Bool),
+    )
+);
+record NSDeleteCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"setReceiversSpecifier:", Void, NSScriptObjectSpecifier),
+        (#"keySpecifier", NSScriptObjectSpecifier),
+    )
+);
+record NSDictionary = externalClass(NSObject,
+    ClassMethods(
+        (#"dictionary", Id),
+        (#"dictionaryWithObject:forKey:", Id, Id, Id),
+        (#"dictionaryWithObjects:forKeys:count:", Id, Pointer[Id], Pointer[Id], CULong),
+        (#"dictionaryWithObjectsAndKeys:", Id, Id),
+        (#"dictionaryWithDictionary:", Id, NSDictionary),
+        (#"dictionaryWithObjects:forKeys:", Id, NSArray, NSArray),
+        (#"dictionaryWithContentsOfFile:", Id, NSString),
+        (#"dictionaryWithContentsOfURL:", Id, NSURL),
+    ),
+    InstanceMethods(
+        (#"count", CULong),
+        (#"objectForKey:", Id, Id),
+        (#"keyEnumerator", NSEnumerator),
+        (#"allKeys", NSArray),
+        (#"allKeysForObject:", NSArray, Id),
+        (#"allValues", NSArray),
+        (#"description", NSString),
+        (#"descriptionInStringsFileFormat", NSString),
+        (#"descriptionWithLocale:", NSString, Id),
+        (#"descriptionWithLocale:indent:", NSString, Id, CULong),
+        (#"isEqualToDictionary:", Bool, NSDictionary),
+        (#"objectEnumerator", NSEnumerator),
+        (#"objectsForKeys:notFoundMarker:", NSArray, NSArray, Id),
+        (#"writeToFile:atomically:", Bool, NSString, Bool),
+        (#"writeToURL:atomically:", Bool, NSURL, Bool),
+        (#"keysSortedByValueUsingSelector:", NSArray, SelectorHandle),
+        (#"getObjects:andKeys:", Void, Pointer[Id], Pointer[Id]),
+        (#"enumerateKeysAndObjectsUsingBlock:", Void, UnknownType),
+        (#"enumerateKeysAndObjectsWithOptions:usingBlock:", Void, CULong, UnknownType),
+        (#"keysSortedByValueUsingComparator:", NSArray, NSComparator),
+        (#"keysSortedByValueWithOptions:usingComparator:", NSArray, CULong, NSComparator),
+        (#"keysOfEntriesPassingTest:", NSSet, UnknownType),
+        (#"keysOfEntriesWithOptions:passingTest:", NSSet, CULong, UnknownType),
+        (#"initWithObjects:forKeys:count:", Id, Pointer[Id], Pointer[Id], CULong),
+        (#"initWithObjectsAndKeys:", Id, Id),
+        (#"initWithDictionary:", Id, NSDictionary),
+        (#"initWithDictionary:copyItems:", Id, NSDictionary, Bool),
+        (#"initWithObjects:forKeys:", Id, NSArray, NSArray),
+        (#"initWithContentsOfFile:", Id, NSString),
+        (#"initWithContentsOfURL:", Id, NSURL),
+        (#"fileSize", UInt64),
+        (#"fileModificationDate", NSDate),
+        (#"fileType", NSString),
+        (#"filePosixPermissions", CULong),
+        (#"fileOwnerAccountName", NSString),
+        (#"fileGroupOwnerAccountName", NSString),
+        (#"fileSystemNumber", CLong),
+        (#"fileSystemFileNumber", CULong),
+        (#"fileExtensionHidden", Bool),
+        (#"fileHFSCreatorCode", UInt),
+        (#"fileHFSTypeCode", UInt),
+        (#"fileIsImmutable", Bool),
+        (#"fileIsAppendOnly", Bool),
+        (#"fileCreationDate", NSDate),
+        (#"fileOwnerAccountID", NSNumber),
+        (#"fileGroupOwnerAccountID", NSNumber),
+        (#"valueForKey:", Id, NSString),
+    )
+);
+record NSDirectoryEnumerator = externalClass(NSEnumerator,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"fileAttributes", NSDictionary),
+        (#"directoryAttributes", NSDictionary),
+        (#"skipDescendents", Void),
+        (#"level", CULong),
+        (#"skipDescendants", Void),
+    )
+);
+record NSDistantObject = externalClass(NSProxy,
+    ClassMethods(
+        (#"proxyWithTarget:connection:", NSDistantObject, Id, NSConnection),
+        (#"proxyWithLocal:connection:", NSDistantObject, Id, NSConnection),
+    ),
+    InstanceMethods(
+        (#"initWithTarget:connection:", Id, Id, NSConnection),
+        (#"initWithLocal:connection:", Id, Id, NSConnection),
+        (#"setProtocolForProxy:", Void, Id),
+        (#"connectionForProxy", NSConnection),
+    )
+);
+record NSDistantObjectRequest = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"invocation", NSInvocation),
+        (#"connection", NSConnection),
+        (#"conversation", Id),
+        (#"replyWithException:", Void, NSException),
+    )
+);
+record NSDistributedLock = externalClass(NSObject,
+    ClassMethods(
+        (#"lockWithPath:", NSDistributedLock, NSString),
+    ),
+    InstanceMethods(
+        (#"initWithPath:", Id, NSString),
+        (#"tryLock", Bool),
+        (#"unlock", Void),
+        (#"breakLock", Void),
+        (#"lockDate", NSDate),
+    )
+);
+record NSDistributedNotificationCenter = externalClass(NSNotificationCenter,
+    ClassMethods(
+        (#"notificationCenterForType:", NSDistributedNotificationCenter, NSString),
+        (#"defaultCenter", Id),
+    ),
+    InstanceMethods(
+        (#"addObserver:selector:name:object:suspensionBehavior:", Void, Id, SelectorHandle, NSString, NSString, CULong),
+        (#"postNotificationName:object:userInfo:deliverImmediately:", Void, NSString, NSString, NSDictionary, Bool),
+        (#"postNotificationName:object:userInfo:options:", Void, NSString, NSString, NSDictionary, CULong),
+        (#"setSuspended:", Void, Bool),
+        (#"suspended", Bool),
+        (#"addObserver:selector:name:object:", Void, Id, SelectorHandle, NSString, NSString),
+        (#"postNotificationName:object:", Void, NSString, NSString),
+        (#"postNotificationName:object:userInfo:", Void, NSString, NSString, NSDictionary),
+        (#"removeObserver:name:object:", Void, Id, NSString, NSString),
+    )
+);
+record NSEnumerator = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"nextObject", Id),
+        (#"allObjects", NSArray),
+    )
+);
+record NSError = externalClass(NSObject,
+    ClassMethods(
+        (#"errorWithDomain:code:userInfo:", Id, NSString, CLong, NSDictionary),
+    ),
+    InstanceMethods(
+        (#"initWithDomain:code:userInfo:", Id, NSString, CLong, NSDictionary),
+        (#"domain", NSString),
+        (#"code", CLong),
+        (#"userInfo", NSDictionary),
+        (#"localizedDescription", NSString),
+        (#"localizedFailureReason", NSString),
+        (#"localizedRecoverySuggestion", NSString),
+        (#"localizedRecoveryOptions", NSArray),
+        (#"recoveryAttempter", Id),
+        (#"helpAnchor", NSString),
+    )
+);
+record NSException = externalClass(NSObject,
+    ClassMethods(
+        (#"exceptionWithName:reason:userInfo:", NSException, NSString, NSString, NSDictionary),
+        (#"raise:format:", Void, NSString, NSString),
+        (#"raise:format:arguments:", Void, NSString, NSString, Pointer[__va_list_tag]),
+    ),
+    InstanceMethods(
+        (#"initWithName:reason:userInfo:", Id, NSString, NSString, NSDictionary),
+        (#"name", NSString),
+        (#"reason", NSString),
+        (#"userInfo", NSDictionary),
+        (#"callStackReturnAddresses", NSArray),
+        (#"callStackSymbols", NSArray),
+        (#"raise", Void),
+    )
+);
+record NSExistsCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSExpression = externalClass(NSObject,
+    ClassMethods(
+        (#"expressionForConstantValue:", NSExpression, Id),
+        (#"expressionForEvaluatedObject", NSExpression),
+        (#"expressionForVariable:", NSExpression, NSString),
+        (#"expressionForKeyPath:", NSExpression, NSString),
+        (#"expressionForFunction:arguments:", NSExpression, NSString, NSArray),
+        (#"expressionForAggregate:", NSExpression, NSArray),
+        (#"expressionForUnionSet:with:", NSExpression, NSExpression, NSExpression),
+        (#"expressionForIntersectSet:with:", NSExpression, NSExpression, NSExpression),
+        (#"expressionForMinusSet:with:", NSExpression, NSExpression, NSExpression),
+        (#"expressionForSubquery:usingIteratorVariable:predicate:", NSExpression, NSExpression, NSString, Id),
+        (#"expressionForFunction:selectorName:arguments:", NSExpression, NSExpression, NSString, NSArray),
+        (#"expressionForBlock:arguments:", NSExpression, UnknownType, NSArray),
+    ),
+    InstanceMethods(
+        (#"initWithExpressionType:", Id, CULong),
+        (#"expressionType", CULong),
+        (#"constantValue", Id),
+        (#"keyPath", NSString),
+        (#"function", NSString),
+        (#"variable", NSString),
+        (#"operand", NSExpression),
+        (#"arguments", NSArray),
+        (#"collection", Id),
+        (#"predicate", NSPredicate),
+        (#"leftExpression", NSExpression),
+        (#"rightExpression", NSExpression),
+        (#"expressionBlock", UnknownType),
+        (#"expressionValueWithObject:context:", Id, Id, NSMutableDictionary),
+    )
+);
+record NSFileHandle = externalClass(NSObject,
+    ClassMethods(
+        (#"fileHandleWithStandardInput", Id),
+        (#"fileHandleWithStandardOutput", Id),
+        (#"fileHandleWithStandardError", Id),
+        (#"fileHandleWithNullDevice", Id),
+        (#"fileHandleForReadingAtPath:", Id, NSString),
+        (#"fileHandleForWritingAtPath:", Id, NSString),
+        (#"fileHandleForUpdatingAtPath:", Id, NSString),
+        (#"fileHandleForReadingFromURL:error:", Id, NSURL, Pointer[NSError]),
+        (#"fileHandleForWritingToURL:error:", Id, NSURL, Pointer[NSError]),
+        (#"fileHandleForUpdatingURL:error:", Id, NSURL, Pointer[NSError]),
+    ),
+    InstanceMethods(
+        (#"availableData", NSData),
+        (#"readDataToEndOfFile", NSData),
+        (#"readDataOfLength:", NSData, CULong),
+        (#"writeData:", Void, NSData),
+        (#"offsetInFile", UInt64),
+        (#"seekToEndOfFile", UInt64),
+        (#"seekToFileOffset:", Void, UInt64),
+        (#"truncateFileAtOffset:", Void, UInt64),
+        (#"synchronizeFile", Void),
+        (#"closeFile", Void),
+        (#"readInBackgroundAndNotifyForModes:", Void, NSArray),
+        (#"readInBackgroundAndNotify", Void),
+        (#"readToEndOfFileInBackgroundAndNotifyForModes:", Void, NSArray),
+        (#"readToEndOfFileInBackgroundAndNotify", Void),
+        (#"acceptConnectionInBackgroundAndNotifyForModes:", Void, NSArray),
+        (#"acceptConnectionInBackgroundAndNotify", Void),
+        (#"waitForDataInBackgroundAndNotifyForModes:", Void, NSArray),
+        (#"waitForDataInBackgroundAndNotify", Void),
+        (#"initWithFileDescriptor:closeOnDealloc:", Id, Int, Bool),
+        (#"initWithFileDescriptor:", Id, Int),
+        (#"fileDescriptor", Int),
+    )
+);
+record NSFileManager = externalClass(NSObject,
+    ClassMethods(
+        (#"defaultManager", NSFileManager),
+    ),
+    InstanceMethods(
+        (#"mountedVolumeURLsIncludingResourceValuesForKeys:options:", NSArray, NSArray, CULong),
+        (#"contentsOfDirectoryAtURL:includingPropertiesForKeys:options:error:", NSArray, NSURL, NSArray, CULong, Pointer[NSError]),
+        (#"URLsForDirectory:inDomains:", NSArray, CULong, CULong),
+        (#"URLForDirectory:inDomain:appropriateForURL:create:error:", NSURL, CULong, CULong, NSURL, Bool, Pointer[NSError]),
+        (#"setDelegate:", Void, Id),
+        (#"delegate", Id),
+        (#"setAttributes:ofItemAtPath:error:", Bool, NSDictionary, NSString, Pointer[NSError]),
+        (#"createDirectoryAtPath:withIntermediateDirectories:attributes:error:", Bool, NSString, Bool, NSDictionary, Pointer[NSError]),
+        (#"contentsOfDirectoryAtPath:error:", NSArray, NSString, Pointer[NSError]),
+        (#"subpathsOfDirectoryAtPath:error:", NSArray, NSString, Pointer[NSError]),
+        (#"attributesOfItemAtPath:error:", NSDictionary, NSString, Pointer[NSError]),
+        (#"attributesOfFileSystemForPath:error:", NSDictionary, NSString, Pointer[NSError]),
+        (#"createSymbolicLinkAtPath:withDestinationPath:error:", Bool, NSString, NSString, Pointer[NSError]),
+        (#"destinationOfSymbolicLinkAtPath:error:", NSString, NSString, Pointer[NSError]),
+        (#"copyItemAtPath:toPath:error:", Bool, NSString, NSString, Pointer[NSError]),
+        (#"moveItemAtPath:toPath:error:", Bool, NSString, NSString, Pointer[NSError]),
+        (#"linkItemAtPath:toPath:error:", Bool, NSString, NSString, Pointer[NSError]),
+        (#"removeItemAtPath:error:", Bool, NSString, Pointer[NSError]),
+        (#"copyItemAtURL:toURL:error:", Bool, NSURL, NSURL, Pointer[NSError]),
+        (#"moveItemAtURL:toURL:error:", Bool, NSURL, NSURL, Pointer[NSError]),
+        (#"linkItemAtURL:toURL:error:", Bool, NSURL, NSURL, Pointer[NSError]),
+        (#"removeItemAtURL:error:", Bool, NSURL, Pointer[NSError]),
+        (#"fileAttributesAtPath:traverseLink:", NSDictionary, NSString, Bool),
+        (#"changeFileAttributes:atPath:", Bool, NSDictionary, NSString),
+        (#"directoryContentsAtPath:", NSArray, NSString),
+        (#"fileSystemAttributesAtPath:", NSDictionary, NSString),
+        (#"pathContentOfSymbolicLinkAtPath:", NSString, NSString),
+        (#"createSymbolicLinkAtPath:pathContent:", Bool, NSString, NSString),
+        (#"createDirectoryAtPath:attributes:", Bool, NSString, NSDictionary),
+        (#"linkPath:toPath:handler:", Bool, NSString, NSString, Id),
+        (#"copyPath:toPath:handler:", Bool, NSString, NSString, Id),
+        (#"movePath:toPath:handler:", Bool, NSString, NSString, Id),
+        (#"removeFileAtPath:handler:", Bool, NSString, Id),
+        (#"currentDirectoryPath", NSString),
+        (#"changeCurrentDirectoryPath:", Bool, NSString),
+        (#"fileExistsAtPath:", Bool, NSString),
+        (#"fileExistsAtPath:isDirectory:", Bool, NSString, Pointer[Bool]),
+        (#"isReadableFileAtPath:", Bool, NSString),
+        (#"isWritableFileAtPath:", Bool, NSString),
+        (#"isExecutableFileAtPath:", Bool, NSString),
+        (#"isDeletableFileAtPath:", Bool, NSString),
+        (#"contentsEqualAtPath:andPath:", Bool, NSString, NSString),
+        (#"displayNameAtPath:", NSString, NSString),
+        (#"componentsToDisplayForPath:", NSArray, NSString),
+        (#"enumeratorAtPath:", NSDirectoryEnumerator, NSString),
+        (#"enumeratorAtURL:includingPropertiesForKeys:options:errorHandler:", NSDirectoryEnumerator, NSURL, NSArray, CULong, UnknownType),
+        (#"subpathsAtPath:", NSArray, NSString),
+        (#"contentsAtPath:", NSData, NSString),
+        (#"createFileAtPath:contents:attributes:", Bool, NSString, NSData, NSDictionary),
+        (#"fileSystemRepresentationWithPath:", Pointer[CChar], NSString),
+        (#"stringWithFileSystemRepresentation:length:", NSString, Pointer[CChar], CULong),
+        (#"replaceItemAtURL:withItemAtURL:backupItemName:options:resultingItemURL:error:", Bool, NSURL, NSURL, NSString, CULong, Pointer[NSURL], Pointer[NSError]),
+    )
+);
+record NSFormatter = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"stringForObjectValue:", NSString, Id),
+        (#"attributedStringForObjectValue:withDefaultAttributes:", NSAttributedString, Id, NSDictionary),
+        (#"editingStringForObjectValue:", NSString, Id),
+        (#"getObjectValue:forString:errorDescription:", Bool, Pointer[Id], NSString, Pointer[NSString]),
+        (#"isPartialStringValid:newEditingString:errorDescription:", Bool, NSString, Pointer[NSString], Pointer[NSString]),
+        (#"isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:", Bool, Pointer[NSString], NSRangePointer, NSString, NSRange, Pointer[NSString]),
+    )
+);
+record NSGarbageCollector = externalClass(NSObject,
+    ClassMethods(
+        (#"defaultCollector", Id),
+    ),
+    InstanceMethods(
+        (#"isCollecting", Bool),
+        (#"disable", Void),
+        (#"enable", Void),
+        (#"isEnabled", Bool),
+        (#"collectIfNeeded", Void),
+        (#"collectExhaustively", Void),
+        (#"disableCollectorForPointer:", Void, RawPointer),
+        (#"enableCollectorForPointer:", Void, RawPointer),
+        (#"zone", Pointer[NSZone]),
+    )
+);
+record NSGetCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSHTTPCookie = externalClass(NSObject,
+    ClassMethods(
+        (#"cookieWithProperties:", Id, NSDictionary),
+        (#"requestHeaderFieldsWithCookies:", NSDictionary, NSArray),
+        (#"cookiesWithResponseHeaderFields:forURL:", NSArray, NSDictionary, NSURL),
+    ),
+    InstanceMethods(
+        (#"initWithProperties:", Id, NSDictionary),
+        (#"properties", NSDictionary),
+        (#"version", CULong),
+        (#"name", NSString),
+        (#"value", NSString),
+        (#"expiresDate", NSDate),
+        (#"isSessionOnly", Bool),
+        (#"domain", NSString),
+        (#"path", NSString),
+        (#"isSecure", Bool),
+        (#"isHTTPOnly", Bool),
+        (#"comment", NSString),
+        (#"commentURL", NSURL),
+        (#"portList", NSArray),
+    )
+);
+record NSHTTPCookieStorage = externalClass(NSObject,
+    ClassMethods(
+        (#"sharedHTTPCookieStorage", NSHTTPCookieStorage),
+    ),
+    InstanceMethods(
+        (#"initWithStorageLocation:", Id, NSURL),
+        (#"cookies", NSArray),
+        (#"setCookie:", Void, NSHTTPCookie),
+        (#"deleteCookie:", Void, NSHTTPCookie),
+        (#"cookiesForURL:", NSArray, NSURL),
+        (#"setCookies:forURL:mainDocumentURL:", Void, NSArray, NSURL, NSURL),
+        (#"cookieAcceptPolicy", CULong),
+        (#"setCookieAcceptPolicy:", Void, CULong),
+    )
+);
+record NSHTTPURLResponse = externalClass(NSURLResponse,
+    ClassMethods(
+        (#"localizedStringForStatusCode:", NSString, CLong),
+    ),
+    InstanceMethods(
+        (#"statusCode", CLong),
+        (#"allHeaderFields", NSDictionary),
+    )
+);
+record NSHashTable = externalClass(NSObject,
+    ClassMethods(
+        (#"hashTableWithOptions:", Id, CULong),
+        (#"hashTableWithWeakObjects", Id),
+    ),
+    InstanceMethods(
+        (#"initWithOptions:capacity:", Id, CULong, CULong),
+        (#"initWithPointerFunctions:capacity:", Id, NSPointerFunctions, CULong),
+        (#"pointerFunctions", NSPointerFunctions),
+        (#"count", CULong),
+        (#"member:", Id, Id),
+        (#"objectEnumerator", NSEnumerator),
+        (#"addObject:", Void, Id),
+        (#"removeObject:", Void, Id),
+        (#"removeAllObjects", Void),
+        (#"allObjects", NSArray),
+        (#"anyObject", Id),
+        (#"containsObject:", Bool, Id),
+        (#"intersectsHashTable:", Bool, NSHashTable),
+        (#"isEqualToHashTable:", Bool, NSHashTable),
+        (#"isSubsetOfHashTable:", Bool, NSHashTable),
+        (#"intersectHashTable:", Void, NSHashTable),
+        (#"unionHashTable:", Void, NSHashTable),
+        (#"minusHashTable:", Void, NSHashTable),
+        (#"setRepresentation", NSSet),
+    )
+);
+record NSHost = externalClass(NSObject,
+    ClassMethods(
+        (#"currentHost", NSHost),
+        (#"hostWithName:", NSHost, NSString),
+        (#"hostWithAddress:", NSHost, NSString),
+        (#"setHostCacheEnabled:", Void, Bool),
+        (#"isHostCacheEnabled", Bool),
+        (#"flushHostCache", Void),
+    ),
+    InstanceMethods(
+        (#"isEqualToHost:", Bool, NSHost),
+        (#"name", NSString),
+        (#"names", NSArray),
+        (#"address", NSString),
+        (#"addresses", NSArray),
+        (#"localizedName", NSString),
+    )
+);
+record NSIndexPath = externalClass(NSObject,
+    ClassMethods(
+        (#"indexPathWithIndex:", Id, CULong),
+        (#"indexPathWithIndexes:length:", Id, Pointer[CULong], CULong),
+    ),
+    InstanceMethods(
+        (#"initWithIndex:", Id, CULong),
+        (#"initWithIndexes:length:", Id, Pointer[CULong], CULong),
+        (#"indexPathByAddingIndex:", NSIndexPath, CULong),
+        (#"indexPathByRemovingLastIndex", NSIndexPath),
+        (#"indexAtPosition:", CULong, CULong),
+        (#"length", CULong),
+        (#"getIndexes:", Void, Pointer[CULong]),
+        (#"compare:", CLong, NSIndexPath),
+    )
+);
+record NSIndexSet = externalClass(NSObject,
+    ClassMethods(
+        (#"indexSet", Id),
+        (#"indexSetWithIndex:", Id, CULong),
+        (#"indexSetWithIndexesInRange:", Id, NSRange),
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"initWithIndex:", Id, CULong),
+        (#"initWithIndexesInRange:", Id, NSRange),
+        (#"initWithIndexSet:", Id, NSIndexSet),
+        (#"isEqualToIndexSet:", Bool, NSIndexSet),
+        (#"count", CULong),
+        (#"firstIndex", CULong),
+        (#"lastIndex", CULong),
+        (#"indexGreaterThanIndex:", CULong, CULong),
+        (#"indexLessThanIndex:", CULong, CULong),
+        (#"indexGreaterThanOrEqualToIndex:", CULong, CULong),
+        (#"indexLessThanOrEqualToIndex:", CULong, CULong),
+        (#"getIndexes:maxCount:inIndexRange:", CULong, Pointer[CULong], CULong, NSRangePointer),
+        (#"countOfIndexesInRange:", CULong, NSRange),
+        (#"containsIndex:", Bool, CULong),
+        (#"containsIndexesInRange:", Bool, NSRange),
+        (#"containsIndexes:", Bool, NSIndexSet),
+        (#"intersectsIndexesInRange:", Bool, NSRange),
+        (#"enumerateIndexesUsingBlock:", Void, UnknownType),
+        (#"enumerateIndexesWithOptions:usingBlock:", Void, CULong, UnknownType),
+        (#"enumerateIndexesInRange:options:usingBlock:", Void, NSRange, CULong, UnknownType),
+        (#"indexPassingTest:", CULong, UnknownType),
+        (#"indexWithOptions:passingTest:", CULong, CULong, UnknownType),
+        (#"indexInRange:options:passingTest:", CULong, NSRange, CULong, UnknownType),
+        (#"indexesPassingTest:", NSIndexSet, UnknownType),
+        (#"indexesWithOptions:passingTest:", NSIndexSet, CULong, UnknownType),
+        (#"indexesInRange:options:passingTest:", NSIndexSet, NSRange, CULong, UnknownType),
+    )
+);
+record NSIndexSpecifier = externalClass(NSScriptObjectSpecifier,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithContainerClassDescription:containerSpecifier:key:index:", Id, NSScriptClassDescription, NSScriptObjectSpecifier, NSString, CLong),
+        (#"index", CLong),
+        (#"setIndex:", Void, CLong),
+    )
+);
+record NSInputStream = externalClass(NSStream,
+    ClassMethods(
+        (#"inputStreamWithData:", Id, NSData),
+        (#"inputStreamWithFileAtPath:", Id, NSString),
+        (#"inputStreamWithURL:", Id, NSURL),
+    ),
+    InstanceMethods(
+        (#"read:maxLength:", CLong, Pointer[CUChar], CULong),
+        (#"getBuffer:length:", Bool, Pointer[Pointer[CUChar]], Pointer[CULong]),
+        (#"hasBytesAvailable", Bool),
+        (#"initWithData:", Id, NSData),
+        (#"initWithFileAtPath:", Id, NSString),
+        (#"initWithURL:", Id, NSURL),
+    )
+);
+record NSInvocation = externalClass(NSObject,
+    ClassMethods(
+        (#"invocationWithMethodSignature:", NSInvocation, NSMethodSignature),
+    ),
+    InstanceMethods(
+        (#"methodSignature", NSMethodSignature),
+        (#"retainArguments", Void),
+        (#"argumentsRetained", Bool),
+        (#"target", Id),
+        (#"setTarget:", Void, Id),
+        (#"selector", SelectorHandle),
+        (#"setSelector:", Void, SelectorHandle),
+        (#"getReturnValue:", Void, RawPointer),
+        (#"setReturnValue:", Void, RawPointer),
+        (#"getArgument:atIndex:", Void, RawPointer, CLong),
+        (#"setArgument:atIndex:", Void, RawPointer, CLong),
+        (#"invoke", Void),
+        (#"invokeWithTarget:", Void, Id),
+    )
+);
+record NSInvocationOperation = externalClass(NSOperation,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithTarget:selector:object:", Id, Id, SelectorHandle, Id),
+        (#"initWithInvocation:", Id, NSInvocation),
+        (#"invocation", NSInvocation),
+        (#"result", Id),
+    )
+);
+record NSKeyedArchiver = externalClass(NSCoder,
+    ClassMethods(
+        (#"archivedDataWithRootObject:", NSData, Id),
+        (#"archiveRootObject:toFile:", Bool, Id, NSString),
+        (#"setClassName:forClass:", Void, NSString, Id),
+        (#"classNameForClass:", NSString, Id),
+    ),
+    InstanceMethods(
+        (#"initForWritingWithMutableData:", Id, NSMutableData),
+        (#"setDelegate:", Void, Id),
+        (#"delegate", Id),
+        (#"setOutputFormat:", Void, CULong),
+        (#"outputFormat", CULong),
+        (#"finishEncoding", Void),
+        (#"setClassName:forClass:", Void, NSString, Id),
+        (#"classNameForClass:", NSString, Id),
+        (#"encodeObject:forKey:", Void, Id, NSString),
+        (#"encodeConditionalObject:forKey:", Void, Id, NSString),
+        (#"encodeBool:forKey:", Void, Bool, NSString),
+        (#"encodeInt:forKey:", Void, Int, NSString),
+        (#"encodeInt32:forKey:", Void, Int, NSString),
+        (#"encodeInt64:forKey:", Void, Int64, NSString),
+        (#"encodeFloat:forKey:", Void, Float, NSString),
+        (#"encodeDouble:forKey:", Void, Double, NSString),
+        (#"encodeBytes:length:forKey:", Void, Pointer[CUChar], CULong, NSString),
+    )
+);
+record NSKeyedUnarchiver = externalClass(NSCoder,
+    ClassMethods(
+        (#"unarchiveObjectWithData:", Id, NSData),
+        (#"unarchiveObjectWithFile:", Id, NSString),
+        (#"setClass:forClassName:", Void, Id, NSString),
+        (#"classForClassName:", Id, NSString),
+    ),
+    InstanceMethods(
+        (#"initForReadingWithData:", Id, NSData),
+        (#"setDelegate:", Void, Id),
+        (#"delegate", Id),
+        (#"finishDecoding", Void),
+        (#"setClass:forClassName:", Void, Id, NSString),
+        (#"classForClassName:", Id, NSString),
+        (#"containsValueForKey:", Bool, NSString),
+        (#"decodeObjectForKey:", Id, NSString),
+        (#"decodeBoolForKey:", Bool, NSString),
+        (#"decodeIntForKey:", Int, NSString),
+        (#"decodeInt32ForKey:", Int, NSString),
+        (#"decodeInt64ForKey:", Int64, NSString),
+        (#"decodeFloatForKey:", Float, NSString),
+        (#"decodeDoubleForKey:", Double, NSString),
+        (#"decodeBytesForKey:returnedLength:", Pointer[CUChar], NSString, Pointer[CULong]),
+    )
+);
+record NSLocale = externalClass(NSObject,
+    ClassMethods(
+        (#"systemLocale", Id),
+        (#"currentLocale", Id),
+        (#"autoupdatingCurrentLocale", Id),
+        (#"availableLocaleIdentifiers", NSArray),
+        (#"ISOLanguageCodes", NSArray),
+        (#"ISOCountryCodes", NSArray),
+        (#"ISOCurrencyCodes", NSArray),
+        (#"commonISOCurrencyCodes", NSArray),
+        (#"preferredLanguages", NSArray),
+        (#"componentsFromLocaleIdentifier:", NSDictionary, NSString),
+        (#"localeIdentifierFromComponents:", NSString, NSDictionary),
+        (#"canonicalLocaleIdentifierFromString:", NSString, NSString),
+        (#"canonicalLanguageIdentifierFromString:", NSString, NSString),
+        (#"localeIdentifierFromWindowsLocaleCode:", NSString, UInt),
+        (#"windowsLocaleCodeFromLocaleIdentifier:", UInt, NSString),
+        (#"characterDirectionForLanguage:", CULong, NSString),
+        (#"lineDirectionForLanguage:", CULong, NSString),
+    ),
+    InstanceMethods(
+        (#"objectForKey:", Id, Id),
+        (#"displayNameForKey:value:", NSString, Id, Id),
+        (#"localeIdentifier", NSString),
+        (#"initWithLocaleIdentifier:", Id, NSString),
+    )
+);
+record NSLock = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"tryLock", Bool),
+        (#"lockBeforeDate:", Bool, NSDate),
+        (#"setName:", Void, NSString),
+        (#"name", NSString),
+    )
+);
+record NSLogicalTest = externalClass(NSScriptWhoseTest,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initAndTestWithTests:", Id, NSArray),
+        (#"initOrTestWithTests:", Id, NSArray),
+        (#"initNotTestWithTest:", Id, NSScriptWhoseTest),
+    )
+);
+record NSMachBootstrapServer = externalClass(NSPortNameServer,
+    ClassMethods(
+        (#"sharedInstance", Id),
+    ),
+    InstanceMethods(
+        (#"portForName:", NSPort, NSString),
+        (#"portForName:host:", NSPort, NSString, NSString),
+        (#"registerPort:name:", Bool, NSPort, NSString),
+        (#"servicePortWithName:", NSPort, NSString),
+    )
+);
+record NSMachPort = externalClass(NSPort,
+    ClassMethods(
+        (#"portWithMachPort:", NSPort, UInt),
+        (#"portWithMachPort:options:", NSPort, UInt, CULong),
+    ),
+    InstanceMethods(
+        (#"initWithMachPort:", Id, UInt),
+        (#"setDelegate:", Void, Id),
+        (#"delegate", Id),
+        (#"initWithMachPort:options:", Id, UInt, CULong),
+        (#"machPort", UInt),
+        (#"scheduleInRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"removeFromRunLoop:forMode:", Void, NSRunLoop, NSString),
+    )
+);
+record NSMapTable = externalClass(NSObject,
+    ClassMethods(
+        (#"mapTableWithKeyOptions:valueOptions:", Id, CULong, CULong),
+        (#"mapTableWithStrongToStrongObjects", Id),
+        (#"mapTableWithWeakToStrongObjects", Id),
+        (#"mapTableWithStrongToWeakObjects", Id),
+        (#"mapTableWithWeakToWeakObjects", Id),
+    ),
+    InstanceMethods(
+        (#"initWithKeyOptions:valueOptions:capacity:", Id, CULong, CULong, CULong),
+        (#"initWithKeyPointerFunctions:valuePointerFunctions:capacity:", Id, NSPointerFunctions, NSPointerFunctions, CULong),
+        (#"keyPointerFunctions", NSPointerFunctions),
+        (#"valuePointerFunctions", NSPointerFunctions),
+        (#"objectForKey:", Id, Id),
+        (#"removeObjectForKey:", Void, Id),
+        (#"setObject:forKey:", Void, Id, Id),
+        (#"count", CULong),
+        (#"keyEnumerator", NSEnumerator),
+        (#"objectEnumerator", NSEnumerator),
+        (#"removeAllObjects", Void),
+        (#"dictionaryRepresentation", NSDictionary),
+    )
+);
+record NSMessagePort = externalClass(NSPort,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSMessagePortNameServer = externalClass(NSPortNameServer,
+    ClassMethods(
+        (#"sharedInstance", Id),
+    ),
+    InstanceMethods(
+        (#"portForName:", NSPort, NSString),
+        (#"portForName:host:", NSPort, NSString, NSString),
+    )
+);
+record NSMetadataItem = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"valueForAttribute:", Id, NSString),
+        (#"valuesForAttributes:", NSDictionary, NSArray),
+        (#"attributes", NSArray),
+    )
+);
+record NSMetadataQuery = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"delegate", Id),
+        (#"setDelegate:", Void, Id),
+        (#"predicate", NSPredicate),
+        (#"setPredicate:", Void, NSPredicate),
+        (#"sortDescriptors", NSArray),
+        (#"setSortDescriptors:", Void, NSArray),
+        (#"valueListAttributes", NSArray),
+        (#"setValueListAttributes:", Void, NSArray),
+        (#"groupingAttributes", NSArray),
+        (#"setGroupingAttributes:", Void, NSArray),
+        (#"notificationBatchingInterval", Double),
+        (#"setNotificationBatchingInterval:", Void, Double),
+        (#"searchScopes", NSArray),
+        (#"setSearchScopes:", Void, NSArray),
+        (#"startQuery", Bool),
+        (#"stopQuery", Void),
+        (#"isStarted", Bool),
+        (#"isGathering", Bool),
+        (#"isStopped", Bool),
+        (#"disableUpdates", Void),
+        (#"enableUpdates", Void),
+        (#"resultCount", CULong),
+        (#"resultAtIndex:", Id, CULong),
+        (#"results", NSArray),
+        (#"indexOfResult:", CULong, Id),
+        (#"valueLists", NSDictionary),
+        (#"groupedResults", NSArray),
+        (#"valueOfAttribute:forResultAtIndex:", Id, NSString, CULong),
+    )
+);
+record NSMetadataQueryAttributeValueTuple = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"attribute", NSString),
+        (#"value", Id),
+        (#"count", CULong),
+    )
+);
+record NSMetadataQueryResultGroup = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"attribute", NSString),
+        (#"value", Id),
+        (#"subgroups", NSArray),
+        (#"resultCount", CULong),
+        (#"resultAtIndex:", Id, CULong),
+        (#"results", NSArray),
+    )
+);
+record NSMethodSignature = externalClass(NSObject,
+    ClassMethods(
+        (#"signatureWithObjCTypes:", NSMethodSignature, Pointer[CChar]),
+    ),
+    InstanceMethods(
+        (#"numberOfArguments", CULong),
+        (#"getArgumentTypeAtIndex:", Pointer[CChar], CULong),
+        (#"frameLength", CULong),
+        (#"isOneway", Bool),
+        (#"methodReturnType", Pointer[CChar]),
+        (#"methodReturnLength", CULong),
+    )
+);
+record NSMiddleSpecifier = externalClass(NSScriptObjectSpecifier,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSMoveCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"setReceiversSpecifier:", Void, NSScriptObjectSpecifier),
+        (#"keySpecifier", NSScriptObjectSpecifier),
+    )
+);
+record NSMutableArray = externalClass(NSArray,
+    ClassMethods(
+        (#"arrayWithCapacity:", Id, CULong),
+    ),
+    InstanceMethods(
+        (#"addObject:", Void, Id),
+        (#"insertObject:atIndex:", Void, Id, CULong),
+        (#"removeLastObject", Void),
+        (#"removeObjectAtIndex:", Void, CULong),
+        (#"replaceObjectAtIndex:withObject:", Void, CULong, Id),
+        (#"addObjectsFromArray:", Void, NSArray),
+        (#"exchangeObjectAtIndex:withObjectAtIndex:", Void, CULong, CULong),
+        (#"removeAllObjects", Void),
+        (#"removeObject:inRange:", Void, Id, NSRange),
+        (#"removeObject:", Void, Id),
+        (#"removeObjectIdenticalTo:inRange:", Void, Id, NSRange),
+        (#"removeObjectIdenticalTo:", Void, Id),
+        (#"removeObjectsFromIndices:numIndices:", Void, Pointer[CULong], CULong),
+        (#"removeObjectsInArray:", Void, NSArray),
+        (#"removeObjectsInRange:", Void, NSRange),
+        (#"replaceObjectsInRange:withObjectsFromArray:range:", Void, NSRange, NSArray, NSRange),
+        (#"replaceObjectsInRange:withObjectsFromArray:", Void, NSRange, NSArray),
+        (#"setArray:", Void, NSArray),
+        (#"sortUsingFunction:context:", Void, CCodePointer[(Id,Id,RawPointer),(CLong)], RawPointer),
+        (#"sortUsingSelector:", Void, SelectorHandle),
+        (#"insertObjects:atIndexes:", Void, NSArray, NSIndexSet),
+        (#"removeObjectsAtIndexes:", Void, NSIndexSet),
+        (#"replaceObjectsAtIndexes:withObjects:", Void, NSIndexSet, NSArray),
+        (#"sortUsingComparator:", Void, NSComparator),
+        (#"sortWithOptions:usingComparator:", Void, CULong, NSComparator),
+        (#"initWithCapacity:", Id, CULong),
+        (#"sortUsingDescriptors:", Void, NSArray),
+        (#"filterUsingPredicate:", Void, NSPredicate),
+    )
+);
+record NSMutableAttributedString = externalClass(NSAttributedString,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"replaceCharactersInRange:withString:", Void, NSRange, NSString),
+        (#"setAttributes:range:", Void, NSDictionary, NSRange),
+        (#"mutableString", NSMutableString),
+        (#"addAttribute:value:range:", Void, NSString, Id, NSRange),
+        (#"addAttributes:range:", Void, NSDictionary, NSRange),
+        (#"removeAttribute:range:", Void, NSString, NSRange),
+        (#"replaceCharactersInRange:withAttributedString:", Void, NSRange, NSAttributedString),
+        (#"insertAttributedString:atIndex:", Void, NSAttributedString, CULong),
+        (#"appendAttributedString:", Void, NSAttributedString),
+        (#"deleteCharactersInRange:", Void, NSRange),
+        (#"setAttributedString:", Void, NSAttributedString),
+        (#"beginEditing", Void),
+        (#"endEditing", Void),
+    )
+);
+record NSMutableCharacterSet = externalClass(NSCharacterSet,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"addCharactersInRange:", Void, NSRange),
+        (#"removeCharactersInRange:", Void, NSRange),
+        (#"addCharactersInString:", Void, NSString),
+        (#"removeCharactersInString:", Void, NSString),
+        (#"formUnionWithCharacterSet:", Void, NSCharacterSet),
+        (#"formIntersectionWithCharacterSet:", Void, NSCharacterSet),
+        (#"invert", Void),
+    )
+);
+record NSMutableData = externalClass(NSData,
+    ClassMethods(
+        (#"dataWithCapacity:", Id, CULong),
+        (#"dataWithLength:", Id, CULong),
+    ),
+    InstanceMethods(
+        (#"mutableBytes", RawPointer),
+        (#"setLength:", Void, CULong),
+        (#"appendBytes:length:", Void, RawPointer, CULong),
+        (#"appendData:", Void, NSData),
+        (#"increaseLengthBy:", Void, CULong),
+        (#"replaceBytesInRange:withBytes:", Void, NSRange, RawPointer),
+        (#"resetBytesInRange:", Void, NSRange),
+        (#"setData:", Void, NSData),
+        (#"replaceBytesInRange:withBytes:length:", Void, NSRange, RawPointer, CULong),
+        (#"initWithCapacity:", Id, CULong),
+        (#"initWithLength:", Id, CULong),
+    )
+);
+record NSMutableDictionary = externalClass(NSDictionary,
+    ClassMethods(
+        (#"dictionaryWithCapacity:", Id, CULong),
+    ),
+    InstanceMethods(
+        (#"removeObjectForKey:", Void, Id),
+        (#"setObject:forKey:", Void, Id, Id),
+        (#"addEntriesFromDictionary:", Void, NSDictionary),
+        (#"removeAllObjects", Void),
+        (#"removeObjectsForKeys:", Void, NSArray),
+        (#"setDictionary:", Void, NSDictionary),
+        (#"initWithCapacity:", Id, CULong),
+        (#"setValue:forKey:", Void, Id, NSString),
+    )
+);
+record NSMutableIndexSet = externalClass(NSIndexSet,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"addIndexes:", Void, NSIndexSet),
+        (#"removeIndexes:", Void, NSIndexSet),
+        (#"removeAllIndexes", Void),
+        (#"addIndex:", Void, CULong),
+        (#"removeIndex:", Void, CULong),
+        (#"addIndexesInRange:", Void, NSRange),
+        (#"removeIndexesInRange:", Void, NSRange),
+        (#"shiftIndexesStartingAtIndex:by:", Void, CULong, CLong),
+    )
+);
+record NSMutableSet = externalClass(NSSet,
+    ClassMethods(
+        (#"setWithCapacity:", Id, CULong),
+    ),
+    InstanceMethods(
+        (#"addObject:", Void, Id),
+        (#"removeObject:", Void, Id),
+        (#"addObjectsFromArray:", Void, NSArray),
+        (#"intersectSet:", Void, NSSet),
+        (#"minusSet:", Void, NSSet),
+        (#"removeAllObjects", Void),
+        (#"unionSet:", Void, NSSet),
+        (#"setSet:", Void, NSSet),
+        (#"initWithCapacity:", Id, CULong),
+        (#"filterUsingPredicate:", Void, NSPredicate),
+    )
+);
+record NSMutableString = externalClass(NSString,
+    ClassMethods(
+        (#"stringWithCapacity:", Id, CULong),
+    ),
+    InstanceMethods(
+        (#"replaceCharactersInRange:withString:", Void, NSRange, NSString),
+        (#"insertString:atIndex:", Void, NSString, CULong),
+        (#"deleteCharactersInRange:", Void, NSRange),
+        (#"appendString:", Void, NSString),
+        (#"appendFormat:", Void, NSString),
+        (#"setString:", Void, NSString),
+        (#"initWithCapacity:", Id, CULong),
+        (#"replaceOccurrencesOfString:withString:options:range:", CULong, NSString, NSString, CULong, NSRange),
+    )
+);
+record NSMutableURLRequest = externalClass(NSURLRequest,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"setURL:", Void, NSURL),
+        (#"setCachePolicy:", Void, CULong),
+        (#"setTimeoutInterval:", Void, Double),
+        (#"setMainDocumentURL:", Void, NSURL),
+        (#"setHTTPMethod:", Void, NSString),
+        (#"setAllHTTPHeaderFields:", Void, NSDictionary),
+        (#"setValue:forHTTPHeaderField:", Void, NSString, NSString),
+        (#"addValue:forHTTPHeaderField:", Void, NSString, NSString),
+        (#"setHTTPBody:", Void, NSData),
+        (#"setHTTPBodyStream:", Void, NSInputStream),
+        (#"setHTTPShouldHandleCookies:", Void, Bool),
+    )
+);
+record NSNameSpecifier = externalClass(NSScriptObjectSpecifier,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithContainerClassDescription:containerSpecifier:key:name:", Id, NSScriptClassDescription, NSScriptObjectSpecifier, NSString, NSString),
+        (#"name", NSString),
+        (#"setName:", Void, NSString),
+    )
+);
+record NSNetService = externalClass(NSObject,
+    ClassMethods(
+        (#"dictionaryFromTXTRecordData:", NSDictionary, NSData),
+        (#"dataFromTXTRecordDictionary:", NSData, NSDictionary),
+    ),
+    InstanceMethods(
+        (#"initWithDomain:type:name:port:", Id, NSString, NSString, NSString, Int),
+        (#"initWithDomain:type:name:", Id, NSString, NSString, NSString),
+        (#"delegate", Id),
+        (#"setDelegate:", Void, Id),
+        (#"scheduleInRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"removeFromRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"domain", NSString),
+        (#"type", NSString),
+        (#"name", NSString),
+        (#"addresses", NSArray),
+        (#"port", CLong),
+        (#"publish", Void),
+        (#"publishWithOptions:", Void, CULong),
+        (#"resolve", Void),
+        (#"stop", Void),
+        (#"hostName", NSString),
+        (#"resolveWithTimeout:", Void, Double),
+        (#"getInputStream:outputStream:", Bool, Pointer[NSInputStream], Pointer[NSOutputStream]),
+        (#"setTXTRecordData:", Bool, NSData),
+        (#"TXTRecordData", NSData),
+        (#"startMonitoring", Void),
+        (#"stopMonitoring", Void),
+        (#"protocolSpecificInformation", NSString),
+        (#"setProtocolSpecificInformation:", Void, NSString),
+    )
+);
+record NSNetServiceBrowser = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"delegate", Id),
+        (#"setDelegate:", Void, Id),
+        (#"scheduleInRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"removeFromRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"searchForBrowsableDomains", Void),
+        (#"searchForRegistrationDomains", Void),
+        (#"searchForServicesOfType:inDomain:", Void, NSString, NSString),
+        (#"stop", Void),
+        (#"searchForAllDomains", Void),
+    )
+);
+record NSNotification = externalClass(NSObject,
+    ClassMethods(
+        (#"notificationWithName:object:", Id, NSString, Id),
+        (#"notificationWithName:object:userInfo:", Id, NSString, Id, NSDictionary),
+    ),
+    InstanceMethods(
+        (#"name", NSString),
+        (#"object", Id),
+        (#"userInfo", NSDictionary),
+    )
+);
+record NSNotificationCenter = externalClass(NSObject,
+    ClassMethods(
+        (#"defaultCenter", Id),
+    ),
+    InstanceMethods(
+        (#"addObserver:selector:name:object:", Void, Id, SelectorHandle, NSString, Id),
+        (#"postNotification:", Void, NSNotification),
+        (#"postNotificationName:object:", Void, NSString, Id),
+        (#"postNotificationName:object:userInfo:", Void, NSString, Id, NSDictionary),
+        (#"removeObserver:", Void, Id),
+        (#"removeObserver:name:object:", Void, Id, NSString, Id),
+        (#"addObserverForName:object:queue:usingBlock:", Id, NSString, Id, NSOperationQueue, UnknownType),
+    )
+);
+record NSNotificationQueue = externalClass(NSObject,
+    ClassMethods(
+        (#"defaultQueue", Id),
+    ),
+    InstanceMethods(
+        (#"initWithNotificationCenter:", Id, NSNotificationCenter),
+        (#"enqueueNotification:postingStyle:", Void, NSNotification, CULong),
+        (#"enqueueNotification:postingStyle:coalesceMask:forModes:", Void, NSNotification, CULong, CULong, NSArray),
+        (#"dequeueNotificationsMatching:coalesceMask:", Void, NSNotification, CULong),
+    )
+);
+record NSNull = externalClass(NSObject,
+    ClassMethods(
+        (#"null", NSNull),
+    ),
+    InstanceMethods(
+    )
+);
+record NSNumber = externalClass(NSValue,
+    ClassMethods(
+        (#"numberWithChar:", NSNumber, CChar),
+        (#"numberWithUnsignedChar:", NSNumber, CUChar),
+        (#"numberWithShort:", NSNumber, Short),
+        (#"numberWithUnsignedShort:", NSNumber, UShort),
+        (#"numberWithInt:", NSNumber, Int),
+        (#"numberWithUnsignedInt:", NSNumber, UInt),
+        (#"numberWithLong:", NSNumber, CLong),
+        (#"numberWithUnsignedLong:", NSNumber, CULong),
+        (#"numberWithLongLong:", NSNumber, Int64),
+        (#"numberWithUnsignedLongLong:", NSNumber, UInt64),
+        (#"numberWithFloat:", NSNumber, Float),
+        (#"numberWithDouble:", NSNumber, Double),
+        (#"numberWithBool:", NSNumber, Bool),
+        (#"numberWithInteger:", NSNumber, CLong),
+        (#"numberWithUnsignedInteger:", NSNumber, CULong),
+    ),
+    InstanceMethods(
+        (#"charValue", CChar),
+        (#"unsignedCharValue", CUChar),
+        (#"shortValue", Short),
+        (#"unsignedShortValue", UShort),
+        (#"intValue", Int),
+        (#"unsignedIntValue", UInt),
+        (#"longValue", CLong),
+        (#"unsignedLongValue", CULong),
+        (#"longLongValue", Int64),
+        (#"unsignedLongLongValue", UInt64),
+        (#"floatValue", Float),
+        (#"doubleValue", Double),
+        (#"boolValue", Bool),
+        (#"integerValue", CLong),
+        (#"unsignedIntegerValue", CULong),
+        (#"stringValue", NSString),
+        (#"compare:", CLong, NSNumber),
+        (#"isEqualToNumber:", Bool, NSNumber),
+        (#"descriptionWithLocale:", NSString, Id),
+        (#"initWithChar:", Id, CChar),
+        (#"initWithUnsignedChar:", Id, CUChar),
+        (#"initWithShort:", Id, Short),
+        (#"initWithUnsignedShort:", Id, UShort),
+        (#"initWithInt:", Id, Int),
+        (#"initWithUnsignedInt:", Id, UInt),
+        (#"initWithLong:", Id, CLong),
+        (#"initWithUnsignedLong:", Id, CULong),
+        (#"initWithLongLong:", Id, Int64),
+        (#"initWithUnsignedLongLong:", Id, UInt64),
+        (#"initWithFloat:", Id, Float),
+        (#"initWithDouble:", Id, Double),
+        (#"initWithBool:", Id, Bool),
+        (#"initWithInteger:", Id, CLong),
+        (#"initWithUnsignedInteger:", Id, CULong),
+        (#"decimalValue", NSDecimal),
+    )
+);
+record NSNumberFormatter = externalClass(NSFormatter,
+    ClassMethods(
+        (#"localizedStringFromNumber:numberStyle:", NSString, NSNumber, CULong),
+        (#"defaultFormatterBehavior", CULong),
+        (#"setDefaultFormatterBehavior:", Void, CULong),
+    ),
+    InstanceMethods(
+        (#"getObjectValue:forString:range:error:", Bool, Pointer[Id], NSString, Pointer[NSRange], Pointer[NSError]),
+        (#"stringFromNumber:", NSString, NSNumber),
+        (#"numberFromString:", NSNumber, NSString),
+        (#"numberStyle", CULong),
+        (#"setNumberStyle:", Void, CULong),
+        (#"locale", NSLocale),
+        (#"setLocale:", Void, NSLocale),
+        (#"generatesDecimalNumbers", Bool),
+        (#"setGeneratesDecimalNumbers:", Void, Bool),
+        (#"formatterBehavior", CULong),
+        (#"setFormatterBehavior:", Void, CULong),
+        (#"negativeFormat", NSString),
+        (#"setNegativeFormat:", Void, NSString),
+        (#"textAttributesForNegativeValues", NSDictionary),
+        (#"setTextAttributesForNegativeValues:", Void, NSDictionary),
+        (#"positiveFormat", NSString),
+        (#"setPositiveFormat:", Void, NSString),
+        (#"textAttributesForPositiveValues", NSDictionary),
+        (#"setTextAttributesForPositiveValues:", Void, NSDictionary),
+        (#"allowsFloats", Bool),
+        (#"setAllowsFloats:", Void, Bool),
+        (#"decimalSeparator", NSString),
+        (#"setDecimalSeparator:", Void, NSString),
+        (#"alwaysShowsDecimalSeparator", Bool),
+        (#"setAlwaysShowsDecimalSeparator:", Void, Bool),
+        (#"currencyDecimalSeparator", NSString),
+        (#"setCurrencyDecimalSeparator:", Void, NSString),
+        (#"usesGroupingSeparator", Bool),
+        (#"setUsesGroupingSeparator:", Void, Bool),
+        (#"groupingSeparator", NSString),
+        (#"setGroupingSeparator:", Void, NSString),
+        (#"zeroSymbol", NSString),
+        (#"setZeroSymbol:", Void, NSString),
+        (#"textAttributesForZero", NSDictionary),
+        (#"setTextAttributesForZero:", Void, NSDictionary),
+        (#"nilSymbol", NSString),
+        (#"setNilSymbol:", Void, NSString),
+        (#"textAttributesForNil", NSDictionary),
+        (#"setTextAttributesForNil:", Void, NSDictionary),
+        (#"notANumberSymbol", NSString),
+        (#"setNotANumberSymbol:", Void, NSString),
+        (#"textAttributesForNotANumber", NSDictionary),
+        (#"setTextAttributesForNotANumber:", Void, NSDictionary),
+        (#"positiveInfinitySymbol", NSString),
+        (#"setPositiveInfinitySymbol:", Void, NSString),
+        (#"textAttributesForPositiveInfinity", NSDictionary),
+        (#"setTextAttributesForPositiveInfinity:", Void, NSDictionary),
+        (#"negativeInfinitySymbol", NSString),
+        (#"setNegativeInfinitySymbol:", Void, NSString),
+        (#"textAttributesForNegativeInfinity", NSDictionary),
+        (#"setTextAttributesForNegativeInfinity:", Void, NSDictionary),
+        (#"positivePrefix", NSString),
+        (#"setPositivePrefix:", Void, NSString),
+        (#"positiveSuffix", NSString),
+        (#"setPositiveSuffix:", Void, NSString),
+        (#"negativePrefix", NSString),
+        (#"setNegativePrefix:", Void, NSString),
+        (#"negativeSuffix", NSString),
+        (#"setNegativeSuffix:", Void, NSString),
+        (#"currencyCode", NSString),
+        (#"setCurrencyCode:", Void, NSString),
+        (#"currencySymbol", NSString),
+        (#"setCurrencySymbol:", Void, NSString),
+        (#"internationalCurrencySymbol", NSString),
+        (#"setInternationalCurrencySymbol:", Void, NSString),
+        (#"percentSymbol", NSString),
+        (#"setPercentSymbol:", Void, NSString),
+        (#"perMillSymbol", NSString),
+        (#"setPerMillSymbol:", Void, NSString),
+        (#"minusSign", NSString),
+        (#"setMinusSign:", Void, NSString),
+        (#"plusSign", NSString),
+        (#"setPlusSign:", Void, NSString),
+        (#"exponentSymbol", NSString),
+        (#"setExponentSymbol:", Void, NSString),
+        (#"groupingSize", CULong),
+        (#"setGroupingSize:", Void, CULong),
+        (#"secondaryGroupingSize", CULong),
+        (#"setSecondaryGroupingSize:", Void, CULong),
+        (#"multiplier", NSNumber),
+        (#"setMultiplier:", Void, NSNumber),
+        (#"formatWidth", CULong),
+        (#"setFormatWidth:", Void, CULong),
+        (#"paddingCharacter", NSString),
+        (#"setPaddingCharacter:", Void, NSString),
+        (#"paddingPosition", CULong),
+        (#"setPaddingPosition:", Void, CULong),
+        (#"roundingMode", CULong),
+        (#"setRoundingMode:", Void, CULong),
+        (#"roundingIncrement", NSNumber),
+        (#"setRoundingIncrement:", Void, NSNumber),
+        (#"minimumIntegerDigits", CULong),
+        (#"setMinimumIntegerDigits:", Void, CULong),
+        (#"maximumIntegerDigits", CULong),
+        (#"setMaximumIntegerDigits:", Void, CULong),
+        (#"minimumFractionDigits", CULong),
+        (#"setMinimumFractionDigits:", Void, CULong),
+        (#"maximumFractionDigits", CULong),
+        (#"setMaximumFractionDigits:", Void, CULong),
+        (#"minimum", NSNumber),
+        (#"setMinimum:", Void, NSNumber),
+        (#"maximum", NSNumber),
+        (#"setMaximum:", Void, NSNumber),
+        (#"currencyGroupingSeparator", NSString),
+        (#"setCurrencyGroupingSeparator:", Void, NSString),
+        (#"isLenient", Bool),
+        (#"setLenient:", Void, Bool),
+        (#"usesSignificantDigits", Bool),
+        (#"setUsesSignificantDigits:", Void, Bool),
+        (#"minimumSignificantDigits", CULong),
+        (#"setMinimumSignificantDigits:", Void, CULong),
+        (#"maximumSignificantDigits", CULong),
+        (#"setMaximumSignificantDigits:", Void, CULong),
+        (#"isPartialStringValidationEnabled", Bool),
+        (#"setPartialStringValidationEnabled:", Void, Bool),
+        (#"hasThousandSeparators", Bool),
+        (#"setHasThousandSeparators:", Void, Bool),
+        (#"thousandSeparator", NSString),
+        (#"setThousandSeparator:", Void, NSString),
+        (#"localizesFormat", Bool),
+        (#"setLocalizesFormat:", Void, Bool),
+        (#"format", NSString),
+        (#"setFormat:", Void, NSString),
+        (#"attributedStringForZero", NSAttributedString),
+        (#"setAttributedStringForZero:", Void, NSAttributedString),
+        (#"attributedStringForNil", NSAttributedString),
+        (#"setAttributedStringForNil:", Void, NSAttributedString),
+        (#"attributedStringForNotANumber", NSAttributedString),
+        (#"setAttributedStringForNotANumber:", Void, NSAttributedString),
+        (#"roundingBehavior", NSDecimalNumberHandler),
+        (#"setRoundingBehavior:", Void, NSDecimalNumberHandler),
+    )
+);
+record NSObject = externalClass(Void,
+    ClassMethods(
+        (#"load", Void),
+        (#"initialize", Void),
+        (#"new", Id),
+        (#"allocWithZone:", Id, Pointer[NSZone]),
+        (#"alloc", Id),
+        (#"copyWithZone:", Id, Pointer[NSZone]),
+        (#"mutableCopyWithZone:", Id, Pointer[NSZone]),
+        (#"superclass", Id),
+        (#"class", Id),
+        (#"instancesRespondToSelector:", Bool, SelectorHandle),
+        (#"conformsToProtocol:", Bool, Id),
+        (#"instanceMethodForSelector:", IMP, SelectorHandle),
+        (#"instanceMethodSignatureForSelector:", NSMethodSignature, SelectorHandle),
+        (#"description", NSString),
+        (#"isSubclassOfClass:", Bool, Id),
+        (#"resolveClassMethod:", Bool, SelectorHandle),
+        (#"resolveInstanceMethod:", Bool, SelectorHandle),
+        (#"version", CLong),
+        (#"setVersion:", Void, CLong),
+        (#"poseAsClass:", Void, Id),
+        (#"accessInstanceVariablesDirectly", Bool),
+        (#"useStoredAccessor", Bool),
+        (#"keyPathsForValuesAffectingValueForKey:", NSSet, NSString),
+        (#"automaticallyNotifiesObserversForKey:", Bool, NSString),
+        (#"setKeys:triggerChangeNotificationsForDependentKey:", Void, NSArray, NSString),
+        (#"classFallbacksForKeyedArchiver", NSArray),
+        (#"classForKeyedUnarchiver", Id),
+        (#"cancelPreviousPerformRequestsWithTarget:selector:object:", Void, Id, SelectorHandle, Id),
+        (#"cancelPreviousPerformRequestsWithTarget:", Void, Id),
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"dealloc", Void),
+        (#"finalize", Void),
+        (#"copy", Id),
+        (#"mutableCopy", Id),
+        (#"methodForSelector:", IMP, SelectorHandle),
+        (#"doesNotRecognizeSelector:", Void, SelectorHandle),
+        (#"forwardingTargetForSelector:", Id, SelectorHandle),
+        (#"forwardInvocation:", Void, NSInvocation),
+        (#"methodSignatureForSelector:", NSMethodSignature, SelectorHandle),
+        (#"classForCoder", Id),
+        (#"replacementObjectForCoder:", Id, NSCoder),
+        (#"awakeAfterUsingCoder:", Id, NSCoder),
+        (#"autoContentAccessingProxy", Id),
+        (#"attemptRecoveryFromError:optionIndex:delegate:didRecoverSelector:contextInfo:", Void, NSError, CULong, Id, SelectorHandle, RawPointer),
+        (#"attemptRecoveryFromError:optionIndex:", Bool, NSError, CULong),
+        (#"fileManager:shouldProceedAfterError:", Bool, NSFileManager, NSDictionary),
+        (#"fileManager:willProcessPath:", Void, NSFileManager, NSString),
+        (#"fileManager:shouldCopyItemAtPath:toPath:", Bool, NSFileManager, NSString, NSString),
+        (#"fileManager:shouldCopyItemAtURL:toURL:", Bool, NSFileManager, NSURL, NSURL),
+        (#"fileManager:shouldProceedAfterError:copyingItemAtPath:toPath:", Bool, NSFileManager, NSError, NSString, NSString),
+        (#"fileManager:shouldProceedAfterError:copyingItemAtURL:toURL:", Bool, NSFileManager, NSError, NSURL, NSURL),
+        (#"fileManager:shouldMoveItemAtPath:toPath:", Bool, NSFileManager, NSString, NSString),
+        (#"fileManager:shouldMoveItemAtURL:toURL:", Bool, NSFileManager, NSURL, NSURL),
+        (#"fileManager:shouldProceedAfterError:movingItemAtPath:toPath:", Bool, NSFileManager, NSError, NSString, NSString),
+        (#"fileManager:shouldProceedAfterError:movingItemAtURL:toURL:", Bool, NSFileManager, NSError, NSURL, NSURL),
+        (#"fileManager:shouldLinkItemAtPath:toPath:", Bool, NSFileManager, NSString, NSString),
+        (#"fileManager:shouldLinkItemAtURL:toURL:", Bool, NSFileManager, NSURL, NSURL),
+        (#"fileManager:shouldProceedAfterError:linkingItemAtPath:toPath:", Bool, NSFileManager, NSError, NSString, NSString),
+        (#"fileManager:shouldProceedAfterError:linkingItemAtURL:toURL:", Bool, NSFileManager, NSError, NSURL, NSURL),
+        (#"fileManager:shouldRemoveItemAtPath:", Bool, NSFileManager, NSString),
+        (#"fileManager:shouldRemoveItemAtURL:", Bool, NSFileManager, NSURL),
+        (#"fileManager:shouldProceedAfterError:removingItemAtPath:", Bool, NSFileManager, NSError, NSString),
+        (#"fileManager:shouldProceedAfterError:removingItemAtURL:", Bool, NSFileManager, NSError, NSURL),
+        (#"valueForKey:", Id, NSString),
+        (#"setValue:forKey:", Void, Id, NSString),
+        (#"validateValue:forKey:error:", Bool, Pointer[Id], NSString, Pointer[NSError]),
+        (#"mutableArrayValueForKey:", NSMutableArray, NSString),
+        (#"mutableSetValueForKey:", NSMutableSet, NSString),
+        (#"valueForKeyPath:", Id, NSString),
+        (#"setValue:forKeyPath:", Void, Id, NSString),
+        (#"validateValue:forKeyPath:error:", Bool, Pointer[Id], NSString, Pointer[NSError]),
+        (#"mutableArrayValueForKeyPath:", NSMutableArray, NSString),
+        (#"mutableSetValueForKeyPath:", NSMutableSet, NSString),
+        (#"valueForUndefinedKey:", Id, NSString),
+        (#"setValue:forUndefinedKey:", Void, Id, NSString),
+        (#"setNilValueForKey:", Void, NSString),
+        (#"dictionaryWithValuesForKeys:", NSDictionary, NSArray),
+        (#"setValuesForKeysWithDictionary:", Void, NSDictionary),
+        (#"storedValueForKey:", Id, NSString),
+        (#"takeStoredValue:forKey:", Void, Id, NSString),
+        (#"takeValue:forKey:", Void, Id, NSString),
+        (#"takeValue:forKeyPath:", Void, Id, NSString),
+        (#"handleQueryWithUnboundKey:", Id, NSString),
+        (#"handleTakeValue:forUnboundKey:", Void, Id, NSString),
+        (#"unableToSetNilForKey:", Void, NSString),
+        (#"valuesForKeys:", NSDictionary, NSArray),
+        (#"takeValuesFromDictionary:", Void, NSDictionary),
+        (#"observeValueForKeyPath:ofObject:change:context:", Void, NSString, Id, NSDictionary, RawPointer),
+        (#"addObserver:forKeyPath:options:context:", Void, NSObject, NSString, CULong, RawPointer),
+        (#"removeObserver:forKeyPath:", Void, NSObject, NSString),
+        (#"willChangeValueForKey:", Void, NSString),
+        (#"didChangeValueForKey:", Void, NSString),
+        (#"willChange:valuesAtIndexes:forKey:", Void, CULong, NSIndexSet, NSString),
+        (#"didChange:valuesAtIndexes:forKey:", Void, CULong, NSIndexSet, NSString),
+        (#"willChangeValueForKey:withSetMutation:usingObjects:", Void, NSString, CULong, NSSet),
+        (#"didChangeValueForKey:withSetMutation:usingObjects:", Void, NSString, CULong, NSSet),
+        (#"setObservationInfo:", Void, RawPointer),
+        (#"observationInfo", RawPointer),
+        (#"classForKeyedArchiver", Id),
+        (#"replacementObjectForKeyedArchiver:", Id, NSKeyedArchiver),
+        (#"performSelector:withObject:afterDelay:inModes:", Void, SelectorHandle, Id, Double, NSArray),
+        (#"performSelector:withObject:afterDelay:", Void, SelectorHandle, Id, Double),
+        (#"performSelectorOnMainThread:withObject:waitUntilDone:modes:", Void, SelectorHandle, Id, Bool, NSArray),
+        (#"performSelectorOnMainThread:withObject:waitUntilDone:", Void, SelectorHandle, Id, Bool),
+        (#"performSelector:onThread:withObject:waitUntilDone:modes:", Void, SelectorHandle, NSThread, Id, Bool, NSArray),
+        (#"performSelector:onThread:withObject:waitUntilDone:", Void, SelectorHandle, NSThread, Id, Bool),
+        (#"performSelectorInBackground:withObject:", Void, SelectorHandle, Id),
+        (#"URL:resourceDataDidBecomeAvailable:", Void, NSURL, NSData),
+        (#"URLResourceDidFinishLoading:", Void, NSURL),
+        (#"URLResourceDidCancelLoading:", Void, NSURL),
+        (#"URL:resourceDidFailLoadingWithReason:", Void, NSURL, NSString),
+        (#"connection:willSendRequest:redirectResponse:", NSURLRequest, NSURLConnection, NSURLRequest, NSURLResponse),
+        (#"connection:needNewBodyStream:", NSInputStream, NSURLConnection, NSURLRequest),
+        (#"connection:canAuthenticateAgainstProtectionSpace:", Bool, NSURLConnection, NSURLProtectionSpace),
+        (#"connection:didReceiveAuthenticationChallenge:", Void, NSURLConnection, NSURLAuthenticationChallenge),
+        (#"connection:didCancelAuthenticationChallenge:", Void, NSURLConnection, NSURLAuthenticationChallenge),
+        (#"connectionShouldUseCredentialStorage:", Bool, NSURLConnection),
+        (#"connection:didReceiveResponse:", Void, NSURLConnection, NSURLResponse),
+        (#"connection:didReceiveData:", Void, NSURLConnection, NSData),
+        (#"connection:didSendBodyData:totalBytesWritten:totalBytesExpectedToWrite:", Void, NSURLConnection, CLong, CLong, CLong),
+        (#"connectionDidFinishLoading:", Void, NSURLConnection),
+        (#"connection:didFailWithError:", Void, NSURLConnection, NSError),
+        (#"connection:willCacheResponse:", NSCachedURLResponse, NSURLConnection, NSCachedURLResponse),
+        (#"classForArchiver", Id),
+        (#"replacementObjectForArchiver:", Id, NSArchiver),
+        (#"classForPortCoder", Id),
+        (#"replacementObjectForPortCoder:", Id, NSPortCoder),
+        (#"classDescription", NSClassDescription),
+        (#"attributeKeys", NSArray),
+        (#"toOneRelationshipKeys", NSArray),
+        (#"toManyRelationshipKeys", NSArray),
+        (#"inverseForRelationshipKey:", NSString, NSString),
+        (#"scriptingValueForSpecifier:", Id, NSScriptObjectSpecifier),
+        (#"scriptingProperties", NSDictionary),
+        (#"setScriptingProperties:", Void, NSDictionary),
+        (#"copyScriptingValue:forKey:withProperties:", Id, Id, NSString, NSDictionary),
+        (#"newScriptingObjectOfClass:forValueForKey:withContentsValue:properties:", Id, Id, NSString, Id, NSDictionary),
+        (#"classCode", UInt),
+        (#"className", NSString),
+        (#"valueAtIndex:inPropertyWithKey:", Id, CULong, NSString),
+        (#"valueWithName:inPropertyWithKey:", Id, NSString, NSString),
+        (#"valueWithUniqueID:inPropertyWithKey:", Id, Id, NSString),
+        (#"insertValue:atIndex:inPropertyWithKey:", Void, Id, CULong, NSString),
+        (#"removeValueAtIndex:fromPropertyWithKey:", Void, CULong, NSString),
+        (#"replaceValueAtIndex:inPropertyWithKey:withValue:", Void, CULong, NSString, Id),
+        (#"insertValue:inPropertyWithKey:", Void, Id, NSString),
+        (#"coerceValue:forKey:", Id, Id, NSString),
+        (#"objectSpecifier", NSScriptObjectSpecifier),
+        (#"indicesOfObjectsByEvaluatingObjectSpecifier:", NSArray, NSScriptObjectSpecifier),
+        (#"isEqualTo:", Bool, Id),
+        (#"isLessThanOrEqualTo:", Bool, Id),
+        (#"isLessThan:", Bool, Id),
+        (#"isGreaterThanOrEqualTo:", Bool, Id),
+        (#"isGreaterThan:", Bool, Id),
+        (#"isNotEqualTo:", Bool, Id),
+        (#"doesContain:", Bool, Id),
+        (#"isLike:", Bool, NSString),
+        (#"isCaseInsensitiveLike:", Bool, NSString),
+        (#"scriptingIsEqualTo:", Bool, Id),
+        (#"scriptingIsLessThanOrEqualTo:", Bool, Id),
+        (#"scriptingIsLessThan:", Bool, Id),
+        (#"scriptingIsGreaterThanOrEqualTo:", Bool, Id),
+        (#"scriptingIsGreaterThan:", Bool, Id),
+        (#"scriptingBeginsWith:", Bool, Id),
+        (#"scriptingEndsWith:", Bool, Id),
+        (#"scriptingContains:", Bool, Id),
+        (#"downloadDidBegin:", Void, NSURLDownload),
+        (#"download:willSendRequest:redirectResponse:", NSURLRequest, NSURLDownload, NSURLRequest, NSURLResponse),
+        (#"download:canAuthenticateAgainstProtectionSpace:", Bool, NSURLDownload, NSURLProtectionSpace),
+        (#"download:didReceiveAuthenticationChallenge:", Void, NSURLDownload, NSURLAuthenticationChallenge),
+        (#"download:didCancelAuthenticationChallenge:", Void, NSURLDownload, NSURLAuthenticationChallenge),
+        (#"downloadShouldUseCredentialStorage:", Bool, NSURLDownload),
+        (#"download:didReceiveResponse:", Void, NSURLDownload, NSURLResponse),
+        (#"download:willResumeWithResponse:fromByte:", Void, NSURLDownload, NSURLResponse, Int64),
+        (#"download:didReceiveDataOfLength:", Void, NSURLDownload, CULong),
+        (#"download:shouldDecodeSourceDataOfMIMEType:", Bool, NSURLDownload, NSString),
+        (#"download:decideDestinationWithSuggestedFilename:", Void, NSURLDownload, NSString),
+        (#"download:didCreateDestination:", Void, NSURLDownload, NSString),
+        (#"downloadDidFinish:", Void, NSURLDownload),
+        (#"download:didFailWithError:", Void, NSURLDownload, NSError),
+    )
+);
+record NSOperation = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"start", Void),
+        (#"main", Void),
+        (#"isCancelled", Bool),
+        (#"cancel", Void),
+        (#"isExecuting", Bool),
+        (#"isFinished", Bool),
+        (#"isConcurrent", Bool),
+        (#"isReady", Bool),
+        (#"addDependency:", Void, NSOperation),
+        (#"removeDependency:", Void, NSOperation),
+        (#"dependencies", NSArray),
+        (#"queuePriority", CLong),
+        (#"setQueuePriority:", Void, CLong),
+        (#"completionBlock", UnknownType),
+        (#"setCompletionBlock:", Void, UnknownType),
+        (#"waitUntilFinished", Void),
+        (#"threadPriority", Double),
+        (#"setThreadPriority:", Void, Double),
+    )
+);
+record NSOperationQueue = externalClass(NSObject,
+    ClassMethods(
+        (#"currentQueue", Id),
+        (#"mainQueue", Id),
+    ),
+    InstanceMethods(
+        (#"addOperation:", Void, NSOperation),
+        (#"addOperations:waitUntilFinished:", Void, NSArray, Bool),
+        (#"addOperationWithBlock:", Void, UnknownType),
+        (#"operations", NSArray),
+        (#"operationCount", CULong),
+        (#"maxConcurrentOperationCount", CLong),
+        (#"setMaxConcurrentOperationCount:", Void, CLong),
+        (#"setSuspended:", Void, Bool),
+        (#"isSuspended", Bool),
+        (#"setName:", Void, NSString),
+        (#"name", NSString),
+        (#"cancelAllOperations", Void),
+        (#"waitUntilAllOperationsAreFinished", Void),
+    )
+);
+record NSOrthography = externalClass(NSObject,
+    ClassMethods(
+        (#"orthographyWithDominantScript:languageMap:", Id, NSString, NSDictionary),
+    ),
+    InstanceMethods(
+        (#"dominantScript", NSString),
+        (#"languageMap", NSDictionary),
+        (#"languagesForScript:", NSArray, NSString),
+        (#"dominantLanguageForScript:", NSString, NSString),
+        (#"dominantLanguage", NSString),
+        (#"allScripts", NSArray),
+        (#"allLanguages", NSArray),
+        (#"initWithDominantScript:languageMap:", Id, NSString, NSDictionary),
+    )
+);
+record NSOutputStream = externalClass(NSStream,
+    ClassMethods(
+        (#"outputStreamToMemory", Id),
+        (#"outputStreamToBuffer:capacity:", Id, Pointer[CUChar], CULong),
+        (#"outputStreamToFileAtPath:append:", Id, NSString, Bool),
+        (#"outputStreamWithURL:append:", Id, NSURL, Bool),
+    ),
+    InstanceMethods(
+        (#"write:maxLength:", CLong, Pointer[CUChar], CULong),
+        (#"hasSpaceAvailable", Bool),
+        (#"initToMemory", Id),
+        (#"initToBuffer:capacity:", Id, Pointer[CUChar], CULong),
+        (#"initToFileAtPath:append:", Id, NSString, Bool),
+        (#"initWithURL:append:", Id, NSURL, Bool),
+    )
+);
+record NSPipe = externalClass(NSObject,
+    ClassMethods(
+        (#"pipe", Id),
+    ),
+    InstanceMethods(
+        (#"fileHandleForReading", NSFileHandle),
+        (#"fileHandleForWriting", NSFileHandle),
+        (#"init", Id),
+    )
+);
+record NSPointerArray = externalClass(NSObject,
+    ClassMethods(
+        (#"pointerArrayWithOptions:", Id, CULong),
+        (#"pointerArrayWithPointerFunctions:", Id, NSPointerFunctions),
+        (#"pointerArrayWithStrongObjects", Id),
+        (#"pointerArrayWithWeakObjects", Id),
+    ),
+    InstanceMethods(
+        (#"initWithOptions:", Id, CULong),
+        (#"initWithPointerFunctions:", Id, NSPointerFunctions),
+        (#"pointerFunctions", NSPointerFunctions),
+        (#"pointerAtIndex:", RawPointer, CULong),
+        (#"addPointer:", Void, RawPointer),
+        (#"removePointerAtIndex:", Void, CULong),
+        (#"insertPointer:atIndex:", Void, RawPointer, CULong),
+        (#"replacePointerAtIndex:withPointer:", Void, CULong, RawPointer),
+        (#"compact", Void),
+        (#"count", CULong),
+        (#"setCount:", Void, CULong),
+        (#"allObjects", NSArray),
+    )
+);
+record NSPointerFunctions = externalClass(NSObject,
+    ClassMethods(
+        (#"pointerFunctionsWithOptions:", Id, CULong),
+    ),
+    InstanceMethods(
+        (#"initWithOptions:", Id, CULong),
+        (#"hashFunction", CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),(CULong)]),
+        (#"setHashFunction:", Void, CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),(CULong)]),
+        (#"isEqualFunction", CCodePointer[(RawPointer,RawPointer,CCodePointer[(RawPointer),(CULong)]),(CChar)]),
+        (#"setIsEqualFunction:", Void, CCodePointer[(RawPointer,RawPointer,CCodePointer[(RawPointer),(CULong)]),(CChar)]),
+        (#"sizeFunction", CCodePointer[(RawPointer),(CULong)]),
+        (#"setSizeFunction:", Void, CCodePointer[(RawPointer),(CULong)]),
+        (#"descriptionFunction", CCodePointer[(RawPointer),(NSString)]),
+        (#"setDescriptionFunction:", Void, CCodePointer[(RawPointer),(NSString)]),
+        (#"relinquishFunction", CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),()]),
+        (#"setRelinquishFunction:", Void, CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),()]),
+        (#"acquireFunction", CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)],CChar),(RawPointer)]),
+        (#"setAcquireFunction:", Void, CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)],CChar),(RawPointer)]),
+        (#"usesStrongWriteBarrier", Bool),
+        (#"setUsesStrongWriteBarrier:", Void, Bool),
+        (#"usesWeakReadAndWriteBarriers", Bool),
+        (#"setUsesWeakReadAndWriteBarriers:", Void, Bool),
+    )
+);
+record NSPort = externalClass(NSObject,
+    ClassMethods(
+        (#"allocWithZone:", Id, Pointer[NSZone]),
+        (#"port", NSPort),
+    ),
+    InstanceMethods(
+        (#"invalidate", Void),
+        (#"isValid", Bool),
+        (#"setDelegate:", Void, Id),
+        (#"delegate", Id),
+        (#"scheduleInRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"removeFromRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"reservedSpaceLength", CULong),
+        (#"sendBeforeDate:components:from:reserved:", Bool, NSDate, NSMutableArray, NSPort, CULong),
+        (#"sendBeforeDate:msgid:components:from:reserved:", Bool, NSDate, CULong, NSMutableArray, NSPort, CULong),
+        (#"addConnection:toRunLoop:forMode:", Void, NSConnection, NSRunLoop, NSString),
+        (#"removeConnection:fromRunLoop:forMode:", Void, NSConnection, NSRunLoop, NSString),
+    )
+);
+record NSPortCoder = externalClass(NSCoder,
+    ClassMethods(
+        (#"portCoderWithReceivePort:sendPort:components:", Id, NSPort, NSPort, NSArray),
+    ),
+    InstanceMethods(
+        (#"isBycopy", Bool),
+        (#"isByref", Bool),
+        (#"connection", NSConnection),
+        (#"encodePortObject:", Void, NSPort),
+        (#"decodePortObject", NSPort),
+        (#"initWithReceivePort:sendPort:components:", Id, NSPort, NSPort, NSArray),
+        (#"dispatch", Void),
+    )
+);
+record NSPortMessage = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithSendPort:receivePort:components:", Id, NSPort, NSPort, NSArray),
+        (#"components", NSArray),
+        (#"receivePort", NSPort),
+        (#"sendPort", NSPort),
+        (#"sendBeforeDate:", Bool, NSDate),
+        (#"msgid", UInt),
+        (#"setMsgid:", Void, UInt),
+    )
+);
+record NSPortNameServer = externalClass(NSObject,
+    ClassMethods(
+        (#"systemDefaultPortNameServer", NSPortNameServer),
+    ),
+    InstanceMethods(
+        (#"portForName:", NSPort, NSString),
+        (#"portForName:host:", NSPort, NSString, NSString),
+        (#"registerPort:name:", Bool, NSPort, NSString),
+        (#"removePortForName:", Bool, NSString),
+    )
+);
+record NSPositionalSpecifier = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithPosition:objectSpecifier:", Id, CULong, NSScriptObjectSpecifier),
+        (#"position", CULong),
+        (#"objectSpecifier", NSScriptObjectSpecifier),
+        (#"setInsertionClassDescription:", Void, NSScriptClassDescription),
+        (#"evaluate", Void),
+        (#"insertionContainer", Id),
+        (#"insertionKey", NSString),
+        (#"insertionIndex", CLong),
+        (#"insertionReplaces", Bool),
+    )
+);
+record NSPredicate = externalClass(NSObject,
+    ClassMethods(
+        (#"predicateWithFormat:argumentArray:", NSPredicate, NSString, NSArray),
+        (#"predicateWithFormat:", NSPredicate, NSString),
+        (#"predicateWithFormat:arguments:", NSPredicate, NSString, Pointer[__va_list_tag]),
+        (#"predicateWithValue:", NSPredicate, Bool),
+        (#"predicateWithBlock:", NSPredicate, UnknownType),
+    ),
+    InstanceMethods(
+        (#"predicateFormat", NSString),
+        (#"predicateWithSubstitutionVariables:", NSPredicate, NSDictionary),
+        (#"evaluateWithObject:", Bool, Id),
+        (#"evaluateWithObject:substitutionVariables:", Bool, Id, NSDictionary),
+    )
+);
+record NSProcessInfo = externalClass(NSObject,
+    ClassMethods(
+        (#"processInfo", NSProcessInfo),
+    ),
+    InstanceMethods(
+        (#"environment", NSDictionary),
+        (#"arguments", NSArray),
+        (#"hostName", NSString),
+        (#"processName", NSString),
+        (#"processIdentifier", Int),
+        (#"setProcessName:", Void, NSString),
+        (#"globallyUniqueString", NSString),
+        (#"operatingSystem", CULong),
+        (#"operatingSystemName", NSString),
+        (#"operatingSystemVersionString", NSString),
+        (#"processorCount", CULong),
+        (#"activeProcessorCount", CULong),
+        (#"physicalMemory", UInt64),
+        (#"systemUptime", Double),
+        (#"disableSuddenTermination", Void),
+        (#"enableSuddenTermination", Void),
+    )
+);
+record NSPropertyListSerialization = externalClass(NSObject,
+    ClassMethods(
+        (#"propertyList:isValidForFormat:", Bool, Id, CULong),
+        (#"dataWithPropertyList:format:options:error:", NSData, Id, CULong, CULong, Pointer[NSError]),
+        (#"writePropertyList:toStream:format:options:error:", CLong, Id, NSOutputStream, CULong, CULong, Pointer[NSError]),
+        (#"propertyListWithData:options:format:error:", Id, NSData, CULong, Pointer[CULong], Pointer[NSError]),
+        (#"propertyListWithStream:options:format:error:", Id, NSInputStream, CULong, Pointer[CULong], Pointer[NSError]),
+        (#"dataFromPropertyList:format:errorDescription:", NSData, Id, CULong, Pointer[NSString]),
+        (#"propertyListFromData:mutabilityOption:format:errorDescription:", Id, NSData, CULong, Pointer[CULong], Pointer[NSString]),
+    ),
+    InstanceMethods(
+    )
+);
+record NSPropertySpecifier = externalClass(NSScriptObjectSpecifier,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSProtocolChecker = externalClass(NSProxy,
+    ClassMethods(
+        (#"protocolCheckerWithTarget:protocol:", Id, NSObject, Id),
+    ),
+    InstanceMethods(
+        (#"protocol", Id),
+        (#"target", NSObject),
+        (#"initWithTarget:protocol:", Id, NSObject, Id),
+    )
+);
+record NSProxy = externalClass(Void,
+    ClassMethods(
+        (#"alloc", Id),
+        (#"allocWithZone:", Id, Pointer[NSZone]),
+        (#"class", Id),
+        (#"respondsToSelector:", Bool, SelectorHandle),
+    ),
+    InstanceMethods(
+        (#"forwardInvocation:", Void, NSInvocation),
+        (#"methodSignatureForSelector:", NSMethodSignature, SelectorHandle),
+        (#"dealloc", Void),
+        (#"finalize", Void),
+        (#"description", NSString),
+    )
+);
+record NSPurgeableData = externalClass(NSMutableData,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSQuitCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"saveOptions", CULong),
+    )
+);
+record NSRandomSpecifier = externalClass(NSScriptObjectSpecifier,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSRangeSpecifier = externalClass(NSScriptObjectSpecifier,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithContainerClassDescription:containerSpecifier:key:startSpecifier:endSpecifier:", Id, NSScriptClassDescription, NSScriptObjectSpecifier, NSString, NSScriptObjectSpecifier, NSScriptObjectSpecifier),
+        (#"startSpecifier", NSScriptObjectSpecifier),
+        (#"setStartSpecifier:", Void, NSScriptObjectSpecifier),
+        (#"endSpecifier", NSScriptObjectSpecifier),
+        (#"setEndSpecifier:", Void, NSScriptObjectSpecifier),
+    )
+);
+record NSRecursiveLock = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"tryLock", Bool),
+        (#"lockBeforeDate:", Bool, NSDate),
+        (#"setName:", Void, NSString),
+        (#"name", NSString),
+    )
+);
+record NSRelativeSpecifier = externalClass(NSScriptObjectSpecifier,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithContainerClassDescription:containerSpecifier:key:relativePosition:baseSpecifier:", Id, NSScriptClassDescription, NSScriptObjectSpecifier, NSString, CULong, NSScriptObjectSpecifier),
+        (#"relativePosition", CULong),
+        (#"setRelativePosition:", Void, CULong),
+        (#"baseSpecifier", NSScriptObjectSpecifier),
+        (#"setBaseSpecifier:", Void, NSScriptObjectSpecifier),
+    )
+);
+record NSRunLoop = externalClass(NSObject,
+    ClassMethods(
+        (#"currentRunLoop", NSRunLoop),
+        (#"mainRunLoop", NSRunLoop),
+    ),
+    InstanceMethods(
+        (#"currentMode", NSString),
+        (#"getCFRunLoop", CFRunLoopRef),
+        (#"addTimer:forMode:", Void, NSTimer, NSString),
+        (#"addPort:forMode:", Void, NSPort, NSString),
+        (#"removePort:forMode:", Void, NSPort, NSString),
+        (#"limitDateForMode:", NSDate, NSString),
+        (#"acceptInputForMode:beforeDate:", Void, NSString, NSDate),
+        (#"run", Void),
+        (#"runUntilDate:", Void, NSDate),
+        (#"runMode:beforeDate:", Bool, NSString, NSDate),
+        (#"configureAsServer", Void),
+        (#"performSelector:target:argument:order:modes:", Void, SelectorHandle, Id, Id, CULong, NSArray),
+        (#"cancelPerformSelector:target:argument:", Void, SelectorHandle, Id, Id),
+        (#"cancelPerformSelectorsWithTarget:", Void, Id),
+    )
+);
+record NSScanner = externalClass(NSObject,
+    ClassMethods(
+        (#"scannerWithString:", Id, NSString),
+        (#"localizedScannerWithString:", Id, NSString),
+    ),
+    InstanceMethods(
+        (#"string", NSString),
+        (#"scanLocation", CULong),
+        (#"setScanLocation:", Void, CULong),
+        (#"setCharactersToBeSkipped:", Void, NSCharacterSet),
+        (#"setCaseSensitive:", Void, Bool),
+        (#"setLocale:", Void, Id),
+        (#"charactersToBeSkipped", NSCharacterSet),
+        (#"caseSensitive", Bool),
+        (#"locale", Id),
+        (#"scanInt:", Bool, Pointer[Int]),
+        (#"scanInteger:", Bool, Pointer[CLong]),
+        (#"scanHexLongLong:", Bool, Pointer[UInt64]),
+        (#"scanHexFloat:", Bool, Pointer[Float]),
+        (#"scanHexDouble:", Bool, Pointer[Double]),
+        (#"scanHexInt:", Bool, Pointer[UInt]),
+        (#"scanLongLong:", Bool, Pointer[Int64]),
+        (#"scanFloat:", Bool, Pointer[Float]),
+        (#"scanDouble:", Bool, Pointer[Double]),
+        (#"scanString:intoString:", Bool, NSString, Pointer[NSString]),
+        (#"scanCharactersFromSet:intoString:", Bool, NSCharacterSet, Pointer[NSString]),
+        (#"scanUpToString:intoString:", Bool, NSString, Pointer[NSString]),
+        (#"scanUpToCharactersFromSet:intoString:", Bool, NSCharacterSet, Pointer[NSString]),
+        (#"isAtEnd", Bool),
+        (#"initWithString:", Id, NSString),
+        (#"scanDecimal:", Bool, Pointer[NSDecimal]),
+    )
+);
+record NSScriptClassDescription = externalClass(NSClassDescription,
+    ClassMethods(
+        (#"classDescriptionForClass:", NSScriptClassDescription, Id),
+    ),
+    InstanceMethods(
+        (#"initWithSuiteName:className:dictionary:", Id, NSString, NSString, NSDictionary),
+        (#"suiteName", NSString),
+        (#"className", NSString),
+        (#"implementationClassName", NSString),
+        (#"superclassDescription", NSScriptClassDescription),
+        (#"appleEventCode", UInt),
+        (#"matchesAppleEventCode:", Bool, UInt),
+        (#"supportsCommand:", Bool, NSScriptCommandDescription),
+        (#"selectorForCommand:", SelectorHandle, NSScriptCommandDescription),
+        (#"typeForKey:", NSString, NSString),
+        (#"classDescriptionForKey:", NSScriptClassDescription, NSString),
+        (#"appleEventCodeForKey:", UInt, NSString),
+        (#"keyWithAppleEventCode:", NSString, UInt),
+        (#"defaultSubcontainerAttributeKey", NSString),
+        (#"isLocationRequiredToCreateForKey:", Bool, NSString),
+        (#"hasPropertyForKey:", Bool, NSString),
+        (#"hasOrderedToManyRelationshipForKey:", Bool, NSString),
+        (#"hasReadablePropertyForKey:", Bool, NSString),
+        (#"hasWritablePropertyForKey:", Bool, NSString),
+        (#"isReadOnlyKey:", Bool, NSString),
+    )
+);
+record NSScriptCoercionHandler = externalClass(NSObject,
+    ClassMethods(
+        (#"sharedCoercionHandler", NSScriptCoercionHandler),
+    ),
+    InstanceMethods(
+        (#"coerceValue:toClass:", Id, Id, Id),
+        (#"registerCoercer:selector:toConvertFromClass:toClass:", Void, Id, SelectorHandle, Id, Id),
+    )
+);
+record NSScriptCommand = externalClass(NSObject,
+    ClassMethods(
+        (#"currentCommand", NSScriptCommand),
+    ),
+    InstanceMethods(
+        (#"initWithCommandDescription:", Id, NSScriptCommandDescription),
+        (#"commandDescription", NSScriptCommandDescription),
+        (#"setDirectParameter:", Void, Id),
+        (#"directParameter", Id),
+        (#"setReceiversSpecifier:", Void, NSScriptObjectSpecifier),
+        (#"receiversSpecifier", NSScriptObjectSpecifier),
+        (#"evaluatedReceivers", Id),
+        (#"setArguments:", Void, NSDictionary),
+        (#"arguments", NSDictionary),
+        (#"evaluatedArguments", NSDictionary),
+        (#"isWellFormed", Bool),
+        (#"performDefaultImplementation", Id),
+        (#"executeCommand", Id),
+        (#"setScriptErrorNumber:", Void, Int),
+        (#"setScriptErrorOffendingObjectDescriptor:", Void, NSAppleEventDescriptor),
+        (#"setScriptErrorExpectedTypeDescriptor:", Void, NSAppleEventDescriptor),
+        (#"setScriptErrorString:", Void, NSString),
+        (#"scriptErrorNumber", Int),
+        (#"scriptErrorOffendingObjectDescriptor", NSAppleEventDescriptor),
+        (#"scriptErrorExpectedTypeDescriptor", NSAppleEventDescriptor),
+        (#"scriptErrorString", NSString),
+        (#"appleEvent", NSAppleEventDescriptor),
+        (#"suspendExecution", Void),
+        (#"resumeExecutionWithResult:", Void, Id),
+    )
+);
+record NSScriptCommandDescription = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithSuiteName:commandName:dictionary:", Id, NSString, NSString, NSDictionary),
+        (#"suiteName", NSString),
+        (#"commandName", NSString),
+        (#"appleEventClassCode", UInt),
+        (#"appleEventCode", UInt),
+        (#"commandClassName", NSString),
+        (#"returnType", NSString),
+        (#"appleEventCodeForReturnType", UInt),
+        (#"argumentNames", NSArray),
+        (#"typeForArgumentWithName:", NSString, NSString),
+        (#"appleEventCodeForArgumentWithName:", UInt, NSString),
+        (#"isOptionalArgumentWithName:", Bool, NSString),
+        (#"createCommandInstance", NSScriptCommand),
+        (#"createCommandInstanceWithZone:", NSScriptCommand, Pointer[NSZone]),
+    )
+);
+record NSScriptExecutionContext = externalClass(NSObject,
+    ClassMethods(
+        (#"sharedScriptExecutionContext", NSScriptExecutionContext),
+    ),
+    InstanceMethods(
+        (#"topLevelObject", Id),
+        (#"setTopLevelObject:", Void, Id),
+        (#"objectBeingTested", Id),
+        (#"setObjectBeingTested:", Void, Id),
+        (#"rangeContainerObject", Id),
+        (#"setRangeContainerObject:", Void, Id),
+    )
+);
+record NSScriptObjectSpecifier = externalClass(NSObject,
+    ClassMethods(
+        (#"objectSpecifierWithDescriptor:", NSScriptObjectSpecifier, NSAppleEventDescriptor),
+    ),
+    InstanceMethods(
+        (#"initWithContainerSpecifier:key:", Id, NSScriptObjectSpecifier, NSString),
+        (#"initWithContainerClassDescription:containerSpecifier:key:", Id, NSScriptClassDescription, NSScriptObjectSpecifier, NSString),
+        (#"childSpecifier", NSScriptObjectSpecifier),
+        (#"setChildSpecifier:", Void, NSScriptObjectSpecifier),
+        (#"containerSpecifier", NSScriptObjectSpecifier),
+        (#"setContainerSpecifier:", Void, NSScriptObjectSpecifier),
+        (#"containerIsObjectBeingTested", Bool),
+        (#"setContainerIsObjectBeingTested:", Void, Bool),
+        (#"containerIsRangeContainerObject", Bool),
+        (#"setContainerIsRangeContainerObject:", Void, Bool),
+        (#"key", NSString),
+        (#"setKey:", Void, NSString),
+        (#"containerClassDescription", NSScriptClassDescription),
+        (#"setContainerClassDescription:", Void, NSScriptClassDescription),
+        (#"keyClassDescription", NSScriptClassDescription),
+        (#"indicesOfObjectsByEvaluatingWithContainer:count:", Pointer[CLong], Id, Pointer[CLong]),
+        (#"objectsByEvaluatingWithContainers:", Id, Id),
+        (#"objectsByEvaluatingSpecifier", Id),
+        (#"evaluationErrorNumber", CLong),
+        (#"setEvaluationErrorNumber:", Void, CLong),
+        (#"evaluationErrorSpecifier", NSScriptObjectSpecifier),
+        (#"descriptor", NSAppleEventDescriptor),
+    )
+);
+record NSScriptSuiteRegistry = externalClass(NSObject,
+    ClassMethods(
+        (#"sharedScriptSuiteRegistry", NSScriptSuiteRegistry),
+        (#"setSharedScriptSuiteRegistry:", Void, NSScriptSuiteRegistry),
+    ),
+    InstanceMethods(
+        (#"loadSuitesFromBundle:", Void, NSBundle),
+        (#"loadSuiteWithDictionary:fromBundle:", Void, NSDictionary, NSBundle),
+        (#"registerClassDescription:", Void, NSScriptClassDescription),
+        (#"registerCommandDescription:", Void, NSScriptCommandDescription),
+        (#"suiteNames", NSArray),
+        (#"appleEventCodeForSuite:", UInt, NSString),
+        (#"bundleForSuite:", NSBundle, NSString),
+        (#"classDescriptionsInSuite:", NSDictionary, NSString),
+        (#"commandDescriptionsInSuite:", NSDictionary, NSString),
+        (#"suiteForAppleEventCode:", NSString, UInt),
+        (#"classDescriptionWithAppleEventCode:", NSScriptClassDescription, UInt),
+        (#"commandDescriptionWithAppleEventClass:andAppleEventCode:", NSScriptCommandDescription, UInt, UInt),
+        (#"aeteResource:", NSData, NSString),
+    )
+);
+record NSScriptWhoseTest = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"isTrue", Bool),
+    )
+);
+record NSSet = externalClass(NSObject,
+    ClassMethods(
+        (#"set", Id),
+        (#"setWithObject:", Id, Id),
+        (#"setWithObjects:count:", Id, Pointer[Id], CULong),
+        (#"setWithObjects:", Id, Id),
+        (#"setWithSet:", Id, NSSet),
+        (#"setWithArray:", Id, NSArray),
+    ),
+    InstanceMethods(
+        (#"count", CULong),
+        (#"member:", Id, Id),
+        (#"objectEnumerator", NSEnumerator),
+        (#"allObjects", NSArray),
+        (#"anyObject", Id),
+        (#"containsObject:", Bool, Id),
+        (#"description", NSString),
+        (#"descriptionWithLocale:", NSString, Id),
+        (#"intersectsSet:", Bool, NSSet),
+        (#"isEqualToSet:", Bool, NSSet),
+        (#"isSubsetOfSet:", Bool, NSSet),
+        (#"makeObjectsPerformSelector:", Void, SelectorHandle),
+        (#"makeObjectsPerformSelector:withObject:", Void, SelectorHandle, Id),
+        (#"setByAddingObject:", NSSet, Id),
+        (#"setByAddingObjectsFromSet:", NSSet, NSSet),
+        (#"setByAddingObjectsFromArray:", NSSet, NSArray),
+        (#"enumerateObjectsUsingBlock:", Void, UnknownType),
+        (#"enumerateObjectsWithOptions:usingBlock:", Void, CULong, UnknownType),
+        (#"objectsPassingTest:", NSSet, UnknownType),
+        (#"objectsWithOptions:passingTest:", NSSet, CULong, UnknownType),
+        (#"initWithObjects:count:", Id, Pointer[Id], CULong),
+        (#"initWithObjects:", Id, Id),
+        (#"initWithSet:", Id, NSSet),
+        (#"initWithSet:copyItems:", Id, NSSet, Bool),
+        (#"initWithArray:", Id, NSArray),
+        (#"valueForKey:", Id, NSString),
+        (#"setValue:forKey:", Void, Id, NSString),
+        (#"addObserver:forKeyPath:options:context:", Void, NSObject, NSString, CULong, RawPointer),
+        (#"removeObserver:forKeyPath:", Void, NSObject, NSString),
+        (#"sortedArrayUsingDescriptors:", NSArray, NSArray),
+        (#"filteredSetUsingPredicate:", NSSet, NSPredicate),
+    )
+);
+record NSSetCommand = externalClass(NSScriptCommand,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"setReceiversSpecifier:", Void, NSScriptObjectSpecifier),
+        (#"keySpecifier", NSScriptObjectSpecifier),
+    )
+);
+record NSSimpleCString = externalClass(NSString,
+    ClassMethods(
+    ),
+    InstanceMethods(
+    )
+);
+record NSSocketPort = externalClass(NSPort,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"initWithTCPPort:", Id, UShort),
+        (#"initWithProtocolFamily:socketType:protocol:address:", Id, Int, Int, Int, NSData),
+        (#"initWithProtocolFamily:socketType:protocol:socket:", Id, Int, Int, Int, Int),
+        (#"initRemoteWithTCPPort:host:", Id, UShort, NSString),
+        (#"initRemoteWithProtocolFamily:socketType:protocol:address:", Id, Int, Int, Int, NSData),
+        (#"protocolFamily", Int),
+        (#"socketType", Int),
+        (#"protocol", Int),
+        (#"address", NSData),
+        (#"socket", Int),
+    )
+);
+record NSSocketPortNameServer = externalClass(NSPortNameServer,
+    ClassMethods(
+        (#"sharedInstance", Id),
+    ),
+    InstanceMethods(
+        (#"portForName:", NSPort, NSString),
+        (#"portForName:host:", NSPort, NSString, NSString),
+        (#"registerPort:name:", Bool, NSPort, NSString),
+        (#"removePortForName:", Bool, NSString),
+        (#"portForName:host:nameServerPortNumber:", NSPort, NSString, NSString, UShort),
+        (#"registerPort:name:nameServerPortNumber:", Bool, NSPort, NSString, UShort),
+        (#"setDefaultNameServerPortNumber:", Void, UShort),
+        (#"defaultNameServerPortNumber", UShort),
+    )
+);
+record NSSortDescriptor = externalClass(NSObject,
+    ClassMethods(
+        (#"sortDescriptorWithKey:ascending:", Id, NSString, Bool),
+        (#"sortDescriptorWithKey:ascending:selector:", Id, NSString, Bool, SelectorHandle),
+        (#"sortDescriptorWithKey:ascending:comparator:", Id, NSString, Bool, NSComparator),
+    ),
+    InstanceMethods(
+        (#"initWithKey:ascending:", Id, NSString, Bool),
+        (#"initWithKey:ascending:selector:", Id, NSString, Bool, SelectorHandle),
+        (#"key", NSString),
+        (#"ascending", Bool),
+        (#"selector", SelectorHandle),
+        (#"initWithKey:ascending:comparator:", Id, NSString, Bool, NSComparator),
+        (#"comparator", NSComparator),
+        (#"compareObject:toObject:", CLong, Id, Id),
+        (#"reversedSortDescriptor", Id),
+    )
+);
+record NSSpecifierTest = externalClass(NSScriptWhoseTest,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithObjectSpecifier:comparisonOperator:testObject:", Id, NSScriptObjectSpecifier, CULong, Id),
+    )
+);
+record NSSpellServer = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"setDelegate:", Void, Id),
+        (#"delegate", Id),
+        (#"registerLanguage:byVendor:", Bool, NSString, NSString),
+        (#"isWordInUserDictionaries:caseSensitive:", Bool, NSString, Bool),
+        (#"run", Void),
+    )
+);
+record NSStream = externalClass(NSObject,
+    ClassMethods(
+        (#"getStreamsToHost:port:inputStream:outputStream:", Void, NSHost, CLong, Pointer[NSInputStream], Pointer[NSOutputStream]),
+    ),
+    InstanceMethods(
+        (#"open", Void),
+        (#"close", Void),
+        (#"delegate", Id),
+        (#"setDelegate:", Void, Id),
+        (#"propertyForKey:", Id, NSString),
+        (#"setProperty:forKey:", Bool, Id, NSString),
+        (#"scheduleInRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"removeFromRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"streamStatus", CULong),
+        (#"streamError", NSError),
+    )
+);
+record NSString = externalClass(NSObject,
+    ClassMethods(
+        (#"defaultCStringEncoding", CULong),
+        (#"availableStringEncodings", Pointer[CULong]),
+        (#"localizedNameOfStringEncoding:", NSString, CULong),
+        (#"string", Id),
+        (#"stringWithString:", Id, NSString),
+        (#"stringWithCharacters:length:", Id, Pointer[UShort], CULong),
+        (#"stringWithUTF8String:", Id, Pointer[CChar]),
+        (#"stringWithFormat:", Id, NSString),
+        (#"localizedStringWithFormat:", Id, NSString),
+        (#"stringWithCString:encoding:", Id, Pointer[CChar], CULong),
+        (#"stringWithContentsOfURL:encoding:error:", Id, NSURL, CULong, Pointer[NSError]),
+        (#"stringWithContentsOfFile:encoding:error:", Id, NSString, CULong, Pointer[NSError]),
+        (#"stringWithContentsOfURL:usedEncoding:error:", Id, NSURL, Pointer[CULong], Pointer[NSError]),
+        (#"stringWithContentsOfFile:usedEncoding:error:", Id, NSString, Pointer[CULong], Pointer[NSError]),
+        (#"stringWithContentsOfFile:", Id, NSString),
+        (#"stringWithContentsOfURL:", Id, NSURL),
+        (#"stringWithCString:length:", Id, Pointer[CChar], CULong),
+        (#"stringWithCString:", Id, Pointer[CChar]),
+        (#"pathWithComponents:", NSString, NSArray),
+    ),
+    InstanceMethods(
+        (#"length", CULong),
+        (#"characterAtIndex:", UShort, CULong),
+        (#"getCharacters:range:", Void, Pointer[UShort], NSRange),
+        (#"substringFromIndex:", NSString, CULong),
+        (#"substringToIndex:", NSString, CULong),
+        (#"substringWithRange:", NSString, NSRange),
+        (#"compare:", CLong, NSString),
+        (#"compare:options:", CLong, NSString, CULong),
+        (#"compare:options:range:", CLong, NSString, CULong, NSRange),
+        (#"compare:options:range:locale:", CLong, NSString, CULong, NSRange, Id),
+        (#"caseInsensitiveCompare:", CLong, NSString),
+        (#"localizedCompare:", CLong, NSString),
+        (#"localizedCaseInsensitiveCompare:", CLong, NSString),
+        (#"localizedStandardCompare:", CLong, NSString),
+        (#"isEqualToString:", Bool, NSString),
+        (#"hasPrefix:", Bool, NSString),
+        (#"hasSuffix:", Bool, NSString),
+        (#"rangeOfString:", NSRange, NSString),
+        (#"rangeOfString:options:", NSRange, NSString, CULong),
+        (#"rangeOfString:options:range:", NSRange, NSString, CULong, NSRange),
+        (#"rangeOfString:options:range:locale:", NSRange, NSString, CULong, NSRange, NSLocale),
+        (#"rangeOfCharacterFromSet:", NSRange, NSCharacterSet),
+        (#"rangeOfCharacterFromSet:options:", NSRange, NSCharacterSet, CULong),
+        (#"rangeOfCharacterFromSet:options:range:", NSRange, NSCharacterSet, CULong, NSRange),
+        (#"rangeOfComposedCharacterSequenceAtIndex:", NSRange, CULong),
+        (#"rangeOfComposedCharacterSequencesForRange:", NSRange, NSRange),
+        (#"stringByAppendingString:", NSString, NSString),
+        (#"stringByAppendingFormat:", NSString, NSString),
+        (#"doubleValue", Double),
+        (#"floatValue", Float),
+        (#"intValue", Int),
+        (#"integerValue", CLong),
+        (#"longLongValue", Int64),
+        (#"boolValue", Bool),
+        (#"componentsSeparatedByString:", NSArray, NSString),
+        (#"componentsSeparatedByCharactersInSet:", NSArray, NSCharacterSet),
+        (#"commonPrefixWithString:options:", NSString, NSString, CULong),
+        (#"uppercaseString", NSString),
+        (#"lowercaseString", NSString),
+        (#"capitalizedString", NSString),
+        (#"stringByTrimmingCharactersInSet:", NSString, NSCharacterSet),
+        (#"stringByPaddingToLength:withString:startingAtIndex:", NSString, CULong, NSString, CULong),
+        (#"getLineStart:end:contentsEnd:forRange:", Void, Pointer[CULong], Pointer[CULong], Pointer[CULong], NSRange),
+        (#"lineRangeForRange:", NSRange, NSRange),
+        (#"getParagraphStart:end:contentsEnd:forRange:", Void, Pointer[CULong], Pointer[CULong], Pointer[CULong], NSRange),
+        (#"paragraphRangeForRange:", NSRange, NSRange),
+        (#"enumerateSubstringsInRange:options:usingBlock:", Void, NSRange, CULong, UnknownType),
+        (#"enumerateLinesUsingBlock:", Void, UnknownType),
+        (#"description", NSString),
+        (#"hash", CULong),
+        (#"fastestEncoding", CULong),
+        (#"smallestEncoding", CULong),
+        (#"dataUsingEncoding:allowLossyConversion:", NSData, CULong, Bool),
+        (#"dataUsingEncoding:", NSData, CULong),
+        (#"canBeConvertedToEncoding:", Bool, CULong),
+        (#"cStringUsingEncoding:", Pointer[CChar], CULong),
+        (#"getCString:maxLength:encoding:", Bool, Pointer[CChar], CULong, CULong),
+        (#"getBytes:maxLength:usedLength:encoding:options:range:remainingRange:", Bool, RawPointer, CULong, Pointer[CULong], CULong, CULong, NSRange, NSRangePointer),
+        (#"maximumLengthOfBytesUsingEncoding:", CULong, CULong),
+        (#"lengthOfBytesUsingEncoding:", CULong, CULong),
+        (#"decomposedStringWithCanonicalMapping", NSString),
+        (#"precomposedStringWithCanonicalMapping", NSString),
+        (#"decomposedStringWithCompatibilityMapping", NSString),
+        (#"precomposedStringWithCompatibilityMapping", NSString),
+        (#"stringByFoldingWithOptions:locale:", NSString, CULong, NSLocale),
+        (#"stringByReplacingOccurrencesOfString:withString:options:range:", NSString, NSString, NSString, CULong, NSRange),
+        (#"stringByReplacingOccurrencesOfString:withString:", NSString, NSString, NSString),
+        (#"stringByReplacingCharactersInRange:withString:", NSString, NSRange, NSString),
+        (#"UTF8String", Pointer[CChar]),
+        (#"init", Id),
+        (#"initWithCharactersNoCopy:length:freeWhenDone:", Id, Pointer[UShort], CULong, Bool),
+        (#"initWithCharacters:length:", Id, Pointer[UShort], CULong),
+        (#"initWithUTF8String:", Id, Pointer[CChar]),
+        (#"initWithString:", Id, NSString),
+        (#"initWithFormat:", Id, NSString),
+        (#"initWithFormat:arguments:", Id, NSString, Pointer[__va_list_tag]),
+        (#"initWithFormat:locale:", Id, NSString, Id),
+        (#"initWithFormat:locale:arguments:", Id, NSString, Id, Pointer[__va_list_tag]),
+        (#"initWithData:encoding:", Id, NSData, CULong),
+        (#"initWithBytes:length:encoding:", Id, RawPointer, CULong, CULong),
+        (#"initWithBytesNoCopy:length:encoding:freeWhenDone:", Id, RawPointer, CULong, CULong, Bool),
+        (#"initWithCString:encoding:", Id, Pointer[CChar], CULong),
+        (#"initWithContentsOfURL:encoding:error:", Id, NSURL, CULong, Pointer[NSError]),
+        (#"initWithContentsOfFile:encoding:error:", Id, NSString, CULong, Pointer[NSError]),
+        (#"initWithContentsOfURL:usedEncoding:error:", Id, NSURL, Pointer[CULong], Pointer[NSError]),
+        (#"initWithContentsOfFile:usedEncoding:error:", Id, NSString, Pointer[CULong], Pointer[NSError]),
+        (#"writeToURL:atomically:encoding:error:", Bool, NSURL, Bool, CULong, Pointer[NSError]),
+        (#"writeToFile:atomically:encoding:error:", Bool, NSString, Bool, CULong, Pointer[NSError]),
+        (#"propertyList", Id),
+        (#"propertyListFromStringsFileFormat", NSDictionary),
+        (#"cString", Pointer[CChar]),
+        (#"lossyCString", Pointer[CChar]),
+        (#"cStringLength", CULong),
+        (#"getCString:", Void, Pointer[CChar]),
+        (#"getCString:maxLength:", Void, Pointer[CChar], CULong),
+        (#"getCString:maxLength:range:remainingRange:", Void, Pointer[CChar], CULong, NSRange, NSRangePointer),
+        (#"writeToFile:atomically:", Bool, NSString, Bool),
+        (#"writeToURL:atomically:", Bool, NSURL, Bool),
+        (#"initWithContentsOfFile:", Id, NSString),
+        (#"initWithContentsOfURL:", Id, NSURL),
+        (#"initWithCStringNoCopy:length:freeWhenDone:", Id, Pointer[CChar], CULong, Bool),
+        (#"initWithCString:length:", Id, Pointer[CChar], CULong),
+        (#"initWithCString:", Id, Pointer[CChar]),
+        (#"getCharacters:", Void, Pointer[UShort]),
+        (#"pathComponents", NSArray),
+        (#"isAbsolutePath", Bool),
+        (#"lastPathComponent", NSString),
+        (#"stringByDeletingLastPathComponent", NSString),
+        (#"stringByAppendingPathComponent:", NSString, NSString),
+        (#"pathExtension", NSString),
+        (#"stringByDeletingPathExtension", NSString),
+        (#"stringByAppendingPathExtension:", NSString, NSString),
+        (#"stringByAbbreviatingWithTildeInPath", NSString),
+        (#"stringByExpandingTildeInPath", NSString),
+        (#"stringByStandardizingPath", NSString),
+        (#"stringByResolvingSymlinksInPath", NSString),
+        (#"stringsByAppendingPaths:", NSArray, NSArray),
+        (#"completePathIntoString:caseSensitive:matchesIntoArray:filterTypes:", CULong, Pointer[NSString], Bool, Pointer[NSArray], NSArray),
+        (#"fileSystemRepresentation", Pointer[CChar]),
+        (#"getFileSystemRepresentation:maxLength:", Bool, Pointer[CChar], CULong),
+        (#"stringByAddingPercentEscapesUsingEncoding:", NSString, CULong),
+        (#"stringByReplacingPercentEscapesUsingEncoding:", NSString, CULong),
+    )
+);
+record NSTask = externalClass(NSObject,
+    ClassMethods(
+        (#"launchedTaskWithLaunchPath:arguments:", NSTask, NSString, NSArray),
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"setLaunchPath:", Void, NSString),
+        (#"setArguments:", Void, NSArray),
+        (#"setEnvironment:", Void, NSDictionary),
+        (#"setCurrentDirectoryPath:", Void, NSString),
+        (#"setStandardInput:", Void, Id),
+        (#"setStandardOutput:", Void, Id),
+        (#"setStandardError:", Void, Id),
+        (#"launchPath", NSString),
+        (#"arguments", NSArray),
+        (#"environment", NSDictionary),
+        (#"currentDirectoryPath", NSString),
+        (#"standardInput", Id),
+        (#"standardOutput", Id),
+        (#"standardError", Id),
+        (#"launch", Void),
+        (#"interrupt", Void),
+        (#"terminate", Void),
+        (#"suspend", Bool),
+        (#"resume", Bool),
+        (#"processIdentifier", Int),
+        (#"isRunning", Bool),
+        (#"terminationStatus", Int),
+        (#"terminationReason", CLong),
+        (#"waitUntilExit", Void),
+    )
+);
+record NSTextCheckingResult = externalClass(NSObject,
+    ClassMethods(
+        (#"orthographyCheckingResultWithRange:orthography:", NSTextCheckingResult, NSRange, NSOrthography),
+        (#"spellCheckingResultWithRange:", NSTextCheckingResult, NSRange),
+        (#"grammarCheckingResultWithRange:details:", NSTextCheckingResult, NSRange, NSArray),
+        (#"dateCheckingResultWithRange:date:", NSTextCheckingResult, NSRange, NSDate),
+        (#"dateCheckingResultWithRange:date:timeZone:duration:", NSTextCheckingResult, NSRange, NSDate, NSTimeZone, Double),
+        (#"addressCheckingResultWithRange:components:", NSTextCheckingResult, NSRange, NSDictionary),
+        (#"linkCheckingResultWithRange:URL:", NSTextCheckingResult, NSRange, NSURL),
+        (#"quoteCheckingResultWithRange:replacementString:", NSTextCheckingResult, NSRange, NSString),
+        (#"dashCheckingResultWithRange:replacementString:", NSTextCheckingResult, NSRange, NSString),
+        (#"replacementCheckingResultWithRange:replacementString:", NSTextCheckingResult, NSRange, NSString),
+        (#"correctionCheckingResultWithRange:replacementString:", NSTextCheckingResult, NSRange, NSString),
+    ),
+    InstanceMethods(
+        (#"resultType", UInt64),
+        (#"range", NSRange),
+        (#"orthography", NSOrthography),
+        (#"grammarDetails", NSArray),
+        (#"date", NSDate),
+        (#"timeZone", NSTimeZone),
+        (#"duration", Double),
+        (#"addressComponents", NSDictionary),
+        (#"URL", NSURL),
+        (#"replacementString", NSString),
+    )
+);
+record NSThread = externalClass(NSObject,
+    ClassMethods(
+        (#"currentThread", NSThread),
+        (#"detachNewThreadSelector:toTarget:withObject:", Void, SelectorHandle, Id, Id),
+        (#"isMultiThreaded", Bool),
+        (#"sleepUntilDate:", Void, NSDate),
+        (#"sleepForTimeInterval:", Void, Double),
+        (#"exit", Void),
+        (#"threadPriority", Double),
+        (#"setThreadPriority:", Bool, Double),
+        (#"callStackReturnAddresses", NSArray),
+        (#"callStackSymbols", NSArray),
+        (#"isMainThread", Bool),
+        (#"mainThread", NSThread),
+    ),
+    InstanceMethods(
+        (#"threadDictionary", NSMutableDictionary),
+        (#"threadPriority", Double),
+        (#"setThreadPriority:", Void, Double),
+        (#"setName:", Void, NSString),
+        (#"name", NSString),
+        (#"stackSize", CULong),
+        (#"setStackSize:", Void, CULong),
+        (#"isMainThread", Bool),
+        (#"init", Id),
+        (#"initWithTarget:selector:object:", Id, Id, SelectorHandle, Id),
+        (#"isExecuting", Bool),
+        (#"isFinished", Bool),
+        (#"isCancelled", Bool),
+        (#"cancel", Void),
+        (#"start", Void),
+        (#"main", Void),
+    )
+);
+record NSTimeZone = externalClass(NSObject,
+    ClassMethods(
+        (#"systemTimeZone", NSTimeZone),
+        (#"resetSystemTimeZone", Void),
+        (#"defaultTimeZone", NSTimeZone),
+        (#"setDefaultTimeZone:", Void, NSTimeZone),
+        (#"localTimeZone", NSTimeZone),
+        (#"knownTimeZoneNames", NSArray),
+        (#"abbreviationDictionary", NSDictionary),
+        (#"setAbbreviationDictionary:", Void, NSDictionary),
+        (#"timeZoneDataVersion", NSString),
+        (#"timeZoneWithName:", Id, NSString),
+        (#"timeZoneWithName:data:", Id, NSString, NSData),
+        (#"timeZoneForSecondsFromGMT:", Id, CLong),
+        (#"timeZoneWithAbbreviation:", Id, NSString),
+    ),
+    InstanceMethods(
+        (#"name", NSString),
+        (#"data", NSData),
+        (#"secondsFromGMTForDate:", CLong, NSDate),
+        (#"abbreviationForDate:", NSString, NSDate),
+        (#"isDaylightSavingTimeForDate:", Bool, NSDate),
+        (#"daylightSavingTimeOffsetForDate:", Double, NSDate),
+        (#"nextDaylightSavingTimeTransitionAfterDate:", NSDate, NSDate),
+        (#"secondsFromGMT", CLong),
+        (#"abbreviation", NSString),
+        (#"isDaylightSavingTime", Bool),
+        (#"daylightSavingTimeOffset", Double),
+        (#"nextDaylightSavingTimeTransition", NSDate),
+        (#"description", NSString),
+        (#"isEqualToTimeZone:", Bool, NSTimeZone),
+        (#"localizedName:locale:", NSString, CLong, NSLocale),
+        (#"initWithName:", Id, NSString),
+        (#"initWithName:data:", Id, NSString, NSData),
+    )
+);
+record NSTimer = externalClass(NSObject,
+    ClassMethods(
+        (#"timerWithTimeInterval:invocation:repeats:", NSTimer, Double, NSInvocation, Bool),
+        (#"scheduledTimerWithTimeInterval:invocation:repeats:", NSTimer, Double, NSInvocation, Bool),
+        (#"timerWithTimeInterval:target:selector:userInfo:repeats:", NSTimer, Double, Id, SelectorHandle, Id, Bool),
+        (#"scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:", NSTimer, Double, Id, SelectorHandle, Id, Bool),
+    ),
+    InstanceMethods(
+        (#"initWithFireDate:interval:target:selector:userInfo:repeats:", Id, NSDate, Double, Id, SelectorHandle, Id, Bool),
+        (#"fire", Void),
+        (#"fireDate", NSDate),
+        (#"setFireDate:", Void, NSDate),
+        (#"timeInterval", Double),
+        (#"invalidate", Void),
+        (#"isValid", Bool),
+        (#"userInfo", Id),
+    )
+);
+record NSURL = externalClass(NSObject,
+    ClassMethods(
+        (#"fileURLWithPath:isDirectory:", Id, NSString, Bool),
+        (#"fileURLWithPath:", Id, NSString),
+        (#"URLWithString:", Id, NSString),
+        (#"URLWithString:relativeToURL:", Id, NSString, NSURL),
+        (#"URLByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:", Id, NSData, CULong, NSURL, Pointer[Bool], Pointer[NSError]),
+        (#"resourceValuesForKeys:fromBookmarkData:", NSDictionary, NSArray, NSData),
+        (#"writeBookmarkData:toURL:options:error:", Bool, NSData, NSURL, CULong, Pointer[NSError]),
+        (#"bookmarkDataWithContentsOfURL:error:", NSData, NSURL, Pointer[NSError]),
+        (#"fileURLWithPathComponents:", NSURL, NSArray),
+    ),
+    InstanceMethods(
+        (#"initWithScheme:host:path:", Id, NSString, NSString, NSString),
+        (#"initFileURLWithPath:isDirectory:", Id, NSString, Bool),
+        (#"initFileURLWithPath:", Id, NSString),
+        (#"initWithString:", Id, NSString),
+        (#"initWithString:relativeToURL:", Id, NSString, NSURL),
+        (#"absoluteString", NSString),
+        (#"relativeString", NSString),
+        (#"baseURL", NSURL),
+        (#"absoluteURL", NSURL),
+        (#"scheme", NSString),
+        (#"resourceSpecifier", NSString),
+        (#"host", NSString),
+        (#"port", NSNumber),
+        (#"user", NSString),
+        (#"password", NSString),
+        (#"path", NSString),
+        (#"fragment", NSString),
+        (#"parameterString", NSString),
+        (#"query", NSString),
+        (#"relativePath", NSString),
+        (#"isFileURL", Bool),
+        (#"standardizedURL", NSURL),
+        (#"getResourceValue:forKey:error:", Bool, Pointer[Id], NSString, Pointer[NSError]),
+        (#"resourceValuesForKeys:error:", NSDictionary, NSArray, Pointer[NSError]),
+        (#"setResourceValue:forKey:error:", Bool, Id, NSString, Pointer[NSError]),
+        (#"setResourceValues:error:", Bool, NSDictionary, Pointer[NSError]),
+        (#"checkResourceIsReachableAndReturnError:", Bool, Pointer[NSError]),
+        (#"isFileReferenceURL", Bool),
+        (#"fileReferenceURL", NSURL),
+        (#"filePathURL", NSURL),
+        (#"bookmarkDataWithOptions:includingResourceValuesForKeys:relativeToURL:error:", NSData, CULong, NSArray, NSURL, Pointer[NSError]),
+        (#"initByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:", Id, NSData, CULong, NSURL, Pointer[Bool], Pointer[NSError]),
+        (#"resourceDataUsingCache:", NSData, Bool),
+        (#"loadResourceDataNotifyingClient:usingCache:", Void, Id, Bool),
+        (#"propertyForKey:", Id, NSString),
+        (#"setResourceData:", Bool, NSData),
+        (#"setProperty:forKey:", Bool, Id, NSString),
+        (#"URLHandleUsingCache:", NSURLHandle, Bool),
+        (#"pathComponents", NSArray),
+        (#"lastPathComponent", NSString),
+        (#"pathExtension", NSString),
+        (#"URLByAppendingPathComponent:", NSURL, NSString),
+        (#"URLByDeletingLastPathComponent", NSURL),
+        (#"URLByAppendingPathExtension:", NSURL, NSString),
+        (#"URLByDeletingPathExtension", NSURL),
+        (#"URLByStandardizingPath", NSURL),
+        (#"URLByResolvingSymlinksInPath", NSURL),
+    )
+);
+record NSURLAuthenticationChallenge = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithProtectionSpace:proposedCredential:previousFailureCount:failureResponse:error:sender:", Id, NSURLProtectionSpace, NSURLCredential, CLong, NSURLResponse, NSError, Id),
+        (#"initWithAuthenticationChallenge:sender:", Id, NSURLAuthenticationChallenge, Id),
+        (#"protectionSpace", NSURLProtectionSpace),
+        (#"proposedCredential", NSURLCredential),
+        (#"previousFailureCount", CLong),
+        (#"failureResponse", NSURLResponse),
+        (#"error", NSError),
+        (#"sender", Id),
+    )
+);
+record NSURLCache = externalClass(NSObject,
+    ClassMethods(
+        (#"sharedURLCache", NSURLCache),
+        (#"setSharedURLCache:", Void, NSURLCache),
+    ),
+    InstanceMethods(
+        (#"initWithMemoryCapacity:diskCapacity:diskPath:", Id, CULong, CULong, NSString),
+        (#"cachedResponseForRequest:", NSCachedURLResponse, NSURLRequest),
+        (#"storeCachedResponse:forRequest:", Void, NSCachedURLResponse, NSURLRequest),
+        (#"removeCachedResponseForRequest:", Void, NSURLRequest),
+        (#"removeAllCachedResponses", Void),
+        (#"memoryCapacity", CULong),
+        (#"diskCapacity", CULong),
+        (#"setMemoryCapacity:", Void, CULong),
+        (#"setDiskCapacity:", Void, CULong),
+        (#"currentMemoryUsage", CULong),
+        (#"currentDiskUsage", CULong),
+    )
+);
+record NSURLConnection = externalClass(NSObject,
+    ClassMethods(
+        (#"canHandleRequest:", Bool, NSURLRequest),
+        (#"connectionWithRequest:delegate:", NSURLConnection, NSURLRequest, Id),
+        (#"sendSynchronousRequest:returningResponse:error:", NSData, NSURLRequest, Pointer[NSURLResponse], Pointer[NSError]),
+    ),
+    InstanceMethods(
+        (#"initWithRequest:delegate:", Id, NSURLRequest, Id),
+        (#"initWithRequest:delegate:startImmediately:", Id, NSURLRequest, Id, Bool),
+        (#"start", Void),
+        (#"cancel", Void),
+        (#"scheduleInRunLoop:forMode:", Void, NSRunLoop, NSString),
+        (#"unscheduleFromRunLoop:forMode:", Void, NSRunLoop, NSString),
+    )
+);
+record NSURLCredential = externalClass(NSObject,
+    ClassMethods(
+        (#"credentialWithUser:password:persistence:", NSURLCredential, NSString, NSString, CULong),
+        (#"credentialWithIdentity:certificates:persistence:", NSURLCredential, SecIdentityRef, NSArray, CULong),
+        (#"credentialForTrust:", NSURLCredential, SecTrustRef),
+    ),
+    InstanceMethods(
+        (#"persistence", CULong),
+        (#"initWithUser:password:persistence:", Id, NSString, NSString, CULong),
+        (#"user", NSString),
+        (#"password", NSString),
+        (#"hasPassword", Bool),
+        (#"initWithIdentity:certificates:persistence:", Id, SecIdentityRef, NSArray, CULong),
+        (#"identity", SecIdentityRef),
+        (#"certificates", NSArray),
+        (#"initWithTrust:", Id, SecTrustRef),
+    )
+);
+record NSURLCredentialStorage = externalClass(NSObject,
+    ClassMethods(
+        (#"sharedCredentialStorage", NSURLCredentialStorage),
+    ),
+    InstanceMethods(
+        (#"credentialsForProtectionSpace:", NSDictionary, NSURLProtectionSpace),
+        (#"allCredentials", NSDictionary),
+        (#"setCredential:forProtectionSpace:", Void, NSURLCredential, NSURLProtectionSpace),
+        (#"removeCredential:forProtectionSpace:", Void, NSURLCredential, NSURLProtectionSpace),
+        (#"defaultCredentialForProtectionSpace:", NSURLCredential, NSURLProtectionSpace),
+        (#"setDefaultCredential:forProtectionSpace:", Void, NSURLCredential, NSURLProtectionSpace),
+    )
+);
+record NSURLDownload = externalClass(NSObject,
+    ClassMethods(
+        (#"canResumeDownloadDecodedWithEncodingMIMEType:", Bool, NSString),
+    ),
+    InstanceMethods(
+        (#"initWithRequest:delegate:", Id, NSURLRequest, Id),
+        (#"initWithResumeData:delegate:path:", Id, NSData, Id, NSString),
+        (#"cancel", Void),
+        (#"setDestination:allowOverwrite:", Void, NSString, Bool),
+        (#"request", NSURLRequest),
+        (#"resumeData", NSData),
+        (#"setDeletesFileUponFailure:", Void, Bool),
+        (#"deletesFileUponFailure", Bool),
+    )
+);
+record NSURLHandle = externalClass(NSObject,
+    ClassMethods(
+        (#"registerURLHandleClass:", Void, Id),
+        (#"URLHandleClassForURL:", Id, NSURL),
+        (#"canInitWithURL:", Bool, NSURL),
+        (#"cachedHandleForURL:", NSURLHandle, NSURL),
+    ),
+    InstanceMethods(
+        (#"status", CULong),
+        (#"failureReason", NSString),
+        (#"addClient:", Void, Id),
+        (#"removeClient:", Void, Id),
+        (#"loadInBackground", Void),
+        (#"cancelLoadInBackground", Void),
+        (#"resourceData", NSData),
+        (#"availableResourceData", NSData),
+        (#"expectedResourceDataSize", Int64),
+        (#"flushCachedData", Void),
+        (#"backgroundLoadDidFailWithReason:", Void, NSString),
+        (#"didLoadBytes:loadComplete:", Void, NSData, Bool),
+        (#"initWithURL:cached:", Id, NSURL, Bool),
+        (#"propertyForKey:", Id, NSString),
+        (#"propertyForKeyIfAvailable:", Id, NSString),
+        (#"writeProperty:forKey:", Bool, Id, NSString),
+        (#"writeData:", Bool, NSData),
+        (#"loadInForeground", NSData),
+        (#"beginLoadInBackground", Void),
+        (#"endLoadInBackground", Void),
+    )
+);
+record NSURLProtectionSpace = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithHost:port:protocol:realm:authenticationMethod:", Id, NSString, CLong, NSString, NSString, NSString),
+        (#"initWithProxyHost:port:type:realm:authenticationMethod:", Id, NSString, CLong, NSString, NSString, NSString),
+        (#"realm", NSString),
+        (#"receivesCredentialSecurely", Bool),
+        (#"isProxy", Bool),
+        (#"host", NSString),
+        (#"port", CLong),
+        (#"proxyType", NSString),
+        (#"protocol", NSString),
+        (#"authenticationMethod", NSString),
+        (#"distinguishedNames", NSArray),
+        (#"serverTrust", SecTrustRef),
+    )
+);
+record NSURLProtocol = externalClass(NSObject,
+    ClassMethods(
+        (#"canInitWithRequest:", Bool, NSURLRequest),
+        (#"canonicalRequestForRequest:", NSURLRequest, NSURLRequest),
+        (#"requestIsCacheEquivalent:toRequest:", Bool, NSURLRequest, NSURLRequest),
+        (#"propertyForKey:inRequest:", Id, NSString, NSURLRequest),
+        (#"setProperty:forKey:inRequest:", Void, Id, NSString, NSMutableURLRequest),
+        (#"removePropertyForKey:inRequest:", Void, NSString, NSMutableURLRequest),
+        (#"registerClass:", Bool, Id),
+        (#"unregisterClass:", Void, Id),
+    ),
+    InstanceMethods(
+        (#"initWithRequest:cachedResponse:client:", Id, NSURLRequest, NSCachedURLResponse, Id),
+        (#"client", Id),
+        (#"request", NSURLRequest),
+        (#"cachedResponse", NSCachedURLResponse),
+        (#"startLoading", Void),
+        (#"stopLoading", Void),
+    )
+);
+record NSURLRequest = externalClass(NSObject,
+    ClassMethods(
+        (#"requestWithURL:", Id, NSURL),
+        (#"requestWithURL:cachePolicy:timeoutInterval:", Id, NSURL, CULong, Double),
+    ),
+    InstanceMethods(
+        (#"initWithURL:", Id, NSURL),
+        (#"initWithURL:cachePolicy:timeoutInterval:", Id, NSURL, CULong, Double),
+        (#"URL", NSURL),
+        (#"cachePolicy", CULong),
+        (#"timeoutInterval", Double),
+        (#"mainDocumentURL", NSURL),
+        (#"HTTPMethod", NSString),
+        (#"allHTTPHeaderFields", NSDictionary),
+        (#"valueForHTTPHeaderField:", NSString, NSString),
+        (#"HTTPBody", NSData),
+        (#"HTTPBodyStream", NSInputStream),
+        (#"HTTPShouldHandleCookies", Bool),
+    )
+);
+record NSURLResponse = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithURL:MIMEType:expectedContentLength:textEncodingName:", Id, NSURL, NSString, CLong, NSString),
+        (#"URL", NSURL),
+        (#"MIMEType", NSString),
+        (#"expectedContentLength", Int64),
+        (#"textEncodingName", NSString),
+        (#"suggestedFilename", NSString),
+    )
+);
+record NSUnarchiver = externalClass(NSCoder,
+    ClassMethods(
+        (#"unarchiveObjectWithData:", Id, NSData),
+        (#"unarchiveObjectWithFile:", Id, NSString),
+        (#"decodeClassName:asClassName:", Void, NSString, NSString),
+        (#"classNameDecodedForArchiveClassName:", NSString, NSString),
+    ),
+    InstanceMethods(
+        (#"initForReadingWithData:", Id, NSData),
+        (#"setObjectZone:", Void, Pointer[NSZone]),
+        (#"objectZone", Pointer[NSZone]),
+        (#"isAtEnd", Bool),
+        (#"systemVersion", UInt),
+        (#"decodeClassName:asClassName:", Void, NSString, NSString),
+        (#"classNameDecodedForArchiveClassName:", NSString, NSString),
+        (#"replaceObject:withObject:", Void, Id, Id),
+    )
+);
+record NSUndoManager = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"beginUndoGrouping", Void),
+        (#"endUndoGrouping", Void),
+        (#"groupingLevel", CLong),
+        (#"disableUndoRegistration", Void),
+        (#"enableUndoRegistration", Void),
+        (#"isUndoRegistrationEnabled", Bool),
+        (#"groupsByEvent", Bool),
+        (#"setGroupsByEvent:", Void, Bool),
+        (#"setLevelsOfUndo:", Void, CULong),
+        (#"levelsOfUndo", CULong),
+        (#"setRunLoopModes:", Void, NSArray),
+        (#"runLoopModes", NSArray),
+        (#"undo", Void),
+        (#"redo", Void),
+        (#"undoNestedGroup", Void),
+        (#"canUndo", Bool),
+        (#"canRedo", Bool),
+        (#"isUndoing", Bool),
+        (#"isRedoing", Bool),
+        (#"removeAllActions", Void),
+        (#"removeAllActionsWithTarget:", Void, Id),
+        (#"registerUndoWithTarget:selector:object:", Void, Id, SelectorHandle, Id),
+        (#"prepareWithInvocationTarget:", Id, Id),
+        (#"undoActionName", NSString),
+        (#"redoActionName", NSString),
+        (#"setActionName:", Void, NSString),
+        (#"undoMenuItemTitle", NSString),
+        (#"redoMenuItemTitle", NSString),
+        (#"undoMenuTitleForUndoActionName:", NSString, NSString),
+        (#"redoMenuTitleForUndoActionName:", NSString, NSString),
+    )
+);
+record NSUniqueIDSpecifier = externalClass(NSScriptObjectSpecifier,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithContainerClassDescription:containerSpecifier:key:uniqueID:", Id, NSScriptClassDescription, NSScriptObjectSpecifier, NSString, Id),
+        (#"uniqueID", Id),
+        (#"setUniqueID:", Void, Id),
+    )
+);
+record NSUserDefaults = externalClass(NSObject,
+    ClassMethods(
+        (#"standardUserDefaults", NSUserDefaults),
+        (#"resetStandardUserDefaults", Void),
+    ),
+    InstanceMethods(
+        (#"init", Id),
+        (#"initWithUser:", Id, NSString),
+        (#"objectForKey:", Id, NSString),
+        (#"setObject:forKey:", Void, Id, NSString),
+        (#"removeObjectForKey:", Void, NSString),
+        (#"stringForKey:", NSString, NSString),
+        (#"arrayForKey:", NSArray, NSString),
+        (#"dictionaryForKey:", NSDictionary, NSString),
+        (#"dataForKey:", NSData, NSString),
+        (#"stringArrayForKey:", NSArray, NSString),
+        (#"integerForKey:", CLong, NSString),
+        (#"floatForKey:", Float, NSString),
+        (#"doubleForKey:", Double, NSString),
+        (#"boolForKey:", Bool, NSString),
+        (#"URLForKey:", NSURL, NSString),
+        (#"setInteger:forKey:", Void, CLong, NSString),
+        (#"setFloat:forKey:", Void, Float, NSString),
+        (#"setDouble:forKey:", Void, Double, NSString),
+        (#"setBool:forKey:", Void, Bool, NSString),
+        (#"setURL:forKey:", Void, NSURL, NSString),
+        (#"registerDefaults:", Void, NSDictionary),
+        (#"addSuiteNamed:", Void, NSString),
+        (#"removeSuiteNamed:", Void, NSString),
+        (#"dictionaryRepresentation", NSDictionary),
+        (#"volatileDomainNames", NSArray),
+        (#"volatileDomainForName:", NSDictionary, NSString),
+        (#"setVolatileDomain:forName:", Void, NSDictionary, NSString),
+        (#"removeVolatileDomainForName:", Void, NSString),
+        (#"persistentDomainNames", NSArray),
+        (#"persistentDomainForName:", NSDictionary, NSString),
+        (#"setPersistentDomain:forName:", Void, NSDictionary, NSString),
+        (#"removePersistentDomainForName:", Void, NSString),
+        (#"synchronize", Bool),
+        (#"objectIsForcedForKey:", Bool, NSString),
+        (#"objectIsForcedForKey:inDomain:", Bool, NSString, NSString),
+    )
+);
+record NSValue = externalClass(NSObject,
+    ClassMethods(
+        (#"valueWithBytes:objCType:", NSValue, RawPointer, Pointer[CChar]),
+        (#"value:withObjCType:", NSValue, RawPointer, Pointer[CChar]),
+        (#"valueWithNonretainedObject:", NSValue, Id),
+        (#"valueWithPointer:", NSValue, RawPointer),
+        (#"valueWithRange:", NSValue, NSRange),
+        (#"valueWithPoint:", NSValue, NSPoint),
+        (#"valueWithSize:", NSValue, NSSize),
+        (#"valueWithRect:", NSValue, NSRect),
+    ),
+    InstanceMethods(
+        (#"getValue:", Void, RawPointer),
+        (#"objCType", Pointer[CChar]),
+        (#"initWithBytes:objCType:", Id, RawPointer, Pointer[CChar]),
+        (#"nonretainedObjectValue", Id),
+        (#"pointerValue", RawPointer),
+        (#"isEqualToValue:", Bool, NSValue),
+        (#"rangeValue", NSRange),
+        (#"pointValue", NSPoint),
+        (#"sizeValue", NSSize),
+        (#"rectValue", NSRect),
+    )
+);
+record NSValueTransformer = externalClass(NSObject,
+    ClassMethods(
+        (#"setValueTransformer:forName:", Void, NSValueTransformer, NSString),
+        (#"valueTransformerForName:", NSValueTransformer, NSString),
+        (#"valueTransformerNames", NSArray),
+        (#"transformedValueClass", Id),
+        (#"allowsReverseTransformation", Bool),
+    ),
+    InstanceMethods(
+        (#"transformedValue:", Id, Id),
+        (#"reverseTransformedValue:", Id, Id),
+    )
+);
+record NSWhoseSpecifier = externalClass(NSScriptObjectSpecifier,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithContainerClassDescription:containerSpecifier:key:test:", Id, NSScriptClassDescription, NSScriptObjectSpecifier, NSString, NSScriptWhoseTest),
+        (#"test", NSScriptWhoseTest),
+        (#"setTest:", Void, NSScriptWhoseTest),
+        (#"startSubelementIdentifier", CULong),
+        (#"setStartSubelementIdentifier:", Void, CULong),
+        (#"startSubelementIndex", CLong),
+        (#"setStartSubelementIndex:", Void, CLong),
+        (#"endSubelementIdentifier", CULong),
+        (#"setEndSubelementIdentifier:", Void, CULong),
+        (#"endSubelementIndex", CLong),
+        (#"setEndSubelementIndex:", Void, CLong),
+    )
+);
+record NSXMLDTD = externalClass(NSXMLNode,
+    ClassMethods(
+        (#"predefinedEntityDeclarationForName:", NSXMLDTDNode, NSString),
+    ),
+    InstanceMethods(
+        (#"initWithContentsOfURL:options:error:", Id, NSURL, CULong, Pointer[NSError]),
+        (#"initWithData:options:error:", Id, NSData, CULong, Pointer[NSError]),
+        (#"setPublicID:", Void, NSString),
+        (#"publicID", NSString),
+        (#"setSystemID:", Void, NSString),
+        (#"systemID", NSString),
+        (#"insertChild:atIndex:", Void, NSXMLNode, CULong),
+        (#"insertChildren:atIndex:", Void, NSArray, CULong),
+        (#"removeChildAtIndex:", Void, CULong),
+        (#"setChildren:", Void, NSArray),
+        (#"addChild:", Void, NSXMLNode),
+        (#"replaceChildAtIndex:withNode:", Void, CULong, NSXMLNode),
+        (#"entityDeclarationForName:", NSXMLDTDNode, NSString),
+        (#"notationDeclarationForName:", NSXMLDTDNode, NSString),
+        (#"elementDeclarationForName:", NSXMLDTDNode, NSString),
+        (#"attributeDeclarationForName:elementName:", NSXMLDTDNode, NSString, NSString),
+    )
+);
+record NSXMLDTDNode = externalClass(NSXMLNode,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithXMLString:", Id, NSString),
+        (#"setDTDKind:", Void, CULong),
+        (#"DTDKind", CULong),
+        (#"isExternal", Bool),
+        (#"setPublicID:", Void, NSString),
+        (#"publicID", NSString),
+        (#"setSystemID:", Void, NSString),
+        (#"systemID", NSString),
+        (#"setNotationName:", Void, NSString),
+        (#"notationName", NSString),
+    )
+);
+record NSXMLDocument = externalClass(NSXMLNode,
+    ClassMethods(
+        (#"replacementClassForClass:", Id, Id),
+    ),
+    InstanceMethods(
+        (#"initWithXMLString:options:error:", Id, NSString, CULong, Pointer[NSError]),
+        (#"initWithContentsOfURL:options:error:", Id, NSURL, CULong, Pointer[NSError]),
+        (#"initWithData:options:error:", Id, NSData, CULong, Pointer[NSError]),
+        (#"initWithRootElement:", Id, NSXMLElement),
+        (#"setCharacterEncoding:", Void, NSString),
+        (#"characterEncoding", NSString),
+        (#"setVersion:", Void, NSString),
+        (#"version", NSString),
+        (#"setStandalone:", Void, Bool),
+        (#"isStandalone", Bool),
+        (#"setDocumentContentKind:", Void, CULong),
+        (#"documentContentKind", CULong),
+        (#"setMIMEType:", Void, NSString),
+        (#"MIMEType", NSString),
+        (#"setDTD:", Void, NSXMLDTD),
+        (#"DTD", NSXMLDTD),
+        (#"setRootElement:", Void, NSXMLNode),
+        (#"rootElement", NSXMLElement),
+        (#"insertChild:atIndex:", Void, NSXMLNode, CULong),
+        (#"insertChildren:atIndex:", Void, NSArray, CULong),
+        (#"removeChildAtIndex:", Void, CULong),
+        (#"setChildren:", Void, NSArray),
+        (#"addChild:", Void, NSXMLNode),
+        (#"replaceChildAtIndex:withNode:", Void, CULong, NSXMLNode),
+        (#"XMLData", NSData),
+        (#"XMLDataWithOptions:", NSData, CULong),
+        (#"objectByApplyingXSLT:arguments:error:", Id, NSData, NSDictionary, Pointer[NSError]),
+        (#"objectByApplyingXSLTString:arguments:error:", Id, NSString, NSDictionary, Pointer[NSError]),
+        (#"objectByApplyingXSLTAtURL:arguments:error:", Id, NSURL, NSDictionary, Pointer[NSError]),
+        (#"validateAndReturnError:", Bool, Pointer[NSError]),
+    )
+);
+record NSXMLElement = externalClass(NSXMLNode,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithName:", Id, NSString),
+        (#"initWithName:URI:", Id, NSString, NSString),
+        (#"initWithName:stringValue:", Id, NSString, NSString),
+        (#"initWithXMLString:error:", Id, NSString, Pointer[NSError]),
+        (#"elementsForName:", NSArray, NSString),
+        (#"elementsForLocalName:URI:", NSArray, NSString, NSString),
+        (#"addAttribute:", Void, NSXMLNode),
+        (#"removeAttributeForName:", Void, NSString),
+        (#"setAttributes:", Void, NSArray),
+        (#"setAttributesAsDictionary:", Void, NSDictionary),
+        (#"attributes", NSArray),
+        (#"attributeForName:", NSXMLNode, NSString),
+        (#"attributeForLocalName:URI:", NSXMLNode, NSString, NSString),
+        (#"addNamespace:", Void, NSXMLNode),
+        (#"removeNamespaceForPrefix:", Void, NSString),
+        (#"setNamespaces:", Void, NSArray),
+        (#"namespaces", NSArray),
+        (#"namespaceForPrefix:", NSXMLNode, NSString),
+        (#"resolveNamespaceForName:", NSXMLNode, NSString),
+        (#"resolvePrefixForNamespaceURI:", NSString, NSString),
+        (#"insertChild:atIndex:", Void, NSXMLNode, CULong),
+        (#"insertChildren:atIndex:", Void, NSArray, CULong),
+        (#"removeChildAtIndex:", Void, CULong),
+        (#"setChildren:", Void, NSArray),
+        (#"addChild:", Void, NSXMLNode),
+        (#"replaceChildAtIndex:withNode:", Void, CULong, NSXMLNode),
+        (#"normalizeAdjacentTextNodesPreservingCDATA:", Void, Bool),
+    )
+);
+record NSXMLNode = externalClass(NSObject,
+    ClassMethods(
+        (#"document", Id),
+        (#"documentWithRootElement:", Id, NSXMLElement),
+        (#"elementWithName:", Id, NSString),
+        (#"elementWithName:URI:", Id, NSString, NSString),
+        (#"elementWithName:stringValue:", Id, NSString, NSString),
+        (#"elementWithName:children:attributes:", Id, NSString, NSArray, NSArray),
+        (#"attributeWithName:stringValue:", Id, NSString, NSString),
+        (#"attributeWithName:URI:stringValue:", Id, NSString, NSString, NSString),
+        (#"namespaceWithName:stringValue:", Id, NSString, NSString),
+        (#"processingInstructionWithName:stringValue:", Id, NSString, NSString),
+        (#"commentWithStringValue:", Id, NSString),
+        (#"textWithStringValue:", Id, NSString),
+        (#"DTDNodeWithXMLString:", Id, NSString),
+        (#"localNameForName:", NSString, NSString),
+        (#"prefixForName:", NSString, NSString),
+        (#"predefinedNamespaceForPrefix:", NSXMLNode, NSString),
+    ),
+    InstanceMethods(
+        (#"initWithKind:", Id, CULong),
+        (#"initWithKind:options:", Id, CULong, CULong),
+        (#"kind", CULong),
+        (#"setName:", Void, NSString),
+        (#"name", NSString),
+        (#"setObjectValue:", Void, Id),
+        (#"objectValue", Id),
+        (#"setStringValue:", Void, NSString),
+        (#"setStringValue:resolvingEntities:", Void, NSString, Bool),
+        (#"stringValue", NSString),
+        (#"index", CULong),
+        (#"level", CULong),
+        (#"rootDocument", NSXMLDocument),
+        (#"parent", NSXMLNode),
+        (#"childCount", CULong),
+        (#"children", NSArray),
+        (#"childAtIndex:", NSXMLNode, CULong),
+        (#"previousSibling", NSXMLNode),
+        (#"nextSibling", NSXMLNode),
+        (#"previousNode", NSXMLNode),
+        (#"nextNode", NSXMLNode),
+        (#"detach", Void),
+        (#"XPath", NSString),
+        (#"localName", NSString),
+        (#"prefix", NSString),
+        (#"setURI:", Void, NSString),
+        (#"URI", NSString),
+        (#"description", NSString),
+        (#"XMLString", NSString),
+        (#"XMLStringWithOptions:", NSString, CULong),
+        (#"canonicalXMLStringPreservingComments:", NSString, Bool),
+        (#"nodesForXPath:error:", NSArray, NSString, Pointer[NSError]),
+        (#"objectsForXQuery:constants:error:", NSArray, NSString, NSDictionary, Pointer[NSError]),
+        (#"objectsForXQuery:error:", NSArray, NSString, Pointer[NSError]),
+    )
+);
+record NSXMLParser = externalClass(NSObject,
+    ClassMethods(
+    ),
+    InstanceMethods(
+        (#"initWithContentsOfURL:", Id, NSURL),
+        (#"initWithData:", Id, NSData),
+        (#"delegate", Id),
+        (#"setDelegate:", Void, Id),
+        (#"setShouldProcessNamespaces:", Void, Bool),
+        (#"setShouldReportNamespacePrefixes:", Void, Bool),
+        (#"setShouldResolveExternalEntities:", Void, Bool),
+        (#"shouldProcessNamespaces", Bool),
+        (#"shouldReportNamespacePrefixes", Bool),
+        (#"shouldResolveExternalEntities", Bool),
+        (#"parse", Bool),
+        (#"abortParsing", Void),
+        (#"parserError", NSError),
+        (#"publicID", NSString),
+        (#"systemID", NSString),
+        (#"lineNumber", CLong),
+        (#"columnNumber", CLong),
+    )
+);
 
 external NSFoundationVersionNumber : Double;
 
