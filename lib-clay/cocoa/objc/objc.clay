@@ -6,7 +6,7 @@ public import cocoa.objc.runtime.(
     Class as ClassHandle,
     nil as nilHandle,
     SEL as SelectorHandle,
-    BOOL
+    BOOL, YES, NO
 );
 
 
@@ -352,14 +352,14 @@ record NewClassCouldNotAddInstanceMethod (name: StringConstant, selector: String
 instance Exception = NewClassCouldNotAddInstanceMethod;
 
 private classMethodImp(static T, static sel, static fn) 
-    = SelectorImpType(Static[T], sel)((self, _cmd, ...args) =>
+    = SelectorImpType(Static[T], sel)((self, _cmd,, ...args) =>
         forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
             fn(T, sel, ...msgSendBox(Static[T], sel, ...args))
         )
     );
 
 private instanceMethodImp(static T, static sel, static fn)
-    = SelectorImpType(T, sel)((self, _cmd, ...args) =>
+    = SelectorImpType(T, sel)((self, _cmd,, ...args) => // XXX workaround parser bug
         forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(T, sel), r),
             fn(T(self), sel, ...msgSendBox(T, sel, ...args))
         )
@@ -376,7 +376,7 @@ overload objcClassMake(static T) {
     if (null?(handle))
         throw NewClassCouldNotBeCreated(name);
 
-    var metahandle = Class(object_getClass(Id(handle)));
+    var metahandle = Class(object_getClass(Id(ObjectHandle(handle))));
 
     static for (ivarPair in ...ClassInstanceVars(T)) {
         var ivarName = StaticName(ivarPair.0);
