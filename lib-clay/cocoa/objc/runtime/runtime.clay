@@ -10,6 +10,7 @@ alias Ivar = Pointer[ObjcIvar];
 alias Method = RawPointer;
 alias Protocol = Id;
 alias BOOL = CChar;
+alias IMP = RawPointer;
 
 alias YES = BOOL(1);
 alias NO = BOOL(0);
@@ -61,7 +62,7 @@ external class_getName(cls: Class) Pointer[CChar];
 external class_addMethod(
         class: Class,
         name: SEL,
-        imp: RawPointer,
+        imp: IMP,
         types: Pointer[CChar]
     ) BOOL;
 external class_addProtocol(
