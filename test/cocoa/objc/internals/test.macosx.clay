@@ -402,9 +402,6 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectType(test, "NSString from ObjectHandle", NSString,
             msgSendBox1(NSString, nilHandle)
         );
-        expectType(test, "Id from class type", Id, // XXX class
-            msgSendBox1(Id, NSString)
-        );
         expectType(test, "clay Bool from objc BOOL", Bool,
             msgSendBox1(Bool, NO)
         );
@@ -418,6 +415,9 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         );
         expectType(test, "ObjectHandle from NSString", ObjectHandle,
             msgSendUnbox1(NSString, nil(NSString))
+        );
+        expectType(test, "ObjectHandle from class type", ObjectHandle,
+            msgSendUnbox1(Id, NSString) // XXX Class
         );
         expectType(test, "objc BOOL from clay Bool", BOOL,
             msgSendUnbox1(Bool, false)
@@ -446,9 +446,6 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         );
         expectEqualValues(test, "stringWithUTF8String:", Tuple(Pointer[CChar]),
             ...Type(...msgSendBox(Id, #"stringWithUTF8String:", null(CChar)))
-        );
-        expectEqualValues(test, "stringWithFormat:", Tuple(Id),
-            ...Type(...msgSendBox(Id, #"stringWithFormat:", nilHandle))
         );
         expectEqualValues(test, "setEnabled:", Tuple(Bool),
             ...Type(...msgSendBox(Id, #"setEnabled:", NO))
