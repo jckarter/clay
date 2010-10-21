@@ -505,24 +505,26 @@ void BindingsConverter::generateObjC()
             ObjCInterfaceDecl *classDecl = i->second.classDecl;
             vector<ObjCCategoryDecl *> const &categoryDecls = i->second.categoryDecls;
 
-            out << "record " << i->first << " = externalClass(";
+            if (classDecl) {
+                out << "record " << i->first << " = externalClass(";
 
-            ObjCInterfaceDecl *superclass = classDecl->getSuperClass();
-            if (superclass)
-                out << superclass->getNameAsString();
-            else
-                out << "Void";
+                ObjCInterfaceDecl *superclass = classDecl->getSuperClass();
+                if (superclass)
+                    out << superclass->getNameAsString();
+                else
+                    out << "Void";
 
-            out << ");\n";
+                out << ");\n";
 
-            for (ObjCInterfaceDecl::protocol_iterator jpro = classDecl->protocol_begin();
-                 jpro != classDecl->protocol_end();
-                 ++jpro) {
-                ObjCProtocolDecl *protocol = *jpro;
-                generateObjCClassMethods(i->first, protocol->meth_begin(), protocol->meth_end());
+                for (ObjCInterfaceDecl::protocol_iterator jpro = classDecl->protocol_begin();
+                     jpro != classDecl->protocol_end();
+                     ++jpro) {
+                    ObjCProtocolDecl *protocol = *jpro;
+                    generateObjCClassMethods(i->first, protocol->meth_begin(), protocol->meth_end());
+                }
+
+                generateObjCClassMethods(i->first, classDecl->meth_begin(), classDecl->meth_end());
             }
-
-            generateObjCClassMethods(i->first, classDecl->meth_begin(), classDecl->meth_end());
 
             for (vector<ObjCCategoryDecl *>::const_iterator jcat = categoryDecls.begin();
                  jcat != categoryDecls.end();
