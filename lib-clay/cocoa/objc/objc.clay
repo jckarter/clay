@@ -283,17 +283,11 @@ procedure classObjcName;
 
 ValidSuperclass?(T) = Class?(T) or T == Void;
 
-[Super, CM, IM] // XXX | ValidSuperclass?(Super)]
-externalClass(static Super,
-    classmethods: ClassMethods[CM],
-    instancemethods: InstanceMethods[IM]
-) = recordWithProperties(
+[Super | ValidSuperclass?(Super)]
+externalClass(static Super) = recordWithProperties(
     (
         (SuperclassType, Super),
         (ExternalClass?, static true),
-        (ClassInstanceVars, static ()),
-        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
-        Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),
     ), 
     (#__handle__, ObjectHandle)
 );
@@ -470,48 +464,95 @@ overload encode(static Id) = "@";
 
 procedure selector;
 procedure varargSelector;
+procedure externalInstanceMethod;
+procedure externalClassMethod;
+procedure externalVarargInstanceMethod;
+procedure externalVarargClassMethod;
+
 FixedSelector?(sel) = CallDefined?(selector, Static[sel]);
 VarargSelector?(sel) = CallDefined?(varargSelector, Static[sel]);
 Selector?(sel) = FixedSelector?(sel) or VarargSelector?(sel);
 
 selectorHandle(sel) = objcSelector[sel];
 
+[sel | Selector?(sel)]
+SelectorArgumentCount(static sel) = countValues(...GenericSelector(sel)) - 1;
+
 [sel | FixedSelector?(sel)]
 GenericSelector(static sel) = ...selector(sel);
 [sel | VarargSelector?(sel)]
 overload GenericSelector(static sel) = ...varargSelector(sel);
 
-[sel | Selector?(sel)]
-SelectorArgumentCount(static sel) = countValues(...GenericSelector(sel)) - 1;
 
+
+//
+// typed selectors
+//
+
+[T, sel | ExternalClass?(T) and FixedSelector?(sel)]
+TypedSelector(static T, static sel) = ...externalInstanceMethod(T, sel);
+[T, sel | ExternalClass?(T) and FixedSelector?(sel)]
+overload TypedSelector(static Static[T], static sel) = ...externalClassMethod(T, sel);
+[T, sel | ClayClass?(T) and FixedSelector?(sel)]
+overload TypedSelector(static T, static sel) = ...assocValue(sel, ...ClassInstanceMethods(T));
+[T, sel | ClayClass?(T) and FixedSelector?(sel)]
+overload TypedSelector(static Static[T], static sel) = ...assocValue(sel, ...ClassClassMethods(T));
+
+[T, sel | ExternalClass?(T) and FixedSelector?(sel)]
+TypedSelector?(static T, static sel)
+    = CallDefined?(externalInstanceMethod, Static[T], Static[sel]);
+[T, sel | ExternalClass?(T) and FixedSelector?(sel)]
+overload TypedSelector?(static Static[T], static sel)
+    = CallDefined?(externalClassMethod, Static[Static[T]], Static[sel]);
+[T, sel | ClayClass?(T) and FixedSelector?(sel)]
+overload TypedSelector?(static T, static sel)
+    = assocValue?(sel, ...ClassInstanceMethods(T));
+[T, sel | ClayClass?(T) and FixedSelector?(sel)]
+overload TypedSelector?(static Static[T], static sel)
+    = assocValue?(sel, ...ClassClassMethods(T));
+
+
+[T, sel | ExternalClass?(T) and VarargSelector?(sel)]
+overload TypedSelector(static T, static sel) = ...externalVarargInstanceMethod(T, sel);
+[T, sel | ExternalClass?(T) and VarargSelector?(sel)]
+overload TypedSelector(static Static[T], static sel) = ...externalVarargClassMethod(T, sel);
+
+[T, sel | ExternalClass?(T) and VarargSelector?(sel)]
+overload TypedSelector?(static T, static sel)
+    = CallDefined?(externalVarargInstanceMethod, Static[T], Static[sel]);
+[T, sel | ExternalClass?(T) and VarargSelector?(sel)]
+overload TypedSelector?(static Static[T], static sel)
+    = CallDefined?(externalVarargClassMethod, Static[Static[T]], Static[sel]);
+ 
 
 
 //
 // selector signatures by type
 //
 
-private Selector(static Id, sel) = ...GenericSelector(sel);
+[sel | Selector?(sel)]
+private Selector(static Id, static sel) = ...GenericSelector(sel);
 
-[T, sel | Class?(T)]
+[T, sel | Class?(T) and Selector?(sel)]
 overload Selector(static T, static sel) = ...GenericSelector(sel);
-[T, sel | Class?(T)]
+[T, sel | Class?(T) and Selector?(sel)]
 overload Selector(static Static[T], static sel) = ...GenericSelector(sel);
 
 [T, sel | Class?(T) and SuperclassType(T) != Void]
 overload Selector(static T, static sel) = ...Selector(SuperclassType(T), sel);
 [T, sel |
     Class?(T)
-    and assocValue?(sel, ...ClassInstanceMethods(T))
+    and TypedSelector?(T, sel)
 ]
-overload Selector(static T, static sel) = ...assocValue(sel, ...ClassInstanceMethods(T));
+overload Selector(static T, static sel) = ...TypedSelector(T, sel);
 
 [T, sel | Class?(T) and SuperclassType(T) != Void]
 overload Selector(static Static[T], static sel) = ...Selector(Static[SuperclassType(T)], sel);
 [T, sel |
     Class?(T)
-    and assocValue?(sel, ...ClassClassMethods(T))
+    and TypedSelector?(Static[T], sel)
 ]
-overload Selector(static Static[T], static sel) = ...assocValue(sel, ...ClassClassMethods(T));
+overload Selector(static Static[T], static sel) = ...TypedSelector(Static[T], sel);
 
 [T, sel]
 SelectorReturnType(static T, static sel) = firstValue(...Selector(T, sel));
@@ -819,9 +860,3 @@ overload call(method: SuperMethodRef[T, identifier], forward ...args: Args) {
         ...args
     );
 }
-
-
-
-//
-// 
-//
