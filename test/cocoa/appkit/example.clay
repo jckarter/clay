@@ -75,6 +75,5 @@ overload newInstanceMethod(self: ExampleController, static #"performClear:", sen
 
 main() {
     classHandle(ExampleController); classHandle(ExampleAppDelegate);
-    println(classHandle(ExampleAppDelegate));
     NSApplicationMain(...getArgcArgv());
 }
