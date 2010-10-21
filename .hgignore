@@ -1,6 +1,6 @@
 syntax: regexp
 
-.*\.swp
+.*\.sw?
 
 cscope.out
 tags
@@ -26,5 +26,7 @@ tags
 ^misc/bindgen/vs2008/.*\.user$
 ^misc/bindgen/vs2008/Debug/
 ^misc/bindgen/vs2008/Release/
+
+^test/cocoa/appkit/Example.app
 
 ^mingw/
