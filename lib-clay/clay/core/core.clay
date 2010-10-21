@@ -1,6 +1,14 @@
 
 import maybe.*;
+import clay.common.*;
 import clay.ast as ast;
+import clay.diagnostics.*;
+
+
+
+//
+// Module
+//
 
 record Module (
     name : String,
@@ -38,7 +46,7 @@ installModule(name:String, module:ModulePtr) {
 
 
 //
-// symbol table entries for globals
+// symbol table entries for top-level items
 //
 
 record Record (
@@ -335,3 +343,107 @@ record SymbolTable (
     entries : HashMap[String, SymbolTableEntry],
 );
 alias SymbolTablePtr = SharedPointer[SymbolTable];
+
+
+
+//
+// location context for errors
+//
+
+private var currentModuleStack = Vector[ModulePtr]();
+
+private currentModule() {
+    if (empty?(currentModuleStack))
+        return nothing(ModulePtr);
+    return Maybe(back(currentModuleStack));
+}
+
+withCurrentModule(module:ModulePtr, f) {
+    push(currentModuleStack, module);
+    try {
+        var x = captureValues(...f());
+        pop(currentModuleStack);
+        return forward ...forwardValues(x);
+    }
+    catch (e) {
+        pop(currentModuleStack);
+        throw e;
+    }
+}
+
+
+
+//
+// semantic errors
+//
+
+[T]
+private SemanticError?(static T) = false;
+
+private semanticError(...fields) = recordWithPredicate(
+    SemanticError?,
+    (#where, Maybe[ModulePtr]),
+    ...fields,
+);
+
+[T, ...A | Record?(T)
+           and SemanticError?(T)
+           and (Tuple[...RecordFieldTypes(T)] ==
+                Tuple[Maybe[ModulePtr], ...A])]
+callbyname overload T(...args:A) =
+    T(currentModule(), ...args);
+
+variant SemanticError;
+
+instance ClayError = SemanticError;
+
+[T | VariantMember?(SemanticError, T)]
+overload Exception(forward e:T) =
+    Exception(SemanticError(e));
+
+overload displayError(e:SemanticError) {
+    displayError(*e);
+}
+
+private displaySemanticError(err, node, ...message) {
+    if (nothing?(err.where) or empty?(node.tokens)) {
+        println(err);
+        return;
+    }
+    var m = require(err.where);
+    var stokens = m^.ast^.tokens;
+    var offset = stokens^.vector[node.mainToken].range.begin;
+
+    errorWithLocation(stokens^.file, offset, ...message);
+}
+
+
+
+//
+// semantic error instances
+//
+
+record ModuleNotFoundError = semanticError(
+    (#name, ast.DottedName),
+);
+instance SemanticError = ModuleNotFoundError;
+
+overload displayError(e:ModuleNotFoundError) {
+    displaySemanticError(
+        e, e.name,
+        "module not found: ",
+        join(".", mapped(ident => ident.str, e.name.parts)),
+    );
+}
+
+record GlobalRedefinitionError = semanticError(
+    (#name, ast.Identifier),
+);
+instance SemanticError = GlobalRedefinitionError;
+
+overload displayError(e:GlobalRedefinitionError) {
+    displaySemanticError(
+        e, e.name,
+        "name redefinition: ", e.name.str,
+    );
+}
