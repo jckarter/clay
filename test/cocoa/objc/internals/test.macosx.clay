@@ -55,6 +55,8 @@ overload externalInstanceMethod(static NSString, static #"description")
 
 record NSMutableString = externalClass(NSString);
 
+record MyNSNumber = externalClass(#"NSNumber", NSString);
+
 record SubString1 = newClass(NSString,
     InstanceVars(
         (#foo, Int),
@@ -67,7 +69,7 @@ record SubString1 = newClass(NSString,
     )
 );
 
-record SubString2 = newClass(NSString,
+record SubString2 = newClass(#"ClaySubString2", NSString,
     InstanceVars(
         (#foo, Double),
     ),
@@ -233,9 +235,18 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectNotSubclass(test, SubString1, SubString2);
         expectNotSubclass(test, SubString2, SubSubString);
     }),
-    TestCase("clayClassName", test => {
+    TestCase("ClassName", test => {
+        expectEqual(test, "class name for NSObject", "NSObject",
+            ClassName(NSObject)
+        );
+        expectEqual(test, "class name for MyNSNumber", "NSNumber",
+            ClassName(MyNSNumber)
+        );
         expectEqual(test, "class name for SubString1", "clay:__main__.SubString1",
-            clayClassName(SubString1)
+            ClassName(SubString1)
+        );
+        expectEqual(test, "class name for SubString2", "ClaySubString2",
+            ClassName(SubString2)
         );
     }),
     TestCase("MsgSendCompatible?", test => {
