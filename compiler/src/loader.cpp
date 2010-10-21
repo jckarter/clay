@@ -25,11 +25,7 @@ static map<string, ModulePtr> modules;
 
 static std::string getOS(llvm::Triple const &triple) {
     switch (triple.getOS()) {
-    case llvm::Triple::Darwin :
-        if (triple.getArch() == llvm::Triple::arm || triple.getArch() == llvm::Triple::thumb)
-            return "ios";
-        else
-            return "macosx";
+    case llvm::Triple::Darwin : return "macosx";
     case llvm::Triple::DragonFly : return "dragonfly";
     case llvm::Triple::FreeBSD : return "freebsd";
     case llvm::Triple::Linux : return "linux";
