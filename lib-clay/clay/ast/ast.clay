@@ -434,9 +434,9 @@ variant TopLevelItem =
     OverloadPtr |
     EnumPtr |
     GlobalVariablePtr |
+    GlobalAliasPtr |
     ExternalProcedurePtr |
-    ExternalVariablePtr |
-    GlobalAliasPtr
+    ExternalVariablePtr
     ;
 
 

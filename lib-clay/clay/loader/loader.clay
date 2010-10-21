@@ -3,10 +3,16 @@ import maybe.*;
 import io.paths.*;
 import clay.tokens.*;
 import clay.lexer.*;
-import clay.ast.*;
+import clay.ast as ast;
 import clay.parser.*;
-import clay.state.*;
+import clay.core.*;
 import clay.loader.platform as platform;
+
+
+
+//
+// module search path
+//
 
 private var searchPath = Vector[String]();
 
@@ -22,6 +28,12 @@ initSearchPath() {
     addToSearchPaths(libClayDir2);
     addToSearchPaths(String("."));
 }
+
+
+
+//
+// locateModule
+//
 
 private var moduleSuffixes = initModuleSuffixes();
 
@@ -76,10 +88,99 @@ private locateModule(dottedName) {
     return String("");
 }
 
-private loadDependents(module) {
-    for (x in module^.ast^.imports)
-        loadModule(fieldRef(*x, #name));
+
+
+//
+// initializeSymbolTables
+//
+
+private initializeSymbolTables(module) {
+    module^.publicGlobals = new SymbolTable();
+    module^.allGlobals = new SymbolTable();
+    for (x in module^.ast^.topLevelItems)
+        installItem(module, *x);
 }
+
+private procedure installItem;
+
+overload installItem(module, x:ast.RecordPtr) {
+    addGlobal(module, x^.visibility, x^.name, new Record(x));
+}
+
+overload installItem(module, x:ast.VariantPtr) {
+    addGlobal(module, x^.visibility, x^.name, new Variant(x));
+}
+
+overload installItem(module, x:ast.InstancePtr) {
+}
+
+overload installItem(module, x:ast.ProcedurePtr) {
+    addGlobal(module, x^.visibility, x^.name, new Procedure(x));
+}
+
+overload installItem(module, x:ast.OverloadPtr) {
+}
+
+overload installItem(module, x:ast.EnumPtr) {
+    var e = new Enum(x);
+    addGlobal(module, x^.visibility, x^.name, e);
+    for (i, member in enumerated(x^.members))
+        addGlobal(module, x^.visibility, member, new EnumMember(e, i));
+}
+
+overload installItem(module, x:ast.GlobalVariablePtr) {
+    addGlobal(module, x^.visibility, x^.name, new GlobalVariable(x));
+}
+
+overload installItem(module, x:ast.GlobalAliasPtr) {
+    addGlobal(module, x^.visibility, x^.name, new GlobalAlias(x));
+}
+
+overload installItem(module, x:ast.ExternalProcedurePtr) {
+    addGlobal(module, x^.visibility, x^.name, new ExternalProcedure(x));
+}
+
+overload installItem(module, x:ast.ExternalVariablePtr) {
+    addGlobal(module, x^.visibility, x^.name, new ExternalVariable(x));
+}
+
+private globalVisibility(x:Maybe[ast.Visibility]) =
+    maybe(x, x => x, () => ast.PUBLIC);
+
+private addGlobal(module, visibility, name:ast.Identifier, x) {
+    addGlobal(module, visibility, name, SymbolTableEntry(x));
+}
+
+overload addGlobal(module, visibility, name:ast.Identifier, x:SymbolTableEntry) {
+    switch (globalVisibility(visibility)) {
+    case ast.PRIVATE :
+        addPrivateGlobal(module, name, x);
+        break;
+    case ast.PUBLIC :
+        addPublicGlobal(module, name, x);
+        break;
+    default :
+        assert(false);
+        break;
+    }
+}
+
+private addPrivateGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
+    if (contains?(module^.allGlobals^.entries, name.str))
+        error("global redefinition: ", name);
+    module^.allGlobals^.entries[name.str] = x;
+}
+
+private addPublicGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
+    addPrivateGlobal(module, name, x);
+    module^.publicGlobals^.entries[name.str] = x;
+}
+
+
+
+//
+// loadModule, loadPrelude, loadProgram
+//
 
 loadModule(dottedName) {
     var name = moduleString(dottedName);
@@ -98,6 +199,7 @@ loadModule(dottedName) {
             module^.name = name;
             module^.ast = parse(tokenize(readSource(path)));
             installModule(name, module);
+            initializeSymbolTables(module);
             loadDependents(module);
             return module;
         },
@@ -105,13 +207,19 @@ loadModule(dottedName) {
 }
 
 loadPrelude() =
-    loadModule(DottedName("prelude"));
+    loadModule(ast.DottedName("prelude"));
 
 loadProgram(path) {
     println("loading program: ", path);
     var module = new Module();
     module^.name = String("__main__");
     module^.ast = parse(tokenize(readSource(path)));
+    initializeSymbolTables(module);
     loadDependents(module);
     return module;
+}
+
+private loadDependents(module) {
+    for (x in module^.ast^.imports)
+        loadModule(fieldRef(*x, #name));
 }
