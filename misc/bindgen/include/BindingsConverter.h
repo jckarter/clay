@@ -45,7 +45,7 @@ private:
     void allocateObjcPropertySelector(ObjCPropertyDecl *property);
 
     template<typename MethodIterator>
-    void generateObjCClassMethods(MethodIterator begin, MethodIterator end);
+    void generateObjCClassMethods(string const& className, MethodIterator begin, MethodIterator end);
 
 public :
     virtual void Initialize(ASTContext &astc);
@@ -78,9 +78,6 @@ private :
         vector<ObjCCategoryDecl *> categoryDecls;
 
         class_info() : classDecl(NULL) {}
-
-        explicit class_info(ObjCInterfaceDecl *decl)
-            : classDecl(decl) {}
     };
 
     map<string, class_info> objcClasses;

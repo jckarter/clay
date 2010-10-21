@@ -309,44 +309,47 @@ void BindingsConverter::HandleTopLevelDecl(DeclGroupRef DG)
         case Decl::ObjCInterface : {
             ObjCInterfaceDecl *x = (ObjCInterfaceDecl *)decl;
 
-            if (matches) {
-                objcClasses[x->getNameAsString()] = class_info(x);
+            for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
+                 imeth != x->meth_end();
+                 ++imeth)
+                allocateObjcMethodSelector(*imeth);
+            for (ObjCContainerDecl::prop_iterator iprop = x->prop_begin();
+                 iprop != x->prop_end();
+                 ++iprop)
+                allocateObjcPropertySelector(*iprop);
 
-                for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
-                     imeth != x->meth_end();
-                     ++imeth)
-                    allocateObjcMethodSelector(*imeth);
-                for (ObjCContainerDecl::prop_iterator iprop = x->prop_begin();
-                     iprop != x->prop_end();
-                     ++iprop)
-                    allocateObjcPropertySelector(*iprop);
+            if (matches) {
+                objcClasses[x->getNameAsString()].classDecl = x;
             }
             break;
         }
         case Decl::ObjCCategory : {
             ObjCCategoryDecl *x = (ObjCCategoryDecl *)decl;
 
-            if (matches) {
-                map<string, class_info>::iterator objcClassI
-                    = objcClasses.find(x->getClassInterface()->getNameAsString());
-                if (objcClassI == objcClasses.end())
-                    cerr << "warning: category "
-                         << x->getClassInterface()->getNameAsString()
-                         << " (" << x->getNameAsString() << ")"
-                         << " found before original interface definition\n";
-                else {
-                    objcClassI->second.categoryDecls.push_back(x);
+            for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
+                 imeth != x->meth_end();
+                 ++imeth)
+                allocateObjcMethodSelector(*imeth);
+            for (ObjCContainerDecl::prop_iterator iprop = x->prop_begin();
+                 iprop != x->prop_end();
+                 ++iprop)
+                allocateObjcPropertySelector(*iprop);
 
-                    for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
-                         imeth != x->meth_end();
-                         ++imeth)
-                        allocateObjcMethodSelector(*imeth);
-                    for (ObjCContainerDecl::prop_iterator iprop = x->prop_begin();
-                         iprop != x->prop_end();
-                         ++iprop)
-                        allocateObjcPropertySelector(*iprop);
-                }
+            if (matches) {
+                objcClasses[x->getClassInterface()->getNameAsString()].categoryDecls.push_back(x);
             }
+        }
+        case Decl::ObjCProtocol : {
+            ObjCProtocolDecl *x = (ObjCProtocolDecl *)decl;
+
+            for (ObjCContainerDecl::method_iterator imeth = x->meth_begin();
+                 imeth != x->meth_end();
+                 ++imeth)
+                allocateObjcMethodSelector(*imeth);
+            for (ObjCContainerDecl::prop_iterator iprop = x->prop_begin();
+                 iprop != x->prop_end();
+                 ++iprop)
+                allocateObjcPropertySelector(*iprop);
         }
         default :
             break;
@@ -442,81 +445,94 @@ void BindingsConverter::generate()
 }
 
 template<typename MethodIterator>
-void BindingsConverter::generateObjCClassMethods(MethodIterator begin, MethodIterator end) {
+void BindingsConverter::generateObjCClassMethods(
+    string const &className,
+    MethodIterator begin, MethodIterator end
+) {
     for (MethodIterator imeth = begin; imeth != end; ++imeth) {
         ObjCMethodDecl *method = *imeth;
-        out << "        (";
-        out << "#\"" << method->getSelector().getAsString() << "\", ";
+        out << "overload ";
+        if (method->isClassMethod()) {
+            if (method->isVariadic())
+                out << "externalVarargClassMethod";
+            else
+                out << "externalClassMethod";
+        } else {
+            if (method->isVariadic())
+                out << "externalVarargInstanceMethod";
+            else
+                out << "externalInstanceMethod";
+        }
+        out << "(static " << className << ", static #\"" 
+            << method->getSelector().getAsString() << "\") = ";
         out << convertType(method->getResultType().getTypePtr());
         for (ObjCMethodDecl::param_iterator jparam = method->param_begin();
              jparam != method->param_end();
              ++jparam) {
             out << ", " << convertType((*jparam)->getType().getTypePtr());
         }
-        out << "),\n";
+        out << ";\n";
     }
 }
 
 void BindingsConverter::generateObjC()
 {
-    out << "\n";
-    for (map<string, selector_info>::const_iterator i = objcSelectors.begin();
-         i != objcSelectors.end();
-         ++i) {
-        
-        out << "overload "
-            << (i->second.isVariadic ? "varargSelector" : "selector")
-            << "(static #\"" << i->first << "\") = ";
-        out << convertType(i->second.resultType.getTypePtr());
+    if (!objcSelectors.empty()) {
+        out << "\n";
+        for (map<string, selector_info>::const_iterator i = objcSelectors.begin();
+             i != objcSelectors.end();
+             ++i) {
+            
+            out << "overload "
+                << (i->second.isVariadic ? "varargSelector" : "selector")
+                << "(static #\"" << i->first << "\") = ";
+            out << convertType(i->second.resultType.getTypePtr());
 
-        for (vector<QualType>::const_iterator j = i->second.paramTypes.begin();
-             j != i->second.paramTypes.end();
-             ++j) {
-            out << ", " << convertType(j->getTypePtr());
+            for (vector<QualType>::const_iterator j = i->second.paramTypes.begin();
+                 j != i->second.paramTypes.end();
+                 ++j) {
+                out << ", " << convertType(j->getTypePtr());
+            }
+            out << ";\n";
         }
-        out << ";\n";
     }
 
-    out << "\n";
-    for (map<string, class_info>::const_iterator i = objcClasses.begin();
-         i != objcClasses.end();
-         ++i) {
-        ObjCInterfaceDecl *classDecl = i->second.classDecl;
-        vector<ObjCCategoryDecl *> const &categoryDecls = i->second.categoryDecls;
+    if (!objcClasses.empty()) {
+        out << "\n";
+        for (map<string, class_info>::const_iterator i = objcClasses.begin();
+             i != objcClasses.end();
+             ++i) {
+            ObjCInterfaceDecl *classDecl = i->second.classDecl;
+            vector<ObjCCategoryDecl *> const &categoryDecls = i->second.categoryDecls;
 
-        out << "record " << i->first << " = externalClass(";
+            out << "record " << i->first << " = externalClass(";
 
-        ObjCInterfaceDecl *superclass = classDecl->getSuperClass();
-        if (superclass)
-            out << superclass->getNameAsString();
-        else
-            out << "Void";
+            ObjCInterfaceDecl *superclass = classDecl->getSuperClass();
+            if (superclass)
+                out << superclass->getNameAsString();
+            else
+                out << "Void";
 
-        out << ",\n";
-        out << "    ClassMethods(\n";
+            out << ");\n";
 
-        generateObjCClassMethods(classDecl->classmeth_begin(), classDecl->classmeth_end());
+            for (ObjCInterfaceDecl::protocol_iterator jpro = classDecl->protocol_begin();
+                 jpro != classDecl->protocol_end();
+                 ++jpro) {
+                ObjCProtocolDecl *protocol = *jpro;
+                generateObjCClassMethods(i->first, protocol->meth_begin(), protocol->meth_end());
+            }
 
-        for (vector<ObjCCategoryDecl *>::const_iterator jcat = categoryDecls.begin();
-             jcat != categoryDecls.end();
-             ++jcat) {
-            generateObjCClassMethods((*jcat)->classmeth_begin(), (*jcat)->classmeth_end());
+            generateObjCClassMethods(i->first, classDecl->meth_begin(), classDecl->meth_end());
+
+            for (vector<ObjCCategoryDecl *>::const_iterator jcat = categoryDecls.begin();
+                 jcat != categoryDecls.end();
+                 ++jcat) {
+                generateObjCClassMethods(i->first, (*jcat)->meth_begin(), (*jcat)->meth_end());
+            }
+            out << "\n";
         }
-
-        out << "    ),\n";
-        out << "    InstanceMethods(\n";
-
-        generateObjCClassMethods(classDecl->instmeth_begin(), classDecl->instmeth_end());
-
-        for (vector<ObjCCategoryDecl *>::const_iterator jcat = categoryDecls.begin();
-             jcat != categoryDecls.end();
-             ++jcat) {
-            generateObjCClassMethods((*jcat)->instmeth_begin(), (*jcat)->instmeth_end());
-        }
-
-        out << "    )\n";
-        out << ");\n";
     }
+
 }
 
 bool BindingsConverter::isClayKeyword(const string &cIdent) {
