@@ -1,1 +1,5 @@
+import cocoa.objc.(Void);
 public import cocoa.appkit.generated.*;
+
+procedure IBOutlet;
+alias IBAction = Void;

@@ -7,6 +7,7 @@ import libc.*;
 import cocoa.corefoundation.*;
 import cocoa.applicationservices.*;
 import cocoa.foundation.*;
+import cocoa.quartzcore.*;
 
 private alias OpaquePointer = RawPointer;
 private alias UnknownType = Int;

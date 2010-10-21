@@ -5,6 +5,7 @@ CLAY_BINDGEN_FLAGS = -x objective-c \
     -import cocoa.corefoundation \
     -import cocoa.applicationservices \
     -import cocoa.foundation \
+    -import cocoa.quartzcore \
     -match /AppKit
 
 generated.macosx.x86.32.clay: generated_from.h

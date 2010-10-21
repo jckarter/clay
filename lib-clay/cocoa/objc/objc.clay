@@ -280,7 +280,8 @@ overload ClassName(static T) = StaticName(ClassStaticName(T));
 [T, name | Class?(T) and SuperclassType(T) != Void and Identifier?(name)]
 ClassIvarType(static T, static name) = ClassIvarType(SuperclassType(T), name);
 [T, name | Class?(T) and Identifier?(name) and assocValue?(name, ...ClassInstanceVars(T))]
-overload ClassIvarType(static T, static name) = assocValue(name, ...ClassInstanceVars(T));
+overload ClassIvarType(static T, static name) = firstValue(...assocValue(name, ...ClassInstanceVars(T)));
+
 
 
 //
@@ -395,7 +396,7 @@ private classMethodImp(static T, static sel, static fn)
     = makeCCodePointer(
         (self, _cmd, ...args) =>
             forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
-                fn(T, sel, ...msgSendBox(Static[T], sel, ...args))
+                ...fn(T, sel, ...msgSendBox(Static[T], sel, ...args))
             ),
         ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(Static[T], sel)
     );
@@ -405,7 +406,7 @@ private instanceMethodImp(static T, static sel, static fn)
     = makeCCodePointer(
         (self, _cmd, ...args) =>
             forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(T, sel), r),
-                fn(T(self), sel, ...msgSendBox(T, sel, ...args))
+                ...fn(T(self), sel, ...msgSendBox(T, sel, ...args))
             ),
         ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(T, sel)
     );
