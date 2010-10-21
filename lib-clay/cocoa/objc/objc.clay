@@ -264,11 +264,23 @@ procedure ClassInstanceVars;
 procedure ClassClassMethods;
 procedure ClassInstanceMethods;
 
+[T | ExternalClass?(T)]
+ClassName(static T) = StaticName(T);
+
+[T | ClayClass?(T)]
+overload ClassName(static T) {
+    return "clay:" + ModuleName(T) + "." + StaticName(T);
+}
+
+procedure ClassStaticName;
+
+[T | CallDefined?(ClassStaticName, Static[T])]
+overload ClassName(static T) = StaticName(ClassStaticName(T));
+
 [T, name | Class?(T) and SuperclassType(T) != Void and Identifier?(name)]
 ClassIvarType(static T, static name) = ClassIvarType(SuperclassType(T), name);
 [T, name | Class?(T) and Identifier?(name) and assocValue?(name, ...ClassInstanceVars(T))]
 overload ClassIvarType(static T, static name) = assocValue(name, ...ClassInstanceVars(T));
-
 
 
 //
@@ -292,12 +304,22 @@ externalClass(static Super) = recordWithProperties(
     (#__handle__, ObjectHandle)
 );
 
+[name, Super | Identifier?(name) and ValidSuperclass?(Super)]
+overload externalClass(static name, static Super) = recordWithProperties(
+    (
+        (SuperclassType, Super),
+        (ExternalClass?, static true),
+        (ClassStaticName, name),
+    ), 
+    (#__handle__, ObjectHandle)
+);
+
 record ExternalClassNotFound (name: StringConstant);
 instance Exception = ExternalClassNotFound;
 
 [T | ExternalClass?(T)]
 overload objcClassMake(static T) {
-    var name = StaticName(T);
+    var name = ClassName(T);
     var handle = objc_getClass(cstring(name));
     if (null?(handle))
         throw ExternalClassNotFound(name);
@@ -339,12 +361,25 @@ newClass(static Super,
     (#__handle__, ObjectHandle)
 );
 
+[name, Super, IV, CM, IM | Identifier?(name)] // XXX ValidSuperclass?(Super)]
+overload newClass(static name, static Super,
+    instancevars: InstanceVars[IV],
+    classmethods: ClassMethods[CM],
+    instancemethods: InstanceMethods[IM]
+) = recordWithProperties(
+    (
+        (SuperclassType, Super),
+        (ClayClass?, static true),
+        (ClassStaticName, name),
+        Tuple(ClassInstanceVars, ...unpack(instancevars.value)),
+        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
+        Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),
+    ), 
+    (#__handle__, ObjectHandle)
+);
+
 record NewClassCouldNotBeCreated (module: StringConstant, name: StringConstant);
 instance Exception = NewClassCouldNotBeCreated;
-
-clayClassName(T) {
-    return "clay:" + ModuleName(T) + "." + StaticName(T);
-}
 
 record NewClassCouldNotAddIvar (module: StringConstant, name: StringConstant, ivar: StringConstant);
 instance Exception = NewClassCouldNotAddIvar;
@@ -377,7 +412,7 @@ private instanceMethodImp(static T, static sel, static fn)
 
 [T | ClayClass?(T)]
 overload objcClassMake(static T) {
-    var name = clayClassName(T);
+    var name = ClassName(T);
     var handle = objc_allocateClassPair(
         ClassHandle(objectHandle(SuperclassType(T))),
         cstring(name),
