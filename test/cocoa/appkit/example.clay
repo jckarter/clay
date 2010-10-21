@@ -52,6 +52,8 @@ _performMath(self, fn) {
     var left = self^.leftField.intValue();
     var right = self^.rightField.intValue();
     self^.resultField.setIntValue(fn(left, right));
+    self^.resultField.becomeFirstResponder();
+    self^.resultField.selectText(self);
 }
 
 overload newInstanceMethod(self: ExampleController, static #"performAdd:", sender: Id)
