@@ -16,44 +16,29 @@ overload selector(static #"numberWithInt:") = Id, Int;
 
 overload selector(static #"drain") = Void;
 
-record NSObject = externalClass(Void,
-    ClassMethods(
-        (#"alloc", Id),
-        (#"class", Id), // XXX Class
-    ),
-    InstanceMethods(
-        (#"init", Id),
-        (#"description", NSString),
-        (#"retain", Id),
-        (#"release", Id),
-        (#"autorelease", Id),
-        (#"class", Id),
-    ),
-);
+record NSObject = externalClass(Void);
+overload externalClassMethod(static NSObject, static #"alloc") = Id;
+overload externalClassMethod(static NSObject, static #"class") = Id; // XXX Class
+overload externalInstanceMethod(static NSObject, static #"init") = Id;
+overload externalInstanceMethod(static NSObject, static #"description") = NSString;
+overload externalInstanceMethod(static NSObject, static #"retain") = Id;
+overload externalInstanceMethod(static NSObject, static #"release") = Id;
+overload externalInstanceMethod(static NSObject, static #"autorelease") = Id;
+overload externalInstanceMethod(static NSObject, static #"class") = Id; // XXX Class
 
-record NSString = externalClass(NSObject,
-    ClassMethods(
-        (#"stringWithUTF8String:", Id, Pointer[CChar]),
-        (#"stringWithFormat:", Id, NSString),
-    ),
-    InstanceMethods(
-        (#"UTF8String", Pointer[CChar]),
-    ),
-);
+record NSString = externalClass(NSObject);
+overload externalClassMethod(static NSString, static #"stringWithUTF8String:")
+    = Id, Pointer[CChar];
+overload externalVarargClassMethod(static NSString, static #"stringWithFormat:")
+    = Id, NSString;
+overload externalInstanceMethod(static NSString, static #"UTF8String")
+    = Pointer[CChar];
 
-record NSNumber = externalClass(NSObject,
-    ClassMethods(
-        (#"numberWithInt:", Id, Int),
-    ),
-    InstanceMethods(),
-);
+record NSNumber = externalClass(NSObject);
+overload externalClassMethod(static NSNumber, static #"numberWithInt:") = Id, Int;
 
-record NSAutoreleasePool = externalClass(NSObject,
-    ClassMethods(),
-    InstanceMethods(
-        (#"drain", Void),
-    ),
-);
+record NSAutoreleasePool = externalClass(NSObject);
+overload externalInstanceMethod(static NSNumber, static #"drain") = Void;
 
 main() {
     var pool = NSAutoreleasePool.alloc().init();

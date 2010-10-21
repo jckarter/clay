@@ -29,38 +29,31 @@ overload selector(static #"setEnabled:") = Void, Bool;
 overload selector(static #"version") = Id;
 overload selector(static #"classVersion") = Id;
 
-record NSObject = externalClass(Void,
-    ClassMethods(
-        (#"alloc", Id),
-        (#"allocWithZone:", NSZone),
-        (#"new", Id),
-    ),
-    InstanceMethods(
-        (#"init", Id),
-        (#"copy", Id),
-        (#"copyWithZone:", Id, NSZone),
-        (#"mutableCopy", Id),
-        (#"retain", Id),
-    ),
-);
+record NSObject = externalClass(Void);
+overload externalClassMethod(static NSObject, static #"alloc") = Id;
+overload externalClassMethod(static NSObject, static #"allocWithZone:") = Id, NSZone;
+overload externalClassMethod(static NSObject, static #"new") = Id;
+overload externalInstanceMethod(static NSObject, static #"init") = Id;
+overload externalInstanceMethod(static NSObject, static #"copy") = Id;
+overload externalInstanceMethod(static NSObject, static #"copyWithZone:") = Id, NSZone;
+overload externalInstanceMethod(static NSObject, static #"mutableCopy") = Id;
+overload externalInstanceMethod(static NSObject, static #"retain") = Id;
 
-record NSString = externalClass(NSObject,
-    ClassMethods(
-        (#"stringWithUTF8String:", Id, Pointer[CChar]),
-        (#"stringWithFormat:", Id, NSString),
-    ),
-    InstanceMethods(
-        (#"initWithUTF8String:", Id, Pointer[CChar]),
-        (#"initWithFormat:", Id, NSString),
-        (#"UTF8String", Pointer[CChar]),
-        (#"description", NSString),
-    ),
-);
+record NSString = externalClass(NSObject);
+overload externalClassMethod(static NSString, static #"stringWithUTF8String:")
+    = Id, Pointer[CChar];
+overload externalVarargClassMethod(static NSString, static #"stringWithFormat:")
+    = Id, NSString;
+overload externalInstanceMethod(static NSString, static #"initWithUTF8String:")
+    = Id, Pointer[CChar];
+overload externalVarargInstanceMethod(static NSString, static #"initWithFormat:")
+    = Id, NSString;
+overload externalInstanceMethod(static NSString, static #"UTF8String")
+    = Pointer[CChar];
+overload externalInstanceMethod(static NSString, static #"description")
+    = NSString;
 
-record NSMutableString = externalClass(NSString,
-    ClassMethods(),
-    InstanceMethods(),
-);
+record NSMutableString = externalClass(NSString);
 
 record SubString1 = newClass(NSString,
     InstanceVars(
