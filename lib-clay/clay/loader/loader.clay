@@ -1,7 +1,7 @@
 
 import maybe.*;
 import io.paths.*;
-import clay.tokens.*;
+import clay.common.*;
 import clay.lexer.*;
 import clay.ast as ast;
 import clay.parser.*;
@@ -84,8 +84,7 @@ private locateModule(dottedName) {
                 return path;
         }
     }
-    error("module not found: ", moduleString(dottedName));
-    return String("");
+    throw ModuleNotFoundError(dottedName);
 }
 
 
@@ -167,7 +166,7 @@ overload addGlobal(module, visibility, name:ast.Identifier, x:SymbolTableEntry) 
 
 private addPrivateGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
     if (contains?(module^.allGlobals^.entries, name.str))
-        error("global redefinition: ", name);
+        throw GlobalRedefinitionError(name);
     module^.allGlobals^.entries[name.str] = x;
 }
 
@@ -199,8 +198,10 @@ loadModule(dottedName) {
             module^.name = name;
             module^.ast = parse(tokenize(readSource(path)));
             installModule(name, module);
-            initializeSymbolTables(module);
-            loadDependents(module);
+            withCurrentModule(module, () => {
+                initializeSymbolTables(module);
+                loadDependents(module);
+            });
             return module;
         },
     );
@@ -214,8 +215,10 @@ loadProgram(path) {
     var module = new Module();
     module^.name = String("__main__");
     module^.ast = parse(tokenize(readSource(path)));
-    initializeSymbolTables(module);
-    loadDependents(module);
+    withCurrentModule(module, () => {
+        initializeSymbolTables(module);
+        loadDependents(module);
+    });
     return module;
 }
 

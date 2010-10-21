@@ -1,7 +1,88 @@
 
-import clay.tokens.*;
+import clay.common.*;
+import clay.diagnostics.*;
 import maybe.*;
 import parsing.combinators.wrapper.*;
+
+
+
+//
+// data definitions
+//
+
+enum TokenKind {
+    SENTINEL,
+    SYMBOL,
+    KEYWORD,
+    IDENTIFIER,
+    STRING_LITERAL,
+    CHAR_LITERAL,
+    INT_LITERAL,
+    FLOAT_LITERAL,
+    SPACE,
+    COMMENT,
+    LLVM,
+}
+
+alias DataRange = Range[SizeT];
+
+record Token(kind:TokenKind, subKind:UInt8, range:DataRange);
+
+[I | Integer?(I)]
+overload Token(kind:TokenKind, subKind:I) =
+    Token(kind, UInt8(subKind), DataRange(SizeT(0), SizeT(0)));
+
+overload Token(kind:TokenKind) = Token(kind, 0);
+
+record SourceTokens (
+    file : SourceFilePtr,
+    vector : Vector[Token],
+);
+alias SourceTokensPtr = SharedPointer[SourceTokens];
+
+
+
+//
+// symbols and keywords
+//
+
+private var symbols = [
+    "<--", "...", "=>",
+    "==", "!=", "<=", ">=",
+    "<", ">",
+    "+=", "-=", "*=", "/=", "%=",
+    "+", "-", "*", "/", "%", "=", "&", "^", "|",
+    "(", ")", "[", "]", "{", "}",
+    ":", ";", ",", ".", "#"
+];
+
+private var keywords = [
+    "public", "private", "import", "as",
+    "record", "variant", "instance",
+    "procedure", "overload", "external", "alias",
+    "static", "callbyname", "lvalue", "rvalue",
+    "inline", "enum", "var", "ref", "forward",
+    "and", "or", "not", "new",
+    "if", "else", "goto", "return", "while",
+    "switch", "case", "default", "break", "continue", "for", "in",
+    "true", "false", "try", "catch", "throw"
+];
+
+symbolIndex(s) Int {
+    for (i, x in enumerated(symbols)) {
+        if (x == s)
+            return Int(i);
+    }
+    return -1;
+}
+
+keywordIndex(s) Int {
+    for (i, x in enumerated(keywords)) {
+        if (x == s)
+            return Int(i);
+    }
+    return -1;
+}
 
 
 
@@ -355,17 +436,27 @@ private var lexToken = bounds(choice(
 
 
 //
+// LexerError
+//
+
+record LexerError(
+    file: SourceFilePtr,
+    where: SizeT
+);
+
+instance ClayError = LexerError;
+
+overload displayError(e:LexerError) {
+    errorWithLocation(e.file, e.where, "invalid token");
+}
+
+
+
+//
 // tokenize
 //
 
 private var lexSentinel = bounds(input => Maybe(Token(SENTINEL)));
-
-record LexerError(
-    file:SourceFilePtr,
-    where:SizeT
-);
-
-instance Exception = LexerError;
 
 private var tokenize1 = modify(
     x => {

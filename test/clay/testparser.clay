@@ -1,9 +1,8 @@
 
-import clay.tokens.*;
+import clay.common.*;
 import clay.lexer.*;
-import clay.ast.*;
 import clay.parser.*;
-import clay.errors.*;
+import clay.core.*;
 
 main(args) {
     if (size(args) != 2) {
@@ -15,10 +14,7 @@ main(args) {
         println(ast^.imports);
         println(ast^.topLevelItems);
     }
-    catch (e:LexerError) {
-        displayError(e);
-    }
-    catch (e:ParserError) {
+    catch (e:ClayError) {
         displayError(e);
     }
     return 0;
