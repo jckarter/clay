@@ -1,0 +1,80 @@
+import cocoa.*;
+
+record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
+    InstanceVars(
+        (#window, NSWindow, IBOutlet)
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"applicationDidFinishLaunching:", Void, NSNotification),
+        (#"applicationShouldTerminateAfterLastWindowClosed:", Bool, NSApplication),
+    ),
+);
+
+overload selector(static #"performAdd:") = Void, Id;
+overload selector(static #"performSubtract:") = Void, Id;
+overload selector(static #"performMultiply:") = Void, Id;
+overload selector(static #"performDivide:") = Void, Id;
+overload selector(static #"performClear:") = Void, Id;
+
+record ExampleController = newClass(#"ExampleController", NSObject,
+    InstanceVars(
+        (#leftField,   NSTextField, IBOutlet),
+        (#rightField,  NSTextField, IBOutlet),
+        (#resultField, NSTextField, IBOutlet),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"awakeFromNib", Void),
+        (#"performAdd:", IBAction, Id),
+        (#"performSubtract:", IBAction, Id),
+        (#"performMultiply:", IBAction, Id),
+        (#"performDivide:", IBAction, Id),
+        (#"performClear:", IBAction, Id),
+    ),
+);
+
+overload newInstanceMethod(self: ExampleAppDelegate, static #"applicationDidFinishLaunching:",
+    notification: NSNotification
+) {
+    // do nothing
+}
+
+overload newInstanceMethod(self: ExampleAppDelegate, static #"applicationShouldTerminateAfterLastWindowClosed:",
+    app: NSApplication
+) = true;
+
+overload newInstanceMethod(self: ExampleController, static #"awakeFromNib") {
+    // do nothing
+}
+
+_performMath(self, fn) {
+    var left = self^.leftField.intValue();
+    var right = self^.rightField.intValue();
+    self^.resultField.setIntValue(fn(left, right));
+}
+
+overload newInstanceMethod(self: ExampleController, static #"performAdd:", sender: Id)
+    { _performMath(self, add); }
+
+overload newInstanceMethod(self: ExampleController, static #"performSubtract:", sender: Id)
+    { _performMath(self, subtract); }
+
+overload newInstanceMethod(self: ExampleController, static #"performMultiply:", sender: Id)
+    { _performMath(self, multiply); }
+
+overload newInstanceMethod(self: ExampleController, static #"performDivide:", sender: Id)
+    { _performMath(self, divide); }
+
+overload newInstanceMethod(self: ExampleController, static #"performClear:", sender: Id) {
+    self^.leftField.setStringValue(NSSTR(#""));
+    self^.rightField.setStringValue(NSSTR(#""));
+    self^.resultField.setStringValue(NSSTR(#""));
+    self^.leftField.becomeFirstResponder();
+}
+
+main() {
+    classHandle(ExampleController); classHandle(ExampleAppDelegate);
+    println(classHandle(ExampleAppDelegate));
+    NSApplicationMain(...getArgcArgv());
+}
