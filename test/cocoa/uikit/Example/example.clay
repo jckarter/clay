@@ -2,15 +2,24 @@ import cocoa.objc.*;
 import cocoa.foundation.*;
 import cocoa.uikit.*;
 
+overload selector(static #"performMath:") = Void, UISegmentedControl;
+
 record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
     InstanceVars(
-        (#window, UIWindow, IBOutlet),
-        (#viewController, ExampleViewController, IBOutlet)
+        (#window, IBOutlet(UIWindow)),
+        (#viewController, IBOutlet(ExampleViewController)),
     ),
     ClassMethods(),
     InstanceMethods(
-        (#"application:didFinishLaunchingWithOptions:", Void, UIApplication, NSDictionary),
-        (#"dealloc", Void),
+        (#"application:didFinishLaunchingWithOptions:", (self, app, options) => {
+            self^.window.addSubview(self^.viewController.view());
+            self^.window.makeKeyAndVisible();
+        }),
+        (#"dealloc", (self) => {
+            self^.viewController.release();
+            self^.window.release();
+            super(self).dealloc();
+        }),
     ),
 );
 
@@ -18,11 +27,9 @@ record ExampleViewController = newClass(#"ExampleViewController", UIViewControll
     InstanceVars(),
     ClassMethods(),
     InstanceMethods(
-        (#"shouldAutorotateToInterfaceOrientation:", Bool, UIInterfaceOrientation),
+        (#"shouldAutorotateToInterfaceOrientation:", (self, orientation) => true),
     ),
 );
-
-overload selector(static #"performMath:") = Void, Id;
 
 record ExampleController = newClass(#"ExampleController", NSObject,
     InstanceVars(
@@ -32,51 +39,31 @@ record ExampleController = newClass(#"ExampleController", NSObject,
     ),
     ClassMethods(),
     InstanceMethods(
-        (#"performMath:", IBAction, UISegmentedControl),
+        (#"performMath:", IBAction((self, sender) => {
+            switch (Int(sender.selectedSegmentIndex())) {
+            case 0:
+                _performMath(self, add);
+                break;
+            case 1:
+                _performMath(self, subtract);
+                break;
+            case 2:
+                _performMath(self, multiply);
+                break;
+            case 3:
+                _performMath(self, divide);
+                break;
+            default:
+                break;
+            }
+        })),
     ),
 );
-
-overload newInstanceMethod(self: ExampleAppDelegate, static #"application:didFinishLaunchingWithOptions:",
-    app: UIApplication, options: NSDictionary
-) {
-    self^.window.addSubview(self^.viewController.view());
-    self^.window.makeKeyAndVisible();
-}
-
-overload newInstanceMethod(self: ExampleAppDelegate, static #"dealloc") {
-    self^.viewController.release();
-    self^.window.release();
-    super(self).dealloc();
-}
-
-overload newInstanceMethod(self: ExampleViewController,
-    static #"shouldAutorotateToInterfaceOrientation:",
-    orientation: UIInterfaceOrientation
-) = true;
 
 _performMath(self, fn) {
     var left = self^.leftField.text().intValue();
     var right = self^.rightField.text().intValue();
     self^.resultLabel.setText(NSString.stringWithFormat(NSSTR(#"%d"), fn(left, right)));
-}
-
-overload newInstanceMethod(self: ExampleController, static #"performMath:", sender: UISegmentedControl) {
-    switch (Int(sender.selectedSegmentIndex())) {
-    case 0:
-        _performMath(self, add);
-        break;
-    case 1:
-        _performMath(self, subtract);
-        break;
-    case 2:
-        _performMath(self, multiply);
-        break;
-    case 3:
-        _performMath(self, divide);
-        break;
-    default:
-        break;
-    }
 }
 
 main() {

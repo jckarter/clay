@@ -426,7 +426,7 @@ LPC0_39:
 	bl	_free
 	cmp	r5, #0
 	bne	LBB0_10
-@ BB#42:                                @ %normal127.i
+@ BB#42:                                @ %normal130.i
 	ldr	r0, [sp, #144]
 	add	r1, r0, #1
 	ldr	r2, [sp, #148]
@@ -441,7 +441,7 @@ LPC0_39:
 	bne	LBB0_207
 @ BB#44:                                @ %clay_reserve(Vector[Char], UInt32).exit.return12_crit_edge.i51.i
 	ldr	r0, [sp, #144]
-LBB0_45:                                @ %normal129.i
+LBB0_45:                                @ %normal132.i
 	mov	r1, #0
 	ldr	r5, [sp, #152]
 	strb	r1, [r5, r0]
@@ -462,7 +462,7 @@ LPC0_42:
 	bl	_free
 	tst	r6, #255
 	bne	LBB0_54
-@ BB#46:                                @ %ifTrue133.i
+@ BB#46:                                @ %ifTrue136.i
 	ldr	r4, LCPI0_43
 	
 LPC0_43:
@@ -471,7 +471,7 @@ LPC0_43:
 	str	r4, [sp, #212]
 	cmp	r4, #0
 	beq	LBB0_49
-@ BB#47:                                @ %ifTrue133.i
+@ BB#47:                                @ %ifTrue136.i
 	cmp	r4, #1
 	bne	LBB0_50
 @ BB#48:                                @ %ifTrue13.i4.i23.i
@@ -524,7 +524,7 @@ LBB0_50:                                @ %ifMerge20.i9.i28.i
 @ BB#53:                                @ %clay_destroy(Exception).exit23.i29.i
 	add	r0, sp, #212
 	b	LBB0_9
-LBB0_54:                                @ %return153.i
+LBB0_54:                                @ %return156.i
 	ldr	r0, LCPI0_49
 	add	r1, sp, #168
 	add	r2, sp, #176
@@ -562,7 +562,7 @@ LPC0_51:
 	bl	_free
 	cmp	r5, #0
 	bne	LBB0_10
-@ BB#56:                                @ %normal158.i
+@ BB#56:                                @ %normal165.i
 	ldr	r0, [sp, #128]
 	add	r1, r0, #1
 	ldr	r2, [sp, #132]
@@ -577,7 +577,7 @@ LPC0_51:
 	bne	LBB0_208
 @ BB#58:                                @ %clay_reserve(Vector[Char], UInt32).exit.return12_crit_edge.i.i233
 	ldr	r0, [sp, #128]
-LBB0_59:                                @ %normal160.i
+LBB0_59:                                @ %normal167.i
 	mov	r1, #0
 	ldr	r5, [sp, #136]
 	strb	r1, [r5, r0]
@@ -598,7 +598,7 @@ LPC0_53:
 	bl	_free
 	tst	r6, #255
 	bne	LBB0_68
-@ BB#60:                                @ %ifTrue164.i
+@ BB#60:                                @ %ifTrue171.i
 	ldr	r4, LCPI0_54
 	
 LPC0_54:
@@ -607,7 +607,7 @@ LPC0_54:
 	str	r4, [sp, #156]
 	cmp	r4, #0
 	beq	LBB0_63
-@ BB#61:                                @ %ifTrue164.i
+@ BB#61:                                @ %ifTrue171.i
 	cmp	r4, #1
 	bne	LBB0_64
 @ BB#62:                                @ %ifTrue13.i4.i.i235
@@ -872,7 +872,7 @@ LPC0_79:
 	bl	_free
 	cmp	r5, #0
 	bne	LBB0_10
-@ BB#89:                                @ %normal42.i
+@ BB#89:                                @ %normal45.i
 	ldr	r0, [sp, #320]
 	add	r1, r0, #1
 	ldr	r2, [sp, #324]
@@ -887,7 +887,7 @@ LPC0_79:
 	bne	LBB0_210
 @ BB#91:                                @ %clay_reserve(Vector[Char], UInt32).exit.return12_crit_edge.i.i268
 	ldr	r0, [sp, #320]
-LBB0_92:                                @ %normal44.i
+LBB0_92:                                @ %normal47.i
 	ldr	r5, [sp, #328]
 	mov	r11, #0
 	strb	r11, [r5, r0]
@@ -908,7 +908,7 @@ LPC0_81:
 	bl	_free
 	tst	r6, #255
 	bne	LBB0_101
-@ BB#93:                                @ %ifTrue48.i
+@ BB#93:                                @ %ifTrue51.i
 	ldr	r4, LCPI0_82
 	
 LPC0_82:
@@ -917,7 +917,7 @@ LPC0_82:
 	str	r4, [sp, #332]
 	cmp	r4, #0
 	beq	LBB0_96
-@ BB#94:                                @ %ifTrue48.i
+@ BB#94:                                @ %ifTrue51.i
 	cmp	r4, #1
 	bne	LBB0_97
 @ BB#95:                                @ %ifTrue13.i4.i.i272
@@ -1487,7 +1487,7 @@ LPC0_134:
 	bl	_free
 	cmp	r5, #0
 	bne	LBB0_10
-@ BB#158:                               @ %normal171.i
+@ BB#158:                               @ %normal174.i
 	ldr	r0, [sp, #24]
 	add	r1, r0, #1
 	ldr	r2, [sp, #28]
@@ -1502,7 +1502,7 @@ LPC0_134:
 	bne	LBB0_211
 @ BB#160:                               @ %clay_reserve(Vector[Char], UInt32).exit.return12_crit_edge.i.i
 	ldr	r0, [sp, #24]
-LBB0_161:                               @ %normal173.i
+LBB0_161:                               @ %normal176.i
 	mov	r1, #0
 	ldr	r5, [sp, #32]
 	strb	r1, [r5, r0]
@@ -1523,7 +1523,7 @@ LPC0_137:
 	bl	_free
 	tst	r6, #255
 	bne	LBB0_183
-@ BB#162:                               @ %ifTrue177.i
+@ BB#162:                               @ %ifTrue180.i
 	ldr	r4, LCPI0_138
 	
 LPC0_138:
@@ -1532,7 +1532,7 @@ LPC0_138:
 	str	r4, [sp, #36]
 	cmp	r4, #0
 	beq	LBB0_165
-@ BB#163:                               @ %ifTrue177.i
+@ BB#163:                               @ %ifTrue180.i
 	cmp	r4, #1
 	bne	LBB0_168
 @ BB#164:                               @ %ifTrue13.i4.i.i210
@@ -1865,11 +1865,11 @@ LCPI0_191:
 LCPI0_192:
 	.long	L_clayliteral_str9-(LPC0_29+8)
 	 
-LBB0_207:                               @ %landing128.i
+LBB0_207:                               @ %landing131.i
 	ldr	r0, [sp, #152]
 	bl	_free
 	b	LBB0_10
-LBB0_208:                               @ %landing159.i
+LBB0_208:                               @ %landing166.i
 	ldr	r0, [sp, #136]
 	bl	_free
 	b	LBB0_10
@@ -1878,11 +1878,11 @@ LBB0_208:                               @ %landing159.i
 LCPI0_193:
 	.long	L_clayliteral_str2-(LPC0_30+8)
 	 
-LBB0_210:                               @ %landing43.i
+LBB0_210:                               @ %landing46.i
 	ldr	r0, [sp, #328]
 	bl	_free
 	b	LBB0_10
-LBB0_211:                               @ %landing172.i
+LBB0_211:                               @ %landing175.i
 	ldr	r0, [sp, #32]
 	bl	_free
 	b	LBB0_10
@@ -1937,7 +1937,7 @@ LCPI0_48:
 	 
 	.align	2
 LCPI0_49:
-	.long	L_clayliteral_str41-(LPC0_49+8)
+	.long	L_clayliteral_str68-(LPC0_49+8)
 	 
 	.align	2
 LCPI0_50:
@@ -1993,7 +1993,7 @@ LCPI0_62:
 	 
 	.align	2
 LCPI0_63:
-	.long	L_clayliteral_str77-(LPC0_63+8)
+	.long	L_clayliteral_str78-(LPC0_63+8)
 	 
 	.align	2
 LCPI0_64:
@@ -2009,7 +2009,7 @@ LCPI0_66:
 	 
 	.align	2
 LCPI0_67:
-	.long	L_clayliteral_str77-(LPC0_67+8)
+	.long	L_clayliteral_str78-(LPC0_67+8)
 	 
 	.align	2
 LCPI0_68:
@@ -2017,11 +2017,11 @@ LCPI0_68:
 	 
 	.align	2
 LCPI0_69:
-	.long	L_clayliteral_str81-(LPC0_69+8)
+	.long	L_clayliteral_str82-(LPC0_69+8)
 	 
 	.align	2
 LCPI0_70:
-	.long	L_clayliteral_str75-(LPC0_70+8)
+	.long	L_clayliteral_str76-(LPC0_70+8)
 	 
 	.align	2
 LCPI0_71:
@@ -2041,11 +2041,11 @@ LCPI0_74:
 	 
 	.align	2
 LCPI0_75:
-	.long	L_clayliteral_str75-(LPC0_75+8)
+	.long	L_clayliteral_str76-(LPC0_75+8)
 	 
 	.align	2
 LCPI0_76:
-	.long	L_clayliteral_str82-(LPC0_76+8)
+	.long	L_clayliteral_str41-(LPC0_76+8)
 	 
 	.align	2
 LCPI0_77:
@@ -2085,11 +2085,11 @@ LCPI0_85:
 	 
 	.align	2
 LCPI0_86:
-	.long	L_clayliteral_str75-(LPC0_86+8)
+	.long	L_clayliteral_str76-(LPC0_86+8)
 	 
 	.align	2
 LCPI0_87:
-	.long	L_clayliteral_str81-(LPC0_87+8)
+	.long	L_clayliteral_str82-(LPC0_87+8)
 	 
 	.align	2
 LCPI0_88:
@@ -2273,7 +2273,7 @@ LCPI0_132:
 	 
 	.align	2
 LCPI0_133:
-	.long	L_clayliteral_str41-(LPC0_133+8)
+	.long	L_clayliteral_str68-(LPC0_133+8)
 	 
 	.align	2
 LCPI0_134:
@@ -3969,7 +3969,7 @@ L_clayliteral_str40:
 	.asciz	 "makeKeyAndVisible"
 
 L_clayliteral_str41:                    @ @clayliteral_str41
-	.asciz	 "v"
+	.asciz	 "c"
 
 L_clayliteral_str43:                    @ @clayliteral_str43
 	.asciz	 ":"
@@ -3980,20 +3980,20 @@ L_clayliteral_str51:                    @ @clayliteral_str51
 L_clayliteral_str60:                    @ @clayliteral_str60
 	.asciz	 "release"
 
-	.align	4                       @ @clayliteral_str75
-L_clayliteral_str75:
+L_clayliteral_str68:                    @ @clayliteral_str68
+	.asciz	 "v"
+
+	.align	4                       @ @clayliteral_str76
+L_clayliteral_str76:
 	.asciz	 "ExampleViewController"
 
-	.align	4                       @ @clayliteral_str77
-L_clayliteral_str77:
+	.align	4                       @ @clayliteral_str78
+L_clayliteral_str78:
 	.asciz	 "UIViewController"
 
-	.align	4                       @ @clayliteral_str81
-L_clayliteral_str81:
+	.align	4                       @ @clayliteral_str82
+L_clayliteral_str82:
 	.asciz	 "shouldAutorotateToInterfaceOrientation:"
-
-L_clayliteral_str82:                    @ @clayliteral_str82
-	.asciz	 "c"
 
 L_clayliteral_str83:                    @ @clayliteral_str83
 	.asciz	 "i"
