@@ -1,0 +1,5 @@
+import cocoa.objc.(Void);
+public import cocoa.uikit.generated.*;
+
+procedure IBOutlet;
+alias IBAction = Void;
