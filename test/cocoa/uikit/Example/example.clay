@@ -1,0 +1,92 @@
+import cocoa.objc.*;
+import cocoa.foundation.*;
+import cocoa.uikit.*;
+
+record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
+    InstanceVars(
+        (#window, UIWindow, IBOutlet),
+        (#viewController, ExampleViewController, IBOutlet)
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"application:didFinishLaunchingWithOptions:", Void, UIApplication, NSDictionary),
+        (#"dealloc", Void),
+    ),
+);
+
+record ExampleViewController = newClass(#"ExampleViewController", UIViewController,
+    InstanceVars(),
+    ClassMethods(),
+    InstanceMethods(
+        (#"shouldAutorotateToInterfaceOrientation:", Bool, UIInterfaceOrientation),
+    ),
+);
+
+overload selector(static #"performMath:") = Void, Id;
+
+record ExampleController = newClass(#"ExampleController", NSObject,
+    InstanceVars(
+        (#leftField,   UITextField, IBOutlet),
+        (#rightField,  UITextField, IBOutlet),
+        (#resultLabel, UILabel, IBOutlet),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"performMath:", IBAction, UISegmentedControl),
+    ),
+);
+
+overload newInstanceMethod(self: ExampleAppDelegate, static #"application:didFinishLaunchingWithOptions:",
+    app: UIApplication, options: NSDictionary
+) {
+    self^.window.addSubview(self^.viewController.view());
+    self^.window.makeKeyAndVisible();
+}
+
+overload newInstanceMethod(self: ExampleAppDelegate, static #"dealloc") {
+    self^.viewController.release();
+    self^.window.release();
+    super(self).dealloc();
+}
+
+overload newInstanceMethod(self: ExampleViewController,
+    static #"shouldAutorotateToInterfaceOrientation:",
+    orientation: UIInterfaceOrientation
+) = true;
+
+_performMath(self, fn) {
+    var left = self^.leftField.text().intValue();
+    var right = self^.rightField.text().intValue();
+    self^.resultLabel.setText(NSString.stringWithFormat(NSSTR(#"%d"), fn(left, right)));
+}
+
+overload newInstanceMethod(self: ExampleController, static #"performMath:", sender: UISegmentedControl) {
+    switch (Int(sender.selectedSegmentIndex())) {
+    case 0:
+        _performMath(self, add);
+        break;
+    case 1:
+        _performMath(self, subtract);
+        break;
+    case 2:
+        _performMath(self, multiply);
+        break;
+    case 3:
+        _performMath(self, divide);
+        break;
+    default:
+        break;
+    }
+}
+
+main() {
+    classHandle(ExampleAppDelegate);
+    classHandle(ExampleViewController);
+    classHandle(ExampleController);
+
+    var pool = NSAutoreleasePool.alloc().init();
+    var retVal = UIApplicationMain(...getArgcArgv(), nil(NSString), nil(NSString));
+    pool.drain();
+
+    return retVal;
+}
