@@ -343,9 +343,6 @@ overload objcInitIvarOffset(static T, ivarName)
 
 ClayClass?(T) = false;
 
-procedure newClassMethod;
-procedure newInstanceMethod;
-
 [Super, IV, CM, IM] // XXX | ValidSuperclass?(Super)]
 newClass(static Super,
     instancevars: InstanceVars[IV],
@@ -391,22 +388,22 @@ instance Exception = NewClassCouldNotAddClassMethod;
 record NewClassCouldNotAddInstanceMethod (module: StringConstant, name: StringConstant, selector: StringConstant);
 instance Exception = NewClassCouldNotAddInstanceMethod;
 
-[T, sel, fn]
-private classMethodImp(static T, static sel, static fn) 
+[T, sel]
+private classMethodImp(static T, static sel, fn) 
     = makeCCodePointer(
         (self, _cmd, ...args) =>
             forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
-                ...fn(T, sel, ...msgSendBox(Static[T], sel, ...args))
+                ...fn(...msgSendBox(Static[T], sel, ...args))
             ),
         ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(Static[T], sel)
     );
 
-[T, sel, fn]
-private instanceMethodImp(static T, static sel, static fn)
+[T, sel]
+private instanceMethodImp(static T, static sel, fn)
     = makeCCodePointer(
         (self, _cmd, ...args) =>
             forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(T, sel), r),
-                ...fn(T(self), sel, ...msgSendBox(T, sel, ...args))
+                ...fn(T(self), ...msgSendBox(T, sel, ...args))
             ),
         ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(T, sel)
     );
@@ -439,10 +436,11 @@ overload objcClassMake(static T) {
 
     static for (classMethod in ...ClassClassMethods(T)) {
         var selector = classMethod.0;
+        var imp = classMethod.1;
         if (class_addMethod(
             metahandle,
             objcSelector[selector],
-            RawPointer(classMethodImp(T, selector, newClassMethod)),
+            RawPointer(classMethodImp(T, selector, imp)),
             cstring(SelectorTypeEncoding(Static[T], selector))
         ) == NO)
             throw NewClassCouldNotAddClassMethod(ModuleName(T), StaticName(T), StaticName(selector));
@@ -450,10 +448,11 @@ overload objcClassMake(static T) {
 
     static for (instanceMethod in ...ClassInstanceMethods(T)) {
         var selector = instanceMethod.0;
+        var imp = instanceMethod.1;
         if (class_addMethod(
             handle,
             objcSelector[selector],
-            RawPointer(instanceMethodImp(T, selector, newInstanceMethod)),
+            RawPointer(instanceMethodImp(T, selector, imp)),
             cstring(SelectorTypeEncoding(T, selector))
         ) == NO)
             throw NewClassCouldNotAddInstanceMethod(ModuleName(T), StaticName(T), StaticName(selector));
@@ -530,9 +529,11 @@ TypedSelector(static T, static sel) = ...externalInstanceMethod(T, sel);
 [T, sel | ExternalClass?(T) and FixedSelector?(sel)]
 overload TypedSelector(static Static[T], static sel) = ...externalClassMethod(T, sel);
 [T, sel | ClayClass?(T) and FixedSelector?(sel)]
-overload TypedSelector(static T, static sel) = ...assocValue(sel, ...ClassInstanceMethods(T));
+overload TypedSelector(static T, static sel)
+    = ...restValues(...assocValue(sel, ...ClassInstanceMethods(T)));
 [T, sel | ClayClass?(T) and FixedSelector?(sel)]
-overload TypedSelector(static Static[T], static sel) = ...assocValue(sel, ...ClassClassMethods(T));
+overload TypedSelector(static Static[T], static sel)
+    = ...restValues(...assocValue(sel, ...ClassClassMethods(T)));
 
 [T, sel | ExternalClass?(T) and FixedSelector?(sel)]
 TypedSelector?(static T, static sel)
@@ -542,10 +543,10 @@ overload TypedSelector?(static Static[T], static sel)
     = CallDefined?(externalClassMethod, Static[Static[T]], Static[sel]);
 [T, sel | ClayClass?(T) and FixedSelector?(sel)]
 overload TypedSelector?(static T, static sel)
-    = assocValue?(sel, ...ClassInstanceMethods(T));
+    = assocCountValues(sel, ...ClassInstanceMethods(T)) > 1;
 [T, sel | ClayClass?(T) and FixedSelector?(sel)]
 overload TypedSelector?(static Static[T], static sel)
-    = assocValue?(sel, ...ClassClassMethods(T));
+    = assocCountValues(sel, ...ClassClassMethods(T)) > 1;
 
 
 [T, sel | ExternalClass?(T) and VarargSelector?(sel)]
