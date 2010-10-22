@@ -526,10 +526,20 @@ private var returnKind = choice(
 //
 
 private var lambdaArgs = choice(
-    modify(Vector[Identifier], identifier),
+    modify(
+        x => VariadicList(Vector[Identifier](move(x)), nothing(Identifier)),
+        identifier,
+    ),
     modify(
         x => move(x.1),
-        sequence(sym(#"("), zeroOrMore(identifier), sym(#")")),
+        sequence(
+            sym(#"("),
+            variadicList(
+                identifier,
+                modify(x => x.1, sequence(sym(#"..."), identifier)),
+            ),
+            sym(#")")
+        ),
     ),
 );
 
