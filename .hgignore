@@ -1,6 +1,10 @@
 syntax: regexp
 
-.*\.swp
+.*\.sw.$
+.*\.orig$
+\.DS_Store$
+\.xcodeproj/.*\.mode.*v.*$
+\.xcodeproj/.*\.pbxuser$
 
 cscope.out
 tags
@@ -8,7 +12,7 @@ tags
 .*\.pyc$
 .*\.out$
 .*bin/*$
-^build/*$
+(^|/)build/*$
 ^clay$
 ^compiler/src/.*\.o$
 ^compiler/src/.*\.dep$
@@ -26,5 +30,7 @@ tags
 ^misc/bindgen/vs2008/.*\.user$
 ^misc/bindgen/vs2008/Debug/
 ^misc/bindgen/vs2008/Release/
+
+^test/cocoa/appkit/Example.app
 
 ^mingw/

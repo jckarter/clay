@@ -1,0 +1,51 @@
+import cocoa.*;
+
+record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
+    InstanceVars(
+        (#window, IBOutlet(NSWindow)),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"applicationShouldTerminateAfterLastWindowClosed:", (self, app) => true),
+    ),
+);
+
+overload selector(static #"performAdd:") = Void, Id;
+overload selector(static #"performSubtract:") = Void, Id;
+overload selector(static #"performMultiply:") = Void, Id;
+overload selector(static #"performDivide:") = Void, Id;
+overload selector(static #"performClear:") = Void, Id;
+
+record ExampleController = newClass(#"ExampleController", NSObject,
+    InstanceVars(
+        (#leftField,   IBOutlet(NSTextField)),
+        (#rightField,  IBOutlet(NSTextField)),
+        (#resultField, IBOutlet(NSTextField)),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"performAdd:", IBAction((self, sender) => { _performMath(self, add); })),
+        (#"performSubtract:", IBAction((self, sender) => { _performMath(self, subtract); })),
+        (#"performMultiply:", IBAction((self, sender) => { _performMath(self, multiply); })),
+        (#"performDivide:", IBAction((self, sender) => { _performMath(self, divide); })),
+        (#"performClear:", IBAction((self, sender) => {
+            self^.leftField.setStringValue(NSSTR(#""));
+            self^.rightField.setStringValue(NSSTR(#""));
+            self^.resultField.setStringValue(NSSTR(#""));
+            self^.leftField.becomeFirstResponder();
+        })),
+    ),
+);
+
+_performMath(self, fn) {
+    var left = self^.leftField.intValue();
+    var right = self^.rightField.intValue();
+    self^.resultField.setIntValue(fn(left, right));
+    self^.resultField.becomeFirstResponder();
+    self^.resultField.selectText(self);
+}
+
+main() {
+    classHandle(ExampleController); classHandle(ExampleAppDelegate);
+    NSApplicationMain(...getArgcArgv());
+}

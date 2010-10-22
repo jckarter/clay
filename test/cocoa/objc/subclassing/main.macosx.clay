@@ -1,0 +1,86 @@
+import cocoa.objc.*;
+import cocoa.foundation.*;
+
+import cocoa.objc.runtime.(object_getClassName);
+
+overload selector(static #"ncStringWithInt:") = Id, Int;
+overload selector(static #"ncStringWithNumber:") = Id, NSNumber;
+overload selector(static #"initWithNumber:") = Id, NSNumber;
+
+record NumberConvertingString = newClass(NSString,
+    InstanceVars((#value, Int)),
+    ClassMethods(
+        (#"ncStringWithInt:",
+            (value) => NumberConvertingString.alloc().initWithInt(value).autorelease()
+        ),
+        (#"ncStringWithNumber:",
+            (value) => NumberConvertingString.alloc().initWithNumber(value).autorelease()
+        ),
+    ),
+    InstanceMethods(
+        (#"initWithInt:", (self, value) => {
+            self = super(self).init();
+            if (not nil?(self)) {
+                self^.value = value;
+            }
+            return self;
+        }),
+        (#"initWithNumber:", (self, value) => {
+            self = super(self).init();
+            if (not nil?(self)) {
+                self^.value = value.intValue();
+            }
+            return self;
+        }),
+        (#"length", (self) => {
+            var length = NSUInteger(0);
+            var value = self^.value;
+
+            if (value < 0) {
+                length = 1;
+                value = -value;
+            }
+            while (value > 0) {
+                length += 1;
+                value /= 10;
+            }
+            return length;
+        }),
+        (#"characterAtIndex:", (self, index) => {
+            var value = self^.value;
+            var length = self.length();
+
+            if (value < 0) {
+                if (index == 0)
+                    return unichar('-');
+                value = -value;
+            }
+            
+            var pos = length - index - 1;
+            var base = 1;
+            for (n in range(pos))
+                base *= 10;
+
+            var digit = (value/base) % 10;
+            return unichar(Int('0') + digit);
+        }),
+    )
+);
+
+main() {
+    var pool = NSAutoreleasePool.alloc().init();
+    
+    var nStr1 = NumberConvertingString.ncStringWithInt(451);
+    var nStr2 = NumberConvertingString.ncStringWithNumber(NSNumber.numberWithInt(451));
+    var str = NSString.stringWithString(nStr1);
+
+    var formattedNStr1 = NSString.stringWithFormat(NSSTR(#"%@ didn't start the fire"), nStr1);
+    var formattedNStr2 = NSString.stringWithFormat(NSSTR(#"%@ didn't start the fire"), nStr2);
+    var formattedStr = NSString.stringWithFormat(NSSTR(#"%@ didn't start the fire"), str);
+
+    println(CStringRef(formattedNStr1.UTF8String()));
+    println(CStringRef(formattedNStr2.UTF8String()));
+    println(CStringRef(formattedStr.UTF8String()));
+
+    pool.drain();
+}

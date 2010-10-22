@@ -108,9 +108,9 @@ int main(int argc, char* argv[]) {
             else if (!strcmp(argv[i], "ppc64"))
                 target = "powerpc64-apple-darwin10";
             else if (!strcmp(argv[i], "armv6"))
-                target = "armv6-apple-darwin10";
+                target = "armv6-apple-darwin4.1-iphoneos";
             else if (!strcmp(argv[i], "armv7"))
-                target = "armv7-apple-darwin10";
+                target = "thumbv7-apple-darwin4.1-iphoneos";
             else {
                 cerr << "Unrecognized -arch value " << argv[i] << "\n";
                 usage(argv[0]);

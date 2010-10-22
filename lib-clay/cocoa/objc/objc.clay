@@ -16,15 +16,17 @@ public import cocoa.objc.runtime.(
 //
 
 private procedure objcClassMake;
+private procedure objcInitIvar;
+private procedure objcInitIvarOffset;
 private var objcClass[Class] = objcClassMake(Class);
 
 private var objcSelector[name] = sel_registerName(cstring(StaticName(name)));
 
 private var objcIvar[Class, ivarName]
-    = class_getInstanceVariable(objcClass[Class], cstring(StaticName(ivarName)));
+    = objcInitIvar(Class, ivarName);
 
 private var objcIvarOffset[Class, ivarName]
-    = ivar_getOffset(objcIvar[Class, ivarName]);
+    = objcInitIvarOffset(Class, ivarName);
 
 private var objcConstantString[value]
     = CFConstantString(
@@ -262,10 +264,23 @@ procedure ClassInstanceVars;
 procedure ClassClassMethods;
 procedure ClassInstanceMethods;
 
+[T | ExternalClass?(T)]
+ClassName(static T) = StaticName(T);
+
+[T | ClayClass?(T)]
+overload ClassName(static T) {
+    return "clay:" + ModuleName(T) + "." + StaticName(T);
+}
+
+procedure ClassStaticName;
+
+[T | CallDefined?(ClassStaticName, Static[T])]
+overload ClassName(static T) = StaticName(ClassStaticName(T));
+
 [T, name | Class?(T) and SuperclassType(T) != Void and Identifier?(name)]
 ClassIvarType(static T, static name) = ClassIvarType(SuperclassType(T), name);
 [T, name | Class?(T) and Identifier?(name) and assocValue?(name, ...ClassInstanceVars(T))]
-overload ClassIvarType(static T, static name) = assocValue(name, ...ClassInstanceVars(T));
+overload ClassIvarType(static T, static name) = firstValue(...assocValue(name, ...ClassInstanceVars(T)));
 
 
 
@@ -281,17 +296,21 @@ procedure classObjcName;
 
 ValidSuperclass?(T) = Class?(T) or T == Void;
 
-[Super, CM, IM] // XXX | ValidSuperclass?(Super)]
-externalClass(static Super,
-    classmethods: ClassMethods[CM],
-    instancemethods: InstanceMethods[IM]
-) = recordWithProperties(
+[Super | ValidSuperclass?(Super)]
+externalClass(static Super) = recordWithProperties(
     (
         (SuperclassType, Super),
         (ExternalClass?, static true),
-        (ClassInstanceVars, static ()),
-        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
-        Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),
+    ), 
+    (#__handle__, ObjectHandle)
+);
+
+[name, Super | Identifier?(name) and ValidSuperclass?(Super)]
+overload externalClass(static name, static Super) = recordWithProperties(
+    (
+        (SuperclassType, Super),
+        (ExternalClass?, static true),
+        (ClassStaticName, name),
     ), 
     (#__handle__, ObjectHandle)
 );
@@ -301,12 +320,20 @@ instance Exception = ExternalClassNotFound;
 
 [T | ExternalClass?(T)]
 overload objcClassMake(static T) {
-    var name = StaticName(T);
+    var name = ClassName(T);
     var handle = objc_getClass(cstring(name));
     if (null?(handle))
         throw ExternalClassNotFound(name);
-    return ObjectHandle(handle);
+    return handle;
 }
+
+[T | ExternalClass?(T)]
+overload objcInitIvar(static T, ivarName)
+    = class_getInstanceVariable(objcClass[Class], cstring(StaticName(ivarName)));
+
+[T | ExternalClass?(T)]
+overload objcInitIvarOffset(static T, ivarName)
+    = ivar_getOffset(objcIvar[Class, ivarName]);
 
 
 
@@ -315,9 +342,6 @@ overload objcClassMake(static T) {
 //
 
 ClayClass?(T) = false;
-
-procedure newClassMethod;
-procedure newInstanceMethod;
 
 [Super, IV, CM, IM] // XXX | ValidSuperclass?(Super)]
 newClass(static Super,
@@ -335,12 +359,25 @@ newClass(static Super,
     (#__handle__, ObjectHandle)
 );
 
+[name, Super, IV, CM, IM | Identifier?(name)] // XXX ValidSuperclass?(Super)]
+overload newClass(static name, static Super,
+    instancevars: InstanceVars[IV],
+    classmethods: ClassMethods[CM],
+    instancemethods: InstanceMethods[IM]
+) = recordWithProperties(
+    (
+        (SuperclassType, Super),
+        (ClayClass?, static true),
+        (ClassStaticName, name),
+        Tuple(ClassInstanceVars, ...unpack(instancevars.value)),
+        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
+        Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),
+    ), 
+    (#__handle__, ObjectHandle)
+);
+
 record NewClassCouldNotBeCreated (module: StringConstant, name: StringConstant);
 instance Exception = NewClassCouldNotBeCreated;
-
-clayClassName(T) {
-    return "clay:" + ModuleName(T) + "." + StaticName(T);
-}
 
 record NewClassCouldNotAddIvar (module: StringConstant, name: StringConstant, ivar: StringConstant);
 instance Exception = NewClassCouldNotAddIvar;
@@ -351,25 +388,29 @@ instance Exception = NewClassCouldNotAddClassMethod;
 record NewClassCouldNotAddInstanceMethod (module: StringConstant, name: StringConstant, selector: StringConstant);
 instance Exception = NewClassCouldNotAddInstanceMethod;
 
-[T, sel, fn]
-private classMethodImp(static T, static sel, static fn) 
-    = SelectorImpType(Static[T], sel)((self, _cmd, ...args) =>
-        forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
-            fn(T, sel, ...msgSendBox(Static[T], sel, ...args))
-        )
+[T, sel]
+private classMethodImp(static T, static sel, fn) 
+    = makeCCodePointer(
+        (self, _cmd, ...args) =>
+            forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
+                ...fn(...msgSendBox(Static[T], sel, ...args))
+            ),
+        ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(Static[T], sel)
     );
 
-[T, sel, fn]
-private instanceMethodImp(static T, static sel, static fn)
-    = SelectorImpType(T, sel)((self, _cmd, ...args) =>
-        forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(T, sel), r),
-            fn(T(self), sel, ...msgSendBox(T, sel, ...args))
-        )
+[T, sel]
+private instanceMethodImp(static T, static sel, fn)
+    = makeCCodePointer(
+        (self, _cmd, ...args) =>
+            forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(T, sel), r),
+                ...fn(T(self), ...msgSendBox(T, sel, ...args))
+            ),
+        ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(T, sel)
     );
 
 [T | ClayClass?(T)]
 overload objcClassMake(static T) {
-    var name = clayClassName(T);
+    var name = ClassName(T);
     var handle = objc_allocateClassPair(
         ClassHandle(objectHandle(SuperclassType(T))),
         cstring(name),
@@ -395,10 +436,11 @@ overload objcClassMake(static T) {
 
     static for (classMethod in ...ClassClassMethods(T)) {
         var selector = classMethod.0;
+        var imp = classMethod.1;
         if (class_addMethod(
             metahandle,
             objcSelector[selector],
-            RawPointer(classMethodImp(T, selector, newClassMethod)),
+            RawPointer(classMethodImp(T, selector, imp)),
             cstring(SelectorTypeEncoding(Static[T], selector))
         ) == NO)
             throw NewClassCouldNotAddClassMethod(ModuleName(T), StaticName(T), StaticName(selector));
@@ -406,19 +448,32 @@ overload objcClassMake(static T) {
 
     static for (instanceMethod in ...ClassInstanceMethods(T)) {
         var selector = instanceMethod.0;
+        var imp = instanceMethod.1;
         if (class_addMethod(
             handle,
             objcSelector[selector],
-            RawPointer(instanceMethodImp(T, selector, newInstanceMethod)),
+            RawPointer(instanceMethodImp(T, selector, imp)),
             cstring(SelectorTypeEncoding(T, selector))
         ) == NO)
-            throw NewClassCouldNotAddInstanceMethod(name, StaticName(selector));
+            throw NewClassCouldNotAddInstanceMethod(ModuleName(T), StaticName(T), StaticName(selector));
     }
 
     objc_registerClassPair(handle);
 
+    static for (ivarPair in ...ClassInstanceVars(T)) {
+        var ivar = ivarPair.0;
+        objcIvar[T, ivar] = class_getInstanceVariable(handle, cstring(StaticName(ivar)));
+        objcIvarOffset[T, ivar] = ivar_getOffset(objcIvar[T, ivar]);
+    }
+
     return handle;
 }
+
+[T | ClayClass?(T)]
+overload objcInitIvar(static T, ivarName) = Ivar(0);
+
+[T | ClayClass?(T)]
+overload objcInitIvarOffset(static T, ivarName) = PtrInt(0);
 
 
 
@@ -426,7 +481,8 @@ overload objcClassMake(static T) {
 // Class objects as objc params
 //
 
-[T | Class?(T)] overload objectHandle(static T) = ObjectHandle(objcClass[T]);
+[T | Class?(T)] classHandle(static T) = objcClass[T];
+[T | Class?(T)] overload objectHandle(static T) = ObjectHandle(classHandle(T));
 [T | Class?(T)] overload ObjectParameterType(static Static[T]) = Id; // XXX Class
 
 [T | Class?(T)] overload encode(static T) = "@";
@@ -443,48 +499,97 @@ overload encode(static Id) = "@";
 
 procedure selector;
 procedure varargSelector;
+procedure externalInstanceMethod;
+procedure externalClassMethod;
+procedure externalVarargInstanceMethod;
+procedure externalVarargClassMethod;
+
 FixedSelector?(sel) = CallDefined?(selector, Static[sel]);
 VarargSelector?(sel) = CallDefined?(varargSelector, Static[sel]);
 Selector?(sel) = FixedSelector?(sel) or VarargSelector?(sel);
 
 selectorHandle(sel) = objcSelector[sel];
 
+[sel | Selector?(sel)]
+SelectorArgumentCount(static sel) = countValues(...GenericSelector(sel)) - 1;
+
 [sel | FixedSelector?(sel)]
 GenericSelector(static sel) = ...selector(sel);
 [sel | VarargSelector?(sel)]
 overload GenericSelector(static sel) = ...varargSelector(sel);
 
-[sel | Selector?(sel)]
-SelectorArgumentCount(static sel) = countValues(...GenericSelector(sel)) - 1;
 
+
+//
+// typed selectors
+//
+
+[T, sel | ExternalClass?(T) and FixedSelector?(sel)]
+TypedSelector(static T, static sel) = ...externalInstanceMethod(T, sel);
+[T, sel | ExternalClass?(T) and FixedSelector?(sel)]
+overload TypedSelector(static Static[T], static sel) = ...externalClassMethod(T, sel);
+[T, sel | ClayClass?(T) and FixedSelector?(sel)]
+overload TypedSelector(static T, static sel)
+    = ...restValues(...assocValue(sel, ...ClassInstanceMethods(T)));
+[T, sel | ClayClass?(T) and FixedSelector?(sel)]
+overload TypedSelector(static Static[T], static sel)
+    = ...restValues(...assocValue(sel, ...ClassClassMethods(T)));
+
+[T, sel | ExternalClass?(T) and FixedSelector?(sel)]
+TypedSelector?(static T, static sel)
+    = CallDefined?(externalInstanceMethod, Static[T], Static[sel]);
+[T, sel | ExternalClass?(T) and FixedSelector?(sel)]
+overload TypedSelector?(static Static[T], static sel)
+    = CallDefined?(externalClassMethod, Static[Static[T]], Static[sel]);
+[T, sel | ClayClass?(T) and FixedSelector?(sel)]
+overload TypedSelector?(static T, static sel)
+    = assocCountValues(sel, ...ClassInstanceMethods(T)) > 1;
+[T, sel | ClayClass?(T) and FixedSelector?(sel)]
+overload TypedSelector?(static Static[T], static sel)
+    = assocCountValues(sel, ...ClassClassMethods(T)) > 1;
+
+
+[T, sel | ExternalClass?(T) and VarargSelector?(sel)]
+overload TypedSelector(static T, static sel) = ...externalVarargInstanceMethod(T, sel);
+[T, sel | ExternalClass?(T) and VarargSelector?(sel)]
+overload TypedSelector(static Static[T], static sel) = ...externalVarargClassMethod(T, sel);
+
+[T, sel | ExternalClass?(T) and VarargSelector?(sel)]
+overload TypedSelector?(static T, static sel)
+    = CallDefined?(externalVarargInstanceMethod, Static[T], Static[sel]);
+[T, sel | ExternalClass?(T) and VarargSelector?(sel)]
+overload TypedSelector?(static Static[T], static sel)
+    = CallDefined?(externalVarargClassMethod, Static[Static[T]], Static[sel]);
+ 
 
 
 //
 // selector signatures by type
 //
 
-private Selector(static Id, sel) = ...GenericSelector(sel);
+[sel | Selector?(sel)]
+private Selector(static Id, static sel) = ...GenericSelector(sel);
 
-[T, sel | Class?(T)]
+[T, sel | Class?(T) and Selector?(sel)]
 overload Selector(static T, static sel) = ...GenericSelector(sel);
-[T, sel | Class?(T)]
+[T, sel | Class?(T) and Selector?(sel)]
 overload Selector(static Static[T], static sel) = ...GenericSelector(sel);
 
 [T, sel | Class?(T) and SuperclassType(T) != Void]
 overload Selector(static T, static sel) = ...Selector(SuperclassType(T), sel);
 [T, sel |
     Class?(T)
-    and assocValue?(sel, ...ClassInstanceMethods(T))
+    and TypedSelector?(T, sel)
 ]
-overload Selector(static T, static sel) = ...assocValue(sel, ...ClassInstanceMethods(T));
+overload Selector(static T, static sel) = ...TypedSelector(T, sel);
 
 [T, sel | Class?(T) and SuperclassType(T) != Void]
 overload Selector(static Static[T], static sel) = ...Selector(Static[SuperclassType(T)], sel);
 [T, sel |
     Class?(T)
-    and assocValue?(sel, ...ClassClassMethods(T))
+    and TypedSelector?(Static[T], sel)
 ]
-overload Selector(static Static[T], static sel) = ...assocValue(sel, ...ClassClassMethods(T));
+overload Selector(static Static[T], static sel) = ...TypedSelector(Static[T], sel);
 
 [T, sel]
 SelectorReturnType(static T, static sel) = firstValue(...Selector(T, sel));
@@ -765,17 +870,21 @@ overload fieldRef(ivars: IvarsRef[T], static ivar)
 
 private record SuperRef[T] (__handle__: ObjectHandle);
 
-[T | Class?(T) and SuperclassType?(T) != Void]
+[T | Class?(T) and SuperclassType(T) != Void]
 super(obj: T) = SuperRef[T](objectHandle(obj));
 
-[T | Class?(T) and SuperclassType?(T) != Void]
+[T | Class?(T) and SuperclassType(T) != Void]
 overload super(obj: Weak[T]) = SuperRef[T](objectHandle(obj));
 
 private record SuperMethodRef[T, identifier] (super: ObjcSuper);
 
 [T]
 overload SuperMethodRef(super: SuperRef[T], identifier)
-    = SuperMethodRef[T, identifier](ObjcSuper(super.__handle__, objectHandle(SuperclassType(T))));
+    = SuperMethodRef[T, identifier](ObjcSuper(super.__handle__, classHandle(SuperclassType(T))));
+
+[T, cmd | Class?(T) and cmd != #__handle__]
+overload fieldRef(sup: SuperRef[T], static cmd)
+    = SuperMethodRef(sup, cmd);
 
 [T, identifier, ...Args]
 overload call(method: SuperMethodRef[T, identifier], forward ...args: Args) {
@@ -788,9 +897,3 @@ overload call(method: SuperMethodRef[T, identifier], forward ...args: Args) {
         ...args
     );
 }
-
-
-
-//
-// 
-//

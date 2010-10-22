@@ -1,0 +1,5 @@
+import cocoa.objc.(Void);
+public import cocoa.uikit.generated.*;
+
+IBOutlet(forward x) = forward x;
+IBAction(forward x) = forward x;
