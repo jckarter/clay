@@ -90,6 +90,49 @@ private locateModule(dottedName) {
 
 
 //
+// addPrivateGlobal, addPublicGlobal
+//
+
+private globalVisibility(x:Maybe[ast.Visibility]) =
+    maybe(x, x => x, () => ast.PUBLIC);
+
+private addGlobal(module, visibility, name:ast.Identifier, x) {
+    addGlobal(module, visibility, name, SymbolTableEntry(x));
+}
+
+overload addGlobal(module, visibility, name:ast.Identifier, x:SymbolTableEntry) {
+    switch (globalVisibility(visibility)) {
+    case ast.PRIVATE :
+        addPrivateGlobal(module, name, x);
+        break;
+    case ast.PUBLIC :
+        addPublicGlobal(module, name, x);
+        break;
+    default :
+        assert(false);
+        break;
+    }
+}
+
+private addPrivateGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
+    if (contains?(module^.allGlobals^.entries, name.str))
+        throw GlobalRedefinitionError(name);
+    module^.allGlobals^.entries[name.str] = x;
+}
+
+[T | VariantMember?(SymbolTableEntry, T)]
+private addPublicGlobal(module, name:ast.Identifier, forward x:T) {
+    addPublicGlobal(module, name, SymbolTableEntry(x));
+}
+
+overload  addPublicGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
+    addPrivateGlobal(module, name, x);
+    module^.publicGlobals^.entries[name.str] = x;
+}
+
+
+
+//
 // initializeSymbolTables
 //
 
@@ -143,36 +186,49 @@ overload installItem(module, x:ast.ExternalVariablePtr) {
     addGlobal(module, x^.visibility, x^.name, new ExternalVariable(x));
 }
 
-private globalVisibility(x:Maybe[ast.Visibility]) =
-    maybe(x, x => x, () => ast.PUBLIC);
 
-private addGlobal(module, visibility, name:ast.Identifier, x) {
-    addGlobal(module, visibility, name, SymbolTableEntry(x));
+
+//
+// initializePrimitivesModule
+//
+
+private initializePrimitivesModule(module) {
+    module^.publicGlobals = new SymbolTable();
+    module^.allGlobals = new SymbolTable();
+
+    var simpleType = (name, type) => {
+        addPublicGlobal(module, ast.Identifier(name), SymbolTableEntry(type));
+    };
+    simpleType("Bool", boolType);
+    simpleType("Int8", int8Type);
+    simpleType("Int16", int16Type);
+    simpleType("Int32", int32Type);
+    simpleType("Int64", int64Type);
+    simpleType("UInt8", uint8Type);
+    simpleType("UInt16", uint16Type);
+    simpleType("UInt32", uint32Type);
+    simpleType("UInt64", uint64Type);
+    simpleType("Float32", float32Type);
+    simpleType("Float64", float64Type);
+
+    installPrimitives(module, PrimitiveTypeConstructor, PrimitiveTypeConstructorKind);
+    installPrimitives(module, StaticPrimitive, StaticPrimitiveKind);
+    installPrimitives(module, Primitive, PrimitiveKind);
 }
 
-overload addGlobal(module, visibility, name:ast.Identifier, x:SymbolTableEntry) {
-    switch (globalVisibility(visibility)) {
-    case ast.PRIVATE :
-        addPrivateGlobal(module, name, x);
-        break;
-    case ast.PUBLIC :
-        addPublicGlobal(module, name, x);
-        break;
-    default :
-        assert(false);
-        break;
+private installPrimitives(module, Entry, KindEnum) {
+    for (i in range(EnumMemberCount(KindEnum))) {
+        var kind = KindEnum(i);
+        var name = ast.Identifier(primitiveName(kind));
+        var x = new Entry(kind);
+        addPublicGlobal(module, name, SymbolTableEntry(x));
     }
 }
 
-private addPrivateGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
-    if (contains?(module^.allGlobals^.entries, name.str))
-        throw GlobalRedefinitionError(name);
-    module^.allGlobals^.entries[name.str] = x;
-}
-
-private addPublicGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
-    addPrivateGlobal(module, name, x);
-    module^.publicGlobals^.entries[name.str] = x;
+private primitiveName(kind) {
+    var s = printString(kind);
+    assert(beginsWith?(s, "PRIM_"));
+    return sliceFrom(s, size("PRIM_"));
 }
 
 
@@ -187,9 +243,11 @@ loadModule(dottedName) {
         module ref=> module,
         () ref=> {
             if (name == "__primitives__") {
+                println("loading module: ", name);
                 var module = new Module();
                 module^.name = name;
                 installModule(name, module);
+                initializePrimitivesModule(module);
                 return module;
             }
             var path = locateModule(dottedName);
