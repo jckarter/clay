@@ -18,9 +18,9 @@ overload selector(static #"performClear:") = Void, Id;
 
 record ExampleController = newClass(#"ExampleController", NSObject,
     InstanceVars(
-        (#leftField,   NSTextField, IBOutlet),
-        (#rightField,  NSTextField, IBOutlet),
-        (#resultField, NSTextField, IBOutlet),
+        (#leftField,   IBOutlet(NSTextField)),
+        (#rightField,  IBOutlet(NSTextField)),
+        (#resultField, IBOutlet(NSTextField)),
     ),
     ClassMethods(),
     InstanceMethods(
