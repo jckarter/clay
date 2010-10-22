@@ -44,6 +44,17 @@ overload printReprTo(stream, x:T) {
 
 
 //
+// VariadicList
+//
+
+record VariadicList[T] (
+    items : Vector[T],
+    variadicItem : Maybe[T],
+);
+
+
+
+//
 // Identifier, DottedName
 //
 
@@ -141,7 +152,7 @@ record IfExpr = ...ast(
 
 record LambdaExpr = ...ast(
     (#captureByRef, Bool),
-    (#formalArgs,   Vector[Identifier]),
+    (#formalArgs,   VariadicList[Identifier]),
     (#body,         StatementPtr),
 );
 
@@ -269,17 +280,6 @@ record StaticFor = ...ast(
     (#variable, Identifier),
     (#values,   Vector[ExprPtr]),
     (#body,     StatementPtr),
-);
-
-
-
-//
-// VariadicList
-//
-
-record VariadicList[T] (
-    items : Vector[T],
-    variadicItem : Maybe[T],
 );
 
 
