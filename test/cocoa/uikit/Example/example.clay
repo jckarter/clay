@@ -33,9 +33,9 @@ record ExampleViewController = newClass(#"ExampleViewController", UIViewControll
 
 record ExampleController = newClass(#"ExampleController", NSObject,
     InstanceVars(
-        (#leftField,   UITextField, IBOutlet),
-        (#rightField,  UITextField, IBOutlet),
-        (#resultLabel, UILabel, IBOutlet),
+        (#leftField,   IBOutlet(UITextField)),
+        (#rightField,  IBOutlet(UITextField)),
+        (#resultLabel, IBOutlet(UILabel)),
     ),
     ClassMethods(),
     InstanceMethods(
