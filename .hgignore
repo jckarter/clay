@@ -2,6 +2,9 @@ syntax: regexp
 
 .*\.sw.$
 .*\.orig$
+\.DS_Store$
+\.xcodeproj/.*\.mode.*v.*$
+\.xcodeproj/.*\.pbxuser$
 
 cscope.out
 tags
@@ -9,7 +12,7 @@ tags
 .*\.pyc$
 .*\.out$
 .*bin/*$
-^build/*$
+(^|/)build/*$
 ^clay$
 ^compiler/src/.*\.o$
 ^compiler/src/.*\.dep$
