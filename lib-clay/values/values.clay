@@ -194,3 +194,10 @@ overload assocValue?(static key, kv, ...kvs) = assocValue?(key, ...kvs);
 [key, ...T]
 overload assocValue?(static key, kv: Tuple[Static[key], ...T], ...kvs) = true;
 
+[key]
+assocCountValues(static key) = -1;
+[key]
+overload assocCountValues(static key, kv, ...kvs) = assocCountValues(key, ...kvs);
+[key, ...T]
+overload assocCountValues(static key, kv: Tuple[Static[key], ...T], ...kvs) = countValues(...T);
+

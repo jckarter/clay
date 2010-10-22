@@ -1,0 +1,79 @@
+import cocoa.objc.*;
+import cocoa.foundation.*;
+import cocoa.uikit.*;
+
+overload selector(static #"performMath:") = Void, UISegmentedControl;
+
+record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
+    InstanceVars(
+        (#window, IBOutlet(UIWindow)),
+        (#viewController, IBOutlet(ExampleViewController)),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"application:didFinishLaunchingWithOptions:", (self, app, options) => {
+            self^.window.addSubview(self^.viewController.view());
+            self^.window.makeKeyAndVisible();
+        }),
+        (#"dealloc", (self) => {
+            self^.viewController.release();
+            self^.window.release();
+            super(self).dealloc();
+        }),
+    ),
+);
+
+record ExampleViewController = newClass(#"ExampleViewController", UIViewController,
+    InstanceVars(),
+    ClassMethods(),
+    InstanceMethods(
+        (#"shouldAutorotateToInterfaceOrientation:", (self, orientation) => true),
+    ),
+);
+
+record ExampleController = newClass(#"ExampleController", NSObject,
+    InstanceVars(
+        (#leftField,   IBOutlet(UITextField)),
+        (#rightField,  IBOutlet(UITextField)),
+        (#resultLabel, IBOutlet(UILabel)),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"performMath:", IBAction((self, sender) => {
+            switch (Int(sender.selectedSegmentIndex())) {
+            case 0:
+                _performMath(self, add);
+                break;
+            case 1:
+                _performMath(self, subtract);
+                break;
+            case 2:
+                _performMath(self, multiply);
+                break;
+            case 3:
+                _performMath(self, divide);
+                break;
+            default:
+                break;
+            }
+        })),
+    ),
+);
+
+_performMath(self, fn) {
+    var left = self^.leftField.text().intValue();
+    var right = self^.rightField.text().intValue();
+    self^.resultLabel.setText(NSString.stringWithFormat(NSSTR(#"%d"), fn(left, right)));
+}
+
+main() {
+    classHandle(ExampleAppDelegate);
+    classHandle(ExampleViewController);
+    classHandle(ExampleController);
+
+    var pool = NSAutoreleasePool.alloc().init();
+    var retVal = UIApplicationMain(...getArgcArgv(), nil(NSString), nil(NSString));
+    pool.drain();
+
+    return retVal;
+}

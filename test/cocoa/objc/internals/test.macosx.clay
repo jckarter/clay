@@ -29,60 +29,55 @@ overload selector(static #"setEnabled:") = Void, Bool;
 overload selector(static #"version") = Id;
 overload selector(static #"classVersion") = Id;
 
-record NSObject = externalClass(Void,
-    ClassMethods(
-        (#"alloc", Id),
-        (#"allocWithZone:", NSZone),
-        (#"new", Id),
-    ),
-    InstanceMethods(
-        (#"init", Id),
-        (#"copy", Id),
-        (#"copyWithZone:", Id, NSZone),
-        (#"mutableCopy", Id),
-        (#"retain", Id),
-    ),
-);
+record NSObject = externalClass(Void);
+overload externalClassMethod(static NSObject, static #"alloc") = Id;
+overload externalClassMethod(static NSObject, static #"allocWithZone:") = Id, NSZone;
+overload externalClassMethod(static NSObject, static #"new") = Id;
+overload externalInstanceMethod(static NSObject, static #"init") = Id;
+overload externalInstanceMethod(static NSObject, static #"copy") = Id;
+overload externalInstanceMethod(static NSObject, static #"copyWithZone:") = Id, NSZone;
+overload externalInstanceMethod(static NSObject, static #"mutableCopy") = Id;
+overload externalInstanceMethod(static NSObject, static #"retain") = Id;
 
-record NSString = externalClass(NSObject,
-    ClassMethods(
-        (#"stringWithUTF8String:", Id, Pointer[CChar]),
-        (#"stringWithFormat:", Id, NSString),
-    ),
-    InstanceMethods(
-        (#"initWithUTF8String:", Id, Pointer[CChar]),
-        (#"initWithFormat:", Id, NSString),
-        (#"UTF8String", Pointer[CChar]),
-        (#"description", NSString),
-    ),
-);
+record NSString = externalClass(NSObject);
+overload externalClassMethod(static NSString, static #"stringWithUTF8String:")
+    = Id, Pointer[CChar];
+overload externalVarargClassMethod(static NSString, static #"stringWithFormat:")
+    = Id, NSString;
+overload externalInstanceMethod(static NSString, static #"initWithUTF8String:")
+    = Id, Pointer[CChar];
+overload externalVarargInstanceMethod(static NSString, static #"initWithFormat:")
+    = Id, NSString;
+overload externalInstanceMethod(static NSString, static #"UTF8String")
+    = Pointer[CChar];
+overload externalInstanceMethod(static NSString, static #"description")
+    = NSString;
 
-record NSMutableString = externalClass(NSString,
-    ClassMethods(),
-    InstanceMethods(),
-);
+record NSMutableString = externalClass(NSString);
+
+record MyNSNumber = externalClass(#"NSNumber", NSString);
 
 record SubString1 = newClass(NSString,
     InstanceVars(
         (#foo, Int),
     ),
     ClassMethods(
-        (#"classVersion", Int),
+        (#"classVersion", () => 7, Int),
     ),
     InstanceMethods(
-        (#"version", Int),
+        (#"version", (self) => 7, Int),
     )
 );
 
-record SubString2 = newClass(NSString,
+record SubString2 = newClass(#"ClaySubString2", NSString,
     InstanceVars(
         (#foo, Double),
     ),
     ClassMethods(
-        (#"classVersion", Double),
+        (#"classVersion", () => nil(Id)),
     ),
     InstanceMethods(
-        (#"version", Double),
+        (#"version", (self) => nil(Id)),
     )
 );
 
@@ -92,6 +87,18 @@ record SubSubString = newClass(SubString1,
     ),
     ClassMethods(),
     InstanceMethods()
+);
+
+record SubSubSubString = newClass(SubSubString,
+    InstanceVars(
+        (#bar, StringConstant),
+    ),
+    ClassMethods(
+        (#"classVersion", () => 8),
+    ),
+    InstanceMethods(
+        (#"classVersion", (self) => 8),
+    ),
 );
 
 record Foo (
@@ -240,9 +247,18 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectNotSubclass(test, SubString1, SubString2);
         expectNotSubclass(test, SubString2, SubSubString);
     }),
-    TestCase("clayClassName", test => {
+    TestCase("ClassName", test => {
+        expectEqual(test, "class name for NSObject", "NSObject",
+            ClassName(NSObject)
+        );
+        expectEqual(test, "class name for MyNSNumber", "NSNumber",
+            ClassName(MyNSNumber)
+        );
         expectEqual(test, "class name for SubString1", "clay:__main__.SubString1",
-            clayClassName(SubString1)
+            ClassName(SubString1)
+        );
+        expectEqual(test, "class name for SubString2", "ClaySubString2",
+            ClassName(SubString2)
         );
     }),
     TestCase("MsgSendCompatible?", test => {
@@ -310,10 +326,12 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectSelectorTypeEncoding(test, Static[NSObject], #"version", "@@:");
         // typed selector via implementing class
         expectSelectorTypeEncoding(test, SubString1, #"version", "i@:");
-        // typed selector via implementing class
-        expectSelectorTypeEncoding(test, SubString2, #"version", "d@:");
-        // typed selector via implementing superclass
+        // typed selector via implementing class defaulting to generic selector
+        expectSelectorTypeEncoding(test, SubString2, #"version", "@@:");
+        // typed selector via implementing superclass 
         expectSelectorTypeEncoding(test, SubSubString, #"version", "i@:");
+        // typed selector via implementing class defaulting to superclass selector 
+        expectSelectorTypeEncoding(test, SubSubSubString, #"version", "i@:");
 
         // generic selector via Id
         expectSelectorTypeEncoding(test, Id, #"classVersion", "@@:");
@@ -325,10 +343,12 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectSelectorTypeEncoding(test, Static[NSObject], #"classVersion", "@@:");
         // typed selector via implementing metaclass
         expectSelectorTypeEncoding(test, Static[SubString1], #"classVersion", "i@:");
-        // typed selector via implementing metaclass
-        expectSelectorTypeEncoding(test, Static[SubString2], #"classVersion", "d@:");
+        // typed selector via implementing metaclass defaulting to generic selector
+        expectSelectorTypeEncoding(test, Static[SubString2], #"classVersion", "@@:");
         // typed selector via implementing supermetaclass
         expectSelectorTypeEncoding(test, Static[SubSubString], #"classVersion", "i@:");
+        // typed selector via implementing metaclass defaulting to supermetaclass selector
+        expectSelectorTypeEncoding(test, Static[SubSubSubString], #"classVersion", "i@:");
     }),
     TestCase("parameter type conversion", test => {
         expectMsgSendParamType(test, Id, ObjectHandle);

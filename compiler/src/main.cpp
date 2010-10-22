@@ -246,8 +246,6 @@ static void usage()
     cerr << "  -llvm             - emit llvm code\n";
     cerr << "  -asm              - emit assember code\n";
     cerr << "  -c                - emit object code\n";
-    cerr << "                      (only works for LLVM-supported formats:\n";
-    cerr << "                        Mach-O, COFF)\n";
     cerr << "  -unoptimized      - generate unoptimized code\n";
     cerr << "  -exceptions       - enable exception handling\n";
     cerr << "  -no-exceptions    - disable exception handling\n";
@@ -428,9 +426,9 @@ int main(int argc, char **argv) {
             } else if (arch == "ppc64") {
                 targetTriple = "powerpc64-apple-darwin10";
             } else if (arch == "armv6") {
-                targetTriple = "armv6-apple-darwin10";
+                targetTriple = "armv6-apple-darwin4.1-iphoneos";
             } else if (arch == "armv7") {
-                targetTriple = "armv7-apple-darwin10";
+                targetTriple = "thumbv7-apple-darwin4.1-iphoneos";
             } else {
                 cerr << "error: unrecognized -arch value " << arch << "\n";
                 return -1;
