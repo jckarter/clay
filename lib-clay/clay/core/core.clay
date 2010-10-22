@@ -270,6 +270,40 @@ record Type (
 alias TypePtr = SharedPointer[Type];
 
 
+overload Type(tag:TypeTag) = Type(tag, Vector[StaticValue]());
+
+overload Type(tag:TypeTag, forward value:StaticValue) {
+    var t = Type(tag);
+    push(t.params, value);
+    return move(t);
+}
+
+[T | VariantMember?(TypeTag, T)]
+overload Type(tag:T, forward ...args) =
+    Type(TypeTag(tag), ...args);
+
+
+
+//
+// primitive types
+//
+
+var boolType = new Type(BoolTag());
+
+var int8Type = new Type(IntegerTag(true, 8));
+var int16Type = new Type(IntegerTag(true, 16));
+var int32Type = new Type(IntegerTag(true, 32));
+var int64Type = new Type(IntegerTag(true, 64));
+
+var uint8Type = new Type(IntegerTag(false, 8));
+var uint16Type = new Type(IntegerTag(false, 16));
+var uint32Type = new Type(IntegerTag(false, 32));
+var uint64Type = new Type(IntegerTag(false, 64)); 
+
+var float32Type = new Type(FloatTag(32));
+var float64Type = new Type(FloatTag(64));
+
+
 
 //
 // ModuleHolder
