@@ -9,7 +9,7 @@ throwNothing() { }
 
 main() = testMain(
     TestSuite(
-        "test test suite", Tuple(
+        "test test suite", [
             TestCase("should pass", test => {
                 var seq = [2, 3, 5, 7, 11];
 
@@ -64,6 +64,6 @@ main() = testMain(
             PendingTestCase("should fail", test => {
                 expectTrue(test, "truth", false);
             })
-        )
+        ]
     )
 );

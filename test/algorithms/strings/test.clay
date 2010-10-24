@@ -2,7 +2,7 @@ import test.*;
 
 main() = testMain(
     TestSuite(
-        "algorithms.strings", Tuple(
+        "algorithms.strings", [
             TestCase("trim", test => {
                 expectEqual(test, "trim, string",
                     trim("   \t A string,\nthat\tneeds trimming. \n  \n "),
@@ -13,6 +13,6 @@ main() = testMain(
                     "message"
                 );
             }),
-        )
+        ]
     )
 );

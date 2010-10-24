@@ -3,7 +3,7 @@ import sequences.lazy.grouped.*;
 import strings.encodings.utf8.*;
 
 main() = testMain(
-    TestSuite("lazy grouped sequences", Tuple(
+    TestSuite("lazy grouped sequences", [
         TestCase("iterator-only sequences", test => {
             var ustr = grouped(UTF8("abc123!!!"), 3);
             var iter = iterator(ustr);
@@ -83,5 +83,5 @@ main() = testMain(
                     and Int(y) + 1 == Int(z)
                 );
         }),
-    )),
+    ]),
 );
