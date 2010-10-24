@@ -194,7 +194,7 @@ expectSelectorNotCallableWith(test, Class, selector, ...T) {
     );
 }
 
-main() = testMain(TestSuite("Objective-C binding internals", Tuple(
+main() = testMain(TestSuite("Objective-C binding internals", [
     TestCase("type encodings", test => {
         expectEncoding(test, "");
         expectEncoding(test, "c", Int8);
@@ -526,5 +526,5 @@ main() = testMain(TestSuite("Objective-C binding internals", Tuple(
         expectEqual(test, "string", "Hello", CStringRef(stringFields^.string));
         expectEqual(test, "length", 5, stringFields^.length);
     }),
-)));
+]));
 

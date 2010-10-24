@@ -3,7 +3,7 @@ import deques.*;
 import test.*;
 
 main() = testMain(
-    TestSuite("priority queues", Tuple(
+    TestSuite("priority queues", [
         TestCase("queue operations", test => {
             var q = VectorQueue[Int]();
 
@@ -61,5 +61,5 @@ main() = testMain(
             expectEqual(test, "(other sequence) (3) queue pop", 42,  queuePop(q3));
             expectTrue (test, "(other sequence) (3) queue empty", queueEmpty?(q3));
         }),
-    )),
+    ]),
 );
