@@ -66,7 +66,7 @@ record GraphNodeRecord (
 variant TestVariant = Int | Vector[Int] | Char | Double;
 
 main() = testMain(
-    TestSuite("marshaling", Tuple(
+    TestSuite("marshaling", [
         TestCase("POD types", test => {
             expectMarshalingInvariants(test, "1", 1);
             expectMarshalingInvariants(test, "'a'", 'a');
@@ -189,5 +189,5 @@ main() = testMain(
                 expectEqual(test, "dd^.right", nullShared(GraphNodeRecord), dd^.right);
             });
         }),
-    )),
+    ]),
 );
