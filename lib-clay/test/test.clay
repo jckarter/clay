@@ -6,19 +6,19 @@ record TestStatus (
 
 overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
 
-record TestCase[F] (
+record TestCase (
     name: StringConstant,
-    _case: F,
+    _case: Lambda[(TestStatus), ()],
     pending?: Bool,
 );
 
-[F] overload TestCase(name, fn:F) = TestCase[F](name, fn, false);
+overload TestCase(name, fn) = TestCase(name, Lambda[(TestStatus), ()](fn), false);
 
-[F] PendingTestCase(name, fn:F) = TestCase[F](name, fn, true);
+PendingTestCase(name, fn) = TestCase(name, Lambda[(TestStatus), ()](fn), true);
 
-record TestSuite[TestCases] (
+record TestSuite[n] (
     name: StringConstant,
-    testCases: TestCases,
+    testCases: Array[TestCase, n],
 );
 
 alias TEST_CASE_INDENT = "  ";
@@ -40,13 +40,12 @@ reportTest(test: TestStatus, ...prefix) {
     );
 }
 
-[TestCases] runTestSuite(suite: TestSuite[TestCases]) TestStatus {
+[n] runTestSuite(suite: TestSuite[n]) TestStatus {
     var test = TestStatus();
     println("Testing ", suite.name, ":");
-    eachValue(
-        _case ref => { accumulateTestStatus(test, runTestCase(_case)); },
-        ...unpack(suite.testCases)
-    );
+    for (_case in suite.testCases)
+        accumulateTestStatus(test, runTestCase(_case));
+
     reportTest(test, "-- ", suite.name, ": ");
     return test;
 }
@@ -61,7 +60,7 @@ pendingMessage(pending?) {
 
 printFailure(...xs) { println(TEST_FAILURE_INDENT, ...xs); }
 
-[F] runTestCase(_case: TestCase[F]) TestStatus {
+runTestCase(_case: TestCase) TestStatus {
     print(TEST_CASE_INDENT, pendingMessage(_case.pending?), _case.name, ":");
     flush(stdout);
     
