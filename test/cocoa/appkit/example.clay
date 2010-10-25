@@ -46,7 +46,4 @@ _performMath(self, fn) {
     self^.resultField.selectText(self);
 }
 
-main() {
-    classHandle(ExampleController); classHandle(ExampleAppDelegate);
-    NSApplicationMain(...getArgcArgv());
-}
+main() = appKitMain(ExampleController, ExampleAppDelegate);
