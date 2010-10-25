@@ -11,10 +11,10 @@ record NumberConvertingString = newClass(NSString,
     InstanceVars((#value, Int)),
     ClassMethods(
         (#"ncStringWithInt:",
-            (value) => NumberConvertingString.alloc().initWithInt(value).autorelease()
+            (class, value) => class.alloc().initWithInt(value).autorelease()
         ),
         (#"ncStringWithNumber:",
-            (value) => NumberConvertingString.alloc().initWithNumber(value).autorelease()
+            (class, value) => class.alloc().initWithNumber(value).autorelease()
         ),
     ),
     InstanceMethods(
