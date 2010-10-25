@@ -1,0 +1,15 @@
+import cocoa.objc.*;
+import cocoa.foundation.*;
+import cocoa.uikit.*;
+
+uiKitMain(...NibClasses) {
+    // XXX hack to force externally referenced classes to be instantiated
+    static for (NibClass in ...NibClasses)
+        classHandle(NibClass);
+
+    var pool = NSAutoreleasePool.alloc().init();
+    var retVal = UIApplicationMain(...getArgcArgv(), nil(NSString), nil(NSString));
+    pool.drain();
+
+    return retVal;
+}
