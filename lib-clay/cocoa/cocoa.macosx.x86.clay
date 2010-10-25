@@ -1,3 +1,0 @@
-public import cocoa.objc.*;
-public import cocoa.foundation.*;
-public import cocoa.appkit.*;

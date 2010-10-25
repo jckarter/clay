@@ -1,4 +1,5 @@
 import cocoa.*;
+import cocoa.appkit.*;
 
 record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
     InstanceVars(
