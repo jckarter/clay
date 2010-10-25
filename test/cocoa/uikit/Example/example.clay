@@ -1,5 +1,4 @@
-import cocoa.objc.*;
-import cocoa.foundation.*;
+import cocoa.*;
 import cocoa.uikit.*;
 
 overload selector(static #"performMath:") = Void, UISegmentedControl;
@@ -66,14 +65,4 @@ _performMath(self, fn) {
     self^.resultLabel.setText(NSString.stringWithFormat(NSSTR(#"%d"), fn(left, right)));
 }
 
-main() {
-    classHandle(ExampleAppDelegate);
-    classHandle(ExampleViewController);
-    classHandle(ExampleController);
-
-    var pool = NSAutoreleasePool.alloc().init();
-    var retVal = UIApplicationMain(...getArgcArgv(), nil(NSString), nil(NSString));
-    pool.drain();
-
-    return retVal;
-}
+main() = uiKitMain(ExampleAppDelegate, ExampleViewController, ExampleController);

@@ -1,0 +1,408 @@
+import cocoa.objc.runtime;
+import cocoa.objc.*;
+import cocoa.foundation.*;
+
+public import cocoa.util.platform.*;
+
+
+
+//
+// object identity
+//
+[T1, T2 | ObjectRef?(T1) and ObjectRef?(T2)]
+is?(x: T1, y: T2) = objectHandle(x) == objectHandle(y);
+
+[T1, T2 | ObjectRef?(T1) and ObjectRef?(T2)]
+isNot?(x: T1, y: T2) = objectHandle(x) != objectHandle(y);
+
+
+
+//
+// NSNumber overloads
+//
+overload NSNumber(x: Int8)  = NSNumber.numberWithChar(x);
+overload NSNumber(x: Int16) = NSNumber.numberWithShort(x);
+overload NSNumber(x: Int32) = NSNumber.numberWithInt(x);
+overload NSNumber(x: Int64) = NSNumber.numberWithLongLong(x);
+overload NSNumber(x: UInt8)  = NSNumber.numberWithUnsignedChar(x);
+overload NSNumber(x: UInt16) = NSNumber.numberWithUnsignedShort(x);
+overload NSNumber(x: UInt32) = NSNumber.numberWithUnsignedInt(x);
+overload NSNumber(x: UInt64) = NSNumber.numberWithUnsignedLongLong(x);
+overload NSNumber(x: Float32) = NSNumber.numberWithFloat(x);
+overload NSNumber(x: Float64) = NSNumber.numberWithDouble(x);
+overload NSNumber(x: Bool) = NSNumber.numberWithBool(x);
+
+[O | ObjectRef?(O)] overload Int8(o: O)  = o.intValue();
+[O | ObjectRef?(O)] overload Int16(o: O) = o.shortValue();
+[O | ObjectRef?(O)] overload Int32(o: O) = o.intValue();
+[O | ObjectRef?(O)] overload Int64(o: O) = o.longLongValue();
+[O | ObjectRef?(O)] overload UInt8(o: O)  = o.unsignedIntValue();
+[O | ObjectRef?(O)] overload UInt16(o: O) = o.unsignedShortValue();
+[O | ObjectRef?(O)] overload UInt32(o: O) = o.unsignedIntValue();
+[O | ObjectRef?(O)] overload UInt64(o: O) = o.unsignedLongLongValue();
+[O | ObjectRef?(O)] overload Float32(o: O) = o.floatValue();
+[O | ObjectRef?(O)] overload Float64(o: O) = o.doubleValue();
+[O | ObjectRef?(O)] overload Bool(o: O) = o.boolValue();
+
+
+
+//
+// NSString overloads
+//
+[ident | Identifier?(ident)]
+overload NSString(static ident) = NSString(NSSTR(ident));
+
+[S | CCompatibleString?(S)]
+overload NSString(s: S) = NSString.stringWithUTF8String(cstring(s));
+
+[O | ObjectRef?(O)]
+overload String(o: O) = String(CStringRef(o.description().UTF8String()));
+
+[O | Class?(O) and Subclass?(NSString, O)]
+overload String(o: O) = String(CStringRef(o.UTF8String()));
+
+[O | Class?(O) and Subclass?(NSString, O)]
+overload cstring(o: O) = o.UTF8String();
+
+
+
+//
+// NSValue overloads
+//
+[T]
+makeNSValue(value: T)
+    = NSValue.valueWithBytes_objCType(RawPointer(&value), cstring(encode(T)));
+[T | ObjectRef?(T)]
+overload makeNSValue(obj: T) = NSValue.valueWithNonretainedObject(obj);
+
+record NSValueTypeMismatch (object: Id);
+instance Exception = NSValueTypeMismatch;
+
+[T, O | ObjectRef?(O)]
+fromNSValue(static T, o: O) {
+    if (CStringRef(o.objCType()) != encode(T))
+        throw NSValueTypeMismatch(Id(o));
+    else
+        return fromNSValueUnsafe(T, o);
+}
+
+[T, O | ObjectRef?(O)]
+fromNSValueUnsafe(static T, o: O) returned: T {
+    o.getValue(RawPointer(&returned));
+}
+
+[T, O | ObjectRef?(O)]
+overload Pointer[T](o: O) = Pointer[T](o.pointerValue());
+
+
+
+//
+// primitive-as-object boxing
+//
+
+[N | Numeric?(N) or N == Bool]
+overload ObjectParameterType(static N) = NSNumber;
+[N | Numeric?(N) or N == Bool]
+overload objectHandle(n: N) = objectHandle(NSNumber(n));
+
+[T | RegularRecord?(T)]
+overload ObjectParameterType(static T) = NSValue;
+[T | RegularRecord?(T)]
+overload objectHandle(r: T) = objectHandle(makeNSValue(r));
+
+[S | CCompatibleString?(S)]
+overload ObjectParameterType(static S) = NSString;
+[S | CCompatibleString?(S)]
+overload objectHandle(s: S) = objectHandle(NSString(s));
+
+
+
+//
+// object equality and comparison
+//
+
+[O1, O2 | ObjectRef?(O1) and ObjectRef?(O2)]
+overload equals?(o1: O1, o2: O2) = o1.isEqual(o2);
+
+[O1, O2 | ObjectRef?(O1) and ObjectRef?(O2)]
+overload lesser?(o1: O1, o2: O2) = o1.compare(o2) < 0;
+
+[O, T | ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
+overload equals?(o: O, v: T) = o.isEqual(objectHandle(v));
+
+[O, T | ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
+overload equals?(v: T, o: O) = o.isEqual(objectHandle(v));
+
+[O, T | ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
+overload lesser?(o: O, v: T) = o.compare(objectHandle(v)) < 0;
+
+[O, T | ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
+overload lesser?(v: T, o: O) = o.compare(objectHandle(v)) > 0;
+
+
+
+//
+// object hashing
+//
+
+[O | ObjectRef?(O)]
+overload hash(o: O) = o.hash();
+
+
+
+//
+// object enumeration
+//
+
+private alias FAST_ENUMERATION_BUFFER_SIZE = 16;
+
+record NSFastEnumerationIterator (
+    delegate: MethodDelegate[Id, #"countByEnumeratingWithState:objects:count:"],
+    n: NSUInteger,
+    state: NSFastEnumerationState,
+    count: NSUInteger,
+    objects: Array[Id, FAST_ENUMERATION_BUFFER_SIZE]
+);
+
+private refreshIterator(i: NSFastEnumerationIterator) {
+    i.n = NSUInteger(0);
+    i.count = i.delegate(
+        &i.state, begin(i.objects), NSUInteger(FAST_ENUMERATION_BUFFER_SIZE)
+    );
+}
+
+[O | ObjectRef?(O)]
+overload iterator(o: O) returned: NSFastEnumerationIterator {
+    returned.delegate = MethodDelegate(Id(o), #"countByEnumeratingWithState:objects:count:");
+    returned.state.state = 0;
+    refreshIterator(returned);
+}
+
+overload hasNext?(i: NSFastEnumerationIterator) = i.count != 0;
+overload next(i: NSFastEnumerationIterator) returned: Id {
+    returned = i.state.itemsPtr[i.n];
+    inc(i.n);
+    if (i.n == i.count)
+        refreshIterator(i);
+}
+
+[O | ObjectRef?(O)]
+overload size(o: O) = SizeT(o.count());
+
+
+
+//
+// object indexing as array, dictionary
+//
+
+[OD, OK | ObjectRef?(OD) and ObjectParameterType?(OK)]
+overload index(o: OD, k: OK) = o.objectForKey(objectHandle(k));
+
+[O, I | ObjectRef?(O) and Integer?(I)]
+overload index(o: O, n: I) = o.objectAtIndex(NSUInteger(n));
+
+
+
+//
+// array and dictionary constructors
+//
+[T, ...E | Class?(T) and allValues?(ObjectParameterType?, ...E)]
+makeArrayOfClass(static T, forward ...elements: E)
+    = T.arrayWithObjects(...mapValues(objectHandle, ...elements), nilHandle);
+
+[...E | allValues?(ObjectParameterType?, ...E)]
+makeNSArray(forward ...elements: E)
+    = makeArrayOfClass(NSArray, ...elements);
+[...E | allValues?(ObjectParameterType?, ...E)]
+makeNSMutableArray(forward ...elements: E)
+    = makeArrayOfClass(NSMutableArray, ...elements);
+
+private swapValuePairs() = ;
+overload swapValuePairs(forward x, forward y, forward ...xys)
+    = forward y, x, ...swapValuePairs(...xys);
+
+private ValidDictionaryKVs?(...E)
+    = countValues(...E) % 2 == 0
+      and allValues?(ObjectParameterType?, ...E);
+
+[T, ...E | Class?(T) and ValidDictionaryKVs?(...E)]
+private makeDictionaryOfClass(static T, forward ...kvs: E)
+    = T.dictionaryWithObjectsAndKeys(
+        ...mapValues(objectHandle, ...swapValuePairs(...kvs)),
+        nilHandle
+    );
+
+[...E | ValidDictionaryKVs?(...E)]
+makeNSDictionary(forward ...kvs: E)
+    = makeDictionaryOfClass(NSDictionary, ...kvs);
+[...E | ValidDictionaryKVs?(...E)]
+makeNSMutableDictionary(forward ...kvs: E)
+    = makeDictionaryOfClass(NSMutableDictionary, ...kvs);
+
+
+
+//
+// push, insert, remove operations on objects as arrays
+//
+
+[O, OV | ObjectRef?(O) and ObjectParameterType?(OV)]
+overload push(o: O, v: OV) { o.addObject(objectHandle(v)); }
+
+[O, I, OV | ObjectRef?(O) and Integer?(I) and ObjectParameterType?(OV)]
+overload insert(o: O, n: I, v: OV) {
+    o.insertObject_atIndex(objectHandle(v), NSUInteger(n));
+}
+
+[O, I | ObjectRef?(O) and Integer?(I)]
+overload remove(o: O, n: I) { o.removeObjectAtIndex(NSUInteger(n)); }
+
+
+
+//
+// withAutoreleasePool
+//
+
+private record Drained (pool: NSAutoreleasePool);
+overload destroy(x: Drained) { x.pool.drain(); }
+
+withAutoreleasePool(fn) {
+    var pool = Drained(NSAutoreleasePool(NSAutoreleasePool.alloc().init()));
+    return forward ...fn();
+}
+
+
+
+//
+// standard implementations of lifecycle methods (init*, copyWithZone:, dealloc) 
+//
+
+[O, superSelector, F, ...A |
+    Class?(O)
+    and Selector?(superSelector)
+    and CallDefined?(call, F,
+        O, ...dropValues(static SelectorArgumentCount(superSelector), ...A)
+    )
+]
+initObjectWith(
+    self_: O, static superSelector, initFn_: F, forward ...args:A
+) {
+    var self = self_;
+    ref initFn = initFn_;
+    var superArgCount = static SelectorArgumentCount(superSelector);
+
+    // self = super(self).init...(...);
+    self = callMethod(super(self), superSelector,
+        ...takeValues(superArgCount, ...args)
+    );
+
+    if (not nil?(self))
+        self = initFn(self,
+            ...dropValues(superArgCount, ...args)
+        );
+    return self;
+}
+
+initObject(self) = initObjectWith(self, #"init", self => self);
+
+overload initObject(self, superSelector, forward ...args)
+    = initObjectWith(self, superSelector, initObjectMembers, ...args);
+
+[O | Class?(O)]
+private objectMembers(self: O)
+    = ref ...mapValues(ivar => ref fieldRef(self^, ivar.0), ...ClassInstanceVars(O));
+
+[O | Class?(O)]
+initObjectMembers(self: O) {
+    static for (member in ...objectMembers(self))
+        member <-- Type(member)();
+    return self;
+}
+
+[O, ...A | Class?(O) and (Tuple[...ClassIvarTypes(O)] == Tuple[...A])]
+overload initObjectMembers(self: O, forward ...args: A) {
+    ...objectMembers(self) <-- ...args;
+    return self;
+}
+
+[O | Class?(O)]
+copyRootObject(self: O, zone: Pointer[NSZone]) returned: O {
+    var base = O(self.class().allocWithZone(zone));
+    base = super(base).init();
+    return initObjectMembers(base, ...objectMembers(self));
+}
+
+[O | Class?(O)]
+copyInheritingObject(self: O, zone: Pointer[NSZone]) returned: O {
+    var base = O(super(self).copyWithZone(zone));
+    return initObjectMembers(base, ...objectMembers(self));
+}
+
+[O | Class?(O)]
+copyImmutableObject(self: O, zone: Pointer[NSZone]) = self.retain();
+
+[O | Class?(O)]
+deallocObject(self: O) {
+    static for (member in ...objectMembers(self))
+        destroy(member);
+    super(self).dealloc();
+}
+
+
+
+//
+// templates to define lifecycle methods
+//
+
+[selector | Selector?(selector)]
+AutoreleasedClassMethod(static selector)
+    = (selector, class => class.alloc().init().autorelease());
+
+[selector, instanceSelector | Selector?(selector) and Selector?(instanceSelector)]
+overload AutoreleasedClassMethod(static selector, static instanceSelector)
+    = (selector, (class, ...args) =>
+        callMethod(class.alloc(), instanceSelector, ...args).autorelease()
+    );
+
+[selector, superSelector | Selector?(selector) and Selector?(superSelector)]
+InitInstanceMethod(static selector, static superSelector)
+    = (selector, (self, ...args) => initObject(self, superSelector, ...args));
+
+overload InitInstanceMethod(selector) = InitInstanceMethod(selector, #"init");
+overload InitInstanceMethod() = InitInstanceMethod(#"init", #"init");
+
+// XXX InitMemberwiseInstanceMethod
+
+// symbols for CopyInstanceMethod
+procedure CopyRoot;
+procedure CopyInheriting;
+procedure CopyImmutable;
+
+[selector | Selector?(selector)]
+CopyInstanceMethod(static selector, static CopyRoot)
+    = (selector, copyRootObject);
+[selector | Selector?(selector)]
+overload CopyInstanceMethod(static selector, static CopyInheriting)
+    = (selector, copyInheritingObject);
+[selector | Selector?(selector)]
+overload CopyInstanceMethod(static selector, static CopyImmutable)
+    = (selector, copyImmutableObject);
+
+[Flag | Flag == CopyRoot or Flag == CopyInheriting or Flag == CopyImmutable]
+overload CopyInstanceMethod(static Flag)
+    = CopyInstanceMethod(#"copyWithZone:", Flag);
+
+[selector | Selector?(selector)]
+DeallocInstanceMethod(static selector) = (selector, deallocObject);
+
+overload DeallocInstanceMethod() = DeallocInstanceMethod(#"dealloc");
+
+
+
+//
+// printing
+//
+
+[O | ObjectRef?(O)]
+overload printTo(stream, o: O) {
+    printTo(stream, String(o));
+}

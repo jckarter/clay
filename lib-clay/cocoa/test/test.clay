@@ -1,0 +1,22 @@
+import cocoa.util.*;
+
+expectIs(test: TestStatus, name, expected, result) {
+    expect(
+        test,
+        is?(expected, result),
+        () => {
+            printFailure(name, " is expected to share identity with ", expected, " but does not");
+        }
+    );
+}
+
+expectIsNot(test: TestStatus, name, expected, result) {
+    expect(
+        test,
+        isNot?(expected, result),
+        () => {
+            printFailure(name, " is expected not to share identity with ", expected, " but does");
+        }
+    );
+}
+

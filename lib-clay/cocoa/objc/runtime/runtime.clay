@@ -80,6 +80,14 @@ external class_getInstanceVariable(
         class: Class,
         name: Pointer[CChar]
     ) Ivar;
+external class_getMethodImplementation(
+        class: Class,
+        selector: SEL
+    ) IMP;
+external class_getMethodImplementation_stret(
+        class: Class,
+        selector: SEL
+    ) IMP;
 
 external ivar_getName(ivar: Ivar) Pointer[CChar];
 external ivar_getOffset(ivar: Ivar) PtrInt;

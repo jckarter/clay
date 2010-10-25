@@ -1,0 +1,10 @@
+import cocoa.objc.*;
+import cocoa.foundation.*;
+import cocoa.appkit.*;
+
+appKitMain(...NibClasses) {
+    // XXX hack to force externally referenced classes to be instantiated
+    static for (NibClass in ...NibClasses)
+        classHandle(NibClass);
+    return NSApplicationMain(...getArgcArgv());
+}

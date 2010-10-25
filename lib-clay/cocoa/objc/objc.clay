@@ -115,6 +115,9 @@ ObjectParameterType?(T)
       and CallDefined?(ObjectParameterType, Static[T])
       and ObjectHandleType(T) == ObjectHandle;
 
+[T | ObjectParameterType?(T)]
+objectParameter(forward x: T) = forward ObjectParameterType(T)(objectHandle(x));
+
 
 
 //
@@ -282,6 +285,8 @@ ClassIvarType(static T, static name) = ClassIvarType(SuperclassType(T), name);
 [T, name | Class?(T) and Identifier?(name) and assocValue?(name, ...ClassInstanceVars(T))]
 overload ClassIvarType(static T, static name) = firstValue(...assocValue(name, ...ClassInstanceVars(T)));
 
+ClassIvarNames(T) = ...mapValues(ivar => ivar.0, ...ClassInstanceVars(T));
+ClassIvarTypes(T) = ...mapValues(ivar => ivar.1, ...ClassInstanceVars(T));
 
 
 //
@@ -393,7 +398,7 @@ private classMethodImp(static T, static sel, fn)
     = makeCCodePointer(
         (self, _cmd, ...args) =>
             forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
-                ...fn(...msgSendBox(Static[T], sel, ...args))
+                ...fn(objectParameter(T), ...msgSendBox(Static[T], sel, ...args))
             ),
         ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(Static[T], sel)
     );
@@ -731,6 +736,11 @@ private objc_msgSendSuper_for(static T, static S) = objc_msgSendSuper;
 [T, S | Selector?(S) and StRet?(SelectorReturnParamType(T, S))]
 overload objc_msgSendSuper_for(static T, static S) = objc_msgSendSuper_stret;
 
+[T, S | Selector?(S)]
+private class_getMethodImplementation_for(static T, static S) = class_getMethodImplementation;
+[T, S | Selector?(S) and StRet?(SelectorReturnParamType(T, S))]
+overload class_getMethodImplementation_for(static T, static S) = class_getMethodImplementation_stret;
+
 SelectorCallableWith?(C, S, ...T) = false;
 
 [C, S, ...TT | FixedSelector?(S) and countValues(...TT) == SelectorArgumentCount(S)]
@@ -800,7 +810,11 @@ overload _identifierSelectorChar(static #_) = #":";
 
 [argCount, underscoreCount, lastCharacter]
 private _extraColon(static argCount, static underscoreCount, static lastCharacter) = ;
-[argCount, underscoreCount, lastCharacter | argCount > underscoreCount and lastCharacter != #_]
+[argCount, underscoreCount, lastCharacter |
+    argCount > underscoreCount
+    and lastCharacter != #_
+    and lastCharacter != #":"
+]
 overload _extraColon(static argCount, static underscoreCount, static lastCharacter)
     = #":";
 
@@ -831,6 +845,16 @@ overload fieldRef(forward self: T, static cmd) = MethodRef(self, cmd);
 [T, cmd | Class?(T)]
 overload fieldRef(static T, static cmd) = MethodRef(T, cmd);
 
+[T, selector, ...Args | ObjectParameterType?(T) and Selector?(selector)]
+callMethod(forward self: T, static selector, forward ...args: Args)
+    = forward ...msgSend(
+        T,
+        msgSender(T, selector),
+        objectHandle(self),
+        selector,
+        ...args
+    );
+
 [T, identifier, ...Args]
 overload call(method: MethodRef[T, identifier], forward ...args: Args) {
     var selector = identifierSelector(identifier, static countValues(...Args));
@@ -842,6 +866,34 @@ overload call(method: MethodRef[T, identifier], forward ...args: Args) {
         ...args
     );
 }
+
+
+
+//
+// method delegate (cached method pointer)
+//
+
+record MethodDelegate[T, selector] (self: ObjectHandle, imp: IMP);
+
+[T, selector | ObjectParameterType?(T) and Selector?(selector)]
+overload MethodDelegate(self: T, static selector) {
+    var selfHandle = objectHandle(self);
+    var imp = class_getMethodImplementation_for(T, selector)(
+        object_getClass(selfHandle), 
+        selectorHandle(selector)
+    );
+    return MethodDelegate[T, selector](selfHandle, imp);
+}
+
+[T, selector]
+overload call(delegate: MethodDelegate[T, selector], forward ...args)
+    = forward ...msgSend(
+        T,
+        SelectorImpType(T, selector)(delegate.imp),
+        delegate.self,
+        selector,
+        ...args
+    );
 
 
 
@@ -885,6 +937,18 @@ overload SuperMethodRef(super: SuperRef[T], identifier)
 [T, cmd | Class?(T) and cmd != #__handle__]
 overload fieldRef(sup: SuperRef[T], static cmd)
     = SuperMethodRef(sup, cmd);
+
+[T, selector, ...Args | Class?(T) and Selector?(selector)]
+overload callMethod(sup: SuperRef[T], static selector, forward ...args: Args) {
+    var super = ObjcSuper(sup.__handle__, classHandle(SuperclassType(T)));
+    return forward ...msgSend(
+        SuperclassType(T),
+        msgSenderSuper(SuperclassType(T), selector),
+        &super,
+        selector,
+        ...args
+    );
+}
 
 [T, identifier, ...Args]
 overload call(method: SuperMethodRef[T, identifier], forward ...args: Args) {
