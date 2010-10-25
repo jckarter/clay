@@ -1,5 +1,4 @@
-import cocoa.objc.*;
-import cocoa.foundation.*;
+import cocoa.*;
 import cocoa.uikit.*;
 
 overload selector(static #"performMath:") = Void, UISegmentedControl;
