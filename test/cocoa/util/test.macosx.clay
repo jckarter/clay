@@ -1,0 +1,219 @@
+import cocoa.*;
+import cocoa.test.*;
+import test.*;
+import test.memory.*;
+
+record Foo (x: Int64, y: Double);
+[I | Integer?(I) and I != Int64]
+overload Foo(x: I, y: Double) = Foo(Int64(x), y);
+
+overload selector(static #"lifecycleTest") = Id;
+overload selector(static #"lifecycleTestWithCanary:") = Id, Canary;
+overload selector(static #"lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
+overload selector(static #"initWithCanary:") = Id, Canary;
+overload selector(static #"initWithCanary:subcanary:") = Id, Canary, Canary;
+overload selector(static #"initWithSubcanary:") = Id, Canary;
+
+record LifecycleTest = newClass(NSObject,
+    InstanceVars(
+        (#canary, Canary),
+    ),
+    ClassMethods(
+        AutoreleasedClassMethod(#"lifecycleTestWithCanary:", #"initWithCanary:"),
+        AutoreleasedClassMethod(#"lifecycleTest"),
+    ),
+    InstanceMethods(
+        InitInstanceMethod(#"initWithCanary:"),
+        InitInstanceMethod(),
+        CopyInstanceMethod(CopyRoot),
+        DeallocInstanceMethod(),
+    ),
+);
+
+record LifecycleSubTest = newClass(LifecycleTest,
+    InstanceVars(
+        (#subcanary, Canary),
+    ),
+    ClassMethods(
+        AutoreleasedClassMethod(
+            #"lifecycleTestWithCanary:subcanary:", #"initWithCanary:subcanary:"
+        ),
+    ),
+    InstanceMethods(
+        InitInstanceMethod(#"initWithCanary:subcanary:", #"initWithCanary:"),
+        InitInstanceMethod(#"initWithSubcanary:"),
+        InitInstanceMethod(),
+        CopyInstanceMethod(CopyInheriting),
+        DeallocInstanceMethod(),
+    ),
+);
+
+main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
+    TestCase("constructor overloads", test => {
+        expectEqual(test, "NSNumber(bool)", true, NSNumber(true).boolValue());
+        expectEqual(test, "NSNumber(integer)", 5, NSNumber(5).intValue());
+        expectEqual(test, "NSNumber(double)", 5.5, NSNumber(5.5).doubleValue());
+        expectEqual(test, "NSNumber(64-bit integer)", 0x1_0000_0000_u64,
+            NSNumber(0x1_0000_0000_u64).unsignedLongLongValue()
+        );
+
+        expectEqual(test, "NSString(identifier)", "bees",
+            CStringRef(NSString(#"bees").UTF8String())
+        );
+        expectEqual(test, "NSString(string constant)", "bees",
+            CStringRef(NSString("bees").UTF8String())
+        );
+        expectEqual(test, "NSString(string)", "bees",
+            CStringRef(NSString(String("bees")).UTF8String())
+        );
+
+        expectEqual(test, "String(NSString)", "ants",
+            String(NSString(#"ants"))
+        );
+
+        expectEqual(test, "NSValue(integer)", 5, fromNSValue(Int, makeNSValue(5)));
+        expectEqual(test, "NSValue(double)", 5.5, fromNSValue(Double, makeNSValue(5.5)));
+        expectEqual(test, "NSValue(pointer)", null(Int),
+            fromNSValue(Pointer[Int], makeNSValue(null(Int)))
+        );
+        expectEqual(test, "NSValue(record)", Foo(14, 92.0),
+            fromNSValue(Foo, makeNSValue(Foo(14, 92.0)))
+        );
+    }),
+    TestCase("boxing of clay primitives", test => {
+        expectEqual(test, "integer", 5, objectParameter(5).intValue());
+        expectEqual(test, "double", 5.5, objectParameter(5.5).doubleValue());
+        expectEqual(test, "64-bit integer", 0x1_0000_0000_u64,
+            objectParameter(0x1_0000_0000_u64).unsignedLongLongValue()
+        );
+        expectEqual(test, "bool", true,
+            objectParameter(true).boolValue()
+        );
+
+        expectEqual(test, "string constant", "worms",
+            String(objectParameter("worms"))
+        );
+
+        expectEqual(test, "string", "worms",
+            String(objectParameter(String("worms")))
+        );
+
+        expectEqual(test, "record", Foo(7, 11.0),
+            fromNSValue(Foo, objectParameter(Foo(7, 11.0)))
+        );
+    }),
+    TestCase("equality, hashing and comparison", test => {
+        var x = NSString("foo");
+        var y = NSString("foo");
+        var z = x;
+        var w = NSString("bar");
+
+        expectTrue(test, "equality", x == y);
+        expectTrue(test, "inequality", x != w);
+
+        expectFalse(test, "<", x < y);
+        expectFalse(test, "<", x < w);
+        expectTrue (test, "<=", x <= y);
+        expectFalse(test, "<=", x <= w);
+        expectFalse(test, ">", x > y);
+        expectTrue (test, ">", x > w);
+        expectTrue (test, ">=", x >= y);
+        expectTrue (test, ">=", x >= w);
+
+        expectTrue(test, "object-primitive <", x < "fop");
+        expectTrue(test, "object-primitive ==", x == "foo");
+        expectTrue(test, "object-primitive !=", x != "bar");
+        expectTrue(test, "object-primitive >", x > "fon");
+
+        expectTrue(test, "different identity", isNot?(x, y));
+        expectTrue(test, "same identity", is?(x, z));
+
+        expectEqual(test, "hashing", x.hash(), hash(x));
+    }),
+    TestCase("array", test => {
+        var array = NSMutableArray.alloc().init();
+
+        array.addObject(9);
+        push(array, "birds");
+        array.insertObject_atIndex(Foo(12, 24.0), NSUInteger(1));
+        insert(array, 1, NSNull.null());
+
+        expectEqual(test, "index 0", 9, array[0].intValue());
+        expectEqual(test, "index 1", NSNull.null(), array[1]);
+        expectEqual(test, "index 2", Foo(12, 24.0), fromNSValue(Foo, array[2]));
+        expectEqual(test, "index 3", "birds", String(array[3]));
+
+        expectEqual(test, "size(array)", 4, size(array));
+
+        expectSequence(test, "array as sequence", array,
+            Id(NSNumber(9)),
+            Id(NSNull.null()),
+            Id(makeNSValue(Foo(12, 24.0))),
+            Id(NSString("birds")),
+        );
+
+        array.release();
+    }),
+    TestCase("dictionary", test => {
+        var dict = NSMutableDictionary.alloc().init();
+
+        dict.setObject_forKey(9, "zim");
+        dict.setObject_forKey("birds", "zang");
+
+        expectEqual(test, "key zim", 9, dict["zim"].intValue());
+        expectEqual(test, "key zang", "birds", String(dict["zang"]));
+
+        expectEqual(test, "size(dict)", 2, size(dict));
+
+        dict.release();
+    }),
+    TestCase("array, dictionary constructors", test => {
+        var array = makeNSArray(1, "foo", 2.0, NSNull.null());
+        var dict = makeNSDictionary(
+            "zim", 9,
+            "zang", "bar",
+            "zung", false,
+        );
+
+        expectEqual(test, "size(array)", 4, size(array));
+        expectEqual(test, "size(dict)",  3, size(dict));
+
+        expectSequence(test, "array as sequence", array,
+            Id(NSNumber(1)),
+            Id(NSString("foo")),
+            Id(NSNumber(2.0)),
+            Id(NSNull.null())
+        );
+        expectEqual(test, "dict key zim",  9,     dict["zim" ]);
+        expectEqual(test, "dict key zang", "bar", dict["zang"]);
+        expectEqual(test, "dict key zung", false, dict["zung"]);
+    }),
+    TestCase("lifecycle methods", test => {
+        expectCanariesDestroyed(test, "lifecycle methods on clay objc class", () => {
+            withAutoreleasePool(() => {
+                var autoreleased1 = LifecycleTest.lifecycleTest();
+                var autoreleased2 = LifecycleTest.lifecycleTestWithCanary(Canary());
+                var autoreleased3 = LifecycleSubTest.lifecycleTest();
+                var autoreleased4
+                    = LifecycleSubTest.lifecycleTestWithCanary_subcanary(Canary(), Canary());
+
+                var inited1 = LifecycleTest.alloc().init();
+                var inited2 = LifecycleTest.alloc().initWithCanary(Canary());
+                var inited3 = LifecycleSubTest.alloc().init();
+                var inited4
+                    = LifecycleSubTest.alloc().initWithCanary_subcanary(Canary(), Canary());
+                var inited5
+                    = LifecycleSubTest.alloc().initWithSubcanary(Canary());
+
+                var copied1 = autoreleased1.copy();
+                var copied2 = inited1.copy();
+                var copied3 = autoreleased3.copy();
+                var copied4 = inited3.copy();
+
+                static for (o in inited1, inited2, inited3, inited4, inited5,
+                                 copied1, copied2, copied3, copied4)
+                    o.release();
+            });
+        });
+    }),
+])));
