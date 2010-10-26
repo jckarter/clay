@@ -125,8 +125,10 @@ objectParameter(forward x: T) = forward ObjectParameterType(T)(objectHandle(x));
 //
 
 private release(x) {
-    printlnTo(stderr, "releasing ", CStringRef(object_getClassName(objectHandle(x))), " ", x);
-    objc_msgSend(objectHandle(x), objcSelector[#release]);
+    if (not null?(x)) {
+        printlnTo(stderr, "releasing ", CStringRef(object_getClassName(objectHandle(x))), " ", x);
+        objc_msgSend(objectHandle(x), objcSelector[#release]);
+    }
 }
 private retain(x) {
     printlnTo(stderr, "retaining ", CStringRef(object_getClassName(objectHandle(x))), " ", x);
@@ -144,8 +146,8 @@ ObjectType?(T) = false;
 [O | ObjectType?(O)] overload objectHandle(x: O) = x.__handle__;
 [O | ObjectType?(O)] overload ObjectParameterType(static O) = O;
 
-[O | ObjectType?(O)] nil(static O) = O();
-[O | ObjectType?(O)] nil?(obj: O) = null?(obj.__handle__);
+[O | ObjectRef?(O)] nil(static O) = O();
+[O | ObjectRef?(O)] nil?(obj: O) = null?(obj.__handle__);
 
 [O | ObjectType?(O)] overload RegularRecord?(static O) = false;
 
@@ -193,6 +195,8 @@ record Retained[O] (__handle__: ObjectHandle);
 
 [O | ObjectType?(O)] overload objectHandle(obj: Retained[O]) = obj.__handle__;
 [O | ObjectType?(O)] overload ObjectParameterType(static Retained[O]) = O;
+
+[O | ObjectType?(O)] overload Retained[O]() = Retained[O](nilHandle);
 
 // copying managed <-> unmanaged
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
@@ -525,8 +529,7 @@ overload objcInitIvarOffset(static T, ivarName) = PtrInt(0);
 [T | Class?(T)] overload objectHandle(static T) = ObjectHandle(classHandle(T));
 [T | Class?(T)] overload ObjectParameterType(static Static[T]) = Id; // XXX Class
 
-[T | Class?(T)] overload encode(static T) = "@";
-overload encode(static Id) = "@";
+[T | ObjectRef?(T)] overload encode(static T) = "@";
 
 // XXX class container
 
@@ -662,10 +665,17 @@ ForwardingSelector?(sel) = false;
 [sel | IdentifierStartsWith?(sel, #"init")]
 overload ForwardingSelector?(static sel) = true;
 
+AutoreleasingSelector?(sel) = false;
+overload AutoreleasingSelector?(static #"autorelease") = true;
+
 [T, sel | Class?(T) and AllocatingSelector?(sel)]
 overload SelectorReturnType(static Static[T], static sel) = T;
 
-[T, sel | ObjectType?(T) and (RetainingSelector?(sel) or ForwardingSelector?(sel))]
+[T, sel | ObjectType?(T) and (
+    RetainingSelector?(sel)
+    or ForwardingSelector?(sel)
+    or AutoreleasingSelector?(sel)
+)]
 overload SelectorReturnType(static T, static sel) = T;
 
 
@@ -881,15 +891,15 @@ overload _extraColon(static argCount, static underscoreCount, static lastCharact
 // method syntax
 //
 
-private record MethodRef[T, identifier] (self: ObjectHandle);
+private record MethodRef[T, Captured, identifier] (self: Captured);
 
-overload MethodRef(forward value, identifier)
-    = MethodRef[ObjectParameterType(Type(value)), identifier](objectHandle(value));
+overload MethodRef(T, forward value, identifier)
+    = MethodRef[T, Type(captureValue(value)), identifier](captureValue(value));
 
 [T, cmd | ObjectRef?(T) and cmd != #__handle__]
-overload fieldRef(forward self: T, static cmd) = MethodRef(self, cmd);
+overload fieldRef(forward self: T, static cmd) = MethodRef(ObjectParameterType(T), self, cmd);
 [T, cmd | Class?(T)]
-overload fieldRef(static T, static cmd) = MethodRef(T, cmd);
+overload fieldRef(static T, static cmd) = MethodRef(Static[T], T, cmd);
 
 [T, selector, ...Args | ObjectParameterType?(T) and Selector?(selector)]
 callMethod(forward self: T, static selector, forward ...args: Args)
@@ -901,13 +911,13 @@ callMethod(forward self: T, static selector, forward ...args: Args)
         ...args
     );
 
-[T, identifier, ...Args]
-overload call(method: MethodRef[T, identifier], forward ...args: Args) {
+[T, Captured, identifier, ...Args]
+overload call(method: MethodRef[T, Captured, identifier], forward ...args: Args) {
     var selector = identifierSelector(identifier, static countValues(...Args));
     return forward ...msgSend(
         T,
         msgSender(T, selector),
-        method.self,
+        objectHandle(forwardValue(method.self)),
         selector, 
         ...args
     );
@@ -966,27 +976,30 @@ overload fieldRef(ivars: IvarsRef[T], static ivar)
 // superclass method invocation
 //
 
-private record SuperRef[T] (__handle__: ObjectHandle);
+private record SuperRef[T, Captured] (__self__: Captured);
 
 [T | Class?(T) and SuperclassType(T) != Void]
-super(obj: T) = SuperRef[T](objectHandle(obj));
+super(forward obj: T) = SuperRef[T, Type(captureValue(obj))](captureValue(obj));
 
 [T | Class?(T) and SuperclassType(T) != Void]
-overload super(obj: Retained[T]) = SuperRef[T](objectHandle(obj));
+overload super(forward obj: Retained[T]) = SuperRef[T, Type(captureValue(obj))](captureValue(obj));
 
-private record SuperMethodRef[T, identifier] (super: ObjcSuper);
+private record SuperMethodRef[T, Captured, identifier] (__self__: Captured);
 
-[T]
-overload SuperMethodRef(super: SuperRef[T], identifier)
-    = SuperMethodRef[T, identifier](ObjcSuper(super.__handle__, classHandle(SuperclassType(T))));
+[T, Captured]
+overload SuperMethodRef(forward super: SuperRef[T, Captured], identifier)
+    = SuperMethodRef[T, Captured, identifier](super.__self__);
 
-[T, cmd | Class?(T) and cmd != #__handle__]
-overload fieldRef(sup: SuperRef[T], static cmd)
+[T, Captured, cmd | Class?(T) and cmd != #__self__]
+overload fieldRef(sup: SuperRef[T, Captured], static cmd)
     = SuperMethodRef(sup, cmd);
 
-[T, selector, ...Args | Class?(T) and Selector?(selector)]
-overload callMethod(sup: SuperRef[T], static selector, forward ...args: Args) {
-    var super = ObjcSuper(sup.__handle__, classHandle(SuperclassType(T)));
+[T, Captured, selector, ...Args | Class?(T) and Selector?(selector)]
+overload callMethod(sup: SuperRef[T, Captured], static selector, forward ...args: Args) {
+    var super = ObjcSuper(
+        objectHandle(forwardValue(sup.__self__)),
+        classHandle(SuperclassType(T))
+    );
     return forward ...msgSend(
         SuperclassType(T),
         msgSenderSuper(SuperclassType(T), selector),
@@ -996,13 +1009,17 @@ overload callMethod(sup: SuperRef[T], static selector, forward ...args: Args) {
     );
 }
 
-[T, identifier, ...Args]
-overload call(method: SuperMethodRef[T, identifier], forward ...args: Args) {
+[T, Captured, identifier, ...Args]
+overload call(method: SuperMethodRef[T, Captured, identifier], forward ...args: Args) {
     var selector = identifierSelector(identifier, static countValues(...Args));
+    var super = ObjcSuper(
+        objectHandle(forwardValue(method.__self__)),
+        classHandle(SuperclassType(T))
+    );
     return forward ...msgSend(
         SuperclassType(T),
         msgSenderSuper(SuperclassType(T), selector),
-        &method.super,
+        &super,
         selector,
         ...args
     );
