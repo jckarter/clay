@@ -193,6 +193,8 @@ overload nil() = nil(Id);
 
 record Retained[O] (__handle__: ObjectHandle);
 
+[O | ObjectType?(O)] overload RegularRecord?(static Retained[O]) = false;
+
 [O | ObjectType?(O)] overload objectHandle(obj: Retained[O]) = obj.__handle__;
 [O | ObjectType?(O)] overload ObjectParameterType(static Retained[O]) = O;
 
