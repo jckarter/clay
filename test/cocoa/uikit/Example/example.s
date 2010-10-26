@@ -11,12 +11,12 @@ Leh_func_begin0:
 @ BB#0:                                 @ %init
 	stmdb	sp!, {r4, r5, r6, r7, lr}
 	add	r7, sp, #12
-	stmdb	sp!, {r8, r11}
-	sub	sp, sp, #103, 30	@ 412
+	stmdb	sp!, {r8, r10, r11}
+	sub	sp, sp, #26, 28	@ 416
 	bic	sp, sp, #7
 	ldr	r0, LCPI0_157
 	ldr	r1, LCPI0_158
-	mov	r5, #0
+	mov	r4, #0
 	
 LPC0_1:
 	add	r0, pc, r0
@@ -24,8 +24,8 @@ LPC0_1:
 LPC0_0:
 	ldr	r1, [pc, r1]
 	ldr	r2, [r1]
-	str	r5, [r0, #128]
-	stmia	r0, {r2, r5}
+	str	r4, [r0, #128]
+	stmia	r0, {r2, r4}
 	ldr	r0, LCPI0_159
 	
 LPC0_2:
@@ -33,68 +33,68 @@ LPC0_2:
 	bl	_objc_getClass
 	cmp	r0, #0
 	bne	LBB0_11
-@ BB#1:                                 @ %ifTrue.i
-	ldr	r5, LCPI0_160
+@ BB#1:                                 @ %ifTrue.i195
+	ldr	r4, LCPI0_160
 	
 LPC0_3:
-	add	r5, pc, r5
-	ldr	r5, [r5, #128]
-	str	r5, [sp, #16]
-	cmp	r5, #0
+	add	r4, pc, r4
+	ldr	r4, [r4, #128]
+	str	r4, [sp, #12]
+	cmp	r4, #0
 	beq	LBB0_4
-@ BB#2:                                 @ %ifTrue.i
-	cmp	r5, #1
+@ BB#2:                                 @ %ifTrue.i195
+	cmp	r4, #1
 	bne	LBB0_5
-@ BB#3:                                 @ %ifTrue13.i4.i.i
-	ldr	r5, LCPI0_161
+@ BB#3:                                 @ %ifTrue13.i4.i.i197
+	ldr	r4, LCPI0_161
 	
 LPC0_4:
-	add	r5, pc, r5
-	ldr	r0, [r5, #140]
+	add	r4, pc, r4
+	ldr	r0, [r4, #140]
 	bl	_free
-LBB0_4:                                 @ %clay_destroy(Exception).exit.i.i
-	ldr	r5, LCPI0_162
+LBB0_4:                                 @ %clay_destroy(Exception).exit.i.i205
+	ldr	r4, LCPI0_162
 	mov	r0, #2
 	ldr	r1, LCPI0_163
 	
 LPC0_5:
-	add	r5, pc, r5
-	str	r0, [r5, #128]
+	add	r4, pc, r4
+	str	r0, [r4, #128]
 	
 LPC0_6:
 	add	r0, pc, r1
-	str	r0, [r5, #132]
+	str	r0, [r4, #132]
 	add	r0, r0, #8
-	str	r0, [r5, #136]
+	str	r0, [r4, #136]
 	b	LBB0_10
-LBB0_5:                                 @ %ifMerge20.i10.i.i
-	sub	r0, r5, #2
+LBB0_5:                                 @ %ifMerge20.i10.i.i203
+	sub	r0, r4, #2
 	cmp	r0, #2
 	blo	LBB0_4
-@ BB#6:                                 @ %ifMerge20.i10.i.i
-	cmp	r5, #4
-	cmpne	r5, #5
+@ BB#6:                                 @ %ifMerge20.i10.i.i203
+	cmp	r4, #4
+	cmpne	r4, #5
 	beq	LBB0_4
-@ BB#7:                                 @ %ifMerge20.i10.i.i
-	cmp	r5, #6
-	cmpne	r5, #7
+@ BB#7:                                 @ %ifMerge20.i10.i.i203
+	cmp	r4, #6
+	cmpne	r4, #7
 	beq	LBB0_4
-@ BB#8:                                 @ %clay_destroy(Exception).exit25.i.i
-	add	r0, sp, #16
-LBB0_9:                                 @ %clay_destroy(Exception).exit25.i.i
+@ BB#8:                                 @ %clay_destroy(Exception).exit25.i.i204
+	add	r0, sp, #12
+LBB0_9:                                 @ %clay_destroy(Exception).exit25.i.i204
 	bl	"_clay_error(StringConstant, Int32)"
 LBB0_10:                                @ %exception
                                         @ =>This Inner Loop Header: Depth=1
-	ldr	r5, LCPI0_164
+	ldr	r4, LCPI0_164
 	
 LPC0_7:
-	ldr	r3, [pc, r5]
+	ldr	r3, [pc, r4]
 	mov	r1, #36
 	mov	r2, #1
-	ldr	r5, LCPI0_165
+	ldr	r4, LCPI0_165
 	
 LPC0_8:
-	add	r0, pc, r5
+	add	r0, pc, r4
 	bl	_fwrite
 	bl	_abort
 	b	LBB0_10
@@ -102,48 +102,79 @@ LBB0_11:                                @ %normal2
 	ldr	r1, LCPI0_166
 	
 LPC0_9:
-	add	r4, pc, r1
-	str	r0, [r4, #8]
+	add	r5, pc, r1
+	str	r0, [r5, #8]
+	mov	r8, #2
 	ldr	r1, LCPI0_167
 	
 LPC0_10:
 	add	r0, pc, r1
 	bl	_sel_registerName
-	str	r0, [r4, #12]
-	str	r5, [r4, #16]
-	str	r5, [r4, #20]
+	str	r0, [r5, #12]
+	str	r4, [r5, #16]
+	str	r4, [r5, #20]
 	ldr	r0, LCPI0_168
 	
 LPC0_11:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #24]
+	str	r0, [r5, #24]
 	ldr	r0, LCPI0_169
 	
 LPC0_12:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #28]
+	str	r0, [r5, #28]
 	ldr	r0, LCPI0_170
 	
 LPC0_13:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #32]
+	str	r0, [r5, #32]
 	ldr	r0, LCPI0_171
 	
 LPC0_14:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #36]
+	str	r0, [r5, #36]
+	mov	r0, #28
+	orr	r0, r0, #2, 20	@ 8192
+	bl	_malloc
+	mov	r6, r0
+	mov	r0, #1
+	str	r0, [r6]
+	mov	r0, #2
+	bl	_isatty
+	str	r8, [r6, #4]
+	strb	r4, [r6, #8]
+	mvn	r1, #0
+	str	r1, [sp, #120]
+	cmp	r0, #0
+	mov	r0, #20
+	orr	r0, r0, #1, 20	@ 4096
+	strb	r4, [sp, #124]
+	mov	r1, #12
+	orr	r1, r1, #1, 20	@ 4096
+	str	r4, [r6, r1]
+	mov	r1, #16
+	orr	r1, r1, #1, 20	@ 4096
+	str	r4, [r6, r1]
+	mov	r1, #24
+	orr	r1, r1, #2, 20	@ 8192
+	str	r4, [r6, r1]
+	movne	r4, #1
+	strb	r4, [r6, r0]
+	add	r0, sp, #120
+	bl	"_clay_destroy(RawFile)"
+	str	r6, [r5, #40]
 	ldr	r0, LCPI0_172
 	
 LPC0_15:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #40]
+	str	r0, [r5, #44]
 	ldr	r1, LCPI0_173
-	ldr	r0, [r4, #8]
+	ldr	r0, [r5, #8]
 	mov	r2, #0
 	
 LPC0_16:
@@ -303,16 +334,16 @@ LPC0_26:
 	cmp	r4, #1
 	bne	LBB0_30
 @ BB#28:                                @ %ifTrue13.i4.i38.i
-	ldr	r4, LCPI0_190
+	ldr	r4, LCPI0_27
 	
 LPC0_27:
 	add	r4, pc, r4
 	ldr	r0, [r4, #140]
 	bl	_free
 LBB0_29:                                @ %clay_destroy(Exception).exit.i46.i
-	ldr	r4, LCPI0_191
+	ldr	r4, LCPI0_28
 	mov	r0, #4
-	ldr	r1, LCPI0_192
+	ldr	r1, LCPI0_29
 	
 LPC0_28:
 	add	r4, pc, r4
@@ -323,14 +354,14 @@ LPC0_29:
 	str	r0, [r4, #132]
 	add	r0, r0, #8
 	str	r0, [r4, #136]
-	ldr	r0, LCPI0_193
+	ldr	r0, LCPI0_30
 	
 LPC0_30:
 	add	r0, pc, r0
 	str	r0, [r4, #140]
 	add	r0, r0, #18
 	str	r0, [r4, #144]
-	ldr	r0, LCPI0_194
+	ldr	r0, LCPI0_31
 	
 LPC0_31:
 	add	r0, pc, r0
@@ -442,7 +473,7 @@ LPC0_39:
 	add	r1, sp, #220
 	bl	"_clay_vectorSetCapacity(Vector[Char], UInt32)"
 	cmp	r0, #0
-	bne	LBB0_209
+	bne	LBB0_202
 @ BB#44:                                @ %clay_reserve(Vector[Char], UInt32).exit.return12_crit_edge.i54.i
 	ldr	r0, [sp, #144]
 LBB0_45:                                @ %normal132.i
@@ -567,7 +598,7 @@ LPC0_51:
 	bl	_free
 	cmp	r5, #0
 	bne	LBB0_10
-@ BB#56:                                @ %normal165.i
+@ BB#56:                                @ %normal164.i
 	ldr	r0, [sp, #128]
 	add	r1, r0, #1
 	ldr	r2, [sp, #132]
@@ -579,10 +610,10 @@ LPC0_51:
 	add	r1, sp, #164
 	bl	"_clay_vectorSetCapacity(Vector[Char], UInt32)"
 	cmp	r0, #0
-	bne	LBB0_210
+	bne	LBB0_204
 @ BB#58:                                @ %clay_reserve(Vector[Char], UInt32).exit.return12_crit_edge.i.i235
 	ldr	r0, [sp, #128]
-LBB0_59:                                @ %normal167.i
+LBB0_59:                                @ %normal166.i
 	mov	r1, #0
 	ldr	r5, [sp, #136]
 	strb	r1, [r5, r0]
@@ -603,7 +634,7 @@ LPC0_53:
 	bl	_free
 	tst	r6, #255
 	bne	LBB0_68
-@ BB#60:                                @ %ifTrue171.i
+@ BB#60:                                @ %ifTrue170.i
 	ldr	r4, LCPI0_54
 	
 LPC0_54:
@@ -612,7 +643,7 @@ LPC0_54:
 	str	r4, [sp, #156]
 	cmp	r4, #0
 	beq	LBB0_63
-@ BB#61:                                @ %ifTrue171.i
+@ BB#61:                                @ %ifTrue170.i
 	cmp	r4, #1
 	bne	LBB0_64
 @ BB#62:                                @ %ifTrue13.i4.i.i237
@@ -666,7 +697,7 @@ LBB0_64:                                @ %ifMerge20.i10.i.i243
 @ BB#67:                                @ %clay_destroy(Exception).exit25.i.i244
 	add	r0, sp, #156
 	b	LBB0_9
-LBB0_68:                                @ %normal66
+LBB0_68:                                @ %normal68
 	mov	r0, r4
 	bl	_objc_registerClassPair
 	ldr	r0, LCPI0_60
@@ -745,20 +776,20 @@ LBB0_73:                                @ %ifMerge20.i10.i.i255
 @ BB#76:                                @ %clay_destroy(Exception).exit25.i.i256
 	add	r0, sp, #79, 30	@ 316
 	b	LBB0_9
-LBB0_77:                                @ %normal68
+LBB0_77:                                @ %normal70
 	ldr	r1, LCPI0_68
 	
 LPC0_68:
 	add	r4, pc, r1
-	str	r0, [r4, #44]
+	str	r0, [r4, #48]
 	ldr	r1, LCPI0_69
 	
 LPC0_69:
 	add	r0, pc, r1
 	bl	_sel_registerName
-	str	r0, [r4, #48]
+	str	r0, [r4, #52]
 	ldr	r1, LCPI0_70
-	ldr	r0, [r4, #44]
+	ldr	r0, [r4, #48]
 	mov	r2, #0
 	
 LPC0_70:
@@ -892,7 +923,7 @@ LPC0_79:
 	add	r1, sp, #85, 30	@ 340
 	bl	"_clay_vectorSetCapacity(Vector[Char], UInt32)"
 	cmp	r0, #0
-	bne	LBB0_211
+	bne	LBB0_205
 @ BB#91:                                @ %clay_reserve(Vector[Char], UInt32).exit.return12_crit_edge.i.i272
 	ldr	r0, [sp, #320]
 LBB0_92:                                @ %normal47.i
@@ -904,7 +935,7 @@ LBB0_92:                                @ %normal47.i
 LPC0_80:
 	add	r0, pc, r1
 	mov	r3, r5
-	ldr	r1, [r0, #48]
+	ldr	r1, [r0, #52]
 	ldr	r0, LCPI0_81
 	
 LPC0_81:
@@ -979,7 +1010,7 @@ LBB0_97:                                @ %ifMerge20.i10.i.i282
 @ BB#100:                               @ %clay_destroy(Exception).exit25.i.i283
 	add	r0, sp, #83, 30	@ 332
 	b	LBB0_9
-LBB0_101:                               @ %normal79
+LBB0_101:                               @ %normal81
 	mov	r0, r4
 	bl	_objc_registerClassPair
 	ldr	r0, LCPI0_88
@@ -991,28 +1022,28 @@ LPC0_89:
 LPC0_88:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #52]
+	str	r0, [r4, #56]
 	ldr	r0, LCPI0_90
 	
 LPC0_90:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #56]
-	str	r11, [r4, #60]
+	str	r0, [r4, #60]
+	str	r11, [r4, #64]
 	ldr	r0, LCPI0_91
 	
 LPC0_91:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #64]
+	str	r0, [r4, #68]
 	ldr	r0, LCPI0_92
 	
 LPC0_92:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #68]
-	str	r11, [r4, #72]
+	str	r0, [r4, #72]
 	str	r11, [r4, #76]
+	str	r11, [r4, #80]
 	ldr	r0, LCPI0_93
 	
 LPC0_93:
@@ -1041,7 +1072,7 @@ LPC0_95:
 LPC0_96:
 	add	r0, pc, r0
 	ldr	r0, [r0, #128]
-	str	r0, [sp, #408]
+	str	r0, [sp, #412]
 	cmp	r0, #0
 	beq	LBB0_105
 @ BB#103:                               @ %ifTrue.i286
@@ -1082,26 +1113,26 @@ LBB0_106:                               @ %ifMerge20.i10.i.i294
 	cmpne	r0, #7
 	beq	LBB0_105
 @ BB#109:                               @ %clay_destroy(Exception).exit25.i.i295
-	add	r0, sp, #102, 30	@ 408
+	add	r0, sp, #103, 30	@ 412
 	b	LBB0_9
-LBB0_110:                               @ %normal134
+LBB0_110:                               @ %normal136
 	ldr	r1, LCPI0_100
 	
 LPC0_100:
 	add	r4, pc, r1
-	str	r0, [r4, #80]
+	str	r0, [r4, #84]
 	ldr	r1, LCPI0_101
 	
 LPC0_101:
 	add	r0, pc, r1
 	bl	_sel_registerName
-	str	r0, [r4, #84]
+	str	r0, [r4, #88]
 	ldr	r0, LCPI0_102
 	
 LPC0_102:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #88]
+	str	r0, [r4, #92]
 	ldr	r1, LCPI0_103
 	ldr	r0, [r4, #8]
 	mov	r2, #0
@@ -1117,7 +1148,7 @@ LPC0_103:
 LPC0_104:
 	add	r0, pc, r0
 	ldr	r0, [r0, #128]
-	str	r0, [sp, #40]
+	str	r0, [sp, #32]
 	cmp	r0, #0
 	beq	LBB0_114
 @ BB#112:                               @ %ifTrue.i208
@@ -1165,7 +1196,7 @@ LBB0_115:                               @ %ifMerge20.i10.i14.i
 	cmpne	r0, #7
 	beq	LBB0_114
 @ BB#118:                               @ %clay_destroy(Exception).exit25.i15.i
-	add	r0, sp, #40
+	add	r0, sp, #32
 	b	LBB0_9
 LBB0_119:                               @ %ifMerge.i209
 	mov	r4, r0
@@ -1216,14 +1247,14 @@ LPC0_119:
 	mov	r0, r4
 	bl	_class_addIvar
 	tst	r0, #255
-	bne	LBB0_158
+	bne	LBB0_161
 @ BB#122:                               @ %ifTrue144.i
 	ldr	r4, LCPI0_127
 	
 LPC0_127:
 	add	r4, pc, r4
 	ldr	r4, [r4, #128]
-	str	r4, [sp, #120]
+	str	r4, [sp, #112]
 	cmp	r4, #0
 	beq	LBB0_125
 @ BB#123:                               @ %ifTrue144.i
@@ -1271,7 +1302,7 @@ LBB0_126:                               @ %ifTrue57.i
 LPC0_113:
 	add	r4, pc, r4
 	ldr	r4, [r4, #128]
-	str	r4, [sp, #116]
+	str	r4, [sp, #108]
 	cmp	r4, #0
 	beq	LBB0_129
 @ BB#127:                               @ %ifTrue57.i
@@ -1326,7 +1357,7 @@ LBB0_130:                               @ %ifMerge20.i10.i27.i
 	cmpne	r4, #7
 	beq	LBB0_129
 @ BB#133:                               @ %clay_destroy(Exception).exit25.i28.i
-	add	r0, sp, #116
+	add	r0, sp, #108
 	b	LBB0_9
 LBB0_134:                               @ %ifTrue101.i
 	ldr	r4, LCPI0_121
@@ -1334,7 +1365,7 @@ LBB0_134:                               @ %ifTrue101.i
 LPC0_121:
 	add	r4, pc, r4
 	ldr	r4, [r4, #128]
-	str	r4, [sp, #124]
+	str	r4, [sp, #116]
 	cmp	r4, #0
 	beq	LBB0_137
 @ BB#135:                               @ %ifTrue101.i
@@ -1389,7 +1420,7 @@ LBB0_138:                               @ %ifMerge20.i10.i62.i
 	cmpne	r4, #7
 	beq	LBB0_137
 @ BB#141:                               @ %clay_destroy(Exception).exit25.i63.i
-	add	r0, sp, #124
+	add	r0, sp, #116
 	b	LBB0_9
 LBB0_142:                               @ %ifMerge20.i10.i40.i
 	sub	r0, r4, #2
@@ -1404,7 +1435,7 @@ LBB0_142:                               @ %ifMerge20.i10.i40.i
 	cmpne	r4, #7
 	beq	LBB0_125
 @ BB#145:                               @ %clay_destroy(Exception).exit25.i41.i
-	add	r0, sp, #120
+	add	r0, sp, #112
 	b	LBB0_9
 @ BB#146:
 	.align	2
@@ -1466,81 +1497,96 @@ LCPI0_167:
 LCPI0_168:
 	.long	L_clayliteral_str22-(LPC0_11+8)
 	 
-LBB0_158:                               @ %ifMerge159.i
+@ BB#158:
+	.align	2
+LCPI0_169:
+	.long	L_clayliteral_str28-(LPC0_12+8)
+	 
+@ BB#159:
+	.align	2
+LCPI0_170:
+	.long	L_clayliteral_str40-(LPC0_13+8)
+	 
+@ BB#160:
+	.align	2
+LCPI0_171:
+	.long	L_clayliteral_str51-(LPC0_14+8)
+	 
+LBB0_161:                               @ %ifMerge159.i
 	ldr	r0, LCPI0_133
 	ldr	r2, LCPI0_135
 	
 LPC0_133:
 	add	r0, pc, r0
-	str	r0, [sp, #104]
+	str	r0, [sp, #96]
 	
 LPC0_135:
 	add	r2, pc, r2
-	str	r2, [sp, #88]
+	str	r2, [sp, #80]
 	add	r0, r0, #1
-	str	r0, [sp, #108]
+	str	r0, [sp, #100]
 	add	r2, r2, #1
-	str	r2, [sp, #92]
+	str	r2, [sp, #84]
 	ldr	r0, LCPI0_134
-	add	r2, sp, #56
+	add	r2, sp, #48
 	
 LPC0_134:
 	add	r0, pc, r0
 	add	r1, r0, #1
-	str	r0, [sp, #96]
-	str	r0, [sp, #48]
-	str	r1, [sp, #100]
-	str	r1, [sp, #52]
-	add	r0, sp, #88
-	add	r1, sp, #48
+	str	r0, [sp, #88]
+	str	r0, [sp, #40]
+	str	r1, [sp, #92]
+	str	r1, [sp, #44]
+	add	r0, sp, #80
+	add	r1, sp, #40
 	bl	"_clay_add(StringConstant, StringConstant)"
 	cmp	r0, #0
 	bne	LBB0_10
-@ BB#159:                               @ %normal22.i.i.i
+@ BB#162:                               @ %normal22.i.i.i
+	add	r0, sp, #88
+	add	r1, sp, #48
+	add	r2, sp, #64
+	bl	"_clay_add(StringConstant, Vector[Char])"
+	mov	r5, r0
+	ldr	r0, [sp, #56]
+	bl	_free
+	cmp	r5, #0
+	bne	LBB0_10
+@ BB#163:                               @ %clay_SelectorTypeEncoding(Static[ExampleController], Static[#performMathc58]).exit.i
 	add	r0, sp, #96
-	add	r1, sp, #56
-	add	r2, sp, #72
+	add	r1, sp, #64
+	add	r2, sp, #16
 	bl	"_clay_add(StringConstant, Vector[Char])"
 	mov	r5, r0
-	ldr	r0, [sp, #64]
+	ldr	r0, [sp, #72]
 	bl	_free
 	cmp	r5, #0
 	bne	LBB0_10
-@ BB#160:                               @ %clay_SelectorTypeEncoding(Static[ExampleController], Static[#performMathc58]).exit.i
-	add	r0, sp, #104
-	add	r1, sp, #72
-	add	r2, sp, #24
-	bl	"_clay_add(StringConstant, Vector[Char])"
-	mov	r5, r0
-	ldr	r0, [sp, #80]
-	bl	_free
-	cmp	r5, #0
-	bne	LBB0_10
-@ BB#161:                               @ %normal174.i
-	ldr	r0, [sp, #24]
+@ BB#164:                               @ %normal174.i
+	ldr	r0, [sp, #16]
 	add	r1, r0, #1
-	ldr	r2, [sp, #28]
+	ldr	r2, [sp, #20]
 	cmp	r2, r1
-	bhs	LBB0_164
-@ BB#162:                               @ %clay_reserve(Vector[Char], UInt32).exit.i.i
-	str	r1, [sp, #44]
-	add	r0, sp, #24
-	add	r1, sp, #44
+	bhs	LBB0_167
+@ BB#165:                               @ %clay_reserve(Vector[Char], UInt32).exit.i.i
+	str	r1, [sp, #36]
+	add	r0, sp, #16
+	add	r1, sp, #36
 	bl	"_clay_vectorSetCapacity(Vector[Char], UInt32)"
 	cmp	r0, #0
-	bne	LBB0_212
-@ BB#163:                               @ %clay_reserve(Vector[Char], UInt32).exit.return12_crit_edge.i.i
-	ldr	r0, [sp, #24]
-LBB0_164:                               @ %normal176.i
+	bne	LBB0_207
+@ BB#166:                               @ %clay_reserve(Vector[Char], UInt32).exit.return12_crit_edge.i.i
+	ldr	r0, [sp, #16]
+LBB0_167:                               @ %normal176.i
 	mov	r1, #0
-	ldr	r5, [sp, #32]
+	ldr	r5, [sp, #24]
 	strb	r1, [r5, r0]
 	mov	r3, r5
 	ldr	r1, LCPI0_136
 	
 LPC0_136:
 	add	r0, pc, r1
-	ldr	r1, [r0, #52]
+	ldr	r1, [r0, #56]
 	ldr	r0, LCPI0_137
 	
 LPC0_137:
@@ -1552,26 +1598,26 @@ LPC0_137:
 	bl	_free
 	tst	r6, #255
 	bne	LBB0_185
-@ BB#165:                               @ %ifTrue180.i
+@ BB#168:                               @ %ifTrue180.i
 	ldr	r4, LCPI0_138
 	
 LPC0_138:
 	add	r4, pc, r4
 	ldr	r4, [r4, #128]
-	str	r4, [sp, #36]
+	str	r4, [sp, #28]
 	cmp	r4, #0
-	beq	LBB0_168
-@ BB#166:                               @ %ifTrue180.i
+	beq	LBB0_171
+@ BB#169:                               @ %ifTrue180.i
 	cmp	r4, #1
 	bne	LBB0_173
-@ BB#167:                               @ %ifTrue13.i4.i.i211
+@ BB#170:                               @ %ifTrue13.i4.i.i211
 	ldr	r4, LCPI0_139
 	
 LPC0_139:
 	add	r4, pc, r4
 	ldr	r0, [r4, #140]
 	bl	_free
-LBB0_168:                               @ %clay_destroy(Exception).exit.i.i219
+LBB0_171:                               @ %clay_destroy(Exception).exit.i.i219
 	ldr	r4, LCPI0_140
 	mov	r0, #6
 	ldr	r1, LCPI0_141
@@ -1600,40 +1646,25 @@ LPC0_143:
 	add	r0, r0, #12
 	str	r0, [r4, #152]
 	b	LBB0_10
-@ BB#169:
-	.align	2
-LCPI0_169:
-	.long	L_clayliteral_str28-(LPC0_12+8)
-	 
-@ BB#170:
-	.align	2
-LCPI0_170:
-	.long	L_clayliteral_str40-(LPC0_13+8)
-	 
-@ BB#171:
-	.align	2
-LCPI0_171:
-	.long	L_clayliteral_str51-(LPC0_14+8)
-	 
 @ BB#172:
 	.align	2
 LCPI0_172:
-	.long	L_clayliteral_str60-(LPC0_15+8)
+	.long	L_clayliteral_str57-(LPC0_15+8)
 	 
 LBB0_173:                               @ %ifMerge20.i10.i.i217
 	sub	r0, r4, #2
 	cmp	r0, #2
-	blo	LBB0_168
+	blo	LBB0_171
 @ BB#174:                               @ %ifMerge20.i10.i.i217
 	cmp	r4, #4
 	cmpne	r4, #5
-	beq	LBB0_168
+	beq	LBB0_171
 @ BB#175:                               @ %ifMerge20.i10.i.i217
 	cmp	r4, #6
 	cmpne	r4, #7
-	beq	LBB0_168
+	beq	LBB0_171
 @ BB#176:                               @ %clay_destroy(Exception).exit25.i.i218
-	add	r0, sp, #36
+	add	r0, sp, #28
 	b	LBB0_9
 @ BB#177:
 	.align	2
@@ -1675,7 +1706,7 @@ LCPI0_179:
 LCPI0_180:
 	.long	L_clayliteral_str11-(LPC0_22+8)
 	 
-LBB0_185:                               @ %normal160
+LBB0_185:                               @ %normal162
 	mov	r0, r4
 	bl	_objc_registerClassPair
 	ldr	r0, LCPI0_144
@@ -1689,7 +1720,7 @@ LPC0_144:
 	
 LPC0_145:
 	add	r5, pc, r1
-	str	r0, [r5, #60]
+	str	r0, [r5, #64]
 	ldr	r0, LCPI0_146
 	
 LPC0_146:
@@ -1697,7 +1728,7 @@ LPC0_146:
 	mov	r0, r4
 	bl	_class_getInstanceVariable
 	bl	_ivar_getOffset
-	str	r0, [r5, #72]
+	str	r0, [r5, #76]
 	ldr	r0, LCPI0_147
 	
 LPC0_147:
@@ -1705,34 +1736,34 @@ LPC0_147:
 	mov	r0, r4
 	bl	_class_getInstanceVariable
 	bl	_ivar_getOffset
-	str	r0, [r5, #76]
+	str	r0, [r5, #80]
 	ldr	r0, LCPI0_148
 	
 LPC0_148:
 	add	r0, pc, r0
 	bl	_objc_getClass
 	cmp	r0, #0
-	bne	LBB0_208
-@ BB#186:                               @ %ifTrue.i195
+	bne	LBB0_200
+@ BB#186:                               @ %ifTrue.i
 	ldr	r0, LCPI0_149
 	
 LPC0_149:
 	add	r0, pc, r0
 	ldr	r0, [r0, #128]
-	str	r0, [sp, #20]
+	str	r0, [sp, #8]
 	cmp	r0, #0
 	beq	LBB0_189
-@ BB#187:                               @ %ifTrue.i195
+@ BB#187:                               @ %ifTrue.i
 	cmp	r0, #1
 	bne	LBB0_192
-@ BB#188:                               @ %ifTrue13.i4.i.i197
+@ BB#188:                               @ %ifTrue13.i4.i.i
 	ldr	r0, LCPI0_150
 	
 LPC0_150:
 	add	r0, pc, r0
 	ldr	r0, [r0, #140]
 	bl	_free
-LBB0_189:                               @ %clay_destroy(Exception).exit.i.i205
+LBB0_189:                               @ %clay_destroy(Exception).exit.i.i
 	ldr	r0, LCPI0_151
 	mov	r1, #2
 	ldr	r2, LCPI0_152
@@ -1757,20 +1788,20 @@ LCPI0_181:
 LCPI0_182:
 	.long	L_clayliteral_str15-(LPC0_24+8)
 	 
-LBB0_192:                               @ %ifMerge20.i10.i.i203
+LBB0_192:                               @ %ifMerge20.i10.i.i
 	sub	r1, r0, #2
 	cmp	r1, #2
 	blo	LBB0_189
-@ BB#193:                               @ %ifMerge20.i10.i.i203
+@ BB#193:                               @ %ifMerge20.i10.i.i
 	cmp	r0, #4
 	cmpne	r0, #5
 	beq	LBB0_189
-@ BB#194:                               @ %ifMerge20.i10.i.i203
+@ BB#194:                               @ %ifMerge20.i10.i.i
 	cmp	r0, #6
 	cmpne	r0, #7
 	beq	LBB0_189
-@ BB#195:                               @ %clay_destroy(Exception).exit25.i.i204
-	add	r0, sp, #20
+@ BB#195:                               @ %clay_destroy(Exception).exit25.i.i
+	add	r0, sp, #8
 	b	LBB0_9
 @ BB#196:
 	.align	2
@@ -1792,122 +1823,85 @@ LCPI0_185:
 LCPI0_186:
 	.long	L_clayliteral_str9-(LPC0_35+8)
 	 
-@ BB#200:
-	.align	2
-LCPI0_187:
-	.long	L_clayliteral_str2-(LPC0_36+8)
-	 
-@ BB#201:
-	.align	2
-LCPI0_188:
-	.long	L_clayliteral_str15-(LPC0_37+8)
-	 
-@ BB#202:
-	.align	2
-LCPI0_189:
-	.long	_merged-(LPC0_26+8)
-	 
-@ BB#203:
-	.align	2
-LCPI0_190:
-	.long	_merged-(LPC0_27+8)
-	 
-@ BB#204:
-	.align	2
-LCPI0_191:
-	.long	_merged-(LPC0_28+8)
-	 
-@ BB#205:
-	.align	2
-LCPI0_192:
-	.long	L_clayliteral_str9-(LPC0_29+8)
-	 
-@ BB#206:
-	.align	2
-LCPI0_193:
-	.long	L_clayliteral_str2-(LPC0_30+8)
-	 
-@ BB#207:
-	.align	2
-LCPI0_194:
-	.long	L_clayliteral_str11-(LPC0_31+8)
-	 
-LBB0_208:                               @ %normal162
+LBB0_200:                               @ %normal164
 	ldr	r1, LCPI0_153
 	
 LPC0_153:
 	add	r4, pc, r1
-	str	r0, [r4, #92]
-	mov	r6, #2
+	str	r0, [r4, #96]
 	ldr	r1, LCPI0_154
 	
 LPC0_154:
 	add	r0, pc, r1
 	bl	_sel_registerName
-	str	r0, [r4, #96]
+	str	r0, [r4, #100]
 	ldr	r0, LCPI0_155
 	
 LPC0_155:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #100]
+	str	r0, [r4, #104]
 	ldr	r0, LCPI0_156
 	
 LPC0_156:
 	add	r0, pc, r0
 	bl	_sel_registerName
-	str	r0, [r4, #104]
-	mov	r0, #28
-	orr	r0, r0, #2, 20	@ 8192
-	bl	_malloc
-	mov	r5, r0
-	mov	r0, #1
-	str	r0, [r5]
-	mov	r0, #2
-	bl	_isatty
-	str	r6, [r5, #4]
-	mvn	r2, #0
-	str	r2, [sp, #8]
-	mov	r1, #0
-	cmp	r0, #0
-	strb	r1, [r5, #8]
-	mov	r0, #20
-	orr	r0, r0, #1, 20	@ 4096
-	strb	r1, [sp, #12]
-	mov	r2, #12
-	orr	r2, r2, #1, 20	@ 4096
-	str	r1, [r5, r2]
-	mov	r2, #16
-	orr	r2, r2, #1, 20	@ 4096
-	str	r1, [r5, r2]
-	mov	r2, #24
-	orr	r2, r2, #2, 20	@ 8192
-	str	r1, [r5, r2]
-	movne	r1, #1
-	strb	r1, [r5, r0]
-	add	r0, sp, #8
-	bl	"_clay_destroy(RawFile)"
-	str	r5, [r4, #108]
-	sub	sp, r7, #20
-	ldmia	sp!, {r8, r11}
+	str	r0, [r4, #108]
+	sub	sp, r7, #24
+	ldmia	sp!, {r8, r10, r11}
 	ldmia	sp!, {r4, r5, r6, r7, pc}
-LBB0_209:                               @ %landing131.i
+@ BB#201:
+	.align	2
+LCPI0_187:
+	.long	L_clayliteral_str2-(LPC0_36+8)
+	 
+LBB0_202:                               @ %landing131.i
 	ldr	r0, [sp, #152]
 	bl	_free
 	b	LBB0_10
-LBB0_210:                               @ %landing166.i
+@ BB#203:
+	.align	2
+LCPI0_188:
+	.long	L_clayliteral_str15-(LPC0_37+8)
+	 
+LBB0_204:                               @ %landing165.i
 	ldr	r0, [sp, #136]
 	bl	_free
 	b	LBB0_10
-LBB0_211:                               @ %landing46.i
+LBB0_205:                               @ %landing46.i
 	ldr	r0, [sp, #328]
 	bl	_free
 	b	LBB0_10
-LBB0_212:                               @ %landing175.i
-	ldr	r0, [sp, #32]
+@ BB#206:
+	.align	2
+LCPI0_189:
+	.long	_merged-(LPC0_26+8)
+	 
+LBB0_207:                               @ %landing175.i
+	ldr	r0, [sp, #24]
 	bl	_free
 	b	LBB0_10
-@ BB#213:
+@ BB#208:
+	.align	2
+LCPI0_27:
+	.long	_merged-(LPC0_27+8)
+	 
+	.align	2
+LCPI0_28:
+	.long	_merged-(LPC0_28+8)
+	 
+	.align	2
+LCPI0_29:
+	.long	L_clayliteral_str9-(LPC0_29+8)
+	 
+	.align	2
+LCPI0_30:
+	.long	L_clayliteral_str2-(LPC0_30+8)
+	 
+	.align	2
+LCPI0_31:
+	.long	L_clayliteral_str11-(LPC0_31+8)
+	 
 	.align	2
 LCPI0_38:
 	.long	L_clayliteral_str41-(LPC0_38+8)
@@ -1954,7 +1948,7 @@ LCPI0_48:
 	 
 	.align	2
 LCPI0_49:
-	.long	L_clayliteral_str68-(LPC0_49+8)
+	.long	L_clayliteral_str65-(LPC0_49+8)
 	 
 	.align	2
 LCPI0_50:
@@ -2010,7 +2004,7 @@ LCPI0_62:
 	 
 	.align	2
 LCPI0_63:
-	.long	L_clayliteral_str78-(LPC0_63+8)
+	.long	L_clayliteral_str75-(LPC0_63+8)
 	 
 	.align	2
 LCPI0_64:
@@ -2026,7 +2020,7 @@ LCPI0_66:
 	 
 	.align	2
 LCPI0_67:
-	.long	L_clayliteral_str78-(LPC0_67+8)
+	.long	L_clayliteral_str75-(LPC0_67+8)
 	 
 	.align	2
 LCPI0_68:
@@ -2034,11 +2028,11 @@ LCPI0_68:
 	 
 	.align	2
 LCPI0_69:
-	.long	L_clayliteral_str82-(LPC0_69+8)
+	.long	L_clayliteral_str79-(LPC0_69+8)
 	 
 	.align	2
 LCPI0_70:
-	.long	L_clayliteral_str76-(LPC0_70+8)
+	.long	L_clayliteral_str73-(LPC0_70+8)
 	 
 	.align	2
 LCPI0_71:
@@ -2058,7 +2052,7 @@ LCPI0_74:
 	 
 	.align	2
 LCPI0_75:
-	.long	L_clayliteral_str76-(LPC0_75+8)
+	.long	L_clayliteral_str73-(LPC0_75+8)
 	 
 	.align	2
 LCPI0_76:
@@ -2074,7 +2068,7 @@ LCPI0_78:
 	 
 	.align	2
 LCPI0_79:
-	.long	L_clayliteral_str83-(LPC0_79+8)
+	.long	L_clayliteral_str80-(LPC0_79+8)
 	 
 	.align	2
 LCPI0_80:
@@ -2102,11 +2096,11 @@ LCPI0_85:
 	 
 	.align	2
 LCPI0_86:
-	.long	L_clayliteral_str76-(LPC0_86+8)
+	.long	L_clayliteral_str73-(LPC0_86+8)
 	 
 	.align	2
 LCPI0_87:
-	.long	L_clayliteral_str82-(LPC0_87+8)
+	.long	L_clayliteral_str79-(LPC0_87+8)
 	 
 	.align	2
 LCPI0_88:
@@ -2114,19 +2108,19 @@ LCPI0_88:
 	 
 	.align	2
 LCPI0_89:
-	.long	L_clayliteral_str103-(LPC0_88+8)
+	.long	L_clayliteral_str100-(LPC0_88+8)
 	 
 	.align	2
 LCPI0_90:
-	.long	L_clayliteral_str122-(LPC0_90+8)
+	.long	L_clayliteral_str119-(LPC0_90+8)
 	 
 	.align	2
 LCPI0_91:
-	.long	L_clayliteral_str130-(LPC0_91+8)
+	.long	L_clayliteral_str127-(LPC0_91+8)
 	 
 	.align	2
 LCPI0_92:
-	.long	L_clayliteral_str141-(LPC0_92+8)
+	.long	L_clayliteral_str138-(LPC0_92+8)
 	 
 	.align	2
 LCPI0_93:
@@ -2138,7 +2132,7 @@ LCPI0_94:
 	 
 	.align	2
 LCPI0_95:
-	.long	L_clayliteral_str163-(LPC0_95+8)
+	.long	L_clayliteral_str160-(LPC0_95+8)
 	 
 	.align	2
 LCPI0_96:
@@ -2154,7 +2148,7 @@ LCPI0_98:
 	 
 	.align	2
 LCPI0_99:
-	.long	L_clayliteral_str163-(LPC0_99+8)
+	.long	L_clayliteral_str160-(LPC0_99+8)
 	 
 	.align	2
 LCPI0_100:
@@ -2162,15 +2156,15 @@ LCPI0_100:
 	 
 	.align	2
 LCPI0_101:
-	.long	L_clayliteral_str165-(LPC0_101+8)
+	.long	L_clayliteral_str162-(LPC0_101+8)
 	 
 	.align	2
 LCPI0_102:
-	.long	L_clayliteral_str175-(LPC0_102+8)
+	.long	L_clayliteral_str172-(LPC0_102+8)
 	 
 	.align	2
 LCPI0_103:
-	.long	L_clayliteral_str88-(LPC0_103+8)
+	.long	L_clayliteral_str85-(LPC0_103+8)
 	 
 	.align	2
 LCPI0_104:
@@ -2190,7 +2184,7 @@ LCPI0_107:
 	 
 	.align	2
 LCPI0_108:
-	.long	L_clayliteral_str88-(LPC0_108+8)
+	.long	L_clayliteral_str85-(LPC0_108+8)
 	 
 	.align	2
 LCPI0_109:
@@ -2198,7 +2192,7 @@ LCPI0_109:
 	 
 	.align	2
 LCPI0_110:
-	.long	L_clayliteral_str91-(LPC0_109+8)
+	.long	L_clayliteral_str88-(LPC0_109+8)
 	 
 	.align	2
 LCPI0_111:
@@ -2206,7 +2200,7 @@ LCPI0_111:
 	 
 	.align	2
 LCPI0_112:
-	.long	L_clayliteral_str95-(LPC0_111+8)
+	.long	L_clayliteral_str92-(LPC0_111+8)
 	 
 	.align	2
 LCPI0_113:
@@ -2226,11 +2220,11 @@ LCPI0_116:
 	 
 	.align	2
 LCPI0_117:
-	.long	L_clayliteral_str88-(LPC0_117+8)
+	.long	L_clayliteral_str85-(LPC0_117+8)
 	 
 	.align	2
 LCPI0_118:
-	.long	L_clayliteral_str91-(LPC0_118+8)
+	.long	L_clayliteral_str88-(LPC0_118+8)
 	 
 	.align	2
 LCPI0_119:
@@ -2238,7 +2232,7 @@ LCPI0_119:
 	 
 	.align	2
 LCPI0_120:
-	.long	L_clayliteral_str98-(LPC0_119+8)
+	.long	L_clayliteral_str95-(LPC0_119+8)
 	 
 	.align	2
 LCPI0_121:
@@ -2258,11 +2252,11 @@ LCPI0_124:
 	 
 	.align	2
 LCPI0_125:
-	.long	L_clayliteral_str88-(LPC0_125+8)
+	.long	L_clayliteral_str85-(LPC0_125+8)
 	 
 	.align	2
 LCPI0_126:
-	.long	L_clayliteral_str95-(LPC0_126+8)
+	.long	L_clayliteral_str92-(LPC0_126+8)
 	 
 	.align	2
 LCPI0_127:
@@ -2282,15 +2276,15 @@ LCPI0_130:
 	 
 	.align	2
 LCPI0_131:
-	.long	L_clayliteral_str88-(LPC0_131+8)
+	.long	L_clayliteral_str85-(LPC0_131+8)
 	 
 	.align	2
 LCPI0_132:
-	.long	L_clayliteral_str98-(LPC0_132+8)
+	.long	L_clayliteral_str95-(LPC0_132+8)
 	 
 	.align	2
 LCPI0_133:
-	.long	L_clayliteral_str68-(LPC0_133+8)
+	.long	L_clayliteral_str65-(LPC0_133+8)
 	 
 	.align	2
 LCPI0_134:
@@ -2326,15 +2320,15 @@ LCPI0_141:
 	 
 	.align	2
 LCPI0_142:
-	.long	L_clayliteral_str88-(LPC0_142+8)
+	.long	L_clayliteral_str85-(LPC0_142+8)
 	 
 	.align	2
 LCPI0_143:
-	.long	L_clayliteral_str103-(LPC0_143+8)
+	.long	L_clayliteral_str100-(LPC0_143+8)
 	 
 	.align	2
 LCPI0_144:
-	.long	L_clayliteral_str91-(LPC0_144+8)
+	.long	L_clayliteral_str88-(LPC0_144+8)
 	 
 	.align	2
 LCPI0_145:
@@ -2342,15 +2336,15 @@ LCPI0_145:
 	 
 	.align	2
 LCPI0_146:
-	.long	L_clayliteral_str95-(LPC0_146+8)
+	.long	L_clayliteral_str92-(LPC0_146+8)
 	 
 	.align	2
 LCPI0_147:
-	.long	L_clayliteral_str98-(LPC0_147+8)
+	.long	L_clayliteral_str95-(LPC0_147+8)
 	 
 	.align	2
 LCPI0_148:
-	.long	L_clayliteral_str191-(LPC0_148+8)
+	.long	L_clayliteral_str188-(LPC0_148+8)
 	 
 	.align	2
 LCPI0_149:
@@ -2366,7 +2360,7 @@ LCPI0_151:
 	 
 	.align	2
 LCPI0_152:
-	.long	L_clayliteral_str191-(LPC0_152+8)
+	.long	L_clayliteral_str188-(LPC0_152+8)
 	 
 	.align	2
 LCPI0_153:
@@ -2374,15 +2368,15 @@ LCPI0_153:
 	 
 	.align	2
 LCPI0_154:
-	.long	L_clayliteral_str193-(LPC0_154+8)
+	.long	L_clayliteral_str190-(LPC0_154+8)
 	 
 	.align	2
 LCPI0_155:
-	.long	L_clayliteral_str200-(LPC0_155+8)
+	.long	L_clayliteral_str197-(LPC0_155+8)
 	 
 	.align	2
 LCPI0_156:
-	.long	L_clayliteral_str208-(LPC0_156+8)
+	.long	L_clayliteral_str205-(LPC0_156+8)
 	 
 Leh_func_end0:
 
@@ -2397,7 +2391,7 @@ Leh_func_begin1:
 	
 LPC1_0:
 	add	r0, pc, r0
-	ldr	r4, [r0, #108]
+	ldr	r4, [r0, #40]
 	cmp	r4, #0
 	beq	LBB1_7
 @ BB#1:                                 @ %return10.i
@@ -2432,7 +2426,7 @@ LBB1_5:                                 @ %clay_destroy(FileData).exit.i
 	
 LPC1_1:
 	add	r0, pc, r0
-	ldr	r0, [r0, #108]
+	ldr	r0, [r0, #40]
 	bl	_free
 LBB1_7:                                 @ %clay_destroy(File).exit
 	ldr	r0, LCPI1_2
@@ -2504,10 +2498,10 @@ LPC2_0:
 	add	r5, pc, r2
 	mov	r4, r1
 	str	r0, [r5, #4]
-	ldrd	r0, [r5, #92]
+	ldrd	r0, [r5, #96]
 	add	r7, sp, #12
 	bl	_objc_msgSend
-	ldr	r1, [r5, #100]
+	ldr	r1, [r5, #104]
 	bl	_objc_msgSend
 	mov	r6, r0
 	mov	r2, #0
@@ -2516,7 +2510,7 @@ LPC2_0:
 	mov	r3, r2
 	bl	_UIApplicationMain
 	mov	r4, r0
-	ldr	r1, [r5, #104]
+	ldr	r1, [r5, #108]
 	mov	r0, r6
 	bl	_objc_msgSend
 	mov	r0, r4
@@ -3433,190 +3427,106 @@ LBB10_15:                               @ %landing1
 	b	LBB10_2
 
 	.align	2
-"_clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod])": @ @"clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod])"
+"_clay_release(Pointer[ObjcObject])":   @ @"clay_release(Pointer[ObjcObject])"
 Leh_func_begin11:
-@ BB#0:                                 @ %body
+@ BB#0:                                 @ %init
 	stmdb	sp!, {r4, r5, r7, lr}
 	add	r7, sp, #8
-	sub	sp, sp, #8
+	sub	sp, sp, #104
 	bic	sp, sp, #7
-	ldr	r1, LCPI11_0
+	mov	r4, r0
+	ldr	r0, [r4]
+	cmp	r0, #0
+	beq	LBB11_7
+@ BB#1:                                 @ %ifTrue
+	bl	_object_getClassName
+	mov	r5, r0
+	ldr	r0, LCPI11_0
+	mov	r1, #10
+	strb	r1, [sp]
 	
 LPC11_0:
-	add	r5, pc, r1
-	mov	r4, r0
-	ldr	r0, [r5, #20]
-	ldr	r0, [r4, r0]
-	ldr	r1, [r5, #40]
-	bl	_objc_msgSend
-	ldr	r0, [r5, #16]
-	ldr	r1, [r5, #40]
-	ldr	r0, [r4, r0]
-	bl	_objc_msgSend
-	str	r4, [sp]
-	ldr	r0, [r5, #8]
-	str	r0, [sp, #4]
-	ldr	r1, [r5, #36]
+	add	r0, pc, r0
+	bl	"_clay_write(File, Pointer[UInt8], UInt32)"
+	cmp	r0, #0
+	bne	LBB11_8
+@ BB#2:                                 @ %normal.i.i
+	mov	r0, r5
+	bl	_strlen
+	mov	r1, r0
+	mov	r0, r5
+	bl	"_clay_write(File, Pointer[UInt8], UInt32)"
+	cmp	r0, #0
+	bne	LBB11_8
+@ BB#3:                                 @ %normal2.i.i
+	ldr	r0, LCPI11_1
+	mov	r1, #1
+	
+LPC11_1:
+	add	r0, pc, r0
+	bl	"_clay_write(File, Pointer[UInt8], UInt32)"
+	cmp	r0, #0
+	bne	LBB11_8
+@ BB#4:                                 @ %normal4.i.i
+	ldr	r0, LCPI11_2
+	ldr	r2, [r4]
+	
+LPC11_2:
+	add	r1, pc, r0
+	add	r5, sp, #4
+	mov	r0, r5
+	bl	_sprintf
+	mov	r0, r5
+	bl	_strlen
+	mov	r1, r0
+	mov	r0, r5
+	bl	"_clay_write(File, Pointer[UInt8], UInt32)"
+	cmp	r0, #0
+	bne	LBB11_8
+@ BB#5:                                 @ %clay_printlnTo(File, StringConstant, CStringRef, StringConstant, Pointer[ObjcObject]).exit
 	mov	r0, sp
-	bl	_objc_msgSendSuper
+	mov	r1, #1
+	bl	"_clay_write(File, Pointer[UInt8], UInt32)"
+	cmp	r0, #0
+	bne	LBB11_8
+@ BB#6:                                 @ %normal19
+	ldr	r1, LCPI11_3
+	ldr	r0, [r4]
+	
+LPC11_3:
+	add	r1, pc, r1
+	ldr	r1, [r1, #44]
+	bl	_objc_msgSend
+LBB11_7:                                @ %ifMerge
+	mov	r0, #0
 	sub	sp, r7, #8
 	ldmia	sp!, {r4, r5, r7, pc}
-@ BB#1:
+LBB11_8:                                @ %landing18
+	mov	r0, #1
+	sub	sp, r7, #8
+	ldmia	sp!, {r4, r5, r7, pc}
+@ BB#9:
 	.align	2
 LCPI11_0:
-	.long	_merged-(LPC11_0+8)
+	.long	L_clayliteral_str53-(LPC11_0+8)
+	 
+	.align	2
+LCPI11_1:
+	.long	L_clayliteral_str54-(LPC11_1+8)
+	 
+	.align	2
+LCPI11_2:
+	.long	L_clayliteral_str55-(LPC11_2+8)
+	 
+	.align	2
+LCPI11_3:
+	.long	_merged-(LPC11_3+8)
 	 
 Leh_func_end11:
 
 	.align	2
-"_clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod], Int32)": @ @"clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod], Int32)"
-@ BB#0:                                 @ %body
-	mov	r0, #1
-	bx	lr
-
-	.align	2
-"_clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod], Pointer[ObjcObject])": @ @"clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod], Pointer[ObjcObject])"
-Leh_func_begin13:
-@ BB#0:                                 @ %body
-	stmdb	sp!, {r4, r5, r6, r7, lr}
-	mov	r4, r0
-	ldr	r1, LCPI13_0
-	
-LPC13_0:
-	add	r0, pc, r1
-	add	r7, sp, #12
-	ldr	r1, [r0, #56]
-	mov	r0, r2
-	bl	_objc_msgSend
-	cmp	r0, #3
-	ldmiahi	sp!, {r4, r5, r6, r7, pc}
-	adr	r1, #LJTI13_0_0
-	ldr	r0, [r1, r0, lsl #2]
-	add	pc, r0, r1
-LJTI13_0_0:
-	.set	L13_0_0_set_1,LBB13_1-LJTI13_0_0
-	.long	 L13_0_0_set_1
-	.set	L13_0_0_set_3,LBB13_3-LJTI13_0_0
-	.long	 L13_0_0_set_3
-	.set	L13_0_0_set_4,LBB13_4-LJTI13_0_0
-	.long	 L13_0_0_set_4
-	.set	L13_0_0_set_5,LBB13_5-LJTI13_0_0
-	.long	 L13_0_0_set_5
-LBB13_1:                                @ %ifTrue.i.i
-	ldr	r0, LCPI13_1
-	
-LPC13_1:
-	add	r5, pc, r0
-	ldrd	r0, [r5, #60]
-	ldr	r0, [r4, r0]
-	bl	_objc_msgSend
-	ldr	r1, [r5, #68]
-	bl	_objc_msgSend
-	mov	r6, r0
-	ldr	r0, [r5, #72]
-	ldr	r1, [r5, #64]
-	ldr	r0, [r4, r0]
-	bl	_objc_msgSend
-	ldr	r1, [r5, #68]
-	bl	_objc_msgSend
-	add	r3, r0, r6
-LBB13_2:                                @ %ifTrue.i.i
-	ldr	r0, [r5, #80]
-	ldr	r1, [r5, #84]
-	add	r2, r5, #112
-	ldr	r6, [r5, #76]
-	bl	_objc_msgSend
-	mov	r2, r0
-	ldr	r0, [r4, r6]
-	ldr	r1, [r5, #88]
-	bl	_objc_msgSend
-	ldmia	sp!, {r4, r5, r6, r7, pc}
-LBB13_3:                                @ %ifTrue7.i.i
-	ldr	r0, LCPI13_2
-	
-LPC13_2:
-	add	r5, pc, r0
-	ldrd	r0, [r5, #60]
-	ldr	r0, [r4, r0]
-	bl	_objc_msgSend
-	ldr	r1, [r5, #68]
-	bl	_objc_msgSend
-	mov	r6, r0
-	ldr	r0, [r5, #72]
-	ldr	r1, [r5, #64]
-	ldr	r0, [r4, r0]
-	bl	_objc_msgSend
-	ldr	r1, [r5, #68]
-	bl	_objc_msgSend
-	sub	r3, r6, r0
-	b	LBB13_2
-LBB13_4:                                @ %ifTrue12.i.i
-	ldr	r0, LCPI13_3
-	
-LPC13_3:
-	add	r5, pc, r0
-	ldrd	r0, [r5, #60]
-	ldr	r0, [r4, r0]
-	bl	_objc_msgSend
-	ldr	r1, [r5, #68]
-	bl	_objc_msgSend
-	mov	r6, r0
-	ldr	r0, [r5, #72]
-	ldr	r1, [r5, #64]
-	ldr	r0, [r4, r0]
-	bl	_objc_msgSend
-	ldr	r1, [r5, #68]
-	bl	_objc_msgSend
-	mul	r3, r0, r6
-	b	LBB13_2
-LBB13_5:                                @ %ifTrue17.i.i
-	ldr	r0, LCPI13_4
-	
-LPC13_4:
-	add	r5, pc, r0
-	ldrd	r0, [r5, #60]
-	ldr	r0, [r4, r0]
-	bl	_objc_msgSend
-	ldr	r1, [r5, #68]
-	bl	_objc_msgSend
-	mov	r6, r0
-	ldr	r0, [r5, #72]
-	ldr	r1, [r5, #64]
-	ldr	r0, [r4, r0]
-	bl	_objc_msgSend
-	ldr	r1, [r5, #68]
-	bl	_objc_msgSend
-	mov	r1, r0
-	mov	r0, r6
-	bl	___divsi3
-	mov	r3, r0
-	b	LBB13_2
-@ BB#6:
-	.align	2
-LCPI13_0:
-	.long	_merged-(LPC13_0+8)
-	 
-	.align	2
-LCPI13_1:
-	.long	_merged-(LPC13_1+8)
-	 
-	.align	2
-LCPI13_2:
-	.long	_merged-(LPC13_2+8)
-	 
-	.align	2
-LCPI13_3:
-	.long	_merged-(LPC13_3+8)
-	 
-	.align	2
-LCPI13_4:
-	.long	_merged-(LPC13_4+8)
-	 
-Leh_func_end13:
-
-	.align	2
 "_clay_destroy(RawFile)":               @ @"clay_destroy(RawFile)"
-Leh_func_begin14:
+Leh_func_begin12:
 @ BB#0:                                 @ %init
 	stmdb	sp!, {r4, r7, lr}
 	add	r7, sp, #4
@@ -3624,12 +3534,12 @@ Leh_func_begin14:
 	bic	sp, sp, #7
 	ldrb	r1, [r0, #4]
 	cmp	r1, #0
-	beq	LBB14_7
+	beq	LBB12_7
 @ BB#1:                                 @ %ifTrue
 	ldr	r0, [r0]
 	bl	_close
 	cmn	r0, #1
-	bne	LBB14_7
+	bne	LBB12_7
 @ BB#2:                                 @ %ifTrue9
 	bl	___error
 	ldr	r0, [r0]
@@ -3638,24 +3548,24 @@ Leh_func_begin14:
 	mov	r0, #10
 	strb	r0, [sp]
 	mov	r1, #7
-	ldr	r0, LCPI14_0
+	ldr	r0, LCPI12_0
 	
-LPC14_0:
+LPC12_0:
 	add	r0, pc, r0
 	bl	"_clay_write(File, Pointer[UInt8], UInt32)"
 	cmp	r0, #0
-	beq	LBB14_4
-LBB14_3:                                @ %ifTrue9.clay_errorNoThrow(CStringRef).exit_crit_edge
+	beq	LBB12_4
+LBB12_3:                                @ %ifTrue9.clay_errorNoThrow(CStringRef).exit_crit_edge
 	mov	r4, #0
-	b	LBB14_6
-LBB14_4:                                @ %normal.i.i.i
+	b	LBB12_6
+LBB12_4:                                @ %normal.i.i.i
 	mov	r0, r4
 	bl	_strlen
 	mov	r1, r0
 	mov	r0, r4
 	bl	"_clay_write(File, Pointer[UInt8], UInt32)"
 	cmp	r0, #0
-	bne	LBB14_3
+	bne	LBB12_3
 @ BB#5:                                 @ %normal2.i.i.i
 	mov	r0, sp
 	mov	r1, #1
@@ -3663,65 +3573,65 @@ LBB14_4:                                @ %normal.i.i.i
 	bl	"_clay_write(File, Pointer[UInt8], UInt32)"
 	cmp	r0, #0
 	moveq	r4, #1
-LBB14_6:                                @ %clay_errorNoThrow(CStringRef).exit
+LBB12_6:                                @ %clay_errorNoThrow(CStringRef).exit
 	and	r0, r4, #1
 	eor	r0, r0, #1
 	sub	sp, r7, #4
 	ldmia	sp!, {r4, r7, pc}
-LBB14_7:                                @ %ifMerge
+LBB12_7:                                @ %ifMerge
 	mov	r0, #0
 	sub	sp, r7, #4
 	ldmia	sp!, {r4, r7, pc}
 @ BB#8:
 	.align	2
-LCPI14_0:
-	.long	L_clayliteral_str209-(LPC14_0+8)
+LCPI12_0:
+	.long	L_clayliteral_str52-(LPC12_0+8)
 	 
-Leh_func_end14:
+Leh_func_end12:
 
 	.align	2
 "_clay_write(File, Pointer[UInt8], UInt32)": @ @"clay_write(File, Pointer[UInt8], UInt32)"
-Leh_func_begin15:
+Leh_func_begin13:
 @ BB#0:                                 @ %init
 	stmdb	sp!, {r4, r5, r6, r7, lr}
 	add	r7, sp, #12
 	stmdb	sp!, {r8, r10, r11}
-	ldr	r2, LCPI15_0
+	ldr	r2, LCPI13_0
 	mov	r3, #24
 	orr	r3, r3, #2, 20	@ 8192
 	mov	r10, r0
 	mov	r11, r1
 	mov	r0, #0
 	
-LPC15_0:
+LPC13_0:
 	add	r2, pc, r2
-	ldr	r4, [r2, #108]
+	ldr	r4, [r2, #40]
 	mov	r5, r4
 	ldr	r3, [r5, r3]!
 	add	r2, r4, #21
 	add	r6, r2, #1, 20	@ 4096
 	add	r8, r2, #2, 20	@ 8192
 	add	r3, r6, r3
-LBB15_1:                                @ %whileBegin
+LBB13_1:                                @ %whileBegin
                                         @ =>This Inner Loop Header: Depth=1
 	cmp	r11, #0
-	beq	LBB15_11
+	beq	LBB13_11
 @ BB#2:                                 @ %whileBody
-                                        @   in Loop: Header=BB15_1 Depth=1
+                                        @   in Loop: Header=BB13_1 Depth=1
 	cmp	r3, r8
-	bne	LBB15_7
+	bne	LBB13_7
 @ BB#3:                                 @ %return27
-                                        @   in Loop: Header=BB15_1 Depth=1
+                                        @   in Loop: Header=BB13_1 Depth=1
 	sub	r2, r3, r6
 	str	r2, [r5]
 	cmp	r3, r6
-	bne	LBB15_5
+	bne	LBB13_5
 @ BB#4:                                 @ %return27.ifMerge_crit_edge
-                                        @   in Loop: Header=BB15_1 Depth=1
+                                        @   in Loop: Header=BB13_1 Depth=1
 	mov	r0, #0
-	b	LBB15_6
-LBB15_5:                                @ %return10.i
-                                        @   in Loop: Header=BB15_1 Depth=1
+	b	LBB13_6
+LBB13_5:                                @ %return10.i
+                                        @   in Loop: Header=BB13_1 Depth=1
 	ldr	r0, [r4, #4]
 	mov	r1, r6
 	bl	"_clay_write(RawFile, Pointer[UInt8], UInt32)"
@@ -3731,11 +3641,11 @@ LBB15_5:                                @ %return10.i
 	ldmiane	sp!, {r4, r5, r6, r7, pc}
 	mov	r0, #0
 	str	r0, [r5]
-LBB15_6:                                @ %return18.i
-                                        @   in Loop: Header=BB15_1 Depth=1
+LBB13_6:                                @ %return18.i
+                                        @   in Loop: Header=BB13_1 Depth=1
 	mov	r3, r6
-LBB15_7:                                @ %ifMerge
-                                        @   in Loop: Header=BB15_1 Depth=1
+LBB13_7:                                @ %ifMerge
+                                        @   in Loop: Header=BB13_1 Depth=1
 	ldrb	r1, [r10], #1
 	strb	r1, [r3], #1
 	cmp	r1, #10
@@ -3743,15 +3653,15 @@ LBB15_7:                                @ %ifMerge
 	mov	r1, #0
 	moveq	r1, #1
 	add	r0, r1, r0
-	b	LBB15_1
-LBB15_8:                                @ %ifTrue98
+	b	LBB13_1
+LBB13_8:                                @ %ifTrue98
 	cmp	r3, r6
-	bne	LBB15_10
+	bne	LBB13_10
 @ BB#9:                                 @ %ifTrue98.clay_flushData(FileData).exit7_crit_edge
 	mov	r0, #0
 	ldmia	sp!, {r8, r10, r11}
 	ldmia	sp!, {r4, r5, r6, r7, pc}
-LBB15_10:                               @ %return10.i3
+LBB13_10:                               @ %return10.i3
 	ldr	r0, [r4, #4]
 	mov	r1, r6
 	bl	"_clay_write(RawFile, Pointer[UInt8], UInt32)"
@@ -3761,7 +3671,7 @@ LBB15_10:                               @ %return10.i3
 	movne	r0, #1
 	ldmia	sp!, {r8, r10, r11}
 	ldmia	sp!, {r4, r5, r6, r7, pc}
-LBB15_11:                               @ %return77
+LBB13_11:                               @ %return77
 	cmp	r0, #0
 	sub	r2, r3, r6
 	str	r2, [r5]
@@ -3769,21 +3679,21 @@ LBB15_11:                               @ %return77
 	orrne	r0, r0, #1, 20	@ 4096
 	ldrbne	r0, [r4, r0]
 	tstne	r0, #255
-	bne	LBB15_8
+	bne	LBB13_8
 @ BB#12:                                @ %ifMerge102
 	mov	r0, #0
 	ldmia	sp!, {r8, r10, r11}
 	ldmia	sp!, {r4, r5, r6, r7, pc}
 @ BB#13:
 	.align	2
-LCPI15_0:
-	.long	_merged-(LPC15_0+8)
+LCPI13_0:
+	.long	_merged-(LPC13_0+8)
 	 
-Leh_func_end15:
+Leh_func_end13:
 
 	.align	2
 "_clay_write(RawFile, Pointer[UInt8], UInt32)": @ @"clay_write(RawFile, Pointer[UInt8], UInt32)"
-Leh_func_begin16:
+Leh_func_begin14:
 @ BB#0:                                 @ %init
 	stmdb	sp!, {r4, r5, r6, r7, lr}
 	add	r7, sp, #12
@@ -3792,7 +3702,7 @@ Leh_func_begin16:
 	bic	sp, sp, #7
 	bl	_write
 	cmn	r0, #1
-	bne	LBB16_23
+	bne	LBB14_23
 @ BB#1:                                 @ %ifTrue
 	bl	___error
 	ldr	r0, [r0]
@@ -3805,80 +3715,80 @@ Leh_func_begin16:
 	bl	_strlen
 	mov	r5, r0
 	cmp	r0, #0
-	bne	LBB16_12
-LBB16_2:                                @ %ifTrue.whileBegin.i.i.i_crit_edge
+	bne	LBB14_12
+LBB14_2:                                @ %ifTrue.whileBegin.i.i.i_crit_edge
 	add	r6, sp, #16
-LBB16_3:                                @ %whileBegin.i.i.i
+LBB14_3:                                @ %whileBegin.i.i.i
                                         @ =>This Loop Header: Depth=1
-                                        @     Child Loop BB16_10 Depth 2
+                                        @     Child Loop BB14_10 Depth 2
 	cmp	r5, #0
-	beq	LBB16_15
+	beq	LBB14_15
 @ BB#4:                                 @ %whileBody.i.i.i
-                                        @   in Loop: Header=BB16_3 Depth=1
+                                        @   in Loop: Header=BB14_3 Depth=1
 	ldr	r8, [sp]
 	add	r10, r8, #1
 	ldr	r0, [sp, #4]
 	ldrb	r11, [r4]
 	cmp	r0, r10
-	blo	LBB16_6
+	blo	LBB14_6
 @ BB#5:                                 @ %whileBody.i.i.i.ifMerge.i.i.i_crit_edge
-                                        @   in Loop: Header=BB16_3 Depth=1
+                                        @   in Loop: Header=BB14_3 Depth=1
 	mov	r0, r8
-	b	LBB16_8
-LBB16_6:                                @ %ifTrue.i.i.i
-                                        @   in Loop: Header=BB16_3 Depth=1
+	b	LBB14_8
+LBB14_6:                                @ %ifTrue.i.i.i
+                                        @   in Loop: Header=BB14_3 Depth=1
 	mov	r0, r10, lsl #1
 	str	r0, [sp, #16]
 	mov	r1, r6
 	mov	r0, sp
 	bl	"_clay_vectorSetCapacity(Vector[Char], UInt32)"
 	cmp	r0, #0
-	bne	LBB16_13
+	bne	LBB14_13
 @ BB#7:                                 @ %ifTrue.ifMerge_crit_edge.i.i.i
-                                        @   in Loop: Header=BB16_3 Depth=1
+                                        @   in Loop: Header=BB14_3 Depth=1
 	ldr	r0, [sp]
-LBB16_8:                                @ %ifMerge.i.i.i
-                                        @   in Loop: Header=BB16_3 Depth=1
+LBB14_8:                                @ %ifMerge.i.i.i
+                                        @   in Loop: Header=BB14_3 Depth=1
 	add	r1, r0, #1
 	ldr	r2, [sp, #8]
 	cmp	r1, r10
-	beq	LBB16_11
+	beq	LBB14_11
 @ BB#9:                                 @ %bb.nph.i.i.i.i.i
-                                        @   in Loop: Header=BB16_3 Depth=1
+                                        @   in Loop: Header=BB14_3 Depth=1
 	add	r12, r2, r1
 	add	r0, r2, r0
 	sub	r3, r1, r10
 	add	r12, r12, r8
 	sub	r12, r12, r10
 	sub	r12, r12, #1
-LBB16_10:                               @ %whileBody.i.i.i.i.i
-                                        @   Parent Loop BB16_3 Depth=1
+LBB14_10:                               @ %whileBody.i.i.i.i.i
+                                        @   Parent Loop BB14_3 Depth=1
                                         @ =>  This Inner Loop Header: Depth=2
 	ldrb	lr, [r12], #-1
 	strb	lr, [r0], #-1
 	subs	r3, r3, #1
-	bne	LBB16_10
-LBB16_11:                               @ %normal16.i.i.i
-                                        @   in Loop: Header=BB16_3 Depth=1
+	bne	LBB14_10
+LBB14_11:                               @ %normal16.i.i.i
+                                        @   in Loop: Header=BB14_3 Depth=1
 	str	r1, [sp]
 	strb	r11, [r2, r8]
 	sub	r5, r5, #1
 	add	r4, r4, #1
-	b	LBB16_3
-LBB16_12:                               @ %clay_reserve(Vector[Char], UInt32).exit.i.i.i
+	b	LBB14_3
+LBB14_12:                               @ %clay_reserve(Vector[Char], UInt32).exit.i.i.i
 	mov	r0, sp
 	add	r1, sp, #12
 	str	r5, [sp, #12]
 	bl	"_clay_vectorSetCapacity(Vector[Char], UInt32)"
 	cmp	r0, #0
-	beq	LBB16_2
-LBB16_13:                               @ %landing1.i
+	beq	LBB14_2
+LBB14_13:                               @ %landing1.i
 	ldr	r0, [sp, #8]
-LBB16_14:                               @ %landing1.i
+LBB14_14:                               @ %landing1.i
 	bl	_free
 	mov	r0, #1
-	b	LBB16_24
-LBB16_15:                               @ %normal2.i
+	b	LBB14_24
+LBB14_15:                               @ %normal2.i
 	mov	r0, #0
 	ldr	r6, [sp]
 	ldr	r4, [sp, #8]
@@ -3886,72 +3796,267 @@ LBB16_15:                               @ %normal2.i
 	str	r0, [sp]
 	str	r0, [sp, #4]
 	str	r0, [sp, #8]
-	ldr	r0, LCPI16_0
+	ldr	r0, LCPI14_0
 	
-LPC16_0:
+LPC14_0:
 	add	r0, pc, r0
 	ldr	r0, [r0, #128]
 	str	r0, [sp, #20]
 	cmp	r0, #0
-	beq	LBB16_18
+	beq	LBB14_18
 @ BB#16:                                @ %normal2.i
 	cmp	r0, #1
-	bne	LBB16_19
+	bne	LBB14_19
 @ BB#17:                                @ %ifTrue13.i.i.i
-	ldr	r0, LCPI16_1
+	ldr	r0, LCPI14_1
 	
-LPC16_1:
+LPC14_1:
 	add	r0, pc, r0
 	ldr	r0, [r0, #140]
 	bl	_free
-LBB16_18:                               @ %clay_destroy(Exception).exit17.i
-	ldr	r0, LCPI16_2
+LBB14_18:                               @ %clay_destroy(Exception).exit17.i
+	ldr	r0, LCPI14_2
 	
-LPC16_2:
+LPC14_2:
 	add	r1, pc, r0
 	mov	r0, #1
 	str	r0, [r1, #128]
 	str	r6, [r1, #132]
 	str	r5, [r1, #136]
 	str	r4, [r1, #140]
-	b	LBB16_24
-LBB16_19:                               @ %ifMerge20.i.i.i
+	b	LBB14_24
+LBB14_19:                               @ %ifMerge20.i.i.i
 	sub	r1, r0, #2
 	cmp	r1, #2
-	blo	LBB16_18
+	blo	LBB14_18
 @ BB#20:                                @ %ifMerge20.i.i.i
 	cmp	r0, #4
 	cmpne	r0, #5
-	beq	LBB16_18
+	beq	LBB14_18
 @ BB#21:                                @ %ifMerge20.i.i.i
 	cmp	r0, #6
 	cmpne	r0, #7
-	beq	LBB16_18
+	beq	LBB14_18
 @ BB#22:                                @ %clay_destroy(Exception).exit30.i
 	add	r0, sp, #20
 	bl	"_clay_error(StringConstant, Int32)"
 	mov	r0, r4
-	b	LBB16_14
-LBB16_23:                               @ %ifMerge
+	b	LBB14_14
+LBB14_23:                               @ %ifMerge
 	mov	r0, #0
-LBB16_24:                               @ %ifMerge
+LBB14_24:                               @ %ifMerge
 	sub	sp, r7, #24
 	ldmia	sp!, {r8, r10, r11}
 	ldmia	sp!, {r4, r5, r6, r7, pc}
 @ BB#25:
 	.align	2
-LCPI16_0:
-	.long	_merged-(LPC16_0+8)
+LCPI14_0:
+	.long	_merged-(LPC14_0+8)
 	 
 	.align	2
-LCPI16_1:
-	.long	_merged-(LPC16_1+8)
+LCPI14_1:
+	.long	_merged-(LPC14_1+8)
 	 
 	.align	2
-LCPI16_2:
-	.long	_merged-(LPC16_2+8)
+LCPI14_2:
+	.long	_merged-(LPC14_2+8)
 	 
-Leh_func_end16:
+Leh_func_end14:
+
+	.align	2
+"_clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod])": @ @"clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod])"
+Leh_func_begin15:
+@ BB#0:                                 @ %body
+	stmdb	sp!, {r4, r5, r7, lr}
+	add	r7, sp, #8
+	sub	sp, sp, #8
+	bic	sp, sp, #7
+	mov	r4, r0
+	ldr	r1, LCPI15_0
+	
+LPC15_0:
+	add	r0, pc, r1
+	ldr	r5, [r0, #20]
+	ldr	r0, [r0, #16]
+	add	r0, r4, r0
+	bl	"_clay_release(Pointer[ObjcObject])"
+	cmp	r0, #0
+	bne	LBB15_3
+@ BB#1:                                 @ %normal2.i.i
+	add	r0, r4, r5
+	bl	"_clay_release(Pointer[ObjcObject])"
+	cmp	r0, #0
+	bne	LBB15_3
+@ BB#2:                                 @ %normal4.i.i
+	ldr	r0, LCPI15_1
+	str	r4, [sp]
+	
+LPC15_1:
+	add	r0, pc, r0
+	ldr	r1, [r0, #8]
+	str	r1, [sp, #4]
+	ldr	r1, [r0, #36]
+	mov	r0, sp
+	bl	_objc_msgSendSuper
+LBB15_3:                                @ %clay_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod]).exit
+	sub	sp, r7, #8
+	ldmia	sp!, {r4, r5, r7, pc}
+@ BB#4:
+	.align	2
+LCPI15_0:
+	.long	_merged-(LPC15_0+8)
+	 
+	.align	2
+LCPI15_1:
+	.long	_merged-(LPC15_1+8)
+	 
+Leh_func_end15:
+
+	.align	2
+"_clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod], Int32)": @ @"clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod], Int32)"
+@ BB#0:                                 @ %body
+	mov	r0, #1
+	bx	lr
+
+	.align	2
+"_clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod], Pointer[ObjcObject])": @ @"clay_cwrapper_LambdaProcedure(Pointer[ObjcObject], Pointer[ObjcMethod], Pointer[ObjcObject])"
+Leh_func_begin17:
+@ BB#0:                                 @ %body
+	stmdb	sp!, {r4, r5, r6, r7, lr}
+	mov	r4, r0
+	ldr	r1, LCPI17_0
+	
+LPC17_0:
+	add	r0, pc, r1
+	add	r7, sp, #12
+	ldr	r1, [r0, #60]
+	mov	r0, r2
+	bl	_objc_msgSend
+	cmp	r0, #3
+	ldmiahi	sp!, {r4, r5, r6, r7, pc}
+	adr	r1, #LJTI17_0_0
+	ldr	r0, [r1, r0, lsl #2]
+	add	pc, r0, r1
+LJTI17_0_0:
+	.set	L17_0_0_set_1,LBB17_1-LJTI17_0_0
+	.long	 L17_0_0_set_1
+	.set	L17_0_0_set_3,LBB17_3-LJTI17_0_0
+	.long	 L17_0_0_set_3
+	.set	L17_0_0_set_4,LBB17_4-LJTI17_0_0
+	.long	 L17_0_0_set_4
+	.set	L17_0_0_set_5,LBB17_5-LJTI17_0_0
+	.long	 L17_0_0_set_5
+LBB17_1:                                @ %ifTrue.i.i
+	ldr	r0, LCPI17_1
+	
+LPC17_1:
+	add	r5, pc, r0
+	ldrd	r0, [r5, #64]
+	ldr	r0, [r4, r0]
+	bl	_objc_msgSend
+	ldr	r1, [r5, #72]
+	bl	_objc_msgSend
+	mov	r6, r0
+	ldr	r0, [r5, #76]
+	ldr	r1, [r5, #68]
+	ldr	r0, [r4, r0]
+	bl	_objc_msgSend
+	ldr	r1, [r5, #72]
+	bl	_objc_msgSend
+	add	r3, r0, r6
+LBB17_2:                                @ %ifTrue.i.i
+	ldr	r0, [r5, #84]
+	ldr	r1, [r5, #88]
+	add	r2, r5, #112
+	ldr	r6, [r5, #80]
+	bl	_objc_msgSend
+	mov	r2, r0
+	ldr	r0, [r4, r6]
+	ldr	r1, [r5, #92]
+	bl	_objc_msgSend
+	ldmia	sp!, {r4, r5, r6, r7, pc}
+LBB17_3:                                @ %ifTrue7.i.i
+	ldr	r0, LCPI17_2
+	
+LPC17_2:
+	add	r5, pc, r0
+	ldrd	r0, [r5, #64]
+	ldr	r0, [r4, r0]
+	bl	_objc_msgSend
+	ldr	r1, [r5, #72]
+	bl	_objc_msgSend
+	mov	r6, r0
+	ldr	r0, [r5, #76]
+	ldr	r1, [r5, #68]
+	ldr	r0, [r4, r0]
+	bl	_objc_msgSend
+	ldr	r1, [r5, #72]
+	bl	_objc_msgSend
+	sub	r3, r6, r0
+	b	LBB17_2
+LBB17_4:                                @ %ifTrue12.i.i
+	ldr	r0, LCPI17_3
+	
+LPC17_3:
+	add	r5, pc, r0
+	ldrd	r0, [r5, #64]
+	ldr	r0, [r4, r0]
+	bl	_objc_msgSend
+	ldr	r1, [r5, #72]
+	bl	_objc_msgSend
+	mov	r6, r0
+	ldr	r0, [r5, #76]
+	ldr	r1, [r5, #68]
+	ldr	r0, [r4, r0]
+	bl	_objc_msgSend
+	ldr	r1, [r5, #72]
+	bl	_objc_msgSend
+	mul	r3, r0, r6
+	b	LBB17_2
+LBB17_5:                                @ %ifTrue17.i.i
+	ldr	r0, LCPI17_4
+	
+LPC17_4:
+	add	r5, pc, r0
+	ldrd	r0, [r5, #64]
+	ldr	r0, [r4, r0]
+	bl	_objc_msgSend
+	ldr	r1, [r5, #72]
+	bl	_objc_msgSend
+	mov	r6, r0
+	ldr	r0, [r5, #76]
+	ldr	r1, [r5, #68]
+	ldr	r0, [r4, r0]
+	bl	_objc_msgSend
+	ldr	r1, [r5, #72]
+	bl	_objc_msgSend
+	mov	r1, r0
+	mov	r0, r6
+	bl	___divsi3
+	mov	r3, r0
+	b	LBB17_2
+@ BB#6:
+	.align	2
+LCPI17_0:
+	.long	_merged-(LPC17_0+8)
+	 
+	.align	2
+LCPI17_1:
+	.long	_merged-(LPC17_1+8)
+	 
+	.align	2
+LCPI17_2:
+	.long	_merged-(LPC17_2+8)
+	 
+	.align	2
+LCPI17_3:
+	.long	_merged-(LPC17_3+8)
+	 
+	.align	2
+LCPI17_4:
+	.long	_merged-(LPC17_4+8)
+	 
+Leh_func_end17:
 
 	.section	__TEXT,__cstring,cstring_literals
 	.align	4                       @ @clayliteral_str
@@ -4018,78 +4123,87 @@ L_clayliteral_str43:                    @ @clayliteral_str43
 L_clayliteral_str51:                    @ @clayliteral_str51
 	.asciz	 "dealloc"
 
-L_clayliteral_str60:                    @ @clayliteral_str60
+L_clayliteral_str52:                    @ @clayliteral_str52
+	.asciz	 "error: "
+
+L_clayliteral_str53:                    @ @clayliteral_str53
+	.asciz	 "releasing "
+
+L_clayliteral_str54:                    @ @clayliteral_str54
+	.asciz	 " "
+
+L_clayliteral_str55:                    @ @clayliteral_str55
+	.asciz	 "%p"
+
+L_clayliteral_str57:                    @ @clayliteral_str57
 	.asciz	 "release"
 
-L_clayliteral_str68:                    @ @clayliteral_str68
+L_clayliteral_str65:                    @ @clayliteral_str65
 	.asciz	 "v"
 
-	.align	4                       @ @clayliteral_str76
-L_clayliteral_str76:
+	.align	4                       @ @clayliteral_str73
+L_clayliteral_str73:
 	.asciz	 "ExampleViewController"
 
-	.align	4                       @ @clayliteral_str78
-L_clayliteral_str78:
+	.align	4                       @ @clayliteral_str75
+L_clayliteral_str75:
 	.asciz	 "UIViewController"
 
-	.align	4                       @ @clayliteral_str82
-L_clayliteral_str82:
+	.align	4                       @ @clayliteral_str79
+L_clayliteral_str79:
 	.asciz	 "shouldAutorotateToInterfaceOrientation:"
 
-L_clayliteral_str83:                    @ @clayliteral_str83
+L_clayliteral_str80:                    @ @clayliteral_str80
 	.asciz	 "i"
 
-	.align	4                       @ @clayliteral_str88
-L_clayliteral_str88:
+	.align	4                       @ @clayliteral_str85
+L_clayliteral_str85:
 	.asciz	 "ExampleController"
 
-L_clayliteral_str91:                    @ @clayliteral_str91
+L_clayliteral_str88:                    @ @clayliteral_str88
 	.asciz	 "leftField"
 
-L_clayliteral_str95:                    @ @clayliteral_str95
+L_clayliteral_str92:                    @ @clayliteral_str92
 	.asciz	 "rightField"
 
-L_clayliteral_str98:                    @ @clayliteral_str98
+L_clayliteral_str95:                    @ @clayliteral_str95
 	.asciz	 "resultLabel"
 
-L_clayliteral_str103:                   @ @clayliteral_str103
+L_clayliteral_str100:                   @ @clayliteral_str100
 	.asciz	 "performMath:"
 
-	.align	4                       @ @clayliteral_str122
-L_clayliteral_str122:
+	.align	4                       @ @clayliteral_str119
+L_clayliteral_str119:
 	.asciz	 "selectedSegmentIndex"
 
-L_clayliteral_str130:                   @ @clayliteral_str130
+L_clayliteral_str127:                   @ @clayliteral_str127
 	.asciz	 "text"
 
-L_clayliteral_str141:                   @ @clayliteral_str141
+L_clayliteral_str138:                   @ @clayliteral_str138
 	.asciz	 "intValue"
 
-L_clayliteral_str163:                   @ @clayliteral_str163
+L_clayliteral_str160:                   @ @clayliteral_str160
 	.asciz	 "NSString"
 
-	.align	4                       @ @clayliteral_str165
-L_clayliteral_str165:
+	.align	4                       @ @clayliteral_str162
+L_clayliteral_str162:
 	.asciz	 "stringWithFormat:"
 
-L_clayliteral_str175:                   @ @clayliteral_str175
+L_clayliteral_str172:                   @ @clayliteral_str172
 	.asciz	 "setText:"
 
-	.align	4                       @ @clayliteral_str191
-L_clayliteral_str191:
+	.align	4                       @ @clayliteral_str188
+L_clayliteral_str188:
 	.asciz	 "NSAutoreleasePool"
 
-L_clayliteral_str193:                   @ @clayliteral_str193
+L_clayliteral_str190:                   @ @clayliteral_str190
 	.asciz	 "alloc"
 
-L_clayliteral_str200:                   @ @clayliteral_str200
+L_clayliteral_str197:                   @ @clayliteral_str197
 	.asciz	 "init"
 
-L_clayliteral_str208:                   @ @clayliteral_str208
+L_clayliteral_str205:                   @ @clayliteral_str205
 	.asciz	 "drain"
-
-L_clayliteral_str209:                   @ @clayliteral_str209
-	.asciz	 "error: "
 
 .zerofill __DATA,__bss,_merged,156,4    @ @merged
                                         @ @merged
