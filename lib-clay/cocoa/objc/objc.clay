@@ -200,7 +200,7 @@ record Retained[O] (__handle__: ObjectHandle);
 
 // copying managed <-> unmanaged
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload Retained[O1](obj: O2) = Retained[O1](retain(obj.__handle__));
+overload Retained[O1](obj: O2) = Retained[O1](obj.__handle__);
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
 overload O1(obj: Retained[O2]) = O1(obj.__handle__);
 
@@ -223,7 +223,7 @@ overload Retained(forward obj: Retained[O]) = Retained[O](obj);
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
 overload assign(left: Retained[O1], right: O2) {
     var oldHandle = left.__handle__;
-    left.__handle__ = retain(right.__handle__);
+    left.__handle__ = right.__handle__;
     release(oldHandle);
 }
 [O1, O2 | AssignableObjectTypes?(O1, O2)]

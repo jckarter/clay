@@ -1016,14 +1016,29 @@ LPC0_92:
 	ldr	r0, LCPI0_93
 	
 LPC0_93:
+	ldr	r0, [pc, r0]
+	str	r0, [r4, #112]
+	mov	r0, #242, 30	@ 968
+	orr	r0, r0, #1, 22	@ 1024
+	str	r0, [r4, #116]
+	ldr	r0, LCPI0_94
+	
+LPC0_94:
+	add	r0, pc, r0
+	str	r0, [r4, #120]
+	mov	r0, #2
+	str	r0, [r4, #124]
+	ldr	r0, LCPI0_95
+	
+LPC0_95:
 	add	r0, pc, r0
 	bl	_objc_getClass
 	cmp	r0, #0
 	bne	LBB0_110
 @ BB#102:                               @ %ifTrue.i286
-	ldr	r0, LCPI0_94
+	ldr	r0, LCPI0_96
 	
-LPC0_94:
+LPC0_96:
 	add	r0, pc, r0
 	ldr	r0, [r0, #128]
 	str	r0, [sp, #408]
@@ -1033,22 +1048,22 @@ LPC0_94:
 	cmp	r0, #1
 	bne	LBB0_106
 @ BB#104:                               @ %ifTrue13.i4.i.i288
-	ldr	r0, LCPI0_95
+	ldr	r0, LCPI0_97
 	
-LPC0_95:
+LPC0_97:
 	add	r0, pc, r0
 	ldr	r0, [r0, #140]
 	bl	_free
 LBB0_105:                               @ %clay_destroy(Exception).exit.i.i296
-	ldr	r0, LCPI0_96
+	ldr	r0, LCPI0_98
 	mov	r1, #2
-	ldr	r2, LCPI0_97
+	ldr	r2, LCPI0_99
 	
-LPC0_96:
+LPC0_98:
 	add	r0, pc, r0
 	str	r1, [r0, #128]
 	
-LPC0_97:
+LPC0_99:
 	add	r1, pc, r2
 	str	r1, [r0, #132]
 	add	r1, r1, #8
@@ -1069,31 +1084,16 @@ LBB0_106:                               @ %ifMerge20.i10.i.i294
 @ BB#109:                               @ %clay_destroy(Exception).exit25.i.i295
 	add	r0, sp, #102, 30	@ 408
 	b	LBB0_9
-LBB0_110:                               @ %normal123
-	ldr	r1, LCPI0_98
-	
-LPC0_98:
-	add	r4, pc, r1
-	str	r0, [r4, #80]
-	ldr	r1, LCPI0_99
-	
-LPC0_99:
-	ldr	r0, [pc, r1]
-	str	r0, [r4, #112]
-	mov	r0, #242, 30	@ 968
-	orr	r0, r0, #1, 22	@ 1024
-	str	r0, [r4, #116]
-	ldr	r0, LCPI0_100
+LBB0_110:                               @ %normal134
+	ldr	r1, LCPI0_100
 	
 LPC0_100:
-	add	r0, pc, r0
-	str	r0, [r4, #120]
-	mov	r0, #2
-	str	r0, [r4, #124]
-	ldr	r0, LCPI0_101
+	add	r4, pc, r1
+	str	r0, [r4, #80]
+	ldr	r1, LCPI0_101
 	
 LPC0_101:
-	add	r0, pc, r0
+	add	r0, pc, r1
 	bl	_sel_registerName
 	str	r0, [r4, #84]
 	ldr	r0, LCPI0_102
@@ -2130,15 +2130,15 @@ LCPI0_92:
 	 
 	.align	2
 LCPI0_93:
-	.long	L_clayliteral_str146-(LPC0_93+8)
+	.long	L___CFConstantStringClassReference$non_lazy_ptr-(LPC0_93+8)
 	 
 	.align	2
 LCPI0_94:
-	.long	_merged-(LPC0_94+8)
+	.long	L_clayliteral_str8-(LPC0_94+8)
 	 
 	.align	2
 LCPI0_95:
-	.long	_merged-(LPC0_95+8)
+	.long	L_clayliteral_str163-(LPC0_95+8)
 	 
 	.align	2
 LCPI0_96:
@@ -2146,7 +2146,7 @@ LCPI0_96:
 	 
 	.align	2
 LCPI0_97:
-	.long	L_clayliteral_str146-(LPC0_97+8)
+	.long	_merged-(LPC0_97+8)
 	 
 	.align	2
 LCPI0_98:
@@ -2154,11 +2154,11 @@ LCPI0_98:
 	 
 	.align	2
 LCPI0_99:
-	.long	L___CFConstantStringClassReference$non_lazy_ptr-(LPC0_99+8)
+	.long	L_clayliteral_str163-(LPC0_99+8)
 	 
 	.align	2
 LCPI0_100:
-	.long	L_clayliteral_str8-(LPC0_100+8)
+	.long	_merged-(LPC0_100+8)
 	 
 	.align	2
 LCPI0_101:
@@ -2350,7 +2350,7 @@ LCPI0_147:
 	 
 	.align	2
 LCPI0_148:
-	.long	L_clayliteral_str186-(LPC0_148+8)
+	.long	L_clayliteral_str191-(LPC0_148+8)
 	 
 	.align	2
 LCPI0_149:
@@ -2366,7 +2366,7 @@ LCPI0_151:
 	 
 	.align	2
 LCPI0_152:
-	.long	L_clayliteral_str186-(LPC0_152+8)
+	.long	L_clayliteral_str191-(LPC0_152+8)
 	 
 	.align	2
 LCPI0_153:
@@ -3187,16 +3187,15 @@ Leh_func_begin7:
 LPC7_0:
 	add	r5, pc, r1
 	mov	r4, r0
-	ldr	r0, [r5, #16]
-	ldr	r2, [r5, #20]
-	ldr	r6, [r4, r0]
+	ldr	r0, [r5, #20]
+	ldr	r6, [r5, #16]
 	add	r7, sp, #12
 	ldr	r1, [r5, #24]
-	ldr	r0, [r4, r2]
+	ldr	r0, [r4, r0]
 	bl	_objc_msgSend
 	mov	r2, r0
+	ldr	r0, [r4, r6]
 	ldr	r1, [r5, #28]
-	mov	r0, r6
 	bl	_objc_msgSend
 	ldr	r0, [r5, #16]
 	ldr	r1, [r5, #32]
@@ -3454,10 +3453,10 @@ LPC11_0:
 	ldr	r1, [r5, #40]
 	ldr	r0, [r4, r0]
 	bl	_objc_msgSend
+	str	r4, [sp]
 	ldr	r0, [r5, #8]
 	str	r0, [sp, #4]
 	ldr	r1, [r5, #36]
-	str	r4, [sp]
 	mov	r0, sp
 	bl	_objc_msgSendSuper
 	sub	sp, r7, #8
@@ -3522,15 +3521,14 @@ LPC13_1:
 	bl	_objc_msgSend
 	add	r3, r0, r6
 LBB13_2:                                @ %ifTrue.i.i
-	ldr	r2, [r5, #76]
-	ldr	r4, [r4, r2]
 	ldr	r0, [r5, #80]
 	ldr	r1, [r5, #84]
 	add	r2, r5, #112
+	ldr	r6, [r5, #76]
 	bl	_objc_msgSend
 	mov	r2, r0
+	ldr	r0, [r4, r6]
 	ldr	r1, [r5, #88]
-	mov	r0, r4
 	bl	_objc_msgSend
 	ldmia	sp!, {r4, r5, r6, r7, pc}
 LBB13_3:                                @ %ifTrue7.i.i
@@ -4067,7 +4065,7 @@ L_clayliteral_str130:                   @ @clayliteral_str130
 L_clayliteral_str141:                   @ @clayliteral_str141
 	.asciz	 "intValue"
 
-L_clayliteral_str146:                   @ @clayliteral_str146
+L_clayliteral_str163:                   @ @clayliteral_str163
 	.asciz	 "NSString"
 
 	.align	4                       @ @clayliteral_str165
@@ -4077,8 +4075,8 @@ L_clayliteral_str165:
 L_clayliteral_str175:                   @ @clayliteral_str175
 	.asciz	 "setText:"
 
-	.align	4                       @ @clayliteral_str186
-L_clayliteral_str186:
+	.align	4                       @ @clayliteral_str191
+L_clayliteral_str191:
 	.asciz	 "NSAutoreleasePool"
 
 L_clayliteral_str193:                   @ @clayliteral_str193
