@@ -15,8 +15,9 @@ overload selector(static #"copy") = Id;
 overload selector(static #"copyWithZone:") = Id, NSZone;
 overload selector(static #"mutableCopy") = Id;
 overload selector(static #"retain") = Id;
-overload selector(static #"release") = Id;
+overload selector(static #"release") = Void;
 overload selector(static #"autorelease") = Id;
+overload selector(static #"dealloc") = Void;
 
 overload selector(static #"stringWithUTF8String:") = Id, Pointer[CChar];
 overload selector(static #"initWithUTF8String:") = Id, Pointer[CChar];
@@ -58,6 +59,7 @@ overload externalInstanceMethod(static NSString, static #"description")
     = NSString;
 
 record NSMutableString = externalClass(NSString);
+record NSAutoreleasePool = externalClass(NSObject);
 
 record MyNSNumber = externalClass(#"NSNumber", NSString);
 
@@ -481,37 +483,26 @@ main() = testMain(TestSuite("Objective-C binding internals", [
             SelectorReturnType(Static[NSObject], #"init")
         );
     }),
-    PendingTestCase("return types of message expressions", test => {
+    TestCase("return types of message expressions", test => {
         var id = nil(Id);
         var object = nil(NSObject);
         var string = nil(NSString);
-        var rId = nil(Retained[Id]);
-        var rObject = nil(Retained[NSObject]);
-        var rString = nil(Retained[NSString]);
 
-        expectType(test, "NSObject.alloc().init()", Retained[NSObject], NSObject.alloc().init());
-        expectType(test, "NSString.alloc().init()", Retained[NSString], NSString.alloc().init());
+        expectType(test, "NSObject.alloc().init()", NSObject, NSObject.alloc().init());
+        expectType(test, "NSString.alloc().init()", NSString, NSString.alloc().init());
 
         expectType(test, "id.init()", Id, id.init());
         expectType(test, "object.init()", NSObject, object.init());
         expectType(test, "string.init()", NSString, string.init());
         expectType(test, "super(string).init()", NSString, string.init());
 
-        expectType(test, "rId.init()", Retained[Id], rId.init());
-        expectType(test, "rObject.init()", Retained[NSObject], rObject.init());
-        expectType(test, "rString.init()", Retained[NSString], rString.init());
-
         expectType(test, "id.init().autorelease()", Id, id.init().autorelease());
         expectType(test, "object.init().autorelease()", NSObject, object.init().autorelease());
         expectType(test, "string.init().autorelease()", NSString, string.init().autorelease());
 
-        expectType(test, "rId.init().autorelease()", Id, rId.init().autorelease());
-        expectType(test, "rObject.init().autorelease()", NSObject, rObject.init().autorelease());
-        expectType(test, "rString.init().autorelease()", NSString, rString.init().autorelease());
-
-        expectType(test, "object.class().alloc().init()", Retained[Id],
+        expectType(test, "object.class().alloc().init()", Id,
             object.class().alloc().init());
-        expectType(test, "object.class().alloc().init().autorelease()", Retained[Id],
+        expectType(test, "object.class().alloc().init().autorelease()", Id,
             object.class().alloc().init());
     }),
     TestCase("msgSendBox1 type", test => {
@@ -644,6 +635,20 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         );
         expectEqual(test, "string", "Hello", CStringRef(stringFields^.string));
         expectEqual(test, "length", 5, stringFields^.length);
+    }),
+    TestCase("Retained memory management", test => {
+        var pool = NSAutoreleasePool.alloc().init();
+
+        // construction from unretained reference
+        var x = Retained(CocoaCanary.alloc().init());
+        var y = Retained(x.copy());
+        // copy construction
+        var z = x;
+
+        // rvalue message expression
+        Retained(CocoaCanary.alloc()).init();
+
+        pool.drain();
     }),
 ]));
 
