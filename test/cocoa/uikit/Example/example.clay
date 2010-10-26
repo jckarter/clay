@@ -5,8 +5,8 @@ overload selector(static #"performMath:") = Void, UISegmentedControl;
 
 record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
     InstanceVars(
-        (#window, IBOutlet(UIWindow)),
-        (#viewController, IBOutlet(ExampleViewController)),
+        (#window, IBOutlet(Retained[UIWindow])),
+        (#viewController, IBOutlet(Retained[ExampleViewController])),
     ),
     ClassMethods(),
     InstanceMethods(
@@ -14,11 +14,7 @@ record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
             self^.window.addSubview(self^.viewController.view());
             self^.window.makeKeyAndVisible();
         }),
-        (#"dealloc", (self) => {
-            self^.viewController.release();
-            self^.window.release();
-            super(self).dealloc();
-        }),
+        DeallocInstanceMethod(),
     ),
 );
 
@@ -62,7 +58,7 @@ record ExampleController = newClass(#"ExampleController", NSObject,
 _performMath(self, fn) {
     var left = self^.leftField.text().intValue();
     var right = self^.rightField.text().intValue();
-    self^.resultLabel.setText(NSString.stringWithFormat(NSSTR(#"%d"), fn(left, right)));
+    self^.resultLabel.setText(NSString.stringWithFormat(NSString(#"%d"), fn(left, right)));
 }
 
 main() = uiKitMain(ExampleAppDelegate, ExampleViewController, ExampleController);
