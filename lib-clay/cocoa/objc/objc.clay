@@ -124,11 +124,11 @@ objectParameter(forward x: T) = forward ObjectParameterType(T)(objectHandle(x));
 // reference counting methods
 //
 
-release(x) {
+private release(x) {
     printlnTo(stderr, "releasing ", CStringRef(object_getClassName(objectHandle(x))), " ", x);
-    return objc_msgSend(objectHandle(x), objcSelector[#release]);
+    objc_msgSend(objectHandle(x), objcSelector[#release]);
 }
-retain(x) {
+private retain(x) {
     printlnTo(stderr, "retaining ", CStringRef(object_getClassName(objectHandle(x))), " ", x);
     return objc_msgSend(objectHandle(x), objcSelector[#retain]);
 }
@@ -154,7 +154,10 @@ ObjectType?(T) = false;
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
 overload O1(obj: O2) = O1(obj.__handle__);
 
-[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+private AssignableObjectTypes?(O1, O2)
+    = ObjectType?(O1) and ObjectType?(O2);
+
+[O1, O2 | AssignableObjectTypes?(O1, O2)]
 overload assign(left: O1, right: O2) {
     left.__handle__ = right.__handle__;
 }
@@ -166,7 +169,7 @@ overload destroy(obj: O) { }
 overload moveUnsafe(obj: O) = O(obj.__handle__);
 
 [O | ObjectType?(O)] 
-overload resetUnsafe(obj: O) { obj.__handle__ = nilHandle; }
+overload resetUnsafe(obj: O) { }
 
 
 
@@ -183,40 +186,71 @@ overload nil() = nil(Id);
 
 
 //
-// weak object reference
+// managed object references
 //
 
-record Weak[O] (__handle__: ObjectHandle);
+record Retained[O] (__handle__: ObjectHandle);
 
-[O | ObjectType?(O)] overload objectHandle(obj: Weak[O]) = obj.__handle__;
-[O | ObjectType?(O)] overload ObjectParameterType(static Weak[O]) = O;
+[O | ObjectType?(O)] overload objectHandle(obj: Retained[O]) = obj.__handle__;
+[O | ObjectType?(O)] overload ObjectParameterType(static Retained[O]) = O;
 
+// copying managed <-> unmanaged
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload O1(obj: Weak[O2]) = O1(retain(obj.__handle__));
+overload Retained[O1](obj: O2) = Retained[O1](retain(obj.__handle__));
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload O1(obj: Retained[O2]) = O1(obj.__handle__);
+
+// copying managed to managed
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload Retained[O1](lvalue obj: Retained[O2]) = Retained[O1](retain(obj.__handle__));
+[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
+overload Retained[O1](rvalue obj: Retained[O2]) r: Retained[O1] {
+    r.__handle__ <-- obj.__handle__;
+    resetUnsafe(obj);
+}
+
+// shorthand copying
 [O | ObjectType?(O)]
-overload Weak(obj: O) = Weak[O](obj.__handle__);
-[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload Weak[O1](obj: O2) = Weak[O1](obj.__handle__);
+overload Retained(obj: O) = Retained[O](obj);
+[O | ObjectType?(O)]
+overload Retained(forward obj: Retained[O]) = Retained[O](obj);
 
-[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload assign(left: O1, right: Weak[O2]) {
+// assigning managed <-> unmanaged
+[O1, O2 | AssignableObjectTypes?(O1, O2)]
+overload assign(left: Retained[O1], right: O2) {
     var oldHandle = left.__handle__;
     left.__handle__ = retain(right.__handle__);
     release(oldHandle);
 }
-[O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload assign(left: Weak[O1], right: O2) {
+[O1, O2 | AssignableObjectTypes?(O1, O2)]
+overload assign(left: O1, right: Retained[O2]) {
     left.__handle__ = right.__handle__;
 }
 
-[O | ObjectType?(O)] 
-overload destroy(obj: Weak[O]) { }
+// assigning managed to managed
+[O1, O2 | AssignableObjectTypes?(O1, O2)]
+overload assign(left: Retained[O1], lvalue right: Retained[O2]) {
+    var oldHandle = left.__handle__;
+    left.__handle__ = retain(right.__handle__);
+    release(oldHandle);
+}
+// assigning managed to managed
+[O1, O2 | AssignableObjectTypes?(O1, O2)]
+overload assign(left: Retained[O1], rvalue right: Retained[O2]) {
+    var oldHandle = left.__handle__;
+    left.__handle__ = right.__handle__;
+    resetUnsafe(right);
+    release(oldHandle);
+}
 
 [O | ObjectType?(O)] 
-overload moveUnsafe(obj: Weak[O]) = Weak[O](obj.__handle__);
+overload destroy(obj: Retained[O]) { release(obj.__handle__); }
 
 [O | ObjectType?(O)] 
-overload resetUnsafe(obj: Weak[O]) { }
+overload moveUnsafe(obj: Retained[O]) = Retained[O](obj.__handle__);
+
+[O | ObjectType?(O)] 
+overload resetUnsafe(obj: Retained[O]) { obj.__handle__ = nilHandle; }
 
 
 
@@ -287,6 +321,7 @@ overload ClassIvarType(static T, static name) = firstValue(...assocValue(name, .
 
 ClassIvarNames(T) = ...mapValues(ivar => ivar.0, ...ClassInstanceVars(T));
 ClassIvarTypes(T) = ...mapValues(ivar => ivar.1, ...ClassInstanceVars(T));
+
 
 
 //
@@ -608,11 +643,16 @@ SelectorArgumentTypes(static T, static sel) = ...restValues(...Selector(T, sel))
 // retaining and forwarding selectors
 //
 
-RetainingSelector?(sel) = false;
+AllocatingSelector?(sel) = false;
 [sel |
     IdentifierStartsWith?(sel, #"alloc")
     or IdentifierStartsWith?(sel, #"new")
-    or IdentifierStartsWith?(sel, #"copy")
+]
+overload AllocatingSelector?(static sel) = true;
+
+RetainingSelector?(sel) = false;
+[sel |
+    IdentifierStartsWith?(sel, #"copy")
     or IdentifierStartsWith?(sel, #"mutableCopy")
     or sel == #"retain"
 ]
@@ -621,6 +661,12 @@ overload RetainingSelector?(static sel) = true;
 ForwardingSelector?(sel) = false;
 [sel | IdentifierStartsWith?(sel, #"init")]
 overload ForwardingSelector?(static sel) = true;
+
+[T, sel | Class?(T) and AllocatingSelector?(sel)]
+overload SelectorReturnType(static Static[T], static sel) = T;
+
+[T, sel | ObjectType?(T) and (RetainingSelector?(sel) or ForwardingSelector?(sel))]
+overload SelectorReturnType(static T, static sel) = T;
 
 
 
@@ -632,7 +678,7 @@ ObjectRef?(T) = false;
 [T | ObjectType?(T)]
 overload ObjectRef?(static T) = true;
 [T | ObjectType?(T)]
-overload ObjectRef?(static Weak[T]) = true;
+overload ObjectRef?(static Retained[T]) = true;
 
 MsgSendCompatible?(ParamType, ValueType) = false;
 
@@ -652,7 +698,7 @@ overload MsgSendCompatible?(static Param, static Value) = true;
 overload MsgSendCompatible?(static Id, static Value) = true;
 
 [Value | ObjectParameterType?(Value)]
-overload MsgSendCompatible?(static Weak[Id], static Value) = true;
+overload MsgSendCompatible?(static Retained[Id], static Value) = true;
 
 
 // XXX selector container
@@ -906,7 +952,7 @@ private record IvarsRef[T] (__handle__: ObjectHandle);
 [T | Class?(T)]
 overload dereference(obj: T) = IvarsRef[T](objectHandle(obj));
 [T | Class?(T)]
-overload dereference(obj: Weak[T]) = IvarsRef[T](objectHandle(obj));
+overload dereference(obj: Retained[T]) = IvarsRef[T](objectHandle(obj));
 
 [T, ivar | Class?(T) and ivar != #__handle__]
 overload fieldRef(ivars: IvarsRef[T], static ivar)
@@ -926,7 +972,7 @@ private record SuperRef[T] (__handle__: ObjectHandle);
 super(obj: T) = SuperRef[T](objectHandle(obj));
 
 [T | Class?(T) and SuperclassType(T) != Void]
-overload super(obj: Weak[T]) = SuperRef[T](objectHandle(obj));
+overload super(obj: Retained[T]) = SuperRef[T](objectHandle(obj));
 
 private record SuperMethodRef[T, identifier] (super: ObjcSuper);
 
