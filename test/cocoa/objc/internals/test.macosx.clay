@@ -145,19 +145,19 @@ _expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
 [ParamType | ObjectType?(ParamType)]
 overload _expectMsgSendCompatible(expectTF, test, static ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
-    __expectMsgSendCompatible(expectTF, test, Weak[ParamType], ValueType);
+    __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
 }
 [ValueType | ObjectType?(ValueType)]
 overload _expectMsgSendCompatible(expectTF, test, ParamType, static ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
-    __expectMsgSendCompatible(expectTF, test, ParamType, Weak[ValueType]);
+    __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
 }
 [ParamType, ValueType | ObjectType?(ParamType) and ObjectType?(ValueType)]
 overload _expectMsgSendCompatible(expectTF, test, static ParamType, static ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
-    __expectMsgSendCompatible(expectTF, test, Weak[ParamType], ValueType);
-    __expectMsgSendCompatible(expectTF, test, ParamType, Weak[ValueType]);
-    __expectMsgSendCompatible(expectTF, test, Weak[ParamType], Weak[ValueType]);
+    __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
+    __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
+    __expectMsgSendCompatible(expectTF, test, Retained[ParamType], Retained[ValueType]);
 }
 
 expectMsgSendCompatible(test, ParamType, ValueType) {
@@ -394,23 +394,59 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         expectType(test, "SubSubString^.foo", Int, nil(SubSubString)^.foo);
         expectType(test, "SubSubString^.bar", StringConstant, nil(SubSubString)^.bar);
     }),
-    TestCase("retaining selectors", test => {
-        expectTrue(test, "alloc", RetainingSelector?(#"alloc"));
-        expectTrue(test, "allocWithZone:", RetainingSelector?(#"allocWithZone:"));
+    TestCase("special selectors", test => {
+        expectTrue(test, "alloc", AllocatingSelector?(#"alloc"));
+        expectTrue(test, "allocWithZone:", AllocatingSelector?(#"allocWithZone:"));
+        expectTrue(test, "new", AllocatingSelector?(#"new"));
+
+        expectTrue(test, "retain", RetainingSelector?(#"retain"));
         expectTrue(test, "copy", RetainingSelector?(#"copy"));
         expectTrue(test, "copyWithZone:", RetainingSelector?(#"copyWithZone:"));
         expectTrue(test, "mutableCopy", RetainingSelector?(#"mutableCopy"));
-        expectTrue(test, "retain", RetainingSelector?(#"retain"));
-        expectTrue(test, "new", RetainingSelector?(#"new"));
+        expectTrue(test, "mutableCopyWithZone", RetainingSelector?(#"mutableCopy"));
 
-        expectFalse(test, "description", RetainingSelector?(#"description"));
-        expectFalse(test, "initWithFormat:", RetainingSelector?(#"initWithFormat:"));
-        expectFalse(test, "stringWithFormat:", RetainingSelector?(#"stringWithFormat:"));
-    }),
-    TestCase("forwarding selectors", test => {
         expectTrue(test, "init", ForwardingSelector?(#"init"));
         expectTrue(test, "initWithFormat:", ForwardingSelector?(#"initWithFormat:"));
-        expectFalse(test, "stringWithFormat:", ForwardingSelector?(#"stringWithFormat:"));
+    }),
+    TestCase("return types for special selectors", test => {
+        expectEqual(test, "NSObject +alloc", NSObject,
+            SelectorReturnType(Static[NSObject], #"alloc")
+        );
+        expectEqual(test, "NSString +alloc", NSString,
+            SelectorReturnType(Static[NSString], #"alloc")
+        );
+        expectEqual(test, "Id -alloc", Id,
+            SelectorReturnType(Id, #"alloc")
+        );
+        expectEqual(test, "NSObject -alloc", Id,
+            SelectorReturnType(NSObject, #"alloc")
+        );
+
+        expectEqual(test, "Id -retain", Id,
+            SelectorReturnType(Id, #"retain")
+        );
+        expectEqual(test, "NSObject -retain", NSObject,
+            SelectorReturnType(NSObject, #"retain")
+        );
+        expectEqual(test, "NSString -retain", NSString,
+            SelectorReturnType(NSString, #"retain")
+        );
+        expectEqual(test, "NSObject +retain", Id, // XXX Class?
+            SelectorReturnType(Static[NSObject], #"retain")
+        );
+
+        expectEqual(test, "Id -init", Id,
+            SelectorReturnType(Id, #"init")
+        );
+        expectEqual(test, "NSObject -init", NSObject,
+            SelectorReturnType(NSObject, #"init")
+        );
+        expectEqual(test, "NSString -init", NSString,
+            SelectorReturnType(NSString, #"init")
+        );
+        expectEqual(test, "NSObject +init", Id, // XXX Class
+            SelectorReturnType(Static[NSObject], #"init")
+        );
     }),
     TestCase("msgSendBox1 type", test => {
         expectType(test, "Id from ObjectHandle", Id,
