@@ -22,9 +22,9 @@
 			fileType = pattern.proxy;
 			isEditable = 1;
 			outputFiles = (
-				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE).s",
+				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE).$(CURRENT_ARCH).s",
 			);
-			script = "/opt/local/clay/bin/clay -asm -arch armv6 -o ${DERIVED_FILES_DIR}/${INPUT_FILE_BASE}.s ${INPUT_FILE_PATH} ";
+			script = "clay-xcodebuild";
 		};
 /* End PBXBuildRule section */
 
@@ -170,7 +170,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = armv6;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -186,7 +186,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = armv6;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				COPY_PHASE_STRIP = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Example_Prefix.pch;
