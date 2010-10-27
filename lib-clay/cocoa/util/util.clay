@@ -326,15 +326,15 @@ overload initObjectMembers(self: O, forward ...args: A) {
 
 [O | Class?(O)]
 copyRootObject(self: O, zone: Pointer[NSZone]) returned: O {
-    var base = O(self.class().allocWithZone(zone));
-    base = super(base).init();
-    return initObjectMembers(base, ...objectMembers(self));
+    var copy = O(self.class().allocWithZone(zone));
+    copy = super(copy).init();
+    return initObjectMembers(copy, ...objectMembers(self));
 }
 
 [O | Class?(O)]
 copyInheritingObject(self: O, zone: Pointer[NSZone]) returned: O {
-    var base = O(super(self).copyWithZone(zone));
-    return initObjectMembers(base, ...objectMembers(self));
+    var copy = O(super(self).copyWithZone(zone));
+    return initObjectMembers(copy, ...objectMembers(self));
 }
 
 [O | Class?(O)]
