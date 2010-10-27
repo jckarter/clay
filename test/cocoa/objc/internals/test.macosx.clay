@@ -1,4 +1,5 @@
 import test.*;
+import test.memory.*;
 import cocoa.objc.*;
 import cocoa.objc.platform;
 
@@ -9,10 +10,14 @@ overload selector(static #"allocWithZone:") = Id, NSZone;
 overload selector(static #"new") = Id;
 
 overload selector(static #"init") = Id;
+overload selector(static #"class") = Id; // XXX Class
 overload selector(static #"copy") = Id;
 overload selector(static #"copyWithZone:") = Id, NSZone;
 overload selector(static #"mutableCopy") = Id;
 overload selector(static #"retain") = Id;
+overload selector(static #"release") = Void;
+overload selector(static #"autorelease") = Id;
+overload selector(static #"dealloc") = Void;
 
 overload selector(static #"stringWithUTF8String:") = Id, Pointer[CChar];
 overload selector(static #"initWithUTF8String:") = Id, Pointer[CChar];
@@ -54,6 +59,7 @@ overload externalInstanceMethod(static NSString, static #"description")
     = NSString;
 
 record NSMutableString = externalClass(NSString);
+record NSAutoreleasePool = externalClass(NSObject);
 
 record MyNSNumber = externalClass(#"NSNumber", NSString);
 
@@ -101,6 +107,32 @@ record SubSubSubString = newClass(SubSubString,
     ),
 );
 
+record CocoaCanary = newClass(NSObject,
+    InstanceVars(
+        (#canary, Canary),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"init", self => {
+            self = super(self).init();
+            if (not nil?(self)) {
+                self^.canary <-- Canary();
+            }
+            return self;
+        }),
+        (#"copyWithZone:", (self, zone) => {
+            var copy = CocoaCanary(self.class().allocWithZone(zone));
+            copy = super(copy).init();
+            copy^.canary <-- self^.canary;
+            return copy;
+        }),
+        (#"dealloc", self => {
+            destroy(self^.canary);
+            super(self).dealloc();
+        }),
+    )
+);
+
 record Foo (
     x: NSObject,
     y: Pointer[CChar],
@@ -145,19 +177,19 @@ _expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
 [ParamType | ObjectType?(ParamType)]
 overload _expectMsgSendCompatible(expectTF, test, static ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
-    __expectMsgSendCompatible(expectTF, test, Weak[ParamType], ValueType);
+    __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
 }
 [ValueType | ObjectType?(ValueType)]
 overload _expectMsgSendCompatible(expectTF, test, ParamType, static ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
-    __expectMsgSendCompatible(expectTF, test, ParamType, Weak[ValueType]);
+    __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
 }
 [ParamType, ValueType | ObjectType?(ParamType) and ObjectType?(ValueType)]
 overload _expectMsgSendCompatible(expectTF, test, static ParamType, static ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
-    __expectMsgSendCompatible(expectTF, test, Weak[ParamType], ValueType);
-    __expectMsgSendCompatible(expectTF, test, ParamType, Weak[ValueType]);
-    __expectMsgSendCompatible(expectTF, test, Weak[ParamType], Weak[ValueType]);
+    __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
+    __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
+    __expectMsgSendCompatible(expectTF, test, Retained[ParamType], Retained[ValueType]);
 }
 
 expectMsgSendCompatible(test, ParamType, ValueType) {
@@ -215,6 +247,7 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         expectEncoding(test, "@", Id);
         expectEncoding(test, "@", NSObject);
         expectEncoding(test, "@", NSString);
+        expectEncoding(test, "@", Retained[NSString]);
         expectEncoding(test, "^v", RawPointer);
         expectEncoding(test, "^i", Pointer[Int32]);
         expectEncoding(test, "^^i", Pointer[Pointer[Int32]]);
@@ -394,23 +427,83 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         expectType(test, "SubSubString^.foo", Int, nil(SubSubString)^.foo);
         expectType(test, "SubSubString^.bar", StringConstant, nil(SubSubString)^.bar);
     }),
-    TestCase("retaining selectors", test => {
-        expectTrue(test, "alloc", RetainingSelector?(#"alloc"));
-        expectTrue(test, "allocWithZone:", RetainingSelector?(#"allocWithZone:"));
+    TestCase("special selectors", test => {
+        expectTrue(test, "alloc", AllocatingSelector?(#"alloc"));
+        expectTrue(test, "allocWithZone:", AllocatingSelector?(#"allocWithZone:"));
+        expectTrue(test, "new", AllocatingSelector?(#"new"));
+
+        expectTrue(test, "retain", RetainingSelector?(#"retain"));
         expectTrue(test, "copy", RetainingSelector?(#"copy"));
         expectTrue(test, "copyWithZone:", RetainingSelector?(#"copyWithZone:"));
         expectTrue(test, "mutableCopy", RetainingSelector?(#"mutableCopy"));
-        expectTrue(test, "retain", RetainingSelector?(#"retain"));
-        expectTrue(test, "new", RetainingSelector?(#"new"));
+        expectTrue(test, "mutableCopyWithZone", RetainingSelector?(#"mutableCopy"));
 
-        expectFalse(test, "description", RetainingSelector?(#"description"));
-        expectFalse(test, "initWithFormat:", RetainingSelector?(#"initWithFormat:"));
-        expectFalse(test, "stringWithFormat:", RetainingSelector?(#"stringWithFormat:"));
-    }),
-    TestCase("forwarding selectors", test => {
         expectTrue(test, "init", ForwardingSelector?(#"init"));
         expectTrue(test, "initWithFormat:", ForwardingSelector?(#"initWithFormat:"));
-        expectFalse(test, "stringWithFormat:", ForwardingSelector?(#"stringWithFormat:"));
+
+        expectTrue(test, "autorelease", AutoreleasingSelector?(#"autorelease"));
+    }),
+    TestCase("return types for special selectors", test => {
+        expectEqual(test, "NSObject +alloc", NSObject,
+            SelectorReturnType(Static[NSObject], #"alloc")
+        );
+        expectEqual(test, "NSString +alloc", NSString,
+            SelectorReturnType(Static[NSString], #"alloc")
+        );
+        expectEqual(test, "Id -alloc", Id,
+            SelectorReturnType(Id, #"alloc")
+        );
+        expectEqual(test, "NSObject -alloc", Id,
+            SelectorReturnType(NSObject, #"alloc")
+        );
+
+        expectEqual(test, "Id -retain", Id,
+            SelectorReturnType(Id, #"retain")
+        );
+        expectEqual(test, "NSObject -retain", NSObject,
+            SelectorReturnType(NSObject, #"retain")
+        );
+        expectEqual(test, "NSString -retain", NSString,
+            SelectorReturnType(NSString, #"retain")
+        );
+        expectEqual(test, "NSObject +retain", Id, // XXX Class?
+            SelectorReturnType(Static[NSObject], #"retain")
+        );
+
+        expectEqual(test, "Id -init", Id,
+            SelectorReturnType(Id, #"init")
+        );
+        expectEqual(test, "NSObject -init", NSObject,
+            SelectorReturnType(NSObject, #"init")
+        );
+        expectEqual(test, "NSString -init", NSString,
+            SelectorReturnType(NSString, #"init")
+        );
+        expectEqual(test, "NSObject +init", Id, // XXX Class
+            SelectorReturnType(Static[NSObject], #"init")
+        );
+    }),
+    TestCase("return types of message expressions", test => {
+        var id = nil(Id);
+        var object = nil(NSObject);
+        var string = nil(NSString);
+
+        expectType(test, "NSObject.alloc().init()", NSObject, NSObject.alloc().init());
+        expectType(test, "NSString.alloc().init()", NSString, NSString.alloc().init());
+
+        expectType(test, "id.init()", Id, id.init());
+        expectType(test, "object.init()", NSObject, object.init());
+        expectType(test, "string.init()", NSString, string.init());
+        expectType(test, "super(string).init()", NSString, string.init());
+
+        expectType(test, "id.init().autorelease()", Id, id.init().autorelease());
+        expectType(test, "object.init().autorelease()", NSObject, object.init().autorelease());
+        expectType(test, "string.init().autorelease()", NSString, string.init().autorelease());
+
+        expectType(test, "object.class().alloc().init()", Id,
+            object.class().alloc().init());
+        expectType(test, "object.class().alloc().init().autorelease()", Id,
+            object.class().alloc().init());
     }),
     TestCase("msgSendBox1 type", test => {
         expectType(test, "Id from ObjectHandle", Id,
@@ -542,6 +635,20 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         );
         expectEqual(test, "string", "Hello", CStringRef(stringFields^.string));
         expectEqual(test, "length", 5, stringFields^.length);
+    }),
+    TestCase("Retained memory management", test => {
+        var pool = NSAutoreleasePool.alloc().init();
+
+        // construction from unretained reference
+        var x = Retained(CocoaCanary.alloc().init());
+        var y = Retained(x.copy());
+        // copy construction
+        var z = x;
+
+        // rvalue message expression
+        Retained(CocoaCanary.alloc()).init();
+
+        pool.drain();
     }),
 ]));
 
