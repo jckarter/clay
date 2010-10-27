@@ -16,7 +16,7 @@ import clay.loader.platform as platform;
 
 private var searchPath = Vector[String]();
 
-addToSearchPaths(p) {
+addSearchPath(p) {
     push(searchPath, p);
 }
 
@@ -24,9 +24,9 @@ initSearchPath() {
     var clayDir, clayExe = ...splitPath(pathToExecutable());
     var libClayDir1 = joinPath(clayDir, "lib-clay");
     var libClayDir2 = joinPath(clayDir, "..", "lib-clay");
-    addToSearchPaths(libClayDir1);
-    addToSearchPaths(libClayDir2);
-    addToSearchPaths(String("."));
+    addSearchPath(libClayDir1);
+    addSearchPath(libClayDir2);
+    addSearchPath(String("."));
 }
 
 
@@ -125,7 +125,7 @@ private addPublicGlobal(module, name:ast.Identifier, forward x:T) {
     addPublicGlobal(module, name, SymbolTableEntry(x));
 }
 
-overload  addPublicGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
+overload addPublicGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
     addPrivateGlobal(module, name, x);
     module^.publicGlobals^.entries[name.str] = x;
 }
