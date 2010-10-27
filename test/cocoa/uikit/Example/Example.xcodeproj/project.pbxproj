@@ -11,8 +11,22 @@
 		1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
 		288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765FC0DF74451002DB57D /* CoreGraphics.framework */; };
 		28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 28AD733E0D9D9553002E5188 /* MainWindow.xib */; };
-		D8D7CF1F127167B000D78B76 /* example.s in Sources */ = {isa = PBXBuildFile; fileRef = D8D7CF1E127167B000D78B76 /* example.s */; };
+		D85432ED1278457600D10B50 /* example.clay in Sources */ = {isa = PBXBuildFile; fileRef = D8D7CF2A127167C900D78B76 /* example.clay */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		D85432C61278362E00D10B50 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.clay";
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE).s",
+			);
+			script = "/opt/local/clay/bin/clay -asm -arch armv6 -o ${DERIVED_FILES_DIR}/${INPUT_FILE_BASE}.s ${INPUT_FILE_PATH} ";
+		};
+/* End PBXBuildRule section */
 
 /* Begin PBXFileReference section */
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -21,7 +35,6 @@
 		288765FC0DF74451002DB57D /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		28AD733E0D9D9553002E5188 /* MainWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Example-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Example-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
-		D8D7CF1E127167B000D78B76 /* example.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = example.s; sourceTree = "<group>"; };
 		D8D7CF2A127167C900D78B76 /* example.clay */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = example.clay; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -51,20 +64,11 @@
 			isa = PBXGroup;
 			children = (
 				D8D7CF21127167BE00D78B76 /* Clay Sources */,
-				29B97315FDCFA39411CA2CEA /* Build Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
 			name = CustomTemplate;
-			sourceTree = "<group>";
-		};
-		29B97315FDCFA39411CA2CEA /* Build Sources */ = {
-			isa = PBXGroup;
-			children = (
-				D8D7CF1E127167B000D78B76 /* example.s */,
-			);
-			name = "Build Sources";
 			sourceTree = "<group>";
 		};
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
@@ -106,6 +110,7 @@
 				1D60588F0D05DD3D006BFB54 /* Frameworks */,
 			);
 			buildRules = (
+				D85432C61278362E00D10B50 /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -154,7 +159,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D8D7CF1F127167B000D78B76 /* example.s in Sources */,
+				D85432ED1278457600D10B50 /* example.clay in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
