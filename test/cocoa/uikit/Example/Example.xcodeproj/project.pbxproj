@@ -24,7 +24,7 @@
 			outputFiles = (
 				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE).$(CURRENT_ARCH).s",
 			);
-			script = "clay-xcodebuild";
+			script = "/usr/local/bin/clay-xcodebuild";
 		};
 /* End PBXBuildRule section */
 
