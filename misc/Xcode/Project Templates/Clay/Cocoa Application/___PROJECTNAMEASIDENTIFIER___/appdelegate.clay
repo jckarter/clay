@@ -1,0 +1,10 @@
+import cocoa.*;
+import cocoa.appkit.*;
+
+record AppDelegate = newClass(#___PROJECTNAMEASIDENTIFIER___AppDelegate, NSObject,
+    InstanceVars(
+        (#window, IBOutlet(NSWindow)),
+    ),
+    ClassMethods(),
+    InstanceMethods(),
+);

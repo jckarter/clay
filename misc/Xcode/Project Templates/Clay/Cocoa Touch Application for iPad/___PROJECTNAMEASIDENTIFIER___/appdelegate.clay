@@ -1,0 +1,17 @@
+import cocoa.*;
+import cocoa.uikit.*;
+
+record AppDelegate = newClass(#"___PROJECTNAMEASIDENTIFIER___AppDelegate", NSObject,
+    InstanceVars(
+        (#window, IBOutlet(Retained[UIWindow])),
+        (#viewController, IBOutlet(Retained[UIViewController])),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        (#"application:didFinishLaunchingWithOptions:", (self, app, options) => {
+            self^.window.addSubview(self^.viewController.view());
+            self^.window.makeKeyAndVisible();
+        }),
+        DeallocInstanceMethod(),
+    ),
+);
