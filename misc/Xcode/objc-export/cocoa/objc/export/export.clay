@@ -2,16 +2,16 @@ import cocoa.*;
 
 procedure objcType;
 
-[T | ClayClass?(T)]
-overload objcType(static T) = "id";
-[T | Class?(T) and (ExternalClass?(T) or ExternalClayClass?(T))]
+[T | Record?(T)] overload objcType(static T) = "int";
+
+[T | Class?(T)]
 overload objcType(static T) = ClassName(T) + " *";
 
 [T] overload objcType(static Pointer[T]) = objcType(T) + " *";
 [T | Record?(T) or not CallDefined?(objcType, T)]
 overload objcType(static Pointer[T]) = "void *";
 
-[T | Record?(T)] overload objcType(static Pointer[T]) = "int";
+[T] overload objcType(static Retained[T]) = objcType(T);
 
 overload objcType(static RawPointer) = "void *";
 overload objcType(static Id) = "id";

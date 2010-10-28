@@ -1,37 +1,10 @@
 #!/bin/sh
 
-if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-Cocoa|-UIKit] clayfile classes..."
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 path/to/main.clay"
+    echo "main.clay must use appKitMain or uiKitMain"
     exit 2
 fi
 
-FRAMEWORK=Cocoa
-if [ $1 != ${1#-} ]; then
-    FRAMEWORK=${1#-}
-    shift
-fi
-
 SELFDIR=`dirname $0`
-MODULEPATH=`dirname $1`
-MODULENAME=`basename $1 .clay`
-
-SCRIPT=/tmp/export-main.$$.clay
-
-shift
-CLASSES=
-for class in "$@"; do
-    CLASSES=$CLASSES,$class
-done
-
-cat >$SCRIPT <<END
-import cocoa.objc.export.*;
-import $MODULENAME.*;
-
-main() {
-    printObjcHeaderWithInterfacesTo(stdout, "$FRAMEWORK"$CLASSES);
-}
-END
-
-clay -I$SELFDIR -I$MODULEPATH -run $SCRIPT
-
-rm -f $SCRIPT
+clay -I$SELFDIR -run "$1"
