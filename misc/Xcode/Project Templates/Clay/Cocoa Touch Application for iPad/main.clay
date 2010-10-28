@@ -1,0 +1,5 @@
+import cocoa.*;
+import ___PROJECTNAMEASIDENTIFIER___.appdelegate.*;
+import ___PROJECTNAMEASIDENTIFIER___.viewcontroller.*;
+
+main() = uiKitMain(AppDelegate, ViewController);

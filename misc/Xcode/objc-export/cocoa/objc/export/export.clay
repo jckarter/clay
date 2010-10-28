@@ -1,0 +1,110 @@
+import cocoa.*;
+
+procedure objcType;
+
+[T | Record?(T)] overload objcType(static T) = "int";
+
+[T | Class?(T)]
+overload objcType(static T) = ClassName(T) + " *";
+
+[T] overload objcType(static Pointer[T]) = objcType(T) + " *";
+[T | Record?(T) or not CallDefined?(objcType, T)]
+overload objcType(static Pointer[T]) = "void *";
+
+[T] overload objcType(static Retained[T]) = objcType(T);
+
+overload objcType(static RawPointer) = "void *";
+overload objcType(static Id) = "id";
+overload objcType(static ObjectHandle) = "id";
+overload objcType(static ClassHandle) = "Class";
+overload objcType(static SelectorHandle) = "SEL";
+overload objcType(static Bool) = "BOOL";
+
+overload objcType(static Void) = "void";
+overload objcType(static ()) = "void";
+overload objcType(static Int8) = "signed char";
+overload objcType(static Int16) = "short";
+overload objcType(static Int32) = "int";
+overload objcType(static Int64) = "long long";
+overload objcType(static UInt8) = "unsigned char";
+overload objcType(static UInt16) = "unsigned short";
+overload objcType(static UInt32) = "unsigned";
+overload objcType(static UInt64) = "unsigned long long";
+overload objcType(static Float32) = "float";
+overload objcType(static Float64) = "double";
+
+printObjcInterfaceTo(stream, Class) {
+    printTo(stream, "@interface ", ClassName(Class));
+    if (SuperclassType(Class) != Void)
+        printTo(stream, " : ", ClassName(SuperclassType(Class)), " ");
+    printlnTo(stream, "{");
+
+    static for (ivar in ...ClassInstanceVars(Class)) {
+        printTo(stream, "    ");
+        printIvarTo(stream, ivar.0, ivar.1);
+    }
+
+    printlnTo(stream, "}");
+    printlnTo(stream);
+
+    static for (method in ...ClassClassMethods(Class)) {
+        printTo(stream, "+ ");
+        printMethodTo(stream, Class, method.0);
+    }
+    printlnTo(stream);
+    
+    static for (method in ...ClassInstanceMethods(Class)) {
+        printTo(stream, "- ");
+        printMethodTo(stream, Class, method.0, method.1);
+    }
+    printlnTo(stream);
+    
+    printlnTo(stream, "@end");
+    printlnTo(stream);
+}
+
+private _printMethodTo(stream, T, selector, returnType) {
+    var selectorNames = split(String(StaticName(selector)), ':');
+    var selectorArgumentTypes = Vector[String](
+        ...mapValues(T => String(objcType(T)), ...SelectorArgumentTypes(T, selector))
+    );
+
+    printTo(stream, "(", returnType, ")", selectorNames[0]);
+
+    for (name, type, n in zipped(
+        slicedFrom(selectorNames, 1),
+        selectorArgumentTypes,
+        range(1, size(selectorArgumentTypes)+1)
+    ))
+        printTo(stream, ":(", type, ")arg", n, " ");
+
+    printlnTo(stream, ";");
+}
+
+private printMethodTo(stream, T, selector) {
+    _printMethodTo(stream, T, selector, objcType(SelectorReturnType(T, selector)));
+}
+overload printMethodTo(stream, T, selector, imp) { printMethodTo(stream, T, selector); }
+
+overload printMethodTo(stream, T, selector, static IBActionWrapper) {
+    _printMethodTo(stream, T, selector, "IBAction");
+}
+
+private printIvarTo(stream, name, T) {
+    printlnTo(stream, objcType(T), " ", StaticName(name), ";");
+}
+
+[T]
+overload printIvarTo(stream, name, static IBOutletWrapper[T]) {
+    printTo(stream, "IBOutlet ");
+    printIvarTo(stream, name, T);
+}
+
+printObjcHeaderWithInterfacesTo(stream, framework, ...Classes) {
+    printlnTo(stream, "#import <", framework, "/", framework, ".h>");
+    printlnTo(stream);
+
+    static for (Class in ...Classes) {
+        printObjcInterfaceTo(stream, Class);
+    }
+}
