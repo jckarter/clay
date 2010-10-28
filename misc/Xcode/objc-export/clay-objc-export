@@ -1,0 +1,31 @@
+#!/bin/sh
+
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 [-Cocoa|-UIKit] clayfile classes..."
+    exit 2
+fi
+
+FRAMEWORK=Cocoa
+if [ $1 != ${1#-} ]; then
+    FRAMEWORK=${1#-}
+    shift
+fi
+
+SELFDIR=`dirname $0`
+MODULEPATH=`dirname $1`
+MODULENAME=`basename $1 .clay`
+
+SCRIPT=/tmp/export-main.$$.clay
+
+cat >$SCRIPT <<END
+import cocoa.objc.export.*;
+import $MODULENAME.*;
+
+main() {
+    printObjcHeaderWithInterfacesTo(stdout, "$FRAMEWORK", $2);
+}
+END
+
+clay -I$SELFDIR -I$MODULEPATH -run $SCRIPT
+
+rm -f $SCRIPT
