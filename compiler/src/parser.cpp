@@ -54,7 +54,7 @@ static bool keyword(const char *s) {
 
 
 //
-// identifier, identifierList, optIdentifierList,
+// identifier, identifierList,
 // identifierListNoTail, dottedName
 //
 
@@ -85,15 +85,6 @@ static bool identifierList(vector<IdentifierPtr> &x) {
             break;
         }
         x.push_back(y);
-    }
-    return true;
-}
-
-static bool optIdentifierList(vector<IdentifierPtr> &x) {
-    int p = save();
-    if (!identifierList(x)) {
-        restore(p);
-        x.clear();
     }
     return true;
 }
