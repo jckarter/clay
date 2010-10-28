@@ -1,0 +1,11 @@
+import cocoa.objc.export.*;
+
+// monkeypatch appKitMain/uiKitMain to generate headers for all the nib-exported classes
+
+exportMain(fmwk, ...NibClasses) {
+    printObjcHeaderWithInterfacesTo(stdout, fmwk, ...NibClasses);
+    return 0;
+}
+
+appKitMain(...NibClasses) = exportMain("Cocoa", ...NibClasses);
+uiKitMain(...NibClasses) = exportMain("UIKit", ...NibClasses);
