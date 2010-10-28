@@ -17,12 +17,18 @@ MODULENAME=`basename $1 .clay`
 
 SCRIPT=/tmp/export-main.$$.clay
 
+shift
+CLASSES=
+for class in "$@"; do
+    CLASSES=$CLASSES,$class
+done
+
 cat >$SCRIPT <<END
 import cocoa.objc.export.*;
 import $MODULENAME.*;
 
 main() {
-    printObjcHeaderWithInterfacesTo(stdout, "$FRAMEWORK", $2);
+    printObjcHeaderWithInterfacesTo(stdout, "$FRAMEWORK"$CLASSES);
 }
 END
 
