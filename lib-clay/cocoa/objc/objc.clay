@@ -126,12 +126,10 @@ objectParameter(forward x: T) = forward ObjectParameterType(T)(objectHandle(x));
 
 private release(x) {
     if (not null?(x)) {
-        printlnTo(stderr, "releasing ", CStringRef(object_getClassName(objectHandle(x))), " ", x);
         objc_msgSend(objectHandle(x), objcSelector[#release]);
     }
 }
 private retain(x) {
-    printlnTo(stderr, "retaining ", CStringRef(object_getClassName(objectHandle(x))), " ", x);
     return objc_msgSend(objectHandle(x), objcSelector[#retain]);
 }
 
@@ -307,13 +305,13 @@ procedure ClassInstanceVars;
 procedure ClassClassMethods;
 procedure ClassInstanceMethods;
 
-[T | ExternalClass?(T)]
-ClassName(static T) = StaticName(T);
-
 [T | ClayClass?(T)]
 overload ClassName(static T) {
     return "clay:" + ModuleName(T) + "." + StaticName(T);
 }
+
+[T | ExternalClass?(T) or ExternalClayClass?(T)]
+ClassName(static T) = StaticName(T);
 
 procedure ClassStaticName;
 
@@ -388,6 +386,7 @@ overload objcInitIvarOffset(static T, ivarName)
 //
 
 ClayClass?(T) = false;
+ExternalClayClass?(T) = false;
 
 [Super, IV, CM, IM] // XXX | ValidSuperclass?(Super)]
 newClass(static Super,
@@ -405,7 +404,7 @@ newClass(static Super,
     (#__handle__, ObjectHandle)
 );
 
-[name, Super, IV, CM, IM | Identifier?(name)] // XXX ValidSuperclass?(Super)]
+[name, Super, IV, CM, IM] // XXX ValidSuperclass?(Super)]
 overload newClass(static name, static Super,
     instancevars: InstanceVars[IV],
     classmethods: ClassMethods[CM],
@@ -415,6 +414,23 @@ overload newClass(static name, static Super,
         (SuperclassType, Super),
         (ClayClass?, static true),
         (ClassStaticName, name),
+        Tuple(ClassInstanceVars, ...unpack(instancevars.value)),
+        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
+        Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),
+    ), 
+    (#__handle__, ObjectHandle)
+);
+
+[Super, IV, CM, IM] // XXX | ValidSuperclass?(Super)]
+newExternalClass(static Super,
+    instancevars: InstanceVars[IV],
+    classmethods: ClassMethods[CM],
+    instancemethods: InstanceMethods[IM]
+) = recordWithProperties(
+    (
+        (SuperclassType, Super),
+        (ClayClass?, static true),
+        (ExternalClayClass?, static true),
         Tuple(ClassInstanceVars, ...unpack(instancevars.value)),
         Tuple(ClassClassMethods, ...unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),

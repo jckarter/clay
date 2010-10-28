@@ -1,0 +1,6 @@
+// monkey-patch IBOutlet and IBAction so they're visible
+record IBOutletWrapper[T] (x: T);
+record IBActionWrapper[T] (x: T);
+
+IBOutlet(T) = IBOutletWrapper[T];
+IBAction(T) = IBActionWrapper;
