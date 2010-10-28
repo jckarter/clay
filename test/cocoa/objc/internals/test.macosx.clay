@@ -68,7 +68,7 @@ record SubString1 = newClass(NSString,
         (#foo, Int),
     ),
     ClassMethods(
-        (#"classVersion", () => 7, Int),
+        (#"classVersion", (class) => 7, Int),
     ),
     InstanceMethods(
         (#"version", (self) => 7, Int),
@@ -80,7 +80,7 @@ record SubString2 = newClass(#"ClaySubString2", NSString,
         (#foo, Double),
     ),
     ClassMethods(
-        (#"classVersion", () => nil(Id)),
+        (#"classVersion", (class) => nil(Id)),
     ),
     InstanceMethods(
         (#"version", (self) => nil(Id)),
@@ -100,7 +100,7 @@ record SubSubSubString = newClass(SubSubString,
         (#bar, StringConstant),
     ),
     ClassMethods(
-        (#"classVersion", () => 8),
+        (#"classVersion", (class) => 8),
     ),
     InstanceMethods(
         (#"classVersion", (self) => 8),
