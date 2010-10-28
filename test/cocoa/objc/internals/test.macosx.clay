@@ -87,7 +87,7 @@ record SubString2 = newClass(#"ClaySubString2", NSString,
     )
 );
 
-record SubSubString = newClass(SubString1,
+record SubSubString = newExternalClass(SubString1,
     InstanceVars(
         (#bar, StringConstant),
     ),
@@ -281,17 +281,20 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         expectNotSubclass(test, SubString2, SubSubString);
     }),
     TestCase("ClassName", test => {
-        expectEqual(test, "class name for NSObject", "NSObject",
+        expectEqual(test, "class name for externalClass NSObject", "NSObject",
             ClassName(NSObject)
         );
-        expectEqual(test, "class name for MyNSNumber", "NSNumber",
+        expectEqual(test, "class name for externalClass(name) MyNSNumber", "NSNumber",
             ClassName(MyNSNumber)
         );
-        expectEqual(test, "class name for SubString1", "clay:__main__.SubString1",
+        expectEqual(test, "class name for newClass SubString1", "clay:__main__.SubString1",
             ClassName(SubString1)
         );
-        expectEqual(test, "class name for SubString2", "ClaySubString2",
+        expectEqual(test, "class name for newClass(name) SubString2", "ClaySubString2",
             ClassName(SubString2)
+        );
+        expectEqual(test, "class name for newExternalClass SubSubString", "SubSubString",
+            ClassName(SubSubString)
         );
     }),
     TestCase("MsgSendCompatible?", test => {
