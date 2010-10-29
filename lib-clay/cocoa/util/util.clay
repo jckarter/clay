@@ -2,6 +2,7 @@ import cocoa.objc.runtime;
 import cocoa.objc.*;
 import cocoa.nib.*;
 import cocoa.foundation.*;
+import identifiers.*;
 
 public import cocoa.util.platform.*;
 
@@ -396,6 +397,98 @@ overload CopyInstanceMethod(static Flag)
 DeallocInstanceMethod(static selector) = (selector, deallocObject);
 
 overload DeallocInstanceMethod() = DeallocInstanceMethod(#"dealloc");
+
+
+[ivarName, readerSelector | Identifier?(ivarName) and Selector?(readerSelector)]
+ReaderInstanceMethod(static ivarName, static readerSelector, T)
+    = (readerSelector, self => T(fieldRef(self^, ivarName)), T);
+
+[ivarName | Identifier?(ivarName) and Selector?(ivarName)]
+overload ReaderInstanceMethod(static ivarName, T)
+    = ReaderInstanceMethod(ivarName, ivarName, T);
+
+[ivarName, readerSelector | Identifier?(ivarName) and Selector?(readerSelector)]
+overload ReaderInstanceMethod(static ivarName, static readerSelector)
+    = (readerSelector, self => SelectorReturnType(Id, readerSelector)(fieldRef(self^, ivarName)));
+
+[ivarName | Identifier?(ivarName) and Selector?(ivarName)]
+overload ReaderInstanceMethod(static ivarName)
+    = ReaderInstanceMethod(ivarName, ivarName);
+
+
+defaultWriterSelector(ivarName)
+    = IdentifierConcat(#"set",
+        IdentifierUpperChar(IdentifierSlice(ivarName, static 0, static 1)),
+        IdentifierSlice(ivarName, static 1, static IdentifierSize(ivarName)),
+        #":"
+    );
+
+[ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
+WriterInstanceMethod(static ivarName, static writerSelector, T)
+    = (writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }, Void, T);
+
+[ivarName | Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
+overload WriterInstanceMethod(static ivarName, T)
+    = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName), Void, T);
+
+[ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
+overload WriterInstanceMethod(static ivarName, static writerSelector)
+    = (writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; });
+
+[ivarName | Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
+overload WriterInstanceMethod(static ivarName)
+    = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName));
+
+
+[ivarName, readerSelector, writerSelector |
+    Identifier?(ivarName)
+    and Selector?(readerSelector)
+    and Selector?(writerSelector)
+]
+PropertyInstanceMethods(static ivarName, static readerSelector, static writerSelector, T)
+    = ReaderInstanceMethod(ivarName, readerSelector, T),
+      WriterInstanceMethod(ivarName, writerSelector, T);
+
+[ivarName, readerSelector |
+    Identifier?(ivarName)
+    and Selector?(readerSelector)
+    and Selector?(defaultWriterSelector(readerSelector))
+]
+overload PropertyInstanceMethods(static ivarName, static readerSelector, T)
+    = ...PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector), T);
+
+[ivarName |
+    Identifier?(ivarName)
+    and Selector?(ivarName)
+    and Selector?(defaultWriterSelector(ivarName))
+]
+overload PropertyInstanceMethods(static ivarName, T)
+    = ...PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName), T);
+
+[ivarName, readerSelector, writerSelector |
+    Identifier?(ivarName)
+    and Selector?(readerSelector)
+    and Selector?(writerSelector)
+]
+overload PropertyInstanceMethods(static ivarName, static readerSelector, static writerSelector)
+    = ReaderInstanceMethod(ivarName, readerSelector),
+      WriterInstanceMethod(ivarName, writerSelector);
+
+[ivarName, readerSelector |
+    Identifier?(ivarName)
+    and Selector?(readerSelector)
+    and Selector?(defaultWriterSelector(readerSelector))
+]
+overload PropertyInstanceMethods(static ivarName, static readerSelector)
+    = ...PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector));
+
+[ivarName |
+    Identifier?(ivarName)
+    and Selector?(ivarName)
+    and Selector?(defaultWriterSelector(ivarName))
+]
+overload PropertyInstanceMethods(static ivarName)
+    = ...PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName));
 
 
 
