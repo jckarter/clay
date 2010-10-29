@@ -354,6 +354,19 @@ ModulePtr loadProgram(const string &fileName) {
     return m;
 }
 
+ModulePtr loadProgramSource(const string &name, const string &source) {
+    ModulePtr m = parse("__main__", new Source(name,
+        const_cast<char*>(source.c_str()),
+        source.size())
+    );
+    ModulePtr prelude = loadPrelude();
+    loadDependents(m);
+    installGlobals(m);
+    initModule(prelude);
+    initModule(m);
+    return m;
+}
+
 ModulePtr loadedModule(const string &module) {
     if (!modules.count(module))
         error("module not loaded: " + module);
