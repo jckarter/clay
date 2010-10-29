@@ -98,7 +98,7 @@ class TestCase(object):
         self.testfile = testfile
 
     def cmdline(self, clay) :
-        return [clay] + self.buildflags + [self.testfile]
+        return [clay, "-I" + self.path] + self.buildflags + [self.testfile]
 
     def pre_build(self) :
         pass
