@@ -28,8 +28,8 @@ using namespace clang;
 
 void usage(char *argv0) {
     cerr << "clay-bindgen: Generates clay bindings for C libraries\n";
-    cerr << "Usage: " << argv0 << " [options] inputfile\n";
-    cerr << "Supported options:\n";
+    cerr << "Usage: " << argv0 << " <options> <headerfile>\n";
+    cerr << "options:\n";
     cerr << "  -o <file>         - write generated bindings to file (default stdout)\n";
     cerr << "  -target <tgt>     - target platform for which to predefine macros\n";
     cerr << "  -isysroot <dir>   - use <dir> as system root for includes search\n";

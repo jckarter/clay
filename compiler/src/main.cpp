@@ -235,9 +235,9 @@ static bool generateBinary(llvm::Module *module,
     return (result == 0);
 }
 
-static void usage()
+static void usage(char *argv0)
 {
-    cerr << "usage: clay <options> <clayfile>\n";
+    cerr << "usage: " << argv0 << " <options> <clayfile>\n";
     cerr << "options:\n";
     cerr << "  -o <file>         - specify output file\n";
     cerr << "  -target <target>  - set target platform for code generation\n";
@@ -280,7 +280,7 @@ static string basename(const string &fullname)
 
 int main(int argc, char **argv) {
     if (argc == 1) {
-        usage();
+        usage(argv[0]);
         return -1;
     }
 
@@ -527,7 +527,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "-help") == 0
                  || strcmp(argv[i], "--help") == 0
                  || strcmp(argv[i], "/?") == 0) {
-            usage();
+            usage(argv[0]);
             return -1;
         }
         else if (strstr(argv[i], "-") != argv[i]) {
