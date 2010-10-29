@@ -41,11 +41,11 @@ void usage(char *argv0) {
     cerr << "  -I<dir>           - add <dir> to header search path\n";
     cerr << "  -x <lang>         - parse headers for language <lang> (default c).\n";
     cerr << "                      Only \"c\" and \"objective-c\" supported.\n";
-    cerr << "  -match <name>     - only generate bindings for definitions from files\n";
-    cerr << "                      whose name contains <name>.\n";
-    cerr << "                      If multiple -match parameters are passed, then\n";
-    cerr << "                      bindings are generated from files containing any\n";
-    cerr << "                      of the specified <name>s.\n";
+    cerr << "  -match <string>   - only generate bindings for definitions from files\n";
+    cerr << "                      whose full pathname contains <string>.\n";
+    cerr << "                      If multiple -match parameters are given, then\n";
+    cerr << "                      bindings are generated from files with pathnames\n";
+    cerr << "                      containing any of the specified <string>s.\n";
     cerr << "                      By default bindings are generated for all parsed\n";
     cerr << "                      definitions.\n";
     cerr << "  -import <module>  - Add an \"import <module>.*;\" statement to the\n";
