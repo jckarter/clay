@@ -223,7 +223,7 @@ overload Retained(forward obj: Retained[O]) = Retained[O](obj);
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
 overload assign(left: Retained[O1], right: O2) {
     var oldHandle = left.__handle__;
-    left.__handle__ = right.__handle__;
+    left.__handle__ = retain(right.__handle__);
     release(oldHandle);
 }
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
