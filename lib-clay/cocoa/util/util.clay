@@ -404,5 +404,19 @@ overload DeallocInstanceMethod() = DeallocInstanceMethod(#"dealloc");
 
 [O | ObjectRef?(O)]
 overload printTo(stream, o: O) {
-    printTo(stream, String(o));
+    printTo(stream, CStringRef(o.description().UTF8String()));
 }
+
+
+
+//
+// IBOutlets/IBActions
+//
+
+private toIBOutlet(ivar) = (ivar.0, IBOutlet(ivar.1));
+private toIBAction(method) = (method.0, IBAction(method.1),
+    ...dropValues(static 2, ...unpack(method))
+);
+
+IBOutlets(...ivars) = ...mapValues(toIBOutlet, ...ivars);
+IBActions(...methods) = ...mapValues(toIBAction, ...methods);
