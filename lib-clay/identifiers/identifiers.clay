@@ -17,3 +17,63 @@ overload IdentifierEndsWith?(static identifier, static endsWith)
           static IdentifierSize(identifier) - IdentifierSize(endsWith),
           static IdentifierSize(identifier)
       ) == endsWith;
+
+[i | Identifier?(i) and IdentifierSize(i) == 1]
+IdentifierUpperChar(static i) = i;
+
+overload IdentifierUpperChar(static #a) = #A;
+overload IdentifierUpperChar(static #b) = #B;
+overload IdentifierUpperChar(static #c) = #C;
+overload IdentifierUpperChar(static #d) = #D;
+overload IdentifierUpperChar(static #e) = #E;
+overload IdentifierUpperChar(static #f) = #F;
+overload IdentifierUpperChar(static #g) = #G;
+overload IdentifierUpperChar(static #h) = #H;
+overload IdentifierUpperChar(static #i) = #I;
+overload IdentifierUpperChar(static #j) = #J;
+overload IdentifierUpperChar(static #k) = #K;
+overload IdentifierUpperChar(static #l) = #L;
+overload IdentifierUpperChar(static #m) = #M;
+overload IdentifierUpperChar(static #n) = #N;
+overload IdentifierUpperChar(static #o) = #O;
+overload IdentifierUpperChar(static #p) = #P;
+overload IdentifierUpperChar(static #q) = #Q;
+overload IdentifierUpperChar(static #r) = #R;
+overload IdentifierUpperChar(static #s) = #S;
+overload IdentifierUpperChar(static #t) = #T;
+overload IdentifierUpperChar(static #u) = #U;
+overload IdentifierUpperChar(static #v) = #V;
+overload IdentifierUpperChar(static #w) = #W;
+overload IdentifierUpperChar(static #x) = #X;
+overload IdentifierUpperChar(static #y) = #Y;
+overload IdentifierUpperChar(static #z) = #Z;
+
+[i | Identifier?(i) and IdentifierSize(i) == 1]
+IdentifierLowerChar(static i) = i;
+
+overload IdentifierLowerChar(static #A) = #a;
+overload IdentifierLowerChar(static #B) = #b;
+overload IdentifierLowerChar(static #C) = #c;
+overload IdentifierLowerChar(static #D) = #d;
+overload IdentifierLowerChar(static #E) = #e;
+overload IdentifierLowerChar(static #F) = #f;
+overload IdentifierLowerChar(static #G) = #g;
+overload IdentifierLowerChar(static #H) = #h;
+overload IdentifierLowerChar(static #I) = #i;
+overload IdentifierLowerChar(static #J) = #j;
+overload IdentifierLowerChar(static #K) = #k;
+overload IdentifierLowerChar(static #L) = #l;
+overload IdentifierLowerChar(static #M) = #m;
+overload IdentifierLowerChar(static #N) = #n;
+overload IdentifierLowerChar(static #O) = #o;
+overload IdentifierLowerChar(static #P) = #p;
+overload IdentifierLowerChar(static #Q) = #q;
+overload IdentifierLowerChar(static #R) = #r;
+overload IdentifierLowerChar(static #S) = #s;
+overload IdentifierLowerChar(static #T) = #t;
+overload IdentifierLowerChar(static #U) = #u;
+overload IdentifierLowerChar(static #V) = #v;
+overload IdentifierLowerChar(static #W) = #w;
+overload IdentifierLowerChar(static #X) = #x;
+overload IdentifierLowerChar(static #Y) = #y;
+overload IdentifierLowerChar(static #Z) = #z;
