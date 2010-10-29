@@ -216,4 +216,8 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
             });
         });
     }),
+    TestCase("printing objects", test => {
+        expectEqual(test, "print NSString", "whisky", printString(NSString(#"whisky")));
+        expectEqual(test, "print NSNumber", "2020", printString(NSNumber(2020)));
+    }),
 ])));
