@@ -305,9 +305,20 @@ procedure ClassInstanceVars;
 procedure ClassClassMethods;
 procedure ClassInstanceMethods;
 
+moduleNameIdentifier(T) {
+    var name = String();
+    for (c in ModuleName(T)) {
+        if (c == '.')
+            push(name, "__");
+        else
+            push(name, c);
+    }
+    return move(name);
+}
+
 [T | ClayClass?(T)]
 overload ClassName(static T) {
-    return "clay:" + ModuleName(T) + "." + StaticName(T);
+    return "clay__" + moduleNameIdentifier(T) + "__" + StaticName(T);
 }
 
 [T | ExternalClass?(T) or ExternalClayClass?(T)]
