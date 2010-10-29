@@ -638,9 +638,17 @@ int main(int argc, char **argv) {
         else
             outputFile = DEFAULT_EXE;
     }
+    string atomicOutputFile = "." + outputFile + ".claytmp";
     llvm::sys::Path outputFilePath(outputFile);
-    outputFilePath.eraseFromDisk();
-    llvm::sys::RemoveFileOnSignal(outputFilePath);
+    llvm::sys::Path atomicOutputFilePath(atomicOutputFile);
+    
+    if (outputFilePath.exists() && !outputFilePath.canWrite()) {
+        cerr << "error: unable to open " << outputFile << " for writing\n";
+        return -1;
+    }
+
+    atomicOutputFilePath.eraseFromDisk();
+    llvm::sys::RemoveFileOnSignal(atomicOutputFilePath);
 
     HiResTimer loadTimer, compileTimer, llvmTimer;
 
@@ -662,7 +670,7 @@ int main(int argc, char **argv) {
         runModule(llvmModule);
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
-        llvm::raw_fd_ostream out(outputFile.c_str(),
+        llvm::raw_fd_ostream out(atomicOutputFile.c_str(),
                                  errorInfo,
                                  llvm::raw_fd_ostream::F_Binary);
         if (!errorInfo.empty()) {
@@ -716,13 +724,19 @@ int main(int argc, char **argv) {
         );
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
-        result = generateBinary(llvmModule, outputFile, gccPath,
+        result = generateBinary(llvmModule, atomicOutputFile, gccPath,
                                 exceptions, sharedLib, genPIC,
                                 arguments);
         if (!result)
             return -1;
     }
     llvmTimer.stop();
+
+    string renameError;
+    if (atomicOutputFilePath.renamePathOnDisk(outputFilePath, &renameError)) {
+        cerr << "error: could not commit result to " << outputFile << ": " << renameError;
+        return -1;
+    }
 
     if (showTiming) {
         cerr << "load time = " << loadTimer.elapsedMillis() << " ms\n";
