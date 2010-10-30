@@ -67,6 +67,17 @@ record TypesTest (
     y: UPtrInt,
     z: SizeT,
     aa: StringConstant,
+    bb: Vec[Int, 4],
+    cc: Bool,
+    dd: Byte,
+    ee: UByte,
+    ff: Short,
+    gg: UShort,
+    hh: Long,
+    ii: ULong,
+    jj: Tuple[Int, Char],
+    kk: Union[Int, Char],
+    ll: Static[0],
 );
 
 variant VariantTest = TypesTest | Int;
