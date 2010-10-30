@@ -10,7 +10,7 @@ endif
 
 syn keyword clayKeyword public private import as record variant instance procedure overload external alias static callbyname lvalue rvalue inline enum var ref forward and or not new if else goto return while switch case default break continue for in true false try catch throw
 
-syn keyword clayType Bool Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 Float32 Float64 Pointer CodePointer RefCodePointer CCodePointer StdCallCodePointer FastCallCodePointer Array Tuple Void Byte UByte Char Short UShort Int UInt Long ULong Float Double RawPointer SizeT PtrInt UPtrInt StringConstant
+syn keyword clayType Bool Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 Float32 Float64 Pointer CodePointer RefCodePointer CCodePointer StdCallCodePointer FastCallCodePointer Array Tuple Void Byte UByte Char Short UShort Int UInt Long ULong Float Double RawPointer SizeT PtrInt UPtrInt StringConstant Vec Union Static
 
 syn keyword clayConstant true false
 
