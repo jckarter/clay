@@ -1,0 +1,259 @@
+// This file isn't meant to be compiled, but used as a spot
+// test for syntax highlighters
+
+/* comment */
+/* /* comment */
+// comment
+// comment \
+notAComment() {}
+// comment \\
+alsoNotAComment() {}
+
+import module;
+import module as anAlias;
+import module.*;
+import module.(member);
+import module.(member1, member2);
+import module.(member1 as alias1, member2);
+import module.(member1 as alias1, member2, member3);
+import module.(member1 as alias1, member2, member3,);
+
+import module.path;
+import module.path as anAlias;
+import module.path.*;
+import module.path.(member);
+import module.path.(member1, member2);
+import module.path.(member1 as alias1, member2);
+import module.path.(member1 as alias1, member2, member3);
+import module.path.(member1 as alias1, member2, member3,);
+
+import module.path.name;
+import module.path.name as anAlias;
+import module.path.name.*;
+import module.path.name.(member);
+import module.path.name.(member1, member2);
+import module.path.name.(member1 as alias1, member2);
+import module.path.name.(member1 as alias1, member2, member3);
+import module.path.name.(member1 as alias1, member2, member3,);
+
+public import module.path.name;
+private import module.path.name;
+
+record TypesTest (
+    a: Int8,
+    b: Int16,
+    c: Int32,
+    d: Int64,
+    e: UInt8,
+    f: UInt16,
+    g: UInt32,
+    h: UInt64,
+    i: Float32,
+    j: Float64,
+    k: Int,
+    l: UInt,
+    m: Float,
+    n: Double,
+    o: Char,
+    p: Pointer[Int],
+    q: RawPointer,
+    r: CodePointer[Int, Int],
+    s: RefCodePointer[Int, Int],
+    t: CCodePointer[Int, Int],
+    u: StdCallCodePointer[Int, Int],
+    v: FastCallCodePointer[Int, Int],
+    w: Array[Int, 10],
+    x: PtrInt,
+    y: UPtrInt,
+    z: SizeT,
+    aa: StringConstant,
+);
+
+variant VariantTest = TypesTest | Int;
+instance InstanceTest = VariantTest;
+
+keywordsTest(x, lvalue y, rvalue z, forward w, static v) {
+    if (x) {} else {}
+
+    switch (x) {
+    case 0:
+        break;
+    case 1:
+        break;
+    default:
+        break;
+    }
+
+    for (x in y) {
+        continue;
+        break;
+    }
+
+    while (x) {}
+
+    goto z;
+
+    try {} catch(x) {} catch(y) {}
+
+    new Type(x)();
+    
+    x and y;
+    x or y;
+    not x;
+
+    x => y;
+    (x, y) => z;
+    
+    x => { y; };
+    (x, y) => { z; };
+
+    x ref=> y;
+    (x, y) ref=> z;
+    
+    x ref=> { y; };
+    (x, y) ref=> { z; };
+
+    return x;
+    return ref y;
+    return forward z;
+
+    return ...x;
+    return ref ...y;
+    return forward ...z;
+
+    var u = x;
+    ref t = y;
+    alias s = z;
+}
+
+private overload keywordsTest() {}
+public overload keywordsTest() {}
+
+external externalKeywordTest1();
+external externalKeywordTest2() {}
+
+valueTest() {
+    true;
+    false;
+
+    'a';
+    ' ';
+    '\a';
+    '\b';
+    '\f';
+    '\v';
+    '\r';
+    '\n';
+    '\t';
+    '\x00';
+    '\x7F';
+    '\"';
+    '\'';
+
+    0;
+    123;
+    1_234;
+    1_23_45_678;
+    1_23_45_678_;
+    0x0;
+    0x123;
+    0x123abc;
+    0x123_abc;
+    
+    -0;
+    -123;
+    -1_234;
+    -1_23_45_678;
+    -1_23_45_678_;
+    -0x0;
+    -0x123;
+    -0x123abc;
+    -0x123_abc;
+
+    -0;
+    -123;
+    -1_234;
+    -1_23_45_678;
+    -1_23_45_678_;
+    -0x0;
+    -0x123;
+    -0x123abc;
+    -0x123_abc;
+
+    123i8; 123i16; 123i32; 123i64;
+    123u8; 123u16; 123u32; 123u64;
+    123f32; 123f64;
+    123u; 123f;
+
+    123_i8; 123_i16; 123_i32; 123_i64;
+    123_u8; 123_u16; 123_u32; 123_u64;
+    123_f32; 123_f64;
+    123_u; 123_f;
+
+    0.;
+    1.;
+    123.;
+    1.0;
+    1.123;
+    1.123_456;
+    321.123_456;
+    1_234.567_890;
+    2e1_234;
+    3e+1_234;
+    4e-1_234;
+    5.2e1;
+    5.3e+1;
+    5.3e-1;
+
+    0.f;
+    1.f;
+    123.f;
+    1.0f;
+    1.123f;
+    1.123_456f;
+    321.123_456f;
+    1_234.567_890f;
+    2e1_234f;
+    3e+1_234f;
+    4e-1_234f;
+    5.2e1f;
+    5.3e+1f;
+    5.3e-1f;
+
+    +0.;
+    +1.;
+    +123.;
+    +1.0;
+    +1.123;
+    +1.123_456;
+    +321.123_456;
+    +1_234.567_890;
+    +2e1_234;
+    +3e+1_234;
+    +4e-1_234;
+    +5.2e1;
+    +5.3e+1;
+    +5.3e-1;
+
+    -0.;
+    -1.;
+    -123.;
+    -1.0;
+    -1.123;
+    -1.123_456;
+    -321.123_456;
+    -1_234.567_890;
+    -2e1_234;
+    -3e+1_234;
+    -4e-1_234;
+    -5.2e1;
+    -5.3e+1;
+    -5.3e-1;
+
+    "str ing";
+    " str ing";
+    "str ing ";
+    "\"string\"";
+    "string\\";
+    " \x00 \x7F \t \r \n \a \b \f \v \" \\ ";
+}
