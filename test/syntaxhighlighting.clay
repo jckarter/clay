@@ -97,22 +97,6 @@ keywordsTest(x, lvalue y, rvalue z, forward w, static v) {
 
     new Type(x)();
     
-    x and y;
-    x or y;
-    not x;
-
-    x => y;
-    (x, y) => z;
-    
-    x => { y; };
-    (x, y) => { z; };
-
-    x ref=> y;
-    (x, y) ref=> z;
-    
-    x ref=> { y; };
-    (x, y) ref=> { z; };
-
     return x;
     return ref y;
     return forward z;
@@ -128,17 +112,47 @@ keywordsTest(x, lvalue y, rvalue z, forward w, static v) {
 
 operatorsTest() {
     not x;
+    +x;
     -x;
     x^;
     &x;
+    *x;
+    x.0;
+    x.y;
+    x[y];
+    x(y);
 
     x * y;
     x / y;
+    x % y;
 
     x + y;
     x - y;
 
+    x and y;
+
+    x or y;
+
+    x => y;
+    (x, y) => z;
+    
+    x => { y; };
+    (x, y) => { z; };
+
+    x ref=> y;
+    (x, y) ref=> z;
+    
+    x ref=> { y; };
+    (x, y) ref=> { z; };
+
     if (x) y else z;
+
+    (...x);
+
+    new x;
+    static x;
+    ref x;
+    forward x;
 }
 
 private overload keywordsTest() {}
