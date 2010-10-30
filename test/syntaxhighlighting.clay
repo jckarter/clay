@@ -126,6 +126,21 @@ keywordsTest(x, lvalue y, rvalue z, forward w, static v) {
     alias s = z;
 }
 
+operatorsTest() {
+    not x;
+    -x;
+    x^;
+    &x;
+
+    x * y;
+    x / y;
+
+    x + y;
+    x - y;
+
+    if (x) y else z;
+}
+
 private overload keywordsTest() {}
 public overload keywordsTest() {}
 
@@ -256,4 +271,18 @@ valueTest() {
     "\"string\"";
     "string\\";
     " \x00 \x7F \t \r \n \a \b \f \v \" \\ ";
+
+    #zim;
+    #zang_zung;
+    #_zippity;
+    #doo_;
+    #"dah";
+
+    #"deedle ";
+    #" dum";
+    #"diddly squat";
+
+    #"\"symbol\"";
+    #"symbol\\";
+    #" \x00 \x7F \t \r \n \a \b \f \v \" \\ ";
 }
