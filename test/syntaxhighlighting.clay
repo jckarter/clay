@@ -106,8 +106,6 @@ keywordsTest(x, lvalue y, rvalue z, forward w, static v) {
 
     try {} catch(x) {} catch(y) {}
 
-    new Type(x)();
-    
     return x;
     return ref y;
     return forward z;
@@ -122,7 +120,7 @@ keywordsTest(x, lvalue y, rvalue z, forward w, static v) {
 }
 
 operatorsTest() {
-    not x;
+   not x;
     +x;
     -x;
     x^;
@@ -296,13 +294,15 @@ valueTest() {
     "\"string\"";
     "string\\";
     " \x00 \x7F \t \r \n \a \b \f \v \" \\ ";
+    "//";
+    "/*";
 
     #zim;
     #zang_zung;
     #_zippity;
     #doo_;
-    #"dah";
 
+    #"dah";
     #"deedle ";
     #" dum";
     #"diddly squat";
@@ -310,4 +310,6 @@ valueTest() {
     #"\"symbol\"";
     #"symbol\\";
     #" \x00 \x7F \t \r \n \a \b \f \v \" \\ ";
+    #"//";
+    #"/*";
 }
