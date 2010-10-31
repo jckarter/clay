@@ -2,12 +2,33 @@
 // test for syntax highlighters
 
 /* comment */
+notAComment0() {}
+/* "comment */
+notAComment1() {}
+/* 'comment */
+notAComment2() {}
 /* /* comment */
+notAComment3() {}
 // comment
+notAComment4() {}
+// "comment
+notAComment5() {}
+// 'comment
+notAComment6() {}
 // comment \
-notAComment() {}
+notAComment7() {}
 // comment \\
-alsoNotAComment() {}
+notAComment8() {}
+// comment {
+notAComment9() {}
+// comment (
+notAComment10() {}
+/*
+])}
+comment
+actuallyThisIsAComment() {
+{(["'
+*/
 
 import module;
 import module as anAlias;
@@ -102,7 +123,8 @@ keywordsTest(x, lvalue y, rvalue z, forward w, static v) {
 
     while (x) {}
 
-    goto z;
+    goto labelTest;
+labelTest:
 
     try {} catch(x) {} catch(y) {}
 
@@ -120,7 +142,7 @@ keywordsTest(x, lvalue y, rvalue z, forward w, static v) {
 }
 
 operatorsTest() {
-   not x;
+    not x;
     +x;
     -x;
     x^;
