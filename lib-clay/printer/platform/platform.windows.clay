@@ -1,3 +1,6 @@
 
 alias formatForInt64 = "%I64d";
 alias formatForUInt64 = "%I64u";
+alias formatForHexInt64 = "%I64x";
+alias formatForHEXInt64 = "%I64X";
+alias formatForOctInt64 = "%I64o";

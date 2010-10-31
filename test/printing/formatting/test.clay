@@ -1,0 +1,129 @@
+import test.*;
+import printer.formatter.*;
+
+main() = testMain(
+    TestSuite("formatting", [
+        TestCase("number base formatters", test => {
+            expectPrinted(test, "oct(12345)", "30071",
+                oct(12345)
+            );
+            expectPrinted(test, "hex(12346)", "303a",
+                hex(12346)
+            );
+            expectPrinted(test, "HEX(12346)", "303A",
+                HEX(12346)
+            );
+            expectPrinted(test, "oct(-12345)", "-30071",
+                oct(-12345)
+            );
+            expectPrinted(test, "hex(-12346)", "-303a",
+                hex(-12346)
+            );
+            expectPrinted(test, "HEX(-12346)", "-303A",
+                HEX(-12346)
+            );
+        }),
+        TestCase("printedWidth", test => {
+            expectEqual(test, "printedWidth(\"foo\")", 3, printedWidth("foo"));
+
+            expectEqual(test, "printedWidth(0)", 1, printedWidth(0));
+            expectEqual(test, "printedWidth(1)", 1, printedWidth(1));
+            expectEqual(test, "printedWidth(9)", 1, printedWidth(9));
+            expectEqual(test, "printedWidth(10)", 2, printedWidth(10));
+            expectEqual(test, "printedWidth(-1)", 2, printedWidth(-1));
+            expectEqual(test, "printedWidth(-9)", 2, printedWidth(-9));
+            expectEqual(test, "printedWidth(-10)", 3, printedWidth(-10));
+            expectEqual(test, "printedWidth(18446744073709551615_u64)",
+                20, printedWidth(18446744073709551615_u64)
+            );
+            expectEqual(test, "printedWidth(10000000000000000000_u64)",
+                20, printedWidth(10000000000000000000_u64)
+            );
+            expectEqual(test, "printedWidth(9999999999999999999_u64)",
+                19, printedWidth(9999999999999999999_u64)
+            );
+            expectEqual(test, "printedWidth(9223372036854775807_i64)",
+                19, printedWidth(9223372036854775807_i64)
+            );
+            expectEqual(test, "printedWidth(1000000000000000000_i64)",
+                19, printedWidth(1000000000000000000_i64)
+            );
+            expectEqual(test, "printedWidth(999999999999999999_i64)",
+                18, printedWidth(999999999999999999_i64)
+            );
+            expectEqual(test, "printedWidth(-9223372036854775807_i64)",
+                20, printedWidth(-9223372036854775807_i64)
+            );
+            expectEqual(test, "printedWidth(-1000000000000000000_i64)",
+                20, printedWidth(-1000000000000000000_i64)
+            );
+            expectEqual(test, "printedWidth(-999999999999999999_i64)",
+                19, printedWidth(-999999999999999999_i64)
+            );
+
+            expectEqual(test, "printedWidth(hex(0))", 1, printedWidth(hex(0)));
+            expectEqual(test, "printedWidth(hex(1))", 1, printedWidth(hex(1)));
+            expectEqual(test, "printedWidth(hex(0xf))", 1, printedWidth(hex(0xf)));
+            expectEqual(test, "printedWidth(hex(0x10))", 2, printedWidth(hex(0x10)));
+            expectEqual(test, "printedWidth(hex(-1))", 2, printedWidth(hex(-1)));
+            expectEqual(test, "printedWidth(hex(-0xf))", 2, printedWidth(hex(-0xf)));
+            expectEqual(test, "printedWidth(hex(-0x10))", 3, printedWidth(hex(-0x10)));
+            expectEqual(test, "printedWidth(hex(0xffffffffffffffff_u64))",
+                16, printedWidth(hex(0xffffffffffffffff_u64))
+            );
+            expectEqual(test, "printedWidth(hex(0x7fffffffffffffff_i64))",
+                16, printedWidth(hex(0x7fffffffffffffff_i64))
+            );
+            expectEqual(test, "printedWidth(hex(0x1000000000000000_i64))",
+                16, printedWidth(hex(0x1000000000000000_i64))
+            );
+            expectEqual(test, "printedWidth(hex(0xfffffffffffffff_i64))",
+                15, printedWidth(hex(0xfffffffffffffff_i64))
+            );
+            expectEqual(test, "printedWidth(hex(-0x7fffffffffffffff_i64))",
+                17, printedWidth(hex(-0x7fffffffffffffff_i64))
+            );
+            expectEqual(test, "printedWidth(hex(-0x1000000000000000_i64))",
+                17, printedWidth(hex(-0x1000000000000000_i64))
+            );
+            expectEqual(test, "printedWidth(hex(-0xfffffffffffffff_i64))",
+                16, printedWidth(hex(-0xfffffffffffffff_i64))
+            );
+        }),
+        TestCase("leftAligned/rightAligned", test => {
+            expectPrinted(test, "leftAligned(5, \"foo\")", "foo  ",
+                leftAligned(5, "foo")
+            );
+            expectPrinted(test, "rightAligned(5, \"foo\")", "  foo",
+                rightAligned(5, "foo")
+            );
+
+            expectPrinted(test, "leftAligned(5, \"foo\", 1234)", "foo1234",
+                leftAligned(5, "foo", 1234)
+            );
+            expectPrinted(test, "rightAligned(5, \"foo\", 1234)", "foo1234",
+                rightAligned(5, "foo", 1234)
+            );
+
+            expectPrinted(test, "leftAligned(5, \"foo\")", "foo  ",
+                leftAligned(5, "foo")
+            );
+            expectPrinted(test, "rightAligned(5, \"foo\")", "  foo",
+                rightAligned(5, "foo")
+            );
+
+            expectPrinted(test, "leftAlignedWith(5, '-', \"foo\")", "foo--",
+                leftAlignedWith(5, '-', "foo")
+            );
+            expectPrinted(test, "rightAlignedWith(5, '-', \"foo\")", "--foo",
+                rightAlignedWith(5, '-', "foo")
+            );
+
+            expectPrinted(test,
+                "leftAlignedWith(10, '-', rightAlignedWith(7, '|', hex(0xFFFF)))",
+                "|||ffff---",
+                leftAlignedWith(10, '-', rightAlignedWith(7, '|', hex(0xFFFF)))
+            );
+        }),
+    ]),
+);
