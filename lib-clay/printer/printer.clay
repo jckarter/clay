@@ -64,7 +64,7 @@ overload printTo(stream, x:Pointer[T]) {
     printWithSprintf(stream, "%p", x);
 }
 
-private printWithSprintf(stream, formatString, value) {
+printWithSprintf(stream, formatString, value) {
     var buf = Array[CChar, 100]();
     libc.sprintf(&buf[0], cstring(formatString), value);
     var n = libc.strlen(&buf[0]);

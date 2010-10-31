@@ -254,6 +254,10 @@ expectException(test: TestStatus, name, expectedException, fn) {
     });
 }
 
+expectPrinted(test: TestStatus, name, expectedOutput, forward ...values) {
+    expectEqual(test, name, expectedOutput, printString(...values));
+}
+
 testMain(...suites) {
     var test = TestStatus();
     eachValue(
