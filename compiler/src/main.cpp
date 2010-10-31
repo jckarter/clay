@@ -235,9 +235,10 @@ static bool generateBinary(llvm::Module *module,
     return (result == 0);
 }
 
-static void usage()
+static void usage(char *argv0)
 {
-    cerr << "usage: clay <options> <clayfile>\n";
+    cerr << "usage: " << argv0 << " <options> <clayfile>\n";
+    cerr << "       " << argv0 << " <options> -e <clay source>\n";
     cerr << "options:\n";
     cerr << "  -o <file>         - specify output file\n";
     cerr << "  -target <target>  - set target platform for code generation\n";
@@ -265,6 +266,8 @@ static void usage()
     cerr << "  -L<dir>           - add <dir> to library search path\n";
     cerr << "  -l<lib>           - link with library <lib>\n";
     cerr << "  -I<path>          - add <path> to clay module search path\n";
+    cerr << "  -e <source>       - compile and run <source> (implies -run)\n";
+    cerr << "  -M<module>        - \"import <module>.*;\" for -e\n";
     cerr << "  -v                - display version info\n";
 }
 
@@ -280,7 +283,7 @@ static string basename(const string &fullname)
 
 int main(int argc, char **argv) {
     if (argc == 1) {
-        usage();
+        usage(argv[0]);
         return -1;
     }
 
@@ -306,6 +309,9 @@ int main(int argc, char **argv) {
     string clayFile;
     string outputFile;
     string targetTriple = llvm::sys::getHostTriple();
+
+    string clayScriptImports;
+    string clayScript;
 
     vector<string> libSearchPath;
     vector<string> libraries;
@@ -355,6 +361,24 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-timing") == 0) {
             showTiming = true;
+        }
+        else if (strcmp(argv[i], "-e") == 0) {
+            if (i+1 == argc) {
+                cerr << "error: source string missing after -e\n";
+                return -1;
+            }
+            ++i;
+            run = true;
+            clayScript += argv[i];
+            clayScript += "\n";
+        }
+        else if (strncmp(argv[i], "-M", 2) == 0) {
+            string modulespec = argv[i]+2; 
+            if (modulespec.empty()) {
+                cerr << "error: module missing after -M\n";
+                return -1;
+            }
+            clayScriptImports += "import " + modulespec + ".*; ";
         }
         else if (strcmp(argv[i], "-o") == 0) {
             if (i+1 == argc) {
@@ -527,7 +551,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "-help") == 0
                  || strcmp(argv[i], "--help") == 0
                  || strcmp(argv[i], "/?") == 0) {
-            usage();
+            usage(argv[0]);
             return -1;
         }
         else if (strstr(argv[i], "-") != argv[i]) {
@@ -544,9 +568,17 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (clayFile.empty()) {
+    if (clayScript.empty() && clayFile.empty()) {
         cerr << "error: clay file not specified\n";
         return -1;
+    }
+    if (!clayScript.empty() + !clayFile.empty() > 1) {
+        cerr << "error: -e cannot be specified with input file\n";
+        return -1;
+    }
+
+    if (!clayScriptImports.empty() && clayScript.empty()) {
+        cerr << "error: -M specified without -e\n";
     }
 
     if (emitLLVM + emitAsm + emitObject > 1) {
@@ -638,14 +670,28 @@ int main(int argc, char **argv) {
         else
             outputFile = DEFAULT_EXE;
     }
+    string atomicOutputFile = "." + outputFile + ".claytmp";
     llvm::sys::Path outputFilePath(outputFile);
-    outputFilePath.eraseFromDisk();
-    llvm::sys::RemoveFileOnSignal(outputFilePath);
+    llvm::sys::Path atomicOutputFilePath(atomicOutputFile);
+    
+    if (!run) {
+        if (outputFilePath.exists() && !outputFilePath.canWrite()) {
+            cerr << "error: unable to open " << outputFile << " for writing\n";
+            return -1;
+        }
+
+        atomicOutputFilePath.eraseFromDisk();
+        llvm::sys::RemoveFileOnSignal(atomicOutputFilePath);
+    }
 
     HiResTimer loadTimer, compileTimer, llvmTimer;
 
     loadTimer.start();
-    ModulePtr m = loadProgram(clayFile);
+    ModulePtr m;
+    if (!clayScript.empty())
+        m = loadProgramSource("-e", clayScriptImports + "main() { " + clayScript + " }");
+    else
+        m = loadProgram(clayFile);
     loadTimer.stop();
     compileTimer.start();
     if (sharedLib)
@@ -662,7 +708,7 @@ int main(int argc, char **argv) {
         runModule(llvmModule);
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
-        llvm::raw_fd_ostream out(outputFile.c_str(),
+        llvm::raw_fd_ostream out(atomicOutputFile.c_str(),
                                  errorInfo,
                                  llvm::raw_fd_ostream::F_Binary);
         if (!errorInfo.empty()) {
@@ -716,13 +762,21 @@ int main(int argc, char **argv) {
         );
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
-        result = generateBinary(llvmModule, outputFile, gccPath,
+        result = generateBinary(llvmModule, atomicOutputFile, gccPath,
                                 exceptions, sharedLib, genPIC,
                                 arguments);
         if (!result)
             return -1;
     }
     llvmTimer.stop();
+
+    if (!run) {
+        string renameError;
+        if (atomicOutputFilePath.renamePathOnDisk(outputFilePath, &renameError)) {
+            cerr << "error: could not commit result to " << outputFile << ": " << renameError;
+            return -1;
+        }
+    }
 
     if (showTiming) {
         cerr << "load time = " << loadTimer.elapsedMillis() << " ms\n";

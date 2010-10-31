@@ -48,6 +48,34 @@ record LifecycleSubTest = newClass(LifecycleTest,
     ),
 );
 
+overload selector(static #"foo") = Int;
+overload selector(static #"setFoo:") = Void, Int;
+overload selector(static #"foo64") = Int;
+overload selector(static #"setFoo64:") = Void, Int;
+overload selector(static #"bar") = Float;
+overload selector(static #"setBar:") = Void, Float;
+overload selector(static #"isBas") = Bool;
+overload selector(static #"setBas:") = Void, Bool;
+
+record PropertyTest = newClass(NSObject,
+    InstanceVars(
+        (#fooVar, Int64),
+        (#bar, Retained[Id]),
+        (#bas, Bool),
+    ),
+    ClassMethods(),
+    InstanceMethods(
+        // reader/writer names related but different from variable name, default selector type
+        ...PropertyInstanceMethods(#fooVar, #"foo"),
+        // reader/writer names related but different from variable name, specified selector type
+        ...PropertyInstanceMethods(#fooVar, #"foo64", Int64),
+        // default reader/writer names, specified selector type
+        ...PropertyInstanceMethods(#bar, Id),
+        // reader/writer names both different, default selector type
+        ...PropertyInstanceMethods(#bas, #"isBas", #"setBas:"),
+    )
+);
+
 main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
     TestCase("constructor overloads", test => {
         expectEqual(test, "NSNumber(bool)", true, NSNumber(true).boolValue());
@@ -215,5 +243,24 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
                     o.release();
             });
         });
+    }),
+    TestCase("printing objects", test => {
+        expectEqual(test, "print NSString", "whisky", printString(NSString(#"whisky")));
+        expectEqual(test, "print NSNumber", "2020", printString(NSNumber(2020)));
+    }),
+    TestCase("property accessor methods", test => {
+        var x = Retained(PropertyTest.alloc().init());
+        {
+            var s = Retained(NSString.alloc().initWithFormat(NSSTR(#"catch-%d"), 22));
+            x.setFoo(27);
+            x.setBar(s);
+            x.setBas(true);
+            // s gets released here, so setBar had better have retained it
+        }
+        expectEqual(test, "foo", 27, x.foo());
+        expectEqual(test, "foo64", 27_i64, x.foo64());
+        expectEqual(test, "bar retainCount", NSUInteger(1), x.bar().retainCount());
+        expectEqual(test, "bar", "catch-22", x.bar());
+        expectEqual(test, "isBas", true, x.isBas());
     }),
 ])));
