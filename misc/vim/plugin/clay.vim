@@ -1,7 +1,21 @@
 nmap <Leader>cl :ClayLibraryModule<SPACE>
+nmap <Leader>c0 :LibClayAlternate(0)<CR>
+nmap <Leader>c1 :LibClayAlternate(1)<CR>
+nmap <Leader>c2 :LibClayAlternate(2)<CR>
+nmap <Leader>c3 :LibClayAlternate(3)<CR>
+nmap <Leader>c4 :LibClayAlternate(4)<CR>
+nmap <Leader>c5 :LibClayAlternate(5)<CR>
+nmap <Leader>c6 :LibClayAlternate(6)<CR>
+nmap <Leader>c7 :LibClayAlternate(7)<CR>
+nmap <Leader>c8 :LibClayAlternate(8)<CR>
+nmap <Leader>c9 :LibClayAlternate(9)<CR>
 
 if !exists("g:LibClay")
     let g:LibClay = "/usr/local/lib/lib-clay"
+endif
+
+if !exists("g:LibClayAlternates")
+    let g:LibClayAlternates = ["/usr/local/lib/lib-clay"]
 endif
 
 function! s:unique(list)
@@ -28,6 +42,7 @@ function! ClayCompleteLibraryModule(arglead, cmdline, cursorpos)
 endfunction
 
 command! -nargs=1 -complete=customlist,ClayCompleteLibraryModule ClayLibraryModule :call GoToClayLibraryModule("<args>")
+command! -nargs=1 LibClayAlternate :call SelectLibClayAlternate(<args>)
 
 function! ClayModuleFileNames(path)
     let names = [a:path . ".clay"]
@@ -74,8 +89,14 @@ endfunction
 function! GoToClayLibraryModule(module)
     let modulefile = FindClayModuleFile(g:LibClay . "/" . substitute(a:module, "\\.", "/", "g"))
     if modulefile == ""
-        echo "Library module " modulefile " not found"
+        echo "Library module" modulefile "not found"
     else
         exe "edit " fnameescape(modulefile)
     endif
 endfunction
+
+function! SelectLibClayAlternate(n)
+    echo "Setting g:LibClay to" get(g:LibClayAlternates, a:n, g:LibClay)
+    let g:LibClay = get(g:LibClayAlternates, a:n, g:LibClay)
+endfunction
+
