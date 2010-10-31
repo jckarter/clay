@@ -1,14 +1,14 @@
-nmap <Leader>cl :ClayLibraryModule<SPACE>
-nmap <Leader>c0 :LibClayAlternate(0)<CR>
-nmap <Leader>c1 :LibClayAlternate(1)<CR>
-nmap <Leader>c2 :LibClayAlternate(2)<CR>
-nmap <Leader>c3 :LibClayAlternate(3)<CR>
-nmap <Leader>c4 :LibClayAlternate(4)<CR>
-nmap <Leader>c5 :LibClayAlternate(5)<CR>
-nmap <Leader>c6 :LibClayAlternate(6)<CR>
-nmap <Leader>c7 :LibClayAlternate(7)<CR>
-nmap <Leader>c8 :LibClayAlternate(8)<CR>
-nmap <Leader>c9 :LibClayAlternate(9)<CR>
+nmap <Leader>cl :LibClayModule<SPACE>
+nmap <Leader>c0 :LibClayAlternate 0<CR>
+nmap <Leader>c1 :LibClayAlternate 1<CR>
+nmap <Leader>c2 :LibClayAlternate 2<CR>
+nmap <Leader>c3 :LibClayAlternate 3<CR>
+nmap <Leader>c4 :LibClayAlternate 4<CR>
+nmap <Leader>c5 :LibClayAlternate 5<CR>
+nmap <Leader>c6 :LibClayAlternate 6<CR>
+nmap <Leader>c7 :LibClayAlternate 7<CR>
+nmap <Leader>c8 :LibClayAlternate 8<CR>
+nmap <Leader>c9 :LibClayAlternate 9<CR>
 
 if !exists("g:LibClay")
     let g:LibClay = "/usr/local/lib/lib-clay"
@@ -41,7 +41,7 @@ function! ClayCompleteLibraryModule(arglead, cmdline, cursorpos)
     return modulesl
 endfunction
 
-command! -nargs=1 -complete=customlist,ClayCompleteLibraryModule ClayLibraryModule :call GoToClayLibraryModule("<args>")
+command! -nargs=1 -complete=customlist,ClayCompleteLibraryModule LibClayModule :call GoToLibClayModule("<args>")
 command! -nargs=1 LibClayAlternate :call SelectLibClayAlternate(<args>)
 
 function! ClayModuleFileNames(path)
@@ -86,7 +86,7 @@ function! FindClayModuleFile(path)
     return ""
 endfunction
 
-function! GoToClayLibraryModule(module)
+function! GoToLibClayModule(module)
     let modulefile = FindClayModuleFile(g:LibClay . "/" . substitute(a:module, "\\.", "/", "g"))
     if modulefile == ""
         echo "Library module" modulefile "not found"

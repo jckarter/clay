@@ -14,13 +14,13 @@ let g:LibClay = "/path/to/lib-clay"
 
 The clay plugin adds the following ex-mode commands:
 
-:ClayLibraryModule <module> [<platform>]
+:LibClayModule <module> [<platform>]
     Opens the clay source file for the library module <module> under
     the g:LibClay directory. <module> is specified as a dotted path, as
     in a clay "import" statement. If there are multiple platform-specific
     source files for the module, one is chosen arbitrarily.
     Example:
-        :ClayLibraryModule io.files
+        :LibClayModule io.files
 :LibClayAlternate <n>
     Sets g:LibClay to the <n>th element of the g:LibClayAlternates
     variable. This makes it easy to navigate between different Clay
@@ -33,7 +33,7 @@ The clay plugin adds the following ex-mode commands:
 
 The clay plugin adds the following command-mode keyboard commands:
 
-\cl       short for :ClayLibraryModule<SPACE>
+\cl       short for :LibClayModule<SPACE>
 \c<n>     short for :LibClayAlternate <n> (for <n> between 0 and 9)
 
 If you've changed the mapleader character, that character will be used instead
