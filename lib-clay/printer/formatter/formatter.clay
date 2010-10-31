@@ -1,0 +1,196 @@
+import printer.*;
+import printer.platform.*;
+
+
+
+//
+// Formatter types
+//
+
+Formatter?(X) = false;
+
+formatter(F, forward x, forward ...params)
+    = F[Type(captureValue(x))](captureValue(x), ...params);
+
+
+
+//
+// Number base formatters
+//
+
+private record HexFormatter[T] (value: T);
+private record HEXFormatter[T] (value: T);
+private record OctFormatter[T] (value: T);
+
+[T] overload Formatter?(static HexFormatter[T]) = true;
+[T] overload Formatter?(static HEXFormatter[T]) = true;
+[T] overload Formatter?(static OctFormatter[T]) = true;
+
+[I | Integer?(I)]
+hex(forward x: I) = formatter(HexFormatter, x);
+[I | Integer?(I)]
+HEX(forward x: I) = formatter(HEXFormatter, x);
+[I | Integer?(I)]
+oct(forward x: I) = formatter(OctFormatter, x);
+
+[F | Formatter?(F)]
+overload printTo(stream, forward formatter: F) {
+    formatTo(stream, formatter, forwardValue(formatter.value));
+}
+
+// formatTo(stream, formatter, value)
+procedure formatTo;
+
+private _formatBase(stream, value, fmt) {
+    if (value < 0) {
+        printTo(stream, '-');
+        printWithSprintf(stream, fmt, -value);
+    } else {
+        printWithSprintf(stream, fmt, value);
+    }
+}
+
+private formatBase(stream, value, fmt, fmt64) {
+    _formatBase(stream, value, fmt);
+}
+overload formatBase(stream, value: Int64, fmt, fmt64) {
+    _formatBase(stream, value, fmt64);
+}
+overload formatBase(stream, value: UInt64, fmt, fmt64) {
+    printWithSprintf(stream, fmt64, value);
+}
+
+[T] overload formatTo(stream, f: HexFormatter[T], value) {
+    formatBase(stream, value, "%x", formatForHexInt64);
+}
+
+[T] overload formatTo(stream, f: HEXFormatter[T], value) {
+    formatBase(stream, value, "%X", formatForHEXInt64);
+}
+
+[T] overload formatTo(stream, f: OctFormatter[T], value) {
+    formatBase(stream, value, "%o", formatForOctInt64);
+}
+
+
+
+//
+// printedWidth function
+//
+
+// printedWidth(object) SizeT
+procedure printedWidth;
+
+[S | String?(S)]
+overload printedWidth(s: S) = size(s);
+
+[base, length, place]
+private _unsignedWidthInBase(n, static base, static length, static place) {
+    if (n < place)
+        return length;
+    else return _unsignedWidthInBase(n, static base, static length+1, static place*base);
+}
+[base, length, place | place > UPTRINT_MAX/base]
+overload _unsignedWidthInBase(n, static base, static length, static place) {
+    if (n < place)
+        return length;
+    else
+        return length + 1;
+}
+
+
+[base]
+unsignedWidthInBase(n, static base)
+    = _unsignedWidthInBase(n, static base, static SizeT(1), static UInt64(base));
+
+[base]
+widthInBase(n, static base) {
+    if (n < 0)
+        return 1 + unsignedWidthInBase(-n, static base);
+    else
+        return unsignedWidthInBase(n, static base);
+}
+
+[I | Integer?(I)]
+overload printedWidth(n: I) = widthInBase(n, static 10);
+
+[T]
+overload printedWidth(f: HexFormatter[T]) = widthInBase(capturedRef(f.value), static 16);
+[T]
+overload printedWidth(f: HEXFormatter[T]) = widthInBase(capturedRef(f.value), static 16);
+[T]
+overload printedWidth(f: OctFormatter[T]) = widthInBase(capturedRef(f.value), static  8);
+
+overload printedWidth(c: Char) = 1;
+overload printedWidth(b: Bool) = if (b) 4 else 5;
+
+
+
+//
+// minimum-width alignment formatter
+//
+
+private record LeftAlignedFormatter[T] (
+    value: T,
+    width: SizeT,
+    filledWidth: SizeT,
+    pad: Char,
+);
+private record RightAlignedFormatter[T] (
+    value: T,
+    width: SizeT,
+    filledWidth: SizeT,
+    pad: Char,
+);
+
+private AlignedFormatter?(T) = false;
+[T] overload AlignedFormatter?(static LeftAlignedFormatter[T]) = true;
+[T] overload AlignedFormatter?(static RightAlignedFormatter[T]) = true;
+[T | AlignedFormatter?(T)] overload Formatter?(static T) = true;
+
+[I | Integer?(I)]
+private alignedFormatter(F, width: I, pad: Char, forward ...values) {
+    // If printedWidth isn't available for all objects, print them to a string
+    // and use the width of that
+    var s = printString(...values);
+    var filledWidth = size(s);
+    return formatter(F, Tuple(move(s)), SizeT(width), filledWidth, pad);
+}
+
+private filledWidth(...values)
+    = foldValues(add, SizeT(0), ...mapValues(printedWidth, ...values));
+
+[I, ...TT | Integer?(I) and allValues?(T => CallDefined?(printedWidth, T), ...TT)]
+overload alignedFormatter(F, width: I, pad: Char, forward ...values: TT) {
+    var cvalues = captureValues(...values);
+    return F(cvalues, SizeT(width), filledWidth(...capturedRefs(cvalues)), pad);
+}
+
+leftAlignedWith(width, pad, forward ...values)
+    = alignedFormatter(LeftAlignedFormatter, width, pad, ...values);
+rightAlignedWith(width, pad, forward ...values)
+    = alignedFormatter(RightAlignedFormatter, width, pad, ...values);
+
+leftAligned(width, forward ...values)
+    = alignedFormatter(LeftAlignedFormatter, width, ' ', ...values);
+rightAligned(width, forward ...values)
+    = alignedFormatter(RightAlignedFormatter, width, ' ', ...values);
+
+[T]
+overload printTo(stream, f: LeftAlignedFormatter[T]) {
+    printTo(stream, ...forwardValues(f.value));
+    var i = f.filledWidth;
+    while (i < f.width) {
+        printTo(stream, f.pad);
+        i += 1;
+    }
+}
+[T]
+overload printTo(stream, f: RightAlignedFormatter[T]) {
+    var i = f.filledWidth;
+    while (i < f.width) {
+        printTo(stream, f.pad);
+        i += 1;
+    }
+    printTo(stream, ...forwardValues(f.value));
+}
