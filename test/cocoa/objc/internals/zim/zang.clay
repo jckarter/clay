@@ -1,0 +1,3 @@
+import cocoa.objc.*;
+
+record ZangClass = newClass(Void, InstanceVars(), ClassMethods(), InstanceMethods());
