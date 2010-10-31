@@ -3,6 +3,9 @@ import test.memory.*;
 import cocoa.objc.*;
 import cocoa.objc.platform;
 
+import foo.(FooClass);
+import zim.zang.(ZangClass);
+
 record NSZone ();
 
 overload selector(static #"alloc") = Id;
@@ -287,8 +290,14 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         expectEqual(test, "class name for externalClass(name) MyNSNumber", "NSNumber",
             ClassName(MyNSNumber)
         );
-        expectEqual(test, "class name for newClass SubString1", "clay:__main__.SubString1",
+        expectEqual(test, "class name for newClass SubString1", "clay____main____SubString1",
             ClassName(SubString1)
+        );
+        expectEqual(test, "class name for newClass foo.FooClass", "clay__foo__FooClass",
+            ClassName(FooClass)
+        );
+        expectEqual(test, "class name for newClass zim.zang.ZangClass", "clay__zim__zang__ZangClass",
+            ClassName(ZangClass)
         );
         expectEqual(test, "class name for newClass(name) SubString2", "ClaySubString2",
             ClassName(SubString2)
