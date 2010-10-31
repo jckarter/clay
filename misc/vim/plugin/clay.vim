@@ -77,7 +77,6 @@ function! FindClayModuleFile(path)
     let basename = substitute(a:path, "^.*[/\\\\]", "", "")
     let searchnames = ClayModuleFileNames(a:path)
     let searchnames += ClayModuleFileNames(a:path . "/" . basename)
-    echo searchnames
     for name in searchnames
         if getftype(name) != ""
             return name
