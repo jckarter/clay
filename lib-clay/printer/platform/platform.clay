@@ -1,3 +1,6 @@
 
 alias formatForInt64 = "%lld";
 alias formatForUInt64 = "%llu";
+alias formatForHexInt64 = "%llx";
+alias formatForHEXInt64 = "%llX";
+alias formatForOctInt64 = "%llo";
