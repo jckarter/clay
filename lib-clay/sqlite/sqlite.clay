@@ -1,1 +1,1 @@
-import sqlite.generated.*;
+public import sqlite.generated.*;
