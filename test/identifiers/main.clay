@@ -26,4 +26,11 @@ main() {
     println(IdentifierEndsWith?(#foobar, #bar));
     println(IdentifierEndsWith?(#foobar, #foobar));
     println(IdentifierEndsWith?(#foo, #foobar));
+
+    println();
+    println(IdentifierFind(#foobarfoo, #foo));
+    println(IdentifierFind(#foobarfoo, #bar));
+    println(IdentifierFind(#foobarfoo, #bas));
+    println(IdentifierFind(#foo, #foobarfoo));
+    println(IdentifierFind(#foobarfoo, #foo, static 1));
 }
