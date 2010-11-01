@@ -112,6 +112,7 @@ endfunction
 
 function! CreateLibClayModuleDir(module)
     let modulepath = g:LibClay . "/" . substitute(a:module, "\\.", "/", "g")
+    let basename = substitute(a:module, "^.*\\.", "", "")
     exe "silent !mkdir -p " shellescape(modulepath)
-    exe "edit " fnameescape(modulepath . "/" . a:module . ".clay")
+    exe "edit " fnameescape(modulepath . "/" . basename . ".clay")
 endfunction
