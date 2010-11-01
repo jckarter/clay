@@ -1,0 +1,220 @@
+alias SQLITE_OK         =  0;
+alias SQLITE_ERROR      =  1;
+alias SQLITE_INTERNAL   =  2;
+alias SQLITE_PERM       =  3;
+alias SQLITE_ABORT      =  4;
+alias SQLITE_BUSY       =  5;
+alias SQLITE_LOCKED     =  6;
+alias SQLITE_NOMEM      =  7;
+alias SQLITE_READONLY   =  8;
+alias SQLITE_INTERRUPT  =  9;
+alias SQLITE_IOERR      = 10;
+alias SQLITE_CORRUPT    = 11;
+alias SQLITE_NOTFOUND   = 12;
+alias SQLITE_FULL       = 13;
+alias SQLITE_CANTOPEN   = 14;
+alias SQLITE_PROTOCOL   = 15;
+alias SQLITE_EMPTY      = 16;
+alias SQLITE_SCHEMA     = 17;
+alias SQLITE_TOOBIG     = 18;
+alias SQLITE_CONSTRAINT = 19;
+alias SQLITE_MISMATCH   = 20;
+alias SQLITE_MISUSE     = 21;
+alias SQLITE_NOLFS      = 22;
+alias SQLITE_AUTH       = 23;
+alias SQLITE_FORMAT     = 24;
+alias SQLITE_RANGE      = 25;
+alias SQLITE_NOTADB     = 26;
+alias SQLITE_ROW        = 100;
+alias SQLITE_DONE       = 101;
+
+alias SQLITE_IOERR_READ              = bitwiseOr(SQLITE_IOERR, shiftRight(1, 8));
+alias SQLITE_IOERR_SHORT_READ        = bitwiseOr(SQLITE_IOERR, shiftRight(2, 8));
+alias SQLITE_IOERR_WRITE             = bitwiseOr(SQLITE_IOERR, shiftRight(3, 8));
+alias SQLITE_IOERR_FSYNC             = bitwiseOr(SQLITE_IOERR, shiftRight(4, 8));
+alias SQLITE_IOERR_DIR_FSYNC         = bitwiseOr(SQLITE_IOERR, shiftRight(5, 8));
+alias SQLITE_IOERR_TRUNCATE          = bitwiseOr(SQLITE_IOERR, shiftRight(6, 8));
+alias SQLITE_IOERR_FSTAT             = bitwiseOr(SQLITE_IOERR, shiftRight(7, 8));
+alias SQLITE_IOERR_UNLOCK            = bitwiseOr(SQLITE_IOERR, shiftRight(8, 8));
+alias SQLITE_IOERR_RDLOCK            = bitwiseOr(SQLITE_IOERR, shiftRight(9, 8));
+alias SQLITE_IOERR_DELETE            = bitwiseOr(SQLITE_IOERR, shiftRight(10, 8));
+alias SQLITE_IOERR_BLOCKED           = bitwiseOr(SQLITE_IOERR, shiftRight(11, 8));
+alias SQLITE_IOERR_NOMEM             = bitwiseOr(SQLITE_IOERR, shiftRight(12, 8));
+alias SQLITE_IOERR_ACCESS            = bitwiseOr(SQLITE_IOERR, shiftRight(13, 8));
+alias SQLITE_IOERR_CHECKRESERVEDLOCK = bitwiseOr(SQLITE_IOERR, shiftRight(14, 8));
+alias SQLITE_IOERR_LOCK              = bitwiseOr(SQLITE_IOERR, shiftRight(15, 8));
+alias SQLITE_IOERR_CLOSE             = bitwiseOr(SQLITE_IOERR, shiftRight(16, 8));
+alias SQLITE_IOERR_DIR_CLOSE         = bitwiseOr(SQLITE_IOERR, shiftRight(17, 8));
+
+alias SQLITE_LOCKED_SHAREDCACHE      = bitwiseOr(SQLITE_LOCKED, (1, 8));
+
+alias SQLITE_OPEN_READONLY         = 0x00000001;
+alias SQLITE_OPEN_READWRITE        = 0x00000002;
+alias SQLITE_OPEN_CREATE           = 0x00000004;
+alias SQLITE_OPEN_DELETEONCLOSE    = 0x00000008;
+alias SQLITE_OPEN_EXCLUSIVE        = 0x00000010;
+alias SQLITE_OPEN_AUTOPROXY        = 0x00000020;
+alias SQLITE_OPEN_MAIN_DB          = 0x00000100;
+alias SQLITE_OPEN_TEMP_DB          = 0x00000200;
+alias SQLITE_OPEN_TRANSIENT_DB     = 0x00000400;
+alias SQLITE_OPEN_MAIN_JOURNAL     = 0x00000800;
+alias SQLITE_OPEN_TEMP_JOURNAL     = 0x00001000;
+alias SQLITE_OPEN_SUBJOURNAL       = 0x00002000;
+alias SQLITE_OPEN_MASTER_JOURNAL   = 0x00004000;
+alias SQLITE_OPEN_NOMUTEX          = 0x00008000;
+alias SQLITE_OPEN_FULLMUTEX        = 0x00010000;
+
+alias SQLITE_IOCAP_ATOMIC          = 0x00000001;
+alias SQLITE_IOCAP_ATOMIC512       = 0x00000002;
+alias SQLITE_IOCAP_ATOMIC1K        = 0x00000004;
+alias SQLITE_IOCAP_ATOMIC2K        = 0x00000008;
+alias SQLITE_IOCAP_ATOMIC4K        = 0x00000010;
+alias SQLITE_IOCAP_ATOMIC8K        = 0x00000020;
+alias SQLITE_IOCAP_ATOMIC16K       = 0x00000040;
+alias SQLITE_IOCAP_ATOMIC32K       = 0x00000080;
+alias SQLITE_IOCAP_ATOMIC64K       = 0x00000100;
+alias SQLITE_IOCAP_SAFE_APPEND     = 0x00000200;
+alias SQLITE_IOCAP_SEQUENTIAL      = 0x00000400;
+
+alias SQLITE_LOCK_NONE          = 0;
+alias SQLITE_LOCK_SHARED        = 1;
+alias SQLITE_LOCK_RESERVED      = 2;
+alias SQLITE_LOCK_PENDING       = 3;
+alias SQLITE_LOCK_EXCLUSIVE     = 4;
+
+alias SQLITE_SYNC_NORMAL        = 0x00002;
+alias SQLITE_SYNC_FULL          = 0x00003;
+alias SQLITE_SYNC_DATAONLY      = 0x00010;
+
+alias SQLITE_FCNTL_LOCKSTATE        = 1;
+alias SQLITE_GET_LOCKPROXYFILE      = 2;
+alias SQLITE_SET_LOCKPROXYFILE      = 3;
+alias SQLITE_LAST_ERRNO             = 4;
+
+alias SQLITE_ACCESS_EXISTS    = 0;
+alias SQLITE_ACCESS_READWRITE = 1;
+alias SQLITE_ACCESS_READ      = 2;
+
+alias SQLITE_CONFIG_SINGLETHREAD  = 1; /* nil */
+alias SQLITE_CONFIG_MULTITHREAD   = 2; /* nil */
+alias SQLITE_CONFIG_SERIALIZED    = 3; /* nil */
+alias SQLITE_CONFIG_MALLOC        = 4; /* sqlite3_mem_methods* */
+alias SQLITE_CONFIG_GETMALLOC     = 5; /* sqlite3_mem_methods* */
+alias SQLITE_CONFIG_SCRATCH       = 6; /* void*, int sz, int N */
+alias SQLITE_CONFIG_PAGECACHE     = 7; /* void*, int sz, int N */
+alias SQLITE_CONFIG_HEAP          = 8; /* void*, int nByte, int min */
+alias SQLITE_CONFIG_MEMSTATUS     = 9; /* boolean */
+alias SQLITE_CONFIG_MUTEX        = 10; /* sqlite3_mutex_methods* */
+alias SQLITE_CONFIG_GETMUTEX     = 11; /* sqlite3_mutex_methods* */
+/* previously SQLITE_CONFIG_CHUNKALLOC 12 which is now unused. */ 
+alias SQLITE_CONFIG_LOOKASIDE    = 13; /* int int */
+alias SQLITE_CONFIG_PCACHE       = 14; /* sqlite3_pcache_methods* */
+alias SQLITE_CONFIG_GETPCACHE    = 15; /* sqlite3_pcache_methods* */
+
+alias SQLITE_DBCONFIG_LOOKASIDE    = 1001; /* void* int int */
+
+alias SQLITE_DENY   = 1; /* Abort the SQL statement with an error */
+alias SQLITE_IGNORE = 2; /* Don't allow access, but don't generate an error */
+
+alias SQLITE_CREATE_INDEX          = 1; /* Index Name      Table Name      */
+alias SQLITE_CREATE_TABLE          = 2; /* Table Name      NULL            */
+alias SQLITE_CREATE_TEMP_INDEX     = 3; /* Index Name      Table Name      */
+alias SQLITE_CREATE_TEMP_TABLE     = 4; /* Table Name      NULL            */
+alias SQLITE_CREATE_TEMP_TRIGGER   = 5; /* Trigger Name    Table Name      */
+alias SQLITE_CREATE_TEMP_VIEW      = 6; /* View Name       NULL            */
+alias SQLITE_CREATE_TRIGGER        = 7; /* Trigger Name    Table Name      */
+alias SQLITE_CREATE_VIEW           = 8; /* View Name       NULL            */
+alias SQLITE_DELETE                = 9; /* Table Name      NULL            */
+alias SQLITE_DROP_INDEX           = 10; /* Index Name      Table Name      */
+alias SQLITE_DROP_TABLE           = 11; /* Table Name      NULL            */
+alias SQLITE_DROP_TEMP_INDEX      = 12; /* Index Name      Table Name      */
+alias SQLITE_DROP_TEMP_TABLE      = 13; /* Table Name      NULL            */
+alias SQLITE_DROP_TEMP_TRIGGER    = 14; /* Trigger Name    Table Name      */
+alias SQLITE_DROP_TEMP_VIEW       = 15; /* View Name       NULL            */
+alias SQLITE_DROP_TRIGGER         = 16; /* Trigger Name    Table Name      */
+alias SQLITE_DROP_VIEW            = 17; /* View Name       NULL            */
+alias SQLITE_INSERT               = 18; /* Table Name      NULL            */
+alias SQLITE_PRAGMA               = 19; /* Pragma Name     1st arg or NULL */
+alias SQLITE_READ                 = 20; /* Table Name      Column Name     */
+alias SQLITE_SELECT               = 21; /* NULL            NULL            */
+alias SQLITE_TRANSACTION          = 22; /* Operation       NULL            */
+alias SQLITE_UPDATE               = 23; /* Table Name      Column Name     */
+alias SQLITE_ATTACH               = 24; /* Filename        NULL            */
+alias SQLITE_DETACH               = 25; /* Database Name   NULL            */
+alias SQLITE_ALTER_TABLE          = 26; /* Database Name   Table Name      */
+alias SQLITE_REINDEX              = 27; /* Index Name      NULL            */
+alias SQLITE_ANALYZE              = 28; /* Table Name      NULL            */
+alias SQLITE_CREATE_VTABLE        = 29; /* Table Name      Module Name     */
+alias SQLITE_DROP_VTABLE          = 30; /* Table Name      Module Name     */
+alias SQLITE_FUNCTION             = 31; /* NULL            Function Name   */
+alias SQLITE_SAVEPOINT            = 32; /* Operation       Savepoint Name  */
+alias SQLITE_COPY                  = 0; /* No longer used */
+
+alias SQLITE_LIMIT_LENGTH                    = 0;
+alias SQLITE_LIMIT_SQL_LENGTH                = 1;
+alias SQLITE_LIMIT_COLUMN                    = 2;
+alias SQLITE_LIMIT_EXPR_DEPTH                = 3;
+alias SQLITE_LIMIT_COMPOUND_SELECT           = 4;
+alias SQLITE_LIMIT_VDBE_OP                   = 5;
+alias SQLITE_LIMIT_FUNCTION_ARG              = 6;
+alias SQLITE_LIMIT_ATTACHED                  = 7;
+alias SQLITE_LIMIT_LIKE_PATTERN_LENGTH       = 8;
+alias SQLITE_LIMIT_VARIABLE_NUMBER           = 9;
+
+alias SQLITE_INTEGER  = 1;
+alias SQLITE_FLOAT    = 2;
+alias SQLITE_BLOB     = 4;
+alias SQLITE_NULL     = 5;
+alias SQLITE_TEXT     = 3;
+alias SQLITE3_TEXT     = 3;
+
+alias SQLITE_UTF8           = 1;
+alias SQLITE_UTF16LE        = 2;
+alias SQLITE_UTF16BE        = 3;
+alias SQLITE_UTF16          = 4; /* Use native byte order */
+alias SQLITE_ANY            = 5; /* sqlite3_create_function only */
+alias SQLITE_UTF16_ALIGNED  = 8; /* sqlite3_create_collation only */
+
+alias SQLITE_STATIC      = sqlite3_destructor_type(0);
+alias SQLITE_TRANSIENT   = sqlite3_destructor_type(-1);
+
+alias SQLITE_INDEX_CONSTRAINT_EQ    = 2;
+alias SQLITE_INDEX_CONSTRAINT_GT    = 4;
+alias SQLITE_INDEX_CONSTRAINT_LE    = 8;
+alias SQLITE_INDEX_CONSTRAINT_LT    = 16;
+alias SQLITE_INDEX_CONSTRAINT_GE    = 32;
+alias SQLITE_INDEX_CONSTRAINT_MATCH = 64;
+
+alias SQLITE_MUTEX_FAST             = 0;
+alias SQLITE_MUTEX_RECURSIVE        = 1;
+alias SQLITE_MUTEX_STATIC_MASTER    = 2;
+alias SQLITE_MUTEX_STATIC_MEM       = 3; /* sqlite3_malloc() */
+alias SQLITE_MUTEX_STATIC_MEM2      = 4; /* NOT USED */
+alias SQLITE_MUTEX_STATIC_OPEN      = 4; /* sqlite3BtreeOpen() */
+alias SQLITE_MUTEX_STATIC_PRNG      = 5; /* sqlite3_random() */
+alias SQLITE_MUTEX_STATIC_LRU       = 6; /* lru page list */
+alias SQLITE_MUTEX_STATIC_LRU2      = 7; /* lru page list */
+
+alias SQLITE_TESTCTRL_PRNG_SAVE                = 5;
+alias SQLITE_TESTCTRL_PRNG_RESTORE             = 6;
+alias SQLITE_TESTCTRL_PRNG_RESET               = 7;
+alias SQLITE_TESTCTRL_BITVEC_TEST              = 8;
+alias SQLITE_TESTCTRL_FAULT_INSTALL            = 9;
+alias SQLITE_TESTCTRL_BENIGN_MALLOC_HOOKS     = 10;
+alias SQLITE_TESTCTRL_PENDING_BYTE            = 11;
+
+alias SQLITE_STATUS_MEMORY_USED          = 0;
+alias SQLITE_STATUS_PAGECACHE_USED       = 1;
+alias SQLITE_STATUS_PAGECACHE_OVERFLOW   = 2;
+alias SQLITE_STATUS_SCRATCH_USED         = 3;
+alias SQLITE_STATUS_SCRATCH_OVERFLOW     = 4;
+alias SQLITE_STATUS_MALLOC_SIZE          = 5;
+alias SQLITE_STATUS_PARSER_STACK         = 6;
+alias SQLITE_STATUS_PAGECACHE_SIZE       = 7;
+alias SQLITE_STATUS_SCRATCH_SIZE         = 8;
+
+alias SQLITE_DBSTATUS_LOOKASIDE_USED     = 0;
+
+alias SQLITE_STMTSTATUS_FULLSCAN_STEP     = 1;
+alias SQLITE_STMTSTATUS_SORT              = 2;
+

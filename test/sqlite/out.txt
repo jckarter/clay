@@ -1,0 +1,6 @@
+creating table
+inserting table
+selecting table
+lolcats => 9001
+goatse => -1
+dropping table
