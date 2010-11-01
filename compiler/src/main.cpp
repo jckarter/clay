@@ -670,7 +670,7 @@ int main(int argc, char **argv) {
         else
             outputFile = DEFAULT_EXE;
     }
-    string atomicOutputFile = "." + outputFile + ".claytmp";
+    string atomicOutputFile = outputFile + ".claytmp";
     llvm::sys::Path outputFilePath(outputFile);
     llvm::sys::Path atomicOutputFilePath(atomicOutputFile);
     
