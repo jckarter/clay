@@ -1,4 +1,6 @@
 nmap <Leader>cl :LibClayModule<SPACE>
+nmap <Leader>cn :LibClayNewModule<SPACE>
+nmap <Leader>cN :LibClayNewModuleDir<SPACE>
 nmap <Leader>c0 :LibClayAlternate 0<CR>
 nmap <Leader>c1 :LibClayAlternate 1<CR>
 nmap <Leader>c2 :LibClayAlternate 2<CR>
@@ -42,6 +44,8 @@ function! ClayCompleteLibraryModule(arglead, cmdline, cursorpos)
 endfunction
 
 command! -nargs=1 -complete=customlist,ClayCompleteLibraryModule LibClayModule :call GoToLibClayModule("<args>")
+command! -nargs=1 -complete=customlist,ClayCompleteLibraryModule LibClayNewModule :call CreateLibClayModule("<args>")
+command! -nargs=1 -complete=customlist,ClayCompleteLibraryModule LibClayNewModuleDir :call CreateLibClayModuleDir("<args>")
 command! -nargs=1 LibClayAlternate :call SelectLibClayAlternate(<args>)
 
 function! ClayModuleFileNames(path)
@@ -99,3 +103,15 @@ function! SelectLibClayAlternate(n)
     let g:LibClay = get(g:LibClayAlternates, a:n, g:LibClay)
 endfunction
 
+function! CreateLibClayModule(module)
+    let modulename = g:LibClay . "/" . substitute(a:module, "\\.", "/", "g") . ".clay"
+    let modulepath = substitute(modulename, "[/\\\\][^/\\\\]*$", "", "")
+    exe "silent !mkdir -p " shellescape(modulepath)
+    exe "edit " fnameescape(modulename)
+endfunction
+
+function! CreateLibClayModuleDir(module)
+    let modulepath = g:LibClay . "/" . substitute(a:module, "\\.", "/", "g")
+    exe "silent !mkdir -p " shellescape(modulepath)
+    exe "edit " fnameescape(modulepath . "/" . a:module . ".clay")
+endfunction
