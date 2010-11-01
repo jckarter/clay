@@ -1,0 +1,19 @@
+import sqlite.*;
+
+main() {
+    var db = SqliteDB("temp.sqlite");
+
+    println("creating table");
+    runStatement(db, "create temp table hoozits (foo, bar)"); 
+
+    println("inserting table");
+    runStatement(db, "insert into hoozits values ('lolcats', 9001)"); 
+    runStatement(db, "insert into hoozits values ('goatse', -1)"); 
+
+    println("selecting table");
+    for (row in SqliteStatement(db, "select * from hoozits"))
+        println(row[0], " => ", row[1, Int]);
+
+    println("dropping table");
+    runStatement(db, "drop table hoozits");
+}
