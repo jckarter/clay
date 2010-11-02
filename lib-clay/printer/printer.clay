@@ -353,3 +353,16 @@ printlnString(...x) {
     printlnTo(s, ...x);
     return move(s);
 }
+
+
+
+//
+// observe, observeTo -- dump intermediate values and forward them
+//
+
+observeTo(stream, forward ...x) {
+    var captured = captureValues(...x);
+    printlnTo(stream, "[observed: ", ...weaveValues(", ", ...capturedRefs(captured)), "]");
+    return forward ...forwardValues(captured);
+}
+observe(forward ...x) = forward ...observeTo(stderr, ...x);

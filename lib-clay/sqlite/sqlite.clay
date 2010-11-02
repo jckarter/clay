@@ -1,0 +1,146 @@
+public import sqlite.generated.*;
+public import sqlite.constants.*;
+
+
+
+//
+// SqliteError exception
+//
+record SqliteError (code: Int, message: CStringRef);
+instance Exception = SqliteError;
+
+overload SqliteError(code: Int, db: SqliteDB)
+    = SqliteError(code, CStringRef(sqlite3_errmsg(db.handle)));
+
+
+
+//
+// SqliteDB
+//
+record SqliteDB (handle: Pointer[sqlite3]);
+overload RegularRecord?(static SqliteDB) = false;
+
+[S | CCompatibleString?(S)]
+overload SqliteDB(filename: S) returned: SqliteDB {
+    var code = sqlite3_open(cstring(filename), &returned.handle);
+    if (code != SQLITE_OK)
+        throw SqliteError(code, returned);
+}
+
+overload moveUnsafe(db: SqliteDB) = SqliteDB(db.handle);
+overload resetUnsafe(db: SqliteDB) { db.handle = null(sqlite3); }
+overload destroy(db: SqliteDB) { sqlite3_close(db.handle); }
+
+
+
+//
+// SqliteStatement
+//
+record SqliteStatement (handle: Pointer[sqlite3_stmt]);
+overload RegularRecord?(static SqliteStatement) = false;
+
+[S | CCompatibleString?(S)]
+overload SqliteStatement(db: SqliteDB, sql: S) returned: SqliteStatement {
+    var tail = Pointer[CChar]();
+    var code = sqlite3_prepare_v2(db.handle, cstring(sql), Int(size(sql)), &returned.handle, &tail);
+    if (code != SQLITE_OK)
+        throw SqliteError(code, db);
+}
+
+overload moveUnsafe(st: SqliteStatement) = SqliteStatement(st.handle);
+overload resetUnsafe(st: SqliteStatement) { st.handle = null(sqlite3_stmt); }
+overload destroy(st: SqliteStatement) { sqlite3_finalize(st.handle); }
+
+resetStatement(st: SqliteStatement) { sqlite3_reset(st.handle); }
+clearStatement(st: SqliteStatement) { sqlite3_clear_bindings(st.handle); }
+
+[N, F | Integer?(N) and Float?(F)]
+bindStatement(st: SqliteStatement, n: N, value: F)
+    { sqlite3_bind_double(st.handle, Int(n), Double(value)); }
+[N, I | Integer?(N) and Integer?(I)]
+overload bindStatement(st: SqliteStatement, n: N, value: I)
+    { sqlite3_bind_int(st.handle, Int(n), Int(value)); }
+[N, I | Integer?(N) and (I == Int64 or I == UInt64)]
+overload bindStatement(st: SqliteStatement, n: N, value: I)
+    { sqlite3_bind_int64(st.handle, Int(n), Int64(value)); }
+[N | Integer?(N)]
+overload bindStatement(st: SqliteStatement, n: N)
+    { sqlite3_bind_null(st.handle, Int(n)); }
+[N, S | Integer?(N) and CCompatibleString?(S)]
+overload bindStatement(st: SqliteStatement, n: N, value: S)
+    { sqlite3_bind_text(st.handle, Int(n), cstring(value), size(value), SQLITE_TRANSIENT); }
+
+[NS | CCompatibleString?(NS)]
+overload bindStatement(st: SqliteStatement, name: NS, value)
+    { bindStatement(st, sqlite3_bind_parameter_index(st.handle, cstring(name)), value); }
+
+alias DUMMY_ERROR_MSG = CStringRef(cstring(""));
+
+runStatement(st: SqliteStatement) {
+    var code = sqlite3_step(st.handle);
+    var baseCode = bitwiseAnd(code, 0xFF);
+    if (not inValues?(baseCode, SQLITE_OK, SQLITE_ROW, SQLITE_DONE))
+        throw SqliteError(code, DUMMY_ERROR_MSG);
+    resetStatement(st);
+}
+
+[S | CCompatibleString?(S)]
+overload runStatement(db: SqliteDB, sql: S) {
+    var msg = Pointer[CChar]();
+    var code = sqlite3_exec(db.handle, cstring(sql), sqlite3_callback(0), RawPointer(0), &msg);
+    if (code != SQLITE_OK)
+        throw SqliteError(code, CStringRef(msg));
+}
+
+
+
+//
+// SqliteStatementIterator
+//
+
+// note: doesn't own the handle!
+private record SqliteStatementIterator (handle: Pointer[sqlite3_stmt]); 
+
+overload iterator(lvalue st: SqliteStatement) = SqliteStatementIterator(st.handle);
+overload iterator(rvalue st: SqliteStatement) = move(st);
+
+private SqliteStatementIterator?(T) = T == SqliteStatement or T == SqliteStatementIterator;
+
+// XXX assumes next() is always preceded by hasNext?()
+[St | SqliteStatementIterator?(St)]
+overload hasNext?(st: St) {
+    var code = sqlite3_step(st.handle);
+    var baseCode = bitwiseAnd(code, 0xFF);
+    if (not inValues?(baseCode, SQLITE_OK, SQLITE_ROW, SQLITE_DONE))
+        throw SqliteError(code, DUMMY_ERROR_MSG);
+    return code != SQLITE_DONE;
+}
+
+[St | SqliteStatementIterator?(St)]
+overload next(st: St) = st;
+
+[St, N, F | SqliteStatementIterator?(St) and Integer?(N) and Float?(F)]
+overload index(st: St, n: N, static F)
+    = F(sqlite3_column_double(st.handle, Int(n)));
+
+[St, N, I | SqliteStatementIterator?(St) and Integer?(N) and Integer?(I)]
+overload index(st: St, n: N, static I)
+    = I(sqlite3_column_int(st.handle, Int(n)));
+
+[St, N, I | SqliteStatementIterator?(St) and Integer?(N) and (I == Int64 or I == UInt64)]
+overload index(st: St, n: N, static I)
+    = I(sqlite3_column_int64(st.handle, Int(n)));
+
+[St, N, S | SqliteStatementIterator?(St) and Integer?(N) and String?(S)]
+overload index(st: St, n: N, static S)
+    = S(CStringRef(sqlite3_column_text(st.handle, Int(n))));
+
+[St, N | SqliteStatementIterator?(St) and Integer?(N)]
+overload index(st: St, n: N, static CStringRef)
+    = CStringRef(sqlite3_column_text(st.handle, Int(n)));
+
+[St, N | SqliteStatementIterator?(St) and Integer?(N)]
+overload index(st: St, n: N)
+    = CStringRef(sqlite3_column_text(st.handle, Int(n)));
+
+// TODO: sqlite values
