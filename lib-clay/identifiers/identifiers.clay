@@ -18,6 +18,29 @@ overload IdentifierEndsWith?(static identifier, static endsWith)
           static IdentifierSize(identifier)
       ) == endsWith;
 
+
+[identifier, sub, start |
+    Identifier?(identifier) and Identifier?(sub)
+]
+IdentifierFind(static identifier, static sub, static start)
+    = IdentifierFind(identifier, sub, static start + 1);
+
+[identifier, sub, start |
+    Identifier?(identifier) and Identifier?(sub)
+    and IdentifierSize(identifier) < IdentifierSize(sub) + start
+]
+overload IdentifierFind(static identifier, static sub, static start) = -1;
+
+[identifier, sub, start |
+    Identifier?(identifier) and Identifier?(sub)
+    and IdentifierSize(identifier) >= IdentifierSize(sub) + start
+    and IdentifierSlice(identifier, static start, static start + IdentifierSize(sub))
+        == sub
+]
+overload IdentifierFind(static identifier, static sub, static start) = start;
+
+overload IdentifierFind(identifier, sub) = IdentifierFind(identifier, sub, static 0);
+
 [i | Identifier?(i) and IdentifierSize(i) == 1]
 IdentifierUpperChar(static i) = i;
 

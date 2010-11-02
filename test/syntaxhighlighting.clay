@@ -151,7 +151,11 @@ operatorsTest() {
     x.0;
     x.y;
     x[y];
+    x[y, z, w];
+    x[y, z, ...w];
     x(y);
+    x(y, z, w);
+    x(y, z, ...w);
 
     x * y;
     x / y;
@@ -315,9 +319,29 @@ valueTest() {
     "str ing ";
     "\"string\"";
     "string\\";
+    "string\\\"";
+    "string\\\\";
     " \x00 \x7F \t \r \n \a \b \f \v \" \\ ";
     "//";
     "/*";
+    "
+
+
+
+string
+
+
+
+    ";
+    ("
+
+
+string
+
+
+
+    ");
+
 
     #zim;
     #zang_zung;
@@ -331,6 +355,8 @@ valueTest() {
 
     #"\"symbol\"";
     #"symbol\\";
+    #"symbol\\\"";
+    #"symbol\\\\";
     #" \x00 \x7F \t \r \n \a \b \f \v \" \\ ";
     #"//";
     #"/*";
