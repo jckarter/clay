@@ -113,6 +113,8 @@ class TestCase(object):
     def match(self, resultout, resulterr, returncode) :
         outfile = fileForPlatform(".", "out", "txt")
         errfile = fileForPlatform(".", "err", "txt")
+        if not os.path.isfile(outfile) :
+            return False
         refout = open(outfile).read()
         referr = ""
         if os.path.isfile(errfile):

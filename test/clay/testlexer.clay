@@ -1,7 +1,6 @@
 
-import clay.tokens.*;
+import clay.common.*;
 import clay.lexer.*;
-import clay.errors.*;
 
 main(args) {
     if (size(args) != 2) {
@@ -16,7 +15,7 @@ main(args) {
             println(x.kind, ": ", sliced(file^.data, r.begin, r.end));
         }
     }
-    catch (e:LexerError) {
+    catch (e:ClayError) {
         displayError(e);
     }
     return 0;

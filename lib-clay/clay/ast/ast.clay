@@ -1,6 +1,6 @@
 
 import maybe.*;
-import clay.tokens.*;
+import clay.lexer.*;
 
 
 
@@ -40,6 +40,17 @@ overload printReprTo(stream, x:T) {
     printTo(stream, T);
     printReprValuesTo(stream, ...dropValues(static 2, ...recordFields(x)));
 }
+
+
+
+//
+// VariadicList
+//
+
+record VariadicList[T] (
+    items : Vector[T],
+    variadicItem : Maybe[T],
+);
 
 
 
@@ -141,7 +152,7 @@ record IfExpr = ...ast(
 
 record LambdaExpr = ...ast(
     (#captureByRef, Bool),
-    (#formalArgs,   Vector[Identifier]),
+    (#formalArgs,   VariadicList[Identifier]),
     (#body,         StatementPtr),
 );
 
@@ -269,17 +280,6 @@ record StaticFor = ...ast(
     (#variable, Identifier),
     (#values,   Vector[ExprPtr]),
     (#body,     StatementPtr),
-);
-
-
-
-//
-// VariadicList
-//
-
-record VariadicList[T] (
-    items : Vector[T],
-    variadicItem : Maybe[T],
 );
 
 
@@ -434,9 +434,9 @@ variant TopLevelItem =
     OverloadPtr |
     EnumPtr |
     GlobalVariablePtr |
+    GlobalAliasPtr |
     ExternalProcedurePtr |
-    ExternalVariablePtr |
-    GlobalAliasPtr
+    ExternalVariablePtr
     ;
 
 

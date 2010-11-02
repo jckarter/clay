@@ -1,11 +1,11 @@
 
-import clay.tokens.*;
-import clay.lexer.*;
-import clay.parser.*;
+import maybe.*;
+import clay.common.*;
+
 
 
 //
-// displayError
+// errorWithLocation
 //
 
 private computeLocation(data, offset) {
@@ -44,9 +44,10 @@ private splitLines(data) {
     return move(lines);
 }
 
-procedure displayError;
+errorWithLocation(file:SourceFilePtr, offset, ...message) {
+    ref fileName = file^.path;
+    ref data = file^.data;
 
-overload displayError(fileName, data, offset, message) {
     var line, column, tabs = ...computeLocation(data, offset);
     column += 7*tabs;
     var lines = splitLines(data);
@@ -65,20 +66,6 @@ overload displayError(fileName, data, offset, message) {
     println("#######################################");
     println();
     println(fileName, "(", line+1, ",", column, ")");
-    println("error: ", message);
+    println("error: ", ...message);
     println();
-}
-
-overload displayError(file:SourceFilePtr, offset, message) {
-    displayError(file^.path, file^.data, offset, message);
-}
-
-overload displayError(e:LexerError) {
-    displayError(e.file^.path, e.file^.data, e.where, "invalid token");
-}
-
-overload displayError(e:ParserError) {
-    var offset = e.tokens^.vector[e.where].range.begin;
-    ref sf = e.tokens^.file^;
-    displayError(sf.path, sf.data, offset, "parse error");
 }

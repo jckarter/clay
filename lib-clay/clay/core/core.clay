@@ -1,0 +1,483 @@
+
+import maybe.*;
+import clay.common.*;
+import clay.ast as ast;
+import clay.diagnostics.*;
+
+
+
+//
+// Module
+//
+
+record Module (
+    name : String,
+    ast : ast.SourceASTPtr,
+    publicGlobals : SymbolTablePtr,
+    allGlobals : SymbolTablePtr,
+);
+
+alias ModulePtr = SharedPointer[Module];
+
+private var modulesMap = HashMap[String,ModulePtr]();
+
+
+
+//
+// lookupModule, installModule
+//
+
+procedure lookupModule;
+
+[S | String?(S)]
+overload lookupModule(name:S) = lookupModule(String(name));
+
+overload lookupModule(name:String) Maybe[ModulePtr] { 
+    var ptr = lookup(modulesMap, name);
+    if (null?(ptr))
+        return nothing(ModulePtr);
+    return Maybe(ptr^);
+}
+
+installModule(name:String, module:ModulePtr) {
+    modulesMap[name] = module;
+}
+
+
+
+//
+// symbol table entries for top-level items
+//
+
+record Record (
+    ast : ast.RecordPtr,
+);
+alias RecordPtr = SharedPointer[Record];
+
+record Variant (
+    ast : ast.VariantPtr,
+);
+alias VariantPtr = SharedPointer[Variant];
+
+record Procedure (
+    ast : ast.ProcedurePtr,
+);
+alias ProcedurePtr = SharedPointer[Procedure];
+
+record Enum (
+    ast : ast.EnumPtr,
+);
+alias EnumPtr = SharedPointer[Enum];
+
+record EnumMember (
+    parent : EnumPtr,
+    index : SizeT,
+);
+alias EnumMemberPtr = SharedPointer[EnumMember];
+
+record GlobalVariable (
+    ast : ast.GlobalVariablePtr,
+);
+alias GlobalVariablePtr = SharedPointer[GlobalVariable];
+
+record GlobalAlias (
+    ast : ast.GlobalAliasPtr,
+);
+alias GlobalAliasPtr = SharedPointer[GlobalAlias];
+
+record ExternalProcedure (
+    ast : ast.ExternalProcedurePtr,
+);
+alias ExternalProcedurePtr = SharedPointer[ExternalProcedure];
+
+record ExternalVariable (
+    ast : ast.ExternalVariablePtr,
+);
+alias ExternalVariablePtr = SharedPointer[ExternalVariable];
+
+
+
+//
+// primitives
+//
+
+enum PrimitiveTypeConstructorKind {
+    PRIM_Pointer,
+    PRIM_CodePointer,
+    PRIM_CCodePointer,
+    PRIM_VarArgsCCodePointer,
+    PRIM_StdCallCodePointer,
+    PRIM_FastCallCodePointer,
+    PRIM_Array,
+    PRIM_Tuple,
+    PRIM_Union,
+    PRIM_Static,
+}
+
+enum StaticPrimitiveKind {
+    PRIM_Type?,
+    PRIM_CallDefined?,
+
+    PRIM_AttributeVarArgs,
+    PRIM_AttributeStdCall,
+    PRIM_AttributeFastCall,
+    PRIM_AttributeCDecl,
+
+    PRIM_AttributeDLLImport,
+    PRIM_AttributeDLLExport,
+
+    PRIM_CCodePointer?,
+
+    PRIM_TupleElementCount,
+
+    PRIM_UnionMemberCount,
+
+    PRIM_Record?,
+    PRIM_RecordFieldCount,
+    PRIM_RecordFieldName,
+    PRIM_RecordWithField?,
+
+    PRIM_Variant?,
+    PRIM_VariantMemberIndex,
+    PRIM_VariantMemberCount,
+
+    PRIM_staticIntegers,
+
+    PRIM_Enum?,
+    PRIM_EnumMemberCount,
+
+    PRIM_Identifier?,
+    PRIM_IdentifierSize,
+    PRIM_IdentifierConcat,
+    PRIM_IdentifierSlice,
+}
+
+enum PrimitiveKind {
+    PRIM_TypeSize,
+    PRIM_TypeAlignment,
+
+    PRIM_primitiveCopy,
+
+    PRIM_boolNot,
+
+    PRIM_numericEquals?,
+    PRIM_numericLesser?,
+    PRIM_numericAdd,
+    PRIM_numericSubtract,
+    PRIM_numericMultiply,
+    PRIM_numericDivide,
+    PRIM_numericNegate,
+
+    PRIM_integerRemainder,
+    PRIM_integerShiftLeft,
+    PRIM_integerShiftRight,
+    PRIM_integerBitwiseAnd,
+    PRIM_integerBitwiseOr,
+    PRIM_integerBitwiseXor,
+    PRIM_integerBitwiseNot,
+
+    PRIM_numericConvert,
+
+    PRIM_addressOf,
+    PRIM_pointerDereference,
+    PRIM_pointerEquals?,
+    PRIM_pointerLesser?,
+    PRIM_pointerOffset,
+    PRIM_pointerToInt,
+    PRIM_intToPointer,
+
+    PRIM_makeCodePointer,
+    PRIM_makeCCodePointer,
+    PRIM_pointerCast,
+
+    PRIM_arrayRef,
+
+    PRIM_tupleRef,
+    PRIM_tupleElements,
+
+    PRIM_recordFieldRef,
+    PRIM_recordFieldRefByName,
+    PRIM_recordFields,
+
+    PRIM_variantRepr,
+
+    PRIM_ModuleName,
+    PRIM_StaticName,
+    PRIM_staticFieldRef,
+
+    PRIM_EnumMemberName,
+    PRIM_enumToInt,
+    PRIM_intToEnum,
+}
+
+record PrimitiveTypeConstructor(
+    kind : PrimitiveTypeConstructorKind
+);
+alias PrimitiveTypeConstructorPtr = SharedPointer[PrimitiveTypeConstructor];
+
+record StaticPrimitive(
+    kind : StaticPrimitiveKind,
+);
+alias StaticPrimitivePtr = SharedPointer[StaticPrimitive];
+
+record Primitive(
+    kind : PrimitiveKind,
+);
+alias PrimitivePtr = SharedPointer[Primitive];
+
+
+
+//
+// type tags
+//
+
+record BoolTag();
+record IntegerTag(signed?:Bool, bits:Int);
+record FloatTag(bits:Int);
+record PointerTag();
+record CodePointerTag();
+record RefTag();
+record CCodePointerTag();
+record VarArgsCCodePointerTag();
+record StdCallCodePointerTag();
+record FastCallCodePointerTag();
+record ArrayTag();
+record TupleTag();
+record UnionTag();
+record StaticTag();
+record RecordTag(info:RecordPtr);
+record VariantTag(info:VariantPtr);
+record EnumTag(info:EnumPtr);
+
+variant TypeTag =
+    BoolTag | IntegerTag | FloatTag | PointerTag |
+    CodePointerTag | RefTag |
+    CCodePointerTag | VarArgsCCodePointerTag |
+    StdCallCodePointerTag | FastCallCodePointerTag |
+    ArrayTag | TupleTag | UnionTag | StaticTag |
+    RecordTag | VariantTag | EnumTag;
+
+
+
+//
+// types
+//
+
+record Type (
+    tag : TypeTag,
+    params : Vector[StaticValue],
+);
+alias TypePtr = SharedPointer[Type];
+
+
+overload Type(tag:TypeTag) = Type(tag, Vector[StaticValue]());
+
+overload Type(tag:TypeTag, forward value:StaticValue) {
+    var t = Type(tag);
+    push(t.params, value);
+    return move(t);
+}
+
+[T | VariantMember?(TypeTag, T)]
+overload Type(tag:T, forward ...args) =
+    Type(TypeTag(tag), ...args);
+
+
+
+//
+// primitive types
+//
+
+var boolType = new Type(BoolTag());
+
+var int8Type = new Type(IntegerTag(true, 8));
+var int16Type = new Type(IntegerTag(true, 16));
+var int32Type = new Type(IntegerTag(true, 32));
+var int64Type = new Type(IntegerTag(true, 64));
+
+var uint8Type = new Type(IntegerTag(false, 8));
+var uint16Type = new Type(IntegerTag(false, 16));
+var uint32Type = new Type(IntegerTag(false, 32));
+var uint64Type = new Type(IntegerTag(false, 64)); 
+
+var float32Type = new Type(FloatTag(32));
+var float64Type = new Type(FloatTag(64));
+
+
+
+//
+// ModuleHolder
+//
+
+record ModuleHolder(
+    imported : Maybe[ModulePtr],
+    children : HashMap[String, ModuleHolderPtr],
+);
+alias ModuleHolderPtr = SharedPointer[ModuleHolder];
+
+
+
+//
+// static values
+//
+
+record BoolValue(value : Bool);
+record IntValue(value : Int);
+record TupleValue(elements : Vector[StaticValue]);
+record IdentifierValue(value : String);
+
+variant StaticValue =
+    BoolValue | IntValue | TupleValue | IdentifierValue |
+    ProcedurePtr | RecordPtr | VariantPtr |
+    PrimitiveTypeConstructorPtr | StaticPrimitivePtr | PrimitivePtr |
+    TypePtr | ModuleHolderPtr
+    ;
+
+
+
+//
+// local symbol table entries
+//
+
+record LocalVariable (
+    type : TypePtr,
+    lvalue? : Bool,
+);
+alias LocalVariablePtr = SharedPointer[LocalVariable];
+
+record LocalAlias (
+    expr : ast.ExprPtr,
+    symbolTable : SymbolTablePtr,
+);
+alias LocalAliasPtr = SharedPointer[LocalAlias];
+
+
+
+//
+// SymbolTable
+//
+
+variant SymbolTableEntry =
+    RecordPtr | VariantPtr | ProcedurePtr | EnumPtr | EnumMemberPtr |
+    GlobalVariablePtr | GlobalAliasPtr |
+    ExternalProcedurePtr | ExternalVariablePtr |
+    PrimitiveTypeConstructorPtr | StaticPrimitivePtr | PrimitivePtr |
+    TypePtr | ModuleHolderPtr |
+    BoolValue | IntValue | TupleValue | IdentifierValue |
+    LocalVariablePtr | LocalAliasPtr |
+    InvalidEntry
+    ;
+
+record InvalidEntry();
+
+overload SymbolTableEntry() = SymbolTableEntry(InvalidEntry());
+
+
+record SymbolTable (
+    entries : HashMap[String, SymbolTableEntry],
+);
+alias SymbolTablePtr = SharedPointer[SymbolTable];
+
+
+
+//
+// location context for errors
+//
+
+private var currentModuleStack = Vector[ModulePtr]();
+
+private currentModule() {
+    if (empty?(currentModuleStack))
+        return nothing(ModulePtr);
+    return Maybe(back(currentModuleStack));
+}
+
+withCurrentModule(module:ModulePtr, f) {
+    push(currentModuleStack, module);
+    try {
+        var x = captureValues(...f());
+        pop(currentModuleStack);
+        return forward ...forwardValues(x);
+    }
+    catch (e) {
+        pop(currentModuleStack);
+        throw e;
+    }
+}
+
+
+
+//
+// semantic errors
+//
+
+[T]
+private SemanticError?(static T) = false;
+
+private semanticError(...fields) = recordWithPredicate(
+    SemanticError?,
+    (#where, Maybe[ModulePtr]),
+    ...fields,
+);
+
+[T, ...A | Record?(T)
+           and SemanticError?(T)
+           and (Tuple[...RecordFieldTypes(T)] ==
+                Tuple[Maybe[ModulePtr], ...A])]
+callbyname overload T(...args:A) =
+    T(currentModule(), ...args);
+
+variant SemanticError;
+
+instance ClayError = SemanticError;
+
+[T | VariantMember?(SemanticError, T)]
+overload Exception(forward e:T) =
+    Exception(SemanticError(e));
+
+overload displayError(e:SemanticError) {
+    displayError(*e);
+}
+
+private displaySemanticError(err, node, ...message) {
+    if (nothing?(err.where) or empty?(node.tokens)) {
+        println(err);
+        return;
+    }
+    var m = require(err.where);
+    var stokens = m^.ast^.tokens;
+    var offset = stokens^.vector[node.mainToken].range.begin;
+
+    errorWithLocation(stokens^.file, offset, ...message);
+}
+
+
+
+//
+// semantic error instances
+//
+
+record ModuleNotFoundError = semanticError(
+    (#name, ast.DottedName),
+);
+instance SemanticError = ModuleNotFoundError;
+
+overload displayError(e:ModuleNotFoundError) {
+    displaySemanticError(
+        e, e.name,
+        "module not found: ",
+        join(".", mapped(ident => ident.str, e.name.parts)),
+    );
+}
+
+record GlobalRedefinitionError = semanticError(
+    (#name, ast.Identifier),
+);
+instance SemanticError = GlobalRedefinitionError;
+
+overload displayError(e:GlobalRedefinitionError) {
+    displaySemanticError(
+        e, e.name,
+        "name redefinition: ", e.name.str,
+    );
+}
