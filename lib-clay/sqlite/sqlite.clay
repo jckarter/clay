@@ -41,8 +41,9 @@ overload RegularRecord?(static SqliteStatement) = false;
 
 [S | CCompatibleString?(S)]
 overload SqliteStatement(db: SqliteDB, sql: S) returned: SqliteStatement {
-    var tail = Pointer[CChar]();
-    var code = sqlite3_prepare_v2(db.handle, cstring(sql), Int(size(sql)), &returned.handle, &tail);
+    var code = sqlite3_prepare_v2(db.handle, cstring(sql), Int(size(sql)) + 1,
+        &returned.handle, null(Pointer[CChar])
+    );
     if (code != SQLITE_OK)
         throw SqliteError(code, db);
 }
@@ -68,7 +69,7 @@ overload bindStatement(st: SqliteStatement, n: N)
     { sqlite3_bind_null(st.handle, Int(n)); }
 [N, S | Integer?(N) and CCompatibleString?(S)]
 overload bindStatement(st: SqliteStatement, n: N, value: S)
-    { sqlite3_bind_text(st.handle, Int(n), cstring(value), size(value), SQLITE_TRANSIENT); }
+    { sqlite3_bind_text(st.handle, Int(n), cstring(value), Int(size(value)), SQLITE_TRANSIENT); }
 
 [NS | CCompatibleString?(NS)]
 overload bindStatement(st: SqliteStatement, name: NS, value)
@@ -76,7 +77,13 @@ overload bindStatement(st: SqliteStatement, name: NS, value)
 
 alias DUMMY_ERROR_MSG = CStringRef(cstring(""));
 
-runStatement(st: SqliteStatement) {
+runStatement(st: SqliteStatement, ...bindings) {
+    var i = 1;
+    static for (binding in ...bindings) {
+        bindStatement(st, i, binding);
+        inc(i);
+    }
+
     var code = sqlite3_step(st.handle);
     var baseCode = bitwiseAnd(code, 0xFF);
     if (not inValues?(baseCode, SQLITE_OK, SQLITE_ROW, SQLITE_DONE))
@@ -92,6 +99,11 @@ overload runStatement(db: SqliteDB, sql: S) {
         throw SqliteError(code, CStringRef(msg));
 }
 
+[S, ...B | CCompatibleString?(S) and countValues(...B) > 0]
+overload runStatement(db: SqliteDB, sql: S, ...bindings: B) {
+    var st = SqliteStatement(db, sql);
+    runStatement(st, ...bindings);
+}
 
 
 //
