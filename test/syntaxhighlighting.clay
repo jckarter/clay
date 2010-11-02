@@ -151,7 +151,11 @@ operatorsTest() {
     x.0;
     x.y;
     x[y];
+    x[y, z, w];
+    x[y, z, ...w];
     x(y);
+    x(y, z, w);
+    x(y, z, ...w);
 
     x * y;
     x / y;

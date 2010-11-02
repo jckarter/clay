@@ -27,7 +27,7 @@ syn match clayHexInt /[+\-]\?\<0x[0-9A-Fa-f][0-9A-Fa-f_]*\(i8\|u8\|i16\|u16\|i32
 syn match claySimpleIdentifier /#[A-Za-z_][A-Za-z0-9_?]*\>/
 syn match clayQuotedIdentifier /#"\([^"\\]\|\\\(["'trnabfv\\]\|x[0-9a-fA-F]\{2}\)\)*"/
 syn match clayChar /'\([^'\\]\|\\\(["'trnabfv\\]\|x[0-9a-fA-F]\{2}\)\)'/
-syn match clayGotoLabel /^\s*[A-Za-z_][A-Za-z0-9_?]*:\@=/
+syn match clayGotoLabel /^\s*[A-Za-z_][A-Za-z0-9_?]*\(:\s*$\)\@=/
 
 syn match clayMultiValue /\.\.\./
 syn match clayLambda /\(ref\s*\)\?=>/
