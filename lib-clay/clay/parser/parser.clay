@@ -1,9 +1,10 @@
 
 import maybe.*;
 import parsing.combinators.wrapper.*;
-import clay.tokens.*;
+import clay.common.*;
 import clay.lexer.*;
 import clay.ast.*;
+import clay.diagnostics.*;
 
 
 
@@ -525,10 +526,20 @@ private var returnKind = choice(
 //
 
 private var lambdaArgs = choice(
-    modify(Vector[Identifier], identifier),
+    modify(
+        x => VariadicList(Vector[Identifier](move(x)), nothing(Identifier)),
+        identifier,
+    ),
     modify(
         x => move(x.1),
-        sequence(sym(#"("), zeroOrMore(identifier), sym(#")")),
+        sequence(
+            sym(#"("),
+            variadicList(
+                identifier,
+                modify(x => x.1, sequence(sym(#"..."), identifier)),
+            ),
+            sym(#")")
+        ),
     ),
 );
 
@@ -1106,16 +1117,26 @@ private var importDef = choice(
 
 
 //
-// parseExpr, parse
+// ParserError
 //
 
 record ParserError(
-    tokens : SourceTokensPtr,
-    where:SizeT,
+    tokens: SourceTokensPtr,
+    where: SizeT,
 );
 
-instance Exception = ParserError;
+instance ClayError = ParserError;
 
+overload displayError(e:ParserError) {
+    var offset = e.tokens^.vector[e.where].range.begin;
+    errorWithLocation(e.tokens^.file, offset, "parse error");
+}
+
+
+
+//
+// parseExpr, parse
+//
 
 private var parseExpr2 = modify(
     x => x.0,

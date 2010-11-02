@@ -1,0 +1,39 @@
+
+
+//
+// Source
+//
+
+record SourceFile (
+    path : String,
+    data : String,
+);
+alias SourceFilePtr = SharedPointer[SourceFile];
+
+readSource(path) =
+    new SourceFile(path, readAll(File(path)));
+
+
+
+//
+// ClayError
+//
+
+variant ClayError;
+
+instance Exception = ClayError;
+
+[T | VariantMember?(ClayError, T)]
+overload Exception(forward x:T) = Exception(ClayError(x));
+
+
+
+//
+// displayError
+//
+
+procedure displayError;
+
+overload displayError(e:ClayError) {
+    displayError(*e);
+}

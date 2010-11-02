@@ -3159,10 +3159,20 @@ bool codegenStatement(StatementPtr stmt,
         bool terminated = codegenStatement(x->body, env, ctx);
         if (!terminated)
             ctx->builder->CreateBr(whileBegin);
+        bool breakUsed = (ctx->breaks.back().useCount > 0);
         ctx->breaks.pop_back();
         ctx->continues.pop_back();
-
         ctx->builder->SetInsertPoint(whileEnd);
+
+        if (!breakUsed && (x->condition->exprKind == BOOL_LITERAL)) {
+            BoolLiteral *y = (BoolLiteral *)x->condition.ptr();
+            if (y->value) {
+                // it's a "while (true)" loop with no 'break'
+                ctx->builder->CreateUnreachable();
+                return true;
+            }
+        }
+
         return false;
     }
 

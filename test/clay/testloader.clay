@@ -1,5 +1,6 @@
 
-import clay.ast.*;
+import clay.common.*;
+import clay.ast.(DottedName);
 import clay.loader.*;
 
 usage(args) {
@@ -62,17 +63,22 @@ main(args) {
         return -1;
     }
 
-    initSearchPath();
-    if (loadPrelude?)
-        loadPrelude();
-
-    if (not empty?(moduleToLoad)) {
-        var module = loadModule(DottedName(split(moduleToLoad, ".")));
-        displayModule(module);
+    try {
+        initSearchPath();
+        if (loadPrelude?)
+            loadPrelude();
+    
+        if (not empty?(moduleToLoad)) {
+            var module = loadModule(DottedName(split(moduleToLoad, ".")));
+            displayModule(module);
+        }
+        else if (not empty?(programToLoad)) {
+            var module = loadProgram(programToLoad);
+            displayModule(module);
+        }
     }
-    else if (not empty?(programToLoad)) {
-        var module = loadProgram(programToLoad);
-        displayModule(module);
+    catch (e:ClayError) {
+        displayError(e);
     }
     return 0;
 }
