@@ -101,14 +101,10 @@ overload runStatement(db: SqliteDB, sql: S) {
 // note: doesn't own the handle!
 private record SqliteStatementIterator (handle: Pointer[sqlite3_stmt]); 
 
-overload iterator(lvalue st: SqliteStatement) = SqliteStatementIterator(st.handle);
-overload iterator(rvalue st: SqliteStatement) = move(st);
-
-private SqliteStatementIterator?(T) = T == SqliteStatement or T == SqliteStatementIterator;
+overload iterator(st: SqliteStatement) = SqliteStatementIterator(st.handle);
 
 // XXX assumes next() is always preceded by hasNext?()
-[St | SqliteStatementIterator?(St)]
-overload hasNext?(st: St) {
+overload hasNext?(st: SqliteStatementIterator) {
     var code = sqlite3_step(st.handle);
     var baseCode = bitwiseAnd(code, 0xFF);
     if (not inValues?(baseCode, SQLITE_OK, SQLITE_ROW, SQLITE_DONE))
@@ -116,31 +112,30 @@ overload hasNext?(st: St) {
     return code != SQLITE_DONE;
 }
 
-[St | SqliteStatementIterator?(St)]
-overload next(st: St) = st;
+overload next(st: SqliteStatementIterator) = st;
 
-[St, N, F | SqliteStatementIterator?(St) and Integer?(N) and Float?(F)]
-overload index(st: St, n: N, static F)
+[N, F | Integer?(N) and Float?(F)]
+overload index(st: SqliteStatementIterator, n: N, static F)
     = F(sqlite3_column_double(st.handle, Int(n)));
 
-[St, N, I | SqliteStatementIterator?(St) and Integer?(N) and Integer?(I)]
-overload index(st: St, n: N, static I)
+[N, I | Integer?(N) and Integer?(I)]
+overload index(st: SqliteStatementIterator, n: N, static I)
     = I(sqlite3_column_int(st.handle, Int(n)));
 
-[St, N, I | SqliteStatementIterator?(St) and Integer?(N) and (I == Int64 or I == UInt64)]
-overload index(st: St, n: N, static I)
+[N, I | Integer?(N) and (I == Int64 or I == UInt64)]
+overload index(st: SqliteStatementIterator, n: N, static I)
     = I(sqlite3_column_int64(st.handle, Int(n)));
 
-[St, N, S | SqliteStatementIterator?(St) and Integer?(N) and String?(S)]
-overload index(st: St, n: N, static S)
+[N, S | Integer?(N) and String?(S)]
+overload index(st: SqliteStatementIterator, n: N, static S)
     = S(CStringRef(sqlite3_column_text(st.handle, Int(n))));
 
-[St, N | SqliteStatementIterator?(St) and Integer?(N)]
-overload index(st: St, n: N, static CStringRef)
+[N | Integer?(N)]
+overload index(st: SqliteStatementIterator, n: N, static CStringRef)
     = CStringRef(sqlite3_column_text(st.handle, Int(n)));
 
-[St, N | SqliteStatementIterator?(St) and Integer?(N)]
-overload index(st: St, n: N)
+[N | Integer?(N)]
+overload index(st: SqliteStatementIterator, n: N)
     = CStringRef(sqlite3_column_text(st.handle, Int(n)));
 
 // TODO: sqlite values
