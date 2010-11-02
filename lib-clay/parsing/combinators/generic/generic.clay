@@ -166,7 +166,7 @@ condition(static TokenInput, predicate:Predicate) =
             x ref=> {
                 if (predicate(x))
                     return Maybe(move(x));
-                input = saved;
+                input = move(saved);
                 return nothing(TokenType(TokenInput));
             },
             () ref=> nothing(TokenType(TokenInput)),
@@ -199,7 +199,7 @@ literalString(static TokenInput, forward a:A) {
                 () => false,
             );
             if (not parsed?) {
-                input = saved;
+                input = move(saved);
                 return nothing(A);
             }
         }
