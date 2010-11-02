@@ -32,12 +32,12 @@ overload next(x:ParserInput) {
     return ref token;
 }
 
-overload assign(dest:ParserInput, src:ParserInput) {
+overload assign(dest:ParserInput, lvalue src:ParserInput) {
     if (dest.tokens == src.tokens) {
-        dest.current = src.current;
         var destMax = max(dest.maxCurrent, dest.current);
         var srcMax = max(src.maxCurrent, src.current);
         dest.maxCurrent = max(destMax, srcMax);
+        dest.current = src.current;
     }
     else {
         dest.tokens = src.tokens;
