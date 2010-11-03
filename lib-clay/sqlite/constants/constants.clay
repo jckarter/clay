@@ -1,3 +1,5 @@
+import sqlite.generated.*;
+
 alias SQLITE_OK         =  0;
 alias SQLITE_ERROR      =  1;
 alias SQLITE_INTERNAL   =  2;
