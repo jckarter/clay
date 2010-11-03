@@ -12,7 +12,7 @@ import parsing.combinators.wrapper.*;
 
 enum TokenKind {
     SENTINEL,
-    SYMBOL,
+    PUNCTUATION,
     KEYWORD,
     IDENTIFIER,
     STRING_LITERAL,
@@ -43,10 +43,10 @@ alias SourceTokensPtr = SharedPointer[SourceTokens];
 
 
 //
-// symbols and keywords
+// punctuations and keywords
 //
 
-private var symbols = [
+private var punctuations = [
     "<--", "...", "=>",
     "==", "!=", "<=", ">=",
     "<", ">",
@@ -68,8 +68,8 @@ private var keywords = [
     "true", "false", "try", "catch", "throw"
 ];
 
-symbolIndex(s) Int {
-    for (i, x in enumerated(symbols)) {
+punctuationIndex(s) Int {
+    for (i, x in enumerated(punctuations)) {
         if (x == s)
             return Int(i);
     }
@@ -233,15 +233,15 @@ private lexIdentifierOrKeyword(input) Maybe[Token] {
 
 
 //
-// symbol
+// punctuation
 //
 
-private lexSymbol(input) {
-    for (i, sym in enumerated(symbols)) {
+private lexPunctuation(input) {
+    for (i, sym in enumerated(punctuations)) {
         var parser = literalString(sym);
         var result = parser(input);
         if (not nothing?(result))
-            return Maybe(Token(SYMBOL, i));
+            return Maybe(Token(PUNCTUATION, i));
     }
     return nothing(Token);
 }
@@ -424,7 +424,7 @@ private var lexToken = bounds(choice(
     lexSpace,
     lexLineComment,
     lexBlockComment,
-    lexSymbol,
+    lexPunctuation,
     lexLLVM,
     lexIdentifierOrKeyword,
     lexCharLiteral,
