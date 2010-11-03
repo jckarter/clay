@@ -2,13 +2,13 @@ import cocoa.*;
 
 procedure objcType;
 
-[T | Record?(T)] overload objcType(static T) = "int";
+[T | Record?(T)] overload objcType(static T) = "struct " + StaticName(T);
 
 [T | Class?(T)]
 overload objcType(static T) = ClassName(T) + " *";
 
 [T] overload objcType(static Pointer[T]) = objcType(T) + " *";
-[T | Record?(T) or not CallDefined?(objcType, T)]
+[T | not CallDefined?(objcType, Static[T])]
 overload objcType(static Pointer[T]) = "void *";
 
 [T] overload objcType(static Retained[T]) = objcType(T);

@@ -1,6 +1,12 @@
 creating table
 inserting table
 selecting table
-lolcats => 9001
-goatse => -1
+  goatse => -1
+  doublerainbow => 2
+  lolcats => 9001
+updating table
+selecting table
+  turkeys => 3
+  mario => 34
+  all your base => 2101
 dropping table

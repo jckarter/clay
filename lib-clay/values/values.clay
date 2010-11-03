@@ -17,6 +17,13 @@ inline overload mapValues(fn, forward x, forward ...xs)
     = forward ...fn(x), ...mapValues(fn, ...xs);
 inline overload mapValues(fn) = ;
 
+private procedure _mapIndexedValues;
+[n] inline overload _mapIndexedValues(fn, static n, forward x, forward ...xs)
+    = forward ...fn(x, n), ..._mapIndexedValues(fn, static n+1, ...xs);
+[n] inline overload _mapIndexedValues(fn, static n) = ;
+
+mapIndexedValues(fn, forward ...values) = forward ..._mapIndexedValues(fn, static 0, ...values);
+
 procedure foldValues;
 inline overload foldValues(fn, forward x, forward ...xs)
     = fn(x, foldValues(fn, ...xs));
