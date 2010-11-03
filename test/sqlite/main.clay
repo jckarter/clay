@@ -1,9 +1,11 @@
 import sqlite.*;
 
+record Wotsit (id: Int, name: String);
+
 main() {
     var db = SqliteDB("temp.sqlite");
 
-    println("creating table");
+    println("creating table hoozits");
     runStatement(db, "create temp table hoozits (foo text, bar integer)"); 
 
     println("inserting table");
@@ -31,4 +33,28 @@ main() {
 
     println("dropping table");
     runStatement(db, "drop table hoozits");
+
+    println();
+    println("creating table wotsits");
+    runStatement(db, "create temp table wotsits (id integer primary key, name text)");
+
+    var insertStmt = SqliteStatement(db, "insert into wotsits values (?, ?)");
+    println("inserting table");
+    runStatement(insertStmt, 0, "zim");
+    runStatement(insertStmt, 1, SqliteNull);
+    runStatement(insertStmt, 2, "zang");
+
+    println("selecting table");
+    for (row in SqliteStatement(db, "select id, name from wotsits order by id")) {
+        if (nullColumn?(row, 1))
+            println("  -- null name in wotsit ", row[0, Int]);
+        else {
+            println("  -- values: ", ...weaveValues(", ", ...rowValues(row, Int, String)));
+            println("     tuple:  ", rowTuple(row, Int, String));
+            println("     record: ", rowRecord(row, Wotsit));
+        }
+    }
+
+    println("dropping table");
+    runStatement(db, "drop table wotsits");
 }
