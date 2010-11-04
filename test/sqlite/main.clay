@@ -38,9 +38,9 @@ main() {
     println("creating table wotsits");
     runStatement(db, "create temp table wotsits (id integer primary key, name text)");
 
-    var insertStmt = SqliteStatement(db, "insert into wotsits values (?, ?)");
+    var insertStmt = SqliteStatement(db, "insert into wotsits values (?, ?)", 0, "zim");
     println("inserting table");
-    runStatement(insertStmt, 0, "zim");
+    runStatement(insertStmt);
     runStatement(insertStmt, 1, SqliteNull);
     runStatement(insertStmt, 2, "zang");
 
