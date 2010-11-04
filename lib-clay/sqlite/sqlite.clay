@@ -190,4 +190,23 @@ rowTuple(st: SqliteStatementIterator, ...Types)
 rowRecord(st: SqliteStatementIterator, T)
     = T(...rowValues(st, ...RecordFieldTypes(T)));
 
+
+
+//
+// withTransaction
+//
+
+withTransaction(db: SqliteDB, fn) {
+    runStatement(db, "begin");
+
+    try {
+        fn();
+    } catch (ex) {
+        runStatement(db, "rollback");
+        throw ex;
+    }
+
+    runStatement(db, "commit");
+}
+
 // TODO: sqlite values
