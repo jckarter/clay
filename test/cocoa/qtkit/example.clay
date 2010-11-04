@@ -1,0 +1,24 @@
+import cocoa.*;
+import cocoa.qtkit.*;
+import unix.(sleep);
+
+main(args) {
+    if (size(args) < 2) {
+        error("usage: ", args[0], " filename");
+    }
+
+    withAutoreleasePool(() ref=> {
+        var err = nil(NSError);
+        var movie = QTMovie(QTMovie.movieWithFile_error(args[1], &err));
+        if (nil?(movie)) {
+            error("Error opening movie ", args[1], ": ", err);
+        }
+        
+        println("Playing ", args[1], "...");
+        movie.play();
+
+        var duration = movie.duration();
+        sleep(UInt(duration.timeValue / duration.timeScale + 1));
+        println("Done");
+    });
+}
