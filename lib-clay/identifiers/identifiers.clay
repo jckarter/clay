@@ -41,6 +41,18 @@ overload IdentifierFind(static identifier, static sub, static start) = start;
 
 overload IdentifierFind(identifier, sub) = IdentifierFind(identifier, sub, static 0);
 
+IdentifierCapitalize(i)
+    = IdentifierConcat(
+        IdentifierUpperChar(IdentifierSlice(i, static 0, static 1)),
+        IdentifierSlice(i, static 1, static IdentifierSize(i))
+    );
+
+IdentifierDecapitalize(i)
+    = IdentifierConcat(
+        IdentifierLowerChar(IdentifierSlice(i, static 0, static 1)),
+        IdentifierSlice(i, static 1, static IdentifierSize(i))
+    );
+
 [i | Identifier?(i) and IdentifierSize(i) == 1]
 IdentifierUpperChar(static i) = i;
 
