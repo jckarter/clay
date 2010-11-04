@@ -98,7 +98,7 @@ bindStatementRecord(st: SqliteStatement, r: R) {
 overload SqliteStatement(db: SqliteDB, sql: S, ...bindings: TT) {
     var st = SqliteStatement(db, sql);
     bindStatementValues(st, ...bindings);
-    return move(stmt);
+    return move(st);
 }
 
 [NS | CCompatibleString?(NS)]
