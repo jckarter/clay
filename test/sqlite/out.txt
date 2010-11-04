@@ -21,4 +21,16 @@ selecting table
   -- values: 2, zang
      tuple:  (2, "zang")
      record: Wotsit(2, "zang")
+trying transaction
+caught exception during transaction
+selecting table
+  values: 0, zim
+  null name in wotsit 1
+  values: 2, zang
+trying transaction again
+selecting table
+  values: 0, zim
+  null name in wotsit 1
+  values: 2, zang
+  values: 3, zung
 dropping table
