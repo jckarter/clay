@@ -73,18 +73,43 @@ overload bindStatement(st: SqliteStatement, n: N, static SqliteNull)
 overload bindStatement(st: SqliteStatement, n: N, value: S)
     { sqlite3_bind_text(st.handle, Int(n), cstring(value), Int(size(value)), SQLITE_TRANSIENT); }
 
+BindableType?(T) = CallDefined?(bindStatement, SqliteStatement, Int, T);
+
+[...TT | allValues?(BindableType?, ...TT)]
+bindStatementValues(st: SqliteStatement, ...bindings: TT) {
+    var i = 1;
+    static for (binding in ...bindings) {
+        bindStatement(st, i, binding);
+        inc(i);
+    }
+}
+
+[...TT | allValues?(BindableType?, ...TT)]
+bindStatementTuple(st: SqliteStatement, t: Tuple[...TT]) {
+    bindStatementValues(st, ...unpack(t));
+}
+
+[R | Record?(R) and allValues?(BindableType?, ...RecordFieldTypes(R))]
+bindStatementRecord(st: SqliteStatement, r: R) {
+    bindStatementValues(st, ...recordFields(r));
+}
+
+[S, ...TT | CCompatibleString?(S) and countValues(...TT) > 0 and allValues?(BindableType?, ...TT)]
+overload SqliteStatement(db: SqliteDB, sql: S, ...bindings: TT) {
+    var st = SqliteStatement(db, sql);
+    bindStatementValues(st, ...bindings);
+    return move(stmt);
+}
+
 [NS | CCompatibleString?(NS)]
 overload bindStatement(st: SqliteStatement, name: NS, value)
     { bindStatement(st, sqlite3_bind_parameter_index(st.handle, cstring(name)), value); }
 
 alias DUMMY_ERROR_MSG = CStringRef(cstring(""));
 
-runStatement(st: SqliteStatement, ...bindings) {
-    var i = 1;
-    static for (binding in ...bindings) {
-        bindStatement(st, i, binding);
-        inc(i);
-    }
+[...TT | allValues?(BindableType?, ...TT)]
+runStatement(st: SqliteStatement, ...bindings: TT) {
+    bindStatementValues(st, ...bindings);
 
     var code = sqlite3_step(st.handle);
     var baseCode = bitwiseAnd(code, 0xFF);
@@ -101,8 +126,8 @@ overload runStatement(db: SqliteDB, sql: S) {
         throw SqliteError(code, CStringRef(msg));
 }
 
-[S, ...B | CCompatibleString?(S) and countValues(...B) > 0]
-overload runStatement(db: SqliteDB, sql: S, ...bindings: B) {
+[S, ...TT | CCompatibleString?(S) and countValues(...TT) > 0 and allValues?(BindableType?, ...TT)]
+overload runStatement(db: SqliteDB, sql: S, ...bindings: TT) {
     var st = SqliteStatement(db, sql);
     runStatement(st, ...bindings);
 }
