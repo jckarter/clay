@@ -250,3 +250,19 @@ callbyname arrayLiteral(...args:A) {
 
 [n]
 integerArray(static n) = Array(static n, range(n));
+
+
+
+//
+// array assignment
+//
+
+[T,U,n | CallDefined?(assign, T, U)]
+overload assign(left: Array[T,n], right: Array[U, n]) {
+    assignMemory(begin(left), end(left), begin(right));
+}
+
+[T,U,n | CallDefined?(assign, T, U)]
+overload assign(left: Array[T,n], rvalue right: Array[U, n]) {
+    moveAssignMemory(begin(left), end(left), begin(right));
+}

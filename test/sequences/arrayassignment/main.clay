@@ -1,0 +1,17 @@
+main() {
+    var x = [1, 2, 3];
+    var y = [4_u64, 5_u64, 6_u64];
+    var z = [7, 8, 9];
+
+    x = z;
+    println(x);
+
+    y = z;
+    println(y);
+
+    z = [10, 11, 12];
+    println(z);
+
+    y = [13, 14, 15];
+    println(y);
+}
