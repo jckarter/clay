@@ -209,7 +209,7 @@ overload shiftRight(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
 // bitwiseAnd, bitwiseOr, bitwiseXor
 //
 
-[T,n | Numeric?(T)]
+[T,n | Integer?(T)]
 bitwiseAnd(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
     %1 = load $Vec[T,n] * %a
     %2 = load $Vec[T,n] * %b
@@ -218,7 +218,7 @@ bitwiseAnd(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
     ret i32 0
 }
 
-[T,n | Numeric?(T)]
+[T,n | Integer?(T)]
 bitwiseOr(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
     %1 = load $Vec[T,n] * %a
     %2 = load $Vec[T,n] * %b
@@ -227,7 +227,7 @@ bitwiseOr(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
     ret i32 0
 }
 
-[T,n | Numeric?(T)]
+[T,n | Integer?(T)]
 bitwiseXor(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
     %1 = load $Vec[T,n] * %a
     %2 = load $Vec[T,n] * %b
