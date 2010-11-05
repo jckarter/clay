@@ -42,5 +42,10 @@ main() {
 
     println();
     println("v3: ", v3);
-    println("Vec[UInt, 2](v3): ", Vec[UInt, 2](v3));
+    println("v4 = Vec[UInt, 2](v3): ", Vec[UInt, 2](v3));
+
+    var v4 = Vec[UInt, 2](v3);
+    println("v1 and v4: ", bitwiseAnd(v1, v4));
+    println("v1 or  v4: ", bitwiseOr( v1, v4));
+    println("v1 xor v4: ", bitwiseXor(v1, v4));
 }
