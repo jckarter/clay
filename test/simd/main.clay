@@ -5,41 +5,36 @@ main() {
 
     var v2 = Vec(2, 3); // type will be inferred as Vec[Int,2]
 
-    display("v1",  v1);
-    display("v2",  v2);
-    display("add", v1 + v2);
-    display("sub", v1 - v2);
-    display("mul", v1 * v2);
-    display("div", v1 / v2);
-    display("rem", v1 % v2);
-    display("shl", shiftLeft(v1, v2));
-    display("shr", shiftRight(v1, v2));
-    display("and", bitwiseAnd(v1, v2));
-    display("or",  bitwiseOr(v1, v2));
-    display("xor", bitwiseXor(v1, v2));
+    println("v1: ",  v1);
+    println("v2: ",  v2);
+    println("add: ", v1 + v2);
+    println("sub: ", v1 - v2);
+    println("mul: ", v1 * v2);
+    println("div: ", v1 / v2);
+    println("rem: ", v1 % v2);
+    println("shl: ", shiftLeft(v1, v2));
+    println("shr: ", shiftRight(v1, v2));
+    println("and: ", bitwiseAnd(v1, v2));
+    println("or: ",  bitwiseOr(v1, v2));
+    println("xor: ", bitwiseXor(v1, v2));
     println();
-    display("v1",  v1);
-    display("v2",  v2);
-    display("add", v1 + v2 + 3);
-    display("sub", v1 - v2 - 3);
-    display("mul", v1 * v2 * 3);
-    display("div", v1 / v2 / 3);
-    display("rem", v1 % v2 % 3);
-    display("shl", shiftLeft(shiftLeft(v1, v2), 3));
-    display("shr", shiftRight(shiftRight(v1, v2), 3));
-    display("and", bitwiseAnd(bitwiseAnd(v1, v2), 3));
-    display("or",  bitwiseOr(bitwiseOr(v1, v2), 3));
-    display("xor", bitwiseXor(bitwiseXor(v1, v2), 3));
+    println("v1: ",  v1);
+    println("v2: ",  v2);
+    println("add: ", v1 + v2 + 3);
+    println("sub: ", v1 - v2 - 3);
+    println("mul: ", v1 * v2 * 3);
+    println("div: ", v1 / v2 / 3);
+    println("rem: ", v1 % v2 % 3);
+    println("shl: ", shiftLeft(shiftLeft(v1, v2), 3));
+    println("shr: ", shiftRight(shiftRight(v1, v2), 3));
+    println("and: ", bitwiseAnd(bitwiseAnd(v1, v2), 3));
+    println("or: ",  bitwiseOr(bitwiseOr(v1, v2), 3));
+    println("xor: ", bitwiseXor(bitwiseXor(v1, v2), 3));
 
-    display("plus v1", plus(v1));
-    display("plus v2", plus(v2));
-    display("minus v1", minus(v1));
-    display("minus v2", minus(v2));
-    display("bitwiseNot v1", bitwiseNot(v1));
-    display("bitwiseNot v2", bitwiseNot(v2));
-}
-
-
-display(label, v) {
-    println(label, ": ", v[0], ", ", v[1]);
+    println("plus v1: ", plus(v1));
+    println("plus v2: ", plus(v2));
+    println("minus v1: ", minus(v1));
+    println("minus v2: ", minus(v2));
+    println("bitwiseNot v1: ", bitwiseNot(v1));
+    println("bitwiseNot v2: ", bitwiseNot(v2));
 }

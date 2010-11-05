@@ -230,3 +230,14 @@ inline overload minus(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
 
 [T,n]
 inline overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(-1)), a);
+
+
+
+//
+// printing
+//
+
+[T,n]
+inline overload printTo(stream, a:Vec[T,n])
+    { printTo(stream, Type(a), "(", ...weaveValues(", ", ...unpackVec(a)), ")"); }
+
