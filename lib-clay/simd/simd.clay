@@ -186,12 +186,16 @@ inline overload shiftRight(a:Vec[T,n], x:X) = shiftRight(a, Vec[T,n](T(x)));
 [T,n,X | Numeric?(X)]
 inline overload shiftRight(x:X, a:Vec[T,n]) = shiftRight(Vec[T,n](T(x)),  a);
 
+private inline bitwiseOp(fn, a, b) {
+    alias size = Int(TypeSize(Type(a)));
+    return bitwiseCast(
+        fn(bitwiseCast(a, Vec[UInt8, size]), bitwiseCast(b, Vec[UInt8, size])),
+        Type(a)
+    );
+}
 
-[T,n]
-inline overload bitwiseAnd(a:Vec[T,n], b:Vec[T,n]) = prims.bitwiseAnd(a, b);
-
-[T,n, U,m | T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-inline overload bitwiseAnd(a:Vec[T,n], b:Vec[U,m]) = prims.bitwiseAnd(a, Vec[T,n](b));
+[T,n, U,m | CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
+inline overload bitwiseAnd(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitwiseAnd, a, b);
 
 [T,n,X | Numeric?(X)]
 inline overload bitwiseAnd(a:Vec[T,n], x:X) = bitwiseAnd(a, Vec[T,n](T(x)));
@@ -200,11 +204,8 @@ inline overload bitwiseAnd(a:Vec[T,n], x:X) = bitwiseAnd(a, Vec[T,n](T(x)));
 inline overload bitwiseAnd(x:X, a:Vec[T,n]) = bitwiseAnd(Vec[T,n](T(x)),  a);
 
 
-[T,n]
-inline overload bitwiseOr(a:Vec[T,n], b:Vec[T,n]) = prims.bitwiseOr(a, b);
-
-[T,n, U,m | T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-inline overload bitwiseOr(a:Vec[T,n], b:Vec[U,m]) = prims.bitwiseOr(a, Vec[T,n](b));
+[T,n, U,m | CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
+inline overload bitwiseOr(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitwiseOr, a, b);
 
 [T,n,X | Numeric?(X)]
 inline overload bitwiseOr(a:Vec[T,n], x:X) = bitwiseOr(a, Vec[T,n](T(x)));
@@ -213,11 +214,8 @@ inline overload bitwiseOr(a:Vec[T,n], x:X) = bitwiseOr(a, Vec[T,n](T(x)));
 inline overload bitwiseOr(x:X, a:Vec[T,n]) = bitwiseOr(Vec[T,n](T(x)),  a);
 
 
-[T,n]
-inline overload bitwiseXor(a:Vec[T,n], b:Vec[T,n]) = prims.bitwiseXor(a, b);
-
-[T,n, U,m | T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-inline overload bitwiseXor(a:Vec[T,n], b:Vec[U,m]) = prims.bitwiseXor(a, Vec[T,n](b));
+[T,n, U,m | CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
+inline overload bitwiseXor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitwiseXor, a, b);
 
 [T,n,X | Numeric?(X)]
 inline overload bitwiseXor(a:Vec[T,n], x:X) = bitwiseXor(a, Vec[T,n](T(x)));
@@ -238,7 +236,7 @@ inline overload plus(a:Vec[T,n]) = a;
 inline overload minus(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
 
 [T,n]
-inline overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(-1)), a);
+inline overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](componentMask(T)), a);
 
 
 
@@ -261,4 +259,15 @@ CompatibleVectorTypes?(X, Y) = false;
 overload CompatibleVectorTypes?(static Vec[T,n], static Vec[U,m]) = true;
 
 [T,n, U,m | T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-inline overload Vec[T,n](v: Vec[U,m]) = Pointer[Vec[T,n]](&v)^;
+inline overload Vec[T,n](v: Vec[U,m]) = bitwiseCast(v, Vec[T,n]);
+
+
+
+//
+// boolean masks
+//
+
+[T | Integer?(T)]
+inline componentMask(static T) = T(-1);
+inline overload componentMask(static Float32) = bitwiseCast(-1_i32, Float32);
+inline overload componentMask(static Float64) = bitwiseCast(-1_i64, Float64);
