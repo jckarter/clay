@@ -127,7 +127,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
             String(Id("worms"))
         );
 
-        expectEqual(test, "string constant", "worms",
+        expectEqual(test, "identifier", "worms",
             String(Id(#"worms"))
         );
 
