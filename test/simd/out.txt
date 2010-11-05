@@ -29,3 +29,6 @@ minus v1: Vec[Int32, 2](-11, -21)
 minus v2: Vec[Int32, 2](-2, -3)
 bitwiseNot v1: Vec[Int32, 2](-12, -22)
 bitwiseNot v2: Vec[Int32, 2](-3, -4)
+
+v3: Vec[Int32, 2](1, -1)
+Vec[UInt, 2](v3): Vec[UInt32, 2](1, 4294967295)

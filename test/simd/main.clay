@@ -37,4 +37,10 @@ main() {
     println("minus v2: ", minus(v2));
     println("bitwiseNot v1: ", bitwiseNot(v1));
     println("bitwiseNot v2: ", bitwiseNot(v2));
+
+    var v3 = Vec(1, -1);
+
+    println();
+    println("v3: ", v3);
+    println("Vec[UInt, 2](v3): ", Vec[UInt, 2](v3));
 }
