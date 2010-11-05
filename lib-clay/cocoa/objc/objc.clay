@@ -183,6 +183,8 @@ overload ObjectType?(static Id) = true;
 
 overload nil() = nil(Id);
 
+[T | ObjectParameterType?(T) and T != Id and T != ObjectHandle]
+overload Id(object: T) = Id(objectHandle(object));
 
 
 //

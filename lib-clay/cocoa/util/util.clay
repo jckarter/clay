@@ -117,6 +117,11 @@ overload ObjectParameterType(static S) = NSString;
 [S | CCompatibleString?(S)]
 overload objectHandle(s: S) = objectHandle(NSString(s));
 
+[i | Identifier?(i)]
+overload ObjectParameterType(static Static[i]) = NSString;
+[i | Identifier?(i)]
+overload objectHandle(static i) = NSSTR(i);
+
 
 
 //
