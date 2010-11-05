@@ -114,25 +114,29 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
         );
     }),
     TestCase("boxing of clay primitives", test => {
-        expectEqual(test, "integer", 5, objectParameter(5).intValue());
-        expectEqual(test, "double", 5.5, objectParameter(5.5).doubleValue());
+        expectEqual(test, "integer", 5, Id(5).intValue());
+        expectEqual(test, "double", 5.5, Id(5.5).doubleValue());
         expectEqual(test, "64-bit integer", 0x1_0000_0000_u64,
-            objectParameter(0x1_0000_0000_u64).unsignedLongLongValue()
+            Id(0x1_0000_0000_u64).unsignedLongLongValue()
         );
         expectEqual(test, "bool", true,
-            objectParameter(true).boolValue()
+            Id(true).boolValue()
         );
 
         expectEqual(test, "string constant", "worms",
-            String(objectParameter("worms"))
+            String(Id("worms"))
+        );
+
+        expectEqual(test, "string constant", "worms",
+            String(Id(#"worms"))
         );
 
         expectEqual(test, "string", "worms",
-            String(objectParameter(String("worms")))
+            String(Id(String("worms")))
         );
 
         expectEqual(test, "record", Foo(7, 11.0),
-            fromNSValue(Foo, objectParameter(Foo(7, 11.0)))
+            fromNSValue(Foo, Id(Foo(7, 11.0)))
         );
     }),
     TestCase("equality, hashing and comparison", test => {
