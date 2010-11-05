@@ -1,5 +1,6 @@
 public import sqlite.generated.*;
 public import sqlite.constants.*;
+public import maybe.*;
 
 
 
@@ -55,8 +56,6 @@ overload destroy(st: SqliteStatement) { sqlite3_finalize(st.handle); }
 resetStatement(st: SqliteStatement) { sqlite3_reset(st.handle); }
 clearStatement(st: SqliteStatement) { sqlite3_clear_bindings(st.handle); }
 
-procedure SqliteNull;
-
 [N, F | Integer?(N) and Float?(F)]
 bindStatement(st: SqliteStatement, n: N, value: F)
     { sqlite3_bind_double(st.handle, Int(n), Double(value)); }
@@ -67,13 +66,20 @@ overload bindStatement(st: SqliteStatement, n: N, value: I)
 overload bindStatement(st: SqliteStatement, n: N, value: I)
     { sqlite3_bind_int64(st.handle, Int(n), Int64(value)); }
 [N | Integer?(N)]
-overload bindStatement(st: SqliteStatement, n: N, static SqliteNull)
+overload bindStatement(st: SqliteStatement, n: N, value: Nothing)
+    { sqlite3_bind_null(st.handle, Int(n)); }
+[N | Integer?(N)]
+overload bindStatement(st: SqliteStatement, n: N, static Nothing)
     { sqlite3_bind_null(st.handle, Int(n)); }
 [N, S | Integer?(N) and CCompatibleString?(S)]
 overload bindStatement(st: SqliteStatement, n: N, value: S)
     { sqlite3_bind_text(st.handle, Int(n), cstring(value), Int(size(value)), SQLITE_TRANSIENT); }
 
 BindableType?(T) = CallDefined?(bindStatement, SqliteStatement, Int, T);
+
+[N, T | Integer?(N) and BindableType?(T)]
+overload bindStatement(st: SqliteStatement, n: N, value: Maybe[T])
+    { bindStatement(st, n, *value); }
 
 [...TT | allValues?(BindableType?, ...TT)]
 bindStatementValues(st: SqliteStatement, ...bindings: TT) {
@@ -180,6 +186,10 @@ overload index(st: SqliteStatementIterator, n: N)
 [N | Integer?(N)]
 nullColumn?(st: SqliteStatementIterator, n: N)
     = sqlite3_column_type(st.handle, Int(n)) == SQLITE_NULL;
+
+[N, T | Integer?(N) and CallDefined?(index, SqliteStatementIterator, N, Static[T])]
+overload index(st: SqliteStatementIterator, n: N, static Maybe[T])
+    = if (nullColumn?(st, n)) nothing(T) else Maybe(st[n, T]);
 
 rowValues(st: SqliteStatementIterator, ...Types)
     = ...mapIndexedValues((Type, n) => st[n, Type], ...Types);
