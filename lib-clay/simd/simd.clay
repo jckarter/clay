@@ -241,3 +241,11 @@ inline overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(-1)), a);
 inline overload printTo(stream, a:Vec[T,n])
     { printTo(stream, Type(a), "(", ...weaveValues(", ", ...unpackVec(a)), ")"); }
 
+
+
+//
+// casting
+//
+
+[T,n, U,m | T != U and TypeSize(Vec[T,n]) == TypeSize(Vec[U,m])]
+inline overload Vec[T,n](v: Vec[U,m]) = Pointer[Vec[T,n]](&v)^;
