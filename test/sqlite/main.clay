@@ -1,6 +1,6 @@
 import sqlite.*;
 
-record Wotsit (id: Int, name: String);
+record Wotsit (id: Int, name: Maybe[String]);
 
 record ExemplaryError ();
 instance Exception = ExemplaryError;
@@ -47,19 +47,15 @@ main() {
     println("inserting table");
     withTransaction(db, () ref=> {
         runStatement(insertStmt);
-        runStatement(insertStmt, 1, SqliteNull);
+        runStatement(insertStmt, 1, Nothing());
         runStatement(insertStmt, 2, "zang");
     });
 
     println("selecting table");
     for (row in SqliteStatement(db, "select id, name from wotsits order by id")) {
-        if (nullColumn?(row, 1))
-            println("  -- null name in wotsit ", row[0, Int]);
-        else {
-            println("  -- values: ", ...weaveValues(", ", ...rowValues(row, Int, String)));
-            println("     tuple:  ", rowTuple(row, Int, String));
-            println("     record: ", rowRecord(row, Wotsit));
-        }
+        println("  -- values: ", ...weaveValues(", ", ...rowValues(row, Int, Maybe[String])));
+        println("     tuple:  ", rowTuple(row, Int, Maybe[String]));
+        println("     record: ", rowRecord(row, Wotsit));
     }
 
     println("trying transaction");
