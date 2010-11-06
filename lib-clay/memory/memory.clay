@@ -211,8 +211,8 @@ fillMemory(first:Pointer[T], last:Pointer[T], value:T) {
 // assignMemory, moveAssignMemory
 //
 
-[T]
-assignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+[T, U | CallDefined?(assign, T, U)]
+assignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U]) {
     var srcPtr = srcFirst;
     eachLocation(destFirst, destLast, x => {
         x = srcPtr^;
@@ -220,13 +220,13 @@ assignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     });
 }
 
-[T]
-overload assignMemory(first:Pointer[T], last:Pointer[T], value:T) {
+[T, U | CallDefined?(assign, T, U)]
+overload assignMemory(first:Pointer[T], last:Pointer[T], value:U) {
     eachLocation(first, last, x ref => { x = value; });
 }
 
-[T]
-moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+[T, U | CallDefined?(assign, T, U)]
+moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U]) {
     var srcPtr = srcFirst;
     eachLocation(destFirst, destLast, x => {
         x = move(srcPtr^);

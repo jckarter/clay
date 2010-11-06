@@ -1,31 +1,45 @@
-v1: 11, 21
-v2: 2, 3
-add: 13, 24
-sub: 9, 18
-mul: 22, 63
-div: 5, 7
-rem: 1, 0
-shl: 44, 168
-shr: 2, 2
-and: 2, 1
-or: 11, 23
-xor: 9, 22
+v1: Vec[Int32, 2](11, 21)
+v2: Vec[Int32, 2](2, 3)
+add: Vec[Int32, 2](13, 24)
+sub: Vec[Int32, 2](9, 18)
+mul: Vec[Int32, 2](22, 63)
+div: Vec[Int32, 2](5, 7)
+rem: Vec[Int32, 2](1, 0)
+shl: Vec[Int32, 2](44, 168)
+shr: Vec[Int32, 2](2, 2)
+and: Vec[Int32, 2](2, 1)
+or: Vec[Int32, 2](11, 23)
+xor: Vec[Int32, 2](9, 22)
 
-v1: 11, 21
-v2: 2, 3
-add: 16, 27
-sub: 6, 15
-mul: 66, 189
-div: 1, 2
-rem: 1, 0
-shl: 352, 1344
-shr: 0, 0
-and: 2, 1
-or: 11, 23
-xor: 10, 21
-plus v1: 11, 21
-plus v2: 2, 3
-minus v1: -11, -21
-minus v2: -2, -3
-bitwiseNot v1: -12, -22
-bitwiseNot v2: -3, -4
+v1: Vec[Int32, 2](11, 21)
+v2: Vec[Int32, 2](2, 3)
+add: Vec[Int32, 2](16, 27)
+sub: Vec[Int32, 2](6, 15)
+mul: Vec[Int32, 2](66, 189)
+div: Vec[Int32, 2](1, 2)
+rem: Vec[Int32, 2](1, 0)
+shl: Vec[Int32, 2](352, 1344)
+shr: Vec[Int32, 2](0, 0)
+and: Vec[Int32, 2](2, 1)
+or: Vec[Int32, 2](11, 23)
+xor: Vec[Int32, 2](10, 21)
+plus v1: Vec[Int32, 2](11, 21)
+plus v2: Vec[Int32, 2](2, 3)
+minus v1: Vec[Int32, 2](-11, -21)
+minus v2: Vec[Int32, 2](-2, -3)
+bitwiseNot v1: Vec[Int32, 2](-12, -22)
+bitwiseNot v2: Vec[Int32, 2](-3, -4)
+
+v3: Vec[Int32, 2](1, -1)
+v4 = Vec[UInt, 2](v3): Vec[UInt32, 2](1, 4294967295)
+v1 and v4: Vec[Int32, 2](1, 21)
+v1 or  v4: Vec[Int32, 2](11, -1)
+v1 xor v4: Vec[Int32, 2](10, -22)
+
+v5: Vec[Float32, 4](1.000000, 2.000000, 3.000000, 4.000000)
+v6: Vec[Float32, 4](-5.000000, -6.000000, -7.000000, -8.000000)
+v7: Vec[Float32, 4](nan, 0.000000, 0.000000, nan)
+bitwiseNot v7: Vec[Float32, 4](0.000000, nan, nan, 0.000000)
+bitwiseBlend v7, v5, v6: Vec[Float32, 4](1.000000, -6.000000, -7.000000, 4.000000)
+v8: Vec[Int32, 4](-1, 0, 0, -1)
+bitwiseBlend v8, v5, v6: Vec[Float32, 4](1.000000, -6.000000, -7.000000, 4.000000)

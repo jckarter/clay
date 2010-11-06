@@ -322,3 +322,17 @@ callbyname overload ifExpression(condition, lvalue consequent:T, lvalue alternat
     else
         return ref alternate;
 }
+
+
+
+//
+// bitwiseCast, bitwiseAndc, bitwiseBlend
+//
+
+[T, U | TypeSize(T) >= TypeSize(U)]
+inline bitwiseCast(x: T, static U) = ref Pointer[U](&x)^;
+
+inline bitwiseAndc(a, b) = bitwiseAnd(a, bitwiseNot(b));
+inline bitwiseBlend(mask, ones, zeros)
+    = bitwiseOr(bitwiseAnd(ones, mask), bitwiseAndc(zeros, mask));
+
