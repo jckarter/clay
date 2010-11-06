@@ -1,5 +1,6 @@
 public import sqlite.generated.*;
 public import sqlite.constants.*;
+public import maybe.*;
 
 
 
@@ -55,8 +56,6 @@ overload destroy(st: SqliteStatement) { sqlite3_finalize(st.handle); }
 resetStatement(st: SqliteStatement) { sqlite3_reset(st.handle); }
 clearStatement(st: SqliteStatement) { sqlite3_clear_bindings(st.handle); }
 
-procedure SqliteNull;
-
 [N, F | Integer?(N) and Float?(F)]
 bindStatement(st: SqliteStatement, n: N, value: F)
     { sqlite3_bind_double(st.handle, Int(n), Double(value)); }
@@ -67,11 +66,46 @@ overload bindStatement(st: SqliteStatement, n: N, value: I)
 overload bindStatement(st: SqliteStatement, n: N, value: I)
     { sqlite3_bind_int64(st.handle, Int(n), Int64(value)); }
 [N | Integer?(N)]
-overload bindStatement(st: SqliteStatement, n: N, static SqliteNull)
+overload bindStatement(st: SqliteStatement, n: N, value: Nothing)
+    { sqlite3_bind_null(st.handle, Int(n)); }
+[N | Integer?(N)]
+overload bindStatement(st: SqliteStatement, n: N, static Nothing)
     { sqlite3_bind_null(st.handle, Int(n)); }
 [N, S | Integer?(N) and CCompatibleString?(S)]
 overload bindStatement(st: SqliteStatement, n: N, value: S)
     { sqlite3_bind_text(st.handle, Int(n), cstring(value), Int(size(value)), SQLITE_TRANSIENT); }
+
+BindableType?(T) = CallDefined?(bindStatement, SqliteStatement, Int, T);
+
+[N, T | Integer?(N) and BindableType?(T)]
+overload bindStatement(st: SqliteStatement, n: N, value: Maybe[T])
+    { bindStatement(st, n, *value); }
+
+[...TT | allValues?(BindableType?, ...TT)]
+bindStatementValues(st: SqliteStatement, ...bindings: TT) {
+    var i = 1;
+    static for (binding in ...bindings) {
+        bindStatement(st, i, binding);
+        inc(i);
+    }
+}
+
+[...TT | allValues?(BindableType?, ...TT)]
+bindStatementTuple(st: SqliteStatement, t: Tuple[...TT]) {
+    bindStatementValues(st, ...unpack(t));
+}
+
+[R | Record?(R) and allValues?(BindableType?, ...RecordFieldTypes(R))]
+bindStatementRecord(st: SqliteStatement, r: R) {
+    bindStatementValues(st, ...recordFields(r));
+}
+
+[S, ...TT | CCompatibleString?(S) and countValues(...TT) > 0 and allValues?(BindableType?, ...TT)]
+overload SqliteStatement(db: SqliteDB, sql: S, ...bindings: TT) {
+    var st = SqliteStatement(db, sql);
+    bindStatementValues(st, ...bindings);
+    return move(st);
+}
 
 [NS | CCompatibleString?(NS)]
 overload bindStatement(st: SqliteStatement, name: NS, value)
@@ -79,12 +113,9 @@ overload bindStatement(st: SqliteStatement, name: NS, value)
 
 alias DUMMY_ERROR_MSG = CStringRef(cstring(""));
 
-runStatement(st: SqliteStatement, ...bindings) {
-    var i = 1;
-    static for (binding in ...bindings) {
-        bindStatement(st, i, binding);
-        inc(i);
-    }
+[...TT | allValues?(BindableType?, ...TT)]
+runStatement(st: SqliteStatement, ...bindings: TT) {
+    bindStatementValues(st, ...bindings);
 
     var code = sqlite3_step(st.handle);
     var baseCode = bitwiseAnd(code, 0xFF);
@@ -101,8 +132,8 @@ overload runStatement(db: SqliteDB, sql: S) {
         throw SqliteError(code, CStringRef(msg));
 }
 
-[S, ...B | CCompatibleString?(S) and countValues(...B) > 0]
-overload runStatement(db: SqliteDB, sql: S, ...bindings: B) {
+[S, ...TT | CCompatibleString?(S) and countValues(...TT) > 0 and allValues?(BindableType?, ...TT)]
+overload runStatement(db: SqliteDB, sql: S, ...bindings: TT) {
     var st = SqliteStatement(db, sql);
     runStatement(st, ...bindings);
 }
@@ -156,6 +187,10 @@ overload index(st: SqliteStatementIterator, n: N)
 nullColumn?(st: SqliteStatementIterator, n: N)
     = sqlite3_column_type(st.handle, Int(n)) == SQLITE_NULL;
 
+[N, T | Integer?(N) and CallDefined?(index, SqliteStatementIterator, N, Static[T])]
+overload index(st: SqliteStatementIterator, n: N, static Maybe[T])
+    = if (nullColumn?(st, n)) nothing(T) else Maybe(st[n, T]);
+
 rowValues(st: SqliteStatementIterator, ...Types)
     = ...mapIndexedValues((Type, n) => st[n, Type], ...Types);
 
@@ -164,5 +199,24 @@ rowTuple(st: SqliteStatementIterator, ...Types)
 
 rowRecord(st: SqliteStatementIterator, T)
     = T(...rowValues(st, ...RecordFieldTypes(T)));
+
+
+
+//
+// withTransaction
+//
+
+withTransaction(db: SqliteDB, fn) {
+    runStatement(db, "begin");
+
+    try {
+        fn();
+    } catch (ex) {
+        runStatement(db, "rollback");
+        throw ex;
+    }
+
+    runStatement(db, "commit");
+}
 
 // TODO: sqlite values

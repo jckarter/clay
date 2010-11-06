@@ -117,6 +117,11 @@ overload ObjectParameterType(static S) = NSString;
 [S | CCompatibleString?(S)]
 overload objectHandle(s: S) = objectHandle(NSString(s));
 
+[i | Identifier?(i)]
+overload ObjectParameterType(static Static[i]) = NSString;
+[i | Identifier?(i)]
+overload objectHandle(static i) = NSSTR(i);
+
 
 
 //
@@ -366,13 +371,11 @@ overload AutoreleasedClassMethod(static selector, static instanceSelector)
     );
 
 [selector, superSelector | Selector?(selector) and Selector?(superSelector)]
-InitInstanceMethod(static selector, static superSelector)
-    = (selector, (self, ...args) => initObject(self, superSelector, ...args));
+InitInstanceMethod(static selector, static superSelector, ...Types)
+    = (selector, (self, ...args) => initObject(self, superSelector, ...args), ...Types);
 
 overload InitInstanceMethod(selector) = InitInstanceMethod(selector, #"init");
 overload InitInstanceMethod() = InitInstanceMethod(#"init", #"init");
-
-// XXX InitMemberwiseInstanceMethod
 
 // symbols for CopyInstanceMethod
 procedure CopyRoot;
@@ -417,11 +420,7 @@ overload ReaderInstanceMethod(static ivarName)
 
 
 defaultWriterSelector(ivarName)
-    = IdentifierConcat(#"set",
-        IdentifierUpperChar(IdentifierSlice(ivarName, static 0, static 1)),
-        IdentifierSlice(ivarName, static 1, static IdentifierSize(ivarName)),
-        #":"
-    );
+    = IdentifierConcat(#"set", IdentifierCapitalize(ivarName), #":");
 
 [ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
 WriterInstanceMethod(static ivarName, static writerSelector, T)
@@ -514,3 +513,36 @@ private toIBAction(method) = (method.0, IBAction(method.1),
 
 IBOutlets(...ivars) = ...mapValues(toIBOutlet, ...ivars);
 IBActions(...methods) = ...mapValues(toIBAction, ...methods);
+
+
+
+//
+// regularClass
+//
+
+private regularClassInstanceMethods(...fields)
+    = InitInstanceMethod(),
+      ...regularClassInitMethod(...fields),
+      CopyInstanceMethod(CopyRoot),
+      DeallocInstanceMethod(),
+      ...regularClassPropertyMethods(...fields);
+
+private regularClassInitMethod() = ;
+overload regularClassInitMethod(...fields)
+    = InitInstanceMethod(regularClassInitMethodName(...fields), #"init",
+        Id, ...mapValues(x => x.1, ...fields)
+    );
+
+private regularClassInitMethodName(field1, ...fields)
+    = IdentifierConcat(#"initWith", IdentifierCapitalize(field1.0), #":",
+        ...mapValues(x => ...(x.0, #":"), ...fields)
+    );
+
+private regularClassPropertyMethods(...fields)
+    = ...mapValues(field => ...PropertyInstanceMethods(field.0, field.1), ...fields);
+
+regularClass(...fields) = newClass(NSObject,
+    InstanceVars(...fields),
+    ClassMethods(),
+    InstanceMethods(...regularClassInstanceMethods(...fields))
+);

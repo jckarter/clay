@@ -1,6 +1,9 @@
 import sqlite.*;
 
-record Wotsit (id: Int, name: String);
+record Wotsit (id: Int, name: Maybe[String]);
+
+record ExemplaryError ();
+instance Exception = ExemplaryError;
 
 main() {
     var db = SqliteDB("temp.sqlite");
@@ -9,9 +12,11 @@ main() {
     runStatement(db, "create temp table hoozits (foo text, bar integer)"); 
 
     println("inserting table");
-    runStatement(db, "insert into hoozits values ('lolcats', 9001)"); 
-    runStatement(db, "insert into hoozits values ('goatse', -1)"); 
-    runStatement(db, "insert into hoozits values ('doublerainbow', 2)"); 
+    withTransaction(db, () ref=> {
+        runStatement(db, "insert into hoozits values ('lolcats', 9001)"); 
+        runStatement(db, "insert into hoozits values ('goatse', -1)"); 
+        runStatement(db, "insert into hoozits values ('doublerainbow', 2)"); 
+    });
 
     println("selecting table");
     for (row in SqliteStatement(db, "select * from hoozits order by bar"))
@@ -38,20 +43,51 @@ main() {
     println("creating table wotsits");
     runStatement(db, "create temp table wotsits (id integer primary key, name text)");
 
-    var insertStmt = SqliteStatement(db, "insert into wotsits values (?, ?)");
+    var insertStmt = SqliteStatement(db, "insert into wotsits values (?, ?)", 0, "zim");
     println("inserting table");
-    runStatement(insertStmt, 0, "zim");
-    runStatement(insertStmt, 1, SqliteNull);
-    runStatement(insertStmt, 2, "zang");
+    withTransaction(db, () ref=> {
+        runStatement(insertStmt);
+        runStatement(insertStmt, 1, Nothing());
+        runStatement(insertStmt, 2, "zang");
+    });
+
+    println("selecting table");
+    for (row in SqliteStatement(db, "select id, name from wotsits order by id")) {
+        println("  -- values: ", ...weaveValues(", ", ...rowValues(row, Int, Maybe[String])));
+        println("     tuple:  ", rowTuple(row, Int, Maybe[String]));
+        println("     record: ", rowRecord(row, Wotsit));
+    }
+
+    println("trying transaction");
+    try {
+        withTransaction(db, () ref=> {
+            runStatement(insertStmt, 3, "zung");
+            throw ExemplaryError();
+        });
+    } catch (ex: ExemplaryError) {
+        println("caught exception during transaction");
+    }
 
     println("selecting table");
     for (row in SqliteStatement(db, "select id, name from wotsits order by id")) {
         if (nullColumn?(row, 1))
-            println("  -- null name in wotsit ", row[0, Int]);
+            println("  null name in wotsit ", row[0, Int]);
         else {
-            println("  -- values: ", ...weaveValues(", ", ...rowValues(row, Int, String)));
-            println("     tuple:  ", rowTuple(row, Int, String));
-            println("     record: ", rowRecord(row, Wotsit));
+            println("  values: ", ...weaveValues(", ", ...rowValues(row, Int, String)));
+        }
+    }
+
+    println("trying transaction again");
+    withTransaction(db, () ref=> {
+        runStatement(insertStmt, 3, "zung");
+    });
+
+    println("selecting table");
+    for (row in SqliteStatement(db, "select id, name from wotsits order by id")) {
+        if (nullColumn?(row, 1))
+            println("  null name in wotsit ", row[0, Int]);
+        else {
+            println("  values: ", ...weaveValues(", ", ...rowValues(row, Int, String)));
         }
     }
 

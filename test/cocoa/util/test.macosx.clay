@@ -76,6 +76,11 @@ record PropertyTest = newClass(NSObject,
     )
 );
 
+overload selector(static #"initWithFoo:bar:") = Id, Id, Id;
+
+record RegularTest = regularClass((#foo, String), (#bar, Char));
+record RegularCanary = regularClass((#foo, Canary), (#bar, Canary));
+
 main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
     TestCase("constructor overloads", test => {
         expectEqual(test, "NSNumber(bool)", true, NSNumber(true).boolValue());
@@ -109,25 +114,29 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
         );
     }),
     TestCase("boxing of clay primitives", test => {
-        expectEqual(test, "integer", 5, objectParameter(5).intValue());
-        expectEqual(test, "double", 5.5, objectParameter(5.5).doubleValue());
+        expectEqual(test, "integer", 5, Id(5).intValue());
+        expectEqual(test, "double", 5.5, Id(5.5).doubleValue());
         expectEqual(test, "64-bit integer", 0x1_0000_0000_u64,
-            objectParameter(0x1_0000_0000_u64).unsignedLongLongValue()
+            Id(0x1_0000_0000_u64).unsignedLongLongValue()
         );
         expectEqual(test, "bool", true,
-            objectParameter(true).boolValue()
+            Id(true).boolValue()
         );
 
         expectEqual(test, "string constant", "worms",
-            String(objectParameter("worms"))
+            String(Id("worms"))
+        );
+
+        expectEqual(test, "identifier", "worms",
+            String(Id(#"worms"))
         );
 
         expectEqual(test, "string", "worms",
-            String(objectParameter(String("worms")))
+            String(Id(String("worms")))
         );
 
         expectEqual(test, "record", Foo(7, 11.0),
-            fromNSValue(Foo, objectParameter(Foo(7, 11.0)))
+            fromNSValue(Foo, Id(Foo(7, 11.0)))
         );
     }),
     TestCase("equality, hashing and comparison", test => {
@@ -262,5 +271,64 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
         expectEqual(test, "bar retainCount", NSUInteger(1), x.bar().retainCount());
         expectEqual(test, "bar", "catch-22", x.bar());
         expectEqual(test, "isBas", true, x.isBas());
+    }),
+    TestCase("regularClass method signatures", test => {
+        expectEqual(test, "SelectorReturnType(RegularTest, #foo)", String,
+            SelectorReturnType(RegularTest, #"foo")
+        );
+        expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #foo)", (),
+            ...SelectorArgumentTypes(RegularTest, #"foo")
+        );
+        expectEqual(test, "SelectorReturnType(RegularTest, #setFoo:)", Void,
+            SelectorReturnType(RegularTest, #"setFoo:")
+        );
+        expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #setFoo:)", Tuple(String),
+            ...SelectorArgumentTypes(RegularTest, #"setFoo:")
+        );
+
+        expectEqual(test, "SelectorReturnType(RegularTest, #initWithFoo:bar:)", RegularTest,
+            SelectorReturnType(RegularTest, #"initWithFoo:bar:")
+        );
+        expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #initWithFoo:bar:)",
+            (String, Char),
+            ...SelectorArgumentTypes(RegularTest, #"initWithFoo:bar:")
+        );
+
+        expectEqual(test, "SelectorReturnType(RegularCanary, #initWithFoo:bar:)", RegularCanary,
+            SelectorReturnType(RegularCanary, #"initWithFoo:bar:")
+        );
+        expectEqualValues(test, "SelectorArgumentTypes(RegularCanary, #initWithFoo:bar:)",
+            (Canary, Canary),
+            ...SelectorArgumentTypes(RegularCanary, #"initWithFoo:bar:")
+        );
+    }),
+    TestCase("regularClass usage", test => {
+        var defaultObject = Retained(RegularTest.alloc().init());
+
+        expectEqual(test, "defaultObject.foo()", "", defaultObject.foo());
+
+        var regularObject = Retained(RegularTest.alloc().initWithFoo_bar(String("wye"), 'x'));
+
+        expectEqual(test, "regularObject.foo()", "wye", regularObject.foo());
+        expectEqual(test, "regularObject.bar()", 'x', regularObject.bar());
+
+        regularObject.setFoo(String("zed"));
+        regularObject.setBar('w');
+
+        expectEqual(test, "regularObject.foo()", "zed", regularObject.foo());
+        expectEqual(test, "regularObject.bar()", 'w', regularObject.bar());
+
+        var copy = Retained(regularObject.copy());
+
+        expectEqual(test, "copy.foo()", "zed", copy.foo());
+        expectEqual(test, "copy.bar()", 'w', copy.bar());
+    }),
+    TestCase("regularClass memory management", test => {
+        expectCanariesDestroyed(test, "regularClass memory management", () => {
+            var foo = Retained(RegularCanary.alloc().init());
+            var bar = Retained(foo.copy());
+            foo.setFoo(Canary());
+            var bas = Retained(RegularCanary.alloc().initWithFoo_bar(Canary(), Canary()));
+        });
     }),
 ])));

@@ -1,4 +1,4 @@
-creating table
+creating table hoozits
 inserting table
 selecting table
   goatse => -1
@@ -9,4 +9,30 @@ selecting table
   turkeys => 3
   mario => 34
   all your base => 2101
+dropping table
+
+creating table wotsits
+inserting table
+selecting table
+  -- values: 0, zim
+     tuple:  (0, "zim")
+     record: Wotsit(0, "zim")
+  -- values: 1, Nothing()
+     tuple:  (1, Nothing())
+     record: Wotsit(1, Nothing())
+  -- values: 2, zang
+     tuple:  (2, "zang")
+     record: Wotsit(2, "zang")
+trying transaction
+caught exception during transaction
+selecting table
+  values: 0, zim
+  null name in wotsit 1
+  values: 2, zang
+trying transaction again
+selecting table
+  values: 0, zim
+  null name in wotsit 1
+  values: 2, zang
+  values: 3, zung
 dropping table

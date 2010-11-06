@@ -183,6 +183,8 @@ overload ObjectType?(static Id) = true;
 
 overload nil() = nil(Id);
 
+[T | ObjectParameterType?(T) and T != Id and T != ObjectHandle]
+overload Id(object: T) = Id(objectHandle(object));
 
 
 //
@@ -461,23 +463,47 @@ instance Exception = NewClassCouldNotAddClassMethod;
 record NewClassCouldNotAddInstanceMethod (module: StringConstant, name: StringConstant, selector: StringConstant);
 instance Exception = NewClassCouldNotAddInstanceMethod;
 
+private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ...args) {
+    objc_msgSend(
+        ObjectHandle(objc_getClass(cstring("NSException"))),
+        objcSelector[#"raise:format:"],
+        reason, format, ...mapValues(varArgUnbox1, ...args) 
+    );
+}
+
 [T, sel]
 private classMethodImp(static T, static sel, fn) 
     = makeCCodePointer(
-        (self, _cmd, ...args) =>
-            forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
-                ...fn(objectParameter(T), ...msgSendBox(Static[T], sel, ...args))
-            ),
+        (self, _cmd, ...args) => {
+            try {
+                return forward ...mapValues(
+                    r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
+                    ...fn(objectParameter(T), ...msgSendBox(Static[T], sel, ...args))
+                );
+            } catch (ex) {
+                raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(printString(ex)));
+                // not actually reached
+                throw ex;
+            }
+        },
         ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(Static[T], sel)
     );
 
 [T, sel]
 private instanceMethodImp(static T, static sel, fn)
     = makeCCodePointer(
-        (self, _cmd, ...args) =>
-            forward ...mapValues(r => msgSendUnbox1(SelectorReturnType(T, sel), r),
-                ...fn(T(self), ...msgSendBox(T, sel, ...args))
-            ),
+        (self, _cmd, ...args) => {
+            try {
+                return forward ...mapValues(
+                    r => msgSendUnbox1(SelectorReturnType(T, sel), r),
+                    ...fn(T(self), ...msgSendBox(T, sel, ...args))
+                );
+            } catch (ex) {
+                raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(printString(ex)));
+                // not actually reached
+                throw ex;
+            }
+        },
         ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(T, sel)
     );
 
