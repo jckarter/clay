@@ -1,0 +1,164 @@
+
+import maybe.*;
+import metaclay.common.*;
+import metaclay.ast as ast;
+import metaclay.diagnostics.*;
+
+
+
+//
+// top-level item entries
+//
+
+record SymbolHead = referenceType(
+    ast: ast.Symbol,
+    env: Env,
+    symbols: HashMap[Vector[Value], SymbolValue],
+);
+
+overload SymbolHead(x:ast.Symbol, env:Env) =
+    SymbolHead(x, env, HashMap[Vector[Value], SymbolValue]());
+
+record Function = referenceType(
+    ast: ast.Function,
+    env: Env,
+    overloads: Vector[Overload],
+);
+
+overload Function(x:ast.Function, env:Env) =
+    Function(x, env, Vector[Overload]());
+
+record Overload = referenceType(
+    ast: ast.Overload,
+    env: Env,
+);
+
+
+
+//
+// primitives
+//
+
+enum PrimitiveKind {
+    PRIM_add,
+    PRIM_subtract,
+    PRIM_multiply,
+    PRIM_divide,
+    PRIM_remainder,
+    PRIM_equals?,
+    PRIM_lesser?,
+}
+
+record Primitive = referenceType(
+    kind: PrimitiveKind,
+);
+
+
+
+//
+// environment
+//
+
+variant EnvEntry = SymbolHead
+                 | Function
+                 | Primitive
+                 | Value
+                 | PatternCell
+                 ;
+ 
+overload EnvEntry() = EnvEntry(SymbolHead());
+
+record Env = referenceType(
+    parent: Env,
+    entries: HashMap[String, EnvEntry],
+);
+
+newEnv(parent:Env) = Env(parent, HashMap[String, EnvEntry]());
+
+
+
+//
+// envAdd, envLookup
+//
+
+envAdd(env, name, entry) {
+    if (contains?(env.entries, name.str))
+        error("name redefinition: ", name.str);
+    env.entries[name.str] = EnvEntry(entry);
+}
+
+envLookup(env, name) {
+    if (null?(env))
+        error("name not found: ", name);
+    var ptr = lookup(env.entries, name.str);
+    if (null?(ptr))
+        return envLookup(env.parent, name);
+    return ptr^;
+}
+
+
+
+//
+// Module
+//
+
+record Module = referenceType(
+    name: String,
+    ast: ast.SourceAST,
+    globals: Env,
+);
+
+overload Module(name:String) = Module(name, ast.SourceAST(), Env());
+
+
+
+//
+// Value
+//
+
+variant Value = BoolValue
+              | IntValue
+              | StringValue
+              | LambdaValue
+              | SymbolHeadValue
+              | FunctionValue
+              | PrimitiveValue
+              | SymbolValue
+              ;
+
+overload Value() = Value(BoolValue());
+
+record BoolValue(value: Bool);
+record IntValue(value: Int);
+record StringValue(value: String);
+record LambdaValue(value: ast.LambdaExpr, env: Env);
+record SymbolHeadValue(value: SymbolHead);
+record FunctionValue(value: Function);
+record PrimitiveValue(value: Primitive);
+
+record SymbolValue = referenceType(
+    head: SymbolHead,
+    params: Vector[Value],
+    initialized?: Bool,
+    body: Maybe[Value],
+);
+
+
+
+//
+// Pattern
+//
+
+variant Pattern = Value
+                | PatternCell
+                | SymbolPattern
+                ;
+         
+record PatternCell = referenceType(
+    value: Maybe[Value]
+);
+
+record SymbolPattern = referenceType(
+    head: SymbolHead,
+    params: Vector[Pattern],
+);

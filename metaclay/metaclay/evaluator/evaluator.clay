@@ -1,0 +1,440 @@
+
+import maybe.*;
+import metaclay.common.*;
+import metaclay.ast as ast;
+import metaclay.core.*;
+
+
+
+//
+// parseStringLiteral
+//
+
+parseStringLiteral(s) {
+    var result = String();
+    assert(front(s) == '\"');
+    assert(back(s) == '\"');
+    var i = 1;
+    while (i+1 < size(s)) {
+        var c = s[i];
+        if (c == '\\') {
+            c, i = ...parseEscapeChar(s, i+1);
+            push(result, c);
+        }
+        else {
+            push(result, c);
+            i += 1;
+        }
+    }
+    return move(result);
+}
+
+private parseEscapeChar(s, i) {
+    switch (s[i]) {
+        case 'n': return '\n', i+1;
+        case 'r': return '\r', i+1;
+        case 't': return '\t', i+1;
+        case 'a': return '\a', i+1;
+        case 'b': return '\b', i+1;
+        case 'f': return '\f', i+1;
+        case 'v': return '\v', i+1;
+        case '\\': return '\\', i+1;
+        case '\'': return '\'', i+1;
+        case '\"': return '\"', i+1;
+        case 'x' : return parseHexChar(s[i+1], s[i+2]), i+3;
+    }
+    return parseOctalChar(s[i+1], s[i+2], s[i+3]), i+4;
+}
+
+private parseHexChar(a, b) {
+    return Char(parseHexDigit(a)*16 + parseHexDigit(b));
+}
+
+private parseHexDigit(x) {
+    if ((x >= '0') and (x <= '9'))
+        return Int(x) - Int('0');
+    if ((x >= 'a') and (x <= 'z'))
+        return Int(x) - Int('a') + 10;
+    if ((x >= 'A') and (x <= 'Z'))
+        return Int(x) - Int('z') + 10;
+    error("invalid hex digit: ", x);
+    return -1;
+}
+
+private parseOctalChar(a, b, c) {
+    return Char(
+        parseOctalDigit(a)*8*8 + parseOctalDigit(b)*8 + parseOctalDigit(c)
+    );
+}
+
+private parseOctalDigit(x) {
+    if ((x >= '0') and (x <= '7'))
+        return Int(x) - Int('0');
+    error("invalid octal digit: ", x);
+    return -1;
+}
+
+
+
+//
+// symbols
+//
+
+symbolHasParams?(x:SymbolHead) {
+    return not empty?(x.ast.params);
+}
+
+symbolValue(x:SymbolHead) {
+    return symbolValue(x, Vector[Value]());
+}
+
+overload symbolValue(x:SymbolHead, params:Vector[Value]) {
+    var ptr = lookup(x.symbols, params);
+    if (not null?(ptr)) {
+        return ptr^;
+    }
+    ref y = x.symbols[params];
+    y = SymbolValue(x, params, false, nothing(Value));
+    return y;
+}
+
+
+
+//
+// evaluateMain
+//
+
+evaluateMain(module) {
+    var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
+    var mainCall = ast.Expr(ast.Call(mainRef, Vector[ast.Expr]()));
+    return evaluateExpr(mainCall, module.globals);
+}
+
+
+
+//
+// evaluateBool
+//
+
+evaluateBool(expr, env) {
+    var result = evaluateExpr(expr, env);
+    if (not variantIs?(result, BoolValue))
+        error("expecting a Bool value");
+    return variantAs(result, BoolValue).value;
+}
+
+
+
+//
+// evaluateExpr
+//
+
+procedure evaluateExpr;
+
+overload evaluateExpr(x:ast.Expr, env) Value {
+    return evaluateExpr(*x, env);
+}
+overload evaluateExpr(x:ast.BoolLiteral, env) {
+    return Value(BoolValue(x.value));
+}
+overload evaluateExpr(x:ast.IntLiteral, env) {
+    return Value(IntValue(Int(x.value)));
+}
+overload evaluateExpr(x:ast.StringLiteral, env) {
+    return Value(StringValue(parseStringLiteral(x.value)));
+}
+overload evaluateExpr(x:ast.NameRef, env) {
+    return match(envLookup(env, x.name),
+        SymbolHead, x => {
+            if (symbolHasParams?(x))
+                return Value(SymbolHeadValue(x));
+            return Value(symbolValue(x));
+        },
+        Function, x => Value(FunctionValue(x)),
+        Primitive, x => Value(PrimitiveValue(x)),
+        Value, x => x,
+        PatternCell, x => {
+            error("pattern variable cannot be used in non-pattern expression");
+            return Value();
+        }
+    );
+}
+overload evaluateExpr(x:ast.Call, env) {
+    var callable = evaluateExpr(x.expr, env);
+    var args = map(y => evaluateExpr(y, env), x.args);
+    return evaluateCall(callable, args);
+}
+overload evaluateExpr(x:ast.Indexing, env) {
+    var indexable = evaluateExpr(x.expr, env);
+    var args = map(y => evaluateExpr(y, env), x.args);
+    return evaluateIndexing(indexable, args);
+}
+overload evaluateExpr(x:ast.LambdaExpr, env) {
+    return Value(LambdaValue(x, env));
+}
+overload evaluateExpr(x:ast.IfExpr, env) {
+    if (evaluateBool(x.condition, env))
+        return evaluateExpr(x.thenPart, env);
+    else
+        return evaluateExpr(x.elsePart, env);
+}
+
+
+
+//
+// evaluateCall
+//
+
+procedure evaluateCall;
+overload evaluateCall(x, args) {
+    error("invalid callee: ", x);
+    return Value();
+}
+overload evaluateCall(x:Value, args) {
+    return evaluateCall(*x, args);
+}
+overload evaluateCall(x:LambdaValue, args) {
+    if (size(x.value.formalArgs) != size(args))
+        error("incorrect no. of arguments in call to lambda");
+    var env2 = newEnv(x.env);
+    for (name, arg in zipped(x.value.formalArgs, args))
+        envAdd(env2, name, arg);
+    return evaluateExpr(x.value.body, env2);
+}
+overload evaluateCall(x:FunctionValue, args) {
+    for (y in reversed(x.value.overloads)) {
+        var result = matchOverload(y, args);
+        if (not nothing?(result))
+            return evaluateExpr(y.ast.body, just(result));
+    }
+    error("no matching operation");
+    return Value();
+}
+overload evaluateCall(x:PrimitiveValue, args) {
+    return evaluatePrimitive(x.value.kind, args);
+}
+
+
+
+//
+// evaluateIndexing
+//
+
+procedure evaluateIndexing;
+overload evaluateIndexing(x, args) {
+    error("invalid indexee: ", x);
+    return Value();
+}
+overload evaluateIndexing(x:Value, args) {
+    return evaluateIndexing(*x, args);
+}
+overload evaluateIndexing(x:SymbolHeadValue, args) {
+    var head = x.value;
+    if (size(head.ast.params) != size(args))
+        error("incorrect no. of arguments in indexing");
+    return Value(symbolValue(head, args));
+}
+
+
+
+//
+// evaluatePattern
+//
+
+procedure evaluatePattern;
+overload evaluatePattern(x, env) {
+    return Pattern(evaluateExpr(x, env));
+}
+overload evaluatePattern(x:ast.Expr, env) Pattern {
+    return evaluatePattern(*x, env);
+}
+overload evaluatePattern(x:ast.NameRef, env) {
+    var entry = envLookup(env, x.name);
+    if (variantIs?(entry, PatternCell))
+        return Pattern(variantAs(entry, PatternCell));
+    return Pattern(evaluateExpr(x, env));
+}
+overload evaluatePattern(x:ast.Indexing, env) {
+    var indexable = evaluateExpr(x.expr, env);
+    var args = map(y => evaluatePattern(y, env), x.args);
+    return evaluateIndexingPattern(indexable, args);
+}
+
+
+
+//
+// evaluateIndexingPattern
+//
+
+procedure evaluateIndexingPattern;
+overload evaluateIndexingPattern(x, args) {
+    var toValue = y => {
+        if (not variantIs?(y, Value))
+            error("can't use pattern in a non-pattern expression");
+        return variantAs(y, Value);
+    };
+    var args2 = map(toValue, args);
+    return Pattern(evaluateIndexing(x, args2));
+}
+overload evaluateIndexingPattern(x:Value, args) {
+    return evaluateIndexingPattern(*x, args);
+}
+overload evaluateIndexingPattern(x:SymbolHeadValue, args) {
+    var head = x.value;
+    if (size(head.ast.params) != size(args))
+        error("incorrect no. of arguments for indexing");
+    return Pattern(SymbolPattern(head, args));
+}
+
+
+
+//
+// unify
+//
+
+procedure unify;
+overload unify(p:Pattern, x:Value) {
+    return unify(*p, x);
+}
+overload unify(p:Value, x:Value) {
+    return p == x;
+}
+overload unify(p:PatternCell, x:Value) {
+    return maybe(p.value,
+        y => y == x,
+        () => {
+            p.value = Maybe(x);
+            return true;
+        }
+    );
+}
+overload unify(p:SymbolPattern, x:Value) {
+    if (not variantIs?(x, SymbolValue))
+        return false;
+    var y = variantAs(x, SymbolValue);
+    if (p.head != y.head)
+        return false;
+    assert(size(p.params) == size(y.params));
+    for (p2, x2 in zipped(p.params, y.params)) {
+        if (not unify(p2, x2))
+            return false;
+    }
+    return true;
+}
+
+
+
+//
+// derefCell
+//
+
+derefCell(x:PatternCell) {
+    return maybe(x.value,
+        y => y,
+        () => {
+            error("unbound pattern variable");
+            return Value();
+        },
+    );
+}
+
+
+
+//
+// matchOverload
+//
+
+matchOverload(x:Overload, args:Vector[Value]) Maybe[Env] {
+    var cells = Vector[PatternCell]();
+    var patternEnv = newEnv(x.env);
+    for (pvar in x.ast.patternVars) {
+        var cell = PatternCell(nothing(Value));
+        push(cells, cell);
+        envAdd(patternEnv, pvar, cell);
+    }
+    if (size(x.ast.argPatterns) != size(args))
+        return nothing(Env);
+    for (argPattern, arg in zipped(x.ast.argPatterns, args)) {
+        var pattern = evaluatePattern(argPattern, patternEnv);
+        if (not unify(pattern, arg))
+            return nothing(Env);
+    }
+    var env2 = newEnv(x.env);
+    for (pvar, cell in zipped(x.ast.patternVars, cells))
+        envAdd(env2, pvar, derefCell(cell));
+    return maybe(x.ast.predicate,
+        pred => {
+            if (not evaluateBool(pred, env2))
+                return nothing(Env);
+            return Maybe(env2);
+        },
+        () => Maybe(env2),
+    );
+}
+
+
+
+//
+// evaluatePrimitive
+//
+
+twoValues(args) {
+    if (size(args) != 2)
+        error("expecting two arguments");
+    return args[0], args[1];
+}
+
+twoInts(args) {
+    var a, b = ...twoValues(args);
+    if (not variantIs?(a, IntValue) or not variantIs?(b, IntValue))
+        error("expecting two integers");
+    return variantAs(a, IntValue).value, variantAs(b, IntValue).value;
+}
+
+evaluatePrimitive(kind, args) {
+    switch (kind) {
+    case PRIM_add : {
+        var a, b = ...twoInts(args);
+        return Value(IntValue(a + b));
+    }
+    case PRIM_subtract : {
+        var a, b = ...twoInts(args);
+        return Value(IntValue(a - b));
+    }
+    case PRIM_multiply : {
+        var a, b = ...twoInts(args);
+        return Value(IntValue(a * b));
+    }
+    case PRIM_divide : {
+        var a, b = ...twoInts(args);
+        return Value(IntValue(a / b));
+    }
+    case PRIM_remainder : {
+        var a, b = ...twoInts(args);
+        return Value(IntValue(a % b));
+    }
+    case PRIM_equals? : {
+        var a, b = ...twoValues(args);
+        return Value(BoolValue(a == b));
+    }
+    case PRIM_lesser? : {
+        var a, b = ...twoValues(args);
+        if (variantIs?(a, BoolValue) and variantIs?(b, BoolValue)) {
+            var x, y = ...mapValues(v => variantAs(v, BoolValue).value, a, b);
+            return Value(BoolValue(x < y));
+        }
+        else if (variantIs?(a, IntValue) and variantIs?(b, IntValue)) {
+            var x, y = ...mapValues(v => variantAs(v, IntValue).value, a, b);
+            return Value(BoolValue(x < y));
+        }
+        else {
+            error("lesser? expects is applicable to Int,Int or Bool,Bool");
+            return Value();
+        }
+    }
+    default : {
+        assert(false);
+        return Value();
+    }
+    }
+}

@@ -1,0 +1,150 @@
+
+import maybe.*;
+import metaclay.lexer.*;
+
+
+
+//
+// TokenRange
+//
+
+alias TokenRange = Range[SizeT];
+
+
+
+//
+// AST nodes
+//
+
+private ast(...fields) = referenceTypeWithPredicate(
+    ASTNode?,
+    tokens: TokenRange,
+    mainToken: SizeT,
+    ...fields,
+);
+
+procedure ASTNode?;
+overload ASTNode?(x) = false;
+
+[T, ...A | ASTNode?(T)
+           and (Tuple[...ReferenceTypeFieldTypes(T)] ==
+                Tuple[TokenRange, SizeT, ...A])]
+callbyname overload T(...args:A) {
+    alias tokens = TokenRange(SizeT(0), SizeT(0));
+    return T(tokens, SizeT(0), ...args);
+}
+
+[T | ASTNode?(T)]
+overload printReprTo(stream, x:T) {
+    printTo(stream, T);
+    printReprValuesTo(stream, ...dropValues(static 2, ...referenceTypeFields(x)));
+}
+
+
+
+//
+// Identifier
+//
+
+record Identifier = ast(
+    str:String,
+);
+
+[S | String?(S) and (S != String)]
+overload Identifier(x:S) = Identifier(String(x));
+
+
+
+//
+// Expr
+//
+
+variant Expr = BoolLiteral
+             | IntLiteral
+             | StringLiteral
+             | NameRef
+             | Call
+             | Indexing
+             | LambdaExpr
+             | IfExpr
+             ;
+
+overload Expr() = Expr(BoolLiteral());
+
+record BoolLiteral = ast(
+    value:Bool
+);
+
+record IntLiteral = ast(
+    value:String
+);
+
+record StringLiteral = ast(
+    value:String
+);
+
+record NameRef = ast(
+    name:Identifier
+);
+
+record Call = ast(
+    expr:Expr,
+    args:Vector[Expr]
+);
+
+record Indexing = ast(
+    expr:Expr,
+    args:Vector[Expr]
+);
+
+record LambdaExpr = ast(
+    formalArgs:Vector[Identifier],
+    body:Expr
+);
+
+record IfExpr = ast(
+    condition:Expr,
+    thenPart:Expr,
+    elsePart:Expr
+);
+
+
+
+//
+// TopLevelItem
+//
+
+variant TopLevelItem = Symbol
+                     | Function
+                     | Overload
+                     ;
+
+record Symbol = ast(
+    name: Identifier,
+    params: Vector[Identifier],
+    expr: Maybe[Expr],
+);
+
+record Function = ast(
+    name: Identifier,
+    body: Maybe[Overload],
+);
+
+record Overload = ast(
+    patternVars: Vector[Identifier],
+    predicate: Maybe[Expr],
+    target: Identifier,
+    argPatterns: Vector[Expr],
+    body: Expr,
+);
+
+
+
+//
+// SourceAST
+//
+
+record SourceAST = referenceType(
+    tokens: SourceTokens,
+    topLevelItems: Vector[TopLevelItem],
+);
