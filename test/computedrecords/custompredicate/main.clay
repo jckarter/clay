@@ -1,6 +1,6 @@
 
 
-record Point[T] = flexi((#x, T), (#y, T));
+record Point[T] = flexi(x:T, y:T);
 
 main() {
     println(FlexiConstructor?(Point[Int]));

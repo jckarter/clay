@@ -885,7 +885,7 @@ static bool unpack(ExprPtr &x) {
 
 
 //
-// newExpr, staticExpr
+// newExpr, staticExpr, pairExpr
 //
 
 static bool newExpr(ExprPtr &x) {
@@ -908,6 +908,23 @@ static bool staticExpr(ExprPtr &x) {
     return true;
 }
 
+static bool pairExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    IdentifierPtr y;
+    if (!identifier(y)) return false;
+    if (!symbol(":")) return false;
+    ExprPtr z;
+    if (!expression(z)) return false;
+    ExprPtr ident = new IdentifierLiteral(y);
+    ident->location = location;
+    ExprListPtr args = new ExprList();
+    args->add(ident);
+    args->add(z);
+    x = new Tuple(args);
+    x->location = location;
+    return true;
+}
+
 
 
 //
@@ -917,6 +934,7 @@ static bool staticExpr(ExprPtr &x) {
 static bool expression(ExprPtr &x) {
     int p = save();
     if (lambda(x)) return true;
+    if (restore(p), pairExpr(x)) return true;
     if (restore(p), orExpr(x)) return true;
     if (restore(p), ifExpr(x)) return true;
     if (restore(p), unpack(x)) return true;
