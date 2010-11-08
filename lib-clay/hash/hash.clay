@@ -108,3 +108,12 @@ private hashSequence(a) {
     }
     return h;
 }
+
+
+
+//
+// variants
+//
+
+[T | Variant?(T)]
+overload hash(x:T) = 23*variantTag(x) + hash(*x);
