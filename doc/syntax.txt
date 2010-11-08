@@ -1,8 +1,10 @@
 Module -> Import* TopLevelItem*
 
-Import -> "import" DottedName ("as" Identifier)? ";"
-        | "import" DottedName "." "*" ";"
-        | "import" DottedName "." "(" comma_list(ImportedItem) ")" ";"
+Visibility -> "public" | "private"
+
+Import -> Visibility? "import" DottedName ("as" Identifier)? ";"
+        | Visibility? "import" DottedName "." "*" ";"
+        | Visibility? "import" DottedName "." "(" comma_list(ImportedItem) ")" ";"
 
 DottedName -> Identifier ("." Identifier)*
 
@@ -15,7 +17,7 @@ TopLevelItem -> Record | Variant | Instance
               | ExternalProcedure | ExternalVariable
               | GlobalAlias
 
-Record -> "record" Identifier PatternVars? RecordBody
+Record -> Visibility? "record" Identifier PatternVars? RecordBody
 
 RecordBody -> NormalRecordBody
             | ComputedRecordBody
@@ -27,13 +29,13 @@ PatternVars -> "[" comma_list(Identifier) "]"
 RecordField -> Identifier TypeSpec
 TypeSpec -> ":" Pattern
 
-Variant -> "variant" Identifier PatternVars? ("=" DefaultInstances)? ";"
+Variant -> Visibility? "variant" Identifier PatternVars? ("=" DefaultInstances)? ";"
 
 DefaultInstances -> Type ("|" Type)*
 
 Instance -> PatternVarsWithCond? "instance" Pattern "=" Type ";"
 
-Procedure -> PatternVarsWithCond? "inline"? "callbyname"? "procedure"?
+Procedure -> PatternVarsWithCond? Visibility? "inline"? "callbyname"? "procedure"?
              Identifier Arguments ReturnSpec? VarReturnSpec? Body
            | "procedure" Identifier ";"
 
@@ -63,11 +65,11 @@ Body -> "=" ReturnExpression ";"
 Overload -> PatternVarsWithCond? "inline"? "callbyname"? "overload"
             Pattern Arguments ReturnSpec? VarReturnSpec? Body
 
-Enumeration -> "enum" Identifier "{" comma_list(Identifier) "}"
+Enumeration -> Visibility? "enum" Identifier "{" comma_list(Identifier) "}"
 
-GlobalVariable -> "var" Identifier PatternVars? "=" Expression ";"
+GlobalVariable -> Visibility? "var" Identifier PatternVars? "=" Expression ";"
 
-ExternalProcedure -> "external" Identifier "(" ExternalArgs ")"
+ExternalProcedure -> Visibility? "external" Identifier "(" ExternalArgs ")"
                      Type? (ExternalBody | ";")
 ExternalArgs -> comma_list(ExternalArg) ("," "...")?
               | ("...")?
@@ -75,9 +77,9 @@ ExternalArg -> Identifier TypeSpec
 ExternalBody -> "=" Expression ";"
               | Block
 
-ExternalVariable -> "external" Identifier TypeSpec ";"
+ExternalVariable -> Visibility? "external" Identifier TypeSpec ";"
 
-GlobalAlias -> "alias" Identifier PatternVars? "=" Expression ";"
+GlobalAlias -> Visibility? "alias" Identifier PatternVars? "=" Expression ";"
 
 
 //
