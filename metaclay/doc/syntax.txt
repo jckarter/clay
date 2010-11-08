@@ -1,0 +1,37 @@
+Syntax:
+------
+
+GlobalSymbol -> "symbol" Identifier StaticParams? ";"
+
+GlobalSymbolWithBody -> "symbol"? Identifier StaticParams? "=" Expr ";"
+
+StaticParams -> "[" comma_list(Identifier) "]"
+
+Function -> "function" Identifier ";"
+
+Overload -> PatternVarsWithPredicate? "overload" Identifier
+            "(" comma_list(Pattern)? ")" "=" Expr ";"
+
+PatternVarsWithPredicate -> "[" comma_list(Identifier)? "|" Expr "]"
+
+FunctionWithBody -> PatternVarsWithPredicate? "function"? Identifier
+                    "(" comma_list(Pattern)? ")" "=" Expr ";"
+
+Pattern -> BoolLiteral
+         | IntLiteral
+         | StringLiteral
+         | Identifier
+         | Identifier "[" comma_list(Pattern) "]"
+
+Expr -> BoolLiteral
+      | IntLiteral
+      | StringLiteral
+      | Identifier
+      | Expr "(" comma_list(Expr) ")"
+      | Expr "[" comma_list(Expr) "]"
+      | Lambda
+      | "if" "(" Expr ")" Expr "else" Expr
+
+Lambda -> LambdaArgs "=>" Expr
+LambdaArgs -> Identifier
+            | "(" comma_list(Identifier)? ")"

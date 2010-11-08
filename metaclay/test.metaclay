@@ -1,0 +1,14 @@
+
+function factorial;
+[n] overload factorial(n) = multiply(n, factorial(subtract(n, 1)));
+overload factorial(1) = 1;
+overload factorial(0) = 1;
+
+[n]
+factorial2(n) =
+    if (lesser?(n, 2))
+        1
+    else
+        multiply(n, factorial2(subtract(n, 1)));
+
+main() = factorial(8);

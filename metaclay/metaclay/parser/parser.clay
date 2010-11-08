@@ -1,0 +1,477 @@
+
+import maybe.*;
+import parsing.combinators.wrapper.*;
+import metaclay.common.*;
+import metaclay.lexer.*;
+import metaclay.ast.*;
+import metaclay.diagnostics.*;
+
+
+
+//
+// parser input
+//
+
+record ParserInput(
+    tokens: SourceTokens,
+    current: SizeT,
+    maxCurrent: SizeT,
+);
+
+overload ParserInput(tokens: SourceTokens) =
+    ParserInput(tokens, SizeT(0), SizeT(0));
+
+overload iterator(x:ParserInput) = x;
+
+overload hasNext?(x:ParserInput) =
+    (x.current < size(x.tokens.vector));
+
+overload next(x:ParserInput) {
+    ref token = x.tokens.vector[x.current];
+    x.current += 1;
+    return ref token;
+}
+
+overload assign(dest:ParserInput, lvalue src:ParserInput) {
+    if (dest.tokens == src.tokens) {
+        var destMax = max(dest.maxCurrent, dest.current);
+        var srcMax = max(src.maxCurrent, src.current);
+        dest.maxCurrent = max(destMax, srcMax);
+        dest.current = src.current;
+    }
+    else {
+        dest.tokens = src.tokens;
+        dest.current = src.current;
+        dest.maxCurrent = src.maxCurrent;
+    }
+}
+
+
+
+//
+// combinator specialization
+//
+
+private var combinators = Combinators[ParserInput]();
+
+private var Parser? = combinators.Parser?;
+private var Parsers? = combinators.Parsers?;
+private var ParseResult = combinators.ParseResult;
+
+private var nextToken = combinators.nextToken;
+
+private var condition = combinators.condition;
+private var literal = combinators.literal;
+private var literalString = combinators.literalString;
+private var optional = combinators.optional;
+private var choice = combinators.choice;
+private var sequence = combinators.sequence;
+private var sequenceAs = combinators.sequenceAs;
+private var modify = combinators.modify;
+private var repeated = combinators.repeated;
+private var repeatedAs = combinators.repeatedAs;
+private var zeroOrMore = combinators.zeroOrMore;
+private var oneOrMore = combinators.oneOrMore;
+private var zeroOrMoreAs = combinators.zeroOrMoreAs;
+private var oneOrMoreAs = combinators.oneOrMoreAs;
+private var separatedList = combinators.separatedList;
+private var optSeparatedList = combinators.optSeparatedList;
+private var separatedListStrict = combinators.separatedListStrict;
+
+
+
+//
+// bounds combinator
+//
+
+[Parser]
+private bounds(parser:Parser) {
+    return input => {
+        alias T = ParseResult(Parser);
+        var start = input.current;
+        return maybe(parser(input),
+            x ref=> {
+                x.tokens = TokenRange(start, input.current);
+                x.mainToken = start;
+                return Maybe(move(x));
+            },
+            () => nothing(T),
+        );
+    };
+}
+
+
+
+//
+// keywords
+//
+
+private keyword(s) {
+    var i = keywordIndex(s);
+    assert(i >= 0, "invalid keyword");
+    var pred = (x => ((x.kind == KEYWORD) and (x.subKind == i)));
+    return modify(x => (), condition(pred));
+}
+
+private var kw_symbol = keyword("symbol");
+private var kw_function = keyword("function");
+private var kw_overload = keyword("overload");
+private var kw_static = keyword("static");
+private var kw_true = keyword("true");
+private var kw_false = keyword("false");
+private var kw_if = keyword("if");
+private var kw_else = keyword("else");
+
+
+
+//
+// punctuations
+//
+
+private punctuationParser(Ident) {
+    var i = punctuationIndex(StaticName(Ident));
+    assert(i >= 0, "invalid punctuation");
+    var pred = (x => ((x.kind == PUNCTUATION) and (x.subKind == i)));
+    return modify(x => (), condition(pred));
+}
+
+private var punctuationParserTable[Ident] = punctuationParser(Ident);
+
+[Ident]
+private punc(static Ident) = punctuationParserTable[Ident];
+
+
+
+//
+// utility combinators
+//
+
+private commaList(forward parser) = separatedList(punc(#","), parser);
+private optCommaList(forward parser) = optSeparatedList(punc(#","), parser);
+
+private commaListStrict(forward parser) =
+    separatedListStrict(punc(#","), parser);
+
+private optCommaListStrict(forward parser) =
+    optSeparatedListStrict(punc(#","), parser);
+
+
+
+//
+// token parser
+//
+
+private token(tokenKind) = condition(x => (x.kind == tokenKind));
+
+private tokenData(tokenKind) {
+    var parser = token(tokenKind);
+    return input => {
+        ref data = input.tokens.file.data;
+        return maybe(parser(input),
+            x ref=> Maybe(sliced(data, x.range.begin, x.range.end)),
+            () ref=> nothing(Type(sliced(data, SizeT(0), SizeT(0)))),
+        );
+    };
+}
+
+
+
+//
+// identifier
+//
+
+private var identifier = bounds(modify(Identifier, tokenData(IDENTIFIER)));
+private var identifierList = commaList(identifier);
+
+
+
+//
+// exprParser combinator
+//
+
+private exprParser(forward modifier, forward parser) = modify(
+    x => Expr(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+
+
+//
+// literals
+//
+
+private var boolTrue = modify(x => true, kw_true);
+private var boolFalse = modify(x => false, kw_false);
+
+private var boolLiteral = exprParser(
+    BoolLiteral,
+    choice(boolTrue, boolFalse),
+);
+
+private var identStr = modify(String, tokenData(IDENTIFIER));
+
+private var intLiteral = exprParser(
+    x => IntLiteral(String(x)),
+    tokenData(INT_LITERAL),
+);
+
+private var stringLiteral = exprParser(
+    x => StringLiteral(String(x)),
+    tokenData(STRING_LITERAL),
+);
+
+private var literalExpr = choice(
+    boolLiteral, intLiteral, stringLiteral
+);
+
+
+
+//
+// atomic expr
+//
+
+private var nameRef = exprParser(
+    x => NameRef(move(x)),
+    identifier,
+);
+
+private var atomicExpr = choice(nameRef, literalExpr);
+
+
+
+//
+// setBase, foldTail
+//
+
+private exprTokens(x) = ref x.tokens;
+
+private setBase2(root, field, base) {
+    fieldRef(root, field) = base;
+    root.tokens.begin = exprTokens(*base).begin;
+}
+
+private setBase(x, y) { assert(false, "baseless expression!"); }
+overload setBase(x:Indexing, y) { setBase2(x, #expr, y); }
+overload setBase(x:Call,     y) { setBase2(x, #expr, y); }
+
+private foldTail(x) {
+    var result = x.0;
+    for (y in x.1) {
+        setBase(*y, result);
+        result = y;
+    }
+    return result;
+}
+
+
+
+//
+// suffix expr
+//
+
+private var indexingSuffix = exprParser(
+    x => Indexing(Expr(), move(x.1)),
+    sequence(punc(#"["), optExprList, punc(#"]")),
+);
+
+private var callSuffix = exprParser(
+    x => Call(Expr(), move(x.1)),
+    sequence(punc(#"("), optExprList, punc(#")")),
+);
+
+private var suffix = choice(
+    indexingSuffix, callSuffix,
+);
+
+private var suffixExpr = modify(
+    foldTail,
+    sequence(atomicExpr, zeroOrMore(suffix)),
+);
+
+
+
+//
+// lambda
+//
+
+private var lambdaArgs = choice(
+    modify(
+        x => Vector[Identifier](move(x)),
+        identifier,
+    ),
+    modify(
+        x => move(x.1),
+        sequence(
+            punc(#"("),
+            optCommaList(identifier),
+            punc(#")")
+        ),
+    ),
+);
+
+private var lambdaExpr = exprParser(
+    x => LambdaExpr(move(x.0), move(x.2)),
+    sequence(lambdaArgs, punc(#"=>"), expr),
+);
+
+
+
+//
+// if expr
+//
+
+private var ifExpr = exprParser(
+    x => IfExpr(move(x.2), move(x.4), move(x.6)),
+    sequence(kw_if, punc(#"("), expr, punc(#")"), expr, kw_else, expr),
+);
+
+
+
+//
+// expr
+//
+
+private var expr2 = choice(
+    ifExpr, lambdaExpr, suffixExpr,
+);
+
+private expr(input) Maybe[Expr] { return expr2(input); }
+
+private var exprList = commaList(expr);
+private var optExprList = optCommaList(expr);
+
+
+
+//
+// top level items
+//
+
+private topLevelItemParser(forward modifier, forward parser) = modify(
+    x => TopLevelItem(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+private var staticParams = modify(
+    x => move(x.1),
+    sequence(punc(#"["), identifierList, punc(#"]")),
+);
+
+private var optStaticParams = modify(
+    x => maybe(move(x), move, () => Vector[Identifier]()),
+    optional(staticParams),
+);
+
+private var symbolDef = topLevelItemParser(
+    x => Symbol(move(x.1), Vector[Identifier](), nothing(Expr)),
+    sequence(kw_symbol, identifier, optStaticParams, punc(#";")),
+);
+
+private var symbolDefWithBody = topLevelItemParser(
+    x => Symbol(move(x.1), move(x.2), Maybe(move(x.4))),
+    sequence(
+        optional(kw_symbol), identifier, optStaticParams,
+        punc(#"="), expr, punc(#";")
+    ),
+);
+
+private var functionDef = topLevelItemParser(
+    x => Function(move(x.1), nothing(Overload)),
+    sequence(kw_function, identifier, punc(#";")),
+);
+
+private var optPredicate = optional(modify(
+    x => move(x.1),
+    sequence(punc(#"|"), expr),
+));
+
+private var patternVarsWithPredicate = modify(
+    x => (move(x.1), move(x.2)),
+    sequence(punc(#"["), identifierList, optPredicate, punc(#"]")),
+);
+
+private var optPatternVarsWithPredicate = modify(
+    x => maybe(move(x), move, () => (Vector[Identifier](), nothing(Expr))),
+    optional(patternVarsWithPredicate),
+);
+
+private var arguments = modify(
+    x => move(x.1),
+    sequence(punc(#"("), optExprList, punc(#")")),
+);
+
+private var overloadDef = topLevelItemParser(
+    x => Overload(
+        move((x.0).0), move((x.0).1), move(x.2), move(x.3), move(x.5),
+    ),
+    sequence(
+        optPatternVarsWithPredicate, kw_overload,
+        identifier, arguments, punc(#"="), expr, punc(#";"),
+    ),
+);
+
+private var functionDefWithBody = topLevelItemParser(
+    x => Function(x.2, Maybe(Overload(
+        move((x.0).0), move((x.0).1), x.2, move(x.3), move(x.5),
+    ))),
+    sequence(
+        optPatternVarsWithPredicate, optional(kw_function),
+        identifier, arguments, punc(#"="), expr, punc(#";"),
+    ),
+);
+
+private var topLevelItem = choice(
+    symbolDef, symbolDefWithBody, functionDef,
+    overloadDef, functionDefWithBody,
+);
+
+
+
+//
+// ParserError
+//
+
+record ParserError(
+    tokens: SourceTokens,
+    where: SizeT,
+);
+
+instance ClayError = ParserError;
+
+overload displayError(e:ParserError) {
+    var offset = e.tokens.vector[e.where].range.begin;
+    errorWithLocation(e.tokens.file, offset, "parse error");
+}
+
+
+
+//
+// parseExpr, parse
+//
+
+private var parseExpr2 = modify(
+    x => x.0,
+    sequence(expr, token(SENTINEL)),
+);
+
+parseExpr(tokens:SourceTokens) {
+    var input = ParserInput(tokens);
+    var result = parseExpr2(input);
+    if (nothing?(result))
+        throw ParserError(tokens, input.maxCurrent);
+    return require(move(result));
+}
+
+private var parse2 = modify(
+    x => SourceAST(SourceTokens(), move(x.0)),
+    sequence(zeroOrMore(topLevelItem), token(SENTINEL)),
+);
+
+parse(tokens: SourceTokens) {
+    var input = ParserInput(tokens);
+    var ast = parse2(input);
+    if (nothing?(ast))
+        throw ParserError(tokens, input.maxCurrent);
+    var ast2 = require(move(ast));
+    ast2.tokens = tokens;
+    return move(ast2);
+}
