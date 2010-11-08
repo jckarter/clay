@@ -1,6 +1,7 @@
 
-record Point1[T] = obj1((#x, T), (#y, T));
-record Point2[T] = obj2((#x, T), (#y, T));
+
+record Point1[T] = obj1(x:T, y:T);
+record Point2[T] = obj2(x:T, y:T);
 
 main() {
     var P1 = Point1[Int];
@@ -46,6 +47,6 @@ obj2(...fields:F) = recordWithProperties(
         (NodeFieldCount, static countValues(...F)),
         (NodeFields, ...fields),
     ),
-    (#extra, Double),
+    extra: Double,
     ...fields,
 );

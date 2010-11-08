@@ -1,7 +1,7 @@
 
 
 computeFields(T) {
-    return (#x, T), (#y, T);
+    return x:T, y:T;
 }
 
 record Point[T] = ...computeFields(T);

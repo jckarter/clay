@@ -1,7 +1,7 @@
 
 record Node[T] = referenceType(
-    (#value, T),
-    (#next, Node[T]),
+    value:T,
+    next:Node[T],
 );
 
 main() {
