@@ -1,0 +1,193 @@
+
+
+//
+// reference type properties
+//
+
+
+procedure ReferenceType?;
+overload ReferenceType?(x) = false;
+
+procedure ReferenceTypeFieldCount;
+procedure ReferenceTypeFieldNames;
+procedure ReferenceTypeFieldTypes;
+
+
+
+//
+// reference type type-definers
+//
+
+[...F | (countValues(...F) > 0)]
+referenceTypeWithProperties(properties, ...fields:F) = recordWithProperties(
+    (
+        (RegularRecord?, static false),
+        (ReferenceType?, static true),
+        (ReferenceTypeFieldCount, static countValues(...F)),
+        (ReferenceTypeFieldNames, ...mapValues(x => x.0, ...fields)),
+        (ReferenceTypeFieldTypes, ...mapValues(x => x.1, ...fields)),
+        ...unpack(properties),
+    ),
+    (#ptr, SharedPointer[Tuple[...mapValues(x => x.1, ...fields)]]),
+);
+
+[...F | (countValues(...F) > 0)]
+referenceTypeWithProperty(property, ...fields:F) =
+    referenceTypeWithProperties(Tuple(property), ...fields);
+
+[...F | (countValues(...F) > 0)]
+referenceTypeWithPredicate(predicate, ...fields:F) =
+    referenceTypeWithProperty((predicate, static true), ...fields);
+
+[...F | (countValues(...F) > 0)]
+referenceType(...fields:F) = referenceTypeWithProperties(Tuple(), ...fields);
+
+
+
+//
+// referencePtr
+//
+
+[T | ReferenceType?(T)]
+inline referencePtr(x:T) =
+    ref recordFieldRef(x, static 0);
+
+
+
+//
+// fieldRef, staticIndex
+//
+
+[T | ReferenceType?(T)]
+overload fieldRef(x:T, field);
+
+[T | ReferenceType?(T)]
+overload staticIndex(x:T, i);
+
+
+[T, Field | ReferenceType?(T)]
+private fieldNameIndex(static T, static Field) =
+    findField(static Field, ...ReferenceTypeFieldNames(T));
+
+private findField(field, first, ...rest) = 1 + findField(field, ...rest);
+[F] overload findField(static F, static F, ...rest) = 0;
+overload findField(field) = -1;
+
+
+[T, i | ReferenceType?(T) and (i >= 0) and (i < ReferenceTypeFieldCount(T))]
+overload staticIndex(x:T, static i) =
+    ref staticIndex(referencePtr(x)^, static i);
+
+[T, Field | ReferenceType?(T) and (fieldNameIndex(T, Field) >= 0)]
+overload fieldRef(x:T, static Field) =
+    ref staticIndex(x, static fieldNameIndex(T, Field));
+
+
+
+//
+// referenceTypeFields
+//
+
+[T | ReferenceType?(T)]
+referenceTypeFields(x:T) = ref ...tupleElements(referencePtr(x)^);
+
+
+
+//
+// default constructor
+//
+
+[T | ReferenceType?(T)]
+overload T() returned:T {
+    initialize(referencePtr(returned));
+}
+
+
+
+//
+// field order constructor
+//
+
+[T, ...A | ReferenceType?(T) and (Tuple[...A] == Tuple[...ReferenceTypeFieldTypes(T)])]
+callbyname overload T(...args:A) returned:T {
+    referencePtr(returned) <-- new Tuple(...args);
+}
+
+
+
+//
+// allocateRef
+//
+
+[T | ReferenceType?(T)]
+allocateRef(static T) returned:T {
+    referencePtr(returned) <-- new Tuple[...ReferenceTypeFieldTypes(T)]();
+}
+
+
+
+//
+// copy constructor
+//
+
+[T | ReferenceType?(T)]
+overload T(src:T) returned:T {
+    referencePtr(returned) <-- referencePtr(src);
+}
+
+
+
+//
+// moveUnsafe, resetUnsafe
+//
+
+[T | ReferenceType?(T)]
+overload moveUnsafe(src:T) returned:T {
+    referencePtr(returned) <-- moveUnsafe(referencePtr(src));
+}
+
+[T | ReferenceType?(T)]
+overload resetUnsafe(x:T) {
+    resetUnsafe(referencePtr(x));
+}
+
+
+
+//
+// destroy, assign
+//
+
+[T | ReferenceType?(T)]
+overload destroy(x:T) {
+    destroy(referencePtr(x));
+}
+
+[T | ReferenceType?(T)]
+overload assign(dest:T, lvalue src:T) {
+    assign(referencePtr(dest), referencePtr(src));
+}
+
+
+
+//
+// equals?, lesser?
+//
+
+[T | ReferenceType?(T)]
+overload equals?(a:T, b:T) {
+    return equals?(referencePtr(a), referencePtr(b));
+}
+
+[T | ReferenceType?(T)]
+overload lesser?(a:T, b:T) {
+    return lesser?(referencePtr(a), referencePtr(b));
+}
+
+
+
+//
+// null?
+//
+
+[T | ReferenceType?(T)]
+overload null?(x:T) = null?(referencePtr(x));

@@ -171,6 +171,17 @@ overload printTo(stream, x:SharedPointer[T]) {
 
 
 //
+// printTo - reference types
+//
+
+[T | ReferenceType?(T)]
+overload printTo(stream, x:T) {
+    printReprTo(stream, x);
+}
+
+
+
+//
 // printReprTo
 //
 
@@ -316,6 +327,23 @@ overload printReprTo(stream, x:SharedPointer[T]) {
     if (not null?(x))
         printReprTo(stream, x^);
     printTo(stream, ")");
+}
+
+
+
+//
+// printReprTo - reference types
+//
+
+[T | ReferenceType?(T)]
+overload printReprTo(stream, x:T) {
+    // FIXME: handle cycles
+    if (null?(x)) {
+        printTo(stream, "null");
+        return;
+    }
+    printTo(stream, T);
+    printReprValuesTo(stream, ...referenceTypeFields(x));
 }
 
 
