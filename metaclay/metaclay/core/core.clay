@@ -69,11 +69,14 @@ variant EnvEntry = SymbolHead
 overload EnvEntry() = EnvEntry(SymbolHead());
 
 record Env = referenceType(
-    parent: Env,
+    parent: Maybe[Env],
     entries: HashMap[String, EnvEntry],
 );
 
-newEnv(parent:Env) = Env(parent, HashMap[String, EnvEntry]());
+overload Env(parent:Maybe[Env]) =
+    Env(parent, HashMap[String, EnvEntry]());
+
+newEnv(parent:Env) = Env(Maybe(parent));
 
 
 
@@ -88,11 +91,12 @@ envAdd(env, name, entry) {
 }
 
 envLookup(env, name) {
-    if (null?(env))
-        error("name not found: ", name);
     var ptr = lookup(env.entries, name.str);
-    if (null?(ptr))
-        return envLookup(env.parent, name);
+    if (null?(ptr)) {
+        if (nothing?(env.parent))
+            error("name not found: ", name);
+        return envLookup(require(env.parent), name);
+    }
     return ptr^;
 }
 
@@ -162,3 +166,11 @@ record SymbolPattern = referenceType(
     head: SymbolHead,
     params: Vector[Pattern],
 );
+
+
+
+//
+// stack trace and location info
+//
+
+private var 
