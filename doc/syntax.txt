@@ -180,8 +180,11 @@ OrExpr -> AndExpr ("or" AndExpr)*
 AndExpr -> NotExpr ("and" NotExpr)*
 NotExpr -> "not"? CompareExpr
 
-CompareExpr -> AddSubExpr (CompareOp AddSubExpr)?
-CompareOp -> "==" | "!=" | "<" | "<=" | ">" | ">="
+EqualExpr -> CompareExpr (EqualOp CompareExpr)?
+EqualOp -> "==" | "!="
+
+CompareExpr -> AddSubExpr (CompareOp AddSubExpr)
+CompareOp -> "<" | "<=" | ">" | ">="
 
 AddSubExpr -> MulDivExpr (("+" | "-") MulDivExpr)*
 MulDivExpr -> PrefixExpr (("*" | "/" | "%") PrefixExpr)*

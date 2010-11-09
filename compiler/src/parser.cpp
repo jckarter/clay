@@ -601,8 +601,8 @@ static bool addSubExpr(ExprPtr &x) {
 
 static bool compareOp(int &op) {
     int p = save();
-    const char *s[] = {"==", "!=", "<", "<=", ">", ">=", NULL};
-    const int ops[] = {EQUALS, NOT_EQUALS, LESSER, LESSER_EQUALS,
+    const char *s[] = {"<", "<=", ">", ">=", NULL};
+    const int ops[] = {LESSER, LESSER_EQUALS,
                        GREATER, GREATER_EQUALS};
     for (const char **a = s; *a; ++a) {
         restore(p);
@@ -644,6 +644,53 @@ static bool compareExpr(ExprPtr &x) {
 
 
 //
+// equal expr
+//
+
+static bool equalOp(int &op) {
+    int p = save();
+    if (symbol("==")) {
+        op = EQUALS;
+        return true;
+    }
+    restore(p);
+    if (symbol("!=")) {
+        op = NOT_EQUALS;
+        return true;
+    }
+    return false;
+}
+
+
+static bool equalTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!equalOp(op)) return false;
+    ExprPtr y;
+    if (!compareExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool equalExpr(ExprPtr &x) {
+    if (!compareExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!equalTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+
+//
 // not, and, or
 //
 
@@ -652,10 +699,10 @@ static bool notExpr(ExprPtr &x) {
     int p = save();
     if (!keyword("not")) {
         restore(p);
-        return compareExpr(x);
+        return equalExpr(x);
     }
     ExprPtr y;
-    if (!compareExpr(y)) return false;
+    if (!equalExpr(y)) return false;
     x = new UnaryOp(NOT, y);
     x->location = location;
     return true;
