@@ -13,7 +13,7 @@ private primitiveName(kind) {
 }
 
 private primitivesEnv() {
-    var env = newEnv(Env());
+    var env = newEnv();
     for (i in range(EnumMemberCount(PrimitiveKind))) {
         var kind = PrimitiveKind(i);
         var name = ast.Identifier(primitiveName(kind));
@@ -48,7 +48,7 @@ private initializeGlobals(module) {
 private envLookupFunction(env, name) {
     var entry = envLookup(env, name);
     if (not variantIs?(entry, Function))
-        error("expecting a function '", name, "' name, but received: ", entry);
+        genericError("expecting a function '", name, "' name, but received: ", entry);
     return variantAs(entry, Function);
 }
 
@@ -68,7 +68,9 @@ private initializeOverloads(module) {
 loadProgram(path) {
     var module = Module(String("__main__"));
     module.ast = parse(tokenize(readSource(path)));
-    initializeGlobals(module);
-    initializeOverloads(module);
+    withCurrentModule(module, () => {
+        initializeGlobals(module);
+        initializeOverloads(module);
+    });
     return module;
 }
