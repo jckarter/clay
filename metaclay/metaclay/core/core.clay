@@ -166,11 +166,3 @@ record SymbolPattern = referenceType(
     head: SymbolHead,
     params: Vector[Pattern],
 );
-
-
-
-//
-// stack trace and location info
-//
-
-private var 
