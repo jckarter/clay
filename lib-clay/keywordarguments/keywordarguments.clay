@@ -1,0 +1,20 @@
+keywordArguments(names, forward ...keywords)
+    = forward ...mapValues(
+        name => forward getKeywordArgument(name, ...keywords),
+        ...unpack(names)
+    );
+
+[I | Identifier?(I)]
+getKeywordArgument(static I, forward ...keywords)
+    = forward assocValue(I, ...keywords);
+
+[I, T | Identifier?(I)]
+overload getKeywordArgument(name: Tuple[Static[I], T], forward ...keywords)
+    = name.1;
+
+[I, T] private _Keyword(static Tuple[I, T]) = I;
+Keywords(...K) = ...mapValues(T => _Keyword(T), ...K);
+
+[I, T, ...K | Identifier?(I) and inValues?(Static[I], ...Keywords(...K))]
+overload getKeywordArgument(name: Tuple[Static[I], T], forward ...keywords: K)
+    = forward assocValue(name.0, ...keywords);

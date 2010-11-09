@@ -1,0 +1,27 @@
+import keywordarguments.*;
+
+requiredKeywords(x, ...keywords) {
+    var zim, zang, zung = ...keywordArguments((#zim, #zang, #zung), ...keywords);
+    println();
+    println("x = ", x);
+    println("zim = ", zim);
+    println("zang = ", zang);
+    println("zung = ", zung);
+}
+
+optionalKeywords(x, ...keywords) {
+    var zim, zang, zung = ...keywordArguments((zim: 5, zang: "six", zung: 7.0), ...keywords);
+    println();
+    println("x = ", x);
+    println("zim = ", zim);
+    println("zang = ", zang);
+    println("zung = ", zung);
+}
+
+main() {
+    requiredKeywords(0, zim: 1, zang: "two", zung: 3.0);
+    optionalKeywords(4);
+    optionalKeywords(8, zim: 9);
+    optionalKeywords(10, zang: "eleven");
+    optionalKeywords(12, zung: 13.0);
+}
