@@ -77,6 +77,7 @@ overload Env(parent:Maybe[Env]) =
     Env(parent, HashMap[String, EnvEntry]());
 
 newEnv(parent:Env) = Env(Maybe(parent));
+overload newEnv() = Env(nothing(Env));
 
 
 
@@ -86,7 +87,7 @@ newEnv(parent:Env) = Env(Maybe(parent));
 
 envAdd(env, name, entry) {
     if (contains?(env.entries, name.str))
-        error("name redefinition: ", name.str);
+        genericError("name redefinition: ", name.str);
     env.entries[name.str] = EnvEntry(entry);
 }
 
@@ -94,7 +95,7 @@ envLookup(env, name) {
     var ptr = lookup(env.entries, name.str);
     if (null?(ptr)) {
         if (nothing?(env.parent))
-            error("name not found: ", name);
+            genericError("name not found: ", name);
         return envLookup(require(env.parent), name);
     }
     return ptr^;
@@ -166,3 +167,170 @@ record SymbolPattern = referenceType(
     head: SymbolHead,
     params: Vector[Pattern],
 );
+
+
+
+//
+// execution context info
+//
+
+record ListNode[T] = referenceType(
+    value: T,
+    next: ListNode[T],
+);
+
+[T]
+listEmpty?(root:ListNode[T]) = null?(root);
+
+[T]
+listTop(root:ListNode[T]) = ref root.value;
+
+[T]
+listPush(root:ListNode[T], forward x:T) {
+    root = ListNode[T](x, root);
+}
+
+[T]
+listPop(root:ListNode[T]) {
+    root = root.next;
+}
+
+record CallStackEntry (
+    callable: Value,
+    args: Vector[Value],
+);
+
+record LocationContext (
+    modules: ListNode[Module],
+    calls: ListNode[CallStackEntry],
+    mainTokens: ListNode[SizeT],
+);
+
+private var _locationContext = LocationContext();
+
+withCurrentModule(module:Module, f) {
+    listPush(_locationContext.modules, module);
+    try {
+        var x = captureValues(...f());
+        listPop(_locationContext.modules);
+        return forward ...forwardValues(x);
+    }
+    catch (e) {
+        listPop(_locationContext.modules);
+        throw e;
+    }
+}
+
+withCurrentCall(callable:Value, args:Vector[Value], f) {
+    listPush(_locationContext.calls, CallStackEntry(callable, args));
+    try {
+        var x = captureValues(...f());
+        listPop(_locationContext.calls);
+        return forward ...forwardValues(x);
+    }
+    catch (e) {
+        listPop(_locationContext.calls);
+        throw e;
+    }
+}
+
+[T | ast.ASTNode?(T)]
+withCurrentLocation(ast:T, f) {
+    if (empty?(ast.tokens))
+        return forward ...f();
+    listPush(_locationContext.mainTokens, ast.mainToken);
+    try {
+        var x = captureValues(...f());
+        listPop(_locationContext.mainTokens);
+        return forward ...forwardValues(x);
+    }
+    catch (e) {
+        listPop(_locationContext.mainTokens);
+        throw e;
+    }
+}
+
+
+
+//
+// semantic errors
+//
+
+[T]
+private SemanticError?(static T) = false;
+
+private semanticError(...fields) = recordWithPredicate(
+    SemanticError?,
+    locationContext: LocationContext,
+    ...fields
+);
+
+[T, ...A | Record?(T)
+           and SemanticError?(T)
+           and (Tuple[...RecordFieldTypes(T)] ==
+                Tuple[LocationContext, ...A])]
+callbyname overload T(...args:A) =
+    T(_locationContext, ...args);
+
+variant SemanticError;
+
+instance ClayError = SemanticError;
+
+[T | VariantMember?(SemanticError, T)]
+overload Exception(forward e:T) =
+    Exception(SemanticError(e));
+
+overload displayError(e:SemanticError) {
+    displayError(*e);
+}
+
+displaySemanticError(locationContext:LocationContext, ...message) {
+    if (listEmpty?(locationContext.modules)
+        or listEmpty?(locationContext.mainTokens)) {
+        println(...message);
+        return;
+    }
+    var module = listTop(locationContext.modules);
+    var mainToken = listTop(locationContext.mainTokens);
+    var tokens = module.ast.tokens;
+    var offset = tokens.vector[mainToken].range.begin;
+
+    errorWithLocation(tokens.file, offset, ...message);
+
+/*     println("call stack: "); */
+/*     var callEntry = locationContext.calls; */
+/*     while (not null?(callEntry)) { */
+/*         ref call = callEntry.value; */
+/*         print("    ", call.callable, "("); */
+/*         var first = true; */
+/*         for (arg in call.args) { */
+/*             if (first) */
+/*                 first = false; */
+/*             else */
+/*                 print(", "); */
+/*             print(arg); */
+/*         } */
+/*         println(")"); */
+/*         callEntry = callEntry.next; */
+/*     } */
+}
+
+
+
+//
+// semantic error instances
+//
+
+record GenericError = semanticError(
+    msg: String,
+);
+
+instance SemanticError = GenericError;
+
+overload displayError(e:GenericError) {
+    displaySemanticError(e.locationContext, e.msg);
+}
+
+genericError(...msg) {
+    throw GenericError(printString(...msg));
+}
