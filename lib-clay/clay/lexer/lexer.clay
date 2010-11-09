@@ -34,11 +34,10 @@ overload Token(kind:TokenKind, subKind:I) =
 
 overload Token(kind:TokenKind) = Token(kind, 0);
 
-record SourceTokens (
-    file : SourceFilePtr,
-    vector : Vector[Token],
+record SourceTokens = referenceType(
+    file: SourceFile,
+    vector: Vector[Token],
 );
-alias SourceTokensPtr = SharedPointer[SourceTokens];
 
 
 
@@ -91,20 +90,20 @@ keywordIndex(s) Int {
 //
 
 record LexerInput(
-    file : SourceFilePtr,
+    file : SourceFile,
     current : SizeT,
     maxCurrent : SizeT,
 );
 
-overload LexerInput(file : SourceFilePtr) =
+overload LexerInput(file : SourceFile) =
     LexerInput(file, SizeT(0), SizeT(0));
 
 overload iterator(x:LexerInput) = x;
 
-overload hasNext?(x:LexerInput) = (x.current < size(x.file^.data));
+overload hasNext?(x:LexerInput) = (x.current < size(x.file.data));
 
 overload next(x:LexerInput) {
-    var c = x.file^.data[x.current];
+    var c = x.file.data[x.current];
     x.current += 1;
     return c;
 }
@@ -221,7 +220,7 @@ private var identStr = seq(identChar1, zeroPlus(identChar2));
 private lexIdentifierOrKeyword(input) Maybe[Token] {
     var start = input.current;
     if (not nothing?(identStr(input))) {
-        var data = sliced(input.file^.data, start, input.current);
+        var data = sliced(input.file.data, start, input.current);
         var i = keywordIndex(data);
         if (i >= 0)
             return Maybe(Token(KEYWORD, i));
@@ -440,7 +439,7 @@ private var lexToken = bounds(choice(
 //
 
 record LexerError(
-    file: SourceFilePtr,
+    file: SourceFile,
     where: SizeT
 );
 
@@ -470,16 +469,16 @@ private var tokenize1 = modify(
 tokenizeAll(file) {
     var input = LexerInput(file);
     var tokensData = require(tokenize1(input));
-    if (input.current != size(file^.data))
+    if (input.current != size(file.data))
         throw LexerError(file, input.maxCurrent);
-    return new SourceTokens(file, move(tokensData));
+    return SourceTokens(file, move(tokensData));
 }
 
 tokenize(file) {
     var tokens = tokenizeAll(file);
-    tokens^.vector = Vector(filtered(
+    tokens.vector = Vector(filtered(
         x => (x.kind != SPACE) and (x.kind != COMMENT),
-        tokens^.vector,
+        tokens.vector,
     ));
     return move(tokens);
 }
