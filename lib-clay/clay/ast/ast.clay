@@ -107,6 +107,7 @@ variant Expr =
     Unpack |
     New |
     StaticExpr |
+    PairExpr |
     DispatchExpr
     ;
 
@@ -159,6 +160,7 @@ record LambdaExpr = ...ast(
 record Unpack       = ...ast((#expr, ExprPtr));
 record New          = ...ast((#expr, ExprPtr));
 record StaticExpr   = ...ast((#expr, ExprPtr));
+record PairExpr     = ...ast((#name, Identifier), (#expr, ExprPtr));
 record DispatchExpr = ...ast((#expr, ExprPtr));
 
 

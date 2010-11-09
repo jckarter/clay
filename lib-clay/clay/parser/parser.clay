@@ -447,14 +447,18 @@ private var addSubOp = choice(
 private var addSubExpr = binaryOp(addSubOp, mulDivExpr);
 
 private var compareOp = choice(
-    modify(x => EQUALS,         punc(#"==")),
-    modify(x => NOT_EQUALS,     punc(#"!=")),
     modify(x => LESSER,         punc(#"<")),
     modify(x => LESSER_EQUALS,  punc(#"<=")),
     modify(x => GREATER,        punc(#">")),
     modify(x => GREATER_EQUALS, punc(#">=")),
 );
 private var compareExpr = binaryOp(compareOp, addSubExpr);
+
+private var equalOp = choice(
+    modify(x => EQUALS,     punc(#"==")),
+    modify(x => NOT_EQUALS, punc(#"!=")),
+);
+private var equalExpr = binaryOp(equalOp, compareExpr);
 
 
 
@@ -465,9 +469,9 @@ private var compareExpr = binaryOp(compareOp, addSubExpr);
 private var notExpr = choice(
     exprParser(
         x => UnaryOp(NOT, x.1),
-        sequence(kw_not, compareExpr),
+        sequence(kw_not, equalExpr),
     ),
-    compareExpr,
+    equalExpr,
 );
 
 private andOrOp(node, op, term) = modify(
@@ -484,7 +488,7 @@ private var orExpr = andOrOp(Or, kw_or, andExpr);
 
 
 //
-// if expr, unpack expr, new expr, static expr
+// if expr, unpack expr, new expr, static expr, pair expr
 //
 
 private var ifExpr = exprParser(
@@ -505,6 +509,11 @@ private var newExpr = exprParser(
 private var staticExpr = exprParser(
     x => StaticExpr(x.1),
     sequence(kw_static, expr),
+);
+
+private var pairExpr = exprParser(
+    x => PairExpr(move(x.0), move(x.2)),
+    sequence(identifier, punc(#":"), expr),
 );
 
 
@@ -568,7 +577,7 @@ private var lambdaExpr = exprParser(
 //
 
 private var expr2 = choice(
-    lambdaExpr, orExpr, ifExpr, unpackExpr, newExpr, staticExpr,
+    lambdaExpr, pairExpr, orExpr, ifExpr, unpackExpr, newExpr, staticExpr,
 );
 
 private expr(input) Maybe[ExprPtr] { return expr2(input); }
