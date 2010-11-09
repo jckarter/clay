@@ -470,7 +470,7 @@ private displaySemanticError(err, node, ...message) {
 //
 
 record ModuleNotFoundError = semanticError(
-    (#name, ast.DottedName),
+    name: ast.DottedName,
 );
 instance SemanticError = ModuleNotFoundError;
 
@@ -483,7 +483,7 @@ overload displayError(e:ModuleNotFoundError) {
 }
 
 record GlobalRedefinitionError = semanticError(
-    (#name, ast.Identifier),
+    name: ast.Identifier,
 );
 instance SemanticError = GlobalRedefinitionError;
 
