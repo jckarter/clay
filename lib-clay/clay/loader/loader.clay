@@ -115,9 +115,9 @@ overload addGlobal(module, visibility, name:ast.Identifier, x:SymbolTableEntry) 
 }
 
 private addPrivateGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
-    if (contains?(module^.allGlobals^.entries, name.str))
+    if (contains?(module.allGlobals.entries, name.str))
         throw GlobalRedefinitionError(name);
-    module^.allGlobals^.entries[name.str] = x;
+    module.allGlobals.entries[name.str] = x;
 }
 
 [T | VariantMember?(SymbolTableEntry, T)]
@@ -127,7 +127,7 @@ private addPublicGlobal(module, name:ast.Identifier, forward x:T) {
 
 overload addPublicGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
     addPrivateGlobal(module, name, x);
-    module^.publicGlobals^.entries[name.str] = x;
+    module.publicGlobals.entries[name.str] = x;
 }
 
 
@@ -137,53 +137,53 @@ overload addPublicGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {
 //
 
 private initializeSymbolTables(module) {
-    module^.publicGlobals = new SymbolTable();
-    module^.allGlobals = new SymbolTable();
-    for (x in module^.ast^.topLevelItems)
+    module.publicGlobals = newSymbolTable();
+    module.allGlobals = newSymbolTable();
+    for (x in module.ast.topLevelItems)
         installItem(module, *x);
 }
 
 private procedure installItem;
 
-overload installItem(module, x:ast.RecordPtr) {
-    addGlobal(module, x^.visibility, x^.name, new Record(x));
+overload installItem(module, x:ast.Record) {
+    addGlobal(module, x.visibility, x.name, Record(x));
 }
 
-overload installItem(module, x:ast.VariantPtr) {
-    addGlobal(module, x^.visibility, x^.name, new Variant(x));
+overload installItem(module, x:ast.Variant) {
+    addGlobal(module, x.visibility, x.name, Variant(x));
 }
 
-overload installItem(module, x:ast.InstancePtr) {
+overload installItem(module, x:ast.Instance) {
 }
 
-overload installItem(module, x:ast.ProcedurePtr) {
-    addGlobal(module, x^.visibility, x^.name, new Procedure(x));
+overload installItem(module, x:ast.Procedure) {
+    addGlobal(module, x.visibility, x.name, Procedure(x));
 }
 
-overload installItem(module, x:ast.OverloadPtr) {
+overload installItem(module, x:ast.Overload) {
 }
 
-overload installItem(module, x:ast.EnumPtr) {
-    var e = new Enum(x);
-    addGlobal(module, x^.visibility, x^.name, e);
-    for (i, member in enumerated(x^.members))
-        addGlobal(module, x^.visibility, member, new EnumMember(e, i));
+overload installItem(module, x:ast.Enum) {
+    var e = Enum(x);
+    addGlobal(module, x.visibility, x.name, e);
+    for (i, member in enumerated(x.members))
+        addGlobal(module, x.visibility, member, EnumMember(e, i));
 }
 
-overload installItem(module, x:ast.GlobalVariablePtr) {
-    addGlobal(module, x^.visibility, x^.name, new GlobalVariable(x));
+overload installItem(module, x:ast.GlobalVariable) {
+    addGlobal(module, x.visibility, x.name, GlobalVariable(x));
 }
 
-overload installItem(module, x:ast.GlobalAliasPtr) {
-    addGlobal(module, x^.visibility, x^.name, new GlobalAlias(x));
+overload installItem(module, x:ast.GlobalAlias) {
+    addGlobal(module, x.visibility, x.name, GlobalAlias(x));
 }
 
-overload installItem(module, x:ast.ExternalProcedurePtr) {
-    addGlobal(module, x^.visibility, x^.name, new ExternalProcedure(x));
+overload installItem(module, x:ast.ExternalProcedure) {
+    addGlobal(module, x.visibility, x.name, ExternalProcedure(x));
 }
 
-overload installItem(module, x:ast.ExternalVariablePtr) {
-    addGlobal(module, x^.visibility, x^.name, new ExternalVariable(x));
+overload installItem(module, x:ast.ExternalVariable) {
+    addGlobal(module, x.visibility, x.name, ExternalVariable(x));
 }
 
 
@@ -193,8 +193,8 @@ overload installItem(module, x:ast.ExternalVariablePtr) {
 //
 
 private initializePrimitivesModule(module) {
-    module^.publicGlobals = new SymbolTable();
-    module^.allGlobals = new SymbolTable();
+    module.publicGlobals = newSymbolTable();
+    module.allGlobals = newSymbolTable();
 
     var simpleType = (name, type) => {
         addPublicGlobal(module, ast.Identifier(name), SymbolTableEntry(type));
@@ -220,7 +220,7 @@ private installPrimitives(module, Entry, KindEnum) {
     for (i in range(EnumMemberCount(KindEnum))) {
         var kind = KindEnum(i);
         var name = ast.Identifier(primitiveName(kind));
-        var x = new Entry(kind);
+        var x = Entry(kind);
         addPublicGlobal(module, name, SymbolTableEntry(x));
     }
 }
@@ -244,17 +244,15 @@ loadModule(dottedName) {
         () ref=> {
             if (name == "__primitives__") {
                 println("loading module: ", name);
-                var module = new Module();
-                module^.name = name;
+                var module = Module(name);
                 installModule(name, module);
                 initializePrimitivesModule(module);
                 return module;
             }
             var path = locateModule(dottedName);
             println("loading module: ", name, ", ", path);
-            var module = new Module();
-            module^.name = name;
-            module^.ast = parse(tokenize(readSource(path)));
+            var module = Module(name);
+            module.ast = parse(tokenize(readSource(path)));
             installModule(name, module);
             withCurrentModule(module, () => {
                 initializeSymbolTables(module);
@@ -270,9 +268,8 @@ loadPrelude() =
 
 loadProgram(path) {
     println("loading program: ", path);
-    var module = new Module();
-    module^.name = String("__main__");
-    module^.ast = parse(tokenize(readSource(path)));
+    var module = Module(String("__main__"));
+    module.ast = parse(tokenize(readSource(path)));
     withCurrentModule(module, () => {
         initializeSymbolTables(module);
         loadDependents(module);
@@ -281,6 +278,6 @@ loadProgram(path) {
 }
 
 private loadDependents(module) {
-    for (x in module^.ast^.imports)
+    for (x in module.ast.imports)
         loadModule(fieldRef(*x, #name));
 }

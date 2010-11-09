@@ -10,16 +10,17 @@ import clay.diagnostics.*;
 // Module
 //
 
-record Module (
-    name : String,
-    ast : ast.SourceASTPtr,
-    publicGlobals : SymbolTablePtr,
-    allGlobals : SymbolTablePtr,
+record Module = referenceType(
+    name: String,
+    ast: ast.SourceAST,
+    publicGlobals: SymbolTable,
+    allGlobals: SymbolTable,
 );
 
-alias ModulePtr = SharedPointer[Module];
+overload Module(name:String) =
+    Module(name, ast.SourceAST(), SymbolTable(), SymbolTable());
 
-private var modulesMap = HashMap[String,ModulePtr]();
+private var modulesMap = HashMap[String,Module]();
 
 
 
@@ -32,14 +33,14 @@ procedure lookupModule;
 [S | String?(S)]
 overload lookupModule(name:S) = lookupModule(String(name));
 
-overload lookupModule(name:String) Maybe[ModulePtr] { 
+overload lookupModule(name:String) Maybe[Module] { 
     var ptr = lookup(modulesMap, name);
     if (null?(ptr))
-        return nothing(ModulePtr);
+        return nothing(Module);
     return Maybe(ptr^);
 }
 
-installModule(name:String, module:ModulePtr) {
+installModule(name:String, module:Module) {
     modulesMap[name] = module;
 }
 
@@ -49,51 +50,42 @@ installModule(name:String, module:ModulePtr) {
 // symbol table entries for top-level items
 //
 
-record Record (
-    ast : ast.RecordPtr,
+record Record = referenceType(
+    ast: ast.Record,
 );
-alias RecordPtr = SharedPointer[Record];
 
-record Variant (
-    ast : ast.VariantPtr,
+record Variant = referenceType(
+    ast: ast.Variant,
 );
-alias VariantPtr = SharedPointer[Variant];
 
-record Procedure (
-    ast : ast.ProcedurePtr,
+record Procedure = referenceType(
+    ast: ast.Procedure,
 );
-alias ProcedurePtr = SharedPointer[Procedure];
 
-record Enum (
-    ast : ast.EnumPtr,
+record Enum = referenceType(
+    ast: ast.Enum,
 );
-alias EnumPtr = SharedPointer[Enum];
 
-record EnumMember (
-    parent : EnumPtr,
-    index : SizeT,
+record EnumMember = referenceType(
+    parent: Enum,
+    index: SizeT,
 );
-alias EnumMemberPtr = SharedPointer[EnumMember];
 
-record GlobalVariable (
-    ast : ast.GlobalVariablePtr,
+record GlobalVariable = referenceType(
+    ast: ast.GlobalVariable,
 );
-alias GlobalVariablePtr = SharedPointer[GlobalVariable];
 
-record GlobalAlias (
-    ast : ast.GlobalAliasPtr,
+record GlobalAlias = referenceType(
+    ast: ast.GlobalAlias,
 );
-alias GlobalAliasPtr = SharedPointer[GlobalAlias];
 
-record ExternalProcedure (
-    ast : ast.ExternalProcedurePtr,
+record ExternalProcedure = referenceType(
+    ast: ast.ExternalProcedure,
 );
-alias ExternalProcedurePtr = SharedPointer[ExternalProcedure];
 
-record ExternalVariable (
-    ast : ast.ExternalVariablePtr,
+record ExternalVariable = referenceType(
+    ast: ast.ExternalVariable,
 );
-alias ExternalVariablePtr = SharedPointer[ExternalVariable];
 
 
 
@@ -210,20 +202,17 @@ enum PrimitiveKind {
     PRIM_intToEnum,
 }
 
-record PrimitiveTypeConstructor(
-    kind : PrimitiveTypeConstructorKind
+record PrimitiveTypeConstructor = referenceType(
+    kind: PrimitiveTypeConstructorKind
 );
-alias PrimitiveTypeConstructorPtr = SharedPointer[PrimitiveTypeConstructor];
 
-record StaticPrimitive(
-    kind : StaticPrimitiveKind,
+record StaticPrimitive = referenceType(
+    kind: StaticPrimitiveKind,
 );
-alias StaticPrimitivePtr = SharedPointer[StaticPrimitive];
 
-record Primitive(
-    kind : PrimitiveKind,
+record Primitive = referenceType(
+    kind: PrimitiveKind,
 );
-alias PrimitivePtr = SharedPointer[Primitive];
 
 
 
@@ -245,17 +234,28 @@ record ArrayTag();
 record TupleTag();
 record UnionTag();
 record StaticTag();
-record RecordTag(info:RecordPtr);
-record VariantTag(info:VariantPtr);
-record EnumTag(info:EnumPtr);
+record RecordTag(info:Record);
+record VariantTag(info:Variant);
+record EnumTag(info:Enum);
 
-variant TypeTag =
-    BoolTag | IntegerTag | FloatTag | PointerTag |
-    CodePointerTag | RefTag |
-    CCodePointerTag | VarArgsCCodePointerTag |
-    StdCallCodePointerTag | FastCallCodePointerTag |
-    ArrayTag | TupleTag | UnionTag | StaticTag |
-    RecordTag | VariantTag | EnumTag;
+variant TypeTag = BoolTag
+                | IntegerTag
+                | FloatTag
+                | PointerTag
+                | CodePointerTag
+                | RefTag
+                | CCodePointerTag
+                | VarArgsCCodePointerTag
+                | StdCallCodePointerTag
+                | FastCallCodePointerTag
+                | ArrayTag
+                | TupleTag
+                | UnionTag
+                | StaticTag
+                | RecordTag
+                | VariantTag
+                | EnumTag
+                ;
 
 
 
@@ -263,12 +263,10 @@ variant TypeTag =
 // types
 //
 
-record Type (
-    tag : TypeTag,
-    params : Vector[StaticValue],
+record Type = referenceType(
+    tag: TypeTag,
+    params: Vector[StaticValue],
 );
-alias TypePtr = SharedPointer[Type];
-
 
 overload Type(tag:TypeTag) = Type(tag, Vector[StaticValue]());
 
@@ -288,20 +286,20 @@ overload Type(tag:T, forward ...args) =
 // primitive types
 //
 
-var boolType = new Type(BoolTag());
+var boolType = Type(BoolTag());
 
-var int8Type = new Type(IntegerTag(true, 8));
-var int16Type = new Type(IntegerTag(true, 16));
-var int32Type = new Type(IntegerTag(true, 32));
-var int64Type = new Type(IntegerTag(true, 64));
+var int8Type = Type(IntegerTag(true, 8));
+var int16Type = Type(IntegerTag(true, 16));
+var int32Type = Type(IntegerTag(true, 32));
+var int64Type = Type(IntegerTag(true, 64));
 
-var uint8Type = new Type(IntegerTag(false, 8));
-var uint16Type = new Type(IntegerTag(false, 16));
-var uint32Type = new Type(IntegerTag(false, 32));
-var uint64Type = new Type(IntegerTag(false, 64)); 
+var uint8Type = Type(IntegerTag(false, 8));
+var uint16Type = Type(IntegerTag(false, 16));
+var uint32Type = Type(IntegerTag(false, 32));
+var uint64Type = Type(IntegerTag(false, 64)); 
 
-var float32Type = new Type(FloatTag(32));
-var float64Type = new Type(FloatTag(64));
+var float32Type = Type(FloatTag(32));
+var float64Type = Type(FloatTag(64));
 
 
 
@@ -309,11 +307,10 @@ var float64Type = new Type(FloatTag(64));
 // ModuleHolder
 //
 
-record ModuleHolder(
-    imported : Maybe[ModulePtr],
-    children : HashMap[String, ModuleHolderPtr],
+record ModuleHolder = referenceType(
+    imported: Maybe[Module],
+    children: HashMap[String, ModuleHolder],
 );
-alias ModuleHolderPtr = SharedPointer[ModuleHolder];
 
 
 
@@ -321,17 +318,24 @@ alias ModuleHolderPtr = SharedPointer[ModuleHolder];
 // static values
 //
 
-record BoolValue(value : Bool);
-record IntValue(value : Int);
-record TupleValue(elements : Vector[StaticValue]);
-record IdentifierValue(value : String);
+record BoolValue(value: Bool);
+record IntValue(value: Int);
+record TupleValue(elements: Vector[StaticValue]);
+record IdentifierValue(value: String);
 
-variant StaticValue =
-    BoolValue | IntValue | TupleValue | IdentifierValue |
-    ProcedurePtr | RecordPtr | VariantPtr |
-    PrimitiveTypeConstructorPtr | StaticPrimitivePtr | PrimitivePtr |
-    TypePtr | ModuleHolderPtr
-    ;
+variant StaticValue = BoolValue
+                    | IntValue
+                    | TupleValue
+                    | IdentifierValue
+                    | Procedure
+                    | Record
+                    | Variant
+                    | PrimitiveTypeConstructor
+                    | StaticPrimitive
+                    | Primitive
+                    | Type
+                    | ModuleHolder
+                    ;
 
 
 
@@ -339,17 +343,15 @@ variant StaticValue =
 // local symbol table entries
 //
 
-record LocalVariable (
-    type : TypePtr,
-    lvalue? : Bool,
+record LocalVariable = referenceType(
+    type: Type,
+    lvalue?: Bool,
 );
-alias LocalVariablePtr = SharedPointer[LocalVariable];
 
-record LocalAlias (
-    expr : ast.ExprPtr,
-    symbolTable : SymbolTablePtr,
+record LocalAlias = referenceType(
+    expr: ast.Expr,
+    symbolTable: SymbolTable,
 );
-alias LocalAliasPtr = SharedPointer[LocalAlias];
 
 
 
@@ -357,26 +359,36 @@ alias LocalAliasPtr = SharedPointer[LocalAlias];
 // SymbolTable
 //
 
-variant SymbolTableEntry =
-    RecordPtr | VariantPtr | ProcedurePtr | EnumPtr | EnumMemberPtr |
-    GlobalVariablePtr | GlobalAliasPtr |
-    ExternalProcedurePtr | ExternalVariablePtr |
-    PrimitiveTypeConstructorPtr | StaticPrimitivePtr | PrimitivePtr |
-    TypePtr | ModuleHolderPtr |
-    BoolValue | IntValue | TupleValue | IdentifierValue |
-    LocalVariablePtr | LocalAliasPtr |
-    InvalidEntry
-    ;
+variant SymbolTableEntry = Record
+                         | Variant
+                         | Procedure
+                         | Enum
+                         | EnumMember
+                         | GlobalVariable
+                         | GlobalAlias
+                         | ExternalProcedure
+                         | ExternalVariable
+                         | PrimitiveTypeConstructor
+                         | StaticPrimitive
+                         | Primitive
+                         | Type
+                         | ModuleHolder
+                         | BoolValue
+                         | IntValue
+                         | TupleValue
+                         | IdentifierValue
+                         | LocalVariable
+                         | LocalAlias
+                         ;
 
-record InvalidEntry();
-
-overload SymbolTableEntry() = SymbolTableEntry(InvalidEntry());
+overload SymbolTableEntry() = SymbolTableEntry(Record());
 
 
-record SymbolTable (
-    entries : HashMap[String, SymbolTableEntry],
+record SymbolTable = referenceType(
+    entries: HashMap[String, SymbolTableEntry],
 );
-alias SymbolTablePtr = SharedPointer[SymbolTable];
+
+newSymbolTable() = SymbolTable(HashMap[String, SymbolTableEntry]());
 
 
 
@@ -384,15 +396,15 @@ alias SymbolTablePtr = SharedPointer[SymbolTable];
 // location context for errors
 //
 
-private var currentModuleStack = Vector[ModulePtr]();
+private var currentModuleStack = Vector[Module]();
 
 private currentModule() {
     if (empty?(currentModuleStack))
-        return nothing(ModulePtr);
+        return nothing(Module);
     return Maybe(back(currentModuleStack));
 }
 
-withCurrentModule(module:ModulePtr, f) {
+withCurrentModule(module:Module, f) {
     push(currentModuleStack, module);
     try {
         var x = captureValues(...f());
@@ -416,14 +428,14 @@ private SemanticError?(static T) = false;
 
 private semanticError(...fields) = recordWithPredicate(
     SemanticError?,
-    (#where, Maybe[ModulePtr]),
+    where: Maybe[Module],
     ...fields,
 );
 
 [T, ...A | Record?(T)
            and SemanticError?(T)
            and (Tuple[...RecordFieldTypes(T)] ==
-                Tuple[Maybe[ModulePtr], ...A])]
+                Tuple[Maybe[Module], ...A])]
 callbyname overload T(...args:A) =
     T(currentModule(), ...args);
 
@@ -445,10 +457,10 @@ private displaySemanticError(err, node, ...message) {
         return;
     }
     var m = require(err.where);
-    var stokens = m^.ast^.tokens;
-    var offset = stokens^.vector[node.mainToken].range.begin;
+    var stokens = m.ast.tokens;
+    var offset = stokens.vector[node.mainToken].range.begin;
 
-    errorWithLocation(stokens^.file, offset, ...message);
+    errorWithLocation(stokens.file, offset, ...message);
 }
 
 

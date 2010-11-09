@@ -11,8 +11,8 @@ main(args) {
     }
     try {
         var ast = parse(tokenize(readSource(args[1])));
-        println(ast^.imports);
-        println(ast^.topLevelItems);
+        println(ast.imports);
+        println(ast.topLevelItems);
     }
     catch (e:ClayError) {
         displayError(e);

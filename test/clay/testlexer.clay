@@ -10,9 +10,9 @@ main(args) {
     try {
         var file = readSource(args[1]);
         var tokens = tokenize(file);
-        for (x in tokens^.vector) {
+        for (x in tokens.vector) {
             ref r = x.range;
-            println(x.kind, ": ", sliced(file^.data, r.begin, r.end));
+            println(x.kind, ": ", sliced(file.data, r.begin, r.end));
         }
     }
     catch (e:ClayError) {
