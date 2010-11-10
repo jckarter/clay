@@ -4,14 +4,13 @@
 // Source
 //
 
-record SourceFile (
-    path : String,
-    data : String,
+record SourceFile = referenceType(
+    path: String,
+    data: String,
 );
-alias SourceFilePtr = SharedPointer[SourceFile];
 
 readSource(path) =
-    new SourceFile(path, readAll(File(path)));
+    SourceFile(path, readAll(File(path)));
 
 
 

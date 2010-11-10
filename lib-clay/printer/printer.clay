@@ -182,6 +182,17 @@ overload printTo(stream, x:T) {
 
 
 //
+// printTo - HashMap
+//
+
+[K,V]
+overload printTo(stream, x:HashMap[K,V]) {
+    printReprTo(stream, x);
+}
+
+
+
+//
 // printReprTo
 //
 
@@ -344,6 +355,26 @@ overload printReprTo(stream, x:T) {
     }
     printTo(stream, T);
     printReprValuesTo(stream, ...referenceTypeFields(x));
+}
+
+
+
+//
+// printReprTo - HashMap
+//
+
+[K, V]
+overload printReprTo(stream, x:HashMap[K,V]) {
+    printTo(stream, HashMap[K,V], '(');
+    var first = true;
+    for (k, v in items(x)) {
+        if (first)
+            first = false;
+        else
+            printTo(stream, ", ");
+        printReprValuesTo(stream, k, v);
+    }
+    printTo(stream, ')');
 }
 
 

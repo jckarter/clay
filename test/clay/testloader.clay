@@ -84,9 +84,9 @@ main(args) {
 }
 
 displayModule(module) {
-    println(module^.name);
-    println(module^.ast^.tokens^.file^.path);
-    println(module^.ast^.imports);
-    println(module^.ast^.topLevelItems);
+    println(module.name);
+    println(module.ast.tokens.file.path);
+    println(module.ast.imports);
+    println(module.ast.topLevelItems);
     return 0;
 }

@@ -13,21 +13,21 @@ import clay.diagnostics.*;
 //
 
 record ParserInput(
-    tokens : SourceTokensPtr,
+    tokens : SourceTokens,
     current : SizeT,
     maxCurrent : SizeT,
 );
 
-overload ParserInput(tokens : SourceTokensPtr) =
+overload ParserInput(tokens : SourceTokens) =
     ParserInput(tokens, SizeT(0), SizeT(0));
 
 overload iterator(x:ParserInput) = x;
 
 overload hasNext?(x:ParserInput) =
-    (x.current < size(x.tokens^.vector));
+    (x.current < size(x.tokens.vector));
 
 overload next(x:ParserInput) {
-    ref token = x.tokens^.vector[x.current];
+    ref token = x.tokens.vector[x.current];
     x.current += 1;
     return ref token;
 }
@@ -218,7 +218,7 @@ private token(tokenKind) = condition(x => (x.kind == tokenKind));
 private tokenData(tokenKind) {
     var parser = token(tokenKind);
     return input => {
-        ref data = input.tokens^.file^.data;
+        ref data = input.tokens.file.data;
         return maybe(parser(input),
             x ref=> Maybe(sliced(data, x.range.begin, x.range.end)),
             () ref=> nothing(Type(sliced(data, SizeT(0), SizeT(0)))),
@@ -242,7 +242,7 @@ private var identifierList = commaList(identifier);
 //
 
 private exprParser(forward modifier, forward parser) = modify(
-    x => new Expr(move(x)),
+    x => Expr(move(x)),
     bounds(modify(modifier, parser)),
 );
 
@@ -327,7 +327,7 @@ private exprTokens(x) = ref fieldRef(*x, #tokens);
 
 private setBase2(root, field, base) {
     fieldRef(root, field) = base;
-    root.tokens.begin = exprTokens(base^).begin;
+    root.tokens.begin = exprTokens(base).begin;
 }
 private setBase(x, y) { assert(false, "baseless expression!"); }
 overload setBase(x:Indexing,       y) { setBase2(x, #expr, y); }
@@ -342,7 +342,7 @@ overload setBase(x:Or,             y) { setBase2(x, #expr1, y); }
 private foldTail(x) {
     var result = x.0;
     for (y in x.1) {
-        setBase(*(y^), result);
+        setBase(*y, result);
         result = y;
     }
     return result;
@@ -355,27 +355,27 @@ private foldTail(x) {
 //
 
 private var indexingSuffix = exprParser(
-    x => Indexing(ExprPtr(), move(x.1)),
+    x => Indexing(Expr(), move(x.1)),
     sequence(punc(#"["), optExprList, punc(#"]")),
 );
 
 private var callSuffix = exprParser(
-    x => Call(ExprPtr(), move(x.1)),
+    x => Call(Expr(), move(x.1)),
     sequence(punc(#"("), optExprList, punc(#")")),
 );
 
 private var fieldRefSuffix = exprParser(
-    x => FieldRef(ExprPtr(), x.1),
+    x => FieldRef(Expr(), x.1),
     sequence(punc(#"."), identifier),
 );
 
 private var staticIndexingSuffix = exprParser(
-    x => StaticIndexing(ExprPtr(), String(x.1)),
+    x => StaticIndexing(Expr(), String(x.1)),
     sequence(punc(#"."), tokenData(INT_LITERAL)),
 );
 
 private var dereferenceSuffix = exprParser(
-    x => UnaryOp(DEREFERENCE, ExprPtr()),
+    x => UnaryOp(DEREFERENCE, Expr()),
     punc(#"^"),
 );
 
@@ -428,7 +428,7 @@ private var prefixExpr = choice(
 private binaryOp(op, term) = modify(
     foldTail,
     sequence(term, zeroOrMore(exprParser(
-        x => BinaryOp(x.0, ExprPtr(), x.1),
+        x => BinaryOp(x.0, Expr(), x.1),
         sequence(op, term),
     ))),
 );
@@ -447,14 +447,18 @@ private var addSubOp = choice(
 private var addSubExpr = binaryOp(addSubOp, mulDivExpr);
 
 private var compareOp = choice(
-    modify(x => EQUALS,         punc(#"==")),
-    modify(x => NOT_EQUALS,     punc(#"!=")),
     modify(x => LESSER,         punc(#"<")),
     modify(x => LESSER_EQUALS,  punc(#"<=")),
     modify(x => GREATER,        punc(#">")),
     modify(x => GREATER_EQUALS, punc(#">=")),
 );
 private var compareExpr = binaryOp(compareOp, addSubExpr);
+
+private var equalOp = choice(
+    modify(x => EQUALS,     punc(#"==")),
+    modify(x => NOT_EQUALS, punc(#"!=")),
+);
+private var equalExpr = binaryOp(equalOp, compareExpr);
 
 
 
@@ -465,15 +469,15 @@ private var compareExpr = binaryOp(compareOp, addSubExpr);
 private var notExpr = choice(
     exprParser(
         x => UnaryOp(NOT, x.1),
-        sequence(kw_not, compareExpr),
+        sequence(kw_not, equalExpr),
     ),
-    compareExpr,
+    equalExpr,
 );
 
 private andOrOp(node, op, term) = modify(
     foldTail,
     sequence(term, zeroOrMore(exprParser(
-        x => node(ExprPtr(), x.1),
+        x => node(Expr(), x.1),
         sequence(op, term),
     ))),
 );
@@ -484,7 +488,7 @@ private var orExpr = andOrOp(Or, kw_or, andExpr);
 
 
 //
-// if expr, unpack expr, new expr, static expr
+// if expr, unpack expr, new expr, static expr, pair expr
 //
 
 private var ifExpr = exprParser(
@@ -505,6 +509,11 @@ private var newExpr = exprParser(
 private var staticExpr = exprParser(
     x => StaticExpr(x.1),
     sequence(kw_static, expr),
+);
+
+private var pairExpr = exprParser(
+    x => PairExpr(move(x.0), move(x.2)),
+    sequence(identifier, punc(#":"), expr),
 );
 
 
@@ -551,7 +560,7 @@ private var optCaptureByRef = choice(
 private var lambdaBody = choice(
     block,
     statementParser(
-        x => Return(x.0, Vector[ExprPtr](x.1)),
+        x => Return(x.0, Vector[Expr](x.1)),
         sequence(returnKind, expr),
     ),
 );
@@ -568,10 +577,10 @@ private var lambdaExpr = exprParser(
 //
 
 private var expr2 = choice(
-    lambdaExpr, orExpr, ifExpr, unpackExpr, newExpr, staticExpr,
+    lambdaExpr, pairExpr, orExpr, ifExpr, unpackExpr, newExpr, staticExpr,
 );
 
-private expr(input) Maybe[ExprPtr] { return expr2(input); }
+private expr(input) Maybe[Expr] { return expr2(input); }
 
 private var exprList = commaList(expr);
 private var optExprList = optCommaList(expr);
@@ -610,7 +619,7 @@ private var typeSpec = modify(x => x.1, sequence(punc(#":"), expr));
 //
 
 private statementParser(forward modifier, forward parser) = modify(
-    x => new Statement(move(x)),
+    x => Statement(move(x)),
     bounds(modify(modifier, parser)),
 );
 
@@ -723,12 +732,12 @@ private var whileStatement = statementParser(
 );
 
 private var breakStatement = statementParser(
-    x => Break(),
+    x => Break(0),
     sequence(kw_break, punc(#";")),
 );
 
 private var continueStatement = statementParser(
-    x => Continue(),
+    x => Continue(0),
     sequence(kw_continue, punc(#";")),
 );
 
@@ -772,7 +781,7 @@ private var statement2 = choice(
     tryStatement, throwStatement, staticForStatement,
 );
 
-private statement(input) Maybe[StatementPtr] = statement2(input);
+private statement(input) Maybe[Statement] = statement2(input);
 
 
 
@@ -796,7 +805,7 @@ private var patternVarsWithPredicate2 = modify(
 );
 
 private var patternVarsWithPredicate = modify(
-    x => maybe(move(x), move, () => (Vector[PatternVar](), nothing(ExprPtr))),
+    x => maybe(move(x), move, () => (Vector[PatternVar](), nothing(Expr))),
     optional(patternVarsWithPredicate2),
 );
 
@@ -868,7 +877,7 @@ private var codeBody = choice(
 //
 
 private topLevelItemParser(forward modifier, forward parser) = modify(
-    x => TopLevelItem(new move(x)),
+    x => TopLevelItem(move(x)),
     bounds(modify(modifier, parser)),
 );
 
@@ -925,7 +934,7 @@ private var recordDef = topLevelItemParser(
 
 private var defaultInstances = choice(
     modify(
-        x => Vector[ExprPtr](),
+        x => Vector[Expr](),
         punc(#";"),
     ),
     modify(
@@ -1014,7 +1023,7 @@ private var externalAttribtues2 = modify(
 );
 
 private var externalAttribtues = modify(
-    x => maybe(move(x), move, () => Vector[ExprPtr]()),
+    x => maybe(move(x), move, () => Vector[Expr]()),
     optional(externalAttribtues2),
 );
 
@@ -1024,7 +1033,7 @@ private var externalArg = bounds(modify(
 ));
 
 private var variadicExternalArg = bounds(modify(
-    x => ExternalArg(),
+    x => ExternalArg(Identifier(), Expr()),
     punc(#"..."),
 ));
 
@@ -1035,7 +1044,7 @@ private var externalArgs = modify(
 
 private var externalBody = choice(
     modify(x => Maybe(x), block),
-    modify(x => nothing(StatementPtr), punc(#";")),
+    modify(x => nothing(Statement), punc(#";")),
 );
 
 private var externalProcedure = topLevelItemParser(
@@ -1121,15 +1130,15 @@ private var importDef = choice(
 //
 
 record ParserError(
-    tokens: SourceTokensPtr,
+    tokens: SourceTokens,
     where: SizeT,
 );
 
 instance ClayError = ParserError;
 
 overload displayError(e:ParserError) {
-    var offset = e.tokens^.vector[e.where].range.begin;
-    errorWithLocation(e.tokens^.file, offset, "parse error");
+    var offset = e.tokens.vector[e.where].range.begin;
+    errorWithLocation(e.tokens.file, offset, "parse error");
 }
 
 
@@ -1143,7 +1152,7 @@ private var parseExpr2 = modify(
     sequence(expr, token(SENTINEL)),
 );
 
-parseExpr(tokens:SourceTokensPtr) {
+parseExpr(tokens:SourceTokens) {
     var input = ParserInput(tokens);
     var result = parseExpr2(input);
     if (nothing?(result))
@@ -1152,18 +1161,18 @@ parseExpr(tokens:SourceTokensPtr) {
 }
 
 private var parse2 = modify(
-    x => SourceAST(SourceTokensPtr(), x.0, x.1),
+    x => SourceAST(SourceTokens(), x.0, x.1),
     sequence(
         zeroOrMore(importDef), zeroOrMore(topLevelItem), token(SENTINEL)
     ),
 );
 
-parse(tokens:SourceTokensPtr) {
+parse(tokens:SourceTokens) {
     var input = ParserInput(tokens);
     var ast = parse2(input);
     if (nothing?(ast))
         throw ParserError(tokens, input.maxCurrent);
     var ast2 = require(move(ast));
     ast2.tokens = tokens;
-    return new move(ast2);
+    return move(ast2);
 }

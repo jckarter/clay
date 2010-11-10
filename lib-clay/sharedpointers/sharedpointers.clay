@@ -69,8 +69,7 @@ inline overload resetUnsafe(p : SharedPointer[T]) {
 inline overload assign(dest:SharedPointer[T], lvalue src:SharedPointer[T]) {
     if (dest.ptr == src.ptr)
         return;
-    destroy(dest);
-    dest <-- src;
+    dest = SharedPointer[T](src);
 }
 
 [T]
