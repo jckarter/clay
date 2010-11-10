@@ -57,7 +57,7 @@ private parseHexDigit(x) {
         return Int(x) - Int('a') + 10;
     if ((x >= 'A') and (x <= 'Z'))
         return Int(x) - Int('z') + 10;
-    error("invalid hex digit: ", x);
+    genericError("invalid hex digit: ", x);
     return -1;
 }
 
@@ -70,7 +70,7 @@ private parseOctalChar(a, b, c) {
 private parseOctalDigit(x) {
     if ((x >= '0') and (x <= '7'))
         return Int(x) - Int('0');
-    error("invalid octal digit: ", x);
+    genericError("invalid octal digit: ", x);
     return -1;
 }
 
@@ -105,9 +105,11 @@ overload symbolValue(x:SymbolHead, params:Vector[Value]) {
 //
 
 evaluateMain(module) {
-    var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
-    var mainCall = ast.Expr(ast.Call(mainRef, Vector[ast.Expr]()));
-    return evaluateExpr(mainCall, module.globals);
+    return withCurrentModule(module, () => {
+        var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
+        var mainCall = ast.Expr(ast.Call(mainRef, Vector[ast.Expr]()));
+        return evaluateExpr(mainCall, module.globals);
+    });
 }
 
 
@@ -119,7 +121,7 @@ evaluateMain(module) {
 evaluateBool(expr, env) {
     var result = evaluateExpr(expr, env);
     if (not variantIs?(result, BoolValue))
-        error("expecting a Bool value");
+        genericError("expecting a Bool value");
     return variantAs(result, BoolValue).value;
 }
 
@@ -132,7 +134,7 @@ evaluateBool(expr, env) {
 procedure evaluateExpr;
 
 overload evaluateExpr(x:ast.Expr, env) Value {
-    return evaluateExpr(*x, env);
+    return withCurrentLocation(*x, () ref=> evaluateExpr(*x, env));
 }
 overload evaluateExpr(x:ast.BoolLiteral, env) {
     return Value(BoolValue(x.value));
@@ -154,7 +156,7 @@ overload evaluateExpr(x:ast.NameRef, env) {
         Primitive, x => Value(PrimitiveValue(x)),
         Value, x => x,
         PatternCell, x => {
-            error("pattern variable cannot be used in non-pattern expression");
+            genericError("pattern variable cannot be used in non-pattern expression");
             return Value();
         }
     );
@@ -187,15 +189,15 @@ overload evaluateExpr(x:ast.IfExpr, env) {
 
 procedure evaluateCall;
 overload evaluateCall(x, args) {
-    error("invalid callee: ", x);
+    genericError("invalid callee: ", x);
     return Value();
 }
 overload evaluateCall(x:Value, args) {
-    return evaluateCall(*x, args);
+    return withCurrentCall(x, args, () ref=> evaluateCall(*x, args));
 }
 overload evaluateCall(x:LambdaValue, args) {
     if (size(x.value.formalArgs) != size(args))
-        error("incorrect no. of arguments in call to lambda");
+        genericError("incorrect no. of arguments in call to lambda");
     var env2 = newEnv(x.env);
     for (name, arg in zipped(x.value.formalArgs, args))
         envAdd(env2, name, arg);
@@ -207,7 +209,7 @@ overload evaluateCall(x:FunctionValue, args) {
         if (not nothing?(result))
             return evaluateExpr(y.ast.body, just(result));
     }
-    error("no matching operation");
+    genericError("no matching operation");
     return Value();
 }
 overload evaluateCall(x:PrimitiveValue, args) {
@@ -222,7 +224,7 @@ overload evaluateCall(x:PrimitiveValue, args) {
 
 procedure evaluateIndexing;
 overload evaluateIndexing(x, args) {
-    error("invalid indexee: ", x);
+    genericError("invalid indexee: ", x);
     return Value();
 }
 overload evaluateIndexing(x:Value, args) {
@@ -231,7 +233,7 @@ overload evaluateIndexing(x:Value, args) {
 overload evaluateIndexing(x:SymbolHeadValue, args) {
     var head = x.value;
     if (size(head.ast.params) != size(args))
-        error("incorrect no. of arguments in indexing");
+        genericError("incorrect no. of arguments in indexing");
     return Value(symbolValue(head, args));
 }
 
@@ -270,7 +272,7 @@ procedure evaluateIndexingPattern;
 overload evaluateIndexingPattern(x, args) {
     var toValue = y => {
         if (not variantIs?(y, Value))
-            error("can't use pattern in a non-pattern expression");
+            genericError("can't use pattern in a non-pattern expression");
         return variantAs(y, Value);
     };
     var args2 = map(toValue, args);
@@ -282,7 +284,7 @@ overload evaluateIndexingPattern(x:Value, args) {
 overload evaluateIndexingPattern(x:SymbolHeadValue, args) {
     var head = x.value;
     if (size(head.ast.params) != size(args))
-        error("incorrect no. of arguments for indexing");
+        genericError("incorrect no. of arguments for indexing");
     return Pattern(SymbolPattern(head, args));
 }
 
@@ -332,7 +334,7 @@ derefCell(x:PatternCell) {
     return maybe(x.value,
         y => y,
         () => {
-            error("unbound pattern variable");
+            genericError("unbound pattern variable");
             return Value();
         },
     );
@@ -380,14 +382,14 @@ matchOverload(x:Overload, args:Vector[Value]) Maybe[Env] {
 
 twoValues(args) {
     if (size(args) != 2)
-        error("expecting two arguments");
+        genericError("expecting two arguments");
     return args[0], args[1];
 }
 
 twoInts(args) {
     var a, b = ...twoValues(args);
     if (not variantIs?(a, IntValue) or not variantIs?(b, IntValue))
-        error("expecting two integers");
+        genericError("expecting two integers");
     return variantAs(a, IntValue).value, variantAs(b, IntValue).value;
 }
 
@@ -428,7 +430,7 @@ evaluatePrimitive(kind, args) {
             return Value(BoolValue(x < y));
         }
         else {
-            error("lesser? expects is applicable to Int,Int or Bool,Bool");
+            genericError("lesser? expects is applicable to Int,Int or Bool,Bool");
             return Value();
         }
     }

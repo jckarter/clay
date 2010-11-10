@@ -44,9 +44,9 @@ private splitLines(data) {
     return move(lines);
 }
 
-errorWithLocation(file:SourceFilePtr, offset, ...message) {
-    ref fileName = file^.path;
-    ref data = file^.data;
+errorWithLocation(file:SourceFile, offset, ...message) {
+    ref fileName = file.path;
+    ref data = file.data;
 
     var line, column, tabs = ...computeLocation(data, offset);
     column += 7*tabs;
