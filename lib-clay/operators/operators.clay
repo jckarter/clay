@@ -336,3 +336,36 @@ inline bitwiseAndc(a, b) = bitwiseAnd(a, bitwiseNot(b));
 inline bitwiseBlend(mask, ones, zeros)
     = bitwiseOr(bitwiseAnd(ones, mask), bitwiseAndc(zeros, mask));
 
+
+
+//
+// PODType?
+//
+
+PODType?(X) = false;
+
+overload PODType?(static Bool) = true;
+overload PODType?(static Int8) = true;
+overload PODType?(static Int16) = true;
+overload PODType?(static Int32) = true;
+overload PODType?(static Int64) = true;
+overload PODType?(static UInt8) = true;
+overload PODType?(static UInt16) = true;
+overload PODType?(static UInt32) = true;
+overload PODType?(static UInt64) = true;
+overload PODType?(static Float32) = true;
+overload PODType?(static Float64) = true;
+[T] overload PODType?(static Pointer[T]) = true;
+[I, O] overload PODType?(static CodePointer[I, O]) = true;
+[I, O] overload PODType?(static CCodePointer[I, O]) = true;
+[I, O] overload PODType?(static VarArgsCCodePointer[I, O]) = true;
+[I, O] overload PODType?(static StdCallCodePointer[I, O]) = true;
+[I, O] overload PODType?(static FastCallCodePointer[I, O]) = true;
+[T] overload PODType?(static Static[T]) = true;
+[T,n] overload PODType?(static Array[T,n]) = PODType?(T);
+[T,n] overload PODType?(static Vec[T,n]) = true;
+[...T] overload PODType?(static Tuple[...T]) = allValues?(PODType?, ...T);
+[...T] overload PODType?(static Union[...T]) = allValues?(PODType?, ...T);
+
+[R | RegularRecord?(R)] overload PODType?(static R)
+    = allValues?(PODType?, ...RecordFieldTypes(R));
