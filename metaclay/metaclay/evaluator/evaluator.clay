@@ -43,7 +43,7 @@ private parseEscapeChar(s, i) {
         case '\"': return '\"', i+1;
         case 'x' : return parseHexChar(s[i+1], s[i+2]), i+3;
     }
-    return parseOctalChar(s[i+1], s[i+2], s[i+3]), i+4;
+    return parseOctalChar(s[i], s[i+1], s[i+2]), i+3;
 }
 
 private parseHexChar(a, b) {
