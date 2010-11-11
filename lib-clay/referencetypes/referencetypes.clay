@@ -67,11 +67,17 @@ overload staticIndex(x:T, i);
 
 [T, Field | ReferenceType?(T)]
 private fieldNameIndex(static T, static Field) =
-    findField(static Field, ...ReferenceTypeFieldNames(T));
+    findField(static 0, static Field, ...ReferenceTypeFieldNames(T));
 
-private findField(field, first, ...rest) = 1 + findField(field, ...rest);
-[F] overload findField(static F, static F, ...rest) = 0;
-overload findField(field) = -1;
+[pos]
+private findField(static pos, field, first, ...rest) =
+    findField(static pos+1, field, ...rest);
+
+[pos, F]
+overload findField(static pos, static F, static F, ...rest) = pos;
+
+[pos]
+overload findField(static pos, field) = -1;
 
 
 [T, i | ReferenceType?(T) and (i >= 0) and (i < ReferenceTypeFieldCount(T))]
