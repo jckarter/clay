@@ -1,0 +1,40 @@
+import sqlite.*;
+import sqlite.sequences.*;
+
+record Pope (id: Int, name: String);
+
+main() {
+    var db = SqliteDB("temp.sqlite");
+
+    runStatement(db, "create temp table popes (id integer primary key, name text not null)");
+
+    var insertStmt = SqliteStatement(db, "insert into popes values (null, ?)");
+    withTransaction(db, () ref=> {
+        runStatement(insertStmt, "benedictus");
+        runStatement(insertStmt, "boniface");
+        runStatement(insertStmt, "pius");
+        runStatement(insertStmt, "marcellinus");
+        runStatement(insertStmt, "paulus");
+        runStatement(insertStmt, "petrus");
+        runStatement(insertStmt, "clemens");
+        runStatement(insertStmt, "xystus");
+        runStatement(insertStmt, "telesphorus");
+    });
+
+    var us_popes = SqliteStatementSequence(Pope, static 3, db,
+        "select id, name from popes where name like ? order by name",
+        "%us"
+    );
+
+    println(size(us_popes), " -us popes:");
+
+    for (pope in us_popes)
+        println(pope.name);
+
+    println("second verse, same as the first:");
+
+    for (pope in us_popes)
+        println(pope.name);
+
+    runStatement(db, "drop table popes");
+}
