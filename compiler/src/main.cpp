@@ -16,6 +16,7 @@
 #include "llvm/Support/StandardPasses.h"
 #include "llvm/System/Path.h"
 #include "llvm/Target/TargetRegistry.h"
+#include "llvm/Target/TargetOptions.h"
 
 #include <iostream>
 #include <cstring>
@@ -93,7 +94,7 @@ static void runModule(llvm::Module *module)
     delete engine;
 }
 
-static void optimizeLLVM(llvm::Module *module, bool internalize)
+static void optimizeLLVM(llvm::Module *module, unsigned optLevel, bool internalize)
 {
     llvm::PassManager passes;
 
@@ -105,7 +106,7 @@ static void optimizeLLVM(llvm::Module *module, bool internalize)
 
     fpasses.add(new llvm::TargetData(*td));
 
-    addOptimizationPasses(passes, fpasses, 3, internalize);
+    addOptimizationPasses(passes, fpasses, optLevel, internalize);
 
     fpasses.doInitialization();
     for (llvm::Module::iterator i = module->begin(), e = module->end();
@@ -129,6 +130,7 @@ static void generateLLVM(llvm::Module *module, llvm::raw_ostream *out)
 static void generateAssembly(llvm::Module *module,
                              llvm::raw_ostream *out,
                              bool emitObject,
+                             unsigned optLevel,
                              bool sharedLib,
                              bool genPIC)
 {
@@ -137,6 +139,8 @@ static void generateAssembly(llvm::Module *module,
     const llvm::Target *theTarget =
         llvm::TargetRegistry::lookupTarget(theTriple.getTriple(), err);
     assert(theTarget != NULL);
+    if (optLevel < 2)
+        llvm::NoFramePointerElim = true;
     if (sharedLib || genPIC)
         llvm::TargetMachine::setRelocationModel(llvm::Reloc::PIC_);
     llvm::TargetMachine::setCodeModel(llvm::CodeModel::Default);
@@ -156,11 +160,18 @@ static void generateAssembly(llvm::Module *module,
         ? llvm::TargetMachine::CGFT_ObjectFile
         : llvm::TargetMachine::CGFT_AssemblyFile;
 
+    llvm::CodeGenOpt::Level level;
+    switch (optLevel) {
+    case 0 : level = llvm::CodeGenOpt::None; break;
+    case 1 : level = llvm::CodeGenOpt::Less; break;
+    case 2 : level = llvm::CodeGenOpt::Default; break;
+    default : level = llvm::CodeGenOpt::Aggressive; break;
+    }
     bool result =
         target->addPassesToEmitFile(fpasses,
                                     fout,
                                     fileType,
-                                    llvm::CodeGenOpt::Aggressive);
+                                    level);
     assert(!result);
 
     fpasses.doInitialization();
@@ -175,6 +186,7 @@ static void generateAssembly(llvm::Module *module,
 static bool generateBinary(llvm::Module *module,
                            const string &outputFile,
                            const llvm::sys::Path &gccPath,
+                           unsigned optLevel,
                            bool exceptions,
                            bool sharedLib,
                            bool genPIC,
@@ -197,7 +209,7 @@ static bool generateBinary(llvm::Module *module,
         return false;
     }
 
-    generateAssembly(module, &asmOut, false, sharedLib, genPIC);
+    generateAssembly(module, &asmOut, false, optLevel, sharedLib, genPIC);
     asmOut.close();
 
     vector<const char *> gccArgs;
@@ -701,8 +713,9 @@ int main(int argc, char **argv) {
     compileTimer.stop();
 
     llvmTimer.start();
-    if (optimize)
-        optimizeLLVM(llvmModule, !(sharedLib || run));
+    unsigned optLevel = optimize ? 3 : 0;
+    if (optLevel > 0)
+        optimizeLLVM(llvmModule, optLevel, !(sharedLib || run));
 
     if (run)
         runModule(llvmModule);
@@ -718,7 +731,7 @@ int main(int argc, char **argv) {
         if (emitLLVM)
             generateLLVM(llvmModule, &out);
         else if (emitAsm || emitObject)
-            generateAssembly(llvmModule, &out, emitObject, sharedLib, genPIC);
+            generateAssembly(llvmModule, &out, emitObject, optLevel, sharedLib, genPIC);
     }
     else {
         bool result;
@@ -763,7 +776,7 @@ int main(int argc, char **argv) {
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
         result = generateBinary(llvmModule, atomicOutputFile, gccPath,
-                                exceptions, sharedLib, genPIC,
+                                optLevel, exceptions, sharedLib, genPIC,
                                 arguments);
         if (!result)
             return -1;
