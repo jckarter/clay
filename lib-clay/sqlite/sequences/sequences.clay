@@ -1,0 +1,151 @@
+import sqlite.*;
+
+private alias DEFAULT_BUFFER_SIZE = 128;
+
+private record SqliteStatementBuffer[T,bufferSize] (
+    offset: SizeT,
+    buffer: Array[T,bufferSize],
+);
+
+record SqliteStatementSequence[T,bufferSize] (
+    statement: SqliteStatement, 
+    olderBuffer: SizeT,
+    limitOffsetIndex: Int,
+    size: SizeT,
+    buffers: Array[SqliteStatementBuffer[T,bufferSize], 2],
+);
+
+[T,n] overload RegularRecord?(static SqliteStatementSequence[T,n]) = false;
+
+[T,n] overload SqliteStatementSequence[T, n]();
+[T,n] overload destroy(seq: SqliteStatementSequence[T, n]) {
+    destroy(seq.buffers);
+}
+
+[T,n, I, J | Integer?(I) and Integer?(J)]
+private initSqliteStatementSequence(static T, static n, rvalue statement: SqliteStatement, limitOffsetIndex: I, sz: J)
+    returned: SqliteStatementSequence[T, n]
+{
+    returned.statement <-- move(statement);
+    returned.olderBuffer = 0;
+    returned.size = SizeT(sz);
+    returned.limitOffsetIndex = Int(limitOffsetIndex);
+
+    try {
+        resetUnsafe(returned.buffers[0].buffer);
+        fillBuffer(returned, returned.buffers[0], SizeT(0));
+        try {
+            resetUnsafe(returned.buffers[1].buffer);
+            fillBuffer(returned, returned.buffers[1], SizeT(n));
+        } catch (ex) {
+            destroy(returned.buffers[0]);
+            throw ex;
+        }
+    } catch (ex) {
+        destroy(returned.statement);
+        throw ex;
+    }
+}
+
+[T, n, S | String?(S)]
+overload SqliteStatementSequence(static T, static n, db: SqliteDB, sql: S, ...statementArgs) {
+    var limitOffsetIndex = Int(countValues(...statementArgs) + 1);
+
+    var size = statementValue(SizeT, db,
+        printString("select count(1) from (", sql, ")"),
+        ...statementArgs
+    );
+
+    return initSqliteStatementSequence(T, static n,
+        SqliteStatement(db,
+            printString(
+                sql,
+                " limit ?", limitOffsetIndex,
+                " offset ?", limitOffsetIndex + 1
+            ),
+            ...statementArgs
+        ),
+        limitOffsetIndex,
+        size
+    );
+}
+
+[T,n,I | Integer?(I)]
+private fillBuffer(seq: SqliteStatementSequence[T,n], buffer: SqliteStatementBuffer[T,n], offset: I) {
+    resetStatement(seq.statement);
+    bindStatement(seq.statement, seq.limitOffsetIndex,     n);      // limit
+    bindStatement(seq.statement, seq.limitOffsetIndex + 1, offset); // offset
+    var intoBuffer = begin(buffer.buffer);
+    try {
+        for (row in seq.statement) {
+            intoBuffer^ = rowRecord(row, T);
+            inc(intoBuffer);
+        }
+        buffer.offset = offset;
+    } catch (ex) {
+        for (x in coordinateRange(begin(buffer.buffer), intoBuffer)) {
+            destroy(x);
+            resetUnsafe(x);
+        }
+        throw ex;
+    }
+}
+
+[T,n,I | Integer?(I)]
+private indexFromBuffer(buffer: SqliteStatementBuffer[T,n], i: I)
+    = ref buffer.buffer[i - buffer.offset];
+
+private offsetForIndex(n, i) = (i / n) * n;
+
+[T,n]
+private inBuffer?(buffer: SqliteStatementBuffer[T,n], i) = i - buffer.offset < n;
+
+[T,n,I | Integer?(I)]
+overload index(seq: SqliteStatementSequence[T,n], i: I) {
+    if (inBuffer?(seq.buffers[0], i)) {
+        seq.olderBuffer = 1;
+        return indexFromBuffer(seq.buffers[0], i);
+    } else if (inBuffer?(seq.buffers[1], i)) {
+        seq.olderBuffer = 0;
+        return indexFromBuffer(seq.buffers[1], i);
+    } else {
+        var buffer = seq.olderBuffer;
+        fillBuffer(seq, seq.buffers[buffer], offsetForIndex(n, i));
+        seq.olderBuffer = 1 - buffer;
+        return indexFromBuffer(seq.buffers[buffer], i);
+    }
+}
+
+[T,n]
+overload size(seq: SqliteStatementSequence[T,n]) = seq.size;
+
+private record SqliteStatementCoordinate[T,n] (
+    seq: Pointer[SqliteStatementSequence[T,n]],
+    index: SizeT
+);
+
+[T,n] overload begin(seq: SqliteStatementSequence[T,n])
+    = SqliteStatementCoordinate[T,n](&seq, SizeT(0));
+[T,n] overload end(seq: SqliteStatementSequence[T,n])
+    = SqliteStatementCoordinate[T,n](&seq, size(seq));
+
+[T,n] overload dereference(i: SqliteStatementCoordinate[T,n]) = i.seq^[i.index];
+[T,n, I | Integer?(I)] overload index(i: SqliteStatementCoordinate[T,n], j: I)
+    = i.seq^[i.index + j];
+
+[T,n] overload inc(i: SqliteStatementCoordinate[T,n]) { inc(i.index); }
+[T,n] overload dec(i: SqliteStatementCoordinate[T,n]) { dec(i.index); }
+
+[T,n, I | Integer?(I)] overload add(i: SqliteStatementCoordinate[T,n], j: I)
+    = SqliteStatementCoordinate[T,n](i.seq, i.index + j);
+[T,n, I | Integer?(I)] overload subtract(i: SqliteStatementCoordinate[T,n], j: I)
+    = SqliteStatementCoordinate[T,n](i.seq, i.index - j);
+
+[T,n] overload subtract(i: SqliteStatementCoordinate[T,n], j: SqliteStatementCoordinate[T,n])
+    = PtrInt(i.index - j.index);
+
+[T,n] overload lesser?(i: SqliteStatementCoordinate[T,n], j: SqliteStatementCoordinate[T,n])
+    = i.index < j.index;
+
+[T,n] overload iterator(seq: SqliteStatementSequence[T,n]) = coordinateRange(begin(seq), end(seq));
+

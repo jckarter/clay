@@ -1,0 +1,16 @@
+7 -us popes:
+benedictus
+marcellinus
+paulus
+petrus
+pius
+telesphorus
+xystus
+second verse, same as the first:
+benedictus
+marcellinus
+paulus
+petrus
+pius
+telesphorus
+xystus
