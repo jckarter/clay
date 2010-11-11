@@ -41,12 +41,21 @@ overload File(path:S) = File(new FileData(RawFile(path)));
 overload File(rvalue f:RawFile) =
     File(new FileData(move(f)));
 
-overload FileData(rvalue file:RawFile) {
-    var lineBuffered? = terminal?(file);
-    var buf = Array[Byte,BUFFER_SIZE]();
-    return FileData(move(file),
-                    buf, null(Byte), null(Byte),
-                    lineBuffered?, buf, SizeT(0));
+overload FileData(rvalue file:RawFile) returned:FileData {
+/*     var lineBuffered? = terminal?(file); */
+/*     var buf = Array[Byte,BUFFER_SIZE](); */
+/*     return FileData(move(file), */
+/*                     buf, null(Byte), null(Byte), */
+/*                     lineBuffered?, buf, SizeT(0)); */
+
+    // HACK: the above code makes -unoptimized way too slow.
+    // the code below avoids initializing the buffer
+
+    returned.file <-- move(file);
+    returned.readBegin <-- null(Byte);
+    returned.readEnd <-- null(Byte);
+    returned.lineBuffered? <-- terminal?(file);
+    returned.writeCount <-- SizeT(0);
 }
 
 
