@@ -53,6 +53,12 @@ record Primitive = referenceType(
     kind: PrimitiveKind,
 );
 
+primitiveName(kind) {
+    var s = printString(kind);
+    assert(beginsWith?(s, "PRIM_"));
+    return sliceFrom(s, size("PRIM_"));
+}
+
 
 
 //
@@ -147,6 +153,37 @@ record SymbolValue = referenceType(
     initialized?: Bool,
     body: Maybe[Value],
 );
+
+
+overload printTo(stream, x:Value) {
+    printTo(stream, *x);
+}
+overload printTo(stream, x:BoolValue) {
+    printTo(stream, x.value);
+}
+overload printTo(stream, x:IntValue) {
+    printTo(stream, x.value);
+}
+overload printTo(stream, x:StringValue) {
+    printReprTo(stream, x.value);
+}
+overload printTo(stream, x:LambdaValue) {
+    printTo(stream, "<lambda>");
+}
+overload printTo(stream, x:SymbolHeadValue) {
+    printTo(stream, x.value.ast.name.str);
+}
+overload printTo(stream, x:FunctionValue) {
+    printTo(stream, x.value.ast.name.str);
+}
+overload printTo(stream, x:PrimitiveValue) {
+    printTo(stream, primitiveName(x.value.kind));
+}
+overload printTo(stream, x:SymbolValue) {
+    printTo(stream, x.head.ast.name.str);
+    if (not empty?(x.params))
+        printTo(stream, x.params);
+}
 
 
 
@@ -297,22 +334,22 @@ displaySemanticError(locationContext:LocationContext, ...message) {
 
     errorWithLocation(tokens.file, offset, ...message);
 
-/*     println("call stack: "); */
-/*     var callEntry = locationContext.calls; */
-/*     while (not null?(callEntry)) { */
-/*         ref call = callEntry.value; */
-/*         print("    ", call.callable, "("); */
-/*         var first = true; */
-/*         for (arg in call.args) { */
-/*             if (first) */
-/*                 first = false; */
-/*             else */
-/*                 print(", "); */
-/*             print(arg); */
-/*         } */
-/*         println(")"); */
-/*         callEntry = callEntry.next; */
-/*     } */
+    println("call stack: ");
+    var callEntry = locationContext.calls;
+    while (not null?(callEntry)) {
+        ref call = callEntry.value;
+        print("    ", call.callable, "(");
+        var first = true;
+        for (arg in call.args) {
+            if (first)
+                first = false;
+            else
+                print(", ");
+            print(arg);
+        }
+        println(")");
+        callEntry = callEntry.next;
+    }
 }
 
 

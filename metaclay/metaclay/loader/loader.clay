@@ -6,12 +6,6 @@ import metaclay.ast as ast;
 import metaclay.parser.*;
 import metaclay.core.*;
 
-private primitiveName(kind) {
-    var s = printString(kind);
-    assert(beginsWith?(s, "PRIM_"));
-    return sliceFrom(s, size("PRIM_"));
-}
-
 private primitivesEnv() {
     var env = newEnv();
     for (i in range(EnumMemberCount(PrimitiveKind))) {
