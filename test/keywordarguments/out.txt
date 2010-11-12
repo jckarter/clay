@@ -1,0 +1,25 @@
+
+x = 0
+zim = 1
+zang = two
+zung = 3.000000
+
+x = 4
+zim = 5
+zang = six
+zung = 7.000000
+
+x = 8
+zim = 9
+zang = six
+zung = 7.000000
+
+x = 10
+zim = 5
+zang = eleven
+zung = 7.000000
+
+x = 12
+zim = 5
+zang = six
+zung = 13.000000
