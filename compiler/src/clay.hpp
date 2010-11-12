@@ -2251,6 +2251,7 @@ TypePtr enumType(EnumerationPtr enumeration);
 
 bool isPrimitiveType(TypePtr t);
 bool isPrimitiveAggregateType(TypePtr t);
+bool isPrimitiveAggregateTooLarge(TypePtr t);
 bool isPointerOrCodePointerType(TypePtr t);
 bool isStaticOrTupleOfStatics(TypePtr t);
 
