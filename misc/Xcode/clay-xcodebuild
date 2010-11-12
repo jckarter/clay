@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ x$ACTION != xbuild -o -z "$CURRENT_ARCH" -o -z "$INPUT_FILE_NAME" -o "$*" ]; then
+if [ x$ACTION != xbuild -o -z "$CURRENT_ARCH" -o -z "$INPUT_FILE_NAME" ]; then
     echo "This script is intended to be used as part of an Xcode build process."
     echo "To add Clay files to an Xcode target, open the target settings, go to"
     echo "the \"Rules\" tab, click the \"+\" button to create a custom build"
@@ -23,4 +23,4 @@ CLAY=`dirname $0`/clay
 INFILE="$INPUT_FILE_NAME"
 OUTFILE="$DERIVED_FILES_DIR/$INPUT_FILE_BASE.$CURRENT_ARCH.s"
 
-$CLAY -o "$OUTFILE" -asm -arch $CURRENT_ARCH "$INFILE"
+$CLAY "$@" -o "$OUTFILE" -asm -arch $CURRENT_ARCH "$INFILE"
