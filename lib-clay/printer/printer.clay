@@ -422,6 +422,7 @@ printlnString(...x) {
 observeTo(stream, forward ...x) {
     var captured = captureValues(...x);
     printlnTo(stream, "[observed: ", ...weaveValues(", ", ...capturedRefs(captured)), "]");
+    flush(stream);
     return forward ...forwardValues(captured);
 }
 observe(forward ...x) = forward ...observeTo(stderr, ...x);
