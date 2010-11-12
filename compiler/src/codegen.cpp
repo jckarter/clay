@@ -267,7 +267,10 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
 
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 {
-    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type)
+        && (dest->type == src->type)
+        && (!isPrimitiveAggregateTooLarge(dest->type)))
+    {
         if (dest->type->typeKind != STATIC_TYPE) {
             llvm::Value *v = ctx->builder->CreateLoad(src->llValue);
             ctx->builder->CreateStore(v, dest->llValue);
@@ -282,7 +285,10 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 
 void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 {
-    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type)
+        && (dest->type == src->type)
+        && (!isPrimitiveAggregateTooLarge(dest->type)))
+    {
         if (dest->type->typeKind != STATIC_TYPE) {
             llvm::Value *v = ctx->builder->CreateLoad(src->llValue);
             ctx->builder->CreateStore(v, dest->llValue);
@@ -297,7 +303,10 @@ void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 
 void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 {
-    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type)
+        && (dest->type == src->type)
+        && (!isPrimitiveAggregateTooLarge(dest->type)))
+    {
         if (dest->type->typeKind != STATIC_TYPE) {
             llvm::Value *v = ctx->builder->CreateLoad(src->llValue);
             ctx->builder->CreateStore(v, dest->llValue);
@@ -316,7 +325,10 @@ void codegenValueMoveAssign(CValuePtr dest,
                             CValuePtr src,
                             CodegenContextPtr ctx)
 {
-    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+    if (isPrimitiveAggregateType(dest->type)
+        && (dest->type == src->type)
+        && (!isPrimitiveAggregateTooLarge(dest->type)))
+    {
         if (dest->type->typeKind != STATIC_TYPE) {
             llvm::Value *v = ctx->builder->CreateLoad(src->llValue);
             ctx->builder->CreateStore(v, dest->llValue);
@@ -2073,7 +2085,7 @@ bool codegenShortcut(ObjectPtr callable,
         if (pvArgs->size() == 0)
             return true;
         PValuePtr pv = pvArgs->values[0];
-        if (pv->type == t) {
+        if ((pv->type == t) && (!isPrimitiveAggregateTooLarge(t))) {
             MultiCValuePtr cvArgs = codegenMultiAsRef(args, env, ctx);
             assert(cvArgs->size() == 1);
             CValuePtr cv = cvArgs->values[0];
@@ -2938,11 +2950,14 @@ bool codegenStatement(StatementPtr stmt,
         }
         int marker = cgMarkStack(ctx);
         if (mpvLeft->size() == 1) {
-            ExprListPtr args = new ExprList();
-            args->add(x->left);
-            args->add(x->right);
-            ExprPtr assignCall = new Call(prelude_expr_assign(), args);
-            codegenExprAsRef(assignCall, env, ctx);
+            MultiCValuePtr mcvRight = codegenMultiAsRef(x->right, env, ctx);
+            MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
+            CValuePtr cvRight = mcvRight->values[0];
+            CValuePtr cvLeft = mcvLeft->values[0];
+            if (mpvRight->values[0]->isTemp)
+                codegenValueMoveAssign(cvLeft, cvRight, ctx);
+            else
+                codegenValueAssign(cvLeft, cvRight, ctx);
         }
         else {
             MultiCValuePtr mcvRight = new MultiCValue();
