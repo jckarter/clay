@@ -139,10 +139,15 @@ void codegenCallPointer(CValuePtr x,
                         MultiCValuePtr args,
                         CodegenContextPtr ctx,
                         MultiCValuePtr out);
-void codegenCallPointer(CValuePtr x,
-                        MultiCValuePtr args,
-                        CodegenContextPtr ctx,
-                        MultiCValuePtr out);
+void codegenCallCCode(CCodePointerTypePtr type,
+                      llvm::Value *llCallable,
+                      MultiCValuePtr args,
+                      CodegenContextPtr ctx,
+                      MultiCValuePtr out);
+void codegenCallCCodePointer(CValuePtr x,
+                             MultiCValuePtr args,
+                             CodegenContextPtr ctx,
+                             MultiCValuePtr out);
 void codegenCallCode(InvokeEntryPtr entry,
                      MultiCValuePtr args,
                      CodegenContextPtr ctx,
@@ -1803,6 +1808,22 @@ void codegenCallExpr(ExprPtr callable,
         return;
     }
 
+    if ((pv->type->typeKind == CCODE_POINTER_TYPE)
+        && (callable->exprKind == NAME_REF))
+    {
+        CCodePointerType *t = (CCodePointerType *)pv->type.ptr();
+        NameRef *x = (NameRef *)callable.ptr();
+        ObjectPtr y = safeLookupEnv(env, x->name);
+        if (y->objKind == EXTERNAL_PROCEDURE) {
+            ExternalProcedure *z = (ExternalProcedure *)y.ptr();
+            if (!z->llvmFunc)
+                codegenExternalProcedure(z);
+            MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
+            codegenCallCCode(t, z->llvmFunc, mcv, ctx, out);
+            return;
+        }
+    }
+
     if (pv->type->typeKind != STATIC_TYPE) {
         ExprListPtr args2 = new ExprList(callable);
         args2->add(args);
@@ -2151,7 +2172,7 @@ void codegenCallPointer(CValuePtr x,
 
 
 //
-// codegenCallCCodePointer
+// codegenCallCCode, codegenCallCCodePointer
 //
 
 static llvm::Value *promoteCVarArg(TypePtr t,
@@ -2180,18 +2201,16 @@ static llvm::Value *promoteCVarArg(TypePtr t,
     }
 }
 
-void codegenCallCCodePointer(CValuePtr x,
-                             MultiCValuePtr args,
-                             CodegenContextPtr ctx,
-                             MultiCValuePtr out)
+void codegenCallCCode(CCodePointerTypePtr t,
+                      llvm::Value *llCallable,
+                      MultiCValuePtr args,
+                      CodegenContextPtr ctx,
+                      MultiCValuePtr out)
 {
-    assert(x->type->typeKind == CCODE_POINTER_TYPE);
-    CCodePointerType *t = (CCodePointerType *)x->type.ptr();
     if (!t->hasVarArgs)
         ensureArity(args, t->argTypes.size());
     else if (args->size() < t->argTypes.size())
         arityError2(t->argTypes.size(), args->size());
-    llvm::Value *llCallable = ctx->builder->CreateLoad(x->llValue);
     vector<llvm::Value *> llArgs;
     for (unsigned i = 0; i < t->argTypes.size(); ++i) {
         CValuePtr cv = args->values[i];
@@ -2235,6 +2254,17 @@ void codegenCallCCodePointer(CValuePtr x,
     else {
         assert(out->size() == 0);
     }
+}
+
+void codegenCallCCodePointer(CValuePtr x,
+                             MultiCValuePtr args,
+                             CodegenContextPtr ctx,
+                             MultiCValuePtr out)
+{
+    llvm::Value *llCallable = ctx->builder->CreateLoad(x->llValue);
+    assert(x->type->typeKind == CCODE_POINTER_TYPE);
+    CCodePointerType *t = (CCodePointerType *)x->type.ptr();
+    codegenCallCCode(t, llCallable, args, ctx, out);
 }
 
 
