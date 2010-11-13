@@ -20,6 +20,8 @@ syn keyword clayType Bool Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 Floa
 
 syn keyword clayBoolean true false
 
+syn keyword clayDebug observeTo observe
+
 syn region clayString start=+"+ skip=+\\\\\|\\"+ end=+"+
 
 syn region clayComment start="/\*" end="\*/"
@@ -50,5 +52,6 @@ hi def link clayLabelKeyword Label
 hi def link clayGotoLabel    Label
 hi def link clayMultiValue   Special
 hi def link clayLambda       Special
+hi def link clayDebug        Todo
 
 let b:current_syntax = "clay"
