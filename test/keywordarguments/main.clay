@@ -1,7 +1,6 @@
 import keywordarguments.*;
 
-requiredKeywords(x, ...keywords) {
-    var zim, zang, zung = ...keywordArguments((#zim, #zang, #zung), ...keywords);
+foo(x: Int, zim: Int, zang: StringConstant, zung: Double) {
     println();
     println("x = ", x);
     println("zim = ", zim);
@@ -9,13 +8,12 @@ requiredKeywords(x, ...keywords) {
     println("zung = ", zung);
 }
 
+requiredKeywords(x, ...keywords) {
+    foo(x, ...keywordArguments((#zim, #zang, #zung), ...keywords));
+}
+
 optionalKeywords(x, ...keywords) {
-    var zim, zang, zung = ...keywordArguments((zim: 5, zang: "six", zung: 7.0), ...keywords);
-    println();
-    println("x = ", x);
-    println("zim = ", zim);
-    println("zang = ", zang);
-    println("zung = ", zung);
+    foo(x, ...keywordArguments((zim: 5, zang: "six", zung: 7.0), ...keywords));
 }
 
 main() {
