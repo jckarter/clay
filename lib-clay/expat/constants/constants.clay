@@ -1,0 +1,19 @@
+import expat.generated.*;
+
+alias XML_SetProcessingInstructionHandler = XML_SetProcessingInstrHandler;
+alias XML_SetUnparsedEntityDeclHandler = XML_SetUnparsedEntDeclHandler;
+alias XML_SetStartNamespaceDeclHandler = XML_SetStartNamespcDeclHandler;
+alias XML_SetExternalEntityRefHandlerArg = XML_SetExternalEntRefHandlerArg;
+
+alias XML_TRUE = XML_Bool(1);
+alias XML_FALSE = XML_Bool(0);
+
+XML_GetUserData(parser) = Pointer[RawPointer](parser)^;
+
+alias XML_GetErrorLineNumber = XML_GetCurrentLineNumber;
+alias XML_GetErrorColumnNumber = XML_GetCurrentColumnNumber;
+alias XML_GetErrorByteIndex = XML_GetCurrentByteIndex;
+
+alias XML_MAJOR_VERSION = 2;
+alias XML_MINOR_VERSION = 0;
+alias XML_MICRO_VERSION = 1;
