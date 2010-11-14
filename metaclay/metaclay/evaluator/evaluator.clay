@@ -57,7 +57,7 @@ private parseHexDigit(x) {
         return Int(x) - Int('a') + 10;
     if ((x >= 'A') and (x <= 'Z'))
         return Int(x) - Int('z') + 10;
-    genericError("invalid hex digit: ", x);
+    assert(false, "invalid hex digit: ", x);
     return -1;
 }
 
@@ -70,7 +70,7 @@ private parseOctalChar(a, b, c) {
 private parseOctalDigit(x) {
     if ((x >= '0') and (x <= '7'))
         return Int(x) - Int('0');
-    genericError("invalid octal digit: ", x);
+    assert(false, "invalid octal digit: ", x);
     return -1;
 }
 
