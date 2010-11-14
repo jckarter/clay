@@ -302,3 +302,17 @@ inline overload call(ptr:FastCallCodePointer[(...In), (...Out)], ...args:In) =
 [...In, ...Out]
 inline overload call(ptr:StdCallCodePointer[(...In), (...Out)], ...args:In) =
     ...callCCodePointer(ptr, ...args);
+
+
+
+//
+// construct code pointers from static callables
+//
+
+[...In, ...Out, fn | CallDefined?(fn, ...In)]
+inline overload CodePointer[(...In), (...Out)](static fn) CodePointer[(...In), (...Out)]
+    = makeCodePointer(fn, ...In);
+
+[...In, ...Out, fn | CallDefined?(fn, ...In)]
+inline overload CCodePointer[(...In), (...Out)](static fn) CCodePointer[(...In), (...Out)]
+    = makeCCodePointer(fn, ...In);
