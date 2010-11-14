@@ -156,6 +156,26 @@ private optCommaListStrict(forward parser) =
     optSeparatedListStrict(punc(#","), parser);
 
 
+private commaAndItem(item) = modify(x => move(x.1), sequence(punc(#","), item));
+
+[Item, VariadicItem | Parsers?(Item, VariadicItem)]
+private variadicList(item:Item, variadicItem:VariadicItem) {
+    alias T = ParseResult(Item);
+    return choice(
+        modify(
+            x => VariadicList(move(x.0), move(x.1)),
+            sequence(
+                commaListStrict(item), optional(commaAndItem(variadicItem))
+            ),
+        ),
+        modify(
+            x => VariadicList(Vector[T](), move(x)),
+            optional(variadicItem),
+        ),
+    );
+}
+
+
 
 //
 // token parser
@@ -182,6 +202,14 @@ private tokenData(tokenKind) {
 
 private var identifier = bounds(modify(Identifier, tokenData(IDENTIFIER)));
 private var identifierList = commaList(identifier);
+
+private var variadicIdentifierList = variadicList(
+    identifier,
+    modify(
+        x => move(x.1),
+        sequence(punc(#"..."), identifier),
+    ),
+);
 
 
 
@@ -296,14 +324,17 @@ private var suffixExpr = modify(
 
 private var lambdaArgs = choice(
     modify(
-        x => Vector[Identifier](move(x)),
+        x => VariadicList[Identifier](
+            Vector[Identifier](move(x)),
+            nothing(Identifier),
+        ),
         identifier,
     ),
     modify(
         x => move(x.1),
         sequence(
             punc(#"("),
-            optCommaList(identifier),
+            variadicIdentifierList,
             punc(#")")
         ),
     ),
@@ -311,7 +342,7 @@ private var lambdaArgs = choice(
 
 private var lambdaExpr = exprParser(
     x => LambdaExpr(move(x.0), move(x.2)),
-    sequence(lambdaArgs, punc(#"=>"), expr),
+    sequence(lambdaArgs, punc(#"=>"), groupedExprList),
 );
 
 
@@ -337,8 +368,107 @@ private var expr2 = choice(
 
 private expr(input) Maybe[Expr] { return expr2(input); }
 
-private var exprList = commaList(expr);
-private var optExprList = optCommaList(expr);
+
+
+//
+// exprList
+//
+
+private var unpackExpr = bounds(modify(
+    x => UnpackExpr(move(x.1)),
+    sequence(punc(#"..."), expr),
+));
+
+private var exprListItem = choice(
+    modify(x => ExprListItem(move(x)), unpackExpr),
+    modify(x => ExprListItem(move(x)), expr),
+);
+
+private var groupedExprList = choice(
+    modify(
+        x => move(x.2),
+        sequence(punc(#"..."), punc(#"("), exprList, punc(#")")),
+    ),
+    modify(
+        x => Vector[ExprListItem](move(x)),
+        exprListItem,
+    ),
+);
+
+private var exprList2 = modify(
+    x => {
+        var result = Vector[ExprListItem]();
+        for (a in x)
+            push(result, move(a));
+        return move(result);
+    },
+    commaList(groupedExprList),
+);
+
+private exprList(input) Maybe[ExprList] { return exprList2(input); }
+
+private var optExprList = modify(
+    x => maybe(x, move, () => ExprList()),
+    optional(exprList),
+);
+
+
+
+//
+// patterns
+//
+
+private patternParser(forward modifier, forward parser) = modify(
+    x => Pattern(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+private var boolLiteralPattern = patternParser(
+    BoolLiteral,
+    choice(boolTrue, boolFalse),
+);
+
+private var intLiteralPattern = patternParser(
+    x => IntLiteral(String(x)),
+    tokenData(INT_LITERAL),
+);
+
+private var stringLiteralPattern = patternParser(
+    x => StringLiteral(String(x)),
+    tokenData(STRING_LITERAL),
+);
+
+private var nameRefPattern = patternParser(
+    x => NameRef(move(x)),
+    identifier,
+);
+
+private var indexingPattern = patternParser(
+    x => IndexingPattern(move(x.0), move(x.2)),
+    sequence(nameRefPattern, punc(#"["), patternList, punc(#"]")),
+);
+
+private var pattern2 = choice(
+    boolLiteralPattern, intLiteralPattern, stringLiteralPattern,
+    indexingPattern, nameRefPattern,
+);
+
+private pattern(input) Maybe[Pattern] { return pattern2(input); }
+
+private var patternList2 = variadicList(
+    pattern,
+    modify(
+        x => move(x.1),
+        sequence(punc(#"..."), nameRefPattern),
+    ),
+);
+
+private patternList(input) Maybe[PatternList] { return patternList2(input); }
+
+private var optPatternList = modify(
+    x => maybe(x, move, () => PatternList()),
+    optional(patternList),
+);
 
 
 
@@ -353,16 +483,16 @@ private topLevelItemParser(forward modifier, forward parser) = modify(
 
 private var staticParams = modify(
     x => move(x.1),
-    sequence(punc(#"["), identifierList, punc(#"]")),
+    sequence(punc(#"["), variadicIdentifierList, punc(#"]")),
 );
 
 private var optStaticParams = modify(
-    x => maybe(move(x), move, () => Vector[Identifier]()),
+    x => maybe(x, move, () => VariadicList[Identifier]()),
     optional(staticParams),
 );
 
 private var symbolDef = topLevelItemParser(
-    x => Symbol(move(x.1), Vector[Identifier](), nothing(Expr)),
+    x => Symbol(move(x.1), move(x.2), nothing(Expr)),
     sequence(kw_symbol, identifier, optStaticParams, punc(#";")),
 );
 
@@ -384,19 +514,32 @@ private var optPredicate = optional(modify(
     sequence(punc(#"|"), expr),
 ));
 
+private var patternVar = bounds(choice(
+    modify(
+        x => PatternVar(true, move(x.1)),
+        sequence(punc(#"..."), identifier),
+    ),
+    modify(
+        x => PatternVar(false, move(x)),
+        identifier,
+    ),
+));
+
+private var patternVarList = commaList(patternVar);
+
 private var patternVarsWithPredicate = modify(
     x => (move(x.1), move(x.2)),
-    sequence(punc(#"["), identifierList, optPredicate, punc(#"]")),
+    sequence(punc(#"["), patternVarList, optPredicate, punc(#"]")),
 );
 
 private var optPatternVarsWithPredicate = modify(
-    x => maybe(move(x), move, () => (Vector[Identifier](), nothing(Expr))),
+    x => maybe(x, move, () => (Vector[PatternVar](), nothing(Expr))),
     optional(patternVarsWithPredicate),
 );
 
 private var arguments = modify(
     x => move(x.1),
-    sequence(punc(#"("), optExprList, punc(#")")),
+    sequence(punc(#"("), optPatternList, punc(#")")),
 );
 
 private var overloadDef = topLevelItemParser(
@@ -405,7 +548,7 @@ private var overloadDef = topLevelItemParser(
     ),
     sequence(
         optPatternVarsWithPredicate, kw_overload,
-        identifier, arguments, punc(#"="), expr, punc(#";"),
+        identifier, arguments, punc(#"="), optExprList, punc(#";"),
     ),
 );
 
@@ -415,7 +558,7 @@ private var functionDefWithBody = topLevelItemParser(
     ))),
     sequence(
         optPatternVarsWithPredicate, optional(kw_function),
-        identifier, arguments, punc(#"="), expr, punc(#";"),
+        identifier, arguments, punc(#"="), optExprList, punc(#";"),
     ),
 );
 

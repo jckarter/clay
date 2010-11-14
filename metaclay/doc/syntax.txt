@@ -5,33 +5,46 @@ GlobalSymbol -> "symbol" Identifier StaticParams? ";"
 
 GlobalSymbolWithBody -> "symbol"? Identifier StaticParams? "=" Expr ";"
 
-StaticParams -> "[" comma_list(Identifier) "]"
+StaticParams -> "[" variadic_list(Identifier, Identifier) "]"
 
 Function -> "function" Identifier ";"
 
 Overload -> PatternVarsWithPredicate? "overload" Identifier
-            "(" comma_list(Pattern)? ")" "=" Expr ";"
-
-PatternVarsWithPredicate -> "[" comma_list(Identifier)? "|" Expr "]"
+            "(" PatternList? ")" "=" ExprList ";"
 
 FunctionWithBody -> PatternVarsWithPredicate? "function"? Identifier
-                    "(" comma_list(Pattern)? ")" "=" Expr ";"
+                    "(" PatternList? ")" "=" ExprList ";"
+
+PatternVarsWithPredicate -> "[" comma_list(PatternVar)? "|" Expr "]"
+PatternVar -> ("...")? Identifier
+
+PatternList -> variadic_list(Pattern, Identifier)
 
 Pattern -> BoolLiteral
          | IntLiteral
          | StringLiteral
          | Identifier
-         | Identifier "[" comma_list(Pattern) "]"
+         | Identifier "[" PatternList "]"
+
+ExprList -> comma_list(ExprListItem)
+
+ExprListItem -> "..." "(" ExprList ")"
+              | "..." Expr
+              | Expr
 
 Expr -> BoolLiteral
       | IntLiteral
       | StringLiteral
       | Identifier
-      | Expr "(" comma_list(Expr) ")"
-      | Expr "[" comma_list(Expr) "]"
+      | Expr "(" ExprList ")"
+      | Expr "[" ExprList "]"
       | Lambda
       | "if" "(" Expr ")" Expr "else" Expr
+      | "(" Expr ")"
 
-Lambda -> LambdaArgs "=>" Expr
+Lambda -> LambdaArgs "=>" ExprListItem
 LambdaArgs -> Identifier
-            | "(" comma_list(Identifier)? ")"
+            | "(" variadic_list(Identifier, Identifier)? ")"
+
+variadic_list(Head, Tail) -> "..." Tail
+                           | comma_list(Head) ("," "..." Tail)?

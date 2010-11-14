@@ -45,6 +45,7 @@ record SourceTokens = referenceType(
 //
 
 private var punctuations = [
+    "...",
     "=>",
     "(", ")", "[", "]",
     "|",
