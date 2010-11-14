@@ -138,10 +138,10 @@ record IfExpr = ast(
 
 
 //
-// PatternList
+// ListPattern
 //
 
-alias PatternList = VariadicList[Pattern];
+alias ListPattern = VariadicList[Pattern];
 
 variant Pattern = BoolLiteral
                 | IntLiteral
@@ -152,7 +152,7 @@ variant Pattern = BoolLiteral
 
 record IndexingPattern = ast(
     base: Pattern,
-    args: PatternList,
+    args: ListPattern,
 );
 
 
@@ -181,7 +181,7 @@ record Overload = ast(
     patternVars: Vector[PatternVar],
     predicate: Maybe[Expr],
     target: Identifier,
-    argPatterns: PatternList,
+    argPatterns: ListPattern,
     body: ExprList,
 );
 

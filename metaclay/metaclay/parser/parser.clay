@@ -445,7 +445,7 @@ private var nameRefPattern = patternParser(
 
 private var indexingPattern = patternParser(
     x => IndexingPattern(move(x.0), move(x.2)),
-    sequence(nameRefPattern, punc(#"["), patternList, punc(#"]")),
+    sequence(nameRefPattern, punc(#"["), listPattern, punc(#"]")),
 );
 
 private var pattern2 = choice(
@@ -455,7 +455,7 @@ private var pattern2 = choice(
 
 private pattern(input) Maybe[Pattern] { return pattern2(input); }
 
-private var patternList2 = variadicList(
+private var listPattern2 = variadicList(
     pattern,
     modify(
         x => move(x.1),
@@ -463,11 +463,11 @@ private var patternList2 = variadicList(
     ),
 );
 
-private patternList(input) Maybe[PatternList] { return patternList2(input); }
+private listPattern(input) Maybe[ListPattern] { return listPattern2(input); }
 
-private var optPatternList = modify(
-    x => maybe(x, move, () => PatternList()),
-    optional(patternList),
+private var optListPattern = modify(
+    x => maybe(x, move, () => ListPattern()),
+    optional(listPattern),
 );
 
 
@@ -539,7 +539,7 @@ private var optPatternVarsWithPredicate = modify(
 
 private var arguments = modify(
     x => move(x.1),
-    sequence(punc(#"("), optPatternList, punc(#")")),
+    sequence(punc(#"("), optListPattern, punc(#")")),
 );
 
 private var overloadDef = topLevelItemParser(
