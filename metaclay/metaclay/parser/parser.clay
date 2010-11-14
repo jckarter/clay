@@ -445,7 +445,7 @@ private var nameRefPattern = patternParser(
 
 private var indexingPattern = patternParser(
     x => IndexingPattern(move(x.0), move(x.2)),
-    sequence(nameRefPattern, punc(#"["), listPattern, punc(#"]")),
+    sequence(nameRef, punc(#"["), listPattern, punc(#"]")),
 );
 
 private var pattern2 = choice(
