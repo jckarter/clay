@@ -59,6 +59,9 @@ clearStatement(st: SqliteStatement) { sqlite3_clear_bindings(st.handle); }
 [N, F | Integer?(N) and Float?(F)]
 bindStatement(st: SqliteStatement, n: N, value: F)
     { sqlite3_bind_double(st.handle, Int(n), Double(value)); }
+[N | Integer?(N)]
+overload bindStatement(st: SqliteStatement, n: N, value: Bool)
+    { sqlite3_bind_int(st.handle, Int(n), if (value) 1 else 0); }
 [N, I | Integer?(N) and Integer?(I)]
 overload bindStatement(st: SqliteStatement, n: N, value: I)
     { sqlite3_bind_int(st.handle, Int(n), Int(value)); }
@@ -175,6 +178,10 @@ overload next(st: SqliteStatementIterator) = st;
 [N, F | Integer?(N) and Float?(F)]
 overload index(st: SqliteStatementIterator, n: N, static F)
     = F(sqlite3_column_double(st.handle, Int(n)));
+
+[N | Integer?(N)]
+overload index(st: SqliteStatementIterator, n: N, static Bool)
+    = sqlite3_column_int(st.handle, Int(n)) != 0;
 
 [N, I | Integer?(N) and Integer?(I)]
 overload index(st: SqliteStatementIterator, n: N, static I)
