@@ -43,15 +43,42 @@ overload printReprTo(stream, x:T) {
 
 
 //
+// VariadicList
+//
+
+record VariadicList[T] (
+    items: Vector[T],
+    variadicItem: Maybe[T],
+);
+
+
+
+//
 // Identifier
 //
 
 record Identifier = ast(
-    str:String,
+    str: String,
 );
 
 [S | String?(S) and (S != String)]
 overload Identifier(x:S) = Identifier(String(x));
+
+
+
+//
+// ExprList
+//
+
+alias ExprList = Vector[ExprListItem];
+
+variant ExprListItem = UnpackExpr
+                     | Expr
+                     ;
+
+record UnpackExpr = ast(
+    expr: Expr,
+);
 
 
 
@@ -72,40 +99,60 @@ variant Expr = BoolLiteral
 overload Expr() = Expr(BoolLiteral());
 
 record BoolLiteral = ast(
-    value:Bool
+    value: Bool,
 );
 
 record IntLiteral = ast(
-    value:String
+    value: String,
 );
 
 record StringLiteral = ast(
-    value:String
+    value: String,
 );
 
 record NameRef = ast(
-    name:Identifier
+    name: Identifier,
 );
 
 record Call = ast(
-    expr:Expr,
-    args:Vector[Expr]
+    expr: Expr,
+    args: ExprList,
 );
 
 record Indexing = ast(
-    expr:Expr,
-    args:Vector[Expr]
+    expr: Expr,
+    args: ExprList,
 );
 
 record LambdaExpr = ast(
-    formalArgs:Vector[Identifier],
-    body:Expr
+    formalArgs: VariadicList[Identifier],
+    body: ExprList,
 );
 
 record IfExpr = ast(
-    condition:Expr,
-    thenPart:Expr,
-    elsePart:Expr
+    condition: Expr,
+    thenPart: Expr,
+    elsePart: Expr,
+);
+
+
+
+//
+// PatternList
+//
+
+alias PatternList = VariadicList[Pattern];
+
+variant Pattern = BoolLiteral
+                | IntLiteral
+                | StringLiteral
+                | NameRef
+                | IndexingPattern
+                ;
+
+record IndexingPattern = ast(
+    base: Pattern,
+    args: PatternList,
 );
 
 
@@ -121,7 +168,7 @@ variant TopLevelItem = Symbol
 
 record Symbol = ast(
     name: Identifier,
-    params: Vector[Identifier],
+    params: VariadicList[Identifier],
     expr: Maybe[Expr],
 );
 
@@ -131,11 +178,16 @@ record Function = ast(
 );
 
 record Overload = ast(
-    patternVars: Vector[Identifier],
+    patternVars: Vector[PatternVar],
     predicate: Maybe[Expr],
     target: Identifier,
-    argPatterns: Vector[Expr],
-    body: Expr,
+    argPatterns: PatternList,
+    body: ExprList,
+);
+
+record PatternVar = ast(
+    variadic?: Bool,
+    name: Identifier,
 );
 
 
