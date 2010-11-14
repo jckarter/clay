@@ -38,12 +38,12 @@ overload error(...e) {
 // assert
 //
 
-callbyname assert(cond:Bool) {
+callbyname assert(cond:Bool, ...message) {
     if (not cond)
-        error("assertion failed");
+        error("assertion failed: ", ...message);
 }
 
-callbyname overload assert(cond:Bool, message) {
+callbyname overload assert(cond:Bool) {
     if (not cond)
-        error("assertion failed: ", message);
+        error("assertion failed");
 }

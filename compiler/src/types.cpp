@@ -370,6 +370,39 @@ bool isPrimitiveAggregateType(TypePtr t)
     }
 }
 
+bool isPrimitiveAggregateTooLarge(TypePtr t)
+{
+    switch (t->typeKind) {
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+    case STATIC_TYPE :
+    case ENUM_TYPE :
+        return false;
+    case TUPLE_TYPE : {
+        TupleType *tt = (TupleType *)t.ptr();
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+            if (isPrimitiveAggregateTooLarge(tt->elementTypes[i]))
+                return true;
+        }
+        return false;
+    }
+    case ARRAY_TYPE : {
+        ArrayType *at = (ArrayType *)t.ptr();
+        if (at->size > 8)
+            return true;
+        if (isPrimitiveAggregateTooLarge(at->elementType))
+            return true;
+        return false;
+    }
+    default :
+        return false;
+    }
+}
+
 bool isPointerOrCodePointerType(TypePtr t)
 {
     switch (t->typeKind) {
