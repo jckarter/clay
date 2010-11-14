@@ -13,11 +13,11 @@ import metaclay.diagnostics.*;
 record SymbolHead = referenceType(
     ast: ast.Symbol,
     env: Env,
-    symbols: HashMap[Vector[Value], SymbolValue],
+    symbols: HashMap[ValueList, SymbolValue],
 );
 
 overload SymbolHead(x:ast.Symbol, env:Env) =
-    SymbolHead(x, env, HashMap[Vector[Value], SymbolValue]());
+    SymbolHead(x, env, HashMap[ValueList, SymbolValue]());
 
 record Function = referenceType(
     ast: ast.Function,
@@ -70,6 +70,8 @@ variant EnvEntry = SymbolHead
                  | Primitive
                  | Value
                  | PatternCell
+                 | ValueList
+                 | ListPatternCell
                  ;
  
 overload EnvEntry() = EnvEntry(SymbolHead());
@@ -91,7 +93,7 @@ overload newEnv() = Env(nothing(Env));
 // envAdd, envLookup
 //
 
-envAdd(env, name, entry) {
+envAdd(env, name, forward entry) {
     if (contains?(env.entries, name.str))
         genericError("name redefinition: ", name.str);
     env.entries[name.str] = EnvEntry(entry);
@@ -102,9 +104,9 @@ envLookup(env, name) {
     if (null?(ptr)) {
         if (nothing?(env.parent))
             genericError("name not found: ", name);
-        return envLookup(require(env.parent), name);
+        return ref envLookup(require(env.parent), name);
     }
-    return ptr^;
+    return ref ptr^;
 }
 
 
@@ -127,6 +129,8 @@ overload Module(name:String) = Module(name, ast.SourceAST(), Env());
 // Value
 //
 
+alias ValueList = Vector[Value];
+
 variant Value = BoolValue
               | IntValue
               | StringValue
@@ -139,6 +143,9 @@ variant Value = BoolValue
 
 overload Value() = Value(BoolValue());
 
+[T | VariantMember?(Value, T)]
+overload ValueList(forward x:T) = ValueList(Value(x));
+
 record BoolValue(value: Bool);
 record IntValue(value: Int);
 record StringValue(value: String);
@@ -149,7 +156,7 @@ record PrimitiveValue(value: Primitive);
 
 record SymbolValue = referenceType(
     head: SymbolHead,
-    params: Vector[Value],
+    params: ValueList,
     initialized?: Bool,
     body: Maybe[Value],
 );
@@ -202,7 +209,24 @@ record PatternCell = referenceType(
 
 record SymbolPattern = referenceType(
     head: SymbolHead,
-    params: Vector[Pattern],
+    params: ListPattern,
+);
+
+overload Pattern() = Pattern(Value());
+
+
+
+//
+// ListPattern
+//
+
+record ListPattern = referenceType(
+    patterns: Vector[Pattern],
+    variadicPattern: ListPatternCell,
+);
+
+record ListPatternCell = referenceType(
+    values: Maybe[ValueList],
 );
 
 
@@ -234,7 +258,7 @@ listPop(root:ListNode[T]) {
 
 record CallStackEntry (
     callable: Value,
-    args: Vector[Value],
+    args: ValueList,
 );
 
 record LocationContext (
@@ -258,7 +282,7 @@ withCurrentModule(module:Module, f) {
     }
 }
 
-withCurrentCall(callable:Value, args:Vector[Value], f) {
+withCurrentCall(callable:Value, args:ValueList, f) {
     listPush(_locationContext.calls, CallStackEntry(callable, args));
     try {
         var x = captureValues(...f());

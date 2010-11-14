@@ -81,14 +81,15 @@ private parseOctalDigit(x) {
 //
 
 symbolHasParams?(x:SymbolHead) {
-    return not empty?(x.ast.params);
+    ref p = x.ast.params;
+    return not (empty?(p.items) and nothing?(p.variadicItem));
 }
 
 symbolValue(x:SymbolHead) {
-    return symbolValue(x, Vector[Value]());
+    return symbolValue(x, ValueList());
 }
 
-overload symbolValue(x:SymbolHead, params:Vector[Value]) {
+overload symbolValue(x:SymbolHead, params:ValueList) {
     var ptr = lookup(x.symbols, params);
     if (not null?(ptr)) {
         return ptr^;
@@ -101,13 +102,64 @@ overload symbolValue(x:SymbolHead, params:Vector[Value]) {
 
 
 //
+// bindArgs
+//
+
+nArgsStr(n) {
+    if (n == 1)
+        return printString("1 argument");
+    else
+        return printString(n, " arguments");
+}
+
+ensureArity(formalArgs, args) {
+    if (nothing?(formalArgs.variadicItem)) {
+        var expected = size(formalArgs.items);
+        var received = size(args);
+        if (received != expected) {
+            genericError(
+                "expected ", nArgsStr(expected),
+                ", but received ", received
+            );
+        }
+    }
+    else {
+        var minExpected = size(formalArgs.items);
+        var received = size(args);
+        if (received < minExpected) {
+            genericError(
+                "expected atleast ", nArgsStr(minExpected),
+                ", but received ", received
+            );
+        }
+    }
+}
+
+bindArgs(env, formalArgs, args) {
+    ensureArity(formalArgs, args);
+    var env2 = newEnv(env);
+    var nFixed = size(formalArgs.items);
+    for (name, arg in zipped(formalArgs.items, slicedUpto(args, nFixed)))
+        envAdd(env2, name, arg);
+    maybe(formalArgs.variadicItem,
+        name ref=> {
+            envAdd(env2, name, ValueList(slicedFrom(args, nFixed)));
+        },
+        () => {}
+    );
+    return env2;
+}
+
+
+
+//
 // evaluateMain
 //
 
 evaluateMain(module) {
     return withCurrentModule(module, () => {
         var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
-        var mainCall = ast.Expr(ast.Call(mainRef, Vector[ast.Expr]()));
+        var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
         return evaluateExpr(mainCall, module.globals);
     });
 }
@@ -146,29 +198,19 @@ overload evaluateExpr(x:ast.StringLiteral, env) {
     return Value(StringValue(parseStringLiteral(x.value)));
 }
 overload evaluateExpr(x:ast.NameRef, env) {
-    return match(envLookup(env, x.name),
-        SymbolHead, x => {
-            if (symbolHasParams?(x))
-                return Value(SymbolHeadValue(x));
-            return Value(symbolValue(x));
-        },
-        Function, x => Value(FunctionValue(x)),
-        Primitive, x => Value(PrimitiveValue(x)),
-        Value, x => x,
-        PatternCell, x => {
-            genericError("pattern variable cannot be used in non-pattern expression");
-            return Value();
-        }
-    );
+    return envEntryToValue(envLookup(env, x.name));
 }
 overload evaluateExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
-    var args = map(y => evaluateExpr(y, env), x.args);
-    return evaluateCall(callable, args);
+    var args = evaluateExprList(x.args, env);
+    var results = evaluateCall(callable, move(args));
+    if (size(results) != 1)
+        genericError("expected 1 value, received ", size(results), " values");
+    return move(results[0]);
 }
 overload evaluateExpr(x:ast.Indexing, env) {
     var indexable = evaluateExpr(x.expr, env);
-    var args = map(y => evaluateExpr(y, env), x.args);
+    var args = evaluateExprList(x.args, env);
     return evaluateIndexing(indexable, args);
 }
 overload evaluateExpr(x:ast.LambdaExpr, env) {
@@ -184,33 +226,144 @@ overload evaluateExpr(x:ast.IfExpr, env) {
 
 
 //
+// envEntryToValue
+//
+
+procedure envEntryToValue;
+
+overload envEntryToValue(x:EnvEntry) {
+    return envEntryToValue(*x);
+}
+overload envEntryToValue(x:SymbolHead) {
+    if (symbolHasParams?(x))
+        return Value(SymbolHeadValue(x));
+    return Value(symbolValue(x));
+}
+overload envEntryToValue(x:Function) {
+    return Value(FunctionValue(x));
+}
+overload envEntryToValue(x:Primitive) {
+    return Value(PrimitiveValue(x));
+}
+overload envEntryToValue(x:Value) {
+    return x;
+}
+overload envEntryToValue(x:ValueList) {
+    genericError("multi-value used in single value context");
+    return Value();
+}
+overload envEntryToValue(x:PatternCell) {
+    genericError("pattern variable cannot be used in non-pattern expression");
+    return Value();
+}
+overload envEntryToValue(x:ListPatternCell) {
+    genericError("pattern variable cannot be used in non-pattern expression");
+    return Value();
+}
+
+
+
+//
+// evaluateExprList
+//
+
+evaluateExprList(exprList, env) {
+    var results = ValueList();
+    for (item in exprList)
+        push(results, evaluateExprListItem(item, env));
+    return move(results);
+}
+
+procedure evaluateExprListItem;
+
+overload evaluateExprListItem(x:ast.ExprListItem, env) {
+    return evaluateExprListItem(*x, env);
+}
+overload evaluateExprListItem(x:ast.Expr, env) {
+    return ValueList(evaluateExpr(x, env));
+}
+overload evaluateExprListItem(x:ast.UnpackExpr, env) {
+    return evaluateMultiExpr(x.expr, env);
+}
+
+
+
+//
+// evaluateMultiExpr
+//
+
+procedure evaluateMultiExpr;
+
+overload evaluateMultiExpr(x, env) {
+    genericError("single valued expression used in multi-value context");
+    return ValueList();
+}
+overload evaluateMultiExpr(x:ast.Expr, env) ValueList {
+    return withCurrentLocation(*x, () ref=> evaluateMultiExpr(*x, env));
+}
+overload evaluateMultiExpr(x:ast.NameRef, env) {
+    return envEntryToValueList(envLookup(env, x.name));
+}
+overload evaluateMultiExpr(x:ast.Call, env) {
+    var callable = evaluateExpr(x.expr, env);
+    var args = evaluateExprList(x.args, env);
+    return evaluateCall(callable, move(args));
+}
+
+
+
+//
+// envEntryToValueList
+//
+
+procedure envEntryToValueList;
+
+overload envEntryToValueList(x) {
+    genericError("single value used in multi-valued context");
+    return ValueList();
+}
+overload envEntryToValueList(x:EnvEntry) {
+    return envEntryToValueList(*x);
+}
+overload envEntryToValueList(x:ValueList) {
+    return x;
+}
+overload envEntryToValueList(x:PatternCell) {
+    genericError("pattern variable cannot be used in non-pattern expression");
+    return ValueList();
+}
+overload envEntryToValueList(x:ListPatternCell) {
+    genericError("pattern variable cannot be used in non-pattern expression");
+    return ValueList();
+}
+
+
+
+//
 // evaluateCall
 //
 
 procedure evaluateCall;
+
 overload evaluateCall(x, args) {
     genericError("invalid callee: ", x);
-    return Value();
+    return ValueList();
 }
 overload evaluateCall(x:Value, args) {
     return withCurrentCall(x, args, () ref=> evaluateCall(*x, args));
 }
 overload evaluateCall(x:LambdaValue, args) {
-    if (size(x.value.formalArgs) != size(args))
-        genericError("incorrect no. of arguments in call to lambda");
-    var env2 = newEnv(x.env);
-    for (name, arg in zipped(x.value.formalArgs, args))
-        envAdd(env2, name, arg);
-    return evaluateExpr(x.value.body, env2);
+    var env2 = bindArgs(x.env, x.value.formalArgs, args);
+    return evaluateExprList(x.value.body, env2);
 }
 overload evaluateCall(x:FunctionValue, args) {
     for (y in reversed(x.value.overloads)) {
         var result = matchOverload(y, args);
         if (not nothing?(result))
-            return evaluateExpr(y.ast.body, just(result));
+            return evaluateExprList(y.ast.body, just(result));
     }
     genericError("no matching operation");
-    return Value();
+    return ValueList();
 }
 overload evaluateCall(x:PrimitiveValue, args) {
     return evaluatePrimitive(x.value.kind, args);
@@ -223,6 +376,7 @@ overload evaluateCall(x:PrimitiveValue, args) {
 //
 
 procedure evaluateIndexing;
+
 overload evaluateIndexing(x, args) {
     genericError("invalid indexee: ", x);
     return Value();
@@ -232,8 +386,7 @@ overload evaluateIndexing(x:Value, args) {
 }
 overload evaluateIndexing(x:SymbolHeadValue, args) {
     var head = x.value;
-    if (size(head.ast.params) != size(args))
-        genericError("incorrect no. of arguments in indexing");
+    ensureArity(head.ast.params, args);
     return Value(symbolValue(head, args));
 }
 
@@ -244,22 +397,48 @@ overload evaluateIndexing(x:SymbolHeadValue, args) {
 //
 
 procedure evaluatePattern;
-overload evaluatePattern(x, env) {
+
+overload evaluatePattern(x:ast.Pattern, env) {
+    return withCurrentLocation(*x, () ref=> evaluatePattern(*x, env));
+}
+overload evaluatePattern(x:ast.BoolLiteral, env) {
     return Pattern(evaluateExpr(x, env));
 }
-overload evaluatePattern(x:ast.Expr, env) Pattern {
-    return evaluatePattern(*x, env);
+overload evaluatePattern(x:ast.IntLiteral, env) {
+    return Pattern(evaluateExpr(x, env));
+}
+overload evaluatePattern(x:ast.StringLiteral, env) {
+    return Pattern(evaluateExpr(x, env));
 }
 overload evaluatePattern(x:ast.NameRef, env) {
-    var entry = envLookup(env, x.name);
-    if (variantIs?(entry, PatternCell))
-        return Pattern(variantAs(entry, PatternCell));
-    return Pattern(evaluateExpr(x, env));
+    return envEntryToPattern(envLookup(env, x.name));
 }
-overload evaluatePattern(x:ast.Indexing, env) {
-    var indexable = evaluateExpr(x.expr, env);
-    var args = map(y => evaluatePattern(y, env), x.args);
-    return evaluateIndexingPattern(indexable, args);
+overload evaluatePattern(x:ast.IndexingPattern, env) {
+    var base = evaluateExpr(x.base, env);
+    var args = evaluateListPattern(x.args, env);
+    return evaluateIndexingPattern(base, args);
+}
+
+
+
+//
+// envEntryToPattern
+//
+
+procedure envEntryToPattern;
+
+overload envEntryToPattern(x) {
+    return Pattern(envEntryToValue(x));
+}
+overload envEntryToPattern(x:EnvEntry) {
+    return envEntryToPattern(*x);
+}
+overload envEntryToPattern(x:PatternCell) {
+    return Pattern(x);
+}
+overload envEntryToPattern(x:ListPatternCell) {
+    genericError("multi-pattern used in single pattern context");
+    return Pattern();
 }
 
 
@@ -269,23 +448,70 @@ overload evaluatePattern(x:ast.Indexing, env) {
 //
 
 procedure evaluateIndexingPattern;
+
 overload evaluateIndexingPattern(x, args) {
-    var toValue = y => {
-        if (not variantIs?(y, Value))
-            genericError("can't use pattern in a non-pattern expression");
-        return variantAs(y, Value);
-    };
-    var args2 = map(toValue, args);
-    return Pattern(evaluateIndexing(x, args2));
+    genericError("invalid pattern expression");
+    return Pattern();
 }
 overload evaluateIndexingPattern(x:Value, args) {
     return evaluateIndexingPattern(*x, args);
 }
 overload evaluateIndexingPattern(x:SymbolHeadValue, args) {
-    var head = x.value;
-    if (size(head.ast.params) != size(args))
-        genericError("incorrect no. of arguments for indexing");
-    return Pattern(SymbolPattern(head, args));
+    return Pattern(SymbolPattern(x.value, args));
+}
+
+
+
+//
+// evaluateListPattern
+//
+
+evaluateListPattern(x:ast.ListPattern, env) ListPattern {
+    return ListPattern(
+        map(y => evaluatePattern(y, env), x.items),
+        maybe(x.variadicItem,
+            y => evaluateListPatternCell(y, env),
+            () => ListPatternCell(Maybe(ValueList())),
+        ),
+    );
+}
+
+
+
+//
+// evaluateListPatternCell
+//
+
+procedure evaluateListPatternCell;
+
+overload evaluateListPatternCell(x, env) {
+    genericError("single value pattern used in multi-pattern context");
+    return ListPatternCell();
+}
+overload evaluateListPatternCell(x:ast.Pattern, env) {
+    return withCurrentLocation(*x, () ref=> evaluateListPatternCell(*x, env));
+}
+overload evaluateListPatternCell(x:ast.NameRef, env) {
+    return envEntryToListPatternCell(envLookup(env, x.name));
+}
+
+
+
+//
+// envEntryToListPatternCell
+//
+
+procedure envEntryToListPatternCell;
+
+overload envEntryToListPatternCell(x) {
+    genericError("single value used in multi-valued context");
+    return ListPatternCell();
+}
+overload envEntryToListPatternCell(x:EnvEntry) {
+    return envEntryToListPatternCell(*x);
+}
+overload envEntryToListPatternCell(x:ListPatternCell) {
+    return x;
 }
 
 
@@ -303,8 +529,8 @@ overload unify(p:Value, x:Value) {
 }
 overload unify(p:PatternCell, x:Value) {
     return maybe(p.value,
-        y => y == x,
-        () => {
+        y ref=> (y == x),
+        () ref=> {
             p.value = Maybe(x);
             return true;
         }
@@ -316,21 +542,60 @@ overload unify(p:SymbolPattern, x:Value) {
     var y = variantAs(x, SymbolValue);
     if (p.head != y.head)
         return false;
-    assert(size(p.params) == size(y.params));
-    for (p2, x2 in zipped(p.params, y.params)) {
-        if (not unify(p2, x2))
-            return false;
-    }
-    return true;
+    return unifyList(p.params, y.params);
 }
 
 
 
 //
-// derefCell
+// unifyList
 //
 
-derefCell(x:PatternCell) {
+unifyList(listPattern:ListPattern, values:ValueList) {
+    if (size(listPattern.patterns) > size(values))
+        return false;
+    for (pattern, value in zipped(listPattern.patterns, values))
+        if (not unify(pattern, value))
+            return false;
+    var restValues = slicedFrom(values, size(listPattern.patterns));
+    ref listCell = listPattern.variadicPattern;
+    return maybe(listCell.values,
+        v ref=> {
+            if (size(v) != size(restValues))
+                return false;
+            for (a, b in zipped(v, restValues))
+                if (a != b)
+                    return false;
+            return true;
+        },
+        () ref=> {
+            listCell.values = Maybe(ValueList(restValues));
+            return true;
+        },
+    );
+}
+
+
+
+//
+// derefPattern
+//
+
+procedure derefPattern;
+
+overload derefPattern(env, name:ast.Identifier) {
+    return withCurrentLocation(name, () ref=> {
+        return derefPattern(envLookup(env, name));
+    });
+}
+overload derefPattern(x) {
+    assert(false);
+    return Value();
+}
+overload derefPattern(x:EnvEntry) {
+    return derefPattern(*x);
+}
+overload derefPattern(x:PatternCell) {
     return maybe(x.value,
         y => y,
         () => {
@@ -343,27 +608,57 @@ derefCell(x:PatternCell) {
 
 
 //
+// derefListPattern
+//
+
+procedure derefListPattern;
+
+overload derefListPattern(env, name:ast.Identifier) {
+    return withCurrentLocation(name, () ref=> {
+        return derefListPattern(envLookup(env, name));
+    });
+}
+overload derefListPattern(x) {
+    assert(false);
+    return ValueList();
+}
+overload derefListPattern(x:EnvEntry) {
+    return derefListPattern(*x);
+}
+overload derefListPattern(x:ListPatternCell) {
+    return maybe(x.values,
+        y => y,
+        () => {
+            genericError("unbound pattern variable");
+            return ValueList();
+        },
+    );
+}
+
+
+
+//
 // matchOverload
 //
 
-matchOverload(x:Overload, args:Vector[Value]) Maybe[Env] {
-    var cells = Vector[PatternCell]();
+matchOverload(x:Overload, args:ValueList) Maybe[Env] {
     var patternEnv = newEnv(x.env);
     for (pvar in x.ast.patternVars) {
-        var cell = PatternCell(nothing(Value));
-        push(cells, cell);
-        envAdd(patternEnv, pvar, cell);
+        if (pvar.variadic?)
+            envAdd(patternEnv, pvar.name, ListPatternCell(nothing(ValueList)));
+        else
+            envAdd(patternEnv, pvar.name, PatternCell(nothing(Value)));
     }
-    if (size(x.ast.argPatterns) != size(args))
+    var argsPattern = evaluateListPattern(x.ast.argsPattern, patternEnv);
+    if (not unifyList(argsPattern, args))
         return nothing(Env);
-    for (argPattern, arg in zipped(x.ast.argPatterns, args)) {
-        var pattern = evaluatePattern(argPattern, patternEnv);
-        if (not unify(pattern, arg))
-            return nothing(Env);
-    }
     var env2 = newEnv(x.env);
-    for (pvar, cell in zipped(x.ast.patternVars, cells))
-        envAdd(env2, pvar, derefCell(cell));
+    for (pvar in x.ast.patternVars) {
+        if (pvar.variadic?)
+            envAdd(env2, pvar.name, derefListPattern(patternEnv, pvar.name));
+        else
+            envAdd(env2, pvar.name, derefPattern(patternEnv, pvar.name));
+    }
     return maybe(x.ast.predicate,
         pred => {
             if (not evaluateBool(pred, env2))
@@ -397,46 +692,46 @@ evaluatePrimitive(kind, args) {
     switch (kind) {
     case PRIM_add : {
         var a, b = ...twoInts(args);
-        return Value(IntValue(a + b));
+        return ValueList(IntValue(a + b));
     }
     case PRIM_subtract : {
         var a, b = ...twoInts(args);
-        return Value(IntValue(a - b));
+        return ValueList(IntValue(a - b));
     }
     case PRIM_multiply : {
         var a, b = ...twoInts(args);
-        return Value(IntValue(a * b));
+        return ValueList(IntValue(a * b));
     }
     case PRIM_divide : {
         var a, b = ...twoInts(args);
-        return Value(IntValue(a / b));
+        return ValueList(IntValue(a / b));
     }
     case PRIM_remainder : {
         var a, b = ...twoInts(args);
-        return Value(IntValue(a % b));
+        return ValueList(IntValue(a % b));
     }
     case PRIM_equals? : {
         var a, b = ...twoValues(args);
-        return Value(BoolValue(a == b));
+        return ValueList(BoolValue(a == b));
     }
     case PRIM_lesser? : {
         var a, b = ...twoValues(args);
         if (variantIs?(a, BoolValue) and variantIs?(b, BoolValue)) {
             var x, y = ...mapValues(v => variantAs(v, BoolValue).value, a, b);
-            return Value(BoolValue(x < y));
+            return ValueList(BoolValue(x < y));
         }
         else if (variantIs?(a, IntValue) and variantIs?(b, IntValue)) {
             var x, y = ...mapValues(v => variantAs(v, IntValue).value, a, b);
-            return Value(BoolValue(x < y));
+            return ValueList(BoolValue(x < y));
         }
         else {
             genericError("lesser? expects is applicable to Int,Int or Bool,Bool");
-            return Value();
+            return ValueList();
         }
     }
     default : {
         assert(false);
-        return Value();
+        return ValueList();
     }
     }
 }
