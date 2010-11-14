@@ -151,7 +151,7 @@ variant Pattern = BoolLiteral
                 ;
 
 record IndexingPattern = ast(
-    base: Pattern,
+    base: Expr,
     args: ListPattern,
 );
 
