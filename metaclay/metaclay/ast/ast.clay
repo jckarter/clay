@@ -181,7 +181,7 @@ record Overload = ast(
     patternVars: Vector[PatternVar],
     predicate: Maybe[Expr],
     target: Identifier,
-    argPatterns: ListPattern,
+    argsPattern: ListPattern,
     body: ExprList,
 );
 
