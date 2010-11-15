@@ -121,6 +121,8 @@ private var kw_true = keyword("true");
 private var kw_false = keyword("false");
 private var kw_if = keyword("if");
 private var kw_else = keyword("else");
+private var kw_and = keyword("and");
+private var kw_or = keyword("or");
 
 
 
@@ -293,6 +295,8 @@ private setBase2(root, field, base) {
 private setBase(x, y) { assert(false, "baseless expression!"); }
 overload setBase(x:Indexing, y) { setBase2(x, #expr, y); }
 overload setBase(x:Call,     y) { setBase2(x, #expr, y); }
+overload setBase(x:AndExpr,  y) { setBase2(x, #expr1, y); }
+overload setBase(x:OrExpr,   y) { setBase2(x, #expr1, y); }
 
 private foldTail(x) {
     var result = x.0;
@@ -327,6 +331,23 @@ private var suffixExpr = modify(
     foldTail,
     sequence(atomicExpr, zeroOrMore(suffix)),
 );
+
+
+
+//
+// and/or expr
+//
+
+private andOrOp(node, op, term) = modify(
+    foldTail,
+    sequence(term, zeroOrMore(exprParser(
+        x => node(Expr(), move(x.1)),
+        sequence(op, term),
+    ))),
+);
+
+private var andExpr = andOrOp(AndExpr, kw_and, suffixExpr);
+private var orExpr = andOrOp(OrExpr, kw_or, andExpr);
 
 
 
@@ -375,7 +396,7 @@ private var ifExpr = exprParser(
 //
 
 private var expr2 = choice(
-    ifExpr, lambdaExpr, suffixExpr,
+    ifExpr, lambdaExpr, orExpr,
 );
 
 private expr(input) Maybe[Expr] { return expr2(input); }

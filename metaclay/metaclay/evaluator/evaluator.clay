@@ -246,6 +246,18 @@ overload evaluateExpr(x:ast.Indexing, env) {
     var args = evaluateExprList(x.args, env);
     return evaluateIndexing(indexable, args);
 }
+overload evaluateExpr(x:ast.AndExpr, env) {
+    if (evaluateBool(x.expr1, env))
+        return evaluateExpr(x.expr2, env);
+    else
+        return Value(BoolValue(false));
+}
+overload evaluateExpr(x:ast.OrExpr, env) {
+    if (evaluateBool(x.expr1, env))
+        return Value(BoolValue(true));
+    else
+        return evaluateExpr(x.expr2, env);
+}
 overload evaluateExpr(x:ast.LambdaExpr, env) {
     return Value(LambdaValue(x, env));
 }
