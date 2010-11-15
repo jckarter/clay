@@ -1,0 +1,14 @@
+record DestroyedBy[Value, Destructor] (value: Value, destructor: Destructor);
+[V,D] overload RegularRecord?(static DestroyedBy[V,D]) = false;
+[V,D] overload DestroyedBy[V,D]();
+[V,D] overload destroy(d: DestroyedBy[V,D]) { d.destructor(d.value); }
+
+[V,D] overload dereference(d: DestroyedBy[V,D]) = ref d.value;
+
+record Finally[F] (destructor: F);
+[F] overload RegularRecord?(static Finally[F]) = false;
+[F] overload Finally[F]();
+[F] overload destroy(f: Finally[F]) { f.destructor(); }
+
+callbyname destroyedBy(value, destructor) = DestroyedBy(value, destructor);
+callbyname finally(destructor) = Finally(destructor);
