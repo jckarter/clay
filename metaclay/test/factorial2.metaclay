@@ -1,0 +1,9 @@
+
+[n]
+factorial(n) =
+    if (lesser?(n, 2))
+        1
+    else
+        multiply(n, factorial(subtract(n, 1)));
+
+main() = factorial(8);
