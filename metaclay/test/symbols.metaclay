@@ -1,0 +1,67 @@
+
+
+//
+// mapValues
+//
+
+function mapValues;
+[f, first, ...rest]
+overload mapValues(f, first, ...rest) = f(first), ...mapValues(f, ...rest);
+[f]
+overload mapValues(f) = ;
+
+
+
+//
+// clay types as symbols
+//
+
+symbol Bool;
+symbol Int;
+symbol Array[T,n];
+symbol Tuple[...T];
+
+symbol RecordTag;
+
+[...fields]
+recordType(...fields) = (RecordTag, fieldNames(...fields), fieldTypes(...fields));
+
+[...fields]
+fieldNames(...fields) = (...mapValues(f => tupleElement(f, 0), ...fields));
+
+[...fields]
+fieldTypes(...fields) = (...mapValues(f => tupleElement(f, 1), ...fields));
+
+[t]
+record?(t) =
+    symbolWithBody?(t)
+    and tupleWithTag?(symbolBody(t), RecordTag);
+
+[x]
+symbolWithBody?(x) = symbol?(x) and symbolHasBody?(x);
+
+[x, tag]
+tupleWithTag?(x, tag) =
+    tuple?(x)
+    and lesser?(0, tupleSize(x))
+    and equals?(tupleElement(x, 0), tag);
+
+[t | record?(t)]
+recordFieldCount(t) = tupleSize(tupleElement(symbolBody(t), 1));
+
+[t | record?(t)]
+recordFieldNames(t) = tupleElement(symbolBody(t), 1);
+
+[t | record?(t)]
+recordFieldTypes(t) = tupleElement(symbolBody(t), 2);
+
+
+symbol Point[T] = recordType(
+    ("x", T),
+    ("y", T),
+);
+
+[t | record?(t)]
+recordInfo(t) = (t, recordFieldNames(t), recordFieldTypes(t));
+
+main() = recordInfo(Point[Int]);
