@@ -13,11 +13,11 @@ import metaclay.diagnostics.*;
 record SymbolHead = referenceType(
     ast: ast.Symbol,
     env: Env,
-    symbols: HashMap[Vector[Value], SymbolValue],
+    symbols: HashMap[ValueList, SymbolValue],
 );
 
 overload SymbolHead(x:ast.Symbol, env:Env) =
-    SymbolHead(x, env, HashMap[Vector[Value], SymbolValue]());
+    SymbolHead(x, env, HashMap[ValueList, SymbolValue]());
 
 record Function = referenceType(
     ast: ast.Function,
@@ -40,13 +40,33 @@ record Overload = referenceType(
 //
 
 enum PrimitiveKind {
+    PRIM_int?,
     PRIM_add,
     PRIM_subtract,
     PRIM_multiply,
     PRIM_divide,
     PRIM_remainder,
+    PRIM_integers,
+
+    PRIM_bool?,
     PRIM_equals?,
     PRIM_lesser?,
+
+    PRIM_string?,
+    PRIM_stringSize,
+    PRIM_stringSlice,
+    PRIM_stringConcat,
+    PRIM_stringChars,
+
+    PRIM_tuple?,
+    PRIM_tuple,
+    PRIM_tupleSize,
+    PRIM_tupleElement,
+    PRIM_tupleElements,
+
+    PRIM_symbol?,
+    PRIM_symbolHasBody?,
+    PRIM_symbolBody,
 }
 
 record Primitive = referenceType(
@@ -70,6 +90,8 @@ variant EnvEntry = SymbolHead
                  | Primitive
                  | Value
                  | PatternCell
+                 | ValueList
+                 | ListPatternCell
                  ;
  
 overload EnvEntry() = EnvEntry(SymbolHead());
@@ -91,7 +113,7 @@ overload newEnv() = Env(nothing(Env));
 // envAdd, envLookup
 //
 
-envAdd(env, name, entry) {
+envAdd(env, name, forward entry) {
     if (contains?(env.entries, name.str))
         genericError("name redefinition: ", name.str);
     env.entries[name.str] = EnvEntry(entry);
@@ -102,9 +124,9 @@ envLookup(env, name) {
     if (null?(ptr)) {
         if (nothing?(env.parent))
             genericError("name not found: ", name);
-        return envLookup(require(env.parent), name);
+        return ref envLookup(require(env.parent), name);
     }
-    return ptr^;
+    return ref ptr^;
 }
 
 
@@ -124,12 +146,47 @@ overload Module(name:String) = Module(name, ast.SourceAST(), Env());
 
 
 //
+// ValueList
+//
+
+record ValueList(
+    data: SharedPointer[Vector[Value]],
+);
+
+overload ValueList() = ValueList(new Vector[Value]());
+
+[A | Sequence?(A) and (SequenceElementType(A) == Value)]
+overload ValueList(forward a:A) = ValueList(new Vector[Value](a));
+
+[...A | equalValues?(Value, ...A)]
+callbyname overload ValueList(...elements:A) =
+    ValueList(new Vector[Value](...elements));
+
+[T | VariantMember?(Value, T)]
+overload ValueList(forward x:T) = ValueList(Value(x));
+
+overload size(x:ValueList) = size(x.data^);
+overload index(x:ValueList, i) = ref index(x.data^, i);
+overload begin(x:ValueList) = begin(x.data^);
+overload end(x:ValueList) = end(x.data^);
+overload iterator(x:ValueList) = iterator(x.data^);
+overload push(x:ValueList, forward ...a) { push(x.data^, ...a); }
+overload hash(x:ValueList) = hash(x.data^);
+overload equals?(a:ValueList, b:ValueList) = equals?(a.data^, b.data^);
+overload printTo(stream, x:ValueList) {
+    printTo(stream, x.data^);
+}
+
+
+
+//
 // Value
 //
 
 variant Value = BoolValue
               | IntValue
               | StringValue
+              | TupleValue
               | LambdaValue
               | SymbolHeadValue
               | FunctionValue
@@ -142,6 +199,7 @@ overload Value() = Value(BoolValue());
 record BoolValue(value: Bool);
 record IntValue(value: Int);
 record StringValue(value: String);
+record TupleValue(elements: ValueList);
 record LambdaValue(value: ast.LambdaExpr, env: Env);
 record SymbolHeadValue(value: SymbolHead);
 record FunctionValue(value: Function);
@@ -149,7 +207,7 @@ record PrimitiveValue(value: Primitive);
 
 record SymbolValue = referenceType(
     head: SymbolHead,
-    params: Vector[Value],
+    params: ValueList,
     initialized?: Bool,
     body: Maybe[Value],
 );
@@ -166,6 +224,18 @@ overload printTo(stream, x:IntValue) {
 }
 overload printTo(stream, x:StringValue) {
     printReprTo(stream, x.value);
+}
+overload printTo(stream, x:TupleValue) {
+    printTo(stream, "(");
+    var first = true;
+    for (element in x.elements) {
+        if (first)
+            first = false;
+        else
+            printTo(stream, ", ");
+        printTo(stream, element);
+    }
+    printTo(stream, ")");
 }
 overload printTo(stream, x:LambdaValue) {
     printTo(stream, "<lambda>");
@@ -185,6 +255,15 @@ overload printTo(stream, x:SymbolValue) {
         printTo(stream, x.params);
 }
 
+[T | VariantMember?(Value, T)]
+overload printReprTo(stream, x:T) {
+    printTo(stream, x);
+}
+
+overload printReprTo(stream, x:Value) {
+    printReprTo(stream, *x);
+}
+
 
 
 //
@@ -202,7 +281,24 @@ record PatternCell = referenceType(
 
 record SymbolPattern = referenceType(
     head: SymbolHead,
-    params: Vector[Pattern],
+    params: ListPattern,
+);
+
+overload Pattern() = Pattern(Value());
+
+
+
+//
+// ListPattern
+//
+
+record ListPattern = referenceType(
+    patterns: Vector[Pattern],
+    variadicPattern: ListPatternCell,
+);
+
+record ListPatternCell = referenceType(
+    values: Maybe[ValueList],
 );
 
 
@@ -234,7 +330,7 @@ listPop(root:ListNode[T]) {
 
 record CallStackEntry (
     callable: Value,
-    args: Vector[Value],
+    args: ValueList,
 );
 
 record LocationContext (
@@ -258,7 +354,7 @@ withCurrentModule(module:Module, f) {
     }
 }
 
-withCurrentCall(callable:Value, args:Vector[Value], f) {
+withCurrentCall(callable:Value, args:ValueList, f) {
     listPush(_locationContext.calls, CallStackEntry(callable, args));
     try {
         var x = captureValues(...f());

@@ -1,0 +1,37 @@
+
+
+//
+// mapValues
+//
+
+function mapValues;
+
+[f, first, ...rest]
+overload mapValues(f, first, ...rest) = f(first), ...mapValues(f, ...rest);
+
+[f]
+overload mapValues(f) = ;
+
+
+
+//
+// stringChar, reverseString
+//
+
+[s, i]
+stringChar(s, i) = stringSlice(s, i, add(i, 1));
+
+[s]
+reverseString(s) =
+    stringConcat(...mapValues(
+        i => stringChar(s, subtract(stringSize(s), add(i,1))),
+        ...integers(stringSize(s)),
+    ));
+
+
+
+//
+// main
+//
+
+main() = reverseString("foobar");

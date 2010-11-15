@@ -40,7 +40,7 @@ private initializeGlobals(module) {
 }
 
 private envLookupFunction(env, name) {
-    var entry = envLookup(env, name);
+    ref entry = envLookup(env, name);
     if (not variantIs?(entry, Function))
         genericError("expecting a function '", name, "' name, but received: ", entry);
     return variantAs(entry, Function);
