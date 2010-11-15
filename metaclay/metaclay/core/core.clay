@@ -255,6 +255,15 @@ overload printTo(stream, x:SymbolValue) {
         printTo(stream, x.params);
 }
 
+[T | VariantMember?(Value, T)]
+overload printReprTo(stream, x:T) {
+    printTo(stream, x);
+}
+
+overload printReprTo(stream, x:Value) {
+    printReprTo(stream, *x);
+}
+
 
 
 //
