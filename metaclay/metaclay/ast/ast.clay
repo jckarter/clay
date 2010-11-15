@@ -93,6 +93,8 @@ variant Expr = BoolLiteral
              | TupleExpr
              | Call
              | Indexing
+             | AndExpr
+             | OrExpr
              | LambdaExpr
              | IfExpr
              ;
@@ -127,6 +129,16 @@ record Call = ast(
 record Indexing = ast(
     expr: Expr,
     args: ExprList,
+);
+
+record AndExpr = ast(
+    expr1: Expr,
+    expr2: Expr,
+);
+
+record OrExpr = ast(
+    expr1: Expr,
+    expr2: Expr,
 );
 
 record LambdaExpr = ast(

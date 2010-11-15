@@ -58,6 +58,7 @@ private var keywords = [
     "overload", "static",
     "true", "false",
     "if", "else",
+    "and", "or",
 ];
 
 punctuationIndex(s) Int {
