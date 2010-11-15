@@ -1,0 +1,17 @@
+import destructors.*;
+
+var destroyed = false;
+
+destroyThingy(x) { println("destroying ", x); destroyed = true; }
+
+scope() {
+    var x = finally(() => { println("scope finished"); });
+    var y = destroyedBy(5, destroyThingy);
+    
+    println("scope working");
+}
+
+main() {
+    scope();
+    println("destroyed? ", destroyed);
+}
