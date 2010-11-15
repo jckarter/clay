@@ -40,27 +40,32 @@ record Overload = referenceType(
 //
 
 enum PrimitiveKind {
+    PRIM_int?,
     PRIM_add,
     PRIM_subtract,
     PRIM_multiply,
     PRIM_divide,
     PRIM_remainder,
-
     PRIM_integers,
 
+    PRIM_bool?,
     PRIM_equals?,
     PRIM_lesser?,
 
+    PRIM_string?,
     PRIM_stringSize,
     PRIM_stringSlice,
     PRIM_stringConcat,
     PRIM_stringChars,
 
+    PRIM_tuple?,
     PRIM_tuple,
     PRIM_tupleSize,
     PRIM_tupleElement,
     PRIM_tupleElements,
 
+    PRIM_symbol?,
+    PRIM_symbolHasBody?,
     PRIM_symbolBody,
 }
 

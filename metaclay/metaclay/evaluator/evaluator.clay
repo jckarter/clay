@@ -99,7 +99,7 @@ overload symbolValue(x:SymbolHead, params:ValueList) {
     return y;
 }
 
-symbolBody(x:SymbolValue) {
+private initializeSymbol(x:SymbolValue) {
     if (not x.initialized?) {
         // FIXME: check for recursion
         x.body = maybe(x.head.ast.expr,
@@ -111,6 +111,15 @@ symbolBody(x:SymbolValue) {
         );
         x.initialized? = true;
     }
+}
+
+symbolHasBody?(x:SymbolValue) {
+    initializeSymbol(x);
+    return not nothing?(x.body);
+}
+
+symbolBody(x:SymbolValue) {
+    initializeSymbol(x);
     return maybe(x.body,
         x => x,
         () => {
@@ -786,6 +795,10 @@ private oneSymbol(args) {
 
 evaluatePrimitive(kind, args) {
     switch (kind) {
+    case PRIM_int? : {
+        var a = oneValue(args);
+        return ValueList(BoolValue(variantIs?(a, IntValue)));
+    }
     case PRIM_add : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a + b));
@@ -806,7 +819,6 @@ evaluatePrimitive(kind, args) {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a % b));
     }
-
     case PRIM_integers : {
         var a = oneInt(args);
         if (a < 0)
@@ -814,6 +826,10 @@ evaluatePrimitive(kind, args) {
         return ValueList(mapped(i => Value(IntValue(i)), range(a)));
     }
 
+    case PRIM_bool? : {
+        var a = oneValue(args);
+        return ValueList(BoolValue(variantIs?(a, BoolValue)));
+    }
     case PRIM_equals? : {
         var a, b = ...twoValues(args);
         return ValueList(BoolValue(a == b));
@@ -834,6 +850,10 @@ evaluatePrimitive(kind, args) {
         }
     }
 
+    case PRIM_string? : {
+        var a = oneValue(args);
+        return ValueList(BoolValue(variantIs?(a, StringValue)));
+    }
     case PRIM_stringSize : {
         var s = oneString(args);
         return ValueList(IntValue(Int(size(s))));
@@ -854,6 +874,10 @@ evaluatePrimitive(kind, args) {
         return ValueList(StringValue(move(result)));
     }
 
+    case PRIM_tuple? : {
+        var a = oneValue(args);
+        return ValueList(BoolValue(variantIs?(a, TupleValue)));
+    }
     case PRIM_tuple : {
         return ValueList(TupleValue(args));
     }
@@ -871,6 +895,14 @@ evaluatePrimitive(kind, args) {
         return oneTuple(args);
     }
 
+    case PRIM_symbol? : {
+        var a = oneValue(args);
+        return ValueList(BoolValue(variantIs?(a, SymbolValue)));
+    }
+    case PRIM_symbolHasBody? : {
+        var a = oneSymbol(args);
+        return ValueList(BoolValue(symbolHasBody?(a)));
+    }
     case PRIM_symbolBody : {
         var a = oneSymbol(args);
         return ValueList(symbolBody(a));

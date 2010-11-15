@@ -1,6 +1,7 @@
 
 numeric primitives:
 
+int?(x) Bool
 add(a:Int, b:Int) Int
 subtract(a:Int, b:Int) Int
 multiply(a:Int, b:Int) Int
@@ -9,17 +10,22 @@ remainder(a:Int, b:Int) Int
 
 integers(n:Int) ...
 
+bool?(x) Bool
 equals?(a, b) Bool
 lesser?(a:Int, b:Int) Bool
 lesser?(a:Bool, b:Bool) Bool
 
+string?(x) Bool
 stringSize(s:String) Int
 stringSlice(s:String, start:Int, end:Int) String
 stringConcat(...strings) String
 
+tuple?(x) Bool
 tuple(...values) Tuple
 tupleSize(s:Tuple) Int
 tupleElement(s:Tuple, i:Int) x
 tupleElements(s:Tuple) ...
 
+symbol?(x)
+symbolHasBody?(x)
 symbolBody(x:Symbol) value
