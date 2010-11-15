@@ -29,10 +29,10 @@ mapTuple(f, a) = tuple(...mapValues(f, ...tupleElements(a)));
 
 [a]
 reverseTuple(a) =
-    tuple(...mapValues(
+    mapTuple(
         i => tupleElement(a, subtract(tupleSize(a), add(i,1))),
-        ...integers(tupleSize(a)),
-    ));
+        tuple(...integers(tupleSize(a))),
+    );
 
 
 
