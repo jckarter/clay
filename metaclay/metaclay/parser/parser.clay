@@ -263,7 +263,14 @@ private var nameRef = exprParser(
     identifier,
 );
 
-private var atomicExpr = choice(nameRef, literalExpr);
+private var bracketedExpr = modify(
+    x => move(x.1),
+    sequence(punc(#"("), expr, punc(#")")),
+);
+
+private var atomicExpr = choice(
+    nameRef, literalExpr, bracketedExpr,
+);
 
 
 
