@@ -19,7 +19,7 @@ overload mapValues(f) = ;
 //
 
 [f, a]
-mapTuple(f, a) = tuple(...mapValues(f, ...tupleElements(a)));
+mapTuple(f, a) = (...mapValues(f, ...tupleElements(a)));
 
 
 
@@ -31,7 +31,7 @@ mapTuple(f, a) = tuple(...mapValues(f, ...tupleElements(a)));
 reverseTuple(a) =
     mapTuple(
         i => tupleElement(a, subtract(tupleSize(a), add(i,1))),
-        tuple(...integers(tupleSize(a))),
+        (...integers(tupleSize(a))),
     );
 
 
@@ -40,4 +40,4 @@ reverseTuple(a) =
 // main
 //
 
-main() = reverseTuple(tuple(1, 2, true, false, "foo"));
+main() = reverseTuple((1, 2, true, false, "foo"));

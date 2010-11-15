@@ -90,6 +90,7 @@ variant Expr = BoolLiteral
              | IntLiteral
              | StringLiteral
              | NameRef
+             | TupleExpr
              | Call
              | Indexing
              | LambdaExpr
@@ -112,6 +113,10 @@ record StringLiteral = ast(
 
 record NameRef = ast(
     name: Identifier,
+);
+
+record TupleExpr = ast(
+    args: ExprList,
 );
 
 record Call = ast(

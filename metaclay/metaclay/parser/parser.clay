@@ -268,8 +268,13 @@ private var bracketedExpr = modify(
     sequence(punc(#"("), expr, punc(#")")),
 );
 
+private var tupleExpr = exprParser(
+    x => TupleExpr(move(x.1)),
+    sequence(punc(#"("), optExprList, punc(#")")),
+);
+
 private var atomicExpr = choice(
-    nameRef, literalExpr, bracketedExpr,
+    nameRef, literalExpr, bracketedExpr, tupleExpr,
 );
 
 
