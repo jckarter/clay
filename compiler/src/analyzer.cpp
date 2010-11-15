@@ -1883,7 +1883,8 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
         Switch *x = (Switch *)stmt.ptr();
         if (!x->desugared)
             x->desugared = desugarSwitchStatement(x);
-        return analyzeStatement(x->desugared, env, ctx);
+        analyzeStatement(x->desugared, env, ctx);
+        return SA_FALLTHROUGH;
     }
 
     case CASE_BODY : {
