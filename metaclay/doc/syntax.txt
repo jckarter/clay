@@ -41,6 +41,7 @@ Expr -> BoolLiteral
       | Lambda
       | "if" "(" Expr ")" Expr "else" Expr
       | "(" Expr ")"
+      | "(" ExprList ")"
 
 Lambda -> LambdaArgs "=>" ExprListItem
 LambdaArgs -> Identifier
