@@ -141,10 +141,42 @@ overload Module(name:String) = Module(name, ast.SourceAST(), Env());
 
 
 //
-// Value
+// ValueList
 //
 
-alias ValueList = Vector[Value];
+record ValueList(
+    data: SharedPointer[Vector[Value]],
+);
+
+overload ValueList() = ValueList(new Vector[Value]());
+
+[A | Sequence?(A) and (SequenceElementType(A) == Value)]
+overload ValueList(forward a:A) = ValueList(new Vector[Value](a));
+
+[...A | equalValues?(Value, ...A)]
+callbyname overload ValueList(...elements:A) =
+    ValueList(new Vector[Value](...elements));
+
+[T | VariantMember?(Value, T)]
+overload ValueList(forward x:T) = ValueList(Value(x));
+
+overload size(x:ValueList) = size(x.data^);
+overload index(x:ValueList, i) = ref index(x.data^, i);
+overload begin(x:ValueList) = begin(x.data^);
+overload end(x:ValueList) = end(x.data^);
+overload iterator(x:ValueList) = iterator(x.data^);
+overload push(x:ValueList, forward ...a) { push(x.data^, ...a); }
+overload hash(x:ValueList) = hash(x.data^);
+overload equals?(a:ValueList, b:ValueList) = equals?(a.data^, b.data^);
+overload printTo(stream, x:ValueList) {
+    printTo(stream, x.data^);
+}
+
+
+
+//
+// Value
+//
 
 variant Value = BoolValue
               | IntValue
@@ -158,9 +190,6 @@ variant Value = BoolValue
               ;
 
 overload Value() = Value(BoolValue());
-
-[T | VariantMember?(Value, T)]
-overload ValueList(forward x:T) = ValueList(Value(x));
 
 record BoolValue(value: Bool);
 record IntValue(value: Int);
