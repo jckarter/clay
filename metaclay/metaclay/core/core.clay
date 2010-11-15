@@ -45,8 +45,23 @@ enum PrimitiveKind {
     PRIM_multiply,
     PRIM_divide,
     PRIM_remainder,
+
+    PRIM_integers,
+
     PRIM_equals?,
     PRIM_lesser?,
+
+    PRIM_stringSize,
+    PRIM_stringSlice,
+    PRIM_stringConcat,
+    PRIM_stringChars,
+
+    PRIM_tuple,
+    PRIM_tupleSize,
+    PRIM_tupleElement,
+    PRIM_tupleElements,
+
+    PRIM_symbolBody,
 }
 
 record Primitive = referenceType(
@@ -134,6 +149,7 @@ alias ValueList = Vector[Value];
 variant Value = BoolValue
               | IntValue
               | StringValue
+              | TupleValue
               | LambdaValue
               | SymbolHeadValue
               | FunctionValue
@@ -149,6 +165,7 @@ overload ValueList(forward x:T) = ValueList(Value(x));
 record BoolValue(value: Bool);
 record IntValue(value: Int);
 record StringValue(value: String);
+record TupleValue(elements: ValueList);
 record LambdaValue(value: ast.LambdaExpr, env: Env);
 record SymbolHeadValue(value: SymbolHead);
 record FunctionValue(value: Function);
@@ -173,6 +190,18 @@ overload printTo(stream, x:IntValue) {
 }
 overload printTo(stream, x:StringValue) {
     printReprTo(stream, x.value);
+}
+overload printTo(stream, x:TupleValue) {
+    printTo(stream, "(");
+    var first = true;
+    for (element in x.elements) {
+        if (first)
+            first = false;
+        else
+            printTo(stream, ", ");
+        printTo(stream, element);
+    }
+    printTo(stream, ")");
 }
 overload printTo(stream, x:LambdaValue) {
     printTo(stream, "<lambda>");

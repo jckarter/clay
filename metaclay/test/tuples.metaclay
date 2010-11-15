@@ -1,0 +1,43 @@
+
+
+//
+// mapValues
+//
+
+function mapValues;
+
+[f, first, ...rest]
+overload mapValues(f, first, ...rest) = f(first), ...mapValues(f, ...rest);
+
+[f]
+overload mapValues(f) = ;
+
+
+
+//
+// mapTuple
+//
+
+[f, a]
+mapTuple(f, a) = tuple(...mapValues(f, ...tupleElements(a)));
+
+
+
+//
+// reverseTuple
+//
+
+[a]
+reverseTuple(a) =
+    tuple(...mapValues(
+        i => tupleElement(a, subtract(tupleSize(a), add(i,1))),
+        ...integers(tupleSize(a)),
+    ));
+
+
+
+//
+// main
+//
+
+main() = reverseTuple(tuple(1, 2, true, false, "foo"));

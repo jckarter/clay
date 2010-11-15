@@ -99,6 +99,27 @@ overload symbolValue(x:SymbolHead, params:ValueList) {
     return y;
 }
 
+symbolBody(x:SymbolValue) {
+    if (not x.initialized?) {
+        // FIXME: check for recursion
+        x.body = maybe(x.head.ast.expr,
+            expr ref=> {
+                var env = bindArgs(x.head.env, x.head.ast.params, x.params);
+                return Maybe(evaluateExpr(expr, env));
+            },
+            () => nothing(Value),
+        );
+        x.initialized? = true;
+    }
+    return maybe(x.body,
+        x => x,
+        () => {
+            genericError("symbol does not have a body");
+            return Value();
+        },
+    );
+}
+
 
 
 //
@@ -675,17 +696,89 @@ matchOverload(x:Overload, args:ValueList) Maybe[Env] {
 // evaluatePrimitive
 //
 
-twoValues(args) {
+private oneValue(args) {
+    if (size(args) != 1)
+        genericError("expecting one argument");
+    return args[0];
+}
+
+private twoValues(args) {
     if (size(args) != 2)
         genericError("expecting two arguments");
     return args[0], args[1];
 }
 
-twoInts(args) {
+private threeValues(args) {
+    if (size(args) != 3)
+        genericError("expecting three arguments");
+    return args[0], args[1], args[2];
+}
+
+private oneInt(args) {
+    var a = oneValue(args);
+    if (not variantIs?(a, IntValue))
+        genericError("expecting one integer");
+    return variantAs(a, IntValue).value;
+}
+
+private twoInts(args) {
     var a, b = ...twoValues(args);
     if (not variantIs?(a, IntValue) or not variantIs?(b, IntValue))
         genericError("expecting two integers");
     return variantAs(a, IntValue).value, variantAs(b, IntValue).value;
+}
+
+private oneString(args) {
+    var a = oneValue(args);
+    if (not variantIs?(a, StringValue))
+        genericError("expecting one string");
+    return variantAs(a, StringValue).value;
+}
+
+private stringIntInt(args) {
+    var a, b, c = ...threeValues(args);
+    if (not variantIs?(a, StringValue)
+        or not variantIs?(b, IntValue)
+        or not variantIs?(c, IntValue))
+    {
+        genericError("expecting a string, and two Ints");
+    }
+    return ...(
+        variantAs(a, StringValue).value,
+        variantAs(b, IntValue).value,
+        variantAs(c, IntValue).value,
+    );
+}
+
+private nStrings(args) {
+    var result = Vector[String]();
+    for (i, x in enumerated(args)) {
+        if (not variantIs?(x, StringValue))
+            genericError("expecting a string, but received: ", x);
+        push(result, variantAs(x, StringValue).value);
+    }
+    return move(result);
+}
+
+private oneTuple(args) {
+    var a = oneValue(args);
+    if (not variantIs?(a, TupleValue))
+        genericError("expecting a tuple, but received: ", a);
+    return variantAs(a, TupleValue).elements;
+}
+
+private tupleInt(args) {
+    var a, b = ...twoValues(args);
+    if (not variantIs?(a, TupleValue) or not variantIs?(b, IntValue))
+        genericError("expecting a tuple and a int");
+    return variantAs(a, TupleValue).elements, variantAs(b, IntValue).value;
+}
+
+private oneSymbol(args) {
+    var a = oneValue(args);
+    if (not variantIs?(a, SymbolValue))
+        genericError("expecting a symbol, but received: ", a);
+    return variantAs(a, SymbolValue);
 }
 
 evaluatePrimitive(kind, args) {
@@ -710,6 +803,14 @@ evaluatePrimitive(kind, args) {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a % b));
     }
+
+    case PRIM_integers : {
+        var a = oneInt(args);
+        if (a < 0)
+            genericError("expecting a non-negative integer");
+        return ValueList(mapped(i => Value(IntValue(i)), range(a)));
+    }
+
     case PRIM_equals? : {
         var a, b = ...twoValues(args);
         return ValueList(BoolValue(a == b));
@@ -729,6 +830,49 @@ evaluatePrimitive(kind, args) {
             return ValueList();
         }
     }
+
+    case PRIM_stringSize : {
+        var s = oneString(args);
+        return ValueList(IntValue(Int(size(s))));
+    }
+    case PRIM_stringSlice : {
+        var s, i, j = ...stringIntInt(args);
+        if ((i < 0) or (i > size(s)))
+            genericError("invalid starting index: ", i);
+        if ((j < i) or (j > size(s)))
+            genericError("invalid ending index: ", j);
+        return ValueList(StringValue(slice(s, i, j)));
+    }
+    case PRIM_stringConcat : {
+        var a = nStrings(args);
+        var result = String();
+        for (s in a)
+            push(result, move(s));
+        return ValueList(StringValue(move(result)));
+    }
+
+    case PRIM_tuple : {
+        return ValueList(TupleValue(args));
+    }
+    case PRIM_tupleSize : {
+        var a = oneTuple(args);
+        return ValueList(IntValue(Int(size(a))));
+    }
+    case PRIM_tupleElement : {
+        var a, i = ...tupleInt(args);
+        if ((i < 0) or (i > size(a)))
+            genericError("tuple index out of range");
+        return ValueList(a[i]);
+    }
+    case PRIM_tupleElements : {
+        return oneTuple(args);
+    }
+
+    case PRIM_symbolBody : {
+        var a = oneSymbol(args);
+        return ValueList(symbolBody(a));
+    }
+
     default : {
         assert(false);
         return ValueList();
