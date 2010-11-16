@@ -369,3 +369,6 @@ overload PODType?(static Float64) = true;
 
 [R | RegularRecord?(R)] overload PODType?(static R)
     = allValues?(PODType?, ...RecordFieldTypes(R));
+
+[V | Variant?(V)] overload PODType?(static V)
+    = allValues?(PODType?, ...VariantMembers(V));
