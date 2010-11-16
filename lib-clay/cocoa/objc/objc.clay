@@ -233,6 +233,9 @@ overload Retained(obj: O) = Retained[O](obj);
 [O | ObjectType?(O)]
 overload Retained(forward obj: Retained[O]) = Retained[O](obj);
 
+[O | ObjectType?(O)]
+weak(obj: Retained[O]) = O(obj);
+
 // assigning managed <-> unmanaged
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
 overload assign(left: Retained[O1], right: O2) {
