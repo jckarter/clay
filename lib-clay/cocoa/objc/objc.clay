@@ -186,6 +186,18 @@ overload nil() = nil(Id);
 [T | ObjectParameterType?(T) and T != Id and T != ObjectHandle]
 overload Id(object: T) = Id(objectHandle(object));
 
+
+
+//
+// cast between raw pointer and object types
+//
+
+[O | ObjectType?(O)]
+overload RawPointer(o: O) = RawPointer(o.__handle__);
+[O | ObjectType?(O)]
+overload O(o: RawPointer) = O(ObjectHandle(o));
+
+
 
 //
 // managed object references
