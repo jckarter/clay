@@ -548,14 +548,9 @@ private var optStaticParams = modify(
 );
 
 private var symbolDef = topLevelItemParser(
-    x => Symbol(move(x.1), move(x.2), nothing(Expr)),
-    sequence(kw_symbol, identifier, optStaticParams, punc(#";")),
-);
-
-private var symbolDefWithBody = topLevelItemParser(
-    x => Symbol(move(x.1), move(x.2), Maybe(move(x.4))),
+    x => Symbol(move(x.1), move(x.2), move(x.4)),
     sequence(
-        optional(kw_symbol), identifier, optStaticParams,
+        kw_symbol, identifier, optStaticParams,
         punc(#"="), expr, punc(#";")
     ),
 );
@@ -594,8 +589,7 @@ private var functionDefWithBody = topLevelItemParser(
 );
 
 private var topLevelItem = choice(
-    symbolDef, symbolDefWithBody, functionDef,
-    overloadDef, functionDefWithBody,
+    symbolDef, functionDef, overloadDef, functionDefWithBody,
 );
 
 

@@ -4,8 +4,7 @@
 // top level
 //
 
-GlobalSymbol -> "symbol" Identifier StaticParams? ";"
-GlobalSymbolWithBody -> "symbol"? Identifier StaticParams? "=" Expr ";"
+GlobalSymbol -> "symbol" Identifier StaticParams? "=" Expr ";"
 StaticParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 
 Function -> "function" Identifier ";"

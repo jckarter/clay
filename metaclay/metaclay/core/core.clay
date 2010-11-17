@@ -71,7 +71,6 @@ enum PrimitiveKind {
     PRIM_tupleElements,
 
     PRIM_symbol?,
-    PRIM_symbolHasBody?,
     PRIM_symbolBody,
 }
 
@@ -214,7 +213,6 @@ record PrimitiveValue(value: Primitive);
 record SymbolValue = referenceType(
     head: SymbolHead,
     params: ValueList,
-    initialized?: Bool,
     body: Maybe[Value],
 );
 

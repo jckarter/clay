@@ -192,7 +192,7 @@ variant TopLevelItem = Symbol
 record Symbol = ast(
     name: Identifier,
     params: VariadicList[Identifier],
-    expr: Maybe[Expr],
+    expr: Expr,
 );
 
 record Function = ast(
