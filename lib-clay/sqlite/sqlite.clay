@@ -193,12 +193,22 @@ overload index(st: SqliteStatementIterator, n: N, static I)
     = I(sqlite3_column_int64(st.handle, Int(n)));
 
 [N, S | Integer?(N) and String?(S)]
-overload index(st: SqliteStatementIterator, n: N, static S)
-    = S(CStringRef(sqlite3_column_text(st.handle, Int(n))));
+overload index(st: SqliteStatementIterator, n: N, static S) {
+    var cstr = sqlite3_column_text(st.handle, Int(n));
+    if (null?(cstr))
+        return S();
+    else
+        return S(CStringRef(cstr));
+}
 
 [N | Integer?(N)]
-overload index(st: SqliteStatementIterator, n: N, static CStringRef)
-    = CStringRef(sqlite3_column_text(st.handle, Int(n)));
+overload index(st: SqliteStatementIterator, n: N, static CStringRef) {
+    var cstr = sqlite3_column_text(st.handle, Int(n));
+    if (null?(cstr))
+        return CStringRef(cstring(""));
+    else
+        return CStringRef(cstr);
+}
 
 [N | Integer?(N)]
 overload index(st: SqliteStatementIterator, n: N)

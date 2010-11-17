@@ -36,3 +36,4 @@ selecting table
   values: 2, zang
   values: 3, zung
 dropping table
+null string: 
