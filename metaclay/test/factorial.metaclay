@@ -1,6 +1,6 @@
 
 function factorial;
-[n] overload factorial(n) = multiply(n, factorial(subtract(n, 1)));
+overload factorial('n) = multiply('n, factorial(subtract('n, 1)));
 overload factorial(1) = 1;
 overload factorial(0) = 1;
 
