@@ -5,12 +5,7 @@ StRet?(type) = false;
 //Fp2Ret?(type) = false;
 
 // XXX not tested!
-private ReturnInRegisters?(T)
-    = RegularRecord?(T)
-      and inValues?(TypeSize(T), 1, 2, 4, 8);
-
-[T | Record?(T) and not ReturnInRegisters?(T)]
-overload StRet?(static T) = true;
+[T | Type?(T)] overload StRet?(static T) = not inValues?(TypeSize(T), 1, 2, 4, 8);
 
 external __CFConstantStringClassReference : Opaque;
 

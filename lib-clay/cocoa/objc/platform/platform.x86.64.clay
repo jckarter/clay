@@ -7,13 +7,7 @@ StRet?(type) = false;
 //overload FpRet?(static Float80) = true;
 //overload Fp2Ret?(static Complex[Float80]) = true;
 
-// note: structs never return in registers on linux, netbsd, solaris
-ReturnInRegisters?(T)
-    = RegularRecord?(T)
-      and TypeSize(T) < 16;
-
-[T | Record?(T) and not ReturnInRegisters?(T)]
-overload StRet?(static T) = true;
+[T | Type?(T)] overload StRet?(static T) = TypeSize(T) > 16;
 
 external __CFConstantStringClassReference : Opaque;
 
