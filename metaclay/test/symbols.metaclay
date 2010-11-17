@@ -15,7 +15,7 @@ overload mapValues('f) = ;
 //
 
 symbol Bool = ();
-symbol  Int = ();
+symbol Int = ();
 symbol Array['T, 'n] = ();
 symbol Tuple[...'T] = ();
 

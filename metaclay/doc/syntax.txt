@@ -4,8 +4,8 @@
 // top level
 //
 
-GlobalSymbol -> "symbol" Identifier StaticParams? "=" Expr ";"
-StaticParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
+GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
+SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 
 Function -> "function" Identifier ";"
 Overload -> "overload" Identifier "(" PatternList? ")" Predicate? "=" ExprList ";"

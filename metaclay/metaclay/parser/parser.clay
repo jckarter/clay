@@ -537,20 +537,20 @@ private var variadicPatternVarList = variadicList(
     ),
 );
 
-private var staticParams = modify(
+private var symbolParams = modify(
     x => move(x.1),
     sequence(punc(#"["), variadicPatternVarList, punc(#"]")),
 );
 
-private var optStaticParams = modify(
+private var optSymbolParams = modify(
     x => maybe(x, move, () => VariadicList[Identifier]()),
-    optional(staticParams),
+    optional(symbolParams),
 );
 
 private var symbolDef = topLevelItemParser(
     x => Symbol(move(x.1), move(x.2), move(x.4)),
     sequence(
-        kw_symbol, identifier, optStaticParams,
+        kw_symbol, identifier, optSymbolParams,
         punc(#"="), expr, punc(#";")
     ),
 );
