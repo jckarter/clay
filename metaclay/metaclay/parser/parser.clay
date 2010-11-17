@@ -265,6 +265,11 @@ private var nameRef = exprParser(
     identifier,
 );
 
+private var patternNameRef = exprParser(
+    x => PatternNameRef(move(x.1)),
+    sequence(punc(#"'"), identifier),
+);
+
 private var bracketedExpr = modify(
     x => move(x.1),
     sequence(punc(#"("), expr, punc(#")")),
@@ -276,7 +281,7 @@ private var tupleExpr = exprParser(
 );
 
 private var atomicExpr = choice(
-    nameRef, literalExpr, bracketedExpr, tupleExpr,
+    nameRef, literalExpr, patternNameRef, bracketedExpr, tupleExpr,
 );
 
 
@@ -476,6 +481,11 @@ private var nameRefPattern = patternParser(
     identifier,
 );
 
+private var patternNameRefPattern = patternParser(
+    x => PatternNameRef(move(x.1)),
+    sequence(punc(#"'"), identifier),
+);
+
 private var indexingPattern = patternParser(
     x => IndexingPattern(move(x.0), move(x.2)),
     sequence(nameRef, punc(#"["), listPattern, punc(#"]")),
@@ -483,7 +493,7 @@ private var indexingPattern = patternParser(
 
 private var pattern2 = choice(
     boolLiteralPattern, intLiteralPattern, stringLiteralPattern,
-    indexingPattern, nameRefPattern,
+    indexingPattern, nameRefPattern, patternNameRefPattern,
 );
 
 private pattern(input) Maybe[Pattern] { return pattern2(input); }
@@ -492,7 +502,7 @@ private var listPattern2 = variadicList(
     pattern,
     modify(
         x => move(x.1),
-        sequence(punc(#"..."), nameRefPattern),
+        sequence(punc(#"..."), patternNameRefPattern),
     ),
 );
 
@@ -514,13 +524,26 @@ private topLevelItemParser(forward modifier, forward parser) = modify(
     bounds(modify(modifier, parser)),
 );
 
+private var patternVar = bounds(modify(
+    x => PatternVar(move(x.1)),
+    sequence(punc(#"'"), identifier),
+));
+
+private var variadicPatternVarList = variadicList(
+    patternVar,
+    modify(
+        x => move(x.1),
+        sequence(punc(#"..."), patternVar),
+    ),
+);
+
 private var staticParams = modify(
     x => move(x.1),
-    sequence(punc(#"["), variadicIdentifierList, punc(#"]")),
+    sequence(punc(#"["), variadicPatternVarList, punc(#"]")),
 );
 
 private var optStaticParams = modify(
-    x => maybe(x, move, () => VariadicList[Identifier]()),
+    x => maybe(x, move, () => VariadicList[PatternVar]()),
     optional(staticParams),
 );
 
@@ -547,51 +570,26 @@ private var optPredicate = optional(modify(
     sequence(punc(#"|"), expr),
 ));
 
-private var patternVar = bounds(choice(
-    modify(
-        x => PatternVar(true, move(x.1)),
-        sequence(punc(#"..."), identifier),
-    ),
-    modify(
-        x => PatternVar(false, move(x)),
-        identifier,
-    ),
-));
-
-private var patternVarList = commaList(patternVar);
-
-private var patternVarsWithPredicate = modify(
-    x => (move(x.1), move(x.2)),
-    sequence(punc(#"["), patternVarList, optPredicate, punc(#"]")),
-);
-
-private var optPatternVarsWithPredicate = modify(
-    x => maybe(x, move, () => (Vector[PatternVar](), nothing(Expr))),
-    optional(patternVarsWithPredicate),
-);
-
 private var arguments = modify(
     x => move(x.1),
     sequence(punc(#"("), optListPattern, punc(#")")),
 );
 
 private var overloadDef = topLevelItemParser(
-    x => Overload(
-        move((x.0).0), move((x.0).1), move(x.2), move(x.3), move(x.5),
-    ),
+    x => Overload(move(x.1), move(x.2), move(x.3), move(x.5)),
     sequence(
-        optPatternVarsWithPredicate, kw_overload,
-        identifier, arguments, punc(#"="), optExprList, punc(#";"),
+        kw_overload, identifier, arguments, optPredicate,
+        punc(#"="), optExprList, punc(#";"),
     ),
 );
 
 private var functionDefWithBody = topLevelItemParser(
-    x => Function(x.2, Maybe(Overload(
-        move((x.0).0), move((x.0).1), x.2, move(x.3), move(x.5),
-    ))),
+    x => Function(x.1, Maybe(
+        Overload(x.1, move(x.2), move(x.3), move(x.5)),
+    )),
     sequence(
-        optPatternVarsWithPredicate, optional(kw_function),
-        identifier, arguments, punc(#"="), optExprList, punc(#";"),
+        optional(kw_function), identifier, arguments, optPredicate,
+        punc(#"="), optExprList, punc(#";"),
     ),
 );
 
