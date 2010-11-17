@@ -186,6 +186,18 @@ overload nil() = nil(Id);
 [T | ObjectParameterType?(T) and T != Id and T != ObjectHandle]
 overload Id(object: T) = Id(objectHandle(object));
 
+
+
+//
+// cast between raw pointer and object types
+//
+
+[O | ObjectType?(O)]
+overload RawPointer(o: O) = RawPointer(o.__handle__);
+[O | ObjectType?(O)]
+overload O(o: RawPointer) = O(ObjectHandle(o));
+
+
 
 //
 // managed object references
@@ -220,6 +232,9 @@ overload Retained[O1](rvalue obj: Retained[O2]) r: Retained[O1] {
 overload Retained(obj: O) = Retained[O](obj);
 [O | ObjectType?(O)]
 overload Retained(forward obj: Retained[O]) = Retained[O](obj);
+
+[O | ObjectType?(O)]
+weak(obj: Retained[O]) = O(obj);
 
 // assigning managed <-> unmanaged
 [O1, O2 | AssignableObjectTypes?(O1, O2)]

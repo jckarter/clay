@@ -94,7 +94,7 @@ fromNSValueUnsafe(static T, o: O) returned: T {
 }
 
 [T, O | ObjectRef?(O)]
-overload Pointer[T](o: O) = Pointer[T](o.pointerValue());
+overload fromNSValueUnsafe(static Pointer[T], o: O) = Pointer[T](o.pointerValue());
 
 
 
