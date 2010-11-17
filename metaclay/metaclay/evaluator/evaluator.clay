@@ -162,36 +162,18 @@ overload symbolValue(x:SymbolHead, params:ValueList) {
         return ptr^;
     }
     ref y = x.symbols[params];
-    y = SymbolValue(x, params, false, nothing(Value));
+    y = SymbolValue(x, params, nothing(Value));
     return y;
 }
 
-private initializeSymbol(x:SymbolValue) {
-    if (not x.initialized?) {
-        // FIXME: check for recursion
-        x.body = maybe(x.head.ast.expr,
-            expr ref=> {
-                var env = bindPatternArgs(x.head.env, x.head.ast.params, x.params);
-                return Maybe(evaluateExpr(expr, env));
-            },
-            () => nothing(Value),
-        );
-        x.initialized? = true;
-    }
-}
-
-symbolHasBody?(x:SymbolValue) {
-    initializeSymbol(x);
-    return not nothing?(x.body);
-}
-
 symbolBody(x:SymbolValue) {
-    initializeSymbol(x);
     return maybe(x.body,
         x => x,
         () => {
-            genericError("symbol does not have a body");
-            return Value();
+            var env = bindPatternArgs(x.head.env, x.head.ast.params, x.params);
+            var result = evaluateExpr(x.head.ast.expr, env);
+            x.body = Maybe(result);
+            return result;
         },
     );
 }
@@ -988,10 +970,6 @@ evaluatePrimitive(kind, args) {
     case PRIM_symbol? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, SymbolValue)));
-    }
-    case PRIM_symbolHasBody? : {
-        var a = oneSymbol(args);
-        return ValueList(BoolValue(symbolHasBody?(a)));
     }
     case PRIM_symbolBody : {
         var a = oneSymbol(args);

@@ -14,22 +14,20 @@ overload mapValues('f) = ;
 // clay types as symbols
 //
 
-symbol Bool;
-symbol Int;
-symbol Array['T, 'n];
-symbol Tuple[...'T];
+symbol Bool = ();
+symbol  Int = ();
+symbol Array['T, 'n] = ();
+symbol Tuple[...'T] = ();
 
-symbol RecordTag;
+symbol RecordTag = ();
 
 recordType(...'fields) = (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
 fieldNames(...'fields) = (...mapValues(f => tupleElement(f, 0), ...'fields));
 fieldTypes(...'fields) = (...mapValues(f => tupleElement(f, 1), ...'fields));
 
 record?('t) =
-    symbolWithBody?('t)
+    symbol?('t)
     and tupleWithTag?(symbolBody('t), RecordTag);
-
-symbolWithBody?('x) = symbol?('x) and symbolHasBody?('x);
 
 tupleWithTag?('x, 'tag) =
     tuple?('x)

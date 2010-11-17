@@ -27,5 +27,4 @@ tupleElement(s:Tuple, i:Int) x
 tupleElements(s:Tuple) ...
 
 symbol?(x)
-symbolHasBody?(x)
 symbolBody(x:Symbol) value
