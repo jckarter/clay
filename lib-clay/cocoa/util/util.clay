@@ -497,7 +497,10 @@ overload PropertyInstanceMethods(static ivarName)
 
 [O | ObjectRef?(O)]
 overload printTo(stream, o: O) {
-    printTo(stream, CStringRef(o.description().UTF8String()));
+    if (nil?(o))
+        printTo(stream, "(nil)");
+    else
+        printTo(stream, CStringRef(o.description().UTF8String()));
 }
 
 
