@@ -5,12 +5,8 @@
 //
 
 function mapValues;
-
-[f, first, ...rest]
-overload mapValues(f, first, ...rest) = f(first), ...mapValues(f, ...rest);
-
-[f]
-overload mapValues(f) = ;
+overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
+overload mapValues('f) = ;
 
 
 
@@ -18,8 +14,7 @@ overload mapValues(f) = ;
 // mapTuple
 //
 
-[f, a]
-mapTuple(f, a) = (...mapValues(f, ...tupleElements(a)));
+mapTuple('f, 'a) = (...mapValues('f, ...tupleElements('a)));
 
 
 
@@ -27,11 +22,10 @@ mapTuple(f, a) = (...mapValues(f, ...tupleElements(a)));
 // reverseTuple
 //
 
-[a]
-reverseTuple(a) =
+reverseTuple('a) =
     mapTuple(
-        i => tupleElement(a, subtract(tupleSize(a), add(i,1))),
-        (...integers(tupleSize(a))),
+        i => tupleElement('a, subtract(tupleSize('a), add(i,1))),
+        (...integers(tupleSize('a))),
     );
 
 

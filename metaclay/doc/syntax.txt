@@ -1,53 +1,84 @@
-Syntax:
-------
 
-GlobalSymbol -> "symbol" Identifier StaticParams? ";"
+
+//
+// top level
+//
 
-GlobalSymbolWithBody -> "symbol"? Identifier StaticParams? "=" Expr ";"
-
-StaticParams -> "[" variadic_list(Identifier, Identifier) "]"
+GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
+SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 
 Function -> "function" Identifier ";"
+Overload -> "overload" Identifier "(" PatternList? ")" Predicate? "=" ExprList ";"
+FunctionWithBody -> "function"? Identifier "(" PatternList? ")" Predicate? "=" ExprList ";"
+Predicate -> "|" Expr
 
-Overload -> PatternVarsWithPredicate? "overload" Identifier
-            "(" PatternList? ")" "=" ExprList ";"
 
-FunctionWithBody -> PatternVarsWithPredicate? "function"? Identifier
-                    "(" PatternList? ")" "=" ExprList ";"
+
+//
+// patterns
+//
 
-PatternVarsWithPredicate -> "[" comma_list(PatternVar)? "|" Expr "]"
-PatternVar -> ("...")? Identifier
-
-PatternList -> variadic_list(Pattern, Identifier)
-
+PatternList -> variadic_list(Pattern, PatternNameRef)
 Pattern -> BoolLiteral
          | IntLiteral
          | StringLiteral
+         | IndexingPattern
          | Identifier
-         | Identifier "[" PatternList "]"
+         | PatternNameRef
+
+IndexingPattern -> Identifier "[" PatternList "]"
+
+
+
+//
+// expressions
+//
 
 ExprList -> comma_list(ExprListItem)
-
 ExprListItem -> "..." "(" ExprList ")"
               | "..." Expr
               | Expr
 
-Expr -> BoolLiteral
-      | IntLiteral
-      | StringLiteral
-      | Identifier
-      | Expr "(" ExprList ")"
-      | Expr "[" ExprList "]"
-      | Lambda
-      | "if" "(" Expr ")" Expr "else" Expr
-      | "(" Expr ")"
-      | "(" ExprList ")"
-      | Expr "and" Expr
-      | Expr "or" Expr
+LiteralExpr -> BoolLiteral
+             | IntLiteral
+             | StringLiteral
 
-Lambda -> LambdaArgs "=>" ExprListItem
+AtomicExpr -> NameRef
+            | PatternNameRef
+            | BracketedExpr
+            | TupleExpr
+
+NameRef -> Identifier
+PatternNameRef -> "'" Identifier
+BracketedExpr -> "(" Expr ")"
+TupleExpr -> "(" ExprList? ")"
+
+SuffixExpr -> AtomicExpr Suffix*
+Suffix -> IndexingSuffix
+        | CallSuffix
+
+IndexingSuffix -> "[" ExprList? "]"
+CallSuffix -> "(" ExprList? "]"
+
+AndExpr -> SuffixExpr ("and" SuffixExpr)*
+
+OrExpr -> AndExpr ("or" AndExpr)*
+
+LambdaExpr -> LambdaArgs "=>" ExprListItem
 LambdaArgs -> Identifier
             | "(" variadic_list(Identifier, Identifier)? ")"
+
+IfExpr -> "if" "(" Expr ")" Expr "else" Expr
+
+Expr -> IfExpr
+      | LambdaExpr
+      | OrExpr
+
+
+
+//
+// misc
+//
 
 variadic_list(Head, Tail) -> "..." Tail
                            | comma_list(Head) ("," "..." Tail)?

@@ -31,7 +31,13 @@ overload Function(x:ast.Function, env:Env) =
 record Overload = referenceType(
     ast: ast.Overload,
     env: Env,
+    patternVarsInitialized?: Bool,
+    patternVars: Vector[ast.Identifier],
+    variadicPatternVars: Vector[ast.Identifier],
 );
+
+overload Overload(x:ast.Overload, env:Env) =
+    Overload(x, env, false, Vector[ast.Identifier](), Vector[ast.Identifier]());
 
 
 
@@ -65,7 +71,6 @@ enum PrimitiveKind {
     PRIM_tupleElements,
 
     PRIM_symbol?,
-    PRIM_symbolHasBody?,
     PRIM_symbolBody,
 }
 
@@ -208,7 +213,6 @@ record PrimitiveValue(value: Primitive);
 record SymbolValue = referenceType(
     head: SymbolHead,
     params: ValueList,
-    initialized?: Bool,
     body: Maybe[Value],
 );
 
