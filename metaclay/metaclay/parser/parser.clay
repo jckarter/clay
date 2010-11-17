@@ -524,10 +524,10 @@ private topLevelItemParser(forward modifier, forward parser) = modify(
     bounds(modify(modifier, parser)),
 );
 
-private var patternVar = bounds(modify(
-    x => PatternVar(move(x.1)),
+private var patternVar = modify(
+    x => move(x.1),
     sequence(punc(#"'"), identifier),
-));
+);
 
 private var variadicPatternVarList = variadicList(
     patternVar,
@@ -543,7 +543,7 @@ private var staticParams = modify(
 );
 
 private var optStaticParams = modify(
-    x => maybe(x, move, () => VariadicList[PatternVar]()),
+    x => maybe(x, move, () => VariadicList[Identifier]()),
     optional(staticParams),
 );
 
