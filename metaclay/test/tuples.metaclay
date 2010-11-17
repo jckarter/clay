@@ -5,7 +5,7 @@
 //
 
 function mapValues;
-overload mapValues('f, 'first, ...'rest) = f('first), ...mapValues('f, ...'rest);
+overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
 overload mapValues('f) = ;
 
 
