@@ -90,6 +90,7 @@ variant Expr = BoolLiteral
              | IntLiteral
              | StringLiteral
              | NameRef
+             | PatternNameRef
              | TupleExpr
              | Call
              | Indexing
@@ -114,6 +115,10 @@ record StringLiteral = ast(
 );
 
 record NameRef = ast(
+    name: Identifier,
+);
+
+record PatternNameRef = ast(
     name: Identifier,
 );
 
@@ -164,6 +169,7 @@ variant Pattern = BoolLiteral
                 | IntLiteral
                 | StringLiteral
                 | NameRef
+                | PatternNameRef
                 | IndexingPattern
                 ;
 
@@ -186,7 +192,7 @@ variant TopLevelItem = Symbol
 record Symbol = ast(
     name: Identifier,
     params: VariadicList[Identifier],
-    expr: Maybe[Expr],
+    expr: Expr,
 );
 
 record Function = ast(
@@ -195,16 +201,10 @@ record Function = ast(
 );
 
 record Overload = ast(
-    patternVars: Vector[PatternVar],
-    predicate: Maybe[Expr],
     target: Identifier,
     argsPattern: ListPattern,
+    predicate: Maybe[Expr],
     body: ExprList,
-);
-
-record PatternVar = ast(
-    variadic?: Bool,
-    name: Identifier,
 );
 
 
