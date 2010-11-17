@@ -93,4 +93,6 @@ main() {
 
     println("dropping table");
     runStatement(db, "drop table wotsits");
+
+    println("null string: ", statementValue(String, db, "select null"));
 }
