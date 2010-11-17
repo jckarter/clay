@@ -19,8 +19,10 @@ main() = testMain(TestSuite("PODType?", [
         expectPOD(test, true,  Array[Int, 2]);
         expectPOD(test, false, Array[IrregularRecord, 2]);
         expectPOD(test, true,  Vec[Int, 2]);
+        expectPOD(test, true,  Tuple[]);
         expectPOD(test, true,  Tuple[Int, Float]);
         expectPOD(test, false, Tuple[Int, IrregularRecord]);
+        expectPOD(test, true,  Union[]);
         expectPOD(test, true,  Union[Int, Float]);
 
         expectPOD(test, true,  Char);
