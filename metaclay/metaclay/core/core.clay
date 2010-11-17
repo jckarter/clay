@@ -31,7 +31,13 @@ overload Function(x:ast.Function, env:Env) =
 record Overload = referenceType(
     ast: ast.Overload,
     env: Env,
+    patternVarsInitialized?: Bool,
+    patternVars: Vector[ast.Identifier],
+    variadicPatternVars: Vector[ast.Identifier],
 );
+
+overload Overload(x:ast.Overload, env:Env) =
+    Overload(x, env, false, Vector[ast.Identifier](), Vector[ast.Identifier]());
 
 
 
