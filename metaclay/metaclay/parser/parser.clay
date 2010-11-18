@@ -116,7 +116,6 @@ private keyword(s) {
 private var kw_symbol = keyword("symbol");
 private var kw_function = keyword("function");
 private var kw_overload = keyword("overload");
-private var kw_static = keyword("static");
 private var kw_true = keyword("true");
 private var kw_false = keyword("false");
 private var kw_if = keyword("if");
