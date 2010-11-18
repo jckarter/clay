@@ -7,37 +7,66 @@ import metaclay.diagnostics.*;
 
 
 //
+// Module, Program
+//
+
+record Module = referenceType(
+    program: Program,
+    name: String,
+    ast: ast.SourceAST,
+    globals: Env,
+);
+
+overload Module(program:Program, name:String) =
+    Module(program, name, ast.SourceAST(), Env());
+
+record Program = referenceType(
+    mainModule: Module,
+    allOverloads: Vector[Overload],
+);
+
+overload Program(module:Module) =
+    Program(module, Vector[Overload]());
+
+
+
+//
 // top-level item entries
 //
 
 record SymbolHead = referenceType(
     ast: ast.Symbol,
-    env: Env,
-    symbols: HashMap[ValueList, SymbolValue],
+    module: Module,
+    symbols: HashMap[ValueList, Symbol],
 );
 
-overload SymbolHead(x:ast.Symbol, env:Env) =
-    SymbolHead(x, env, HashMap[ValueList, SymbolValue]());
+overload SymbolHead(x:ast.Symbol, module:Module) =
+    SymbolHead(x, module, HashMap[ValueList, Symbol]());
 
-record Function = referenceType(
-    ast: ast.Function,
+record Symbol = referenceType(
+    head: SymbolHead,
+    params: ValueList,
     env: Env,
-    overloads: Vector[Overload],
+    body: Maybe[Value],
 );
 
-overload Function(x:ast.Function, env:Env) =
-    Function(x, env, Vector[Overload]());
+overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
+    Symbol(head, params, env, nothing(Value));
 
 record Overload = referenceType(
     ast: ast.Overload,
-    env: Env,
+    module: Module,
     patternVarsInitialized?: Bool,
     patternVars: Vector[ast.Identifier],
     variadicPatternVars: Vector[ast.Identifier],
 );
 
-overload Overload(x:ast.Overload, env:Env) =
-    Overload(x, env, false, Vector[ast.Identifier](), Vector[ast.Identifier]());
+overload Overload(x:ast.Overload, module:Module) =
+    Overload(
+        x, module, false,
+        Vector[ast.Identifier](),
+        Vector[ast.Identifier](),
+    );
 
 
 
@@ -91,7 +120,6 @@ primitiveName(kind) {
 //
 
 variant EnvEntry = SymbolHead
-                 | Function
                  | Primitive
                  | Value
                  | PatternCell
@@ -133,20 +161,6 @@ envLookup(env, name) {
     }
     return ref ptr^;
 }
-
-
-
-//
-// Module
-//
-
-record Module = referenceType(
-    name: String,
-    ast: ast.SourceAST,
-    globals: Env,
-);
-
-overload Module(name:String) = Module(name, ast.SourceAST(), Env());
 
 
 
@@ -193,10 +207,10 @@ variant Value = BoolValue
               | StringValue
               | TupleValue
               | LambdaValue
-              | SymbolHeadValue
-              | FunctionValue
-              | PrimitiveValue
-              | SymbolValue
+
+              | SymbolHead
+              | Symbol
+              | Primitive
               ;
 
 overload Value() = Value(BoolValue());
@@ -206,16 +220,12 @@ record IntValue(value: Int);
 record StringValue(value: String);
 record TupleValue(elements: ValueList);
 record LambdaValue(value: ast.LambdaExpr, env: Env);
-record SymbolHeadValue(value: SymbolHead);
-record FunctionValue(value: Function);
-record PrimitiveValue(value: Primitive);
 
-record SymbolValue = referenceType(
-    head: SymbolHead,
-    params: ValueList,
-    body: Maybe[Value],
-);
 
+
+//
+// print Value
+//
 
 overload printTo(stream, x:Value) {
     printTo(stream, *x);
@@ -244,19 +254,16 @@ overload printTo(stream, x:TupleValue) {
 overload printTo(stream, x:LambdaValue) {
     printTo(stream, "<lambda>");
 }
-overload printTo(stream, x:SymbolHeadValue) {
-    printTo(stream, x.value.ast.name.str);
+overload printTo(stream, x:SymbolHead) {
+    printTo(stream, x.ast.name.str);
 }
-overload printTo(stream, x:FunctionValue) {
-    printTo(stream, x.value.ast.name.str);
-}
-overload printTo(stream, x:PrimitiveValue) {
-    printTo(stream, primitiveName(x.value.kind));
-}
-overload printTo(stream, x:SymbolValue) {
+overload printTo(stream, x:Symbol) {
     printTo(stream, x.head.ast.name.str);
     if (not empty?(x.params))
         printTo(stream, x.params);
+}
+overload printTo(stream, x:Primitive) {
+    printTo(stream, primitiveName(x.kind));
 }
 
 [T | VariantMember?(Value, T)]

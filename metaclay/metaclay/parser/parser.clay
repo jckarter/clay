@@ -491,9 +491,13 @@ private var indexingPattern = patternParser(
     sequence(nameRef, punc(#"["), listPattern, punc(#"]")),
 );
 
+private var targetPattern = choice(
+    indexingPattern, nameRefPattern, patternNameRefPattern
+);
+
 private var pattern2 = choice(
     boolLiteralPattern, intLiteralPattern, stringLiteralPattern,
-    indexingPattern, nameRefPattern, patternNameRefPattern,
+    targetPattern,
 );
 
 private pattern(input) Maybe[Pattern] { return pattern2(input); }
@@ -573,17 +577,17 @@ private var arguments = modify(
 private var overloadDef = topLevelItemParser(
     x => Overload(move(x.1), move(x.2), move(x.3), move(x.5)),
     sequence(
-        kw_overload, identifier, arguments, optPredicate,
+        kw_overload, targetPattern, arguments, optPredicate,
         punc(#"="), optExprList, punc(#";"),
     ),
 );
 
 private var functionDefWithBody = topLevelItemParser(
-    x => Function(x.1, Maybe(
+    x => Function(variantAs(x.1, NameRef).name, Maybe(
         Overload(x.1, move(x.2), move(x.3), move(x.5)),
     )),
     sequence(
-        optional(kw_function), identifier, arguments, optPredicate,
+        optional(kw_function), nameRefPattern, arguments, optPredicate,
         punc(#"="), optExprList, punc(#";"),
     ),
 );

@@ -40,6 +40,11 @@ overload printReprTo(stream, x:T) {
     printReprValuesTo(stream, ...dropValues(static 2, ...referenceTypeFields(x)));
 }
 
+assignLocation(destNode, srcNode) {
+    destNode.tokens = srcNode.tokens;
+    destNode.mainToken = srcNode.mainToken;
+}
+
 
 
 //
@@ -201,8 +206,8 @@ record Function = ast(
 );
 
 record Overload = ast(
-    target: Identifier,
-    argsPattern: ListPattern,
+    target: Pattern,
+    args: ListPattern,
     predicate: Maybe[Expr],
     body: ExprList,
 );

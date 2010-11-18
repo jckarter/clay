@@ -22,15 +22,15 @@ private initializeGlobals(module) {
     for (item in module.ast.topLevelItems) {
         match(item,
             ast.Symbol, x => {
-                envAdd(env, x.name, SymbolHead(x, env));
+                envAdd(env, x.name, SymbolHead(x, module));
             },
             ast.Function, x => {
-                var y = Function(x, env);
-                maybe(x.body,
-                    z => { push(y.overloads, Overload(z, env)); },
-                    () => {},
+                var astSymbol = ast.Symbol(
+                    x.name, ast.VariadicList[ast.Identifier](),
+                    ast.Expr(ast.TupleExpr(ast.ExprList())),
                 );
-                envAdd(env, x.name, y);
+                ast.assignLocation(astSymbol, x);
+                envAdd(env, x.name, SymbolHead(astSymbol, module));
             },
             ast.Overload, x => {
             }
@@ -50,21 +50,35 @@ private initializeOverloads(module) {
     for (item in module.ast.topLevelItems) {
         match(item,
             ast.Symbol, x => {},
-            ast.Function, x => {},
+            ast.Function, x => {
+                maybe(x.body,
+                    astOverload ref=> {
+                        var y = Overload(astOverload, module);
+                        push(module.program.allOverloads, y);
+                    },
+                    () => {},
+                );
+            },
             ast.Overload, x => {
-                var func = envLookupFunction(module.globals, x.target);
-                push(func.overloads, Overload(x, module.globals));
+                var y = Overload(x, module);
+                push(module.program.allOverloads, y);
             },
         );
     }
 }
 
-loadProgram(path) {
-    var module = Module(String("__main__"));
+private loadModule(program, path) {
+    var module = Module(program, String("__main__"));
     module.ast = parse(tokenize(readSource(path)));
     withCurrentModule(module, () => {
         initializeGlobals(module);
         initializeOverloads(module);
     });
     return module;
+}
+
+loadProgram(path) {
+    var program = Program(Module());
+    program.mainModule = loadModule(program, path);
+    return program;
 }
