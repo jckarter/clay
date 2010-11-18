@@ -162,16 +162,16 @@ overload symbolValue(x:SymbolHead, params:ValueList) {
         return ptr^;
     }
     ref y = x.symbols[params];
-    y = SymbolValue(x, params, nothing(Value));
+    var env = bindPatternArgs(x.module.globals, x.ast.params, params);
+    y = Symbol(x, params, env);
     return y;
 }
 
-symbolBody(x:SymbolValue) {
+symbolBody(x:Symbol) {
     return maybe(x.body,
         x => x,
         () => {
-            var env = bindPatternArgs(x.head.env, x.head.ast.params, x.params);
-            var result = evaluateExpr(x.head.ast.expr, env);
+            var result = evaluateExpr(x.head.ast.expr, x.env);
             x.body = Maybe(result);
             return result;
         },
@@ -184,7 +184,8 @@ symbolBody(x:SymbolValue) {
 // evaluateMain
 //
 
-evaluateMain(module) {
+evaluateMain(program) {
+    var module = program.mainModule;
     return withCurrentModule(module, () => {
         var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
         var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
@@ -282,14 +283,11 @@ overload envEntryToValue(x:EnvEntry) {
 }
 overload envEntryToValue(x:SymbolHead) {
     if (symbolHasParams?(x))
-        return Value(SymbolHeadValue(x));
+        return Value(x);
     return Value(symbolValue(x));
 }
-overload envEntryToValue(x:Function) {
-    return Value(FunctionValue(x));
-}
 overload envEntryToValue(x:Primitive) {
-    return Value(PrimitiveValue(x));
+    return Value(x);
 }
 overload envEntryToValue(x:Value) {
     return x;
@@ -405,17 +403,14 @@ overload evaluateCall(x:LambdaValue, args) {
     var env2 = bindArgs(x.env, x.value.formalArgs, args);
     return evaluateExprList(x.value.body, env2);
 }
-overload evaluateCall(x:FunctionValue, args) {
-    for (y in reversed(x.value.overloads)) {
-        var result = matchOverload(y, args);
-        if (not nothing?(result))
-            return evaluateExprList(y.ast.body, just(result));
-    }
-    genericError("no matching operation");
-    return ValueList();
+overload evaluateCall(x:Symbol, args) {
+    return callOverload(x.head.module.program, Value(x), args);
 }
-overload evaluateCall(x:PrimitiveValue, args) {
-    return evaluatePrimitive(x.value.kind, args);
+overload evaluateCall(x:SymbolHead, args) {
+    return callOverload(x.module.program, Value(x), args);
+}
+overload evaluateCall(x:Primitive, args) {
+    return evaluatePrimitive(x.kind, args);
 }
 
 
@@ -433,10 +428,9 @@ overload evaluateIndexing(x, args) {
 overload evaluateIndexing(x:Value, args) {
     return evaluateIndexing(*x, args);
 }
-overload evaluateIndexing(x:SymbolHeadValue, args) {
-    var head = x.value;
-    ensureArity(head.ast.params, args);
-    return Value(symbolValue(head, args));
+overload evaluateIndexing(x:SymbolHead, args) {
+    ensureArity(x.ast.params, args);
+    return Value(symbolValue(x, args));
 }
 
 
@@ -486,8 +480,8 @@ overload evaluateIndexingPattern(x, args) {
 overload evaluateIndexingPattern(x:Value, args) {
     return evaluateIndexingPattern(*x, args);
 }
-overload evaluateIndexingPattern(x:SymbolHeadValue, args) {
-    return Pattern(SymbolPattern(x.value, args));
+overload evaluateIndexingPattern(x:SymbolHead, args) {
+    return Pattern(SymbolPattern(x, args));
 }
 
 
@@ -548,9 +542,9 @@ overload unify(p:PatternCell, x:Value) {
     );
 }
 overload unify(p:SymbolPattern, x:Value) {
-    if (not variantIs?(x, SymbolValue))
+    if (not variantIs?(x, Symbol))
         return false;
-    var y = variantAs(x, SymbolValue);
+    var y = variantAs(x, Symbol);
     if (p.head != y.head)
         return false;
     return unifyList(p.params, y.params);
@@ -740,7 +734,8 @@ initializeOverloadPatternVars(x:Overload) {
                 push(x.patternVars, name);
         }
     };
-    walkListPattern(x.ast.argsPattern, visitor);
+    walkPattern(x.ast.target, visitor);
+    walkListPattern(x.ast.args, visitor);
     x.patternVarsInitialized? = true;
 }
 
@@ -750,14 +745,17 @@ initializeOverloadPatternVars(x:Overload) {
 // matchOverload
 //
 
-matchOverload(x:Overload, args:ValueList) Maybe[Env] {
+matchOverload(x:Overload, callable:Value, args:ValueList) Maybe[Env] {
     initializeOverloadPatternVars(x);
-    var env = newEnv(x.env);
+    var env = newEnv(x.module.globals);
     for (name in x.patternVars)
         envAdd(env, name, PatternCell(nothing(Value)));
     for (name in x.variadicPatternVars)
         envAdd(env, name, ListPatternCell(nothing(ValueList)));
-    var argsPattern = evaluateListPattern(x.ast.argsPattern, env);
+    var callablePattern = evaluatePattern(x.ast.target, env);
+    if (not unify(callablePattern, callable))
+        return nothing(Env);
+    var argsPattern = evaluateListPattern(x.ast.args, env);
     if (not unifyList(argsPattern, args))
         return nothing(Env);
     for (name in x.patternVars)
@@ -774,6 +772,21 @@ matchOverload(x:Overload, args:ValueList) Maybe[Env] {
     );
 }
 
+
+
+//
+// callOverload
+//
+
+callOverload(program, callable, args) {
+    for (x in reversed(program.allOverloads)) {
+        var result = matchOverload(x, callable, args);
+        if (not nothing?(result))
+            return evaluateExprList(x.ast.body, just(result));
+    }
+    genericError("no matching operation");
+    return ValueList();
+}
 
 
 //
@@ -860,9 +873,9 @@ private tupleInt(args) {
 
 private oneSymbol(args) {
     var a = oneValue(args);
-    if (not variantIs?(a, SymbolValue))
+    if (not variantIs?(a, Symbol))
         genericError("expecting a symbol, but received: ", a);
-    return variantAs(a, SymbolValue);
+    return variantAs(a, Symbol);
 }
 
 evaluatePrimitive(kind, args) {
@@ -969,7 +982,7 @@ evaluatePrimitive(kind, args) {
 
     case PRIM_symbol? : {
         var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, SymbolValue)));
+        return ValueList(BoolValue(variantIs?(a, Symbol)));
     }
     case PRIM_symbolBody : {
         var a = oneSymbol(args);

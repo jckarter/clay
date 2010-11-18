@@ -8,7 +8,7 @@ GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
 SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 
 Function -> "function" Identifier ";"
-Overload -> "overload" Identifier "(" PatternList? ")" Predicate? "=" ExprList ";"
+Overload -> "overload" TargetPattern "(" PatternList? ")" Predicate? "=" ExprList ";"
 FunctionWithBody -> "function"? Identifier "(" PatternList? ")" Predicate? "=" ExprList ";"
 Predicate -> "|" Expr
 
@@ -27,6 +27,10 @@ Pattern -> BoolLiteral
          | PatternNameRef
 
 IndexingPattern -> Identifier "[" PatternList "]"
+
+TargetPattern -> IndexingPattern
+               | Identifier
+               | PatternNameRef
 
 
 
