@@ -114,6 +114,7 @@ private keyword(s) {
 }
 
 private var kw_symbol = keyword("symbol");
+private var kw_attribute = keyword("attribute");
 private var kw_function = keyword("function");
 private var kw_overload = keyword("overload");
 private var kw_true = keyword("true");
@@ -558,15 +559,23 @@ private var symbolDef = topLevelItemParser(
     ),
 );
 
-private var functionDef = topLevelItemParser(
-    x => Function(move(x.1), nothing(Overload)),
-    sequence(kw_function, identifier, punc(#";")),
-);
-
 private var optPredicate = optional(modify(
     x => move(x.1),
     sequence(punc(#"|"), expr),
 ));
+
+private var attributeDef = topLevelItemParser(
+    x => Attribute(move(x.1), move(x.2), move(x.4)),
+    sequence(
+        kw_attribute, targetPattern, optPredicate,
+        punc(#"="), expr, punc(#";"),
+    ),
+);
+
+private var functionDef = topLevelItemParser(
+    x => Function(move(x.1), nothing(Overload)),
+    sequence(kw_function, identifier, punc(#";")),
+);
 
 private var arguments = modify(
     x => move(x.1),
@@ -592,7 +601,7 @@ private var functionDefWithBody = topLevelItemParser(
 );
 
 private var topLevelItem = choice(
-    symbolDef, functionDef, overloadDef, functionDefWithBody,
+    symbolDef, attributeDef, functionDef, overloadDef, functionDefWithBody,
 );
 
 

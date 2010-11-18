@@ -28,3 +28,4 @@ tupleElements(s:Tuple) ...
 
 symbol?(x)
 symbolBody(x:Symbol) value
+symbolAttributes(x:Symbol) value

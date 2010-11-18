@@ -22,11 +22,12 @@ overload Module(program:Program, name:String) =
 
 record Program = referenceType(
     mainModule: Module,
+    allAttributes: Vector[Attribute],
     allOverloads: Vector[Overload],
 );
 
 overload Program(module:Module) =
-    Program(module, Vector[Overload]());
+    Program(module, Vector[Attribute](), Vector[Overload]());
 
 
 
@@ -48,10 +49,26 @@ record Symbol = referenceType(
     params: ValueList,
     env: Env,
     body: Maybe[Value],
+    attributes: Maybe[Value],
 );
 
 overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
-    Symbol(head, params, env, nothing(Value));
+    Symbol(head, params, env, nothing(Value), nothing(Value));
+
+record Attribute = referenceType(
+    ast: ast.Attribute,
+    module: Module,
+    patternVarsInitialized?: Bool,
+    patternVars: Vector[ast.Identifier],
+    variadicPatternVars: Vector[ast.Identifier],
+);
+
+overload Attribute(x:ast.Attribute, module:Module) =
+    Attribute(
+        x, module, false,
+        Vector[ast.Identifier](),
+        Vector[ast.Identifier](),
+    );
 
 record Overload = referenceType(
     ast: ast.Overload,
@@ -101,6 +118,7 @@ enum PrimitiveKind {
 
     PRIM_symbol?,
     PRIM_symbolBody,
+    PRIM_symbolAttributes,
 }
 
 record Primitive = referenceType(

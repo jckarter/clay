@@ -190,6 +190,7 @@ record IndexingPattern = ast(
 //
 
 variant TopLevelItem = Symbol
+                     | Attribute
                      | Function
                      | Overload
                      ;
@@ -198,6 +199,12 @@ record Symbol = ast(
     name: Identifier,
     params: VariadicList[Identifier],
     expr: Expr,
+);
+
+record Attribute = ast(
+    target: Pattern,
+    predicate: Maybe[Expr],
+    body: Expr,
 );
 
 record Function = ast(

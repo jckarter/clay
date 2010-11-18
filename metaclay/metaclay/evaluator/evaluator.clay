@@ -168,11 +168,26 @@ overload symbolValue(x:SymbolHead, params:ValueList) {
 }
 
 symbolBody(x:Symbol) {
+    // FIXME: check for recursion
     return maybe(x.body,
         x => x,
         () => {
             var result = evaluateExpr(x.head.ast.expr, x.env);
             x.body = Maybe(result);
+            return result;
+        },
+    );
+}
+
+symbolAttributes(x:Symbol) {
+    // FIXME: check for recursion
+    return maybe(x.attributes,
+        x => x,
+        () => {
+            var result = Value(TupleValue(
+                evaluateAttributes(x.head.module.program, Value(x)),
+            ));
+            x.attributes = Maybe(result);
             return result;
         },
     );
@@ -708,56 +723,81 @@ walkListPattern(x:ast.ListPattern, visitor) {
 
 
 //
-// initializeOverloadPatternVars
+// PatternVarCollector
 //
 
-initializeOverloadPatternVars(x:Overload) {
+record PatternVarCollector(
+    names: HashMap[String, Bool],
+    patternVars: Vector[ast.Identifier],
+    variadicPatternVars: Vector[ast.Identifier],
+);
+
+overload call(x:PatternVarCollector, pattern, variadic?) {
+    if (not variantIs?(pattern, ast.PatternNameRef))
+        return;
+    ref name = variantAs(pattern, ast.PatternNameRef).name;
+    if (contains?(x.names, name.str)) {
+        if (x.names[name.str] != variadic?) {
+            genericError(
+                "pattern variable cannot be used in both ",
+                "single-value and multi-value context"
+            );
+        }
+    }
+    else {
+        x.names[name.str] = variadic?;
+        if (variadic?)
+            push(x.variadicPatternVars, name);
+        else
+            push(x.patternVars, name);
+    }
+}
+
+
+
+//
+// initializePatternVars
+//
+
+procedure applyCollector;
+overload applyCollector(x:Overload, collector) {
+    walkPattern(x.ast.target, collector);
+    walkListPattern(x.ast.args, collector);
+}
+overload applyCollector(x:Attribute, collector) {
+    walkPattern(x.ast.target, collector);
+}
+
+[T | (T == Overload) or (T == Attribute)]
+initializePatternVars(x:T) {
     if (x.patternVarsInitialized?)
         return;
-    var names = HashMap[String, Bool]();
-    var visitor = (p, variadic?) ref=> {
-        if (not variantIs?(p, ast.PatternNameRef)) return;
-        ref name = variantAs(p, ast.PatternNameRef).name;
-        if (contains?(names, name.str)) {
-            if (names[name.str] != variadic?) {
-                genericError(
-                    "pattern variable cannot be used in both ",
-                    "single-value and multi-value context"
-                );
-            }
-        }
-        else {
-            names[name.str] = variadic?;
-            if (variadic?)
-                push(x.variadicPatternVars, name);
-            else
-                push(x.patternVars, name);
-        }
-    };
-    walkPattern(x.ast.target, visitor);
-    walkListPattern(x.ast.args, visitor);
+    var collector = PatternVarCollector();
+    applyCollector(x, collector);
+    x.patternVars = move(collector.patternVars);
+    x.variadicPatternVars = move(collector.variadicPatternVars);
     x.patternVarsInitialized? = true;
 }
 
 
 
 //
-// matchOverload
+// matchAttribute, matchOverload
 //
 
-matchOverload(x:Overload, callable:Value, args:ValueList) Maybe[Env] {
-    initializeOverloadPatternVars(x);
+[T | (T == Attribute) or (T == Overload)]
+private initializeMatch(x:T) {
+    initializePatternVars(x);
     var env = newEnv(x.module.globals);
     for (name in x.patternVars)
         envAdd(env, name, PatternCell(nothing(Value)));
     for (name in x.variadicPatternVars)
         envAdd(env, name, ListPatternCell(nothing(ValueList)));
-    var callablePattern = evaluatePattern(x.ast.target, env);
-    if (not unify(callablePattern, callable))
-        return nothing(Env);
-    var argsPattern = evaluateListPattern(x.ast.args, env);
-    if (not unifyList(argsPattern, args))
-        return nothing(Env);
+    return env;
+}
+
+[T | (T == Attribute) or (T == Overload)]
+private finishMatch(x:T, env:Env) {
     for (name in x.patternVars)
         derefPattern(env, name);
     for (name in x.variadicPatternVars)
@@ -770,6 +810,41 @@ matchOverload(x:Overload, callable:Value, args:ValueList) Maybe[Env] {
         },
         () => Maybe(env),
     );
+}
+
+matchAttribute(x:Attribute, target:Value) Maybe[Env] {
+    var env = initializeMatch(x);
+    var targetPattern = evaluatePattern(x.ast.target, env);
+    if (not unify(targetPattern, target))
+        return nothing(Env);
+    return finishMatch(x, env);
+}
+
+matchOverload(x:Overload, callable:Value, args:ValueList) Maybe[Env] {
+    var env = initializeMatch(x);
+    var callablePattern = evaluatePattern(x.ast.target, env);
+    if (not unify(callablePattern, callable))
+        return nothing(Env);
+    var argsPattern = evaluateListPattern(x.ast.args, env);
+    if (not unifyList(argsPattern, args))
+        return nothing(Env);
+    return finishMatch(x, env);
+}
+
+
+
+//
+// evaluateAttributes
+//
+
+evaluateAttributes(program, target) {
+    var values = ValueList();
+    for (x in program.allAttributes) {
+        var result = matchAttribute(x, target);
+        if (not nothing?(result))
+            push(values, evaluateExpr(x.ast.body, just(result)));
+    }
+    return move(values);
 }
 
 
@@ -787,6 +862,7 @@ callOverload(program, callable, args) {
     genericError("no matching operation");
     return ValueList();
 }
+
 
 
 //
@@ -987,6 +1063,10 @@ evaluatePrimitive(kind, args) {
     case PRIM_symbolBody : {
         var a = oneSymbol(args);
         return ValueList(symbolBody(a));
+    }
+    case PRIM_symbolAttributes : {
+        var a = oneSymbol(args);
+        return ValueList(symbolAttributes(a));
     }
 
     default : {
