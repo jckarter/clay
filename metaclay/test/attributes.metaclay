@@ -1,0 +1,92 @@
+
+
+//
+// mapValues
+//
+
+function mapValues;
+overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
+overload mapValues('f) = ;
+
+
+
+//
+// clay types as symbols
+//
+
+symbol Bool = ();
+symbol Int = ();
+symbol Array['T, 'n] = ();
+symbol Tuple[...'T] = ();
+
+symbol String = ();
+
+
+tupleWithTag?('x, 'tag) =
+    tuple?('x)
+    and lesser?(0, tupleSize('x))
+    and equals?(tupleElement('x, 0), 'tag);
+
+
+
+//
+// record types
+//
+
+symbol RecordTag = ();
+
+recordType(...'fields) = (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
+fieldNames(...'fields) = (...mapValues(f => tupleElement(f, 0), ...'fields));
+fieldTypes(...'fields) = (...mapValues(f => tupleElement(f, 1), ...'fields));
+
+record?('t) =
+    symbol?('t)
+    and tupleWithTag?(symbolBody('t), RecordTag);
+
+recordFieldCount('t) | record?('t) = tupleSize(tupleElement(symbolBody('t), 1));
+recordFieldNames('t) | record?('t) = tupleElement(symbolBody('t), 1);
+recordFieldTypes('t) | record?('t) = tupleElement(symbolBody('t), 2);
+
+
+
+//
+// variant types
+//
+
+symbol VariantTag = ();
+
+variantType(...'members) = (VariantTag, (...'members));
+
+variant?('t) = 
+    symbol?('t)
+    and tupleWithTag?(symbolBody('t), VariantTag);
+
+variantMembers('t) | variant?('t) = (
+    ...tupleElements(tupleElement(symbolBody('t), 1)),
+    ...tupleElements(symbolAttributes('t)),
+);
+
+
+
+//
+// testing
+//
+
+symbol GenericError = recordType(
+    ("msg", String),
+);
+
+symbol Exception = variantType(GenericError);
+
+symbol AssertionError = recordType(
+    ("condition", String),
+    ("msg", String),
+);
+
+attribute Exception = AssertionError;
+
+main() = (
+    variant?(String),
+    variant?(Exception),
+    variantMembers(Exception)
+);

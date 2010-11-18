@@ -24,6 +24,8 @@ private initializeGlobals(module) {
             ast.Symbol, x => {
                 envAdd(env, x.name, SymbolHead(x, module));
             },
+            ast.Attribute, x => {
+            },
             ast.Function, x => {
                 var astSymbol = ast.Symbol(
                     x.name, ast.VariadicList[ast.Identifier](),
@@ -46,10 +48,14 @@ private envLookupFunction(env, name) {
     return variantAs(entry, Function);
 }
 
-private initializeOverloads(module) {
+private initializeAttributesAndOverloads(module) {
     for (item in module.ast.topLevelItems) {
         match(item,
             ast.Symbol, x => {},
+            ast.Attribute, x => {
+                var y = Attribute(x, module);
+                push(module.program.allAttributes, y);
+            },
             ast.Function, x => {
                 maybe(x.body,
                     astOverload ref=> {
@@ -72,7 +78,7 @@ private loadModule(program, path) {
     module.ast = parse(tokenize(readSource(path)));
     withCurrentModule(module, () => {
         initializeGlobals(module);
-        initializeOverloads(module);
+        initializeAttributesAndOverloads(module);
     });
     return module;
 }
