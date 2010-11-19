@@ -364,6 +364,7 @@ overload PODType?(static Float64) = true;
 [T] overload PODType?(static Static[T]) = true;
 [T,n] overload PODType?(static Array[T,n]) = PODType?(T);
 [T,n] overload PODType?(static Vec[T,n]) = true;
+[E | Enum?(E)] overload PODType?(static E) = true;
 [...T] overload PODType?(static Tuple[...T]) = allValues?(PODType?, ...T);
 overload PODType?(static Tuple[]) = true;
 [...T] overload PODType?(static Union[...T]) = allValues?(PODType?, ...T);
