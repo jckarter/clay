@@ -1,6 +1,6 @@
 
-import metaclay.common.*;
-import metaclay.diagnostics.*;
+import newclay.common.*;
+import newclay.diagnostics.*;
 import maybe.*;
 import parsing.combinators.wrapper.*;
 
@@ -55,7 +55,7 @@ private var punctuations = [
 ];
 
 private var keywords = [
-    "symbol", "function",
+    "symbol", "attribute",
     "overload", "static",
     "true", "false",
     "if", "else",

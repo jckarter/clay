@@ -1,0 +1,34 @@
+
+
+//
+// mapValues
+//
+
+symbol mapValues = ();
+static overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
+static overload mapValues('f) = ;
+
+
+
+//
+// stringChar, reverseString
+//
+
+symbol stringChar = ();
+static overload stringChar('s, 'i) = staticStringSlice('s, 'i, staticAdd('i, 1));
+
+symbol reverseString = ();
+static overload reverseString('s) =
+    staticStringConcat(...mapValues(
+        i => stringChar('s, staticSubtract(staticStringSize('s), staticAdd(i,1))),
+        ...staticIntegers(staticStringSize('s)),
+    ));
+
+
+
+//
+// main
+//
+
+symbol main = ();
+static overload main() = reverseString("foobar");

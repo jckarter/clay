@@ -1,7 +1,0 @@
-
-function factorial;
-overload factorial('n) = multiply('n, factorial(subtract('n, 1)));
-overload factorial(1) = 1;
-overload factorial(0) = 1;
-
-main() = factorial(8);

@@ -1,6 +1,6 @@
 
 import maybe.*;
-import metaclay.lexer.*;
+import newclay.lexer.*;
 
 
 
@@ -38,6 +38,11 @@ callbyname overload T(...args:A) {
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
     printReprValuesTo(stream, ...dropValues(static 2, ...referenceTypeFields(x)));
+}
+
+assignLocation(destNode, srcNode) {
+    destNode.tokens = srcNode.tokens;
+    destNode.mainToken = srcNode.mainToken;
 }
 
 
@@ -185,8 +190,8 @@ record IndexingPattern = ast(
 //
 
 variant TopLevelItem = Symbol
-                     | Function
-                     | Overload
+                     | Attribute
+                     | StaticOverload
                      ;
 
 record Symbol = ast(
@@ -195,14 +200,15 @@ record Symbol = ast(
     expr: Expr,
 );
 
-record Function = ast(
-    name: Identifier,
-    body: Maybe[Overload],
+record Attribute = ast(
+    target: Pattern,
+    predicate: Maybe[Expr],
+    body: Expr,
 );
 
-record Overload = ast(
-    target: Identifier,
-    argsPattern: ListPattern,
+record StaticOverload = ast(
+    target: Pattern,
+    args: ListPattern,
     predicate: Maybe[Expr],
     body: ExprList,
 );

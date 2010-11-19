@@ -1,8 +1,33 @@
 
 import maybe.*;
-import metaclay.common.*;
-import metaclay.ast as ast;
-import metaclay.diagnostics.*;
+import newclay.common.*;
+import newclay.ast as ast;
+import newclay.diagnostics.*;
+
+
+
+//
+// Module, Program
+//
+
+record Module = referenceType(
+    program: Program,
+    name: String,
+    ast: ast.SourceAST,
+    globals: Env,
+);
+
+overload Module(program:Program, name:String) =
+    Module(program, name, ast.SourceAST(), Env());
+
+record Program = referenceType(
+    mainModule: Module,
+    allAttributes: Vector[Attribute],
+    allStaticOverloads: Vector[StaticOverload],
+);
+
+overload Program(module:Module) =
+    Program(module, Vector[Attribute](), Vector[StaticOverload]());
 
 
 
@@ -12,32 +37,53 @@ import metaclay.diagnostics.*;
 
 record SymbolHead = referenceType(
     ast: ast.Symbol,
-    env: Env,
-    symbols: HashMap[ValueList, SymbolValue],
+    module: Module,
+    symbols: HashMap[ValueList, Symbol],
 );
 
-overload SymbolHead(x:ast.Symbol, env:Env) =
-    SymbolHead(x, env, HashMap[ValueList, SymbolValue]());
+overload SymbolHead(x:ast.Symbol, module:Module) =
+    SymbolHead(x, module, HashMap[ValueList, Symbol]());
 
-record Function = referenceType(
-    ast: ast.Function,
+record Symbol = referenceType(
+    head: SymbolHead,
+    params: ValueList,
     env: Env,
-    overloads: Vector[Overload],
+    body: Maybe[Value],
+    attributes: Maybe[Value],
 );
 
-overload Function(x:ast.Function, env:Env) =
-    Function(x, env, Vector[Overload]());
+overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
+    Symbol(head, params, env, nothing(Value), nothing(Value));
 
-record Overload = referenceType(
-    ast: ast.Overload,
-    env: Env,
+record Attribute = referenceType(
+    ast: ast.Attribute,
+    module: Module,
     patternVarsInitialized?: Bool,
     patternVars: Vector[ast.Identifier],
     variadicPatternVars: Vector[ast.Identifier],
 );
 
-overload Overload(x:ast.Overload, env:Env) =
-    Overload(x, env, false, Vector[ast.Identifier](), Vector[ast.Identifier]());
+overload Attribute(x:ast.Attribute, module:Module) =
+    Attribute(
+        x, module, false,
+        Vector[ast.Identifier](),
+        Vector[ast.Identifier](),
+    );
+
+record StaticOverload = referenceType(
+    ast: ast.StaticOverload,
+    module: Module,
+    patternVarsInitialized?: Bool,
+    patternVars: Vector[ast.Identifier],
+    variadicPatternVars: Vector[ast.Identifier],
+);
+
+overload StaticOverload(x:ast.StaticOverload, module:Module) =
+    StaticOverload(
+        x, module, false,
+        Vector[ast.Identifier](),
+        Vector[ast.Identifier](),
+    );
 
 
 
@@ -46,32 +92,32 @@ overload Overload(x:ast.Overload, env:Env) =
 //
 
 enum PrimitiveKind {
-    PRIM_int?,
-    PRIM_add,
-    PRIM_subtract,
-    PRIM_multiply,
-    PRIM_divide,
-    PRIM_remainder,
-    PRIM_integers,
+    PRIM_staticInt?,
+    PRIM_staticAdd,
+    PRIM_staticSubtract,
+    PRIM_staticMultiply,
+    PRIM_staticDivide,
+    PRIM_staticRemainder,
+    PRIM_staticIntegers,
 
-    PRIM_bool?,
-    PRIM_equals?,
-    PRIM_lesser?,
+    PRIM_staticBool?,
+    PRIM_staticEquals?,
+    PRIM_staticLesser?,
 
-    PRIM_string?,
-    PRIM_stringSize,
-    PRIM_stringSlice,
-    PRIM_stringConcat,
-    PRIM_stringChars,
+    PRIM_staticString?,
+    PRIM_staticStringSize,
+    PRIM_staticStringSlice,
+    PRIM_staticStringConcat,
 
-    PRIM_tuple?,
-    PRIM_tuple,
-    PRIM_tupleSize,
-    PRIM_tupleElement,
-    PRIM_tupleElements,
+    PRIM_staticTuple?,
+    PRIM_staticTuple,
+    PRIM_staticTupleSize,
+    PRIM_staticTupleElement,
+    PRIM_staticTupleElements,
 
-    PRIM_symbol?,
-    PRIM_symbolBody,
+    PRIM_staticSymbol?,
+    PRIM_staticSymbolBody,
+    PRIM_staticSymbolAttributes,
 }
 
 record Primitive = referenceType(
@@ -91,7 +137,6 @@ primitiveName(kind) {
 //
 
 variant EnvEntry = SymbolHead
-                 | Function
                  | Primitive
                  | Value
                  | PatternCell
@@ -133,20 +178,6 @@ envLookup(env, name) {
     }
     return ref ptr^;
 }
-
-
-
-//
-// Module
-//
-
-record Module = referenceType(
-    name: String,
-    ast: ast.SourceAST,
-    globals: Env,
-);
-
-overload Module(name:String) = Module(name, ast.SourceAST(), Env());
 
 
 
@@ -193,10 +224,10 @@ variant Value = BoolValue
               | StringValue
               | TupleValue
               | LambdaValue
-              | SymbolHeadValue
-              | FunctionValue
-              | PrimitiveValue
-              | SymbolValue
+
+              | SymbolHead
+              | Symbol
+              | Primitive
               ;
 
 overload Value() = Value(BoolValue());
@@ -206,16 +237,12 @@ record IntValue(value: Int);
 record StringValue(value: String);
 record TupleValue(elements: ValueList);
 record LambdaValue(value: ast.LambdaExpr, env: Env);
-record SymbolHeadValue(value: SymbolHead);
-record FunctionValue(value: Function);
-record PrimitiveValue(value: Primitive);
 
-record SymbolValue = referenceType(
-    head: SymbolHead,
-    params: ValueList,
-    body: Maybe[Value],
-);
 
+
+//
+// print Value
+//
 
 overload printTo(stream, x:Value) {
     printTo(stream, *x);
@@ -244,19 +271,16 @@ overload printTo(stream, x:TupleValue) {
 overload printTo(stream, x:LambdaValue) {
     printTo(stream, "<lambda>");
 }
-overload printTo(stream, x:SymbolHeadValue) {
-    printTo(stream, x.value.ast.name.str);
+overload printTo(stream, x:SymbolHead) {
+    printTo(stream, x.ast.name.str);
 }
-overload printTo(stream, x:FunctionValue) {
-    printTo(stream, x.value.ast.name.str);
-}
-overload printTo(stream, x:PrimitiveValue) {
-    printTo(stream, primitiveName(x.value.kind));
-}
-overload printTo(stream, x:SymbolValue) {
+overload printTo(stream, x:Symbol) {
     printTo(stream, x.head.ast.name.str);
     if (not empty?(x.params))
         printTo(stream, x.params);
+}
+overload printTo(stream, x:Primitive) {
+    printTo(stream, primitiveName(x.kind));
 }
 
 [T | VariantMember?(Value, T)]

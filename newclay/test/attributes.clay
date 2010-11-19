@@ -1,0 +1,114 @@
+
+
+//
+// mapValues
+//
+
+symbol mapValues = ();
+static overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
+static overload mapValues('f) = ;
+
+
+
+//
+// clay types as symbols
+//
+
+symbol Bool = ();
+symbol Int = ();
+symbol Array['T, 'n] = ();
+symbol Tuple[...'T] = ();
+
+symbol String = ();
+
+
+symbol tupleWithTag? = ();
+static overload tupleWithTag?('x, 'tag) =
+    staticTuple?('x)
+    and staticLesser?(0, staticTupleSize('x))
+    and staticEquals?(staticTupleElement('x, 0), 'tag);
+
+
+
+//
+// record types
+//
+
+symbol RecordTag = ();
+
+symbol recordType = ();
+static overload recordType(...'fields) =
+    (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
+
+symbol fieldNames = ();
+static overload fieldNames(...'fields) =
+    (...mapValues(f => staticTupleElement(f, 0), ...'fields));
+
+symbol fieldTypes = ();
+static overload fieldTypes(...'fields) =
+    (...mapValues(f => staticTupleElement(f, 1), ...'fields));
+
+symbol record? = ();
+static overload record?('t) =
+    staticSymbol?('t)
+    and tupleWithTag?(staticSymbolBody('t), RecordTag);
+
+symbol recordFieldCount = ();
+static overload recordFieldCount('t) | record?('t) =
+    staticTupleSize(staticTupleElement(staticSymbolBody('t), 1));
+
+symbol recordFieldNames = ();
+static overload recordFieldNames('t) | record?('t) =
+    staticTupleElement(staticSymbolBody('t), 1);
+
+symbol recordFieldTypes = ();
+static overload recordFieldTypes('t) | record?('t) =
+    staticTupleElement(staticSymbolBody('t), 2);
+
+
+
+//
+// variant types
+//
+
+symbol VariantTag = ();
+
+symbol variantType = ();
+static overload variantType(...'members) = (VariantTag, (...'members));
+
+symbol variant? = ();
+static overload variant?('t) = 
+    staticSymbol?('t)
+    and tupleWithTag?(staticSymbolBody('t), VariantTag);
+
+symbol variantMembers = ();
+static overload variantMembers('t) | variant?('t) = (
+    ...staticTupleElements(staticTupleElement(staticSymbolBody('t), 1)),
+    ...staticTupleElements(staticSymbolAttributes('t)),
+);
+
+
+
+//
+// testing
+//
+
+symbol GenericError = recordType(
+    ("msg", String),
+);
+
+symbol Exception = variantType(GenericError);
+
+symbol AssertionError = recordType(
+    ("condition", String),
+    ("msg", String),
+);
+
+attribute Exception = AssertionError;
+
+symbol main = ();
+static overload main() = (
+    variant?(String),
+    variant?(Exception),
+    variantMembers(Exception)
+);
