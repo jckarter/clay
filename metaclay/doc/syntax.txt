@@ -7,11 +7,7 @@
 GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
 SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
-
-Function -> "function" Identifier ";"
 Overload -> "overload" TargetPattern "(" PatternList? ")" Predicate? "=" ExprList ";"
-FunctionWithBody -> "function"? Identifier "(" PatternList? ")" Predicate? "=" ExprList ";"
-
 Predicate -> "|" Expr
 
 

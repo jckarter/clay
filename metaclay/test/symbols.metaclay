@@ -4,7 +4,7 @@
 // mapValues
 //
 
-function mapValues;
+symbol mapValues = ();
 overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
 overload mapValues('f) = ;
 
@@ -21,22 +21,34 @@ symbol Tuple[...'T] = ();
 
 symbol RecordTag = ();
 
-recordType(...'fields) = (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
-fieldNames(...'fields) = (...mapValues(f => tupleElement(f, 0), ...'fields));
-fieldTypes(...'fields) = (...mapValues(f => tupleElement(f, 1), ...'fields));
+symbol recordType = ();
+overload recordType(...'fields) = (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
 
-record?('t) =
+symbol fieldNames = ();
+overload fieldNames(...'fields) = (...mapValues(f => tupleElement(f, 0), ...'fields));
+
+symbol fieldTypes = ();
+overload fieldTypes(...'fields) = (...mapValues(f => tupleElement(f, 1), ...'fields));
+
+symbol record? = ();
+overload record?('t) =
     symbol?('t)
     and tupleWithTag?(symbolBody('t), RecordTag);
 
-tupleWithTag?('x, 'tag) =
+symbol tupleWithTag? = ();
+overload tupleWithTag?('x, 'tag) =
     tuple?('x)
     and lesser?(0, tupleSize('x))
     and equals?(tupleElement('x, 0), 'tag);
 
-recordFieldCount('t) | record?('t) = tupleSize(tupleElement(symbolBody('t), 1));
-recordFieldNames('t) | record?('t) = tupleElement(symbolBody('t), 1);
-recordFieldTypes('t) | record?('t) = tupleElement(symbolBody('t), 2);
+symbol recordFieldCount = ();
+overload recordFieldCount('t) | record?('t) = tupleSize(tupleElement(symbolBody('t), 1));
+
+symbol recordFieldNames = ();
+overload recordFieldNames('t) | record?('t) = tupleElement(symbolBody('t), 1);
+
+symbol recordFieldTypes = ();
+overload recordFieldTypes('t) | record?('t) = tupleElement(symbolBody('t), 2);
 
 
 symbol Point['T] = recordType(
@@ -44,6 +56,8 @@ symbol Point['T] = recordType(
     ("y", 'T),
 );
 
-recordInfo('t) | record?('t) = ('t, recordFieldNames('t), recordFieldTypes('t));
+symbol recordInfo = ();
+overload recordInfo('t) | record?('t) = ('t, recordFieldNames('t), recordFieldTypes('t));
 
-main() = recordInfo(Point[Int]);
+symbol main = ();
+overload main() = recordInfo(Point[Int]);

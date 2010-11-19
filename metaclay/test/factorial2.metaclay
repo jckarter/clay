@@ -1,8 +1,10 @@
 
-factorial('n) =
+symbol factorial = ();
+overload factorial('n) =
     if (lesser?('n, 2))
         1
     else
         multiply('n, factorial(subtract('n, 1)));
 
-main() = factorial(8);
+symbol main = ();
+overload main() = factorial(8);

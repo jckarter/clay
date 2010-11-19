@@ -26,26 +26,11 @@ private initializeGlobals(module) {
             },
             ast.Attribute, x => {
             },
-            ast.Function, x => {
-                var astSymbol = ast.Symbol(
-                    x.name, ast.VariadicList[ast.Identifier](),
-                    ast.Expr(ast.TupleExpr(ast.ExprList())),
-                );
-                ast.assignLocation(astSymbol, x);
-                envAdd(env, x.name, SymbolHead(astSymbol, module));
-            },
             ast.Overload, x => {
             }
         );
     }
     module.globals = env;
-}
-
-private envLookupFunction(env, name) {
-    ref entry = envLookup(env, name);
-    if (not variantIs?(entry, Function))
-        genericError("expecting a function '", name, "' name, but received: ", entry);
-    return variantAs(entry, Function);
 }
 
 private initializeAttributesAndOverloads(module) {
@@ -55,15 +40,6 @@ private initializeAttributesAndOverloads(module) {
             ast.Attribute, x => {
                 var y = Attribute(x, module);
                 push(module.program.allAttributes, y);
-            },
-            ast.Function, x => {
-                maybe(x.body,
-                    astOverload ref=> {
-                        var y = Overload(astOverload, module);
-                        push(module.program.allOverloads, y);
-                    },
-                    () => {},
-                );
             },
             ast.Overload, x => {
                 var y = Overload(x, module);

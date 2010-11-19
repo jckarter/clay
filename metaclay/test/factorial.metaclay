@@ -1,7 +1,8 @@
 
-function factorial;
+symbol factorial = ();
 overload factorial('n) = multiply('n, factorial(subtract('n, 1)));
 overload factorial(1) = 1;
 overload factorial(0) = 1;
 
-main() = factorial(8);
+symbol main = ();
+overload main() = factorial(8);
