@@ -1,7 +1,7 @@
 
 
 //
-// constructors, moveUnsafe, resetUnsafe, destory, assign
+// constructors, moveUnsafe, resetUnsafe, destroy, assign
 //
 
 [E | Enum?(E)]
