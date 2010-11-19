@@ -425,4 +425,11 @@ observeTo(stream, forward ...x) {
     flush(stream);
     return forward ...forwardValues(captured);
 }
+[tag | Identifier?(tag)]
+overload observeTo(stream, static tag, forward ...x) {
+    var captured = captureValues(...x);
+    printlnTo(stream, "[observed ", tag, ": ", ...weaveValues(", ", ...capturedRefs(captured)), "]");
+    flush(stream);
+    return forward ...forwardValues(captured);
+}
 observe(forward ...x) = forward ...observeTo(stderr, ...x);
