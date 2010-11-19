@@ -3,6 +3,7 @@ import cocoa.*;
 procedure objcType;
 
 [T | Record?(T)] overload objcType(static T) = "struct " + StaticName(T);
+[T | Enum?(T)] overload objcType(static T) = "enum " + StaticName(T);
 
 [T | Class?(T)]
 overload objcType(static T) = ClassName(T) + " *";
