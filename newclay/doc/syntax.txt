@@ -7,7 +7,7 @@
 GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
 SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
-StaticOverload -> "static" "overload" TargetPattern "(" PatternList? ")"
+StaticOverload -> "static" "overload" TargetPattern "(" ListPattern? ")"
                    Predicate? "=" ExprList ";"
 Predicate -> "|" Expr
 
@@ -17,7 +17,7 @@ Predicate -> "|" Expr
 // patterns
 //
 
-PatternList -> variadic_list(Pattern, PatternNameRef)
+ListPattern -> variadic_list(Pattern, PatternNameRef)
 Pattern -> BoolLiteral
          | IntLiteral
          | StringLiteral
@@ -25,7 +25,7 @@ Pattern -> BoolLiteral
          | Identifier
          | PatternNameRef
 
-IndexingPattern -> Identifier "[" PatternList "]"
+IndexingPattern -> Identifier "[" ListPattern "]"
 
 TargetPattern -> IndexingPattern
                | Identifier
