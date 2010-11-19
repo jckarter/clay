@@ -27,10 +27,12 @@ inline nothing(T) = Maybe[T]();
 //
 
 inline nothing?(x) = variantIs?(x, Nothing);
-inline anything?(x) = variantIs?(x, Type(just(x)));
+inline just?(x) = variantIs?(x, Type(just(x)));
 
 [T]
 inline just(forward m: Maybe[T]) = forward variantAs(m, T);
+[T]
+inline just(m: Maybe[T], dflt: T) = maybe(m, v => v, () => dflt);
 
 
 //
