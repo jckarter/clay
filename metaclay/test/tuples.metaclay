@@ -4,7 +4,7 @@
 // mapValues
 //
 
-function mapValues;
+symbol mapValues = ();
 overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
 overload mapValues('f) = ;
 
@@ -14,7 +14,8 @@ overload mapValues('f) = ;
 // mapTuple
 //
 
-mapTuple('f, 'a) = (...mapValues('f, ...tupleElements('a)));
+symbol mapTuple = ();
+overload mapTuple('f, 'a) = (...mapValues('f, ...tupleElements('a)));
 
 
 
@@ -22,7 +23,8 @@ mapTuple('f, 'a) = (...mapValues('f, ...tupleElements('a)));
 // reverseTuple
 //
 
-reverseTuple('a) =
+symbol reverseTuple = ();
+overload reverseTuple('a) =
     mapTuple(
         i => tupleElement('a, subtract(tupleSize('a), add(i,1))),
         (...integers(tupleSize('a))),
@@ -34,4 +36,5 @@ reverseTuple('a) =
 // main
 //
 
-main() = reverseTuple((1, 2, true, false, "foo"));
+symbol main = ();
+overload main() = reverseTuple((1, 2, true, false, "foo"));

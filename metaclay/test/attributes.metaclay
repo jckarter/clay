@@ -4,7 +4,7 @@
 // mapValues
 //
 
-function mapValues;
+symbol mapValues = ();
 overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
 overload mapValues('f) = ;
 
@@ -22,7 +22,8 @@ symbol Tuple[...'T] = ();
 symbol String = ();
 
 
-tupleWithTag?('x, 'tag) =
+symbol tupleWithTag? = ();
+overload tupleWithTag?('x, 'tag) =
     tuple?('x)
     and lesser?(0, tupleSize('x))
     and equals?(tupleElement('x, 0), 'tag);
@@ -35,17 +36,28 @@ tupleWithTag?('x, 'tag) =
 
 symbol RecordTag = ();
 
-recordType(...'fields) = (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
-fieldNames(...'fields) = (...mapValues(f => tupleElement(f, 0), ...'fields));
-fieldTypes(...'fields) = (...mapValues(f => tupleElement(f, 1), ...'fields));
+symbol recordType = ();
+overload recordType(...'fields) = (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
 
-record?('t) =
+symbol fieldNames = ();
+overload fieldNames(...'fields) = (...mapValues(f => tupleElement(f, 0), ...'fields));
+
+symbol fieldTypes = ();
+overload fieldTypes(...'fields) = (...mapValues(f => tupleElement(f, 1), ...'fields));
+
+symbol record? = ();
+overload record?('t) =
     symbol?('t)
     and tupleWithTag?(symbolBody('t), RecordTag);
 
-recordFieldCount('t) | record?('t) = tupleSize(tupleElement(symbolBody('t), 1));
-recordFieldNames('t) | record?('t) = tupleElement(symbolBody('t), 1);
-recordFieldTypes('t) | record?('t) = tupleElement(symbolBody('t), 2);
+symbol recordFieldCount = ();
+overload recordFieldCount('t) | record?('t) = tupleSize(tupleElement(symbolBody('t), 1));
+
+symbol recordFieldNames = ();
+overload recordFieldNames('t) | record?('t) = tupleElement(symbolBody('t), 1);
+
+symbol recordFieldTypes = ();
+overload recordFieldTypes('t) | record?('t) = tupleElement(symbolBody('t), 2);
 
 
 
@@ -55,13 +67,16 @@ recordFieldTypes('t) | record?('t) = tupleElement(symbolBody('t), 2);
 
 symbol VariantTag = ();
 
-variantType(...'members) = (VariantTag, (...'members));
+symbol variantType = ();
+overload variantType(...'members) = (VariantTag, (...'members));
 
-variant?('t) = 
+symbol variant? = ();
+overload variant?('t) = 
     symbol?('t)
     and tupleWithTag?(symbolBody('t), VariantTag);
 
-variantMembers('t) | variant?('t) = (
+symbol variantMembers = ();
+overload variantMembers('t) | variant?('t) = (
     ...tupleElements(tupleElement(symbolBody('t), 1)),
     ...tupleElements(symbolAttributes('t)),
 );
@@ -85,7 +100,8 @@ symbol AssertionError = recordType(
 
 attribute Exception = AssertionError;
 
-main() = (
+symbol main = ();
+overload main() = (
     variant?(String),
     variant?(Exception),
     variantMembers(Exception)
