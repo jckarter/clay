@@ -1,0 +1,40 @@
+
+
+//
+// mapValues
+//
+
+symbol mapValues = ();
+static overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
+static overload mapValues('f) = ;
+
+
+
+//
+// mapTuple
+//
+
+symbol mapTuple = ();
+static overload mapTuple('f, 'a) = (...mapValues('f, ...staticTupleElements('a)));
+
+
+
+//
+// reverseTuple
+//
+
+symbol reverseTuple = ();
+static overload reverseTuple('a) =
+    mapTuple(
+        i => staticTupleElement('a, staticSubtract(staticTupleSize('a), staticAdd(i,1))),
+        (...staticIntegers(staticTupleSize('a))),
+    );
+
+
+
+//
+// main
+//
+
+symbol main = ();
+static overload main() = reverseTuple((1, 2, true, false, "foo"));

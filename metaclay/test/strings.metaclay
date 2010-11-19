@@ -1,31 +1,0 @@
-
-
-//
-// mapValues
-//
-
-function mapValues;
-overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
-overload mapValues('f) = ;
-
-
-
-//
-// stringChar, reverseString
-//
-
-stringChar('s, 'i) = stringSlice('s, 'i, add('i, 1));
-
-reverseString('s) =
-    stringConcat(...mapValues(
-        i => stringChar('s, subtract(stringSize('s), add(i,1))),
-        ...integers(stringSize('s)),
-    ));
-
-
-
-//
-// main
-//
-
-main() = reverseString("foobar");
