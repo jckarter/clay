@@ -256,6 +256,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
     TestCase("printing objects", test => {
         expectEqual(test, "print NSString", "whisky", printString(NSString(#"whisky")));
         expectEqual(test, "print NSNumber", "2020", printString(NSNumber(2020)));
+        expectEqual(test, "print nil", "(nil)", printString(nil(NSString)));
     }),
     TestCase("property accessor methods", test => {
         var x = Retained(PropertyTest.alloc().init());

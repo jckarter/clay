@@ -49,7 +49,7 @@ void usage(char *argv0) {
     cerr << "                      By default bindings are generated for all parsed\n";
     cerr << "                      definitions.\n";
     cerr << "  -import <module>  - Add an \"import <module>.*;\" statement to the\n";
-    cerr << "                    - generated output\n";
+    cerr << "                      generated output\n";
     exit(EXIT_FAILURE);
 }
 

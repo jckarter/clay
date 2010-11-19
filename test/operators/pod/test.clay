@@ -6,6 +6,9 @@ overload RegularRecord?(static IrregularRecord) = false;
 record PODRecord (x: Int, y: Char);
 record NonPODRecord (x: Int, y: IrregularRecord);
 
+variant PODVariant = Int | Char;
+variant NonPODVariant = Int | NonPODRecord;
+
 expectPOD(test, tf, Type) { expectEqual(test, StaticName(Type), tf, PODType?(Type)); }
 
 main() = testMain(TestSuite("PODType?", [
@@ -16,8 +19,10 @@ main() = testMain(TestSuite("PODType?", [
         expectPOD(test, true,  Array[Int, 2]);
         expectPOD(test, false, Array[IrregularRecord, 2]);
         expectPOD(test, true,  Vec[Int, 2]);
+        expectPOD(test, true,  Tuple[]);
         expectPOD(test, true,  Tuple[Int, Float]);
         expectPOD(test, false, Tuple[Int, IrregularRecord]);
+        expectPOD(test, true,  Union[]);
         expectPOD(test, true,  Union[Int, Float]);
 
         expectPOD(test, true,  Char);
@@ -26,5 +31,8 @@ main() = testMain(TestSuite("PODType?", [
         expectPOD(test, false, UniquePointer[Int]);
         expectPOD(test, false, Vector[Int]);
         expectPOD(test, false, String);
+
+        expectPOD(test, true,  PODVariant);
+        expectPOD(test, false, NonPODVariant);
     }),
 ]));

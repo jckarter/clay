@@ -7,11 +7,11 @@ public import maybe.*;
 //
 // SqliteError exception
 //
-record SqliteError (code: Int, message: CStringRef);
+record SqliteError (code: Int, message: String);
 instance Exception = SqliteError;
 
-overload SqliteError(code: Int, db: SqliteDB)
-    = SqliteError(code, CStringRef(sqlite3_errmsg(db.handle)));
+overload SqliteError(code: Int, dbHandle: Pointer[sqlite3])
+    = SqliteError(code, String(CStringRef(sqlite3_errmsg(dbHandle))));
 
 
 
@@ -24,8 +24,11 @@ overload RegularRecord?(static SqliteDB) = false;
 [S | CCompatibleString?(S)]
 overload SqliteDB(filename: S) returned: SqliteDB {
     var code = sqlite3_open(cstring(filename), &returned.handle);
-    if (code != SQLITE_OK)
-        throw SqliteError(code, returned);
+    if (code != SQLITE_OK) {
+        var errmsg = String(CStringRef(sqlite3_errmsg(returned.handle)));
+        sqlite3_close(returned.handle);
+        throw SqliteError(code, move(errmsg));
+    }
 }
 
 overload moveUnsafe(db: SqliteDB) = SqliteDB(db.handle);
@@ -46,7 +49,7 @@ overload SqliteStatement(db: SqliteDB, sql: S) returned: SqliteStatement {
         &returned.handle, null(Pointer[CChar])
     );
     if (code != SQLITE_OK)
-        throw SqliteError(code, db);
+        throw SqliteError(code, db.handle);
 }
 
 overload moveUnsafe(st: SqliteStatement) = SqliteStatement(st.handle);
@@ -114,8 +117,6 @@ overload SqliteStatement(db: SqliteDB, sql: S, ...bindings: TT) {
 overload bindStatement(st: SqliteStatement, name: NS, value)
     { bindStatement(st, sqlite3_bind_parameter_index(st.handle, cstring(name)), value); }
 
-alias DUMMY_ERROR_MSG = CStringRef(cstring(""));
-
 [...TT | allValues?(BindableType?, ...TT)]
 runStatement(st: SqliteStatement, ...bindings: TT) {
     bindStatementValues(st, ...bindings);
@@ -123,7 +124,7 @@ runStatement(st: SqliteStatement, ...bindings: TT) {
     var code = sqlite3_step(st.handle);
     var baseCode = bitwiseAnd(code, 0xFF);
     if (not inValues?(baseCode, SQLITE_OK, SQLITE_ROW, SQLITE_DONE))
-        throw SqliteError(code, DUMMY_ERROR_MSG);
+        throw SqliteError(code, sqlite3_db_handle(st.handle));
     resetStatement(st);
 }
 
@@ -132,7 +133,7 @@ overload runStatement(db: SqliteDB, sql: S) {
     var msg = Pointer[CChar]();
     var code = sqlite3_exec(db.handle, cstring(sql), sqlite3_callback(0), RawPointer(0), &msg);
     if (code != SQLITE_OK)
-        throw SqliteError(code, CStringRef(msg));
+        throw SqliteError(code, String(CStringRef(msg)));
 }
 
 [S, ...TT | CCompatibleString?(S) and countValues(...TT) > 0 and allValues?(BindableType?, ...TT)]
@@ -169,7 +170,7 @@ overload hasNext?(st: SqliteStatementIterator) {
     var code = sqlite3_step(st.handle);
     var baseCode = bitwiseAnd(code, 0xFF);
     if (not inValues?(baseCode, SQLITE_OK, SQLITE_ROW, SQLITE_DONE))
-        throw SqliteError(code, DUMMY_ERROR_MSG);
+        throw SqliteError(code, sqlite3_db_handle(st.handle));
     return code != SQLITE_DONE;
 }
 
@@ -192,12 +193,22 @@ overload index(st: SqliteStatementIterator, n: N, static I)
     = I(sqlite3_column_int64(st.handle, Int(n)));
 
 [N, S | Integer?(N) and String?(S)]
-overload index(st: SqliteStatementIterator, n: N, static S)
-    = S(CStringRef(sqlite3_column_text(st.handle, Int(n))));
+overload index(st: SqliteStatementIterator, n: N, static S) {
+    var cstr = sqlite3_column_text(st.handle, Int(n));
+    if (null?(cstr))
+        return S();
+    else
+        return S(CStringRef(cstr));
+}
 
 [N | Integer?(N)]
-overload index(st: SqliteStatementIterator, n: N, static CStringRef)
-    = CStringRef(sqlite3_column_text(st.handle, Int(n)));
+overload index(st: SqliteStatementIterator, n: N, static CStringRef) {
+    var cstr = sqlite3_column_text(st.handle, Int(n));
+    if (null?(cstr))
+        return CStringRef(cstring(""));
+    else
+        return CStringRef(cstr);
+}
 
 [N | Integer?(N)]
 overload index(st: SqliteStatementIterator, n: N)
