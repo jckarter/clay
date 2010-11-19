@@ -5,8 +5,8 @@
 //
 
 symbol mapValues = ();
-overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
-overload mapValues('f) = ;
+static overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
+static overload mapValues('f) = ;
 
 
 
@@ -15,13 +15,13 @@ overload mapValues('f) = ;
 //
 
 symbol stringChar = ();
-overload stringChar('s, 'i) = stringSlice('s, 'i, add('i, 1));
+static overload stringChar('s, 'i) = staticStringSlice('s, 'i, staticAdd('i, 1));
 
 symbol reverseString = ();
-overload reverseString('s) =
-    stringConcat(...mapValues(
-        i => stringChar('s, subtract(stringSize('s), add(i,1))),
-        ...integers(stringSize('s)),
+static overload reverseString('s) =
+    staticStringConcat(...mapValues(
+        i => stringChar('s, staticSubtract(staticStringSize('s), staticAdd(i,1))),
+        ...staticIntegers(staticStringSize('s)),
     ));
 
 
@@ -31,4 +31,4 @@ overload reverseString('s) =
 //
 
 symbol main = ();
-overload main() = reverseString("foobar");
+static overload main() = reverseString("foobar");

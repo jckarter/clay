@@ -5,8 +5,8 @@
 //
 
 symbol mapValues = ();
-overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
-overload mapValues('f) = ;
+static overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
+static overload mapValues('f) = ;
 
 
 
@@ -23,10 +23,10 @@ symbol String = ();
 
 
 symbol tupleWithTag? = ();
-overload tupleWithTag?('x, 'tag) =
-    tuple?('x)
-    and lesser?(0, tupleSize('x))
-    and equals?(tupleElement('x, 0), 'tag);
+static overload tupleWithTag?('x, 'tag) =
+    staticTuple?('x)
+    and staticLesser?(0, staticTupleSize('x))
+    and staticEquals?(staticTupleElement('x, 0), 'tag);
 
 
 
@@ -37,27 +37,33 @@ overload tupleWithTag?('x, 'tag) =
 symbol RecordTag = ();
 
 symbol recordType = ();
-overload recordType(...'fields) = (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
+static overload recordType(...'fields) =
+    (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
 
 symbol fieldNames = ();
-overload fieldNames(...'fields) = (...mapValues(f => tupleElement(f, 0), ...'fields));
+static overload fieldNames(...'fields) =
+    (...mapValues(f => staticTupleElement(f, 0), ...'fields));
 
 symbol fieldTypes = ();
-overload fieldTypes(...'fields) = (...mapValues(f => tupleElement(f, 1), ...'fields));
+static overload fieldTypes(...'fields) =
+    (...mapValues(f => staticTupleElement(f, 1), ...'fields));
 
 symbol record? = ();
-overload record?('t) =
-    symbol?('t)
-    and tupleWithTag?(symbolBody('t), RecordTag);
+static overload record?('t) =
+    staticSymbol?('t)
+    and tupleWithTag?(staticSymbolBody('t), RecordTag);
 
 symbol recordFieldCount = ();
-overload recordFieldCount('t) | record?('t) = tupleSize(tupleElement(symbolBody('t), 1));
+static overload recordFieldCount('t) | record?('t) =
+    staticTupleSize(staticTupleElement(staticSymbolBody('t), 1));
 
 symbol recordFieldNames = ();
-overload recordFieldNames('t) | record?('t) = tupleElement(symbolBody('t), 1);
+static overload recordFieldNames('t) | record?('t) =
+    staticTupleElement(staticSymbolBody('t), 1);
 
 symbol recordFieldTypes = ();
-overload recordFieldTypes('t) | record?('t) = tupleElement(symbolBody('t), 2);
+static overload recordFieldTypes('t) | record?('t) =
+    staticTupleElement(staticSymbolBody('t), 2);
 
 
 
@@ -68,17 +74,17 @@ overload recordFieldTypes('t) | record?('t) = tupleElement(symbolBody('t), 2);
 symbol VariantTag = ();
 
 symbol variantType = ();
-overload variantType(...'members) = (VariantTag, (...'members));
+static overload variantType(...'members) = (VariantTag, (...'members));
 
 symbol variant? = ();
-overload variant?('t) = 
-    symbol?('t)
-    and tupleWithTag?(symbolBody('t), VariantTag);
+static overload variant?('t) = 
+    staticSymbol?('t)
+    and tupleWithTag?(staticSymbolBody('t), VariantTag);
 
 symbol variantMembers = ();
-overload variantMembers('t) | variant?('t) = (
-    ...tupleElements(tupleElement(symbolBody('t), 1)),
-    ...tupleElements(symbolAttributes('t)),
+static overload variantMembers('t) | variant?('t) = (
+    ...staticTupleElements(staticTupleElement(staticSymbolBody('t), 1)),
+    ...staticTupleElements(staticSymbolAttributes('t)),
 );
 
 
@@ -101,7 +107,7 @@ symbol AssertionError = recordType(
 attribute Exception = AssertionError;
 
 symbol main = ();
-overload main() = (
+static overload main() = (
     variant?(String),
     variant?(Exception),
     variantMembers(Exception)

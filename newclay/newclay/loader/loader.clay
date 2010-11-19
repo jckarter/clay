@@ -26,7 +26,7 @@ private initializeGlobals(module) {
             },
             ast.Attribute, x => {
             },
-            ast.Overload, x => {
+            ast.StaticOverload, x => {
             }
         );
     }
@@ -41,9 +41,9 @@ private initializeAttributesAndOverloads(module) {
                 var y = Attribute(x, module);
                 push(module.program.allAttributes, y);
             },
-            ast.Overload, x => {
-                var y = Overload(x, module);
-                push(module.program.allOverloads, y);
+            ast.StaticOverload, x => {
+                var y = StaticOverload(x, module);
+                push(module.program.allStaticOverloads, y);
             },
         );
     }

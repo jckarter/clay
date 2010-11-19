@@ -7,7 +7,8 @@
 GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
 SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
-Overload -> "overload" TargetPattern "(" PatternList? ")" Predicate? "=" ExprList ";"
+StaticOverload -> "static" "overload" TargetPattern "(" PatternList? ")"
+                   Predicate? "=" ExprList ";"
 Predicate -> "|" Expr
 
 
