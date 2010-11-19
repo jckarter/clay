@@ -1,0 +1,4 @@
+main() {
+    println(Array[Char, 5]('z'));
+    println(Array[Char, 1]('z'));
+}
