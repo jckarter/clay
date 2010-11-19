@@ -1,7 +1,7 @@
 
-import metaclay.common.*;
-import metaclay.loader.*;
-import metaclay.evaluator.*;
+import newclay.common.*;
+import newclay.loader.*;
+import newclay.evaluator.*;
 
 main(args) {
     if (size(args) != 2) {

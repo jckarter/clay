@@ -1,10 +1,10 @@
 
 import maybe.*;
-import metaclay.common.*;
-import metaclay.lexer.*;
-import metaclay.ast as ast;
-import metaclay.parser.*;
-import metaclay.core.*;
+import newclay.common.*;
+import newclay.lexer.*;
+import newclay.ast as ast;
+import newclay.parser.*;
+import newclay.core.*;
 
 private primitivesEnv() {
     var env = newEnv();

@@ -1,10 +1,10 @@
 
 import maybe.*;
 import parsing.combinators.wrapper.*;
-import metaclay.common.*;
-import metaclay.lexer.*;
-import metaclay.ast.*;
-import metaclay.diagnostics.*;
+import newclay.common.*;
+import newclay.lexer.*;
+import newclay.ast.*;
+import newclay.diagnostics.*;
 
 
 

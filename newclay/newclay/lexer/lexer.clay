@@ -1,6 +1,6 @@
 
-import metaclay.common.*;
-import metaclay.diagnostics.*;
+import newclay.common.*;
+import newclay.diagnostics.*;
 import maybe.*;
 import parsing.combinators.wrapper.*;
 

@@ -1,7 +1,6 @@
 
-import metaclay.common.*;
-import metaclay.lexer.*;
-import metaclay.parser.*;
+import newclay.common.*;
+import newclay.lexer.*;
 
 main(args) {
     if (size(args) != 2) {
@@ -10,8 +9,11 @@ main(args) {
     }
     try {
         var file = readSource(args[1]);
-        var ast = parse(tokenize(file));
-        println(ast.topLevelItems);
+        var tokens = tokenize(file);
+        for (x in tokens.vector) {
+            ref r = x.range;
+            println(x.kind, ": ", sliced(file.data, r.begin, r.end));
+        }
     }
     catch (e:ClayError) {
         displayError(e);
