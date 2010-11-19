@@ -191,7 +191,7 @@ record IndexingPattern = ast(
 
 variant TopLevelItem = Symbol
                      | Attribute
-                     | Overload
+                     | StaticOverload
                      ;
 
 record Symbol = ast(
@@ -206,7 +206,7 @@ record Attribute = ast(
     body: Expr,
 );
 
-record Overload = ast(
+record StaticOverload = ast(
     target: Pattern,
     args: ListPattern,
     predicate: Maybe[Expr],

@@ -1,10 +1,10 @@
 
 symbol factorial = ();
-overload factorial('n) =
-    if (lesser?('n, 2))
+static overload factorial('n) =
+    if (staticLesser?('n, 2))
         1
     else
-        multiply('n, factorial(subtract('n, 1)));
+        staticMultiply('n, factorial(staticSubtract('n, 1)));
 
 symbol main = ();
-overload main() = factorial(8);
+static overload main() = factorial(8);

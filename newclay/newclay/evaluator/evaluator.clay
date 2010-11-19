@@ -419,10 +419,10 @@ overload evaluateCall(x:LambdaValue, args) {
     return evaluateExprList(x.value.body, env2);
 }
 overload evaluateCall(x:Symbol, args) {
-    return callOverload(x.head.module.program, Value(x), args);
+    return callStaticOverload(x.head.module.program, Value(x), args);
 }
 overload evaluateCall(x:SymbolHead, args) {
-    return callOverload(x.module.program, Value(x), args);
+    return callStaticOverload(x.module.program, Value(x), args);
 }
 overload evaluateCall(x:Primitive, args) {
     return evaluatePrimitive(x.kind, args);
@@ -760,7 +760,7 @@ overload call(x:PatternVarCollector, pattern, variadic?) {
 //
 
 procedure applyCollector;
-overload applyCollector(x:Overload, collector) {
+overload applyCollector(x:StaticOverload, collector) {
     walkPattern(x.ast.target, collector);
     walkListPattern(x.ast.args, collector);
 }
@@ -768,7 +768,7 @@ overload applyCollector(x:Attribute, collector) {
     walkPattern(x.ast.target, collector);
 }
 
-[T | (T == Overload) or (T == Attribute)]
+[T | (T == StaticOverload) or (T == Attribute)]
 initializePatternVars(x:T) {
     if (x.patternVarsInitialized?)
         return;
@@ -782,10 +782,10 @@ initializePatternVars(x:T) {
 
 
 //
-// matchAttribute, matchOverload
+// matchAttribute, matchStaticOverload
 //
 
-[T | (T == Attribute) or (T == Overload)]
+[T | (T == Attribute) or (T == StaticOverload)]
 private initializeMatch(x:T) {
     initializePatternVars(x);
     var env = newEnv(x.module.globals);
@@ -796,7 +796,7 @@ private initializeMatch(x:T) {
     return env;
 }
 
-[T | (T == Attribute) or (T == Overload)]
+[T | (T == Attribute) or (T == StaticOverload)]
 private finishMatch(x:T, env:Env) {
     for (name in x.patternVars)
         derefPattern(env, name);
@@ -820,7 +820,7 @@ matchAttribute(x:Attribute, target:Value) Maybe[Env] {
     return finishMatch(x, env);
 }
 
-matchOverload(x:Overload, callable:Value, args:ValueList) Maybe[Env] {
+matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env] {
     var env = initializeMatch(x);
     var callablePattern = evaluatePattern(x.ast.target, env);
     if (not unify(callablePattern, callable))
@@ -850,12 +850,12 @@ evaluateAttributes(program, target) {
 
 
 //
-// callOverload
+// callStaticOverload
 //
 
-callOverload(program, callable, args) {
-    for (x in reversed(program.allOverloads)) {
-        var result = matchOverload(x, callable, args);
+callStaticOverload(program, callable, args) {
+    for (x in reversed(program.allStaticOverloads)) {
+        var result = matchStaticOverload(x, callable, args);
         if (not nothing?(result))
             return evaluateExprList(x.ast.body, just(result));
     }
@@ -956,46 +956,46 @@ private oneSymbol(args) {
 
 evaluatePrimitive(kind, args) {
     switch (kind) {
-    case PRIM_int? : {
+    case PRIM_staticInt? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, IntValue)));
     }
-    case PRIM_add : {
+    case PRIM_staticAdd : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a + b));
     }
-    case PRIM_subtract : {
+    case PRIM_staticSubtract : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a - b));
     }
-    case PRIM_multiply : {
+    case PRIM_staticMultiply : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a * b));
     }
-    case PRIM_divide : {
+    case PRIM_staticDivide : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a / b));
     }
-    case PRIM_remainder : {
+    case PRIM_staticRemainder : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a % b));
     }
-    case PRIM_integers : {
+    case PRIM_staticIntegers : {
         var a = oneInt(args);
         if (a < 0)
             genericError("expecting a non-negative integer");
         return ValueList(mapped(i => Value(IntValue(i)), range(a)));
     }
 
-    case PRIM_bool? : {
+    case PRIM_staticBool? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, BoolValue)));
     }
-    case PRIM_equals? : {
+    case PRIM_staticEquals? : {
         var a, b = ...twoValues(args);
         return ValueList(BoolValue(a == b));
     }
-    case PRIM_lesser? : {
+    case PRIM_staticLesser? : {
         var a, b = ...twoValues(args);
         if (variantIs?(a, BoolValue) and variantIs?(b, BoolValue)) {
             var x, y = ...mapValues(v => variantAs(v, BoolValue).value, a, b);
@@ -1011,15 +1011,15 @@ evaluatePrimitive(kind, args) {
         }
     }
 
-    case PRIM_string? : {
+    case PRIM_staticString? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, StringValue)));
     }
-    case PRIM_stringSize : {
+    case PRIM_staticStringSize : {
         var s = oneString(args);
         return ValueList(IntValue(Int(size(s))));
     }
-    case PRIM_stringSlice : {
+    case PRIM_staticStringSlice : {
         var s, i, j = ...stringIntInt(args);
         if ((i < 0) or (i > size(s)))
             genericError("invalid starting index: ", i);
@@ -1027,7 +1027,7 @@ evaluatePrimitive(kind, args) {
             genericError("invalid ending index: ", j);
         return ValueList(StringValue(slice(s, i, j)));
     }
-    case PRIM_stringConcat : {
+    case PRIM_staticStringConcat : {
         var a = nStrings(args);
         var result = String();
         for (s in a)
@@ -1035,36 +1035,36 @@ evaluatePrimitive(kind, args) {
         return ValueList(StringValue(move(result)));
     }
 
-    case PRIM_tuple? : {
+    case PRIM_staticTuple? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, TupleValue)));
     }
-    case PRIM_tuple : {
+    case PRIM_staticTuple : {
         return ValueList(TupleValue(args));
     }
-    case PRIM_tupleSize : {
+    case PRIM_staticTupleSize : {
         var a = oneTuple(args);
         return ValueList(IntValue(Int(size(a))));
     }
-    case PRIM_tupleElement : {
+    case PRIM_staticTupleElement : {
         var a, i = ...tupleInt(args);
         if ((i < 0) or (i > size(a)))
             genericError("tuple index out of range");
         return ValueList(a[i]);
     }
-    case PRIM_tupleElements : {
+    case PRIM_staticTupleElements : {
         return oneTuple(args);
     }
 
-    case PRIM_symbol? : {
+    case PRIM_staticSymbol? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, Symbol)));
     }
-    case PRIM_symbolBody : {
+    case PRIM_staticSymbolBody : {
         var a = oneSymbol(args);
         return ValueList(symbolBody(a));
     }
-    case PRIM_symbolAttributes : {
+    case PRIM_staticSymbolAttributes : {
         var a = oneSymbol(args);
         return ValueList(symbolAttributes(a));
     }

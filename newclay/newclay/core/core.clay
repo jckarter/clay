@@ -23,11 +23,11 @@ overload Module(program:Program, name:String) =
 record Program = referenceType(
     mainModule: Module,
     allAttributes: Vector[Attribute],
-    allOverloads: Vector[Overload],
+    allStaticOverloads: Vector[StaticOverload],
 );
 
 overload Program(module:Module) =
-    Program(module, Vector[Attribute](), Vector[Overload]());
+    Program(module, Vector[Attribute](), Vector[StaticOverload]());
 
 
 
@@ -70,16 +70,16 @@ overload Attribute(x:ast.Attribute, module:Module) =
         Vector[ast.Identifier](),
     );
 
-record Overload = referenceType(
-    ast: ast.Overload,
+record StaticOverload = referenceType(
+    ast: ast.StaticOverload,
     module: Module,
     patternVarsInitialized?: Bool,
     patternVars: Vector[ast.Identifier],
     variadicPatternVars: Vector[ast.Identifier],
 );
 
-overload Overload(x:ast.Overload, module:Module) =
-    Overload(
+overload StaticOverload(x:ast.StaticOverload, module:Module) =
+    StaticOverload(
         x, module, false,
         Vector[ast.Identifier](),
         Vector[ast.Identifier](),
@@ -92,33 +92,32 @@ overload Overload(x:ast.Overload, module:Module) =
 //
 
 enum PrimitiveKind {
-    PRIM_int?,
-    PRIM_add,
-    PRIM_subtract,
-    PRIM_multiply,
-    PRIM_divide,
-    PRIM_remainder,
-    PRIM_integers,
+    PRIM_staticInt?,
+    PRIM_staticAdd,
+    PRIM_staticSubtract,
+    PRIM_staticMultiply,
+    PRIM_staticDivide,
+    PRIM_staticRemainder,
+    PRIM_staticIntegers,
 
-    PRIM_bool?,
-    PRIM_equals?,
-    PRIM_lesser?,
+    PRIM_staticBool?,
+    PRIM_staticEquals?,
+    PRIM_staticLesser?,
 
-    PRIM_string?,
-    PRIM_stringSize,
-    PRIM_stringSlice,
-    PRIM_stringConcat,
-    PRIM_stringChars,
+    PRIM_staticString?,
+    PRIM_staticStringSize,
+    PRIM_staticStringSlice,
+    PRIM_staticStringConcat,
 
-    PRIM_tuple?,
-    PRIM_tuple,
-    PRIM_tupleSize,
-    PRIM_tupleElement,
-    PRIM_tupleElements,
+    PRIM_staticTuple?,
+    PRIM_staticTuple,
+    PRIM_staticTupleSize,
+    PRIM_staticTupleElement,
+    PRIM_staticTupleElements,
 
-    PRIM_symbol?,
-    PRIM_symbolBody,
-    PRIM_symbolAttributes,
+    PRIM_staticSymbol?,
+    PRIM_staticSymbolBody,
+    PRIM_staticSymbolAttributes,
 }
 
 record Primitive = referenceType(
