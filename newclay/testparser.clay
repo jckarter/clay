@@ -1,6 +1,7 @@
 
-import metaclay.common.*;
-import metaclay.loader.*;
+import newclay.common.*;
+import newclay.lexer.*;
+import newclay.parser.*;
 
 main(args) {
     if (size(args) != 2) {
@@ -8,8 +9,9 @@ main(args) {
         return -1;
     }
     try {
-        var program = loadProgram(args[1]);
-        println(program.mainModule.ast.topLevelItems);
+        var file = readSource(args[1]);
+        var ast = parse(tokenize(file));
+        println(ast.topLevelItems);
     }
     catch (e:ClayError) {
         displayError(e);

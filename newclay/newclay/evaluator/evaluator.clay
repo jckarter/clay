@@ -1,8 +1,8 @@
 
 import maybe.*;
-import metaclay.common.*;
-import metaclay.ast as ast;
-import metaclay.core.*;
+import newclay.common.*;
+import newclay.ast as ast;
+import newclay.core.*;
 
 
 

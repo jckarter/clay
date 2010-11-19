@@ -1,0 +1,18 @@
+
+import newclay.common.*;
+import newclay.loader.*;
+
+main(args) {
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <file>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[1]);
+        println(program.mainModule.ast.topLevelItems);
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
