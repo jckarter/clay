@@ -118,6 +118,12 @@ overload Array[T,n](rvalue s:S) returned:Array[T,n] {
     }
 }
 
+[T,n]
+overload Array[T,n](elt: T) returned:Array[T,n] {
+    for (relt in returned)
+        relt <-- elt;
+}
+
 [n, S | Sequence?(S)]
 overload Array(static n, forward s:S) {
     alias T = SequenceElementType(S);

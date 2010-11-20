@@ -133,7 +133,7 @@ overload answerRemoteMessage(instream) {
 [Protocol]
 answerLoop(static Protocol, instream) {
     var code = maybeReadMarshalSize(instream);
-    while(anything?(code)) {
+    while(just?(code)) {
         answerRemoteMessage(instream, just(code));
         code = maybeReadMarshalSize(instream);
     }
