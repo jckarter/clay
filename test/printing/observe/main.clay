@@ -4,7 +4,7 @@ overload tellRvalue(rvalue x) = 1;
 main() {
     var x = String("lemons");
     println(observe(2) + 1);
-    println(add(...observe(2, 1)));
+    println(add(...observe(#loneliestNumbers, 2, 1)));
     println(tellRvalue(observe(x)) + 4);
     println(tellRvalue(observe(String("lemons"))) + 4);
 }
