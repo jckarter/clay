@@ -143,6 +143,10 @@ copyMemoryBackwards(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[
     );
 }
 
+[T]
+copyNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    copyMemory(destFirst, destLast, srcFirst);
+}
 
 
 //
@@ -165,6 +169,16 @@ moveMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T])
         x <-- moveUnsafe(srcPtr^);
         srcPtr += 1;
     });
+}
+
+[T]
+moveNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    moveMemory(destFirst, destLast, srcFirst);
+}
+
+[T]
+moveNonoverlappingMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    moveMemoryUnsafe(destFirst, destLast, srcFirst);
 }
 
 
@@ -196,13 +210,18 @@ resetMemoryUnsafe(first:Pointer[T], last:Pointer[T]) {
 
 
 //
-// fillMemory
+// fillMemory, zeroMemory
 //
 
 [T]
 fillMemory(first:Pointer[T], last:Pointer[T], value:T) {
     var ptr = &value;
     eachLocationWithCleanup(first, last, x => { x <-- ptr^; });
+}
+
+[T]
+zeroMemory(first:Pointer[T], last:Pointer[T]) {
+    fillMemory(first, last, T(0));
 }
 
 
@@ -232,6 +251,18 @@ moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U])
         x = move(srcPtr^);
         srcPtr += 1;
     });
+}
+
+[T, U | CallDefined?(assign, T, U)]
+assignNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U])
+{
+    assignMemory(destFirst, destLast, srcFirst);
+}
+
+[T, U | CallDefined?(assign, T, U)]
+moveAssignNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U])
+{
+    moveAssignMemory(destFirst, destLast, srcFirst);
 }
 
 
