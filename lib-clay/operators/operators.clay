@@ -52,7 +52,7 @@ procedure staticIndex;
 //
 
 Coordinate?(T) = CallDefined?(dereference, T);
-CoordinateTargetType(T) = Type(dereference(typeToLValue(T)));
+CoordinateTargetType(T) = ...Type(...dereference(typeToLValue(T)));
 
 RandomAccessCoordinate?(T) =
     Coordinate?(T) and
@@ -74,7 +74,7 @@ ContiguousCoordinate?(T) = false;
 //
 
 Iterator?(T) = CallDefined?(hasNext?, T) and CallDefined?(next, T);
-IteratorTargetType(T) = Type(next(typeToLValue(T)));
+IteratorTargetType(T) = ...Type(...next(typeToLValue(T)));
 
 
 
@@ -132,7 +132,7 @@ procedure StaticSize;
 //
 
 Sequence?(T) = CallDefined?(iterator, T);
-SequenceElementType(T) = Type(next(iterator(typeToLValue(T))));
+SequenceElementType(T) = ...Type(...next(iterator(typeToLValue(T))));
 SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
 StaticSizedSequence?(T) = Sequence?(T) and CallDefined?(StaticSize, Static[T]);
 RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
