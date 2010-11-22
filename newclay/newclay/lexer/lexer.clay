@@ -19,6 +19,7 @@ enum TokenKind {
     CHAR_LITERAL,
     INT_LITERAL,
     FLOAT_LITERAL,
+    C_CODE,
     SPACE,
     COMMENT,
 }
@@ -46,7 +47,7 @@ record SourceTokens = referenceType(
 
 private var punctuations = [
     "...",
-    "=>",
+    "=>", ":",
     "(", ")", "[", "]",
     "|",
     "=",
@@ -330,6 +331,34 @@ private var lexFloatLiteral = modify(
 
 
 //
+// c code
+//
+
+private var cCodePrefix = literalString("__c__");
+private var cCodeDelimiter = literalString("\"\"\"");
+
+private nonDelimiter(input) {
+    var saved = input;
+    return maybe(cCodeDelimiter(input),
+        x ref=> {
+            input = move(saved);
+            return nothing(Char);
+        },
+        () ref=> nextChar(input),
+    );
+}
+
+private var lexCCode = modify(
+    x => Token(C_CODE),
+    seq(
+        cCodePrefix, zeroPlus(condition(space?)),
+        cCodeDelimiter, zeroPlus(nonDelimiter), cCodeDelimiter,
+    ),
+);
+
+
+
+//
 // space
 //
 
@@ -388,6 +417,7 @@ private var lexToken = bounds(choice(
     lexLineComment,
     lexBlockComment,
     lexPunctuation,
+    lexCCode,
     lexIdentifierOrKeyword,
     lexCharLiteral,
     lexStringLiteral,

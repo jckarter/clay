@@ -1,0 +1,41 @@
+
+symbol StaticProcedureTag = ();
+symbol newStaticProcedure = newStaticProcedure();
+static overload newStaticProcedure() = (StaticProcedureTag,);
+
+symbol PrimitiveTypeTag = ();
+symbol newPrimitiveType = newStaticProcedure();
+static overload newPrimitiveType('cname) = (PrimitiveTypeTag, 'cname);
+
+symbol Bool = newPrimitiveType("char");
+symbol Int = newPrimitiveType("int");
+
+symbol ProcedureTag = ();
+symbol newProcedure = newStaticProcedure();
+static overload newProcedure() = (ProcedureTag,);
+
+
+symbol lesser? = newProcedure();
+overload lesser?(a:Int, b:Int) returned:Bool __c__ """
+    *returned = *a < *b;
+""";
+
+symbol subtract = newProcedure();
+overload subtract(a:Int, b:Int) returned:Int __c__ """
+    *returned = *a - *b;
+""";
+
+symbol multiply = newProcedure();
+overload multiply(a:Int, b:Int) returned:Int __c__ """
+    *returned = *a * *b;
+""";
+
+symbol factorial = newProcedure();
+overload factorial(n:Int) Int =
+    if (lesser?(n, 2))
+        1
+    else
+        multiply(n, factorial(subtract(n, 1)));
+
+symbol main = newProcedure();
+overload main() = factorial(5);
