@@ -192,6 +192,7 @@ record IndexingPattern = ast(
 variant TopLevelItem = Symbol
                      | Attribute
                      | StaticOverload
+                     | Overload
                      ;
 
 record Symbol = ast(
@@ -211,6 +212,42 @@ record StaticOverload = ast(
     args: ListPattern,
     predicate: Maybe[Expr],
     body: ExprList,
+);
+
+record Overload = ast(
+    target: Pattern,
+    args: VariadicList[Argument],
+    returns: Vector[ReturnSpec],
+    predicate: Maybe[Expr],
+    body: CodeBody,
+);
+
+record Argument = ast(
+    name: Identifier,
+    type: Maybe[Pattern],
+);
+
+enum ReturnSpecKind {
+    SINGLE_RETURN,
+    VARIADIC_RETURN,
+}
+
+record ReturnSpec = ast(
+    kind: ReturnSpecKind,
+    name: Maybe[Identifier],
+    type: Expr,
+);
+
+variant CodeBody = ExprCodeBody
+                 | CCodeBody
+                 ;
+
+record ExprCodeBody = ast(
+    exprs: ExprList,
+);
+
+record CCodeBody = ast(
+    cCode: String,
 );
 
 
