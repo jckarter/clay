@@ -1,0 +1,117 @@
+
+//
+// bindings to llvm intrinsics
+//
+// XXX couldn't get intrinsic calls to work, so we just bind to libc memcpy/memmove
+
+private external memcpy(dest: RawPointer, src: RawPointer, size: SizeT) RawPointer;
+private external memmove(dest: RawPointer, src: RawPointer, size: SizeT) RawPointer;
+[P] private inline _memcpy(dest: Pointer[P], src: Pointer[P], len: SizeT) { memcpy(RawPointer(dest), RawPointer(src), len); }
+[P] private inline _memmove(dest: Pointer[P], src: Pointer[P], len: SizeT) { memmove(RawPointer(dest), RawPointer(src), len); }
+
+
+//
+// copy*Memory*, move*Memory*, *assign*Memory* for POD types
+//
+
+[P]
+private inline copyPODs(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    _memmove(destFirst, srcFirst, SizeT(RawPointer(destLast)-RawPointer(destFirst)));
+}
+[P]
+private inline copyNonovPODs(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    _memcpy(destFirst, srcFirst, SizeT(RawPointer(destLast)-RawPointer(destFirst)));
+}
+
+[P | PODType?(P)]
+inline overload copyMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload copyMemoryBackwards(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload copyNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyNonovPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload moveMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload moveMemoryUnsafe(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload moveNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyNonovPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload moveNonoverlappingMemoryUnsafe(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyNonovPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload moveMemoryBackwardsUnsafe(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload assignMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload moveAssignMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload assignNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyNonovPODs(destFirst, destLast, srcFirst);
+}
+[P | PODType?(P)]
+inline overload moveAssignNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
+    copyNonovPODs(destFirst, destLast, srcFirst);
+}
+
+
+//
+// resetMemoryUnsafe, destroyMemory for POD
+//
+
+[P | PODType?(P)]
+inline overload resetMemoryUnsafe(first:Pointer[P], last:Pointer[P]) { }
+
+[P | PODType?(P)]
+inline overload destroyMemory(first:Pointer[P], last:Pointer[P]) { }
+
+
+//
+// value semantics for POD
+//
+
+[P | PODType?(P)]
+inline copyPOD(x: P) returned: P { _memcpy(&returned, &x, TypeSize(P)); }
+inline overload copyPOD(x: Bool) returned: Bool { primitiveCopy(returned, x); }
+[N | Numeric?(N)]
+inline overload copyPOD(x: N) returned: N { primitiveCopy(returned, x); }
+[E | Enum?(E)]
+inline overload copyPOD(x: E) returned: E { primitiveCopy(returned, x); }
+[T]
+inline overload copyPOD(x: Pointer[T]) returned: Pointer[T] { primitiveCopy(returned, x); }
+[In, Out]
+inline overload copyPOD(x: CodePointer[In, Out]) returned: CodePointer[In, Out]
+    { primitiveCopy(returned, x); }
+[CP | CCodePointer?(CP)]
+inline overload copyPOD(x: CP) returned: CP
+    { primitiveCopy(returned, x); }
+
+[P | PODType?(P)]
+inline overload destroy(x: P) {}
+[P | PODType?(P)]
+inline overload moveUnsafe(x: P) = copyPOD(x);
+[P | PODType?(P)]
+inline overload resetUnsafe(x: P) { }
+[P | PODType?(P)]
+inline overload P(x: P) returned: P = copyPOD(x);
+[P | PODType?(P)]
+inline overload assign(x: P, y: P) { x <-- copyPOD(y); }
+

@@ -8,29 +8,6 @@
 inline overload E() returned:E {
 }
 
-[E | Enum?(E)]
-inline overload E(src:E) returned:E {
-    primitiveCopy(returned, src);
-}
-
-[E | Enum?(E)]
-inline overload moveUnsafe(src:E) returned:E {
-    primitiveCopy(returned, src);
-}
-
-[E | Enum?(E)]
-inline overload resetUnsafe(x:E) {
-}
-
-[E | Enum?(E)]
-inline overload destroy(x:E) {
-}
-
-[E | Enum?(E)]
-inline overload assign(dest:E, src:E) {
-    primitiveCopy(dest, src);
-}
-
 
 
 //

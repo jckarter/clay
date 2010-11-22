@@ -98,24 +98,6 @@ inline overload T() returned:T {
 [T1,T2 | Numeric?(T1,T2)]
 inline overload T1(src:T2) = numericConvert(T1, src);
 
-[T | Numeric?(T)]
-inline overload T(src:T) returned:T {
-    primitiveCopy(returned, src);
-}
-
-[T | Numeric?(T)]
-inline overload moveUnsafe(src:T) returned:T {
-    primitiveCopy(returned, src);
-}
-
-[T | Numeric?(T)]
-inline overload resetUnsafe(x:T) {
-}
-
-[T | Numeric?(T)]
-inline overload destroy(x:T) {
-}
-
 
 
 //
@@ -130,11 +112,6 @@ inline overload assign(dest:A, src:B) {
 [A, B | Integer?(A,B) and (TypeSize(A) == TypeSize(B))]
 inline overload assign(dest:A, src:B) {
     primitiveCopy(dest, A(src));
-}
-
-[T | Numeric?(T)]
-inline overload assign(dest:T, src:T) {
-    primitiveCopy(dest, src);
 }
 
 

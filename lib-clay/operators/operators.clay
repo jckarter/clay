@@ -367,7 +367,7 @@ overload PODType?(static Float64) = true;
 [E | Enum?(E)] overload PODType?(static E) = true;
 [...T] overload PODType?(static Tuple[...T]) = allValues?(PODType?, ...T);
 overload PODType?(static Tuple[]) = true;
-[...T] overload PODType?(static Union[...T]) = allValues?(PODType?, ...T);
+[...T] overload PODType?(static Union[...T]) = true;
 overload PODType?(static Union[]) = true;
 
 [R | RegularRecord?(R)] overload PODType?(static R)

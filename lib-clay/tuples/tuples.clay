@@ -95,7 +95,7 @@ inline overload initializeTypes() = ;
 // copy constructor
 //
 
-[...T]
+[...T | not allValues?(PODType?, ...T)]
 inline overload Tuple[...T](src:Tuple[...T]) returned:Tuple[...T] {
     ...tupleElements(returned) <-- ...tupleElements(src);
 }
@@ -106,14 +106,14 @@ inline overload Tuple[...T](src:Tuple[...T]) returned:Tuple[...T] {
 // moveUnsafe, resetUnsafe
 //
 
-[...T]
+[...T | not allValues?(PODType?, ...T)]
 inline overload moveUnsafe(src:Tuple[...T]) returned:Tuple[...T] {
     alias n = TupleElementCount(Tuple[...T]);
     static for (i in ...staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
-[...T]
+[...T | not allValues?(PODType?, ...T)]
 inline overload resetUnsafe(a:Tuple[...T]) {
     static for (x in ...tupleElements(a))
         resetUnsafe(x);
@@ -125,7 +125,7 @@ inline overload resetUnsafe(a:Tuple[...T]) {
 // destroy
 //
 
-[...T]
+[...T | not allValues?(PODType?, ...T)]
 inline overload destroy(a:Tuple[...T]) {
     static for (x in ...tupleElements(a))
         destroy(x);
@@ -137,7 +137,7 @@ inline overload destroy(a:Tuple[...T]) {
 // assign
 //
 
-[...T]
+[...T | not allValues?(PODType?, ...T)]
 inline overload assign(dest:Tuple[...T], lvalue src:Tuple[...T]) {
     alias n = TupleElementCount(Tuple[...T]);
     static for (i in ...staticIntegers(static n))
