@@ -12,6 +12,8 @@
 static vector<CompileContextEntry> contextStack;
 
 void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params) {
+    if (contextStack.size() > 1000)
+        error("runaway recursion");
     contextStack.push_back(make_pair(obj, params));
 }
 

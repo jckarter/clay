@@ -2,20 +2,6 @@
 inline overload Bool() returned:Bool {
 }
 
-inline overload Bool(src:Bool) returned:Bool {
-    primitiveCopy(returned, src);
-}
-
-inline overload moveUnsafe(src:Bool) returned:Bool {
-    primitiveCopy(returned, src);
-}
-
-inline overload resetUnsafe(x:Bool) {
-}
-
-inline overload destroy(x:Bool) {
-}
-
 [I | Integer?(I)]
 inline overload I(a:Bool) {
     if (a) return I(1);
@@ -31,7 +17,3 @@ inline overload equals?(a:Bool, b:Bool) {
 }
 
 inline overload lesser?(a:Bool, b:Bool) = ((not a) and b);
-
-inline overload assign(dest:Bool, src:Bool) {
-    primitiveCopy(dest, src);
-}

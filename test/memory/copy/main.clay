@@ -1,23 +1,31 @@
+record NonPODInt (x: Int);
+overload RegularRecord?(static NonPODInt) = false;
+overload NonPODInt(x: NonPODInt) = NonPODInt(x.x);
+overload moveUnsafe(x: NonPODInt) = NonPODInt(x.x);
+overload resetUnsafe(x: NonPODInt) {}
+overload destroy(x: NonPODInt) {}
+
 main() {
-    var v1 = Vector[Int](0, 1, 2, 3, 4, 5, 6, 7);
+    alias NP = NonPODInt;
+    var v1 = Vector[NP](NP(0), NP(1), NP(2), NP(3), NP(4), NP(5), NP(6), NP(7));
     copyMemory(begin(v1), begin(v1) + 7, begin(v1) + 1);
     println("after copyMemory up:");
     for (x in v1)
         println(x);
 
-    var v2 = Vector[Int](0, 1, 2, 3, 4, 5, 6, 7);
+    var v2 = Vector[NP](NP(0), NP(1), NP(2), NP(3), NP(4), NP(5), NP(6), NP(7));
     copyMemory(begin(v2) + 1, begin(v2) + 8, begin(v2));
     println("after copyMemory down:");
     for (x in v2)
         println(x);
 
-    var v3 = Vector[Int](0, 1, 2, 3, 4, 5, 6, 7);
+    var v3 = Vector[NP](NP(0), NP(1), NP(2), NP(3), NP(4), NP(5), NP(6), NP(7));
     copyMemoryBackwards(begin(v3) + 1, begin(v3) + 8, begin(v3));
     println("after copyMemoryBackwards down:");
     for (x in v3)
         println(x);
 
-    var v4 = Vector[Int](0, 1, 2, 3, 4, 5, 6, 7);
+    var v4 = Vector[NP](NP(0), NP(1), NP(2), NP(3), NP(4), NP(5), NP(6), NP(7));
     copyMemoryBackwards(begin(v4), begin(v4) + 7, begin(v4) + 1);
     println("after copyMemoryBackwards up:");
     for (x in v4)

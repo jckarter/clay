@@ -197,22 +197,22 @@ overload Array[T,n]() returned:Array[T,n] {
     initializeMemory(begin(returned), end(returned));
 }
 
-[T,n]
+[T,n | not PODType?(T)]
 overload Array[T,n](src:Array[T,n]) returned:Array[T,n] {
-    copyMemory(begin(returned), end(returned), begin(src));
+    copyNonoverlappingMemory(begin(returned), end(returned), begin(src));
 }
 
-[T,n]
+[T,n | not PODType?(T)]
 overload moveUnsafe(src:Array[T,n]) returned:Array[T,n] {
-    moveMemoryUnsafe(begin(returned), end(returned), begin(src));
+    moveNonoverlappingMemoryUnsafe(begin(returned), end(returned), begin(src));
 }
 
-[T,n]
+[T,n | not PODType?(T)]
 overload resetUnsafe(a:Array[T,n]) {
     resetMemoryUnsafe(begin(a), end(a));
 }
 
-[T,n]
+[T,n | not PODType?(T)]
 overload destroy(a:Array[T,n]) {
     destroyMemory(begin(a), end(a));
 }
@@ -263,12 +263,12 @@ integerArray(static n) = Array(static n, range(n));
 // array assignment
 //
 
-[T,U,n | CallDefined?(assign, T, U)]
+[T,U,n | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
 overload assign(left: Array[T,n], right: Array[U, n]) {
     assignMemory(begin(left), end(left), begin(right));
 }
 
-[T,U,n | CallDefined?(assign, T, U)]
+[T,U,n | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
 overload assign(left: Array[T,n], rvalue right: Array[U, n]) {
     moveAssignMemory(begin(left), end(left), begin(right));
 }
