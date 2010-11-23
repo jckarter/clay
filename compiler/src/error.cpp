@@ -11,9 +11,11 @@
 
 static vector<CompileContextEntry> contextStack;
 
+static const unsigned RECURSION_WARNING_LEVEL = 1000;
+
 void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params) {
-    if (contextStack.size() > 1000)
-        error("runaway recursion");
+    if (contextStack.size() >= RECURSION_WARNING_LEVEL)
+        warning("potential runaway recursion");
     contextStack.push_back(make_pair(obj, params));
 }
 
@@ -196,20 +198,28 @@ void setAbortOnError(bool flag) {
     abortOnError = flag;
 }
 
-void error(const string &msg) {
+void displayError(const string &msg, const string &kind) {
     LocationPtr location = topLocation();
     if (location.ptr()) {
         int line, column;
         displayLocation(location, line, column);
-        fprintf(stderr, "%s(%d,%d): error: %s\n",
+        fprintf(stderr, "%s(%d,%d): %s: %s\n",
                 location->source->fileName.c_str(),
-                line+1, column, msg.c_str());
+                line+1, column, kind.c_str(), msg.c_str());
         displayCompileContext();
         displayDebugStack();
     }
     else {
         fprintf(stderr, "error: %s\n", msg.c_str());
     }
+}
+
+void warning(const string &msg) {
+    displayError(msg, "warning");
+}
+
+void error(const string &msg) {
+    displayError(msg, "error");
     if (abortOnError)
         abort();
     else
