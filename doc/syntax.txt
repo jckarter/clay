@@ -1,4 +1,4 @@
-Module -> Import* TopLevelItem*
+Module -> Import* TopLevelLLVM? TopLevelItem*
 
 Visibility -> "public" | "private"
 
@@ -10,6 +10,7 @@ DottedName -> Identifier ("." Identifier)*
 
 ImportedItem -> Identifier ("as" Identifier)?
 
+TopLevelLLVM -> "__llvm__ { .* }"
 
 TopLevelItem -> Record | Variant | Instance
               | Procedure | Overload

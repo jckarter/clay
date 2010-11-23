@@ -678,7 +678,7 @@ static void print(ostream &out, const Object *x) {
         const ValueHolder *y = (const ValueHolder *)x;
         EValuePtr ev = new EValue(y->type, y->buf);
         out << "ValueHolder(";
-        printValue(out, ev);
+        printTypeAndValue(out, ev);
         out << ")";
         break;
     }
@@ -892,7 +892,7 @@ void printName(ostream &out, ObjectPtr x)
         else {
             EValuePtr ev = new EValue(y->type, y->buf);
             out << "ValueHolder(";
-            printValue(out, ev);
+            printTypeAndValue(out, ev);
             out << ")";
         }
         break;
@@ -907,23 +907,27 @@ void printName(ostream &out, ObjectPtr x)
 
 
 //
-// printValue
+// printTypeAndValue, printValue
 //
+
+void printTypeAndValue(ostream &out, EValuePtr ev)
+{
+    printName(out, ev->type.ptr());
+    out << "(";
+    printValue(out, ev);
+    out << ")";
+}
 
 void printValue(ostream &out, EValuePtr ev)
 {
-    printName(out, ev->type.ptr());
     switch (ev->type->typeKind) {
     case BOOL_TYPE : {
-        out << "(";
         char v = *((char *)ev->addr);
         out << (v ? "true" : "false");
-        out << ")";
         break;
     }
     case INTEGER_TYPE : {
         IntegerType *t = (IntegerType *)ev->type.ptr();
-        out << "(";
         if (t->isSigned) {
             switch (t->bits) {
             case 8 :
@@ -960,12 +964,10 @@ void printValue(ostream &out, EValuePtr ev)
                 assert(false);
             }
         }
-        out << ")";
         break;
     }
     case FLOAT_TYPE : {
         FloatType *t = (FloatType *)ev->type.ptr();
-        out << "(";
         switch (t->bits) {
         case 32 :
             out << *((float *)ev->addr);
@@ -976,7 +978,7 @@ void printValue(ostream &out, EValuePtr ev)
         default :
             assert(false);
         }
-        out << ")";
+        break;
     }
     default :
         break;
