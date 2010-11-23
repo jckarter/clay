@@ -2359,7 +2359,7 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
 
 
 //
-// codegenLLVMBody
+// interpolateLLVMCode
 //
 
 static bool isFirstIdentChar(char c) {
@@ -2445,7 +2445,7 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
     }
 }
 
-static bool renderTemplate(LLVMBodyPtr llvmBody, string &out, EnvPtr env)
+static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
 {
     SourcePtr source = llvmBody->location->source;
     int startingOffset = llvmBody->location->offset;
@@ -2490,6 +2490,12 @@ static bool renderTemplate(LLVMBodyPtr llvmBody, string &out, EnvPtr env)
     return true;
 }
 
+
+
+//
+// codegenLLVMBody
+//
+
 void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName) 
 {
     string llFunc;
@@ -2529,7 +2535,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     }
 
     string body;
-    if (!renderTemplate(entry->code->llvmBody, body, entry->env))
+    if (!interpolateLLVMCode(entry->code->llvmBody, body, entry->env))
         error("failed to apply template");
 
     out << string(") ") << body;
@@ -4991,6 +4997,53 @@ void codegenPrimOp(PrimOpPtr x,
 
 
 //
+// codegenTopLevelLLVM
+//
+
+string stripEnclosingBraces(const string &s) {
+    string::const_iterator i = s.begin();
+    string::const_iterator j = s.end();
+    assert(i != j);
+    assert(*i == '{');
+    assert(*(j-1) == '}');
+    return string(i+1, j-1);
+}
+
+void codegenTopLevelLLVM(ModulePtr m)
+{
+    if (m->topLevelLLVMGenerated) return;
+    m->topLevelLLVMGenerated = true;
+    vector<ImportPtr>::iterator ii, iend;
+    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
+        codegenTopLevelLLVM((*ii)->module);
+
+    if (!m->topLevelLLVM) return;
+
+    LocationContext loc(m->topLevelLLVM->location);
+
+    string code;
+    if (!interpolateLLVMCode(m->topLevelLLVM, code, m->env))
+        error("failed to generate top level llvm");
+
+    code = stripEnclosingBraces(code);
+
+    llvm::SMDiagnostic err;
+    llvm::MemoryBuffer *buf =
+        llvm::MemoryBuffer::getMemBuffer(llvm::StringRef(code));
+
+    if (!llvm::ParseAssembly(buf, llvmModule, err,
+                             llvm::getGlobalContext())) {
+        string errBuf;
+        llvm::raw_string_ostream errOut(errBuf);
+        err.Print("\n", errOut);
+        std::cerr << errOut.str() << std::endl;
+        error("llvm assembly parse error");
+    }
+}
+
+
+
+//
 // codegenSharedLib, codegenExe
 //
 
@@ -5127,6 +5180,7 @@ static void generateLLVMCtorsAndDtors() {
 
 void codegenSharedLib(ModulePtr module)
 {
+    codegenTopLevelLLVM(module);
     initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
 
@@ -5143,6 +5197,7 @@ void codegenSharedLib(ModulePtr module)
 
 void codegenExe(ModulePtr module)
 {
+    codegenTopLevelLLVM(module);
     initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
 
