@@ -2359,50 +2359,142 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
 
 
 //
-// codegenLLVMBody
+// interpolateLLVMCode
 //
 
-static bool terminator(char c) {
-    return (c == ' ' || c == '\n' || c == '\r' || c == '*' || c == '\t');
+static bool isFirstIdentChar(char c) {
+    if (c == '_') return true;
+    if ((c >= 'a') && (c <= 'z')) return true;
+    if ((c >= 'A') && (c <= 'Z')) return true;
+    return false;
 }
 
-static bool renderTemplate(LLVMBodyPtr llvmBody, string &out, EnvPtr env)
+static bool isIdentChar(char c) {
+    if (isFirstIdentChar(c)) return true;
+    if ((c >= '0') && (c <= '9')) return true;
+    if (c == '?') return true;
+    return false;
+}
+
+static string::const_iterator parseIdentifier(string::const_iterator first,
+                                              string::const_iterator last)
+{
+    string::const_iterator i = first;
+    if ((i == last) || !isFirstIdentChar(*i))
+        return first;
+    ++i;
+    while ((i != last) && isIdentChar(*i))
+        ++i;
+    return i;
+}
+
+static string::const_iterator parseBracketedExpr(string::const_iterator first,
+                                                 string::const_iterator last)
+{
+    string::const_iterator i = first;
+    if ((i == last) || (*i != '{'))
+        return first;
+    ++i;
+    int count = 1;
+    while (i != last) {
+        if (*i == '{')
+            ++count;
+        else if (*i == '}')
+            --count;
+        ++i;
+        if (count == 0)
+            break;
+    }
+    if (count != 0)
+        return first;
+    return i;
+}
+
+static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
+                            EnvPtr env, llvm::raw_string_ostream &outstream)
+{
+    ExprPtr expr = parseExpr(source, offset, length);
+    ObjectPtr x = evaluateOneStatic(expr, env);
+    LocationContext loc(expr->location);
+    if (x->objKind == TYPE) {
+        Type *type = (Type *)x.ptr();
+        WriteTypeSymbolic(outstream, llvmType(type), NULL);
+    }
+    else if (x->objKind == VALUE_HOLDER) {
+        ValueHolder *vh = (ValueHolder *)x.ptr();
+        if ((vh->type->typeKind == BOOL_TYPE)
+            ||(vh->type->typeKind == INTEGER_TYPE)
+            ||(vh->type->typeKind == FLOAT_TYPE))
+        {
+            ostringstream sout;
+            printValue(sout, new EValue(vh->type, vh->buf));
+            outstream << sout.str();
+        }
+        else {
+            error("only booleans, integers, and float values are supported");
+        }
+    }
+    else if (x->objKind == IDENTIFIER) {
+        Identifier *y = (Identifier *)x.ptr();
+        outstream << y->str;
+    }
+    else {
+        ostringstream sout;
+        printName(sout, x);
+        outstream << sout.str();
+    }
+}
+
+static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
 {
     SourcePtr source = llvmBody->location->source;
     int startingOffset = llvmBody->location->offset;
 
     const string &body = llvmBody->body;
     llvm::raw_string_ostream outstream(out);
-    for(string::const_iterator i = body.begin(); i != body.end(); ++i) {
+    string::const_iterator i = body.begin();
+    while (i != body.end()) {
         if (*i != '$') {
             outstream << *i;
-            continue;
-        }
-
-        ++i;
-
-        if ((i != body.end()) && (*i == '$')) {
-            outstream << *i;
-            continue;
-        }
-
-        string::const_iterator typeExprBegin = i;
-        while ((i != body.end()) && !terminator(*i))
             ++i;
-        string::const_iterator typeExprEnd = i;
+            continue;
+        }
 
-        int offset = (typeExprBegin - body.begin()) + startingOffset;
-        int length = typeExprEnd - typeExprBegin;
+        string::const_iterator first, last;
+        first = i + 1;
 
-        ExprPtr typeExpr = parseExpr(source, offset, length);
-        TypePtr type = evaluateType(typeExpr, env);
-        WriteTypeSymbolic(outstream, llvmType(type), llvmModule);
+        last = parseIdentifier(first, body.end());
+        if (last != first) {
+            unsigned offset = (first - body.begin()) + startingOffset;
+            unsigned length = last - first;
+            interpolateExpr(source, offset, length, env, outstream);
+            i = last;
+            continue;
+        }
+
+        last = parseBracketedExpr(first, body.end());
+        if (last != first) {
+            first += 1;
+            last -= 1;
+            unsigned offset = (first - body.begin()) + startingOffset;
+            unsigned length = last - first;
+            interpolateExpr(source, offset, length, env, outstream);
+            i = last + 1;
+            continue;
+        }
 
         outstream << *i;
+        ++i;
     }
     out = outstream.str();
     return true;
 }
+
+
+
+//
+// codegenLLVMBody
+//
 
 void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName) 
 {
@@ -2422,8 +2514,8 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
         const llvm::Type *argType = llvmPointerType(entry->argsKey[i]);
         if (argCount > 0) out << string(", ");
-        WriteTypeSymbolic(out, argType, llvmModule);
-        out << string(" %") << entry->fixedArgNames[i]->str;
+        WriteTypeSymbolic(out, argType, NULL);
+        out << string(" %\"") << entry->fixedArgNames[i]->str << string("\"");
         argCount ++;
     }
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
@@ -2434,7 +2526,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
         else
             argType = llvmPointerType(rt);
         if (argCount > 0) out << string(", ");
-        WriteTypeSymbolic(out, argType, llvmModule);
+        WriteTypeSymbolic(out, argType, NULL);
         assert(i < entry->code->returnSpecs.size());
         const ReturnSpecPtr spec = entry->code->returnSpecs[i];
         assert(spec->name.ptr());
@@ -2443,7 +2535,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     }
 
     string body;
-    if (!renderTemplate(entry->code->llvmBody, body, entry->env))
+    if (!interpolateLLVMCode(entry->code->llvmBody, body, entry->env))
         error("failed to apply template");
 
     out << string(") ") << body;
@@ -4905,6 +4997,53 @@ void codegenPrimOp(PrimOpPtr x,
 
 
 //
+// codegenTopLevelLLVM
+//
+
+string stripEnclosingBraces(const string &s) {
+    string::const_iterator i = s.begin();
+    string::const_iterator j = s.end();
+    assert(i != j);
+    assert(*i == '{');
+    assert(*(j-1) == '}');
+    return string(i+1, j-1);
+}
+
+void codegenTopLevelLLVM(ModulePtr m)
+{
+    if (m->topLevelLLVMGenerated) return;
+    m->topLevelLLVMGenerated = true;
+    vector<ImportPtr>::iterator ii, iend;
+    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
+        codegenTopLevelLLVM((*ii)->module);
+
+    if (!m->topLevelLLVM) return;
+
+    LocationContext loc(m->topLevelLLVM->location);
+
+    string code;
+    if (!interpolateLLVMCode(m->topLevelLLVM, code, m->env))
+        error("failed to generate top level llvm");
+
+    code = stripEnclosingBraces(code);
+
+    llvm::SMDiagnostic err;
+    llvm::MemoryBuffer *buf =
+        llvm::MemoryBuffer::getMemBuffer(llvm::StringRef(code));
+
+    if (!llvm::ParseAssembly(buf, llvmModule, err,
+                             llvm::getGlobalContext())) {
+        string errBuf;
+        llvm::raw_string_ostream errOut(errBuf);
+        err.Print("\n", errOut);
+        std::cerr << errOut.str() << std::endl;
+        error("llvm assembly parse error");
+    }
+}
+
+
+
+//
 // codegenSharedLib, codegenExe
 //
 
@@ -5041,6 +5180,7 @@ static void generateLLVMCtorsAndDtors() {
 
 void codegenSharedLib(ModulePtr module)
 {
+    codegenTopLevelLLVM(module);
     initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
 
@@ -5057,6 +5197,7 @@ void codegenSharedLib(ModulePtr module)
 
 void codegenExe(ModulePtr module)
 {
+    codegenTopLevelLLVM(module);
     initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
 

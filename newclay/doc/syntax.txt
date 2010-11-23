@@ -7,9 +7,26 @@
 GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
 SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
-StaticOverload -> "static" "overload" TargetPattern "(" PatternList? ")"
+StaticOverload -> "static" "overload" TargetPattern "(" ListPattern? ")"
                    Predicate? "=" ExprList ";"
+
+Overload -> "overload" TargetPattern "(" ArgumentList? ")" ReturnList
+            Predicate? CodeBody
+
 Predicate -> "|" Expr
+
+ArgumentList -> variadic_list2(Argument, MultiArgument)
+Argument -> Identifier (":" Pattern)?
+MultiArgument -> "..." Identifier (":" PatternNameRef)?
+
+ReturnList -> (ReturnSpec | VariadicReturnSpec)*
+ReturnSpec -> (Identifier ":")? Expr
+VariadicReturnSpec -> "..." (Identifier ":")? Expr
+
+CodeBody -> "=" ExprList ";"
+          |  "__c__" InlineCCodeBody ";"
+
+InlineCCodeBody -> """.*"""
 
 
 
@@ -17,7 +34,7 @@ Predicate -> "|" Expr
 // patterns
 //
 
-PatternList -> variadic_list(Pattern, PatternNameRef)
+ListPattern -> variadic_list(Pattern, PatternNameRef)
 Pattern -> BoolLiteral
          | IntLiteral
          | StringLiteral
@@ -25,7 +42,7 @@ Pattern -> BoolLiteral
          | Identifier
          | PatternNameRef
 
-IndexingPattern -> Identifier "[" PatternList "]"
+IndexingPattern -> Identifier "[" ListPattern "]"
 
 TargetPattern -> IndexingPattern
                | Identifier
@@ -83,5 +100,7 @@ Expr -> IfExpr
 // misc
 //
 
-variadic_list(Head, Tail) -> "..." Tail
-                           | comma_list(Head) ("," "..." Tail)?
+variadic_list(Head, Tail) -> variadic_list2(Head, "..." Tail)
+
+variadic_list2(Head, Tail) -> Tail
+                            | comma_list(Head) ("," Tail)?

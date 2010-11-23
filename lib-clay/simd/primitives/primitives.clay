@@ -7,7 +7,7 @@
 [T,n]
 vecElementRef(a:Vec[T,n], i:Int) returned:ByRef[T] __llvm__{
     %iVal = load $Int * %i
-    %ptr = getelementptr $Vec[T,n] * %a, i32 0, $Int %iVal
+    %ptr = getelementptr ${Vec[T,n]} * %a, i32 0, $Int %iVal
     store $T * %ptr, $T ** %returned
     ret i32 0
 }
@@ -22,19 +22,19 @@ procedure add;
 
 [T,n | Integer?(T)]
 overload add(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = add $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = add ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | Float?(T)]
 overload add(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = fadd $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = fadd ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
@@ -48,19 +48,19 @@ procedure subtract;
 
 [T,n | Integer?(T)]
 overload subtract(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = sub $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = sub ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | Float?(T)]
 overload subtract(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = fsub $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = fsub ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
@@ -74,19 +74,19 @@ procedure multiply;
 
 [T,n | Integer?(T)]
 overload multiply(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = mul $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = mul ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | Float?(T)]
 overload multiply(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = fmul $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = fmul ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
@@ -100,28 +100,28 @@ procedure divide;
 
 [T,n | SignedInteger?(T)]
 overload divide(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = sdiv $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = sdiv ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | UnsignedInteger?(T)]
 overload divide(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = udiv $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = udiv ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | Float?(T)]
 overload divide(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = fdiv $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = fdiv ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
@@ -135,28 +135,28 @@ procedure remainder;
 
 [T,n | SignedInteger?(T)]
 overload remainder(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = srem $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = srem ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | UnsignedInteger?(T)]
 overload remainder(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = urem $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = urem ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | Float?(T)]
 overload remainder(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = frem $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = frem ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
@@ -170,10 +170,10 @@ procedure shiftLeft;
 
 [T,n | Integer?(T)]
 overload shiftLeft(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = shl $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = shl ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
@@ -187,19 +187,19 @@ procedure shiftRight;
 
 [T,n | SignedInteger?(T)]
 overload shiftRight(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = ashr $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = ashr ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | UnsignedInteger?(T)]
 overload shiftRight(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = lshr $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = lshr ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
@@ -211,27 +211,27 @@ overload shiftRight(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
 
 [T,n | Integer?(T)]
 bitwiseAnd(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = and $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = and ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | Integer?(T)]
 bitwiseOr(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = or $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = or ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }
 
 [T,n | Integer?(T)]
 bitwiseXor(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
-    %1 = load $Vec[T,n] * %a
-    %2 = load $Vec[T,n] * %b
-    %3 = xor $Vec[T,n] %1, %2
-    store $Vec[T,n] %3, $Vec[T,n] * %returned
+    %1 = load ${Vec[T,n]} * %a
+    %2 = load ${Vec[T,n]} * %b
+    %3 = xor ${Vec[T,n]} %1, %2
+    store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i32 0
 }

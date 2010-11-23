@@ -1,0 +1,16 @@
+
+__llvm__ {
+    declare i32 @llvm.bswap.i32(i32)
+}
+
+bswap(x:Int32) returned:Int32 __llvm__ {
+    %1 = load i32* %x
+    %2 = call i32 @llvm.bswap.i32(i32 %1)
+    store i32 %2, i32* %returned
+    ret i32 0
+}
+
+main() {
+    println(bswap(1));
+    println(bswap(-1));
+}
