@@ -378,7 +378,7 @@ void cgDestroyStack(int marker, CodegenContextPtr ctx)
     assert(marker <= i);
     while (marker < i) {
         --i;
-        codegenValueDestroy(ctx->valueStack[i].cv, ctx);
+        codegenValueDestroy(ctx->valueStack[i], ctx);
     }
 }
 
@@ -393,14 +393,14 @@ void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx)
 {
     assert(marker <= (int)ctx->valueStack.size());
     while (marker < (int)ctx->valueStack.size()) {
-        codegenValueDestroy(ctx->valueStack.back().cv, ctx);
+        codegenValueDestroy(ctx->valueStack.back(), ctx);
         ctx->valueStack.pop_back();
     }
 }
 
 void cgPushStack(CValuePtr cv, CodegenContextPtr ctx)
 {
-    ctx->valueStack.push_back(CStackValue(cv));
+    ctx->valueStack.push_back(cv);
 }
 
 CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx)
