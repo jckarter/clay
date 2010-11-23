@@ -1,0 +1,17 @@
+
+[x]
+foo(static x) returned:Int32 __llvm__ {
+    store i32 $x, i32* %returned
+    ret i32 0
+}
+
+[x]
+bar(static x) returned:Int32 __llvm__ {
+    store $x, i32* %returned
+    ret i32 0
+}
+
+main() {
+    println(foo(static 3));
+    println(bar(#"i32 4"));
+}
