@@ -1,5 +1,5 @@
 sizeof union = 8
-as Double = 1.000000
+as Double = 1
 as UInt64 = 4607182418800017408
 as Array[UInt8,8] = 0 0 0 0 0 0 240 63 
 as Point = Point(0, 1072693248)

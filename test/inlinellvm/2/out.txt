@@ -1,4 +1,4 @@
 30 Int32
 50 UInt64
 70 Int64
-3.600000 Float64
+3.6 Float64

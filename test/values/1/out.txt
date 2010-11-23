@@ -1,7 +1,7 @@
 1
-2.000000
+2
 three
-2, 4.000000, threethree
+2, 4, threethree
 
 6
 
