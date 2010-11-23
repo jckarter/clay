@@ -1781,6 +1781,7 @@ void printNameList(ostream &out, const vector<ObjectPtr> &x);
 void printNameList(ostream &out, const vector<TypePtr> &x);
 void printStaticName(ostream &out, ObjectPtr x);
 void printName(ostream &out, ObjectPtr x);
+void printTypeAndValue(ostream &out, EValuePtr ev);
 void printValue(ostream &out, EValuePtr ev);
 
 
