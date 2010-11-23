@@ -54,9 +54,11 @@ overload printTo(stream, x:UInt64) {
     printWithSprintf(stream, formatForUInt64, x);
 }
 
-[F | Float?(F)]
-overload printTo(stream, x:F) {
-    printWithSprintf(stream, "%f", Double(x));
+overload printTo(stream, x:Double) {
+    printWithSprintf(stream, "%.16g", Double(x));
+}
+overload printTo(stream, x:Float) {
+    printWithSprintf(stream, "%.7g", Double(x));
 }
 
 [T]
