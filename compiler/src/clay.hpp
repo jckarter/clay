@@ -143,7 +143,7 @@ enum ObjectKind {
 
     FORMAL_ARG,
     RETURN_SPEC,
-    LLVM_BODY,
+    LLVM_CODE,
     CODE,
 
     RECORD,
@@ -261,7 +261,7 @@ struct Unreachable;
 
 struct FormalArg;
 struct ReturnSpec;
-struct LLVMBody;
+struct LLVMCode;
 struct Code;
 
 struct TopLevelItem;
@@ -402,7 +402,7 @@ typedef Pointer<Unreachable> UnreachablePtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
-typedef Pointer<LLVMBody> LLVMBodyPtr;
+typedef Pointer<LLVMCode> LLVMCodePtr;
 typedef Pointer<Code> CodePtr;
 
 typedef Pointer<TopLevelItem> TopLevelItemPtr;
@@ -1301,10 +1301,10 @@ struct PatternVar {
         : isMulti(false) {}
 };
 
-struct LLVMBody : ANode {
+struct LLVMCode : ANode {
     string body;
-    LLVMBody(const string &body)
-        : ANode(LLVM_BODY), body(body) {}
+    LLVMCode(const string &body)
+        : ANode(LLVM_CODE), body(body) {}
 };
 
 struct Code : public ANode {
@@ -1315,7 +1315,7 @@ struct Code : public ANode {
     vector<ReturnSpecPtr> returnSpecs;
     ReturnSpecPtr varReturnSpec;
     StatementPtr body;
-    LLVMBodyPtr llvmBody;
+    LLVMCodePtr llvmBody;
 
     Code()
         : ANode(CODE) {}
@@ -1692,6 +1692,7 @@ struct ModuleHolder : public Object {
 struct Module : public ANode {
     string moduleName;
     vector<ImportPtr> imports;
+    LLVMCodePtr topLevelLLVM;
     vector<TopLevelItemPtr> topLevelItems;
 
     ModuleHolderPtr rootHolder;
@@ -1711,18 +1712,24 @@ struct Module : public ANode {
     bool allSymbolsLoaded;
     int allSymbolsLoading;
 
+    bool topLevelLLVMGenerated;
+
     Module(const string &moduleName)
         : ANode(MODULE), moduleName(moduleName),
           initialized(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
-          allSymbolsLoaded(false), allSymbolsLoading(0) {}
+          allSymbolsLoaded(false), allSymbolsLoading(0),
+          topLevelLLVMGenerated(false) {}
     Module(const string &moduleName,
            const vector<ImportPtr> &imports,
+           LLVMCodePtr topLevelLLVM,
            const vector<TopLevelItemPtr> &topLevelItems)
         : ANode(MODULE), moduleName(moduleName), imports(imports),
+          topLevelLLVM(topLevelLLVM), topLevelItems(topLevelItems),
           initialized(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
-          allSymbolsLoaded(false), allSymbolsLoading(0) {}
+          allSymbolsLoaded(false), allSymbolsLoading(0),
+          topLevelLLVMGenerated(false) {}
 };
 
 

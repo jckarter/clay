@@ -2162,11 +2162,11 @@ static bool optCallByName(bool &callByName) {
     return true;
 }
     
-static bool llvmBody(LLVMBodyPtr &b) {
+static bool llvmCode(LLVMCodePtr &b) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_LLVM))
         return false;
-    b = new LLVMBody(t->str);
+    b = new LLVMCode(t->str);
     b->location = t->location;
     return true;
 }
@@ -2181,7 +2181,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     if (!identifier(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;
     if (!optReturnSpecList(y->returnSpecs)) return false;
-    if (!llvmBody(y->llvmBody)) return false;
+    if (!llvmCode(y->llvmBody)) return false;
     y->location = location;
 
     ProcedurePtr u = new Procedure(z, vis);
@@ -2260,7 +2260,7 @@ static bool overload(TopLevelItemPtr &x) {
     if (!optBody(y->body)) {
         restore(p);
         if (callByName) return false;
-        if (!llvmBody(y->llvmBody)) return false;
+        if (!llvmCode(y->llvmBody)) return false;
     }
     y->location = location;
     x = new Overload(z, y, callByName, isInline);
@@ -2665,10 +2665,20 @@ static bool topLevelItems(vector<TopLevelItemPtr> &x) {
     return true;
 }
 
+static bool optTopLevelLLVM(LLVMCodePtr &x) {
+    int p = save();
+    if (!llvmCode(x)) {
+        restore(p);
+        x = NULL;
+    }
+    return true;
+}
+
 static bool module(const string &moduleName, ModulePtr &x) {
     LocationPtr location = currentLocation();
     ModulePtr y = new Module(moduleName);
     if (!imports(y->imports)) return false;
+    if (!optTopLevelLLVM(y->topLevelLLVM)) return false;
     if (!topLevelItems(y->topLevelItems)) return false;
     x = y.ptr();
     x->location = location;
