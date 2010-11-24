@@ -249,14 +249,16 @@ rowRecord(st: SqliteStatementIterator, T)
 withTransaction(db: SqliteDB, fn) {
     runStatement(db, "begin");
 
+    var returnValues = Type(captureValues(...fn()))();
     try {
-        fn();
+        returnValues = captureValues(...fn());
     } catch (ex) {
         runStatement(db, "rollback");
         throw ex;
     }
 
     runStatement(db, "commit");
+    return ...forwardValues(returnValues);
 }
 
 // TODO: sqlite values
