@@ -2,3 +2,5 @@ public import cocoa.foundation.generated.*;
 
 // definition of NSNotFound is bugged because of clay's sized int constants
 alias NSNotFound = PTRINT_MAX;
+
+NSMakeRange(loc: NSUInteger, len: NSUInteger) = NSRange(loc, len);
