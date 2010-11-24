@@ -9,13 +9,16 @@ main() {
     var db = SqliteDB("temp.sqlite");
 
     println("creating table hoozits");
-    runStatement(db, "create temp table hoozits (foo text, bar integer)"); 
+    runStatement(db, "create temp table hoozits (foo text, bar integer primary key)"); 
 
     println("inserting table");
     withTransaction(db, () ref=> {
         runStatement(db, "insert into hoozits values ('lolcats', 9001)"); 
+        println("inserted id ", lastInsertedRowId(db));
         runStatement(db, "insert into hoozits values ('goatse', -1)"); 
+        println("inserted id ", lastInsertedRowId(db));
         runStatement(db, "insert into hoozits values ('doublerainbow', 2)"); 
+        println("inserted id ", lastInsertedRowId(db));
     });
 
     println("selecting table");

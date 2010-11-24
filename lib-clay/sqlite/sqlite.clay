@@ -162,6 +162,8 @@ statementValue?(db: SqliteDB, sql: S, forward ...bindings: TT) {
     return hasNext?(si);
 }
 
+lastInsertedRowId(db: SqliteDB) = sqlite3_last_insert_rowid(db.handle);
+
 
 //
 // SqliteStatementIterator
