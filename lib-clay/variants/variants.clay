@@ -255,10 +255,13 @@ inline invalidVariant(x:V) {
 // variant matching
 //
 
+procedure MatchDefault; // dummy symbol used to implement default case
+
 private procedure matchValue;
-[T] inline overload matchValue(forward x:T, static T, fn, ...cases) = forward ...fn(x);
 [T, U | T != U] inline overload matchValue(forward x:T, static U, fn, ...cases)
     = forward ...matchValue(x, ...cases);
+[T] inline overload matchValue(forward x:T, static T, fn, ...cases) = forward ...fn(x);
+inline overload matchValue(forward x, static MatchDefault, fn, ...cases) = forward ...fn(x);
 
 inline match(forward v, ...cases) = forward ...matchValue(*v, ...cases);
 
