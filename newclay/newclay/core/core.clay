@@ -58,50 +58,37 @@ record Symbol = referenceType(
 overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
     Symbol(head, params, env, nothing(Value), nothing(Value));
 
+record PatternVars = referenceType(
+    vars: Vector[ast.Identifier],
+    variadicVars: Vector[ast.Identifier],
+);
+
 record Attribute = referenceType(
     ast: ast.Attribute,
     module: Module,
-    patternVarsInitialized?: Bool,
-    patternVars: Vector[ast.Identifier],
-    variadicPatternVars: Vector[ast.Identifier],
+    patternVars: Maybe[PatternVars],
 );
 
 overload Attribute(x:ast.Attribute, module:Module) =
-    Attribute(
-        x, module, false,
-        Vector[ast.Identifier](),
-        Vector[ast.Identifier](),
-    );
+    Attribute(x, module, nothing(PatternVars));
 
 record StaticOverload = referenceType(
     ast: ast.StaticOverload,
     module: Module,
-    patternVarsInitialized?: Bool,
-    patternVars: Vector[ast.Identifier],
-    variadicPatternVars: Vector[ast.Identifier],
+    patternVars: Maybe[PatternVars],
 );
 
 overload StaticOverload(x:ast.StaticOverload, module:Module) =
-    StaticOverload(
-        x, module, false,
-        Vector[ast.Identifier](),
-        Vector[ast.Identifier](),
-    );
+    StaticOverload(x, module, nothing(PatternVars));
 
 record Overload = referenceType(
     ast: ast.Overload,
     module: Module,
-    patternVarsInitialized?: Bool,
-    patternVars: Vector[ast.Identifier],
-    variadicPatternVars: Vector[ast.Identifier],
+    patternVars: Maybe[PatternVars],
 );
 
 overload Overload(x:ast.Overload, module:Module) =
-    Overload(
-        x, module, false,
-        Vector[ast.Identifier](),
-        Vector[ast.Identifier](),
-    );
+    Overload(x, module, nothing(PatternVars));
 
 
 
