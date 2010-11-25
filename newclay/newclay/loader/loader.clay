@@ -48,7 +48,8 @@ private initializeAttributesAndOverloads(module) {
                 push(module.program.allStaticOverloads, y);
             },
             ast.Overload, x => {
-                assert(false);
+                var y = Overload(x, module);
+                push(module.program.allOverloads, y);
             },
         );
     }

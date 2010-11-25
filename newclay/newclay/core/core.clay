@@ -24,10 +24,13 @@ record Program = referenceType(
     mainModule: Module,
     allAttributes: Vector[Attribute],
     allStaticOverloads: Vector[StaticOverload],
+    allOverloads: Vector[Overload],
 );
 
-overload Program(module:Module) =
-    Program(module, Vector[Attribute](), Vector[StaticOverload]());
+overload Program(module:Module) = Program(
+    module, Vector[Attribute](),
+    Vector[StaticOverload](), Vector[Overload](),
+);
 
 
 
@@ -80,6 +83,21 @@ record StaticOverload = referenceType(
 
 overload StaticOverload(x:ast.StaticOverload, module:Module) =
     StaticOverload(
+        x, module, false,
+        Vector[ast.Identifier](),
+        Vector[ast.Identifier](),
+    );
+
+record Overload = referenceType(
+    ast: ast.Overload,
+    module: Module,
+    patternVarsInitialized?: Bool,
+    patternVars: Vector[ast.Identifier],
+    variadicPatternVars: Vector[ast.Identifier],
+);
+
+overload Overload(x:ast.Overload, module:Module) =
+    Overload(
         x, module, false,
         Vector[ast.Identifier](),
         Vector[ast.Identifier](),
