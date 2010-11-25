@@ -5062,7 +5062,7 @@ void codegenPrimOp(PrimOpPtr x,
 // codegenTopLevelLLVM
 //
 
-string stripEnclosingBraces(const string &s) {
+static string stripEnclosingBraces(const string &s) {
     string::const_iterator i = s.begin();
     string::const_iterator j = s.end();
     assert(i != j);
@@ -5071,13 +5071,13 @@ string stripEnclosingBraces(const string &s) {
     return string(i+1, j-1);
 }
 
-void codegenTopLevelLLVM(ModulePtr m)
+static void codegenTopLevelLLVMRecursive(ModulePtr m)
 {
     if (m->topLevelLLVMGenerated) return;
     m->topLevelLLVMGenerated = true;
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
-        codegenTopLevelLLVM((*ii)->module);
+        codegenTopLevelLLVMRecursive((*ii)->module);
 
     if (!m->topLevelLLVM) return;
 
@@ -5101,6 +5101,11 @@ void codegenTopLevelLLVM(ModulePtr m)
         std::cerr << errOut.str() << std::endl;
         error("llvm assembly parse error");
     }
+}
+
+void codegenTopLevelLLVM(ModulePtr m) {
+    codegenTopLevelLLVMRecursive(preludeModule());
+    codegenTopLevelLLVMRecursive(m);
 }
 
 
