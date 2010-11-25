@@ -52,7 +52,7 @@ procedure staticIndex;
 //
 
 Coordinate?(T) = CallDefined?(dereference, T);
-CoordinateTargetType(T) = Type(dereference(typeToLValue(T)));
+CoordinateTargetType(T) = ...Type(...dereference(typeToLValue(T)));
 
 RandomAccessCoordinate?(T) =
     Coordinate?(T) and
@@ -74,7 +74,7 @@ ContiguousCoordinate?(T) = false;
 //
 
 Iterator?(T) = CallDefined?(hasNext?, T) and CallDefined?(next, T);
-IteratorTargetType(T) = Type(next(typeToLValue(T)));
+IteratorTargetType(T) = ...Type(...next(typeToLValue(T)));
 
 
 
@@ -132,7 +132,7 @@ procedure StaticSize;
 //
 
 Sequence?(T) = CallDefined?(iterator, T);
-SequenceElementType(T) = Type(next(iterator(typeToLValue(T))));
+SequenceElementType(T) = ...Type(...next(iterator(typeToLValue(T))));
 SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
 StaticSizedSequence?(T) = Sequence?(T) and CallDefined?(StaticSize, Static[T]);
 RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
@@ -364,9 +364,10 @@ overload PODType?(static Float64) = true;
 [T] overload PODType?(static Static[T]) = true;
 [T,n] overload PODType?(static Array[T,n]) = PODType?(T);
 [T,n] overload PODType?(static Vec[T,n]) = true;
+[E | Enum?(E)] overload PODType?(static E) = true;
 [...T] overload PODType?(static Tuple[...T]) = allValues?(PODType?, ...T);
 overload PODType?(static Tuple[]) = true;
-[...T] overload PODType?(static Union[...T]) = allValues?(PODType?, ...T);
+[...T] overload PODType?(static Union[...T]) = true;
 overload PODType?(static Union[]) = true;
 
 [R | RegularRecord?(R)] overload PODType?(static R)

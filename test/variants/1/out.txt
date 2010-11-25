@@ -1,2 +1,2 @@
-Circle(10.100000)
-Square(20.200000)
+Circle(10.1)
+Square(20.2)

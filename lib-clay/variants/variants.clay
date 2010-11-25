@@ -46,7 +46,7 @@ callbyname overload V(x:T) returned:V {
 // copy constructor
 //
 
-[V | Variant?(V)]
+[V | Variant?(V) and not PODType?(V)]
 overload V(src:V) returned:V {
     ref destRepr = variantRepr(returned);
     ref srcRepr = variantRepr(src);
@@ -67,7 +67,7 @@ overload V(src:V) returned:V {
     end :
 }
 
-[V | Variant?(V)]
+[V | Variant?(V) and not PODType?(V)]
 inline overload V(rvalue src:V) = move(src);
 
 
@@ -76,7 +76,7 @@ inline overload V(rvalue src:V) = move(src);
 // moveUnsafe, resetUnsafe
 //
 
-[V | Variant?(V)]
+[V | Variant?(V) and not PODType?(V)]
 overload moveUnsafe(src:V) returned:V {
     ref destRepr = variantRepr(returned);
     ref srcRepr = variantRepr(src);
@@ -97,7 +97,7 @@ overload moveUnsafe(src:V) returned:V {
     end :
 }
 
-[V | Variant?(V)]
+[V | Variant?(V) and not PODType?(V)]
 inline overload resetUnsafe(x:V) {
     ref repr = variantRepr(x);
     repr.tag = 0;
@@ -110,7 +110,7 @@ inline overload resetUnsafe(x:V) {
 // assign
 //
 
-[V | Variant?(V)]
+[V | Variant?(V) and not PODType?(V)]
 overload assign(dest:V, lvalue src:V) {
     ref destRepr = variantRepr(dest);
     ref srcRepr = variantRepr(src);
@@ -144,7 +144,7 @@ overload assign(dest:V, lvalue src:V) {
 // destroy
 //
 
-[V | Variant?(V)]
+[V | Variant?(V) and not PODType?(V)]
 overload destroy(x:V) {
     ref repr = variantRepr(x);
     var tag = repr.tag;
@@ -255,10 +255,13 @@ inline invalidVariant(x:V) {
 // variant matching
 //
 
+procedure MatchDefault; // dummy symbol used to implement default case
+
 private procedure matchValue;
-[T] inline overload matchValue(forward x:T, static T, fn, ...cases) = forward ...fn(x);
 [T, U | T != U] inline overload matchValue(forward x:T, static U, fn, ...cases)
     = forward ...matchValue(x, ...cases);
+[T] inline overload matchValue(forward x:T, static T, fn, ...cases) = forward ...fn(x);
+inline overload matchValue(forward x, static MatchDefault, fn, ...cases) = forward ...fn(x);
 
 inline match(forward v, ...cases) = forward ...matchValue(*v, ...cases);
 

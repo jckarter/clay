@@ -332,4 +332,19 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
             var bas = Retained(RegularCanary.alloc().initWithFoo_bar(Canary(), Canary()));
         });
     }),
+    TestCase("indexSetIndices", test => {
+        expectSequence(test, "indexSetIndices(empty index set)",
+            indexSetIndices(NSIndexSet.indexSet()),
+        );
+        expectSequence(test, "indexSetIndices(single index set)",
+            indexSetIndices(NSIndexSet.indexSetWithIndex(NSUInteger(5))),
+            NSUInteger(5)
+        );
+        expectSequence(test, "indexSetIndices(range index set)",
+            indexSetIndices(NSIndexSet.indexSetWithIndexesInRange(
+                NSMakeRange(NSUInteger(10), NSUInteger(5))
+            )),
+            NSUInteger(10), NSUInteger(11), NSUInteger(12), NSUInteger(13), NSUInteger(14)
+        );
+    }),
 ])));

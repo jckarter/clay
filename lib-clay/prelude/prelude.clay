@@ -10,6 +10,7 @@ public import numbers.*;
 public import enumerations.*;
 public import pointers.*;
 public import memory.*;
+public import operators.pod.*;
 public import sharedpointers.*;
 public import uniquepointers.*;
 public import values.*;

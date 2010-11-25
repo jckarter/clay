@@ -23,9 +23,9 @@ testing UInt64
 min = 0
 max = 18446744073709551615
 testing Float32
-a = 1.200000
-b = -3.400000
+a = 1.2
+b = -3.4
 testing Float64
-a = 1.200000
-b = -3.400000
+a = 1.2
+b = -3.4
 42
