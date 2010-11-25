@@ -549,3 +549,22 @@ regularClass(...fields) = newClass(NSObject,
     ClassMethods(),
     InstanceMethods(...regularClassInstanceMethods(...fields))
 );
+
+
+
+//
+// indexSetIndices
+//
+
+[O | ObjectRef?(O)]
+indexSetIndices(o: O) {
+    var indices = Vector[NSUInteger]();
+    var indexCount = o.count();
+    resize(indices, indexCount);
+    o.getIndexes_maxCount_inIndexRange(
+        begin(indices),
+        indexCount,
+        NSRangePointer(0),
+    );
+    return move(indices);
+}
