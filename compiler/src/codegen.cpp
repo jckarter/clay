@@ -2465,9 +2465,12 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
     }
     else if (x->objKind == VALUE_HOLDER) {
         ValueHolder *vh = (ValueHolder *)x.ptr();
-        if ((vh->type->typeKind == BOOL_TYPE)
-            ||(vh->type->typeKind == INTEGER_TYPE)
-            ||(vh->type->typeKind == FLOAT_TYPE))
+        if (vh->type->typeKind == BOOL_TYPE) {
+            bool result = (*(char *)vh->buf) != 0;
+            outstream << (result ? 1 : 0);
+        }
+        else if ((vh->type->typeKind == INTEGER_TYPE)
+                 ||(vh->type->typeKind == FLOAT_TYPE))
         {
             ostringstream sout;
             printValue(sout, new EValue(vh->type, vh->buf));
