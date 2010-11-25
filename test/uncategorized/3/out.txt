@@ -1,2 +1,2 @@
-((1, 1, 1, 1, 1, -100000), (1, 1, 1, 1, 2, 1, 100000), (1, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 100.000000, 0.010000, -2000.000000, -0.002000, 100000.000001), (), (true), #foo, #bar)
+((1, 1, 1, 1, 1, -100000), (1, 1, 1, 1, 2, 1, 100000), (1, 1, 1, 1, 1, 1, 100, 0.01, -2000, -0.002, 100000.000001), (), (true), #foo, #bar)
 Tuple[Tuple[Int32, Int8, Int16, Int32, Int64, Int32], Tuple[Int32, UInt8, UInt16, UInt32, UInt32, UInt64, UInt32], Tuple[Int32, Float64, Float32, Float64, Float32, Float64, Float64, Float64, Float32, Float32, Float64], Tuple[], Tuple[Bool], Static[#foo], Static[#bar]]

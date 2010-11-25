@@ -543,6 +543,7 @@ private :
 };
 
 void setAbortOnError(bool flag);
+void warning(const string &msg);
 void error(const string &msg);
 void fmtError(const char *fmt, ...);
 

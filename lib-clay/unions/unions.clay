@@ -25,14 +25,6 @@ Union?(x) = false;
 inline overload Union[...T]() returned:Union[...T] {
 }
 
-[...T]
-inline overload resetUnsafe(x:Union[...T]) {
-}
-
-[...T]
-inline overload destroy(x:Union[...T]) {
-}
-
 
 
 //

@@ -28,14 +28,6 @@ inline overload Static[A](src:Static[A]) returned:Static[A] {
 inline overload moveUnsafe(src:Static[A]) returned:Static[A] {
 }
 
-[A]
-inline overload resetUnsafe(x:Static[A]) {
-}
-
-[A]
-inline overload destroy(x:Static[A]) {
-}
-
 
 
 //

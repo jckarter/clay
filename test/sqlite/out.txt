@@ -1,5 +1,8 @@
 creating table hoozits
 inserting table
+inserted id 9001
+inserted id -1
+inserted id 2
 selecting table
   goatse => -1
   doublerainbow => 2

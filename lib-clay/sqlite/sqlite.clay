@@ -155,6 +155,15 @@ statementValue(static T, db: SqliteDB, sql: S, forward ...bindings: TT) {
         throw NoStatementValue();
 }
 
+[S, ...TT | CCompatibleString?(S) and allValues?(BindableType?, ...TT)]
+statementValue?(db: SqliteDB, sql: S, forward ...bindings: TT) {
+    var st = SqliteStatement(db, sql, ...bindings);
+    var si = iterator(st);
+    return hasNext?(si);
+}
+
+lastInsertedRowId(db: SqliteDB) = sqlite3_last_insert_rowid(db.handle);
+
 
 //
 // SqliteStatementIterator
@@ -240,14 +249,16 @@ rowRecord(st: SqliteStatementIterator, T)
 withTransaction(db: SqliteDB, fn) {
     runStatement(db, "begin");
 
+    var returnValues = Type(captureValues(...fn()))();
     try {
-        fn();
+        returnValues = captureValues(...fn());
     } catch (ex) {
         runStatement(db, "rollback");
         throw ex;
     }
 
     runStatement(db, "commit");
+    return ...forwardValues(returnValues);
 }
 
 // TODO: sqlite values

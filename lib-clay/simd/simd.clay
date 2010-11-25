@@ -76,16 +76,8 @@ inline overload moveUnsafe(src:Vec[T,n]) returned:Vec[T,n] {
 }
 
 [T,n]
-inline overload resetUnsafe(src:Vec[T,n]) {
-}
-
-[T,n]
 inline overload assign(dest:Vec[T,n], src:Vec[T,n]) {
     dest <-- src;
-}
-
-[T,n]
-inline overload destroy(a:Vec[T,n]) {
 }
 
 

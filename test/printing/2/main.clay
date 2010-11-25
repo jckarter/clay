@@ -1,6 +1,6 @@
 
 main() {
-    println((1, true, 3.0));
+    println((1, true, 3.5));
     println([10, 20, 30]);
     println(Vector([true, false, true]));
 }

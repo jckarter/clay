@@ -8,6 +8,13 @@ foo(x) {
     );
 }
 
+bar(x) {
+    match(x,
+        Int, i => { println("I saw an Int ", i); },
+        MatchDefault, x => { println("I saw a non-Int ", x); },
+    );
+}
+
 main() {
     var x = Foo(2);
     var y = Foo(3.0);
@@ -16,4 +23,9 @@ main() {
     foo(x);
     foo(y);
     foo(z);
+    println();
+
+    bar(x);
+    bar(y);
+    bar(z);
 }

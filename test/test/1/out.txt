@@ -75,7 +75,7 @@ Testing test test suite:
       7
       11
 
-    throws int is expected to throw exception of type Int32 but throws 7.000000
+    throws int is expected to throw exception of type Int32 but throws 7
 
     throws int is expected to throw exception of type Int32 but doesn't throw
 

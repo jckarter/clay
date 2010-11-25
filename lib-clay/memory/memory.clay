@@ -112,7 +112,7 @@ initializeMemory(first:Pointer[T], last:Pointer[T]) {
 // destroyMemory
 //
 
-[T]
+[T | not PODType?(T)]
 destroyMemory(first:Pointer[T], last:Pointer[T]) {
     eachLocation(first, last, destroy);
 }
@@ -123,7 +123,7 @@ destroyMemory(first:Pointer[T], last:Pointer[T]) {
 // copyMemory, copyMemoryBackwards
 //
 
-[T]
+[T | not PODType?(T)]
 copyMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst;
     eachLocationWithCleanup(destFirst, destLast, x => {
@@ -133,7 +133,7 @@ copyMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     );
 }
 
-[T]
+[T | not PODType?(T)]
 copyMemoryBackwards(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst + (destLast - destFirst);
     eachLocationBackwardsWithCleanup(destFirst, destLast, x => {
@@ -143,13 +143,17 @@ copyMemoryBackwards(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[
     );
 }
 
+[T | not PODType?(T)]
+copyNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    copyMemory(destFirst, destLast, srcFirst);
+}
 
 
 //
 // moveMemory, moveMemoryUnsafe
 //
 
-[T]
+[T | not PODType?(T)]
 moveMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst;
     eachLocation(destFirst, destLast, x => {
@@ -158,7 +162,7 @@ moveMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     });
 }
 
-[T]
+[T | not PODType?(T)]
 moveMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst;
     eachLocation(destFirst, destLast, x => {
@@ -167,13 +171,23 @@ moveMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T])
     });
 }
 
+[T | not PODType?(T)]
+moveNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    moveMemory(destFirst, destLast, srcFirst);
+}
+
+[T | not PODType?(T)]
+moveNonoverlappingMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    moveMemoryUnsafe(destFirst, destLast, srcFirst);
+}
+
 
 
 //
 // moveMemoryBackwardsUnsafe
 //
 
-[T]
+[T | not PODType?(T)]
 moveMemoryBackwardsUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst + (destLast - destFirst);
     eachLocationBackwards(destFirst, destLast, x => {
@@ -188,7 +202,7 @@ moveMemoryBackwardsUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Po
 // resetMemoryUnsafe
 //
 
-[T]
+[T | not PODType?(T)]
 resetMemoryUnsafe(first:Pointer[T], last:Pointer[T]) {
     eachLocation(first, last, resetUnsafe);
 }
@@ -196,7 +210,7 @@ resetMemoryUnsafe(first:Pointer[T], last:Pointer[T]) {
 
 
 //
-// fillMemory
+// fillMemory, zeroMemory
 //
 
 [T]
@@ -205,13 +219,18 @@ fillMemory(first:Pointer[T], last:Pointer[T], value:T) {
     eachLocationWithCleanup(first, last, x => { x <-- ptr^; });
 }
 
+[T]
+zeroMemory(first:Pointer[T], last:Pointer[T]) {
+    fillMemory(first, last, T(0));
+}
+
 
 
 //
 // assignMemory, moveAssignMemory
 //
 
-[T, U | CallDefined?(assign, T, U)]
+[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
 assignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U]) {
     var srcPtr = srcFirst;
     eachLocation(destFirst, destLast, x => {
@@ -220,18 +239,30 @@ assignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U]) {
     });
 }
 
-[T, U | CallDefined?(assign, T, U)]
+[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
 overload assignMemory(first:Pointer[T], last:Pointer[T], value:U) {
     eachLocation(first, last, x ref => { x = value; });
 }
 
-[T, U | CallDefined?(assign, T, U)]
+[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
 moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U]) {
     var srcPtr = srcFirst;
     eachLocation(destFirst, destLast, x => {
         x = move(srcPtr^);
         srcPtr += 1;
     });
+}
+
+[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
+assignNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U])
+{
+    assignMemory(destFirst, destLast, srcFirst);
+}
+
+[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
+moveAssignNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U])
+{
+    moveAssignMemory(destFirst, destLast, srcFirst);
 }
 
 
