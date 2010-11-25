@@ -1871,6 +1871,7 @@ ModulePtr loadProgram(const string &fileName);
 ModulePtr loadProgramSource(const string &name, const string &source);
 ModulePtr loadedModule(const string &module);
 const string &primOpName(PrimOpPtr x);
+ModulePtr preludeModule();
 ModulePtr primitivesModule();
 ModulePtr staticModule(ObjectPtr x);
 
