@@ -209,7 +209,7 @@ overload insert(a:V, i:I, seq:S) {
 overload insert(a:V, i:I, seq:S) {
     var first, last = ...insertLocationsUnsafe(a, i, size(seq));
     try {
-        copyMemory(first, last, &seq[0]);
+        copyNonoverlappingMemory(first, last, &seq[0]);
     }
     catch (e) {
         resetMemoryUnsafe(first, last);
@@ -233,7 +233,7 @@ overload insert(a:V, i:I, rvalue seq:S) {
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, rvalue seq:S) {
     var first, last = ...insertLocationsUnsafe(a, i, size(seq));
-    moveMemory(first, last, &seq[0]);
+    moveNonoverlappingMemory(first, last, &seq[0]);
 }
 
 [V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
