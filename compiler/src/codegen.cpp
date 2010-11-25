@@ -29,6 +29,7 @@ void cgPopStack(int marker, CodegenContextPtr ctx);
 void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx);
 void cgPushStack(CValuePtr cv, CodegenContextPtr ctx);
 CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx);
+CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx);
 
 MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
                                      EnvPtr env,
@@ -230,7 +231,9 @@ llvm::BasicBlock *newBasicBlock(const char *name, CodegenContextPtr ctx)
 static CValuePtr staticCValue(ObjectPtr obj, CodegenContextPtr ctx)
 {
     TypePtr t = staticType(obj);
-    return codegenAllocValue(t, ctx);
+    if (ctx->valueForStatics == NULL)
+        ctx->valueForStatics = ctx->initBuilder->CreateAlloca(llvmType(t));
+    return new CValue(t, ctx->valueForStatics);
 }
 
 static CValuePtr derefValue(CValuePtr cvPtr, CodegenContextPtr ctx)
@@ -364,7 +367,40 @@ llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx)
 
 
 //
-// codegen temps
+// temps
+//
+
+static llvm::Value *allocTemp(const llvm::Type *llType, CodegenContextPtr ctx)
+{
+    llvm::Value *llv = NULL;
+    for (unsigned i = ctx->discardedSlots.size(); i > 0; --i) {
+        if (ctx->discardedSlots[i-1].llType == llType) {
+            llv = ctx->discardedSlots[i-1].llValue;
+            ctx->discardedSlots.erase(ctx->discardedSlots.begin() + i-1);
+            break;
+        }
+    }
+    if (!llv)
+        llv = ctx->initBuilder->CreateAlloca(llType);
+    ctx->allocatedSlots.push_back(StackSlot(llType, llv));
+    return llv;
+}
+
+static int markTemps(CodegenContextPtr ctx) {
+    return ctx->allocatedSlots.size();
+}
+
+static void clearTemps(int marker, CodegenContextPtr ctx) {
+    while (marker < (int)ctx->allocatedSlots.size()) {
+        ctx->discardedSlots.push_back(ctx->allocatedSlots.back());
+        ctx->allocatedSlots.pop_back();
+    }
+}
+
+
+
+//
+// codegen value stack
 //
 
 int cgMarkStack(CodegenContextPtr ctx)
@@ -378,7 +414,7 @@ void cgDestroyStack(int marker, CodegenContextPtr ctx)
     assert(marker <= i);
     while (marker < i) {
         --i;
-        codegenValueDestroy(ctx->valueStack[i].cv, ctx);
+        codegenValueDestroy(ctx->valueStack[i], ctx);
     }
 }
 
@@ -393,17 +429,24 @@ void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx)
 {
     assert(marker <= (int)ctx->valueStack.size());
     while (marker < (int)ctx->valueStack.size()) {
-        codegenValueDestroy(ctx->valueStack.back().cv, ctx);
+        CValuePtr cv = ctx->valueStack.back();
         ctx->valueStack.pop_back();
+        codegenValueDestroy(cv, ctx);
     }
 }
 
 void cgPushStack(CValuePtr cv, CodegenContextPtr ctx)
 {
-    ctx->valueStack.push_back(CStackValue(cv));
+    ctx->valueStack.push_back(cv);
 }
 
 CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx)
+{
+    llvm::Value *llv = allocTemp(llvmType(t), ctx);
+    return new CValue(t, llv);
+}
+
+CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx)
 {
     const llvm::Type *llt = llvmType(t);
     llvm::Value *llv = ctx->initBuilder->CreateAlloca(llt);
@@ -2422,9 +2465,12 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
     }
     else if (x->objKind == VALUE_HOLDER) {
         ValueHolder *vh = (ValueHolder *)x.ptr();
-        if ((vh->type->typeKind == BOOL_TYPE)
-            ||(vh->type->typeKind == INTEGER_TYPE)
-            ||(vh->type->typeKind == FLOAT_TYPE))
+        if (vh->type->typeKind == BOOL_TYPE) {
+            bool result = (*(char *)vh->buf) != 0;
+            outstream << (result ? 1 : 0);
+        }
+        else if ((vh->type->typeKind == INTEGER_TYPE)
+                 ||(vh->type->typeKind == FLOAT_TYPE))
         {
             ostringstream sout;
             printValue(sout, new EValue(vh->type, vh->buf));
@@ -3070,6 +3116,7 @@ bool codegenStatement(StatementPtr stmt,
             if (mpvLeft->values[i]->isTemp)
                 argumentError(i, "cannot assign to a temporary");
         }
+        int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         if (mpvLeft->size() == 1) {
             MultiCValuePtr mcvRight = codegenMultiAsRef(x->right, env, ctx);
@@ -3100,6 +3147,7 @@ bool codegenStatement(StatementPtr stmt,
             }
         }
         cgDestroyAndPopStack(marker, ctx);
+        clearTemps(tempMarker, ctx);
         return false;
     }
 
@@ -3118,10 +3166,12 @@ bool codegenStatement(StatementPtr stmt,
                                   mpvRight->values[i]->type);
             }
         }
+        int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
         codegenMultiInto(x->right, env, ctx, mcvLeft);
         cgDestroyAndPopStack(marker, ctx);
+        clearTemps(tempMarker, ctx);
         return false;
     }
 
@@ -3199,10 +3249,12 @@ bool codegenStatement(StatementPtr stmt,
 
     case IF : {
         If *x = (If *)stmt.ptr();
+        int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         CValuePtr cv = codegenOneAsRef(x->condition, env, ctx);
         llvm::Value *cond = codegenToBoolFlag(cv, ctx);
         cgDestroyAndPopStack(marker, ctx);
+        clearTemps(tempMarker, ctx);
 
         llvm::BasicBlock *trueBlock = newBasicBlock("ifTrue", ctx);
         llvm::BasicBlock *falseBlock = newBasicBlock("ifFalse", ctx);
@@ -3267,9 +3319,11 @@ bool codegenStatement(StatementPtr stmt,
 
     case EXPR_STATEMENT : {
         ExprStatement *x = (ExprStatement *)stmt.ptr();
+        int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenExprAsRef(x->expr, env, ctx);
         cgDestroyAndPopStack(marker, ctx);
+        clearTemps(tempMarker, ctx);
         return false;
     }
 
@@ -3283,10 +3337,12 @@ bool codegenStatement(StatementPtr stmt,
         ctx->builder->CreateBr(whileBegin);
         ctx->builder->SetInsertPoint(whileBegin);
 
+        int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         CValuePtr cv = codegenOneAsRef(x->condition, env, ctx);
         llvm::Value *cond = codegenToBoolFlag(cv, ctx);
         cgDestroyAndPopStack(marker, ctx);
+        clearTemps(tempMarker, ctx);
 
         ctx->builder->CreateCondBr(cond, whileBody, whileEnd);
 
@@ -3387,9 +3443,11 @@ bool codegenStatement(StatementPtr stmt,
             error("throw statements need an argument");
         ExprPtr callable = prelude_expr_throwValue();
         ExprListPtr args = new ExprList(x->expr);
+        int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
         cgDestroyAndPopStack(marker, ctx);
+        clearTemps(tempMarker, ctx);
         ctx->builder->CreateUnreachable();
         return true;
     }
@@ -3473,12 +3531,14 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             arityError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            CValuePtr cv = codegenAllocValue(mpv->values[i]->type, ctx);
+            CValuePtr cv = codegenAllocNewValue(mpv->values[i]->type, ctx);
             mcv->add(cv);
         }
+        int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenMultiInto(x->values, env, ctx, mcv);
         cgDestroyAndPopStack(marker, ctx);
+        clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
             CValuePtr cv = mcv->values[i];
@@ -3500,18 +3560,20 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
             if (pv->isTemp) {
-                CValuePtr cv = codegenAllocValue(pv->type, ctx);
+                CValuePtr cv = codegenAllocNewValue(pv->type, ctx);
                 mcv->add(cv);
             }
             else {
                 TypePtr ptrType = pointerType(pv->type);
-                CValuePtr cvRef = codegenAllocValue(ptrType, ctx);
+                CValuePtr cvRef = codegenAllocNewValue(ptrType, ctx);
                 mcv->add(cvRef);
             }
         }
+        int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenMulti(x->values, env, ctx, mcv);
         cgDestroyAndPopStack(marker, ctx);
+        clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
             CValuePtr cv;

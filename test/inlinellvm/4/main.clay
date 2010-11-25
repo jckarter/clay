@@ -10,7 +10,16 @@ bswap(x:Int32) returned:Int32 __llvm__ {
     ret i32 0
 }
 
+[x]
+returnStaticInt(static x) returned:Int32 __llvm__ {
+    store i32 $x, i32* %returned
+    ret i32 0
+}
+
 main() {
     println(bswap(1));
     println(bswap(-1));
+    println(returnStaticInt(static 10));
+    println(returnStaticInt(static true));
+    println(returnStaticInt(static false));
 }

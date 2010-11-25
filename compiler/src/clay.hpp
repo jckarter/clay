@@ -2878,12 +2878,11 @@ struct CReturn {
         : byRef(byRef), type(type), value(value) {}
 };
 
-struct CStackValue {
-    CValuePtr cv;
-    llvm::BasicBlock *landingPad;
-    llvm::BasicBlock *destructor;
-    CStackValue(CValuePtr cv)
-        : cv(cv), landingPad(NULL), destructor(NULL) {}
+struct StackSlot {
+    const llvm::Type *llType;
+    llvm::Value *llValue;
+    StackSlot(const llvm::Type *llType, llvm::Value *llValue)
+        : llType(llType), llValue(llValue) {}
 };
 
 struct CodegenContext : public Object {
@@ -2891,7 +2890,11 @@ struct CodegenContext : public Object {
     llvm::IRBuilder<> *initBuilder;
     llvm::IRBuilder<> *builder;
 
-    vector<CStackValue> valueStack;
+    vector<CValuePtr> valueStack;
+    llvm::Value *valueForStatics;
+
+    vector<StackSlot> allocatedSlots;
+    vector<StackSlot> discardedSlots;
 
     vector< vector<CReturn> > returnLists;
     vector<JumpTarget> returnTargets;
@@ -2906,6 +2909,7 @@ struct CodegenContext : public Object {
           llvmFunc(llvmFunc),
           initBuilder(NULL),
           builder(NULL),
+          valueForStatics(NULL),
           checkExceptions(true) {}
 
     ~CodegenContext() {
