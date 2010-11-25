@@ -688,7 +688,7 @@ overload derefListPattern(x:ListPatternCell) {
 
 
 //
-// walkPattern, walkListPattern
+// walkPattern, walkMultiPattern, walkListPattern, etc.
 //
 
 procedure walkPattern;
@@ -707,17 +707,43 @@ overload walkPattern(x:ast.IndexingPattern, visitor) {
     walkListPattern(x.args, visitor);
 }
 
+procedure walkMultiPattern;
+overload walkMultiPattern(x, visitor) {
+    genericError("not a multi-valued pattern");
+}
+overload walkMultiPattern(x:ast.Pattern, visitor) {
+    withCurrentLocation(*x, () ref=> {
+        visitor(x, true);
+        walkMultiPattern(*x, visitor);
+    });
+}
+overload walkMultiPattern(x:ast.PatternNameRef, visitor) {
+}
+
 walkListPattern(x:ast.ListPattern, visitor) {
     for (y in x.items)
         walkPattern(y, visitor);
     maybe(x.variadicItem,
-        y ref=> {
-            withCurrentLocation(*y, () ref=> {
-                visitor(y, true);
-            });
-        },
+        y ref=> { walkMultiPattern(y, visitor); },
         () => {},
     );
+}
+
+
+
+//
+// walkArgumentPatterns, walkArgumentPattern, walkVariadicArgumentPattern
+
+walkArgumentPatterns(x:ast.VariadicList[ast.Argument], visitor) {
+    for (y in x.items)
+        walkArgumentPattern(y);
+    maybe(x.variadicItem, walkVariadicArgumentPattern, () => {});
+}
+walkArgumentPattern(x:ast.Argument, visitor) {
+    maybe(x.type, p ref=> { walkPattern(p, visitor); }, () => {});
+}
+walkVariadicArgumentPattern(x:ast.Argument, visitor) {
+    maybe(x.type, p ref=> { walkMultiPattern(p, visitor); }, () => {});
 }
 
 
@@ -728,8 +754,8 @@ walkListPattern(x:ast.ListPattern, visitor) {
 
 record PatternVarCollector(
     names: HashMap[String, Bool],
-    patternVars: Vector[ast.Identifier],
-    variadicPatternVars: Vector[ast.Identifier],
+    vars: Vector[ast.Identifier],
+    variadicVars: Vector[ast.Identifier],
 );
 
 overload call(x:PatternVarCollector, pattern, variadic?) {
@@ -747,62 +773,71 @@ overload call(x:PatternVarCollector, pattern, variadic?) {
     else {
         x.names[name.str] = variadic?;
         if (variadic?)
-            push(x.variadicPatternVars, name);
+            push(x.variadicVars, name);
         else
-            push(x.patternVars, name);
+            push(x.vars, name);
     }
 }
 
 
 
 //
-// initializePatternVars
+// topLevelItemPatternVars
 //
 
-procedure applyCollector;
+procedure TopLevelItemWithPatternVars?(x) = false;
+overload TopLevelItemWithPatternVars?(static Attribute) = true;
+overload TopLevelItemWithPatternVars?(static StaticOverload) = true;
+overload TopLevelItemWithPatternVars?(static Overload) = true;
+
+private procedure applyCollector;
+overload applyCollector(x:Attribute, collector) {
+    walkPattern(x.ast.target, collector);
+}
 overload applyCollector(x:StaticOverload, collector) {
     walkPattern(x.ast.target, collector);
     walkListPattern(x.ast.args, collector);
 }
-overload applyCollector(x:Attribute, collector) {
+overload applyCollector(x:Overload, collector) {
     walkPattern(x.ast.target, collector);
+    walkArgumentPatterns(x.ast.args, collector);
 }
 
-[T | (T == StaticOverload) or (T == Attribute)]
-initializePatternVars(x:T) {
-    if (x.patternVarsInitialized?)
-        return;
-    var collector = PatternVarCollector();
-    applyCollector(x, collector);
-    x.patternVars = move(collector.patternVars);
-    x.variadicPatternVars = move(collector.variadicPatternVars);
-    x.patternVarsInitialized? = true;
+[T | TopLevelItemWithPatternVars?(T)]
+topLevelItemPatternVars(x:T) {
+    return maybe(x.patternVars,
+        y ref=> y,
+        () ref=> {
+            var c = PatternVarCollector();
+            applyCollector(x, c);
+            var pvars = PatternVars(move(c.vars), move(c.variadicVars));
+            x.patternVars = Maybe(pvars);
+            return pvars;
+        },
+    );
 }
 
 
 
 //
-// matchAttribute, matchStaticOverload
+// initializeMatch, finishMatch
 //
 
-[T | (T == Attribute) or (T == StaticOverload)]
-private initializeMatch(x:T) {
-    initializePatternVars(x);
-    var env = newEnv(x.module.globals);
-    for (name in x.patternVars)
+initializeMatch(baseEnv:Env, pvars:PatternVars) {
+    var env = newEnv(baseEnv);
+    for (name in pvars.vars)
         envAdd(env, name, PatternCell(nothing(Value)));
-    for (name in x.variadicPatternVars)
+    for (name in pvars.variadicVars)
         envAdd(env, name, ListPatternCell(nothing(ValueList)));
     return env;
 }
 
-[T | (T == Attribute) or (T == StaticOverload)]
-private finishMatch(x:T, env:Env) {
-    for (name in x.patternVars)
+finishMatch(pvars:PatternVars, env:Env, predicate:Maybe[ast.Expr]) {
+    for (name in pvars.vars)
         derefPattern(env, name);
-    for (name in x.variadicPatternVars)
+    for (name in pvars.variadicVars)
         derefListPattern(env, name);
-    return maybe(x.ast.predicate,
+    return maybe(predicate,
         pred => {
             if (not evaluateBool(pred, env))
                 return nothing(Env);
@@ -812,23 +847,31 @@ private finishMatch(x:T, env:Env) {
     );
 }
 
+
+
+//
+// matchAttribute, matchStaticOverload
+//
+
 matchAttribute(x:Attribute, target:Value) Maybe[Env] {
-    var env = initializeMatch(x);
+    var pvars = topLevelItemPatternVars(x);
+    var env = initializeMatch(x.module.globals, pvars);
     var targetPattern = evaluatePattern(x.ast.target, env);
     if (not unify(targetPattern, target))
         return nothing(Env);
-    return finishMatch(x, env);
+    return finishMatch(pvars, env, x.ast.predicate);
 }
 
 matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env] {
-    var env = initializeMatch(x);
+    var pvars = topLevelItemPatternVars(x);
+    var env = initializeMatch(x.module.globals, pvars);
     var callablePattern = evaluatePattern(x.ast.target, env);
     if (not unify(callablePattern, callable))
         return nothing(Env);
     var argsPattern = evaluateListPattern(x.ast.args, env);
     if (not unifyList(argsPattern, args))
         return nothing(Env);
-    return finishMatch(x, env);
+    return finishMatch(pvars, env, x.ast.predicate);
 }
 
 
