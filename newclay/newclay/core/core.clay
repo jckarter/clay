@@ -97,32 +97,32 @@ overload Overload(x:ast.Overload, module:Module) =
 //
 
 enum PrimitiveKind {
-    PRIM_staticInt?,
-    PRIM_staticAdd,
-    PRIM_staticSubtract,
-    PRIM_staticMultiply,
-    PRIM_staticDivide,
-    PRIM_staticRemainder,
-    PRIM_staticIntegers,
+    PRIM_StaticInt?,
+    PRIM_StaticAdd,
+    PRIM_StaticSubtract,
+    PRIM_StaticMultiply,
+    PRIM_StaticDivide,
+    PRIM_StaticRemainder,
+    PRIM_StaticIntegers,
 
-    PRIM_staticBool?,
-    PRIM_staticEquals?,
-    PRIM_staticLesser?,
+    PRIM_StaticBool?,
+    PRIM_StaticEquals?,
+    PRIM_StaticLesser?,
 
-    PRIM_staticString?,
-    PRIM_staticStringSize,
-    PRIM_staticStringSlice,
-    PRIM_staticStringConcat,
+    PRIM_StaticString?,
+    PRIM_StaticStringSize,
+    PRIM_StaticStringSlice,
+    PRIM_StaticStringConcat,
 
-    PRIM_staticTuple?,
-    PRIM_staticTuple,
-    PRIM_staticTupleSize,
-    PRIM_staticTupleElement,
-    PRIM_staticTupleElements,
+    PRIM_StaticTuple?,
+    PRIM_StaticTuple,
+    PRIM_StaticTupleSize,
+    PRIM_StaticTupleElement,
+    PRIM_StaticTupleElements,
 
-    PRIM_staticSymbol?,
-    PRIM_staticSymbolBody,
-    PRIM_staticSymbolAttributes,
+    PRIM_StaticSymbol?,
+    PRIM_StaticSymbolBody,
+    PRIM_StaticSymbolAttributes,
 }
 
 record Primitive = referenceType(

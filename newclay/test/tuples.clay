@@ -15,7 +15,7 @@ static overload mapValues('f) = ;
 //
 
 symbol mapTuple = ();
-static overload mapTuple('f, 'a) = (...mapValues('f, ...staticTupleElements('a)));
+static overload mapTuple('f, 'a) = (...mapValues('f, ...StaticTupleElements('a)));
 
 
 
@@ -26,8 +26,8 @@ static overload mapTuple('f, 'a) = (...mapValues('f, ...staticTupleElements('a))
 symbol reverseTuple = ();
 static overload reverseTuple('a) =
     mapTuple(
-        i => staticTupleElement('a, staticSubtract(staticTupleSize('a), staticAdd(i,1))),
-        (...staticIntegers(staticTupleSize('a))),
+        i => StaticTupleElement('a, StaticSubtract(StaticTupleSize('a), StaticAdd(i,1))),
+        (...StaticIntegers(StaticTupleSize('a))),
     );
 
 

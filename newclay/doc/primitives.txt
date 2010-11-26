@@ -1,31 +1,31 @@
 
 numeric primitives:
 
-staticInt?(x) Bool
-staticAdd(a:Int, b:Int) Int
-staticSubtract(a:Int, b:Int) Int
-staticMultiply(a:Int, b:Int) Int
-staticDivide(a:Int, b:Int) Int
-staticRemainder(a:Int, b:Int) Int
+StaticInt?(x) Bool
+StaticAdd(a:Int, b:Int) Int
+StaticSubtract(a:Int, b:Int) Int
+StaticMultiply(a:Int, b:Int) Int
+StaticDivide(a:Int, b:Int) Int
+StaticRemainder(a:Int, b:Int) Int
 
-staticIntegers(n:Int) ...
+StaticIntegers(n:Int) ...
 
-staticBool?(x) Bool
-staticEquals?(a, b) Bool
-staticLesser?(a:Int, b:Int) Bool
-staticLesser?(a:Bool, b:Bool) Bool
+StaticBool?(x) Bool
+StaticEquals?(a, b) Bool
+StaticLesser?(a:Int, b:Int) Bool
+StaticLesser?(a:Bool, b:Bool) Bool
 
-staticString?(x) Bool
-staticStringSize(s:String) Int
-staticStringSlice(s:String, start:Int, end:Int) String
-staticStringConcat(...strings) String
+StaticString?(x) Bool
+StaticStringSize(s:String) Int
+StaticStringSlice(s:String, start:Int, end:Int) String
+StaticStringConcat(...strings) String
 
-staticTuple?(x) Bool
-staticTuple(...values) Tuple
-staticTupleSize(s:Tuple) Int
-staticTupleElement(s:Tuple, i:Int) x
-staticTupleElements(s:Tuple) ...
+StaticTuple?(x) Bool
+StaticTuple(...values) Tuple
+StaticTupleSize(s:Tuple) Int
+StaticTupleElement(s:Tuple, i:Int) x
+StaticTupleElements(s:Tuple) ...
 
-staticSymbol?(x)
-staticSymbolBody(x:Symbol) value
-staticSymbolAttributes(x:Symbol) value
+StaticSymbol?(x)
+StaticSymbolBody(x:Symbol) value
+StaticSymbolAttributes(x:Symbol) value
