@@ -202,7 +202,7 @@ symbolAttributes(x:Symbol) {
 evaluateMain(program) {
     var module = program.mainModule;
     return withCurrentModule(module, () => {
-        var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
+        var mainRef = ast.Expr(ast.NameRef(ast.Identifier("Main")));
         var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
         return evaluateExpr(mainCall, module.globals);
     });
