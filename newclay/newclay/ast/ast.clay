@@ -40,9 +40,31 @@ overload printReprTo(stream, x:T) {
     printReprValuesTo(stream, ...dropValues(static 2, ...referenceTypeFields(x)));
 }
 
+
+
+//
+// getLocation, setLocation, assignLocation
+//
+
+procedure getLocation;
+overload getLocation(x) = x.tokens, x.mainToken;
+overload getLocation(x:Expr) = ...getLocation(*x);
+overload getLocation(x:ExprListItem) = ...getLocation(*x);
+
+procedure setLocation;
+overload setLocation(x, tokens, mainToken) {
+    x.tokens = tokens;
+    x.mainToken = mainToken;
+}
+overload setLocation(x:Expr, tokens, mainToken) {
+    setLocation(*x, tokens, mainToken);
+}
+overload setLocation(x:ExprListItem, tokens, mainToken) {
+    setLocation(*x, tokens, mainToken);
+}
+
 assignLocation(destNode, srcNode) {
-    destNode.tokens = srcNode.tokens;
-    destNode.mainToken = srcNode.mainToken;
+    setLocation(destNode, ...getLocation(srcNode));
 }
 
 
@@ -223,28 +245,55 @@ record Overload = ast(
 );
 
 record Argument = ast(
+    kind: Maybe[ArgumentKind],
     name: Identifier,
     type: Maybe[Pattern],
 );
 
-enum ReturnSpecKind {
-    SINGLE_RETURN,
-    VARIADIC_RETURN,
+enum ArgumentKind {
+    ARG_CONST,
+    ARG_REF,
+    ARG_RVALUE,
+    ARG_FORWARD,
 }
 
 record ReturnSpec = ast(
-    kind: ReturnSpecKind,
+    kind: Maybe[ReturnKind],
+    arityKind: ReturnArityKind,
     name: Maybe[Identifier],
     type: Expr,
 );
+
+enum ReturnKind {
+    RETURN_CONST,
+    RETURN_REF,
+}
+
+enum ReturnArityKind {
+    RETURN_SINGLE,
+    RETURN_MULTI,
+}
 
 variant CodeBody = ExprCodeBody
                  | CCodeBody
                  ;
 
 record ExprCodeBody = ast(
-    exprs: ExprList,
+    exprs: ReturnExprList,
 );
+
+alias ReturnExprList = Vector[ReturnExprListItem];
+
+record ReturnExprListItem = ast(
+    kind: Maybe[ReturnExprKind],
+    item: ExprListItem,
+);
+
+enum ReturnExprKind {
+    RETURN_EXPR_CONST,
+    RETURN_EXPR_REF,
+    RETURN_EXPR_FORWARD,
+}
 
 record CCodeBody = ast(
     cCode: String,

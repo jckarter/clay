@@ -58,6 +58,7 @@ private var punctuations = [
 private var keywords = [
     "symbol", "attribute",
     "overload", "static",
+    "const", "ref", "rvalue", "forward",
     "true", "false",
     "if", "else",
     "and", "or",

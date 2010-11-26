@@ -16,17 +16,23 @@ Overload -> "overload" TargetPattern "(" ArgumentList? ")" ReturnList
 Predicate -> "|" Expr
 
 ArgumentList -> variadic_list2(Argument, MultiArgument)
-Argument -> Identifier (":" Pattern)?
-MultiArgument -> "..." Identifier (":" PatternNameRef)?
+Argument -> ArgumentKind? Identifier (":" Pattern)?
+MultiArgument -> ArgumentKind? "..." Identifier (":" PatternNameRef)?
+ArgumentKind -> "const" | "ref" | "rvalue" | "forward"
 
 ReturnList -> (ReturnSpec | VariadicReturnSpec)*
-ReturnSpec -> (Identifier ":")? Expr
-VariadicReturnSpec -> "..." (Identifier ":")? Expr
+ReturnSpec -> ReturnKind? (Identifier ":")? Expr
+VariadicReturnSpec -> ReturnKind? "..." (Identifier ":")? Expr
+ReturnKind -> "const" | "ref"
 
-CodeBody -> "=" ExprList ";"
+CodeBody -> "=" ReturnExprList ";"
           |  "__c__" InlineCCodeBody ";"
 
 InlineCCodeBody -> """.*"""
+
+ReturnExprList -> comma_list(ReturnExprListItem)
+ReturnExprListItem -> ReturnExprKind? ExprListItem
+ReturnExprKind -> "const" | "ref" | "forward"
 
 
 
