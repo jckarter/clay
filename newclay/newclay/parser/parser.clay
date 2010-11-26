@@ -117,6 +117,10 @@ private var kw_symbol = keyword("symbol");
 private var kw_attribute = keyword("attribute");
 private var kw_overload = keyword("overload");
 private var kw_static = keyword("static");
+private var kw_const = keyword("const");
+private var kw_ref = keyword("ref");
+private var kw_rvalue = keyword("rvalue");
+private var kw_forward = keyword("forward");
 private var kw_true = keyword("true");
 private var kw_false = keyword("false");
 private var kw_if = keyword("if");
@@ -611,14 +615,24 @@ private var staticOverloadDef = topLevelItemParser(
 
 // overloadDef
 
+private var argumentKind = choice(
+    modify(x => ARG_CONST, kw_const),
+    modify(x => ARG_REF, kw_ref),
+    modify(x => ARG_RVALUE, kw_rvalue),
+    modify(x => ARG_FORWARD, kw_forward),
+);
+
 private var argument = bounds(modify(
-    x => Argument(move(x.0), move(x.1)),
-    sequence(identifier, optTypePattern),
+    x => Argument(move(x.0), move(x.1), move(x.2)),
+    sequence(optional(argumentKind), identifier, optTypePattern),
 ));
 
 private var multiArgument = bounds(modify(
-    x => Argument(move(x.1), move(x.2)),
-    sequence(punc(#"..."), identifier, optMultiTypePattern),
+    x => Argument(move(x.0), move(x.2), move(x.3)),
+    sequence(
+        optional(argumentKind), punc(#"..."),
+        identifier, optMultiTypePattern
+    ),
 ));
 
 private var arguments = variadicList(
@@ -638,23 +652,77 @@ private var baseReturn = choice(
     modify(x => (nothing(Identifier), move(x)), expr),
 );
 
+private var returnKind = choice(
+    modify(x => RETURN_CONST, kw_const),
+    modify(x => RETURN_REF, kw_ref),
+);
+
 private var singleReturn = bounds(modify(
-    x => ReturnSpec(SINGLE_RETURN, move(x.0), move(x.1)),
-    baseReturn,
+    x => ReturnSpec(move(x.0), RETURN_SINGLE, move((x.1).0), move((x.1).1)),
+    sequence(optional(returnKind), baseReturn),
 ));
 
 private var multiReturn = bounds(modify(
-    x => ReturnSpec(VARIADIC_RETURN, move((x.1).0), move((x.1).1)),
-    sequence(punc(#"..."), baseReturn),
+    x => ReturnSpec(move(x.0), RETURN_MULTI, move((x.2).0), move((x.2).1)),
+    sequence(optional(returnKind), punc(#"..."), baseReturn),
 ));
 
 private var returnSpecs = optCommaList(
     choice(singleReturn, multiReturn)
 );
 
+private var returnExprKind = choice(
+    modify(x => RETURN_EXPR_CONST, kw_const),
+    modify(x => RETURN_EXPR_REF, kw_ref),
+    modify(x => RETURN_EXPR_FORWARD, kw_forward),
+);
+
+private var returnExprListItem = bounds(modify(
+    x => ReturnExprListItem(move(x.0), move(x.1)),
+    sequence(optional(returnExprKind), exprListItem),
+));
+
+private var groupedReturnExprList1 = modify(
+    x => map(
+        y ref=> {
+            var z = ReturnExprListItem(x.0, move(y));
+            assignLocation(z, z.item);
+            return move(z);
+        },
+        move(x.3),
+    ),
+    sequence(
+        optional(returnExprKind), punc(#"..."),
+        punc(#"("), exprList, punc(#")"),
+    ),
+);
+
+private var groupedReturnExprList = choice(
+    groupedReturnExprList1,
+    modify(
+        x => Vector[ReturnExprListItem](move(x)),
+        returnExprListItem,
+    ),
+);
+
+private var returnExprList = modify(
+    x => {
+        var result = Vector[ReturnExprListItem]();
+        for (a in x)
+            push(result, move(a));
+        return move(result);
+    },
+    commaList(groupedReturnExprList),
+);
+
+private var optReturnExprList = modify(
+    x => maybe(x, move, () => ReturnExprList()),
+    optional(returnExprList),
+);
+
 private var exprCodeBody = modify(CodeBody, bounds(modify(
     x => ExprCodeBody(move(x.1)),
-    sequence(punc(#"="), optExprList, punc(#";")),
+    sequence(punc(#"="), optReturnExprList, punc(#";")),
 )));
 
 private var inlineCCodeBody = modify(CodeBody, bounds(modify(
