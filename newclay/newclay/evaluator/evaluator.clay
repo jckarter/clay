@@ -319,6 +319,14 @@ overload envEntryToValue(x:ListPatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
     return Value();
 }
+overload envEntryToValue(x:RTVariable) {
+    genericError("run-time variable cannot be used in evaluator");
+    return Value();
+}
+overload envEntryToValue(x:RTListVariable) {
+    genericError("run-time variable cannot be used in evaluator");
+    return Value();
+}
 
 
 
@@ -396,6 +404,14 @@ overload envEntryToValueList(x:PatternCell) {
 }
 overload envEntryToValueList(x:ListPatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
+    return ValueList();
+}
+overload envEntryToValueList(x:RTVariable) {
+    genericError("run-time variable cannot be used in evaluator");
+    return ValueList();
+}
+overload envEntryToValueList(x:RTListVariable) {
+    genericError("run-time variable cannot be used in evaluator");
     return ValueList();
 }
 
