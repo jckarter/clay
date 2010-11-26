@@ -1,31 +1,31 @@
 
 
 //
-// mapValues
+// MapValues
 //
 
-symbol mapValues = ();
-static overload mapValues('f, 'first, ...'rest) = 'f('first), ...mapValues('f, ...'rest);
-static overload mapValues('f) = ;
+symbol MapValues = ();
+static overload MapValues('f, 'first, ...'rest) = 'f('first), ...MapValues('f, ...'rest);
+static overload MapValues('f) = ;
 
 
 
 //
-// mapTuple
+// MapTuple
 //
 
-symbol mapTuple = ();
-static overload mapTuple('f, 'a) = (...mapValues('f, ...StaticTupleElements('a)));
+symbol MapTuple = ();
+static overload MapTuple('f, 'a) = (...MapValues('f, ...StaticTupleElements('a)));
 
 
 
 //
-// reverseTuple
+// ReverseTuple
 //
 
-symbol reverseTuple = ();
-static overload reverseTuple('a) =
-    mapTuple(
+symbol ReverseTuple = ();
+static overload ReverseTuple('a) =
+    MapTuple(
         i => StaticTupleElement('a, StaticSubtract(StaticTupleSize('a), StaticAdd(i,1))),
         (...StaticIntegers(StaticTupleSize('a))),
     );
@@ -33,8 +33,8 @@ static overload reverseTuple('a) =
 
 
 //
-// main
+// Main
 //
 
-symbol main = ();
-static overload main() = reverseTuple((1, 2, true, false, "foo"));
+symbol Main = ();
+static overload Main() = ReverseTuple((1, 2, true, false, "foo"));

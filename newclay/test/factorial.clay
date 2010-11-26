@@ -1,8 +1,8 @@
 
-symbol factorial = ();
-static overload factorial('n) = StaticMultiply('n, factorial(StaticSubtract('n, 1)));
-static overload factorial(1) = 1;
-static overload factorial(0) = 1;
+symbol Factorial = ();
+static overload Factorial('n) = StaticMultiply('n, Factorial(StaticSubtract('n, 1)));
+static overload Factorial(1) = 1;
+static overload Factorial(0) = 1;
 
-symbol main = ();
-static overload main() = factorial(8);
+symbol Main = ();
+static overload Main() = Factorial(8);
