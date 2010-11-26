@@ -25,33 +25,33 @@ symbol recordType = ();
 static overload recordType(...'fields) = (RecordTag, fieldNames(...'fields), fieldTypes(...'fields));
 
 symbol fieldNames = ();
-static overload fieldNames(...'fields) = (...mapValues(f => staticTupleElement(f, 0), ...'fields));
+static overload fieldNames(...'fields) = (...mapValues(f => StaticTupleElement(f, 0), ...'fields));
 
 symbol fieldTypes = ();
-static overload fieldTypes(...'fields) = (...mapValues(f => staticTupleElement(f, 1), ...'fields));
+static overload fieldTypes(...'fields) = (...mapValues(f => StaticTupleElement(f, 1), ...'fields));
 
 symbol record? = ();
 static overload record?('t) =
-    staticSymbol?('t)
-    and tupleWithTag?(staticSymbolBody('t), RecordTag);
+    StaticSymbol?('t)
+    and tupleWithTag?(StaticSymbolBody('t), RecordTag);
 
 symbol tupleWithTag? = ();
 static overload tupleWithTag?('x, 'tag) =
-    staticTuple?('x)
-    and staticLesser?(0, staticTupleSize('x))
-    and staticEquals?(staticTupleElement('x, 0), 'tag);
+    StaticTuple?('x)
+    and StaticLesser?(0, StaticTupleSize('x))
+    and StaticEquals?(StaticTupleElement('x, 0), 'tag);
 
 symbol recordFieldCount = ();
 static overload recordFieldCount('t) | record?('t) =
-    staticTupleSize(staticTupleElement(staticSymbolBody('t), 1));
+    StaticTupleSize(StaticTupleElement(StaticSymbolBody('t), 1));
 
 symbol recordFieldNames = ();
 static overload recordFieldNames('t) | record?('t) =
-    staticTupleElement(staticSymbolBody('t), 1);
+    StaticTupleElement(StaticSymbolBody('t), 1);
 
 symbol recordFieldTypes = ();
 static overload recordFieldTypes('t) | record?('t) =
-    staticTupleElement(staticSymbolBody('t), 2);
+    StaticTupleElement(StaticSymbolBody('t), 2);
 
 
 symbol Point['T] = recordType(

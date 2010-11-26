@@ -999,46 +999,46 @@ private oneSymbol(args) {
 
 evaluatePrimitive(kind, args) {
     switch (kind) {
-    case PRIM_staticInt? : {
+    case PRIM_StaticInt? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, IntValue)));
     }
-    case PRIM_staticAdd : {
+    case PRIM_StaticAdd : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a + b));
     }
-    case PRIM_staticSubtract : {
+    case PRIM_StaticSubtract : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a - b));
     }
-    case PRIM_staticMultiply : {
+    case PRIM_StaticMultiply : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a * b));
     }
-    case PRIM_staticDivide : {
+    case PRIM_StaticDivide : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a / b));
     }
-    case PRIM_staticRemainder : {
+    case PRIM_StaticRemainder : {
         var a, b = ...twoInts(args);
         return ValueList(IntValue(a % b));
     }
-    case PRIM_staticIntegers : {
+    case PRIM_StaticIntegers : {
         var a = oneInt(args);
         if (a < 0)
             genericError("expecting a non-negative integer");
         return ValueList(mapped(i => Value(IntValue(i)), range(a)));
     }
 
-    case PRIM_staticBool? : {
+    case PRIM_StaticBool? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, BoolValue)));
     }
-    case PRIM_staticEquals? : {
+    case PRIM_StaticEquals? : {
         var a, b = ...twoValues(args);
         return ValueList(BoolValue(a == b));
     }
-    case PRIM_staticLesser? : {
+    case PRIM_StaticLesser? : {
         var a, b = ...twoValues(args);
         if (variantIs?(a, BoolValue) and variantIs?(b, BoolValue)) {
             var x, y = ...mapValues(v => variantAs(v, BoolValue).value, a, b);
@@ -1054,15 +1054,15 @@ evaluatePrimitive(kind, args) {
         }
     }
 
-    case PRIM_staticString? : {
+    case PRIM_StaticString? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, StringValue)));
     }
-    case PRIM_staticStringSize : {
+    case PRIM_StaticStringSize : {
         var s = oneString(args);
         return ValueList(IntValue(Int(size(s))));
     }
-    case PRIM_staticStringSlice : {
+    case PRIM_StaticStringSlice : {
         var s, i, j = ...stringIntInt(args);
         if ((i < 0) or (i > size(s)))
             genericError("invalid starting index: ", i);
@@ -1070,7 +1070,7 @@ evaluatePrimitive(kind, args) {
             genericError("invalid ending index: ", j);
         return ValueList(StringValue(slice(s, i, j)));
     }
-    case PRIM_staticStringConcat : {
+    case PRIM_StaticStringConcat : {
         var a = nStrings(args);
         var result = String();
         for (s in a)
@@ -1078,36 +1078,36 @@ evaluatePrimitive(kind, args) {
         return ValueList(StringValue(move(result)));
     }
 
-    case PRIM_staticTuple? : {
+    case PRIM_StaticTuple? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, TupleValue)));
     }
-    case PRIM_staticTuple : {
+    case PRIM_StaticTuple : {
         return ValueList(TupleValue(args));
     }
-    case PRIM_staticTupleSize : {
+    case PRIM_StaticTupleSize : {
         var a = oneTuple(args);
         return ValueList(IntValue(Int(size(a))));
     }
-    case PRIM_staticTupleElement : {
+    case PRIM_StaticTupleElement : {
         var a, i = ...tupleInt(args);
         if ((i < 0) or (i > size(a)))
             genericError("tuple index out of range");
         return ValueList(a[i]);
     }
-    case PRIM_staticTupleElements : {
+    case PRIM_StaticTupleElements : {
         return oneTuple(args);
     }
 
-    case PRIM_staticSymbol? : {
+    case PRIM_StaticSymbol? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, Symbol)));
     }
-    case PRIM_staticSymbolBody : {
+    case PRIM_StaticSymbolBody : {
         var a = oneSymbol(args);
         return ValueList(symbolBody(a));
     }
-    case PRIM_staticSymbolAttributes : {
+    case PRIM_StaticSymbolAttributes : {
         var a = oneSymbol(args);
         return ValueList(symbolAttributes(a));
     }
