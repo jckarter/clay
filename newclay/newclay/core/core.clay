@@ -147,6 +147,8 @@ variant EnvEntry = SymbolHead
                  | PatternCell
                  | ValueList
                  | ListPatternCell
+                 | RTVariable
+                 | RTListVariable
                  ;
  
 overload EnvEntry() = EnvEntry(SymbolHead());
@@ -333,6 +335,48 @@ record ListPattern = referenceType(
 record ListPatternCell = referenceType(
     values: Maybe[ValueList],
 );
+
+
+
+//
+// RTVariable, RTListVariable
+//
+
+enum RTVariableKind {
+    RT_VARIABLE_CONST,
+    RT_VARIABLE_REF,
+    RT_VARIABLE_RVALUE,
+    RT_VARIABLE_LOCAL,
+}
+
+record RTVariable = referenceType(
+    kind: RTVariableKind,
+    type: Value,
+);
+
+record RTListVariable = referenceType(
+    kinds: Vector[RTVariableKind],
+    types: Vector[Value],
+);
+
+
+
+//
+// RTValue, RTValueList
+//
+
+enum RTValueKind {
+    RT_VALUE_CONST,
+    RT_VALUE_REF,
+    RT_VALUE_RVALUE,
+}
+
+record RTValue (
+    kind: RTValueKind,
+    type: Value,
+);
+
+alias RTValueList = Vector[RTValue];
 
 
 
