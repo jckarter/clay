@@ -147,16 +147,7 @@ bindPatternArgs(env, formalArgs, args) {
 // symbols
 //
 
-symbolHasParams?(x:SymbolHead) {
-    ref p = x.ast.params;
-    return not (empty?(p.items) and nothing?(p.variadicItem));
-}
-
-symbolValue(x:SymbolHead) {
-    return symbolValue(x, ValueList());
-}
-
-overload symbolValue(x:SymbolHead, params:ValueList) {
+symbolValue(x:SymbolHead, params:ValueList) {
     var ptr = lookup(x.symbols, params);
     if (not null?(ptr)) {
         return ptr^;
@@ -295,14 +286,6 @@ procedure envEntryToValue;
 
 overload envEntryToValue(x:EnvEntry) {
     return envEntryToValue(*x);
-}
-overload envEntryToValue(x:SymbolHead) {
-    if (symbolHasParams?(x))
-        return Value(x);
-    return Value(symbolValue(x));
-}
-overload envEntryToValue(x:Primitive) {
-    return Value(x);
 }
 overload envEntryToValue(x:Value) {
     return x;
