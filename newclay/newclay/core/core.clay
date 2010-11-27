@@ -47,6 +47,11 @@ record SymbolHead = referenceType(
 overload SymbolHead(x:ast.Symbol, module:Module) =
     SymbolHead(x, module, HashMap[ValueList, Symbol]());
 
+symbolHeadHasParams?(x:SymbolHead) {
+    ref p = x.ast.params;
+    return not (empty?(p.items) and nothing?(p.variadicItem));
+}
+
 record Symbol = referenceType(
     head: SymbolHead,
     params: ValueList,
@@ -141,17 +146,15 @@ primitiveName(kind) {
 // environment
 //
 
-variant EnvEntry = SymbolHead
-                 | Primitive
-                 | Value
-                 | PatternCell
+variant EnvEntry = Value
                  | ValueList
+                 | PatternCell
                  | ListPatternCell
                  | RTVariable
                  | RTListVariable
                  ;
  
-overload EnvEntry() = EnvEntry(SymbolHead());
+overload EnvEntry() = EnvEntry(Value());
 
 record Env = referenceType(
     parent: Maybe[Env],
