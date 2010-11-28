@@ -1,0 +1,721 @@
+
+import maybe.*;
+import newclay.ast as ast;
+import newclay.core.*;
+import newclay.evaluator.*;
+
+
+//
+// initializeClayHooks
+//
+
+initializeClayHooks(program:Program) {
+    var env = program.mainModule.globals;
+    var lookup =
+        name => envEntryToValue(envLookup(env, ast.Identifier(name)));
+    program.hooks = ClayHooks(
+        lookup("TypeTemplate?"),
+        lookup("Type?"),
+        lookup("Procedure?"),
+        lookup("Bool"),
+        lookup("Int"),
+    );
+}
+
+
+
+//
+// symbolHeadTypeTemplate?, symbolType?, symbolProcedure?
+//
+
+symbolHeadTypeTemplate?(x:SymbolHead) {
+    // FIXME: check for recursion
+    return maybe(x.typeTemplate?,
+        x => x,
+        () => {
+            var predicate = x.module.program.hooks.TypeTemplate?;
+            var result = evaluateBoolCall(predicate, ValueList(x));
+            x.typeTemplate? = Maybe(result);
+            return result;
+        },
+    );
+}
+
+symbolType?(x:Symbol) {
+    // FIXME: check for recursion
+    return maybe(x.type?,
+        x => x,
+        () => {
+            var predicate = x.head.module.program.hooks.Type?;
+            var result = evaluateBoolCall(predicate, ValueList(x));
+            x.type? = Maybe(result);
+            return result;
+        },
+    );
+}
+
+symbolProcedure?(x:Symbol) {
+    // FIXME: check for recursion
+    return maybe(x.procedure?,
+        x => x,
+        () => {
+            var predicate = x.head.module.program.hooks.Procedure?;
+            var result = evaluateBoolCall(predicate, ValueList(x));
+            x.procedure? = Maybe(result);
+            return result;
+        },
+    );
+}
+
+
+
+//
+// AnalyzerContext
+//
+
+record AnalyzerContext = referenceType(
+    program: Program,
+    hooks: ClayHooks,
+);
+
+overload AnalyzerContext(program:Program) =
+    AnalyzerContext(program, program.hooks);
+
+
+
+//
+// analyzeMain
+//
+
+analyzeMain(program:Program) {
+    var ctx = AnalyzerContext(program);
+    var module = program.mainModule;
+    return withCurrentModule(module, () => {
+        var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
+        var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
+        return analyzeExpr(mainCall, module.globals, ctx);
+    });
+}
+
+
+
+//
+// analyzeBool
+//
+
+analyzeBool(x:ast.Expr, env, ctx) RTValue {
+    return withCurrentLocation(*x, () ref=> {
+        var result = analyzeExpr(x, env, ctx);
+        if (result.type != ctx.hooks.Bool)
+            genericError("expected Bool value");
+        return result;
+    });
+}
+
+
+
+//
+// analyzeExpr
+//
+
+procedure analyzeExpr;
+
+overload analyzeExpr(x:ast.Expr, env, ctx) RTValue {
+    return withCurrentLocation(*x, () ref=> analyzeExpr(*x, env, ctx));
+}
+overload analyzeExpr(x:ast.BoolLiteral, env, ctx) {
+    return RTValue(RT_VALUE_RVALUE, ctx.hooks.Bool);
+}
+overload analyzeExpr(x:ast.IntLiteral, env, ctx) {
+    return RTValue(RT_VALUE_RVALUE, ctx.hooks.Int);
+}
+overload analyzeExpr(x:ast.StringLiteral, env, ctx) {
+    genericError("strings are not yet supported");
+    return RTValue();
+}
+overload analyzeExpr(x:ast.NameRef, env, ctx) {
+    return envEntryToRTValue(envLookup(env, x.name), ctx);
+}
+overload analyzeExpr(x:ast.PatternNameRef, env, ctx) {
+    return valueToRTValue(derefPattern(env, x.name), ctx);
+}
+overload analyzeExpr(x:ast.TupleExpr, env, ctx) {
+    genericError("tuples are not yet supported");
+    return RTValue();
+}
+overload analyzeExpr(x:ast.Call, env, ctx) {
+    var callable = evaluateExpr(x.expr, env);
+    if (runtimeCallable?(callable)) {
+        var args = analyzeExprList(x.args, env, ctx);
+        return analyzeCallWithOneResult(callable, args, ctx);
+    }
+    else {
+        var args = evaluateExprList(x.args, env);
+        var result = evaluateCallWithOneResult(callable, args);
+        return valueToRTValue(result, ctx);
+    }
+}
+overload analyzeExpr(x:ast.Indexing, env, ctx) {
+    return valueToRTValue(evaluateExpr(x, env), ctx);
+}
+overload analyzeExpr(x:ast.AndExpr, env, ctx) {
+    analyzeBool(x.expr1, env, ctx);
+    analyzeBool(x.expr2, env, ctx);
+    return RTValue(RT_VALUE_RVALUE, ctx.hooks.Bool);
+}
+overload analyzeExpr(x:ast.OrExpr, env, ctx) {
+    analyzeBool(x.expr1, env, ctx);
+    analyzeBool(x.expr2, env, ctx);
+    return RTValue(RT_VALUE_RVALUE, ctx.hooks.Bool);
+}
+overload analyzeExpr(x:ast.LambdaExpr, env, ctx) {
+    genericError("lambda expressions are not yet supported");
+    return RTValue();
+}
+overload analyzeExpr(x:ast.IfExpr, env, ctx) {
+    analyzeBool(x.condition, env, ctx);
+    try {
+        var a = analyzeExpr(x.thenPart, env, ctx);
+        return RTValue(RT_VALUE_RVALUE, a.type);
+    }
+    catch (e:RecursiveAnalysisError) {
+        var b = analyzeExpr(x.elsePart, env, ctx);
+        return RTValue(RT_VALUE_RVALUE, b.type);
+    }
+}
+
+
+
+//
+// envEntryToRTValue
+//
+
+envEntryToRTValue(entry:EnvEntry, ctx) {
+    return match(entry,
+        Value, x => valueToRTValue(x, ctx),
+        ValueList, x => {
+            genericError("multi-value used in single value context");
+            return RTValue();
+        },
+        PatternCell, x => {
+            genericError("pattern variable cannot be used in non-pattern expression");
+            return RTValue();
+        },
+        ListPatternCell, x => {
+            genericError("pattern variable cannot be used in non-pattern expression");
+            return RTValue();
+        },
+        RTVariable, x => rtVariableToRTValue(x),
+        RTListVariable, x => {
+            genericError("multi-value used in single value context");
+            return RTValue();
+        },
+    );
+}
+
+
+
+//
+// rtVariableToRTValue, rtVariableKindToRTValueKind
+//
+
+rtVariableToRTValue(x:RTVariable) =
+    RTValue(rtVariableKindToRTValueKind(x.kind), x.type);
+
+rtVariableKindToRTValueKind(x:RTVariableKind) {
+    switch (x) {
+    case RT_VARIABLE_CONST: return RT_VALUE_CONST;
+    case RT_VARIABLE_REF: return RT_VALUE_REF;
+    case RT_VARIABLE_RVALUE: return RT_VALUE_RVALUE;
+    case RT_VARIABLE_LOCAL: return RT_VALUE_REF;
+    default :
+        assert(false);
+        return RTValueKind();
+    }
+}
+
+
+
+//
+// valueToRTValue
+//
+
+valueToRTValue(x:Value, ctx) {
+    return match(x,
+        BoolValue, x => RTValue(RT_VALUE_RVALUE, ctx.hooks.Bool),
+        IntValue, x => RTValue(RT_VALUE_RVALUE, ctx.hooks.Int),
+        StringValue, x => {
+            genericError("strings are not yet supported");
+            return RTValue();
+        },
+        TupleValue, x => {
+            genericError("tuples are not yet supported");
+            return RTValue();
+        },
+        MatchDefault, x => {
+            genericError("static values are not yet supported");
+            return RTValue();
+        },
+    );
+}
+
+
+
+//
+// analyzeExprList
+//
+
+analyzeExprList(exprList, env, ctx) {
+    var results = RTValueList();
+    for (item in exprList)
+        push(results, analyzeExprListItem(item, env, ctx));
+    return move(results);
+}
+
+procedure analyzeExprListItem;
+
+overload analyzeExprListItem(x:ast.ExprListItem, env, ctx) {
+    return analyzeExprListItem(*x, env, ctx);
+}
+overload analyzeExprListItem(x:ast.Expr, env, ctx) {
+    return RTValueList(analyzeExpr(x, env, ctx));
+}
+overload analyzeExprListItem(x:ast.UnpackExpr, env, ctx) {
+    return analyzeMultiExpr(x.expr, env, ctx);
+}
+
+
+
+//
+// analyzeMultiExpr
+//
+
+procedure analyzeMultiExpr;
+
+overload analyzeMultiExpr(x, env, ctx) {
+    genericError("single valued expression used in multi-value context");
+    return RTValueList();
+}
+overload analyzeMultiExpr(x:ast.Expr, env, ctx) RTValueList {
+    return withCurrentLocation(*x, () ref=> analyzeMultiExpr(*x, env, ctx));
+}
+overload analyzeMultiExpr(x:ast.NameRef, env, ctx) {
+    return envEntryToRTValueList(envLookup(env, x.name), ctx);
+}
+overload analyzeMultiExpr(x:ast.PatternNameRef, env, ctx) {
+    return valueListToRTValueList(derefListPattern(env, x.name), ctx);
+}
+overload analyzeMultiExpr(x:ast.Call, env, ctx) {
+    var callable = evaluateExpr(x.expr, env);
+    if (runtimeCallable?(callable)) {
+        var args = analyzeExprList(x.args, env, ctx);
+        return analyzeCall(callable, args, ctx);
+    }
+    else {
+        var args = evaluateExprList(x.args, env);
+        var result = evaluateCall(callable, args);
+        return valueListToRTValueList(result, ctx);
+    }
+}
+
+
+
+//
+// envEntryToRTValueList
+//
+
+procedure envEntryToRTValueList;
+
+overload envEntryToRTValueList(x:EnvEntry, ctx) {
+    return envEntryToRTValueList(*x, ctx);
+}
+overload envEntryToRTValueList(x:Value, ctx) {
+    genericError("single value used in multi-valued context");
+    return RTValueList();
+}
+overload envEntryToRTValueList(x:ValueList, ctx) {
+    return map(y ref=> valueToRTValue(y, ctx), x);
+}
+overload envEntryToRTValueList(x:PatternCell, ctx) {
+    genericError("pattern variable cannot be used in non-pattern expression");
+    return RTValueList();
+}
+overload envEntryToRTValueList(x:ListPatternCell, ctx) {
+    genericError("pattern variable cannot be used in non-pattern expression");
+    return RTValueList();
+}
+overload envEntryToRTValueList(x:RTVariable, ctx) {
+    genericError("single value used in multi-valued context");
+    return RTValueList();
+}
+overload envEntryToRTValueList(x:RTListVariable, ctx) {
+    var result = RTValueList();
+    for (kind, type in zipped(x.kinds, x.types)) {
+        var kind2 = rtVariableKindToRTValueKind(kind);
+        push(result, RTValue(kind2, type));
+    }
+    return move(result);
+}
+
+
+
+//
+// valueListToRTValueList
+//
+
+valueListToRTValueList(x:ValueList, ctx) {
+    return map(y ref=> valueToRTValue(y, ctx), x);
+}
+
+
+
+//
+// runtimeCallable?
+//
+
+runtimeCallable?(x:Value) {
+    return match(x,
+        SymbolHead, y => symbolHeadTypeTemplate?(y),
+        Symbol, y => (symbolType?(y) or symbolProcedure?(y)),
+        MatchDefault, y => false,
+    );
+}
+
+
+
+//
+// analyzeCallWithOneResult, analyzeCall
+//
+
+analyzeCallWithOneResult(x, args:RTValueList, ctx) {
+    var results = analyzeCall(x, args, ctx);
+    if (size(results) != 1)
+        genericError("expected 1 value, received ", size(results), " values");
+    return move(results[0]);
+}
+
+procedure analyzeCall;
+
+overload analyzeCall(x, args, ctx) {
+    genericError("invalid runtime procedure: ", x);
+    return RTValueList();
+}
+overload analyzeCall(x:Value, args:RTValueList, ctx) RTValueList {
+    return withCallAnalysis(x, args, () ref=> analyzeCall(*x, args, ctx));
+}
+overload analyzeCall(x:Symbol, args, ctx) {
+    return analyzeRTCall(x.invokeTable, Value(x), args, ctx);
+}
+overload analyzeCall(x:SymbolHead, args, ctx) {
+    return analyzeRTCall(x.invokeTable, Value(x), args, ctx);
+}
+
+
+
+//
+// matchOverload
+//
+
+private arityMatches?(formalArgs:ast.VariadicList[ast.Argument], args:RTValueList) {
+    if (nothing?(formalArgs.variadicItem))
+        return size(args) == size(formalArgs.items);
+    else
+        return size(args) >= size(formalArgs.items);
+}
+
+private referenceSpecifier(x:ast.Argument) ast.ArgumentKind {
+    return maybe(x.kind, y => y, () => ast.ARG_CONST);
+}
+
+private referenceKindMatches?(fkind:ast.ArgumentKind, kind:RTValueKind) {
+    if ((fkind == ast.ARG_REF) and (kind != RT_VALUE_REF))
+        return false;
+    if ((fkind == ast.ARG_RVALUE) and (kind != RT_VALUE_RVALUE))
+        return false;
+    return true;
+}
+
+private internalArgumentKind(fkind:ast.ArgumentKind, kind:RTValueKind) {
+    if (fkind == ast.ARG_CONST)
+        return RT_VARIABLE_CONST;
+    if (fkind == ast.ARG_RVALUE)
+        return RT_VARIABLE_REF;
+    switch (kind) {
+    case RT_VALUE_CONST: return RT_VARIABLE_CONST;
+    case RT_VALUE_REF: return RT_VARIABLE_REF;
+    case RT_VALUE_RVALUE: return RT_VARIABLE_RVALUE;
+    default :
+        assert(false);
+        return RTVariableKind();
+    }
+}
+
+private loweredArgumentKind(fkind:ast.ArgumentKind, kind:RTValueKind) {
+    if (fkind == ast.ARG_CONST)
+        return RT_VALUE_CONST;
+    return kind;
+}
+
+private unifyArgumentType(farg:ast.Argument, arg:RTValue, env) {
+    return maybe(farg.type,
+        type ref=> {
+            var typePattern = evaluatePattern(type, env);
+            return unify(typePattern, arg.type);
+        },
+        () => true,
+    );
+}
+
+private unifyVariadicArgumentType(farg, args, env) {
+    return maybe(farg.type,
+        type => {
+            var listCell = evaluateListPatternCell(type, env);
+            return unifyList(listCell, mapped(a => ref a.type, args));
+        },
+        () => true,
+    );
+}
+
+private unifyArgument(farg:ast.Argument, arg:RTValue, env, loweredArgs) {
+    var fkind = referenceSpecifier(farg);
+    if (not referenceKindMatches?(fkind, arg.kind))
+        return false;
+    if (not unifyArgumentType(farg, arg, env))
+        return false;
+    var argVarKind = internalArgumentKind(fkind, arg.kind);
+    envAdd(env, farg.name, RTVariable(argVarKind, arg.type));
+    var loweredArgKind = loweredArgumentKind(fkind, arg.kind);
+    push(loweredArgs, RTValue(loweredArgKind, arg.type));
+    return true;
+}
+
+private unifyVariadicArgument(farg:ast.Argument, args, env, loweredArgs) {
+    var fkind = referenceSpecifier(farg);
+    for (arg in args) {
+        if (not referenceKindMatches?(fkind, arg.kind))
+            return false;
+        var loweredArgKind = loweredArgumentKind(fkind, arg.kind);
+        push(loweredArgs, RTValue(loweredArgKind, arg.type));
+    }
+    if (not unifyVariadicArgumentType(farg, args, env))
+        return false;
+    var kinds = map(a => internalArgumentKind(fkind, a.kind),  args);
+    var types = ValueList(mapped(a => a.type, args));
+    envAdd(env, farg.name, RTListVariable(move(kinds), move(types)));
+    return true;
+}
+
+private unifyArguments(formalArgs, args, env, loweredArgs) {
+    for (farg, arg in zipped(formalArgs.items, args)) {
+        if (not unifyArgument(farg, arg, env, loweredArgs))
+            return false;
+    }
+    var restArgs = slicedFrom(args, size(formalArgs.items));
+    return maybe(formalArgs.variadicItem,
+        farg ref=> unifyVariadicArgument(farg, restArgs, env, loweredArgs),
+        () => true,
+    );
+}
+
+private convertNamedReturnReference(x) {
+    // FIXME: implement it
+    return x;
+}
+
+private bindNamedSingleReturn(env, name, returnSpec) {
+    var type = evaluateExpr(returnSpec.type, env);
+    if (not nothing?(returnSpec.kind))
+        type = convertNamedReturnReference(type);
+    envAdd(env, name, RTVariable(RT_VARIABLE_LOCAL, type));
+}
+
+private bindNamedMultiReturn(env, name, returnSpec) {
+    var types = evaluateMultiExpr(returnSpec.type, env);
+    if (not nothing?(returnSpec.kind))
+        types = ValueList(mapped(convertNamedReturnReference, types));
+    var kinds = map(x => RT_VARIABLE_LOCAL, range(size(types)));
+    envAdd(env, name, RTListVariable(kinds, types));
+}
+
+private bindNamedReturn(env, name, returnSpec) {
+    switch (returnSpec.arityKind) {
+    case ast.RETURN_SINGLE : bindNamedSingleReturn(env, name, returnSpec); break;
+    case ast.RETURN_MULTI : bindNamedMultiReturn(env, name, returnSpec); break;
+    default : assert(false); break;
+    }
+}
+
+private bindNamedReturns(env, returnSpecs) {
+    for (returnSpec in returnSpecs) {
+        maybe(returnSpec.name,
+            name ref=> { bindNamedReturn(env, name, returnSpec); },
+            () => {}
+        );
+    }
+}
+
+record MatchResult(
+    env: Env,
+    loweredArgs: RTValueList,
+);
+
+matchOverload(x:Overload, callable:Value, args:RTValueList) Maybe[MatchResult] {
+    ref formalArgs = x.ast.args;
+    if (not arityMatches?(formalArgs, args))
+        return nothing(MatchResult);
+    var pvars = topLevelItemPatternVars(x);
+    var env = initializeMatch(x.module.globals, pvars);
+    var callablePattern = evaluatePattern(x.ast.target, env);
+    if (not unify(callablePattern, callable))
+        return nothing(MatchResult);
+    var loweredArgs = RTValueList();
+    if (not unifyArguments(formalArgs, args, env, loweredArgs))
+        return nothing(MatchResult);
+    assert(size(loweredArgs) == size(args));
+    bindNamedReturns(env, x.ast.returns);
+    verifyPatternVars(pvars, env);
+    if (not testPredicate(x.ast.predicate, env))
+        return nothing(MatchResult);
+    return Maybe(MatchResult(env, move(loweredArgs)));
+}
+
+
+
+//
+// analyzeRTCall
+//
+
+private findOverload(program, callable, args) {
+    for (x in reversed(program.allOverloads)) {
+        var result = matchOverload(x, callable, args);
+        if (not nothing?(result)) {
+            ref mr = just(result);
+            return x, mr.env, move(mr.loweredArgs);
+        }
+    }
+    genericError("no matching operation");
+    return Overload(), Env(), RTValueList();
+}
+
+private returnSpecRTValueKind(returnSpec: ast.ReturnSpec) {
+    return maybe(returnSpec.kind,
+        k => {
+            switch (k) {
+                case ast.RETURN_CONST: return RT_VALUE_CONST;
+                case ast.RETURN_REF: return RT_VALUE_REF;
+                default :
+                    assert(false);
+                    return RTValueKind();
+            }
+        },
+        () => RT_VALUE_RVALUE,
+    );
+}
+
+private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
+    var result = RTValueList();
+    for (returnSpec in returns) {
+        if (returnSpec.arityKind == ast.RETURN_SINGLE) {
+            var kind = returnSpecRTValueKind(returnSpec);
+            var type = evaluateExpr(returnSpec.type, env);
+            push(result, RTValue(kind, type));
+        }
+        else {
+            var kind = returnSpecRTValueKind(returnSpec);
+            var types = evaluateMultiExpr(returnSpec.type, env);
+            for (type in types)
+                push(result, RTValue(kind, type));
+        }
+    }
+    return move(result);
+}
+
+private returnExprRTValueKind(x:ast.ReturnExprListItem, kind:RTValueKind) {
+    return maybe(x.kind,
+        y => {
+            switch (y) {
+                case ast.RETURN_EXPR_CONST :
+                    if (kind == RT_VALUE_RVALUE)
+                        genericError("cannot return temporary by reference");
+                    return RT_VALUE_CONST;
+                case ast.RETURN_EXPR_REF :
+                    if (kind == RT_VALUE_RVALUE)
+                        genericError("cannot return temporary by reference");
+                    if (kind == RT_VALUE_CONST)
+                        genericError("cannot return const ref as mutable ref");
+                    return RT_VALUE_REF;
+                case ast.RETURN_EXPR_FORWARD :
+                    return kind;
+                default :
+                    assert(false);
+                    return RTValueKind();
+            }
+        },
+        () => RT_VALUE_RVALUE,
+    );
+}
+
+analyzeReturnExprListItem(x, env, ctx) {
+    return withCurrentLocation(*x.item, () ref=> {
+        var results = analyzeExprListItem(x.item, env, ctx);
+        var results2 = RTValueList();
+        for (r in results)
+            push(results2, RTValue(returnExprRTValueKind(x, r.kind), r.type));
+        return move(results2);
+    });
+}
+
+analyzeReturnExprList(returnExprList, env, ctx) {
+    var results = RTValueList();
+    for (item in returnExprList)
+        push(results, analyzeReturnExprListItem(item, env, ctx));
+    return move(results);
+}
+
+private analyzeBody(x:Overload, env, ctx) {
+    if (not empty?(x.ast.returns))
+        return computeReturnSpec(x.ast.returns, env);
+    return match(x.ast.body,
+        ast.ExprCodeBody, y ref=> analyzeReturnExprList(y.exprs, env, ctx),
+        ast.CCodeBody, y ref=> RTValueList(), // void return
+    );
+}
+
+private entryReturns(entry:InvokeEntry) {
+    return maybe(entry.specialization, x => x.returns,
+        () => {
+            recursiveAnalysisError();
+            return RTValueList();
+        },
+    );
+}
+
+analyzeRTCall(invokeTable:InvokeTable, callable:Value, args:RTValueList, ctx) RTValueList {
+    var entryPtr = lookup(invokeTable, args);
+    if (not null?(entryPtr))
+        return entryReturns(entryPtr^);
+    invokeTable[args] = InvokeEntry(nothing(Specialization));
+    var x, env, loweredArgs = ...findOverload(ctx.program, callable, args);
+    var lowered? = (loweredArgs != args);
+    if (lowered?) {
+        var entryPtr = lookup(invokeTable, loweredArgs);
+        if (not null?(entryPtr))
+            return entryReturns(entryPtr^);
+        invokeTable[loweredArgs] = InvokeEntry(nothing(Specialization));
+    }
+    var result = RTValueList();
+    try {
+        result = analyzeBody(x, env, ctx);
+    }
+    catch (e) {
+        remove(invokeTable, args);
+        if (lowered?)
+            remove(invokeTable, loweredArgs);
+        throw e;
+    }
+    var s = Specialization(callable, loweredArgs, x, env, result);
+    invokeTable[args].specialization = Maybe(s);
+    if (lowered?)
+        invokeTable[loweredArgs].specialization = Maybe(s);
+    return result;
+}

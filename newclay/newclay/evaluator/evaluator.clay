@@ -1,6 +1,5 @@
 
 import maybe.*;
-import newclay.common.*;
 import newclay.ast as ast;
 import newclay.core.*;
 
@@ -147,7 +146,7 @@ bindPatternArgs(env, formalArgs, args) {
 // symbols
 //
 
-symbolValue(x:SymbolHead, params:ValueList) {
+makeSymbol(x:SymbolHead, params:ValueList) {
     var ptr = lookup(x.symbols, params);
     if (not null?(ptr)) {
         return ptr^;
@@ -202,11 +201,21 @@ evaluateMain(program) {
 
 
 //
-// evaluateBool
+// evaluateBool, evaluateBoolCall
 //
 
 evaluateBool(expr, env) {
-    var result = evaluateExpr(expr, env);
+    return withCurrentLocation(*expr, () ref=> {
+        var result = evaluateExpr(expr, env);
+        if (not variantIs?(result, BoolValue))
+            genericError("expecting a Bool value");
+        return variantAs(result, BoolValue).value;
+    });
+}
+
+evaluateBoolCall(callable:Value, args:ValueList) {
+    // FIXME: what about error location?
+    var result = evaluateCallWithOneResult(callable, args);
     if (not variantIs?(result, BoolValue))
         genericError("expecting a Bool value");
     return variantAs(result, BoolValue).value;
@@ -244,10 +253,7 @@ overload evaluateExpr(x:ast.TupleExpr, env) {
 overload evaluateExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
     var args = evaluateExprList(x.args, env);
-    var results = evaluateCall(callable, move(args));
-    if (size(results) != 1)
-        genericError("expected 1 value, received ", size(results), " values");
-    return move(results[0]);
+    return evaluateCallWithOneResult(callable, args);
 }
 overload evaluateExpr(x:ast.Indexing, env) {
     var indexable = evaluateExpr(x.expr, env);
@@ -401,8 +407,15 @@ overload envEntryToValueList(x:RTListVariable) {
 
 
 //
-// evaluateCall
+// evaluateCallWithOneResult, evaluateCall
 //
+
+evaluateCallWithOneResult(x, args) {
+    var results = evaluateCall(x, move(args));
+    if (size(results) != 1)
+        genericError("expected 1 value, received ", size(results), " values");
+    return move(results[0]);
+}
 
 procedure evaluateCall;
 
@@ -411,17 +424,17 @@ overload evaluateCall(x, args) {
     return ValueList();
 }
 overload evaluateCall(x:Value, args) {
-    return withCurrentCall(x, args, () ref=> evaluateCall(*x, args));
+    return withStaticCall(x, args, () ref=> evaluateCall(*x, args));
 }
 overload evaluateCall(x:LambdaValue, args) {
     var env2 = bindArgs(x.env, x.value.formalArgs, args);
     return evaluateExprList(x.value.body, env2);
 }
 overload evaluateCall(x:Symbol, args) {
-    return callStaticOverload(x.head.module.program, Value(x), args);
+    return evaluateStaticCall(x.head.module.program, Value(x), args);
 }
 overload evaluateCall(x:SymbolHead, args) {
-    return callStaticOverload(x.module.program, Value(x), args);
+    return evaluateStaticCall(x.module.program, Value(x), args);
 }
 overload evaluateCall(x:Primitive, args) {
     return evaluatePrimitive(x.kind, args);
@@ -444,7 +457,7 @@ overload evaluateIndexing(x:Value, args) {
 }
 overload evaluateIndexing(x:SymbolHead, args) {
     ensureArity(x.ast.params, args);
-    return Value(symbolValue(x, args));
+    return Value(makeSymbol(x, args));
 }
 
 
@@ -570,25 +583,32 @@ overload unify(p:SymbolPattern, x:Value) {
 // unifyList
 //
 
-unifyList(listPattern:ListPattern, values:ValueList) {
+procedure unifyList;
+
+[A | SizedSequence?(A) and SequenceElementType(A) == Value]
+overload unifyList(listPattern:ListPattern, values:A) {
     if (size(listPattern.patterns) > size(values))
         return false;
     for (pattern, value in zipped(listPattern.patterns, values))
         if (not unify(pattern, value))
             return false;
     var restValues = slicedFrom(values, size(listPattern.patterns));
-    ref listCell = listPattern.variadicPattern;
+    return unifyList(listPattern.variadicPattern, restValues);
+}
+
+[A | SizedSequence?(A) and SequenceElementType(A) == Value]
+overload unifyList(listCell:ListPatternCell, values:A) {
     return maybe(listCell.values,
         v ref=> {
-            if (size(v) != size(restValues))
+            if (size(v) != size(values))
                 return false;
-            for (a, b in zipped(v, restValues))
+            for (a, b in zipped(v, values))
                 if (a != b)
                     return false;
             return true;
         },
         () ref=> {
-            listCell.values = Maybe(ValueList(restValues));
+            listCell.values = Maybe(ValueList(values));
             return true;
         },
     );
@@ -735,8 +755,11 @@ walkListPattern(x:ast.ListPattern, visitor) {
 
 walkArgumentPatterns(x:ast.VariadicList[ast.Argument], visitor) {
     for (y in x.items)
-        walkArgumentPattern(y);
-    maybe(x.variadicItem, walkVariadicArgumentPattern, () => {});
+        walkArgumentPattern(y, visitor);
+    maybe(x.variadicItem,
+        x ref=> { walkVariadicArgumentPattern(x, visitor); },
+        () => {},
+    );
 }
 walkArgumentPattern(x:ast.Argument, visitor) {
     maybe(x.type, p ref=> { walkPattern(p, visitor); }, () => {});
@@ -819,7 +842,7 @@ topLevelItemPatternVars(x:T) {
 
 
 //
-// initializeMatch, finishMatch
+// initializeMatch, verifyPatternVars, testPredicate
 //
 
 initializeMatch(baseEnv:Env, pvars:PatternVars) {
@@ -831,18 +854,17 @@ initializeMatch(baseEnv:Env, pvars:PatternVars) {
     return env;
 }
 
-finishMatch(pvars:PatternVars, env:Env, predicate:Maybe[ast.Expr]) {
+verifyPatternVars(pvars:PatternVars, env:Env) {
     for (name in pvars.vars)
         derefPattern(env, name);
     for (name in pvars.variadicVars)
         derefListPattern(env, name);
+}
+
+testPredicate(predicate:Maybe[ast.Expr], env) {
     return maybe(predicate,
-        pred => {
-            if (not evaluateBool(pred, env))
-                return nothing(Env);
-            return Maybe(env);
-        },
-        () => Maybe(env),
+        pred => evaluateBool(pred, env),
+        () => true,
     );
 }
 
@@ -858,7 +880,10 @@ matchAttribute(x:Attribute, target:Value) Maybe[Env] {
     var targetPattern = evaluatePattern(x.ast.target, env);
     if (not unify(targetPattern, target))
         return nothing(Env);
-    return finishMatch(pvars, env, x.ast.predicate);
+    verifyPatternVars(pvars, env);
+    if (not testPredicate(x.ast.predicate, env))
+        return nothing(Env);
+    return Maybe(env);
 }
 
 matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env] {
@@ -870,7 +895,10 @@ matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env]
     var argsPattern = evaluateListPattern(x.ast.args, env);
     if (not unifyList(argsPattern, args))
         return nothing(Env);
-    return finishMatch(pvars, env, x.ast.predicate);
+    verifyPatternVars(pvars, env);
+    if (not testPredicate(x.ast.predicate, env))
+        return nothing(Env);
+    return Maybe(env);
 }
 
 
@@ -892,10 +920,10 @@ evaluateAttributes(program, target) {
 
 
 //
-// callStaticOverload
+// evaluateStaticCall
 //
 
-callStaticOverload(program, callable, args) {
+evaluateStaticCall(program, callable, args) {
     for (x in reversed(program.allStaticOverloads)) {
         var result = matchStaticOverload(x, callable, args);
         if (not nothing?(result))

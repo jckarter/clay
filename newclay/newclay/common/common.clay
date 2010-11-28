@@ -1,4 +1,49 @@
 
+
+
+//
+// linked stack
+//
+
+record StackNode[T] = referenceType(
+    value: T,
+    next: StackNode[T],
+);
+
+record Stack[T] (
+    root: StackNode[T],
+);
+
+[T]
+stackEmpty?(s:Stack[T]) = null?(s.root);
+
+[T]
+stackTop(s:Stack[T]) = ref s.root.value;
+
+[T]
+stackPush(s:Stack[T], forward x:T) {
+    s.root = StackNode[T](x, s.root);
+}
+
+[T]
+stackPop(s:Stack[T]) {
+    s.root = s.root.next;
+}
+
+[T]
+overload iterator(s:Stack[T]) = s.root;
+
+[T]
+overload hasNext?(x:StackNode[T]) = not null?(x);
+
+[T]
+overload next(x:StackNode[T]) {
+    ref item = x.value;
+    x = x.next;
+    return ref item;
+}
+
+
 
 //
 // Source

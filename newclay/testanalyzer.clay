@@ -1,0 +1,21 @@
+
+import newclay.common.*;
+import newclay.loader.*;
+import newclay.analyzer.*;
+
+main(args) {
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <file>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[1]);
+        initializeClayHooks(program);
+        var result = analyzeMain(program);
+        println("result = ", result);
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}

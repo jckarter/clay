@@ -25,11 +25,21 @@ record Program = referenceType(
     allAttributes: Vector[Attribute],
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
+    hooks: ClayHooks,
 );
 
 overload Program(module:Module) = Program(
     module, Vector[Attribute](),
     Vector[StaticOverload](), Vector[Overload](),
+    ClayHooks(),
+);
+
+record ClayHooks = referenceType(
+    TypeTemplate?: Value,
+    Type?: Value,
+    Procedure?: Value,
+    Bool: Value,
+    Int: Value,
 );
 
 
@@ -42,10 +52,15 @@ record SymbolHead = referenceType(
     ast: ast.Symbol,
     module: Module,
     symbols: HashMap[ValueList, Symbol],
+    typeTemplate?: Maybe[Bool],
+    invokeTable: InvokeTable,
 );
 
 overload SymbolHead(x:ast.Symbol, module:Module) =
-    SymbolHead(x, module, HashMap[ValueList, Symbol]());
+    SymbolHead(
+        x, module, HashMap[ValueList, Symbol](),
+        nothing(Bool), InvokeTable(),
+    );
 
 symbolHeadHasParams?(x:SymbolHead) {
     ref p = x.ast.params;
@@ -58,10 +73,18 @@ record Symbol = referenceType(
     env: Env,
     body: Maybe[Value],
     attributes: Maybe[Value],
+    type?: Maybe[Bool],
+    procedure?: Maybe[Bool],
+    invokeTable: InvokeTable,
 );
 
 overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
-    Symbol(head, params, env, nothing(Value), nothing(Value));
+    Symbol(
+        head, params, env,
+        nothing(Value), nothing(Value),
+        nothing(Bool), nothing(Bool),
+        InvokeTable(),
+    );
 
 record PatternVars = referenceType(
     vars: Vector[ast.Identifier],
@@ -183,7 +206,7 @@ envLookup(env, name) {
     var ptr = lookup(env.entries, name.str);
     if (null?(ptr)) {
         if (nothing?(env.parent))
-            genericError("name not found: ", name);
+            genericError("name not found: ", name.str);
         return ref envLookup(require(env.parent), name);
     }
     return ref ptr^;
@@ -359,7 +382,7 @@ record RTVariable = referenceType(
 
 record RTListVariable = referenceType(
     kinds: Vector[RTVariableKind],
-    types: Vector[Value],
+    types: ValueList,
 );
 
 
@@ -381,86 +404,137 @@ record RTValue (
 
 alias RTValueList = Vector[RTValue];
 
+overload printReprTo(stream, x:RTValue) {
+    switch (x.kind) {
+        case RT_VALUE_CONST: printTo(stream, "const"); break;
+        case RT_VALUE_REF: printTo(stream, "ref"); break;
+        case RT_VALUE_RVALUE: printTo(stream, "rvalue"); break;
+    }
+    printTo(stream, " ");
+    printReprTo(stream, x.type);
+}
+
+
+
+//
+// invoke tables
+//
+
+record Specialization = referenceType(
+    callable: Value,
+    args: RTValueList,
+    matchedOverload: Overload,
+    bodyEnv: Env,
+    returns: RTValueList,
+);
+
+record InvokeEntry(
+    specialization: Maybe[Specialization],
+);
+
+alias InvokeTable = HashMap[RTValueList, InvokeEntry];
+
 
 
 //
 // execution context info
 //
 
-record ListNode[T] = referenceType(
-    value: T,
-    next: ListNode[T],
-);
+variant CompilationEntry = StaticCallEntry
+                         | CallAnalysisEntry
+                         ;
 
-[T]
-listEmpty?(root:ListNode[T]) = null?(root);
-
-[T]
-listTop(root:ListNode[T]) = ref root.value;
-
-[T]
-listPush(root:ListNode[T], forward x:T) {
-    root = ListNode[T](x, root);
-}
-
-[T]
-listPop(root:ListNode[T]) {
-    root = root.next;
-}
-
-record CallStackEntry (
+record StaticCallEntry (
     callable: Value,
     args: ValueList,
 );
 
+record CallAnalysisEntry (
+    callable: Value,
+    args: RTValueList,
+);
+
+overload printTo(stream, x:StaticCallEntry) {
+    printReprTo(stream, x.callable);
+    printTo(stream, "(");
+    printReprElementsTo(stream, x.args);
+    printTo(stream, ")");
+}
+
+overload printTo(stream, x:CallAnalysisEntry) {
+    printReprTo(stream, x.callable);
+    printTo(stream, "(");
+    printReprElementsTo(stream, x.args);
+    printTo(stream, ")");
+}
+
 record LocationContext (
-    modules: ListNode[Module],
-    calls: ListNode[CallStackEntry],
-    mainTokens: ListNode[SizeT],
+    modules: Stack[Module],
+    compilationStack: Stack[CompilationEntry],
+    mainTokens: Stack[SizeT],
 );
 
 private var _locationContext = LocationContext();
 
 withCurrentModule(module:Module, f) {
-    listPush(_locationContext.modules, module);
+    stackPush(_locationContext.modules, module);
     try {
         var x = captureValues(...f());
-        listPop(_locationContext.modules);
+        stackPop(_locationContext.modules);
         return forward ...forwardValues(x);
     }
     catch (e) {
-        listPop(_locationContext.modules);
+        stackPop(_locationContext.modules);
         throw e;
     }
 }
 
-withCurrentCall(callable:Value, args:ValueList, f) {
-    listPush(_locationContext.calls, CallStackEntry(callable, args));
+withCompilationEntry(forward entry:CompilationEntry, action) {
+    ref stack = _locationContext.compilationStack;
+    stackPush(stack, entry);
     try {
-        var x = captureValues(...f());
-        listPop(_locationContext.calls);
+        var x = captureValues(...action());
+        stackPop(stack);
         return forward ...forwardValues(x);
     }
     catch (e) {
-        listPop(_locationContext.calls);
+        stackPop(stack);
         throw e;
     }
+}
+
+withStaticCall(callable:Value, args:ValueList, action) {
+    return forward ...withCompilationEntry(
+        CompilationEntry(StaticCallEntry(callable, args)),
+        action,
+    );
+}
+
+withCallAnalysis(callable:Value, args:RTValueList, action) {
+    return forward ...withCompilationEntry(
+        CompilationEntry(CallAnalysisEntry(callable, args)),
+        action,
+    );
 }
 
 [T | ast.ASTNode?(T)]
 withCurrentLocation(ast:T, f) {
     if (empty?(ast.tokens))
         return forward ...f();
-    listPush(_locationContext.mainTokens, ast.mainToken);
+    stackPush(_locationContext.mainTokens, ast.mainToken);
     try {
         var x = captureValues(...f());
-        listPop(_locationContext.mainTokens);
+        stackPop(_locationContext.mainTokens);
         return forward ...forwardValues(x);
     }
     catch (e) {
-        listPop(_locationContext.mainTokens);
+        stackPop(_locationContext.mainTokens);
         throw e;
     }
+}
+
+overload withCurrentLocation(expr:ast.Expr, f) {
+    return withCurrentLocation(*expr, f);
 }
 
 
@@ -498,34 +572,21 @@ overload displayError(e:SemanticError) {
 }
 
 displaySemanticError(locationContext:LocationContext, ...message) {
-    if (listEmpty?(locationContext.modules)
-        or listEmpty?(locationContext.mainTokens)) {
+    if (stackEmpty?(locationContext.modules)
+        or stackEmpty?(locationContext.mainTokens)) {
         println(...message);
         return;
     }
-    var module = listTop(locationContext.modules);
-    var mainToken = listTop(locationContext.mainTokens);
+    var module = stackTop(locationContext.modules);
+    var mainToken = stackTop(locationContext.mainTokens);
     var tokens = module.ast.tokens;
     var offset = tokens.vector[mainToken].range.begin;
 
     errorWithLocation(tokens.file, offset, ...message);
 
-    println("call stack: ");
-    var callEntry = locationContext.calls;
-    while (not null?(callEntry)) {
-        ref call = callEntry.value;
-        print("    ", call.callable, "(");
-        var first = true;
-        for (arg in call.args) {
-            if (first)
-                first = false;
-            else
-                print(", ");
-            print(arg);
-        }
-        println(")");
-        callEntry = callEntry.next;
-    }
+    println("context stack: ");
+    for (entry in locationContext.compilationStack)
+        println("    ", entry);
 }
 
 
@@ -546,4 +607,18 @@ overload displayError(e:GenericError) {
 
 genericError(...msg) {
     throw GenericError(printString(...msg));
+}
+
+
+record RecursiveAnalysisError = semanticError(
+);
+
+instance SemanticError = RecursiveAnalysisError;
+
+overload displayError(e:RecursiveAnalysisError) {
+    displaySemanticError(e.locationContext, "recursion during type propagation");
+}
+
+recursiveAnalysisError() {
+    throw RecursiveAnalysisError();
 }
