@@ -244,12 +244,6 @@ record Overload = ast(
     body: CodeBody,
 );
 
-record Argument = ast(
-    kind: Maybe[ArgumentKind],
-    name: Identifier,
-    type: Maybe[Pattern],
-);
-
 enum ArgumentKind {
     ARG_CONST,
     ARG_REF,
@@ -257,11 +251,10 @@ enum ArgumentKind {
     ARG_FORWARD,
 }
 
-record ReturnSpec = ast(
-    kind: Maybe[ReturnKind],
-    arityKind: ReturnArityKind,
-    name: Maybe[Identifier],
-    type: Expr,
+record Argument = ast(
+    kind: Maybe[ArgumentKind],
+    name: Identifier,
+    type: Maybe[Pattern],
 );
 
 enum ReturnKind {
@@ -273,6 +266,13 @@ enum ReturnArityKind {
     RETURN_SINGLE,
     RETURN_MULTI,
 }
+
+record ReturnSpec = ast(
+    kind: Maybe[ReturnKind],
+    arityKind: ReturnArityKind,
+    name: Maybe[Identifier],
+    type: Expr,
+);
 
 variant CodeBody = ExprCodeBody
                  | CCodeBody
