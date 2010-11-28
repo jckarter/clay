@@ -13,6 +13,8 @@ enum CanaryState { DESTROYED, ALIVE, MOVED, RESET, INVALID }
 private var canaryTracker = Vector[CanaryState]();
 record Canary ( id: SizeT, throwOnCopy?: Bool );
 
+overload RegularRecord?(static Canary) = false;
+
 // overload allocateRawMemory(Canary) to initialize memory to an invalid canary index
 private record CanaryLike ( canary: Canary );
 overload allocateRawMemory(static Canary, n) r: Pointer[Canary] {
