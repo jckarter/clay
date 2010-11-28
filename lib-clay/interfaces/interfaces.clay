@@ -71,14 +71,6 @@ callbyname allocateBox(static I, this: T) Pointer[I] {
     return ptr;
 }
 
-[n, value, other]
-private _valueIndex(static n, static value, static other, ...etc)
-    = _valueIndex(static n+1, static value, ...etc);
-[n, value]
-overload _valueIndex(static n, static value, static value, ...etc) = n;
-[value]
-private valueIndex(static value, ...etc) = _valueIndex(static 0, static value, ...etc);
-
 [...memberFunctions, fn]
 private vtblSlot(vtbl: InterfaceVtbl[...memberFunctions], static fn)
     = staticIndex(
