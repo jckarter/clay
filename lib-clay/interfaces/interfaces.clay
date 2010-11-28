@@ -3,6 +3,8 @@ import libc.(malloc, free);
 InterfaceType?(X) = false;
 procedure InterfaceMembers;
 
+private ImplicitInterfaceMembers() = (destroy, (), ());
+
 private VtblSlotFunction(memFun) = memFun.0;
 private VtblSlotInputTypes(memFun) = ...unpack(memFun.1);
 private VtblSlotOutputTypes(memFun) = ...unpack(memFun.2);
@@ -24,11 +26,20 @@ private record InterfaceVtbl[...memberFunctions]
 interfaceType(...memberFunctions) = recordWithProperties(
     (
         (InterfaceType?, static true),
-        (InterfaceMembers, ...memberFunctions),
+        (InterfaceMembers, 
+            ...ImplicitInterfaceMembers(),
+            ...memberFunctions
+        ),
     ),
-    (#vtbl, Pointer[InterfaceVtbl[...memberFunctions]]),
+    (#vtbl, Pointer[InterfaceVtbl[...ImplicitInterfaceMembers(), ...memberFunctions]]),
     (#this, Opaque),
 );
+
+[I | InterfaceType?(I)]
+overload RegularRecord?(static I) = false;
+
+[I | InterfaceType?(I)]
+overload destroy(i: I) { invoke(destroy, &i); }
 
 private vtblSlotMember(T, memFun) = VtblSlotType(memFun)(
     makeCodePointer(VtblSlotFunction(memFun), T, ...VtblSlotInputTypes(memFun))
@@ -46,7 +57,7 @@ private var interfaceVtbl[I, T] = makeInterfaceVtbl(I, T);
 BoxSize(T) = TypeSize(RawPointer) + TypeSize(T);
 
 [I, T | InterfaceType?(I)]
-callbyname box(static I, this: T) Pointer[I] {
+callbyname allocateBox(static I, this: T) Pointer[I] {
     var ptr = Pointer[I](malloc(BoxSize(T)));
     ptr^.vtbl = &interfaceVtbl[I, T];
 
