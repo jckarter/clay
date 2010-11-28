@@ -1,5 +1,6 @@
 import interfaces.*;
-import libc.(free);
+import test.memory.*;
+import deques.*;
 
 record TestInterface = interfaceType(
     (print, (),    ()),
@@ -8,17 +9,16 @@ record TestInterface = interfaceType(
 
 main() {
     var objects = [
-        box(TestInterface, "hello world"),
-        box(TestInterface, [1, 2, 3, 4]),
-        box(TestInterface, Vector[Float](5.0f, 6.0f, 7.0f)),
+        allocateBox(TestInterface, "hello world"),
+        allocateBox(TestInterface, [1, 2, 3, 4]),
+        allocateBox(TestInterface, Vector[Float](5.0f, 6.0f, 7.0f)),
     ];
 
     for (object in objects) {
         invoke(print, object);
         println(" size ", invoke(size, object));
 
-        // XXX memory not yet automatically managed for boxes
-        free(RawPointer(object));
+        // NB: memory not automatically managed for boxes
+        freeObject(object);
     }
-
 }
