@@ -208,3 +208,17 @@ overload assocCountValues(static key, kv, ...kvs) = assocCountValues(key, ...kvs
 [key, ...T]
 overload assocCountValues(static key, kv: Tuple[Static[key], ...T], ...kvs) = countValues(...T);
 
+
+
+//
+// find the index of a value within a value list
+//
+
+[n, value, other]
+private _valueIndex(static n, static value, static other, ...etc)
+    = _valueIndex(static n+1, static value, ...etc);
+[n, value]
+overload _valueIndex(static n, static value, static value, ...etc) = n;
+[value]
+valueIndex(static value, ...etc) = _valueIndex(static 0, static value, ...etc);
+
