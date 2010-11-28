@@ -308,7 +308,7 @@ inline empty?(a:T) = (size(a) == 0);
 procedure ifExpression;
 
 [T]
-callbyname overload ifExpression(condition, consequent:T, alternate:T) {
+callbyname overload ifExpression(condition, consequent:T, alternate:T) T {
     if (condition)
         return consequent;
     else
@@ -316,7 +316,7 @@ callbyname overload ifExpression(condition, consequent:T, alternate:T) {
 }
 
 [T]
-callbyname overload ifExpression(condition, lvalue consequent:T, lvalue alternate:T) {
+callbyname overload ifExpression(condition, lvalue consequent:T, lvalue alternate:T) T {
     if (condition)
         return ref consequent;
     else

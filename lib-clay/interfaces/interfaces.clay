@@ -1,0 +1,80 @@
+import libc.(malloc, free);
+
+InterfaceType?(X) = false;
+procedure InterfaceMembers;
+
+private VtblSlotFunction(memFun) = memFun.0;
+private VtblSlotInputTypes(memFun) = ...unpack(memFun.1);
+private VtblSlotOutputTypes(memFun) = ...unpack(memFun.2);
+
+InterfaceMember?(I, fn) = false;
+
+[I, fn | InterfaceType?(I)]
+overload InterfaceMember?(static I, static fn)
+    = inValues?(fn, ...mapValues(VtblSlotFunction, ...InterfaceMembers(I)));
+
+private VtblSlotType(memFun) = CodePointer[
+    (Opaque, ...VtblSlotInputTypes(memFun)),
+    (...VtblSlotOutputTypes(memFun))
+];
+
+private record InterfaceVtbl[...memberFunctions]
+    = (#methods, Tuple[...mapValues(VtblSlotType, ...memberFunctions)]);
+
+interfaceType(...memberFunctions) = recordWithProperties(
+    (
+        (InterfaceType?, static true),
+        (InterfaceMembers, ...memberFunctions),
+    ),
+    (#vtbl, Pointer[InterfaceVtbl[...memberFunctions]]),
+    (#this, Opaque),
+);
+
+private vtblSlotMember(T, memFun) = VtblSlotType(memFun)(
+    makeCodePointer(VtblSlotFunction(memFun), T, ...VtblSlotInputTypes(memFun))
+);
+
+[I, T | InterfaceType?(I)]
+private makeInterfaceVtbl(static I, static T) = InterfaceVtbl[...InterfaceMembers(I)](
+    Tuple(
+        ...mapValues(slot => vtblSlotMember(T, slot), ...InterfaceMembers(I))
+    )
+);
+
+private var interfaceVtbl[I, T] = makeInterfaceVtbl(I, T);
+
+BoxSize(T) = TypeSize(RawPointer) + TypeSize(T);
+
+[I, T | InterfaceType?(I)]
+callbyname box(static I, this: T) Pointer[I] {
+    var ptr = Pointer[I](malloc(BoxSize(T)));
+    ptr^.vtbl = &interfaceVtbl[I, T];
+
+    try {
+        Pointer[T](&ptr^.this)^ <-- this;
+    }
+    catch (ex) {
+        free(RawPointer(ptr));
+        throw ex;
+    }
+    return ptr;
+}
+
+[n, value, other]
+private _valueIndex(static n, static value, static other, ...etc)
+    = _valueIndex(static n+1, static value, ...etc);
+[n, value]
+overload _valueIndex(static n, static value, static value, ...etc) = n;
+[value]
+private valueIndex(static value, ...etc) = _valueIndex(static 0, static value, ...etc);
+
+[...memberFunctions, fn]
+private vtblSlot(vtbl: InterfaceVtbl[...memberFunctions], static fn)
+    = staticIndex(
+        vtbl.methods,
+        static valueIndex(fn, ...mapValues(VtblSlotFunction, ...memberFunctions))
+    );
+
+[I, fn | InterfaceMember?(I, fn)]
+invoke(static fn, i: Pointer[I], forward ...args)
+    = ...vtblSlot(i^.vtbl^, fn)(i^.this, ...args);
