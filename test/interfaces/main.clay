@@ -1,0 +1,24 @@
+import interfaces.*;
+import libc.(free);
+
+record TestInterface = interfaceType(
+    (print, (),    ()),
+    (size,  (),    SizeT),
+);
+
+main() {
+    var objects = [
+        box(TestInterface, "hello world"),
+        box(TestInterface, [1, 2, 3, 4]),
+        box(TestInterface, Vector[Float](5.0f, 6.0f, 7.0f)),
+    ];
+
+    for (object in objects) {
+        invoke(print, object);
+        println(" size ", invoke(size, object));
+
+        // XXX memory not yet automatically managed for boxes
+        free(RawPointer(object));
+    }
+
+}
