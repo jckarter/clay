@@ -1,0 +1,77 @@
+record Struct4 (x: Int);
+record Struct8 (x: Struct4, y: Struct4);
+record Struct16 (x: Struct8, y: Struct8);
+record Struct32 (x: Struct16, y: Struct16);
+record Struct64 (x: Struct32, y: Struct32);
+
+external foo64(x: Struct32, y: Struct32) Struct64;
+external foo32(x: Struct16, y: Struct16) Struct32;
+external foo16(x: Struct8,  y: Struct8 ) Struct16;
+external foo8 (x: Struct4,  y: Struct4 ) Struct8;
+external foo4 (x: Int) Struct4;
+
+external bar64(r: Pointer[Struct64], x: Struct32, y: Struct32);
+external bar32(r: Pointer[Struct32], x: Struct16, y: Struct16);
+external bar16(r: Pointer[Struct16], x: Struct8,  y: Struct8 );
+external bar8 (r: Pointer[Struct8 ], x: Struct4,  y: Struct4 );
+external bar4 (r: Pointer[Struct4 ], x: Int);
+
+main() {
+    println("return by value:");
+    println(foo4(1));
+    println(foo8(Struct4(2), Struct4(3)));
+    println(foo16(Struct8(Struct4(4), Struct4(5)), Struct8(Struct4(6), Struct4(7))));
+    println(foo32(
+        Struct16(Struct8(Struct4( 8), Struct4( 9)), Struct8(Struct4(10), Struct4(11))),
+        Struct16(Struct8(Struct4(12), Struct4(13)), Struct8(Struct4(14), Struct4(15))),
+    ));
+    println(foo32(
+        Struct16(Struct8(Struct4( 8), Struct4( 9)), Struct8(Struct4(10), Struct4(11))),
+        Struct16(Struct8(Struct4(12), Struct4(13)), Struct8(Struct4(14), Struct4(15))),
+    ));
+    println(foo64(
+        Struct32(
+        Struct16(Struct8(Struct4(16), Struct4(17)), Struct8(Struct4(18), Struct4(19))),
+        Struct16(Struct8(Struct4(20), Struct4(21)), Struct8(Struct4(22), Struct4(23))),
+        ),
+        Struct32(
+        Struct16(Struct8(Struct4(24), Struct4(25)), Struct8(Struct4(26), Struct4(27))),
+        Struct16(Struct8(Struct4(28), Struct4(29)), Struct8(Struct4(30), Struct4(31))),
+        ),
+    ));
+
+    println();
+    println("return by pointer:");
+    var r4  = Struct4();
+    var r8  = Struct8();
+    var r16 = Struct16();
+    var r32 = Struct32();
+    var r64 = Struct64();
+
+    bar4(&r4, 1);
+    println(r4);
+
+    bar8(&r8, Struct4(2), Struct4(3));
+    println(r8);
+
+    bar16(&r16, Struct8(Struct4(4), Struct4(5)), Struct8(Struct4(6), Struct4(7)));
+    println(r16);
+
+    bar32(&r32,
+        Struct16(Struct8(Struct4( 8), Struct4( 9)), Struct8(Struct4(10), Struct4(11))),
+        Struct16(Struct8(Struct4(12), Struct4(13)), Struct8(Struct4(14), Struct4(15))),
+    );
+    println(r32);
+
+    bar64(&r64,
+        Struct32(
+        Struct16(Struct8(Struct4(16), Struct4(17)), Struct8(Struct4(18), Struct4(19))),
+        Struct16(Struct8(Struct4(20), Struct4(21)), Struct8(Struct4(22), Struct4(23))),
+        ),
+        Struct32(
+        Struct16(Struct8(Struct4(24), Struct4(25)), Struct8(Struct4(26), Struct4(27))),
+        Struct16(Struct8(Struct4(28), Struct4(29)), Struct8(Struct4(30), Struct4(31))),
+        ),
+    );
+    println(r64);
+}
