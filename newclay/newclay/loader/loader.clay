@@ -66,10 +66,8 @@ private initializeAttributesAndOverloads(module) {
 private loadModule(program, path) {
     var module = Module(program, String("__main__"));
     module.ast = parse(tokenize(readSource(path)));
-    withCurrentModule(module, () => {
-        initializeGlobals(module);
-        initializeAttributesAndOverloads(module);
-    });
+    initializeGlobals(module);
+    initializeAttributesAndOverloads(module);
     return module;
 }
 

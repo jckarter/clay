@@ -89,11 +89,10 @@ overload AnalyzerContext(program:Program) =
 
 analyzeMain(program:Program) {
     var ctx = AnalyzerContext(program);
-    var module = program.mainModule;
-    return withCurrentModule(module, () => {
+    return withProgram(program, () ref=> {
         var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
         var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
-        return analyzeExpr(mainCall, module.globals, ctx);
+        return analyzeExpr(mainCall, program.mainModule.globals, ctx);
     });
 }
 
@@ -104,7 +103,7 @@ analyzeMain(program:Program) {
 //
 
 analyzeBool(x:ast.Expr, env, ctx) RTValue {
-    return withCurrentLocation(*x, () ref=> {
+    return withLocation(*x, () ref=> {
         var result = analyzeExpr(x, env, ctx);
         if (result.type != ctx.hooks.Bool)
             genericError("expected Bool value");
@@ -121,7 +120,7 @@ analyzeBool(x:ast.Expr, env, ctx) RTValue {
 procedure analyzeExpr;
 
 overload analyzeExpr(x:ast.Expr, env, ctx) RTValue {
-    return withCurrentLocation(*x, () ref=> analyzeExpr(*x, env, ctx));
+    return withLocation(*x, () ref=> analyzeExpr(*x, env, ctx));
 }
 overload analyzeExpr(x:ast.BoolLiteral, env, ctx) {
     return RTValue(RT_VALUE_RVALUE, ctx.hooks.Bool);
@@ -297,7 +296,7 @@ overload analyzeMultiExpr(x, env, ctx) {
     return RTValueList();
 }
 overload analyzeMultiExpr(x:ast.Expr, env, ctx) RTValueList {
-    return withCurrentLocation(*x, () ref=> analyzeMultiExpr(*x, env, ctx));
+    return withLocation(*x, () ref=> analyzeMultiExpr(*x, env, ctx));
 }
 overload analyzeMultiExpr(x:ast.NameRef, env, ctx) {
     return envEntryToRTValueList(envLookup(env, x.name), ctx);
@@ -656,7 +655,7 @@ private returnExprRTValueKind(x:ast.ReturnExprListItem, kind:RTValueKind) {
 }
 
 analyzeReturnExprListItem(x, env, ctx) {
-    return withCurrentLocation(*x.item, () ref=> {
+    return withLocation(*x.item, () ref=> {
         var results = analyzeExprListItem(x.item, env, ctx);
         var results2 = RTValueList();
         for (r in results)
