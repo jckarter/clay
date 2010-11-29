@@ -59,6 +59,49 @@ withStackValue(stack, value, action) {
 
 
 //
+// TriState
+//
+
+record Uninitialized();
+record Initializing();
+
+variant TriState[T] = Uninitialized
+                    | Initializing
+                    | T
+                    ;
+
+[T]
+overload TriState[T]() = TriState[T](Uninitialized());
+
+[T]
+overload TriState(forward x:T) = TriState[T](x);
+
+[T]
+triStateInitialize(x:TriState[T], initializer, onError) {
+    return match(x,
+        T, y => y,
+        Initializing, y => {
+            onError();
+            return T();
+        },
+        Uninitialized, y ref=> {
+            x = TriState[T](Initializing());
+            try {
+                var result = initializer();
+                x = TriState[T](result);
+                return result;
+            }
+            catch (e) {
+                x = TriState[T](Uninitialized());
+                throw e;
+            }
+        },
+    );
+}
+
+
+
+//
 // Source
 //
 

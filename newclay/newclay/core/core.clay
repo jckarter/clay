@@ -35,7 +35,7 @@ overload Program(module:Module) = Program(
     ClayHooks(),
 );
 
-record ClayHooks = referenceType(
+record ClayHooks (
     TypeTemplate?: Value,
     Type?: Value,
     Procedure?: Value,
@@ -53,14 +53,14 @@ record SymbolHead = referenceType(
     ast: ast.Symbol,
     module: Module,
     symbols: HashMap[ValueList, Symbol],
-    typeTemplate?: Maybe[Bool],
+    typeTemplate?: TriState[Bool],
     invokeTable: InvokeTable,
 );
 
 overload SymbolHead(x:ast.Symbol, module:Module) =
     SymbolHead(
         x, module, HashMap[ValueList, Symbol](),
-        nothing(Bool), InvokeTable(),
+        TriState[Bool](), InvokeTable(),
     );
 
 symbolHeadHasParams?(x:SymbolHead) {
@@ -72,18 +72,18 @@ record Symbol = referenceType(
     head: SymbolHead,
     params: ValueList,
     env: Env,
-    body: Maybe[Value],
-    attributes: Maybe[Value],
-    type?: Maybe[Bool],
-    procedure?: Maybe[Bool],
+    body: TriState[Value],
+    attributes: TriState[Value],
+    type?: TriState[Bool],
+    procedure?: TriState[Bool],
     invokeTable: InvokeTable,
 );
 
 overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
     Symbol(
         head, params, env,
-        nothing(Value), nothing(Value),
-        nothing(Bool), nothing(Bool),
+        TriState[Value](), TriState[Value](),
+        TriState[Bool](), TriState[Bool](),
         InvokeTable(),
     );
 
@@ -434,6 +434,19 @@ record InvokeEntry(
 );
 
 alias InvokeTable = HashMap[RTValueList, InvokeEntry];
+
+
+
+//
+// safeInitialize
+//
+
+[T]
+safeInitialize(x:TriState[T], initializer) {
+    return triStateInitialize(x, initializer, () => {
+        genericError("recursion during initialization");
+    });
+}
 
 
 

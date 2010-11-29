@@ -28,42 +28,21 @@ initializeClayHooks(program:Program) {
 // symbolHeadTypeTemplate?, symbolType?, symbolProcedure?
 //
 
-symbolHeadTypeTemplate?(x:SymbolHead) {
-    // FIXME: check for recursion
-    return maybe(x.typeTemplate?,
-        x => x,
-        () => {
-            var predicate = x.module.program.hooks.TypeTemplate?;
-            var result = evaluateBoolCall(predicate, ValueList(x));
-            x.typeTemplate? = Maybe(result);
-            return result;
-        },
+symbolHeadTypeTemplate?(head:SymbolHead) {
+    return safeInitialize(head.typeTemplate?,
+        () ref=> evaluateBoolCall(getHooks().TypeTemplate?, ValueList(head)),
     );
 }
 
 symbolType?(x:Symbol) {
-    // FIXME: check for recursion
-    return maybe(x.type?,
-        x => x,
-        () => {
-            var predicate = x.head.module.program.hooks.Type?;
-            var result = evaluateBoolCall(predicate, ValueList(x));
-            x.type? = Maybe(result);
-            return result;
-        },
+    return safeInitialize(x.type?,
+        () ref=> evaluateBoolCall(getHooks().Type?, ValueList(x)),
     );
 }
 
 symbolProcedure?(x:Symbol) {
-    // FIXME: check for recursion
-    return maybe(x.procedure?,
-        x => x,
-        () => {
-            var predicate = x.head.module.program.hooks.Procedure?;
-            var result = evaluateBoolCall(predicate, ValueList(x));
-            x.procedure? = Maybe(result);
-            return result;
-        },
+    return safeInitialize(x.procedure?,
+        () ref=> evaluateBoolCall(getHooks().Procedure?, ValueList(x)),
     );
 }
 
