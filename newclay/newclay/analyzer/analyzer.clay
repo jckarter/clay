@@ -19,6 +19,7 @@ initializeClayHooks(program:Program) {
         lookup("Procedure?"),
         lookup("Bool"),
         lookup("Int"),
+        lookup("Static"),
         lookup("Pointer"),
     );
 }
@@ -217,8 +218,8 @@ valueToRTValue(x:Value) {
             return RTValue();
         },
         MatchDefault, x => {
-            genericError("static values are not yet supported");
-            return RTValue();
+            var type = evaluateIndexing(getHooks().Static, ValueList(x));
+            return RTValue(RT_VALUE_RVALUE, type);
         },
     );
 }
