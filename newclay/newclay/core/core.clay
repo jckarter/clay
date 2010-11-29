@@ -519,7 +519,7 @@ withCallAnalysis(callable:Value, args:RTValueList, action) {
 
 [T | ast.ASTNode?(T)]
 withCurrentLocation(ast:T, f) {
-    if (empty?(ast.tokens))
+    if (empty?(ast.tokenRange))
         return forward ...f();
     stackPush(_locationContext.mainTokens, ast.mainToken);
     try {
