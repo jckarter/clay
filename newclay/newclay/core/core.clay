@@ -41,6 +41,7 @@ record ClayHooks (
     Procedure?: Value,
     Bool: Value,
     Int: Value,
+    Pointer: Value,
 );
 
 
