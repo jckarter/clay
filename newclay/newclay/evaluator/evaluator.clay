@@ -158,28 +158,14 @@ makeSymbol(x:SymbolHead, params:ValueList) {
 }
 
 symbolBody(x:Symbol) {
-    // FIXME: check for recursion
-    return maybe(x.body,
-        x => x,
-        () => {
-            var result = evaluateExpr(x.head.ast.expr, x.env);
-            x.body = Maybe(result);
-            return result;
-        },
+    return safeInitialize(x.body,
+        () ref=> evaluateExpr(x.head.ast.expr, x.env)
     );
 }
 
 symbolAttributes(x:Symbol) {
-    // FIXME: check for recursion
-    return maybe(x.attributes,
-        x => x,
-        () => {
-            var result = Value(TupleValue(
-                evaluateAttributes(x.head.module.program, Value(x)),
-            ));
-            x.attributes = Maybe(result);
-            return result;
-        },
+    return safeInitialize(x.attributes,
+        () ref=> Value(TupleValue(evaluateAttributes(Value(x))))
     );
 }
 
@@ -906,9 +892,9 @@ matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env]
 // evaluateAttributes
 //
 
-evaluateAttributes(program, target) {
+evaluateAttributes(target) {
     var values = ValueList();
-    for (x in program.allAttributes) {
+    for (x in getProgram().allAttributes) {
         var result = matchAttribute(x, target);
         if (not nothing?(result))
             push(values, evaluateExpr(x.ast.body, just(result)));
