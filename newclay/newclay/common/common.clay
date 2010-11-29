@@ -43,6 +43,19 @@ overload next(x:StackNode[T]) {
     return ref item;
 }
 
+withStackValue(stack, value, action) {
+    stackPush(stack, value);
+    try {
+        var x = captureValues(...action());
+        stackPop(stack);
+        return forward ...forwardValues(x);
+    }
+    catch (e) {
+        stackPop(stack);
+        throw e;
+    }
+}
+
 
 
 //
