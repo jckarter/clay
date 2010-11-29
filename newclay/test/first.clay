@@ -27,6 +27,10 @@ static overload Type?('x) | PrimitiveType?('x) = true;
 symbol Bool = NewPrimitiveType("char");
 symbol Int = NewPrimitiveType("int");
 
+symbol Static['T] = ();
+static overload TypeTemplate?(Static) = true;
+static overload Type?(Static['T]) = true;
+
 symbol Pointer['T] = ();
 static overload TypeTemplate?(Pointer) = true;
 static overload Type?(Pointer['T]) = true;
@@ -71,4 +75,4 @@ overload factorial(n:Int) =
         multiply(n, factorial(subtract(n, 1)));
 
 symbol main = NewProcedure();
-overload main() = factorial(5);
+overload main() = factorial;

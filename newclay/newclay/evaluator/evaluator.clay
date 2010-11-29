@@ -294,12 +294,36 @@ overload envEntryToValue(x:ListPatternCell) {
     return Value();
 }
 overload envEntryToValue(x:RTVariable) {
-    genericError("run-time variable cannot be used in evaluator");
-    return Value();
+    return maybe(rtTypeToValue(x.type),
+        x => x,
+        () => {
+            genericError("run-time variable cannot be used in evaluator");
+            return Value();
+        },
+    );
 }
 overload envEntryToValue(x:RTListVariable) {
-    genericError("run-time variable cannot be used in evaluator");
+    genericError("multi-value used in single value context");
     return Value();
+}
+
+
+
+//
+// rtTypeToValue
+//
+
+rtTypeToValue(type) {
+    return match(type,
+        Symbol, sym => {
+            if (Value(sym.head) == getHooks().Static) {
+                assert(size(sym.params) == 1);
+                return Maybe(sym.params[0]);
+            }
+            return nothing(Value);
+        },
+        MatchDefault, x => nothing(Value),
+    );
 }
 
 
@@ -381,12 +405,20 @@ overload envEntryToValueList(x:ListPatternCell) {
     return ValueList();
 }
 overload envEntryToValueList(x:RTVariable) {
-    genericError("run-time variable cannot be used in evaluator");
+    genericError("single value used in multi-valued context");
     return ValueList();
 }
 overload envEntryToValueList(x:RTListVariable) {
-    genericError("run-time variable cannot be used in evaluator");
-    return ValueList();
+    var values = ValueList();
+    for (type in x.types) {
+        var result = rtTypeToValue(type);
+        if (nothing?(result)) {
+            genericError("run-time variable cannot be used in evaluator");
+            return ValueList();
+        }
+        push(values, just(result));
+    }
+    return values;
 }
 
 
