@@ -75,4 +75,4 @@ overload factorial(n:Int) =
         multiply(n, factorial(subtract(n, 1)));
 
 symbol main = NewProcedure();
-overload main() = factorial;
+overload main() = factorial, factorial(5);
