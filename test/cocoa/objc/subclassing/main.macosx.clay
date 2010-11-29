@@ -1,11 +1,15 @@
 import cocoa.objc.*;
 import cocoa.foundation.*;
+import cocoa.applicationservices.*;
 
 import cocoa.objc.runtime.(object_getClassName);
 
 overload selector(static #"ncStringWithInt:") = Id, Int;
 overload selector(static #"ncStringWithNumber:") = Id, NSNumber;
 overload selector(static #"initWithNumber:") = Id, NSNumber;
+overload selector(static #"someCGRect") = CGRect;
+overload selector(static #"someCGPoint") = CGPoint;
+overload selector(static #"someCGSize") = CGSize;
 
 record NumberConvertingString = newClass(NSString,
     InstanceVars((#value, Int)),
@@ -64,6 +68,25 @@ record NumberConvertingString = newClass(NSString,
             var digit = (value/base) % 10;
             return unichar(Int('0') + digit);
         }),
+
+        (#"someCGRect", self => CGRect(
+            CGPoint(
+                CGFloat(10.0),
+                CGFloat(20.0),
+            ),
+            CGSize(
+                CGFloat(30.0),
+                CGFloat(40.0),
+            ),
+        )),
+        (#"someCGPoint", self => CGPoint(
+            CGFloat(50.0),
+            CGFloat(60.0),
+        )),
+        (#"someCGSize", self => CGSize(
+            CGFloat(70.0),
+            CGFloat(80.0),
+        )),
     )
 );
 
@@ -81,6 +104,10 @@ main() {
     println(CStringRef(formattedNStr1.UTF8String()));
     println(CStringRef(formattedNStr2.UTF8String()));
     println(CStringRef(formattedStr.UTF8String()));
+
+    println(nStr1.someCGRect());
+    println(nStr1.someCGPoint());
+    println(nStr1.someCGSize());
 
     pool.drain();
 }
