@@ -18,6 +18,7 @@ alias TokenRange = Range[SizeT];
 
 private ast(...fields) = referenceTypeWithPredicate(
     ASTNode?,
+    tokens: SourceTokens,
     tokenRange: TokenRange,
     mainToken: SizeT,
     ...fields,
@@ -28,16 +29,16 @@ overload ASTNode?(x) = false;
 
 [T, ...A | ASTNode?(T)
            and (Tuple[...ReferenceTypeFieldTypes(T)] ==
-                Tuple[TokenRange, SizeT, ...A])]
+                Tuple[SourceTokens, TokenRange, SizeT, ...A])]
 callbyname overload T(...args:A) {
     alias tokenRange = TokenRange(SizeT(0), SizeT(0));
-    return T(tokenRange, SizeT(0), ...args);
+    return T(SourceTokens(), tokenRange, SizeT(0), ...args);
 }
 
 [T | ASTNode?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
-    printReprValuesTo(stream, ...dropValues(static 2, ...referenceTypeFields(x)));
+    printReprValuesTo(stream, ...dropValues(static 3, ...referenceTypeFields(x)));
 }
 
 
@@ -47,20 +48,21 @@ overload printReprTo(stream, x:T) {
 //
 
 procedure getLocation;
-overload getLocation(x) = x.tokenRange, x.mainToken;
+overload getLocation(x) = x.tokens, x.tokenRange, x.mainToken;
 overload getLocation(x:Expr) = ...getLocation(*x);
 overload getLocation(x:ExprListItem) = ...getLocation(*x);
 
 procedure setLocation;
-overload setLocation(x, tokenRange, mainToken) {
+overload setLocation(x, tokens, tokenRange, mainToken) {
+    x.tokens = tokens;
     x.tokenRange = tokenRange;
     x.mainToken = mainToken;
 }
-overload setLocation(x:Expr, tokenRange, mainToken) {
-    setLocation(*x, tokenRange, mainToken);
+overload setLocation(x:Expr, tokens, tokenRange, mainToken) {
+    setLocation(*x, tokens, tokenRange, mainToken);
 }
-overload setLocation(x:ExprListItem, tokenRange, mainToken) {
-    setLocation(*x, tokenRange, mainToken);
+overload setLocation(x:ExprListItem, tokens, tokenRange, mainToken) {
+    setLocation(*x, tokens, tokenRange, mainToken);
 }
 
 assignLocation(destNode, srcNode) {

@@ -91,6 +91,7 @@ private bounds(parser:Parser) {
         var start = input.current;
         return maybe(parser(input),
             x ref=> {
+                x.tokens = input.tokens;
                 x.tokenRange = TokenRange(start, input.current);
                 x.mainToken = start;
                 return Maybe(move(x));
