@@ -1,18 +1,55 @@
 
-symbol StaticProcedureTag = ();
-symbol NewStaticProcedure = NewStaticProcedure();
-static overload NewStaticProcedure() = (StaticProcedureTag,);
+symbol StaticFunctionTag = ();
+symbol NewStaticFunction = NewStaticFunction();
+static overload NewStaticFunction() = (StaticFunctionTag,);
+
+symbol StaticFunction? = NewStaticFunction();
+static overload StaticFunction?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), StaticFunctionTag);
+
+symbol TypeTemplate? = NewStaticFunction();
+static overload TypeTemplate?('x) = false;
 
 symbol PrimitiveTypeTag = ();
-symbol NewPrimitiveType = NewStaticProcedure();
+symbol NewPrimitiveType = NewStaticFunction();
 static overload NewPrimitiveType('cname) = (PrimitiveTypeTag, 'cname);
+
+symbol PrimitiveType? = NewStaticFunction();
+static overload PrimitiveType?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), PrimitiveTypeTag);
+
+symbol Type? = NewStaticFunction();
+static overload Type?('x) = false;
+static overload Type?('x) | PrimitiveType?('x) = true;
 
 symbol Bool = NewPrimitiveType("char");
 symbol Int = NewPrimitiveType("int");
 
+symbol Static['T] = ();
+static overload TypeTemplate?(Static) = true;
+static overload Type?(Static['T]) = true;
+
+symbol Pointer['T] = ();
+static overload TypeTemplate?(Pointer) = true;
+static overload Type?(Pointer['T]) = true;
+
 symbol ProcedureTag = ();
-symbol NewProcedure = NewStaticProcedure();
+symbol NewProcedure = NewStaticFunction();
 static overload NewProcedure() = (ProcedureTag,);
+
+symbol Procedure? = NewStaticFunction();
+static overload Procedure?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), ProcedureTag);
+
+
+symbol TupleWithTag? = NewStaticFunction();
+static overload TupleWithTag?('x, 'tag) =
+    StaticTuple?('x)
+    and StaticLesser?(0, StaticTupleSize('x))
+    and StaticEquals?(StaticTupleElement('x, 0), 'tag);
 
 
 symbol lesser? = NewProcedure();
@@ -31,11 +68,11 @@ overload multiply(a:Int, b:Int) returned:Int __c__ """
 """;
 
 symbol factorial = NewProcedure();
-overload factorial(n:Int) Int =
+overload factorial(n:Int) =
     if (lesser?(n, 2))
         1
     else
         multiply(n, factorial(subtract(n, 1)));
 
 symbol main = NewProcedure();
-overload main() = factorial(5);
+overload main() = factorial, factorial(5);

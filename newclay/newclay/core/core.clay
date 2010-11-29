@@ -1,6 +1,7 @@
 
 import maybe.*;
 import newclay.common.*;
+import newclay.lexer.(SourceTokens);
 import newclay.ast as ast;
 import newclay.diagnostics.*;
 
@@ -25,11 +26,23 @@ record Program = referenceType(
     allAttributes: Vector[Attribute],
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
+    hooks: ClayHooks,
 );
 
 overload Program(module:Module) = Program(
     module, Vector[Attribute](),
     Vector[StaticOverload](), Vector[Overload](),
+    ClayHooks(),
+);
+
+record ClayHooks (
+    TypeTemplate?: Value,
+    Type?: Value,
+    Procedure?: Value,
+    Bool: Value,
+    Int: Value,
+    Static: Value,
+    Pointer: Value,
 );
 
 
@@ -42,21 +55,39 @@ record SymbolHead = referenceType(
     ast: ast.Symbol,
     module: Module,
     symbols: HashMap[ValueList, Symbol],
+    typeTemplate?: TriState[Bool],
+    invokeTable: InvokeTable,
 );
 
 overload SymbolHead(x:ast.Symbol, module:Module) =
-    SymbolHead(x, module, HashMap[ValueList, Symbol]());
+    SymbolHead(
+        x, module, HashMap[ValueList, Symbol](),
+        TriState[Bool](), InvokeTable(),
+    );
+
+symbolHeadHasParams?(x:SymbolHead) {
+    ref p = x.ast.params;
+    return not (empty?(p.items) and nothing?(p.variadicItem));
+}
 
 record Symbol = referenceType(
     head: SymbolHead,
     params: ValueList,
     env: Env,
-    body: Maybe[Value],
-    attributes: Maybe[Value],
+    body: TriState[Value],
+    attributes: TriState[Value],
+    type?: TriState[Bool],
+    procedure?: TriState[Bool],
+    invokeTable: InvokeTable,
 );
 
 overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
-    Symbol(head, params, env, nothing(Value), nothing(Value));
+    Symbol(
+        head, params, env,
+        TriState[Value](), TriState[Value](),
+        TriState[Bool](), TriState[Bool](),
+        InvokeTable(),
+    );
 
 record PatternVars = referenceType(
     vars: Vector[ast.Identifier],
@@ -141,15 +172,15 @@ primitiveName(kind) {
 // environment
 //
 
-variant EnvEntry = SymbolHead
-                 | Primitive
-                 | Value
-                 | PatternCell
+variant EnvEntry = Value
                  | ValueList
+                 | PatternCell
                  | ListPatternCell
+                 | RTVariable
+                 | RTListVariable
                  ;
  
-overload EnvEntry() = EnvEntry(SymbolHead());
+overload EnvEntry() = EnvEntry(Value());
 
 record Env = referenceType(
     parent: Maybe[Env],
@@ -178,7 +209,7 @@ envLookup(env, name) {
     var ptr = lookup(env.entries, name.str);
     if (null?(ptr)) {
         if (nothing?(env.parent))
-            genericError("name not found: ", name);
+            genericError("name not found: ", name.str);
         return ref envLookup(require(env.parent), name);
     }
     return ref ptr^;
@@ -337,83 +368,170 @@ record ListPatternCell = referenceType(
 
 
 //
-// execution context info
+// RTVariable, RTListVariable
 //
 
-record ListNode[T] = referenceType(
-    value: T,
-    next: ListNode[T],
+enum RTVariableKind {
+    RT_VARIABLE_CONST,
+    RT_VARIABLE_REF,
+    RT_VARIABLE_RVALUE,
+    RT_VARIABLE_LOCAL,
+}
+
+record RTVariable = referenceType(
+    kind: RTVariableKind,
+    type: Value,
 );
 
-[T]
-listEmpty?(root:ListNode[T]) = null?(root);
+record RTListVariable = referenceType(
+    kinds: Vector[RTVariableKind],
+    types: ValueList,
+);
 
-[T]
-listTop(root:ListNode[T]) = ref root.value;
 
-[T]
-listPush(root:ListNode[T], forward x:T) {
-    root = ListNode[T](x, root);
+
+//
+// RTValue, RTValueList
+//
+
+enum RTValueKind {
+    RT_VALUE_CONST,
+    RT_VALUE_REF,
+    RT_VALUE_RVALUE,
 }
 
-[T]
-listPop(root:ListNode[T]) {
-    root = root.next;
+record RTValue (
+    kind: RTValueKind,
+    type: Value,
+);
+
+alias RTValueList = Vector[RTValue];
+
+overload printReprTo(stream, x:RTValue) {
+    switch (x.kind) {
+        case RT_VALUE_CONST: printTo(stream, "const"); break;
+        case RT_VALUE_REF: printTo(stream, "ref"); break;
+        case RT_VALUE_RVALUE: printTo(stream, "rvalue"); break;
+    }
+    printTo(stream, " ");
+    printReprTo(stream, x.type);
 }
 
-record CallStackEntry (
+
+
+//
+// invoke tables
+//
+
+record Specialization = referenceType(
+    callable: Value,
+    args: RTValueList,
+    matchedOverload: Overload,
+    bodyEnv: Env,
+    returns: RTValueList,
+);
+
+record InvokeEntry(
+    specialization: Maybe[Specialization],
+);
+
+alias InvokeTable = HashMap[RTValueList, InvokeEntry];
+
+
+
+//
+// safeInitialize
+//
+
+[T]
+safeInitialize(x:TriState[T], initializer) {
+    return triStateInitialize(x, initializer, () => {
+        genericError("recursion during initialization");
+    });
+}
+
+
+
+//
+// program stack
+//
+
+private var _programStack = Stack[Program]();
+
+withProgram(program:Program, f) =
+    forward ...withStackValue(_programStack, program, f);
+
+getProgram() = ref stackTop(_programStack);
+getHooks() = ref getProgram().hooks;
+
+
+
+//
+// location stack
+//
+
+record LocationEntry (
+    tokens: SourceTokens,
+    where: SizeT,
+);
+
+private var _locationStack = Stack[LocationEntry]();
+
+withLocation(node, f) {
+    var tokens, tokenRange, mainToken = ...ast.getLocation(node);
+    if (null?(tokens) or empty?(tokenRange))
+        return forward ...f();
+    var location = LocationEntry(tokens, mainToken);
+    return forward ...withStackValue(_locationStack, location, f);
+}
+
+
+
+//
+// compilation stack
+//
+
+variant CompilationEntry = StaticCallEntry
+                         | CallAnalysisEntry
+                         ;
+
+record StaticCallEntry (
     callable: Value,
     args: ValueList,
 );
 
-record LocationContext (
-    modules: ListNode[Module],
-    calls: ListNode[CallStackEntry],
-    mainTokens: ListNode[SizeT],
+record CallAnalysisEntry (
+    callable: Value,
+    args: RTValueList,
 );
 
-private var _locationContext = LocationContext();
-
-withCurrentModule(module:Module, f) {
-    listPush(_locationContext.modules, module);
-    try {
-        var x = captureValues(...f());
-        listPop(_locationContext.modules);
-        return forward ...forwardValues(x);
-    }
-    catch (e) {
-        listPop(_locationContext.modules);
-        throw e;
-    }
+overload printTo(stream, x:StaticCallEntry) {
+    printReprTo(stream, x.callable);
+    printTo(stream, "(");
+    printReprElementsTo(stream, x.args);
+    printTo(stream, ")");
 }
 
-withCurrentCall(callable:Value, args:ValueList, f) {
-    listPush(_locationContext.calls, CallStackEntry(callable, args));
-    try {
-        var x = captureValues(...f());
-        listPop(_locationContext.calls);
-        return forward ...forwardValues(x);
-    }
-    catch (e) {
-        listPop(_locationContext.calls);
-        throw e;
-    }
+overload printTo(stream, x:CallAnalysisEntry) {
+    printReprTo(stream, x.callable);
+    printTo(stream, "(");
+    printReprElementsTo(stream, x.args);
+    printTo(stream, ")");
 }
 
-[T | ast.ASTNode?(T)]
-withCurrentLocation(ast:T, f) {
-    if (empty?(ast.tokens))
-        return forward ...f();
-    listPush(_locationContext.mainTokens, ast.mainToken);
-    try {
-        var x = captureValues(...f());
-        listPop(_locationContext.mainTokens);
-        return forward ...forwardValues(x);
-    }
-    catch (e) {
-        listPop(_locationContext.mainTokens);
-        throw e;
-    }
+private var _compilationStack = Stack[CompilationEntry]();
+
+withCompilationEntry(forward entry:CompilationEntry, f) =
+    forward ...withStackValue(_compilationStack, entry, f);
+
+withStaticCall(callable:Value, args:ValueList, f) {
+    var entry = CompilationEntry(StaticCallEntry(callable, args));
+    return forward ...withCompilationEntry(move(entry), f);
+}
+
+withCallAnalysis(callable:Value, args:RTValueList, f) {
+    var entry = CompilationEntry(CallAnalysisEntry(callable, args));
+    return forward ...withCompilationEntry(move(entry), f);
 }
 
 
@@ -427,16 +545,17 @@ private SemanticError?(static T) = false;
 
 private semanticError(...fields) = recordWithPredicate(
     SemanticError?,
-    locationContext: LocationContext,
+    locationStack: Stack[LocationEntry],
+    compilationStack: Stack[CompilationEntry],
     ...fields
 );
 
 [T, ...A | Record?(T)
            and SemanticError?(T)
            and (Tuple[...RecordFieldTypes(T)] ==
-                Tuple[LocationContext, ...A])]
+                Tuple[Stack[LocationEntry], Stack[CompilationEntry], ...A])]
 callbyname overload T(...args:A) =
-    T(_locationContext, ...args);
+    T(_locationStack, _compilationStack, ...args);
 
 variant SemanticError;
 
@@ -450,35 +569,18 @@ overload displayError(e:SemanticError) {
     displayError(*e);
 }
 
-displaySemanticError(locationContext:LocationContext, ...message) {
-    if (listEmpty?(locationContext.modules)
-        or listEmpty?(locationContext.mainTokens)) {
+displaySemanticError(locationStack, compilationStack, ...message) {
+    if (stackEmpty?(locationStack)) {
         println(...message);
         return;
     }
-    var module = listTop(locationContext.modules);
-    var mainToken = listTop(locationContext.mainTokens);
-    var tokens = module.ast.tokens;
-    var offset = tokens.vector[mainToken].range.begin;
-
+    var location = stackTop(locationStack);
+    var tokens = location.tokens;
+    var offset = tokens.vector[location.where].range.begin;
     errorWithLocation(tokens.file, offset, ...message);
-
-    println("call stack: ");
-    var callEntry = locationContext.calls;
-    while (not null?(callEntry)) {
-        ref call = callEntry.value;
-        print("    ", call.callable, "(");
-        var first = true;
-        for (arg in call.args) {
-            if (first)
-                first = false;
-            else
-                print(", ");
-            print(arg);
-        }
-        println(")");
-        callEntry = callEntry.next;
-    }
+    println("context stack: ");
+    for (entry in compilationStack)
+        println("    ", entry);
 }
 
 
@@ -494,9 +596,24 @@ record GenericError = semanticError(
 instance SemanticError = GenericError;
 
 overload displayError(e:GenericError) {
-    displaySemanticError(e.locationContext, e.msg);
+    displaySemanticError(e.locationStack, e.compilationStack, e.msg);
 }
 
 genericError(...msg) {
     throw GenericError(printString(...msg));
+}
+
+
+record RecursiveAnalysisError = semanticError(
+);
+
+instance SemanticError = RecursiveAnalysisError;
+
+overload displayError(e:RecursiveAnalysisError) {
+    var msg = "recursion during type propagation";
+    displaySemanticError(e.locationStack, e.compilationStack, msg);
+}
+
+recursiveAnalysisError() {
+    throw RecursiveAnalysisError();
 }

@@ -18,7 +18,8 @@ alias TokenRange = Range[SizeT];
 
 private ast(...fields) = referenceTypeWithPredicate(
     ASTNode?,
-    tokens: TokenRange,
+    tokens: SourceTokens,
+    tokenRange: TokenRange,
     mainToken: SizeT,
     ...fields,
 );
@@ -28,16 +29,16 @@ overload ASTNode?(x) = false;
 
 [T, ...A | ASTNode?(T)
            and (Tuple[...ReferenceTypeFieldTypes(T)] ==
-                Tuple[TokenRange, SizeT, ...A])]
+                Tuple[SourceTokens, TokenRange, SizeT, ...A])]
 callbyname overload T(...args:A) {
-    alias tokens = TokenRange(SizeT(0), SizeT(0));
-    return T(tokens, SizeT(0), ...args);
+    alias tokenRange = TokenRange(SizeT(0), SizeT(0));
+    return T(SourceTokens(), tokenRange, SizeT(0), ...args);
 }
 
 [T | ASTNode?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
-    printReprValuesTo(stream, ...dropValues(static 2, ...referenceTypeFields(x)));
+    printReprValuesTo(stream, ...dropValues(static 3, ...referenceTypeFields(x)));
 }
 
 
@@ -47,20 +48,21 @@ overload printReprTo(stream, x:T) {
 //
 
 procedure getLocation;
-overload getLocation(x) = x.tokens, x.mainToken;
+overload getLocation(x) = x.tokens, x.tokenRange, x.mainToken;
 overload getLocation(x:Expr) = ...getLocation(*x);
 overload getLocation(x:ExprListItem) = ...getLocation(*x);
 
 procedure setLocation;
-overload setLocation(x, tokens, mainToken) {
+overload setLocation(x, tokens, tokenRange, mainToken) {
     x.tokens = tokens;
+    x.tokenRange = tokenRange;
     x.mainToken = mainToken;
 }
-overload setLocation(x:Expr, tokens, mainToken) {
-    setLocation(*x, tokens, mainToken);
+overload setLocation(x:Expr, tokens, tokenRange, mainToken) {
+    setLocation(*x, tokens, tokenRange, mainToken);
 }
-overload setLocation(x:ExprListItem, tokens, mainToken) {
-    setLocation(*x, tokens, mainToken);
+overload setLocation(x:ExprListItem, tokens, tokenRange, mainToken) {
+    setLocation(*x, tokens, tokenRange, mainToken);
 }
 
 assignLocation(destNode, srcNode) {
@@ -244,12 +246,6 @@ record Overload = ast(
     body: CodeBody,
 );
 
-record Argument = ast(
-    kind: Maybe[ArgumentKind],
-    name: Identifier,
-    type: Maybe[Pattern],
-);
-
 enum ArgumentKind {
     ARG_CONST,
     ARG_REF,
@@ -257,11 +253,10 @@ enum ArgumentKind {
     ARG_FORWARD,
 }
 
-record ReturnSpec = ast(
-    kind: Maybe[ReturnKind],
-    arityKind: ReturnArityKind,
-    name: Maybe[Identifier],
-    type: Expr,
+record Argument = ast(
+    kind: Maybe[ArgumentKind],
+    name: Identifier,
+    type: Maybe[Pattern],
 );
 
 enum ReturnKind {
@@ -273,6 +268,13 @@ enum ReturnArityKind {
     RETURN_SINGLE,
     RETURN_MULTI,
 }
+
+record ReturnSpec = ast(
+    kind: Maybe[ReturnKind],
+    arityKind: ReturnArityKind,
+    name: Maybe[Identifier],
+    type: Expr,
+);
 
 variant CodeBody = ExprCodeBody
                  | CCodeBody
