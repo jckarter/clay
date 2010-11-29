@@ -91,7 +91,7 @@ private bounds(parser:Parser) {
         var start = input.current;
         return maybe(parser(input),
             x ref=> {
-                x.tokens = TokenRange(start, input.current);
+                x.tokenRange = TokenRange(start, input.current);
                 x.mainToken = start;
                 return Maybe(move(x));
             },
@@ -294,11 +294,11 @@ private var atomicExpr = choice(
 // setBase, foldTail
 //
 
-private exprTokens(x) = ref x.tokens;
+private exprTokenRange(x) = ref x.tokenRange;
 
 private setBase2(root, field, base) {
     fieldRef(root, field) = base;
-    root.tokens.begin = exprTokens(*base).begin;
+    root.tokenRange.begin = exprTokenRange(*base).begin;
 }
 
 private setBase(x, y) { assert(false, "baseless expression!"); }
