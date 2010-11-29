@@ -179,7 +179,7 @@ evaluateMain(program) {
     return withProgram(program, () => {
         var mainRef = ast.Expr(ast.NameRef(ast.Identifier("Main")));
         var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
-        return evaluateExpr(mainCall, program.mainModule.globals);
+        return evaluateMultiExpr(mainCall, program.mainModule.globals);
     });
 }
 

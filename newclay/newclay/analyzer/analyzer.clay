@@ -58,7 +58,7 @@ analyzeMain(program:Program) {
     return withProgram(program, () ref=> {
         var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
         var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
-        return analyzeExpr(mainCall, program.mainModule.globals);
+        return analyzeMultiExpr(mainCall, program.mainModule.globals);
     });
 }
 
