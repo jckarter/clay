@@ -80,7 +80,7 @@ overload TriState(forward x:T) = TriState[T](x);
 triStateInitialize(x:TriState[T], initializer, onError) {
     return match(x,
         T, y => y,
-        Initializing, y => {
+        Initializing, y ref=> {
             onError();
             return T();
         },
