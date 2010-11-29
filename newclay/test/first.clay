@@ -27,6 +27,10 @@ static overload Type?('x) | PrimitiveType?('x) = true;
 symbol Bool = NewPrimitiveType("char");
 symbol Int = NewPrimitiveType("int");
 
+symbol Pointer['T] = ();
+static overload TypeTemplate?(Pointer) = true;
+static overload Type?(Pointer['T]) = true;
+
 symbol ProcedureTag = ();
 symbol NewProcedure = NewStaticFunction();
 static overload NewProcedure() = (ProcedureTag,);

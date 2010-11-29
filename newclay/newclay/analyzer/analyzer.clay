@@ -19,6 +19,7 @@ initializeClayHooks(program:Program) {
         lookup("Procedure?"),
         lookup("Bool"),
         lookup("Int"),
+        lookup("Pointer"),
     );
 }
 
@@ -449,10 +450,8 @@ private unifyArguments(formalArgs, args, env, loweredArgs) {
     );
 }
 
-private convertNamedReturnReference(x) {
-    // FIXME: implement it
-    return x;
-}
+private convertNamedReturnReference(type) =
+    evaluateIndexing(getHooks().Pointer, ValueList(type));
 
 private bindNamedSingleReturn(env, name, returnSpec) {
     var type = evaluateExpr(returnSpec.type, env);
