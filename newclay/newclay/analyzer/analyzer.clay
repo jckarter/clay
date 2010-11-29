@@ -345,35 +345,6 @@ runtimeCallable?(x:Value) {
 
 
 //
-// analyzeCallWithOneResult, analyzeCall
-//
-
-analyzeCallWithOneResult(x, args:RTValueList) {
-    var results = analyzeCall(x, args);
-    if (size(results) != 1)
-        genericError("expected 1 value, received ", size(results), " values");
-    return move(results[0]);
-}
-
-procedure analyzeCall;
-
-overload analyzeCall(x, args) {
-    genericError("invalid runtime procedure: ", x);
-    return RTValueList();
-}
-overload analyzeCall(x:Value, args:RTValueList) RTValueList {
-    return withCallAnalysis(x, args, () ref=> analyzeCall(*x, args));
-}
-overload analyzeCall(x:Symbol, args) {
-    return analyzeRTCall(x.invokeTable, Value(x), args);
-}
-overload analyzeCall(x:SymbolHead, args) {
-    return analyzeRTCall(x.invokeTable, Value(x), args);
-}
-
-
-
-//
 // matchOverload
 //
 
@@ -543,7 +514,7 @@ matchOverload(x:Overload, callable:Value, args:RTValueList) Maybe[MatchResult] {
 
 
 //
-// analyzeRTCall
+// call analysis helpers
 //
 
 private findOverload(program, callable, args) {
@@ -616,7 +587,7 @@ private returnExprRTValueKind(x:ast.ReturnExprListItem, kind:RTValueKind) {
     );
 }
 
-analyzeReturnExprListItem(x, env) {
+private analyzeReturnExprListItem(x, env) {
     return withLocation(*x.item, () ref=> {
         var results = analyzeExprListItem(x.item, env);
         var results2 = RTValueList();
@@ -626,7 +597,7 @@ analyzeReturnExprListItem(x, env) {
     });
 }
 
-analyzeReturnExprList(returnExprList, env) {
+private analyzeReturnExprList(returnExprList, env) {
     var results = RTValueList();
     for (item in returnExprList)
         push(results, analyzeReturnExprListItem(item, env));
@@ -651,7 +622,36 @@ private entryReturns(entry:InvokeEntry) {
     );
 }
 
-analyzeRTCall(invokeTable:InvokeTable, callable:Value, args:RTValueList) RTValueList {
+
+
+//
+// analyzeCallWithOneResult, analyzeCall
+//
+
+analyzeCallWithOneResult(x, args:RTValueList) {
+    var results = analyzeCall(x, args);
+    if (size(results) != 1)
+        genericError("expected 1 value, received ", size(results), " values");
+    return move(results[0]);
+}
+
+procedure analyzeCall;
+
+overload analyzeCall(x, args) {
+    genericError("invalid runtime procedure: ", x);
+    return RTValueList();
+}
+overload analyzeCall(x:Value, args:RTValueList) RTValueList {
+    return withCallAnalysis(x, args, () ref=> analyzeCall(*x, args));
+}
+overload analyzeCall(x:Symbol, args) {
+    return analyzeCall(x.invokeTable, Value(x), args);
+}
+overload analyzeCall(x:SymbolHead, args) {
+    return analyzeCall(x.invokeTable, Value(x), args);
+}
+
+overload analyzeCall(invokeTable:InvokeTable, callable:Value, args:RTValueList) RTValueList {
     var entryPtr = lookup(invokeTable, args);
     if (not null?(entryPtr))
         return entryReturns(entryPtr^);
