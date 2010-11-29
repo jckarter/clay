@@ -1,4 +1,105 @@
 
+
+
+//
+// linked stack
+//
+
+record StackNode[T] = referenceType(
+    value: T,
+    next: StackNode[T],
+);
+
+record Stack[T] (
+    root: StackNode[T],
+);
+
+[T]
+stackEmpty?(s:Stack[T]) = null?(s.root);
+
+[T]
+stackTop(s:Stack[T]) = ref s.root.value;
+
+[T]
+stackPush(s:Stack[T], forward x:T) {
+    s.root = StackNode[T](x, s.root);
+}
+
+[T]
+stackPop(s:Stack[T]) {
+    s.root = s.root.next;
+}
+
+[T]
+overload iterator(s:Stack[T]) = s.root;
+
+[T]
+overload hasNext?(x:StackNode[T]) = not null?(x);
+
+[T]
+overload next(x:StackNode[T]) {
+    ref item = x.value;
+    x = x.next;
+    return ref item;
+}
+
+withStackValue(stack, value, action) {
+    stackPush(stack, value);
+    try {
+        var x = captureValues(...action());
+        stackPop(stack);
+        return forward ...forwardValues(x);
+    }
+    catch (e) {
+        stackPop(stack);
+        throw e;
+    }
+}
+
+
+
+//
+// TriState
+//
+
+record Uninitialized();
+record Initializing();
+
+variant TriState[T] = Uninitialized
+                    | Initializing
+                    | T
+                    ;
+
+[T]
+overload TriState[T]() = TriState[T](Uninitialized());
+
+[T]
+overload TriState(forward x:T) = TriState[T](x);
+
+[T]
+triStateInitialize(x:TriState[T], initializer, onError) {
+    return match(x,
+        T, y => y,
+        Initializing, y ref=> {
+            onError();
+            return T();
+        },
+        Uninitialized, y ref=> {
+            x = TriState[T](Initializing());
+            try {
+                var result = initializer();
+                x = TriState[T](result);
+                return result;
+            }
+            catch (e) {
+                x = TriState[T](Uninitialized());
+                throw e;
+            }
+        },
+    );
+}
+
+
 
 //
 // Source

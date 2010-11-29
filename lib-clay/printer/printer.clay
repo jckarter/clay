@@ -255,7 +255,7 @@ overload printReprTo(stream, x:T) {
 
 
 //
-// printReprValuesTo
+// printReprValuesTo, printReprElementsTo
 //
 
 printReprValuesTo(stream, ...values) {
@@ -269,6 +269,17 @@ printReprValuesTo(stream, ...values) {
         printReprTo(stream, y);
     }
     printTo(stream, ')');
+}
+
+printReprElementsTo(stream, seq) {
+    var first = true;
+    for (x in seq) {
+        if (first)
+            first = false;
+        else
+            printTo(stream, ", ");
+        printReprTo(stream, x);
+    }
 }
 
 
@@ -289,11 +300,7 @@ overload printReprTo(stream, a:Vector[T]) {
 
 private printSequenceTo(stream, a) {
     printTo(stream, '[');
-    for (i, x in enumerated(a)) {
-        if (i != 0)
-            printTo(stream, ", ");
-        printReprTo(stream, x);
-    }
+    printReprElementsTo(stream, a);
     printTo(stream, ']');
 }
 

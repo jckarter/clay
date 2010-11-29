@@ -12,7 +12,7 @@ private primitivesEnv() {
         var kind = PrimitiveKind(i);
         var name = ast.Identifier(primitiveName(kind));
         var entry = Primitive(kind);
-        envAdd(env, name, entry);
+        envAdd(env, name, Value(entry));
     }
     return env;
 }
@@ -22,7 +22,15 @@ private initializeGlobals(module) {
     for (item in module.ast.topLevelItems) {
         match(item,
             ast.Symbol, x => {
-                envAdd(env, x.name, SymbolHead(x, module));
+                var head = SymbolHead(x, module);
+                if (symbolHeadHasParams?(head)) {
+                    envAdd(env, x.name, Value(head));
+                }
+                else {
+                    var sym = Symbol(head, ValueList(), env);
+                    head.symbols[ValueList()] = sym;
+                    envAdd(env, x.name, Value(sym));
+                }
             },
             ast.Attribute, x => {
             },
@@ -58,10 +66,8 @@ private initializeAttributesAndOverloads(module) {
 private loadModule(program, path) {
     var module = Module(program, String("__main__"));
     module.ast = parse(tokenize(readSource(path)));
-    withCurrentModule(module, () => {
-        initializeGlobals(module);
-        initializeAttributesAndOverloads(module);
-    });
+    initializeGlobals(module);
+    initializeAttributesAndOverloads(module);
     return module;
 }
 
