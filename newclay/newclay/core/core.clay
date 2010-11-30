@@ -4,6 +4,7 @@ import newclay.common.*;
 import newclay.lexer.(SourceTokens);
 import newclay.ast as ast;
 import newclay.diagnostics.*;
+import newclay.ir as ir;
 
 
 
@@ -38,11 +39,24 @@ overload Program(module:Module) = Program(
 record ClayHooks (
     TypeTemplate?: Value,
     Type?: Value,
-    Procedure?: Value,
+
+    ToLowLevelType: Value,
+    LLSigned: Value,
+    LLUnsigned: Value,
+    LLBoolType: Value,
+    LLIntegerType: Value,
+    LLFloatType: Value,
+    LLPointerType: Value,
+    LLArrayType: Value,
+    LLTupleType: Value,
+    LLUnionType: Value,
+
     Bool: Value,
     Int: Value,
     Static: Value,
     Pointer: Value,
+
+    Procedure?: Value,
 );
 
 
@@ -79,6 +93,7 @@ record Symbol = referenceType(
     type?: TriState[Bool],
     procedure?: TriState[Bool],
     invokeTable: InvokeTable,
+    lowLevelType: Maybe[ir.Type],
 );
 
 overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
@@ -87,6 +102,7 @@ overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
         TriState[Value](), TriState[Value](),
         TriState[Bool](), TriState[Bool](),
         InvokeTable(),
+        nothing(ir.Type),
     );
 
 record PatternVars = referenceType(

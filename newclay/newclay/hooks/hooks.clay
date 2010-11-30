@@ -15,11 +15,24 @@ initializeClayHooks(program:Program) {
     program.hooks = ClayHooks(
         lookup("TypeTemplate?"),
         lookup("Type?"),
-        lookup("Procedure?"),
+
+        lookup("ToLowLevelType"),
+        lookup("LLSigned"),
+        lookup("LLUnsigned"),
+        lookup("LLBoolType"),
+        lookup("LLIntegerType"),
+        lookup("LLFloatType"),
+        lookup("LLPointerType"),
+        lookup("LLArrayType"),
+        lookup("LLTupleType"),
+        lookup("LLUnionType"),
+
         lookup("Bool"),
         lookup("Int"),
         lookup("Static"),
         lookup("Pointer"),
+
+        lookup("Procedure?"),
     );
 }
 
