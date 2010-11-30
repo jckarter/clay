@@ -1,6 +1,7 @@
 
 import newclay.common.*;
 import newclay.loader.*;
+import newclay.hooks.*;
 import newclay.analyzer.*;
 
 main(args) {

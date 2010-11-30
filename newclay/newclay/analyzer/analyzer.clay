@@ -3,50 +3,7 @@ import maybe.*;
 import newclay.ast as ast;
 import newclay.core.*;
 import newclay.evaluator.*;
-
-
-//
-// initializeClayHooks
-//
-
-initializeClayHooks(program:Program) {
-    var env = program.mainModule.globals;
-    var lookup =
-        name => envEntryToValue(envLookup(env, ast.Identifier(name)));
-    program.hooks = ClayHooks(
-        lookup("TypeTemplate?"),
-        lookup("Type?"),
-        lookup("Procedure?"),
-        lookup("Bool"),
-        lookup("Int"),
-        lookup("Static"),
-        lookup("Pointer"),
-    );
-}
-
-
-
-//
-// symbolHeadTypeTemplate?, symbolType?, symbolProcedure?
-//
-
-symbolHeadTypeTemplate?(head:SymbolHead) {
-    return safeInitialize(head.typeTemplate?,
-        () ref=> evaluateBoolCall(getHooks().TypeTemplate?, ValueList(head)),
-    );
-}
-
-symbolType?(x:Symbol) {
-    return safeInitialize(x.type?,
-        () ref=> evaluateBoolCall(getHooks().Type?, ValueList(x)),
-    );
-}
-
-symbolProcedure?(x:Symbol) {
-    return safeInitialize(x.procedure?,
-        () ref=> evaluateBoolCall(getHooks().Procedure?, ValueList(x)),
-    );
-}
+import newclay.hooks.*;
 
 
 
