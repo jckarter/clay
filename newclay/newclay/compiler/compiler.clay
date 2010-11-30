@@ -1,0 +1,166 @@
+
+import maybe.*;
+import newclay.ast as ast;
+import newclay.core.*;
+import newclay.evaluator.*;
+import newclay.hooks.*;
+import newclay.analyzer.*;
+import newclay.ir as ir;
+
+
+
+//
+// valueToType, symbolToType
+//
+
+valueToType(x:Value) {
+    return match(x,
+        Symbol, y => symbolToType(y),
+        MatchDefault, y => {
+            genericError("invalid type: ", y);
+            return ir.Type();
+        },
+    );
+}
+
+symbolToType(x:Symbol) ir.Type {
+    if (not symbolType?(x))
+        genericError("invalid type: ", x);
+    return maybe(x.lowLevelType,
+        y => y,
+        () ref=> {
+            var irType = ir.Type(ir.TypeTag(), printString(x));
+            x.lowLevelType = Maybe(irType);
+            irType.tag = valueToTypeTag(evaluateCallWithOneResult(
+                getHooks().ToLowLevelType, ValueList(x),
+            ));
+            return irType;
+        },
+    );
+}
+
+valueToTypeTag(x:Value) {
+    ref hooks = getHooks();
+    if (x == hooks.LLBoolType)
+        return ir.TypeTag(ir.BoolTag());
+    if (not variantIs?(x, Symbol))
+        genericError("invalid symbolic type: ", x);
+    ref y = variantAs(x, Symbol);
+    switch (Value(y.head)) {
+    case hooks.LLIntegerType :
+        return symbolToIntegerTag(y);
+    case hooks.LLFloatType :
+        return symbolToFloatTag(y);
+    case hooks.LLPointerType :
+        return symbolToPointerTag(y);
+    case hooks.LLArrayType :
+        return symbolToArrayTag(y);
+    case hooks.LLTupleType :
+        return symbolToTupleTag(y);
+    case hooks.LLUnionType :
+        return symbolToUnionTag(y);
+    default :
+        genericError("invalid symbolic type: ", x);
+        return ir.TypeTag();
+    }
+}
+
+symbolToIntegerTag(x:Symbol) {
+    var a, b = ...unpackValueList(static 2, x.params);
+    var kind = valueToIntegerKind(a);
+    var bits = valueToIntegerBitSize(b);
+    return ir.TypeTag(ir.IntegerTag(kind, bits));
+}
+
+valueToIntegerKind(x:Value) {
+    ref hooks = getHooks();
+    if (x == hooks.LLSigned)
+        return ir.SIGNED_INTEGER;
+    else if (x == hooks.LLUnsigned)
+        return ir.UNSIGNED_INTEGER;
+    genericError("invalid symbolic integer kind: ", x);
+    return ir.IntegerKind();
+}
+
+valueToIntegerBitSize(x:Value) {
+    var a = valueToInt(x);
+    if ((a != 8) and (a != 16) and (a != 32) and (a != 64))
+        genericError("invalid integer bit size: ", a);
+    return a;
+}
+
+symbolToFloatTag(x:Symbol) {
+    var a = ...unpackValueList(static 1, x.params);
+    var bits = valueToFloatBitSize(a);
+    return ir.TypeTag(ir.FloatTag(bits));
+}
+
+valueToFloatBitSize(x:Value) {
+    var a = valueToInt(x);
+    if ((a != 32) and (a != 64))
+        genericError("invalid float bit size: ", a);
+    return a;
+}
+
+symbolToPointerTag(x:Symbol) {
+    var a = ...unpackValueList(static 1, x.params);
+    var target = valueToType(a);
+    return ir.TypeTag(ir.PointerTag(target));
+}
+
+symbolToArrayTag(x:Symbol) {
+    var a, b = ...unpackValueList(static 2, x.params);
+    var element = valueToType(a);
+    var size = valueToArraySize(b);
+    return ir.TypeTag(ir.ArrayTag(element, size));
+}
+
+valueToArraySize(x:Value) {
+    var a = valueToInt(x);
+    if (a < 0)
+        genericError("invalid array size: ", a);
+    return a;
+}
+
+symbolToTupleTag(x:Symbol) {
+    var elements = map(valueToType, x.params);
+    return ir.TypeTag(ir.TupleTag(move(elements)));
+}
+
+symbolToUnionTag(x:Symbol) {
+    var members = map(valueToType, x.params);
+    return ir.TypeTag(ir.UnionTag(move(members)));
+}
+
+[n]
+unpackValueList(static n, x:ValueList) {
+    if (size(x) != n) {
+        var valuesStr = (n => if (n == 1) "value" else "values");
+        genericError(
+            "expecting ", n, " ", valuesStr(n),
+            ", but received ", size(x)
+        );
+    }
+    return ...sequenceValues(x, static n);
+}
+
+valueToInt(x:Value) {
+    if (not variantIs?(x, IntValue))
+        genericError("invalid integer: ", x);
+    return variantAs(x, IntValue).value;
+}
+
+
+
+//
+// compileMain
+//
+
+compileMain(program:Program) {
+    return withProgram(program, () ref=> {
+        var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
+        var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
+        var result = analyzeMultiExpr(mainCall, program.mainModule.globals);
+        return map(x => (x.kind, valueToType(x.type)), result);
+    });
+}
