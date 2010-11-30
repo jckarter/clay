@@ -221,14 +221,23 @@ envAdd(env, name, forward entry) {
     env.entries[name.str] = EnvEntry(entry);
 }
 
-envLookup(env, name) {
-    var ptr = lookup(env.entries, name.str);
+procedure envLookup;
+
+overload envLookup(env, name:String) {
+    var ptr = lookup(env.entries, name);
     if (null?(ptr)) {
         if (nothing?(env.parent))
-            genericError("name not found: ", name.str);
+            genericError("name not found: ", name);
         return ref envLookup(require(env.parent), name);
     }
     return ref ptr^;
+
+}
+overload envLookup(env, name:ast.Identifier) {
+    return ref envLookup(env, name.str);
+}
+overload envLookup(env, name:StringConstant) {
+    return ref envLookup(env, String(name));
 }
 
 
