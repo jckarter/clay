@@ -17,7 +17,7 @@ analyzeMain(program:Program) {
         var mainValue = envEntryToValue(envLookup(env, "main"));
         if (not runtimeCallable?(mainValue))
             genericError("invalid procedure: main");
-        return analyzeCall(mainValue, RTValueList());
+        return analyzeCall(mainValue, RTResultList());
     });
 }
 
@@ -27,7 +27,7 @@ analyzeMain(program:Program) {
 // analyzeBool
 //
 
-analyzeBool(x:ast.Expr, env) RTValue {
+analyzeBool(x:ast.Expr, env) RTResult {
     return withLocation(*x, () ref=> {
         var result = analyzeExpr(x, env);
         if (result.type != getHooks().Bool)
@@ -44,28 +44,28 @@ analyzeBool(x:ast.Expr, env) RTValue {
 
 procedure analyzeExpr;
 
-overload analyzeExpr(x:ast.Expr, env) RTValue {
+overload analyzeExpr(x:ast.Expr, env) RTResult {
     return withLocation(*x, () ref=> analyzeExpr(*x, env));
 }
 overload analyzeExpr(x:ast.BoolLiteral, env) {
-    return RTValue(RT_VALUE_RVALUE, getHooks().Bool);
+    return RTResult(RT_RESULT_RVALUE, getHooks().Bool);
 }
 overload analyzeExpr(x:ast.IntLiteral, env) {
-    return RTValue(RT_VALUE_RVALUE, getHooks().Int);
+    return RTResult(RT_RESULT_RVALUE, getHooks().Int);
 }
 overload analyzeExpr(x:ast.StringLiteral, env) {
     genericError("strings are not yet supported");
-    return RTValue();
+    return RTResult();
 }
 overload analyzeExpr(x:ast.NameRef, env) {
-    return envEntryToRTValue(envLookup(env, x.name));
+    return envEntryToRTResult(envLookup(env, x.name));
 }
 overload analyzeExpr(x:ast.PatternNameRef, env) {
-    return valueToRTValue(derefPattern(env, x.name));
+    return valueToRTResult(derefPattern(env, x.name));
 }
 overload analyzeExpr(x:ast.TupleExpr, env) {
     genericError("tuples are not yet supported");
-    return RTValue();
+    return RTResult();
 }
 overload analyzeExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
@@ -76,63 +76,63 @@ overload analyzeExpr(x:ast.Call, env) {
     else {
         var args = evaluateExprList(x.args, env);
         var result = evaluateCallWithOneResult(callable, args);
-        return valueToRTValue(result);
+        return valueToRTResult(result);
     }
 }
 overload analyzeExpr(x:ast.Indexing, env) {
-    return valueToRTValue(evaluateExpr(x, env));
+    return valueToRTResult(evaluateExpr(x, env));
 }
 overload analyzeExpr(x:ast.AndExpr, env) {
     analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return RTValue(RT_VALUE_RVALUE, getHooks().Bool);
+    return RTResult(RT_RESULT_RVALUE, getHooks().Bool);
 }
 overload analyzeExpr(x:ast.OrExpr, env) {
     analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return RTValue(RT_VALUE_RVALUE, getHooks().Bool);
+    return RTResult(RT_RESULT_RVALUE, getHooks().Bool);
 }
 overload analyzeExpr(x:ast.LambdaExpr, env) {
     genericError("lambda expressions are not yet supported");
-    return RTValue();
+    return RTResult();
 }
 overload analyzeExpr(x:ast.IfExpr, env) {
     analyzeBool(x.condition, env);
     try {
         var a = analyzeExpr(x.thenPart, env);
-        return RTValue(RT_VALUE_RVALUE, a.type);
+        return RTResult(RT_RESULT_RVALUE, a.type);
     }
     catch (e:RecursiveAnalysisError) {
         var b = analyzeExpr(x.elsePart, env);
-        return RTValue(RT_VALUE_RVALUE, b.type);
+        return RTResult(RT_RESULT_RVALUE, b.type);
     }
 }
 
 
 
 //
-// envEntryToRTValue
+// envEntryToRTResult
 //
 
-envEntryToRTValue(entry:EnvEntry) {
+envEntryToRTResult(entry:EnvEntry) {
     return match(entry,
-        Value, x => valueToRTValue(x),
+        Value, x => valueToRTResult(x),
         ValueList, x => {
             genericError("multi-value used in single value context");
-            return RTValue();
+            return RTResult();
         },
         PatternCell, x => {
             genericError("pattern variable cannot be used in non-pattern expression");
-            return RTValue();
+            return RTResult();
         },
         ListPatternCell, x => {
             genericError("pattern variable cannot be used in non-pattern expression");
-            return RTValue();
+            return RTResult();
         },
-        RTVariable, x => rtVariableToRTValue(x),
+        RTVariable, x => rtVariableToRTResult(x),
         RTListVariable, x => {
             genericError("multi-value used in single value context");
-            return RTValue();
+            return RTResult();
         },
     );
 }
@@ -140,44 +140,44 @@ envEntryToRTValue(entry:EnvEntry) {
 
 
 //
-// rtVariableToRTValue, rtVariableKindToRTValueKind
+// rtVariableToRTResult, rtVariableKindToRTResultKind
 //
 
-rtVariableToRTValue(x:RTVariable) =
-    RTValue(rtVariableKindToRTValueKind(x.kind), x.type);
+rtVariableToRTResult(x:RTVariable) =
+    RTResult(rtVariableKindToRTResultKind(x.kind), x.type);
 
-rtVariableKindToRTValueKind(x:RTVariableKind) {
+rtVariableKindToRTResultKind(x:RTVariableKind) {
     switch (x) {
-    case RT_VARIABLE_CONST: return RT_VALUE_CONST;
-    case RT_VARIABLE_REF: return RT_VALUE_REF;
-    case RT_VARIABLE_RVALUE: return RT_VALUE_RVALUE;
+    case RT_VARIABLE_CONST: return RT_RESULT_CONST;
+    case RT_VARIABLE_REF: return RT_RESULT_REF;
+    case RT_VARIABLE_RVALUE: return RT_RESULT_RVALUE;
     default :
         assert(false);
-        return RTValueKind();
+        return RTResultKind();
     }
 }
 
 
 
 //
-// valueToRTValue
+// valueToRTResult
 //
 
-valueToRTValue(x:Value) {
+valueToRTResult(x:Value) {
     return match(x,
-        BoolValue, x => RTValue(RT_VALUE_RVALUE, getHooks().Bool),
-        IntValue, x => RTValue(RT_VALUE_RVALUE, getHooks().Int),
+        BoolValue, x => RTResult(RT_RESULT_RVALUE, getHooks().Bool),
+        IntValue, x => RTResult(RT_RESULT_RVALUE, getHooks().Int),
         StringValue, x => {
             genericError("strings are not yet supported");
-            return RTValue();
+            return RTResult();
         },
         TupleValue, x => {
             genericError("tuples are not yet supported");
-            return RTValue();
+            return RTResult();
         },
         MatchDefault, x => {
             var type = evaluateIndexing(getHooks().Static, ValueList(x));
-            return RTValue(RT_VALUE_RVALUE, type);
+            return RTResult(RT_RESULT_RVALUE, type);
         },
     );
 }
@@ -189,7 +189,7 @@ valueToRTValue(x:Value) {
 //
 
 analyzeExprList(exprList, env) {
-    var results = RTValueList();
+    var results = RTResultList();
     for (item in exprList)
         push(results, analyzeExprListItem(item, env));
     return move(results);
@@ -201,7 +201,7 @@ overload analyzeExprListItem(x:ast.ExprListItem, env) {
     return analyzeExprListItem(*x, env);
 }
 overload analyzeExprListItem(x:ast.Expr, env) {
-    return RTValueList(analyzeExpr(x, env));
+    return RTResultList(analyzeExpr(x, env));
 }
 overload analyzeExprListItem(x:ast.UnpackExpr, env) {
     return analyzeMultiExpr(x.expr, env);
@@ -217,16 +217,16 @@ procedure analyzeMultiExpr;
 
 overload analyzeMultiExpr(x, env) {
     genericError("single valued expression used in multi-value context");
-    return RTValueList();
+    return RTResultList();
 }
-overload analyzeMultiExpr(x:ast.Expr, env) RTValueList {
+overload analyzeMultiExpr(x:ast.Expr, env) RTResultList {
     return withLocation(*x, () ref=> analyzeMultiExpr(*x, env));
 }
 overload analyzeMultiExpr(x:ast.NameRef, env) {
-    return envEntryToRTValueList(envLookup(env, x.name));
+    return envEntryToRTResultList(envLookup(env, x.name));
 }
 overload analyzeMultiExpr(x:ast.PatternNameRef, env) {
-    return valueListToRTValueList(derefListPattern(env, x.name));
+    return valueListToRTResultList(derefListPattern(env, x.name));
 }
 overload analyzeMultiExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
@@ -237,45 +237,45 @@ overload analyzeMultiExpr(x:ast.Call, env) {
     else {
         var args = evaluateExprList(x.args, env);
         var result = evaluateCall(callable, args);
-        return valueListToRTValueList(result);
+        return valueListToRTResultList(result);
     }
 }
 
 
 
 //
-// envEntryToRTValueList
+// envEntryToRTResultList
 //
 
-procedure envEntryToRTValueList;
+procedure envEntryToRTResultList;
 
-overload envEntryToRTValueList(x:EnvEntry) {
-    return envEntryToRTValueList(*x);
+overload envEntryToRTResultList(x:EnvEntry) {
+    return envEntryToRTResultList(*x);
 }
-overload envEntryToRTValueList(x:Value) {
+overload envEntryToRTResultList(x:Value) {
     genericError("single value used in multi-valued context");
-    return RTValueList();
+    return RTResultList();
 }
-overload envEntryToRTValueList(x:ValueList) {
-    return map(y ref=> valueToRTValue(y), x);
+overload envEntryToRTResultList(x:ValueList) {
+    return map(y ref=> valueToRTResult(y), x);
 }
-overload envEntryToRTValueList(x:PatternCell) {
+overload envEntryToRTResultList(x:PatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
-    return RTValueList();
+    return RTResultList();
 }
-overload envEntryToRTValueList(x:ListPatternCell) {
+overload envEntryToRTResultList(x:ListPatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
-    return RTValueList();
+    return RTResultList();
 }
-overload envEntryToRTValueList(x:RTVariable) {
+overload envEntryToRTResultList(x:RTVariable) {
     genericError("single value used in multi-valued context");
-    return RTValueList();
+    return RTResultList();
 }
-overload envEntryToRTValueList(x:RTListVariable) {
-    var result = RTValueList();
+overload envEntryToRTResultList(x:RTListVariable) {
+    var result = RTResultList();
     for (kind, type in zipped(x.kinds, x.types)) {
-        var kind2 = rtVariableKindToRTValueKind(kind);
-        push(result, RTValue(kind2, type));
+        var kind2 = rtVariableKindToRTResultKind(kind);
+        push(result, RTResult(kind2, type));
     }
     return move(result);
 }
@@ -283,10 +283,10 @@ overload envEntryToRTValueList(x:RTListVariable) {
 
 
 //
-// valueListToRTValueList
+// valueListToRTResultList
 //
 
-valueListToRTValueList(x:ValueList) = map(valueToRTValue, x);
+valueListToRTResultList(x:ValueList) = map(valueToRTResult, x);
 
 
 
@@ -308,7 +308,7 @@ runtimeCallable?(x:Value) {
 // analyzeCallWithOneResult, analyzeCall
 //
 
-analyzeCallWithOneResult(x, args:RTValueList) {
+analyzeCallWithOneResult(x, args:RTResultList) {
     var results = analyzeCall(x, args);
     if (size(results) != 1)
         genericError("expected 1 value, received ", size(results), " values");
@@ -326,7 +326,7 @@ analyzeCall(x, args) {
 // matchOverload
 //
 
-private arityMatches?(formalArgs:ast.VariadicList[ast.Argument], args:RTValueList) {
+private arityMatches?(formalArgs:ast.VariadicList[ast.Argument], args:RTResultList) {
     if (nothing?(formalArgs.variadicItem))
         return size(args) == size(formalArgs.items);
     else
@@ -337,36 +337,36 @@ private referenceSpecifier(x:ast.Argument) ast.ArgumentKind {
     return maybe(x.kind, y => y, () => ast.ARG_CONST);
 }
 
-private referenceKindMatches?(fkind:ast.ArgumentKind, kind:RTValueKind) {
-    if ((fkind == ast.ARG_REF) and (kind != RT_VALUE_REF))
+private referenceKindMatches?(fkind:ast.ArgumentKind, kind:RTResultKind) {
+    if ((fkind == ast.ARG_REF) and (kind != RT_RESULT_REF))
         return false;
-    if ((fkind == ast.ARG_RVALUE) and (kind != RT_VALUE_RVALUE))
+    if ((fkind == ast.ARG_RVALUE) and (kind != RT_RESULT_RVALUE))
         return false;
     return true;
 }
 
-private internalArgumentKind(fkind:ast.ArgumentKind, kind:RTValueKind) {
+private internalArgumentKind(fkind:ast.ArgumentKind, kind:RTResultKind) {
     if (fkind == ast.ARG_CONST)
         return RT_VARIABLE_CONST;
     if (fkind == ast.ARG_RVALUE)
         return RT_VARIABLE_REF;
     switch (kind) {
-    case RT_VALUE_CONST: return RT_VARIABLE_CONST;
-    case RT_VALUE_REF: return RT_VARIABLE_REF;
-    case RT_VALUE_RVALUE: return RT_VARIABLE_RVALUE;
+    case RT_RESULT_CONST: return RT_VARIABLE_CONST;
+    case RT_RESULT_REF: return RT_VARIABLE_REF;
+    case RT_RESULT_RVALUE: return RT_VARIABLE_RVALUE;
     default :
         assert(false);
         return RTVariableKind();
     }
 }
 
-private loweredArgumentKind(fkind:ast.ArgumentKind, kind:RTValueKind) {
+private loweredArgumentKind(fkind:ast.ArgumentKind, kind:RTResultKind) {
     if (fkind == ast.ARG_CONST)
-        return RT_VALUE_CONST;
+        return RT_RESULT_CONST;
     return kind;
 }
 
-private unifyArgumentType(farg:ast.Argument, arg:RTValue, env) {
+private unifyArgumentType(farg:ast.Argument, arg:RTResult, env) {
     return maybe(farg.type,
         type ref=> {
             var typePattern = evaluatePattern(type, env);
@@ -386,7 +386,7 @@ private unifyVariadicArgumentType(farg, args, env) {
     );
 }
 
-private unifyArgument(farg:ast.Argument, arg:RTValue, env, loweredArgs) {
+private unifyArgument(farg:ast.Argument, arg:RTResult, env, loweredArgs) {
     var fkind = referenceSpecifier(farg);
     if (not referenceKindMatches?(fkind, arg.kind))
         return false;
@@ -395,7 +395,7 @@ private unifyArgument(farg:ast.Argument, arg:RTValue, env, loweredArgs) {
     var argVarKind = internalArgumentKind(fkind, arg.kind);
     envAdd(env, farg.name, RTVariable(argVarKind, arg.type));
     var loweredArgKind = loweredArgumentKind(fkind, arg.kind);
-    push(loweredArgs, RTValue(loweredArgKind, arg.type));
+    push(loweredArgs, RTResult(loweredArgKind, arg.type));
     return true;
 }
 
@@ -405,7 +405,7 @@ private unifyVariadicArgument(farg:ast.Argument, args, env, loweredArgs) {
         if (not referenceKindMatches?(fkind, arg.kind))
             return false;
         var loweredArgKind = loweredArgumentKind(fkind, arg.kind);
-        push(loweredArgs, RTValue(loweredArgKind, arg.type));
+        push(loweredArgs, RTResult(loweredArgKind, arg.type));
     }
     if (not unifyVariadicArgumentType(farg, args, env))
         return false;
@@ -464,10 +464,10 @@ private bindNamedReturns(env, returnSpecs) {
 
 record MatchResult(
     env: Env,
-    loweredArgs: RTValueList,
+    loweredArgs: RTResultList,
 );
 
-matchOverload(x:Overload, callable:Value, args:RTValueList) Maybe[MatchResult] {
+matchOverload(x:Overload, callable:Value, args:RTResultList) Maybe[MatchResult] {
     ref formalArgs = x.ast.args;
     if (not arityMatches?(formalArgs, args))
         return nothing(MatchResult);
@@ -476,7 +476,7 @@ matchOverload(x:Overload, callable:Value, args:RTValueList) Maybe[MatchResult] {
     var callablePattern = evaluatePattern(x.ast.target, env);
     if (not unify(callablePattern, callable))
         return nothing(MatchResult);
-    var loweredArgs = RTValueList();
+    var loweredArgs = RTResultList();
     if (not unifyArguments(formalArgs, args, env, loweredArgs))
         return nothing(MatchResult);
     assert(size(loweredArgs) == size(args));
@@ -502,79 +502,79 @@ private findOverload(program, callable, args) {
         }
     }
     genericError("no matching operation");
-    return Overload(), Env(), RTValueList();
+    return Overload(), Env(), RTResultList();
 }
 
-private returnSpecRTValueKind(returnSpec: ast.ReturnSpec) {
+private returnSpecRTResultKind(returnSpec: ast.ReturnSpec) {
     return maybe(returnSpec.kind,
         k => {
             switch (k) {
-                case ast.RETURN_CONST: return RT_VALUE_CONST;
-                case ast.RETURN_REF: return RT_VALUE_REF;
+                case ast.RETURN_CONST: return RT_RESULT_CONST;
+                case ast.RETURN_REF: return RT_RESULT_REF;
                 default :
                     assert(false);
-                    return RTValueKind();
+                    return RTResultKind();
             }
         },
-        () => RT_VALUE_RVALUE,
+        () => RT_RESULT_RVALUE,
     );
 }
 
 private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
-    var result = RTValueList();
+    var result = RTResultList();
     for (returnSpec in returns) {
         if (returnSpec.arityKind == ast.RETURN_SINGLE) {
-            var kind = returnSpecRTValueKind(returnSpec);
+            var kind = returnSpecRTResultKind(returnSpec);
             var type = evaluateExpr(returnSpec.type, env);
-            push(result, RTValue(kind, type));
+            push(result, RTResult(kind, type));
         }
         else {
-            var kind = returnSpecRTValueKind(returnSpec);
+            var kind = returnSpecRTResultKind(returnSpec);
             var types = evaluateMultiExpr(returnSpec.type, env);
             for (type in types)
-                push(result, RTValue(kind, type));
+                push(result, RTResult(kind, type));
         }
     }
     return move(result);
 }
 
-private returnExprRTValueKind(x:ast.ReturnExprListItem, kind:RTValueKind) {
+private returnExprRTResultKind(x:ast.ReturnExprListItem, kind:RTResultKind) {
     return maybe(x.kind,
         y => {
             switch (y) {
                 case ast.RETURN_EXPR_CONST :
-                    if (kind == RT_VALUE_RVALUE)
+                    if (kind == RT_RESULT_RVALUE)
                         genericError("cannot return temporary by reference");
-                    return RT_VALUE_CONST;
+                    return RT_RESULT_CONST;
                 case ast.RETURN_EXPR_REF :
-                    if (kind == RT_VALUE_RVALUE)
+                    if (kind == RT_RESULT_RVALUE)
                         genericError("cannot return temporary by reference");
-                    if (kind == RT_VALUE_CONST)
+                    if (kind == RT_RESULT_CONST)
                         genericError("cannot return const ref as mutable ref");
-                    return RT_VALUE_REF;
+                    return RT_RESULT_REF;
                 case ast.RETURN_EXPR_FORWARD :
                     return kind;
                 default :
                     assert(false);
-                    return RTValueKind();
+                    return RTResultKind();
             }
         },
-        () => RT_VALUE_RVALUE,
+        () => RT_RESULT_RVALUE,
     );
 }
 
 private analyzeReturnExprListItem(x, env) {
     return withLocation(*x.item, () ref=> {
         var results = analyzeExprListItem(x.item, env);
-        var results2 = RTValueList();
+        var results2 = RTResultList();
         for (r in results)
-            push(results2, RTValue(returnExprRTValueKind(x, r.kind), r.type));
+            push(results2, RTResult(returnExprRTResultKind(x, r.kind), r.type));
         return move(results2);
     });
 }
 
 private analyzeReturnExprList(returnExprList, env) {
-    var results = RTValueList();
+    var results = RTResultList();
     for (item in returnExprList)
         push(results, analyzeReturnExprListItem(item, env));
     return move(results);
@@ -585,7 +585,7 @@ private analyzeBody(x:Overload, env) {
         return computeReturnSpec(x.ast.returns, env);
     return match(x.ast.body,
         ast.ExprCodeBody, y ref=> analyzeReturnExprList(y.exprs, env),
-        ast.CCodeBody, y ref=> RTValueList(), // void return
+        ast.CCodeBody, y ref=> RTResultList(), // void return
     );
 }
 
@@ -616,13 +616,13 @@ private callableInvokeTable(callable:Value) {
 // analyzeCallable
 //
 
-analyzeCallable(callable:Value, args:RTValueList) Specialization {
+analyzeCallable(callable:Value, args:RTResultList) Specialization {
     return withCallAnalysis(callable, args,
         () ref=> analyzeCallable2(callable, args)
     );
 }
 
-private analyzeCallable2(callable:Value, args:RTValueList) Specialization {
+private analyzeCallable2(callable:Value, args:RTResultList) Specialization {
     ref invokeTable = callableInvokeTable(callable);
     var entryPtr = lookup(invokeTable, args);
     if (not null?(entryPtr))
@@ -639,7 +639,7 @@ private analyzeCallable2(callable:Value, args:RTValueList) Specialization {
         }
         invokeTable[loweredArgs] = InvokeEntry(nothing(Specialization));
     }
-    var result = RTValueList();
+    var result = RTResultList();
     try {
         result = analyzeBody(x, env);
     }
