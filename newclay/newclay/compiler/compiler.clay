@@ -172,3 +172,44 @@ compileMain(program:Program) {
         return map(x => (x.kind, valueToType(x.type)), s.returns);
     });
 }
+
+
+
+//
+// compileSpecialization
+//
+
+private newIRProcedureName(callable:Value) {
+    var baseName = printString(callable);
+    ref nameCounts = getProgram().lowLevelNameCounts;
+    var countPtr = lookup(nameCounts, baseName);
+    if (null?(countPtr)) {
+        nameCounts[baseName] = 1;
+    }
+    else {
+        countPtr^ += 1;
+        printTo(baseName, countPtr^);
+    }
+    return move(baseName);
+}
+
+compileSpecialization(x:Specialization) ir.Procedure {
+    return maybe(x.lowLevelProc,
+        y => y,
+        () ref=> {
+            var proc = ir.Procedure(newIRProcedureName(x.callalbe));
+            x.lowLevelProc = Maybe(proc);
+            try {
+                compileSpecialization(x, proc);
+                return proc;
+            }
+            catch (e) {
+                x.lowLevelProc = nothing(ir.Procedure);
+                throw e;
+            }
+        },
+    );
+}
+
+overload compileSpecialization(x:Specialization, out:ir.Procedure) {
+}
