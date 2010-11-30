@@ -168,7 +168,7 @@ compileMain(program:Program) {
         var mainValue = envEntryToValue(envLookup(env, "main"));
         if (not runtimeCallable?(mainValue))
             genericError("invalid procedure: main");
-        var s = analyzeCallable(mainValue, RTValueList());
+        var s = analyzeCallable(mainValue, RTResultList());
         return map(x => (x.kind, valueToType(x.type)), s.returns);
     });
 }
