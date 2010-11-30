@@ -304,6 +304,24 @@ runtimeCallable?(x:Value) {
 
 
 //
+// analyzeCallWithOneResult, analyzeCall
+//
+
+analyzeCallWithOneResult(x, args:RTValueList) {
+    var results = analyzeCall(x, args);
+    if (size(results) != 1)
+        genericError("expected 1 value, received ", size(results), " values");
+    return move(results[0]);
+}
+
+analyzeCall(x, args) {
+    var specialization = analyzeCallable(x, args);
+    return specialization.returns;
+}
+
+
+
+//
 // matchOverload
 //
 
@@ -471,7 +489,7 @@ matchOverload(x:Overload, callable:Value, args:RTValueList) Maybe[MatchResult] {
 
 
 //
-// call analysis helpers
+// analyzeCallable helpers
 //
 
 private findOverload(program, callable, args) {
@@ -570,11 +588,23 @@ private analyzeBody(x:Overload, env) {
     );
 }
 
-private entryReturns(entry:InvokeEntry) {
-    return maybe(entry.specialization, x => x.returns,
+private entrySpecialization(entry:InvokeEntry) {
+    return maybe(entry.specialization,
+        x => x,
         () => {
             recursiveAnalysisError();
-            return RTValueList();
+            return Specialization();
+        },
+    );
+}
+
+callableInvokeTable(callable:Value) {
+    return ref match(callable,
+        Symbol, x => ref x.invokeTable,
+        SymbolHead, x => ref x.invokeTable,
+        MatchDefault, x => {
+            genericError("invalid runtime callable: ", x);
+            return ref typeToLValue(InvokeTable);
         },
     );
 }
@@ -582,43 +612,30 @@ private entryReturns(entry:InvokeEntry) {
 
 
 //
-// analyzeCallWithOneResult, analyzeCall
+// analyzeCallable
 //
 
-analyzeCallWithOneResult(x, args:RTValueList) {
-    var results = analyzeCall(x, args);
-    if (size(results) != 1)
-        genericError("expected 1 value, received ", size(results), " values");
-    return move(results[0]);
+analyzeCallable(callable:Value, args:RTValueList) Specialization {
+    return withCallAnalysis(callable, args,
+        () ref=> analyzeCallable2(callable, args)
+    );
 }
 
-procedure analyzeCall;
-
-overload analyzeCall(x, args) {
-    genericError("invalid runtime procedure: ", x);
-    return RTValueList();
-}
-overload analyzeCall(x:Value, args:RTValueList) RTValueList {
-    return withCallAnalysis(x, args, () ref=> analyzeCall(*x, args));
-}
-overload analyzeCall(x:Symbol, args) {
-    return analyzeCall(x.invokeTable, Value(x), args);
-}
-overload analyzeCall(x:SymbolHead, args) {
-    return analyzeCall(x.invokeTable, Value(x), args);
-}
-
-overload analyzeCall(invokeTable:InvokeTable, callable:Value, args:RTValueList) RTValueList {
+private analyzeCallable2(callable:Value, args:RTValueList) Specialization {
+    ref invokeTable = callableInvokeTable(callable);
     var entryPtr = lookup(invokeTable, args);
     if (not null?(entryPtr))
-        return entryReturns(entryPtr^);
+        return entrySpecialization(entryPtr^);
     invokeTable[args] = InvokeEntry(nothing(Specialization));
     var x, env, loweredArgs = ...findOverload(getProgram(), callable, args);
     var lowered? = (loweredArgs != args);
     if (lowered?) {
         var entryPtr = lookup(invokeTable, loweredArgs);
-        if (not null?(entryPtr))
-            return entryReturns(entryPtr^);
+        if (not null?(entryPtr)) {
+            var s = entrySpecialization(entryPtr^);
+            invokeTable[args].specialization = Maybe(s);
+            return s;
+        }
         invokeTable[loweredArgs] = InvokeEntry(nothing(Specialization));
     }
     var result = RTValueList();
@@ -635,5 +652,5 @@ overload analyzeCall(invokeTable:InvokeTable, callable:Value, args:RTValueList) 
     invokeTable[args].specialization = Maybe(s);
     if (lowered?)
         invokeTable[loweredArgs].specialization = Maybe(s);
-    return result;
+    return s;
 }
