@@ -158,9 +158,11 @@ valueToInt(x:Value) {
 
 compileMain(program:Program) {
     return withProgram(program, () ref=> {
-        var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
-        var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
-        var result = analyzeMultiExpr(mainCall, program.mainModule.globals);
-        return map(x => (x.kind, valueToType(x.type)), result);
+        var env = program.mainModule.globals;
+        var mainValue = envEntryToValue(envLookup(env, "main"));
+        if (not runtimeCallable?(mainValue))
+            genericError("invalid procedure: main");
+        var s = analyzeCallable(mainValue, RTValueList());
+        return map(x => (x.kind, valueToType(x.type)), s.returns);
     });
 }

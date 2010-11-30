@@ -13,9 +13,11 @@ import newclay.hooks.*;
 
 analyzeMain(program:Program) {
     return withProgram(program, () ref=> {
-        var mainRef = ast.Expr(ast.NameRef(ast.Identifier("main")));
-        var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
-        return analyzeMultiExpr(mainCall, program.mainModule.globals);
+        var env = program.mainModule.globals;
+        var mainValue = envEntryToValue(envLookup(env, "main"));
+        if (not runtimeCallable?(mainValue))
+            genericError("invalid procedure: main");
+        return analyzeCall(mainValue, RTValueList());
     });
 }
 
@@ -598,7 +600,7 @@ private entrySpecialization(entry:InvokeEntry) {
     );
 }
 
-callableInvokeTable(callable:Value) {
+private callableInvokeTable(callable:Value) {
     return ref match(callable,
         Symbol, x => ref x.invokeTable,
         SymbolHead, x => ref x.invokeTable,
