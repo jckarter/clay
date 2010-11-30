@@ -31,10 +31,16 @@ symbolToType(x:Symbol) ir.Type {
         () ref=> {
             var irType = ir.Type(ir.TypeTag(), printString(x));
             x.lowLevelType = Maybe(irType);
-            irType.tag = valueToTypeTag(evaluateCallWithOneResult(
-                getHooks().ToLowLevelType, ValueList(x),
-            ));
-            return irType;
+            try {
+                irType.tag = valueToTypeTag(evaluateCallWithOneResult(
+                    getHooks().ToLowLevelType, ValueList(x),
+                ));
+                return irType;
+            }
+            catch (e) {
+                x.lowLevelType = nothing(ir.Type);
+                throw e;
+            }
         },
     );
 }
