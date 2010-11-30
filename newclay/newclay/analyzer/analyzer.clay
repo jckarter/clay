@@ -151,7 +151,6 @@ rtVariableKindToRTValueKind(x:RTVariableKind) {
     case RT_VARIABLE_CONST: return RT_VALUE_CONST;
     case RT_VARIABLE_REF: return RT_VALUE_REF;
     case RT_VARIABLE_RVALUE: return RT_VALUE_RVALUE;
-    case RT_VARIABLE_LOCAL: return RT_VALUE_REF;
     default :
         assert(false);
         return RTValueKind();
@@ -435,14 +434,14 @@ private bindNamedSingleReturn(env, name, returnSpec) {
     var type = evaluateExpr(returnSpec.type, env);
     if (not nothing?(returnSpec.kind))
         type = convertNamedReturnReference(type);
-    envAdd(env, name, RTVariable(RT_VARIABLE_LOCAL, type));
+    envAdd(env, name, RTVariable(RT_VARIABLE_REF, type));
 }
 
 private bindNamedMultiReturn(env, name, returnSpec) {
     var types = evaluateMultiExpr(returnSpec.type, env);
     if (not nothing?(returnSpec.kind))
         types = ValueList(mapped(convertNamedReturnReference, types));
-    var kinds = map(x => RT_VARIABLE_LOCAL, range(size(types)));
+    var kinds = map(x => RT_VARIABLE_REF, range(size(types)));
     envAdd(env, name, RTListVariable(kinds, types));
 }
 
