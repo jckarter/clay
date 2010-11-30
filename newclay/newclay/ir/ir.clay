@@ -63,13 +63,17 @@ record Program = referenceType(
     procedures: Vector[Procedure],
 );
 
+newProgram() = Program(Vector[Procedure]());
+
 record Procedure = referenceType(
-    module: String,
     name: String,
     inputs: Vector[Input],
     outputs: Vector[Output],
     code: CodeBody,
 );
+
+overload Procedure(forward name:String) =
+    Procedure(name, Vector[Input](), Vector[Output](), CodeBode());
 
 enum InputKind {
     INPUT_CONST,

@@ -9,18 +9,8 @@ import newclay.ir as ir;
 
 
 //
-// Module, Program
+// Program
 //
-
-record Module = referenceType(
-    program: Program,
-    name: String,
-    ast: ast.SourceAST,
-    globals: Env,
-);
-
-overload Module(program:Program, name:String) =
-    Module(program, name, ast.SourceAST(), Env());
 
 record Program = referenceType(
     mainModule: Module,
@@ -28,12 +18,16 @@ record Program = referenceType(
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
     hooks: ClayHooks,
+    lowLevelProgram: ir.Program,
+    lowLevelNameCounts: HashMap[String, Int];
 );
 
 overload Program(module:Module) = Program(
     module, Vector[Attribute](),
     Vector[StaticOverload](), Vector[Overload](),
     ClayHooks(),
+    ir.newProgram(),
+    HashMap[String, Int](),
 );
 
 record ClayHooks (
@@ -58,6 +52,22 @@ record ClayHooks (
 
     Procedure?: Value,
 );
+
+
+
+//
+// Module
+//
+
+record Module = referenceType(
+    program: Program,
+    name: String,
+    ast: ast.SourceAST,
+    globals: Env,
+);
+
+overload Module(program:Program, name:String) =
+    Module(program, name, ast.SourceAST(), Env());
 
 
 
@@ -454,7 +464,16 @@ record Specialization = referenceType(
     matchedOverload: Overload,
     bodyEnv: Env,
     returns: RTValueList,
+    lowLevelProc: Maybe[ir.Procedure];
 );
+
+overload Specialization(callable:Value, args:RTValueList,
+                        matchedOverload:Overload, bodyEnv:Env,
+                        returns:RTValueList) =
+    Specialization(
+        callable, args, matchedOverload, bodyEnv, returns,
+        nothing(ir.Procedure)
+    );
 
 record InvokeEntry(
     specialization: Maybe[Specialization],
