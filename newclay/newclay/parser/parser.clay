@@ -656,6 +656,7 @@ private var baseReturn = choice(
 private var returnKind = choice(
     modify(x => RETURN_CONST, kw_const),
     modify(x => RETURN_REF, kw_ref),
+    modify(x => RETURN_RVALUE, kw_rvalue),
 );
 
 private var singleReturn = bounds(modify(
@@ -675,6 +676,7 @@ private var returnSpecs = optCommaList(
 private var returnExprKind = choice(
     modify(x => RETURN_EXPR_CONST, kw_const),
     modify(x => RETURN_EXPR_REF, kw_ref),
+    modify(x => RETURN_EXPR_RVALUE, kw_rvalue),
     modify(x => RETURN_EXPR_FORWARD, kw_forward),
 );
 
