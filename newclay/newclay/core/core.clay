@@ -432,6 +432,7 @@ enum RTResultKind {
     RT_RESULT_CONST,
     RT_RESULT_REF,
     RT_RESULT_RVALUE,
+    RT_RESULT_VALUE,
 }
 
 record RTResult (
@@ -446,6 +447,7 @@ overload printReprTo(stream, x:RTResult) {
         case RT_RESULT_CONST: printTo(stream, "const"); break;
         case RT_RESULT_REF: printTo(stream, "ref"); break;
         case RT_RESULT_RVALUE: printTo(stream, "rvalue"); break;
+        case RT_RESULT_VALUE: printTo(stream, "value"); break;
     }
     printTo(stream, " ");
     printReprTo(stream, x.type);

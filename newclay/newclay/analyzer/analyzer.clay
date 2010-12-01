@@ -48,10 +48,10 @@ overload analyzeExpr(x:ast.Expr, env) RTResult {
     return withLocation(*x, () ref=> analyzeExpr(*x, env));
 }
 overload analyzeExpr(x:ast.BoolLiteral, env) {
-    return RTResult(RT_RESULT_RVALUE, getHooks().Bool);
+    return RTResult(RT_RESULT_VALUE, getHooks().Bool);
 }
 overload analyzeExpr(x:ast.IntLiteral, env) {
-    return RTResult(RT_RESULT_RVALUE, getHooks().Int);
+    return RTResult(RT_RESULT_VALUE, getHooks().Int);
 }
 overload analyzeExpr(x:ast.StringLiteral, env) {
     genericError("strings are not yet supported");
@@ -85,12 +85,12 @@ overload analyzeExpr(x:ast.Indexing, env) {
 overload analyzeExpr(x:ast.AndExpr, env) {
     analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return RTResult(RT_RESULT_RVALUE, getHooks().Bool);
+    return RTResult(RT_RESULT_VALUE, getHooks().Bool);
 }
 overload analyzeExpr(x:ast.OrExpr, env) {
     analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return RTResult(RT_RESULT_RVALUE, getHooks().Bool);
+    return RTResult(RT_RESULT_VALUE, getHooks().Bool);
 }
 overload analyzeExpr(x:ast.LambdaExpr, env) {
     genericError("lambda expressions are not yet supported");
@@ -100,11 +100,11 @@ overload analyzeExpr(x:ast.IfExpr, env) {
     analyzeBool(x.condition, env);
     try {
         var a = analyzeExpr(x.thenPart, env);
-        return RTResult(RT_RESULT_RVALUE, a.type);
+        return RTResult(RT_RESULT_VALUE, a.type);
     }
     catch (e:RecursiveAnalysisError) {
         var b = analyzeExpr(x.elsePart, env);
-        return RTResult(RT_RESULT_RVALUE, b.type);
+        return RTResult(RT_RESULT_VALUE, b.type);
     }
 }
 
@@ -165,8 +165,8 @@ rtVariableKindToRTResultKind(x:RTVariableKind) {
 
 valueToRTResult(x:Value) {
     return match(x,
-        BoolValue, x => RTResult(RT_RESULT_RVALUE, getHooks().Bool),
-        IntValue, x => RTResult(RT_RESULT_RVALUE, getHooks().Int),
+        BoolValue, x => RTResult(RT_RESULT_VALUE, getHooks().Bool),
+        IntValue, x => RTResult(RT_RESULT_VALUE, getHooks().Int),
         StringValue, x => {
             genericError("strings are not yet supported");
             return RTResult();
@@ -177,7 +177,7 @@ valueToRTResult(x:Value) {
         },
         MatchDefault, x => {
             var type = evaluateIndexing(getHooks().Static, ValueList(x));
-            return RTResult(RT_RESULT_RVALUE, type);
+            return RTResult(RT_RESULT_VALUE, type);
         },
     );
 }
@@ -338,18 +338,23 @@ private referenceSpecifier(x:ast.Argument) ast.ArgumentKind {
 }
 
 private referenceKindMatches?(fkind:ast.ArgumentKind, kind:RTResultKind) {
-    if ((fkind == ast.ARG_REF) and (kind != RT_RESULT_REF))
-        return false;
-    if ((fkind == ast.ARG_RVALUE) and (kind != RT_RESULT_RVALUE))
-        return false;
+    assert(kind != RT_RESULT_VALUE);
+    if (fkind == ast.ARG_REF)
+        return kind == RT_RESULT_REF;
+    if (fkind == ast.ARG_RVALUE)
+        return (kind == RT_RESULT_RVALUE) or (kind == RT_RESULT_VALUE);
     return true;
 }
 
 private internalArgumentKind(fkind:ast.ArgumentKind, kind:RTResultKind) {
+    assert(kind != RT_RESULT_VALUE);
     if (fkind == ast.ARG_CONST)
         return RT_VARIABLE_CONST;
     if (fkind == ast.ARG_RVALUE)
         return RT_VARIABLE_REF;
+    if (fkind == ast.ARG_REF)
+        return RT_VARIABLE_REF;
+    assert(fkind == ast.ARG_FORWARD);
     switch (kind) {
     case RT_RESULT_CONST: return RT_VARIABLE_CONST;
     case RT_RESULT_REF: return RT_VARIABLE_REF;
@@ -516,7 +521,7 @@ private returnSpecRTResultKind(returnSpec: ast.ReturnSpec) {
                     return RTResultKind();
             }
         },
-        () => RT_RESULT_RVALUE,
+        () => RT_RESULT_VALUE,
     );
 }
 
@@ -543,23 +548,30 @@ private returnExprRTResultKind(x:ast.ReturnExprListItem, kind:RTResultKind) {
         y => {
             switch (y) {
                 case ast.RETURN_EXPR_CONST :
+                    if (kind == RT_RESULT_VALUE)
+                        genericError("cannot return temporary as const reference");
                     if (kind == RT_RESULT_RVALUE)
-                        genericError("cannot return temporary by reference");
+                        genericError("cannot return rvalue as const reference");
                     return RT_RESULT_CONST;
                 case ast.RETURN_EXPR_REF :
+                    if (kind == RT_RESULT_VALUE)
+                        genericError("cannot return temporary as mutable reference");
                     if (kind == RT_RESULT_RVALUE)
-                        genericError("cannot return temporary by reference");
+                        genericError("cannot return rvalue as mutable reference");
                     if (kind == RT_RESULT_CONST)
-                        genericError("cannot return const ref as mutable ref");
+                        genericError("cannot return const as mutable reference");
                     return RT_RESULT_REF;
                 case ast.RETURN_EXPR_FORWARD :
+                    // return rvalue references as values
+                    if (kind == RT_RESULT_RVALUE)
+                        kind = RT_RESULT_VALUE;
                     return kind;
                 default :
                     assert(false);
                     return RTResultKind();
             }
         },
-        () => RT_RESULT_RVALUE,
+        () => RT_RESULT_VALUE,
     );
 }
 
@@ -610,6 +622,13 @@ private callableInvokeTable(callable:Value) {
     );
 }
 
+private argumentToReference(x:RTResult) {
+    var kind = x.kind;
+    if (kind == RT_RESULT_VALUE)
+        kind = RT_RESULT_RVALUE;
+    return RTResult(kind, x.type);
+}
+
 
 
 //
@@ -622,8 +641,9 @@ analyzeCallable(callable:Value, args:RTResultList) Specialization {
     );
 }
 
-private analyzeCallable2(callable:Value, args:RTResultList) Specialization {
+private analyzeCallable2(callable:Value, origArgs:RTResultList) Specialization {
     ref invokeTable = callableInvokeTable(callable);
+    var args = map(argumentToReference, origArgs);
     var entryPtr = lookup(invokeTable, args);
     if (not null?(entryPtr))
         return entrySpecialization(entryPtr^);
