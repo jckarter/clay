@@ -23,7 +23,7 @@ ArgumentKind -> "const" | "ref" | "rvalue" | "forward"
 ReturnList -> (ReturnSpec | VariadicReturnSpec)*
 ReturnSpec -> ReturnKind? (Identifier ":")? Expr
 VariadicReturnSpec -> ReturnKind? "..." (Identifier ":")? Expr
-ReturnKind -> "const" | "ref"
+ReturnKind -> "const" | "ref" | "rvalue"
 
 CodeBody -> "=" ReturnExprList ";"
           |  "__c__" InlineCCodeBody ";"
@@ -32,7 +32,7 @@ InlineCCodeBody -> """.*"""
 
 ReturnExprList -> comma_list(ReturnExprListItem)
 ReturnExprListItem -> ReturnExprKind? ExprListItem
-ReturnExprKind -> "const" | "ref" | "forward"
+ReturnExprKind -> "const" | "ref" | "rvalue" | "forward"
 
 
 

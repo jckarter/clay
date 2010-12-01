@@ -262,6 +262,7 @@ record Argument = ast(
 enum ReturnKind {
     RETURN_CONST,
     RETURN_REF,
+    RETURN_RVALUE,
 }
 
 enum ReturnArityKind {
@@ -294,6 +295,7 @@ record ReturnExprListItem = ast(
 enum ReturnExprKind {
     RETURN_EXPR_CONST,
     RETURN_EXPR_REF,
+    RETURN_EXPR_RVALUE,
     RETURN_EXPR_FORWARD,
 }
 

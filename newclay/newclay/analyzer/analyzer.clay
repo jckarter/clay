@@ -516,6 +516,7 @@ private returnSpecRTResultKind(returnSpec: ast.ReturnSpec) {
             switch (k) {
                 case ast.RETURN_CONST: return RT_RESULT_CONST;
                 case ast.RETURN_REF: return RT_RESULT_REF;
+                case ast.RETURN_RVALUE: return RT_RESULT_RVALUE;
                 default :
                     assert(false);
                     return RTResultKind();
@@ -561,10 +562,14 @@ private returnExprRTResultKind(x:ast.ReturnExprListItem, kind:RTResultKind) {
                     if (kind == RT_RESULT_CONST)
                         genericError("cannot return const as mutable reference");
                     return RT_RESULT_REF;
+                case ast.RETURN_EXPR_RVALUE :
+                    if (kind == RT_RESULT_VALUE)
+                        genericError("cannot return temporary as rvalue reference");
+                    if (kind == RT_RESULT_CONST)
+                        genericError("cannot return const as rvalue reference");
+                    return RT_RESULT_RVALUE;
                 case ast.RETURN_EXPR_FORWARD :
-                    // return rvalue references as values
-                    if (kind == RT_RESULT_RVALUE)
-                        kind = RT_RESULT_VALUE;
+                    // FIXME: is alright to forward rvalue references?
                     return kind;
                 default :
                     assert(false);
