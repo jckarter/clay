@@ -30,17 +30,17 @@ parseStringLiteral(s) {
 
 private parseEscapeChar(s, i) {
     switch (s[i]) {
-        case 'n': return '\n', i+1;
-        case 'r': return '\r', i+1;
-        case 't': return '\t', i+1;
-        case 'a': return '\a', i+1;
-        case 'b': return '\b', i+1;
-        case 'f': return '\f', i+1;
-        case 'v': return '\v', i+1;
-        case '\\': return '\\', i+1;
-        case '\'': return '\'', i+1;
-        case '\"': return '\"', i+1;
-        case 'x' : return parseHexChar(s[i+1], s[i+2]), i+3;
+    case 'n': return '\n', i+1;
+    case 'r': return '\r', i+1;
+    case 't': return '\t', i+1;
+    case 'a': return '\a', i+1;
+    case 'b': return '\b', i+1;
+    case 'f': return '\f', i+1;
+    case 'v': return '\v', i+1;
+    case '\\': return '\\', i+1;
+    case '\'': return '\'', i+1;
+    case '\"': return '\"', i+1;
+    case 'x' : return parseHexChar(s[i+1], s[i+2]), i+3;
     }
     return parseOctalChar(s[i], s[i+1], s[i+2]), i+3;
 }

@@ -452,10 +452,10 @@ alias RTResultList = Vector[RTResult];
 
 overload printReprTo(stream, x:RTResult) {
     switch (x.kind) {
-        case RT_RESULT_CONST: printTo(stream, "const"); break;
-        case RT_RESULT_REF: printTo(stream, "ref"); break;
-        case RT_RESULT_RVALUE: printTo(stream, "rvalue"); break;
-        case RT_RESULT_VALUE: printTo(stream, "value"); break;
+    case RT_RESULT_CONST: printTo(stream, "const"); break;
+    case RT_RESULT_REF: printTo(stream, "ref"); break;
+    case RT_RESULT_RVALUE: printTo(stream, "rvalue"); break;
+    case RT_RESULT_VALUE: printTo(stream, "value"); break;
     }
     printTo(stream, " ");
     printReprTo(stream, x.type);
