@@ -393,45 +393,47 @@ private unifyVariadicArgumentType(formalArg, args, env) {
     );
 }
 
-private unifyArgument(formalArg:ast.Argument, arg:RTResult, env, loweredArgs) {
+private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTResult) {
     var formalKind = referenceSpecifier(formalArg);
     if (not referenceKindMatches?(formalKind, arg.kind))
         return false;
-    if (not unifyArgumentType(formalArg, arg, env))
+    if (not unifyArgumentType(formalArg, arg, s.bodyEnv))
         return false;
-    var argVarKind = internalArgumentKind(formalKind, arg.kind);
-    envAdd(env, formalArg.name, RTVariable(argVarKind, arg.type));
     var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
-    push(loweredArgs, RTResult(loweredArgKind, arg.type));
+    push(s.args, RTResult(loweredArgKind, arg.type));
+    var argVarKind = internalArgumentKind(formalKind, arg.kind);
+    var v = RTVariable(argVarKind, arg.type);
+    envAdd(s.bodyEnv, formalArg.name, v);
+    push(s.internalArgs, v);
     return true;
 }
 
-private unifyVariadicArgument(formalArg:ast.Argument, args, env, loweredArgs) {
+private unifyVariadicArgument(s:Specialization, formalArg:ast.Argument, args) {
     var formalKind = referenceSpecifier(formalArg);
     for (arg in args) {
         if (not referenceKindMatches?(formalKind, arg.kind))
             return false;
         var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
-        push(loweredArgs, RTResult(loweredArgKind, arg.type));
+        push(s.args, RTResult(loweredArgKind, arg.type));
     }
-    if (not unifyVariadicArgumentType(formalArg, args, env))
+    if (not unifyVariadicArgumentType(formalArg, args, s.bodyEnv))
         return false;
     var kinds = map(a => internalArgumentKind(formalKind, a.kind),  args);
     var types = ValueList(mapped(a => a.type, args));
-    envAdd(env, formalArg.name, RTListVariable(move(kinds), move(types)));
+    var v = RTListVariable(move(kinds), move(types));
+    envAdd(s.bodyEnv, formalArg.name, v);
+    s.internalVariadicArg = Maybe(v);
     return true;
 }
 
-private unifyArguments(formalArgs, args, env, loweredArgs) {
+private unifyArguments(s:Specialization, formalArgs, args) {
     for (formalArg, arg in zipped(formalArgs.items, args)) {
-        if (not unifyArgument(formalArg, arg, env, loweredArgs))
+        if (not unifyArgument(s, formalArg, arg))
             return false;
     }
     var restArgs = slicedFrom(args, size(formalArgs.items));
     return maybe(formalArgs.variadicItem,
-        formalArg ref=> unifyVariadicArgument(
-            formalArg, restArgs, env, loweredArgs,
-        ),
+        formalArg ref=> unifyVariadicArgument(s, formalArg, restArgs),
         () => true,
     );
 }
@@ -439,61 +441,60 @@ private unifyArguments(formalArgs, args, env, loweredArgs) {
 private convertNamedReturnReference(type) =
     evaluateIndexing(getHooks().Pointer, ValueList(type));
 
-private bindNamedSingleReturn(env, name, returnSpec) {
-    var type = evaluateExpr(returnSpec.type, env);
+private bindNamedSingleReturn(s:Specialization, name, returnSpec) {
+    var type = evaluateExpr(returnSpec.type, s.bodyEnv);
     if (not nothing?(returnSpec.kind))
         type = convertNamedReturnReference(type);
-    envAdd(env, name, RTVariable(RT_VARIABLE_REF, type));
+    var v = RTVariable(RT_VARIABLE_REF, type);
+    push(s.namedReturnVars, v);
+    envAdd(s.bodyEnv, name, v);
 }
 
-private bindNamedMultiReturn(env, name, returnSpec) {
-    var types = evaluateMultiExpr(returnSpec.type, env);
+private bindNamedMultiReturn(s:Specialization, name, returnSpec) {
+    var types = evaluateMultiExpr(returnSpec.type, s.bodyEnv);
     if (not nothing?(returnSpec.kind))
         types = ValueList(mapped(convertNamedReturnReference, types));
     var kinds = map(x => RT_VARIABLE_REF, range(size(types)));
-    envAdd(env, name, RTListVariable(kinds, types));
+    var v = RTListVariable(move(kinds), move(types));
+    push(s.namedVariadicReturnVars, v);
+    envAdd(s.bodyEnv, name, v);
 }
 
-private bindNamedReturn(env, name, returnSpec) {
+private bindNamedReturn(s:Specialization, name, returnSpec) {
     switch (returnSpec.arityKind) {
-    case ast.RETURN_SINGLE : bindNamedSingleReturn(env, name, returnSpec); break;
-    case ast.RETURN_MULTI : bindNamedMultiReturn(env, name, returnSpec); break;
+    case ast.RETURN_SINGLE : bindNamedSingleReturn(s, name, returnSpec); break;
+    case ast.RETURN_MULTI : bindNamedMultiReturn(s, name, returnSpec); break;
     default : assert(false); break;
     }
 }
 
-private bindNamedReturns(env, returnSpecs) {
-    for (returnSpec in returnSpecs) {
+private bindNamedReturns(s:Specialization) {
+    for (returnSpec in s.matchedOverload.ast.returns) {
         maybe(returnSpec.name,
-            name ref=> { bindNamedReturn(env, name, returnSpec); },
+            name ref=> { bindNamedReturn(s, name, returnSpec); },
             () => {}
         );
     }
 }
 
-record MatchResult(
-    env: Env,
-    loweredArgs: RTResultList,
-);
-
-matchOverload(x:Overload, callable:Value, args:RTResultList) Maybe[MatchResult] {
+matchOverload(x:Overload, callable:Value, args:RTResultList) Maybe[Specialization] {
     ref formalArgs = x.ast.args;
     if (not arityMatches?(formalArgs, args))
-        return nothing(MatchResult);
+        return nothing(Specialization);
     var pvars = topLevelItemPatternVars(x);
-    var env = initializeMatch(x.module.globals, pvars);
-    var callablePattern = evaluatePattern(x.ast.target, env);
+    var s = Specialization(x, callable);
+    s.bodyEnv = initializeMatch(x.module.globals, pvars);
+    var callablePattern = evaluatePattern(x.ast.target, s.bodyEnv);
     if (not unify(callablePattern, callable))
-        return nothing(MatchResult);
-    var loweredArgs = RTResultList();
-    if (not unifyArguments(formalArgs, args, env, loweredArgs))
-        return nothing(MatchResult);
-    assert(size(loweredArgs) == size(args));
-    bindNamedReturns(env, x.ast.returns);
-    verifyPatternVars(pvars, env);
-    if (not testPredicate(x.ast.predicate, env))
-        return nothing(MatchResult);
-    return Maybe(MatchResult(env, move(loweredArgs)));
+        return nothing(Specialization);
+    if (not unifyArguments(s, formalArgs, args))
+        return nothing(Specialization);
+    assert(size(s.args) == size(args));
+    bindNamedReturns(s);
+    verifyPatternVars(pvars, s.bodyEnv);
+    if (not testPredicate(x.ast.predicate, s.bodyEnv))
+        return nothing(Specialization);
+    return Maybe(s);
 }
 
 
@@ -505,13 +506,11 @@ matchOverload(x:Overload, callable:Value, args:RTResultList) Maybe[MatchResult] 
 private findOverload(program, callable, args) {
     for (x in reversed(program.allOverloads)) {
         var result = matchOverload(x, callable, args);
-        if (not nothing?(result)) {
-            ref mr = just(result);
-            return x, mr.env, move(mr.loweredArgs);
-        }
+        if (not nothing?(result))
+            return just(move(result));
     }
     genericError("no matching operation");
-    return Overload(), Env(), RTResultList();
+    return Specialization();
 }
 
 private returnSpecRTResultKind(returnSpec: ast.ReturnSpec) {
@@ -657,7 +656,8 @@ private analyzeCallable2(callable:Value, origArgs:RTResultList) Specialization {
     if (not null?(entryPtr))
         return entrySpecialization(entryPtr^);
     invokeTable[args] = InvokeEntry(nothing(Specialization));
-    var x, env, loweredArgs = ...findOverload(getProgram(), callable, args);
+    var specialization = findOverload(getProgram(), callable, args);
+    ref loweredArgs = specialization.args;
     var lowered? = (loweredArgs != args);
     if (lowered?) {
         var entryPtr = lookup(invokeTable, loweredArgs);
@@ -668,9 +668,9 @@ private analyzeCallable2(callable:Value, origArgs:RTResultList) Specialization {
         }
         invokeTable[loweredArgs] = InvokeEntry(nothing(Specialization));
     }
-    var result = RTResultList();
     try {
-        result = analyzeBody(x, env);
+        alias s = specialization;
+        s.returns = analyzeBody(s.matchedOverload, s.bodyEnv);
     }
     catch (e) {
         remove(invokeTable, args);
@@ -678,9 +678,8 @@ private analyzeCallable2(callable:Value, origArgs:RTResultList) Specialization {
             remove(invokeTable, loweredArgs);
         throw e;
     }
-    var s = Specialization(callable, loweredArgs, x, env, result);
-    invokeTable[args].specialization = Maybe(s);
+    invokeTable[args].specialization = Maybe(specialization);
     if (lowered?)
-        invokeTable[loweredArgs].specialization = Maybe(s);
-    return s;
+        invokeTable[loweredArgs].specialization = Maybe(specialization);
+    return specialization;
 }

@@ -19,7 +19,7 @@ record Program = referenceType(
     allOverloads: Vector[Overload],
     hooks: ClayHooks,
     lowLevelProgram: ir.Program,
-    lowLevelNameCounts: HashMap[String, Int],
+    lowLevelNames: NameAllocator,
 );
 
 overload Program(module:Module) = Program(
@@ -27,7 +27,7 @@ overload Program(module:Module) = Program(
     Vector[StaticOverload](), Vector[Overload](),
     ClayHooks(),
     ir.newProgram(),
-    HashMap[String, Int](),
+    NameAllocator(),
 );
 
 record ClayHooks (
@@ -415,12 +415,20 @@ enum RTVariableKind {
 record RTVariable = referenceType(
     kind: RTVariableKind,
     type: Value,
+    lowLevelId: Int,
 );
+
+overload RTVariable(kind:RTVariableKind, type:Value) =
+    RTVariable(kind, type, -1);
 
 record RTListVariable = referenceType(
     kinds: Vector[RTVariableKind],
     types: ValueList,
+    lowLevelId: Int,
 );
+
+overload RTListVariable(forward kinds:Vector[RTVariableKind], forward types:ValueList) =
+    RTListVariable(kinds, types, -1);
 
 
 
@@ -456,25 +464,28 @@ overload printReprTo(stream, x:RTResult) {
 
 
 //
-// invoke tables
+// Specialization, InvokeTable
 //
 
 record Specialization = referenceType(
+    matchedOverload: Overload,
     callable: Value,
     args: RTResultList,
-    matchedOverload: Overload,
+    internalArgs: Vector[RTVariable],
+    internalVariadicArg: Maybe[RTListVariable],
     bodyEnv: Env,
+    namedReturnVars: Vector[RTVariable],
+    namedVariadicReturnVars: Vector[RTListVariable],
     returns: RTResultList,
     lowLevelProc: Maybe[ir.Procedure],
 );
 
-overload Specialization(callable:Value, args:RTResultList,
-                        matchedOverload:Overload, bodyEnv:Env,
-                        returns:RTResultList) =
-    Specialization(
-        callable, args, matchedOverload, bodyEnv, returns,
-        nothing(ir.Procedure)
-    );
+overload Specialization(matchedOverload:Overload, callable:Value) {
+    var s = allocateRef(Specialization);
+    s.matchedOverload = matchedOverload;
+    s.callable = callable;
+    return move(s);
+}
 
 record InvokeEntry(
     specialization: Maybe[Specialization],

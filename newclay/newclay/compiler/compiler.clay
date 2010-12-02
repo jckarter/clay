@@ -1,5 +1,6 @@
 
 import maybe.*;
+import newclay.common.*;
 import newclay.ast as ast;
 import newclay.core.*;
 import newclay.evaluator.*;
@@ -163,14 +164,70 @@ valueToInt(x:Value) {
 //
 
 compileMain(program:Program) {
-    return withProgram(program, () ref=> {
+    return ...withProgram(program, () ref=> {
         var env = program.mainModule.globals;
         var mainValue = envEntryToValue(envLookup(env, "main"));
         if (not runtimeCallable?(mainValue))
             genericError("invalid procedure: main");
         var s = analyzeCallable(mainValue, RTResultList());
-        return map(x => (x.kind, valueToType(x.type)), s.returns);
+        var irProc = compileSpecialization(s);
+        return map(x => (x.kind, valueToType(x.type)), s.returns), irProc;
     });
+}
+
+
+
+//
+// CompileContext
+//
+
+private record VariableInfo (
+    name: String,
+    kind: ir.LocalKind,
+    type: ir.Type,
+);
+
+private record MultiVariableInfo (
+    parts: Vector[Int],
+);
+
+private record CompileContext (
+    specialization: Specialization,
+    irProcedure: ir.Procedure,
+    variables: Vector[VariableInfo],
+    multiVariables: Vector[MultiVariableInfo],
+    names: NameAllocator,
+);
+
+overload CompileContext(specialization:Specialization, irProcedure:ir.Procedure) =
+    CompileContext(
+        specialization, irProcedure,
+        Vector[VariableInfo](),
+        Vector[MultiVariableInfo](),
+        NameAllocator(),
+    );
+
+private var _compileContextStack = Stack[CompileContext]();
+
+private withNewCompileContext(x:Specialization, y:ir.Procedure, f) =
+    forward ...withStackValue(_compileContextStack, CompileContext(x, y), f);
+
+private context() = ref stackTop(_compileContextStack);
+private irProcedure() = ref context().irProcedure;
+private variableInfo(id) = ref context().variables[id];
+private multVariableInfo(id) = ref context().multiVariables[id];
+
+private allocateLocal(baseName:String, kind:ir.LocalKind, type:ir.Type) Int {
+    ref ctx = context();
+    var name = allocateName(ctx.names, baseName);
+    push(ctx.variables, VariableInfo(move(name), kind, type));
+    return Int(size(ctx.variables) - 1);
+}
+
+private allocateMultiLocal(forward parts:Vector[Int]) Int {
+    ref ctx = context();
+    push(ctx.multiVariables, MultiVariableInfo(parts));
+    return Int(size(ctx.multiVariables) - 1);
 }
 
 
@@ -180,27 +237,77 @@ compileMain(program:Program) {
 //
 
 private newIRProcedureName(callable:Value) {
-    var baseName = printString(callable);
-    ref nameCounts = getProgram().lowLevelNameCounts;
-    var countPtr = lookup(nameCounts, baseName);
-    if (null?(countPtr)) {
-        nameCounts[baseName] = 1;
+    return allocateName(getProgram().lowLevelNames, printString(callable));
+}
+
+private inputKind(kind:RTResultKind, astKind: Maybe[ast.ArgumentKind]) ir.InputKind {
+    switch (kind) {
+    case RT_RESULT_CONST : return ir.INPUT_CONST;
+    case RT_RESULT_REF : return ir.INPUT_REF;
+    case RT_RESULT_RVALUE : return maybe(astKind,
+        x => if (x == ast.ARG_FORWARD) ir.INPUT_MOVABLE_RVALUE else ir.INPUT_RVALUE,
+        () => ir.INPUT_RVALUE,
+    );
+    default :
+        assert(false, kind);
+        return ir.InputKind();
     }
-    else {
-        countPtr^ += 1;
-        printTo(baseName, countPtr^);
+}
+
+private inputLocalKind(x:ir.InputKind) ir.LocalKind {
+    switch (x) {
+    case ir.INPUT_CONST: return ir.LOCAL_CONST;
+    case ir.INPUT_REF: return ir.LOCAL_REF;
+    case ir.INPUT_RVALUE: return ir.LOCAL_REF;
+    case ir.INPUT_MOVABLE_RVALUE: return ir.LOCAL_RVALUE;
+    default :
+        assert(false);
+        return ir.LocalKind();
     }
-    return move(baseName);
+}
+
+private compileArgument(arg:RTResult, astArg:ast.Argument) {
+    var ikind = inputKind(arg.kind, astArg.kind);
+    var localKind = inputLocalKind(ikind);
+    var type = valueToType(arg.type);
+    var id = allocateLocal(astArg.name.str, localKind, type);
+    push(irProcedure().inputs, ir.Input(variableInfo(id).name, ikind, type));
+    return id;
+}
+
+private compileArguments() {
+    var s = context().specialization;
+    ref astArgs = s.matchedOverload.ast.args;
+    for (internalArg, arg, astArg in zipped(s.internalArgs, s.args, astArgs.items))
+        internalArg.lowLevelId = compileArgument(arg, astArg);
+    maybe(astArgs.variadicItem,
+        astArg ref=> {
+            var parts = Vector[Int]();
+            for (arg in slicedFrom(s.args, size(astArgs.items))) {
+                var id = compileArgument(arg, astArg);
+                push(parts, id);
+            }
+            ref internalVarArg = just(s.internalVariadicArg);
+            internalVarArg.lowLevelId = allocateMultiLocal(move(parts));
+        },
+        () => {},
+    );
+}
+
+private compileSpecialization2() {
+    compileArguments();
 }
 
 compileSpecialization(x:Specialization) ir.Procedure {
     return maybe(x.lowLevelProc,
         y => y,
         () ref=> {
-            var proc = ir.Procedure(newIRProcedureName(x.callalbe));
+            var baseName = printString(x.callable);
+            var name = allocateName(getProgram().lowLevelNames, baseName);
+            var proc = ir.Procedure(newIRProcedureName(x.callable));
             x.lowLevelProc = Maybe(proc);
             try {
-                compileSpecialization(x, proc);
+                withNewCompileContext(x, proc, compileSpecialization2);
                 return proc;
             }
             catch (e) {
@@ -209,7 +316,4 @@ compileSpecialization(x:Specialization) ir.Procedure {
             }
         },
     );
-}
-
-overload compileSpecialization(x:Specialization, out:ir.Procedure) {
 }

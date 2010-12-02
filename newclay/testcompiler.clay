@@ -13,8 +13,9 @@ main(args) {
     try {
         var program = loadProgram(args[1]);
         initializeClayHooks(program);
-        var result = compileMain(program);
+        var result, irProc = ...compileMain(program);
         println("result = ", result);
+        println("irProc = ", irProc);
     }
     catch (e:ClayError) {
         displayError(e);
