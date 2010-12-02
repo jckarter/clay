@@ -337,24 +337,26 @@ private referenceSpecifier(x:ast.Argument) ast.ArgumentKind {
     return maybe(x.kind, y => y, () => ast.ARG_CONST);
 }
 
-private referenceKindMatches?(fkind:ast.ArgumentKind, kind:RTResultKind) {
+private referenceKindMatches?(formalKind:ast.ArgumentKind, kind:RTResultKind) {
     assert(kind != RT_RESULT_VALUE);
-    if (fkind == ast.ARG_REF)
+    if (formalKind == ast.ARG_REF)
         return kind == RT_RESULT_REF;
-    if (fkind == ast.ARG_RVALUE)
+    if (formalKind == ast.ARG_RVALUE)
         return (kind == RT_RESULT_RVALUE) or (kind == RT_RESULT_VALUE);
     return true;
 }
 
-private internalArgumentKind(fkind:ast.ArgumentKind, kind:RTResultKind) {
+private internalArgumentKind(formalKind:ast.ArgumentKind, kind:RTResultKind)
+    RTVariableKind
+{
     assert(kind != RT_RESULT_VALUE);
-    if (fkind == ast.ARG_CONST)
+    if (formalKind == ast.ARG_CONST)
         return RT_VARIABLE_CONST;
-    if (fkind == ast.ARG_RVALUE)
+    if (formalKind == ast.ARG_RVALUE)
         return RT_VARIABLE_REF;
-    if (fkind == ast.ARG_REF)
+    if (formalKind == ast.ARG_REF)
         return RT_VARIABLE_REF;
-    assert(fkind == ast.ARG_FORWARD);
+    assert(formalKind == ast.ARG_FORWARD);
     switch (kind) {
     case RT_RESULT_CONST: return RT_VARIABLE_CONST;
     case RT_RESULT_REF: return RT_VARIABLE_REF;
@@ -365,14 +367,14 @@ private internalArgumentKind(fkind:ast.ArgumentKind, kind:RTResultKind) {
     }
 }
 
-private loweredArgumentKind(fkind:ast.ArgumentKind, kind:RTResultKind) {
-    if (fkind == ast.ARG_CONST)
+private loweredArgumentKind(formalKind:ast.ArgumentKind, kind:RTResultKind) {
+    if (formalKind == ast.ARG_CONST)
         return RT_RESULT_CONST;
     return kind;
 }
 
-private unifyArgumentType(farg:ast.Argument, arg:RTResult, env) {
-    return maybe(farg.type,
+private unifyArgumentType(formalArg:ast.Argument, arg:RTResult, env) {
+    return maybe(formalArg.type,
         type ref=> {
             var typePattern = evaluatePattern(type, env);
             return unify(typePattern, arg.type);
@@ -381,8 +383,8 @@ private unifyArgumentType(farg:ast.Argument, arg:RTResult, env) {
     );
 }
 
-private unifyVariadicArgumentType(farg, args, env) {
-    return maybe(farg.type,
+private unifyVariadicArgumentType(formalArg, args, env) {
+    return maybe(formalArg.type,
         type => {
             var listCell = evaluateListPatternCell(type, env);
             return unifyList(listCell, mapped(a => ref a.type, args));
@@ -391,43 +393,45 @@ private unifyVariadicArgumentType(farg, args, env) {
     );
 }
 
-private unifyArgument(farg:ast.Argument, arg:RTResult, env, loweredArgs) {
-    var fkind = referenceSpecifier(farg);
-    if (not referenceKindMatches?(fkind, arg.kind))
+private unifyArgument(formalArg:ast.Argument, arg:RTResult, env, loweredArgs) {
+    var formalKind = referenceSpecifier(formalArg);
+    if (not referenceKindMatches?(formalKind, arg.kind))
         return false;
-    if (not unifyArgumentType(farg, arg, env))
+    if (not unifyArgumentType(formalArg, arg, env))
         return false;
-    var argVarKind = internalArgumentKind(fkind, arg.kind);
-    envAdd(env, farg.name, RTVariable(argVarKind, arg.type));
-    var loweredArgKind = loweredArgumentKind(fkind, arg.kind);
+    var argVarKind = internalArgumentKind(formalKind, arg.kind);
+    envAdd(env, formalArg.name, RTVariable(argVarKind, arg.type));
+    var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
     push(loweredArgs, RTResult(loweredArgKind, arg.type));
     return true;
 }
 
-private unifyVariadicArgument(farg:ast.Argument, args, env, loweredArgs) {
-    var fkind = referenceSpecifier(farg);
+private unifyVariadicArgument(formalArg:ast.Argument, args, env, loweredArgs) {
+    var formalKind = referenceSpecifier(formalArg);
     for (arg in args) {
-        if (not referenceKindMatches?(fkind, arg.kind))
+        if (not referenceKindMatches?(formalKind, arg.kind))
             return false;
-        var loweredArgKind = loweredArgumentKind(fkind, arg.kind);
+        var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
         push(loweredArgs, RTResult(loweredArgKind, arg.type));
     }
-    if (not unifyVariadicArgumentType(farg, args, env))
+    if (not unifyVariadicArgumentType(formalArg, args, env))
         return false;
-    var kinds = map(a => internalArgumentKind(fkind, a.kind),  args);
+    var kinds = map(a => internalArgumentKind(formalKind, a.kind),  args);
     var types = ValueList(mapped(a => a.type, args));
-    envAdd(env, farg.name, RTListVariable(move(kinds), move(types)));
+    envAdd(env, formalArg.name, RTListVariable(move(kinds), move(types)));
     return true;
 }
 
 private unifyArguments(formalArgs, args, env, loweredArgs) {
-    for (farg, arg in zipped(formalArgs.items, args)) {
-        if (not unifyArgument(farg, arg, env, loweredArgs))
+    for (formalArg, arg in zipped(formalArgs.items, args)) {
+        if (not unifyArgument(formalArg, arg, env, loweredArgs))
             return false;
     }
     var restArgs = slicedFrom(args, size(formalArgs.items));
     return maybe(formalArgs.variadicItem,
-        farg ref=> unifyVariadicArgument(farg, restArgs, env, loweredArgs),
+        formalArg ref=> unifyVariadicArgument(
+            formalArg, restArgs, env, loweredArgs,
+        ),
         () => true,
     );
 }
