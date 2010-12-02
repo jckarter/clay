@@ -102,6 +102,30 @@ triStateInitialize(x:TriState[T], initializer, onError) {
 
 
 //
+// allocateName
+//
+
+record NameAllocator (
+    nameCounts: HashMap[String, Int],
+);
+
+allocateName(x:NameAllocator, baseName:String) {
+    var countPtr = lookup(x.nameCounts, baseName);
+    if (null?(countPtr)) {
+        x.nameCounts[baseName] = 1;
+        return baseName;
+    }
+    else {
+        countPtr^ += 1;
+        var name = baseName;
+        printTo(name, countPtr^);
+        return move(name);
+    }
+}
+
+
+
+//
 // Source
 //
 

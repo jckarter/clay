@@ -73,7 +73,7 @@ record Procedure = referenceType(
 );
 
 overload Procedure(forward name:String) =
-    Procedure(name, Vector[Input](), Vector[Output](), CodeBode());
+    Procedure(name, Vector[Input](), Vector[Output](), CodeBody());
 
 enum InputKind {
     INPUT_CONST,
@@ -104,6 +104,8 @@ record Output = referenceType(
 variant CodeBody = Statement
                  | CCodeBody
                  ;
+
+overload CodeBody() = CodeBody(Statement());
 
 record CCodeBody = referenceType(
     code: String,
@@ -155,6 +157,8 @@ variant Statement = Block
                   | If
                   | Return
                   ;
+
+overload Statement() = Statement(Block());
 
 record Block = referenceType(
     statements: Vector[Statement],
