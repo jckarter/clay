@@ -179,7 +179,7 @@ lastInsertedRowId(db: SqliteDB) = sqlite3_last_insert_rowid(db.handle);
 //
 
 // note: doesn't own the handle!
-private record SqliteStatementIterator (handle: Pointer[sqlite3_stmt]); 
+record SqliteStatementIterator (handle: Pointer[sqlite3_stmt]); 
 
 overload iterator(st: SqliteStatement) = SqliteStatementIterator(st.handle);
 
