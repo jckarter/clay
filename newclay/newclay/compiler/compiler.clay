@@ -1,0 +1,319 @@
+
+import maybe.*;
+import newclay.common.*;
+import newclay.ast as ast;
+import newclay.core.*;
+import newclay.evaluator.*;
+import newclay.hooks.*;
+import newclay.analyzer.*;
+import newclay.ir as ir;
+
+
+
+//
+// valueToType, symbolToType
+//
+
+valueToType(x:Value) {
+    return match(x,
+        Symbol, y => symbolToType(y),
+        MatchDefault, y => {
+            genericError("invalid type: ", y);
+            return ir.Type();
+        },
+    );
+}
+
+symbolToType(x:Symbol) ir.Type {
+    if (not symbolType?(x))
+        genericError("invalid type: ", x);
+    return maybe(x.lowLevelType,
+        y => y,
+        () ref=> {
+            var irType = ir.Type(ir.TypeTag(), printString(x));
+            x.lowLevelType = Maybe(irType);
+            try {
+                irType.tag = valueToTypeTag(evaluateCallWithOneResult(
+                    getHooks().ToLowLevelType, ValueList(x),
+                ));
+                return irType;
+            }
+            catch (e) {
+                x.lowLevelType = nothing(ir.Type);
+                throw e;
+            }
+        },
+    );
+}
+
+valueToTypeTag(x:Value) {
+    ref hooks = getHooks();
+    if (x == hooks.LLBoolType)
+        return ir.TypeTag(ir.BoolTag());
+    if (not variantIs?(x, Symbol))
+        genericError("invalid symbolic type: ", x);
+    ref y = variantAs(x, Symbol);
+    switch (Value(y.head)) {
+    case hooks.LLIntegerType :
+        return symbolToIntegerTag(y);
+    case hooks.LLFloatType :
+        return symbolToFloatTag(y);
+    case hooks.LLPointerType :
+        return symbolToPointerTag(y);
+    case hooks.LLArrayType :
+        return symbolToArrayTag(y);
+    case hooks.LLTupleType :
+        return symbolToTupleTag(y);
+    case hooks.LLUnionType :
+        return symbolToUnionTag(y);
+    default :
+        genericError("invalid symbolic type: ", x);
+        return ir.TypeTag();
+    }
+}
+
+symbolToIntegerTag(x:Symbol) {
+    var a, b = ...unpackValueList(static 2, x.params);
+    var kind = valueToIntegerKind(a);
+    var bits = valueToIntegerBitSize(b);
+    return ir.TypeTag(ir.IntegerTag(kind, bits));
+}
+
+valueToIntegerKind(x:Value) {
+    ref hooks = getHooks();
+    if (x == hooks.LLSigned)
+        return ir.SIGNED_INTEGER;
+    else if (x == hooks.LLUnsigned)
+        return ir.UNSIGNED_INTEGER;
+    genericError("invalid symbolic integer kind: ", x);
+    return ir.IntegerKind();
+}
+
+valueToIntegerBitSize(x:Value) {
+    var a = valueToInt(x);
+    if ((a != 8) and (a != 16) and (a != 32) and (a != 64))
+        genericError("invalid integer bit size: ", a);
+    return a;
+}
+
+symbolToFloatTag(x:Symbol) {
+    var a = ...unpackValueList(static 1, x.params);
+    var bits = valueToFloatBitSize(a);
+    return ir.TypeTag(ir.FloatTag(bits));
+}
+
+valueToFloatBitSize(x:Value) {
+    var a = valueToInt(x);
+    if ((a != 32) and (a != 64))
+        genericError("invalid float bit size: ", a);
+    return a;
+}
+
+symbolToPointerTag(x:Symbol) {
+    var a = ...unpackValueList(static 1, x.params);
+    var target = valueToType(a);
+    return ir.TypeTag(ir.PointerTag(target));
+}
+
+symbolToArrayTag(x:Symbol) {
+    var a, b = ...unpackValueList(static 2, x.params);
+    var element = valueToType(a);
+    var size = valueToArraySize(b);
+    return ir.TypeTag(ir.ArrayTag(element, size));
+}
+
+valueToArraySize(x:Value) {
+    var a = valueToInt(x);
+    if (a < 0)
+        genericError("invalid array size: ", a);
+    return a;
+}
+
+symbolToTupleTag(x:Symbol) {
+    var elements = map(valueToType, x.params);
+    return ir.TypeTag(ir.TupleTag(move(elements)));
+}
+
+symbolToUnionTag(x:Symbol) {
+    var members = map(valueToType, x.params);
+    return ir.TypeTag(ir.UnionTag(move(members)));
+}
+
+[n]
+unpackValueList(static n, x:ValueList) {
+    if (size(x) != n) {
+        var valuesStr = (n => if (n == 1) "value" else "values");
+        genericError(
+            "expecting ", n, " ", valuesStr(n),
+            ", but received ", size(x)
+        );
+    }
+    return ...sequenceValues(x, static n);
+}
+
+valueToInt(x:Value) {
+    if (not variantIs?(x, IntValue))
+        genericError("invalid integer: ", x);
+    return variantAs(x, IntValue).value;
+}
+
+
+
+//
+// compileMain
+//
+
+compileMain(program:Program) {
+    return ...withProgram(program, () ref=> {
+        var env = program.mainModule.globals;
+        var mainValue = envEntryToValue(envLookup(env, "main"));
+        if (not runtimeCallable?(mainValue))
+            genericError("invalid procedure: main");
+        var s = analyzeCallable(mainValue, RTResultList());
+        var irProc = compileSpecialization(s);
+        return map(x => (x.kind, valueToType(x.type)), s.returns), irProc;
+    });
+}
+
+
+
+//
+// CompileContext
+//
+
+private record VariableInfo (
+    name: String,
+    kind: ir.LocalKind,
+    type: ir.Type,
+);
+
+private record MultiVariableInfo (
+    parts: Vector[Int],
+);
+
+private record CompileContext (
+    specialization: Specialization,
+    irProcedure: ir.Procedure,
+    variables: Vector[VariableInfo],
+    multiVariables: Vector[MultiVariableInfo],
+    names: NameAllocator,
+);
+
+overload CompileContext(specialization:Specialization, irProcedure:ir.Procedure) =
+    CompileContext(
+        specialization, irProcedure,
+        Vector[VariableInfo](),
+        Vector[MultiVariableInfo](),
+        NameAllocator(),
+    );
+
+private var _compileContextStack = Stack[CompileContext]();
+
+private withNewCompileContext(x:Specialization, y:ir.Procedure, f) =
+    forward ...withStackValue(_compileContextStack, CompileContext(x, y), f);
+
+private context() = ref stackTop(_compileContextStack);
+private irProcedure() = ref context().irProcedure;
+private variableInfo(id) = ref context().variables[id];
+private multVariableInfo(id) = ref context().multiVariables[id];
+
+private allocateLocal(baseName:String, kind:ir.LocalKind, type:ir.Type) Int {
+    ref ctx = context();
+    var name = allocateName(ctx.names, baseName);
+    push(ctx.variables, VariableInfo(move(name), kind, type));
+    return Int(size(ctx.variables) - 1);
+}
+
+private allocateMultiLocal(forward parts:Vector[Int]) Int {
+    ref ctx = context();
+    push(ctx.multiVariables, MultiVariableInfo(parts));
+    return Int(size(ctx.multiVariables) - 1);
+}
+
+
+
+//
+// compileSpecialization
+//
+
+private newIRProcedureName(callable:Value) {
+    return allocateName(getProgram().lowLevelNames, printString(callable));
+}
+
+private inputKind(kind:RTResultKind, astKind: Maybe[ast.ArgumentKind]) ir.InputKind {
+    switch (kind) {
+    case RT_RESULT_CONST : return ir.INPUT_CONST;
+    case RT_RESULT_REF : return ir.INPUT_REF;
+    case RT_RESULT_RVALUE : return maybe(astKind,
+        x => if (x == ast.ARG_FORWARD) ir.INPUT_MOVABLE_RVALUE else ir.INPUT_RVALUE,
+        () => ir.INPUT_RVALUE,
+    );
+    default :
+        assert(false, kind);
+        return ir.InputKind();
+    }
+}
+
+private inputLocalKind(x:ir.InputKind) ir.LocalKind {
+    switch (x) {
+    case ir.INPUT_CONST: return ir.LOCAL_CONST;
+    case ir.INPUT_REF: return ir.LOCAL_REF;
+    case ir.INPUT_RVALUE: return ir.LOCAL_REF;
+    case ir.INPUT_MOVABLE_RVALUE: return ir.LOCAL_RVALUE;
+    default :
+        assert(false);
+        return ir.LocalKind();
+    }
+}
+
+private compileArgument(arg:RTResult, astArg:ast.Argument) {
+    var ikind = inputKind(arg.kind, astArg.kind);
+    var localKind = inputLocalKind(ikind);
+    var type = valueToType(arg.type);
+    var id = allocateLocal(astArg.name.str, localKind, type);
+    push(irProcedure().inputs, ir.Input(variableInfo(id).name, ikind, type));
+    return id;
+}
+
+private compileArguments() {
+    var s = context().specialization;
+    ref astArgs = s.matchedOverload.ast.args;
+    for (internalArg, arg, astArg in zipped(s.internalArgs, s.args, astArgs.items))
+        internalArg.lowLevelId = compileArgument(arg, astArg);
+    maybe(astArgs.variadicItem,
+        astArg ref=> {
+            var parts = Vector[Int]();
+            for (arg in slicedFrom(s.args, size(astArgs.items))) {
+                var id = compileArgument(arg, astArg);
+                push(parts, id);
+            }
+            ref internalVarArg = just(s.internalVariadicArg);
+            internalVarArg.lowLevelId = allocateMultiLocal(move(parts));
+        },
+        () => {},
+    );
+}
+
+private compileSpecialization2() {
+    compileArguments();
+}
+
+compileSpecialization(x:Specialization) ir.Procedure {
+    return maybe(x.lowLevelProc,
+        y => y,
+        () ref=> {
+            var baseName = printString(x.callable);
+            var name = allocateName(getProgram().lowLevelNames, baseName);
+            var proc = ir.Procedure(newIRProcedureName(x.callable));
+            x.lowLevelProc = Maybe(proc);
+            try {
+                withNewCompileContext(x, proc, compileSpecialization2);
+                return proc;
+            }
+            catch (e) {
+                x.lowLevelProc = nothing(ir.Procedure);
+                throw e;
+            }
+        },
+    );
+}

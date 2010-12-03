@@ -3,6 +3,7 @@ import newclay.common.*;
 import newclay.loader.*;
 import newclay.hooks.*;
 import newclay.analyzer.*;
+import newclay.compiler.*;
 
 main(args) {
     if (size(args) != 2) {
@@ -12,8 +13,9 @@ main(args) {
     try {
         var program = loadProgram(args[1]);
         initializeClayHooks(program);
-        var result = analyzeMain(program);
+        var result, irProc = ...compileMain(program);
         println("result = ", result);
+        println("irProc = ", irProc);
     }
     catch (e:ClayError) {
         displayError(e);

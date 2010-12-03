@@ -4,11 +4,59 @@ import newclay.common.*;
 import newclay.lexer.(SourceTokens);
 import newclay.ast as ast;
 import newclay.diagnostics.*;
+import newclay.ir as ir;
 
 
 
 //
-// Module, Program
+// Program
+//
+
+record Program = referenceType(
+    mainModule: Module,
+    allAttributes: Vector[Attribute],
+    allStaticOverloads: Vector[StaticOverload],
+    allOverloads: Vector[Overload],
+    hooks: ClayHooks,
+    lowLevelProgram: ir.Program,
+    lowLevelNames: NameAllocator,
+);
+
+overload Program(module:Module) = Program(
+    module, Vector[Attribute](),
+    Vector[StaticOverload](), Vector[Overload](),
+    ClayHooks(),
+    ir.newProgram(),
+    NameAllocator(),
+);
+
+record ClayHooks (
+    TypeTemplate?: Value,
+    Type?: Value,
+
+    ToLowLevelType: Value,
+    LLSigned: Value,
+    LLUnsigned: Value,
+    LLBoolType: Value,
+    LLIntegerType: Value,
+    LLFloatType: Value,
+    LLPointerType: Value,
+    LLArrayType: Value,
+    LLTupleType: Value,
+    LLUnionType: Value,
+
+    Bool: Value,
+    Int: Value,
+    Static: Value,
+    Pointer: Value,
+
+    Procedure?: Value,
+);
+
+
+
+//
+// Module
 //
 
 record Module = referenceType(
@@ -20,30 +68,6 @@ record Module = referenceType(
 
 overload Module(program:Program, name:String) =
     Module(program, name, ast.SourceAST(), Env());
-
-record Program = referenceType(
-    mainModule: Module,
-    allAttributes: Vector[Attribute],
-    allStaticOverloads: Vector[StaticOverload],
-    allOverloads: Vector[Overload],
-    hooks: ClayHooks,
-);
-
-overload Program(module:Module) = Program(
-    module, Vector[Attribute](),
-    Vector[StaticOverload](), Vector[Overload](),
-    ClayHooks(),
-);
-
-record ClayHooks (
-    TypeTemplate?: Value,
-    Type?: Value,
-    Procedure?: Value,
-    Bool: Value,
-    Int: Value,
-    Static: Value,
-    Pointer: Value,
-);
 
 
 
@@ -79,6 +103,7 @@ record Symbol = referenceType(
     type?: TriState[Bool],
     procedure?: TriState[Bool],
     invokeTable: InvokeTable,
+    lowLevelType: Maybe[ir.Type],
 );
 
 overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
@@ -87,6 +112,7 @@ overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
         TriState[Value](), TriState[Value](),
         TriState[Bool](), TriState[Bool](),
         InvokeTable(),
+        nothing(ir.Type),
     );
 
 record PatternVars = referenceType(
@@ -205,14 +231,23 @@ envAdd(env, name, forward entry) {
     env.entries[name.str] = EnvEntry(entry);
 }
 
-envLookup(env, name) {
-    var ptr = lookup(env.entries, name.str);
+procedure envLookup;
+
+overload envLookup(env, name:String) {
+    var ptr = lookup(env.entries, name);
     if (null?(ptr)) {
         if (nothing?(env.parent))
-            genericError("name not found: ", name.str);
+            genericError("name not found: ", name);
         return ref envLookup(require(env.parent), name);
     }
     return ref ptr^;
+
+}
+overload envLookup(env, name:ast.Identifier) {
+    return ref envLookup(env, name.str);
+}
+overload envLookup(env, name:StringConstant) {
+    return ref envLookup(env, String(name));
 }
 
 
@@ -375,43 +410,52 @@ enum RTVariableKind {
     RT_VARIABLE_CONST,
     RT_VARIABLE_REF,
     RT_VARIABLE_RVALUE,
-    RT_VARIABLE_LOCAL,
 }
 
 record RTVariable = referenceType(
     kind: RTVariableKind,
     type: Value,
+    lowLevelId: Int,
 );
+
+overload RTVariable(kind:RTVariableKind, type:Value) =
+    RTVariable(kind, type, -1);
 
 record RTListVariable = referenceType(
     kinds: Vector[RTVariableKind],
     types: ValueList,
+    lowLevelId: Int,
 );
+
+overload RTListVariable(forward kinds:Vector[RTVariableKind], forward types:ValueList) =
+    RTListVariable(kinds, types, -1);
 
 
 
 //
-// RTValue, RTValueList
+// RTResult, RTResultList
 //
 
-enum RTValueKind {
-    RT_VALUE_CONST,
-    RT_VALUE_REF,
-    RT_VALUE_RVALUE,
+enum RTResultKind {
+    RT_RESULT_CONST,
+    RT_RESULT_REF,
+    RT_RESULT_RVALUE,
+    RT_RESULT_VALUE,
 }
 
-record RTValue (
-    kind: RTValueKind,
+record RTResult (
+    kind: RTResultKind,
     type: Value,
 );
 
-alias RTValueList = Vector[RTValue];
+alias RTResultList = Vector[RTResult];
 
-overload printReprTo(stream, x:RTValue) {
+overload printReprTo(stream, x:RTResult) {
     switch (x.kind) {
-        case RT_VALUE_CONST: printTo(stream, "const"); break;
-        case RT_VALUE_REF: printTo(stream, "ref"); break;
-        case RT_VALUE_RVALUE: printTo(stream, "rvalue"); break;
+        case RT_RESULT_CONST: printTo(stream, "const"); break;
+        case RT_RESULT_REF: printTo(stream, "ref"); break;
+        case RT_RESULT_RVALUE: printTo(stream, "rvalue"); break;
+        case RT_RESULT_VALUE: printTo(stream, "value"); break;
     }
     printTo(stream, " ");
     printReprTo(stream, x.type);
@@ -420,22 +464,34 @@ overload printReprTo(stream, x:RTValue) {
 
 
 //
-// invoke tables
+// Specialization, InvokeTable
 //
 
 record Specialization = referenceType(
-    callable: Value,
-    args: RTValueList,
     matchedOverload: Overload,
+    callable: Value,
+    args: RTResultList,
+    internalArgs: Vector[RTVariable],
+    internalVariadicArg: Maybe[RTListVariable],
     bodyEnv: Env,
-    returns: RTValueList,
+    namedReturnVars: Vector[RTVariable],
+    namedVariadicReturnVars: Vector[RTListVariable],
+    returns: RTResultList,
+    lowLevelProc: Maybe[ir.Procedure],
 );
+
+overload Specialization(matchedOverload:Overload, callable:Value) {
+    var s = allocateRef(Specialization);
+    s.matchedOverload = matchedOverload;
+    s.callable = callable;
+    return move(s);
+}
 
 record InvokeEntry(
     specialization: Maybe[Specialization],
 );
 
-alias InvokeTable = HashMap[RTValueList, InvokeEntry];
+alias InvokeTable = HashMap[RTResultList, InvokeEntry];
 
 
 
@@ -502,7 +558,7 @@ record StaticCallEntry (
 
 record CallAnalysisEntry (
     callable: Value,
-    args: RTValueList,
+    args: RTResultList,
 );
 
 overload printTo(stream, x:StaticCallEntry) {
@@ -529,7 +585,7 @@ withStaticCall(callable:Value, args:ValueList, f) {
     return forward ...withCompilationEntry(move(entry), f);
 }
 
-withCallAnalysis(callable:Value, args:RTValueList, f) {
+withCallAnalysis(callable:Value, args:RTResultList, f) {
     var entry = CompilationEntry(CallAnalysisEntry(callable, args));
     return forward ...withCompilationEntry(move(entry), f);
 }
