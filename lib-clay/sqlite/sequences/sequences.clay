@@ -10,7 +10,6 @@ private record SqliteStatementBuffer[T,bufferSize] (
 record SqliteStatementSequence[T,bufferSize] (
     statement: SqliteStatement, 
     olderBuffer: SizeT,
-    limitOffsetIndex: Int,
     size: SizeT,
     buffers: Array[SqliteStatementBuffer[T,bufferSize], 2],
 );
@@ -21,15 +20,27 @@ record SqliteStatementSequence[T,bufferSize] (
 [T,n] overload destroy(seq: SqliteStatementSequence[T, n]) {
     destroy(seq.buffers);
 }
+[T,n] overload moveUnsafe(seq: SqliteStatementSequence[T, n])
+    returned: SqliteStatementSequence[T, n]
+{
+    returned.statement <-- move(seq.statement);
+    returned.olderBuffer <-- move(seq.olderBuffer);
+    returned.size <-- move(seq.size);
+    returned.buffers <-- move(seq.buffers);
+}
+[T,n] overload resetUnsafe(seq: SqliteStatementSequence[T, n])
+{
+    resetUnsafe(seq.statement);
+    resetUnsafe(seq.buffers);
+}
 
-[T,n, I, J | Integer?(I) and Integer?(J)]
-private initSqliteStatementSequence(static T, static n, rvalue statement: SqliteStatement, limitOffsetIndex: I, sz: J)
+[T,n, J | Integer?(J)]
+overload SqliteStatementSequence(static T, static n, rvalue statement: SqliteStatement, sz: J)
     returned: SqliteStatementSequence[T, n]
 {
     returned.statement <-- move(statement);
     returned.olderBuffer = 0;
     returned.size = SizeT(sz);
-    returned.limitOffsetIndex = Int(limitOffsetIndex);
 
     try {
         resetUnsafe(returned.buffers[0].buffer);
@@ -49,32 +60,29 @@ private initSqliteStatementSequence(static T, static n, rvalue statement: Sqlite
 
 [T, n, S | String?(S)]
 overload SqliteStatementSequence(static T, static n, db: SqliteDB, sql: S, ...statementArgs) {
-    var limitOffsetIndex = Int(countValues(...statementArgs) + 1);
-
     var size = statementValue(SizeT, db,
         printString("select count(1) from (", sql, ")"),
         ...statementArgs
     );
 
-    return initSqliteStatementSequence(T, static n,
+    return SqliteStatementSequence(T, static n,
         SqliteStatement(db,
             printString(
                 sql,
-                " limit ?", limitOffsetIndex,
-                " offset ?", limitOffsetIndex + 1
+                " limit :limit offset :offset",
             ),
             ...statementArgs
         ),
-        limitOffsetIndex,
         size
     );
 }
 
 [T,n,I | Integer?(I)]
 private fillBuffer(seq: SqliteStatementSequence[T,n], buffer: SqliteStatementBuffer[T,n], offset: I) {
+    observe(#"filling buffer");
     resetStatement(seq.statement);
-    bindStatement(seq.statement, seq.limitOffsetIndex,     n);      // limit
-    bindStatement(seq.statement, seq.limitOffsetIndex + 1, offset); // offset
+    bindStatement(seq.statement, ":limit",  observe(#limit, n));
+    bindStatement(seq.statement, ":offset", observe(#offset, offset));
     var intoBuffer = begin(buffer.buffer);
     try {
         for (row in seq.statement) {
@@ -102,7 +110,7 @@ private inBuffer?(buffer: SqliteStatementBuffer[T,n], i) = i - buffer.offset < n
 
 [T,n,I | Integer?(I)]
 overload index(seq: SqliteStatementSequence[T,n], i: I) {
-    if (inBuffer?(seq.buffers[0], i)) {
+    if (inBuffer?(seq.buffers[0], observe(i))) {
         seq.olderBuffer = 1;
         return indexFromBuffer(seq.buffers[0], i);
     } else if (inBuffer?(seq.buffers[1], i)) {
