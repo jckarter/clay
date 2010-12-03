@@ -1,0 +1,201 @@
+
+
+//
+// types
+//
+
+record Type = referenceType(
+    tag: TypeTag,
+    name: String,
+);
+
+variant TypeTag = BoolTag
+                | IntegerTag
+                | FloatTag
+                | PointerTag
+                | ArrayTag
+                | TupleTag
+                | UnionTag
+                ;
+
+overload TypeTag() = TypeTag(BoolTag());
+
+record BoolTag();
+
+enum IntegerKind {
+    SIGNED_INTEGER,
+    UNSIGNED_INTEGER,
+}
+
+record IntegerTag(
+    kind: IntegerKind,
+    bits: Int,
+);
+
+record FloatTag(
+    bits: Int,
+);
+
+record PointerTag(
+    target: Type,
+);
+
+record ArrayTag(
+    element: Type,
+    size: Int,
+);
+
+record TupleTag(
+    elements: Vector[Type],
+);
+
+record UnionTag(
+    members: Vector[Type],
+);
+
+
+
+//
+// Program, Procedure
+//
+
+record Program = referenceType(
+    procedures: Vector[Procedure],
+);
+
+newProgram() = Program(Vector[Procedure]());
+
+record Procedure = referenceType(
+    name: String,
+    inputs: Vector[Input],
+    outputs: Vector[Output],
+    code: CodeBody,
+);
+
+overload Procedure(forward name:String) =
+    Procedure(name, Vector[Input](), Vector[Output](), CodeBody());
+
+enum InputKind {
+    INPUT_CONST,
+    INPUT_REF,
+    INPUT_RVALUE,
+    INPUT_MOVABLE_RVALUE,
+}
+
+record Input = referenceType(
+    name: String,
+    kind: InputKind,
+    type: Type,
+);
+
+enum OutputKind {
+    OUTPUT_CONST,
+    OUTPUT_REF,
+    OUTPUT_RVALUE,
+    OUTPUT_VALUE,
+}
+
+record Output = referenceType(
+    name: String,
+    kind: OutputKind,
+    type: Type,
+);
+
+variant CodeBody = Statement
+                 | CCodeBody
+                 ;
+
+overload CodeBody() = CodeBody(Statement());
+
+record CCodeBody = referenceType(
+    code: String,
+);
+
+
+
+//
+// Expr
+//
+
+variant AtomicExpr = NameRef
+                   | BoolLiteral
+                   | IntLiteral
+                   ;
+
+record NameRef = referenceType(
+    name: String,
+);
+
+record BoolLiteral(
+    value: Bool,
+);
+
+record IntLiteral(
+    value: Int,
+);
+
+record CallExpr = referenceType(
+    callable: String,
+    args: Vector[AtomicExpr],
+);
+
+variant Expr = CallExpr
+             | AtomicExpr
+             ;
+
+
+
+//
+// Statement
+//
+
+variant Statement = Block
+                  | LocalReference
+                  | LocalValue
+                  | Initialize
+                  | Assign
+                  | If
+                  | Return
+                  ;
+
+overload Statement() = Statement(Block());
+
+record Block = referenceType(
+    statements: Vector[Statement],
+);
+
+enum LocalKind {
+    LOCAL_CONST,
+    LOCAL_REF,
+    LOCAL_RVALUE,
+}
+
+record LocalReference = referenceType(
+    name: String,
+    kind: LocalKind,
+    type: Type,
+);
+
+record LocalValue = referenceType(
+    name: String,
+    kind: LocalKind,
+    type: Type,
+);
+
+record Initialize = referenceType(
+    lhs: Vector[String],
+    rhs: Expr,
+);
+
+record Assign = referenceType(
+    lhs: Vector[String],
+    rhs: Expr,
+);
+
+record If = referenceType(
+    condition: Expr,
+    thenPart: Statement,
+    elsePart: Statement,
+);
+
+record Return();
