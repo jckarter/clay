@@ -150,8 +150,7 @@ variant Expr = CallExpr
 //
 
 variant Statement = Block
-                  | LocalReference
-                  | LocalValue
+                  | LocalDef
                   | Initialize
                   | Assign
                   | If
@@ -170,15 +169,10 @@ enum AccessKind {
     ACCESS_RVALUE,
 }
 
-record LocalReference = referenceType(
+record LocalDef = referenceType(
     name: String,
     access: AccessKind,
-    type: Type,
-);
-
-record LocalValue = referenceType(
-    name: String,
-    kind: AccessKind,
+    value?: Bool,
     type: Type,
 );
 
