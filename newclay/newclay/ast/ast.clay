@@ -16,11 +16,15 @@ alias TokenRange = Range[SizeT];
 // AST nodes
 //
 
-private ast(...fields) = referenceTypeWithPredicate(
-    ASTNode?,
+record Location (
     tokens: SourceTokens,
     tokenRange: TokenRange,
     mainToken: SizeT,
+);
+
+private ast(...fields) = referenceTypeWithPredicate(
+    ASTNode?,
+    location: Location,
     ...fields,
 );
 
@@ -29,16 +33,16 @@ overload ASTNode?(x) = false;
 
 [T, ...A | ASTNode?(T)
            and (Tuple[...ReferenceTypeFieldTypes(T)] ==
-                Tuple[SourceTokens, TokenRange, SizeT, ...A])]
+                Tuple[Location, ...A])]
 callbyname overload T(...args:A) {
     alias tokenRange = TokenRange(SizeT(0), SizeT(0));
-    return T(SourceTokens(), tokenRange, SizeT(0), ...args);
+    return T(Location(SourceTokens(), tokenRange, SizeT(0)), ...args);
 }
 
 [T | ASTNode?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
-    printReprValuesTo(stream, ...dropValues(static 3, ...referenceTypeFields(x)));
+    printReprValuesTo(stream, ...dropValues(static 1, ...referenceTypeFields(x)));
 }
 
 
@@ -47,27 +51,19 @@ overload printReprTo(stream, x:T) {
 // getLocation, setLocation, assignLocation
 //
 
-record Location (
-    tokens: SourceTokens,
-    tokenRange: TokenRange,
-    mainToken: SizeT,
-);
-
 procedure getLocation;
-overload getLocation(x) = Location(x.tokens, x.tokenRange, x.mainToken);
+overload getLocation(x) = x.location;
 overload getLocation(x:Expr) = getLocation(*x);
 overload getLocation(x:ExprListItem) = getLocation(*x);
 
 procedure setLocation;
-overload setLocation(x, location) {
-    x.tokens = location.tokens;
-    x.tokenRange = location.tokenRange;
-    x.mainToken = location.mainToken;
+overload setLocation(x, forward location) {
+    x.location = location;
 }
-overload setLocation(x:Expr, location) {
+overload setLocation(x:Expr, forward location) {
     setLocation(*x, location);
 }
-overload setLocation(x:ExprListItem, location) {
+overload setLocation(x:ExprListItem, forward location) {
     setLocation(*x, location);
 }
 
