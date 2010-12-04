@@ -467,6 +467,10 @@ overload printReprTo(stream, x:RTResult) {
 // Specialization, InvokeTable
 //
 
+variant NamedReturn = RTVariable
+                    | RTListVariable
+                    ;
+
 record Specialization = referenceType(
     matchedOverload: Overload,
     callable: Value,
@@ -474,8 +478,7 @@ record Specialization = referenceType(
     internalArgs: Vector[RTVariable],
     internalVariadicArg: Maybe[RTListVariable],
     bodyEnv: Env,
-    namedReturnVars: Vector[RTVariable],
-    namedVariadicReturnVars: Vector[RTListVariable],
+    namedReturns: Vector[NamedReturn],
     returns: RTResultList,
     lowLevelProc: Maybe[ir.Procedure],
 );
