@@ -181,29 +181,15 @@ compileMain(program:Program) {
 // CompileContext
 //
 
-private record VariableInfo (
-    name: String,
-    kind: ir.AccessKind,
-    type: ir.Type,
-);
-
-private record MultiVariableInfo (
-    parts: Vector[Int],
-);
-
 private record CompileContext (
     specialization: Specialization,
     irProcedure: ir.Procedure,
-    variables: Vector[VariableInfo],
-    multiVariables: Vector[MultiVariableInfo],
     names: NameAllocator,
 );
 
 overload CompileContext(specialization:Specialization, irProcedure:ir.Procedure) =
     CompileContext(
         specialization, irProcedure,
-        Vector[VariableInfo](),
-        Vector[MultiVariableInfo](),
         NameAllocator(),
     );
 
@@ -214,20 +200,16 @@ private withNewCompileContext(x:Specialization, y:ir.Procedure, f) =
 
 private context() = ref stackTop(_compileContextStack);
 private irProcedure() = ref context().irProcedure;
-private variableInfo(id) = ref context().variables[id];
-private multVariableInfo(id) = ref context().multiVariables[id];
 
-private allocateLocal(baseName:String, kind:ir.AccessKind, type:ir.Type) Int {
-    ref ctx = context();
-    var name = allocateName(ctx.names, baseName);
-    push(ctx.variables, VariableInfo(move(name), kind, type));
-    return Int(size(ctx.variables) - 1);
+private allocateLocalName(baseName:String) {
+    return allocateName(context().names, baseName);
 }
 
-private allocateMultiLocal(forward parts:Vector[Int]) Int {
-    ref ctx = context();
-    push(ctx.multiVariables, MultiVariableInfo(parts));
-    return Int(size(ctx.multiVariables) - 1);
+private allocateLocal(
+    baseName:String, value?:Bool, type:ir.Type, access:ir.AccessKind
+) ir.Local
+{
+    return ir.Local(allocateLocalName(baseName), value?, type, access);
 }
 
 
@@ -270,25 +252,24 @@ private compileArgument(arg:RTResult, astArg:ast.Argument) {
     var ikind = inputKind(arg.kind, astArg.kind);
     var accessKind = inputAccessKind(ikind);
     var type = valueToType(arg.type);
-    var id = allocateLocal(astArg.name.str, accessKind, type);
-    push(irProcedure().inputs, ir.Input(variableInfo(id).name, ikind, type));
-    return id;
+    var local = allocateLocal(astArg.name.str, false, type, accessKind);
+    push(irProcedure().inputs, ir.Input(local.name, ikind, type));
+    return local;
 }
 
 private compileArguments() {
     var s = context().specialization;
     ref astArgs = s.matchedOverload.ast.args;
     for (internalArg, arg, astArg in zipped(s.internalArgs, s.args, astArgs.items))
-        internalArg.lowLevelId = compileArgument(arg, astArg);
+        internalArg.lowLevelLocal = compileArgument(arg, astArg);
     maybe(astArgs.variadicItem,
         astArg ref=> {
-            var parts = Vector[Int]();
-            for (arg in slicedFrom(s.args, size(astArgs.items))) {
-                var id = compileArgument(arg, astArg);
-                push(parts, id);
-            }
             ref internalVarArg = just(s.internalVariadicArg);
-            internalVarArg.lowLevelId = allocateMultiLocal(move(parts));
+            clear(internalVarArg.lowLevelLocals);
+            for (arg in slicedFrom(s.args, size(astArgs.items))) {
+                var local = compileArgument(arg, astArg);
+                push(internalVarArg.lowLevelLocals, local);
+            }
         },
         () => {},
     );

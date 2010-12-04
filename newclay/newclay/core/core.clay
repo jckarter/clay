@@ -415,20 +415,20 @@ enum RTVariableKind {
 record RTVariable = referenceType(
     kind: RTVariableKind,
     type: Value,
-    lowLevelId: Int,
+    lowLevelLocal: ir.Local,
 );
 
 overload RTVariable(kind:RTVariableKind, type:Value) =
-    RTVariable(kind, type, -1);
+    RTVariable(kind, type, ir.Local());
 
 record RTListVariable = referenceType(
     kinds: Vector[RTVariableKind],
     types: ValueList,
-    lowLevelId: Int,
+    lowLevelLocals: Vector[ir.Local],
 );
 
 overload RTListVariable(forward kinds:Vector[RTVariableKind], forward types:ValueList) =
-    RTListVariable(kinds, types, -1);
+    RTListVariable(kinds, types, Vector[ir.Local]());
 
 
 
