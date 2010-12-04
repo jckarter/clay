@@ -1,10 +1,23 @@
 tellRvalue(lvalue x) = 0;
 overload tellRvalue(rvalue x) = 1;
 
+tellRvalueString(lvalue x) = "lvalue";
+overload tellRvalueString(rvalue x) = "rvalue";
+
+record AnException ();
+instance Exception = AnException;
+
 main() {
     var x = String("lemons");
     println(observe(2) + 1);
     println(add(...observe(#loneliestNumbers, 2, 1)));
     println(tellRvalue(observe(x)) + 4);
     println(tellRvalue(observe(String("lemons"))) + 4);
+
+    var a = [1, 2, 3];
+    println(tellRvalueString(observeCall(add, a[0], a[1])));
+    println(tellRvalueString(observeCall(index, a, 1)));
+    try {
+        println(...observeCall(throwValue, AnException()));
+    } catch (ex) { }
 }

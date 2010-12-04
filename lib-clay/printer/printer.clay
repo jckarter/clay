@@ -425,7 +425,7 @@ printlnString(...x) {
 
 
 //
-// observe, observeTo -- dump intermediate values and forward them
+// observe, observeTo, observeCall -- log intermediate values and forward them
 //
 
 observeTo(stream, forward ...x) {
@@ -442,3 +442,23 @@ overload observeTo(stream, static tag, forward ...x) {
     return forward ...forwardValues(captured);
 }
 observe(forward ...x) = forward ...observeTo(stderr, ...x);
+
+observeCallTo(stream, forward fn, forward ...args) {
+    var capturedFn = captureValue(fn);
+    var capturedArgs = captureValues(...args);
+    printlnTo(stream, "[observed call ", capturedRef(capturedFn), "(", ...weaveValues(", ", ...capturedRefs(capturedArgs)), ")...");
+    flush(stream);
+    try {
+        var capturedReturn = captureValues(...forwardValue(capturedFn)(...forwardValues(capturedArgs)));
+        printlnTo(stream, "  ...returned ", ...capturedRefs(capturedReturn), "]");
+        flush(stream);
+        return forward ...forwardValues(capturedReturn);
+    } catch (ex) {
+        printlnTo(stream, "  ...threw ", ex, "]");
+        flush(stream);
+        throw ex;
+    }
+}
+
+observeCall(forward fn, forward ...args)
+    = forward ...observeCallTo(stderr, fn, ...args);
