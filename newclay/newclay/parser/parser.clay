@@ -300,11 +300,11 @@ private var atomicExpr = choice(
 // setBase, foldTail
 //
 
-private exprTokenRange(x) = ref x.tokenRange;
+private exprTokenRange(x) = ref x.location.tokenRange;
 
 private setBase2(root, field, base) {
     fieldRef(root, field) = base;
-    root.tokenRange.begin = exprTokenRange(*base).begin;
+    root.location.tokenRange.begin = exprTokenRange(*base).begin;
 }
 
 private setBase(x, y) { assert(false, "baseless expression!"); }
