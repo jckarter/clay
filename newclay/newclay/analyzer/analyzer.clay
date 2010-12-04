@@ -446,7 +446,7 @@ private bindNamedSingleReturn(s:Specialization, name, returnSpec) {
     if (not nothing?(returnSpec.kind))
         type = convertNamedReturnReference(type);
     var v = RTVariable(RT_VARIABLE_REF, type);
-    push(s.namedReturnVars, v);
+    push(s.namedReturns, NamedReturn(v));
     envAdd(s.bodyEnv, name, v);
 }
 
@@ -456,7 +456,7 @@ private bindNamedMultiReturn(s:Specialization, name, returnSpec) {
         types = ValueList(mapped(convertNamedReturnReference, types));
     var kinds = map(x => RT_VARIABLE_REF, range(size(types)));
     var v = RTListVariable(move(kinds), move(types));
-    push(s.namedVariadicReturnVars, v);
+    push(s.namedReturns, NamedReturn(v));
     envAdd(s.bodyEnv, name, v);
 }
 
