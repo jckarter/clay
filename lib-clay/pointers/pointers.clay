@@ -18,12 +18,11 @@ procedure null?;
 
 
 //
-// Pointer - constructors, moveUnsafe, resetUnsafe, destroy
+// Pointer - constructor
 //
 
 [T]
-inline overload Pointer[T]() returned:Pointer[T] {
-}
+inline overload Pointer[T]() returned:Pointer[T] { }
 
 
 
@@ -123,12 +122,11 @@ CodePointer?(x) = false;
 
 
 //
-// CodePointer - constructors, moveUnsafe, resetUnsafe, destroy
+// CodePointer - constructor
 //
 
 [In, Out]
-inline overload CodePointer[In,Out]() CodePointer[In,Out] {
-}
+inline overload CodePointer[In,Out]() CodePointer[In,Out] { }
 
 
 
@@ -174,12 +172,11 @@ inline overload null?(p:CodePointer[In,Out]) = null?(RawPointer(p));
 
 
 //
-// CCodePointer - constructors, moveUnsafe, resetUnsafe, destroy
+// CCodePointer - constructor
 //
 
 [CP | CCodePointer?(CP)]
-inline overload CP() returned:CP {
-}
+inline overload CP() returned:CP { }
 
 
 

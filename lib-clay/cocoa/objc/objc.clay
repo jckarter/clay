@@ -141,13 +141,11 @@ private retain(x) {
 
 ObjectType?(T) = false;
 
-[O | ObjectType?(O)] overload objectHandle(x: O) = x.__handle__;
+[O | ObjectType?(O)] overload objectHandle(x: O) ObjectHandle = x.__handle__;
 [O | ObjectType?(O)] overload ObjectParameterType(static O) = O;
 
 [O | ObjectRef?(O)] nil(static O) = O();
 [O | ObjectRef?(O)] nil?(obj: O) = null?(obj.__handle__);
-
-[O | ObjectType?(O)] overload RegularRecord?(static O) = false;
 
 [O | ObjectType?(O)] overload O() = O(nilHandle);
 
@@ -161,15 +159,6 @@ private AssignableObjectTypes?(O1, O2)
 overload assign(left: O1, right: O2) {
     left.__handle__ = right.__handle__;
 }
-
-[O | ObjectType?(O)] 
-overload destroy(obj: O) { }
-
-[O | ObjectType?(O)] 
-overload moveUnsafe(obj: O) = O(obj.__handle__);
-
-[O | ObjectType?(O)] 
-overload resetUnsafe(obj: O) { }
 
 
 
@@ -207,7 +196,7 @@ record Retained[O] (__handle__: ObjectHandle);
 
 [O | ObjectType?(O)] overload RegularRecord?(static Retained[O]) = false;
 
-[O | ObjectType?(O)] overload objectHandle(obj: Retained[O]) = obj.__handle__;
+[O | ObjectType?(O)] overload objectHandle(obj: Retained[O]) ObjectHandle = obj.__handle__;
 [O | ObjectType?(O)] overload ObjectParameterType(static Retained[O]) = O;
 
 [O | ObjectType?(O)] overload Retained[O]() = Retained[O](nilHandle);
@@ -268,7 +257,7 @@ overload assign(left: Retained[O1], rvalue right: Retained[O2]) {
 overload destroy(obj: Retained[O]) { release(obj.__handle__); }
 
 [O | ObjectType?(O)] 
-overload moveUnsafe(obj: Retained[O]) = Retained[O](obj.__handle__);
+overload BitwiseMovedType?(static Retained[O]) = true;
 
 [O | ObjectType?(O)] 
 overload resetUnsafe(obj: Retained[O]) { obj.__handle__ = nilHandle; }
@@ -279,7 +268,7 @@ overload resetUnsafe(obj: Retained[O]) { obj.__handle__ = nilHandle; }
 // raw object handles as parameters
 //
 
-overload objectHandle(x: ObjectHandle) = x;
+overload objectHandle(x: ObjectHandle) ObjectHandle = x;
 overload ObjectParameterType(static ObjectHandle) = Id;
 
 

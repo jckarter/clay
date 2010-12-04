@@ -56,9 +56,7 @@ inline overload SharedPointer[T](src:SharedPointer[T]) {
 }
 
 [T]
-inline overload moveUnsafe(src:SharedPointer[T]) returned:SharedPointer[T] {
-    returned.ptr = src.ptr;
-}
+overload BitwiseMovedType?(static SharedPointer[T]) = true;
 
 [T]
 inline overload resetUnsafe(p : SharedPointer[T]) {

@@ -63,16 +63,7 @@ overload Any(x:Any) {
     );
 }
 
-overload moveUnsafe(src:Any) returned:Any {
-    returned <-- Any(
-        src.id,
-        src.ptr,
-        src.size,
-        src.alignment,
-        src.copyConstructor,
-        src.destructor
-    );
-}
+overload BitwiseMovedType?(static Any) = true;
 
 overload resetUnsafe(x:Any) {
     x <-- Any();
