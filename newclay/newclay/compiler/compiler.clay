@@ -183,7 +183,7 @@ compileMain(program:Program) {
 
 private record VariableInfo (
     name: String,
-    kind: ir.LocalKind,
+    kind: ir.AccessKind,
     type: ir.Type,
 );
 
@@ -217,7 +217,7 @@ private irProcedure() = ref context().irProcedure;
 private variableInfo(id) = ref context().variables[id];
 private multVariableInfo(id) = ref context().multiVariables[id];
 
-private allocateLocal(baseName:String, kind:ir.LocalKind, type:ir.Type) Int {
+private allocateLocal(baseName:String, kind:ir.AccessKind, type:ir.Type) Int {
     ref ctx = context();
     var name = allocateName(ctx.names, baseName);
     push(ctx.variables, VariableInfo(move(name), kind, type));
@@ -254,23 +254,23 @@ private inputKind(kind:RTResultKind, astKind: Maybe[ast.ArgumentKind]) ir.InputK
     }
 }
 
-private inputLocalKind(x:ir.InputKind) ir.LocalKind {
+private inputAccessKind(x:ir.InputKind) ir.AccessKind {
     switch (x) {
-    case ir.INPUT_CONST: return ir.LOCAL_CONST;
-    case ir.INPUT_REF: return ir.LOCAL_REF;
-    case ir.INPUT_RVALUE: return ir.LOCAL_REF;
-    case ir.INPUT_MOVABLE_RVALUE: return ir.LOCAL_RVALUE;
+    case ir.INPUT_CONST: return ir.ACCESS_CONST;
+    case ir.INPUT_REF: return ir.ACCESS_REF;
+    case ir.INPUT_RVALUE: return ir.ACCESS_REF;
+    case ir.INPUT_MOVABLE_RVALUE: return ir.ACCESS_RVALUE;
     default :
         assert(false);
-        return ir.LocalKind();
+        return ir.AccessKind();
     }
 }
 
 private compileArgument(arg:RTResult, astArg:ast.Argument) {
     var ikind = inputKind(arg.kind, astArg.kind);
-    var localKind = inputLocalKind(ikind);
+    var accessKind = inputAccessKind(ikind);
     var type = valueToType(arg.type);
-    var id = allocateLocal(astArg.name.str, localKind, type);
+    var id = allocateLocal(astArg.name.str, accessKind, type);
     push(irProcedure().inputs, ir.Input(variableInfo(id).name, ikind, type));
     return id;
 }
