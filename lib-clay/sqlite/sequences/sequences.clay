@@ -79,10 +79,9 @@ overload SqliteStatementSequence(static T, static n, db: SqliteDB, sql: S, ...st
 
 [T,n,I | Integer?(I)]
 private fillBuffer(seq: SqliteStatementSequence[T,n], buffer: SqliteStatementBuffer[T,n], offset: I) {
-    observe(#"filling buffer");
     resetStatement(seq.statement);
-    bindStatement(seq.statement, ":limit",  observe(#limit, n));
-    bindStatement(seq.statement, ":offset", observe(#offset, offset));
+    bindStatement(seq.statement, ":limit",  n);
+    bindStatement(seq.statement, ":offset", offset);
     var intoBuffer = begin(buffer.buffer);
     try {
         for (row in seq.statement) {
@@ -110,7 +109,7 @@ private inBuffer?(buffer: SqliteStatementBuffer[T,n], i) = i - buffer.offset < n
 
 [T,n,I | Integer?(I)]
 overload index(seq: SqliteStatementSequence[T,n], i: I) {
-    if (inBuffer?(seq.buffers[0], observe(i))) {
+    if (inBuffer?(seq.buffers[0], i)) {
         seq.olderBuffer = 1;
         return indexFromBuffer(seq.buffers[0], i);
     } else if (inBuffer?(seq.buffers[1], i)) {
