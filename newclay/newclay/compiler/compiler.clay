@@ -248,7 +248,7 @@ private inputAccessKind(x:ir.InputKind) ir.AccessKind {
     }
 }
 
-private compileArgument(arg:RTResult, astArg:ast.Argument) {
+private compileInput(arg:RTResult, astArg:ast.Argument) {
     var ikind = inputKind(arg.kind, astArg.kind);
     var accessKind = inputAccessKind(ikind);
     var type = valueToType(arg.type);
@@ -257,17 +257,17 @@ private compileArgument(arg:RTResult, astArg:ast.Argument) {
     return local;
 }
 
-private compileArguments() {
+private compileInputs() {
     var s = context().specialization;
     ref astArgs = s.matchedOverload.ast.args;
     for (internalArg, arg, astArg in zipped(s.internalArgs, s.args, astArgs.items))
-        internalArg.lowLevelLocal = compileArgument(arg, astArg);
+        internalArg.lowLevelLocal = compileInput(arg, astArg);
     maybe(astArgs.variadicItem,
         astArg ref=> {
             ref internalVarArg = just(s.internalVariadicArg);
             clear(internalVarArg.lowLevelLocals);
             for (arg in slicedFrom(s.args, size(astArgs.items))) {
-                var local = compileArgument(arg, astArg);
+                var local = compileInput(arg, astArg);
                 push(internalVarArg.lowLevelLocals, local);
             }
         },
@@ -276,7 +276,7 @@ private compileArguments() {
 }
 
 private compileSpecialization2() {
-    compileArguments();
+    compileInputs();
 }
 
 compileSpecialization(x:Specialization) ir.Procedure {
