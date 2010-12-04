@@ -65,6 +65,14 @@ overload printTo(stream, x:Float) {
 overload printTo(stream, x:Pointer[T]) {
     printWithSprintf(stream, "%p", x);
 }
+[I, O]
+overload printTo(stream, x:CodePointer[I, O]) {
+    printWithSprintf(stream, "%p", x);
+}
+[CP | CCodePointer?(CP)]
+overload printTo(stream, x:CP) {
+    printWithSprintf(stream, "%p", x);
+}
 
 printWithSprintf(stream, formatString, value) {
     var buf = Array[CChar, 100]();
