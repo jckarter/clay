@@ -184,12 +184,7 @@ overload Deque(forward from:A) = Deque(mapped(Tuple, from));
     }
 }
 
-[T] overload moveUnsafe(deque: Deque[T]) returned: Deque[T] {
-    returned.map <-- deque.map;
-    returned.mapSize <-- deque.mapSize;
-    returned.begin <-- deque.begin;
-    returned.end <-- deque.end;
-}
+[T] overload BitwiseMovedType?(static Deque[T]) = true;
 
 [T] overload resetUnsafe(d: Deque[T]) {
     d.map <-- Pointer[Pointer[T]](0);

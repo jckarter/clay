@@ -70,9 +70,7 @@ overload destroy(x:RawFile) {
 
 // moveUnsafe, resetUnsafe
 
-overload moveUnsafe(src:RawFile) returned:RawFile {
-    returned <-- RawFile(src.handle, src.owned);
-}
+overload BitwiseMovedType?(static RawFile) = true;
 
 overload resetUnsafe(x:RawFile) {
     x <-- RawFile(-1, false);

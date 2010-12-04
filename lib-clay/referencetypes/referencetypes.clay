@@ -148,9 +148,7 @@ overload T(src:T) returned:T {
 //
 
 [T | ReferenceType?(T)]
-overload moveUnsafe(src:T) returned:T {
-    referencePtr(returned) <-- moveUnsafe(referencePtr(src));
-}
+overload BitwiseMovedType?(static T) = true;
 
 [T | ReferenceType?(T)]
 overload resetUnsafe(x:T) {
