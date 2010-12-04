@@ -375,3 +375,17 @@ overload PODType?(static Union[]) = true;
 
 [V | Variant?(V)] overload PODType?(static V)
     = allValues?(PODType?, ...VariantMembers(V));
+
+
+//
+// Finer-grained POD-related properties
+//
+
+BitwiseCopiedType?(T) = PODType?(T);
+BitwiseMovedType?(T) = PODType?(T);
+NotDestroyedType?(T) = PODType?(T);
+NotResetType?(T) = PODType?(T);
+CopyDoesNotThrowType?(T) = PODType?(T);
+AssignDoesNotThrowType?(T) = PODType?(T);
+BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and NotDestroyedType?(T);
+BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and NotDestroyedType?(T);
