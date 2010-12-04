@@ -534,11 +534,11 @@ record LocationEntry (
 private var _locationStack = Stack[LocationEntry]();
 
 withLocation(node, f) {
-    var tokens, tokenRange, mainToken = ...ast.getLocation(node);
-    if (null?(tokens) or empty?(tokenRange))
+    var x = ast.getLocation(node);
+    if (null?(x.tokens) or empty?(x.tokenRange))
         return forward ...f();
-    var location = LocationEntry(tokens, mainToken);
-    return forward ...withStackValue(_locationStack, location, f);
+    var entry = LocationEntry(x.tokens, x.mainToken);
+    return forward ...withStackValue(_locationStack, entry, f);
 }
 
 

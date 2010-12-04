@@ -469,12 +469,14 @@ private bindNamedReturn(s:Specialization, name, returnSpec) {
 }
 
 private bindNamedReturns(s:Specialization) {
-    for (returnSpec in s.matchedOverload.ast.returns) {
-        maybe(returnSpec.name,
-            name ref=> { bindNamedReturn(s, name, returnSpec); },
-            () => {}
-        );
-    }
+    ref x = s.matchedOverload.ast;
+    maybe(x.returnedNames,
+        names ref=> {
+            for (name, returnSpec in zipped(names, x.returns))
+                bindNamedReturn(s, name, returnSpec);
+        },
+        () => {},
+    );
 }
 
 matchOverload(x:Overload, callable:Value, args:RTResultList) Maybe[Specialization] {
@@ -538,6 +540,7 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
             push(result, RTResult(kind, type));
         }
         else {
+            assert(returnSpec.arityKind == ast.RETURN_MULTI);
             var kind = returnSpecRTResultKind(returnSpec);
             var types = evaluateMultiExpr(returnSpec.type, env);
             for (type in types)

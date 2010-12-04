@@ -85,21 +85,26 @@ private var separatedListStrict = combinators.separatedListStrict;
 //
 
 [Parser]
-private bounds(parser:Parser) {
+private includeBounds(parser:Parser) {
     return input => {
         alias T = ParseResult(Parser);
         var start = input.current;
         return maybe(parser(input),
             x ref=> {
-                x.tokens = input.tokens;
-                x.tokenRange = TokenRange(start, input.current);
-                x.mainToken = start;
-                return Maybe(move(x));
+                var tokenRange = TokenRange(start, input.current);
+                var bounds = Location(input.tokens, tokenRange, start);
+                return Maybe(Tuple(move(bounds), move(x)));
             },
-            () => nothing(T),
+            () => nothing(Tuple[Location,T]),
         );
     };
 }
+
+[Parser]
+private bounds(parser:Parser) = modify(
+    x => { setLocation(x.1, move(x.0)); return move(x.1); },
+    includeBounds(parser),
+);
 
 
 
@@ -659,18 +664,46 @@ private var returnKind = choice(
     modify(x => RETURN_RVALUE, kw_rvalue),
 );
 
-private var singleReturn = bounds(modify(
-    x => ReturnSpec(move(x.0), RETURN_SINGLE, move((x.1).0), move((x.1).1)),
-    sequence(optional(returnKind), baseReturn),
+private var returnArityKind = modify(
+    x => maybe(x, x => RETURN_MULTI, () => RETURN_SINGLE),
+    optional(punc(#"...")),
+);
+
+private var namedReturn2 = modify(
+    x => Tuple(move(x.2), ReturnSpec(x.0, x.1, move(x.4))),
+    sequence(
+        optional(returnKind), returnArityKind, identifier, punc(#":"), expr,
+    ),
+);
+
+private var namedReturn = modify(
+    x => { setLocation((x.1).1, move(x.0)); return move(x.1); },
+    includeBounds(namedReturn2),
+);
+
+private var namedReturnList = modify(
+    x => Tuple(Maybe(map(y => move(y.0), x)), map(y => move(y.1), x)),
+    commaList(namedReturn),
+);
+
+private var unnamedReturn = bounds(modify(
+    x => ReturnSpec(x.0, x.1, move(x.2)),
+    sequence(optional(returnKind), returnArityKind, expr),
 ));
 
-private var multiReturn = bounds(modify(
-    x => ReturnSpec(move(x.0), RETURN_MULTI, move((x.2).0), move((x.2).1)),
-    sequence(optional(returnKind), punc(#"..."), baseReturn),
-));
+private var unnamedReturnList = modify(
+    x => Tuple(nothing(Vector[Identifier]), move(x)),
+    commaList(unnamedReturn),
+);
 
-private var returnSpecs = optCommaList(
-    choice(singleReturn, multiReturn)
+private var returnList = choice(namedReturnList, unnamedReturnList);
+
+private var optReturnList = modify(
+    x => maybe(x,
+        move,
+        () => Tuple(nothing(Vector[Identifier]), Vector[ReturnSpec]()),
+    ),
+    optional(returnList),
 );
 
 private var returnExprKind = choice(
@@ -736,10 +769,13 @@ private var inlineCCodeBody = modify(CodeBody, bounds(modify(
 private var codeBody = choice(exprCodeBody, inlineCCodeBody);
 
 private var overloadDef = topLevelItemParser(
-    x => Overload(move(x.1), move(x.3), move(x.5), move(x.6), move(x.7)),
+    x => Overload(
+        move(x.1), move(x.3), move((x.5).1), move((x.5).0),
+        move(x.6), move(x.7),
+    ),
     sequence(
         kw_overload, targetPattern, punc(#"("), optArguments, punc(#")"),
-        returnSpecs, optPredicate, codeBody,
+        optReturnList, optPredicate, codeBody,
     ),
 );
 

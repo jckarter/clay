@@ -47,26 +47,32 @@ overload printReprTo(stream, x:T) {
 // getLocation, setLocation, assignLocation
 //
 
+record Location (
+    tokens: SourceTokens,
+    tokenRange: TokenRange,
+    mainToken: SizeT,
+);
+
 procedure getLocation;
-overload getLocation(x) = x.tokens, x.tokenRange, x.mainToken;
-overload getLocation(x:Expr) = ...getLocation(*x);
-overload getLocation(x:ExprListItem) = ...getLocation(*x);
+overload getLocation(x) = Location(x.tokens, x.tokenRange, x.mainToken);
+overload getLocation(x:Expr) = getLocation(*x);
+overload getLocation(x:ExprListItem) = getLocation(*x);
 
 procedure setLocation;
-overload setLocation(x, tokens, tokenRange, mainToken) {
-    x.tokens = tokens;
-    x.tokenRange = tokenRange;
-    x.mainToken = mainToken;
+overload setLocation(x, location) {
+    x.tokens = location.tokens;
+    x.tokenRange = location.tokenRange;
+    x.mainToken = location.mainToken;
 }
-overload setLocation(x:Expr, tokens, tokenRange, mainToken) {
-    setLocation(*x, tokens, tokenRange, mainToken);
+overload setLocation(x:Expr, location) {
+    setLocation(*x, location);
 }
-overload setLocation(x:ExprListItem, tokens, tokenRange, mainToken) {
-    setLocation(*x, tokens, tokenRange, mainToken);
+overload setLocation(x:ExprListItem, location) {
+    setLocation(*x, location);
 }
 
 assignLocation(destNode, srcNode) {
-    setLocation(destNode, ...getLocation(srcNode));
+    setLocation(destNode, getLocation(srcNode));
 }
 
 
@@ -242,6 +248,7 @@ record Overload = ast(
     target: Pattern,
     args: VariadicList[Argument],
     returns: Vector[ReturnSpec],
+    returnedNames: Maybe[Vector[Identifier]],
     predicate: Maybe[Expr],
     body: CodeBody,
 );
@@ -273,7 +280,6 @@ enum ReturnArityKind {
 record ReturnSpec = ast(
     kind: Maybe[ReturnKind],
     arityKind: ReturnArityKind,
-    name: Maybe[Identifier],
     type: Expr,
 );
 
