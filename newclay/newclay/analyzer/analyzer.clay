@@ -517,12 +517,12 @@ private returnSpecRTResultKind(returnSpec: ast.ReturnSpec) {
     return maybe(returnSpec.kind,
         k => {
             switch (k) {
-                case ast.RETURN_CONST: return RT_RESULT_CONST;
-                case ast.RETURN_REF: return RT_RESULT_REF;
-                case ast.RETURN_RVALUE: return RT_RESULT_RVALUE;
-                default :
-                    assert(false);
-                    return RTResultKind();
+            case ast.RETURN_CONST: return RT_RESULT_CONST;
+            case ast.RETURN_REF: return RT_RESULT_REF;
+            case ast.RETURN_RVALUE: return RT_RESULT_RVALUE;
+            default :
+                assert(false);
+                return RTResultKind();
             }
         },
         () => RT_RESULT_VALUE,
@@ -551,32 +551,32 @@ private returnExprRTResultKind(x:ast.ReturnExprListItem, kind:RTResultKind) {
     return maybe(x.kind,
         y => {
             switch (y) {
-                case ast.RETURN_EXPR_CONST :
-                    if (kind == RT_RESULT_VALUE)
-                        genericError("cannot return temporary as const reference");
-                    if (kind == RT_RESULT_RVALUE)
-                        genericError("cannot return rvalue as const reference");
-                    return RT_RESULT_CONST;
-                case ast.RETURN_EXPR_REF :
-                    if (kind == RT_RESULT_VALUE)
-                        genericError("cannot return temporary as mutable reference");
-                    if (kind == RT_RESULT_RVALUE)
-                        genericError("cannot return rvalue as mutable reference");
-                    if (kind == RT_RESULT_CONST)
-                        genericError("cannot return const as mutable reference");
-                    return RT_RESULT_REF;
-                case ast.RETURN_EXPR_RVALUE :
-                    if (kind == RT_RESULT_VALUE)
-                        genericError("cannot return temporary as rvalue reference");
-                    if (kind == RT_RESULT_CONST)
-                        genericError("cannot return const as rvalue reference");
-                    return RT_RESULT_RVALUE;
-                case ast.RETURN_EXPR_FORWARD :
-                    // FIXME: is alright to forward rvalue references?
-                    return kind;
-                default :
-                    assert(false);
-                    return RTResultKind();
+            case ast.RETURN_EXPR_CONST :
+                if (kind == RT_RESULT_VALUE)
+                    genericError("cannot return temporary as const reference");
+                if (kind == RT_RESULT_RVALUE)
+                    genericError("cannot return rvalue as const reference");
+                return RT_RESULT_CONST;
+            case ast.RETURN_EXPR_REF :
+                if (kind == RT_RESULT_VALUE)
+                    genericError("cannot return temporary as mutable reference");
+                if (kind == RT_RESULT_RVALUE)
+                    genericError("cannot return rvalue as mutable reference");
+                if (kind == RT_RESULT_CONST)
+                    genericError("cannot return const as mutable reference");
+                return RT_RESULT_REF;
+            case ast.RETURN_EXPR_RVALUE :
+                if (kind == RT_RESULT_VALUE)
+                    genericError("cannot return temporary as rvalue reference");
+                if (kind == RT_RESULT_CONST)
+                    genericError("cannot return const as rvalue reference");
+                return RT_RESULT_RVALUE;
+            case ast.RETURN_EXPR_FORWARD :
+                // FIXME: is alright to forward rvalue references?
+                return kind;
+            default :
+                assert(false);
+                return RTResultKind();
             }
         },
         () => RT_RESULT_VALUE,
