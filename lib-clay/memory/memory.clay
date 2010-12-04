@@ -1,5 +1,5 @@
 
-import libc.(malloc, free);
+import libc.(malloc, realloc, free);
 import memory.platform.(SystemMallocAlignment);
 
 
@@ -78,6 +78,12 @@ freeRawMemoryAligned(ptr:Pointer[T]) {
 allocateRawMemory(static T, count:I) {
     var ptr = malloc(TypeSize(T) * SizeT(count));
     return Pointer[T](ptr);
+}
+
+[T,I | Integer?(I)]
+reallocateRawMemory(ptr:Pointer[T], count:I) {
+    var newptr = realloc(RawPointer(ptr), TypeSize(T) * SizeT(count));
+    return Pointer[T](newptr);
 }
 
 [T]

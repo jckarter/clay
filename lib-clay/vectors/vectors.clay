@@ -132,3 +132,9 @@ overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
     a.data = data;
     a.capacity = capacity;
 }
+
+[T | BitwiseMovedType?(T)]
+overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
+    a.data = reallocateRawMemory(a.data, capacity);
+    a.capacity = capacity;
+}
