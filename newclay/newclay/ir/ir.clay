@@ -146,6 +146,25 @@ variant Expr = CallExpr
 
 
 //
+// Local
+//
+
+enum AccessKind {
+    ACCESS_CONST,
+    ACCESS_REF,
+    ACCESS_RVALUE,
+}
+
+record Local = referenceType(
+    name: String,
+    value?: Bool,
+    type: Type,
+    access: AccessKind,
+);
+
+
+
+//
 // Statement
 //
 
@@ -163,17 +182,8 @@ record Block = referenceType(
     statements: Vector[Statement],
 );
 
-enum AccessKind {
-    ACCESS_CONST,
-    ACCESS_REF,
-    ACCESS_RVALUE,
-}
-
 record LocalDef = referenceType(
-    name: String,
-    access: AccessKind,
-    value?: Bool,
-    type: Type,
+    local: Local,
 );
 
 record Initialize = referenceType(
