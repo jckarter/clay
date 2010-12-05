@@ -28,7 +28,7 @@
 import twohash.implementation.*;
 
 //
-// basic definitions
+// Types
 //
 
 record HashSet[K]
@@ -41,31 +41,11 @@ record HashMap[K, V]
     data: TwoHash[MapEntry[K, V]],
 );
 
-record StringMap[V]
+record SetVector[K]
 (
-    data: TwoHash[StringMapEntry[V]],
+    data: TwoHash[SetVectorEntry[K]],
+    sentinel: Pointer[SetVectorEntry[K]],
 );
-
-[T]
-Hashtable?(static T) = false;
-
-[K]
-overload Hashtable?(static HashSet[K]) = true;
-
-[K]
-overload EntryType(static HashSet[K]) = SetEntry[K];
-
-[K, V]
-overload Hashtable?(static HashMap[K, V]) = true;
-
-[K, V]
-overload EntryType(static HashMap[K, V]) = MapEntry[K, V];
-
-[V]
-overload Hashtable?(static StringMap[V]) = true;
-
-[V]
-overload EntryType(static StringMap[V]) = StringMapEntry[V];
 
 private record SetEntry[K]
 (
@@ -78,21 +58,15 @@ private record MapEntry[K, V]
     value: V,
 );
 
-private record StringMapEntry[V]
+private record SetVectorEntry[K]
 (
-    hash: SizeT,
-    ptr: Pointer[StringAndValue[V]],
-);
-
-private record StringAndValue[V]
-(
-    value: V,
-    stringSize: SizeT,
-    // followed by string bytes...
+    key: K,
+    next: Pointer[SetVectorEntry[K]],
+    prev: Pointer[SetVectorEntry[K]],
 );
 
 [T]
-Entry?(static T) = false;
+private Entry?(static T) = false;
 
 [K]
 overload Entry?(static SetEntry[K]) = true;
@@ -100,12 +74,35 @@ overload Entry?(static SetEntry[K]) = true;
 [K, V]
 overload Entry?(static MapEntry[K, V]) = true;
 
-[V]
-overload Entry?(static StringMapEntry[V]) = true;
+[K]
+overload Entry?(static SetVectorEntry[K]) = true;
+
+[T]
+private HashSetLike?(static T) = false;
+
+[K]
+overload HashSetLike?(static HashSet[K]) = true;
+
+[K]
+overload HashSetLike?(static SetVector[K]) = true;
 
 //
-// Entries
+// Type predicates
 //
+
+[T]
+private Hashtable?(static T) = false;
+
+[T | RecordWithField?(T, static #data) and TwoHash?(Type(typeToLValue(T).data))]
+overload Hashtable?(static T) = true;
+
+[T | Hashtable?(T)]
+overload EntryType(static T) = EntryType(Type(typeToLValue(T).data));
+
+//
+// Entry semantics
+//
+// (copied from records.clay)
 
 [T | Entry?(T)]
 overload RegularRecord?(static T) = false;
@@ -141,7 +138,7 @@ overload size(a: Hash) = a.data.size;
 // lookup
 //
 
-[K]
+[K, Hash | HashSetLike?(Hash)]
 overload lookup(a: HashSet[K], key: K)
 {
     var pEntry = pEntryAt(a.data, key);
@@ -157,21 +154,12 @@ overload lookup(a: HashMap[K, V], key: K)
     return &pEntry^.value;
 }
 
-[K, V]
-overload lookup(a: StringMap[V], key: K)
-{
-    var pEntry = pEntryAt(a.data, key);
-    if (null?(pEntry))
-        return null(V);
-    return &pEntry^.ptr^.value;
-}
-
 //
 // put
 //
 
-[K]
-overload put(a: HashSet[K], key: K, b: Bool) 
+[K, Hash | HashSetLike?(Hash)]
+overload put(a: Hash, key: K, b: Bool) 
 {
     var pEntry = pEntryAt(a.data, key);
     if (not null?(pEntry) or not b)
@@ -179,7 +167,7 @@ overload put(a: HashSet[K], key: K, b: Bool)
         if (not b) freeEntry(a.data, pEntry);
         return;
     }
-    var pEntry = allocateEntryAt(a.data, key, SetEntry[K](key));
+    var pEntry = allocateEntryAt(a.data, key, EntryType(Hash)(a, key));
 }
 
 [K, V]
@@ -194,24 +182,12 @@ overload put(a: HashMap[K, V], key: K, forward value: V)
     var pEntry = allocateEntryAt(a.data, key, MapEntry[K, V](key, value));
 }
 
-[V]
-overload put(a: StringMap[V], key: StringConstant, forward value: V) 
-{
-    var pEntry = pEntryAt(a.data, key);
-    if (not null?(pEntry)) 
-    {
-        pEntry^.ptr^.value = value;
-        return;
-    }
-    var pEntry = allocateEntryAt(a.data, key, StringMapEntry[V](key, value));
-}
-
 //
 // index
 //
 
 // !! has different semantics (non-ref return)
-[K]
+[K, Hash | HashSetLike?(Hash)]
 overload index(a: HashSet[K], key: K)
 {
     var pEntry = pEntryAt(a.data, key);
@@ -226,18 +202,8 @@ overload index(a: HashMap[K, V], key: K)
     var pEntry = pEntryAt(a.data, key);
     if (not null?(pEntry))
         return ref pEntry^.value;
-    var pEntry = allocateEntryAt(a.data, key, MapEntry[K, V](key));
+    var pEntry = allocateEntryAt(a.data, key, MapEntry[K, V](key, V()));
     return ref pEntry^.value;
-}
-
-[K, V]
-overload index(a: StringMap[V], key: K)
-{
-    var pEntry = pEntryAt(a.data, key);
-    if (not null?(pEntry))
-        return ref pEntry^.ptr^.value;
-    var pEntry = allocateEntryAt(a.data, key, StringMapEntry[V](key));
-    return ref pEntry^.ptr^.value;
 }
 
 //
@@ -261,7 +227,7 @@ overload remove(a: Hash, key: K)
 procedure itemFromEntry;
 
 [Hash | Hashtable?(Hash)]
-overload items(a:Hash) = TwoHashEntries[EntryType(Hash), itemFromEntry](a.data);
+overload items(a: Hash) = TwoHashEntries[EntryType(Hash), itemFromEntry](a.data);
 
 [K]
 overload itemFromEntry(entry: SetEntry[K]) = entry.key, true;
@@ -269,58 +235,100 @@ overload itemFromEntry(entry: SetEntry[K]) = entry.key, true;
 [K, V]
 overload itemFromEntry(entry: MapEntry[K, V]) = entry.key, entry.value;
 
-[V]
-overload itemFromEntry(entry: StringMapEntry[V]) = stringRef(entry.ptr^), entry.ptr^.value;
-
-// Entry constructors
-
-[K, V]
-overload MapEntry[K, V](key) = MapEntry[K, V](key, V());
-
-[V]
-overload StringMapEntry[V](key) = StringMapEntry[V](key, V());
-
-[V]
-overload StringMapEntry[V](key, forward value: V)
-{
-    var rawPtr = allocateRawMemory(Byte, TypeSize(StringAndValue[V]) + size(key));
-    var ptr = Pointer[StringAndValue[V]](rawPtr);
-    ptr^.stringSize = size(key);
-    ptr^.value <-- value;
-    var str = stringRef(ptr^);
-    copyMemory(begin(str), end(str), begin(key));
-    return StringMapEntry[V](hash(str), ptr);
-}
-
-[V]
-stringRef(a: StringAndValue[V]) = StringConstant(Pointer[Char](&a+1), a.stringSize);
-
+//
 // Entry match
+//
+
+[E, K]
+overload keyMatch?(entry: E, key: K) = entry.key == key;
+
+[E]
+overload entryHash(entry: E) = largeHash(entry.key);
+
+//
+// SetVector stuff
+//
 
 [K]
-overload keyMatch?(entry: SetEntry[K], key: K) = entry.key == key;
-
-[K, V]
-overload keyMatch?(entry: MapEntry[K, V], key: K) = entry.key == key;
-
-[K, V]
-overload keyMatch?(entry: StringMapEntry[V], key: K)
+overload SetVector[K]() set: SetVector[K]
 {
-    if (entry.hash != hash(key))
-        return false;
-    return stringRef(entry.ptr^) == key;
+    set.data <-- TwoHash[SetVectorEntry[K]]();
+    set.sentinel = allocateRawMemory(SetVectorEntry[K], 1);
+    resetUnsafe(set.sentinel^.key);
+    set.sentinel^.next = set.sentinel;
+    set.sentinel^.prev = set.sentinel;
 }
 
 [K]
-overload entryHash(entry: SetEntry[K]) = largeHash(entry.key);
+overload destroy(set: SetVector[K])
+{
+    destroy(set.data);
+    destroy(set.sentinel);
+}
 
-[K, V]
-overload entryHash(entry: MapEntry[K, V]) = largeHash(entry.key);
+[K]
+overload SetVectorEntry[K](a: SetVector[K], key: K) entry: SetVectorEntry[K]
+{
+    ref sentinel = a.sentinel;
+    entry.key <-- move(key);
+    entry.next = sentinel;
+    entry.prev = sentinel^.prev;
+    entry.next^.prev = &entry;
+    entry.prev^.next = &entry;
+}
 
-[V]
-overload entryHash(entry: StringMapEntry[V]) = largeHash(entry.hash);
+[K]
+overload destroy(entry: SetVectorEntry[K])
+{
+    destroy(entry.key);
+    entry.prev^.next = entry.next;
+    entry.next^.prev = entry.prev;
+}
+
+[K]
+overload resetUnsafe(a: SetVectorEntry[K])
+{
+    a.prev = &a;
+    a.next = &a;
+}
+
+[K]
+overload moveEntry(src: SetVectorEntry[K], th) entry: SetVectorEntry[K]
+{
+    entry <-- move(src);
+    entry.prev^.next = &entry;
+    entry.next^.prev = &entry;
+}
 
 
+[K]
+overload items(a: SetVector[K]) = SetVectorItems(a.sentinel, a.sentinel);
+
+private record SetVectorItems[K]
+(
+    current: Pointer[SetVectorEntry[K]],
+    sentinel: Pointer[SetVectorEntry[K]],
+);
+
+[K]
+overload iterator(i: SetVectorItems[K]) = i;
+
+[K]
+overload hasNext?(i: SetVectorItems[K]) = (i.current^.next != i.sentinel);
+
+[K]
+overload next(i: SetVectorItems[K])
+{
+    i.current = i.current^.next;
+    return ref i.current^.key;
+}
+
+//
+// misc
+//
+
+[K]
+overload SetEntry[K](a: HashSet[K], key: K) = SetEntry[K](key);
 
 
 

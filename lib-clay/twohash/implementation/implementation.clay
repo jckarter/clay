@@ -40,6 +40,15 @@ record TwoHash[E]
 );
 
 [E]
+overload EntryType(static TwoHash[E]) = E;
+
+[T]
+TwoHash?(static T) = false;
+
+[E]
+overload TwoHash?(static TwoHash[E]) = true;
+
+[E]
 overload RegularRecord?(static TwoHash[E]) = false;
 
 record Table[B]
@@ -190,7 +199,7 @@ retry:
     if (entryCount[1] < entryCount[0])
         bi = 1;
         
-    return allocateInBucket(th.tables[bi][hash[bi]], entry, hash[2]);
+    return allocateInBucket(th, th.tables[bi][hash[bi]], entry, hash[2]);
 }
 
 //
@@ -345,8 +354,10 @@ overload splitHash(th: TwoHash[E], entry: E) = baseSplitHash(th, entryHash(entry
 // helpers
 //
 
+moveEntry(entry, th) = move(entry);
+
 [E]
-allocateInBucket(b: Bucket[E], entry: E, hashByte)
+allocateInBucket(th, b: Bucket[E], entry: E, hashByte)
 {
     for (k in range(16))
     {
@@ -354,7 +365,7 @@ allocateInBucket(b: Bucket[E], entry: E, hashByte)
         {
             b.hashBytes[k] = Byte(hashByte);
             var pEntry = &b.entries[k];
-            pEntry^ <-- move(entry);
+            pEntry^ <-- moveEntry(entry, th);
             return pEntry;
         }
     }
@@ -383,7 +394,7 @@ grow(th: TwoHash[E])
                 var hash = splitHash(th, entry);
                 ref newBucket = th.tables[i][hash[i]];
                 
-                allocateInBucket(newBucket, entry, hash[2]);
+                allocateInBucket(th, newBucket, entry, hash[2]);
             }
         }
     }
