@@ -471,11 +471,8 @@ instance Exception = NewClassCouldNotBeCreated;
 record NewClassCouldNotAddIvar (module: StringConstant, name: StringConstant, ivar: StringConstant);
 instance Exception = NewClassCouldNotAddIvar;
 
-record NewClassCouldNotAddClassMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
-instance Exception = NewClassCouldNotAddClassMethod;
-
-record NewClassCouldNotAddInstanceMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
-instance Exception = NewClassCouldNotAddInstanceMethod;
+record NewClassCouldNotAddMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
+instance Exception = NewClassCouldNotAddMethod;
 
 private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ...args) {
     objc_msgSend(
@@ -581,6 +578,22 @@ private var objcNewClassInstanceMethodsTable[T]
         ...mapValues(m => objcNewClassInstanceMethod(T, m), ...ClassInstanceMethods(T))
     );
 
+private _objcNewClassAddMethods(
+    moduleName: StringConstant,
+    symbolName: StringConstant,
+    handle: ClassHandle,
+    methodsBegin: Pointer[ObjcNewClassMethod],
+    methodsEnd: Pointer[ObjcNewClassMethod]
+) {
+    for (method in coordinateRange(methodsBegin, methodsEnd))
+        if (class_addMethod(
+            handle,
+            method.selector,
+            method.imp,
+            cstring(method.typeEncoding)
+        ) == NO)
+            throw NewClassCouldNotAddMethod(moduleName, symbolName, CStringRef(Pointer[CChar](method.selector)));
+}
 
 private _objcNewClassMake(
     super: ClassHandle,
@@ -614,23 +627,12 @@ private _objcNewClassMake(
         ) == NO)
             throw NewClassCouldNotAddIvar(moduleName, symbolName, ivarEntry.name);
 
-    for (classMethod in coordinateRange(classMethodsBegin, classMethodsEnd))
-        if (class_addMethod(
-            metahandle,
-            classMethod.selector,
-            classMethod.imp,
-            cstring(classMethod.typeEncoding)
-        ) == NO)
-            throw NewClassCouldNotAddClassMethod(moduleName, symbolName, CStringRef(Pointer[CChar](classMethod.selector)));
-
-    for (instanceMethod in coordinateRange(instanceMethodsBegin, instanceMethodsEnd))
-        if (class_addMethod(
-            handle,
-            instanceMethod.selector,
-            instanceMethod.imp,
-            cstring(instanceMethod.typeEncoding)
-        ) == NO)
-            throw NewClassCouldNotAddInstanceMethod(moduleName, symbolName, CStringRef(Pointer[CChar](instanceMethod.selector)));
+    _objcNewClassAddMethods(moduleName, symbolName, metahandle,
+        classMethodsBegin, classMethodsEnd
+    );
+    _objcNewClassAddMethods(moduleName, symbolName, handle,
+        instanceMethodsBegin, instanceMethodsEnd
+    );
 
     objc_registerClassPair(handle);
     return handle;
