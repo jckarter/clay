@@ -1980,6 +1980,8 @@ enum PrimOpCode {
     PRIM_IdentifierSize,
     PRIM_IdentifierConcat,
     PRIM_IdentifierSlice,
+    PRIM_IdentifierModuleName,
+    PRIM_IdentifierStaticName,
 };
 
 struct PrimOp : public Object {
