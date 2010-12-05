@@ -4050,6 +4050,25 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_IdentifierModuleName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        ModulePtr m = staticModule(obj);
+        if (!m)
+            argumentError(0, "value has no associated module");
+        evalStaticObject(new Identifier(m->moduleName), out);
+        break;
+    }
+
+    case PRIM_IdentifierStaticName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        ostringstream sout;
+        printStaticName(sout, obj);
+        evalStaticObject(new Identifier(sout.str()), out);
+        break;
+    }
+
     default :
         assert(false);
 
