@@ -176,7 +176,7 @@ valueToRTResult(x:Value) {
             return RTResult();
         },
         MatchDefault, x => {
-            return RTResult(RT_RESULT_VALUE, staticType(type));
+            return RTResult(RT_RESULT_VALUE, staticType(Value(x)));
         },
     );
 }

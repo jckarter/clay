@@ -87,7 +87,7 @@ staticType(x:Value) {
 
 staticType?(x:Value) {
     return match(x,
-        Symbol, y => (y.head == getHooks().Static),
+        Symbol, y => (Value(y.head) == getHooks().Static),
         MatchDefault, y => false,
     );
 }
@@ -112,7 +112,7 @@ pointerType(x:Value) Value {
 
 pointerType?(x:Value) {
     return match(x,
-        Symbol, y => (y.head == getHooks().Pointer),
+        Symbol, y => (Value(y.head) == getHooks().Pointer),
         MatchDefault, y => false,
     );
 }
