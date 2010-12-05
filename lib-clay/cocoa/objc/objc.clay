@@ -64,12 +64,9 @@ overload encodeIdentifier() = #"";
 // XXX distinguish raw pointer from Pointer[UInt8]
 overload encodeIdentifier(static RawPointer) = #"^v";
 
-// XXX pending proper StaticNameIdentifier primitive
-private StaticNameIdentifier(T) = #"Record";
-
 [T | Record?(T)]
 overload encodeIdentifier(static Pointer[Pointer[T]])
-    = IdentifierConcat(#"^^{", StaticNameIdentifier(T), #"}");
+    = IdentifierConcat(#"^^{", IdentifierStaticName(T), #"}");
 [T | Tuple?(T)]
 overload encodeIdentifier(static Pointer[Pointer[T]]) = #"^^{Tuple}";
 [T | Union?(T)]
@@ -77,7 +74,7 @@ overload encodeIdentifier(static Pointer[Pointer[T]]) = #"^^(Union)";
 
 [T | RegularRecord?(T)] overload encodeIdentifier(static T)
     = IdentifierConcat(
-        #"{", StaticNameIdentifier(T), #"=",
+        #"{", IdentifierStaticName(T), #"=",
         encodeIdentifier(...RecordFieldTypes(T)),
         #"}"
     );
@@ -322,20 +319,19 @@ procedure ClassInstanceVars;
 procedure ClassClassMethods;
 procedure ClassInstanceMethods;
 
-moduleNameIdentifier(T) {
-    var name = String();
-    for (c in ModuleName(T)) {
-        if (c == '.')
-            push(name, "__");
-        else
-            push(name, c);
-    }
-    return move(name);
-}
+MangledModuleChar(c) = c;
+overload MangledModuleChar(static #".") = #__;
+
+MangledModuleName(T) = IdentifierConcat(...mapValues(
+    MangledModuleChar,
+    ...IdentifierChars(IdentifierModuleName(T))
+));
 
 [T | ClayClass?(T)]
 overload ClassName(static T) {
-    return "clay__" + moduleNameIdentifier(T) + "__" + StaticName(T);
+    return StaticName(IdentifierConcat(
+        #"clay__", MangledModuleName(T), #"__", IdentifierStaticName(T)
+    ));
 }
 
 [T | ExternalClass?(T) or ExternalClayClass?(T)]
@@ -475,10 +471,10 @@ instance Exception = NewClassCouldNotBeCreated;
 record NewClassCouldNotAddIvar (module: StringConstant, name: StringConstant, ivar: StringConstant);
 instance Exception = NewClassCouldNotAddIvar;
 
-record NewClassCouldNotAddClassMethod (module: StringConstant, name: StringConstant, selector: StringConstant);
+record NewClassCouldNotAddClassMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
 instance Exception = NewClassCouldNotAddClassMethod;
 
-record NewClassCouldNotAddInstanceMethod (module: StringConstant, name: StringConstant, selector: StringConstant);
+record NewClassCouldNotAddInstanceMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
 instance Exception = NewClassCouldNotAddInstanceMethod;
 
 private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ...args) {
@@ -525,57 +521,135 @@ private instanceMethodImp(static T, static sel, fn)
         ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(T, sel)
     );
 
-[T | ClayClass?(T)]
-overload objcClassMake(static T) {
-    var name = ClassName(T);
+private record ObjcNewClassInstanceVar(
+    name: StringConstant,
+    size: SizeT,
+    alignment: UInt8,
+    typeEncoding: StringConstant,
+);
+
+private objcNewClassInstanceVar(ivarPair) {
+    var ivarName = ivarPair.0;
+    var ivarType = ivarPair.1;
+
+    return ObjcNewClassInstanceVar(
+        StaticName(ivarName),
+        TypeSize(ivarType),
+        UInt8(log2(TypeAlignment(ivarType))),
+        encode(ivarType)
+    );
+}
+
+private var objcNewClassInstanceVarsTable[T]
+    = Array[ObjcNewClassInstanceVar, countValues(...ClassInstanceVars(T))](
+        ...mapValues(objcNewClassInstanceVar, ...ClassInstanceVars(T))
+    );
+
+private record ObjcNewClassMethod (
+    selector: SelectorHandle,
+    imp: RawPointer,
+    typeEncoding: StringConstant,
+);
+
+private objcNewClassClassMethod(T, classMethod) {
+    var selector = classMethod.0;
+    var imp = classMethod.1;
+    return ObjcNewClassMethod(
+        objcSelector[selector],
+        RawPointer(classMethodImp(T, selector, imp)),
+        SelectorTypeEncoding(Static[T], selector)
+    );
+}
+
+private var objcNewClassClassMethodsTable[T]
+    = Array[ObjcNewClassMethod, countValues(...ClassClassMethods(T))](
+        ...mapValues(m => objcNewClassClassMethod(T, m), ...ClassClassMethods(T))
+    );
+
+private objcNewClassInstanceMethod(T, instanceMethod) {
+    var selector = instanceMethod.0;
+    var imp = instanceMethod.1;
+    return ObjcNewClassMethod(
+        objcSelector[selector],
+        RawPointer(instanceMethodImp(T, selector, imp)),
+        SelectorTypeEncoding(T, selector)
+    );
+}
+
+private var objcNewClassInstanceMethodsTable[T]
+    = Array[ObjcNewClassMethod, countValues(...ClassInstanceMethods(T))](
+        ...mapValues(m => objcNewClassInstanceMethod(T, m), ...ClassInstanceMethods(T))
+    );
+
+
+private _objcNewClassMake(
+    super: ClassHandle,
+    className: StringConstant,
+    symbolName: StringConstant,
+    moduleName: StringConstant,
+    ivarsBegin: Pointer[ObjcNewClassInstanceVar],
+    ivarsEnd: Pointer[ObjcNewClassInstanceVar],
+    classMethodsBegin: Pointer[ObjcNewClassMethod],
+    classMethodsEnd: Pointer[ObjcNewClassMethod],
+    instanceMethodsBegin: Pointer[ObjcNewClassMethod],
+    instanceMethodsEnd: Pointer[ObjcNewClassMethod]
+) ClassHandle {
     var handle = objc_allocateClassPair(
-        ClassHandle(objectHandle(SuperclassType(T))),
-        cstring(name),
+        super,
+        cstring(className),
         SizeT(0)
     );
     if (null?(handle))
-        throw NewClassCouldNotBeCreated(ModuleName(T), StaticName(T));
+        throw NewClassCouldNotBeCreated(moduleName, symbolName);
 
     var metahandle = Class(object_getClass(ObjectHandle(handle)));
 
-    static for (ivarPair in ...ClassInstanceVars(T)) {
-        var ivarName = StaticName(ivarPair.0);
-        var ivarType = ivarPair.1;
+    for (ivarEntry in coordinateRange(ivarsBegin, ivarsEnd))
         if (class_addIvar(
             handle,
-            cstring(ivarName),
-            TypeSize(ivarType),
-            UInt8(log2(TypeAlignment(ivarType))),
-            cstring(encode(ivarType))
+            cstring(ivarEntry.name),
+            ivarEntry.size,
+            ivarEntry.alignment,
+            cstring(ivarEntry.typeEncoding),
         ) == NO)
-            throw NewClassCouldNotAddIvar(ModuleName(T), StaticName(T), ivarName);
-    }
+            throw NewClassCouldNotAddIvar(moduleName, symbolName, ivarEntry.name);
 
-    static for (classMethod in ...ClassClassMethods(T)) {
-        var selector = classMethod.0;
-        var imp = classMethod.1;
+    for (classMethod in coordinateRange(classMethodsBegin, classMethodsEnd))
         if (class_addMethod(
             metahandle,
-            objcSelector[selector],
-            RawPointer(classMethodImp(T, selector, imp)),
-            cstring(SelectorTypeEncoding(Static[T], selector))
+            classMethod.selector,
+            classMethod.imp,
+            cstring(classMethod.typeEncoding)
         ) == NO)
-            throw NewClassCouldNotAddClassMethod(ModuleName(T), StaticName(T), StaticName(selector));
-    }
+            throw NewClassCouldNotAddClassMethod(moduleName, symbolName, CStringRef(Pointer[CChar](classMethod.selector)));
 
-    static for (instanceMethod in ...ClassInstanceMethods(T)) {
-        var selector = instanceMethod.0;
-        var imp = instanceMethod.1;
+    for (instanceMethod in coordinateRange(instanceMethodsBegin, instanceMethodsEnd))
         if (class_addMethod(
             handle,
-            objcSelector[selector],
-            RawPointer(instanceMethodImp(T, selector, imp)),
-            cstring(SelectorTypeEncoding(T, selector))
+            instanceMethod.selector,
+            instanceMethod.imp,
+            cstring(instanceMethod.typeEncoding)
         ) == NO)
-            throw NewClassCouldNotAddInstanceMethod(ModuleName(T), StaticName(T), StaticName(selector));
-    }
+            throw NewClassCouldNotAddInstanceMethod(moduleName, symbolName, CStringRef(Pointer[CChar](instanceMethod.selector)));
 
     objc_registerClassPair(handle);
+    return handle;
+}
+
+[T | ClayClass?(T)]
+inline overload objcClassMake(static T) ClassHandle {
+    var handle = _objcNewClassMake(
+        objcClass[SuperclassType(T)],
+        ClassName(T),
+        StaticName(T),
+        ModuleName(T),
+        begin(objcNewClassInstanceVarsTable[T]),
+        end  (objcNewClassInstanceVarsTable[T]),
+        begin(objcNewClassClassMethodsTable[T]),
+        end  (objcNewClassClassMethodsTable[T]),
+        begin(objcNewClassInstanceMethodsTable[T]),
+        end  (objcNewClassInstanceMethodsTable[T]),
+    );
 
     static for (ivarPair in ...ClassInstanceVars(T)) {
         var ivar = ivarPair.0;
@@ -587,10 +661,10 @@ overload objcClassMake(static T) {
 }
 
 [T | ClayClass?(T)]
-overload objcInitIvar(static T, ivarName) = Ivar(0);
+overload objcInitIvar(static T, ivarName) = Ivar();
 
 [T | ClayClass?(T)]
-overload objcInitIvarOffset(static T, ivarName) = PtrInt(0);
+overload objcInitIvarOffset(static T, ivarName) = PtrInt();
 
 
 
