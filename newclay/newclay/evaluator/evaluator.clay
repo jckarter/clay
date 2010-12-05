@@ -2,6 +2,7 @@
 import maybe.*;
 import newclay.ast as ast;
 import newclay.core.*;
+import newclay.hooks.*;
 
 
 
@@ -79,38 +80,15 @@ private parseOctalDigit(x) {
 // bindArgs, bindPatternArgs
 //
 
-nArgsStr(n) {
-    if (n == 1)
-        return printString("1 argument");
+verifyBindingArity(formalArgs, args) {
+    if (nothing?(formalArgs.variadicItem))
+        ensureArity(size(formalArgs.items), size(args));
     else
-        return printString(n, " arguments");
-}
-
-ensureArity(formalArgs, args) {
-    if (nothing?(formalArgs.variadicItem)) {
-        var expected = size(formalArgs.items);
-        var received = size(args);
-        if (received != expected) {
-            genericError(
-                "expected ", nArgsStr(expected),
-                ", but received ", received
-            );
-        }
-    }
-    else {
-        var minExpected = size(formalArgs.items);
-        var received = size(args);
-        if (received < minExpected) {
-            genericError(
-                "expected atleast ", nArgsStr(minExpected),
-                ", but received ", received
-            );
-        }
-    }
+        ensureArity2(size(formalArgs.items), size(args));
 }
 
 bindArgs(env, formalArgs, args) {
-    ensureArity(formalArgs, args);
+    verifyBindingArity(formalArgs, args);
     var env2 = newEnv(env);
     var nFixed = size(formalArgs.items);
     for (name, arg in zipped(formalArgs.items, slicedUpto(args, nFixed)))
@@ -125,7 +103,7 @@ bindArgs(env, formalArgs, args) {
 }
 
 bindPatternArgs(env, formalArgs, args) {
-    ensureArity(formalArgs, args);
+    verifyBindingArity(formalArgs, args);
     var env2 = newEnv(env);
     var nFixed = size(formalArgs.items);
     for (name, arg in zipped(formalArgs.items, slicedUpto(args, nFixed)))
@@ -407,8 +385,7 @@ overload envEntryToValueList(x:RTListVariable) {
 
 evaluateCallWithOneResult(x, args) {
     var results = evaluateCall(x, move(args));
-    if (size(results) != 1)
-        genericError("expected 1 value, received ", size(results), " values");
+    ensureArity(1, size(results));
     return move(results[0]);
 }
 
@@ -451,7 +428,7 @@ overload evaluateIndexing(x:Value, args) {
     return evaluateIndexing(*x, args);
 }
 overload evaluateIndexing(x:SymbolHead, args) {
-    ensureArity(x.ast.params, args);
+    verifyBindingArity(x.ast.params, args);
     return Value(makeSymbol(x, args));
 }
 
@@ -935,20 +912,17 @@ evaluateStaticCall(program, callable, args) {
 //
 
 private oneValue(args) {
-    if (size(args) != 1)
-        genericError("expecting one argument");
+    ensureArity(1, size(args));
     return args[0];
 }
 
 private twoValues(args) {
-    if (size(args) != 2)
-        genericError("expecting two arguments");
+    ensureArity(2, size(args));
     return args[0], args[1];
 }
 
 private threeValues(args) {
-    if (size(args) != 3)
-        genericError("expecting three arguments");
+    ensureArity(3, size(args));
     return args[0], args[1], args[2];
 }
 
@@ -1071,7 +1045,7 @@ evaluatePrimitive(kind, args) {
             return ValueList(BoolValue(x < y));
         }
         else {
-            genericError("lesser? expects is applicable to Int,Int or Bool,Bool");
+            genericError("lesser? is only applicable to Int,Int or Bool,Bool");
             return ValueList();
         }
     }
