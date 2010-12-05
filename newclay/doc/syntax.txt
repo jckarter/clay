@@ -10,7 +10,7 @@ SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
 StaticOverload -> "static" "overload" TargetPattern "(" ListPattern? ")"
                    Predicate? "=" ExprList ";"
 
-Overload -> "overload" TargetPattern "(" ArgumentList? ")" ReturnList
+Overload -> "overload" TargetPattern "(" ArgumentList? ")" ReturnList?
             Predicate? CodeBody
 
 Predicate -> "|" Expr
@@ -20,9 +20,16 @@ Argument -> ArgumentKind? Identifier (":" Pattern)?
 MultiArgument -> ArgumentKind? "..." Identifier (":" PatternNameRef)?
 ArgumentKind -> "const" | "ref" | "rvalue" | "forward"
 
-ReturnList -> (ReturnSpec | VariadicReturnSpec)*
-ReturnSpec -> ReturnKind? (Identifier ":")? Expr
-VariadicReturnSpec -> ReturnKind? "..." (Identifier ":")? Expr
+ReturnList -> NamedReturnList | UnnamedReturnList
+
+NamedReturnList -> (NamedReturnSpec | NamedVariadicReturnSpec)+
+NamedReturnSpec -> ReturnKind? Identifier ":" Expr
+NamedVariadicReturnSpec -> ReturnKind? "..." Identifier ":" Expr
+
+UnnamedReturnList -> (UnnamedReturnSpec | UnnamedVariadicReturnSpec)+
+UnnamedReturnSpec -> ReturnKind? Expr
+UnnamedVariadicReturnSpec -> ReturnKind? "..." Expr
+
 ReturnKind -> "const" | "ref" | "rvalue"
 
 CodeBody -> "=" ReturnExprList ";"

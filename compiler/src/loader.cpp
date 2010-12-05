@@ -756,6 +756,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(IdentifierSize);
     PRIMITIVE(IdentifierConcat);
     PRIMITIVE(IdentifierSlice);
+    PRIMITIVE(IdentifierModuleName);
+    PRIMITIVE(IdentifierStaticName);
 
 #undef PRIMITIVE
 

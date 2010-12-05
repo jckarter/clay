@@ -1639,11 +1639,11 @@ void codegenCompileTimeValue(EValuePtr ev,
     }
 
     default : {
+        // TODO: support complex constants
         ostringstream sout;
         sout << "constants of type " << ev->type
              << " are not yet supported";
-        // TODO: support complex constants
-        
+        error(sout.str());
         break;
     }
 
@@ -5046,6 +5046,25 @@ void codegenPrimOp(PrimOpPtr x,
                                     begin, end);
         string result = ident->str.substr(begin, end-begin);
         codegenStaticObject(new Identifier(result), ctx, out);
+        break;
+    }
+
+    case PRIM_IdentifierModuleName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        ModulePtr m = staticModule(obj);
+        if (!m)
+            argumentError(0, "value has no associated module");
+        codegenStaticObject(new Identifier(m->moduleName), ctx, out);
+        break;
+    }
+
+    case PRIM_IdentifierStaticName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        ostringstream sout;
+        printStaticName(sout, obj);
+        codegenStaticObject(new Identifier(sout.str()), ctx, out);
         break;
     }
 
