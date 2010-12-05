@@ -1639,11 +1639,11 @@ void codegenCompileTimeValue(EValuePtr ev,
     }
 
     default : {
+        // TODO: support complex constants
         ostringstream sout;
         sout << "constants of type " << ev->type
              << " are not yet supported";
-        // TODO: support complex constants
-        
+        error(sout.str());
         break;
     }
 
