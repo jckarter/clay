@@ -78,6 +78,31 @@ typeSymbol(type:Value) Symbol {
 
 
 //
+// staticType, staticType?, staticTypeValue
+//
+
+staticType(x:Value) {
+    return evaluateIndexing(getHooks().Static, ValueList(x));
+}
+
+staticType?(x:Value) {
+    return match(x,
+        Symbol, y => (y.head == getHooks().Static),
+        MatchDefault, y => false,
+    );
+}
+
+staticTypeValue(x:Value) {
+    var sym = typeSymbol(x);
+    if (Value(sym.head) != getHooks().Static)
+        genericError("not a static type: ", x);
+    assert(size(sym.params) == 1);
+    return sym.params[0];
+}
+
+
+
+//
 // pointerType, pointerType?, pointerTargetType
 //
 

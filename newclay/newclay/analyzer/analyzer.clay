@@ -176,8 +176,7 @@ valueToRTResult(x:Value) {
             return RTResult();
         },
         MatchDefault, x => {
-            var type = evaluateIndexing(getHooks().Static, ValueList(x));
-            return RTResult(RT_RESULT_VALUE, type);
+            return RTResult(RT_RESULT_VALUE, staticType(type));
         },
     );
 }
