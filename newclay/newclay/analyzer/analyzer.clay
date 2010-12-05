@@ -309,8 +309,7 @@ runtimeCallable?(x:Value) {
 
 analyzeCallWithOneResult(x, args:RTResultList) {
     var results = analyzeCall(x, args);
-    if (size(results) != 1)
-        genericError("expected 1 value, received ", size(results), " values");
+    ensureArity(1, size(results));
     return move(results[0]);
 }
 

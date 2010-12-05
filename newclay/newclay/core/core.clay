@@ -658,10 +658,6 @@ overload displayError(e:GenericError) {
     displaySemanticError(e.locationStack, e.compilationStack, e.msg);
 }
 
-genericError(...msg) {
-    throw GenericError(printString(...msg));
-}
-
 
 record RecursiveAnalysisError = semanticError(
 );
@@ -673,6 +669,43 @@ overload displayError(e:RecursiveAnalysisError) {
     displaySemanticError(e.locationStack, e.compilationStack, msg);
 }
 
+
+
+//
+// error reporting helpers
+//
+
+genericError(...msg) {
+    throw GenericError(printString(...msg));
+}
+
 recursiveAnalysisError() {
     throw RecursiveAnalysisError();
+}
+
+private valuesStr(n) =
+    if (n == 1) "value" else "values";
+
+arityError(expected, received) {
+    genericError(
+        "expected ", expected, " ", valuesStr(expected),
+        ", but received ", received
+    );
+}
+
+arityError2(minExpected, received) {
+    genericError(
+        "expected atleast ", minExpected, " ", valuesStr(minExpected),
+        ", but received ", received
+    );
+}
+
+ensureArity(expected, received) {
+    if (expected != received)
+        arityError(expected, received);
+}
+
+ensureArity2(minExpected, received) {
+    if (minExpected > received)
+        arityError2(minExpected, received);
 }
