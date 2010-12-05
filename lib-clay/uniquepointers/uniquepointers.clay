@@ -37,9 +37,7 @@ overload UniquePointer[T]() = UniquePointer(null(T));
 overload UniquePointer[T](src: UniquePointer[T]);
 
 [T]
-inline overload moveUnsafe(src: UniquePointer[T]) returned: UniquePointer[T] {
-    returned.ptr = src.ptr;
-}
+overload BitwiseMovedType?(static UniquePointer[T]) = true;
 
 [T]
 inline overload resetUnsafe(p: UniquePointer[T]) {

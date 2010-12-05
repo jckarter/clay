@@ -1,0 +1,11 @@
+add: add, #add
+Vector[Char]: Vector[Char], #Vector[Char]
+Vec: Vec, #Vec
+hash: hash, #hash
+Array: Array, #Array
+Array[Bool, 10]: Array[Bool, 10], #Array[Bool, 10]
+HashMap: HashMap, #HashMap
+HashMap[Int32, Int32]: HashMap[Int32, Int32], #HashMap[Int32, Int32]
+vectors.generic: vectors.generic, #vectors.generic
+Record?: Record?, #Record?
+disp: disp, #disp

@@ -72,8 +72,7 @@ private cloneList(_b:NodePtr[K,V]) {
 //
 
 [K,V]
-overload moveUnsafe(a:HashMap[K,V]) =
-    HashMap[K,V](moveUnsafe(a.buckets), a.size);
+overload BitwiseMovedType?(static HashMap[K,V]) = true;
 
 [K,V]
 overload resetUnsafe(a:HashMap[K,V]) {

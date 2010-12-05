@@ -415,20 +415,20 @@ enum RTVariableKind {
 record RTVariable = referenceType(
     kind: RTVariableKind,
     type: Value,
-    lowLevelId: Int,
+    lowLevelLocal: ir.Local,
 );
 
 overload RTVariable(kind:RTVariableKind, type:Value) =
-    RTVariable(kind, type, -1);
+    RTVariable(kind, type, ir.Local());
 
 record RTListVariable = referenceType(
     kinds: Vector[RTVariableKind],
     types: ValueList,
-    lowLevelId: Int,
+    lowLevelLocals: Vector[ir.Local],
 );
 
 overload RTListVariable(forward kinds:Vector[RTVariableKind], forward types:ValueList) =
-    RTListVariable(kinds, types, -1);
+    RTListVariable(kinds, types, Vector[ir.Local]());
 
 
 
@@ -467,6 +467,10 @@ overload printReprTo(stream, x:RTResult) {
 // Specialization, InvokeTable
 //
 
+variant NamedReturn = RTVariable
+                    | RTListVariable
+                    ;
+
 record Specialization = referenceType(
     matchedOverload: Overload,
     callable: Value,
@@ -474,8 +478,7 @@ record Specialization = referenceType(
     internalArgs: Vector[RTVariable],
     internalVariadicArg: Maybe[RTListVariable],
     bodyEnv: Env,
-    namedReturnVars: Vector[RTVariable],
-    namedVariadicReturnVars: Vector[RTListVariable],
+    namedReturns: Vector[NamedReturn],
     returns: RTResultList,
     lowLevelProc: Maybe[ir.Procedure],
 );

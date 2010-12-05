@@ -339,39 +339,104 @@ inline bitwiseBlend(mask, ones, zeros)
 
 
 //
+// PrimitiveType?
+//
+
+PrimitiveType?(X) = false;
+overload PrimitiveType?(static Bool) = true;
+overload PrimitiveType?(static Int8) = true;
+overload PrimitiveType?(static Int16) = true;
+overload PrimitiveType?(static Int32) = true;
+overload PrimitiveType?(static Int64) = true;
+overload PrimitiveType?(static UInt8) = true;
+overload PrimitiveType?(static UInt16) = true;
+overload PrimitiveType?(static UInt32) = true;
+overload PrimitiveType?(static UInt64) = true;
+overload PrimitiveType?(static Float32) = true;
+overload PrimitiveType?(static Float64) = true;
+[T] overload PrimitiveType?(static Pointer[T]) = true;
+[I, O] overload PrimitiveType?(static CodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(static CCodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(static VarArgsCCodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(static StdCallCodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(static FastCallCodePointer[I, O]) = true;
+[T] overload PrimitiveType?(static Static[T]) = true;
+[T,n] overload PrimitiveType?(static Vec[T,n]) = true;
+[E | Enum?(E)] overload PrimitiveType?(static E) = true;
+[...T] overload PrimitiveType?(static Union[...T]) = true;
+[] overload PrimitiveType?(static Union[]) = true;
+overload PrimitiveType?(static Tuple[]) = true;
+
+
+
+//
+// PrimitiveCompoundType?, PrimitiveCompoundMemberTypes
+//
+
+PrimitiveCompoundType?(X) = false;
+
+[T,n] overload PrimitiveCompoundType?(static Array[T,n]) = true;
+[...T] overload PrimitiveCompoundType?(static Tuple[...T]) = true;
+[R | RegularRecord?(R)] overload PrimitiveCompoundType?(static R) = true;
+[V | Variant?(V)] overload PrimitiveCompoundType?(static V) = true;
+
+procedure PrimitiveCompoundMemberTypes;
+[T,n] overload PrimitiveCompoundMemberTypes(static Array[T,n]) = T;
+[...T] overload PrimitiveCompoundMemberTypes(static Tuple[...T]) = ...T;
+[R | RegularRecord?(R)]
+overload PrimitiveCompoundMemberTypes(static R) = ...RecordFieldTypes(R);
+[V | Variant?(V)]
+overload PrimitiveCompoundMemberTypes(static V) = ...VariantMembers(V);
+
+
+//
 // PODType?
 //
 
 PODType?(X) = false;
 
-overload PODType?(static Bool) = true;
-overload PODType?(static Int8) = true;
-overload PODType?(static Int16) = true;
-overload PODType?(static Int32) = true;
-overload PODType?(static Int64) = true;
-overload PODType?(static UInt8) = true;
-overload PODType?(static UInt16) = true;
-overload PODType?(static UInt32) = true;
-overload PODType?(static UInt64) = true;
-overload PODType?(static Float32) = true;
-overload PODType?(static Float64) = true;
-[T] overload PODType?(static Pointer[T]) = true;
-[I, O] overload PODType?(static CodePointer[I, O]) = true;
-[I, O] overload PODType?(static CCodePointer[I, O]) = true;
-[I, O] overload PODType?(static VarArgsCCodePointer[I, O]) = true;
-[I, O] overload PODType?(static StdCallCodePointer[I, O]) = true;
-[I, O] overload PODType?(static FastCallCodePointer[I, O]) = true;
-[T] overload PODType?(static Static[T]) = true;
-[T,n] overload PODType?(static Array[T,n]) = PODType?(T);
-[T,n] overload PODType?(static Vec[T,n]) = true;
-[E | Enum?(E)] overload PODType?(static E) = true;
-[...T] overload PODType?(static Tuple[...T]) = allValues?(PODType?, ...T);
-overload PODType?(static Tuple[]) = true;
-[...T] overload PODType?(static Union[...T]) = true;
-overload PODType?(static Union[]) = true;
+[T | PrimitiveType?(T)]
+overload PODType?(static T) = true;
 
-[R | RegularRecord?(R)] overload PODType?(static R)
-    = allValues?(PODType?, ...RecordFieldTypes(R));
+[T | PrimitiveCompoundType?(T)]
+overload PODType?(static T) = allValues?(PODType?, ...PrimitiveCompoundMemberTypes(T));
 
-[V | Variant?(V)] overload PODType?(static V)
-    = allValues?(PODType?, ...VariantMembers(V));
+
+
+//
+// Finer-grained POD-related properties
+//
+
+BitwiseCopiedType?(T) = PODType?(T);
+BitwiseMovedType?(T) = PODType?(T);
+NotDestroyedType?(T) = PODType?(T);
+NotResetType?(T) = PODType?(T);
+CopyDoesNotThrowType?(T) = PODType?(T);
+AssignDoesNotThrowType?(T) = PODType?(T);
+BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and NotDestroyedType?(T);
+BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and NotDestroyedType?(T);
+
+[T | PrimitiveCompoundType?(T)]
+overload BitwiseCopiedType?(static T)
+    = allValues?(BitwiseCopiedType?, ...PrimitiveCompoundMemberTypes(T));
+[T | PrimitiveCompoundType?(T)]
+overload BitwiseMovedType?(static T)
+    = allValues?(BitwiseMovedType?, ...PrimitiveCompoundMemberTypes(T));
+[T | PrimitiveCompoundType?(T)]
+overload NotDestroyedType?(static T)
+    = allValues?(NotDestroyedType?, ...PrimitiveCompoundMemberTypes(T));
+[T | PrimitiveCompoundType?(T)]
+overload NotResetType?(static T)
+    = allValues?(NotResetType?, ...PrimitiveCompoundMemberTypes(T));
+[T | PrimitiveCompoundType?(T)]
+overload CopyDoesNotThrowType?(static T)
+    = allValues?(CopyDoesNotThrowType?, ...PrimitiveCompoundMemberTypes(T));
+[T | PrimitiveCompoundType?(T)]
+overload AssignDoesNotThrowType?(static T)
+    = allValues?(AssignDoesNotThrowType?, ...PrimitiveCompoundMemberTypes(T));
+[T | PrimitiveCompoundType?(T)]
+overload BitwiseAssignedType?(static T)
+    = allValues?(BitwiseAssignedType?, ...PrimitiveCompoundMemberTypes(T));
+[T | PrimitiveCompoundType?(T)]
+overload BitwiseMoveAssignedType?(static T)
+    = allValues?(BitwiseMoveAssignedType?, ...PrimitiveCompoundMemberTypes(T));

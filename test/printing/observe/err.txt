@@ -2,3 +2,9 @@
 [observed #loneliestNumbers: 2, 1]
 [observed: lemons]
 [observed: lemons]
+[observed call add(1, 2)...
+  ...returned 3]
+[observed call index([1, 2, 3], 1)...
+  ...returned 2]
+[observed call throwValue(AnException())...
+  ...threw AnException()]

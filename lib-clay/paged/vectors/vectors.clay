@@ -79,9 +79,7 @@ overload pushAll(a) {}
 //
 
 [T]
-overload moveUnsafe(a:Vector[T]) returned:Vector[T] {
-    returned <-- Vector[T](a.size, a.capacity, a.data);
-}
+overload BitwiseMovedType?(static Vector[T]) = true;
 
 [T]
 overload resetUnsafe(a:Vector[T]) {

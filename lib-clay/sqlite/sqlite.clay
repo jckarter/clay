@@ -31,7 +31,7 @@ overload SqliteDB(filename: S) returned: SqliteDB {
     }
 }
 
-overload moveUnsafe(db: SqliteDB) = SqliteDB(db.handle);
+overload BitwiseMovedType?(static SqliteDB) = true;
 overload resetUnsafe(db: SqliteDB) { db.handle = null(sqlite3); }
 overload destroy(db: SqliteDB) { sqlite3_close(db.handle); }
 
@@ -52,7 +52,7 @@ overload SqliteStatement(db: SqliteDB, sql: S) returned: SqliteStatement {
         throw SqliteError(code, db.handle);
 }
 
-overload moveUnsafe(st: SqliteStatement) = SqliteStatement(st.handle);
+overload BitwiseMovedType?(static SqliteStatement) = true;
 overload resetUnsafe(st: SqliteStatement) { st.handle = null(sqlite3_stmt); }
 overload destroy(st: SqliteStatement) { sqlite3_finalize(st.handle); }
 
