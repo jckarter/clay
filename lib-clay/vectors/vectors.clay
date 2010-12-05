@@ -79,10 +79,7 @@ private pushAll(v, forward ...elements:A) {
 // moveUnsafe, resetUnsafe, assign, destroy
 //
 
-[T]
-inline overload moveUnsafe(a:Vector[T]) returned:Vector[T] {
-    returned <-- Vector[T](a.size, a.capacity, a.data);
-}
+[T] overload BitwiseMovedType?(static Vector[T]) = true;
 
 [T]
 inline overload resetUnsafe(a:Vector[T]) {
@@ -130,5 +127,11 @@ overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
     }
     freeRawMemory(a.data);
     a.data = data;
+    a.capacity = capacity;
+}
+
+[T | BitwiseMovedType?(T)]
+overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
+    a.data = reallocateRawMemory(a.data, capacity);
     a.capacity = capacity;
 }

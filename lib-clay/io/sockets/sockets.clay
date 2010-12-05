@@ -146,7 +146,7 @@ overload Socket?(static StreamSocket) = true;
 overload destroy(s: S) { if (s.raw != SOCKET_ERROR) platform.close(s.raw); }
 
 [S | Socket?(S)]
-overload moveUnsafe(s: S) s2: S { s2.raw <-- s.raw; }
+overload BitwiseMovedType?(static S) = true;
 
 [S | Socket?(S)]
 overload resetUnsafe(s: S) { s.raw = SOCKET_ERROR; }

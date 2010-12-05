@@ -109,3 +109,5 @@ staticFieldRef(module, ident)
 IdentifierSize(ident) : SizeT
 IdentifierConcat(ident1, ident2) : ident
 IdentifierSlice(ident1, start, end) : ident
+IdentifierModuleName(x) : ident
+IdentifierStaticName(x) : ident

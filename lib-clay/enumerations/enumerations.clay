@@ -1,12 +1,11 @@
 
 
 //
-// constructors, moveUnsafe, resetUnsafe, destroy, assign
+// constructor
 //
 
 [E | Enum?(E)]
-inline overload E() returned:E {
-}
+inline overload E() returned:E { }
 
 
 

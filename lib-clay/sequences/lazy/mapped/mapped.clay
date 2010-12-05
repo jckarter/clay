@@ -6,9 +6,9 @@ import sequences.util.*;
 // mapped
 //
 
-inline mapped(mapper, forward ...seqs) = Mapped(mapper, zipped(...seqs));
+inline mapped(forward mapper, forward ...seqs) = Mapped(mapper, zipped(...seqs));
 
-inline overload mapped(mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
+inline overload mapped(forward mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
 
 
 private record Mapped[F, A] (

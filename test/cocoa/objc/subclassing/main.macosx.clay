@@ -69,24 +69,25 @@ record NumberConvertingString = newClass(NSString,
             return unichar(Int('0') + digit);
         }),
 
-        (#"someCGRect", self => CGRect(
-            CGPoint(
-                CGFloat(10.0),
-                CGFloat(20.0),
-            ),
-            CGSize(
-                CGFloat(30.0),
-                CGFloat(40.0),
-            ),
-        )),
-        (#"someCGPoint", self => CGPoint(
-            CGFloat(50.0),
-            CGFloat(60.0),
-        )),
-        (#"someCGSize", self => CGSize(
-            CGFloat(70.0),
-            CGFloat(80.0),
-        )),
+        // XXX struct returns are currently broken because of a lack of LLVM support
+        // (#"someCGRect", self => CGRect(
+        //     CGPoint(
+        //         CGFloat(10.0),
+        //         CGFloat(20.0),
+        //     ),
+        //     CGSize(
+        //         CGFloat(30.0),
+        //         CGFloat(40.0),
+        //     ),
+        // )),
+        // (#"someCGPoint", self => CGPoint(
+        //     CGFloat(50.0),
+        //     CGFloat(60.0),
+        // )),
+        // (#"someCGSize", self => CGSize(
+        //     CGFloat(70.0),
+        //     CGFloat(80.0),
+        // )),
     )
 );
 
@@ -105,9 +106,9 @@ main() {
     println(CStringRef(formattedNStr2.UTF8String()));
     println(CStringRef(formattedStr.UTF8String()));
 
-    println(nStr1.someCGRect());
-    println(nStr1.someCGPoint());
-    println(nStr1.someCGSize());
+    // println(nStr1.someCGRect());
+    // println(nStr1.someCGPoint());
+    // println(nStr1.someCGSize());
 
     pool.drain();
 }

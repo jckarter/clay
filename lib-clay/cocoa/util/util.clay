@@ -107,9 +107,9 @@ overload ObjectParameterType(static N) = NSNumber;
 [N | Numeric?(N) or N == Bool]
 overload objectHandle(n: N) = objectHandle(NSNumber(n));
 
-[T | RegularRecord?(T)]
+[T | RegularRecord?(T) and not ObjectRef?(T)]
 overload ObjectParameterType(static T) = NSValue;
-[T | RegularRecord?(T)]
+[T | RegularRecord?(T) and not ObjectRef?(T)]
 overload objectHandle(r: T) = objectHandle(makeNSValue(r));
 
 [S | CCompatibleString?(S)]

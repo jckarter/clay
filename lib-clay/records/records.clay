@@ -89,7 +89,7 @@ inline overload initializeTypes() = ;
 // copy constructor
 //
 
-[T | RegularRecord?(T) and not PODType?(T)]
+[T | RegularRecord?(T) and not BitwiseCopiedType?(T)]
 overload T(src:T) returned:T {
     ...recordFields(returned) <-- ...recordFields(src);
 }
@@ -100,14 +100,14 @@ overload T(src:T) returned:T {
 // moveUnsafe, resetUnsafe
 //
 
-[T | RegularRecord?(T) and not PODType?(T)]
+[T | RegularRecord?(T) and not BitwiseMovedType?(T)]
 overload moveUnsafe(src:T) returned:T {
     alias n = RecordFieldCount(T);
     static for (i in ...staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
-[T | RegularRecord?(T) and not PODType?(T)]
+[T | RegularRecord?(T) and not NotResetType?(T)]
 overload resetUnsafe(a:T) {
     static for (x in ...recordFields(a))
         resetUnsafe(x);
@@ -119,7 +119,7 @@ overload resetUnsafe(a:T) {
 // destroy
 //
 
-[T | RegularRecord?(T) and not PODType?(T)]
+[T | RegularRecord?(T) and not NotDestroyedType?(T)]
 overload destroy(a:T) {
     static for (x in ...recordFields(a))
         destroy(x);
@@ -131,7 +131,7 @@ overload destroy(a:T) {
 // assign
 //
 
-[T | RegularRecord?(T) and not PODType?(T)]
+[T | RegularRecord?(T) and not BitwiseAssignedType?(T)]
 overload assign(dest:T, lvalue src:T) {
     alias n = RecordFieldCount(T);
     static for (i in ...staticIntegers(static n))

@@ -88,12 +88,11 @@ inline overload toBiggerNumericType(static A, static B, v) = B(v);
 
 
 //
-// constructors, moveUnsafe, resetUnsafe, destroy
+// constructors
 //
 
 [T | Numeric?(T)]
-inline overload T() returned:T {
-}
+inline overload T() returned:T { }
 
 [T1,T2 | Numeric?(T1,T2)]
 inline overload T1(src:T2) = numericConvert(T1, src);
