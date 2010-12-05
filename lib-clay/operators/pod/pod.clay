@@ -84,7 +84,7 @@ inline overload copyNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[
 [P | BitwiseMovedType?(P)]
 inline overload moveMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
     copyPODs(destFirst, destLast, srcFirst);
-    resetMemoryUnsafe(srcFirst, srcLast + (destLast - destFirst));
+    resetMemoryUnsafe(srcFirst, srcFirst + (destLast - destFirst));
 }
 [P | BitwiseMovedType?(P) and NotResetType?(P)]
 inline overload moveMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
