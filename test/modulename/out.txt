@@ -1,11 +1,11 @@
-add: operators
-Vector[Char]: vectors
-Vec: __primitives__
-hash: operators
-Array: __primitives__
-Array[Bool, 10]: __primitives__
-HashMap: hashmaps
-HashMap[Int32, Int32]: hashmaps
-vectors.generic: vectors.generic
-Record?: __primitives__
-disp: __main__
+add: operators, #operators
+Vector[Char]: vectors, #vectors
+Vec: __primitives__, #__primitives__
+hash: operators, #operators
+Array: __primitives__, #__primitives__
+Array[Bool, 10]: __primitives__, #__primitives__
+HashMap: hashmaps, #hashmaps
+HashMap[Int32, Int32]: hashmaps, #hashmaps
+vectors.generic: vectors.generic, #vectors.generic
+Record?: __primitives__, #__primitives__
+disp: __main__, #__main__

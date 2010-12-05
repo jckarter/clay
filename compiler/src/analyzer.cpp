@@ -2537,6 +2537,27 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return analyzeStaticObject(new Identifier(result));
     }
 
+    case PRIM_IdentifierModuleName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj)
+            argumentError(0, "expecting static object");
+        ModulePtr m = staticModule(obj);
+        if (!m)
+            argumentError(0, "value has no associated module");
+        return analyzeStaticObject(new Identifier(m->moduleName));
+    }
+
+    case PRIM_IdentifierStaticName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj)
+            argumentError(0, "expecting static object");
+        ostringstream sout;
+        printStaticName(sout, obj);
+        return analyzeStaticObject(new Identifier(sout.str()));
+    }
+
     default :
         assert(false);
         return NULL;
