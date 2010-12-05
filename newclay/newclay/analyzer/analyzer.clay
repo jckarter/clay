@@ -438,13 +438,10 @@ private unifyArguments(s:Specialization, formalArgs, args) {
     );
 }
 
-private convertNamedReturnReference(type) =
-    evaluateIndexing(getHooks().Pointer, ValueList(type));
-
 private bindNamedSingleReturn(s:Specialization, name, returnSpec) {
     var type = evaluateExpr(returnSpec.type, s.bodyEnv);
     if (not nothing?(returnSpec.kind))
-        type = convertNamedReturnReference(type);
+        type = pointerType(type);
     var v = RTVariable(RT_VARIABLE_REF, type);
     push(s.namedReturns, NamedReturn(v));
     envAdd(s.bodyEnv, name, v);
@@ -453,7 +450,7 @@ private bindNamedSingleReturn(s:Specialization, name, returnSpec) {
 private bindNamedMultiReturn(s:Specialization, name, returnSpec) {
     var types = evaluateMultiExpr(returnSpec.type, s.bodyEnv);
     if (not nothing?(returnSpec.kind))
-        types = ValueList(mapped(convertNamedReturnReference, types));
+        types = ValueList(mapped(pointerType, types));
     var kinds = map(x => RT_VARIABLE_REF, range(size(types)));
     var v = RTListVariable(move(kinds), move(types));
     push(s.namedReturns, NamedReturn(v));

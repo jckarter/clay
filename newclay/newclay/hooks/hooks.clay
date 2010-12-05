@@ -58,3 +58,44 @@ symbolProcedure?(x:Symbol) {
         () ref=> evaluateBoolCall(getHooks().Procedure?, ValueList(x)),
     );
 }
+
+
+
+//
+// typeSymbol
+//
+
+typeSymbol(type:Value) Symbol {
+    return match(type,
+        Symbol, y => y,
+        MatchDefault, y => {
+            genericError("invalid type: ", y);
+            return Symbol();
+        },
+    );
+}
+
+
+
+//
+// pointerType, pointerType?, pointerTargetType
+//
+
+pointerType(x:Value) Value {
+    return evaluateIndexing(getHooks().Pointer, ValueList(x));
+}
+
+pointerType?(x:Value) {
+    return match(x,
+        Symbol, y => (y.head == getHooks().Pointer),
+        MatchDefault, y => false,
+    );
+}
+
+pointerTargetType(x:Value) Value {
+    var sym = typeSymbol(x);
+    if (Value(sym.head) != getHooks().Pointer)
+        genericError("not a pointer type: ", x);
+    assert(size(sym.params) == 1);
+    return sym.params[0];
+}
