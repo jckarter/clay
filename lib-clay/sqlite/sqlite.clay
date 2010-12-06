@@ -142,17 +142,17 @@ overload runStatement(db: SqliteDB, sql: S, ...bindings: TT) {
     runStatement(st, ...bindings);
 }
 
-record NoStatementValue ();
-instance Exception = NoStatementValue;
+record NoStatementRow ();
+instance Exception = NoStatementRow;
 
-[T]
-statementValue(static T, st: SqliteStatement) {
+statementSingleRow(st: SqliteStatement) {
     var si = iterator(st);
-    if (hasNext?(si))
-        return next(si)[0, T];
-    else
-        throw NoStatementValue();
+    if (not hasNext?(si))
+        throw NoStatementRow();
+    return next(si);
 }
+
+[T] statementValue(static T, st: SqliteStatement) = statementSingleRow(st)[0, T];
 
 [T, S, ...TT | CCompatibleString?(S) and allValues?(BindableType?, ...TT)]
 overload statementValue(static T, db: SqliteDB, sql: S, forward ...bindings: TT) {
