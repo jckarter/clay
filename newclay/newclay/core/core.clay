@@ -450,13 +450,18 @@ record RTResult (
 
 alias RTResultList = Vector[RTResult];
 
-overload printReprTo(stream, x:RTResult) {
-    switch (x.kind) {
-    case RT_RESULT_CONST: printTo(stream, "const"); break;
-    case RT_RESULT_REF: printTo(stream, "ref"); break;
-    case RT_RESULT_RVALUE: printTo(stream, "rvalue"); break;
-    case RT_RESULT_VALUE: printTo(stream, "value"); break;
+rtResultKindString(x:RTResultKind) {
+    switch (x) {
+    case RT_RESULT_CONST: return "const";
+    case RT_RESULT_REF: return "ref";
+    case RT_RESULT_RVALUE: return "rvalue";
+    case RT_RESULT_VALUE: return "value";
+    default : assert(false); return "";
     }
+}
+
+overload printReprTo(stream, x:RTResult) {
+    printTo(stream, rtResultKindString(x.kind));
     printTo(stream, " ");
     printReprTo(stream, x.type);
 }
@@ -708,4 +713,8 @@ ensureArity(expected, received) {
 ensureArity2(minExpected, received) {
     if (minExpected > received)
         arityError2(minExpected, received);
+}
+
+typeError(expected, received) {
+    genericError("expected type ", expected, ", but received ", received);
 }
