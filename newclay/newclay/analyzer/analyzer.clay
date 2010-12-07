@@ -290,6 +290,65 @@ valueListToRTResultList(x:ValueList) = map(valueToRTResult, x);
 
 
 //
+// analyzeReturnExprList, analyzeReturnExprListItem
+//
+
+private returnExprRTResultKind(x:ast.ReturnExprListItem, kind:RTResultKind) {
+    return maybe(x.kind,
+        y => {
+            switch (y) {
+            case ast.RETURN_EXPR_CONST :
+                if (kind == RT_RESULT_VALUE)
+                    genericError("cannot return temporary as const reference");
+                if (kind == RT_RESULT_RVALUE)
+                    genericError("cannot return rvalue as const reference");
+                return RT_RESULT_CONST;
+            case ast.RETURN_EXPR_REF :
+                if (kind == RT_RESULT_VALUE)
+                    genericError("cannot return temporary as mutable reference");
+                if (kind == RT_RESULT_RVALUE)
+                    genericError("cannot return rvalue as mutable reference");
+                if (kind == RT_RESULT_CONST)
+                    genericError("cannot return const as mutable reference");
+                return RT_RESULT_REF;
+            case ast.RETURN_EXPR_RVALUE :
+                if (kind == RT_RESULT_VALUE)
+                    genericError("cannot return temporary as rvalue reference");
+                if (kind == RT_RESULT_CONST)
+                    genericError("cannot return const as rvalue reference");
+                return RT_RESULT_RVALUE;
+            case ast.RETURN_EXPR_FORWARD :
+                // FIXME: is alright to forward rvalue references?
+                return kind;
+            default :
+                assert(false);
+                return RTResultKind();
+            }
+        },
+        () => RT_RESULT_VALUE,
+    );
+}
+
+analyzeReturnExprListItem(x, env) {
+    return withLocation(x.item, () ref=> {
+        var results = analyzeExprListItem(x.item, env);
+        var results2 = RTResultList();
+        for (r in results)
+            push(results2, RTResult(returnExprRTResultKind(x, r.kind), r.type));
+        return move(results2);
+    });
+}
+
+analyzeReturnExprList(returnExprList, env) {
+    var results = RTResultList();
+    for (item in returnExprList)
+        push(results, analyzeReturnExprListItem(item, env));
+    return move(results);
+}
+
+
+
+//
 // runtimeCallable?
 //
 
@@ -543,59 +602,6 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
         }
     }
     return move(result);
-}
-
-private returnExprRTResultKind(x:ast.ReturnExprListItem, kind:RTResultKind) {
-    return maybe(x.kind,
-        y => {
-            switch (y) {
-            case ast.RETURN_EXPR_CONST :
-                if (kind == RT_RESULT_VALUE)
-                    genericError("cannot return temporary as const reference");
-                if (kind == RT_RESULT_RVALUE)
-                    genericError("cannot return rvalue as const reference");
-                return RT_RESULT_CONST;
-            case ast.RETURN_EXPR_REF :
-                if (kind == RT_RESULT_VALUE)
-                    genericError("cannot return temporary as mutable reference");
-                if (kind == RT_RESULT_RVALUE)
-                    genericError("cannot return rvalue as mutable reference");
-                if (kind == RT_RESULT_CONST)
-                    genericError("cannot return const as mutable reference");
-                return RT_RESULT_REF;
-            case ast.RETURN_EXPR_RVALUE :
-                if (kind == RT_RESULT_VALUE)
-                    genericError("cannot return temporary as rvalue reference");
-                if (kind == RT_RESULT_CONST)
-                    genericError("cannot return const as rvalue reference");
-                return RT_RESULT_RVALUE;
-            case ast.RETURN_EXPR_FORWARD :
-                // FIXME: is alright to forward rvalue references?
-                return kind;
-            default :
-                assert(false);
-                return RTResultKind();
-            }
-        },
-        () => RT_RESULT_VALUE,
-    );
-}
-
-private analyzeReturnExprListItem(x, env) {
-    return withLocation(*x.item, () ref=> {
-        var results = analyzeExprListItem(x.item, env);
-        var results2 = RTResultList();
-        for (r in results)
-            push(results2, RTResult(returnExprRTResultKind(x, r.kind), r.type));
-        return move(results2);
-    });
-}
-
-private analyzeReturnExprList(returnExprList, env) {
-    var results = RTResultList();
-    for (item in returnExprList)
-        push(results, analyzeReturnExprListItem(item, env));
-    return move(results);
 }
 
 private analyzeBody(x:Overload, env) {
