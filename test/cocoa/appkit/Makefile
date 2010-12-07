@@ -4,7 +4,7 @@ all: \
     Example.app/Contents/Resources/MainMenu.nib
 
 Example.app/Contents/MacOS/example: example.clay Example.app/Contents/MacOS
-	clay -framework Cocoa -o Example.app/Contents/MacOS/example example.clay
+	clay -I ../../../lib-clay -framework Cocoa -o Example.app/Contents/MacOS/example example.clay
 
 Example.app:
 	mkdir -p Example.app
