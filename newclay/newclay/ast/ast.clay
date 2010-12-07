@@ -55,6 +55,7 @@ procedure getLocation;
 overload getLocation(x) = x.location;
 overload getLocation(x:Expr) = getLocation(*x);
 overload getLocation(x:ExprListItem) = getLocation(*x);
+overload getLocation(x:Pattern) = getLocation(*x);
 
 procedure setLocation;
 overload setLocation(x, forward location) {
@@ -64,6 +65,9 @@ overload setLocation(x:Expr, forward location) {
     setLocation(*x, location);
 }
 overload setLocation(x:ExprListItem, forward location) {
+    setLocation(*x, location);
+}
+overload setLocation(x:Pattern, forward location) {
     setLocation(*x, location);
 }
 
