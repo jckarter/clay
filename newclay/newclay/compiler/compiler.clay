@@ -549,12 +549,15 @@ compileReturnExprListItemInto(x:ast.ReturnExprListItem, env, out:A) {
                 push(refTemps, refTemp);
             }
         }
-        emitLocalDef(refTemps);
+        if (not empty?(refTemps))
+            emitLocalDef(refTemps);
         compileExprListItemInto(x.item, env, out2);
-        for (result, outLocal, outLocal2 in zipped(results, out, out2)) {
-            if (result.kind != RT_RESULT_VALUE) {
-                var addr = ir.AtomicExpr(ir.LocalAddressOf(outLocal2));
-                emitInitialize(out, addr);
+        if (not empty?(refTemps)) {
+            for (result, outLocal, outLocal2 in zipped(results, out, out2)) {
+                if (result.kind != RT_RESULT_VALUE) {
+                    var addr = ir.AtomicExpr(ir.LocalAddressOf(outLocal2));
+                    emitInitialize(out, addr);
+                }
             }
         }
     });
