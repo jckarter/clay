@@ -2,6 +2,7 @@ import cocoa.objc.runtime;
 import cocoa.objc.*;
 import cocoa.nib.*;
 import cocoa.foundation.*;
+import maybe.*;
 import identifiers.*;
 
 public import cocoa.util.platform.*;
@@ -95,6 +96,13 @@ fromNSValueUnsafe(static T, o: O) returned: T {
 
 [T, O | ObjectRef?(O)]
 overload fromNSValueUnsafe(static Pointer[T], o: O) = Pointer[T](o.pointerValue());
+
+
+
+//
+// Maybe[] conversion
+[T, O | ObjectRef?(O) and CallDefined?(T, O)]
+overload Maybe[T](o: O) = if (nil?(o)) nothing(T) else Maybe(T(o));
 
 
 
