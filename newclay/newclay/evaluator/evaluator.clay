@@ -168,7 +168,7 @@ evaluateMain(program) {
 //
 
 evaluateBool(expr, env) {
-    return withLocation(*expr, () ref=> {
+    return withLocation(expr, () ref=> {
         var result = evaluateExpr(expr, env);
         if (not variantIs?(result, BoolValue))
             genericError("expecting a Bool value");
@@ -193,7 +193,7 @@ evaluateBoolCall(callable:Value, args:ValueList) {
 procedure evaluateExpr;
 
 overload evaluateExpr(x:ast.Expr, env) Value {
-    return withLocation(*x, () ref=> evaluateExpr(*x, env));
+    return withLocation(x, () ref=> evaluateExpr(*x, env));
 }
 overload evaluateExpr(x:ast.BoolLiteral, env) {
     return Value(BoolValue(x.value));
@@ -329,7 +329,7 @@ overload evaluateMultiExpr(x, env) {
     return ValueList();
 }
 overload evaluateMultiExpr(x:ast.Expr, env) ValueList {
-    return withLocation(*x, () ref=> evaluateMultiExpr(*x, env));
+    return withLocation(x, () ref=> evaluateMultiExpr(*x, env));
 }
 overload evaluateMultiExpr(x:ast.NameRef, env) {
     return envEntryToValueList(envLookup(env, x.name));
@@ -441,7 +441,7 @@ overload evaluateIndexing(x:SymbolHead, args) {
 procedure evaluatePattern;
 
 overload evaluatePattern(x:ast.Pattern, env) {
-    return withLocation(*x, () ref=> evaluatePattern(*x, env));
+    return withLocation(x, () ref=> evaluatePattern(*x, env));
 }
 overload evaluatePattern(x:ast.BoolLiteral, env) {
     return Pattern(evaluateExpr(x, env));
@@ -512,7 +512,7 @@ overload evaluateListPatternCell(x, env) {
     return ListPatternCell();
 }
 overload evaluateListPatternCell(x:ast.Pattern, env) {
-    return withLocation(*x, () ref=> evaluateListPatternCell(*x, env));
+    return withLocation(x, () ref=> evaluateListPatternCell(*x, env));
 }
 overload evaluateListPatternCell(x:ast.PatternNameRef, env) {
     return lookupListPattern(env, x.name);
@@ -684,7 +684,7 @@ overload derefListPattern(x:ListPatternCell) {
 
 procedure walkPattern;
 overload walkPattern(x:ast.Pattern, visitor) {
-    withLocation(*x, () ref=> {
+    withLocation(x, () ref=> {
         visitor(x, false);
         walkPattern(*x, visitor);
     });
@@ -703,7 +703,7 @@ overload walkMultiPattern(x, visitor) {
     genericError("not a multi-valued pattern");
 }
 overload walkMultiPattern(x:ast.Pattern, visitor) {
-    withLocation(*x, () ref=> {
+    withLocation(x, () ref=> {
         visitor(x, true);
         walkMultiPattern(*x, visitor);
     });
