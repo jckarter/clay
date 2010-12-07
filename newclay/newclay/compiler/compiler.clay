@@ -30,7 +30,7 @@ symbolToType(x:Symbol) ir.Type {
     return maybe(x.lowLevelType,
         y => y,
         () ref=> {
-            var irType = ir.Type(ir.TypeTag(), printString(x));
+            var irType = ir.Type(ir.TypeTag(), x);
             x.lowLevelType = Maybe(irType);
             try {
                 irType.tag = valueToTypeTag(evaluateCallWithOneResult(
@@ -141,13 +141,7 @@ symbolToUnionTag(x:Symbol) {
 
 [n]
 unpackValueList(static n, x:ValueList) {
-    if (size(x) != n) {
-        var valuesStr = (n => if (n == 1) "value" else "values");
-        genericError(
-            "expecting ", n, " ", valuesStr(n),
-            ", but received ", size(x)
-        );
-    }
+    ensureArity(n, size(x));
     return ...sequenceValues(x, static n);
 }
 
@@ -202,15 +196,8 @@ private withNewCompileContext(x:Specialization, y:ir.Procedure, f) =
 private context() = ref stackTop(_compileContextStack);
 private irProcedure() = ref context().irProcedure;
 
-private allocateLocalName(baseName:String) {
+private newLocalName(baseName) {
     return allocateName(context().names, baseName);
-}
-
-private allocateLocal(
-    baseName:String, value?:Bool, type:ir.Type, access:ir.AccessKind
-) ir.Local
-{
-    return ir.Local(allocateLocalName(baseName), value?, type, access);
 }
 
 
@@ -253,7 +240,8 @@ private compileInput(arg:RTResult, astArg:ast.Argument) {
     var ikind = inputKind(arg.kind, astArg.kind);
     var accessKind = inputAccessKind(ikind);
     var type = valueToType(arg.type);
-    var local = allocateLocal(astArg.name.str, false, type, accessKind);
+    var name = newLocalName(astArg.name.str);
+    var local = ir.Local(move(name), false, type, accessKind);
     push(irProcedure().inputs, ir.Input(local.name, ikind, type));
     return local;
 }
@@ -290,15 +278,13 @@ private outputKind(x:RTResultKind) ir.OutputKind {
 
 private outputLocal(x:ir.Output) {
     var type = x.type;
-    if (x.kind != ir.OUTPUT_VALUE) {
-        var name = printString("Pointer[", type.name, "]");
-        type = ir.Type(ir.TypeTag(ir.PointerTag(type)), move(name));
-    }
+    if (x.kind != ir.OUTPUT_VALUE)
+        type = valueToType(pointerType(Value(type.symbol)));
     return ir.Local(x.name, true, type, ir.ACCESS_REF);
 }
 
 private compileOutput(result:RTResult, baseName:String) {
-    var name = allocateLocalName(baseName);
+    var name = newLocalName(baseName);
     var okind = outputKind(result.kind);
     var type = valueToType(result.type);
     var output = ir.Output(name, okind, type);
@@ -343,9 +329,32 @@ private compileOutputs() {
     );
 }
 
+private compileCodeBody() {
+    var s = context().specialization;
+    irProcedure().code = match(s.matchedOverload.ast.body,
+        ast.CCodeBody, x ref=> {
+            return ir.CodeBody(ir.CCodeBody(x.cCode));
+        },
+        ast.ExprCodeBody, x ref=> {
+            if (not empty?(s.namedReturns)) {
+                genericError(
+                    "procedures with named return ",
+                    "cannot return with an expression"
+                );
+            }
+            var block = withNewBlock(() ref=> {
+                ref out = context().returnLocals;
+                compileReturnExprListInto(x.exprs, s.bodyEnv, out);
+            });
+            return ir.CodeBody(ir.Statement(block));
+        },
+    );
+}
+
 private compileSpecialization2() {
     compileInputs();
     compileOutputs();
+    compileCodeBody();
 }
 
 compileSpecialization(x:Specialization) ir.Procedure {
@@ -366,4 +375,669 @@ compileSpecialization(x:Specialization) ir.Procedure {
             }
         },
     );
+}
+
+
+
+//
+// CompiledExpr
+//
+
+record CompiledExpr (
+    irExpr: ir.AtomicExpr,
+    info: RTResult,
+);
+
+
+
+//
+// helpers for generating statements
+//
+
+private var _blocks = Stack[ir.Block]();
+
+private withNewBlock(f) {
+    var block = ir.Block(Vector[ir.Statement]());
+    withStackValue(_blocks, block, f);
+    return move(block);
+}
+
+currentBlock() = ref stackTop(_blocks);
+
+procedure emitStatement;
+overload emitStatement(x) {
+    emitStatement(ir.Statement(x));
+}
+overload emitStatement(x:ir.Statement) {
+    push(currentBlock().statements, x);
+}
+
+procedure emitInitialize;
+overload emitInitialize(out:ir.Local, expr:ir.Expr) {
+    emitInitialize([out], expr);
+}
+overload emitInitialize(out:ir.Local, expr:ir.AtomicExpr) {
+    emitInitialize([out], ir.Expr(expr));
+}
+[A | ir.LocalSequence?(A)]
+overload emitInitialize(out:A, expr:ir.Expr) {
+    emitStatement(ir.Initialize(Vector(out), expr));
+}
+[A | ir.LocalSequence?(A)]
+overload emitInitialize(out:A, expr:ir.AtomicExpr) {
+    emitStatement(ir.Initialize(Vector(out), ir.Expr(expr)));
+}
+overload emitInitialize(out:ir.Local, result:CompiledExpr) {
+    ensureCompatibleLocal(out, result.info);
+    emitInitialize(out, result.irExpr);
+}
+[A | ir.LocalSequence?(A)]
+overload emitInitialize(out:A, result:Vector[CompiledExpr]) {
+    ensureCompatibleLocals(out, mapped(x => ref x.info, result));
+    for (x, y in zipped(out, result))
+        emitInitialize(x, y.irExpr);
+}
+
+procedure emitLocalDef;
+overload emitLocalDef(local:ir.Local) {
+    emitLocalDef([local]);
+}
+overload emitLocalDef(local:ir.Local, expr:ir.Expr) {
+    emitLocalDef([local], expr);
+}
+[A | ir.LocalSequence?(A)]
+overload emitLocalDef(locals:A) {
+    emitStatement(ir.LocalDef(Vector(locals), nothing(ir.Expr)));
+}
+[A | ir.LocalSequence?(A)]
+overload emitLocalDef(locals:A, expr:ir.Expr) {
+    emitStatement(ir.LocalDef(Vector(locals), Maybe(expr)));
+}
+
+private tempAccessKind(x:RTResultKind) ir.AccessKind {
+    switch (x) {
+    case RT_RESULT_CONST: return ir.ACCESS_CONST;
+    case RT_RESULT_REF: return ir.ACCESS_REF;
+    case RT_RESULT_RVALUE: return ir.ACCESS_RVALUE;
+    case RT_RESULT_VALUE: return ir.ACCESS_RVALUE;
+    default :
+        assert(false);
+        return ir.AccessKind();
+    }
+}
+
+private newTemp(x:RTResult) ir.Local {
+    var name = newLocalName("temp");
+    return ir.Local(
+        move(name), (x.kind == RT_RESULT_VALUE),
+        valueToType(x.type), tempAccessKind(x.kind),
+    );
+}
+
+
+
+//
+// local compatibility
+//
+
+private localTypeMatches?(x:ir.Local, y:RTResult) {
+    return Value(x.type.symbol) == y.type;
+}
+
+private localKindCompatible?(x:ir.Local, y:RTResult) {
+    if (x.value?)
+        return true;
+    switch (x.access) {
+    case ir.ACCESS_CONST: return true;
+    case ir.ACCESS_REF: return y.kind == RT_RESULT_REF;
+    case ir.ACCESS_RVALUE: return y.kind == RT_RESULT_RVALUE;
+    }
+    assert(false);
+    return false;
+}
+
+private ensureCompatibleLocal(x:ir.Local, y:RTResult) {
+    if (not localTypeMatches?(x, y))
+        typeError(x.type.symbol, y.type);
+    if (not localKindCompatible?(x, y)) {
+        genericError(
+            "expected reference kind ", ir.accessKindString(x.access),
+            ", but received ", rtResultKindString(y.kind),
+        );
+    }
+}
+
+[A, B | ir.LocalSequence?(A) and SizedSequence?(B)
+        and SequenceElementType(B) == RTResult]
+private ensureCompatibleLocals(x:A, y:B) {
+    ensureArity(size(x), size(y));
+    for (a, b in zipped(x, y))
+        ensureCompatibleLocal(a, b);
+}
+
+
+
+//
+// compileReturnExprListInto
+//
+
+[A | ir.LocalSequence?(A)]
+compileReturnExprListInto(x:ast.ReturnExprList, env, out:A) {
+    ensureArity(size(out), size(analyzeReturnExprList(x, env)));
+    var i = SizeT(0);
+    for (item in x) {
+        var results = analyzeReturnExprListItem(item, env);
+        var outSlice = sliced(out, i, i+size(results));
+        compileReturnExprListItemInto(item, env, outSlice);
+        i += size(results);
+    }
+}
+
+[A | ir.LocalSequence?(A)]
+compileReturnExprListItemInto(x:ast.ReturnExprListItem, env, out:A) {
+    withLocation(x.item, () ref=> {
+        var results = analyzeReturnExprListItem(x, env);
+        ensureArity(size(out), size(results));
+        var out2 = Vector[ir.Local]();
+        var refTemps = Vector[ir.Local]();
+        for (result, outLocal in zipped(results, out)) {
+            if (result.kind == RT_RESULT_VALUE)
+                push(out2, outLocal);
+            else {
+                var refTemp = newTemp(result);
+                push(out2, refTemp);
+                push(refTemps, refTemp);
+            }
+        }
+        emitLocalDef(refTemps);
+        compileExprListItemInto(x.item, env, out2);
+        for (result, outLocal, outLocal2 in zipped(results, out, out2)) {
+            if (result.kind != RT_RESULT_VALUE) {
+                var addr = ir.AtomicExpr(ir.LocalAddressOf(outLocal2));
+                emitInitialize(out, addr);
+            }
+        }
+    });
+}
+
+
+
+//
+// compileExprInto
+//
+
+procedure compileExprInto;
+
+overload compileExprInto(x:ast.Expr, env, out:ir.Local) {
+    withLocation(x, () ref=> { compileExprInto(*x, env, out); });
+}
+overload compileExprInto(x:ast.BoolLiteral, env, out) {
+    emitInitialize(out, compileExpr(x, env));
+}
+overload compileExprInto(x:ast.IntLiteral, env, out) {
+    emitInitialize(out, compileExpr(x, env));
+}
+overload compileExprInto(x:ast.StringLiteral, env, out) {
+    genericError("strings are not yet supported");
+}
+overload compileExprInto(x:ast.NameRef, env, out) {
+    emitInitialize(out, compileExpr(x, env));
+}
+overload compileExprInto(x:ast.PatternNameRef, env, out) {
+    compileValueInto(derefPattern(env, x.name), out);
+}
+overload compileExprInto(x:ast.TupleExpr, env, out) {
+    genericError("tuples are not yet supported");
+}
+overload compileExprInto(x:ast.Call, env, out) {
+    var callable = evaluateExpr(x.expr, env);
+    if (runtimeCallable?(callable)) {
+        var args = compileExprList(x.args, env);
+        compileCallWithOneResultInto(callable, args, out);
+    }
+    else {
+        var args = evaluateExprList(x.args, env);
+        var result = evaluateCallWithOneResult(callable, args);
+        compileValueInto(result, out);
+    }
+}
+overload compileExprInto(x:ast.Indexing, env, out) {
+    compileValueInto(evaluateExpr(x, env), out);
+}
+overload compileExprInto(x:ast.AndExpr, env, out) {
+    var cond = compileBoolExpr(x.expr1, env);
+    var thenPart = ir.Statement(withNewBlock(() ref=> {
+        compileExprInto(x.expr2, env, out);
+    }));
+    var elsePart = ir.Statement(withNewBlock(() ref=> {
+        emitInitialize(out, cond);
+    }));
+    emitStatement(ir.If(ir.Expr(cond.irExpr), thenPart, elsePart));
+}
+overload compileExprInto(x:ast.OrExpr, env, out) {
+    var cond = compileBoolExpr(x.expr1, env);
+    var thenPart = ir.Statement(withNewBlock(() ref=> {
+        emitInitialize(out, cond);
+    }));
+    var elsePart = ir.Statement(withNewBlock(() ref=> {
+        compileExprInto(x.expr2, env, out);
+    }));
+    emitStatement(ir.If(ir.Expr(cond.irExpr), thenPart, elsePart));
+}
+overload compileExprInto(x:ast.LambdaExpr, env, out) {
+    genericError("lambda expressions are not yet supported");
+}
+overload compileExprInto(x:ast.IfExpr, env, out) {
+    var cond = compileBoolExpr(x.condition, env);
+    var thenPart = ir.Statement(withNewBlock(() ref=> {
+        compileExprInto(x.thenPart, env, out);
+    }));
+    var elsePart = ir.Statement(withNewBlock(() ref=> {
+        compileExprInto(x.elsePart, env, out);
+    }));
+    emitStatement(ir.If(ir.Expr(cond.irExpr), thenPart, elsePart));
+}
+
+
+
+//
+// compileExprListInto
+//
+
+[A | ir.LocalSequence?(A)]
+compileExprListInto(x:ast.ExprList, env, out:A) {
+    ensureArity(size(out), size(analyzeExprList(x, env)));
+    var i = SizeT(0);
+    for (item in x) {
+        var results = analyzeExprListItem(item, env);
+        compileExprListItemInto(item, env, sliced(out, i, i+size(results)));
+        i += size(results);
+    }
+}
+
+[A | ir.LocalSequence?(A)]
+compileExprListItemInto(x:ast.ExprListItem, env, out:A) {
+    match(x,
+        ast.UnpackExpr, y ref=> {
+            compileMultiExprInto(y.expr, env, out);
+        },
+        ast.Expr, y ref=> {
+            assert(size(out) == 1);
+            compileExprInto(y, env, out[0]);
+        },
+    );
+}
+
+
+
+//
+// compileMultiExprInto
+//
+
+procedure compileMultiExprInto;
+
+[A | ir.LocalSequence?(A)]
+overload compileMultiExprInto(x, env, out:A) {
+    genericError("single valued expression used in multi-value context");
+}
+[A | ir.LocalSequence?(A)]
+overload compileMultiExprInto(x:ast.Expr, env, out:A) {
+    withLocation(x, () ref=> { compileMultiExprInto(*x, env, out); });
+}
+[A | ir.LocalSequence?(A)]
+overload compileMultiExprInto(x:ast.NameRef, env, out:A) {
+    emitInitialize(out, compileMultiExpr(x, env));
+}
+[A | ir.LocalSequence?(A)]
+overload compileMultiExprInto(x:ast.PatternNameRef, env, out:A) {
+    compileValueListInto(derefListPattern(env, x.name), out);
+}
+[A | ir.LocalSequence?(A)]
+overload compileMultiExprInto(x:ast.Call, env, out:A) {
+    var callable = evaluateExpr(x.expr, env);
+    if (runtimeCallable?(callable)) {
+        var args = compileExprList(x.args, env);
+        compileCallInto(callable, args, out);
+    }
+    else {
+        var args = evaluateExprList(x.args, env);
+        var results = evaluateCall(callable, args);
+        compileValueListInto(results, out);
+    }
+}
+
+
+
+//
+// compileValueInto
+//
+
+compileValueInto(x:Value, out:ir.Local) {
+    match(x,
+        StringValue, y => {
+            genericError("string are not yet supported");
+        },
+        TupleValue, y => {
+            genericError("tuples are not yet supported");
+        },
+        MatchDefault, y => {
+            emitInitialize(out, compileValue(x));
+        },
+    );
+}
+
+
+
+//
+// compileValueListInto
+//
+
+[A | ir.LocalSequence?(A)]
+compileValueListInto(x:ValueList, out:A) {
+    ensureArity(size(out), size(x));
+    for (a, b in zipped(x, out))
+        compileValueInto(a, b);
+}
+
+
+
+//
+// compileBoolExpr
+//
+
+compileBoolExpr(x:ast.Expr, env) CompiledExpr {
+    return withLocation(x, () ref=> {
+        var result = compileExpr(x, env);
+        if (result.info.type != getHooks().Bool)
+            typeError(getHooks().Bool, result.info.type);
+        return move(result);
+    });
+}
+
+
+
+//
+// compileExpr
+//
+
+procedure compileExpr;
+
+overload compileExpr(x:ast.Expr, env) CompiledExpr {
+    return withLocation(x, () ref=> compileExpr(*x, env));
+}
+overload compileExpr(x:ast.BoolLiteral, env) {
+    return CompiledExpr(
+        ir.AtomicExpr(ir.BoolLiteral(x.value)),
+        analyzeExpr(x, env),
+    );
+}
+overload compileExpr(x:ast.IntLiteral, env) {
+    return CompiledExpr(
+        ir.AtomicExpr(ir.IntLiteral(Int(x.value))),
+        analyzeExpr(x, env),
+    );
+}
+overload compileExpr(x:ast.StringLiteral, env) {
+    genericError("strings are not yet supported");
+    return CompiledExpr();
+}
+overload compileExpr(x:ast.NameRef, env) {
+    return compileEnvEntry(envLookup(env, x.name));
+}
+overload compileExpr(x:ast.PatternNameRef, env) {
+    return compileValue(derefPattern(env, x.name));
+}
+overload compileExpr(x:ast.TupleExpr, env) {
+    genericError("tuples are not yet supported");
+    return CompiledExpr();
+}
+overload compileExpr(x:ast.Call, env) {
+    var callable = evaluateExpr(x.expr, env);
+    if (runtimeCallable?(callable)) {
+        var args = compileExprList(x.args, env);
+        return compileCallWithOneResult(callable, args);
+    }
+    else {
+        var args = evaluateExprList(x.args, env);
+        var result = evaluateCallWithOneResult(callable, args);
+        return compileValue(result);
+    }
+}
+overload compileExpr(x:ast.Indexing, env) {
+    return compileValue(evaluateExpr(x, env));
+}
+overload compileExpr(x:ast.AndExpr, env) {
+    return compileExprIntoNewTemp(ast.Expr(x), env);
+}
+overload compileExpr(x:ast.OrExpr, env) {
+    return compileExprIntoNewTemp(ast.Expr(x), env);
+}
+overload compileExpr(x:ast.LambdaExpr, env) {
+    genericError("lambda expressions are not yet supported");
+    return CompiledExpr();
+}
+overload compileExpr(x:ast.IfExpr, env) {
+    return compileExprIntoNewTemp(ast.Expr(x), env);
+}
+
+private compileExprIntoNewTemp(expr:ast.Expr, env) {
+    var analysis = analyzeExpr(expr, env);
+    var temp = newTemp(analysis);
+    emitLocalDef(temp);
+    compileExprInto(expr, env, temp);
+    return CompiledExpr(ir.AtomicExpr(ir.LocalRef(temp)), analysis);
+}
+
+
+
+//
+// compileEnvEntry
+//
+
+compileEnvEntry(entry:EnvEntry) CompiledExpr {
+    return match(entry,
+        Value, x => compileValue(x),
+        ValueList, x => {
+            genericError("multi-value used in single value context");
+            return CompiledExpr();
+        },
+        PatternCell, x => {
+            genericError("pattern variable cannot be used in non-pattern expression");
+            return CompiledExpr();
+        },
+        ListPatternCell, x => {
+            genericError("pattern variable cannot be used in non-pattern expression");
+            return CompiledExpr();
+        },
+        RTVariable, x => {
+            assert(not null?(x.lowLevelLocal), "null?(RTVariable.lowLevelLocal");
+            return CompiledExpr(
+                ir.AtomicExpr(ir.LocalRef(x.lowLevelLocal)),
+                rtVariableToRTResult(x),
+            );
+        },
+        RTListVariable, x => {
+            genericError("multi-value used in single value context");
+            return CompiledExpr();
+        },
+    );
+}
+
+
+
+//
+// compileExprList
+//
+
+compileExprList(x:ast.ExprList, env) Vector[CompiledExpr] {
+    var results = Vector[CompiledExpr]();
+    for (item in x)
+        push(results, compileExprListItem(item, env));
+    return move(results);
+}
+
+compileExprListItem(x:ast.ExprListItem, env) Vector[CompiledExpr] {
+    return match(x,
+        ast.UnpackExpr, y ref=> compileMultiExpr(y.expr, env),
+        ast.Expr, y ref=> Vector([compileExpr(y, env)]),
+    );
+}
+
+
+
+//
+// compileMultiExpr
+//
+
+procedure compileMultiExpr;
+
+overload compileMultiExpr(x, env) {
+    genericError("single valued expression used in multi-value context");
+    return Vector[CompiledExpr]();
+}
+overload compileMultiExpr(x:ast.Expr, env) Vector[CompiledExpr] {
+    return withLocation(x, () ref=> compileMultiExpr(*x, env));
+}
+overload compileMultiExpr(x:ast.NameRef, env) {
+    return compileEnvEntryMulti(envLookup(env, x.name));
+}
+overload compileMultiExpr(x:ast.PatternNameRef, env) {
+    return compileValueList(derefListPattern(env, x.name));
+}
+overload compileMultiExpr(x:ast.Call, env) {
+    var callable = evaluateExpr(x.expr, env);
+    if (runtimeCallable?(callable)) {
+        var args = compileExprList(x.args, env);
+        return compileCall(callable, args);
+    }
+    else {
+        var args = evaluateExprList(x.args, env);
+        var results = evaluateCall(callable, args);
+        return compileValueList(results);
+    }
+}
+
+
+
+//
+// compileEnvEntryMulti
+//
+
+procedure compileEnvEntryMulti;
+
+overload compileEnvEntryMulti(entry:EnvEntry) {
+    return compileEnvEntryMulti(*entry);
+}
+overload compileEnvEntryMulti(x:Value) {
+    genericError("single value used in multi-valued context");
+    return Vector[CompiledExpr]();
+}
+overload compileEnvEntryMulti(x:ValueList) {
+    return compileValueList(x);
+}
+overload compileEnvEntryMulti(x:PatternCell) {
+    genericError("pattern variable cannot be used in non-pattern expression");
+    return Vector[CompiledExpr]();
+}
+overload compileEnvEntryMulti(x:ListPatternCell) {
+    genericError("pattern variable cannot be used in non-pattern expression");
+    return Vector[CompiledExpr]();
+}
+overload compileEnvEntryMulti(x:RTVariable) {
+    genericError("single value used in multi-valued context");
+    return Vector[CompiledExpr]();
+}
+overload compileEnvEntryMulti(x:RTListVariable) {
+    assert(size(x.lowLevelLocals) == size(x.types));
+    var results = envEntryToRTResultList(x);
+    assert(size(results) == size(x.lowLevelLocals));
+    return map(
+        (a, b) => CompiledExpr(ir.AtomicExpr(ir.LocalRef(a)), b), 
+        x.lowLevelLocals,
+        results,
+    );
+}
+
+
+
+//
+// compileValue
+//
+
+compileValue(x:Value) CompiledExpr {
+    return match(x,
+        BoolValue, y ref=> CompiledExpr(
+            ir.AtomicExpr(ir.BoolLiteral(y.value)),
+            valueToRTResult(x),
+        ),
+        IntValue, y ref=> CompiledExpr(
+            ir.AtomicExpr(ir.IntLiteral(y.value)),
+            valueToRTResult(x),
+        ),
+        StringValue, y ref=> {
+            genericError("string are not yet supported");
+            return CompiledExpr();
+        },
+        TupleValue, y ref=> {
+            genericError("tuples are not yet supported");
+            return CompiledExpr();
+        },
+        MatchDefault, y ref=> CompiledExpr(
+            ir.AtomicExpr(ir.StaticLiteral(x)),
+            valueToRTResult(x),
+        ),
+    );
+}
+
+
+
+//
+// compileValueList
+//
+
+compileValueList(x:ValueList) Vector[CompiledExpr] {
+    return map(compileValue, x);
+}
+
+
+
+//
+// compileCallWithOneResult, compileCall
+//
+
+compileCallWithOneResult(x:Value, args:Vector[CompiledExpr]) CompiledExpr {
+    var results = compileCall(x, args);
+    ensureArity(1, size(results));
+    return move(results[0]);
+}
+
+compileCall(f:Value, args:Vector[CompiledExpr]) Vector[CompiledExpr] {
+    var specialization = analyzeCallable(f, map(x => x.info, args));
+    var irProc = compileSpecialization(specialization);
+    var callExpr = ir.Expr(ir.CallExpr(irProc, map(x => x.irExpr, args)));
+    var locals = map(newTemp, specialization.returns);
+    emitLocalDef(locals, callExpr);
+    return map(
+        (local, info) => CompiledExpr(ir.AtomicExpr(ir.LocalRef(local)), info),
+        locals, specialization.returns,
+    );
+}
+
+
+
+//
+// compileCallWithOneResultInto, compileCallInto
+//
+
+compileCallWithOneResultInto(x:Value, args:Vector[CompiledExpr], out:ir.Local) {
+    compileCallInto(x, args, [out]);
+}
+
+[A | ir.LocalSequence?(A)]
+compileCallInto(f:Value, args:Vector[CompiledExpr], out:A) {
+    var specialization = analyzeCallable(f, map(x => x.info, args));
+    ensureCompatibleLocals(out, specialization.returns);
+    var irProc = compileSpecialization(specialization);
+    var callExpr = ir.Expr(ir.CallExpr(irProc, map(x => x.irExpr, args)));
+    emitInitialize(out, callExpr);
 }

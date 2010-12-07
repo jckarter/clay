@@ -1,4 +1,8 @@
 
+import maybe.*;
+import newclay.core.(Symbol, Value);
+
+
 
 //
 // types
@@ -6,7 +10,7 @@
 
 record Type = referenceType(
     tag: TypeTag,
-    name: String,
+    symbol: Symbol,
 );
 
 variant TypeTag = BoolTag
@@ -114,17 +118,49 @@ record CCodeBody = referenceType(
 
 
 //
+// Local, LocalSequence?
+//
+
+enum AccessKind {
+    ACCESS_CONST,
+    ACCESS_REF,
+    ACCESS_RVALUE,
+}
+
+accessKindString(x:AccessKind) {
+    switch (x) {
+    case ACCESS_CONST : return "const";
+    case ACCESS_REF : return "mutable";
+    case ACCESS_RVALUE : return "rvalue";
+    default: assert(false); return "";
+    }
+}
+
+record Local = referenceType(
+    name: String,
+    value?: Bool,
+    type: Type,
+    access: AccessKind,
+);
+
+[A]
+LocalSequence?(static A) =
+    SizedSequence?(A) and (SequenceElementType(A) == Local);
+
+
+
+//
 // Expr
 //
 
-variant AtomicExpr = NameRef
-                   | BoolLiteral
+variant AtomicExpr = BoolLiteral
                    | IntLiteral
+                   | StaticLiteral
+                   | LocalRef
+                   | LocalAddressOf
                    ;
 
-record NameRef = referenceType(
-    name: String,
-);
+overload AtomicExpr() = AtomicExpr(BoolLiteral());
 
 record BoolLiteral(
     value: Bool,
@@ -134,32 +170,25 @@ record IntLiteral(
     value: Int,
 );
 
-record CallExpr = referenceType(
-    callable: String,
-    args: Vector[AtomicExpr],
+record StaticLiteral(
+    value: Value,
 );
 
-variant Expr = CallExpr
-             | AtomicExpr
+record LocalRef = referenceType(
+    local: Local,
+);
+
+record LocalAddressOf = referenceType(
+    local: Local,
+);
+
+variant Expr = AtomicExpr
+             | CallExpr
              ;
 
-
-
-//
-// Local
-//
-
-enum AccessKind {
-    ACCESS_CONST,
-    ACCESS_REF,
-    ACCESS_RVALUE,
-}
-
-record Local = referenceType(
-    name: String,
-    value?: Bool,
-    type: Type,
-    access: AccessKind,
+record CallExpr = referenceType(
+    callable: Procedure,
+    args: Vector[AtomicExpr],
 );
 
 
@@ -171,7 +200,6 @@ record Local = referenceType(
 variant Statement = Block
                   | LocalDef
                   | Initialize
-                  | Assign
                   | If
                   | Return
                   ;
@@ -183,17 +211,13 @@ record Block = referenceType(
 );
 
 record LocalDef = referenceType(
-    local: Local,
+    locals: Vector[Local],
+    expr: Maybe[Expr],
 );
 
 record Initialize = referenceType(
-    lhs: Vector[String],
-    rhs: Expr,
-);
-
-record Assign = referenceType(
-    lhs: Vector[String],
-    rhs: Expr,
+    locals: Vector[Local],
+    expr: Expr,
 );
 
 record If = referenceType(
