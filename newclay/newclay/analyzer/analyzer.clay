@@ -28,7 +28,7 @@ analyzeMain(program:Program) {
 //
 
 analyzeBool(x:ast.Expr, env) RTResult {
-    return withLocation(*x, () ref=> {
+    return withLocation(x, () ref=> {
         var result = analyzeExpr(x, env);
         if (result.type != getHooks().Bool)
             typeError(getHooks().Bool, result.type);
@@ -45,7 +45,7 @@ analyzeBool(x:ast.Expr, env) RTResult {
 procedure analyzeExpr;
 
 overload analyzeExpr(x:ast.Expr, env) RTResult {
-    return withLocation(*x, () ref=> analyzeExpr(*x, env));
+    return withLocation(x, () ref=> analyzeExpr(*x, env));
 }
 overload analyzeExpr(x:ast.BoolLiteral, env) {
     return RTResult(RT_RESULT_VALUE, getHooks().Bool);
@@ -219,7 +219,7 @@ overload analyzeMultiExpr(x, env) {
     return RTResultList();
 }
 overload analyzeMultiExpr(x:ast.Expr, env) RTResultList {
-    return withLocation(*x, () ref=> analyzeMultiExpr(*x, env));
+    return withLocation(x, () ref=> analyzeMultiExpr(*x, env));
 }
 overload analyzeMultiExpr(x:ast.NameRef, env) {
     return envEntryToRTResultList(envLookup(env, x.name));
