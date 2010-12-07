@@ -185,3 +185,48 @@ htonl(x: UInt32) y: UInt32 {
     yb[3] = UInt8(bitwiseAnd(           x,      0xFFu32));
 }
 alias ntohl = htonl;
+
+
+
+//
+// signals
+//
+
+alias SIGHUP	= 1;
+alias SIGINT	= 2;
+alias SIGQUIT	= 3;
+alias SIGILL	= 4;
+alias SIGTRAP	= 5;
+alias SIGABRT	= 6;
+alias SIGPOLL	= 7;
+alias SIGIOT	= SIGABRT;
+alias SIGEMT	= 7;
+alias SIGFPE	= 8;
+alias SIGKILL	= 9;
+alias SIGBUS	= 10;
+alias SIGSEGV	= 11;
+alias SIGSYS	= 12;
+alias SIGPIPE	= 13;
+alias SIGALRM	= 14;
+alias SIGTERM	= 15;
+alias SIGURG	= 16;
+alias SIGSTOP	= 17;
+alias SIGTSTP	= 18;
+alias SIGCONT	= 19;
+alias SIGCHLD	= 20;
+alias SIGTTIN	= 21;
+alias SIGTTOU	= 22;
+alias SIGIO	= 23;
+alias SIGXCPU	= 24;
+alias SIGXFSZ	= 25;
+alias SIGVTALRM = 26;
+alias SIGPROF	= 27;
+alias SIGWINCH	= 28;
+alias SIGINFO	= 29;
+alias SIGUSR1	= 30;
+alias SIGUSR2	= 31;
+
+alias	SIG_DFL		= CCodePointer[(Int),()](0);
+alias	SIG_IGN		= CCodePointer[(Int),()](1);
+alias	SIG_HOLD	= CCodePointer[(Int),()](5);
+alias	SIG_ERR		= CCodePointer[(Int),()](-1);
