@@ -31,7 +31,7 @@ analyzeBool(x:ast.Expr, env) RTResult {
     return withLocation(*x, () ref=> {
         var result = analyzeExpr(x, env);
         if (result.type != getHooks().Bool)
-            genericError("expected Bool value");
+            typeError(getHooks().Bool, result.type);
         return result;
     });
 }
