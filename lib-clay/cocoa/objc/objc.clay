@@ -315,7 +315,8 @@ overload InstanceMethods(...values) = InstanceMethods[Type(Tuple(...values))](Tu
 // class properties
 //
 
-procedure ClassInstanceVars;
+[T | Class?(T)]
+ClassInstanceVars(static T) = ();
 procedure ClassClassMethods;
 procedure ClassInstanceMethods;
 
@@ -349,6 +350,12 @@ overload ClassIvarType(static T, static name) = firstValue(...assocValue(name, .
 
 ClassIvarNames(T) = ...mapValues(ivar => ivar.0, ...ClassInstanceVars(T));
 ClassIvarTypes(T) = ...mapValues(ivar => ivar.1, ...ClassInstanceVars(T));
+
+ClassInstanceVar?(T, ivar) = false;
+[T, ivar | Class?(T) and Identifier?(ivar)]
+overload ClassInstanceVar?(static T, static ivar) = ClassInstanceVar?(SuperclassType(T), ivar);
+[T, ivar | Class?(T) and Identifier?(ivar) and assocValue?(ivar, ...ClassInstanceVars(T))]
+overload ClassInstanceVar?(static T, static ivar) = true;
 
 
 
@@ -1034,6 +1041,18 @@ overload _extraColon(static argCount, static underscoreCount, static lastCharact
 [argCount] identifierSelector(identifier, static argCount)
     = _identifierSelector(static argCount, ...IdentifierChars(identifier));
 
+[identifier, minArity]
+private _ValidMethodIdentifier?(static identifier, static minArity)
+    = Selector?(identifierSelector(identifier, static minArity))
+      or Selector?(identifierSelector(identifier, static minArity+1));
+
+[identifier]
+ValidMethodIdentifier?(static identifier)
+    = _ValidMethodIdentifier?(
+        static identifier,
+        static countOccurrences(#_, ...IdentifierChars(identifier))
+    );
+
 
 
 //
@@ -1045,9 +1064,10 @@ private record MethodRef[T, Captured, identifier] (self: Captured);
 overload MethodRef(T, forward value, identifier)
     = MethodRef[T, Type(captureValue(value)), identifier](captureValue(value));
 
-[T, cmd | ObjectRef?(T) and cmd != #__handle__]
-overload fieldRef(forward self: T, static cmd) = MethodRef(ObjectParameterType(T), self, cmd);
-[T, cmd | Class?(T)]
+[T, cmd | ObjectRef?(T) and cmd != #__handle__ and ValidMethodIdentifier?(cmd)]
+overload fieldRef(forward self: T, static cmd)
+    = MethodRef(ObjectParameterType(T), self, cmd);
+[T, cmd | Class?(T) and ValidMethodIdentifier?(cmd)]
 overload fieldRef(static T, static cmd) = MethodRef(Static[T], T, cmd);
 
 [T, selector, ...Args | ObjectParameterType?(T) and Selector?(selector)]
@@ -1060,7 +1080,14 @@ callMethod(forward self: T, static selector, forward ...args: Args)
         ...args
     );
 
-[T, Captured, identifier, ...Args]
+[T, Captured, identifier, ...Args |
+    Selector?(identifierSelector(identifier, static countValues(...Args)))
+    and SelectorCallableWith?(
+        T,
+        identifierSelector(identifier, static countValues(...Args)),
+        ...Args
+    )
+]
 overload call(method: MethodRef[T, Captured, identifier], forward ...args: Args) {
     var selector = identifierSelector(identifier, static countValues(...Args));
     return forward ...msgSend(
@@ -1113,7 +1140,8 @@ overload dereference(obj: T) = IvarsRef[T](objectHandle(obj));
 [T | Class?(T)]
 overload dereference(obj: Retained[T]) = IvarsRef[T](objectHandle(obj));
 
-[T, ivar | Class?(T) and ivar != #__handle__]
+
+[T, ivar | Class?(T) and ivar != #__handle__ and ClassInstanceVar?(T, ivar)]
 overload fieldRef(ivars: IvarsRef[T], static ivar)
     = ref Pointer[ClassIvarType(T, ivar)](
         Pointer[UInt8](ivars.__handle__) + objcIvarOffset[T, ivar]
