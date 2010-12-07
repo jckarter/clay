@@ -11,6 +11,7 @@
 #include <sys/select.h>
 #include <sys/signal.h>
 #include <sys/event.h>
+#include <signal.h>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <netdb.h>

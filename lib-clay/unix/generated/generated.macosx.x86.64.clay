@@ -2338,6 +2338,102 @@ external kevent64(
     flags : UInt,
     timeout : Pointer[Struct_timespec]) Int;
 
+external sys_signame : Array[Pointer[CChar],32];
+
+external sys_siglist : Array[Pointer[CChar],32];
+
+external raise(
+    argument0 : Int) Int;
+
+external bsd_signal(
+    argument0 : Int,
+    argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
+
+external ("_kill") kill(
+    argument0 : Int,
+    argument1 : Int) Int;
+
+external ("_killpg") killpg(
+    argument0 : Int,
+    argument1 : Int) Int;
+
+external sigaction(
+    argument0 : Int,
+    argument1 : Pointer[Struct_sigaction],
+    argument2 : Pointer[Struct_sigaction]) Int;
+
+external sigaddset(
+    argument0 : Pointer[UInt],
+    argument1 : Int) Int;
+
+external ("_sigaltstack") sigaltstack(
+    argument0 : Pointer[stack_t],
+    argument1 : Pointer[stack_t]) Int;
+
+external sigdelset(
+    argument0 : Pointer[UInt],
+    argument1 : Int) Int;
+
+external sigemptyset(
+    argument0 : Pointer[UInt]) Int;
+
+external sigfillset(
+    argument0 : Pointer[UInt]) Int;
+
+external sighold(
+    argument0 : Int) Int;
+
+external sigignore(
+    argument0 : Int) Int;
+
+external siginterrupt(
+    argument0 : Int,
+    argument1 : Int) Int;
+
+external sigismember(
+    argument0 : Pointer[UInt],
+    argument1 : Int) Int;
+
+external ("_sigpause") sigpause(
+    argument0 : Int) Int;
+
+external sigpending(
+    argument0 : Pointer[UInt]) Int;
+
+external sigprocmask(
+    argument0 : Int,
+    argument1 : Pointer[UInt],
+    argument2 : Pointer[UInt]) Int;
+
+external sigrelse(
+    argument0 : Int) Int;
+
+external sigset(
+    argument0 : Int,
+    argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
+
+external ("_sigsuspend") sigsuspend(
+    argument0 : Pointer[UInt]) Int;
+
+external ("_sigwait") sigwait(
+    argument0 : Pointer[UInt],
+    argument1 : Pointer[Int]) Int;
+
+external psignal(
+    argument0 : UInt,
+    argument1 : Pointer[CChar]);
+
+external sigblock(
+    argument0 : Int) Int;
+
+external sigsetmask(
+    argument0 : Int) Int;
+
+external sigvec(
+    argument0 : Int,
+    argument1 : Pointer[Struct_sigvec],
+    argument2 : Pointer[Struct_sigvec]) Int;
+
 record Struct_dirent (
     d_ino : UInt64,
     d_seekoff : UInt64,
