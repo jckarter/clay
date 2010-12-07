@@ -6,8 +6,6 @@ private alias UnknownType = Int;
 private alias AUnionType = Int;
 
 
-
-
 record Struct___va_list_tag (
     gp_offset : UInt,
     fp_offset : UInt,
@@ -1967,6 +1965,293 @@ external pfctlinput(
     argument0 : Int,
     argument1 : Pointer[Struct_sockaddr]);
 
+alias sig_atomic_t = Int;
+
+record Struct___darwin_i386_thread_state (
+    __eax : UInt,
+    __ebx : UInt,
+    __ecx : UInt,
+    __edx : UInt,
+    __edi : UInt,
+    __esi : UInt,
+    __ebp : UInt,
+    __esp : UInt,
+    __ss : UInt,
+    __eflags : UInt,
+    __eip : UInt,
+    __cs : UInt,
+    __ds : UInt,
+    __es : UInt,
+    __fs : UInt,
+    __gs : UInt,
+);
+
+record Struct___darwin_fp_control (
+    __invalid : UShort,
+    __denorm : UShort,
+    __zdiv : UShort,
+    __ovrfl : UShort,
+    __undfl : UShort,
+    __precis : UShort,
+    unnamed_field6 : UShort,
+    __pc : UShort,
+    __rc : UShort,
+    unnamed_field9 : UShort,
+    unnamed_field10 : UShort,
+);
+
+alias __darwin_fp_control_t = Struct___darwin_fp_control;
+
+record Struct___darwin_fp_status (
+    __invalid : UShort,
+    __denorm : UShort,
+    __zdiv : UShort,
+    __ovrfl : UShort,
+    __undfl : UShort,
+    __precis : UShort,
+    __stkflt : UShort,
+    __errsumm : UShort,
+    __c0 : UShort,
+    __c1 : UShort,
+    __c2 : UShort,
+    __tos : UShort,
+    __c3 : UShort,
+    __busy : UShort,
+);
+
+alias __darwin_fp_status_t = Struct___darwin_fp_status;
+
+record Struct___darwin_mmst_reg (
+    __mmst_reg : Array[CChar,10],
+    __mmst_rsrv : Array[CChar,6],
+);
+
+record Struct___darwin_xmm_reg (
+    __xmm_reg : Array[CChar,16],
+);
+
+record Struct___darwin_i386_float_state (
+    __fpu_reserved : Array[Int,2],
+    __fpu_fcw : Struct___darwin_fp_control,
+    __fpu_fsw : Struct___darwin_fp_status,
+    __fpu_ftw : CUChar,
+    __fpu_rsrv1 : CUChar,
+    __fpu_fop : UShort,
+    __fpu_ip : UInt,
+    __fpu_cs : UShort,
+    __fpu_rsrv2 : UShort,
+    __fpu_dp : UInt,
+    __fpu_ds : UShort,
+    __fpu_rsrv3 : UShort,
+    __fpu_mxcsr : UInt,
+    __fpu_mxcsrmask : UInt,
+    __fpu_stmm0 : Struct___darwin_mmst_reg,
+    __fpu_stmm1 : Struct___darwin_mmst_reg,
+    __fpu_stmm2 : Struct___darwin_mmst_reg,
+    __fpu_stmm3 : Struct___darwin_mmst_reg,
+    __fpu_stmm4 : Struct___darwin_mmst_reg,
+    __fpu_stmm5 : Struct___darwin_mmst_reg,
+    __fpu_stmm6 : Struct___darwin_mmst_reg,
+    __fpu_stmm7 : Struct___darwin_mmst_reg,
+    __fpu_xmm0 : Struct___darwin_xmm_reg,
+    __fpu_xmm1 : Struct___darwin_xmm_reg,
+    __fpu_xmm2 : Struct___darwin_xmm_reg,
+    __fpu_xmm3 : Struct___darwin_xmm_reg,
+    __fpu_xmm4 : Struct___darwin_xmm_reg,
+    __fpu_xmm5 : Struct___darwin_xmm_reg,
+    __fpu_xmm6 : Struct___darwin_xmm_reg,
+    __fpu_xmm7 : Struct___darwin_xmm_reg,
+    __fpu_rsrv4 : Array[CChar,224],
+    __fpu_reserved1 : Int,
+);
+
+record Struct___darwin_i386_exception_state (
+    __trapno : UInt,
+    __err : UInt,
+    __faultvaddr : UInt,
+);
+
+record Struct___darwin_x86_debug_state32 (
+    __dr0 : UInt,
+    __dr1 : UInt,
+    __dr2 : UInt,
+    __dr3 : UInt,
+    __dr4 : UInt,
+    __dr5 : UInt,
+    __dr6 : UInt,
+    __dr7 : UInt,
+);
+
+record Struct___darwin_x86_thread_state64 (
+    __rax : UInt64,
+    __rbx : UInt64,
+    __rcx : UInt64,
+    __rdx : UInt64,
+    __rdi : UInt64,
+    __rsi : UInt64,
+    __rbp : UInt64,
+    __rsp : UInt64,
+    __r8 : UInt64,
+    __r9 : UInt64,
+    __r10 : UInt64,
+    __r11 : UInt64,
+    __r12 : UInt64,
+    __r13 : UInt64,
+    __r14 : UInt64,
+    __r15 : UInt64,
+    __rip : UInt64,
+    __rflags : UInt64,
+    __cs : UInt64,
+    __fs : UInt64,
+    __gs : UInt64,
+);
+
+record Struct___darwin_x86_float_state64 (
+    __fpu_reserved : Array[Int,2],
+    __fpu_fcw : Struct___darwin_fp_control,
+    __fpu_fsw : Struct___darwin_fp_status,
+    __fpu_ftw : CUChar,
+    __fpu_rsrv1 : CUChar,
+    __fpu_fop : UShort,
+    __fpu_ip : UInt,
+    __fpu_cs : UShort,
+    __fpu_rsrv2 : UShort,
+    __fpu_dp : UInt,
+    __fpu_ds : UShort,
+    __fpu_rsrv3 : UShort,
+    __fpu_mxcsr : UInt,
+    __fpu_mxcsrmask : UInt,
+    __fpu_stmm0 : Struct___darwin_mmst_reg,
+    __fpu_stmm1 : Struct___darwin_mmst_reg,
+    __fpu_stmm2 : Struct___darwin_mmst_reg,
+    __fpu_stmm3 : Struct___darwin_mmst_reg,
+    __fpu_stmm4 : Struct___darwin_mmst_reg,
+    __fpu_stmm5 : Struct___darwin_mmst_reg,
+    __fpu_stmm6 : Struct___darwin_mmst_reg,
+    __fpu_stmm7 : Struct___darwin_mmst_reg,
+    __fpu_xmm0 : Struct___darwin_xmm_reg,
+    __fpu_xmm1 : Struct___darwin_xmm_reg,
+    __fpu_xmm2 : Struct___darwin_xmm_reg,
+    __fpu_xmm3 : Struct___darwin_xmm_reg,
+    __fpu_xmm4 : Struct___darwin_xmm_reg,
+    __fpu_xmm5 : Struct___darwin_xmm_reg,
+    __fpu_xmm6 : Struct___darwin_xmm_reg,
+    __fpu_xmm7 : Struct___darwin_xmm_reg,
+    __fpu_xmm8 : Struct___darwin_xmm_reg,
+    __fpu_xmm9 : Struct___darwin_xmm_reg,
+    __fpu_xmm10 : Struct___darwin_xmm_reg,
+    __fpu_xmm11 : Struct___darwin_xmm_reg,
+    __fpu_xmm12 : Struct___darwin_xmm_reg,
+    __fpu_xmm13 : Struct___darwin_xmm_reg,
+    __fpu_xmm14 : Struct___darwin_xmm_reg,
+    __fpu_xmm15 : Struct___darwin_xmm_reg,
+    __fpu_rsrv4 : Array[CChar,96],
+    __fpu_reserved1 : Int,
+);
+
+record Struct___darwin_x86_exception_state64 (
+    __trapno : UInt,
+    __err : UInt,
+    __faultvaddr : UInt64,
+);
+
+record Struct___darwin_x86_debug_state64 (
+    __dr0 : UInt64,
+    __dr1 : UInt64,
+    __dr2 : UInt64,
+    __dr3 : UInt64,
+    __dr4 : UInt64,
+    __dr5 : UInt64,
+    __dr6 : UInt64,
+    __dr7 : UInt64,
+);
+
+record Struct___darwin_mcontext32 (
+    __es : Struct___darwin_i386_exception_state,
+    __ss : Struct___darwin_i386_thread_state,
+    __fs : Struct___darwin_i386_float_state,
+);
+
+record Struct___darwin_mcontext64 (
+    __es : Struct___darwin_x86_exception_state64,
+    __ss : Struct___darwin_x86_thread_state64,
+    __fs : Struct___darwin_x86_float_state64,
+);
+
+alias mcontext_t = Pointer[Struct___darwin_mcontext32];
+
+record Struct___darwin_sigaltstack (
+    ss_sp : RawPointer,
+    ss_size : CULong,
+    ss_flags : Int,
+);
+
+record Struct___darwin_ucontext (
+    uc_onstack : Int,
+    uc_sigmask : UInt,
+    uc_stack : Struct___darwin_sigaltstack,
+    uc_link : Pointer[Struct___darwin_ucontext],
+    uc_mcsize : CULong,
+    uc_mcontext : Pointer[Struct___darwin_mcontext32],
+);
+
+alias stack_t = Struct___darwin_sigaltstack;
+
+alias ucontext_t = Struct___darwin_ucontext;
+
+record Struct_sigevent (
+    sigev_notify : Int,
+    sigev_signo : Int,
+    sigev_value : AUnionType,
+    sigev_notify_function : CCodePointer[(AUnionType),()],
+    sigev_notify_attributes : Pointer[pthread_attr_t],
+);
+
+record Struct___siginfo (
+    si_signo : Int,
+    si_errno : Int,
+    si_code : Int,
+    si_pid : Int,
+    si_uid : UInt,
+    si_status : Int,
+    si_addr : RawPointer,
+    si_value : AUnionType,
+    si_band : CLong,
+    __pad : Array[CULong,7],
+);
+
+alias siginfo_t = Struct___siginfo;
+
+record Struct___sigaction (
+    __sigaction_u : AUnionType,
+    sa_tramp : CCodePointer[(RawPointer,Int,Int,Pointer[Struct___siginfo],RawPointer),()],
+    sa_mask : UInt,
+    sa_flags : Int,
+);
+
+record Struct_sigaction (
+    __sigaction_u : AUnionType,
+    sa_mask : UInt,
+    sa_flags : Int,
+);
+
+alias sig_t = CCodePointer[(Int),()];
+
+record Struct_sigvec (
+    sv_handler : CCodePointer[(Int),()],
+    sv_mask : Int,
+    sv_flags : Int,
+);
+
+record Struct_sigstack (
+    ss_sp : Pointer[CChar],
+    ss_onstack : Int,
+);
+
+external signal(
+    argument0 : Int,
+    argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
+
 alias uint8_t = CUChar;
 
 alias uint16_t = UShort;
@@ -2052,6 +2337,102 @@ external kevent64(
     nevents : Int,
     flags : UInt,
     timeout : Pointer[Struct_timespec]) Int;
+
+external sys_signame : Array[Pointer[CChar],32];
+
+external sys_siglist : Array[Pointer[CChar],32];
+
+external raise(
+    argument0 : Int) Int;
+
+external bsd_signal(
+    argument0 : Int,
+    argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
+
+external ("_kill$UNIX2003") kill(
+    argument0 : Int,
+    argument1 : Int) Int;
+
+external ("_killpg$UNIX2003") killpg(
+    argument0 : Int,
+    argument1 : Int) Int;
+
+external sigaction(
+    argument0 : Int,
+    argument1 : Pointer[Struct_sigaction],
+    argument2 : Pointer[Struct_sigaction]) Int;
+
+external sigaddset(
+    argument0 : Pointer[UInt],
+    argument1 : Int) Int;
+
+external ("_sigaltstack$UNIX2003") sigaltstack(
+    argument0 : Pointer[stack_t],
+    argument1 : Pointer[stack_t]) Int;
+
+external sigdelset(
+    argument0 : Pointer[UInt],
+    argument1 : Int) Int;
+
+external sigemptyset(
+    argument0 : Pointer[UInt]) Int;
+
+external sigfillset(
+    argument0 : Pointer[UInt]) Int;
+
+external sighold(
+    argument0 : Int) Int;
+
+external sigignore(
+    argument0 : Int) Int;
+
+external siginterrupt(
+    argument0 : Int,
+    argument1 : Int) Int;
+
+external sigismember(
+    argument0 : Pointer[UInt],
+    argument1 : Int) Int;
+
+external ("_sigpause$UNIX2003") sigpause(
+    argument0 : Int) Int;
+
+external sigpending(
+    argument0 : Pointer[UInt]) Int;
+
+external sigprocmask(
+    argument0 : Int,
+    argument1 : Pointer[UInt],
+    argument2 : Pointer[UInt]) Int;
+
+external sigrelse(
+    argument0 : Int) Int;
+
+external sigset(
+    argument0 : Int,
+    argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
+
+external ("_sigsuspend$UNIX2003") sigsuspend(
+    argument0 : Pointer[UInt]) Int;
+
+external ("_sigwait$UNIX2003") sigwait(
+    argument0 : Pointer[UInt],
+    argument1 : Pointer[Int]) Int;
+
+external psignal(
+    argument0 : UInt,
+    argument1 : Pointer[CChar]);
+
+external sigblock(
+    argument0 : Int) Int;
+
+external sigsetmask(
+    argument0 : Int) Int;
+
+external sigvec(
+    argument0 : Int,
+    argument1 : Pointer[Struct_sigvec],
+    argument2 : Pointer[Struct_sigvec]) Int;
 
 record Struct_dirent (
     d_ino : UInt64,

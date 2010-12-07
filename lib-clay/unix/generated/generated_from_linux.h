@@ -9,7 +9,9 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <sys/signal.h>
 #include <sys/epoll.h>
+#include <signal.h>
 #include <dirent.h>
 
 #include <netdb.h>
