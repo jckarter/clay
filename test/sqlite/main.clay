@@ -98,4 +98,6 @@ main() {
     runStatement(db, "drop table wotsits");
 
     println("null string: ", statementValue(String, db, "select null"));
+    println("string?: ", maybeStatementValue(String, db, "select 'mellow yellow'"));
+    println("no string?: ", maybeStatementValue(String, db, "select 'mellow yellow' from sqlite_master where 0"));
 }
