@@ -142,16 +142,36 @@ overload runStatement(db: SqliteDB, sql: S, ...bindings: TT) {
     runStatement(st, ...bindings);
 }
 
-record NoStatementValue ();
-instance Exception = NoStatementValue;
+record NoStatementRow ();
+instance Exception = NoStatementRow;
 
-[T]
-statementValue(static T, st: SqliteStatement) {
+maybeStatementSingleRow(st: SqliteStatement) {
     var si = iterator(st);
-    if (hasNext?(si))
-        return next(si)[0, T];
-    else
-        throw NoStatementValue();
+    if (not hasNext?(si))
+        return nothing(SqliteStatementIterator);
+    return Maybe(next(si));
+}
+
+statementSingleRow(st: SqliteStatement)
+    = just(maybeStatementSingleRow(st));
+
+[T] statementValue(static T, st: SqliteStatement) = statementSingleRow(st)[0, T];
+
+[T, S, ...TT | CCompatibleString?(S) and allValues?(BindableType?, ...TT)]
+overload statementValue(static T, db: SqliteDB, sql: S, forward ...bindings: TT) {
+    var st = SqliteStatement(db, sql, ...bindings);
+    return statementValue(T, st);
+}
+
+[T] maybeStatementValue(static T, st: SqliteStatement) = maybe(maybeStatementSingleRow(st),
+    si => Maybe(si[0, T]),
+    () => nothing(T),
+);
+
+[T, S, ...TT | CCompatibleString?(S) and allValues?(BindableType?, ...TT)]
+overload maybeStatementValue(static T, db: SqliteDB, sql: S, forward ...bindings: TT) {
+    var st = SqliteStatement(db, sql, ...bindings);
+    return maybeStatementValue(T, st);
 }
 
 [T, S, ...TT | CCompatibleString?(S) and allValues?(BindableType?, ...TT)]
