@@ -133,6 +133,10 @@ allocateName(x:NameAllocator, baseName:String) {
     }
 }
 
+overload allocateName(x:NameAllocator, baseName:StringConstant) {
+    return allocateName(x, String(baseName));
+}
+
 
 
 //
