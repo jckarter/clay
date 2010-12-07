@@ -235,8 +235,8 @@ overload analyzeMultiExpr(x:ast.Call, env) {
     }
     else {
         var args = evaluateExprList(x.args, env);
-        var result = evaluateCall(callable, args);
-        return valueListToRTResultList(result);
+        var results = evaluateCall(callable, args);
+        return valueListToRTResultList(results);
     }
 }
 
