@@ -127,21 +127,27 @@ overload codegenTypeInternal(x:FloatTag, name) {
     );
 }
 overload codegenTypeInternal(x:PointerTag, name) {
+    ref targetName = codegenType(x.target);
     printlnTo(
-        context().typeDefs, "typedef ",
-        codegenType(x.target), "* ", name, ";"
+        context().typeDefs, "typedef ", targetName, "* ", name, ";"
     );
 }
 overload codegenTypeInternal(x:ArrayTag, name) {
+    ref elementName = codegenType(x.element);
     printlnTo(
         context().typeDefs, "typedef ",
-        codegenType(x.element), " ", name, "[", x.size, "];"
+        elementName, " ", name, "[", x.size, "];"
     );
 }
 overload codegenTypeInternal(x:TupleTag, name) {
     var auxName = newGlobalName(name + "_s");
     ref ctx = context();
     printlnTo(ctx.typeDefs, "typedef struct ", auxName, " ", name, ";");
+
+    // make sure internal types are generated
+    for (element in x.elements)
+        codegenType(element);
+
     ref bodies = ctx.typeBodies;
     printlnTo(bodies, "struct ", auxName, " {");
     for (i, element in enumerated(x.elements)) {
@@ -153,6 +159,11 @@ overload codegenTypeInternal(x:UnionTag, name) {
     var auxName = newGlobalName(name + "_s");
     ref ctx = context();
     printlnTo(ctx.typeDefs, "typedef union ", auxName, " ", name, ";");
+
+    // make sure internal types are generated
+    for (member in x.members)
+        codegenType(member);
+
     ref bodies = ctx.typeBodies;
     printlnTo(bodies, "union ", auxName, " {");
     for (i, member in enumerated(x.members)) {
