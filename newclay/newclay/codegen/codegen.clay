@@ -1,0 +1,172 @@
+
+import maybe.*;
+import newclay.common.*;
+import newclay.core.*;
+import newclay.ir.*;
+
+
+
+//
+// CodegenContext
+//
+
+private record CodegenContext = referenceType (
+    typeDefs: String,
+    typeBodyDefs: String,
+    codeProtoDefs: String,
+    codeBodyDefs: String,
+    typeMap: HashMap[Type, String],
+    codeMap: HashMap[Procedure, String],
+    globalNames: NameAllocator;
+);
+
+private newCodegenContext() = allocateRef(CodegenContext);
+
+private var _codegenContextStack = Stack[CodegenContext]();
+
+private withNewCodegenContext(f) {
+    var ctx = newCodegenContext();
+    withStackValue(_codegenContextStack, ctx, f);
+    return move(ctx);
+}
+
+private context() = ref stackTop(_codegenContextStack);
+
+private newGlobalName(baseName) {
+    return allocateName(context().globalNames, baseName);
+}
+
+
+
+//
+// sanitizeName
+//
+
+private letter?(x) =
+    ((x >= 'a') and (x <= 'z')) or ((x >= 'A') and (x <= 'Z'));
+
+private digit?(x) = ((x >= '0') and (x <= '9'));
+
+private sanitizeChar(x) {
+    if (letter?(x) or digit?(x))
+        return x;
+    return '_';
+}
+
+private sanitizeFirstChar(x) {
+    if (letter?(x))
+        return x;
+    return '_';
+}
+
+private sanitizeName(rvalue name) {
+    var result = move(name);
+    for (x in result)
+        sanitizeChar(x);
+    if (empty?(result))
+        return String("x");
+    result[0] = sanitizeFirstChar(result[0]);
+    return move(result);
+}
+
+
+
+//
+// codegenType
+//
+
+private cIntegerType(x:IntegerTag) {
+    if (x.kind == SIGNED_INTEGER) {
+        switch (x.bits) {
+        case 8 : return "char";
+        case 16 : return "short";
+        case 32 : return "int";
+        case 64 : return "long long";
+        default : assert(false); return "";
+        }
+    }
+    else if (x.kind == UNSIGNED_INTEGER) {
+        switch (x.bits) {
+        case 8 : return "unsigned char";
+        case 16 : return "unsigned short";
+        case 32 : return "unsigned int";
+        case 64 : return "unsigned long long";
+        default : assert(false); return "";
+        }
+    }
+    else {
+        assert(false);
+        return "";
+    }
+}
+
+private cFloatType(x:FloatTag) {
+    switch (x.bits) {
+    case 32 : return "float";
+    case 64 : return "double";
+    default : assert(false); return "";
+    }
+}
+
+private procedure codegenTypeInternal;
+
+overload codegenTypeInternal(x:TypeTag, name) {
+    codegenTypeInternal(*x, name);
+}
+overload codegenTypeInternal(x:BoolTag, name) {
+    printlnTo(context().typeDefs, "typedef char ", name, ";");
+}
+overload codegenTypeInternal(x:IntegerTag, name) {
+    printlnTo(
+        context().typeDefs, "typedef ", cIntegerType(x), " ", name, ";"
+    );
+}
+overload codegenTypeInternal(x:FloatTag, name) {
+    printlnTo(
+        context().typeDefs, "typedef ", cFloatType(x), " ", name, ";"
+    );
+}
+overload codegenTypeInternal(x:PointerTag, name) {
+    printlnTo(
+        context().typeDefs, "typedef ",
+        codegenType(x.target), " * ", name, ";"
+    );
+}
+overload codegenTypeInternal(x:ArrayTag, name) {
+    printlnTo(
+        context().typeDefs, "typedef ",
+        codegenType(x.element), " ", name, "[", x.size, "];"
+    );
+}
+overload codegenTypeInternal(x:TupleTag, name) {
+    var auxName = newGlobalName(name + "_s");
+    ref ctx = context();
+    printlnTo(ctx.typeDefs, "typedef struct ", auxName, " ", name, ";");
+    ref bodyDefs = ctx.typeBodyDefs;
+    printlnTo(bodyDefs, "struct ", auxName, " {");
+    for (i, element in enumerated(x.elements)) {
+        printlnTo(bodyDefs, "    ", codegenType(element), " f", i, ";");
+    }
+    printlnTo(bodyDefs, "};");
+}
+overload codegenTypeInternal(x:UnionTag, name) {
+    var auxName = newGlobalName(name + "_s");
+    ref ctx = context();
+    printlnTo(ctx.typeDefs, "typedef union ", auxName, " ", name, ";");
+    ref bodyDefs = ctx.typeBodyDefs;
+    printlnTo(bodyDefs, "union ", auxName, " {");
+    for (i, element in enumerated(x.elements)) {
+        printlnTo(bodyDefs, "    ", codegenType(element), " f", i, ";");
+    }
+    printlnTo(bodyDefs, "};");
+}
+
+codegenType(x:Type) ref String{
+    var ctx = context();
+    var ptr = lookup(ctx.typeMap, x);
+    if (not null?(ptr))
+        return ref ptr^;
+    var typeName = newGlobalName(sanitizeName(printString(x.symbol)));
+    ctx.typeMap[x] = typeName;
+    codegenTypeInternal(x.tag, typeName);
+}
