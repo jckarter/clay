@@ -225,10 +225,11 @@ codegenFunctionPrototype(x:Procedure, name) {
 //
 
 codegenFunctionDef(x:Procedure, name) {
-    ref out = context().functionDefs;
+    var out = String();
     printFunctionHeaderTo(out, x, name);
     printlnTo(out, " {");
     printlnTo(out, "}");
+    printTo(context().functionDefs, out);
 }
 
 
