@@ -154,24 +154,6 @@ valueToInt(x:Value) {
 
 
 //
-// compileMain
-//
-
-compileMain(program:Program) {
-    return ...withProgram(program, () ref=> {
-        var env = program.mainModule.globals;
-        var mainValue = envEntryToValue(envLookup(env, "main"));
-        if (not runtimeCallable?(mainValue))
-            genericError("invalid procedure: main");
-        var s = analyzeCallable(mainValue, RTResultList());
-        var irProc = compileSpecialization(s);
-        return map(x => (x.kind, valueToType(x.type)), s.returns), irProc;
-    });
-}
-
-
-
-//
 // CompileContext
 //
 

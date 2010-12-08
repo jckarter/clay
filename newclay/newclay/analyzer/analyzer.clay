@@ -11,14 +11,12 @@ import newclay.hooks.*;
 // analyzeMain
 //
 
-analyzeMain(program:Program) {
-    return withProgram(program, () ref=> {
-        var env = program.mainModule.globals;
-        var mainValue = envEntryToValue(envLookup(env, "main"));
-        if (not runtimeCallable?(mainValue))
-            genericError("invalid procedure: main");
-        return analyzeCall(mainValue, RTResultList());
-    });
+analyzeMain() {
+    var env = getProgram().mainModule.globals;
+    var mainValue = envEntryToValue(envLookup(env, "main"));
+    if (not runtimeCallable?(mainValue))
+        genericError("invalid procedure: main");
+    return analyzeCallable(mainValue, RTResultList());
 }
 
 
