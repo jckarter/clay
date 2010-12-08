@@ -1,5 +1,6 @@
 
 import newclay.common.*;
+import newclay.core.*;
 import newclay.loader.*;
 import newclay.hooks.*;
 import newclay.analyzer.*;
@@ -11,9 +12,11 @@ main(args) {
     }
     try {
         var program = loadProgram(args[1]);
-        initializeClayHooks(program);
-        var result = analyzeMain(program);
-        println("result = ", result);
+        withProgram(program, () ref=> {
+            initializeClayHooks();
+            var specialization = analyzeMain();
+            println("result = ", specialization.returns);
+        });
     }
     catch (e:ClayError) {
         displayError(e);

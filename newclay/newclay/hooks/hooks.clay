@@ -8,7 +8,8 @@ import newclay.evaluator.*;
 // initializeClayHooks
 //
 
-initializeClayHooks(program:Program) {
+initializeClayHooks() {
+    var program = getProgram();
     var env = program.mainModule.globals;
     var lookup = name => envEntryToValue(envLookup(env, name));
     program.hooks = ClayHooks(
