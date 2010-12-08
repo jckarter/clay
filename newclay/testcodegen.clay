@@ -1,0 +1,31 @@
+
+import newclay.common.*;
+import newclay.core.*;
+import newclay.loader.*;
+import newclay.hooks.*;
+import newclay.analyzer.*;
+import newclay.compiler.*;
+import newclay.codegen.*;
+
+main(args) {
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <file>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[1]);
+        withProgram(program, () ref=> {
+            initializeClayHooks();
+            var specialization = analyzeMain();
+            println("results = ", specialization.returns);
+            var irProc = compileSpecialization(specialization);
+            println("irProc = ", irProc);
+            var cCode = codegenMain(irProc);
+            println("cCode = ", '\n', cCode);
+        });
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
