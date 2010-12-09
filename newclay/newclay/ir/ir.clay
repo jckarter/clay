@@ -274,9 +274,9 @@ record Initialize = referenceType(
 );
 
 record If = referenceType(
-    condition: Expr,
-    thenPart: Statement,
-    elsePart: Statement,
+    condition: AtomicExpr,
+    thenPart: Block,
+    elsePart: Block,
 );
 
 record Return();

@@ -589,36 +589,36 @@ overload compileExprInto(x:ast.Indexing, env, out) {
 }
 overload compileExprInto(x:ast.AndExpr, env, out) {
     var cond = compileBoolExpr(x.expr1, env);
-    var thenPart = ir.Statement(withNewBlock(() ref=> {
+    var thenPart = withNewBlock(() ref=> {
         compileExprInto(x.expr2, env, out);
-    }));
-    var elsePart = ir.Statement(withNewBlock(() ref=> {
+    });
+    var elsePart = withNewBlock(() ref=> {
         emitInitialize(out, cond);
-    }));
-    emitStatement(ir.If(ir.Expr(cond.irExpr), thenPart, elsePart));
+    });
+    emitStatement(ir.If(cond.irExpr, thenPart, elsePart));
 }
 overload compileExprInto(x:ast.OrExpr, env, out) {
     var cond = compileBoolExpr(x.expr1, env);
-    var thenPart = ir.Statement(withNewBlock(() ref=> {
+    var thenPart = withNewBlock(() ref=> {
         emitInitialize(out, cond);
-    }));
-    var elsePart = ir.Statement(withNewBlock(() ref=> {
+    });
+    var elsePart = withNewBlock(() ref=> {
         compileExprInto(x.expr2, env, out);
-    }));
-    emitStatement(ir.If(ir.Expr(cond.irExpr), thenPart, elsePart));
+    });
+    emitStatement(ir.If(cond.irExpr, thenPart, elsePart));
 }
 overload compileExprInto(x:ast.LambdaExpr, env, out) {
     genericError("lambda expressions are not yet supported");
 }
 overload compileExprInto(x:ast.IfExpr, env, out) {
     var cond = compileBoolExpr(x.condition, env);
-    var thenPart = ir.Statement(withNewBlock(() ref=> {
+    var thenPart = withNewBlock(() ref=> {
         compileExprInto(x.thenPart, env, out);
-    }));
-    var elsePart = ir.Statement(withNewBlock(() ref=> {
+    });
+    var elsePart = withNewBlock(() ref=> {
         compileExprInto(x.elsePart, env, out);
-    }));
-    emitStatement(ir.If(ir.Expr(cond.irExpr), thenPart, elsePart));
+    });
+    emitStatement(ir.If(cond.irExpr, thenPart, elsePart));
 }
 
 
