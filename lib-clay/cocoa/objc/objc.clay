@@ -1038,8 +1038,11 @@ overload _extraColon(static argCount, static underscoreCount, static lastCharact
     );
 }
 
-[argCount] identifierSelector(identifier, static argCount)
+private var memoIdentifierSelector[identifier, argCount]
     = _identifierSelector(static argCount, ...IdentifierChars(identifier));
+
+[argCount] identifierSelector(identifier, static argCount)
+    = memoIdentifierSelector[identifier, argCount];
 
 [identifier, minArity]
 private _ValidMethodIdentifier?(static identifier, static minArity)
