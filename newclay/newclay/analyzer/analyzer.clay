@@ -28,8 +28,8 @@ analyzeMain() {
 analyzeBool(x:ast.Expr, env) RTResult {
     return withLocation(x, () ref=> {
         var result = analyzeExpr(x, env);
-        if (result.type != getHooks().Bool)
-            typeError(getHooks().Bool, result.type);
+        if (result.type != boolType())
+            typeError(boolType(), result.type);
         return result;
     });
 }
@@ -46,10 +46,10 @@ overload analyzeExpr(x:ast.Expr, env) RTResult {
     return withLocation(x, () ref=> analyzeExpr(*x, env));
 }
 overload analyzeExpr(x:ast.BoolLiteral, env) {
-    return RTResult(RT_RESULT_VALUE, getHooks().Bool);
+    return RTResult(RT_RESULT_VALUE, boolType());
 }
 overload analyzeExpr(x:ast.IntLiteral, env) {
-    return RTResult(RT_RESULT_VALUE, getHooks().Int);
+    return RTResult(RT_RESULT_VALUE, intType());
 }
 overload analyzeExpr(x:ast.StringLiteral, env) {
     genericError("strings are not yet supported");
@@ -83,12 +83,12 @@ overload analyzeExpr(x:ast.Indexing, env) {
 overload analyzeExpr(x:ast.AndExpr, env) {
     analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return RTResult(RT_RESULT_VALUE, getHooks().Bool);
+    return RTResult(RT_RESULT_VALUE, boolType());
 }
 overload analyzeExpr(x:ast.OrExpr, env) {
     analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return RTResult(RT_RESULT_VALUE, getHooks().Bool);
+    return RTResult(RT_RESULT_VALUE, boolType());
 }
 overload analyzeExpr(x:ast.LambdaExpr, env) {
     genericError("lambda expressions are not yet supported");
@@ -163,8 +163,8 @@ rtVariableKindToRTResultKind(x:RTVariableKind) {
 
 valueToRTResult(x:Value) {
     return match(x,
-        BoolValue, x => RTResult(RT_RESULT_VALUE, getHooks().Bool),
-        IntValue, x => RTResult(RT_RESULT_VALUE, getHooks().Int),
+        BoolValue, x => RTResult(RT_RESULT_VALUE, boolType()),
+        IntValue, x => RTResult(RT_RESULT_VALUE, intType()),
         StringValue, x => {
             genericError("strings are not yet supported");
             return RTResult();
