@@ -296,7 +296,7 @@ private compileNamedOutputs(names) {
 
 private compileUnnamedOutputs() {
     var s = context().specialization;
-    var baseName = String("return");
+    var baseName = String("returned");
     for (result in s.returns)
         compileOutput(result, baseName);
 }
