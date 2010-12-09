@@ -329,14 +329,9 @@ overload printTo(stream, x:StringValue) {
 }
 overload printTo(stream, x:TupleValue) {
     printTo(stream, "(");
-    var first = true;
-    for (element in x.elements) {
-        if (first)
-            first = false;
-        else
-            printTo(stream, ", ");
-        printTo(stream, element);
-    }
+    var commaOut = CommaListPrinter(&stream);
+    for (element in x.elements)
+        newItem(commaOut, element);
     printTo(stream, ")");
 }
 overload printTo(stream, x:LambdaValue) {

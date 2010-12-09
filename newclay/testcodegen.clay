@@ -4,6 +4,8 @@ import newclay.core.*;
 import newclay.loader.*;
 import newclay.hooks.*;
 import newclay.analyzer.*;
+import newclay.compiler.*;
+import newclay.codegen.*;
 
 main(args) {
     if (size(args) != 2) {
@@ -15,7 +17,9 @@ main(args) {
         withProgram(program, () ref=> {
             initializeClayHooks();
             var specialization = analyzeMain();
-            println("result = ", specialization.returns);
+            var irProc = compileSpecialization(specialization);
+            var cCode = codegenMain(irProc);
+            print(cCode);
         });
     }
     catch (e:ClayError) {
