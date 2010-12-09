@@ -17,11 +17,9 @@ main(args) {
         withProgram(program, () ref=> {
             initializeClayHooks();
             var specialization = analyzeMain();
-            println("results = ", specialization.returns);
             var irProc = compileSpecialization(specialization);
-            println("irProc = ", irProc);
             var cCode = codegenMain(irProc);
-            println("cCode = ", '\n', cCode);
+            print(cCode);
         });
     }
     catch (e:ClayError) {
