@@ -497,12 +497,14 @@ overload codegenAtomicAsPtr(x:AtomicExpr) {
 }
 overload codegenAtomicAsPtr(x:BoolLiteral) {
     var temp = newCName("temp");
-    beginLine("char ", temp, " = ", codegenAtomicAsValue(x), ";");
+    var type = codegenType(valueToType(boolType()));
+    beginLine(type, " ", temp, " = ", codegenAtomicAsValue(x), ";");
     return printString("&", temp);
 }
 overload codegenAtomicAsPtr(x:IntLiteral) {
     var temp = newCName("temp");
-    beginLine("int ", temp, " = ", codegenAtomicAsValue(x), ";");
+    var type = codegenType(valueToType(intType()));
+    beginLine(type, " ", temp, " = ", codegenAtomicAsValue(x), ";");
     return printString("&", temp);
 }   
 overload codegenAtomicAsPtr(x:StaticLiteral) {
@@ -539,7 +541,7 @@ private headerIncludes() {
 private mainWrapper() {
     var buf = String();
     printlnTo(buf, "int main() {");
-    printlnTo(buf, "    int result;");
+    printlnTo(buf, "    Int result;");
     printlnTo(buf, "    clay_main(&result);");
     printlnTo(buf, "    printf(\"result = %d\\n\", result);");
     printlnTo(buf, "    return 0;");
