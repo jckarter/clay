@@ -163,4 +163,4 @@ overload factorial(n:Int) =
 //
 
 symbol main = NewProcedure();
-overload main() = factorial, factorial(5);
+overload main() = factorial(5);

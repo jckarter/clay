@@ -2,7 +2,9 @@
 import maybe.*;
 import newclay.common.*;
 import newclay.core.*;
+import newclay.hooks.*;
 import newclay.ir.*;
+import newclay.compiler.*;
 
 
 
@@ -75,6 +77,10 @@ private sanitizeName(name) {
 // codegenType
 //
 
+private cBoolType() {
+    return "char";
+}
+
 private cIntegerType(x:IntegerTag) {
     if (x.kind == SIGNED_INTEGER) {
         switch (x.bits) {
@@ -114,7 +120,7 @@ overload codegenTypeInternal(x:TypeTag, name) {
     codegenTypeInternal(*x, name);
 }
 overload codegenTypeInternal(x:BoolTag, name) {
-    printlnTo(context().typeDefs, "typedef char ", name, ";");
+    printlnTo(context().typeDefs, "typedef ", cBoolType(), " ", name, ";");
 }
 overload codegenTypeInternal(x:IntegerTag, name) {
     printlnTo(
@@ -195,12 +201,15 @@ private record ProcedureContext = referenceType(
     proto: String,
     code: String,
     localNames: HashMap[Local, String],
+    returnValueLocals: HashMap[Local, Int],
+    indentLevel: Int,
 );
 
 overload ProcedureContext(proc:Procedure, name:String) {
     var x = allocateRef(ProcedureContext);
     x.proc = proc;
     x.name = name;
+    x.indentLevel = 0;
     return move(x);
 }
 
@@ -224,6 +233,29 @@ private localName(x:Local) ByRef[String] {
     return ref name;
 }
 
+private returnValueLocal?(x:Local) {
+    return contains?(pcontext().returnValueLocals, x);
+}
+
+private beginLine(...args) {
+    ref pctx = pcontext();
+    ref out = pctx.code;
+    printlnTo(out);
+    for (i in range(pctx.indentLevel))
+        printTo(out, "    ");
+    printTo(out, ...args);
+}
+
+private continueLine(...args) {
+    printTo(pcontext().code, ...args);
+}
+
+
+
+//
+// codegenProcedurePrototype
+//
+
 private inlineCCode?() {
     return variantIs?(pcontext().proc.code, CCodeBody);
 }
@@ -242,12 +274,6 @@ private outputName(x:Output) {
         return ref localName(x.local);
 }
 
-
-
-//
-// codegenProcedurePrototype
-//
-
 private codegenProcedurePrototype() {
     var pctx = pcontext();
     var out = String();
@@ -260,22 +286,10 @@ private codegenProcedurePrototype() {
         if (x.kind != OUTPUT_VALUE)
             continueItem(commaOut, "*");
         continueItem(commaOut, " ", outputName(x));
+        pctx.returnValueLocals[x.local] = 1;
     }
     printTo(out, ")");
-    printlnTo(pctx.proto, out, ";");
-    printTo(pctx.code, out);
-}
-
-
-
-//
-// codegenProcedureBody
-//
-
-codegenProcedureBody() {
-    var pctx = pcontext();
-    printlnTo(pctx.code, " {");
-    printlnTo(pctx.code, "}");
+    return move(out);
 }
 
 
@@ -283,6 +297,33 @@ codegenProcedureBody() {
 //
 // codegenProcedure
 //
+
+private parseCCode(x:String) {
+    var b, e = begin(x), end(x);
+    var delim = "\"\"\"";
+    var p = find(b, e, delim);
+    assert(p != e);
+    b = p + size(delim);
+    p = find(b, e, delim);
+    assert(p != e);
+    e = p;
+    return CoordinateRange(b, e);
+}
+
+private codegenProcedure2() {
+    var pctx = pcontext();
+    var proto = codegenProcedurePrototype();
+    printTo(pctx.proto, proto, ";");
+    printTo(pctx.code, proto, " ");
+    match(pctx.proc.code,
+        Block, x => { codegenStatement(x); },
+        CCodeBody, x => {
+            printTo(pctx.code, "{");
+            printTo(pctx.code, parseCCode(x.code));
+            printTo(pctx.code, "}");
+        },
+    );
+}
 
 codegenProcedure(x:Procedure) ByRef[String] {
     var ctx = context();
@@ -292,12 +333,194 @@ codegenProcedure(x:Procedure) ByRef[String] {
     var name = newCName(sanitizeName(x.name));
     ctx.codeMap[x] = name;
     var pctx = withNewProcedureContext(x, name, () ref=> {
-        codegenProcedurePrototype();
-        codegenProcedureBody();
+        codegenProcedure2();
     });
-    printTo(ctx.prototypes, pctx.proto);
-    printTo(ctx.procedures, pctx.code);
+    printlnTo(ctx.prototypes, pctx.proto);
+    printlnTo(ctx.procedures, pctx.code);
     return ref ctx.codeMap[x];
+}
+
+
+
+//
+// codegenStatement
+//
+
+procedure codegenStatement;
+
+overload codegenStatement(x:Statement) {
+    codegenStatement(*x);
+}
+overload codegenStatement(x:Block) {
+    ref pctx = pcontext();
+    continueLine("{");
+    pctx.indentLevel += 1;
+    for (y in x.statements)
+        codegenStatement(y);
+    pctx.indentLevel -= 1;
+    beginLine("}");
+}
+overload codegenStatement(x:LocalDef) {
+    for (y in x.locals) {
+        beginLine(codegenType(y.type));
+        if (not y.value?)
+            continueLine("*");
+        continueLine(" ", localName(y), ";");
+    }
+    maybe(x.expr,
+        expr ref=> { codegenInitialize(expr, x.locals); },
+        () => {},
+    );
+}
+overload codegenStatement(x:Initialize) {
+    codegenInitialize(x.expr, x.locals);
+}
+overload codegenStatement(x:If) {
+    beginLine("if (", codegenAtomicAsValue(x.condition), ") ");
+    codegenStatement(x.thenPart);
+    beginLine("else ");
+    codegenStatement(x.elsePart);
+}
+overload codegenStatement(x:Return) {
+    beginLine("return;");
+}
+
+
+
+//
+// codegenInitialize, codegenInitializeAtomic, codegenCall
+//
+
+codegenInitialize(x:Expr, out:Vector[Local]) {
+    match(x,
+        AtomicExpr, y ref=> {
+            ensureArity(1, size(out));
+            codegenInitializeAtomic(y, out[0]);
+        },
+        CallExpr, y ref=> {
+            codegenCall(y, out);
+        },
+    );
+}
+
+private localAsLHS(x:Local) {
+    if (returnValueLocal?(x))
+        return printString("*", localName(x));
+    return localName(x);
+}
+
+private localAsLHSPtr(x:Local) {
+    if (returnValueLocal?(x))
+        return localName(x);
+    return printString("&", localName(x));
+}
+
+codegenInitializeAtomic(x:AtomicExpr, out:Local) {
+    beginLine(
+        localAsLHS(out), " = ", codegenAtomicAsValue(x), ";"
+    );
+}
+
+codegenCall(x:CallExpr, out:Vector[Local]) {
+    var args = String();
+    var argsBuf = CommaListPrinter(&args);
+    for (y in x.args)
+        newItem(argsBuf, codegenAtomicAsPtr(y));
+    for (y in out)
+        newItem(argsBuf, localAsLHSPtr(y));
+    beginLine(codegenProcedure(x.callable), "(", args, ");");
+}
+
+
+
+//
+// localAsPtr, localAsValue
+//
+
+private localAsPtr(x:Local) {
+    if (x.value? and (not returnValueLocal?(x)))
+        return printString("&", localName(x));
+    else
+        return localName(x);
+}
+
+private localAsValue(x:Local) {
+    if (x.value? and (not returnValueLocal?(x)))
+        return localName(x);
+    else
+        return printString("*", localName(x));
+}
+
+
+
+//
+// codegenAtomicAsValue
+//
+
+procedure codegenAtomicAsValue;
+
+overload codegenAtomicAsValue(x:AtomicExpr) {
+    return codegenAtomicAsValue(*x);
+}
+overload codegenAtomicAsValue(x:BoolLiteral) {
+    if (x.value)
+        return String("1");
+    else
+        return String("0");
+}
+overload codegenAtomicAsValue(x:IntLiteral) {
+    return printString(x.value);
+}   
+overload codegenAtomicAsValue(x:StaticLiteral) {
+    var temp = newCName("temp");
+    var type = codegenType(valueToType(staticType(x.value)));
+    beginLine(type, " ", temp, ";");
+    return move(temp);
+}   
+overload codegenAtomicAsValue(x:LocalRef) {
+    return localAsValue(x.local);
+}   
+overload codegenAtomicAsValue(x:LocalAddressOf) {
+    return localAsPtr(x.local);
+}   
+
+
+
+//
+// codegenAtomicAsPtr
+//
+
+procedure codegenAtomicAsPtr;
+
+overload codegenAtomicAsPtr(x:AtomicExpr) {
+    return codegenAtomicAsPtr(*x);
+}
+overload codegenAtomicAsPtr(x:BoolLiteral) {
+    var temp = newCName("temp");
+    beginLine("char ", temp, " = ", codegenAtomicAsValue(x), ";");
+    return printString("&", temp);
+}
+overload codegenAtomicAsPtr(x:IntLiteral) {
+    var temp = newCName("temp");
+    beginLine("int ", temp, " = ", codegenAtomicAsValue(x), ";");
+    return printString("&", temp);
+}   
+overload codegenAtomicAsPtr(x:StaticLiteral) {
+    var temp = newCName("temp");
+    var type = codegenType(valueToType(staticType(x.value)));
+    beginLine(type, " ", temp, ";");
+    return printString("&", temp);
+}   
+overload codegenAtomicAsPtr(x:LocalRef) {
+    return localAsPtr(x.local);
+}   
+overload codegenAtomicAsPtr(x:LocalAddressOf) {
+    var temp = newCName("temp");
+    beginLine(
+        codegenType(x.local.type), "* ", temp,
+        " = ", localAsPtr(x.local), ";"
+    );
+    return printString("&", temp);
 }
 
 
@@ -306,12 +529,34 @@ codegenProcedure(x:Procedure) ByRef[String] {
 // codegenMain
 //
 
+private headerIncludes() {
+    var buf = String();
+    printlnTo(buf, "#include <stdio.h>");
+    printlnTo(buf, "#include <stdlib.h>");
+    return move(buf);
+}
+
+private mainWrapper() {
+    var buf = String();
+    printlnTo(buf, "int main() {");
+    printlnTo(buf, "    int result;");
+    printlnTo(buf, "    clay_main(&result);");
+    printlnTo(buf, "    printf(\"result = %d\\n\", result);");
+    printlnTo(buf, "    return 0;");
+    printlnTo(buf, "}");
+    return move(buf);
+}
+
 codegenMain(proc) {
     var ctx = withNewCodegenContext(() ref=> {
         codegenProcedure(proc);
     });
     return printString(
-        ctx.typeDefs, ctx.typeBodies,
-        ctx.prototypes, ctx.procedures,
+        headerIncludes(),
+        ctx.typeDefs,
+        ctx.typeBodies,
+        ctx.prototypes,
+        ctx.procedures,
+        mainWrapper(),
     );
 }
