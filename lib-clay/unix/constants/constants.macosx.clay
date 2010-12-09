@@ -21,7 +21,7 @@ alias O_EVTONLY  = 0x8000;
 
 
 //
-// flags for 'chmod'
+// flags for 'chmod'/'stat'
 //
 
 alias S_IRWXU = 0700;
@@ -43,6 +43,15 @@ alias S_ISUID = 04000;
 alias S_ISGID = 02000;
 alias S_ISVTX = 01000;
 
+alias S_IFMT   = 0170000;
+alias S_IFIFO  = 0010000;
+alias S_IFCHR  = 0020000;
+alias S_IFDIR  = 0040000;
+alias S_IFBLK  = 0060000;
+alias S_IFREG  = 0100000;
+alias S_IFLNK  = 0120000;
+alias S_IFSOCK = 0140000;
+alias S_IFWHT  = 0160000;
 
 
 //
