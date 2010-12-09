@@ -2,6 +2,35 @@
 
 
 //
+// CommaListPrinter
+//
+
+record CommaListPrinter[Stream] (
+    stream: Pointer[Stream],
+    first: Bool,
+);
+
+[Stream]
+overload CommaListPrinter(stream:Pointer[Stream]) =
+    CommaListPrinter[Stream](stream, true);
+
+[Stream]
+newItem(x:CommaListPrinter[Stream], ...args) {
+    if (x.first)
+        x.first = false;
+    else
+        printTo(x.stream^, ", ");
+    printTo(x.stream^, ...args);
+}
+
+[Stream]
+continueItem(x:CommaListPrinter[Stream], ...args) {
+    printTo(x.stream^, ...args);
+}
+
+
+
+//
 // linked stack
 //
 

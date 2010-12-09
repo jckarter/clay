@@ -154,24 +154,6 @@ valueToInt(x:Value) {
 
 
 //
-// compileMain
-//
-
-compileMain(program:Program) {
-    return ...withProgram(program, () ref=> {
-        var env = program.mainModule.globals;
-        var mainValue = envEntryToValue(envLookup(env, "main"));
-        if (not runtimeCallable?(mainValue))
-            genericError("invalid procedure: main");
-        var s = analyzeCallable(mainValue, RTResultList());
-        var irProc = compileSpecialization(s);
-        return map(x => (x.kind, valueToType(x.type)), s.returns), irProc;
-    });
-}
-
-
-
-//
 // CompileContext
 //
 
@@ -179,13 +161,11 @@ private record CompileContext (
     specialization: Specialization,
     irProcedure: ir.Procedure,
     names: NameAllocator,
-    returnLocals: Vector[ir.Local],
 );
 
 overload CompileContext(specialization:Specialization, irProcedure:ir.Procedure) =
     CompileContext(
-        specialization, irProcedure,
-        NameAllocator(), Vector[ir.Local](),
+        specialization, irProcedure, NameAllocator(),
     );
 
 private var _compileContextStack = Stack[CompileContext]();
@@ -207,7 +187,8 @@ private newLocalName(baseName) {
 //
 
 private newIRProcedureName(callable:Value) {
-    return allocateName(getProgram().lowLevelNames, printString(callable));
+    var baseName = printString("clay_", callable);
+    return allocateName(getProgram().lowLevelNames, baseName);
 }
 
 private inputKind(kind:RTResultKind, astKind: Maybe[ast.ArgumentKind]) ir.InputKind {
@@ -242,7 +223,7 @@ private compileInput(arg:RTResult, astArg:ast.Argument) {
     var type = valueToType(arg.type);
     var name = newLocalName(astArg.name.str);
     var local = ir.Local(move(name), false, type, accessKind);
-    push(irProcedure().inputs, ir.Input(local.name, ikind, type));
+    push(irProcedure().inputs, ir.Input(ikind, type, local));
     return local;
 }
 
@@ -276,21 +257,21 @@ private outputKind(x:RTResultKind) ir.OutputKind {
     }
 }
 
-private outputLocal(x:ir.Output) {
-    var type = x.type;
-    if (x.kind != ir.OUTPUT_VALUE)
-        type = valueToType(pointerType(Value(type.symbol)));
-    return ir.Local(x.name, true, type, ir.ACCESS_REF);
+private outputLocal(forward name, outputKind, type) {
+    var localType = type;
+    if (outputKind != ir.OUTPUT_VALUE)
+        localType = valueToType(pointerType(Value(localType.symbol)));
+    return ir.Local(name, true, localType, ir.ACCESS_REF);
 }
 
 private compileOutput(result:RTResult, baseName:String) {
     var name = newLocalName(baseName);
     var okind = outputKind(result.kind);
     var type = valueToType(result.type);
-    var output = ir.Output(name, okind, type);
+    var local = outputLocal(move(name), okind, type);
+    var output = ir.Output(okind, type, local);
     push(irProcedure().outputs, output);
-    var local = outputLocal(output);
-    push(context().returnLocals, local);
+    return output;
 }
 
 private compileNamedOutputs(names) {
@@ -299,14 +280,14 @@ private compileNamedOutputs(names) {
     for (name, namedReturn in zipped(names, s.namedReturns)) {
         match(namedReturn,
             RTVariable, x ref=> {
-                compileOutput(next(resultsIter), name.str);
-                x.lowLevelLocal = back(context().returnLocals);
+                var output = compileOutput(next(resultsIter), name.str);
+                x.lowLevelLocal = output.local;
             },
             RTListVariable, x ref=> {
                 clear(x.lowLevelLocals);
                 for (i in range(size(x.types))) {
-                    compileOutput(next(resultsIter), name.str);
-                    push(x.lowLevelLocals, back(context().returnLocals));
+                    var output = compileOutput(next(resultsIter), name.str);
+                    push(x.lowLevelLocals, output.local);
                 }
             },
         );
@@ -316,7 +297,7 @@ private compileNamedOutputs(names) {
 
 private compileUnnamedOutputs() {
     var s = context().specialization;
-    var baseName = String("return");
+    var baseName = String("returned");
     for (result in s.returns)
         compileOutput(result, baseName);
 }
@@ -343,10 +324,10 @@ private compileCodeBody() {
                 );
             }
             var block = withNewBlock(() ref=> {
-                ref out = context().returnLocals;
+                var out = map(x => x.local, irProcedure().outputs);
                 compileReturnExprListInto(x.exprs, s.bodyEnv, out);
             });
-            return ir.CodeBody(ir.Statement(block));
+            return ir.CodeBody(block);
         },
     );
 }
@@ -361,8 +342,6 @@ compileSpecialization(x:Specialization) ir.Procedure {
     return maybe(x.lowLevelProc,
         y => y,
         () ref=> {
-            var baseName = printString(x.callable);
-            var name = allocateName(getProgram().lowLevelNames, baseName);
             var proc = ir.Procedure(newIRProcedureName(x.callable));
             x.lowLevelProc = Maybe(proc);
             try {
@@ -609,36 +588,36 @@ overload compileExprInto(x:ast.Indexing, env, out) {
 }
 overload compileExprInto(x:ast.AndExpr, env, out) {
     var cond = compileBoolExpr(x.expr1, env);
-    var thenPart = ir.Statement(withNewBlock(() ref=> {
+    var thenPart = withNewBlock(() ref=> {
         compileExprInto(x.expr2, env, out);
-    }));
-    var elsePart = ir.Statement(withNewBlock(() ref=> {
+    });
+    var elsePart = withNewBlock(() ref=> {
         emitInitialize(out, cond);
-    }));
-    emitStatement(ir.If(ir.Expr(cond.irExpr), thenPart, elsePart));
+    });
+    emitStatement(ir.If(cond.irExpr, thenPart, elsePart));
 }
 overload compileExprInto(x:ast.OrExpr, env, out) {
     var cond = compileBoolExpr(x.expr1, env);
-    var thenPart = ir.Statement(withNewBlock(() ref=> {
+    var thenPart = withNewBlock(() ref=> {
         emitInitialize(out, cond);
-    }));
-    var elsePart = ir.Statement(withNewBlock(() ref=> {
+    });
+    var elsePart = withNewBlock(() ref=> {
         compileExprInto(x.expr2, env, out);
-    }));
-    emitStatement(ir.If(ir.Expr(cond.irExpr), thenPart, elsePart));
+    });
+    emitStatement(ir.If(cond.irExpr, thenPart, elsePart));
 }
 overload compileExprInto(x:ast.LambdaExpr, env, out) {
     genericError("lambda expressions are not yet supported");
 }
 overload compileExprInto(x:ast.IfExpr, env, out) {
     var cond = compileBoolExpr(x.condition, env);
-    var thenPart = ir.Statement(withNewBlock(() ref=> {
+    var thenPart = withNewBlock(() ref=> {
         compileExprInto(x.thenPart, env, out);
-    }));
-    var elsePart = ir.Statement(withNewBlock(() ref=> {
+    });
+    var elsePart = withNewBlock(() ref=> {
         compileExprInto(x.elsePart, env, out);
-    }));
-    emitStatement(ir.If(ir.Expr(cond.irExpr), thenPart, elsePart));
+    });
+    emitStatement(ir.If(cond.irExpr, thenPart, elsePart));
 }
 
 
@@ -751,8 +730,8 @@ compileValueListInto(x:ValueList, out:A) {
 compileBoolExpr(x:ast.Expr, env) CompiledExpr {
     return withLocation(x, () ref=> {
         var result = compileExpr(x, env);
-        if (result.info.type != getHooks().Bool)
-            typeError(getHooks().Bool, result.info.type);
+        if (result.info.type != boolType())
+            typeError(boolType(), result.info.type);
         return move(result);
     });
 }
