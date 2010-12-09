@@ -326,7 +326,7 @@ private compileCodeBody() {
                 var out = map(x => x.local, irProcedure().outputs);
                 compileReturnExprListInto(x.exprs, s.bodyEnv, out);
             });
-            return ir.CodeBody(ir.Statement(block));
+            return ir.CodeBody(block);
         },
     );
 }

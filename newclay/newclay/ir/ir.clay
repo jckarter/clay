@@ -73,6 +73,13 @@ enum AccessKind {
     ACCESS_RVALUE,
 }
 
+record Local = referenceType(
+    name: String,
+    value?: Bool,
+    type: Type,
+    access: AccessKind,
+);
+
 accessKindString(x:AccessKind) {
     switch (x) {
     case ACCESS_CONST : return "const";
@@ -88,13 +95,6 @@ overload printReprTo(stream, x:AccessKind) {
 overload printTo(stream, x:AccessKind) {
     printReprTo(stream, x);
 }
-
-record Local = referenceType(
-    name: String,
-    value?: Bool,
-    type: Type,
-    access: AccessKind,
-);
 
 overload printReprTo(stream, x:Local) {
     printTo(stream, Local);
@@ -156,11 +156,11 @@ record Output = referenceType(
     local: Local,
 );
 
-variant CodeBody = Statement
+variant CodeBody = Block
                  | CCodeBody
                  ;
 
-overload CodeBody() = CodeBody(Statement());
+overload CodeBody() = CodeBody(Block());
 
 record CCodeBody = referenceType(
     code: String,
