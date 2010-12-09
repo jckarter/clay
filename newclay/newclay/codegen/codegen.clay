@@ -277,7 +277,7 @@ private outputName(x:Output) {
 private codegenProcedurePrototype() {
     var pctx = pcontext();
     var out = String();
-    printTo(out, "void ", pctx.name, "(");
+    printTo(out, "static void ", pctx.name, "(");
     var commaOut = CommaListPrinter(&out);
     for (x in pctx.proc.inputs)
         newItem(commaOut, codegenType(x.type), "* ", inputName(x));
