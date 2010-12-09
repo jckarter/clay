@@ -64,85 +64,6 @@ overload printTo(stream, x:Type) { printReprTo(stream, x); }
 
 
 //
-// Program, Procedure
-//
-
-record Program = referenceType(
-    procedures: Vector[Procedure],
-);
-
-newProgram() = Program(Vector[Procedure]());
-
-record Procedure = referenceType(
-    name: String,
-    inputs: Vector[Input],
-    outputs: Vector[Output],
-    code: CodeBody,
-);
-
-overload Procedure(forward name:String) =
-    Procedure(name, Vector[Input](), Vector[Output](), CodeBody());
-
-enum InputKind {
-    INPUT_CONST,
-    INPUT_REF,
-    INPUT_RVALUE,
-    INPUT_MOVABLE_RVALUE,
-}
-
-record Input = referenceType(
-    name: String,
-    kind: InputKind,
-    type: Type,
-);
-
-enum OutputKind {
-    OUTPUT_CONST,
-    OUTPUT_REF,
-    OUTPUT_RVALUE,
-    OUTPUT_VALUE,
-}
-
-record Output = referenceType(
-    name: String,
-    kind: OutputKind,
-    type: Type,
-);
-
-variant CodeBody = Statement
-                 | CCodeBody
-                 ;
-
-overload CodeBody() = CodeBody(Statement());
-
-record CCodeBody = referenceType(
-    code: String,
-);
-
-
-overload printReprTo(stream, x:InputKind) {
-    switch (x) {
-    case INPUT_CONST: printTo(stream, "const"); break;
-    case INPUT_REF: printTo(stream, "ref"); break;
-    case INPUT_RVALUE: printTo(stream, "rvalue"); break;
-    case INPUT_MOVABLE_RVALUE: printTo(stream, "forward rvalue"); break;
-    }
-}
-overload printTo(stream, x:InputKind) { printReprTo(stream, x); }
-
-overload printReprTo(stream, x:OutputKind) {
-    switch (x) {
-    case OUTPUT_CONST: printTo(stream, "const"); break;
-    case OUTPUT_REF: printTo(stream, "ref"); break;
-    case OUTPUT_RVALUE: printTo(stream, "rvalue"); break;
-    case OUTPUT_VALUE: printTo(stream, "value"); break;
-    }
-}
-overload printTo(stream, x:OutputKind) { printReprTo(stream, x); }
-
-
-
-//
 // Local, LocalSequence?
 //
 
@@ -186,6 +107,85 @@ overload printTo(stream, x:Local) { printReprTo(stream, x); }
 [A]
 LocalSequence?(static A) =
     SizedSequence?(A) and (SequenceElementType(A) == Local);
+
+
+
+//
+// Program, Procedure
+//
+
+record Program = referenceType(
+    procedures: Vector[Procedure],
+);
+
+newProgram() = Program(Vector[Procedure]());
+
+record Procedure = referenceType(
+    name: String,
+    inputs: Vector[Input],
+    outputs: Vector[Output],
+    code: CodeBody,
+);
+
+overload Procedure(forward name:String) =
+    Procedure(name, Vector[Input](), Vector[Output](), CodeBody());
+
+enum InputKind {
+    INPUT_CONST,
+    INPUT_REF,
+    INPUT_RVALUE,
+    INPUT_MOVABLE_RVALUE,
+}
+
+record Input = referenceType(
+    kind: InputKind,
+    type: Type,
+    local: Local,
+);
+
+enum OutputKind {
+    OUTPUT_CONST,
+    OUTPUT_REF,
+    OUTPUT_RVALUE,
+    OUTPUT_VALUE,
+}
+
+record Output = referenceType(
+    kind: OutputKind,
+    type: Type,
+    local: Local,
+);
+
+variant CodeBody = Statement
+                 | CCodeBody
+                 ;
+
+overload CodeBody() = CodeBody(Statement());
+
+record CCodeBody = referenceType(
+    code: String,
+);
+
+
+overload printReprTo(stream, x:InputKind) {
+    switch (x) {
+    case INPUT_CONST: printTo(stream, "const"); break;
+    case INPUT_REF: printTo(stream, "ref"); break;
+    case INPUT_RVALUE: printTo(stream, "rvalue"); break;
+    case INPUT_MOVABLE_RVALUE: printTo(stream, "forward rvalue"); break;
+    }
+}
+overload printTo(stream, x:InputKind) { printReprTo(stream, x); }
+
+overload printReprTo(stream, x:OutputKind) {
+    switch (x) {
+    case OUTPUT_CONST: printTo(stream, "const"); break;
+    case OUTPUT_REF: printTo(stream, "ref"); break;
+    case OUTPUT_RVALUE: printTo(stream, "rvalue"); break;
+    case OUTPUT_VALUE: printTo(stream, "value"); break;
+    }
+}
+overload printTo(stream, x:OutputKind) { printReprTo(stream, x); }
 
 
 

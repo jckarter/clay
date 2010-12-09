@@ -161,13 +161,11 @@ private record CompileContext (
     specialization: Specialization,
     irProcedure: ir.Procedure,
     names: NameAllocator,
-    returnLocals: Vector[ir.Local],
 );
 
 overload CompileContext(specialization:Specialization, irProcedure:ir.Procedure) =
     CompileContext(
-        specialization, irProcedure,
-        NameAllocator(), Vector[ir.Local](),
+        specialization, irProcedure, NameAllocator(),
     );
 
 private var _compileContextStack = Stack[CompileContext]();
@@ -224,7 +222,7 @@ private compileInput(arg:RTResult, astArg:ast.Argument) {
     var type = valueToType(arg.type);
     var name = newLocalName(astArg.name.str);
     var local = ir.Local(move(name), false, type, accessKind);
-    push(irProcedure().inputs, ir.Input(local.name, ikind, type));
+    push(irProcedure().inputs, ir.Input(ikind, type, local));
     return local;
 }
 
@@ -258,21 +256,21 @@ private outputKind(x:RTResultKind) ir.OutputKind {
     }
 }
 
-private outputLocal(x:ir.Output) {
-    var type = x.type;
-    if (x.kind != ir.OUTPUT_VALUE)
-        type = valueToType(pointerType(Value(type.symbol)));
-    return ir.Local(x.name, true, type, ir.ACCESS_REF);
+private outputLocal(forward name, outputKind, type) {
+    var localType = type;
+    if (outputKind != ir.OUTPUT_VALUE)
+        localType = valueToType(pointerType(Value(localType.symbol)));
+    return ir.Local(name, true, localType, ir.ACCESS_REF);
 }
 
 private compileOutput(result:RTResult, baseName:String) {
     var name = newLocalName(baseName);
     var okind = outputKind(result.kind);
     var type = valueToType(result.type);
-    var output = ir.Output(name, okind, type);
+    var local = outputLocal(move(name), okind, type);
+    var output = ir.Output(okind, type, local);
     push(irProcedure().outputs, output);
-    var local = outputLocal(output);
-    push(context().returnLocals, local);
+    return output;
 }
 
 private compileNamedOutputs(names) {
@@ -281,14 +279,14 @@ private compileNamedOutputs(names) {
     for (name, namedReturn in zipped(names, s.namedReturns)) {
         match(namedReturn,
             RTVariable, x ref=> {
-                compileOutput(next(resultsIter), name.str);
-                x.lowLevelLocal = back(context().returnLocals);
+                var output = compileOutput(next(resultsIter), name.str);
+                x.lowLevelLocal = output.local;
             },
             RTListVariable, x ref=> {
                 clear(x.lowLevelLocals);
                 for (i in range(size(x.types))) {
-                    compileOutput(next(resultsIter), name.str);
-                    push(x.lowLevelLocals, back(context().returnLocals));
+                    var output = compileOutput(next(resultsIter), name.str);
+                    push(x.lowLevelLocals, output.local);
                 }
             },
         );
@@ -325,7 +323,7 @@ private compileCodeBody() {
                 );
             }
             var block = withNewBlock(() ref=> {
-                ref out = context().returnLocals;
+                var out = map(x => x.local, irProcedure().outputs);
                 compileReturnExprListInto(x.exprs, s.bodyEnv, out);
             });
             return ir.CodeBody(ir.Statement(block));
