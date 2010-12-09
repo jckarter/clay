@@ -13,11 +13,11 @@ import newclay.ir.*;
 private record CodegenContext = referenceType (
     typeDefs: String,
     typeBodies: String,
-    functionPrototypes: String,
-    functionDefs: String,
+    prototypes: String,
+    procedures: String,
     typeMap: HashMap[Type, String],
     codeMap: HashMap[Procedure, String],
-    globalNames: NameAllocator,
+    cNames: NameAllocator,
 );
 
 private newCodegenContext() = allocateRef(CodegenContext);
@@ -32,8 +32,8 @@ private withNewCodegenContext(f) {
 
 private context() = ref stackTop(_codegenContextStack);
 
-private newGlobalName(baseName) {
-    return allocateName(context().globalNames, baseName);
+private newCName(baseName) {
+    return allocateName(context().cNames, baseName);
 }
 
 
@@ -140,7 +140,7 @@ overload codegenTypeInternal(x:ArrayTag, name) {
     );
 }
 overload codegenTypeInternal(x:TupleTag, name) {
-    var auxName = newGlobalName(name + "_s");
+    var auxName = newCName(name + "_s");
     ref ctx = context();
     printlnTo(ctx.typeDefs, "typedef struct ", auxName, " ", name, ";");
 
@@ -156,7 +156,7 @@ overload codegenTypeInternal(x:TupleTag, name) {
     printlnTo(bodies, "};");
 }
 overload codegenTypeInternal(x:UnionTag, name) {
-    var auxName = newGlobalName(name + "_s");
+    var auxName = newCName(name + "_u");
     ref ctx = context();
     printlnTo(ctx.typeDefs, "typedef union ", auxName, " ", name, ";");
 
@@ -177,7 +177,7 @@ codegenType(x:Type) ByRef[String] {
     var ptr = lookup(ctx.typeMap, x);
     if (not null?(ptr))
         return ref ptr^;
-    var typeName = newGlobalName(sanitizeName(printString(x.symbol)));
+    var typeName = newCName(sanitizeName(printString(x.symbol)));
     ctx.typeMap[x] = typeName;
     codegenTypeInternal(x.tag, typeName);
     return ref ctx.typeMap[x];
@@ -186,50 +186,96 @@ codegenType(x:Type) ByRef[String] {
 
 
 //
-// codegenFunctionPrototype
+// ProcedureContext
 //
 
-private printFunctionHeaderTo(out, x:Procedure, name) {
-    printTo(out, "void ", name, "(");
-    var first = true;
-    var beginArg = () ref=> {
-        if (first)
-            first = false;
-        else
-            printTo(out, ", ");
-    };
-    for (y in x.inputs) {
-        beginArg();
-        printTo(out, codegenType(y.type), "* ", y.name);
-    }
-    for (y in x.outputs) {
-        beginArg();
-        printTo(out, codegenType(y.type), "*");
-        if (y.kind != OUTPUT_VALUE)
-            printTo(out, "*");
-        printTo(out, " ", y.name);
-    }
-    printTo(out, ")");
+private record ProcedureContext = referenceType(
+    proc: Procedure,
+    name: String,
+    proto: String,
+    code: String,
+    localNames: HashMap[Local, String],
+);
+
+overload ProcedureContext(proc:Procedure, name:String) {
+    var x = allocateRef(ProcedureContext);
+    x.proc = proc;
+    x.name = name;
+    return move(x);
 }
 
-codegenFunctionPrototype(x:Procedure, name) {
-    ref out = context().functionPrototypes;
-    printFunctionHeaderTo(out, x, name);
-    printlnTo(out, ";");
+private var _procedureContextStack = Stack[ProcedureContext]();
+
+private withNewProcedureContext(proc, name, f) {
+    var pctx = ProcedureContext(proc, name);
+    withStackValue(_procedureContextStack, pctx, f);
+    return move(pctx);
+}
+
+private pcontext() = ref stackTop(_procedureContextStack);
+
+private localName(x:Local) ByRef[String] {
+    ref names = pcontext().localNames;
+    var ptr = lookup(names, x);
+    if (not null?(ptr))
+        return ref ptr^;
+    ref name = names[x];
+    name = newCName(x.name);
+    return ref name;
+}
+
+private inlineCCode?() {
+    return variantIs?(pcontext().proc.code, CCodeBody);
+}
+
+private inputName(x:Input) {
+    if (inlineCCode?())
+        return ref x.local.name;
+    else
+        return ref localName(x.local);
+}
+
+private outputName(x:Output) {
+    if (inlineCCode?())
+        return ref x.local.name;
+    else
+        return ref localName(x.local);
 }
 
 
 
 //
-// codegenFunctionDef
+// codegenProcedurePrototype
 //
 
-codegenFunctionDef(x:Procedure, name) {
+private codegenProcedurePrototype() {
+    var pctx = pcontext();
     var out = String();
-    printFunctionHeaderTo(out, x, name);
-    printlnTo(out, " {");
-    printlnTo(out, "}");
-    printTo(context().functionDefs, out);
+    printTo(out, "void ", pctx.name, "(");
+    var commaOut = CommaListPrinter(&out);
+    for (x in pctx.proc.inputs)
+        newItem(commaOut, codegenType(x.type), "* ", inputName(x));
+    for (x in pctx.proc.outputs) {
+        newItem(commaOut, codegenType(x.type), "*");
+        if (x.kind != OUTPUT_VALUE)
+            continueItem(commaOut, "*");
+        continueItem(commaOut, " ", outputName(x));
+    }
+    printTo(out, ")");
+    printlnTo(pctx.proto, out, ";");
+    printTo(pctx.code, out);
+}
+
+
+
+//
+// codegenProcedureBody
+//
+
+codegenProcedureBody() {
+    var pctx = pcontext();
+    printlnTo(pctx.code, " {");
+    printlnTo(pctx.code, "}");
 }
 
 
@@ -239,15 +285,19 @@ codegenFunctionDef(x:Procedure, name) {
 //
 
 codegenProcedure(x:Procedure) ByRef[String] {
-    ref codeMap = context().codeMap;
-    var ptr = lookup(codeMap, x);
+    var ctx = context();
+    var ptr = lookup(ctx.codeMap, x);
     if (not null?(ptr))
         return ref ptr^;
-    var name = newGlobalName(sanitizeName(x.name));
-    codeMap[x] = name;
-    codegenFunctionPrototype(x, name);
-    codegenFunctionDef(x, name);
-    return ref codeMap[x];
+    var name = newCName(sanitizeName(x.name));
+    ctx.codeMap[x] = name;
+    var pctx = withNewProcedureContext(x, name, () ref=> {
+        codegenProcedurePrototype();
+        codegenProcedureBody();
+    });
+    printTo(ctx.prototypes, pctx.proto);
+    printTo(ctx.procedures, pctx.code);
+    return ref ctx.codeMap[x];
 }
 
 
@@ -262,6 +312,6 @@ codegenMain(proc) {
     });
     return printString(
         ctx.typeDefs, ctx.typeBodies,
-        ctx.functionPrototypes, ctx.functionDefs,
+        ctx.prototypes, ctx.procedures,
     );
 }
