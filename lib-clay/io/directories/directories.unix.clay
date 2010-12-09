@@ -8,10 +8,10 @@ import libc;
 //
 
 directoryListing(x) =
-    filtered(notCurrentOrPrevious?, mapped(direntPointerToString, direntSequence(x)));
+    filtered(notCurrentOrPrevious?, mapped(direntName, direntSequence(x)));
 
 private notCurrentOrPrevious?(x) = not (x == "." or x == "..");
-private direntPointerToString(x) = CStringRef(Pointer[Int8](&x^.d_name));
+private direntName(x) = CStringRef(begin(x.d_name));
 
 
 
@@ -19,15 +19,32 @@ private direntPointerToString(x) = CStringRef(Pointer[Int8](&x^.d_name));
 // DirentSequence
 //
 
-private record DirentSequence[S] (
-    path : S
+record DirentSequence (
+    dir : Pointer[DIR],
 );
 
-[T | String?(T)]
-direntSequence(x:T) = DirentSequence[T](x);
+overload RegularRecord?(static DirentSequence) = false;
+overload BitwiseMovedType?(static DirentSequence) = true;
 
-[T | String?(T)]
-overload iterator(x:DirentSequence[T]) = DirentIterator(x.path);
+[T | CCompatibleString?(T)]
+overload DirentSequence(dir:T) returned: DirentSequence {
+    returned.dir = opendir(cstring(dir));
+    if (null?(returned.dir))
+        error("failed to open directory: ", errorMessage());
+}
+
+overload destroy(s: DirentSequence) {
+    if (not null?(s.dir))
+        closedir(s.dir);
+}
+overload resetUnsafe(s: DirentSequence) {
+    s.dir = null(DIR);
+}
+
+[T | CCompatibleString?(T)]
+direntSequence(dir:T) = DirentSequence(dir);
+
+overload iterator(s:DirentSequence) = DirentIterator(s.dir, Struct_dirent());
 
 
 
@@ -36,42 +53,18 @@ overload iterator(x:DirentSequence[T]) = DirentIterator(x.path);
 //
 
 private record DirentIterator (
-    dirp : Pointer[DIR],
-    queued? : Bool,
-    entry : Pointer[Struct_dirent],
+    dir : Pointer[DIR],
+    entry : Struct_dirent,
 );
 
-[T | String?(T)]
-overload DirentIterator(x:T) {
-    var dirp = opendir(cstring(x));
-    if (null?(dirp))
-        error("failed to open directory '", x, "': ", errorMessage());
-    return DirentIterator(dirp, false, null(Struct_dirent));
-}
-
-overload destroy(x:DirentIterator) {
-    if (closedir(x.dirp) > 0)
-        errorNoThrow("failed to close directory: ", errorMessage());
-}
-
 overload hasNext?(x:DirentIterator) {
-    if (not x.queued?) {
-        x.queued? = true;
-
-        if (not null?(x.entry))
-            destroy(x.entry);
-
-        var returnCode = readdir_r(x.dirp, allocateRawMemory(Struct_dirent, 1), &x.entry);
-
-        if (returnCode != 0)
-            error("failed to read directory: ", errorMessage());
-    }
-    return not null?(x.entry);
+    var ptr = Pointer[Struct_dirent]();
+    var returnCode = readdir_r(x.dir, &x.entry, &ptr);
+    if (returnCode != 0)
+        error("failed to read directory: ", errorMessage());
+    return not null?(ptr);
 }
 
 overload next(x:DirentIterator) {
-    if (not x.queued?)
-        hasNext?(x);
-    x.queued? = false;
     return x.entry;
 }
