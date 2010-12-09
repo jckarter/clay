@@ -79,6 +79,15 @@ typeSymbol(type:Value) Symbol {
 
 
 //
+// boolType, intType
+//
+
+boolType() = getHooks().Bool;
+intType() = getHooks().Int;
+
+
+
+//
 // staticType, staticType?, staticTypeValue
 //
 

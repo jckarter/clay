@@ -730,8 +730,8 @@ compileValueListInto(x:ValueList, out:A) {
 compileBoolExpr(x:ast.Expr, env) CompiledExpr {
     return withLocation(x, () ref=> {
         var result = compileExpr(x, env);
-        if (result.info.type != getHooks().Bool)
-            typeError(getHooks().Bool, result.info.type);
+        if (result.info.type != boolType())
+            typeError(boolType(), result.info.type);
         return move(result);
     });
 }
