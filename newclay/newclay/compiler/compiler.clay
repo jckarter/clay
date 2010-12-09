@@ -187,7 +187,8 @@ private newLocalName(baseName) {
 //
 
 private newIRProcedureName(callable:Value) {
-    return allocateName(getProgram().lowLevelNames, printString(callable));
+    var baseName = printString("clay_", callable);
+    return allocateName(getProgram().lowLevelNames, baseName);
 }
 
 private inputKind(kind:RTResultKind, astKind: Maybe[ast.ArgumentKind]) ir.InputKind {
@@ -341,8 +342,6 @@ compileSpecialization(x:Specialization) ir.Procedure {
     return maybe(x.lowLevelProc,
         y => y,
         () ref=> {
-            var baseName = printString(x.callable);
-            var name = allocateName(getProgram().lowLevelNames, baseName);
             var proc = ir.Procedure(newIRProcedureName(x.callable));
             x.lowLevelProc = Maybe(proc);
             try {
