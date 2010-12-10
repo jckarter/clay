@@ -552,6 +552,7 @@ withLocation(node, f) {
 
 variant CompilationEntry = StaticCallEntry
                          | CallAnalysisEntry
+                         | CallCompilationEntry
                          ;
 
 record StaticCallEntry (
@@ -564,7 +565,13 @@ record CallAnalysisEntry (
     args: RTResultList,
 );
 
+record CallCompilationEntry (
+    callable: Value,
+    args: RTResultList,
+);
+
 overload printTo(stream, x:StaticCallEntry) {
+    printTo(stream, "eval: ");
     printReprTo(stream, x.callable);
     printTo(stream, "(");
     printReprElementsTo(stream, x.args);
@@ -572,6 +579,15 @@ overload printTo(stream, x:StaticCallEntry) {
 }
 
 overload printTo(stream, x:CallAnalysisEntry) {
+    printTo(stream, "analyze: ");
+    printReprTo(stream, x.callable);
+    printTo(stream, "(");
+    printReprElementsTo(stream, x.args);
+    printTo(stream, ")");
+}
+
+overload printTo(stream, x:CallCompilationEntry) {
+    printTo(stream, "compile: ");
     printReprTo(stream, x.callable);
     printTo(stream, "(");
     printReprElementsTo(stream, x.args);
@@ -590,6 +606,11 @@ withStaticCall(callable:Value, args:ValueList, f) {
 
 withCallAnalysis(callable:Value, args:RTResultList, f) {
     var entry = CompilationEntry(CallAnalysisEntry(callable, args));
+    return forward ...withCompilationEntry(move(entry), f);
+}
+
+withCallCompilation(callable:Value, args:RTResultList, f) {
+    var entry = CompilationEntry(CallCompilationEntry(callable, args));
     return forward ...withCompilationEntry(move(entry), f);
 }
 

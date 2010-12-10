@@ -170,8 +170,13 @@ overload CompileContext(specialization:Specialization, irProcedure:ir.Procedure)
 
 private var _compileContextStack = Stack[CompileContext]();
 
-private withNewCompileContext(x:Specialization, y:ir.Procedure, f) =
-    forward ...withStackValue(_compileContextStack, CompileContext(x, y), f);
+private withNewCompileContext(x:Specialization, y:ir.Procedure, f) {
+    return forward ...withCallCompilation(x.callable, x.args, () ref=> {
+        return forward ...withStackValue(
+            _compileContextStack, CompileContext(x, y), f
+        );
+    });
+}
 
 private context() = ref stackTop(_compileContextStack);
 private irProcedure() = ref context().irProcedure;
