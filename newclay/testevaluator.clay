@@ -1,5 +1,6 @@
 
 import newclay.common.*;
+import newclay.core.*;
 import newclay.loader.*;
 import newclay.evaluator.*;
 
@@ -10,8 +11,10 @@ main(args) {
     }
     try {
         var program = loadProgram(args[1]);
-        var result = evaluateMain(program);
-        println("result = ", result);
+        withProgram(program, () ref=> {
+            var result = evaluateMain();
+            println("result = ", result);
+        });
     }
     catch (e:ClayError) {
         displayError(e);
