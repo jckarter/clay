@@ -153,12 +153,11 @@ symbolAttributes(x:Symbol) {
 // evaluateMain
 //
 
-evaluateMain(program) {
-    return withProgram(program, () => {
-        var mainRef = ast.Expr(ast.NameRef(ast.Identifier("Main")));
-        var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
-        return evaluateMultiExpr(mainCall, program.mainModule.globals);
-    });
+evaluateMain() {
+    var mainRef = ast.Expr(ast.NameRef(ast.Identifier("Main")));
+    var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
+    var env = getProgram().mainModule.globals;
+    return evaluateMultiExpr(mainCall, env);
 }
 
 
