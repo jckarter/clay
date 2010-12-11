@@ -1002,7 +1002,7 @@ overload msgSenderSuper(static C, static S)
         SelectorReturnParamType(C, S)
     ](objc_msgSendSuper_for(C, S));
 
-[SelfT, S, ...T | Selector?(S) and SelectorCallableWith?(SelfT, S, ...T)]
+[SelfT, S, ...T]
 msgSend(static SelfT, imp, self, static S, forward ...args: T) {
     var cmdHandle = selectorHandle(S);
 
@@ -1050,11 +1050,11 @@ private _ValidMethodIdentifier?(static identifier, static minArity)
       or Selector?(identifierSelector(identifier, static minArity+1));
 
 [identifier]
-ValidMethodIdentifier?(static identifier)
-    = _ValidMethodIdentifier?(
-        static identifier,
-        static countOccurrences(#_, ...IdentifierChars(identifier))
-    );
+ValidMethodIdentifier?(static identifier) = true;
+    //= _ValidMethodIdentifier?(
+    //    static identifier,
+    //    static countOccurrences(#_, ...IdentifierChars(identifier))
+    //);
 
 
 
