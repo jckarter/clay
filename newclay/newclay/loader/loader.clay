@@ -72,7 +72,7 @@ private loadModule(program, path) {
 }
 
 loadProgram(path) {
-    var program = Program(Module());
-    program.mainModule = loadModule(program, path);
+    var program = Program();
+    mainModule(program) = loadModule(program, path);
     return program;
 }

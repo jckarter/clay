@@ -10,7 +10,7 @@ import newclay.evaluator.*;
 
 initializeClayHooks() {
     var program = getProgram();
-    var env = program.mainModule.globals;
+    var env = mainModule(program).globals;
     var lookup = name => envEntryToValue(envLookup(env, name));
     program.hooks = ClayHooks(
         lookup("TypeTemplate?"),
