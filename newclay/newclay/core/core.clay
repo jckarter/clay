@@ -12,8 +12,10 @@ import newclay.ir as ir;
 // Program
 //
 
+alias ModuleMap = HashMap[String, Module];
+
 record Program = referenceType(
-    mainModule: Module,
+    modules: ModuleMap,
     allAttributes: Vector[Attribute],
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
@@ -22,13 +24,15 @@ record Program = referenceType(
     lowLevelNames: NameAllocator,
 );
 
-overload Program(module:Module) = Program(
-    module, Vector[Attribute](),
+overload Program() = Program(
+    ModuleMap(), Vector[Attribute](),
     Vector[StaticOverload](), Vector[Overload](),
     ClayHooks(),
     ir.newProgram(),
     NameAllocator(),
 );
+
+mainModule(program:Program) = ref program.modules[String("__main__")];
 
 record ClayHooks (
     TypeTemplate?: Value,
@@ -521,6 +525,7 @@ withProgram(program:Program, f) =
     forward ...withStackValue(_programStack, program, f);
 
 getProgram() = ref stackTop(_programStack);
+getProgramMainModule() = ref mainModule(getProgram());
 getHooks() = ref getProgram().hooks;
 
 

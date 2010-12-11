@@ -9,7 +9,7 @@ main(args) {
     }
     try {
         var program = loadProgram(args[1]);
-        println(program.mainModule.ast.topLevelItems);
+        println(mainModule(program).ast.topLevelItems);
     }
     catch (e:ClayError) {
         displayError(e);

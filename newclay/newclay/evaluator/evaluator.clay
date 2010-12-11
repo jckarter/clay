@@ -156,7 +156,7 @@ symbolAttributes(x:Symbol) {
 evaluateMain() {
     var mainRef = ast.Expr(ast.NameRef(ast.Identifier("Main")));
     var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
-    var env = getProgram().mainModule.globals;
+    var env = getProgramMainModule().globals;
     return evaluateMultiExpr(mainCall, env);
 }
 

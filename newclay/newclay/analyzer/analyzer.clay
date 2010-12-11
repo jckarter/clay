@@ -12,7 +12,7 @@ import newclay.hooks.*;
 //
 
 analyzeMain() {
-    var env = getProgram().mainModule.globals;
+    var env = getProgramMainModule().globals;
     var mainValue = envEntryToValue(envLookup(env, "main"));
     if (not runtimeCallable?(mainValue))
         genericError("invalid procedure: main");
