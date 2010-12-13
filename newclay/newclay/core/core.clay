@@ -33,6 +33,7 @@ overload Program() = Program(
 );
 
 mainModule(program:Program) = ref program.modules[String("__main__")];
+primitivesModule(program:Program) = ref program.modules[String("__primitives__")];
 
 record ClayHooks (
     TypeTemplate?: Value,
@@ -212,16 +213,70 @@ variant EnvEntry = Value
  
 overload EnvEntry() = EnvEntry(Value());
 
+variant EnvParent = EnvRoot | Env;
+
+record AmbiguousEntry (modules: Vector[Tuple[Module, EnvEntry]]);
+instance Exception = AmbiguousEntry;
+
+variant EnvRootEntry = EnvEntry | AmbiguousEntry;
+overload EnvRootEntry() = EnvRootEntry(AmbiguousEntry());
+
+record EnvRoot (
+    generalImports: Vector[Module],
+    specificImports: HashMap[String, EnvEntry],
+    entries: Maybe[HashMap[String, EnvRootEntry]],
+);
+
+private addGeneralEnvRootEntry(entries, entryName, entryList) {
+    switch (size(entryList)) {
+    case 0:
+        return;
+    case 1:
+        entries[entryName] = EnvRootEntry(entryList[0].1);
+        return;
+    default:
+        entries[entryName] = EnvRootEntry(AmbiguousEntry(entryList));
+        return;
+    }
+}
+
+private addGeneralEnvRootEntries(entries, generalImports) {
+    var generalEntries = HashMap[String, Vector[Tuple[Module, EnvEntry]]]();
+    for (module in generalImports)
+        for (entryName, entry in items(module.globals.entries))
+            push(generalEntries[entryName], (module, entry));
+
+    for (entryName, entryList in items(generalEntries))
+        addGeneralEnvRootEntry(entries, entryName, entryList);
+}
+
+private addSpecificEnvRootEntries(entries, specificImports) {
+    for (entryName, entry in items(specificImports))
+        entries[entryName] = EnvRootEntry(entry);
+}
+
+envRootEntries(envRoot: EnvRoot) = maybe(envRoot.entries,
+    entries ref=> ref entries,
+    () ref=> {
+        envRoot.entries = Maybe(HashMap[String, EnvRootEntry]());
+        ref entries = just(envRoot.entries);
+        addGeneralEnvRootEntries(entries, envRoot.generalImports);
+        addSpecificEnvRootEntries(entries, envRoot.specificImports);
+        return ref entries;
+    },
+);
+
 record Env = referenceType(
-    parent: Maybe[Env],
+    parent: EnvParent,
     entries: HashMap[String, EnvEntry],
 );
 
-overload Env(parent:Maybe[Env]) =
+overload Env(parent:EnvParent) =
     Env(parent, HashMap[String, EnvEntry]());
 
-newEnv(parent:Env) = Env(Maybe(parent));
-overload newEnv() = Env(nothing(Env));
+newEnv(parent:Env) = Env(EnvParent(parent));
+overload newEnv(root: EnvRoot) = Env(EnvParent(root));
+overload newEnv() = Env(EnvParent(EnvRoot()));
 
 
 
@@ -237,16 +292,29 @@ envAdd(env, name, forward entry) {
 
 procedure envLookup;
 
-overload envLookup(env, name:String) {
+overload envLookup(env:Env, name:String) {
     var ptr = lookup(env.entries, name);
-    if (null?(ptr)) {
-        if (nothing?(env.parent))
-            genericError("name not found: ", name);
-        return ref envLookup(require(env.parent), name);
-    }
+    if (null?(ptr))
+        return ref envLookup(env.parent, name);
     return ref ptr^;
-
 }
+
+private envRootEntryLookup(entry:EnvEntry) = ref entry;
+overload envRootEntryLookup(entry:AmbiguousEntry) {
+    if (true) throw entry; else return ref typeToLValue(EnvEntry);
+}
+
+overload envLookup(envRoot:EnvRoot, name:String) {
+    ref entries = envRootEntries(envRoot);
+    var ptr = lookup(entries, name);
+    if (null?(ptr))
+        throw GenericError(printString("name not found: ", name));
+    else
+        return ref envRootEntryLookup(*ptr^);
+}
+
+overload envLookup(envParent:EnvParent, name:String) = ref envLookup(*envParent, name);
+
 overload envLookup(env, name:ast.Identifier) {
     return ref envLookup(env, name.str);
 }
