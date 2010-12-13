@@ -38,6 +38,8 @@ private initializeGlobals(module) {
                                 = moduleLookup(importedModule, spec.name);
                         }
                     },
+                    // XXX QualifiedImport, AliasedImport
+                    MatchDefault, x => {},
                 );
             },
             ast.Symbol, symbolItem ref=> {

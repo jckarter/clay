@@ -1,3 +1,11 @@
+import foo;
+import foo.bar;
+import foo.bar.bas;
+
+import foo as zim;
+import foo.bar as zang;
+import foo.bar.bas as zung;
+
 import foo.*;
 import foo.bar.*;
 import foo.bar.bas.*;
@@ -11,4 +19,7 @@ import foo.bar.bas.(a, b,);
 
 import foo.bar.bas.(a, b as c);
 import foo.bar.bas.(a as b, c);
-import foo.bar.bas.(a as b, c as d,);
+import foo.bar.bas.(
+    a as b,
+    c as d,
+);

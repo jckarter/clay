@@ -259,13 +259,21 @@ record Import = ast(
     spec: ImportSpec,
 );
 
-variant ImportSpec = GeneralImportSpec | SpecificImportSpecs;
+variant ImportSpec = GeneralImportSpec
+                   | SpecificImportSpecs
+                   | QualifiedImportSpec
+                   | AliasedImportSpec
+                   ;
 alias SpecificImportSpecs = Vector[SpecificImportSpec];
 
 record GeneralImportSpec = ast();
 record SpecificImportSpec = ast(
     name: Identifier,
     asName: Maybe[Identifier],
+);
+record QualifiedImportSpec = ast();
+record AliasedImportSpec = ast(
+    asName: Identifier,
 );
 
 enum ArgumentKind {

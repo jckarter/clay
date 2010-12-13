@@ -575,22 +575,38 @@ private var variadicPatternVarList = variadicList(
 
 private var importAlias = optional(modify(x => x.1, sequence(kw_as, identifier)));
 
-private var generalImportSpec = modify(x => ImportSpec(GeneralImportSpec()), punc(#"*"));
+private var qualifiedImportSpec = modify(
+    x => ImportSpec(QualifiedImportSpec()),
+    punc(#";")
+);
+private var generalImportSpec = modify(
+    x => ImportSpec(GeneralImportSpec()),
+    sequence(punc(#"."), punc(#"*"), punc(#";"))
+);
+private var aliasedImportSpec = modify(
+    x => ImportSpec(AliasedImportSpec(x.1)),
+    sequence(kw_as, identifier, punc(#";"))
+);
 private var specificImportSpec = modify(
     x => SpecificImportSpec(x.0, x.1),
     sequence(identifier, importAlias)
 );
 private var specificImportSpecList = modify(
-    x => ImportSpec(x.1),
-    sequence(punc(#"("), optCommaList(specificImportSpec), punc(#")")),
+    x => ImportSpec(x.2),
+    sequence(punc(#"."), punc(#"("), optCommaList(specificImportSpec), punc(#")"), punc(#";")),
 );
-private var importSpec = choice(generalImportSpec, specificImportSpecList);
+private var importSpec = choice(
+    qualifiedImportSpec,
+    generalImportSpec,
+    aliasedImportSpec,
+    specificImportSpecList,
+);
 
 private var modulePath = separatedListStrict(punc(#"."), identifier);
 
 private var importDef = topLevelItemParser(
-    x => Import(move(x.1), move(x.3)),
-    sequence(kw_import, modulePath, punc(#"."), importSpec, punc(#";")),
+    x => Import(move(x.1), move(x.2)),
+    sequence(kw_import, modulePath, importSpec),
 );
 
 // symbolDef
