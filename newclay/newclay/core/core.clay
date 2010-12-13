@@ -12,10 +12,19 @@ import newclay.ir as ir;
 // Program
 //
 
-alias ModuleMap = HashMap[String, Module];
+record ModuleName (path: Vector[String]);
+alias ModuleMap = HashMap[ModuleName, Module];
+
+[...S | countValues(...S) >= 1 and allValues?(String?, ...S)]
+overload ModuleName(...components: S)
+    = ModuleName(Vector[String](...mapValues(String, ...components)));
+
+overload ModuleName(astName: Vector[ast.Identifier])
+    = ModuleName(map(x => x.str, astName));
 
 record Program = referenceType(
     modules: ModuleMap,
+    moduleSearchPath: Vector[String],
     allAttributes: Vector[Attribute],
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
@@ -25,15 +34,20 @@ record Program = referenceType(
 );
 
 overload Program() = Program(
-    ModuleMap(), Vector[Attribute](),
-    Vector[StaticOverload](), Vector[Overload](),
+    ModuleMap(), Vector[String](),
+    Vector[Attribute](), Vector[StaticOverload](), Vector[Overload](),
     ClayHooks(),
     ir.newProgram(),
     NameAllocator(),
 );
 
-mainModule(program:Program) = ref program.modules[String("__main__")];
-primitivesModule(program:Program) = ref program.modules[String("__primitives__")];
+var mainModuleName = ModuleName("__main__");
+var primitivesModuleName = ModuleName("__primitives__");
+var preludeModuleName = ModuleName("prelude");
+
+moduleNameString(name:ModuleName) = join('.', name.path);
+mainModule(program:Program) = ref program.modules[mainModuleName];
+primitivesModule(program:Program) = ref program.modules[primitivesModuleName];
 
 record ClayHooks (
     TypeTemplate?: Value,
@@ -66,12 +80,12 @@ record ClayHooks (
 
 record Module = referenceType(
     program: Program,
-    name: String,
+    name: ModuleName,
     ast: ast.SourceAST,
     globals: Env,
 );
 
-overload Module(program:Program, name:String) =
+overload Module(program:Program, name:ModuleName) =
     Module(program, name, ast.SourceAST(), Env());
 
 
@@ -299,12 +313,12 @@ overload envLookup(env:Env, name:String) {
     return ref ptr^;
 }
 
-[T] private pretendToReturnRef(static T, f) { if (true) f(); else return ref typeToLValue(T); }
+// HACK around type propagation bug in dynamic dispatch
+[T] private throwButPropagate(static T, f) { if (true) throw f(); else return ref typeToLValue(T); }
 
 private envRootEntryLookup(entry:EnvEntry) = ref entry;
-overload envRootEntryLookup(entry:AmbiguousEntry) {
-    pretendToReturnRef(EnvEntry, () => { throw entry; });
-}
+overload envRootEntryLookup(entry:AmbiguousEntry)
+    = ref throwButPropagate(EnvEntry, () => entry);
 
 overload envLookup(envRoot:EnvRoot, name:String) {
     ref entries = envRootEntries(envRoot);
@@ -317,13 +331,14 @@ overload envLookup(envRoot:EnvRoot, name:String) {
 
 overload envLookup(envParent:EnvParent, name:String) = ref envLookup(*envParent, name);
 
-overload envLookup(env, name:ast.Identifier) {
-    return ref envLookup(env, name.str);
-}
-overload envLookup(env, name:StringConstant) {
-    return ref envLookup(env, String(name));
-}
+overload envLookup(env, name:ast.Identifier) = ref envLookup(env, name.str);
+overload envLookup(env, name:StringConstant) = ref envLookup(env, String(name));
 
+moduleLookup(module:Module, name:String) = ref envLookup(module.globals, name);
+overload moduleLookup(module:Module, name:ast.Identifier)
+    = ref envLookup(module.globals, name.str);
+overload moduleLookup(module:Module, name:StringConstant)
+    = ref envLookup(module.globals, String(name));
 
 
 //
