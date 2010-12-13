@@ -255,11 +255,12 @@ record Overload = ast(
 );
 
 record Import = ast(
-    path: Vector[Identifier],
+    name: Vector[Identifier],
     spec: ImportSpec,
 );
 
-variant ImportSpec = GeneralImportSpec | Vector[SpecificImportSpec];
+variant ImportSpec = GeneralImportSpec | SpecificImportSpecs;
+alias SpecificImportSpecs = Vector[SpecificImportSpec];
 
 record GeneralImportSpec = ast();
 record SpecificImportSpec = ast(
