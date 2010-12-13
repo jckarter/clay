@@ -119,6 +119,8 @@ private keyword(s) {
     return modify(x => (), condition(pred));
 }
 
+private var kw_import = keyword("import");
+private var kw_as = keyword("as");
 private var kw_symbol = keyword("symbol");
 private var kw_attribute = keyword("attribute");
 private var kw_overload = keyword("overload");
@@ -569,6 +571,28 @@ private var variadicPatternVarList = variadicList(
     ),
 );
 
+// importDef
+
+private var importAlias = optional(modify(x => x.1, sequence(kw_as, identifier)));
+
+private var generalImportSpec = modify(x => ImportSpec(GeneralImportSpec()), punc(#"*"));
+private var specificImportSpec = modify(
+    x => SpecificImportSpec(x.0, x.1),
+    sequence(identifier, importAlias)
+);
+private var specificImportSpecList = modify(
+    x => ImportSpec(x.1),
+    sequence(punc(#"("), optCommaList(specificImportSpec), punc(#")")),
+);
+private var importSpec = choice(generalImportSpec, specificImportSpecList);
+
+private var modulePath = separatedListStrict(punc(#"."), identifier);
+
+private var importDef = topLevelItemParser(
+    x => Import(move(x.1), move(x.3)),
+    sequence(kw_import, modulePath, punc(#"."), importSpec, punc(#";")),
+);
+
 // symbolDef
 
 private var symbolParams = modify(
@@ -782,7 +806,7 @@ private var overloadDef = topLevelItemParser(
 // topLevelItem
 
 private var topLevelItem = choice(
-    symbolDef, attributeDef, staticOverloadDef, overloadDef,
+    importDef, symbolDef, attributeDef, staticOverloadDef, overloadDef,
 );
 
 

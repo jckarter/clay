@@ -223,6 +223,7 @@ variant TopLevelItem = Symbol
                      | Attribute
                      | StaticOverload
                      | Overload
+                     | Import
                      ;
 
 record Symbol = ast(
@@ -251,6 +252,19 @@ record Overload = ast(
     returnedNames: Maybe[Vector[Identifier]],
     predicate: Maybe[Expr],
     body: CodeBody,
+);
+
+record Import = ast(
+    path: Vector[Identifier],
+    spec: ImportSpec,
+);
+
+variant ImportSpec = GeneralImportSpec | Vector[SpecificImportSpec];
+
+record GeneralImportSpec = ast();
+record SpecificImportSpec = ast(
+    name: Identifier,
+    asName: Maybe[Identifier],
 );
 
 enum ArgumentKind {
