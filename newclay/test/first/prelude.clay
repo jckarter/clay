@@ -1,3 +1,4 @@
+import __primitives__.*;
 
 
 //
@@ -144,23 +145,4 @@ overload multiply(a:Int, b:Int) returned:Int __c__ """
 """;
 
 
-
-//
-// factorial
-//
 
-symbol factorial = NewProcedure();
-overload factorial(n:Int) =
-    if (lesser?(n, 2))
-        1
-    else
-        multiply(n, factorial(subtract(n, 1)));
-
-
-
-//
-// main
-//
-
-symbol main = NewProcedure();
-overload main() = factorial(5);
