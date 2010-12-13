@@ -1,0 +1,14 @@
+import foo.*;
+import foo.bar.*;
+import foo.bar.bas.*;
+
+import foo.bar.bas.();
+
+import foo.bar.bas.(a);
+
+import foo.bar.bas.(a, b);
+import foo.bar.bas.(a, b,);
+
+import foo.bar.bas.(a, b as c);
+import foo.bar.bas.(a as b, c);
+import foo.bar.bas.(a as b, c as d,);

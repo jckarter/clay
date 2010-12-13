@@ -299,9 +299,11 @@ overload envLookup(env:Env, name:String) {
     return ref ptr^;
 }
 
+[T] private pretendToReturnRef(static T, f) { if (true) f(); else return ref typeToLValue(T); }
+
 private envRootEntryLookup(entry:EnvEntry) = ref entry;
 overload envRootEntryLookup(entry:AmbiguousEntry) {
-    if (true) throw entry; else return ref typeToLValue(EnvEntry);
+    pretendToReturnRef(EnvEntry, () => { throw entry; });
 }
 
 overload envLookup(envRoot:EnvRoot, name:String) {

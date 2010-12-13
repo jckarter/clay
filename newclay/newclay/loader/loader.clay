@@ -38,12 +38,7 @@ private initializeGlobals(module) {
                     envAdd(env, x.name, Value(sym));
                 }
             },
-            ast.Attribute, x => {
-            },
-            ast.StaticOverload, x => {
-            },
-            ast.Overload, x => {
-            }
+            MatchDefault, x => { },
         );
     }
     module.globals = env;
@@ -52,7 +47,6 @@ private initializeGlobals(module) {
 private initializeAttributesAndOverloads(module) {
     for (item in module.ast.topLevelItems) {
         match(item,
-            ast.Symbol, x => {},
             ast.Attribute, x => {
                 var y = Attribute(x, module);
                 push(module.program.allAttributes, y);
@@ -65,6 +59,7 @@ private initializeAttributesAndOverloads(module) {
                 var y = Overload(x, module);
                 push(module.program.allOverloads, y);
             },
+            MatchDefault, x => { },
         );
     }
 }
