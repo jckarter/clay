@@ -4,8 +4,10 @@
 // top level
 //
 
-Import -> "import" ModuleName ImportSpec ";"
-ImportSpec -> "*" | "(" comma_list(SpecificImportSpec) ")"
+Import -> "import" ModuleName ImportSpec? ";"
+ImportSpec -> "as" Identifier
+            | "." "*"
+            | "." "(" comma_list(SpecificImportSpec) ")"
 SpecificImportSpec -> Identifier ("as" Identifier)?
 
 GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
