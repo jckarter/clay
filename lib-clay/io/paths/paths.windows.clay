@@ -101,6 +101,9 @@ slicedPath(path) {
     return sliced(path, begin(volume), end(directory)), name;
 }
 
+pathDirname(path) = String(nthValue(static 0, ...slicedPath(path)));
+pathBasename(path) = String(nthValue(static 1, ...slicedPath(path)));
+
 splitPath(path) = ...mapValues(force, ...slicedPath(path));
 
 pathComponents(path) {
