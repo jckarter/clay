@@ -1,5 +1,7 @@
 import filemodule;
 import dirmodule;
 import dirmodule.subfilemodule;
+import dirmodule.subfilemodule2;
+import conflict.diamonds;
 
 symbol Main = ();
