@@ -237,7 +237,7 @@ variant EnvRootEntry = EnvEntry | AmbiguousEntry;
 overload EnvRootEntry() = EnvRootEntry(AmbiguousEntry());
 
 record EnvRoot (
-    generalImports: Vector[Module],
+    generalImports: HashMap[ModuleName, Module],
     specificImports: HashMap[String, EnvEntry],
     entries: Maybe[HashMap[String, EnvRootEntry]],
 );
@@ -257,7 +257,7 @@ private addGeneralEnvRootEntry(entries, entryName, entryList) {
 
 private addGeneralEnvRootEntries(entries, generalImports) {
     var generalEntries = HashMap[String, Vector[Tuple[Module, EnvEntry]]]();
-    for (module in generalImports)
+    for (name, module in items(generalImports))
         for (entryName, entry in items(module.globals.entries))
             push(generalEntries[entryName], (module, entry));
 
@@ -311,7 +311,9 @@ private envRootReset(envRoot) {
 }
 
 envRootAddGeneral(envRoot:EnvRoot, module:Module) {
-    push(envRoot.generalImports, module);
+    if (not null?(lookup(envRoot.generalImports, module.name)))
+        genericError("redundant import of module ", module.name);
+    envRoot.generalImports[module.name] = module;
     envRootReset(envRoot);
 }
 
@@ -467,9 +469,8 @@ qualifiedImportConflictError(path, name) {
 }
 
 private checkQualifiedImportConflicts(moduleValue, module) {
-    observe(module.name);
     for (name, m in items(moduleValue.submodules))
-        if (envLookup?(module.globals, observe(name)))
+        if (envLookup?(module.globals, name))
             qualifiedImportConflictError(module.name.path, name);
 }
 

@@ -23,7 +23,7 @@ main(args) {
             println(moduleNameString(moduleName), ":");
             var env = module.globals;
             var envRoot = variantAs(env.parent, EnvRoot);
-            for (module in envRoot.generalImports)
+            for (name, module in items(envRoot.generalImports))
                 println("  imports ", module.name, ".*");
             for (asName, entry in items(envRoot.specificImports)) {
                 println("  imports ", entry, " as ", asName);
