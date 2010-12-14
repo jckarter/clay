@@ -20,52 +20,6 @@ private loadPrimitivesModule(program:Program) {
     return module;
 }
 
-private addRootModuleValue(envRoot, moduleName) {
-    var moduleRefEntry = lookup(envRoot.specificImports, moduleName.path[0]);
-    if (null?(moduleRefEntry)) {
-        moduleRefEntry = &envRoot.specificImports[moduleName.path[0]];
-        moduleRefEntry^ = EnvEntry(Value(ModuleValue()));
-    } else if (not nestedVariantIs?(moduleRefEntry^, ModuleValue)) {
-        genericError(
-            "qualified import of module ", moduleName,
-            " conflicts with import of definition ", moduleRefEntry^,
-            " as ", moduleName.path[0],
-        );
-    }
-    return ref nestedVariantAs(moduleRefEntry^, ModuleValue);
-}
-
-private addQualifiedModuleValue(envRoot, module, moduleName) {
-    assert(size(moduleName.path) > 0);
-
-    if (size(moduleName.path) == 1) {
-        ref moduleValue = addRootModuleValue(envRoot, moduleName);
-        if (just?(moduleValue.module))
-            genericError(
-                "qualified import of module ", moduleName.path[0],
-                " conflicts with import of module ", just(moduleValue.module).name,
-                " as ", moduleName.path[0],
-            );
-        moduleValue.module = Maybe(module);
-    } else {
-        var moduleRef = &addRootModuleValue(envRoot, moduleName);
-
-        var componentPath = Vector[String](moduleName.path[0]);
-
-        var last = size(moduleName.path) - 1;
-        for (component in sliced(moduleName.path, 1, last)) {
-            moduleRef = &addModuleValueSubmodule(moduleRef^, componentPath, component);
-            push(componentPath, component);
-        }
-        var basename = moduleName.path[last];
-        addModuleValueSubmodule(moduleRef^, componentPath, basename, module);
-        maybe(moduleRef^.module, parentModule ref=> {
-            if (envLookup?(parentModule.globals, basename))
-                qualifiedImportConflictError(componentPath, basename);
-        });
-    }
-}
-
 private addImportItem(module, envRoot, importItem) {
     var moduleName = ModuleName(importItem.name);
     var importedModule = programModule(module.program, moduleName);

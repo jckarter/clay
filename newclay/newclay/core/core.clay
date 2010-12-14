@@ -439,6 +439,11 @@ record StringValue(value: String);
 record TupleValue(elements: ValueList);
 record LambdaValue(value: ast.LambdaExpr, env: Env);
 
+
+//
+// ModuleValue
+//
+
 record ModuleValue (
     module: Maybe[Module],
     submodules: HashMap[String, ModuleValue],
@@ -461,22 +466,76 @@ qualifiedImportConflictError(path, name) {
     );
 }
 
+private checkQualifiedImportConflicts(moduleValue, module) {
+    observe(module.name);
+    for (name, m in items(moduleValue.submodules))
+        if (envLookup?(module.globals, observe(name)))
+            qualifiedImportConflictError(module.name.path, name);
+}
+
 addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], name:String, module:Maybe[Module]) {
     maybe(moduleRef.module, refModule => {
         if (envLookup?(refModule.globals, name))
             qualifiedImportConflictError(path, name);
     });
     ref submoduleRef = moduleRef.submodules[name];
-    if (nothing?(submoduleRef.module))
+    if (nothing?(submoduleRef.module)) {
         submoduleRef.module = module;
-    else if (just?(module))
+        maybe(module, justModule => {
+            checkQualifiedImportConflicts(submoduleRef, justModule);
+        });
+    } else if (just?(module))
         genericError("conflicting qualified imports for module ", join('.', path), ".", name);
     return ref submoduleRef;
 }
+
 overload addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], name:String, module:Module)
     = ref addModuleValueSubmodule(moduleRef, path, name, Maybe(module));
 overload addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], name:String)
     = ref addModuleValueSubmodule(moduleRef, path, name, nothing(Module));
+
+private addRootModuleValue(envRoot, moduleName) {
+    var moduleRefEntry = lookup(envRoot.specificImports, moduleName.path[0]);
+    if (null?(moduleRefEntry)) {
+        moduleRefEntry = &envRoot.specificImports[moduleName.path[0]];
+        moduleRefEntry^ = EnvEntry(Value(ModuleValue()));
+    } else if (not nestedVariantIs?(moduleRefEntry^, ModuleValue)) {
+        genericError(
+            "qualified import of module ", moduleName,
+            " conflicts with import of definition ", moduleRefEntry^,
+            " as ", moduleName.path[0],
+        );
+    }
+    return ref nestedVariantAs(moduleRefEntry^, ModuleValue);
+}
+
+addQualifiedModuleValue(envRoot: EnvRoot, module:Module, moduleName:ModuleName) {
+    assert(size(moduleName.path) > 0);
+
+    if (size(moduleName.path) == 1) {
+        ref moduleValue = addRootModuleValue(envRoot, moduleName);
+        if (just?(moduleValue.module))
+            genericError(
+                "qualified import of module ", moduleName.path[0],
+                " conflicts with import of module ", just(moduleValue.module).name,
+                " as ", moduleName.path[0],
+            );
+        moduleValue.module = Maybe(module);
+        checkQualifiedImportConflicts(moduleValue, module);
+    } else {
+        var moduleRef = &addRootModuleValue(envRoot, moduleName);
+
+        var componentPath = Vector[String](moduleName.path[0]);
+
+        var last = size(moduleName.path) - 1;
+        for (component in sliced(moduleName.path, 1, last)) {
+            moduleRef = &addModuleValueSubmodule(moduleRef^, componentPath, component);
+            push(componentPath, component);
+        }
+        var basename = moduleName.path[last];
+        addModuleValueSubmodule(moduleRef^, componentPath, basename, module);
+    }
+}
 
 
 //
