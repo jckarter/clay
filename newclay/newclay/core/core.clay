@@ -46,6 +46,7 @@ var primitivesModuleName = ModuleName("__primitives__");
 var preludeModuleName = ModuleName("prelude");
 
 moduleNameString(name:ModuleName) = join('.', name.path);
+overload printTo(stream, name:ModuleName) { printTo(stream, moduleNameString(name)); }
 mainModule(program:Program) = ref program.modules[mainModuleName];
 primitivesModule(program:Program) = ref program.modules[primitivesModuleName];
 
@@ -304,41 +305,80 @@ envAdd(env, name, forward entry) {
     env.entries[name.str] = EnvEntry(entry);
 }
 
-procedure envLookup;
+private envRootReset(envRoot) {
+    if (just?(envRoot.entries))
+        envRoot.entries = nothing(HashMap[String, EnvRootEntry]);
+}
 
-overload envLookup(env:Env, name:String) {
+envRootAddGeneral(envRoot:EnvRoot, module:Module) {
+    push(envRoot.generalImports, module);
+    envRootReset(envRoot);
+}
+
+[V | VariantMember?(Value, V)]
+callbyname overload envRootAddSpecific(envRoot_:EnvRoot, asName_:String, entry_:V) {
+    envRootAddSpecific(envRoot_, asName_, EnvEntry(Value(entry_)));
+}
+callbyname envRootAddSpecific(envRoot_:EnvRoot, asName_:String, entry_:EnvEntry) {
+    ref envRoot = envRoot_;
+    ref asName = asName_;
+    var specImport = lookup(envRoot.specificImports, asName);
+    if (null?(specImport))
+        envRoot.specificImports[asName] = entry_; // evaluate entry_ lazily 
+    else
+        genericError("conflicting imports for identifier ", asName);
+
+    envRootReset(envRoot);
+}
+
+procedure maybeEnvLookup;
+
+overload maybeEnvLookup(env:Env, name:String, foundFn, notFoundFn) {
     var ptr = lookup(env.entries, name);
     if (null?(ptr))
-        return ref envLookup(env.parent, name);
-    return ref ptr^;
+        return forward maybeEnvLookup(env.parent, name, foundFn, notFoundFn);
+    return forward foundFn(ptr^);
 }
 
 // HACK around type propagation bug in dynamic dispatch
-[T] private throwButPropagate(static T, f) { if (true) throw f(); else return ref typeToLValue(T); }
+[T] private throwButPropagate(static T, ex) {
+    if (true)
+        throw ex;
+    else
+        return ref typeToLValue(T);
+}
 
-private envRootEntryLookup(entry:EnvEntry) = ref entry;
-overload envRootEntryLookup(entry:AmbiguousEntry)
-    = ref throwButPropagate(EnvEntry, () => entry);
+private envRootEntryLookup(entry:EnvEntry, foundFn, notFoundFn) = forward foundFn(entry);
+[F | RValue?(typeToRValue(F)(typeToRValue(EnvEntry)))]
+overload envRootEntryLookup(entry:AmbiguousEntry, foundFn:F, notFoundFn)
+    = throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), entry);
+[F | LValue?(typeToRValue(F)(typeToRValue(EnvEntry)))]
+overload envRootEntryLookup(entry:AmbiguousEntry, foundFn:F, notFoundFn)
+    = ref throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), entry);
 
-overload envLookup(envRoot:EnvRoot, name:String) {
+overload maybeEnvLookup(envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
     ref entries = envRootEntries(envRoot);
     var ptr = lookup(entries, name);
     if (null?(ptr))
-        throw GenericError(printString("name not found: ", name));
+        return forward notFoundFn();
     else
-        return ref envRootEntryLookup(*ptr^);
+        return forward envRootEntryLookup(*ptr^, foundFn, notFoundFn);
 }
 
-overload envLookup(envParent:EnvParent, name:String) = ref envLookup(*envParent, name);
+overload maybeEnvLookup(envParent:EnvParent, name:String, foundFn, notFoundFn)
+    = forward maybeEnvLookup(*envParent, name, foundFn, notFoundFn);
 
-overload envLookup(env, name:ast.Identifier) = ref envLookup(env, name.str);
-overload envLookup(env, name:StringConstant) = ref envLookup(env, String(name));
+overload maybeEnvLookup(env, name:ast.Identifier, foundFn, notFoundFn)
+    = forward maybeEnvLookup(env, name.str, foundFn, notFoundFn);
+overload maybeEnvLookup(env, name:StringConstant, foundFn, notFoundFn)
+    = forward maybeEnvLookup(env, String(name), foundFn, notFoundFn);
 
-moduleLookup(module:Module, name:String) = ref envLookup(module.globals, name);
-overload moduleLookup(module:Module, name:ast.Identifier)
-    = ref envLookup(module.globals, name.str);
-overload moduleLookup(module:Module, name:StringConstant)
-    = ref envLookup(module.globals, String(name));
+envLookup(env, name) = ref maybeEnvLookup(env, name,
+    entry ref=> ref entry,
+    () ref=> ref throwButPropagate(EnvEntry, GenericError(printString("name not found: ", name))),
+);
+
+envLookup?(env, name) = maybeEnvLookup(env, name, entry => true, () => false);
 
 
 //
@@ -384,6 +424,7 @@ variant Value = BoolValue
               | StringValue
               | TupleValue
               | LambdaValue
+              | ModuleValue
 
               | SymbolHead
               | Symbol
@@ -398,6 +439,44 @@ record StringValue(value: String);
 record TupleValue(elements: ValueList);
 record LambdaValue(value: ast.LambdaExpr, env: Env);
 
+record ModuleValue (
+    module: Maybe[Module],
+    submodules: HashMap[String, ModuleValue],
+);
+
+overload equals?(m1: ModuleValue, m2: ModuleValue)
+    = m1.module == m2.module;
+
+overload ModuleValue(module:Module)
+    = ModuleValue(Maybe(module), HashMap[String,ModuleValue]());
+overload ModuleValue(module:Maybe[Module])
+    = ModuleValue(module, HashMap[String,ModuleValue]());
+
+qualifiedImportConflictError(path, name) {
+    var pathString = join('.', path);
+    genericError(
+        "qualified import of module ", pathString, ".", name,
+        " conflicts with definition ", name,
+        " in module ", pathString
+    );
+}
+
+addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], name:String, module:Maybe[Module]) {
+    maybe(moduleRef.module, refModule => {
+        if (envLookup?(refModule.globals, name))
+            qualifiedImportConflictError(path, name);
+    });
+    ref submoduleRef = moduleRef.submodules[name];
+    if (nothing?(submoduleRef.module))
+        submoduleRef.module = module;
+    else if (just?(module))
+        genericError("conflicting qualified imports for module ", join('.', path), ".", name);
+    return ref submoduleRef;
+}
+overload addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], name:String, module:Module)
+    = ref addModuleValueSubmodule(moduleRef, path, name, Maybe(module));
+overload addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], name:String)
+    = ref addModuleValueSubmodule(moduleRef, path, name, nothing(Module));
 
 
 //
@@ -433,6 +512,12 @@ overload printTo(stream, x:Symbol) {
     printTo(stream, x.head.ast.name.str);
     if (not empty?(x.params))
         printTo(stream, x.params);
+}
+overload printTo(stream, x:ModuleValue) {
+    maybe(x.module,
+        module => { printTo(stream, "module ", module.name); },
+        ()     => { printTo(stream, "<incomplete module name>"); },
+    );
 }
 overload printTo(stream, x:Primitive) {
     printTo(stream, primitiveName(x.kind));

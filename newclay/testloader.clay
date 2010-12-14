@@ -1,6 +1,16 @@
 
 import newclay.common.*;
+import newclay.core.*;
 import newclay.loader.*;
+
+dumpModuleValue(moduleValue:ModuleValue, depth:Int) {
+    for (name, submoduleValue in items(moduleValue.submodules)) {
+        for (x in range(depth))
+            print("  ");
+        println(".", name, ": ", submoduleValue);
+        dumpModuleValue(submoduleValue, depth+1);
+    }
+}
 
 main(args) {
     if (size(args) != 2) {
@@ -9,7 +19,23 @@ main(args) {
     }
     try {
         var program = loadProgram(args[1]);
-        println(mainModule(program).ast.topLevelItems);
+        for (moduleName, module in items(program.modules)) {
+            println(moduleNameString(moduleName), ":");
+            var env = module.globals;
+            var envRoot = variantAs(env.parent, EnvRoot);
+            for (module in envRoot.generalImports)
+                println("  imports ", module.name, ".*");
+            for (asName, entry in items(envRoot.specificImports)) {
+                println("  imports ", entry, " as ", asName);
+                if (nestedVariantIs?(entry, ModuleValue)) {
+                    var moduleValue = nestedVariantAs(entry, ModuleValue);
+                    dumpModuleValue(moduleValue, 2);
+                }
+            }
+
+            for (entryName, entry in items(env.entries))
+                println("  ", entryName, ": ", entry);
+        }
     }
     catch (e:ClayError) {
         displayError(e);

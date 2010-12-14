@@ -1,6 +1,7 @@
 
-import maybe.*;
 import io.paths.*;
+import maybe.*;
+import variants.nested.*;
 import newclay.common.*;
 import newclay.lexer.*;
 import newclay.ast as ast;
@@ -19,6 +20,86 @@ private loadPrimitivesModule(program:Program) {
     return module;
 }
 
+private addRootModuleValue(envRoot, moduleName) {
+    var moduleRefEntry = lookup(envRoot.specificImports, moduleName.path[0]);
+    if (null?(moduleRefEntry)) {
+        moduleRefEntry = &envRoot.specificImports[moduleName.path[0]];
+        moduleRefEntry^ = EnvEntry(Value(ModuleValue()));
+    } else if (not nestedVariantIs?(moduleRefEntry^, ModuleValue)) {
+        genericError(
+            "qualified import of module ", moduleName,
+            " conflicts with import of definition ", moduleRefEntry^,
+            " as ", moduleName.path[0],
+        );
+    }
+    return ref nestedVariantAs(moduleRefEntry^, ModuleValue);
+}
+
+private addQualifiedModuleValue(envRoot, module, moduleName) {
+    assert(size(moduleName.path) > 0);
+
+    if (size(moduleName.path) == 1) {
+        ref moduleValue = addRootModuleValue(envRoot, moduleName);
+        if (just?(moduleValue.module))
+            genericError(
+                "qualified import of module ", moduleName.path[0],
+                " conflicts with import of module ", just(moduleValue.module).name,
+                " as ", moduleName.path[0],
+            );
+        moduleValue.module = Maybe(module);
+    } else {
+        var moduleRef = &addRootModuleValue(envRoot, moduleName);
+
+        var componentPath = Vector[String](moduleName.path[0]);
+
+        var last = size(moduleName.path) - 1;
+        for (component in sliced(moduleName.path, 1, last)) {
+            moduleRef = &addModuleValueSubmodule(moduleRef^, componentPath, component);
+            push(componentPath, component);
+        }
+        var basename = moduleName.path[last];
+        addModuleValueSubmodule(moduleRef^, componentPath, basename, module);
+        maybe(moduleRef^.module, parentModule ref=> {
+            if (envLookup?(parentModule.globals, basename))
+                qualifiedImportConflictError(componentPath, basename);
+        });
+    }
+}
+
+private addImportItem(module, envRoot, importItem) {
+    var moduleName = ModuleName(importItem.name);
+    var importedModule = programModule(module.program, moduleName);
+    match(importItem.spec,
+        ast.GeneralImportSpec,   genSpec ref=> {
+            envRootAddGeneral(envRoot, importedModule);
+        },
+        ast.SpecificImportSpecs, specSpecs ref=> {
+            for (spec in specSpecs) {
+                var asName = just(spec.asName, spec.name).str;
+                envRootAddSpecific(envRoot, asName, envLookup(importedModule.globals, spec.name));
+            }
+        },
+        ast.QualifiedImportSpec, qualSpec ref=> {
+            addQualifiedModuleValue(envRoot, importedModule, moduleName);
+        },
+        ast.AliasedImportSpec, aliasSpec ref=> {
+            envRootAddSpecific(envRoot, aliasSpec.asName.str, ModuleValue(importedModule));
+        },
+    );
+}
+
+private addSymbolItem(module, env, symbolItem) {
+    var head = SymbolHead(symbolItem, module);
+    if (symbolHeadHasParams?(head)) {
+        envAdd(env, symbolItem.name, Value(head));
+    }
+    else {
+        var sym = Symbol(head, ValueList(), env);
+        head.symbols[ValueList()] = sym;
+        envAdd(env, symbolItem.name, Value(sym));
+    }
+}
+
 private initializeGlobals(module) {
     var env = newEnv();
     ref envRoot = variantAs(env.parent, EnvRoot);
@@ -26,32 +107,10 @@ private initializeGlobals(module) {
     for (item in module.ast.topLevelItems) {
         match(item,
             ast.Import, importItem ref=> {
-                var importedModule = programModule(module.program, ModuleName(importItem.name));
-                match(importItem.spec,
-                    ast.GeneralImportSpec,   genSpec ref=> {
-                        push(envRoot.generalImports, importedModule);
-                    },
-                    ast.SpecificImportSpecs, specSpecs ref=> {
-                        for (spec in specSpecs) {
-                            var asName = just(spec.asName, spec.name);
-                            envRoot.specificImports[asName.str]
-                                = moduleLookup(importedModule, spec.name);
-                        }
-                    },
-                    // XXX QualifiedImport, AliasedImport
-                    MatchDefault, x => {},
-                );
+                addImportItem(module, envRoot, importItem);
             },
             ast.Symbol, symbolItem ref=> {
-                var head = SymbolHead(symbolItem, module);
-                if (symbolHeadHasParams?(head)) {
-                    envAdd(env, symbolItem.name, Value(head));
-                }
-                else {
-                    var sym = Symbol(head, ValueList(), env);
-                    head.symbols[ValueList()] = sym;
-                    envAdd(env, symbolItem.name, Value(sym));
-                }
+                addSymbolItem(module, env, symbolItem);
             },
             MatchDefault, x => { },
         );
