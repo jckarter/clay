@@ -118,16 +118,16 @@ private findModuleSource(searchPath, name) {
 }
 
 private loadModule(program, name) {
-    var module = Module(program, name);
+    ref module = program.modules[name];
+    module = Module(program, name);
     module.ast = parse(tokenize(readSource(findModuleSource(program.moduleSearchPath, name))));
     initializeModule(module);
-    return module;
 }
 
 programModule(program:Program, name:ModuleName) {
     var ptr = lookup(program.modules, name);
     if (null?(ptr)) {
-        program.modules[name] = loadModule(program, name);
+        loadModule(program, name);
         return ref program.modules[name];
     } else
         return ref ptr^;
