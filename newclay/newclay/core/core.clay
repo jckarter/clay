@@ -343,12 +343,15 @@ overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport
     envRootReset(envRoot);
 }
 
-procedure maybeEnvLookup;
+private procedure _maybeEnvLookup;
 
-overload maybeEnvLookup(env:Env, name:String, foundFn, notFoundFn) {
+overload _maybeEnvLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn) {
+    if (just?(fromEnv) and env == just(fromEnv))
+        return forward notFoundFn();
+
     var ptr = lookup(env.entries, name);
     if (null?(ptr))
-        return forward maybeEnvLookup(env.parent, name, foundFn, notFoundFn);
+        return forward _maybeEnvLookup(Maybe(just(fromEnv, env)), env.parent, name, foundFn, notFoundFn);
     return forward foundFn(ptr^);
 }
 
@@ -360,29 +363,33 @@ overload maybeEnvLookup(env:Env, name:String, foundFn, notFoundFn) {
         return ref typeToLValue(T);
 }
 
-private envRootEntryLookup(entry:EnvEntry, foundFn, notFoundFn) = forward foundFn(entry);
+private envRootEntryLookup(fromEnv:Maybe[Env], entry:EnvEntry, foundFn, notFoundFn)
+    = forward foundFn(entry);
 [F | RValue?(typeToRValue(F)(typeToRValue(EnvEntry)))]
-overload envRootEntryLookup(entry:AmbiguousEntry, foundFn:F, notFoundFn)
+overload envRootEntryLookup(fromEnv:Maybe[Env], entry:AmbiguousEntry, foundFn:F, notFoundFn)
     = throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), entry);
 [F | LValue?(typeToRValue(F)(typeToRValue(EnvEntry)))]
-overload envRootEntryLookup(entry:AmbiguousEntry, foundFn:F, notFoundFn)
+overload envRootEntryLookup(fromEnv:Maybe[Env], entry:AmbiguousEntry, foundFn:F, notFoundFn)
     = ref throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), entry);
 
-overload maybeEnvLookup(envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
+overload _maybeEnvLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
     ref entries = envRootEntries(envRoot);
     var ptr = lookup(entries, name);
     if (null?(ptr))
         return forward notFoundFn();
     else
-        return forward envRootEntryLookup(*ptr^, foundFn, notFoundFn);
+        return forward envRootEntryLookup(fromEnv, *ptr^, foundFn, notFoundFn);
 }
 
-overload maybeEnvLookup(envParent:EnvParent, name:String, foundFn, notFoundFn)
-    = forward maybeEnvLookup(*envParent, name, foundFn, notFoundFn);
+overload _maybeEnvLookup(fromEnv:Maybe[Env], envParent:EnvParent, name:String, foundFn, notFoundFn)
+    = forward _maybeEnvLookup(fromEnv, *envParent, name, foundFn, notFoundFn);
 
-overload maybeEnvLookup(env, name:ast.Identifier, foundFn, notFoundFn)
+maybeEnvLookup(env, name:String, foundFn, notFoundFn)
+    = forward _maybeEnvLookup(nothing(Env), env, name, foundFn, notFoundFn);
+
+overload maybeEnvLookup(env:Env, name:ast.Identifier, foundFn, notFoundFn)
     = forward maybeEnvLookup(env, name.str, foundFn, notFoundFn);
-overload maybeEnvLookup(env, name:StringConstant, foundFn, notFoundFn)
+overload maybeEnvLookup(env:Env, name:StringConstant, foundFn, notFoundFn)
     = forward maybeEnvLookup(env, String(name), foundFn, notFoundFn);
 
 envLookup(env, name) = ref maybeEnvLookup(env, name,
