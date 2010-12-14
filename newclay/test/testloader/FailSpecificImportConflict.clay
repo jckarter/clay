@@ -1,0 +1,4 @@
+import filemodule.(FileModuleEntry as fme);
+import dirmodule.subfilemodule.(SubFileModuleEntry as fme);
+
+symbol Main = ();
