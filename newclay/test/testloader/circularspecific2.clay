@@ -1,0 +1,4 @@
+import circularspecific1.*;
+import circularspecific1.(Circular1);
+
+symbol Circular2 = ();
