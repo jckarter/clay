@@ -1,0 +1,3 @@
+import circular1.*;
+
+symbol Circular2 = ();
