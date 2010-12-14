@@ -213,6 +213,18 @@ overload next(x:HashMapItems[K,V]) {
 
 
 //
+// assignment
+//
+
+[K,V]
+overload assign(to: HashMap[K,V], forward from: HashMap[K,V]) {
+    destroy(to);
+    to <-- from;
+}
+
+
+
+//
 // helper procs
 //
 
