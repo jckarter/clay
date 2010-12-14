@@ -236,13 +236,25 @@ instance Exception = AmbiguousEntry;
 variant EnvRootEntry = EnvEntry | AmbiguousEntry;
 overload EnvRootEntry() = EnvRootEntry(AmbiguousEntry());
 
+record EnvImport(module: Module, name: String);
+overload printTo(stream, imp:EnvImport) {
+    printTo(stream, imp.name, " from module ", imp.module.name);
+}
+
+variant SpecificImport = EnvImport
+                       | ModuleValue;
+overload SpecificImport() = SpecificImport(EnvImport());
+
+overload EnvRootEntry(imp: EnvImport) = EnvRootEntry(envLookup(imp.module.globals, imp.name));
+overload EnvRootEntry(mv: ModuleValue) = EnvRootEntry(EnvEntry(Value(mv)));
+
 record EnvRoot (
     generalImports: HashMap[ModuleName, Module],
-    specificImports: HashMap[String, EnvEntry],
+    specificImports: HashMap[String, SpecificImport],
     entries: Maybe[HashMap[String, EnvRootEntry]],
 );
 
-private addGeneralEnvRootEntry(entries, entryName, entryList) {
+private resolveGeneralEnvRootEntry(entries, entryName, entryList) {
     switch (size(entryList)) {
     case 0:
         return;
@@ -255,19 +267,19 @@ private addGeneralEnvRootEntry(entries, entryName, entryList) {
     }
 }
 
-private addGeneralEnvRootEntries(entries, generalImports) {
+private resolveGeneralEnvRootEntries(entries, generalImports) {
     var generalEntries = HashMap[String, Vector[Tuple[Module, EnvEntry]]]();
     for (name, module in items(generalImports))
         for (entryName, entry in items(module.globals.entries))
             push(generalEntries[entryName], (module, entry));
 
     for (entryName, entryList in items(generalEntries))
-        addGeneralEnvRootEntry(entries, entryName, entryList);
+        resolveGeneralEnvRootEntry(entries, entryName, entryList);
 }
 
-private addSpecificEnvRootEntries(entries, specificImports) {
+private resolveSpecificEnvRootEntries(entries, specificImports) {
     for (entryName, entry in items(specificImports))
-        entries[entryName] = EnvRootEntry(entry);
+        entries[entryName] = EnvRootEntry(*entry);
 }
 
 envRootEntries(envRoot: EnvRoot) = maybe(envRoot.entries,
@@ -275,8 +287,8 @@ envRootEntries(envRoot: EnvRoot) = maybe(envRoot.entries,
     () ref=> {
         envRoot.entries = Maybe(HashMap[String, EnvRootEntry]());
         ref entries = just(envRoot.entries);
-        addGeneralEnvRootEntries(entries, envRoot.generalImports);
-        addSpecificEnvRootEntries(entries, envRoot.specificImports);
+        resolveGeneralEnvRootEntries(entries, envRoot.generalImports);
+        resolveSpecificEnvRootEntries(entries, envRoot.specificImports);
         return ref entries;
     },
 );
@@ -317,18 +329,16 @@ envRootAddGeneral(envRoot:EnvRoot, module:Module) {
     envRootReset(envRoot);
 }
 
-[V | VariantMember?(Value, V)]
-callbyname overload envRootAddSpecific(envRoot_:EnvRoot, asName_:String, entry_:V) {
-    envRootAddSpecific(envRoot_, asName_, EnvEntry(Value(entry_)));
+[I | VariantMember?(SpecificImport, I)]
+envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:I) {
+    envRootAddSpecific(envRoot, asName, SpecificImport(entry));
 }
-callbyname envRootAddSpecific(envRoot_:EnvRoot, asName_:String, entry_:EnvEntry) {
-    ref envRoot = envRoot_;
-    ref asName = asName_;
+overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport) {
     var specImport = lookup(envRoot.specificImports, asName);
     if (null?(specImport))
-        envRoot.specificImports[asName] = entry_; // evaluate entry_ lazily 
+        envRoot.specificImports[asName] = entry;
     else
-        genericError("conflicting imports for identifier ", asName);
+        genericError("import of ", entry, " as ", asName, " conflicts with import of ", specImport^, " as ", asName);
 
     envRootReset(envRoot);
 }
@@ -498,8 +508,8 @@ overload addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], nam
 private addRootModuleValue(envRoot, moduleName) {
     var moduleRefEntry = lookup(envRoot.specificImports, moduleName.path[0]);
     if (null?(moduleRefEntry)) {
+        envRootAddSpecific(envRoot, moduleName.path[0], ModuleValue());
         moduleRefEntry = &envRoot.specificImports[moduleName.path[0]];
-        moduleRefEntry^ = EnvEntry(Value(ModuleValue()));
     } else if (not nestedVariantIs?(moduleRefEntry^, ModuleValue)) {
         genericError(
             "qualified import of module ", moduleName,

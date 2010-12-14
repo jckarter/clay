@@ -30,7 +30,7 @@ private addImportItem(module, envRoot, importItem) {
         ast.SpecificImportSpecs, specSpecs ref=> {
             for (spec in specSpecs) {
                 var asName = just(spec.asName, spec.name).str;
-                envRootAddSpecific(envRoot, asName, envLookup(importedModule.globals, spec.name));
+                envRootAddSpecific(envRoot, asName, EnvImport(importedModule, spec.name.str));
             }
         },
         ast.QualifiedImportSpec, qualSpec ref=> {
