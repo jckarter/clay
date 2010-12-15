@@ -147,6 +147,24 @@ symbolAttributes(x:Symbol) {
     );
 }
 
+
+//
+// modules
+//
+
+moduleValueLookup(moduleValue:ModuleValue, memberValue:StringValue) {
+    var submoduleValue = lookup(moduleValue.submodules, memberValue.value);
+    if (null?(submoduleValue)) {
+        return maybe(moduleValue.module,
+            module ref=> envEntryToValue(envLookup(module.globals, memberValue.value)),
+            ()     ref=> throwButPropagate(Value,
+                GenericError(String("qualified reference to non-imported module"))
+            ),
+        );
+    }
+    else
+        return Value(submoduleValue^);
+}
 
 
 //
@@ -992,6 +1010,13 @@ private oneSymbol(args) {
     return variantAs(a, Symbol);
 }
 
+private moduleString(args) {
+    var moduleValue, stringValue = ...twoValues(args);
+    if (not variantIs?(moduleValue, ModuleValue) or not variantIs?(stringValue, StringValue))
+        genericError("expecting a module and an identifier string");
+    return variantAs(moduleValue, ModuleValue), variantAs(stringValue, StringValue);
+}
+
 evaluatePrimitive(kind, args) {
     switch (kind) {
     case PRIM_StaticInt? : {
@@ -1105,6 +1130,10 @@ evaluatePrimitive(kind, args) {
     case PRIM_StaticSymbolAttributes : {
         var a = oneSymbol(args);
         return ValueList(symbolAttributes(a));
+    }
+    case PRIM_StaticModuleMember : {
+        var module, member = ...moduleString(args);
+        return ValueList(moduleValueLookup(module, member));
     }
 
     default : {
