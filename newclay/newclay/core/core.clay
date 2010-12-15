@@ -343,15 +343,20 @@ overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport
     envRootReset(envRoot);
 }
 
-private procedure _maybeEnvLookup;
+private procedure _ifEnvLookup;
 
-overload _maybeEnvLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn) {
+overload _ifEnvLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn) {
     if (just?(fromEnv) and env == just(fromEnv))
         return forward notFoundFn();
 
     var ptr = lookup(env.entries, name);
-    if (null?(ptr))
-        return forward _maybeEnvLookup(Maybe(just(fromEnv, env)), env.parent, name, foundFn, notFoundFn);
+    if (null?(ptr)) {
+        var newFromEnv = maybe(fromEnv,
+            env ref=> fromEnv,
+            ()  ref=> if (variantIs?(env.parent, EnvRoot)) Maybe(env) else nothing(Env)
+        );
+        return forward _ifEnvLookup(newFromEnv, env.parent, name, foundFn, notFoundFn);
+    }
     return forward foundFn(ptr^);
 }
 
@@ -372,7 +377,7 @@ overload envRootEntryLookup(fromEnv:Maybe[Env], entry:AmbiguousEntry, foundFn:F,
 overload envRootEntryLookup(fromEnv:Maybe[Env], entry:AmbiguousEntry, foundFn:F, notFoundFn)
     = ref throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), entry);
 
-overload _maybeEnvLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
+overload _ifEnvLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
     ref entries = envRootEntries(envRoot);
     var ptr = lookup(entries, name);
     if (null?(ptr))
@@ -381,23 +386,23 @@ overload _maybeEnvLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, found
         return forward envRootEntryLookup(fromEnv, *ptr^, foundFn, notFoundFn);
 }
 
-overload _maybeEnvLookup(fromEnv:Maybe[Env], envParent:EnvParent, name:String, foundFn, notFoundFn)
-    = forward _maybeEnvLookup(fromEnv, *envParent, name, foundFn, notFoundFn);
+overload _ifEnvLookup(fromEnv:Maybe[Env], envParent:EnvParent, name:String, foundFn, notFoundFn)
+    = forward _ifEnvLookup(fromEnv, *envParent, name, foundFn, notFoundFn);
 
-maybeEnvLookup(env, name:String, foundFn, notFoundFn)
-    = forward _maybeEnvLookup(nothing(Env), env, name, foundFn, notFoundFn);
+ifEnvLookup(env, name:String, foundFn, notFoundFn)
+    = forward _ifEnvLookup(nothing(Env), env, name, foundFn, notFoundFn);
 
-overload maybeEnvLookup(env:Env, name:ast.Identifier, foundFn, notFoundFn)
-    = forward maybeEnvLookup(env, name.str, foundFn, notFoundFn);
-overload maybeEnvLookup(env:Env, name:StringConstant, foundFn, notFoundFn)
-    = forward maybeEnvLookup(env, String(name), foundFn, notFoundFn);
+overload ifEnvLookup(env:Env, name:ast.Identifier, foundFn, notFoundFn)
+    = forward ifEnvLookup(env, name.str, foundFn, notFoundFn);
+overload ifEnvLookup(env:Env, name:StringConstant, foundFn, notFoundFn)
+    = forward ifEnvLookup(env, String(name), foundFn, notFoundFn);
 
-envLookup(env, name) = ref maybeEnvLookup(env, name,
+envLookup(env, name) = ref ifEnvLookup(env, name,
     entry ref=> ref entry,
     () ref=> ref throwButPropagate(EnvEntry, GenericError(printString("name not found: ", name))),
 );
 
-envLookup?(env, name) = maybeEnvLookup(env, name, entry => true, () => false);
+envLookup?(env, name) = ifEnvLookup(env, name, entry => true, () => false);
 
 
 //
@@ -592,8 +597,8 @@ overload printTo(stream, x:Symbol) {
 }
 overload printTo(stream, x:ModuleValue) {
     maybe(x.module,
-        module => { printTo(stream, "module ", module.name); },
-        ()     => { printTo(stream, "<incomplete module name>"); },
+        module ref=> { printTo(stream, "module ", module.name); },
+        ()     ref=> { printTo(stream, "<incomplete module name>"); },
     );
 }
 overload printTo(stream, x:Primitive) {
