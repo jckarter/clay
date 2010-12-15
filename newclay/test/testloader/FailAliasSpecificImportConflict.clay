@@ -1,0 +1,4 @@
+import filemodule.(FileModuleEntry as foo);
+import dirmodule as foo;
+
+symbol Main = ();

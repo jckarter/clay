@@ -53,9 +53,11 @@ private var punctuations = [
     "=",
     "'",
     ";", ",",
+    "*", ".",
 ];
 
 private var keywords = [
+    "import", "as",
     "symbol", "attribute",
     "overload", "static",
     "const", "ref", "rvalue", "forward",

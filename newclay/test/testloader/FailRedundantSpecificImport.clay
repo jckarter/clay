@@ -1,0 +1,3 @@
+import filemodule.(FileModuleEntry as fme, FileModuleEntry as fme);
+
+symbol Main = ();

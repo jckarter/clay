@@ -1,0 +1,5 @@
+import __primitives__.*;
+import factorial;
+
+symbol Main = ();
+static overload Main() = StaticModuleMember(factorial, "Factorial")(8);

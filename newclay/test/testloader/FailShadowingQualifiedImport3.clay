@@ -1,0 +1,4 @@
+import conflict.diamonds;
+import conflict.diamonds.mine;
+
+symbol Main = ();

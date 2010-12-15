@@ -1,43 +1,72 @@
 
+import io.paths.*;
 import maybe.*;
+import variants.nested.*;
 import newclay.common.*;
 import newclay.lexer.*;
 import newclay.ast as ast;
 import newclay.parser.*;
 import newclay.core.*;
 
-private primitivesEnv() {
-    var env = newEnv();
+private loadPrimitivesModule(program:Program) {
+    var module = Module(program, primitivesModuleName);
+    module.globals = newEnv();
     for (i in range(EnumMemberCount(PrimitiveKind))) {
         var kind = PrimitiveKind(i);
         var name = ast.Identifier(primitiveName(kind));
         var entry = Primitive(kind);
-        envAdd(env, name, Value(entry));
+        envAdd(module.globals, name, Value(entry));
     }
-    return env;
+    return module;
+}
+
+private addImportItem(module, envRoot, importItem) {
+    var moduleName = ModuleName(importItem.name);
+    var importedModule = programModule(module.program, moduleName);
+    match(importItem.spec,
+        ast.GeneralImportSpec,   genSpec ref=> {
+            envRootAddGeneral(envRoot, importedModule);
+        },
+        ast.SpecificImportSpecs, specSpecs ref=> {
+            for (spec in specSpecs) {
+                var asName = just(spec.asName, spec.name).str;
+                envRootAddSpecific(envRoot, asName, EnvImport(importedModule, spec.name.str));
+            }
+        },
+        ast.QualifiedImportSpec, qualSpec ref=> {
+            addQualifiedModuleValue(envRoot, importedModule, moduleName);
+        },
+        ast.AliasedImportSpec, aliasSpec ref=> {
+            envRootAddSpecific(envRoot, aliasSpec.asName.str, ModuleValue(importedModule));
+        },
+    );
+}
+
+private addSymbolItem(module, env, symbolItem) {
+    var head = SymbolHead(symbolItem, module);
+    if (symbolHeadHasParams?(head)) {
+        envAdd(env, symbolItem.name, Value(head));
+    }
+    else {
+        var sym = Symbol(head, ValueList(), env);
+        head.symbols[ValueList()] = sym;
+        envAdd(env, symbolItem.name, Value(sym));
+    }
 }
 
 private initializeGlobals(module) {
-    var env = newEnv(primitivesEnv());
+    var env = newEnv();
+    ref envRoot = variantAs(env.parent, EnvRoot);
+
     for (item in module.ast.topLevelItems) {
         match(item,
-            ast.Symbol, x => {
-                var head = SymbolHead(x, module);
-                if (symbolHeadHasParams?(head)) {
-                    envAdd(env, x.name, Value(head));
-                }
-                else {
-                    var sym = Symbol(head, ValueList(), env);
-                    head.symbols[ValueList()] = sym;
-                    envAdd(env, x.name, Value(sym));
-                }
+            ast.Import, importItem ref=> {
+                addImportItem(module, envRoot, importItem);
             },
-            ast.Attribute, x => {
+            ast.Symbol, symbolItem ref=> {
+                addSymbolItem(module, env, symbolItem);
             },
-            ast.StaticOverload, x => {
-            },
-            ast.Overload, x => {
-            }
+            MatchDefault, x => { },
         );
     }
     module.globals = env;
@@ -46,7 +75,6 @@ private initializeGlobals(module) {
 private initializeAttributesAndOverloads(module) {
     for (item in module.ast.topLevelItems) {
         match(item,
-            ast.Symbol, x => {},
             ast.Attribute, x => {
                 var y = Attribute(x, module);
                 push(module.program.allAttributes, y);
@@ -59,20 +87,68 @@ private initializeAttributesAndOverloads(module) {
                 var y = Overload(x, module);
                 push(module.program.allOverloads, y);
             },
+            MatchDefault, x => { },
         );
     }
 }
 
-private loadModule(program, path) {
-    var module = Module(program, String("__main__"));
-    module.ast = parse(tokenize(readSource(path)));
+private initializeModule(module) {
     initializeGlobals(module);
     initializeAttributesAndOverloads(module);
+}
+
+private moduleSourcePath(root, name) = joinPath(root, joinPath(name.path));
+
+private findModuleSource(searchPath, name) {
+    var path = String();
+    var basename = name.path[size(name.path) - 1];
+    for (root in searchPath) {
+        path = moduleSourcePath(root, name);
+        for (tryName in [
+            path + ".clay",
+            joinPath(path, basename + ".clay"),
+        ])
+            if (pathExists?(tryName))
+                return move(tryName);
+    }
+
+    throw GenericError(printString(
+        "could not find source file for module ", moduleNameString(name)
+    ));
+}
+
+private loadModule(program, name) {
+    ref module = program.modules[name];
+    module = Module(program, name);
+    module.ast = parse(tokenize(readSource(findModuleSource(program.moduleSearchPath, name))));
+    initializeModule(module);
+}
+
+programModule(program:Program, name:ModuleName) {
+    var ptr = lookup(program.modules, name);
+    if (null?(ptr)) {
+        loadModule(program, name);
+        return ref program.modules[name];
+    } else
+        return ref ptr^;
+}
+
+private loadMainModule(program, mainFilename) {
+    var module = Module(program, mainModuleName);
+    module.ast = parse(tokenize(readSource(mainFilename)));
+    initializeModule(module);
     return module;
 }
 
-loadProgram(path) {
+loadProgram(mainFilename:String, searchPath:Vector[String]) {
     var program = Program();
-    mainModule(program) = loadModule(program, path);
+    program.moduleSearchPath = searchPath;
+    primitivesModule(program) = loadPrimitivesModule(program);
+    mainModule(program) = loadMainModule(program, mainFilename);
     return program;
+}
+
+overload loadProgram(mainFilename) {
+    var mainFilenameStr = String(mainFilename);
+    return loadProgram(mainFilenameStr, Vector[String](pathDirname(mainFilenameStr)));
 }
