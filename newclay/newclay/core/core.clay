@@ -284,7 +284,7 @@ private resolveSpecificEnvRootEntries(entries, specificImports) {
         entries[entryName] = EnvRootEntry(*entry);
 }
 
-envRootEntries(envRoot: EnvRoot) = maybe(envRoot.entries,
+envRootEntries(envRoot: EnvRoot) = ref maybe(envRoot.entries,
     entries ref=> ref entries,
     () ref=> {
         envRoot.entries = Maybe(HashMap[String, EnvRootEntry]());
@@ -473,6 +473,11 @@ record ModuleValue (
     module: Maybe[Module],
     submodules: HashMap[String, ModuleValue],
 );
+
+breakpoint() __llvm__{
+    call void asm sideeffect "int $$3", ""()
+    ret i32 0
+}
 
 overload equals?(m1: ModuleValue, m2: ModuleValue)
     = m1.module == m2.module;
