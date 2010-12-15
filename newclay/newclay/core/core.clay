@@ -200,6 +200,8 @@ enum PrimitiveKind {
     PRIM_StaticSymbol?,
     PRIM_StaticSymbolBody,
     PRIM_StaticSymbolAttributes,
+
+    PRIM_StaticModuleMember,
 }
 
 record Primitive = referenceType(
@@ -360,8 +362,7 @@ overload _ifEnvLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoun
     return forward foundFn(ptr^);
 }
 
-// HACK around type propagation bug in dynamic dispatch
-[T] private throwButPropagate(static T, ex) {
+[T] throwButPropagate(static T, ex) {
     if (true)
         throw ex;
     else
