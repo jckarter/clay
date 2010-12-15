@@ -157,13 +157,12 @@ moduleValueLookup(moduleValue:ModuleValue, memberValue:StringValue) {
     if (null?(submoduleValue)) {
         return maybe(moduleValue.module,
             module ref=> envEntryToValue(envLookup(module.globals, memberValue.value)),
-            ()     ref=> throwButPropagate(Value,
-                GenericError(String("qualified reference to non-imported module"))
+            ()     ref=> throwButPropagate(Value, GenericError(String("qualified reference to non-imported module"))
             ),
         );
-    }
-    else
+    } else {
         return Value(submoduleValue^);
+    }
 }
 
 
@@ -271,6 +270,7 @@ overload evaluateExpr(x:ast.IfExpr, env) {
 procedure envEntryToValue;
 
 overload envEntryToValue(x:EnvEntry) {
+    observe(&x);
     return envEntryToValue(*x);
 }
 overload envEntryToValue(x:Value) {
@@ -1012,8 +1012,9 @@ private oneSymbol(args) {
 
 private moduleString(args) {
     var moduleValue, stringValue = ...twoValues(args);
-    if (not variantIs?(moduleValue, ModuleValue) or not variantIs?(stringValue, StringValue))
+    if (not variantIs?(moduleValue, ModuleValue) or not variantIs?(stringValue, StringValue)) {
         genericError("expecting a module and an identifier string");
+    }
     return variantAs(moduleValue, ModuleValue), variantAs(stringValue, StringValue);
 }
 
