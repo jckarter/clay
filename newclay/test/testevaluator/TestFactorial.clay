@@ -1,3 +1,4 @@
+import __primitives__.*;
 
 symbol Factorial = ();
 static overload Factorial('n) = StaticMultiply('n, Factorial(StaticSubtract('n, 1)));
