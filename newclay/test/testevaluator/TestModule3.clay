@@ -1,0 +1,5 @@
+import __primitives__.*;
+import factorial.(Factorial as Fac);
+
+symbol Main = ();
+static overload Main() = Fac(8);
