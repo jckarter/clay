@@ -1,0 +1,3 @@
+import circularspecific1.*;
+
+symbol Main = ();

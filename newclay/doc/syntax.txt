@@ -4,6 +4,12 @@
 // top level
 //
 
+Import -> "import" ModuleName ImportSpec? ";"
+ImportSpec -> "as" Identifier
+            | "." "*"
+            | "." "(" comma_list(SpecificImportSpec) ")"
+SpecificImportSpec -> Identifier ("as" Identifier)?
+
 GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
 SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
