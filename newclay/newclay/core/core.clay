@@ -266,7 +266,7 @@ overload EnvRootEntry(imp: EnvImport) {
 
 overload EnvRootEntry(mv: ModuleValue) = EnvRootEntry(EnvEntry(Value(mv)));
 
-record EnvRoot (
+record EnvRoot = referenceType(
     generalImports: HashMap[ModuleName, Module],
     specificImports: HashMap[String, SpecificImport],
     entries: Maybe[HashMap[String, EnvRootEntry]],
@@ -328,9 +328,10 @@ record Env = referenceType(
 overload Env(parent:EnvParent) =
     Env(parent, HashMap[String, EnvEntry]());
 
+newEnv(parent:EnvParent) = Env(parent);
 [E | VariantMember?(EnvParent, E)]
-newEnv(parent:E) = Env(EnvParent(parent));
-overload newEnv() = Env(EnvParent(EnvRoot()));
+overload newEnv(parent:E) = Env(EnvParent(parent));
+overload newEnv() = Env(EnvParent(allocateRef(EnvRoot)));
 
 
 
@@ -338,13 +339,13 @@ overload newEnv() = Env(EnvParent(EnvRoot()));
 // envRoot, envAdd, publicLookup, privateLookup
 //
 
-envRoot(env:EnvRoot) ByRef[EnvRoot] = ref env;
-overload envRoot(env:Env) ByRef[EnvRoot] = ref envRoot(*env.parent);
-overload envRoot(env:Module) ByRef[EnvRoot] {
+envRoot(env:EnvRoot) EnvRoot = env;
+overload envRoot(env:Env) EnvRoot = envRoot(*env.parent);
+overload envRoot(env:Module) EnvRoot {
     assert(false);
-    return ref envRoot(env.privateEnv);
+    return envRoot(env.privateEnv);
 }
-overload envRoot(env:EnvParent) ByRef[EnvRoot] = ref envRoot(*env);
+overload envRoot(env:EnvParent) EnvRoot = envRoot(*env);
 
 envAdd(env, name, forward entry) {
     if (contains?(env.entries, name.str))
@@ -378,9 +379,7 @@ overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport
     envRootReset(envRoot);
 }
 
-private procedure _ifPublicLookup;
-
-overload _ifPublicLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn) {
+private _ifEnvLookup(_ifParentLookup, fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn) {
     if (just?(fromEnv) and env == just(fromEnv))
         return forward notFoundFn();
 
@@ -390,10 +389,15 @@ overload _ifPublicLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notF
             env ref=> fromEnv,
             ()  ref=> if (variantIs?(env.parent, EnvRoot)) Maybe(env) else nothing(Env)
         );
-        return forward _ifPublicLookup(newFromEnv, env.parent, name, foundFn, notFoundFn);
+        return forward _ifParentLookup(newFromEnv, env.parent, name, foundFn, notFoundFn);
     }
     return forward foundFn(ptr^);
 }
+
+private procedure _ifPublicLookup;
+
+overload _ifPublicLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn)
+    = forward _ifEnvLookup(_ifPublicLookup, fromEnv, env, name, foundFn, notFoundFn);
 
 [T] throwButPropagate(static T, ex) {
     if (true)
@@ -426,15 +430,6 @@ overload _ifPublicLookup(fromEnv:Maybe[Env], module:Module, name:String, foundFn
 overload _ifPublicLookup(fromEnv:Maybe[Env], envParent:EnvParent, name:String, foundFn, notFoundFn)
     = forward _ifPublicLookup(fromEnv, *envParent, name, foundFn, notFoundFn);
 
-private _ifPrivateLookup(fromEnv, env, name, foundFn, notFoundFn)
-    = forward _ifPublicLookup(fromEnv, env, name, foundFn, notFoundFn);
-
-overload _ifPrivateLookup(fromEnv, module:Module, name, foundFn, notFoundFn)
-    = forward _ifPublicLookup(fromEnv, module.privateEnv, name,
-        foundFn,
-        () => forward _ifPublicLookup(fromEnv, module.publicEnv, name, foundFn, notFoundFn),
-    );
-
 ifPublicLookup(env, name:String, foundFn, notFoundFn)
     = forward _ifPublicLookup(nothing(Env), env, name, foundFn, notFoundFn);
 
@@ -450,6 +445,21 @@ publicLookup(env, name) = ref ifPublicLookup(env, name,
 
 publicLookup?(env, name) = ifPublicLookup(env, name, entry => true, () => false);
 
+private _ifPrivateLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn)
+    = forward _ifEnvLookup(_ifPrivateLookup, fromEnv, env, name, foundFn, notFoundFn);
+
+overload _ifPrivateLookup(fromEnv, env:EnvRoot, name, foundFn, notFoundFn)
+    = forward _ifPublicLookup(fromEnv, env, name, foundFn, notFoundFn);
+
+overload _ifPrivateLookup(fromEnv, module:Module, name, foundFn, notFoundFn)
+    = forward _ifPublicLookup(fromEnv, module.privateEnv, name,
+        foundFn,
+        () => forward _ifPublicLookup(fromEnv, module.publicEnv, name, foundFn, notFoundFn),
+    );
+
+overload _ifPrivateLookup(fromEnv, env:EnvParent, name, foundFn, notFoundFn)
+    = forward _ifPrivateLookup(fromEnv, *env, name, foundFn, notFoundFn);
+
 ifPrivateLookup(env, name:String, foundFn, notFoundFn)
     = forward _ifPrivateLookup(nothing(Env), env, name, foundFn, notFoundFn);
 
@@ -463,10 +473,7 @@ privateLookup(env, name) = ref ifPrivateLookup(env, name,
     () ref=> ref throwButPropagate(EnvEntry, GenericError(printString("name not found: ", name))),
 );
 
-privateLookup?(module:Module, name) = ifPrivateLookup(module.privateEnv, name,
-    entry ref=> true,
-    ()    ref=> false,
-);
+privateLookup?(env, name) = ifPrivateLookup(env, name, entry => true, () => false);
 
 
 //
@@ -525,7 +532,10 @@ record BoolValue(value: Bool);
 record IntValue(value: Int);
 record StringValue(value: String);
 record TupleValue(elements: ValueList);
-record LambdaValue(value: ast.LambdaExpr, env: Env);
+record LambdaValue(value: ast.LambdaExpr, env: EnvParent);
+
+[E | VariantMember?(EnvParent, E)]
+overload LambdaValue(value: ast.LambdaExpr, env: E) = LambdaValue(value, EnvParent(env));
 
 
 //
