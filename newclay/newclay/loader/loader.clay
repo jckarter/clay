@@ -51,7 +51,7 @@ private addSymbolItem(module, env, symbolItem) {
     var name = symbolItem.name;
     if (not null?(lookup(module.publicEnv.entries, name.str))
         or not null?(lookup(module.privateEnv.entries, name.str)))
-        genericError("redefinition of symbol ", symbolItem);
+        genericError("symbol redefinition: ", name.str);
 
     var head = SymbolHead(symbolItem, module);
 

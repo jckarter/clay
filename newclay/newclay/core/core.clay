@@ -298,9 +298,11 @@ private resolveGeneralEnvRootEntries(entries, generalImports) {
 
     for (name, module in items(generalImports)) {
         ref rootEntries = envRootEntries(envRoot(module.publicEnv));
-        for (entryName, entry in items(rootEntries))
-            if (null?(lookup(entries, entryName)))
+        for (entryName, entry in items(rootEntries)) {
+            if (null?(lookup(entries, entryName))) {
                 entries[entryName] = entry;
+            }
+        }
     }
 }
 
@@ -433,17 +435,17 @@ overload _ifPublicLookup(fromEnv:Maybe[Env], envParent:EnvParent, name:String, f
 ifPublicLookup(env, name:String, foundFn, notFoundFn)
     = forward _ifPublicLookup(nothing(Env), env, name, foundFn, notFoundFn);
 
-overload ifPublicLookup(env, name:ast.Identifier, foundFn, notFoundFn)
-    = forward ifPublicLookup(env, name.str, foundFn, notFoundFn);
-overload ifPublicLookup(env, name:StringConstant, foundFn, notFoundFn)
-    = forward ifPublicLookup(env, String(name), foundFn, notFoundFn);
-
 publicLookup(env, name) = ref ifPublicLookup(env, name,
     entry ref=> ref entry,
     () ref=> ref throwButPropagate(EnvEntry, GenericError(printString("name not found: ", name))),
 );
+overload publicLookup(env, name:ast.Identifier)
+    = forward publicLookup(env, name.str);
+overload publicLookup(env, name:StringConstant)
+    = forward publicLookup(env, String(name));
 
 publicLookup?(env, name) = ifPublicLookup(env, name, entry => true, () => false);
+
 
 private _ifPrivateLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn)
     = forward _ifEnvLookup(_ifPrivateLookup, fromEnv, env, name, foundFn, notFoundFn);
@@ -463,15 +465,14 @@ overload _ifPrivateLookup(fromEnv, env:EnvParent, name, foundFn, notFoundFn)
 ifPrivateLookup(env, name:String, foundFn, notFoundFn)
     = forward _ifPrivateLookup(nothing(Env), env, name, foundFn, notFoundFn);
 
-overload ifPrivateLookup(env, name:ast.Identifier, foundFn, notFoundFn)
-    = forward ifPrivateLookup(env, name.str, foundFn, notFoundFn);
-overload ifPrivateLookup(env, name:StringConstant, foundFn, notFoundFn)
-    = forward ifPrivateLookup(env, String(name), foundFn, notFoundFn);
-
 privateLookup(env, name) = ref ifPrivateLookup(env, name,
     entry ref=> ref entry,
     () ref=> ref throwButPropagate(EnvEntry, GenericError(printString("name not found: ", name))),
 );
+overload privateLookup(env, name:ast.Identifier)
+    = forward privateLookup(env, name.str);
+overload privateLookup(env, name:StringConstant)
+    = forward privateLookup(env, String(name));
 
 privateLookup?(env, name) = ifPrivateLookup(env, name, entry => true, () => false);
 
