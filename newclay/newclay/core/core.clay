@@ -83,11 +83,12 @@ record Module = referenceType(
     program: Program,
     name: ModuleName,
     ast: ast.SourceAST,
-    globals: Env,
+    publicEnv: Env,
+    privateEnv: Env,
 );
 
 overload Module(program:Program, name:ModuleName) =
-    Module(program, name, ast.SourceAST(), Env());
+    Module(program, name, ast.SourceAST(), Env(), Env());
 
 overload printTo(stream, mod:Module) {
     printTo(stream, "module ", moduleNameString(mod.name));
@@ -233,15 +234,17 @@ variant EnvEntry = Value
  
 overload EnvEntry() = EnvEntry(Value());
 
-variant EnvParent = EnvRoot | Env;
+variant EnvParent = EnvRoot | Env | Module;
 
 record AmbiguousEntry (modules: Vector[Tuple[Module, EnvEntry]]);
 
 variant EnvRootEntry = EnvEntry | AmbiguousEntry;
 overload EnvRootEntry() = EnvRootEntry(AmbiguousEntry());
 
-record EnvImport(module: Module, name: String);
+record EnvImport(visibility: ast.VisibilityKind, module: Module, name: String);
 overload printTo(stream, imp:EnvImport) {
+    if (imp.visibility == ast.VIS_PRIVATE)
+        printTo(stream, "private definition ");
     printTo(stream, imp.name, " from module ", imp.module.name);
 }
 
@@ -249,7 +252,18 @@ variant SpecificImport = EnvImport
                        | ModuleValue;
 overload SpecificImport() = SpecificImport(EnvImport());
 
-overload EnvRootEntry(imp: EnvImport) = EnvRootEntry(envLookup(imp.module.globals, imp.name));
+overload EnvRootEntry(imp: EnvImport) {
+    switch (imp.visibility) {
+    case ast.VIS_PRIVATE:
+        return EnvRootEntry(privateLookup(imp.module, imp.name));
+    case ast.VIS_PUBLIC:
+        return EnvRootEntry(publicLookup(imp.module, imp.name));
+    default:
+        genericError("invalid visibility");
+        return EnvRootEntry();
+    }
+}
+
 overload EnvRootEntry(mv: ModuleValue) = EnvRootEntry(EnvEntry(Value(mv)));
 
 record EnvRoot (
@@ -273,12 +287,21 @@ private resolveGeneralEnvRootEntry(entries, entryName, entryList) {
 
 private resolveGeneralEnvRootEntries(entries, generalImports) {
     var generalEntries = HashMap[String, Vector[Tuple[Module, EnvEntry]]]();
-    for (name, module in items(generalImports))
-        for (entryName, entry in items(module.globals.entries))
+
+    for (name, module in items(generalImports)) {
+        for (entryName, entry in items(module.publicEnv.entries))
             push(generalEntries[entryName], (module, entry));
+    }
 
     for (entryName, entryList in items(generalEntries))
         resolveGeneralEnvRootEntry(entries, entryName, entryList);
+
+    for (name, module in items(generalImports)) {
+        ref rootEntries = envRootEntries(envRoot(module.publicEnv));
+        for (entryName, entry in items(rootEntries))
+            if (null?(lookup(entries, entryName)))
+                entries[entryName] = entry;
+    }
 }
 
 private resolveSpecificEnvRootEntries(entries, specificImports) {
@@ -305,15 +328,23 @@ record Env = referenceType(
 overload Env(parent:EnvParent) =
     Env(parent, HashMap[String, EnvEntry]());
 
-newEnv(parent:Env) = Env(EnvParent(parent));
-overload newEnv(root: EnvRoot) = Env(EnvParent(root));
+[E | VariantMember?(EnvParent, E)]
+newEnv(parent:E) = Env(EnvParent(parent));
 overload newEnv() = Env(EnvParent(EnvRoot()));
 
 
 
 //
-// envAdd, envLookup
+// envRoot, envAdd, publicLookup, privateLookup
 //
+
+envRoot(env:EnvRoot) ByRef[EnvRoot] = ref env;
+overload envRoot(env:Env) ByRef[EnvRoot] = ref envRoot(*env.parent);
+overload envRoot(env:Module) ByRef[EnvRoot] {
+    assert(false);
+    return ref envRoot(env.privateEnv);
+}
+overload envRoot(env:EnvParent) ByRef[EnvRoot] = ref envRoot(*env);
 
 envAdd(env, name, forward entry) {
     if (contains?(env.entries, name.str))
@@ -347,9 +378,9 @@ overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport
     envRootReset(envRoot);
 }
 
-private procedure _ifEnvLookup;
+private procedure _ifPublicLookup;
 
-overload _ifEnvLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn) {
+overload _ifPublicLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn) {
     if (just?(fromEnv) and env == just(fromEnv))
         return forward notFoundFn();
 
@@ -359,7 +390,7 @@ overload _ifEnvLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoun
             env ref=> fromEnv,
             ()  ref=> if (variantIs?(env.parent, EnvRoot)) Maybe(env) else nothing(Env)
         );
-        return forward _ifEnvLookup(newFromEnv, env.parent, name, foundFn, notFoundFn);
+        return forward _ifPublicLookup(newFromEnv, env.parent, name, foundFn, notFoundFn);
     }
     return forward foundFn(ptr^);
 }
@@ -380,7 +411,7 @@ overload envRootEntryLookup(fromEnv:Maybe[Env], name:String, entry:AmbiguousEntr
 overload envRootEntryLookup(fromEnv:Maybe[Env], name:String, entry:AmbiguousEntry, foundFn:F, notFoundFn)
     = ref throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), AmbiguousEntryError(name, entry));
 
-overload _ifEnvLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
+overload _ifPublicLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
     ref entries = envRootEntries(envRoot);
     var ptr = lookup(entries, name);
     if (null?(ptr))
@@ -389,23 +420,53 @@ overload _ifEnvLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, foundFn,
         return forward envRootEntryLookup(fromEnv, name, *ptr^, foundFn, notFoundFn);
 }
 
-overload _ifEnvLookup(fromEnv:Maybe[Env], envParent:EnvParent, name:String, foundFn, notFoundFn)
-    = forward _ifEnvLookup(fromEnv, *envParent, name, foundFn, notFoundFn);
+overload _ifPublicLookup(fromEnv:Maybe[Env], module:Module, name:String, foundFn, notFoundFn)
+    = forward _ifPublicLookup(fromEnv, module.publicEnv, name, foundFn, notFoundFn);
 
-ifEnvLookup(env, name:String, foundFn, notFoundFn)
-    = forward _ifEnvLookup(nothing(Env), env, name, foundFn, notFoundFn);
+overload _ifPublicLookup(fromEnv:Maybe[Env], envParent:EnvParent, name:String, foundFn, notFoundFn)
+    = forward _ifPublicLookup(fromEnv, *envParent, name, foundFn, notFoundFn);
 
-overload ifEnvLookup(env:Env, name:ast.Identifier, foundFn, notFoundFn)
-    = forward ifEnvLookup(env, name.str, foundFn, notFoundFn);
-overload ifEnvLookup(env:Env, name:StringConstant, foundFn, notFoundFn)
-    = forward ifEnvLookup(env, String(name), foundFn, notFoundFn);
+private _ifPrivateLookup(fromEnv, env, name, foundFn, notFoundFn)
+    = forward _ifPublicLookup(fromEnv, env, name, foundFn, notFoundFn);
 
-envLookup(env, name) = ref ifEnvLookup(env, name,
+overload _ifPrivateLookup(fromEnv, module:Module, name, foundFn, notFoundFn)
+    = forward _ifPublicLookup(fromEnv, module.privateEnv, name,
+        foundFn,
+        () => forward _ifPublicLookup(fromEnv, module.publicEnv, name, foundFn, notFoundFn),
+    );
+
+ifPublicLookup(env, name:String, foundFn, notFoundFn)
+    = forward _ifPublicLookup(nothing(Env), env, name, foundFn, notFoundFn);
+
+overload ifPublicLookup(env, name:ast.Identifier, foundFn, notFoundFn)
+    = forward ifPublicLookup(env, name.str, foundFn, notFoundFn);
+overload ifPublicLookup(env, name:StringConstant, foundFn, notFoundFn)
+    = forward ifPublicLookup(env, String(name), foundFn, notFoundFn);
+
+publicLookup(env, name) = ref ifPublicLookup(env, name,
     entry ref=> ref entry,
     () ref=> ref throwButPropagate(EnvEntry, GenericError(printString("name not found: ", name))),
 );
 
-envLookup?(env, name) = ifEnvLookup(env, name, entry => true, () => false);
+publicLookup?(env, name) = ifPublicLookup(env, name, entry => true, () => false);
+
+ifPrivateLookup(env, name:String, foundFn, notFoundFn)
+    = forward _ifPrivateLookup(nothing(Env), env, name, foundFn, notFoundFn);
+
+overload ifPrivateLookup(env, name:ast.Identifier, foundFn, notFoundFn)
+    = forward ifPrivateLookup(env, name.str, foundFn, notFoundFn);
+overload ifPrivateLookup(env, name:StringConstant, foundFn, notFoundFn)
+    = forward ifPrivateLookup(env, String(name), foundFn, notFoundFn);
+
+privateLookup(env, name) = ref ifPrivateLookup(env, name,
+    entry ref=> ref entry,
+    () ref=> ref throwButPropagate(EnvEntry, GenericError(printString("name not found: ", name))),
+);
+
+privateLookup?(module:Module, name) = ifPrivateLookup(module.privateEnv, name,
+    entry ref=> true,
+    ()    ref=> false,
+);
 
 
 //
@@ -476,11 +537,6 @@ record ModuleValue (
     submodules: HashMap[String, ModuleValue],
 );
 
-breakpoint() __llvm__{
-    call void asm sideeffect "int $$3", ""()
-    ret i32 0
-}
-
 overload equals?(m1: ModuleValue, m2: ModuleValue)
     = m1.module == m2.module;
 
@@ -500,13 +556,13 @@ qualifiedImportConflictError(path, name) {
 
 private checkQualifiedImportConflicts(moduleValue, module) {
     for (name, m in items(moduleValue.submodules))
-        if (envLookup?(module.globals, name))
+        if (publicLookup?(module, name))
             qualifiedImportConflictError(module.name.path, name);
 }
 
 addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], name:String, module:Maybe[Module]) {
     maybe(moduleRef.module, refModule => {
-        if (envLookup?(refModule.globals, name))
+        if (publicLookup?(refModule, name))
             qualifiedImportConflictError(path, name);
     });
     ref submoduleRef = moduleRef.submodules[name];
