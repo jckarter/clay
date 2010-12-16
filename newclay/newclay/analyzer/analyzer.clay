@@ -12,8 +12,7 @@ import newclay.hooks.*;
 //
 
 analyzeMain() {
-    var env = getProgramMainModule().globals;
-    var mainValue = envEntryToValue(envLookup(env, "main"));
+    var mainValue = envEntryToValue(publicLookup(getProgramMainModule(), "main"));
     if (not runtimeCallable?(mainValue))
         genericError("invalid procedure: main");
     return analyzeCallable(mainValue, RTResultList());
@@ -56,7 +55,7 @@ overload analyzeExpr(x:ast.StringLiteral, env) {
     return RTResult();
 }
 overload analyzeExpr(x:ast.NameRef, env) {
-    return envEntryToRTResult(envLookup(env, x.name));
+    return envEntryToRTResult(privateLookup(env, x.name));
 }
 overload analyzeExpr(x:ast.PatternNameRef, env) {
     return valueToRTResult(derefPattern(env, x.name));
@@ -220,7 +219,7 @@ overload analyzeMultiExpr(x:ast.Expr, env) RTResultList {
     return withLocation(x, () ref=> analyzeMultiExpr(*x, env));
 }
 overload analyzeMultiExpr(x:ast.NameRef, env) {
-    return envEntryToRTResultList(envLookup(env, x.name));
+    return envEntryToRTResultList(privateLookup(env, x.name));
 }
 overload analyzeMultiExpr(x:ast.PatternNameRef, env) {
     return valueListToRTResultList(derefListPattern(env, x.name));
@@ -537,7 +536,7 @@ matchOverload(x:Overload, callable:Value, args:RTResultList) Maybe[Specializatio
         return nothing(Specialization);
     var pvars = topLevelItemPatternVars(x);
     var s = Specialization(x, callable);
-    s.bodyEnv = initializeMatch(x.module.globals, pvars);
+    s.bodyEnv = initializeMatch(x.module, pvars);
     var callablePattern = evaluatePattern(x.ast.target, s.bodyEnv);
     if (not unify(callablePattern, callable))
         return nothing(Specialization);
