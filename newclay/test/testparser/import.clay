@@ -23,3 +23,9 @@ import foo.bar.bas.(
     a as b,
     c as d,
 );
+
+public import foo.*;
+private import foo.*;
+
+import foo.(private a);
+import foo.(private a as b);
