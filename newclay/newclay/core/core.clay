@@ -89,6 +89,9 @@ record Module = referenceType(
 overload Module(program:Program, name:ModuleName) =
     Module(program, name, ast.SourceAST(), Env());
 
+overload printTo(stream, mod:Module) {
+    printTo(stream, "module ", moduleNameString(mod.name));
+}
 
 
 //
@@ -233,7 +236,6 @@ overload EnvEntry() = EnvEntry(Value());
 variant EnvParent = EnvRoot | Env;
 
 record AmbiguousEntry (modules: Vector[Tuple[Module, EnvEntry]]);
-instance Exception = AmbiguousEntry;
 
 variant EnvRootEntry = EnvEntry | AmbiguousEntry;
 overload EnvRootEntry() = EnvRootEntry(AmbiguousEntry());
@@ -369,14 +371,14 @@ overload _ifEnvLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoun
         return ref typeToLValue(T);
 }
 
-private envRootEntryLookup(fromEnv:Maybe[Env], entry:EnvEntry, foundFn, notFoundFn)
+private envRootEntryLookup(fromEnv:Maybe[Env], name:String, entry:EnvEntry, foundFn, notFoundFn)
     = forward foundFn(entry);
 [F | RValue?(typeToRValue(F)(typeToRValue(EnvEntry)))]
-overload envRootEntryLookup(fromEnv:Maybe[Env], entry:AmbiguousEntry, foundFn:F, notFoundFn)
-    = throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), entry);
+overload envRootEntryLookup(fromEnv:Maybe[Env], name:String, entry:AmbiguousEntry, foundFn:F, notFoundFn)
+    = throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), AmbiguousEntryError(name, entry));
 [F | LValue?(typeToRValue(F)(typeToRValue(EnvEntry)))]
-overload envRootEntryLookup(fromEnv:Maybe[Env], entry:AmbiguousEntry, foundFn:F, notFoundFn)
-    = ref throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), entry);
+overload envRootEntryLookup(fromEnv:Maybe[Env], name:String, entry:AmbiguousEntry, foundFn:F, notFoundFn)
+    = ref throwButPropagate(Type(foundFn(typeToRValue(EnvEntry))), AmbiguousEntryError(name, entry));
 
 overload _ifEnvLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
     ref entries = envRootEntries(envRoot);
@@ -384,7 +386,7 @@ overload _ifEnvLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, foundFn,
     if (null?(ptr))
         return forward notFoundFn();
     else
-        return forward envRootEntryLookup(fromEnv, *ptr^, foundFn, notFoundFn);
+        return forward envRootEntryLookup(fromEnv, name, *ptr^, foundFn, notFoundFn);
 }
 
 overload _ifEnvLookup(fromEnv:Maybe[Env], envParent:EnvParent, name:String, foundFn, notFoundFn)
@@ -953,6 +955,22 @@ overload displayError(e:RecursiveAnalysisError) {
     displaySemanticError(e.locationStack, e.compilationStack, msg);
 }
 
+
+record AmbiguousEntryError = semanticError(
+    name: String,
+    entry: AmbiguousEntry,
+);
+
+instance SemanticError = AmbiguousEntryError;
+
+overload displayError(e:AmbiguousEntryError) {
+    var msg = printString(
+        "name ", e.name, " ambiguously imported from multiple modules; use \"import module.(name);\" form to disambiguate"
+    );
+    for (m in e.entry.modules)
+        printTo(msg, "\n  ", m.0.name);
+    displaySemanticError(e.locationStack, e.compilationStack, msg);
+}
 
 
 //
