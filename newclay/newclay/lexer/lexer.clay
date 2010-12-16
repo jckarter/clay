@@ -64,6 +64,7 @@ private var keywords = [
     "true", "false",
     "if", "else",
     "and", "or",
+    "public", "private",
 ];
 
 punctuationIndex(s) Int {

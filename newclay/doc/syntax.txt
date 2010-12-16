@@ -4,13 +4,15 @@
 // top level
 //
 
-Import -> "import" ModuleName ImportSpec? ";"
+Visibility -> "public" | "private"
+
+Import -> Visibility? "import" ModuleName ImportSpec? ";"
 ImportSpec -> "as" Identifier
             | "." "*"
             | "." "(" comma_list(SpecificImportSpec) ")"
-SpecificImportSpec -> Identifier ("as" Identifier)?
+SpecificImportSpec -> Visibility? Identifier ("as" Identifier)?
 
-GlobalSymbol -> "symbol" Identifier SymbolParams? "=" Expr ";"
+GlobalSymbol -> Visibility? "symbol" Identifier SymbolParams? "=" Expr ";"
 SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
 StaticOverload -> "static" "overload" TargetPattern "(" ListPattern? ")"
@@ -97,7 +99,7 @@ Suffix -> IndexingSuffix
         | CallSuffix
 
 IndexingSuffix -> "[" ExprList? "]"
-CallSuffix -> "(" ExprList? "]"
+CallSuffix -> "(" ExprList? ")"
 
 AndExpr -> SuffixExpr ("and" SuffixExpr)*
 
