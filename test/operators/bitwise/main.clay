@@ -1,0 +1,6 @@
+import printer.formatter.*;
+
+main() {
+    println(hex(rotateLeft(0x12345678u, 4)));
+    println(hex(rotateRight(0x12345678u, 4)));
+}
