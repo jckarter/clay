@@ -49,6 +49,7 @@ moduleNameString(name:ModuleName) = join('.', name.path);
 overload printTo(stream, name:ModuleName) { printTo(stream, moduleNameString(name)); }
 mainModule(program:Program) = ref program.modules[mainModuleName];
 primitivesModule(program:Program) = ref program.modules[primitivesModuleName];
+preludeModule(program:Program) = ref program.modules[preludeModuleName];
 
 record ClayHooks (
     TypeTemplate?: Value,
@@ -121,7 +122,7 @@ symbolHeadHasParams?(x:SymbolHead) {
 record Symbol = referenceType(
     head: SymbolHead,
     params: ValueList,
-    env: Env,
+    env: EnvParent,
     body: TriState[Value],
     attributes: TriState[Value],
     type?: TriState[Bool],
@@ -130,14 +131,17 @@ record Symbol = referenceType(
     lowLevelType: Maybe[ir.Type],
 );
 
-overload Symbol(head:SymbolHead, params:ValueList, env:Env) =
-    Symbol(
+overload Symbol(head:SymbolHead, params:ValueList, env:EnvParent)
+    = Symbol(
         head, params, env,
         TriState[Value](), TriState[Value](),
         TriState[Bool](), TriState[Bool](),
         InvokeTable(),
         nothing(ir.Type),
     );
+[E | VariantMember?(EnvParent, E)]
+overload Symbol(head:SymbolHead, params:ValueList, env:E)
+    = Symbol(head, params, EnvParent(env));
 
 record PatternVars = referenceType(
     vars: Vector[ast.Identifier],

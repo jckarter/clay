@@ -1,0 +1,6 @@
+symbol factorial = NewProcedure();
+overload factorial(n:Int)
+    = if (lesser?(n, 2))
+        1
+    else
+        multiply(n, factorial(subtract(n, 1)));
