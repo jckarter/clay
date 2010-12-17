@@ -914,7 +914,7 @@ evaluateAttributes(target) {
 evaluateStaticCall(program, callable, args) {
     for (x in reversed(program.allStaticOverloads)) {
         var result = matchStaticOverload(x, callable, args);
-        if (not nothing?(result))
+        if (just?(result))
             return evaluateExprList(x.ast.body, just(result));
     }
     genericError("no matching operation");
