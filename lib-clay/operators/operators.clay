@@ -343,10 +343,10 @@ inline bitwiseBlend(mask, ones, zeros)
 //
 
 [I, J | Integer?(I) and Integer?(J)]
-rotateLeft(x:I, n:J) = bitwiseOr(shiftLeft(x, n), shiftRight(x, TypeSize(J)*8 - n));
+rotateLeft(x:I, n:J) = bitwiseOr(shiftLeft(x, n), shiftRight(x, TypeSize(I)*8 - n));
 
 [I, J | Integer?(I) and Integer?(J)]
-rotateRight(x:I, n:J) = bitwiseOr(shiftRight(x, n), shiftLeft(x, TypeSize(J)*8 - n));
+rotateRight(x:I, n:J) = bitwiseOr(shiftRight(x, n), shiftLeft(x, TypeSize(I)*8 - n));
 
 
 
