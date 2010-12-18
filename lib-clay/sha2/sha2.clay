@@ -1,0 +1,184 @@
+import printer.formatter.*;
+
+record SHA256 (digest: Array[UInt8, 32]);
+
+overload printTo(stream, sha:SHA256) {
+    for (byte in sha.digest)
+        printTo(stream, rightAlignedWith(2, '0', hex(byte)));
+}
+
+private var sha256RoundConstants = [
+   0x428a2f98_u, 0x71374491_u, 0xb5c0fbcf_u, 0xe9b5dba5_u,
+   0x3956c25b_u, 0x59f111f1_u, 0x923f82a4_u, 0xab1c5ed5_u,
+   0xd807aa98_u, 0x12835b01_u, 0x243185be_u, 0x550c7dc3_u,
+   0x72be5d74_u, 0x80deb1fe_u, 0x9bdc06a7_u, 0xc19bf174_u,
+   0xe49b69c1_u, 0xefbe4786_u, 0x0fc19dc6_u, 0x240ca1cc_u,
+   0x2de92c6f_u, 0x4a7484aa_u, 0x5cb0a9dc_u, 0x76f988da_u,
+   0x983e5152_u, 0xa831c66d_u, 0xb00327c8_u, 0xbf597fc7_u,
+   0xc6e00bf3_u, 0xd5a79147_u, 0x06ca6351_u, 0x14292967_u,
+   0x27b70a85_u, 0x2e1b2138_u, 0x4d2c6dfc_u, 0x53380d13_u,
+   0x650a7354_u, 0x766a0abb_u, 0x81c2c92e_u, 0x92722c85_u,
+   0xa2bfe8a1_u, 0xa81a664b_u, 0xc24b8b70_u, 0xc76c51a3_u,
+   0xd192e819_u, 0xd6990624_u, 0xf40e3585_u, 0x106aa070_u,
+   0x19a4c116_u, 0x1e376c08_u, 0x2748774c_u, 0x34b0bcb5_u,
+   0x391c0cb3_u, 0x4ed8aa4a_u, 0x5b9cca4f_u, 0x682e6ff3_u,
+   0x748f82ee_u, 0x78a5636f_u, 0x84c87814_u, 0x8cc70208_u,
+   0x90befffa_u, 0xa4506ceb_u, 0xbef9a3f7_u, 0xc67178f2_u,
+];
+
+private ntohl(n:UInt32) {
+    ref bytes = bitwiseCast(n, Array[UInt8, 4]);
+    return bitwiseOr(
+        shiftLeft(UInt32(bytes[0]), 24),
+        shiftLeft(UInt32(bytes[1]), 16),
+        shiftLeft(UInt32(bytes[2]),  8),
+                  UInt32(bytes[3])
+    );
+}
+private htonl(n:UInt32) returned:UInt32 {
+    ref bytes = bitwiseCast(returned, Array[UInt8, 4]);
+    bytes[0] = UInt8(shiftRight(n, 24));
+    bytes[1] = UInt8(shiftRight(n, 16));
+    bytes[2] = UInt8(shiftRight(n,  8));
+    bytes[3] = UInt8(           n     );
+}
+
+private ntohll(n:UInt64) {
+    ref bytes = bitwiseCast(n, Array[UInt8, 8]);
+    return bitwiseOr(
+        shiftLeft(UInt32(bytes[0]), 56),
+        shiftLeft(UInt32(bytes[1]), 48),
+        shiftLeft(UInt32(bytes[2]), 40),
+        shiftLeft(UInt32(bytes[3]), 32),
+        shiftLeft(UInt32(bytes[4]), 24),
+        shiftLeft(UInt32(bytes[5]), 16),
+        shiftLeft(UInt32(bytes[6]),  8),
+                  UInt32(bytes[7])
+    );
+}
+private htonll(n:UInt64) returned:UInt64 {
+    ref bytes = bitwiseCast(returned, Array[UInt8, 8]);
+    bytes[0] = UInt8(shiftRight(n, 56));
+    bytes[1] = UInt8(shiftRight(n, 48));
+    bytes[2] = UInt8(shiftRight(n, 40));
+    bytes[3] = UInt8(shiftRight(n, 32));
+    bytes[4] = UInt8(shiftRight(n, 24));
+    bytes[5] = UInt8(shiftRight(n, 16));
+    bytes[6] = UInt8(shiftRight(n,  8));
+    bytes[7] = UInt8(           n     );
+}
+
+alias ChunkBytes = Array[UInt8,  64];
+alias ChunkWords = Array[UInt32, 16];
+
+private sha256chunk(state, tempState, chunkSpace, chunk) {
+    for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
+        toChunkWord = ntohl(fromChunkWord);
+    for (i in range(16, 64)) {
+        var s0 = bitwiseXor(
+            rotateRight(chunkSpace[i-15],  7),
+            rotateRight(chunkSpace[i-15], 18),
+            shiftRight (chunkSpace[i-15],  3),
+        );
+        var s1 = bitwiseXor(
+            rotateRight(chunkSpace[i-2], 17),
+            rotateRight(chunkSpace[i-2], 19),
+            shiftRight (chunkSpace[i-2], 10),
+        );
+        chunkSpace[i] = chunkSpace[i-16] + s0 + chunkSpace[i-7] + s1;
+    }
+
+    tempState = state;
+    for (roundWord, chunkWord in zipped(sha256RoundConstants, chunkSpace)) {
+        var s0 = bitwiseXor(
+            rotateRight(tempState[0],  2),
+            rotateRight(tempState[0], 13),
+            rotateRight(tempState[0], 22),
+        );
+        var maj = bitwiseXor(
+            bitwiseAnd(tempState[0], tempState[1]),
+            bitwiseAnd(tempState[0], tempState[2]),
+            bitwiseAnd(tempState[1], tempState[2]),
+        );
+        var t2 = s0 + maj;
+        var s1 = bitwiseXor(
+            rotateRight(tempState[4],  6),
+            rotateRight(tempState[4], 11),
+            rotateRight(tempState[4], 25),
+        );
+        var ch = bitwiseXor(
+            bitwiseAnd (tempState[4], tempState[5]),
+            bitwiseAndc(tempState[6], tempState[4]),
+        );
+        var t1 = tempState[7] + s1 + ch + roundWord + chunkWord;
+        tempState[7] = tempState[6];
+        tempState[6] = tempState[5];
+        tempState[5] = tempState[4];
+        tempState[4] = tempState[3] + t1;
+        tempState[3] = tempState[2];
+        tempState[2] = tempState[1];
+        tempState[1] = tempState[0];
+        tempState[0] = t1 + t2;
+    }
+    for (stateWord, tempStateWord in zipped(state, tempState))
+        stateWord += tempStateWord;
+}
+
+[S | ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
+sha256(message: S) returned: SHA256 {
+    var messageSize = size(message);
+    var messageHeadSize = bitwiseAndc(messageSize, SizeT(63));
+    var messageTailSize = messageSize - messageHeadSize;
+
+    var messageHeadBegin = Pointer[ChunkWords](begin(message));
+    var messageHeadEnd   = Pointer[ChunkWords](begin(message) + messageHeadSize);
+    var messageTailBegin = Pointer[UInt8](messageHeadEnd);
+    var messageTailEnd   = Pointer[UInt8](end(message));
+
+    var state = [
+        0x6a09e667_u,
+        0xbb67ae85_u,
+        0x3c6ef372_u,
+        0xa54ff53a_u,
+        0x510e527f_u,
+        0x9b05688c_u,
+        0x1f83d9ab_u,
+        0x5be0cd19_u,
+    ];
+    var tempState = Array[UInt32, 8]();
+    var chunkSpace = Array[UInt32, 64]();
+
+    for (chunk in coordinateRange(messageHeadBegin, messageHeadEnd))
+        sha256chunk(state, tempState, chunkSpace, chunk);
+
+    var tailChunkBytes = ChunkBytes();
+    ref tailChunk = bitwiseCast(tailChunkBytes, ChunkWords);
+    copyNonoverlappingMemory(
+        begin(tailChunkBytes),
+        begin(tailChunkBytes) + messageTailSize,
+        messageTailBegin
+    );
+    tailChunkBytes[messageTailSize] = 0x80_u8;
+
+    if (messageTailSize >= 56) {
+        zeroMemory(
+            begin(tailChunkBytes) + messageTailSize + 1,
+            end(tailChunkBytes)
+        );
+        sha256chunk(state, tempState, chunkSpace, tailChunk);
+        messageTailSize = 0;
+    } else {
+        messageTailSize += 1;
+    }
+
+    zeroMemory(
+        begin(tailChunkBytes) + messageTailSize,
+        end(tailChunkBytes) - 8,
+    );
+    Pointer[UInt64](end(tailChunkBytes) - 8)^ = htonll(UInt64(messageSize) * 8);
+    sha256chunk(state, tempState, chunkSpace, tailChunk);
+
+    ref returnedWords = bitwiseCast(returned.digest, Array[UInt32, 8]);
+    for (returnedWord, stateWord in zipped(returnedWords, state))
+        returnedWord = htonl(stateWord);
+}

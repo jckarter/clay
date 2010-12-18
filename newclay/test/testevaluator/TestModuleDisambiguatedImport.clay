@@ -1,0 +1,7 @@
+import __primitives__.*;
+import factorial.*; // has Factorial
+import tools.*; // also has Factorial
+import tools.(Factorial); // disambiguate
+
+symbol Main = ();
+static overload Main() = Factorial(8);

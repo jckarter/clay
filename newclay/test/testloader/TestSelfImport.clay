@@ -1,1 +1,1 @@
-import FailSelfImport.*;
+import TestSelfImport.*;
