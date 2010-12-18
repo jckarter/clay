@@ -130,7 +130,7 @@ makeSymbol(x:SymbolHead, params:ValueList) {
         return ptr^;
     }
     ref y = x.symbols[params];
-    var env = bindPatternArgs(x.module.globals, x.ast.params, params);
+    var env = bindPatternArgs(x.module, x.ast.params, params);
     y = Symbol(x, params, env);
     return y;
 }
@@ -156,7 +156,7 @@ moduleValueLookup(moduleValue:ModuleValue, memberValue:StringValue) {
     var submoduleValue = lookup(moduleValue.submodules, memberValue.value);
     if (null?(submoduleValue)) {
         return maybe(moduleValue.module,
-            module ref=> envEntryToValue(envLookup(module.globals, memberValue.value)),
+            module ref=> envEntryToValue(publicLookup(module, memberValue.value)),
             ()     ref=> throwButPropagate(Value, GenericError(String("qualified reference to non-imported module"))
             ),
         );
@@ -173,8 +173,7 @@ moduleValueLookup(moduleValue:ModuleValue, memberValue:StringValue) {
 evaluateMain() {
     var mainRef = ast.Expr(ast.NameRef(ast.Identifier("Main")));
     var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
-    var env = getProgramMainModule().globals;
-    return evaluateMultiExpr(mainCall, env);
+    return evaluateMultiExpr(mainCall, getProgramMainModule());
 }
 
 
@@ -221,7 +220,7 @@ overload evaluateExpr(x:ast.StringLiteral, env) {
     return Value(StringValue(parseStringLiteral(x.value)));
 }
 overload evaluateExpr(x:ast.NameRef, env) {
-    return envEntryToValue(envLookup(env, x.name));
+    return envEntryToValue(privateLookup(env, x.name));
 }
 overload evaluateExpr(x:ast.PatternNameRef, env) {
     return derefPattern(env, x.name);
@@ -348,7 +347,7 @@ overload evaluateMultiExpr(x:ast.Expr, env) ValueList {
     return withLocation(x, () ref=> evaluateMultiExpr(*x, env));
 }
 overload evaluateMultiExpr(x:ast.NameRef, env) {
-    return envEntryToValueList(envLookup(env, x.name));
+    return envEntryToValueList(privateLookup(env, x.name));
 }
 overload evaluateMultiExpr(x:ast.PatternNameRef, env) {
     return derefListPattern(env, x.name);
@@ -612,7 +611,7 @@ procedure lookupPattern;
 
 overload lookupPattern(env, name:ast.Identifier) {
     return withLocation(name, () ref=> {
-        return lookupPattern(envLookup(env, name));
+        return lookupPattern(privateLookup(env, name));
     });
 }
 overload lookupPattern(x) {
@@ -657,7 +656,7 @@ procedure lookupListPattern;
 
 overload lookupListPattern(env, name:ast.Identifier) {
     return withLocation(name, () ref=> {
-        return lookupListPattern(envLookup(env, name));
+        return lookupListPattern(privateLookup(env, name));
     });
 }
 overload lookupListPattern(x) {
@@ -833,7 +832,8 @@ topLevelItemPatternVars(x:T) {
 // initializeMatch, verifyPatternVars, testPredicate
 //
 
-initializeMatch(baseEnv:Env, pvars:PatternVars) {
+[E | VariantMember?(EnvParent, E)]
+initializeMatch(baseEnv:E, pvars:PatternVars) {
     var env = newEnv(baseEnv);
     for (name in pvars.vars)
         envAdd(env, name, PatternCell(nothing(Value)));
@@ -864,7 +864,7 @@ testPredicate(predicate:Maybe[ast.Expr], env) {
 
 matchAttribute(x:Attribute, target:Value) Maybe[Env] {
     var pvars = topLevelItemPatternVars(x);
-    var env = initializeMatch(x.module.globals, pvars);
+    var env = initializeMatch(x.module, pvars);
     var targetPattern = evaluatePattern(x.ast.target, env);
     if (not unify(targetPattern, target))
         return nothing(Env);
@@ -876,7 +876,7 @@ matchAttribute(x:Attribute, target:Value) Maybe[Env] {
 
 matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env] {
     var pvars = topLevelItemPatternVars(x);
-    var env = initializeMatch(x.module.globals, pvars);
+    var env = initializeMatch(x.module, pvars);
     var callablePattern = evaluatePattern(x.ast.target, env);
     if (not unify(callablePattern, callable))
         return nothing(Env);
@@ -914,7 +914,7 @@ evaluateAttributes(target) {
 evaluateStaticCall(program, callable, args) {
     for (x in reversed(program.allStaticOverloads)) {
         var result = matchStaticOverload(x, callable, args);
-        if (not nothing?(result))
+        if (just?(result))
             return evaluateExprList(x.ast.body, just(result));
     }
     genericError("no matching operation");

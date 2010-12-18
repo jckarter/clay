@@ -316,7 +316,7 @@ callbyname overload ifExpression(condition, consequent:T, alternate:T) T {
 }
 
 [T]
-callbyname overload ifExpression(condition, lvalue consequent:T, lvalue alternate:T) T {
+callbyname overload ifExpression(condition, lvalue consequent:T, lvalue alternate:T) ByRef[T] {
     if (condition)
         return ref consequent;
     else
@@ -335,6 +335,18 @@ inline bitwiseCast(x: T, static U) = ref Pointer[U](&x)^;
 inline bitwiseAndc(a, b) = bitwiseAnd(a, bitwiseNot(b));
 inline bitwiseBlend(mask, ones, zeros)
     = bitwiseOr(bitwiseAnd(ones, mask), bitwiseAndc(zeros, mask));
+
+
+
+//
+// rotateLeft, rotateRight
+//
+
+[I, J | Integer?(I) and Integer?(J)]
+rotateLeft(x:I, n:J) = bitwiseOr(shiftLeft(x, n), shiftRight(x, TypeSize(I)*8 - n));
+
+[I, J | Integer?(I) and Integer?(J)]
+rotateRight(x:I, n:J) = bitwiseOr(shiftRight(x, n), shiftLeft(x, TypeSize(I)*8 - n));
 
 
 

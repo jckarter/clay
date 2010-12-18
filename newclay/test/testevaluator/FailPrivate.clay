@@ -1,0 +1,4 @@
+import tools.*;
+
+symbol Main = ();
+static overload Main() = PrivateFactorial(8);

@@ -21,20 +21,24 @@ main(args) {
         var program = loadProgram(args[1]);
         for (moduleName, module in items(program.modules)) {
             println(moduleNameString(moduleName), ":");
-            var env = module.globals;
-            var envRoot = variantAs(env.parent, EnvRoot);
-            for (name, module in items(envRoot.generalImports))
-                println("  imports ", module.name, ".*");
-            for (asName, entry in items(envRoot.specificImports)) {
-                println("  imports ", entry, " as ", asName);
-                if (nestedVariantIs?(entry, ModuleValue)) {
-                    var moduleValue = nestedVariantAs(entry, ModuleValue);
-                    dumpModuleValue(moduleValue, 2);
-                }
-            }
 
-            for (entryName, entry in items(env.entries))
-                println("  ", entryName, ": ", entry);
+            for (nameEnv in [("public", module.publicEnv), ("private", module.privateEnv)]) {
+                var name, env = ...unpack(nameEnv);
+                println("  ", name, ":");
+                var root = envRoot(env);
+                for (name, module in items(root.generalImports))
+                    println("    imports ", module.name, ".*");
+                for (asName, entry in items(root.specificImports)) {
+                    println("    imports ", entry, " as ", asName);
+                    if (nestedVariantIs?(entry, ModuleValue)) {
+                        var moduleValue = nestedVariantAs(entry, ModuleValue);
+                        dumpModuleValue(moduleValue, 3);
+                    }
+                }
+
+                for (entryName, entry in items(env.entries))
+                    println("    ", entryName, ": ", entry);
+            }
         }
     }
     catch (e:ClayError) {

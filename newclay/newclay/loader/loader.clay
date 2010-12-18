@@ -10,12 +10,13 @@ import newclay.core.*;
 
 private loadPrimitivesModule(program:Program) {
     var module = Module(program, primitivesModuleName);
-    module.globals = newEnv();
+    module.privateEnv = newEnv();
+    module.publicEnv = newEnv();
     for (i in range(EnumMemberCount(PrimitiveKind))) {
         var kind = PrimitiveKind(i);
         var name = ast.Identifier(primitiveName(kind));
         var entry = Primitive(kind);
-        envAdd(module.globals, name, Value(entry));
+        envAdd(module.publicEnv, name, Value(entry));
     }
     return module;
 }
@@ -30,7 +31,11 @@ private addImportItem(module, envRoot, importItem) {
         ast.SpecificImportSpecs, specSpecs ref=> {
             for (spec in specSpecs) {
                 var asName = just(spec.asName, spec.name).str;
-                envRootAddSpecific(envRoot, asName, EnvImport(importedModule, spec.name.str));
+                envRootAddSpecific(
+                    envRoot,
+                    asName,
+                    EnvImport(spec.visibility, importedModule, spec.name.str)
+                );
             }
         },
         ast.QualifiedImportSpec, qualSpec ref=> {
@@ -43,33 +48,49 @@ private addImportItem(module, envRoot, importItem) {
 }
 
 private addSymbolItem(module, env, symbolItem) {
+    var name = symbolItem.name;
+    if (not null?(lookup(module.publicEnv.entries, name.str))
+        or not null?(lookup(module.privateEnv.entries, name.str)))
+        genericError("symbol redefinition: ", name.str);
+
     var head = SymbolHead(symbolItem, module);
+
     if (symbolHeadHasParams?(head)) {
-        envAdd(env, symbolItem.name, Value(head));
-    }
-    else {
-        var sym = Symbol(head, ValueList(), env);
+        envAdd(env, name, Value(head));
+    } else {
+        var sym = Symbol(head, ValueList(), module);
         head.symbols[ValueList()] = sym;
-        envAdd(env, symbolItem.name, Value(sym));
+        envAdd(env, name, Value(sym));
     }
 }
 
 private initializeGlobals(module) {
-    var env = newEnv();
-    ref envRoot = variantAs(env.parent, EnvRoot);
+    module.publicEnv  = newEnv();
+    module.privateEnv = newEnv();
+    ref publicRoot  = envRoot(module.publicEnv);
+    ref privateRoot = envRoot(module.privateEnv);
+
+    envRootAddGeneral(privateRoot, programModule(module.program, preludeModuleName));
 
     for (item in module.ast.topLevelItems) {
         match(item,
             ast.Import, importItem ref=> {
-                addImportItem(module, envRoot, importItem);
+                addImportItem(
+                    module,
+                    if (importItem.visibility == ast.VIS_PUBLIC) publicRoot else privateRoot,
+                    importItem
+                );
             },
             ast.Symbol, symbolItem ref=> {
-                addSymbolItem(module, env, symbolItem);
+                addSymbolItem(
+                    module,
+                    if (symbolItem.visibility == ast.VIS_PUBLIC) module.publicEnv else module.privateEnv,
+                    symbolItem
+                );
             },
             MatchDefault, x => { },
         );
     }
-    module.globals = env;
 }
 
 private initializeAttributesAndOverloads(module) {

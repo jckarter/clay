@@ -29,3 +29,5 @@ StaticTupleElements(s:Tuple) ...
 StaticSymbol?(x)
 StaticSymbolBody(x:Symbol) value
 StaticSymbolAttributes(x:Symbol) value
+
+StaticModuleMember(x:Module, y:String) value

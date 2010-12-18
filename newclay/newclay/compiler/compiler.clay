@@ -769,7 +769,7 @@ overload compileExpr(x:ast.StringLiteral, env) {
     return CompiledExpr();
 }
 overload compileExpr(x:ast.NameRef, env) {
-    return compileEnvEntry(envLookup(env, x.name));
+    return compileEnvEntry(privateLookup(env, x.name));
 }
 overload compileExpr(x:ast.PatternNameRef, env) {
     return compileValue(derefPattern(env, x.name));
@@ -886,7 +886,7 @@ overload compileMultiExpr(x:ast.Expr, env) Vector[CompiledExpr] {
     return withLocation(x, () ref=> compileMultiExpr(*x, env));
 }
 overload compileMultiExpr(x:ast.NameRef, env) {
-    return compileEnvEntryMulti(envLookup(env, x.name));
+    return compileEnvEntryMulti(privateLookup(env, x.name));
 }
 overload compileMultiExpr(x:ast.PatternNameRef, env) {
     return compileValueList(derefListPattern(env, x.name));

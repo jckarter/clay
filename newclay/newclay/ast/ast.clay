@@ -226,7 +226,13 @@ variant TopLevelItem = Symbol
                      | Import
                      ;
 
+enum VisibilityKind {
+    VIS_PUBLIC,
+    VIS_PRIVATE,
+}
+
 record Symbol = ast(
+    visibility: VisibilityKind,
     name: Identifier,
     params: VariadicList[Identifier],
     expr: Expr,
@@ -255,6 +261,7 @@ record Overload = ast(
 );
 
 record Import = ast(
+    visibility: VisibilityKind,
     name: Vector[Identifier],
     spec: ImportSpec,
 );
@@ -268,6 +275,7 @@ alias SpecificImportSpecs = Vector[SpecificImportSpec];
 
 record GeneralImportSpec = ast();
 record SpecificImportSpec = ast(
+    visibility: VisibilityKind,
     name: Identifier,
     asName: Maybe[Identifier],
 );
