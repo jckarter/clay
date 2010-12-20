@@ -32,16 +32,18 @@ readChar(stream, c:Char) Bool {
     return result == 1;
 }
 
-readLine(stream) String {
-    var v = Vector[Char]();
+readUpto(stream, upto) String {
+    var v = String();
     var c = Char();
     while (readChar(stream, c)) {
         push(v, c);
-        if (c == '\n')
+        if (c == upto)
             break;
     }
-    return String(move(v));
+    return move(v);
 }
+
+readLine(stream) = readUpto(stream, '\n');
 
 readAll(stream) String {
     var buf = String();
