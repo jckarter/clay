@@ -1,0 +1,12 @@
+import byteorder.*;
+import printer.formatter.*;
+
+main() {
+    println("0x", hex(networkToHost(bitwiseCast([1_u8, 2_u8], UInt16))));
+    println("0x", hex(networkToHost(bitwiseCast([1_u8, 2_u8, 3_u8, 4_u8], UInt32))));
+    println("0x", hex(networkToHost(bitwiseCast([1_u8, 2_u8, 3_u8, 4_u8, 5_u8, 6_u8, 7_u8, 8_u8], UInt64))));
+
+    println(bitwiseCast(hostToNetwork(0x0102_u16), Array[UInt8, 2]));
+    println(bitwiseCast(hostToNetwork(0x01020304_u32), Array[UInt8, 4]));
+    println(bitwiseCast(hostToNetwork(0x0102030405060708_u64), Array[UInt8, 8]));
+}

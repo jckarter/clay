@@ -1,7 +1,7 @@
 import unix;
 public import unix.(
     errno, socket, bind, listen, accept, connect, send, recv, sendto, recvfrom, close,
-    select, getsockopt, setsockopt, htons, ntohs, htonl, ntohl, gethostbyname,
+    select, getsockopt, setsockopt, gethostbyname,
     gethostbyaddr,
     AF_UNSPEC, AF_LOCAL, AF_INET, AF_INET6,
     PF_UNSPEC, PF_LOCAL, PF_INET, PF_INET6,

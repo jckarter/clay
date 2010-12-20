@@ -2,7 +2,7 @@ import win32;
 public import win32.(
     SOCKET_ERROR,
     socket, bind, listen, accept, connect, send, recv, sendto, recvfrom,
-    select, getsockopt, setsockopt, htons, ntohs, htonl, ntohl, gethostbyname,
+    select, getsockopt, setsockopt, gethostbyname,
     gethostbyaddr,
     AF_UNSPEC, AF_INET, AF_INET6,
     PF_UNSPEC, PF_INET, PF_INET6,

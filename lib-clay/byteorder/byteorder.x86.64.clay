@@ -1,0 +1,19 @@
+public import byteorder.constants.*;
+public import byteorder.platform.*;
+public import byteorder.common.*;
+
+[I32| inValues?(I32, Int32, UInt32)]
+overload networkToHost(n:I32) returned:I32 __llvm__ {
+    %nn = load $I32 * %n
+    %rr = call $I32 asm "bswapl $0", "=r,r"($I32 %nn)
+    store $I32 %rr, $I32 * %returned
+    ret i32 0
+}
+
+[I64| inValues?(I64, Int64, UInt64)]
+overload networkToHost(n:I64) returned:I64 __llvm__ {
+    %nn = load $I64 * %n
+    %rr = call $I64 asm "bswapq $0", "=r,r"($I64 %nn)
+    store $I64 %rr, $I64 * %returned
+    ret i32 0
+}

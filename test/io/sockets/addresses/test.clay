@@ -1,12 +1,13 @@
 import io.sockets.*;
 import test.*;
+import byteorder.*;
 
 _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr) {}
 overload _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr: Sockaddr_in)
 {
     expectEqual(test, "family of " + name, AF_INET, sockaddr.sin_family);
-    expectEqual(test, "host of " + name, expectedHost, ntohl(sockaddr.sin_addr.s_addr));
-    expectEqual(test, "port of " + name, expectedPort, ntohs(sockaddr.sin_port));
+    expectEqual(test, "host of " + name, expectedHost, networkToHost(sockaddr.sin_addr.s_addr));
+    expectEqual(test, "port of " + name, expectedPort, networkToHost(sockaddr.sin_port));
 }
 
 expectSockaddrIn(test, name, expectedHost, expectedPort, address) {

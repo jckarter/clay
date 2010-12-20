@@ -1,3 +1,4 @@
+import byteorder.*;
 
 
 //
@@ -179,21 +180,11 @@ alias SO_REUSEADDR = 4;
 //
 // byte order macros
 //
-htons(x: UInt16) y: UInt16 {
-    var yb = Pointer[UInt8](&y);
-    yb[0] = UInt8(shiftRight(x, 8));
-    yb[1] = UInt8(bitwiseAnd(x, 0xFFu16));
-}
-alias ntohs = htons;
+htons(x: UInt16) = hostToNetwork(x);
+ntohs(x: UInt16) = networkToHost(x);
 
-htonl(x: UInt32) y: UInt32 {
-    var yb = Pointer[UInt8](&y);
-    yb[0] = UInt8(           shiftRight(x, 24)          );
-    yb[1] = UInt8(bitwiseAnd(shiftRight(x, 16), 0xFFu32));
-    yb[2] = UInt8(bitwiseAnd(shiftRight(x,  8), 0xFFu32));
-    yb[3] = UInt8(bitwiseAnd(           x,      0xFFu32));
-}
-alias ntohl = htonl;
+htonl(x: UInt32) = hostToNetwork(x);
+ntohl(x: UInt32) = networkToHost(x);
 
 
 

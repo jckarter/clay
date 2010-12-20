@@ -1,7 +1,8 @@
 import io.sockets.platform;
+import byteorder.*;
 public import io.sockets.platform.(
     Sockaddr, Sockaddr_in, Sockaddr_storage,
-    In_addr, htons, htonl, ntohs, ntohl,
+    In_addr,
     AF_UNSPEC, AF_INET, AF_INET6,
     PF_UNSPEC, PF_INET, PF_INET6,
     INADDR_ANY, INADDR_BROADCAST, INADDR_LOOPBACK, INADDR_NONE,
@@ -89,13 +90,13 @@ overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
         throw InvalidInetAddress(sockaddr, szsockaddr);
     var psockaddr_in = Pointer[Sockaddr_in](&sockaddr);
     addr.host <-- psockaddr_in^.sin_addr;
-    addr.port <-- ntohs(psockaddr_in^.sin_port);
+    addr.port <-- networkToHost(psockaddr_in^.sin_port);
 }
 
 overload makeSockaddr(inet: Inet) sin: Sockaddr_in {
     memset(RawPointer(&sin), 0, TypeSize(Sockaddr_in));
     sin.sin_family = AF_INET;
-    sin.sin_port <-- htons(inet.port);
+    sin.sin_port <-- hostToNetwork(inet.port);
     sin.sin_addr <-- inet.host;
 }
 
@@ -104,7 +105,7 @@ overload sockaddrStreamProtocol(inet: Inet) = IPPROTO_TCP;
 overload sockaddrDgramProtocol(inet: Inet) = IPPROTO_UDP;
 
 overload lookupInetHostname(n: UInt32) s: In_addr {
-    s.s_addr <-- htonl(n);
+    s.s_addr <-- hostToNetwork(n);
 }
 
 overload lookupInetHostname(n: In_addr) = n;
@@ -257,7 +258,7 @@ overload flush(s: StreamSocket) { }
 // Print support for In_addr
 //
 overload printTo(stream, addr: In_addr) {
-    var host = ntohl(addr.s_addr);
+    var host = networkToHost(addr.s_addr);
     printTo(stream,
                    shiftRight(host, 24),         ".",
         bitwiseAnd(shiftRight(host, 16), 0xFFu), ".",
