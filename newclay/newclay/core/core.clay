@@ -1036,10 +1036,11 @@ instance SemanticError = AmbiguousEntryError;
 
 overload displayError(e:AmbiguousEntryError) {
     var msg = printString(
-        "name ", e.name, " ambiguously imported from multiple modules; use \"import module.(name);\" form to disambiguate"
+        "name ", e.name, " ambiguously imported from multiple modules:"
     );
     for (m in e.entry.modules)
         printTo(msg, "\n  ", m.0.name);
+    printTo(msg, "\nuse \"import module.(name);\" form to disambiguate");
     displaySemanticError(e.locationStack, e.compilationStack, msg);
 }
 
