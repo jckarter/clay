@@ -1,0 +1,5 @@
+enum ByteOrderKind {
+    UnknownByteOrder,
+    LittleEndian,
+    BigEndian
+}

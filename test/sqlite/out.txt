@@ -40,3 +40,5 @@ selecting table
   values: 3, zung
 dropping table
 null string: 
+string?: mellow yellow
+no string?: Nothing()

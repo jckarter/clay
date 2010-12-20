@@ -1,0 +1,3 @@
+import byteorder.constants.*;
+
+alias ByteOrder = LittleEndian;
