@@ -1,0 +1,55 @@
+import newclay.common.*;
+import newclay.core.*;
+import newclay.loader.*;
+import newclay.cache.*;
+import commandline.dispatch.*;
+
+create(args) {
+    if (size(args) != 2) {
+        println("usage: testcache create <file> <cache>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[0]);
+        var cache = createCache(program);
+        saveCache(args[1], cache);
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
+
+printDirty(s:SymbolHead) {
+    println(s.module, " symbol ", s.ast.name.str);
+}
+overload printDirty(s:Attribute) {
+    println(s.module, " symbol attribute ", s.ast.target);
+}
+overload printDirty(s:StaticOverload) {
+    println(s.module, " static overload ", s.ast.target);
+}
+overload printDirty(s:Overload) {
+    println(s.module, " overload ", s.ast.target);
+}
+
+showdirty(args) {
+    if (size(args) != 2) {
+        println("usage: testcache showdirty <file> <cache>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[0]);
+        var cache = loadCache(args[1]);
+
+        eachDirty(program, cache, (entry, hash, Type) ref=> {
+            printDirty(entry);
+        });
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
+
+main() = dispatchMain(create, showdirty);
