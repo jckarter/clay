@@ -55,6 +55,8 @@ private addSymbolItem(module, env, symbolItem) {
 
     var head = SymbolHead(symbolItem, module);
 
+    push(module.program.allSymbolHeads, head);
+
     if (symbolHeadHasParams?(head)) {
         envAdd(env, name, Value(head));
     } else {

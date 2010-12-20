@@ -25,6 +25,7 @@ overload ModuleName(astName: Vector[ast.Identifier])
 record Program = referenceType(
     modules: ModuleMap,
     moduleSearchPath: Vector[String],
+    allSymbolHeads: Vector[SymbolHead],
     allAttributes: Vector[Attribute],
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
@@ -35,7 +36,7 @@ record Program = referenceType(
 
 overload Program() = Program(
     ModuleMap(), Vector[String](),
-    Vector[Attribute](), Vector[StaticOverload](), Vector[Overload](),
+    Vector[SymbolHead](), Vector[Attribute](), Vector[StaticOverload](), Vector[Overload](),
     ClayHooks(),
     ir.newProgram(),
     NameAllocator(),
