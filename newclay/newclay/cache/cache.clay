@@ -1,0 +1,146 @@
+import newclay.core.*;
+import newclay.ast as ast;
+import sha2.*;
+import maybe.*;
+import libc.(sscanf);
+
+record CachedSymbol();
+record CachedAttribute();
+record CachedStaticOverload();
+record CachedOverload();
+
+variant CacheEntry = CachedSymbol
+                   | CachedAttribute
+                   | CachedStaticOverload
+                   | CachedOverload;
+overload CacheEntry() = CacheEntry(CachedSymbol());
+
+record Cache = referenceType(
+    entries: HashMap[SHA256, CacheEntry],
+);
+
+newCache() = allocateRef(Cache);
+
+printHashString(x) {
+    var s = moduleNameString(x.module.name);
+    printTo(s, ",");
+    printReprTo(s, x.ast);
+    return s;
+}
+
+hashCacheEntry(x) = sha256(printHashString(x));
+
+eachCacheableEntry(program:Program, fn) {
+    static for (cachedEntries in 
+        (program.allSymbolHeads,     CachedSymbol),
+        (program.allAttributes,      CachedAttribute),
+        (program.allStaticOverloads, CachedStaticOverload),
+        (program.allOverloads,       CachedOverload),
+    ) {
+        ref entries, CachedEntryType = ...unpack(cachedEntries);
+        
+        for (entry in entries)
+            fn(entry, hashCacheEntry(entry), CachedEntryType);
+    }
+}
+
+createCache(program:Program) {
+    var cache = newCache();
+
+    eachCacheableEntry(program, (entry, hash, Type) ref=> {
+        cache.entries[hash] = CacheEntry(Type());
+    });
+
+    return move(cache);
+}
+
+dirty?(cache:Cache, hash:SHA256, Type) {
+    var entryp = lookup(cache.entries, hash);
+    if (null?(entryp))
+        return true;
+    else
+        return not variantIs?(entryp^, Type);
+}
+
+eachDirty(program:Program, cache:Cache, fn) {
+    eachCacheableEntry(program, (entry, hash, Type) ref=> {
+        if (dirty?(cache, hash, Type))
+            fn(entry, hash, Type);
+    });
+}
+
+record InvalidCacheFile();
+instance Exception = InvalidCacheFile;
+
+private hexDigit(c) =
+    if (c >= '0' and c <= '9') Int(c) - Int('0')
+    else if (c >= 'A' and c <= 'F') Int(c) - Int('A') + 10
+    else if (c >= 'a' and c <= 'f') Int(c) - Int('a') + 10
+    else throwButPropagate(Int, InvalidCacheFile());
+
+private readSHA(stream) out:Maybe[SHA256] {
+    var shaString = String();
+    resize(shaString, 64);
+    var count = read(stream, Pointer[UInt8](begin(shaString)), 64);
+    if (count == 0)
+        return nothing(SHA256);
+    if (count != 64)
+        throw InvalidCacheFile();
+    var out = Maybe(SHA256());
+    for (outByte, inHex in zipped(just(out).digest, grouped(shaString, 2)))
+        outByte = UInt8(hexDigit(inHex[0]) * 16 + hexDigit(inHex[1]));
+    return out;
+}
+
+private loadCacheEntry(file, cache) {
+    var mHash = readSHA(file);
+    return maybe(mHash,
+        hash ref=> {
+            var c = Char();
+            if (not readChar(file, c))
+                throw InvalidCacheFile();
+            if (c != '=')
+                throw InvalidCacheFile();
+            var entryStr = readLine(file);
+
+            var entry = CacheEntry();
+            switch (entryStr) {
+            case "CachedSymbol\n":
+                entry = CacheEntry(CachedSymbol());
+                break;
+            case "CachedAttribute\n":
+                entry = CacheEntry(CachedAttribute());
+                break;
+            case "CachedStaticOverload\n":
+                entry = CacheEntry(CachedStaticOverload());
+                break;
+            case "CachedOverload\n":
+                entry = CacheEntry(CachedOverload());
+                break;
+            }
+
+            cache.entries[hash] = entry;
+            return true;
+        },
+        () ref=> false,
+    );
+}
+
+loadCache(filename) = loadCache(File(filename, READ));
+overload loadCache(file:File) {
+    var cache = newCache();
+    while (loadCacheEntry(file, cache)) {}
+    return cache;
+}
+
+TypeStaticName(x) = StaticName(Type(x));
+
+private saveCacheEntry(file, hash, entry) {
+    printlnTo(file, hash, "=", TypeStaticName(*entry));
+}
+
+saveCache(filename, cache:Cache) { saveCache(File(filename, CREATE), cache); }
+overload saveCache(file:File, cache:Cache) {
+    for (hash, entry in items(cache.entries))
+        saveCacheEntry(file, hash, entry);
+}
