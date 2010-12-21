@@ -871,17 +871,13 @@ parseExpr(tokens:SourceTokens) {
     return require(move(result));
 }
 
-private var parse2 = modify(
+var parse2 = modify(
     x => SourceAST(SourceTokens(), move(x.0)),
     sequence(zeroOrMore(topLevelItem), token(SENTINEL)),
 );
 
-parse(tokens: SourceTokens) {
-    var input = ParserInput(tokens);
-    var ast = parse2(input);
-    if (nothing?(ast))
-        throw ParserError(tokens, input.maxCurrent);
-    var ast2 = require(move(ast));
-    ast2.tokens = tokens;
-    return move(ast2);
+external parser_parse(tokensp:Pointer[SourceTokens], returnedp:Pointer[SourceAST]);
+
+parse(tokens:SourceTokens) returned:SourceAST {
+    parser_parse(&tokens, &returned);
 }

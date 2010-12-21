@@ -471,11 +471,8 @@ tokenizeAll(file) {
     return SourceTokens(file, move(tokensData));
 }
 
-tokenize(file) {
-    var tokens = tokenizeAll(file);
-    tokens.vector = Vector(filtered(
-        x => (x.kind != SPACE) and (x.kind != COMMENT),
-        tokens.vector,
-    ));
-    return move(tokens);
+external lexer_tokenize(filep:Pointer[SourceFile], returnedp:Pointer[SourceTokens]);
+
+tokenize(file) returned:SourceTokens {
+    lexer_tokenize(&file, &returned);
 }

@@ -1,0 +1,18 @@
+import newclay.parser.*;
+import newclay.ast.*;
+import newclay.lexer.*;
+import maybe.*;
+
+external parser_parse(tokensp:Pointer[SourceTokens], returnedp:Pointer[SourceAST]) {
+    ref tokens = tokensp^;
+    ref returned = returnedp^;
+
+    var input = ParserInput(tokens);
+    var ast = parse2(input);
+    if (nothing?(ast))
+        throw ParserError(tokens, input.maxCurrent);
+    var ast2 = require(move(ast));
+    ast2.tokens = tokens;
+
+    returned <-- move(ast2);
+}
