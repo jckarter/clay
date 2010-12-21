@@ -1,7 +1,6 @@
 
 import io.paths.*;
 import maybe.*;
-import variants.nested.*;
 import newclay.common.*;
 import newclay.lexer.*;
 import newclay.ast as ast;
