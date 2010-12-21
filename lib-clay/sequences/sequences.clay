@@ -85,3 +85,20 @@ overload add(forward a:A, forward x:T) {
 
 [A, T | Sequence?(A) and (SequenceElementType(A) == T)]
 overload add(forward x:T, forward a:A) = Vector[T](x) + a;
+
+
+//
+// interleave
+//
+
+[S | Sequence?(S)]
+interleave(seq:S, betweenFn, fn) {
+    var i = iterator(seq);
+    if (hasNext?(i)) {
+        fn(next(i));
+        while (hasNext?(i)) {
+            betweenFn();
+            fn(next(i));
+        }
+    }
+}

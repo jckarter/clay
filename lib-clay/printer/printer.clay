@@ -280,14 +280,10 @@ printReprValuesTo(stream, ...values) {
 }
 
 printReprElementsTo(stream, seq) {
-    var first = true;
-    for (x in seq) {
-        if (first)
-            first = false;
-        else
-            printTo(stream, ", ");
-        printReprTo(stream, x);
-    }
+    interleave(seq,
+        () => { printTo(stream, ", "); },
+        x  => { printReprTo(stream, x); },
+    );
 }
 
 
