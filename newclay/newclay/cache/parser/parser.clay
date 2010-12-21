@@ -1,0 +1,46 @@
+import parsing.combinators.strings.*;
+import newclay.cache.*;
+import sha2.*;
+import identifiers.*;
+import maybe.*;
+
+private var _hexDigit = choice(
+    modify(c => Int(c) - Int('0'),      condition(c => c >= '0' and c <= '9')),
+    modify(c => Int(c) - Int('A') + 10, condition(c => c >= 'A' and c <= 'F')),
+    modify(c => Int(c) - Int('a') + 10, condition(c => c >= 'a' and c <= 'f')),
+);
+
+private var _hexByte = modify(
+    x => UInt8(x.0 * 16 + x.1),
+    sequence(_hexDigit, _hexDigit),
+);
+
+private var _sha = modify(
+    x => SHA256(Array[UInt8, 32](x)),
+    repeated(32, 32, _hexByte),
+);
+
+private IdentifierAsChar(x) = StaticName(x)[0];
+
+private _token(ident)
+    = sequence(...mapValues(IdentifierAsChar, ...IdentifierChars(ident)));
+
+private var _cacheEntry = choice(
+    modify(x => CacheEntry(CachedSymbol()), _token(#CachedSymbol)),
+    modify(x => CacheEntry(CachedAttribute()), _token(#CachedAttribute)),
+    modify(x => CacheEntry(CachedStaticOverload()), _token(#CachedStaticOverload)),
+    modify(x => CacheEntry(CachedOverload()), _token(#CachedOverload)),
+);
+
+private var _cacheEntryLine = modify(
+    x => (x.0, x.2),
+    sequence(_sha, '=', _cacheEntry),
+);
+
+record InvalidCacheFile ();
+instance Exception = InvalidCacheFile;
+
+parseCacheEntryLine(s) = ...maybe(_cacheEntryLine(iterator(s)),
+    entry => ...unpack(entry),
+    ()    => ...throwButPropagate(InvalidCacheFile(), SHA256, CacheEntry),
+);
