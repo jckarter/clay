@@ -40,9 +40,12 @@ callbyname overload T(...args:A) {
 }
 
 [T | ASTNode?(T)]
+astFields(x:T) = forward ...dropValues(static 1, ...referenceTypeFields(x));
+
+[T | ASTNode?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
-    printReprValuesTo(stream, ...dropValues(static 1, ...referenceTypeFields(x)));
+    printReprValuesTo(stream, ...astFields(x));
 }
 
 
