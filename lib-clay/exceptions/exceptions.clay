@@ -42,6 +42,26 @@ private signalException() __llvm__{
 
 
 //
+// throwButPropagate
+//
+
+throwButPropagate(ex, ...T) {
+    if (true)
+        throw ex;
+    else
+        return forward ...mapValues(typeToLValue, ...T);
+}
+
+callbyname throwButPropagateLike(ex, ...expr) {
+    if (true)
+        throw ex;
+    else
+        return forward ...expr;
+}
+
+
+
+//
 // exceptionIs?, exceptionAs, exceptionAsAny
 //
 
