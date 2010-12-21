@@ -66,11 +66,9 @@ overload printHashReprTo(s, m:Module, x:ast.NameRef) {
     ifPrivateLookup(m, x.name.str,
         entry ref=> {
             printHashEntryTo(s, x.name.str, *entry);
-            return true;
         },
         ()    ref=> {
             printTo(s, x.name.str);
-            return true;
         },
     );
 }
@@ -147,7 +145,7 @@ private hexDigit(c) =
     if (c >= '0' and c <= '9') Int(c) - Int('0')
     else if (c >= 'A' and c <= 'F') Int(c) - Int('A') + 10
     else if (c >= 'a' and c <= 'f') Int(c) - Int('a') + 10
-    else throwButPropagate(Int, InvalidCacheFile());
+    else throwButPropagate(InvalidCacheFile(), Int);
 
 private readSHA(stream) out:Maybe[SHA256] {
     var shaString = String();

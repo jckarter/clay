@@ -157,8 +157,7 @@ moduleValueLookup(moduleValue:ModuleValue, memberValue:StringValue) {
     if (null?(submoduleValue)) {
         return maybe(moduleValue.module,
             module ref=> envEntryToValue(publicLookup(module, memberValue.value)),
-            ()     ref=> throwButPropagate(Value, GenericError(String("qualified reference to non-imported module"))
-            ),
+            ()     ref=> throwButPropagate(GenericError(String("qualified reference to non-imported module")), Value),
         );
     } else {
         return Value(submoduleValue^);
