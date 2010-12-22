@@ -188,23 +188,6 @@ createCache(program:Program) {
     return move(cache);
 }
 
-entryDirty?(...x) = true;
-
-dirty?(cache:Cache, entry, hash:SHA256) {
-    var entryp = lookup(cache.entries, hash);
-    if (null?(entryp))
-        return true;
-    else
-        return entryDirty?(entry, cache.entries[hash]);
-}
-
-eachDirty(program:Program, cache:Cache, fn) {
-    eachCacheableEntry(program, (entry, hash) ref=> {
-        if (dirty?(cache, entry, hash))
-            fn(entry, hash);
-    });
-}
-
 
 //
 // loadCache

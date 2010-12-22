@@ -194,8 +194,10 @@ record StringLiteral = ast(
 );
 
 record NameRef = ast(
+    module: Maybe[ModuleName],
     name: Identifier,
 );
+overload NameRef(name:Identifier) = NameRef(nothing(ModuleName), name);
 
 record PatternNameRef = ast(
     name: Identifier,
