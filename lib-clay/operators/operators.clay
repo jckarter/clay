@@ -452,3 +452,12 @@ overload BitwiseAssignedType?(static T)
 [T | PrimitiveCompoundType?(T)]
 overload BitwiseMoveAssignedType?(static T)
     = allValues?(BitwiseMoveAssignedType?, ...PrimitiveCompoundMemberTypes(T));
+
+
+
+//
+// identity test
+//
+
+inline is?(x, y) = &x == &y;
+inline isNot?(x, y) = not is?(x, y);

@@ -393,7 +393,7 @@ private var lambdaArgs = choice(
 );
 
 private var lambdaExpr = exprParser(
-    x => LambdaExpr(move(x.0), move(x.2)),
+    x => LambdaExpr(nothing(Expr), move(x.0), move(x.2)),
     sequence(lambdaArgs, punc(#"=>"), groupedExprList),
 );
 
