@@ -9,6 +9,9 @@ expectMarshalingInvariants(test, name, value) {
     expectEqual(test, "unmarshal(marshal(" + name + ")",
         expectedValue, unmarshal(marshaled, Type(value))
     );
+    expectTrue(test, "size(marshal(" + name + ") == marshaledSize(" + name + ")",
+        size(marshaled) == marshaledSize(MarshalContext(), value)
+    );
 
     if (not empty?(marshaled)) {
         var truncated = marshaled;
@@ -43,8 +46,8 @@ record ComplexRecord (
     z: Char,
 );
 
-record UniquePointerRecord (x: UniquePointer[Canary]);
-overload UniquePointerRecord(x: Canary) = UniquePointerRecord(allocateUnique(x));
+record UniquePointerRecord (x: UniquePointer[Int]);
+overload UniquePointerRecord(x: Int) = UniquePointerRecord(allocateUnique(x));
 overload UniquePointerRecord(o: UniquePointerRecord)
     = if (null?(o.x)) UniquePointerRecord()
       else UniquePointerRecord(allocateUnique(o.x^));
@@ -58,10 +61,12 @@ overload printTo(stream, o: UniquePointerRecord) {
 }
 
 record GraphNodeRecord (
-    value: Canary,
     left: SharedPointer[GraphNodeRecord],
     right: SharedPointer[GraphNodeRecord],
 );
+
+record ReferenceRecord = referenceType(x: Int);
+overload equals?(a:ReferenceRecord, b:ReferenceRecord) = a.x == b.x;
 
 variant TestVariant = Int | Vector[Int] | Char | Double;
 
@@ -76,6 +81,9 @@ main() = testMain(
                 "PODRecord(1, 'a', 0.0)", PODRecord(1, 'a', 0.0)
             );
             expectMarshalingInvariants(test, "[1, 2, 3]", [1, 2, 3]);
+        }),
+        TestCase("reference types", test => {
+            expectMarshalingInvariants(test, "ReferenceRecord(3)", ReferenceRecord(3));
         }),
         TestCase("sequences", test => {
             expectMarshalingInvariants(test,
@@ -107,8 +115,32 @@ main() = testMain(
                 (1, Vector[Int](1, 2, 3), 'a')
             );
             expectMarshalingInvariants(test,
+                "(1, Vector[Int](1, 2, 3), 'a')",
+                (1, Vector[Int](1, 2, 3), 'a')
+            );
+            expectMarshalingInvariants(test,
                 "ComplexRecord(1, Vector[Int](1, 2, 3), 'a')",
                 ComplexRecord(1, Vector[Int](1, 2, 3), 'a')
+            );
+            expectMarshalingInvariants(test,
+                "(ReferenceRecord(3), ReferenceRecord(5))",
+                (ReferenceRecord(3), ReferenceRecord(5))
+            );
+            expectMarshalingInvariants(test,
+                "Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5))",
+                Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5)),
+            );
+            expectMarshalingInvariants(test,
+                "(ReferenceRecord(3), Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5)))",
+                (ReferenceRecord(3), Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5))),
+            );
+            expectMarshalingInvariants(test,
+                "Range[Int](1, 3)",
+                Range[Int](1, 3),
+            );
+            expectMarshalingInvariants(test,
+                "Range[SizeT](1, 3)",
+                Range[SizeT](SizeT(1), SizeT(3)),
             );
             expectNullMarshaling(test, "()", ());
             expectNullMarshaling(test, "EmptyRecord()", EmptyRecord());
@@ -156,8 +188,8 @@ main() = testMain(
                 expectMarshalingInvariants(test, "UniquePointerRecord()",
                     UniquePointerRecord()
                 );
-                expectMarshalingInvariants(test, "UniquePointerRecord(Canary())",
-                    UniquePointerRecord(Canary())
+                expectMarshalingInvariants(test, "UniquePointerRecord(3)",
+                    UniquePointerRecord(3)
                 );
             });
         }),

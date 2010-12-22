@@ -118,15 +118,19 @@ overload marshaledSize(context, r: R)
         ...mapValues(f ref=> marshaledSize(context, f), ...recordFields(r))
     );
 
-[R | Record?(R) and RecordMemberwiseMarshalable?(R)]
-overload marshalTo(context, buffer_: Pointer[Byte], forward r: R) buffer: Pointer[Byte] {
-    buffer <-- buffer_;
-    static for (x in ...recordFields(r))
+marshalMemberwise(context, buffer:Pointer[Byte], forward ...fields) {
+    static for (x in ...fields)
         buffer = marshalTo(context, buffer, x);
 }
 
+[R | Record?(R) and RecordMemberwiseMarshalable?(R)]
+overload marshalTo(context, buffer_: Pointer[Byte], forward r: R) buffer: Pointer[Byte] {
+    buffer <-- buffer_;
+    marshalMemberwise(context, buffer, ...recordFields(r));
+}
+
 [FieldT]
-private unmarshalMemberwise(
+unmarshalMemberwise(
     context,
     begin: Pointer[Byte],
     end: Pointer[Byte],
@@ -251,7 +255,9 @@ overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], stati
 // general sequence marshaling
 //
 private MarshalableSequence?(S)
-    = Sequence?(S) and Marshalable?(SequenceElementType(S));
+    = SequenceContainer?(S) and Marshalable?(SequenceElementType(S));
+
+overload MarshalableSequence?(static StringConstant) = true;
 
 private UnmarshalAsVectorSequence?(S)
     = MarshalableSequence?(S) and not CallDefined?(push, S, SequenceElementType(S));
