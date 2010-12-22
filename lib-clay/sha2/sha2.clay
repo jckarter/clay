@@ -3,9 +3,8 @@ import byteorder.*;
 
 record SHA256 (digest: Array[UInt8, 32]);
 
-overload printTo(stream, sha:SHA256) {
-    for (byte in sha.digest)
-        printTo(stream, rightAlignedWith(2, '0', hex(byte)));
+overload printTo(stream, forward sha:SHA256) {
+    printTo(stream, hexString(sha.digest));
 }
 
 private var sha256RoundConstants = [
