@@ -1,7 +1,15 @@
 
 import maybe.*;
 import newclay.lexer.*;
+import remote.marshaling.*;
 
+
+
+//
+// ModuleName
+//
+
+record ModuleName(path: Vector[String]);
 
 
 //
@@ -46,6 +54,39 @@ astFields(x:T) = forward ...dropValues(static 1, ...referenceTypeFields(x));
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
     printReprValuesTo(stream, ...astFields(x));
+}
+
+[T | ASTNode?(T)]
+overload marshaledSize(context:MarshalContext, x:T) MarshalSize
+    = foldValues(add,
+        marshaledSize(context, x.location.tokenRange),
+        marshaledSize(context, x.location.mainToken),
+        ...mapValues(f ref=> marshaledSize(context, f), ...astFields(x)),
+    );
+
+[T | ASTNode?(T)]
+overload marshalTo(context:MarshalContext, buffer_:Pointer[Byte], x:T) buffer:Pointer[Byte] {
+    buffer <-- buffer_;
+    marshalMemberwise(context, buffer,
+        x.location.tokenRange,
+        x.location.mainToken,
+        ...astFields(x),
+    );
+}
+
+[T | ASTNode?(T)]
+overload unmarshalFrom(context:UnmarshalContext, begin_:Pointer[Byte], end:Pointer[Byte], static T)
+    returned:T, begin:Pointer[Byte]
+{
+    begin <-- begin_;
+    // XXX should get tokens pointer from SourceAST context if available
+    returned <-- allocateUninitializedRefUnsafe(T);
+    returned.location.tokens <-- SourceTokens();
+    unmarshalMemberwise(context, begin, end,
+        returned.location.tokenRange,
+        returned.location.mainToken,
+        ...astFields(returned),
+    );
 }
 
 

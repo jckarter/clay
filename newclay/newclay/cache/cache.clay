@@ -3,6 +3,8 @@ import newclay.cache.parser.*;
 import newclay.ast as ast;
 import sha2.*;
 import maybe.*;
+import remote.marshaling.*;
+import printer.formatter.*;
 import libc.(sscanf);
 
 
@@ -10,10 +12,28 @@ import libc.(sscanf);
 // Cache types
 //
 
-record CachedSymbol();
-record CachedAttribute();
-record CachedStaticOverload();
-record CachedOverload();
+record CachedSymbol = referenceType(
+    module: ModuleName,
+    name: ast.Identifier,
+    params: ast.VariadicList[ast.Identifier],
+);
+record CachedAttribute = referenceType(
+    module: ModuleName,
+    target: ast.Pattern,
+    predicate: Maybe[ast.Expr],
+);
+record CachedStaticOverload = referenceType(
+    module: ModuleName,
+    target: ast.Pattern,
+    predicate: Maybe[ast.Expr],
+    args: ast.ListPattern,
+);
+record CachedOverload = referenceType(
+    module: ModuleName,
+    target: ast.Pattern,
+    predicate: Maybe[ast.Expr],
+    args: ast.VariadicList[ast.Argument],
+);
 
 variant CacheEntry = CachedSymbol
                    | CachedAttribute
@@ -116,41 +136,72 @@ hashCacheEntry(x) = sha256(hashString(x));
 //
 
 eachCacheableEntry(program:Program, fn) {
-    static for (cachedEntries in 
-        (program.allSymbolHeads,     CachedSymbol),
-        (program.allAttributes,      CachedAttribute),
-        (program.allStaticOverloads, CachedStaticOverload),
-        (program.allOverloads,       CachedOverload),
+    static for (entries in 
+        program.allSymbolHeads,
+        program.allAttributes,
+        program.allStaticOverloads,
+        program.allOverloads
     ) {
-        ref entries, CachedEntryType = ...unpack(cachedEntries);
-        
         for (entry in entries)
-            fn(entry, hashCacheEntry(entry), CachedEntryType);
+            fn(entry, hashCacheEntry(entry));
     }
+}
+
+private createCacheEntry(cache:Cache, entry:SymbolHead, hash:SHA256) {
+    cache.entries[hash] = CacheEntry(CachedSymbol(
+        entry.module.name, 
+        entry.ast.name,
+        entry.ast.params,
+    ));
+}
+overload createCacheEntry(cache:Cache, entry:Attribute, hash:SHA256) {
+    cache.entries[hash] = CacheEntry(CachedAttribute(
+        entry.module.name, 
+        entry.ast.target,
+        entry.ast.predicate,
+    ));
+}
+overload createCacheEntry(cache:Cache, entry:StaticOverload, hash:SHA256) {
+    cache.entries[hash] = CacheEntry(CachedStaticOverload(
+        entry.module.name,
+        entry.ast.target,
+        entry.ast.predicate,
+        entry.ast.args,
+    ));
+}
+overload createCacheEntry(cache:Cache, entry:Overload, hash:SHA256) {
+    cache.entries[hash] = CacheEntry(CachedOverload(
+        entry.module.name,
+        entry.ast.target,
+        entry.ast.predicate,
+        entry.ast.args,
+    ));
 }
 
 createCache(program:Program) {
     var cache = newCache();
 
-    eachCacheableEntry(program, (entry, hash, Type) ref=> {
-        cache.entries[hash] = CacheEntry(Type());
+    eachCacheableEntry(program, (entry, hash) ref=> {
+        createCacheEntry(cache, entry, hash);
     });
 
     return move(cache);
 }
 
-dirty?(cache:Cache, entry, hash:SHA256, Type) {
+entryDirty?(...x) = true;
+
+dirty?(cache:Cache, entry, hash:SHA256) {
     var entryp = lookup(cache.entries, hash);
     if (null?(entryp))
         return true;
     else
-        return not variantIs?(entryp^, Type);
+        return entryDirty?(entry, cache.entries[hash]);
 }
 
 eachDirty(program:Program, cache:Cache, fn) {
-    eachCacheableEntry(program, (entry, hash, Type) ref=> {
-        if (dirty?(cache, entry, hash, Type))
-            fn(entry, hash, Type);
+    eachCacheableEntry(program, (entry, hash) ref=> {
+        if (dirty?(cache, entry, hash))
+            fn(entry, hash);
     });
 }
 
@@ -158,8 +209,6 @@ eachDirty(program:Program, cache:Cache, fn) {
 //
 // loadCache
 //
-
-procedure die;
 
 loadCache(filename) = loadCache(File(filename, READ));
 overload loadCache(file:File) {
@@ -176,10 +225,14 @@ overload loadCache(file:File) {
 // saveCache
 //
 
-TypeStaticName(x) = StaticName(Type(x));
+private printCacheEntryTo(file, entry) {
+    printTo(file, StaticName(Type(entry)), "(", hexString(marshal(entry)), ")");
+}
 
 private saveCacheEntry(file, hash, entry) {
-    printlnTo(file, hash, "=", TypeStaticName(*entry));
+    printTo(file, hash, "=");
+    printCacheEntryTo(file, *entry);
+    printlnTo(file);
 }
 
 saveCache(filename, cache:Cache) { saveCache(File(filename, CREATE), cache); }
