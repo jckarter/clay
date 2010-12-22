@@ -130,6 +130,12 @@ allocateRef(static T) returned:T {
     referencePtr(returned) <-- new Tuple[...ReferenceTypeFieldTypes(T)]();
 }
 
+[T | ReferenceType?(T)]
+allocateUninitializedRefUnsafe(static T) returned:T {
+    alias InnerType = Tuple[...ReferenceTypeFieldTypes(T)];
+    referencePtr(returned) <-- SharedPointer[InnerType](allocateRawMemory(RefCounted[InnerType], 1));
+}
+
 
 
 //
