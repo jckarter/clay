@@ -125,5 +125,12 @@ main() = testMain(
                 leftAlignedWith(10, '-', rightAlignedWith(7, '|', hex(0xFFFF)))
             );
         }),
+        TestCase("hexString", test => {
+            expectPrinted(test,
+                "hexString([0_u8, 0xFF_u8, 0x0F_u8])",
+                "00FF0F",
+                hexString([0_u8, 0xFF_u8, 0x0F_u8]),
+            );
+        }),
     ]),
 );

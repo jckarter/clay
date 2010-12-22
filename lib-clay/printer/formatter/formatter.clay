@@ -12,6 +12,11 @@ Formatter?(X) = false;
 formatter(F, forward x, forward ...params)
     = F[Type(captureValue(x))](captureValue(x), ...params);
 
+[F | Formatter?(F)]
+overload printTo(stream, forward formatter: F) {
+    formatTo(stream, formatter, forwardValue(formatter.value));
+}
+
 
 
 //
@@ -32,11 +37,6 @@ hex(forward x: I) = formatter(HexFormatter, x);
 HEX(forward x: I) = formatter(HEXFormatter, x);
 [I | Integer?(I)]
 oct(forward x: I) = formatter(OctFormatter, x);
-
-[F | Formatter?(F)]
-overload printTo(stream, forward formatter: F) {
-    formatTo(stream, formatter, forwardValue(formatter.value));
-}
 
 // formatTo(stream, formatter, value)
 procedure formatTo;
@@ -70,6 +70,25 @@ overload formatBase(stream, value: UInt64, fmt, fmt64) {
 
 [T] overload formatTo(stream, f: OctFormatter[T], value) {
     formatBase(stream, value, "%o", formatForOctInt64);
+}
+
+
+
+//
+// hexString
+//
+
+record HexStringFormatter[T] (value: T);
+[T] overload Formatter?(static HexStringFormatter[T]) = true;
+
+HexStringSequence?(S) = Sequence?(S) and TypeSize(SequenceElementType(S)) == 1;
+
+[S | HexStringSequence?(S)]
+hexString(forward s:S) = formatter(HexStringFormatter, s);
+
+[T] overload formatTo(stream, f: HexStringFormatter[T], value) {
+    for (b in value)
+        printWithSprintf(stream, "%02X", bitwiseCast(b, UInt8));
 }
 
 
