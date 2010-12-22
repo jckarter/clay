@@ -46,6 +46,8 @@ record ComplexRecord (
     z: Char,
 );
 
+enum Enum { FOO, BAR, BAS }
+
 record UniquePointerRecord (x: UniquePointer[Int]);
 overload UniquePointerRecord(x: Int) = UniquePointerRecord(allocateUnique(x));
 overload UniquePointerRecord(o: UniquePointerRecord)
@@ -184,42 +186,41 @@ main() = testMain(
             expectNullMarshaling(test, "() => {}", () => {});
         }),
         TestCase("unique pointers", test => {
-            expectCanariesDestroyed(test, "fun with unique pointer marshaling", () => {
-                expectMarshalingInvariants(test, "UniquePointerRecord()",
-                    UniquePointerRecord()
-                );
-                expectMarshalingInvariants(test, "UniquePointerRecord(3)",
-                    UniquePointerRecord(3)
-                );
-            });
+            expectMarshalingInvariants(test, "UniquePointerRecord()",
+                UniquePointerRecord()
+            );
+            expectMarshalingInvariants(test, "UniquePointerRecord(3)",
+                UniquePointerRecord(3)
+            );
         }),
         TestCase("shared pointers", test => {
-            expectCanariesDestroyed(test, "fun with shared pointer marshaling", () => {
-                var a = new GraphNodeRecord();
-                var b = new GraphNodeRecord();
-                var c = new GraphNodeRecord();
-                var d = new GraphNodeRecord();
+            var a = new GraphNodeRecord();
+            var b = new GraphNodeRecord();
+            var c = new GraphNodeRecord();
+            var d = new GraphNodeRecord();
 
-                a^.left = b;
-                a^.right = d;
-                b^.left = c;
-                b^.right = c;
-                c^.left = d;
+            a^.left = b;
+            a^.right = d;
+            b^.left = c;
+            b^.right = c;
+            c^.left = d;
 
-                var aa = unmarshal(marshal(a), SharedPointer[GraphNodeRecord]);
-                var bb = aa^.left;
-                var cc = bb^.left;
-                var dd = aa^.right;
+            var aa = unmarshal(marshal(a), SharedPointer[GraphNodeRecord]);
+            var bb = aa^.left;
+            var cc = bb^.left;
+            var dd = aa^.right;
 
-                expectEqual(test, "aa^.left", bb, aa^.left);
-                expectEqual(test, "aa^.right", dd, aa^.right);
-                expectEqual(test, "bb^.left", cc, bb^.left);
-                expectEqual(test, "bb^.right", cc, bb^.right);
-                expectEqual(test, "cc^.left", dd, cc^.left);
-                expectEqual(test, "cc^.right", nullShared(GraphNodeRecord), cc^.right);
-                expectEqual(test, "dd^.left", nullShared(GraphNodeRecord), dd^.left);
-                expectEqual(test, "dd^.right", nullShared(GraphNodeRecord), dd^.right);
-            });
+            expectEqual(test, "aa^.left", bb, aa^.left);
+            expectEqual(test, "aa^.right", dd, aa^.right);
+            expectEqual(test, "bb^.left", cc, bb^.left);
+            expectEqual(test, "bb^.right", cc, bb^.right);
+            expectEqual(test, "cc^.left", dd, cc^.left);
+            expectEqual(test, "cc^.right", nullShared(GraphNodeRecord), cc^.right);
+            expectEqual(test, "dd^.left", nullShared(GraphNodeRecord), dd^.left);
+            expectEqual(test, "dd^.right", nullShared(GraphNodeRecord), dd^.right);
+        }),
+        TestCase("enums", test => {
+            expectMarshalingInvariants(test, "FOO", FOO);
         }),
     ]),
 );
