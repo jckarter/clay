@@ -94,6 +94,7 @@ overload BitwiseMarshalable?(static Bool) = true;
 [C | Character?(C)] overload BitwiseMarshalable?(static C) = true;
 [I | Integer?(I)] overload BitwiseMarshalable?(static I) = true;
 [F | Float?(F)] overload BitwiseMarshalable?(static F) = true;
+[E | Enum?(E)] overload BitwiseMarshalable?(static E) = true;
 [R | RegularRecord?(R) and allValues?(BitwiseMarshalable?, ...RecordFieldTypes(R))]
 overload BitwiseMarshalable?(static R) = true;
 [...TupleMembers | allValues?(BitwiseMarshalable?, ...TupleMembers)]
