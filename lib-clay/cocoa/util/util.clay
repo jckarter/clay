@@ -13,10 +13,7 @@ public import cocoa.util.platform.*;
 // object identity
 //
 [T1, T2 | ObjectRef?(T1) and ObjectRef?(T2)]
-is?(x: T1, y: T2) = objectHandle(x) == objectHandle(y);
-
-[T1, T2 | ObjectRef?(T1) and ObjectRef?(T2)]
-isNot?(x: T1, y: T2) = objectHandle(x) != objectHandle(y);
+overload is?(x: T1, y: T2) = objectHandle(x) == objectHandle(y);
 
 
 

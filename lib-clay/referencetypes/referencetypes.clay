@@ -201,3 +201,12 @@ overload lesser?(a:T, b:T) {
 
 [T | ReferenceType?(T)]
 overload null?(x:T) = null?(referencePtr(x));
+
+
+
+//
+// is?
+//
+
+[T | ReferenceType?(T)]
+overload is?(x:T, y:T) = referencePtr(x) == referencePtr(y);

@@ -193,11 +193,21 @@ record StringLiteral = ast(
     value: String,
 );
 
+record LocalEnvRef ();
+record ModuleEnvRef (module: ModuleName);
+record ModuleAliasEnvRef (module: ModuleName);
+
+variant EnvRef = Nothing
+               | LocalEnvRef
+               | ModuleEnvRef
+               | ModuleAliasRef;
+overload EnvRef() = EnvRef(Nothing());
+
 record NameRef = ast(
-    module: Maybe[ModuleName],
+    env: EnvRef,
     name: Identifier,
 );
-overload NameRef(name:Identifier) = NameRef(nothing(ModuleName), name);
+overload NameRef(name:Identifier) = NameRef(EnvRef(), name);
 
 record PatternNameRef = ast(
     name: Identifier,
@@ -228,6 +238,7 @@ record OrExpr = ast(
 );
 
 record LambdaExpr = ast(
+    predicate: Maybe[Expr],
     formalArgs: VariadicList[Identifier],
     body: ExprList,
 );
