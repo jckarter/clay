@@ -12,7 +12,7 @@ import newclay.ir as ir;
 // Program
 //
 
-record ModuleName (path: Vector[String]);
+alias ModuleName = ast.ModuleName;
 alias ModuleMap = HashMap[ModuleName, Module];
 
 [...S | countValues(...S) >= 1 and allValues?(String?, ...S)]
