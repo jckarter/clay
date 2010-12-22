@@ -1,4 +1,5 @@
 import parsing.combinators.strings.*;
+import remote.marshaling.*;
 import newclay.cache.*;
 import sha2.*;
 import identifiers.*;
@@ -15,6 +16,8 @@ private var _hexByte = modify(
     sequence(_hexDigit, _hexDigit),
 );
 
+private var _hexString = repeated(0, INT_MAX, _hexByte);
+
 private var _sha = modify(
     x => SHA256(Array[UInt8, 32](x)),
     repeated(32, 32, _hexByte),
@@ -25,16 +28,20 @@ private IdentifierAsChar(x) = StaticName(x)[0];
 private _token(ident)
     = sequence(...mapValues(IdentifierAsChar, ...IdentifierChars(ident)));
 
-private var _cacheEntry = choice(
-    modify(x => CacheEntry(CachedSymbol()), _token(#CachedSymbol)),
-    modify(x => CacheEntry(CachedAttribute()), _token(#CachedAttribute)),
-    modify(x => CacheEntry(CachedStaticOverload()), _token(#CachedStaticOverload)),
-    modify(x => CacheEntry(CachedOverload()), _token(#CachedOverload)),
+private unmarshalLambda(T) = Lambda[(Vector[UInt8]), (CacheEntry)](
+    x => CacheEntry(unmarshal(x, T)),
+);
+
+private var _cacheEntryType = choice(
+    modify(x => unmarshalLambda(CachedSymbol), _token(#CachedSymbol)),
+    modify(x => unmarshalLambda(CachedAttribute), _token(#CachedAttribute)),
+    modify(x => unmarshalLambda(CachedStaticOverload), _token(#CachedStaticOverload)),
+    modify(x => unmarshalLambda(CachedOverload), _token(#CachedOverload)),
 );
 
 private var _cacheEntryLine = modify(
-    x => (x.0, x.2),
-    sequence(_sha, '=', _cacheEntry),
+    x => (x.0, x.2(x.4)),
+    sequence(_sha, '=', _cacheEntryType, '(', _hexString, ')'),
 );
 
 record InvalidCacheFile ();

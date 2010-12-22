@@ -3,6 +3,7 @@ import newclay.core.*;
 import newclay.loader.*;
 import newclay.cache.*;
 import commandline.dispatch.*;
+import sha2.*;
 
 create(args) {
     if (size(args) != 2) {
@@ -20,31 +21,22 @@ create(args) {
     return 0;
 }
 
-printDirty(s:SymbolHead) {
-    println(s.module, " symbol ", s.ast.name.str);
-}
-overload printDirty(s:Attribute) {
-    println(s.module, " symbol attribute ", s.ast.target);
-}
-overload printDirty(s:StaticOverload) {
-    println(s.module, " static overload ", s.ast.target);
-}
-overload printDirty(s:Overload) {
-    println(s.module, " overload ", s.ast.target);
+printEntry(hash:SHA256, s:CacheEntry) {
+    println(hash);
+    print("    ");
+    println(*s);
 }
 
-showdirty(args) {
-    if (size(args) != 2) {
-        println("usage: testcache showdirty <file> <cache>");
+show(args) {
+    if (size(args) != 1) {
+        println("usage: testcache show <cache>");
         return -1;
     }
     try {
-        var program = loadProgram(args[0]);
-        var cache = loadCache(args[1]);
-
-        eachDirty(program, cache, (entry, hash, Type) ref=> {
-            printDirty(entry);
-        });
+        var cache = loadCache(args[0]);
+        
+        for (hash, entry in items(cache.entries))
+            printEntry(hash, entry);
     }
     catch (e:ClayError) {
         displayError(e);
@@ -52,4 +44,4 @@ showdirty(args) {
     return 0;
 }
 
-main() = dispatchMain(create, showdirty);
+main() = dispatchMain(create, show);
