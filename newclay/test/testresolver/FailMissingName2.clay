@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+symbol Bar = (Foo);
