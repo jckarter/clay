@@ -10,7 +10,6 @@ alias DummyValue = Value(BoolValue(false));
 private record ResolveASTVisitor(env:EnvParent);
 
 overload visitAST(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
-    observe(#g);
     visitAST(r, lambda.predicate);
     visitAST(r, lambda.formalArgs);
 
@@ -28,7 +27,6 @@ overload visitAST(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
 }
 
 overload visitAST(r:ResolveASTVisitor, oload:ast.Overload) {
-    observe(#h);
     visitAST(r, oload.predicate);
     visitAST(r, oload.target);
     visitAST(r, oload.args);
@@ -53,7 +51,6 @@ overload visitAST(r:ResolveASTVisitor, oload:ast.Overload) {
 }
 
 overload visitAST(r:ResolveASTVisitor, nameRef:ast.NameRef) {
-    observe(#i);
     nameRef.env = match(privateLookup(r.env, nameRef.name),
         Value, v => match(v,
             SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name)),
@@ -67,6 +64,5 @@ overload visitAST(r:ResolveASTVisitor, nameRef:ast.NameRef) {
 }
 
 overload resolveAST(e:EnvParent, a) {
-    observe(#j);
     visitAST(ResolveASTVisitor(e), a);
 }

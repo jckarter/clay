@@ -1,15 +1,47 @@
-
 import newclay.common.*;
 import newclay.core.*;
 import newclay.loader.*;
+import newclay.ast as ast;
+import newclay.ast.(visitAST, visitASTNode);
 
-dumpModuleValue(moduleValue:ModuleValue, depth:Int) {
-    for (name, submoduleValue in items(moduleValue.submodules)) {
-        for (x in range(depth))
-            print("  ");
-        println(".", name, ": ", submoduleValue);
-        dumpModuleValue(submoduleValue, depth+1);
-    }
+record TestResolverVisitor (depth:Int);
+
+depth(d) {
+    var s = String();
+    for (i in range(d)) s += "  ";
+    return s;
+}
+
+overload visitAST(v:TestResolverVisitor, node:ast.Symbol) {
+    println(depth(v.depth), "symbol ", node.name.str);
+    v.depth += 1;
+    visitASTNode(v, node);
+    v.depth -= 1;
+}
+
+overload visitAST(v:TestResolverVisitor, node:ast.LambdaExpr) {
+    println(depth(v.depth), "lambda");
+    v.depth += 1;
+    visitASTNode(v, node);
+    v.depth -= 1;
+}
+
+overload visitAST(v:TestResolverVisitor, node:ast.Overload) {
+    println(depth(v.depth), "overload ", node.target);
+    v.depth += 1;
+    visitASTNode(v, node);
+    v.depth -= 1;
+}
+
+overload visitAST(v:TestResolverVisitor, node:ast.StaticOverload) {
+    println(depth(v.depth), "static overload ", node.target);
+    v.depth += 1;
+    visitASTNode(v, node);
+    v.depth -= 1;
+}
+
+overload visitAST(v:TestResolverVisitor, node:ast.NameRef) {
+    println(depth(v.depth), node.name.str, " from ", node.env);
 }
 
 main(args) {
@@ -20,8 +52,8 @@ main(args) {
     try {
         var program = loadProgram(args[1]);
         for (moduleName, module in items(program.modules)) {
-            if (not null?(module.ast))
-                println(moduleNameString(moduleName), ": ", module.ast.topLevelItems);
+            println(moduleName, ":");
+            visitAST(TestResolverVisitor(1), module.ast);
         }
     }
     catch (e:ClayError) {
