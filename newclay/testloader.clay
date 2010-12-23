@@ -39,7 +39,6 @@ main(args) {
                 for (entryName, entry in items(env.entries))
                     println("    ", entryName, ": ", entry);
             }
-            println("  ast: ", module.ast);
         }
     }
     catch (e:ClayError) {

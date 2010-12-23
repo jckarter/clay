@@ -6,7 +6,7 @@ procedure resolveAST;
 
 alias DummyValue = Value(BoolValue(false));
 
-overload resolveAST(env:EnvParent, x) {observe(Type(x));}
+overload resolveAST(env:EnvParent, x) {}
 
 overload resolveAST(env:EnvParent, sourceAST:ast.SourceAST) {
     if (not null?(sourceAST))
