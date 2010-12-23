@@ -40,8 +40,17 @@ overload visitAST(v:TestResolverVisitor, node:ast.StaticOverload) {
     v.depth -= 1;
 }
 
+printDottedPath(x:Vector[ast.Identifier]) {
+    interleave(x,
+        () => {print(".");},
+        i  => {print(i.str);}
+    );
+}
+
 overload visitAST(v:TestResolverVisitor, node:ast.NameRef) {
-    println(depth(v.depth), node.name.str, " from ", node.env);
+    print(depth(v.depth));
+    printDottedPath(node.name);
+    println(" references ", node.env);
 }
 
 main(args) {

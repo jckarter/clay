@@ -189,7 +189,7 @@ record StringLiteral = ast(
 
 record UnresolvedEnvRef ();
 record LocalEnvRef ();
-record ModuleEnvRef (module: ModuleName);
+record ModuleEnvRef (module: ModuleName, name: String);
 record ModulePathRef (path: Vector[Identifier]);
 record ModuleAliasRef (module: ModuleName);
 

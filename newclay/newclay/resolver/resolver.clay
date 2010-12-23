@@ -53,9 +53,9 @@ overload visitAST(r:ResolveASTVisitor, oload:ast.Overload) {
 overload visitAST(r:ResolveASTVisitor, nameRef:ast.NameRef) {
     nameRef.env = match(privateLookup(r.env, nameRef.name),
         Value, v => match(v,
-            SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name)),
-            Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name)),
-            Primitive,    p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName)),
+            SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name, h.ast.name.str)),
+            Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name, s.head.ast.name.str)),
+            Primitive,    p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName, primitiveName(p))),
             ModuleValue,  m => maybe(m.module,
                 module => ast.EnvRef(ast.ModuleAliasRef(module.name)),
                 () => ast.EnvRef(ast.ModulePathRef(nameRef.name)),

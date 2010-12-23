@@ -217,11 +217,12 @@ record Primitive = referenceType(
     kind: PrimitiveKind,
 );
 
-primitiveName(kind) {
+primitiveName(kind:PrimitiveKind) {
     var s = printString(kind);
     assert(beginsWith?(s, "PRIM_"));
     return sliceFrom(s, size("PRIM_"));
 }
+overload primitiveName(p:Primitive) = primitiveName(p.kind);
 
 
 
@@ -488,7 +489,7 @@ moduleValueLookup(moduleValue:ModuleValue, member:String) {
             ()     ref=> ref throwButPropagate(GenericError(String("qualified reference to module that is not imported")), EnvEntry),
         );
     } else {
-        return ref submoduleValue^;
+        return ref submoduleValue^.envEntry;
     }
 }
 
@@ -498,12 +499,12 @@ private namePathLookupFailureError()
 // XXX this will need to change to support fieldRef syntax
 namePathLookup(lookupFn, env, namePath:Vector[ast.Identifier]) {
     assert(size(namePath) > 0);
-    var entryp = &lookupFn(env, observe(namePath[0]));
+    var entryp = &lookupFn(env, namePath[0]);
 
     for (component in slicedFrom(namePath, 1))
         entryp = &match(entryp^,
             Value, v ref=> ref match(v, 
-                ModuleValue,  mv ref=> ref moduleValueLookup(mv, observe(component).str),
+                ModuleValue,  mv ref=> ref moduleValueLookup(mv, component.str),
                 MatchDefault, x  ref=> ref namePathLookupFailureError(),
             ),
             MatchDefault, x ref=> ref namePathLookupFailureError(),
@@ -585,18 +586,23 @@ overload LambdaValue(value: ast.LambdaExpr, env: E) = LambdaValue(value, EnvPare
 // ModuleValue
 //
 
+record ModuleValueEntry (envEntry:EnvEntry);
+overload ModuleValueEntry() = ModuleValueEntry(EnvEntry(Value(ModuleValue())));
+
 record ModuleValue (
     module: Maybe[Module],
-    submodules: HashMap[String, EnvEntry],
+    submodules: HashMap[String, ModuleValueEntry],
 );
+moduleValueSubmodule(m:ModuleValue, name:String)
+    = ref nestedVariantAs(m.submodules[name].envEntry, ModuleValue);
 
 overload equals?(m1: ModuleValue, m2: ModuleValue)
     = m1.module == m2.module;
 
 overload ModuleValue(module:Module)
-    = ModuleValue(Maybe(module), HashMap[String,EnvEntry]());
+    = ModuleValue(Maybe(module), HashMap[String,ModuleValueEntry]());
 overload ModuleValue(module:Maybe[Module])
-    = ModuleValue(module, HashMap[String,EnvEntry]());
+    = ModuleValue(module, HashMap[String,ModuleValueEntry]());
 
 qualifiedImportConflictError(path, name) {
     var pathString = join('.', path);
@@ -619,13 +625,7 @@ addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], name:String,
             qualifiedImportConflictError(path, name);
     });
 
-    var submoduleRefp = lookup(moduleRef.submodules, name);
-    if (null?(submoduleRefp)) {
-        submoduleRefp = &moduleRef.submodules[name];
-        submoduleRefp^ = EnvEntry(Value(ModuleValue()));
-    }
-
-    ref submoduleRef = nestedVariantAs(submoduleRefp^, ModuleValue);
+    ref submoduleRef = moduleValueSubmodule(moduleRef, name);
     if (nothing?(submoduleRef.module)) {
         submoduleRef.module = module;
         maybe(module, justModule => {
