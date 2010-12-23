@@ -193,15 +193,16 @@ record StringLiteral = ast(
     value: String,
 );
 
+record UnresolvedEnvRef ();
 record LocalEnvRef ();
 record ModuleEnvRef (module: ModuleName);
-record ModuleAliasEnvRef (module: ModuleName);
+record ModuleAliasRef (module: ModuleName);
 
-variant EnvRef = Nothing
+variant EnvRef = UnresolvedEnvRef
                | LocalEnvRef
                | ModuleEnvRef
                | ModuleAliasRef;
-overload EnvRef() = EnvRef(Nothing());
+overload EnvRef() = EnvRef(UnresolvedEnvRef());
 
 record NameRef = ast(
     env: EnvRef,

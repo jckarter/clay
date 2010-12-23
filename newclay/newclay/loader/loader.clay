@@ -6,6 +6,7 @@ import newclay.lexer.*;
 import newclay.ast as ast;
 import newclay.parser.*;
 import newclay.core.*;
+import newclay.resolver.*;
 
 private loadPrimitivesModule(program:Program) {
     var module = Module(program, primitivesModuleName);
@@ -162,11 +163,17 @@ private loadMainModule(program, mainFilename) {
     return module;
 }
 
+private resolveProgram(program:Program) {
+    for (name, module in items(program.modules))
+        resolveAST(EnvParent(module), module.ast);
+}
+
 loadProgram(mainFilename:String, searchPath:Vector[String]) {
     var program = Program();
     program.moduleSearchPath = searchPath;
     primitivesModule(program) = loadPrimitivesModule(program);
     mainModule(program) = loadMainModule(program, mainFilename);
+    resolveProgram(program);
     return program;
 }
 
