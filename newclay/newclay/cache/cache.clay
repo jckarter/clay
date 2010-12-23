@@ -49,91 +49,11 @@ newCache() = allocateRef(Cache);
 
 
 //
-// Cache entry hashing
-//
-
-private printHashReprTo(s, m:Module, x) { printReprTo(s, x); }
-
-[V | Variant?(V)]
-overload printHashReprTo(s, m:Module, x:V) { printHashReprTo(s, m, *x); }
-
-[T]
-overload printHashReprTo(s, m:Module, xs:Vector[T]) {
-    printTo(s, "[");
-    for (x in xs) {
-        printHashReprTo(s, m, x);
-        printTo(s, ",");
-    }
-    printTo(s, "]");
-}
-
-[S | String?(S)]
-overload printHashReprTo(s, m:Module, str:S) {
-    printReprTo(s, str);
-}
-
-[T]
-overload printHashReprTo(s, m:Module, xs:ast.VariadicList[T]) {
-    printTo(s, "[");
-    for (x in xs.items) {
-        printHashReprTo(s, m, x);
-        printTo(s, ",");
-    }
-    printHashReprTo(s, m, xs.variadicItem);
-    printTo(s, "]");
-}
-
-[N | ast.ASTNode?(N)]
-overload printHashReprTo(s, m:Module, x:N) {
-    printTo(s, StaticName(N), "(");
-    static for (field in ...ast.astFields(x)) {
-        printHashReprTo(s, m, field);
-        printTo(s, ",");
-    }
-    printTo(s, ")");
-}
-
-overload printHashReprTo(s, m:Module, x:ast.NameRef) {
-    ifPrivateLookup(m, x.name.str,
-        entry ref=> {
-            printHashEntryTo(s, x.name.str, *entry);
-        },
-        ()    ref=> {
-            printTo(s, x.name.str);
-        },
-    );
-}
-
-private printHashEntryTo(s, name:String, entry) { printTo(s, name); }
-
-overload printHashEntryTo(s, name:String, entry:Value) {
-    printHashEntryTo(s, name, *entry);
-}
-
-overload printHashEntryTo(s, name:String, entry:Symbol) {
-    printHashEntryTo(s, name, entry.head);
-}
-overload printHashEntryTo(s, name:String, entry:SymbolHead) {
-    printTo(s, entry.module.name, ".", name);
-}
-overload printHashEntryTo(s, name:String, entry:ModuleValue) {
-    printTo(s, entry.module);
-}
-
-hashString(x) {
-    var s = String();
-    printTo(s, x.module.name);
-    printTo(s, ":");
-    printHashReprTo(s, x.module, x.ast);
-    return s;
-}
-
-hashCacheEntry(x) = sha256(hashString(x));
-
-
-//
 // Cache creation and querying
 //
+
+private hashData(x) = marshal(x.module.name, x.ast);
+hashCacheEntry(x) = sha256(hashData(x));
 
 eachCacheableEntry(program:Program, fn) {
     static for (entries in 

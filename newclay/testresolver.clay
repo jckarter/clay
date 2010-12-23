@@ -2,7 +2,7 @@ import newclay.common.*;
 import newclay.core.*;
 import newclay.loader.*;
 import newclay.ast as ast;
-import newclay.ast.(visitAST, visitASTNode);
+import newclay.ast.(visitAST, visitASTFields);
 
 record TestResolverVisitor (depth:Int);
 
@@ -15,28 +15,28 @@ depth(d) {
 overload visitAST(v:TestResolverVisitor, node:ast.Symbol) {
     println(depth(v.depth), "symbol ", node.name.str);
     v.depth += 1;
-    visitASTNode(v, node);
+    visitASTFields(v, node);
     v.depth -= 1;
 }
 
 overload visitAST(v:TestResolverVisitor, node:ast.LambdaExpr) {
     println(depth(v.depth), "lambda");
     v.depth += 1;
-    visitASTNode(v, node);
+    visitASTFields(v, node);
     v.depth -= 1;
 }
 
 overload visitAST(v:TestResolverVisitor, node:ast.Overload) {
     println(depth(v.depth), "overload ", node.target);
     v.depth += 1;
-    visitASTNode(v, node);
+    visitASTFields(v, node);
     v.depth -= 1;
 }
 
 overload visitAST(v:TestResolverVisitor, node:ast.StaticOverload) {
     println(depth(v.depth), "static overload ", node.target);
     v.depth += 1;
-    visitASTNode(v, node);
+    visitASTFields(v, node);
     v.depth -= 1;
 }
 
