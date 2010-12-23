@@ -149,23 +149,6 @@ symbolAttributes(x:Symbol) {
 
 
 //
-// modules
-//
-
-moduleValueLookup(moduleValue:ModuleValue, memberValue:StringValue) {
-    var submoduleValue = lookup(moduleValue.submodules, memberValue.value);
-    if (null?(submoduleValue)) {
-        return maybe(moduleValue.module,
-            module ref=> envEntryToValue(publicLookup(module, memberValue.value)),
-            ()     ref=> throwButPropagate(GenericError(String("qualified reference to non-imported module")), Value),
-        );
-    } else {
-        return Value(submoduleValue^);
-    }
-}
-
-
-//
 // evaluateMain
 //
 
@@ -1132,7 +1115,7 @@ evaluatePrimitive(kind, args) {
     }
     case PRIM_StaticModuleMember : {
         var module, member = ...moduleString(args);
-        return ValueList(moduleValueLookup(module, member));
+        return ValueList(envEntryToValue(moduleValueLookup(module, member.value)));
     }
 
     default : {
