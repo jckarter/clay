@@ -190,11 +190,13 @@ record StringLiteral = ast(
 record UnresolvedEnvRef ();
 record LocalEnvRef ();
 record ModuleEnvRef (module: ModuleName);
+record ModulePathRef (name: String);
 record ModuleAliasRef (module: ModuleName);
 
 variant EnvRef = UnresolvedEnvRef
                | LocalEnvRef
                | ModuleEnvRef
+               | ModulePathRef
                | ModuleAliasRef;
 overload EnvRef() = EnvRef(UnresolvedEnvRef());
 
