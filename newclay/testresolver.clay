@@ -1,0 +1,31 @@
+
+import newclay.common.*;
+import newclay.core.*;
+import newclay.loader.*;
+
+dumpModuleValue(moduleValue:ModuleValue, depth:Int) {
+    for (name, submoduleValue in items(moduleValue.submodules)) {
+        for (x in range(depth))
+            print("  ");
+        println(".", name, ": ", submoduleValue);
+        dumpModuleValue(submoduleValue, depth+1);
+    }
+}
+
+main(args) {
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <file>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[1]);
+        for (moduleName, module in items(program.modules)) {
+            if (not null?(module.ast))
+                println(moduleNameString(moduleName), ": ", module.ast.topLevelItems);
+        }
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
