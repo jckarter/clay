@@ -1,0 +1,10 @@
+import __primitives__.*;
+import publicimporter.*;
+
+symbol Main = ();
+static overload Main() = (
+    Factorial(8),
+    Fac(8),
+    factorial.Factorial(8),
+    fac.Factorial(8),
+);
