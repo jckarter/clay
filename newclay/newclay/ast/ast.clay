@@ -414,32 +414,32 @@ record SourceAST = referenceType(
 // visitAST
 //
 
-visitAST(visitor, x) {observe(#a);}
+visitAST(visitor, x) {}
 
 overload visitAST(visitor, sourceAST: SourceAST) {
-    observe(#b);
     if (not null?(sourceAST))
         for (item in sourceAST.topLevelItems)
             visitAST(visitor, item);
 }
 
-[N | ASTNode?(N)]
-overload visitAST(visitor, node:N) {
-    observe(#c);
+visitASTNode(visitor, node) {
     static for (field in ...astFields(node))
         visitAST(visitor, field);
 }
 
+[N | ASTNode?(N)]
+overload visitAST(visitor, node:N) {
+    visitASTNode(visitor, node);
+}
+
 [T]
 overload visitAST(visitor, v:Vector[T]) {
-    observe(#d);
     for (elt in v)
         visitAST(visitor, elt);
 }
 
 [T]
 overload visitAST(visitor, v:VariadicList[T]) {
-    observe(#e);
     for (elt in v.items)
         visitAST(visitor, elt);
     visitAST(visitor, v.variadicItem);
@@ -447,6 +447,5 @@ overload visitAST(visitor, v:VariadicList[T]) {
 
 [V | Variant?(V)]
 overload visitAST(visitor, v:V) {
-    observe(#f);
     visitAST(visitor, *v);
 }
