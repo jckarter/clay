@@ -1,4 +1,4 @@
-
+import libc.(abort);
 
 
 
@@ -8,6 +8,7 @@
 
 errorNoThrow(...e) {
     printlnTo(stderr, "error: ", ...e);
+    abort();
 }
 
 [ | not ExceptionsEnabled?]
@@ -40,10 +41,10 @@ overload error(...e) {
 
 callbyname assert(cond:Bool, ...message) {
     if (not cond)
-        error("assertion failed: ", ...message);
+        errorNoThrow("assertion failed: ", ...message);
 }
 
 callbyname overload assert(cond:Bool) {
     if (not cond)
-        error("assertion failed");
+        errorNoThrow("assertion failed");
 }
