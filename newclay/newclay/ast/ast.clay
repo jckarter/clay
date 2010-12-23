@@ -59,8 +59,6 @@ overload printReprTo(stream, x:T) {
 [T | ASTNode?(T)]
 overload marshaledSize(context:MarshalContext, x:T) MarshalSize
     = foldValues(add,
-        marshaledSize(context, x.location.tokenRange),
-        marshaledSize(context, x.location.mainToken),
         ...mapValues(f ref=> marshaledSize(context, f), ...astFields(x)),
     );
 
@@ -68,8 +66,6 @@ overload marshaledSize(context:MarshalContext, x:T) MarshalSize
 overload marshalTo(context:MarshalContext, buffer_:Pointer[Byte], x:T) buffer:Pointer[Byte] {
     buffer <-- buffer_;
     marshalMemberwise(context, buffer,
-        x.location.tokenRange,
-        x.location.mainToken,
         ...astFields(x),
     );
 }
@@ -81,10 +77,8 @@ overload unmarshalFrom(context:UnmarshalContext, begin_:Pointer[Byte], end:Point
     begin <-- begin_;
     // XXX should get tokens pointer from SourceAST context if available
     returned <-- allocateUninitializedRefUnsafe(T);
-    returned.location.tokens <-- SourceTokens();
+    returned.location <-- Location();
     unmarshalMemberwise(context, begin, end,
-        returned.location.tokenRange,
-        returned.location.mainToken,
         ...astFields(returned),
     );
 }
@@ -414,7 +408,16 @@ record SourceAST = referenceType(
 // visitAST
 //
 
-visitAST(visitor, x) {}
+visitASTLeaf(visitor, x) {}
+
+visitASTFields(visitor, node) {
+    static for (field in ...astFields(node))
+        visitAST(visitor, field);
+}
+
+visitAST(visitor, x) {
+    visitASTLeaf(visitor, x);
+}
 
 overload visitAST(visitor, sourceAST: SourceAST) {
     if (not null?(sourceAST))
@@ -422,14 +425,9 @@ overload visitAST(visitor, sourceAST: SourceAST) {
             visitAST(visitor, item);
 }
 
-visitASTNode(visitor, node) {
-    static for (field in ...astFields(node))
-        visitAST(visitor, field);
-}
-
 [N | ASTNode?(N)]
 overload visitAST(visitor, node:N) {
-    visitASTNode(visitor, node);
+    visitASTFields(visitor, node);
 }
 
 [T]
