@@ -1,0 +1,88 @@
+import newclay.ast as ast;
+import newclay.core.*;
+import maybe.*;
+
+procedure resolveAST;
+
+alias DummyValue = Value(BoolValue(false));
+
+overload resolveAST(env:EnvParent, x) {observe(Type(x));}
+
+overload resolveAST(env:EnvParent, sourceAST:ast.SourceAST) {
+    if (not null?(sourceAST))
+        for (item in sourceAST.topLevelItems)
+            resolveAST(env, item);
+}
+
+[T | ast.ASTNode?(T)]
+overload resolveAST(env:EnvParent, node:T) {
+    static for (field in ...ast.astFields(node))
+        resolveAST(env, field);
+}
+
+[T]
+overload resolveAST(env:EnvParent, v:Vector[T]) {
+    for (elt in v)
+        resolveAST(env, elt);
+}
+
+[T]
+overload resolveAST(env:EnvParent, v:ast.VariadicList[T]) {
+    for (elt in v.items)
+        resolveAST(env, elt);
+    resolveAST(env, v.variadicItem);
+}
+
+[V | Variant?(V)]
+overload resolveAST(env:EnvParent, v:V) {
+    resolveAST(env, *v);
+}
+
+overload resolveAST(env:EnvParent, lambda:ast.LambdaExpr) {
+    resolveAST(env, lambda.predicate);
+    resolveAST(env, lambda.formalArgs);
+
+    var subenv = newEnv(env);
+    for (arg in lambda.formalArgs.items)
+        envAdd(subenv, arg, DummyValue);
+    maybe(lambda.formalArgs.variadicItem, arg ref=> {
+        envAdd(subenv, arg, DummyValue);
+    });
+
+    resolveAST(EnvParent(subenv), lambda.body);
+}
+
+overload resolveAST(env:EnvParent, oload:ast.Overload) {
+    resolveAST(env, oload.predicate);
+    resolveAST(env, oload.target);
+    resolveAST(env, oload.args);
+
+    var subenv = newEnv(env);
+
+    for (arg in oload.args.items)
+        envAdd(subenv, arg.name, DummyValue);
+    maybe(oload.args.variadicItem, arg ref=> {
+        envAdd(subenv, arg.name, DummyValue);
+    });
+
+    maybe(oload.returnedNames, returnedNames ref=> {
+        for (ret in returnedNames)
+            envAdd(subenv, ret, DummyValue);
+    });
+
+    resolveAST(EnvParent(subenv), oload.returns);
+    resolveAST(EnvParent(subenv), oload.body);
+}
+
+overload resolveAST(env:EnvParent, nameRef:ast.NameRef) {
+    nameRef.env = match(privateLookup(env, nameRef.name),
+        Value, v => match(v,
+            SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name)),
+            Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name)),
+            Primitive,    p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName)),
+            ModuleValue,  m => ast.EnvRef(ast.ModuleAliasRef(just(m.module).name)), // XXX what about partial module value?!
+            MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
+        ),
+        MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
+    );
+}
