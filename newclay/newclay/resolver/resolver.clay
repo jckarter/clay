@@ -1,4 +1,5 @@
 import newclay.ast as ast;
+import newclay.ast.(visitAST);
 import newclay.core.*;
 import maybe.*;
 
@@ -6,58 +7,33 @@ procedure resolveAST;
 
 alias DummyValue = Value(BoolValue(false));
 
-overload resolveAST(env:EnvParent, x) {}
+private record ResolveASTVisitor(env:EnvParent);
 
-overload resolveAST(env:EnvParent, sourceAST:ast.SourceAST) {
-    if (not null?(sourceAST))
-        for (item in sourceAST.topLevelItems)
-            resolveAST(env, item);
-}
+overload visitAST(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
+    observe(#g);
+    visitAST(r, lambda.predicate);
+    visitAST(r, lambda.formalArgs);
 
-[T | ast.ASTNode?(T)]
-overload resolveAST(env:EnvParent, node:T) {
-    static for (field in ...ast.astFields(node))
-        resolveAST(env, field);
-}
+    var subenv = newEnv(r.env);
 
-[T]
-overload resolveAST(env:EnvParent, v:Vector[T]) {
-    for (elt in v)
-        resolveAST(env, elt);
-}
-
-[T]
-overload resolveAST(env:EnvParent, v:ast.VariadicList[T]) {
-    for (elt in v.items)
-        resolveAST(env, elt);
-    resolveAST(env, v.variadicItem);
-}
-
-[V | Variant?(V)]
-overload resolveAST(env:EnvParent, v:V) {
-    resolveAST(env, *v);
-}
-
-overload resolveAST(env:EnvParent, lambda:ast.LambdaExpr) {
-    resolveAST(env, lambda.predicate);
-    resolveAST(env, lambda.formalArgs);
-
-    var subenv = newEnv(env);
     for (arg in lambda.formalArgs.items)
         envAdd(subenv, arg, DummyValue);
     maybe(lambda.formalArgs.variadicItem, arg ref=> {
         envAdd(subenv, arg, DummyValue);
     });
 
-    resolveAST(EnvParent(subenv), lambda.body);
+    var subr = ResolveASTVisitor(EnvParent(subenv));
+
+    visitAST(subr, lambda.body);
 }
 
-overload resolveAST(env:EnvParent, oload:ast.Overload) {
-    resolveAST(env, oload.predicate);
-    resolveAST(env, oload.target);
-    resolveAST(env, oload.args);
+overload visitAST(r:ResolveASTVisitor, oload:ast.Overload) {
+    observe(#h);
+    visitAST(r, oload.predicate);
+    visitAST(r, oload.target);
+    visitAST(r, oload.args);
 
-    var subenv = newEnv(env);
+    var subenv = newEnv(r.env);
 
     for (arg in oload.args.items)
         envAdd(subenv, arg.name, DummyValue);
@@ -70,12 +46,15 @@ overload resolveAST(env:EnvParent, oload:ast.Overload) {
             envAdd(subenv, ret, DummyValue);
     });
 
-    resolveAST(EnvParent(subenv), oload.returns);
-    resolveAST(EnvParent(subenv), oload.body);
+    var subr = ResolveASTVisitor(EnvParent(subenv));
+
+    visitAST(subr, oload.returns);
+    visitAST(subr, oload.body);
 }
 
-overload resolveAST(env:EnvParent, nameRef:ast.NameRef) {
-    nameRef.env = match(privateLookup(env, nameRef.name),
+overload visitAST(r:ResolveASTVisitor, nameRef:ast.NameRef) {
+    observe(#i);
+    nameRef.env = match(privateLookup(r.env, nameRef.name),
         Value, v => match(v,
             SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name)),
             Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name)),
@@ -85,4 +64,9 @@ overload resolveAST(env:EnvParent, nameRef:ast.NameRef) {
         ),
         MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
     );
+}
+
+overload resolveAST(e:EnvParent, a) {
+    observe(#j);
+    visitAST(ResolveASTVisitor(e), a);
 }
