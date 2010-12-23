@@ -1,0 +1,4 @@
+import splitfactorial1.*;
+
+static overload Factorial(1) = 1;
+static overload Factorial(0) = 1;
