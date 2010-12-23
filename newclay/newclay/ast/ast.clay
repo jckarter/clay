@@ -190,7 +190,7 @@ record StringLiteral = ast(
 record UnresolvedEnvRef ();
 record LocalEnvRef ();
 record ModuleEnvRef (module: ModuleName);
-record ModulePathRef (name: String);
+record ModulePathRef (partialModule: ModuleName);
 record ModuleAliasRef (module: ModuleName);
 
 variant EnvRef = UnresolvedEnvRef
@@ -202,9 +202,9 @@ overload EnvRef() = EnvRef(UnresolvedEnvRef());
 
 record NameRef = ast(
     env: EnvRef,
-    name: Identifier,
+    name: Vector[Identifier],
 );
-overload NameRef(name:Identifier) = NameRef(EnvRef(), name);
+overload NameRef(name:Vector[Identifier]) = NameRef(EnvRef(), name);
 
 record PatternNameRef = ast(
     name: Identifier,
