@@ -3,7 +3,7 @@ if [ x$1 = x ]; then
     exit 1
 fi
 
-make $1
+make $1 || exit 1
 for test in test/$1/Fail*.clay test/$1/Test*.clay; do
     echo
     echo --------------------
