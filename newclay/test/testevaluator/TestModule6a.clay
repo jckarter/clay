@@ -1,0 +1,9 @@
+import __primitives__.*;
+import tools;
+import tools.factorial;
+
+symbol Main = ();
+static overload Main() = (
+    tools.Factorial(8),
+    tools.factorial.Factorial(8),
+);
