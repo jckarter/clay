@@ -58,7 +58,7 @@ overload visitAST(r:ResolveASTVisitor, nameRef:ast.NameRef) {
             Primitive,    p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName)),
             ModuleValue,  m => maybe(m.module,
                 module => ast.EnvRef(ast.ModuleAliasRef(module.name)),
-                () => ast.EnvRef(ast.ModulePathRef(nameRef.name.str)),
+                () => ast.EnvRef(ast.ModulePathRef(nameRef.name)),
             ),
             MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
         ),
