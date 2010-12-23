@@ -56,7 +56,10 @@ overload visitAST(r:ResolveASTVisitor, nameRef:ast.NameRef) {
             SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name)),
             Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name)),
             Primitive,    p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName)),
-            ModuleValue,  m => ast.EnvRef(ast.ModuleAliasRef(just(m.module).name)), // XXX what about partial module value?!
+            ModuleValue,  m => maybe(m.module,
+                module => ast.EnvRef(ast.ModuleAliasRef(module.name)),
+                () => ast.EnvRef(ast.ModulePathRef(nameRef.name.str)),
+            ),
             MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
         ),
         MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
