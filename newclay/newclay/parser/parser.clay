@@ -276,7 +276,7 @@ private var literalExpr = choice(
 
 private var nameRef = exprParser(
     x => NameRef(move(x)),
-    identifier,
+    namePath,
 );
 
 private var patternNameRef = exprParser(
@@ -492,7 +492,7 @@ private var stringLiteralPattern = patternParser(
 
 private var nameRefPattern = patternParser(
     x => NameRef(move(x)),
-    identifier,
+    namePath,
 );
 
 private var patternNameRefPattern = patternParser(
@@ -582,6 +582,8 @@ private var visibility = optional(choice(
 
 // importDef
 
+private var namePath = separatedListStrict(punc(#"."), identifier);
+
 private var importAlias = optional(modify(x => x.1, sequence(kw_as, identifier)));
 
 private var qualifiedImportSpec = modify(
@@ -611,11 +613,9 @@ private var importSpec = choice(
     specificImportSpecList,
 );
 
-private var modulePath = separatedListStrict(punc(#"."), identifier);
-
 private var importDef = topLevelItemParser(
     x => Import(just(x.0, VIS_PRIVATE), move(x.2), move(x.3)),
-    sequence(visibility, kw_import, modulePath, importSpec),
+    sequence(visibility, kw_import, namePath, importSpec),
 );
 
 // symbolDef

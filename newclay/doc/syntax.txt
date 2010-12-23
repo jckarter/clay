@@ -6,7 +6,9 @@
 
 Visibility -> "public" | "private"
 
-Import -> Visibility? "import" ModuleName ImportSpec? ";"
+NamePath -> Identifier ("." Identifier)*
+
+Import -> Visibility? "import" NamePath ImportSpec? ";"
 ImportSpec -> "as" Identifier
             | "." "*"
             | "." "(" comma_list(SpecificImportSpec) ")"
@@ -89,7 +91,7 @@ AtomicExpr -> NameRef
             | BracketedExpr
             | TupleExpr
 
-NameRef -> Identifier
+NameRef -> NamePath
 PatternNameRef -> "'" Identifier
 BracketedExpr -> "(" Expr ")"
 TupleExpr -> "(" ExprList? ")"
