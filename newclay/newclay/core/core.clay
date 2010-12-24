@@ -486,7 +486,7 @@ moduleValueLookup(moduleValue:ModuleValue, member:String) {
     if (null?(submoduleValue)) {
         return ref maybe(moduleValue.module,
             module ref=> ref publicLookup(module, member),
-            ()     ref=> ref throwButPropagate(GenericError(String("qualified reference to module that is not imported")), EnvEntry),
+            ()     ref=> ref throwButPropagate(GenericError(String("qualified reference to member of module that is not imported")), EnvEntry),
         );
     } else {
         return ref submoduleValue^.envEntry;
@@ -1131,4 +1131,56 @@ ensureArity2(minExpected, received) {
 
 typeError(expected, received) {
     genericError("expected type ", expected, ", but received ", received);
+}
+
+
+
+//
+// visitAST
+//
+
+visitASTLeaf(visitor, x) {}
+
+visitASTNode(visitor, node) {
+    visitASTFields(visitor, node);
+}
+
+visitASTFields(visitor, node) {
+    static for (field in ...ast.astFields(node))
+        visitAST(visitor, field);
+}
+
+visitAST(visitor, x) {
+    visitASTLeaf(visitor, x);
+}
+
+overload visitAST(visitor, sourceAST: ast.SourceAST) {
+    if (not null?(sourceAST))
+        for (item in sourceAST.topLevelItems)
+            visitAST(visitor, item);
+}
+
+[N | ast.ASTNode?(N)]
+overload visitAST(visitor, node:N) {
+    withLocation(node, () ref=> {
+        visitASTNode(visitor, node);
+    });
+}
+
+[T]
+overload visitAST(visitor, v:Vector[T]) {
+    for (elt in v)
+        visitAST(visitor, elt);
+}
+
+[T]
+overload visitAST(visitor, v:ast.VariadicList[T]) {
+    for (elt in v.items)
+        visitAST(visitor, elt);
+    visitAST(visitor, v.variadicItem);
+}
+
+[V | Variant?(V)]
+overload visitAST(visitor, v:V) {
+    visitAST(visitor, *v);
 }

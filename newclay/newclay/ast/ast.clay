@@ -405,48 +405,3 @@ record SourceAST = referenceType(
     tokens: SourceTokens,
     topLevelItems: Vector[TopLevelItem],
 );
-
-
-//
-// visitAST
-//
-
-visitASTLeaf(visitor, x) {}
-
-visitASTFields(visitor, node) {
-    static for (field in ...astFields(node))
-        visitAST(visitor, field);
-}
-
-visitAST(visitor, x) {
-    visitASTLeaf(visitor, x);
-}
-
-overload visitAST(visitor, sourceAST: SourceAST) {
-    if (not null?(sourceAST))
-        for (item in sourceAST.topLevelItems)
-            visitAST(visitor, item);
-}
-
-[N | ASTNode?(N)]
-overload visitAST(visitor, node:N) {
-    visitASTFields(visitor, node);
-}
-
-[T]
-overload visitAST(visitor, v:Vector[T]) {
-    for (elt in v)
-        visitAST(visitor, elt);
-}
-
-[T]
-overload visitAST(visitor, v:VariadicList[T]) {
-    for (elt in v.items)
-        visitAST(visitor, elt);
-    visitAST(visitor, v.variadicItem);
-}
-
-[V | Variant?(V)]
-overload visitAST(visitor, v:V) {
-    visitAST(visitor, *v);
-}
