@@ -48,6 +48,13 @@ procedure staticIndex;
 
 
 //
+// uninitialized stack allocation
+//
+
+[T] uninitializedUnsafe(static T) x:T {}
+
+
+//
 // coordinate type predicates
 //
 

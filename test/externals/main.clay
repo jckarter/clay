@@ -1,0 +1,26 @@
+import externals.*;
+
+impl_sq(x:Double) Double = x*x;
+
+external external_sq(ex:ExternalException, inX:Pointer[Double], outY:Pointer[Double]) {
+    wrapAsExternal(impl_sq, static 1, ex, inX, outY);
+}
+
+sq(x) = callExternal(external_sq, x);
+
+impl_thrower(x:StringConstant) { error(x); }
+
+external external_thrower(ex:ExternalException, inX:Pointer[StringConstant]) {
+    wrapAsExternal(impl_thrower, static 1, ex, inX);
+}
+
+thrower(x) { callExternal(external_thrower, x); }
+
+main() {
+    println(sq(5.0));
+    try {
+        thrower("buh");
+    } catch (ex) {
+        println("caught ", ex);
+    }
+}
