@@ -171,6 +171,7 @@ overload remove(a:HashMap[K,V], key:K) {
         a.buckets[i] = node^.next;
     else
         prevNode^.next = node^.next;
+    a.size -= 1;
     return true;
 }
 
