@@ -7,6 +7,8 @@ import remote.marshaling.*;
 import printer.formatter.*;
 import libc.(sscanf);
 
+alias CACHE_FORMAT_VERSION_STRING = "0";
+
 
 //
 // Cache types
@@ -108,13 +110,35 @@ createCache(program:Program) {
     return move(cache);
 }
 
+diffCaches(a:Cache, b:Cache) {
+    var onlyInA = a.entries;
+    var onlyInB = b.entries;
+
+    for (k, v in items(a.entries))
+        if (not null?(lookup(b.entries, k))) {
+            remove(onlyInA, k);
+            remove(onlyInB, k);
+        }
+
+    return move(onlyInA), move(onlyInB);
+}
+
 
 //
 // loadCache
 //
 
+record InvalidCacheVersion ();
+instance Exception = InvalidCacheVersion;
+
 loadCache(filename) = loadCache(File(filename, READ));
 overload loadCache(file:File) {
+    var versionLine = readLine(file);
+    if (versionLine[size(versionLine)-1] == '\n')
+        pop(versionLine);
+    if (versionLine != CACHE_FORMAT_VERSION_STRING)
+        throw InvalidCacheVersion();
+
     var cache = newCache();
     for (line in lines(file)) {
         var hash, entry = ...parseCacheEntryLine(line);
@@ -140,6 +164,7 @@ private saveCacheEntry(file, hash, entry) {
 
 saveCache(filename, cache:Cache) { saveCache(File(filename, CREATE), cache); }
 overload saveCache(file:File, cache:Cache) {
+    printlnTo(file, CACHE_FORMAT_VERSION_STRING);
     for (hash, entry in items(cache.entries))
         saveCacheEntry(file, hash, entry);
 }

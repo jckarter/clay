@@ -7,7 +7,7 @@ import sha2.*;
 
 create(args) {
     if (size(args) != 2) {
-        println("usage: testcache create <file> <cache>");
+        println("usage: testcache create <main.clay> <cache>");
         return -1;
     }
     try {
@@ -44,4 +44,36 @@ show(args) {
     return 0;
 }
 
-main() = dispatchMain(create, show);
+diff(args) {
+    if (size(args) != 2) {
+        println("usage: testcache diff <main.clay> <cache>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[0]);
+        var newCache = createCache(program);
+        var oldCache = loadCache(args[1]);
+
+        var plus, minus = ...diffCaches(newCache, oldCache);
+
+        if (size(plus) > 0) {
+            println("New definitions not present in cache:");
+            println("-------------------------------------");
+            for (hash, entry in items(plus))
+                printEntry(hash, entry);
+        }
+
+        if (size(minus) > 0) {
+            println("Old definitions not present in program:");
+            println("---------------------------------------");
+            for (hash, entry in items(minus))
+                printEntry(hash, entry);
+        }
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
+
+main() = dispatchMain(create, show, diff);
