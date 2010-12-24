@@ -4,8 +4,8 @@ import newclay.core.*;
 import newclay.loader.*;
 
 dumpModuleValue(moduleValue:ModuleValue, depth:Int) {
-    for (name, submoduleEntry in items(moduleValue.submodules)) {
-        ref submoduleValue = nestedVariantAs(submoduleEntry, ModuleValue);
+    for (name, submodule in items(moduleValue.submodules)) {
+        ref submoduleValue = nestedVariantAs(submodule.envEntry, ModuleValue);
         for (x in range(depth))
             print("  ");
         println(".", name, ": ", submoduleValue);
