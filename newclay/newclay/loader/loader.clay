@@ -22,48 +22,52 @@ private loadPrimitivesModule(program:Program) {
 }
 
 private addImportItem(module, envRoot, importItem) {
-    var moduleName = ModuleName(importItem.name);
-    var importedModule = programModule(module.program, moduleName);
-    match(importItem.spec,
-        ast.GeneralImportSpec,   genSpec ref=> {
-            envRootAddGeneral(envRoot, importedModule);
-        },
-        ast.SpecificImportSpecs, specSpecs ref=> {
-            for (spec in specSpecs) {
-                var asName = just(spec.asName, spec.name).str;
-                envRootAddSpecific(
-                    envRoot,
-                    asName,
-                    EnvImport(spec.visibility, importedModule, spec.name.str)
-                );
-            }
-        },
-        ast.QualifiedImportSpec, qualSpec ref=> {
-            addQualifiedModuleValue(envRoot, importedModule, moduleName);
-        },
-        ast.AliasedImportSpec, aliasSpec ref=> {
-            envRootAddSpecific(envRoot, aliasSpec.asName.str, ModuleValue(importedModule));
-        },
-    );
+    withLocation(importItem, () ref=> {
+        var moduleName = ModuleName(importItem.name);
+        var importedModule = programModule(module.program, moduleName);
+        match(importItem.spec,
+            ast.GeneralImportSpec,   genSpec ref=> {
+                envRootAddGeneral(envRoot, importedModule);
+            },
+            ast.SpecificImportSpecs, specSpecs ref=> {
+                for (spec in specSpecs) {
+                    var asName = just(spec.asName, spec.name).str;
+                    envRootAddSpecific(
+                        envRoot,
+                        asName,
+                        EnvImport(spec.visibility, importedModule, spec.name.str)
+                    );
+                }
+            },
+            ast.QualifiedImportSpec, qualSpec ref=> {
+                addQualifiedModuleValue(envRoot, importedModule, moduleName);
+            },
+            ast.AliasedImportSpec, aliasSpec ref=> {
+                envRootAddSpecific(envRoot, aliasSpec.asName.str, ModuleValue(importedModule));
+            },
+        );
+    });
 }
 
 private addSymbolItem(module, env, symbolItem) {
-    var name = symbolItem.name;
-    if (not null?(lookup(module.publicEnv.entries, name.str))
-        or not null?(lookup(module.privateEnv.entries, name.str)))
-        genericError("symbol redefinition: ", name.str);
+    withLocation(symbolItem, () ref=> {
+        var name = symbolItem.name;
+        if (not null?(lookup(module.publicEnv.entries, name.str))
+            or not null?(lookup(module.privateEnv.entries, name.str)))
+            genericError("symbol redefinition: ", name.str);
 
-    var head = SymbolHead(symbolItem, module);
+        var head = SymbolHead(symbolItem, module);
 
-    push(module.program.allSymbolHeads, head);
+        push(module.program.allSymbolHeads, head);
 
-    if (symbolHeadHasParams?(head)) {
-        envAdd(env, name, Value(head));
-    } else {
-        var sym = Symbol(head, ValueList(), module);
-        head.symbols[ValueList()] = sym;
-        envAdd(env, name, Value(sym));
-    }
+        if (symbolHeadHasParams?(head)) {
+            envAdd(env, name, Value(head));
+        } else {
+            var sym = Symbol(head, ValueList(), module);
+            head.symbols[ValueList()] = sym;
+            envAdd(env, name, Value(sym));
+        }
+    });
 }
 
 private initializeGlobals(module) {
