@@ -46,7 +46,7 @@ record SourceTokens = referenceType(
 // punctuations and keywords
 //
 
-private var punctuations = [
+var punctuations = [
     "...",
     "=>", ":",
     "(", ")", "[", "]",
@@ -57,7 +57,7 @@ private var punctuations = [
     "*", ".",
 ];
 
-private var keywords = [
+var keywords = [
     "import", "as",
     "symbol", "attribute",
     "overload", "static",
@@ -126,313 +126,6 @@ overload assign(dest:LexerInput, lvalue src:LexerInput) {
 
 
 //
-// combinator specialization
-//
-
-private var combinators = Combinators[LexerInput]();
-
-private var Parser? = combinators.Parser?;
-private var Parsers? = combinators.Parsers?;
-private var ParseResult = combinators.ParseResult;
-
-private var nextChar = combinators.nextToken;
-
-private var condition = combinators.condition;
-private var literal = combinators.literal;
-private var literalString = combinators.literalString;
-private var optional = combinators.optional;
-private var choice = combinators.choice;
-private var sequence = combinators.sequence;
-private var sequenceAs = combinators.sequenceAs;
-private var modify = combinators.modify;
-private var repeated = combinators.repeated;
-private var repeatedAs = combinators.repeatedAs;
-private var zeroOrMore = combinators.zeroOrMore;
-private var oneOrMore = combinators.oneOrMore;
-private var zeroOrMoreAs = combinators.zeroOrMoreAs;
-private var oneOrMoreAs = combinators.oneOrMoreAs;
-
-
-
-//
-// utility
-//
-
-private alias Dummy = Char;
-private alias dummy = 'T';
-
-private seq(forward ...parsers) = sequenceAs(dummy, ...parsers);
-
-private zeroPlus(forward ...parsers) = zeroPlus(seq(...parsers));
-overload zeroPlus(forward parser) = zeroOrMoreAs(dummy, parser);
-
-private onePlus(forward ...parsers) = onePlus(seq(...parsers));
-overload onePlus(forward parser) = oneOrMoreAs(dummy, parser);
-
-
-
-//
-// bounds combinator
-//
-
-[Parser]
-private bounds(parser:Parser) {
-    return input => {
-        alias T = ParseResult(Parser);
-        var start = input.current;
-        return maybe(parser(input),
-            x ref=> {
-                x.range = DataRange(start, input.current);
-                return Maybe(x);
-            },
-            () => nothing(T),
-        );
-    };
-}
-
-
-
-//
-// char predicates
-//
-
-private decimalDigit?(c) = ((c >= '0') and (c <= '9'));
-private hexDigit?(c) = decimalDigit?(c) or
-                       ((c >= 'a') and (c <= 'f')) or
-                       ((c >= 'A') and (c <= 'F'));
-private octalDigit?(c) = ((c >= '0') and (c <= '7'));
-
-private alpha?(c) = ((c >= 'a') and (c <= 'z')) or
-                    ((c >= 'A') and (c <= 'Z'));
-
-
-
-//
-// identifiers and keywords
-//
-
-private identChar1?(c) = alpha?(c) or (c == '_');
-private identChar2?(c) = identChar1?(c) or decimalDigit?(c) or (c == '?');
-
-private var identChar1 = condition(identChar1?);
-private var identChar2 = condition(identChar2?);
-private var identStr = seq(identChar1, zeroPlus(identChar2));
-
-private lexIdentifierOrKeyword(input) Maybe[Token] {
-    var start = input.current;
-    if (not nothing?(identStr(input))) {
-        var data = sliced(input.file.data, start, input.current);
-        var i = keywordIndex(data);
-        if (i >= 0)
-            return Maybe(Token(KEYWORD, i));
-        return Maybe(Token(IDENTIFIER));
-    }
-    return nothing(Token);
-}
-
-
-
-//
-// punctuation
-//
-
-private lexPunctuation(input) {
-    for (i, sym in enumerated(punctuations)) {
-        var parser = literalString(sym);
-        var result = parser(input);
-        if (not nothing?(result))
-            return Maybe(Token(PUNCTUATION, i));
-    }
-    return nothing(Token);
-}
-
-
-
-//
-// hexDigit, octalDigit, decimalDigit
-//
-
-private var hexDigit = condition(hexDigit?);
-private var octalDigit = condition(octalDigit?);
-private var decimalDigit = condition(decimalDigit?);
-
-
-
-//
-// char literal, string literal
-//
-
-private var hexEscape = seq('x', hexDigit, hexDigit);
-private var octalEscape = seq(octalDigit, octalDigit, octalDigit);
-
-private var escapeSeq = choice(
-    'n', 'r', 't', 'a', 'b', 'f', 'v', '\\', '\'', '\"',
-     hexEscape, octalEscape,
-);
-
-private var escapeChar2 = seq('\\', escapeSeq);
-private escapeChar(input) = escapeChar2(input);
-
-private var charChar = choice(
-    condition(c => (c != '\\' and c != '\'')),
-    escapeChar,
-);
-
-private var strChar = choice(
-    condition(c => (c != '\\' and c != '\"')),
-    escapeChar,
-);
-
-private var lexCharLiteral = modify(
-    x => Token(CHAR_LITERAL),
-    seq('\'', charChar, '\''),
-);
-
-private var lexStringLiteral = modify(
-    x => Token(STRING_LITERAL),
-    seq('\"', zeroPlus(strChar), '\"'),
-);
-
-
-
-//
-// int literal
-//
-
-private var hexInt = seq(
-    "0x", hexDigit, zeroPlus(choice('_', hexDigit))
-);
-
-private var decimalInt = seq(
-    decimalDigit, zeroPlus(choice('_', decimalDigit))
-);
-
-private var sign = choice('+', '-');
-
-private var lexIntLiteral = modify(
-    x => Token(INT_LITERAL),
-    seq(optional(sign), choice(hexInt, decimalInt)),
-);
-
-
-
-//
-// float literal
-//
-
-private var exponent = seq(choice('e','E'), optional(sign), decimalInt);
-private var fractional = seq('.', decimalInt);
-
-private var floatTail = choice(
-    seq(fractional, optional(exponent)),
-    exponent,
-);
-
-private var lexFloatLiteral = modify(
-    x => Token(FLOAT_LITERAL),
-    seq(optional(sign), decimalInt, floatTail),
-);
-
-
-
-//
-// c code
-//
-
-private var cCodePrefix = literalString("__c__");
-private var cCodeDelimiter = literalString("\"\"\"");
-
-private nonDelimiter(input) {
-    var saved = input;
-    return maybe(cCodeDelimiter(input),
-        x ref=> {
-            input = move(saved);
-            return nothing(Char);
-        },
-        () ref=> nextChar(input),
-    );
-}
-
-private var lexCCode = modify(
-    x => Token(C_CODE),
-    seq(
-        cCodePrefix, zeroPlus(condition(space?)),
-        cCodeDelimiter, zeroPlus(nonDelimiter), cCodeDelimiter,
-    ),
-);
-
-
-
-//
-// space
-//
-
-private space?(c) {
-    for (x in " \t\n\r\f\v") {
-        if (c == x)
-            return true;
-    }
-    return false;
-}
-
-private var lexSpace = modify(
-    x => Token(SPACE),
-    onePlus(condition(space?)),
-);
-
-
-
-//
-// comments
-//
-
-private var notNewline = condition(c => (c != '\n'));
-
-private var lexLineComment = modify(
-    x => Token(COMMENT),
-    seq("//", zeroPlus(notNewline), optional('\n')),
-);
-
-private blockCommentTail(input) {
-    var saved = input;
-    var lastWasStar = false;
-    while (hasNext?(input)) {
-        var c = next(input);
-        if (lastWasStar and (c == '/'))
-            return Maybe(dummy);
-        lastWasStar = (c == '*');
-    }
-    input = saved;
-    return nothing(Dummy);
-}
-
-private var lexBlockComment = modify(
-    x => Token(COMMENT),
-    seq("/*", blockCommentTail)
-);
-
-
-
-//
-// lex one token
-//
-
-private var lexToken = bounds(choice(
-    lexSpace,
-    lexLineComment,
-    lexBlockComment,
-    lexPunctuation,
-    lexCCode,
-    lexIdentifierOrKeyword,
-    lexCharLiteral,
-    lexStringLiteral,
-    lexFloatLiteral,
-    lexIntLiteral,
-));
-
-
-
-//
 // LexerError
 //
 
@@ -452,25 +145,6 @@ overload displayError(e:LexerError) {
 //
 // tokenize
 //
-
-private var lexSentinel = bounds(input => Maybe(Token(SENTINEL)));
-
-private var tokenize1 = modify(
-    x => {
-        var v = move(x.0);
-        push(v, move(x.1));
-        return move(v);
-    },
-    sequence(zeroOrMore(lexToken), lexSentinel),
-);
-
-tokenizeAll(file) {
-    var input = LexerInput(file);
-    var tokensData = require(tokenize1(input));
-    if (input.current != size(file.data))
-        throw LexerError(file, input.maxCurrent);
-    return SourceTokens(file, move(tokensData));
-}
 
 external lexer_tokenize(
     ex:ExternalException,

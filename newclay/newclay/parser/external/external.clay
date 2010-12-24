@@ -1,8 +1,831 @@
 import newclay.parser.*;
 import newclay.ast.*;
+import newclay.common.*;
+import newclay.diagnostics.*;
 import newclay.lexer.*;
+import parsing.combinators.wrapper.*;
 import maybe.*;
 import externals.*;
+
+
+
+//
+// combinator specialization
+//
+
+private var combinators = Combinators[ParserInput]();
+
+private var Parser? = combinators.Parser?;
+private var Parsers? = combinators.Parsers?;
+private var ParseResult = combinators.ParseResult;
+
+private var nextToken = combinators.nextToken;
+
+private var condition = combinators.condition;
+private var literal = combinators.literal;
+private var literalString = combinators.literalString;
+private var optional = combinators.optional;
+private var choice = combinators.choice;
+private var sequence = combinators.sequence;
+private var sequenceAs = combinators.sequenceAs;
+private var modify = combinators.modify;
+private var repeated = combinators.repeated;
+private var repeatedAs = combinators.repeatedAs;
+private var zeroOrMore = combinators.zeroOrMore;
+private var oneOrMore = combinators.oneOrMore;
+private var zeroOrMoreAs = combinators.zeroOrMoreAs;
+private var oneOrMoreAs = combinators.oneOrMoreAs;
+private var separatedList = combinators.separatedList;
+private var optSeparatedList = combinators.optSeparatedList;
+private var separatedListStrict = combinators.separatedListStrict;
+
+
+
+//
+// bounds combinator
+//
+
+[Parser]
+private includeBounds(parser:Parser) {
+    return input => {
+        alias T = ParseResult(Parser);
+        var start = input.current;
+        return maybe(parser(input),
+            x ref=> {
+                var tokenRange = TokenRange(start, input.current);
+                var bounds = Location(input.tokens, tokenRange, start);
+                return Maybe(Tuple(move(bounds), move(x)));
+            },
+            () => nothing(Tuple[Location,T]),
+        );
+    };
+}
+
+[Parser]
+private bounds(parser:Parser) = modify(
+    x => { setLocation(x.1, move(x.0)); return move(x.1); },
+    includeBounds(parser),
+);
+
+
+
+//
+// keywords
+//
+
+private keyword(s) {
+    var i = keywordIndex(s);
+    assert(i >= 0, "invalid keyword");
+    var pred = (x => ((x.kind == KEYWORD) and (x.subKind == i)));
+    return modify(x => (), condition(pred));
+}
+
+private var kw_import = keyword("import");
+private var kw_as = keyword("as");
+private var kw_symbol = keyword("symbol");
+private var kw_attribute = keyword("attribute");
+private var kw_overload = keyword("overload");
+private var kw_static = keyword("static");
+private var kw_const = keyword("const");
+private var kw_ref = keyword("ref");
+private var kw_rvalue = keyword("rvalue");
+private var kw_forward = keyword("forward");
+private var kw_true = keyword("true");
+private var kw_false = keyword("false");
+private var kw_if = keyword("if");
+private var kw_else = keyword("else");
+private var kw_and = keyword("and");
+private var kw_or = keyword("or");
+private var kw_public = keyword("public");
+private var kw_private = keyword("private");
+
+
+
+//
+// punctuations
+//
+
+private punctuationParser(Ident) {
+    var i = punctuationIndex(StaticName(Ident));
+    assert(i >= 0, "invalid punctuation");
+    var pred = (x => ((x.kind == PUNCTUATION) and (x.subKind == i)));
+    return modify(x => (), condition(pred));
+}
+
+private var punctuationParserTable[Ident] = punctuationParser(Ident);
+
+[Ident]
+private punc(static Ident) = punctuationParserTable[Ident];
+
+
+
+//
+// utility combinators
+//
+
+private commaList(forward parser) = separatedList(punc(#","), parser);
+private optCommaList(forward parser) = optSeparatedList(punc(#","), parser);
+
+private commaListStrict(forward parser) =
+    separatedListStrict(punc(#","), parser);
+
+private optCommaListStrict(forward parser) =
+    optSeparatedListStrict(punc(#","), parser);
+
+
+private commaAndItem(item) = modify(x => move(x.1), sequence(punc(#","), item));
+
+[Item, VariadicItem | Parsers?(Item, VariadicItem)]
+private variadicList(item:Item, variadicItem:VariadicItem) {
+    alias T = ParseResult(Item);
+    return choice(
+        modify(
+            x => VariadicList(move(x.0), move(x.1)),
+            sequence(
+                commaListStrict(item), optional(commaAndItem(variadicItem))
+            ),
+        ),
+        modify(
+            x => VariadicList(Vector[T](), move(x)),
+            optional(variadicItem),
+        ),
+    );
+}
+
+
+
+//
+// token parser
+//
+
+private token(tokenKind) = condition(x => (x.kind == tokenKind));
+
+private tokenData(tokenKind) {
+    var parser = token(tokenKind);
+    return input => {
+        ref data = input.tokens.file.data;
+        return maybe(parser(input),
+            x ref=> Maybe(sliced(data, x.range.begin, x.range.end)),
+            () ref=> nothing(Type(sliced(data, SizeT(0), SizeT(0)))),
+        );
+    };
+}
+
+
+
+//
+// identifier
+//
+
+private var identifier = bounds(modify(Identifier, tokenData(IDENTIFIER)));
+private var identifierList = commaList(identifier);
+
+private var variadicIdentifierList = variadicList(
+    identifier,
+    modify(
+        x => move(x.1),
+        sequence(punc(#"..."), identifier),
+    ),
+);
+
+
+
+//
+// exprParser combinator
+//
+
+private exprParser(forward modifier, forward parser) = modify(
+    x => Expr(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+
+
+//
+// literals
+//
+
+private var boolTrue = modify(x => true, kw_true);
+private var boolFalse = modify(x => false, kw_false);
+
+private var boolLiteral = exprParser(
+    BoolLiteral,
+    choice(boolTrue, boolFalse),
+);
+
+private var identStr = modify(String, tokenData(IDENTIFIER));
+
+private var intLiteral = exprParser(
+    x => IntLiteral(String(x)),
+    tokenData(INT_LITERAL),
+);
+
+private var stringLiteral = exprParser(
+    x => StringLiteral(String(x)),
+    tokenData(STRING_LITERAL),
+);
+
+private var literalExpr = choice(
+    boolLiteral, intLiteral, stringLiteral
+);
+
+
+
+//
+// atomic expr
+//
+
+private var nameRef = exprParser(
+    x => NameRef(move(x)),
+    namePath,
+);
+
+private var patternNameRef = exprParser(
+    x => PatternNameRef(move(x.1)),
+    sequence(punc(#"'"), identifier),
+);
+
+private var bracketedExpr = modify(
+    x => move(x.1),
+    sequence(punc(#"("), expr, punc(#")")),
+);
+
+private var tupleExpr = exprParser(
+    x => TupleExpr(move(x.1)),
+    sequence(punc(#"("), optExprList, punc(#")")),
+);
+
+private var atomicExpr = choice(
+    nameRef, literalExpr, patternNameRef, bracketedExpr, tupleExpr,
+);
+
+
+
+//
+// setBase, foldTail
+//
+
+private exprTokenRange(x) = ref x.location.tokenRange;
+
+private setBase2(root, field, base) {
+    fieldRef(root, field) = base;
+    root.location.tokenRange.begin = exprTokenRange(*base).begin;
+}
+
+private setBase(x, y) { assert(false, "baseless expression!"); }
+overload setBase(x:Indexing, y) { setBase2(x, #expr, y); }
+overload setBase(x:Call,     y) { setBase2(x, #expr, y); }
+overload setBase(x:AndExpr,  y) { setBase2(x, #expr1, y); }
+overload setBase(x:OrExpr,   y) { setBase2(x, #expr1, y); }
+
+private foldTail(x) {
+    var result = x.0;
+    for (y in x.1) {
+        setBase(*y, result);
+        result = y;
+    }
+    return result;
+}
+
+
+
+//
+// suffix expr
+//
+
+private var indexingSuffix = exprParser(
+    x => Indexing(Expr(), move(x.1)),
+    sequence(punc(#"["), optExprList, punc(#"]")),
+);
+
+private var callSuffix = exprParser(
+    x => Call(Expr(), move(x.1)),
+    sequence(punc(#"("), optExprList, punc(#")")),
+);
+
+private var suffix = choice(
+    indexingSuffix, callSuffix,
+);
+
+private var suffixExpr = modify(
+    foldTail,
+    sequence(atomicExpr, zeroOrMore(suffix)),
+);
+
+
+
+//
+// and/or expr
+//
+
+private andOrOp(node, op, term) = modify(
+    foldTail,
+    sequence(term, zeroOrMore(exprParser(
+        x => node(Expr(), move(x.1)),
+        sequence(op, term),
+    ))),
+);
+
+private var andExpr = andOrOp(AndExpr, kw_and, suffixExpr);
+private var orExpr = andOrOp(OrExpr, kw_or, andExpr);
+
+
+
+//
+// lambda
+//
+
+private var lambdaArgs = choice(
+    modify(
+        x => VariadicList[Identifier](
+            Vector[Identifier](move(x)),
+            nothing(Identifier),
+        ),
+        identifier,
+    ),
+    modify(
+        x => move(x.1),
+        sequence(
+            punc(#"("),
+            variadicIdentifierList,
+            punc(#")")
+        ),
+    ),
+);
+
+private var lambdaExpr = exprParser(
+    x => LambdaExpr(nothing(Expr), move(x.0), move(x.2)),
+    sequence(lambdaArgs, punc(#"=>"), groupedExprList),
+);
+
+
+
+//
+// if expr
+//
+
+private var ifExpr = exprParser(
+    x => IfExpr(move(x.2), move(x.4), move(x.6)),
+    sequence(kw_if, punc(#"("), expr, punc(#")"), expr, kw_else, expr),
+);
+
+
+
+//
+// expr
+//
+
+private var expr2 = choice(
+    ifExpr, lambdaExpr, orExpr,
+);
+
+private expr(input) Maybe[Expr] { return expr2(input); }
+
+
+
+//
+// exprList
+//
+
+private var unpackExpr = bounds(modify(
+    x => UnpackExpr(move(x.1)),
+    sequence(punc(#"..."), expr),
+));
+
+private var exprListItem = choice(
+    modify(x => ExprListItem(move(x)), unpackExpr),
+    modify(x => ExprListItem(move(x)), expr),
+);
+
+private var groupedExprList = choice(
+    modify(
+        x => move(x.2),
+        sequence(punc(#"..."), punc(#"("), exprList, punc(#")")),
+    ),
+    modify(
+        x => Vector[ExprListItem](move(x)),
+        exprListItem,
+    ),
+);
+
+private var exprList2 = modify(
+    x => {
+        var result = Vector[ExprListItem]();
+        for (a in x)
+            push(result, move(a));
+        return move(result);
+    },
+    commaList(groupedExprList),
+);
+
+private exprList(input) Maybe[ExprList] { return exprList2(input); }
+
+private var optExprList = modify(
+    x => maybe(x, move, () => ExprList()),
+    optional(exprList),
+);
+
+
+
+//
+// patterns
+//
+
+private patternParser(forward modifier, forward parser) = modify(
+    x => Pattern(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+private var boolLiteralPattern = patternParser(
+    BoolLiteral,
+    choice(boolTrue, boolFalse),
+);
+
+private var intLiteralPattern = patternParser(
+    x => IntLiteral(String(x)),
+    tokenData(INT_LITERAL),
+);
+
+private var stringLiteralPattern = patternParser(
+    x => StringLiteral(String(x)),
+    tokenData(STRING_LITERAL),
+);
+
+private var nameRefPattern = patternParser(
+    x => NameRef(move(x)),
+    namePath,
+);
+
+private var patternNameRefPattern = patternParser(
+    x => PatternNameRef(move(x.1)),
+    sequence(punc(#"'"), identifier),
+);
+
+private var indexingPattern = patternParser(
+    x => IndexingPattern(move(x.0), move(x.2)),
+    sequence(nameRef, punc(#"["), listPattern, punc(#"]")),
+);
+
+private var targetPattern = choice(
+    indexingPattern, nameRefPattern, patternNameRefPattern
+);
+
+private var pattern2 = choice(
+    boolLiteralPattern, intLiteralPattern, stringLiteralPattern,
+    targetPattern,
+);
+
+private pattern(input) Maybe[Pattern] { return pattern2(input); }
+
+private var listPattern2 = variadicList(
+    pattern,
+    modify(
+        x => move(x.1),
+        sequence(punc(#"..."), patternNameRefPattern),
+    ),
+);
+
+private listPattern(input) Maybe[ListPattern] { return listPattern2(input); }
+
+private var optListPattern = modify(
+    x => maybe(x, move, () => ListPattern()),
+    optional(listPattern),
+);
+
+
+
+//
+// typePattern, multiTypePattern
+//
+
+private var typePattern = modify(
+    x => move(x.1),
+    sequence(punc(#":"), pattern),
+);
+private var optTypePattern = optional(typePattern);
+
+private var multiTypePattern = modify(
+    x => move(x.1),
+    sequence(punc(#":"), patternNameRefPattern),
+);
+private var optMultiTypePattern = optional(multiTypePattern);
+
+
+
+//
+// top level items
+//
+
+private topLevelItemParser(forward modifier, forward parser) = modify(
+    x => TopLevelItem(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+private var patternVar = modify(
+    x => move(x.1),
+    sequence(punc(#"'"), identifier),
+);
+
+private var variadicPatternVarList = variadicList(
+    patternVar,
+    modify(
+        x => move(x.1),
+        sequence(punc(#"..."), patternVar),
+    ),
+);
+
+// visibility
+
+private var visibility = optional(choice(
+        modify(x => VIS_PUBLIC,  kw_public),
+        modify(x => VIS_PRIVATE, kw_private),
+    ));
+
+// importDef
+
+private var namePath = separatedListStrict(punc(#"."), identifier);
+
+private var importAlias = optional(modify(x => x.1, sequence(kw_as, identifier)));
+
+private var qualifiedImportSpec = modify(
+    x => ImportSpec(QualifiedImportSpec()),
+    punc(#";")
+);
+private var generalImportSpec = modify(
+    x => ImportSpec(GeneralImportSpec()),
+    sequence(punc(#"."), punc(#"*"), punc(#";"))
+);
+private var aliasedImportSpec = modify(
+    x => ImportSpec(AliasedImportSpec(x.1)),
+    sequence(kw_as, identifier, punc(#";"))
+);
+private var specificImportSpec = modify(
+    x => SpecificImportSpec(just(x.0, VIS_PUBLIC), x.1, x.2),
+    sequence(visibility, identifier, importAlias)
+);
+private var specificImportSpecList = modify(
+    x => ImportSpec(x.2),
+    sequence(punc(#"."), punc(#"("), optCommaList(specificImportSpec), punc(#")"), punc(#";")),
+);
+private var importSpec = choice(
+    qualifiedImportSpec,
+    generalImportSpec,
+    aliasedImportSpec,
+    specificImportSpecList,
+);
+
+private var importDef = topLevelItemParser(
+    x => Import(just(x.0, VIS_PRIVATE), move(x.2), move(x.3)),
+    sequence(visibility, kw_import, namePath, importSpec),
+);
+
+// symbolDef
+
+private var symbolParams = modify(
+    x => move(x.1),
+    sequence(punc(#"["), variadicPatternVarList, punc(#"]")),
+);
+
+private var optSymbolParams = modify(
+    x => maybe(x, move, () => VariadicList[Identifier]()),
+    optional(symbolParams),
+);
+
+private var symbolDef = topLevelItemParser(
+    x => Symbol(just(x.0, VIS_PUBLIC), move(x.2), move(x.3), move(x.5)),
+    sequence(
+        visibility, kw_symbol, identifier, optSymbolParams,
+        punc(#"="), expr, punc(#";")
+    ),
+);
+
+// attributeDef
+
+private var optPredicate = optional(modify(
+    x => move(x.1),
+    sequence(punc(#"|"), expr),
+));
+
+private var attributeDef = topLevelItemParser(
+    x => Attribute(move(x.1), move(x.2), move(x.4)),
+    sequence(
+        kw_attribute, targetPattern, optPredicate,
+        punc(#"="), expr, punc(#";"),
+    ),
+);
+
+// staticOverloadDef
+
+private var staticArguments = modify(
+    x => move(x.1),
+    sequence(punc(#"("), optListPattern, punc(#")")),
+);
+
+private var staticOverloadDef = topLevelItemParser(
+    x => StaticOverload(move(x.2), move(x.3), move(x.4), move(x.6)),
+    sequence(
+        kw_static, kw_overload, targetPattern, staticArguments,
+        optPredicate, punc(#"="), optExprList, punc(#";"),
+    ),
+);
+
+// overloadDef
+
+private var argumentKind = choice(
+    modify(x => ARG_CONST, kw_const),
+    modify(x => ARG_REF, kw_ref),
+    modify(x => ARG_RVALUE, kw_rvalue),
+    modify(x => ARG_FORWARD, kw_forward),
+);
+
+private var argument = bounds(modify(
+    x => Argument(move(x.0), move(x.1), move(x.2)),
+    sequence(optional(argumentKind), identifier, optTypePattern),
+));
+
+private var multiArgument = bounds(modify(
+    x => Argument(move(x.0), move(x.2), move(x.3)),
+    sequence(
+        optional(argumentKind), punc(#"..."),
+        identifier, optMultiTypePattern
+    ),
+));
+
+private var arguments = variadicList(
+    argument, multiArgument
+);
+
+private var optArguments = modify(
+    x => maybe(x, move, () => VariadicList[Argument]()),
+    optional(arguments),
+);
+
+private var baseReturn = choice(
+    modify(
+        x => (Maybe(move(x.0)), move(x.2)),
+        sequence(identifier, punc(#":"), expr),
+    ),
+    modify(x => (nothing(Identifier), move(x)), expr),
+);
+
+private var returnKind = choice(
+    modify(x => RETURN_CONST, kw_const),
+    modify(x => RETURN_REF, kw_ref),
+    modify(x => RETURN_RVALUE, kw_rvalue),
+);
+
+private var returnArityKind = modify(
+    x => maybe(x, x => RETURN_MULTI, () => RETURN_SINGLE),
+    optional(punc(#"...")),
+);
+
+private var namedReturn2 = modify(
+    x => Tuple(move(x.2), ReturnSpec(x.0, x.1, move(x.4))),
+    sequence(
+        optional(returnKind), returnArityKind, identifier, punc(#":"), expr,
+    ),
+);
+
+private var namedReturn = modify(
+    x => { setLocation((x.1).1, move(x.0)); return move(x.1); },
+    includeBounds(namedReturn2),
+);
+
+private var namedReturnList = modify(
+    x => Tuple(Maybe(map(y => move(y.0), x)), map(y => move(y.1), x)),
+    commaList(namedReturn),
+);
+
+private var unnamedReturn = bounds(modify(
+    x => ReturnSpec(x.0, x.1, move(x.2)),
+    sequence(optional(returnKind), returnArityKind, expr),
+));
+
+private var unnamedReturnList = modify(
+    x => Tuple(nothing(Vector[Identifier]), move(x)),
+    commaList(unnamedReturn),
+);
+
+private var returnList = choice(namedReturnList, unnamedReturnList);
+
+private var optReturnList = modify(
+    x => maybe(x,
+        move,
+        () => Tuple(nothing(Vector[Identifier]), Vector[ReturnSpec]()),
+    ),
+    optional(returnList),
+);
+
+private var returnExprKind = choice(
+    modify(x => RETURN_EXPR_CONST, kw_const),
+    modify(x => RETURN_EXPR_REF, kw_ref),
+    modify(x => RETURN_EXPR_RVALUE, kw_rvalue),
+    modify(x => RETURN_EXPR_FORWARD, kw_forward),
+);
+
+private var returnExprListItem = bounds(modify(
+    x => ReturnExprListItem(move(x.0), move(x.1)),
+    sequence(optional(returnExprKind), exprListItem),
+));
+
+private var groupedReturnExprList1 = modify(
+    x => map(
+        y ref=> {
+            var z = ReturnExprListItem(x.0, move(y));
+            assignLocation(z, z.item);
+            return move(z);
+        },
+        move(x.3),
+    ),
+    sequence(
+        optional(returnExprKind), punc(#"..."),
+        punc(#"("), exprList, punc(#")"),
+    ),
+);
+
+private var groupedReturnExprList = choice(
+    groupedReturnExprList1,
+    modify(
+        x => Vector[ReturnExprListItem](move(x)),
+        returnExprListItem,
+    ),
+);
+
+private var returnExprList = modify(
+    x => {
+        var result = Vector[ReturnExprListItem]();
+        for (a in x)
+            push(result, move(a));
+        return move(result);
+    },
+    commaList(groupedReturnExprList),
+);
+
+private var optReturnExprList = modify(
+    x => maybe(x, move, () => ReturnExprList()),
+    optional(returnExprList),
+);
+
+private var exprCodeBody = modify(CodeBody, bounds(modify(
+    x => ExprCodeBody(move(x.1)),
+    sequence(punc(#"="), optReturnExprList, punc(#";")),
+)));
+
+private var inlineCCodeBody = modify(CodeBody, bounds(modify(
+    x => CCodeBody(String(x.0)),
+    sequence(tokenData(C_CODE), punc(#";")),
+)));
+
+private var codeBody = choice(exprCodeBody, inlineCCodeBody);
+
+private var overloadDef = topLevelItemParser(
+    x => Overload(
+        move(x.1), move(x.3), move((x.5).1), move((x.5).0),
+        move(x.6), move(x.7),
+    ),
+    sequence(
+        kw_overload, targetPattern, punc(#"("), optArguments, punc(#")"),
+        optReturnList, optPredicate, codeBody,
+    ),
+);
+
+// topLevelItem
+
+private var topLevelItem = choice(
+    importDef, symbolDef, attributeDef, staticOverloadDef, overloadDef,
+);
+
+
+
+//
+// parseExpr, parse implementation
+//
+
+private var parseExpr2 = modify(
+    x => x.0,
+    sequence(expr, token(SENTINEL)),
+);
+
+private impl_parseExpr(tokens:SourceTokens) {
+    var input = ParserInput(tokens);
+    var result = parseExpr2(input);
+    if (nothing?(result))
+        throw ParserError(tokens, input.maxCurrent);
+    return require(move(result));
+}
+
+external parser_parseExpr(
+    ex:ExternalException,
+    inTokens:Pointer[SourceTokens],
+    out:Pointer[Expr]
+) {
+    wrapAsExternal(impl_parseExpr, static 1, ex, inTokens, out);
+}
+
+private var parse2 = modify(
+    x => SourceAST(SourceTokens(), move(x.0)),
+    sequence(zeroOrMore(topLevelItem), token(SENTINEL)),
+);
 
 private impl_parse(tokens:SourceTokens) {
     var input = ParserInput(tokens);

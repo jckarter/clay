@@ -1043,7 +1043,7 @@ displaySemanticError(locationStack, compilationStack, ...message) {
     var tokens = location.tokens;
     var offset = tokens.vector[location.where].range.begin;
     errorWithLocation(tokens.file, offset, ...message);
-    if (size(compilationStack) > 0) {
+    if (not stackEmpty?(compilationStack)) {
         println("context stack: ");
         for (entry in compilationStack)
             println("    ", entry);
