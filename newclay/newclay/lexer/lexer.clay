@@ -3,6 +3,7 @@ import newclay.common.*;
 import newclay.diagnostics.*;
 import maybe.*;
 import parsing.combinators.wrapper.*;
+import externals.*;
 
 
 
@@ -471,8 +472,10 @@ tokenizeAll(file) {
     return SourceTokens(file, move(tokensData));
 }
 
-external lexer_tokenize(filep:Pointer[SourceFile], returnedp:Pointer[SourceTokens]);
+external lexer_tokenize(
+    ex:ExternalException,
+    inFile:Pointer[SourceFile],
+    out:Pointer[SourceTokens]
+);
 
-tokenize(file) returned:SourceTokens {
-    lexer_tokenize(&file, &returned);
-}
+tokenize(file) = callExternal(lexer_tokenize, file);

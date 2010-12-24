@@ -1,5 +1,6 @@
 
 import maybe.*;
+import externals.*;
 import parsing.combinators.wrapper.*;
 import newclay.common.*;
 import newclay.lexer.*;
@@ -876,8 +877,10 @@ var parse2 = modify(
     sequence(zeroOrMore(topLevelItem), token(SENTINEL)),
 );
 
-external parser_parse(tokensp:Pointer[SourceTokens], returnedp:Pointer[SourceAST]);
+external parser_parse(
+    ex:ExternalException,
+    inTokens:Pointer[SourceTokens],
+    out:Pointer[SourceAST]
+);
 
-parse(tokens:SourceTokens) returned:SourceAST {
-    parser_parse(&tokens, &returned);
-}
+parse(tokens) = callExternal(parser_parse, tokens);

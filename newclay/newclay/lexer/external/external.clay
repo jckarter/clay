@@ -1,15 +1,22 @@
 import newclay.common.*;
 import newclay.lexer.*;
+import externals.*;
 
-external lexer_tokenize(filep:Pointer[SourceFile], returnedp:Pointer[SourceTokens]) {
-    ref file = filep^;
-    ref returned = returnedp^;
-
+private impl_tokenize(file:SourceFile) {
     var tokens = tokenizeAll(file);
     tokens.vector = Vector(filtered(
         x => (x.kind != SPACE) and (x.kind != COMMENT),
         tokens.vector,
     ));
 
-    returned <-- move(tokens);
+    return move(tokens);
 }
+
+external lexer_tokenize(
+    ex:ExternalException,
+    inFile:Pointer[SourceFile],
+    out:Pointer[SourceTokens]
+) {
+    wrapAsExternal(impl_tokenize, static 1, ex, inFile, out);
+}
+
