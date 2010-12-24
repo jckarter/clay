@@ -1,5 +1,4 @@
 import newclay.ast as ast;
-import newclay.ast.(visitAST);
 import newclay.core.*;
 import maybe.*;
 
@@ -9,7 +8,7 @@ alias DummyValue = Value(BoolValue(false));
 
 private record ResolveASTVisitor(env:EnvParent);
 
-overload visitAST(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
+overload visitASTNode(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
     visitAST(r, lambda.predicate);
     visitAST(r, lambda.formalArgs);
 
@@ -26,7 +25,7 @@ overload visitAST(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
     visitAST(subr, lambda.body);
 }
 
-overload visitAST(r:ResolveASTVisitor, oload:ast.Overload) {
+overload visitASTNode(r:ResolveASTVisitor, oload:ast.Overload) {
     visitAST(r, oload.predicate);
     visitAST(r, oload.target);
     visitAST(r, oload.args);
@@ -50,7 +49,7 @@ overload visitAST(r:ResolveASTVisitor, oload:ast.Overload) {
     visitAST(subr, oload.body);
 }
 
-overload visitAST(r:ResolveASTVisitor, nameRef:ast.NameRef) {
+overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
     nameRef.env = match(privateLookup(r.env, nameRef.name),
         Value, v => match(v,
             SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name, h.ast.name.str)),
