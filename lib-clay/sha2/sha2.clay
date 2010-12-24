@@ -3,6 +3,8 @@ import byteorder.*;
 
 record SHA256 (digest: Array[UInt8, 32]);
 
+overload hash(x:SHA256) = bitwiseCast(x.digest, SizeT);
+
 overload printTo(stream, forward sha:SHA256) {
     printTo(stream, hexString(sha.digest));
 }
