@@ -1,7 +1,9 @@
 import __primitives__.*;
 
-private symbol Factorial = ();
+symbol Factorial = ();
 static overload Factorial('n) = StaticMultiply('n, Factorial(StaticSubtract('n, 1)));
 static overload Factorial(1) = 1;
 static overload Factorial(0) = 1;
 
+symbol Main = ();
+static overload Main() = Factorial(2), Factorial(3), Factorial(5), Factorial(8);
