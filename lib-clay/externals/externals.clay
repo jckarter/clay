@@ -1,0 +1,37 @@
+import maybe.*;
+
+alias ExternalException = Pointer[Maybe[Exception]];
+
+// impl_fn(a:A, b:B, ...) x:X, y:Y, ...
+// external_fn(ex:ExternalException, a:Pointer[A], b:Pointer[B], ..., outX:Pointer[X], outY:Pointer[Y]) 
+//    = ...wrapAsExternal(impl_fn, ...);
+// fn(a:A, b:B, ...) x:X, y:Y, ...
+//    = ...callExternal(external_fn, ...);
+
+[inCount]
+inline wrapAsExternal(impl_fn, static inCount, exp:ExternalException, ...inoutp) {
+    try {
+        ...mapValues(dereference, ...dropValues(static inCount, ...inoutp))
+            <-- ...impl_fn(...mapValues(dereference, ...takeValues(static inCount, ...inoutp)));
+        exp^ <-- nothing(Exception);
+    } catch (ex) {
+        exp^ <-- Maybe(ex);
+    }
+}
+
+[T] private unpointer(static Pointer[T]) = T;
+
+[...IO, ...T |
+    (...T) == (...mapValues(unpointer, ...takeValues(static countValues(...T), ...IO)))
+]
+inline callExternal(
+    external_fn:CCodePointer[(ExternalException, ...IO), ()],
+    ...args:T
+)
+    ...out:mapValues(unpointer, ...dropValues(static countValues(...T), ...IO))
+{
+    var ex = uninitializedUnsafe(Maybe[Exception]);
+    external_fn(...mapValues(addressOf, ex, ...args, ...out));
+
+    maybe(ex, e => { throw e; });
+}
