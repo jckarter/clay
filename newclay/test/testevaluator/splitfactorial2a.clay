@@ -1,0 +1,4 @@
+import splitfactorial1;
+
+static overload splitfactorial1.Factorial(1) = 1;
+static overload splitfactorial1.Factorial(0) = 1;
