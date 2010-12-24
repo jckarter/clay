@@ -400,10 +400,10 @@ overload evaluateCall(x:LambdaValue, args) {
     return evaluateExprList(x.value.body, env2);
 }
 overload evaluateCall(x:Symbol, args) {
-    return evaluateStaticCall(x.head.module.program, Value(x), args);
+    return memoizeStaticCall(x.evalTable, x.head.module.program, Value(x), args);
 }
 overload evaluateCall(x:SymbolHead, args) {
-    return evaluateStaticCall(x.module.program, Value(x), args);
+    return memoizeStaticCall(x.evalTable, x.module.program, Value(x), args);
 }
 overload evaluateCall(x:Primitive, args) {
     return evaluatePrimitive(x.kind, args);
@@ -890,8 +890,21 @@ evaluateAttributes(target) {
 
 
 //
-// evaluateStaticCall
+// memoizeStaticCall, evaluateStaticCall
 //
+
+memoizeStaticCall(evalTable, program, callable, args) {
+    var memoizedResultp = lookup(evalTable, args);
+    if (null?(memoizedResultp)) {
+        observe(#evaluating, callable, args);
+        ref result = evalTable[args];
+        result = evaluateStaticCall(program, callable, args);
+        return result;
+    } else {
+        observe(#memoized, callable, args);
+        return memoizedResultp^;
+    }
+}
 
 evaluateStaticCall(program, callable, args) {
     for (x in reversed(program.allStaticOverloads)) {

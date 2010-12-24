@@ -101,18 +101,21 @@ overload printTo(stream, mod:Module) {
 // top-level item entries
 //
 
+alias EvalTable = HashMap[ValueList, ValueList];
+
 record SymbolHead = referenceType(
     ast: ast.Symbol,
     module: Module,
     symbols: HashMap[ValueList, Symbol],
     typeTemplate?: TriState[Bool],
+    evalTable: EvalTable,
     invokeTable: InvokeTable,
 );
 
 overload SymbolHead(x:ast.Symbol, module:Module) =
     SymbolHead(
         x, module, HashMap[ValueList, Symbol](),
-        TriState[Bool](), InvokeTable(),
+        TriState[Bool](), EvalTable(), InvokeTable(),
     );
 
 symbolHeadHasParams?(x:SymbolHead) {
@@ -128,6 +131,7 @@ record Symbol = referenceType(
     attributes: TriState[Value],
     type?: TriState[Bool],
     procedure?: TriState[Bool],
+    evalTable: EvalTable,
     invokeTable: InvokeTable,
     lowLevelType: Maybe[ir.Type],
 );
@@ -137,6 +141,7 @@ overload Symbol(head:SymbolHead, params:ValueList, env:EnvParent)
         head, params, env,
         TriState[Value](), TriState[Value](),
         TriState[Bool](), TriState[Bool](),
+        EvalTable(),
         InvokeTable(),
         nothing(ir.Type),
     );
@@ -175,7 +180,6 @@ record Overload = referenceType(
 
 overload Overload(x:ast.Overload, module:Module) =
     Overload(x, module, nothing(PatternVars));
-
 
 
 //
