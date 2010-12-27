@@ -51,21 +51,27 @@ var punctuations = [
     "=>", ":",
     "(", ")", "[", "]",
     "|",
-    "=",
+    "=", "<--",
     "'",
     ";", ",",
     "*", ".",
+    "{", "}",
 ];
 
 var keywords = [
     "import", "as",
     "symbol", "attribute",
     "overload", "static",
-    "const", "ref", "rvalue", "forward",
+    "var", "const", "ref", "rvalue", "forward",
     "true", "false",
     "if", "else",
     "and", "or",
     "public", "private",
+    "goto", "return", "break", "continue",
+    "try", "catch", "throw",
+    "for", "in",
+    "while",
+    "switch", "case", "default",
 ];
 
 punctuationIndex(s) Int {

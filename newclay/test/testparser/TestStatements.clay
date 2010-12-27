@@ -1,0 +1,99 @@
+overload foo() {
+    var x;
+    var x:Int;
+    var x = 1;
+    var x:Int = 1;
+
+    var x, y;
+    var x, y:Int;
+    var x:Int, y;
+    var x, y:'T;
+    var x:'T, y;
+
+    var x:Int = 1, y:Int = 2;
+
+    var x, y = 1, 2;
+    var x, y = ...bar();
+    var x:Int, y = ...bar();
+    var x, y:Int = ...bar();
+    var x:Int, y:Int = ...bar();
+    var x:Int, y:Int, ...z = ...bar();
+
+    var ...x = ...bar();
+
+wut:
+    goto wut;
+
+    ref x:Int, y:Int, ...z = ...bar();
+    rvalue x:Int, y:Int, ...z = ...bar();
+    const x:Int, y:Int, ...z = ...bar();
+    forward x:Int, y:Int, ...z = ...bar();
+//    alias x:Int, y:Int, ...z = ...bar();
+
+    x = 1;
+    x <-- 1;
+    x, y <-- 1, 2;
+    x, y, ...z <-- 1, 2, 3;
+
+    return x;
+    return ref x, const y;
+    return ref x, const y, ...z;
+
+    break;
+    continue;
+
+    throw "foo";
+
+    if (x)
+        y;
+    else
+        z;
+
+    if (x) {
+        y;
+    } else if (z) {
+        w;
+    } else {
+        v;
+    }
+
+    for (x:Int, ref y:'T in z)
+        w;
+
+    static for (x in y, z, w)
+        v;
+
+    while (x) y;
+
+    switch (x)
+    case (y) {
+        a;
+    }
+
+    switch (x)
+    case (y, z) {
+        a;
+    }
+    case (z, w) {
+        b;
+    }
+    default {
+        c;
+    }
+
+    try {
+        a;
+    } catch (ex) {
+        b;
+    }
+
+    try {
+        a;
+    } catch (ex:X) {
+        b;
+    } catch (ex:'T) {
+        c;
+    } catch (ex) {
+        d;
+    }
+}

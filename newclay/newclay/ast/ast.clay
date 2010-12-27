@@ -308,7 +308,7 @@ record StaticOverload = ast(
 
 record Overload = ast(
     target: Pattern,
-    args: VariadicList[Argument],
+    args: ArgumentList,
     returns: Vector[ReturnSpec],
     returnedNames: Maybe[Vector[Identifier]],
     predicate: Maybe[Expr],
@@ -352,6 +352,8 @@ record Argument = ast(
     type: Maybe[Pattern],
 );
 
+alias ArgumentList = VariadicList[Argument];
+
 enum ReturnKind {
     RETURN_CONST,
     RETURN_REF,
@@ -370,6 +372,7 @@ record ReturnSpec = ast(
 );
 
 variant CodeBody = ExprCodeBody
+                 | Block
                  | CCodeBody
                  ;
 
@@ -395,6 +398,145 @@ record CCodeBody = ast(
     cCode: String,
 );
 
+
+//
+// statements
+//
+
+record Block = ast(
+    statements: Vector[Statement],
+);
+
+variant Statement = Block
+                  | LabelDef
+                  | BindingStatement
+                  | AssignmentStatement
+                  | GotoStatement
+                  | ReturnStatement
+                  | BreakStatement
+                  | ContinueStatement
+                  | ThrowStatement
+                  | IfStatement
+                  | ForStatement
+                  | StaticForStatement
+                  | WhileStatement
+                  | SwitchStatement
+                  | TryStatement
+                  | ExprStatement
+                  ;
+
+record LabelDef = ast(
+    name: Identifier
+);
+
+enum BindingKind {
+    BINDING_VAR,
+    BINDING_CONST,
+    BINDING_REF,
+    BINDING_RVALUE,
+    BINDING_FORWARD,
+    BINDING_ALIAS,
+}
+
+record BindingStatement = ast(
+    kind: BindingKind,
+    bindings: BindingList,
+);
+
+variant BindingList = SingleBindingList
+                    | MultipleBindingList
+                    ;
+
+record BindingName = ast(
+    name: Identifier,
+    type: Maybe[Pattern],
+);
+
+record SingleBinding = ast(
+    name: BindingName,
+    value: Expr,
+);
+
+alias SingleBindingList = Vector[SingleBinding];
+
+record MultipleBindingList = ast(
+    names: VariadicList[BindingName],
+    values: Maybe[ExprList],
+);
+
+enum AssignmentKind {
+    ASSIGNMENT_ASSIGN,
+    ASSIGNMENT_INITIALIZE,
+}
+
+record AssignmentStatement = ast(
+    kind: AssignmentKind,
+    to: ExprList,
+    from: ExprList,
+);
+
+record GotoStatement = ast(
+    label: Identifier,
+);
+
+record ReturnStatement = ast(
+    values: ReturnExprList,
+);
+
+record BreakStatement = ast();
+record ContinueStatement = ast();
+
+record ThrowStatement = ast(
+    value: Expr,
+);
+
+record IfStatement = ast(
+    condition: Expr,
+    thenBody: Statement,
+    elseBody: Maybe[Statement],
+);
+
+record ForStatement = ast(
+    bodyBindings: ArgumentList,
+    sequenceValue: Expr,
+    body: Statement,
+);
+
+record StaticForStatement = ast(
+    bodyBinding: Identifier,
+    values: ExprList,
+    body: Statement,
+);
+
+record WhileStatement = ast(
+    condition: Expr,
+    body: Statement,
+);
+
+record SwitchStatement = ast(
+    value: Expr,
+    caseBlocks: Vector[CaseBlock],
+    defaultBlock: Maybe[Block],
+);
+
+record CaseBlock = ast(
+    values: ExprList,
+    body: Block,
+);
+
+record TryStatement = ast(
+    body: Block,
+    catchBlocks: Vector[CatchBlock],
+);
+
+record CatchBlock = ast(
+    binding: BindingName,
+    body: Block,
+);
+
+record ExprStatement = ast(
+    expr: Expr,
+);
 
 
 //
