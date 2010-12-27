@@ -1,0 +1,11 @@
+
+symbol noReturn = NewProcedure();
+overload noReturn() {
+    throw 0;
+}
+
+symbol main = NewProcedure();
+overload main() {
+    noReturn();
+}
+

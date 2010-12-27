@@ -1,0 +1,7 @@
+
+symbol main = NewProcedure();
+overload main() {
+    var x = true;
+    return ref x;
+}
+

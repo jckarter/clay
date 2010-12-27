@@ -1,0 +1,7 @@
+symbol main = NewProcedure();
+overload main() =
+    if (true)
+        true
+    else
+        0;
+
