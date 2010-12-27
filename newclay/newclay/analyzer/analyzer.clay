@@ -607,6 +607,7 @@ private analyzeBody(x:Overload, env) {
     return match(x.ast.body,
         ast.ExprCodeBody, y ref=> analyzeReturnExprList(y.exprs, env),
         ast.CCodeBody, y ref=> RTResultList(), // void return
+        ast.Block, y ref=> throwButPropagate(GenericError(String("analyzer doesn't support blocks yet")), RTResultList),
     );
 }
 

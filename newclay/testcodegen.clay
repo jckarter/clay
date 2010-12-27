@@ -1,5 +1,7 @@
 
 import newclay.common.*;
+import newclay.lexer;
+import newclay.parser;
 import newclay.core.*;
 import newclay.loader.*;
 import newclay.hooks.*;

@@ -1,6 +1,7 @@
+import newclay.common.*;
+import newclay.lexer.*;
 import newclay.parser.*;
 import newclay.ast.*;
-import newclay.common.*;
 import newclay.diagnostics.*;
 import newclay.lexer.*;
 import parsing.combinators.wrapper.*;
@@ -86,6 +87,7 @@ private var kw_symbol = keyword("symbol");
 private var kw_attribute = keyword("attribute");
 private var kw_overload = keyword("overload");
 private var kw_static = keyword("static");
+private var kw_var = keyword("var");
 private var kw_const = keyword("const");
 private var kw_ref = keyword("ref");
 private var kw_rvalue = keyword("rvalue");
@@ -98,6 +100,19 @@ private var kw_and = keyword("and");
 private var kw_or = keyword("or");
 private var kw_public = keyword("public");
 private var kw_private = keyword("private");
+private var kw_goto = keyword("goto");
+private var kw_return = keyword("return");
+private var kw_break = keyword("break");
+private var kw_continue = keyword("continue");
+private var kw_try = keyword("try");
+private var kw_catch = keyword("catch");
+private var kw_throw = keyword("throw");
+private var kw_for = keyword("for");
+private var kw_in = keyword("in");
+private var kw_while = keyword("while");
+private var kw_switch = keyword("switch");
+private var kw_case = keyword("case");
+private var kw_default = keyword("default");
 
 
 
@@ -776,7 +791,9 @@ private var inlineCCodeBody = modify(CodeBody, bounds(modify(
     sequence(tokenData(C_CODE), punc(#";")),
 )));
 
-private var codeBody = choice(exprCodeBody, inlineCCodeBody);
+private var blockCodeBody = modify(CodeBody, bounds(block));
+
+private var codeBody = choice(exprCodeBody, blockCodeBody, inlineCCodeBody);
 
 private var overloadDef = topLevelItemParser(
     x => Overload(
@@ -787,6 +804,188 @@ private var overloadDef = topLevelItemParser(
         kw_overload, targetPattern, punc(#"("), optArguments, punc(#")"),
         optReturnList, optPredicate, codeBody,
     ),
+);
+
+// statements
+
+private var block2 = modify(
+    x => Block(x.1),
+    sequence(punc(#"{"), repeated(0, INT_MAX, statement), punc(#"}")),
+);
+
+private block(input) Maybe[Block] = block2(input);
+
+private var statement2 = choice(
+    blockStatement,
+    labelDef,
+    bindingStatement,
+    assignmentStatement,
+    gotoStatement,
+    returnStatement,
+    breakStatement,
+    continueStatement,
+    throwStatement,
+    ifStatement,
+    forStatement,
+    staticForStatement,
+    whileStatement,
+    switchStatement,
+    tryStatement,
+    exprStatement,
+);
+
+private statement(input) Maybe[Statement] = statement2(input);
+
+private statementParser(forward modifier, forward parser) = modify(
+    x => Statement(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+private var blockStatement = statementParser(x => x, block);
+
+private var labelDef = statementParser(
+    x => LabelDef(x.0),
+    sequence(identifier, punc(#":"))
+);
+
+private var bindingStatement = statementParser(
+    x => BindingStatement(x.0, x.1),
+    sequence(bindingKind, bindingList, punc(#";"))
+);
+
+private var bindingKind = choice(
+    modify(x => BINDING_VAR, kw_var),
+    modify(x => BINDING_CONST, kw_const),
+    modify(x => BINDING_REF, kw_ref),
+    modify(x => BINDING_RVALUE, kw_rvalue),
+    modify(x => BINDING_FORWARD, kw_forward),
+);
+
+private var bindingList = choice(
+    modify(x => BindingList(x), singleBindingList),
+    modify(x => BindingList(x), multipleBindingList),
+);
+
+private var bindingName = modify(
+    x => BindingName(x.0, x.1),
+    sequence(identifier, optTypePattern),
+);
+
+private var singleBindingList = commaList(singleBinding);
+private var singleBinding = modify(
+    x => SingleBinding(x.0, x.2),
+    sequence(bindingName, punc(#"="), expr),
+);
+
+private var variadicBindingNameList = variadicList(
+    bindingName,
+    modify(
+        x => BindingName(x.1, nothing(Pattern)),
+        sequence(punc(#"..."), identifier),
+    ),
+);
+
+private var multipleBindingExprList = modify(
+    x => x.1,
+    sequence(punc(#"="), exprList),
+);
+
+private var multipleBindingList = modify(
+    x => MultipleBindingList(x.0, x.1),
+    sequence(variadicBindingNameList, optional(multipleBindingExprList)),
+);
+
+private var assignmentOp = choice(
+    modify(x => ASSIGNMENT_ASSIGN, punc(#"=")),
+    modify(x => ASSIGNMENT_INITIALIZE, punc(#"<--")),
+);
+
+private var assignmentStatement = statementParser(
+    x => AssignmentStatement(x.1, x.0, x.2),
+    sequence(exprList, assignmentOp, exprList, punc(#";")),
+);
+
+private var gotoStatement = statementParser(
+    x => GotoStatement(x.1),
+    sequence(kw_goto, identifier, punc(#";")),
+);
+
+private var returnStatement = statementParser(
+    x => ReturnStatement(x.1),
+    sequence(kw_return, optReturnExprList, punc(#";")),
+);
+
+private var breakStatement = statementParser(
+    x => BreakStatement(),
+    sequence(kw_break, punc(#";")),
+);
+
+private var continueStatement = statementParser(
+    x => ContinueStatement(),
+    sequence(kw_continue, punc(#";")),
+);
+
+private var throwStatement = statementParser(
+    x => ThrowStatement(x.1),
+    sequence(kw_throw, expr, punc(#";")),
+);
+
+private var elseBlock = modify(
+    x => x.1,
+    sequence(kw_else, statement),
+);
+
+private var ifStatement = statementParser(
+    x => IfStatement(x.2, x.4, x.5),
+    sequence(kw_if, punc(#"("), expr, punc(#")"), statement, optional(elseBlock)),
+);
+
+private var forStatement = statementParser(
+    x => ForStatement(x.2, x.4, x.6),
+    sequence(kw_for, punc(#"("), arguments, kw_in, expr, punc(#")"), statement),
+);
+
+private var staticForStatement = statementParser(
+    x => StaticForStatement(x.3, x.5, x.7),
+    sequence(kw_static, kw_for, punc(#"("), identifier, kw_in, exprList, punc(#")"), statement),
+);
+
+private var whileStatement = statementParser(
+    x => WhileStatement(x.2, x.4),
+    sequence(kw_while, punc(#"("), expr, punc(#")"), statement),
+);
+
+private var switchStatement = statementParser(
+    x => SwitchStatement(x.2, x.4, x.5),
+    sequence(kw_switch, punc(#"("), expr, punc(#")"),
+        repeated(1, INT_MAX, caseBlock),
+        optional(defaultBlock),
+    ),
+);
+
+private var caseBlock = bounds(modify(
+    x => CaseBlock(x.2, x.4),
+    sequence(kw_case, punc(#"("), exprList, punc(#")"), block),
+));
+
+private var defaultBlock = bounds(modify(
+    x => x.1,
+    sequence(kw_default, block),
+));
+
+private var tryStatement = statementParser(
+    x => TryStatement(x.1, x.2),
+    sequence(kw_try, block, repeated(1, INT_MAX, catchBlock)),
+);
+
+private var catchBlock = bounds(modify(
+    x => CatchBlock(x.2, x.4),
+    sequence(kw_catch, punc(#"("), bindingName, punc(#")"), block),
+));
+
+private var exprStatement = statementParser(
+    x => ExprStatement(x.0),
+    sequence(expr, punc(#";")),
 );
 
 // topLevelItem

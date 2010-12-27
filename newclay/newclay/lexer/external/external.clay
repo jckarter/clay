@@ -1,6 +1,6 @@
 import newclay.common.*;
-import newclay.diagnostics.*;
 import newclay.lexer.*;
+import newclay.diagnostics.*;
 import maybe.*;
 import parsing.combinators.wrapper.*;
 import externals.*;

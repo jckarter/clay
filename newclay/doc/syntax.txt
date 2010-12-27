@@ -43,7 +43,8 @@ UnnamedVariadicReturnSpec -> ReturnKind? "..." Expr
 ReturnKind -> "const" | "ref" | "rvalue"
 
 CodeBody -> "=" ReturnExprList ";"
-          |  "__c__" InlineCCodeBody ";"
+          | Block
+          | "__c__" InlineCCodeBody ";"
 
 InlineCCodeBody -> """.*"""
 
@@ -117,6 +118,77 @@ Expr -> IfExpr
       | LambdaExpr
       | OrExpr
 
+
+//
+// statements
+//
+
+Block -> "{" Statement* "}"
+
+Statement -> Block
+           | LabelDef
+           | BindingStatement
+           | Assignment
+           | GotoStatement
+           | ReturnStatement
+           | BreakStatement
+           | ContinueStatement
+           | ThrowStatement
+           | IfStatement
+           | ForStatement
+           | StaticForStatement
+           | WhileStatement
+           | SwitchStatement
+           | TryStatement
+           | ExprStatement
+
+LabelDef -> Identifier ":"
+
+BindingStatement -> BindingKind BindingList ";"
+
+Assignment -> ExprList AssignmentOp ExprList ";"
+AssignmentOp -> "<--" | "="             // | "+=" | "-=" | "*=" | "/=" | "%="
+
+GotoStatement -> "goto" Identifier ";"
+
+ReturnStatement -> "return" ReturnExprList? ";"
+
+BreakStatement -> "break" ";"
+
+ContinueStatement -> "continue" ";"
+
+ThrowStatement -> "throw" Expr ";"
+
+IfStatement -> "if" "(" Expr ")" Statement
+               ("else" Statement)?
+
+ForStatement -> "for" "(" ArgumentList "in" Expr ")" Statement
+
+StaticForStatement -> "static" "for" "(" Identifier "in" ExprList ")" Statement
+
+WhileStatement -> "while" "(" Expr ")" Statement
+
+SwitchStatement -> "switch" "(" Expr ")"
+                   ("case" "(" ExprList ")" Block)+
+                   ("default" Block)?
+
+TryStatement -> "try" Block ("catch" "(" BindingName ")" Block)+
+
+ExprStatement -> Expr ";"
+
+
+//
+// variable binding
+//
+
+BindingKind -> "var" | "const" | "ref" | "rvalue" | "forward" | "alias"
+
+BindingName -> Identifier (":" Pattern)?
+
+SingleBinding -> BindingName "=" Expr
+
+BindingList -> comma_list(SingleBinding)
+             | variadic_list(BindingName, Identifier) ("=" ExprList)?
 
 
 //

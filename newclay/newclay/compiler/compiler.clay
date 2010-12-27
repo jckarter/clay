@@ -334,6 +334,10 @@ private compileCodeBody() {
             });
             return ir.CodeBody(block);
         },
+        ast.Block, x ref=> {
+            genericError("compiler does not support blocks yet");
+            return ir.CodeBody();
+        }
     );
 }
 
