@@ -96,4 +96,7 @@ wut:
     } catch (ex) {
         d;
     }
+
+    {}
+    { var x; }
 }

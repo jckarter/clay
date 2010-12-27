@@ -343,6 +343,15 @@ analyzeReturnExprList(returnExprList, env) {
     return move(results);
 }
 
+
+//
+// analyzeBlock, analyzeStatement
+//
+
+analyzeBlock(block, env) {
+    genericError("analyzer doesn't support blocks yet");
+    return RTResultList();
+}
 
 
 //
@@ -607,7 +616,7 @@ private analyzeBody(x:Overload, env) {
     return match(x.ast.body,
         ast.ExprCodeBody, y ref=> analyzeReturnExprList(y.exprs, env),
         ast.CCodeBody, y ref=> RTResultList(), // void return
-        ast.Block, y ref=> throwButPropagate(GenericError(String("analyzer doesn't support blocks yet")), RTResultList),
+        ast.Block, y ref=> analyzeBlock(y, env),
     );
 }
 
