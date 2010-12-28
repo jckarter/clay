@@ -87,15 +87,23 @@ verifyBindingArity(formalArgs, args) {
         ensureArity2(size(formalArgs.items), size(args));
 }
 
+private lambdaArgName(arg) {
+    if (just?(arg.kind))
+        genericError("reference kind not allowed on lambda evaluated in static context");
+    if (just?(arg.type))
+        genericError("type not allowed on lambda evaluated in static context");
+    return arg.name;
+}
+
 bindArgs(env, formalArgs, args) {
     verifyBindingArity(formalArgs, args);
     var env2 = newEnv(env);
     var nFixed = size(formalArgs.items);
-    for (name, arg in zipped(formalArgs.items, slicedUpto(args, nFixed)))
-        envAdd(env2, name, arg);
+    for (formalArg, arg in zipped(formalArgs.items, slicedUpto(args, nFixed)))
+        envAdd(env2, lambdaArgName(formalArg), arg);
     maybe(formalArgs.variadicItem,
-        name ref=> {
-            envAdd(env2, name, ValueList(slicedFrom(args, nFixed)));
+        formalArg ref=> {
+            envAdd(env2, lambdaArgName(formalArg), ValueList(slicedFrom(args, nFixed)));
         },
         () => {}
     );
@@ -396,8 +404,8 @@ overload evaluateCall(x:Value, args) {
     return withStaticCall(x, args, () ref=> evaluateCall(*x, args));
 }
 overload evaluateCall(x:LambdaValue, args) {
-    var env2 = bindArgs(x.env, x.value.formalArgs, args);
-    return evaluateExprList(x.value.body, env2);
+    var env2 = bindArgs(x.env, x.value.args, args);
+    return evaluateLambdaCodeBody(*x.value.body, env2);
 }
 overload evaluateCall(x:Symbol, args) {
     return memoizeStaticCall(x.evalTable, x.head.module.program, Value(x), args);
@@ -409,6 +417,11 @@ overload evaluateCall(x:Primitive, args) {
     return evaluatePrimitive(x.kind, args);
 }
 
+evaluateLambdaCodeBody(x:ast.ExprList, env) = evaluateExprList(x, env);
+overload evaluateLambdaCodeBody(x:ast.Block, env) {
+    genericError("lambda block statement not allowed in static context");
+    return ValueList();
+}
 
 
 //
