@@ -10,14 +10,14 @@ private record ResolveASTVisitor(env:EnvParent);
 
 overload visitASTNode(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
     visitAST(r, lambda.predicate);
-    visitAST(r, lambda.formalArgs);
+    visitAST(r, lambda.args);
 
     var subenv = newEnv(r.env);
 
-    for (arg in lambda.formalArgs.items)
-        envAdd(subenv, arg, DummyValue);
-    maybe(lambda.formalArgs.variadicItem, arg ref=> {
-        envAdd(subenv, arg, DummyValue);
+    for (arg in lambda.args.items)
+        envAdd(subenv, arg.name, DummyValue);
+    maybe(lambda.args.variadicItem, arg ref=> {
+        envAdd(subenv, arg.name, DummyValue);
     });
 
     var subr = ResolveASTVisitor(EnvParent(subenv));
