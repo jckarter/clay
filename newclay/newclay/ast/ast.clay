@@ -235,10 +235,20 @@ record OrExpr = ast(
     expr2: Expr,
 );
 
+enum LambdaCaptureKind {
+    LAMBDA_CAPTURE_BY_VALUE,
+    LAMBDA_CAPTURE_BY_REFERENCE,
+}
+
+variant LambdaCodeBody = ExprList
+                       | Block
+                       ;
+
 record LambdaExpr = ast(
+    captureKind: LambdaCaptureKind,
     predicate: Maybe[Expr],
-    formalArgs: VariadicList[Identifier],
-    body: ExprList,
+    args: ArgumentList,
+    body: LambdaCodeBody,
 );
 
 record IfExpr = ast(
