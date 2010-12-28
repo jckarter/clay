@@ -1,0 +1,19 @@
+overload foo() {
+    x -> y;
+    x => y;
+
+    (x:Int) -> y;
+    (ref x) -> y;
+    (ref x:Int) -> y;
+
+    (x, y) -> y;
+    (ref x, rvalue y) -> y;
+    (ref x:Int, forward y:Bool) -> y;
+    (ref x:Int, forward y:Bool) -> y;
+
+    (ref x:Int, forward y:Bool) -> ...(x, y);
+
+    (x, y) -> {
+        return x, y;
+    };
+}
