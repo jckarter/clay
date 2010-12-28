@@ -1,5 +1,6 @@
 symbol main = NewProcedure();
 overload main() {
-    return;
+    var x = 5;
+    return x;
 }
 
