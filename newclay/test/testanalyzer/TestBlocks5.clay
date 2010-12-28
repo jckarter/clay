@@ -1,9 +1,3 @@
-
-symbol refReturn = NewProcedure();
-overload refReturn() ref Int __c__ """
-    assert(0 && "fake");
-""";
-
 symbol main = NewProcedure();
 overload main() {}
 
