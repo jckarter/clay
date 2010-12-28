@@ -352,25 +352,31 @@ private var orExpr = andOrOp(OrExpr, kw_or, andExpr);
 
 private var lambdaArgs = choice(
     modify(
-        x => VariadicList[Identifier](
-            Vector[Identifier](move(x)),
-            nothing(Identifier),
+        x => VariadicList[Argument](
+            Vector[Argument](Argument(nothing(ArgumentKind), move(x), nothing(Pattern))),
+            nothing(Argument),
         ),
         identifier,
     ),
     modify(
         x => move(x.1),
-        sequence(
-            punc(#"("),
-            variadicIdentifierList,
-            punc(#")")
-        ),
+        sequence(punc(#"("), arguments, punc(#")")),
     ),
 );
 
+private var lambdaCodeBody = choice(
+    modify(LambdaCodeBody, groupedExprList),
+    modify(LambdaCodeBody, block),
+);
+
+private var lambdaCaptureKind = choice(
+    modify(x => LAMBDA_CAPTURE_BY_VALUE,     punc(#"=>")),
+    modify(x => LAMBDA_CAPTURE_BY_REFERENCE, punc(#"->")),
+);
+
 private var lambdaExpr = exprParser(
-    x => LambdaExpr(nothing(Expr), move(x.0), move(x.2)),
-    sequence(lambdaArgs, punc(#"=>"), groupedExprList),
+    x => LambdaExpr(move(x.1), nothing(Expr), move(x.0), move(x.2)),
+    sequence(lambdaArgs, lambdaCaptureKind, lambdaCodeBody),
 );
 
 

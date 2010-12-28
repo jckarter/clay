@@ -108,9 +108,12 @@ AndExpr -> SuffixExpr ("and" SuffixExpr)*
 
 OrExpr -> AndExpr ("or" AndExpr)*
 
-LambdaExpr -> LambdaArgs "=>" ExprListItem
+LambdaCodeBody -> ExprListItem
+                | Block
+
+LambdaExpr -> LambdaArgs ("=>" | "->") LambdaCodeBody
 LambdaArgs -> Identifier
-            | "(" variadic_list(Identifier, Identifier)? ")"
+            | "(" ArgumentList ")"
 
 IfExpr -> "if" "(" Expr ")" Expr "else" Expr
 
