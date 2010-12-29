@@ -14,7 +14,7 @@
 #include "llvm/Support/IRReader.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/StandardPasses.h"
-#include "llvm/System/Path.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Target/TargetRegistry.h"
 #include "llvm/Target/TargetOptions.h"
 
@@ -646,7 +646,7 @@ int main(int argc, char **argv) {
     // Add the relative path from the executable
     llvm::sys::Path clayExe =
         llvm::sys::Path::GetMainExecutable(argv[0], (void *)&main);
-    llvm::sys::Path clayDir(clayExe.getDirname());
+    llvm::sys::Path clayDir(llvm::sys::path::parent_path(clayExe.str()));
     llvm::sys::Path libDirDevelopment(clayDir);
     llvm::sys::Path libDirProduction1(clayDir);
     llvm::sys::Path libDirProduction2(clayDir);
