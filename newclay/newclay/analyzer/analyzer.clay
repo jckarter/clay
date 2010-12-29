@@ -82,11 +82,13 @@ overload analyzeExpr(x:ast.Indexing, env) {
     return valueToRTResult(evaluateExpr(x, env));
 }
 overload analyzeExpr(x:ast.AndExpr, env) {
+    // XXX coalesce nontermination
     analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
     return Maybe(RTResult(RT_RESULT_VALUE, boolType()));
 }
 overload analyzeExpr(x:ast.OrExpr, env) {
+    // XXX coalesce nontermination
     analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
     return Maybe(RTResult(RT_RESULT_VALUE, boolType()));
@@ -96,6 +98,7 @@ overload analyzeExpr(x:ast.LambdaExpr, env) {
     return nothing(RTResult);
 }
 overload analyzeExpr(x:ast.IfExpr, env) {
+    // XXX coalesce nontermination of condition
     analyzeBool(x.condition, env);
     var recursiveAnalysisBranches = 0;
     var thenResult = nothing(RTResult);
@@ -410,10 +413,122 @@ analyzeReturnExprList(returnExprList, env) {
 // analyzeBlock
 //
 
-analyzeBlock(block, env) {
-    genericError("blocks are not yet supported");
-    return nothing(RTResultList);
+analyzeBlock(block, env) Maybe[RTResultList] {
+    return withLocation(block, () ref=> {
+        var results = nothing(RTResultList);
+        if (analyzeStatement(block, env, results))
+            return results;
+        else
+            return Maybe(RTResultList());
+    });
 }
+
+private procedure analyzeStatement;
+
+overload analyzeStatement(stmt:ast.Statement, env:Env, inoutResults:Maybe[RTResultList]) Bool {
+    return withLocation(*stmt, () ref=> analyzeStatement(*stmt, env, inoutResults));
+}
+overload analyzeStatement(stmt:ast.LabelDef, env, results) = false;
+overload analyzeStatement(stmt:ast.BindingStatement, env, results) {
+    // XXX
+    genericError("variable binding statements are not yet supported");
+    return false;
+}
+overload analyzeStatement(stmt:ast.AssignmentStatement, env, results) = false;
+overload analyzeStatement(stmt:ast.GotoStatement, env, results) = false;
+overload analyzeStatement(stmt:ast.ReturnStatement, env, results) {
+    results = unifyStatementReturns(results, analyzeReturnExprList(stmt.values, env));
+    return true;
+}
+overload analyzeStatement(stmt:ast.BreakStatement, env, results) = false;
+overload analyzeStatement(stmt:ast.ContinueStatement, env, results) = false;
+overload analyzeStatement(stmt:ast.ThrowStatement, env, results) {
+    return true;
+}
+
+overload analyzeStatement(stmt:ast.IfStatement, env, results) {
+    if (nothing?(analyzeBool(stmt.condition, env)))
+        return true;
+
+    var thenReturns? = analyzeStatement(stmt.thenBody, newEnv(env), results);
+    var elseReturns? = maybe(stmt.elseBody,
+        elseBody ref=> analyzeStatement(elseBody, newEnv(env), results),
+        () ref=> true,
+    );
+    return thenReturns? and elseReturns?;
+}
+
+overload analyzeStatement(stmt:ast.ForStatement, env, results) {
+    var subenv = newEnv(env);
+    bindForBindings(subenv, stmt.sequenceValue, stmt.bodyBindings);
+    return analyzeStatement(stmt.body, subenv, results);
+}
+
+private bindForBindings(...x) {
+    // XXX
+    genericError("for loops are not yet supported");
+}
+
+overload analyzeStatement(stmt:ast.StaticForStatement, env, results) {
+    // XXX alias "bodyBinding" to each expression from "values" in turn and analyze
+    genericError("static for loops are not yet supported");
+    return false;
+}
+
+overload analyzeStatement(stmt:ast.WhileStatement, env, results) {
+    if (nothing?(analyzeBool(stmt.condition, env)))
+        return true;
+
+    return analyzeStatement(stmt.body, newEnv(env), results);
+}
+
+overload analyzeStatement(stmt:ast.SwitchStatement, env, results) {
+    if (nothing?(analyzeExpr(stmt.value, env)))
+        return true;
+
+    var allReturn? = not empty?(stmt.caseBlocks);
+    for (caseBlock in stmt.caseBlocks)
+        allReturn? = analyzeBlockStatement(caseBlock.body, env, results) and allReturn?;
+
+    maybe(stmt.defaultBlock, defaultBlock => {
+        allReturn? = analyzeBlockStatement(defaultBlock, env, results) and allReturn?;
+    });
+    return allReturn?;
+}
+
+overload analyzeStatement(stmt:ast.TryStatement, env, results) {
+    // XXX
+    genericError("try blocks are not yet supported");
+    return false;
+}
+
+overload analyzeStatement(stmt:ast.ExprStatement, env, results) {
+    return nothing?(analyzeMultiExpr(stmt.expr, env));
+}
+
+overload analyzeStatement(block:ast.Block, env, results) Bool {
+    var subenv = newEnv(env);
+    for (stmt in block.statements)
+        if (analyzeStatement(stmt, subenv, results))
+            return true;
+    return false;
+}
+
+private analyzeBlockStatement(block:ast.Block, env, results) Bool
+    = withLocation(block, () ref=> analyzeStatement(block, env, results));
+
+private unifyStatementReturns(existingResults, newResults)
+    = maybe(existingResults,
+        er ref=> maybe(newResults,
+            nr ref=> {
+                if (nr != er)
+                    genericError("mismatching return types");
+                return Maybe(nr);
+            },
+            () ref=> existingResults,
+        ),
+        () ref=> newResults,
+    );
 
 
 //
@@ -716,7 +831,6 @@ private argumentToReference(x:RTResult) {
         kind = RT_RESULT_RVALUE;
     return RTResult(kind, x.type);
 }
-
 
 
 //
