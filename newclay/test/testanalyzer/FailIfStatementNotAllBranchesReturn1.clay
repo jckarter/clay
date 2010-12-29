@@ -1,6 +1,5 @@
-
 symbol main = NewProcedure();
 overload main() {
-    throw 0;
+    if (true)
+        return 1;
 }
-

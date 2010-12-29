@@ -281,30 +281,37 @@ private compileOutput(result:RTResult, baseName:String) {
 
 private compileNamedOutputs(names) {
     var s = context().specialization;
-    var resultsIter = iterator(s.returns);
-    for (name, namedReturn in zipped(names, s.namedReturns)) {
-        match(namedReturn,
-            RTVariable, x ref=> {
-                var output = compileOutput(next(resultsIter), name.str);
-                x.lowLevelLocal = output.local;
-            },
-            RTListVariable, x ref=> {
-                clear(x.lowLevelLocals);
-                for (i in range(size(x.types))) {
-                    var output = compileOutput(next(resultsIter), name.str);
-                    push(x.lowLevelLocals, output.local);
-                }
-            },
-        );
-    }
-    assert(not hasNext?(resultsIter));
+    maybe(s.returns,
+        returns ref=> {
+            var resultsIter = iterator(returns);
+            for (name, namedReturn in zipped(names, s.namedReturns)) {
+                match(namedReturn,
+                    RTVariable, x ref=> {
+                        var output = compileOutput(next(resultsIter), name.str);
+                        x.lowLevelLocal = output.local;
+                    },
+                    RTListVariable, x ref=> {
+                        clear(x.lowLevelLocals);
+                        for (i in range(size(x.types))) {
+                            var output = compileOutput(next(resultsIter), name.str);
+                            push(x.lowLevelLocals, output.local);
+                        }
+                    },
+                );
+            }
+            assert(not hasNext?(resultsIter));
+        },
+        () ref=> { assert(false, "non-terminating function with named returns"); },
+    );
 }
 
 private compileUnnamedOutputs() {
     var s = context().specialization;
     var baseName = String("returned");
-    for (result in s.returns)
-        compileOutput(result, baseName);
+    maybe(s.returns, returns => {
+        for (result in returns)
+            compileOutput(result, baseName);
+    });
 }
 
 private compileOutputs() {
@@ -373,7 +380,7 @@ compileSpecialization(x:Specialization) ir.Procedure {
 
 record CompiledExpr (
     irExpr: ir.AtomicExpr,
-    info: RTResult,
+    info: Maybe[RTResult],
 );
 
 
@@ -421,7 +428,7 @@ overload emitInitialize(out:ir.Local, result:CompiledExpr) {
 }
 [A | ir.LocalSequence?(A)]
 overload emitInitialize(out:A, result:Vector[CompiledExpr]) {
-    ensureCompatibleLocals(out, mapped(x => ref x.info, result));
+    ensureCompatibleLocals(out, compiledExprListInfo(result));
     for (x, y in zipped(out, result))
         emitInitialize(x, y.irExpr);
 }
@@ -454,7 +461,12 @@ private tempAccessKind(x:RTResultKind) ir.AccessKind {
     }
 }
 
-private newTemp(x:RTResult) ir.Local {
+private newTemp(maybeX:Maybe[RTResult]) ir.Local {
+    // XXX return nothing when input is nothing
+    return require(maybeX, x => newTemp(x));
+}
+
+overload newTemp(x:RTResult) ir.Local {
     var name = newLocalName("temp");
     return ir.Local(
         move(name), (x.kind == RT_RESULT_VALUE),
@@ -484,23 +496,27 @@ private localKindCompatible?(x:ir.Local, y:RTResult) {
     return false;
 }
 
-private ensureCompatibleLocal(x:ir.Local, y:RTResult) {
-    if (not localTypeMatches?(x, y))
-        typeError(x.type.symbol, y.type);
-    if (not localKindCompatible?(x, y)) {
-        genericError(
-            "expected reference kind ", ir.accessKindString(x.access),
-            ", but received ", rtResultKindString(y.kind),
-        );
-    }
+private ensureCompatibleLocal(x:ir.Local, maybeY:Maybe[RTResult]) {
+    maybe(maybeY, y ref=> {
+        if (not localTypeMatches?(x, y))
+            typeError(x.type.symbol, y.type);
+        if (not localKindCompatible?(x, y)) {
+            genericError(
+                "expected reference kind ", ir.accessKindString(x.access),
+                ", but received ", rtResultKindString(y.kind),
+            );
+        }
+    });
 }
 
 [A, B | ir.LocalSequence?(A) and SizedSequence?(B)
         and SequenceElementType(B) == RTResult]
-private ensureCompatibleLocals(x:A, y:B) {
-    ensureArity(size(x), size(y));
-    for (a, b in zipped(x, y))
-        ensureCompatibleLocal(a, b);
+private ensureCompatibleLocals(x:A, maybeY:Maybe[B]) {
+    maybe(maybeY, y ref=> {
+        ensureArity(size(x), size(y));
+        for (a, b in zipped(x, y))
+            ensureCompatibleLocal(a, Maybe(b));
+    });
 }
 
 
@@ -511,20 +527,23 @@ private ensureCompatibleLocals(x:A, y:B) {
 
 [A | ir.LocalSequence?(A)]
 compileReturnExprListInto(x:ast.ReturnExprList, env, out:A) {
-    ensureArity(size(out), size(analyzeReturnExprList(x, env)));
-    var i = SizeT(0);
-    for (item in x) {
-        var results = analyzeReturnExprListItem(item, env);
-        var outSlice = sliced(out, i, i+size(results));
-        compileReturnExprListItemInto(item, env, outSlice);
-        i += size(results);
-    }
+    maybe(analyzeReturnExprList(x, env),
+        exprResults ref=> {
+            ensureArity(size(out), size(exprResults));
+            var i = SizeT(0);
+            for (item in x) {
+                var itemResults = just(analyzeReturnExprListItem(item, env));
+                var outSlice = sliced(out, i, i+size(itemResults));
+                compileReturnExprListItemInto(item, env, itemResults, outSlice);
+                i += size(itemResults);
+            }
+        },
+    );
 }
 
 [A | ir.LocalSequence?(A)]
-compileReturnExprListItemInto(x:ast.ReturnExprListItem, env, out:A) {
+compileReturnExprListItemInto(x:ast.ReturnExprListItem, env, results:RTResultList, out:A) {
     withLocation(x.item, () ref=> {
-        var results = analyzeReturnExprListItem(x, env);
         ensureArity(size(out), size(results));
         var out2 = Vector[ir.Local]();
         var refTemps = Vector[ir.Local]();
@@ -739,8 +758,10 @@ compileValueListInto(x:ValueList, out:A) {
 compileBoolExpr(x:ast.Expr, env) CompiledExpr {
     return withLocation(x, () ref=> {
         var result = compileExpr(x, env);
-        if (result.info.type != boolType())
-            typeError(boolType(), result.info.type);
+        maybe(result.info, info ref=> {
+            if (info.type != boolType())
+                typeError(boolType(), info.type);
+        });
         return move(result);
     });
 }
@@ -940,12 +961,16 @@ overload compileEnvEntryMulti(x:RTVariable) {
 }
 overload compileEnvEntryMulti(x:RTListVariable) {
     assert(size(x.lowLevelLocals) == size(x.types));
-    var results = envEntryToRTResultList(x);
-    assert(size(results) == size(x.lowLevelLocals));
-    return map(
-        (a, b) => CompiledExpr(ir.AtomicExpr(ir.LocalRef(a)), b), 
-        x.lowLevelLocals,
-        results,
+    return maybe(envEntryToRTResultList(x),
+        results ref=> {
+            assert(size(results) == size(x.lowLevelLocals));
+            return map(
+                (a, b) => CompiledExpr(ir.AtomicExpr(ir.LocalRef(a)), Maybe(b)), 
+                x.lowLevelLocals,
+                results,
+            );
+        },
+        () ref=> Vector[CompiledExpr](),
     );
 }
 
@@ -996,24 +1021,36 @@ compileValueList(x:ValueList) Vector[CompiledExpr] {
 // compileCallWithOneResult, compileCall
 //
 
+compiledExprListInfo(exprs:Vector[CompiledExpr]) = maybeRTResultList(mapped(x => ref x.info, exprs));
+
 compileCallWithOneResult(x:Value, args:Vector[CompiledExpr]) CompiledExpr {
     var results = compileCall(x, args);
+    // XXX nonterminating return should succeed, no-value return should fail here
     ensureArity(1, size(results));
     return move(results[0]);
 }
 
 compileCall(f:Value, args:Vector[CompiledExpr]) Vector[CompiledExpr] {
-    var specialization = analyzeCallable(f, map(x => x.info, args));
-    var irProc = compileSpecialization(specialization);
-    var callExpr = ir.Expr(ir.CallExpr(irProc, map(x => x.irExpr, args)));
-    var locals = map(newTemp, specialization.returns);
-    emitLocalDef(locals, callExpr);
-    return map(
-        (local, info) => CompiledExpr(ir.AtomicExpr(ir.LocalRef(local)), info),
-        locals, specialization.returns,
+    return maybe(analyzeCallable(f, compiledExprListInfo(args)),
+        specialization ref=> {
+            var irProc = compileSpecialization(specialization);
+            var callExpr = ir.Expr(ir.CallExpr(irProc, map(x => x.irExpr, args)));
+            var locals = maybe(specialization.returns,
+                returns ref=> map(newTemp, returns),
+                ()      ref=> Vector[ir.Local](),
+            );
+            emitLocalDef(locals, callExpr);
+            return maybe(specialization.returns,
+                returns ref=> map(
+                    (local, info) => CompiledExpr(ir.AtomicExpr(ir.LocalRef(local)), Maybe(info)),
+                    locals, returns,
+                ),
+                () ref=> Vector[CompiledExpr](),
+            );
+        },
+        () ref=> Vector[CompiledExpr](),
     );
 }
-
 
 
 //
@@ -1026,9 +1063,11 @@ compileCallWithOneResultInto(x:Value, args:Vector[CompiledExpr], out:ir.Local) {
 
 [A | ir.LocalSequence?(A)]
 compileCallInto(f:Value, args:Vector[CompiledExpr], out:A) {
-    var specialization = analyzeCallable(f, map(x => x.info, args));
-    ensureCompatibleLocals(out, specialization.returns);
-    var irProc = compileSpecialization(specialization);
-    var callExpr = ir.Expr(ir.CallExpr(irProc, map(x => x.irExpr, args)));
-    emitInitialize(out, callExpr);
+    // XXX mark "out" as nonterminating somehow
+    maybe(analyzeCallable(f, compiledExprListInfo(args)), specialization => {
+        ensureCompatibleLocals(out, specialization.returns);
+        var irProc = compileSpecialization(specialization);
+        var callExpr = ir.Expr(ir.CallExpr(irProc, map(x => x.irExpr, args)));
+        emitInitialize(out, callExpr);
+    });
 }

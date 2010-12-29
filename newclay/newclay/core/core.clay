@@ -863,7 +863,7 @@ record Specialization = referenceType(
     internalVariadicArg: Maybe[RTListVariable],
     bodyEnv: Env,
     namedReturns: Vector[NamedReturn],
-    returns: RTResultList,
+    returns: Maybe[RTResultList],
     lowLevelProc: Maybe[ir.Procedure],
 );
 
