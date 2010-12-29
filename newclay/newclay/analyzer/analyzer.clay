@@ -82,38 +82,39 @@ overload analyzeExpr(x:ast.Indexing, env) {
     return valueToRTResult(evaluateExpr(x, env));
 }
 overload analyzeExpr(x:ast.AndExpr, env) {
-    // XXX coalesce nontermination
-    analyzeBool(x.expr1, env);
+    var result = analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return Maybe(RTResult(RT_RESULT_VALUE, boolType()));
+    return result;
 }
 overload analyzeExpr(x:ast.OrExpr, env) {
-    // XXX coalesce nontermination
-    analyzeBool(x.expr1, env);
+    var result = analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return Maybe(RTResult(RT_RESULT_VALUE, boolType()));
+    return result;
 }
 overload analyzeExpr(x:ast.LambdaExpr, env) {
     genericError("lambda expressions are not yet supported");
     return nothing(RTResult);
 }
 overload analyzeExpr(x:ast.IfExpr, env) {
-    // XXX coalesce nontermination of condition
-    analyzeBool(x.condition, env);
-    var recursiveAnalysisBranches = 0;
-    var thenResult = nothing(RTResult);
-    var elseResult = nothing(RTResult);
-    try {
-        thenResult = analyzeExpr(x.thenPart, env);
-    } catch (e:RecursiveAnalysisError) { recursiveAnalysisBranches += 1; }
-    try {
-        elseResult = analyzeExpr(x.elsePart, env);
-    } catch (e:RecursiveAnalysisError) { recursiveAnalysisBranches += 1; }
+    return maybe(analyzeBool(x.condition, env),
+        condResult ref=> {
+            var recursiveAnalysisBranches = 0;
+            var thenResult = nothing(RTResult);
+            var elseResult = nothing(RTResult);
+            try {
+                thenResult = analyzeExpr(x.thenPart, env);
+            } catch (e:RecursiveAnalysisError) { recursiveAnalysisBranches += 1; }
+            try {
+                elseResult = analyzeExpr(x.elsePart, env);
+            } catch (e:RecursiveAnalysisError) { recursiveAnalysisBranches += 1; }
 
-    if (recursiveAnalysisBranches == 2)
-        recursiveAnalysisError();
+            if (recursiveAnalysisBranches == 2)
+                recursiveAnalysisError();
 
-    return unifyAnalyzeExprBranches(thenResult, elseResult);
+            return unifyAnalyzeExprBranches(thenResult, elseResult);
+        },
+        () ref=> nothing(RTResult),
+    );
 }
 
 private unifyAnalyzeExprResultKinds(thenr, elser) {
@@ -418,8 +419,12 @@ analyzeBlock(block, env) Maybe[RTResultList] {
         var results = nothing(RTResultList);
         if (analyzeStatement(block, env, results))
             return results;
-        else
+        else if (nothing?(results))
             return Maybe(RTResultList());
+        else {
+            genericError("not all branches return");
+            return nothing(RTResultList);
+        }
     });
 }
 
@@ -453,7 +458,7 @@ overload analyzeStatement(stmt:ast.IfStatement, env, results) {
     var thenReturns? = analyzeStatement(stmt.thenBody, newEnv(env), results);
     var elseReturns? = maybe(stmt.elseBody,
         elseBody ref=> analyzeStatement(elseBody, newEnv(env), results),
-        () ref=> true,
+        () ref=> false,
     );
     return thenReturns? and elseReturns?;
 }
@@ -490,9 +495,11 @@ overload analyzeStatement(stmt:ast.SwitchStatement, env, results) {
     for (caseBlock in stmt.caseBlocks)
         allReturn? = analyzeBlockStatement(caseBlock.body, env, results) and allReturn?;
 
-    maybe(stmt.defaultBlock, defaultBlock => {
-        allReturn? = analyzeBlockStatement(defaultBlock, env, results) and allReturn?;
-    });
+    allReturn? = maybe(stmt.defaultBlock,
+        defaultBlock ref=> analyzeBlockStatement(defaultBlock, env, results),
+        () ref=> false,
+    ) and allReturn?;
+
     return allReturn?;
 }
 
