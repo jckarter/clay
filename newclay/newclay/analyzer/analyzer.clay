@@ -15,7 +15,7 @@ analyzeMain() {
     var mainValue = envEntryToValue(publicLookup(getProgramMainModule(), "main"));
     if (not runtimeCallable?(mainValue))
         genericError("invalid procedure: main");
-    return analyzeCallable(mainValue, RTResultList());
+    return analyzeCallable(mainValue, Maybe(RTResultList()));
 }
 
 
@@ -324,7 +324,7 @@ overload envEntryToRTResultList(x:RTListVariable) {
 // valueListToRTResultList
 //
 
-maybeRTResultList(maybeRTResults:Vector[Maybe[RTResult]]) {
+maybeRTResultList(maybeRTResults) {
     var results = Vector[RTResult]();
     reserve(results, size(maybeRTResults));
 
@@ -445,14 +445,12 @@ analyzeCallWithOneResult(x, argResults:Maybe[RTResultList]) {
     );
 }
 
-analyzeCall(x, maybeArgResults) = maybe(maybeArgResults,
-    argResults ref=> {
-        var specialization = analyzeCallable(x, argResults);
-        return specialization.returns;
-    },
-    () ref=> nothing(RTResultList),
-);
-
+analyzeCall(x, argResults) {
+    return maybe(analyzeCallable(x, argResults),
+        specialization => specialization.returns,
+        () => nothing(RTResultList),
+    );
+}
 
 
 //
@@ -725,9 +723,10 @@ private argumentToReference(x:RTResult) {
 // analyzeCallable
 //
 
-analyzeCallable(callable:Value, args:RTResultList) Specialization {
-    return withCallAnalysis(callable, args,
-        () ref=> analyzeCallable2(callable, args)
+analyzeCallable(callable:Value, maybeArgs:Maybe[RTResultList]) Maybe[Specialization] {
+    return maybe(maybeArgs,
+        args ref=> withCallAnalysis(callable, args, () ref=> Maybe(analyzeCallable2(callable, args))),
+        () ref=> nothing(Specialization),
     );
 }
 

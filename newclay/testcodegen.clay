@@ -8,6 +8,7 @@ import newclay.hooks.*;
 import newclay.analyzer.*;
 import newclay.compiler.*;
 import newclay.codegen.*;
+import maybe.*;
 
 main(args) {
     if (size(args) != 2) {
@@ -18,10 +19,16 @@ main(args) {
         var program = loadProgram(args[1]);
         withProgram(program, () ref=> {
             initializeClayHooks();
-            var specialization = analyzeMain();
-            var irProc = compileSpecialization(specialization);
-            var cCode = codegenMain(irProc);
-            print(cCode);
+            maybe(analyzeMain(),
+                specialization ref=> {
+                    var irProc = compileSpecialization(specialization);
+                    var cCode = codegenMain(irProc);
+                    print(cCode);
+                },
+                () ref=> {
+                    assert(false, "main() is unreachable");
+                },
+            );
         });
     }
     catch (e:ClayError) {
