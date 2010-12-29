@@ -53,4 +53,10 @@ main() {
     ref y = require(copy(a));
     y *= 1000;
     println(a);
+
+    var c = Maybe(100);
+    var d = nothing(Int);
+
+    println(maybe(c, cc => Maybe(cc+1)));
+    println(maybe(d, dd => Maybe(dd+1)));
 }

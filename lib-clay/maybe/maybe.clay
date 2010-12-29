@@ -21,6 +21,9 @@ inline overload Maybe[T]() = Maybe[T](Nothing());
 
 inline nothing(T) = Maybe[T]();
 
+Maybe?(T) = false;
+[T] overload Maybe?(static Maybe[T]) = true;
+
 
 //
 // nothing?
@@ -39,14 +42,21 @@ inline overload just(m: Maybe[T], dflt: T) = maybe(m, v => v, () => dflt);
 // maybe function
 //
 
+procedure die;
+
 private procedure maybeValue;
-inline overload maybeValue(forward x, thenFn, ...elseFn) = forward ...thenFn(x);
-inline overload maybeValue(forward n: Nothing, thenFn, elseFn) = forward ...elseFn();
-inline overload maybeValue(forward n: Nothing, thenFn) { }
+inline overload maybeValue(T, forward x, thenFn, ...elseFn) = forward ...thenFn(x);
+inline overload maybeValue(T, forward n: Nothing, thenFn, elseFn) = forward ...elseFn();
+
+
+// if the thenFn returns Maybe[T]s, have the default else case return nothing(T)s
+[T, F | allValues?(Maybe?, ...Type(...typeToRValue(F)(typeToRValue(T))))]
+inline overload maybeValue(static T, forward n: Nothing, thenFn:F)
+    = ...mapValues(call, ...Type(...thenFn(typeToRValue(T))));
 
 [T]
 inline maybe(forward m:Maybe[T], thenFn, ...elseFn)
-    = forward ...maybeValue(*m, thenFn, ...elseFn);
+    = forward ...maybeValue(static T, *m, thenFn, ...elseFn);
 
 
 
