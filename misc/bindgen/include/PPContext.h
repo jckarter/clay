@@ -6,7 +6,7 @@
 
 #include "llvm/Config/config.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/System/Path.h"
+#include "llvm/Support/Path.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/SourceManager.h"
@@ -37,11 +37,12 @@ struct PPContext {
         std::vector<std::string> const &frameworkDirs,
         std::vector<std::string> const &headerDirs
     ) : 
-        diags(client),
+        diags(IntrusiveRefCntPtr<DiagnosticIDs>(new DiagnosticIDs()), client),
         opts(langOpts),
         target(clang::TargetInfo::CreateTargetInfo(diags,targetOpts)),
+        fm(FileSystemOptions()),
         headers(fm),
-        sm(diags),
+        sm(diags, fm),
         pp(diags, opts, *target, sm, headers)
         {
             diags.setSuppressSystemWarnings(true);

@@ -246,7 +246,7 @@ int main(int argc, char* argv[]) {
 
     // Initialize ASTContext
     Builtin::Context builtins(*context.target);
-    builtins.InitializeBuiltins(context.pp.getIdentifierTable());
+    builtins.InitializeBuiltins(context.pp.getIdentifierTable(), langOpts);
 
     ASTContext astContext(context.opts, context.sm, *context.target,
                           context.pp.getIdentifierTable(),

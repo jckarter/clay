@@ -16,6 +16,6 @@ else(UNIX)
 endif (UNIX)
 
 target_link_libraries(clay-bindgen 
-    "clangFrontend" "clangParse" "clangSema" "clangChecker"
+    "clangFrontend" "clangParse" "clangSema"
     "clangAnalysis" "clangIndex" "clangAST" "clangLex"
     "clangBasic" "clangDriver" "clangFrontendTool" "clangSerialization" ${LLVM_LIBS})

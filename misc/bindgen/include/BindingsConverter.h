@@ -35,8 +35,8 @@ private:
     string convertBuiltinType(const BuiltinType *type);
     string convertFPType(const FunctionNoProtoType *type);
     string convertFPType(const FunctionProtoType *type);
-    string convertObjcType(const Type *type);
-    string convertType(const Type *type);
+    string convertObjcType(const clang::Type *type);
+    string convertType(const clang::Type *type);
     string convertIdent(const string &cIdent);
 
     bool isClayKeyword(const string &cIdent);
