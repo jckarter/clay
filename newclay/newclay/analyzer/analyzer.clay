@@ -465,8 +465,10 @@ overload analyzeStatement(stmt:ast.IfStatement, env, results) {
 
 overload analyzeStatement(stmt:ast.ForStatement, env, results) {
     var subenv = newEnv(env);
+    // XXX propagate nontermination of sequence expression
     bindForBindings(subenv, stmt.sequenceValue, stmt.bodyBindings);
-    return analyzeStatement(stmt.body, subenv, results);
+    analyzeStatement(stmt.body, subenv, results);
+    return false;
 }
 
 private bindForBindings(...x) {
@@ -484,7 +486,8 @@ overload analyzeStatement(stmt:ast.WhileStatement, env, results) {
     if (nothing?(analyzeBool(stmt.condition, env)))
         return true;
 
-    return analyzeStatement(stmt.body, newEnv(env), results);
+    analyzeStatement(stmt.body, newEnv(env), results);
+    return false;
 }
 
 overload analyzeStatement(stmt:ast.SwitchStatement, env, results) {
