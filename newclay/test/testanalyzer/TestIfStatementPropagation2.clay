@@ -1,0 +1,12 @@
+symbol nop = NewProcedure();
+overload nop() {}
+
+symbol main = NewProcedure();
+overload main() {
+    if (true)
+        return 1;
+    else
+        nop();
+
+    return 2;
+}

@@ -1,0 +1,10 @@
+symbol nonterminating = NewProcedure();
+overload nonterminating() { throw 0; }
+
+symbol main = NewProcedure();
+overload main() {
+    if (true)
+        nonterminating();
+    else
+        return 2;
+}
