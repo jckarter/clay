@@ -1,0 +1,16 @@
+symbol nonterminating = NewProcedure();
+overload nonterminating() { throw 0; }
+
+symbol main = NewProcedure();
+overload main() {
+    switch (nonterminating())
+    case (1) {
+        return 1;
+    }
+    case (2) {
+        return 2;
+    }
+    default {
+        return 3;
+    }
+}

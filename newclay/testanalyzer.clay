@@ -6,6 +6,7 @@ import newclay.core.*;
 import newclay.loader.*;
 import newclay.hooks.*;
 import newclay.analyzer.*;
+import maybe.*;
 
 main(args) {
     if (size(args) != 2) {
@@ -16,8 +17,10 @@ main(args) {
         var program = loadProgram(args[1]);
         withProgram(program, () ref=> {
             initializeClayHooks();
-            var specialization = analyzeMain();
-            println("result = ", specialization.returns);
+            maybe(analyzeMain(),
+                specialization => { println("result = ", specialization.returns); },
+                () => { assert(false, "main() is unreachable"); },
+            );
         });
     }
     catch (e:ClayError) {

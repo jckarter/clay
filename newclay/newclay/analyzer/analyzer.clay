@@ -15,7 +15,7 @@ analyzeMain() {
     var mainValue = envEntryToValue(publicLookup(getProgramMainModule(), "main"));
     if (not runtimeCallable?(mainValue))
         genericError("invalid procedure: main");
-    return analyzeCallable(mainValue, RTResultList());
+    return analyzeCallable(mainValue, Maybe(RTResultList()));
 }
 
 
@@ -24,12 +24,14 @@ analyzeMain() {
 // analyzeBool
 //
 
-analyzeBool(x:ast.Expr, env) RTResult {
+analyzeBool(x:ast.Expr, env) Maybe[RTResult] {
     return withLocation(x, () ref=> {
-        var result = analyzeExpr(x, env);
-        if (result.type != boolType())
-            typeError(boolType(), result.type);
-        return result;
+        var maybeResult = analyzeExpr(x, env);
+        maybe(maybeResult, result ref=> {
+            if (result.type != boolType())
+                typeError(boolType(), result.type);
+        });
+        return maybeResult;
     });
 }
 
@@ -41,18 +43,18 @@ analyzeBool(x:ast.Expr, env) RTResult {
 
 procedure analyzeExpr;
 
-overload analyzeExpr(x:ast.Expr, env) RTResult {
+overload analyzeExpr(x:ast.Expr, env) Maybe[RTResult] {
     return withLocation(x, () ref=> analyzeExpr(*x, env));
 }
 overload analyzeExpr(x:ast.BoolLiteral, env) {
-    return RTResult(RT_RESULT_VALUE, boolType());
+    return Maybe(RTResult(RT_RESULT_VALUE, boolType()));
 }
 overload analyzeExpr(x:ast.IntLiteral, env) {
-    return RTResult(RT_RESULT_VALUE, intType());
+    return Maybe(RTResult(RT_RESULT_VALUE, intType()));
 }
 overload analyzeExpr(x:ast.StringLiteral, env) {
     genericError("strings are not yet supported");
-    return RTResult();
+    return nothing(RTResult);
 }
 overload analyzeExpr(x:ast.NameRef, env) {
     return envEntryToRTResult(privateLookup(env, x.name));
@@ -62,7 +64,7 @@ overload analyzeExpr(x:ast.PatternNameRef, env) {
 }
 overload analyzeExpr(x:ast.TupleExpr, env) {
     genericError("tuples are not yet supported");
-    return RTResult();
+    return nothing(RTResult);
 }
 overload analyzeExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
@@ -80,31 +82,68 @@ overload analyzeExpr(x:ast.Indexing, env) {
     return valueToRTResult(evaluateExpr(x, env));
 }
 overload analyzeExpr(x:ast.AndExpr, env) {
-    analyzeBool(x.expr1, env);
+    var result = analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return RTResult(RT_RESULT_VALUE, boolType());
+    return result;
 }
 overload analyzeExpr(x:ast.OrExpr, env) {
-    analyzeBool(x.expr1, env);
+    var result = analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return RTResult(RT_RESULT_VALUE, boolType());
+    return result;
 }
 overload analyzeExpr(x:ast.LambdaExpr, env) {
     genericError("lambda expressions are not yet supported");
-    return RTResult();
+    return nothing(RTResult);
 }
 overload analyzeExpr(x:ast.IfExpr, env) {
-    analyzeBool(x.condition, env);
-    try {
-        var a = analyzeExpr(x.thenPart, env);
-        return RTResult(RT_RESULT_VALUE, a.type);
-    }
-    catch (e:RecursiveAnalysisError) {
-        var b = analyzeExpr(x.elsePart, env);
-        return RTResult(RT_RESULT_VALUE, b.type);
-    }
+    return maybe(analyzeBool(x.condition, env),
+        condResult ref=> {
+            var recursiveAnalysisBranches = 0;
+            var thenResult = nothing(RTResult);
+            var elseResult = nothing(RTResult);
+            try {
+                thenResult = analyzeExpr(x.thenPart, env);
+            } catch (e:RecursiveAnalysisError) { recursiveAnalysisBranches += 1; }
+            try {
+                elseResult = analyzeExpr(x.elsePart, env);
+            } catch (e:RecursiveAnalysisError) { recursiveAnalysisBranches += 1; }
+
+            if (recursiveAnalysisBranches == 2)
+                recursiveAnalysisError();
+
+            return unifyAnalyzeExprBranches(thenResult, elseResult);
+        },
+        () ref=> nothing(RTResult),
+    );
 }
 
+private unifyAnalyzeExprResultKinds(thenr, elser) {
+    if (thenr.kind == elser.kind)
+        return thenr.kind;
+    else if (thenr.kind == RT_RESULT_VALUE or elser.kind == RT_RESULT_VALUE)
+        return RT_RESULT_VALUE;
+    else if (thenr.kind == RT_RESULT_CONST or elser.kind == RT_RESULT_CONST)
+        return RT_RESULT_CONST;
+    else if (thenr.kind == RT_RESULT_REF or elser.kind == RT_RESULT_REF)
+        return RT_RESULT_REF;
+    else
+        return RT_RESULT_RVALUE;
+}
+
+private unifyAnalyzeExprTypes(thenr, elser) {
+    if (thenr.type != elser.type)
+        genericError("return types in if expression branches do not match");
+    return Maybe(RTResult(unifyAnalyzeExprResultKinds(thenr, elser), thenr.type));
+}
+
+unifyAnalyzeExprBranches(thenResult, elseResult)
+    = maybe(thenResult,
+        thenr ref=> maybe(elseResult,
+            elser ref=> unifyAnalyzeExprTypes(thenr, elser),
+            () ref=> thenResult,
+        ),
+        () ref=> elseResult,
+    );
 
 
 //
@@ -115,21 +154,21 @@ envEntryToRTResult(entry:EnvEntry) {
     return match(entry,
         Value, x => valueToRTResult(x),
         ValueList, x => {
-            genericError("multi-value used in single value context");
-            return RTResult();
+            genericError("multiple values used in single value context");
+            return nothing(RTResult);
         },
         PatternCell, x => {
             genericError("pattern variable cannot be used in non-pattern expression");
-            return RTResult();
+            return nothing(RTResult);
         },
         ListPatternCell, x => {
             genericError("pattern variable cannot be used in non-pattern expression");
-            return RTResult();
+            return nothing(RTResult);
         },
         RTVariable, x => rtVariableToRTResult(x),
         RTListVariable, x => {
             genericError("multi-value used in single value context");
-            return RTResult();
+            return nothing(RTResult);
         },
     );
 }
@@ -141,7 +180,7 @@ envEntryToRTResult(entry:EnvEntry) {
 //
 
 rtVariableToRTResult(x:RTVariable) =
-    RTResult(rtVariableKindToRTResultKind(x.kind), x.type);
+    Maybe(RTResult(rtVariableKindToRTResultKind(x.kind), x.type));
 
 rtVariableKindToRTResultKind(x:RTVariableKind) {
     switch (x) {
@@ -162,18 +201,18 @@ rtVariableKindToRTResultKind(x:RTVariableKind) {
 
 valueToRTResult(x:Value) {
     return match(x,
-        BoolValue, x => RTResult(RT_RESULT_VALUE, boolType()),
-        IntValue, x => RTResult(RT_RESULT_VALUE, intType()),
+        BoolValue, x => Maybe(RTResult(RT_RESULT_VALUE, boolType())),
+        IntValue, x => Maybe(RTResult(RT_RESULT_VALUE, intType())),
         StringValue, x => {
             genericError("strings are not yet supported");
-            return RTResult();
+            return nothing(RTResult);
         },
         TupleValue, x => {
             genericError("tuples are not yet supported");
-            return RTResult();
+            return nothing(RTResult);
         },
         MatchDefault, x => {
-            return RTResult(RT_RESULT_VALUE, staticType(Value(x)));
+            return Maybe(RTResult(RT_RESULT_VALUE, staticType(Value(x))));
         },
     );
 }
@@ -186,9 +225,13 @@ valueToRTResult(x:Value) {
 
 analyzeExprList(exprList, env) {
     var results = RTResultList();
-    for (item in exprList)
-        push(results, analyzeExprListItem(item, env));
-    return move(results);
+    for (item in exprList) {
+        var itemResults = analyzeExprListItem(item, env);
+        if (nothing?(itemResults))
+            return nothing(RTResultList);
+        push(results, just(itemResults));
+    }
+    return Maybe(move(results));
 }
 
 procedure analyzeExprListItem;
@@ -197,7 +240,10 @@ overload analyzeExprListItem(x:ast.ExprListItem, env) {
     return analyzeExprListItem(*x, env);
 }
 overload analyzeExprListItem(x:ast.Expr, env) {
-    return RTResultList(analyzeExpr(x, env));
+    return maybe(analyzeExpr(x, env),
+        result ref=> Maybe(RTResultList(result)),
+        () ref=> nothing(RTResultList),
+    );
 }
 overload analyzeExprListItem(x:ast.UnpackExpr, env) {
     return analyzeMultiExpr(x.expr, env);
@@ -213,9 +259,9 @@ procedure analyzeMultiExpr;
 
 overload analyzeMultiExpr(x, env) {
     genericError("single valued expression used in multi-value context");
-    return RTResultList();
+    return nothing(RTResultList);
 }
-overload analyzeMultiExpr(x:ast.Expr, env) RTResultList {
+overload analyzeMultiExpr(x:ast.Expr, env) Maybe[RTResultList] {
     return withLocation(x, () ref=> analyzeMultiExpr(*x, env));
 }
 overload analyzeMultiExpr(x:ast.NameRef, env) {
@@ -250,22 +296,22 @@ overload envEntryToRTResultList(x:EnvEntry) {
 }
 overload envEntryToRTResultList(x:Value) {
     genericError("single value used in multi-valued context");
-    return RTResultList();
+    return nothing(RTResultList);
 }
 overload envEntryToRTResultList(x:ValueList) {
-    return map(y ref=> valueToRTResult(y), x);
+    return valueListToRTResultList(x);
 }
 overload envEntryToRTResultList(x:PatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
-    return RTResultList();
+    return nothing(RTResultList);
 }
 overload envEntryToRTResultList(x:ListPatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
-    return RTResultList();
+    return nothing(RTResultList);
 }
 overload envEntryToRTResultList(x:RTVariable) {
     genericError("single value used in multi-valued context");
-    return RTResultList();
+    return nothing(RTResultList);
 }
 overload envEntryToRTResultList(x:RTListVariable) {
     var result = RTResultList();
@@ -273,7 +319,7 @@ overload envEntryToRTResultList(x:RTListVariable) {
         var kind2 = rtVariableKindToRTResultKind(kind);
         push(result, RTResult(kind2, type));
     }
-    return move(result);
+    return Maybe(move(result));
 }
 
 
@@ -282,7 +328,21 @@ overload envEntryToRTResultList(x:RTListVariable) {
 // valueListToRTResultList
 //
 
-valueListToRTResultList(x:ValueList) = map(valueToRTResult, x);
+maybeRTResultList(maybeRTResults) {
+    var results = Vector[RTResult]();
+    reserve(results, size(maybeRTResults));
+
+    for (result in maybeRTResults)
+        if (just?(result))
+            push(results, just(result));
+        else
+            return nothing(RTResultList);
+
+    return Maybe(move(results));
+}
+
+// XXX more efficient
+valueListToRTResultList(x:ValueList) = maybeRTResultList(map(valueToRTResult, x));
 
 
 
@@ -327,31 +387,158 @@ private returnExprRTResultKind(x:ast.ReturnExprListItem, kind:RTResultKind) {
 }
 
 analyzeReturnExprListItem(x, env) {
-    return withLocation(x.item, () ref=> {
-        var results = analyzeExprListItem(x.item, env);
-        var results2 = RTResultList();
-        for (r in results)
-            push(results2, RTResult(returnExprRTResultKind(x, r.kind), r.type));
-        return move(results2);
-    });
+    return withLocation(x.item, () ref=>
+        maybe(analyzeExprListItem(x.item, env),
+            results ref=> Maybe(map(
+                r ref=> RTResult(returnExprRTResultKind(x, r.kind), r.type),
+                results
+            )),
+            () ref=> nothing(RTResultList)
+        )
+    );
 }
 
 analyzeReturnExprList(returnExprList, env) {
     var results = RTResultList();
-    for (item in returnExprList)
-        push(results, analyzeReturnExprListItem(item, env));
-    return move(results);
+    for (item in returnExprList) {
+        var itemResults = analyzeReturnExprListItem(item, env);
+        if (nothing?(itemResults))
+            return nothing(RTResultList);
+        push(results, just(itemResults));
+    }
+    return Maybe(move(results));
 }
 
 
 //
-// analyzeBlock, analyzeStatement
+// analyzeBlock
 //
 
-analyzeBlock(block, env) {
-    genericError("analyzer doesn't support blocks yet");
-    return RTResultList();
+analyzeBlock(block, env) Maybe[RTResultList] {
+    return withLocation(block, () ref=> {
+        var results = nothing(RTResultList);
+        if (analyzeStatement(block, env, results))
+            return results;
+        else if (nothing?(results))
+            return Maybe(RTResultList());
+        else {
+            genericError("not all branches return");
+            return nothing(RTResultList);
+        }
+    });
 }
+
+private procedure analyzeStatement;
+
+overload analyzeStatement(stmt:ast.Statement, env:Env, inoutResults:Maybe[RTResultList]) Bool {
+    return withLocation(*stmt, () ref=> analyzeStatement(*stmt, env, inoutResults));
+}
+overload analyzeStatement(stmt:ast.LabelDef, env, results) = false;
+overload analyzeStatement(stmt:ast.BindingStatement, env, results) {
+    // XXX
+    genericError("variable binding statements are not yet supported");
+    return false;
+}
+overload analyzeStatement(stmt:ast.AssignmentStatement, env, results) = false;
+overload analyzeStatement(stmt:ast.GotoStatement, env, results) = false;
+overload analyzeStatement(stmt:ast.ReturnStatement, env, results) {
+    results = unifyStatementReturns(results, analyzeReturnExprList(stmt.values, env));
+    return true;
+}
+overload analyzeStatement(stmt:ast.BreakStatement, env, results) = false;
+overload analyzeStatement(stmt:ast.ContinueStatement, env, results) = false;
+overload analyzeStatement(stmt:ast.ThrowStatement, env, results) {
+    return true;
+}
+
+overload analyzeStatement(stmt:ast.IfStatement, env, results) {
+    if (nothing?(analyzeBool(stmt.condition, env)))
+        return true;
+
+    var thenReturns? = analyzeStatement(stmt.thenBody, newEnv(env), results);
+    var elseReturns? = maybe(stmt.elseBody,
+        elseBody ref=> analyzeStatement(elseBody, newEnv(env), results),
+        () ref=> false,
+    );
+    return thenReturns? and elseReturns?;
+}
+
+overload analyzeStatement(stmt:ast.ForStatement, env, results) {
+    var subenv = newEnv(env);
+    // XXX propagate nontermination of sequence expression
+    bindForBindings(subenv, stmt.sequenceValue, stmt.bodyBindings);
+    analyzeStatement(stmt.body, subenv, results);
+    return false;
+}
+
+private bindForBindings(...x) {
+    // XXX
+    genericError("for loops are not yet supported");
+}
+
+overload analyzeStatement(stmt:ast.StaticForStatement, env, results) {
+    // XXX alias "bodyBinding" to each expression from "values" in turn and analyze
+    genericError("static for loops are not yet supported");
+    return false;
+}
+
+overload analyzeStatement(stmt:ast.WhileStatement, env, results) {
+    if (nothing?(analyzeBool(stmt.condition, env)))
+        return true;
+
+    analyzeStatement(stmt.body, newEnv(env), results);
+    return false;
+}
+
+overload analyzeStatement(stmt:ast.SwitchStatement, env, results) {
+    if (nothing?(analyzeExpr(stmt.value, env)))
+        return true;
+
+    var allReturn? = not empty?(stmt.caseBlocks);
+    for (caseBlock in stmt.caseBlocks)
+        allReturn? = analyzeBlockStatement(caseBlock.body, env, results) and allReturn?;
+
+    allReturn? = maybe(stmt.defaultBlock,
+        defaultBlock ref=> analyzeBlockStatement(defaultBlock, env, results),
+        () ref=> false,
+    ) and allReturn?;
+
+    return allReturn?;
+}
+
+overload analyzeStatement(stmt:ast.TryStatement, env, results) {
+    // XXX
+    genericError("try blocks are not yet supported");
+    return false;
+}
+
+overload analyzeStatement(stmt:ast.ExprStatement, env, results) {
+    return nothing?(analyzeMultiExpr(stmt.expr, env));
+}
+
+overload analyzeStatement(block:ast.Block, env, results) Bool {
+    var subenv = newEnv(env);
+    for (stmt in block.statements)
+        if (analyzeStatement(stmt, subenv, results))
+            return true;
+    return false;
+}
+
+private analyzeBlockStatement(block:ast.Block, env, results) Bool
+    = withLocation(block, () ref=> analyzeStatement(block, env, results));
+
+private unifyStatementReturns(existingResults, newResults)
+    = maybe(existingResults,
+        er ref=> maybe(newResults,
+            nr ref=> {
+                if (nr != er)
+                    genericError("mismatching return types");
+                return Maybe(nr);
+            },
+            () ref=> existingResults,
+        ),
+        () ref=> newResults,
+    );
 
 
 //
@@ -372,17 +559,23 @@ runtimeCallable?(x:Value) {
 // analyzeCallWithOneResult, analyzeCall
 //
 
-analyzeCallWithOneResult(x, args:RTResultList) {
-    var results = analyzeCall(x, args);
-    ensureArity(1, size(results));
-    return move(results[0]);
+analyzeCallWithOneResult(x, argResults:Maybe[RTResultList]) {
+    var maybeResults = analyzeCall(x, argResults);
+    return maybe(maybeResults,
+        results ref=> {
+            ensureArity(1, size(results));
+            return Maybe(move(results[0]));
+        },
+        () ref=> nothing(RTResult),
+    );
 }
 
-analyzeCall(x, args) {
-    var specialization = analyzeCallable(x, args);
-    return specialization.returns;
+analyzeCall(x, argResults) {
+    return maybe(analyzeCallable(x, argResults),
+        specialization => specialization.returns,
+        () => nothing(RTResultList),
+    );
 }
-
 
 
 //
@@ -592,6 +785,7 @@ private returnSpecRTResultKind(returnSpec: ast.ReturnSpec) {
 }
 
 private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
+    // XXX handle noreturn syntax here
     var result = RTResultList();
     for (returnSpec in returns) {
         if (returnSpec.arityKind == ast.RETURN_SINGLE) {
@@ -607,7 +801,7 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
                 push(result, RTResult(kind, type));
         }
     }
-    return move(result);
+    return Maybe(move(result));
 }
 
 private analyzeBody(x:Overload, env) {
@@ -615,7 +809,7 @@ private analyzeBody(x:Overload, env) {
         return computeReturnSpec(x.ast.returns, env);
     return match(x.ast.body,
         ast.ExprCodeBody, y ref=> analyzeReturnExprList(y.exprs, env),
-        ast.CCodeBody, y ref=> RTResultList(), // void return
+        ast.CCodeBody, y ref=> Maybe(RTResultList()), // void return
         ast.Block, y ref=> analyzeBlock(y, env),
     );
 }
@@ -648,15 +842,15 @@ private argumentToReference(x:RTResult) {
     return RTResult(kind, x.type);
 }
 
-
 
 //
 // analyzeCallable
 //
 
-analyzeCallable(callable:Value, args:RTResultList) Specialization {
-    return withCallAnalysis(callable, args,
-        () ref=> analyzeCallable2(callable, args)
+analyzeCallable(callable:Value, maybeArgs:Maybe[RTResultList]) Maybe[Specialization] {
+    return maybe(maybeArgs,
+        args ref=> withCallAnalysis(callable, args, () ref=> Maybe(analyzeCallable2(callable, args))),
+        () ref=> nothing(Specialization),
     );
 }
 

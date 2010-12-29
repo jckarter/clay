@@ -1,0 +1,10 @@
+
+symbol nonterminating = NewProcedure();
+overload nonterminating() { throw 0; }
+
+symbol foo = NewProcedure();
+overload foo(x:Int) = if (nonterminating()) 1 else 2;
+
+symbol main = NewProcedure();
+overload main() = foo(2);
+
