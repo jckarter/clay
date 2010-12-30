@@ -89,7 +89,14 @@ overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
 }
 
 overload visitASTNode(r:ResolveASTVisitor, block:ast.Block) {
-    visitAST(newVisitor(r), block.statements);
+    var subenv = newEnv(r.env);
+    for (stmt in block.statements)
+        match(stmt,
+            ast.LabelDef, label ref=> { envAdd(subenv, label.name, DummyValue); },
+            MatchDefault, x ref=> {},
+        );
+
+    visitAST(ResolveASTVisitor(subenv), block.statements);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.IfStatement) {
@@ -125,10 +132,6 @@ overload visitASTNode(r:ResolveASTVisitor, block:ast.CatchBlock) {
     var subenv = newEnv(r.env);
     addBindingName(r, subenv, block.binding);
     visitAST(ResolveASTVisitor(subenv), block.body);
-}
-
-overload visitASTNode(r:ResolveASTVisitor, label:ast.LabelDef) {
-    envAdd(variantAs(r.env, Env), label.name, DummyValue);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.BindingStatement) {

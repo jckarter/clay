@@ -6,5 +6,6 @@ symbol bas = ();
 
 overload Foo() {
 bar:
+    bar; // invalid, but tests that "bar" enters the local environment
     goto bar;
 }
