@@ -451,7 +451,15 @@ overload analyzeStatement(stmt:ast.BindingStatement, env, results) {
     return false;
 }
 overload analyzeStatement(stmt:ast.AssignmentStatement, env, results) = false;
-overload analyzeStatement(stmt:ast.GotoStatement, env, results) = false;
+overload analyzeStatement(stmt:ast.GotoStatement, env, results) {
+    match(privateLookup(env, stmt.label),
+        RTLabel, x ref=> {},
+        MatchDefault, x ref=> {
+            genericError("goto target is not a label");
+        },
+    );
+    return false;
+}
 overload analyzeStatement(stmt:ast.ReturnStatement, env, results) {
     results = unifyStatementReturns(results, analyzeReturnExprList(stmt.values, env));
     return true;
@@ -529,6 +537,13 @@ overload analyzeStatement(stmt:ast.ExprStatement, env, results) {
 
 overload analyzeStatement(block:ast.Block, env, results) Bool {
     var subenv = newEnv(env);
+    for (stmt in block.statements)
+        match(stmt,
+            ast.LabelDef, label ref=> {
+                envAdd(subenv, label.name, RTLabel(label));
+            },
+            MatchDefault, x ref=> {},
+        );
     for (stmt in block.statements)
         if (analyzeStatement(stmt, subenv, results))
             return true;
