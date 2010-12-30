@@ -872,6 +872,10 @@ compileEnvEntry(entry:EnvEntry) CompiledExpr {
             genericError("multi-value used in single value context");
             return CompiledExpr();
         },
+        RTLabel, x => {
+            genericError("cannot use label as value");
+            return CompiledExpr();
+        }
     );
 }
 
@@ -972,6 +976,10 @@ overload compileEnvEntryMulti(x:RTListVariable) {
         },
         () ref=> Vector[CompiledExpr](),
     );
+}
+overload compileEnvEntryMulti(x:RTLabel) {
+    genericError("label cannot be used as value");
+    return Vector[CompiledExpr]();
 }
 
 
