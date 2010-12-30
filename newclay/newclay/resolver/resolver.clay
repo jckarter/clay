@@ -8,20 +8,48 @@ alias DummyValue = Value(BoolValue(false));
 
 private record ResolveASTVisitor(env:EnvParent);
 
+[E | VariantMember?(EnvParent, E)]
+overload ResolveASTVisitor(e:E) = ResolveASTVisitor(EnvParent(e));
+
+private newVisitor(parent:ResolveASTVisitor) = ResolveASTVisitor(newEnv(parent.env));
+
+private bindArgumentList(env:Env, argList) {
+    for (arg in argList.items)
+        envAdd(env, arg.name, DummyValue);
+    maybe(argList.variadicItem, arg ref=> {
+        envAdd(env, arg.name, DummyValue);
+    });
+}
+
+private addBindingName(r, subenv:Env, bindingName) {
+    visitAST(r, bindingName.type);
+    envAdd(subenv, bindingName.name, DummyValue);
+}
+
+private addBindingList(r, subenv:Env, bindingList:ast.SingleBindingList) {
+    for (binding in bindingList) {
+        visitAST(r, binding.value);
+        addBindingName(r, subenv, binding.name);
+    }
+}
+
+overload addBindingList(r, subenv:Env, bindingList:ast.MultipleBindingList) {
+    visitAST(r, bindingList.values);
+    for (bindingName in bindingList.names.items)
+        addBindingName(r, subenv, bindingName);
+    maybe(bindingList.names.variadicItem, bindingName ref=> {
+        addBindingName(r, subenv, bindingName);
+    });
+}
+
 overload visitASTNode(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
     visitAST(r, lambda.predicate);
     visitAST(r, lambda.args);
 
     var subenv = newEnv(r.env);
+    bindArgumentList(subenv, lambda.args);
 
-    for (arg in lambda.args.items)
-        envAdd(subenv, arg.name, DummyValue);
-    maybe(lambda.args.variadicItem, arg ref=> {
-        envAdd(subenv, arg.name, DummyValue);
-    });
-
-    var subr = ResolveASTVisitor(EnvParent(subenv));
-
+    var subr = ResolveASTVisitor(subenv);
     visitAST(subr, lambda.body);
 }
 
@@ -31,19 +59,14 @@ overload visitASTNode(r:ResolveASTVisitor, oload:ast.Overload) {
     visitAST(r, oload.args);
 
     var subenv = newEnv(r.env);
-
-    for (arg in oload.args.items)
-        envAdd(subenv, arg.name, DummyValue);
-    maybe(oload.args.variadicItem, arg ref=> {
-        envAdd(subenv, arg.name, DummyValue);
-    });
+    bindArgumentList(subenv, oload.args);
 
     maybe(oload.returnedNames, returnedNames ref=> {
         for (ret in returnedNames)
             envAdd(subenv, ret, DummyValue);
     });
 
-    var subr = ResolveASTVisitor(EnvParent(subenv));
+    var subr = ResolveASTVisitor(subenv);
 
     visitAST(subr, oload.returns);
     visitAST(subr, oload.body);
@@ -63,6 +86,53 @@ overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
         ),
         MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
     );
+}
+
+overload visitASTNode(r:ResolveASTVisitor, block:ast.Block) {
+    visitAST(newVisitor(r), block.statements);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, stmt:ast.IfStatement) {
+    visitAST(r, stmt.condition);
+    visitAST(newVisitor(r), stmt.thenBody);
+    maybe(stmt.elseBody, elseBody ref=> { visitAST(newVisitor(r), elseBody); });
+}
+
+overload visitASTNode(r:ResolveASTVisitor, stmt:ast.WhileStatement) {
+    visitAST(r, stmt.condition);
+    visitAST(newVisitor(r), stmt.body);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, stmt:ast.ForStatement) {
+    visitAST(r, stmt.sequenceValue);
+
+    var subenv = newEnv(r.env);
+    bindArgumentList(subenv, stmt.bodyBindings);
+
+    visitAST(ResolveASTVisitor(subenv), stmt.body);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, stmt:ast.StaticForStatement) {
+    visitAST(r, stmt.values);
+
+    var subenv = newEnv(r.env);
+    envAdd(subenv, stmt.bodyBinding, DummyValue);
+
+    visitAST(ResolveASTVisitor(subenv), stmt.body);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, block:ast.CatchBlock) {
+    var subenv = newEnv(r.env);
+    addBindingName(r, subenv, block.binding);
+    visitAST(ResolveASTVisitor(subenv), block.body);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, label:ast.LabelDef) {
+    envAdd(variantAs(r.env, Env), label.name, DummyValue);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, stmt:ast.BindingStatement) {
+    addBindingList(r, variantAs(r.env, Env), *stmt.bindings);
 }
 
 overload resolveAST(e:EnvParent, a) {
