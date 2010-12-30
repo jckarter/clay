@@ -1,0 +1,10 @@
+import __primitives__.*;
+
+symbol Foo = ();
+symbol bar = ();
+symbol bas = ();
+
+overload Foo() {
+    goto bar;
+bar:
+}
