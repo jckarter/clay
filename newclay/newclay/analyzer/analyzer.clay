@@ -170,6 +170,10 @@ envEntryToRTResult(entry:EnvEntry) {
             genericError("multi-value used in single value context");
             return nothing(RTResult);
         },
+        RTLabel, x => {
+            genericError("label cannot be used as a value");
+            return nothing(RTResult);
+        },
     );
 }
 
@@ -311,6 +315,7 @@ overload envEntryToRTResultList(x:ListPatternCell) {
 }
 overload envEntryToRTResultList(x:RTVariable) {
     genericError("single value used in multi-valued context");
+    // XXX why is that an error?
     return nothing(RTResultList);
 }
 overload envEntryToRTResultList(x:RTListVariable) {
@@ -320,6 +325,10 @@ overload envEntryToRTResultList(x:RTListVariable) {
         push(result, RTResult(kind2, type));
     }
     return Maybe(move(result));
+}
+overload envEntryToRTResultList(x:RTLabel) {
+    genericError("label cannot be used as a value");
+    return nothing(RTResultList);
 }
 
 
@@ -419,9 +428,11 @@ analyzeBlock(block, env) Maybe[RTResultList] {
         var results = nothing(RTResultList);
         if (analyzeStatement(block, env, results))
             return results;
-        else if (nothing?(results))
+        else if (maybe(results, r => empty?(r), () => true))
+            // fallthrough (or void return + fallthrough) in block; assume void return
             return Maybe(RTResultList());
         else {
+            // there was a return, but we also fell through 
             genericError("not all branches return");
             return nothing(RTResultList);
         }

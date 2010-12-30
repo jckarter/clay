@@ -283,6 +283,10 @@ overload envEntryToValue(x:RTListVariable) {
     genericError("multi-value used in single value context");
     return Value();
 }
+overload envEntryToValue(x:RTLabel) {
+    genericError("cannot reference label at compile time");
+    return Value();
+}
 
 
 
@@ -376,10 +380,15 @@ overload envEntryToValueList(x:ListPatternCell) {
 }
 overload envEntryToValueList(x:RTVariable) {
     genericError("single value used in multi-valued context");
+    // XXX why is that an error?
     return ValueList();
 }
 overload envEntryToValueList(x:RTListVariable) {
     return ValueList(mapped(rtTypeToValue, x.types));
+}
+overload envEntryToValueList(x:RTLabel) {
+    genericError("cannot reference label at compile time");
+    return ValueList();
 }
 
 
