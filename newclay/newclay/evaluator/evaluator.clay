@@ -380,7 +380,6 @@ overload envEntryToValueList(x:ListPatternCell) {
 }
 overload envEntryToValueList(x:RTVariable) {
     genericError("single value used in multi-valued context");
-    // XXX why is that an error?
     return ValueList();
 }
 overload envEntryToValueList(x:RTListVariable) {

@@ -17,4 +17,17 @@ main() {
 
     for (k,v in items(h))
         println(k, ", ", v);
+
+    var hh = HashMap[Int,Int]();
+    hh = h;
+
+    println();
+    for (k,v in items(hh))
+        println(k, ", ", v);
+
+    hh = hh;
+
+    println();
+    for (k,v in items(hh))
+        println(k, ", ", v);
 }
