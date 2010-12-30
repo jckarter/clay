@@ -315,7 +315,6 @@ overload envEntryToRTResultList(x:ListPatternCell) {
 }
 overload envEntryToRTResultList(x:RTVariable) {
     genericError("single value used in multi-valued context");
-    // XXX why is that an error?
     return nothing(RTResultList);
 }
 overload envEntryToRTResultList(x:RTListVariable) {
@@ -350,7 +349,7 @@ maybeRTResultList(maybeRTResults) {
     return Maybe(move(results));
 }
 
-// XXX more efficient
+// XXX make more efficient
 valueListToRTResultList(x:ValueList) = maybeRTResultList(map(valueToRTResult, x));
 
 
@@ -446,9 +445,7 @@ overload analyzeStatement(stmt:ast.Statement, env:Env, inoutResults:Maybe[RTResu
 }
 overload analyzeStatement(stmt:ast.LabelDef, env, results) = false;
 overload analyzeStatement(stmt:ast.BindingStatement, env, results) {
-    // XXX
-    genericError("variable binding statements are not yet supported");
-    return false;
+    return analyzeBindings(stmt.kind, *stmt.bindings, env);
 }
 overload analyzeStatement(stmt:ast.AssignmentStatement, env, results) = false;
 overload analyzeStatement(stmt:ast.GotoStatement, env, results) {
@@ -458,6 +455,8 @@ overload analyzeStatement(stmt:ast.GotoStatement, env, results) {
             genericError("goto target is not a label");
         },
     );
+    // XXX analyze branches and loops introduced by goto
+    genericError("goto is not yet supported");
     return false;
 }
 overload analyzeStatement(stmt:ast.ReturnStatement, env, results) {
@@ -566,6 +565,83 @@ private unifyStatementReturns(existingResults, newResults)
         () ref=> newResults,
     );
 
+private procedure analyzeBindings;
+
+overload analyzeBindings(kind:ast.BindingKind, bindingList:ast.SingleBindingList, env) {
+    for (binding in bindingList)
+        if (maybeAnalyzeBinding(kind, binding, env))
+            return true;
+    return false;
+}
+
+private maybeAnalyzeBinding(kind, binding, env) = maybe(analyzeExpr(binding.value, env),
+    valueResult ref=> {
+        analyzeBinding(kind, binding.name, valueResult, env);
+        return false;
+    },
+    () ref=> true,
+);
+
+overload analyzeBindings(kind:ast.BindingKind, bindingList:ast.MultipleBindingList, env) {
+    return maybe(bindingList.values,
+        valueExprList ref=> maybe(analyzeExprList(valueExprList, env),
+            valueResults ref=> {
+                if (not arityMatches?(bindingList.names, valueResults))
+                    genericError("incorrect number of values for variable binding");
+                for (binding, result in zipped(bindingList.names.items, valueResults))
+                    analyzeBinding(kind, binding, result, env);
+                // XXX variadic item
+                return false;
+            },
+            () ref=> true,
+        ),
+        () ref=> {
+            // XXX
+            genericError("variable binding without initialization is not yet supported");
+            return false;
+        },
+    );
+}
+
+private analyzeBinding(kind:ast.BindingKind, bindingName:ast.BindingName, result:RTResult, env) {
+    maybe(bindingName.type, x => {
+        // XXX
+        genericError("variable binding with declared type is not yet supported");
+    });
+
+    var variableKind = bindingVariableKind(kind, result.kind);
+    envAdd(env, bindingName.name, RTVariable(variableKind, result.type));
+}
+
+private bindingVariableKind(kind:ast.BindingKind, boundKind:RTResultKind) {
+    switch (kind) {
+    case ast.BINDING_VAR:
+        return RT_VARIABLE_REF;
+    case ast.BINDING_REF:
+        if (boundKind != RT_RESULT_REF)
+            genericError("ref variable must be bound to an lvalue");
+        return RT_VARIABLE_REF;
+    case ast.BINDING_RVALUE:
+        if (boundKind != RT_RESULT_RVALUE)
+            genericError("rvalue variable must be bound to an rvalue reference");
+        return RT_VARIABLE_RVALUE;
+    case ast.BINDING_CONST:
+        return RT_VARIABLE_CONST;
+    case ast.BINDING_FORWARD:
+        if (boundKind == RT_RESULT_VALUE)
+            return RT_VARIABLE_REF;
+        else
+            return resultVariableKind(boundKind);
+    case ast.BINDING_ALIAS:
+        // XXX
+        genericError("alias variables are not yet supported");
+        return RTVariableKind();
+    default:
+        assert(false, "invalid binding kind");
+        return RTVariableKind();
+    }
+}
+
 
 //
 // runtimeCallable?
@@ -608,7 +684,8 @@ analyzeCall(x, argResults) {
 // matchOverload
 //
 
-private arityMatches?(formalArgs:ast.VariadicList[ast.Argument], args:RTResultList) {
+[Arg]
+private arityMatches?(formalArgs:ast.VariadicList[Arg], args:RTResultList) {
     if (nothing?(formalArgs.variadicItem))
         return size(args) == size(formalArgs.items);
     else
@@ -628,6 +705,17 @@ private referenceKindMatches?(formalKind:ast.ArgumentKind, kind:RTResultKind) {
     return true;
 }
 
+private resultVariableKind(kind:RTResultKind) {
+    switch (kind) {
+    case RT_RESULT_CONST: return RT_VARIABLE_CONST;
+    case RT_RESULT_REF: return RT_VARIABLE_REF;
+    case RT_RESULT_RVALUE: return RT_VARIABLE_RVALUE;
+    default :
+        assert(false);
+        return RTVariableKind();
+    }
+}
+
 private internalArgumentKind(formalKind:ast.ArgumentKind, kind:RTResultKind)
     RTVariableKind
 {
@@ -639,14 +727,7 @@ private internalArgumentKind(formalKind:ast.ArgumentKind, kind:RTResultKind)
     if (formalKind == ast.ARG_REF)
         return RT_VARIABLE_REF;
     assert(formalKind == ast.ARG_FORWARD);
-    switch (kind) {
-    case RT_RESULT_CONST: return RT_VARIABLE_CONST;
-    case RT_RESULT_REF: return RT_VARIABLE_REF;
-    case RT_RESULT_RVALUE: return RT_VARIABLE_RVALUE;
-    default :
-        assert(false);
-        return RTVariableKind();
-    }
+    return resultVariableKind(kind);
 }
 
 private loweredArgumentKind(formalKind:ast.ArgumentKind, kind:RTResultKind) {
