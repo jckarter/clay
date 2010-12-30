@@ -811,7 +811,7 @@ overload RTListVariable(forward kinds:Vector[RTVariableKind], forward types:Valu
     RTListVariable(kinds, types, Vector[ir.Local]());
 
 record RTLabel = referenceType(
-    name: String,
+    ast: ast.LabelDef,
 );
 
 
