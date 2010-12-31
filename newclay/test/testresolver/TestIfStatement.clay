@@ -1,0 +1,11 @@
+import __primitives__.*;
+
+symbol Foo = ();
+symbol bar = ();
+symbol bas = ();
+
+overload Foo() {
+    if (true)
+        var bar = 1;
+    bar;
+}

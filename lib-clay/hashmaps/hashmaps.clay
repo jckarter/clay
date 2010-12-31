@@ -218,9 +218,10 @@ overload next(x:HashMapItems[K,V]) {
 //
 
 [K,V]
-overload assign(to: HashMap[K,V], forward from: HashMap[K,V]) {
+overload assign(to: HashMap[K,V], lvalue from: HashMap[K,V]) {
+    var tmp = from;
     destroy(to);
-    to <-- from;
+    to <-- move(tmp);
 }
 
 

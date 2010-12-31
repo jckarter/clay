@@ -1,0 +1,7 @@
+symbol bar = ();
+
+symbol main = NewProcedure();
+overload main() {
+    goto bar;
+foo:
+}
