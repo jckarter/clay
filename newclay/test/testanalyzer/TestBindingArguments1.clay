@@ -1,0 +1,38 @@
+
+symbol RefArg = ();
+symbol RvalueArg = ();
+symbol ConstArg = ();
+
+symbol foo = NewProcedure();
+overload foo(x) = ConstArg;
+overload foo(ref x) = RefArg;
+overload foo(rvalue x) = RvalueArg;
+
+symbol valueReturn = NewProcedure();
+overload valueReturn() Int __c__ """abort();""";
+
+symbol refReturn = NewProcedure();
+overload refReturn() ref Int __c__ """abort();""";
+
+symbol rvalueReturn = NewProcedure();
+overload rvalueReturn() rvalue Int __c__ """abort();""";
+
+symbol constReturn = NewProcedure();
+overload constReturn() const Int __c__ """abort();""";
+
+symbol main = NewProcedure();
+overload main() {
+    var x = valueReturn();
+    ref y = refReturn();
+    rvalue z1 = rvalueReturn();
+    rvalue z2 = valueReturn();
+    const w1 = constReturn();
+    const w2 = valueReturn();
+
+    return foo(x),
+           foo(y),
+           foo(z1),
+           foo(z2),
+           foo(w1),
+           foo(w2);
+}

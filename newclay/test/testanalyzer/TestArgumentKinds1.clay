@@ -1,4 +1,13 @@
 
+symbol RefArg = ();
+symbol RvalueArg = ();
+symbol ConstArg = ();
+
+symbol foo = NewProcedure();
+overload foo(x) = ConstArg;
+overload foo(ref x) = RefArg;
+overload foo(rvalue x) = RvalueArg;
+
 symbol valueReturn = NewProcedure();
 overload valueReturn() Int __c__ """abort();""";
 
@@ -13,8 +22,7 @@ overload constReturn() const Int __c__ """abort();""";
 
 symbol main = NewProcedure();
 overload main() =
-    valueReturn(), forward valueReturn(),
-    refReturn(), ref refReturn(), forward refReturn(),
-    rvalueReturn(), rvalue rvalueReturn(), forward rvalueReturn(),
-    constReturn(), const constReturn(), forward constReturn();
-
+    foo(valueReturn()),
+    foo(refReturn()),
+    foo(rvalueReturn()),
+    foo(constReturn());

@@ -618,9 +618,10 @@ overload analyzeBindings(kind:ast.BindingKind, bindingList:ast.MultipleBindingLi
 }
 
 private analyzeBinding(kind:ast.BindingKind, bindingName:ast.BindingName, result:RTResult, env) {
-    maybe(bindingName.type, x => {
-        // XXX
-        genericError("variable binding with declared type is not yet supported");
+    maybe(bindingName.type, typePattern => {
+        var bindingType = evaluatePattern(typePattern, env);
+        if (not unify(bindingType, result.type))
+            genericError("variable declared with type ", bindingType, " but bound to value of type ", result.type);
     });
 
     var variableKind = bindingVariableKind(kind, result.kind);

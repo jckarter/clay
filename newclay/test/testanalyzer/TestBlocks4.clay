@@ -1,11 +1,20 @@
 
+symbol valueReturn = NewProcedure();
+overload valueReturn() Int __c__ """abort();""";
+
 symbol refReturn = NewProcedure();
-overload refReturn() ref Int __c__ """
-    assert(0 && "fake");
-""";
+overload refReturn() ref Int __c__ """abort();""";
+
+symbol rvalueReturn = NewProcedure();
+overload rvalueReturn() rvalue Int __c__ """abort();""";
+
+symbol constReturn = NewProcedure();
+overload constReturn() const Int __c__ """abort();""";
 
 symbol main = NewProcedure();
-overload main() {
-    return refReturn(), ref refReturn();
-}
+overload main() =
+    valueReturn(), forward valueReturn(),
+    refReturn(), ref refReturn(), forward refReturn(),
+    rvalueReturn(), rvalue rvalueReturn(), forward rvalueReturn(),
+    constReturn(), const constReturn(), forward constReturn();
 

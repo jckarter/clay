@@ -1,4 +1,3 @@
-
 symbol valueReturn = NewProcedure();
 overload valueReturn() Int __c__ """abort();""";
 
@@ -12,9 +11,9 @@ symbol constReturn = NewProcedure();
 overload constReturn() const Int __c__ """abort();""";
 
 symbol main = NewProcedure();
-overload main() =
-    valueReturn(), forward valueReturn(),
-    refReturn(), ref refReturn(), forward refReturn(),
-    rvalueReturn(), rvalue rvalueReturn(), forward rvalueReturn(),
-    constReturn(), const constReturn(), forward constReturn();
+overload main() {
+    ref y = refReturn();
+    const w = constReturn();
 
+    return const y, const w;
+}

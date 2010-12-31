@@ -765,6 +765,17 @@ record SymbolPattern = referenceType(
 
 overload Pattern() = Pattern(Value());
 
+overload printTo(stream, x:PatternCell) {
+    maybe(x.value,
+        value ref=> { printTo(stream, value); },
+        ()    ref=> { printTo(stream, "<uninitialized pattern cell>"); }
+    );
+}
+
+overload printTo(stream, x:SymbolPattern) {
+    printTo(stream, x.head, "[", x.params, "]");
+}
+
 
 
 //
@@ -780,6 +791,19 @@ record ListPatternCell = referenceType(
     values: Maybe[ValueList],
 );
 
+overload printTo(stream, x:ListPattern) {
+    var commaOut = CommaListPrinter(&stream);
+    for (element in x.patterns)
+        newItem(commaOut, element);
+
+    maybe(x.variadicPattern.values,
+        values ref=> {
+            for (value in values)
+                newItem(commaOut, value);
+        },
+        ()    ref=> { printTo(stream, "...<uninitialized pattern cell>"); }
+    );
+}
 
 
 //
