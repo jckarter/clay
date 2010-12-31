@@ -1,0 +1,4 @@
+symbol main = NewProcedure();
+overload main() {
+    return 1;
+}

@@ -342,8 +342,10 @@ private compileCodeBody() {
             return ir.CodeBody(block);
         },
         ast.Block, x ref=> {
-            genericError("compiler does not support blocks yet");
-            return ir.CodeBody();
+            return ir.CodeBody(withNewBlock(() ref=> {
+                var out = map(x => x.local, irProcedure().outputs);
+                compileBlockInto(x, s.bodyEnv, out);
+            }));
         }
     );
 }
@@ -519,6 +521,60 @@ private ensureCompatibleLocals(x:A, maybeY:Maybe[B]) {
     });
 }
 
+
+
+//
+// compileBlockInto, compileStatementInto
+//
+
+[A | ir.LocalSequence?(A)]
+compileBlockInto(block:ast.Block, env, out:A) Bool {
+    return withLocation(block, () ref=> {
+        for (stmt in block.statements)
+            if (compileStatementInto(stmt, env, out))
+                return true;
+        return false;
+    });
+}
+
+[A | ir.LocalSequence?(A)]
+compileStatementInto(stmt:ast.Statement, env, out:A) Bool {
+    return withLocation(*stmt, () ref=> compileStatementInto(*stmt, env, out));
+}
+
+[S | VariantMember?(ast.Statement, S)]
+overload compileStatementInto(stmt:S, env, out) {
+    genericError("compiling this statement is not yet supported");
+    return false;
+}
+
+overload compileStatementInto(stmt:ast.ReturnStatement, env, out) {
+    compileReturnExprListInto(stmt.values, env, out);
+    emitStatement(ir.Return());
+    return true;
+}
+
+overload compileStatementInto(stmt:ast.ExprStatement, env, out) {
+    compileMultiExpr(stmt.expr, env); // XXX nontermination
+    return false;
+}
+
+overload compileStatementInto(stmt:ast.IfStatement, env, out) {
+    var cond = compileBoolExpr(stmt.condition, env); // XXX nontermination
+    var thenReturns?, elseReturns? = false, false;
+
+    var thenPart = withNewBlock(() ref=> {
+        thenReturns? = compileStatementInto(stmt.thenBody, newEnv(env), out);
+    });
+    var elsePart = maybe(stmt.elseBody,
+        elseBody ref=> Maybe(withNewBlock(() ref=> {
+            elseReturns? = compileStatementInto(elseBody, newEnv(env), out);
+        })),
+    );
+
+    emitStatement(ir.If(cond.irExpr, thenPart, elsePart));
+    return thenReturns? and elseReturns?;
+}
 
 
 //
@@ -862,7 +918,7 @@ compileEnvEntry(entry:EnvEntry) CompiledExpr {
             return CompiledExpr();
         },
         RTVariable, x => {
-            assert(not null?(x.lowLevelLocal), "null?(RTVariable.lowLevelLocal");
+            assert(not null?(x.lowLevelLocal), "null?(RTVariable.lowLevelLocal)");
             return CompiledExpr(
                 ir.AtomicExpr(ir.LocalRef(x.lowLevelLocal)),
                 rtVariableToRTResult(x),

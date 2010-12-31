@@ -1,0 +1,16 @@
+symbol fanfare = NewProcedure();
+overload fanfare() __c__ """
+    printf("hello world");
+""";
+
+symbol foo = NewProcedure();
+overload foo(x:Bool) {
+    if (x)
+        return;
+    fanfare();
+}
+
+symbol main = NewProcedure();
+overload main() {
+    foo(true);
+}

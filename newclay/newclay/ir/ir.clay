@@ -276,8 +276,14 @@ record Initialize = referenceType(
 record If = referenceType(
     condition: AtomicExpr,
     thenPart: Block,
-    elsePart: Block,
+    elsePart: Maybe[Block],
 );
+
+overload If(condition:AtomicExpr, thenPart:Block)
+    = If(condition, thenPart, nothing(Block));
+
+overload If(condition:AtomicExpr, thenPart:Block, elsePart:Block)
+    = If(condition, thenPart, Maybe(elsePart));
 
 record Return();
 
