@@ -1,0 +1,13 @@
+symbol foo = NewProcedure();
+overload foo(x:'T) {
+    var y:'T = 2;
+    return y;
+}
+
+symbol main = NewProcedure();
+overload main() {
+    var x:Int = 5;
+    var y:Bool = foo(true);
+    return x, y;
+}
+
