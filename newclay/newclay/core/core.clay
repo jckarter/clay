@@ -240,6 +240,7 @@ variant EnvEntry = Value
                  | ListPatternCell
                  | RTVariable
                  | RTListVariable
+                 | RTLabel
                  ;
  
 overload EnvEntry() = EnvEntry(Value());
@@ -808,6 +809,10 @@ record RTListVariable = referenceType(
 
 overload RTListVariable(forward kinds:Vector[RTVariableKind], forward types:ValueList) =
     RTListVariable(kinds, types, Vector[ir.Local]());
+
+record RTLabel = referenceType(
+    ast: ast.LabelDef,
+);
 
 
 

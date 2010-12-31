@@ -1,0 +1,14 @@
+import __primitives__.*;
+
+symbol Foo = ();
+symbol bar = ();
+symbol barrr = ();
+symbol bas = ();
+
+overload Foo() {
+    static for (bar in bar, bas)
+        var ...barrr = bar, bas;
+    bar;
+    bas;
+    barrr;
+}

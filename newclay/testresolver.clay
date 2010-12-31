@@ -1,4 +1,6 @@
 import newclay.common.*;
+import newclay.lexer;
+import newclay.parser;
 import newclay.core.*;
 import newclay.loader.*;
 import newclay.ast as ast;
@@ -34,6 +36,69 @@ overload visitASTNode(v:TestResolverVisitor, node:ast.Overload) {
 
 overload visitASTNode(v:TestResolverVisitor, node:ast.StaticOverload) {
     println(depth(v.depth), "static overload ", node.target);
+    v.depth += 1;
+    visitASTFields(v, node);
+    v.depth -= 1;
+}
+
+overload visitASTNode(v:TestResolverVisitor, node:ast.Block) {
+    println(depth(v.depth), "block");
+    v.depth += 1;
+    visitASTFields(v, node);
+    v.depth -= 1;
+}
+
+overload visitASTNode(v:TestResolverVisitor, node:ast.IfStatement) {
+    println(depth(v.depth), "if statement");
+    v.depth += 1;
+    visitASTFields(v, node);
+    v.depth -= 1;
+}
+
+overload visitASTNode(v:TestResolverVisitor, node:ast.WhileStatement) {
+    println(depth(v.depth), "while statement");
+    v.depth += 1;
+    visitASTFields(v, node);
+    v.depth -= 1;
+}
+
+overload visitASTNode(v:TestResolverVisitor, node:ast.ForStatement) {
+    println(depth(v.depth), "for statement");
+    v.depth += 1;
+    visitASTFields(v, node);
+    v.depth -= 1;
+}
+
+overload visitASTNode(v:TestResolverVisitor, node:ast.StaticForStatement) {
+    println(depth(v.depth), "static for statement");
+    v.depth += 1;
+    visitASTFields(v, node);
+    v.depth -= 1;
+}
+
+overload visitASTNode(v:TestResolverVisitor, node:ast.SwitchStatement) {
+    println(depth(v.depth), "switch statement");
+    v.depth += 1;
+    visitASTFields(v, node);
+    v.depth -= 1;
+}
+
+overload visitASTNode(v:TestResolverVisitor, node:ast.TryStatement) {
+    println(depth(v.depth), "try statement");
+    v.depth += 1;
+    visitASTFields(v, node);
+    v.depth -= 1;
+}
+
+overload visitASTNode(v:TestResolverVisitor, node:ast.CatchBlock) {
+    println(depth(v.depth), "catch block");
+    v.depth += 1;
+    visitASTFields(v, node);
+    v.depth -= 1;
+}
+
+overload visitASTNode(v:TestResolverVisitor, node:ast.BindingStatement) {
+    println(depth(v.depth), "bindings ", node);
     v.depth += 1;
     visitASTFields(v, node);
     v.depth -= 1;
