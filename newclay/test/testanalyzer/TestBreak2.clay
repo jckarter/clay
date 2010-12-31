@@ -1,0 +1,7 @@
+
+symbol main = NewProcedure();
+overload main() {
+    while (true) {
+        break;
+    }
+}
