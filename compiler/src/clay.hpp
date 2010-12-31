@@ -19,7 +19,7 @@
 #include <llvm/BasicBlock.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/raw_ostream.h>
-#include <llvm/System/Host.h>
+#include <llvm/Support/Host.h>
 #include <llvm/Target/TargetData.h>
 #include <llvm/Target/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
