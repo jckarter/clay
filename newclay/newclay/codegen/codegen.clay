@@ -378,8 +378,10 @@ overload codegenStatement(x:Initialize) {
 overload codegenStatement(x:If) {
     beginLine("if (", codegenAtomicAsValue(x.condition), ") ");
     codegenStatement(x.thenPart);
-    beginLine("else ");
-    codegenStatement(x.elsePart);
+    maybe(x.elsePart, elsePart => {
+        beginLine("else ");
+        codegenStatement(elsePart);
+    });
 }
 overload codegenStatement(x:Return) {
     beginLine("return;");

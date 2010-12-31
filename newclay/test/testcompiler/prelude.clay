@@ -1,0 +1,148 @@
+import __primitives__.*;
+
+
+//
+// NewStaticFunction, StaticFunction?
+//
+
+symbol StaticFunctionTag = ();
+symbol NewStaticFunction = NewStaticFunction();
+static overload NewStaticFunction() = (StaticFunctionTag,);
+
+symbol StaticFunction? = NewStaticFunction();
+static overload StaticFunction?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), StaticFunctionTag);
+
+
+
+//
+// TypeTemplate?, Type?
+//
+
+symbol TypeTemplate? = NewStaticFunction();
+static overload TypeTemplate?('x) = false;
+
+symbol Type? = NewStaticFunction();
+static overload Type?('x) = false;
+
+
+
+//
+// ToLowLevelType
+//
+
+symbol ToLowLevelType = NewStaticFunction();
+
+symbol LLSigned = ();
+symbol LLUnsigned = ();
+
+symbol LLBoolType = ();
+symbol LLIntegerType['Signed, 'Bits] = ();
+symbol LLFloatType['Bits] = ();
+symbol LLPointerType['T] = ();
+symbol LLArrayType['T, 'n] = ();
+symbol LLTupleType[...'T] = ();
+symbol LLUnionType[...'T] = ();
+
+
+
+//
+// NewPrimitiveType, PrimitiveType?
+
+symbol PrimitiveTypeTag = ();
+symbol NewPrimitiveType = NewStaticFunction();
+static overload NewPrimitiveType() = (PrimitiveTypeTag,);
+
+symbol PrimitiveType? = NewStaticFunction();
+static overload PrimitiveType?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), PrimitiveTypeTag);
+
+static overload Type?('x) | PrimitiveType?('x) = true;
+
+
+
+//
+// Bool, Int
+//
+
+symbol Bool = NewPrimitiveType();
+symbol Int = NewPrimitiveType();
+
+static overload ToLowLevelType(Bool) = LLBoolType;
+static overload ToLowLevelType(Int) = LLIntegerType[LLSigned, 32];
+
+
+
+//
+// Static[T]
+//
+
+symbol Static['T] = ();
+static overload TypeTemplate?(Static) = true;
+static overload Type?(Static['T]) = true;
+static overload ToLowLevelType(Static['T]) = LLTupleType[];
+
+
+
+//
+// Pointer[T]
+//
+
+symbol Pointer['T] = ();
+static overload TypeTemplate?(Pointer) = true;
+static overload Type?(Pointer['T]) = true;
+static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
+
+
+
+//
+// NewProcedure, Procedure?
+//
+
+symbol ProcedureTag = ();
+symbol NewProcedure = NewStaticFunction();
+static overload NewProcedure() = (ProcedureTag,);
+
+symbol Procedure? = NewStaticFunction();
+static overload Procedure?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), ProcedureTag);
+
+
+
+//
+// TupleWithTag?
+//
+
+symbol TupleWithTag? = NewStaticFunction();
+static overload TupleWithTag?('x, 'tag) =
+    StaticTuple?('x)
+    and StaticLesser?(0, StaticTupleSize('x))
+    and StaticEquals?(StaticTupleElement('x, 0), 'tag);
+
+
+
+//
+// lesser?, subtract, multiply
+//
+
+
+symbol lesser? = NewProcedure();
+overload lesser?(a:Int, b:Int) returned:Bool __c__ """
+    *returned = *a < *b;
+""";
+
+symbol subtract = NewProcedure();
+overload subtract(a:Int, b:Int) returned:Int __c__ """
+    *returned = *a - *b;
+""";
+
+symbol multiply = NewProcedure();
+overload multiply(a:Int, b:Int) returned:Int __c__ """
+    *returned = *a * *b;
+""";
+
+
+

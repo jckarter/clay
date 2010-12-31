@@ -1,0 +1,11 @@
+symbol foo = NewProcedure();
+overload foo(x:Bool) {
+    if (x)
+        return 1;
+    return 0;
+}
+
+symbol main = NewProcedure();
+overload main() {
+    return foo(true);
+}
