@@ -1,0 +1,8 @@
+symbol nonterminating = NewProcedure();
+overload nonterminating() { throw 0; }
+
+symbol main = NewProcedure();
+overload main() {
+    var x = nonterminating();
+}
+
