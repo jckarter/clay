@@ -1,0 +1,719 @@
+make: `testanalyzer' is up to date.
+
+--------------------
+test/testanalyzer/FailBaselessRecursivePropagation.clay
+--------------------
+
+#######################################
+
+symbol foo = NewProcedure();
+overload foo(x:Int) = if (true) foo(1) else foo(0);
+----------------------^
+
+symbol main = NewProcedure();
+#######################################
+
+test/testanalyzer/FailBaselessRecursivePropagation.clay(3,22)
+error: recursion during type propagation
+
+context stack: 
+    analyze: foo(value Int)
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailBindingMismatchedReferenceKinds1.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() {
+    ref y = valueReturn();
+----^
+}
+
+#######################################
+
+test/testanalyzer/FailBindingMismatchedReferenceKinds1.clay(15,4)
+error: ref variable must be bound to an lvalue
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailBindingMismatchedReferenceKinds2.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() {
+    ref y = rvalueReturn();
+----^
+}
+
+#######################################
+
+test/testanalyzer/FailBindingMismatchedReferenceKinds2.clay(15,4)
+error: ref variable must be bound to an lvalue
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailBindingMismatchedReferenceKinds3.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() {
+    ref y = constReturn();
+----^
+}
+
+#######################################
+
+test/testanalyzer/FailBindingMismatchedReferenceKinds3.clay(15,4)
+error: ref variable must be bound to an lvalue
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailBindingMismatchedReferenceKinds4.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() {
+    rvalue y = refReturn();
+----^
+}
+
+#######################################
+
+test/testanalyzer/FailBindingMismatchedReferenceKinds4.clay(15,4)
+error: rvalue variable must be bound to an rvalue reference
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailBindingMismatchedReferenceKinds5.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() {
+    rvalue y = constReturn();
+----^
+}
+
+#######################################
+
+test/testanalyzer/FailBindingMismatchedReferenceKinds5.clay(15,4)
+error: rvalue variable must be bound to an rvalue reference
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailBlocksDivergentBranchReturns.clay
+--------------------
+
+#######################################
+        return true;
+    else
+        return 0;
+--------^
+}
+
+#######################################
+
+test/testanalyzer/FailBlocksDivergentBranchReturns.clay(6,8)
+error: mismatching return types
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailGotoNonexistentLabel.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() {
+    goto bar;
+----^
+foo:
+}
+#######################################
+
+test/testanalyzer/FailGotoNonexistentLabel.clay(5,4)
+error: goto target is not a label
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailIfExpressionDivergentReturns.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() =
+    if (true)
+----^
+        true
+    else
+#######################################
+
+test/testanalyzer/FailIfExpressionDivergentReturns.clay(3,4)
+error: return types in if expression branches do not match
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailIfStatementNotAllBranchesReturn1.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() {
+----------------^
+    if (true)
+        return 1;
+#######################################
+
+test/testanalyzer/FailIfStatementNotAllBranchesReturn1.clay(2,16)
+error: not all branches return
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailIfStatementNotAllBranchesReturn2.clay
+--------------------
+
+#######################################
+
+symbol main = NewProcedure();
+overload main() {
+----------------^
+    if (true)
+        return 1;
+#######################################
+
+test/testanalyzer/FailIfStatementNotAllBranchesReturn2.clay(5,16)
+error: not all branches return
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailIfStatementNotAllBranchesReturn3.clay
+--------------------
+
+#######################################
+
+symbol main = NewProcedure();
+overload main() {
+----------------^
+    if (true)
+        nop();
+#######################################
+
+test/testanalyzer/FailIfStatementNotAllBranchesReturn3.clay(5,16)
+error: not all branches return
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailRefLocal.clay
+--------------------
+result = [ref Bool]
+
+--------------------
+test/testanalyzer/FailRefLocal2.clay
+--------------------
+result = [ref Bool]
+
+--------------------
+test/testanalyzer/FailRefLocal3.clay
+--------------------
+result = [const Bool]
+
+--------------------
+test/testanalyzer/FailRefLocal4.clay
+--------------------
+result = [rvalue Bool]
+
+--------------------
+test/testanalyzer/FailRefTemporary.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() = ref true;
+----------------------^
+
+
+#######################################
+
+test/testanalyzer/FailRefTemporary.clay(2,22)
+error: cannot return temporary as mutable reference
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailSwitchStatementNotAllBranchesReturn1.clay
+--------------------
+
+#######################################
+
+symbol main = NewProcedure();
+overload main() {
+----------------^
+    switch (0)
+    case (0) {
+#######################################
+
+test/testanalyzer/FailSwitchStatementNotAllBranchesReturn1.clay(3,16)
+error: not all branches return
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailSwitchStatementNotAllBranchesReturn2.clay
+--------------------
+
+#######################################
+
+symbol main = NewProcedure();
+overload main() {
+----------------^
+    switch (0)
+    case (0) {
+#######################################
+
+test/testanalyzer/FailSwitchStatementNotAllBranchesReturn2.clay(3,16)
+error: not all branches return
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailSwitchStatementNotAllBranchesReturn3.clay
+--------------------
+
+#######################################
+
+symbol main = NewProcedure();
+overload main() {
+----------------^
+    switch (0)
+    case (0) {
+#######################################
+
+test/testanalyzer/FailSwitchStatementNotAllBranchesReturn3.clay(3,16)
+error: not all branches return
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/FailWhileStatementNotAllBranchesReturn.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() {
+----------------^
+    while (true)
+        return 1;
+#######################################
+
+test/testanalyzer/FailWhileStatementNotAllBranchesReturn.clay(2,16)
+error: not all branches return
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/Test1.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/Test2.clay
+--------------------
+result = [value Bool]
+
+--------------------
+test/testanalyzer/Test3.clay
+--------------------
+result = [ref Int]
+
+--------------------
+test/testanalyzer/Test4.clay
+--------------------
+result = [value Int, ref Int]
+
+--------------------
+test/testanalyzer/Test5.clay
+--------------------
+result = []
+
+--------------------
+test/testanalyzer/TestAndExpressionNoReturnPropagation1.clay
+--------------------
+result = [value Bool]
+
+--------------------
+test/testanalyzer/TestAndExpressionNoReturnPropagation2.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestBinding1.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestBinding2.clay
+--------------------
+result = [value Int, value Bool]
+
+--------------------
+test/testanalyzer/TestBinding3.clay
+--------------------
+result = [value Int, value Bool]
+
+--------------------
+test/testanalyzer/TestBinding4.clay
+--------------------
+
+#######################################
+overload main() {
+    var ...x = 5, true;
+    return ...x;
+--------------^
+}
+
+#######################################
+
+test/testanalyzer/TestBinding4.clay(4,14)
+error: name not found: x
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/TestBindingNoReturnPropagation1.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestBindingNoReturnPropagation2.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestBindingNoReturnPropagation3.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestBindingReferenceKinds1.clay
+--------------------
+result = [value Int, value Int, value Int, value Int]
+
+--------------------
+test/testanalyzer/TestBindingReferenceKinds2.clay
+--------------------
+result = [ref Int, ref Int, rvalue Int, const Int]
+
+--------------------
+test/testanalyzer/TestBindingReferenceKinds3.clay
+--------------------
+result = [value Int, const Int, const Int, const Int]
+
+--------------------
+test/testanalyzer/TestBindingReferenceKinds4.clay
+--------------------
+result = [value Int, ref Int, rvalue Int, const Int]
+
+--------------------
+test/testanalyzer/TestBindingReferenceKinds5.clay
+--------------------
+result = [value Int, value Int]
+
+--------------------
+test/testanalyzer/TestBindingScope1.clay
+--------------------
+result = [value Bool, value Int, value Int]
+
+--------------------
+test/testanalyzer/TestBindingScope2.clay
+--------------------
+result = [value Bool, value Int, value Bool]
+
+--------------------
+test/testanalyzer/TestBlocks1.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestBlocks2.clay
+--------------------
+result = [value Bool]
+
+--------------------
+test/testanalyzer/TestBlocks3.clay
+--------------------
+result = [ref Int]
+
+--------------------
+test/testanalyzer/TestBlocks4.clay
+--------------------
+result = [value Int, ref Int]
+
+--------------------
+test/testanalyzer/TestBlocks5.clay
+--------------------
+result = []
+
+--------------------
+test/testanalyzer/TestBlocks5a.clay
+--------------------
+result = []
+
+--------------------
+test/testanalyzer/TestBlocksNoReturn.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestBlocksNoReturnPropagation.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestExprStatement1.clay
+--------------------
+result = []
+
+--------------------
+test/testanalyzer/TestExprStatement2.clay
+--------------------
+result = []
+
+--------------------
+test/testanalyzer/TestExprStatement3.clay
+--------------------
+result = []
+
+--------------------
+test/testanalyzer/TestGotoLabel.clay
+--------------------
+
+#######################################
+overload main() {
+foo:
+    goto foo;
+----^
+}
+
+#######################################
+
+test/testanalyzer/TestGotoLabel.clay(4,4)
+error: goto is not yet supported
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/TestGotoLabel2.clay
+--------------------
+
+#######################################
+symbol main = NewProcedure();
+overload main() {
+    goto foo;
+----^
+foo:
+}
+#######################################
+
+test/testanalyzer/TestGotoLabel2.clay(3,4)
+error: goto is not yet supported
+
+context stack: 
+    analyze: main()
+
+--------------------
+test/testanalyzer/TestIfExpressionNoReturnPropagation.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestIfExpressionNoReturnPropagation2.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestIfExpressionNoReturnPropagation3.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestIfExpressionNoReturnPropagation4.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestIfStatementNoReturnPropagation1.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestIfStatementNoReturnPropagation2.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestIfStatementNoReturnPropagation3.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestIfStatementNoReturnPropagation4.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestIfStatementNoReturnPropagation5.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestIfStatementNoReturnPropagation6.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestIfStatementPropagation1.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestIfStatementPropagation2.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestIfStatementPropagation3.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestNestedBlockReturn.clay
+--------------------
+result = [value Bool]
+
+--------------------
+test/testanalyzer/TestNoReturnBranchWithFallthrough.clay
+--------------------
+result = []
+
+--------------------
+test/testanalyzer/TestNoReturnMultipleValues.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestNoReturnMultipleValues2.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestOrExpressionNoReturnPropagation1.clay
+--------------------
+result = [value Bool]
+
+--------------------
+test/testanalyzer/TestOrExpressionNoReturnPropagation2.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestRecursivePropagation1.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestRecursivePropagation2.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestSwitchStatementNoReturnPropagation1.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestSwitchStatementPropagation1.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestSwitchStatementPropagation2.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestSwitchStatementPropagation3.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestSwitchStatementPropagation4.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestVoidReturnWithFallthrough.clay
+--------------------
+result = []
+
+--------------------
+test/testanalyzer/TestWhileStatementNoReturnPropagation1.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestWhileStatementNoReturnPropagation2.clay
+--------------------
+result = [value Int]
+
+--------------------
+test/testanalyzer/TestWhileStatementNoReturnPropagation3.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestWhileStatementNoReturnPropagation4.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestWhileStatementNoReturnPropagation5.clay
+--------------------
+result = Nothing()
+
+--------------------
+test/testanalyzer/TestWhileStatementPropagation1.clay
+--------------------
+result = [value Int]
