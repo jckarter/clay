@@ -795,20 +795,26 @@ enum RTVariableKind {
 record RTVariable = referenceType(
     kind: RTVariableKind,
     type: Value,
+    value?: Bool,
     lowLevelLocal: ir.Local,
 );
 
 overload RTVariable(kind:RTVariableKind, type:Value) =
-    RTVariable(kind, type, ir.Local());
+    RTVariable(kind, type, false, ir.Local());
+overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool) =
+    RTVariable(kind, type, value?, ir.Local());
 
 record RTListVariable = referenceType(
     kinds: Vector[RTVariableKind],
     types: ValueList,
+    values?: Vector[Bool],
     lowLevelLocals: Vector[ir.Local],
 );
 
-overload RTListVariable(forward kinds:Vector[RTVariableKind], forward types:ValueList) =
-    RTListVariable(kinds, types, Vector[ir.Local]());
+overload RTListVariable(forward kinds:Vector[RTVariableKind], forward types:ValueList) {
+    var sz = size(kinds);
+    return RTListVariable(kinds, types, map(x => false, range(sz)), Vector[ir.Local]());
+}
 
 record RTLabel = referenceType(
     ast: ast.LabelDef,

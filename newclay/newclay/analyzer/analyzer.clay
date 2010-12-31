@@ -43,59 +43,59 @@ analyzeBool(x:ast.Expr, env) Maybe[RTResult] {
 
 procedure analyzeExpr;
 
-overload analyzeExpr(x:ast.Expr, env) Maybe[RTResult] {
-    return withLocation(x, () ref=> analyzeExpr(*x, env));
+overload analyzeExpr(x:ast.Expr, env, ...kind) Maybe[RTResult] {
+    return withLocation(x, () ref=> analyzeExpr(*x, env, ...kind));
 }
-overload analyzeExpr(x:ast.BoolLiteral, env) {
-    return Maybe(RTResult(RT_RESULT_VALUE, boolType()));
+overload analyzeExpr(x:ast.BoolLiteral, env, ...kind) {
+    return Maybe(RTResult(resultKind(RT_RESULT_VALUE, ...kind), boolType()));
 }
-overload analyzeExpr(x:ast.IntLiteral, env) {
-    return Maybe(RTResult(RT_RESULT_VALUE, intType()));
+overload analyzeExpr(x:ast.IntLiteral, env, ...kind) {
+    return Maybe(RTResult(resultKind(RT_RESULT_VALUE, ...kind), intType()));
 }
-overload analyzeExpr(x:ast.StringLiteral, env) {
+overload analyzeExpr(x:ast.StringLiteral, env, ...kind) {
     genericError("strings are not yet supported");
     return nothing(RTResult);
 }
-overload analyzeExpr(x:ast.NameRef, env) {
-    return envEntryToRTResult(privateLookup(env, x.name));
+overload analyzeExpr(x:ast.NameRef, env, ...kind) {
+    return envEntryToRTResult(privateLookup(env, x.name), ...kind);
 }
-overload analyzeExpr(x:ast.PatternNameRef, env) {
-    return valueToRTResult(derefPattern(env, x.name));
+overload analyzeExpr(x:ast.PatternNameRef, env, ...kind) {
+    return resultWithKind(valueToRTResult(derefPattern(env, x.name)), ...kind);
 }
-overload analyzeExpr(x:ast.TupleExpr, env) {
+overload analyzeExpr(x:ast.TupleExpr, env, ...kind) {
     genericError("tuples are not yet supported");
     return nothing(RTResult);
 }
-overload analyzeExpr(x:ast.Call, env) {
+overload analyzeExpr(x:ast.Call, env, ...kind) {
     var callable = evaluateExpr(x.expr, env);
     if (runtimeCallable?(callable)) {
         var args = analyzeExprList(x.args, env);
-        return analyzeCallWithOneResult(callable, args);
+        return resultWithKind(analyzeCallWithOneResult(callable, args), ...kind);
     }
     else {
         var args = evaluateExprList(x.args, env);
         var result = evaluateCallWithOneResult(callable, args);
-        return valueToRTResult(result);
+        return resultWithKind(valueToRTResult(result), ...kind);
     }
 }
-overload analyzeExpr(x:ast.Indexing, env) {
-    return valueToRTResult(evaluateExpr(x, env));
+overload analyzeExpr(x:ast.Indexing, env, ...kind) {
+    return resultWithKind(valueToRTResult(evaluateExpr(x, env)), ...kind);
 }
-overload analyzeExpr(x:ast.AndExpr, env) {
+overload analyzeExpr(x:ast.AndExpr, env, ...kind) {
     var result = analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return result;
+    return resultWithKind(result, ...kind);
 }
-overload analyzeExpr(x:ast.OrExpr, env) {
+overload analyzeExpr(x:ast.OrExpr, env, ...kind) {
     var result = analyzeBool(x.expr1, env);
     analyzeBool(x.expr2, env);
-    return result;
+    return resultWithKind(result, ...kind);
 }
-overload analyzeExpr(x:ast.LambdaExpr, env) {
+overload analyzeExpr(x:ast.LambdaExpr, env, ...kind) {
     genericError("lambda expressions are not yet supported");
     return nothing(RTResult);
 }
-overload analyzeExpr(x:ast.IfExpr, env) {
+overload analyzeExpr(x:ast.IfExpr, env, ...kind) {
     return maybe(analyzeBool(x.condition, env),
         condResult ref=> {
             var recursiveAnalysisBranches = 0;
@@ -111,7 +111,7 @@ overload analyzeExpr(x:ast.IfExpr, env) {
             if (recursiveAnalysisBranches == 2)
                 recursiveAnalysisError();
 
-            return unifyAnalyzeExprBranches(thenResult, elseResult);
+            return resultWithKind(unifyAnalyzeExprBranches(thenResult, elseResult), ...kind);
         },
         () ref=> nothing(RTResult),
     );
@@ -150,9 +150,9 @@ unifyAnalyzeExprBranches(thenResult, elseResult)
 // envEntryToRTResult
 //
 
-envEntryToRTResult(entry:EnvEntry) {
+envEntryToRTResult(entry:EnvEntry, ...kind) {
     return match(entry,
-        Value, x => valueToRTResult(x),
+        Value, x => resultWithKind(valueToRTResult(x), ...kind),
         ValueList, x => {
             genericError("multiple values used in single value context");
             return nothing(RTResult);
@@ -165,7 +165,7 @@ envEntryToRTResult(entry:EnvEntry) {
             genericError("pattern variable cannot be used in non-pattern expression");
             return nothing(RTResult);
         },
-        RTVariable, x => rtVariableToRTResult(x),
+        RTVariable, x => rtVariableToRTResult(x, ...kind),
         RTListVariable, x => {
             genericError("multi-value used in single value context");
             return nothing(RTResult);
@@ -183,11 +183,11 @@ envEntryToRTResult(entry:EnvEntry) {
 // rtVariableToRTResult, rtVariableKindToRTResultKind
 //
 
-rtVariableToRTResult(x:RTVariable) =
-    Maybe(RTResult(rtVariableKindToRTResultKind(x.kind), x.type));
+rtVariableToRTResult(x:RTVariable, ...kind) =
+    Maybe(RTResult(rtVariableKindToRTResultKind(x.kind, x.value?, ...kind), x.type));
 
-rtVariableKindToRTResultKind(x:RTVariableKind) {
-    switch (x) {
+rtVariableKindToRTResultKind(varKind:RTVariableKind, varValue?:Bool) {
+    switch (varKind) {
     case RT_VARIABLE_CONST: return RT_RESULT_CONST;
     case RT_VARIABLE_REF: return RT_RESULT_REF;
     case RT_VARIABLE_RVALUE: return RT_RESULT_RVALUE;
@@ -197,6 +197,15 @@ rtVariableKindToRTResultKind(x:RTVariableKind) {
     }
 }
 
+overload rtVariableKindToRTResultKind(
+    varKind:RTVariableKind,
+    varValue?:Bool,
+    returnKind:Maybe[ast.ReturnExprKind]
+)
+    = resultKind(
+        if (varValue?) RT_RESULT_VALUE else rtVariableKindToRTResultKind(varKind, varValue?),
+        returnKind
+    );
 
 
 //
@@ -227,10 +236,10 @@ valueToRTResult(x:Value) {
 // analyzeExprList
 //
 
-analyzeExprList(exprList, env) {
+analyzeExprList(exprList:ast.ExprList, env, ...kind) {
     var results = RTResultList();
     for (item in exprList) {
-        var itemResults = analyzeExprListItem(item, env);
+        var itemResults = analyzeExprListItem(item, env, ...kind);
         if (nothing?(itemResults))
             return nothing(RTResultList);
         push(results, just(itemResults));
@@ -240,17 +249,17 @@ analyzeExprList(exprList, env) {
 
 procedure analyzeExprListItem;
 
-overload analyzeExprListItem(x:ast.ExprListItem, env) {
-    return analyzeExprListItem(*x, env);
+overload analyzeExprListItem(x:ast.ExprListItem, env, ...kind) {
+    return analyzeExprListItem(*x, env, ...kind);
 }
-overload analyzeExprListItem(x:ast.Expr, env) {
-    return maybe(analyzeExpr(x, env),
+overload analyzeExprListItem(x:ast.Expr, env, ...kind) {
+    return maybe(analyzeExpr(x, env, ...kind),
         result ref=> Maybe(RTResultList(result)),
         () ref=> nothing(RTResultList),
     );
 }
-overload analyzeExprListItem(x:ast.UnpackExpr, env) {
-    return analyzeMultiExpr(x.expr, env);
+overload analyzeExprListItem(x:ast.UnpackExpr, env, ...kind) {
+    return analyzeMultiExpr(x.expr, env, ...kind);
 }
 
 
@@ -261,29 +270,29 @@ overload analyzeExprListItem(x:ast.UnpackExpr, env) {
 
 procedure analyzeMultiExpr;
 
-overload analyzeMultiExpr(x, env) {
+overload analyzeMultiExpr(x, env, ...kind) {
     genericError("single valued expression used in multi-value context");
     return nothing(RTResultList);
 }
-overload analyzeMultiExpr(x:ast.Expr, env) Maybe[RTResultList] {
-    return withLocation(x, () ref=> analyzeMultiExpr(*x, env));
+overload analyzeMultiExpr(x:ast.Expr, env, ...kind) Maybe[RTResultList] {
+    return withLocation(x, () ref=> analyzeMultiExpr(*x, env, ...kind));
 }
-overload analyzeMultiExpr(x:ast.NameRef, env) {
-    return envEntryToRTResultList(privateLookup(env, x.name));
+overload analyzeMultiExpr(x:ast.NameRef, env, ...kind) {
+    return envEntryToRTResultList(privateLookup(env, x.name), ...kind);
 }
-overload analyzeMultiExpr(x:ast.PatternNameRef, env) {
-    return valueListToRTResultList(derefListPattern(env, x.name));
+overload analyzeMultiExpr(x:ast.PatternNameRef, env, ...kind) {
+    return resultListWithKind(valueListToRTResultList(derefListPattern(env, x.name)), ...kind);
 }
-overload analyzeMultiExpr(x:ast.Call, env) {
+overload analyzeMultiExpr(x:ast.Call, env, ...kind) {
     var callable = evaluateExpr(x.expr, env);
     if (runtimeCallable?(callable)) {
         var args = analyzeExprList(x.args, env);
-        return analyzeCall(callable, args);
+        return resultListWithKind(analyzeCall(callable, args), ...kind);
     }
     else {
         var args = evaluateExprList(x.args, env);
         var results = evaluateCall(callable, args);
-        return valueListToRTResultList(results);
+        return resultListWithKind(valueListToRTResultList(results), ...kind);
     }
 }
 
@@ -295,37 +304,37 @@ overload analyzeMultiExpr(x:ast.Call, env) {
 
 procedure envEntryToRTResultList;
 
-overload envEntryToRTResultList(x:EnvEntry) {
+overload envEntryToRTResultList(x:EnvEntry, ...kind) {
     return envEntryToRTResultList(*x);
 }
-overload envEntryToRTResultList(x:Value) {
+overload envEntryToRTResultList(x:Value, ...kind) {
     genericError("single value used in multi-valued context");
     return nothing(RTResultList);
 }
-overload envEntryToRTResultList(x:ValueList) {
-    return valueListToRTResultList(x);
+overload envEntryToRTResultList(x:ValueList, ...kind) {
+    return resultListWithKind(valueListToRTResultList(x), ...kind);
 }
-overload envEntryToRTResultList(x:PatternCell) {
+overload envEntryToRTResultList(x:PatternCell, ...kind) {
     genericError("pattern variable cannot be used in non-pattern expression");
     return nothing(RTResultList);
 }
-overload envEntryToRTResultList(x:ListPatternCell) {
+overload envEntryToRTResultList(x:ListPatternCell, ...kind) {
     genericError("pattern variable cannot be used in non-pattern expression");
     return nothing(RTResultList);
 }
-overload envEntryToRTResultList(x:RTVariable) {
+overload envEntryToRTResultList(x:RTVariable, ...kind) {
     genericError("single value used in multi-valued context");
     return nothing(RTResultList);
 }
-overload envEntryToRTResultList(x:RTListVariable) {
+overload envEntryToRTResultList(x:RTListVariable, ...returnKind) {
     var result = RTResultList();
-    for (kind, type in zipped(x.kinds, x.types)) {
-        var kind2 = rtVariableKindToRTResultKind(kind);
+    for (kind, type, value? in zipped(x.kinds, x.types, x.values?)) {
+        var kind2 = rtVariableKindToRTResultKind(kind, value?, ...returnKind);
         push(result, RTResult(kind2, type));
     }
     return Maybe(move(result));
 }
-overload envEntryToRTResultList(x:RTLabel) {
+overload envEntryToRTResultList(x:RTLabel, ...kind) {
     genericError("label cannot be used as a value");
     return nothing(RTResultList);
 }
@@ -358,10 +367,10 @@ valueListToRTResultList(x:ValueList) = maybeRTResultList(map(valueToRTResult, x)
 // analyzeReturnExprList, analyzeReturnExprListItem
 //
 
-private returnExprRTResultKind(x:ast.ReturnExprListItem, kind:RTResultKind) {
-    return maybe(x.kind,
-        y => {
-            switch (y) {
+private resultKind(kind:RTResultKind, returnKind:Maybe[ast.ReturnExprKind]) {
+    return maybe(returnKind,
+        rk => {
+            switch (rk) {
             case ast.RETURN_EXPR_CONST :
                 if (kind == RT_RESULT_VALUE)
                     genericError("cannot return temporary as const reference");
@@ -394,16 +403,21 @@ private returnExprRTResultKind(x:ast.ReturnExprListItem, kind:RTResultKind) {
     );
 }
 
+overload resultKind(kind) = kind;
+
+private resultWithKind(result:RTResult, returnKind)
+    = RTResult(resultKind(result.kind, returnKind), result.type);
+overload resultWithKind(result:Maybe[RTResult], returnKind)
+    = maybe(result, r ref=> Maybe(resultWithKind(r, returnKind)));
+overload resultWithKind(result) = result;
+
+private resultListWithKind(resultList:Maybe[RTResultList], returnKind)
+    = maybe(resultList, r ref=> Maybe(map(x => resultWithKind(x, returnKind), r)));
+
+overload resultListWithKind(resultList:Maybe[RTResultList]) = resultList;
+
 analyzeReturnExprListItem(x, env) {
-    return withLocation(x.item, () ref=>
-        maybe(analyzeExprListItem(x.item, env),
-            results ref=> Maybe(map(
-                r ref=> RTResult(returnExprRTResultKind(x, r.kind), r.type),
-                results
-            )),
-            () ref=> nothing(RTResultList)
-        )
-    );
+    return withLocation(x.item, () ref=> analyzeExprListItem(x.item, env, x.kind));
 }
 
 analyzeReturnExprList(returnExprList, env) {
@@ -610,7 +624,8 @@ private analyzeBinding(kind:ast.BindingKind, bindingName:ast.BindingName, result
     });
 
     var variableKind = bindingVariableKind(kind, result.kind);
-    envAdd(env, bindingName.name, RTVariable(variableKind, result.type));
+    var variableValue? = kind == ast.BINDING_VAR or result.kind == RT_RESULT_VALUE;
+    envAdd(env, bindingName.name, RTVariable(variableKind, result.type, variableValue?));
 }
 
 private bindingVariableKind(kind:ast.BindingKind, boundKind:RTResultKind) {
@@ -622,14 +637,14 @@ private bindingVariableKind(kind:ast.BindingKind, boundKind:RTResultKind) {
             genericError("ref variable must be bound to an lvalue");
         return RT_VARIABLE_REF;
     case ast.BINDING_RVALUE:
-        if (boundKind != RT_RESULT_RVALUE)
-            genericError("rvalue variable must be bound to an rvalue reference");
+        if (boundKind != RT_RESULT_RVALUE and boundKind != RT_RESULT_VALUE)
+            genericError("rvalue variable must be bound to an rvalue");
         return RT_VARIABLE_RVALUE;
     case ast.BINDING_CONST:
         return RT_VARIABLE_CONST;
     case ast.BINDING_FORWARD:
         if (boundKind == RT_RESULT_VALUE)
-            return RT_VARIABLE_REF;
+            return RT_VARIABLE_RVALUE;
         else
             return resultVariableKind(boundKind);
     case ast.BINDING_ALIAS:
