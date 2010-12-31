@@ -436,7 +436,8 @@ analyzeReturnExprList(returnExprList, env) {
 // analyzeBlock
 //
 
-analyzeBlock(block, env) Maybe[RTResultList] {
+analyzeBlock(block, env_) Maybe[RTResultList] {
+    var env = env_;
     return withLocation(block, () ref=> {
         var results = nothing(RTResultList);
         if (analyzeStatement(block, env, results))
@@ -582,9 +583,11 @@ private unifyStatementReturns(existingResults, newResults)
 private procedure analyzeBindings;
 
 overload analyzeBindings(kind:ast.BindingKind, bindingList:ast.SingleBindingList, env) {
-    for (binding in bindingList)
+    for (binding in bindingList) {
+        env = newEnv(env);
         if (maybeAnalyzeBinding(kind, binding, env))
             return true;
+    }
     return false;
 }
 
@@ -597,6 +600,7 @@ private maybeAnalyzeBinding(kind, binding, env) = maybe(analyzeExpr(binding.valu
 );
 
 overload analyzeBindings(kind:ast.BindingKind, bindingList:ast.MultipleBindingList, env) {
+    env = newEnv(env);
     return maybe(bindingList.values,
         valueExprList ref=> maybe(analyzeExprList(valueExprList, env),
             valueResults ref=> {
