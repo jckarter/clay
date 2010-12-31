@@ -1,0 +1,21 @@
+symbol valueReturn = NewProcedure();
+overload valueReturn() Int __c__ """abort();""";
+
+symbol refReturn = NewProcedure();
+overload refReturn() ref Int __c__ """abort();""";
+
+symbol rvalueReturn = NewProcedure();
+overload rvalueReturn() rvalue Int __c__ """abort();""";
+
+symbol constReturn = NewProcedure();
+overload constReturn() const Int __c__ """abort();""";
+
+symbol main = NewProcedure();
+overload main() {
+    forward x = valueReturn();
+    forward y = refReturn();
+    forward z = rvalueReturn();
+    forward w = constReturn();
+
+    return forward x, forward y, forward z, forward w;
+}

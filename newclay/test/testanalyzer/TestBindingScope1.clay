@@ -1,0 +1,9 @@
+symbol main = NewProcedure();
+overload main() {
+    var x = true;
+    {
+        var w = x, x = 1, y = x;
+        return w, x, y;
+    }
+}
+
