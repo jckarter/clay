@@ -1,0 +1,14 @@
+symbol fanfare = NewProcedure();
+overload fanfare() __c__ """
+    printf("hello world");
+""";
+
+symbol main = NewProcedure();
+overload main() {
+    while (true) {
+        fanfare();
+        break;
+    }
+
+    return 0;
+}

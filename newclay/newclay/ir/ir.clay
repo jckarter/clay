@@ -254,7 +254,10 @@ variant Statement = Block
                   | LocalDef
                   | Initialize
                   | If
+                  | While
                   | Return
+                  | Break
+                  | Continue
                   ;
 
 overload Statement() = Statement(Block());
@@ -285,8 +288,14 @@ overload If(condition:AtomicExpr, thenPart:Block)
 overload If(condition:AtomicExpr, thenPart:Block, elsePart:Block)
     = If(condition, thenPart, Maybe(elsePart));
 
-record Return();
+record While = referenceType(
+    condition: AtomicExpr,
+    bodyPart: Block,
+);
 
+record Return();
+record Break();
+record Continue();
 
 overload printReprTo(stream, x:Initialize) {
     printTo(stream, Initialize);
