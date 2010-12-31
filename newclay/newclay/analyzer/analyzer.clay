@@ -433,14 +433,14 @@ analyzeReturnExprList(returnExprList, env) {
 
 
 //
-// analyzeBlock
+// analyzeBlockCodeBody
 //
 
-analyzeBlock(block, env_) Maybe[RTResultList] {
+analyzeBlockCodeBody(block, env_) Maybe[RTResultList] {
     var env = env_;
     return withLocation(block, () ref=> {
         var results = nothing(RTResultList);
-        if (analyzeStatement(block, env, results))
+        if (analyzeStatement(block, env, results, false))
             return results;
         else if (maybe(results, r => empty?(r), () => true))
             // fallthrough (or void return + fallthrough) in block; assume void return
@@ -455,15 +455,22 @@ analyzeBlock(block, env_) Maybe[RTResultList] {
 
 private procedure analyzeStatement;
 
-overload analyzeStatement(stmt:ast.Statement, env:Env, inoutResults:Maybe[RTResultList]) Bool {
-    return withLocation(*stmt, () ref=> analyzeStatement(*stmt, env, inoutResults));
+overload analyzeStatement(
+    stmt:ast.Statement,
+    inoutEnv:Env,
+    inoutResults:Maybe[RTResultList],
+    loop?:Bool
+) Bool {
+    return withLocation(*stmt,
+        () ref=> analyzeStatement(*stmt, inoutEnv, inoutResults, loop?)
+    );
 }
-overload analyzeStatement(stmt:ast.LabelDef, env, results) = false;
-overload analyzeStatement(stmt:ast.BindingStatement, env, results) {
+overload analyzeStatement(stmt:ast.LabelDef, env, results, loop?) = false;
+overload analyzeStatement(stmt:ast.BindingStatement, env, results, loop?) {
     return analyzeBindings(stmt.kind, *stmt.bindings, env);
 }
-overload analyzeStatement(stmt:ast.AssignmentStatement, env, results) = false;
-overload analyzeStatement(stmt:ast.GotoStatement, env, results) {
+overload analyzeStatement(stmt:ast.AssignmentStatement, env, results, loop?) = false;
+overload analyzeStatement(stmt:ast.GotoStatement, env, results, loop?) {
     match(privateLookup(env, stmt.label),
         RTLabel, x ref=> {},
         MatchDefault, x ref=> {
@@ -474,33 +481,41 @@ overload analyzeStatement(stmt:ast.GotoStatement, env, results) {
     genericError("goto is not yet supported");
     return false;
 }
-overload analyzeStatement(stmt:ast.ReturnStatement, env, results) {
+overload analyzeStatement(stmt:ast.ReturnStatement, env, results, loop?) {
     results = unifyStatementReturns(results, analyzeReturnExprList(stmt.values, env));
     return true;
 }
-overload analyzeStatement(stmt:ast.BreakStatement, env, results) = false;
-overload analyzeStatement(stmt:ast.ContinueStatement, env, results) = false;
-overload analyzeStatement(stmt:ast.ThrowStatement, env, results) {
+overload analyzeStatement(stmt:ast.BreakStatement, env, results, loop?) {
+    if (not loop?)
+        genericError("break statement must be used inside a loop");
+    return false;
+}
+overload analyzeStatement(stmt:ast.ContinueStatement, env, results, loop?) {
+    if (not loop?)
+        genericError("continue statement must be used inside a loop");
+    return false;
+}
+overload analyzeStatement(stmt:ast.ThrowStatement, env, results, loop?) {
     return true;
 }
 
-overload analyzeStatement(stmt:ast.IfStatement, env, results) {
+overload analyzeStatement(stmt:ast.IfStatement, env, results, loop?) {
     if (nothing?(analyzeBool(stmt.condition, env)))
         return true;
 
-    var thenReturns? = analyzeStatement(stmt.thenBody, newEnv(env), results);
+    var thenReturns? = analyzeStatement(stmt.thenBody, newEnv(env), results, loop?);
     var elseReturns? = maybe(stmt.elseBody,
-        elseBody ref=> analyzeStatement(elseBody, newEnv(env), results),
+        elseBody ref=> analyzeStatement(elseBody, newEnv(env), results, loop?),
         () ref=> false,
     );
     return thenReturns? and elseReturns?;
 }
 
-overload analyzeStatement(stmt:ast.ForStatement, env, results) {
+overload analyzeStatement(stmt:ast.ForStatement, env, results, loop?) {
     var subenv = newEnv(env);
     // XXX propagate nontermination of sequence expression
     bindForBindings(subenv, stmt.sequenceValue, stmt.bodyBindings);
-    analyzeStatement(stmt.body, subenv, results);
+    analyzeStatement(stmt.body, subenv, results, true);
     return false;
 }
 
@@ -509,47 +524,47 @@ private bindForBindings(...x) {
     genericError("for loops are not yet supported");
 }
 
-overload analyzeStatement(stmt:ast.StaticForStatement, env, results) {
+overload analyzeStatement(stmt:ast.StaticForStatement, env, results, loop?) {
     // XXX alias "bodyBinding" to each expression from "values" in turn and analyze
     genericError("static for loops are not yet supported");
     return false;
 }
 
-overload analyzeStatement(stmt:ast.WhileStatement, env, results) {
+overload analyzeStatement(stmt:ast.WhileStatement, env, results, loop?) {
     if (nothing?(analyzeBool(stmt.condition, env)))
         return true;
 
-    analyzeStatement(stmt.body, newEnv(env), results);
+    analyzeStatement(stmt.body, newEnv(env), results, true);
     return false;
 }
 
-overload analyzeStatement(stmt:ast.SwitchStatement, env, results) {
+overload analyzeStatement(stmt:ast.SwitchStatement, env, results, loop?) {
     if (nothing?(analyzeExpr(stmt.value, env)))
         return true;
 
     var allReturn? = not empty?(stmt.caseBlocks);
     for (caseBlock in stmt.caseBlocks)
-        allReturn? = analyzeBlockStatement(caseBlock.body, env, results) and allReturn?;
+        allReturn? = analyzeBlockStatement(caseBlock.body, env, results, loop?) and allReturn?;
 
     allReturn? = maybe(stmt.defaultBlock,
-        defaultBlock ref=> analyzeBlockStatement(defaultBlock, env, results),
+        defaultBlock ref=> analyzeBlockStatement(defaultBlock, env, results, loop?),
         () ref=> false,
     ) and allReturn?;
 
     return allReturn?;
 }
 
-overload analyzeStatement(stmt:ast.TryStatement, env, results) {
+overload analyzeStatement(stmt:ast.TryStatement, env, results, loop?) {
     // XXX
     genericError("try blocks are not yet supported");
     return false;
 }
 
-overload analyzeStatement(stmt:ast.ExprStatement, env, results) {
+overload analyzeStatement(stmt:ast.ExprStatement, env, results, loop?) {
     return nothing?(analyzeMultiExpr(stmt.expr, env));
 }
 
-overload analyzeStatement(block:ast.Block, env, results) Bool {
+overload analyzeStatement(block:ast.Block, env, results, loop?) Bool {
     var subenv = newEnv(env);
     for (stmt in block.statements)
         match(stmt,
@@ -559,13 +574,13 @@ overload analyzeStatement(block:ast.Block, env, results) Bool {
             MatchDefault, x ref=> {},
         );
     for (stmt in block.statements)
-        if (analyzeStatement(stmt, subenv, results))
+        if (analyzeStatement(stmt, subenv, results, loop?))
             return true;
     return false;
 }
 
-private analyzeBlockStatement(block:ast.Block, env, results) Bool
-    = withLocation(block, () ref=> analyzeStatement(block, env, results));
+private analyzeBlockStatement(block:ast.Block, env, results, loop?) Bool
+    = withLocation(block, () ref=> analyzeStatement(block, env, results, loop?));
 
 private unifyStatementReturns(existingResults, newResults)
     = maybe(existingResults,
@@ -937,7 +952,7 @@ private analyzeBody(x:Overload, env) {
     return match(x.ast.body,
         ast.ExprCodeBody, y ref=> analyzeReturnExprList(y.exprs, env),
         ast.CCodeBody, y ref=> Maybe(RTResultList()), // void return
-        ast.Block, y ref=> analyzeBlock(y, env),
+        ast.Block, y ref=> analyzeBlockCodeBody(y, env),
     );
 }
 
