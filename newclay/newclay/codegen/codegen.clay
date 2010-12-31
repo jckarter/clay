@@ -383,8 +383,18 @@ overload codegenStatement(x:If) {
         codegenStatement(elsePart);
     });
 }
+overload codegenStatement(x:While) {
+    beginLine("while (", codegenAtomicAsValue(x.condition), ") ");
+    codegenStatement(x.bodyPart);
+}
 overload codegenStatement(x:Return) {
     beginLine("return;");
+}
+overload codegenStatement(x:Break) {
+    beginLine("break;");
+}
+overload codegenStatement(x:Continue) {
+    beginLine("continue;");
 }
 
 

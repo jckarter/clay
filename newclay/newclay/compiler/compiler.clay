@@ -576,6 +576,34 @@ overload compileStatementInto(stmt:ast.IfStatement, env, out) {
     return thenReturns? and elseReturns?;
 }
 
+overload compileStatementInto(stmt:ast.WhileStatement, env, out) {
+    var cond = compileBoolExpr(stmt.condition, env); // XXX nontermination
+    var bodyPart = withNewBlock(() ref=> {
+        compileStatementInto(stmt.body, newEnv(env), out);
+    });
+
+    emitStatement(ir.While(cond.irExpr, bodyPart));
+    return false;
+}
+
+overload compileStatementInto(stmt:ast.BreakStatement, env, out) {
+    emitStatement(ir.Break());
+    return false;
+}
+
+overload compileStatementInto(stmt:ast.ContinueStatement, env, out) {
+    emitStatement(ir.Continue());
+    return false;
+}
+
+overload compileStatementInto(block:ast.Block, env, out) {
+    var returned? = false;
+    emitStatement(withNewBlock(() ref=> {
+        returned? = compileBlockInto(block, newEnv(env), out);
+    }));
+    return returned?;
+}
+
 
 //
 // compileReturnExprListInto
