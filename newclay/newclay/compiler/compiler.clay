@@ -528,7 +528,8 @@ private ensureCompatibleLocals(x:A, maybeY:Maybe[B]) {
 //
 
 [A | ir.LocalSequence?(A)]
-compileBlockInto(block:ast.Block, env, out:A) Bool {
+compileBlockInto(block:ast.Block, env_, out:A) Bool {
+    var env = env_;
     return withLocation(block, () ref=> {
         for (stmt in block.statements)
             if (compileStatementInto(stmt, env, out))
@@ -604,6 +605,33 @@ overload compileStatementInto(block:ast.Block, env, out) {
     return returned?;
 }
 
+overload compileStatementInto(stmt:ast.AssignmentStatement, env, out) {
+    if (stmt.kind != ast.ASSIGNMENT_INITIALIZE)
+        genericError("compiling non-initializing assignment is not yet supported");
+
+    var into = map(compiledExprToAssignableLocal, compileExprList(stmt.to, env)); // XXX nontermination
+    compileExprListInto(stmt.from, env, into); // XXX nontermination
+    return false;
+}
+
+compiledExprToAssignableLocal(expr:CompiledExpr) 
+    = match(expr.irExpr,
+        ir.LocalRef, r => {
+            if (r.local.access == ir.ACCESS_CONST)
+                genericError("const reference cannot be the target of an initialization");
+            // XXX rvalue?
+            return r.local;
+        },
+        ir.LocalAddressOf, x => {
+            genericError("address expression cannot be the target of an initialization");
+            return ir.Local();
+        },
+        MatchDefault, x => {
+            genericError("literal constant cannot be the target of an initialization");
+            return ir.Local();
+        },
+    );
+
 
 //
 // compileReturnExprListInto
@@ -611,7 +639,7 @@ overload compileStatementInto(block:ast.Block, env, out) {
 
 [A | ir.LocalSequence?(A)]
 compileReturnExprListInto(x:ast.ReturnExprList, env, out:A) {
-    maybe(analyzeReturnExprList(x, env),
+    maybe(analyzeReturnExprList(x, env), // XXX still need to compile up to nontermination point!
         exprResults ref=> {
             ensureArity(size(out), size(exprResults));
             var i = SizeT(0);
@@ -740,10 +768,10 @@ overload compileExprInto(x:ast.IfExpr, env, out) {
 
 [A | ir.LocalSequence?(A)]
 compileExprListInto(x:ast.ExprList, env, out:A) {
-    ensureArity(size(out), size(analyzeExprList(x, env)));
+    ensureArity(size(out), size(just(analyzeExprList(x, env)))); // XXX nontermination
     var i = SizeT(0);
     for (item in x) {
-        var results = analyzeExprListItem(item, env);
+        var results = just(analyzeExprListItem(item, env)); // XXX nontermination
         compileExprListItemInto(item, env, sliced(out, i, i+size(results)));
         i += size(results);
     }
