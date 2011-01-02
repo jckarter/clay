@@ -83,7 +83,7 @@ record Local = referenceType(
 accessKindString(x:AccessKind) {
     switch (x) {
     case ACCESS_CONST : return "const";
-    case ACCESS_REF : return "mutable";
+    case ACCESS_REF : return "ref";
     case ACCESS_RVALUE : return "rvalue";
     default: assert(false); return "";
     }
