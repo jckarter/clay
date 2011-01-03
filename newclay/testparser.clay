@@ -2,6 +2,7 @@
 import newclay.common.*;
 import newclay.lexer.*;
 import newclay.parser.*;
+import newclay.ast.transforms.*;
 
 main(args) {
     if (size(args) != 2) {
@@ -11,7 +12,13 @@ main(args) {
     try {
         var file = readSource(args[1]);
         var ast = parse(tokenize(file));
+        println("Original AST:");
         println(ast.topLevelItems);
+
+        var transformedAST = transformAST(ast);
+        println();
+        println("Transformed AST:");
+        println(transformedAST.topLevelItems);
     }
     catch (e:ClayError) {
         displayError(e);
