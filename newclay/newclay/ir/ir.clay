@@ -238,6 +238,12 @@ overload printReprTo(stream, x:LocalRef) {
 }
 overload printTo(stream, x:LocalRef) { printReprTo(stream, x); }
 
+overload printReprTo(stream, x:LocalAddressOf) {
+    printTo(stream, LocalAddressOf);
+    printReprValuesTo(stream, x.local.name);
+}
+overload printTo(stream, x:LocalAddressOf) { printReprTo(stream, x); }
+
 overload printReprTo(stream, x:CallExpr) {
     printTo(stream, CallExpr);
     printReprValuesTo(stream, x.callable.name, x.args);
