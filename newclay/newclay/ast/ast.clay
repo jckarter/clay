@@ -289,6 +289,8 @@ variant TopLevelItem = Symbol
                      | StaticOverload
                      | Overload
                      | Import
+                     | Procedure
+                     | StaticFunction
                      ;
 
 enum VisibilityKind {
@@ -296,10 +298,14 @@ enum VisibilityKind {
     VIS_PRIVATE,
 }
 
-record Symbol = ast(
-    visibility: VisibilityKind,
+record SymbolName = ast(
     name: Identifier,
     params: VariadicList[Identifier],
+);
+
+record Symbol = ast(
+    visibility: VisibilityKind,
+    name: SymbolName,
     expr: Expr,
 );
 
@@ -309,20 +315,40 @@ record Attribute = ast(
     body: Expr,
 );
 
-record StaticOverload = ast(
-    target: Pattern,
+record StaticOverloadDefinition = ast(
     args: ListPattern,
     predicate: Maybe[Expr],
     body: ExprList,
 );
 
-record Overload = ast(
+record StaticOverload = ast(
     target: Pattern,
+    definition: StaticOverloadDefinition,
+);
+
+record OverloadDefinition = ast(
     args: ArgumentList,
     returns: Vector[ReturnSpec],
     returnedNames: Maybe[Vector[Identifier]],
     predicate: Maybe[Expr],
     body: CodeBody,
+);
+
+record Overload = ast(
+    target: Pattern,
+    definition: OverloadDefinition,
+);
+
+record StaticFunction = ast(
+    visibility: VisibilityKind,
+    name: SymbolName,
+    definition: StaticOverloadDefinition,
+);
+
+record Procedure = ast(
+    visibility: VisibilityKind,
+    name: SymbolName,
+    definition: OverloadDefinition,
 );
 
 record Import = ast(
