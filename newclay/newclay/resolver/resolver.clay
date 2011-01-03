@@ -54,30 +54,30 @@ overload visitASTNode(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
 }
 
 overload visitASTNode(r:ResolveASTVisitor, oload:ast.Overload) {
-    visitAST(r, oload.predicate);
+    visitAST(r, oload.definition.predicate);
     visitAST(r, oload.target);
-    visitAST(r, oload.args);
+    visitAST(r, oload.definition.args);
 
     var subenv = newEnv(r.env);
-    bindArgumentList(subenv, oload.args);
+    bindArgumentList(subenv, oload.definition.args);
 
-    maybe(oload.returnedNames, returnedNames ref=> {
+    maybe(oload.definition.returnedNames, returnedNames ref=> {
         for (ret in returnedNames)
             envAdd(subenv, ret, DummyValue);
     });
 
     var subr = ResolveASTVisitor(subenv);
 
-    visitAST(subr, oload.returns);
-    visitAST(subr, oload.body);
+    visitAST(subr, oload.definition.returns);
+    visitAST(subr, oload.definition.body);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
-    if (variantIs?(nameRef.env, UnresolvedEnvRef))
+    if (variantIs?(nameRef.env, ast.UnresolvedEnvRef))
         nameRef.env = match(privateLookup(r.env, nameRef.name),
             Value, v => match(v,
-                SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name, h.ast.name.str)),
-                Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name, s.head.ast.name.str)),
+                SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name, h.ast.name.name.str)),
+                Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name, s.head.ast.name.name.str)),
                 Primitive,    p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName, primitiveName(p))),
                 ModuleValue,  m => maybe(m.module,
                     module => ast.EnvRef(ast.ModuleAliasRef(module.name)),

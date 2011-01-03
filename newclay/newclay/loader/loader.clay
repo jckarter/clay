@@ -51,7 +51,7 @@ private addImportItem(module, envRoot, importItem) {
 
 private addSymbolItem(module, env, symbolItem) {
     withLocation(symbolItem, () ref=> {
-        var name = symbolItem.name;
+        var name = symbolItem.name.name;
         if (not null?(lookup(module.publicEnv.entries, name.str))
             or not null?(lookup(module.privateEnv.entries, name.str)))
             genericError("symbol redefinition: ", name.str);
