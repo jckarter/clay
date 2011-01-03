@@ -1,0 +1,8 @@
+println() { }
+
+foo(x) { println(x); }
+private bar(x) { println(x); }
+public bas(x) { println(x); }
+
+static Foo('x) = 'x;
+static Bar('x) | Foo('x) = ('x, 'x);

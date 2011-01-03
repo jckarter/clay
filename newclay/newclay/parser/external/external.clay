@@ -612,10 +612,15 @@ private var optSymbolParams = modify(
     optional(symbolParams),
 );
 
+private var symbolName = modify(
+    x => SymbolName(x.0, x.1),
+    sequence(identifier, optSymbolParams),
+);
+
 private var symbolDef = topLevelItemParser(
-    x => Symbol(just(x.0, VIS_PUBLIC), move(x.2), move(x.3), move(x.5)),
+    x => Symbol(just(x.0, VIS_PUBLIC), move(x.2), move(x.4)),
     sequence(
-        visibility, kw_symbol, identifier, optSymbolParams,
+        visibility, kw_symbol, symbolName,
         punc(#"="), expr, punc(#";")
     ),
 );
@@ -642,12 +647,14 @@ private var staticArguments = modify(
     sequence(punc(#"("), optListPattern, punc(#")")),
 );
 
+private var staticOverloadDefinition = modify(
+    x => StaticOverloadDefinition(move(x.0), move(x.1), move(x.3)),
+    sequence(staticArguments, optPredicate, punc(#"="), optExprList, punc(#";")),
+);
+
 private var staticOverloadDef = topLevelItemParser(
-    x => StaticOverload(move(x.2), move(x.3), move(x.4), move(x.6)),
-    sequence(
-        kw_static, kw_overload, targetPattern, staticArguments,
-        optPredicate, punc(#"="), optExprList, punc(#";"),
-    ),
+    x => StaticOverload(move(x.2), move(x.3)),
+    sequence(kw_static, kw_overload, targetPattern, staticOverloadDefinition),
 );
 
 // overloadDef
@@ -801,15 +808,29 @@ private var blockCodeBody = modify(CodeBody, bounds(block));
 
 private var codeBody = choice(exprCodeBody, blockCodeBody, inlineCCodeBody);
 
-private var overloadDef = topLevelItemParser(
-    x => Overload(
-        move(x.1), move(x.3), move((x.5).1), move((x.5).0),
-        move(x.6), move(x.7),
-    ),
+private var overloadDefinition = modify(
+    x => OverloadDefinition(move(x.1), move((x.3).1), move((x.3).0), move(x.4), move(x.5)),
     sequence(
-        kw_overload, targetPattern, punc(#"("), optArguments, punc(#")"),
+        punc(#"("), optArguments, punc(#")"),
         optReturnList, optPredicate, codeBody,
     ),
+);
+
+private var overloadDef = topLevelItemParser(
+    x => Overload(move(x.1), move(x.2)),
+    sequence(kw_overload, targetPattern, overloadDefinition),
+);
+
+// procedureDef, staticFunctionDef
+
+private var procedureDef = topLevelItemParser(
+    x => Procedure(just(x.0, VIS_PUBLIC), x.1, x.2),
+    sequence(visibility, symbolName, overloadDefinition),
+);
+
+private var staticFunctionDef = topLevelItemParser(
+    x => StaticFunction(just(x.0, VIS_PUBLIC), x.2, x.3),
+    sequence(visibility, kw_static, symbolName, staticOverloadDefinition),
 );
 
 // statements
@@ -998,6 +1019,7 @@ private var exprStatement = statementParser(
 
 private var topLevelItem = choice(
     importDef, symbolDef, attributeDef, staticOverloadDef, overloadDef,
+    procedureDef, staticFunctionDef
 );
 
 
