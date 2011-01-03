@@ -138,7 +138,7 @@ makeSymbol(x:SymbolHead, params:ValueList) {
         return ptr^;
     }
     ref y = x.symbols[params];
-    var env = bindPatternArgs(x.module, x.ast.params, params);
+    var env = bindPatternArgs(x.module, x.ast.name.params, params);
     y = Symbol(x, params, env);
     return y;
 }
@@ -446,7 +446,7 @@ overload evaluateIndexing(x:Value, args) {
     return evaluateIndexing(*x, args);
 }
 overload evaluateIndexing(x:SymbolHead, args) {
-    verifyBindingArity(x.ast.params, args);
+    verifyBindingArity(x.ast.name.params, args);
     return Value(makeSymbol(x, args));
 }
 
@@ -808,11 +808,11 @@ overload applyCollector(x:Attribute, collector) {
 }
 overload applyCollector(x:StaticOverload, collector) {
     walkPattern(x.ast.target, collector);
-    walkListPattern(x.ast.args, collector);
+    walkListPattern(x.ast.definition.args, collector);
 }
 overload applyCollector(x:Overload, collector) {
     walkPattern(x.ast.target, collector);
-    walkArgumentPatterns(x.ast.args, collector);
+    walkArgumentPatterns(x.ast.definition.args, collector);
 }
 
 [T | TopLevelItemWithPatternVars?(T)]
@@ -883,11 +883,11 @@ matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env]
     var callablePattern = evaluatePattern(x.ast.target, env);
     if (not unify(callablePattern, callable))
         return nothing(Env);
-    var argsPattern = evaluateListPattern(x.ast.args, env);
+    var argsPattern = evaluateListPattern(x.ast.definition.args, env);
     if (not unifyList(argsPattern, args))
         return nothing(Env);
     verifyPatternVars(pvars, env);
-    if (not testPredicate(x.ast.predicate, env))
+    if (not testPredicate(x.ast.definition.predicate, env))
         return nothing(Env);
     return Maybe(env);
 }
@@ -917,12 +917,12 @@ evaluateAttributes(target) {
 memoizeStaticCall(evalTable, program, callable, args) {
     var memoizedResultp = lookup(evalTable, args);
     if (null?(memoizedResultp)) {
-        observe(#evaluating, callable, args);
+        // observe(#evaluating, callable, args);
         ref result = evalTable[args];
         result = evaluateStaticCall(program, callable, args);
         return result;
     } else {
-        observe(#memoized, callable, args);
+        // observe(#memoized, callable, args);
         return memoizedResultp^;
     }
 }
@@ -931,7 +931,7 @@ evaluateStaticCall(program, callable, args) {
     for (x in reversed(program.allStaticOverloads)) {
         var result = matchStaticOverload(x, callable, args);
         if (just?(result))
-            return evaluateExprList(x.ast.body, just(result));
+            return evaluateExprList(x.ast.definition.body, just(result));
     }
     genericError("no matching operation");
     return ValueList();
