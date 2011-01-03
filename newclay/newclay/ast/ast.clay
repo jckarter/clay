@@ -206,6 +206,8 @@ record NameRef = ast(
 );
 overload NameRef(name:Vector[Identifier]) = NameRef(EnvRef(), name);
 overload NameRef(name:Identifier) = NameRef(EnvRef(), Vector[Identifier](name));
+[S | String?(S)]
+overload NameRef(name:S) = NameRef(Identifier(String(S)));
 
 record PatternNameRef = ast(
     name: Identifier,

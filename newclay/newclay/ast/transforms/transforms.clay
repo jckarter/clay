@@ -1,0 +1,115 @@
+import newclay.ast.*;
+import newclay.core.(preludeModuleName);
+import maybe.*;
+
+
+//
+// transformAST: apply transformations to the input SourceAST and create a new SourceAST
+//
+
+transformAST(from:SourceAST) {
+    var to = SourceAST(from.tokens, Vector[TopLevelItem]());
+
+    for (fromItem in from.topLevelItems)
+        transformASTInto(fromItem, to.topLevelItems);
+    return move(to);
+}
+
+transformASTInto(from:TopLevelItem, to:Vector[TopLevelItem]) {
+    transformASTInto(*from, to);
+}
+
+[Node | VariantMember?(TopLevelItem, Node)]
+overload transformASTInto(from:Node, to:Vector[TopLevelItem]) {
+    push(to, TopLevelItem(from));
+}
+
+
+//
+// transformed: construct a derived AST node that borrows the location info of an original node 
+//
+
+[FromNode, ToNode | ASTNode?(FromNode) and ASTNode?(ToNode)]
+transformed(from:FromNode, static ToNode, forward ...args) {
+    var to = ToNode(...args);
+    to.location = from.location;
+    return move(to);
+}
+
+[FromNode, S | ASTNode?(FromNode) and String?(S)]
+transformedNameRef(from:FromNode, moduleName:ModuleName, identifier:S)
+    = transformed(from, NameRef,
+        EnvRef(ModuleEnvRef(preludeModuleName, String(identifier))),
+        Vector[Identifier](Identifier(identifier)),
+    );
+        
+
+//
+// transform Procedure into Symbol, Overload
+//
+// <Visibility>? <SymbolName> <OverloadDefinition>
+//    
+//   becomes
+//
+// <Visibility>? symbol <SymbolName> = prelude.NewProcedure();
+// overload <SymbolName> <OverloadDefinition>
+// 
+
+overload transformASTInto(from:Procedure, to:Vector[TopLevelItem]) {
+    var NewProcedureNameRef = transformedNameRef(from, preludeModuleName, String("NewProcedure"));
+
+    push(to, TopLevelItem(transformed(from, Symbol,
+        from.visibility,
+        from.name,
+        Expr(transformed(from, Call,
+            Expr(transformedNameRef(from, preludeModuleName, String("NewProcedure"))),
+            ExprList()
+        ))
+    )));
+
+    push(to, TopLevelItem(transformed(from, Overload,
+        symbolNameToPattern(from.name),
+        from.definition,
+    )));
+}
+
+symbolNameToPattern(name:SymbolName) =
+    if (empty?(name.params.items) and nothing?(name.params.variadicItem))
+        Pattern(transformed(name, NameRef, name.name))
+    else
+        Pattern(transformed(name, IndexingPattern,
+            Expr(transformed(name.name, NameRef, name.name)),
+            ListPattern(
+                map(symbolParamToPattern, name.params.items),
+                maybe(name.params.variadicItem, x => Maybe(symbolParamToPattern(x))),
+            ),
+        ));
+        
+symbolParamToPattern(name:Identifier) =
+    Pattern(transformed(name, PatternNameRef, name));
+
+
+//
+// transform StaticFunction into Symbol, StaticOverload
+//
+// <Visibility>? static <SymbolName> <StaticOverloadDefinition>
+//    
+//   becomes
+//
+// <Visibility>? symbol <SymbolName> = ();
+// static overload <SymbolName> <StaticOverloadDefinition>
+// 
+
+overload transformASTInto(from:StaticFunction, to:Vector[TopLevelItem]) {
+    push(to, TopLevelItem(transformed(from, Symbol,
+        from.visibility,
+        from.name,
+        Expr(transformed(from, TupleExpr, ExprList())),
+    )));
+
+    push(to, TopLevelItem(transformed(from, StaticOverload,
+        symbolNameToPattern(from.name),
+        from.definition,
+    )));
+}
+
