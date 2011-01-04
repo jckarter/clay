@@ -1,0 +1,140 @@
+
+import newclay.common.*;
+import newclay.lexer;
+import newclay.parser;
+import newclay.ast as ast;
+import newclay.core.*;
+import newclay.loader.*;
+import newclay.hooks.*;
+import newclay.analysis.*;
+import newclay.analysis as analysis;
+import maybe.*;
+
+[T]
+LeafTypeName(x:T) = StaticName(T);
+[V | Variant?(V)]
+overload LeafTypeName(x:V) = LeafTypeName(*x);
+
+fakeSpecialization(env) {
+    var s = allocateRef(analysis.Specialization);
+    s.env = env;
+    return s;
+}
+
+printDepth(depth) {
+    for (i in range(depth))
+        print("  ");
+}
+
+printNode(depth, node) {
+    printDepth(depth);
+    print(LeafTypeName(node), " ");
+    printNodeData(depth, *node);
+}
+
+printNodeData(depth, node:SpecializedExpr) {
+    println(LeafTypeName(node.ast));
+    printInputsOutputs(depth+1, node.inputs, node.outputs);
+}
+
+asPtr(x) = referencePtr(x).ptr;
+
+overload printNodeData(depth, node:SpecializedCall) {
+    println(LeafTypeName(node.ast),
+        " specialization ", asPtr(node.specialization),
+        " ", node.specialization.callable
+    );
+    printInputsOutputs(depth+1, node.inputs, node.outputs);
+}
+
+overload printNodeData(depth, node:SpecializedIf) {
+    println(LeafTypeName(node.ast));
+    printDepth(depth+1);
+    print("condition ");
+    printVar(node.condition);
+    printDepth(depth+1);
+    print("then:");
+    for (thenNode in node.thenBody)
+        printNode(depth+2, thenNode);
+    printDepth(depth+1);
+    print("else:");
+    for (elseNode in node.elseBody)
+        printNode(depth+2, elseNode);
+}
+
+overload printNodeData(depth, node:SpecializedValueList) {
+    println(LeafTypeName(node.ast), " ", node.valueList);
+    printVars(depth+1, "out ", node.outputs);
+}
+
+overload printNodeData(depth, node:SpecializedPhi) {
+    println();
+    for (input in node.inputs) {
+        printDepth(depth+1);
+        println("branch");
+        printVars(depth+2, "in  ", input);
+    }
+    printVars(depth+1, "out ", node.output);
+}
+
+printVar(variable) {
+    println(asPtr(variable), " ", variable);
+}
+
+printVars(depth, prefix, vars) {
+    for (v in vars) {
+        printDepth(depth);
+        print(prefix);
+        printVar(*v);
+    }
+}
+
+printInputsOutputs(depth, inputs:VariableList, mOutputs:Maybe[VariableList]) {
+    printVars(depth, "in  ", inputs);
+    maybe(mOutputs,
+        outputs ref=> {
+            printVars(depth, "out ", inputs);
+        },
+        () ref=> { println("nonterminating"); }
+    );
+}
+
+main(args) {
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <file>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[1]);
+        withProgram(program, () ref=> {
+            initializeClayHooks();
+
+            // hack to extract an Expr from the main() definition
+            var main = variantAs(publicLookup(getProgramMainModule(), "main"), Value);
+            var mainSymbol = variantAs(main, Symbol);
+            var mainExpr = mainSymbol.head.ast.expr;
+
+            var env = newEnv(getProgramMainModule());
+            envAdd(env, ast.Identifier("a?"), RTVariable(RT_VARIABLE_REF, boolType(), true, "a?"));
+            envAdd(env, ast.Identifier("b?"), RTVariable(RT_VARIABLE_REF, boolType(), true, "b?"));
+            envAdd(env, ast.Identifier("c?"), RTVariable(RT_VARIABLE_REF, boolType(), true, "c?"));
+
+            envAdd(env, ast.Identifier("x"), RTVariable(RT_VARIABLE_REF, intType(), true, "x"));
+            envAdd(env, ast.Identifier("y"), RTVariable(RT_VARIABLE_REF, intType(), true, "y"));
+            envAdd(env, ast.Identifier("z"), RTVariable(RT_VARIABLE_REF, intType(), true, "z"));
+
+            var s = fakeSpecialization(env);
+            s.outputs = analyzeNode(s.body, env, mainExpr);
+
+            println("result = ", s.outputs);
+            println("analysis nodes:");
+            for (node in s.body) {
+                printNode(1, node);
+            }
+        });
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
