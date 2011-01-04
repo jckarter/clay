@@ -119,7 +119,7 @@ overload SymbolHead(x:ast.Symbol, module:Module) =
     );
 
 symbolHeadHasParams?(x:SymbolHead) {
-    ref p = x.ast.params;
+    ref p = x.ast.name.params;
     return not (empty?(p.items) and nothing?(p.variadicItem));
 }
 
@@ -717,10 +717,10 @@ overload printTo(stream, x:LambdaValue) {
     printTo(stream, "<lambda>");
 }
 overload printTo(stream, x:SymbolHead) {
-    printTo(stream, x.ast.name.str);
+    printTo(stream, x.ast.name.name.str);
 }
 overload printTo(stream, x:Symbol) {
-    printTo(stream, x.head.ast.name.str);
+    printTo(stream, x.head.ast.name.name.str);
     if (not empty?(x.params))
         printTo(stream, x.params);
 }
