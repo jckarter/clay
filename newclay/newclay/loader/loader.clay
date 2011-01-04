@@ -4,6 +4,7 @@ import maybe.*;
 import newclay.common.*;
 import newclay.lexer.*;
 import newclay.ast as ast;
+import newclay.ast.transforms.*;
 import newclay.parser.*;
 import newclay.core.*;
 import newclay.resolver.*;
@@ -120,6 +121,7 @@ private initializeAttributesAndOverloads(module) {
 }
 
 private initializeModule(module) {
+    module.ast = transformAST(module.originalAST);
     initializeGlobals(module);
     initializeAttributesAndOverloads(module);
 }
@@ -147,7 +149,7 @@ private findModuleSource(searchPath, name) {
 private loadModule(program, name) {
     ref module = program.modules[name];
     module = Module(program, name);
-    module.ast = parse(tokenize(readSource(findModuleSource(program.moduleSearchPath, name))));
+    module.originalAST = parse(tokenize(readSource(findModuleSource(program.moduleSearchPath, name))));
     initializeModule(module);
 }
 
@@ -162,7 +164,7 @@ programModule(program:Program, name:ModuleName) {
 
 private loadMainModule(program, mainFilename) {
     var module = Module(program, mainModuleName);
-    module.ast = parse(tokenize(readSource(mainFilename)));
+    module.originalAST = parse(tokenize(readSource(mainFilename)));
     initializeModule(module);
     return module;
 }

@@ -84,13 +84,14 @@ record ClayHooks (
 record Module = referenceType(
     program: Program,
     name: ModuleName,
+    originalAST: ast.SourceAST,
     ast: ast.SourceAST,
     publicEnv: Env,
     privateEnv: Env,
 );
 
 overload Module(program:Program, name:ModuleName) =
-    Module(program, name, ast.SourceAST(), Env(), Env());
+    Module(program, name, ast.SourceAST(), ast.SourceAST(), Env(), Env());
 
 overload printTo(stream, mod:Module) {
     printTo(stream, "module ", moduleNameString(mod.name));
@@ -821,25 +822,21 @@ record RTVariable = referenceType(
     kind: RTVariableKind,
     type: Value,
     value?: Bool,
-    lowLevelLocal: ir.Local,
+    name: Maybe[String],
 );
 
 overload RTVariable(kind:RTVariableKind, type:Value) =
-    RTVariable(kind, type, false, ir.Local());
+    RTVariable(kind, type, false, nothing(String));
 overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool) =
-    RTVariable(kind, type, value?, ir.Local());
+    RTVariable(kind, type, value?, nothing(String));
+[S | String?(S)]
+overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool, forward name:S) =
+    RTVariable(kind, type, value?, Maybe(String(name)));
 
 record RTListVariable = referenceType(
-    kinds: Vector[RTVariableKind],
-    types: ValueList,
-    values?: Vector[Bool],
-    lowLevelLocals: Vector[ir.Local],
+    vars: Vector[RTVariable],
+    name: Maybe[String],
 );
-
-overload RTListVariable(forward kinds:Vector[RTVariableKind], forward types:ValueList) {
-    var sz = size(kinds);
-    return RTListVariable(kinds, types, map(x => false, range(sz)), Vector[ir.Local]());
-}
 
 record RTLabel = referenceType(
     ast: ast.LabelDef,
