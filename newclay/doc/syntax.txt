@@ -14,14 +14,24 @@ ImportSpec -> "as" Identifier
             | "." "(" comma_list(SpecificImportSpec) ")"
 SpecificImportSpec -> Visibility? Identifier ("as" Identifier)?
 
-GlobalSymbol -> Visibility? "symbol" Identifier SymbolParams? "=" Expr ";"
+SymbolName -> Identifier SymbolParams?
+
+GlobalSymbol -> Visibility? "symbol" SymbolName "=" Expr ";"
 SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
 SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
-StaticOverload -> "static" "overload" TargetPattern "(" ListPattern? ")"
-                   Predicate? "=" ExprList ";"
 
-Overload -> "overload" TargetPattern "(" ArgumentList? ")" ReturnList?
-            Predicate? CodeBody
+StaticOverloadDefinition -> "(" ListPattern? ")" Predicate? "=" ExprList ";"
+
+StaticOverload -> "static" "overload" TargetPattern StaticOverloadDefinition
+
+OverloadDefinition -> "(" ArgumentList? ")" ReturnList?
+                      Predicate? CodeBody
+
+Overload -> "overload" TargetPattern 
+
+StaticFunction -> Visibility? "static" SymbolName StaticOverloadDefinition
+
+Procedure -> Visibility? SymbolName OverloadDefinition
 
 Predicate -> "|" Expr
 
