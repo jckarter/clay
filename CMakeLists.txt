@@ -87,7 +87,7 @@ elseif(MSVC)
         "LLVMSelectionDAG" "LLVMX86Info" "LLVMAsmParser" "LLVMAsmPrinter"
         "LLVMCodeGen" "LLVMScalarOpts" "LLVMInstCombine" "LLVMTransformUtils"
         "LLVMipa" "LLVMAnalysis" "LLVMTarget" "LLVMCore" "LLVMMC"
-        "LLVMSupport" "LLVMSystem")
+        "LLVMSupport")
 endif(UNIX)
 
 if(UNIX)
