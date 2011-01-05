@@ -32,12 +32,13 @@ printNode(depth, node) {
     printNodeData(depth, *node);
 }
 
-printNodeData(depth, node:SpecializedExpr) {
-    println(LeafTypeName(node.ast));
-    printInputsOutputs(depth+1, node.inputs, node.outputs);
-}
-
 asPtr(x) = referencePtr(x).ptr;
+
+procedure printNodeData;
+
+overload printNodeData(depth, node:SpecializedCCodeBody) {
+    println();
+}
 
 overload printNodeData(depth, node:SpecializedCall) {
     println(LeafTypeName(node.ast),
@@ -71,10 +72,24 @@ overload printNodeData(depth, node:SpecializedPhi) {
     println();
     for (input in node.inputs) {
         printDepth(depth+1);
-        println("branch");
-        printVars(depth+2, "in  ", input);
+        print("in  ");
+        printVar(input);
     }
-    printVars(depth+1, "out ", node.output);
+    printDepth(depth+1);
+    print("out ");
+    printVar(node.output);
+}
+
+overload printNodeData(depth, node:SpecializedReturn) {
+    println(LeafTypeName(node.ast));
+
+    printDepth(depth+1);
+    print("in  ");
+    printVar(node.input);
+
+    printDepth(depth+1);
+    print("out ");
+    printVar(node.output);
 }
 
 printVar(variable) {
@@ -85,15 +100,19 @@ printVars(depth, prefix, vars) {
     for (v in vars) {
         printDepth(depth);
         print(prefix);
-        printVar(*v);
+        printVar(v);
     }
 }
 
 printInputsOutputs(depth, inputs:VariableList, mOutputs:Maybe[VariableList]) {
     printVars(depth, "in  ", inputs);
+    printOutputs(depth, mOutputs);
+}
+
+printOutputs(depth, mOutputs:Maybe[VariableList]) {
     maybe(mOutputs,
         outputs ref=> {
-            printVars(depth, "out ", inputs);
+            printVars(depth, "out ", outputs);
         },
         () ref=> { println("nonterminating"); }
     );
@@ -109,24 +128,14 @@ main(args) {
         withProgram(program, () ref=> {
             initializeClayHooks();
 
-            // hack to extract an Expr from the main() definition
-            var main = variantAs(publicLookup(getProgramMainModule(), "main"), Value);
-            var mainSymbol = variantAs(main, Symbol);
-            var mainExpr = mainSymbol.head.ast.expr;
+            var s = analyzeMain();
 
-            var env = newEnv(getProgramMainModule());
-            envAdd(env, ast.Identifier("a?"), RTVariable(RT_VARIABLE_REF, boolType(), true, "a?"));
-            envAdd(env, ast.Identifier("b?"), RTVariable(RT_VARIABLE_REF, boolType(), true, "b?"));
-            envAdd(env, ast.Identifier("c?"), RTVariable(RT_VARIABLE_REF, boolType(), true, "c?"));
-
-            envAdd(env, ast.Identifier("x"), RTVariable(RT_VARIABLE_REF, intType(), true, "x"));
-            envAdd(env, ast.Identifier("y"), RTVariable(RT_VARIABLE_REF, intType(), true, "y"));
-            envAdd(env, ast.Identifier("z"), RTVariable(RT_VARIABLE_REF, intType(), true, "z"));
-
-            var s = fakeSpecialization(env);
-            s.outputs = analyzeNode(s.body, env, mainExpr);
-
-            println("result = ", s.outputs);
+            println("results:");
+            printOutputs(1, s.results);
+            println("internal args:");
+            printVars(1, "in  ", s.internalArgs);
+            println("internal named returns:");
+            printVars(1, "out ", s.internalNamedResults);
             println("analysis nodes:");
             for (node in s.body) {
                 printNode(1, node);
