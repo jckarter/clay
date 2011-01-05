@@ -1,0 +1,21 @@
+
+
+//
+// type aliases for 64-bit platforms
+//
+
+alias PtrInt = Int64;
+alias UPtrInt = UInt64;
+
+alias CLong = Int32;
+alias CULong = UInt32;
+
+
+
+//
+// limits
+//
+
+alias PTRINT_MIN = INT64_MIN;
+alias PTRINT_MAX = INT64_MAX;
+alias UPTRINT_MAX = UINT64_MAX;
