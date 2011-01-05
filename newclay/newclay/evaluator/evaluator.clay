@@ -383,7 +383,7 @@ overload envEntryToValueList(x:RTVariable) {
     return ValueList();
 }
 overload envEntryToValueList(x:RTListVariable) {
-    return ValueList(mapped(rtTypeToValue, x.types));
+    return ValueList(mapped(v => rtTypeToValue(v.type), x.vars));
 }
 overload envEntryToValueList(x:RTLabel) {
     genericError("cannot reference label at compile time");

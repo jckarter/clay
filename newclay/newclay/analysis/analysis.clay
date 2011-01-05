@@ -6,77 +6,15 @@ import newclay.evaluator.*;
 
 
 //
-// specialization types
-//
-
-alias VariableList = Vector[RTVariable];
-
-record Specialization = referenceType(
-    matchedOverload: Overload,
-    callable: Value,
-    args: RTResultList,
-    env: Env,
-    body: Vector[SpecializedNode],
-    inputs: VariableList,
-    outputs: Maybe[VariableList],
-);
-
-variant SpecializedNode = SpecializedExpr
-                        | SpecializedValueList
-                        | SpecializedCall
-                        | SpecializedIf
-                        | SpecializedPhi;
-
-variant ASTNode = ast.ExprListItem;
-    // CodeBody or ExprListItem or ReturnExprListItem or Statement
-overload ASTNode(x:ast.Expr) = ASTNode(ast.ExprListItem(x));
-[E | VariantMember?(ast.Expr, E)]
-overload ASTNode(x:E) = ASTNode(ast.ExprListItem(ast.Expr(x)));
-
-record SpecializedValueList = referenceType(
-    ast: ASTNode,
-    valueList: ValueList,
-    outputs: VariableList,
-);
-
-record SpecializedExpr = referenceType(
-    ast: ASTNode,
-    inputs: VariableList,
-    outputs: Maybe[VariableList],
-);
-
-record SpecializedCall = referenceType(
-    ast: ASTNode,
-    inputs: VariableList,
-    outputs: Maybe[VariableList],
-    specialization: Specialization, // XXX how to evaluate recursive reference?
-);
-
-record SpecializedIf = referenceType(
-    ast: ASTNode,
-    condition: RTVariable,
-    thenBody: Vector[SpecializedNode],
-    elseBody: Vector[SpecializedNode],
-);
-
-record SpecializedPhi = referenceType(
-    inputs: Vector[VariableList],
-    output: VariableList,
-);
-
-
-//
 // analyzeMain
 //
 
-/*
 analyzeMain() {
     var mainValue = envEntryToValue(publicLookup(getProgramMainModule(), "main"));
     if (not runtimeCallable?(mainValue))
         genericError("main is not a procedure");
-    return analyzeCallable(mainValue, Maybe(RTResultList()));
+    return analyzeCallable(mainValue, VariableList());
 }
-*/
 
 
 //
@@ -87,29 +25,96 @@ analyzeNode(s:Vector[SpecializedNode], env:Env, body:ast.ExprCodeBody)
     = analyzeSubnode(s, newEnv(env), body.exprs);
 
 overload analyzeNode(s:Vector[SpecializedNode], env:Env, body:ast.CCodeBody) {
-    return addSpecializedExpr(s, body, VariableList());
+    return addSpecializedCCodeBody(s, body);
 }
+
+
+//
+// analyzeNode(ReturnExprList; ReturnExprListItem instances)
+//
+
+private analyzeExprListNode(s, env, exprList) {
+    var outputs = VariableList();
+    for (item in exprList) {
+        var itemOutputs = analyzeSubnode(s, env, item);
+        if (nothing?(itemOutputs))
+            return nothing(VariableList);
+        push(outputs, just(itemOutputs));
+    }
+    return Maybe(outputs);
+}
+
+overload analyzeNode(s:Vector[SpecializedNode], env:Env, exprList:ast.ReturnExprList)
+    Maybe[VariableList]
+    = analyzeExprListNode(s, env, exprList);
+
+overload analyzeNode(s:Vector[SpecializedNode], env:Env, rItem:ast.ReturnExprListItem)
+    Maybe[VariableList]
+{
+    var results = analyzeSubnode(s, env, rItem.item);
+    return maybe(results,
+        rs ref=> Maybe(map(r ref=> analyzeReturn(s, rItem, r), rs)), 
+    );
+}
+
+private analyzeReturn(
+    s:Vector[SpecializedNode],
+    rItem:ast.ReturnExprListItem,
+    source:RTVariable
+) = maybe(rItem.kind,
+    // reference return
+    returnKind ref=> {
+        if (source.value?)
+            genericError("cannot return temporary by reference");
+
+        switch (returnKind) {
+        case ast.RETURN_EXPR_CONST:
+            if (source.kind == RT_VARIABLE_RVALUE)
+                genericError("cannot return rvalue as const reference");
+            if (source.kind != RT_VARIABLE_CONST)
+                return singleAddSpecializedReturn(s, rItem, source,
+                    newReference(RT_VARIABLE_CONST, source.type)
+                );
+            break;
+        case ast.RETURN_EXPR_REF:
+            if (source.kind == RT_VARIABLE_RVALUE)
+                genericError("cannot return rvalue as ref reference");
+            if (source.kind == RT_VARIABLE_CONST)
+                genericError("cannot return const as ref reference");
+            break;
+        case ast.RETURN_EXPR_RVALUE:
+            if (source.kind == RT_VARIABLE_CONST)
+                genericError("cannot return const as rvalue reference");
+            if (source.kind != RT_VARIABLE_RVALUE)
+                return singleAddSpecializedReturn(s, rItem, source,
+                    newReference(RT_VARIABLE_RVALUE, source.type)
+                );
+            break;
+        case ast.RETURN_EXPR_FORWARD:
+            break;
+        default:
+            assert(false, "invalid reference kind");
+            return RTVariable();
+        }
+        return source;
+    },
+    // value return
+    () ref=> singleAddSpecializedReturn(s, rItem, source, newValue(source.type)),
+);
 
 
 //
 // analyzeNode(ExprList; ExprListItem instances)
 //
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, exprList:ast.ExprList) Maybe[VariableList] {
-    var outputs = VariableList();
+overload analyzeNode(s:Vector[SpecializedNode], env:Env, exprList:ast.ExprList) Maybe[VariableList]
+    = analyzeExprListNode(s, env, exprList);
 
-    for (item in exprList) {
-        var itemOutputs = analyzeSubnode(s, env, *item);
-        if (nothing?(itemOutputs))
-            return nothing(VariableList);
-        push(outputs, itemOutputs);
-    }
-    // XXX SpecializedExprListItem
-    return addSpecializedExpr(s, exprList, outputs);
-}
+overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.ExprListItem) Maybe[VariableList]
+    = analyzeNode(s, env, *expr);
 
 overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.Expr) Maybe[VariableList]
-    = analyzeSubnode(s, env, *expr);
+    = analyzeNode(s, env, *expr);
 
 overload analyzeNode(s:Vector[SpecializedNode], env:Env, unpack:ast.UnpackExpr)
     = analyzeMultiExprSubnode(s, env, unpack.expr);
@@ -157,15 +162,12 @@ overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.Call) {
     var callable = evaluateExpr(expr.expr, env);
 
     if (runtimeCallable?(callable)) {
-        return genericAnalysisError("not yet");
-        /*
         var maybeInputs = analyzeNode(s, env, expr.args);
         return maybe(maybeInputs,
             inputs ref=> addSpecializedCall(s, expr, inputs,
-                ...analyzeCallWithOneResult(callable, inputs)
-            )
+                analyzeCallableWithOneResult(callable, inputs)
+            ),
         );
-        */
     } else {
         var args = evaluateExprList(expr.args, env);
         var result = evaluateCallWithOneResult(callable, args);
@@ -186,7 +188,7 @@ overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.LambdaExpr)
     = genericAnalysisError("lambda expressions are not yet supported");
 
 overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.IfExpr)
-    = maybe(analyzeSubnode(s, env, expr.condition),
+    = maybe(analyzeBoolSubnode(s, env, expr.condition),
         condResult ref=> {
             var ifNode = SpecializedIf(ASTNode(expr), singleVariable(condResult),
                 Vector[SpecializedNode](),
@@ -250,13 +252,8 @@ unifyIfExprBranches(s, thenResult, elseResult)
 // analyzeNode(Block), analyzeStatement
 //
 
-/*XXX
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, body:ast.Block) {
-    var subenv = newEnv(env);
-    for (stmt in body.statements)
-        ...
-}
-*/
+overload analyzeNode(s:Vector[SpecializedNode], env:Env, body:ast.Block)
+    = genericAnalysisError("blocks are not yet supported");
 
 
 //
@@ -282,18 +279,69 @@ private analyzeShortCircuit(s, env, expr)
 // analyzeMultiExprSubnode
 //
 
-private analyzeMultiExprSubnode(s, env, expr)
-    = genericAnalysisError("not yet");
+private analyzeMultiExprSubnode(s, env, ast) Maybe[VariableList]
+    = withLocation(ast, () ref=> analyzeMultiExprNode(s, env, ast));
+
+private analyzeMultiExprNode(s, env, ast)
+    = genericAnalysisError("single value cannot be used in multiple value context");
+
+overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[VariableList]
+    = analyzeMultiExprSubnode(s, env, *expr);
+
+overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {
+    var envEntry = privateLookup(env, expr.name);
+    return match(envEntry,
+        RTListVariable, x ref=> Maybe(x.vars),
+        ValueList, x ref=> addSpecializedValueList(s, expr, x),
+        Value, x ref=>
+            genericAnalysisError("single value cannot be used in multiple value context"),
+        PatternCell, x ref=>
+            genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
+        ListPatternCell, x ref=>
+            genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
+        RTVariable, x ref=>
+            genericAnalysisError("single value cannot be used in multiple value context"),
+        RTLabel, x ref=>
+            genericAnalysisError("label cannot be used as a value"),
+    );
+}
+
+overload analyzeMultiExprNode(s:Vector[SpecializedNode], env:Env, expr:ast.PatternNameRef)
+    = addSpecializedValueList(s, expr, derefListPattern(env, expr.name));
+
+overload analyzeMultiExprNode(s:Vector[SpecializedNode], env:Env, expr:ast.Call) {
+    var callable = evaluateExpr(expr.expr, env);
+
+    if (runtimeCallable?(callable)) {
+        var maybeInputs = analyzeNode(s, env, expr.args);
+        return maybe(maybeInputs,
+            inputs ref=> addSpecializedCall(s, expr, inputs, analyzeCallable(callable, inputs)),
+        );
+    } else {
+        var args = evaluateExprList(expr.args, env);
+        var result = evaluateCall(callable, args);
+        return addSpecializedValueList(s, expr, result);
+    }
+}
 
 
 //
 // analyzeBoolSubnode
 //
 
-
-//
-// analyzeCall/WithOneResult
-//
+validBoolResult?(results:Maybe[VariableList])
+    = maybe(results,
+        r => singleVariable(r).type == boolType(),
+        () => true
+    );
+
+analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
+    var results = analyzeNode(s, env, ast);
+    if (not validBoolResult?(results))
+        // OK to assume results is not Nothing and has one element here
+        genericError(boolType(), " expected but ", just(results)[0].type, " received");
+    return results;
+});
 
 
 //
@@ -316,14 +364,13 @@ runtimeCallable?(x:Value) {
 singleVariable(s:VariableList) {
     if (size(s) != 1)
         genericError("multiple values cannot be used in single value context");
-    return match(s[0],
-        RTVariable,     v => v,
-        RTListVariable, l => {
-            genericError("multiple values cannot be used in single value context");
-            return RTVariable();
-        },
-    );
+    return s[0];
 }
+
+cloneVariable(v:RTVariable) = RTVariable(v.kind, v.type, v.value?);
+cloneVariables(vs:VariableList) = map(cloneVariable, vs);
+overload cloneVariables(mvs:Maybe[VariableList])
+    = maybe(mvs, vs => Maybe(cloneVariables(vs)));
 
 analyzeSubnode(s:Vector[SpecializedNode], env:Env, ast) Maybe[VariableList]
     = withLocation(ast, () ref=> analyzeNode(s, env, ast));
@@ -333,9 +380,12 @@ genericAnalysisError(forward ...err) {
     return nothing(VariableList);
 }
 
+newValue(type) = RTVariable(RT_VARIABLE_RVALUE, type, true);
+newReference(kind, type) = RTVariable(kind, type, false);
+
 valueToRTVariable(value:Value) = match(value,
-    BoolValue, x => RTVariable(RT_VARIABLE_RVALUE, boolType(), true),
-    IntValue, x => RTVariable(RT_VARIABLE_RVALUE, intType(), true),
+    BoolValue, x => newValue(boolType()),
+    IntValue, x => newValue(intType()),
     StringValue, x => {
         genericError("strings are not yet supported");
         return RTVariable();
@@ -344,10 +394,15 @@ valueToRTVariable(value:Value) = match(value,
         genericError("tuples are not yet supported");
         return RTVariable();
     },
-    MatchDefault, x => RTVariable(RT_VARIABLE_RVALUE, staticType(Value(x)), true),
+    MatchDefault, x => newValue(staticType(Value(x))),
 );
 
-valueToSingleVariableList(value) = VariableList(Variable(valueToRTVariable(value)));
+valueToSingleVariableList(value) = VariableList(valueToRTVariable(value));
+
+addSpecializedCCodeBody(s:Vector[SpecializedNode], body:ast.CCodeBody) {
+    push(s, SpecializedNode(SpecializedCCodeBody(body)));
+    return Maybe(VariableList());
+}
 
 addSpecializedValue(s:Vector[SpecializedNode], ast, value:Value) {
     var outputs = valueToSingleVariableList(value);
@@ -355,55 +410,388 @@ addSpecializedValue(s:Vector[SpecializedNode], ast, value:Value) {
     return Maybe(outputs);
 }
 
-addSpecializedExpr(
-    s:Vector[SpecializedNode],
-    ast,
-    inputs:VariableList,
-    outputs:Maybe[VariableList]
-) {
-    push(s, SpecializedNode(SpecializedExpr(ASTNode(ast), inputs, outputs)));
-    return outputs;
+addSpecializedValueList(s:Vector[SpecializedNode], ast, valueList:ValueList) {
+    var outputs = Vector(mapped(valueToRTVariable, valueList));
+    push(s, SpecializedNode(SpecializedValueList(ASTNode(ast), valueList, outputs)));
+    return Maybe(outputs);
 }
-
-overload addSpecializedExpr(s:Vector[SpecializedNode], ast, io:VariableList)
-    = addSpecializedExpr(s, ast, io, Maybe(io));
-
-overload addSpecializedExpr(
-    s:Vector[SpecializedNode],
-    ast,
-    inputs:VariableList,
-    outputs:VariableList
-) = addSpecializedExpr(s, ast, inputs, Maybe(outputs));
-
-overload addSpecializedExpr(
-    s:Vector[SpecializedNode],
-    ast,
-    inputs:VariableList,
-    outputs:Variable
-) = addSpecializedExpr(s, ast, inputs, VariableList(outputs));
-
-[V | VariantMember?(Variable, V)]
-overload addSpecializedExpr(
-    s:Vector[SpecializedNode],
-    ast,
-    inputs:VariableList,
-    outputs:V
-) = addSpecializedExpr(s, ast, inputs, VariableList(Variable(outputs)));
 
 addSpecializedCall(
     s:Vector[SpecializedNode],
     ast,
     inputs:VariableList,
-    outputs:Maybe[VariableList],
     specialization:Specialization
 ) {
+    var outputs = cloneVariables(specialization.results);
     push(s, SpecializedNode(SpecializedCall(ASTNode(ast), inputs, outputs, specialization)));
     return outputs;
 }
 
 addSpecializedPhi(s:Vector[SpecializedNode], inputValue1:VariableList, ...inputValues) {
-    var inputs = Vector[VariableList](inputValue1, ...inputValues);
-    var output = inputValue1; // XXX clone and unify types/reference kinds
+    var inputs = VariableList(...mapValues(singleVariable, inputValue1, ...inputValues));
+
+    var output = cloneVariable(inputs[0]);
+    // result of if expression is a value if an input was a value, or the inputs are of different
+    // reference kinds
+    if (output.value?)
+        output.kind = RT_VARIABLE_RVALUE;
+    else for (input in slicedFrom(inputs, 1)) {
+        if (input.value? or input.kind != output.kind) {
+            output.kind = RT_VARIABLE_RVALUE;
+            output.value? = true;
+            break;
+        }
+    }
+
     push(s, SpecializedNode(SpecializedPhi(inputs, output)));
-    return Maybe(output);
+    return Maybe(VariableList(output));
 }
+
+singleAddSpecializedReturn(
+    s:Vector[SpecializedNode],
+    ast:ast.ReturnExprListItem,
+    input:RTVariable,
+    output:RTVariable
+) {
+    push(s, SpecializedNode(SpecializedReturn(ast, input, output)));
+    return output;
+}
+
+addSpecializedReturn(
+    s:Vector[SpecializedNode],
+    ast:ast.ReturnExprListItem,
+    input:RTVariable,
+    output:RTVariable
+) = Maybe(VariableList(singleAddSpecializedReturn(s, ast, input, output)));
+
+
+//
+// matchOverload
+//
+
+[Arg, S | Sequence?(S)]
+arityMatches?(formalArgs:ast.VariadicList[Arg], args:S) {
+    if (nothing?(formalArgs.variadicItem))
+        return size(args) == size(formalArgs.items);
+    else
+        return size(args) >= size(formalArgs.items);
+}
+
+private referenceSpecifier(x:ast.Argument) ast.ArgumentKind {
+    return maybe(x.kind, y => y, () => ast.ARG_CONST);
+}
+
+private referenceKindMatches?(formalKind:ast.ArgumentKind, kind:RTVariableKind) {
+    if (formalKind == ast.ARG_REF)
+        return kind == RT_VARIABLE_REF;
+    if (formalKind == ast.ARG_RVALUE)
+        return kind == RT_VARIABLE_RVALUE;
+    return true;
+}
+
+private internalArgumentKind(formalKind:ast.ArgumentKind, kind:RTVariableKind)
+    RTVariableKind
+{
+    if (formalKind == ast.ARG_CONST)
+        return RT_VARIABLE_CONST;
+    if (formalKind == ast.ARG_RVALUE)
+        return RT_VARIABLE_REF;
+    if (formalKind == ast.ARG_REF)
+        return RT_VARIABLE_REF;
+    assert(formalKind == ast.ARG_FORWARD);
+    return kind;
+}
+
+private loweredArgumentKind(formalKind:ast.ArgumentKind, kind:RTVariableKind) {
+    if (formalKind == ast.ARG_CONST)
+        return RT_VARIABLE_CONST;
+    return kind;
+}
+
+private unifyArgumentType(formalArg:ast.Argument, arg:RTVariable, env) {
+    return maybe(formalArg.type,
+        type ref=> {
+            var typePattern = evaluatePattern(type, env);
+            return unify(typePattern, arg.type);
+        },
+        () => true,
+    );
+}
+
+private unifyVariadicArgumentType(formalArg, args, env) {
+    return maybe(formalArg.type,
+        type => {
+            var listCell = evaluateListPatternCell(type, env);
+            return unifyList(listCell, mapped(a => ref a.type, args));
+        },
+        () => true,
+    );
+}
+
+private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTVariable) {
+    var formalKind = referenceSpecifier(formalArg);
+    if (not referenceKindMatches?(formalKind, arg.kind))
+        return false;
+    if (not unifyArgumentType(formalArg, arg, s.env))
+        return false;
+    var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
+    push(s.args, RTVariable(loweredArgKind, arg.type, false, formalArg.name.str));
+    var argVarKind = internalArgumentKind(formalKind, arg.kind);
+    var v = RTVariable(argVarKind, arg.type, false, formalArg.name.str);
+    envAdd(s.env, formalArg.name, v);
+    push(s.internalArgs, v);
+    return true;
+}
+
+private unifyVariadicArgument(s:Specialization, formalArg:ast.Argument, args) {
+    var formalKind = referenceSpecifier(formalArg);
+    for (arg in args) {
+        if (not referenceKindMatches?(formalKind, arg.kind))
+            return false;
+        var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
+        push(s.args, RTVariable(loweredArgKind, arg.type));
+    }
+    if (not unifyVariadicArgumentType(formalArg, args, s.env))
+        return false;
+    var vars = map(
+        a ref=> RTVariable(internalArgumentKind(formalKind, a.kind), a.type),
+        args
+    );
+
+    var listVar = RTListVariable(vars);
+    envAdd(s.env, formalArg.name, listVar);
+
+    push(s.internalArgs, move(vars));
+    return true;
+}
+
+private unifyArguments(s:Specialization, formalArgs, args) {
+    for (formalArg, arg in zipped(formalArgs.items, args)) {
+        if (not unifyArgument(s, formalArg, arg))
+            return false;
+    }
+    var restArgs = slicedFrom(args, size(formalArgs.items));
+    return maybe(formalArgs.variadicItem,
+        formalArg ref=> unifyVariadicArgument(s, formalArg, restArgs),
+        () => true,
+    );
+}
+
+private bindNamedSingleReturn(s:Specialization, name, returnSpec) {
+    var type = evaluateExpr(returnSpec.type, s.env);
+    if (just?(returnSpec.kind))
+        type = pointerType(type);
+    var v = RTVariable(RT_VARIABLE_REF, type, false, name);
+    push(s.internalNamedResults, v);
+    envAdd(s.env, name, v);
+}
+
+private bindNamedMultiReturn(s:Specialization, name, returnSpec) {
+    var types = evaluateMultiExpr(returnSpec.type, s.env);
+    var ref? = just?(returnSpec.kind);
+
+    var vars = map(
+        type ref=> RTVariable(RT_VARIABLE_REF, if (ref?) pointerType(type) else type),
+        types
+    );
+
+    var v = RTListVariable(vars, name);
+    envAdd(s.env, name, v);
+
+    push(s.internalNamedResults, move(vars));
+}
+
+private bindNamedReturn(s:Specialization, name, returnSpec) {
+    switch (returnSpec.arityKind) {
+    case ast.RETURN_SINGLE:
+        bindNamedSingleReturn(s, name, returnSpec);
+        break;
+    case ast.RETURN_MULTI:
+        bindNamedMultiReturn(s, name, returnSpec);
+        break;
+    default:
+        assert(false);
+        break;
+    }
+}
+
+private bindNamedReturns(s:Specialization) {
+    ref ast = s.matchedOverload.ast;
+    maybe(ast.definition.returnedNames,
+        names ref=> {
+            for (name, returnSpec in zipped(names, ast.definition.returns))
+                bindNamedReturn(s, name, returnSpec);
+        },
+        () => {},
+    );
+}
+
+matchOverload(o:Overload, callable:Value, args:VariableList) Maybe[Specialization] {
+    ref formalArgs = o.ast.definition.args;
+    if (not arityMatches?(formalArgs, args))
+        return nothing(Specialization);
+    var pvars = topLevelItemPatternVars(o);
+    var s = Specialization(o, callable);
+    s.env = initializeMatch(o.module, pvars);
+    var callablePattern = evaluatePattern(o.ast.target, s.env);
+    if (not unify(callablePattern, callable))
+        return nothing(Specialization);
+    if (not unifyArguments(s, formalArgs, args))
+        return nothing(Specialization);
+    assert(size(s.args) == size(args));
+    bindNamedReturns(s);
+    verifyPatternVars(pvars, s.env);
+    if (not testPredicate(o.ast.definition.predicate, s.env))
+        return nothing(Specialization);
+    return Maybe(s);
+}
+
+
+//
+// analyzeCallable helpers
+//
+
+private findOverload(program, callable, args) {
+    for (x in reversed(program.allOverloads)) {
+        var result = matchOverload(x, callable, args);
+        if (not nothing?(result))
+            return just(move(result));
+    }
+    genericError("no matching operation");
+    return Specialization();
+}
+
+private returnSpecKind(returnSpec: ast.ReturnSpec) {
+    return ...maybe(returnSpec.kind,
+        k => {
+            switch (k) {
+            case ast.RETURN_CONST: return RT_VARIABLE_CONST, false;
+            case ast.RETURN_REF: return RT_VARIABLE_REF, false;
+            case ast.RETURN_RVALUE: return RT_VARIABLE_RVALUE, false;
+            default :
+                assert(false);
+                return RTVariableKind(), false;
+            }
+        },
+        () => ...(RT_VARIABLE_RVALUE, true),
+    );
+}
+
+private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
+    // XXX handle noreturn syntax here
+    var results = VariableList();
+    for (returnSpec in returns) {
+        if (returnSpec.arityKind == ast.RETURN_SINGLE) {
+            var kind, value? = ...returnSpecKind(returnSpec);
+            var type = evaluateExpr(returnSpec.type, env);
+            push(results, RTVariable(kind, type, value?));
+        }
+        else {
+            assert(returnSpec.arityKind == ast.RETURN_MULTI);
+            var kind, value? = ...returnSpecKind(returnSpec);
+            var types = evaluateMultiExpr(returnSpec.type, env);
+            for (type in types)
+                push(results, RTVariable(kind, type, value?));
+        }
+    }
+    return Maybe(move(results));
+}
+
+private analyzeBody(s:Specialization, env, o:Overload) {
+    var declaredReturns? = not empty?(o.ast.definition.returns);
+
+    if (declaredReturns?)
+        s.results = computeReturnSpec(o.ast.definition.returns, env);
+
+    var analyzedResults = match(o.ast.definition.body,
+        ast.ExprCodeBody, body ref=> analyzeNode(s.body, env, body.exprs),
+        ast.CCodeBody, body ref=> analyzeSubnode(s.body, env, body),
+        ast.Block, body ref=> analyzeSubnode(s.body, env, body),
+    );
+
+    if (declaredReturns?) {
+        // declared returns,  actually returns  => return types must match
+        // declared returns,  actually noreturn => ok
+        // declared noreturn, actually returns  => error
+        maybe(analyzedResults, ar ref=> {
+            if (analyzedResults != s.results)
+                genericError("procedure declared with different return types from what the body returns");
+        });
+    } else {
+        s.results = analyzedResults;
+    }
+}
+
+private entrySpecialization(entry:InvokeEntry) {
+    return maybe(entry.specialization,
+        x => x,
+        () => {
+            recursiveAnalysisError();
+            return Specialization();
+        },
+    );
+}
+
+private callableInvokeTable(callable:Value) {
+    return ref match(callable,
+        Symbol, x => ref x.invokeTable,
+        SymbolHead, x => ref x.invokeTable,
+        MatchDefault, x => {
+            genericError("invalid runtime callable: ", x);
+            return ref typeToLValue(InvokeTable);
+        },
+    );
+}
+
+
+//
+// analyzeCallable[WithOneResult]
+//
+
+analyzeCallableWithOneResult(callable:Value, args:VariableList) {
+    var spec = analyzeCallable(callable, args);
+    maybe(spec.results, results ref=> {
+        ensureArity(1, size(results));
+    });
+    return spec;
+}
+
+analyzeCallable(callable:Value, args:VariableList) Specialization
+    = withCallAnalysis(callable, args, () ref=> analyzeCallable2(callable, args));
+
+analyzeCallable2(callable:Value, args:VariableList) Specialization {
+    ref invokeTable = callableInvokeTable(callable);
+    var entryPtr = lookup(invokeTable, args);
+    if (not null?(entryPtr))
+        return entrySpecialization(entryPtr^);
+    invokeTable[args] = InvokeEntry(nothing(Specialization));
+    var specialization = findOverload(getProgram(), callable, args);
+    ref loweredArgs = specialization.args;
+    observe(#args, args);
+    observe(#loweredArgs, loweredArgs);
+    var lowered? = (loweredArgs != args);
+    if (lowered?) {
+        var entryPtr = lookup(invokeTable, loweredArgs);
+        if (not null?(entryPtr)) {
+            var s = entrySpecialization(entryPtr^);
+            invokeTable[args].specialization = Maybe(s);
+            return s;
+        }
+        invokeTable[loweredArgs] = InvokeEntry(nothing(Specialization));
+    }
+    try {
+        alias s = specialization;
+        analyzeBody(s, s.env, s.matchedOverload);
+    }
+    catch (e) {
+        remove(invokeTable, args);
+        if (lowered?)
+            remove(invokeTable, loweredArgs);
+        throw e;
+    }
+    invokeTable[args].specialization = Maybe(specialization);
+    if (lowered?)
+        invokeTable[loweredArgs].specialization = Maybe(specialization);
+    return specialization;
+}
+

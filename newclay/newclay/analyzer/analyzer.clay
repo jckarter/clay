@@ -5,6 +5,29 @@ import newclay.core.*;
 import newclay.evaluator.*;
 import newclay.hooks.*;
 
+variant NamedReturn = RTVariable
+                    | RTListVariable
+                    ;
+
+record Specialization = referenceType(
+    matchedOverload: Overload,
+    callable: Value,
+    args: RTResultList,
+    internalArgs: Vector[RTVariable],
+    internalVariadicArg: Maybe[RTListVariable],
+    bodyEnv: Env,
+    namedReturns: Vector[NamedReturn],
+    returns: Maybe[RTResultList],
+    lowLevelProc: Maybe[ir.Procedure],
+);
+
+overload Specialization(matchedOverload:Overload, callable:Value) {
+    var s = allocateRef(Specialization);
+    s.matchedOverload = matchedOverload;
+    s.callable = callable;
+    return move(s);
+}
+
 
 
 //

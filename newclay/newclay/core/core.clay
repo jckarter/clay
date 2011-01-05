@@ -832,11 +832,20 @@ overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool) =
 [S | String?(S)]
 overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool, forward name:S) =
     RTVariable(kind, type, value?, Maybe(String(name)));
+overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool, name:ast.Identifier) =
+    RTVariable(kind, type, value?, name.str);
 
 record RTListVariable = referenceType(
     vars: Vector[RTVariable],
     name: Maybe[String],
 );
+
+overload RTListVariable(vars:Vector[RTVariable]) = RTListVariable(vars, nothing(String));
+[S | String?(S)]
+overload RTListVariable(vars:Vector[RTVariable], forward name:S)
+    = RTListVariable(vars, Maybe(String(name)));
+overload RTListVariable(vars:Vector[RTVariable], name:ast.Identifier)
+    = RTListVariable(vars, name.str);
 
 record RTLabel = referenceType(
     ast: ast.LabelDef,
@@ -845,73 +854,83 @@ record RTLabel = referenceType(
 
 
 //
-// RTResult, RTResultList
+// Specialization, SpecializedNode, InvokeTable
 //
 
-enum RTResultKind {
-    RT_RESULT_CONST,
-    RT_RESULT_REF,
-    RT_RESULT_RVALUE,
-    RT_RESULT_VALUE,
-}
-
-record RTResult (
-    kind: RTResultKind,
-    type: Value,
-);
-
-alias RTResultList = Vector[RTResult];
-
-rtResultKindString(x:RTResultKind) {
-    switch (x) {
-    case RT_RESULT_CONST: return "const";
-    case RT_RESULT_REF: return "ref";
-    case RT_RESULT_RVALUE: return "rvalue";
-    case RT_RESULT_VALUE: return "value";
-    default : assert(false); return "";
-    }
-}
-
-overload printReprTo(stream, x:RTResult) {
-    printTo(stream, rtResultKindString(x.kind));
-    printTo(stream, " ");
-    printReprTo(stream, x.type);
-}
-
-
-
-//
-// Specialization, InvokeTable
-//
-
-variant NamedReturn = RTVariable
-                    | RTListVariable
-                    ;
+alias VariableList = Vector[RTVariable];
 
 record Specialization = referenceType(
     matchedOverload: Overload,
     callable: Value,
-    args: RTResultList,
-    internalArgs: Vector[RTVariable],
-    internalVariadicArg: Maybe[RTListVariable],
-    bodyEnv: Env,
-    namedReturns: Vector[NamedReturn],
-    returns: Maybe[RTResultList],
-    lowLevelProc: Maybe[ir.Procedure],
+    args: VariableList,
+    results: Maybe[VariableList], // old returns
+    env: Env, // old bodyEnv
+    body: Vector[SpecializedNode], // old lowLevelProc
+    internalArgs: VariableList, // old internalArgs, internalVariadicArg
+    internalNamedResults: VariableList, // old namedReturns
 );
 
-overload Specialization(matchedOverload:Overload, callable:Value) {
+overload Specialization(o:Overload, callable:Value) {
     var s = allocateRef(Specialization);
-    s.matchedOverload = matchedOverload;
+    s.matchedOverload = o;
     s.callable = callable;
     return move(s);
 }
+
+variant SpecializedNode = SpecializedCCodeBody
+                        | SpecializedValueList
+                        | SpecializedCall
+                        | SpecializedIf
+                        | SpecializedReturn
+                        | SpecializedPhi;
+
+variant ASTNode = ast.ExprListItem;
+    // CodeBody or ExprListItem or ReturnExprListItem or Statement
+overload ASTNode(x:ast.Expr) = ASTNode(ast.ExprListItem(x));
+[E | VariantMember?(ast.Expr, E)]
+overload ASTNode(x:E) = ASTNode(ast.ExprListItem(ast.Expr(x)));
+
+record SpecializedCCodeBody = referenceType(
+    ast: ast.CCodeBody,
+);
+
+record SpecializedValueList = referenceType(
+    ast: ASTNode,
+    valueList: ValueList,
+    outputs: VariableList,
+);
+
+record SpecializedCall = referenceType(
+    ast: ASTNode,
+    inputs: VariableList,
+    outputs: Maybe[VariableList],
+    specialization: Specialization, // XXX how to evaluate recursive reference?
+);
+
+record SpecializedIf = referenceType(
+    ast: ASTNode,
+    condition: RTVariable,
+    thenBody: Vector[SpecializedNode],
+    elseBody: Vector[SpecializedNode],
+);
+
+record SpecializedPhi = referenceType(
+    inputs: VariableList,
+    output: RTVariable,
+);
+
+record SpecializedReturn = referenceType(
+    ast: ast.ReturnExprListItem,
+    input: RTVariable,
+    output: RTVariable,
+);
+
 
 record InvokeEntry(
     specialization: Maybe[Specialization],
 );
 
-alias InvokeTable = HashMap[RTResultList, InvokeEntry];
+alias InvokeTable = HashMap[VariableList, InvokeEntry];
 
 
 
@@ -980,12 +999,12 @@ record StaticCallEntry (
 
 record CallAnalysisEntry (
     callable: Value,
-    args: RTResultList,
+    args: VariableList,
 );
 
 record CallCompilationEntry (
     callable: Value,
-    args: RTResultList,
+    args: VariableList,
 );
 
 overload printTo(stream, x:StaticCallEntry) {
@@ -1022,12 +1041,12 @@ withStaticCall(callable:Value, args:ValueList, f) {
     return forward ...withCompilationEntry(move(entry), f);
 }
 
-withCallAnalysis(callable:Value, args:RTResultList, f) {
+withCallAnalysis(callable:Value, args:VariableList, f) {
     var entry = CompilationEntry(CallAnalysisEntry(callable, args));
     return forward ...withCompilationEntry(move(entry), f);
 }
 
-withCallCompilation(callable:Value, args:RTResultList, f) {
+withCallCompilation(callable:Value, args:VariableList, f) {
     var entry = CompilationEntry(CallCompilationEntry(callable, args));
     return forward ...withCompilationEntry(move(entry), f);
 }
