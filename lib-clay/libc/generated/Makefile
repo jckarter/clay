@@ -1,7 +1,7 @@
 # Clay Makefile
 
 default :
-	@echo "use 'make macosx[32|64]' or 'make IOS_SDK_ROOT=<ROOT> ios' or 'make linux[32|64]' or 'make windows'."
+	@echo "use 'make macosx[32|64]' or 'make IOS_SDK_ROOT=<ROOT> ios' or 'make linux[32|64]' or 'make windows' or 'make windows64'."
 
 macosx : macosx64 macosx32
 
@@ -39,3 +39,8 @@ windows32 :
 	gcc -E generated_from_win32.h > temp32.h
 	clay-bindgen temp32.h > generated.windows.32.clay
 	rm -f temp32.h
+
+windows64 :
+	gcc -E generated_from_win32.h > temp64.h
+	clay-bindgen temp64.h > generated.windows.64.clay
+	rm -f temp64.h
