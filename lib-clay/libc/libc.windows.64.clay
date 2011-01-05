@@ -1,0 +1,7 @@
+public import libc.generated.*;
+
+var stdin = &__iob_func()[0];
+var stdout = &__iob_func()[1];
+var stderr = &__iob_func()[2];
+
+alias strtod = __strtod;
