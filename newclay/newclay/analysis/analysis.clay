@@ -64,11 +64,10 @@ private analyzeReturn(
 ) = maybe(rItem.kind,
     // reference return
     returnKind ref=> {
-        if (source.value?)
-            genericError("cannot return temporary by reference");
-
         switch (returnKind) {
         case ast.RETURN_EXPR_CONST:
+            if (source.value?)
+                genericError("cannot return temporary as const reference");
             if (source.kind == RT_VARIABLE_RVALUE)
                 genericError("cannot return rvalue as const reference");
             if (source.kind != RT_VARIABLE_CONST)
@@ -77,12 +76,16 @@ private analyzeReturn(
                 );
             break;
         case ast.RETURN_EXPR_REF:
+            if (source.value?)
+                genericError("cannot return temporary as ref reference");
             if (source.kind == RT_VARIABLE_RVALUE)
                 genericError("cannot return rvalue as ref reference");
             if (source.kind == RT_VARIABLE_CONST)
                 genericError("cannot return const as ref reference");
             break;
         case ast.RETURN_EXPR_RVALUE:
+            if (source.value?)
+                genericError("cannot return temporary as ref reference");
             if (source.kind == RT_VARIABLE_CONST)
                 genericError("cannot return const as rvalue reference");
             if (source.kind != RT_VARIABLE_RVALUE)
@@ -91,6 +94,8 @@ private analyzeReturn(
                 );
             break;
         case ast.RETURN_EXPR_FORWARD:
+            if (source.value?)
+                return singleAddSpecializedReturn(s, rItem, source, newValue(source.type));
             break;
         default:
             assert(false, "invalid reference kind");
@@ -698,28 +703,37 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
 }
 
 private analyzeBody(s:Specialization, env, o:Overload) {
-    var declaredReturns? = not empty?(o.ast.definition.returns);
+    withLocation(o.ast.definition, () ref=> {
+        var declaredReturns? = not empty?(o.ast.definition.returns);
+        var namedReturns? = just?(o.ast.definition.returnedNames);
 
-    if (declaredReturns?)
-        s.results = computeReturnSpec(o.ast.definition.returns, env);
+        if (declaredReturns?)
+            s.results = computeReturnSpec(o.ast.definition.returns, env);
 
-    var analyzedResults = match(o.ast.definition.body,
-        ast.ExprCodeBody, body ref=> analyzeNode(s.body, env, body.exprs),
-        ast.CCodeBody, body ref=> analyzeSubnode(s.body, env, body),
-        ast.Block, body ref=> analyzeSubnode(s.body, env, body),
-    );
+        var analyzedResults = match(o.ast.definition.body,
+            ast.ExprCodeBody, body ref=> analyzeNode(s.body, env, body.exprs),
+            ast.CCodeBody, body ref=> {
+                if (declaredReturns? and not namedReturns?)
+                    genericError("__c__ procedure must use named return values");
+                return analyzeSubnode(s.body, env, body);
+            },
+            ast.Block, body ref=> analyzeSubnode(s.body, env, body),
+        );
 
-    if (declaredReturns?) {
-        // declared returns,  actually returns  => return types must match
-        // declared returns,  actually noreturn => ok
-        // declared noreturn, actually returns  => error
-        maybe(analyzedResults, ar ref=> {
-            if (analyzedResults != s.results)
-                genericError("procedure declared with different return types from what the body returns");
-        });
-    } else {
-        s.results = analyzedResults;
-    }
+        if (declaredReturns?) {
+            // if returns are named, the body should be void
+            var expectedResults = if (namedReturns?) Maybe(VariableList()) else s.results;
+            // declared returns,  actually returns  => return types must match
+            // declared returns,  actually noreturn => ok
+            // declared noreturn, actually returns  => error
+            maybe(analyzedResults, ar ref=> {
+                if (analyzedResults != expectedResults)
+                    genericError("procedure declared with different return types from what the body returns");
+            });
+        } else {
+            s.results = analyzedResults;
+        }
+    });
 }
 
 private entrySpecialization(entry:InvokeEntry) {
