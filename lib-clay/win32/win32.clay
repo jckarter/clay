@@ -38,7 +38,7 @@ errorMessage(errorCode) {
         CULong(0),
         LPSTR(&buf[0]),
         CULong(size(buf)),
-        null(Int));
+        null(va_list));
     if (result == 0)
         return String("Unknown error");
     return String(&buf[0]);
