@@ -1,0 +1,47 @@
+
+public import win32.generated.*;
+public import win32.constants.*;
+public import win32.errno.*;
+
+
+
+//
+// GetFileSizeEx, SetFilePointerEx
+//
+// redefined because LARGE_INTEGER definition is wrong
+//
+
+external GetFileSizeEx(
+    handle : HANDLE,
+    lpFileSize : Pointer[Int64]) BOOL;
+
+external SetFilePointerEx(
+    handle : HANDLE,
+    offset : Int64,
+    newPosition : Pointer[Int64],
+    moveMethod : DWORD) BOOL;
+
+
+
+//
+// errorMessage
+//
+
+alias FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
+
+errorMessage(errorCode) {
+    var buf = Array[Byte, 1024]();
+    var result = FormatMessageA(
+        FORMAT_MESSAGE_FROM_SYSTEM,
+        RawPointer(0),
+        CULong(errorCode),
+        CULong(0),
+        LPSTR(&buf[0]),
+        CULong(size(buf)),
+        null(va_list));
+    if (result == 0)
+        return String("Unknown error");
+    return String(&buf[0]);
+}
+
+overload errorMessage() = errorMessage(GetLastError());
