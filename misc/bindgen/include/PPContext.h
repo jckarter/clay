@@ -48,11 +48,13 @@ struct PPContext {
             diags.setSuppressSystemWarnings(true);
 
             HeaderSearchOptions hsOpts;
+#ifndef WIN32
             llvm::sys::Path resourceDir(LLVM_LIBDIR);
             resourceDir.appendComponent("clang");
             resourceDir.appendComponent(CLANG_VERSION_STRING);
 
             hsOpts.ResourceDir = resourceDir.c_str();
+#endif
             hsOpts.UseBuiltinIncludes = 1;
             hsOpts.UseStandardIncludes = 1;
 

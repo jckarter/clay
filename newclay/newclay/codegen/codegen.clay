@@ -417,20 +417,26 @@ codegenInitialize(x:Expr, out:Vector[Local]) {
 
 private localAsLHS(x:Local) {
     if (returnValueLocal?(x))
-        return printString("*", localName(x));
-    return localName(x);
-}
-
-private localAsLHSPtr(x:Local) {
-    if (returnValueLocal?(x))
-        return localName(x);
-    return printString("&", localName(x));
+        return true, printString("*", localName(x));
+    if (x.value?)
+        return true, localName(x);
+    return false, localName(x);
 }
 
 codegenInitializeAtomic(x:AtomicExpr, out:Local) {
-    beginLine(
-        localAsLHS(out), " = ", codegenAtomicAsValue(x), ";"
-    );
+    var lhsValue?, lhs = ...localAsLHS(out);
+    var rhs =
+        if (lhsValue?)
+            codegenAtomicAsValue(x)
+        else
+            codegenAtomicAsPtr(x);
+    beginLine(lhs, " = ", rhs, ";");
+}
+
+private localAsCallResult(x:Local) {
+    if (returnValueLocal?(x))
+        return localName(x);
+    return printString("&", localName(x));
 }
 
 codegenCall(x:CallExpr, out:Vector[Local]) {
@@ -439,7 +445,7 @@ codegenCall(x:CallExpr, out:Vector[Local]) {
     for (y in x.args)
         newItem(argsBuf, codegenAtomicAsPtr(y));
     for (y in out)
-        newItem(argsBuf, localAsLHSPtr(y));
+        newItem(argsBuf, localAsCallResult(y));
     beginLine(codegenProcedure(x.callable), "(", args, ");");
 }
 
