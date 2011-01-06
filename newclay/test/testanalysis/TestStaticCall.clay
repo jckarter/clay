@@ -1,5 +1,0 @@
-import __primitives__.*;
-
-static StaticSucc('x) = StaticAdd('x, 1);
-
-symbol main = StaticSucc(5);

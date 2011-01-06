@@ -118,6 +118,35 @@ printOutputs(depth, mOutputs:Maybe[VariableList]) {
     );
 }
 
+printSpecialization(depth, s) {
+    printDepth(depth);
+    println("specialization ", asPtr(s));
+    printDepth(depth);
+    println("results:");
+    printOutputs(depth+1, s.results);
+    printDepth(depth);
+    println("internal args:");
+    printVars(depth+1, "in  ", s.internalArgs);
+    printDepth(depth);
+    println("internal named returns:");
+    printVars(depth+1, "out ", s.internalNamedResults);
+    printDepth(depth);
+    println("analysis nodes:");
+    for (node in s.body) {
+        printNode(depth+1, node);
+    }
+}
+
+printInvokeTable(name, table) {
+    for (args, invoke in items(table)) {
+        println(name, "(", args, "):");
+        maybe(invoke.specialization,
+            s => { printSpecialization(1, s); },
+            () => { println("  <no specialization!>"); },
+        );
+    }
+}
+
 main(args) {
     if (size(args) != 2) {
         println("usage: ", args[0], " <file>");
@@ -130,16 +159,16 @@ main(args) {
 
             var s = analyzeMain();
 
-            println("results:");
-            printOutputs(1, s.results);
-            println("internal args:");
-            printVars(1, "in  ", s.internalArgs);
-            println("internal named returns:");
-            printVars(1, "out ", s.internalNamedResults);
-            println("analysis nodes:");
-            for (node in s.body) {
-                printNode(1, node);
+            for (symbolHead in program.allSymbolHeads) {
+                printInvokeTable(symbolHead.ast.name.name.str, symbolHead.invokeTable);
+                for (args, symbol in items(symbolHead.symbols)) {
+                    printInvokeTable(
+                        printString(symbolHead.ast.name.name.str, args),
+                        symbol.invokeTable
+                    );
+                }
             }
+
         });
     }
     catch (e:ClayError) {

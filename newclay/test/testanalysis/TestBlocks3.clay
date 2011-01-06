@@ -1,6 +1,6 @@
 
 symbol refReturn = NewProcedure();
-overload refReturn() ref Int __c__ """
+overload refReturn() ref x:Int __c__ """
     assert(0 && "fake");
 """;
 
