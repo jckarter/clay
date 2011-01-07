@@ -179,9 +179,16 @@ printSpecialization(depth, s) {
     printVars(depth+1, "out ", s.internalNamedResults);
     printDepth(depth);
     println("analysis nodes:");
-    for (node in s.body) {
-        printNode(depth+1, node);
-    }
+    maybe(s.body,
+        body ref=> {
+            for (node in body)
+                printNode(depth+1, node);
+        },
+        () ref=> {
+            printDepth(depth+1);
+            println("<body not analyzed>");
+        }
+    );
 }
 
 printInvokeTable(name, table) {
