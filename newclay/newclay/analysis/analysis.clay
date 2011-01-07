@@ -375,10 +375,24 @@ overload analyzeStatement(s, pc, bc, lc, block:ast.Block) Bool {
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.LabelDef) = false;
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.BindingStatement) {
-    genericError("variable bindings not yet supported");
-    return false;
-}
+private analyzeInitialize(s, env:Env, stmt, toExprList:ast.ExprList, fromExprList:ast.ExprList)
+    // XXX parallel assignment? x, y <-- y, x
+    = maybe(analyzeNode(s, env, toExprList),
+        toValues ref=> maybe(analyzeNode(s, env, fromExprList),
+            fromValues ref=> {
+                if (size(toValues) != size(fromValues))
+                    genericError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
+                for (toValue, fromValue in zipped(toValues, fromValues)) {
+                    if (toValue.kind != RT_VARIABLE_REF)
+                        genericError("values on left side of <-- must be lvalues");
+                    addSpecializedInitialize(s, stmt, fromValue, toValue);
+                }
+                return false;
+            },
+            () ref=> true,
+        ),
+        () ref=> true,
+    );
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
     switch (stmt.kind) {
@@ -386,8 +400,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
         genericError("assignment with = not yet supported");
         return false;
     case ast.ASSIGNMENT_INITIALIZE:
-        genericError("initialization with <-- not yet supported");
-        return false;
+        return analyzeInitialize(s, bc.env, stmt, stmt.to, stmt.from);
     default:
         assert(false);
         return false;
@@ -395,7 +408,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.BindingStatement) {
-    var subenv, returns? = ...analyzeBindings(s, bc.env, stmt.kind, *stmt.bindings);
+    var subenv, returns? = ...analyzeBindings(s, bc.env, stmt, stmt.kind, *stmt.bindings);
     bc.env = subenv;
     return returns?;
 }
@@ -555,29 +568,36 @@ private procedure analyzeBindings;
 overload analyzeBindings(
     s:Vector[SpecializedNode],
     env_:Env,
+    stmt:ast.BindingStatement,
     kind:ast.BindingKind,
     bindingList:ast.SingleBindingList
 ) {
     var env = env_;
     for (binding in bindingList) {
         env = newEnv(env);
-        if (maybeAnalyzeBinding(s, env, kind, binding))
+        if (maybeAnalyzeBinding(s, env, stmt, kind, binding))
             return env, true;
     }
     return env, false;
 }
 
-private maybeAnalyzeBinding(s, env, kind, binding)
+private maybeAnalyzeBinding(s, env, stmt, kind, binding)
     = maybe(analyzeSubnode(s, env, binding.value),
         valueResult ref=> {
-            analyzeBinding(s, env, kind, binding.name, singleVariable(valueResult));
+            analyzeBinding(s, env, stmt, kind, binding.name, singleVariable(valueResult));
             return false;
         },
         () ref=> true,
     );
 
-private analyzeBinding(s, env, kind:ast.BindingKind, bindingName:ast.BindingName, value:RTVariable)
-{
+private analyzeBinding(
+    s,
+    env,
+    stmt:ast.BindingStatement,
+    kind:ast.BindingKind,
+    bindingName:ast.BindingName,
+    value:RTVariable
+) {
     maybe(bindingName.type, typePattern ref=> {
         var bindingType = evaluatePattern(typePattern, env);
         if (not unify(bindingType, value.type))
@@ -590,7 +610,7 @@ private analyzeBinding(s, env, kind:ast.BindingKind, bindingName:ast.BindingName
     var variableKind = bindingVariableKind(kind, value.kind);
     var variableValue? = kind == ast.BINDING_VAR or value.value?;
     var result = RTVariable(variableKind, value.type, variableValue?, bindingName.name.str);
-    addSpecializedBind(s, bindingName, value, result);
+    addSpecializedBind(s, stmt, value, result);
     envAdd(env, bindingName.name, result);
 }
 
@@ -623,6 +643,7 @@ private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTVariableKin
 overload analyzeBindings(
     s:Vector[SpecializedNode],
     env_:Env,
+    stmt:ast.BindingStatement,
     kind:ast.BindingKind,
     bindingList:ast.MultipleBindingList
 ) {
@@ -633,7 +654,7 @@ overload analyzeBindings(
                 if (not arityMatches?(bindingList.names, values))
                     genericError("incorrect number of values for variable binding");
                 for (binding, value in zipped(bindingList.names.items, values))
-                    analyzeBinding(s, env, kind, binding, value);
+                    analyzeBinding(s, env, stmt, kind, binding, value);
                 // XXX variadic item
                 if (just?(bindingList.names.variadicItem))
                     genericError("variadic variable binding not yet supported");
@@ -827,6 +848,16 @@ addSpecializedBind(
     input:RTVariable,
     output:RTVariable
 ) = Maybe(VariableList(singleAddSpecializedBind(s, ast, input, output)));
+
+addSpecializedInitialize(
+    s:Vector[SpecializedNode],
+    ast,
+    input:RTVariable,
+    output:RTVariable
+) {
+    push(s, SpecializedNode(SpecializedInitialize(ASTNode(ast), input, output)));
+    return Maybe(VariableList(output));
+}
 
 
 //
