@@ -1,5 +1,7 @@
-alias GLCodePointer[Args, Return] = StdCallCodePointer[Args, Return];
-alias GLAPI = stdcall;
+import win32.(WINAPI, WinApiCodePointer);
+
+alias GLCodePointer[Args, Return] = WinApiCodePointer[Args, Return];
+alias GLAPI = WINAPI;
 
 external (stdcall) wglGetProcAddress(name: LPCSTR) GLCodePointer[(), ()];
 

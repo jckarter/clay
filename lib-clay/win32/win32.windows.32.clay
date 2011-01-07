@@ -3,6 +3,8 @@ public import win32.generated.*;
 public import win32.constants.*;
 public import win32.errno.*;
 
+alias WINAPI = stdcall;
+alias WinApiCodePointer = StdCallCodePointer;
 
 
 //
