@@ -84,6 +84,18 @@ overload printNodeData(depth, node:SpecializedWhile) {
         printNode(depth+2, bodyNode);
 }
 
+overload printNodeData(depth, node:SpecializedInitialize) {
+    println(LeafTypeName(node.ast));
+
+    printDepth(depth+1);
+    print("in  ");
+    printVar(node.input);
+
+    printDepth(depth+1);
+    print("out ");
+    printVar(node.output);
+}
+
 overload printNodeData(depth, node:SpecializedBind) {
     println(LeafTypeName(node.ast));
 
