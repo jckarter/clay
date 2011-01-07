@@ -490,24 +490,31 @@ private trueCondition?(expr)
     // XXX check for true condition
     = false;
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement)
-    = maybe(analyzeBoolSubnode(s, bc.env, stmt.condition),
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
+    var whileNode = SpecializedWhile(
+        stmt,
+        Vector[SpecializedNode](),
+        RTVariable(),
+        Vector[SpecializedNode](),
+    );
+    return maybe(analyzeBoolSubnode(whileNode.conditionBody, bc.env, stmt.condition),
         condResult ref=> {
+            whileNode.condition = singleVariable(condResult);
+
             var subbc = BlockContext(newEnv(bc.env));
             var sublc = LoopContext(true, trueCondition?(stmt.condition));
-            var whileNode = SpecializedWhile(
-                stmt,
-                singleVariable(condResult), 
-                Vector[SpecializedNode](),
-            );
 
             var bodyReturns? = analyzeStatement(whileNode.body, pc, subbc, sublc, stmt.body);
 
             push(s, SpecializedNode(whileNode));
             return observe(#infinite?, sublc.infiniteLoop?) and observe(#returns?, bodyReturns?);
         },
-        () ref=> true,
+        () ref=> {
+            push(s, whileNode.conditionBody);
+            return true;
+        }
     );
+}
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.SwitchStatement) {
     genericError("switch statements are not yet supported");

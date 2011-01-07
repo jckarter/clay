@@ -939,6 +939,7 @@ record SpecializedIf = referenceType(
 
 record SpecializedWhile = referenceType(
     ast: ast.WhileStatement,
+    conditionBody: Vector[SpecializedNode],
     condition: RTVariable,
     body: Vector[SpecializedNode],
 );
