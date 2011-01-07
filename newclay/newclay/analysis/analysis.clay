@@ -394,6 +394,12 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
     }
 }
 
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.BindingStatement) {
+    var subenv, returns? = ...analyzeBindings(s, bc.env, stmt.kind, *stmt.bindings);
+    bc.env = subenv;
+    return returns?;
+}
+
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.GotoStatement) {
     match(privateLookup(bc.env, stmt.label),
         RTLabel, x ref=> {},
@@ -537,6 +543,110 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.TryStatement) {
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) Bool {
     return nothing?(analyzeMultiExprSubnode(s, bc.env, stmt.expr));
+}
+
+
+//
+// analyzeBindings
+//
+
+private procedure analyzeBindings;
+
+overload analyzeBindings(
+    s:Vector[SpecializedNode],
+    env_:Env,
+    kind:ast.BindingKind,
+    bindingList:ast.SingleBindingList
+) {
+    var env = env_;
+    for (binding in bindingList) {
+        env = newEnv(env);
+        if (maybeAnalyzeBinding(s, env, kind, binding))
+            return env, true;
+    }
+    return env, false;
+}
+
+private maybeAnalyzeBinding(s, env, kind, binding)
+    = maybe(analyzeSubnode(s, env, binding.value),
+        valueResult ref=> {
+            analyzeBinding(s, env, kind, binding.name, singleVariable(valueResult));
+            return false;
+        },
+        () ref=> true,
+    );
+
+private analyzeBinding(s, env, kind:ast.BindingKind, bindingName:ast.BindingName, value:RTVariable)
+{
+    maybe(bindingName.type, typePattern ref=> {
+        var bindingType = evaluatePattern(typePattern, env);
+        if (not unify(bindingType, value.type))
+            genericError(
+                "variable declared with type ", bindingType,
+                " but bound to value of type ", value.type,
+            );
+    });
+
+    var variableKind = bindingVariableKind(kind, value.kind);
+    var variableValue? = kind == ast.BINDING_VAR or value.value?;
+    var result = RTVariable(variableKind, value.type, variableValue?, bindingName.name.str);
+    addSpecializedBind(s, bindingName, value, result);
+    envAdd(env, bindingName.name, result);
+}
+
+private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTVariableKind) {
+    switch (bindingKind) {
+    case ast.BINDING_VAR:
+        return RT_VARIABLE_REF;
+    case ast.BINDING_REF:
+        if (valueKind != RT_VARIABLE_REF)
+            genericError("ref variable must be bound to an lvalue");
+        return RT_VARIABLE_REF;
+    case ast.BINDING_RVALUE:
+        if (valueKind != RT_VARIABLE_RVALUE)
+            genericError("rvalue variable must be bound to an rvalue");
+        return RT_VARIABLE_RVALUE;
+    case ast.BINDING_CONST:
+        return RT_VARIABLE_CONST;
+    case ast.BINDING_FORWARD:
+        return valueKind;
+    case ast.BINDING_ALIAS:
+        // XXX
+        genericError("alias variables are not yet supported");
+        return RTVariableKind();
+    default:
+        assert(false, "invalid binding kind");
+        return RTVariableKind();
+    }
+}
+
+overload analyzeBindings(
+    s:Vector[SpecializedNode],
+    env_:Env,
+    kind:ast.BindingKind,
+    bindingList:ast.MultipleBindingList
+) {
+    var env = newEnv(env_);
+    return ...maybe(bindingList.values,
+        valueExprList ref=> ...maybe(analyzeNode(s, env, valueExprList),
+            values ref=> {
+                if (not arityMatches?(bindingList.names, values))
+                    genericError("incorrect number of values for variable binding");
+                for (binding, value in zipped(bindingList.names.items, values))
+                    analyzeBinding(s, env, kind, binding, value);
+                // XXX variadic item
+                if (just?(bindingList.names.variadicItem))
+                    genericError("variadic variable binding not yet supported");
+                return env, false;
+            },
+            () ref=> ...(env, true),
+        ),
+        () ref=> {
+            // XXX
+            genericError("variable binding without initialization is not yet supported");
+            return env, false;
+        },
+    );
 }
 
 
