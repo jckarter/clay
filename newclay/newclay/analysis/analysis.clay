@@ -186,11 +186,39 @@ overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.Call) {
 overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.Indexing)
     = addSpecializedValue(s, expr, evaluateExpr(expr, env));
 
+private analyzeShortCircuit(s, env, expr, LeftBody, RightBody)
+    // XXX recursion
+    = maybe(analyzeBoolSubnode(s, env, expr.expr1),
+        results1 ref=> {
+            var result1 = singleVariable(results1);
+            var output = RTVariable(RT_VARIABLE_RVALUE, boolType(), true);
+
+            var ifNode = SpecializedIf(ASTNode(expr), result1,
+                Vector[SpecializedNode](),
+                Vector[SpecializedNode]()
+            );
+
+            ref leftBody = fieldRef(ifNode, LeftBody);
+            ref rightBody = fieldRef(ifNode, RightBody);
+            maybe(analyzeBoolSubnode(rightBody, env, expr.expr2),
+                results2 ref=> {
+                    addSpecializedBind(rightBody, ASTNode(expr),
+                        singleVariable(results2),
+                        output
+                    );
+                },
+            );
+            addSpecializedBind(leftBody, ASTNode(expr), result1, output);
+            push(s, SpecializedNode(ifNode));
+            return Maybe(VariableList(output));
+        },
+    );
+
 overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.AndExpr)
-    = analyzeShortCircuit(s, env, expr);
+    = analyzeShortCircuit(s, env, expr, #elseBody, #thenBody);
 
 overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.OrExpr)
-    = analyzeShortCircuit(s, env, expr);
+    = analyzeShortCircuit(s, env, expr, #thenBody, #elseBody);
 
 overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.LambdaExpr)
     = genericAnalysisError("lambda expressions are not yet supported");
@@ -253,25 +281,6 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult)
         ),
         () ref=> elseResult,
     );
-
-
-//
-// analyzeShortCircuit
-//
-
-private analyzeShortCircuit(s, env, expr)
-    = genericAnalysisError("not yet");
-/*
-    = maybe(analyzeBoolSubnode(s, env, expr.expr1),
-        result1 ref=> addSpecializedExpr(s, expr,
-            maybe(analyzeBoolSubnode(s, env, expr.expr2),
-                result2 ref=> VariableList(result1, result2),
-                ()      ref=> VariableList(result1),
-            ),
-            RTVariable(RT_VARIABLE_RVALUE, boolType(), true)
-        ),
-    );
-*/
 
 
 //
