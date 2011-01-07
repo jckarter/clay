@@ -870,11 +870,12 @@ record Specialization = referenceType(
     matchedOverload: Overload,
     callable: Value,
     args: VariableList,
-    results: Maybe[VariableList], // old returns
-    env: Env, // old bodyEnv
-    body: Vector[SpecializedNode], // old lowLevelProc
-    internalArgs: VariableList, // old internalArgs, internalVariadicArg
-    internalNamedResults: VariableList, // old namedReturns
+    results: Maybe[VariableList],
+    env: Env,
+    body: Maybe[Vector[SpecializedNode]],
+    internalArgs: VariableList,
+    internalResults: Maybe[VariableList],
+    internalNamedResults: VariableList,
 );
 
 overload Specialization(o:Overload, callable:Value) {

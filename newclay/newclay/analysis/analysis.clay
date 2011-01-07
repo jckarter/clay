@@ -1092,45 +1092,58 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
     return Maybe(move(results));
 }
 
-private analyzeBody(s:Specialization, env, o:Overload) {
-    withLocation(o.ast.definition, () ref=> {
-        var declaredReturns? = not empty?(o.ast.definition.returns);
-        var namedReturns? = just?(o.ast.definition.returnedNames);
+private analyzeCallableReturns(s:Specialization, env, o:Overload) {
+    if (not empty?(o.ast.definition.returns))
+        s.results = computeReturnSpec(o.ast.definition.returns, env);
+    else {
+        analyzeCallableBody(s, env, o);
+    }
+}
 
-        if (declaredReturns?)
-            s.results = computeReturnSpec(o.ast.definition.returns, env);
+private analyzeCallableBody(s:Specialization, env, o:Overload) {
+    s.body = Maybe(Vector[SpecializedNode]());
+    try {
+        withLocation(o.ast.definition, () ref=> {
+            var declaredReturns? = not empty?(o.ast.definition.returns);
+            var namedReturns? = just?(o.ast.definition.returnedNames);
 
-        var analyzedResults = match(o.ast.definition.body,
-            ast.ExprCodeBody, body ref=> analyzeNode(s.body, env, body.exprs),
-            ast.CCodeBody, body ref=> {
-                if (declaredReturns? and not namedReturns?)
-                    genericError("__c__ procedure must use named return values");
-                return analyzeSubnode(s.body, env, body);
-            },
-            ast.Block, body ref=> analyzeSubnode(s.body, env, body),
-        );
+            var analyzedResults = match(o.ast.definition.body,
+                ast.ExprCodeBody, body ref=> analyzeNode(just(s.body), env, body.exprs),
+                ast.CCodeBody, body ref=> {
+                    if (declaredReturns? and not namedReturns?)
+                        genericError("__c__ procedure must use named return values");
+                    return analyzeSubnode(just(s.body), env, body);
+                },
+                ast.Block, body ref=> analyzeSubnode(just(s.body), env, body),
+            );
 
-        if (declaredReturns?) {
-            // if returns are named, the body should be void
-            var expectedResults = if (namedReturns?) Maybe(VariableList()) else s.results;
-            // declared returns,  actually returns  => return types must match
-            // declared returns,  actually noreturn => ok
-            // declared noreturn, actually returns  => error
-            maybe(analyzedResults, ar ref=> {
-                maybe(expectedResults,
-                    er ref=> {
-                        if (not equalResults?(ar, er))
-                            genericError("procedure declared with different return types from what the body returns");
-                    },
-                    () ref=> {
-                        genericError("procedure declared as noreturn but the body returns");
-                    },
-                );
-            });
-        } else {
+            if (declaredReturns?) {
+                // if returns are named, the body should be void
+                var expectedResults = if (namedReturns?)
+                    Maybe(VariableList())
+                else
+                    s.results;
+                // declared returns,  actually returns  => return types must match
+                // declared returns,  actually noreturn => ok
+                // declared noreturn, actually returns  => error
+                maybe(analyzedResults, ar ref=> {
+                    maybe(expectedResults,
+                        er ref=> {
+                            if (not equalResults?(ar, er))
+                                genericError("procedure declared with different return types from what the body returns");
+                        },
+                        () ref=> {
+                            genericError("procedure declared as noreturn but the body returns");
+                        },
+                    );
+                });
+            }
             s.results = analyzedResults;
-        }
-    });
+        });
+    } catch (ex) {
+        s.body = nothing(Vector[SpecializedNode]);
+        throw ex; 
+    }
 }
 
 private entrySpecialization(entry:InvokeEntry) {
@@ -1170,6 +1183,7 @@ analyzeCallableWithOneResult(callable:Value, args:VariableList) {
 analyzeCallable(callable:Value, args:VariableList) Specialization
     = withCallAnalysis(callable, args, () ref=> analyzeCallable2(callable, args));
 
+// HERE handle recursion with declared returns
 analyzeCallable2(callable:Value, args:VariableList) Specialization {
     ref invokeTable = callableInvokeTable(callable);
     var entryPtr = lookup(invokeTable, ArgumentList(args));
@@ -1190,7 +1204,7 @@ analyzeCallable2(callable:Value, args:VariableList) Specialization {
     }
     try {
         alias s = specialization;
-        analyzeBody(s, s.env, s.matchedOverload);
+        analyzeCallableReturns(s, s.env, s.matchedOverload);
     }
     catch (e) {
         remove(invokeTable, ArgumentList(args));
