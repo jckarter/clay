@@ -905,7 +905,8 @@ variant SpecializedNode = SpecializedCCodeBody
 
 variant ASTNode = ast.ExprListItem
                 | ast.ReturnExprListItem
-                | ast.Statement;
+                | ast.Statement
+                | ast.BindingName;
     // CodeBody or ExprListItem or ReturnExprListItem or Statement
 overload ASTNode(x:ast.Expr) = ASTNode(ast.ExprListItem(x));
 [E | VariantMember?(ast.Expr, E)]
