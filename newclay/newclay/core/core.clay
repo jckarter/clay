@@ -825,6 +825,20 @@ record RTVariable = referenceType(
     name: Maybe[String],
 );
 
+equalArguments?(vs:VariableList, ws:VariableList) {
+    for (v, w in zipped(vs, ws))
+        if (v.kind != w.kind or v.type != w.type)
+            return false;
+    return true;
+}
+
+equalResults?(vs:VariableList, ws:VariableList) {
+    for (v, w in zipped(vs, ws))
+        if (v.kind != w.kind or v.type != w.type or v.value? != w.value?)
+            return false;
+    return true;
+}
+
 overload RTVariable(kind:RTVariableKind, type:Value) =
     RTVariable(kind, type, false, nothing(String));
 overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool) =
@@ -881,14 +895,23 @@ variant SpecializedNode = SpecializedCCodeBody
                         | SpecializedValueList
                         | SpecializedCall
                         | SpecializedIf
+                        | SpecializedWhile
+                        | SpecializedBind
+                        | SpecializedPhi
+                        | SpecializedBreak
+                        | SpecializedContinue
                         | SpecializedReturn
-                        | SpecializedPhi;
+                        | SpecializedThrow;
 
-variant ASTNode = ast.ExprListItem;
+variant ASTNode = ast.ExprListItem
+                | ast.ReturnExprListItem
+                | ast.Statement;
     // CodeBody or ExprListItem or ReturnExprListItem or Statement
 overload ASTNode(x:ast.Expr) = ASTNode(ast.ExprListItem(x));
 [E | VariantMember?(ast.Expr, E)]
 overload ASTNode(x:E) = ASTNode(ast.ExprListItem(ast.Expr(x)));
+[S | VariantMember?(ast.Statement, S)]
+overload ASTNode(x:S) = ASTNode(ast.Statement(x));
 
 record SpecializedCCodeBody = referenceType(
     ast: ast.CCodeBody,
@@ -914,15 +937,38 @@ record SpecializedIf = referenceType(
     elseBody: Vector[SpecializedNode],
 );
 
+record SpecializedWhile = referenceType(
+    ast: ast.WhileStatement,
+    condition: RTVariable,
+    body: Vector[SpecializedNode],
+);
+
 record SpecializedPhi = referenceType(
-    inputs: VariableList,
+    branches: Vector[VariableList],
+    outputs: VariableList,
+);
+
+record SpecializedBind = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
     output: RTVariable,
 );
 
+record SpecializedBreak = referenceType(
+    ast: ast.BreakStatement,
+);
+
+record SpecializedContinue = referenceType(
+    ast: ast.ContinueStatement,
+);
+
 record SpecializedReturn = referenceType(
-    ast: ast.ReturnExprListItem,
-    input: RTVariable,
-    output: RTVariable,
+    ast: ast.ReturnStatement,
+);
+
+record SpecializedThrow = referenceType(
+    ast: ast.ThrowStatement,
+    exception: RTVariable,
 );
 
 
@@ -930,8 +976,15 @@ record InvokeEntry(
     specialization: Maybe[Specialization],
 );
 
-alias InvokeTable = HashMap[VariableList, InvokeEntry];
+alias InvokeTable = HashMap[ArgumentList, InvokeEntry];
 
+record ArgumentList(args:VariableList);
+
+overload equals?(a:ArgumentList, b:ArgumentList)
+    = equalArguments?(a.args, b.args);
+
+overload hash(a:ArgumentList)
+    = hash(map(arg => (arg.kind, arg.type), a.args));
 
 
 //

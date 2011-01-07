@@ -1,0 +1,7 @@
+
+symbol foo = NewProcedure();
+overload foo() __c__ """abort();""";
+
+symbol main = NewProcedure();
+overload main() { foo(); }
+

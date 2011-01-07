@@ -12,9 +12,10 @@ symbol constReturn = NewProcedure();
 overload constReturn() const x:Int __c__ """abort();""";
 
 symbol main = NewProcedure();
-overload main() =
-    valueReturn(), forward valueReturn(),
-    refReturn(), ref refReturn(), forward refReturn(),
-    rvalueReturn(), rvalue rvalueReturn(), forward rvalueReturn(),
-    constReturn(), const constReturn(), forward constReturn();
+overload main() {
+    return valueReturn(), forward valueReturn(),
+        refReturn(), ref refReturn(), forward refReturn(),
+        rvalueReturn(), rvalue rvalueReturn(), forward rvalueReturn(),
+        constReturn(), const constReturn(), forward constReturn();
+}
 

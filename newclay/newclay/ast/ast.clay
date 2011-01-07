@@ -92,6 +92,7 @@ overload unmarshalFrom(context:UnmarshalContext, begin_:Pointer[Byte], end:Point
 procedure getLocation;
 overload getLocation(x) = x.location;
 overload getLocation(x:Expr) = getLocation(*x);
+overload getLocation(x:Statement) = getLocation(*x);
 overload getLocation(x:ExprListItem) = getLocation(*x);
 overload getLocation(x:Pattern) = getLocation(*x);
 
