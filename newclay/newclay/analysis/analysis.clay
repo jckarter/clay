@@ -507,7 +507,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
             var bodyReturns? = analyzeStatement(whileNode.body, pc, subbc, sublc, stmt.body);
 
             push(s, SpecializedNode(whileNode));
-            return observe(#infinite?, sublc.infiniteLoop?) and observe(#returns?, bodyReturns?);
+            return sublc.infiniteLoop? and bodyReturns?;
         },
         () ref=> {
             push(s, whileNode.conditionBody);
@@ -539,7 +539,7 @@ private analyzeMultiExprSubnode(s, env, ast) Maybe[VariableList]
     = withLocation(ast, () ref=> analyzeMultiExprNode(s, env, ast));
 
 private analyzeMultiExprNode(s, env, ast)
-    = genericAnalysisError(observe(#general, "single value cannot be used in multiple value context"));
+    = genericAnalysisError("single value cannot be used in multiple value context");
 
 overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[VariableList]
     = analyzeMultiExprSubnode(s, env, *expr);
@@ -550,13 +550,13 @@ overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {
         RTListVariable, x ref=> Maybe(x.vars),
         ValueList, x ref=> addSpecializedValueList(s, expr, x),
         Value, x ref=>
-            genericAnalysisError(observe(#value, "single value cannot be used in multiple value context")),
+            genericAnalysisError("single value cannot be used in multiple value context"),
         PatternCell, x ref=>
             genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
         ListPatternCell, x ref=>
             genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
         RTVariable, x ref=>
-            genericAnalysisError(observe(#variable, "single value cannot be used in multiple value context")),
+            genericAnalysisError("single value cannot be used in multiple value context"),
         RTLabel, x ref=>
             genericAnalysisError("label cannot be used as a value"),
     );
@@ -566,7 +566,6 @@ overload analyzeMultiExprNode(s:Vector[SpecializedNode], env:Env, expr:ast.Patte
     = addSpecializedValueList(s, expr, derefListPattern(env, expr.name));
 
 overload analyzeMultiExprNode(s:Vector[SpecializedNode], env:Env, expr:ast.Call) {
-    observe(#multiCall);
     var callable = evaluateExpr(expr.expr, env);
 
     if (runtimeCallable?(callable)) {
