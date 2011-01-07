@@ -74,7 +74,12 @@ overload printNodeData(depth, node:SpecializedWhile) {
     print("condition ");
     printVar(node.condition);
     printDepth(depth+1);
-    print("body:");
+    println("condition body:");
+    for (condNode in node.conditionBody)
+        printNode(depth+2, condNode);
+
+    printDepth(depth+1);
+    println("body:");
     for (bodyNode in node.body)
         printNode(depth+2, bodyNode);
 }
