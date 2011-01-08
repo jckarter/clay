@@ -2321,7 +2321,7 @@ void codegenCallCode(InvokeEntryPtr entry,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out)
 {
-    if (inlineEnabled() && entry->isInline) {
+    if (inlineEnabled() && entry->isInline && !entry->code->isLLVMBody()) {
         codegenCallInline(entry, args, ctx, out);
         return;
     }
@@ -2580,11 +2580,15 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
         argCount ++;
     }
 
+    out << ") ";
+    if (entry->isInline)
+        out << "alwaysinline ";
+
     string body;
     if (!interpolateLLVMCode(entry->code->llvmBody, body, entry->env))
         error("failed to apply template");
 
-    out << string(") ") << body;
+    out << body;
 
     llvm::SMDiagnostic err;
     llvm::MemoryBuffer *buf = 
