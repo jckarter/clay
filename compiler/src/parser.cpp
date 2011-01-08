@@ -2177,6 +2177,8 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
+    bool isInline;
+    if (!optInline(isInline)) return false;
     IdentifierPtr z;
     if (!identifier(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;
@@ -2190,7 +2192,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(z);
     target->location = location;
-    OverloadPtr v = new Overload(target, y, false, false);
+    OverloadPtr v = new Overload(target, y, false, isInline);
     v->location = location;
     x.push_back(v.ptr());
 
