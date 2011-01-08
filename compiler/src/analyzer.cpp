@@ -1734,7 +1734,7 @@ void analyzeCodeBody(InvokeEntryPtr entry)
     CodePtr code = entry->code;
     assert(code->hasBody());
 
-    if (code->isInlineLLVM() || code->hasReturnSpecs()) {
+    if (code->isLLVMBody() || code->hasReturnSpecs()) {
         evaluateReturnSpecs(code->returnSpecs, code->varReturnSpec,
                             entry->env,
                             entry->returnIsRef, entry->returnTypes);

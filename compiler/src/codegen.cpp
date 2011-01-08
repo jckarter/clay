@@ -2663,7 +2663,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     string callableName = getCodeName(entry);
 
-    if (entry->code->isInlineLLVM()) {
+    if (entry->code->isLLVMBody()) {
         codegenLLVMBody(entry, callableName);
         return;
     }
@@ -2872,7 +2872,7 @@ void codegenCallInline(InvokeEntryPtr entry,
                        MultiCValuePtr out)
 {
     assert(entry->isInline);
-    if (entry->code->isInlineLLVM())
+    if (entry->code->isLLVMBody())
         error(entry->code, "llvm procedures cannot be inlined");
 
     ensureArity(args, entry->argsKey.size());

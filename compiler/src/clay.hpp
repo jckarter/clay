@@ -1336,11 +1336,11 @@ struct Code : public ANode {
         return (returnSpecs.size() > 0) || varReturnSpec.ptr();
     }
 
-    bool isInlineLLVM() {
+    bool isLLVMBody() {
         return llvmBody.ptr() != NULL;
     }
     bool hasBody() {
-        return body.ptr() || isInlineLLVM();
+        return body.ptr() || isLLVMBody();
     }
 };
 
