@@ -48,7 +48,7 @@ struct PPContext {
             diags.setSuppressSystemWarnings(true);
 
             HeaderSearchOptions hsOpts;
-#ifndef WIN32
+#if (defined(LLVM_LIBDIR) && defined (CLANG_VERSION_STRING))
             llvm::sys::Path resourceDir(LLVM_LIBDIR);
             resourceDir.appendComponent("clang");
             resourceDir.appendComponent(CLANG_VERSION_STRING);
