@@ -1,5 +1,5 @@
 symbol refReturn = NewProcedure();
-overload refReturn() ref Int __c__ """abort();""";
+overload refReturn() ref r:Int __c__ """abort();""";
 
 symbol id = NewProcedure();
 overload id(ref x) = ref x;

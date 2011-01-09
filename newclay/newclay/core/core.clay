@@ -4,7 +4,6 @@ import newclay.common.*;
 import newclay.lexer.(SourceTokens);
 import newclay.ast as ast;
 import newclay.diagnostics.*;
-import newclay.ir as ir;
 
 
 
@@ -30,16 +29,12 @@ record Program = referenceType(
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
     hooks: ClayHooks,
-    lowLevelProgram: ir.Program,
-    lowLevelNames: NameAllocator,
 );
 
 overload Program() = Program(
     ModuleMap(), Vector[String](),
     Vector[SymbolHead](), Vector[Attribute](), Vector[StaticOverload](), Vector[Overload](),
     ClayHooks(),
-    ir.newProgram(),
-    NameAllocator(),
 );
 
 var mainModuleName = ModuleName("__main__");
@@ -134,7 +129,6 @@ record Symbol = referenceType(
     procedure?: TriState[Bool],
     evalTable: EvalTable,
     invokeTable: InvokeTable,
-    lowLevelType: Maybe[ir.Type],
 );
 
 overload Symbol(head:SymbolHead, params:ValueList, env:EnvParent)
@@ -144,7 +138,6 @@ overload Symbol(head:SymbolHead, params:ValueList, env:EnvParent)
         TriState[Bool](), TriState[Bool](),
         EvalTable(),
         InvokeTable(),
-        nothing(ir.Type),
     );
 [E | VariantMember?(EnvParent, E)]
 overload Symbol(head:SymbolHead, params:ValueList, env:E)
@@ -877,11 +870,12 @@ record Specialization = referenceType(
     matchedOverload: Overload,
     callable: Value,
     args: VariableList,
-    results: Maybe[VariableList], // old returns
-    env: Env, // old bodyEnv
-    body: Vector[SpecializedNode], // old lowLevelProc
-    internalArgs: VariableList, // old internalArgs, internalVariadicArg
-    internalNamedResults: VariableList, // old namedReturns
+    results: Maybe[VariableList],
+    env: Env,
+    body: Maybe[Vector[SpecializedNode]],
+    internalArgs: VariableList,
+    internalResults: Maybe[VariableList],
+    internalNamedResults: VariableList,
 );
 
 overload Specialization(o:Overload, callable:Value) {
@@ -896,6 +890,7 @@ variant SpecializedNode = SpecializedCCodeBody
                         | SpecializedCall
                         | SpecializedIf
                         | SpecializedWhile
+                        | SpecializedInitialize
                         | SpecializedBind
                         | SpecializedPhi
                         | SpecializedBreak
@@ -905,8 +900,7 @@ variant SpecializedNode = SpecializedCCodeBody
 
 variant ASTNode = ast.ExprListItem
                 | ast.ReturnExprListItem
-                | ast.Statement
-                | ast.BindingName;
+                | ast.Statement;
     // CodeBody or ExprListItem or ReturnExprListItem or Statement
 overload ASTNode(x:ast.Expr) = ASTNode(ast.ExprListItem(x));
 [E | VariantMember?(ast.Expr, E)]
@@ -951,6 +945,12 @@ record SpecializedPhi = referenceType(
 );
 
 record SpecializedBind = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
+    output: RTVariable,
+);
+
+record SpecializedInitialize = referenceType(
     ast: ASTNode,
     input: RTVariable,
     output: RTVariable,

@@ -375,10 +375,24 @@ overload analyzeStatement(s, pc, bc, lc, block:ast.Block) Bool {
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.LabelDef) = false;
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.BindingStatement) {
-    genericError("variable bindings not yet supported");
-    return false;
-}
+private analyzeInitialize(s, env:Env, stmt, toExprList:ast.ExprList, fromExprList:ast.ExprList)
+    // XXX parallel assignment? x, y <-- y, x
+    = maybe(analyzeNode(s, env, toExprList),
+        toValues ref=> maybe(analyzeNode(s, env, fromExprList),
+            fromValues ref=> {
+                if (size(toValues) != size(fromValues))
+                    genericError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
+                for (toValue, fromValue in zipped(toValues, fromValues)) {
+                    if (toValue.kind != RT_VARIABLE_REF)
+                        genericError("values on left side of <-- must be lvalues");
+                    addSpecializedInitialize(s, stmt, fromValue, toValue);
+                }
+                return false;
+            },
+            () ref=> true,
+        ),
+        () ref=> true,
+    );
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
     switch (stmt.kind) {
@@ -386,8 +400,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
         genericError("assignment with = not yet supported");
         return false;
     case ast.ASSIGNMENT_INITIALIZE:
-        genericError("initialization with <-- not yet supported");
-        return false;
+        return analyzeInitialize(s, bc.env, stmt, stmt.to, stmt.from);
     default:
         assert(false);
         return false;
@@ -395,7 +408,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.BindingStatement) {
-    var subenv, returns? = ...analyzeBindings(s, bc.env, stmt.kind, *stmt.bindings);
+    var subenv, returns? = ...analyzeBindings(s, bc.env, stmt, stmt.kind, *stmt.bindings);
     bc.env = subenv;
     return returns?;
 }
@@ -555,29 +568,36 @@ private procedure analyzeBindings;
 overload analyzeBindings(
     s:Vector[SpecializedNode],
     env_:Env,
+    stmt:ast.BindingStatement,
     kind:ast.BindingKind,
     bindingList:ast.SingleBindingList
 ) {
     var env = env_;
     for (binding in bindingList) {
         env = newEnv(env);
-        if (maybeAnalyzeBinding(s, env, kind, binding))
+        if (maybeAnalyzeBinding(s, env, stmt, kind, binding))
             return env, true;
     }
     return env, false;
 }
 
-private maybeAnalyzeBinding(s, env, kind, binding)
+private maybeAnalyzeBinding(s, env, stmt, kind, binding)
     = maybe(analyzeSubnode(s, env, binding.value),
         valueResult ref=> {
-            analyzeBinding(s, env, kind, binding.name, singleVariable(valueResult));
+            analyzeBinding(s, env, stmt, kind, binding.name, singleVariable(valueResult));
             return false;
         },
         () ref=> true,
     );
 
-private analyzeBinding(s, env, kind:ast.BindingKind, bindingName:ast.BindingName, value:RTVariable)
-{
+private analyzeBinding(
+    s,
+    env,
+    stmt:ast.BindingStatement,
+    kind:ast.BindingKind,
+    bindingName:ast.BindingName,
+    value:RTVariable
+) {
     maybe(bindingName.type, typePattern ref=> {
         var bindingType = evaluatePattern(typePattern, env);
         if (not unify(bindingType, value.type))
@@ -590,7 +610,7 @@ private analyzeBinding(s, env, kind:ast.BindingKind, bindingName:ast.BindingName
     var variableKind = bindingVariableKind(kind, value.kind);
     var variableValue? = kind == ast.BINDING_VAR or value.value?;
     var result = RTVariable(variableKind, value.type, variableValue?, bindingName.name.str);
-    addSpecializedBind(s, bindingName, value, result);
+    addSpecializedBind(s, stmt, value, result);
     envAdd(env, bindingName.name, result);
 }
 
@@ -623,6 +643,7 @@ private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTVariableKin
 overload analyzeBindings(
     s:Vector[SpecializedNode],
     env_:Env,
+    stmt:ast.BindingStatement,
     kind:ast.BindingKind,
     bindingList:ast.MultipleBindingList
 ) {
@@ -633,7 +654,7 @@ overload analyzeBindings(
                 if (not arityMatches?(bindingList.names, values))
                     genericError("incorrect number of values for variable binding");
                 for (binding, value in zipped(bindingList.names.items, values))
-                    analyzeBinding(s, env, kind, binding, value);
+                    analyzeBinding(s, env, stmt, kind, binding, value);
                 // XXX variadic item
                 if (just?(bindingList.names.variadicItem))
                     genericError("variadic variable binding not yet supported");
@@ -827,6 +848,16 @@ addSpecializedBind(
     input:RTVariable,
     output:RTVariable
 ) = Maybe(VariableList(singleAddSpecializedBind(s, ast, input, output)));
+
+addSpecializedInitialize(
+    s:Vector[SpecializedNode],
+    ast,
+    input:RTVariable,
+    output:RTVariable
+) {
+    push(s, SpecializedNode(SpecializedInitialize(ASTNode(ast), input, output)));
+    return Maybe(VariableList(output));
+}
 
 
 //
@@ -1061,45 +1092,58 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
     return Maybe(move(results));
 }
 
-private analyzeBody(s:Specialization, env, o:Overload) {
-    withLocation(o.ast.definition, () ref=> {
-        var declaredReturns? = not empty?(o.ast.definition.returns);
-        var namedReturns? = just?(o.ast.definition.returnedNames);
+private analyzeCallableReturns(s:Specialization, env, o:Overload) {
+    if (not empty?(o.ast.definition.returns))
+        s.results = computeReturnSpec(o.ast.definition.returns, env);
+    else {
+        analyzeCallableBody(s, env, o);
+    }
+}
 
-        if (declaredReturns?)
-            s.results = computeReturnSpec(o.ast.definition.returns, env);
+private analyzeCallableBody(s:Specialization, env, o:Overload) {
+    s.body = Maybe(Vector[SpecializedNode]());
+    try {
+        withLocation(o.ast.definition, () ref=> {
+            var declaredReturns? = not empty?(o.ast.definition.returns);
+            var namedReturns? = just?(o.ast.definition.returnedNames);
 
-        var analyzedResults = match(o.ast.definition.body,
-            ast.ExprCodeBody, body ref=> analyzeNode(s.body, env, body.exprs),
-            ast.CCodeBody, body ref=> {
-                if (declaredReturns? and not namedReturns?)
-                    genericError("__c__ procedure must use named return values");
-                return analyzeSubnode(s.body, env, body);
-            },
-            ast.Block, body ref=> analyzeSubnode(s.body, env, body),
-        );
+            var analyzedResults = match(o.ast.definition.body,
+                ast.ExprCodeBody, body ref=> analyzeNode(just(s.body), env, body.exprs),
+                ast.CCodeBody, body ref=> {
+                    if (declaredReturns? and not namedReturns?)
+                        genericError("__c__ procedure must use named return values");
+                    return analyzeSubnode(just(s.body), env, body);
+                },
+                ast.Block, body ref=> analyzeSubnode(just(s.body), env, body),
+            );
 
-        if (declaredReturns?) {
-            // if returns are named, the body should be void
-            var expectedResults = if (namedReturns?) Maybe(VariableList()) else s.results;
-            // declared returns,  actually returns  => return types must match
-            // declared returns,  actually noreturn => ok
-            // declared noreturn, actually returns  => error
-            maybe(analyzedResults, ar ref=> {
-                maybe(expectedResults,
-                    er ref=> {
-                        if (not equalResults?(ar, er))
-                            genericError("procedure declared with different return types from what the body returns");
-                    },
-                    () ref=> {
-                        genericError("procedure declared as noreturn but the body returns");
-                    },
-                );
-            });
-        } else {
+            if (declaredReturns?) {
+                // if returns are named, the body should be void
+                var expectedResults = if (namedReturns?)
+                    Maybe(VariableList())
+                else
+                    s.results;
+                // declared returns,  actually returns  => return types must match
+                // declared returns,  actually noreturn => ok
+                // declared noreturn, actually returns  => error
+                maybe(analyzedResults, ar ref=> {
+                    maybe(expectedResults,
+                        er ref=> {
+                            if (not equalResults?(ar, er))
+                                genericError("procedure declared with different return types from what the body returns");
+                        },
+                        () ref=> {
+                            genericError("procedure declared as noreturn but the body returns");
+                        },
+                    );
+                });
+            }
             s.results = analyzedResults;
-        }
-    });
+        });
+    } catch (ex) {
+        s.body = nothing(Vector[SpecializedNode]);
+        throw ex; 
+    }
 }
 
 private entrySpecialization(entry:InvokeEntry) {
@@ -1139,6 +1183,7 @@ analyzeCallableWithOneResult(callable:Value, args:VariableList) {
 analyzeCallable(callable:Value, args:VariableList) Specialization
     = withCallAnalysis(callable, args, () ref=> analyzeCallable2(callable, args));
 
+// HERE handle recursion with declared returns
 analyzeCallable2(callable:Value, args:VariableList) Specialization {
     ref invokeTable = callableInvokeTable(callable);
     var entryPtr = lookup(invokeTable, ArgumentList(args));
@@ -1159,7 +1204,7 @@ analyzeCallable2(callable:Value, args:VariableList) Specialization {
     }
     try {
         alias s = specialization;
-        analyzeBody(s, s.env, s.matchedOverload);
+        analyzeCallableReturns(s, s.env, s.matchedOverload);
     }
     catch (e) {
         remove(invokeTable, ArgumentList(args));
