@@ -44,13 +44,6 @@ inline overload resetUnsafe(p: UniquePointer[T]) {
     p.ptr = null(T);
 }
 
-[T]
-inline overload assign(dest: UniquePointer[T], rvalue src: UniquePointer[T]) {
-    destroy(dest);
-    dest.ptr = src.ptr;
-    src.ptr = null(T);
-}
-
 // no assign from lvalue
 [T]
 inline overload assign(dest: UniquePointer[T], lvalue src: UniquePointer[T]);
