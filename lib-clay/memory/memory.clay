@@ -259,6 +259,15 @@ moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U])
     });
 }
 
+[T | not PODType?(T)]
+overload moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+    var srcPtr = srcFirst;
+    eachLocation(destFirst, destLast, x => {
+        swap(x, srcPtr^);
+        srcPtr += 1;
+    });
+}
+
 [T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
 assignNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U])
 {
