@@ -1,0 +1,3 @@
+List(1, UniqueValue[List](List(2, UniqueValue[List](List(3, UniqueValue[List]())))))
+List(1, UniqueValue[List](List(2, UniqueValue[List](List(3, UniqueValue[List]())))))
+List(4, UniqueValue[List](List(5, UniqueValue[List]())))

@@ -1,0 +1,28 @@
+import test.memory.*;
+
+record List(canary: Canary, value:Int, next:UniqueValue[List]);
+
+callbyname overload List(value:Int) = List(Canary(), value, nullUniqueValue(List));
+callbyname overload List(value:Int, next:List) = List(Canary(), value, UniqueValue(next));
+
+overload printReprTo(stream, l:List) {
+    printTo(stream, List);
+    printReprValuesTo(stream, l.value, l.next);
+}
+
+main() {
+    {
+        var x = List(1, List(2, List(3)));
+        var y = x;
+
+        println(x);
+        println(y);
+
+        var z = List(4, List(5));
+        x = z;
+
+        println(x);
+    }
+
+    checkCanariesDestroyed();
+}
