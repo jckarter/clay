@@ -390,6 +390,18 @@ overload printReprTo(stream, x:HashMap[K,V]) {
     printTo(stream, ')');
 }
 
+
+//
+// printReprTo - UniqueValue
+//
+
+[T]
+overload printReprTo(stream, v:UniqueValue[T]) {
+    if (null?(v))
+        printTo(stream, UniqueValue[T], "()");
+    else
+        printTo(stream, UniqueValue[T], "(", v^, ")");
+}
 
 
 //
