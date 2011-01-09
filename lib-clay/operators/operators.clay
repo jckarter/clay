@@ -262,6 +262,14 @@ inline swap(a, b) {
     b <-- move(temp);
 }
 
+[T | BitwiseMovedType?(T)]
+inline overload swap(a:T, b:T) {
+    alias TBytes = Array[UInt8, Int(TypeSize(T))];
+    var temp = bitwiseCast(a, TBytes);
+    bitwiseCast(a, TBytes) <-- bitwiseCast(b, TBytes);
+    bitwiseCast(b, TBytes) <-- temp;
+}
+
 
 //
 // min, max
