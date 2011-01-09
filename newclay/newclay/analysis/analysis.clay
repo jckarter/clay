@@ -4,6 +4,14 @@ import newclay.core.*;
 import newclay.hooks.*;
 import newclay.evaluator.*;
 
+record SpecializationContext (
+    body: Pointer[Vector[SpecializedNode]],
+    complete?: Pointer[Bool],
+);
+
+subContext(s:SpecializationContext, subBody:Vector[SpecializedNode])
+    = SpecializationContext(&subBody, s.complete?);
+
 
 //
 // analyzeMain
@@ -21,10 +29,10 @@ analyzeMain() {
 // analyzeNode
 //
 
-analyzeNode(s:Vector[SpecializedNode], env:Env, body:ast.ExprCodeBody)
+analyzeNode(s:SpecializationContext, env:Env, body:ast.ExprCodeBody)
     = analyzeSubnode(s, newEnv(env), body.exprs);
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, body:ast.CCodeBody) {
+overload analyzeNode(s:SpecializationContext, env:Env, body:ast.CCodeBody) {
     return addSpecializedCCodeBody(s, body);
 }
 
@@ -44,11 +52,11 @@ private analyzeExprListNode(s, env, exprList) {
     return Maybe(outputs);
 }
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, exprList:ast.ReturnExprList)
+overload analyzeNode(s:SpecializationContext, env:Env, exprList:ast.ReturnExprList)
     Maybe[VariableList]
     = analyzeExprListNode(s, env, exprList);
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, rItem:ast.ReturnExprListItem)
+overload analyzeNode(s:SpecializationContext, env:Env, rItem:ast.ReturnExprListItem)
     Maybe[VariableList]
 {
     var results = analyzeSubnode(s, env, rItem.item);
@@ -58,7 +66,7 @@ overload analyzeNode(s:Vector[SpecializedNode], env:Env, rItem:ast.ReturnExprLis
 }
 
 private analyzeReturn(
-    s:Vector[SpecializedNode],
+    s:SpecializationContext,
     rItem:ast.ReturnExprListItem,
     source:RTVariable
 ) = maybe(rItem.kind,
@@ -115,16 +123,16 @@ private analyzeReturn(
 // analyzeNode(ExprList; ExprListItem instances)
 //
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, exprList:ast.ExprList) Maybe[VariableList]
+overload analyzeNode(s:SpecializationContext, env:Env, exprList:ast.ExprList) Maybe[VariableList]
     = analyzeExprListNode(s, env, exprList);
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.ExprListItem) Maybe[VariableList]
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ExprListItem) Maybe[VariableList]
     = analyzeNode(s, env, *expr);
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.Expr) Maybe[VariableList]
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Expr) Maybe[VariableList]
     = analyzeNode(s, env, *expr);
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, unpack:ast.UnpackExpr)
+overload analyzeNode(s:SpecializationContext, env:Env, unpack:ast.UnpackExpr)
     = analyzeMultiExprSubnode(s, env, unpack.expr);
 
 
@@ -132,17 +140,17 @@ overload analyzeNode(s:Vector[SpecializedNode], env:Env, unpack:ast.UnpackExpr)
 // analyzeNode(Expr instances)
 //
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.BoolLiteral)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BoolLiteral)
     = addSpecializedValue(s, expr, Value(BoolValue(expr.value)));
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.IntLiteral)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IntLiteral)
     // XXX Integer type matching
     = addSpecializedValue(s, expr, Value(IntValue(Int(expr.value))));
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.StringLiteral)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StringLiteral)
     = addSpecializedValue(s, expr, Value(StringValue(expr.value)));
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.NameRef) {
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NameRef) {
     var envEntry = privateLookup(env, expr.name);
     return match(envEntry,
         RTVariable, x ref=> Maybe(VariableList(x)),
@@ -160,13 +168,13 @@ overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.NameRef) {
     );
 }
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.PatternNameRef)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.PatternNameRef)
     = addSpecializedValue(s, expr, derefPattern(env, expr.name));
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.TupleExpr)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.TupleExpr)
     = genericAnalysisError("tuples are not yet supported");
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.Call) {
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call) {
     var callable = evaluateExpr(expr.expr, env);
 
     if (runtimeCallable?(callable)) {
@@ -183,7 +191,7 @@ overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.Call) {
     }
 }
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.Indexing)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
     = addSpecializedValue(s, expr, evaluateExpr(expr, env));
 
 private analyzeShortCircuit(s, env, expr, LeftBody, RightBody)
@@ -198,32 +206,33 @@ private analyzeShortCircuit(s, env, expr, LeftBody, RightBody)
                 Vector[SpecializedNode]()
             );
 
-            ref leftBody = fieldRef(ifNode, LeftBody);
-            ref rightBody = fieldRef(ifNode, RightBody);
-            maybe(analyzeBoolSubnode(rightBody, env, expr.expr2),
+            ref leftS = subContext(s, fieldRef(ifNode, LeftBody));
+            ref rightS = subContext(s, fieldRef(ifNode, RightBody));
+
+            maybe(analyzeBoolSubnode(rightS, env, expr.expr2),
                 results2 ref=> {
-                    addSpecializedBind(rightBody, ASTNode(expr),
+                    addSpecializedBind(rightS, ASTNode(expr),
                         singleVariable(results2),
                         output
                     );
                 },
             );
-            addSpecializedBind(leftBody, ASTNode(expr), result1, output);
-            push(s, SpecializedNode(ifNode));
+            addSpecializedBind(leftS, ASTNode(expr), result1, output);
+            addSpecializedNode(s, ifNode);
             return Maybe(VariableList(output));
         },
     );
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.AndExpr)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.AndExpr)
     = analyzeShortCircuit(s, env, expr, #elseBody, #thenBody);
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.OrExpr)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.OrExpr)
     = analyzeShortCircuit(s, env, expr, #thenBody, #elseBody);
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.LambdaExpr)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.LambdaExpr)
     = genericAnalysisError("lambda expressions are not yet supported");
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.IfExpr)
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
     = maybe(analyzeBoolSubnode(s, env, expr.condition),
         condResult ref=> {
             var ifNode = SpecializedIf(ASTNode(expr), singleVariable(condResult),
@@ -237,19 +246,26 @@ overload analyzeNode(s:Vector[SpecializedNode], env:Env, expr:ast.IfExpr)
             var elseResult = nothing(VariableList);
 
             try {
-                thenResult = analyzeSubnode(ifNode.thenBody, env, expr.thenPart);
-            } catch (e:RecursiveAnalysisError) { thenRecursive? = true; }
+                thenResult = analyzeSubnode(subContext(s, ifNode.thenBody), env, expr.thenPart);
+            } catch (e:RecursiveAnalysisError) {
+                s.complete?^ = false;
+                thenRecursive? = true;
+            }
+
             try {
-                elseResult = analyzeSubnode(ifNode.elseBody, env, expr.elsePart);
-            } catch (e:RecursiveAnalysisError) { elseRecursive? = true; }
+                elseResult = analyzeSubnode(subContext(s, ifNode.elseBody), env, expr.elsePart);
+            } catch (e:RecursiveAnalysisError) {
+                s.complete?^ = false;
+                elseRecursive? = true;
+            }
 
             // XXX if recursive, we need to re-analyze the recursive branch with the other branch result
-            if (thenRecursive? or elseRecursive?)
+            if (thenRecursive? and elseRecursive?)
                 recursiveAnalysisError();
 
             var outputs = unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult);
 
-            push(s, SpecializedNode(ifNode));
+            addSpecializedNode(s, ifNode);
 
             return outputs;
         },
@@ -272,8 +288,8 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult)
                 else
                     output = RTVariable(RT_VARIABLE_RVALUE, thenv.type, true);
 
-                singleAddSpecializedBind(ifNode.thenBody, expr, thenv, output);
-                singleAddSpecializedBind(ifNode.elseBody, expr, elsev, output);
+                addSpecializedBind(subContext(s, ifNode.thenBody), expr, thenv, output);
+                addSpecializedBind(subContext(s, ifNode.elseBody), expr, elsev, output);
 
                 return Maybe(VariableList(output));
             },
@@ -307,7 +323,7 @@ private record LoopContext (
 
 overload LoopContext() = LoopContext(false, false);
 
-overload analyzeNode(s:Vector[SpecializedNode], env:Env, block:ast.Block) {
+overload analyzeNode(s:SpecializationContext, env:Env, block:ast.Block) {
     var pc = ProcContext();
     var bc = BlockContext(env);
     var lc = LoopContext();
@@ -349,7 +365,7 @@ overload analyzeNode(s:Vector[SpecializedNode], env:Env, block:ast.Block) {
 }
 
 private analyzeStatement(
-    s:Vector[SpecializedNode],
+    s:SpecializationContext,
     pc:ProcContext,
     bc:BlockContext,
     lc:LoopContext,
@@ -429,7 +445,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ReturnStatement) {
     maybe(analyzeNode(s, bc.env, stmt.values),
         results ref=> {
             push(pc.results, ProcResult(stmt, results));
-            push(s, SpecializedNode(SpecializedReturn(stmt)));
+            addSpecializedNode(s, SpecializedReturn(stmt));
         },
     );
     return true;
@@ -439,27 +455,28 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.BreakStatement) {
     if (not lc.loop?)
         genericError("break statement cannot be used outside of a loop");
     lc.infiniteLoop? = false;
-    push(s, SpecializedNode(SpecializedBreak(stmt)));
+    addSpecializedNode(s, SpecializedBreak(stmt));
     return true;
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ContinueStatement) {
     if (not lc.loop?)
         genericError("continue statement cannot be used outside of a loop");
-    push(s, SpecializedNode(SpecializedContinue(stmt)));
+    addSpecializedNode(s, SpecializedContinue(stmt));
     return true;
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ThrowStatement) {
     maybe(analyzeSubnode(s, bc.env, stmt.value),
         exResult ref=> {
-            push(s, SpecializedNode(SpecializedThrow(stmt, singleVariable(exResult))));
+            addSpecializedNode(s, SpecializedThrow(stmt, singleVariable(exResult)));
         },
     );
     return true;
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
+    // XXX recursion with statements
     = maybe(analyzeBoolSubnode(s, bc.env, stmt.condition),
         condResult ref=> {
             var ifNode = SpecializedIf(ASTNode(stmt), singleVariable(condResult),
@@ -474,7 +491,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
 
             try {
                 thenReturns? = analyzeStatement(
-                    ifNode.thenBody,
+                    subContext(s, ifNode.thenBody),
                     pc,
                     BlockContext(newEnv(bc.env)),
                     lc,
@@ -485,7 +502,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
             maybe(stmt.elseBody, elseBody ref=> {
                 try {
                     elseReturns? = analyzeStatement(
-                        ifNode.elseBody,
+                        subContext(s, ifNode.elseBody),
                         pc,
                         BlockContext(newEnv(bc.env)),
                         lc,
@@ -498,7 +515,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
             if (thenRecursive? or elseRecursive?)
                 recursiveAnalysisError();
 
-            push(s, SpecializedNode(ifNode));
+            addSpecializedNode(s, ifNode);
             return thenReturns? and elseReturns?;
         },
         () => true,
@@ -525,20 +542,23 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
         RTVariable(),
         Vector[SpecializedNode](),
     );
-    return maybe(analyzeBoolSubnode(whileNode.conditionBody, bc.env, stmt.condition),
+    return maybe(analyzeBoolSubnode(subContext(s, whileNode.conditionBody), bc.env, stmt.condition),
         condResult ref=> {
             whileNode.condition = singleVariable(condResult);
 
             var subbc = BlockContext(newEnv(bc.env));
             var sublc = LoopContext(true, trueCondition?(stmt.condition));
 
-            var bodyReturns? = analyzeStatement(whileNode.body, pc, subbc, sublc, stmt.body);
+            var bodyReturns? = analyzeStatement(
+                subContext(s, whileNode.body),
+                pc, subbc, sublc, stmt.body
+            );
 
-            push(s, SpecializedNode(whileNode));
+            addSpecializedNode(s, whileNode);
             return sublc.infiniteLoop? and bodyReturns?;
         },
         () ref=> {
-            push(s, whileNode.conditionBody);
+            addSpecializedNodes(s, whileNode.conditionBody);
             return true;
         }
     );
@@ -566,7 +586,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) Bool {
 private procedure analyzeBindings;
 
 overload analyzeBindings(
-    s:Vector[SpecializedNode],
+    s:SpecializationContext,
     env_:Env,
     stmt:ast.BindingStatement,
     kind:ast.BindingKind,
@@ -641,7 +661,7 @@ private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTVariableKin
 }
 
 overload analyzeBindings(
-    s:Vector[SpecializedNode],
+    s:SpecializationContext,
     env_:Env,
     stmt:ast.BindingStatement,
     kind:ast.BindingKind,
@@ -702,10 +722,10 @@ overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {
     );
 }
 
-overload analyzeMultiExprNode(s:Vector[SpecializedNode], env:Env, expr:ast.PatternNameRef)
+overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.PatternNameRef)
     = addSpecializedValueList(s, expr, derefListPattern(env, expr.name));
 
-overload analyzeMultiExprNode(s:Vector[SpecializedNode], env:Env, expr:ast.Call) {
+overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Call) {
     var callable = evaluateExpr(expr.expr, env);
 
     if (runtimeCallable?(callable)) {
@@ -768,7 +788,7 @@ cloneVariables(vs:VariableList) = map(cloneVariable, vs);
 overload cloneVariables(mvs:Maybe[VariableList])
     = maybe(mvs, vs => Maybe(cloneVariables(vs)));
 
-analyzeSubnode(s:Vector[SpecializedNode], env:Env, ast) Maybe[VariableList]
+analyzeSubnode(s:SpecializationContext, env:Env, ast) Maybe[VariableList]
     = withLocation(ast, () ref=> analyzeNode(s, env, ast));
 
 genericAnalysisError(forward ...err) {
@@ -795,67 +815,80 @@ valueToRTVariable(value:Value) = match(value,
 
 valueToSingleVariableList(value) = VariableList(valueToRTVariable(value));
 
-addSpecializedCCodeBody(s:Vector[SpecializedNode], body:ast.CCodeBody) {
-    push(s, SpecializedNode(SpecializedCCodeBody(body)));
+addSpecializedNode(s:SpecializationContext, node:SpecializedNode) {
+    push(s.body^, node);
+}
+
+[T | VariantMember?(SpecializedNode, T)]
+overload addSpecializedNode(s:SpecializationContext, node:T) {
+    push(s.body^, SpecializedNode(node));
+}
+
+addSpecializedNodes(s:SpecializationContext, node:Vector[SpecializedNode]) {
+    push(s.body^, node);
+}
+
+addSpecializedCCodeBody(s:SpecializationContext, body:ast.CCodeBody) {
+    addSpecializedNode(s, SpecializedCCodeBody(body));
     return Maybe(VariableList());
 }
 
-addSpecializedValue(s:Vector[SpecializedNode], ast, value:Value) {
+addSpecializedValue(s:SpecializationContext, ast, value:Value) {
     var outputs = valueToSingleVariableList(value);
-    push(s, SpecializedNode(SpecializedValueList(ASTNode(ast), ValueList(value), outputs)));
+    addSpecializedNode(s, SpecializedValueList(ASTNode(ast), ValueList(value), outputs));
     return Maybe(outputs);
 }
 
-addSpecializedValueList(s:Vector[SpecializedNode], ast, valueList:ValueList) {
+addSpecializedValueList(s:SpecializationContext, ast, valueList:ValueList) {
     var outputs = Vector(mapped(valueToRTVariable, valueList));
-    push(s, SpecializedNode(SpecializedValueList(ASTNode(ast), valueList, outputs)));
+    addSpecializedNode(s, SpecializedValueList(ASTNode(ast), valueList, outputs));
     return Maybe(outputs);
 }
 
 addSpecializedCall(
-    s:Vector[SpecializedNode],
+    s:SpecializationContext,
     ast,
     inputs:VariableList,
     specialization:Specialization
 ) {
     var outputs = cloneVariables(specialization.results);
-    push(s, SpecializedNode(SpecializedCall(ASTNode(ast), inputs, outputs, specialization)));
+    addSpecializedNode(s, SpecializedCall(ASTNode(ast), inputs, outputs, specialization));
     return outputs;
 }
 
 addSpecializedPhi(
-    s:Vector[SpecializedNode],
+    s:SpecializationContext,
     branches:Vector[VariableList],
     outputs:VariableList
 ) {
-    push(s, SpecializedNode(SpecializedPhi(branches, outputs)));
+    addSpecializedNode(s, SpecializedPhi(branches, outputs));
     return Maybe(outputs);
 }
 
 singleAddSpecializedBind(
-    s:Vector[SpecializedNode],
+    s:SpecializationContext,
     ast,
     input:RTVariable,
     output:RTVariable
 ) {
-    push(s, SpecializedNode(SpecializedBind(ASTNode(ast), input, output)));
+    addSpecializedNode(s, SpecializedBind(ASTNode(ast), input, output));
     return output;
 }
 
 addSpecializedBind(
-    s:Vector[SpecializedNode],
+    s:SpecializationContext,
     ast,
     input:RTVariable,
     output:RTVariable
 ) = Maybe(VariableList(singleAddSpecializedBind(s, ast, input, output)));
 
 addSpecializedInitialize(
-    s:Vector[SpecializedNode],
+    s:SpecializationContext,
     ast,
     input:RTVariable,
     output:RTVariable
 ) {
-    push(s, SpecializedNode(SpecializedInitialize(ASTNode(ast), input, output)));
+    addSpecializedNode(s, SpecializedInitialize(ASTNode(ast), input, output));
     return Maybe(VariableList(output));
 }
 
@@ -1107,15 +1140,21 @@ private analyzeCallableBody(s:Specialization, env, o:Overload) {
             var declaredReturns? = not empty?(o.ast.definition.returns);
             var namedReturns? = just?(o.ast.definition.returnedNames);
 
+            var complete? = true;
+            var context = SpecializationContext(&just(s.body), &complete?);
+
             var analyzedResults = match(o.ast.definition.body,
-                ast.ExprCodeBody, body ref=> analyzeNode(just(s.body), env, body.exprs),
+                ast.ExprCodeBody, body ref=> analyzeNode(context, env, body.exprs),
                 ast.CCodeBody, body ref=> {
                     if (declaredReturns? and not namedReturns?)
                         genericError("__c__ procedure must use named return values");
-                    return analyzeSubnode(just(s.body), env, body);
+                    return analyzeSubnode(context, env, body);
                 },
-                ast.Block, body ref=> analyzeSubnode(just(s.body), env, body),
+                ast.Block, body ref=> analyzeSubnode(context, env, body),
             );
+
+            if (not complete?)
+                s.body = nothing(Vector[SpecializedNode]);
 
             if (declaredReturns?) {
                 // if returns are named, the body should be void
