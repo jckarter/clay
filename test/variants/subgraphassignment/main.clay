@@ -1,0 +1,14 @@
+variant Tree = Branch | Leaf;
+
+record Branch(left:SharedPointer[Tree], right:SharedPointer[Tree]);
+record Leaf(value:Int);
+
+[T | VariantMember?(Tree, T)]
+callbyname overload Branch(l:T, r:T)
+    = Branch(allocateShared(Tree(l)), allocateShared(Tree(r)));
+
+main() {
+    var tree = Tree(Branch(Leaf(1), Leaf(2)));
+    tree = variantAs(tree, Branch).left^;
+    println(tree);
+}

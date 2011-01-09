@@ -118,9 +118,13 @@ overload assign(dest:V, lvalue src:V) {
     if (tag != srcRepr.tag) {
         if (&dest == &src)
             return;
-        destroy(dest);
-        resetUnsafe(dest);
-        dest <-- src;
+        var temp = moveUnsafe(dest);
+        try {
+            dest <-- src;
+        } catch (ex) {
+            dest <-- move(temp);
+            throw ex;
+        }
         return;
     }
     ref destData = destRepr.data;

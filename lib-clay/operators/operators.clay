@@ -222,8 +222,7 @@ inline move(src:T) returned:T {
 
 [T]
 inline overload assign(dest:T, rvalue src:T) {
-    destroy(dest);
-    dest <-- move(src);
+    swap(dest, src);
 }
 
 inline notEquals?(a, b) = not equals?(a, b);
@@ -258,11 +257,18 @@ inline overload bitwiseXor(a, b, c, ...rest) =
 //
 
 inline swap(a, b) {
-    var temp = move(a);
-    a = move(b);
-    b = move(temp);
+    var temp = moveUnsafe(a);
+    a <-- moveUnsafe(b);
+    b <-- move(temp);
 }
 
+[T | BitwiseMovedType?(T)]
+inline overload swap(a:T, b:T) {
+    alias TBytes = Array[UInt8, Int(TypeSize(T))];
+    var temp = bitwiseCast(a, TBytes);
+    bitwiseCast(a, TBytes) <-- bitwiseCast(b, TBytes);
+    bitwiseCast(b, TBytes) <-- temp;
+}
 
 
 //
