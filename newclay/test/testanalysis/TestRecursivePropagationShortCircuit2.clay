@@ -1,0 +1,5 @@
+foo(x) = true and foo(x);
+
+main() {
+    return foo(1);
+}
