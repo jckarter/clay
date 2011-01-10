@@ -92,6 +92,7 @@ private var kw_const = keyword("const");
 private var kw_ref = keyword("ref");
 private var kw_rvalue = keyword("rvalue");
 private var kw_forward = keyword("forward");
+private var kw_alias = keyword("alias");
 private var kw_true = keyword("true");
 private var kw_false = keyword("false");
 private var kw_if = keyword("if");
@@ -113,6 +114,9 @@ private var kw_while = keyword("while");
 private var kw_switch = keyword("switch");
 private var kw_case = keyword("case");
 private var kw_default = keyword("default");
+private var kw_c = keyword("__c__");
+private var kw_llvm = keyword("__llvm__");
+private var kw_asm = keyword("__asm__");
 
 
 
@@ -799,14 +803,20 @@ private var exprCodeBody = modify(CodeBody, bounds(modify(
     sequence(punc(#"="), optReturnExprList, punc(#";")),
 )));
 
-private var inlineCCodeBody = modify(CodeBody, bounds(modify(
-    x => CCodeBody(String(x.0)),
-    sequence(tokenData(C_CODE), punc(#";")),
+private var literalCodeBodyKind = choice(
+    modify(x => LITERAL_C, kw_c),
+    modify(x => LITERAL_ASM, kw_asm),
+    modify(x => LITERAL_LLVM, kw_llvm),
+);
+
+private var literalCodeBody = modify(CodeBody, bounds(modify(
+    x => LiteralCodeBody(x.0, String(x.1)),
+    sequence(literalCodeBodyKind, tokenData(LITERAL_CODE), punc(#";")),
 )));
 
 private var blockCodeBody = modify(CodeBody, bounds(block));
 
-private var codeBody = choice(exprCodeBody, blockCodeBody, inlineCCodeBody);
+private var codeBody = choice(exprCodeBody, blockCodeBody, literalCodeBody);
 
 private var overloadDefinition = modify(
     x => OverloadDefinition(move(x.1), move((x.3).1), move((x.3).0), move(x.4), move(x.5)),

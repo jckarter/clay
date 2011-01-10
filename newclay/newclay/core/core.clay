@@ -884,7 +884,7 @@ overload Specialization(o:Overload, callable:Value) {
     return move(s);
 }
 
-variant SpecializedNode = SpecializedCCodeBody
+variant SpecializedNode = SpecializedLiteralCodeBody
                         | SpecializedValueList
                         | SpecializedCall
                         | SpecializedIf
@@ -907,8 +907,8 @@ overload ASTNode(x:E) = ASTNode(ast.ExprListItem(ast.Expr(x)));
 [S | VariantMember?(ast.Statement, S)]
 overload ASTNode(x:S) = ASTNode(ast.Statement(x));
 
-record SpecializedCCodeBody = referenceType(
-    ast: ast.CCodeBody,
+record SpecializedLiteralCodeBody = referenceType(
+    ast: ast.LiteralCodeBody,
 );
 
 record SpecializedValueList = referenceType(
@@ -1179,7 +1179,7 @@ record RecursiveAnalysisError = semanticError(
 instance SemanticError = RecursiveAnalysisError;
 
 overload displayError(e:RecursiveAnalysisError) {
-    var msg = "recursion during type propagation";
+    var msg = "recursion without base case during type propagation";
     displaySemanticError(e.locationStack, e.compilationStack, msg);
 }
 

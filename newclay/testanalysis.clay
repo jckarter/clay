@@ -36,7 +36,7 @@ asPtr(x) = referencePtr(x).ptr;
 
 procedure printNodeData;
 
-overload printNodeData(depth, node:SpecializedCCodeBody) {
+overload printNodeData(depth, node:SpecializedLiteralCodeBody) {
     println();
 }
 

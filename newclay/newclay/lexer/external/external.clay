@@ -220,12 +220,11 @@ private var lexFloatLiteral = modify(
 // c code
 //
 
-private var cCodePrefix = literalString("__c__");
-private var cCodeDelimiter = literalString("\"\"\"");
+private var literalCodeDelimiter = literalString("\"\"\"");
 
 private nonDelimiter(input) {
     var saved = input;
-    return maybe(cCodeDelimiter(input),
+    return maybe(literalCodeDelimiter(input),
         x ref=> {
             input = move(saved);
             return nothing(Char);
@@ -234,12 +233,9 @@ private nonDelimiter(input) {
     );
 }
 
-private var lexCCode = modify(
-    x => Token(C_CODE),
-    seq(
-        cCodePrefix, zeroPlus(condition(space?)),
-        cCodeDelimiter, zeroPlus(nonDelimiter), cCodeDelimiter,
-    ),
+private var lexLiteralCode = modify(
+    x => Token(LITERAL_CODE),
+    seq(literalCodeDelimiter, zeroPlus(nonDelimiter), literalCodeDelimiter),
 );
 
 
@@ -303,7 +299,7 @@ private var lexToken = bounds(choice(
     lexLineComment,
     lexBlockComment,
     lexPunctuation,
-    lexCCode,
+    lexLiteralCode,
     lexIdentifierOrKeyword,
     lexCharLiteral,
     lexStringLiteral,

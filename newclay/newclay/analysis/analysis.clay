@@ -26,11 +26,11 @@ analyzeMain() {
 
 
 //
-// analyzeCCodeBody
+// analyzeLiteralCodeBody
 //
 
-private analyzeCCodeBody(s:SpecializationContext, env:Env, body:ast.CCodeBody) {
-    return addSpecializedCCodeBody(s, body);
+private analyzeLiteralCodeBody(s:SpecializationContext, env:Env, body:ast.LiteralCodeBody) {
+    return addSpecializedLiteralCodeBody(s, body);
 }
 
 
@@ -869,8 +869,8 @@ addSpecializedNodes(s:SpecializationContext, node:Vector[SpecializedNode]) {
     push(s.body^, node);
 }
 
-addSpecializedCCodeBody(s:SpecializationContext, body:ast.CCodeBody) {
-    addSpecializedNode(s, SpecializedCCodeBody(body));
+addSpecializedLiteralCodeBody(s:SpecializationContext, body:ast.LiteralCodeBody) {
+    addSpecializedNode(s, SpecializedLiteralCodeBody(body));
     return Maybe(VariableList());
 }
 
@@ -1186,10 +1186,10 @@ private analyzeCallableBody(s:Specialization, env, o:Overload) {
 
             var analyzedResults = match(o.ast.definition.body,
                 ast.ExprCodeBody, body ref=> analyzeNode(context, env, body.exprs),
-                ast.CCodeBody, body ref=> {
+                ast.LiteralCodeBody, body ref=> {
                     if (declaredReturns? and not namedReturns?)
-                        genericError("__c__ procedure must use named return values");
-                    return analyzeCCodeBody(context, env, body);
+                        genericError("literal procedure must use named return values");
+                    return analyzeLiteralCodeBody(context, env, body);
                 },
                 ast.Block, body ref=> analyzeBlockCodeBody(context, env, body),
             );
@@ -1263,7 +1263,6 @@ analyzeCallableWithOneResult(callable:Value, args:VariableList) {
 analyzeCallable(callable:Value, args:VariableList) Specialization
     = withCallAnalysis(callable, args, () ref=> analyzeCallable2(callable, args));
 
-// HERE handle recursion with declared returns
 analyzeCallable2(callable:Value, args:VariableList) Specialization {
     ref invokeTable = callableInvokeTable(callable);
     var entryPtr = lookup(invokeTable, ArgumentList(args));
