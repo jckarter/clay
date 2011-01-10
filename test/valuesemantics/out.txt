@@ -31,6 +31,9 @@ destroy Test 13
 construct Test 14
 move Test 14
 reset Test 15
+move Test 14
+reset Test 16
+destroy Test 16
 destroy Test 15
 destroy Test 0
 destroy Test 1
