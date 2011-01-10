@@ -874,7 +874,6 @@ record Specialization = referenceType(
     env: Env,
     body: Maybe[Vector[SpecializedNode]],
     internalArgs: VariableList,
-    internalResults: Maybe[VariableList],
     internalNamedResults: VariableList,
 );
 
