@@ -26,15 +26,20 @@ analyzeMain() {
 
 
 //
+// analyzeCCodeBody
+//
+
+private analyzeCCodeBody(s:SpecializationContext, env:Env, body:ast.CCodeBody) {
+    return addSpecializedCCodeBody(s, body);
+}
+
+
+//
 // analyzeNode
 //
 
 analyzeNode(s:SpecializationContext, env:Env, body:ast.ExprCodeBody)
     = analyzeSubnode(s, newEnv(env), body.exprs);
-
-overload analyzeNode(s:SpecializationContext, env:Env, body:ast.CCodeBody) {
-    return addSpecializedCCodeBody(s, body);
-}
 
 
 //
@@ -300,7 +305,7 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult)
 
 
 //
-// analyzeNode(Block), analyzeStatement
+// analyzeBlockCodeBody, analyzeStatement
 //
 
 private record ProcResult (
@@ -310,6 +315,7 @@ private record ProcResult (
 
 private record ProcContext (
     results: Vector[ProcResult],
+    recursiveReturn: Maybe[ast.ReturnStatement],
 );
 
 private record BlockContext (
@@ -323,46 +329,53 @@ private record LoopContext (
 
 overload LoopContext() = LoopContext(false, false);
 
-overload analyzeNode(s:SpecializationContext, env:Env, block:ast.Block) {
-    var pc = ProcContext();
-    var bc = BlockContext(env);
-    var lc = LoopContext();
+private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
+    = withLocation(block, () ref=> {
+        var pc = ProcContext();
+        var bc = BlockContext(env);
+        var lc = LoopContext();
 
-    var returns? = analyzeStatement(s, pc, bc, lc, block);
+        var returns? = analyzeStatement(s, pc, bc, lc, block);
 
-    if (returns?) {
-        // "returns" without results? => nonterminating
-        // returns with results? => results
-        if (empty?(pc.results))
-            return nothing(VariableList);
-        else {
-            var results = cloneVariables(pc.results[0].results);
-            var branches = Vector[VariableList](pc.results[0].results);
-            if (size(pc.results) > 1) {
-                for (resultSet in slicedFrom(pc.results, 1)) {
-                    withLocation(resultSet.statement, () ref=> {
-                        if (not equalResults?(results, resultSet.results))
-                            genericError("return statement types do not match");
-                        if (size(results) > 0)
-                            push(branches, resultSet.results);
+        if (returns?) {
+            // "returns" without results? => nonterminating result
+            // "returns" without definite results, but recursive return? => recursion error
+            // returns with results? => results
+            if (empty?(pc.results)) {
+                maybe(pc.recursiveReturn, stmt ref=> {
+                    withLocation(stmt, () ref=> {
+                        recursiveAnalysisError();
                     });
+                });
+                return nothing(VariableList);
+            } else {
+                var results = cloneVariables(pc.results[0].results);
+                var branches = Vector[VariableList](pc.results[0].results);
+                if (size(pc.results) > 1) {
+                    for (resultSet in slicedFrom(pc.results, 1)) {
+                        withLocation(resultSet.statement, () ref=> {
+                            if (not equalResults?(results, resultSet.results))
+                                genericError("return statement types do not match");
+                            if (size(results) > 0)
+                                push(branches, resultSet.results);
+                        });
+                    }
+                    if (size(results) > 0)
+                        addSpecializedPhi(s, branches, results);
                 }
-                if (size(results) > 0)
-                    addSpecializedPhi(s, branches, results);
+                return Maybe(results);
             }
-            return Maybe(results);
+        } else {
+            // falls through with no results? => void results
+            // falls through with nonvoid results? => error (not all branches return)
+            // falls through with void results? => void results
+            if (not empty?(pc.results))
+                for (resultSet in pc.results)
+                    if (not empty?(resultSet.results))
+                        genericError("not all branches return in block");
+            return Maybe(VariableList());
         }
-    } else {
-        // falls through with no results? => void results
-        // falls through with nonvoid results? => error (not all branches return)
-        // falls through with void results? => void results
-        if (not empty?(pc.results))
-            for (resultSet in pc.results)
-                if (not empty?(resultSet.results))
-                    genericError("not all branches return in block");
-        return Maybe(VariableList());
-    }
-}
+    });
 
 private analyzeStatement(
     s:SpecializationContext,
@@ -391,29 +404,38 @@ overload analyzeStatement(s, pc, bc, lc, block:ast.Block) Bool {
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.LabelDef) = false;
 
-private analyzeInitialize(s, env:Env, stmt, toExprList:ast.ExprList, fromExprList:ast.ExprList)
-    // XXX parallel assignment? x, y <-- y, x
-    = maybe(analyzeNode(s, env, toExprList),
-        toValues ref=> maybe(analyzeNode(s, env, fromExprList),
-            fromValues ref=> {
-                if (size(toValues) != size(fromValues))
-                    genericError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
-                for (toValue, fromValue in zipped(toValues, fromValues)) {
-                    if (toValue.kind != RT_VARIABLE_REF)
-                        genericError("values on left side of <-- must be lvalues");
-                    addSpecializedInitialize(s, stmt, fromValue, toValue);
-                }
-                return false;
-            },
+private analyzeInitialize(s, env:Env, stmt, toExprList:ast.ExprList, fromExprList:ast.ExprList) {
+    try {
+        return maybe(analyzeNode(s, env, toExprList),
+            toValues ref=> maybe(analyzeNode(s, env, fromExprList),
+                fromValues ref=> {
+                    if (size(toValues) != size(fromValues))
+                        genericError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
+                    for (toValue, fromValue in zipped(toValues, fromValues)) {
+                        if (toValue.kind != RT_VARIABLE_REF)
+                            genericError("values on left side of <-- must be lvalues");
+                        addSpecializedInitialize(s, stmt, fromValue, toValue);
+                    }
+                    return false;
+                },
+                () ref=> true,
+            ),
             () ref=> true,
-        ),
-        () ref=> true,
-    );
+        );
+    } catch (e:RecursiveAnalysisError) {
+    // XXX recursive analysis will need to be an error if it influences delayed propagation of var
+    // bindings
+        s.complete?^ = false;
+        return false;
+    }
+}
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
     switch (stmt.kind) {
     case ast.ASSIGNMENT_ASSIGN:
         genericError("assignment with = not yet supported");
+        // NOTE will need to support parallel assignment when assigning multiple values.
+        // eg x, y = y, x;
         return false;
     case ast.ASSIGNMENT_INITIALIZE:
         return analyzeInitialize(s, bc.env, stmt, stmt.to, stmt.from);
@@ -424,6 +446,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.BindingStatement) {
+    // XXX handle recursion in binding values?
     var subenv, returns? = ...analyzeBindings(s, bc.env, stmt, stmt.kind, *stmt.bindings);
     bc.env = subenv;
     return returns?;
@@ -442,12 +465,17 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.GotoStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ReturnStatement) {
-    maybe(analyzeNode(s, bc.env, stmt.values),
-        results ref=> {
-            push(pc.results, ProcResult(stmt, results));
-            addSpecializedNode(s, SpecializedReturn(stmt));
-        },
-    );
+    try {
+        maybe(analyzeNode(s, bc.env, stmt.values),
+            results ref=> {
+                push(pc.results, ProcResult(stmt, results));
+                addSpecializedNode(s, SpecializedReturn(stmt));
+            },
+        );
+    } catch (e:RecursiveAnalysisError) {
+        s.complete?^ = false;
+        pc.recursiveReturn = Maybe(stmt);
+    }
     return true;
 }
 
@@ -467,11 +495,15 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ContinueStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ThrowStatement) {
-    maybe(analyzeSubnode(s, bc.env, stmt.value),
-        exResult ref=> {
-            addSpecializedNode(s, SpecializedThrow(stmt, singleVariable(exResult)));
-        },
-    );
+    try {
+        maybe(analyzeSubnode(s, bc.env, stmt.value),
+            exResult ref=> {
+                addSpecializedNode(s, SpecializedThrow(stmt, singleVariable(exResult)));
+            },
+        );
+    } catch (e:RecursiveAnalysisError) {
+        s.complete?^ = false;
+    }
     return true;
 }
 
@@ -485,7 +517,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
             );
 
             var thenRecursive? = false;
-            var elseRecursive? = false; // XXX should be treated as "true" if no else block
+            var elseRecursive? = nothing?(stmt.elseBody);
             var thenReturns? = false;
             var elseReturns? = false;
 
@@ -511,8 +543,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
                 } catch (e:RecursiveAnalysisError) { elseRecursive? = true; }
             });
 
-            // XXX if recursive, we need to re-analyze the recursive branch with the other branch result
-            if (thenRecursive? or elseRecursive?)
+            if (thenRecursive? and elseRecursive?)
                 recursiveAnalysisError();
 
             addSpecializedNode(s, ifNode);
@@ -575,7 +606,12 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.TryStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) Bool {
-    return nothing?(analyzeMultiExprSubnode(s, bc.env, stmt.expr));
+    try {
+        return nothing?(analyzeMultiExprSubnode(s, bc.env, stmt.expr));
+    } catch (e:RecursiveAnalysisError) {
+        s.complete?^ = false;
+        return false;
+    }
 }
 
 
@@ -928,7 +964,7 @@ private internalArgumentKind(formalKind:ast.ArgumentKind, kind:RTVariableKind)
     if (formalKind == ast.ARG_CONST)
         return RT_VARIABLE_CONST;
     if (formalKind == ast.ARG_RVALUE)
-        return RT_VARIABLE_REF;
+        return RT_VARIABLE_RVALUE;
     if (formalKind == ast.ARG_REF)
         return RT_VARIABLE_REF;
     assert(formalKind == ast.ARG_FORWARD);
@@ -1153,9 +1189,9 @@ private analyzeCallableBody(s:Specialization, env, o:Overload) {
                 ast.CCodeBody, body ref=> {
                     if (declaredReturns? and not namedReturns?)
                         genericError("__c__ procedure must use named return values");
-                    return analyzeSubnode(context, env, body);
+                    return analyzeCCodeBody(context, env, body);
                 },
-                ast.Block, body ref=> analyzeSubnode(context, env, body),
+                ast.Block, body ref=> analyzeBlockCodeBody(context, env, body),
             );
 
             if (not complete?)
