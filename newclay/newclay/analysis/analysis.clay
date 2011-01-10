@@ -752,11 +752,16 @@ validBoolResult?(results:Maybe[VariableList])
     );
 
 analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
-    var results = analyzeNode(s, env, ast);
-    if (not validBoolResult?(results))
-        // OK to assume results is not Nothing and has one element here
-        genericError(boolType(), " expected but ", just(results)[0].type, " received");
-    return results;
+    try {
+        var results = analyzeNode(s, env, ast);
+        if (not validBoolResult?(results))
+            // OK to assume results is not Nothing and has one element here
+            genericError(boolType(), " expected but ", just(results)[0].type, " received");
+        return results;
+    } catch (e:RecursiveAnalysisError) {
+        s.complete?^ = false;
+        return Maybe(VariableList(newValue(boolType())));
+    }
 });
 
 
