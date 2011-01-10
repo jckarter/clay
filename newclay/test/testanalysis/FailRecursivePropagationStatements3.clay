@@ -1,0 +1,10 @@
+foo(x) {
+    if (true)
+        return foo(x);
+    else
+        return foo(x);
+}
+
+main() {
+    return foo(1);
+}
