@@ -412,7 +412,7 @@ record ReturnSpec = ast(
 
 variant CodeBody = ExprCodeBody
                  | Block
-                 | CCodeBody
+                 | LiteralCodeBody
                  ;
 
 record ExprCodeBody = ast(
@@ -433,8 +433,15 @@ enum ReturnExprKind {
     RETURN_EXPR_FORWARD,
 }
 
-record CCodeBody = ast(
-    cCode: String,
+enum LiteralCodeBodyKind {
+    LITERAL_C,
+    LITERAL_LLVM,
+    LITERAL_ASM,
+}
+
+record LiteralCodeBody = ast(
+    kind: LiteralCodeBodyKind,
+    code: String,
 );
 
 

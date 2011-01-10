@@ -20,7 +20,7 @@ enum TokenKind {
     CHAR_LITERAL,
     INT_LITERAL,
     FLOAT_LITERAL,
-    C_CODE,
+    LITERAL_CODE,
     SPACE,
     COMMENT,
 }
@@ -62,7 +62,7 @@ var keywords = [
     "import", "as",
     "symbol", "attribute",
     "overload", "static",
-    "var", "const", "ref", "rvalue", "forward",
+    "var", "const", "ref", "rvalue", "forward", "alias",
     "true", "false",
     "if", "else",
     "and", "or",
@@ -72,6 +72,7 @@ var keywords = [
     "for", "in",
     "while",
     "switch", "case", "default",
+    "__c__", "__llvm__", "__asm__",
 ];
 
 punctuationIndex(s) Int {

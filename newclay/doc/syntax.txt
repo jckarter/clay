@@ -54,9 +54,11 @@ ReturnKind -> "const" | "ref" | "rvalue"
 
 CodeBody -> "=" ReturnExprList ";"
           | Block
-          | "__c__" InlineCCodeBody ";"
+          | LiteralCodeBodyKind LiteralCodeBody ";"
 
-InlineCCodeBody -> """.*"""
+LiteralCodeBodyKind = "__c__" | "__asm__" | "__llvm__"
+
+LiteralCodeBody -> """.*"""
 
 ReturnExprList -> comma_list(ReturnExprListItem)
 ReturnExprListItem -> ReturnExprKind? ExprListItem
