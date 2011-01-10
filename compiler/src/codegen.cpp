@@ -686,19 +686,6 @@ MultiCValuePtr codegenExprAsRef(ExprPtr expr,
         ObjectExpr *x = (ObjectExpr *)expr.ptr();
         return codegenStaticObjectAsRef(x->obj, expr, env, ctx);
     }
-    case CALL : {
-        Call *x = (Call *)expr.ptr();
-        PValuePtr pv = safeAnalyzeOne(x->expr, env);
-        if (pv->type->typeKind == STATIC_TYPE) {
-            StaticType *st = (StaticType *)pv->type.ptr();
-            if (st->obj == prelude_move()) {
-                MultiCValuePtr mcv = codegenMultiAsRef(x->args, env, ctx);
-                ensureArity(mcv, 1);
-                return mcv;
-            }
-        }
-        break;
-    }
     default :
         break;
     }
