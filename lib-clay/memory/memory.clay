@@ -217,11 +217,11 @@ zeroMemory(begin:Pointer[T], end:Pointer[T]) {
 
 
 //
-// assignMemory, moveAssignMemory
+// assignNonoverlappingMemory, moveAssignNonoverlappingMemory
 //
 
 [T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-assignMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
+assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x = srcPtr^;
@@ -230,12 +230,7 @@ assignMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
 }
 
 [T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-overload assignMemory(begin:Pointer[T], end:Pointer[T], value:U) {
-    eachLocation(begin, end, x ref => { x = value; });
-}
-
-[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-moveAssignMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
+moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x = move(srcPtr^);
@@ -244,24 +239,12 @@ moveAssignMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
 }
 
 [T | not PODType?(T)]
-overload moveAssignMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+overload moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         swap(x, srcPtr^);
         srcPtr += 1;
     });
-}
-
-[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U])
-{
-    assignMemory(destBegin, srcBegin, srcEnd);
-}
-
-[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U])
-{
-    moveAssignMemory(destBegin, srcBegin, srcEnd);
 }
 
 
