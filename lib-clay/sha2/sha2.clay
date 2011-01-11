@@ -115,8 +115,8 @@ sha256(message: S) returned: SHA256 {
     ref tailChunk = bitwiseCast(tailChunkBytes, ChunkWords);
     copyNonoverlappingMemory(
         begin(tailChunkBytes),
-        begin(tailChunkBytes) + messageTailSize,
-        messageTailBegin
+        messageTailBegin,
+        messageTailBegin + messageTailSize
     );
     tailChunkBytes[messageTailSize] = 0x80_u8;
 

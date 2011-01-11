@@ -61,71 +61,55 @@ __llvm__ {
 //
 
 [P]
-private inline copyPODs(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    _memmove(destFirst, srcFirst, SizeT(RawPointer(destLast)-RawPointer(destFirst)));
+private inline copyPODs(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    _memmove(destBegin, srcBegin, SizeT(RawPointer(srcEnd)-RawPointer(srcBegin)));
 }
 [P]
-private inline copyNonovPODs(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    _memcpy(destFirst, srcFirst, SizeT(RawPointer(destLast)-RawPointer(destFirst)));
+private inline copyNonovPODs(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    _memcpy(destBegin, srcBegin, SizeT(RawPointer(srcEnd)-RawPointer(srcBegin)));
 }
 
 [P | BitwiseCopiedType?(P)]
-inline overload copyMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
-}
-[P | BitwiseCopiedType?(P)]
-inline overload copyMemoryBackwards(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
-}
-[P | BitwiseCopiedType?(P)]
-inline overload copyNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyNonovPODs(destFirst, destLast, srcFirst);
+inline overload copyNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 [P | BitwiseMovedType?(P)]
-inline overload moveMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
-    resetMemoryUnsafe(srcFirst, srcFirst + (destLast - destFirst));
+inline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    copyPODs(destBegin, srcBegin, srcEnd);
+    var destEnd = destBegin + (srcEnd - srcBegin);
+    if (destBegin <= srcBegin)
+        resetMemoryUnsafe(max(destEnd, srcBegin), srcEnd);
+    else
+        resetMemoryUnsafe(srcBegin, min(srcEnd, destBegin));
 }
 [P | BitwiseMovedType?(P) and NotResetType?(P)]
-inline overload moveMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
+inline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    copyPODs(destBegin, srcBegin, srcEnd);
 }
 [P | BitwiseMovedType?(P)]
-inline overload moveMemoryUnsafe(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
+inline overload moveMemoryUnsafe(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    copyPODs(destBegin, srcBegin, srcEnd);
 }
 [P | BitwiseMovedType?(P)]
-inline overload moveNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyNonovPODs(destFirst, destLast, srcFirst);
-    resetMemoryUnsafe(srcFirst, srcFirst + (destLast - destFirst));
+inline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    copyNonovPODs(destBegin, srcBegin, srcEnd);
+    resetMemoryUnsafe(srcBegin, srcEnd);
 }
 [P | BitwiseMovedType?(P) and NotResetType?(P)]
-inline overload moveNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyNonovPODs(destFirst, destLast, srcFirst);
+inline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 [P | BitwiseMovedType?(P)]
-inline overload moveNonoverlappingMemoryUnsafe(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyNonovPODs(destFirst, destLast, srcFirst);
-}
-[P | BitwiseMovedType?(P)]
-inline overload moveMemoryBackwardsUnsafe(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
+inline overload moveNonoverlappingMemoryUnsafe(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 [P | BitwiseAssignedType?(P)]
-inline overload assignMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
+inline overload assignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 [P | BitwiseMoveAssignedType?(P)]
-inline overload moveAssignMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
-}
-[P | BitwiseAssignedType?(P)]
-inline overload assignNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyNonovPODs(destFirst, destLast, srcFirst);
-}
-[P | BitwiseMoveAssignedType?(P)]
-inline overload moveAssignNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyNonovPODs(destFirst, destLast, srcFirst);
+inline overload moveAssignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+    copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 
 
@@ -134,10 +118,10 @@ inline overload moveAssignNonoverlappingMemory(destFirst:Pointer[P], destLast:Po
 //
 
 [P | NotResetType?(P)]
-inline overload resetMemoryUnsafe(first:Pointer[P], last:Pointer[P]) { }
+inline overload resetMemoryUnsafe(begin:Pointer[P], end:Pointer[P]) { }
 
 [P | NotDestroyedType?(P)]
-inline overload destroyMemory(first:Pointer[P], last:Pointer[P]) { }
+inline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) { }
 
 
 //

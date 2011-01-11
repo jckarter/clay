@@ -496,26 +496,19 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
         frontOffset = SizeT(0);
     if (deque.mapSize > SizeT(2)*newNodeCount) {
         newBeginNode = deque.map + (deque.mapSize - newNodeCount)/SizeT(2) + frontOffset;
-        if (newBeginNode < deque.begin.node)
-            moveMemoryUnsafe(
-                newBeginNode,
-                newBeginNode + oldNodeCount,
-                deque.begin.node
-            );
-        else
-            moveMemoryBackwardsUnsafe(
-                newBeginNode,
-                newBeginNode + oldNodeCount,
-                deque.begin.node
-            );
+        moveMemoryUnsafe(
+            newBeginNode,
+            deque.begin.node,
+            deque.begin.node + oldNodeCount,
+        );
     } else {
         var newMapSize = deque.mapSize + max(deque.mapSize, addCount) + SizeT(2);
         var newMap = allocateRawMemory(Pointer[T], newMapSize);
         newBeginNode = newMap + (newMapSize - newNodeCount)/SizeT(2) + frontOffset;
         moveMemoryUnsafe(
             newBeginNode,
-            newBeginNode + oldNodeCount,
-            deque.begin.node
+            deque.begin.node,
+            deque.begin.node + oldNodeCount,
         );
 
         freeRawMemory(deque.map);

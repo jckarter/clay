@@ -89,7 +89,7 @@ inline overload resetUnsafe(a:Vector[T]) {
 [T]
 overload assign(dest:Vector[T], lvalue src:Vector[T]) {
     resizeUnsafe(dest, size(src));
-    assignNonoverlappingMemory(begin(dest), end(dest), begin(src));
+    assignNonoverlappingMemory(begin(dest), begin(src), end(src));
 }
 
 [T]
@@ -120,11 +120,7 @@ inline overload vectorCapacity(a:Vector[T]) = a.capacity;
 overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
     assert(capacity >= a.size);
     var data = allocateRawMemory(T, capacity);
-    var ptr = data;
-    for (x in a) {
-        ptr^ <-- moveUnsafe(x);
-        inc(ptr);
-    }
+    moveNonoverlappingMemoryUnsafe(data, a.data, a.data + a.size);
     freeRawMemory(a.data);
     a.data = data;
     a.capacity = capacity;
