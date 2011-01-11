@@ -204,3 +204,14 @@ procedure displayError;
 overload displayError(e:ClayError) {
     displayError(*e);
 }
+
+
+//
+// IdentityHashed -- hash referenceType by identity
+//
+
+record IdentityHashed[T] (value:T);
+
+[T] overload equals?(x:IdentityHashed[T], y:IdentityHashed[T]) = is?(x, y);
+[T] overload hash(x:IdentityHashed[T]) = hash(referencePtr(x));
+
