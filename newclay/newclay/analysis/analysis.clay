@@ -665,7 +665,7 @@ private analyzeBinding(
     });
 
     var variableKind = bindingVariableKind(kind, value.kind);
-    var variableValue? = kind == ast.BINDING_VAR or value.value?;
+    var variableValue? = kind == ast.BINDING_VAR;
     var result = RTVariable(variableKind, value.type, variableValue?, bindingName.name.str);
     addSpecializedBind(s, stmt, value, result);
     envAdd(env, bindingName.name, result);
