@@ -85,7 +85,7 @@ private analyzeReturn(
                 genericError("cannot return rvalue as const reference");
             if (source.kind != RT_VARIABLE_CONST)
                 return singleAddSpecializedBindReturn(s, rItem, source,
-                    newReference(RT_VARIABLE_CONST, source.type)
+                    newReference(RT_VARIABLE_CONST, source.type, "returned")
                 );
             break;
         case ast.RETURN_EXPR_REF:
@@ -103,24 +103,26 @@ private analyzeReturn(
                 genericError("cannot return const as rvalue reference");
             if (source.kind != RT_VARIABLE_RVALUE)
                 return singleAddSpecializedBindReturn(s, rItem, source,
-                    newReference(RT_VARIABLE_RVALUE, source.type)
+                    newReference(RT_VARIABLE_RVALUE, source.type, "returned")
                 );
             break;
         case ast.RETURN_EXPR_FORWARD:
             if (source.value?) {
                 if (source.kind != RT_VARIABLE_RVALUE)
                     genericError("cannot forward non-rvalue temporary value");
-                return singleAddSpecializedBindReturn(s, rItem, source, newValue(source.type));
+                return singleAddSpecializedBindReturn(s, rItem, source,
+                    newValue(source.type, "returned")
+                );
             }
             break;
         default:
             assert(false, "invalid reference kind");
             return RTVariable();
         }
-        return singleAddSpecializedBindReturn(s, rItem, source, cloneVariable(source));
+        return singleAddSpecializedBindReturn(s, rItem, source, cloneVariable(source, "returned"));
     },
     // value return
-    () ref=> singleAddSpecializedBindReturn(s, rItem, source, newValue(source.type)),
+    () ref=> singleAddSpecializedBindReturn(s, rItem, source, newValue(source.type, "returned")),
 );
 
 
@@ -351,7 +353,7 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
             } else {
                 if (size(pc.results) > 1) {
                     var branches = Vector[VariableList](pc.results[0].results);
-                    var results = cloneVariables(pc.results[0].results);
+                    var results = cloneVariables(pc.results[0].results, "returned");
                     for (resultSet in slicedFrom(pc.results, 1)) {
                         withLocation(resultSet.statement, () ref=> {
                             if (not equalResults?(results, resultSet.results))
@@ -827,8 +829,8 @@ singleVariable(s:VariableList) {
     return s[0];
 }
 
-cloneVariable(v:RTVariable) = RTVariable(v.kind, v.type, v.value?);
-cloneVariables(vs:VariableList) = map(cloneVariable, vs);
+cloneVariable(v:RTVariable, ...name) = RTVariable(v.kind, v.type, v.value?, ...name);
+cloneVariables(vs:VariableList, ...name) = map(v ref=> cloneVariable(v, ...name), vs);
 overload cloneVariables(mvs:Maybe[VariableList])
     = maybe(mvs, vs => Maybe(cloneVariables(vs)));
 
@@ -840,8 +842,8 @@ genericAnalysisError(forward ...err) {
     return nothing(VariableList);
 }
 
-newValue(type) = RTVariable(RT_VARIABLE_RVALUE, type, true);
-newReference(kind, type) = RTVariable(kind, type, false);
+newValue(type, ...name) = RTVariable(RT_VARIABLE_RVALUE, type, true, ...name);
+newReference(kind, type, ...name) = RTVariable(kind, type, false, ...name);
 
 valueToRTVariable(value:Value) = match(value,
     BoolValue, x => newValue(boolType()),
