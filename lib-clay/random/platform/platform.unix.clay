@@ -6,11 +6,11 @@ random() {
     return UInt(libc.random());
 }
 
-seedRandom(x:Int) {
-    libc.srandom(UInt(x));
+seedRandom(x:UInt) {
+    libc.srandom(x);
 }
 
 seedRandomWithTime() {
     var t = unix.time(null(CLong));
-    seedRandom(Int(t));
+    seedRandom(UInt(t));
 }
