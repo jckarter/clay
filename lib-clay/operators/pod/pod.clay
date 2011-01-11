@@ -104,14 +104,6 @@ inline overload moveMemoryBackwardsUnsafe(destBegin:Pointer[P], srcBegin:Pointer
     copyPODs(destBegin, srcBegin, srcEnd);
 }
 [P | BitwiseAssignedType?(P)]
-inline overload assignMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
-    copyPODs(destBegin, srcBegin, srcEnd);
-}
-[P | BitwiseMoveAssignedType?(P)]
-inline overload moveAssignMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
-    copyPODs(destBegin, srcBegin, srcEnd);
-}
-[P | BitwiseAssignedType?(P)]
 inline overload assignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
