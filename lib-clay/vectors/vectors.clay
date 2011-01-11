@@ -89,7 +89,7 @@ inline overload resetUnsafe(a:Vector[T]) {
 [T]
 overload assign(dest:Vector[T], lvalue src:Vector[T]) {
     resizeUnsafe(dest, size(src));
-    assignNonoverlappingMemory(begin(dest), end(dest), begin(src));
+    assignNonoverlappingMemory(begin(dest), begin(src), end(src));
 }
 
 [T]

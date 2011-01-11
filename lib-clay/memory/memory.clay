@@ -108,8 +108,8 @@ overload freeRawMemory(ptr:Pointer[T]) {
 //
 
 [T]
-initializeMemory(first:Pointer[T], last:Pointer[T]) {
-    eachLocationWithCleanup(first, last, initialize);
+initializeMemory(begin:Pointer[T], end:Pointer[T]) {
+    eachLocationWithCleanup(begin, end, initialize);
 }
 
 
@@ -119,8 +119,8 @@ initializeMemory(first:Pointer[T], last:Pointer[T]) {
 //
 
 [T | not PODType?(T)]
-destroyMemory(first:Pointer[T], last:Pointer[T]) {
-    eachLocation(first, last, destroy);
+destroyMemory(begin:Pointer[T], end:Pointer[T]) {
+    eachLocation(begin, end, destroy);
 }
 
 
@@ -130,13 +130,12 @@ destroyMemory(first:Pointer[T], last:Pointer[T]) {
 //
 
 [T | not PODType?(T)]
-copyNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
-    var srcPtr = srcFirst;
-    eachLocationWithCleanup(destFirst, destLast, x => {
-            x <-- srcPtr^;
-            srcPtr += 1;
-        }
-    );
+copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    var srcPtr = srcBegin;
+    eachLocationWithCleanup(destBegin, destBegin+(srcEnd-srcBegin), x => {
+        x <-- srcPtr^;
+        srcPtr += 1;
+    });
 }
 
 
@@ -145,31 +144,31 @@ copyNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Poi
 //
 
 [T | not PODType?(T)]
-moveMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
-    var srcPtr = srcFirst;
-    eachLocation(destFirst, destLast, x => {
+moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    var srcPtr = srcBegin;
+    eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x <-- move(srcPtr^);
         srcPtr += 1;
     });
 }
 
 [T | not PODType?(T)]
-moveMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
-    var srcPtr = srcFirst;
-    eachLocation(destFirst, destLast, x => {
+moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    var srcPtr = srcBegin;
+    eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x <-- moveUnsafe(srcPtr^);
         srcPtr += 1;
     });
 }
 
 [T | not PODType?(T)]
-moveNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
-    moveMemory(destFirst, destLast, srcFirst);
+moveNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    moveMemory(destBegin, srcBegin, srcEnd);
 }
 
 [T | not PODType?(T)]
-moveNonoverlappingMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
-    moveMemoryUnsafe(destFirst, destLast, srcFirst);
+moveNonoverlappingMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    moveMemoryUnsafe(destBegin, srcBegin, srcEnd);
 }
 
 
@@ -179,9 +178,9 @@ moveNonoverlappingMemoryUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFir
 //
 
 [T | not PODType?(T)]
-moveMemoryBackwardsUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
-    var srcPtr = srcFirst + (destLast - destFirst);
-    eachLocationBackwards(destFirst, destLast, x => {
+moveMemoryBackwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    var srcPtr = srcEnd;
+    eachLocationBackwards(destBegin, destBegin+(srcEnd-srcBegin), x => {
         srcPtr -= 1;
         x <-- moveUnsafe(srcPtr^);
     });
@@ -194,8 +193,8 @@ moveMemoryBackwardsUnsafe(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Po
 //
 
 [T | not PODType?(T)]
-resetMemoryUnsafe(first:Pointer[T], last:Pointer[T]) {
-    eachLocation(first, last, resetUnsafe);
+resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
+    eachLocation(begin, end, resetUnsafe);
 }
 
 
@@ -205,14 +204,14 @@ resetMemoryUnsafe(first:Pointer[T], last:Pointer[T]) {
 //
 
 [T]
-fillMemory(first:Pointer[T], last:Pointer[T], value:T) {
+fillMemory(begin:Pointer[T], end:Pointer[T], value:T) {
     var ptr = &value;
-    eachLocationWithCleanup(first, last, x => { x <-- ptr^; });
+    eachLocationWithCleanup(begin, end, x => { x <-- ptr^; });
 }
 
 [T]
-zeroMemory(first:Pointer[T], last:Pointer[T]) {
-    fillMemory(first, last, T(0));
+zeroMemory(begin:Pointer[T], end:Pointer[T]) {
+    fillMemory(begin, end, T(0));
 }
 
 
@@ -222,47 +221,47 @@ zeroMemory(first:Pointer[T], last:Pointer[T]) {
 //
 
 [T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-assignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U]) {
-    var srcPtr = srcFirst;
-    eachLocation(destFirst, destLast, x => {
+assignMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
+    var srcPtr = srcBegin;
+    eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x = srcPtr^;
         srcPtr += 1;
     });
 }
 
 [T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-overload assignMemory(first:Pointer[T], last:Pointer[T], value:U) {
-    eachLocation(first, last, x ref => { x = value; });
+overload assignMemory(begin:Pointer[T], end:Pointer[T], value:U) {
+    eachLocation(begin, end, x ref => { x = value; });
 }
 
 [T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U]) {
-    var srcPtr = srcFirst;
-    eachLocation(destFirst, destLast, x => {
+moveAssignMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
+    var srcPtr = srcBegin;
+    eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x = move(srcPtr^);
         srcPtr += 1;
     });
 }
 
 [T | not PODType?(T)]
-overload moveAssignMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
-    var srcPtr = srcFirst;
-    eachLocation(destFirst, destLast, x => {
+overload moveAssignMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    var srcPtr = srcBegin;
+    eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         swap(x, srcPtr^);
         srcPtr += 1;
     });
 }
 
 [T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-assignNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U])
+assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U])
 {
-    assignMemory(destFirst, destLast, srcFirst);
+    assignMemory(destBegin, srcBegin, srcEnd);
 }
 
 [T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-moveAssignNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[U])
+moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U])
 {
-    moveAssignMemory(destFirst, destLast, srcFirst);
+    moveAssignMemory(destBegin, srcBegin, srcEnd);
 }
 
 
@@ -272,53 +271,53 @@ moveAssignNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFir
 //
 
 [T]
-private eachLocation(_first:Pointer[T], _last:Pointer[T], f) {
-    var first, last = _first, _last;
-    var ptr = first;
-    while (ptr != last) {
+private eachLocation(_begin:Pointer[T], _end:Pointer[T], f) {
+    var begin, end = _begin, _end;
+    var ptr = begin;
+    while (ptr != end) {
         f(ptr^);
         ptr += 1;
     }
 }
 
 [T]
-private eachLocationBackwards(_first:Pointer[T], _last:Pointer[T], f) {
-    var first, last = _first, _last;
-    var ptr = last;
-    while (ptr != first) {
+private eachLocationBackwards(_begin:Pointer[T], _end:Pointer[T], f) {
+    var begin, end = _begin, _end;
+    var ptr = end;
+    while (ptr != begin) {
         ptr -= 1;
         f(ptr^);
     }
 }
 
 [T]
-private eachLocationWithCleanup(_first:Pointer[T], _last:Pointer[T], f) {
-    var first, last = _first, _last;
-    var ptr = first;
+private eachLocationWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
+    var begin, end = _begin, _end;
+    var ptr = begin;
     try {
-        while (ptr != last) {
+        while (ptr != end) {
             f(ptr^);
             ptr += 1;
         }
     }
     catch (e) {
-        destroyMemory(first, ptr);
+        destroyMemory(begin, ptr);
         throw e;
     }
 }
 
 [T]
-private eachLocationBackwardsWithCleanup(_first:Pointer[T], _last:Pointer[T], f) {
-    var first, last = _first, _last;
-    var ptr = last;
+private eachLocationBackwardsWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
+    var begin, end = _begin, _end;
+    var ptr = end;
     try {
-        while (ptr != first) {
+        while (ptr != begin) {
             ptr -= 1;
             f(ptr^);
         }
     }
     catch (e) {
-        destroyMemory(ptr+1, last);
+        destroyMemory(ptr+1, end);
         throw e;
     }
 }

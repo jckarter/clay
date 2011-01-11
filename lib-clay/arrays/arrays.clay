@@ -199,12 +199,12 @@ overload Array[T,n]() returned:Array[T,n] {
 
 [T,n | not BitwiseCopiedType?(T)]
 overload Array[T,n](src:Array[T,n]) returned:Array[T,n] {
-    copyNonoverlappingMemory(begin(returned), end(returned), begin(src));
+    copyNonoverlappingMemory(begin(returned), begin(src), end(src));
 }
 
 [T,n | not BitwiseMovedType?(T)]
 overload moveUnsafe(src:Array[T,n]) returned:Array[T,n] {
-    moveNonoverlappingMemoryUnsafe(begin(returned), end(returned), begin(src));
+    moveNonoverlappingMemoryUnsafe(begin(returned), begin(src), end(src));
 }
 
 [T,n | not NotResetType?(T)]
@@ -265,10 +265,10 @@ integerArray(static n) = Array(static n, range(n));
 
 [T,U,n | not (T == U and BitwiseAssignedType?(T)) and CallDefined?(assign, T, U)]
 overload assign(left: Array[T,n], right: Array[U, n]) {
-    assignNonoverlappingMemory(begin(left), end(left), begin(right));
+    assignNonoverlappingMemory(begin(left), begin(right), end(right));
 }
 
 [T,U,n | not (T == U and BitwiseMoveAssignedType?(T)) and CallDefined?(assign, T, U)]
 overload assign(left: Array[T,n], rvalue right: Array[U, n]) {
-    moveAssignNonoverlappingMemory(begin(left), end(left), begin(right));
+    moveAssignNonoverlappingMemory(begin(left), begin(right), end(right));
 }
