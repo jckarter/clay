@@ -174,7 +174,7 @@ coalesceSpecialization(s:Specialization) {
     var coalescingMap, coalescedBody = ...coalesceBody(just(s.body));
 
     s.body = Maybe(move(coalescedBody));
-    s.internalArgs = coalescedVars(coalescingMap, s.internalArgs);
+    s.args = coalescedVars(coalescingMap, s.args);
 
     assert(s.internalNamedResults == coalescedVars(coalescingMap, s.internalNamedResults),
         "coalescing invariant: named return values should not be coalesced",

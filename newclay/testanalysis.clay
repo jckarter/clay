@@ -188,8 +188,8 @@ printSpecialization(depth, s) {
     println("results:");
     printOutputs(depth+1, s.results);
     printDepth(depth);
-    println("internal args:");
-    printVars(depth+1, "in  ", s.internalArgs);
+    println("args:");
+    printVars(depth+1, "in  ", s.args);
     printDepth(depth);
     println("internal named returns:");
     printVars(depth+1, "out ", s.internalNamedResults);

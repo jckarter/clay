@@ -1,10 +1,17 @@
 if [ x$1 = x ]; then
-    echo "usage: $0 testwhatever"
+    echo "usage: $0 testwhatever [suite]"
     exit 1
 fi
 
-make $1 || exit 1
-for test in test/$1/Fail*.clay test/$1/Test*.clay; do
+runner=$1
+
+if [ x$2 = x ]; then
+    suite=$1
+else
+    suite=$2
+fi
+
+for test in test/$suite/Fail*.clay test/$suite/Test*.clay; do
     echo
     echo ---------------------------------------------
     echo $test
@@ -12,5 +19,5 @@ for test in test/$1/Fail*.clay test/$1/Test*.clay; do
     cat $test
     echo ---------------------------------------------
 
-    ./$1 $test
+    ./$runner $test
 done
