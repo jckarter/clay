@@ -1,0 +1,335 @@
+import newclay.ast as ast;
+import newclay.core.*;
+import newclay.common.*;
+import maybe.*;
+import printer.formatter.*;
+
+record CodegenContext (
+    types: HashMap[Value, String],
+    functions: HashMap[Specialization, String],
+);
+
+alnum?(c) = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
+
+mangleString(name) {
+    var mangled = String();
+    for (c in name)
+        if (not alnum?(c))
+            printTo(mangled, '_', rightAlignedWith(2, '0', hex(UInt8(c))));
+        else
+            push(mangled, c);
+    return move(mangled);
+}
+
+mangleGlobal(name) = "_clay__" + mangleString(name);
+
+symbolIdentifier(symbol:Value) {
+    var moduleName = match(symbol,
+        SymbolHead, s => s.module.name,
+        Symbol, s => s.head.module.name,
+        MatchDefault, x => {
+            assert(false, "non-symbol value used as type or callable");
+            return ModuleName();
+        },
+    );
+
+    return printString(moduleName, '.', symbol);
+}
+
+mangleType(type:Value) = mangleGlobal(symbolIdentifier(type));
+
+mangleFunction(s:Specialization) {
+    var identifier = symbolIdentifier(s.callable);
+    printTo(identifier, ArgumentList(s.args));
+    return mangleGlobal(identifier);
+}
+
+private typeName(c:CodegenContext, type:Value) {
+    var namep = lookup(c.types, type);
+    if (null?(namep)) {
+        c.types[type] = mangleType(type);
+        return c.types[type];
+    } else
+        return namep^;
+}
+
+private functionName(c:CodegenContext, function:Specialization) {
+    var namep = lookup(c.functions, function);
+    if (null?(namep)) {
+        c.functions[function] = mangleFunction(function);
+        return c.functions[function];
+    } else
+        return namep^;
+}
+
+record CodegenBodyContext (
+    s:Specialization,
+    bodyVars:HashMap[RTVariable, String],
+    bodyCode:String,
+    indent:Int,
+    localNames:NameAllocator,
+);
+
+overload CodegenBodyContext(s) = CodegenBodyContext(
+    s,
+    HashMap[RTVariable, String](),
+    String(),
+    1,
+    NameAllocator(),
+);
+
+private newLocalName(bc:CodegenBodyContext, variable) {
+    var name = maybe(variable.name, n => n, () => String("temp"));
+    bc.bodyVars[variable] = mangleString(allocateName(bc.localNames, name)) + "_";
+    return bc.bodyVars[variable];
+}
+
+private localName(bc:CodegenBodyContext, variable) {
+    var namep = lookup(bc.bodyVars, variable);
+    if (null?(namep))
+        return newLocalName(bc, variable);
+    else
+        return namep^;
+}
+
+private localDeref(bc:CodegenBodyContext, variable) {
+    var name = localName(bc, variable);
+    if (variable.value?)
+        return name;
+    else
+        return "*" + name;
+}
+
+private localRef(bc:CodegenBodyContext, variable) {
+    var name = localName(bc, variable);
+    if (variable.value?)
+        return "&" + name;
+    else
+        return name;
+}
+
+private localResultRef(bc:CodegenBodyContext, variable) {
+    var name = localName(bc, variable);
+    return "&" + name;
+}
+
+codegenSpecialization(c:CodegenContext, s:Specialization) {
+    ref body = just(s.body);
+    var bc = CodegenBodyContext(s);
+
+    for (node in body)
+        codegenNode(c, bc, *node);
+    return finalizeSpecialization(c, bc);
+}
+
+private printLocalDefinitionTo(stream, c, bc, a) {
+    printTo(stream, typeName(c, a.type), " ");
+    if (not a.value?)
+        printTo(stream, '*');
+    printTo(stream, localName(bc, a));
+}
+
+private printResultDefinitionTo(stream, c, bc, a) {
+    printTo(stream, typeName(c, a.type), " *");
+    if (not a.value?)
+        printTo(stream, '*');
+    printTo(stream, localName(bc, a));
+}
+
+private finalizeSpecialization(c, bc) {
+    var result = String();
+
+    printTo(result, "static void ", functionName(c, bc.s), "(");
+
+    interleave(bc.s.internalArgs,
+        () ref=> { printTo(result, ", "); },
+        a  ref=> {
+            printLocalDefinitionTo(result, c, bc, a);
+            remove(bc.bodyVars, a);
+        },
+    );
+
+    maybe(bc.s.results,
+        results ref=> {
+            if (not empty?(bc.s.internalNamedResults)) {
+                if (not empty?(bc.s.internalArgs))
+                    printTo(result, ", ");
+                
+                interleave(bc.s.internalNamedResults,
+                    () ref=> { printTo(result, ", "); },
+                    r  ref=> {
+                        printLocalDefinitionTo(result, c, bc, r);
+                        remove(bc.bodyVars, r);
+                    },
+                );
+            } else if (not empty?(results)) {
+                if (not empty?(bc.s.internalArgs))
+                    printTo(result, ", ");
+
+                interleave(results,
+                    () ref=> { printTo(result, ", "); },
+                    r  ref=> {
+                        printResultDefinitionTo(result, c, bc, r);
+                        remove(bc.bodyVars, r);
+                    },
+                );
+            } else if (empty?(bc.s.internalArgs))
+                printTo(result, "void");
+        },
+        () ref=> {
+            if (empty?(bc.s.internalArgs))
+                printTo(result, "void");
+        },
+    );
+
+    printTo(result, ") {\n");
+
+    for (variable, name in items(bc.bodyVars)) {
+        printToIndented(result, 1);
+        printLocalDefinitionTo(result, c, bc, variable);
+        printTo(result, ";\n");
+    }
+
+    printlnTo(result);
+    printTo(result, bc.bodyCode);
+    printTo(result, "}\n");
+
+    return move(result);
+}
+
+private printToIndented(stream, indent, forward ...args) {
+    for (i in range(indent))
+        printTo(stream, "  ");
+    printTo(stream, ...args);
+}
+overload printToIndented(bc:CodegenBodyContext, forward ...args) {
+    printToIndented(bc.bodyCode, bc.indent, ...args);
+}
+overload printTo(bc:CodegenBodyContext, forward ...args) {
+    printTo(bc.bodyCode, ...args);
+}
+
+private procedure codegenNode;
+
+overload codegenNode(c, bc, node:SpecializedLiteralCodeBody) {
+    if (node.ast.kind == ast.LITERAL_LLVM)
+        genericError("__llvm__ procedures are not yet supported");
+    if (node.ast.kind == ast.LITERAL_ASM)
+        genericError("__asm__ procedures are not yet supported");
+
+    printTo(bc.bodyCode, '\n', node.ast.code, '\n');
+}
+
+overload codegenNode(c, bc, node:SpecializedValueList) {
+    for (value, output in zipped(node.valueList, node.outputs)) {
+        printToIndented(bc, localDeref(bc, output), " = ", cValue(value), ";\n");
+    }
+}
+
+overload codegenNode(c, bc, node:SpecializedCall) {
+    var function = functionName(c, node.specialization);
+
+    printToIndented(bc, function, "(");
+    
+    interleave(node.inputs,
+        () ref=> { printTo(bc, ", "); },
+        i  ref=> { printTo(bc, localRef(bc, i)); },
+    );
+
+    maybe(node.outputs, outputs ref=> {
+        if (not empty?(node.inputs)) printTo(bc, ", ");
+        // XXX handle by-value/by-ref return when we support call result coalescing
+        interleave(outputs,
+            () ref=> { printTo(bc, ", "); },
+            o  ref=> { printTo(bc, localResultRef(bc, o)); },
+        );
+    });
+
+    printTo(bc, ");\n");
+}
+
+overload codegenNode(c, bc, node:SpecializedIf) {
+    printToIndented(bc, "if (", localDeref(bc, node.condition), ") {\n"); 
+    bc.indent += 1;
+
+    for (subnode in node.thenBody)
+        codegenNode(c, bc, *subnode);
+
+    bc.indent -= 1;
+    printToIndented(bc, "} else {\n");
+    bc.indent += 1;
+
+    for (subnode in node.elseBody)
+        codegenNode(c, bc, *subnode);
+
+    bc.indent -= 1;
+    printToIndented(bc, "}\n");
+}
+
+overload codegenNode(c, bc, node:SpecializedWhile) {
+    printToIndented(bc, "for (;;) {\n");
+    bc.indent += 1;
+
+    for (subnode in node.conditionBody)
+        codegenNode(c, bc, *subnode);
+
+    printToIndented(bc, "if (!(", localDeref(bc, node.condition), ")) break;\n");
+
+    for (subnode in node.body)
+        codegenNode(c, bc, *subnode);
+    
+    bc.indent -= 1;
+    printToIndented(bc, "}\n");
+}
+
+overload codegenNode(c, bc, node:SpecializedPhi) {
+    assert(false, "SpecializedPhi must be eliminated by coalescing");
+}
+
+overload codegenNode(c, bc, node:SpecializedBind) {
+    if (node.output.value?) {
+        // XXX should initializeFrom other value rather than bitwise assign
+        printToIndented(bc, localName(bc, node.output), " = ", localDeref(bc, node.input), ";\n");
+    } else {
+        printToIndented(bc, localName(bc, node.output), " = ", localRef(bc, node.input), ";\n");
+    }
+}
+
+overload codegenNode(c, bc, node:SpecializedBindReturn) {
+    if (node.output.value?) {
+        // XXX should initializeFrom other value rather than bitwise assign
+        printToIndented(bc, "*", localName(bc, node.output), " = ", localDeref(bc, node.input), ";\n");
+    } else {
+        printToIndented(bc, "*", localName(bc, node.output), " = ", localRef(bc, node.input), ";\n");
+    }
+}
+
+overload codegenNode(c, bc, node:SpecializedInitialize) {
+    // XXX should initializeFrom other value rather than bitwise assign
+    printToIndented(bc, localDeref(bc, node.output), " = ", localDeref(bc, node.input), ";\n");
+}
+
+overload codegenNode(c, bc, node:SpecializedBreak) {
+    printToIndented(bc, "break;\n");
+}
+
+overload codegenNode(c, bc, node:SpecializedContinue) {
+    printToIndented(bc, "continue;\n");
+}
+
+overload codegenNode(c, bc, node:SpecializedReturn) {
+    printToIndented(bc, "return;\n");
+}
+
+overload codegenNode(c, bc, node:SpecializedThrow) {
+    printToIndented(bc, "abort();\n");
+}
+
+overload codegenNode(c, bc, node:SpecializedNop) {
+}
+
+private cValue(value:Value) = match(value,
+    BoolValue, bv ref=> if (bv.value) String("1") else String("0"),
+    IntValue,  iv ref=> printString(iv),
+    MatchDefault, x ref=> { assert(false, "value type not yet supported"); return String(); },
+);

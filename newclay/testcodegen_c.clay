@@ -1,0 +1,55 @@
+
+import newclay.common.*;
+import newclay.lexer;
+import newclay.parser;
+import newclay.ast as ast;
+import newclay.core.*;
+import newclay.loader.*;
+import newclay.hooks.*;
+import newclay.analysis.*;
+import newclay.optimizer.*;
+import newclay.codegen.c.*;
+import maybe.*;
+
+printInvokeTable(name, table) {
+    for (args, invoke in items(table)) {
+        println(name, "(", args, "):");
+        maybe(invoke.specialization,
+            s => {
+                printSpecialization(1, s);
+                maybe(s.body, body ref=> {
+                    println("optimized:");
+                    coalesceSpecialization(s);
+                    printSpecialization(1, s);
+                });
+            },
+            () => { println("  <no specialization!>"); },
+        );
+    }
+}
+
+main(args) {
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <file>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[1]);
+        withProgram(program, () ref=> {
+            initializeClayHooks();
+
+            var s = analyzeMain();
+            maybe(s.body,
+                body ref=> {
+                    coalesceSpecialization(s);
+                    println(codegenSpecialization(CodegenContext(), s));
+                },
+                () ref=> { println("main body not analyzed!"); },
+            );
+        });
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
