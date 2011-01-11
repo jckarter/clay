@@ -8,6 +8,7 @@ import libc.(abort);
 
 errorNoThrow(...e) {
     printlnTo(stderr, "error: ", ...e);
+    flush(stderr);
     abort();
 }
 
