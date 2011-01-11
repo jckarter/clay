@@ -126,32 +126,17 @@ destroyMemory(first:Pointer[T], last:Pointer[T]) {
 
 
 //
-// copyMemory, copyMemoryBackwards
+// copyNonoverlappingMemory
 //
 
 [T | not PODType?(T)]
-copyMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
+copyNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
     var srcPtr = srcFirst;
     eachLocationWithCleanup(destFirst, destLast, x => {
             x <-- srcPtr^;
             srcPtr += 1;
         }
     );
-}
-
-[T | not PODType?(T)]
-copyMemoryBackwards(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
-    var srcPtr = srcFirst + (destLast - destFirst);
-    eachLocationBackwardsWithCleanup(destFirst, destLast, x => {
-            srcPtr -= 1;
-            x <-- srcPtr^;
-        }
-    );
-}
-
-[T | not PODType?(T)]
-copyNonoverlappingMemory(destFirst:Pointer[T], destLast:Pointer[T], srcFirst:Pointer[T]) {
-    copyMemory(destFirst, destLast, srcFirst);
 }
 
 

@@ -86,7 +86,7 @@ overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static
     var newBegin_ = begin + TypeSize(T);
     if (newBegin_ > end)
         throw UnmarshalUnexpectedEOF();
-    copyMemory(Pointer[Byte](&returned), Pointer[Byte](&returned + 1), begin);
+    copyNonoverlappingMemory(Pointer[Byte](&returned), Pointer[Byte](&returned + 1), begin);
     newBegin <-- newBegin_;
 }
 

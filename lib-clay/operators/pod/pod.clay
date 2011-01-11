@@ -70,14 +70,6 @@ private inline copyNonovPODs(destFirst:Pointer[P], destLast:Pointer[P], srcFirst
 }
 
 [P | BitwiseCopiedType?(P)]
-inline overload copyMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
-}
-[P | BitwiseCopiedType?(P)]
-inline overload copyMemoryBackwards(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
-    copyPODs(destFirst, destLast, srcFirst);
-}
-[P | BitwiseCopiedType?(P)]
 inline overload copyNonoverlappingMemory(destFirst:Pointer[P], destLast:Pointer[P], srcFirst:Pointer[P]) {
     copyNonovPODs(destFirst, destLast, srcFirst);
 }
