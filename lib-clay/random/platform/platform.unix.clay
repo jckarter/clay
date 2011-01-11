@@ -12,5 +12,5 @@ seedRandom(x:UInt) {
 
 seedRandomWithTime() {
     var t = unix.time(null(CLong));
-    seedRandom(Int(t));
+    seedRandom(UInt(t));
 }
