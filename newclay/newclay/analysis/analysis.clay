@@ -964,19 +964,6 @@ private referenceKindMatches?(formalKind:ast.ArgumentKind, kind:RTVariableKind) 
     return true;
 }
 
-private internalArgumentKind(formalKind:ast.ArgumentKind, kind:RTVariableKind)
-    RTVariableKind
-{
-    if (formalKind == ast.ARG_CONST)
-        return RT_VARIABLE_CONST;
-    if (formalKind == ast.ARG_RVALUE)
-        return RT_VARIABLE_RVALUE;
-    if (formalKind == ast.ARG_REF)
-        return RT_VARIABLE_REF;
-    assert(formalKind == ast.ARG_FORWARD);
-    return kind;
-}
-
 private loweredArgumentKind(formalKind:ast.ArgumentKind, kind:RTVariableKind) {
     if (formalKind == ast.ARG_CONST)
         return RT_VARIABLE_CONST;
@@ -1010,33 +997,29 @@ private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTVariable) 
     if (not unifyArgumentType(formalArg, arg, s.env))
         return false;
     var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
-    push(s.args, RTVariable(loweredArgKind, arg.type, false, formalArg.name.str));
-    var argVarKind = internalArgumentKind(formalKind, arg.kind);
-    var v = RTVariable(argVarKind, arg.type, false, formalArg.name.str);
+    var v = RTVariable(loweredArgKind, arg.type, false, formalArg.name.str);
     envAdd(s.env, formalArg.name, v);
-    push(s.internalArgs, v);
+    push(s.args, v);
     return true;
 }
 
 private unifyVariadicArgument(s:Specialization, formalArg:ast.Argument, args) {
     var formalKind = referenceSpecifier(formalArg);
+    var vars = VariableList();
     for (arg in args) {
         if (not referenceKindMatches?(formalKind, arg.kind))
             return false;
         var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
-        push(s.args, RTVariable(loweredArgKind, arg.type));
+        var v = RTVariable(loweredArgKind, arg.type);
+        push(vars, v);
+        push(s.args, v);
     }
     if (not unifyVariadicArgumentType(formalArg, args, s.env))
         return false;
-    var vars = map(
-        a ref=> RTVariable(internalArgumentKind(formalKind, a.kind), a.type),
-        args
-    );
 
     var listVar = RTListVariable(vars);
     envAdd(s.env, formalArg.name, listVar);
 
-    push(s.internalArgs, move(vars));
     return true;
 }
 
