@@ -6,8 +6,8 @@ random() {
     return UInt(libc.random());
 }
 
-seedRandom(x:Int) {
-    libc.srandom(UInt(x));
+seedRandom(x:UInt) {
+    libc.srandom(x);
 }
 
 seedRandomWithTime() {

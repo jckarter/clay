@@ -3,6 +3,7 @@ import random;
 
 main() {
     random.seedRandom();
+    random.seedRandom(42);
     while (true) {
         var x = random.randomInt(20);
         println(x);
