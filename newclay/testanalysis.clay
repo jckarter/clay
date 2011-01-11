@@ -209,7 +209,7 @@ printSpecialization(depth, s) {
 
 printInvokeTable(name, table) {
     for (args, invoke in items(table)) {
-        println(name, "(", args, "):");
+        println(name, args, ":");
         maybe(invoke.specialization,
             s => {
                 printSpecialization(1, s);

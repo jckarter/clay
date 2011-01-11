@@ -1111,17 +1111,13 @@ overload printTo(stream, x:StaticCallEntry) {
 overload printTo(stream, x:CallAnalysisEntry) {
     printTo(stream, "analyze: ");
     printReprTo(stream, x.callable);
-    printTo(stream, "(");
-    printReprElementsTo(stream, x.args);
-    printTo(stream, ")");
+    printTo(stream, ArgumentList(x.args));
 }
 
 overload printTo(stream, x:CallCompilationEntry) {
     printTo(stream, "compile: ");
     printReprTo(stream, x.callable);
-    printTo(stream, "(");
-    printReprElementsTo(stream, x.args);
-    printTo(stream, ")");
+    printTo(stream, ArgumentList(x.args));
 }
 
 private var _compilationStack = Stack[CompilationEntry]();
