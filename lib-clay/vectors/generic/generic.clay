@@ -170,7 +170,7 @@ private insertLocationsUnsafe(a, pos:I, n:J) {
 overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
     ensureSpace(a, n);
     var first = begin(a) + pos;
-    moveMemoryBackwardsUnsafe(first+n, first, end(a));
+    moveMemoryUnsafe(first+n, first, end(a));
     vectorSize(a) += n;
     return first, first+n;
 }
