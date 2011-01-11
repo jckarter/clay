@@ -1,7 +1,0 @@
-
-symbol main = NewProcedure();
-overload main() {
-    const x = true;
-    return const x;
-}
-

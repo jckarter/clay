@@ -667,7 +667,7 @@ private analyzeBinding(
     });
 
     var variableKind = bindingVariableKind(kind, value.kind);
-    var variableValue? = kind == ast.BINDING_VAR;
+    var variableValue? = kind == ast.BINDING_VAR or kind == ast.BINDING_RVALUE;
     var result = RTVariable(variableKind, value.type, variableValue?, bindingName.name.str);
     addSpecializedBind(s, stmt, value, result);
     envAdd(env, bindingName.name, result);
@@ -1189,7 +1189,7 @@ private analyzeCallableBody(s:Specialization, env, o:Overload) {
                 s.body = nothing(Vector[SpecializedNode]);
 
             if (declaredReturns?) {
-                // if returns are named, the body should be void
+                // if returns are named, the body should return void
                 var expectedResults =
                     if (namedReturns?)
                         Maybe(VariableList())
