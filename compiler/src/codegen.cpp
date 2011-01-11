@@ -686,19 +686,6 @@ MultiCValuePtr codegenExprAsRef(ExprPtr expr,
         ObjectExpr *x = (ObjectExpr *)expr.ptr();
         return codegenStaticObjectAsRef(x->obj, expr, env, ctx);
     }
-    case CALL : {
-        Call *x = (Call *)expr.ptr();
-        PValuePtr pv = safeAnalyzeOne(x->expr, env);
-        if (pv->type->typeKind == STATIC_TYPE) {
-            StaticType *st = (StaticType *)pv->type.ptr();
-            if (st->obj == prelude_move()) {
-                MultiCValuePtr mcv = codegenMultiAsRef(x->args, env, ctx);
-                ensureArity(mcv, 1);
-                return mcv;
-            }
-        }
-        break;
-    }
     default :
         break;
     }
@@ -2321,7 +2308,7 @@ void codegenCallCode(InvokeEntryPtr entry,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out)
 {
-    if (inlineEnabled() && entry->isInline) {
+    if (inlineEnabled() && entry->isInline && !entry->code->isLLVMBody()) {
         codegenCallInline(entry, args, ctx, out);
         return;
     }
@@ -2580,11 +2567,15 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
         argCount ++;
     }
 
+    out << ") ";
+    if (entry->isInline)
+        out << "alwaysinline ";
+
     string body;
     if (!interpolateLLVMCode(entry->code->llvmBody, body, entry->env))
         error("failed to apply template");
 
-    out << string(") ") << body;
+    out << body;
 
     llvm::SMDiagnostic err;
     llvm::MemoryBuffer *buf = 
@@ -2663,7 +2654,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     string callableName = getCodeName(entry);
 
-    if (entry->code->isInlineLLVM()) {
+    if (entry->code->isLLVMBody()) {
         codegenLLVMBody(entry, callableName);
         return;
     }
@@ -2872,7 +2863,7 @@ void codegenCallInline(InvokeEntryPtr entry,
                        MultiCValuePtr out)
 {
     assert(entry->isInline);
-    if (entry->code->isInlineLLVM())
+    if (entry->code->isLLVMBody())
         error(entry->code, "llvm procedures cannot be inlined");
 
     ensureArity(args, entry->argsKey.size());

@@ -1750,7 +1750,7 @@ void evalCallCode(InvokeEntryPtr entry,
 {
     assert(!entry->callByName);
     assert(entry->analyzed);
-    if (entry->code->isInlineLLVM()) {
+    if (entry->code->isLLVMBody()) {
         evalCallCompiledCode(entry, args, out);
         return;
     }

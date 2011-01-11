@@ -482,7 +482,7 @@ static bool blockComment(TokenPtr &x) {
 //
 // llvmToken
 //
-//  InlineLLVM -> '__llvm__' ZeroPlus(Space) Braces
+//  LLVMBody -> '__llvm__' ZeroPlus(Space) Braces
 //
 //  Braces -> '{' Body '}'
 // 
