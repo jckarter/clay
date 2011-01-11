@@ -1,0 +1,12 @@
+foo() __c__ """
+    return 0;
+""";
+
+bar() __llvm__ """
+    ret i32 0
+""";
+
+bas() __asm__ """
+    xor %eax, %eax
+    ret
+""";
