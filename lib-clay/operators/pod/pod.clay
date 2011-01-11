@@ -76,7 +76,11 @@ inline overload copyNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[
 [P | BitwiseMovedType?(P)]
 inline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyPODs(destBegin, srcBegin, srcEnd);
-    resetMemoryUnsafe(srcBegin, srcEnd);
+    var destEnd = destBegin + (srcEnd - srcBegin);
+    if (destBegin <= srcBegin)
+        resetMemoryUnsafe(max(destEnd, srcBegin), srcEnd);
+    else
+        resetMemoryUnsafe(srcBegin, min(srcEnd, destBegin));
 }
 [P | BitwiseMovedType?(P) and NotResetType?(P)]
 inline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
@@ -98,10 +102,6 @@ inline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[
 [P | BitwiseMovedType?(P)]
 inline overload moveNonoverlappingMemoryUnsafe(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
-}
-[P | BitwiseMovedType?(P)]
-inline overload moveMemoryBackwardsUnsafe(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
-    copyPODs(destBegin, srcBegin, srcEnd);
 }
 [P | BitwiseAssignedType?(P)]
 inline overload assignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {

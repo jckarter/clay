@@ -140,11 +140,50 @@ copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Point
 
 
 //
-// moveMemory, moveMemoryUnsafe
+// move*Memory*
 //
 
 [T | not PODType?(T)]
 moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    if (destBegin <= srcBegin) {
+        moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
+        var destEnd = destBegin + (srcEnd - srcBegin);
+        resetMemoryUnsafe(max(destEnd, srcBegin), srcEnd);
+    }
+    else {
+        moveMemoryBackwardsUnsafe(destBegin, srcBegin, srcEnd);
+        resetMemoryUnsafe(srcBegin, min(srcEnd, destBegin));
+    }
+}
+
+[T | not PODType?(T)]
+moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    if (destBegin <= srcBegin)
+        moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
+    else
+        moveMemoryBackwardsUnsafe(destBegin, srcBegin, srcEnd);
+}
+
+[T | not PODType?(T)]
+private moveMemoryForwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    var srcPtr = srcBegin;
+    eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
+        x <-- moveUnsafe(srcPtr^);
+        srcPtr += 1;
+    });
+}
+
+[T | not PODType?(T)]
+private moveMemoryBackwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+    var srcPtr = srcEnd;
+    eachLocationBackwards(destBegin, destBegin+(srcEnd-srcBegin), x => {
+        srcPtr -= 1;
+        x <-- moveUnsafe(srcPtr^);
+    });
+}
+
+[T | not PODType?(T)]
+moveNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x <-- move(srcPtr^);
@@ -153,37 +192,8 @@ moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
 }
 
 [T | not PODType?(T)]
-moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
-    var srcPtr = srcBegin;
-    eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
-        x <-- moveUnsafe(srcPtr^);
-        srcPtr += 1;
-    });
-}
-
-[T | not PODType?(T)]
-moveNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
-    moveMemory(destBegin, srcBegin, srcEnd);
-}
-
-[T | not PODType?(T)]
 moveNonoverlappingMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
-    moveMemoryUnsafe(destBegin, srcBegin, srcEnd);
-}
-
-
-
-//
-// moveMemoryBackwardsUnsafe
-//
-
-[T | not PODType?(T)]
-moveMemoryBackwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
-    var srcPtr = srcEnd;
-    eachLocationBackwards(destBegin, destBegin+(srcEnd-srcBegin), x => {
-        srcPtr -= 1;
-        x <-- moveUnsafe(srcPtr^);
-    });
+    moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
 }
 
 
