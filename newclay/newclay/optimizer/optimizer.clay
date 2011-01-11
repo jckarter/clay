@@ -1,0 +1,186 @@
+import newclay.ast as ast;
+import newclay.core.*;
+import maybe.*;
+
+
+//
+// bind coalescing
+//
+
+alias CoalescingMap = HashMap[RTVariable, RTVariable];
+
+coalesceBinding(cmap:CoalescingMap, from:RTVariable, to:RTVariable) {
+    assert(to.type == from.type, "coalescing invariant: binding types must match");
+
+    var cFrom = coalesced(cmap, from);
+
+    // rvalues can merge with previous rvalues.
+    // permanent values can merge with previous rvalues (even if rvalue is a ref!)
+    if (from.kind == RT_VARIABLE_RVALUE) {
+        assert(to.value? or not inValues?(to.kind, RT_VARIABLE_CONST, RT_VARIABLE_REF),
+            "coalescing invariant: rvalue cannot be bound to const or ref reference"
+        );
+        assert(cFrom.kind == RT_VARIABLE_RVALUE,
+            "coalescing invariant: rvalue cannot be referenced after coalescing with non-rvalue (multiple reference to rvalue not allowed)"
+        );
+
+        if (to.kind == RT_VARIABLE_RVALUE)
+            cmap[to] = cFrom;
+        else {
+            var newVar = RTVariable(to.kind, to.type, cFrom.value?,
+                maybe(to.name, x => to.name, () => cFrom.name)
+            );
+
+            cmap[cFrom] = newVar;
+            cmap[to] = newVar;
+        }
+    // references can merge with previous references or values of the same kind
+    } else if (not to.value? and to.kind == from.kind) {
+        cmap[to] = cFrom;
+    }
+}
+
+coalesced(cmap:CoalescingMap, rtVar:RTVariable) {
+    var cVar = rtVar;
+    var cVarp = lookup(cmap, cVar);
+    while (not null?(cVarp)) {
+        cVar = cVarp^;
+        cVarp = lookup(cmap, cVar);
+    }
+    return cVar;
+}
+
+// coalesce pass
+
+coalesceBody(body:Vector[SpecializedNode]) {
+    var coalescingMap = CoalescingMap();
+
+    for (node in body)
+        coalesceNode(coalescingMap, *node);
+
+    return coalescingMap, coalescedNodes(coalescingMap, body);
+}
+
+private coalesceNode(cmap:CoalescingMap, node) {}
+overload coalesceNode(cmap:CoalescingMap, node:SpecializedBind) {
+    coalesceBinding(cmap, node.input, node.output);
+}
+overload coalesceNode(cmap:CoalescingMap, node:SpecializedIf) {
+    for (subnode in node.thenBody)
+        coalesceNode(cmap, *subnode);
+    for (subnode in node.elseBody)
+        coalesceNode(cmap, *subnode);
+}
+overload coalesceNode(cmap:CoalescingMap, node:SpecializedWhile) {
+    for (subnode in node.conditionBody)
+        coalesceNode(cmap, *subnode);
+    for (subnode in node.body)
+        coalesceNode(cmap, *subnode);
+}
+overload coalesceNode(cmap:CoalescingMap, node:SpecializedPhi) {
+    for (branch in node.branches) {
+        assert(size(branch) == size(node.outputs), "coalescing invariant: SpecializedPhi branches must be of equal length");
+        for (branchOutput, phiOutput in zipped(branch, node.outputs)) {
+            assert(equalResult?(branchOutput, phiOutput), "coalescing invariant: SpecializedPhi branches must match in type and kind");
+            cmap[branchOutput] = phiOutput;
+        }
+    }
+}
+
+// coalescing application pass
+
+private coalescedVars(cmap:CoalescingMap, vs:VariableList)
+    = map(v ref=> coalesced(cmap, v), vs);
+overload coalescedVars(cmap:CoalescingMap, mvs:Maybe[VariableList])
+    = maybe(mvs, vs ref=> Maybe(coalescedVars(cmap, vs)));
+
+private coalescedNodes(cmap:CoalescingMap, nodes:Vector[SpecializedNode])
+    = map(n ref=> coalescedSpecializedNode(cmap, *n), nodes);
+
+private coalescedSpecializedNode(cmap:CoalescingMap, node)
+    = SpecializedNode(coalescedNode(cmap, node));
+
+private procedure coalescedNode;
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedLiteralCodeBody) = node;
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedValueList)
+    = SpecializedValueList(
+        node.ast,
+        node.valueList,
+        coalescedVars(cmap, node.outputs),
+    );
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedCall)
+    = SpecializedCall(
+        node.ast,
+        coalescedVars(cmap, node.inputs),
+        coalescedVars(cmap, node.outputs),
+        node.specialization,
+    );
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedIf) SpecializedIf
+    = SpecializedIf(
+        node.ast,
+        coalesced(cmap, node.condition),
+        coalescedNodes(cmap, node.thenBody),
+        coalescedNodes(cmap, node.elseBody),
+    );
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedWhile) SpecializedWhile
+    = SpecializedWhile(
+        node.ast,
+        coalescedNodes(cmap, node.conditionBody),
+        coalesced(cmap, node.condition),
+        coalescedNodes(cmap, node.body),
+    );
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedPhi)
+    = SpecializedNop();
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedBind) {
+    var cInput = coalesced(cmap, node.input);
+    var cOutput = coalesced(cmap, node.output);
+    if (isNot?(cInput, cOutput))
+        return SpecializedNode(SpecializedBind(node.ast, cInput, cOutput));
+    else
+        return SpecializedNode(SpecializedNop());
+}
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedBindReturn) {
+    var cInput = coalesced(cmap, node.input);
+    var cOutput = coalesced(cmap, node.output);
+
+    assert(isNot?(cInput, cOutput), "coalescing invariant: return value cannot be coalesced with input");
+    return SpecializedBindReturn(node.ast, cInput, cOutput);
+}
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedInitialize)
+    = SpecializedInitialize(
+        node.ast,
+        coalesced(cmap, node.input),
+        coalesced(cmap, node.output),
+    );
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedBreak) = node;
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedContinue) = node;
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedReturn) = node;
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedNop) = node;
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedThrow)
+    = SpecializedThrow(node.ast, coalesced(cmap, node.exception));
+
+coalesceSpecialization(s:Specialization) {
+    var coalescingMap, coalescedBody = ...coalesceBody(just(s.body));
+
+    s.body = Maybe(move(coalescedBody));
+    s.internalArgs = coalescedVars(coalescingMap, s.internalArgs);
+
+    assert(s.internalNamedResults == coalescedVars(coalescingMap, s.internalNamedResults),
+        "coalescing invariant: named return values should not be coalesced",
+    );
+    assert(s.results == coalescedVars(coalescingMap, s.results),
+        "coalescing invariant: return values should not be coalesced",
+    );
+}
+

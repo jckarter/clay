@@ -84,7 +84,7 @@ private analyzeReturn(
             if (source.kind == RT_VARIABLE_RVALUE)
                 genericError("cannot return rvalue as const reference");
             if (source.kind != RT_VARIABLE_CONST)
-                return singleAddSpecializedBind(s, rItem, source,
+                return singleAddSpecializedBindReturn(s, rItem, source,
                     newReference(RT_VARIABLE_CONST, source.type)
                 );
             break;
@@ -102,7 +102,7 @@ private analyzeReturn(
             if (source.kind == RT_VARIABLE_CONST)
                 genericError("cannot return const as rvalue reference");
             if (source.kind != RT_VARIABLE_RVALUE)
-                return singleAddSpecializedBind(s, rItem, source,
+                return singleAddSpecializedBindReturn(s, rItem, source,
                     newReference(RT_VARIABLE_RVALUE, source.type)
                 );
             break;
@@ -110,17 +110,17 @@ private analyzeReturn(
             if (source.value?) {
                 if (source.kind != RT_VARIABLE_RVALUE)
                     genericError("cannot forward non-rvalue temporary value");
-                return singleAddSpecializedBind(s, rItem, source, newValue(source.type));
+                return singleAddSpecializedBindReturn(s, rItem, source, newValue(source.type));
             }
             break;
         default:
             assert(false, "invalid reference kind");
             return RTVariable();
         }
-        return singleAddSpecializedBind(s, rItem, source, cloneVariable(source));
+        return singleAddSpecializedBindReturn(s, rItem, source, cloneVariable(source));
     },
     // value return
-    () ref=> singleAddSpecializedBind(s, rItem, source, newValue(source.type)),
+    () ref=> singleAddSpecializedBindReturn(s, rItem, source, newValue(source.type)),
 );
 
 
@@ -349,9 +349,9 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
                 });
                 return nothing(VariableList);
             } else {
-                var results = cloneVariables(pc.results[0].results);
-                var branches = Vector[VariableList](pc.results[0].results);
                 if (size(pc.results) > 1) {
+                    var branches = Vector[VariableList](pc.results[0].results);
+                    var results = cloneVariables(pc.results[0].results);
                     for (resultSet in slicedFrom(pc.results, 1)) {
                         withLocation(resultSet.statement, () ref=> {
                             if (not equalResults?(results, resultSet.results))
@@ -362,8 +362,9 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
                     }
                     if (size(results) > 0)
                         addSpecializedPhi(s, branches, results);
-                }
-                return Maybe(results);
+                    return Maybe(results);
+                } else
+                    return Maybe(pc.results[0].results);
             }
         } else {
             // falls through with no results? => void results
@@ -676,13 +677,15 @@ private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTVariableKin
         return RT_VARIABLE_REF;
     case ast.BINDING_REF:
         if (valueKind != RT_VARIABLE_REF)
-            genericError("ref variable must be bound to an lvalue");
+            genericError("ref reference must be bound to a non-const lvalue");
         return RT_VARIABLE_REF;
     case ast.BINDING_RVALUE:
         if (valueKind != RT_VARIABLE_RVALUE)
-            genericError("rvalue variable must be bound to an rvalue");
+            genericError("rvalue reference must be bound to an rvalue");
         return RT_VARIABLE_RVALUE;
     case ast.BINDING_CONST:
+        if (valueKind == RT_VARIABLE_RVALUE)
+            genericError("const reference must be bound to an lvalue");
         return RT_VARIABLE_CONST;
     case ast.BINDING_FORWARD:
         return valueKind;
@@ -906,13 +909,13 @@ addSpecializedPhi(
     return Maybe(outputs);
 }
 
-singleAddSpecializedBind(
+singleAddSpecializedBindReturn(
     s:SpecializationContext,
     ast,
     input:RTVariable,
     output:RTVariable
 ) {
-    addSpecializedNode(s, SpecializedBind(ASTNode(ast), input, output));
+    addSpecializedNode(s, SpecializedBindReturn(ASTNode(ast), input, output));
     return output;
 }
 
@@ -921,7 +924,10 @@ addSpecializedBind(
     ast,
     input:RTVariable,
     output:RTVariable
-) = Maybe(VariableList(singleAddSpecializedBind(s, ast, input, output)));
+) {
+    addSpecializedNode(s, SpecializedBind(ASTNode(ast), input, output));
+    return Maybe(VariableList(output));
+}
 
 addSpecializedInitialize(
     s:SpecializationContext,
@@ -1199,10 +1205,11 @@ private analyzeCallableBody(s:Specialization, env, o:Overload) {
 
             if (declaredReturns?) {
                 // if returns are named, the body should be void
-                var expectedResults = if (namedReturns?)
-                    Maybe(VariableList())
-                else
-                    s.results;
+                var expectedResults =
+                    if (namedReturns?)
+                        Maybe(VariableList())
+                    else
+                        s.results;
                 // declared returns,  actually returns  => return types must match
                 // declared returns,  actually noreturn => ok
                 // declared noreturn, actually returns  => error

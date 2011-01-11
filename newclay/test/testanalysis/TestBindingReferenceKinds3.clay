@@ -14,8 +14,7 @@ symbol main = NewProcedure();
 overload main() {
     const x = valueReturn();
     const y = refReturn();
-    const z = rvalueReturn();
     const w = constReturn();
 
-    return x, forward y, forward z, forward w;
+    return x, forward y, forward w;
 }

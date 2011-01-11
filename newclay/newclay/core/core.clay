@@ -818,16 +818,21 @@ record RTVariable = referenceType(
     name: Maybe[String],
 );
 
+equalArgument?(v:RTVariable, w:RTVariable) = v.kind == w.kind and v.type == w.type;
+
 equalArguments?(vs:VariableList, ws:VariableList) {
     for (v, w in zipped(vs, ws))
-        if (v.kind != w.kind or v.type != w.type)
+        if (not equalArgument?(v, w))
             return false;
     return true;
 }
 
+equalResult?(v:RTVariable, w:RTVariable)
+    = v.kind == w.kind and v.type == w.type and v.value? == w.value?;
+
 equalResults?(vs:VariableList, ws:VariableList) {
     for (v, w in zipped(vs, ws))
-        if (v.kind != w.kind or v.type != w.type or v.value? != w.value?)
+        if (not equalResult?(v, w))
             return false;
     return true;
 }
@@ -891,11 +896,13 @@ variant SpecializedNode = SpecializedLiteralCodeBody
                         | SpecializedWhile
                         | SpecializedInitialize
                         | SpecializedBind
+                        | SpecializedBindReturn
                         | SpecializedPhi
                         | SpecializedBreak
                         | SpecializedContinue
                         | SpecializedReturn
-                        | SpecializedThrow;
+                        | SpecializedThrow
+                        | SpecializedNop;
 
 variant ASTNode = ast.ExprListItem
                 | ast.ReturnExprListItem
@@ -949,6 +956,12 @@ record SpecializedBind = referenceType(
     output: RTVariable,
 );
 
+record SpecializedBindReturn = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
+    output: RTVariable,
+);
+
 record SpecializedInitialize = referenceType(
     ast: ASTNode,
     input: RTVariable,
@@ -972,6 +985,7 @@ record SpecializedThrow = referenceType(
     exception: RTVariable,
 );
 
+record SpecializedNop();
 
 record InvokeEntry(
     specialization: Maybe[Specialization],
