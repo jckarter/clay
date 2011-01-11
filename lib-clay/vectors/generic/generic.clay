@@ -170,7 +170,7 @@ private insertLocationsUnsafe(a, pos:I, n:J) {
 overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
     ensureSpace(a, n);
     var first = begin(a) + pos;
-    moveMemoryBackwardsUnsafe(first+n, end(a)+n, first);
+    moveMemoryBackwardsUnsafe(first+n, first, end(a));
     vectorSize(a) += n;
     return first, first+n;
 }
@@ -209,7 +209,8 @@ overload insert(a:V, i:I, seq:S) {
 overload insert(a:V, i:I, seq:S) {
     var first, last = ...insertLocationsUnsafe(a, i, size(seq));
     try {
-        copyNonoverlappingMemory(first, last, &seq[0]);
+        var src = &seq[0];
+        copyNonoverlappingMemory(first, src, src+size(seq));
     }
     catch (e) {
         resetMemoryUnsafe(first, last);
@@ -233,7 +234,8 @@ overload insert(a:V, i:I, rvalue seq:S) {
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, rvalue seq:S) {
     var first, last = ...insertLocationsUnsafe(a, i, size(seq));
-    moveNonoverlappingMemory(first, last, &seq[0]);
+    var src = &seq[0];
+    moveNonoverlappingMemory(first, src, src+size(seq));
 }
 
 [V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
@@ -279,7 +281,7 @@ inline overload clear(a:V) {
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]
 private removeLocations(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     var n = end(a) - j;
-    moveMemoryUnsafe(i, i+n, j);
+    moveMemoryUnsafe(i, j, end(a));
     vectorSize(a) -= (j - i);
     if (vectorCapacity(a) > 3*(size(a)+1))
         vectorSetCapacity(a, 2*(a.size + 1));
