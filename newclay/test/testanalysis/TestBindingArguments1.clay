@@ -27,12 +27,10 @@ overload main() {
     rvalue z1 = rvalueReturn();
     rvalue z2 = valueReturn();
     const w1 = constReturn();
-    const w2 = valueReturn();
 
     return foo(x),
            foo(y),
            foo(z1),
            foo(z2),
-           foo(w1),
-           foo(w2);
+           foo(w1);
 }
