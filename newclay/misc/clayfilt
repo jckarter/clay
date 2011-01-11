@@ -1,0 +1,8 @@
+#!/usr/bin/perl -p
+s/\b_clay__(\w+)\b/"`" . filt($1) . "`"/ge;
+
+sub filt {
+    my $x = shift;
+    $x =~ s/_([0-9A-Fa-f]{2})/chr(hex($1))/ge;
+    return $x;
+}
