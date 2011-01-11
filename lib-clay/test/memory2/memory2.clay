@@ -1,0 +1,71 @@
+
+record Canary (
+    value: Int,
+);
+
+overload RegularRecord?(static Canary) = false;
+
+private alias WATERMARK = 0x12344321;
+private assertAlive(x:Canary) { assert(x.value == WATERMARK); }
+private markAlive(x:Canary) { x.value = WATERMARK; }
+private unmarkAlive(x:Canary) { x.value = 0; }
+
+record CanaryError();
+instance Exception = CanaryError;
+
+private var canaryCount = 0;
+private beginLife(x:Canary) { markAlive(x); canaryCount += 1; }
+private endLife(x:Canary) { unmarkAlive(x); canaryCount -= 1; }
+liveCount() = canaryCount;
+
+private var throwThreshold = -1;
+throwAfter(n:Int) { throwThreshold = n + liveCount(); }
+private beginLifeMaybeThrow(x:Canary) {
+    if ((throwThreshold >= 0) and (canaryCount >= throwThreshold)) {
+        throwThreshold = -1;
+        throw CanaryError();
+    }
+    beginLife(x);
+}
+
+overload Canary() returned:Canary {
+    beginLifeMaybeThrow(returned);
+}
+
+overload Canary(src:Canary) returned:Canary {
+    assertAlive(src);
+    beginLifeMaybeThrow(returned);
+}
+
+overload assign(dest:Canary, src:Canary) {
+    assertAlive(dest);
+    assertAlive(src);
+}
+
+overload moveUnsafe(src:Canary) returned:Canary {
+    assertAlive(src);
+    beginLife(returned);
+    endLife(src);
+}
+
+overload resetUnsafe(dest:Canary) {
+    beginLife(dest);
+}
+
+overload destroy(x:Canary) {
+    endLife(x);
+}
+
+verifyCanaryLevel(action) {
+    var start = liveCount();
+    try {
+        action();
+    }
+    catch (e) {
+        println("caught exception: ", e);
+    }
+    var end = liveCount();
+    if (start != end) {
+        println("ERROR: canary level mismatch: start=", start, ", end=", end);
+    }
+}
