@@ -7,10 +7,13 @@ record TestStatus (
 overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
 
 record TestCase (
-    name: StringConstant,
+    name: String,
     _case: Lambda[(TestStatus), ()],
     pending?: Bool,
 );
+
+[T | String?(T) and T != String]
+overload TestCase(name : T, _case, pending?) TestCase = TestCase(String(name), _case, pending?);
 
 overload TestCase(name, fn) = TestCase(name, Lambda[(TestStatus), ()](fn), false);
 
